@@ -1,7 +1,7 @@
-if(NOT "${NIGHTLY_DIR}" STREQUAL "")
-  message("Nightly test directory is ${NIGHTLY_DIR}")
+if(NOT "${TESTING_ROOT_DIR}" STREQUAL "")
+  message("Testing root directory is ${TESTING_ROOT_DIR}")
 else()
-  message(FATAL_ERROR "You need to set the NIGHTLY_DIR variable. CMake will exit." )
+  message(FATAL_ERROR "You need to set the TESTING_ROOT_DIR variable. CMake will exit." )
 endif()
 
 if(NOT "${HOST_NAME}" STREQUAL "")
@@ -10,12 +10,17 @@ else()
   message(FATAL_ERROR "You need to set the HOST_NAME variable. CMake will exit." )
 endif()
 
+if(NOT "${NALU_DIR}" STREQUAL "")
+  message("NALU_DIR is ${NALU_DIR}")
+else()
+  message(FATAL_ERROR "You need to set the NALU_DIR variable. CMake will exit." )
+endif()
+
 # -----------------------------------------------------------
 # -- Configure CTest
 # -----------------------------------------------------------
 
 # Set important configuration variables
-set(NALU_DIR "${NIGHTLY_DIR}/Nalu")
 set(CTEST_SITE "${HOST_NAME}")
 set(CTEST_BUILD_NAME "${CMAKE_SYSTEM_NAME}${EXTRA_BUILD_NAME}")
 set(CTEST_SOURCE_DIRECTORY "${NALU_DIR}")
@@ -82,9 +87,9 @@ if(result GREATER -1)
 endif()
 
 message("\n -- Submit - ${CTEST_BUILD_NAME} --")
-set(CTEST_NOTES_FILES "${NIGHTLY_DIR}/jobs/nalu-test-log.txt")
+set(CTEST_NOTES_FILES "${TEST_LOG}")
 if(HAVE_STATIC_ANALYSIS_OUTPUT)
-  set(CTEST_NOTES_FILES ${CTEST_NOTES_FILES} "${NIGHTLY_DIR}/jobs/nalu-static-analysis.txt")
+  set(CTEST_NOTES_FILES ${CTEST_NOTES_FILES} "${STATIC_ANALYSIS_LOG}")
 endif()
 ctest_submit(RETRY_COUNT 20
              RETRY_DELAY 20
