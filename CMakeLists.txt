@@ -1,5 +1,7 @@
 ############################ BASE ######################################
 cmake_minimum_required (VERSION 3.1)
+project(Nalu CXX C Fortran)
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ########################## OPTIONS #####################################
@@ -16,6 +18,18 @@ option(ENABLE_HYPRE "Use HYPRE Solver library" OFF)
 option(ENABLE_WARNINGS "Add -Wall to show compiler warnings" ON)
 option(ENABLE_EXTRA_WARNINGS "Add -Wextra to show even more compiler warnings" OFF)
 
+set(CMAKE_CXX_STANDARD 11)       # Set nalu-wind C++11 standard
+set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions
+set(CMAKE_CXX_STANDARD_REQUIRED) # Force error if C++11 standard is not supported
+
+find_package(MPI REQUIRED)
+
+set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
+set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+find_package(OpenMP)
+
 ########################## TRILINOS ####################################
 set(CMAKE_PREFIX_PATH ${Trilinos_DIR} ${CMAKE_PREFIX_PATH})
 set(CMAKE_PREFIX_PATH ${Trilinos_PATH} ${CMAKE_PREFIX_PATH})
@@ -25,10 +39,6 @@ if(Trilinos_FOUND)
 endif()
 include_directories(SYSTEM ${Trilinos_INCLUDE_DIRS})
 include_directories(SYSTEM ${Trilinos_TPL_INCLUDE_DIRS})
-
-set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
-set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
-set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
 # Build Nalu as shared libraries if that is how Trilinos was built
 if(Trilinos_BUILD_SHARED_LIBS)
@@ -41,7 +51,6 @@ endif(Trilinos_BUILD_SHARED_LIBS)
 
 # Set Nalu's compilers, CMAKE_FIND_LIBRARY_PREFIXES
 # and CMAKE_FIND_LIBRARY_SUFFIXES, etc, after inheriting settings from Trilinos
-project(Nalu CXX Fortran)
 
 ############################ YAML ######################################
 set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
@@ -126,8 +135,8 @@ if(ENABLE_EXTRA_WARNINGS)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wextra -pedantic")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Trilinos_CXX_COMPILER_FLAGS} ${EXTRA_CXX_FLAGS}")
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${Trilinos_Fortran_COMPILER_FLAGS} ${EXTRA_Fortran_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${EXTRA_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
 
 message("-- CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 message("-- CMAKE_Fortran_FLAGS = ${CMAKE_Fortran_FLAGS}")
