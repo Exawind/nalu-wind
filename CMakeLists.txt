@@ -23,10 +23,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions
 set(CMAKE_CXX_STANDARD_REQUIRED) # Force error if C++11 standard is not supported
 
 find_package(MPI REQUIRED)
-
-set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
-set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
-set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+include_directories(SYSTEM ${MPI_C_INCLUDE_PATH})
+include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
+include_directories(SYSTEM ${MPI_Fortran_INCLUDE_PATH})
 
 find_package(OpenMP)
 
@@ -197,6 +196,7 @@ include_directories(${CMAKE_BINARY_DIR}/include)
 add_library(nalu ${SOURCE} ${HEADER})
 target_link_libraries(nalu ${Trilinos_LIBRARIES})
 target_link_libraries(nalu ${YAML_CPP_LIBRARIES})
+target_link_libraries(nalu ${MPI_CXX_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_C_LIBRARIES})
 
 if(ENABLE_OPENFAST)
   target_link_libraries(nalu ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
@@ -221,6 +221,15 @@ endif()
 
 add_executable(${nalu_ex_name} nalu.C)
 target_link_libraries(${nalu_ex_name} nalu)
+if(MPI_COMPILE_FLAGS)
+  set_target_properties(${nalu_ex_name} PROPERTIES
+    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+endif(MPI_COMPILE_FLAGS)
+if(MPI_LINK_FLAGS)
+  set_target_properties(${nalu_ex_name} PROPERTIES
+    LINK_FLAGS "${MPI_LINK_FLAGS}")
+endif(MPI_LINK_FLAGS)
+
 
 set(utest_ex_name "unittestX")
 if(CMAKE_BUILD_TYPE STREQUAL "DEBUG")
@@ -230,6 +239,14 @@ endif()
 add_executable(${utest_ex_name} unit_tests.C ${UNIT_TESTS_SOURCES})
 target_link_libraries(${utest_ex_name} nalu)
 target_include_directories(${utest_ex_name} PUBLIC "${CMAKE_SOURCE_DIR}/unit_tests")
+if(MPI_COMPILE_FLAGS)
+  set_target_properties(${utest_ex_name} PROPERTIES
+    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+endif(MPI_COMPILE_FLAGS)
+if(MPI_LINK_FLAGS)
+  set_target_properties(${utest_ex_name} PROPERTIES
+    LINK_FLAGS "${MPI_LINK_FLAGS}")
+endif(MPI_LINK_FLAGS)
 
 set(nalu_ex_catalyst_name "naluXCatalyst")
 if(ENABLE_PARAVIEW_CATALYST)
