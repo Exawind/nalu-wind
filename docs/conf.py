@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Nalu documentation build configuration file, created by
+# Nalu-Wind documentation build configuration file, created by
 # sphinx-quickstart on Wed Jan 25 13:52:07 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -100,9 +100,9 @@ source_suffix = ['.rst']
 master_doc = 'index'
 
 # General information about the project.
-project = u'Nalu'
-copyright = u'2017, Nalu Development Team'
-author = u'Nalu Team'
+project = u'Nalu-Wind'
+copyright = u'2018, Nalu-Wind Development Team'
+author = u'Nalu-Wind Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -187,8 +187,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Nalu.tex', u'Nalu Documentation',
-     u'Nalu Development Team', 'manual'),
+    (master_doc, 'Nalu.tex', u'Nalu-Wind Documentation',
+     u'Nalu-Wind Development Team', 'manual'),
 ]
 
 
@@ -197,7 +197,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'nalu', u'Nalu Documentation',
+    (master_doc, 'nalu', u'Nalu-Wind Documentation',
      [author], 1)
 ]
 
@@ -208,7 +208,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Nalu', u'Nalu Documentation',
+    (master_doc, 'Nalu', u'Nalu-Wind Documentation',
      author, 'Nalu', 'One line description of project.',
      'Miscellaneous'),
 ]
@@ -229,8 +229,8 @@ primary_domain = "cpp"
 
 def setup(app):
     app.add_object_type("inpfile", "inpfile",
-                        objname="Nalu Input File Parameter",
-                        indextemplate="pair: %s; Nalu Input File Parameter")
+                        objname="Nalu-Wind Input File Parameter",
+                        indextemplate="pair: %s; Nalu-Wind Input File Parameter")
 
     app.add_config_value("use_breathe", use_breathe, 'env')
     app.add_config_value("on_rtd", readTheDocs, 'env')
