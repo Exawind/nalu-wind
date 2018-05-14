@@ -1,7 +1,7 @@
-Building Nalu Manually
+Building Nalu-Wind Manually
 ======================
 
-If you prefer not to build using Spack, below are instructions which describe the process of building Nalu by hand.
+If you prefer not to build using Spack, below are instructions which describe the process of building Nalu-Wind by hand.
 
 Linux and OSX
 -------------
@@ -11,7 +11,7 @@ The instructions for Linux and OSX are mostly the same, except on each OS you ma
 Homebrew
 ~~~~~~~~
 
-If using OSX, you can install many dependencies using Homebrew. Install `Homebrew <https://github.com/Homebrew/homebrew/wiki/Installation>`__ on your local machine and reference the list below for some packages Homebrew can install for you which allows you to skip the steps describing the build process for each application, but not that you will need to find the location of the applications in which Homebrew has installed them, to use when building Trilinos and Nalu.
+If using OSX, you can install many dependencies using Homebrew. Install `Homebrew <https://github.com/Homebrew/homebrew/wiki/Installation>`__ on your local machine and reference the list below for some packages Homebrew can install for you which allows you to skip the steps describing the build process for each application, but not that you will need to find the location of the applications in which Homebrew has installed them, to use when building Trilinos and Nalu-Wind.
 
 ::
 
@@ -148,7 +148,7 @@ using mpi: /path/to/mpi/openmpi/bin/mpicc
 YAML-CPP
 ~~~~~~~~
 
-YAML is provided `here <https://github.com/jbeder/yaml-cpp>`__. Versions of Nalu before v1.1.0 used earlier versions of YAML-CPP. For brevity only the latest build instructions are discussed and the history of the Nalu git repo can be used to find older installation instructions if required. YAML-CPP has introduced several fixes since v0.5.3 in the master branch, so it is recommended to build the master branch, or choose commit ``5d5bb52e`` which is the latest commit that has been tested as of this writing.
+YAML is provided `here <https://github.com/jbeder/yaml-cpp>`__. Versions of Nalu-Wind before v1.1.0 used earlier versions of YAML-CPP. For brevity only the latest build instructions are discussed and the history of the Nalu-Wind git repo can be used to find older installation instructions if required. YAML-CPP has introduced several fixes since v0.5.3 in the master branch, so it is recommended to build the master branch, or choose commit ``5d5bb52e`` which is the latest commit that has been tested as of this writing.
 
 Prepare:
 
@@ -218,7 +218,7 @@ Build:
 NetCDF v4.3.3.1 and Parallel NetCDF v1.6.1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In order to support all aspects of Nalu's parallel models, this combination of products is required.
+In order to support all aspects of Nalu-Wind's parallel models, this combination of products is required.
 
 Parallel NetCDF v1.6.1
 **********************
@@ -285,10 +285,10 @@ Prepare:
 HYPRE
 ~~~~~
 
-Nalu can use HYPRE solvers and preconditioners, especially for Pressure Poisson
+Nalu-Wind can use HYPRE solvers and preconditioners, especially for Pressure Poisson
 solves. However, this dependency is optional and is not enabled by default.
 Users wishing to use HYPRE solver and preconditioner combination must compile
-HYPRE library and link to it when building Nalu.
+HYPRE library and link to it when building Nalu-Wind.
 
 .. code-block:: bash
 
@@ -308,28 +308,28 @@ HYPRE library and link to it when building Nalu.
       run linear systems with :math:`> 2` billion rows. Otherwise, ``nalu``
       executable will throw an error at runtime for large problems.
 
-   #. Users must pass ``-DENABLE_HYPRE`` option to CMake during Nalu
+   #. Users must pass ``-DENABLE_HYPRE`` option to CMake during Nalu-Wind
       configuration phase. Optionally, the variable `-DHYPRE_DIR`` can be used
       to pass the path of HYPRE install location to CMake.
 
 Build
 *****
 
-Place into the build directory, one of the ``do-configTrilinos_*`` files, that can be obtained from the Nalu repo.
+Place into the build directory, one of the ``do-configTrilinos_*`` files, that can be obtained from the Nalu-Wind repo.
 
-``do-configTrilinos_*`` will be used to run cmake to build trilinos correctly for Nalu. Note that there are two files: one for 'release' and the other 'debug'. The files can be found on the Nalu GitHub site or copied from ``$nalu_build_dir/packages/Nalu/build``, which is created in the Nalu build step documented below. For example:
+``do-configTrilinos_*`` will be used to run cmake to build trilinos correctly for Nalu-Wind. Note that there are two files: one for 'release' and the other 'debug'. The files can be found on the Nalu-Wind GitHub site or copied from ``$nalu_build_dir/packages/nalu-wind/build``, which is created in the Nalu-Wind build step documented below. For example:
 
-Pull latest version of ``do-configTrilinos_*`` from Nalu's GitHub site:
-
-::
-
-    curl -o $nalu_build_dir/packages/Trilinos/build/do-configTrilinos_release https://raw.githubusercontent.com/NaluCFD/Nalu/master/build/do-configTrilinos_release
-
-Or if you create the Nalu directory as directed below, simply copy one of the ``do-configTrilinos_*`` files from local copy of Nalu's git repository:
+Pull latest version of ``do-configTrilinos_*`` from Nalu-Wind's GitHub site:
 
 ::
 
-    cp $nalu_build_dir/packages/Nalu/build/do-configTrilinos_release $nalu_build_dir/packages/Trilinos/build
+    curl -o $nalu_build_dir/packages/Trilinos/build/do-configTrilinos_release https://github.com/Exawind/nalu-wind/blob/master/build/do-configTrilinos_release
+
+Or if you create the Nalu-Wind directory as directed below, simply copy one of the ``do-configTrilinos_*`` files from local copy of Nalu-Wind's git repository:
+
+::
+
+    cp $nalu_build_dir/packages/nalu-wind/build/do-configTrilinos_release $nalu_build_dir/packages/Trilinos/build
 
 Now edit ``do-configTrilinos_release`` to modify the paths so they point to ``$nalu_build_dir/install``.
 
@@ -351,14 +351,14 @@ ParaView Catalyst
 ~~~~~~~~~~~~~~~~~
 
 Optionally enable `ParaView Catalyst <https://www.paraview.org/in-situ/>`__
-for in-situ visualization with Nalu. These instructions can be skipped if 
-you do not require in-situ visualization with Nalu.
+for in-situ visualization with Nalu-Wind. These instructions can be skipped if 
+you do not require in-situ visualization with Nalu-Wind.
 
 Build ParaView SuperBuild v5.3.0
 ********************************
 
 The `ParaView SuperBuild <https://gitlab.kitware.com/paraview/paraview-superbuild>`__ 
-builds ParaView along with all dependencies necessary to enable Catalyst with Nalu.
+builds ParaView along with all dependencies necessary to enable Catalyst with Nalu-Wind.
 Clone the ParaView SuperBuild within ``$nalu_build_dir/packages``:
 
 ::
@@ -394,7 +394,7 @@ Make sure the MPI library names are correct.
     ./do-configParaViewSuperBuild
     make -j 8
    
-Build Nalu ParaView Catalyst Adapter
+Build Nalu-Wind ParaView Catalyst Adapter
 ************************************
 
 Create a new build folder in ``$nalu_build_dir/``:
@@ -415,44 +415,44 @@ top of the file to the root build directory path.
     make
     make install
 
-Nalu
-~~~~
+Nalu-Wind
+~~~~~~~~~
 
-Nalu is provided `here <https://github.com/NaluCFD/Nalu>`__. One may either build the released Nalu version 1.2.0 which matches with Trilinos version 12.12.1, or the master branch of Nalu which matches with the master branch or develop branch of Trilinos. If it is necessary to build an older version of Nalu, refer to the history of the Nalu git repo for instructions on doing so.
+Nalu-Wind is provided `here <https://github.com/exawind/nalu-wind>`__. One may either build the released Nalu-Wind version 1.2.0 which matches with Trilinos version 12.12.1, or the master branch of Nalu-Wind which matches with the master branch or develop branch of Trilinos. If it is necessary to build an older version of Nalu-Wind, refer to the history of the Nalu-Wind git repo for instructions on doing so.
 
 Prepare:
 
 ::
 
-    git clone https://github.com/NaluCFD/Nalu.git
+    git clone https://github.com/Exawind/nalu-wind.git
 
 
 Build
 *****
 
-In ``Nalu/build``, you will find the `do-configNalu <https://github.com/NaluCFD/Nalu/blob/master/build/do-configNalu_release>`__ script. Copy the ``do-configNalu_release`` or ``debug`` file to a new, non-tracked file:
+In ``Nalu-Wind/build``, you will find the `do-configNalu <https://github.com/Exawind/nalu-wind/blob/master/build/do-configNalu_release>`__ script. Copy the ``do-configNalu_release`` or ``debug`` file to a new, non-tracked file:
 
 ::
 
     cp do-configNalu_release do-configNaluNonTracked
 
-Edit the paths at the top of the files by defining the ``nalu_build_dir variable``. Within ``Nalu/build``, execute the following commands:
+Edit the paths at the top of the files by defining the ``nalu_build_dir variable``. Within ``Nalu-Wind/build``, execute the following commands:
 
 ::
 
     ./do-configNaluNonTracked
     make 
 
-This process will create ``naluX`` within the ``Nalu/build`` location. You may also build a debug executable by modifying the Nalu config file to use "Debug". In this case, a ``naluXd`` executable is created.
+This process will create ``naluX`` within the ``Nalu-Wind/build`` location. You may also build a debug executable by modifying the Nalu-Wind config file to use "Debug". In this case, a ``naluXd`` executable is created.
 
 
-Build Nalu with ParaView Catalyst Enabled
-*****************************************
+Build Nalu-Wind with ParaView Catalyst Enabled
+**********************************************
 
-If you have built ParaView Catalyst and the Nalu ParaView Catalyst Adapter, you
-can build Nalu with Catalyst enabled.
+If you have built ParaView Catalyst and the Nalu-Wind ParaView Catalyst Adapter, you
+can build Nalu-Wind with Catalyst enabled.
 
-In ``Nalu/build``, find ``do-configNaluCatalyst``. Copy ``do-configNaluCatalyst`` to
+In ``Nalu-Wind/build``, find ``do-configNaluCatalyst``. Copy ``do-configNaluCatalyst`` to
 a new, non-tracked file:
 
 ::
@@ -461,8 +461,8 @@ a new, non-tracked file:
     ./do-configNaluCatalystNonTracked
     make 
 
-The build will create the same executables as a regular Nalu build, and will also create a  
-bash shell script named ``naluXCatalyst``.  Use ``naluXCatalyst`` to run Nalu
+The build will create the same executables as a regular Nalu-Wind build, and will also create a  
+bash shell script named ``naluXCatalyst``.  Use ``naluXCatalyst`` to run Nalu-Wind
 with Catalyst enabled.  It is also possible to run ``naluX`` with Catalyst enabled by
 first setting the environment variable:
 
@@ -470,10 +470,10 @@ first setting the environment variable:
 
    export CATALYST_ADAPTER_INSTALL_DIR=$nalu_build_dir/install
 
-Nalu will render images to Catalyst in-situ if it encounters the keyword ``catalyst_file_name``
-in the ``output`` section of the Nalu input deck. The ``catalyst_file_name`` command specifies the
+Nalu-Wind will render images to Catalyst in-situ if it encounters the keyword ``catalyst_file_name``
+in the ``output`` section of the Nalu-Wind input deck. The ``catalyst_file_name`` command specifies the
 path to a text file containing ParaView Catalyst input deck commands. Consult the ``catalyst.txt`` files
-in the following Nalu regression test directories for examples of the Catalyst input deck command syntax:
+in the following Nalu-Wind regression test directories for examples of the Catalyst input deck command syntax:
 
 ::
 
@@ -490,10 +490,10 @@ in the following Nalu regression test directories for examples of the Catalyst i
 When the above regression tests are run, Catalyst is run as part of the regression test. The regression
 test checks that the correct number of image output files have been created by the test.
 
-The Nalu Catalyst integration also supports running Catalyst Python script files exported from the ParaView GUI.
+The Nalu-Wind Catalyst integration also supports running Catalyst Python script files exported from the ParaView GUI.
 The procedure for exporting Catalyst Python scripts from ParaView is documented in the 
 `Catalyst user guide <https://www.paraview.org/in-situ/>`__. To use an exported Catalyst script, insert 
-the ``paraview_script_name`` keyword in the ``output`` section of the Nalu input deck. The argument for
+the ``paraview_script_name`` keyword in the ``output`` section of the Nalu-Wind input deck. The argument for
 the ``paraview_script_name`` command contains a file path to the exported script. 
 
 ::

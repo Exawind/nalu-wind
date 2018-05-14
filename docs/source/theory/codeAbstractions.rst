@@ -1,16 +1,14 @@
 Code Abstractions
 -----------------
 
-The Nalu code base is a c++ code-base that significantly leverages the
+The Nalu-Wind code base is a c++ code-base that significantly leverages the
 Sierra Toolkit and Trilinos infrastructure. This section is designed to
 provide a high level overview of the underlying abstractions that the
 code base exercises. For more detailed code information, the developer
 is referred to the Trilinos project (github.com). In the sections that
 follow, only a high level overview is provided.
 
-The developer might also find useful examples in the NaluUnit github
-repository as it contains a number of specialized implementations that
-are very small in nature. In fact, the Nalu code base emerged as a small
+The Nalu-Wind code base emerged as a small
 testbed unit test to evaluate the STK infrastructure. Interestingly, the
 first “algorithm” implementation was a simple :math:`L_2` projected
 nodal gradient. This effort involved reading in a mesh, registering a
@@ -35,7 +33,7 @@ underlying topology, e.g., HEXAHEDRAL-8. A sideset is a set of exposed
 element faces on which a boundary condition is to be applied. Finally, a
 nodeset is a collection of nodes. In general, nodesets are possibly
 output entities as the code does not exercise enforcing physics or
-boundary conditions on nodesets. Although Nalu supports an edge-based
+boundary conditions on nodesets. Although Nalu-Wind supports an edge-based
 scheme, an edge, which is an entity connecting two nodes, is not part of
 the Exodus standard and must be generated within the STK infrastructure.
 Therefore, a particular discretization choice may require
@@ -70,7 +68,7 @@ parallel ranks touching them. Edges and internal faces
 (element:face:element connectivity) have the same rule of locally
 owned/shared and can also be ghosted. Again, edges and internal faces
 must be created by existing STK methods should the physics algorithm
-require them. In Nalu, the choice of element-based or edge-based is
+require them. In Nalu-Wind, the choice of element-based or edge-based is
 determined within the input file.
 
 Connectivity
@@ -390,8 +388,8 @@ field the field data method.
       }
     }
 
-High Level Nalu Abstractions
-++++++++++++++++++++++++++++
+High Level Nalu-Wind Abstractions
++++++++++++++++++++++++++++++++++
 
 Realm
 ~~~~~
@@ -405,7 +403,7 @@ requires fields and parts to solve the desired physics set.
 EquationSystem
 ~~~~~~~~~~~~~~
 
-An equation system holds the set of PDEs of interest. As Nalu uses a
+An equation system holds the set of PDEs of interest. As Nalu-Wind uses a
 pressure projection scheme with split PDE systems, the pre-defined
 systems are, LowMach, MixtureFraction, Enthalpy, TurbKineticEnergy, etc.
 New monolithic equation system can be easily created and plugged into

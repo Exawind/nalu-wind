@@ -1,7 +1,7 @@
 Overset
 -------
 
-Nalu supports simulations using an overset mesh methodology to model complex
+Nalu-Wind supports simulations using an overset mesh methodology to model complex
 geometries. Currently the codebase supports two approaches to determine overset
 mesh connectivity:
 
@@ -131,7 +131,7 @@ connectivity package that was developed as an academic/research counterpart for
 PUNDIT (the overset grid assembler used in NASA/Army CREATE A/V program and
 HELIOS). The base library has been modified to remove the limitation where each
 MPI rank could only own one mesh block. The code has been extended to handle
-multiple mesh blocks per MPI rank to support Nalu's mesh decomposition
+multiple mesh blocks per MPI rank to support Nalu-Wind's mesh decomposition
 strategies.
 
 TIOGA uses a different nomenclature for overset mesh assembly. A brief
@@ -168,7 +168,7 @@ TIOGA
 
   The element that is used to *interpolate* field data from donor mesh to a
   recipient mesh. While TIOGA provides flow interpolation routines, the current
-  implementation in Nalu uses the ``MasterElement`` classes in Nalu to maintain
+  implementation in Nalu-Wind uses the ``MasterElement`` classes in Nalu-Wind to maintain
   consistency between the STK and the TIOGA overset implementations.
 
 **orphan points**

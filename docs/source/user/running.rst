@@ -1,9 +1,9 @@
-Running Nalu
-============
+Running Nalu-Wind
+=================
 
-This section describes the general process of setting up and executing Nalu,
+This section describes the general process of setting up and executing Nalu-Wind,
 understanding the various input file options available to the user, and how to
-extract results and analyze them. For the simplest case, Nalu requires the user
+extract results and analyze them. For the simplest case, Nalu-Wind requires the user
 to provide a YAML input file with the options that control the run along with a
 computational mesh in Exodus-II format. More complex setups might require
 additional files:
@@ -25,7 +25,7 @@ additional files:
 Examples
 --------
 
-Here we describe any examples we have for users to try running Nalu.
+Here we describe any examples we have for users to try running Nalu-Wind.
 
 Tutorials
 ---------

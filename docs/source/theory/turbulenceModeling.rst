@@ -82,7 +82,7 @@ Again, note that the useful identities for the Favre-filtered RANS
 variables do not apply, so that
 :math:`\bar{\tilde{\phi}} \ne \tilde{\phi}` and
 :math:`\overline{\phi''} \ne 0`. The Favre-filtered approach is used for
-all LES models in Nalu.
+all LES models in Nalu-Wind.
 
 .. _theory_standard_smagorinsky_les:
 
@@ -169,7 +169,7 @@ See :math:`k^{sgs}` :ref:`PDE <theory_ksgs_les_model>` section.
 SST RANS Model
 ++++++++++++++
 
-As noted, Nalu does support a SST RANS-based model (the reader is
+As noted, Nalu-Wind does support a SST RANS-based model (the reader is
 referred to the SST equation set description).
 
 UT-A Hybrid Turbulence Model
@@ -204,6 +204,6 @@ Wall Models
 
 Flows are either expected to be fully resolved or, alternatively, under-resolved
 where wall functions are used. A classic law of the wall has been implemented in
-Nalu. Wall models to handle adverse pressure gradients are planned. For more
+Nalu-Wind. Wall models to handle adverse pressure gradients are planned. For more
 information of the form of wall models, please refer to the :ref:`boundary
 condition <theory_boundary_conditions>` section of this manual.

@@ -1,7 +1,7 @@
 Nalu Style Guide
 ================
 
-1. No tabs. Remove them from your editor. Better yet, use eclipse and follow the xml style. Use the format `here <https://github.com/NaluCFD/Nalu/blob/master/SQA/naluEclipseFormat.xml>`__.
+1. No tabs. Remove them from your editor. Better yet, use eclipse and follow the xml style. Use the format `here <https://github.com/exawind/nalu-wind/blob/master/SQA/naluEclipseFormat.xml>`__.
 
 2. Use underscores for private data, e.g., ``const double thePrivateData_``.
 

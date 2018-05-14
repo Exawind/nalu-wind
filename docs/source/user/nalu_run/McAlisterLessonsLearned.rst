@@ -41,7 +41,7 @@ below), while another structured block is used upstream of the test section.
 The meshes first produced used the Discontinuous Galerkin (DG)
 non-conformal interface between the hexahedral tip vortex mesh and the 
 fully unstructured test section mesh. Due to the relative novelty of the
-DG approach and our lack of familiarity with its performance in Nalu, it was
+DG approach and our lack of familiarity with its performance in Nalu-Wind, it was
 decided that a more conservative traditional, conformal interface between 
 the blocks was preferable. Therefore, the tetrahedral test section block
 interfaces to the hexahedral tip vortex block and the upstream block

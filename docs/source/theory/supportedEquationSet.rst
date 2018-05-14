@@ -17,7 +17,7 @@ The continuity equation is always solved in the variable density form.
    \int \frac{\partial \bar{\rho}} {\partial t}\, dV
    + \int \bar{\rho} \widetilde{u}_i  n_i\, dS = 0
 
-Since Nalu uses equal-order interpolation (variables are collocated)
+Since Nalu-Wind uses equal-order interpolation (variables are collocated)
 stabilization is required. The stabilization choice will be developed in
 the pressure stabilization section.
 
@@ -164,7 +164,7 @@ vertical component of the acceleration is small relative to gravity,
 such that the terms containing :math:`\cos\phi` are neglected.  However,
 there is evidence that this so-called traditional approximation is not
 valid for some mesoscale atmospheric phenomena \cite{Gerkema_etal:08},
-and so the full Coriolis term is retained in Nalu. The implementation
+and so the full Coriolis term is retained in Nalu-Wind. The implementation
 proceeds by first finding the velocity vector in the East-North-Up
 coordinate system, then calculating the Coriolis acceleration vector
 (:eq:`coracc`), then transforming this vector back to the model
@@ -447,7 +447,7 @@ ABL Forcing Source Terms
 
 In LES of wind plant atmospheric flows, it is often necessary to
 drive the flow to a predetermined vertical velocity and/or temperature profile.
-In Nalu, this is achieved by adding appropriate
+In Nalu-Wind, this is achieved by adding appropriate
 source terms :math:`\mathrm{f}_i` to the
 momentum equation :eq:`favmom` and
 :math:`S_\theta` to the enthalpy equation :eq:`fav-enth`.
@@ -513,7 +513,7 @@ such that the body force is only a
 function of height :math:`z` and time :math:`t`.
 The implementation allows the
 user to prescribe relaxation factors :math:`\alpha_u` for the source terms that are
-applied. Nalu uses a default value of 1.0 for the relaxation factors if no
+applied. Nalu-Wind uses a default value of 1.0 for the relaxation factors if no
 values are defined in the input file during initialization.
 
 The enthalpy source term works similarly to the momentum source term.
@@ -686,7 +686,7 @@ For simulations in which a buoyancy source term is desired, the code supports th
 Shear Stress Transport (SST) RANS Model Suite
 +++++++++++++++++++++++++++++++++++++++++++++
 
-Although Nalu is primarily expected to be a LES simulation tool, RANS
+Although Nalu-Wind is primarily expected to be a LES simulation tool, RANS
 modeling is supported through the activation of the SST equation set.
 
 It has been observed that standard 1998 :math:`k-\omega` models display

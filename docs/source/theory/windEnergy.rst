@@ -2,12 +2,12 @@
 Wind Energy Modeling
 ====================
 
-Wind energy analysis is the primary application area for the Nalu development
-team. This section describes the theoretical basis of Nalu from a wind energy
+Wind energy analysis is the primary application area for the Nalu-Wind development
+team. This section describes the theoretical basis of Nalu-Wind from a wind energy
 perspective, using nomenclature familiar to wind energy experts and mapping it
-to Nalu concepts and nomenclature described in previous sections. Hopefully,
+to Nalu-Wind concepts and nomenclature described in previous sections. Hopefully,
 this will provide an easier transition for users familiar with WRF and SOWFA to
-Nalu.
+Nalu-Wind.
 
 In order to evaluate the energy output and the structural loading on wind
 turbines, the code must model: 1. the incoming turbulent wind field across the
@@ -15,13 +15,13 @@ entire wind farm, and 2. the evolution of turbine wakes in turbulent inflow
 conditions and their interaction with the downstream turbines. First, the
 governing equations with all the terms necessary to model a wind farm are
 presented with links to implementation and verification details elsewhere in the
-theory and/or verification manuals. A brief description of Nalu's numerical
+theory and/or verification manuals. A brief description of Nalu-Wind's numerical
 discretization schemes is presented next. This is followed by a brief discussion
 of the boundary conditions used to model atmospheric boundary layer (ABL) flows
 with or without wind turbines (currently modeled as actuator sources within the
 flow domain).
 
-Currently Nalu supports two types of wind simulations:
+Currently Nalu-Wind supports two types of wind simulations:
 
 **Precursor simulations**
 
@@ -36,7 +36,7 @@ Currently Nalu supports two types of wind simulations:
   In this case, the wind turbine blades and tower are modeled as actuator source
   terms by coupling to the `OpenFAST
   <https://openfast.readthedocs.io/en/master/>`_ libraries. Velocity fields are
-  sampled at the blade and tower control points within the Nalu domain and the
+  sampled at the blade and tower control points within the Nalu-Wind domain and the
   blade positions and blade/tower loading is provided by OpenFAST to be used as
   source terms within the momentum equation.
 
@@ -137,11 +137,11 @@ farm applications.
 Numerical Discretization & Stabilization
 ----------------------------------------
 
-Nalu provides two dicretization approaches
+Nalu-Wind provides two dicretization approaches
 
 **Control Volume Finite Element Method (CVFEM)**
 
-  Nalu uses a *dual mesh* approach (see :numref:`theory_cvfem_dual_mesh`) where
+  Nalu-Wind uses a *dual mesh* approach (see :numref:`theory_cvfem_dual_mesh`) where
   the *control volumes* are constructed around the nodes of the finite elements
   within the mesh -- see :numref:`windenergy_cvfem_fig`. The equations are
   solved at the *integration* points on the *sub-control surfaces* and/or the
@@ -172,9 +172,9 @@ scheme and its impact on the simulations.
 Time stepping scheme
 --------------------
 
-The time stepping method in Nalu is described in the Fuego theory manual
+The time stepping method in Nalu-Wind is described in the Fuego theory manual
 :cite:`FuegoTheoryManual:2016` for the backward Euler time discretization. The
-implementation details of the BDF2 time stepping scheme used in Nalu is
+implementation details of the BDF2 time stepping scheme used in Nalu-Wind is
 described here. The Navier-Stokes equations are written as 
 
 .. math::
@@ -223,7 +223,7 @@ After each Newton or *outer* iteration, :math:`\phi^{**}` is a better approximat
    {\bf F}_i^* = \left . \frac{\partial F_i}{\partial u_j} \right |^{*} u_j^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V 
    
 Applying Eq. :eq:`linearize-f-phi-star` to Eq. :eq:`fav-mom-nalu-newton`, we get the
-linearized momentum predictor equation solved in Nalu.
+linearized momentum predictor equation solved in Nalu-Wind.
 
 .. math::   
    :label: fav-mom-nalu-linearize-f
@@ -280,16 +280,16 @@ Thus, the final set of equations solved at each outer iteration is
 Initial & Boundary Conditions
 -----------------------------
 
-This section briefly describes the boundary conditions available in Nalu for
+This section briefly describes the boundary conditions available in Nalu-Wind for
 modeling wind farm problems. The terrain and top boundary conditions are
 described first as they are common to precusor and wind farm simulations.
 
 Initial conditions
 ~~~~~~~~~~~~~~~~~~
 
-Nalu has the ability to initialize the internal flow fields to uniform
+Nalu-Wind has the ability to initialize the internal flow fields to uniform
 conditions for all pressure, velocity, temperature, and TKE (:math:`k`) in the
-:inpfile:`input file <initial_conditions.constant>`. Nalu also provides a *user
+:inpfile:`input file <initial_conditions.constant>`. Nalu-Wind also provides a *user
 function* to add perturbations to the velocity field to trigger turbulence
 generation during precursor simulations. To specify more complex flow field
 conditions, a temperature profile with a capping inversion for example, users
@@ -400,31 +400,31 @@ This summation well approximates the integral given in Equation
 :eq:`force-integral` so long as the ratio of actuator element size to
 projection function width :math:`\epsilon` does not exceed a certain threshold.
 
-Presently, Nalu uses an actuator line representation to model the effects of
+Presently, Nalu-Wind uses an actuator line representation to model the effects of
 turbine on the flow field; however, the class hierarchy is designed with the
 potential to add other actuator source terms such as actuator disk, swept
 actuator line and actuator surface capability in the future. The
-:class:`ActuatorLineFAST <sierra::nalu::ActuatorLineFAST>` class couples Nalu
+:class:`ActuatorLineFAST <sierra::nalu::ActuatorLineFAST>` class couples Nalu-Wind
 with NREL's OpenFAST for actuator line simulations of wind turbines. OpenFAST is
 a aero-hydro-servo-elastic tool to model wind turbine developed by the National
 Renewable Energy Laboratory (NREL). The :class:`ActuatorLineFAST
-<sierra::nalu::ActuatorLineFAST>` class allows Nalu to interface as an inflow
+<sierra::nalu::ActuatorLineFAST>` class allows Nalu-Wind to interface as an inflow
 module to OpenFAST by supplying the velocity field information.
 
-Nalu -- OpenFAST Coupling Algorithm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Nalu-Wind -- OpenFAST Coupling Algorithm
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The actuator line implementation allows for flexible blades that are not
 necessarily straight (prebend and sweep). The current implementation requires a
-fixed time step when coupled to OpenFAST, but allows the time step in Nalu to be
+fixed time step when coupled to OpenFAST, but allows the time step in Nalu-Wind to be
 an integral multiple of the OpenFAST time step. At present, a simple time lagged
-FSI model is used to interface Nalu with the turbine model in OpenFAST:
+FSI model is used to interface Nalu-Wind with the turbine model in OpenFAST:
 
   + The velocity at time step at time step :math:`n` is sampled at the actuator
     points and sent to OpenFAST,
-  + OpenFAST advances the turbines upto the next Nalu time step :math:`n+1`,
+  + OpenFAST advances the turbines upto the next Nalu-Wind time step :math:`n+1`,
   + The body forces at the actuator points are converted to the source terms of the momentum 
-    equation to advance Nalu to the next time step :math:`n+1`.
+    equation to advance Nalu-Wind to the next time step :math:`n+1`.
     
 This FSI algorithm is expected to be only first order accurate in time. We are
 currently working on improving the FSI coupling scheme to be second order

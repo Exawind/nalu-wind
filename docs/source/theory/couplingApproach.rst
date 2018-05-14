@@ -41,7 +41,7 @@ sensitive to time step and must be used by an educated user. In general,
 the conclusions are, thus far, that the standard segregated pressure
 projection scheme is preferred.
 
-The algorithm implemented in Nalu is a fourth order approximate
+The algorithm implemented in Nalu-Wind is a fourth order approximate
 projection scheme with monolithic momentum coupling. Evaluation of a
 predictor/corrector approach for reating flow is anticipated in the late
 FY15 time frame.

@@ -1,7 +1,7 @@
-/** \mainpage Nalu Doxygen Main Page
+/** \mainpage Nalu-Wind Doxygen Main Page
  *
  * This is the main page of the source code documentation. This documentation is automatically
- * extracted from annotations in the comments of the source code. Refer to the official Nalu 
+ * extracted from annotations in the comments of the source code. Refer to the official Nalu-Wind
  * documentation on how to write these annotations for Doxygen. Get started browsing the 
  * source code documentation by using the links below.
  *

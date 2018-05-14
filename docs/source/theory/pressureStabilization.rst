@@ -4,8 +4,8 @@ Pressure Stabilization
 ----------------------
 
 A number of papers describing the pressure stabilization approach that
-Nalu uses are in the open literature,
-Domino, :cite:`Domino:2006`, :cite:`Domino:2008`, :cite:`Domino:2014`. Nalu
+Nalu-Wind uses are in the open literature,
+Domino, :cite:`Domino:2006`, :cite:`Domino:2008`, :cite:`Domino:2014`. Nalu-Wind
 supports an incremental fourth order approximate projection scheme with
 time step scaling. By scaling, it is implied that a time scale based on
 either the physical time step or a combined elemental advection and

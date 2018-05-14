@@ -3,5 +3,5 @@ User Manual
 .. toctree::
    :maxdepth: 2
 
-   Building Nalu <building.rst>
-   Running Nalu <running.rst>
+   Building Nalu-Wind <building.rst>
+   Running Nalu-Wind <running.rst>

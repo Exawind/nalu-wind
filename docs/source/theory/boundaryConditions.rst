@@ -124,7 +124,7 @@ dimensionless wall roughness parameter and is described by,
    E = \exp(\kappa C).
 
 
-In Nalu, :math:`\kappa` is set to the value of 0.42 while the value of
+In Nalu-Wind, :math:`\kappa` is set to the value of 0.42 while the value of
 :math:`E` is set to 9.8 for smooth walls (White suggests values of
 :math:`\kappa=0.41` and :math:`E=7.768.`). The viscous sublayer is
 assumed to extend to a value of :math:`y^+` = 11.63.
@@ -728,7 +728,7 @@ In this example, the temperature gradient normal to the symmetry boundary
 is set to -0.003 K/m, where the boundary-normal direction is pointed into 
 the domain.
 
-Nalu does not solve a transport equation for temperature directly, but 
+Nalu-Wind does not solve a transport equation for temperature directly, but 
 rather it solves one for enthalpy. Therfore, the boundary-normal temperature 
 gradient condition is applied internally in the code through application of 
 a compatible heat flux,

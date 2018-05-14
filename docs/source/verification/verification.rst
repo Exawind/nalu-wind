@@ -2,7 +2,7 @@
 ---------------------------------------------------------------
 
 Verification of first-order and second-order temporal accuracy for the
-CVFEM and EBVC formulation in Nalu is performed using the method of
+CVFEM and EBVC formulation in Nalu-Wind is performed using the method of
 manufactured solution (MMS) technique. For the unsteady isothermal,
 uniform laminar physics set, the exact solution of the convecting,
 decaying Taylor vortex is used.
@@ -59,7 +59,7 @@ scheme is confirmed to be first order accurate given the first order
 splitting error noted in this fully implicit momentum solve.
 
 The Steady Taylor Vortex will be used to verify the spatial accuracy for
-the full set of advection operators supported in Nalu.
+the full set of advection operators supported in Nalu-Wind.
 
 
 .. _fo-fourth-tstep:
@@ -252,7 +252,7 @@ suite.
 
 The evaluation of the low-Mach Laplace (or diffusion operator) is of
 great interest to the core supported application space. Although the
-application space for Nalu is characterized by a highly turbulent flow,
+application space for Nalu-Wind is characterized by a highly turbulent flow,
 the usage of an approximate pressure projection scheme always makes the
 chosen Laplace form important. Although the element-based scheme is
 expected to be accurate, it can be problematic on high aspect ratio
@@ -538,7 +538,7 @@ demonstration.
 
 Infrastructure Unit Test
 ++++++++++++++++++++++++
-As noted above, the Nalu application code leverages the STK unit tests within the IO and transfer
+As noted above, the Nalu-Wind application code leverages the STK unit tests within the IO and transfer
 modules. Interested parties may peruse the STK product under a cloned Trilinos cloned project,
 i.e., Trilinos/packages/stk/stk_doc_test. Under the STK product, a variety of search, transfer and 
 input/output tests exist. For example, interpolation in time using the IO infrastructure is captured 
@@ -733,7 +733,7 @@ relative to the specified solution.
    +---------------+---------------------+---------------+---------------+-------+
 
 
-This test is added to Nalu's nightly test suite, testing that the convergence rate between 
+This test is added to Nalu-Wind's nightly test suite, testing that the convergence rate between 
 the 1/32 and 1/64 element sizes is second order.
 
 3D Hybrid 1x2x10 Duct: Specified Pressure Drop
@@ -820,7 +820,7 @@ slight degradation in order-of-accuracy is noted for the thexahedral topology.
 Actuator line simulations coupled to OpenFAST
 ---------------------------------------------
 
-We test the implementation of the actuator line algorithm in Nalu coupled to
+We test the implementation of the actuator line algorithm in Nalu-Wind coupled to
 `OpenFAST <github.com/OpenFAST/OpenFAST>`_ by performing a simulation of a flow
 past an elliptic wing at a constant angle of attack. We compare the solution
 from the coupled simulation to that using lifting line theory
@@ -1027,7 +1027,7 @@ we also see that configuration 1 significantly distorts the temperature from the
 
 
 We also verify that the global mass-flow-rate correction of configuration 2 is correcting the outflow mass flow rate 
-properly.  The output from Nalu showing the correction is correct and is shown as follows:
+properly.  The output from Nalu-Wind showing the correction is correct and is shown as follows:
 
 
 .. code-block:: c++

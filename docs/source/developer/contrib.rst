@@ -1,5 +1,5 @@
-Contributing to Nalu
-====================
+Contributing to Nalu-Wind
+=========================
 
 1. There is no rush to push. We only support production tested capability. Better yet, peform code verification and unit testing.
 

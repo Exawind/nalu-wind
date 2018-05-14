@@ -3,7 +3,7 @@
 Discretization Approach
 -----------------------
 
-Nalu supports two discretizations: control volume finite element and
+Nalu-Wind supports two discretizations: control volume finite element and
 (CVFEM) edge-based vertex centered (EBVC). Each are finite volume
 forumations and each solve for the primitives are are each considered
 vertex-based schemes. Considerable testing has provided a set of general
@@ -219,7 +219,7 @@ approach is strickly second order accurate. When running higher order
 CVFEM, a consistent mass matrix appraoch is required to maintain design
 order of the overall discretization. This is strickly due to the
 pressure stabilization whose accuracy can be affected by the form of the
-projected nodal gradient (see the Nalu theory manual or a variety of
+projected nodal gradient (see the Nalu-Wind theory manual or a variety of
 SNL-based publications).
 
 In the description that follows, :math:`\bar{G_j \phi}` represent the
@@ -366,7 +366,7 @@ Eq. :eq:`generalGrad`.
 Common approaches in the cell-centered community are to use
 the projected nodal gradients for the
 :math:`\frac{\partial u_j}{\partial x_i}` stress component. However, in
-Nalu, the above form of equation is used.
+Nalu-Wind, the above form of equation is used.
 
 Substituting the relations of the velocity gradients for the x and
 y-componnet of force above provides the following expression used for

@@ -1,9 +1,9 @@
 .. _user_nalu_input_file:
 
-Nalu Input File
----------------
+Nalu-Wind Input File
+--------------------
 
-Nalu requires the user to provide an input file, in YAML format, during
+Nalu-Wind requires the user to provide an input file, in YAML format, during
 invocation at the command line using the :option:`naluX -i` flag. By default,
 :program:`naluX` will look for :file:`nalu.i` in the current working directory
 to determine the mesh file as well as the run setup for execution. A sample
@@ -11,10 +11,10 @@ to determine the mesh file as well as the run setup for execution. A sample
 
 .. literalinclude:: nalu.i
    :language: yaml
-   :caption: Sample Nalu input file for the Heat Conduction problem
+   :caption: Sample Nalu-Wind input file for the Heat Conduction problem
    :emphasize-lines: 6, 11, 21, 91
 
-Nalu input file contains the following top-level sections that describe the
+Nalu-Wind input file contains the following top-level sections that describe the
 simulation to be executed.
 
 **Realms**
@@ -41,14 +41,14 @@ simulation to be executed.
       other realms. In this context, it acts as an *output* realm.
 
   Inclusion of an input/output realm will require the user to provide the
-  additional :inpfile:`transfers` section in the Nalu input file that defines
+  additional :inpfile:`transfers` section in the Nalu-Wind input file that defines
   the solution fields that are transferred between the realms. See
   :ref:`nalu_inp_realm` for detailed documentation on all Realm options.
 
 **Linear Solvers**
 
   This section configures the solvers and preconditioners used to solve the
-  resulting linear system of equations within Nalu. The linear system
+  resulting linear system of equations within Nalu-Wind. The linear system
   convergence tolerance and other controls are set here and can be used with
   multiple systems across different realms. See :ref:`nalu_inp_linear_solvers`
   for more details.
@@ -60,7 +60,7 @@ simulation to be executed.
   Courant number constraints, etc. Each time integration section in this list
   can accept one or more :inpfile:`realms` that are integrated in time using
   that specific time integration scheme. See :ref:`nalu_inp_time_integrators`
-  for complete documentation of all time integration options available in Nalu.
+  for complete documentation of all time integration options available in Nalu-Wind.
 
 **Transfers**
 
@@ -69,7 +69,7 @@ simulation to be executed.
   transfer definition provides a mapping of the to and from realm, part, and the
   solution field that must be transferred at every timestep during the
   simulation. See :ref:`nalu_inp_transfers` section for complete documentation of
-  all transfer options available in Nalu.
+  all transfer options available in Nalu-Wind.
 
 **Simulations**
 
@@ -246,11 +246,11 @@ Time Integration Options
 
 .. inpfile:: time_int.termination_time
 
-   Nalu will stop the simulation once the ``termination_time`` has reached.
+   Nalu-Wind will stop the simulation once the ``termination_time`` has reached.
 
 .. inpfile:: time_int.termination_step_count
 
-   Nalu will stop the simulation once the specified ``termination_step_count``
+   Nalu-Wind will stop the simulation once the specified ``termination_step_count``
    timesteps have been completed. If both :inpfile:`time_int.termination_time`
    and this parameter are provided then this parameter will prevail.
 
@@ -897,13 +897,13 @@ Output Options
 
 .. inpfile:: output.output_frequency
 
-   Nalu will write the output file every ``output_frequency`` timesteps. Note
+   Nalu-Wind will write the output file every ``output_frequency`` timesteps. Note
    that currently there is no option to output results at a specified simulation
    time. Default: ``1``.
 
 .. inpfile:: output.output_start
 
-   Nalu will start writing output past the ``output_start`` timestep. Default: ``0``.
+   Nalu-Wind will start writing output past the ``output_start`` timestep. Default: ``0``.
 
 .. inpfile:: output.output_forced_wall_time
 
@@ -941,7 +941,7 @@ Restart Options
    If this variable is present, it indicates that the current run will restart
    from a previous simulation. This requires that the :inpfile:`mesh` be a
    restart file with all the fields necessary for the equation sets defined in
-   the :inpfile:`equation_systems.systems`. Nalu will restart from the closest
+   the :inpfile:`equation_systems.systems`. Nalu-Wind will restart from the closest
    time available in the :inpfile:`mesh` to ``restart_time``. The timesteps
    available in a restart file can be examined by looking at the ``time_whole``
    variable using the ``ncdump`` utility.
@@ -959,7 +959,7 @@ Restart Options
 
 .. inpfile:: restart.restart_start
 
-   Nalu will write a restart file after ``restart_start`` timesteps have elapsed.
+   Nalu-Wind will write a restart file after ``restart_start`` timesteps have elapsed.
 
 .. inpfile:: restart.restart_forced_wall_time
 
@@ -1121,7 +1121,7 @@ Actuator
   
 .. inpfile:: actuator.epsilon
 
-   The spreading width :math:`\epsilon` in the Gaussian spreading function in the `[chordwise, spanwise, chord normal]` coordinate system to spread the forces from the actuator point to the nodes. Nalu currently only supports an isotropic Gaussian spreading function and uses only the value in the first component along the `chordwise` direction.
+   The spreading width :math:`\epsilon` in the Gaussian spreading function in the `[chordwise, spanwise, chord normal]` coordinate system to spread the forces from the actuator point to the nodes. Nalu-Wind currently only supports an isotropic Gaussian spreading function and uses only the value in the first component along the `chordwise` direction.
    
 .. inpfile:: actuator.restart_filename
 
@@ -1481,4 +1481,4 @@ Simulations
 
 .. inpfile:: simulations
 
-   This is the top-level section that orchestrates the entire execution of Nalu.
+   This is the top-level section that orchestrates the entire execution of Nalu-Wind.

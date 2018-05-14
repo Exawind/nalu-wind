@@ -3,7 +3,7 @@ Developer Manual
 .. toctree::
    :maxdepth: 2
 
-   Testing Nalu <testing.rst>
+   Testing Nalu-Wind <testing.rst>
    Source Code Documentation <code.rst>
    How to Document Source Code <write_developer_doc.rst>
    How to Write User Documentation <write_user_doc.rst>
