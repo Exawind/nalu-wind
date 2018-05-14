@@ -128,6 +128,11 @@ public:
     double * error ) override ;
 
   void shifted_face_grad_op(
+    int face_ordinal,
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& gradop) final;
+
+  void shifted_face_grad_op(
     const int nelem,
     const int face_ordinal,
     const double *coords,
@@ -197,6 +202,13 @@ public:
     double *elem_pcoords) override;
 
   const int* side_node_ordinals(int sideOrdinal) final;
+private :
+  void face_grad_op(
+    const int face_ordinal,
+    const bool shifted,
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& gradop);
+
 };
 
 } // namespace nalu

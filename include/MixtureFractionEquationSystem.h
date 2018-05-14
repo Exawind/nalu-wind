@@ -52,7 +52,7 @@ public:
   
   void register_open_bc(
     stk::mesh::Part *part,
-    const stk::topology &theTopo,
+    const stk::topology &partTopo,
     const OpenBoundaryConditionData &openBCData);
 
   void register_wall_bc(

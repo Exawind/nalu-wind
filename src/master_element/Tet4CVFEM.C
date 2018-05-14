@@ -690,6 +690,15 @@ void TetSCS::face_grad_op(
 //-------- shifted_face_grad_op --------------------------------------------
 //--------------------------------------------------------------------------
 void TetSCS::shifted_face_grad_op(
+  int face_ordinal,
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& gradop)
+{
+  // no difference for regular face_grad_op
+  face_grad_op(face_ordinal, coords, gradop);
+}
+
+void TetSCS::shifted_face_grad_op(
   const int nelem,
   const int /*face_ordinal*/,
   const double *coords,
@@ -721,7 +730,7 @@ void TetSCS::shifted_face_grad_op(
           &coords[12*n], &gradop[k*nelem*12+n*12], &det_j[npf*n+k], error, &lerr );
 
       if ( lerr )
-        NaluEnv::self().naluOutput() << "sorry, issue with face_grad_op.." << std::endl;
+        NaluEnv::self().naluOutput() << "sorry, issue with shifted_face_grad_op.." << std::endl;
     }
   }
 }

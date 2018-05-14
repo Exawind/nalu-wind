@@ -254,7 +254,7 @@ namespace nalu{
     std::map<std::string, SolverAlgorithm*>& solverAlgs)
   {
     const stk::topology topo = part.topology();
-    const std::string algName = "AssembleElemSolverAlg_" + topo.name();
+    const std::string algName = eqSys.name_ + "_AssembleElemSolverAlg_" + topo.name();
 
     bool isNotNGP = !(topo == stk::topology::HEXAHEDRON_8 ||
                       topo == stk::topology::HEXAHEDRON_27 ||
@@ -270,7 +270,7 @@ namespace nalu{
       auto* theSolverAlg = new AssembleElemSolverAlgorithm(eqSys.realm_, &part, &eqSys, stk::topology::ELEMENT_RANK, topo.num_nodes(), isNotNGP);
       ThrowRequire(theSolverAlg != nullptr);
 
-      NaluEnv::self().naluOutputP0() << "Created the following alg: " << algName << std::endl;
+      NaluEnv::self().naluOutputP0() << "Created the following interior elem alg: " << algName << std::endl;
       solverAlgs.insert({algName, theSolverAlg});
     }
     else {
@@ -295,7 +295,7 @@ namespace nalu{
     std::map<std::string, SolverAlgorithm*>& solverAlgs)
   {
     const stk::topology topo = part.topology();
-    const std::string algName = "AssembleFaceElemSolverAlg_" + topo.name() + "_"+elemTopo.name();
+    const std::string algName = eqSys.name_ + "_AssembleFaceElemSolverAlg_" + topo.name() + "_" + elemTopo.name();
 
     bool isNotNGP = !(elemTopo == stk::topology::HEXAHEDRON_8 ||
                       elemTopo == stk::topology::HEXAHEDRON_27 ||
@@ -312,7 +312,7 @@ namespace nalu{
                                             topo.num_nodes(), elemTopo.num_nodes(), isNotNGP);
       ThrowRequire(theSolverAlg != nullptr);
 
-      NaluEnv::self().naluOutputP0() << "Created the following alg: " << algName << std::endl;
+      NaluEnv::self().naluOutputP0() << "Created the following bc face/elem alg: " << algName << std::endl;
       solverAlgs.insert({algName, theSolverAlg});
     }
     else {
@@ -335,8 +335,8 @@ namespace nalu{
     std::map<std::string, SolverAlgorithm*>& solverAlgs)
   {
     const stk::topology topo = part.topology();
-    const std::string algName = "AssembleElemSolverAlg_" + topo.name();
-
+    const std::string algName = eqSys.name_ + "_AssembleElemSolverAlg_" + topo.name();
+    
     bool isNotNGP = !(topo == stk::topology::QUAD_4 ||
                       topo == stk::topology::QUAD_9 ||
                       topo == stk::topology::TRI_3 ||
@@ -350,7 +350,7 @@ namespace nalu{
                                                            eqSys.realm_.meta_data().side_rank(), topo.num_nodes(), isNotNGP);
       ThrowRequire(theSolverAlg != nullptr);
 
-      NaluEnv::self().naluOutputP0() << "Created the following alg: " << algName << std::endl;
+      NaluEnv::self().naluOutputP0() << "Created the following bc face alg: " << algName << std::endl;
       solverAlgs.insert({algName, theSolverAlg});
     }
     else {

@@ -591,19 +591,30 @@ void Quad42DSCS::shifted_grad_op(
 //-------- face_grad_op ----------------------------------------------------
 //--------------------------------------------------------------------------
 void Quad42DSCS::face_grad_op(
-  int face_ordinal,
+  const int face_ordinal,
+  const bool shifted,
   SharedMemView<DoubleType**>& coords,
   SharedMemView<DoubleType***>& gradop)
 {
   using traits = AlgTraitsEdge2DQuad42D;
 
+  const std::vector<double> &p = shifted ? intgExpFaceShift_: intgExpFace_;
   constexpr int derivSize = traits::numFaceIp_ * traits::nodesPerElement_ * traits::nDim_;
   DoubleType psi[derivSize];
   SharedMemView<DoubleType***> deriv(psi, traits::numFaceIp_, traits::nodesPerElement_, traits::nDim_);
   const int len = 2*traits::numFaceIp_;
-  const std::vector<double> exp_face(&intgExpFace_[len*face_ordinal], &intgExpFace_[len*(face_ordinal+1)]);
+  const std::vector<double> exp_face(&p[len*face_ordinal], &p[len*(face_ordinal+1)]);
   quad_derivative(exp_face, deriv);
   generic_grad_op<traits>(deriv, coords, gradop);
+}
+
+void Quad42DSCS::face_grad_op(
+  int face_ordinal,
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& gradop)
+{
+  constexpr bool shifted = false;
+  face_grad_op(face_ordinal, shifted, coords, gradop);
 }
 
 void Quad42DSCS::face_grad_op(
@@ -646,6 +657,15 @@ void Quad42DSCS::face_grad_op(
 //--------------------------------------------------------------------------
 //-------- shifted_face_grad_op --------------------------------------------
 //--------------------------------------------------------------------------
+void Quad42DSCS::shifted_face_grad_op(
+  int face_ordinal,
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& gradop)
+{
+  constexpr bool shifted = true;
+  face_grad_op(face_ordinal, shifted, coords, gradop);
+}
+
 void Quad42DSCS::shifted_face_grad_op(
   const int nelem,
   const int face_ordinal,

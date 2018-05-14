@@ -658,6 +658,15 @@ void Tri32DSCS::face_grad_op(
 //-------- shifted_face_grad_op --------------------------------------------
 //--------------------------------------------------------------------------
 void Tri32DSCS::shifted_face_grad_op(
+  int face_ordinal,
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& gradop)
+{
+  // same as regular face_grad_op
+  face_grad_op(face_ordinal, coords, gradop);
+}
+
+void Tri32DSCS::shifted_face_grad_op(
   const int nelem,
   const int /*face_ordinal*/,
   const double *coords,

@@ -194,6 +194,11 @@ public:
     double *det_j,
     double * error );
 
+  void shifted_face_grad_op(
+    int face_ordinal,
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& gradop) final;
+
   void general_face_grad_op(
     const int face_ordinal,
     const double *isoParCoord,
@@ -221,8 +226,9 @@ private:
   using QuadFaceGradType = SharedMemView<DoubleType***>;
   using TriFaceGradType = SharedMemView<DoubleType***>;
 
-  void face_grad_op_quad(int face_ordinal, SharedMemView<DoubleType**>& coords, QuadFaceGradType& gradop);
-  void face_grad_op_tri(int face_ordinal, SharedMemView<DoubleType**>& coords, TriFaceGradType& gradop);
+  void face_grad_op(const int face_ordinal, const bool shifted, SharedMemView<DoubleType**>& coords, QuadFaceGradType& gradop);
+  void face_grad_op_quad(const int face_ordinal, const bool shifted, SharedMemView<DoubleType**>& coords, QuadFaceGradType& gradop);
+  void face_grad_op_tri(const int face_ordinal, const bool shifted, SharedMemView<DoubleType**>& coords, TriFaceGradType& gradop);
 };
 
 } // namespace nalu

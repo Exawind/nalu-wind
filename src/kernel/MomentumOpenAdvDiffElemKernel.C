@@ -119,6 +119,10 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
   DoubleType w_uspecBip[BcAlgTraits::nDim_];
   DoubleType w_coordBip[BcAlgTraits::nDim_];
   DoubleType w_nx[BcAlgTraits::nDim_];
+  DoubleType w_GuBip[BcAlgTraits::nDim_*BcAlgTraits::nDim_];
+  DoubleType w_NOC[BcAlgTraits::nDim_];
+  DoubleType w_coordScs[BcAlgTraits::nDim_];
+  DoubleType w_dxBip[BcAlgTraits::nDim_];
 
   const int *face_node_ordinals = meSCS_->side_node_ordinals(elemFaceOrdinal);
  
@@ -212,10 +216,56 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
     const DoubleType mdotLeaving = stk::math::if_then_else(tmdot > 0, 1.0, 0.0);
     const DoubleType om_mdotLeaving = 1.0 - mdotLeaving;
     
+    // prepare for NOC when entraining and using the opposing SCS value; dui/dxj*nj = 0
     for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) {
-
+      w_coordScs[i] = 0.0;
+    }
+    
+    // compute coord and opposing face
+    for ( int ic = 0; ic < BcAlgTraits::nodesPerElement_; ++ic ) {
+      const DoubleType rAdv = vf_adv_shape_function_(ip,ic);
+      for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
+        w_coordScs[j] += rAdv*v_coordinates(ic,j);
+      }
+    }
+    
+    // compute dxBip and zero tensor GjUi
+    for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) {
+      w_dxBip[i] = w_coordBip[i] - w_coordScs[i];
+      for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
+        w_GuBip[i*BcAlgTraits::nDim_+j] = 0.0;
+      }
+    }
+    
+    // compute Gjui at bip
+    for ( int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic ) {
+      const DoubleType rAdv = vf_adv_shape_function_(ip,ic);
+      for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) { 
+        for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
+          w_GuBip[i*BcAlgTraits::nDim_+j] += rAdv*vf_Gjui(ic,i,j);
+        }
+      }
+    }
+    
+    // NOC term for each component
+    for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) {
+      DoubleType GlUidxl = 0.0;
+      DoubleType Gn = 0.0;
+      DoubleType an = 0.0;
+      DoubleType adx = 0.0;
+      for ( int l = 0; l < BcAlgTraits::nDim_; ++l ) {
+        GlUidxl += w_GuBip[i*BcAlgTraits::nDim_+l]*w_dxBip[l];
+        Gn += w_GuBip[i*BcAlgTraits::nDim_+l]*w_nx[l];
+        adx += vf_exposedAreaVec(ip,l)*w_dxBip[l];
+        an += vf_exposedAreaVec(ip,l)*w_nx[l];
+      }
+      w_NOC[i] = GlUidxl - Gn*adx/an;
+    }
+    
+    for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) {
+      
       const int indexR = nearestNode*BcAlgTraits::nDim_ + i;
-
+      
       //================
       // flow is leaving
       //================
@@ -253,19 +303,19 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
         const DoubleType nj = w_nx[j];
         ubipnx += w_uBip[j]*nj;
         ubipExtrapnx += w_uBipExtrap[j]*nj;
-        uscsnx += w_uScs[j]*nj;
+        uscsnx += (w_uScs[j] + w_NOC[j])*nj;
         uspecbipnx += w_uspecBip[j]*nj;
       }
 
       const DoubleType nxi = w_nx[i];
-
+      
       // total advection; with tangeant entrain
       const DoubleType afluxEntraining =
-          tmdot*(pecfac*ubipExtrapnx+om_pecfac*(nfEntrain_*ubipnx + om_nfEntrain_*uscsnx))*nxi
-          + tmdot*(w_uspecBip[i] - uspecbipnx*nxi);
+        tmdot*(pecfac*ubipExtrapnx+om_pecfac*(nfEntrain_*ubipnx + om_nfEntrain_*uscsnx))*nxi
+        + tmdot*(w_uspecBip[i] - uspecbipnx*nxi);
 
       rhs(indexR) -= afluxEntraining*om_mdotLeaving;
-
+      
       // upwind and central
       for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
         const DoubleType nxinxj = nxi*w_nx[j];

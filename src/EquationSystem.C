@@ -490,7 +490,6 @@ EquationSystem::supp_alg_is_requested(std::vector<std::string> names)
   return found;
 }
 
-
 bool
 EquationSystem::nodal_src_is_requested()
 {
