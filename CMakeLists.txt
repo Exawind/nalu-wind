@@ -1,5 +1,7 @@
 ############################ BASE ######################################
 cmake_minimum_required (VERSION 3.1)
+project(Nalu CXX C Fortran)
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ########################## OPTIONS #####################################
@@ -16,6 +18,17 @@ option(ENABLE_HYPRE "Use HYPRE Solver library" OFF)
 option(ENABLE_WARNINGS "Add -Wall to show compiler warnings" ON)
 option(ENABLE_EXTRA_WARNINGS "Add -Wextra to show even more compiler warnings" OFF)
 
+set(CMAKE_CXX_STANDARD 11)       # Set nalu-wind C++11 standard
+set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions
+set(CMAKE_CXX_STANDARD_REQUIRED) # Force error if C++11 standard is not supported
+
+find_package(MPI REQUIRED)
+include_directories(SYSTEM ${MPI_C_INCLUDE_PATH})
+include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
+include_directories(SYSTEM ${MPI_Fortran_INCLUDE_PATH})
+
+find_package(OpenMP)
+
 ########################## TRILINOS ####################################
 set(CMAKE_PREFIX_PATH ${Trilinos_DIR} ${CMAKE_PREFIX_PATH})
 set(CMAKE_PREFIX_PATH ${Trilinos_PATH} ${CMAKE_PREFIX_PATH})
@@ -25,10 +38,6 @@ if(Trilinos_FOUND)
 endif()
 include_directories(SYSTEM ${Trilinos_INCLUDE_DIRS})
 include_directories(SYSTEM ${Trilinos_TPL_INCLUDE_DIRS})
-
-set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
-set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
-set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
 # Build Nalu as shared libraries if that is how Trilinos was built
 if(Trilinos_BUILD_SHARED_LIBS)
@@ -41,7 +50,6 @@ endif(Trilinos_BUILD_SHARED_LIBS)
 
 # Set Nalu's compilers, CMAKE_FIND_LIBRARY_PREFIXES
 # and CMAKE_FIND_LIBRARY_SUFFIXES, etc, after inheriting settings from Trilinos
-project(Nalu CXX Fortran)
 
 ############################ YAML ######################################
 set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
@@ -126,8 +134,13 @@ if(ENABLE_EXTRA_WARNINGS)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wextra -pedantic")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Trilinos_CXX_COMPILER_FLAGS} ${EXTRA_CXX_FLAGS}")
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${Trilinos_Fortran_COMPILER_FLAGS} ${EXTRA_Fortran_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${EXTRA_Fortran_FLAGS}")
+
+if (OPENMP_FOUND)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
+endif()
 
 message("-- CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 message("-- CMAKE_Fortran_FLAGS = ${CMAKE_Fortran_FLAGS}")
@@ -183,6 +196,7 @@ include_directories(${CMAKE_BINARY_DIR}/include)
 add_library(nalu ${SOURCE} ${HEADER})
 target_link_libraries(nalu ${Trilinos_LIBRARIES})
 target_link_libraries(nalu ${YAML_CPP_LIBRARIES})
+target_link_libraries(nalu ${MPI_CXX_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_C_LIBRARIES})
 
 if(ENABLE_OPENFAST)
   target_link_libraries(nalu ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
@@ -207,6 +221,15 @@ endif()
 
 add_executable(${nalu_ex_name} nalu.C)
 target_link_libraries(${nalu_ex_name} nalu)
+if(MPI_COMPILE_FLAGS)
+  set_target_properties(${nalu_ex_name} PROPERTIES
+    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+endif(MPI_COMPILE_FLAGS)
+if(MPI_LINK_FLAGS)
+  set_target_properties(${nalu_ex_name} PROPERTIES
+    LINK_FLAGS "${MPI_LINK_FLAGS}")
+endif(MPI_LINK_FLAGS)
+
 
 set(utest_ex_name "unittestX")
 if(CMAKE_BUILD_TYPE STREQUAL "DEBUG")
@@ -216,6 +239,14 @@ endif()
 add_executable(${utest_ex_name} unit_tests.C ${UNIT_TESTS_SOURCES})
 target_link_libraries(${utest_ex_name} nalu)
 target_include_directories(${utest_ex_name} PUBLIC "${CMAKE_SOURCE_DIR}/unit_tests")
+if(MPI_COMPILE_FLAGS)
+  set_target_properties(${utest_ex_name} PROPERTIES
+    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+endif(MPI_COMPILE_FLAGS)
+if(MPI_LINK_FLAGS)
+  set_target_properties(${utest_ex_name} PROPERTIES
+    LINK_FLAGS "${MPI_LINK_FLAGS}")
+endif(MPI_LINK_FLAGS)
 
 set(nalu_ex_catalyst_name "naluXCatalyst")
 if(ENABLE_PARAVIEW_CATALYST)
