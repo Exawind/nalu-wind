@@ -54,7 +54,7 @@ public:
 
   void register_wall_bc(
     stk::mesh::Part *part,
-    const stk::topology &theTopo,
+    const stk::topology &partTopo,
     const WallBoundaryConditionData &wallBCData);
  
   virtual void register_non_conformal_bc(

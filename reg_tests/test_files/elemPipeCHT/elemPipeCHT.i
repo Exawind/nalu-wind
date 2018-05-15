@@ -73,6 +73,7 @@ realms:
 
     solution_options:
       name: myOptionsHC
+      use_consolidated_face_elem_bc_algorithm: yes
       options:
         - projected_nodal_gradient:
             temperature: element

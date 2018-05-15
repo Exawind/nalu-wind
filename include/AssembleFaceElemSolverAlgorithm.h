@@ -66,7 +66,8 @@ public:
 
       const bool interleaveMeViews = false;
 
-      stk::mesh::Selector s_locally_owned_union = bulk.mesh_meta_data().locally_owned_part() & *part_;
+      stk::mesh::Selector s_locally_owned_union = bulk.mesh_meta_data().locally_owned_part() 
+        &stk::mesh::selectUnion(partVec_);
       stk::mesh::EntityRank sideRank = bulk.mesh_meta_data().side_rank();
       stk::mesh::BucketVector const& buckets = bulk.get_buckets(sideRank, s_locally_owned_union );
 
@@ -100,12 +101,12 @@ public:
                 break;
               }
 
-              smdata.connectedNodes[simdFaceIndex] = bulk.begin_nodes(face);
+              const stk::mesh::Entity* elems = bulk.begin_elements(face);
+  
+              smdata.connectedNodes[simdFaceIndex] = bulk.begin_nodes(elems[0]);
               smdata.elemFaceOrdinal = thisElemFaceOrdinal;
               elemFaceOrdinal = thisElemFaceOrdinal;
               sierra::nalu::fill_pre_req_data(faceDataNeeded_, bulk, face, *smdata.faceViews[simdFaceIndex], interleaveMeViews);
-  
-              const stk::mesh::Entity* elems = bulk.begin_elements(face);
               sierra::nalu::fill_pre_req_data(elemDataNeeded_, bulk, elems[0], *smdata.elemViews[simdFaceIndex], interleaveMeViews);
               ++simdFaceIndex;
             }
@@ -125,7 +126,6 @@ public:
 
   ElemDataRequests faceDataNeeded_;
   ElemDataRequests elemDataNeeded_;
-  stk::mesh::Part* part_;
   unsigned numDof_;
   unsigned nodesPerFace_;
   unsigned nodesPerElem_;
