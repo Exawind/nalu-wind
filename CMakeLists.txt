@@ -224,7 +224,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "DEBUG")
    set(utest_ex_name "unittestXd")
 endif()
 
-add_executable(${utest_ex_name} unit_tests.C ${NALU_UNIT_SOURCES} ${NALU_UNIT_HEADERS})
+add_executable(${utest_ex_name} unit_tests.C ${NALU_UNIT_SOURCES})
 target_link_libraries(${utest_ex_name} nalu)
 target_include_directories(${utest_ex_name} PUBLIC "${CMAKE_SOURCE_DIR}/unit_tests")
 
