@@ -1,0 +1,19 @@
+add_sources(GlobalHeaderList
+   ConstantPropertyEvaluator.h
+   EnthalpyPropertyEvaluator.h
+   GenericPropAlgorithm.h
+   HDF5TablePropAlgorithm.h
+   IdealGasPropertyEvaluator.h
+   InverseDualVolumePropAlgorithm.h
+   InversePropAlgorithm.h
+   LinearPropAlgorithm.h
+   MaterialPropertyData.h
+   PolynomialPropertyEvaluator.h
+   PropertyEvaluator.h
+   ReferencePropertyData.h
+   SpecificHeatPropertyEvaluator.h
+   SutherlandsPropertyEvaluator.h
+   TemperaturePropAlgorithm.h
+   ThermalConductivityFromPrandtlPropAlgorithm.h
+   WaterPropertyEvaluator.h
+)

@@ -1,0 +1,18 @@
+add_sources(GlobalSourceList
+   ConstantPropertyEvaluator.C
+   EnthalpyPropertyEvaluator.C
+   GenericPropAlgorithm.C
+   HDF5TablePropAlgorithm.C
+   IdealGasPropertyEvaluator.C
+   InverseDualVolumePropAlgorithm.C
+   InversePropAlgorithm.C
+   LinearPropAlgorithm.C
+   MaterialPropertyData.C
+   PolynomialPropertyEvaluator.C
+   ReferencePropertyData.C
+   SpecificHeatPropertyEvaluator.C
+   SutherlandsPropertyEvaluator.C
+   TemperaturePropAlgorithm.C
+   ThermalConductivityFromPrandtlPropAlgorithm.C
+   WaterPropertyEvaluator.C
+)

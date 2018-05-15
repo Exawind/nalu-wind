@@ -1,0 +1,12 @@
+add_sources(GlobalHeaderList
+   MomentumNSOElemKernel.h
+   MomentumNSOElemSuppAlgDep.h
+   MomentumNSOGradElemSuppAlg.h
+   MomentumNSOKeElemKernel.h
+   MomentumNSOKeElemSuppAlgDep.h
+   MomentumNSOSijElemKernel.h
+   ScalarNSOElemKernel.h
+   ScalarNSOElemSuppAlgDep.h
+   ScalarNSOKeElemKernel.h
+   ScalarNSOKeElemSuppAlg.h
+)

@@ -1,0 +1,22 @@
+add_sources(GlobalSourceList
+   CalculateHexVolume.F
+   CalculateOctohedronVolume.F
+   CalculatePolyhedralArea.F
+   CalculatePolyhedralVolume.F
+   CalculateQuadArea.F
+   Hex27CVFEM.C
+   Hex8CVFEM.C
+   Hex8FEM.C
+   MasterElement.C
+   MasterElementFactory.C
+   MasterElementHO.C
+   MasterElementUtils.C
+   MasterElementWork.F
+   Pyr5CVFEM.C
+   Quad42DCVFEM.C
+   Quad43DCVFEM.C
+   Quad92DCVFEM.C
+   Tet4CVFEM.C
+   Tri32DCVFEM.C
+   Wed6CVFEM.C
+)

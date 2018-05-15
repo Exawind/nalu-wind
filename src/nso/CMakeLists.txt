@@ -1,0 +1,12 @@
+add_sources(GlobalSourceList
+   MomentumNSOElemKernel.C
+   MomentumNSOElemSuppAlgDep.C
+   MomentumNSOGradElemSuppAlg.C
+   MomentumNSOKeElemKernel.C
+   MomentumNSOKeElemSuppAlgDep.C
+   MomentumNSOSijElemKernel.C
+   ScalarNSOElemKernel.C
+   ScalarNSOElemSuppAlgDep.C
+   ScalarNSOKeElemKernel.C
+   ScalarNSOKeElemSuppAlg.C
+)

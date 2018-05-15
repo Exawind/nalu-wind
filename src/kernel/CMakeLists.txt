@@ -1,0 +1,28 @@
+add_sources(GlobalSourceList
+   ContinuityAdvElemKernel.C
+   ContinuityMassElemKernel.C
+   ContinuityOpenElemKernel.C
+   KernelBuilderLog.C
+   MomentumActuatorSrcElemKernel.C
+   MomentumAdvDiffElemKernel.C
+   MomentumBuoyancyBoussinesqSrcElemKernel.C
+   MomentumBuoyancySrcElemKernel.C
+   MomentumCoriolisSrcElemKernel.C
+   MomentumHybridTurbElemKernel.C
+   MomentumMassElemKernel.C
+   MomentumOpenAdvDiffElemKernel.C
+   MomentumSymmetryElemKernel.C
+   MomentumUpwAdvDiffElemKernel.C
+   MomentumWallFunctionElemKernel.C
+   ScalarAdvDiffElemKernel.C
+   ScalarDiffElemKernel.C
+   ScalarDiffFemKernel.C
+   ScalarMassElemKernel.C
+   ScalarOpenAdvElemKernel.C
+   ScalarUpwAdvDiffElemKernel.C
+   SpecificDissipationRateSSTSrcElemKernel.C
+   TurbKineticEnergyKsgsDesignOrderSrcElemKernel.C
+   TurbKineticEnergyKsgsSrcElemKernel.C
+   TurbKineticEnergySSTDESSrcElemKernel.C
+   TurbKineticEnergySSTSrcElemKernel.C
+)
