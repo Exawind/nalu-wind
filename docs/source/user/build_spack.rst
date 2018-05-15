@@ -14,8 +14,8 @@ Step 1
 ~~~~~~
 
 This assumes you have a (Homebrew) installation of GCC installed already 
-(we are using GCC 7.2.0). These instructions have been tested on OSX 10.11 and MacOS 10.12.
-MacOS 10.12 will not build CMake or Pkg-Config with GCC anymore because they will pick up 
+(we are using GCC 7.2.0). These instructions have been tested on OSX 10.11, MacOS 10.12, adn MacOS 10.13.
+MacOS 10.12/10.13 will not build CMake or Pkg-Config with GCC anymore because they will pick up 
 system header files that have objective C code in them. We build Nalu-Wind using Spack on MacOS Sierra by
 using Homebrew to install ``cmake`` and ``pkg-config`` and defining these 
 as external packages in Spack (see 
@@ -99,13 +99,6 @@ repo (we will be cloning into the ${HOME} directory):
 
    cd ${HOME} && git clone https://github.com/exawind/build-test.git
 
-One first thing to note is that the login nodes and the compute nodes on Peregrine 
-run different OSes. So programs will be organized in Spack according to the OS 
-they were built on, i.e. a login node (rhel6) typically called the front-end or 
-compute node (centos6) typically called the back-end. You can see this in the 
-directory structure where the programs will be built which will be located 
-in ``${SPACK_ROOT}/opt``. You should build on a compute node.
-
 Step 2
 ~~~~~~
 
@@ -117,21 +110,17 @@ Step 3
 ~~~~~~
 
 Configure your environment in the recommended way. You should purge all 
-modules and only load GCC 5.2.0 in your login script. In the example 
+modules and load GCC 6.2.0 in your login script. In the example 
 `.bash_profile <https://github.com/exawind/build-test/blob/master/configs/machines/peregrine/dot_bash_profile_peregrine.sh>`__
 in the repo we also load Python. If you have problems building with Spack on 
 Peregrine, it is most likely your environment has deviated from this 
 recommended one. Even when building with the Intel compiler in Spack, 
-this is the recommended environment.
+this is the recommended environment at login.
 
 ::
 
-   {
    module purge
-   module load gcc/5.2.0
-   module load python/2.7.8
-   unload mkl
-   } &> /dev/null
+   module load gcc/6.2.0
 
 Also add Spack shell support to your ``.bash_profile`` as shown in the example 
 `.bash_profile <https://github.com/exawind/build-test/blob/master/configs/machines/peregrine/dot_bash_profile_peregrine.sh>`__

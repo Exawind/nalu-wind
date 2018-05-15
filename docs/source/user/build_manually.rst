@@ -23,7 +23,7 @@ If using OSX, you can install many dependencies using Homebrew. Install `Homebre
     brew install superlu43
 
 
-CMake v3.6.1
+CMake v3.9.4
 ~~~~~~~~~~~~
 
 CMake is provided `here <http://www.cmake.org/download/>`__.
@@ -33,14 +33,13 @@ Prepare:
 ::
 
     cd $nalu_build_dir/packages
-    curl -o cmake-3.6.1.tar.gz http://www.cmake.org/files/v3.6/cmake-3.6.1.tar.gz
-    tar xf cmake-3.6.1.tar.gz
+    tar xf cmake-3.9.4.tar.gz
 
 Build:
 
 ::
 
-    cd $nalu_build_dir/packages/cmake-3.6.1
+    cd $nalu_build_dir/packages/cmake-3.9.4
     ./configure --prefix=$nalu_build_dir/install
     make
     make install
@@ -55,7 +54,6 @@ Prepare:
 ::
 
     cd $nalu_build_dir/packages
-    curl -o superlu_4.3.tar.gz http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_4.3.tar.gz
     tar xf superlu_4.3.tar.gz
 
 Build:
@@ -94,7 +92,7 @@ Next, make some new directories:
     make
     cp SRC/*.h $nalu_build_dir/install/SuperLU_4.3/include
 
-Libxml2 v2.9.2
+Libxml2 v2.9.4
 ~~~~~~~~~~~~~~
 
 Libxml2 is found `here <http://www.xmlsoft.org/sources/>`__.
@@ -104,19 +102,18 @@ Prepare:
 ::
 
     cd $nalu_build_dir/packages
-    curl -o libxml2-2.9.2.tar.gz http://www.xmlsoft.org/sources/libxml2-2.9.2.tar.gz
-    tar -xvf libxml2-2.9.2.tar.gz
+    tar -xvf libxml2-2.9.4.tar.gz
 
 Build:
 
 ::
 
-    cd $nalu_build_dir/packages/libxml2-2.9.2
+    cd $nalu_build_dir/packages/libxml2-2.9.4
     CC=mpicc CXX=mpicxx ./configure -without-python --prefix=$nalu_build_dir/install
     make
     make install
 
-Boost v1.60.0
+Boost v1.66.0
 ~~~~~~~~~~~~~
 
 Boost is found `here <http://www.boost.org>`__.
@@ -126,14 +123,13 @@ Prepare:
 ::
 
     cd $nalu_build_dir/packages
-    curl -o boost_1_60_0.tar.gz http://iweb.dl.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.tar.gz
-    tar -zxvf boost_1_60_0.tar.gz
+    tar -zxvf boost_1_66_0.tar.gz
 
 Build:
 
 ::
 
-    cd $nalu_build_dir/packages/boost_1_60_0
+    cd $nalu_build_dir/packages/boost_1_66_0
     ./bootstrap.sh --prefix=$nalu_build_dir/install --with-libraries=signals,regex,filesystem,system,mpi,serialization,thread,program_options,exception
 
 Next, edit ``project-config.jam`` and add a 'using mpi', e.g,
@@ -145,10 +141,10 @@ using mpi: /path/to/mpi/openmpi/bin/mpicc
     ./b2 -j 4 2>&1 | tee boost_build_one
     ./b2 -j 4 install 2>&1 | tee boost_build_intall
 
-YAML-CPP
-~~~~~~~~
+YAML-CPP 0.6.2
+~~~~~~~~~~~~~~
 
-YAML is provided `here <https://github.com/jbeder/yaml-cpp>`__. Versions of Nalu-Wind before v1.1.0 used earlier versions of YAML-CPP. For brevity only the latest build instructions are discussed and the history of the Nalu-Wind git repo can be used to find older installation instructions if required. YAML-CPP has introduced several fixes since v0.5.3 in the master branch, so it is recommended to build the master branch, or choose commit ``5d5bb52e`` which is the latest commit that has been tested as of this writing.
+YAML is provided `here <https://github.com/jbeder/yaml-cpp>`__. Versions of Nalu before v1.1.0 used earlier versions of YAML-CPP. For brevity only the latest build instructions are discussed and the history of the Nalu-Wind git repo can be used to find older installation instructions if required.
 
 Prepare:
 
@@ -156,6 +152,7 @@ Prepare:
 
     cd $nalu_build_dir/packages
     git clone https://github.com/jbeder/yaml-cpp
+    cd yaml-cpp && git checkout yaml-cpp-0.6.2
 
 Build:
 
@@ -169,8 +166,8 @@ Build:
     make install
 
 
-Zlib v1.2.8
-~~~~~~~~~~~
+Zlib v1.2.11
+~~~~~~~~~~~~
 
 Zlib is provided `here <http://www.zlib.net>`__.
 
@@ -179,48 +176,46 @@ Prepare:
 ::
 
     cd $nalu_build_dir/packages
-    curl -o zlib-1.2.8.tar.gz http://zlib.net/zlib-1.2.8.tar.gz
-    tar -zxvf zlib-1.2.8.tar.gz
+    tar -zxvf zlib-1.2.11.tar.gz
 
 Build:
 
 ::
 
-    cd $nalu_build_dir/packages/zlib-1.2.8
+    cd $nalu_build_dir/packages/zlib-1.2.11
     CC=gcc CXX=g++ CFLAGS=-O3 CXXFLAGS=-O3 ./configure --prefix=$nalu_build_dir/install/
     make
     make install
 
-HDF5 v1.8.16
+HDF5 v1.10.1
 ~~~~~~~~~~~~
 
-HDF5 1.8.16 is provided `here <http://www.hdfgroup.org/downloads/index.html>`__.
+HDF5 1.10.1 is provided `here <http://www.hdfgroup.org/downloads/index.html>`__.
 
 Prepare:
 
 ::
 
     cd $nalu_build_dir/packages/
-    curl -o hdf5-1.8.16.tar.gz http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.16/src/hdf5-1.8.16.tar.gz
-    tar -zxvf hdf5-1.8.16.tar.gz
+    tar -zxvf hdf5-1.10.1.tar.gz
 
 Build:
 
 ::
 
-    cd $nalu_build_dir/packages/hdf5-1.8.16
+    cd $nalu_build_dir/packages/hdf5-1.10.1
     ./configure CC=mpicc FC=mpif90 CXX=mpicxx CXXFLAGS="-fPIC -O3" CFLAGS="-fPIC -O3" FCFLAGS="-fPIC -O3" --enable-parallel --with-zlib=$nalu_build_dir/install --prefix=$nalu_build_dir/install
     make
     make install
     make check
         
 
-NetCDF v4.3.3.1 and Parallel NetCDF v1.6.1
+NetCDF v4.4.1.1 and Parallel NetCDF v1.8.0
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to support all aspects of Nalu-Wind's parallel models, this combination of products is required.
 
-Parallel NetCDF v1.6.1
+Parallel NetCDF v1.8.0
 **********************
 
 Parallel NetCDF is provided on the `Argon Trac Page <https://trac.mcs.anl.gov/projects/parallel-netcdf/wiki/Download>`__.
@@ -230,20 +225,20 @@ Prepare:
 ::
 
     cd $nalu_build_dir/packages/
-    tar -zxvf parallel-netcdf-1.6.1.tar.gz
+    tar -zxvf parallel-netcdf-1.8.0.tar.gz
 
 Build:
 
 ::
 
-    cd parallel-netcdf-1.6.1
+    cd parallel-netcdf-1.8.0
     ./configure --prefix=$nalu_install_dir CC=mpicc FC=mpif90 CXX=mpicxx CFLAGS="-I$nalu_install_dir/include -O3" LDFLAGS=-L$nalu_install_dir/lib --disable-fortran
     make
     make install
 
 Note that we have created an install directory that might look like ``$nalu_build_dir/install``.
 
-NetCDF v4.3.3.1
+NetCDF v4.4.1.1
 ***************
 
 NetCDF is provided `here <https://github.com/Unidata/netcdf-c/releases>`__.
@@ -253,14 +248,13 @@ Prepare:
 ::
 
     cd $nalu_build_dir/packages/
-    curl -o netcdf-c-4.3.3.1.tar.gz https://codeload.github.com/Unidata/netcdf-c/tar.gz/v4.3.3.1
-    tar -zxvf netcdf-c-4.3.3.1.tar.gz
+    tar -zxvf netcdf-c-4.4.1.1.tar.gz
 
 Build:
 
 ::
 
-    cd netcdf-c-4.3.3.1
+    cd netcdf-c-4.4.1.1
     ./configure --prefix=$nalu_install_dir CC=mpicc FC=mpif90 CXX=mpicxx CFLAGS="-I$nalu_install_dir/include -O3" LDFLAGS=-L$nalu_install_dir/lib --enable-pnetcdf --enable-parallel-tests --enable-netcdf-4 --disable-shared --disable-fsync --disable-cdmremote --disable-dap --disable-doxygen --disable-v2
     make -j 4 
     make check
@@ -395,7 +389,7 @@ Make sure the MPI library names are correct.
     make -j 8
    
 Build Nalu-Wind ParaView Catalyst Adapter
-************************************
+*****************************************
 
 Create a new build folder in ``$nalu_build_dir/``:
 
@@ -418,7 +412,7 @@ top of the file to the root build directory path.
 Nalu-Wind
 ~~~~~~~~~
 
-Nalu-Wind is provided `here <https://github.com/exawind/nalu-wind>`__. One may either build the released Nalu-Wind version 1.2.0 which matches with Trilinos version 12.12.1, or the master branch of Nalu-Wind which matches with the master branch or develop branch of Trilinos. If it is necessary to build an older version of Nalu-Wind, refer to the history of the Nalu-Wind git repo for instructions on doing so.
+Nalu-Wind is provided `here <https://github.com/exawind/nalu-wind>`__. The master branch of Nalu-Wind typically matches with the master branch or develop branch of Trilinos. If it is necessary to build an older version of Nalu-Wind, refer to the history of the Nalu git repo for instructions on doing so.
 
 Prepare:
 
