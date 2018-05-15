@@ -34,7 +34,6 @@ set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 if(Trilinos_BUILD_SHARED_LIBS)
   set(Nalu_LIBRARY_TYPE SHARED)
   set(BUILD_SHARED_LIBS ON)
-  #message("-- Building Nalu with shared libraries")
 else(Trilinos_BUILD_SHARED_LIBS)
   set(Nalu_LIBRARY_TYPE STATIC)
 endif(Trilinos_BUILD_SHARED_LIBS)
@@ -99,7 +98,6 @@ if(ENABLE_TIOGA)
 endif()
 
 ########################### NALU #####################################
-
 # Add any extra flags based on compiler and/or OS
 message("-- CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
 message("-- CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
@@ -143,7 +141,7 @@ if(ENABLE_HYPRE)
   endif()
 endif()
 
-################################# TAG VERSIONS #####################################
+########################### TAG VERSIONS #####################################
 include(GetGitRevisionDescription)
 get_git_head_revision(NALU_GITREFSPEC NALU_GIT_COMMIT_SHA)
 if (NALU_GIT_COMMIT_SHA)
@@ -174,19 +172,25 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/NaluVersionInfo.h.in"
   "${CMAKE_BINARY_DIR}/include/NaluVersionInfo.h" @ONLY)
 #### END TAG VERSIONS
 
-file(GLOB SOURCE src/*.C src/*/*.C src/*/*.F)
-file(GLOB HEADER include/*.h include/*/*.h
-  ${CMAKE_CURRENT_BINARY_DIR}/include/*.h)
+# Add all source files from source subdirectories
+include(${CMAKE_SOURCE_DIR}/cmake/AddSourcesFunctions.cmake)
+add_subdirectory(src)
+add_subdirectory(include)
+add_subdirectory(unit_tests)
+get_property(NALU_SOURCES GLOBAL PROPERTY GlobalSourceList)
+get_property(NALU_HEADERS GLOBAL PROPERTY GlobalHeaderList)
+get_property(NALU_UNIT_SOURCES GLOBAL PROPERTY GlobalUnitSourceList)
+get_property(NALU_UNIT_HEADERS GLOBAL PROPERTY GlobalUnitHeaderList)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_BINARY_DIR}/include)
-add_library(nalu ${SOURCE} ${HEADER})
+add_library(nalu ${NALU_SOURCES} ${NALU_HEADERS})
 target_link_libraries(nalu ${Trilinos_LIBRARIES})
 target_link_libraries(nalu ${YAML_CPP_LIBRARIES})
 
 if(ENABLE_OPENFAST)
   target_link_libraries(nalu ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
-endif (ENABLE_OPENFAST)
+endif()
 
 if(ENABLE_TIOGA)
   target_link_libraries(nalu ${TIOGA_LIBRARIES})
@@ -195,8 +199,6 @@ endif()
 if(ENABLE_HYPRE)
   target_link_libraries(nalu ${HYPRE_LIBRARIES})
 endif()
-
-file(GLOB UNIT_TESTS_SOURCES unit_tests/*.C unit_tests/*/*.C)
 
 set(nalu_ex_name "naluX")
 message("-- CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
@@ -213,7 +215,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "DEBUG")
    set(utest_ex_name "unittestXd")
 endif()
 
-add_executable(${utest_ex_name} unit_tests.C ${UNIT_TESTS_SOURCES})
+add_executable(${utest_ex_name} unit_tests.C ${NALU_UNIT_SOURCES} ${NALU_UNIT_HEADERS})
 target_link_libraries(${utest_ex_name} nalu)
 target_include_directories(${utest_ex_name} PUBLIC "${CMAKE_SOURCE_DIR}/unit_tests")
 
