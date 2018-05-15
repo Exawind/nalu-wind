@@ -184,7 +184,7 @@ get_property(NALU_UNIT_HEADERS GLOBAL PROPERTY GlobalUnitHeaderList)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_BINARY_DIR}/include)
-add_library(nalu ${NALU_SOURCES} ${NALU_HEADERS})
+add_library(nalu ${NALU_SOURCES})
 target_link_libraries(nalu ${Trilinos_LIBRARIES})
 target_link_libraries(nalu ${YAML_CPP_LIBRARIES})
 

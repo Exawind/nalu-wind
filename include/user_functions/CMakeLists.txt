@@ -1,4 +1,4 @@
-add_sources(
+add_headers(
    BoundaryLayerPerturbationAuxFunction.h
    BoussinesqNonIsoEnthalpySrcNodeSuppAlg.h
    BoussinesqNonIsoMomentumSrcNodeSuppAlg.h

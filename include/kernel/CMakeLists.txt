@@ -1,4 +1,4 @@
-add_sources(
+add_headers(
   ContinuityAdvElemKernel.h
   ContinuityMassElemKernel.h
   ContinuityOpenElemKernel.h

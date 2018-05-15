@@ -1,4 +1,4 @@
-add_sources(
+add_headers(
    FromMesh.h
    LinInterp.h
    ToMesh.h

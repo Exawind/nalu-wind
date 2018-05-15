@@ -1,4 +1,4 @@
-add_sources(
+add_headers(
    BSpline.h
    Converter.h
    Functions.h

@@ -1,4 +1,4 @@
-add_sources(
+add_headers(
    ElementCondenser.h
    ElementDescription.h
    HexNElementDescription.h

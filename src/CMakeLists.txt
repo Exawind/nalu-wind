@@ -55,7 +55,6 @@ add_sources(
    AuxFunctionAlgorithm.C
    AveragingInfo.C
    BoundaryConditions.C
-   CMakeLists.txt
    ComputeABLWallFrictionVelocityAlgorithm.C
    ComputeGeometryAlgorithmDriver.C
    ComputeGeometryBoundaryAlgorithm.C

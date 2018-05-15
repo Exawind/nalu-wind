@@ -1,6 +1,5 @@
-add_sources(
+add_headers(
    AssembleOversetSolverConstraintAlgorithm.h
-   CMakeLists.txt
    OversetInfo.h
    OversetManager.h
    OversetManagerSTK.h

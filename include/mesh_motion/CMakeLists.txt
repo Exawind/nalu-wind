@@ -1,4 +1,4 @@
-add_sources(
+add_headers(
    AssembleMeshDisplacementElemSolverAlgorithm.h
    AssemblePressureForceBCSolverAlgorithm.h
    MeshDisplacementEquationSystem.h

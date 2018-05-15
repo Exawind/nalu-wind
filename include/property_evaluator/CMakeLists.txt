@@ -1,4 +1,4 @@
-add_sources(
+add_headers(
    ConstantPropertyEvaluator.h
    EnthalpyPropertyEvaluator.h
    GenericPropAlgorithm.h
