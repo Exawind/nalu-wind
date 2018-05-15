@@ -1,0 +1,19 @@
+add_sources(
+   Hex27CVFEM.h
+   Hex8CVFEM.h
+   Hex8FEM.h
+   Hex8GeometryFunctions.h
+   MasterElement.h
+   MasterElementFactory.h
+   MasterElementFunctions.h
+   MasterElementHO.h
+   MasterElementUtils.h
+   Pyr5CVFEM.h
+   Quad42DCVFEM.h
+   Quad43DCVFEM.h
+   Quad92DCVFEM.h
+   TensorOps.h
+   Tet4CVFEM.h
+   Tri32DCVFEM.h
+   Wed6CVFEM.h
+)

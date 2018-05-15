@@ -1,0 +1,12 @@
+add_sources(
+   AssembleRadTransEdgeSolverAlgorithm.h
+   AssembleRadTransEdgeUpwindSolverAlgorithm.h
+   AssembleRadTransWallSolverAlgorithm.h
+   RadTransAbsorptionBlackBodyElemKernel.h
+   RadTransAdvectionSUCVElemKernel.h
+   RadTransBlackBodyNodeSuppAlg.h
+   RadTransIsoScatteringNodeSuppAlg.h
+   RadTransIsotropicScatteringElemKernel.h
+   RadTransWallElemKernel.h
+   RadiativeTransportEquationSystem.h
+)

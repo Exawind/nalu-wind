@@ -1,0 +1,24 @@
+add_unit_sources(
+   UnitTestContinuityAdvElem.C
+   UnitTestContinuityMassElem.C
+   UnitTestFaceBasic.C
+   UnitTestFaceElemBasic.C
+   UnitTestKernelUtils.C
+   UnitTestMomentumActuatorSrcElem.C
+   UnitTestMomentumAdvDiffElem.C
+   UnitTestMomentumBuoyancyBoussinesqSrcElem.C
+   UnitTestMomentumBuoyancySrcElem.C
+   UnitTestMomentumCoriolisSrcElem.C
+   UnitTestMomentumHybridTurbElem.C
+   UnitTestMomentumMassElem.C
+   UnitTestMomentumNSOElem.C
+   UnitTestMomentumNSOKeElem.C
+   UnitTestSSTSrcElem.C
+   UnitTestScalarAdvDiffElem.C
+   UnitTestScalarDiffElem.C
+   UnitTestSteadyThermal3dContactSrcElem.C
+)
+
+add_unit_headers(
+   UnitTestKernelUtils.h
+)

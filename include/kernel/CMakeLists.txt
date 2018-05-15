@@ -1,0 +1,30 @@
+add_sources(
+  ContinuityAdvElemKernel.h
+  ContinuityMassElemKernel.h
+  ContinuityOpenElemKernel.h
+  Kernel.h
+  KernelBuilder.h
+  KernelBuilderLog.h
+  MomentumActuatorSrcElemKernel.h
+  MomentumAdvDiffElemKernel.h
+  MomentumBuoyancyBoussinesqSrcElemKernel.h
+  MomentumBuoyancySrcElemKernel.h
+  MomentumCoriolisSrcElemKernel.h
+  MomentumHybridTurbElemKernel.h
+  MomentumMassElemKernel.h
+  MomentumOpenAdvDiffElemKernel.h
+  MomentumSymmetryElemKernel.h
+  MomentumUpwAdvDiffElemKernel.h
+  MomentumWallFunctionElemKernel.h
+  ScalarAdvDiffElemKernel.h
+  ScalarDiffElemKernel.h
+  ScalarDiffFemKernel.h
+  ScalarMassElemKernel.h
+  ScalarOpenAdvElemKernel.h
+  ScalarUpwAdvDiffElemKernel.h
+  SpecificDissipationRateSSTSrcElemKernel.h
+  TurbKineticEnergyKsgsDesignOrderSrcElemKernel.h
+  TurbKineticEnergyKsgsSrcElemKernel.h
+  TurbKineticEnergySSTDESSrcElemKernel.h
+  TurbKineticEnergySSTSrcElemKernel.h
+)
