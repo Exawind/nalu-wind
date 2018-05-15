@@ -1,4 +1,4 @@
-add_sources(
+add_sources(GlobalSourceList
    ContinuityAdvElemKernel.C
    ContinuityMassElemKernel.C
    ContinuityOpenElemKernel.C

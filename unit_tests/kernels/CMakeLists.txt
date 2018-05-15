@@ -1,4 +1,4 @@
-add_unit_sources(
+add_sources(GlobalUnitSourceList
    UnitTestContinuityAdvElem.C
    UnitTestContinuityMassElem.C
    UnitTestFaceBasic.C
@@ -19,6 +19,6 @@ add_unit_sources(
    UnitTestSteadyThermal3dContactSrcElem.C
 )
 
-add_unit_headers(
+add_sources(GlobalUnitHeaderList
    UnitTestKernelUtils.h
 )

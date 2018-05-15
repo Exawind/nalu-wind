@@ -1,4 +1,4 @@
-add_sources(
+add_sources(GlobalSourceList
    ABLForcingAlgorithm.C
    ABLProfileFunction.C
    ActuatorLinePointDrag.C
@@ -180,13 +180,13 @@ add_sources(
 )
 
 if(ENABLE_OPENFAST)
-   add_sources(
+   add_sources(GlobalSourceList
       ActuatorLineFAST.C
    )
 endif()
 
 if(ENABLE_HYPRE)
-   add_sources(
+   add_sources(GlobalSourceList
       HypreDirectSolver.C
       HypreLinearSolverConfig.C
       HypreLinearSystem.C
@@ -194,7 +194,7 @@ if(ENABLE_HYPRE)
 endif()
 
 if(ENABLE_PARAVIEW_CATALYST)
-   add_sources(
+   add_sources(GlobalSourceList
       Adapter.C
    )
 endif()

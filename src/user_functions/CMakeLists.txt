@@ -1,4 +1,4 @@
-add_sources(
+add_sources(GlobalSourceList
    BoundaryLayerPerturbationAuxFunction.C
    BoussinesqNonIsoEnthalpySrcNodeSuppAlg.C
    BoussinesqNonIsoMomentumSrcNodeSuppAlg.C

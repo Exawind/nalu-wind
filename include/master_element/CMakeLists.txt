@@ -1,4 +1,4 @@
-add_headers(
+add_sources(GlobalHeaderList
    Hex27CVFEM.h
    Hex8CVFEM.h
    Hex8FEM.h

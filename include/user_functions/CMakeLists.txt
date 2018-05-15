@@ -1,4 +1,4 @@
-add_headers(
+add_sources(GlobalHeaderList
    BoundaryLayerPerturbationAuxFunction.h
    BoussinesqNonIsoEnthalpySrcNodeSuppAlg.h
    BoussinesqNonIsoMomentumSrcNodeSuppAlg.h

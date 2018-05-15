@@ -1,4 +1,4 @@
-add_sources(
+add_sources(GlobalSourceList
    BSpline.C
    Converter.C
    Functions.C

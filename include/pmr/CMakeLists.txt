@@ -1,4 +1,4 @@
-add_headers(
+add_sources(GlobalHeaderList
    AssembleRadTransEdgeSolverAlgorithm.h
    AssembleRadTransEdgeUpwindSolverAlgorithm.h
    AssembleRadTransWallSolverAlgorithm.h

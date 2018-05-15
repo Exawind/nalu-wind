@@ -1,4 +1,4 @@
-add_sources(
+add_sources(GlobalSourceList
    ElementCondenser.C
    ElementDescription.C
    HexNElementDescription.C

@@ -173,7 +173,16 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/NaluVersionInfo.h.in"
 #### END TAG VERSIONS
 
 # Add all source files from source subdirectories
-include(${CMAKE_SOURCE_DIR}/cmake/AddSourcesFunctions.cmake)
+function(add_sources target_list)
+   foreach(_source IN ITEMS ${ARGN})
+       if (IS_ABSOLUTE "${_source}")
+           set(_source_abs "${_source}")
+       else()
+           get_filename_component(_source_abs "${_source}" ABSOLUTE)
+       endif()
+       set_property(GLOBAL APPEND PROPERTY "${target_list}" "${_source_abs}")
+   endforeach()
+endfunction(add_sources)
 add_subdirectory(src)
 add_subdirectory(include)
 add_subdirectory(unit_tests)

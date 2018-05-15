@@ -1,4 +1,4 @@
-add_unit_sources(
+add_sources(GlobalUnitSourceList
    UnitTest1ElemCoordCheck.C
    UnitTestABLWallFunction.C
    UnitTestBasicKokkos.C
@@ -34,7 +34,7 @@ add_unit_sources(
    UnitTestUtils.C
 )
 
-add_unit_headers(
+add_sources(GlobalUnitHeaderList
    UnitTestFieldUtils.h
    UnitTestHelperObjects.h
    UnitTestKokkosME.h

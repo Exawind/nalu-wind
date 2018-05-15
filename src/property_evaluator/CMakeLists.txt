@@ -1,4 +1,4 @@
-add_sources(
+add_sources(GlobalSourceList
    ConstantPropertyEvaluator.C
    EnthalpyPropertyEvaluator.C
    GenericPropAlgorithm.C

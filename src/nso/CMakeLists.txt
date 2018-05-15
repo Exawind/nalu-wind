@@ -1,4 +1,4 @@
-add_sources(
+add_sources(GlobalSourceList
    MomentumNSOElemKernel.C
    MomentumNSOElemSuppAlgDep.C
    MomentumNSOGradElemSuppAlg.C

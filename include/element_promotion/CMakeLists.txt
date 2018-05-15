@@ -1,4 +1,4 @@
-add_headers(
+add_sources(GlobalHeaderList
    ElementCondenser.h
    ElementDescription.h
    HexNElementDescription.h

@@ -1,4 +1,4 @@
-add_sources(
+add_sources(GlobalSourceList
    AssembleOversetSolverConstraintAlgorithm.C
    OversetInfo.C
    OversetManager.C
@@ -7,7 +7,7 @@ add_sources(
 )
 
 if(ENABLE_TIOGA)
-   add_sources(
+   add_sources(GlobalSourceList
       OversetManagerTIOGA.C
       TiogaBlock.C
       TiogaSTKIface.C

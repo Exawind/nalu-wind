@@ -1,4 +1,4 @@
-add_unit_sources(
+add_sources(GlobalUnitSourceList
    UnitTestAlgorithm.C
    UnitTestLESAlgorithms.C
    UnitTestMomentumBoussinesqSrcNodeSuppAlg.C
@@ -6,7 +6,7 @@ add_unit_sources(
    UnitTestSSTAlgorithms.C
 )
 
-add_unit_headers(
+add_sources(GlobalUnitHeaderList
    UnitTestAlgorithm.h
    UnitTestAlgorithmUtils.h
 )

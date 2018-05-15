@@ -1,4 +1,4 @@
-add_headers(
+add_sources(GlobalHeaderList
    AssembleOversetSolverConstraintAlgorithm.h
    OversetInfo.h
    OversetManager.h

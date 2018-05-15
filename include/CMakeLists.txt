@@ -1,4 +1,4 @@
-add_headers(
+add_sources(GlobalHeaderList
    ABLForcingAlgorithm.h
    ABLProfileFunction.h
    Actuator.h

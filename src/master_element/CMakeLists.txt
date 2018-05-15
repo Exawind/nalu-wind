@@ -1,4 +1,4 @@
-add_sources(
+add_sources(GlobalSourceList
    CalculateHexVolume.F
    CalculateOctohedronVolume.F
    CalculatePolyhedralArea.F

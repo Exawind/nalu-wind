@@ -1,4 +1,4 @@
-add_headers(
+add_sources(GlobalHeaderList
    MomentumNSOElemKernel.h
    MomentumNSOElemSuppAlgDep.h
    MomentumNSOGradElemSuppAlg.h
