@@ -42,6 +42,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
     nfEntrain_(solnOpts.nearestFaceEntrain_),
     om_nfEntrain_(1.0-nfEntrain_),
     includeDivU_(solnOpts.includeDivU_),
+    nocFac_(solnOpts.get_noc_usage("velocity") ? 1.0 : 0.0),
     shiftedGradOp_(solnOpts.get_shifted_grad_op(velocity->name())),
     faceIpNodeMap_(sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_)->ipNodeMap()),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_)),
@@ -113,16 +114,16 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
   ScratchViews<DoubleType> &elemScratchViews,
   int elemFaceOrdinal)
 {
-  DoubleType w_uBip[BcAlgTraits::nDim_];
-  DoubleType w_uScs[BcAlgTraits::nDim_];
-  DoubleType w_uBipExtrap[BcAlgTraits::nDim_];
-  DoubleType w_uspecBip[BcAlgTraits::nDim_];
-  DoubleType w_coordBip[BcAlgTraits::nDim_];
-  DoubleType w_nx[BcAlgTraits::nDim_];
-  DoubleType w_GuBip[BcAlgTraits::nDim_*BcAlgTraits::nDim_];
-  DoubleType w_NOC[BcAlgTraits::nDim_];
-  DoubleType w_coordScs[BcAlgTraits::nDim_];
-  DoubleType w_dxBip[BcAlgTraits::nDim_];
+  DoubleType NALU_ALIGN(64) w_uBip[BcAlgTraits::nDim_];
+  DoubleType NALU_ALIGN(64) w_uScs[BcAlgTraits::nDim_];
+  DoubleType NALU_ALIGN(64) w_uBipExtrap[BcAlgTraits::nDim_];
+  DoubleType NALU_ALIGN(64) w_uspecBip[BcAlgTraits::nDim_];
+  DoubleType NALU_ALIGN(64) w_coordBip[BcAlgTraits::nDim_];
+  DoubleType NALU_ALIGN(64) w_nx[BcAlgTraits::nDim_];
+  DoubleType NALU_ALIGN(64) w_GuBip[BcAlgTraits::nDim_*BcAlgTraits::nDim_];
+  DoubleType NALU_ALIGN(64) w_NOC[BcAlgTraits::nDim_];
+  DoubleType NALU_ALIGN(64) w_coordScs[BcAlgTraits::nDim_];
+  DoubleType NALU_ALIGN(64) w_dxBip[BcAlgTraits::nDim_];
 
   const int *face_node_ordinals = meSCS_->side_node_ordinals(elemFaceOrdinal);
  
@@ -159,6 +160,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
       w_uScs[j] = 0.0;
       w_uspecBip[j] = 0.0;
       w_coordBip[j] = 0.0;
+      w_coordScs[j] = 0.0;
       const DoubleType axj = vf_exposedAreaVec(ip,j);
       asq += axj*axj;
     }
@@ -182,6 +184,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
       const DoubleType r = v_adv_shape_function_(opposingScsIp,ic);
       for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
         w_uScs[j] += r*v_velocityNp1(ic,j);
+        w_coordScs[j] += r*v_coordinates(ic,j);
       }
     }
     
@@ -216,20 +219,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
     const DoubleType mdotLeaving = stk::math::if_then_else(tmdot > 0, 1.0, 0.0);
     const DoubleType om_mdotLeaving = 1.0 - mdotLeaving;
     
-    // prepare for NOC when entraining and using the opposing SCS value; dui/dxj*nj = 0
-    for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) {
-      w_coordScs[i] = 0.0;
-    }
-    
-    // compute coord and opposing face
-    for ( int ic = 0; ic < BcAlgTraits::nodesPerElement_; ++ic ) {
-      const DoubleType rAdv = vf_adv_shape_function_(ip,ic);
-      for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
-        w_coordScs[j] += rAdv*v_coordinates(ic,j);
-      }
-    }
-    
-    // compute dxBip and zero tensor GjUi
+    // NOC: compute dxBip and zero tensor GjUi
     for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) {
       w_dxBip[i] = w_coordBip[i] - w_coordScs[i];
       for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
@@ -237,7 +227,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
       }
     }
     
-    // compute Gjui at bip
+    // NOC: compute Gjui at bip
     for ( int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic ) {
       const DoubleType rAdv = vf_adv_shape_function_(ip,ic);
       for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) { 
@@ -246,7 +236,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
         }
       }
     }
-    
+        
     // NOC term for each component
     for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) {
       DoubleType GlUidxl = 0.0;
@@ -303,7 +293,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
         const DoubleType nj = w_nx[j];
         ubipnx += w_uBip[j]*nj;
         ubipExtrapnx += w_uBipExtrap[j]*nj;
-        uscsnx += (w_uScs[j] + w_NOC[j])*nj;
+        uscsnx += (w_uScs[j] + w_NOC[j]*nocFac_)*nj;
         uspecbipnx += w_uspecBip[j]*nj;
       }
 

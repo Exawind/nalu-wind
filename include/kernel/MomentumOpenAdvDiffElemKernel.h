@@ -78,6 +78,7 @@ private:
   const double nfEntrain_;
   const double om_nfEntrain_;
   const double includeDivU_;
+  const double nocFac_;
   const bool shiftedGradOp_;
   const double small_{1.0e-16};
 

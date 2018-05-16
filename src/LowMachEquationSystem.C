@@ -118,6 +118,7 @@
 
 // bc kernels
 #include <kernel/ContinuityOpenElemKernel.h>
+#include <kernel/MomentumOpenAdvDiffElemKernel.h>
 #include <kernel/MomentumSymmetryElemKernel.h>
 #include <kernel/MomentumWallFunctionElemKernel.h>
 
@@ -1560,7 +1561,7 @@ MomentumEquationSystem::register_inflow_bc(
 void
 MomentumEquationSystem::register_open_bc(
   stk::mesh::Part *part,
-  const stk::topology &theTopo,
+  const stk::topology &partTopo,
   const OpenBoundaryConditionData &openBCData)
 {
 
@@ -1611,21 +1612,48 @@ MomentumEquationSystem::register_open_bc(
     }
   }
 
-  // solver algs; lhs
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
-    = solverAlgDriver_->solverAlgMap_.find(algType);
-  if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-    SolverAlgorithm *theAlg = NULL;
-    if ( realm_.realmUsesEdges_ ) {
-      theAlg = new AssembleMomentumEdgeOpenSolverAlgorithm(realm_, part, this);
+  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {      
+    
+    // solver for continuity open
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    
+    stk::topology elemTopo = get_elem_topo(realm_, *part);
+    
+    AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+    
+    std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
+      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "open");
+    
+    auto& activeKernels = faceElemSolverAlg->activeKernels_;
+    
+    if (solverAlgWasBuilt) {
+      
+      build_face_elem_topo_kernel_automatic<MomentumOpenAdvDiffElemKernel>
+        (partTopo, elemTopo, *this, activeKernels, "momentum_open",
+         realm_.meta_data(), *realm_.solutionOptions_, this,
+         velocity_, dudx_, realm_.is_turbulent() ? evisc_ : visc_,
+         faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
+      
     }
-    else {
-      theAlg = new AssembleMomentumElemOpenSolverAlgorithm(realm_, part, this);
-    }
-    solverAlgDriver_->solverAlgMap_[algType] = theAlg;
   }
   else {
-    itsi->second->partVec_.push_back(part);
+    // solver algs; lhs
+    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
+      = solverAlgDriver_->solverAlgMap_.find(algType);
+    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
+      SolverAlgorithm *theAlg = NULL;
+      if ( realm_.realmUsesEdges_ ) {
+        theAlg = new AssembleMomentumEdgeOpenSolverAlgorithm(realm_, part, this);
+      }
+      else {
+        theAlg = new AssembleMomentumElemOpenSolverAlgorithm(realm_, part, this);
+      }
+      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+    }
+    else {
+      itsi->second->partVec_.push_back(part);
+    }
   }
 }
 
@@ -1965,7 +1993,7 @@ MomentumEquationSystem::register_symmetry_bc(
     bool solverAlgWasBuilt = false;
 
     std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
-      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap);
+      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "symm");
 
     auto& activeKernels = faceElemSolverAlg->activeKernels_;
 
@@ -2759,9 +2787,7 @@ ContinuityEquationSystem::register_open_bc(
   }
   else {
     
-    const bool tryConsolidated = false;
-    if ( tryConsolidated /*realm_.solutionOptions_->useConsolidatedBcSolverAlg_*/) {
-      
+    if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {      
       // non-solver elem alg; compute open mdot (transition to penalty approach)
       std::map<AlgorithmType, Algorithm *>::iterator itm =
         computeMdotAlgDriver_->algMap_.find(algType);
@@ -2783,7 +2809,7 @@ ContinuityEquationSystem::register_open_bc(
       bool solverAlgWasBuilt = false;
 
       std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
-        = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap);
+        = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "open");
       
       auto& activeKernels = faceElemSolverAlg->activeKernels_;
       

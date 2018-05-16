@@ -292,10 +292,12 @@ namespace nalu{
     EquationSystem& eqSys,
     stk::mesh::Part& part,
     stk::topology elemTopo,
-    std::map<std::string, SolverAlgorithm*>& solverAlgs)
+    std::map<std::string, SolverAlgorithm*>& solverAlgs,
+    const std::string bcName)
   {
     const stk::topology topo = part.topology();
-    const std::string algName = eqSys.name_ + "_AssembleFaceElemSolverAlg_" + topo.name() + "_" + elemTopo.name();
+    const std::string algName 
+      = eqSys.name_ + "_" + bcName + "_AssembleFaceElemSolverAlg_" + topo.name() + "_" + elemTopo.name();
 
     bool isNotNGP = !(elemTopo == stk::topology::HEXAHEDRON_8 ||
                       elemTopo == stk::topology::HEXAHEDRON_27 ||

@@ -53,12 +53,6 @@ ContinuityAdvElemKernel<AlgTraits>::ContinuityAdvElemKernel(
     stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
 
   MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
-
-  if ( shiftMdot_ )
-    get_scs_shape_fn_data<AlgTraits>([&](double* ptr){meSCS->shifted_shape_fcn(ptr);}, v_shape_function_);
-  else
-    get_scs_shape_fn_data<AlgTraits>([&](double* ptr){meSCS->shape_fcn(ptr);}, v_shape_function_);
-
   dataPreReqs.add_cvfem_surface_me(meSCS);
 
   // fields and data
@@ -74,6 +68,11 @@ ContinuityAdvElemKernel<AlgTraits>::ContinuityAdvElemKernel(
     dataPreReqs.add_master_element_call(SCS_GRAD_OP, CURRENT_COORDINATES);
   if ( shiftPoisson_ || reducedSensitivities_ )
     dataPreReqs.add_master_element_call(SCS_SHIFTED_GRAD_OP, CURRENT_COORDINATES);
+
+  if ( shiftMdot_ )
+    get_scs_shape_fn_data<AlgTraits>([&](double* ptr){meSCS->shifted_shape_fcn(ptr);}, v_shape_function_);
+  else
+    get_scs_shape_fn_data<AlgTraits>([&](double* ptr){meSCS->shape_fcn(ptr);}, v_shape_function_);
 }
 
 template<typename AlgTraits>

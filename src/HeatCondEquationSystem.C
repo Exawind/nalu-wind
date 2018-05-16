@@ -570,7 +570,7 @@ HeatCondEquationSystem::register_wall_bc(
       bool solverAlgWasBuilt = false;
 
       std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
-        = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap);
+        = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "wall");
       
       auto& activeKernels = faceElemSolverAlg->activeKernels_;
       

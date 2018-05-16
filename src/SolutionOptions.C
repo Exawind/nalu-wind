@@ -780,6 +780,19 @@ SolutionOptions::get_turb_model_constant(
   }
 }
 
+bool
+SolutionOptions::get_noc_usage(
+  const std::string &dofName ) const
+{
+  bool factor = nocDefault_;
+  std::map<std::string, bool>::const_iterator iter
+    = nocMap_.find(dofName);
+  if (iter != nocMap_.end()) {
+    factor = (*iter).second;
+  }
+  return factor;
+}
+
 bool SolutionOptions::has_set_boussinesq_time_scale()
 {
   return (raBoussinesqTimeScale_ > std::numeric_limits<double>::min());

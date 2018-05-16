@@ -134,7 +134,7 @@ public:
 
   virtual void register_open_bc(
     stk::mesh::Part *part,
-    const stk::topology &theTopo,
+    const stk::topology &partTopo,
     const OpenBoundaryConditionData &openBCData);
 
   virtual void register_wall_bc(

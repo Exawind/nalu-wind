@@ -4222,12 +4222,7 @@ bool
 Realm::get_noc_usage(
   const std::string dofName )
 {
-  bool factor = solutionOptions_->nocDefault_;
-  std::map<std::string, bool>::const_iterator iter
-    = solutionOptions_->nocMap_.find(dofName);
-  if (iter != solutionOptions_->nocMap_.end()) {
-    factor = (*iter).second;
-  }
+  bool factor = solutionOptions_->get_noc_usage(dofName);
   return factor;
 }
 
