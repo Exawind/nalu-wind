@@ -41,6 +41,8 @@ else(NOT ${TEST_TOLERANCE} STREQUAL "")
 endif()
 message("-- Using test tolerance of ${TOLERANCE}")
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
+
 # Create symlinks to mesh and xml directories
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
                 ${CMAKE_CURRENT_SOURCE_DIR}/mesh
