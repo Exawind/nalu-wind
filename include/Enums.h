@@ -19,17 +19,18 @@ enum AlgorithmType{
   INTERIOR  = 0,
   INFLOW    = 1,
   WALL      = 2,
-  OPEN      = 3,
-  MASS      = 4,
-  SRC       = 5,
-  SYMMETRY  = 6,
-  WALL_HF   = 7,
-  WALL_CHT  = 8,
-  WALL_RAD  = 9,
-  NON_CONFORMAL = 10,
-  ELEM_SOURCE = 11,
-  OVERSET = 12,
-  WALL_ABL = 13,
+  WALL_FCN  = 3,
+  OPEN      = 4,
+  MASS      = 5,
+  SRC       = 6,
+  SYMMETRY  = 7,
+  WALL_HF   = 8,
+  WALL_CHT  = 9,
+  WALL_RAD  = 10,
+  NON_CONFORMAL = 11,
+  ELEM_SOURCE = 12,
+  OVERSET = 13,
+  WALL_ABL = 14,
 
   /** Set the reference pressure at a node.
    *
@@ -39,7 +40,7 @@ enum AlgorithmType{
    *
    * \sa FixPressureAtNodeAlgorithm
    */
-  REF_PRESSURE = 14
+  REF_PRESSURE = 15
 };
 
 enum BoundaryConditionType{

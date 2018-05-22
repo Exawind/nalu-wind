@@ -148,6 +148,7 @@ realms:
       name: myOptions
 
       use_consolidated_solver_algorithm: yes
+      use_consolidated_face_elem_bc_algorithm: yes
 
       mesh_motion:
 
@@ -174,14 +175,6 @@ realms:
           compute_centroid: yes
 
       options:
-
-        - limiter:
-            pressure: no
-            velocity: no
-
-        - hybrid_factor:
-            mixture_fraction: 0.0
-            velocity: 0.0
 
         - element_source_terms:
             momentum: [lumped_momentum_time_derivative, advection_diffusion, NSO_2ND_KE]

@@ -106,6 +106,7 @@ realms:
       target_name: surface_4
       wall_user_data:
         velocity: [0,0]
+        use_wall_function: yes
 
     - wall_boundary_condition: bc_cylinder
       target_name: surface_5

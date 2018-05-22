@@ -1677,9 +1677,6 @@ MomentumEquationSystem::register_wall_bc(
   if ( !anyWallFunctionActivated )
     notProjectedPart_.push_back(part);
 
-  // algorithm type
-  const AlgorithmType algType = WALL;
-
   // np1 velocity
   VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
   GenericFieldType &dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
@@ -1759,12 +1756,13 @@ MomentumEquationSystem::register_wall_bc(
     
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
+    const AlgorithmType algTypePNG = anyWallFunctionActivated ? WALL_FCN : WALL;
     std::map<AlgorithmType, Algorithm *>::iterator it
-      = assembleNodalGradAlgDriver_->algMap_.find(algType);
+      = assembleNodalGradAlgDriver_->algMap_.find(algTypePNG);
     if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
       Algorithm *theAlg
         = new AssembleNodalGradUBoundaryAlgorithm(realm_, part, theBcField, &dudxNone, edgeNodalGradient_);
-      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
+      assembleNodalGradAlgDriver_->algMap_[algTypePNG] = theAlg;
     }
     else {
       it->second->partVec_.push_back(part);
@@ -1772,7 +1770,7 @@ MomentumEquationSystem::register_wall_bc(
   }
 
   // Dirichlet or wall function bc
-  if ( wallFunctionApproach ) {
+  if ( anyWallFunctionActivated ) {
 
     // register fields; nodal
     ScalarFieldType *assembledWallArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_area_wf"));
@@ -1814,8 +1812,7 @@ MomentumEquationSystem::register_wall_bc(
       // bc data alg
       bcDataAlg_.push_back( new AuxFunctionAlgorithm(realm_, part,
 				   theHeatFluxBcField, theHeatFluxAuxFunc,
-				   stk::topology::NODE_RANK)
-      );
+				   stk::topology::NODE_RANK));
 
       const AlgorithmType wfAlgType = WALL_ABL;
 
@@ -1863,7 +1860,7 @@ MomentumEquationSystem::register_wall_bc(
 
     else {
 
-      const AlgorithmType wfAlgType = WALL;
+      const AlgorithmType wfAlgType = WALL_FCN;
 
       // create algorithm for utau, yp and assembled nodal wall area (_WallFunction)
       std::map<AlgorithmType, Algorithm *>::iterator it_utau =
@@ -1878,14 +1875,14 @@ MomentumEquationSystem::register_wall_bc(
       }
 
       // create lhs/rhs algorithm; generalized for edge (nearest node usage) and element
-      if ( realm_.solutionOptions_->useConsolidatedSolverAlg_ ) {        
+      if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {        
         // element-based uses consolidated approach fully
         auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
         
         AssembleElemSolverAlgorithm* solverAlg = nullptr;
         bool solverAlgWasBuilt = false;
         
-        std::tie(solverAlg, solverAlgWasBuilt) = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap);
+        std::tie(solverAlg, solverAlgWasBuilt) = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "wall_fcn");
         
         ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
         auto& activeKernels = solverAlg->activeKernels_;
@@ -1918,21 +1915,23 @@ MomentumEquationSystem::register_wall_bc(
     }
   }
   else {
+    const AlgorithmType algType = WALL;
+    
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =
-        solverAlgDriver_->solverDirichAlgMap_.find(algType);
+      solverAlgDriver_->solverDirichAlgMap_.find(algType);
     if ( itd == solverAlgDriver_->solverDirichAlgMap_.end() ) {
       DirichletBC *theAlg
-      = new DirichletBC(realm_, this, part, &velocityNp1, theBcField, 0, nDim);
+        = new DirichletBC(realm_, this, part, &velocityNp1, theBcField, 0, nDim);
       solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
     }
     else {
       itd->second->partVec_.push_back(part);
     }
   }
-
+  
   // specialty FSI
   if ( userData.isFsiInterface_ ) {
-    // need p^n+1/2; requires "old" pressure... need a utility to save it and compute it...
+    // FIXME: need p^n+1/2; requires "old" pressure... need a utility to save it and compute it...
     NaluEnv::self().naluOutputP0() << "Warning: Second-order FSI requires p^n+1/2; BC is using p^n+1" << std::endl;
   }
 }

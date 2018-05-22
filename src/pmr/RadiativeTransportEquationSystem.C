@@ -695,7 +695,7 @@ RadiativeTransportEquationSystem::register_wall_bc(
       AssembleElemSolverAlgorithm* solverAlg = nullptr;
       bool solverAlgWasBuilt = false;
       
-      std::tie(solverAlg, solverAlgWasBuilt) = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap);
+      std::tie(solverAlg, solverAlgWasBuilt) = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "wall");
       
       ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
       auto& activeKernels = solverAlg->activeKernels_;

@@ -134,3 +134,22 @@ TEST(KokkosMEBC, test_tet4_views)
   }
 }
 
+
+TEST(KokkosMEBC, test_wedge4_views)
+{
+  for (int k = 0; k < 3; ++k) {
+    test_MEBC_views<sierra::nalu::AlgTraitsQuad4Wed6>(k, {sierra::nalu::SCS_FACE_GRAD_OP});
+  }
+
+  for (int k = 3; k < 5; ++k) {
+    test_MEBC_views<sierra::nalu::AlgTraitsTri3Wed6>(k, {sierra::nalu::SCS_FACE_GRAD_OP});
+  }
+}
+
+TEST(KokkosMEBC, test_pyr5_views)
+{
+  for (int k = 0; k < 4; ++k) {
+    test_MEBC_views<sierra::nalu::AlgTraitsTri3Pyr5>(k, {sierra::nalu::SCS_FACE_GRAD_OP});
+  }
+  test_MEBC_views<sierra::nalu::AlgTraitsQuad4Pyr5>(4, {sierra::nalu::SCS_FACE_GRAD_OP});
+}
