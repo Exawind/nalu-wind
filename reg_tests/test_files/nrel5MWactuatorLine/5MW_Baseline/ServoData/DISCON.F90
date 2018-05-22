@@ -1,7 +1,6 @@
 !=======================================================================
 !SUBROUTINE DISCON ( avrSWAP, from_SC, to_SC, aviFAIL, accINFILE, avcOUTNAME, avcMSG ) BIND (C, NAME='DISCON')
 SUBROUTINE DISCON ( avrSWAP, aviFAIL, accINFILE, avcOUTNAME, avcMSG ) BIND (C, NAME='DISCON')
-!DEC ATTRIBUTES DLLEXPORT :: DISCON
 
    ! This Bladed-style DLL controller is used to implement a variable-speed
    ! generator-torque controller and PI collective blade pitch controller for
@@ -12,16 +11,10 @@ SUBROUTINE DISCON ( avrSWAP, aviFAIL, accINFILE, avcOUTNAME, avcMSG ) BIND (C, N
    ! compile with either gfortran or Intel Visual Fortran (IVF)
    ! DO NOT REMOVE or MODIFY LINES starting with "!DEC$" or "!GCC$"
    ! !DEC$ specifies attributes for IVF and !GCC$ specifies attributes for gfortran
-   !
-   ! Note that gfortran v5.x on Mac produces compiler errors with the DLLEXPORT attribute,
-   ! so I've added the compiler directive IMPLICIT_DLLEXPORT.
    
 USE, INTRINSIC :: ISO_C_Binding
 
 IMPLICIT                        NONE
-#ifndef IMPLICIT_DLLEXPORT
-!GCC$ ATTRIBUTES DLLEXPORT :: DISCON
-#endif
 
    ! Passed Variables:
 !REAL(C_FLOAT),          INTENT(IN   ) :: from_SC   (*)  ! DATA from the supercontroller
