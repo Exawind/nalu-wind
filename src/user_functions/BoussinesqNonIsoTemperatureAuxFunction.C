@@ -20,7 +20,6 @@ namespace nalu{
 
 BoussinesqNonIsoTemperatureAuxFunction::BoussinesqNonIsoTemperatureAuxFunction() :
   AuxFunction(0,1),
-  L_(1.0),
   Cp_(0.01),
   Tref_(300.0)
 {
