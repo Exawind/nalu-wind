@@ -120,14 +120,13 @@ realms:
       turbulence_model: wale
       interp_rhou_together_for_mdot: yes
 
+      use_consolidated_solver_algorithm: yes
+      use_consolidated_face_elem_bc_algorithm: yes
+
       options:
 
         - turbulent_prandtl:
             enthalpy: 0.90
-
-        - source_terms:
-            momentum: buoyancy
-            continuity: density_time_derivative
 
         - user_constants:
             gravity: [0.0,-9.81]
@@ -149,6 +148,11 @@ realms:
         - peclet_function_tanh_width:
             velocity: 200.0
             enthalpy: 4.02
+
+        - element_source_terms:
+            momentum: [lumped_momentum_time_derivative, upw_advection_diffusion, buoyancy]
+            continuity: [lumped_density_time_derivative, advection]
+            enthalpy: [lumped_enthalpy_time_derivative, upw_advection_diffusion]
 
     turbulence_averaging:
       time_filter_interval: 100000.0

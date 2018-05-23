@@ -67,6 +67,9 @@
 #include <kernel/TurbKineticEnergySSTSrcElemKernel.h>
 #include <kernel/TurbKineticEnergySSTDESSrcElemKernel.h>
 
+// bc kernels
+#include <kernel/ScalarOpenAdvElemKernel.h>
+
 // nso
 #include <nso/ScalarNSOElemKernel.h>
 #include <nso/ScalarNSOKeElemSuppAlg.h>
@@ -98,6 +101,9 @@
 
 // stk_util
 #include <stk_util/parallel/ParallelReduce.hpp>
+
+// nalu utility
+#include <utils/StkHelpers.h>
 
 namespace sierra{
 namespace nalu{
@@ -581,7 +587,7 @@ TurbKineticEnergyEquationSystem::register_inflow_bc(
 void
 TurbKineticEnergyEquationSystem::register_open_bc(
   stk::mesh::Part *part,
-  const stk::topology &/*theTopo*/,
+  const stk::topology &partTopo,
   const OpenBoundaryConditionData &openBCData)
 {
 
@@ -628,19 +634,45 @@ TurbKineticEnergyEquationSystem::register_open_bc(
   }
 
   // solver open; lhs
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi = solverAlgDriver_->solverAlgMap_.find(algType);
-  if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-    SolverAlgorithm *theAlg = NULL;
-    if ( realm_.realmUsesEdges_ ) {
-      theAlg = new AssembleScalarEdgeOpenSolverAlgorithm(realm_, part, this, tke_, theBcField, &dkdxNone, evisc_);
+  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {
+    
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    
+    stk::topology elemTopo = get_elem_topo(realm_, *part);
+    
+    AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+    
+    std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
+      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "open");
+    
+    auto& activeKernels = faceElemSolverAlg->activeKernels_;
+    
+    if (solverAlgWasBuilt) {
+      
+      build_face_elem_topo_kernel_automatic<ScalarOpenAdvElemKernel>
+        (partTopo, elemTopo, *this, activeKernels, "turbulent_ke_open",
+         realm_.meta_data(), *realm_.solutionOptions_,
+         this, tke_, theBcField, dkdx_, evisc_, 
+         faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
+      
     }
-    else {
-      theAlg = new AssembleScalarElemOpenSolverAlgorithm(realm_, part, this, tke_, theBcField, &dkdxNone, evisc_);
-    }
-    solverAlgDriver_->solverAlgMap_[algType] = theAlg;
   }
   else {
-    itsi->second->partVec_.push_back(part);
+    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi = solverAlgDriver_->solverAlgMap_.find(algType);
+    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
+      SolverAlgorithm *theAlg = NULL;
+      if ( realm_.realmUsesEdges_ ) {
+        theAlg = new AssembleScalarEdgeOpenSolverAlgorithm(realm_, part, this, tke_, theBcField, &dkdxNone, evisc_);
+      }
+      else {
+        theAlg = new AssembleScalarElemOpenSolverAlgorithm(realm_, part, this, tke_, theBcField, &dkdxNone, evisc_);
+      }
+      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+    }
+    else {
+      itsi->second->partVec_.push_back(part);
+    }
   }
 
 }
