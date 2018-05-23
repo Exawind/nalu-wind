@@ -150,6 +150,11 @@ private:
    */
   void process_elements();
 
+  /** Reset iblank data with moving mesh applications
+   *
+   */
+  void reset_iblank_data();
+
   /** Print summary of mesh blocks
    */
   void print_summary();
