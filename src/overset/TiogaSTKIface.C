@@ -61,6 +61,9 @@ TiogaSTKIface::load(const YAML::Node& node)
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
       << "TIOGA: Using coordinates field: " << coords_name << std::endl;
+
+  if (node["tioga_populate_inactive_part"])
+    populateInactivePart_ = node["tioga_populate_inactive_part"].as<bool>();
 }
 
 void TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
@@ -150,7 +153,7 @@ void TiogaSTKIface::execute()
   // step.
   update_ghosting();
 
-  populate_inactive_part();
+  if (populateInactivePart_) populate_inactive_part();
 
   // Update overset fringe connectivity information for Constraint based algorithm
   populate_overset_info();
