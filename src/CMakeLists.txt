@@ -87,6 +87,7 @@ add_sources(GlobalSourceList
    DirichletBC.C
    EffectiveDiffFluxCoeffAlgorithm.C
    EffectiveSSTDiffFluxCoeffAlgorithm.C
+   EigenDecomposition.C
    ElemDataRequests.C
    EnthalpyABLSrcNodeSuppAlg.C
    EnthalpyEffectiveDiffFluxCoeffAlgorithm.C

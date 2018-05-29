@@ -1,5 +1,6 @@
 add_sources(GlobalSourceList
    ContinuityAdvElemKernel.C
+   ContinuityInflowElemKernel.C
    ContinuityMassElemKernel.C
    ContinuityOpenElemKernel.C
    KernelBuilderLog.C
