@@ -634,7 +634,7 @@ specifies the component of the gravity vector, defined in
 :inpfile:`solution_options.gravity`, that should be used in the
 definition of the Monin-Obukhov length scale calculation.  The
 entry :inpfile:`reference_temperature` is the reference temperature
-used in calculation of the Monin-Obukhov length scale. 
+used in calculation of the Monin-Obukhov length scale.
 
 When there is mesh motion involved the wall boundary must specify a user
 function to determine relative velocity at the surface.
@@ -1134,6 +1134,8 @@ Actuator
 .. inpfile:: actuator.turb_id
 
    A unique turbine id for each turbine
+
+.. include:: ./turbine_modeling.rst
        
 
 Turbulence averaging
@@ -1200,7 +1202,7 @@ Turbulence averaging
      "Moving window" average where the window size is set to to the time
      filter width. The contribution of any quantity before the moving window
      towards the average value reduces exponentially with every time step.
-   
+
 .. inpfile:: turbulence_averaging.time_filter_interval
 
    Number indicating the time filter size over which to calculate the
@@ -1239,12 +1241,12 @@ Turbulence averaging
 
 .. inpfile:: turbulence_averaging.specifications.compute_resolved_stress
 
-   A boolean flag indicating whether the average resolved stress is 
+   A boolean flag indicating whether the average resolved stress is
    computed as :math:`< \bar\rho \widetilde{u_i} \widetilde{u_j} >`.
    The default value is ``no``. When this option is turned on, the Favre
    average of the resolved velocity, :math:`< \bar{\rho} \widetilde{u_j} >`, is
    computed as well.
-   
+
 .. inpfile:: turbulence_averaging.specifications.compute_temperature_resolved_flux
 
    A boolean flag indicating whether the average resolved temperature flux is
@@ -1261,8 +1263,8 @@ Turbulence averaging
    by the turbulence model is used. The sub-filter scale kinetic energy is used
    to determine the isotropic component of the sub-filter stress. As described
    in the section :ref:`supp_eqn_set_mom_cons`, the Yoshizawa model is used to
-   compute the sub-filter kinetic energy when it is not transported. 
-   
+   compute the sub-filter kinetic energy when it is not transported.
+
 .. inpfile:: turbulence_averaging.specifications.compute_temperature_sfs_flux
 
    A boolean flag indicating whether the average sub-filter scale flux of
@@ -1270,7 +1272,7 @@ Turbulence averaging
    stress model is assumed to be of an eddy diffusivity type and the turbulent
    diffusivity computed by the turbulence model is used along with a constant
    turbulent Prandtl number obtained from the Realm.
-   
+
 .. inpfile:: turbulence_averaging.specifications.compute_favre_stress
 
    A boolean flag indicating whether the Favre stress is computed. The
