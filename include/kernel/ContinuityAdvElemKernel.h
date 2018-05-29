@@ -69,7 +69,7 @@ private:
   const double om_interpTogether_;
 
   // scratch space
-  Kokkos::View<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]> v_shape_function_ { "view_shape_func" };
+  AlignedViewType<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]> v_shape_function_ { "view_shape_func" };
 
   const int* lrscv_;
 };

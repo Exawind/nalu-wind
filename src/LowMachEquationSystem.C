@@ -117,6 +117,7 @@
 #include <kernel/MomentumUpwAdvDiffElemKernel.h>
 
 // bc kernels
+#include <kernel/ContinuityInflowElemKernel.h>
 #include <kernel/ContinuityOpenElemKernel.h>
 #include <kernel/MomentumOpenAdvDiffElemKernel.h>
 #include <kernel/MomentumSymmetryElemKernel.h>
@@ -2584,12 +2585,12 @@ ContinuityEquationSystem::register_interior_algorithm(
 }
 
 //--------------------------------------------------------------------------
-//-------- register_inflow_bc ------------------------------------------------
+//-------- register_inflow_bc ----------------------------------------------
 //--------------------------------------------------------------------------
 void
 ContinuityEquationSystem::register_inflow_bc(
   stk::mesh::Part *part,
-  const stk::topology &/*theTopo*/,
+  const stk::topology &partTopo,
   const InflowBoundaryConditionData &inflowBCData)
 {
 
@@ -2707,16 +2708,38 @@ ContinuityEquationSystem::register_inflow_bc(
     itmd->second->partVec_.push_back(part);
   }
   
-  // solver; lhs - shared by both elem/edge
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator its =
-    solverAlgDriver_->solverAlgMap_.find(algType);
-  if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
-    AssembleContinuityInflowSolverAlgorithm *theAlg
-      = new AssembleContinuityInflowSolverAlgorithm(realm_, part, this, useShifted);
-    solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+  // solver; lhs
+  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {      
+
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    
+    AssembleElemSolverAlgorithm* solverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+    
+    std::tie(solverAlg, solverAlgWasBuilt) 
+      = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "inflow");
+    
+    ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+    auto& activeKernels = solverAlg->activeKernels_;
+    
+    if (solverAlgWasBuilt) {
+      build_face_topo_kernel_automatic<ContinuityInflowElemKernel>
+        (partTopo, *this, activeKernels, "continuity_inflow",
+         realm_.bulk_data(), *realm_.solutionOptions_, useShifted, dataPreReqs);
+    }
+
   }
   else {
-    its->second->partVec_.push_back(part);
+    std::map<AlgorithmType, SolverAlgorithm *>::iterator its =
+      solverAlgDriver_->solverAlgMap_.find(algType);
+    if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
+      AssembleContinuityInflowSolverAlgorithm *theAlg
+        = new AssembleContinuityInflowSolverAlgorithm(realm_, part, this, useShifted);
+      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+    }
+    else {
+      its->second->partVec_.push_back(part);
+    }
   }
 
 }

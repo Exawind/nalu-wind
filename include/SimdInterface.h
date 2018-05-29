@@ -16,6 +16,7 @@
  */
 
 #include "stk_simd/Simd.hpp"
+#include "Kokkos_Macros.hpp"
 
 #include <vector>
 
@@ -27,7 +28,7 @@ typedef stk::simd::Double SimdDouble;
 typedef SimdDouble DoubleType;
 
 template<typename T>
-using AlignedVector = std::vector<T, non_std::AlignedAllocator<T, 64>>;
+using AlignedVector = std::vector<T, non_std::AlignedAllocator<T, KOKKOS_MEMORY_ALIGNMENT>>;
 
 using ScalarAlignedVector = AlignedVector<DoubleType>;
 

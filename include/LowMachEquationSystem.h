@@ -214,7 +214,7 @@ public:
 
   virtual void register_inflow_bc(
     stk::mesh::Part *part,
-    const stk::topology &theTopo,
+    const stk::topology &partTopo,
     const InflowBoundaryConditionData &inflowBCData);
 
   virtual void register_open_bc(

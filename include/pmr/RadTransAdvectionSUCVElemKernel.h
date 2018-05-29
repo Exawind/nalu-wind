@@ -77,8 +77,8 @@ private:
   const int* lrscv_;
 
   // scratch space
-  Kokkos::View<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]> v_shape_function_{"v_shape_function"};
-  Kokkos::View<DoubleType[AlgTraits::nDim_]> v_Sk_{"v_Sk"};
+  AlignedViewType<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]> v_shape_function_{"v_shape_function"};
+  AlignedViewType<DoubleType[AlgTraits::nDim_]> v_Sk_{"v_Sk"};
 };
 
 }  // nalu

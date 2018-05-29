@@ -114,14 +114,14 @@ MomentumUpwAdvDiffElemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType *>& rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
-  DoubleType w_uIp[AlgTraits::nDim_];
-  DoubleType w_uIpL[AlgTraits::nDim_];
-  DoubleType w_uIpR[AlgTraits::nDim_];
-  DoubleType w_coordIp[AlgTraits::nDim_];
-  DoubleType w_duL[AlgTraits::nDim_];
-  DoubleType w_duR[AlgTraits::nDim_];
-  DoubleType w_limitL[AlgTraits::nDim_];
-  DoubleType w_limitR[AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_uIp[AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_uIpL[AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_uIpR[AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_coordIp[AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_duL[AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_duR[AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_limitL[AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_limitR[AlgTraits::nDim_];
   for ( int i = 0; i < AlgTraits::nDim_; ++i ) {
     w_limitL[i] = 1.0;
     w_limitR[i] = 1.0;

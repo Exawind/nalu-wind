@@ -85,7 +85,7 @@ private:
   PecletFunction<DoubleType> *pecletFunction_{nullptr};
 
   /// Shape functions
-  Kokkos::View<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> vf_adv_shape_function_ {"vf_adv_shape_function"};
+  AlignedViewType<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> vf_adv_shape_function_ {"vf_adv_shape_function"};
 };
 
 }  // nalu

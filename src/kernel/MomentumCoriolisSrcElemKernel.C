@@ -79,7 +79,7 @@ MomentumCoriolisSrcElemKernel<AlgTraits>::execute(
 
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
     const int nnDim = ipNodeMap_[ip] * AlgTraits::nDim_;
-    DoubleType uIp[3] = { 0.0, 0.0, 0.0 };
+    NALU_ALIGNED DoubleType uIp[3] = { 0.0, 0.0, 0.0 };
     DoubleType rhoIp = 0.0;
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
       DoubleType r = v_shape_function_(ip,n);

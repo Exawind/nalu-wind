@@ -867,7 +867,7 @@ void PyrSCS::face_grad_op_quad(const int face_ordinal, const bool shifted,
 
   constexpr int derivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * quad_traits::nDim_;
 
-  DoubleType NALU_ALIGN(64) psi[derivSize];
+  NALU_ALIGNED DoubleType psi[derivSize];
   QuadFaceGradType deriv(psi,quad_traits::numFaceIp_,quad_traits::nodesPerElement_,quad_traits::nDim_);
 
   const int offset = (face_ordinal != 4) ? 0 : tri_traits::nDim_ * tri_traits::numFaceIp_ * face_ordinal;
@@ -883,7 +883,7 @@ void PyrSCS::face_grad_op_tri(const int face_ordinal, const bool shifted,
   const double *p_intgExp = (!shifted || face_ordinal < 4 ) ? &intgExpFace_[0] : &intgExpFaceShift_[0];
 
   constexpr int derivSize = tri_traits::numFaceIp_ *  tri_traits::nodesPerElement_ * tri_traits::nDim_;
-  DoubleType NALU_ALIGN(64) psi[derivSize];
+  NALU_ALIGNED DoubleType psi[derivSize];
   TriFaceGradType deriv(psi,tri_traits::numFaceIp_,tri_traits::nodesPerElement_,tri_traits::nDim_ );
 
   const int offset = (face_ordinal != 4) ? tri_traits::nDim_ * tri_traits::numFaceIp_ * face_ordinal : 0;
@@ -901,12 +901,12 @@ void PyrSCS::face_grad_op(
   using quad_traits = AlgTraitsQuad4Pyr5;
 
   constexpr int quad_derivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * quad_traits::nDim_;
-  DoubleType NALU_ALIGN(64) quad_grad_temp[quad_derivSize];
+  NALU_ALIGNED DoubleType quad_grad_temp[quad_derivSize];
   QuadFaceGradType quad_gradop(quad_grad_temp,quad_traits::numFaceIp_,quad_traits::nodesPerElement_,quad_traits::nDim_);
   face_grad_op_quad(face_ordinal, shifted, coords, quad_gradop);
 
   constexpr int tri_derivSize = tri_traits::numFaceIp_ *  tri_traits::nodesPerElement_ * tri_traits::nDim_;
-  DoubleType NALU_ALIGN(64) tri_grad_temp[tri_derivSize];
+  NALU_ALIGNED DoubleType tri_grad_temp[tri_derivSize];
   TriFaceGradType tri_gradop(tri_grad_temp,tri_traits::numFaceIp_,tri_traits::nodesPerElement_,tri_traits::nDim_ );
   face_grad_op_tri(face_ordinal, shifted, coords, tri_gradop);
 

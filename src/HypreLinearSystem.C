@@ -333,16 +333,11 @@ HypreLinearSystem::zeroSystem()
   MPI_Comm comm = realm_.bulk_data().parallel();
   HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
 
-  if (systemInitialized_)
-    HYPRE_IJMatrixDestroy(mat_);
-  HYPRE_IJMatrixCreate(comm, iLower_, iUpper_, jLower_, jUpper_, &mat_);
-  HYPRE_IJMatrixSetObjectType(mat_, HYPRE_PARCSR);
   HYPRE_IJMatrixInitialize(mat_);
-  HYPRE_IJMatrixGetObject(mat_, (void**)&(solver->parMat_));
-
   HYPRE_IJVectorInitialize(rhs_);
   HYPRE_IJVectorInitialize(sln_);
 
+  HYPRE_IJMatrixSetConstantValues(mat_, 0.0);
   HYPRE_ParVectorSetConstantValues(solver->parRhs_, 0.0);
   HYPRE_ParVectorSetConstantValues(solver->parSln_, 0.0);
 

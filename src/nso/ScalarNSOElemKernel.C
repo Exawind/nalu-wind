@@ -116,8 +116,8 @@ ScalarNSOElemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType *>& rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
-  DoubleType w_dqdxScs    [AlgTraits::nDim_];
-  DoubleType w_rhoVrtmScs [AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_dqdxScs    [AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_rhoVrtmScs [AlgTraits::nDim_];
 
   SharedMemView<DoubleType**>& v_Gjq = scratchViews.get_scratch_view_2D(*Gjq_);
   SharedMemView<DoubleType**>& v_velocityRTM = scratchViews.get_scratch_view_2D(*velocityRTM_);

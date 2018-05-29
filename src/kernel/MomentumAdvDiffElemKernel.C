@@ -76,7 +76,7 @@ MomentumAdvDiffElemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType *>& rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
-  DoubleType w_uIp[AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_uIp[AlgTraits::nDim_];
 
   SharedMemView<DoubleType**>& v_uNp1 = scratchViews.get_scratch_view_2D(*velocityNp1_);
   SharedMemView<DoubleType*>& v_viscosity = scratchViews.get_scratch_view_1D(*viscosity_);

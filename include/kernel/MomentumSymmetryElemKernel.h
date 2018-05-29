@@ -63,7 +63,7 @@ private:
   MasterElement *meSCS_{nullptr};
 
   /// Shape functions
-  Kokkos::View<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> vf_shape_function_ {"view_face_shape_func"};
+  AlignedViewType<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> vf_shape_function_ {"view_face_shape_func"};
 };
 
 }  // nalu

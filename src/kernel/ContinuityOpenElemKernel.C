@@ -99,10 +99,10 @@ ContinuityOpenElemKernel<BcAlgTraits>::execute(
   ScratchViews<DoubleType> &elemScratchViews,
   int elemFaceOrdinal)
 {
-  DoubleType NALU_ALIGN(64) w_uBip[BcAlgTraits::nDim_];
-  DoubleType NALU_ALIGN(64) w_rho_uBip[BcAlgTraits::nDim_];
-  DoubleType NALU_ALIGN(64) w_GpdxBip[BcAlgTraits::nDim_];
-  DoubleType NALU_ALIGN(64) w_dpdxBip[BcAlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_uBip[BcAlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_rho_uBip[BcAlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_GpdxBip[BcAlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_dpdxBip[BcAlgTraits::nDim_];
  
   const int *face_node_ordinals = meSCS_->side_node_ordinals(elemFaceOrdinal);
  

@@ -128,9 +128,9 @@ MomentumNSOElemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType *>& rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
-  DoubleType w_dukdxScs   [AlgTraits::nDim_];
-  DoubleType w_rhoVrtmScs [AlgTraits::nDim_];
-  DoubleType w_dpdxScs    [AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_dukdxScs   [AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_rhoVrtmScs [AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_dpdxScs    [AlgTraits::nDim_];
 
   SharedMemView<DoubleType***>& v_Gju = scratchViews.get_scratch_view_3D(*Gju_);
   SharedMemView<DoubleType**>& v_uNm1 = scratchViews.get_scratch_view_2D(*velocityNm1_);

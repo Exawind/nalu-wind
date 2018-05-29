@@ -192,8 +192,8 @@ private:
 // 3D Quad 27 subcontrol volume
 class Hex27SCV : public HexahedralP2Element
 {
-  using InterpWeightType = Kokkos::View<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]>;
-  using GradWeightType = Kokkos::View<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
+  using InterpWeightType = AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]>;
+  using GradWeightType = AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
 
 public:
   Hex27SCV();
@@ -259,9 +259,9 @@ private:
 // 3D Hex 27 subcontrol surface
 class Hex27SCS : public HexahedralP2Element
 {
-  using InterpWeightType = Kokkos::View<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]>;
-  using GradWeightType = Kokkos::View<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
-  using ExpGradWeightType = Kokkos::View<DoubleType[6*AlgTraitsQuad9Hex27::numFaceIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
+  using InterpWeightType = AlignedViewType<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]>;
+  using GradWeightType = AlignedViewType<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
+  using ExpGradWeightType = AlignedViewType<DoubleType[6*AlgTraitsQuad9Hex27::numFaceIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
 
 public:
   Hex27SCS();

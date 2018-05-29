@@ -103,10 +103,10 @@ MomentumMassElemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType *>& rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
-  DoubleType w_uNm1 [AlgTraits::nDim_];
-  DoubleType w_uN   [AlgTraits::nDim_];
-  DoubleType w_uNp1 [AlgTraits::nDim_];
-  DoubleType w_Gjp  [AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_uNm1 [AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_uN   [AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_uNp1 [AlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_Gjp  [AlgTraits::nDim_];
 
   SharedMemView<DoubleType*>& v_densityNm1 = scratchViews.get_scratch_view_1D(*densityNm1_);
   SharedMemView<DoubleType*>& v_densityN = scratchViews.get_scratch_view_1D(*densityN_);

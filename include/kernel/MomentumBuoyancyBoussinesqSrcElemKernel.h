@@ -53,12 +53,12 @@ private:
   double rhoRef_;
   double tRef_;
   double beta_;
-  Kokkos::View<DoubleType[AlgTraits::nDim_]> gravity_{ "v_gravity"};
+  AlignedViewType<DoubleType[AlgTraits::nDim_]> gravity_{ "v_gravity"};
 
   const int* ipNodeMap_;
 
   // scratch space
-  Kokkos::View<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]> v_shape_function_ { "v_shape_func" };
+  AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]> v_shape_function_ { "v_shape_func" };
 };
 
 }  // nalu

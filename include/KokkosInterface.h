@@ -12,7 +12,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core.hpp>
 
-#define NALU_ALIGN(size) __attribute__((aligned(size)))
+#define NALU_ALIGNED alignas(KOKKOS_MEMORY_ALIGNMENT)
 
 #if defined(__INTEL_COMPILER)
 #define POINTER_RESTRICT restrict
@@ -34,6 +34,9 @@ using TeamHandleType = Kokkos::TeamPolicy<DeviceSpace, DynamicScheduleType>::mem
 
 template <typename T>
 using SharedMemView = Kokkos::View<T, Kokkos::LayoutRight, DeviceShmem, Kokkos::MemoryUnmanaged>;
+
+template<typename T>
+using AlignedViewType = Kokkos::View<T, Kokkos::MemoryTraits<Kokkos::Aligned>>;
 
 using DeviceTeamPolicy = Kokkos::TeamPolicy<DeviceSpace>;
 using DeviceTeam = DeviceTeamPolicy::member_type;

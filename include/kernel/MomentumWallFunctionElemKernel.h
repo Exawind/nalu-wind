@@ -64,7 +64,7 @@ private:
   const int *ipNodeMap_{nullptr};
   
   // fixed scratch space
-  Kokkos::View<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> vf_shape_function_{"vf_shape_function"};
+  AlignedViewType<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> vf_shape_function_{"vf_shape_function"};
 };
 
 }  // nalu

@@ -6,8 +6,8 @@
 /*------------------------------------------------------------------------*/
 
 
-#ifndef RadTransWallElemKernel_h
-#define RadTransWallElemKernel_h
+#ifndef ContinuityInflowElemKernel_h
+#define ContinuityInflowElemKernel_h
 
 #include "FieldTypeDef.h"
 #include "kernel/Kernel.h"
@@ -21,22 +21,21 @@ namespace nalu {
 
 class ElemDataRequests;
 class MasterElement;
-class RadiativeTransportEquationSystem;
 class TimeIntegrator;
 
-/** Add Int I sj*njds 
+/** Add Int rho*uj*nj*dS
  */
 template<typename BcAlgTraits>
-class RadTransWallElemKernel: public Kernel
+class ContinuityInflowElemKernel: public Kernel
 {
 public:
-  RadTransWallElemKernel(
-      const stk::mesh::BulkData&,
-      RadiativeTransportEquationSystem *radEqSystem,
-      const bool &,
-      ElemDataRequests&);
+  ContinuityInflowElemKernel(
+    const stk::mesh::BulkData& bulkData,
+    const SolutionOptions &solnOpts,
+    const bool &useShifted,
+    ElemDataRequests &faceDataPreReqs);
 
-  virtual ~RadTransWallElemKernel();
+  virtual ~ContinuityInflowElemKernel();
 
   /** Perform pre-timestep work for the computational kernel
    */
@@ -46,28 +45,31 @@ public:
    *  the linear solve
    */
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType **>&lhs,
+    SharedMemView<DoubleType *>&rhs,
+    ScratchViews<DoubleType>& scratchViews);
 
 private:
-  RadTransWallElemKernel() = delete;
+  ContinuityInflowElemKernel() = delete;
 
-  ScalarFieldType *intensity_{nullptr};
-  ScalarFieldType *bcIntensity_{nullptr};
+  VectorFieldType *velocityBC_{nullptr};
+  ScalarFieldType *densityBC_{nullptr};
   GenericFieldType *exposedAreaVec_{nullptr};
 
-  const RadiativeTransportEquationSystem *radEqSystem_;
-  
+  const bool useShifted_;
+  double projTimeScale_;
+  const double interpTogether_;
+  const double om_interpTogether_;
+
   // Integration point to node mapping 
   const int *ipNodeMap_{nullptr};
 
   // scratch space
-  AlignedViewType<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> vf_shape_function_{"vf_shape_function"};
-  AlignedViewType<DoubleType[BcAlgTraits::nDim_]> v_Sk_{"v_Sk"};
+  Kokkos::View<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> 
+    vf_shape_function_{"vf_shape_function"};
 };
 
 }  // nalu
 }  // sierra
 
-#endif /* RadTransWallElemKernel_h */
+#endif /* ContinuityInflowElemKernel_h */

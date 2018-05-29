@@ -79,7 +79,7 @@ ScalarFluxPenaltyElemKernel<BcAlgTraits>::execute(
   ScratchViews<DoubleType> &elemScratchViews,
   int elemFaceOrdinal)
 {
-  DoubleType NALU_ALIGN(64) w_dqdxBip[BcAlgTraits::nDim_];
+  NALU_ALIGNED DoubleType w_dqdxBip[BcAlgTraits::nDim_];
  
   const int *face_node_ordinals = meSCS_->side_node_ordinals(elemFaceOrdinal);
  

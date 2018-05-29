@@ -62,7 +62,7 @@ private:
   const bool shiftedGradOp_;
   
   /// Shape functions
-  Kokkos::View<DoubleType[AlgTraits::numGp_][AlgTraits::nodesPerElement_]> v_shape_function_ { "v_shape_func" };
+  AlignedViewType<DoubleType[AlgTraits::numGp_][AlgTraits::nodesPerElement_]> v_shape_function_ { "v_shape_func" };
 };
 
 }  // nalu

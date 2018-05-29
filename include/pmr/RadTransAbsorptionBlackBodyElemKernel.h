@@ -55,7 +55,7 @@ private:
   const int* ipNodeMap_;
 
   // fixed scratch space
-  Kokkos::View<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]> v_shape_function_{"v_shape_function"};
+  AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]> v_shape_function_{"v_shape_function"};
 };
 
 }  // nalu
