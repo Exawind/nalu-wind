@@ -95,6 +95,8 @@
 #include <user_functions/BoussinesqNonIsoTemperatureAuxFunction.h>
 #include <user_functions/BoussinesqNonIsoEnthalpySrcNodeSuppAlg.h>
 
+#include <user_functions/CappingInversionTemperatureAuxFunction.h>
+
 // overset
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
@@ -1103,6 +1105,9 @@ EnthalpyEquationSystem::register_initial_condition_fcn(
     else if ( fcnName == "BoussinesqNonIso" ) {
       theAuxFunc = new BoussinesqNonIsoTemperatureAuxFunction();
     }
+    else if ( fcnName == "capping_inversion" ) {
+      theAuxFunc = new CappingInversionTemperatureAuxFunction();
+    }
     else {
       throw std::runtime_error("EnthalpyEquationSystem::register_initial_condition_fcn: limited user functions supported");
     }
@@ -1424,6 +1429,9 @@ EnthalpyEquationSystem::temperature_bc_setup(
     }
     else if ( fcnName == "BoussinesqNonIso" ) {
       theAuxFunc = new BoussinesqNonIsoTemperatureAuxFunction();
+    }
+    else if ( fcnName == "capping_inversion" ) {
+      theAuxFunc = new CappingInversionTemperatureAuxFunction();
     }
     else {
       throw std::runtime_error("EnthalpyEquationSystem::temperature_bc_setup; limited user functions supported");

@@ -97,6 +97,7 @@ SolutionOptions::SolutionOptions()
     mdotAlgOpenCorrection_(0.0),
     mdotAlgOpenIpCount_(0),
     mdotAlgOpenPost_(0.0),
+    explicitlyZeroOpenPressureGradient_(false),
     quadType_("GaussLegendre")
 {
   // nothing to do
@@ -212,6 +213,9 @@ SolutionOptions::load(const YAML::Node & y_node)
     // check for global correction algorithm
     get_if_present(y_solution_options, "activate_open_mdot_correction",
       activateOpenMdotCorrection_, activateOpenMdotCorrection_);
+
+    get_if_present(y_solution_options, "explicitly_zero_open_pressure_gradient",
+      explicitlyZeroOpenPressureGradient_, explicitlyZeroOpenPressureGradient_);
 
     // first set of options; hybrid, source, etc.
     const YAML::Node y_options = expect_sequence(y_solution_options, "options", required);
