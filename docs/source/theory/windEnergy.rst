@@ -411,12 +411,8 @@ Renewable Energy Laboratory (NREL). The :class:`ActuatorLineFAST
 <sierra::nalu::ActuatorLineFAST>` class allows Nalu-Wind to interface as an inflow
 module to OpenFAST by supplying the velocity field information.
 
-<<<<<<< HEAD
 Nalu-Wind -- OpenFAST Coupling Algorithm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-=======
-Nacelle Modeling
-~~~~~~~~~~~~~~~~
 
 A nacelle model is implemented using a Gaussian drag body force. The model
 implements a drag force in a direction opposite to velocity field at the center
@@ -461,7 +457,6 @@ interest and the center of the Gaussian force.
 
 Nalu -- OpenFAST Coupling Algorithm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>>>>>> tonynalu/master
 
 The actuator line implementation allows for flexible blades that are not
 necessarily straight (prebend and sweep). The current implementation requires a
@@ -471,17 +466,10 @@ FSI model is used to interface Nalu-Wind with the turbine model in OpenFAST:
 
   + The velocity at time step at time step :math:`n` is sampled at the actuator
     points and sent to OpenFAST,
-<<<<<<< HEAD
   + OpenFAST advances the turbines upto the next Nalu-Wind time step :math:`n+1`,
   + The body forces at the actuator points are converted to the source terms of the momentum 
     equation to advance Nalu-Wind to the next time step :math:`n+1`.
     
-=======
-  + OpenFAST advances the turbines upto the next Nalu time step :math:`n+1`,
-  + The body forces at the actuator points are converted to the source terms of the momentum
-    equation to advance Nalu to the next time step :math:`n+1`.
-
->>>>>>> tonynalu/master
 This FSI algorithm is expected to be only first order accurate in time. We are
 currently working on improving the FSI coupling scheme to be second order
 accurate in time.
