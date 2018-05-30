@@ -4,6 +4,7 @@ add_sources(GlobalHeaderList
    BoussinesqNonIsoMomentumSrcNodeSuppAlg.h
    BoussinesqNonIsoTemperatureAuxFunction.h
    BoussinesqNonIsoVelocityAuxFunction.h
+   CappingInversionTemperatureAuxFunction.h
    ConvectingTaylorVortexPressureAuxFunction.h
    ConvectingTaylorVortexVelocityAuxFunction.h
    FlowPastCylinderTempAuxFunction.h

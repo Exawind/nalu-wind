@@ -4,6 +4,7 @@ add_sources(GlobalSourceList
    BoussinesqNonIsoMomentumSrcNodeSuppAlg.C
    BoussinesqNonIsoTemperatureAuxFunction.C
    BoussinesqNonIsoVelocityAuxFunction.C
+   CappingInversionTemperatureAuxFunction.C
    ConvectingTaylorVortexPressureAuxFunction.C
    ConvectingTaylorVortexVelocityAuxFunction.C
    FlowPastCylinderTempAuxFunction.C

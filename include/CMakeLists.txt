@@ -2,9 +2,7 @@ add_sources(GlobalHeaderList
    ABLForcingAlgorithm.h
    ABLProfileFunction.h
    Actuator.h
-   ActuatorLineFAST.h
    ActuatorLinePointDrag.h
-   Adapter.h
    AlgTraits.h
    Algorithm.h
    AlgorithmDriver.h
@@ -35,6 +33,7 @@ add_sources(GlobalHeaderList
    AssembleNodalGradEdgeAlgorithm.h
    AssembleNodalGradElemAlgorithm.h
    AssembleNodalGradNonConformalAlgorithm.h
+   AssembleNodalGradPAlgorithmDriver.h
    AssembleNodalGradUAlgorithmDriver.h
    AssembleNodalGradUBoundaryAlgorithm.h
    AssembleNodalGradUEdgeAlgorithm.h
@@ -95,6 +94,7 @@ add_sources(GlobalHeaderList
    DirichletBC.h
    EffectiveDiffFluxCoeffAlgorithm.h
    EffectiveSSTDiffFluxCoeffAlgorithm.h
+   EigenDecomposition.h
    ElemDataRequests.h
    EnthalpyABLSrcNodeSuppAlg.h
    EnthalpyEffectiveDiffFluxCoeffAlgorithm.h
@@ -116,8 +116,6 @@ add_sources(GlobalHeaderList
    HeatCondEquationSystem.h
    HeatCondMassBDF2NodeSuppAlg.h
    HeatCondMassBackwardEulerNodeSuppAlg.h
-   HypreDirectSolver.h
-   HypreLinearSystem.h
    InitialConditions.h
    InputOutputRealm.h
    InterfaceBalancer.h
@@ -199,9 +197,28 @@ add_sources(GlobalHeaderList
    TurbViscWaleAlgorithm.h
    TurbulenceAveragingPostProcessing.h
    UnitTests.h
-   XSDKHypreInterface.h
    nalu_make_unique.h
 )
+
+if(ENABLE_OPENFAST)
+   add_sources(GlobalHeaderList
+      ActuatorLineFAST.h
+   )
+endif()
+
+if(ENABLE_HYPRE)
+   add_sources(GlobalHeaderList
+      HypreDirectSolver.h
+      HypreLinearSystem.h
+      XSDKHypreInterface.h
+   )
+endif()
+
+if(ENABLE_PARAVIEW_CATALYST)
+   add_sources(GlobalHeaderList
+      Adapter.h
+   )
+endif()
 
 add_subdirectory(element_promotion)
 add_subdirectory(kernel)
