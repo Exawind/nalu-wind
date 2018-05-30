@@ -23,6 +23,7 @@ namespace nalu{
 class AlgorithmDriver;
 class Realm;
 class AssembleNodalGradAlgorithmDriver;
+class AssembleNodalGradPAlgorithmDriver;
 class AssembleNodalGradUAlgorithmDriver;
 class MomentumEquationSystem;
 class ContinuityEquationSystem;
@@ -259,7 +260,7 @@ public:
 
   ScalarFieldType *pTmp_;
 
-  AssembleNodalGradAlgorithmDriver *assembleNodalGradAlgDriver_;
+  AssembleNodalGradPAlgorithmDriver *assembleNodalGradPAlgDriver_;
   ComputeMdotAlgorithmDriver *computeMdotAlgDriver_;
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 };

@@ -147,6 +147,7 @@ realms:
       turbulence_model: wale
       interp_rhou_together_for_mdot: yes
       activate_open_mdot_correction: yes
+      explicitly_zero_open_pressure_gradient: yes 
 
       options:
 
@@ -231,6 +232,7 @@ realms:
       name: myOptions
       input_variables_interpolate_in_time: yes
       input_variables_from_file_restoration_time: 0.0
+      explicitly_zero_open_pressure_gradient: yes
 
       options:    
         - input_variables_from_file:
