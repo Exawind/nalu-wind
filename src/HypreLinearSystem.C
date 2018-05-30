@@ -330,7 +330,6 @@ HypreLinearSystem::loadComplete()
 void
 HypreLinearSystem::zeroSystem()
 {
-  MPI_Comm comm = realm_.bulk_data().parallel();
   HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
 
   HYPRE_IJMatrixInitialize(mat_);
