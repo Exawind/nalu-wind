@@ -45,7 +45,7 @@ struct AlgTraitsTet4 {
 struct AlgTraitsPyr5 {
   static constexpr int nDim_ = 3;
   static constexpr int nodesPerElement_ = 5;
-  static constexpr int numScsIp_ = 8;
+  static constexpr int numScsIp_ = 12;
   static constexpr int numScvIp_ = 5;
   static constexpr int numGp_ = 5; // for FEM (not supported)
   static constexpr stk::topology::topology_t topo_ = stk::topology::PYRAMID_5;

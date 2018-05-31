@@ -76,6 +76,11 @@ public:
     const int &npts,
     const double *par_coord, 
     double* shape_fcn);
+
+  void shifted_pyr_shape_fcn(
+    const int &npts,
+    const double *par_coord, 
+    double* shape_fcn);
 };
 
 // Pyramid 5 subcontrol surface
@@ -130,6 +135,11 @@ public:
     const double *intLoc,
     double *deriv);
 
+  void shifted_pyr_derivative(
+    const int npts,
+    const double *intLoc,
+    double *deriv);
+
   void gij( 
     SharedMemView<DoubleType**>& coords,
     SharedMemView<DoubleType***>& gupper,
@@ -144,6 +154,8 @@ public:
 
   const int * adjacentNodes();
 
+  const int * scsIpEdgeOrd() override;
+
   void shape_fcn(
     double *shpfc);
 
@@ -151,6 +163,11 @@ public:
     double *shpfc);
   
   void pyr_shape_fcn(
+    const int &npts,
+    const double *par_coord, 
+    double* shape_fcn);
+
+  void shifted_pyr_shape_fcn(
     const int &npts,
     const double *par_coord, 
     double* shape_fcn);

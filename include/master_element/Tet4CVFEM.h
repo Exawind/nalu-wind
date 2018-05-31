@@ -142,6 +142,8 @@ public:
 
   const int * adjacentNodes();
 
+  const int * scsIpEdgeOrd() override;
+
   void shape_fcn(
     double *shpfc);
 

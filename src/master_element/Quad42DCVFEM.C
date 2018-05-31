@@ -318,6 +318,11 @@ Quad42DSCS::Quad42DSCS()
   lrscv_[4]  = 2; lrscv_[5]  = 3;
   lrscv_[6]  = 0; lrscv_[7]  = 3;
   
+  // elem-edge mapping from ip
+  scsIpEdgeOrd_.resize(numIntPoints_);
+  scsIpEdgeOrd_[0] = 0; scsIpEdgeOrd_[1] = 1;
+  scsIpEdgeOrd_[2] = 2; scsIpEdgeOrd_[3] = 3;
+
   // define opposing node
   oppNode_.resize(8);
   // face 0; nodes 0,1
@@ -773,6 +778,15 @@ Quad42DSCS::adjacentNodes()
 {
   // define L/R mappings
   return &lrscv_[0];
+}
+
+//--------------------------------------------------------------------------
+//-------- scsIpEdgeOrd ----------------------------------------------------
+//--------------------------------------------------------------------------
+const int *
+Quad42DSCS::scsIpEdgeOrd()
+{
+  return &scsIpEdgeOrd_[0];
 }
 
 //--------------------------------------------------------------------------

@@ -176,7 +176,11 @@ public:
      throw std::runtime_error("shifted_face_grad_op not implemented");}
 
   virtual const int * adjacentNodes() {
-    throw std::runtime_error("adjacentNodes not implementedunknown bc");
+    throw std::runtime_error("adjacentNodes not implemented");
+    return NULL;}
+
+  virtual const int * scsIpEdgeOrd() {
+    throw std::runtime_error("scsIpEdgeOrd not implemented");
     return NULL;}
 
   virtual const int * ipNodeMap(int ordinal = 0) {
@@ -193,7 +197,7 @@ public:
 
   virtual int opposingNodes(
     const int ordinal, const int node) {
-    throw std::runtime_error("adjacentNodes not implemented"); }
+    throw std::runtime_error("opposingNodes not implemented"); }
 
   virtual int opposingFace(
     const int ordinal, const int node) {
@@ -266,6 +270,7 @@ public:
   std::vector<double> nodeLoc_;
   std::vector<int> sideNodeOrdinals_;
   std::vector<int> sideOffset_;
+  std::vector<int> scsIpEdgeOrd_;
 
   // FEM
   std::vector<double>weights_;

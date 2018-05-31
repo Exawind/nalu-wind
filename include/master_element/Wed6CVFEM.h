@@ -143,6 +143,8 @@ public:
     double *deriv);
 
   const int * adjacentNodes();
+  
+  const int * scsIpEdgeOrd() override;
 
   int opposingNodes(
     const int ordinal, const int node);

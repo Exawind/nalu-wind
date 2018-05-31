@@ -1,8 +1,12 @@
-      subroutine hexVolumeByTriangleFacets( volcoords, volume )
+      subroutine bhexVolumeByTriangleFacets( volcoords, volume )
 c     This subroutine calculates the volume of a hexahedron using
 c     triangular facets. (see "Efficient computation of volume of
 c     Hexahedral Cells", Jeffrey Grandy, LLNL, UCRL-ID-128886, 
 c     October 30, 1997.
+c
+c     Modified for a non-planar bent top face which we have
+c     broken into two triangles
+c
 c
 c     coordinates of vertices of hexahedron
 c     =====================================
@@ -15,7 +19,7 @@ c
       implicit none
       double precision volcoords, volume
       double precision coords
-     
+
       integer triangularFacetTable(3,24)
       integer j, k, ncoords, ntriangles
 
@@ -63,9 +67,8 @@ c
      .    + volcoords(k,3) + volcoords(k,4) )
       end do
       do k = 1,3
-        coords(k,10) = 0.25d0*( volcoords(k,5)
-     .    + volcoords(k,6)
-     .    + volcoords(k,7) + volcoords(k,8) )
+        coords(k,10) = 0.5d0*( volcoords(k,6)
+     .    + volcoords(k,8) )
       end do
       do k = 1,3
         coords(k,11) = 0.25d0*( volcoords(k,1)
