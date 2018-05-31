@@ -179,18 +179,18 @@ described here. The Navier-Stokes equations are written as
 
 .. math::
    :label: fav-mom-nalu
-           
+
    {\bf F}_i (\rho^{n+1}, u_i^{n+1}, P^{n+1}) - \int \left . \frac{\partial \rho u_i}{\partial t} \right |^{n+1} {\rm d}V &= 0, \\
    {\bf F}_i (\rho^{n+1}, u_i^{n+1}, P^{n+1}) - \frac{ (\gamma_1 \rho^{n+1} {u_i}^{n+1} + \gamma_2 \rho^n {u_i}^{n} + \gamma_3 \rho^n {u_i}^{n-1})}{\Delta t} \Delta V &=0,
 
 where
 
 .. math::
-           
+
    {\bf F}_i (\rho^{n+1} u_i^{n+1}) &= - \int \rho^{n+1} u_i^{n+1} u_j^{n+1} n_j {\rm d}S  + \int \tau_{ij}^{n+1} n_j {\rm d}S - \int P^{n+1} n_i {\rm d}S - \int \left(\rho^{n+1} - \rho_{\circ} \right) g_i {\rm d}V, \\
    &= - \int u_i^{n+1} \dot{m}^{n+1}  + \int \tau_{ij}^{n+1} n_j {\rm d}S  - \int P^{n+1} n_i {\rm d}S - \int \left(\rho^{n+1} - \rho_{\circ} \right) g_i {\rm d}V. \\
-   
-   
+
+
 and :math:`\gamma_i` are factors for BDF2 time discretization scheme (see
 :numref:`theory_time_discretization`). As is typical of incompressible flow
 solvers, the mass flow rate through the sub-control surfaces is tracked
@@ -208,7 +208,7 @@ solution to the Navier-Stokes equations at time step :math:`n+1` as
 
 .. math::
    :label: fav-mom-nalu-newton
-           
+
    \mathbf{A}_{ij} \; \delta u_{j} &= {\bf F}_i^{*} - \frac{ (\gamma_1 \rho^{*} {u_i}^{*} + \gamma_2 \rho^n {u_i}^{n} + \gamma_3 \rho^n {u_i}^{n-1})}{\Delta t} \Delta V, \\
    \textrm{where } \delta u_{j} &= u_i^{**} - u_i^*, \\
    \mathbf{A}_{ij} &= \left ( \frac{ \gamma_1 \rho^{*}}{\Delta t} \Delta V \delta_{ij} - \left . \frac{\partial F_i}{\partial u_j} \right |^{*} \right ), \\
@@ -219,15 +219,15 @@ After each Newton or *outer* iteration, :math:`\phi^{**}` is a better approximat
 
 .. math::
    :label: linearize-f-phi-star
-           
-   {\bf F}_i^* = \left . \frac{\partial F_i}{\partial u_j} \right |^{*} u_j^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V 
-   
+
+   {\bf F}_i^* = \left . \frac{\partial F_i}{\partial u_j} \right |^{*} u_j^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V
+
 Applying Eq. :eq:`linearize-f-phi-star` to Eq. :eq:`fav-mom-nalu-newton`, we get the
 linearized momentum predictor equation solved in Nalu-Wind.
 
-.. math::   
+.. math::
    :label: fav-mom-nalu-linearize-f
-      
+
    {\bf A}_{ij} \; \delta u_j &= \left . \frac{\partial F_i}{\partial u_j} \right |^{*} u_j^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V  \\
    & \quad \quad  - \frac{ (\gamma_1 \rho^{*} {u_i}^{*} + \gamma_2 \rho^{n} {u_i}^{n} + \gamma_3 \rho^{n-1} {u_i}^{n-1})}{\Delta t} \Delta V \\
    {\bf A}_{ij} \; \delta u_j &= \left (\frac{ \gamma_1 \rho^{*}}{\Delta t} \Delta V \delta_{ij} - \left . \frac{\partial F_i}{\partial u_j} \right |^{*} \right ) {u_j}^{*} - \int P^{*} n_i {\rm d}S - \int \left(\rho^{*} - \rho_{\circ} \right) g_i {\rm d}V \\
@@ -237,7 +237,7 @@ linearized momentum predictor equation solved in Nalu-Wind.
 
 :math:`u_i^{**}` will not satisfy the continuity equation. A correction step is
 performed at the end of each outer iteration to make :math:`u_i^{**}`
-satisfy the continuity equation as 
+satisfy the continuity equation as
 
 .. math::
 
@@ -250,14 +250,14 @@ equation to be satisfied along with the splitting and stabilization errors is
 
 .. math::
    :label: eq-continuity
-           
+
    {\bf D } \rho u^{**} = b + \left ({\bf L_1} - {\bf D} \tau_3 {\bf G} \right ) \Delta P^{**} + \left ({\bf L_2} - {\bf D} \tau_2 {\bf G} \right ) P^{*}
 
 where :math:`b` contains any source terms when the velocity field is not
 divergence free and the other terms are the errors due to pressure stabilization
 as shown by Domino :cite:`Domino:2006`. The final pressure Poisson equation
 solved to enforce continuity at each outer iteration is
-   
+
 .. math::
    :label: eq-pressure
 
@@ -267,7 +267,7 @@ solved to enforce continuity at each outer iteration is
    b + {\bf L_1} \Delta P^{**} &= {\bf D} (\rho \widehat{u}) - \left ({\bf L_2} - {\bf D} \tau_2 {\bf G} \right ) P^{*} \\
    -{\bf L_1} \Delta P^{**} &= {\bf D} \rho \widehat{u} + {\bf D} \tau_2 {\bf G} P^{*} - {\bf L_2} P^{*} \\
    -{\bf L_1} \Delta P^{**} &= - {\bf D} \rho \widehat{u} - {\bf D} \tau_2 {\bf G} P^{*} + {\bf L_2} P^{*} + b
-  
+
 Thus, the final set of equations solved at each outer iteration is
 
 .. math::
@@ -371,9 +371,9 @@ given by
 
 .. math::
    :label: force-integral
-           
+
    f_i(x,y,z) = \int_0^L g\left(\vec{r}\left(l\right)\right) F'_i\left(l\right) \: \textrm{d} l.
-   
+
 
 Here, the projection function’s position vector is a function of
 position on the actuator line. The part of the line nearest to the point in
@@ -392,9 +392,9 @@ This is convenient because the integral given in Equation
 
 .. math::
    :label: force-summation
-           
+
    f_i(x,y,z) = \sum_{k=0}^N g(\vec{r}^k) F_i^k.
-   
+
 
 This summation well approximates the integral given in Equation
 :eq:`force-integral` so long as the ratio of actuator element size to
@@ -413,6 +413,50 @@ module to OpenFAST by supplying the velocity field information.
 
 Nalu-Wind -- OpenFAST Coupling Algorithm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A nacelle model is implemented using a Gaussian drag body force. The model
+implements a drag force in a direction opposite to velocity field at the center
+of the Gaussian.
+The width of the Gaussian kernel is determined using the reference
+area and drag coefficient of the nacelle as shown by Martinez-Tossas.
+:cite:`Martinez-Tossas2017`
+
+.. math::
+
+   \epsilon_d = \sqrt{2 \, c_d \, A/ \pi}
+
+
+where :math:`c_d` is the drag coefficient,
+and
+:math:`A` is the reference area.
+This value of :math:`\epsilon_d` ensures that the momentum thickness of the
+generated wake is of the right size.
+The velocity sampled at the center of the Gaussian is corrected
+to obtain the upstream velocity.
+
+.. math::
+
+   {\widetilde{u}_i}_\infty = \frac{1}{1 -
+                               c_d \, A / (4 \, \pi \, \epsilon_d^2)}
+                               {\widetilde{u}_i}_c
+
+
+where :math:`\widetilde{u_i}_c` is the velocity at the center of the Gaussian
+and :math:`{\widetilde{u}_i}_\infty` is the free-stream velocity used to compute
+the drag force.
+The drag body force is then
+
+.. math::
+
+   f_d(x,y,z) = \frac{1}{2} \, c_d \, A\, {\widetilde{u}_i}_\infty^2 \,
+                \frac{1}{\pi^{3/2} \epsilon_d^3} e^{-|\vec{r}|^2/\epsilon_d^2}
+
+
+where :math:`\vec{r}` is the position vector between the fluid point of
+interest and the center of the Gaussian force.
+
+Nalu -- OpenFAST Coupling Algorithm
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The actuator line implementation allows for flexible blades that are not
 necessarily straight (prebend and sweep). The current implementation requires a

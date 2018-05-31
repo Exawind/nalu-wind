@@ -275,6 +275,12 @@ void ActuatorLineFAST::readTurbineData(int iTurb, fast::fastInputs & fi, YAML::N
     }
     get_required(turbNode, "num_force_pts_blade", fi.globTurbineData[iTurb].numForcePtsBlade);
     get_required(turbNode, "num_force_pts_tower", fi.globTurbineData[iTurb].numForcePtsTwr);
+    fi.globTurbineData[iTurb].nacelle_cd = 0.0;
+    fi.globTurbineData[iTurb].nacelle_area = 0.0;
+    fi.globTurbineData[iTurb].air_density = 0.0;
+    get_if_present(turbNode, "nacelle_cd", fi.globTurbineData[iTurb].nacelle_cd);
+    get_if_present(turbNode, "nacelle_area", fi.globTurbineData[iTurb].nacelle_area);
+    get_if_present(turbNode, "air_density", fi.globTurbineData[iTurb].air_density);
 
 }
 
@@ -874,14 +880,58 @@ ActuatorLineFAST::create_actuator_line_point_info_map() {
 	  for ( int j = 0; j < nDim; ++j )
 	    centroidCoords[j] = currentCoords[j];
 
-	  // create the bounding point sphere and push back
-	  boundingSphere theSphere( Sphere(centroidCoords, searchRadius), theIdent);
-	  boundingSphereVec_.push_back(theSphere);
+          // create the bounding point sphere and push back
+          boundingSphere theSphere( Sphere(centroidCoords, searchRadius), theIdent);
+          boundingSphereVec_.push_back(theSphere);
 
-	  // create the point info and push back to map
+          // create the point info and push back to map
+          Coordinates epsilon;
+          switch (FAST.getForceNodeType(iTurb, np)) {
+          case fast::HUB: {
+              // Calculate epsilon for hub node based on cd and area here
+              float nac_area = FAST.get_nacelleArea(iTurb);
+              float nac_cd = FAST.get_nacelleCd(iTurb);
+
+              // The constant pi
+              const float pi = acos(-1.0);
+
+              for (int j=0; j<nDim; j++) {
+
+
+                  // Compute epsilon only if drag coefficient is greater than zero
+                  if (nac_cd>0){
+                      // This model is used to set the momentum thickness
+                      // of the wake (Martinez-Tossas PhD Thesis 2017)
+                      float tmpEps = std::sqrt(2.0 / pi * nac_cd * nac_area); 
+                      epsilon.x_ = tmpEps;
+                      epsilon.y_ = tmpEps;
+                      epsilon.z_ = tmpEps;
+                  }
+                  
+                  // If no nacelle force just specify the standard value
+                  // (it will not be used)
+                  else{
+                      epsilon = actuatorLineInfo->epsilon_;
+                      //~ epsilon.y_ = actuatorLineInfo->epsilon_;
+                      //~ epsilon.z_ = actuatorLineInfo->epsilon_;
+                      }
+
+              }
+              break;
+          }
+          case fast::BLADE:
+              epsilon = actuatorLineInfo->epsilon_;
+              break;
+          case fast::TOWER:
+              epsilon = actuatorLineInfo->epsilon_;
+              break;
+          default: throw std::runtime_error("Actuator line model node type not valid"); 
+              break;
+          }
+          
 	  ActuatorLineFASTPointInfo *actuatorLinePointInfo
 	    = new ActuatorLineFASTPointInfo(iTurb, centroidCoords,
-					    searchRadius, actuatorLineInfo->epsilon_,
+					    searchRadius, epsilon,
 					    FAST.getForceNodeType(iTurb, np));
 	  actuatorLinePointInfoMap_[np] = actuatorLinePointInfo;
 

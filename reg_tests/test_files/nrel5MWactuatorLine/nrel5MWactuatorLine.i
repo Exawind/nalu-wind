@@ -133,6 +133,9 @@ realms:
       Turbine0:
         num_force_pts_blade: 50
         num_force_pts_tower: 20
+        nacelle_cd: 1.0
+        nacelle_area: 8.0
+        air_density: 1.225
         epsilon: [ 5.0, 5.0, 5.0 ]
         turbine_base_pos: [ 0.0, 0.0, 0.0 ]
         turbine_hub_pos: [ 0.0, 0.0, 90.0 ]
