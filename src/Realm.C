@@ -76,7 +76,7 @@
 #include <ActuatorLineFAST.h>
 #endif
 
-#include <ABLForcingAlgorithm.h>
+#include <wind_energy/ABLForcingAlgorithm.h>
 
 // props; algs, evaluators and data
 #include <property_evaluator/GenericPropAlgorithm.h>
@@ -609,16 +609,16 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     
   }
 
-  // ABL Forcing parameters
-  if (node["abl_forcing"]) {
-    const YAML::Node ablNode = node["abl_forcing"];
-    ablForcingAlg_ = new ABLForcingAlgorithm(*this, ablNode);
-  }
-
   // Boundary Layer Statistics post-processing
   if (node["boundary_layer_statistics"]) {
     const YAML::Node blStatNode = node["boundary_layer_statistics"];
     bdyLayerStats_ = new BdyLayerStatistics(*this, blStatNode);
+  }
+
+  // ABL Forcing parameters
+  if (node["abl_forcing"]) {
+      const YAML::Node ablNode = node["abl_forcing"];
+      ablForcingAlg_ = new ABLForcingAlgorithm(*this, ablNode);
   }
 }
   
@@ -950,9 +950,6 @@ Realm::setup_post_processing_algorithms()
   // check for actuator line
   if ( NULL != actuator_ )
     actuator_->setup();
-
-  if ( NULL != ablForcingAlg_)
-    ablForcingAlg_->setup();
 
   // check for norm nodal fields
   if ( NULL != solutionNormPostProcessing_ )
@@ -3705,6 +3702,10 @@ Realm::initial_work()
   // include initial condition in averaging postprocessor
   if (turbulenceAveragingPostProcessing_ != nullptr) {
     turbulenceAveragingPostProcessing_->execute();
+  }
+
+  if (bdyLayerStats_ != nullptr) {
+      bdyLayerStats_->execute();
   }
 
   if ( solutionOptions_->meshMotion_ )

@@ -1,6 +1,8 @@
 # -*- mode: yaml -*-
 #
-# Nalu Preprocessing Utility - Example input file
+# Nalu Preprocessing utility
+#
+# Generate a temperature profile with capping inversion for use with ablNeutralEdge case
 #
 
 # Mandatory section for Nalu preprocessing
@@ -13,24 +15,16 @@ nalu_preprocess:
   # Nalu preprocessor expects a list of tasks to be performed on the mesh and
   # field data structures
   tasks:
-#    - rotate_mesh
     - init_abl_fields
-    - generate_planes
-
-  # Inputs for each "task" is organized under the section corresponding to the
-  # task name
-#  rotate_mesh:
-#    mesh_parts:
-#      - unspecified-2-hex
-#      - zplane_0070.0
-#
-#    angle: 41.3
-#    origin: [500.0, 0.0, 0.0]
-#    axis: [0.0, 0.0, 1.0]
-
 
   init_abl_fields:
-    fluid_parts: [fluid_part]
+
+    # Fluid part is the interior mesh block(s) in the mesh. The default block is
+    # `fluid` if the mesh was generated using `abl_mesh` utility.
+    #
+    # Use `ncdump -v eb_names <exodus_file>` to determine the mesh blocks
+    #
+    fluid_parts: [fluid]
 
     temperature:
       heights: [    0, 650.0, 750.0, 1000.0 ]
@@ -41,12 +35,3 @@ nalu_preprocess:
       values:
         - [7.250462296293199, 3.380946093925596, 0.0]
         - [7.250462296293199, 3.380946093925596, 0.0]
-
-  generate_planes:
-    fluid_part: [fluid_part]
-
-    heights: [ 90.0 ]
-    part_name_format: "zplane_%06.1f"
-
-    dx: 40.0
-    dy: 40.0

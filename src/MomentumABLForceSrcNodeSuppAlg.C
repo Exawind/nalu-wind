@@ -1,7 +1,7 @@
 
 #include "MomentumABLForceSrcNodeSuppAlg.h"
 #include "Realm.h"
-#include "ABLForcingAlgorithm.h"
+#include "wind_energy/ABLForcingAlgorithm.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
