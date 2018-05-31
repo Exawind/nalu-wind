@@ -17,8 +17,6 @@ namespace sierra {
 namespace nalu {
 
 class Realm;
-class Transfer;
-class Transfers;
 
 /**
  * \brief ABL Forcing Source terms for Momentum and Temperature equations
@@ -30,17 +28,10 @@ class Transfers;
  *
  * ```
  *   abl_forcing:
- *     search_method: stk_octree
- *     search_tolerance: 0.0001
- *     search_expansion_factor: 1.5
- *
- *     from_target_part: [block_101]
- *
  *     momentum:
  *       type: computed
  *       relaxation_factor: 1.0
  *       heights: [80.0]
- *       target_part_format: "abl_height_%.1f"
  *       velocity_x:
  *         - [0.0, 10.0]                 # [Time0, vxH0, ... , vxHN]
  *         - [100000.0, 10.0]            # [TimeN, vxH0, ... , vxHN]
@@ -57,7 +48,6 @@ class Transfers;
  *       type: computed
  *       relaxation_factor: 1.0
  *       heights: [80.0]
- *       target_part_format: "abl_height_%.1f"
  *       temperature:
  *         - [0.0, 300.0]
  *         - [10000.0, 300.0]
@@ -89,9 +79,6 @@ public:
   //! Parse input file for user options and initialize
   void load(const YAML::Node&);
 
-  //! Setup ABL forcing (steps before mesh creation)
-  void setup();
-
   //! Initialize ABL forcing (steps after mesh creation)
   void initialize();
 
@@ -110,9 +97,6 @@ public:
     const double, //!< Height of the node from terrain
     double&       //!< Temperature source term to be populated
     );
-
-  //! Inactive selector representing union of all the parts
-  inline stk::mesh::Selector& inactive_selector() { return inactiveSelector_; }
 
   inline bool momentumForcingOn() { return (momSrcType_ != OFF); }
 
@@ -140,31 +124,11 @@ private:
     std::vector<double>&,
     Array2D<double>&);
 
-  //! Helper method that determines the part corresponding to a desired
-  //! vertical level and ensures that part exists in the mesh database.
-  void determine_part_names(
-    std::vector<double>&, std::vector<std::string>&, bool, std::string&);
-
-  //! Register velocity and temperature fields on the appropriate parts based
-  //! on user input.
-  void register_fields();
-
-  //! Create transfer that handles mapping of velocity and temperature from
-  //! fluidRealm to the planar nodesets.
-  void create_transfers();
-
-  void populate_transfer_data(std::string, const std::vector<std::string>&);
-
   //! Compute mean velocity and estimate source term for a given timestep
   void compute_momentum_sources();
 
   //! Compute average planar temperature and estimate source term
   void compute_temperature_sources();
-
-  //! Helper method to compute the average velocity on a z-planes
-  void calc_mean_velocity();
-
-  void calc_mean_temperature();
 
   //! Reference to Realm
   Realm& realm_;
@@ -217,45 +181,13 @@ private:
   //! T source as a function of height [num_THeights]
   std::vector<double> TSource_;
 
-  //! stk::Transfer search methods
-  std::string searchMethod_;
-  //! stk::Transfer search tolerance
-  double searchTolerance_;
-  //! stk::Transfer search expansion factor
-  double searchExpansionFactor_;
-
-  //! Domains where velocity/temperature are averaged
-  std::vector<std::string> fromTargetNames_;
-
-  //! Part names
-  std::vector<std::string> velPartNames_;
-  std::vector<std::string> tempPartNames_;
-  std::unordered_set<std::string> allPartNames_;
-
-  stk::mesh::PartVector allParts_;
-  stk::mesh::Selector inactiveSelector_;
-
-  Transfers* transfers_;
-
-  //! Flag indicating whether to generate part names list for velocity field
-  bool velGenPartList_;
-
-  //! Flag indicating whether to generate part names list for temperature field
-  bool tempGenPartList_;
-
-  //! Format string specifier for generating velocity parts list
-  std::string velPartFmt_;
-
-  //! Format string specifier for generating temperature parts list
-  std::string tempPartFmt_;
-
   //! Write frequency for source term output
-  int outputFreq_;
+  int outputFreq_{10};
 
   //! Format string specifier indicating the file name for output. The
   //! specification takes one `%s` specifier that is used to populate Ux, Uy,
   //! Uz, T. Default is "abl_sources_%s.dat"
-  std::string outFileFmt_;
+  std::string outFileFmt_{"abl_%s_sources.dat"};
 };
 }
 }

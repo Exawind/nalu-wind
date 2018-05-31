@@ -248,21 +248,27 @@ realms:
        - temperature
        - turbulent_ke
 
+    # Compute spatial averages of velocity and temperature at all height levels
+    # available on the ABL mesh. This is used for post-processing as well as
+    # determining the ABL forcing necessary to drive the wind to a certain
+    # speed/direction at different heights. See `abl_forcing` section below for
+    # details of the driving wind forcing.
+    boundary_layer_statistics:
+      target_name: [ fluid_part ]
+      stats_output_file: "abl_statistics.nc"
+      compute_temperature_statistics: yes
+      output_frequency: 10
+      time_hist_output_frequency: 2
+
     # This defines the ABL forcing to drive the winds to 8 m/s from
     # 245 degrees (southwest) at 90 m above the surface in a planar 
     # averaged sense.  
     abl_forcing:
-      search_method: stk_kdtree
-      search_tolerance: 0.0001
-      search_expansion_factor: 1.5
-
-      from_target_part: [fluid_part]
-
+      output_format: "abl_%s_sources.dat"
       momentum:
         type: computed
         relaxation_factor: 1.0
         heights: [90.0]
-        target_part_format: "zplane_%06.1f"
         velocity_x:
           - [0.0, 7.250462296293199]
           - [900000.0, 7.250462296293199]
@@ -274,7 +280,6 @@ realms:
         velocity_z:
           - [0.0, 0.0]
           - [90000.0, 0.0]
-
 
 # This defines the time step size, count, etc.
 Time_Integrators:

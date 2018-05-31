@@ -7,7 +7,7 @@
 
 
 #include <LowMachEquationSystem.h>
-#include <ABLForcingAlgorithm.h>
+#include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
 #include <AssembleCourantReynoldsElemAlgorithm.h>
 #include <AssembleContinuityEdgeSolverAlgorithm.h>
@@ -97,7 +97,7 @@
 #include <TurbViscSmagorinskyAlgorithm.h>
 #include <TurbViscSSTAlgorithm.h>
 #include <TurbViscWaleAlgorithm.h>
-#include <ABLForcingAlgorithm.h>
+#include <wind_energy/ABLForcingAlgorithm.h>
 #include <FixPressureAtNodeAlgorithm.h>
 #include <FixPressureAtNodeInfo.h>
 
