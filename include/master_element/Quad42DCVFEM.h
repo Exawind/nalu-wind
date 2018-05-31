@@ -154,6 +154,8 @@ public:
 
   const int * adjacentNodes() override;
 
+  const int * scsIpEdgeOrd() override;
+
   int opposingNodes(
     const int ordinal, const int node) override;
 

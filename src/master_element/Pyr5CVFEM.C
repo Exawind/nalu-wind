@@ -44,29 +44,77 @@ void pyr_deriv(const int npts,
 {
   // d3d(c,s,j) = deriv[c + 3*(s + 5*j)] = deriv[c+3s+15j]
 
+  const double eps = std::numeric_limits<double>::epsilon();
+  
   for ( int j = 0; j < npts; ++j) {
     const int k = j*3;
+    
+    const double r = intgLoc[k+0];
+    const double s = intgLoc[k+1];
+    const double t_tmp = intgLoc[k+2];
+    
+    const double one_minus_t = 1.0 - t_tmp;
+    const double t = (std::fabs(one_minus_t) > eps) ? t_tmp : 1.0 + std::copysign(eps, one_minus_t);
+    const double quarter_inv_tm1 = 0.25 / (1.0 - t);
+    const double t_term = 4.0 * r * s * quarter_inv_tm1 * quarter_inv_tm1;
+    
+    deriv(j,0,0) = -(1.0 - s - t) * quarter_inv_tm1;
+    deriv(j,0,1) = -(1.0 - r - t) * quarter_inv_tm1;
+    deriv(j,0,2) = (+t_term - 0.25);
+    
+    // node 1
+    deriv(j,1,0) = +(1.0 - s - t) * quarter_inv_tm1;
+    deriv(j,1,1) = -(1.0 + r - t) * quarter_inv_tm1;
+    deriv(j,1,2) = (-t_term - 0.25);
+    
+    // node 2
+    deriv(j,2,0) = +(1.0 + s - t) * quarter_inv_tm1;
+    deriv(j,2,1) = +(1.0 + r - t) * quarter_inv_tm1;
+    deriv(j,2,2) = (+t_term - 0.25);
+    
+    // node 3
+    deriv(j,3,0) = -(1.0 + s - t) * quarter_inv_tm1;
+    deriv(j,3,1) = +(1.0 - r - t) * quarter_inv_tm1;
+    deriv(j,3,2) = (-t_term - 0.25);
+    
+    // node 4
+    deriv(j,4,0) = 0.0;
+    deriv(j,4,1) = 0.0;
+    deriv(j,4,2) = 1.0;
+  }
+}
 
+//-------- shifted_pyr_deriv -------------------------------------------------------
+template <typename DerivType>
+void shifted_pyr_deriv(const int npts,
+  const double *intgLoc,
+  DerivType& deriv)
+{
+  // d3d(c,s,j) = deriv[c + 3*(s + 5*j)] = deriv[c+3s+15j]
+    
+  for ( int j = 0; j < npts; ++j) {
+    const int k = j*3;
+    
     const double r = intgLoc[k+0];
     const double s = intgLoc[k+1];
     const double t = intgLoc[k+2];
-
+    
     deriv(j,0,0) =-0.25*(1.0-s)*(1.0-t);  // d(N_1)/ d(r) = deriv[0]
     deriv(j,0,1) =-0.25*(1.0-r)*(1.0-t);  // d(N_1)/ d(s) = deriv[1]
     deriv(j,0,2) =-0.25*(1.0-r)*(1.0-s);  // d(N_1)/ d(t) = deriv[2]
-              
+    
     deriv(j,1,0) = 0.25*(1.0-s)*(1.0-t);  // d(N_2)/ d(r) = deriv[0+3]
     deriv(j,1,1) =-0.25*(1.0+r)*(1.0-t);  // d(N_2)/ d(s) = deriv[1+3]
     deriv(j,1,2) =-0.25*(1.0+r)*(1.0-s);  // d(N_2)/ d(t) = deriv[2+3]
-              
+    
     deriv(j,2,0) = 0.25*(1.0+s)*(1.0-t);  // d(N_3)/ d(r) = deriv[0+6]
     deriv(j,2,1) = 0.25*(1.0+r)*(1.0-t);  // d(N_3)/ d(s) = deriv[1+6]
     deriv(j,2,2) =-0.25*(1.0+r)*(1.0+s);  // d(N_3)/ d(t) = deriv[2+6]
-              
+    
     deriv(j,3,0) =-0.25*(1.0+s)*(1.0-t);  // d(N_4)/ d(r) = deriv[0+9]
     deriv(j,3,1) = 0.25*(1.0-r)*(1.0-t);  // d(N_4)/ d(s) = deriv[1+9]
     deriv(j,3,2) =-0.25*(1.0-r)*(1.0+s);  // d(N_4)/ d(t) = deriv[2+9]
-              
+    
     deriv(j,4,0) = 0.0;                   // d(N_5)/ d(r) = deriv[0+12]
     deriv(j,4,1) = 0.0;                   // d(N_5)/ d(s) = deriv[1+12]
     deriv(j,4,2) = 1.0;                   // d(N_5)/ d(t) = deriv[2+12]
@@ -90,11 +138,14 @@ PyrSCV::PyrSCV()
 
   // standard integration location
   intgLoc_.resize(15);
-  intgLoc_[0]  = -19.0/48.0; intgLoc_[1]  = -19.0/48.0; intgLoc_[2]  = 41.0/240.0;  // vol 0
-  intgLoc_[3]  =  19.0/48.0; intgLoc_[4]  = -19.0/48.0; intgLoc_[5]  = 41.0/240.0;  // vol 1
-  intgLoc_[6]  =  19.0/48.0; intgLoc_[7]  =  19.0/48.0; intgLoc_[8]  = 41.0/240.0;  // vol 2
-  intgLoc_[9]  = -19.0/48.0; intgLoc_[10] =  19.0/48.0; intgLoc_[11] = 41.0/240.0;  // vol 3
-  intgLoc_[12] =   0.0;      intgLoc_[13] =   0.0;      intgLoc_[14] = 0.6 ;        // vol 4
+  const double one69r384 = 169.0/384.0;
+  const double five77r3840 = 577.0/3840.0;
+  const double seven73r1560 = 773.0/1560.0;
+  intgLoc_[0]  = -one69r384; intgLoc_[1]  = -one69r384; intgLoc_[2]  = five77r3840;  // vol 0
+  intgLoc_[3]  =  one69r384; intgLoc_[4]  = -one69r384; intgLoc_[5]  = five77r3840;  // vol 1
+  intgLoc_[6]  =  one69r384; intgLoc_[7]  =  one69r384; intgLoc_[8]  = five77r3840;  // vol 2
+  intgLoc_[9]  = -one69r384; intgLoc_[10] =  one69r384; intgLoc_[11] = five77r3840;  // vol 3
+  intgLoc_[12] =   0.0;      intgLoc_[13] =   0.0;      intgLoc_[14] = seven73r1560; // vol 4
 
   // shifted
   intgLocShift_.resize(15);
@@ -203,16 +254,16 @@ DoubleType octohedron_volume_by_triangle_facets(const DoubleType volcoords[10][3
   // we now add face midpoints only for the four faces that are
   // not planar
   for(int k=0; k<3; ++k) {
-    coords[10][k] = 0.25*( volcoords[1][k] + volcoords[3][k] + volcoords[2][k] + volcoords[9][k] );
+    coords[10][k] = 0.50*( volcoords[3][k] + volcoords[9][k] );
   }
   for(int k=0; k<3; ++k) {
-    coords[11][k] = 0.25*( volcoords[1][k] + volcoords[5][k] + volcoords[4][k] + volcoords[3][k] );
+    coords[11][k] = 0.50*( volcoords[3][k] + volcoords[5][k] );
   }
   for(int k=0; k<3; ++k) {
-    coords[12][k] = 0.25*( volcoords[1][k] + volcoords[7][k] + volcoords[6][k] + volcoords[5][k] );
+    coords[12][k] = 0.50*( volcoords[5][k] + volcoords[7][k] );
   }
   for(int k=0; k<3; ++k) {
-    coords[13][k] = 0.25*( volcoords[1][k] + volcoords[9][k] + volcoords[8][k] + volcoords[7][k] );
+    coords[13][k] = 0.50*( volcoords[7][k] + volcoords[9][k] );
   }
 
   int ncoords = 14;
@@ -237,9 +288,9 @@ void PyrSCV::determinant(
 
   const int pyramidSubcontrolNodeTable[5][10] = {
      {0,  5,  9,  8, 11, 12, 18, 17, -1, -1},
-     {5,  1,  6,  9, 12, 10, 14, 18, -1, -1},
-     {6,  2,  7,  9, 14, 13, 16, 18, -1, -1},
-     {8,  9,  7,  3, 17, 18, 16, 15, -1, -1},
+     {1,  6,  9,  5, 10, 14, 18, 12, -1, -1},
+     {2,  7,  9,  6, 13, 16, 18, 14, -1, -1},
+     {3,  8,  9,  7, 15, 17, 18, 16, -1, -1},
      {4, 18, 15, 17, 11, 12, 10, 14, 13, 16}
   };
   const double one3rd = 1.0/3.0;
@@ -344,7 +395,7 @@ void PyrSCV::determinant(
       }
     }
     // compute volume use an equivalent polyhedron
-    vol(icv) = hex_volume_grandy(ehexcoords);
+    vol(icv) = bhex_volume_grandy(ehexcoords);
   }
 
   // now do octohedron on pyramid tip
@@ -380,7 +431,7 @@ void PyrSCV::shifted_grad_op(
     SharedMemView<DoubleType***>& gradop,
     SharedMemView<DoubleType***>& deriv)
 {
-  pyr_deriv(numIntPoints_, &intgLocShift_[0], deriv);
+  shifted_pyr_deriv(numIntPoints_, &intgLocShift_[0], deriv);
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
@@ -414,7 +465,7 @@ PyrSCV::shape_fcn(double *shpfc)
 void
 PyrSCV::shifted_shape_fcn(double *shpfc)
 {
-  pyr_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  shifted_pyr_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -426,6 +477,37 @@ PyrSCV::pyr_shape_fcn(
   const double *par_coord, 
   double *shape_fcn)
 {
+  const double eps = std::numeric_limits<double>::epsilon();
+  
+  for ( int j = 0; j < npts; ++j ) {
+    const int fivej = 5*j;
+    const int k     = 3*j;
+    const double r    = par_coord[k+0];
+    const double s    = par_coord[k+1];
+    const double t_tmp    = par_coord[k+2];
+    
+    const double one_minus_t = 1.0 - t_tmp;
+    const double t = (std::fabs(one_minus_t) > eps) ? t_tmp : 1.0 + std::copysign(eps, one_minus_t);
+    const double quarter_inv_tm1 = 0.25 / (1.0 - t);
+    
+    shape_fcn[0 + fivej] = (1.0 - r - t) * (1.0 - s - t) * quarter_inv_tm1;
+    shape_fcn[1 + fivej] = (1.0 + r - t) * (1.0 - s - t) * quarter_inv_tm1;
+    shape_fcn[2 + fivej] = (1.0 + r - t) * (1.0 + s - t) * quarter_inv_tm1;
+    shape_fcn[3 + fivej] = (1.0 - r - t) * (1.0 + s - t) * quarter_inv_tm1;
+    shape_fcn[4 + fivej] = t;
+    
+  }
+}
+
+//--------------------------------------------------------------------------
+//-------- shifted_pyr_shape_fcn -------------------------------------------
+//--------------------------------------------------------------------------
+void
+PyrSCV::shifted_pyr_shape_fcn(
+  const int  &npts,
+  const double *par_coord, 
+  double *shape_fcn)
+{
   const double one  = 1.0;
   for ( int j = 0; j < npts; ++j ) {
     const int fivej = 5*j;
@@ -433,7 +515,7 @@ PyrSCV::pyr_shape_fcn(
     const double r    = par_coord[k+0];
     const double s    = par_coord[k+1];
     const double t    = par_coord[k+2];
-
+    
     shape_fcn[0 + fivej] = 0.25*(1.0-r)*(1.0-s)*(one-t);
     shape_fcn[1 + fivej] = 0.25*(1.0+r)*(1.0-s)*(one-t);
     shape_fcn[2 + fivej] = 0.25*(1.0+r)*(1.0+s)*(one-t);
@@ -450,19 +532,32 @@ PyrSCS::PyrSCS()
 {
   nDim_ = 3;
   nodesPerElement_ = 5;
-  numIntPoints_ = 8;
+  numIntPoints_ = 12;
 
   // define L/R mappings
-  lrscv_.resize(16);
+  lrscv_.resize(24);
   lrscv_[0]  = 0; lrscv_[1]  = 1;
   lrscv_[2]  = 1; lrscv_[3]  = 2;
   lrscv_[4]  = 2; lrscv_[5]  = 3;
   lrscv_[6]  = 0; lrscv_[7]  = 3;
   lrscv_[8]  = 0; lrscv_[9]  = 4;
-  lrscv_[10] = 1; lrscv_[11] = 4;
-  lrscv_[12] = 2; lrscv_[13] = 4;
-  lrscv_[14] = 3; lrscv_[15] = 4;
-  
+  lrscv_[10] = 0; lrscv_[11] = 4;
+  lrscv_[12] = 1; lrscv_[13] = 4;
+  lrscv_[14] = 1; lrscv_[15] = 4;
+  lrscv_[16] = 2; lrscv_[17] = 4;
+  lrscv_[18] = 2; lrscv_[19] = 4;
+  lrscv_[20] = 3; lrscv_[21] = 4;
+  lrscv_[22] = 3; lrscv_[23] = 4;
+
+  // elem-edge map from ip
+  scsIpEdgeOrd_.resize(numIntPoints_);
+  scsIpEdgeOrd_[0]  = 0; scsIpEdgeOrd_[1]  = 1; 
+  scsIpEdgeOrd_[2]  = 2; scsIpEdgeOrd_[3]  = 3; 
+  scsIpEdgeOrd_[4]  = 4; scsIpEdgeOrd_[5]  = 4; 
+  scsIpEdgeOrd_[6]  = 5; scsIpEdgeOrd_[7]  = 5;
+  scsIpEdgeOrd_[8]  = 6; scsIpEdgeOrd_[9]  = 6;
+  scsIpEdgeOrd_[10] = 7; scsIpEdgeOrd_[11] = 7;
+
   // define opposing node
   // opposing node for node 4 is never uniquely defined: pick one
   oppNode_.resize(20);
@@ -481,70 +576,78 @@ PyrSCS::PyrSCS()
   // the 5th node maps to two opposing sub-faces, we pick one
   oppFace_.resize(20);
   // face 0
-  oppFace_[0] = 3;  oppFace_[1] = 1;  oppFace_[2] = 6;  oppFace_[3] = -1;
+  oppFace_[0] = 3;  oppFace_[1] = 1;  oppFace_[2] = 8;  oppFace_[3] = -1;
   // face 1
-  oppFace_[4] = 0;  oppFace_[5] = 2;  oppFace_[6] = 7;  oppFace_[7] = -1;
+  oppFace_[4] = 0;  oppFace_[5] = 2;  oppFace_[6] = 10; oppFace_[7] = -1;
   // face 2
   oppFace_[8] = 1;  oppFace_[9] = 3;  oppFace_[10] = 4; oppFace_[11] = -1;
   // face 3
-  oppFace_[12] = 0; oppFace_[13] = 5; oppFace_[14] = 2; oppFace_[15] = -1;
+  oppFace_[12] = 0; oppFace_[13] = 6; oppFace_[14] = 2; oppFace_[15] = -1;
   // face 4
-  oppFace_[16] = 4; oppFace_[17] = 7; oppFace_[18] = 6; oppFace_[19] = 5;
+  oppFace_[16] = 4; oppFace_[17] = 10; oppFace_[18] = 8; oppFace_[19] = 6;
 
   // standard integration location
-  intgLoc_.resize(24);
-  const double fortyFiveHundredFourths = 45.0/104.0;
-  const double fortyOneHundredTwentyths = 41.0/120.0;
-  const double sevenFiftyTwoths = 7.0/52.0;
-  const double sevenTwentyFourths = 7.0/24.0;
-  intgLoc_[0]  =  0.00;                     intgLoc_[1]  = -fortyFiveHundredFourths; intgLoc_[2]  = sevenFiftyTwoths; // surf 1    1->2
-  intgLoc_[3]  =  fortyFiveHundredFourths;  intgLoc_[4]  = 0.00;                     intgLoc_[5]  = sevenFiftyTwoths; // surf 2    2->3
-  intgLoc_[6]  =  0.00;                     intgLoc_[7]  = fortyFiveHundredFourths;  intgLoc_[8]  = sevenFiftyTwoths; // surf 3    3->4
-  intgLoc_[9]  =  -fortyFiveHundredFourths; intgLoc_[10] = 0.0;                      intgLoc_[11] = sevenFiftyTwoths; // surf 4    1->4
-  intgLoc_[12] =  -sevenTwentyFourths;      intgLoc_[13] = -sevenTwentyFourths;      intgLoc_[14] = fortyOneHundredTwentyths; // surf 5    1->5
-  intgLoc_[15] =  sevenTwentyFourths;       intgLoc_[16] = -sevenTwentyFourths;      intgLoc_[17] = fortyOneHundredTwentyths; // surf 6    2->5
-  intgLoc_[18] =  sevenTwentyFourths;       intgLoc_[19] = sevenTwentyFourths;       intgLoc_[20] = fortyOneHundredTwentyths; // surf 7    3->5
-  intgLoc_[21] =  -sevenTwentyFourths;      intgLoc_[22] = sevenTwentyFourths;       intgLoc_[23] = fortyOneHundredTwentyths; // surf 8    4->5
+  intgLoc_.resize(36);
+  const double twentynine63rd = 29.0/63.0;
+  const double fortyone315th = 41.0/315.0;
+  const double two9th = 2.0/9.0;
+  const double thirteen45th = 13.0/45.0;
+  const double seven18th = 7.0/18.0;
+  intgLoc_[0]  = 0.0;             intgLoc_[1]  = -twentynine63rd; intgLoc_[2]  = fortyone315th; // surf 0  1->2
+  intgLoc_[3]  = twentynine63rd;  intgLoc_[4]  = 0.0;             intgLoc_[5]  = fortyone315th; // surf 1  2->3
+  intgLoc_[6]  = 0.0;             intgLoc_[7]  = twentynine63rd;  intgLoc_[8]  = fortyone315th; // surf 2  3->4
+  intgLoc_[9]  = -twentynine63rd; intgLoc_[10] = 0.0;             intgLoc_[11] = fortyone315th; // surf 3  1->4
+  intgLoc_[12] = -two9th;         intgLoc_[13] = -two9th;         intgLoc_[14] = thirteen45th;  // surf 4  1->5 inner
+  intgLoc_[15] = -seven18th;      intgLoc_[16] = -seven18th;      intgLoc_[17] = seven18th;     // surf 5  1->5 outer
+  intgLoc_[18] = two9th;          intgLoc_[19] = -two9th;         intgLoc_[20] = thirteen45th;  // surf 6  2->5 inner
+  intgLoc_[21] = seven18th;       intgLoc_[22] = -seven18th;      intgLoc_[23] = seven18th;     // surf 7  2->5 outer
+  intgLoc_[24] = two9th;          intgLoc_[25] = two9th;          intgLoc_[26] = thirteen45th;  // surf 8  3->5 inner
+  intgLoc_[27] = seven18th;       intgLoc_[28] = seven18th;       intgLoc_[29] = seven18th;     // surf 9  3->5 outer
+  intgLoc_[30] = -two9th;         intgLoc_[31] = two9th;          intgLoc_[32] = thirteen45th;  // surf 10  4->5 inner
+  intgLoc_[33] = -seven18th;      intgLoc_[34] = seven18th;       intgLoc_[35] = seven18th;     // surf 11  4->5 outer
 
   // shifted
-  intgLocShift_.resize(24);
+  intgLocShift_.resize(36);
   intgLocShift_[0]  =  0.00; intgLocShift_[1]  = -1.00; intgLocShift_[2]  =  0.00; // surf 1    1->2
   intgLocShift_[3]  =  1.00; intgLocShift_[4]  =  0.00; intgLocShift_[5]  =  0.00; // surf 2    2->3
   intgLocShift_[6]  =  0.00; intgLocShift_[7]  =  1.00; intgLocShift_[8]  =  0.00; // surf 3    3->4
   intgLocShift_[9]  = -1.00; intgLocShift_[10] =  0.00; intgLocShift_[11] =  0.00; // surf 4    1->4
-  intgLocShift_[12] = -0.50; intgLocShift_[13] = -0.50; intgLocShift_[14] =  0.50; // surf 5    1->5
-  intgLocShift_[15] =  0.50; intgLocShift_[16] = -0.50; intgLocShift_[17] =  0.50; // surf 6    2->5
-  intgLocShift_[18] =  0.50; intgLocShift_[19] =  0.50; intgLocShift_[20] =  0.50; // surf 7    3->5
-  intgLocShift_[21] = -0.50; intgLocShift_[22] =  0.50; intgLocShift_[23] =  0.50; // surf 8    4->5
+  intgLocShift_[12] = -0.50; intgLocShift_[13] = -0.50; intgLocShift_[14] =  0.50; // surf 5    1->5 I
+  intgLocShift_[15] = -0.50; intgLocShift_[16] = -0.50; intgLocShift_[17] =  0.50; // surf 6    1->5 O
+  intgLocShift_[18] =  0.50; intgLocShift_[19] = -0.50; intgLocShift_[20] =  0.50; // surf 7    2->5 I
+  intgLocShift_[21] =  0.50; intgLocShift_[22] = -0.50; intgLocShift_[23] =  0.50; // surf 8    2->5 O
+  intgLocShift_[24] =  0.50; intgLocShift_[25] =  0.50; intgLocShift_[26] =  0.50; // surf 9    3->5 I 
+  intgLocShift_[27] =  0.50; intgLocShift_[28] =  0.50; intgLocShift_[29] =  0.50; // surf 10   3->5 O
+  intgLocShift_[30] = -0.50; intgLocShift_[31] =  0.50; intgLocShift_[32] =  0.50; // surf 11   4->5 I 
+  intgLocShift_[33] = -0.50; intgLocShift_[34] =  0.50; intgLocShift_[35] =  0.50; // surf 12   4->5 O
 
   // exposed face
   intgExpFace_.resize(48);
-  const double five24ths = 5.0/24.0;
-  const double nineteen24ths = 19.0/24.0;
-  const double three8ths = 3.0/8.0;
-  const double one3rd = 1.0/3.0;
-  const double two3rds = 2.0/3.0;
+  const double seven36th = 7.0/36.0;
+  const double twentynine36th = 29.0/36.0;
+  const double five12th = 5.0/12.0;
+  const double eleven18th = 11.0/18.0;
   // face 0; nodes 0,1,4: scs 0, 1, 2
-  intgExpFace_[0]  = -three8ths;     intgExpFace_[1]  = -nineteen24ths; intgExpFace_[2]  = five24ths;
-  intgExpFace_[3]  =  three8ths;     intgExpFace_[4]  = -nineteen24ths; intgExpFace_[5]  = five24ths;
-  intgExpFace_[6]  =  0.0;           intgExpFace_[7]  = -one3rd;        intgExpFace_[8]  = two3rds;
+  intgExpFace_[0]  = -five12th;       intgExpFace_[1]  = -twentynine36th; intgExpFace_[2]  = seven36th;
+  intgExpFace_[3]  =  five12th;       intgExpFace_[4]  = -twentynine36th; intgExpFace_[5]  = seven36th;
+  intgExpFace_[6]  =  0.0;            intgExpFace_[7]  = -seven18th;      intgExpFace_[8]  = eleven18th;
   // face 1; nodes 1,2,4; scs 0, 1, 2
-  intgExpFace_[9]  = nineteen24ths;  intgExpFace_[10] = -three8ths;     intgExpFace_[11] = five24ths;
-  intgExpFace_[12] = nineteen24ths;  intgExpFace_[13] =  three8ths;     intgExpFace_[14] = five24ths;
-  intgExpFace_[15] = one3rd;         intgExpFace_[16] =  0.0;           intgExpFace_[17] = two3rds;
+  intgExpFace_[9]  = twentynine36th;  intgExpFace_[10] = -five12th;       intgExpFace_[11] = seven36th;
+  intgExpFace_[12] = twentynine36th;  intgExpFace_[13] =  five12th;       intgExpFace_[14] = seven36th;
+  intgExpFace_[15] = seven18th;       intgExpFace_[16] =  0.0;            intgExpFace_[17] = eleven18th;
   // face 2; nodes 2,3,4; scs 0, 1, 2
-  intgExpFace_[18] =  three8ths;     intgExpFace_[19] = nineteen24ths;  intgExpFace_[20] = five24ths;
-  intgExpFace_[21] = -three8ths;     intgExpFace_[22] = nineteen24ths;  intgExpFace_[23] = five24ths;
-  intgExpFace_[24] =  0.00;          intgExpFace_[25] = one3rd;         intgExpFace_[26] = two3rds;
+  intgExpFace_[18] =  five12th;       intgExpFace_[19] = twentynine36th;  intgExpFace_[20] = seven36th;
+  intgExpFace_[21] = -five12th;       intgExpFace_[22] = twentynine36th;  intgExpFace_[23] = seven36th;
+  intgExpFace_[24] =  0.00;           intgExpFace_[25] = seven18th;       intgExpFace_[26] = eleven18th;
   //face 3; nodes 0,4,3; scs 0, 1, 2
-  intgExpFace_[27] = -nineteen24ths; intgExpFace_[28] = -three8ths;     intgExpFace_[29] = five24ths;
-  intgExpFace_[30] = -one3rd;        intgExpFace_[31] = 0.0;            intgExpFace_[32] = two3rds;
-  intgExpFace_[33] = -nineteen24ths; intgExpFace_[34] =  three8ths;     intgExpFace_[35] = five24ths;
+  intgExpFace_[27] = -twentynine36th; intgExpFace_[28] = -five12th;       intgExpFace_[29] = seven36th;
+  intgExpFace_[30] = -seven18th;      intgExpFace_[31] = 0.0;             intgExpFace_[32] = eleven18th;
+  intgExpFace_[33] = -twentynine36th; intgExpFace_[34] =  five12th;       intgExpFace_[35] = seven36th;
   // face 4; nodes 0,3,2,1; scs 0, 1, 2
-  intgExpFace_[36] = -0.5;           intgExpFace_[37] = -0.5;           intgExpFace_[38] = 0.0;
-  intgExpFace_[39] = -0.5;           intgExpFace_[40] =  0.5;           intgExpFace_[41] = 0.0;
-  intgExpFace_[42] =  0.5;           intgExpFace_[43] =  0.5;           intgExpFace_[44] = 0.0;
-  intgExpFace_[45] =  0.5;           intgExpFace_[46] = -0.5;           intgExpFace_[47] = 0.0;
+  intgExpFace_[36] = -0.5;            intgExpFace_[37] = -0.5;            intgExpFace_[38] = 0.0;
+  intgExpFace_[39] = -0.5;            intgExpFace_[40] =  0.5;            intgExpFace_[41] = 0.0;
+  intgExpFace_[42] =  0.5;            intgExpFace_[43] =  0.5;            intgExpFace_[44] = 0.0;
+  intgExpFace_[45] =  0.5;            intgExpFace_[46] = -0.5;            intgExpFace_[47] = 0.0;
 
   sideNodeOrdinals_ = {
       0, 1, 4,    // ordinal 0
@@ -568,8 +671,8 @@ PyrSCS::PyrSCS()
 
   std::vector<std::vector<double>> nodeLocations =
   {
-      {-1.0, -1.0, +0.0}, {+1.0, -1.0, +0.0}, {+1.0, +1.0, +0.0}, {-1.0, +1.0, +0.0},
-      {0.0, 0.0, +1.0}
+    {-1.0, -1.0, +0.0}, {+1.0, -1.0, +0.0}, {+1.0, +1.0, +0.0}, {-1.0, +1.0, +0.0},
+    {0.0, 0.0, +1.0}
   };
 
   intgExpFaceShift_.resize(48);
@@ -613,15 +716,19 @@ void PyrSCS::determinant(
     SharedMemView<DoubleType**>& cordel,
     SharedMemView<DoubleType**>& areav)
 {
-  const int pyramidEdgeFacetTable[8][4] = {
-    { 5,  9, 18, 12},  // sc face 1 -- points from 1 -> 2
-    { 6,  9, 18, 14},  // sc face 2 -- points from 2 -> 3
-    { 7,  9, 18, 16},  // sc face 3 -- points from 3 -> 4
-    { 8, 17, 18,  9},  // sc face 4 -- points from 1 -> 4
-    {11, 12, 18, 17},  // sc face 5 -- points from 1 -> 5
-    {10, 14, 18, 12},  // sc face 6 -- points from 2 -> 5
-    {13, 16, 18, 14},  // sc face 7 -- points from 3 -> 5
-    {15, 17, 18, 16}   // sc face 8 -- points from 4 -> 5
+  const int pyramidEdgeFacetTable[12][4] = {
+    { 5,  9, 18, 12},  // sc face 1  -- points from 1 -> 2
+    { 6,  9, 18, 14},  // sc face 2  -- points from 2 -> 3
+    { 7,  9, 18, 16},  // sc face 3  -- points from 3 -> 4
+    { 8, 17, 18,  9},  // sc face 4  -- points from 1 -> 4
+    {12, 12, 18, 17},  // sc face 5  -- points from 1 -> 5 I
+    {11, 12, 12, 17},  // sc face 6  -- points from 1 -> 5 O
+    {14, 14, 18, 12},  // sc face 7  -- points from 2 -> 5 I
+    {10, 14, 14, 12},  // sc face 8  -- points from 2 -> 5 O
+    {16, 16, 18, 14},  // sc face 9  -- points from 3 -> 5 I
+    {13, 16, 16, 14},  // sc face 10 -- points from 3 -> 5 O
+    {17, 17, 18, 16},  // sc face 11 -- points from 4 -> 5 I
+    {15, 17, 17, 16}   // sc face 12 -- points from 4 -> 5 O
   };
   DoubleType coords[19][3];
   DoubleType scscoords[4][3];
@@ -790,7 +897,7 @@ void PyrSCS::shifted_grad_op(
     SharedMemView<DoubleType***>& gradop,
     SharedMemView<DoubleType***>& deriv)
 {
-  pyr_deriv(numIntPoints_, &intgLocShift_[0], deriv);
+  shifted_pyr_deriv(numIntPoints_, &intgLocShift_[0], deriv);
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
@@ -804,7 +911,7 @@ void PyrSCS::shifted_grad_op(
 {
   int lerr = 0;
 
-  pyr_derivative(numIntPoints_, &intgLocShift_[0], deriv);
+  shifted_pyr_derivative(numIntPoints_, &intgLocShift_[0], deriv);
 
   SIERRA_FORTRAN(pyr_gradient_operator)
     ( &nelem,
@@ -862,8 +969,7 @@ void PyrSCS::face_grad_op_quad(const int face_ordinal, const bool shifted,
   using tri_traits = AlgTraitsTri3Pyr5;
   using quad_traits = AlgTraitsQuad4Pyr5;
 
-  // quad4 is the only face that can be safely shifted
-  const double *p_intgExp = (!shifted || face_ordinal < 4 ) ? &intgExpFace_[0] : &intgExpFaceShift_[0];
+  const double *p_intgExp = !shifted  ? &intgExpFace_[0] : &intgExpFaceShift_[0];
 
   constexpr int derivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * quad_traits::nDim_;
 
@@ -871,7 +977,11 @@ void PyrSCS::face_grad_op_quad(const int face_ordinal, const bool shifted,
   QuadFaceGradType deriv(psi,quad_traits::numFaceIp_,quad_traits::nodesPerElement_,quad_traits::nDim_);
 
   const int offset = (face_ordinal != 4) ? 0 : tri_traits::nDim_ * tri_traits::numFaceIp_ * face_ordinal;
-  pyr_deriv(quad_traits::numFaceIp_, &p_intgExp[offset], deriv);
+  if ( shifted )
+    shifted_pyr_deriv(quad_traits::numFaceIp_, &p_intgExp[offset], deriv);
+  else 
+    pyr_deriv(quad_traits::numFaceIp_, &p_intgExp[offset], deriv);
+
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
@@ -879,15 +989,17 @@ void PyrSCS::face_grad_op_tri(const int face_ordinal, const bool shifted,
                                SharedMemView<DoubleType**>& coords, TriFaceGradType& gradop)
 {
   using tri_traits = AlgTraitsTri3Pyr5;
-  // quad4 is the only face that can be safely shifted
-  const double *p_intgExp = (!shifted || face_ordinal < 4 ) ? &intgExpFace_[0] : &intgExpFaceShift_[0];
+  const double *p_intgExp = !shifted ? &intgExpFace_[0] : &intgExpFaceShift_[0];
 
   constexpr int derivSize = tri_traits::numFaceIp_ *  tri_traits::nodesPerElement_ * tri_traits::nDim_;
   NALU_ALIGNED DoubleType psi[derivSize];
   TriFaceGradType deriv(psi,tri_traits::numFaceIp_,tri_traits::nodesPerElement_,tri_traits::nDim_ );
 
   const int offset = (face_ordinal != 4) ? tri_traits::nDim_ * tri_traits::numFaceIp_ * face_ordinal : 0;
-  pyr_deriv(tri_traits::numFaceIp_, &p_intgExp[offset], deriv);
+  if ( shifted )
+    shifted_pyr_deriv(tri_traits::numFaceIp_, &p_intgExp[offset], deriv);
+  else
+    pyr_deriv(tri_traits::numFaceIp_, &p_intgExp[offset], deriv);
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
@@ -962,7 +1074,7 @@ void PyrSCS::shifted_face_grad_op(
     for ( int k=0; k<npf; k++ ) {
 
       const int row = 9*face_ordinal + k*ndim;
-      pyr_derivative(nface, &p_intgExp[row], dpsi);
+      shifted_pyr_derivative(nface, &p_intgExp[row], dpsi);
 
       SIERRA_FORTRAN(pyr_gradient_operator)
         ( &nface,
@@ -1130,6 +1242,57 @@ void PyrSCS::pyr_derivative(
   double *deriv)
 {
   // d3d(c,s,j) = deriv[c + 3*(s + 5*j)] = deriv[c+3s+15j]
+  const double eps = std::numeric_limits<double>::epsilon();
+  
+  for ( int j = 0; j < npts; ++j) {
+    const int k = j*3;
+    const int p = 15*j;
+    
+    const double r = intgLoc[k+0];
+    const double s = intgLoc[k+1];
+    const double t_tmp = intgLoc[k+2];
+    
+    const double one_minus_t = 1.0 - t_tmp;
+    const double t = (std::fabs(one_minus_t) > eps) ? t_tmp : 1.0 + std::copysign(eps, one_minus_t);
+    const double quarter_inv_tm1 = 0.25 / (1.0 - t);
+    const double t_term = 4.0 * r * s * quarter_inv_tm1 * quarter_inv_tm1;
+    
+    // node 0
+    deriv[0+3*0+p] = -(1.0 - s - t) * quarter_inv_tm1;
+    deriv[1+3*0+p] = -(1.0 - r - t) * quarter_inv_tm1;
+    deriv[2+3*0+p] = (+t_term - 0.25);
+    
+    // node 1
+    deriv[0+3*1+p] = +(1.0 - s - t) * quarter_inv_tm1;
+    deriv[1+3*1+p] = -(1.0 + r - t) * quarter_inv_tm1;
+    deriv[2+3*1+p] = (-t_term - 0.25);
+    
+    // node 2
+    deriv[0+3*2+p] = +(1.0 + s - t) * quarter_inv_tm1;
+    deriv[1+3*2+p] = +(1.0 + r - t) * quarter_inv_tm1;
+    deriv[2+3*2+p] = (+t_term - 0.25);
+    
+    // node 3
+    deriv[0+3*3+p] = -(1.0 + s - t) * quarter_inv_tm1;
+    deriv[1+3*3+p] = +(1.0 - r - t) * quarter_inv_tm1;
+    deriv[2+3*3+p] = (-t_term - 0.25);
+    
+    // node 4
+    deriv[0+3*4+p] = 0.0;
+    deriv[1+3*4+p] = 0.0;
+    deriv[2+3*4+p] = 1.0;
+  } 
+}
+
+//--------------------------------------------------------------------------
+//-------- shifted_pyr_derivative ------------------------------------------
+//--------------------------------------------------------------------------
+void PyrSCS::shifted_pyr_derivative(
+  const int npts,
+  const double *intgLoc,
+  double *deriv)
+{
+  // d3d(c,s,j) = deriv[c + 3*(s + 5*j)] = deriv[c+3s+15j]
 
   for ( int j = 0; j < npts; ++j) {
     const int k = j*3;
@@ -1197,6 +1360,15 @@ PyrSCS::adjacentNodes()
 }
 
 //--------------------------------------------------------------------------
+//-------- scsIpEdgeOrd ----------------------------------------------------
+//--------------------------------------------------------------------------
+const int *
+PyrSCS::scsIpEdgeOrd()
+{
+  return &scsIpEdgeOrd_[0];
+}
+
+//--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
@@ -1211,7 +1383,7 @@ PyrSCS::shape_fcn(double *shpfc)
 void
 PyrSCS::shifted_shape_fcn(double *shpfc)
 {
-  pyr_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  shifted_pyr_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -1223,6 +1395,37 @@ PyrSCS::pyr_shape_fcn(
   const double *par_coord, 
   double *shape_fcn)
 {
+  const double eps = std::numeric_limits<double>::epsilon();
+  
+  for ( int j = 0; j < npts; ++j ) {
+    const int fivej = 5*j;
+    const int k     = 3*j;
+    const double r    = par_coord[k+0];
+    const double s    = par_coord[k+1];
+    const double t_tmp    = par_coord[k+2];
+    
+    const double one_minus_t = 1.0 - t_tmp;
+    const double t = (std::fabs(one_minus_t) > eps) ? t_tmp : 1.0 + std::copysign(eps, one_minus_t);
+    const double quarter_inv_tm1 = 0.25 / (1.0 - t);
+    
+    shape_fcn[0 + fivej] = (1.0 - r - t) * (1.0 - s - t) * quarter_inv_tm1;
+    shape_fcn[1 + fivej] = (1.0 + r - t) * (1.0 - s - t) * quarter_inv_tm1;
+    shape_fcn[2 + fivej] = (1.0 + r - t) * (1.0 + s - t) * quarter_inv_tm1;
+    shape_fcn[3 + fivej] = (1.0 - r - t) * (1.0 + s - t) * quarter_inv_tm1;
+    shape_fcn[4 + fivej] = t;
+    
+  }
+}
+
+//--------------------------------------------------------------------------
+//-------- shifted_pyr_shape_fcn -------------------------------------------
+//--------------------------------------------------------------------------
+void
+PyrSCS::shifted_pyr_shape_fcn(
+  const int  &npts,
+  const double *par_coord, 
+  double *shape_fcn)
+{
   const double one  = 1.0;
   for ( int j = 0; j < npts; ++j ) {
     const int fivej = 5*j;
@@ -1230,7 +1433,7 @@ PyrSCS::pyr_shape_fcn(
     const double r    = par_coord[k+0];
     const double s    = par_coord[k+1];
     const double t    = par_coord[k+2];
-
+    
     shape_fcn[0 + fivej] = 0.25*(1.0-r)*(1.0-s)*(one-t);
     shape_fcn[1 + fivej] = 0.25*(1.0+r)*(1.0-s)*(one-t);
     shape_fcn[2 + fivej] = 0.25*(1.0+r)*(1.0+s)*(one-t);

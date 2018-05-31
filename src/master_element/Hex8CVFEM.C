@@ -275,6 +275,15 @@ HexSCS::HexSCS()
   lrscv_[20] = 2; lrscv_[21] = 6;
   lrscv_[22] = 3; lrscv_[23] = 7;
 
+  // elem-edge mapping from ip
+  scsIpEdgeOrd_.resize(numIntPoints_);
+  scsIpEdgeOrd_[0]  = 0;  scsIpEdgeOrd_[1]  = 1; 
+  scsIpEdgeOrd_[2]  = 2;  scsIpEdgeOrd_[3]  = 3; 
+  scsIpEdgeOrd_[4]  = 4;  scsIpEdgeOrd_[5]  = 5; 
+  scsIpEdgeOrd_[6]  = 6;  scsIpEdgeOrd_[7]  = 7;
+  scsIpEdgeOrd_[8]  = 8;  scsIpEdgeOrd_[9]  = 9;
+  scsIpEdgeOrd_[10] = 10; scsIpEdgeOrd_[11] = 11;
+
   // define opposing node
   oppNode_.resize(24);
   // face 0
@@ -806,6 +815,15 @@ HexSCS::adjacentNodes()
 {
   // define L/R mappings
   return &lrscv_[0];
+}
+
+//--------------------------------------------------------------------------
+//-------- scsIpEdgeOrd ----------------------------------------------------
+//--------------------------------------------------------------------------
+const int *
+HexSCS::scsIpEdgeOrd()
+{
+  return &scsIpEdgeOrd_[0];
 }
 
 //--------------------------------------------------------------------------

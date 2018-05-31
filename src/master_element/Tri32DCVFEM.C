@@ -341,6 +341,10 @@ Tri32DSCS::Tri32DSCS()
   lrscv_[2]  = 1; lrscv_[3]  = 2;
   lrscv_[4]  = 0; lrscv_[5]  = 2;
 
+  // elem-edge mapping from ip
+  scsIpEdgeOrd_.resize(numIntPoints_);
+  scsIpEdgeOrd_[0] = 0; scsIpEdgeOrd_[1] = 1; scsIpEdgeOrd_[2] = 2; 
+
   // define opposing node
   oppNode_.resize(6);
   // face 0; nodes 0,1
@@ -775,6 +779,15 @@ Tri32DSCS::adjacentNodes()
 {
   // define L/R mappings
   return &lrscv_[0];
+}
+
+//--------------------------------------------------------------------------
+//-------- scsIpEdgeOrd ----------------------------------------------------
+//--------------------------------------------------------------------------
+const int *
+Tri32DSCS::scsIpEdgeOrd()
+{
+  return &scsIpEdgeOrd_[0];
 }
 
 //--------------------------------------------------------------------------

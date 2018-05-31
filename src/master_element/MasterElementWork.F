@@ -791,16 +791,20 @@ c
       dimension scscoords(3,4)
 
       ! this table defines the vertices of each scs
-      dimension PyramidEdgeFacetTable(4,8)
+      dimension PyramidEdgeFacetTable(4,12)
       data PyramidEdgeFacetTable /
-     .  6, 10, 19, 13,    ! sc face 1 -- points from 1 -> 2
-     .  7, 10, 19, 15,    ! sc face 2 -- points from 2 -> 3
-     .  8, 10, 19, 17,    ! sc face 3 -- points from 3 -> 4
-     .  9, 18, 19, 10,    ! sc face 4 -- points from 1 -> 4
-     .  12, 13, 19, 18,  ! sc face 5 -- points from 1 -> 5
-     .  11, 15, 19, 13,  ! sc face 6 -- points from 2 -> 5
-     .  14, 17, 19, 15,  ! sc face 7 -- points from 3 -> 5
-     .  16, 18, 19, 17 / ! sc face 8 -- points from 4 -> 5
+     .  6, 10, 19, 13,    ! sc face 1  -- points from 1 -> 2
+     .  7, 10, 19, 15,    ! sc face 2  -- points from 2 -> 3
+     .  8, 10, 19, 17,    ! sc face 3  -- points from 3 -> 4
+     .  9, 18, 19, 10,    ! sc face 4  -- points from 1 -> 4
+     .  13, 13, 19, 18,   ! sc face 5  -- points from 1 -> 5 I
+     .  12, 13, 13, 18,   ! sc face 6  -- points from 1 -> 5 O
+     .  15, 15, 19, 13,   ! sc face 7  -- points from 2 -> 5 I
+     .  11, 15, 15, 13,   ! sc face 8  -- points from 2 -> 5 O
+     .  17, 17, 19, 15,   ! sc face 9  -- points from 3 -> 5 I 
+     .  14, 17, 17, 15,   ! sc face 10 -- points from 3 -> 5 O
+     .  18, 18, 19, 17,   ! sc face 11 -- points from 4 -> 5 I 
+     .  16, 18, 18, 17 /  ! sc face 12 -- points from 4 -> 5 O
 
       half = 0.5d0
       one3rd = 1.d0/3.d0
@@ -970,10 +974,10 @@ c
       ! thist table defines the vertices of each scv
       dimension PyramidSubcontrolNodeTable(10,5)
       data PyramidSubcontrolNodeTable /
-     .  0, 5, 9, 8, 11, 12, 18, 17, -1, -1,
-     .  5, 1, 6, 9, 12, 10, 14, 18, -1, -1,
-     .  6, 2, 7, 9, 14, 13, 16, 18, -1, -1,
-     .  8, 9, 7, 3, 17, 18, 16, 15, -1, -1,
+     .  0,  5,  9,  8, 11, 12, 18, 17, -1, -1,
+     .  1,  6,  9,  5, 10, 14, 18, 12, -1, -1,
+     .  2,  7,  9,  6, 13, 16, 18, 14, -1, -1,
+     .  3,  8,  9,  7, 15, 17, 18, 16, -1, -1,
      .  4, 18, 15, 17, 11, 12, 10, 14, 13, 16  /
 
       one3rd = 1.d0/3.d0
@@ -1087,7 +1091,7 @@ c
             end do
           end do
           ! compute volume use an equivalent polyhedron
-          call hexVolumeByTriangleFacets(ehexcoords(1,1),voltmp)
+          call bhexVolumeByTriangleFacets(ehexcoords(1,1),voltmp)
           vol(ielem,icv) = voltmp
           if ( vol(ielem,icv) < 0.0d0) then
             err(nelem) = 1.0d0

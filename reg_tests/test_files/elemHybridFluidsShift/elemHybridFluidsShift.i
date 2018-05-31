@@ -113,6 +113,7 @@ realms:
       shift_cvfem_mdot: yes
 
       use_consolidated_solver_algorithm: yes
+      use_consolidated_face_elem_solver_algorithm: yes
 
       options:
         - hybrid_factor:

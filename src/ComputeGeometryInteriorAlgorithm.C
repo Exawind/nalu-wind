@@ -146,6 +146,7 @@ ComputeGeometryInteriorAlgorithm::execute()
       const int nodesPerElement = meSCS->nodesPerElement_;
       const int numScsIp = meSCS->numIntPoints_;
       const int *lrscv = meSCS->adjacentNodes();
+      const int *scsIpEdgeOrd = meSCS->scsIpEdgeOrd();
 
       // define scratch field
       std::vector<double > ws_coordinates(nodesPerElement*nDim);
@@ -175,20 +176,20 @@ ComputeGeometryInteriorAlgorithm::execute()
         double scs_error = 0.0;
         meSCS->determinant(1, &ws_coordinates[0], &ws_scs_areav[0], &scs_error);
 
-        // iterate edges
+        // extract edge connectivity
         stk::mesh::Entity const * elem_edge_rels = b.begin_edges(k);
-        int num_edges = b.num_edges(k);
-
-        // sanity check on number of edges
-        ThrowAssert( num_edges == numScsIp );
-
-        for ( int nedge = 0; nedge < num_edges; ++nedge ) {
-
+                        
+        for ( int ip = 0; ip < numScsIp; ++ip ) {
+          
+          // for this ip, extract the local edge ordinal
+          const int nedge = scsIpEdgeOrd[ip];
+          
           // get edge and area_vector
           stk::mesh::Entity edge = elem_edge_rels[nedge];
           ThrowAssertMsg(bulk_data.is_valid(edge),"Error!  Invalid edge returned from element relations to edges!");
+          
           double * av = stk::mesh::field_data(*edgeAreaVec, edge );
-
+          
           // extract edge->node relations
           stk::mesh::Entity const * edge_node_rels = bulk_data.begin_nodes(edge);
           ThrowAssert( 2 == bulk_data.num_nodes(edge) );
@@ -196,7 +197,7 @@ ComputeGeometryInteriorAlgorithm::execute()
           // work towards "sign" convention
 
           // extract a local node; choose to pick L and follow it through
-          const int iloc_L = lrscv[2*nedge];
+          const int iloc_L = lrscv[2*ip];
 
           // get global identifiers for nodes Left and Right from the element
           const size_t iglob_Lelem = bulk_data.identifier(elem_node_rels[iloc_L]);
@@ -206,7 +207,7 @@ ComputeGeometryInteriorAlgorithm::execute()
           // then the element and edge relations are aligned
           const double sign = ( iglob_Lelem == iglob_Ledge ) ? 1.0 : -1.0;
 
-          const int offSet = nedge*nDim;
+          const int offSet = ip*nDim;
           for ( int j = 0; j < nDim; ++j ) {
             av[j] += ws_scs_areav[offSet+j]*sign;
           }

@@ -56,24 +56,20 @@ c
       ! we now add face midpoints only for the four faces that are
       ! not planar
       do k = 1,3
-        coords(k,11) = 0.25d0*( volcoords(k,2)
-     .    + volcoords(k,4)
-     .    + volcoords(k,3) + volcoords(k,10) )
+        coords(k,11) = 0.5d0*( volcoords(k,4)
+     .    + volcoords(k,10) )
       end do
       do k = 1,3
-        coords(k,12) = 0.25d0*( volcoords(k,2)
-     .    + volcoords(k,6)
-     .    + volcoords(k,5) + volcoords(k,4) )
+        coords(k,12) = 0.50d0*( volcoords(k,4)
+     .    + volcoords(k,6) )
       end do
       do k = 1,3
-        coords(k,13) = 0.25d0*( volcoords(k,2)
-     .     + volcoords(k,8)
-     .    + volcoords(k,7) + volcoords(k,6) )
+        coords(k,13) = 0.50d0*( volcoords(k,6)
+     .     + volcoords(k,8) )
       end do
       do k = 1,3
-        coords(k,14) = 0.25d0*( volcoords(k,2)
-     .     + volcoords(k,10)
-     .    + volcoords(k,9) + volcoords(k,8) )
+        coords(k,14) = 0.50d0*( volcoords(k,8)
+     .     + volcoords(k,10) )
       end do
 
       ncoords = 14

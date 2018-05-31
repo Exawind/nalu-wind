@@ -162,6 +162,104 @@ namespace nalu {
     return volume;
   }
 
+  template <typename RealType>
+  RealType bhex_volume_grandy(RealType scvcoords[8][3])
+  {
+    /**
+     * The Grandy algorithm for computing the volume of a multilinear box
+     *
+     * "Efficient computation of volume ofl
+     * Hexahedral Cells", Jeffrey Grandy, LLNL, UCRL-ID-128886,
+     *  October 30, 1997.
+     * modified for non-planar bent top face which we have broken into two triangles
+     */
+    constexpr int nTri = 24;
+    constexpr int dim = 3;
+
+    constexpr int nNodes = 8;
+    constexpr int nFaces = 6;
+    constexpr int npv = nNodes + nFaces;
+
+    RealType coordv[npv][dim];
+
+    // copy coordinates
+    for (int n = 0; n < nNodes; ++n) {
+      coordv[n][0] = scvcoords[n][0];
+      coordv[n][1] = scvcoords[n][1];
+      coordv[n][2] = scvcoords[n][2];
+    }
+
+    // now we add the face midpoints
+    for (int k = 0; k < 3; ++k ) {
+      coordv[8][k] = 0.25*( scvcoords[0][k] + scvcoords[1][k]
+                            + scvcoords[2][k] + scvcoords[3][k] );
+    }
+    
+    for (int k = 0; k < 3; ++k ) {
+      coordv[9][k] = 0.5*( scvcoords[5][k] + scvcoords[7][k] );
+    }
+
+    for (int k = 0; k < 3; ++k ) {
+      coordv[10][k] = 0.25*( scvcoords[0][k] + scvcoords[1][k]
+                             + scvcoords[5][k] + scvcoords[4][k] );
+    }   
+    
+    for (int k = 0; k < 3; ++k ) {
+      coordv[11][k] = 0.25*( scvcoords[3][k] + scvcoords[2][k]
+                             + scvcoords[6][k] + scvcoords[7][k] );
+    }
+    
+    for (int k = 0; k < 3; ++k ) {
+      coordv[12][k] = 0.25*( scvcoords[1][k] + scvcoords[2][k]
+                             + scvcoords[6][k] + scvcoords[5][k] );
+    }
+    
+    for (int k = 0; k < 3; ++k ) {
+      coordv[13][k] = 0.25*( scvcoords[0][k] + scvcoords[3][k]
+                             + scvcoords[7][k] + scvcoords[4][k] );
+    }
+    
+    constexpr int triangular_facets[nTri][3] = {
+      { 0,  8,  1}, { 8,  2,  1}, { 3,  2,  8},
+      { 3,  8,  0}, { 6,  9,  5}, { 7,  9,  6},
+      { 4,  9,  7}, { 4,  5,  9}, {10,  0,  1},
+      { 5, 10,  1}, { 4, 10,  5}, { 4,  0, 10},
+      { 7,  6, 11}, { 6,  2, 11}, { 2,  3, 11},
+      { 3,  7, 11}, { 6, 12,  2}, { 5, 12,  6},
+      { 5,  1, 12}, { 1,  2, 12}, { 0,  4, 13},
+      { 4,  7, 13}, { 7,  3, 13}, { 3,  0, 13}
+    };
+
+    RealType volume = 0.0;
+    for (int k = 0; k < nTri; ++k) {
+      const int p = triangular_facets[k][0];
+      const int q = triangular_facets[k][1];
+      const int r = triangular_facets[k][2];
+
+      const RealType triFaceMid[3] = {
+          coordv[p][0] + coordv[q][0] + coordv[r][0],
+          coordv[p][1] + coordv[q][1] + coordv[r][1],
+          coordv[p][2] + coordv[q][2] + coordv[r][2]
+      };
+
+      enum {XC = 0, YC = 1, ZC = 2};
+      RealType dxv[3];
+
+      dxv[0] = ( coordv[q][YC] - coordv[p][YC] ) * ( coordv[r][ZC] - coordv[p][ZC] )
+             - ( coordv[r][YC] - coordv[p][YC] ) * ( coordv[q][ZC] - coordv[p][ZC] );
+
+      dxv[1] = ( coordv[r][XC] - coordv[p][XC] ) * ( coordv[q][ZC] - coordv[p][ZC] )
+             - ( coordv[q][XC] - coordv[p][XC] ) * ( coordv[r][ZC] - coordv[p][ZC] );
+
+      dxv[2] = ( coordv[q][XC] - coordv[p][XC] ) * ( coordv[r][YC] - coordv[p][YC] )
+             - ( coordv[r][XC] - coordv[p][XC] ) * ( coordv[q][YC] - coordv[p][YC] );
+
+      volume += triFaceMid[0] * dxv[0] + triFaceMid[1] * dxv[1] + triFaceMid[2] * dxv[2];
+    }
+    volume /= RealType(18.0);
+    return volume;
+  }
+
   template <typename CoordViewType>
   void subdivide_hex_8(CoordViewType coords, typename CoordViewType::value_type coordv[27][3])
   {
