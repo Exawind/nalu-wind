@@ -57,6 +57,10 @@ public:
   TurbulenceAveragingPostProcessing(
     Realm &realm,
     const YAML::Node &node);
+
+  TurbulenceAveragingPostProcessing(
+    Realm&);
+
   ~TurbulenceAveragingPostProcessing();
   
   // load all of the options

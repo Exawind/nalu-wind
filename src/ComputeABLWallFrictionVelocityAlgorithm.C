@@ -16,8 +16,9 @@
 #include <NaluEnv.h>
 
 #include <ABLProfileFunction.h>
+#include <wind_energy/BdyLayerStatistics.h>
 
-// stk_mesh/base/fem
+// stk_mesh/base/fem/util
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
@@ -25,6 +26,7 @@
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Part.hpp>
+#include <stk_util/parallel/ParallelReduce.hpp>
 
 // basic c++
 #include <cmath>
@@ -101,7 +103,11 @@ ComputeABLWallFrictionVelocityAlgorithm::execute()
   StableABLProfileFunction StableProfFun(gamma_m_, gamma_h_);
   UnstableABLProfileFunction UnstableProfFun(beta_m_, beta_h_);
   NeutralABLProfileFunction NeutralProfFun;
-  
+
+  //Quantities to get the averate utau over the whole sideset
+  std::array<double, 2> uTauAreaSumLocal{ {0.0, 0.0} }; // First value hold uTau * area, second value holds area. To get average utau, sum both quantities over all processes and divide one by another.
+  std::array<double, 2> uTauAreaSumGlobal{ {0.0, 0.0} };
+  double utau_calc;
 
   // zero out assembled nodal quantities
   zero_nodal_fields();
@@ -326,8 +332,19 @@ ComputeABLWallFrictionVelocityAlgorithm::execute()
 
 	const double TfluxBip = heatFluxBip / (rhoBip * CpBip);
         compute_utau(uTangential, ypBip, TfluxBip, p_ABLProfFun, wallFrictionVelocityBip[ip]);
+        uTauAreaSumLocal[0] += wallFrictionVelocityBip[ip] * aMag ;
+        uTauAreaSumLocal[1] += aMag ;
       }
     }
+  }
+  
+  if ((realm_.bdyLayerStats_ != nullptr) &&
+      (realm_.isFinalOuterIter_)) {
+    stk::all_reduce_sum(
+      NaluEnv::self().parallel_comm(), uTauAreaSumLocal.data(),
+      uTauAreaSumGlobal.data(), 2);
+    utau_calc = uTauAreaSumGlobal[0] / uTauAreaSumGlobal[1];
+    realm_.bdyLayerStats_->set_utau_avg(utau_calc);
   }
 
   // parallel assemble and normalize
@@ -380,7 +397,7 @@ ComputeABLWallFrictionVelocityAlgorithm::compute_utau(
   }
   const double log_z_over_z0 = std::log(zp / z0_);
 
-  // initial guesses for utau
+  // Initial guesses for utau
   const double eps_u = 1.0e-8;
   const double perturb = 1.0e-3;
  
