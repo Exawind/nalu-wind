@@ -963,92 +963,50 @@ void PyrSCS::face_grad_op(
   }
 }
 
-void PyrSCS::face_grad_op_quad(const int face_ordinal, const bool shifted, 
-                               SharedMemView<DoubleType**>& coords, QuadFaceGradType& gradop)
-{
-  using tri_traits = AlgTraitsTri3Pyr5;
-  using quad_traits = AlgTraitsQuad4Pyr5;
-
-  const double *p_intgExp = !shifted  ? &intgExpFace_[0] : &intgExpFaceShift_[0];
-
-  constexpr int derivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * quad_traits::nDim_;
-
-  NALU_ALIGNED DoubleType psi[derivSize];
-  QuadFaceGradType deriv(psi,quad_traits::numFaceIp_,quad_traits::nodesPerElement_,quad_traits::nDim_);
-
-  const int offset = (face_ordinal != 4) ? 0 : tri_traits::nDim_ * tri_traits::numFaceIp_ * face_ordinal;
-  if ( shifted )
-    shifted_pyr_deriv(quad_traits::numFaceIp_, &p_intgExp[offset], deriv);
-  else 
-    pyr_deriv(quad_traits::numFaceIp_, &p_intgExp[offset], deriv);
-
-  generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
-}
-
-void PyrSCS::face_grad_op_tri(const int face_ordinal, const bool shifted, 
-                               SharedMemView<DoubleType**>& coords, TriFaceGradType& gradop)
-{
-  using tri_traits = AlgTraitsTri3Pyr5;
-  const double *p_intgExp = !shifted ? &intgExpFace_[0] : &intgExpFaceShift_[0];
-
-  constexpr int derivSize = tri_traits::numFaceIp_ *  tri_traits::nodesPerElement_ * tri_traits::nDim_;
-  NALU_ALIGNED DoubleType psi[derivSize];
-  TriFaceGradType deriv(psi,tri_traits::numFaceIp_,tri_traits::nodesPerElement_,tri_traits::nDim_ );
-
-  const int offset = (face_ordinal != 4) ? tri_traits::nDim_ * tri_traits::numFaceIp_ * face_ordinal : 0;
-  if ( shifted )
-    shifted_pyr_deriv(tri_traits::numFaceIp_, &p_intgExp[offset], deriv);
-  else
-    pyr_deriv(tri_traits::numFaceIp_, &p_intgExp[offset], deriv);
-  generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
-}
-
-void PyrSCS::face_grad_op(
-  const int face_ordinal,
-  const bool shifted,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop)
-{
-  using tri_traits = AlgTraitsTri3Pyr5;
-  using quad_traits = AlgTraitsQuad4Pyr5;
-
-  constexpr int quad_derivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * quad_traits::nDim_;
-  NALU_ALIGNED DoubleType quad_grad_temp[quad_derivSize];
-  QuadFaceGradType quad_gradop(quad_grad_temp,quad_traits::numFaceIp_,quad_traits::nodesPerElement_,quad_traits::nDim_);
-  face_grad_op_quad(face_ordinal, shifted, coords, quad_gradop);
-
-  constexpr int tri_derivSize = tri_traits::numFaceIp_ *  tri_traits::nodesPerElement_ * tri_traits::nDim_;
-  NALU_ALIGNED DoubleType tri_grad_temp[tri_derivSize];
-  TriFaceGradType tri_gradop(tri_grad_temp,tri_traits::numFaceIp_,tri_traits::nodesPerElement_,tri_traits::nDim_ );
-  face_grad_op_tri(face_ordinal, shifted, coords, tri_gradop);
-
-  const int length = (face_ordinal == 4) ? quad_derivSize : tri_derivSize;
-  DoubleType triMask = (face_ordinal == 4) ? 0: 1;
-  DoubleType* gradop_ptr = gradop.ptr_on_device();
-  for (int k = 0; k < length; ++k) {
-    gradop_ptr[k] = (1 - triMask) * quad_grad_temp[k] + triMask * tri_grad_temp[k];
-  }
-}
-
+//--------------------------------------------------------------------------
+//-------- face_grad_op ----------------------------------------------------
+//--------------------------------------------------------------------------
 void PyrSCS::face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**>& coords,
   SharedMemView<DoubleType***>& gradop)
 {
-  constexpr bool shifted = false;
-  face_grad_op(face_ordinal, shifted, coords, gradop);
+  using tri_traits = AlgTraitsTri3Wed6;
+  using quad_traits = AlgTraitsQuad4Wed6;
+  constexpr int dim = 3;
+
+  constexpr int maxDerivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * dim;
+  NALU_ALIGNED DoubleType psi[maxDerivSize];
+
+  const int numFaceIps = (face_ordinal == 4) ? quad_traits::numFaceIp_ : tri_traits::numFaceIp_;
+  SharedMemView<DoubleType***> deriv(psi, numFaceIps, AlgTraitsPyr5::nodesPerElement_, dim);
+
+  const int offset = tri_traits::numFaceIp_ * face_ordinal;
+  pyr_deriv(numFaceIps, &intgExpFace_[dim * offset], deriv);
+  generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
-//-------- shifted_face_grad_op -------------------------------------------
+//-------- shifted_face_grad_op --------------------------------------------
 //--------------------------------------------------------------------------
 void PyrSCS::shifted_face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**>& coords,
   SharedMemView<DoubleType***>& gradop)
 {
-  constexpr bool shifted = true;
-  face_grad_op(face_ordinal, shifted, coords, gradop);
+  using tri_traits = AlgTraitsTri3Wed6;
+  using quad_traits = AlgTraitsQuad4Wed6;
+  constexpr int dim = 3;
+
+  constexpr int maxDerivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * dim;
+  NALU_ALIGNED DoubleType psi[maxDerivSize];
+
+  const int numFaceIps = (face_ordinal == 4) ? quad_traits::numFaceIp_ : tri_traits::numFaceIp_;
+  SharedMemView<DoubleType***> deriv(psi, numFaceIps, AlgTraitsPyr5::nodesPerElement_, dim);
+
+  const int offset = tri_traits::numFaceIp_ * face_ordinal;
+  shifted_pyr_deriv(numFaceIps, &intgExpFaceShift_[dim * offset], deriv);
+  generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
 void PyrSCS::shifted_face_grad_op(

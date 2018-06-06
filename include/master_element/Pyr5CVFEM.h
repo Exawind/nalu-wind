@@ -239,13 +239,6 @@ public:
     const double *field,
     double *result);
 
-private:
-  using QuadFaceGradType = SharedMemView<DoubleType***>;
-  using TriFaceGradType = SharedMemView<DoubleType***>;
-
-  void face_grad_op(const int face_ordinal, const bool shifted, SharedMemView<DoubleType**>& coords, QuadFaceGradType& gradop);
-  void face_grad_op_quad(const int face_ordinal, const bool shifted, SharedMemView<DoubleType**>& coords, QuadFaceGradType& gradop);
-  void face_grad_op_tri(const int face_ordinal, const bool shifted, SharedMemView<DoubleType**>& coords, TriFaceGradType& gradop);
 };
 
 } // namespace nalu
