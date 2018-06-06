@@ -13,6 +13,8 @@
 #include <nso/MomentumNSOElemKernel.h>
 #include <ElemDataRequests.h>
 
+#ifndef KOKKOS_HAVE_CUDA
+
 TEST_F(Hex8MeshWithNSOFields, twoMomentumKernels)
 {
   fill_mesh_and_initialize_test_fields("generated:20x20x20");
@@ -61,4 +63,6 @@ TEST_F(Hex8MeshWithNSOFields, twoMomentumKernels)
 
   EXPECT_EQ(numElems, helperObjs.linsys->numSumIntoCalls_);
 }
+
+#endif
 

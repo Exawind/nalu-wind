@@ -14,6 +14,8 @@
 #include <ElemDataRequests.h>
 #include <ScratchViews.h>
 
+#ifndef KOKKOS_HAVE_CUDA
+
 TEST_F(Hex8MeshWithNSOFields, continuityAdvElem)
 {
   fill_mesh_and_initialize_test_fields("generated:10x10x10");
@@ -55,4 +57,6 @@ TEST_F(Hex8MeshWithNSOFields, continuityAdvElem)
 
   EXPECT_EQ(numElems, helperObjs.linsys->numSumIntoCalls_);
 }
+
+#endif
 

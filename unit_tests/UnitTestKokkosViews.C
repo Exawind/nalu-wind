@@ -300,7 +300,7 @@ public:
        sierra::nalu::SharedMemView<double**>::shmem_size(maxNumScsIp, maxNodesPerElement*nDim) +
        sierra::nalu::SharedMemView<double*>::shmem_size(maxNumScsIp);
 
-    auto team_exec = sierra::nalu::get_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);
+    auto team_exec = sierra::nalu::get_host_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);
     Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
     {
         const stk::mesh::Bucket& bkt = *elemBuckets[team.league_rank()];

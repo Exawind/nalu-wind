@@ -103,6 +103,8 @@ struct HelperObjectsABLWallFunction {
   const double gravity_;
 };
 
+#ifndef KOKKOS_HAVE_CUDA
+
 /*
   This test calls ABLWallFrictionVelocity::compute_utau() for three cases: neutral, unstable,
   and stable stratification.  The gold values for utau are obtained from a separate
@@ -218,6 +220,8 @@ TEST_F(ABLWallFunctionHex8ElementWithBCFields, abl_wall_function_edge_alg_rhs) {
 
   EXPECT_NEAR(linsys->rhs_(0), rhs_gold, tolerance);
 }
+
+#endif
 
 }
 }

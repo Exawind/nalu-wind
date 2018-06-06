@@ -19,11 +19,17 @@ double field_norm(const ScalarFieldType& field, const stk::mesh::BulkData& bulk,
   double norm = 0.0;
   double g_norm = 0.0;
 
-  kokkos_thread_team_bucket_loop(buckets, [&](stk::mesh::Entity node) {
-      double node_value = *stk::mesh::field_data(field, node);
-      Kokkos::atomic_add(&N, (size_t)1);
-      Kokkos::atomic_add(&norm, (node_value * node_value));
-    });
+  Kokkos::parallel_for(sierra::nalu::HostTeamPolicy(buckets.size(), Kokkos::AUTO), NONCONST_LAMBDA(const sierra::nalu::TeamHandleType& team)
+  {
+      const stk::mesh::Bucket& bkt = *buckets[team.league_rank()];
+      Kokkos::parallel_for(Kokkos::TeamThreadRange(team, bkt.size()), NONCONST_LAMBDA(const size_t& j)
+      {
+          double node_value = *stk::mesh::field_data(field, bkt[j]);
+          Kokkos::atomic_add(&N, (size_t)1);
+          Kokkos::atomic_add(&norm, (node_value * node_value));
+      });
+  });
+
   stk::all_reduce_sum(comm, &N, &g_N, 1);
   stk::all_reduce_sum(comm, &norm, &g_norm, 1);
   g_norm = std::sqrt(g_norm/g_N);
