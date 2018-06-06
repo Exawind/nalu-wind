@@ -22,26 +22,42 @@
 #define POINTER_RESTRICT
 #endif
 
+#ifdef KOKKOS_HAVE_CUDA
+#define NONCONST_LAMBDA [&]__host__
+#else
+#define NONCONST_LAMBDA [&]
+#endif
+
 namespace sierra {
 namespace nalu {
 
-using HostSpace = Kokkos::HostSpace;
+using HostSpace = Kokkos::DefaultHostExecutionSpace;
 using DeviceSpace = Kokkos::DefaultExecutionSpace;
 
 using DeviceShmem = DeviceSpace::scratch_memory_space;
+using HostShmem = HostSpace::scratch_memory_space;
 using DynamicScheduleType = Kokkos::Schedule<Kokkos::Dynamic>;
-using TeamHandleType = Kokkos::TeamPolicy<DeviceSpace, DynamicScheduleType>::member_type;
+using TeamHandleType = Kokkos::TeamPolicy<HostSpace, DynamicScheduleType>::member_type;
 
 template <typename T>
-using SharedMemView = Kokkos::View<T, Kokkos::LayoutRight, DeviceShmem, Kokkos::MemoryUnmanaged>;
+using SharedMemView = Kokkos::View<T, Kokkos::LayoutRight, HostShmem, Kokkos::MemoryUnmanaged>;
 
 template<typename T>
 using AlignedViewType = Kokkos::View<T, Kokkos::MemoryTraits<Kokkos::Aligned>>;
 
 using DeviceTeamPolicy = Kokkos::TeamPolicy<DeviceSpace>;
+using HostTeamPolicy = Kokkos::TeamPolicy<HostSpace>;
 using DeviceTeam = DeviceTeamPolicy::member_type;
+using HostTeam = HostTeamPolicy::member_type;
 
-inline DeviceTeamPolicy get_team_policy(const size_t sz, const size_t bytes_per_team,
+inline HostTeamPolicy get_host_team_policy(const size_t sz, const size_t bytes_per_team,
+    const size_t bytes_per_thread)
+{
+  HostTeamPolicy policy(sz, Kokkos::AUTO);
+  return policy.set_scratch_size(0, Kokkos::PerTeam(bytes_per_team), Kokkos::PerThread(bytes_per_thread));
+}
+
+inline DeviceTeamPolicy get_device_team_policy(const size_t sz, const size_t bytes_per_team,
     const size_t bytes_per_thread)
 {
   DeviceTeamPolicy policy(sz, Kokkos::AUTO);

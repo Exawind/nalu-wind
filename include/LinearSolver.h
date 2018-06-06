@@ -67,7 +67,7 @@ class LocalGraphArrays {
 public:
 
   LocalGraphArrays(const Kokkos::View<size_t*,HostSpace>& rowLengths)
-  : rowPointers(Kokkos::View<size_t*>(Kokkos::ViewAllocateWithoutInitializing("rowPtrs"),rowLengths.size()+1)),
+  : rowPointers(Kokkos::View<size_t*,HostSpace>(Kokkos::ViewAllocateWithoutInitializing("rowPtrs"),rowLengths.size()+1)),
     rowPointersData(rowPointers.data()),
     colIndices()
   {

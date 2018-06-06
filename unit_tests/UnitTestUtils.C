@@ -29,6 +29,8 @@
 #include <array>
 #include <random>
 
+#ifndef KOKKOS_HAVE_CUDA
+
 namespace unit_test_utils {
 
 void fill_mesh_1_elem_per_proc_hex8(stk::mesh::BulkData& bulk)
@@ -511,8 +513,6 @@ double global_norm(const double & norm, const size_t & N, const stk::ParallelMac
 
   return g_norm;
 }
-
-#ifndef KOKKOS_HAVE_CUDA
 
 double initialize_linear_scalar_field(
   const stk::mesh::BulkData& bulk,

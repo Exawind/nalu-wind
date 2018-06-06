@@ -71,7 +71,7 @@ public:
       stk::mesh::EntityRank sideRank = bulk.mesh_meta_data().side_rank();
       stk::mesh::BucketVector const& buckets = bulk.get_buckets(sideRank, s_locally_owned_union );
 
-      auto team_exec = sierra::nalu::get_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
+      auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
       Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
       {
         stk::mesh::Bucket & b = *buckets[team.league_rank()];
