@@ -235,6 +235,7 @@ TimeIntegrator::integrate_realm()
   //=====================================
   
   while ( simulation_proceeds() ) {
+    const double startTime = NaluEnv::self().nalu_time();
 
     // negotiate time step
     if ( adaptiveTimeStep_ ) {
@@ -291,6 +292,7 @@ TimeIntegrator::integrate_realm()
       (*ii)->process_external_data_transfer();
     }
 
+    const double endPreProc = NaluEnv::self().nalu_time();
     // nonlinear iteration loop; Picard-style
     for ( int k = 0; k < nonlinearIterations_; ++k ) {
       NaluEnv::self().naluOutputP0()
@@ -302,6 +304,7 @@ TimeIntegrator::integrate_realm()
       }
     }
 
+    const double endSolve = NaluEnv::self().nalu_time();
     // process any post converged work
     for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
       (*ii)->post_converged_work();
@@ -321,6 +324,14 @@ TimeIntegrator::integrate_realm()
     provide_mean_norm();
   
     timeStepNm1_ = timeStepN_;
+
+    const double endPostProc = NaluEnv::self().nalu_time();
+    NaluEnv::self().naluOutputP0()
+      << "WallClockTime: " << timeStepCount_
+      << " Pre: " << (endPreProc - startTime)
+      << " NLI: " << (endSolve - endPreProc)
+      << " Post: " << (endPostProc - endSolve)
+      << " Total: " << (endPostProc - startTime) << std::endl;
   }
   
   // inform the user that the simulation is complete
