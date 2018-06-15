@@ -106,6 +106,11 @@ void kokkos_parallel_reduce(SizeType n, Function loop_body, ReduceType& reduce, 
     Kokkos::parallel_reduce(debuggingName, Kokkos::RangePolicy<Kokkos::Serial>(0, n), loop_body, reduce);
 }
 
+template<typename T>
+inline T* kokkos_malloc_on_device(const std::string& debuggingName) {
+  return static_cast<T*>(Kokkos::kokkos_malloc(debuggingName, sizeof(T)));
+}
+inline void kokkos_free_on_device(void * ptr) { Kokkos::kokkos_free(ptr); }
 }
 }
 
