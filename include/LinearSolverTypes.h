@@ -56,7 +56,7 @@ template <typename Scalar, typename MultiVector, typename Operator>
 class SolverManager;
 
 template <typename Scalar, typename MultiVector, typename Operator>
-class SolverFactory;
+class TpetraSolverFactory;
 }
 
 namespace Ifpack2 {
@@ -95,7 +95,7 @@ typedef Belos::MultiVecTraits<Scalar, MultiVector>                         Multi
 typedef Belos::OperatorTraits<Scalar,MultiVector, Operator>                OperatorTraits;
 typedef Belos::LinearProblem<Scalar, MultiVector, Operator>                LinearProblem;
 typedef Belos::SolverManager<Scalar, MultiVector, Operator>                SolverManager;
-typedef Belos::SolverFactory<Scalar, MultiVector, Operator>                SolverFactory;
+typedef Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>          SolverFactory;
 typedef Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node> Preconditioner;
 };
 
