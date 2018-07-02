@@ -251,6 +251,7 @@ EigenDecomposition::matrix_matrix_multiply(
   }
 }
 
+#ifndef STK_HAVE_NO_SIMD
 //--------------------------------------------------------------------------
 //------------- SIMD solvers -----------------------------------------------
 //--------------------------------------------------------------------------
@@ -510,7 +511,7 @@ EigenDecomposition::matrix_matrix_multiply(
     }
   }
 }
-
+#endif // STK_HAVE_NO_SIMD
 
 } // namespace nalu
 } // namespace Sierra
