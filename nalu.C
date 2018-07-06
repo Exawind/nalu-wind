@@ -223,9 +223,9 @@ int main( int argc, char ** argv )
 
   //output timings consistent w/ rest of Sierra
   stk::diag::Timer & sierra_timer = sierra::nalu::Simulation::rootTimer();
-  const double elapsed_time = sierra_timer.getMetric<stk::diag::CPUTime>().getAccumulatedLap(false);
+  const double elapsed_time = sierra_timer.getMetric<stk::diag::WallTime>().getAccumulatedLap(false);
   stk::diag::Timer & mesh_output_timer = sierra::nalu::Simulation::outputTimer();
-  double mesh_output_time = mesh_output_timer.getMetric<stk::diag::CPUTime>().getAccumulatedLap(false);
+  double mesh_output_time = mesh_output_timer.getMetric<stk::diag::WallTime>().getAccumulatedLap(false);
   double time_without_output = elapsed_time-mesh_output_time;
 
   stk::parallel_print_time_without_output_and_hwm(naluEnv.parallel_comm(), time_without_output, naluEnv.naluOutputP0());

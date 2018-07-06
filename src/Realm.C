@@ -3976,10 +3976,6 @@ Realm::dump_simulation_time()
                   << " \tmin: " << g_min_time[4] << " \tmax: " << g_max_time[4] << std::endl;
   NaluEnv::self().naluOutputP0() << " io populate fd   --  " << " \tavg: " << g_total_time[5]/double(nprocs)
                   << " \tmin: " << g_min_time[5] << " \tmax: " << g_max_time[5] << std::endl;
-  NaluEnv::self().naluOutputP0() << "Timing for connectivity/finalize lysys: " << std::endl;
-  NaluEnv::self().naluOutputP0() << "         eqs init --  " << " \tavg: " << g_total_time[2]/double(nprocs)
-                  << " \tmin: " << g_min_time[2] << " \tmax: " << g_max_time[2] << std::endl;
-
   NaluEnv::self().naluOutputP0() << "Timing for property evaluation:         " << std::endl;
   NaluEnv::self().naluOutputP0() << "            props --  " << " \tavg: " << g_total_time[3]/double(nprocs)
                   << " \tmin: " << g_min_time[3] << " \tmax: " << g_max_time[3] << std::endl;
