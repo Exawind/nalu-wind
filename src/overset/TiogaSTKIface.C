@@ -139,7 +139,7 @@ void TiogaSTKIface::execute()
   }
 
   // Synchronize IBLANK data for shared nodes
-  ScalarFieldType* ibf = meta_.get_field<ScalarFieldType>(
+  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
           stk::topology::NODE_RANK, "iblank");
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
   stk::mesh::copy_owned_to_shared(bulk_, pvec);
@@ -277,7 +277,7 @@ void TiogaSTKIface::update_fringe_info()
 
   VectorFieldType *coords = meta_.get_field<VectorFieldType>
     (stk::topology::NODE_RANK, realm.get_coordinates_name());
-  ScalarFieldType* ibf = meta_.get_field<ScalarFieldType>(
+  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
           stk::topology::NODE_RANK, "iblank");
   int nbadnodes = 0;
 
@@ -299,9 +299,9 @@ void TiogaSTKIface::update_fringe_info()
     stk::mesh::Entity elem = bulk_.get_entity(stk::topology::ELEM_RANK, donorID);
 
     if (!bulk_.bucket(node).owned()) {
-        double ibval = *stk::mesh::field_data(*ibf, node);
+        int ibval = *stk::mesh::field_data(*ibf, node);
 
-        if (ibval > -1.0) {
+        if (ibval > -1) {
             nbadnodes++;
             std::cerr << mtag << "\t" << nodeID << "\t" << donorID 
                 << "\t" << ibval << std::endl;
@@ -384,7 +384,7 @@ void TiogaSTKIface::update_fringe_info()
 void
 TiogaSTKIface::get_receptor_info()
 {
-  ScalarFieldType* ibf = meta_.get_field<ScalarFieldType>(
+  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
     stk::topology::NODE_RANK, "iblank");
 
   std::vector<unsigned long> nodesToReset;
@@ -413,9 +413,9 @@ TiogaSTKIface::get_receptor_info()
     if (!bulk_.bucket(node).owned()) {
       // We have a shared node that is marked as fringe. Ensure that the owning
       // proc also has this marked as fringe.
-      double ibval = *stk::mesh::field_data(*ibf, node);
+      int ibval = *stk::mesh::field_data(*ibf, node);
 
-      if (ibval > -1.0) {
+      if (ibval > -1) {
         // Disagreement between owner and shared status of iblank. Communicate
         // to owner and other shared procs that it must be a fringe.
         std::vector<int> sprocs;
