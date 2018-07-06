@@ -630,8 +630,8 @@ LowMachEquationSystem::solve_and_update()
   // wrap timing
   double timeA, timeB;
   if ( isInit_ ) {
-    timeA = NaluEnv::self().nalu_time();
     continuityEqSys_->compute_projected_nodal_gradient();
+    timeA = NaluEnv::self().nalu_time();
     continuityEqSys_->computeMdotAlgDriver_->execute();
 
     timeB = NaluEnv::self().nalu_time();
@@ -697,10 +697,7 @@ LowMachEquationSystem::solve_and_update()
     continuityEqSys_->timerMisc_ += (timeB-timeA);
 
     // project nodal velocity
-    timeA = NaluEnv::self().nalu_time();
     project_nodal_velocity();
-    timeB = NaluEnv::self().nalu_time();
-    timerMisc_ += (timeB-timeA);
 
     // compute velocity relative to mesh with new velocity
     realm_.compute_vrtm();
@@ -710,8 +707,8 @@ LowMachEquationSystem::solve_and_update()
     // we use this approach to avoid two evals per
     // solve/update since dudx is required for tke
     // production
-    timeA = NaluEnv::self().nalu_time();
     momentumEqSys_->compute_projected_nodal_gradient();
+    timeA = NaluEnv::self().nalu_time();
     momentumEqSys_->compute_wall_function_params();
     timeB = NaluEnv::self().nalu_time();
     momentumEqSys_->timerMisc_ += (timeB-timeA);
@@ -951,16 +948,25 @@ MomentumEquationSystem::initial_work()
   EquationSystem::initial_work();
 
   // proceed with a bunch of initial work; wrap in timer
-  const double timeA = NaluEnv::self().nalu_time();
-  realm_.compute_vrtm();
-  compute_projected_nodal_gradient();
-  compute_wall_function_params();
-  tviscAlgDriver_->execute();
-  diffFluxCoeffAlgDriver_->execute();
-  cflReyAlgDriver_->execute();
+  {
+    const double timeA = NaluEnv::self().nalu_time();
+    realm_.compute_vrtm();
+    const double timeB = NaluEnv::self().nalu_time();
+    timerMisc_ += (timeB-timeA);
+  }
 
-  const double timeB = NaluEnv::self().nalu_time();
-  timerMisc_ += (timeB-timeA);
+  compute_projected_nodal_gradient();
+
+  {
+    const double timeA = NaluEnv::self().nalu_time();
+    compute_wall_function_params();
+    tviscAlgDriver_->execute();
+    diffFluxCoeffAlgDriver_->execute();
+    cflReyAlgDriver_->execute();
+
+    const double timeB = NaluEnv::self().nalu_time();
+    timerMisc_ += (timeB-timeA);
+  }
 }
 
 //--------------------------------------------------------------------------
