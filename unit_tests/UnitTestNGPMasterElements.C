@@ -82,7 +82,13 @@ TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
   GradViewType refGrad = me.copy_deriv_weights_to_view<GradViewType>();
 
   double duration = 0;
-  int nIt = 10000;
+
+#ifndef NDEBUG
+   int nIt = 10000;
+#else
+   int nIt = 1;
+#endif
+
   for (int k = 0; k < nIt; ++k) {
     Kokkos::deep_copy(meGrad, 0.0);
     auto start_clock = clock_type::now();
@@ -160,7 +166,11 @@ TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
   }
 
   double duration = 0;
-  int nIt = 10000;
+#ifndef NDEBUG
+   int nIt = 10000;
+#else
+   int nIt = 1;
+#endif
   for (int k = 0; k < nIt; ++k) {
     Kokkos::deep_copy(meGrad, 0.0);
     auto start_clock = clock_type::now();
@@ -228,7 +238,11 @@ TEST(Hex27SCV, detj)
   GradViewType refGrad = me.copy_deriv_weights_to_view<GradViewType>();
 
   double duration = 0;
-  int nIt = 10000;
+#ifndef NDEBUG
+   int nIt = 10000;
+#else
+   int nIt = 1;
+#endif
   for (int k = 0; k < nIt; ++k) {
     Kokkos::deep_copy(meDetj, 0.0);
     auto start_clock = clock_type::now();

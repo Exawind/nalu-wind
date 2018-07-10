@@ -56,6 +56,12 @@
 // kernels
 #include <kernel/ScalarDiffElemKernel.h>
 #include <kernel/ScalarDiffFemKernel.h>
+#include <kernel/ScalarDiffHOElemKernel.h>
+#include <kernel/ScalarMassHOElemKernel.h>
+
+#include <element_promotion/ElementDescription.h>
+
+#include <user_functions/SteadyThermalContactSrcHOElemKernel.h>
 
 // bc kernels
 #include <kernel/ScalarFluxPenaltyElemKernel.h>
@@ -287,6 +293,7 @@ HeatCondEquationSystem::register_interior_algorithm(
   ScalarFieldType &tempNp1 = temperature_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dtdxNone = dtdx_->field_of_state(stk::mesh::StateNone);
 
+
   // non-solver; contribution to projected nodal gradient; allow for element-based shifted
   if ( !managePNG_ ) {
     std::map<AlgorithmType, Algorithm *>::iterator it
@@ -356,47 +363,34 @@ HeatCondEquationSystem::register_interior_algorithm(
     } 
   }
   else {
-    //========================================================================================
-    // WIP... supplemental algs plug into one homogeneous kernel, AssembleElemSolverAlgorithm
-    // currently valid for P=1 3D hex tet pyr wedge and P=2 3D hex
-    //========================================================================================
     if ( realm_.realmUsesEdges_ )
       throw std::runtime_error("HeatCondElem::Error can not use supplemental design for an edge-based scheme");
 
-    // extract topo from part
-    stk::topology partTopo = part->topology();
-    NaluEnv::self().naluOutputP0() << "The name of this part is " << partTopo.name() << std::endl;
+    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_, realm_.using_tensor_product_kernels());
 
-    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    kb.build_topo_kernel_if_requested<SteadyThermal3dContactSrcElemKernel>("steady_3d_thermal",
+      realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs()
+    );
 
-    AssembleElemSolverAlgorithm* solverAlg =  nullptr;
-    bool solverAlgWasBuilt =  false;
-    std::tie(solverAlg, solverAlgWasBuilt) = build_or_add_part_to_solver_alg(*this, *part, solverAlgMap);
+    kb.build_topo_kernel_if_requested<ScalarDiffElemKernel>("CVFEM_DIFF",
+      realm_.bulk_data(), *realm_.solutionOptions_, temperature_, thermalCond_, kb.data_prereqs()
+    );
 
-    ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
-    auto& activeKernels = solverAlg->activeKernels_;
+    kb.build_fem_kernel_if_requested<ScalarDiffFemKernel>("FEM_DIFF",
+      realm_.bulk_data(), *realm_.solutionOptions_, temperature_, thermalCond_, kb.data_prereqs()
+    );
 
-    if (solverAlgWasBuilt) {
-      build_topo_kernel_if_requested<SteadyThermal3dContactSrcElemKernel>(
-        partTopo, *this, activeKernels, "steady_3d_thermal",
-        realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs
-      );
+    kb.build_sgl_kernel_if_requested<ScalarDiffHOElemKernel>("experimental_ho_cvfem_diffusion",
+      realm_.bulk_data(),  *realm_.solutionOptions_, temperature_, thermalCond_, kb.data_prereqs_HO()
+    );
 
-      build_topo_kernel_if_requested<ScalarDiffElemKernel>(
-        partTopo, *this, activeKernels, "CVFEM_DIFF",
-        realm_.bulk_data(), *realm_.solutionOptions_,
-        temperature_, thermalCond_, dataPreReqs
-      );
+    kb.build_sgl_kernel_if_requested<SteadyThermalContactSrcHOElemKernel>("experimental_ho_cvfem_mms_source",
+      realm_.bulk_data(),  *realm_.solutionOptions_, kb.data_prereqs_HO()
+    );
 
-      build_fem_kernel_if_requested<ScalarDiffFemKernel>(
-        partTopo, *this, activeKernels, "FEM_DIFF",
-        realm_.bulk_data(), *realm_.solutionOptions_, temperature_, thermalCond_, dataPreReqs
-      );
-
-      report_invalid_supp_alg_names();
-      report_built_supp_alg_names();
-    }
+    kb.report();
   }
+
 
   // time term; nodally lumped
   const AlgorithmType algMass = MASS;

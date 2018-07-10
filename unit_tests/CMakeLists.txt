@@ -13,6 +13,7 @@ add_sources(GlobalUnitSourceList
    UnitTestHexElementPromotion.C
    UnitTestHexMasterElements.C
    UnitTestHexSCVDeterminant.C
+   UnitTestIntegrationRule.C
    UnitTestKokkosME.C
    UnitTestKokkosMEBC.C
    UnitTestKokkosViews.C
@@ -47,7 +48,9 @@ add_sources(GlobalUnitHeaderList
    UnitTestLinearSystem.h
    UnitTestRealm.h
    UnitTestUtils.h
+   UnitTestViewUtils.h
 )
 
 add_subdirectory(algorithms)
 add_subdirectory(kernels)
+add_subdirectory(ho_kernels)

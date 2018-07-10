@@ -38,7 +38,7 @@ void perturb_coord_hex_8(stk::mesh::BulkData& bulk, double perturbationSize = 0.
 
 void fill_and_promote_hex_mesh(const std::string& meshSpec, stk::mesh::BulkData& bulk, int polyOrder);
 
-void dump_mesh(stk::mesh::BulkData& bulk, std::vector<stk::mesh::FieldBase*> fields);
+void dump_mesh(stk::mesh::BulkData& bulk, std::vector<stk::mesh::FieldBase*> fields, std::string name = "out.e");
 
 void dump_promoted_mesh_file(stk::mesh::BulkData& bulk, int polyOrder);
 
@@ -56,6 +56,7 @@ double global_norm(const double & norm, const size_t & N, const stk::ParallelMac
 double initialize_quadratic_scalar_field(const stk::mesh::BulkData& bulk,
                                       const VectorFieldType& coordField,
                                       const ScalarFieldType& qField);
+
 
 std::array<double,9> random_rotation_matrix(int dim, std::mt19937& rng);
 std::array<double,9> random_linear_transformation(int dim, double scale,std::mt19937& rng);

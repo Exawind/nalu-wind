@@ -11,6 +11,9 @@
 
 #include <AlgTraits.h>
 
+namespace sierra{
+namespace nalu{
+
 #define INSTANTIATE_KERNEL_3D(ClassName)                          \
 template class ClassName<AlgTraitsHex8>;                          \
 template class ClassName<AlgTraitsHex27>;                         \
@@ -77,6 +80,12 @@ INSTANTIATE_POLY_TEMPLATE(ClassName,AlgTraitsQuadPHexPGL)         \
 #define INSTANTIATE_KERNEL_FACE_ELEMENT_2D_HO(ClassName)          \
 INSTANTIATE_POLY_TEMPLATE(ClassName,AlgTraitsEdgePQuadPGL)        \
 
+#define INSTANTIATE_KERNEL_3D_HOSGL(ClassName)                    \
+template class ClassName<AlgTraitsHex<2>>;                        \
+template class ClassName<AlgTraitsHex<3>>;                        \
+template class ClassName<AlgTraitsHex<4>>;                        \
+template class ClassName<AlgTraitsHex<USER_POLY_ORDER>>;          \
+
 // Instantiate the actual kernels
 
 #define INSTANTIATE_KERNEL(ClassName)                             \
@@ -96,5 +105,14 @@ INSTANTIATE_POLY_TEMPLATE(ClassName,AlgTraitsEdgePQuadPGL)        \
   INSTANTIATE_KERNEL_FACE_ELEMENT_2D(ClassName)                   \
   INSTANTIATE_KERNEL_FACE_ELEMENT_3D_HO(ClassName)                \
   INSTANTIATE_KERNEL_FACE_ELEMENT_2D_HO(ClassName)                \
+
+#define INSTANTIATE_KERNEL_HOSGL(ClassName)                       \
+  INSTANTIATE_KERNEL_3D_HOSGL(ClassName)                          \
+
+
+
+} // namespace nalu
+} // namespace Sierra
+
 
 #endif

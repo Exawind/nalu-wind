@@ -117,6 +117,24 @@ struct AlgTraitsHexGL {
   static constexpr stk::topology::topology_t baseTopo_ = stk::topology::HEX_8;
 };
 
+template <int p>
+struct AlgTraitsHex
+{
+  static constexpr int nDim_ = 3;
+  static constexpr int nodesPerElement_ = (p+1) * (p+1) * (p+1);
+  static constexpr int numScsIp_ = 3 * p * (p+1) * (p+1);
+  static constexpr int numScvIp_ = (p+1) * (p+1) * (p+1);
+  static constexpr int numGp_ = (p+1) * (p+1) * (p+1);
+  static constexpr stk::topology::topology_t topo_ =
+      static_cast<stk::topology::topology_t>(stk::topology::SUPERELEMENT_START + nodesPerElement_);
+
+  // some higher order information
+  static constexpr int polyOrder_ = p;
+  static constexpr int nodes1D_ = p + 1;
+  static constexpr int nscs_ = p;
+  static constexpr stk::topology::topology_t baseTopo_ = stk::topology::HEX_8;
+};
+
 struct AlgTraitsEdge_3D
 {
   static constexpr int nDim_ = 3;
@@ -246,7 +264,6 @@ using AlgTraitsQuad9Hex27 = AlgTraitsFaceElem<AlgTraitsQuad9, AlgTraitsHex27>;
 
 template <int p> using AlgTraitsEdgePQuadPGL = AlgTraitsFaceElem<AlgTraitsEdgeGL<p>, AlgTraitsQuadGL_2D<p>>;
 template <int p> using AlgTraitsQuadPHexPGL = AlgTraitsFaceElem<AlgTraitsQuadGL<p>, AlgTraitsHexGL<p>>;
-
 
 } // namespace nalu
 } // namespace Sierra
