@@ -64,6 +64,9 @@ TiogaSTKIface::load(const YAML::Node& node)
 
   if (node["tioga_populate_inactive_part"])
     populateInactivePart_ = node["tioga_populate_inactive_part"].as<bool>();
+
+  if (node["tioga_symmetry_direction"])
+    symmetryDir_ = node["tioga_symmetry_direction"].as<int>();
 }
 
 void TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
@@ -85,6 +88,8 @@ void TiogaSTKIface::initialize()
   tg_->setCommunicator(bulk_.parallel(),
                        bulk_.parallel_rank(),
                        bulk_.parallel_size());
+
+  tg_->setSymmetry(symmetryDir_);
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
     << "TIOGA: Initializing overset mesh blocks: " << std::endl;
