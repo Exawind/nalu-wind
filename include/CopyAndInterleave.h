@@ -93,7 +93,7 @@ void interleave_3D(SharedMemView<DTYPE***>& dview, const double* sviews[], int s
 inline
 void interleave_1D(ViewHolder* dest, const ViewHolder* sviews[], int simdElems)
 {
-    const double* smemviews[stk::simd::ndoubles];
+    const double* smemviews[stk::simd::ndoubles] = {nullptr};
     SharedMemView<DoubleType*>& dmemview = static_cast<ViewT<SharedMemView<DoubleType*>>*>(dest)->view_;
     for(int i=0; i<simdElems; ++i) {
         smemviews[i] = static_cast<const ViewT<SharedMemView<double*>>*>(sviews[i])->view_.data();
@@ -105,7 +105,7 @@ void interleave_1D(ViewHolder* dest, const ViewHolder* sviews[], int simdElems)
 inline
 void interleave_2D(ViewHolder* dest, const ViewHolder* sviews[], int simdElems)
 {
-    const double* smemviews[stk::simd::ndoubles];
+    const double* smemviews[stk::simd::ndoubles] = {nullptr};
     SharedMemView<DoubleType**>& dmemview = static_cast<ViewT<SharedMemView<DoubleType**>>*>(dest)->view_;
     for(int i=0; i<simdElems; ++i) {
         smemviews[i] = static_cast<const ViewT<SharedMemView<double**>>*>(sviews[i])->view_.data();
@@ -117,7 +117,7 @@ void interleave_2D(ViewHolder* dest, const ViewHolder* sviews[], int simdElems)
 inline
 void interleave_3D(ViewHolder* dest, const ViewHolder* sviews[], int simdElems)
 {
-    const double* smemviews[stk::simd::ndoubles];
+    const double* smemviews[stk::simd::ndoubles] = {nullptr};
     SharedMemView<DoubleType***>& dmemview = static_cast<ViewT<SharedMemView<DoubleType***>>*>(dest)->view_;
     for(int i=0; i<simdElems; ++i) {
         smemviews[i] = static_cast<const ViewT<SharedMemView<double***>>*>(sviews[i])->view_.data();
