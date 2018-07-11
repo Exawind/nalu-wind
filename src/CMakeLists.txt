@@ -190,8 +190,10 @@ endif()
 if(ENABLE_HYPRE)
    add_sources(GlobalSourceList
       HypreDirectSolver.C
+      HypreUVWSolver.C
       HypreLinearSolverConfig.C
       HypreLinearSystem.C
+      HypreUVWLinearSystem.C
    )
 endif()
 

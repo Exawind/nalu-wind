@@ -125,7 +125,7 @@ public:
 
   virtual void writeToFile(const char * filename, bool useOwned=true)=0;
   virtual void writeSolutionToFile(const char * filename, bool useOwned=true)=0;
-  unsigned numDof() const { return numDof_; }
+  virtual unsigned numDof() const { return numDof_; }
   const int & linearSolveIterations() {return linearSolveIterations_; }
   const double & linearResidual() {return linearResidual_; }
   const double & nonLinearResidual() {return nonLinearResidual_; }
