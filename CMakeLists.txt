@@ -146,11 +146,19 @@ message("-- CMAKE_Fortran_FLAGS = ${CMAKE_Fortran_FLAGS}")
 if(ENABLE_HYPRE)
   include(CheckSymbolExists)
   set(CMAKE_REQUIRED_INCLUDES "${HYPRE_INCLUDE_DIRS}")
+  set(CMAKE_REQUIRED_LIBRARIES "${HYPRE_LIBRARIES}")
   check_symbol_exists(
     HYPRE_BIGINT "${HYPRE_INCLUDE_DIRS}/HYPRE_config.h" NALU_HYPRE_BIGINT)
+  check_symbol_exists(
+    hypre_KRYLOV_COGMRES_HEADER "${HYPRE_INCLUDE_DIRS}/krylov.h" NALU_HYPRE_COGMRES)
   if(NOT NALU_HYPRE_BIGINT)
     message(WARNING
       "HYPRE does not enable 64-bit integer support; will fail on large problems!")
+  endif()
+  if (NALU_HYPRE_COGMRES)
+    add_definitions(-DHYPRE_COGMRES)
+  else()
+    message(WARNING "Disabling HYPRE CO-GMRES interface")
   endif()
 endif()
 

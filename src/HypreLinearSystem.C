@@ -5,8 +5,6 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#ifdef NALU_USES_HYPRE
-
 #include "HypreLinearSystem.h"
 #include "HypreDirectSolver.h"
 #include "Realm.h"
@@ -255,6 +253,22 @@ HypreLinearSystem::finalizeLinearSystem()
   for (HypreIntType i=0; i < numRows_; i++)
     rowFilled_[i] = RS_UNFILLED;
 
+  finalizeSolver();
+
+  // Set flag to indicate whether rows must be skipped during normal sumInto
+  // process. For this to be activated, the linear system must have Dirichlet or
+  // overset rows and they must be present on this processor
+  if (hasSkippedRows_ && !skippedRows_.empty())
+    checkSkippedRows_ = true;
+
+  // At this stage the LHS and RHS data structures are ready for
+  // sumInto/assembly.
+  systemInitialized_ = true;
+}
+
+void
+HypreLinearSystem::finalizeSolver()
+{
   MPI_Comm comm = realm_.bulk_data().parallel();
   // Now perform HYPRE assembly so that the data structures are ready to be used
   // by the solvers/preconditioners.
@@ -274,16 +288,6 @@ HypreLinearSystem::finalizeLinearSystem()
   HYPRE_IJVectorSetObjectType(sln_, HYPRE_PARCSR);
   HYPRE_IJVectorInitialize(sln_);
   HYPRE_IJVectorGetObject(sln_, (void**)&(solver->parSln_));
-
-  // Set flag to indicate whether rows must be skipped during normal sumInto
-  // process. For this to be activated, the linear system must have Dirichlet or
-  // overset rows and they must be present on this processor
-  if (hasSkippedRows_ && !skippedRows_.empty())
-    checkSkippedRows_ = true;
-
-  // At this stage the LHS and RHS data structures are ready for
-  // sumInto/assembly.
-  systemInitialized_ = true;
 }
 
 void
@@ -311,6 +315,12 @@ HypreLinearSystem::loadComplete()
       HYPRE_IJMatrixSetValues(mat_, hnrows, &hncols, &lid, &lid, &setval);
   }
 
+  loadCompleteSolver();
+}
+
+void
+HypreLinearSystem::loadCompleteSolver()
+{
   // Now perform HYPRE assembly so that the data structures are ready to be used
   // by the solvers/preconditioners.
   HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
@@ -635,5 +645,3 @@ HypreLinearSystem::copy_hypre_to_stk(
 
 }  // nalu
 }  // sierra
-
-#endif

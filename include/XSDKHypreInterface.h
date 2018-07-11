@@ -82,6 +82,7 @@ enum Hypre_Solver{
     Hybrid,
     PCG,
     GMRES,
+    COGMRES,
     FlexGMRES,
     LGMRES,
     BiCGSTAB
