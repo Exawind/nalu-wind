@@ -18,7 +18,7 @@ class tioga;
 namespace tioga_nalu {
 
 typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
-typedef stk::mesh::Field<double> ScalarFieldType;
+typedef stk::mesh::Field<int> ScalarIntFieldType;
 
 /**
  * Interface to convert STK Mesh Part(s) to TIOGA blocks.
@@ -149,6 +149,11 @@ private:
   /** Generate the element data structure and connectivity information to send to TIOGA
    */
   void process_elements();
+
+  /** Reset iblank data with moving mesh applications
+   *
+   */
+  void reset_iblank_data();
 
   /** Print summary of mesh blocks
    */

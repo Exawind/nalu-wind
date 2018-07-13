@@ -61,6 +61,12 @@ TiogaSTKIface::load(const YAML::Node& node)
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
       << "TIOGA: Using coordinates field: " << coords_name << std::endl;
+
+  if (node["tioga_populate_inactive_part"])
+    populateInactivePart_ = node["tioga_populate_inactive_part"].as<bool>();
+
+  if (node["tioga_symmetry_direction"])
+    symmetryDir_ = node["tioga_symmetry_direction"].as<int>();
 }
 
 void TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
@@ -82,6 +88,8 @@ void TiogaSTKIface::initialize()
   tg_->setCommunicator(bulk_.parallel(),
                        bulk_.parallel_rank(),
                        bulk_.parallel_size());
+
+  tg_->setSymmetry(symmetryDir_);
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
     << "TIOGA: Initializing overset mesh blocks: " << std::endl;
@@ -136,7 +144,7 @@ void TiogaSTKIface::execute()
   }
 
   // Synchronize IBLANK data for shared nodes
-  ScalarFieldType* ibf = meta_.get_field<ScalarFieldType>(
+  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
           stk::topology::NODE_RANK, "iblank");
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
   stk::mesh::copy_owned_to_shared(bulk_, pvec);
@@ -150,7 +158,7 @@ void TiogaSTKIface::execute()
   // step.
   update_ghosting();
 
-  populate_inactive_part();
+  if (populateInactivePart_) populate_inactive_part();
 
   // Update overset fringe connectivity information for Constraint based algorithm
   populate_overset_info();
@@ -274,7 +282,7 @@ void TiogaSTKIface::update_fringe_info()
 
   VectorFieldType *coords = meta_.get_field<VectorFieldType>
     (stk::topology::NODE_RANK, realm.get_coordinates_name());
-  ScalarFieldType* ibf = meta_.get_field<ScalarFieldType>(
+  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
           stk::topology::NODE_RANK, "iblank");
   int nbadnodes = 0;
 
@@ -296,9 +304,9 @@ void TiogaSTKIface::update_fringe_info()
     stk::mesh::Entity elem = bulk_.get_entity(stk::topology::ELEM_RANK, donorID);
 
     if (!bulk_.bucket(node).owned()) {
-        double ibval = *stk::mesh::field_data(*ibf, node);
+        int ibval = *stk::mesh::field_data(*ibf, node);
 
-        if (ibval > -1.0) {
+        if (ibval > -1) {
             nbadnodes++;
             std::cerr << mtag << "\t" << nodeID << "\t" << donorID 
                 << "\t" << ibval << std::endl;
@@ -345,7 +353,7 @@ void TiogaSTKIface::update_fringe_info()
       oinfo->nodalCoords_.data(),
       oinfo->isoParCoords_.data());
 
-#if 1
+#if 0
     if (nearestDistance > (1.0 + 1.0e-8))
       sierra::nalu::NaluEnv::self().naluOutput()
         << "TIOGA WARNING: In pair (" << nodeID << ", " << donorID << "): "
@@ -381,7 +389,7 @@ void TiogaSTKIface::update_fringe_info()
 void
 TiogaSTKIface::get_receptor_info()
 {
-  ScalarFieldType* ibf = meta_.get_field<ScalarFieldType>(
+  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
     stk::topology::NODE_RANK, "iblank");
 
   std::vector<unsigned long> nodesToReset;
@@ -410,14 +418,20 @@ TiogaSTKIface::get_receptor_info()
     if (!bulk_.bucket(node).owned()) {
       // We have a shared node that is marked as fringe. Ensure that the owning
       // proc also has this marked as fringe.
-      double ibval = *stk::mesh::field_data(*ibf, node);
+      int ibval = *stk::mesh::field_data(*ibf, node);
 
-      if (ibval > -1.0) {
+      if (ibval > -1) {
         // Disagreement between owner and shared status of iblank. Communicate
-        // to owner that it must be a fringe.
-        nodesToReset.push_back(bulk_.parallel_owner_rank(node));
-        nodesToReset.push_back(nodeID);
-        nodesToReset.push_back(donorID);
+        // to owner and other shared procs that it must be a fringe.
+        std::vector<int> sprocs;
+        bulk_.comm_shared_procs(bulk_.entity_key(node), sprocs);
+        for (auto jproc: sprocs) {
+          if (jproc == bulk_.parallel_rank()) continue;
+
+          nodesToReset.push_back(jproc);
+          nodesToReset.push_back(nodeID);
+          nodesToReset.push_back(donorID);
+        }
       }
     }
 
@@ -486,6 +500,7 @@ TiogaSTKIface::populate_overset_info()
   auto& osetInfo = oversetManager_.oversetInfoVec_;
   int nDim = meta_.spatial_dimension();
   std::vector<double> elemCoords;
+  std::unordered_set<stk::mesh::EntityId> seenIDs;
 
   // Ensure that the oversetInfoVec has been cleared out
   ThrowAssert(osetInfo.size() == 0);
@@ -499,6 +514,15 @@ TiogaSTKIface::populate_overset_info()
     stk::mesh::EntityId donorID = donorIDs_[i];
     stk::mesh::Entity node = bulk_.get_entity(stk::topology::NODE_RANK, nodeID);
     stk::mesh::Entity elem = bulk_.get_entity(stk::topology::ELEM_RANK, donorID);
+
+    // Track fringe nodes that have already been processed.
+    //
+    // This is necessary when handling fringe-field mismatch across processors,
+    // multiple shared procs might indicate that the owner must reset their
+    // status. This check ensures the fringe is processed only once.
+    auto hasIt = seenIDs.find(nodeID);
+    if (hasIt != seenIDs.end()) continue;
+    seenIDs.insert(nodeID);
 
 #if 1
     // The donor element must have already been ghosted to the required MPI
@@ -539,7 +563,7 @@ TiogaSTKIface::populate_overset_info()
       oinfo->nodalCoords_.data(),
       oinfo->isoParCoords_.data());
 
-#if 1
+#if 0
     if (nearestDistance > (1.0 + 1.0e-8))
       sierra::nalu::NaluEnv::self().naluOutput()
         << "TIOGA WARNING: In pair (" << nodeID << ", " << donorID << "): "

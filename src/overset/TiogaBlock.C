@@ -76,10 +76,10 @@ void TiogaBlock::setup(stk::mesh::PartVector& bcPartVec)
   if (ovsetNames_.size() > 0)
     names_to_parts(ovsetNames_, ovsetParts_);
 
-  ScalarFieldType& ibf = meta_.declare_field<ScalarFieldType>(
+  ScalarIntFieldType& ibf = meta_.declare_field<ScalarIntFieldType>(
     stk::topology::NODE_RANK, "iblank");
 
-  ScalarFieldType& ibcell = meta_.declare_field<ScalarFieldType>(
+  ScalarIntFieldType& ibcell = meta_.declare_field<ScalarIntFieldType>(
     stk::topology::ELEM_RANK, "iblank_cell");
 
   for (auto p: blkParts_) {
@@ -168,8 +168,8 @@ TiogaBlock::update_connectivity()
 void
 TiogaBlock::update_iblanks()
 {
-  ScalarFieldType* ibf =
-    meta_.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "iblank");
+  ScalarIntFieldType* ibf =
+    meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
 
   stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_);
   const stk::mesh::BucketVector& mbkts =
@@ -177,7 +177,7 @@ TiogaBlock::update_iblanks()
 
   int ip = 0;
   for (auto b : mbkts) {
-    double* ib = stk::mesh::field_data(*ibf, *b);
+    int* ib = stk::mesh::field_data(*ibf, *b);
     for (size_t in = 0; in < b->size(); in++) {
       ib[in] = iblank_[ip++];
     }
@@ -186,7 +186,7 @@ TiogaBlock::update_iblanks()
 
 void TiogaBlock::update_iblank_cell()
 {
-  ScalarFieldType* ibf = meta_.get_field<ScalarFieldType>(
+  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
     stk::topology::ELEM_RANK, "iblank_cell");
 
   stk::mesh::Selector mesh_selector = meta_.locally_owned_part() &
@@ -196,7 +196,7 @@ void TiogaBlock::update_iblank_cell()
 
   int ip = 0;
   for (auto b: mbkts) {
-    double* ib = stk::mesh::field_data(*ibf, *b);
+    int* ib = stk::mesh::field_data(*ibf, *b);
     for(size_t in=0; in < b->size(); in++) {
       ib[in] = iblank_cell_[ip++];
     }
@@ -438,10 +438,22 @@ void TiogaBlock::process_elements()
   }
 }
 
+void TiogaBlock::reset_iblank_data()
+{
+  for (size_t i=0; i < iblank_.size(); i++)
+    iblank_[i] = 1;
+
+  for (size_t i=0; i < iblank_cell_.size(); i++)
+    iblank_cell_[i] = 1;
+}
+
 void TiogaBlock::register_block(tioga& tg)
 {
   // Do nothing if this mesh block isn't present in this MPI Rank
   if (num_nodes_ < 1) return;
+
+  // Reset iblanks before tioga connectivity
+  reset_iblank_data();
 
   // Register the mesh block information to TIOGA
   tg.registerGridData(

@@ -148,6 +148,12 @@ private:
   //! ghosted to another MPI rank to ensure that owned and shared nodes are
   //! consistent.
   std::vector<stk::mesh::EntityId> donorIDs_;
+
+  //! Set the symmetry direction for TIOGA, default is z-direction (3)
+  int symmetryDir_{3};
+
+  //! User option to determine whether inactive part is generated with TIOGA
+  bool populateInactivePart_{true};
 };
 
 
