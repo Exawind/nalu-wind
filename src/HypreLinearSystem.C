@@ -539,7 +539,7 @@ HypreLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
   // Call solve
   int status = 0;
 
-  status = solver->solve(iters, finalResidNorm);
+  status = solver->solve(iters, finalResidNorm, realm_.isFinalOuterIter_);
 
   if (solver->getConfig()->getWriteMatrixFiles()) {
     const std::string slnFile = eqSysName_ + ".IJV.sln";

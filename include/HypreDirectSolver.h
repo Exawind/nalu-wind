@@ -54,7 +54,7 @@ public:
    *  @param iters The number of linear iterations performed
    *  @param norm The norm of the final relative residual
    */
-  int solve(int&, double&);
+  int solve(int&, double&, bool);
 
   //! Return the type of solver instance
   virtual PetraType getType() override { return PT_HYPRE; }
@@ -110,6 +110,7 @@ private:
   HypreIntType (*precondSolvePtr_)(
     HYPRE_Solver, HYPRE_ParCSRMatrix, HYPRE_ParVector, HYPRE_ParVector);
 
+  HypreIntType (*solverSetTolPtr_)(HYPRE_Solver, double);
   HypreIntType (*solverNumItersPtr_)(HYPRE_Solver, HypreIntType*);
   HypreIntType (*solverFinalResidualNormPtr_)(HYPRE_Solver, double*);
 
