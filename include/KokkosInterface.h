@@ -64,18 +64,6 @@ inline DeviceTeamPolicy get_device_team_policy(const size_t sz, const size_t byt
   return policy.set_scratch_size(0, Kokkos::PerTeam(bytes_per_team), Kokkos::PerThread(bytes_per_thread));
 }
 
-inline
-SharedMemView<int*> get_int_shmem_view_1D(const TeamHandleType& team, size_t len)
-{
-  return Kokkos::subview(SharedMemView<int**>(team.team_shmem(), team.team_size(), len), team.team_rank(), Kokkos::ALL());
-}
-
-inline
-SharedMemView<stk::mesh::Entity*> get_entity_shmem_view_1D(const TeamHandleType& team, size_t len)
-{
-  return Kokkos::subview(SharedMemView<stk::mesh::Entity**>(team.team_shmem(), team.team_size(), len), team.team_rank(), Kokkos::ALL());
-}
-
 template<typename T>
 SharedMemView<T*> get_shmem_view_1D(const TeamHandleType& team, size_t len)
 {
