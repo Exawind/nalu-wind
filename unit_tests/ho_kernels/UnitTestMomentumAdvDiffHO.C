@@ -40,34 +40,34 @@ namespace {
       }
     }
 
+    double mu(double x, double y, double z) { return (2 + std::cos(kx *x) * std::cos(ky*y) * std::cos(kz*z)); }
+    double rho(double x, double y, double z) { return (2 + std::sin(kx *x) * std::sin(ky*y) * std::sin(kz*z)); }
 
-    double stress_divergence(double x, double y, double z, int d) const
-    {
-      switch (d)
-      {
-        case 0:
-          return -(kx * kx + ky * ky + kz * kz) * val(x, y, z, XH);
-        case 1:
-          return -(kx * kx + ky * ky + kz * kz) * val(x, y, z, YH);
-        case 2:
-          return -(kx * kx + ky * ky + kz * kz) * val(x, y, z, ZH);
+    double force(double x, double y, double z, int d) {
+      ThrowRequire(d >= 0 && d <= 2);
+      switch(d) {
+        case XH:
+          return 2*(std::pow(kx,2) + std::pow(ky,2) + std::pow(kz,2))*std::cos(kx*x)*std::sin(ky*y)*std::sin(kz*z) -
+              std::sin(2*kx*x)*(-(ky*std::pow(std::cos(ky*y),2)) + kx*std::pow(std::sin(ky*y),2))*std::pow(std::sin(kz*z),2) +
+              (std::sin(ky*y)*(4*ky*std::cos(kx*x)*std::pow(std::cos(ky*y),2)*std::pow(std::sin(kx*x),2) + kx*(std::cos(kx*x) + std::cos(3*kx*x))*std::pow(std::sin(ky*y),2))*std::pow(std::sin(kz*z),3))/2. -
+              (kx + ky)*std::pow(std::cos(kz*z),2)*std::sin(2*kx*x)*std::pow(std::sin(ky*y),2)*(1 + std::sin(kx*x)*std::sin(ky*y)*std::sin(kz*z)) +
+              (((std::pow(ky,2) + std::pow(kz,2))*std::pow(std::cos(kx*x),2) - std::pow(kx,2)*std::pow(std::sin(kx*x),2))*std::sin(2*ky*y)*std::sin(2*kz*z))/2.;
+
+        case YH:
+         return -((kx + ky)*std::pow(std::cos(kz*z),2)*std::pow(std::sin(kx*x),2)*std::sin(2*ky*y)*(1 + std::sin(kx*x)*std::sin(ky*y)*std::sin(kz*z))) +
+             (-(std::sin(kz*z)*(-2*ky*std::pow(std::cos(ky*y),3)*std::pow(std::sin(kx*x),3)*std::pow(std::sin(kz*z),2) -
+                     4*std::cos(ky*y)*std::sin(kx*x)*(std::pow(kx,2) + std::pow(ky,2) + std::pow(kz,2) + kx*std::pow(std::cos(kx*x),2)*std::pow(std::sin(ky*y),2)*std::pow(std::sin(kz*z),2)) +
+                     std::sin(2*ky*y)*std::sin(kz*z)*(-2*kx*std::pow(std::cos(kx*x),2) + ky*std::pow(std::sin(kx*x),2)*(2 + std::sin(kx*x)*std::sin(ky*y)*std::sin(kz*z))))) +
+                std::sin(2*kx*x)*((std::pow(kx,2) + std::pow(kz,2))*std::pow(std::cos(ky*y),2) - std::pow(ky,2)*std::pow(std::sin(ky*y),2))*std::sin(2*kz*z))/2.;
+        case ZH:
+          return -((kx + ky)*(-2*(kx + ky)*std::pow(std::cos(kz*z),3)*std::pow(std::sin(kx*x),3)*std::pow(std::sin(ky*y),3) + (std::pow(kx,2) + std::pow(ky,2))*std::pow(std::cos(kz*z),2)*std::sin(2*kx*x)*std::sin(2*ky*y) -
+                  std::pow(kz,2)*std::sin(2*kx*x)*std::sin(2*ky*y)*std::pow(std::sin(kz*z),2) +
+                  4*std::cos(kz*z)*std::sin(kx*x)*std::sin(ky*y)*(std::pow(kx,2) + std::pow(ky,2) + std::pow(kz,2) +
+                     (ky*std::pow(std::cos(ky*y),2)*std::pow(std::sin(kx*x),2) + kx*std::pow(std::cos(kx*x),2)*std::pow(std::sin(ky*y),2))*std::pow(std::sin(kz*z),2)) +
+                  (kx + ky - ky*std::cos(2*kx*x) - kx*std::cos(2*ky*y) + (kx + ky)*std::pow(std::sin(kx*x),3)*std::pow(std::sin(ky*y),3)*std::sin(kz*z))*std::sin(2*kz*z)))/(2.*kz);
         default:
           return 0;
-      }
-    }
 
-    double advection(double x, double y, double z, int d) const
-    {
-      switch (d)
-      {
-        case 0:
-          return ((-kx + (kx + ky)*std::cos(2*ky*y) - ky*std::cos(2*kz*z))*std::sin(2*kx*x))/4.;
-        case 1:
-          return ((-ky + (kx + ky)*std::cos(2*kx*x) - kx*std::cos(2*kz*z))*std::sin(2*ky*y))/4.;
-        case 2:
-          return ((kx + ky)*(-kx - ky + ky*std::cos(2*kx*x) + kx*std::cos(2*ky*y))*std::sin(2*kz*z))/(4.*kz);
-        default:
-          return 0;
       }
     }
 
@@ -87,6 +87,9 @@ template <int p> void mms()
   TestFunction test;
   nodal_vector_workview<p, double> l_exact_force(0); auto& exact_force = l_exact_force.view();
 
+  nodal_scalar_workview<p, double> work_viscosity(1); auto& viscosity = work_viscosity.view();
+  nodal_scalar_workview<p, double> work_rho(1); auto& rho = work_rho.view();
+
   std::vector<double> coords1D = gauss_lobatto_legendre_rule(p+1).first;
   for (int k = 0; k < p + 1; ++k) {
     const double z = coords1D[k];
@@ -102,16 +105,17 @@ template <int p> void mms()
         velocity(k, j, i, YH) = test.val(x, y, z, YH);
         velocity(k, j, i, ZH) = test.val(x, y, z, ZH);
 
-        exact_force(k, j, i, XH) = -test.stress_divergence(x, y, z, XH) + test.advection(x,y,z, XH);
-        exact_force(k, j, i, YH) = -test.stress_divergence(x, y, z, YH) + test.advection(x,y,z, YH);
-        exact_force(k, j, i, ZH) = -test.stress_divergence(x, y, z, ZH) + test.advection(x,y,z, ZH);
+        viscosity(k,j,i) = test.mu(x,y,z);
+        rho(k,j,i) = test.rho(x,y,z);
+
+        exact_force(k, j, i, XH) = test.force(x, y, z, XH);
+        exact_force(k, j, i, YH) = test.force(x, y, z, YH);
+        exact_force(k, j, i, ZH) = test.force(x, y, z, ZH);
       }
     }
   }
 
   // constants
-  nodal_scalar_workview<p, double> work_viscosity(1); auto& viscosity = work_viscosity.view();
-  nodal_scalar_workview<p, double> work_rho(1); auto& rho = work_rho.view();
   nodal_vector_workview<p, double> work_Gp(0); auto& Gp = work_Gp.view();
   nodal_scalar_workview<p, double> work_pressure(1); auto& pressure = work_pressure.view();
 

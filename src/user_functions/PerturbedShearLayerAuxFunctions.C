@@ -77,17 +77,21 @@ PerturbedShearLayerVelocityAuxFunction::do_evaluate(
   const unsigned /*beginPos*/,
   const unsigned /*endPos*/) const
 {
+  std::mt19937 rng;
+  rng.seed(std::mt19937::default_seed); // fixed seed
+  std::uniform_real_distribution<double> r1(-0.05, 0.05);
+
   const double kx = 2;
   const double kz = 32;
   ShearLayerHelper slh;
 
   for (unsigned p = 0; p < numPoints; ++p) {
     const double x = coords[3 * p + 0] * slh.size_ratio_x;
-    const double y = coords[3 * p + 1] * slh.size_ratio_x;
+    const double y = coords[3 * p + 1] * slh.size_ratio_y;
     const double z = coords[3 * p + 2] * slh.size_ratio_z;
-    fieldPtr[3 * p + 0] = slh.funu(y) + slh.funvw(y) * (std::sin(2 * kx * x) + 0.01 * std::cos(kz * z));
-    fieldPtr[3 * p + 1] =               slh.funvw(y) * (std::sin(kx * x) + 0.01 * std::cos(2 * kz * z));
-    fieldPtr[3 * p + 2] =               slh.funvw(y) * (std::cos(2 * kx * x) + 0.01 * std::sin(kz * z));
+    fieldPtr[3 * p + 0] = slh.funu(y) + slh.funvw(y) * (std::sin(2 * kx * x) + 0.01 * std::cos(kz * z) + r1(rng));
+    fieldPtr[3 * p + 1] =               slh.funvw(y) * (std::sin(kx * x) + 0.01 * std::cos(2 * kz * z) + r1(rng));
+    fieldPtr[3 * p + 2] =               slh.funvw(y) * (std::cos(2 * kx * x) + 0.01 * std::sin(kz * z) + r1(rng));
   }
 }
 
