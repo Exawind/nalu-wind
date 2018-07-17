@@ -36,8 +36,8 @@ struct SharedMemData {
         rhs = get_shmem_view_1D<double>(team, rhsSize);
         lhs = get_shmem_view_2D<double>(team, rhsSize, rhsSize);
 
-        scratchIds = get_int_shmem_view_1D(team, rhsSize);
-        sortPermutation = get_int_shmem_view_1D(team, rhsSize);
+        scratchIds = get_shmem_view_1D<int>(team, rhsSize);
+        sortPermutation = get_shmem_view_1D<int>(team, rhsSize);
     }
 
     const stk::mesh::Entity* elemNodes[simdLen];
@@ -72,8 +72,8 @@ struct SharedMemData_FaceElem {
         rhs = get_shmem_view_1D<double>(team, rhsSize);
         lhs = get_shmem_view_2D<double>(team, rhsSize, rhsSize);
 
-        scratchIds = get_int_shmem_view_1D(team, rhsSize);
-        sortPermutation = get_int_shmem_view_1D(team, rhsSize);
+        scratchIds = get_shmem_view_1D<int>(team, rhsSize);
+        sortPermutation = get_shmem_view_1D<int>(team, rhsSize);
     }
 
     const stk::mesh::Entity* connectedNodes[simdLen];
