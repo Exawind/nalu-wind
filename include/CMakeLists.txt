@@ -96,6 +96,7 @@ add_sources(GlobalHeaderList
    EffectiveSSTDiffFluxCoeffAlgorithm.h
    EigenDecomposition.h
    ElemDataRequests.h
+   ElemDataRequestsNGP.h
    EnthalpyABLSrcNodeSuppAlg.h
    EnthalpyEffectiveDiffFluxCoeffAlgorithm.h
    EnthalpyEquationSystem.h

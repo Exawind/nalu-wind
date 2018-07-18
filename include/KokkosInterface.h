@@ -31,6 +31,14 @@
 namespace sierra {
 namespace nalu {
 
+#ifdef KOKKOS_HAVE_CUDA
+   typedef Kokkos::CudaSpace    MemSpace;
+#elif defined(KOKKOS_HAVE_OPENMP)
+   typedef Kokkos::OpenMP       MemSpace;
+#else
+   typedef Kokkos::HostSpace    MemSpace;
+#endif
+
 using HostSpace = Kokkos::DefaultHostExecutionSpace;
 using DeviceSpace = Kokkos::DefaultExecutionSpace;
 
