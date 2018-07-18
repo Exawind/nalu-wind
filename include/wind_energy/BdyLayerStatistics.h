@@ -83,6 +83,19 @@ public:
   void set_utau_avg(double utau)
   { uTauAvg_ = utau; }
 
+  //! Number of vertical levels on this ABL mesh
+  int abl_num_levels() const { return heights_.size(); }
+
+  //! Return the reference to the heights vector
+  const std::vector<double>& abl_heights() const { return heights_; }
+
+  //! Return the index in height array
+  //!
+  //! Returns index into the height array such that
+  //!     \f$ heights[i] \leq ht \leq heights[i+1]\$
+  //!
+  int abl_height_index(const double) const;
+
 private:
   BdyLayerStatistics() = delete;
   BdyLayerStatistics(const BdyLayerStatistics&) = delete;

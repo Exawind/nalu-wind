@@ -224,6 +224,14 @@ BdyLayerStatistics::temperature(double height, double* theta)
     interpolate_variable(1, thetaAvg_, height, theta);
 }
 
+int
+BdyLayerStatistics::abl_height_index(const double height) const
+{
+  auto idx = utils::find_index(heights_, height);
+
+  return idx.second;
+}
+
 void
 BdyLayerStatistics::interpolate_variable(
   int nComp,
