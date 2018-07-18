@@ -3,6 +3,7 @@ add_sources(GlobalUnitSourceList
    UnitTestABLWallFunction.C
    UnitTestBasicKokkos.C
    UnitTestCreateOnDevice.C
+   UnitTestElemDataRequests.C
    UnitTestElemSuppAlg.C
    UnitTestElementDescription.C
    UnitTestFieldUtils.C
