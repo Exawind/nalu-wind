@@ -2,6 +2,12 @@
 
 #include <KokkosInterface.h>
 
+static inline 
+bool is_aligned(const void *pointer, size_t byte_count)
+{
+    return (uintptr_t)pointer % byte_count == 0;
+}
+
 TEST(Shmem, align)
 {
   unsigned N = 1;
@@ -15,17 +21,17 @@ TEST(Shmem, align)
   Kokkos::parallel_reduce(team_exec, KOKKOS_LAMBDA(const sierra::nalu::TeamHandleType& team, unsigned& localResult)
   {
     sierra::nalu::SharedMemView<double*> view1 = sierra::nalu::get_shmem_view_1D<double>(team, numScalars);
-    if (alignof(view1.data()) == 8) {
+    if (is_aligned(view1.data(), 8)) {
         ++localResult;
     }
 
     sierra::nalu::SharedMemView<double*> view2 = sierra::nalu::get_shmem_view_1D<double>(team, numScalars);
-    if (alignof(view1.data()) == 8) {
+    if (is_aligned(view2.data(), 8)) {
         ++localResult;
     }
 
     sierra::nalu::SharedMemView<double*> view3 = sierra::nalu::get_shmem_view_1D<double>(team, numScalars);
-    if (alignof(view1.data()) == 8) {
+    if (is_aligned(view3.data(), 8)) {
         ++localResult;
     }
   }, numCorrectlyAlignedViews);
