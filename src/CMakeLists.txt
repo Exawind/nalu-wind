@@ -15,6 +15,7 @@ add_sources(GlobalSourceList
    AssembleHeatCondIrradWallSolverAlgorithm.C
    AssembleHeatCondWallSolverAlgorithm.C
    AssembleMomentumEdgeABLWallFunctionSolverAlgorithm.C
+   AssembleMomentumEdgeABLTopBC.C
    AssembleMomentumEdgeOpenSolverAlgorithm.C
    AssembleMomentumEdgeSolverAlgorithm.C
    AssembleMomentumEdgeSymmetrySolverAlgorithm.C

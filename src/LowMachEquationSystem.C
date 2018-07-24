@@ -26,6 +26,7 @@
 #include <AssembleMomentumElemWallFunctionSolverAlgorithm.h>
 #include <AssembleMomentumElemABLWallFunctionSolverAlgorithm.h>
 #include <AssembleMomentumEdgeABLWallFunctionSolverAlgorithm.h>
+#include <AssembleMomentumEdgeABLTopBC.h>
 #include <AssembleMomentumNonConformalSolverAlgorithm.h>
 #include <AssembleNodalGradAlgorithmDriver.h>
 #include <AssembleNodalGradPAlgorithmDriver.h>
@@ -1951,10 +1952,12 @@ void
 MomentumEquationSystem::register_symmetry_bc(
   stk::mesh::Part *part,
   const stk::topology &partTopo,
-  const SymmetryBoundaryConditionData &/*symmetryBCData*/)
+  const SymmetryBoundaryConditionData & symmetryBCData)
 {
+  auto& meta_data = realm_.meta_data();
   // algorithm type
   const AlgorithmType algType = SYMMETRY;
+  auto user_data = symmetryBCData.userData_;
 
   VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
   GenericFieldType &dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
@@ -1975,20 +1978,36 @@ MomentumEquationSystem::register_symmetry_bc(
 
   if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_) {
     // solver algs; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
-      = solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      SolverAlgorithm *theAlg = NULL;
-      if ( realm_.realmUsesEdges_ ) {
-        theAlg = new AssembleMomentumEdgeSymmetrySolverAlgorithm(realm_, part, this);
-      }
-      else {
-        theAlg = new AssembleMomentumElemSymmetrySolverAlgorithm(realm_, part, this);
-      }
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
+    if (user_data.ABLTopBC_ ) {
+    std::cerr << part->name() << std::endl;
+  std::string bcFieldName = "top_velocity_bc";
+  VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, bcFieldName));
+  stk::mesh::put_field(*theBcField, *part, 3);
+      auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
+      if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
+  	SolverAlgorithm* theAlg = new AssembleMomentumEdgeABLTopBC(realm_, part, this, 
+		user_data.grid_dims_);
+	solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
+        std::cerr << "Initializing TOP BC" << std::endl;
+      }	else {
+	it->second->partVec_.push_back(part);	
+      }	
+    } else {
+	    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
+		    = solverAlgDriver_->solverAlgMap_.find(algType);
+	    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
+		    SolverAlgorithm *theAlg = NULL;
+		    if ( realm_.realmUsesEdges_ ) {
+			    theAlg = new AssembleMomentumEdgeSymmetrySolverAlgorithm(realm_, part,this);
+		    }
+		    else {
+			    theAlg = new AssembleMomentumElemSymmetrySolverAlgorithm(realm_, part, this);
+		    }
+		    solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+	    }
+	    else {
+		    itsi->second->partVec_.push_back(part);
+	    }
     }
   }
   else {

@@ -309,6 +309,9 @@ struct SymmetryUserData : public UserData {
 
   bool normalTemperatureGradientSpec_;
 
+  bool ABLTopBC_{false};
+  std::vector<int> grid_dims_;
+
   SymmetryUserData()
     : UserData(),
       normalTemperatureGradientSpec_(false)

@@ -1164,6 +1164,11 @@ namespace YAML
       symmetryData.normalTemperatureGradient_ = node["normal_temperature_gradient"].as<sierra::nalu::NormalTemperatureGradient>();
       symmetryData.normalTemperatureGradientSpec_ = true;
     }
+    if (node["grid_dimensions"])
+    {
+      symmetryData.grid_dims_ = node["grid_dimensions"].as<std::vector<int>>();
+      symmetryData.ABLTopBC_ = true;
+    }
     return true;
   }
 
