@@ -116,6 +116,12 @@ ActuatorLineFAST::~ActuatorLineFAST()
   // delete data probes specifications vector
   for ( size_t k = 0; k < actuatorLineInfo_.size(); ++k )
     delete actuatorLineInfo_[k];
+
+  // clear actuatorLinePointInfoMap_
+  for(auto iterPoint : actuatorLinePointInfoMap_)
+  {
+    delete iterPoint.second;
+  }
 }
 
 
