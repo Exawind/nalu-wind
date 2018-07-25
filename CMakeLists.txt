@@ -225,10 +225,6 @@ endif()
 
 set(nalu_ex_name "naluX")
 message("-- CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
-if(CMAKE_BUILD_TYPE STREQUAL "DEBUG")
-   set(nalu_ex_name "naluXd")
-   message("Debug Build")
-endif()
 
 add_executable(${nalu_ex_name} nalu.C)
 target_link_libraries(${nalu_ex_name} nalu)
