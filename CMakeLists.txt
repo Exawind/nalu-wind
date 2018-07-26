@@ -223,9 +223,9 @@ if(ENABLE_HYPRE)
   target_link_libraries(nalu ${HYPRE_LIBRARIES})
 endif()
 
-set(nalu_ex_name "naluX")
 message("-- CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
+set(nalu_ex_name "naluX")
 add_executable(${nalu_ex_name} nalu.C)
 target_link_libraries(${nalu_ex_name} nalu)
 if(MPI_COMPILE_FLAGS)
@@ -237,12 +237,7 @@ if(MPI_LINK_FLAGS)
     LINK_FLAGS "${MPI_LINK_FLAGS}")
 endif(MPI_LINK_FLAGS)
 
-
 set(utest_ex_name "unittestX")
-if(CMAKE_BUILD_TYPE STREQUAL "DEBUG")
-   set(utest_ex_name "unittestXd")
-endif()
-
 add_executable(${utest_ex_name} unit_tests.C ${NALU_UNIT_SOURCES})
 target_link_libraries(${utest_ex_name} nalu)
 target_include_directories(${utest_ex_name} PUBLIC "${CMAKE_SOURCE_DIR}/unit_tests")
