@@ -169,6 +169,12 @@ ActuatorLinePointDrag::~ActuatorLinePointDrag()
   // delete data probes specifications vector
   for ( size_t k = 0; k < actuatorLineInfo_.size(); ++k )
     delete actuatorLineInfo_[k];
+
+  // clear actuatorLinePointInfoMap_
+  for(auto iterPoint : actuatorLinePointInfoMap_)
+  {
+    delete iterPoint.second;
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -353,9 +359,9 @@ ActuatorLinePointDrag::initialize()
   elemsToGhost_.clear();
 
   // clear actuatorLinePointInfoMap_
-  std::map<size_t, ActuatorLinePointDragPointInfo *>::iterator iterPoint;
-  for( iterPoint=actuatorLinePointInfoMap_.begin(); iterPoint!=actuatorLinePointInfoMap_.end(); ++iterPoint )
-    delete (*iterPoint).second;
+  for(auto iterPoint : actuatorLinePointInfoMap_) {
+    delete iterPoint.second;
+  }
   actuatorLinePointInfoMap_.clear();
 
   bulkData.modification_begin();
@@ -516,7 +522,7 @@ ActuatorLinePointDrag::execute()
                               *actuator_source_lhs);
 
     // get the vector of elements
-    std::set<stk::mesh::Entity> nodeVec = infoObject->nodeVec_;
+    const std::set<stk::mesh::Entity>& nodeVec = infoObject->nodeVec_;
 
     spread_actuator_force_to_node_vec(nDim, nodeVec, ws_pointForce, &(infoObject->centroidCoords_[0]), *coordinates, *actuator_source, infoObject->gaussDecayRadius_);
 
@@ -956,7 +962,7 @@ ActuatorLinePointDrag::interpolate_field(
   const int &sizeOfField,
   stk::mesh::Entity elem,
   const stk::mesh::BulkData & bulkData,
-  double *isoParCoords,
+  const double *isoParCoords,
   const double *fieldAtNodes,
   double *pointField)
 {
@@ -1031,7 +1037,7 @@ ActuatorLinePointDrag::assemble_lhs_to_best_elem_nodes(
 void
 ActuatorLinePointDrag::spread_actuator_force_to_node_vec(
   const int &nDim,
-  std::set<stk::mesh::Entity>& nodeVec,
+  const std::set<stk::mesh::Entity>& nodeVec,
   const std::vector<double>& actuator_force,
   const double * actuator_node_coordinates,
   const stk::mesh::FieldBase & coordinates,

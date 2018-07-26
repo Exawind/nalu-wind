@@ -14,9 +14,9 @@ Step 1
 ~~~~~~
 
 This assumes you have a (Homebrew) installation of GCC installed already 
-(we are using GCC 7.2.0). These instructions have been tested on OSX 10.11, MacOS 10.12, adn MacOS 10.13.
-MacOS 10.12/10.13 will not build CMake or Pkg-Config with GCC anymore because they will pick up 
-system header files that have objective C code in them. We build Nalu-Wind using Spack on MacOS Sierra by
+(we are using GCC 7.3.0). These instructions have been tested on OSX 10.11, MacOS 10.12, and MacOS 10.13.
+MacOS 10.12/10.13 will not build CMake or Pkg-Config with GCC because they will pick up 
+system header files that have objective C code in them. Therefore we build Nalu-Wind using Spack on MacOS Sierra by
 using Homebrew to install ``cmake`` and ``pkg-config`` and defining these 
 as external packages in Spack (see 
 `packages.yaml <https://github.com/exawind/build-test/blob/master/configs/machines/mac_sierra/packages.yaml>`__).
@@ -55,7 +55,7 @@ configuration files to your Spack installation:
 Step 5
 ~~~~~~
 
-Try ``spack info nalu`` to see if Spack works. If it does, check the
+Try ``spack info nalu-wind`` to see if Spack works. If it does, check the
 compilers you have available by:
 
 ::
@@ -66,20 +66,22 @@ compilers you have available by:
     clang@9.0.0-apple
     
     -- gcc sierra-x86_64 --------------------------------------------
-    gcc@7.2.0  gcc@6.4.0  gcc@5.4.0
+    gcc@7.3.0  gcc@6.4.0  gcc@5.5.0
 
 Step 6
 ~~~~~~
 
-Install Nalu-Wind with whatever version of GCC (7.2.0 for us) you prefer by editing and running the 
-``install_nalu_gcc_mac.sh`` script in the `build-test <https://github.com/exawind/build-test>`__ repo:
+Install Nalu-Wind with whatever compiler you prefer (it will default to Apple Clang) merely by
+running ``spack install nalu-wind`` or by editing and running the 
+``install_nalu_gcc_mac.sh`` script from the `build-test <https://github.com/exawind/build-test>`__ repo:
 
 ::
 
     cd ${HOME}/build-test/install_scripts && ./install_nalu_gcc_mac.sh
 
-That should be it! Spack will install using the constraints we've specified in ``shared_constraints.sh`` 
-as can be seen in the install script.
+That should be it! When using the install script you will see that Spack will install
+using the constraints we've specified in ``shared_constraints.sh`` which specifies a much more specific
+set of Trilinos options for Nalu-Wind that can shorten the build time.
 
 
 NREL's Peregrine Machine
@@ -132,7 +134,7 @@ in the repo or the following lines:
    source ${SPACK_ROOT}/share/spack/setup-env.sh
 
 Log out and log back in or source your ``.bash_profile`` to get the Spack 
-shell support loaded. Try ``spack info nalu`` to see if Spack works.
+shell support loaded. Try ``spack info nalu-wind`` to see if Spack works.
 
 Step 4
 ~~~~~~
@@ -149,17 +151,18 @@ file to your Spack directory:
 Step 5
 ~~~~~~
 
-Try ``spack info nalu`` to see if Spack works.
+Try ``spack info nalu-wind`` to see if Spack works.
 
 Step 6
 ~~~~~~
 
-Note the build scripts provided here adhere to the official versions of the third party libraries 
+Note the build scripts and packages.yaml configuration files provided here adhere
+to the official versions of the third party libraries 
 we test with, and that you may want to adhere to using them as well. Also note that
 when you checkout the latest Spack, it also means you will be using the latest packages 
 available if you do not set constraints at install time and the newest packages 
 may not have been tested to build correctly on NREL machines yet. So specifying
-versions of the TPL dependencies in this step is recommended.
+versions of the TPL dependencies in your packages.yaml file for Spack is recommended.
 
 Install Nalu-Wind using a compute node either interactively 
 (``qsub -V -I -l nodes=1:ppn=24,walltime=4:00:00 -A <allocation> -q short``) 
@@ -170,120 +173,15 @@ or edit the script to use the correct allocation and ``qsub install_nalu_gcc_per
 That's it! Hopefully the ``install_nalu_gcc_peregrine.sh`` 
 script installs the entire set of dependencies and you get a working build 
 of Nalu-Wind on Peregrine...after about 2 hours of waiting for it to build.
-Note that Peregrine may have problems fetching/downloading packages due to
-SSL errors which are due to the way the machine is configured. Using the
-command ``spack fetch -D <name>`` on your own laptop and then copying the
-package archives to Peregrine is a possible workaround.
 
 To build with the Intel compiler, note the necessary commands in 
 `install_nalu_intel_peregrine.sh <https://github.com/exawind/build-test/blob/master/install_scripts/install_nalu_intel_peregrine.sh>`__ 
 batch script (note you will need to point ``${TMPDIR}`` to disk as it defaults to 
 RAM and will cause problems when building Trilinos).
 
-Then to load Nalu-Wind (and you will need Spack's openmpi for Nalu-Wind now) into your path you 
-will need to ``spack load openmpi %compiler`` and ``spack load nalu %compiler``, using 
-``%gcc`` or ``%intel`` to specify which to load.
-
-NREL's Merlin Machine
----------------------
-
-The following describes how to build Nalu-Wind and its dependencies
-mostly automatically on NREL's Merlin machine using Spack.
-
-Step 1
-~~~~~~
-
-Login to Merlin, and checkout the ``https://github.com/exawind/build-test.git`` 
-repo (we will be cloning into the ${HOME} directory):
-
-::
-
-   cd ${HOME} && git clone https://github.com/exawind/build-test.git
-
-On Merlin, thankfully the login nodes and compute nodes use the same OS (centos7), 
-so building on the login node will still allow the package to be loaded on the compute node.
-Spack will default to using all cores, so be mindful using it on a compute node. You should probably 
-build on a compute node, or set Spack to use a small number of processes when building.
-
-Step 2
-~~~~~~
-
-Checkout the official Spack repo from github:
-
-``cd ${HOME} && git clone https://github.com/spack/spack.git``
-
-Step 3
-~~~~~~
-
-Configure your environment in the recommended way. You should purge all 
-modules and load ``GCCcore/4.9.2`` in your login script. See the example 
-`.bash_profile <https://github.com/exawind/build-test/blob/master/configs/machines/merlin/dot_bash_profile_merlin.sh>`__
-. If you have problems building with Spack on 
-Merlin, it is most likely your environment has deviated from this 
-recommended one. Even when building with the Intel compiler in Spack, 
-this is the recommended environment.
-
-::
-
-   module purge
-   module load GCCcore/4.9.2
-
-Also add Spack shell support to your ``.bash_profile`` as shown in the example 
-`.bash_profile <https://github.com/exawind/build-test/blob/master/configs/machines/merlin/dot_bash_profile_merlin.sh>`__
-in the repo or the following lines:
-
-::
-
-   export SPACK_ROOT=${HOME}/spack
-   source ${SPACK_ROOT}/share/spack/setup-env.sh
-
-Log out and log back in or source your ``.bash_profile`` to get the Spack 
-shell support loaded.
-
-Step 4
-~~~~~~
-
-Configure Spack for Merlin. This is done by running the
-`setup-spack.sh <https://github.com/exawind/build-test/blob/master/configs/setup-spack.sh>`__
-script provided which tries finding what machine you're on and copying the corresponding ``*.yaml``
-file to your Spack directory:
-
-::
-
-   cd ${HOME}/build-test/configs && ./setup-spack.sh
-
-Step 5
-~~~~~~
-
-Try ``spack info nalu-wind`` to see if Spack works.
-
-Step 6
-~~~~~~
-
-Note the build scripts provided here adhere to the official versions of the third party libraries 
-we test with, and that you may want to adhere to using them as well. Also note that
-when you checkout the latest Spack, it also means you will be using the latest packages 
-available if you do not specify a package version at install time and the newest packages 
-may not have been tested to build correctly on NREL machines yet. So specifying
-versions of the TPL dependencies in this step is recommended.
-
-Install Nalu-Wind using a compute node either interactively 
-(``qsub -V -I -l nodes=1:ppn=24,walltime=4:00:00 -A <allocation> -q batch``) 
-or with the example batch script  
-`install_nalu_gcc_merlin.sh <https://github.com/exawind/build-test/blob/master/install_scripts/install_nalu_gcc_merlin.sh>`__
-by editing to use the correct allocation and then ``qsub install_nalu_gcc_merlin.sh``.
-
-That's it! Hopefully that command installs the entire set of dependencies 
-and you get a working build of Nalu-Wind on Merlin.
-
-To build with the Intel compiler, note the necessary commands in 
-`install_nalu_intel_merlin.sh <https://github.com/exawind/build-test/blob/master/install_scripts/install_nalu_intel_merlin.sh>`__ 
-batch script.
-
-Then to load Nalu-Wind (and you will need Spack's openmpi for Nalu-Wind now) into your path you 
+Then to load Nalu-Wind dependencies (and you will need Spack's openmpi for Nalu-Wind now) into your path you 
 will need to ``spack load openmpi %compiler`` and ``spack load nalu-wind %compiler``, using 
 ``%gcc`` or ``%intel`` to specify which to load.
-
 
 Development Build of Nalu-Wind
 ------------------------------

@@ -130,7 +130,7 @@ public:
     const int &sizeOfField,
     stk::mesh::Entity elem,
     const stk::mesh::BulkData & bulkData,
-    double *isoParCoords,
+    const double *isoParCoords,
     const double *fieldAtNodes,
     double *pointField);
 
@@ -177,7 +177,7 @@ public:
   // Spread the actuator force to a node vector
   void spread_actuator_force_to_node_vec(
       const int &nDim,
-      std::set<stk::mesh::Entity>& nodeVec,
+      const std::set<stk::mesh::Entity>& nodeVec,
       const std::vector<double>& actuator_force,
       const double * actuator_node_coordinates,
       const stk::mesh::FieldBase & coordinates,

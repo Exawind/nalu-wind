@@ -3032,7 +3032,7 @@ c clip
 c calculate the inverse Jacobian
          ds_dx(1,1)= denom*(dx_ds(2,2)*dx_ds(3,3)-dx_ds(3,2)*dx_ds(2,3))
          ds_dx(1,2)= denom*(dx_ds(3,2)*dx_ds(1,3)-dx_ds(1,2)*dx_ds(3,3))
-         ds_dx(1,3)= denom*(dx_ds(1,2)*dx_ds(2,3)-dx_ds(2,2)*dx_ds(1,3))         
+         ds_dx(1,3)= denom*(dx_ds(1,2)*dx_ds(2,3)-dx_ds(2,2)*dx_ds(1,3))
 c     
          ds_dx(2,1)= denom*(dx_ds(3,1)*dx_ds(2,3)-dx_ds(2,1)*dx_ds(3,3))
          ds_dx(2,2)= denom*(dx_ds(1,1)*dx_ds(3,3)-dx_ds(3,1)*dx_ds(1,3))

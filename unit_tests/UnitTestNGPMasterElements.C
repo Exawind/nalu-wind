@@ -29,6 +29,9 @@ namespace {
 
 double linear_scalar_value(int dim, double a, const double* b, const double* x)
 {
+  if (dim == 2) {
+    return (a + b[0] * x[0] + b[1] * x[1]);
+  }
   return (a + b[0] * x[0] + b[1] * x[1] + b[2] * x[2]);
 }
 

@@ -319,6 +319,8 @@ Realm::~Realm()
 
   if (nullptr != bdyLayerStats_) delete bdyLayerStats_;
 
+  if (nullptr != oversetManager_) delete oversetManager_;
+
   MasterElementRepo::clear();
 }
 

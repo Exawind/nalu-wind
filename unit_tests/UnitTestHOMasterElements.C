@@ -947,9 +947,9 @@ void check_scv_grad_op_hex(int poly_order, double tol)
             desc->nodeLocs1D[k] + coord_perturb(rng)
         }};
 
-        ws_coords[index * dim + 0] = perturbed_coords[i];
-        ws_coords[index * dim + 1] = perturbed_coords[j];
-        ws_coords[index * dim + 2] = perturbed_coords[k];
+        ws_coords[index * dim + 0] = perturbed_coords[0];
+        ws_coords[index * dim + 1] = perturbed_coords[1];
+        ws_coords[index * dim + 2] = perturbed_coords[2];
         ws_field[index] = linField(&ws_coords[index*dim]);
       }
     }
