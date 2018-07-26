@@ -216,6 +216,12 @@ class Realm {
     stk::mesh::Part *part,
     const stk::topology &theTopo);
 
+  void register_abltop_bc(
+    stk::mesh::Part *part,
+    const stk::topology &theTopo) {
+      register_symmetry_bc( part, theTopo );
+    }
+
   void register_periodic_bc(
     stk::mesh::Part *masterMeshPart,
     stk::mesh::Part *slaveMeshPart,

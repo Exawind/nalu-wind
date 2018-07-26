@@ -49,7 +49,7 @@ AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
   velocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-  bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "top_velocity_bc");
+  bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "cont_velocity_bc");
   density_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   exposedAreaVec_ = meta_data.get_field<GenericFieldType>(meta_data.side_rank(), "exposed_area_vector");
 }
@@ -78,6 +78,8 @@ AssembleMomentumEdgeABLTopBC::execute()
   // space for LHS/RHS; nodesPerFace*nDim*nodesPerFace*nDim and nodesPerFace*nDim
 
   // deal with state
+  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "coordinates");
   VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
 
   // define some common selectors
@@ -104,30 +106,17 @@ AssembleMomentumEdgeABLTopBC::execute()
       int iy = (nodeTmp/imax_);
       int ix = nodeTmp % imax_;
 
-      stk::mesh::EntityId nodeIDx = bulk_data.identifier(node);
-      stk::mesh::EntityId nodeID1 = (iz-20)*imax_*jmax_ + iy*imax_ + ix + 1;
-      stk::mesh::EntityId nodeID2 = (iz-1 )*imax_*jmax_ + iy*imax_ + ix + 1;
-//      std::cerr << nodeIDx << " " << nodeID1 << " " <<
-//       iz << " " << iy << " " << ix << std::endl;
-//    stk::mesh::EntityId nodeID1 = nodeID - 10*imax_*jmax_;
-
+      stk::mesh::EntityId nodeID1 = (iz-10)*imax_*jmax_ + iy*imax_ + ix + 1;
       stk::mesh::Entity node1 = bulk_data.get_entity(stk::topology::NODE_RANK,nodeID1);
-      stk::mesh::Entity node2 = bulk_data.get_entity(stk::topology::NODE_RANK,nodeID2);
 
-      double *uNp1 = stk::mesh::field_data(velocityNp1, node1);
+      double *coord = stk::mesh::field_data(*coordinates, node);
       double *uBC = stk::mesh::field_data(*bcVelocity_, node );
-      double *uTop = stk::mesh::field_data(velocityNp1, node );
-      double *uTopm= stk::mesh::field_data(velocityNp1, node2);
+      double *uNp1 = stk::mesh::field_data(velocityNp1, node1);
 
       uBC[0] = uNp1[0];
-      uBC[1] = uNp1[1];
-      uBC[2] = uNp1[2];
-//      uTop[0] = uNp1[0];
-//      uTop[1] = uNp1[1];
-//      uTop[2] = uNp1[2];
-//      uTopm[0] = uNp1[0];
-//      uTopm[1] = uNp1[1];
-//      uTopm[2] = uNp1[2];
+      uBC[1] = 0.0;
+      uBC[2] = 0.5*uNp1[2];
+//      uBC[2] = std::sin(coord[0])  
 
       //sampleVel_[iy*imax_+ix] = uNp1[2];
     }

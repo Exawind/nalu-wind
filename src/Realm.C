@@ -984,6 +984,9 @@ Realm::setup_bc()
       case SYMMETRY_BC:
         equationSystems_.register_symmetry_bc(name, *reinterpret_cast<const SymmetryBoundaryConditionData *>(&bc));
         break;
+      case ABLTOP_BC:
+        equationSystems_.register_abltop_bc(name, *reinterpret_cast<const ABLTopBoundaryConditionData *>(&bc));
+        break;
       case PERIODIC_BC:
       {
         ThrowAssert(reinterpret_cast<const PeriodicBoundaryConditionData *>(&bc) != nullptr);

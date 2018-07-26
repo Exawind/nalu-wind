@@ -206,6 +206,17 @@ namespace sierra
     }
 
     void operator >>(const YAML::Node& node,
+      ABLTopBoundaryConditionData& abltopBC)
+    {
+      abltopBC.bcName_ =
+          node["abltop_boundary_condition"].as<std::string>();
+      abltopBC.targetName_ = node["target_name"].as<std::string>();
+      abltopBC.theBcType_ = ABLTOP_BC;
+      const YAML::Node& abltopUserData = node["abltop_user_data"];
+      abltopBC.userData_ = abltopUserData.as<ABLTopUserData>();
+    }
+
+    void operator >>(const YAML::Node& node,
       PeriodicBoundaryConditionData& periodicBC)
     {
       periodicBC.bcName_ =
@@ -1157,17 +1168,26 @@ namespace YAML
   bool convert<sierra::nalu::SymmetryUserData>::decode(const Node& node,
     sierra::nalu::SymmetryUserData& symmetryData)
   {
+    return true;
+  }
+
+  bool convert<sierra::nalu::ABLTopUserData>::decode(const Node& node,
+    sierra::nalu::ABLTopUserData& abltopData)
+  {
     // This allows the user to set a fixed noraml temperature gradient that is
     // achieved through application of a compatible normal  heat flux. 
     if (node["normal_temperature_gradient"])
     {
-      symmetryData.normalTemperatureGradient_ = node["normal_temperature_gradient"].as<sierra::nalu::NormalTemperatureGradient>();
-      symmetryData.normalTemperatureGradientSpec_ = true;
+      abltopData.normalTemperatureGradient_ = node["normal_temperature_gradient"].as<sierra::nalu::NormalTemperatureGradient>();
+      abltopData.normalTemperatureGradientSpec_ = true;
     }
-    if (node["grid_dimensions"])
-    {
-      symmetryData.grid_dims_ = node["grid_dimensions"].as<std::vector<int>>();
-      symmetryData.ABLTopBC_ = true;
+    abltopData.ABLTopBC_ = false;
+    if ( node["potential_flow_bc"] ) {
+      abltopData.ABLTopBC_ = node["potential_flow_bc"].as<bool>();
+      std::cerr << "ABL Top BC " <<  abltopData.ABLTopBC_ << std::endl;
+    }
+    if (abltopData.ABLTopBC_) {
+      abltopData.grid_dims_ = node["grid_dimensions"].as<std::vector<int>>();
     }
     return true;
   }
@@ -1235,6 +1255,7 @@ namespace YAML
     node["open_boundary_condition"] >> bcOptions.openbc_;
     node["overset_boundary_condition"] >> bcOptions.oversetbc_;
     node["symmetry_boundary_condition"] >> bcOptions.symmetrybc_;
+    node["abltop_boundary_condition"] >> bcOptions.abltopbc_;
     node["periodic_boundary_condition"] >> bcOptions.periodicbc_;
     node["non_confomal_boundary_condition"] >> bcOptions.nonConformalbc_;
 
