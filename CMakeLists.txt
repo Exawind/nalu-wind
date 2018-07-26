@@ -105,6 +105,9 @@ if(ENABLE_TIOGA)
   add_definitions("-DNALU_USES_TIOGA")
 endif()
 
+find_package(FFTW REQUIRED)
+include_directories(SYSTEM ${FFTW_INCLUDE_DIRS})
+
 ########################### NALU #####################################
 # Add any extra flags based on compiler and/or OS
 message("-- CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
@@ -209,6 +212,7 @@ include_directories(${CMAKE_BINARY_DIR}/include)
 add_library(nalu ${NALU_SOURCES})
 target_link_libraries(nalu ${Trilinos_LIBRARIES})
 target_link_libraries(nalu ${YAML_CPP_LIBRARIES})
+target_link_libraries(nalu ${FFTW_LIBRARIES})
 target_link_libraries(nalu ${MPI_CXX_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_C_LIBRARIES})
 
 if(ENABLE_OPENFAST)
