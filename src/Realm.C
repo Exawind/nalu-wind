@@ -299,6 +299,9 @@ Realm::~Realm()
   if ( NULL != turbulenceAveragingPostProcessing_ )
     delete turbulenceAveragingPostProcessing_;
 
+  if ( NULL != dataProbePostProcessing_ )
+    delete dataProbePostProcessing_;
+
   if ( NULL != actuator_ )
     delete actuator_;
 
