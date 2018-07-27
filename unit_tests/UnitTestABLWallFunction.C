@@ -82,6 +82,7 @@ struct HelperObjectsABLWallFunction {
   {
     delete elemABLWallFunctionSolverAlg;
     delete edgeABLWallFunctionSolverAlg;
+    delete computeGeomBoundAlg;
     realm.metaData_ = nullptr;
     realm.bulkData_ = nullptr;
 
