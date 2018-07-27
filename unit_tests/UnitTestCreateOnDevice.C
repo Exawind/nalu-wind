@@ -10,82 +10,82 @@
 #include <KokkosInterface.h>
 #include "utils/CreateDeviceExpression.h"
 
-class deviceable {
+class Deviceable {
 protected :
-  deviceable *DeviceCopy;
+  Deviceable *deviceCopy_;
 public :
-  KOKKOS_FORCEINLINE_FUNCTION deviceable() : DeviceCopy(nullptr) {} 
-  virtual ~deviceable() {
-    if (DeviceCopy) delete_device_copy();
-    DeviceCopy = nullptr;
+  KOKKOS_FORCEINLINE_FUNCTION Deviceable() : deviceCopy_(nullptr) {} 
+  virtual ~Deviceable() {
+    if (deviceCopy_) delete_device_copy();
+    deviceCopy_ = nullptr;
   }
   template <class T> void copy_to_device(const T &t) {
-    DeviceCopy = sierra::nalu::create_device_expression(t);
+    deviceCopy_ = sierra::nalu::create_device_expression(t);
   }
   void delete_device_copy() {
-    sierra::nalu::kokkos_free_on_device(DeviceCopy);
+    sierra::nalu::kokkos_free_on_device(deviceCopy_);
   }
-  template<class T> T* device_copy() const {return dynamic_cast<T*>(DeviceCopy);}
+  template<class T> T* device_copy() const {return dynamic_cast<T*>(deviceCopy_);}
 };
 
-class shape : public deviceable {
+class Shape : public Deviceable {
 public :
-  KOKKOS_FORCEINLINE_FUNCTION shape() {} 
-  virtual ~shape() {}
+  KOKKOS_FORCEINLINE_FUNCTION Shape() {} 
+  virtual ~Shape() {}
   virtual double area() const = 0;
 };
 
-class rectangle : public shape {
-  const double L,W;
+class Rectangle : public Shape {
+  const double length_,width_;
 public :
-  KOKKOS_FORCEINLINE_FUNCTION rectangle(const double l,const double w):shape(),L(l),W(w) {
+  KOKKOS_FORCEINLINE_FUNCTION Rectangle(const double l,const double w):Shape(),length_(l),width_(w) {
     copy_to_device(*this);
   }
-  KOKKOS_FORCEINLINE_FUNCTION rectangle(const rectangle &r):shape(),L(r.L),W(r.W) {} 
-  virtual ~rectangle(){}
+  KOKKOS_FORCEINLINE_FUNCTION Rectangle(const Rectangle &r):Shape(),length_(r.length_),width_(r.width_) {} 
+  virtual ~Rectangle(){}
   virtual double area() const final {
-    return L*W;
+    return length_ * width_;
   }
 };
 
-class circle : public shape {
-  const double R;
+class Circle : public Shape {
+  const double radius_;
 public :
-  KOKKOS_FORCEINLINE_FUNCTION circle(const double r):shape(),R(r) {
+  KOKKOS_FORCEINLINE_FUNCTION Circle(const double radius):Shape(),radius_(radius) {
     copy_to_device(*this);
   }
-  KOKKOS_FORCEINLINE_FUNCTION circle(const circle &c):shape(),R(c.R) {} 
-  virtual ~circle(){}
+  KOKKOS_FORCEINLINE_FUNCTION Circle(const Circle &c):Shape(),radius_(c.radius_) {} 
+  virtual ~Circle(){}
   virtual double area() const final {
-    return 2*3.14159265*R;
+    return 3.14159265 * radius_ * radius_;
   }
 };
 
 
-TEST(CreateDeviceExpression, shapes) 
+TEST(CreateDeviceExpression, Shapes) 
 {
-// Create a couple of virtual classes on host and device.
-shape *r = new rectangle(4,5);
-shape *c = new circle(2);
-shape *r_dev = r->device_copy<shape>();
-shape *c_dev = c->device_copy<shape>();
+  // Create a couple of virtual classes on host and device.
+  Shape *r = new Rectangle(4,5);
+  Shape *c = new Circle(2);
+  Shape *r_dev = r->device_copy<Shape>();
+  Shape *c_dev = c->device_copy<Shape>();
 
-double r_area;
-auto r_on_device = [&] (int i, double &a) {
-  a = r_dev->area();
-}; 
-sierra::nalu::kokkos_parallel_reduce(1, r_on_device, r_area, "Call Rectangle on Device.");
+  double r_area;
+  auto r_on_device = [&] (int i, double &a) {
+    a = r_dev->area();
+  };
+  sierra::nalu::kokkos_parallel_reduce(1, r_on_device, r_area, "Call Rectangle on Device.");
 
-double c_area;
-auto c_on_device = [&] (int i, double &a) {
-  a = c_dev->area();
-}; 
-sierra::nalu::kokkos_parallel_reduce(1, c_on_device, c_area, "Call Circle on Device.");
+  double c_area;
+  auto c_on_device = [&] (int i, double &a) {
+    a = c_dev->area();
+  };
+  sierra::nalu::kokkos_parallel_reduce(1, c_on_device, c_area, "Call Circle on Device.");
 
-EXPECT_EQ(r_area, r->area()) << "Area of a 4x5 rectangle on device and host";
-EXPECT_EQ(c_area, c->area()) << "Area of a radius 2 circle on device and host";
+  EXPECT_EQ(r_area, r->area()) << "Area of a 4x5 Rectangle on device and host";
+  EXPECT_EQ(c_area, c->area()) << "Area of a radius 2 Circle on device and host";
 
-delete r;
-delete c;
+  delete r;
+  delete c;
 }
 
