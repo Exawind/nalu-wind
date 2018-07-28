@@ -655,6 +655,8 @@ class Realm {
    */
   bool hypreIsActive_{false};
 
+  bool scaleResidualNorms_{false};
+
 };
 
 } // namespace nalu

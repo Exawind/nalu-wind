@@ -532,7 +532,7 @@ Realm::initialize()
 
   initialize_post_processing_algorithms();
 
-  compute_l2_scaling();
+  if (scaleResidualNorms_) compute_l2_scaling();
 
   // Now that the inactive selectors have been processed; we are ready to setup
   // HYPRE IDs
@@ -729,6 +729,8 @@ Realm::load(const YAML::Node & node)
   if (node["balance_nodes_iterations"] || node["balance_nodes_target"] ) {
     doBalanceNodes_ = true;
   }
+
+  get_if_present(node, "activate_l2norm_scaling", scaleResidualNorms_, scaleResidualNorms_);
 
 
   //======================================

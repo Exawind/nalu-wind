@@ -111,6 +111,8 @@ protected:
 
   void copy_hypre_to_stk(stk::mesh::FieldBase*, std::vector<double>&);
 
+  virtual void copy_residual_to_stk();
+
 private:
   std::vector<std::string> vecNames_{"X", "Y", "Z"};
 

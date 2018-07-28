@@ -367,6 +367,11 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
 
   eqSys_->firstTimeStepSolve_ = false;
 
+  if (eqSys_->monitorResiduals_) {
+    copy_residual_to_stk();
+    sync_field(eqSys_->residualField_);
+  }
+
   return status;
 }
 
@@ -409,6 +414,34 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
 
   for (int d=0; d < nDim_; d++)
     rhsNorm[d] = std::sqrt(gblnorm[d]);
+}
+
+void
+HypreUVWLinearSystem::copy_residual_to_stk()
+{
+  auto& meta = realm_.meta_data();
+  auto& bulk = realm_.bulk_data();
+  stk::mesh::FieldBase* stkField = eqSys_->residualField_;
+  const auto sel = stk::mesh::selectField(*stkField)
+    & meta.locally_owned_part()
+    & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
+    & !(realm_.get_inactive_selector());
+
+  const auto& bkts = bulk.get_buckets(
+    stk::topology::NODE_RANK, sel);
+
+  for (auto b: bkts) {
+    double* field = (double*) stk::mesh::field_data(*stkField, *b);
+    for (size_t in=0; in < b->size(); in++) {
+      auto node = (*b)[in];
+      HypreIntType hid = get_entity_hypre_id(node);
+
+      for (size_t d=0; d < nDim_; d++) {
+        int sid = in * nDim_ + d;
+        HYPRE_IJVectorGetValues(rhs_[d], 1, &hid, &field[sid]);
+      }
+    }
+  }
 }
 
 }  // nalu

@@ -141,6 +141,13 @@ ProjectedNodalGradientEquationSystem::register_nodal_fields(
   // delta solution for linear solver
   qTmp_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, deltaName_));
   stk::mesh::put_field_on_mesh(*qTmp_, *part, nDim, nullptr);
+
+  if (monitorResiduals_) {
+    residualFieldName_ = eqnTypeName_ + "_residual";
+    residualField_ = &(meta_data.declare_field<VectorFieldType>(
+                         stk::topology::NODE_RANK, residualFieldName_));
+    stk::mesh::put_field_on_mesh(*residualField_, *part, nDim, nullptr);
+  }
 }
 
 //--------------------------------------------------------------------------

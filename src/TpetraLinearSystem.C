@@ -1837,6 +1837,11 @@ TpetraLinearSystem::solve(
 
   eqSys_->firstTimeStepSolve_ = false;
 
+  if (eqSys_->monitorResiduals_) {
+    copy_residual_to_stk();
+    sync_field(eqSys_->residualField_);
+  }
+
   return status;
 }
 
@@ -2164,6 +2169,37 @@ TpetraLinearSystem::copy_tpetra_to_stk(
         if (useOwned){
           stkFieldPtr[stkIndex] = tpetraVector[localId];
         }
+      }
+    }
+  }
+}
+
+void
+TpetraLinearSystem::copy_residual_to_stk()
+{
+  auto& meta = realm_.meta_data();
+  auto& bulk = realm_.bulk_data();
+  stk::mesh::FieldBase* stkField = eqSys_->residualField_;
+  const auto sel = stk::mesh::selectField(*stkField)
+    & meta.locally_owned_part()
+    & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
+    & !(realm_.get_inactive_selector());
+
+  const LinSys::ConstOneDVector& slnVec = sln_->get1dView();
+
+  const auto& bkts = bulk.get_buckets(
+    stk::topology::NODE_RANK, sel);
+
+  for (auto b: bkts) {
+    double* field = (double*) stk::mesh::field_data(*stkField, *b);
+    for (size_t in=0; in < b->size(); in++) {
+      auto node = (*b)[in];
+      const LocalOrdinal localOffset = entityToLID_[node.local_offset()];
+
+      for (size_t d=0; d < numDof_; d++) {
+        const LocalOrdinal localId = localOffset + d;
+        const size_t stkId = in * numDof_ + d;
+        field[stkId] = slnVec[localId];
       }
     }
   }

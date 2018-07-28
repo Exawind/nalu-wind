@@ -224,6 +224,9 @@ public:
     get_required(node, "name", userSuppliedName_);
     get_required(node, "max_iterations", maxIterations_);
     get_required(node, "convergence_tolerance", convergenceTolerance_);
+
+    get_if_present(node, "monitor_residuals", monitorResiduals_,
+                   monitorResiduals_);
   }
 
   Simulation *root();
@@ -243,6 +246,11 @@ public:
   const std::string eqnTypeName_;
   int maxIterations_;
   double convergenceTolerance_;
+
+  //! Create a residual field for output and debugging
+  bool monitorResiduals_{false};
+  std::string residualFieldName_;
+  stk::mesh::FieldBase* residualField_{nullptr};
 
   // driver that holds all solver algorithms
   SolverAlgorithmDriver *solverAlgDriver_;

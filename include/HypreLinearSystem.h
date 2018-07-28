@@ -224,6 +224,8 @@ protected:
   //! the STK field data instance.
   double copy_hypre_to_stk(stk::mesh::FieldBase*);
 
+  virtual void copy_residual_to_stk();
+
   /** Flags indicating whether a particular row in the HYPRE matrix has been
    * filled or not.
    */

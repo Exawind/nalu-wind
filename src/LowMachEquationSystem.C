@@ -291,6 +291,10 @@ LowMachEquationSystem::register_nodal_fields(
 
   stk::mesh::MetaData &meta_data = realm_.meta_data();
 
+  // Inform subsystems that residual field must be transferred to STK
+  momentumEqSys_->monitorResiduals_ = monitorResiduals_;
+  continuityEqSys_->monitorResiduals_ = monitorResiduals_;
+
   // add properties; denisty needs to be a restart field
   const int numStates = realm_.number_of_states();
   density_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "density", numStates));
@@ -1060,6 +1064,13 @@ MomentumEquationSystem::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*actuatorSource, *part, nullptr);
     stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nullptr);
     stk::mesh::put_field_on_mesh(*g, *part, nullptr);
+  }
+
+  if (monitorResiduals_) {
+    residualFieldName_ = eqnTypeName_ + "_residual";
+    residualField_ = &(meta_data.declare_field<VectorFieldType>(
+                         stk::topology::NODE_RANK, residualFieldName_));
+    stk::mesh::put_field_on_mesh(*residualField_, *part, nDim, nullptr);
   }
 
 }
@@ -2499,6 +2510,13 @@ ContinuityEquationSystem::register_nodal_fields(
 
   coordinates_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates"));
   stk::mesh::put_field_on_mesh(*coordinates_, *part, nDim, nullptr);
+
+  if (monitorResiduals_) {
+    residualFieldName_ = eqnTypeName_ + "_residual";
+    residualField_ = &(meta_data.declare_field<ScalarFieldType>(
+                         stk::topology::NODE_RANK, residualFieldName_));
+    stk::mesh::put_field_on_mesh(*residualField_, *part, nullptr);
+  }
 
 }
 

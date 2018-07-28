@@ -350,6 +350,13 @@ EnthalpyEquationSystem::register_nodal_fields(
     // personally manage enthalpy
     bdf2CopyStateAlg_.push_back(theCopyAlg);
   }
+
+  if (monitorResiduals_) {
+    residualFieldName_ = eqnTypeName_ + "_residual";
+    residualField_ = &(meta_data.declare_field<ScalarFieldType>(
+                         stk::topology::NODE_RANK, residualFieldName_));
+    stk::mesh::put_field_on_mesh(*residualField_, *part, nullptr);
+  }
 }
 
 //--------------------------------------------------------------------------

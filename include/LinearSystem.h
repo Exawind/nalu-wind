@@ -144,6 +144,7 @@ protected:
     const char * msg)=0;
 
   void sync_field(const stk::mesh::FieldBase *field);
+
   bool debug();
 
   Realm &realm_;

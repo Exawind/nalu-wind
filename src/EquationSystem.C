@@ -294,8 +294,15 @@ EquationSystem::assemble_and_solve(
   if ( realm_.hasPeriodic_) {
     timeA = NaluEnv::self().nalu_time();
     realm_.periodic_delta_solution_update(deltaSolution, linsys_->numDof());
+
+    if (monitorResiduals_) {
+      // Not delta solution, but the method copies field from base node to the image node
+      realm_.periodic_delta_solution_update(
+        residualField_, linsys_->numDof());
+    }
     timeB = NaluEnv::self().nalu_time();
     timerMisc_ += (timeB-timeA);
+
   }
 
   // handle statistics

@@ -95,6 +95,10 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   stk::mesh::MetaData &meta_data = realm_.meta_data();
   const int numStates = realm_.number_of_states();
 
+  // Inform subsystems that residual field must be copied to STK for output
+  tkeEqSys_->monitorResiduals_ = monitorResiduals_;
+  sdrEqSys_->monitorResiduals_ = monitorResiduals_;
+
   // re-register tke and sdr for convenience
   tke_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_ke", numStates));
   stk::mesh::put_field_on_mesh(*tke_, *part, nullptr);
