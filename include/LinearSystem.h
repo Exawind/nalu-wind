@@ -13,7 +13,6 @@
 #include <KokkosInterface.h>
 
 #include <Teuchos_RCP.hpp>
-#include <Tpetra_DefaultPlatform.hpp>
 
 #include <Teuchos_GlobalMPISession.hpp>
 #include <Teuchos_oblackholestream.hpp>

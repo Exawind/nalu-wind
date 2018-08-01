@@ -13,11 +13,9 @@
 
 #include <KokkosInterface.h>
 
-#include <Tpetra_DefaultPlatform.hpp>
 #include <Kokkos_DefaultNode.hpp>
 #include <Kokkos_UnorderedMap.hpp>
 #include <Tpetra_Vector.hpp>
-#include <Tpetra_DefaultPlatform.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 
 #include <stk_mesh/base/Types.hpp>
