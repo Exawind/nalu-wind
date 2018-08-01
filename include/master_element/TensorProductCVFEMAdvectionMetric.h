@@ -187,6 +187,7 @@ namespace high_order_metrics {
             const auto rhouCorr_dot_A = rhou_corrIp(k, j, i, XH) * areav[XH]
                                       + rhou_corrIp(k, j, i, YH) * areav[YH]
                                       + rhou_corrIp(k, j, i, ZH) * areav[ZH];
+
             mdot(ZH, k, j, i) = rhouCorr_dot_A - projTimeScale * dpdxIp_dot_A;
           }
         }

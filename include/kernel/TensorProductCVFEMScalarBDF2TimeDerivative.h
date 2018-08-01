@@ -76,6 +76,36 @@ void scalar_dt_rhs(
   }
   ops.volume(drhoqdt, rhs);
 }
+//--------------------------------------------------------------------------
+template <int poly_order, typename Scalar>
+void density_dt_rhs(
+  const CVFEMOperators<poly_order, Scalar>& ops,
+  const nodal_scalar_view<poly_order, Scalar>& metric,
+  double gamma_div_dt[3],
+  const nodal_scalar_view<poly_order, Scalar>& rhom1,
+  const nodal_scalar_view<poly_order, Scalar>& rhop0,
+  const nodal_scalar_view<poly_order, Scalar>& rhop1,
+  nodal_scalar_view<poly_order, Scalar>& rhs)
+{
+  constexpr int n1D = poly_order + 1;
+
+  nodal_scalar_workview<poly_order, Scalar> work_drhodt(0);
+  auto& drhodt = work_drhodt.view();
+
+  for (int k = 0; k < n1D; ++k) {
+    for (int j = 0; j < n1D; ++j) {
+      for (int i = 0; i < n1D; ++i) {
+          drhodt(k, j, i) = -(
+                gamma_div_dt[0] * rhop1(k, j, i)
+              + gamma_div_dt[1] * rhop0(k, j, i)
+              + gamma_div_dt[2] * rhom1(k, j, i)
+              ) * metric(k, j, i);
+      }
+    }
+  }
+  ops.volume(drhodt, rhs);
+}
+
 
 }
 }

@@ -35,11 +35,14 @@ add_sources(GlobalSourceList
    TaylorGreenVelocityAuxFunction.C
    TGMMSHOElemKernel.C
    TornadoAuxFunction.C
+   VariableDensityContinuityMMSHOElemKernel.C
    VariableDensityContinuitySrcElemSuppAlg.C
    VariableDensityContinuitySrcNodeSuppAlg.C
+   VariableDensityEnthalpyMMSHOElemKernel.C
    VariableDensityMixFracAuxFunction.C
    VariableDensityMixFracSrcElemSuppAlg.C
    VariableDensityMixFracSrcNodeSuppAlg.C
+   VariableDensityMomentumMMSHOElemKernel.C
    VariableDensityMomentumSrcElemSuppAlg.C
    VariableDensityMomentumSrcNodeSuppAlg.C
    VariableDensityNonIsoContinuitySrcNodeSuppAlg.C

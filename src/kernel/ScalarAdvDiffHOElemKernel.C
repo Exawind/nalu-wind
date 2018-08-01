@@ -105,7 +105,6 @@ ScalarAdvDiffHOElemKernel<AlgTraits>::execute(
   auto scalar = scratchViews.get_scratch_view<nodal_scalar_view>(*scalarQ_);
   nodal_scalar_view v_rhs(rhs.data());
   tensor_assembly::scalar_advdiff_rhs(ops_, mdot, metric, scalar, v_rhs);
-
 }
 
 INSTANTIATE_KERNEL_HOSGL(ScalarAdvDiffHOElemKernel);

@@ -119,7 +119,13 @@
 
 #include <kernel/MomentumMassHOElemKernel.h>
 #include <kernel/MomentumAdvDiffHOElemKernel.h>
+#include <kernel/MomentumBuoyancySrcHOElemKernel.h>
 #include <kernel/PressurePoissonHOElemKernel.h>
+#include <kernel/ContinuityMassHOElemKernel.h>
+
+//mms kernels
+#include <user_functions/TGMMSHOElemKernel.h>
+
 
 // bc kernels
 #include <kernel/ContinuityInflowElemKernel.h>
@@ -159,6 +165,9 @@
 #include <user_functions/VariableDensityMomentumSrcElemSuppAlg.h>
 #include <user_functions/VariableDensityMomentumSrcNodeSuppAlg.h>
 
+#include <user_functions/VariableDensityMomentumMMSHOElemKernel.h>
+#include <user_functions/VariableDensityContinuityMMSHOElemKernel.h>
+
 #include <user_functions/VariableDensityNonIsoContinuitySrcNodeSuppAlg.h>
 #include <user_functions/VariableDensityNonIsoMomentumSrcNodeSuppAlg.h>
 #include <user_functions/BoussinesqNonIsoMomentumSrcNodeSuppAlg.h>
@@ -179,7 +188,6 @@
 
 #include <user_functions/OneTwoTenVelocityAuxFunction.h>
 
-#include <user_functions/TGMMSHOElemKernel.h>
 #include <user_functions/PerturbedShearLayerAuxFunctions.h>
 
 // deprecated
@@ -1291,17 +1299,25 @@ MomentumEquationSystem::register_interior_algorithm(
        dataPreReqsHO, false);
 
     kb.build_sgl_kernel_if_requested<MomentumAdvDiffHOElemKernel>
-      ("experimental_ho_reduced_sens_advection_diffusion",
+      ("experimental_ho_advection_diffusion_reduced_sens",
        realm_.bulk_data(), *realm_.solutionOptions_, velocity_,
        realm_.is_turbulent()? evisc_ : visc_,
        dataPreReqsHO, true);
 
     kb.build_sgl_kernel_if_requested<MomentumMassHOElemKernel>
-      ("experimental_ho_mass",
+      ("experimental_ho_momentum_time_derivative",
         realm_.bulk_data(), *realm_.solutionOptions_,  dataPreReqsHO);
 
     kb.build_sgl_kernel_if_requested<TGMMSHOElemKernel>
       ("experimental_ho_tgmms",
+        realm_.bulk_data(), *realm_.solutionOptions_,  dataPreReqsHO);
+
+    kb.build_sgl_kernel_if_requested<VariableDensityMomentumMMSHOElemKernel>
+      ("experimental_ho_vdmms",
+        realm_.bulk_data(), *realm_.solutionOptions_,  dataPreReqsHO);
+
+    kb.build_sgl_kernel_if_requested<MomentumBuoyancySrcHOElemKernel>
+      ("experimental_ho_buoyancy",
         realm_.bulk_data(), *realm_.solutionOptions_,  dataPreReqsHO);
 
     kb.report();
@@ -1312,7 +1328,7 @@ MomentumEquationSystem::register_interior_algorithm(
   // include Nodal Mass algorithms
   std::vector<std::string> checkAlgNames = {"momentum_time_derivative",
                                             "lumped_momentum_time_derivative",
-                                            "experimental_ho_mass"};
+                                            "experimental_ho_momentum_time_derivative"};
   bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
   // solver; time contribution (lumped mass matrix)
   if ( !elementMassAlg || nodal_src_is_requested() ) {
@@ -2541,13 +2557,25 @@ ContinuityEquationSystem::register_interior_algorithm(
       ("advection",
         realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs());
 
+      kb.build_sgl_kernel_if_requested<ContinuityMassHOElemKernel>
+      ("experimental_ho_density_time_derivative",
+        realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs_HO());
+
+      kb.build_sgl_kernel_if_requested<ContinuityMassHOElemKernel>
+      ("experimental_ho_density_time_derivative",
+        realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs_HO());
+
       kb.build_sgl_kernel_if_requested<PressurePoissonHOElemKernel>
-      ("experimental_ho_pressure_poisson",
+      ("experimental_ho_advection",
         realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs_HO(), false);
 
       kb.build_sgl_kernel_if_requested<PressurePoissonHOElemKernel>
-      ("experimental_ho_reduced_sens_pressure_poisson",
+      ("experimental_ho_advection_reduced_sens",
         realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs_HO(), true);
+
+      kb.build_sgl_kernel_if_requested<VariableDensityContinuityMMSHOElemKernel>
+        ("experimental_ho_vdmms",
+          realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs_HO());
 
       kb.report();
     }

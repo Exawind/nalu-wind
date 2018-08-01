@@ -2,6 +2,7 @@ add_sources(GlobalSourceList
    ContinuityAdvElemKernel.C
    ContinuityInflowElemKernel.C
    ContinuityMassElemKernel.C
+   ContinuityMassHOElemKernel.C
    ContinuityOpenElemKernel.C
    KernelBuilderLog.C
    MomentumActuatorSrcElemKernel.C
@@ -9,6 +10,7 @@ add_sources(GlobalSourceList
    MomentumAdvDiffHOElemKernel.C
    MomentumBuoyancyBoussinesqSrcElemKernel.C
    MomentumBuoyancySrcElemKernel.C
+   MomentumBuoyancySrcHOElemKernel.C
    MomentumCoriolisSrcElemKernel.C
    MomentumHybridTurbElemKernel.C
    MomentumMassElemKernel.C

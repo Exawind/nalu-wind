@@ -41,25 +41,25 @@ public:
     const double ymod = (do_wrap) ? wrap_value(y, 4 * M_PI) : y;
 
     if (do_wrap) {
-      return (std::tanh(initial_vorticity_thickness * (ymod - 2 * M_PI))
-      - std::tanh(initial_vorticity_thickness * (ymod - 4 * M_PI))
-      - std::tanh(initial_vorticity_thickness * ymod));
+      return (std::tanh(inv_initial_vorticity_thickness * (ymod - 2 * M_PI))
+      - std::tanh(inv_initial_vorticity_thickness * (ymod - 4 * M_PI))
+      - std::tanh(inv_initial_vorticity_thickness * ymod));
     }
-    return std::tanh(initial_vorticity_thickness * ymod);
+    return std::tanh(inv_initial_vorticity_thickness * ymod);
   }
 
   double funvw(double y)
   {
     const double ymod = (do_wrap) ? wrap_value(y + M_PI, 2 * M_PI) : (y + M_PI);
-    return perturb_mag * std::exp(-100/(size_ratio_y*size_ratio_y) * (ymod-M_PI)*(ymod-M_PI));
+    return perturb_mag * std::exp(-100/(size_ratio_x*size_ratio_x) * (ymod-M_PI)*(ymod-M_PI));
   }
 
 
   const double size_ratio_x{4 * M_PI};
   const double size_ratio_y{16/3.0 * M_PI};
   const double size_ratio_z{12 * M_PI};
-  const double perturb_mag{0.2};
-  const double initial_vorticity_thickness{40/size_ratio_x};
+  const double perturb_mag{0.1};
+  const double inv_initial_vorticity_thickness{10/size_ratio_x};
   const bool do_wrap{false};
 };
 

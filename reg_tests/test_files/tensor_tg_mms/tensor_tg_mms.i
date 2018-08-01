@@ -122,8 +122,8 @@ realms:
 
       options:
         - element_source_terms:
-            momentum: [experimental_ho_mass, experimental_ho_advection_diffusion, experimental_ho_tgmms]
-            continuity: [experimental_ho_pressure_poisson]
+            momentum: [experimental_ho_momentum_time_derivative, experimental_ho_advection_diffusion, experimental_ho_tgmms]
+            continuity: [experimental_ho_advection]
 
         - consistent_mass_matrix_png:
             pressure: yes

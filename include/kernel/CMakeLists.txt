@@ -1,6 +1,7 @@
 add_sources(GlobalHeaderList
    ContinuityAdvElemKernel.h
    ContinuityMassElemKernel.h
+   ContinuityMassHOElemKernel.h
    ContinuityOpenElemKernel.h
    Kernel.h
    KernelBuilder.h
@@ -10,6 +11,7 @@ add_sources(GlobalHeaderList
    MomentumAdvDiffHOElemKernel.h
    MomentumBuoyancyBoussinesqSrcElemKernel.h
    MomentumBuoyancySrcElemKernel.h
+   MomentumBuoyancySrcHOElemKernel.h
    MomentumCoriolisSrcElemKernel.h
    MomentumHybridTurbElemKernel.h
    MomentumMassElemKernel.h
