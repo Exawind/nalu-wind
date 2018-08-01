@@ -99,7 +99,7 @@ public:
   SurfaceForceAndMomentAlgorithmDriver *surfaceForceAndMomentAlgDriver_;
 
   bool isInit_;
-     
+
 };
 
 /** Representation of the Momentum conservation equations in 2-D and 3-D

@@ -55,6 +55,9 @@
 #include <kernel/ScalarAdvDiffElemKernel.h>
 #include <kernel/ScalarUpwAdvDiffElemKernel.h>
 
+#include <kernel/ScalarMassHOElemKernel.h>
+#include <kernel/ScalarAdvDiffHOElemKernel.h>
+
 // bc kernels
 #include <kernel/ScalarOpenAdvElemKernel.h>
 
@@ -72,6 +75,7 @@
 #include <user_functions/VariableDensityMixFracSrcNodeSuppAlg.h>
 #include <user_functions/VariableDensityMixFracAuxFunction.h>
 #include <user_functions/RayleighTaylorMixFracAuxFunction.h>
+#include <user_functions/PerturbedShearLayerAuxFunctions.h>
 
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
@@ -394,61 +398,59 @@ MixtureFractionEquationSystem::register_interior_algorithm(
     if ( realm_.realmUsesEdges_ )
       throw std::runtime_error("MixtureFraction::Error can not use element source terms for an edge-based scheme");
     
-    stk::topology partTopo = part->topology();
-    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-    
-    AssembleElemSolverAlgorithm* solverAlg = nullptr;
-    bool solverAlgWasBuilt = false;
-    
-    std::tie(solverAlg, solverAlgWasBuilt) = build_or_add_part_to_solver_alg(*this, *part, solverAlgMap);
-    
-    ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
-    auto& activeKernels = solverAlg->activeKernels_;
+    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_, realm_.using_tensor_product_kernels());
+    auto& dataPreReqs = kb.data_prereqs();
+    auto& dataPreReqsHO = kb.data_prereqs_HO();
 
-    if (solverAlgWasBuilt) {
-      build_topo_kernel_if_requested<ScalarMassElemKernel>
-        (partTopo, *this, activeKernels, "mixture_fraction_time_derivative",
+    kb.build_topo_kernel_if_requested<ScalarMassElemKernel>
+        ( "mixture_fraction_time_derivative",
          realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dataPreReqs, false);
       
-      build_topo_kernel_if_requested<ScalarMassElemKernel>
-        (partTopo, *this, activeKernels, "lumped_mixture_fraction_time_derivative",
+    kb.build_topo_kernel_if_requested<ScalarMassElemKernel>
+        ("lumped_mixture_fraction_time_derivative",
          realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dataPreReqs, true);
       
-      build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
-        (partTopo, *this, activeKernels, "advection_diffusion",
+    kb.build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
+        ("advection_diffusion",
          realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, evisc_, dataPreReqs);
       
-      build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
-        (partTopo, *this, activeKernels, "upw_advection_diffusion",
+    kb.build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
+        ("upw_advection_diffusion",
          realm_.bulk_data(), *realm_.solutionOptions_, this, mixFrac_, dzdx_, evisc_, dataPreReqs);
 
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        (partTopo, *this, activeKernels, "NSO_2ND",
+    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
+        ("NSO_2ND",
          realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, evisc_, 0.0, 0.0, dataPreReqs);
       
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        (partTopo, *this, activeKernels, "NSO_2ND_ALT",
+    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
+        ("NSO_2ND_ALT",
          realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, evisc_, 0.0, 1.0, dataPreReqs);
       
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        (partTopo, *this, activeKernels, "NSO_4TH",
+    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
+        ("NSO_4TH",
          realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, evisc_, 1.0, 0.0, dataPreReqs);
       
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        (partTopo, *this, activeKernels, "NSO_4TH_ALT",
+    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
+        ("NSO_4TH_ALT",
          realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, evisc_, 1.0, 1.0, dataPreReqs);
 
-      build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
-        (partTopo, *this, activeKernels, "NSO_2ND_KE",
+    kb.build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
+        ("NSO_2ND_KE",
          realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, realm_.get_turb_schmidt(mixFrac_->name()), 0.0, dataPreReqs);
       
-      build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
-        (partTopo, *this, activeKernels, "NSO_4TH_KE",
+    kb.build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
+        ("NSO_4TH_KE",
          realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, realm_.get_turb_schmidt(mixFrac_->name()), 1.0, dataPreReqs);
-      
-      report_invalid_supp_alg_names();
-      report_built_supp_alg_names();
-    }
+
+    kb.build_sgl_kernel_if_requested<ScalarMassHOElemKernel>
+        ("experimental_ho_mass",
+         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dataPreReqsHO);
+
+    kb.build_sgl_kernel_if_requested<ScalarAdvDiffHOElemKernel>
+        ("experimental_ho_advection_diffusion",
+         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, evisc_, dataPreReqsHO);
+
+    kb.report();
   }
 
   // effective viscosity alg
@@ -913,6 +915,10 @@ MixtureFractionEquationSystem::register_initial_condition_fcn(
     else if ( fcnName == "RayleighTaylor" ) {
       // create the function
       theAuxFunc = new RayleighTaylorMixFracAuxFunction();      
+    }
+    else if ( fcnName == "PerturbedShearLayer" ) {
+      // create the function
+      theAuxFunc = new PerturbedShearLayerMixFracAuxFunction();
     }
     else {
       throw std::runtime_error("MixtureFractionEquationSystem::register_initial_condition_fcn: VariableDensity only supported");

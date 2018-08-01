@@ -69,6 +69,9 @@
 #include <kernel/ScalarAdvDiffElemKernel.h>
 #include <kernel/ScalarUpwAdvDiffElemKernel.h>
 
+#include <kernel/ScalarMassHOElemKernel.h>
+#include <kernel/ScalarAdvDiffHOElemKernel.h>
+
 // bc kernels
 #include <kernel/ScalarOpenAdvElemKernel.h>
 
@@ -91,6 +94,8 @@
 #include <user_functions/FlowPastCylinderTempAuxFunction.h>
 #include <user_functions/VariableDensityNonIsoTemperatureAuxFunction.h>
 #include <user_functions/VariableDensityNonIsoEnthalpySrcNodeSuppAlg.h>
+#include <user_functions/VariableDensityEnthalpyMMSHOElemKernel.h>
+
 
 #include <user_functions/BoussinesqNonIsoTemperatureAuxFunction.h>
 #include <user_functions/BoussinesqNonIsoEnthalpySrcNodeSuppAlg.h>
@@ -453,61 +458,65 @@ EnthalpyEquationSystem::register_interior_algorithm(
     if ( realm_.realmUsesEdges_ )
       throw std::runtime_error("Enthalpy::Error can not use element source terms for an edge-based scheme");
 
-    stk::topology partTopo = part->topology();
-    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_, realm_.using_tensor_product_kernels());
+    auto& dataPreReqs = kb.data_prereqs();
+    auto& dataPreReqsHO = kb.data_prereqs_HO();
 
-    AssembleElemSolverAlgorithm* solverAlg = nullptr;
-    bool solverAlgWasBuilt = false;
-
-    std::tie(solverAlg, solverAlgWasBuilt) = build_or_add_part_to_solver_alg(*this, *part, solverAlgMap);
-
-    ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
-    auto& activeKernels = solverAlg->activeKernels_;
-
-    if (solverAlgWasBuilt) {
-      build_topo_kernel_if_requested<ScalarMassElemKernel>
-      (partTopo, *this, activeKernels, "enthalpy_time_derivative",
+    kb.build_topo_kernel_if_requested<ScalarMassElemKernel>
+      ("enthalpy_time_derivative",
         realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dataPreReqs, false);
 
-      build_topo_kernel_if_requested<ScalarMassElemKernel>
-      (partTopo, *this, activeKernels, "lumped_enthalpy_time_derivative",
-        realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dataPreReqs, true);
+    kb.build_topo_kernel_if_requested<ScalarMassElemKernel>
+    ("lumped_enthalpy_time_derivative",
+      realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dataPreReqs, true);
 
-      build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
-      (partTopo, *this, activeKernels, "advection_diffusion",
-        realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, evisc_, dataPreReqs);
+    kb.build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
+    ("advection_diffusion",
+      realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, evisc_, dataPreReqs);
 
-      build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
-      (partTopo, *this, activeKernels, "upw_advection_diffusion",
-        realm_.bulk_data(), *realm_.solutionOptions_, this, enthalpy_, dhdx_, evisc_, dataPreReqs);
+    kb.build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
+    ("upw_advection_diffusion",
+      realm_.bulk_data(), *realm_.solutionOptions_, this, enthalpy_, dhdx_, evisc_, dataPreReqs);
 
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-      (partTopo, *this, activeKernels, "NSO_2ND",
-        realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_, evisc_, 0.0, 0.0, dataPreReqs);
+    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
+    ("NSO_2ND",
+      realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_, evisc_, 0.0, 0.0, dataPreReqs);
 
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-      (partTopo, *this, activeKernels, "NSO_2ND_ALT",
-        realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_, evisc_, 0.0, 1.0, dataPreReqs);
+    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
+    ("NSO_2ND_ALT",
+      realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_, evisc_, 0.0, 1.0, dataPreReqs);
 
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-      (partTopo, *this, activeKernels, "NSO_4TH",
-        realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_, evisc_, 1.0, 0.0, dataPreReqs);
+    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
+    ("NSO_4TH",
+      realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_, evisc_, 1.0, 0.0, dataPreReqs);
 
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-      (partTopo, *this, activeKernels, "NSO_4TH_ALT",
-        realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_, evisc_, 1.0, 1.0, dataPreReqs);
+    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
+    ("NSO_4TH_ALT",
+      realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_, evisc_, 1.0, 1.0, dataPreReqs);
 
-      build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
-      (partTopo, *this, activeKernels, "NSO_2ND_KE",
-        realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_, realm_.get_turb_schmidt(enthalpy_->name()), 0.0, dataPreReqs);
+    kb.build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
+    ("NSO_2ND_KE",
+      realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_,
+      realm_.get_turb_schmidt(enthalpy_->name()), 0.0, dataPreReqs);
 
-      build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
-      (partTopo, *this, activeKernels, "NSO_4TH_KE",
-        realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_, realm_.get_turb_schmidt(enthalpy_->name()), 1.0, dataPreReqs);
+    kb.build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
+    ("NSO_4TH_KE",
+      realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dhdx_,
+      realm_.get_turb_schmidt(enthalpy_->name()), 1.0, dataPreReqs);
 
-      report_invalid_supp_alg_names();
-      report_built_supp_alg_names();
-    }
+    kb.build_sgl_kernel_if_requested<ScalarMassHOElemKernel>
+    ("experimental_ho_enthalpy_time_derivative",
+      realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, dataPreReqsHO);
+
+    kb.build_sgl_kernel_if_requested<ScalarAdvDiffHOElemKernel>
+    ("experimental_ho_advection_diffusion",
+      realm_.bulk_data(), *realm_.solutionOptions_, enthalpy_, evisc_, dataPreReqsHO);
+
+    kb.build_sgl_kernel_if_requested<VariableDensityEnthalpyMMSHOElemKernel>
+    ("experimental_ho_vdmms",
+      realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqsHO);
+
+    kb.report();
   }
 
   // time term; nodally lumped
@@ -515,7 +524,8 @@ EnthalpyEquationSystem::register_interior_algorithm(
   // Check if the user has requested CMM or LMM algorithms; if so, do not
   // include Nodal Mass algorithms
   std::vector<std::string> checkAlgNames = {"enthalpy_time_derivative",
-                                            "lumped_enthalpy_time_derivative"};
+                                            "lumped_enthalpy_time_derivative",
+                                            "experimental_ho_enthalpy_time_derivative"};
   bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
   std::map<AlgorithmType, SolverAlgorithm *>::iterator itsm =
     solverAlgDriver_->solverAlgMap_.find(algMass);

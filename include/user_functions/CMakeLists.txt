@@ -12,6 +12,7 @@ add_sources(GlobalHeaderList
    KovasznayVelocityAuxFunction.h
    LinearRampMeshDisplacementAuxFunction.h
    OneTwoTenVelocityAuxFunction.h
+   PerturbedShearLayerAuxFunctions.h
    RayleighTaylorMixFracAuxFunction.h
    SinMeshDisplacementAuxFunction.h
    SinProfileChannelFlowVelocityAuxFunction.h
@@ -28,15 +29,20 @@ add_sources(GlobalHeaderList
    SteadyThermalContact3DSrcNodeSuppAlg.h
    SteadyThermalContactAuxFunction.h
    SteadyThermalContactSrcElemSuppAlg.h
+   SteadyThermalContactSrcHOElemKernel.h
    SteadyThermalContactSrcNodeSuppAlg.h
    TaylorGreenPressureAuxFunction.h
    TaylorGreenVelocityAuxFunction.h
+   TGMMSHOElemKernel.h
    TornadoAuxFunction.h
+   VariableDensityContinuityMMSHOElemKernel.h
    VariableDensityContinuitySrcElemSuppAlg.h
    VariableDensityContinuitySrcNodeSuppAlg.h
+   VariableDensityEnthalpyMMSHOElemKernel.h
    VariableDensityMixFracAuxFunction.h
    VariableDensityMixFracSrcElemSuppAlg.h
    VariableDensityMixFracSrcNodeSuppAlg.h
+   VariableDensityMomentumMMSHOElemKernel.h
    VariableDensityMomentumSrcElemSuppAlg.h
    VariableDensityMomentumSrcNodeSuppAlg.h
    VariableDensityNonIsoContinuitySrcNodeSuppAlg.h

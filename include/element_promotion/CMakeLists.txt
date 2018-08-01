@@ -3,11 +3,11 @@ add_sources(GlobalHeaderList
    ElementDescription.h
    HexNElementDescription.h
    LagrangeBasis.h
+   NodeMapMaker.h
    PromoteElement.h
    PromotedElementIO.h
    PromotedPartHelper.h
    QuadNElementDescription.h
-   QuadratureKernels.h
    QuadratureRule.h
    TensorProductQuadratureRule.h
 )

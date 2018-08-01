@@ -9,6 +9,7 @@
 
 #include <kernel/Kernel.h>
 #include <AssembleElemSolverAlgorithm.h>
+#include <AssembleElemSolverAlgorithmHO.h>
 #include <AssembleFaceElemSolverAlgorithm.h>
 #include <EquationSystem.h>
 #include <AlgTraits.h>
@@ -30,7 +31,6 @@ namespace sierra{
 namespace nalu{
   class Realm;
 
-
   template <template <typename> class T, int order, typename... Args>
   Kernel* build_ho_kernel(int dimension, Args&&... args)
   {
@@ -42,54 +42,267 @@ namespace nalu{
   }
 
   template <template <typename> class T, typename... Args>
-  Kernel* build_fem_kernel(stk::topology topo, Args&&... args)
+  Kernel* build_sgl_kernel(int dimension, stk::topology topo, Args&&... args)
   {
-    ThrowRequireMsg(topo == stk::topology::HEXAHEDRON_8, "FEM kernels only implemented for Hex8 topology");
-    return new T<AlgTraitsHex8>(std::forward<Args>(args)...);
+    const int poly_order = poly_order_from_topology(dimension, topo);
+    switch (poly_order) {
+      case 2: return new T<AlgTraitsHex<2>>(std::forward<Args>(args)...);
+      case 3: return new T<AlgTraitsHex<3>>(std::forward<Args>(args)...);
+      case 4: return new T<AlgTraitsHex<4>>(std::forward<Args>(args)...);
+      case USER_POLY_ORDER: return new T<AlgTraitsHex<USER_POLY_ORDER>>(std::forward<Args>(args)...);
+      default:
+        ThrowRequireMsg(false,
+          "Polynomial order" + std::to_string(poly_order) + "is not supported by default.  "
+          "Specify USER_POLY_ORDER and recompile to run.");
+        return nullptr;
+    }
   }
 
   template <template <typename> class T, typename... Args>
-  Kernel* build_topo_kernel(int dimension, stk::topology topo, Args&&... args)
+  bool build_sgl_kernel_if_requested(
+    stk::topology topo,
+    EquationSystem& eqSys,
+    std::vector<Kernel*>& kernelVec,
+    std::string name,
+    Args&&... args)
   {
-    if (!topo.is_super_topology()) {
-      switch(topo.value()) {
-        case stk::topology::HEX_8:
-          return new T<AlgTraitsHex8>(std::forward<Args>(args)...);
-        case stk::topology::HEX_27:
-          return new T<AlgTraitsHex27>(std::forward<Args>(args)...);
-        case stk::topology::TET_4:
-          return new T<AlgTraitsTet4>(std::forward<Args>(args)...);
-        case stk::topology::PYRAMID_5:
-          return new T<AlgTraitsPyr5>(std::forward<Args>(args)...);
-        case stk::topology::WEDGE_6:
-          return new T<AlgTraitsWed6>(std::forward<Args>(args)...);
-        case stk::topology::QUAD_4_2D:
-          return new T<AlgTraitsQuad4_2D>(std::forward<Args>(args)...);
-        case stk::topology::QUAD_9_2D:
-          return new T<AlgTraitsQuad9_2D>(std::forward<Args>(args)...);
-        case stk::topology::TRI_3_2D:
-          return new T<AlgTraitsTri3_2D>(std::forward<Args>(args)...);
-        default:
-          return nullptr;
-      }
+    const int dim = eqSys.realm_.spatialDimension_;
+    bool isCreated = false;
+    KernelBuilderLog::self().add_valid_name(eqSys.eqnTypeName_,  name);
+    if (eqSys.supp_alg_is_requested(name)) {
+      Kernel* compKernel = build_sgl_kernel<T>(dim, topo, std::forward<Args>(args)...);
+      ThrowRequire(compKernel != nullptr);
+      KernelBuilderLog::self().add_built_name(eqSys.eqnTypeName_,  name);
+      kernelVec.push_back(compKernel);
+      isCreated = true;
+    }
+    return isCreated;
+  }
+
+  inline std::pair<AssembleElemSolverAlgorithm*, bool>
+  build_or_add_part_to_solver_alg(
+    EquationSystem& eqSys,
+    stk::mesh::Part& part,
+    std::map<std::string, SolverAlgorithm*>& solverAlgs)
+  {
+    const stk::topology topo = part.topology();
+    const std::string algName = eqSys.name_ + "_AssembleElemSolverAlg_" + topo.name();
+
+    bool isNotNGP = !(topo == stk::topology::HEXAHEDRON_8 ||
+                      topo == stk::topology::HEXAHEDRON_27 ||
+                      topo == stk::topology::QUADRILATERAL_4_2D ||
+                      topo == stk::topology::TRIANGLE_3_2D ||
+                      topo == stk::topology::WEDGE_6 ||
+                      topo == stk::topology::TETRAHEDRON_4 ||
+                      topo == stk::topology::PYRAMID_5);
+
+    auto itc = solverAlgs.find(algName);
+    bool createNewAlg = itc == solverAlgs.end();
+    if (createNewAlg) {
+      auto* theSolverAlg = new AssembleElemSolverAlgorithm(eqSys.realm_, &part, &eqSys, stk::topology::ELEMENT_RANK, topo.num_nodes(), isNotNGP);
+      ThrowRequire(theSolverAlg != nullptr);
+
+      NaluEnv::self().naluOutputP0() << "Created the following interior elem alg: " << algName << std::endl;
+      solverAlgs.insert({algName, theSolverAlg});
     }
     else {
-      int poly_order = poly_order_from_super_topology(dimension, topo);
-      switch (poly_order) {
-        case 2: return build_ho_kernel<T, 2>(dimension, std::forward<Args>(args)...);
-        case 3: return build_ho_kernel<T, 3>(dimension, std::forward<Args>(args)...);
-        case 4: return build_ho_kernel<T, 4>(dimension, std::forward<Args>(args)...);
-        case USER_POLY_ORDER: return build_ho_kernel<T, USER_POLY_ORDER>(dimension, std::forward<Args>(args)...);
-        default:
-          ThrowRequireMsg(false,
-            "Polynomial order" + std::to_string(poly_order) + "is not supported by default.  "
-            "Specify USER_POLY_ORDER and recompile to run.");
-          return nullptr;
+      auto& partVec = itc->second->partVec_;
+      if (std::find(partVec.begin(), partVec.end(), &part) == partVec.end()) {
+        partVec.push_back(&part);
       }
     }
+
+    auto* theSolverAlg = dynamic_cast<AssembleElemSolverAlgorithm*>(solverAlgs.at(algName));
+    ThrowRequire(theSolverAlg != nullptr);
+
+    return {theSolverAlg, createNewAlg};
+  }
+
+  inline std::pair<AssembleElemSolverAlgorithmHO*, bool>
+  build_or_add_part_to_solver_alg_HO(
+    EquationSystem& eqSys,
+    stk::mesh::Part& part,
+    std::map<std::string, SolverAlgorithm*>& solverAlgs)
+  {
+    const stk::topology topo = part.topology();
+    const std::string algName = "AssembleElemSolverAlgHO_" + topo.name();
+
+
+    auto itc = solverAlgs.find(algName);
+    bool createNewAlg = itc == solverAlgs.end();
+    if (createNewAlg) {
+      auto* theSolverAlg = new AssembleElemSolverAlgorithmHO(eqSys.realm_, &part, &eqSys, stk::topology::ELEMENT_RANK, topo.num_nodes());
+      ThrowRequire(theSolverAlg != nullptr);
+
+      NaluEnv::self().naluOutputP0() << "Created the following alg: " << algName << std::endl;
+      solverAlgs.insert({algName, theSolverAlg});
+    }
+    else {
+      auto& partVec = itc->second->partVec_;
+      if (std::find(partVec.begin(), partVec.end(), &part) == partVec.end()) {
+        partVec.push_back(&part);
+      }
+    }
+
+    auto* theSolverAlg = dynamic_cast<AssembleElemSolverAlgorithmHO*>(solverAlgs.at(algName));
+    ThrowRequire(theSolverAlg != nullptr);
+
+    return {theSolverAlg, createNewAlg};
   }
 
   template <template <typename> class T, typename... Args>
+   Kernel* build_fem_kernel(stk::topology topo, Args&&... args)
+   {
+     ThrowRequireMsg(topo == stk::topology::HEXAHEDRON_8, "FEM kernels only implemented for Hex8 topology");
+     return new T<AlgTraitsHex8>(std::forward<Args>(args)...);
+   }
+
+   template <template <typename> class T, typename... Args>
+   Kernel* build_topo_kernel(int dimension, stk::topology topo, Args&&... args)
+   {
+     if (!topo.is_super_topology()) {
+       switch(topo.value()) {
+         case stk::topology::HEX_8:
+           return new T<AlgTraitsHex8>(std::forward<Args>(args)...);
+         case stk::topology::HEX_27:
+           return new T<AlgTraitsHex27>(std::forward<Args>(args)...);
+         case stk::topology::TET_4:
+           return new T<AlgTraitsTet4>(std::forward<Args>(args)...);
+         case stk::topology::PYRAMID_5:
+           return new T<AlgTraitsPyr5>(std::forward<Args>(args)...);
+         case stk::topology::WEDGE_6:
+           return new T<AlgTraitsWed6>(std::forward<Args>(args)...);
+         case stk::topology::QUAD_4_2D:
+           return new T<AlgTraitsQuad4_2D>(std::forward<Args>(args)...);
+         case stk::topology::QUAD_9_2D:
+           return new T<AlgTraitsQuad9_2D>(std::forward<Args>(args)...);
+         case stk::topology::TRI_3_2D:
+           return new T<AlgTraitsTri3_2D>(std::forward<Args>(args)...);
+         default:
+           return nullptr;
+       }
+     }
+     else {
+       int poly_order = poly_order_from_topology(dimension, topo);
+       switch (poly_order) {
+         case 2: return build_ho_kernel<T, 2>(dimension, std::forward<Args>(args)...);
+         case 3: return build_ho_kernel<T, 3>(dimension, std::forward<Args>(args)...);
+         case 4: return build_ho_kernel<T, 4>(dimension, std::forward<Args>(args)...);
+         case USER_POLY_ORDER: return build_ho_kernel<T, USER_POLY_ORDER>(dimension, std::forward<Args>(args)...);
+         default:
+           ThrowRequireMsg(false,
+             "Polynomial order" + std::to_string(poly_order) + "is not supported by default.  "
+             "Specify USER_POLY_ORDER and recompile to run.");
+           return nullptr;
+       }
+     }
+   }
+
+  class KernelBuilder
+  {
+  public:
+    KernelBuilder(EquationSystem& eqSys, stk::mesh::Part& part, std::map<std::string, SolverAlgorithm*>& solverAlgs, bool is_ho = false)
+    : eqSys_(eqSys), part_(part)
+    {
+      if (is_ho) {
+        std::tie(solverAlgHO_, solverAlgWasBuiltHO_) = build_or_add_part_to_solver_alg_HO(eqSys, part, solverAlgs);
+      }
+      else {
+        std::tie(solverAlg_, solverAlgWasBuilt_) = build_or_add_part_to_solver_alg(eqSys, part, solverAlgs);
+      }
+    }
+
+    void report()
+    {
+      if (solverAlgWasBuilt_ || solverAlgWasBuiltHO_) {
+        eqSys_.report_built_supp_alg_names();
+        eqSys_.report_invalid_supp_alg_names();
+      }
+    }
+
+    ElemDataRequests& data_prereqs() { return solverAlg_->dataNeededByKernels_; }
+    ElemDataRequests& data_prereqs_HO() { return solverAlgHO_->dataNeededByKernels_; }
+
+    template <template <typename> class T, typename... Args>
+    bool build_topo_kernel_if_requested(std::string name, Args&&... args)
+    {
+      if (solverAlgWasBuilt_) {
+        const int dim = eqSys_.realm_.spatialDimension_;
+        bool isCreated = false;
+        KernelBuilderLog::self().add_valid_name(eqSys_.eqnTypeName_,  name);
+        if (eqSys_.supp_alg_is_requested(name)) {
+          Kernel* compKernel = build_topo_kernel<T>(dim, part_.topology(), std::forward<Args>(args)...);
+          ThrowRequire(compKernel != nullptr);
+          KernelBuilderLog::self().add_built_name(eqSys_.eqnTypeName_,  name);
+          solverAlg_->activeKernels_.push_back(compKernel);
+          isCreated = true;
+        }
+        return isCreated;
+      }
+      return false;
+    }
+
+    template <template <typename> class T, typename... Args>
+    bool build_fem_kernel_if_requested(std::string name, Args&&... args)
+    {
+      if (solverAlgWasBuilt_) {
+        bool isCreated = false;
+        KernelBuilderLog::self().add_valid_name(eqSys_.eqnTypeName_,  name);
+        if (eqSys_.supp_alg_is_requested(name)) {
+          Kernel* compKernel = build_fem_kernel<T>(part_.topology(), std::forward<Args>(args)...);
+          ThrowRequire(compKernel != nullptr);
+          KernelBuilderLog::self().add_built_name(eqSys_.eqnTypeName_,  name);
+          solverAlg_->activeKernels_.push_back(compKernel);
+          isCreated = true;
+        }
+        return isCreated;
+      }
+      return false;
+    }
+
+    template <template <typename> class T, typename... Args>
+    bool build_sgl_kernel_if_requested(std::string name, Args&&... args)
+    {
+      if (solverAlgWasBuiltHO_) {
+        const int dim = eqSys_.realm_.spatialDimension_;
+        bool isCreated = false;
+        KernelBuilderLog::self().add_valid_name(eqSys_.eqnTypeName_,  name);
+        if (eqSys_.supp_alg_is_requested(name)) {
+          Kernel* compKernel = build_sgl_kernel<T>(dim, part_.topology(), std::forward<Args>(args)...);
+          ThrowRequire(compKernel != nullptr);
+          KernelBuilderLog::self().add_built_name(eqSys_.eqnTypeName_,  name);
+          solverAlgHO_->activeKernels_.push_back(compKernel);
+          isCreated = true;
+        }
+        return isCreated;
+      }
+      return false;
+    }
+
+    template <template <typename> class T, typename... Args>
+    void build_sgl_kernel_automatic(std::string name, Args&&... args)
+    {
+      if (solverAlgWasBuiltHO_) {
+        const int dim = eqSys_.realm_.spatialDimension_;
+        KernelBuilderLog::self().add_valid_name(eqSys_.eqnTypeName_,  name);
+        Kernel* compKernel = build_sgl_kernel<T>(dim, part_.topology(), std::forward<Args>(args)...);
+        ThrowRequire(compKernel != nullptr);
+        KernelBuilderLog::self().add_built_name(eqSys_.eqnTypeName_,  name);
+        solverAlgHO_->activeKernels_.push_back(compKernel);
+      }
+    }
+
+  private:
+    EquationSystem& eqSys_;
+    stk::mesh::Part& part_;
+    AssembleElemSolverAlgorithm* solverAlg_{nullptr};
+    bool solverAlgWasBuilt_{false};
+
+    AssembleElemSolverAlgorithmHO* solverAlgHO_{nullptr};
+    bool solverAlgWasBuiltHO_{false};
+  };
+
+   template <template <typename> class T, typename... Args>
   Kernel* build_face_elem_topo_kernel(int dimension,
                                       stk::topology faceTopo, stk::topology elemTopo,
                                       Args&&... args)
@@ -159,7 +372,7 @@ namespace nalu{
       }
     }
     else {
-      int poly_order = poly_order_from_super_topology(dimension, topo);
+      int poly_order = poly_order_from_topology(dimension, topo);
       throw std::runtime_error("PMR exposed surface bc does not support promoted element type: " + std::to_string(poly_order));
     }
   }
@@ -245,45 +458,6 @@ namespace nalu{
     KernelBuilderLog::self().add_built_name(eqSys.eqnTypeName_, name);
     kernelVec.push_back(compKernel);  
     return true;
-  }
-
-  inline std::pair<AssembleElemSolverAlgorithm*, bool>
-  build_or_add_part_to_solver_alg(
-    EquationSystem& eqSys,
-    stk::mesh::Part& part,
-    std::map<std::string, SolverAlgorithm*>& solverAlgs)
-  {
-    const stk::topology topo = part.topology();
-    const std::string algName = eqSys.name_ + "_AssembleElemSolverAlg_" + topo.name();
-
-    bool isNotNGP = !(topo == stk::topology::HEXAHEDRON_8 ||
-                      topo == stk::topology::HEXAHEDRON_27 ||
-                      topo == stk::topology::QUADRILATERAL_4_2D ||
-                      topo == stk::topology::TRIANGLE_3_2D ||
-                      topo == stk::topology::WEDGE_6 ||
-                      topo == stk::topology::TETRAHEDRON_4 ||
-                      topo == stk::topology::PYRAMID_5);
-
-    auto itc = solverAlgs.find(algName);
-    bool createNewAlg = itc == solverAlgs.end();
-    if (createNewAlg) {
-      auto* theSolverAlg = new AssembleElemSolverAlgorithm(eqSys.realm_, &part, &eqSys, stk::topology::ELEMENT_RANK, topo.num_nodes(), isNotNGP);
-      ThrowRequire(theSolverAlg != nullptr);
-
-      NaluEnv::self().naluOutputP0() << "Created the following interior elem alg: " << algName << std::endl;
-      solverAlgs.insert({algName, theSolverAlg});
-    }
-    else {
-      auto& partVec = itc->second->partVec_;
-      if (std::find(partVec.begin(), partVec.end(), &part) == partVec.end()) {
-        partVec.push_back(&part);
-      }
-    }
-
-    auto* theSolverAlg = dynamic_cast<AssembleElemSolverAlgorithm*>(solverAlgs.at(algName));
-    ThrowRequire(theSolverAlg != nullptr);
-
-    return {theSolverAlg, createNewAlg};
   }
 
   inline std::pair<AssembleFaceElemSolverAlgorithm*, bool>

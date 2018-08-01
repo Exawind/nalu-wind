@@ -98,7 +98,8 @@ SolutionOptions::SolutionOptions()
     mdotAlgOpenIpCount_(0),
     mdotAlgOpenPost_(0.0),
     explicitlyZeroOpenPressureGradient_(false),
-    quadType_("GaussLegendre")
+    useConsoldiatedPngSolverAlg_(false),
+    newHO_(false)
 {
   // nothing to do
 }
@@ -158,6 +159,9 @@ SolutionOptions::load(const YAML::Node & y_node)
     // check for consolidated face-elem bc alg
     get_if_present(y_solution_options, "use_consolidated_face_elem_bc_algorithm", useConsolidatedBcSolverAlg_, useConsolidatedBcSolverAlg_);
 
+    // use a consolidated alg for the consistent mass PNG
+    get_if_present(y_solution_options, "use_consolidated_png", useConsoldiatedPngSolverAlg_);
+
     // eigenvalue purturbation; over all dofs...
     get_if_present(y_solution_options, "eigenvalue_perturbation", eigenvaluePerturb_);
     get_if_present(y_solution_options, "eigenvalue_perturbation_delta", eigenvaluePerturbDelta_);
@@ -165,7 +169,7 @@ SolutionOptions::load(const YAML::Node & y_node)
     get_if_present(y_solution_options, "eigenvalue_perturbation_turbulent_ke", eigenvaluePerturbTurbKe_);
     
     // quadrature type for high order
-    get_if_present(y_solution_options, "high_order_quadrature_type", quadType_);
+    get_if_present(y_solution_options, "tensor_product_cvfem", newHO_);
 
     // extract turbulence model; would be nice if we could parse an enum..
     std::string specifiedTurbModel;

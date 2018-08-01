@@ -11,7 +11,6 @@
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
-#include <element_promotion/QuadratureKernels.h>
 #include <nalu_make_unique.h>
 
 // stk_mesh/base/fem
@@ -40,8 +39,7 @@ SteadyThermalContactSrcElemSuppAlg::SteadyThermalContactSrcElemSuppAlg(
     k_(1.0),
     pi_(std::acos(-1.0)),
     useShifted_(false),
-    nDim_(realm_.spatialDimension_),
-    useSGL_(false)
+    nDim_(realm_.spatialDimension_)
 {
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -49,11 +47,6 @@ SteadyThermalContactSrcElemSuppAlg::SteadyThermalContactSrcElemSuppAlg(
  
   // scratch vecs
   scvCoords_.resize(nDim_);
-
-  if (realm_.using_SGL_quadrature()) {
-    quadOp_ = make_unique<SGLQuadratureOps>(*realm_.desc_);
-    useSGL_ = true;
-  }
 }
 
 //--------------------------------------------------------------------------
@@ -69,10 +62,6 @@ SteadyThermalContactSrcElemSuppAlg::elem_resize(
   ws_shape_function_.resize(numScvIp*nodesPerElement);
   ws_coordinates_.resize(nDim_*nodesPerElement);
   ws_scv_volume_.resize(numScvIp);
-  ws_nodalSrc_.resize(nodesPerElement);
-  ws_source_integrand_.resize(numScvIp);
-  ws_source_integrated_.resize(numScvIp);
-
 
   // compute shape function
   if ( useShifted_ )
@@ -128,51 +117,28 @@ SteadyThermalContactSrcElemSuppAlg::elem_execute(
   double scv_error = 0.0;
   meSCV->determinant(1, &ws_coordinates_[0], &ws_scv_volume_[0], &scv_error);
 
-  // choose a form...
-  if ( !useSGL_ ) {
-    // interpolate to ips and evaluate source
-    for ( int ip = 0; ip < numScvIp; ++ip ) {
-      
-      // nearest node to ip
-      const int nearestNode = ipNodeMap[ip];
-      
-      // zero out
-      for ( int j =0; j < nDim_; ++j )
-        scvCoords_[j] = 0.0;
-      
-      const int offSet = ip*nodesPerElement;
-      for ( int ic = 0; ic < nodesPerElement; ++ic ) {
-        const double r = ws_shape_function_[offSet+ic];
-        for ( int j = 0; j < nDim_; ++j )
-          scvCoords_[j] += r*ws_coordinates_[ic*nDim_+j];
-      }
-      const double x = scvCoords_[0];
-      const double y = scvCoords_[1];
-      rhs[nearestNode] += k_/4.0*(2.0*a_*pi_)*(2.0*a_*pi_)*(cos(2.0*a_*pi_*x) + cos(2.0*a_*pi_*y))*ws_scv_volume_[ip];
+
+  // interpolate to ips and evaluate source
+  for ( int ip = 0; ip < numScvIp; ++ip ) {
+
+    // nearest node to ip
+    const int nearestNode = ipNodeMap[ip];
+
+    // zero out
+    for ( int j =0; j < nDim_; ++j )
+      scvCoords_[j] = 0.0;
+
+    const int offSet = ip*nodesPerElement;
+    for ( int ic = 0; ic < nodesPerElement; ++ic ) {
+      const double r = ws_shape_function_[offSet+ic];
+      for ( int j = 0; j < nDim_; ++j )
+        scvCoords_[j] += r*ws_coordinates_[ic*nDim_+j];
     }
+    const double x = scvCoords_[0];
+    const double y = scvCoords_[1];
+    rhs[nearestNode] += k_/4.0*(2.0*a_*pi_)*(2.0*a_*pi_)*(cos(2.0*a_*pi_*x) + cos(2.0*a_*pi_*y))*ws_scv_volume_[ip];
   }
-  else {
-    for ( int ip = 0; ip < numScvIp; ++ip ) {
-      for ( int j =0; j < nDim_; ++j )
-        scvCoords_[j] = 0.0;
 
-      const int offSet = ip*nodesPerElement;
-      for ( int ic = 0; ic < nodesPerElement; ++ic ) {
-        const double r = ws_shape_function_[offSet+ic];
-        for ( int j = 0; j < nDim_; ++j )
-          scvCoords_[j] += r*ws_coordinates_[ic*nDim_+j];
-      }
-      const double x = scvCoords_[0];
-      const double y = scvCoords_[1];
-      ws_source_integrand_[ip] = k_/4.0*(2.0*a_*pi_)*(2.0*a_*pi_)*(cos(2.0*a_*pi_*x) + cos(2.0*a_*pi_*y))*ws_scv_volume_[ip];
-    }
-
-    quadOp_->volume_2D(ws_source_integrand_.data(), ws_source_integrated_.data());
-
-    for (int ni = 0; ni < nodesPerElement; ++ni) {
-      rhs[ipNodeMap[ni]] += ws_source_integrated_[ni];
-    }
-  }
 }
 
 } // namespace nalu

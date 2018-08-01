@@ -599,12 +599,11 @@ class Realm {
   void setup_element_promotion(); // create super parts
   void promote_mesh(); // create new super element / sides on parts
   void create_promoted_output_mesh(); // method to create output of linear subelements
-  bool using_SGL_quadrature() const { return get_quad_type() == "SGL"; };
+  bool using_tensor_product_kernels() const;
   bool high_order_active() const { return doPromotion_; };
 
   std::string physics_part_name(std::string) const;
   std::vector<std::string> physics_part_names(std::vector<std::string>) const;
-  std::string get_quad_type() const;
 
   // check for mesh changing
   bool mesh_changed() const;
