@@ -31,9 +31,6 @@
 // user functions
 #include <user_functions/SteadyThermalContactAuxFunction.h>
 
-// stk_util
-#include <stk_util/parallel/Parallel.hpp>
-
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
@@ -47,11 +44,14 @@
 
 // stk_io
 #include <stk_io/IossBridge.hpp>
-
 #include <stk_topology/topology.hpp>
 
 // stk_util
+#include <stk_util/parallel/Parallel.hpp>
 #include <stk_util/parallel/ParallelReduce.hpp>
+
+// overset
+#include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
 namespace sierra{
 namespace nalu{
@@ -67,8 +67,8 @@ namespace nalu{
 ProjectedNodalGradientEquationSystem::ProjectedNodalGradientEquationSystem(
  EquationSystems& eqSystems,
  const EquationType eqType,
- const std::string dofName, 
- const std::string deltaName, 
+ const std::string dofName,
+ const std::string deltaName,
  const std::string independentDofName,
  const std::string eqSysName,
  const bool managesSolve)
@@ -103,7 +103,7 @@ ProjectedNodalGradientEquationSystem::~ProjectedNodalGradientEquationSystem()
 //-------- set_data_map ----------------------------------------------------
 //--------------------------------------------------------------------------
 void
-ProjectedNodalGradientEquationSystem::set_data_map( 
+ProjectedNodalGradientEquationSystem::set_data_map(
   BoundaryConditionType BC, std::string name)
 {
   dataMap_[BC] = name;
@@ -113,7 +113,7 @@ ProjectedNodalGradientEquationSystem::set_data_map(
 //-------- get_name_given_bc -----------------------------------------------
 //--------------------------------------------------------------------------
 std::string
-ProjectedNodalGradientEquationSystem::get_name_given_bc( 
+ProjectedNodalGradientEquationSystem::get_name_given_bc(
   BoundaryConditionType BC)
 {
   std::map<BoundaryConditionType, std::string>::iterator it;
@@ -307,6 +307,25 @@ ProjectedNodalGradientEquationSystem::register_non_conformal_bc(
 }
 
 //--------------------------------------------------------------------------
+//-------- register_overset_bc ---------------------------------------------
+//--------------------------------------------------------------------------
+void
+ProjectedNodalGradientEquationSystem::register_overset_bc()
+{
+  create_constraint_algorithm(dqdx_);
+
+  int nDim = realm_.meta_data().spatial_dimension();
+
+  // Perform fringe updates before all equation system solves
+  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
+
+  equationSystems_.preIterAlgDriver_.push_back(theAlg);
+
+  theAlg->fields_.push_back(
+    std::unique_ptr<OversetFieldData>(new OversetFieldData(dqdx_,1,nDim)));
+}
+
+//--------------------------------------------------------------------------
 //-------- initialize ------------------------------------------------------
 //--------------------------------------------------------------------------
 void
@@ -367,17 +386,17 @@ ProjectedNodalGradientEquationSystem::solve_and_update_external()
 
     // projected nodal gradient, load_complete and solve
     assemble_and_solve(qTmp_);
-    
+
     // update
     double timeA = NaluEnv::self().nalu_time();
     field_axpby(
       realm_.meta_data(),
       realm_.bulk_data(),
       1.0, *qTmp_,
-      1.0, *dqdx_, 
+      1.0, *dqdx_,
       realm_.get_activate_aura());
     double timeB = NaluEnv::self().nalu_time();
-    timerAssemble_ += (timeB-timeA);   
+    timerAssemble_ += (timeB-timeA);
   }
 }
 
