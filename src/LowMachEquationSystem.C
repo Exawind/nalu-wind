@@ -32,6 +32,7 @@
 #include <AssembleNodalGradEdgeAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
 #include <AssembleNodalGradBoundaryAlgorithm.h>
+#include <AssembleNodalGradPOpenBoundaryAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AssembleNodalGradUAlgorithmDriver.h>
 #include <AssembleNodalGradUEdgeAlgorithm.h>
@@ -2816,16 +2817,13 @@ ContinuityEquationSystem::register_open_bc(
     stk::mesh::put_field(*pressureBC, *part );
   }
 
-  VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
-
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
     std::map<AlgorithmType, Algorithm *>::iterator it
       = assembleNodalGradPAlgDriver_->algMap_.find(algType);
     if ( it == assembleNodalGradPAlgDriver_->algMap_.end() ) {
       Algorithm *theAlg 
-        = new AssembleNodalGradBoundaryAlgorithm(realm_, part, pressureBC == NULL ? pressure_ : pressureBC,
-                                                  &dpdxNone, edgeNodalGradient_);
+        = new AssembleNodalGradPOpenBoundaryAlgorithm(realm_, part, edgeNodalGradient_);
       assembleNodalGradPAlgDriver_->algMap_[algType] = theAlg;
     }
     else {

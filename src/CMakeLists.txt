@@ -28,6 +28,7 @@ add_sources(GlobalSourceList
    AssembleMomentumNonConformalSolverAlgorithm.C
    AssembleNodalGradAlgorithmDriver.C
    AssembleNodalGradBoundaryAlgorithm.C
+   AssembleNodalGradPOpenBoundaryAlgorithm.C
    AssembleNodalGradEdgeAlgorithm.C
    AssembleNodalGradElemAlgorithm.C
    AssembleNodalGradNonConformalAlgorithm.C

@@ -3157,19 +3157,6 @@ Realm::register_open_bc(
   stk::mesh::put_field(*exposedAreaVec_, *part, nDim*numScsIp );
 
 
-  if (solutionOptions_->explicitlyZeroOpenPressureGradient_) {
-    const double zero = 0;
-    VectorFieldType& averageNormal =
-        metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "average_open_normal");
-    stk::mesh::put_field(averageNormal, *part, nDim, &zero);
-
-    const int zeroInt = 0 ;
-    ScalarIntFieldType& faceConnectionCount =
-        metaData_->declare_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "open_face_connection_count");
-    stk::mesh::put_field(faceConnectionCount, *part, &zeroInt);
-  }
-
-
   //====================================================
   // Register wall algorithms
   //====================================================

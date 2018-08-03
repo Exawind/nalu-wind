@@ -31,6 +31,7 @@ add_sources(GlobalHeaderList
    AssembleMomentumNonConformalSolverAlgorithm.h
    AssembleNodalGradAlgorithmDriver.h
    AssembleNodalGradBoundaryAlgorithm.h
+   AssembleNodalGradPOpenBoundaryAlgorithm.h
    AssembleNodalGradEdgeAlgorithm.h
    AssembleNodalGradElemAlgorithm.h
    AssembleNodalGradNonConformalAlgorithm.h
