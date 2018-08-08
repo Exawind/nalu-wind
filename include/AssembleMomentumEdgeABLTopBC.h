@@ -11,6 +11,8 @@
 
 #include<SolverAlgorithm.h>
 #include<FieldTypeDef.h>
+#include<complex.h> // Must proceed fftw3.h in order to get native c complex
+#include<fftw3.h>
 
 namespace stk {
 namespace mesh {
@@ -34,13 +36,30 @@ public:
   virtual ~AssembleMomentumEdgeABLTopBC() {}
   virtual void initialize_connectivity();
   virtual void execute();
+  virtual void potentialBCPeriodicPeriodic(
+    double *wSamp_,
+    fftw_complex *uCoef_,
+    fftw_complex *vCoef_,
+    fftw_complex *wCoef_,
+    double *uBC_,
+    double *vBC_,
+    double *wBC_,
+    double xL,
+    double yL,
+    double deltaZ, 
+    int nx,
+    int ny );
 
   VectorFieldType *velocity_;
   VectorFieldType *bcVelocity_;
   ScalarFieldType *density_;
   GenericFieldType *exposedAreaVec_;
   int imax_, jmax_, kmax_;
-  std::vector<double> sampleVel_;
+  double *wSamp_, *uBC_, *vBC_, *wBC_;
+  fftw_complex *uCoef_, *vCoef_, *wCoef_;
+//  std::vector<fftw_complex> uCoef_, vCoef_, wCoef_;
+//  fftw_complex uCoef_, wCoef_;
+  int counter;
 };
 
 } // namespace nalu
