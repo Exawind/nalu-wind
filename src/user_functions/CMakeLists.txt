@@ -12,6 +12,7 @@ add_sources(GlobalSourceList
    KovasznayVelocityAuxFunction.C
    LinearRampMeshDisplacementAuxFunction.C
    OneTwoTenVelocityAuxFunction.C
+   PerturbedShearLayerAuxFunctions.C
    RayleighTaylorMixFracAuxFunction.C
    SinMeshDisplacementAuxFunction.C
    SinProfileChannelFlowVelocityAuxFunction.C
@@ -24,6 +25,7 @@ add_sources(GlobalSourceList
    SteadyThermal3dContactAuxFunction.C
    SteadyThermal3dContactDtDxAuxFunction.C
    SteadyThermal3dContactSrcElemKernel.C
+   SteadyThermalContactSrcHOElemKernel.C
    SteadyThermal3dContactSrcElemSuppAlgDep.C
    SteadyThermalContact3DSrcNodeSuppAlg.C
    SteadyThermalContactAuxFunction.C
@@ -31,12 +33,16 @@ add_sources(GlobalSourceList
    SteadyThermalContactSrcNodeSuppAlg.C
    TaylorGreenPressureAuxFunction.C
    TaylorGreenVelocityAuxFunction.C
+   TGMMSHOElemKernel.C
    TornadoAuxFunction.C
+   VariableDensityContinuityMMSHOElemKernel.C
    VariableDensityContinuitySrcElemSuppAlg.C
    VariableDensityContinuitySrcNodeSuppAlg.C
+   VariableDensityEnthalpyMMSHOElemKernel.C
    VariableDensityMixFracAuxFunction.C
    VariableDensityMixFracSrcElemSuppAlg.C
    VariableDensityMixFracSrcNodeSuppAlg.C
+   VariableDensityMomentumMMSHOElemKernel.C
    VariableDensityMomentumSrcElemSuppAlg.C
    VariableDensityMomentumSrcNodeSuppAlg.C
    VariableDensityNonIsoContinuitySrcNodeSuppAlg.C

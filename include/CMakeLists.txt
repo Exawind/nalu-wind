@@ -14,6 +14,7 @@ add_sources(GlobalHeaderList
    AssembleContinuityNonConformalSolverAlgorithm.h
    AssembleCourantReynoldsElemAlgorithm.h
    AssembleElemSolverAlgorithm.h
+   AssembleElemSolverAlgorithmHO.h
    AssembleFaceElemSolverAlgorithm.h
    AssembleHeatCondIrradWallSolverAlgorithm.h
    AssembleHeatCondWallSolverAlgorithm.h
@@ -89,6 +90,7 @@ add_sources(GlobalHeaderList
    CopyAndInterleave.h
    CopyFieldAlgorithm.h
    CoriolisSrc.h
+   CVFEMTypeDefs.h
    DataProbePostProcessing.h
    DgInfo.h
    DirichletBC.h
@@ -96,6 +98,7 @@ add_sources(GlobalHeaderList
    EffectiveSSTDiffFluxCoeffAlgorithm.h
    EigenDecomposition.h
    ElemDataRequests.h
+   ElemDataRequestsNGP.h
    EnthalpyABLSrcNodeSuppAlg.h
    EnthalpyEffectiveDiffFluxCoeffAlgorithm.h
    EnthalpyEquationSystem.h
@@ -167,6 +170,7 @@ add_sources(GlobalHeaderList
    ScalarMassBackwardEulerNodeSuppAlg.h
    ScalarMassElemSuppAlgDep.h
    ScratchViews.h
+   ScratchViewsHO.h
    SharedMemData.h
    ShearStressTransportEquationSystem.h
    SimdInterface.h

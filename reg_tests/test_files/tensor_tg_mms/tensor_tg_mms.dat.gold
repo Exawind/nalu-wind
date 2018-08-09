@@ -1,0 +1,5 @@
+Nalu Norm Post Processing.......
+Field        Step        Time  Node Count         Loo          L1          L2
+    velocity[0]          25         0.5       53557  0.00473167  0.00030208 0.000464652
+    velocity[1]          25         0.5       53557  0.00851563  0.00047993  0.00078709
+    velocity[2]          25         0.5       53557  0.00588642 0.000302961 0.000464262

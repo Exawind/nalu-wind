@@ -299,6 +299,9 @@ Realm::~Realm()
   if ( NULL != turbulenceAveragingPostProcessing_ )
     delete turbulenceAveragingPostProcessing_;
 
+  if ( NULL != dataProbePostProcessing_ )
+    delete dataProbePostProcessing_;
+
   if ( NULL != actuator_ )
     delete actuator_;
 
@@ -5059,15 +5062,6 @@ void Realm::balance_nodes()
 }
 
 //--------------------------------------------------------------------------
-//-------- get_quad_type() -------------------------------------------------
-//--------------------------------------------------------------------------
-std::string Realm::get_quad_type() const
-{
-  ThrowRequire(solutionOptions_ != nullptr);
-  return solutionOptions_->quadType_;
-}
-
-//--------------------------------------------------------------------------
 //-------- mesh_changed() --------------------------------------------------
 //--------------------------------------------------------------------------
 bool
@@ -5075,6 +5069,12 @@ bool
 {
   // for now, adaptivity only; load-balance in the future?
   return solutionOptions_->activateAdaptivity_;
+}
+
+bool
+Realm::using_tensor_product_kernels() const
+{
+  return solutionOptions_->newHO_;
 }
 
 } // namespace nalu

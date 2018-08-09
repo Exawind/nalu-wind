@@ -16,7 +16,6 @@
 #include <stk_mesh/base/Entity.hpp>
 
 #include <memory>
-#include <element_promotion/QuadratureKernels.h>
 
 namespace sierra{
 namespace nalu{
@@ -45,7 +44,7 @@ public:
     stk::mesh::Entity element,
     MasterElement *meSCS,
     MasterElement *meSCV);
-  
+
   const stk::mesh::BulkData *bulkData_;
 
   VectorFieldType *coordinates_;
@@ -55,18 +54,12 @@ public:
   const double pi_;
   const bool useShifted_;
   const int nDim_;
-  bool useSGL_;
 
   // scratch space
   std::vector<double> scvCoords_;
   std::vector<double> ws_shape_function_;
   std::vector<double> ws_coordinates_;
   std::vector<double> ws_scv_volume_;
-  std::vector<double> ws_nodalSrc_;
-  std::vector<double> ws_source_integrand_;
-  std::vector<double> ws_source_integrated_;
-
-  std::unique_ptr<SGLQuadratureOps> quadOp_;
 };
 
 } // namespace nalu

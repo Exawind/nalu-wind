@@ -16,7 +16,6 @@
 
 #include <Kokkos_DefaultNode.hpp>
 #include <Tpetra_Vector.hpp>
-#include <Tpetra_DefaultPlatform.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 #include <Teuchos_GlobalMPISession.hpp>
 #include <Teuchos_oblackholestream.hpp>
@@ -28,7 +27,6 @@
 typedef double                                                        Scalar;
 typedef long                                                          GlobalOrdinal;
 typedef int                                                           LocalOrdinal;
-typedef Tpetra::DefaultPlatform::DefaultPlatformType                  Platform;
 typedef Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type           Node;
 typedef Teuchos::ScalarTraits<Scalar> STS;
 

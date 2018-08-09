@@ -25,11 +25,11 @@
 #include <SolutionOptions.h>
 #include <SolverAlgorithmDriver.h>
 
+#include <kernel/KernelBuilder.h>
+#include <kernel/ProjectedNodalGradientHOElemKernel.h>
+
 // user functions
 #include <user_functions/SteadyThermalContactAuxFunction.h>
-
-// stk_util
-#include <stk_util/parallel/Parallel.hpp>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -44,11 +44,14 @@
 
 // stk_io
 #include <stk_io/IossBridge.hpp>
-
 #include <stk_topology/topology.hpp>
 
 // stk_util
+#include <stk_util/parallel/Parallel.hpp>
 #include <stk_util/parallel/ParallelReduce.hpp>
+
+// overset
+#include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
 namespace sierra{
 namespace nalu{
@@ -64,8 +67,8 @@ namespace nalu{
 ProjectedNodalGradientEquationSystem::ProjectedNodalGradientEquationSystem(
  EquationSystems& eqSystems,
  const EquationType eqType,
- const std::string dofName, 
- const std::string deltaName, 
+ const std::string dofName,
+ const std::string deltaName,
  const std::string independentDofName,
  const std::string eqSysName,
  const bool managesSolve)
@@ -100,7 +103,7 @@ ProjectedNodalGradientEquationSystem::~ProjectedNodalGradientEquationSystem()
 //-------- set_data_map ----------------------------------------------------
 //--------------------------------------------------------------------------
 void
-ProjectedNodalGradientEquationSystem::set_data_map( 
+ProjectedNodalGradientEquationSystem::set_data_map(
   BoundaryConditionType BC, std::string name)
 {
   dataMap_[BC] = name;
@@ -110,7 +113,7 @@ ProjectedNodalGradientEquationSystem::set_data_map(
 //-------- get_name_given_bc -----------------------------------------------
 //--------------------------------------------------------------------------
 std::string
-ProjectedNodalGradientEquationSystem::get_name_given_bc( 
+ProjectedNodalGradientEquationSystem::get_name_given_bc(
   BoundaryConditionType BC)
 {
   std::map<BoundaryConditionType, std::string>::iterator it;
@@ -151,15 +154,25 @@ ProjectedNodalGradientEquationSystem::register_interior_algorithm(
   const AlgorithmType algType = INTERIOR;
 
   // solver
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator its
+  if (!realm_.solutionOptions_->useConsoldiatedPngSolverAlg_) {
+    std::map<AlgorithmType, SolverAlgorithm *>::iterator its
     = solverAlgDriver_->solverAlgMap_.find(algType);
-  if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
-    AssemblePNGElemSolverAlgorithm *theAlg
+    if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
+      AssemblePNGElemSolverAlgorithm *theAlg
       = new AssemblePNGElemSolverAlgorithm(realm_, part, this, independentDofName_, dofName_);
-    solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+    }
+    else {
+      its->second->partVec_.push_back(part);
+    }
   }
   else {
-    its->second->partVec_.push_back(part);
+    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_, true);
+
+    kb.build_sgl_kernel_automatic<ProjectedNodalGradientHOElemKernel>(
+      dofName_ + "_png",
+      realm_.bulk_data(), *realm_.solutionOptions_, independentDofName_, dofName_, kb.data_prereqs_HO()
+    );
   }
 }
 
@@ -294,6 +307,25 @@ ProjectedNodalGradientEquationSystem::register_non_conformal_bc(
 }
 
 //--------------------------------------------------------------------------
+//-------- register_overset_bc ---------------------------------------------
+//--------------------------------------------------------------------------
+void
+ProjectedNodalGradientEquationSystem::register_overset_bc()
+{
+  create_constraint_algorithm(dqdx_);
+
+  int nDim = realm_.meta_data().spatial_dimension();
+
+  // Perform fringe updates before all equation system solves
+  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
+
+  equationSystems_.preIterAlgDriver_.push_back(theAlg);
+
+  theAlg->fields_.push_back(
+    std::unique_ptr<OversetFieldData>(new OversetFieldData(dqdx_,1,nDim)));
+}
+
+//--------------------------------------------------------------------------
 //-------- initialize ------------------------------------------------------
 //--------------------------------------------------------------------------
 void
@@ -354,17 +386,17 @@ ProjectedNodalGradientEquationSystem::solve_and_update_external()
 
     // projected nodal gradient, load_complete and solve
     assemble_and_solve(qTmp_);
-    
+
     // update
     double timeA = NaluEnv::self().nalu_time();
     field_axpby(
       realm_.meta_data(),
       realm_.bulk_data(),
       1.0, *qTmp_,
-      1.0, *dqdx_, 
+      1.0, *dqdx_,
       realm_.get_activate_aura());
     double timeB = NaluEnv::self().nalu_time();
-    timerAssemble_ += (timeB-timeA);   
+    timerAssemble_ += (timeB-timeA);
   }
 }
 

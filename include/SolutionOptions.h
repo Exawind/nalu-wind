@@ -161,6 +161,9 @@ public:
   double mdotAlgOpenPost_;
   bool explicitlyZeroOpenPressureGradient_;
 
+  // option for consistent mass png
+  bool useConsoldiatedPngSolverAlg_;
+
   // turbulence model coeffs
   std::map<TurbulenceModelConstant, double> turbModelConstantMap_;
   
@@ -216,7 +219,7 @@ public:
 
   std::string name_;
 
-  std::string quadType_;
+  bool newHO_;
 
 };
 

@@ -31,6 +31,14 @@
 namespace sierra {
 namespace nalu {
 
+#ifdef KOKKOS_HAVE_CUDA
+   typedef Kokkos::CudaSpace    MemSpace;
+#elif defined(KOKKOS_HAVE_OPENMP)
+   typedef Kokkos::OpenMP       MemSpace;
+#else
+   typedef Kokkos::HostSpace    MemSpace;
+#endif
+
 using HostSpace = Kokkos::DefaultHostExecutionSpace;
 using DeviceSpace = Kokkos::DefaultExecutionSpace;
 
@@ -80,6 +88,18 @@ template<typename T>
 SharedMemView<T***> get_shmem_view_3D(const TeamHandleType& team, size_t len1, size_t len2, size_t len3)
 {
   return Kokkos::subview(SharedMemView<T****>(team.team_shmem(), team.team_size(), len1, len2, len3), team.team_rank(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
+}
+
+template<typename T>
+SharedMemView<T***> get_shmem_view_4D(const TeamHandleType& team, size_t len1, size_t len2, size_t len3, size_t len4)
+{
+  return Kokkos::subview(SharedMemView<T*****>(team.team_shmem(), team.team_size(), len1, len2, len3, len4), team.team_rank(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
+}
+
+template<typename T>
+SharedMemView<T***> get_shmem_view_5D(const TeamHandleType& team, size_t len1, size_t len2, size_t len3, size_t len4, size_t len5)
+{
+  return Kokkos::subview(SharedMemView<T******>(team.team_shmem(), team.team_size(), len1, len2, len3, len4, len5), team.team_rank(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
 }
 
 template<typename SizeType, class Function>

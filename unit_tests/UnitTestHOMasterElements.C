@@ -16,7 +16,6 @@
 #include <element_promotion/QuadratureRule.h>
 #include <element_promotion/LagrangeBasis.h>
 #include <element_promotion/TensorProductQuadratureRule.h>
-#include <element_promotion/QuadratureKernels.h>
 
 #include "UnitTestUtils.h"
 
@@ -502,154 +501,6 @@ check_volume_quadrature_hex(int polyOrder, double tol)
     EXPECT_NEAR(approxInt[j], exactInt[j], tol);
   }
 }
-//--------------------------------------------------------------------------
-void
-check_volume_quadrature_quad_SGL(int polyOrder, double tol)
-{
-  // create a (-1,1) x (-1,1) element filled with polynomial values
-  // and integrate the polynomial over the dual nodal volumes
-  std::mt19937 rng;
-  rng.seed(0);
-  std::uniform_real_distribution<double> coeff(-10.0, 10.0);
-
-  auto elemDesc = sierra::nalu::ElementDescription::create(2, polyOrder);
-  auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("SGL", elemDesc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderQuad2DSCV(*elemDesc, basis, quad);
-
-  const auto& scsEndLoc = quad.scs_end_loc();
-  std::vector<double> approxInt(elemDesc->nodesPerElement);
-  std::vector<double> coeffsX(elemDesc->polyOrder+1);
-  std::vector<double> coeffsY(elemDesc->polyOrder+1);
-  std::vector<double> exactInt(elemDesc->nodesPerElement);
-  std::vector<double> nodalValues(elemDesc->nodesPerElement);
-  std::vector<double> nodalValuesTensor(elemDesc->nodesPerElement);
-  std::vector<double> approxIntTensor(elemDesc->nodesPerElement, 0.0);
-
-  auto quadOp = sierra::nalu::SGLQuadratureOps(*elemDesc);
-  int nodes1D = elemDesc->nodes1D;
-
-  std::vector<double> temp(elemDesc->nodesPerElement,0.0);
-
-  // get a random polyOrder-degree polynomial
-  for (int k = 0; k < elemDesc->polyOrder+1; ++k) {
-    coeffsX[k] = coeff(rng);
-    coeffsY[k] = coeff(rng);
-  }
-
-  // exact solution
-  for (int i = 0; i < elemDesc->nodes1D; ++i) {
-    for (int j = 0; j < elemDesc->nodes1D; ++j) {
-      nodalValues[elemDesc->node_map(i, j)] =
-            poly_val(coeffsX, elemDesc->nodeLocs1D[i])
-          * poly_val(coeffsY, elemDesc->nodeLocs1D[j]);
-
-      exactInt[elemDesc->node_map(i, j)] =
-            poly_int(coeffsX, scsEndLoc[i], scsEndLoc[i + 1])
-          * poly_int(coeffsY, scsEndLoc[j], scsEndLoc[j + 1]);
-    }
-  }
-
-  approxIntTensor.assign(nodes1D*nodes1D,0.0);
-
-  for (int i = 0; i < elemDesc->nodes1D; ++i) {
-    for (int j = 0; j < elemDesc->nodes1D; ++j) {
-      // this algorithm requires the nodes to be ordered like a tensor
-      nodalValuesTensor[i+nodes1D*j] =  nodalValues[elemDesc->node_map(i, j)];
-
-      //multiply by det(J)_ij here if not a square domain
-    }
-  }
-
-  quadOp.volume_2D(nodalValuesTensor.data(),approxIntTensor.data());
-
-  // convert back to tensor-product form
-  for (int i = 0; i < elemDesc->nodes1D; ++i) {
-    for (int j = 0; j < elemDesc->nodes1D; ++j) {
-      approxInt[elemDesc->node_map(i,j)] = approxIntTensor[i+nodes1D*j];
-    }
-  }
-
-  for (unsigned j = 0; j < exactInt.size(); ++j) {
-    EXPECT_NEAR(approxInt[j], exactInt[j], tol);
-  }
-}
-//--------------------------------------------------------------------------
-void
-check_volume_quadrature_hex_SGL(int polyOrder, double tol)
-{
-  // create a (-1,1) x (-1,1) element filled with polynomial values
-  // and integrate the polynomial over the dual nodal volumes
-
-  std::mt19937 rng;
-  rng.seed(0);
-  std::uniform_real_distribution<double> coeff(-10.0, 10.0);
-
-  auto elemDesc = sierra::nalu::ElementDescription::create(3, polyOrder);
-  auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("SGL", elemDesc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderHexSCV(*elemDesc, basis, quad);
-
-  const auto& scsEndLoc = quad.scs_end_loc();
-  std::vector<double> approxInt(elemDesc->nodesPerElement);
-  std::vector<double> coeffsX(elemDesc->polyOrder+1);
-  std::vector<double> coeffsY(elemDesc->polyOrder+1);
-  std::vector<double> coeffsZ(elemDesc->polyOrder+1);
-  std::vector<double> exactInt(elemDesc->nodesPerElement);
-  std::vector<double> nodalValues(elemDesc->nodesPerElement);
-  std::vector<double> nodalValuesTensor(elemDesc->nodesPerElement);
-  std::vector<double> approxIntTensor(elemDesc->nodesPerElement, 0.0);
-  int nodes1D = elemDesc->nodes1D;
-  int nodes2D = nodes1D*nodes1D;
-
-  auto quadOp = sierra::nalu::SGLQuadratureOps(*elemDesc);
-  std::vector<double> temp1(nodes2D, 0.0);
-  std::vector<double> temp2(nodes2D, 0.0);
-
-  // get a random polyOrder-degree polynomial
-  for (int k = 0; k < elemDesc->polyOrder+1; ++k) {
-    coeffsX[k] = coeff(rng);
-    coeffsY[k] = coeff(rng);
-    coeffsZ[k] = coeff(rng);
-  }
-
-  // exact solution
-  for (int i = 0; i < elemDesc->nodes1D; ++i) {
-    for (int j = 0; j < elemDesc->nodes1D; ++j) {
-      for (int k = 0; k < elemDesc->nodes1D; ++k) {
-        nodalValues[elemDesc->node_map(i, j, k)] =
-              poly_val(coeffsX, elemDesc->nodeLocs1D[i])
-            * poly_val(coeffsY, elemDesc->nodeLocs1D[j])
-            * poly_val(coeffsZ, elemDesc->nodeLocs1D[k]);
-
-        exactInt[elemDesc->node_map(i, j, k)] =
-              poly_int(coeffsX, scsEndLoc[i], scsEndLoc[i + 1])
-            * poly_int(coeffsY, scsEndLoc[j], scsEndLoc[j + 1])
-            * poly_int(coeffsZ, scsEndLoc[k], scsEndLoc[k + 1]);
-      }
-    }
-  }
-
-  approxIntTensor.assign(nodes1D * nodes1D * nodes1D, 0.0);
-
-  for (int i = 0; i < elemDesc->nodes1D; ++i) {
-    for (int j = 0; j < elemDesc->nodes1D; ++j) {
-      for (int k = 0; k < elemDesc->nodes1D; ++k) {
-        // this algorithm requires the nodes to be ordered like a tensor
-        nodalValuesTensor[i + nodes1D * (j + nodes1D * k)] =
-            nodalValues[elemDesc->node_map(i, j, k)];
-
-        //multiply by det(J)_ijk here if not a square domain
-      }
-    }
-  }
-
-  quadOp.volume_3D(nodalValues.data(), approxInt.data());
-
-  for (unsigned j = 0; j < exactInt.size(); ++j) {
-    EXPECT_NEAR(approxInt[j], exactInt[j], tol);
-  }
-}
 
 void check_is_in_element_hex(int poly_order, double tol)
 {
@@ -1004,8 +855,6 @@ TEST_IPS(check_derivative_quad, 10, 1.0e-10);
 TEST_IPS(check_derivative_hex, 10, 1.0e-10);
 TEST_POLY_SINGLE(check_volume_quadrature_quad, 1.0e-10);
 TEST_POLY_SINGLE(check_volume_quadrature_hex, 1.0e-10);
-TEST_POLY_SINGLE(check_volume_quadrature_quad_SGL, 1.0e-10);
-TEST_POLY_SINGLE(check_volume_quadrature_hex_SGL, 1.0e-10);
 TEST_POLY_SINGLE(check_is_in_element_quad, 1.0e-10);
 TEST_POLY_SINGLE(check_is_in_element_hex, 1.0e-10);
 TEST_POLY_SINGLE(check_is_not_in_element_quad, 1.0e-10);

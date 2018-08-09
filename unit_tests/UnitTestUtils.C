@@ -127,16 +127,15 @@ void fill_and_promote_hex_mesh(const std::string& meshSpec, stk::mesh::BulkData&
     sierra::nalu::promotion::promote_elements(bulk, *elemDesc, *coords, baseParts, edgePart, facePart);
 }
 
-void dump_mesh(stk::mesh::BulkData& bulk, std::vector<stk::mesh::FieldBase*> fields)
+void dump_mesh(stk::mesh::BulkData& bulk, std::vector<stk::mesh::FieldBase*> fields, std::string name)
 {
   stk::io::StkMeshIoBroker io(bulk.parallel());
   io.set_bulk_data(bulk);
-  auto fileId = io.create_output_mesh("out.e", stk::io::WRITE_RESULTS);
+  auto fileId = io.create_output_mesh(name, stk::io::WRITE_RESULTS);
 
   for (auto* field : fields) {
     io.add_field(fileId, *field);
   }
-
   io.process_output_request(fileId, 0.0);
 }
 
@@ -162,7 +161,7 @@ void dump_promoted_mesh_file(stk::mesh::BulkData& bulk, int polyOrder)
 
 std::ostream& nalu_out()
 {
-  return sierra::nalu::NaluEnv::self().naluOutputP0();
+  return sierra::nalu::NaluEnv::self().naluOutput();
 }
 
 stk::mesh::Entity create_one_element(
@@ -171,10 +170,15 @@ stk::mesh::Entity create_one_element(
   std::vector<std::vector<double>>& nodeLocations)
 {
   // create just one element
+  std::cout << "ONE ELEMENT CREATED" << std::endl;
+  std::cout << "ONE ELEMENT CREATED" << std::endl;
+  std::cout << "ONE ELEMENT CREATED" << std::endl;
+  std::cout << "ONE ELEMENT CREATED" << std::endl;
 
    auto& meta = bulk.mesh_meta_data();
    stk::mesh::Part& block_1 = meta.declare_part_with_topology("block_1", topo);
    stk::io::put_io_part_attribute(block_1);
+
    stk::mesh::PartVector allSurfaces = { &meta.declare_part("all_surfaces", meta.side_rank()) };
    stk::io::put_io_part_attribute(*allSurfaces.front());
 

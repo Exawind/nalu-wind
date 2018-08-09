@@ -11,6 +11,7 @@ add_sources(GlobalSourceList
    AssembleContinuityNonConformalSolverAlgorithm.C
    AssembleCourantReynoldsElemAlgorithm.C
    AssembleElemSolverAlgorithm.C
+   AssembleElemSolverAlgorithmHO.C
    AssembleFaceElemSolverAlgorithm.C
    AssembleHeatCondIrradWallSolverAlgorithm.C
    AssembleHeatCondWallSolverAlgorithm.C

@@ -20,7 +20,7 @@
 namespace sierra {
 namespace nalu {
 
-  int poly_order_from_super_topology(int dimension, stk::topology superTopo);
+  int poly_order_from_topology(int dimension, stk::topology topo);
 
   using ordinal_type = int;
 

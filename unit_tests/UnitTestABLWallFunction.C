@@ -24,7 +24,7 @@ struct HelperObjectsABLWallFrictionVelocity {
   : yamlNode(unit_test_utils::get_default_inputs()),
     realmDefaultNode(unit_test_utils::get_realm_default_node()),
     naluObj(new unit_test_utils::NaluTest(yamlNode)),
-    realm(naluObj->create_realm(realmDefaultNode, "multi_physics")),
+    realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
     ABLWallFrictionAlgorithm(nullptr),
     gravity_(gravity),
     z0_(z0),
@@ -59,7 +59,7 @@ struct HelperObjectsABLWallFunction {
   : yamlNode(unit_test_utils::get_default_inputs()),
     realmDefaultNode(unit_test_utils::get_realm_default_node()),
     naluObj(new unit_test_utils::NaluTest(yamlNode)),
-    realm(naluObj->create_realm(realmDefaultNode, "multi_physics")),
+    realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
     eqSystems(realm),
     eqSystem(eqSystems),
     linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem)),
@@ -82,6 +82,7 @@ struct HelperObjectsABLWallFunction {
   {
     delete elemABLWallFunctionSolverAlg;
     delete edgeABLWallFunctionSolverAlg;
+    delete computeGeomBoundAlg;
     realm.metaData_ = nullptr;
     realm.bulkData_ = nullptr;
 

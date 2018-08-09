@@ -13,6 +13,11 @@ add_sources(GlobalHeaderList
    Quad43DCVFEM.h
    Quad92DCVFEM.h
    TensorOps.h
+   TensorProductCVFEMAdvectionMetric.h
+   TensorProductCVFEMDiffusionMetric.h
+   TensorProductCVFEMOperators.h
+   TensorProductCVFEMVolumeMetric.h
+   TensorProductOperatorsHexInternal.h
    Tet4CVFEM.h
    Tri32DCVFEM.h
    Wed6CVFEM.h
