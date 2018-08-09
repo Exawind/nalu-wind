@@ -254,7 +254,7 @@ AssembleMomentumEdgeABLTopBC::execute()
   bcVelocity_,
   partVec_,
   0,
-  2);
+  3);
 
 }
 

@@ -2085,6 +2085,9 @@ MomentumEquationSystem::register_abltop_bc(
   VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
   GenericFieldType &dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
 
+  // push mesh part
+  notProjectedPart_.push_back(part);
+
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
     std::map<AlgorithmType, Algorithm *>::iterator it
