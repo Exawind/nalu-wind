@@ -1184,7 +1184,6 @@ namespace YAML
     abltopData.ABLTopBC_ = false;
     if ( node["potential_flow_bc"] ) {
       abltopData.ABLTopBC_ = node["potential_flow_bc"].as<bool>();
-      std::cerr << "ABL Top BC " <<  abltopData.ABLTopBC_ << std::endl;
     }
     if (abltopData.ABLTopBC_) {
       abltopData.grid_dims_ = node["grid_dimensions"].as<std::vector<int>>();

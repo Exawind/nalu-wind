@@ -183,7 +183,6 @@ public:
     stk::mesh::Part *part,
     const stk::topology &theTopo,
     const ABLTopBoundaryConditionData &abltopBCData) {
-      std::cerr << eqnTypeName_ << std::endl;
       SymmetryBoundaryConditionData simData(abltopBCData.boundaryConditions_);
       register_symmetry_bc( part, theTopo, simData );
     }

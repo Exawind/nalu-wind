@@ -2070,10 +2070,8 @@ MomentumEquationSystem::register_abltop_bc(
   const stk::topology &partTopo,
   const ABLTopBoundaryConditionData & abltopBCData)
 {
-  std::cerr << "Processing ABL TOP" << std::endl;
   auto userData = abltopBCData.userData_;
   if (!userData.ABLTopBC_) {
-    std::cerr << "Using symmetry top" << std::endl;
     SymmetryBoundaryConditionData symData(abltopBCData.boundaryConditions_);
     register_symmetry_bc(part, partTopo, symData);
     return;
@@ -2103,7 +2101,6 @@ MomentumEquationSystem::register_abltop_bc(
 
   if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_) {
     // solver algs; lhs
-    std::cerr << part->name() << std::endl;
   std::string bcFieldName = realm_.solutionOptions_->activateOpenMdotCorrection_?"velocity_bc" : "cont_velocity_bc";
   VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, bcFieldName));
   stk::mesh::put_field(*theBcField, *part, 3);
@@ -2112,7 +2109,6 @@ MomentumEquationSystem::register_abltop_bc(
   	SolverAlgorithm* theAlg = new AssembleMomentumEdgeABLTopBC(realm_, part, this, 
 		user_data.grid_dims_);
 	solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
-        std::cerr << "Initializing TOP BC" << std::endl;
       }	else {
 	it->second->partVec_.push_back(part);	
       }	

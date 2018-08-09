@@ -188,7 +188,7 @@ AssembleMomentumEdgeABLTopBC::execute()
   AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic( 
     wSamp_, uCoef_, vCoef_, wCoef_, uBC_, vBC_, wBC_, xL, yL, deltaZ, nx, ny );
 
-//  double uInc = 10.0 - uBC_[0];
+//  double uInc = 1.0 - uBC_[0];
   double uInc = 1.0;
   for( int j=0; j<ny; ++j ) {
     for( int i=0; i<nx; ++i ) {
