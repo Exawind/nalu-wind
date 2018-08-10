@@ -47,17 +47,11 @@ AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
   stk::mesh::Part *part,
   EquationSystem *eqSystem, std::vector<int>& grid_dims)
   : SolverAlgorithm(realm, part, eqSystem),
-  imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2])
-//wSamp_(imax_*jmax_), uBC_(imax_*jmax_), uBC_(imax_*jmax_), wBC_(imax_*jmax_),
-//uCoef_(2*(imax_/2+1)*jmax_), vCoef_(2*(imax_/2+1)*jmax_), wCoef_(2*(imax_/2+1)*jmax_)
+  imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2]),
+  wSamp_(imax_*jmax_), uBC_(imax_*jmax_), vBC_(imax_*jmax_), wBC_(imax_*jmax_),
+  uCoef_((imax_/2+1)*jmax_), vCoef_((imax_/2+1)*jmax_), 
+  wCoef_((imax_/2+1)*jmax_)
 {
-  wSamp_ = new double[jmax_*imax_]; 
-  uBC_   = new double[jmax_*imax_];
-  vBC_   = new double[jmax_*imax_];
-  wBC_   = new double[jmax_*imax_];
-  uCoef_ = new fftw_complex[jmax_*(imax_/2+1)];
-  vCoef_ = new fftw_complex[jmax_*(imax_/2+1)];
-  wCoef_ = new fftw_complex[jmax_*(imax_/2+1)];
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
   velocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
@@ -185,8 +179,9 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   // Compute the upper boundary velocity field
 
-  AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic( 
-    wSamp_, uCoef_, vCoef_, wCoef_, uBC_, vBC_, wBC_, xL, yL, deltaZ, nx, ny );
+  AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic( &wSamp_[0],
+    &uCoef_[0], &vCoef_[0], &wCoef_[0], &uBC_[0], &vBC_[0], &wBC_[0],
+    xL, yL, deltaZ, nx, ny );
 
 //  double uInc = 1.0 - uBC_[0];
   double uInc = 1.0;
@@ -230,11 +225,8 @@ AssembleMomentumEdgeABLTopBC::execute()
 
       int ii = iym*nx   + ixm;
       uTop[0] = uFac*uBC_[ii] + (1.0-uFac)*Um1[0];
-//      sTop[0] = uTop[0];
       uTop[1] = wFac*vBC_[ii];
-//      sTop[1] = uTop[1];
       uTop[2] = wFac*wBC_[ii];
-//      sTop[2] = uTop[2];
 
       if( dump ) {
 //        int i1 = iy*imax_ + ix;
@@ -264,9 +256,9 @@ AssembleMomentumEdgeABLTopBC::execute()
 void
 AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic( 
   double *wSamp_,
-  fftw_complex *uCoef_,
-  fftw_complex *vCoef_,
-  fftw_complex *wCoef_,
+  std::complex<double> *uCoef_,
+  std::complex<double> *vCoef_,
+  std::complex<double> *wCoef_,
   double *uBC_,
   double *vBC_,
   double *wBC_,
@@ -276,9 +268,12 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
   int nx,
   int  ny )
 {
-  double pi, waveX, waveY, norm, kx, ky, ky2, kMag, eFac, scale, xFac, yFac,
+  double waveX, waveY, normFac, kx, ky, ky2, kMag, eFac, scale, xFac, yFac,
          zFac;
   int i, i1, ii, j, jw;
+
+  const double pi = std::acos(-1.0);
+  const std::complex<double> iUnit(0.0,1.0);
 
 // Symmetrize wSamp.
 
@@ -294,16 +289,19 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
 
 // Set up for FFT.
 
-  pi = std::acos(-1.0);
   waveX = 2.0*pi/xL;
   waveY = 2.0*pi/yL;
-  norm = 1.0/((double)nx*(double)ny);
+  normFac = 1.0/((double)nx*(double)ny);
 
   unsigned flags=0;
-  fftw_plan plan_wf = fftw_plan_dft_r2c_2d(ny, nx, wSamp_, wCoef_, flags);
-  fftw_plan plan_ub = fftw_plan_dft_c2r_2d(ny, nx, uCoef_, uBC_,   flags);
-  fftw_plan plan_vb = fftw_plan_dft_c2r_2d(ny, nx, vCoef_, vBC_,   flags);
-  fftw_plan plan_wb = fftw_plan_dft_c2r_2d(ny, nx, wCoef_, wBC_,   flags);
+  fftw_plan plan_wf = fftw_plan_dft_r2c_2d(ny, nx,
+    &wSamp_[0], reinterpret_cast<fftw_complex*>(&wCoef_[0]), flags);
+  fftw_plan plan_ub = fftw_plan_dft_c2r_2d(ny, nx,
+    reinterpret_cast<fftw_complex*>(&uCoef_[0]), &uBC_[0],   flags);
+  fftw_plan plan_vb = fftw_plan_dft_c2r_2d(ny, nx,
+    reinterpret_cast<fftw_complex*>(&vCoef_[0]), &vBC_[0],   flags);
+  fftw_plan plan_wb = fftw_plan_dft_c2r_2d(ny, nx,
+    reinterpret_cast<fftw_complex*>(&wCoef_[0]), &wBC_[0],   flags);
 
 // Solve for potential flow at the upper boundary using FFT.
 
@@ -318,21 +316,18 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
     for( i=0; i<=nx/2; ++i ) {
       kx = waveX*(double)i;
       kMag = std::sqrt( kx*kx + ky2 );
-      eFac = std::exp(-kMag*deltaZ)*norm;
+      eFac = std::exp(-kMag*deltaZ)*normFac;
       scale = 1.0/(kMag+1.0e-15);
       xFac = kx*scale*eFac;
       yFac = ky*scale*eFac;
       zFac =          eFac;
-      uCoef_[ii][0] =  xFac*wCoef_[ii][1];
-      uCoef_[ii][1] = -xFac*wCoef_[ii][0];
-      vCoef_[ii][0] =  yFac*wCoef_[ii][1];
-      vCoef_[ii][1] = -yFac*wCoef_[ii][0];
-      wCoef_[ii][0] =  zFac*wCoef_[ii][0];
-      wCoef_[ii][1] =  zFac*wCoef_[ii][1];
+      uCoef_[ii] = -iUnit*xFac*wCoef_[ii];
+      vCoef_[ii] = -iUnit*yFac*wCoef_[ii];
+      wCoef_[ii] =        zFac*wCoef_[ii];
       ii ++;
     }
   }
-  wCoef_[0][0] = 0.0;
+  wCoef_[0] = 0.0;
 
   fftw_execute(plan_ub);
   fftw_execute(plan_vb);

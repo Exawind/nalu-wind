@@ -38,9 +38,9 @@ public:
   virtual void execute();
   virtual void potentialBCPeriodicPeriodic(
     double *wSamp_,
-    fftw_complex *uCoef_,
-    fftw_complex *vCoef_,
-    fftw_complex *wCoef_,
+    std::complex<double> *uCoef_,
+    std::complex<double> *vCoef_,
+    std::complex<double> *wCoef_,
     double *uBC_,
     double *vBC_,
     double *wBC_,
@@ -55,11 +55,8 @@ public:
   ScalarFieldType *density_;
   GenericFieldType *exposedAreaVec_;
   int imax_, jmax_, kmax_;
-  double *wSamp_, *uBC_, *vBC_, *wBC_;
-  fftw_complex *uCoef_, *vCoef_, *wCoef_;
-//  std::vector<fftw_complex> uCoef_, vCoef_, wCoef_;
-//  fftw_complex uCoef_, wCoef_;
-  int counter;
+  std::vector<double> wSamp_, uBC_, vBC_, wBC_;
+  std::vector< std::complex<double> > uCoef_, vCoef_, wCoef_;
 };
 
 } // namespace nalu
