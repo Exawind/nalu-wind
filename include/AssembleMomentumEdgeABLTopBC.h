@@ -47,6 +47,7 @@ public:
     double xL,
     double yL,
     double deltaZ, 
+    double uAvg, 
     int nx,
     int ny );
 

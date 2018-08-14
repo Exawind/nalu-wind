@@ -79,7 +79,7 @@ AssembleMomentumEdgeABLTopBC::execute()
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
-  double x0, y0, z0, x1, y1, z1, xL, yL, deltaZ;
+  double x0, y0, z0, x1, y1, z1, xL, yL, deltaZ, uAvg;
   int nx = imax_ - 1;
   int ny = jmax_ - 1;
 
@@ -124,6 +124,8 @@ AssembleMomentumEdgeABLTopBC::execute()
     uFac = (double)(timeStepCount-2*startupSteps-1)/(double)(startupSteps);
   }
       
+  double sum1 = 0.0;
+
   stk::mesh::BucketVector const& node_buckets =
     realm_.get_buckets( stk::topology::NODE_RANK, s_locally_owned_union );
   for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
@@ -166,7 +168,8 @@ AssembleMomentumEdgeABLTopBC::execute()
         z1 = coordBC[  2];
       }
 
-      if( ix < imax_ && iy < jmax_ ) {
+      if( ix < nx && iy < ny ) {
+        sum1 = sum1 + USamp[0];
         wSamp_[iym*nx+ixm] = USamp[2];
       }
 
@@ -176,21 +179,14 @@ AssembleMomentumEdgeABLTopBC::execute()
   xL = x1 - x0;
   yL = y1 - y0;
   deltaZ  = z1 - z0;
+  uAvg = sum1/((double)nx*(double)ny);
+  uAvg = 1.0;
 
   // Compute the upper boundary velocity field
 
   AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic( &wSamp_[0],
     &uCoef_[0], &vCoef_[0], &wCoef_[0], &uBC_[0], &vBC_[0], &wBC_[0],
-    xL, yL, deltaZ, nx, ny );
-
-//  double uInc = 1.0 - uBC_[0];
-  double uInc = 1.0;
-  for( int j=0; j<ny; ++j ) {
-    for( int i=0; i<nx; ++i ) {
-      int ii = j*nx + i;
-      uBC_[ii] += uInc;
-    }
-  }
+    xL, yL, deltaZ, uAvg, nx, ny );
 
   // Now set the boundary velocity array values
 
@@ -265,6 +261,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
   double xL,
   double yL,
   double deltaZ,
+  double uAvg,
   int nx,
   int  ny )
 {
@@ -294,18 +291,14 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
   normFac = 1.0/((double)nx*(double)ny);
 
   unsigned flags=0;
-  fftw_plan plan_wf = fftw_plan_dft_r2c_2d(ny, nx,
+  fftw_plan plan_f = fftw_plan_dft_r2c_2d(ny, nx,
     &wSamp_[0], reinterpret_cast<fftw_complex*>(&wCoef_[0]), flags);
-  fftw_plan plan_ub = fftw_plan_dft_c2r_2d(ny, nx,
-    reinterpret_cast<fftw_complex*>(&uCoef_[0]), &uBC_[0],   flags);
-  fftw_plan plan_vb = fftw_plan_dft_c2r_2d(ny, nx,
-    reinterpret_cast<fftw_complex*>(&vCoef_[0]), &vBC_[0],   flags);
-  fftw_plan plan_wb = fftw_plan_dft_c2r_2d(ny, nx,
+  fftw_plan plan_b = fftw_plan_dft_c2r_2d(ny, nx,
     reinterpret_cast<fftw_complex*>(&wCoef_[0]), &wBC_[0],   flags);
 
 // Solve for potential flow at the upper boundary using FFT.
 
-  fftw_execute(plan_wf);
+  fftw_execute(plan_f);
 
   ii = 0;
   for( j=0; j<ny; ++j ) {
@@ -328,10 +321,13 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
     }
   }
   wCoef_[0] = 0.0;
+  uCoef_[0] = uAvg;
 
-  fftw_execute(plan_ub);
-  fftw_execute(plan_vb);
-  fftw_execute(plan_wb);
+  fftw_execute(plan_b);
+  fftw_execute_dft_c2r(plan_b,
+    reinterpret_cast<fftw_complex*>(&uCoef_[0]), &uBC_[0]);
+  fftw_execute_dft_c2r(plan_b,
+    reinterpret_cast<fftw_complex*>(&vCoef_[0]), &vBC_[0]);
 
 }
 
