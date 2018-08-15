@@ -80,7 +80,7 @@ AssembleMomentumEdgeABLTopBC::execute()
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
   double x0, y0, z0, x1, y1, z1, xL, yL, deltaZ, uAvg, vAvg;
-  int ix, iy, iz, ixm, iym;
+  int ix, iy, iz, ixm, iym, nxny, iOff, count;
   int nx = imax_ - 1;
   int ny = jmax_ - 1;
   int nz = kmax_ - 1;
@@ -133,8 +133,10 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   double sumU = 0.0;
   double sumV = 0.0;
-  int iOff = (nz-12)*imax_*jmax_;
+  nxny = imax_*jmax_;
+  iOff = (nz-12)*nxny;
 
+  count=0;
   for( iy=0; iy<ny; ++iy ) {
     for( ix=0; ix<nx; ++ix ) {
 
@@ -152,12 +154,14 @@ AssembleMomentumEdgeABLTopBC::execute()
         wSamp_[iy*nx+ix] = USamp[2];
         z0 = coord[2];
 
-//      fprintf( outFile, "%5llu %5u %5i %3i %3i %12.4e\n",IdNodeSamp, nodeSamp, i1, ix, iy, wSamp_[i1] );
+//      fprintf( outFile, "%5llu %5u %5i %3i %3i %12.4e\n",IdNodeSamp, nodeSamp, ii, ix, iy, wSamp_[ii] );
+
+        count ++;
 
       }
 
-//      int i1 = iy*nx+ix;
-//      fprintf( outFile, "%5llu %5u %5i %3i %3i %12.4e\n",IdNodeSamp, nodeSamp, i1, ix, iy, wSamp_[i1] );
+//      int ii = iy*nx+ix;
+//      fprintf( outFile, "%5llu %5u %5i %3i %3i %12.4e\n",IdNodeSamp, nodeSamp, ii, ix, iy, wSamp_[ii] );
 
     }
   }
@@ -173,6 +177,8 @@ AssembleMomentumEdgeABLTopBC::execute()
   wSamp_[nx*ny  ] = sumU/((double)nx*(double)ny);
   wSamp_[nx*ny+1] = sumV/((double)nx*(double)ny);
 
+//printf("%u %i\n",theRank,count);
+
   // Collect the sampling plane data across all processors
 
   MPI_Allreduce(MPI_IN_PLACE, wSamp_.data(), nx*ny+2,
@@ -182,12 +188,14 @@ AssembleMomentumEdgeABLTopBC::execute()
   vAvg = wSamp_[nx*ny+1];
   uAvg = 1.0;
 
+/*
   for( iy=0; iy<ny; ++iy ) {
     for( ix=0; ix<nx; ++ix ) {
-      int i1 = iy*nx + ix;
-      fprintf( outFile, "%5i %3i %3i %12.4e\n",i1, ix, iy, wSamp_[i1] );
+      int ii = iy*nx + ix;
+      fprintf( outFile, "%5i %3i %3i %12.4e\n",ii, ix, iy, wSamp_[ii] );
     }
   }
+*/
 
   // Compute the upper boundary velocity field
 
@@ -197,55 +205,53 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   // Now set the boundary velocity array values
 
-  stk::mesh::BucketVector const& node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_locally_owned_union );
+  iOff = nz*nxny;
 
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-
-    const stk::mesh::Bucket::size_type length   = b.size();
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-      // get node
-      stk::mesh::Entity nodeBC = b[k];
-
-      stk::mesh::EntityId IdNodeBC = bulk_data.identifier(nodeBC);
-      stk::mesh::EntityId IdNodeTmp = IdNodeBC-1;
-      iz = (IdNodeTmp)/(imax_*jmax_);
-      IdNodeTmp %= imax_*jmax_;
-      iy  = (IdNodeTmp/imax_);
-      ix  = IdNodeTmp % imax_;
+  count = 0;
+  for( iy=0; iy<jmax_; ++iy ) {
+    iym = iy % ny;
+    for( ix=0; ix<imax_; ++ix ) {
       ixm = ix % nx;
-      iym = iy % ny;
 
-      stk::mesh::EntityId IdNodem1 = (iz-1)*imax_*jmax_ + iy*imax_ + ix + 1;
-      stk::mesh::Entity nodem1 =
-        bulk_data.get_entity(stk::topology::NODE_RANK,IdNodem1);
+      stk::mesh::EntityId IdNodeBC = iOff + iy*imax_ + ix + 1;
+      stk::mesh::Entity nodeBC =
+        bulk_data.get_entity(stk::topology::NODE_RANK,IdNodeBC);
 
-      double *coord = stk::mesh::field_data(*coordinates, nodeBC);
-      double *uTop  = stk::mesh::field_data(*bcVelocity_, nodeBC);
-      double *sTop  = stk::mesh::field_data(velocityNp1,  nodeBC);
-      double *Um1   = stk::mesh::field_data(velocityNp1,  nodem1);
+      if ( bulk_data.is_valid(nodeBC) ) {
 
-      int ii = iym*nx   + ixm;
-      uTop[0] = uFac*uBC_[ii] + (1.0-uFac)*Um1[0];
-      uTop[1] = wFac*vBC_[ii];
-      uTop[2] = wFac*wBC_[ii];
+        stk::mesh::EntityId IdNodem1 = IdNodeBC - nxny;
+        stk::mesh::Entity nodem1 =
+          bulk_data.get_entity(stk::topology::NODE_RANK,IdNodem1);
 
-/*
-      if( dump ) {
-//        int i1 = iy*imax_ + ix;
-//        fprintf( outFile, "%5i %5i %3i %3i %3i %3i %12.4e %12.4e %12.4e\n",
-//        i1, ii, ix, ixm, iy, iym, wSamp_[ii], uBC_[ii], wBC_[ii] );
-        fprintf( outFile, "%12.4e%12.4e%12.4e%12.4e%12.4e%12.4e\n",
-        coord[0], uTop[0], sTop[0], uTop[2], sTop[2], wSamp_[ii] );
-      }
-*/
+        double *coord = stk::mesh::field_data(*coordinates, nodeBC);
+        double *uTop  = stk::mesh::field_data(*bcVelocity_, nodeBC);
+        double *sTop  = stk::mesh::field_data(velocityNp1,  nodeBC);
+        double *Um1   = stk::mesh::field_data(velocityNp1,  nodem1);
+
+        int ii = iym*nx   + ixm;
+        uTop[0] = uFac*uBC_[ii] + (1.0-uFac)*Um1[0];
+        uTop[1] = wFac*vBC_[ii];
+        uTop[2] = wFac*wBC_[ii];
+//        uTop[0] = Um1[0];
+//        uTop[1] = 0.0;
+//        uTop[2] = wBC_[ii];
+
+        if( dump ) {
+//          int i1 = iy*imax_ + ix;
+//          fprintf( outFile, "%5i %5i %3i %3i %3i %3i %12.4e %12.4e %12.4e\n",
+//          i1, ii, ix, ixm, iy, iym, wSamp_[ii], uBC_[ii], wBC_[ii] );
+          fprintf( outFile, "%12.4e%12.4e%12.4e%12.4e%12.4e%12.4e\n",
+          coord[0], uTop[0], sTop[0], uTop[2], sTop[2], wSamp_[ii] );
+        }
+
+        count ++;
+
+      }  
 
     }
   }
+
+//printf("%u %i\n",theRank,count);
 
   if( dump ) { fclose(outFile); }
 
