@@ -50,7 +50,10 @@ AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
   imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2]),
   wSamp_(imax_*jmax_), uBC_(imax_*jmax_), vBC_(imax_*jmax_), wBC_(imax_*jmax_),
   uCoef_((imax_/2+1)*jmax_), vCoef_((imax_/2+1)*jmax_), 
-  wCoef_((imax_/2+1)*jmax_)
+  wCoef_((imax_/2+1)*jmax_),
+  indexMapSamp_(imax_*jmax_), indexMapBC_(imax_*jmax_),
+  nodeMapSamp_(imax_*jmax_), nodeMapBC_(imax_*jmax_),
+  zSample_(0.85), needToInitialize(true)
 {
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -76,44 +79,29 @@ void
 AssembleMomentumEdgeABLTopBC::execute()
 {
 
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-
-  double x0, y0, z0, x1, y1, z1, xL, yL, deltaZ, uAvg, vAvg;
-  int ix, iy, iz, ixm, iym, nxny, iOff, count;
+  double uAvg, vAvg;
+  int ix, iy, ixm, iym, imaxjmax, iOff;
   int nx = imax_ - 1;
   int ny = jmax_ - 1;
   int nz = kmax_ - 1;
 
-  const int timeStepCount = realm_.get_time_step_count();
-  const unsigned theRank = NaluEnv::self().parallel_rank();
+  // Determine geometrical parameters and generate a list of sample plane
+  // and bc plane nodes that exist on this process.
 
-  int printSkip = 1;
-  bool dump = false;
-  FILE * outFile;
-  if( timeStepCount % printSkip == 0 ) {
-    dump = true;
-    char fileName[12];
-    snprintf(fileName, 12, "%4s%03i%1s%03u",
-      "sol.",timeStepCount/printSkip,".",theRank);
-    outFile = fopen( fileName, "w" );
+  if( needToInitialize ) {
+    initialize( imax_, jmax_, kmax_, 
+                &zSample_, &xL_, &yL_, &deltaZ_, &izSample_,
+                nodeMapSamp_.data(), indexMapSamp_.data(), &nSamp_,
+                nodeMapBC_.data(), indexMapBC_.data(), &nBC_ );
+    needToInitialize = false;
   }
-
-  //space for LHS/RHS; nodesPerFace*nDim*nodesPerFace*nDim and nodesPerFace*nDim
-
-  // deal with state
-  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
-
-  // define some common selectors
-  stk::mesh::Selector s_locally_owned_union = meta_data.locally_owned_part()
-    &stk::mesh::selectUnion(partVec_);
 
   // wFac and uFac are used to blend between a symmetry BC and the potential
   // flow BC near the start of the simulation.  We start with symmetry and
   // gradually switch over to potential flow.  The vertical velocity is
   // switched over first, then the horizontal velocity.
+
+  const int timeStepCount = realm_.get_time_step_count();
 
   int startupSteps = 3;
   double wFac = 1.0;
@@ -128,15 +116,44 @@ AssembleMomentumEdgeABLTopBC::execute()
     uFac = (double)(timeStepCount-2*startupSteps-1)/(double)(startupSteps);
   }
       
-//  memset(wSamp_.data(), -1.0e+12, imax_*jmax_); // This does not work, why?
+// Set up for diagnostic output.
+
+  const unsigned theRank = NaluEnv::self().parallel_rank();
+
+  int printSkip = 10000;
+  bool dump = false;
+  FILE * outFile;
+  if( timeStepCount % printSkip == 0 ) {
+    dump = true;
+    char fileName[12];
+    snprintf(fileName, 12, "%4s%03i%1s%03u",
+      "sol.",timeStepCount/printSkip,".",theRank);
+    outFile = fopen( fileName, "w" );
+  }
+
+//  printf("%3i %12.4e %12.4e %12.4e %4i %4i\n",
+//         theRank,xL_,yL_,deltaZ_,nSamp_,nBC_);
+
+  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
+  stk::mesh::MetaData & meta_data = realm_.meta_data();
+
+  // deal with state
+  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
+
+  // define some common selectors
+  stk::mesh::Selector s_locally_owned_union = meta_data.locally_owned_part()
+    &stk::mesh::selectUnion(partVec_);
+
+//  memset(wSamp_.data(), -1.0e+12, imax_*jmax_*8); // This does not work, why?
   for(int i=0; i<imax_*jmax_; ++i) { wSamp_[i]=-1.0e+12; }
 
   double sumU = 0.0;
   double sumV = 0.0;
-  nxny = imax_*jmax_;
-  iOff = (nz-12)*nxny;
+  imaxjmax = imax_*jmax_;
+  iOff = (nz-12)*imaxjmax;
 
-  count=0;
   for( iy=0; iy<ny; ++iy ) {
     for( ix=0; ix<nx; ++ix ) {
 
@@ -152,32 +169,14 @@ AssembleMomentumEdgeABLTopBC::execute()
         sumU = sumU + USamp[0];
         sumV = sumV + USamp[1];
         wSamp_[iy*nx+ix] = USamp[2];
-        z0 = coord[2];
-
-//      fprintf( outFile, "%5llu %5u %5i %3i %3i %12.4e\n",IdNodeSamp, nodeSamp, ii, ix, iy, wSamp_[ii] );
-
-        count ++;
 
       }
-
-//      int ii = iy*nx+ix;
-//      fprintf( outFile, "%5llu %5u %5i %3i %3i %12.4e\n",IdNodeSamp, nodeSamp, ii, ix, iy, wSamp_[ii] );
 
     }
   }
 
-  x0 = -5.0;
-  x1 =  5.0;
-  y0 = -1.0/24.0;
-  y1 =  1.0/24.0;
-  z1 =  1.0;
-  xL = x1 - x0;
-  yL = y1 - y0;
-  deltaZ  = z1 - z0;
   wSamp_[nx*ny  ] = sumU/((double)nx*(double)ny);
   wSamp_[nx*ny+1] = sumV/((double)nx*(double)ny);
-
-//printf("%u %i\n",theRank,count);
 
   // Collect the sampling plane data across all processors
 
@@ -188,26 +187,16 @@ AssembleMomentumEdgeABLTopBC::execute()
   vAvg = wSamp_[nx*ny+1];
   uAvg = 1.0;
 
-/*
-  for( iy=0; iy<ny; ++iy ) {
-    for( ix=0; ix<nx; ++ix ) {
-      int ii = iy*nx + ix;
-      fprintf( outFile, "%5i %3i %3i %12.4e\n",ii, ix, iy, wSamp_[ii] );
-    }
-  }
-*/
-
   // Compute the upper boundary velocity field
 
   AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic( &wSamp_[0],
     &uCoef_[0], &vCoef_[0], &wCoef_[0], &uBC_[0], &vBC_[0], &wBC_[0],
-    xL, yL, deltaZ, uAvg, nx, ny );
+    xL_, yL_, deltaZ_, uAvg, nx, ny );
 
   // Now set the boundary velocity array values
 
-  iOff = nz*nxny;
+  iOff = nz*imaxjmax;
 
-  count = 0;
   for( iy=0; iy<jmax_; ++iy ) {
     iym = iy % ny;
     for( ix=0; ix<imax_; ++ix ) {
@@ -219,7 +208,7 @@ AssembleMomentumEdgeABLTopBC::execute()
 
       if ( bulk_data.is_valid(nodeBC) ) {
 
-        stk::mesh::EntityId IdNodem1 = IdNodeBC - nxny;
+        stk::mesh::EntityId IdNodem1 = IdNodeBC - imaxjmax;
         stk::mesh::Entity nodem1 =
           bulk_data.get_entity(stk::topology::NODE_RANK,IdNodem1);
 
@@ -232,9 +221,6 @@ AssembleMomentumEdgeABLTopBC::execute()
         uTop[0] = uFac*uBC_[ii] + (1.0-uFac)*Um1[0];
         uTop[1] = wFac*vBC_[ii];
         uTop[2] = wFac*wBC_[ii];
-//        uTop[0] = Um1[0];
-//        uTop[1] = 0.0;
-//        uTop[2] = wBC_[ii];
 
         if( dump ) {
 //          int i1 = iy*imax_ + ix;
@@ -244,14 +230,10 @@ AssembleMomentumEdgeABLTopBC::execute()
           coord[0], uTop[0], sTop[0], uTop[2], sTop[2], wSamp_[ii] );
         }
 
-        count ++;
-
       }  
 
     }
   }
-
-//printf("%u %i\n",theRank,count);
 
   if( dump ) { fclose(outFile); }
 
@@ -265,6 +247,175 @@ AssembleMomentumEdgeABLTopBC::execute()
 }
 
 //--------------------------------------------------------------------------
+//------------------------- initialize -------------------------------------
+//--------------------------------------------------------------------------
+void
+AssembleMomentumEdgeABLTopBC::initialize(
+  int imax_,
+  int jmax_,
+  int kmax_,
+  double *zSample_,
+  double *xL_,
+  double *yL_,
+  double *deltaZ_,
+  int *izSample_,
+  stk::mesh::Entity *nodeMapSamp_,
+  int *indexMapSamp_,
+  int *nSamp_,
+  stk::mesh::Entity *nodeMapBC_,
+  int *indexMapBC_,
+  int *nBC_)
+{
+
+  double z0, z1, zL, zGrid[kmax_], xMin[2], xMax[2];
+  int ix, iy, iz, imaxjmax, nx, ny, nz, iOff, count;
+
+  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
+  stk::mesh::MetaData & meta_data = realm_.meta_data();
+
+  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "coordinates");
+
+  nx = imax_-1;
+  ny = jmax_-1;
+  nz = kmax_-1;
+  imaxjmax = imax_*jmax_;
+
+  // Determine the vertical mesh distribution by sampling at the middle
+  // of the ix=0 face.
+
+  for( iz=0; iz<kmax_; ++iz ) { zGrid[iz] = -1.0e+10; }
+
+  ix=0;  iy=jmax_/2;
+  for( iz=0; iz<kmax_; ++iz ) {
+    stk::mesh::EntityId IdNode = iz*imaxjmax + iy*imax_ + ix + 1;
+    stk::mesh::Entity node =
+      bulk_data.get_entity(stk::topology::NODE_RANK,IdNode);
+    if ( bulk_data.is_valid(node) ) {
+      double *coord = stk::mesh::field_data(*coordinates,node);
+      zGrid[iz] = coord[2];
+    }
+  }
+
+  MPI_Allreduce( MPI_IN_PLACE, zGrid, kmax_, MPI_DOUBLE, MPI_MAX, 
+                 bulk_data.parallel() );
+
+  z0 = zGrid[0];
+  z1 = zGrid[nz];
+  zL = z1 - z0;
+
+  // Set the default zSample_ to 90% of the domain height.
+
+  if( *zSample_ == -999.0 ) {
+    *zSample_ = z0 + 0.90*zL;
+  }
+
+  // Trap bad values for zSample_.
+
+  if( *zSample_ < z0 || *zSample_ > z1 ) {
+    throw std::runtime_error(
+      "AssembleMomentumEdgeABLTopBC: zSample is not contained in the mesh");
+  }
+  if( (*zSample_-z0) > 0.95*zL ) {
+    throw std::runtime_error(
+      "AssembleMomentumEdgeABLTopBC: zSample is too close to the upper boundary");
+  }
+  if( (*zSample_-z0) < 0.5*zL ) {
+    throw std::runtime_error(
+      "AssembleMomentumEdgeABLTopBC: zSample is too far away from the upper boundary");
+  }
+
+  // Determine the grid index for the sampling plane.
+
+  for( iz=0; iz<kmax_; ++iz ) {
+    if( zGrid[iz] <= *zSample_ && zGrid[iz+1] > *zSample_ ) { break; }
+  }
+  if( (*zSample_-zGrid[iz]) > 0.5*(zGrid[iz+1]-zGrid[iz]) ) { iz ++; }
+  *izSample_ = iz;
+  *deltaZ_ = z1 - zGrid[*izSample_];
+
+  // Determine the horizontal extent of the sampling plane by looking 
+  // at its corner points.
+
+  xMin[0] =  1.0e+12;  xMin[1] =  1.0e+12;
+  xMax[0] = -1.0e+12;  xMax[1] = -1.0e+12;
+
+  ix=0;  iy=0;  iz=*izSample_;
+  stk::mesh::EntityId IdNode1 = iz*imaxjmax + iy*imax_ + ix + 1;
+  stk::mesh::Entity node1 =
+    bulk_data.get_entity(stk::topology::NODE_RANK,IdNode1);
+  if ( bulk_data.is_valid(node1) ) {
+    double *coord = stk::mesh::field_data(*coordinates,node1);
+    xMin[0] = coord[0];
+    xMin[1] = coord[1];
+  }
+
+  ix=nx;  iy=ny;  iz=*izSample_;
+  stk::mesh::EntityId IdNode2 = iz*imaxjmax + iy*imax_ + ix + 1;
+  stk::mesh::Entity node2 =
+    bulk_data.get_entity(stk::topology::NODE_RANK,IdNode2);
+  if ( bulk_data.is_valid(node2) ) {
+    double *coord = stk::mesh::field_data(*coordinates,node2);
+    xMax[0] = coord[0];
+    xMax[1] = coord[1];
+  }
+
+  MPI_Allreduce(MPI_IN_PLACE, xMin, 2, MPI_DOUBLE, MPI_MIN, 
+     bulk_data.parallel());
+  MPI_Allreduce(MPI_IN_PLACE, xMax, 2, MPI_DOUBLE, MPI_MAX, 
+     bulk_data.parallel());
+
+  *xL_ = xMax[0] - xMin[0];
+  *yL_ = xMax[1] - xMin[1];
+
+  // Generate a map for the sampling plane points contained on this process.
+
+  iOff = *izSample_*imaxjmax;
+
+  count = 0;
+  for( iy=0; iy<ny; ++iy ) {
+    for( ix=0; ix<nx; ++ix ) {
+
+      stk::mesh::EntityId IdNodeSamp = iOff + iy*imax_ + ix + 1;
+      stk::mesh::Entity nodeSamp =
+        bulk_data.get_entity(stk::topology::NODE_RANK,IdNodeSamp);
+
+      if ( bulk_data.is_valid(nodeSamp) ) {
+        nodeMapSamp_[count] = nodeSamp;
+        indexMapSamp_[count] = iy*nx + ix;
+        count ++;
+      }
+
+    }
+  }
+  *nSamp_ = count;
+
+  // Generate a map for the boundary points contained on this process.
+
+  iOff = nz*imaxjmax;
+
+  count = 0;
+  for( iy=0; iy<jmax_; ++iy ) {
+    for( ix=0; ix<imax_; ++ix ) {
+
+      stk::mesh::EntityId IdNodeBC = iOff + iy*imax_ + ix + 1;
+      stk::mesh::Entity nodeBC =
+        bulk_data.get_entity(stk::topology::NODE_RANK,IdNodeBC);
+
+      if ( bulk_data.is_valid(nodeBC) ) {
+        nodeMapBC_[count] = nodeBC;
+        indexMapBC_[count] = iy*nx + ix;
+        count ++;
+      }
+
+    }
+  }
+  *nBC_ = count;
+
+}
+
+
+//--------------------------------------------------------------------------
 //-------- potentialBCPeriodicPeriodic -------------------------------------
 //--------------------------------------------------------------------------
 void
@@ -276,9 +427,9 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
   double *uBC_,
   double *vBC_,
   double *wBC_,
-  double xL,
-  double yL,
-  double deltaZ,
+  double xL_,
+  double yL_,
+  double deltaZ_,
   double uAvg,
   int nx,
   int  ny )
@@ -304,8 +455,8 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
 
 // Set up for FFT.
 
-  waveX = 2.0*pi/xL;
-  waveY = 2.0*pi/yL;
+  waveX = 2.0*pi/xL_;
+  waveY = 2.0*pi/yL_;
   normFac = 1.0/((double)nx*(double)ny);
 
   unsigned flags=0;
@@ -327,7 +478,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
     for( i=0; i<=nx/2; ++i ) {
       kx = waveX*(double)i;
       kMag = std::sqrt( kx*kx + ky2 );
-      eFac = std::exp(-kMag*deltaZ)*normFac;
+      eFac = std::exp(-kMag*deltaZ_)*normFac;
       scale = 1.0/(kMag+1.0e-15);
       xFac = kx*scale*eFac;
       yFac = ky*scale*eFac;

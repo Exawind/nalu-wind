@@ -36,6 +36,21 @@ public:
   virtual ~AssembleMomentumEdgeABLTopBC() {}
   virtual void initialize_connectivity();
   virtual void execute();
+  virtual void initialize(
+    int imax_,
+    int jmax_,
+    int kmax_,
+    double *zSample_,
+    double *xL_,
+    double *yL_,
+    double *deltaZ_,
+    int *izSample_,
+    stk::mesh::Entity *nodeMapSamp_,
+    int *indexMapSamp_,
+    int *nSamp_,
+    stk::mesh::Entity *nodeMapBC_,
+    int *indexMapBC_,
+    int *nBC_);
   virtual void potentialBCPeriodicPeriodic(
     double *wSamp_,
     std::complex<double> *uCoef_,
@@ -58,6 +73,11 @@ public:
   int imax_, jmax_, kmax_;
   std::vector<double> wSamp_, uBC_, vBC_, wBC_;
   std::vector< std::complex<double> > uCoef_, vCoef_, wCoef_;
+  std::vector<int> indexMapSamp_, indexMapBC_;
+  std::vector<stk::mesh::Entity> nodeMapSamp_, nodeMapBC_;
+  double xL_, yL_, deltaZ_, zSample_;
+  int izSample_, nSamp_, nBC_;
+  bool needToInitialize;
 };
 
 } // namespace nalu
