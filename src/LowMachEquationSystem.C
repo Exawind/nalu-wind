@@ -2109,8 +2109,8 @@ MomentumEquationSystem::register_abltop_bc(
   stk::mesh::put_field(*theBcField, *part, 3);
       auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
       if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
-  	SolverAlgorithm* theAlg = new AssembleMomentumEdgeABLTopBC(realm_, part, this, 
-		user_data.grid_dims_);
+  	SolverAlgorithm* theAlg = new AssembleMomentumEdgeABLTopBC(realm_, 
+          part, this, user_data.grid_dims_);
 	solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
       }	else {
 	it->second->partVec_.push_back(part);	

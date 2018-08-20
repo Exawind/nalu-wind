@@ -40,31 +40,34 @@ public:
     int imax_,
     int jmax_,
     int kmax_,
-    double *zSample_,
+    double zSample_,
     double *xL_,
     double *yL_,
     double *deltaZ_,
-    int *izSample_,
     stk::mesh::Entity *nodeMapSamp_,
-    int *indexMapSamp_,
-    int *nSamp_,
     stk::mesh::Entity *nodeMapBC_,
+    stk::mesh::Entity *nodeMapM1_,
+    int *indexMapSamp_,
     int *indexMapBC_,
+    int *indexMapSampGlobal_,
+    int *sampleDistrib_,
+    int *displ_,
+    int *nSamp_,
     int *nBC_);
   virtual void potentialBCPeriodicPeriodic(
     double *wSamp_,
-    std::complex<double> *uCoef_,
-    std::complex<double> *vCoef_,
-    std::complex<double> *wCoef_,
+    double xL_,
+    double yL_,
+    double deltaZ_,
+    double *uAvg,
+    int imax_,
+    int jmax_,
     double *uBC_,
     double *vBC_,
     double *wBC_,
-    double xL,
-    double yL,
-    double deltaZ, 
-    double uAvg, 
-    int nx,
-    int ny );
+    std::complex<double> *uCoef_,
+    std::complex<double> *vCoef_,
+    std::complex<double> *wCoef_ );
 
   VectorFieldType *velocity_;
   VectorFieldType *bcVelocity_;
@@ -73,11 +76,12 @@ public:
   int imax_, jmax_, kmax_;
   std::vector<double> wSamp_, uBC_, vBC_, wBC_;
   std::vector< std::complex<double> > uCoef_, vCoef_, wCoef_;
-  std::vector<int> indexMapSamp_, indexMapBC_;
-  std::vector<stk::mesh::Entity> nodeMapSamp_, nodeMapBC_;
+  std::vector<stk::mesh::Entity> nodeMapSamp_, nodeMapBC_, nodeMapM1_;
+  std::vector<int> indexMapSamp_, indexMapBC_, indexMapSampGlobal_,
+                   sampleDistrib_, displ_;
   double xL_, yL_, deltaZ_, zSample_;
-  int izSample_, nSamp_, nBC_;
-  bool needToInitialize;
+  int nSamp_, nBC_;
+  bool needToInitialize_;
 };
 
 } // namespace nalu
