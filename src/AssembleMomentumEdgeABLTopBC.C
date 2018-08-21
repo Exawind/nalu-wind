@@ -48,13 +48,9 @@ AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
   EquationSystem *eqSystem, std::vector<int>& grid_dims)
   : SolverAlgorithm(realm, part, eqSystem),
   imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2]),
-  wSamp_(imax_*jmax_), uBC_(imax_*jmax_), vBC_(imax_*jmax_), wBC_(imax_*jmax_),
-  uCoef_((imax_/2+1)*jmax_), vCoef_((imax_/2+1)*jmax_), 
-  wCoef_((imax_/2+1)*jmax_),
   nodeMapSamp_(imax_*jmax_), nodeMapBC_(imax_*jmax_), nodeMapM1_(imax_*jmax_),
-  indexMapSamp_(imax_*jmax_), indexMapBC_(imax_*jmax_),
-  indexMapSampGlobal_(imax_*jmax_), sampleDistrib_(1000), displ_(1000+1),
-  zSample_(0.85), needToInitialize_(true)
+  indexMapSampGlobal_(imax_*jmax_), indexMapBC_(imax_*jmax_),
+  sampleDistrib_(1000), displ_(1000+1), zSample_(0.85), needToInitialize_(true)
 {
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -80,8 +76,8 @@ void
 AssembleMomentumEdgeABLTopBC::execute()
 {
 
-  std::vector<double> work(imax_*jmax_);
-  std::vector<double> UAvg(2,0.0);
+  std::vector<double> wSamp(imax_*jmax_), uBC(imax_*jmax_), vBC(imax_*jmax_),
+                      wBC(imax_*jmax_), work(imax_*jmax_), UAvg(2,0.0);
   int i, ii;
   int nx = imax_ - 1;
   int ny = jmax_ - 1;
@@ -97,9 +93,8 @@ AssembleMomentumEdgeABLTopBC::execute()
     initialize( imax_, jmax_, kmax_, zSample_,
                 &xL_, &yL_, &deltaZ_, 
                 nodeMapSamp_.data(), nodeMapBC_.data(), nodeMapM1_.data(),
-                indexMapSamp_.data(), indexMapBC_.data(), 
-                indexMapSampGlobal_.data(), sampleDistrib_.data(),
-                displ_.data(), &nSamp_, &nBC_ );
+                indexMapSampGlobal_.data(), indexMapBC_.data(), 
+                sampleDistrib_.data(), displ_.data(), &nBC_ );
     needToInitialize_ = false;
   }
 
@@ -161,10 +156,11 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   // Collect the sample plane data that is held on this process.
 
-  for (i=0; i<nSamp_; ++i) {
+  int nSamp = sampleDistrib_[myrank];
+
+  for (i=0; i<nSamp; ++i) {
     double *USamp = stk::mesh::field_data(velocityNp1,nodeMapSamp_[i]);
-//    wSamp_[indexMapSamp_[i]] = USamp[2];
-    wSamp_[i] = USamp[2];
+    wSamp[i] = USamp[2];
     UAvg[0] += USamp[0];
     UAvg[1] += USamp[1];
   }
@@ -174,21 +170,21 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   // Gather the sampling plane data across all processes.
 
-  MPI_Allgatherv(wSamp_.data(), nSamp_, MPI_DOUBLE, work.data(), 
+  MPI_Allgatherv(wSamp.data(), nSamp, MPI_DOUBLE, work.data(), 
                  sampleDistrib_.data(), displ_.data(), MPI_DOUBLE,
                  bulk_data.parallel());
 
   // Reorder the sample plane data.
 
   for (i=0; i<nx*ny; ++i) {
-    wSamp_[indexMapSampGlobal_[i]] = work[i];
+    wSamp[indexMapSampGlobal_[i]] = work[i];
   }
 
 /*
   if (dump) {
     for (i=0; i<nx*ny; ++i) {
       ii = indexMapSampGlobal_[i];
-      fprintf( outFile, "%4i%4i%12.4e\n", i, ii, wSamp_[i]);
+      fprintf( outFile, "%4i%4i%12.4e\n", i, ii, wSamp[i]);
     }
   }
 */
@@ -201,9 +197,8 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   // Compute the upper boundary velocity field
 
-  potentialBCPeriodicPeriodic( &wSamp_[0], xL_, yL_, deltaZ_, &UAvg[0], imax_,
-                               jmax_, &uBC_[0], &vBC_[0], &wBC_[0],
-                               &uCoef_[0], &vCoef_[0], &wCoef_[0] );
+  potentialBCPeriodicPeriodic( &wSamp[0], xL_, yL_, deltaZ_, &UAvg[0], imax_,
+                               jmax_, &uBC[0], &vBC[0], &wBC[0] );
 
   // Set the boundary velocity array values.
 
@@ -213,9 +208,9 @@ AssembleMomentumEdgeABLTopBC::execute()
     double *sTop  = stk::mesh::field_data(velocityNp1,  nodeMapBC_[i]);
     double *Um1   = stk::mesh::field_data(velocityNp1,  nodeMapM1_[i]);
     double *coord = stk::mesh::field_data(*coordinates, nodeMapBC_[i]);
-    uTop[0] = uFac*uBC_[ii] + (1.0-uFac)*Um1[0];
-    uTop[1] = wFac*vBC_[ii];
-    uTop[2] = wFac*wBC_[ii];
+    uTop[0] = uFac*uBC[ii] + (1.0-uFac)*Um1[0];
+    uTop[1] = wFac*vBC[ii];
+    uTop[2] = wFac*wBC[ii];
     if (dump) {
       fprintf( outFile, "%12.4e%12.4e%12.4e%12.4e%12.4e%12.4e\n",
       coord[0], uTop[0], sTop[0], Um1[0], uTop[2], sTop[2] );
@@ -245,18 +240,19 @@ AssembleMomentumEdgeABLTopBC::initialize(
   stk::mesh::Entity *nodeMapSamp_,
   stk::mesh::Entity *nodeMapBC_,
   stk::mesh::Entity *nodeMapM1_,
-  int *indexMapSamp_,
-  int *indexMapBC_,
   int *indexMapGlobal_,
+  int *indexMapBC_,
   int *sampleDistrib_,
   int *displ_,
-  int *nSamp_,
   int *nBC_)
 {
 
   double z0, z1, zL, zGrid[kmax_], xMin[2], xMax[2];
-  int i, ii, ix, iy, iz, izSample, imaxjmax, j, n, nx, ny, nz, iOff, count;
+  int i, ii, ix, iy, iz, izSample, imaxjmax, j, n, nx, ny, nz, iOff, count,
+      nSamp;
   bool unique;
+
+  std::vector<int> indexMapSamp(imax_*jmax_);
 
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -371,13 +367,13 @@ AssembleMomentumEdgeABLTopBC::initialize(
 
       if (bulk_data.is_valid(nodeSamp)) {
         nodeMapSamp_[ count] = nodeSamp;
-        indexMapSamp_[count] = iy*nx + ix;
+        indexMapSamp[ count] = iy*nx + ix;
         count ++;
       }
 
     }
   }
-  *nSamp_ = count;
+  nSamp = count;
 
   // Generate a map for the boundary points contained on this process.
 
@@ -407,7 +403,7 @@ AssembleMomentumEdgeABLTopBC::initialize(
 
   // Form a master list of index maps.
 
-  MPI_Allgather(nSamp_, 1, MPI_INT, sampleDistrib_, 1,
+  MPI_Allgather(&nSamp, 1, MPI_INT, sampleDistrib_, 1,
                 MPI_INT, bulk_data.parallel());
 
   displ_[0] = 0;
@@ -417,7 +413,7 @@ AssembleMomentumEdgeABLTopBC::initialize(
 
 //  printf("%s %i %i\n","before ",myrank,sampleDistrib_[myrank]);
 
-  MPI_Allgatherv(indexMapSamp_, *nSamp_, MPI_INT, 
+  MPI_Allgatherv(indexMapSamp.data(), nSamp, MPI_INT, 
                  indexMapSampGlobal_.data(), sampleDistrib_, 
                  displ_, MPI_INT, bulk_data.parallel());
 
@@ -445,7 +441,6 @@ AssembleMomentumEdgeABLTopBC::initialize(
     }
     sampleDistrib_[n] = count;
   }
-  *nSamp_ = sampleDistrib_[myrank];
 
   for (i=1; i<nprocs+1; ++i) {
     displ_[i] = displ_[i-1] + sampleDistrib_[i-1];
@@ -461,25 +456,24 @@ AssembleMomentumEdgeABLTopBC::initialize(
 //--------------------------------------------------------------------------
 void
 AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic( 
-  double *wSamp_,
+  double *wSamp,
   double xL_,
   double yL_,
   double deltaZ_,
   double *UAvg,
   int imax_,
   int jmax_,
-  double *uBC_,
-  double *vBC_,
-  double *wBC_,
-  std::complex<double> *uCoef_,
-  std::complex<double> *vCoef_,
-  std::complex<double> *wCoef_ )
+  double *uBC,
+  double *vBC,
+  double *wBC )
 {
 
   double waveX, waveY, normFac, kx, ky, ky2, kMag, eFac, scale, xFac, yFac,
          zFac;
   int i, i1, i2, iOff1, iOff2, ii, j, jw, nx, ny;
 
+  std::vector< std::complex<double> > uCoef((imax_/2+1)*jmax_),
+    vCoef((imax_/2+1)*jmax_), wCoef((imax_/2+1)*jmax_);
   const double pi = std::acos(-1.0);
   const std::complex<double> iUnit(0.0,1.0);
 
@@ -489,12 +483,12 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
 // Symmetrize wSamp.
 
   for (j=0; j<ny; ++j) {
-    wSamp_[j*nx] = 0.0;
+    wSamp[j*nx] = 0.0;
     for (i=1; i<nx/2; ++i) {
       ii = j*nx + i;
       i1 = j*nx + (nx-i);
-      wSamp_[ii] = 0.5*( wSamp_[ii] - wSamp_[i1] );
-      wSamp_[i1] = -wSamp_[ii];
+      wSamp[ii] = 0.5*( wSamp[ii] - wSamp[i1] );
+      wSamp[i1] = -wSamp[ii];
     }
   }
 
@@ -506,9 +500,9 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
 
   unsigned flags=0;
   fftw_plan plan_f = fftw_plan_dft_r2c_2d(ny, nx,
-    &wSamp_[0], reinterpret_cast<fftw_complex*>(&wCoef_[0]), flags);
+    &wSamp[0], reinterpret_cast<fftw_complex*>(&wCoef[0]), flags);
   fftw_plan plan_b = fftw_plan_dft_c2r_2d(ny, nx,
-    reinterpret_cast<fftw_complex*>(&wCoef_[0]), &wBC_[0],   flags);
+    reinterpret_cast<fftw_complex*>(&wCoef[0]), &wBC[0],   flags);
 
 // Forward transform of wSamp.
 
@@ -530,22 +524,22 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
       xFac = kx*scale*eFac;
       yFac = ky*scale*eFac;
       zFac =          eFac;
-      uCoef_[ii] = -iUnit*xFac*wCoef_[ii];
-      vCoef_[ii] = -iUnit*yFac*wCoef_[ii];
-      wCoef_[ii] =        zFac*wCoef_[ii];
+      uCoef[ii] = -iUnit*xFac*wCoef[ii];
+      vCoef[ii] = -iUnit*yFac*wCoef[ii];
+      wCoef[ii] =        zFac*wCoef[ii];
       ii ++;
     }
   }
-  wCoef_[0] = 0.0;
-  uCoef_[0] = UAvg[0];
+  wCoef[0] = 0.0;
+  uCoef[0] = UAvg[0];
 
   // Reverse transform the solution at the upper boundary.
 
   fftw_execute(plan_b);
   fftw_execute_dft_c2r(plan_b,
-    reinterpret_cast<fftw_complex*>(&uCoef_[0]), &uBC_[0]);
+    reinterpret_cast<fftw_complex*>(&uCoef[0]), &uBC[0]);
   fftw_execute_dft_c2r(plan_b,
-    reinterpret_cast<fftw_complex*>(&vCoef_[0]), &vBC_[0]);
+    reinterpret_cast<fftw_complex*>(&vCoef[0]), &vBC[0]);
 
   // Reorganize the output arrays so they contain the periodic points
   // around the edges.
@@ -555,13 +549,13 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
   for (i=0; i<nx; ++i) {
     i1 = iOff1 + i;
     i2 = iOff2 + i;
-    uBC_[i2] = uBC_[i1];
-    vBC_[i2] = vBC_[i1];
-    wBC_[i2] = wBC_[i1];
+    uBC[i2] = uBC[i1];
+    vBC[i2] = vBC[i1];
+    wBC[i2] = wBC[i1];
   }
-  uBC_[iOff2+nx] = uBC_[iOff1+0];
-  vBC_[iOff2+nx] = vBC_[iOff1+0];
-  wBC_[iOff2+nx] = wBC_[iOff1+0];
+  uBC[iOff2+nx] = uBC[iOff1+0];
+  vBC[iOff2+nx] = vBC[iOff1+0];
+  wBC[iOff2+nx] = wBC[iOff1+0];
 
   for (j=ny-1; j>0; --j) {
     iOff1 = j*nx;
@@ -569,13 +563,13 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
     for (i=0; i<nx; ++i) {
       i1 = iOff1 + i;
       i2 = iOff2 + i;
-      uBC_[i2] = uBC_[i1];
-      vBC_[i2] = vBC_[i1];
-      wBC_[i2] = wBC_[i1];
+      uBC[i2] = uBC[i1];
+      vBC[i2] = vBC[i1];
+      wBC[i2] = wBC[i1];
     }
-    uBC_[iOff2+nx] = uBC_[iOff1+0];
-    vBC_[iOff2+nx] = vBC_[iOff1+0];
-    wBC_[iOff2+nx] = wBC_[iOff1+0];
+    uBC[iOff2+nx] = uBC[iOff1+0];
+    vBC[iOff2+nx] = vBC[iOff1+0];
+    wBC[iOff2+nx] = wBC[iOff1+0];
   }
 
 }

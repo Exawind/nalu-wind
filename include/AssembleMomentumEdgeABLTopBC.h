@@ -47,40 +47,32 @@ public:
     stk::mesh::Entity *nodeMapSamp_,
     stk::mesh::Entity *nodeMapBC_,
     stk::mesh::Entity *nodeMapM1_,
-    int *indexMapSamp_,
-    int *indexMapBC_,
     int *indexMapSampGlobal_,
+    int *indexMapBC_,
     int *sampleDistrib_,
     int *displ_,
-    int *nSamp_,
     int *nBC_);
   virtual void potentialBCPeriodicPeriodic(
-    double *wSamp_,
+    double *wSamp,
     double xL_,
     double yL_,
     double deltaZ_,
     double *uAvg,
     int imax_,
     int jmax_,
-    double *uBC_,
-    double *vBC_,
-    double *wBC_,
-    std::complex<double> *uCoef_,
-    std::complex<double> *vCoef_,
-    std::complex<double> *wCoef_ );
+    double *uBC,
+    double *vBC,
+    double *wBC );
 
   VectorFieldType *velocity_;
   VectorFieldType *bcVelocity_;
   ScalarFieldType *density_;
   GenericFieldType *exposedAreaVec_;
   int imax_, jmax_, kmax_;
-  std::vector<double> wSamp_, uBC_, vBC_, wBC_;
-  std::vector< std::complex<double> > uCoef_, vCoef_, wCoef_;
   std::vector<stk::mesh::Entity> nodeMapSamp_, nodeMapBC_, nodeMapM1_;
-  std::vector<int> indexMapSamp_, indexMapBC_, indexMapSampGlobal_,
-                   sampleDistrib_, displ_;
+  std::vector<int> indexMapSampGlobal_, indexMapBC_, sampleDistrib_, displ_;
   double xL_, yL_, deltaZ_, zSample_;
-  int nSamp_, nBC_;
+  int nBC_;
   bool needToInitialize_;
 };
 
