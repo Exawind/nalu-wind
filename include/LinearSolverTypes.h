@@ -28,19 +28,6 @@ class ParameterList;
 
 }
 
-namespace Tpetra {
-
-template <typename LocalOrdinal, typename GlobalOrdinal, typename Node>
-class Map;
-
-template <typename LocalOrdinal, typename GlobalOrdinal, typename Node >
-class Export;
-
-template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Node>
-class Operator;
-
-}
-
 namespace Belos {
 
 template <typename Scalar, typename MultiVector>

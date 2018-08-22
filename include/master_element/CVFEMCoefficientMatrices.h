@@ -10,7 +10,7 @@
 #include <master_element/CVFEMCoefficients.h>
 #include <CVFEMTypeDefs.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 namespace sierra {
 namespace nalu{

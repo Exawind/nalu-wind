@@ -205,7 +205,7 @@ ComputeGeometryAlgorithmDriver::post_work()
   // meta and bulk data
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
-  std::vector<stk::mesh::FieldBase*> sum_fields;
+  std::vector<const stk::mesh::FieldBase*> sum_fields;
 
   // extract field always germane
   ScalarFieldType *dualNodalVolume = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");

@@ -3,7 +3,7 @@
 #include <tabular_props/Functions.h>
 #include <tabular_props/HDF5Table.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 #include <stdexcept>
 #include <iostream>

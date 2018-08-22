@@ -354,7 +354,7 @@ ComputeMdotElemAlgorithm::assemble_edge_mdot()
   }
 
   // parallel reduce
-  std::vector<stk::mesh::FieldBase*> sum_fields(1, edgeMassFlowRate_);
+  std::vector<const stk::mesh::FieldBase*> sum_fields(1, edgeMassFlowRate_);
   stk::mesh::parallel_sum(bulk_data, sum_fields);
 
 }

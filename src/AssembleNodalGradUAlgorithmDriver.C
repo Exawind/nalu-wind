@@ -96,7 +96,7 @@ AssembleNodalGradUAlgorithmDriver::post_work()
 
   // extract fields
   GenericFieldType *dudx = meta_data.get_field<GenericFieldType>(stk::topology::NODE_RANK, dudxName_);
-  std::vector<stk::mesh::FieldBase*> sum_fields(1, dudx);
+  std::vector<const stk::mesh::FieldBase*> sum_fields(1, dudx);
   stk::mesh::parallel_sum(bulk_data, sum_fields);
 
   if ( realm_.hasPeriodic_) {

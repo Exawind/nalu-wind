@@ -8,7 +8,7 @@
 
 #include <ConstantAuxFunction.h>
 #include <algorithm>
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 namespace sierra{
 namespace nalu{

@@ -22,7 +22,7 @@
 #include <NaluEnv.h>
 #include <FORTRAN_Proto.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
 
 #include <iostream>

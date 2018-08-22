@@ -5,7 +5,7 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 #include <element_promotion/LagrangeBasis.h>
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 #include <element_promotion/QuadratureRule.h>
 
 #include <algorithm>

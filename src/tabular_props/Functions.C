@@ -1,7 +1,7 @@
 #include <tabular_props/Functions.h>
 #include <property_evaluator/HDF5TablePropAlgorithm.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 #include <stdexcept>
 #include <cmath>

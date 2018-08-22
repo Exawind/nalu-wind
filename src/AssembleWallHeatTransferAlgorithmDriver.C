@@ -113,7 +113,7 @@ AssembleWallHeatTransferAlgorithmDriver::post_work()
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
-  std::vector<stk::mesh::FieldBase*> fields;
+  std::vector<const stk::mesh::FieldBase*> fields;
   fields.push_back(assembledWallArea_);
   fields.push_back(referenceTemperature_);
   fields.push_back(heatTransferCoefficient_);

@@ -1215,7 +1215,7 @@ RadiativeTransportEquationSystem::assemble_boundary_area()
   }
 
   // parallel and periodic assembly
-  std::vector<stk::mesh::FieldBase*> sum_fields(1, assembledBoundaryArea_);
+  std::vector<const stk::mesh::FieldBase*> sum_fields(1, assembledBoundaryArea_);
   stk::mesh::parallel_sum(bulk_data, sum_fields);
 
   if ( realm_.hasPeriodic_) {
@@ -1388,7 +1388,7 @@ RadiativeTransportEquationSystem::normalize_irradiation()
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
   // parallel and periodic assembly
-  std::vector<stk::mesh::FieldBase*> sum_fields(1, irradiation_);
+  std::vector<const stk::mesh::FieldBase*> sum_fields(1, irradiation_);
   stk::mesh::parallel_sum(bulk_data, sum_fields);
 
   if ( realm_.hasPeriodic_) {

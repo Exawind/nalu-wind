@@ -16,7 +16,7 @@
 #include <SimdInterface.h>
 #include <Kokkos_Core.hpp>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 #include <vector>
 #include <cstdlib>

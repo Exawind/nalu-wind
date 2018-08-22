@@ -6,7 +6,7 @@
 #include <element_promotion/TensorProductQuadratureRule.h>
 #include <element_promotion/QuadratureRule.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 #include <cmath>
 #include <stdexcept>

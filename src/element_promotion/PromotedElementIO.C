@@ -20,7 +20,7 @@
 #include <stk_mesh/base/Selector.hpp>
 #include <stk_topology/topology.hpp>
 #include <stk_topology/topology.tcc>
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 #include <Ioss_DBUsage.h>
 #include <Ioss_DatabaseIO.h>

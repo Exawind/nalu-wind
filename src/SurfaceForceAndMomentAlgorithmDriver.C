@@ -100,7 +100,7 @@ SurfaceForceAndMomentAlgorithmDriver::parallel_assemble_fields()
   ScalarFieldType *yplus = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "yplus");
 
   // parallel assemble
-  std::vector<stk::mesh::FieldBase*> fields;
+  std::vector<const stk::mesh::FieldBase*> fields;
   fields.push_back(pressureForce);
   fields.push_back(tauWall);
   fields.push_back(yplus);
@@ -131,7 +131,7 @@ SurfaceForceAndMomentAlgorithmDriver::parallel_assemble_area()
   ScalarFieldType *assembledAreaWF = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_area_force_moment_wf");
 
   // parallel assemble
-  std::vector<stk::mesh::FieldBase*> fields;
+  std::vector<const stk::mesh::FieldBase*> fields;
   if ( NULL != assembledArea )
     fields.push_back(assembledArea);
   if ( NULL != assembledAreaWF )

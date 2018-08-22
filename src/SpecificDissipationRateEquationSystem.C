@@ -841,7 +841,7 @@ SpecificDissipationRateEquationSystem::compute_wall_model_parameters()
   }
 
   // parallel assemble
-  std::vector<stk::mesh::FieldBase*> fields;
+  std::vector<const stk::mesh::FieldBase*> fields;
   fields.push_back(assembledWallSdr_);
   fields.push_back(assembledWallArea_);
   stk::mesh::parallel_sum(bulk_data, fields);

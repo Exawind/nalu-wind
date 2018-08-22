@@ -12,7 +12,7 @@
 #include <NaluEnv.h>
 #include <LinearSolverTypes.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 // Tpetra support
 #include <BelosLinearProblem.hpp>
