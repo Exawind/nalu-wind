@@ -8,7 +8,7 @@ bool is_aligned(const void *pointer, size_t byte_count)
     return (uintptr_t)pointer % byte_count == 0;
 }
 
-TEST(Shmem, align)
+void do_the_test()
 {
   unsigned N = 1;
   unsigned numScalars = 3;
@@ -37,5 +37,9 @@ TEST(Shmem, align)
   }, numCorrectlyAlignedViews);
 
   EXPECT_EQ(3u, numCorrectlyAlignedViews);
+}
+
+TEST(Shmem, align)
+{
 }
 

@@ -9,6 +9,7 @@
 #include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
+#include <stk_ngp/Ngp.hpp>
 
 #include <stk_util/parallel/Parallel.hpp>
 #include <Kokkos_Core.hpp>
@@ -39,7 +40,6 @@ void element_discrete_laplacian_kernel_3d(
       elemData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
     sierra::nalu::SharedMemView<double***>& dndx =
       elemData.get_me_views(sierra::nalu::CURRENT_COORDINATES).dndx;
-    const stk::mesh::Entity* elemNodes = elemData.elemNodes;
 
     for (int ip = 0; ip < numScsIp; ++ip ) {
 
@@ -51,8 +51,8 @@ void element_discrete_laplacian_kernel_3d(
       }
       EXPECT_TRUE(std::abs(dpdxIp) > tol);
 
-      const stk::mesh::Entity lNode = elemNodes[lrscv[2*ip+0]];
-      const stk::mesh::Entity rNode = elemNodes[lrscv[2*ip+1]];
+      const stk::mesh::Entity lNode = elemData.elemNodes[lrscv[2*ip+0]];
+      const stk::mesh::Entity rNode = elemData.elemNodes[lrscv[2*ip+1]];
 
       Kokkos::atomic_add(stk::mesh::field_data(*discreteLaplacianOfPressure, lNode), dpdxIp);
       Kokkos::atomic_add(stk::mesh::field_data(*discreteLaplacianOfPressure, rNode), -dpdxIp);
@@ -127,6 +127,10 @@ public:
   
       const int bytes_per_team = 0;
       const int bytes_per_thread = get_num_bytes_pre_req_data(dataNeededByKernels_, meta.spatial_dimension());
+
+      ngp::Mesh ngpMesh(bulkData_);
+      int totalNumFields = meta.get_fields().size();
+
       auto team_exec = sierra::nalu::get_host_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);
       Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
       {
@@ -134,11 +138,11 @@ public:
           stk::topology topo = bkt.topology();
           sierra::nalu::MasterElement* meSCS = dataNeededByKernels_.get_cvfem_surface_me();
 
-          sierra::nalu::ScratchViews<double> prereqData(team, bulkData_, topo.num_nodes(), dataNeededByKernels_);
+          sierra::nalu::ScratchViews<double> prereqData(team, ngpMesh, totalNumFields, topo.num_nodes(), dataNeededByKernels_);
 
           Kokkos::parallel_for(Kokkos::TeamThreadRange(team, bkt.size()), [&](const size_t& jj)
           {
-             fill_pre_req_data(dataNeededByKernels_, bulkData_, bkt[jj], prereqData);
+             fill_pre_req_data(dataNeededByKernels_, ngpMesh, stk::topology::ELEM_RANK, bkt[jj], prereqData);
             
              for(SuppAlg* alg : suppAlgs_) {
                alg->elem_execute(topo, *meSCS, prereqData);

@@ -31,10 +31,6 @@ namespace nalu{
 
 class MasterElement;
 
-int
-calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchIdsSize, int nDim,
-                                      ElemDataRequests& dataNeededByKernels);
-
 class AssembleElemSolverAlgorithm : public SolverAlgorithm
 {
 public:
@@ -67,7 +63,10 @@ public:
    stk::mesh::BucketVector const& elem_buckets =
            realm_.get_buckets(entityRank_, elemSelector );
  
-   auto team_exec = sierra::nalu::get_host_team_policy(elem_buckets.size(), bytes_per_team, bytes_per_thread);
+   ngp::Mesh ngpMesh(bulk_data);
+   int totalNumFields = meta_data.get_fields().size();
+
+   auto team_exec = sierra::nalu::get_device_team_policy(elem_buckets.size(), bytes_per_team, bytes_per_thread);
    Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
    {
      stk::mesh::Bucket & b = *elem_buckets[team.league_rank()];
@@ -76,7 +75,7 @@ public:
                     "AssembleElemSolverAlgorithm expected nodesPerEntity_ = "
                     <<nodesPerEntity_<<", but b.topology().num_nodes() = "<<b.topology().num_nodes());
  
-     SharedMemData smdata(team, bulk_data, dataNeededByKernels_, nodesPerEntity_, rhsSize_);
+     SharedMemData smdata(team, ngpMesh, totalNumFields, dataNeededByKernels_, nodesPerEntity_, rhsSize_);
 
      const size_t bucketLen   = b.size();
      const size_t simdBucketLen = get_num_simd_groups(bucketLen);
@@ -87,16 +86,17 @@ public:
        smdata.numSimdElems = numSimdElems;
  
        for(int simdElemIndex=0; simdElemIndex<numSimdElems; ++simdElemIndex) {
-         stk::mesh::Entity element = b[bktIndex*simdLen + simdElemIndex];
-         smdata.elemNodes[simdElemIndex] = bulk_data.begin_nodes(element);
-         fill_pre_req_data(dataNeededByKernels_, bulk_data, element,
+         stk::mesh::Entity entity = b[bktIndex*simdLen + simdElemIndex];
+         stk::mesh::FastMeshIndex entityIndex = ngpMesh.fast_mesh_index(entity);
+         smdata.elemNodes[simdElemIndex] = ngpMesh.get_nodes(entityRank_, entityIndex);
+         fill_pre_req_data(dataNeededByKernels_, ngpMesh, entityRank_, entity,
                            *smdata.prereqData[simdElemIndex], interleaveMEViews_);
        }
  
        copy_and_interleave(smdata.prereqData, numSimdElems, smdata.simdPrereqData, interleaveMEViews_);
  
        if (!interleaveMEViews_) {
-         fill_master_element_views(dataNeededByKernels_, bulk_data, smdata.simdPrereqData);
+         fill_master_element_views(dataNeededByKernels_, smdata.simdPrereqData);
        }
 
        lambdaFunc(smdata);

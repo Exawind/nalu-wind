@@ -97,7 +97,7 @@ void ElemDataRequests::add_coordinates_field(
   unsigned scalarsPerNode,
   COORDS_TYPES cType)
 {
-  coordsFields_[cType] = &field;
+  coordsFields_[cType] = ngp::Field<double>(field.get_mesh(), field);
   add_gathered_nodal_field(field, scalarsPerNode);
 }
 

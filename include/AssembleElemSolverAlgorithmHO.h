@@ -52,8 +52,9 @@ public:
   FieldGatherer(int n1D, const Kokkos::View<int*>& defaultPermutation) :
     n1D_(n1D), defaultPermutation_(defaultPermutation) {};
 
-  void gather_elem_node_field_3D(const stk::mesh::FieldBase& field,
-    const std::array<const stk::mesh::Entity*, simdLen>& elemNodes,
+  void gather_elem_node_field_3D(const ngp::Field<double>& field,
+    const ngp::Mesh& ngpMesh,
+    const std::array<ngp::Mesh::ConnectedNodes, simdLen>& elemNodes,
     int numSimdElems,
     SharedMemView<DoubleType***>& shmemView) const
   {
@@ -63,15 +64,16 @@ public:
           const int permutationIndex = defaultPermutation_((k * n1D_ + j) * n1D_ + i);
           for (int simdIndex = 0; simdIndex < numSimdElems; ++simdIndex) {
             stk::simd::set_data(shmemView(k, j, i), simdIndex,
-              *static_cast<const double*>(stk::mesh::field_data(field, elemNodes[simdIndex][permutationIndex])));
+              field.get(ngpMesh, elemNodes[simdIndex][permutationIndex], 0));
           }
         }
       }
     }
   }
 
-  void gather_elem_node_field_3D(const stk::mesh::FieldBase& field,
-    const std::array<const stk::mesh::Entity*, simdLen>& elemNodes,
+  void gather_elem_node_field_3D(const ngp::Field<double>& field,
+    const ngp::Mesh& ngpMesh,
+    const std::array<ngp::Mesh::ConnectedNodes, simdLen>& elemNodes,
     int numSimdElems,
     SharedMemView<DoubleType****>& shmemView) const
   {
@@ -80,8 +82,8 @@ public:
         for (int i = 0; i < n1D_; ++i) {
           const int permutationIndex = defaultPermutation_((k * n1D_ + j) * n1D_ + i);
           for (int simdIndex = 0; simdIndex < numSimdElems; ++simdIndex) {
-            const double* dataPtr = static_cast<const double*>(stk::mesh::field_data(field,
-              elemNodes[simdIndex][permutationIndex]));
+            const double* dataPtr = static_cast<const double*>(&field.get(ngpMesh,
+              elemNodes[simdIndex][permutationIndex], 0));
             stk::simd::set_data(shmemView(k, j, i, 0), simdIndex, dataPtr[0]);
             stk::simd::set_data(shmemView(k, j, i, 1), simdIndex, dataPtr[1]);
             stk::simd::set_data(shmemView(k, j, i, 2), simdIndex, dataPtr[2]);
@@ -98,32 +100,33 @@ private:
 
 inline void fill_pre_req_data(
   const FieldGatherer& gatherer,
-  ElemDataRequests& dataNeeded,
-  const stk::mesh::BulkData& bulkData,
+  const ElemDataRequests& dataNeeded,
+  const ngp::Mesh& ngpMesh,
   const std::array<stk::mesh::Entity, simdLen>& elems,
   int numSimdElems,
   ScratchViewsHO<DoubleType>& prereqData)
 {
   for (int simdIndex = 0; simdIndex < numSimdElems; ++simdIndex) {
-    prereqData.elemNodes[simdIndex] = bulkData.begin_nodes(elems[simdIndex]);
+    stk::mesh::FastMeshIndex elemIndex = ngpMesh.fast_mesh_index(elems[simdIndex]);
+    prereqData.elemNodes[simdIndex] = ngpMesh.get_nodes(stk::topology::ELEM_RANK, elemIndex);
   }
   prereqData.numSimdElems = numSimdElems;
 
   const FieldSet& neededFields = dataNeeded.get_fields();
   for(const FieldInfo& fieldInfo : neededFields) {
-    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
+    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field.get_rank();
     unsigned scalarsDim1 = fieldInfo.scalarsDim1;
     if (fieldEntityRank == stk::topology::NODE_RANK ) {
       if (scalarsDim1 == 1u) {
-        auto shmemView3D = prereqData.get_scratch_view<SharedMemView<DoubleType***>>(*fieldInfo.field,
+        auto shmemView3D = prereqData.get_scratch_view<SharedMemView<DoubleType***>>(fieldInfo.field,
             gatherer.n1D_, gatherer.n1D_, gatherer.n1D_);
-        gatherer.gather_elem_node_field_3D(*fieldInfo.field, prereqData.elemNodes, prereqData.numSimdElems,
+        gatherer.gather_elem_node_field_3D(fieldInfo.field, ngpMesh, prereqData.elemNodes, prereqData.numSimdElems,
           shmemView3D);
       }
       else {
-        auto shmemView4D = prereqData.get_scratch_view<SharedMemView<DoubleType****>>(*fieldInfo.field,
+        auto shmemView4D = prereqData.get_scratch_view<SharedMemView<DoubleType****>>(fieldInfo.field,
             gatherer.n1D_, gatherer.n1D_, gatherer.n1D_, 3);
-        gatherer.gather_elem_node_field_3D(*fieldInfo.field, prereqData.elemNodes, prereqData.numSimdElems,
+        gatherer.gather_elem_node_field_3D(fieldInfo.field, ngpMesh, prereqData.elemNodes, prereqData.numSimdElems,
           shmemView4D);
       }
     }
@@ -132,11 +135,12 @@ inline void fill_pre_req_data(
 
 struct SharedMemDataHO {
   SharedMemDataHO(const sierra::nalu::TeamHandleType& team,
-    const stk::mesh::BulkData& bulk,
+    const ngp::Mesh& ngpMesh,
+    unsigned totalNumFields,
     const ElemDataRequests& dataNeededByKernels,
     int order, int dim,
     unsigned rhsSize)
-  : simdPrereqData(team, bulk, order, dim, dataNeededByKernels)
+  : simdPrereqData(team, ngpMesh, totalNumFields, order, dim, dataNeededByKernels)
   {
     simdrhs = get_shmem_view_1D<DoubleType>(team, rhsSize);
     simdlhs = get_shmem_view_2D<DoubleType>(team, rhsSize, rhsSize);
@@ -163,7 +167,7 @@ inline int num_scalars_pre_req_data_HO(int nodesPerEntity, const ElemDataRequest
   int numScalars = 0;
   const FieldSet& neededFields = elemDataNeeded.get_fields();
   for(const FieldInfo& fieldInfo : neededFields) {
-    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
+    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field.get_rank();
     unsigned scalarsPerEntity = fieldInfo.scalarsDim1;
     unsigned entitiesPerElem = fieldEntityRank==stk::topology::NODE_RANK ? nodesPerEntity : 1;
     ThrowRequire(entitiesPerElem > 0);
@@ -214,8 +218,11 @@ public:
  
    stk::mesh::BucketVector const& elem_buckets = realm_.get_buckets(entityRank_, elemSelector);
  
-   auto team_exec = sierra::nalu::get_host_team_policy(elem_buckets.size(), bytes_per_team, bytes_per_thread);
-   Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
+   ngp::Mesh ngpMesh(bulk_data);
+   int totalNumFields = meta_data.get_fields().size();
+
+   auto team_exec = sierra::nalu::get_device_team_policy(elem_buckets.size(), bytes_per_team, bytes_per_thread);
+   Kokkos::parallel_for(team_exec, KOKKOS_LAMBDA(const sierra::nalu::TeamHandleType& team)
    {
      stk::mesh::Bucket & b = *elem_buckets[team.league_rank()];
  
@@ -223,15 +230,15 @@ public:
                     "AssembleElemSolverAlgorithmHO expected nodesPerEntity_ = "
                     <<nodesPerEntity_<<", but b.topology().num_nodes() = "<<b.topology().num_nodes());
  
-     SharedMemDataHO smdata(team, bulk_data, dataNeededByKernels_, polyOrder_, dim_, rhsSize_);
+     SharedMemDataHO smdata(team, ngpMesh, totalNumFields, dataNeededByKernels_, polyOrder_, dim_, rhsSize_);
      const size_t bucketLen = b.size();
      const size_t simdBucketLen = get_num_simd_groups(bucketLen);
  
-     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, simdBucketLen), [&](const size_t& bktIndex)
+     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, simdBucketLen), [&] (const size_t& bktIndex)
      {
        const int numSimdElems = get_length_of_next_simd_group(bktIndex, bucketLen);
        const auto simdElems = load_simd_elems(b, bktIndex, bucketLen, numSimdElems);
-       fill_pre_req_data(gatherer_, dataNeededByKernels_, bulk_data, simdElems, numSimdElems, smdata.simdPrereqData);
+       fill_pre_req_data(gatherer_, dataNeededByKernels_, ngpMesh, simdElems, numSimdElems, smdata.simdPrereqData);
        lambdaFunc(smdata);
      });
    });

@@ -45,10 +45,10 @@ using DeviceSpace = Kokkos::DefaultExecutionSpace;
 using DeviceShmem = DeviceSpace::scratch_memory_space;
 using HostShmem = HostSpace::scratch_memory_space;
 using DynamicScheduleType = Kokkos::Schedule<Kokkos::Dynamic>;
-using TeamHandleType = Kokkos::TeamPolicy<HostSpace, DynamicScheduleType>::member_type;
+using TeamHandleType = Kokkos::TeamPolicy<DeviceSpace, DynamicScheduleType>::member_type;
 
 template <typename T>
-using SharedMemView = Kokkos::View<T, Kokkos::LayoutRight, HostShmem, Kokkos::MemoryUnmanaged>;
+using SharedMemView = Kokkos::View<T, Kokkos::LayoutRight, DeviceShmem, Kokkos::MemoryUnmanaged>;
 
 template<typename T>
 using AlignedViewType = Kokkos::View<T, Kokkos::MemoryTraits<Kokkos::Aligned>>;

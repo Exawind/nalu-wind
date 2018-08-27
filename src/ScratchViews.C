@@ -13,26 +13,28 @@ namespace sierra {
 namespace nalu {
 
 inline
-void gather_elem_node_field(const stk::mesh::FieldBase& field,
-                            int numNodes,
-                            const stk::mesh::Entity* elemNodes,
+void gather_elem_node_field(const ngp::Field<double>& field,
+                            const ngp::Mesh& ngpMesh,
+                            const ngp::Mesh::ConnectedNodes& elemNodes,
                             SharedMemView<double*>& shmemView)
 {
-  for(int i=0; i<numNodes; ++i) {
-    shmemView[i] = *static_cast<const double*>(stk::mesh::field_data(field, elemNodes[i]));
+  for(unsigned i=0; i<elemNodes.size(); ++i) {
+    shmemView[i] = field.get(ngpMesh, elemNodes[i], 0);
   }
 }
 
 inline
-void gather_elem_node_tensor_field(const stk::mesh::FieldBase& field,
+void gather_elem_node_tensor_field(const ngp::Field<double>& field,
+                            const ngp::Mesh& ngpMesh,
                             int numNodes,
                             int tensorDim1,
                             int tensorDim2,
-                            const stk::mesh::Entity* elemNodes,
+                            const ngp::Mesh::ConnectedNodes& elemNodes,
                             SharedMemView<double***>& shmemView)
 {
+  ThrowRequireMsg(numNodes==(int)elemNodes.size(),"gather_elem_node_tensor_field, numNodes="<<numNodes<<" but elemNodes.size()="<<elemNodes.size());
   for(int i=0; i<numNodes; ++i) {
-    const double* dataPtr = static_cast<const double*>(stk::mesh::field_data(field, elemNodes[i]));
+    const double* dataPtr = static_cast<const double*>(&field.get(ngpMesh, elemNodes[i], 0));
     unsigned counter = 0;
     for(int d1=0; d1<tensorDim1; ++d1) { 
       for(int d2=0; d2<tensorDim2; ++d2) {
@@ -43,13 +45,13 @@ void gather_elem_node_tensor_field(const stk::mesh::FieldBase& field,
 }
 
 inline
-void gather_elem_tensor_field(const stk::mesh::FieldBase& field,
-                              stk::mesh::Entity elem,
+void gather_elem_tensor_field(const ngp::Field<double>& field,
+                              stk::mesh::FastMeshIndex elem,
                               int tensorDim1,
                               int tensorDim2,
                               SharedMemView<double**>& shmemView)
 {
-  const double* dataPtr = static_cast<const double*>(stk::mesh::field_data(field, elem));
+  const double* dataPtr = static_cast<const double*>(&field.get(elem, 0));
   unsigned counter = 0;
   for(int d1=0; d1<tensorDim1; ++d1) { 
     for(int d2=0; d2<tensorDim2; ++d2) {
@@ -59,13 +61,13 @@ void gather_elem_tensor_field(const stk::mesh::FieldBase& field,
 }
 
 inline
-void gather_elem_node_field_3D(const stk::mesh::FieldBase& field,
-                               int numNodes,
-                               const stk::mesh::Entity* elemNodes,
+void gather_elem_node_field_3D(const ngp::Field<double>& field,
+                               const ngp::Mesh& ngpMesh,
+                               const ngp::Mesh::ConnectedNodes& elemNodes,
                                SharedMemView<double**>& shmemView)
 {
-  for(int i=0; i<numNodes; ++i) {
-    const double* dataPtr = static_cast<const double*>(stk::mesh::field_data(field, elemNodes[i]));
+  for(unsigned i=0; i<elemNodes.size(); ++i) {
+    const double* dataPtr = &field.get(ngpMesh, elemNodes[i], 0);
     shmemView(i,0) = dataPtr[0];
     shmemView(i,1) = dataPtr[1];
     shmemView(i,2) = dataPtr[2];
@@ -73,14 +75,14 @@ void gather_elem_node_field_3D(const stk::mesh::FieldBase& field,
 }
 
 inline
-void gather_elem_node_field(const stk::mesh::FieldBase& field,
-                            int numNodes,
+void gather_elem_node_field(const ngp::Field<double>& field,
+                            const ngp::Mesh& ngpMesh,
                             int scalarsPerNode,
-                            const stk::mesh::Entity* elemNodes,
+                            const ngp::Mesh::ConnectedNodes& elemNodes,
                             SharedMemView<double**>& shmemView)
 {
-  for(int i=0; i<numNodes; ++i) {
-    const double* dataPtr = static_cast<const double*>(stk::mesh::field_data(field, elemNodes[i]));
+  for(unsigned i=0; i<elemNodes.size(); ++i) {
+    const double* dataPtr = &field.get(ngpMesh, elemNodes[i], 0);
     for(int d=0; d<scalarsPerNode; ++d) {
       shmemView(i,d) = dataPtr[d];
     }
@@ -117,7 +119,7 @@ int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDi
   
   const FieldSet& neededFields = dataNeededBySuppAlgs.get_fields();
   for(const FieldInfo& fieldInfo : neededFields) {
-    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
+    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field.get_rank();
     unsigned scalarsPerEntity = fieldInfo.scalarsDim1;
     unsigned entitiesPerElem = fieldEntityRank==stk::topology::NODE_RANK ? nodesPerEntity : 1;
 
@@ -230,7 +232,7 @@ int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDi
 
   const FieldSet& neededFields = dataNeededBySuppAlgs.get_fields();
   for(const FieldInfo& fieldInfo : neededFields) {
-    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
+    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field.get_rank();
     unsigned scalarsPerEntity = fieldInfo.scalarsDim1;
     unsigned entitiesPerElem = fieldEntityRank==stk::topology::NODE_RANK ? nodesPerEntity : 1;
 
@@ -334,35 +336,37 @@ int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDi
 
 
 void fill_pre_req_data(
-  ElemDataRequests& dataNeeded,
-  const stk::mesh::BulkData& bulkData,
-  stk::mesh::Entity elem,
+  const ElemDataRequests& dataNeeded,
+  const ngp::Mesh& ngpMesh,
+  stk::mesh::EntityRank entityRank,
+  stk::mesh::Entity entity,
   ScratchViews<double>& prereqData,
   bool fillMEViews)
 {
-  int nodesPerElem = bulkData.num_nodes(elem);
-
   MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
   MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
   MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
   MasterElement *meFEM = dataNeeded.get_fem_volume_me();
-  prereqData.elemNodes = bulkData.begin_nodes(elem);
+
+  stk::mesh::FastMeshIndex entityIndex = ngpMesh.fast_mesh_index(entity);
+  prereqData.elemNodes = ngpMesh.get_nodes(entityRank, entityIndex);
+  int nodesPerElem = prereqData.elemNodes.size();
 
   const FieldSet& neededFields = dataNeeded.get_fields();
   for(const FieldInfo& fieldInfo : neededFields) {
-    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
+    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field.get_rank();
     unsigned scalarsDim1 = fieldInfo.scalarsDim1;
     bool isTensorField = fieldInfo.scalarsDim2 > 1;
 
     if (fieldEntityRank==stk::topology::EDGE_RANK || fieldEntityRank==stk::topology::FACE_RANK || fieldEntityRank==stk::topology::ELEM_RANK) {
       if (isTensorField) {
-        SharedMemView<double**>& shmemView = prereqData.get_scratch_view_2D(*fieldInfo.field);
-        gather_elem_tensor_field(*fieldInfo.field, elem, scalarsDim1, fieldInfo.scalarsDim2, shmemView);
+        SharedMemView<double**>& shmemView = prereqData.get_scratch_view_2D(fieldInfo.field);
+        gather_elem_tensor_field(fieldInfo.field, entityIndex, scalarsDim1, fieldInfo.scalarsDim2, shmemView);
       }
       else {
-        SharedMemView<double*>& shmemView = prereqData.get_scratch_view_1D(*fieldInfo.field);
+        SharedMemView<double*>& shmemView = prereqData.get_scratch_view_1D(fieldInfo.field);
         unsigned len = shmemView.dimension(0);
-        double* fieldDataPtr = static_cast<double*>(stk::mesh::field_data(*fieldInfo.field, elem));
+        double* fieldDataPtr = static_cast<double*>(&fieldInfo.field.get(entityIndex,0));
         for(unsigned i=0; i<len; ++i) {
           shmemView(i) = fieldDataPtr[i];
         }
@@ -370,21 +374,21 @@ void fill_pre_req_data(
     }
     else if (fieldEntityRank == stk::topology::NODE_RANK) {
       if (isTensorField) {
-        SharedMemView<double***>& shmemView3D = prereqData.get_scratch_view_3D(*fieldInfo.field);
-        gather_elem_node_tensor_field(*fieldInfo.field, nodesPerElem, scalarsDim1, fieldInfo.scalarsDim2, bulkData.begin_nodes(elem), shmemView3D);
+        SharedMemView<double***>& shmemView3D = prereqData.get_scratch_view_3D(fieldInfo.field);
+        gather_elem_node_tensor_field(fieldInfo.field, ngpMesh, nodesPerElem, scalarsDim1, fieldInfo.scalarsDim2, prereqData.elemNodes, shmemView3D);
       }
       else {
         if (scalarsDim1 == 1) {
-          SharedMemView<double*>& shmemView1D = prereqData.get_scratch_view_1D(*fieldInfo.field);
-          gather_elem_node_field(*fieldInfo.field, nodesPerElem, prereqData.elemNodes, shmemView1D);
+          SharedMemView<double*>& shmemView1D = prereqData.get_scratch_view_1D(fieldInfo.field);
+          gather_elem_node_field(fieldInfo.field, ngpMesh, prereqData.elemNodes, shmemView1D);
         }
         else {
-          SharedMemView<double**>& shmemView2D = prereqData.get_scratch_view_2D(*fieldInfo.field);
+          SharedMemView<double**>& shmemView2D = prereqData.get_scratch_view_2D(fieldInfo.field);
           if (scalarsDim1 == 3) {
-            gather_elem_node_field_3D(*fieldInfo.field, nodesPerElem, prereqData.elemNodes, shmemView2D);
+            gather_elem_node_field_3D(fieldInfo.field, ngpMesh, prereqData.elemNodes, shmemView2D);
           }
           else {
-            gather_elem_node_field(*fieldInfo.field, nodesPerElem, scalarsDim1, prereqData.elemNodes, shmemView2D);
+            gather_elem_node_field(fieldInfo.field, ngpMesh, scalarsDim1, prereqData.elemNodes, shmemView2D);
           }
         }
       }
@@ -402,7 +406,7 @@ void fill_pre_req_data(
       auto coordField = it->second;
   
       const std::set<ELEM_DATA_NEEDED>& dataEnums = dataNeeded.get_data_enums(cType);
-      SharedMemView<double**>* coordsView = &prereqData.get_scratch_view_2D(*coordField);
+      SharedMemView<double**>* coordsView = &prereqData.get_scratch_view_2D(coordField);
       auto& meData = prereqData.get_me_views(cType);
   
       meData.fill_master_element_views(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM);
@@ -412,7 +416,6 @@ void fill_pre_req_data(
 
 void fill_master_element_views(
   ElemDataRequests& dataNeeded,
-  const stk::mesh::BulkData& bulkData,
   ScratchViews<DoubleType>& prereqData,
   int faceOrdinal)
 {
@@ -427,7 +430,7 @@ void fill_master_element_views(
       auto coordField = it->second;
   
       const std::set<ELEM_DATA_NEEDED>& dataEnums = dataNeeded.get_data_enums(cType);
-      SharedMemView<DoubleType**>* coordsView = &prereqData.get_scratch_view_2D(*coordField);
+      SharedMemView<DoubleType**>* coordsView = &prereqData.get_scratch_view_2D(coordField);
       auto& meData = prereqData.get_me_views(cType);
   
       meData.fill_master_element_views_new_me(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM, faceOrdinal);

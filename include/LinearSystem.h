@@ -17,6 +17,8 @@
 #include <Teuchos_GlobalMPISession.hpp>
 #include <Teuchos_oblackholestream.hpp>
 
+#include <stk_ngp/Ngp.hpp>
+
 #include <vector>
 #include <string>
 
@@ -78,7 +80,7 @@ public:
 
   virtual void sumInto(
       unsigned numEntities,
-      const stk::mesh::Entity* entities,
+      const ngp::Mesh::ConnectedNodes& entities,
       const SharedMemView<const double*> & rhs,
       const SharedMemView<const double**> & lhs,
       const SharedMemView<int*> & localIds,

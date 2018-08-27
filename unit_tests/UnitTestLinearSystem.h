@@ -39,7 +39,7 @@ public:
 
   virtual void sumInto(
       unsigned numEntities,
-      const stk::mesh::Entity* entities,
+      const ngp::Mesh::ConnectedNodes& entities,
       const sierra::nalu::SharedMemView<const double*> & rhs,
       const sierra::nalu::SharedMemView<const double**> & lhs,
       const sierra::nalu::SharedMemView<int*> & localIds,

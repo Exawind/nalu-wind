@@ -179,7 +179,7 @@ void verify_matrix_for_2_hex8_mesh(int numProcs, int localProc, sierra::nalu::Tp
   Teuchos::RCP<sierra::nalu::LinSys::Matrix> ownedMatrix = tpetraLinsys->getOwnedMatrix();
   EXPECT_NE(nullptr, ownedMatrix.get());
   unsigned expectedGlobalNumRows = 12;
-  int expectedLocalNumRows = 12;
+  unsigned expectedLocalNumRows = 12;
   if (numProcs==2) {
     expectedLocalNumRows = localProc==0 ? 8 : 4;
   }
@@ -189,7 +189,7 @@ void verify_matrix_for_2_hex8_mesh(int numProcs, int localProc, sierra::nalu::Tp
   Teuchos::RCP<const sierra::nalu::LinSys::Map> rowMap = ownedMatrix->getRowMap();
   Teuchos::RCP<const sierra::nalu::LinSys::Map> colMap = ownedMatrix->getColMap();
 
-  for(sierra::nalu::LinSys::LocalOrdinal rowlid=0; rowlid<expectedLocalNumRows; ++rowlid) {
+  for(sierra::nalu::LinSys::LocalOrdinal rowlid=0; rowlid<(int)expectedLocalNumRows; ++rowlid) {
     sierra::nalu::LinSys::GlobalOrdinal rowgid = rowMap->getGlobalElement(rowlid);
     unsigned rowLength = ownedMatrix->getNumEntriesInGlobalRow(rowgid);
     Teuchos::ArrayView<const sierra::nalu::LinSys::LocalOrdinal> inds;

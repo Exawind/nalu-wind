@@ -32,7 +32,7 @@ class ElemDataRequestsNGP
 public:
   typedef Kokkos::View<COORDS_TYPES*, Kokkos::LayoutRight, MemSpace> CoordsTypesView;
   typedef Kokkos::View<ELEM_DATA_NEEDED*, Kokkos::LayoutRight, MemSpace> DataEnumView;
-  typedef Kokkos::View<FieldPtr*, Kokkos::LayoutRight, MemSpace> FieldView;
+  typedef Kokkos::View<ngp::Field<double>*, Kokkos::LayoutRight, MemSpace> FieldView;
 
   ElemDataRequestsNGP(const ElemDataRequests& dataReq)
     : dataEnums(),
@@ -133,7 +133,7 @@ private:
 
     unsigned i = 0;
     for(auto iter : dataReq.get_coordinates_map()) {
-      hostCoordsFields_(i) = {iter.second};
+      hostCoordsFields_(i) = iter.second;
       hostCoordsFieldsTypes_(i) = iter.first;
       ++i;
     }
