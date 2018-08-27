@@ -1187,6 +1187,7 @@ namespace YAML
     }
     if (abltopData.ABLTopBC_) {
       abltopData.grid_dims_ = node["grid_dimensions"].as<std::vector<int>>();
+      abltopData.z_sample_ = node["z_sample"].as<double>();
     }
     return true;
   }

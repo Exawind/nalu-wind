@@ -45,12 +45,13 @@ namespace nalu{
 AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
   Realm &realm,
   stk::mesh::Part *part,
-  EquationSystem *eqSystem, std::vector<int>& grid_dims)
+  EquationSystem *eqSystem, std::vector<int>& grid_dims, double z_sample_)
   : SolverAlgorithm(realm, part, eqSystem),
-  imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2]),
+  imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2]), weight_(jmax_),
   nodeMapSamp_(imax_*jmax_), nodeMapBC_(imax_*jmax_), nodeMapM1_(imax_*jmax_),
-  indexMapSampGlobal_(imax_*jmax_), indexMapBC_(imax_*jmax_),
-  sampleDistrib_(1000), displ_(1000+1), zSample_(0.85), needToInitialize_(true)
+  nodeMapX0_(jmax_), indexMapSampGlobal_(imax_*jmax_), indexMapBC_(imax_*jmax_),
+  sampleDistrib_(1000), displ_(1000+1), zSample_(z_sample_),
+   needToInitialize_(true)
 {
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -77,11 +78,12 @@ AssembleMomentumEdgeABLTopBC::execute()
 {
 
   std::vector<double> wSamp(imax_*jmax_), uBC(imax_*jmax_), vBC(imax_*jmax_),
-                      wBC(imax_*jmax_), work(imax_*jmax_), UAvg(2,0.0);
+                      wBC(imax_*jmax_), work(imax_*jmax_), UAvg(4,0.0);
   int i, ii;
   int nx = imax_ - 1;
   int ny = jmax_ - 1;
   int nxny = nx*ny;
+  double nxnyInv = 1.0/((double)nx*(double)ny);
 
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -91,10 +93,11 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   if( needToInitialize_ ) {
     initialize( imax_, jmax_, kmax_, zSample_,
-                &xL_, &yL_, &deltaZ_, 
+                &xL_, &yL_, &deltaZ_, weight_.data(),
                 nodeMapSamp_.data(), nodeMapBC_.data(), nodeMapM1_.data(),
-                indexMapSampGlobal_.data(), indexMapBC_.data(), 
-                sampleDistrib_.data(), displ_.data(), &nBC_ );
+                nodeMapX0_.data(), indexMapSampGlobal_.data(),
+                indexMapBC_.data(), sampleDistrib_.data(), displ_.data(),
+                &nBC_, &nX0_ );
     needToInitialize_ = false;
   }
 
@@ -118,6 +121,8 @@ AssembleMomentumEdgeABLTopBC::execute()
     uFac = (double)(timeStepCount-2*startupSteps-1)/(double)(startupSteps);
   }
       
+  uFac = 1.0;
+
 // Set up for diagnostic output.
 
   const int nprocs = bulk_data.parallel_size();
@@ -161,12 +166,17 @@ AssembleMomentumEdgeABLTopBC::execute()
   for (i=0; i<nSamp; ++i) {
     double *USamp = stk::mesh::field_data(velocityNp1,nodeMapSamp_[i]);
     wSamp[i] = USamp[2];
-    UAvg[0] += USamp[0];
-    UAvg[1] += USamp[1];
+    UAvg[0] += USamp[0]*nxnyInv;
+    UAvg[1] += USamp[1]*nxnyInv;
   }
 
-  UAvg[0] /= (double)nxny;
-  UAvg[1] /= (double)nxny;
+  // Find contributions to the average velocity at the x=x_min line.
+
+  for (i=0; i<nX0_; ++i) {
+    double *USamp = stk::mesh::field_data(velocityNp1,nodeMapX0_[i]);
+    UAvg[2] += weight_[i]*USamp[0];
+    UAvg[3] += weight_[i]*USamp[1];
+  }
 
   // Gather the sampling plane data across all processes.
 
@@ -191,14 +201,19 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   // Compute the average velocity over the sampling plane.
 
-  MPI_Allreduce(MPI_IN_PLACE, UAvg.data(), 2, MPI_DOUBLE, MPI_SUM,
+  MPI_Allreduce(MPI_IN_PLACE, UAvg.data(), 4, MPI_DOUBLE, MPI_SUM,
                 bulk_data.parallel());
-  UAvg[0]=1.0;  UAvg[1]=0.0;
+//  if(myrank==0) printf("%s%14.4e%14.4e%14.4e%14.4e\n","Averages = ",
+//                       UAvg[0], UAvg[1], UAvg[2], UAvg[3]);
+
+//  UAvg[0]=1.0;  UAvg[1]=0.0;
 
   // Compute the upper boundary velocity field
 
   potentialBCPeriodicPeriodic( &wSamp[0], xL_, yL_, deltaZ_, &UAvg[0], imax_,
                                jmax_, &uBC[0], &vBC[0], &wBC[0] );
+//  potentialBCInflowPeriodic( &wSamp[0], xL_, yL_, deltaZ_, &UAvg[0], imax_,
+//                             jmax_, &uBC[0], &vBC[0], &wBC[0] );
 
   // Set the boundary velocity array values.
 
@@ -237,22 +252,25 @@ AssembleMomentumEdgeABLTopBC::initialize(
   double *xL_,
   double *yL_,
   double *deltaZ_,
+  double *weight_,
   stk::mesh::Entity *nodeMapSamp_,
   stk::mesh::Entity *nodeMapBC_,
   stk::mesh::Entity *nodeMapM1_,
+  stk::mesh::Entity *nodeMapX0_,
   int *indexMapGlobal_,
   int *indexMapBC_,
   int *sampleDistrib_,
   int *displ_,
-  int *nBC_)
+  int *nBC_,
+  int *nX0_)
 {
 
-  double z0, z1, zL, zGrid[kmax_], xMin[2], xMax[2];
+  double z0, z1, zL, zGrid[kmax_], xMin[2], xMax[2], nyInv;
   int i, ii, ix, iy, iz, izSample, imaxjmax, j, n, nx, ny, nz, iOff, count,
-      nSamp;
+      countX0, nSamp;
   bool unique;
 
-  std::vector<int> indexMapSamp(imax_*jmax_);
+  std::vector<int> indexMapSamp(imax_*jmax_), indexMapX0(jmax_);
 
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -379,7 +397,8 @@ AssembleMomentumEdgeABLTopBC::initialize(
 
   iOff = nz*imaxjmax;
 
-  count = 0;
+  count   = 0;
+  countX0 = 0;
   for (iy=0; iy<jmax_; ++iy) {
     for (ix=0; ix<imax_; ++ix) {
 
@@ -395,13 +414,64 @@ AssembleMomentumEdgeABLTopBC::initialize(
         nodeMapM1_[ count] = nodeM1;
         indexMapBC_[count] = iy*imax_ + ix;
         count ++;
+        if (ix == 0) {
+          nodeMapX0_[countX0] = nodeBC;
+          indexMapX0[countX0] = iy;
+          countX0 ++;
+        }
       }
 
     }
   }
   *nBC_ = count;
+  *nX0_ = countX0;
 
-  // Form a master list of index maps.
+  // Form a global list of the x=x_min index maps.
+
+  MPI_Allgather(nX0_, 1, MPI_INT, sampleDistrib_, 1, MPI_INT,
+                bulk_data.parallel());
+
+  displ_[0] = 0;
+  for (i=1; i<nprocs+1; ++i) { 
+    displ_[i] = displ_[i-1] + sampleDistrib_[i-1];
+  }
+
+//  printf("%s %i %i\n","before ",myrank,*nX0_);
+
+  MPI_Allgatherv(indexMapX0.data(), *nX0_, MPI_INT, 
+                 indexMapSampGlobal_.data(), sampleDistrib_, 
+                 displ_, MPI_INT, bulk_data.parallel());
+
+  // Eliminate redundant elements from the global x-x_min lists.
+
+  count = *nX0_;
+  n = myrank;
+  for (i=displ_[n]; i<displ_[n+1]; i++) {
+    for (j=displ_[n+1]; j<displ_[nprocs]; ++j) {
+      if (indexMapSampGlobal_[i] == indexMapSampGlobal_[j]) {
+        count --;
+        for (ii=i-displ_[n]; ii<count; ++ii) {
+          nodeMapX0_[ii] = nodeMapX0_[ii+1];
+          indexMapX0[ii] = indexMapX0[ii+1];
+        }
+      }
+    }
+  }
+  *nX0_ = count;
+
+//  printf("%s %i %i\n","after ",myrank,*nX0_);
+
+  nyInv = 1.0/(double)ny;
+  for (i=0; i<*nX0_; ++i) {
+    if (indexMapX0[i] == 0 || indexMapX0[i] == ny) {
+      weight_[i] = 0.5*nyInv;
+    } else {
+      weight_[i] = nyInv;
+    }
+//    printf("%s%i%12.4e\n","weights ", i, weight_[i]);
+  }
+
+  // Form a global list of the sample plane index maps.
 
   MPI_Allgather(&nSamp, 1, MPI_INT, sampleDistrib_, 1,
                 MPI_INT, bulk_data.parallel());
@@ -417,7 +487,7 @@ AssembleMomentumEdgeABLTopBC::initialize(
                  indexMapSampGlobal_.data(), sampleDistrib_, 
                  displ_, MPI_INT, bulk_data.parallel());
 
-  // Eliminate redundant elements from the master list.
+  // Eliminate redundant elements from the global index list.
 
   ii = 0;
   for (n=0; n<nprocs; ++n) {
@@ -570,6 +640,195 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
     uBC[iOff2+nx] = uBC[iOff1+0];
     vBC[iOff2+nx] = vBC[iOff1+0];
     wBC[iOff2+nx] = wBC[iOff1+0];
+  }
+
+}
+
+//--------------------------------------------------------------------------
+//-------- potentialBCInflowPeriodic -------------------------------------
+//--------------------------------------------------------------------------
+void
+AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic( 
+  double *wSamp,
+  double xL_,
+  double yL_,
+  double deltaZ_,
+  double *UAvg,
+  int imax_,
+  int jmax_,
+  double *uBC,
+  double *vBC,
+  double *wBC )
+{
+
+  double waveX, waveY, normFac, kx, kx2, ky, kMag, eFac, scale, xFac, yFac,
+         zFac, wt, u0, v0, uInc, vInc;
+  int i, i0, i1, i2, ii, iOff1, iOff2, j, j0, j1, jj, nx, ny, nxny;
+
+  std::vector<double> work(imax_*jmax_);
+  std::vector< std::complex<double> > uCoef(imax_*(jmax_/2+1)),
+    vCoef(imax_*(jmax_/2+1)), wCoef(imax_*(jmax_/2+1));
+  const double pi = std::acos(-1.0);
+  const std::complex<double> iUnit(0.0,1.0);
+
+  nx = imax_-1;
+  ny = jmax_-1;
+  nxny = nx*ny;
+
+// Symmetrize wSamp.
+
+/*
+  for (j=0; j<ny; ++j) {
+    wSamp[ j   *imax_  ] = 0.0;
+    wSamp[(j+1)*imax_-1] = 0.0;
+    for (i=1; i<=nx/2; ++i) {
+      ii = j*imax_ + i;
+      i1 = j*imax_ + (nx-i);
+      wSamp[ii] = 0.5*( wSamp[ii] - wSamp[i1] );
+      wSamp[i1] = -wSamp[ii];
+    }
+  }
+*/
+
+// Set up for FFT.
+
+  waveX =     pi/xL_;
+  waveY = 2.0*pi/yL_;
+  normFac = 1.0/((double)(2*nx)*(double)ny);
+
+  unsigned flags=0;
+  fftw_plan plan_sinx = fftw_plan_r2r_1d(nx-1, &wSamp[0], &wSamp[0],
+                                         FFTW_RODFT00, flags);
+  fftw_plan plan_cosx = fftw_plan_r2r_1d(nx+1, work.data(), work.data(),
+                                         FFTW_REDFT00, flags);
+  fftw_plan plan_fy   = fftw_plan_dft_r2c_1d(ny, work.data(),
+                        reinterpret_cast<fftw_complex*>(&wCoef[0]), flags);
+  fftw_plan plan_by   = fftw_plan_dft_c2r_1d(ny, 
+                        reinterpret_cast<fftw_complex*>(&wCoef[0]),
+                        work.data(), flags);
+
+  // Forward transform of wSamp.  Sine transform in x, Fourier transform
+  // in y.  Note that the data is transposed between the x and y transforms.
+
+  for (j=0; j<ny; ++j) {
+    i0 = j*nx;
+    fftw_execute_r2r(plan_sinx, &wSamp[i0+1], &wSamp[i0+1]);
+    work[j] = 0.0;
+    for (i=1; i<nx; ++i) {
+      ii = i*ny + j;
+      work[ii] = wSamp[i0+i];
+    }
+  }
+  for (i=0; i<nx; ++i) {
+    j0 = i*ny;
+    j1 = i*(ny/2+1);
+    fftw_execute_dft_r2c(plan_fy, &work[j0],
+                         reinterpret_cast<fftw_complex*>(&wCoef[j1]));
+  }
+
+  // Solve the potential flow problem.  u0 and v0 are the average velocity
+  // components at the x=x_min edge.
+
+  u0 = 0;
+  v0 = 0;
+  jj = 0;
+  for (i=0; i<nx; ++i) {
+    kx = waveX*(double)i;
+    kx2 = kx*kx;
+    wt = 2.0;
+    if (i==0 || i==nx) { wt = 1.0; }
+    for (j=0; j<=ny/2; ++j) {
+      ky = waveY*(double)j;
+      kMag = std::sqrt( kx2 + ky*ky );
+      eFac = std::exp(-kMag*deltaZ_)*normFac;
+      scale = 1.0/(kMag+1.0e-15);
+      xFac = kx*scale*eFac;
+      yFac = ky*scale*eFac;
+      zFac =          eFac;
+      uCoef[jj] =       -xFac*wCoef[jj];
+      vCoef[jj] = -iUnit*yFac*wCoef[jj];
+      wCoef[jj] =        zFac*wCoef[jj];
+      if (j == 0) {
+        u0 += wt*real(uCoef[jj]);
+        v0 += wt*real(vCoef[jj]);
+      }
+      jj ++;
+    }
+  }
+//  wCoef[0] = 0.0;
+//  uCoef[0] = UAvg[0];
+
+  // Reverse transform the solution at the upper boundary.  Fourier transform
+  // in y, either sine or cosine transform in x.  Note that the data is 
+  // transposed between the y and x transforms.
+
+  for (i=0; i<nx; ++i) {
+    j0 = i*ny;
+    j1 = i*(ny/2+1);
+    fftw_execute_dft_c2r(plan_by, reinterpret_cast<fftw_complex*>(&wCoef[j1]),
+                         &work[j0]);
+  }
+  for (j=0; j<ny; ++j) {
+    i0 = j*imax_;
+    for (i=0; i<nx; ++i) {
+      ii = i*ny + j;
+      wBC[i0+i] = work[ii];
+    }
+    fftw_execute_r2r(plan_sinx, &wBC[i0+1], &wBC[i0+1]);
+    wBC[i0   ] = 0.0;
+    wBC[i0+nx] = 0.0;
+  }
+
+  for (i=0; i<nx; ++i) {
+    j0 = i*ny;
+    j1 = i*(ny/2+1);
+    fftw_execute_dft_c2r(plan_by, reinterpret_cast<fftw_complex*>(&uCoef[j1]),
+                         &work[j0]);
+  }
+  for (j=0; j<ny; ++j) {
+    i0 = j*imax_;
+    for (i=0; i<nx; ++i) {
+      ii = i*ny + j;
+      uBC[i0+i] = work[ii];
+    }
+    fftw_execute_r2r(plan_cosx, &uBC[i0], &uBC[i0]);
+  }
+
+  for (i=0; i<nx; ++i) {
+    j0 = i*ny;
+    j1 = i*(ny/2+1);
+    fftw_execute_dft_c2r(plan_by, reinterpret_cast<fftw_complex*>(&vCoef[j1]),
+                         &work[j0]);
+  }
+  for (j=0; j<ny; ++j) {
+    i0 = j*imax_;
+    for (i=0; i<nx; ++i) {
+      ii = i*ny + j;
+      vBC[i0+i] = work[ii];
+    }
+    fftw_execute_r2r(plan_cosx, &vBC[i0], &vBC[i0]);
+  }
+
+  // Adjust the u and v mean velocity so that the velocity computed at the
+  // x=x_min edge matches the inflow velocity.
+
+  uInc = UAvg[2] - u0;
+  vInc = UAvg[3] - v0;
+  for (i=0; i<imax_*ny; ++i) {
+    uBC[i] += uInc;
+    vBC[i] += vInc;
+  }
+
+  // Enforce periodicity in y.
+
+  iOff1 = 0;
+  iOff2 = ny*imax_;
+  for (i=0; i<imax_; ++i) {
+    i1 = iOff1 + i;
+    i2 = iOff2 + i;
+    uBC[i2] = uBC[i1];
+    vBC[i2] = vBC[i1];
+    wBC[i2] = wBC[i1];
   }
 
 }

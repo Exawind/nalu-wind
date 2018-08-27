@@ -317,6 +317,7 @@ struct ABLTopUserData : public UserData {
 
   bool ABLTopBC_{false};
   std::vector<int> grid_dims_;
+  double z_sample_;
 
   ABLTopUserData()
     : UserData(),

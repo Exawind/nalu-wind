@@ -32,7 +32,7 @@ public:
   AssembleMomentumEdgeABLTopBC(
     Realm &realm,
     stk::mesh::Part *part,
-    EquationSystem *eqSystem, std::vector<int>& grid_dims);
+    EquationSystem *eqSystem, std::vector<int>& grid_dims_, double z_sample_);
   virtual ~AssembleMomentumEdgeABLTopBC() {}
   virtual void initialize_connectivity();
   virtual void execute();
@@ -44,15 +44,29 @@ public:
     double *xL_,
     double *yL_,
     double *deltaZ_,
+    double *weight_,
     stk::mesh::Entity *nodeMapSamp_,
     stk::mesh::Entity *nodeMapBC_,
     stk::mesh::Entity *nodeMapM1_,
+    stk::mesh::Entity *nodeMapX0_,
     int *indexMapSampGlobal_,
     int *indexMapBC_,
     int *sampleDistrib_,
     int *displ_,
-    int *nBC_);
+    int *nBC_,
+    int *nX0_);
   virtual void potentialBCPeriodicPeriodic(
+    double *wSamp,
+    double xL_,
+    double yL_,
+    double deltaZ_,
+    double *uAvg,
+    int imax_,
+    int jmax_,
+    double *uBC,
+    double *vBC,
+    double *wBC );
+  virtual void potentialBCInflowPeriodic(
     double *wSamp,
     double xL_,
     double yL_,
@@ -69,10 +83,12 @@ public:
   ScalarFieldType *density_;
   GenericFieldType *exposedAreaVec_;
   int imax_, jmax_, kmax_;
-  std::vector<stk::mesh::Entity> nodeMapSamp_, nodeMapBC_, nodeMapM1_;
+  std::vector<double> weight_;
+  std::vector<stk::mesh::Entity> nodeMapSamp_, nodeMapBC_, nodeMapM1_,
+                                 nodeMapX0_;
   std::vector<int> indexMapSampGlobal_, indexMapBC_, sampleDistrib_, displ_;
   double xL_, yL_, deltaZ_, zSample_;
-  int nBC_;
+  int nBC_, nX0_;
   bool needToInitialize_;
 };
 
