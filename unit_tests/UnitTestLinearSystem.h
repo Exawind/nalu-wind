@@ -48,13 +48,13 @@ public:
       )
   {
     if (numSumIntoCalls_ == 0) {
-      rhs_ = Kokkos::View<double*>("rhs_",rhs.dimension(0));
-      for(size_t i=0; i<rhs.dimension(0); ++i) {
+      rhs_ = Kokkos::View<double*>("rhs_",rhs.extent(0));
+      for(size_t i=0; i<rhs.extent(0); ++i) {
         rhs_(i) = rhs(i);
       }
-      lhs_ = Kokkos::View<double**>("lhs_",lhs.dimension(0), lhs.dimension(1));
-      for(size_t i=0; i<lhs.dimension(0); ++i) {
-        for(size_t j=0; j<lhs.dimension(1); ++j) {
+      lhs_ = Kokkos::View<double**>("lhs_",lhs.extent(0), lhs.extent(1));
+      for(size_t i=0; i<lhs.extent(0); ++i) {
+        for(size_t j=0; j<lhs.extent(1); ++j) {
           lhs_(i,j) = lhs(i,j);
         }
       }

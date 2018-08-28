@@ -75,17 +75,17 @@ public:
     SharedMemView<double*>& elemVectorView = elemData.get_scratch_view_1D(*elemVectorField);
     SharedMemView<double**>& elemTensorView = elemData.get_scratch_view_2D(*elemTensorField);
 
-    EXPECT_EQ(nodesPerElem, nodalScalarView.dimension(0));
-    EXPECT_EQ(nodesPerElem, nodalVectorView.dimension(0));
-    EXPECT_EQ(4u,           nodalVectorView.dimension(1));
-    EXPECT_EQ(nodesPerElem, nodalTensorView.dimension(0));
-    EXPECT_EQ(3u,           nodalTensorView.dimension(1));
-    EXPECT_EQ(3u,           nodalTensorView.dimension(2));
+    EXPECT_EQ(nodesPerElem, nodalScalarView.extent(0));
+    EXPECT_EQ(nodesPerElem, nodalVectorView.extent(0));
+    EXPECT_EQ(4u,           nodalVectorView.extent(1));
+    EXPECT_EQ(nodesPerElem, nodalTensorView.extent(0));
+    EXPECT_EQ(3u,           nodalTensorView.extent(1));
+    EXPECT_EQ(3u,           nodalTensorView.extent(2));
 
-    EXPECT_EQ(1u, elemScalarView.dimension(0));
-    EXPECT_EQ(8u, elemVectorView.dimension(0));
-    EXPECT_EQ(2u, elemTensorView.dimension(0));
-    EXPECT_EQ(2u, elemTensorView.dimension(1));
+    EXPECT_EQ(1u, elemScalarView.extent(0));
+    EXPECT_EQ(8u, elemVectorView.extent(0));
+    EXPECT_EQ(2u, elemTensorView.extent(0));
+    EXPECT_EQ(2u, elemTensorView.extent(1));
   }
 
 private:

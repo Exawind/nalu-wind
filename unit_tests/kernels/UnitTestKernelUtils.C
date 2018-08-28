@@ -1061,7 +1061,7 @@ void expect_all_near(
   const double* exactValue,
   const double tol)
 {
-  const int length = calcValue.dimension(0);
+  const int length = calcValue.extent(0);
 
   for (int i=0; i < length; ++i) {
     EXPECT_NEAR(calcValue[i], exactValue[i], tol);
@@ -1073,7 +1073,7 @@ void expect_all_near(
   const double exactValue,
   const double tol)
 {
-  const int length = calcValue.dimension(0);
+  const int length = calcValue.extent(0);
 
   for (int i=0; i < length; ++i) {
     EXPECT_NEAR(calcValue[i], exactValue, tol);
@@ -1085,8 +1085,8 @@ void expect_all_near(
   const double* exactValue,
   const double tol)
 {
-  const int dim1 = calcValue.dimension(0);
-  const int dim2 = calcValue.dimension(1);
+  const int dim1 = calcValue.extent(0);
+  const int dim2 = calcValue.extent(1);
 
   for (int i=0; i < dim1; i++)
     for (int j=0; j < dim2; j++)
