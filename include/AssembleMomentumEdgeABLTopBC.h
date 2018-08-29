@@ -36,48 +36,19 @@ public:
   virtual ~AssembleMomentumEdgeABLTopBC() {}
   virtual void initialize_connectivity();
   virtual void execute();
-  virtual void initialize(
-    int imax_,
-    int jmax_,
-    int kmax_,
-    double zSample_,
-    double *xL_,
-    double *yL_,
-    double *deltaZ_,
-    double *weight_,
-    stk::mesh::Entity *nodeMapSamp_,
-    stk::mesh::Entity *nodeMapBC_,
-    stk::mesh::Entity *nodeMapM1_,
-    stk::mesh::Entity *nodeMapX0_,
-    int *indexMapSampGlobal_,
-    int *indexMapBC_,
-    int *sampleDistrib_,
-    int *displ_,
-    int *nBC_,
-    int *nX0_);
+  virtual void initialize();
   virtual void potentialBCPeriodicPeriodic(
-    double *wSamp,
-    double xL_,
-    double yL_,
-    double deltaZ_,
-    double *uAvg,
-    int imax_,
-    int jmax_,
-    double *uBC,
-    double *vBC,
-    double *wBC );
+    std::vector<double>& wSamp,
+    std::vector<double>& uAvg,
+    std::vector<double>& uBC,
+    std::vector<double>& vBC,
+    std::vector<double>& wBC );
   virtual void potentialBCInflowPeriodic(
-    double *wSamp,
-    double xL_,
-    double yL_,
-    double deltaZ_,
-    double *uAvg,
-    int imax_,
-    int jmax_,
-    double *uBC,
-    double *vBC,
-    double *wBC );
-
+    std::vector<double>& wSamp,
+    std::vector<double>& uAvg,
+    std::vector<double>& uBC,
+    std::vector<double>& vBC,
+    std::vector<double>& wBC );
   VectorFieldType *velocity_;
   VectorFieldType *bcVelocity_;
   ScalarFieldType *density_;
@@ -90,6 +61,10 @@ public:
   double xL_, yL_, deltaZ_, zSample_;
   int nBC_, nX0_;
   bool needToInitialize_;
+  fftw_plan planFourier2dF_, planFourier2dB_, planSinx_, planCosx_,
+            planFourierxF_, planFourierxB_,   planSiny_, planCosy_,
+            planFourieryF_, planFourieryB_, planSinxSiny_, planCosxSiny_,
+            planSinxCosy_;
 };
 
 } // namespace nalu

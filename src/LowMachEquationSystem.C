@@ -1990,10 +1990,8 @@ MomentumEquationSystem::register_symmetry_bc(
   const stk::topology &partTopo,
   const SymmetryBoundaryConditionData & symmetryBCData)
 {
-  auto& meta_data = realm_.meta_data();
   // algorithm type
   const AlgorithmType algType = SYMMETRY;
-  auto user_data = symmetryBCData.userData_;
 
   VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
   GenericFieldType &dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
@@ -3095,9 +3093,6 @@ ContinuityEquationSystem::register_abltop_bc(
 
   ScalarFieldType &pressureNone = pressure_->field_of_state(stk::mesh::StateNone);
   VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
-
-  stk::mesh::MetaData &meta_data = realm_.meta_data();
-  const unsigned nDim = meta_data.spatial_dimension();
 
 /*
   // register boundary data; cont_velocity_bc
