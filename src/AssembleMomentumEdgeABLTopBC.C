@@ -45,12 +45,14 @@ namespace nalu{
 AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
   Realm &realm,
   stk::mesh::Part *part,
-  EquationSystem *eqSystem, std::vector<int>& grid_dims, double z_sample_)
+  EquationSystem *eqSystem, std::vector<int>& grid_dims, 
+  std::vector<int>& horiz_bcs, double z_sample)
   : SolverAlgorithm(realm, part, eqSystem),
   imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2]), weight_(jmax_),
   nodeMapSamp_(imax_*jmax_), nodeMapBC_(imax_*jmax_), nodeMapM1_(imax_*jmax_),
   nodeMapX0_(jmax_), indexMapSampGlobal_(imax_*jmax_), indexMapBC_(imax_*jmax_),
-  sampleDistrib_(1000), displ_(1000+1), zSample_(z_sample_),
+  sampleDistrib_(1000), displ_(1000+1), 
+  horizBC_(horiz_bcs.begin(),horiz_bcs.end()), zSample_(z_sample),
   needToInitialize_(true)
 {
   // save off fields
@@ -113,8 +115,8 @@ AssembleMomentumEdgeABLTopBC::execute()
     uFac = (double)(timeStepCount-2*startupSteps-1)/(double)(startupSteps);
   }
       
-  wFac = 1.0;
-  uFac = 1.0;
+//  wFac = 1.0;
+//  uFac = 1.0;
 
 // Set up for diagnostic output.
 
@@ -174,8 +176,21 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   // Compute the upper boundary velocity field
 
-  potentialBCPeriodicPeriodic( wSamp, UAvg, uBC, vBC, wBC );
-//  potentialBCInflowPeriodic( wSamp, UAvg, uBC, vBC, wBC );
+  switch (horizBCType_) {
+    case 0:
+      potentialBCPeriodicPeriodic( wSamp, UAvg, uBC, vBC, wBC );
+    break;
+    case 1:
+      potentialBCInflowPeriodic( wSamp, UAvg, uBC, vBC, wBC );
+  }
+
+/*
+  if (dump && myrank == 0) {
+    for (i=0; i<imax_*jmax_; ++i) {
+      fprintf( outFile, "%5i %12.4e %12.4e %12.4e\n",i,uBC[i],vBC[i],wBC[i] );
+    }
+  }
+*/
 
   // Set the boundary velocity array values.
 
@@ -186,7 +201,7 @@ AssembleMomentumEdgeABLTopBC::execute()
     double *Um1   = stk::mesh::field_data(velocityNp1,  nodeMapM1_[i]);
     double *coord = stk::mesh::field_data(*coordinates, nodeMapBC_[i]);
     uTop[0] = uFac*uBC[ii] + (1.0-uFac)*Um1[0];
-    uTop[1] = wFac*vBC[ii];
+    uTop[1] = uFac*vBC[ii] + (1.0-uFac)*Um1[1];
     uTop[2] = wFac*wBC[ii];
     if (dump) {
       fprintf( outFile, "%12.4e%12.4e%12.4e%12.4e%12.4e%12.4e\n",
@@ -232,28 +247,48 @@ AssembleMomentumEdgeABLTopBC::initialize()
   nz = kmax_-1;
   imaxjmax = imax_*jmax_;
 
+  // Set horizontal BC flag
+
+  if (horizBC_[0]<0 || horizBC_[0]>1 || horizBC_[1]<0 || horizBC_[1]>1) {
+    throw std::runtime_error(
+      "AssembleMomentumEdgeABLTopBC: Bad user input for horizontal_bcs");
+  }
+
+  if (horizBC_[0]==0 && horizBC_[1]==0) horizBCType_ = 0;  // periodic-periodic
+  if (horizBC_[0]==1 && horizBC_[1]==0) horizBCType_ = 1;  // inflow  -periodic
+  if (horizBC_[0]==0 && horizBC_[1]==1) horizBCType_ = 2;  // periodic-inflow  
+  if (horizBC_[0]==1 && horizBC_[1]==1) horizBCType_ = 3;  // inflow  -inflow
+
   // Define fft plans.
 
   unsigned flags=0;
 
-  planFourier2dF_ = 
-    fftw_plan_dft_r2c_2d(ny, nx, work.data(),
+  switch (horizBCType_) {
+    case 0:
+      planFourier2dF_ = 
+      fftw_plan_dft_r2c_2d(ny, nx, work.data(),
+                           reinterpret_cast<fftw_complex*>(workC.data()),flags);
+      planFourier2dB_ = 
+      fftw_plan_dft_c2r_2d(ny,nx,reinterpret_cast<fftw_complex*>(workC.data()),
+                           work.data(), flags);
+    break;
+    case 1:
+      planSinx_ = 
+      fftw_plan_r2r_1d(nx-1, work.data(), work.data(), FFTW_RODFT00, flags);
+      planCosx_ = 
+      fftw_plan_r2r_1d(nx+1, work.data(), work.data(), FFTW_REDFT00, flags);
+      planFourieryF_ = 
+      fftw_plan_dft_r2c_1d(ny, work.data(),
                          reinterpret_cast<fftw_complex*>(workC.data()), flags);
-  planFourier2dB_ = 
-    fftw_plan_dft_c2r_2d(ny, nx, reinterpret_cast<fftw_complex*>(workC.data()),
-                         work.data(), flags);
+      planFourieryB_ = 
+      fftw_plan_dft_c2r_1d(ny, reinterpret_cast<fftw_complex*>(workC.data()),
+                           work.data(), flags);
+    break;
+    default:
+      printf("%s\n","BC not yet implemented");
+      exit(0);
+  }
 /*
-  planSinx_ = 
-    fftw_plan_r2r_1d(nx-1, work.data(), work.data(), FFTW_RODFT00, flags);
-  planCosx_ = 
-    fftw_plan_r2r_1d(nx+1, work.data(), work.data(), FFTW_REDFT00, flags);
-  planFourieryF_ = 
-    fftw_plan_dft_r2c_1d(ny, work.data(),
-                         reinterpret_cast<fftw_complex*>(workC.data()), flags);
-  planFourieryB_ = 
-    fftw_plan_dft_c2r_1d(ny, reinterpret_cast<fftw_complex*>(workC.data()),
-                         work.data(), flags);
-
   planSiny_ = 
     fftw_plan_r2r_1d(ny-1, work.data(), work.data(), FFTW_RODFT00, flags);
   planCosy_ = 
@@ -527,7 +562,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
   ny = jmax_-1;
 
 // Symmetrize wSamp.
-
+/*
   for (j=0; j<ny; ++j) {
     wSamp[j*nx] = 0.0;
     for (i=1; i<nx/2; ++i) {
@@ -537,12 +572,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
       wSamp[i1] = -wSamp[ii];
     }
   }
-
-// Set up for FFT.
-
-  waveX = 2.0*pi/xL_;
-  waveY = 2.0*pi/yL_;
-  normFac = 1.0/((double)nx*(double)ny);
+*/
 
 // Forward transform of wSamp.
 
@@ -550,6 +580,10 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
                        reinterpret_cast<fftw_complex*>(wCoef.data()));
 
 // Solve the potential flow problem.
+
+  waveX = 2.0*pi/xL_;
+  waveY = 2.0*pi/yL_;
+  normFac = 1.0/((double)nx*(double)ny);
 
   ii = 0;
   for (j=0; j<ny; ++j) {
@@ -588,30 +622,30 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
 
   iOff1 = 0;
   iOff2 = ny*imax_;
-  for (i=0; i<nx; ++i) {
+  uBC[iOff2+nx] = uBC[iOff1];
+  vBC[iOff2+nx] = vBC[iOff1];
+  wBC[iOff2+nx] = wBC[iOff1];
+  for (i=nx-1; i>=0; --i) {
     i1 = iOff1 + i;
     i2 = iOff2 + i;
     uBC[i2] = uBC[i1];
     vBC[i2] = vBC[i1];
     wBC[i2] = wBC[i1];
   }
-  uBC[iOff2+nx] = uBC[iOff1+0];
-  vBC[iOff2+nx] = vBC[iOff1+0];
-  wBC[iOff2+nx] = wBC[iOff1+0];
 
-  for (j=ny-1; j>0; --j) {
+  for (j=ny-1; j>=0; --j) {
     iOff1 = j*nx;
     iOff2 = j*imax_;
-    for (i=0; i<nx; ++i) {
+    uBC[iOff2+nx] = uBC[iOff1];
+    vBC[iOff2+nx] = vBC[iOff1];
+    wBC[iOff2+nx] = wBC[iOff1];
+    for (i=nx-1; i>=0; --i) {
       i1 = iOff1 + i;
       i2 = iOff2 + i;
       uBC[i2] = uBC[i1];
       vBC[i2] = vBC[i1];
       wBC[i2] = wBC[i1];
     }
-    uBC[iOff2+nx] = uBC[iOff1+0];
-    vBC[iOff2+nx] = vBC[iOff1+0];
-    wBC[iOff2+nx] = wBC[iOff1+0];
   }
 
 }
@@ -658,12 +692,6 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
   }
 */
 
-// Set up for FFT.
-
-  waveX =     pi/xL_;
-  waveY = 2.0*pi/yL_;
-  normFac = 1.0/((double)(2*nx)*(double)ny);
-
   // Forward transform of wSamp.  Sine transform in x, Fourier transform
   // in y.  Note that the data is transposed between the x and y transforms.
 
@@ -685,6 +713,10 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
 
   // Solve the potential flow problem.  u0 and v0 are the average velocity
   // components at the x=x_min edge.
+
+  waveX =     pi/xL_;
+  waveY = 2.0*pi/yL_;
+  normFac = 1.0/((double)(2*nx)*(double)ny);
 
   u0 = 0;
   v0 = 0;
@@ -721,23 +753,6 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
     j0 = i*ny;
     j1 = i*(ny/2+1);
     fftw_execute_dft_c2r(planFourieryB_,
-                        reinterpret_cast<fftw_complex*>(&wCoef[j1]), &work[j0]);
-  }
-  for (j=0; j<ny; ++j) {
-    i0 = j*imax_;
-    for (i=0; i<nx; ++i) {
-      ii = i*ny + j;
-      wBC[i0+i] = work[ii];
-    }
-    fftw_execute_r2r(planSinx_, &wBC[i0+1], &wBC[i0+1]);
-    wBC[i0   ] = 0.0;
-    wBC[i0+nx] = 0.0;
-  }
-
-  for (i=0; i<nx; ++i) {
-    j0 = i*ny;
-    j1 = i*(ny/2+1);
-    fftw_execute_dft_c2r(planFourieryB_,
                         reinterpret_cast<fftw_complex*>(&uCoef[j1]), &work[j0]);
   }
   for (j=0; j<ny; ++j) {
@@ -761,7 +776,24 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
       ii = i*ny + j;
       vBC[i0+i] = work[ii];
     }
-    fftw_execute_r2r(planCosx_, &vBC[i0], &vBC[i0]);
+    fftw_execute_r2r(planSinx_, &vBC[i0], &vBC[i0]);
+  }
+
+  for (i=0; i<nx; ++i) {
+    j0 = i*ny;
+    j1 = i*(ny/2+1);
+    fftw_execute_dft_c2r(planFourieryB_,
+                        reinterpret_cast<fftw_complex*>(&wCoef[j1]), &work[j0]);
+  }
+  for (j=0; j<ny; ++j) {
+    i0 = j*imax_;
+    for (i=0; i<nx; ++i) {
+      ii = i*ny + j;
+      wBC[i0+i] = work[ii];
+    }
+    fftw_execute_r2r(planSinx_, &wBC[i0+1], &wBC[i0+1]);
+    wBC[i0   ] = 0.0;
+    wBC[i0+nx] = 0.0;
   }
 
   // Adjust the u and v mean velocity so that the velocity computed at the

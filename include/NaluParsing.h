@@ -313,14 +313,16 @@ struct SymmetryUserData : public UserData {
 struct ABLTopUserData : public UserData {
   NormalTemperatureGradient normalTemperatureGradient_;
 
-  bool normalTemperatureGradientSpec_;
-
   bool ABLTopBC_{false};
   std::vector<int> grid_dims_;
+  std::vector<int> horiz_bcs_;
   double z_sample_;
+
+  bool normalTemperatureGradientSpec_;
 
   ABLTopUserData()
     : UserData(),
+      z_sample_(-999.0),
       normalTemperatureGradientSpec_(false)
   {}
 };

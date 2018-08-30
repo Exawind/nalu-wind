@@ -32,7 +32,8 @@ public:
   AssembleMomentumEdgeABLTopBC(
     Realm &realm,
     stk::mesh::Part *part,
-    EquationSystem *eqSystem, std::vector<int>& grid_dims_, double z_sample_);
+    EquationSystem *eqSystem, std::vector<int>& grid_dims_,
+    std::vector<int>& horiz_bcs_, double z_sample_);
   virtual ~AssembleMomentumEdgeABLTopBC() {}
   virtual void initialize_connectivity();
   virtual void execute();
@@ -57,9 +58,10 @@ public:
   std::vector<double> weight_;
   std::vector<stk::mesh::Entity> nodeMapSamp_, nodeMapBC_, nodeMapM1_,
                                  nodeMapX0_;
-  std::vector<int> indexMapSampGlobal_, indexMapBC_, sampleDistrib_, displ_;
+  std::vector<int> indexMapSampGlobal_, indexMapBC_, sampleDistrib_, displ_,
+                   horizBC_;
   double xL_, yL_, deltaZ_, zSample_;
-  int nBC_, nX0_;
+  int nBC_, nX0_, horizBCType_;
   bool needToInitialize_;
   fftw_plan planFourier2dF_, planFourier2dB_, planSinx_, planCosx_,
             planFourierxF_, planFourierxB_,   planSiny_, planCosy_,

@@ -98,6 +98,8 @@ public:
 
   SurfaceForceAndMomentAlgorithmDriver *surfaceForceAndMomentAlgDriver_;
 
+  std::vector<int> xyBCType_;
+
   bool isInit_;
 
 };

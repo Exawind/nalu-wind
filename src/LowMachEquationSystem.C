@@ -244,6 +244,7 @@ LowMachEquationSystem::LowMachEquationSystem(
     dualNodalVolume_(NULL),
     edgeAreaVec_(NULL),
     surfaceForceAndMomentAlgDriver_(NULL),
+    xyBCType_(2,0),
     isInit_(true)
 {
   // push back EQ to manager
@@ -2108,7 +2109,8 @@ MomentumEquationSystem::register_abltop_bc(
       auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
       if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
   	SolverAlgorithm* theAlg = new AssembleMomentumEdgeABLTopBC(realm_, 
-          part, this, user_data.grid_dims_, user_data.z_sample_);
+          part, this, user_data.grid_dims_, user_data.horiz_bcs_,
+          user_data.z_sample_);
 	solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
       }	else {
 	it->second->partVec_.push_back(part);	
