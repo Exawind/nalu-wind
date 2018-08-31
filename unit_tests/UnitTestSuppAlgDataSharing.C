@@ -75,17 +75,17 @@ public:
     SharedMemView<double*>& elemVectorView = elemData.get_scratch_view_1D(*elemVectorField);
     SharedMemView<double**>& elemTensorView = elemData.get_scratch_view_2D(*elemTensorField);
 
-    EXPECT_EQ(nodesPerElem, nodalScalarView.dimension(0));
-    EXPECT_EQ(nodesPerElem, nodalVectorView.dimension(0));
-    EXPECT_EQ(4u,           nodalVectorView.dimension(1));
-    EXPECT_EQ(nodesPerElem, nodalTensorView.dimension(0));
-    EXPECT_EQ(3u,           nodalTensorView.dimension(1));
-    EXPECT_EQ(3u,           nodalTensorView.dimension(2));
+    EXPECT_EQ(nodesPerElem, nodalScalarView.extent(0));
+    EXPECT_EQ(nodesPerElem, nodalVectorView.extent(0));
+    EXPECT_EQ(4u,           nodalVectorView.extent(1));
+    EXPECT_EQ(nodesPerElem, nodalTensorView.extent(0));
+    EXPECT_EQ(3u,           nodalTensorView.extent(1));
+    EXPECT_EQ(3u,           nodalTensorView.extent(2));
 
-    EXPECT_EQ(1u, elemScalarView.dimension(0));
-    EXPECT_EQ(8u, elemVectorView.dimension(0));
-    EXPECT_EQ(2u, elemTensorView.dimension(0));
-    EXPECT_EQ(2u, elemTensorView.dimension(1));
+    EXPECT_EQ(1u, elemScalarView.extent(0));
+    EXPECT_EQ(8u, elemVectorView.extent(0));
+    EXPECT_EQ(2u, elemTensorView.extent(0));
+    EXPECT_EQ(2u, elemTensorView.extent(1));
   }
 
 private:
@@ -118,20 +118,24 @@ public:
 
       const int bytes_per_team = 0;
       const int bytes_per_thread = get_num_bytes_pre_req_data(dataNeededByKernels_, meta.spatial_dimension());
+
+      ngp::Mesh ngpMesh(bulkData_);
+      int totalNumFields = meta.get_fields().size();
+
       auto team_exec = sierra::nalu::get_host_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);
       Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
       {
           const stk::mesh::Bucket& bkt = *elemBuckets[team.league_rank()];
           stk::topology topo = bkt.topology();
 
-          sierra::nalu::ScratchViews<double> prereqData(team, bulkData_, topo.num_nodes(), dataNeededByKernels_);
+          sierra::nalu::ScratchViews<double> prereqData(team, ngpMesh, totalNumFields, topo.num_nodes(), dataNeededByKernels_);
 
           // See get_num_bytes_pre_req_data for padding
           EXPECT_EQ(static_cast<unsigned>(bytes_per_thread), prereqData.total_bytes() + 8 * sizeof(double));
 
           Kokkos::parallel_for(Kokkos::TeamThreadRange(team, bkt.size()), [&](const size_t& jj)
           {
-             fill_pre_req_data(dataNeededByKernels_, bulkData_, bkt[jj], prereqData);
+             fill_pre_req_data(dataNeededByKernels_, ngpMesh, stk::topology::ELEM_RANK, bkt[jj], prereqData);
             
              for(SuppAlg* alg : suppAlgs_) {
                alg->elem_execute(topo, prereqData);

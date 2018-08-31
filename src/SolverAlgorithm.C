@@ -57,7 +57,7 @@ SolverAlgorithm::apply_coeff(
 void
 SolverAlgorithm::apply_coeff(
   unsigned numMeshobjs,
-  const stk::mesh::Entity* symMeshobjs,
+  const ngp::Mesh::ConnectedNodes& symMeshobjs,
   const SharedMemView<int*> & scratchIds,
   const SharedMemView<int*> & sortPermutation,
   const SharedMemView<const double*> & rhs,

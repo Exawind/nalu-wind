@@ -87,7 +87,7 @@ TEST(LocalGraphArrays, insertIndicesNumDof3)
   cols = {21, 18, 24, 15};
   csg->insertIndices(2, cols.size(), cols.data(), numDof);
 
-  EXPECT_EQ(27, csg->colIndices.size());
+  EXPECT_EQ(27u, csg->colIndices.size());
   for(size_t i=0; i<csg->colIndices.size(); ++i) {
     EXPECT_EQ((int)i, csg->colIndices[i]);
   }
@@ -98,7 +98,7 @@ TEST(LocalGraphArrays, insertIndicesNumDof3)
   dupCols = {6, 9, 12};
   csg->insertIndices(1, dupCols.size(), dupCols.data(), numDof);
 
-  EXPECT_EQ(27, csg->colIndices.size());
+  EXPECT_EQ(27u, csg->colIndices.size());
   for(size_t i=0; i<csg->colIndices.size(); ++i) {
     EXPECT_EQ((int)i, csg->colIndices[i]);
   }

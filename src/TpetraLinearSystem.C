@@ -1240,8 +1240,8 @@ TpetraLinearSystem::finalizeLinearSystem()
 
   sort_connections(connections_);
 
-  size_t numSharedNotOwned = sharedNotOwnedRowsMap_->getMyGlobalIndices().dimension(0);
-  size_t numLocallyOwned = ownedRowsMap_->getMyGlobalIndices().dimension(0);
+  size_t numSharedNotOwned = sharedNotOwnedRowsMap_->getMyGlobalIndices().extent(0);
+  size_t numLocallyOwned = ownedRowsMap_->getMyGlobalIndices().extent(0);
   LinSys::RowLengths sharedNotOwnedRowLengths("rowLengths", numSharedNotOwned);
   LinSys::RowLengths locallyOwnedRowLengths("rowLengths", numLocallyOwned);
   Kokkos::View<size_t*,HostSpace> ownedRowLengths = locallyOwnedRowLengths.view<HostSpace>();
@@ -1286,12 +1286,17 @@ TpetraLinearSystem::finalizeLinearSystem()
 
   remove_invalid_indices(ownedGraph, ownedRowLengths);
 
+#ifdef KOKKOS_HAVE_CUDA
+  ThrowRequireMsg(false, "TpetraLinearSystem doesn't yet support Nvidia/cuda.");
+#else
   sharedNotOwnedGraph_ = Teuchos::rcp(new LinSys::Graph(sharedNotOwnedRowsMap_, totalColsMap_, sharedNotOwnedRowLengths, Tpetra::StaticProfile));
  
   ownedGraph_ = Teuchos::rcp(new LinSys::Graph(ownedRowsMap_, totalColsMap_, locallyOwnedRowLengths, Tpetra::StaticProfile));
 
   ownedGraph_->setAllIndices(ownedGraph.rowPointers, ownedGraph.colIndices);
   sharedNotOwnedGraph_->setAllIndices(sharedNotOwnedGraph.rowPointers, sharedNotOwnedGraph.colIndices);
+#endif
+
 //  Teuchos::RCP<LinSys::Import> importer = Teuchos::rcp(new LinSys::Import(ownedRowsMap_, totalColsMap_));
 //  ownedGraph_->expertStaticFillComplete(ownedRowsMap_, ownedRowsMap_, importer);
 //  sharedNotOwnedGraph_->expertStaticFillComplete(ownedRowsMap_, ownedRowsMap_);
@@ -1433,7 +1438,7 @@ void sum_into_row (
 void
 TpetraLinearSystem::sumInto(
       unsigned numEntities,
-      const stk::mesh::Entity* entities,
+      const ngp::Mesh::ConnectedNodes& entities,
       const SharedMemView<const double*> & rhs,
       const SharedMemView<const double**> & lhs,
       const SharedMemView<int*> & localIds,
@@ -1442,10 +1447,10 @@ TpetraLinearSystem::sumInto(
 {
   constexpr bool forceAtomic = !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
 
-  ThrowAssertMsg(lhs.is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.is_contiguous(), "RHS assumed contiguous");
-  ThrowAssertMsg(localIds.is_contiguous(), "localIds assumed contiguous");
-  ThrowAssertMsg(sortPermutation.is_contiguous(), "sortPermutation assumed contiguous");
+  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
+  ThrowAssertMsg(localIds.span_is_contiguous(), "localIds assumed contiguous");
+  ThrowAssertMsg(sortPermutation.span_is_contiguous(), "sortPermutation assumed contiguous");
 
   const int n_obj = numEntities;
   const int numRows = n_obj * numDof_;

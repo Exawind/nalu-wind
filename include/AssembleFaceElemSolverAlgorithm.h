@@ -71,7 +71,10 @@ public:
       stk::mesh::EntityRank sideRank = bulk.mesh_meta_data().side_rank();
       stk::mesh::BucketVector const& buckets = bulk.get_buckets(sideRank, s_locally_owned_union );
 
-      auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
+      ngp::Mesh ngpMesh(bulk);
+      int totalNumFields = bulk.mesh_meta_data().get_fields().size();
+
+      auto team_exec = sierra::nalu::get_device_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
       Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
       {
         stk::mesh::Bucket & b = *buckets[team.league_rank()];
@@ -80,7 +83,7 @@ public:
                        "AssembleFaceElemSolverAlgorithm expected nodesPerEntity_ = "
                        <<nodesPerFace_<<", but b.topology().num_nodes() = "<<b.topology().num_nodes());
 
-        SharedMemData_FaceElem smdata(team, bulk, faceDataNeeded_, elemDataNeeded_, meElemInfo, rhsSize);
+        SharedMemData_FaceElem smdata(team, ngpMesh, totalNumFields, faceDataNeeded_, elemDataNeeded_, meElemInfo, rhsSize);
 
         const size_t bucketLen   = b.size();
         const size_t simdBucketLen = sierra::nalu::get_num_simd_groups(bucketLen);
@@ -103,11 +106,12 @@ public:
 
               const stk::mesh::Entity* elems = bulk.begin_elements(face);
   
-              smdata.connectedNodes[simdFaceIndex] = bulk.begin_nodes(elems[0]);
+              stk::mesh::FastMeshIndex elemIndex = ngpMesh.fast_mesh_index(elems[0]);
+              smdata.connectedNodes[simdFaceIndex] = ngpMesh.get_nodes(stk::topology::ELEM_RANK, elemIndex);
               smdata.elemFaceOrdinal = thisElemFaceOrdinal;
               elemFaceOrdinal = thisElemFaceOrdinal;
-              sierra::nalu::fill_pre_req_data(faceDataNeeded_, bulk, face, *smdata.faceViews[simdFaceIndex], interleaveMeViews);
-              sierra::nalu::fill_pre_req_data(elemDataNeeded_, bulk, elems[0], *smdata.elemViews[simdFaceIndex], interleaveMeViews);
+              sierra::nalu::fill_pre_req_data(faceDataNeeded_, ngpMesh, sideRank, face, *smdata.faceViews[simdFaceIndex], interleaveMeViews);
+              sierra::nalu::fill_pre_req_data(elemDataNeeded_, ngpMesh, stk::topology::ELEM_RANK, elems[0], *smdata.elemViews[simdFaceIndex], interleaveMeViews);
               ++simdFaceIndex;
             }
             smdata.numSimdFaces = simdFaceIndex;
@@ -115,8 +119,8 @@ public:
   
             copy_and_interleave(smdata.faceViews, smdata.numSimdFaces, smdata.simdFaceViews, interleaveMeViews);
             copy_and_interleave(smdata.elemViews, smdata.numSimdFaces, smdata.simdElemViews, interleaveMeViews);
-            fill_master_element_views(faceDataNeeded_, bulk, smdata.simdFaceViews, smdata.elemFaceOrdinal);
-            fill_master_element_views(elemDataNeeded_, bulk, smdata.simdElemViews, smdata.elemFaceOrdinal);
+            fill_master_element_views(faceDataNeeded_, smdata.simdFaceViews, smdata.elemFaceOrdinal);
+            fill_master_element_views(elemDataNeeded_, smdata.simdElemViews, smdata.elemFaceOrdinal);
   
             lamdbaFunc(smdata);
           } while(numFacesProcessed < simdGroupLen);

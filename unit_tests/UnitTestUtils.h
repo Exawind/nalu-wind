@@ -65,7 +65,6 @@ std::array<double,9> random_linear_transformation(int dim, double scale,std::mt1
 
 const double tol = 1.e-10;
 
-#ifndef KOKKOS_HAVE_CUDA
 class Hex8Mesh : public ::testing::Test
 {
 protected:
@@ -100,7 +99,7 @@ protected:
       unit_test_utils::fill_hex8_mesh(meshSpec, bulk);
     }
 
-    void fill_mesh_and_initialize_test_fields(const std::string& meshSpec = "generated:20x20x20")
+    void fill_mesh_and_initialize_test_fields(const std::string& meshSpec = "generated:2x2x2")
     {
         fill_mesh(meshSpec);
 
@@ -302,8 +301,6 @@ class ABLWallFunctionHex8ElementWithBCFields : public Hex8ElementWithBCFields
   double ypSpec_;
 
 };  
-
-#endif
 
 #endif
 

@@ -354,7 +354,7 @@ HypreLinearSystem::zeroSystem()
 void
 HypreLinearSystem::sumInto(
   unsigned numEntities,
-  const stk::mesh::Entity* entities,
+  const ngp::Mesh::ConnectedNodes& entities,
   const SharedMemView<const double*>& rhs,
   const SharedMemView<const double**>& lhs,
   const SharedMemView<int*>&,

@@ -29,8 +29,6 @@
 #include <array>
 #include <random>
 
-#ifndef KOKKOS_HAVE_CUDA
-
 namespace unit_test_utils {
 
 void fill_mesh_1_elem_per_proc_hex8(stk::mesh::BulkData& bulk)
@@ -353,7 +351,6 @@ stk::mesh::Entity create_one_reference_element(stk::mesh::BulkData& bulk, stk::t
   }
 }
 
-
 stk::mesh::Entity create_one_perturbed_element(stk::mesh::BulkData& bulk, stk::topology topo)
 {
 
@@ -518,6 +515,8 @@ double global_norm(const double & norm, const size_t & N, const stk::ParallelMac
   return g_norm;
 }
 
+#ifndef KOKKOS_HAVE_CUDA
+
 double initialize_linear_scalar_field(
   const stk::mesh::BulkData& bulk,
   const VectorFieldType& coordField,
@@ -549,6 +548,7 @@ double initialize_linear_scalar_field(
   return std::sqrt(b[0] * b[0] + b[1]* b[1] + b[2] * b[2]);
 }
 
+#endif // KOKKOS_HAVE_CUDA
 
 double initialize_quadratic_scalar_field(
   const stk::mesh::BulkData& bulk,
@@ -580,11 +580,12 @@ double initialize_quadratic_scalar_field(
 
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::NODE_RANK, selector);
-  kokkos_thread_team_bucket_loop(buckets, [&](stk::mesh::Entity node)
-  {
-    const double* coords = stk::mesh::field_data(coordField, node);
-    *stk::mesh::field_data(qField, node) = quadratic(a,b,H, coords);
-  });
+  for(const stk::mesh::Bucket* bkt : buckets) {
+    for(stk::mesh::Entity node : *bkt) {
+      const double* coords = stk::mesh::field_data(coordField, node);
+      *stk::mesh::field_data(qField, node) = quadratic(a,b,H, coords);
+    }
+  }
 
   double traceOfHessian = H[0] + H[4] + H[8];
 
@@ -673,8 +674,9 @@ std::array<double,9> random_linear_transformation(int dim, double scale, std::mt
   }
 }
 
-
 }//namespace unit_test_utils
+
+#ifndef KOKKOS_HAVE_CUDA
 
 void Hex8Mesh::check_discrete_laplacian(double exactLaplacian)
 {

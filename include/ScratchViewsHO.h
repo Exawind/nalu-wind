@@ -14,6 +14,7 @@
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_ngp/Ngp.hpp>
 
 #include <ElemDataRequests.h>
 #include <master_element/MasterElement.h>
@@ -39,7 +40,8 @@ public:
   typedef T value_type;
 
   ScratchViewsHO(const TeamHandleType& team,
-               const stk::mesh::BulkData& bulkData,
+               const ngp::Mesh& ngpMesh,
+               unsigned totalNumFields,
                int order, int dim,
                const ElemDataRequests& dataNeeded);
 
@@ -51,7 +53,17 @@ public:
     return fieldViews[field.mesh_meta_data_ordinal()].data();
   }
 
+  T* get_scratch_view_ptr(const ngp::Field<double>& field)
+  {
+    return fieldViews[field.get_ordinal()].data();
+  }
+
   template <typename CompiledTimeSizedViewType> CompiledTimeSizedViewType get_scratch_view(const stk::mesh::FieldBase& field)
+  {
+    return CompiledTimeSizedViewType(get_scratch_view_ptr(field));
+  }
+
+  template <typename CompiledTimeSizedViewType> CompiledTimeSizedViewType get_scratch_view(const ngp::Field<double>& field)
   {
     return CompiledTimeSizedViewType(get_scratch_view_ptr(field));
   }
@@ -61,7 +73,17 @@ public:
     return ViewType(get_scratch_view_ptr(field), n0);
   }
 
+  template <typename ViewType> ViewType get_scratch_view(const ngp::Field<double>& field, int n0)
+  {
+    return ViewType(get_scratch_view_ptr(field), n0);
+  }
+
   template <typename ViewType> ViewType get_scratch_view(const stk::mesh::FieldBase& field, int n0, int n1)
+  {
+    return ViewType(get_scratch_view_ptr(field), n0, n1);
+  }
+
+  template <typename ViewType> ViewType get_scratch_view(const ngp::Field<double>& field, int n0, int n1)
   {
     return ViewType(get_scratch_view_ptr(field), n0, n1);
   }
@@ -71,7 +93,17 @@ public:
     return ViewType(get_scratch_view_ptr(field), n0, n1, n2);
   }
 
+  template <typename ViewType> ViewType get_scratch_view(const ngp::Field<double>& field,  int n0, int n1, int n2)
+  {
+    return ViewType(get_scratch_view_ptr(field), n0, n1, n2);
+  }
+
   template <typename ViewType> ViewType get_scratch_view(const stk::mesh::FieldBase& field, int n0, int n1, int n2, int n3)
+  {
+    return ViewType(get_scratch_view_ptr(field), n0, n1, n2, n3);
+  }
+
+  template <typename ViewType> ViewType get_scratch_view(const ngp::Field<double>& field, int n0, int n1, int n2, int n3)
   {
     return ViewType(get_scratch_view_ptr(field), n0, n1, n2, n3);
   }
@@ -81,9 +113,14 @@ public:
     return ViewType(get_scratch_view_ptr(field), n0, n1, n2, n3, n4);
   }
 
+  template <typename ViewType> ViewType get_scratch_view(const ngp::Field<double>& field, int n0, int n1, int n2, int n3, int n4)
+  {
+    return ViewType(get_scratch_view_ptr(field), n0, n1, n2, n3, n4);
+  }
+
   int total_bytes() const { return num_bytes_required; }
 
-  std::array<const stk::mesh::Entity*, simdLen> elemNodes{{}};
+  std::array<ngp::Mesh::ConnectedNodes, simdLen> elemNodes;
   int numSimdElems{simdLen};
 
   const std::vector<SharedMemView<T*>>& get_field_views() const { return fieldViews; }
@@ -96,28 +133,27 @@ private:
 
 template<typename T>
 ScratchViewsHO<T>::ScratchViewsHO(const TeamHandleType& team,
-             const stk::mesh::BulkData& bulkData,
+             const ngp::Mesh& ngpMesh,
+             unsigned totalNumFields,
              int order, int dim,
              const ElemDataRequests& dataNeeded)
 {
   int numScalars = 0;
-  const stk::mesh::MetaData& meta = bulkData.mesh_meta_data();
-  unsigned numFields = meta.get_fields().size();
-  fieldViews.resize(numFields);
+  fieldViews.resize(totalNumFields);
 
   const FieldSet& neededFields = dataNeeded.get_fields();
   for(const FieldInfo& fieldInfo : neededFields) {
-    ThrowAssert(fieldInfo.field->entity_rank() == stk::topology::NODE_RANK);
+    ThrowAssert(fieldInfo.field.get_rank() == stk::topology::NODE_RANK);
     unsigned scalarsDim1 = fieldInfo.scalarsDim1;
 
     const int n1D = order + 1;
     if (scalarsDim1 == 1u) {
-      fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = get_shmem_view_1D<T>(team, n1D * n1D * n1D);
+      fieldViews[fieldInfo.field.get_ordinal()] = get_shmem_view_1D<T>(team, n1D * n1D * n1D);
       numScalars += n1D * n1D * n1D;
     }
 
     if (scalarsDim1 == 3u) {
-      fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = get_shmem_view_1D<T>(team, 3 * n1D * n1D * n1D);
+      fieldViews[fieldInfo.field.get_ordinal()] = get_shmem_view_1D<T>(team, 3 * n1D * n1D * n1D);
       numScalars += 3 * n1D * n1D * n1D;
     }
 

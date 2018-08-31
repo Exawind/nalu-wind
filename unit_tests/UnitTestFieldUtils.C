@@ -19,7 +19,7 @@ double field_norm(const ScalarFieldType& field, const stk::mesh::BulkData& bulk,
   double norm = 0.0;
   double g_norm = 0.0;
 
-  Kokkos::parallel_for(sierra::nalu::HostTeamPolicy(buckets.size(), Kokkos::AUTO), NONCONST_LAMBDA(const sierra::nalu::TeamHandleType& team)
+  Kokkos::parallel_for(sierra::nalu::DeviceTeamPolicy(buckets.size(), Kokkos::AUTO), NONCONST_LAMBDA(const sierra::nalu::TeamHandleType& team)
   {
       const stk::mesh::Bucket& bkt = *buckets[team.league_rank()];
       Kokkos::parallel_for(Kokkos::TeamThreadRange(team, bkt.size()), NONCONST_LAMBDA(const size_t& j)

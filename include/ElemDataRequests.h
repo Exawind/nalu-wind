@@ -13,6 +13,7 @@
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_ngp/Ngp.hpp>
 
 #include <set>
 
@@ -49,13 +50,13 @@ static const std::string CoordinatesTypeNames[] = {
 
 struct FieldInfo {
   FieldInfo(const stk::mesh::FieldBase* fld, unsigned scalars)
-  : field(fld), scalarsDim1(scalars), scalarsDim2(0)
+  : field(fld->get_mesh(), *fld), scalarsDim1(scalars), scalarsDim2(0)
   {}
   FieldInfo(const stk::mesh::FieldBase* fld, unsigned tensorDim1, unsigned tensorDim2)
-  : field(fld), scalarsDim1(tensorDim1), scalarsDim2(tensorDim2)
+  : field(fld->get_mesh(), *fld), scalarsDim1(tensorDim1), scalarsDim2(tensorDim2)
   {}
 
-  const stk::mesh::FieldBase* field;
+  ngp::Field<double> field;
   unsigned scalarsDim1;
   unsigned scalarsDim2;
 };
@@ -63,7 +64,7 @@ struct FieldInfo {
 struct FieldInfoLess {
   bool operator()(const FieldInfo& lhs, const FieldInfo& rhs) const
   {
-    return lhs.field->mesh_meta_data_ordinal() < rhs.field->mesh_meta_data_ordinal();
+    return lhs.field.get_ordinal() < rhs.field.get_ordinal();
   }
 };
 
@@ -134,8 +135,7 @@ public:
     const COORDS_TYPES cType) const
   { return dataEnums[cType]; }
 
-  const stk::mesh::FieldBase* get_coordinates_field(
-    const COORDS_TYPES cType) const
+  ngp::Field<double> get_coordinates_field(const COORDS_TYPES cType) const
   {
     auto it = coordsFields_.find(cType);
     ThrowRequireMsg(
@@ -146,7 +146,7 @@ public:
     return it->second;
   }
 
-  const std::map<COORDS_TYPES, const stk::mesh::FieldBase*>&
+  const std::map<COORDS_TYPES, ngp::Field<double> >&
   get_coordinates_map() const
   { return coordsFields_; }
 
@@ -159,7 +159,7 @@ public:
 
 private:
   std::array<std::set<ELEM_DATA_NEEDED>, MAX_COORDS_TYPES> dataEnums;
-  std::map<COORDS_TYPES, const stk::mesh::FieldBase*> coordsFields_;
+  std::map<COORDS_TYPES, ngp::Field<double> > coordsFields_;
   FieldSet fields;
   MasterElement *meFC_;
   MasterElement *meSCS_;
