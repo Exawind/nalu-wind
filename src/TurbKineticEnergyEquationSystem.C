@@ -182,24 +182,24 @@ TurbKineticEnergyEquationSystem::register_nodal_fields(
 
   // register dof; set it as a restart variable
   tke_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_ke", numStates));
-  stk::mesh::put_field(*tke_, *part);
+  stk::mesh::put_field_on_mesh(*tke_, *part, nullptr);
   realm_.augment_restart_variable_list("turbulent_ke");
 
   dkdx_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dkdx"));
-  stk::mesh::put_field(*dkdx_, *part, nDim);
+  stk::mesh::put_field_on_mesh(*dkdx_, *part, nDim, nullptr);
 
   // delta solution for linear solver; share delta since this is a split system
   kTmp_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pTmp"));
-  stk::mesh::put_field(*kTmp_, *part);
+  stk::mesh::put_field_on_mesh(*kTmp_, *part, nullptr);
 
   visc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity"));
-  stk::mesh::put_field(*visc_, *part);
+  stk::mesh::put_field_on_mesh(*visc_, *part, nullptr);
 
   tvisc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity"));
-  stk::mesh::put_field(*tvisc_, *part);
+  stk::mesh::put_field_on_mesh(*tvisc_, *part, nullptr);
 
   evisc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "effective_viscosity_tke"));
-  stk::mesh::put_field(*evisc_, *part);
+  stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
 
   // make sure all states are properly populated (restart can handle this)
   if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
@@ -519,7 +519,7 @@ TurbKineticEnergyEquationSystem::register_inflow_bc(
 
   // register boundary data; tke_bc
   ScalarFieldType *theBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "tke_bc"));
-  stk::mesh::put_field(*theBcField, *part);
+  stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
   InflowUserData userData = inflowBCData.userData_;
@@ -601,7 +601,7 @@ TurbKineticEnergyEquationSystem::register_open_bc(
 
   // register boundary data; tke_bc
   ScalarFieldType *theBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "open_tke_bc"));
-  stk::mesh::put_field(*theBcField, *part);
+  stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
   OpenUserData userData = openBCData.userData_;
@@ -698,7 +698,7 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
 
   // register boundary data; tke_bc
   ScalarFieldType *theBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "tke_bc"));
-  stk::mesh::put_field(*theBcField, *part);
+  stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
   WallUserData userData = wallBCData.userData_;
@@ -718,7 +718,7 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
 
     // need to register the assembles wall value for tke; can not share with tke_bc
     ScalarFieldType *theAssembledField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "wall_model_tke_bc"));
-    stk::mesh::put_field(*theAssembledField, *part);
+    stk::mesh::put_field_on_mesh(*theAssembledField, *part, nullptr);
 
     // wall function value will prevail at bc intersections
     std::map<AlgorithmType, Algorithm *>::iterator it_tke =

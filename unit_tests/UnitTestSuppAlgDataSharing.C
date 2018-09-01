@@ -159,13 +159,13 @@ TEST_F(Hex8Mesh, supp_alg_data_sharing)
 
     const stk::mesh::Part& wholemesh = meta.universal_part();
 
-    stk::mesh::put_field(nodalScalarField, wholemesh);
-    stk::mesh::put_field(nodalVectorField, wholemesh, 4);
-    stk::mesh::put_field(nodalTensorField, wholemesh, 3, 3);
+    stk::mesh::put_field_on_mesh(nodalScalarField, wholemesh, nullptr);
+    stk::mesh::put_field_on_mesh(nodalVectorField, wholemesh, 4, nullptr);
+    stk::mesh::put_field_on_mesh(nodalTensorField, wholemesh, 3, 3, nullptr);
 
-    stk::mesh::put_field(elemScalarField, wholemesh);
-    stk::mesh::put_field(elemVectorField, wholemesh, 8);
-    stk::mesh::put_field(elemTensorField, wholemesh, 2, 2);
+    stk::mesh::put_field_on_mesh(elemScalarField, wholemesh, nullptr);
+    stk::mesh::put_field_on_mesh(elemVectorField, wholemesh, 8, nullptr);
+    stk::mesh::put_field_on_mesh(elemTensorField, wholemesh, 2, 2, nullptr);
 
     fill_mesh("generated:10x10x10");
 
@@ -194,11 +194,11 @@ TEST_F(Hex8Mesh, inconsistent_field_requests)
 
     const stk::mesh::Part& wholemesh = meta.universal_part();
 
-    stk::mesh::put_field(nodalScalarField, wholemesh);
-    stk::mesh::put_field(nodalTensorField, wholemesh, 3, 3);
+    stk::mesh::put_field_on_mesh(nodalScalarField, wholemesh, nullptr);
+    stk::mesh::put_field_on_mesh(nodalTensorField, wholemesh, 3, 3, nullptr);
 
-    stk::mesh::put_field(elemScalarField, wholemesh);
-    stk::mesh::put_field(elemTensorField, wholemesh, 2, 2);
+    stk::mesh::put_field_on_mesh(elemScalarField, wholemesh, nullptr);
+    stk::mesh::put_field_on_mesh(elemTensorField, wholemesh, 2, 2, nullptr);
 
     fill_mesh("generated:10x10x10");
 

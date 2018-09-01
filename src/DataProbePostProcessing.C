@@ -314,7 +314,7 @@ DataProbePostProcessing::setup()
         // everyone needs coordinates to be registered
         VectorFieldType *coordinates 
           =  &(metaData.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates"));
-        stk::mesh::put_field(*coordinates, *probePart, nDim);
+        stk::mesh::put_field_on_mesh(*coordinates, *probePart, nDim, nullptr);
         // now the general set of fields for this probe
         for ( size_t j = 0; j < probeSpec->fieldInfo_.size(); ++j ) 
           register_field(probeSpec->fieldInfo_[j].first, probeSpec->fieldInfo_[j].second, metaData, probePart);
@@ -473,7 +473,7 @@ DataProbePostProcessing::register_field(
 {
   stk::mesh::FieldBase *toField 
     = &(metaData.declare_field< stk::mesh::Field<double, stk::mesh::SimpleArrayTag> >(stk::topology::NODE_RANK, fieldName));
-  stk::mesh::put_field(*toField, *part, fieldSize);
+  stk::mesh::put_field_on_mesh(*toField, *part, fieldSize, nullptr);
 }
 
 //--------------------------------------------------------------------------

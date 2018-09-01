@@ -389,7 +389,7 @@ RadiativeTransportEquationSystem::register_nodal_fields(
 
   // register all number of ordinates intensity; reserve intensity_ for "curent"
   intensity_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "intensity"));
-  stk::mesh::put_field(*intensity_, *part);
+  stk::mesh::put_field_on_mesh(*intensity_, *part, nullptr);
 
   // may not want all of these at production time...
   for ( int k = 0; k < ordinateDirections_; ++k ) {
@@ -398,48 +398,48 @@ RadiativeTransportEquationSystem::register_nodal_fields(
     const std::string incrementName = ss.str();
     const std::string theName = "intensity_" + incrementName;
     ScalarFieldType *intensityK = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, theName));
-    stk::mesh::put_field(*intensityK, *part);
+    stk::mesh::put_field_on_mesh(*intensityK, *part, nullptr);
   }
 
   // delta solution for linear solver
   iTmp_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "iTmp"));
-  stk::mesh::put_field(*iTmp_, *part);
+  stk::mesh::put_field_on_mesh(*iTmp_, *part, nullptr);
 
   dualNodalVolume_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume"));
-  stk::mesh::put_field(*dualNodalVolume_, *part);
+  stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
 
   coordinates_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates"));
-  stk::mesh::put_field(*coordinates_, *part, nDim);
+  stk::mesh::put_field_on_mesh(*coordinates_, *part, nDim, nullptr);
 
   temperature_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "temperature"));
-  stk::mesh::put_field(*temperature_, *part);
+  stk::mesh::put_field_on_mesh(*temperature_, *part, nullptr);
 
   radiativeHeatFlux_ = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "radiative_heat_flux"));
-  stk::mesh::put_field(*radiativeHeatFlux_, *part, nDim);
+  stk::mesh::put_field_on_mesh(*radiativeHeatFlux_, *part, nDim, nullptr);
 
   divRadiativeHeatFlux_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_radiative_heat_flux"));
-  stk::mesh::put_field(*divRadiativeHeatFlux_, *part);
+  stk::mesh::put_field_on_mesh(*divRadiativeHeatFlux_, *part, nullptr);
 
   radiationSource_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "radiation_source"));
-  stk::mesh::put_field(*radiationSource_, *part);
+  stk::mesh::put_field_on_mesh(*radiationSource_, *part, nullptr);
 
   scalarFlux_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "scalar_flux"));
-  stk::mesh::put_field(*scalarFlux_, *part);
+  stk::mesh::put_field_on_mesh(*scalarFlux_, *part, nullptr);
 
   // for non-linear residual
   scalarFluxOld_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "scalar_flux_old"));
-  stk::mesh::put_field(*scalarFluxOld_, *part);
+  stk::mesh::put_field_on_mesh(*scalarFluxOld_, *part, nullptr);
 
   // props; register and push
   absorptionCoeff_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "absorption_coefficient"));
-  stk::mesh::put_field(*absorptionCoeff_, *part);
+  stk::mesh::put_field_on_mesh(*absorptionCoeff_, *part, nullptr);
   // possibly provided by another coupling mechanism; if so, do not push to propery evaluation
   if (!externalCoupling_)
     realm_.augment_property_map(ABSORBTION_COEFF_ID, absorptionCoeff_);
 
   // always register, however, do not make the user provide a value (default to zero)
   scatteringCoeff_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "scattering_coefficient"));
-  stk::mesh::put_field(*scatteringCoeff_, *part);
+  stk::mesh::put_field_on_mesh(*scatteringCoeff_, *part, nullptr);
   if ( activateScattering_ )
     realm_.augment_property_map(SCATTERING_COEFF_ID, scatteringCoeff_);
   
@@ -461,7 +461,7 @@ RadiativeTransportEquationSystem::register_edge_fields(
   if ( realm_.realmUsesEdges_ ) {
     const int nDim = meta_data.spatial_dimension();
     edgeAreaVec_ = &(meta_data.declare_field<VectorFieldType>(stk::topology::EDGE_RANK, "edge_area_vector"));
-    stk::mesh::put_field(*edgeAreaVec_, *part, nDim);
+    stk::mesh::put_field_on_mesh(*edgeAreaVec_, *part, nDim, nullptr);
   }
 
 }
@@ -594,25 +594,25 @@ RadiativeTransportEquationSystem::register_wall_bc(
 
     // register germane fields (boundary data)
     intensityBc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "intensity_bc"));
-    stk::mesh::put_field(*intensityBc_, *part);
+    stk::mesh::put_field_on_mesh(*intensityBc_, *part, nullptr);
 
     emissivity_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "emissivity"));
-    stk::mesh::put_field(*emissivity_, *part);
+    stk::mesh::put_field_on_mesh(*emissivity_, *part, nullptr);
 
     transmissivity_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "transmissivity"));
-    stk::mesh::put_field(*transmissivity_, *part);
+    stk::mesh::put_field_on_mesh(*transmissivity_, *part, nullptr);
 
     environmentalT_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "environmental_temperature"));
-    stk::mesh::put_field(*environmentalT_, *part);
+    stk::mesh::put_field_on_mesh(*environmentalT_, *part, nullptr);
 
     irradiation_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "irradiation"));
-    stk::mesh::put_field(*irradiation_, *part);
+    stk::mesh::put_field_on_mesh(*irradiation_, *part, nullptr);
 
     bcTemperature_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "temperature_bc"));
-    stk::mesh::put_field(*bcTemperature_, *part);
+    stk::mesh::put_field_on_mesh(*bcTemperature_, *part, nullptr);
 
     assembledBoundaryArea_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_boundary_area"));
-    stk::mesh::put_field(*assembledBoundaryArea_, *part);
+    stk::mesh::put_field_on_mesh(*assembledBoundaryArea_, *part, nullptr);
 
     // interior temperature is not over written by boundary value; push to bcTemperature_
     Temperature theTemp = userData.temperature_;

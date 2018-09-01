@@ -142,29 +142,29 @@ MassFractionEquationSystem::register_nodal_fields(
 
   // register dof; set it as a restart variable
   massFraction_ =  &(meta_data.declare_field<GenericFieldType>(stk::topology::NODE_RANK, "mass_fraction", numStates));
-  stk::mesh::put_field(*massFraction_, *part, numMassFraction_);
+  stk::mesh::put_field_on_mesh(*massFraction_, *part, numMassFraction_, nullptr);
   realm_.augment_restart_variable_list("mass_fraction");
 
   currentMassFraction_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "current_mass_fraction", numStates));
-  stk::mesh::put_field(*currentMassFraction_, *part);
+  stk::mesh::put_field_on_mesh(*currentMassFraction_, *part, nullptr);
 
   // delta solution for linear solver
   yTmp_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "yTmp"));
-  stk::mesh::put_field(*yTmp_, *part);
+  stk::mesh::put_field_on_mesh(*yTmp_, *part, nullptr);
 
   dydx_ = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dydx"));
-  stk::mesh::put_field(*dydx_, *part, nDim);
+  stk::mesh::put_field_on_mesh(*dydx_, *part, nDim, nullptr);
 
   visc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity"));
-  stk::mesh::put_field(*visc_, *part);
+  stk::mesh::put_field_on_mesh(*visc_, *part, nullptr);
 
   if ( realm_.is_turbulent() ) {
     tvisc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity"));
-    stk::mesh::put_field(*tvisc_, *part);
+    stk::mesh::put_field_on_mesh(*tvisc_, *part, nullptr);
   }
   
   evisc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "effective_viscosity_y"));
-  stk::mesh::put_field(*evisc_, *part);
+  stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
 
 }
 
@@ -309,11 +309,11 @@ MassFractionEquationSystem::register_inflow_bc(
 
   // register boundary data; massFraction_bc for all mass fraction number
   GenericFieldType *theBcField = &(meta_data.declare_field<GenericFieldType>(stk::topology::NODE_RANK, "mass_fraction_bc"));
-  stk::mesh::put_field(*theBcField, *part, numMassFraction_);
+  stk::mesh::put_field_on_mesh(*theBcField, *part, numMassFraction_, nullptr);
 
   // register single scalar bc value
   ScalarFieldType *theCurrentBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "current_mass_fraction_bc"));
-  stk::mesh::put_field(*theCurrentBcField, *part);
+  stk::mesh::put_field_on_mesh(*theCurrentBcField, *part, nullptr);
 
   // insert to the set of bcs
   bcMassFractionSet_.insert(std::make_pair(theBcField, theCurrentBcField));
@@ -395,11 +395,11 @@ MassFractionEquationSystem::register_open_bc(
 
   // register boundary data; mass fraction_bc for all speecies number
   GenericFieldType *theBcField = &(meta_data.declare_field<GenericFieldType>(stk::topology::NODE_RANK, "mass_fraction_open_bc"));
-  stk::mesh::put_field(*theBcField, *part, numMassFraction_);
+  stk::mesh::put_field_on_mesh(*theBcField, *part, numMassFraction_, nullptr);
 
   // register single scalar bc value
   ScalarFieldType *theCurrentBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "current_mass_fraction_open_bc"));
-  stk::mesh::put_field(*theCurrentBcField, *part);
+  stk::mesh::put_field_on_mesh(*theCurrentBcField, *part, nullptr);
 
   // insert to the set of bcs
   bcMassFractionSet_.insert(std::make_pair(theBcField, theCurrentBcField));
@@ -476,11 +476,11 @@ MassFractionEquationSystem::register_wall_bc(
 
     // register boundary data; mass fraction_bc for all mass fraction number
     GenericFieldType *theBcField = &(meta_data.declare_field<GenericFieldType>(stk::topology::NODE_RANK, "mass_fraction_bc"));
-    stk::mesh::put_field(*theBcField, *part, numMassFraction_);
+    stk::mesh::put_field_on_mesh(*theBcField, *part, numMassFraction_, nullptr);
 
     // register single scalar bc value
     ScalarFieldType *theCurrentBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "current_mass_fraction_bc"));
-    stk::mesh::put_field(*theCurrentBcField, *part);
+    stk::mesh::put_field_on_mesh(*theCurrentBcField, *part, nullptr);
 
     // insert to the set of bcs
     bcMassFractionSet_.insert(std::make_pair(theBcField, theCurrentBcField));

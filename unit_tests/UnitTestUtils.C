@@ -190,8 +190,8 @@ stk::mesh::Entity create_one_element(
    // set a coordinate field
    using vector_field_type = stk::mesh::Field<double, stk::mesh::Cartesian3d>;
    auto& coordField = meta.declare_field<vector_field_type>(stk::topology::NODE_RANK, "coordinates");
-   stk::mesh::put_field(coordField, block_1);
-   stk::mesh::put_field(coordField, stk::mesh::selectUnion(allSurfaces));
+   stk::mesh::put_field_on_mesh(coordField, block_1, nullptr);
+   stk::mesh::put_field_on_mesh(coordField, stk::mesh::selectUnion(allSurfaces), nullptr);
    meta.set_coordinate_field(&coordField);
    meta.commit();
 
