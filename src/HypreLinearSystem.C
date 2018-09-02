@@ -325,6 +325,10 @@ HypreLinearSystem::loadComplete()
   HYPRE_IJVectorGetObject(sln_, (void**)&(solver->parSln_));
 
   solver->comm_ = realm_.bulk_data().parallel();
+
+  // Set flag to indicate zeroSystem that the matrix must be reinitialized
+  // during the next invocation.
+  matrixAssembled_ = true;
 }
 
 void
@@ -332,9 +336,20 @@ HypreLinearSystem::zeroSystem()
 {
   HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
 
-  HYPRE_IJMatrixInitialize(mat_);
-  HYPRE_IJVectorInitialize(rhs_);
-  HYPRE_IJVectorInitialize(sln_);
+  // It is unsafe to call IJMatrixInitialize multiple times without intervening
+  // call to IJMatrixAssemble. This occurs during the first outer iteration (of
+  // first timestep in static application and every timestep in moving mesh
+  // applications) when the data structures have been created but never used and
+  // zeroSystem is called for a reset. Include a check to ensure we only
+  // initialize if it was previously assembled.
+  if (matrixAssembled_) {
+    HYPRE_IJMatrixInitialize(mat_);
+    HYPRE_IJVectorInitialize(rhs_);
+    HYPRE_IJVectorInitialize(sln_);
+
+    // Set flag to false until next invocation of IJMatrixAssemble in loadComplete
+    matrixAssembled_ = false;
+  }
 
   HYPRE_IJMatrixSetConstantValues(mat_, 0.0);
   HYPRE_ParVectorSetConstantValues(solver->parRhs_, 0.0);

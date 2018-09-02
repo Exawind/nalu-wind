@@ -284,6 +284,9 @@ private:
   //! Maximum Row ID in the Hypre linear system
   HypreIntType maxRowID_;
 
+  //! Flag indicating whether IJMatrixAssemble has been called on the system
+  bool matrixAssembled_{false};
+
   //! Flag indicating whether the linear system has been initialized
   bool systemInitialized_{false};
 
