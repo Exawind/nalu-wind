@@ -242,7 +242,7 @@ realms:
     output:
       output_data_base_name: abl_5km_5km_1km_neutral.e
       output_frequency: 10
-      output_nodse_set: no
+      output_node_set: no
       output_variables:
        - velocity
        - pressure
@@ -259,7 +259,7 @@ realms:
       target_name: [ fluid_part ]
       stats_output_file: "abl_statistics.nc"
       compute_temperature_statistics: yes
-      output_frequency: 10
+      output_frequency: 10000
       time_hist_output_frequency: 2
 
     # This defines the ABL forcing to drive the winds to 8 m/s from

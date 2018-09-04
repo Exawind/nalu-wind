@@ -1,0 +1,523 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+#  generate_simulation_file_input.py
+#  
+#  Copyright 2018 Martinez <lmartin1@LMARTIN1-31527S>
+#  
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#  
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#  
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#  
+#  
+#  The expected call for this script is as follows:
+#
+#  ./nalu_input_fileX \
+#              -s set_up.yaml \
+#              -o input_files/ablNeutralEdge.yaml \
+#              -n abl_simulation.yaml \
+#              -op input_files/nalu_preprocess.yaml \
+#              -np abl_preprocess.yaml
+
+from ruamel.yaml import YAML
+import numpy as np
+import argparse
+
+def main(args):
+    '''
+    This script will load a yaml input file will add the necessary inputs for
+    an atmospheric boundary layer simulation using Nalu.
+    
+    File input for users to modify:
+        set_up.yaml
+        
+    File input for advanced users:
+        file_inputs/ablNeutralEdge.yaml
+        
+    File output:
+        abl_simulation.yaml
+
+    '''
+
+    # Generate a parser from the command line
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=
+        'This code will create new naluX input files based on an example ' +
+        'input file.')
+
+    # Set-up file
+    parser.add_argument('-s', '--set-up', 
+                        type=str,  # The input is a string
+                        metavar='', # Empty string to display help
+                        default='set_up.yaml',
+                        help='The setup yaml file')
+
+    # The old nalu input file
+    parser.add_argument('-o', '--old-input', type=str, 
+                        metavar='',
+                        default='input_files/ablNeutralEdge.yaml',
+                        help='The input yaml file which will be modified')
+
+    # The new nalu input file
+    parser.add_argument('-n', '--new-input', type=str,
+                        metavar='', 
+                        default='abl_simulation.yaml',
+                        help='The new input yaml file')
+
+    # The old pre-processing file
+    parser.add_argument('-op', '--old-pre', type=str,
+                        metavar='', 
+                        #~ nargs='+',
+                        default='input_files/nalu_preprocess.yaml',
+                        help='The old pre-processing yaml file to be modified')
+
+    # The new pre-processing file to be generated
+    parser.add_argument('-np', '--new-pre', type=str,
+                        metavar='', 
+                        default='abl_preprocess.yaml',
+                        help='The new pre-processing yaml file')
+
+    # The arguments from the command line
+    args = parser.parse_args()
+
+    print('Input files:')
+    print(args.set_up)
+    print(args.old_input)
+    print(args.old_pre)
+
+    # Initialize the mapping object
+    mapping_object = mapping_object_class(
+        setup_file=args.set_up, 
+        yaml_input=args.old_input,
+        example_preprocess_file=args.old_pre,
+        )
+
+    # Map the entries from the setup file to the new input files
+    mapping_object.map_all()
+
+    # Write the new generated files
+    mapping_object.write_files(
+        # The pre-processing file
+        preprocess_file=args.new_pre,
+        new_nalu_input_file=args.new_input,
+        )
+
+    print('Files generated:')
+    print(args.new_pre)
+    print(args.new_input)
+
+class mapping_object_class():
+    '''
+    A class used to mapp the yaml setup file to Nalu inputs
+    '''
+    def __init__(self, 
+            # The setup file
+            setup_file='set_up.yaml',
+            # The input file used as a starting point
+            yaml_input='input_files/ablNeutralEdge.yaml',
+            # The pre-processing input file
+            example_preprocess_file='input_files/nalu_preprocess.yaml',
+        ):
+
+        '''
+        Initialize the object
+        This script will take the example input files, modify them according to
+        the setup file, and write the new files.
+        '''
+        # Open the setup file as a yaml file
+        self.yaml_setup = self.open_yaml_file(setup_file)
+        # Open the input file as a yaml file
+        self.yaml_input = self.open_yaml_file(yaml_input)
+        # Open the preprocessing file as a yaml file
+        self.yaml_preprocess = self.open_yaml_file(example_preprocess_file)
+
+
+        # The dictionary containing the entries of the setup file and the
+        #   functions to map the setup inputs to the nalu input file
+        self.mapping_dictionary = {
+            # Wind speed and temperature profiles
+            ('U0Mag', 'wind_dir', 'wind_height'): self.set_velocity,
+            ('temperature_heights', 'temperature_values'): self.set_temperature,
+            # Material Properties
+            'density': self.set_density,
+            'nu': self.set_viscosity,
+            'TRef': self.set_reference_temperature,
+            'latitude': self.set_latitude,
+            # Bottom Wall
+            ('qwall', 'z0', 'TRef'): self.set_bottom_wall,
+            # Time controls
+            'time_step': self.set_time_step,
+            'total_run_time': self.set_total_time,
+            # Mesh
+            'mesh': self.set_mesh,
+            # Output
+            'output_frequency': self.set_output_frequency,
+            'output_data_base_name': self.set_output_data_base_name,
+            # Boundary layer statistics
+            'boundary_layer_statistics': self.set_boundary_layer_statistics,
+            # Normal temperature gradient
+            'TGradUpper': self.set_top_temperature_gradient,
+        }
+
+    def map_all(self):
+        '''
+        Map the setup file to the new input files
+        '''
+
+        print('###################')
+        print('#  Begin mapping  #')
+        print('###################')
+        
+        # Go thorugh all the keys in the dictionary and mapp them
+        for keys in self.mapping_dictionary:
+            try: 
+                self.mapping_dictionary[keys]()
+                print(keys, ' has been mapped')
+            except:
+                print(keys, ' NOT mapped')
+                
+        print('###################')
+        print('#  Mapping done   #')
+        print('###################')
+            
+
+    def write_files(self, 
+        # The preprocess file name
+        preprocess_file='abl_preprocess.yaml',
+        # The new nalu input file
+        new_nalu_input_file='abl_simulation.yaml',
+                        ):
+        '''
+        Write the new input files
+        '''
+        # Define all the yaml input properties
+        yaml=YAML(typ='rt')   # 'rt' (round-trip)
+        # Specify file indentation
+        yaml.indent(mapping=2, sequence=2, offset=0)
+        # mapping is the indentation for dictionaries
+        yaml.default_flow_style = False
+
+        # The preprocessing file
+        yaml.dump(self.yaml_preprocess, open(preprocess_file, 'w'))
+        # The input file for running naluX
+        yaml.dump(self.yaml_input, open(new_nalu_input_file,'w'), )
+
+    def set_mesh(self):
+        '''
+        Set the mesh inputs
+        '''
+        # Add the mesh the preproceccing only if it exists
+        if self.yaml_setup['mesh']['generate'] == 'yes':
+            # Get the mesh file name
+            self.yaml_preprocess['nalu_abl_mesh']['output_db'] = \
+                self.yaml_setup['mesh']['mesh_file']
+                
+            # The domain size
+            # Lower bottom coordinate
+            self.yaml_preprocess['nalu_abl_mesh']['vertices'][0][0] = \
+                self.yaml_setup['mesh']['domain_bounds_x'][0]
+            self.yaml_preprocess['nalu_abl_mesh']['vertices'][0][1] = \
+                self.yaml_setup['mesh']['domain_bounds_y'][0]
+            self.yaml_preprocess['nalu_abl_mesh']['vertices'][0][2] = \
+                self.yaml_setup['mesh']['domain_bounds_z'][0]
+            # Upper coordinate
+            self.yaml_preprocess['nalu_abl_mesh']['vertices'][1][0] = \
+                self.yaml_setup['mesh']['domain_bounds_x'][1]
+            self.yaml_preprocess['nalu_abl_mesh']['vertices'][1][1] = \
+                self.yaml_setup['mesh']['domain_bounds_y'][1]
+            self.yaml_preprocess['nalu_abl_mesh']['vertices'][1][2] = \
+                self.yaml_setup['mesh']['domain_bounds_z'][1]
+    
+            # Number of grid points
+            self.yaml_preprocess['nalu_abl_mesh']['mesh_dimensions'] = \
+                self.yaml_setup['mesh']['number_of_cells']
+
+            print('Mesh will be generated')
+
+        else:
+
+            # Delete the mesh entry from the pre-processing file
+            del(self.yaml_preprocess['nalu_abl_mesh'])
+
+            print('Mesh will not be generated')
+
+        # Set the preprocess mesh
+        self.yaml_preprocess['nalu_preprocess']['input_db'] = \
+            self.yaml_setup['mesh']['mesh_file']
+        self.yaml_preprocess['nalu_preprocess']['output_db'] = \
+            self.yaml_setup['mesh']['mesh_file']
+    
+        # Setup the initial ondition in the pre-process
+        self.yaml_preprocess['nalu_preprocess']['input_db'] = \
+            self.yaml_setup['mesh']['mesh_file']
+        self.yaml_preprocess['nalu_preprocess']['output_db'] = \
+            self.yaml_setup['mesh']['mesh_file']
+    
+        # Set the mesh file in the simulation file
+        self.yaml_input['realms'][0]['mesh'] = \
+            self.yaml_setup['mesh']['mesh_file']
+
+
+    def set_velocity(self):
+        '''
+        Function to setup the velocity entries in the file
+
+        This operation takes the wind angle and converts it to the proper 
+             cartesian coordinate system.
+        A direction of 270 deg means the wind is coming from the west, which
+             is from left to right.
+        
+                              N 0deg
+                               |
+                               |
+                               |
+                     W 270deg --- E 90deg
+                               |
+                               |
+                               |
+                              S 180deg
+        '''
+
+        # The velocity field at hub height
+        U0Mag = self.yaml_setup['U0Mag']
+        wind_height = self.yaml_setup['wind_height']
+        wind_dir = np.deg2rad(270. - self.yaml_setup['wind_dir'])
+
+        # The wind height as a list
+        self.yaml_input['realms'][0]['abl_forcing']['momentum']['heights'] = \
+            [wind_height]
+    
+        # The velocity components
+        # The time history of the velocity components
+        # Start at zero and have a very large number for the last time
+        t0 = 0.    # Time to start forcing
+        t1 = 1.e9  # Time to end forcing (large number)
+        wind_x = U0Mag * np.cos(wind_dir)
+        self.yaml_input['realms'][0]['abl_forcing']['momentum']['velocity_x'] \
+            = [ [t0, wind_x],
+                [t1, wind_x]]
+        wind_y = U0Mag * np.sin(wind_dir)
+        self.yaml_input['realms'][0]['abl_forcing']['momentum']['velocity_y'] \
+            = [ [t0, wind_y],
+                [t1, wind_y]]
+        wind_z = 0.
+        self.yaml_input['realms'][0]['abl_forcing']['momentum']['velocity_z'] \
+            = [ [t0, wind_z],
+                [t1, wind_z]]
+
+        self.yaml_preprocess['nalu_preprocess']['init_abl_fields']['velocity'] \
+            ['heights'] = [0, wind_height]
+        self.yaml_preprocess['nalu_preprocess']['init_abl_fields']['velocity'] \
+            ['values'] = [[wind_x, wind_y, wind_z],[wind_x, wind_y, wind_z],]
+
+
+    def set_temperature(self):
+        '''
+        Set the temperature profiles
+        '''
+        self.yaml_preprocess['nalu_preprocess']['init_abl_fields'] \
+            ['temperature']['heights'] = self.yaml_setup['temperature_heights']
+        self.yaml_preprocess['nalu_preprocess']['init_abl_fields'] \
+            ['temperature']['values'] = self.yaml_setup['temperature_values']
+
+        #~ print('The temperature initial condition has been set')
+
+        # Modify the top boundary condition
+        for var in self.yaml_input['realms'][0]['boundary_conditions']:
+
+            # Top boundary condition
+            if 'symmetry_boundary_condition' in var.keys():
+
+                # If the gradient is specified, use that value, if not, compute
+                #     it from the initial condition
+                print('TGradUpper computed from initial condition')
+                TGradUpper = (self.yaml_setup['temperature_values'][-1]
+                                - self.yaml_setup['temperature_values'][-2]) / (
+                                self.yaml_setup['temperature_heights'][-1]
+                                - self.yaml_setup['temperature_heights'][-2])
+                # Assign the initial condition
+                var['symmetry_user_data']['normal_temperature_gradient'] = \
+                    TGradUpper
+
+
+    def set_density(self):
+        '''
+        Set the density
+        '''
+        # The density
+        for var in self.yaml_input['realms'][0]['material_properties'] \
+            ['specifications']:
+
+            if var['name'] == 'density':
+                var['value'] = self.yaml_setup['density']
+
+        for var in self.yaml_input['realms'][0]['solution_options']['options']:
+            if 'user_constants' in var:
+                var['user_constants']['reference_density'] = \
+                    self.yaml_setup['density']
+
+        # Set the reference pressure
+        R = self.yaml_input['realms'][0]['material_properties'] \
+            ['constant_specification']['universal_gas_constant']
+        self.yaml_input['realms'][0]['material_properties'] \
+            ['constant_specification']['reference_pressure'] = \
+                R * self.yaml_setup['density'] * self.yaml_setup['TRef']
+
+    def set_viscosity(self):
+        '''
+        Set the viscosity
+        '''
+        # Molecular viscosity
+        for var in self.yaml_input['realms'][0]['material_properties'] \
+            ['specifications']:
+            if var['name'] == 'viscosity':
+                var['value'] = self.yaml_setup['nu'] * \
+                    self.yaml_setup['density']
+        
+    def set_latitude(self):
+        '''
+        Set the latitude
+        '''
+        # Loop through all the options and find user_constants
+        for var in self.yaml_input['realms'][0]['solution_options']['options']:
+
+            if 'user_constants' in var:
+    
+                # The latitude
+                var['user_constants']['latitude'] = self.yaml_setup['latitude']
+
+    def set_reference_temperature(self):
+        '''
+        Set the reference temperature
+        '''
+        # Loop through all the options and find user_constants
+        for var in self.yaml_input['realms'][0]['solution_options']['options']:
+
+            if 'user_constants' in var:
+    
+                # The reference temperature
+                var['user_constants']['reference_temperature'] = \
+                    self.yaml_setup['TRef']
+
+
+        # Loop through all the boundary conditions and modify accordingly
+        for var in self.yaml_input['realms'][0]['boundary_conditions']:
+
+            # Bottom wall boundary condition
+            if 'wall_boundary_condition' in var.keys():
+                var['wall_user_data']['reference_temperature'] = \
+                    self.yaml_setup['TRef']
+
+
+    def set_bottom_wall(self):
+        '''
+        Set the bottom wall boundary conditions
+        '''
+
+        # Loop through all the boundary conditions and modify accordingly
+        for var in self.yaml_input['realms'][0]['boundary_conditions']:
+        
+            # Bottom wall boundary condition
+            if 'wall_boundary_condition' in var.keys():
+                var['wall_user_data']['roughness_height'] = \
+                    self.yaml_setup['z0']
+                var['wall_user_data']['reference_temperature'] = \
+                    self.yaml_setup['TRef']
+                var['wall_user_data']['heat_flux'] = \
+                    self.yaml_setup['qwall']
+
+    def set_top_temperature_gradient(self):
+        '''
+        Set the top temperature gradient
+        '''
+        # Loop through all the boundary conditions and modify accordingly
+        for var in self.yaml_input['realms'][0]['boundary_conditions']:
+            # Top boundary condition
+            if 'symmetry_boundary_condition' in var.keys():    
+                # Read the upper wall temperature gradient
+                var['symmetry_user_data']['normal_temperature_gradient'] = \
+                    self.yaml_setup['TGradUpper']
+
+
+    def set_boundary_layer_statistics(self):
+        '''
+        Set the boundary layer sampling
+        '''
+        # Boundary layer statistics
+        self.yaml_input['realms'][0]['boundary_layer_statistics'] \
+            ['stats_output_file'] \
+            = self.yaml_setup['boundary_layer_statistics']['stats_output_file']
+
+        self.yaml_input['realms'][0]['boundary_layer_statistics'] \
+            ['time_hist_output_frequency'] \
+            = self.yaml_setup['boundary_layer_statistics'] \
+                ['time_hist_output_frequency']
+
+
+    def set_time_step(self):
+        '''
+        Set the time-step
+        '''
+        self.yaml_input['Time_Integrators'][0]['StandardTimeIntegrator'] \
+            ['time_step'] = self.yaml_setup['time_step']
+
+    def set_total_time(self):
+        '''
+        Set the total time-steps based on the total time
+        '''
+        # Total number of time-steps to run
+        self.yaml_input['Time_Integrators'][0]['StandardTimeIntegrator'] \
+            ['termination_step_count'] = int(self.yaml_setup['total_run_time']
+                / self.yaml_setup['time_step'])
+
+    def set_output_data_base_name(self):
+        '''
+        Set the output name
+        '''
+        self.yaml_input['realms'][0]['output']['output_data_base_name'] = \
+            self.yaml_setup['output_data_base_name']
+
+    def set_output_frequency(self):
+        '''
+        Set the output name
+        '''
+        self.yaml_input['realms'][0]['output']['output_frequency'] = \
+            self.yaml_setup['output_frequency']
+
+    @staticmethod
+    def open_yaml_file(file_input):
+        '''
+        Open the yaml file
+        file_input = the input file
+        Returns the opened yaml file
+        yaml_file = the open yaml file
+        '''
+
+        # Define all the yaml input properties
+        yaml=YAML(typ='rt')   # 'rt' (round-trip)
+        # Specify file indentation
+        yaml.indent(mapping=2, sequence=2, offset=0)
+        # mapping is the indentation for dictionaries
+        yaml.default_flow_style = False
+
+        # The output file
+        yaml_file = yaml.load(open(file_input))
+
+        return yaml_file
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(main(sys.argv))

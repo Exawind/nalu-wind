@@ -35,7 +35,7 @@ realms:
 
   # The fluid realm that uses the 5 km x 5 km x 1 km atmospheric LES mesh.
 - name: fluidRealm
-  mesh: ./mesh/abl_5km_5km_1km_neutral.g
+  mesh: mesh_abl.exo
   use_edges: yes
   automatic_decomposition_type: rcb
 
@@ -80,7 +80,7 @@ realms:
 
     constant_specification:
       universal_gas_constant: 8314.4621
-      reference_pressure: 101325.0
+      reference_pressure: 2494338.6300000004
 
     reference_quantities:
     - species_name: Air
@@ -96,7 +96,7 @@ realms:
 
     - name: viscosity
       type: constant
-      value: 1.0E-5
+      value: 1e-05
 
     - name: specific_heat
       type: constant
@@ -150,7 +150,7 @@ realms:
     wall_user_data:
       velocity: [0, 0, 0]
       use_abl_wall_function: yes
-      heat_flux: [0.0 0.0 0.0]
+      heat_flux: 0.
       reference_temperature: 300.0
       roughness_height: 0.15
       gravity_vector_component: 3
@@ -240,9 +240,9 @@ realms:
 
 
   output:
-    output_data_base_name: abl_5km_5km_1km_neutral.e
-    output_frequency: 10
-    output_nodse_set: no
+    output_data_base_name: output/abl_5km_5km_1km_neutral.exo
+    output_frequency: 10000
+    output_node_set: no
     output_variables:
     - velocity
     - pressure
@@ -259,8 +259,8 @@ realms:
     target_name: [fluid_part]
     stats_output_file: abl_statistics.nc
     compute_temperature_statistics: yes
-    output_frequency: 10
-    time_hist_output_frequency: 2
+    output_frequency: 10000
+    time_hist_output_frequency: 1
 
     # This defines the ABL forcing to drive the winds to 8 m/s from
     # 245 degrees (southwest) at 90 m above the surface in a planar
@@ -271,17 +271,17 @@ realms:
       type: computed
       relaxation_factor: 1.0
       heights:
-      - 99.27
+      - 90.0
       velocity_x:
       - - 0.0
-        - -1.4695761589768238e-15
+        - 8.0
       - - 1000000000.0
-        - -1.4695761589768238e-15
+        - 8.0
       velocity_y:
       - - 0.0
-        - -8.0
+        - 0.0
       - - 1000000000.0
-        - -8.0
+        - 0.0
       velocity_z:
       - - 0.0
         - 0.0
@@ -291,7 +291,7 @@ Time_Integrators:
 - StandardTimeIntegrator:
     name: ti_1
     start_time: 0.0
-    termination_step_count: 20000
+    termination_step_count: 40000
     time_step: 0.5
     time_stepping_type: fixed
     time_step_count: 0

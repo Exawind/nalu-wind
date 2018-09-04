@@ -10,10 +10,12 @@ nalu_abl_mesh:
 
   spec_type: bounding_box
 
+  fluid_part_name: fluid_part
+
   vertices:
   - [0.0, 0.0, 0.0]
   - [5000.0, 5000.0, 1000.0]
-  # The dimensions of the mesh (grid points)
+
   mesh_dimensions: [500, 500, 100]
 
   xmin_boundary_name: west
@@ -47,17 +49,30 @@ nalu_preprocess:
     #
     # Use `ncdump -v eb_names <exodus_file>` to determine the mesh blocks
     #
-    fluid_parts: [fluid]
+    fluid_parts: [fluid_part]
 
     temperature:
       heights: [0, 650.0, 750.0, 1000.0]
       values: [300.0, 300.0, 308.0, 308.75]
 
+      # Optional section to add random perturbations to temperature field
+#      perturbations:
+#        amplitude: 0.8 # in Kelvin
+#        cutoff_height: 600.0 # Perturbations below capping inversion
+#        skip_periodic_parts: [east, west, north, south]
+
     velocity:
       heights:
-      - 99.27
+      - 0
+      - 90.0
       values:
-      - -1.4695761589768238e-15
-      - -8.0
-      - 0.0
-      perturbation: wait_for_shreyas
+      - - 8.0
+        - 0.0
+        - 0.0
+      - - 8.0
+        - 0.0
+        - 0.0
+      perturbations:
+        reference_height: 50.0   # Reference height for damping
+        amplitude: [1.0, 1.0]    # Perturbation amplitudes in Ux and Uy
+        periods: [4.0, 4.0]      # Num. periods in x and y directions
