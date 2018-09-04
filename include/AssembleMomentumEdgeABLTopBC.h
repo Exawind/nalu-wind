@@ -50,18 +50,24 @@ public:
     std::vector<double>& uBC,
     std::vector<double>& vBC,
     std::vector<double>& wBC );
+  virtual void potentialBCInflowInflow(
+    std::vector<double>& wSamp,
+    std::vector<double>& uAvg,
+    std::vector<double>& uBC,
+    std::vector<double>& vBC,
+    std::vector<double>& wBC );
   VectorFieldType *velocity_;
   VectorFieldType *bcVelocity_;
   ScalarFieldType *density_;
   GenericFieldType *exposedAreaVec_;
   int imax_, jmax_, kmax_;
-  std::vector<double> weight_;
+  std::vector<double> xInflowWeight_, yInflowWeight_;
   std::vector<stk::mesh::Entity> nodeMapSamp_, nodeMapBC_, nodeMapM1_,
-                                 nodeMapX0_;
+                                 nodeMapXInflow_, nodeMapYInflow_;
   std::vector<int> indexMapSampGlobal_, indexMapBC_, sampleDistrib_, displ_,
                    horizBC_;
   double xL_, yL_, deltaZ_, zSample_;
-  int nBC_, nX0_, horizBCType_;
+  int nBC_, nXInflow_, nYInflow_, horizBCType_;
   bool needToInitialize_;
   fftw_plan planFourier2dF_, planFourier2dB_, planSinx_, planCosx_,
             planFourierxF_, planFourierxB_,   planSiny_, planCosy_,

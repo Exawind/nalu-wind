@@ -48,9 +48,11 @@ AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
   EquationSystem *eqSystem, std::vector<int>& grid_dims, 
   std::vector<int>& horiz_bcs, double z_sample)
   : SolverAlgorithm(realm, part, eqSystem),
-  imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2]), weight_(jmax_),
+  imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2]), 
+  xInflowWeight_(jmax_), yInflowWeight_(imax_),
   nodeMapSamp_(imax_*jmax_), nodeMapBC_(imax_*jmax_), nodeMapM1_(imax_*jmax_),
-  nodeMapX0_(jmax_), indexMapSampGlobal_(imax_*jmax_), indexMapBC_(imax_*jmax_),
+  nodeMapXInflow_(jmax_), nodeMapYInflow_(imax_),
+  indexMapSampGlobal_(imax_*jmax_), indexMapBC_(imax_*jmax_),
   sampleDistrib_(1000), displ_(1000+1), 
   horizBC_(horiz_bcs.begin(),horiz_bcs.end()), zSample_(z_sample),
   needToInitialize_(true)
@@ -78,8 +80,8 @@ AssembleMomentumEdgeABLTopBC::execute()
 {
 
   std::vector<double> wSamp(imax_*jmax_), uBC(imax_*jmax_), vBC(imax_*jmax_),
-                      wBC(imax_*jmax_), work(imax_*jmax_), UAvg(4,0.0);
-  int i, ii;
+                      wBC(imax_*jmax_), work(imax_*jmax_), UAvg(6,0.0);
+  int i, j, ii;
   int nx = imax_ - 1;
   int ny = jmax_ - 1;
   double nxnyInv = 1.0/((double)nx*(double)ny);
@@ -115,8 +117,8 @@ AssembleMomentumEdgeABLTopBC::execute()
     uFac = (double)(timeStepCount-2*startupSteps-1)/(double)(startupSteps);
   }
       
-//  wFac = 1.0;
-//  uFac = 1.0;
+  wFac = 1.0;
+  uFac = 1.0;
 
 // Set up for diagnostic output.
 
@@ -149,12 +151,24 @@ AssembleMomentumEdgeABLTopBC::execute()
     UAvg[1] += USamp[1]*nxnyInv;
   }
 
-  // Find contributions to the average velocity at the x=x_min line.
+  // Find contributions to the average velocity at the x inflow boundary
 
-  for (i=0; i<nX0_; ++i) {
-    double *USamp = stk::mesh::field_data(velocityNp1,nodeMapX0_[i]);
-    UAvg[2] += weight_[i]*USamp[0];
-    UAvg[3] += weight_[i]*USamp[1];
+  if (horizBCType_ == 1 || horizBCType_ == 3) {
+    for (i=0; i<nXInflow_; ++i) {
+      double *USamp = stk::mesh::field_data(velocityNp1,nodeMapXInflow_[i]);
+      UAvg[2] += xInflowWeight_[i]*USamp[0];
+      UAvg[3] += xInflowWeight_[i]*USamp[1];
+    }
+  }
+
+  // Find contributions to the average velocity at the y inflow boundary
+
+  if (horizBCType_ == 2 || horizBCType_ == 3) {
+    for (j=0; j<nYInflow_; ++j) {
+      double *USamp = stk::mesh::field_data(velocityNp1,nodeMapYInflow_[j]);
+      UAvg[4] += yInflowWeight_[j]*USamp[0];
+      UAvg[5] += yInflowWeight_[j]*USamp[1];
+    }
   }
 
   // Gather the sampling plane data across all processes.
@@ -169,9 +183,9 @@ AssembleMomentumEdgeABLTopBC::execute()
     wSamp[indexMapSampGlobal_[i]] = work[i];
   }
 
-  // Compute the average velocity over the sampling plane.
+  // Sum the average velocty contributions across all processes.
 
-  MPI_Allreduce(MPI_IN_PLACE, UAvg.data(), 4, MPI_DOUBLE, MPI_SUM,
+  MPI_Allreduce(MPI_IN_PLACE, UAvg.data(), 6, MPI_DOUBLE, MPI_SUM,
                 bulk_data.parallel());
 
   // Compute the upper boundary velocity field
@@ -182,6 +196,9 @@ AssembleMomentumEdgeABLTopBC::execute()
     break;
     case 1:
       potentialBCInflowPeriodic( wSamp, UAvg, uBC, vBC, wBC );
+    break;
+    case 3:
+      potentialBCInflowInflow( wSamp, UAvg, uBC, vBC, wBC );
   }
 
 /*
@@ -226,11 +243,12 @@ AssembleMomentumEdgeABLTopBC::initialize()
 
   std::vector<double> work(imax_*jmax_), zGrid(kmax_), xMin(2), xMax(2);
   std::vector< std::complex<double> > workC(imax_*(jmax_/2+1));
-  std::vector<int> indexMapSamp(imax_*jmax_), indexMapX0(jmax_);
+  std::vector<int> indexMapSamp(imax_*jmax_), indexMapXInflow(jmax_),
+                   indexMapYInflow(imax_);
 
-  double z0, z1, zL, nyInv;
-  int i, ii, ix, iy, iz, izSample, imaxjmax, j, n, nx, ny, nz, iOff, count,
-      countX0, nSamp;
+  double z0, z1, zL, nxInv, nyInv;
+  int i, ii, ix, ixInflow, iy, iyInflow, iz, izSample, imaxjmax, j, n, 
+      nx, ny, nz, iOff, count, countXInflow, countYInflow, nSamp;
   bool unique;
 
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
@@ -247,12 +265,19 @@ AssembleMomentumEdgeABLTopBC::initialize()
   nz = kmax_-1;
   imaxjmax = imax_*jmax_;
 
-  // Set horizontal BC flag
+  // Trap bad values for the horizontal BC flags
 
-  if (horizBC_[0]<0 || horizBC_[0]>1 || horizBC_[1]<0 || horizBC_[1]>1) {
+  if (std::abs(horizBC_[0])>1 || std::abs(horizBC_[1])>1 || 
+      std::abs(horizBC_[2])>1 || std::abs(horizBC_[3])>1) {
     throw std::runtime_error(
       "AssembleMomentumEdgeABLTopBC: Bad user input for horizontal_bcs");
   }
+  if ((horizBC_[0]+horizBC_[1])!=0 || (horizBC_[2]+horizBC_[3])!=0) {
+    throw std::runtime_error(
+      "AssembleMomentumEdgeABLTopBC: Bad user input for horizontal_bcs");
+  }
+
+  // Set horizontal BC flag
 
   if (horizBC_[0]==0 && horizBC_[1]==0) horizBCType_ = 0;  // periodic-periodic
   if (horizBC_[0]==1 && horizBC_[1]==0) horizBCType_ = 1;  // inflow  -periodic
@@ -284,6 +309,15 @@ AssembleMomentumEdgeABLTopBC::initialize()
       fftw_plan_dft_c2r_1d(ny, reinterpret_cast<fftw_complex*>(workC.data()),
                            work.data(), flags);
     break;
+    case 3:
+      planSinx_ = 
+      fftw_plan_r2r_1d(nx-1, work.data(), work.data(), FFTW_RODFT00, flags);
+      planCosx_ = 
+      fftw_plan_r2r_1d(nx+1, work.data(), work.data(), FFTW_REDFT00, flags);
+      planSiny_ = 
+      fftw_plan_r2r_1d(ny-1, work.data(), work.data(), FFTW_RODFT00, flags);
+      planCosy_ = 
+      fftw_plan_r2r_1d(ny+1, work.data(), work.data(), FFTW_REDFT00, flags);
     default:
       printf("%s\n","BC not yet implemented");
       exit(0);
@@ -420,10 +454,18 @@ AssembleMomentumEdgeABLTopBC::initialize()
 
   // Generate a map for the boundary points contained on this process.
 
+  ixInflow = -1;
+  iyInflow = -1;
+  if (horizBC_[0] == 1) ixInflow = 0;
+  if (horizBC_[1] == 1) ixInflow = nx;
+  if (horizBC_[2] == 1) iyInflow = 0;
+  if (horizBC_[3] == 1) iyInflow = ny;
+
   iOff = nz*imaxjmax;
 
-  count   = 0;
-  countX0 = 0;
+  count        = 0;
+  countXInflow = 0;
+  countYInflow = 0;
   for (iy=0; iy<jmax_; ++iy) {
     for (ix=0; ix<imax_; ++ix) {
 
@@ -439,21 +481,27 @@ AssembleMomentumEdgeABLTopBC::initialize()
         nodeMapM1_[ count] = nodeM1;
         indexMapBC_[count] = iy*imax_ + ix;
         count ++;
-        if (ix == 0) {
-          nodeMapX0_[countX0] = nodeBC;
-          indexMapX0[countX0] = iy;
-          countX0 ++;
+        if (ix == ixInflow) {
+          nodeMapXInflow_[countXInflow] = nodeBC;
+          indexMapXInflow[countXInflow] = iy;
+          countXInflow ++;
+        }
+        if (iy == iyInflow) {
+          nodeMapYInflow_[countYInflow] = nodeBC;
+          indexMapYInflow[countYInflow] = ix;
+          countYInflow ++;
         }
       }
 
     }
   }
-  nBC_ = count;
-  nX0_ = countX0;
+  nBC_      = count;
+  nXInflow_ = countXInflow;
+  nYInflow_ = countYInflow;
 
-  // Form a global list of the x=x_min index maps.
+  // Form a global list of the xInflow index maps.
 
-  MPI_Allgather(&nX0_, 1, MPI_INT, sampleDistrib_.data(), 1, MPI_INT,
+  MPI_Allgather(&nXInflow_, 1, MPI_INT, sampleDistrib_.data(), 1, MPI_INT,
                 bulk_data.parallel());
 
   displ_[0] = 0;
@@ -461,33 +509,73 @@ AssembleMomentumEdgeABLTopBC::initialize()
     displ_[i] = displ_[i-1] + sampleDistrib_[i-1];
   }
 
-  MPI_Allgatherv(indexMapX0.data(), nX0_, MPI_INT, 
+  MPI_Allgatherv(indexMapXInflow.data(), nXInflow_, MPI_INT, 
                  indexMapSampGlobal_.data(), sampleDistrib_.data(), 
                  displ_.data(), MPI_INT, bulk_data.parallel());
 
-  // Eliminate redundant elements from the global x-x_min lists.
+  // Eliminate redundant elements from the global xInflow lists.
 
-  count = nX0_;
+  count = nXInflow_;
   n = myrank;
   for (i=displ_[n]; i<displ_[n+1]; i++) {
     for (j=displ_[n+1]; j<displ_[nprocs]; ++j) {
       if (indexMapSampGlobal_[i] == indexMapSampGlobal_[j]) {
         count --;
         for (ii=i-displ_[n]; ii<count; ++ii) {
-          nodeMapX0_[ii] = nodeMapX0_[ii+1];
-          indexMapX0[ii] = indexMapX0[ii+1];
+          nodeMapXInflow_[ii] = nodeMapXInflow_[ii+1];
+          indexMapXInflow[ii] = indexMapXInflow[ii+1];
         }
       }
     }
   }
-  nX0_ = count;
+  nXInflow_ = count;
 
   nyInv = 1.0/(double)ny;
-  for (i=0; i<nX0_; ++i) {
-    if (indexMapX0[i] == 0 || indexMapX0[i] == ny) {
-      weight_[i] = 0.5*nyInv;
+  for (i=0; i<nXInflow_; ++i) {
+    if (indexMapXInflow[i] == 0 || indexMapXInflow[i] == ny) {
+      xInflowWeight_[i] = 0.5*nyInv;
     } else {
-      weight_[i] = nyInv;
+      xInflowWeight_[i] = nyInv;
+    }
+  }
+
+  // Form a global list of the yInflow index maps.
+
+  MPI_Allgather(&nYInflow_, 1, MPI_INT, sampleDistrib_.data(), 1, MPI_INT,
+                bulk_data.parallel());
+
+  displ_[0] = 0;
+  for (i=1; i<nprocs+1; ++i) { 
+    displ_[i] = displ_[i-1] + sampleDistrib_[i-1];
+  }
+
+  MPI_Allgatherv(indexMapYInflow.data(), nYInflow_, MPI_INT, 
+                 indexMapSampGlobal_.data(), sampleDistrib_.data(), 
+                 displ_.data(), MPI_INT, bulk_data.parallel());
+
+  // Eliminate redundant elements from the global yInflow lists.
+
+  count = nYInflow_;
+  n = myrank;
+  for (i=displ_[n]; i<displ_[n+1]; i++) {
+    for (j=displ_[n+1]; j<displ_[nprocs]; ++j) {
+      if (indexMapSampGlobal_[i] == indexMapSampGlobal_[j]) {
+        count --;
+        for (ii=i-displ_[n]; ii<count; ++ii) {
+          nodeMapYInflow_[ii] = nodeMapYInflow_[ii+1];
+          indexMapYInflow[ii] = indexMapYInflow[ii+1];
+        }
+      }
+    }
+  }
+  nYInflow_ = count;
+
+  nxInv = 1.0/(double)nx;
+  for (j=0; j<nYInflow_; ++j) {
+    if (indexMapYInflow[j] == 0 || indexMapYInflow[j] == nx) {
+      yInflowWeight_[j] = 0.5*nxInv;
+    } else {
+      yInflowWeight_[j] = nxInv;
     }
   }
 
@@ -668,14 +756,13 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
 
   double waveX, waveY, normFac, kx, kx2, ky, kMag, eFac, scale, xFac, yFac,
          zFac, wt, u0, v0, uInc, vInc;
-  int i, i0, i1, i2, ii, iOff1, iOff2, j, j0, j1, jj, nx, ny, nxny;
+  int i, i0, ii, iOff, j, j0, j1, jj, nx, ny;
 
   const double pi = std::acos(-1.0);
   const std::complex<double> iUnit(0.0,1.0);
 
   nx = imax_-1;
   ny = jmax_-1;
-  nxny = nx*ny;
 
 // Symmetrize wSamp.
 
@@ -693,7 +780,9 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
 */
 
   // Forward transform of wSamp.  Sine transform in x, Fourier transform
-  // in y.  Note that the data is transposed between the x and y transforms.
+  // in y.  The Nyquist mode in x is not stored since it is explicitly
+  // zero.  The zero mode in x is set to zero explicitly.  Note that the 
+  // data is transposed between the x and y transforms.
 
   for (j=0; j<ny; ++j) {
     i0 = j*nx;
@@ -711,8 +800,9 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
                          reinterpret_cast<fftw_complex*>(&wCoef[j1]));
   }
 
-  // Solve the potential flow problem.  u0 and v0 are the average velocity
-  // components at the x=x_min edge.
+  // Solve the potential flow problem.  The Nyquist modes in x are not
+  // considered since they are identically zero.  u0 and v0 are the 
+  // average velocity components at the x=x_min edge.
 
   waveX =     pi/xL_;
   waveY = 2.0*pi/yL_;
@@ -746,8 +836,9 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
   }
 
   // Reverse transform the solution at the upper boundary.  Fourier transform
-  // in y, either sine or cosine transform in x.  Note that the data is 
-  // transposed between the y and x transforms.
+  // in y, either sine or cosine transform in x.  Note that the Nyquist mode
+  // in x needs to be set to zero prior to a cosine transform.  Also note
+  // that the data is transposed between the y and x transforms.
 
   for (i=0; i<nx; ++i) {
     j0 = i*ny;
@@ -761,6 +852,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
       ii = i*ny + j;
       uBC[i0+i] = work[ii];
     }
+    uBC[i0+nx] = 0.0;
     fftw_execute_r2r(planCosx_, &uBC[i0], &uBC[i0]);
   }
 
@@ -776,7 +868,9 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
       ii = i*ny + j;
       vBC[i0+i] = work[ii];
     }
-    fftw_execute_r2r(planSinx_, &vBC[i0], &vBC[i0]);
+    fftw_execute_r2r(planSinx_, &vBC[i0+1], &vBC[i0+1]);
+    vBC[i0   ] = 0.0;
+    vBC[i0+nx] = 0.0;
   }
 
   for (i=0; i<nx; ++i) {
@@ -808,14 +902,147 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
 
   // Enforce periodicity in y.
 
-  iOff1 = 0;
-  iOff2 = ny*imax_;
+  iOff = ny*imax_;
   for (i=0; i<imax_; ++i) {
-    i1 = iOff1 + i;
-    i2 = iOff2 + i;
-    uBC[i2] = uBC[i1];
-    vBC[i2] = vBC[i1];
-    wBC[i2] = wBC[i1];
+    uBC[iOff+i] = uBC[i];
+    vBC[iOff+i] = vBC[i];
+    wBC[iOff+i] = wBC[i];
+  }
+}
+
+//--------------------------------------------------------------------------
+//-------- potentialBCInflowInflow -----------------------------------------
+//--------------------------------------------------------------------------
+void
+AssembleMomentumEdgeABLTopBC::potentialBCInflowInflow( 
+  std::vector<double>& wSamp,
+  std::vector<double>& UAvg,
+  std::vector<double>& uBC,
+  std::vector<double>& vBC,
+  std::vector<double>& wBC )
+{
+
+  std::vector<double> uCoef(imax_*jmax_), vCoef(imax_*jmax_),
+                      wCoef(imax_*jmax_);
+
+  double waveX, waveY, normFac, kx, kx2, ky, kMag, eFac, scale, xFac, yFac,
+         zFac, wtX, wtY, u0X, u0Y, v0X, v0Y, uInc, vInc;
+  int i, i0, ii, j, j0, jj, nx, ny;
+
+  const double pi = std::acos(-1.0);
+
+  nx = imax_-1;
+  ny = jmax_-1;
+
+  // Forward transform of wSamp.  Sine transform in x, sine transform
+  // in y.  The Nyquist modes in x are not stored since they are identically
+  // zero.  The Nyquist modes in y are stored (as zeros) in order to make
+  // the array stride wide enough for an in place cosine transform (for the
+  // reverse transfrom process).  The zero modes in both x and y are explicitly
+  // set to zero.  Note that the data is transposed between the x and y 
+  // transforms.
+
+  for (j=1; j<ny; ++j) {
+    i0 = j*nx;
+    fftw_execute_r2r(planSinx_, &wSamp[i0+1], &wSamp[i0+1]);
+    wCoef[j] = 0.0;            // i=0  (zero  mode in x)
+    for (i=1; i<nx; ++i) {
+      ii = i*jmax_ + j;
+      wCoef[ii] = wSamp[i0+i];
+    }
+    wCoef[nx*jmax_+j] = 0.0;   // i=nx (Nyquist mode in x)
+  }
+  for (i=1; i<nx; ++i) {
+    j0 = i*jmax_;
+    wCoef[j0] = 0.0;           // j=0  (zero mode in y)
+    fftw_execute_r2r(planSiny_, &wCoef[j0+1], &wCoef[j0+1]);
+    wCoef[j0+ny] = 0.0;        // j=ny (Nyquist mode in y)
+  }
+  wCoef[0] = 0.0;              // i=0, j=0 (zero mode in x and y)
+
+  // Solve the potential flow problem.  The Nyquist modes in x and y are not
+  // considered since they are identically zero.  u0 and v0 are the average 
+  // velocity components at the x=x_min edge.
+
+  waveX = pi/xL_;
+  waveY = pi/yL_;
+  normFac = 1.0/((double)(2*nx)*(double)(2*ny));
+
+  u0X = 0;   v0X = 0;
+  u0Y = 0;   v0Y = 0;
+  for (i=0; i<nx; ++i) {
+    j0 = i*jmax_;
+    kx = waveX*(double)i;
+    kx2 = kx*kx;
+    wtX = 2.0;
+    if (i==0 || i==nx) { wtX = 1.0; }
+    for (j=0; j<=ny; ++j) {
+      jj = j0 + j;
+      ky = waveY*(double)j;
+      kMag = std::sqrt( kx2 + ky*ky );
+      eFac = std::exp(-kMag*deltaZ_)*normFac;
+      scale = 1.0/(kMag+1.0e-15);
+      xFac = kx*scale*eFac;
+      yFac = ky*scale*eFac;
+      zFac =          eFac;
+      uCoef[jj] = -xFac*wCoef[jj];
+      vCoef[jj] = -yFac*wCoef[jj];
+      wCoef[jj] =  zFac*wCoef[jj];
+      if (j == 0) {
+        u0X += wtX*uCoef[jj];
+        v0X += wtX*vCoef[jj];
+      }
+      if (i == 0) {
+        wtY = 2.0;
+        if (j==0 || j==ny) { wtY = 1.0; }
+        u0Y += wtY*uCoef[jj];
+        v0Y += wtY*vCoef[jj];
+      }
+    }
+  }
+
+  // Reverse transform the solution at the upper boundary. Either sine or 
+  // cosine in both x and y.  Note that the Nyquist modes need to be set
+  // to zero prior to a cosine transform.  Also note that the data is 
+  // transposed between the y and x transforms.
+
+  for (i=0; i<nx; ++i) {
+    j0 = i*jmax_;
+    vCoef[j0+ny] = 0.0;       // Nyquist mode in y
+    fftw_execute_r2r(planSiny_, &uCoef[j0+1], &uCoef[j0+1]);
+    fftw_execute_r2r(planCosy_, &vCoef[j0  ], &vCoef[j0  ]);
+    fftw_execute_r2r(planSiny_, &wCoef[j0+1], &wCoef[j0+1]);
+    uCoef[j0   ] = 0.0;
+    uCoef[j0+ny] = 0.0;
+    wCoef[j0   ] = 0.0;
+    wCoef[j0+ny] = 0.0;
+  }
+  for (j=0; j<ny; ++j) {
+    i0 = j*imax_;
+    for (i=0; i<nx; ++i) {
+      ii = i*jmax_ + j;
+      uBC[i0+i] = uCoef[ii];
+      vBC[i0+i] = vCoef[ii];
+      wBC[i0+i] = wCoef[ii];
+    }
+    uBC[i0+nx] = 0.0;      // (Nyquist mode in x)
+    fftw_execute_r2r(planCosx_, &uBC[i0  ], &uBC[i0  ]);
+    fftw_execute_r2r(planSinx_, &vBC[i0+1], &vBC[i0+1]);
+    fftw_execute_r2r(planSinx_, &wBC[i0+1], &wBC[i0+1]);
+    vBC[i0   ] = 0.0;
+    vBC[i0+nx] = 0.0;
+    wBC[i0   ] = 0.0;
+    wBC[i0+nx] = 0.0;
+  }
+
+  // Adjust the u and v mean velocity so that the velocity computed at the
+  // x=x_min edge matches the inflow velocity.
+
+  uInc = UAvg[2] - u0X;
+  vInc = UAvg[5] - v0Y;
+  for (i=0; i<imax_*ny; ++i) {
+    uBC[i] += uInc;
+    vBC[i] += vInc;
   }
 
 }
