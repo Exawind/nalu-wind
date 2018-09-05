@@ -494,11 +494,12 @@ ComputeABLWallFrictionVelocityAlgorithm::normalize_nodal_fields()
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
   // parallel assemble
-  const std::vector<const stk::mesh::FieldBase*> fields = {
+  std::vector<const stk::mesh::FieldBase*> fields = {
     assembledWallArea_,
     assembledWallNormalDistance_
   };
-  stk::mesh::parallel_sum(bulk_data, fields);
+  const std::vector<const stk::mesh::FieldBase*>& const_fields_ref = fields;
+  stk::mesh::parallel_sum(bulk_data, const_fields_ref);
 
   // periodic assemble
   if ( realm_.hasPeriodic_) {
