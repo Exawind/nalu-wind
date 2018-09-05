@@ -27,8 +27,7 @@ linear_solvers:
     kspace: 75
     output_level: 0
     recompute_preconditioner: no
-    muelu_xml_file_name: ./milestone.xml
-
+    muelu_xml_file_name: ../../xml/milestone.xml
 
 # Specify the differnt physics realms.  Here, we have one for the fluid 
 # and one for io transfer to south/west inflow planes.
@@ -36,7 +35,7 @@ realms:
 
   # The fluid realm
   - name: fluidRealm
-    mesh: ./ablHill3d.exo
+    mesh: ../../mesh/ablHill3d.exo
     use_edges: yes
     automatic_decomposition_type: rcb
 
