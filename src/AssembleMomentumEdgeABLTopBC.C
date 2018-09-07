@@ -80,7 +80,7 @@ AssembleMomentumEdgeABLTopBC::execute()
 {
 
   std::vector<double> wSamp(imax_*jmax_), uBC(imax_*jmax_), vBC(imax_*jmax_),
-                      wBC(imax_*jmax_), work(imax_*jmax_), UAvg(6,0.0);
+                      wBC(imax_*jmax_), work(imax_*jmax_), UAvg(9,0.0);
   int i, j, ii;
   int nx = imax_ - 1;
   int ny = jmax_ - 1;
@@ -124,7 +124,7 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   const int myrank = bulk_data.parallel_rank();
 
-  int printSkip = 100000;
+  int printSkip = 10000;
   bool dump = false;
   FILE * outFile;
   if (timeStepCount % printSkip == 0) {
@@ -149,6 +149,7 @@ AssembleMomentumEdgeABLTopBC::execute()
     wSamp[i] = USamp[2];
     UAvg[0] += USamp[0]*nxnyInv;
     UAvg[1] += USamp[1]*nxnyInv;
+    UAvg[2] += USamp[2]*nxnyInv;
   }
 
   // Find contributions to the average velocity at the x inflow boundary
@@ -156,8 +157,9 @@ AssembleMomentumEdgeABLTopBC::execute()
   if (horizBCType_ == 1 || horizBCType_ == 3) {
     for (i=0; i<nXInflow_; ++i) {
       double *USamp = stk::mesh::field_data(velocityNp1,nodeMapXInflow_[i]);
-      UAvg[2] += xInflowWeight_[i]*USamp[0];
-      UAvg[3] += xInflowWeight_[i]*USamp[1];
+      UAvg[3] += xInflowWeight_[i]*USamp[0];
+      UAvg[4] += xInflowWeight_[i]*USamp[1];
+      UAvg[5] += xInflowWeight_[i]*USamp[2];
     }
   }
 
@@ -166,8 +168,9 @@ AssembleMomentumEdgeABLTopBC::execute()
   if (horizBCType_ == 2 || horizBCType_ == 3) {
     for (j=0; j<nYInflow_; ++j) {
       double *USamp = stk::mesh::field_data(velocityNp1,nodeMapYInflow_[j]);
-      UAvg[4] += yInflowWeight_[j]*USamp[0];
-      UAvg[5] += yInflowWeight_[j]*USamp[1];
+      UAvg[6] += yInflowWeight_[j]*USamp[0];
+      UAvg[7] += yInflowWeight_[j]*USamp[1];
+      UAvg[8] += yInflowWeight_[j]*USamp[2];
     }
   }
 
@@ -185,7 +188,7 @@ AssembleMomentumEdgeABLTopBC::execute()
 
   // Sum the average velocty contributions across all processes.
 
-  MPI_Allreduce(MPI_IN_PLACE, UAvg.data(), 6, MPI_DOUBLE, MPI_SUM,
+  MPI_Allreduce(MPI_IN_PLACE, UAvg.data(), 9, MPI_DOUBLE, MPI_SUM,
                 bulk_data.parallel());
 
   // Compute the upper boundary velocity field
@@ -220,10 +223,10 @@ AssembleMomentumEdgeABLTopBC::execute()
     uTop[0] = uFac*uBC[ii] + (1.0-uFac)*Um1[0];
     uTop[1] = uFac*vBC[ii] + (1.0-uFac)*Um1[1];
     uTop[2] = wFac*wBC[ii];
-    if (dump) {
-      fprintf( outFile, "%12.4e%12.4e%12.4e%12.4e%12.4e%12.4e\n",
-      coord[0], uTop[0], sTop[0], Um1[0], uTop[2], sTop[2] );
-    }
+//    if (dump) {
+//      fprintf( outFile, "%12.4e%12.4e%12.4e%12.4e%12.4e%12.4e\n",
+//      coord[0], uTop[0], sTop[0], Um1[0], uTop[2], sTop[2] );
+//    }
   }
 
   if (dump) { fclose(outFile); }
@@ -248,8 +251,7 @@ AssembleMomentumEdgeABLTopBC::initialize()
 
   double z0, z1, zL, nxInv, nyInv;
   int i, ii, ix, ixInflow, iy, iyInflow, iz, izSample, imaxjmax, j, n, 
-      nx, ny, nz, iOff, count, countXInflow, countYInflow, nSamp;
-  bool unique;
+      nx, ny, nz, iOff, count, count1, countXInflow, countYInflow, nSamp;
 
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -279,10 +281,14 @@ AssembleMomentumEdgeABLTopBC::initialize()
 
   // Set horizontal BC flag
 
-  if (horizBC_[0]==0 && horizBC_[1]==0) horizBCType_ = 0;  // periodic-periodic
-  if (horizBC_[0]==1 && horizBC_[1]==0) horizBCType_ = 1;  // inflow  -periodic
-  if (horizBC_[0]==0 && horizBC_[1]==1) horizBCType_ = 2;  // periodic-inflow  
-  if (horizBC_[0]==1 && horizBC_[1]==1) horizBCType_ = 3;  // inflow  -inflow
+  if (         horizBC_[0]==0 && 
+               horizBC_[2]==0     ) horizBCType_ = 0;  // periodic-periodic
+  if (std::abs(horizBC_[0])==1 &&
+               horizBC_[2]==0     ) horizBCType_ = 1;  // inflow  -periodic
+  if (         horizBC_[0]==0 && 
+      std::abs(horizBC_[2])==1    ) horizBCType_ = 2;  // periodic-inflow  
+  if (std::abs(horizBC_[0])==1 && 
+      std::abs(horizBC_[2])==1    ) horizBCType_ = 3;  // inflow  -inflow
 
   // Define fft plans.
 
@@ -486,6 +492,7 @@ AssembleMomentumEdgeABLTopBC::initialize()
           indexMapXInflow[countXInflow] = iy;
           countXInflow ++;
         }
+
         if (iy == iyInflow) {
           nodeMapYInflow_[countYInflow] = nodeBC;
           indexMapYInflow[countYInflow] = ix;
@@ -513,22 +520,38 @@ AssembleMomentumEdgeABLTopBC::initialize()
                  indexMapSampGlobal_.data(), sampleDistrib_.data(), 
                  displ_.data(), MPI_INT, bulk_data.parallel());
 
-  // Eliminate redundant elements from the global xInflow lists.
+  // Flag redundant elements in the global xInflow list for removal with -1.
 
-  count = nXInflow_;
-  n = myrank;
-  for (i=displ_[n]; i<displ_[n+1]; i++) {
-    for (j=displ_[n+1]; j<displ_[nprocs]; ++j) {
-      if (indexMapSampGlobal_[i] == indexMapSampGlobal_[j]) {
-        count --;
-        for (ii=i-displ_[n]; ii<count; ++ii) {
-          nodeMapXInflow_[ii] = nodeMapXInflow_[ii+1];
-          indexMapXInflow[ii] = indexMapXInflow[ii+1];
+  for (n=0; n<nprocs; ++n) {
+    for (i=displ_[n]; i<displ_[n+1]; i++) {
+      for (j=displ_[n+1]; j<displ_[nprocs]; ++j) {
+        if (indexMapSampGlobal_[i] == indexMapSampGlobal_[j]) {
+          if (indexMapSampGlobal_[i] == ny) {
+            indexMapSampGlobal_[i] = -1;
+          } else {
+            indexMapSampGlobal_[j] = -1;
+          }
         }
       }
     }
   }
+
+  // Remove the redundant elements from the local xInflow list.
+
+  n = myrank;
+  count = 0;
+  for (i=displ_[n]; i<displ_[n+1]; i++) {
+    ii = i-displ_[n];
+    if (indexMapSampGlobal_[i]>=0) {
+      nodeMapXInflow_[count] = nodeMapXInflow_[ii];
+      indexMapXInflow[count] = indexMapXInflow[ii];
+      count ++;
+    }
+  }
   nXInflow_ = count;
+
+  // Compute the weighting factors for the local contribution to the 
+  // xInflow average.
 
   nyInv = 1.0/(double)ny;
   for (i=0; i<nXInflow_; ++i) {
@@ -553,29 +576,45 @@ AssembleMomentumEdgeABLTopBC::initialize()
                  indexMapSampGlobal_.data(), sampleDistrib_.data(), 
                  displ_.data(), MPI_INT, bulk_data.parallel());
 
-  // Eliminate redundant elements from the global yInflow lists.
+  // Flag redundant elements in the global yInflow list for removal with -1.
 
-  count = nYInflow_;
-  n = myrank;
-  for (i=displ_[n]; i<displ_[n+1]; i++) {
-    for (j=displ_[n+1]; j<displ_[nprocs]; ++j) {
-      if (indexMapSampGlobal_[i] == indexMapSampGlobal_[j]) {
-        count --;
-        for (ii=i-displ_[n]; ii<count; ++ii) {
-          nodeMapYInflow_[ii] = nodeMapYInflow_[ii+1];
-          indexMapYInflow[ii] = indexMapYInflow[ii+1];
+  for (n=0; n<nprocs; ++n) {
+    for (i=displ_[n]; i<displ_[n+1]; i++) {
+      for (j=displ_[n+1]; j<displ_[nprocs]; ++j) {
+        if (indexMapSampGlobal_[i] == indexMapSampGlobal_[j]) {
+          if (indexMapSampGlobal_[i] == nx) {
+            indexMapSampGlobal_[i] = -1;
+          } else {
+            indexMapSampGlobal_[j] = -1;
+          }
         }
       }
     }
   }
+
+  // Remove the redundant elements from the local yInflow list.
+
+  n = myrank;
+  count = 0;
+  for (i=displ_[n]; i<displ_[n+1]; i++) {
+    ii = i-displ_[n];
+    if (indexMapSampGlobal_[i]>=0) {
+      nodeMapYInflow_[count] = nodeMapYInflow_[ii];
+      indexMapYInflow[count] = indexMapYInflow[ii];
+      count ++;
+    }
+  }
   nYInflow_ = count;
 
+  // Compute the weighting factors for the local contribution to the 
+  // yInflow average.
+
   nxInv = 1.0/(double)nx;
-  for (j=0; j<nYInflow_; ++j) {
-    if (indexMapYInflow[j] == 0 || indexMapYInflow[j] == nx) {
-      yInflowWeight_[j] = 0.5*nxInv;
+  for (i=0; i<nYInflow_; ++i) {
+    if (indexMapYInflow[i] == 0 || indexMapYInflow[i] == nx) {
+      yInflowWeight_[i] = 0.5*nxInv;
     } else {
-      yInflowWeight_[j] = nxInv;
+      yInflowWeight_[i] = nxInv;
     }
   }
 
@@ -593,30 +632,45 @@ AssembleMomentumEdgeABLTopBC::initialize()
                  indexMapSampGlobal_.data(), sampleDistrib_.data(), 
                  displ_.data(), MPI_INT, bulk_data.parallel());
 
-  // Eliminate redundant elements from the global index list.
+  // Flag redundant elements in the global wSamp list for removal with -1.
 
-  ii = 0;
   for (n=0; n<nprocs; ++n) {
-    count = 0;
     for (i=displ_[n]; i<displ_[n+1]; i++) {
-      unique = true;
       for (j=displ_[n+1]; j<displ_[nprocs]; ++j) {
         if (indexMapSampGlobal_[i] == indexMapSampGlobal_[j]) {
-          unique = false;
-          break;
+          if ( indexMapSampGlobal_[i]<nx ||
+              (indexMapSampGlobal_[i]%nx)==0) {
+            indexMapSampGlobal_[j] = -1;
+          } else {
+            indexMapSampGlobal_[i] = -1;
+          }
         }
-      }
-      if (unique) {
-        indexMapSampGlobal_[ii] = indexMapSampGlobal_[i];
-        if (myrank == n) {
-          nodeMapSamp_[count] = nodeMapSamp_[i-displ_[n]];
-        }
-        ii ++;
-        count ++;
       }
     }
-    sampleDistrib_[n] = count;
   }
+
+  // Remove the redundant elements from both the global indexMap and
+  // the local nodeMap.
+
+  n = myrank;
+  count = 0;
+  for (n=0; n<nprocs; ++n) {
+    count1 = 0;
+    for (i=displ_[n]; i<displ_[n+1]; i++) {
+      ii = i-displ_[n];
+      if (indexMapSampGlobal_[i]>=0) {
+        indexMapSampGlobal_[count] = indexMapSampGlobal_[i];
+        if (n==myrank) {
+          nodeMapSamp_[count1] = nodeMapSamp_[ii];
+        }
+        count  ++;
+        count1 ++;
+      }
+    }
+    sampleDistrib_[n] = count1;
+  }
+
+  // Rebuild the global displacement vector.
 
   for (i=1; i<nprocs+1; ++i) {
     displ_[i] = displ_[i-1] + sampleDistrib_[i-1];
@@ -693,8 +747,11 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
       ii ++;
     }
   }
-  wCoef[0] = 0.0;
   uCoef[0] = UAvg[0];
+//  wCoef[1] = UAvg[1];
+//  wCoef[0] = UAvg[2];
+  vCoef[0] = 0.0;
+  wCoef[0] = 0.0;
 
   // Reverse transform the solution at the upper boundary.
 
@@ -755,7 +812,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
     vCoef(imax_*(jmax_/2+1)), wCoef(imax_*(jmax_/2+1));
 
   double waveX, waveY, normFac, kx, kx2, ky, kMag, eFac, scale, xFac, yFac,
-         zFac, wt, u0, v0, uInc, vInc;
+         zFac, wt, u0, v0, uInc, vInc, wInc;
   int i, i0, ii, iOff, j, j0, j1, jj, nx, ny;
 
   const double pi = std::acos(-1.0);
@@ -893,11 +950,20 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
   // Adjust the u and v mean velocity so that the velocity computed at the
   // x=x_min edge matches the inflow velocity.
 
-  uInc = UAvg[2] - u0;
-  vInc = UAvg[3] - v0;
+  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
+  const int myrank = bulk_data.parallel_rank();
+  if(myrank==0) {
+    printf("%s %12.4e %12.4e %12.4e\n","in IP UAvg = ",UAvg[0],UAvg[3],UAvg[6]);
+  }
+
+  uInc = UAvg[3] - u0;
+  vInc = UAvg[4] - v0;
+//  wInc = UAvg[2];
+  wInc = 0.0;
   for (i=0; i<imax_*ny; ++i) {
     uBC[i] += uInc;
     vBC[i] += vInc;
+    wBC[i] += wInc;
   }
 
   // Enforce periodicity in y.
@@ -926,7 +992,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowInflow(
                       wCoef(imax_*jmax_);
 
   double waveX, waveY, normFac, kx, kx2, ky, kMag, eFac, scale, xFac, yFac,
-         zFac, wtX, wtY, u0X, u0Y, v0X, v0Y, uInc, vInc;
+         zFac, wtX, wtY, u0X, u0Y, v0X, v0Y, uInc, vInc, wInc;
   int i, i0, ii, j, j0, jj, nx, ny;
 
   const double pi = std::acos(-1.0);
@@ -1038,11 +1104,14 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowInflow(
   // Adjust the u and v mean velocity so that the velocity computed at the
   // x=x_min edge matches the inflow velocity.
 
-  uInc = UAvg[2] - u0X;
-  vInc = UAvg[5] - v0Y;
+  uInc = UAvg[3] - u0X;
+  vInc = UAvg[7] - v0Y;
+//  wInc = UAvg[2];
+  wInc = 0.0;
   for (i=0; i<imax_*ny; ++i) {
     uBC[i] += uInc;
     vBC[i] += vInc;
+    wBC[i] += wInc;
   }
 
 }
