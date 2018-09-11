@@ -87,7 +87,7 @@ AssembleMomentumEdgeABLTopBC::execute()
   double nxnyInv = 1.0/((double)nx*(double)ny);
 
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
+  const int myrank = bulk_data.parallel_rank();
 
   // Determine geometrical parameters and generate a list of sample plane
   // and bc plane nodes that exist on this process.
@@ -97,48 +97,8 @@ AssembleMomentumEdgeABLTopBC::execute()
     needToInitialize_ = false;
   }
 
-  // wFac and uFac are used to blend between a symmetry BC and the potential
-  // flow BC near the start of the simulation.  We start with symmetry and
-  // gradually switch over to potential flow.  The vertical velocity is
-  // switched over first, then the horizontal velocity.
-
-  const int timeStepCount = realm_.get_time_step_count();
-
-  int startupSteps = 3;
-  double wFac = 1.0;
-  if (timeStepCount <= startupSteps) {
-    wFac = (double)(timeStepCount-1)/(double)(startupSteps);
-  }
-
-  double uFac = 1.0;
-  if (timeStepCount <= 2*startupSteps) {
-    uFac = 0.0;
-  } else if (timeStepCount <= 3*startupSteps) {
-    uFac = (double)(timeStepCount-2*startupSteps-1)/(double)(startupSteps);
-  }
-      
-  wFac = 1.0;
-  uFac = 1.0;
-
-// Set up for diagnostic output.
-
-  const int myrank = bulk_data.parallel_rank();
-
-  int printSkip = 10000;
-  bool dump = false;
-  FILE * outFile;
-  if (timeStepCount % printSkip == 0) {
-    dump = true;
-    char fileName[12];
-    snprintf(fileName, 12, "%4s%03i%1s%03u",
-      "sol.",timeStepCount/printSkip,".",myrank);
-    outFile = fopen(fileName, "w");
-  }
-
   // deal with state
   VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType* coordinates = meta_data.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
 
   // Collect the sample plane data that is held on this process.
 
@@ -204,32 +164,15 @@ AssembleMomentumEdgeABLTopBC::execute()
       potentialBCInflowInflow( wSamp, UAvg, uBC, vBC, wBC );
   }
 
-/*
-  if (dump && myrank == 0) {
-    for (i=0; i<imax_*jmax_; ++i) {
-      fprintf( outFile, "%5i %12.4e %12.4e %12.4e\n",i,uBC[i],vBC[i],wBC[i] );
-    }
-  }
-*/
-
   // Set the boundary velocity array values.
 
   for (i=0; i<nBC_; ++i) {
     ii = indexMapBC_[i];
     double *uTop  = stk::mesh::field_data(*bcVelocity_, nodeMapBC_[i]);
-    double *sTop  = stk::mesh::field_data(velocityNp1,  nodeMapBC_[i]);
-    double *Um1   = stk::mesh::field_data(velocityNp1,  nodeMapM1_[i]);
-    double *coord = stk::mesh::field_data(*coordinates, nodeMapBC_[i]);
-    uTop[0] = uFac*uBC[ii] + (1.0-uFac)*Um1[0];
-    uTop[1] = uFac*vBC[ii] + (1.0-uFac)*Um1[1];
-    uTop[2] = wFac*wBC[ii];
-//    if (dump) {
-//      fprintf( outFile, "%12.4e%12.4e%12.4e%12.4e%12.4e%12.4e\n",
-//      coord[0], uTop[0], sTop[0], Um1[0], uTop[2], sTop[2] );
-//    }
+    uTop[0] = uBC[ii];
+    uTop[1] = vBC[ii];
+    uTop[2] = wBC[ii];
   }
-
-  if (dump) { fclose(outFile); }
 
   // Apply the boundary values as a Dirichlet condition.
 
@@ -267,7 +210,7 @@ AssembleMomentumEdgeABLTopBC::initialize()
   nz = kmax_-1;
   imaxjmax = imax_*jmax_;
 
-  // Trap bad values for the horizontal BC flags
+  // Trap bad values for the horizontal BC index flags
 
   if (std::abs(horizBC_[0])>1 || std::abs(horizBC_[1])>1 || 
       std::abs(horizBC_[2])>1 || std::abs(horizBC_[3])>1) {
@@ -279,7 +222,7 @@ AssembleMomentumEdgeABLTopBC::initialize()
       "AssembleMomentumEdgeABLTopBC: Bad user input for horizontal_bcs");
   }
 
-  // Set horizontal BC flag
+  // Set horizontal BC type flag
 
   if (         horizBC_[0]==0 && 
                horizBC_[2]==0     ) horizBCType_ = 0;  // periodic-periodic
@@ -329,28 +272,6 @@ AssembleMomentumEdgeABLTopBC::initialize()
       printf("%s\n","BC not yet implemented");
       exit(0);
   }
-/*
-  planSiny_ = 
-    fftw_plan_r2r_1d(ny-1, work.data(), work.data(), FFTW_RODFT00, flags);
-  planCosy_ = 
-    fftw_plan_r2r_1d(ny+1, work.data(), work.data(), FFTW_REDFT00, flags);
-  planFourierxF_ = 
-    fftw_plan_dft_r2c_1d(nx, work.data(),
-                         reinterpret_cast<fftw_complex*>(workC.data()), flags);
-  planFourierxB_ = 
-    fftw_plan_dft_c2r_1d(nx, reinterpret_cast<fftw_complex*>(workC.data()),
-                         work.data(), flags);
-
-  planSinxSiny_ =
-    fftw_plan_r2r_2d(ny-1, nx-1, work.data(), work.data(), FFTW_RODFT00,
-                     FFTW_RODFT00, flags);
-  planCosxSiny_ =
-    fftw_plan_r2r_2d(ny-1, nx+1, work.data(), work.data(), FFTW_RODFT00,
-                     FFTW_REDFT00, flags);
-  planSinxCosy_ =
-    fftw_plan_r2r_2d(ny+1, nx-1, work.data(), work.data(), FFTW_REDFT00,
-                     FFTW_RODFT00, flags);
-*/
 
   // Determine the vertical mesh distribution by sampling at the middle
   // of the ix=0 face.
@@ -459,7 +380,7 @@ AssembleMomentumEdgeABLTopBC::initialize()
   }
   nSamp = count;
 
-  // Generate a map for the boundary points contained on this process.
+  // Determine where the inflow plane averages are to be computed.
 
   ixInflow = -1;
   iyInflow = -1;
@@ -467,6 +388,8 @@ AssembleMomentumEdgeABLTopBC::initialize()
   if (horizBC_[1] == 1) ixInflow = nx;
   if (horizBC_[2] == 1) iyInflow = 0;
   if (horizBC_[3] == 1) iyInflow = ny;
+
+  // Generate a map for the boundary points contained on this process.
 
   iOff = nz*imaxjmax;
 
@@ -490,14 +413,14 @@ AssembleMomentumEdgeABLTopBC::initialize()
         count ++;
         if (ix == ixInflow) {
 //          nodeMapXInflow_[countXInflow] = nodeBC;
-          nodeMapXInflow_[countXInflow] = nodeM1;
+          nodeMapXInflow_[countXInflow] = nodeM1;  // one point below the bndry
           indexMapXInflow[countXInflow] = iy;
           countXInflow ++;
         }
 
         if (iy == iyInflow) {
 //          nodeMapYInflow_[countYInflow] = nodeBC;
-          nodeMapYInflow_[countYInflow] = nodeM1;
+          nodeMapYInflow_[countYInflow] = nodeM1; // one point below the bndry
           indexMapYInflow[countYInflow] = ix;
           countYInflow ++;
         }
@@ -706,26 +629,6 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
   nx = imax_-1;
   ny = jmax_-1;
 
-/*
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-  const int myrank = bulk_data.parallel_rank();
-  if(myrank==0) {
-    printf("%s %12.4e %12.4e %12.4e\n","in PP UAvg = ",UAvg[0],UAvg[3],UAvg[6]);
-  }
-*/
-// Symmetrize wSamp.
-/*
-  for (j=0; j<ny; ++j) {
-    wSamp[j*nx] = 0.0;
-    for (i=1; i<nx/2; ++i) {
-      ii = j*nx + i;
-      i1 = j*nx + (nx-i);
-      wSamp[ii] = 0.5*( wSamp[ii] - wSamp[i1] );
-      wSamp[i1] = -wSamp[ii];
-    }
-  }
-*/
-
 // Forward transform of wSamp.
 
   fftw_execute_dft_r2c(planFourier2dF_, wSamp.data(),
@@ -830,21 +733,6 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
 
   nx = imax_-1;
   ny = jmax_-1;
-
-// Symmetrize wSamp.
-
-/*
-  for (j=0; j<ny; ++j) {
-    wSamp[ j   *imax_  ] = 0.0;
-    wSamp[(j+1)*imax_-1] = 0.0;
-    for (i=1; i<=nx/2; ++i) {
-      ii = j*imax_ + i;
-      i1 = j*imax_ + (nx-i);
-      wSamp[ii] = 0.5*( wSamp[ii] - wSamp[i1] );
-      wSamp[i1] = -wSamp[ii];
-    }
-  }
-*/
 
   // Forward transform of wSamp.  Sine transform in x, Fourier transform
   // in y.  The Nyquist mode in x is not stored since it is explicitly
@@ -959,13 +847,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
 
   // Adjust the u and v mean velocity so that the velocity computed at the
   // x=x_min edge matches the inflow velocity.
-/*
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-  const int myrank = bulk_data.parallel_rank();
-  if(myrank==0) {
-    printf("%s %12.4e %12.4e %12.4e\n","in IP UAvg = ",UAvg[0],UAvg[3],UAvg[6]);
-  }
-*/
+
   uInc = UAvg[3] - u0;
   vInc = UAvg[4] - v0;
 //  wInc = UAvg[2];
@@ -1009,14 +891,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowInflow(
 
   nx = imax_-1;
   ny = jmax_-1;
-/*
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-  const int myrank = bulk_data.parallel_rank();
-  if(myrank==0) {
-    printf("%s %12.4e%12.4e%12.4e%12.4e%12.4e\n","in II UAvg = ",
-UAvg[0],UAvg[3],UAvg[4],UAvg[6],UAvg[7]);
-  }
-*/
+
   // Forward transform of wSamp.  Sine transform in x, sine transform
   // in y.  The Nyquist modes in x are not stored since they are identically
   // zero.  The Nyquist modes in y are stored (as zeros) in order to make
