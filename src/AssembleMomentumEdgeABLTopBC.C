@@ -324,6 +324,7 @@ AssembleMomentumEdgeABLTopBC::initialize()
       fftw_plan_r2r_1d(ny-1, work.data(), work.data(), FFTW_RODFT00, flags);
       planCosy_ = 
       fftw_plan_r2r_1d(ny+1, work.data(), work.data(), FFTW_REDFT00, flags);
+    break;
     default:
       printf("%s\n","BC not yet implemented");
       exit(0);
@@ -488,13 +489,15 @@ AssembleMomentumEdgeABLTopBC::initialize()
         indexMapBC_[count] = iy*imax_ + ix;
         count ++;
         if (ix == ixInflow) {
-          nodeMapXInflow_[countXInflow] = nodeBC;
+//          nodeMapXInflow_[countXInflow] = nodeBC;
+          nodeMapXInflow_[countXInflow] = nodeM1;
           indexMapXInflow[countXInflow] = iy;
           countXInflow ++;
         }
 
         if (iy == iyInflow) {
-          nodeMapYInflow_[countYInflow] = nodeBC;
+//          nodeMapYInflow_[countYInflow] = nodeBC;
+          nodeMapYInflow_[countYInflow] = nodeM1;
           indexMapYInflow[countYInflow] = ix;
           countYInflow ++;
         }
@@ -703,6 +706,13 @@ AssembleMomentumEdgeABLTopBC::potentialBCPeriodicPeriodic(
   nx = imax_-1;
   ny = jmax_-1;
 
+/*
+  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
+  const int myrank = bulk_data.parallel_rank();
+  if(myrank==0) {
+    printf("%s %12.4e %12.4e %12.4e\n","in PP UAvg = ",UAvg[0],UAvg[3],UAvg[6]);
+  }
+*/
 // Symmetrize wSamp.
 /*
   for (j=0; j<ny; ++j) {
@@ -949,13 +959,13 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowPeriodic(
 
   // Adjust the u and v mean velocity so that the velocity computed at the
   // x=x_min edge matches the inflow velocity.
-
+/*
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   const int myrank = bulk_data.parallel_rank();
   if(myrank==0) {
     printf("%s %12.4e %12.4e %12.4e\n","in IP UAvg = ",UAvg[0],UAvg[3],UAvg[6]);
   }
-
+*/
   uInc = UAvg[3] - u0;
   vInc = UAvg[4] - v0;
 //  wInc = UAvg[2];
@@ -999,7 +1009,14 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowInflow(
 
   nx = imax_-1;
   ny = jmax_-1;
-
+/*
+  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
+  const int myrank = bulk_data.parallel_rank();
+  if(myrank==0) {
+    printf("%s %12.4e%12.4e%12.4e%12.4e%12.4e\n","in II UAvg = ",
+UAvg[0],UAvg[3],UAvg[4],UAvg[6],UAvg[7]);
+  }
+*/
   // Forward transform of wSamp.  Sine transform in x, sine transform
   // in y.  The Nyquist modes in x are not stored since they are identically
   // zero.  The Nyquist modes in y are stored (as zeros) in order to make
@@ -1083,7 +1100,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowInflow(
     wCoef[j0   ] = 0.0;
     wCoef[j0+ny] = 0.0;
   }
-  for (j=0; j<ny; ++j) {
+  for (j=0; j<jmax_; ++j) {
     i0 = j*imax_;
     for (i=0; i<nx; ++i) {
       ii = i*jmax_ + j;
@@ -1108,7 +1125,7 @@ AssembleMomentumEdgeABLTopBC::potentialBCInflowInflow(
   vInc = UAvg[7] - v0Y;
 //  wInc = UAvg[2];
   wInc = 0.0;
-  for (i=0; i<imax_*ny; ++i) {
+  for (i=0; i<imax_*jmax_; ++i) {
     uBC[i] += uInc;
     vBC[i] += vInc;
     wBC[i] += wInc;

@@ -29,8 +29,7 @@ linear_solvers:
     recompute_preconditioner: no
     muelu_xml_file_name: ../../xml/milestone.xml
 
-# Specify the differnt physics realms.  Here, we have one for the fluid 
-# and one for io transfer to south/west inflow planes.
+# Specify the differnt physics realms, just the fluid realm in this case.
 realms:
 
   # The fluid realm
@@ -91,42 +90,50 @@ realms:
           value: 1000.0
 
     # The initial conditions are that pressure is uniformly 0 Pa and velocity
-    # is 1 m/s from the west.
+    # is 1 m/s from the south west.
     initial_conditions:
       - constant: ic_1
         target_name: [fluid]
         value:
           pressure: 0.0
-          velocity: [1.0, 0.0, 0.0]
+#          velocity: [0.707, 0.707, 0.0]
+          velocity: [0.500, 0.866, 0.0]
 
 
-    # Boundary conditions are periodic on the north, south, east, and west
-    # sides.  The lower boundary condition is a slip wall.  The upper boundary 
-    # is an open boundary using the abltop potential flow model.
+    # Boundary conditions are inflow on the west, open (outflow) on the east,
+    # inflow on the south, open (outflow) on the north.  The lower boundary
+    # is a slip wall.  The upper boundary is an open boundary using the 
+    # abltop potential flow model.
     boundary_conditions:
 
     - inflow_boundary_condition: bc_west
       target_name: west
       inflow_user_data:
-        velocity: [1.0, 0.0, 0.0]
+        velocity: [0.500, 0.866, 0.0]
 
     - open_boundary_condition: bc_east
       target_name: east
       open_user_data:
-        velocity: [1.0, 0.0, 0.0]
+        velocity: [0.500, 0.866, 0.0]
         pressure: 0.0
 
-    - periodic_boundary_condition: bc_north_south
-      target_name: [north, south]
-      periodic_user_data:
-        search_tolerance: 0.0001
+    - inflow_boundary_condition: bc_south
+      target_name: south
+      inflow_user_data:
+        velocity: [0.500, 0.866, 0.0]
+
+    - open_boundary_condition: bc_north
+      target_name: north
+      open_user_data:
+        velocity: [0.500, 0.866, 0.0]
+        pressure: 0.0
 
     - abltop_boundary_condition: bc_upper
       target_name: top
       abltop_user_data:
         potential_flow_bc: true
         grid_dimensions: [61, 61, 61]
-        horizontal_bcs: [1, -1, 0, 0]
+        horizontal_bcs: [1, -1, 1, -1]
         z_sample: 0.85
         normal_temperature_gradient: 0.0 
 
@@ -160,7 +167,7 @@ realms:
             turbulent_ke: 1.0
 
     output:
-      output_data_base_name: ablHill3d.e
+      output_data_base_name: ablHill3d_ip.e
       output_frequency: 1
       output_nodse_set: no
       output_variables:
@@ -168,7 +175,7 @@ realms:
        - pressure
 
     restart:
-      restart_data_base_name: ablHill3d.rst
+      restart_data_base_name: ablHill3d_ip.rst
 #      restart_time: 0.4
       restart_frequency: 20
       restart_start: 20
