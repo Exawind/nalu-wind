@@ -3093,6 +3093,9 @@ ContinuityEquationSystem::register_abltop_bc(
   // algorithm type
   const AlgorithmType algType = TOP_ABL;
 
+  if ( !realm_.realmUsesEdges_ )
+    throw std::runtime_error("ABLTopBoundaryCondition::Error you must use the edge-based scheme");
+
   ScalarFieldType &pressureNone = pressure_->field_of_state(stk::mesh::StateNone);
   VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
 
