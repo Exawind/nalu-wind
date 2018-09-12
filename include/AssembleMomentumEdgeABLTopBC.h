@@ -93,7 +93,7 @@ public:
     */
   virtual void potentialBCPeriodicPeriodic(
     std::vector<double>& wSamp,
-    std::vector<double>& uAvg,
+    std::vector<double>& UAvg,
     std::vector<double>& uBC,
     std::vector<double>& vBC,
     std::vector<double>& wBC );
@@ -113,7 +113,7 @@ public:
     */
   virtual void potentialBCInflowPeriodic(
     std::vector<double>& wSamp,
-    std::vector<double>& uAvg,
+    std::vector<double>& UAvg,
     std::vector<double>& uBC,
     std::vector<double>& vBC,
     std::vector<double>& wBC );
@@ -133,7 +133,7 @@ public:
     */
   virtual void potentialBCInflowInflow(
     std::vector<double>& wSamp,
-    std::vector<double>& uAvg,
+    std::vector<double>& UAvg,
     std::vector<double>& uBC,
     std::vector<double>& vBC,
     std::vector<double>& wBC );
@@ -155,8 +155,7 @@ public:
   bool needToInitialize_;
   fftw_plan planFourier2dF_, planFourier2dB_, planSinx_, planCosx_,
             planFourierxF_, planFourierxB_,   planSiny_, planCosy_,
-            planFourieryF_, planFourieryB_, planSinxSiny_, planCosxSiny_,
-            planSinxCosy_;
+            planFourieryF_, planFourieryB_;
 };
 
 } // namespace nalu
