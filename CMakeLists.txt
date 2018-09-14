@@ -8,6 +8,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 option(ENABLE_TESTS "Enable regression testing." OFF)
 option(ENABLE_DOCUMENTATION "Build documentation." OFF)
 option(ENABLE_SPHINX_API_DOCS "Link Doxygen API docs to Sphinx" OFF)
+option(ENABLE_WIND_UTILS "Build wind utils along with Nalu-Wind" OFF)
 option(ENABLE_OPENFAST
        "Use OPENFAST tpl to get actuator line positions and forces" OFF)
 option(ENABLE_PARAVIEW_CATALYST
@@ -279,4 +280,17 @@ if(ENABLE_TESTS)
    enable_testing()
    include(CTest)
    add_subdirectory(reg_tests)
+endif()
+
+if (ENABLE_WIND_UTILS)
+  if (EXISTS ${CMAKE_SOURCE_DIR}/wind-utils/CMakeLists.txt)
+    add_subdirectory(wind-utils)
+  else()
+    message(WARNING
+      "ENABLE_WIND_UTILS is ON, but wind-utils submodule has not been initialized.\
+       You should execute 'git submodule init && git submodule update' \
+       or use '-DENABLE_WIND_UTILS=OFF' to turn off this warning. \
+       DISABLING wind-utils compilation.
+      ")
+  endif()
 endif()
