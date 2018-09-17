@@ -158,7 +158,7 @@ if(ENABLE_HYPRE)
   if (NALU_HYPRE_COGMRES)
     add_definitions(-DHYPRE_COGMRES)
   else()
-    message(WARNING "Disabling HYPRE CO-GMRES interface")
+    message("-- Disabling HYPRE CO-GMRES interface")
   endif()
 endif()
 
