@@ -1,8 +1,25 @@
-# This is the input file for an ABL Simulation
+################################################################################
+#     This is the input file for an ABL Simulation.
+#     All the parameters in this file will be used to create Nalu inputs.
+################################################################################
 
-###########################################
+##########################################################################
+# These are the example input files and the files which will be generated.
+##########################################################################
+# The old input files which will be modified
+example_input: input_files/ablNeutralEdge.yaml
+example_preprocess: input_files/nalu_preprocess.yaml
+
+# The name of the new input files
+new_input: abl_simulation.yaml
+new_preprocess: abl_preprocess.yaml
+
+# Establish if the simulation is a restart or not (yes/no)
+restart: no
+
+######################################
 # Wind speed and temperature profiles
-###########################################
+######################################
 # Wind speed at specified height [m/s].
 U0Mag:                8.0
 # Wind direction [deg]. A direction of 270 deg means the wind is coming from the
@@ -25,9 +42,9 @@ wind_height:           90.0
 temperature_heights: [    0, 650.0, 750.0, 1000.0 ]
 temperature_values:  [300.0, 300.0, 308.0,  308.75]
 
-########################################
+######################
 # Material properties
-########################################
+######################
 # Density [kg/m^3]
 density:              1.
 # Kinematic viscosity [m^2/s].
@@ -37,27 +54,27 @@ TRef:                 300.0
 # Latitude on the Earth of the site [deg].
 latitude:             41.3
 
-####################################
+##############
 # Bottom wall
-####################################
+##############
 # Wall-normal component of temperature flux at wall.
 # A negative value is flux into domain [K-m/s].
 qwall:               0.
 # Surface roughness (m).
 z0:                   0.15
 
-##########################
+################
 # Time controls
-##########################
+################
 # Time-step [s]
 time_step: 0.5
 # Total number of time to run [s]
 total_run_time: 20000
 # Check for CFL  condition
 
-#############################
+########
 #  Mesh
-#############################
+########
 # Here are the mesh properties
 mesh:
   # Generate the mesh or read from an input file (yes/no)
@@ -75,9 +92,9 @@ mesh:
   # Change this variable
   number_of_cells: [500, 500, 100]
 
-################################
+#########
 # Output
-################################
+#########
 # How often to write output [s]
 # This is time-steps in nalu input
 output_frequency: 10000
@@ -92,20 +109,18 @@ boundary_layer_statistics:
   # How often sample the statistics
   time_hist_output_frequency: 1
 
-################################
+##################################
 # Add restart capability
 # Default to write last time-step
-################################
+##################################
 
-
-
-
-#############################################
+##################################################
 # Upper wall boundary condition
 # This is an optional flag
-# If not specified, the gradient will be computed based on the initial condition
+# If not specified, the gradient will be computed 
+#     based on the initial condition
 #     at the top of the domain
-#############################################
+##################################################
 # Potential temperature gradient above the strong inversion (K/m).
 # Compute this form the last points
 # TGradUpper:           0.003
