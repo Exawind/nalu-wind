@@ -26,7 +26,7 @@
 #include <overset/OversetManager.h>
 #include <overset/OversetInfo.h>
 
-#include <NaluCommNeighbors.hpp>
+#include <stk_util/parallel/CommNeighbors.hpp>
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_util/environment/WallTime.hpp>
 #include <stk_util/util/SortAndUnique.hpp>
@@ -674,7 +674,7 @@ void add_to_length(ViewType& v_owned, ViewType& v_shared, unsigned numDof,
 }
 
 void add_lengths_to_comm(const stk::mesh::BulkData& bulk,
-                         nalu_stk::CommNeighbors& commNeighbors,
+                         stk::CommNeighbors& commNeighbors,
                          int entity_a_owner,
                          stk::mesh::EntityId entityId_a,
                          unsigned numDof,
@@ -683,7 +683,7 @@ void add_lengths_to_comm(const stk::mesh::BulkData& bulk,
                          const int* colOwners)
 {   
     int owner = entity_a_owner;
-    nalu_stk::CommBufferV& sbuf = commNeighbors.send_buffer(owner);
+    stk::CommBufferV& sbuf = commNeighbors.send_buffer(owner);
     GlobalOrdinal rowGid = GID_(entityId_a, numDof , 0);
     
     sbuf.pack(rowGid);
@@ -697,7 +697,7 @@ void add_lengths_to_comm(const stk::mesh::BulkData& bulk,
 
 void communicate_remote_columns(const stk::mesh::BulkData& bulk,
                                 const std::vector<int>& neighborProcs,
-                                nalu_stk::CommNeighbors& commNeighbors,
+                                stk::CommNeighbors& commNeighbors,
                                 unsigned numDof,
                                 const Teuchos::RCP<LinSys::Map>& ownedRowsMap,
                                 Kokkos::View<size_t*,HostSpace>& deviceLocallyOwnedRowLengths,
@@ -706,7 +706,7 @@ void communicate_remote_columns(const stk::mesh::BulkData& bulk,
     commNeighbors.communicate();
     
     for(int p : neighborProcs) { 
-        nalu_stk::CommBufferV& rbuf = commNeighbors.recv_buffer(p);
+        stk::CommBufferV& rbuf = commNeighbors.recv_buffer(p);
         size_t bufSize = rbuf.size_in_bytes();
         while(rbuf.size_in_bytes() > 0) {
             GlobalOrdinal rowGid = 0;
@@ -748,7 +748,7 @@ void
 TpetraLinearSystem::compute_send_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
         const std::vector<std::vector<stk::mesh::Entity> >& connections,
                           const std::vector<int>& neighborProcs,
-                          nalu_stk::CommNeighbors& commNeighbors)
+                          stk::CommNeighbors& commNeighbors)
 { 
   const stk::mesh::BulkData& bulk = realm_.bulk_data();
   std::vector<int> sendLengths(neighborProcs.size(), 0);
@@ -792,7 +792,7 @@ TpetraLinearSystem::compute_send_lengths(const std::vector<stk::mesh::Entity>& r
   }
   
   for(size_t i=0; i<neighborProcs.size(); ++i) {
-    nalu_stk::CommBufferV& sbuf = commNeighbors.send_buffer(neighborProcs[i]);
+    stk::CommBufferV& sbuf = commNeighbors.send_buffer(neighborProcs[i]);
     sbuf.reserve(sendLengths[i]);
   }
 }
@@ -802,7 +802,7 @@ TpetraLinearSystem::compute_graph_row_lengths(const std::vector<stk::mesh::Entit
         const std::vector<std::vector<stk::mesh::Entity> >& connections,
                                               LinSys::RowLengths& sharedNotOwnedRowLengths,
                                               LinSys::RowLengths& locallyOwnedRowLengths,
-                                              nalu_stk::CommNeighbors& commNeighbors)
+                                              stk::CommNeighbors& commNeighbors)
 {
   Kokkos::View<size_t*,HostSpace> deviceSharedNotOwnedRowLengths = sharedNotOwnedRowLengths.view<HostSpace>();
   Kokkos::View<size_t*,HostSpace> deviceLocallyOwnedRowLengths = locallyOwnedRowLengths.view<HostSpace>();
@@ -915,7 +915,7 @@ TpetraLinearSystem::insert_graph_connections(const std::vector<stk::mesh::Entity
 }
 
 void insert_communicated_col_indices(const std::vector<int>& neighborProcs,
-                                     nalu_stk::CommNeighbors& commNeighbors,
+                                     stk::CommNeighbors& commNeighbors,
                                      unsigned numDof,
                                      LocalGraphArrays& ownedGraph,
                                      const LinSys::Map& rowMap,
@@ -923,7 +923,7 @@ void insert_communicated_col_indices(const std::vector<int>& neighborProcs,
 {
     std::vector<LocalOrdinal> colLids;
     for(int p : neighborProcs) {
-        nalu_stk::CommBufferV& rbuf = commNeighbors.recv_buffer(p);
+        stk::CommBufferV& rbuf = commNeighbors.recv_buffer(p);
         while(rbuf.size_in_bytes() > 0) {
             stk::mesh::EntityId rowGid = 0;
             rbuf.unpack(rowGid);
@@ -1263,7 +1263,7 @@ TpetraLinearSystem::finalizeLinearSystem()
   std::vector<int> neighborProcs;
   fill_neighbor_procs(neighborProcs, bulkData, realm_);
 
-  nalu_stk::CommNeighbors commNeighbors(bulkData.parallel(), neighborProcs);
+  stk::CommNeighbors commNeighbors(bulkData.parallel(), neighborProcs);
 
   compute_send_lengths(ownedAndSharedNodes_, connections_, neighborProcs, commNeighbors);
   compute_graph_row_lengths(ownedAndSharedNodes_, connections_, sharedNotOwnedRowLengths, locallyOwnedRowLengths, commNeighbors);

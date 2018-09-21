@@ -132,7 +132,6 @@ add_sources(GlobalSourceList
    MomentumMassBackwardEulerNodeSuppAlg.C
    MomentumMassElemSuppAlgDep.C
    MovingAveragePostProcessor.C
-   NaluCommNeighbors.C
    NaluEnv.C
    NaluParsing.C
    NonConformalInfo.C

@@ -25,7 +25,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace nalu_stk {
+namespace stk {
 class CommNeighbors;
 }
 
@@ -148,13 +148,13 @@ private:
   void compute_send_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
          const std::vector<std::vector<stk::mesh::Entity> >& connections,
                             const std::vector<int>& neighborProcs,
-                            nalu_stk::CommNeighbors& commNeighbors);
+                            stk::CommNeighbors& commNeighbors);
 
   void compute_graph_row_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
          const std::vector<std::vector<stk::mesh::Entity> >& connections,
                                  LinSys::RowLengths& sharedNotOwnedRowLengths,
                                  LinSys::RowLengths& locallyOwnedRowLengths,
-                                 nalu_stk::CommNeighbors& commNeighbors);
+                                 stk::CommNeighbors& commNeighbors);
 
   void insert_graph_connections(const std::vector<stk::mesh::Entity>& rowEntities,
          const std::vector<std::vector<stk::mesh::Entity> >& connections,
