@@ -1,4 +1,4 @@
-Nalu-Wind Documentation 
+Nalu-Wind Documentation
 =======================
 .. toctree::
    :maxdepth: 2
@@ -6,6 +6,7 @@ Nalu-Wind Documentation
    Nalu-Wind Homepage <https://github.com/Exawind/nalu-wind>
    Nalu-Wind Nightly Test Results <http://my.cdash.org/index.php?project=Nalu-Wind>
    User Manual <source/user/index.rst>
+   Examples <source/examples/index.rst>
    Developer Manual <source/developer/index.rst>
    Theory Manual <source/theory/index.rst>
    Verification Manual <source/verification/index.rst>
