@@ -4,15 +4,22 @@ Peregrine
 Here are the instructions to use Nalu and these examples on NREL's HPC system
 Peregrine.
 
+Initial Setup
+=============
+
+These steps need to be completed only once to setup the appropriate Nalu
+environment on the Peregrine system.
+
   1. Create the conda environment::
 
       module load conda
-      conda create -n nalu_python -c conda-forge python=3.6 numpy ruamel.yaml netCDF4 matplotlib
+      conda create -n nalu_python -c conda-forge python=3.6 numpy ruamel.yaml netCDF4 matplotlib scipy
 
   2. Set the Nalu environment.
-     This can be done by adding the following function to your ``.bash_profile``::
+     This can be done by adding the following function to THE USER
+     ``~/.bash_profile``::
 
-       function NaluEnv {
+       function nalu_env {
            module purge
            # Load the python environment
            module load conda
@@ -36,9 +43,24 @@ Peregrine.
                   ;;
            esac}
 
+     Source the new ``~/.bash_profile``::
 
-  3. Load the nalu environment::
+       source ~/.bash_profile
 
-      NaluEnv
+Running Every Case
+==================
+
+Every time the user logs into Peregrine and wants to run a case, these steps
+need to be completed:
+
+  1. Load the nalu environment::
+
+      nalu_env
+
+  2. Copy the executables from the public location to the directory where the
+     case is::
+
+      cp /projects/windsim/nalu-wind-executables/* .
+
 
 The system is now ready to compile and use Nalu.

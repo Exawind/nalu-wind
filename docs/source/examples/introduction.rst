@@ -7,9 +7,9 @@ A ``set_up.yaml`` file is included with all cases.
 This file has the parameters that can be modified for each case of interest.
 
 Each case has a default collection of input files in ``./input_files``.
-When running the code ``nalu_input_fileX``, it will take the inputs files and
-modify them according to the inputs set in ``set_up.yaml``.
-New input files are then generated and ready to use.
+The executable ``nalu_input_fileX`` will take the input files and
+modify them according to the inputs set in ``set_up.yaml`` and
+generate new and ready to use input files.
 
 The general instructions to run each case
 =========================================
@@ -26,14 +26,14 @@ The general instructions to run each case
 Setting up the environment
 ==========================
 
-    In order to use the ``python`` utilities to create the input files a
-    proper environment needs to be set.
+    In order to use the ``python`` utilities to create the input files and
+    post-process some of the data, a proper environment needs to be set.
     The user can add these libraries to their python environment, or use conda
     to create the environment needed.
 
     The new environment can be created through conda using::
 
-      conda create -n nalu_python -c conda-forge python=3.6 numpy ruamel.yaml netCDF4 matplotlib
+      conda create -n nalu_python -c conda-forge python=3.6 numpy ruamel.yaml netCDF4 matplotlib scipy
 
     Now, to use the environment run::
 
@@ -41,8 +41,9 @@ Setting up the environment
 
     This new environment will allow the execution of the ``nalu_input_fileX``
     script.
-    The environmentis saved in your system, so you only have to create it once.
-    After that, you just activate it.
+    The environment is saved in THE USER system, so it needs to be created only
+    once.
+    After that, it just needs to be activated.
 
 
 The ``nalu_input_fileX`` script
