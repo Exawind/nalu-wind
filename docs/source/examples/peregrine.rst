@@ -4,6 +4,8 @@ Peregrine
 Here are the instructions to use Nalu and these examples on NREL's HPC system
 Peregrine.
 
+.. _peregrine_environment:
+
 Initial Setup
 =============
 
@@ -16,10 +18,10 @@ environment on the Peregrine system.
       conda create -n nalu_python -c conda-forge python=3.6 numpy ruamel.yaml netCDF4 matplotlib scipy
 
   2. Set the Nalu environment.
-     This can be done by adding the following function to THE USER
+     This can be done by adding the following function to
      ``~/.bash_profile``::
 
-       function nalu_env {
+      function nalu_env {
            module purge
            # Load the python environment
            module load conda
@@ -41,16 +43,16 @@ environment on the Peregrine system.
                   module use ${mod_dir}/intel-18.1.163
                   module load binutils intel-mpi intel-mkl cmake
                   ;;
-           esac}
+           esac
+       }
 
      Source the new ``~/.bash_profile``::
 
        source ~/.bash_profile
 
-  3. Obtaining Nalu.
-     THE USER can clone the Nalu repository by::
+  3. Clone the Nalu repository by::
 
-       git clone git@github.com:tonyinme/nalu-wind.git
+       git clone https://github.com/tonyinme/nalu-wind.git
 
 
 Running Every Case

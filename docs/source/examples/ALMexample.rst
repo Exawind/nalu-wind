@@ -12,7 +12,7 @@ Step by step instructions to run the case
 
       cd nalu-wind/examples/turbine_uniform_inflow/
 
-  2. Modify the ``set_up.yaml`` file to include all the necessary simulation
+  2. Modify the ``setup.yaml`` file to include all the necessary simulation
      parameters.
 
   3. Generate the new input files.
@@ -24,9 +24,9 @@ Step by step instructions to run the case
     it.
     Instructions for creating the environment are provided in
     :ref:`examples_environment`.
-    Run the exectuable and provide the ``set_up.yaml`` file as input::
+    Run the exectuable and provide the ``setup.yaml`` file as input::
 
-      ../nalu_input_fileX -s set_up.yaml
+      ../nalu_input_fileX -s setup.yaml
 
   4. Generate the mesh::
 

@@ -14,35 +14,34 @@ The example runs for 20,000 [s].
 Step by step instructions to run the case
 =========================================
 
-  1. Go to the directory where the case is::
+  1. Load the appropriate Nalu environment.
+     This requires loading the libraries and Python environment as described in
+     :ref:`examples_environment`.
+     For users on Peregrine the function defined in :ref:`peregrine_environment`
+     should suffice::
+
+       nalu_env
+
+  2. Go to the directory where the case is::
 
       cd nalu-wind/examples/abl_neutral/
 
-  2. Modify the ``set_up.yaml`` file to include all the necessary simulation
+  3. Modify the ``setup.yaml`` file to include all the necessary simulation
      parameters.
 
-  3. Generate the new input files.
-     First, load the python environment::
+  4. Run the exectuable and provide the ``setup.yaml`` file as input::
 
-      source activate nalu_python
+      ../nalu_input_fileX -s setup.yaml
 
-    If the python environment does not exist, create it first, and then activate
-    it.
-    Instructions for creating the environment are provided in
-    :ref:`examples_environment`.
-    Run the exectuable and provide the ``set_up.yaml`` file as input::
+  5. Generate the mesh::
 
-      ../nalu_input_fileX -s set_up.yaml
+      ./abl_mesh -i abl_preprocess.yaml
 
-  4. Generate the mesh::
+  6. Generate the initial condition::
 
-      abl_mesh -i abl_preprocess.yaml
+      ./nalu_preprocess -i abl_preprocess.yaml
 
-  5. Generate the initial condition::
-
-      abl_preprocess -i abl_preprocess.yaml
-
-  6. Run the nalu executable::
+  7. Run the nalu executable::
 
       mpirun -np 600 naluX -i abl_simulation.yaml
 
@@ -54,10 +53,11 @@ Step by step instructions to run the case
 Post-processing
 ===============
 
-Nalu's output is generated at runtime. The ``plot_abl.py`` pythin script is used
-to plot simulation results. The script will load the plane-averaged statistics
+Nalu's output is generated at runtime. The ``abl_plot_example.py`` Python script
+is used to plot simulation results.
+The script will load the plane-averaged statistics
 and plot them as function of time and height.
-To run the script, load the Python environment, and then run::
+To run the script, load the Python environment if needed, and run the Python
+script::
 
-  source activate nalu_python
-  python plot_abl.py
+  python abl_plot_example.py
