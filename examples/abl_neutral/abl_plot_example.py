@@ -125,7 +125,7 @@ class ABLStatsFileClass():
         '''
         Provide field time average
         field - the field to time-average
-        index - the component index (velocity has 3 components for u, v, and w)
+        index - the component index (for example: velocity has 3 components)
         times - the times to average
         '''
         

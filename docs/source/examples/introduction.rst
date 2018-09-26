@@ -6,6 +6,10 @@ aerodynamics is available under ``nalu-wind/examples/``.
 A ``set_up.yaml`` file is included with all cases.
 This file has the parameters that can be modified for each case of interest.
 
+A set of Python utilities is included with the examples.
+These utilities are meant to simplify the process of generating input files
+for running Nalu and plot results form the simulations.
+
 Each case has a default collection of input files in ``./input_files``.
 The executable ``nalu_input_fileX`` will take the input files and
 modify them according to the inputs set in ``set_up.yaml`` and
@@ -26,10 +30,13 @@ The general instructions to run each case
 Setting up the environment
 ==========================
 
-    In order to use the ``python`` utilities to create the input files and
+    In order to use the Python utilities to create the input files and
     post-process some of the data, a proper environment needs to be set.
-    The user can add these libraries to their python environment, or use conda
+    The user can add these libraries to their Python environment, or use conda
     to create the environment needed.
+    Instruction to install conda can be found `here`_.
+
+.. _here: https://conda.io/docs/user-guide/install/index.html
 
     The new environment can be created through conda using::
 

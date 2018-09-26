@@ -57,7 +57,7 @@ Post-processing
 Nalu's output is generated at runtime. The ``plot_abl.py`` pythin script is used
 to plot simulation results. The script will load the plane-averaged statistics
 and plot them as function of time and height.
-To run the script, load the python environment, and then run::
+To run the script, load the Python environment, and then run::
 
   source activate nalu_python
   python plot_abl.py

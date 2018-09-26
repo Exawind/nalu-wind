@@ -47,6 +47,12 @@ environment on the Peregrine system.
 
        source ~/.bash_profile
 
+  3. Obtaining Nalu.
+     THE USER can clone the Nalu repository by::
+
+       git clone git@github.com:tonyinme/nalu-wind.git
+
+
 Running Every Case
 ==================
 

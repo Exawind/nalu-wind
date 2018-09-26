@@ -13,8 +13,8 @@ The new files are written and can be used by the Nalu sover.
 
 ## Step 1
 
-Create a conda environment to be able to use the python script.
-This step needs to be done only once to create a python environment with the neccessary packages.
+Create a conda environment to be able to use the Python script.
+This step needs to be done only once to create a Python environment with the neccessary packages.
 ```
 conda create -n nalu_python -c conda-forge python=3.6 numpy ruamel.yaml
 ```
