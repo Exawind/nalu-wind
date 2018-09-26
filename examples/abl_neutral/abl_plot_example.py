@@ -64,8 +64,8 @@ def main(args):
     '''
     # Velocity
     z = data.heights
-    u = data.time_average(field='velocity', index=0, times=[1000, 1500])
-    v = data.time_average(field='velocity', index=1, times=[1000, 1500])
+    u = data.time_average(field='velocity', index=0, times=[0, 1500])
+    v = data.time_average(field='velocity', index=1, times=[0, 1500])
     u_mag = np.sqrt(u**2 + v**2)
 
     plt.clf()

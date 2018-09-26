@@ -23,12 +23,8 @@
 #  
 #  The expected call for this script is as follows:
 #
-#  ./nalu_input_fileX \
-#              -s set_up.yaml \
-#              -o input_files/ablNeutralEdge.yaml \
-#              -n abl_simulation.yaml \
-#              -op input_files/nalu_preprocess.yaml \
-#              -np abl_preprocess.yaml
+#  ./nalu_input_fileX -s setup.yaml
+#
 
 from ruamel.yaml import YAML
 import numpy as np
@@ -40,7 +36,7 @@ def main(args):
     an atmospheric boundary layer simulation using Nalu.
     
     File input for users to modify:
-        set_up.yaml
+        setup.yaml
         
     File input for advanced users:
         file_inputs/ablNeutralEdge.yaml
@@ -58,44 +54,20 @@ def main(args):
         'input file.')
 
     # Set-up file
-    parser.add_argument('-s', '--set-up', 
+    parser.add_argument('-s', '--setup', 
                         type=str,  # The input is a string
                         metavar='', # Empty string to display help
-                        default='set_up.yaml',
+                        default='setup.yaml',
                         help='The setup yaml file')
-
-    #~ # The old nalu input file
-    #~ parser.add_argument('-o', '--old-input', type=str, 
-                        #~ metavar='',
-                        #~ default='input_files/ablNeutralEdge.yaml',
-                        #~ help='The input yaml file which will be modified')
-
-    #~ # The new nalu input file
-    #~ parser.add_argument('-n', '--new-input', type=str,
-                        #~ metavar='', 
-                        #~ default='abl_simulation.yaml',
-                        #~ help='The new input yaml file')
-
-    #~ # The old pre-processing file
-    #~ parser.add_argument('-op', '--old-pre', type=str,
-                        #~ metavar='', 
-                        #~ default='input_files/nalu_preprocess.yaml',
-                        #~ help='The old pre-processing yaml file to be modified')
-
-    #~ # The new pre-processing file to be generated
-    #~ parser.add_argument('-np', '--new-pre', type=str,
-                        #~ metavar='', 
-                        #~ default='abl_preprocess.yaml',
-                        #~ help='The new pre-processing yaml file')
 
     # The arguments from the command line
     args = parser.parse_args()
 
     print('Setup files:')
-    print(args.set_up)
+    print(args.setup)
 
     # Initialize the mapping object
-    mapping_object = mapping_object_class( setup_file=args.set_up)
+    mapping_object = mapping_object_class( setup_file=args.setup)
 
     # Map the entries from the setup file to the new input files
     mapping_object.map_all()
@@ -109,7 +81,7 @@ class mapping_object_class():
     '''
     def __init__(self, 
             # The setup file
-            setup_file='set_up.yaml',
+            setup_file='setup.yaml',
         ):
 
         '''
