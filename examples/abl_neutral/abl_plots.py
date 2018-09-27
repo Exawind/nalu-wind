@@ -78,8 +78,8 @@ def main(args):
     plt.savefig('Velocity_average.pdf')
 
     # Resolved Stress
-    uu = data.time_average(field='resolved_stress', index=0, times=[1000, 1500])
-    vv = data.time_average(field='resolved_stress', index=2, times=[1000, 1500])
+    uu = data.time_average(field='resolved_stress', index=0, times=[0, 1500])
+    vv = data.time_average(field='resolved_stress', index=2, times=[0, 1500])
 
     plt.clf()
     plt.plot(uu, z, '-o', label='U')
