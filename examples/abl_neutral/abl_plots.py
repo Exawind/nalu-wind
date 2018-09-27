@@ -56,7 +56,7 @@ def main(args):
 
     plt.legend(loc='best')
     plt.xlabel('Time [s]')
-    plt.ylabel('Velocity')
+    plt.ylabel('Velocity [m/s]')
     plt.savefig('Velocity.pdf')
 
     '''
@@ -73,7 +73,7 @@ def main(args):
     plt.plot(v, z, '-o', label='V')
     plt.plot(u_mag, z, '-o', label='U mag')
     plt.legend(loc='best')
-    plt.xlabel('U [m/s]')
+    plt.xlabel('Velocity [m/s]')
     plt.ylabel('z [m]')
     plt.savefig('Velocity_average.pdf')
 
@@ -85,7 +85,7 @@ def main(args):
     plt.plot(uu, z, '-o', label='U')
     plt.plot(vv, z, '-o', label='V')
     plt.legend(loc='best')
-    plt.xlabel('U [m/s]')
+    plt.xlabel("Resolved Stress [m$^2$/s$^2$]")
     plt.ylabel('z [m]')
     plt.savefig('rs_average.pdf')
 
@@ -133,11 +133,14 @@ class ABLStatsFileClass():
         filt = ((self.time[:] >= times[0]) & (self.time[:] <= times[1]))
         # Filtered time
         t = self.time[filt]
+        # The total time
+        dt = np.amax(t) - np.amin(t)
+
         # Filtered field
         f = self.abl_stats[field][filt,:,index]
 
         # Compute the time average as an integral
-        integral = np.trapz(f, x=t, axis=0)
+        integral = np.trapz(f, x=t, axis=0) / dt
 
         return integral
 
