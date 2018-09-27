@@ -131,7 +131,6 @@ class ABLStatsFileClass():
         
         # Filter the field based on the times
         filt = ((self.time[:] >= times[0]) & (self.time[:] <= times[1]))
-        print(filt)
         # Filtered time
         t = self.time[filt]
         # Filtered field
