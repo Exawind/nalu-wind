@@ -1,3 +1,5 @@
+.. _building_nalu:
+
 Building Nalu-Wind
 ==================
 .. toctree::

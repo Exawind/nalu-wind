@@ -94,18 +94,18 @@ class mapping_object_class():
 
         # Read in the input files from the setup file
         # The input file used as a starting point
-        yaml_input=self.yaml_setup['example_input']
+        yaml_input=self.yaml_setup['template_input']
         # The pre-processing input file
-        example_preprocess_file=self.yaml_setup['example_preprocess']
+        template_preprocess_file=self.yaml_setup['template_preprocess']
 
         print('Input files:')
         print(yaml_input)
-        print(example_preprocess_file)
+        print(template_preprocess_file)
 
         # Open the input file as a yaml file
         self.yaml_input = self.open_yaml_file(yaml_input)
         # Open the preprocessing file as a yaml file
-        self.yaml_preprocess = self.open_yaml_file(example_preprocess_file)
+        self.yaml_preprocess = self.open_yaml_file(template_preprocess_file)
 
         # The preprocess file name
         self.preprocess_file=self.yaml_setup['new_preprocess']

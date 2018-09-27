@@ -1,3 +1,5 @@
+.. _abl_neutral_example:
+
 Atmospheric Boundary Layer - Neutral
 ------------------------------------
 
