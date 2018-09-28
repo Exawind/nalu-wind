@@ -7,9 +7,9 @@
 # These are the example input files and the files which will be generated.
 ##########################################################################
 # The old input file which will be modified
-example_input: input_files/nrel5MWactuatorLine.i
+example_input: template_input_files/nrel5MWactuatorLine.i
 # The example pre-process file
-example_preprocess: input_files/nalu_preprocess.yaml
+example_preprocess: template_input_files/nalu_preprocess.yaml
 
 # The name of the new input file
 new_input: alm_simulation.yaml
