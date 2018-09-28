@@ -91,9 +91,9 @@ TEST_F(ContinuityKernelHex8Mesh, advection_default)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::advection_default;
 
@@ -137,9 +137,9 @@ TEST_F(ContinuityKernelHex8Mesh, advection_reduced_sens_cvfem_poisson)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::advection_reduced_sensitivities;
 
@@ -183,9 +183,9 @@ TEST_F(ContinuityKernelHex8Mesh, advection_reduced_shift_cvfem_poisson)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::advection_reduced_sensitivities;
 

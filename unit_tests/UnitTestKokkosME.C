@@ -12,7 +12,7 @@
 void check_that_values_match(const sierra::nalu::SharedMemView<DoubleType*>& values,
                              const double* oldValues)
 {
-  for(size_t i=0; i<values.dimension(0); ++i) {
+  for(size_t i=0; i<values.extent(0); ++i) {
       EXPECT_NEAR(stk::simd::get_data(values(i),0), oldValues[i], tol)<<"i:"<<i;
   }
 }
@@ -21,8 +21,8 @@ void check_that_values_match(const sierra::nalu::SharedMemView<DoubleType**>& va
                              const double* oldValues)
 {
   int counter = 0;
-  for(size_t i=0; i<values.dimension(0); ++i) {
-    for(size_t j=0; j<values.dimension(1); ++j) {
+  for(size_t i=0; i<values.extent(0); ++i) {
+    for(size_t j=0; j<values.extent(1); ++j) {
       EXPECT_NEAR(stk::simd::get_data(values(i,j),0), oldValues[counter++], tol)<<"i:"<<i<<", j:"<<j;
     }
   }
@@ -32,9 +32,9 @@ void check_that_values_match(const sierra::nalu::SharedMemView<DoubleType***>& v
                              const double* oldValues)
 {
   int counter = 0;
-  for(size_t i=0; i<values.dimension(0); ++i) {
-    for(size_t j=0; j<values.dimension(1); ++j) {
-      for(size_t k=0; k<values.dimension(2); ++k) {
+  for(size_t i=0; i<values.extent(0); ++i) {
+    for(size_t j=0; j<values.extent(1); ++j) {
+      for(size_t k=0; k<values.extent(2); ++k) {
         EXPECT_NEAR(stk::simd::get_data(values(i,j,k),0), oldValues[counter++], tol)<<"i:"<<i<<", j:"<<j<<", k:"<<k;
       }
     }
@@ -56,7 +56,7 @@ void compare_old_scv_volume( const sierra::nalu::SharedMemView<DoubleType**>& v_
                             const sierra::nalu::SharedMemView<DoubleType*>& scv_volume,
                             sierra::nalu::MasterElement* meSCV)
 {
-  int len = scv_volume.dimension(0);
+  int len = scv_volume.extent(0);
   std::vector<double> coords;
   copy_DoubleType0_to_double(v_coords, coords);
   std::vector<double> volume(len, 0.0);
@@ -70,7 +70,7 @@ void compare_old_scs_areav( const sierra::nalu::SharedMemView<DoubleType**>& v_c
                             const sierra::nalu::SharedMemView<DoubleType**>& scs_areav,
                             sierra::nalu::MasterElement* meSCS)
 {
-  int len = scs_areav.dimension(0)*scs_areav.dimension(1);
+  int len = scs_areav.extent(0)*scs_areav.extent(1);
   std::vector<double> coords;
   copy_DoubleType0_to_double(v_coords, coords);
   std::vector<double> areav(len, 0.0);
@@ -85,7 +85,7 @@ void compare_old_scs_grad_op( const sierra::nalu::SharedMemView<DoubleType**>& v
                             const sierra::nalu::SharedMemView<DoubleType***>& scs_deriv,
                             sierra::nalu::MasterElement* meSCS)
 {
-  int len = scs_dndx.dimension(0)*scs_dndx.dimension(1)*scs_dndx.dimension(2);
+  int len = scs_dndx.extent(0)*scs_dndx.extent(1)*scs_dndx.extent(2);
   std::vector<double> coords;
   copy_DoubleType0_to_double(v_coords, coords);
   std::vector<double> grad_op(len, 0.0);
@@ -103,7 +103,7 @@ void compare_old_scs_shifted_grad_op( const sierra::nalu::SharedMemView<DoubleTy
                             const sierra::nalu::SharedMemView<DoubleType***>& scs_deriv,
                             sierra::nalu::MasterElement* meSCS)
 {
-  int len = scs_dndx.dimension(0)*scs_dndx.dimension(1)*scs_dndx.dimension(2);
+  int len = scs_dndx.extent(0)*scs_dndx.extent(1)*scs_dndx.extent(2);
   std::vector<double> coords;
   copy_DoubleType0_to_double(v_coords, coords);
   std::vector<double> grad_op(len, 0.0);
@@ -121,7 +121,7 @@ void compare_old_scs_gij(const sierra::nalu::SharedMemView<DoubleType**>& v_coor
                          const sierra::nalu::SharedMemView<DoubleType***>& v_deriv,
                          sierra::nalu::MasterElement* meSCS)
 {
-  int len = v_gijUpper.dimension(0)*v_gijUpper.dimension(1)*v_gijUpper.dimension(2);
+  int len = v_gijUpper.extent(0)*v_gijUpper.extent(1)*v_gijUpper.extent(2);
   std::vector<double> coords;
   copy_DoubleType0_to_double(v_coords, coords);
   std::vector<double> gijUpper(len, 0.0);

@@ -1253,8 +1253,8 @@ TpetraLinearSystem::finalizeLinearSystem()
 
   sort_connections(connections_);
 
-  size_t numSharedNotOwned = sharedNotOwnedRowsMap_->getMyGlobalIndices().dimension(0);
-  size_t numLocallyOwned = ownedRowsMap_->getMyGlobalIndices().dimension(0);
+  size_t numSharedNotOwned = sharedNotOwnedRowsMap_->getMyGlobalIndices().extent(0);
+  size_t numLocallyOwned = ownedRowsMap_->getMyGlobalIndices().extent(0);
   LinSys::RowLengths sharedNotOwnedRowLengths("rowLengths", numSharedNotOwned);
   LinSys::RowLengths locallyOwnedRowLengths("rowLengths", numLocallyOwned);
   Kokkos::View<size_t*,HostSpace> ownedRowLengths = locallyOwnedRowLengths.view<HostSpace>();
