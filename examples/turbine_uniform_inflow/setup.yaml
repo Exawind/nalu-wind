@@ -7,9 +7,9 @@
 # These are the example input files and the files which will be generated.
 ##########################################################################
 # The old input file which will be modified
-example_input: template_input_files/nrel5MWactuatorLine.i
+template_input: template_input_files/nrel5MWactuatorLine.i
 # The example pre-process file
-example_preprocess: template_input_files/nalu_preprocess.yaml
+template_preprocess: template_input_files/nalu_preprocess.yaml
 
 # The name of the new input file
 new_input: alm_simulation.yaml
@@ -33,7 +33,7 @@ nu: 1.0E-5
 actuator:
 
     # The total number of turbines    
-    n_turbines_glob: 1
+    n_turbines_glob: 2
     # The fast time-step. Make sure this is correct in all Fast files
     dt_fast: 0.00625
     # How often to write checkpoint
@@ -41,7 +41,7 @@ actuator:
 
 
     # This is the list of turbines
-    rTurbines:
+    Turbines:
     
         # Turbines need to be named according to the order:
         #     Turbine0, Turbine1, ...
@@ -55,11 +55,11 @@ actuator:
             # The frontal reference area of the nacelle
             nacelle_area: 8.0
             # The value of epsilon
-            epsilon: [ 5.0, 5.0, 5.0 ]
+            epsilon: [ 12.0, 12.0, 12.0 ]
             # The position of the base of the turbine
-            turbine_base_pos: [ 126.0, 0.0, 0.0 ]
+            turbine_base_pos: [ 126.0, 0.0, -90.0 ]
             # A position close to the hub (recommended tower height)
-            turbine_hub_pos: [ 0.0, 0.0, 90.0 ]
+            turbine_hub_pos: [ 0.0, 0.0, 0.0 ]
             # The name of the restart file name
             restart_filename: restart_file
             # The fast input file
@@ -77,12 +77,12 @@ actuator:
             # The frontal reference area of the nacelle
             nacelle_area: 8.0
             # The value of epsilon
-            epsilon: [ 5.0, 5.0, 5.0 ]
+            epsilon: [ 12.0, 12.0, 12.0 ]
             # The position of the base of the turbine
             # This is placed 3D from the first one
-            turbine_base_pos: [ 252.0, 0.0, 0.0 ]
+            turbine_base_pos: [ 252.0, 0.0, -90.0 ]
             # A position close to the hub (recommended tower height)
-            turbine_hub_pos: [ 0.0, 0.0, 90.0 ]
+            turbine_hub_pos: [ 0.0, 0.0, 0.0 ]
             # The name of the restart file name
             restart_filename: restart_file
             # The fast input file
@@ -99,7 +99,7 @@ start_time: 0.0
 # Time-step [s]
 time_step: 0.125
 # Total time to run [s]
-total_run_time: 20000
+total_run_time: 1250
 
 ########
 #  Mesh
@@ -119,14 +119,14 @@ mesh:
 
   # The number of grid points in the x, y, z coordinates
   # Change this variable
-  number_of_cells: [256, 128, 128]
+  number_of_cells: [128, 64, 64]
 
 #########
 # Output
 #########
 # How often to write output [s]
 # This is time-steps in nalu input
-output_frequency: 10000
+output_frequency: 2
 # Output file name. It will create the directory
 # Change .e
 output_data_base_name: output/alm_uniform_inflow.exo

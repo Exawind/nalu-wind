@@ -425,7 +425,13 @@ class mapping_object_class():
         # Set how often to write restart
         self.yaml_input['realms'][0]['actuator']['n_every_checkpoint'] = \
                 self.yaml_setup['actuator']['n_every_checkpoint']
-        
+       
+        # Let the user know the variables they need to change in the fast input file
+        print('Make sure the TMax in OpenFAST input is the same as total simulation time=',
+               self.yaml_setup['total_run_time'])
+        print('Make sure the DT in OpenFAST input is the same as specified in the input file=',
+               self.yaml_setup['actuator']['dt_fast']) 
+ 
         #~ # The fast file name to extract dt
         #~ fast_file_name = self.yaml_setup['Turbines']['Turbine0'] \
                             #~ ['fast_input_filename']
