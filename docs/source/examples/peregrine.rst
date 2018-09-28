@@ -15,10 +15,10 @@ environment on the Peregrine system.
   1. Create the conda environment::
 
       module load conda
-      conda create -n nalu_python -c conda-forge python=3.6 numpy ruamel.yaml netCDF4 matplotlib scipy
+      conda create -n nalu_python -c conda-forge python=3.6 numpy ruamel.yaml netCDF4 matplotlib scipy pandas
 
   2. Set the Nalu environment. This is the same environment used to compile
-     Nalu. If this has not been set, then can be done by adding the following
+     Nalu. If this has not been set, then it can be done by adding the following
      function to ``${HOME}/.bash_profile``::
 
       function nalu_env {
@@ -55,7 +55,7 @@ environment on the Peregrine system.
        git clone https://github.com/tonyinme/nalu-wind.git
 
 Now the environment is ready to run the examples.
-To get started, go to the :ref:`abl_neutral_example`.
+To get started, go to: :ref:`abl_neutral_example`.
 
 Running Every Case
 ==================

@@ -8,38 +8,50 @@ The wind turbine aerodynamic forces are computed using OpenFAST.
 Step by step instructions to run the case
 =========================================
 
-  1. Go to the directory where the case is::
+1. Load the appropriate Nalu environment.
+   This requires loading the libraries and Python environment as described in
+   :ref:`examples_environment`.
+   For users on Peregrine the function defined in :ref:`peregrine_environment`
+   should suffice::
 
-      cd nalu-wind/examples/turbine_uniform_inflow/
+     nalu_env
 
-  2. Modify the :file:`setup.yaml` file to include all the necessary simulation
-     parameters.
+2. Go to the directory where the case is::
 
-  3. Generate the new input files.
-     First, load the python environment::
+    cd nalu-wind/examples/turbine_uniform_inflow/
 
-      source activate nalu_python
+3. Modify the ``setup.yaml`` file to include all the necessary simulation
+   parameters.
 
-    If the python environment does not exist, create it first, and then activate
-    it.
-    Instructions for creating the environment are provided in
-    :ref:`examples_environment`.
-    Run the exectuable and provide the :file:`setup.yaml` file as input::
+4. Run the executable and provide the ``setup.yaml`` file as input::
 
-      ../nalu_input_fileX -s setup.yaml
+    ../nalu_input_fileX -s setup.yaml
 
-  4. Generate the mesh::
+   For users on Peregrine, now copy the executables to the case directory::
 
-      abl_mesh -i alm_preprocess.yaml
+    cp /projects/windsim/nalu-wind-executables/* .
 
-  6. Run the nalu executable::
+5. Generate the mesh::
 
-      mpirun -np 600 naluX -i alm_simulation.yaml
+    ./abl_mesh -i alm_preprocess.yaml
 
-     In this example 600 processors are used, but any number of processors could
-     be used.
-     Target 50K elements per core for choosing number of MPI cores.
+6. Generate the initial condition::
 
+    ./nalu_preprocess -i alm_preprocess.yaml
+
+7. Run the nalu executable::
+
+    mpirun -np 24 naluX -i alm_simulation.yaml
 
 Post-processing
 ===============
+
+The turbine output is generated at runtime.
+The ``plot_alm.py`` Python script
+is used to plot turbine output.
+The script will load the OpenFAST data
+and plot it as a function of time.
+To run the script, load the Python environment if needed, and run the Python
+script::
+
+  python plot_alm.py

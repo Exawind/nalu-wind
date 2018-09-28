@@ -57,7 +57,7 @@ Setting up the environment
 
     The new environment can be created through conda using::
 
-      conda create -n nalu_python -c conda-forge python=3.6 numpy ruamel.yaml netCDF4 matplotlib scipy
+      conda create -n nalu_python -c conda-forge python=3.6 numpy ruamel.yaml netCDF4 matplotlib scipy pandas
 
     This new environment will allow the execution of
     :program:`nalu_input_fileX`.

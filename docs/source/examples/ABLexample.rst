@@ -31,9 +31,13 @@ Step by step instructions to run the case
   3. Modify the ``setup.yaml`` file to include all the necessary simulation
      parameters.
 
-  4. Run the exectuable and provide the ``setup.yaml`` file as input::
+  4. Run the executable and provide the ``setup.yaml`` file as input::
 
       ../nalu_input_fileX -s setup.yaml
+
+     For users on Peregrine, now copy the executables to the case directory::
+
+      cp /projects/windsim/nalu-wind-executables/* .
 
   5. Generate the mesh::
 
