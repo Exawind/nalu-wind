@@ -133,25 +133,3 @@ output_frequency: 2
 # Change .e
 output_data_base_name: output/alm_uniform_inflow.exo
 
-# These are the plane averaged statistics
-boundary_layer_statistics:
-  # The file to write output (netcdf)
-  stats_output_file: abl_statistics.nc
-  # How often sample the statistics
-  time_hist_output_frequency: 1
-
-##################################
-# Add restart capability
-# Default to write last time-step
-##################################
-
-##################################################
-# Upper wall boundary condition
-# This is an optional flag
-# If not specified, the gradient will be computed 
-#     based on the initial condition
-#     at the top of the domain
-##################################################
-# Potential temperature gradient above the strong inversion (K/m).
-# Compute this form the last points
-# TGradUpper:           0.003
