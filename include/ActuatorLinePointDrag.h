@@ -16,15 +16,12 @@ namespace nalu{
 
 class Realm;
 
-class ActuatorLinePointDragInfo {
+class ActuatorLinePointDragInfo : public ActuatorInfo {
 public:
   ActuatorLinePointDragInfo();
   ~ActuatorLinePointDragInfo();
 
   // for each type of probe, e.g., line of site, hold some stuff
-  int processorId_;
-  int numPoints_;
-  std::string turbineName_;
   double radius_;
   double omega_;
   double gaussDecayRadius_;
@@ -34,24 +31,16 @@ public:
 };
 
 // class that holds all of the action... for each point, hold the current location and other useful info
-class ActuatorLinePointDragPointInfo {
+class ActuatorLinePointDragPointInfo : public ActuatorPointInfo{
  public:
   ActuatorLinePointDragPointInfo(
-    size_t localId, Point centroidCoords, double radius, double omega, double twoSigSq, double *velocity);
+    Point centroidCoords, double radius, double omega, double twoSigSq, double *velocity);
   ~ActuatorLinePointDragPointInfo();
-  size_t localId_;
-  Point centroidCoords_;
-  double radius_;
   double omega_;
   double gaussDecayRadius_;
-  double bestX_;
-  stk::mesh::Entity bestElem_;
 
   // mesh motion specifics
   double velocity_[3];
-
-  std::vector<double> isoParCoords_;
-  std::set<stk::mesh::Entity> nodeVec_;
 };
 
  class ActuatorLinePointDrag: public Actuator
@@ -72,9 +61,6 @@ public:
 
   // setup part creation and nodal field registration (after populate_mesh())
   void initialize();
-
-  // determine element bounding box in the mesh
-  void populate_candidate_elements();
 
   // fill in the map that will hold point and ghosted elements
   void create_actuator_line_point_info_map();
@@ -184,18 +170,10 @@ public:
       stk::mesh::FieldBase & actuator_source,
       const double & epsilon);
 
-  // hold the realm
-  Realm &realm_;
-
-  // type of stk search
-  stk::search::SearchMethod searchMethod_;
 
   // custom ghosting
   stk::mesh::Ghosting *actuatorLineGhosting_;
 
-  // how many elements to ghost?
-  uint64_t needToGhostCount_;
-  stk::mesh::EntityProcVec elemsToGhost_;
 
   // local id for set of points
   uint64_t localPointId_;
@@ -206,29 +184,14 @@ public:
   // everyone needs pi
   const double pi_;
 
-  // save off product of search
-  std::vector<std::pair<theKey, theKey> > searchKeyPair_;
-
-  // bounding box data types for stk_search */
-  std::vector<boundingSphere> boundingSphereVec_;
-  std::vector<boundingElementBox> boundingElementBoxVec_;
-
-  // target names for set of bounding boxes
-  std::vector<std::string> searchTargetNames_;
-
+//DELETEME
   // vector of averaging information
-  std::vector<ActuatorLinePointDragInfo *> actuatorLineInfo_;
+   std::vector<ActuatorLinePointDragInfo *> actuatorLineInfo_;
 
   // map of point info objects
-  std::map<size_t, ActuatorLinePointDragPointInfo *> actuatorLinePointInfoMap_;
+   std::map<size_t, ActuatorLinePointDragPointInfo *> actuatorLinePointInfoMap_;
 
-  // scratch space
-  std::vector<double> ws_coordinates_;
-  std::vector<double> ws_scv_volume_;
-  std::vector<double> ws_velocity_;
-  std::vector<double> ws_density_;
-  std::vector<double> ws_viscosity_;
-
+  std::string get_class_name() override;
 };
 
 

@@ -43,16 +43,52 @@ typedef std::pair<Sphere,theKey> boundingSphere;
 typedef std::pair<Box,theKey> boundingElementBox;
 
 class Realm;
- 
+
+class ActuatorInfo{
+public:
+  ActuatorInfo():processorId_(0), numPoints_(1), turbineName_("machine_one"){}
+  virtual ~ActuatorInfo(){}
+
+  int processorId_; ///< The processor on which OpenFAST is run for this turbine
+  int numPoints_; ///< The total number of actuator points for this turbine
+  std::string turbineName_; ///< The turbine name
+};
+
+class ActuatorPointInfo{
+public:
+  ActuatorPointInfo(
+      Point centroidCoords,
+      double searchRadius,
+      double bestX,
+      stk::mesh::Entity bestElem
+      )
+:centroidCoords_(centroidCoords),
+ searchRadius_(searchRadius),
+ bestX_(bestX),
+ bestElem_(bestElem)
+      {}
+  virtual ~ActuatorPointInfo(){}
+
+  Point centroidCoords_; ///< The coordinates of the actuator point.
+  double searchRadius_; ///< Elements within this search radius will be affected by this actuator point.
+  double bestX_; ///< A number returned by stk::isInElement that determines whether an actuator point is inside (< 1) or outside an element (> 1). However, we choose the bestElem_ for this actuator point to be the one with the lowest bestX_.
+  stk::mesh::Entity bestElem_; ///< The element within which the actuator point lies.
+  std::vector<double> isoParCoords_; ///< The isoparametric coordinates of the bestElem_.
+  std::set<stk::mesh::Entity> nodeVec_; ///< A list of nodes that are part of elements that lie within the searchRadius_ around the actuator point.
+};
+
+
 class Actuator
 {
 public:
-  
+
   Actuator(
     Realm &realm,
-    const YAML::Node &node) {} 
+    const YAML::Node &node):realm_(realm),
+    searchMethod_(stk::search::KDTREE),
+    needToGhostCount_(0){}
   virtual ~Actuator() {}
-  
+
   // load all of the options
   virtual void load(
     const YAML::Node & node) = 0;
@@ -65,6 +101,70 @@ public:
 
   // populate nodal field and output norms (if appropriate)
   virtual void execute() = 0;
+
+  // Use for polymorphism
+  virtual std::string get_class_name() = 0;
+
+//------------------------------------------------------------------
+
+  // determine element bounding box in the mesh
+  void populate_candidate_elements();
+/*
+  // fill in the map that will hold point and ghosted elements
+  void create_actuator_line_point_info_map();
+
+  // figure out the set of elements that belong in the custom ghosting data structure
+  void determine_elems_to_ghost();
+
+  // deal with custom ghosting
+  void manage_ghosting();
+
+  // populate vector of elements
+  void complete_search();
+
+  // interpolate field to point centroid
+  void interpolate_field(
+    const int &sizeOfField,
+    stk::mesh::Entity elem,
+    const stk::mesh::BulkData & bulkData,
+    double *isoParCoords,
+    const double *fieldAtNodes,
+    double *pointField);
+
+  // distance from element centroid to point centroid
+  double compute_distance(
+    const int &nDim,
+    const double *elemCentroid,
+    const double *pointCentroid);
+*/
+//------------------------------------------------------------------
+  // hold the realm
+  Realm &realm_;
+
+  // type of stk search
+  stk::search::SearchMethod searchMethod_;
+
+  // how many elements to ghost?
+  uint64_t needToGhostCount_;
+  stk::mesh::EntityProcVec elemsToGhost_;
+
+  // save off product of search
+  std::vector<std::pair<theKey, theKey> > searchKeyPair_;
+  // bounding box data types for stk_search */
+  std::vector<boundingSphere> boundingSphereVec_;
+  std::vector<boundingElementBox> boundingElementBoxVec_;
+  // target names for set of bounding boxes
+  std::vector<std::string> searchTargetNames_;
+
+  std::vector<ActuatorInfo*> actuatorInfoMap_;
+  std::map<size_t, ActuatorPointInfo*> actuatorPointInfoMap_;
+
+  // scratch space
+  std::vector<double> ws_coordinates_;
+  std::vector<double> ws_scv_volume_;
+  std::vector<double> ws_velocity_;
+  std::vector<double> ws_density_;
+  std::vector<double> ws_viscosity_;
 
 };
 

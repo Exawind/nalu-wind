@@ -29,14 +29,10 @@ class Realm;
  *
  */
 //
-class ActuatorLineFASTInfo {
+class ActuatorLineFASTInfo : public ActuatorInfo {
 public:
   ActuatorLineFASTInfo();
   ~ActuatorLineFASTInfo();
-
-  int processorId_; ///< The processor on which OpenFAST is run for this turbine
-  int numPoints_; ///< The total number of actuator points for this turbine
-  std::string turbineName_; ///< The turbine name
   Coordinates epsilon_; ///< The Gaussian spreading width in (chordwise, spanwise, thickness) directions
 };
 
@@ -45,22 +41,14 @@ public:
  *
  */
 //
-class ActuatorLineFASTPointInfo {
- public:
+class ActuatorLineFASTPointInfo : public ActuatorPointInfo{
   ActuatorLineFASTPointInfo(
 			    size_t globTurbId, Point centroidCoords, double searchRadius, Coordinates epsilon, fast::ActuatorNodeType nType);
   ~ActuatorLineFASTPointInfo();
   size_t globTurbId_; ///< Global turbine number.
-  Point centroidCoords_; ///< The coordinates of the actuator point.
-  double searchRadius_; ///< Elements within this search radius will be affected by this actuator point.
   Coordinates epsilon_; ///< The Gaussian spreading width in (chordwise, spanwise, thickness) directions for this actuator point.
-  double bestX_; ///< A number returned by stk::isInElement that determines whether an actuator point is inside (< 1) or outside an element (> 1). However, we choose the bestElem_ for this actuator point to be the one with the lowest bestX_.
-  stk::mesh::Entity bestElem_; ///< The element within which the actuator point lies.
-
   fast::ActuatorNodeType nodeType_; ///< HUB, BLADE or TOWER - Defined by an enum.
 
-  std::vector<double> isoParCoords_; ///< The isoparametric coordinates of the bestElem_.
-  std::set<stk::mesh::Entity> nodeVec_; ///< A list of nodes that are part of elements that lie within the searchRadius_ around the actuator point.
 };
 
 /** The ActuatorLineFAST class couples Nalu with the third party library OpenFAST for actuator line simulations of wind turbines
@@ -96,12 +84,12 @@ class ActuatorLineFASTPointInfo {
  * 5) During the execute phase called every time step, we sample the velocity at each actuator
  *    point and pass it to OpenFAST. All the OpenFAST turbine models are advanced upto Nalu's
  *    next time step to get the body forces at the actuator points. We then iterate over the
- *    ``ActuatorLinePointInfoMap`` to assemble source terms. For each node \f$n\f$within the 
- *    search radius of an actuator point \f$k\f$, the ``spread_actuator_force_to_node_vec`` 
- *    function calculates the effective lumped body force by multiplying the actuator force 
+ *    ``ActuatorLinePointInfoMap`` to assemble source terms. For each node \f$n\f$within the
+ *    search radius of an actuator point \f$k\f$, the ``spread_actuator_force_to_node_vec``
+ *    function calculates the effective lumped body force by multiplying the actuator force
  *    with the Gaussian projection at the node as \f$F_i^n = g(\vec{r}_i^n) \, F_i^k\f$.
- *  
- *  
+ *
+ *
 */
 
 class ActuatorLineFAST: public Actuator {
@@ -133,9 +121,6 @@ class ActuatorLineFAST: public Actuator {
 
   // determine processor bounding box in the mesh
   void populate_candidate_procs();
-
-  // determine element bounding box in the mesh
-  void populate_candidate_elements();
 
   // fill in the map that will hold point and ghosted elements
   void create_actuator_line_point_info_map();
@@ -239,37 +224,21 @@ class ActuatorLineFAST: public Actuator {
     const std::vector<double> & hubShftDir,
     std::vector<double> & thr,
     std::vector<double> & tor);
-  
-  Realm &realm_; ///< hold the realm
 
-  stk::search::SearchMethod searchMethod_; ///< type of stk search
+
 
   stk::mesh::Ghosting *actuatorLineGhosting_;  ///< custom ghosting
-  uint64_t needToGhostCount_;  ///< how many elements to ghost?
-  stk::mesh::EntityProcVec elemsToGhost_; ///< elements to ghost
 
   int tStepRatio_;  ///< Ratio of Nalu time step to FAST time step (dtNalu/dtFAST) - Should be an integral number
 
-  std::vector<std::pair<theKey, theKey> > searchKeyPair_;  ///< save off product of search
-
   // bounding box data types for stk_search
-  std::vector<boundingSphere> boundingSphereVec_; ///< bounding box around each actuator point
-  std::vector<boundingElementBox> boundingElementBoxVec_; ///< bounding box around elements
   std::vector<boundingSphere> boundingHubSphereVec_; ///< bounding box around the hub point of each turbine
   std::vector<boundingElementBox> boundingProcBoxVec_; ///< bounding box around all the nodes residing locally on each processor
+//DELETEME
+//  std::vector<ActuatorLineFASTInfo *> actuatorLineInfo_;   ///< vector of objects containing information for each turbine
+//  std::map<size_t, ActuatorLineFASTPointInfo *> actuatorLinePointInfoMap_;  ///< map of point info objects
 
-  std::vector<std::string> searchTargetNames_;  ///< target names for set of bounding boxes
-
-  std::vector<ActuatorLineFASTInfo *> actuatorLineInfo_;   ///< vector of objects containing information for each turbine
-
-  std::map<size_t, ActuatorLineFASTPointInfo *> actuatorLinePointInfoMap_;  ///< map of point info objects
-
-  // scratch space
-  std::vector<double> ws_coordinates_;
-  std::vector<double> ws_scv_volume_;
-  std::vector<double> ws_velocity_;
-  std::vector<double> ws_density_;
-  std::vector<double> ws_viscosity_;
+  std::string get_class_name() override;
 
   fast::fastInputs fi; ///< Object to hold input information for OpenFAST
   fast::OpenFAST FAST; ///< OpenFAST C++ API handle

@@ -52,9 +52,7 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 ActuatorLinePointDragInfo::ActuatorLinePointDragInfo()
-  : processorId_(0),
-    numPoints_(1),
-    turbineName_("machine_one"),
+   :ActuatorInfo(),
     radius_(0),
     omega_(0.0),
     gaussDecayRadius_(1.5)
@@ -79,19 +77,19 @@ ActuatorLinePointDragInfo::~ActuatorLinePointDragInfo()
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 ActuatorLinePointDragPointInfo::ActuatorLinePointDragPointInfo(
-  size_t localId,
   Point centroidCoords,
   double radius,
   double omega,
   double gaussDecayRadius,
   double *velocity)
-  : localId_(localId),
-    centroidCoords_(centroidCoords),
-    radius_(radius),
+  : ActuatorPointInfo(
+      centroidCoords,
+      radius,
+      1.0e16,
+      stk::mesh::Entity()
+    ),
     omega_(omega),
-    gaussDecayRadius_(gaussDecayRadius),
-    bestX_(1.0e16),
-    bestElem_(stk::mesh::Entity())
+    gaussDecayRadius_(gaussDecayRadius)
 {
   // initialize point velocity and displacement
   velocity_[0] = velocity[0];
@@ -118,10 +116,7 @@ ActuatorLinePointDrag::ActuatorLinePointDrag(
   Realm &realm,
   const YAML::Node &node)
   : Actuator(realm, node),
-    realm_(realm),
-    searchMethod_(stk::search::KDTREE),
     actuatorLineGhosting_(NULL),
-    needToGhostCount_(0),
     localPointId_(0),
     actuatorLineMotion_(false),
     pi_(acos(-1.0))
@@ -514,7 +509,7 @@ ActuatorLinePointDrag::execute()
                       &ws_density_[0], &ws_pointGasDensity);
 
     // point drag calculation
-    compute_point_drag(nDim, infoObject->radius_, &infoObject->velocity_[0], &ws_pointGasVelocity[0], ws_pointGasViscosity,
+    compute_point_drag(nDim, infoObject->searchRadius_, &infoObject->velocity_[0], &ws_pointGasVelocity[0], ws_pointGasViscosity,
                        ws_pointGasDensity, &ws_pointForce[0], &ws_pointForceLHS[0]);
 
     // assemble nodal lhs quantity for best elem
@@ -535,85 +530,6 @@ ActuatorLinePointDrag::execute()
   stk::mesh::parallel_sum_including_ghosts(bulkData, sumFieldVec);
 
 }
-//--------------------------------------------------------------------------
-//-------- populate_candidate_elements -------------------------------------
-//--------------------------------------------------------------------------
-void
-ActuatorLinePointDrag::populate_candidate_elements()
-{
-  stk::mesh::MetaData & metaData = realm_.meta_data();
-  stk::mesh::BulkData & bulkData = realm_.bulk_data();
-
-  const int nDim = metaData.spatial_dimension();
-
-  // fields
-  VectorFieldType *coordinates = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
-
-  // point data structures
-  Point minCorner, maxCorner;
-
-  // extract part
-  stk::mesh::PartVector searchParts;
-  for ( size_t k = 0; k < searchTargetNames_.size(); ++k ) {
-    stk::mesh::Part *thePart = metaData.get_part(searchTargetNames_[k]);
-    if ( NULL != thePart )
-      searchParts.push_back(thePart);
-    else
-      throw std::runtime_error("ActuatorLinePointDrag: Part is null" + searchTargetNames_[k]);
-  }
-
-  // selector and bucket loop
-  stk::mesh::Selector s_locally_owned = metaData.locally_owned_part()
-    &stk::mesh::selectUnion(searchParts);
-
-  stk::mesh::BucketVector const& elem_buckets =
-    realm_.get_buckets( stk::topology::ELEMENT_RANK, s_locally_owned );
-
-  for ( stk::mesh::BucketVector::const_iterator ib = elem_buckets.begin();
-        ib != elem_buckets.end() ; ++ib ) {
-
-    stk::mesh::Bucket & b = **ib;
-
-    const stk::mesh::Bucket::size_type length   = b.size();
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-      // get element
-      stk::mesh::Entity elem = b[k];
-
-      // initialize max and min
-      for (int j = 0; j < nDim; ++j ) {
-        minCorner[j] = +1.0e16;
-        maxCorner[j] = -1.0e16;
-      }
-
-      // extract elem_node_relations
-      stk::mesh::Entity const* elem_node_rels = bulkData.begin_nodes(elem);
-      const int num_nodes = bulkData.num_nodes(elem);
-
-      for ( int ni = 0; ni < num_nodes; ++ni ) {
-        stk::mesh::Entity node = elem_node_rels[ni];
-
-        // pointers to real data
-        const double * coords = stk::mesh::field_data(*coordinates, node );
-
-        // check max/min
-        for ( int j = 0; j < nDim; ++j ) {
-          minCorner[j] = std::min(minCorner[j], coords[j]);
-          maxCorner[j] = std::max(maxCorner[j], coords[j]);
-        }
-      }
-
-      // setup ident
-      stk::search::IdentProc<uint64_t,int> theIdent(bulkData.identifier(elem), NaluEnv::self().parallel_rank());
-
-      // create the bounding point box and push back
-      boundingElementBox theBox(Box(minCorner,maxCorner), theIdent);
-      boundingElementBoxVec_.push_back(theBox);
-    }
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- determine_elems_to_ghost ----------------------------------------
 //--------------------------------------------------------------------------
@@ -721,7 +637,7 @@ ActuatorLinePointDrag::create_actuator_line_point_info_map() {
 
         // create the point info and push back to map
         ActuatorLinePointDragPointInfo *actuatorLinePointInfo
-          = new ActuatorLinePointDragPointInfo(localPointId, centroidCoords,
+          = new ActuatorLinePointDragPointInfo( centroidCoords,
                                       actuatorLineInfo->radius_, actuatorLineInfo->omega_,
                                       actuatorLineInfo->gaussDecayRadius_, velocity);
         actuatorLinePointInfoMap_[localPointId] = actuatorLinePointInfo;
@@ -1061,5 +977,8 @@ ActuatorLinePointDrag::spread_actuator_force_to_node_vec(
     }
 }
 
+std::string ActuatorLinePointDrag::get_class_name(){
+  return "ActuatorLinePointDrag";
+}
 } // namespace nalu
 } // namespace Sierra
