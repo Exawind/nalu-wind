@@ -22,7 +22,22 @@ linear_solvers:
     max_iterations: 200
     kspace: 5
     output_level: 0
-    muelu_xml_file_name: ../../xml/milestone.xml
+    recompute_preconditioner: false
+
+  - name: solve_momentum
+    type: hypre
+    method: hypre_gmres 
+    preconditioner: boomerAMG
+    tolerance: 1e-5
+    max_iterations: 200
+    kspace: 5
+    output_level: 0
+    recompute_preconditioner: true
+    segregated_solver: yes
+    absolute_tolerance: 1.0e-12
+    bamg_max_levels: 1
+    bamg_num_sweeps: 1
+    bamg_relax_type: 6
 
 realms:
 
@@ -42,7 +57,7 @@ realms:
    
       solver_system_specification:
         pressure: solve_cont
-        velocity: solve_scalar
+        velocity: solve_momentum
         mixture_fraction: solve_scalar
         dpdx: solve_scalar
         duidx: solve_scalar

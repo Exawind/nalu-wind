@@ -158,24 +158,24 @@ SpecificDissipationRateEquationSystem::register_nodal_fields(
 
   // register dof; set it as a restart variable
   sdr_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "specific_dissipation_rate", numStates));
-  stk::mesh::put_field(*sdr_, *part);
+  stk::mesh::put_field_on_mesh(*sdr_, *part, nullptr);
   realm_.augment_restart_variable_list("specific_dissipation_rate");
 
   dwdx_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dwdx"));
-  stk::mesh::put_field(*dwdx_, *part, nDim);
+  stk::mesh::put_field_on_mesh(*dwdx_, *part, nDim, nullptr);
 
   // delta solution for linear solver; share delta since this is a split system
   wTmp_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "wTmp"));
-  stk::mesh::put_field(*wTmp_, *part);
+  stk::mesh::put_field_on_mesh(*wTmp_, *part, nullptr);
 
   visc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity"));
-  stk::mesh::put_field(*visc_, *part);
+  stk::mesh::put_field_on_mesh(*visc_, *part, nullptr);
 
   tvisc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity"));
-  stk::mesh::put_field(*tvisc_, *part);
+  stk::mesh::put_field_on_mesh(*tvisc_, *part, nullptr);
 
   evisc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "effective_viscosity_sdr"));
-  stk::mesh::put_field(*evisc_, *part);
+  stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
 
   // make sure all states are properly populated (restart can handle this)
   if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
@@ -438,7 +438,7 @@ SpecificDissipationRateEquationSystem::register_inflow_bc(
 
   // register boundary data; sdr_bc
   ScalarFieldType *theBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sdr_bc"));
-  stk::mesh::put_field(*theBcField, *part);
+  stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
   InflowUserData userData = inflowBCData.userData_;
@@ -519,7 +519,7 @@ SpecificDissipationRateEquationSystem::register_open_bc(
 
   // register boundary data; sdr_bc
   ScalarFieldType *theBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "open_sdr_bc"));
-  stk::mesh::put_field(*theBcField, *part);
+  stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
 
   // extract the value for user specified tke and save off the AuxFunction
   OpenUserData userData = openBCData.userData_;
@@ -589,14 +589,14 @@ SpecificDissipationRateEquationSystem::register_wall_bc(
 
   // register boundary data; sdr_bc
   sdrWallBc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sdr_bc"));
-  stk::mesh::put_field(*sdrWallBc_, *part);
+  stk::mesh::put_field_on_mesh(*sdrWallBc_, *part, nullptr);
 
   // need to register the assembles wall value for sdr; can not share with sdr_bc
   assembledWallSdr_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "wall_model_sdr_bc"));
-  stk::mesh::put_field(*assembledWallSdr_, *part);
+  stk::mesh::put_field_on_mesh(*assembledWallSdr_, *part, nullptr);
 
   assembledWallArea_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_area_sdr"));
-  stk::mesh::put_field(*assembledWallArea_, *part);
+  stk::mesh::put_field_on_mesh(*assembledWallArea_, *part, nullptr);
 
   // are we using wall functions or is this a low Re model?
   WallUserData userData = wallBCData.userData_;
@@ -840,11 +840,7 @@ SpecificDissipationRateEquationSystem::compute_wall_model_parameters()
     wallModelAlg_[k]->execute();
   }
 
-  // parallel assemble
-  std::vector<stk::mesh::FieldBase*> fields;
-  fields.push_back(assembledWallSdr_);
-  fields.push_back(assembledWallArea_);
-  stk::mesh::parallel_sum(bulk_data, fields);
+  stk::mesh::parallel_sum(bulk_data, {assembledWallSdr_, assembledWallArea_});
 
   // periodic assemble
   if ( realm_.hasPeriodic_) {

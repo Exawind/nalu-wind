@@ -208,6 +208,10 @@ protected:
    */
   virtual void beginLinearSystemConstruction();
 
+  virtual void finalizeSolver();
+
+  virtual void loadCompleteSolver();
+
   /** Return the Hypre ID corresponding to the given STK node entity
    *
    *  @param[in] entity The STK node entity object
@@ -220,7 +224,6 @@ protected:
   //! the STK field data instance.
   double copy_hypre_to_stk(stk::mesh::FieldBase*);
 
-private:
   /** Flags indicating whether a particular row in the HYPRE matrix has been
    * filled or not.
    */
@@ -253,12 +256,6 @@ private:
   //! The HYPRE matrix data structure
   mutable HYPRE_IJMatrix mat_;
 
-  //! HYPRE right hand side data structure
-  mutable HYPRE_IJVector rhs_;
-
-  //! HYPRE solution vector
-  mutable HYPRE_IJVector sln_;
-
   //! Track rows that have been updated during the assembly process
   std::vector<RowFillStatus> rowFilled_;
 
@@ -284,6 +281,9 @@ private:
   //! Maximum Row ID in the Hypre linear system
   HypreIntType maxRowID_;
 
+  //! Flag indicating whether IJMatrixAssemble has been called on the system
+  bool matrixAssembled_{false};
+
   //! Flag indicating whether the linear system has been initialized
   bool systemInitialized_{false};
 
@@ -292,6 +292,14 @@ private:
 
   //! Flag indicating that dirichlet and/or overset rows are present for this system
   bool hasSkippedRows_{false};
+
+private:
+  //! HYPRE right hand side data structure
+  mutable HYPRE_IJVector rhs_;
+
+  //! HYPRE solution vector
+  mutable HYPRE_IJVector sln_;
+
 };
 
 }  // nalu

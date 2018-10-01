@@ -21,7 +21,7 @@
 #include <NaluEnv.h>
 #include <FORTRAN_Proto.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
 
 #include <iostream>
@@ -39,7 +39,7 @@ namespace nalu{
 void quad_derivative(const std::vector<double> &par_coord, 
                      SharedMemView<DoubleType***>& deriv) {
   const double half = 0.5;
-  const size_t npts = deriv.dimension(0);
+  const size_t npts = deriv.extent(0);
 
   for(size_t j=0; j<npts; ++j) {
     const DoubleType s1 = par_coord[2*j+0];

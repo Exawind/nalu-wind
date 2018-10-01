@@ -8,7 +8,7 @@
 
 #include <user_functions/KovasznayPressureAuxFunction.h>
 #include <algorithm>
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 // basic c++
 #include <cmath>

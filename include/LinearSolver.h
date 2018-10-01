@@ -46,6 +46,7 @@ namespace nalu{
   enum PetraType {
     PT_TPETRA,       //!< Nalu Tpetra interface
     PT_HYPRE,        //!< Direct HYPRE interface
+    PT_HYPRE_SEGREGATED, //!< Direct HYPRE Segregated momentum solver
     PT_END
   };
 

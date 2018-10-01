@@ -148,46 +148,46 @@ MeshDisplacementEquationSystem::register_nodal_fields(
 
   // register dof; set it as a restart variable
   meshDisplacement_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement", numStates));
-  stk::mesh::put_field(*meshDisplacement_, *part, nDim);
+  stk::mesh::put_field_on_mesh(*meshDisplacement_, *part, nDim, nullptr);
   realm_.augment_restart_variable_list("mesh_displacement");
 
   // mesh velocity (used for fluids coupling)
   meshVelocity_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity"));
-  stk::mesh::put_field(*meshVelocity_, *part, nDim);
+  stk::mesh::put_field_on_mesh(*meshVelocity_, *part, nDim, nullptr);
 
   // projected nodal gradient
   dvdx_ =  &(meta_data.declare_field<GenericFieldType>(stk::topology::NODE_RANK, "dvdx"));
-  stk::mesh::put_field(*dvdx_, *part, nDim*nDim);
+  stk::mesh::put_field_on_mesh(*dvdx_, *part, nDim*nDim, nullptr);
 
   divV_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
-   stk::mesh::put_field(*divV_, *part);
+   stk::mesh::put_field_on_mesh(*divV_, *part, nullptr);
 
    // delta solution for linear solver
   dxTmp_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dxTmp"));
-  stk::mesh::put_field(*dxTmp_, *part, nDim);
+  stk::mesh::put_field_on_mesh(*dxTmp_, *part, nDim, nullptr);
 
   // geometry
   coordinates_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates"));
-  stk::mesh::put_field(*coordinates_, *part, nDim);
+  stk::mesh::put_field_on_mesh(*coordinates_, *part, nDim, nullptr);
 
   currentCoordinates_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
-  stk::mesh::put_field(*currentCoordinates_, *part, nDim);
+  stk::mesh::put_field_on_mesh(*currentCoordinates_, *part, nDim, nullptr);
 
   dualNodalVolume_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume"));
-  stk::mesh::put_field(*dualNodalVolume_, *part);
+  stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
 
   // properties
   if ( activateMass_ ) {
     density_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "density"));
-    stk::mesh::put_field(*density_, *part);
+    stk::mesh::put_field_on_mesh(*density_, *part, nullptr);
     realm_.augment_property_map(DENSITY_ID, density_);
   }
 
   lameMu_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "lame_mu"));
-  stk::mesh::put_field(*lameMu_, *part);
+  stk::mesh::put_field_on_mesh(*lameMu_, *part, nullptr);
 
   lameLambda_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "lame_lambda"));
-  stk::mesh::put_field(*lameLambda_, *part);
+  stk::mesh::put_field_on_mesh(*lameLambda_, *part, nullptr);
 
   // push to property list
   realm_.augment_property_map(LAME_MU_ID, lameLambda_);
@@ -306,7 +306,7 @@ MeshDisplacementEquationSystem::register_wall_bc(
 
     // register boundary data; mesh_displacement_bc
     VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement_bc"));
-    stk::mesh::put_field(*theBcField, *part, nDim);
+    stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
 
     AuxFunction *theAuxFunc = NULL;
 
@@ -376,7 +376,7 @@ MeshDisplacementEquationSystem::register_wall_bc(
   else if (bc_data_specified(userData, pressureName) ) {
     // register the bc pressure field
     ScalarFieldType *bcPressureField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure_bc"));
-    stk::mesh::put_field(*bcPressureField, *part, nDim);
+    stk::mesh::put_field_on_mesh(*bcPressureField, *part, nDim, nullptr);
 
     // extract the value for user specified pressure and save off the AuxFunction
     Pressure pSpec = userData.pressure_;

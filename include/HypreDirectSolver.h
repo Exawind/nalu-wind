@@ -70,10 +70,12 @@ public:
 
   MPI_Comm comm_;
 
-private:
+protected:
   //! Helper method to handle processing the user inputs and creating the
   //! appropriate solver/preconditioner instances.
   void initSolver();
+
+  virtual void setupSolver();
 
   //! Create the Hypre Solver and related call methods
   void createSolver();
@@ -129,6 +131,10 @@ private:
 
   //! Flag indicating whether this class instance has been initialized fully
   bool isInitialized_{false};
+
+private:
+  HypreDirectSolver() = delete;
+  HypreDirectSolver(const HypreDirectSolver&) = delete;
 };
 
 }  // nalu

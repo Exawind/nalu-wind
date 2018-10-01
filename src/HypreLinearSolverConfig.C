@@ -48,6 +48,7 @@ HypreLinearSolverConfig::load(const YAML::Node& node)
                  recomputePreconditioner_, recomputePreconditioner_);
   get_if_present(node, "reuse_preconditioner",
                  reusePreconditioner_, reusePreconditioner_);
+  get_if_present(node, "segregated_solver", useSegregatedSolver_, useSegregatedSolver_);
 
   if (node["absolute_tolerance"]) {
     hasAbsTol_ = true;
@@ -350,7 +351,35 @@ HypreLinearSolverConfig::hypre_gmres_solver_config(const YAML::Node& node)
     Ifpack2::Hypre::Solver, &HYPRE_GMRESSetPrintLevel, outputLevel_)));
   funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
     Ifpack2::Hypre::Solver, &HYPRE_GMRESSetLogging, logLevel)));
+
   paramsPrecond_->set("Solver", Ifpack2::Hypre::GMRES);
+}
+
+void
+HypreLinearSolverConfig::hypre_cogmres_solver_config(const YAML::Node& node)
+{
+#ifdef HYPRE_COGMRES
+  int logLevel = 1;
+  get_if_present(node, "log_level", logLevel, logLevel);
+
+  funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+    Ifpack2::Hypre::Solver, &HYPRE_COGMRESSetKDim, kspace_)));
+  funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+    Ifpack2::Hypre::Solver, &HYPRE_COGMRESSetMaxIter, maxIterations_)));
+  funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+    Ifpack2::Hypre::Solver, &HYPRE_COGMRESSetTol, tolerance_)));
+
+  if (hasAbsTol_) {
+    funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+      Ifpack2::Hypre::Solver, &HYPRE_COGMRESSetAbsoluteTol, absTol_)));
+  }
+
+  funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+    Ifpack2::Hypre::Solver, &HYPRE_COGMRESSetPrintLevel, outputLevel_)));
+  funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+    Ifpack2::Hypre::Solver, &HYPRE_COGMRESSetLogging, logLevel)));
+  paramsPrecond_->set("Solver", Ifpack2::Hypre::COGMRES);
+#endif
 }
 
 void
@@ -483,6 +512,13 @@ HypreLinearSolverConfig::configure_hypre_solver
 {
   if (method_ == "hypre_gmres") {
     hypre_gmres_solver_config(node);
+  }
+  else if (method_ == "hypre_cogmres") {
+#ifdef HYPRE_COGMRES
+    hypre_cogmres_solver_config(node);
+#else
+    throw std::runtime_error("HYPRE version does not support COGMRES");
+#endif
   }
   else if (method_ == "hypre_lgmres") {
     hypre_lgmres_solver_config(node);

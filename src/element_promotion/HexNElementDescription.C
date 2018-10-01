@@ -14,7 +14,7 @@
 #include <NaluEnv.h>
 #include <nalu_make_unique.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
 
 #include <algorithm>

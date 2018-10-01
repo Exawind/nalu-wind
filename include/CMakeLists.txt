@@ -148,8 +148,6 @@ add_sources(GlobalHeaderList
    MomentumMassBackwardEulerNodeSuppAlg.h
    MomentumMassElemSuppAlgDep.h
    MovingAveragePostProcessor.h
-   NaluCommBufferV.hpp
-   NaluCommNeighbors.hpp
    NaluEnv.h
    NaluParsing.h
    NaluParsingHelper.h

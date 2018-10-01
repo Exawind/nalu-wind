@@ -203,7 +203,7 @@ SolutionNormPostProcessing::setup()
       stk::mesh::Part *targetPart = partVec_[j];
 
       // put the field on the part
-      stk::mesh::put_field(*exactDofField, *targetPart, dofSize);
+      stk::mesh::put_field_on_mesh(*exactDofField, *targetPart, dofSize, nullptr);
     
       // create the algorithm to populate the analytical field
       analytical_function_factory(functionName, exactDofField, targetPart);

@@ -38,6 +38,11 @@ HypreIntType Hypre_ParCSRPCGCreate(MPI_Comm comm, HYPRE_Solver *solver)
 HypreIntType Hypre_ParCSRGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
 { return HYPRE_ParCSRGMRESCreate(comm, solver);}
 
+#ifdef HYPRE_COGMRES
+HypreIntType Hypre_ParCSRCOGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
+{ return HYPRE_ParCSRCOGMRESCreate(comm, solver);}
+#endif
+
 HypreIntType Hypre_ParCSRFlexGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
 { return HYPRE_ParCSRFlexGMRESCreate(comm, solver);}
 
@@ -68,7 +73,8 @@ HypreDirectSolver::solve(
 {
   // Initialize the solver on first entry
   double time = -NaluEnv::self().nalu_time();
-  if (!isInitialized_) initSolver();
+  if (!isInitialized_ || config_->recomputePreconditioner())
+    initSolver();
   time += NaluEnv::self().nalu_time();
   timerPrecond_ = time;
 
@@ -144,10 +150,16 @@ HypreDirectSolver::initSolver()
   if (usePrecond_)
     solverPrecondPtr_(solver_, precondSolvePtr_, precondSetupPtr_, precond_);
 
-  // We are always using HYPRE solver
-  solverSetupPtr_(solver_, parMat_, parRhs_, parSln_);
+  setupSolver();
 
   isInitialized_ = true;
+}
+
+void
+HypreDirectSolver::setupSolver()
+{
+  // We are always using HYPRE solver
+  solverSetupPtr_(solver_, parMat_, parRhs_, parSln_);
 }
 
 void
@@ -182,6 +194,19 @@ HypreDirectSolver::createSolver()
     solverNumItersPtr_ = &HYPRE_GMRESGetNumIterations;
     solverFinalResidualNormPtr_ = &HYPRE_GMRESGetFinalRelativeResidualNorm;
     break;
+
+#ifdef HYPRE_COGMRES
+  case Hypre::COGMRES:
+    solverCreatePtr_ = &Hypre_ParCSRCOGMRESCreate;
+    solverDestroyPtr_ = &HYPRE_ParCSRCOGMRESDestroy;
+    solverSetupPtr_ = &HYPRE_ParCSRCOGMRESSetup;
+    solverPrecondPtr_ = &HYPRE_ParCSRCOGMRESSetPrecond;
+    solverSolvePtr_ = &HYPRE_ParCSRCOGMRESSolve;
+    solverSetTolPtr_ = &HYPRE_ParCSRCOGMRESSetTol;
+    solverNumItersPtr_ = &HYPRE_COGMRESGetNumIterations;
+    solverFinalResidualNormPtr_ = &HYPRE_COGMRESGetFinalRelativeResidualNorm;
+    break;
+#endif
 
   case Hypre::FlexGMRES:
     solverCreatePtr_ = &Hypre_ParCSRFlexGMRESCreate;
@@ -267,7 +292,7 @@ HypreDirectSolver::createPrecond()
   namespace Hypre = Ifpack2::Hypre;
 
   if (isPrecondSetup_) {
-    precondDestroyPtr_(solver_);
+    precondDestroyPtr_(precond_);
     isPrecondSetup_ = false;
   }
 

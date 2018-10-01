@@ -7,7 +7,7 @@
 #include <element_promotion/NodeMapMaker.h>
 #include <element_promotion/ElementDescription.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 #include <array>
 

@@ -11,7 +11,7 @@
 #include <array>
 #include <limits>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 #include <KokkosInterface.h>
 #include <SimdInterface.h>

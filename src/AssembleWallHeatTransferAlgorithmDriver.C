@@ -113,14 +113,16 @@ AssembleWallHeatTransferAlgorithmDriver::post_work()
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
-  std::vector<stk::mesh::FieldBase*> fields;
-  fields.push_back(assembledWallArea_);
-  fields.push_back(referenceTemperature_);
-  fields.push_back(heatTransferCoefficient_);
-  fields.push_back(normalHeatFlux_);
-  fields.push_back(robinCouplingParameter_);
+  std::vector<const stk::mesh::FieldBase*> fields = {
+    assembledWallArea_,
+    referenceTemperature_,
+    heatTransferCoefficient_,
+    normalHeatFlux_,
+    robinCouplingParameter_
+  };
+  const std::vector<const stk::mesh::FieldBase*>& const_fields_ref = fields;
 
-  stk::mesh::parallel_sum(bulk_data, fields);
+  stk::mesh::parallel_sum(bulk_data, const_fields_ref);
 
   // add periodic assembly piror to normalization
   if ( realm_.hasPeriodic_) {

@@ -97,20 +97,20 @@ ShearStressTransportEquationSystem::register_nodal_fields(
 
   // re-register tke and sdr for convenience
   tke_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_ke", numStates));
-  stk::mesh::put_field(*tke_, *part);
+  stk::mesh::put_field_on_mesh(*tke_, *part, nullptr);
   sdr_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "specific_dissipation_rate", numStates));
-  stk::mesh::put_field(*sdr_, *part);
+  stk::mesh::put_field_on_mesh(*sdr_, *part, nullptr);
 
   // SST parameters that everyone needs
   minDistanceToWall_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "minimum_distance_to_wall"));
-  stk::mesh::put_field(*minDistanceToWall_, *part);
+  stk::mesh::put_field_on_mesh(*minDistanceToWall_, *part, nullptr);
   fOneBlending_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_f_one_blending"));
-  stk::mesh::put_field(*fOneBlending_, *part);
+  stk::mesh::put_field_on_mesh(*fOneBlending_, *part, nullptr);
   
   // DES model
   if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) {
     maxLengthScale_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_max_length_scale"));
-    stk::mesh::put_field(*maxLengthScale_, *part);
+    stk::mesh::put_field_on_mesh(*maxLengthScale_, *part, nullptr);
   }
 
   // add to restart field

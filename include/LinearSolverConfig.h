@@ -110,6 +110,8 @@ public:
   //! Hypre functions to configure the solver and preconditioner.
   virtual void load(const YAML::Node&);
 
+  bool useSegregatedSolver() const { return useSegregatedSolver_; }
+
 protected:
   //! List of HYPRE API calls and corresponding arugments to configure solver
   //! and preconditioner after they are created.
@@ -142,6 +144,7 @@ protected:
 
   bool isHypreSolver_{true};
   bool hasAbsTol_{false};
+  bool useSegregatedSolver_{false};
 
 private:
   void boomerAMG_solver_config(const YAML::Node&);
@@ -150,6 +153,7 @@ private:
   void euclid_precond_config(const YAML::Node&);
 
   void hypre_gmres_solver_config(const YAML::Node&);
+  void hypre_cogmres_solver_config(const YAML::Node&);
   void hypre_lgmres_solver_config(const YAML::Node&);
   void hypre_flexgmres_solver_config(const YAML::Node&);
   void hypre_pcg_solver_config(const YAML::Node&);

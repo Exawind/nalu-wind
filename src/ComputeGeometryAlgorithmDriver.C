@@ -205,20 +205,20 @@ ComputeGeometryAlgorithmDriver::post_work()
   // meta and bulk data
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
-  std::vector<stk::mesh::FieldBase*> sum_fields;
 
   // extract field always germane
   ScalarFieldType *dualNodalVolume = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
-  sum_fields.push_back(dualNodalVolume);
 
   // handle case for realm using edge-based
   if ( realm_.realmUsesEdges_ ) {
     VectorFieldType *edgeAreaVec = meta_data.get_field<VectorFieldType>(stk::topology::EDGE_RANK, "edge_area_vector");
-    sum_fields.push_back(edgeAreaVec);
+    stk::mesh::parallel_sum(bulk_data, {dualNodalVolume, edgeAreaVec});
+  }
+  else {
+    stk::mesh::parallel_sum(bulk_data, {dualNodalVolume});
   }
 
   // deal with parallel
-  stk::mesh::parallel_sum(bulk_data, sum_fields);
 
   if ( realm_.hasPeriodic_) {
     const unsigned fieldSize = 1;

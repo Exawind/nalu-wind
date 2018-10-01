@@ -30,10 +30,10 @@ TEST(MomentumBoussinesqSrcNodeSuppAlg, single_value)
   auto& meta = helper.realm.meta_data();
 
   auto& dnv = meta.declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, "dual_nodal_volume");
-  stk::mesh::put_field(dnv, meta.universal_part(), 1);
+  stk::mesh::put_field_on_mesh(dnv, meta.universal_part(), 1, nullptr);
 
   auto& temperature = meta.declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, "temperature");
-  stk::mesh::put_field(temperature, meta.universal_part(), 1);
+  stk::mesh::put_field_on_mesh(temperature, meta.universal_part(), 1, nullptr);
 
   meta.commit();
 
@@ -78,14 +78,14 @@ TEST(MomentumBoussinesqRASrcNodeSuppAlg, single_value)
   auto& bulk = helper.realm.bulk_data();
 
   auto& dnv = meta.declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, "dual_nodal_volume");
-  stk::mesh::put_field(dnv, meta.universal_part(), 1);
+  stk::mesh::put_field_on_mesh(dnv, meta.universal_part(), 1, nullptr);
 
   auto& temperature = meta.declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, "temperature");
-  stk::mesh::put_field(temperature, meta.universal_part(), 1);
+  stk::mesh::put_field_on_mesh(temperature, meta.universal_part(), 1, nullptr);
 
   std::string avgTempFieldName = sierra::nalu::MovingAveragePostProcessor::filtered_field_name("temperature");
   auto& raTemperature = meta.declare_field<stk::mesh::Field<double>>(stk::topology::NODE_RANK, avgTempFieldName);
-  stk::mesh::put_field(raTemperature, meta.universal_part(), 1);
+  stk::mesh::put_field_on_mesh(raTemperature, meta.universal_part(), 1, nullptr);
 
   meta.commit();
 
