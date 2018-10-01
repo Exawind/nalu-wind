@@ -80,7 +80,7 @@ realms:
 
     constant_specification:
       universal_gas_constant: 8314.4621
-      reference_pressure: 2494338.6300000004
+      reference_pressure: 86011.67689655174
 
     reference_quantities:
     - species_name: Air

@@ -2,25 +2,25 @@
 # -*- coding: utf-8 -*-
 #
 #  generate_simulation_file_input.py
-#  
+#
 #  Copyright 2018 Martinez <lmartin1@LMARTIN1-31527S>
-#  
+#
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 2 of the License, or
 #  (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-#  
-#  
+#
+#
 #  The expected call for this script is as follows:
 #
 #  ./nalu_input_fileX -s setup.yaml
@@ -34,13 +34,13 @@ def main(args):
     '''
     This script will load a yaml input file will add the necessary inputs for
     an atmospheric boundary layer simulation using Nalu.
-    
+
     File input for users to modify:
         setup.yaml
-        
+
     File input for advanced users:
         file_inputs/ablNeutralEdge.yaml
-        
+
     File output:
         abl_simulation.yaml
 
@@ -54,7 +54,7 @@ def main(args):
         'input file.')
 
     # Set-up file
-    parser.add_argument('-s', '--setup', 
+    parser.add_argument('-s', '--setup',
                         type=str,  # The input is a string
                         metavar='', # Empty string to display help
                         default='setup.yaml',
@@ -79,7 +79,7 @@ class mapping_object_class():
     '''
     A class used to mapp the yaml setup file to Nalu inputs
     '''
-    def __init__(self, 
+    def __init__(self,
             # The setup file
             setup_file='setup.yaml',
         ):
@@ -150,20 +150,20 @@ class mapping_object_class():
         print('###################')
         print('#  Begin mapping  #')
         print('###################')
-        
+
         # Go through all the keys in the dictionary and mapp them
         for keys in self.mapping_dictionary:
             try:
-                print('Attempting to map:', keys) 
+                print('Attempting to map:', keys)
                 self.mapping_dictionary[keys]()
                 print(keys, 'has been mapped ' + u'\u2705\n')
             except:
                 print(keys, 'NOT mapped ' + u'\u274c\n')
-                
+
         print('###################')
         print('#  Mapping done   #')
         print('###################')
-            
+
 
     def write_files(self):
         '''
@@ -195,7 +195,7 @@ class mapping_object_class():
             # Get the mesh file name
             self.yaml_preprocess['nalu_abl_mesh']['output_db'] = \
                 self.yaml_setup['mesh']['mesh_file']
-                
+
             # The domain size
             # Lower bottom coordinate
             self.yaml_preprocess['nalu_abl_mesh']['vertices'][0][0] = \
@@ -211,7 +211,7 @@ class mapping_object_class():
                 self.yaml_setup['mesh']['domain_bounds_y'][1]
             self.yaml_preprocess['nalu_abl_mesh']['vertices'][1][2] = \
                 self.yaml_setup['mesh']['domain_bounds_z'][1]
-    
+
             # Number of grid points
             self.yaml_preprocess['nalu_abl_mesh']['mesh_dimensions'] = \
                 self.yaml_setup['mesh']['number_of_cells']
@@ -231,7 +231,7 @@ class mapping_object_class():
                 self.yaml_setup['mesh']['mesh_file']
             self.yaml_preprocess['nalu_preprocess']['output_db'] = \
                 self.yaml_setup['mesh']['mesh_file']
-        
+
             # Setup the initial ondition in the pre-process
             self.yaml_preprocess['nalu_preprocess']['input_db'] = \
                 self.yaml_setup['mesh']['mesh_file']
@@ -241,7 +241,7 @@ class mapping_object_class():
 
         except:
             print('Mesh not set in preprocessing')
-    
+
         # Set the mesh file in the simulation file
         self.yaml_input['realms'][0]['mesh'] = \
             self.yaml_setup['mesh']['mesh_file']
@@ -251,11 +251,11 @@ class mapping_object_class():
         '''
         Function to setup the velocity entries in the file
 
-        This operation takes the wind angle and converts it to the proper 
+        This operation takes the wind angle and converts it to the proper
              cartesian coordinate system.
         A direction of 270 deg means the wind is coming from the west, which
              is from left to right.
-        
+
                               N 0deg
                                |
                                |
@@ -275,7 +275,7 @@ class mapping_object_class():
         # The wind height as a list
         self.yaml_input['realms'][0]['abl_forcing']['momentum']['heights'] = \
             [wind_height]
-    
+
         # The velocity components
         # The time history of the velocity components
         # Start at zero and have a very large number for the last time
@@ -384,13 +384,22 @@ class mapping_object_class():
                     self.yaml_setup['density']
 
         # Set the reference pressure
-        try: 
+        try:
+            # Universal gas constant
             R = self.yaml_input['realms'][0]['material_properties'] \
                 ['constant_specification']['universal_gas_constant']
+
+            # Molecular weight
+            mw = self.yaml_input['realms'][0]['material_properties'] \
+                ['reference_quantities'][0]['mw']
+
+            # Set the reference pressure
             self.yaml_input['realms'][0]['material_properties'] \
                 ['constant_specification']['reference_pressure'] = \
-                    R * self.yaml_setup['density'] * self.yaml_setup['TRef']
+                 R / mw * self.yaml_setup['density'] * self.yaml_setup['TRef']
+
         except:
+
             print('Reference pressure not set')
 
     def set_turbines(self):
@@ -425,13 +434,13 @@ class mapping_object_class():
         # Set how often to write restart
         self.yaml_input['realms'][0]['actuator']['n_every_checkpoint'] = \
                 self.yaml_setup['actuator']['n_every_checkpoint']
-       
+
         # Let the user know the variables they need to change in the fast input file
         print('Make sure the TMax in OpenFAST input is the same as total simulation time=',
                self.yaml_setup['total_run_time'])
         print('Make sure the DT in OpenFAST input is the same as specified in the input file=',
-               self.yaml_setup['actuator']['dt_fast']) 
- 
+               self.yaml_setup['actuator']['dt_fast'])
+
         #~ # The fast file name to extract dt
         #~ fast_file_name = self.yaml_setup['Turbines']['Turbine0'] \
                             #~ ['fast_input_filename']
@@ -451,11 +460,11 @@ class mapping_object_class():
 
         # Add all the turbines
         for turbine in self.yaml_setup['actuator']['Turbines']:
-            
+
             # First initialize the turbine as a copy of the reference one
             self.yaml_input['realms'][0]['actuator'][turbine] = \
                 default_turbine.copy()
-            
+
             # Set the density
             self.yaml_input['realms'][0]['actuator'][turbine]['air_density'] = \
                 self.yaml_setup['density']
@@ -473,7 +482,7 @@ class mapping_object_class():
 
                     self.yaml_input['realms'][0]['actuator'][turbine][item] = \
                         self.yaml_setup['actuator']['Turbines'][turbine][item]
-  
+
 
     def set_viscosity(self):
         '''
@@ -485,7 +494,7 @@ class mapping_object_class():
             if var['name'] == 'viscosity':
                 var['value'] = self.yaml_setup['nu'] * \
                     self.yaml_setup['density']
-        
+
     def set_latitude(self):
         '''
         Set the latitude
@@ -494,7 +503,7 @@ class mapping_object_class():
         for var in self.yaml_input['realms'][0]['solution_options']['options']:
 
             if 'user_constants' in var:
-    
+
                 # The latitude
                 var['user_constants']['latitude'] = self.yaml_setup['latitude']
 
@@ -502,15 +511,15 @@ class mapping_object_class():
         '''
         Set the reference temperature
         '''
-        
+
         # Read the reference temperature
         TRef = self.yaml_setup['TRef']
-        
+
         # Loop through all the options and find user_constants
         for var in self.yaml_input['realms'][0]['solution_options']['options']:
 
             if 'user_constants' in var:
-    
+
                 # The reference temperature
                 var['user_constants']['reference_temperature'] = TRef
 
@@ -531,10 +540,10 @@ class mapping_object_class():
         z0 = self.yaml_setup['z0']
         TRef = self.yaml_setup['TRef']
         qwall = self.yaml_setup['qwall']
-    
+
         # Loop through all the boundary conditions and modify accordingly
         for var in self.yaml_input['realms'][0]['boundary_conditions']:
-        
+
             # Bottom wall boundary condition
             if 'wall_boundary_condition' in var.keys():
                 var['wall_user_data']['roughness_height'] = z0
@@ -545,14 +554,14 @@ class mapping_object_class():
         '''
         Set the top temperature gradient
         '''
-        
+
         # Read the temperature gradient
         Tg = self.yaml_setup['TGradUpper']
 
         # Loop through all the boundary conditions and modify accordingly
         for var in self.yaml_input['realms'][0]['boundary_conditions']:
             # Top boundary condition
-            if 'symmetry_boundary_condition' in var.keys():    
+            if 'symmetry_boundary_condition' in var.keys():
                 # Read the upper wall temperature gradient
                 var['symmetry_user_data']['normal_temperature_gradient'] = Tg
 
