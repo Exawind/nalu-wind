@@ -18,14 +18,19 @@ modify them according to the inputs set in :file:`setup.yaml` and
 generate new and ready to use input files.
 
 Instructions to compile :program:`Nalu` are provided in :ref:`building_nalu`.
-The `wind-utils repository <https://github.com/Exawind/wind-utils>`_
+The `wind-utils <https://github.com/Exawind/wind-utils>`_ repository
 needs to be compiled to have a access to all the
 pre-processing utilities used in the example cases.
-:program:`wind-utils` can be compiled with :program:`Nalu`
-by enabling the CMake compilation flag::
+The :program:`wind-utils` repository can be downloaded as a submodule by running
+this command inside the :file:`nalu-wind/` repository::
 
-  -DENABLE_WIND_UTILS=ON
+    git submodule init && git submodule update
 
+Now, :program:`wind-utils` can be compiled with :program:`Nalu`
+by enabling the compilation flag inside of
+the `CMakeLists.txt file <https://github.com/Exawind/nalu-wind/blob/master/CMakeLists.txt>`_::
+
+    option(ENABLE_WIND_UTILS "Build wind utils along with Nalu-Wind" ON)
 
 Subsequent make install will install all :program:`wind-utils`
 executables along side
