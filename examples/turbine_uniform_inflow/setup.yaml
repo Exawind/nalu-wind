@@ -41,6 +41,8 @@ actuator:
 
 
     # This is the list of turbines
+    # To add more turbines, simply add more entries and name the turbines in 
+    # sequential order: Turbine0, Turbine1, ... TurbineN-1, TurbineN
     Turbines:
     
         # Turbines need to be named according to the order:

@@ -59,11 +59,11 @@ Step by step instructions to run the case
 Post-processing
 ===============
 
-Nalu's output is generated at runtime. The ``abl_plot_example.py`` Python script
+Nalu's output is generated at runtime. The ``abl_plots.py`` Python script
 is used to plot simulation results.
 The script will load the plane-averaged statistics
 and plot them as function of time and height.
 To run the script, load the Python environment if needed, and run the Python
 script::
 
-  python abl_plot_example.py
+  python abl_plots.py
