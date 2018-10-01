@@ -43,6 +43,19 @@
 namespace sierra{
 namespace nalu{
 
+
+Actuator::~Actuator()
+{
+  // delete data probes specifications vector
+  for ( size_t k = 0; k < actuatorInfo_.size(); ++k )
+    delete actuatorInfo_[k];
+
+  for(auto iterPoint : actuatorPointInfoMap_)
+  {
+    delete iterPoint.second;
+  }
+}
+
 void
 Actuator::populate_candidate_elements()
 {

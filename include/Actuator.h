@@ -87,7 +87,8 @@ public:
     const YAML::Node &node):realm_(realm),
     searchMethod_(stk::search::KDTREE),
     needToGhostCount_(0){}
-  virtual ~Actuator() {}
+
+  virtual ~Actuator();
 
   // load all of the options
   virtual void load(
@@ -156,7 +157,7 @@ public:
   // target names for set of bounding boxes
   std::vector<std::string> searchTargetNames_;
 
-  std::vector<ActuatorInfo*> actuatorInfoMap_;
+  std::vector<ActuatorInfo*> actuatorInfo_;
   std::map<size_t, ActuatorPointInfo*> actuatorPointInfoMap_;
 
   // scratch space

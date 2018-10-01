@@ -159,18 +159,7 @@ ActuatorLinePointDrag::ActuatorLinePointDrag(
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
 ActuatorLinePointDrag::~ActuatorLinePointDrag()
-{
-
-  // delete data probes specifications vector
-  for ( size_t k = 0; k < actuatorLineInfo_.size(); ++k )
-    delete actuatorLineInfo_[k];
-
-  // clear actuatorLinePointInfoMap_
-  for(auto iterPoint : actuatorLinePointInfoMap_)
-  {
-    delete iterPoint.second;
-  }
-}
+{}
 
 //--------------------------------------------------------------------------
 //-------- compute_point_drag ----------------------------------------------
@@ -281,7 +270,7 @@ ActuatorLinePointDrag::load(
         const YAML::Node y_spec = y_specs[ispec];
 
         ActuatorLinePointDragInfo *actuatorLineInfo = new ActuatorLinePointDragInfo();
-        actuatorLineInfo_.push_back(actuatorLineInfo);
+        actuatorInfo_.push_back(actuatorLineInfo);
 
         // name
         const YAML::Node theName = y_spec["turbine_name"];
@@ -353,11 +342,11 @@ ActuatorLinePointDrag::initialize()
   needToGhostCount_ = 0;
   elemsToGhost_.clear();
 
-  // clear actuatorLinePointInfoMap_
-  for(auto iterPoint : actuatorLinePointInfoMap_) {
+  // clear actuatorPointInfoMap_
+  for(auto iterPoint : actuatorPointInfoMap_) {
     delete iterPoint.second;
   }
-  actuatorLinePointInfoMap_.clear();
+  actuatorPointInfoMap_.clear();
 
   bulkData.modification_begin();
 
@@ -462,13 +451,16 @@ ActuatorLinePointDrag::execute()
   }
 
   // loop over map and assemble source terms
-  std::map<size_t, ActuatorLinePointDragPointInfo *>::iterator iterPoint;
-  for (iterPoint  = actuatorLinePointInfoMap_.begin();
-       iterPoint != actuatorLinePointInfoMap_.end();
+  std::map<size_t, ActuatorPointInfo *>::iterator iterPoint;
+  for (iterPoint  = actuatorPointInfoMap_.begin();
+       iterPoint != actuatorPointInfoMap_.end();
        ++iterPoint) {
 
     // actuator line info object of interest
-    ActuatorLinePointDragPointInfo * infoObject = (*iterPoint).second;
+    ActuatorLinePointDragPointInfo * infoObject = dynamic_cast<ActuatorLinePointDragPointInfo*>((*iterPoint).second);
+    if(infoObject==NULL){
+      throw std::runtime_error("Object in ActuatorPointInfo is not correct type.  Should be ActuatorLinePointDragPointInfo.");
+    }
 
     //==========================================================================
     // extract the best element; compute drag given this velocity, property, etc
@@ -579,9 +571,12 @@ ActuatorLinePointDrag::create_actuator_line_point_info_map() {
   stk::mesh::MetaData & metaData = realm_.meta_data();
   const int nDim = metaData.spatial_dimension();
 
-  for ( size_t k = 0; k < actuatorLineInfo_.size(); ++k ) {
+  for ( size_t k = 0; k < actuatorInfo_.size(); ++k ) {
 
-    const ActuatorLinePointDragInfo *actuatorLineInfo = actuatorLineInfo_[k];
+    const ActuatorLinePointDragInfo *actuatorLineInfo = dynamic_cast<ActuatorLinePointDragInfo*>(actuatorInfo_[k]);
+    if(actuatorLineInfo==NULL){
+      throw std::runtime_error("invalid object in actuatorInfo_");
+    }
 
     int processorId = actuatorLineInfo->processorId_;
     if ( processorId == NaluEnv::self().parallel_rank() ) {
@@ -640,7 +635,7 @@ ActuatorLinePointDrag::create_actuator_line_point_info_map() {
           = new ActuatorLinePointDragPointInfo( centroidCoords,
                                       actuatorLineInfo->radius_, actuatorLineInfo->omega_,
                                       actuatorLineInfo->gaussDecayRadius_, velocity);
-        actuatorLinePointInfoMap_[localPointId] = actuatorLinePointInfo;
+        actuatorPointInfoMap_[localPointId] = actuatorLinePointInfo;
       }
     }
   }
@@ -739,14 +734,14 @@ ActuatorLinePointDrag::complete_search()
         throw std::runtime_error("no valid entry for element");
 
       // find the point data structure
-      std::map<size_t, ActuatorLinePointDragPointInfo *>::iterator iterPoint;
-      iterPoint=actuatorLinePointInfoMap_.find(thePt);
-      if ( iterPoint == actuatorLinePointInfoMap_.end() )
-        throw std::runtime_error("no valid entry for actuatorLinePointInfoMap_");
+      std::map<size_t, ActuatorPointInfo *>::iterator iterPoint;
+      iterPoint=actuatorPointInfoMap_.find(thePt);
+      if ( iterPoint == actuatorPointInfoMap_.end() )
+        throw std::runtime_error("no valid entry for actuatorPointInfoMap_");
 
       // extract the point object and push back the element to either the best
       // candidate or the standard vector of elements
-      ActuatorLinePointDragPointInfo *actuatorLinePointInfo = iterPoint->second;
+      ActuatorLinePointDragPointInfo *actuatorLinePointInfo = dynamic_cast<ActuatorLinePointDragPointInfo*>(iterPoint->second);
 
       // extract topo and master element for this topo
       const stk::mesh::Bucket &theBucket = bulkData.bucket(elem);
