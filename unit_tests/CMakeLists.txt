@@ -22,6 +22,7 @@ add_sources(GlobalUnitSourceList
    UnitTestMetricTensor.C
    UnitTestMovingAverage.C
    UnitTestNGPMasterElements.C
+   UnitTestNgpMesh1.C
    UnitTestPecletFunction.C
    UnitTestQuadElementPromotion.C
    UnitTestRealm.C

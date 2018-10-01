@@ -695,12 +695,13 @@ void add_lengths_to_comm(const stk::mesh::BulkData& bulk,
     }
 }
 
+template<typename ViewType>
 void communicate_remote_columns(const stk::mesh::BulkData& bulk,
                                 const std::vector<int>& neighborProcs,
                                 stk::CommNeighbors& commNeighbors,
                                 unsigned numDof,
                                 const Teuchos::RCP<LinSys::Map>& ownedRowsMap,
-                                Kokkos::View<size_t*,HostSpace>& deviceLocallyOwnedRowLengths,
+                                ViewType& deviceLocallyOwnedRowLengths,
                                 std::set<std::pair<int,GlobalOrdinal> >& communicatedColIndices)
 {   
     commNeighbors.communicate();
@@ -804,8 +805,8 @@ TpetraLinearSystem::compute_graph_row_lengths(const std::vector<stk::mesh::Entit
                                               LinSys::RowLengths& locallyOwnedRowLengths,
                                               stk::CommNeighbors& commNeighbors)
 {
-  Kokkos::View<size_t*,HostSpace> deviceSharedNotOwnedRowLengths = sharedNotOwnedRowLengths.view<HostSpace>();
-  Kokkos::View<size_t*,HostSpace> deviceLocallyOwnedRowLengths = locallyOwnedRowLengths.view<HostSpace>();
+  Kokkos::View<size_t*,MemSpace> deviceSharedNotOwnedRowLengths = sharedNotOwnedRowLengths.view<MemSpace>();
+  Kokkos::View<size_t*,MemSpace> deviceLocallyOwnedRowLengths = locallyOwnedRowLengths.view<MemSpace>();
 
   const stk::mesh::BulkData& bulk = realm_.bulk_data();
 
@@ -1131,7 +1132,7 @@ void verify_same_except_sort_order(const std::vector<GlobalOrdinal>& vec1, const
 }
 
 void verify_row_lengths(const LinSys::Graph& graph,
-                        const Kokkos::View<size_t*,HostSpace>& rowLengths, int localProc)
+                        const Kokkos::View<size_t*,MemSpace>& rowLengths, int localProc)
 {
   ThrowRequireMsg(graph.getNodeNumRows() == rowLengths.size(),
                   "Error, graph.getNodeNumRows="<<graph.getNodeNumRows()<<" must equal "
@@ -1179,11 +1180,12 @@ void dump_graph(const std::string& name, int counter, int proc, LinSys::Graph& g
   }
 }
 
-void remove_invalid_indices(LocalGraphArrays& csg, Kokkos::View<size_t*,HostSpace>& rowLengths)
+template<typename ViewType>
+void remove_invalid_indices(LocalGraphArrays& csg, ViewType& rowLengths)
 {
   size_t nnz = csg.rowPointers(rowLengths.size());
-  const LocalOrdinal* cols = csg.colIndices.data();
-  const size_t* rowPtrs = csg.rowPointers.data();
+  auto cols = csg.colIndices.data();
+  auto rowPtrs = csg.rowPointers.data();
   size_t newNnz = 0;
   for(int i=0, ie=csg.rowPointers.size()-1; i<ie; ++i) {
     const LocalOrdinal* row = cols+rowPtrs[i];
@@ -1198,12 +1200,12 @@ void remove_invalid_indices(LocalGraphArrays& csg, Kokkos::View<size_t*,HostSpac
   }
 
   if (newNnz < nnz) {
-    Kokkos::View<LocalOrdinal*,HostSpace> newColIndices(Kokkos::ViewAllocateWithoutInitializing("colInds"),newNnz);
+    Kokkos::View<LocalOrdinal*,MemSpace> newColIndices(Kokkos::ViewAllocateWithoutInitializing("colInds"),newNnz);
     LocalOrdinal* newCols = newColIndices.data();
-    const size_t* rowLens = rowLengths.data();
+    auto rowLens = rowLengths.data();
     int index = 0;
     for(int i=0, ie=csg.rowPointers.size()-1; i<ie; ++i) {
-      const LocalOrdinal* row = cols+rowPtrs[i];
+      auto row = cols+rowPtrs[i];
       for(size_t j=0; j<rowLens[i]; ++j) {
         newCols[index++] = row[j];
       }
@@ -1219,7 +1221,7 @@ void fill_in_extra_dof_rows_per_node(LocalGraphArrays& csg, int numDof)
     return;
   }
 
-  const size_t* rowPtrs = csg.rowPointers.data();
+  auto rowPtrs = csg.rowPointers.data();
   LocalOrdinal* cols = csg.colIndices.data();
   for(int i=0, ie=csg.rowPointers.size()-1; i<ie;) {
     const LocalOrdinal* row = cols+rowPtrs[i];
@@ -1257,8 +1259,8 @@ TpetraLinearSystem::finalizeLinearSystem()
   size_t numLocallyOwned = ownedRowsMap_->getMyGlobalIndices().extent(0);
   LinSys::RowLengths sharedNotOwnedRowLengths("rowLengths", numSharedNotOwned);
   LinSys::RowLengths locallyOwnedRowLengths("rowLengths", numLocallyOwned);
-  Kokkos::View<size_t*,HostSpace> ownedRowLengths = locallyOwnedRowLengths.view<HostSpace>();
-  Kokkos::View<size_t*,HostSpace> globalRowLengths = sharedNotOwnedRowLengths.view<HostSpace>();
+  auto ownedRowLengths = locallyOwnedRowLengths.view<MemSpace>();
+  auto globalRowLengths = sharedNotOwnedRowLengths.view<MemSpace>();
 
   std::vector<int> neighborProcs;
   fill_neighbor_procs(neighborProcs, bulkData, realm_);
@@ -1322,8 +1324,8 @@ TpetraLinearSystem::finalizeLinearSystem()
   ownedRhs_ = Teuchos::rcp(new LinSys::Vector(ownedRowsMap_));
   sharedNotOwnedRhs_ = Teuchos::rcp(new LinSys::Vector(sharedNotOwnedRowsMap_));
 
-  ownedLocalRhs_ = ownedRhs_->getLocalView<sierra::nalu::HostSpace>();
-  sharedNotOwnedLocalRhs_ = sharedNotOwnedRhs_->getLocalView<sierra::nalu::HostSpace>();
+  ownedLocalRhs_ = ownedRhs_->getLocalView<sierra::nalu::MemSpace>();
+  sharedNotOwnedLocalRhs_ = sharedNotOwnedRhs_->getLocalView<sierra::nalu::MemSpace>();
 
   sln_ = Teuchos::rcp(new LinSys::Vector(ownedRowsMap_));
 
@@ -1455,10 +1457,10 @@ TpetraLinearSystem::sumInto(
 {
   constexpr bool forceAtomic = !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
 
-  ThrowAssertMsg(lhs.is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.is_contiguous(), "RHS assumed contiguous");
-  ThrowAssertMsg(localIds.is_contiguous(), "localIds assumed contiguous");
-  ThrowAssertMsg(sortPermutation.is_contiguous(), "sortPermutation assumed contiguous");
+  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
+  ThrowAssertMsg(localIds.span_is_contiguous(), "localIds assumed contiguous");
+  ThrowAssertMsg(sortPermutation.span_is_contiguous(), "sortPermutation assumed contiguous");
 
   const int n_obj = numEntities;
   const int numRows = n_obj * numDof_;
