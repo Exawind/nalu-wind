@@ -27,11 +27,11 @@ this command inside the :file:`nalu-wind/` repository::
     git submodule init && git submodule update
 
 Now, :program:`wind-utils` can be compiled with :program:`Nalu`
-by enabling the compilation flag inside of
-the `CMakeLists.txt file <https://github.com/Exawind/nalu-wind/blob/master/CMakeLists.txt>`_::
+by enabling the compilation flag::
 
-    option(ENABLE_WIND_UTILS "Build wind utils along with Nalu-Wind" ON)
+  -DENABLE_WIND_UTILS=ON
 
+during CMake configure phase.
 Subsequent make install will install all :program:`wind-utils`
 executables along side
 :program:`naluX` under the same installation prefix.
@@ -44,7 +44,7 @@ The general instructions to run each case
   2. Execute the :program:`nalu_input_fileX` script with the
      :file:`setup.yaml` file as
      an input.
-  3. Generate the mesh using :file:`abl_mesh` from nalu wind utils.
+  3. Generate the mesh using :program:`abl_mesh` from nalu wind utils.
   4. Generate the initial condition using :program:`nalu_preprocess`.
   5. Run the simulation using :program:`naluX`.
 
@@ -91,5 +91,5 @@ The :file:`setup.yaml` file
   This file includes the inputs to be modified for a case.
   This example is for a Neutral Atmospheric Boundary Layer simulation.
 
-  .. literalinclude:: ../../../examples/abl_neutral/setup.yaml
+  .. literalinclude:: ../../../../examples/abl_neutral/setup.yaml
       :language: yaml

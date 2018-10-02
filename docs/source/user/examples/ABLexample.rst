@@ -7,9 +7,11 @@ This case is a large-eddy simulation of a neutral atmospheric boundary layer.
 The case uses periodic boundary conditions on the sides (east, west, north,
 south), a wall-model in the bottom wall and a stress free boundary condition at
 the top of the domain.
-A PI controller is used to drive the velocity at a given height.
-The PI controller adjusts the forcing at each time-step to match a given planar
-average velocity at a given height.
+A proportional controller is used to drive the velocity at a given height.
+The controller adjusts the forcing at each time-step to match a
+given planar average velocity at a given height.
+More information about the controller can be found
+in :ref:`abl_forcing_term`.
 It takes about 10,000 [s] for the the turbulence to develop.
 The example runs for 20,000 [s].
 

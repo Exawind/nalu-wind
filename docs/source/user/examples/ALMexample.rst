@@ -1,7 +1,13 @@
 Actuator Line Model in Uniform Inflow
 -------------------------------------
 
-This case is a large-eddy simulation of a wind turbine under uniform inflow.
+This case is a large-eddy simulation of 2 aligned wind turbines under
+uniform inflow.
+The turbines are represented using an actuator line model.
+The turbine model is the NREL 5MW Reference.
+The case has uniform inflow boundary condition with an outflow boundary
+condition on the other end.
+The sides are specified as zero stress boundary conditions.
 The wind turbine aerodynamic forces are computed using OpenFAST.
 
 
