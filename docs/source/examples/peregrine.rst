@@ -52,7 +52,7 @@ environment on the Peregrine system.
 
   3. Clone the Nalu repository by::
 
-       git clone https://github.com/tonyinme/nalu-wind.git
+       git clone https://github.com/Exawind/nalu-wind.git
 
 Now the environment is ready to run the examples.
 To get started, go to: :ref:`abl_neutral_example`.
