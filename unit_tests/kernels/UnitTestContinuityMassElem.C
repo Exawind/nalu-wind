@@ -11,6 +11,8 @@
 
 #include "kernel/ContinuityMassElemKernel.h"
 
+#ifndef KOKKOS_HAVE_CUDA
+
 TEST_F(ContinuityKernelHex8Mesh, density_time_derivative)
 {
   fill_mesh_and_init_fields();
@@ -94,4 +96,6 @@ TEST_F(ContinuityKernelHex8Mesh, density_time_derivative_lumped)
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,-12.5);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_,0.0);
 }
+
+#endif
 

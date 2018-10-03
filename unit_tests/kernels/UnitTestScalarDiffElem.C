@@ -30,6 +30,7 @@ static constexpr double lhs[8][8] = {
 } // hex8_golds
 } // anonymous namespace
 
+#ifndef KOKKOS_HAVE_CUDA
 
 /// Scalar diffusion kernel applied to heat conduction equation
 TEST_F(HeatCondKernelHex8Mesh, cvfem_diff)
@@ -55,12 +56,14 @@ TEST_F(HeatCondKernelHex8Mesh, cvfem_diff)
 
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::heatcond::cvfem_diff;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 0.0);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs);
 }
+
+#endif
 

@@ -176,8 +176,8 @@ void expect_all_near(
   const double (*exactValue)[N],
   const double tol = 1.0e-15)
 {
-  const int dim1 = calcValue.dimension(0);
-  const int dim2 = calcValue.dimension(1);
+  const int dim1 = calcValue.extent(0);
+  const int dim2 = calcValue.extent(1);
   EXPECT_EQ(dim2, N);
 
   for (int i=0; i < dim1; ++i) {
@@ -193,8 +193,8 @@ void expect_all_near(
   const double exactValue,
   const double tol = 1.0e-15)
 {
-  const int dim1 = calcValue.dimension(0);
-  const int dim2 = calcValue.dimension(1);
+  const int dim1 = calcValue.extent(0);
+  const int dim2 = calcValue.extent(1);
   EXPECT_EQ(dim2, N);
 
   for (int i=0; i < dim1; ++i) {
@@ -205,8 +205,6 @@ void expect_all_near(
 }
 
 }
-
-#ifndef KOKKOS_HAVE_CUDA
 
 /** Base class for all computational kernel testing setups
  *
@@ -252,6 +250,8 @@ public:
 
   const VectorFieldType* coordinates_{nullptr};
 };
+
+#ifndef KOKKOS_HAVE_CUDA
 
 /** Test Fixture for Low-Mach Kernels
  *
@@ -589,6 +589,6 @@ public:
 
 };
 
-#endif /* KOKKOS_HAVE_CUDA */
+#endif
 
 #endif /* UNITTESTKERNELUTILS_H */
