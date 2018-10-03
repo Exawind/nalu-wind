@@ -51,7 +51,8 @@ void do_the_test(const stk::mesh::BulkData& bulk)
         stk::mesh::Entity element = b[bktIndex*sierra::nalu::simdLen + simdElemIndex];
         stk::mesh::FastMeshIndex elemIndex = ngpMesh.fast_mesh_index(element);
         if (ngpMesh.get_nodes(stk::topology::ELEM_RANK, elemIndex).size() == expectedNodesPerElem) {
-          ++ngpResults(1);
+          unsigned one = 1;
+          Kokkos::atomic_add(&ngpResults(1), one);
         }
       }
     });

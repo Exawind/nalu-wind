@@ -58,6 +58,8 @@ static constexpr double lhs[8][8] = {
 } // hex8_golds
 } // anonymous namespace
 
+#ifndef KOKKOS_HAVE_CUDA
+
 /// Continuity advection with default Solution options
 TEST_F(ContinuityKernelHex8Mesh, advection_default)
 {
@@ -192,4 +194,6 @@ TEST_F(ContinuityKernelHex8Mesh, advection_reduced_shift_cvfem_poisson)
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs);
 }
+
+#endif
 

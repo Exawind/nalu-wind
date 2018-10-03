@@ -11,6 +11,8 @@
 
 #include "kernel/MomentumActuatorSrcElemKernel.h"
 
+#ifndef KOKKOS_HAVE_CUDA
+
 TEST_F(ActuatorSourceKernelHex8Mesh, actuator_source)
 {
   fill_mesh_and_init_fields();
@@ -33,9 +35,9 @@ TEST_F(ActuatorSourceKernelHex8Mesh, actuator_source)
 
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 24u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 24u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
 
   std::vector<double> rhsExact(24,0.0);
   std::vector<double> lhsExact(24*24,0.0);  
@@ -49,5 +51,7 @@ TEST_F(ActuatorSourceKernelHex8Mesh, actuator_source)
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->lhs_,lhsExact.data());
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,rhsExact.data());
-
 }
+
+#endif
+

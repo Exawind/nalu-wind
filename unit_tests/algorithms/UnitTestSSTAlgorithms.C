@@ -70,6 +70,8 @@ TEST_F(TestTurbulenceAlgorithm, effectivesstdifffluxcoeffalgorithm)
   EXPECT_NEAR(norm, gold_norm, tol);
 }
 
+#ifndef KOKKOS_HAVE_CUDA
+
 TEST_F(TestTurbulenceAlgorithm, turbkineticenergysstnodesourcesuppalg)
 {
   sierra::nalu::Realm& realm = this->create_realm();
@@ -141,3 +143,6 @@ TEST_F(TestTurbulenceAlgorithm, specificdissipationratesstnodesourcesuppalg)
   EXPECT_NEAR(lhs_norm, lhs_gold_norm, tol);
   EXPECT_NEAR(rhs_norm, rhs_gold_norm, tol);
 }
+
+#endif
+
