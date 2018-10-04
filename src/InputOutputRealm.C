@@ -94,12 +94,12 @@ InputOutputRealm::register_io_fields() {
       else { 
         if ( fieldName.find(velocityName) != std::string::npos ) { //FIXME: require FieldType?
           VectorFieldType *velocity = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, fieldName));
-          stk::mesh::put_field(*velocity, *targetPart, fieldSize);
+          stk::mesh::put_field_on_mesh(*velocity, *targetPart, fieldSize, nullptr);
         }
         else {
           stk::mesh::FieldBase *theField 
             = &(metaData_->declare_field< stk::mesh::Field<double, stk::mesh::SimpleArrayTag> >(stk::topology::NODE_RANK, fieldName));
-          stk::mesh::put_field(*theField,*targetPart,fieldSize);
+          stk::mesh::put_field_on_mesh(*theField,*targetPart,fieldSize, nullptr);
         }
       }
     }

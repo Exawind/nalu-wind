@@ -361,7 +361,7 @@ void fill_pre_req_data(
       }
       else {
         SharedMemView<double*>& shmemView = prereqData.get_scratch_view_1D(*fieldInfo.field);
-        unsigned len = shmemView.dimension(0);
+        unsigned len = shmemView.extent(0);
         double* fieldDataPtr = static_cast<double*>(stk::mesh::field_data(*fieldInfo.field, elem));
         for(unsigned i=0; i<len; ++i) {
           shmemView(i) = fieldDataPtr[i];

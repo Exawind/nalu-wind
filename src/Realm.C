@@ -816,11 +816,11 @@ Realm::setup_adaptivity()
   if (solutionOptions_->useMarker_)
     {
       percept::RefineFieldType *refineField= &(metaData_->declare_field<percept::RefineFieldType>(stk::topology::ELEMENT_RANK, "refine_field"));
-      stk::mesh::put_field(*refineField, metaData_->universal_part());
+      stk::mesh::put_field_on_mesh(*refineField, metaData_->universal_part(), nullptr);
       percept::RefineFieldType *refineFieldOrig= &(metaData_->declare_field<percept::RefineFieldType>(stk::topology::ELEMENT_RANK, "refine_field_orig"));
-      stk::mesh::put_field(*refineFieldOrig, metaData_->universal_part());
+      stk::mesh::put_field_on_mesh(*refineFieldOrig, metaData_->universal_part(), nullptr);
       percept::RefineLevelType& refine_level = metaData_->declare_field<percept::RefineLevelType>(stk::topology::ELEMENT_RANK, "refine_level");
-      stk::mesh::put_field( refine_level , metaData_->universal_part());
+      stk::mesh::put_field_on_mesh( refine_level , metaData_->universal_part(), nullptr);
     }
 #endif
 }
@@ -839,10 +839,10 @@ Realm::setup_nodal_fields()
   const stk::mesh::PartVector parts = metaData_->get_parts();
   for ( size_t ipart = 0; ipart < parts.size(); ++ipart ) {
     naluGlobalId_ = &(metaData_->declare_field<GlobalIdFieldType>(stk::topology::NODE_RANK, "nalu_global_id"));
-    stk::mesh::put_field(*naluGlobalId_, *parts[ipart]);
+    stk::mesh::put_field_on_mesh(*naluGlobalId_, *parts[ipart], nullptr);
 
 #ifdef NALU_USES_HYPRE
-    stk::mesh::put_field(*hypreGlobalId_, *parts[ipart]);
+    stk::mesh::put_field_on_mesh(*hypreGlobalId_, *parts[ipart], nullptr);
 #endif
   }
 
@@ -1529,7 +1529,7 @@ Realm::setup_property()
           if ( "na" != auxVarName ) {
             // register and put the field; assume a scalar for now; species extraction will complicate the matter
             ScalarFieldType *auxVar =  &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, auxVarName));
-            stk::mesh::put_field(*auxVar, *targetPart);
+            stk::mesh::put_field_on_mesh(*auxVar, *targetPart, nullptr);
             // create the algorithm to populate it from an HDF5 file
 	    HDF5TablePropAlgorithm * auxVarAlg = new HDF5TablePropAlgorithm(*this, 
 									 targetPart, 
@@ -2999,22 +2999,22 @@ Realm::register_nodal_fields(
   // mesh motion/deformation is high level
   if ( solutionOptions_->meshMotion_ || solutionOptions_->externalMeshDeformation_) {
     VectorFieldType *displacement = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement"));
-    stk::mesh::put_field(*displacement, *part, nDim);
+    stk::mesh::put_field_on_mesh(*displacement, *part, nDim, nullptr);
     VectorFieldType *currentCoords = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
-    stk::mesh::put_field(*currentCoords, *part, nDim);
+    stk::mesh::put_field_on_mesh(*currentCoords, *part, nDim, nullptr);
     VectorFieldType *meshVelocity = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity"));
-    stk::mesh::put_field(*meshVelocity, *part, nDim);
+    stk::mesh::put_field_on_mesh(*meshVelocity, *part, nDim, nullptr);
     VectorFieldType *velocityRTM = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm"));
-    stk::mesh::put_field(*velocityRTM, *part, nDim);
+    stk::mesh::put_field_on_mesh(*velocityRTM, *part, nDim, nullptr);
     // only internal mesh motion requires rotation rate
     if ( solutionOptions_->meshMotion_ ) {
       ScalarFieldType *omega = &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "omega"));
-      stk::mesh::put_field(*omega, *part);
+      stk::mesh::put_field_on_mesh(*omega, *part, nullptr);
     }
     // only external mesh deformation requires dvi/dxj (for GCL)
     if ( solutionOptions_->externalMeshDeformation_) {
       ScalarFieldType *divV = &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
-      stk::mesh::put_field(*divV, *part);
+      stk::mesh::put_field_on_mesh(*divV, *part, nullptr);
     }
   }
 }
@@ -3069,7 +3069,7 @@ Realm::register_wall_bc(
 
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
-  stk::mesh::put_field(*exposedAreaVec_, *part, nDim*numScsIp );
+  stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
   //====================================================
   // Register wall algorithms
@@ -3112,7 +3112,7 @@ Realm::register_inflow_bc(
 
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
-  stk::mesh::put_field(*exposedAreaVec_, *part, nDim*numScsIp );
+  stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
   //====================================================
   // Register wall algorithms
@@ -3154,7 +3154,7 @@ Realm::register_open_bc(
 
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
-  stk::mesh::put_field(*exposedAreaVec_, *part, nDim*numScsIp );
+  stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
 
   //====================================================
@@ -3197,7 +3197,7 @@ Realm::register_symmetry_bc(
 
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
-  stk::mesh::put_field(*exposedAreaVec_, *part, nDim*numScsIp );
+  stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
   //====================================================
   // Register symmetry algorithms
@@ -3303,7 +3303,7 @@ Realm::register_non_conformal_bc(
   // exposed area vector
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
-  stk::mesh::put_field(*exposedAreaVec_, *part, nDim*numScsIp );
+  stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
    
   //====================================================
   // Register non-conformal algorithms

@@ -17,7 +17,7 @@
 #include <NaluEnv.h>
 #include <FORTRAN_Proto.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
 
 #include <iostream>
@@ -35,7 +35,7 @@ namespace nalu{
 template <typename DerivType>
 void tet_deriv(DerivType& deriv)
 {
-  for(size_t j=0; j<deriv.dimension(0); ++j) {
+  for(size_t j=0; j<deriv.extent(0); ++j) {
     deriv(j,0,0) = -1.0;
     deriv(j,0,1) = -1.0;
     deriv(j,0,2) = -1.0;

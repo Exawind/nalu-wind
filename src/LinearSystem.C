@@ -16,6 +16,7 @@
 
 #ifdef NALU_USES_HYPRE
 #include "HypreLinearSystem.h"
+#include "HypreUVWLinearSystem.h"
 #endif
 
 #include <stk_util/parallel/Parallel.hpp>
@@ -99,6 +100,10 @@ LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, Equation
     realm.hypreIsActive_ = true;
     return new HypreLinearSystem(realm, numDof, eqSys, solver);
     break;
+
+  case PT_HYPRE_SEGREGATED:
+    realm.hypreIsActive_ = true;
+    return new HypreUVWLinearSystem(realm, numDof, eqSys, solver);
 #endif
 
   case PT_END:

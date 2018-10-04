@@ -240,7 +240,7 @@ TurbulenceAveragingPostProcessing::setup()
     ThrowRequireMsg(tempField != nullptr, "Temperature field must be registered");
 
     auto& field = metaData.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, fTempName);
-    stk::mesh::put_field(field, stk::mesh::selectField(*tempField));
+    stk::mesh::put_field_on_mesh(field, stk::mesh::selectField(*tempField), nullptr);
     realm_.augment_restart_variable_list(fTempName);
 
     movingAvgPP_ = make_unique<MovingAveragePostProcessor>(
@@ -290,7 +290,7 @@ TurbulenceAveragingPostProcessing::setup()
         const int vortSize = realm_.spatialDimension_;
         const std::string vorticityName = "vorticity";
         VectorFieldType *vortField = &(metaData.declare_field<VectorFieldType>(stk::topology::NODE_RANK, vorticityName));
-        stk::mesh::put_field(*vortField, *targetPart, vortSize);
+        stk::mesh::put_field_on_mesh(*vortField, *targetPart, vortSize, nullptr);
       }
 
       if ( avInfo->computeQcriterion_ ) {
@@ -344,7 +344,7 @@ TurbulenceAveragingPostProcessing::setup()
       // deal with density; always need Reynolds averaged quantity
       const std::string densityReynoldsName = "density_ra_" + averageBlockName;
       ScalarFieldType *densityReynolds =  &(metaData.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, densityReynoldsName));
-      stk::mesh::put_field(*densityReynolds, *targetPart);
+      stk::mesh::put_field_on_mesh(*densityReynolds, *targetPart, nullptr);
       
       // Reynolds
       for ( size_t i = 0; i < avInfo->reynoldsFieldNameVec_.size(); ++i ) {
@@ -433,12 +433,12 @@ TurbulenceAveragingPostProcessing::register_field_from_primitive(
   // register the averaged field with this size; treat velocity as a special case to retain the vector aspect
   if ( primitiveName == "velocity" ) {
     VectorFieldType *averagedField = &(metaData.declare_field<VectorFieldType>(stk::topology::NODE_RANK, averagedName));
-    stk::mesh::put_field(*averagedField, *part, fieldSizePrimitive);
+    stk::mesh::put_field_on_mesh(*averagedField, *part, fieldSizePrimitive, nullptr);
   }
   else {
     stk::mesh::FieldBase *averagedField 
       = &(metaData.declare_field< stk::mesh::Field<double, stk::mesh::SimpleArrayTag> >(stk::topology::NODE_RANK, averagedName));
-    stk::mesh::put_field(*averagedField, *part, fieldSizePrimitive);
+    stk::mesh::put_field_on_mesh(*averagedField, *part, fieldSizePrimitive, nullptr);
   }
 }
   
@@ -481,7 +481,7 @@ TurbulenceAveragingPostProcessing::register_field(
   // register and put the field
   stk::mesh::FieldBase *theField
     = &(metaData.declare_field< stk::mesh::Field<double, stk::mesh::SimpleArrayTag> >(stk::topology::NODE_RANK, fieldName));
-  stk::mesh::put_field(*theField,*targetPart,fieldSize);
+  stk::mesh::put_field_on_mesh(*theField,*targetPart,fieldSize, nullptr);
   // augment the restart list
   realm_.augment_restart_variable_list(fieldName);
 }

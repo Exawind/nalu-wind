@@ -38,8 +38,8 @@ public:
         stk::topology::NODE_RANK,
         sierra::nalu::MovingAveragePostProcessor::filtered_field_name("temperature")
     );
-    stk::mesh::put_field(*temperature_, meta_.universal_part());
-    stk::mesh::put_field(*raTemperature_, meta_.universal_part());
+    stk::mesh::put_field_on_mesh(*temperature_, meta_.universal_part(), nullptr);
+    stk::mesh::put_field_on_mesh(*raTemperature_, meta_.universal_part(), nullptr);
     meta_.commit();
 
     bulk_.modification_begin();

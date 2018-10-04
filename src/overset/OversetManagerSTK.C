@@ -585,7 +585,8 @@ OversetManagerSTK::skin_exposed_surface_on_inactive_part()
   stk::mesh::PartVector partToPopulateVec;
   partToSkinVec.push_back(inActivePart_); // e.g. block_3
   partToPopulateVec.push_back(backgroundSurfacePart_); // e.g. surface_101
-  stk::mesh::create_exposed_block_boundary_sides(*bulkData_, s_inactive, partToPopulateVec, &s_active);
+
+  stk::mesh::create_exposed_block_boundary_sides(*bulkData_, s_inactive, partToPopulateVec, s_active);
 
   const double end_time = NaluEnv::self().nalu_time();
 

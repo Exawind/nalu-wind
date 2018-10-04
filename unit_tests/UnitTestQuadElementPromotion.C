@@ -88,13 +88,13 @@ class PromoteElementQuadTest : public ::testing::Test
         setup_promotion();
 
         double zeroDouble = 0.0;
-        stk::mesh::put_field(*dnvField, meta->universal_part(), 1, &zeroDouble);
-        stk::mesh::put_field(*coordField, meta->universal_part(), nDim, &zeroDouble);
-        stk::mesh::put_field(*qField, meta->universal_part(), 1, &zeroDouble);
-        stk::mesh::put_field(*dqdxField, meta->universal_part(), nDim, &zeroDouble);
+        stk::mesh::put_field_on_mesh(*dnvField, meta->universal_part(), 1, &zeroDouble);
+        stk::mesh::put_field_on_mesh(*coordField, meta->universal_part(), nDim, &zeroDouble);
+        stk::mesh::put_field_on_mesh(*qField, meta->universal_part(), 1, &zeroDouble);
+        stk::mesh::put_field_on_mesh(*dqdxField, meta->universal_part(), nDim, &zeroDouble);
 
         int zeroInt = 0;
-        stk::mesh::put_field(*intField, meta->universal_part(), 1, &zeroInt);
+        stk::mesh::put_field_on_mesh(*intField, meta->universal_part(), 1, &zeroInt);
 
         meta->commit();
         fixture->generate_mesh();

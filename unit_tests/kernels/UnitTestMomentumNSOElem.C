@@ -315,6 +315,8 @@ static constexpr double lhs[24][24] = {
 } // hex8_golds
 } // anonymous namespace
 
+#ifndef KOKKOS_HAVE_CUDA
+
 TEST_F(MomentumKernelHex8Mesh, nso_2nd)
 {
   fill_mesh_and_init_fields();
@@ -349,9 +351,9 @@ TEST_F(MomentumKernelHex8Mesh, nso_2nd)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 24u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 24u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
 
   namespace gold_values = ::hex8_golds::nso_2nd;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,gold_values::rhs);
@@ -394,12 +396,14 @@ TEST_F(MomentumKernelHex8Mesh, nso_2nd_alt)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 24u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 24u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
 
   namespace gold_values = ::hex8_golds::nso_2nd_alt;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<24>(helperObjs.linsys->lhs_, gold_values::lhs);
 }
+
+#endif
 

@@ -46,6 +46,7 @@ namespace nalu{
   enum PetraType {
     PT_TPETRA,       //!< Nalu Tpetra interface
     PT_HYPRE,        //!< Direct HYPRE interface
+    PT_HYPRE_SEGREGATED, //!< Direct HYPRE Segregated momentum solver
     PT_END
   };
 
@@ -54,6 +55,9 @@ class LinearSolvers;
 class Simulation;
 
 const LocalOrdinal INVALID = std::numeric_limits<LocalOrdinal>::max();
+
+typedef typename LinSys::LocalGraph::row_map_type::non_const_type RowPointers;
+typedef typename LinSys::LocalGraph::entries_type::non_const_type ColumnIndices;
 
 /** LocalGraphArrays is a helper class for building the arrays describing
  * the local csr graph, rowPointers and colIndices. These arrays are passed
@@ -64,13 +68,18 @@ const LocalOrdinal INVALID = std::numeric_limits<LocalOrdinal>::max();
 class LocalGraphArrays {
 public:
 
-  LocalGraphArrays(const Kokkos::View<size_t*,HostSpace>& rowLengths)
-  : rowPointers(Kokkos::View<size_t*,HostSpace>(Kokkos::ViewAllocateWithoutInitializing("rowPtrs"),rowLengths.size()+1)),
-    rowPointersData(rowPointers.data()),
+  template<typename ViewType>
+  LocalGraphArrays(const ViewType& rowLengths)
+  : rowPointers(),
+    rowPointersData(nullptr),
     colIndices()
   {
+    RowPointers rowPtrs("rowPtrs", rowLengths.size()+1);
+    rowPointers = rowPtrs;
+    rowPointersData = rowPointers.data();
+
     size_t nnz = compute_row_pointers(rowPointers, rowLengths);
-    colIndices = Kokkos::View<LocalOrdinal*,HostSpace>(Kokkos::ViewAllocateWithoutInitializing("colIndices"), nnz);
+    colIndices = Kokkos::View<LocalOrdinal*,MemSpace>(Kokkos::ViewAllocateWithoutInitializing("colIndices"), nnz);
     Kokkos::deep_copy(colIndices, INVALID);
   }
 
@@ -78,7 +87,7 @@ public:
 
   void insertIndices(size_t localRow, size_t numInds, const LocalOrdinal* inds, int numDof)
   {
-    LocalOrdinal* row = &colIndices(rowPointersData[localRow]);
+    LocalOrdinal* row = &colIndices((int)rowPointersData[localRow]);
     size_t rowLen = get_row_length(localRow);
     LocalOrdinal* rowEnd = std::find(row, row+rowLen, INVALID);
     for(size_t i=0; i<numInds; ++i) {
@@ -90,12 +99,13 @@ public:
     }
   }
 
-  static size_t compute_row_pointers(Kokkos::View<size_t*,HostSpace>& rowPtrs,
-                                   const Kokkos::View<size_t*,HostSpace>& rowLengths)
+  template<typename ViewType1, typename ViewType2>
+  static size_t compute_row_pointers(ViewType1& rowPtrs,
+                                   const ViewType2& rowLengths)
   {
     size_t nnz = 0;
-    size_t* rowPtrData = rowPtrs.data();
-    const size_t* rowLens = rowLengths.data();
+    auto rowPtrData = rowPtrs.data();
+    auto rowLens = rowLengths.data();
     for(unsigned i=0, iend=rowLengths.size(); i<iend; ++i) {
       rowPtrData[i] = nnz;
       nnz += rowLens[i];
@@ -104,9 +114,9 @@ public:
     return nnz;
   }
 
-  Kokkos::View<size_t*,HostSpace> rowPointers;
-  const size_t* rowPointersData;
-  Kokkos::View<LocalOrdinal*,HostSpace> colIndices;
+  RowPointers rowPointers;
+  typename RowPointers::traits::data_type rowPointersData;
+  ColumnIndices colIndices;
 
 private:
 

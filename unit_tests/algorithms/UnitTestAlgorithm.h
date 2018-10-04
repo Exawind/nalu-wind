@@ -16,8 +16,6 @@
 #include <memory>
 #include <cassert>
 
-#ifndef KOKKOS_HAVE_CUDA
-
 class TestAlgorithm: public ::testing::Test
 {
 public:
@@ -133,7 +131,5 @@ struct NodeSuppHelper {
 
   stk::mesh::Entity node;
 };
-
-#endif /* KOKKOS_HAVE_CUDA */
 
 #endif /* UNITTESTALGORITHM_H */

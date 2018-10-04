@@ -58,6 +58,8 @@ static constexpr double lhs[8][8] = {
 } // hex8_golds
 } // anonymous namespace
 
+#ifndef KOKKOS_HAVE_CUDA
+
 /// Continuity advection with default Solution options
 TEST_F(ContinuityKernelHex8Mesh, advection_default)
 {
@@ -91,9 +93,9 @@ TEST_F(ContinuityKernelHex8Mesh, advection_default)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::advection_default;
 
@@ -137,9 +139,9 @@ TEST_F(ContinuityKernelHex8Mesh, advection_reduced_sens_cvfem_poisson)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::advection_reduced_sensitivities;
 
@@ -183,13 +185,15 @@ TEST_F(ContinuityKernelHex8Mesh, advection_reduced_shift_cvfem_poisson)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::advection_reduced_sensitivities;
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs);
 }
+
+#endif
 

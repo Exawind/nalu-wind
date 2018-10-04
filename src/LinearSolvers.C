@@ -15,6 +15,7 @@
 
 #ifdef NALU_USES_HYPRE
 #include "HypreDirectSolver.h"
+#include "HypreUVWSolver.h"
 #endif
 
 #include <yaml-cpp/yaml.h>
@@ -103,7 +104,10 @@ LinearSolvers::create_solver(
     if (hIter != solverHypreConfig_.end()) {
       HypreLinearSolverConfig *cfg = hIter->second;
       foundT = true;
-      theSolver = new HypreDirectSolver(solverName, cfg, this);
+      if ((theEQ == EQ_MOMENTUM) && cfg->useSegregatedSolver())
+        theSolver = new HypreUVWSolver(solverName, cfg, this);
+      else
+        theSolver = new HypreDirectSolver(solverName, cfg, this);
     }
   }
 #endif
