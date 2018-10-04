@@ -48,9 +48,6 @@ else(Trilinos_BUILD_SHARED_LIBS)
   set(Nalu_LIBRARY_TYPE STATIC)
 endif(Trilinos_BUILD_SHARED_LIBS)
 
-# Set Nalu's compilers, CMAKE_FIND_LIBRARY_PREFIXES
-# and CMAKE_FIND_LIBRARY_SUFFIXES, etc, after inheriting settings from Trilinos
-
 ############################ YAML ######################################
 set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
 find_package(YAML-CPP QUIET)
@@ -302,3 +299,6 @@ if (ENABLE_WIND_UTILS)
       ")
   endif()
 endif()
+
+# Note if you are interested in using Xcode for development,
+# refer to instructions in https://github.com/Exawind/nalu-wind/pull/22
