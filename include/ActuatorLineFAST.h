@@ -42,8 +42,9 @@ public:
  */
 //
 class ActuatorLineFASTPointInfo : public ActuatorPointInfo{
+public:
   ActuatorLineFASTPointInfo(
-			    size_t globTurbId, Point centroidCoords, double searchRadius, Coordinates epsilon, fast::ActuatorNodeType nType);
+    size_t globTurbId, Point centroidCoords, double searchRadius, Coordinates epsilon, fast::ActuatorNodeType nType);
   ~ActuatorLineFASTPointInfo();
   size_t globTurbId_; ///< Global turbine number.
   Coordinates epsilon_; ///< The Gaussian spreading width in (chordwise, spanwise, thickness) directions for this actuator point.
@@ -93,7 +94,7 @@ class ActuatorLineFASTPointInfo : public ActuatorPointInfo{
 */
 
 class ActuatorLineFAST: public Actuator {
- public:
+public:
 
   ActuatorLineFAST(
     Realm &realm,
@@ -102,19 +103,19 @@ class ActuatorLineFAST: public Actuator {
 
   // load all of the options
   void load(
-    const YAML::Node & node);
+    const YAML::Node & node) override;
 
   // load the options for each turbine
   void readTurbineData(int iTurb, fast::fastInputs & fi, YAML::Node turbNode);
 
   // setup part creation and nodal field registration (before populate_mesh())
-  void setup();
+  void setup() override;
 
   // allocate turbines to processors containing hub location
   void allocateTurbinesToProcs() ;
 
   // Allocate turbines to processors, initialize FAST and get location of actuator points
-  void initialize();
+  void initialize() override;
 
   // setup part creation and nodal field registration (after populate_mesh())
   void update();
@@ -125,66 +126,14 @@ class ActuatorLineFAST: public Actuator {
   // fill in the map that will hold point and ghosted elements
   void create_actuator_line_point_info_map();
 
-  // figure out the set of elements that belong in the custom ghosting data structure
-  void determine_elems_to_ghost();
-
-  // deal with custom ghosting
-  void manage_ghosting();
-
-  // populate vector of elements
-  void complete_search();
-
   // populate nodal field and output norms (if appropriate)
-  void execute();
-
-  // support methods to gather data; scalar and vector
-  void resize_std_vector(
-    const int &sizeOfField,
-    std::vector<double> &theVector,
-    stk::mesh::Entity elem,
-    const stk::mesh::BulkData & bulkData);
-
-  // general gather methods for scalar and vector (both double)
-  void gather_field(
-    const int &sizeOfField,
-    double *fieldToFill,
-    const stk::mesh::FieldBase &stkField,
-    stk::mesh::Entity const* elem_node_rels,
-    const int &nodesPerElement);
-
-  void gather_field_for_interp(
-    const int &sizeOfField,
-    double *fieldToFill,
-    const stk::mesh::FieldBase &stkField,
-    stk::mesh::Entity const* elem_node_rels,
-    const int &nodesPerElement);
-
-  // element volume and scv volume populated
-  double compute_volume(
-    const int &nDim,
-    stk::mesh::Entity elem,
-    const stk::mesh::BulkData & bulkData);
-
-  // interpolate field to point centroid
-  void interpolate_field(
-    const int &sizeOfField,
-    stk::mesh::Entity elem,
-    const stk::mesh::BulkData & bulkData,
-    double *isoParCoords,
-    const double *fieldAtNodes,
-    double *pointField);
+  void execute() override;
 
   // centroid of the element
   void compute_elem_centroid(
     const int &nDim,
     double *elemCentroid,
     const int &nodesPerElement);
-
-  // distance from element centroid to point centroid
-  double compute_distance(
-    const int &nDim,
-    const double *elemCentroid,
-    const double *pointCentroid);
 
   // compute the body force at an element given a
   // projection weighting.
@@ -224,10 +173,6 @@ class ActuatorLineFAST: public Actuator {
     const std::vector<double> & hubShftDir,
     std::vector<double> & thr,
     std::vector<double> & tor);
-
-
-
-  stk::mesh::Ghosting *actuatorLineGhosting_;  ///< custom ghosting
 
   int tStepRatio_;  ///< Ratio of Nalu time step to FAST time step (dtNalu/dtFAST) - Should be an integral number
 

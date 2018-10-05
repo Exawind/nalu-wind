@@ -82,17 +82,13 @@ class Actuator
 {
 public:
 
-  Actuator(
-    Realm &realm,
-    const YAML::Node &node):realm_(realm),
-    searchMethod_(stk::search::KDTREE),
-    needToGhostCount_(0){}
+  Actuator( Realm &realm, const YAML::Node &node);
 
   virtual ~Actuator();
 
   // load all of the options
   virtual void load(
-    const YAML::Node & node) = 0;
+    const YAML::Node & node);
 
   // setup part creation and nodal field registration (before populate_mesh())
   virtual void setup() = 0;
@@ -103,14 +99,14 @@ public:
   // populate nodal field and output norms (if appropriate)
   virtual void execute() = 0;
 
-  // Use for polymorphism
+  // Use for polymorphic print statements
   virtual std::string get_class_name() = 0;
 
 //------------------------------------------------------------------
 
   // determine element bounding box in the mesh
   void populate_candidate_elements();
-/*
+
   // fill in the map that will hold point and ghosted elements
   void create_actuator_line_point_info_map();
 
@@ -123,15 +119,48 @@ public:
   // populate vector of elements
   void complete_search();
 
+  // support methods to gather data; scalar and vector
+  void resize_std_vector(
+    const int &sizeOfField,
+    std::vector<double> &theVector,
+    stk::mesh::Entity elem,
+    const stk::mesh::BulkData & bulkData);
+
+  // general gather methods for scalar and vector (both double)
+  void gather_field(
+    const int &sizeOfField,
+    double *fieldToFill,
+    const stk::mesh::FieldBase &stkField,
+    stk::mesh::Entity const* elem_node_rels,
+    const int &nodesPerElement);
+
+  void gather_field_for_interp(
+    const int &sizeOfField,
+    double *fieldToFill,
+    const stk::mesh::FieldBase &stkField,
+    stk::mesh::Entity const* elem_node_rels,
+    const int &nodesPerElement);
+
+  // element volume and scv volume populated
+  double compute_volume(
+    const int &nDim,
+    stk::mesh::Entity elem,
+    const stk::mesh::BulkData & bulkData);
+
   // interpolate field to point centroid
   void interpolate_field(
     const int &sizeOfField,
     stk::mesh::Entity elem,
     const stk::mesh::BulkData & bulkData,
-    double *isoParCoords,
+    const double *isoParCoords,
     const double *fieldAtNodes,
     double *pointField);
 
+  double compute_distance(
+    const int &nDim,
+    const double *elemCentroid,
+    const double *pointCentroid);
+/*
   // distance from element centroid to point centroid
   double compute_distance(
     const int &nDim,
@@ -166,6 +195,8 @@ public:
   std::vector<double> ws_velocity_;
   std::vector<double> ws_density_;
   std::vector<double> ws_viscosity_;
+
+  stk::mesh::Ghosting *actuatorGhosting_;
 
 };
 
