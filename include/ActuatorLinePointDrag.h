@@ -133,13 +133,6 @@ public:
   // everyone needs pi
   const double pi_;
 
-//DELETEME
-  // vector of averaging information
-   std::vector<ActuatorLinePointDragInfo *> actuatorLineInfo_;
-
-  // map of point info objects
-   std::map<size_t, ActuatorLinePointDragPointInfo *> actuatorLinePointInfoMap_;
-
   std::string get_class_name() override;
 };
 

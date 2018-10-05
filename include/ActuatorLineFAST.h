@@ -179,9 +179,6 @@ public:
   // bounding box data types for stk_search
   std::vector<boundingSphere> boundingHubSphereVec_; ///< bounding box around the hub point of each turbine
   std::vector<boundingElementBox> boundingProcBoxVec_; ///< bounding box around all the nodes residing locally on each processor
-//DELETEME
-//  std::vector<ActuatorLineFASTInfo *> actuatorLineInfo_;   ///< vector of objects containing information for each turbine
-//  std::map<size_t, ActuatorLineFASTPointInfo *> actuatorLinePointInfoMap_;  ///< map of point info objects
 
   std::string get_class_name() override;
 

@@ -510,7 +510,7 @@ ActuatorLinePointDrag::create_actuator_line_point_info_map() {
 
     const ActuatorLinePointDragInfo *actuatorLineInfo = dynamic_cast<ActuatorLinePointDragInfo*>(actuatorInfo_[k]);
     if(actuatorLineInfo==NULL){
-      throw std::runtime_error("invalid object in actuatorInfo_");
+      throw std::runtime_error("Object in ActuatorInfo is not correct type.  Should be ActuatorLineDragInfo.");
     }
 
     int processorId = actuatorLineInfo->processorId_;
