@@ -10,3 +10,4 @@ The example cases presented are meant to get users started using nalu-wind.
    Getting Started: Peregrine <peregrine.rst>
    Neutral Atmospheric Boundary Layer Example <ABLexample.rst>
    Turbine in Uniform Inflow Example <ALMexample.rst>
+   Wind Farm Example <WFexample.rst>

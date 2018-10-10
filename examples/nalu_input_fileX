@@ -138,8 +138,10 @@ class mapping_object_class():
             'boundary_layer_statistics': self.set_boundary_layer_statistics,
             # Normal temperature gradient
             'TGradUpper': self.set_top_temperature_gradient,
-            # Normal temperature gradient
+            # Turbines
             'Turbines': self.set_turbines,
+            # The boundary data sampling
+            'boundary_data': self.set_boundary_data_sampling,
         }
 
     def map_all(self):
@@ -153,12 +155,21 @@ class mapping_object_class():
 
         # Go through all the keys in the dictionary and mapp them
         for keys in self.mapping_dictionary:
-            try:
-                print('Attempting to map:', keys)
-                self.mapping_dictionary[keys]()
-                print(keys, 'has been mapped ' + u'\u2705\n')
-            except:
-                print(keys, 'NOT mapped ' + u'\u274c\n')
+
+            # Only map the keys available in the setup file
+            # If the keys is a tuple: Are all the keys inside of setup file?
+            condition_1 = all(elem in self.yaml_setup for elem in keys)
+            # If they key is only a string: Is the key inside of the setup file
+            condition_2 = keys in self.yaml_setup
+            if  condition_1 or condition_2:
+
+                # Try to map the keys
+                try:
+                    print('Attempting to map:', keys)
+                    self.mapping_dictionary[keys]()
+                    print(keys, 'has been mapped ' + u'\u2705\n')
+                except:
+                    print(keys, 'NOT mapped ' + u'\u274c\n')
 
         print('###################')
         print('#  Mapping done   #')
@@ -246,6 +257,32 @@ class mapping_object_class():
         self.yaml_input['realms'][0]['mesh'] = \
             self.yaml_setup['mesh']['mesh_file']
 
+    def set_boundary_data_sampling(self):
+        '''
+        Function to set the boundary data sampling
+        
+        This is used to create a mesh for the boundaries, and sample the
+        boundary data from a precursor simulation to be used as a boundary
+        condition for wind farm simulations.
+        '''
+        
+        
+        file_name = self.yaml_setup['boundary_data']['boundary_data_file']
+        list_of_boundaries = self.yaml_setup['boundary_data']['boundaries']
+
+        # The list of tasks in the pre-processing file
+        tasks = self.yaml_preprocess['nalu_preprocess']['tasks']
+
+        # Create the task
+        if 'create_bdy_io_mesh' not in tasks:
+            tasks.append('create_bdy_io_mesh')
+
+        # The name of the boundary data file
+        self.yaml_preprocess['nalu_preprocess']['create_bdy_io_mesh']  \
+            ['output_db'] = file_name
+        # The list of boundaries
+        self.yaml_preprocess['nalu_preprocess']['create_bdy_io_mesh']  \
+            ['boundary_parts'] = list_of_boundaries     
 
     def set_velocity(self):
         '''
