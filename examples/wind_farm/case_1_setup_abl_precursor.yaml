@@ -69,15 +69,7 @@ z0:                   0.15
 # Time-step [s]
 time_step: 0.5
 # Total number of time to run [s]
-total_run_time: 500
-
-# This is to specify how to write restart files
-restart:
-  # This will overwrite
-  restart_data_base_name: ./rstTurbine2/owez_turbine.rst
-  output_frequency: 4800
-  
-
+total_run_time: 50
 
 ########
 #  Mesh
@@ -113,7 +105,7 @@ restart_output:
   # Name of the restart file this will overwrite
   restart_data_base_name: ./rstTurbine2/owez_turbine.rst
   # How often to write restart data (number of time-steps)
-  output_frequency: 5000
+  output_frequency: 100
 
 # These are the plane averaged statistics
 boundary_layer_statistics:
