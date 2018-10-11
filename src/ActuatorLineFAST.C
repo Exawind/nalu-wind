@@ -201,8 +201,9 @@ ActuatorLineFAST::load(
 	if (y_actuatorLine["Turbine" + std::to_string(iTurb)]) {
 
 	  const YAML::Node cur_turbine = y_actuatorLine["Turbine"+std::to_string(iTurb)];
-	  ActuatorLineFASTInfo *actuatorLineInfo = new ActuatorLineFASTInfo();
-	  actuatorInfo_.push_back(actuatorLineInfo);
+
+	  actuatorInfo_.emplace_back(new ActuatorLineFASTInfo());
+	  auto actuatorLineInfo = dynamic_cast<ActuatorLineFASTInfo*>(actuatorInfo_.back().get());
 
           get_required(cur_turbine, "turbine_name", actuatorLineInfo->turbineName_)  ;
 
@@ -358,9 +359,6 @@ ActuatorLineFAST::update()
   elemsToGhost_.clear();
 
   // clear actuatorPointInfoMap_
-  std::map<size_t, ActuatorPointInfo *>::iterator iterPoint;
-  for( iterPoint=actuatorPointInfoMap_.begin(); iterPoint!=actuatorPointInfoMap_.end(); ++iterPoint )
-    delete (*iterPoint).second;
   actuatorPointInfoMap_.clear();
 
   bulkData.modification_begin();
@@ -471,14 +469,11 @@ ActuatorLineFAST::execute()
   }
 
   // loop over map and get velocity at points
-  std::map<size_t, ActuatorPointInfo *>::iterator iterPoint;
   int np=0;
-  for (iterPoint  = actuatorPointInfoMap_.begin();
-       iterPoint != actuatorPointInfoMap_.end();
-       ++iterPoint) {
+  for (auto&& iterPoint : actuatorPointInfoMap_){
 
     // actuator line info object of interest
-    ActuatorLineFASTPointInfo * infoObject = dynamic_cast<ActuatorLineFASTPointInfo*>((*iterPoint).second);
+    auto infoObject = dynamic_cast<ActuatorLineFASTPointInfo*>(iterPoint.second.get());
     if( infoObject==NULL){
       throw std::runtime_error("Object in ActuatorPointInfo is not the correct type.  Should be ActuatorLineFASTPointInfo.");
     }
@@ -550,12 +545,10 @@ ActuatorLineFAST::execute()
 
   // loop over map and assemble source terms
   np = 0;
-  for (iterPoint  = actuatorPointInfoMap_.begin();
-       iterPoint != actuatorPointInfoMap_.end();
-       ++iterPoint) {
+  for (auto&& iterPoint : actuatorPointInfoMap_) {
 
     // actuator line info object of interest
-    ActuatorLineFASTPointInfo * infoObject = dynamic_cast<ActuatorLineFASTPointInfo*>((*iterPoint).second);
+    auto infoObject = dynamic_cast<ActuatorLineFASTPointInfo*>(iterPoint.second.get());
     if( infoObject==NULL){
       throw std::runtime_error("Object in ActuatorPointInfo is not the correct type.  Should be ActuatorLineFASTPointInfo.");
     }
@@ -709,7 +702,7 @@ ActuatorLineFAST::create_actuator_line_point_info_map() {
 
   for ( size_t iTurb = 0; iTurb < actuatorInfo_.size(); ++iTurb ) {
 
-    const ActuatorLineFASTInfo *actuatorLineInfo = dynamic_cast<ActuatorLineFASTInfo*>(actuatorInfo_[iTurb]);
+    const auto actuatorLineInfo = dynamic_cast<ActuatorLineFASTInfo*>(actuatorInfo_[iTurb].get());
     if(actuatorLineInfo==NULL){
       throw std::runtime_error("Object in ActuatorInfo is not correct type.  Should be ActuatorLineFASTInfo.");
     }
@@ -789,11 +782,13 @@ ActuatorLineFAST::create_actuator_line_point_info_map() {
               break;
           }
           
-	  ActuatorLineFASTPointInfo *actuatorLinePointInfo
-	    = new ActuatorLineFASTPointInfo(iTurb, centroidCoords,
-					    searchRadius, epsilon,
-					    FAST.getForceNodeType(iTurb, np));
-	  actuatorPointInfoMap_[np] = actuatorLinePointInfo;
+	  actuatorPointInfoMap_.emplace(np, new ActuatorLineFASTPointInfo
+      (
+        iTurb, centroidCoords,
+        searchRadius, epsilon,
+        FAST.getForceNodeType(iTurb, np)
+      )
+    );
 
 	  np=np+1;
 	}

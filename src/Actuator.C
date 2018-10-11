@@ -51,16 +51,7 @@ Actuator::Actuator(
     actuatorGhosting_(NULL){}
 
 Actuator::~Actuator()
-{
-  // delete data probes specifications vector
-  for ( size_t k = 0; k < actuatorInfo_.size(); ++k )
-    delete actuatorInfo_[k];
-
-  for(auto iterPoint : actuatorPointInfoMap_)
-  {
-    delete iterPoint.second;
-  }
-}
+{}
 
 void Actuator::load( const YAML::Node &y_node){
   // check for any data probes
@@ -222,14 +213,14 @@ Actuator::complete_search()
         throw std::runtime_error("no valid entry for element");
 
       // find the point data structure
-      std::map<size_t, ActuatorPointInfo *>::iterator iterPoint;
+      std::map<size_t, std::unique_ptr<ActuatorPointInfo>>::iterator iterPoint;
       iterPoint=actuatorPointInfoMap_.find(thePt);
       if ( iterPoint == actuatorPointInfoMap_.end() )
         throw std::runtime_error("no valid entry for actuatorPointInfoMap_");
 
       // extract the point object and push back the element to either the best
       // candidate or the standard vector of elements
-      ActuatorPointInfo *actuatorPointInfo = iterPoint->second;
+      ActuatorPointInfo *actuatorPointInfo = iterPoint->second.get();
 
       // extract topo and master element for this topo
       const stk::mesh::Bucket &theBucket = bulkData.bucket(elem);
