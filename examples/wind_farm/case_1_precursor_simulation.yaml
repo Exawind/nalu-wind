@@ -287,33 +287,6 @@ realms:
         - 0.0
       - - 1000000000.0
         - 0.0
-- name: ioRealm
-  mesh: io_transfer_3planes.exo
-  type: input_output
-  automatic_decomposition_type: rcb
-
-  field_registration:
-    specifications:
-
-    - field_name: velocity_bc
-      target_name: [south, west, north]
-      field_size: 3
-      field_type: node_rank
-
-    - field_name: cont_velocity_bc
-      target_name: [south, west, north]
-      field_size: 3
-      field_type: node_rank
-
-    - field_name: temperature_bc
-      target_name: [south, west, north]
-      field_size: 1
-      field_type: node_rank
-
-    - field_name: turbulent_ke_bc
-      target_name: [south, west, north]
-      field_size: 1
-      field_type: node_rank
 
 # This defines the time step size, count, etc.
 Time_Integrators:

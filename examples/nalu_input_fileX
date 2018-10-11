@@ -142,6 +142,8 @@ class mapping_object_class():
             'Turbines': self.set_turbines,
             # The boundary data sampling
             'boundary_data': self.set_boundary_data_sampling,
+            # How often to write restart files
+            'restart_output': self.set_restart_output,
         }
 
     def map_all(self):
@@ -519,6 +521,15 @@ class mapping_object_class():
 
                     self.yaml_input['realms'][0]['actuator'][turbine][item] = \
                         self.yaml_setup['actuator']['Turbines'][turbine][item]
+
+    def set_restart_output(self):
+        '''
+        Set the restart output
+        '''
+        # This will set all the variables specified in the setup file
+        # to the restart section in the input file
+        for val in self.yaml_setup['restart_output']:
+            self.yaml_input['realms'][0]['restart'][val]=self.yaml_setup['restart_output']['val']
 
 
     def set_viscosity(self):
