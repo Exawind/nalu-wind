@@ -31,24 +31,24 @@ The only difference is that now, the boundary data is sampled.
 
       cd nalu-wind/examples/wind_farm/
 
-  3. Modify the ``setup_abl_precursor.yaml`` file to include all the necessary simulation
+  3. Modify the ``case_1_setup_abl_precursor.yaml`` file to include all the necessary simulation
      parameters.
 
-  4. Run the executable and provide the ``setup_abl_precursor.yaml`` file as input::
+  4. Run the executable and provide the ``case_1_setup_abl_precursor.yaml`` file as input::
 
-      ../nalu_input_fileX -s setup_abl_precursor.yaml
+      ../nalu_input_fileX -s case_1_setup_abl_precursor.yaml
 
   5. Generate the mesh::
 
-      ./abl_mesh -i precursor_preprocess.yaml
+      ./abl_mesh -i case_1_precursor_preprocess.yaml
 
   6. Generate the initial condition::
 
-      ./nalu_preprocess -i precursor_preprocess.yaml
+      ./nalu_preprocess -i case_1_precursor_preprocess.yaml
 
   7. Run the nalu executable::
 
-      mpirun -np 8 naluX -i precursor_simulation.yaml
+      mpirun -np 8 naluX -i case_1_precursor_simulation.yaml
 
      In this example 8 processors are used, but any number of processors could
      be used.
