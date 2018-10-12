@@ -49,9 +49,9 @@ public:
   ActuatorInfo():processorId_(0), numPoints_(1), turbineName_("machine_one"){}
   virtual ~ActuatorInfo(){}
 
-  int processorId_; ///< The processor on which OpenFAST is run for this turbine
-  int numPoints_; ///< The total number of actuator points for this turbine
-  std::string turbineName_; ///< The turbine name
+  int processorId_;
+  int numPoints_;
+  std::string turbineName_;
 };
 
 class ActuatorPointInfo{
@@ -160,13 +160,7 @@ public:
     const int &nDim,
     const double *elemCentroid,
     const double *pointCentroid);
-/*
-  // distance from element centroid to point centroid
-  double compute_distance(
-    const int &nDim,
-    const double *elemCentroid,
-    const double *pointCentroid);
-*/
+
 //------------------------------------------------------------------
   // hold the realm
   Realm &realm_;
@@ -186,8 +180,8 @@ public:
   // target names for set of bounding boxes
   std::vector<std::string> searchTargetNames_;
 
-  std::vector<ActuatorInfo*> actuatorInfo_;
-  std::map<size_t, ActuatorPointInfo*> actuatorPointInfoMap_;
+  std::vector<std::unique_ptr<ActuatorInfo>> actuatorInfo_;
+  std::map<size_t, std::unique_ptr<ActuatorPointInfo>> actuatorPointInfoMap_;
 
   // scratch space
   std::vector<double> ws_coordinates_;

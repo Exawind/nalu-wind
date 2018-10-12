@@ -242,8 +242,8 @@ ActuatorLinePointDrag::load(
       for (size_t ispec = 0; ispec < y_specs.size(); ++ispec) {
         const YAML::Node y_spec = y_specs[ispec];
 
-        ActuatorLinePointDragInfo *actuatorLineInfo = new ActuatorLinePointDragInfo();
-        actuatorInfo_.push_back(actuatorLineInfo);
+        actuatorInfo_.emplace_back( new ActuatorLinePointDragInfo() );
+        auto actuatorLineInfo = dynamic_cast<ActuatorLinePointDragInfo*>(actuatorInfo_.back().get());
 
         // name
         const YAML::Node theName = y_spec["turbine_name"];
@@ -315,10 +315,6 @@ ActuatorLinePointDrag::initialize()
   needToGhostCount_ = 0;
   elemsToGhost_.clear();
 
-  // clear actuatorPointInfoMap_
-  for(auto iterPoint : actuatorPointInfoMap_) {
-    delete iterPoint.second;
-  }
   actuatorPointInfoMap_.clear();
 
   bulkData.modification_begin();
@@ -424,13 +420,10 @@ ActuatorLinePointDrag::execute()
   }
 
   // loop over map and assemble source terms
-  std::map<size_t, ActuatorPointInfo *>::iterator iterPoint;
-  for (iterPoint  = actuatorPointInfoMap_.begin();
-       iterPoint != actuatorPointInfoMap_.end();
-       ++iterPoint) {
+  for (auto&& iterPoint  : actuatorPointInfoMap_) {
 
     // actuator line info object of interest
-    ActuatorLinePointDragPointInfo * infoObject = dynamic_cast<ActuatorLinePointDragPointInfo*>((*iterPoint).second);
+    auto infoObject = dynamic_cast<ActuatorLinePointDragPointInfo*>(iterPoint.second.get());
     if(infoObject==NULL){
       throw std::runtime_error("Object in ActuatorPointInfo is not correct type.  Should be ActuatorLinePointDragPointInfo.");
     }
@@ -508,7 +501,8 @@ ActuatorLinePointDrag::create_actuator_line_point_info_map() {
 
   for ( size_t k = 0; k < actuatorInfo_.size(); ++k ) {
 
-    const ActuatorLinePointDragInfo *actuatorLineInfo = dynamic_cast<ActuatorLinePointDragInfo*>(actuatorInfo_[k]);
+    const auto actuatorLineInfo = dynamic_cast<ActuatorLinePointDragInfo*>(actuatorInfo_[k].get());
+
     if(actuatorLineInfo==NULL){
       throw std::runtime_error("Object in ActuatorInfo is not correct type.  Should be ActuatorLineDragInfo.");
     }
@@ -566,11 +560,11 @@ ActuatorLinePointDrag::create_actuator_line_point_info_map() {
         boundingSphereVec_.push_back(theSphere);
 
         // create the point info and push back to map
-        ActuatorLinePointDragPointInfo *actuatorLinePointInfo
-          = new ActuatorLinePointDragPointInfo( centroidCoords,
+        actuatorPointInfoMap_.emplace(
+          localPointId, new ActuatorLinePointDragPointInfo( centroidCoords,
                                       actuatorLineInfo->radius_, actuatorLineInfo->omega_,
-                                      actuatorLineInfo->gaussDecayRadius_, velocity);
-        actuatorPointInfoMap_[localPointId] = actuatorLinePointInfo;
+                                       actuatorLineInfo->gaussDecayRadius_, velocity)
+        );
       }
     }
   }
