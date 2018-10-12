@@ -31,6 +31,7 @@ add_sources(GlobalHeaderList
    AssembleMomentumNonConformalSolverAlgorithm.h
    AssembleNodalGradAlgorithmDriver.h
    AssembleNodalGradBoundaryAlgorithm.h
+   AssembleNodalGradPOpenBoundaryAlgorithm.h
    AssembleNodalGradEdgeAlgorithm.h
    AssembleNodalGradElemAlgorithm.h
    AssembleNodalGradNonConformalAlgorithm.h
@@ -148,8 +149,6 @@ add_sources(GlobalHeaderList
    MomentumMassBackwardEulerNodeSuppAlg.h
    MomentumMassElemSuppAlgDep.h
    MovingAveragePostProcessor.h
-   NaluCommBufferV.hpp
-   NaluCommNeighbors.hpp
    NaluEnv.h
    NaluParsing.h
    NaluParsingHelper.h

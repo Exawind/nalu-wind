@@ -8,6 +8,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 option(ENABLE_TESTS "Enable regression testing." OFF)
 option(ENABLE_DOCUMENTATION "Build documentation." OFF)
 option(ENABLE_SPHINX_API_DOCS "Link Doxygen API docs to Sphinx" OFF)
+option(ENABLE_WIND_UTILS "Build wind utils along with Nalu-Wind" OFF)
 option(ENABLE_OPENFAST
        "Use OPENFAST tpl to get actuator line positions and forces" OFF)
 option(ENABLE_PARAVIEW_CATALYST
@@ -46,9 +47,6 @@ if(Trilinos_BUILD_SHARED_LIBS)
 else(Trilinos_BUILD_SHARED_LIBS)
   set(Nalu_LIBRARY_TYPE STATIC)
 endif(Trilinos_BUILD_SHARED_LIBS)
-
-# Set Nalu's compilers, CMAKE_FIND_LIBRARY_PREFIXES
-# and CMAKE_FIND_LIBRARY_SUFFIXES, etc, after inheriting settings from Trilinos
 
 ############################ YAML ######################################
 set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
@@ -149,11 +147,19 @@ message("-- CMAKE_Fortran_FLAGS = ${CMAKE_Fortran_FLAGS}")
 if(ENABLE_HYPRE)
   include(CheckSymbolExists)
   set(CMAKE_REQUIRED_INCLUDES "${HYPRE_INCLUDE_DIRS}")
+  set(CMAKE_REQUIRED_LIBRARIES "${HYPRE_LIBRARIES}")
   check_symbol_exists(
     HYPRE_BIGINT "${HYPRE_INCLUDE_DIRS}/HYPRE_config.h" NALU_HYPRE_BIGINT)
+  check_symbol_exists(
+    hypre_KRYLOV_COGMRES_HEADER "${HYPRE_INCLUDE_DIRS}/krylov.h" NALU_HYPRE_COGMRES)
   if(NOT NALU_HYPRE_BIGINT)
     message(WARNING
       "HYPRE does not enable 64-bit integer support; will fail on large problems!")
+  endif()
+  if (NALU_HYPRE_COGMRES)
+    add_definitions(-DHYPRE_COGMRES)
+  else()
+    message("-- Disabling HYPRE CO-GMRES interface")
   endif()
 endif()
 
@@ -284,3 +290,19 @@ if(ENABLE_TESTS)
    include(CTest)
    add_subdirectory(reg_tests)
 endif()
+
+if (ENABLE_WIND_UTILS)
+  if (EXISTS ${CMAKE_SOURCE_DIR}/wind-utils/CMakeLists.txt)
+    add_subdirectory(wind-utils)
+  else()
+    message(WARNING
+      "ENABLE_WIND_UTILS is ON, but wind-utils submodule has not been initialized.\
+       You should execute 'git submodule init && git submodule update' \
+       or use '-DENABLE_WIND_UTILS=OFF' to turn off this warning. \
+       DISABLING wind-utils compilation.
+      ")
+  endif()
+endif()
+
+# Note if you are interested in using Xcode for development,
+# refer to instructions in https://github.com/Exawind/nalu-wind/pull/22

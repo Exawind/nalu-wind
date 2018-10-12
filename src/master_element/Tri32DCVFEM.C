@@ -20,7 +20,7 @@
 #include <NaluEnv.h>
 #include <FORTRAN_Proto.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
 
 #include <iostream>
@@ -36,7 +36,7 @@ namespace nalu{
 
 //-------- tri_derivative -----------------------------------------------------
 void tri_derivative (SharedMemView<DoubleType***>& deriv) {
-  const int npts = deriv.dimension(0); 
+  const int npts = deriv.extent(0); 
   for (int j=0; j<npts; ++j) {
     deriv(j,0,0) = -1.0;
     deriv(j,1,0) =  1.0;
@@ -53,8 +53,8 @@ void tri_gradient_operator(
   SharedMemView<DoubleType***>& gradop,
   SharedMemView<DoubleType***>& deriv) {
       
-  const int nint = deriv.dimension(0);
-  const int npe  = deriv.dimension(1);
+  const int nint = deriv.extent(0);
+  const int npe  = deriv.extent(1);
  
   DoubleType dx_ds1, dx_ds2;
   DoubleType dy_ds1, dy_ds2;

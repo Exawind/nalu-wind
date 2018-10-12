@@ -25,6 +25,8 @@ static constexpr double rhs[8] = {
 } // hex8_golds
 } // anonymous namespace
 
+#ifndef KOKKOS_HAVE_CUDA
+
 /// Steady 3D MMS source term
 TEST_F(HeatCondKernelHex8Mesh, steady_3d_thermal)
 {
@@ -48,13 +50,15 @@ TEST_F(HeatCondKernelHex8Mesh, steady_3d_thermal)
 
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = ::hex8_golds::steady_3d_thermal;
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, 0.0);
 }
+
+#endif
 

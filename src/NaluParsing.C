@@ -12,7 +12,7 @@
 #include <Simulation.h>
 #include <Enums.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 // yaml for parsing..
 #include <yaml-cpp/yaml.h>

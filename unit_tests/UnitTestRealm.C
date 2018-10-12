@@ -197,7 +197,7 @@ TEST(NaluMock, test_nalu_mock)
   ScalarFieldType& maxLengthScaleField =
       realm.meta_data().declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_max_length_scale");
   double zero = 0.0;
-  stk::mesh::put_field(maxLengthScaleField, realm.meta_data().universal_part(), &zero);
+  stk::mesh::put_field_on_mesh(maxLengthScaleField, realm.meta_data().universal_part(), &zero);
 
   // 5. Create mesh and get the default part for registration with Algorithm
   unit_test_utils::fill_hex8_mesh("generated:10x10x10", realm.bulk_data());

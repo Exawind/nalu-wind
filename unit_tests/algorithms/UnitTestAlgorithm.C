@@ -90,21 +90,21 @@ TestTurbulenceAlgorithm::declare_fields()
      &meta.declare_field<ScalarFieldType>(
        stk::topology::NODE_RANK, "specific_heat"));
 
-  stk::mesh::put_field(*density_, meta.universal_part(), 1);
-  stk::mesh::put_field(*viscosity_, meta.universal_part(), 1);
-  stk::mesh::put_field(*tke_, meta.universal_part(), 1);
-  stk::mesh::put_field(*sdr_, meta.universal_part(), 1);
-  stk::mesh::put_field(*minDistance_, meta.universal_part(), 1);
-  stk::mesh::put_field(*dudx_, meta.universal_part(), spatialDim*spatialDim);
-  stk::mesh::put_field(*tvisc_, meta.universal_part(), 1);
-  stk::mesh::put_field(*maxLengthScale_, meta.universal_part(), 1);
-  stk::mesh::put_field(*fOneBlend_, meta.universal_part(), 1);
-  stk::mesh::put_field(*evisc_, meta.universal_part(), 1);
-  stk::mesh::put_field(*dualNodalVolume_, meta.universal_part(), 1);
-  stk::mesh::put_field(*dkdx_, meta.universal_part(), spatialDim);
-  stk::mesh::put_field(*dwdx_, meta.universal_part(), spatialDim);
-  stk::mesh::put_field(*dhdx_, meta.universal_part(), spatialDim);
-  stk::mesh::put_field(*specificHeat_, meta.universal_part(), 1);
+  stk::mesh::put_field_on_mesh(*density_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*viscosity_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*tke_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*sdr_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*minDistance_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*dudx_, meta.universal_part(), spatialDim*spatialDim, nullptr);
+  stk::mesh::put_field_on_mesh(*tvisc_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*maxLengthScale_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*fOneBlend_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*evisc_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*dualNodalVolume_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*dkdx_, meta.universal_part(), spatialDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dwdx_, meta.universal_part(), spatialDim, nullptr);
+  stk::mesh::put_field_on_mesh(*dhdx_, meta.universal_part(), spatialDim, nullptr);
+  stk::mesh::put_field_on_mesh(*specificHeat_, meta.universal_part(), 1, nullptr);
 }
 
 void

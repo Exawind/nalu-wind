@@ -9,7 +9,7 @@
 #include <element_promotion/QuadratureRule.h>
 #include <NaluEnv.h>
 
-#include <stk_util/environment/ReportHandler.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 #include <Teuchos_RCP.hpp>
 
 #include <tuple>

@@ -29,6 +29,7 @@ add_sources(GlobalSourceList
    AssembleMomentumNonConformalSolverAlgorithm.C
    AssembleNodalGradAlgorithmDriver.C
    AssembleNodalGradBoundaryAlgorithm.C
+   AssembleNodalGradPOpenBoundaryAlgorithm.C
    AssembleNodalGradEdgeAlgorithm.C
    AssembleNodalGradElemAlgorithm.C
    AssembleNodalGradNonConformalAlgorithm.C
@@ -133,7 +134,6 @@ add_sources(GlobalSourceList
    MomentumMassBackwardEulerNodeSuppAlg.C
    MomentumMassElemSuppAlgDep.C
    MovingAveragePostProcessor.C
-   NaluCommNeighbors.C
    NaluEnv.C
    NaluParsing.C
    NonConformalInfo.C
@@ -191,8 +191,10 @@ endif()
 if(ENABLE_HYPRE)
    add_sources(GlobalSourceList
       HypreDirectSolver.C
+      HypreUVWSolver.C
       HypreLinearSolverConfig.C
       HypreLinearSystem.C
+      HypreUVWLinearSystem.C
    )
 endif()
 

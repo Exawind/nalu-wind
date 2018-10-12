@@ -28,19 +28,6 @@ class ParameterList;
 
 }
 
-namespace Tpetra {
-
-template <typename LocalOrdinal, typename GlobalOrdinal, typename Node>
-class Map;
-
-template <typename LocalOrdinal, typename GlobalOrdinal, typename Node >
-class Export;
-
-template <typename Scalar, typename LocalOrdinal, typename GlobalOrdinal, typename Node>
-class Operator;
-
-}
-
 namespace Belos {
 
 template <typename Scalar, typename MultiVector>
@@ -78,12 +65,12 @@ typedef int    LocalOrdinal;  // MUST be signed
 typedef double Scalar;
 
 typedef Kokkos::DualView<size_t*, DeviceSpace>                             RowLengths;
-typedef Kokkos::StaticCrsGraph<LocalOrdinal, Kokkos::LayoutLeft, DeviceSpace> LocalGraph;
 typedef Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type                Node;
+typedef Tpetra::CrsGraph< LocalOrdinal, GlobalOrdinal, Node>               Graph;
+typedef typename Graph::local_graph_type                                   LocalGraph;
 typedef Teuchos::MpiComm<int>                                              Comm;
 typedef Tpetra::Export< LocalOrdinal, GlobalOrdinal, Node >                Export;
 typedef Tpetra::Import< LocalOrdinal, GlobalOrdinal, Node >                Import;
-typedef Tpetra::CrsGraph< LocalOrdinal, GlobalOrdinal, Node>               Graph;
 typedef Tpetra::Map<LocalOrdinal,GlobalOrdinal,Node>                       Map;
 typedef Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>        MultiVector;
 typedef Teuchos::ArrayRCP<Scalar >                                         OneDVector;

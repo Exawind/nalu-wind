@@ -68,12 +68,12 @@ Adapter::Adapter(
 
     {
       TransitionElementType& transition_element       = perceptMesh_->get_fem_meta_data()->declare_field<TransitionElementType>(stk::topology::ELEMENT_RANK, "transition_element_3");
-      stk::mesh::put_field( transition_element , perceptMesh_->get_fem_meta_data()->universal_part());
+      stk::mesh::put_field_on_mesh( transition_element , perceptMesh_->get_fem_meta_data()->universal_part(), nullptr);
       stk::io::set_field_role(transition_element, Ioss::Field::TRANSIENT);
     }
     {
       TransitionElementType& transition_element       = perceptMesh_->get_fem_meta_data()->declare_field<TransitionElementType>(stk::topology::FACE_RANK, "transition_element");
-      stk::mesh::put_field( transition_element , perceptMesh_->get_fem_meta_data()->universal_part());
+      stk::mesh::put_field_on_mesh( transition_element , perceptMesh_->get_fem_meta_data()->universal_part(), nullptr);
       stk::io::set_field_role(transition_element, Ioss::Field::TRANSIENT);
     }
 
@@ -83,7 +83,7 @@ Adapter::Adapter(
     
     {
       percept::TransitionElementType& transition_element = perceptMesh_->get_fem_meta_data()->declare_field<percept::TransitionElementType>(stk::topology::ELEMENT_RANK, "transition_element");
-      stk::mesh::put_field( transition_element , perceptMesh_->get_fem_meta_data()->universal_part());
+      stk::mesh::put_field_on_mesh( transition_element , perceptMesh_->get_fem_meta_data()->universal_part(), nullptr);
       stk::io::set_field_role(transition_element, Ioss::Field::TRANSIENT);
     }
     

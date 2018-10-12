@@ -2,3 +2,6 @@
 	path = reg_tests/mesh
 	url = https://github.com/Exawind/meshes.git
         ignore = dirty
+[submodule "wind-utils"]
+	path = wind-utils
+	url = git@github.com:exawind/wind-utils.git

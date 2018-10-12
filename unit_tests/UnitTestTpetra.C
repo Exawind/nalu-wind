@@ -184,7 +184,7 @@ void verify_matrix_for_2_hex8_mesh(int numProcs, int localProc, sierra::nalu::Tp
     expectedLocalNumRows = localProc==0 ? 8 : 4;
   }
   EXPECT_EQ(expectedGlobalNumRows, ownedMatrix->getGlobalNumRows());
-  EXPECT_EQ(expectedLocalNumRows, ownedMatrix->getNodeNumRows());
+  EXPECT_EQ((unsigned)expectedLocalNumRows, ownedMatrix->getNodeNumRows());
 
   Teuchos::RCP<const sierra::nalu::LinSys::Map> rowMap = ownedMatrix->getRowMap();
   Teuchos::RCP<const sierra::nalu::LinSys::Map> colMap = ownedMatrix->getColMap();
