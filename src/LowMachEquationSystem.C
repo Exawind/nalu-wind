@@ -83,6 +83,8 @@
 #include <MomentumMassBDF2NodeSuppAlg.h>
 #include <NaluEnv.h>
 #include <NaluParsing.h>
+#include <NonConformalManager.h>
+#include <NonConformalInfo.h>
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <PostProcessingData.h>
 #include <PstabErrorIndicatorEdgeAlgorithm.h>
@@ -209,6 +211,7 @@
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
+#include <stk_mesh/base/FieldBLAS.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
@@ -721,6 +724,22 @@ LowMachEquationSystem::solve_and_update()
     // project nodal velocity
     project_nodal_velocity();
 
+    // update pressure
+    const std::string dofName="pressure";
+    const double relaxFP = realm_.solutionOptions_->get_relaxation_factor(dofName);
+    if (std::fabs(1.0 - relaxFP) > 1.0e-3) {
+      timeA = NaluEnv::self().nalu_time();
+      field_axpby(
+        realm_.meta_data(),
+        realm_.bulk_data(),
+        (relaxFP - 1.0), *continuityEqSys_->pTmp_,
+        1.0, *continuityEqSys_->pressure_,
+        realm_.get_activate_aura());
+      continuityEqSys_->compute_projected_nodal_gradient();
+      timeB = NaluEnv::self().nalu_time();
+      continuityEqSys_->timerAssemble_ += (timeB-timeA);
+    }
+
     // compute velocity relative to mesh with new velocity
     realm_.compute_vrtm();
 
@@ -800,11 +819,6 @@ LowMachEquationSystem::project_nodal_velocity()
 
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
-  // time step
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
-  const double projTimeScale = dt/gamma1;
-
   const int nDim = meta_data.spatial_dimension();
 
   // field that we need
@@ -813,6 +827,7 @@ LowMachEquationSystem::project_nodal_velocity()
   VectorFieldType *uTmp = momentumEqSys_->uTmp_;
   VectorFieldType *dpdx = continuityEqSys_->dpdx_;
   ScalarFieldType &densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType *Udiag = momentumEqSys_->Udiag_;
 
   //==========================================================
   // save off dpdx to uTmp (do it everywhere)
@@ -863,11 +878,12 @@ LowMachEquationSystem::project_nodal_velocity()
     double * ut = stk::mesh::field_data(*uTmp, b);
     double * dp = stk::mesh::field_data(*dpdx, b);
     double * rho = stk::mesh::field_data(densityNp1, b);
+    double * udiagN = stk::mesh::field_data(*Udiag, b);
     
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
       
       // Get scaling factor
-      const double fac = projTimeScale/rho[k];
+      const double fac = 1.0/(rho[k] * udiagN[k]);
       
       // projection step
       const size_t offSet = k*nDim;
@@ -1027,6 +1043,11 @@ MomentumEquationSystem::register_nodal_fields(
     evisc_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "effective_viscosity_u"));
     stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
   }
+
+  Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
+               stk::topology::NODE_RANK, "momentum_diag"));
+  stk::mesh::put_field_on_mesh(*Udiag_, *part, nullptr);
+  realm_.augment_restart_variable_list("momentum_diag");
 
   // make sure all states are properly populated (restart can handle this)
   if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
@@ -2272,6 +2293,17 @@ MomentumEquationSystem::initialize()
 {
   solverAlgDriver_->initialize_connectivity();
   linsys_->finalizeLinearSystem();
+
+  // Set flag to extract diagonal if the user activates it in input file
+  extractDiagonal_ = (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV);
+
+  // We need an estimate of projTimeScale for the computational of mdot in
+  // initialization phase
+  if (!realm_.restarted_simulation()) {
+    const double dt = realm_.get_time_step();
+    const double gamma1 = realm_.get_gamma1();
+    stk::mesh::field_fill(gamma1/dt, *Udiag_);
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -2426,6 +2458,121 @@ MomentumEquationSystem::compute_projected_nodal_gradient()
     // a bit covert, provide linsys with the new norm which is the sum of all norms
     projectedNodalGradEqs_->linsys_->setNonLinearResidual(sumNonlinearResidual);
   }
+}
+
+void
+MomentumEquationSystem::save_diagonal_term(
+  const std::vector<stk::mesh::Entity>& entities,
+  const std::vector<int>& scratchIds,
+  const std::vector<double>& lhs)
+{
+  auto& bulk = realm_.bulk_data();
+  const int nEntities = entities.size();
+  const int nDim = realm_.spatialDimension_;
+  const int offset = nEntities * nDim;
+
+  for (int in=0; in < nEntities; in++) {
+    const auto naluID = *stk::mesh::field_data(*realm_.naluGlobalId_, entities[in]);
+    const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluID);
+    int ix = in * nDim * (offset + 1);
+    double* diagVal = (double*) stk::mesh::field_data(*Udiag_, mnode);
+    diagVal[0] += lhs[ix];
+  }
+}
+
+void
+MomentumEquationSystem::save_diagonal_term(
+  unsigned nEntities,
+  const stk::mesh::Entity* entities,
+  const SharedMemView<const double**>& lhs)
+{
+  auto& bulk = realm_.bulk_data();
+  const int nDim = realm_.spatialDimension_;
+  constexpr bool forceAtomic = !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
+
+  for (unsigned in=0; in < nEntities; in++) {
+    const auto naluID = *stk::mesh::field_data(*realm_.naluGlobalId_, entities[in]);
+    const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluID);
+    int ix = in * nDim;
+    double* diagVal = (double*) stk::mesh::field_data(*Udiag_, mnode);
+    if (forceAtomic)
+      Kokkos::atomic_add(diagVal, lhs(ix, ix));
+    else
+      diagVal[0] += lhs(ix, ix);
+  }
+}
+
+void
+MomentumEquationSystem::assemble_and_solve(
+  stk::mesh::FieldBase* deltaSolution)
+{
+  auto& meta = realm_.meta_data();
+  auto& bulk = realm_.bulk_data();
+
+  // Reset timescale field before momentum solve
+  {
+    double projTimeScale = 0.0;
+    if (realm_.solutionOptions_->tscaleType_ == TSCALE_DEFAULT) {
+      const double dt = realm_.get_time_step();
+      const double gamma1 = realm_.get_gamma1();
+      projTimeScale = gamma1 / dt;
+    }
+
+    const auto sel = meta.universal_part() & stk::mesh::selectField(*Udiag_);
+    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+    for (auto b: bkts) {
+      double* field = (double*) stk::mesh::field_data(*Udiag_, *b);
+
+      for (size_t in=0; in < b->size(); in++)
+        field[in] = projTimeScale;
+    }
+  }
+
+  // Perform actual solve
+  EquationSystem::assemble_and_solve(deltaSolution);
+
+  // Post-process the Udiag term
+  ScalarFieldType* dualVol = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
+  ScalarFieldType* density = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "density");
+  std::vector<const stk::mesh::FieldBase*> fVec{Udiag_};
+
+  if (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV) {
+    const std::string dofName = "velocity";
+    const double dt = realm_.get_time_step();
+    const double gamma1 = realm_.get_gamma1();
+    const double projTimeScale = gamma1 / dt;
+    const double alphaU = realm_.solutionOptions_->get_relaxation_factor(dofName);
+
+    stk::mesh::parallel_sum(bulk, fVec);
+    const auto sel = stk::mesh::selectField(*Udiag_)
+      & meta.locally_owned_part()
+      & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
+      & !(realm_.get_inactive_selector());
+    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+
+    for (auto b: bkts) {
+      double* field = (double*) stk::mesh::field_data(*Udiag_, *b);
+      double* rho = (double*) stk::mesh::field_data(*density, *b);
+      double* dVol = (double*) stk::mesh::field_data(*dualVol, *b);
+
+      for (size_t in=0; in < b->size(); in++) {
+        field[in] /= (rho[in] * dVol[in]);
+        field[in] = (field[in] - projTimeScale) * alphaU + projTimeScale;
+      }
+    }
+  }
+
+  // Communicate to shared and ghosted nodes
+  stk::mesh::copy_owned_to_shared(bulk, fVec);
+  stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
+  if (realm_.hasPeriodic_)
+    realm_.periodic_delta_solution_update(Udiag_, 1);
+  if (realm_.nonConformalManager_ != nullptr &&
+      realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)
+    stk::mesh::communicate_field_data(
+      *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
 }
 
 //==========================================================================

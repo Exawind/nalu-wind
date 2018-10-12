@@ -211,7 +211,10 @@ AssembleContinuityInflowSolverAlgorithm::execute()
         for ( int j=0; j < nDim; ++j ) {
           mdot += (interpTogether*p_rho_uIp[j] + om_interpTogether*rhoIp*p_uIp[j])*areaVec[ip*nDim+j];
         }
-        p_rhs[nn] += -mdot/projTimeScale;
+        if (realm_.realmUsesEdges_)
+          p_rhs[nn] += -mdot;
+        else
+          p_rhs[nn] += -mdot/projTimeScale;
       }
 
       apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
