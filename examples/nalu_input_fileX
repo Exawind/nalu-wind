@@ -141,9 +141,13 @@ class mapping_object_class():
             # Turbines
             'Turbines': self.set_turbines,
             # The boundary data sampling
-            'boundary_data': self.set_boundary_data_sampling,
+            'boundary_data_sampling': self.set_boundary_data_sampling,
             # How often to write restart files
             'restart_output': self.set_restart_output,
+            # Set the restart time
+            'restart_time': self.set_restart_time,
+            # Inflow/outflow boundary condition
+            'inflow_outflow': self.set_inflow_outflow,
         }
 
     def map_all(self):
@@ -267,14 +271,21 @@ class mapping_object_class():
         boundary data from a precursor simulation to be used as a boundary
         condition for wind farm simulations.
         '''
+        # The initial mesh file
         
-        
-        file_name = self.yaml_setup['boundary_data']['boundary_data_file']
-        list_of_boundaries = self.yaml_setup['boundary_data']['boundaries']
+        # The file to be written
+        file_name = self.yaml_setup['boundary_data_sampling']['boundary_data_file']
+        # The list of boundaries
+        list_of_boundaries = self.yaml_setup['boundary_data_sampling']['boundaries']
 
         # The list of tasks in the pre-processing file
         tasks = self.yaml_preprocess['nalu_preprocess']['tasks']
 
+        # Add the mesh input
+        if self.yaml_setup['boundary_data_sampling']['input_mesh']: 
+            self.yaml_preprocess['nalu_preprocess']['input_db'] = \
+                self.yaml_setup['boundary_data_sampling']['input_mesh']
+    
         # Create the task
         if 'create_bdy_io_mesh' not in tasks:
             tasks.append('create_bdy_io_mesh')
@@ -282,10 +293,102 @@ class mapping_object_class():
         # The name of the boundary data file
         self.yaml_preprocess['nalu_preprocess']['create_bdy_io_mesh']  \
             ['output_db'] = file_name
-        # The list of boundaries
-        self.yaml_preprocess['nalu_preprocess']['create_bdy_io_mesh']  \
-            ['boundary_parts'] = list_of_boundaries     
 
+        # Get the boundaries in the input file under the transfer section
+        new_transfers = []
+        nsew = ['north', 'south', 'east', 'west']
+        for transfer in self.yaml_input['transfers']:
+            # The list of transfers to exclude
+            list_to_eliminate = [a for a in nsew if a not in list_of_boundaries]
+            # Condition is true is the name is not to be eliminated
+            condition = transfer['name'] not in list_to_eliminate
+            # Delete the boundaries not needed
+            if condition: new_transfers.append(transfer)
+
+        # Replace the list
+        self.yaml_input['transfers'] = new_transfers
+
+        # Specify the detail in the ioRealm 
+        # Notice this is the second realm (index=1)
+        self.yaml_input['realms'][1]['mesh'] = file_name
+
+        # Change the name of the boundaries  
+        specs = self.yaml_input['realms'][1]['field_registration']['specifications'] 
+        for field in specs:
+            field['target_name'] = list_of_boundaries
+
+        # The name of the output data
+        self.yaml_input['realms'][1]['output']['output_data_base_name'] = \
+            './boundaryData/' + file_name
+
+    def set_inflow_outflow(self):
+        '''
+        Function to set the boundary conditions        
+        '''
+
+        # The list of inflow/outflow BC
+        inflow_bc = self.yaml_setup['inflow_outflow']['inflow']
+        open_bc = self.yaml_setup['inflow_outflow']['open']
+
+        # All the boundary conditions to change as a dictionary
+        bc_all = {}
+        for bc in self.yaml_setup['inflow_outflow']['inflow']:
+            # Dictionary for inflow BC
+            bc_dic = {'inflow_boundary_condition': 'bc_inflow_' + bc,
+                      'target_name': bc,
+                      'inflow_user_data': {
+                        'velocity': [5., 5., 0.0],
+                         'temperature': 300.0,
+                         'external_data': 'yes'}
+                     }
+            bc_all[bc] = bc_dic
+
+        for bc in open_bc:
+            bc_dic = {'open_boundary_condition': 'bc_open_' + bc,
+                      'target_name': bc,
+                      'open_user_data': {
+                        'velocity': [5., 5., 0.0],
+                         'temperature': 300.0,
+                         'pressure': 0.0}
+                     }
+            bc_all[bc] = bc_dic
+
+        # Get the boundaries in the input file under the transfer section
+        new_transfers = []
+        for transfer in self.yaml_input['transfers']:
+            # Condition is true is the name is not to be eliminated
+            condition = transfer['name'] in self.yaml_setup['inflow_outflow']['inflow']
+            # Delete the boundaries not needed
+            if condition: new_transfers.append(transfer)
+
+        # Replace the list
+        self.yaml_input['transfers'] = new_transfers
+
+        # Replace the appropriate BC
+        bcs = self.yaml_input['realms'][0]['boundary_conditions']
+        # Change the appropriate BC
+        for i in range(len(bcs)):
+            bc_name = bcs[i]['target_name']
+            condition = bc_name in list(bc_all.keys())
+            if condition: bcs[i] = bc_all[bc_name]
+
+        # Set the boundary data name
+        self.yaml_input['realms'][1]['mesh'] =  \
+            self.yaml_setup['inflow_outflow']['input_mesh']
+
+        # Set the time to read in the boundary data
+        try:
+            self.yaml_input['realms'][1]['solution_options'] \
+                ['input_variables_from_file_restoration_time'] = \
+                self.yaml_setup['restart_time']
+            print('input_variables_from_file_restoration_time has been set')
+            specs = self.yaml_input['realms'][1]['field_registration']['specifications']
+            for spec in specs:
+                  spec['target_name'] = self.yaml_setup['inflow_outflow']['inflow']
+        except:
+            print('input_variables_from_file_restoration_time not set')
+                    
+            
     def set_velocity(self):
         '''
         Function to setup the velocity entries in the file
@@ -529,8 +632,17 @@ class mapping_object_class():
         # This will set all the variables specified in the setup file
         # to the restart section in the input file
         for val in self.yaml_setup['restart_output']:
-            self.yaml_input['realms'][0]['restart'][val]=self.yaml_setup['restart_output']['val']
+            self.yaml_input['realms'][0]['restart'][val]= \
+                self.yaml_setup['restart_output'][val]
 
+    def set_restart_time(self):
+        '''
+        Set the restart time
+        '''
+        # This will set all the variables specified in the setup file
+        # to the restart section in the input file
+        self.yaml_input['realms'][0]['restart']['restart_time']= \
+                self.yaml_setup['restart_time']
 
     def set_viscosity(self):
         '''
