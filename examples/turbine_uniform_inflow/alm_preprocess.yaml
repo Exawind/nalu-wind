@@ -1,0 +1,32 @@
+# -*- mode: yaml -*-
+#
+# Nalu Preprocessing utility
+#
+# Generate a temperature profile with capping inversion for use with ablNeutralEdge case
+#
+
+nalu_abl_mesh:
+  output_db: mesh_alm.exo
+
+  spec_type: bounding_box
+
+  fluid_part_name: Unspecified-2-HEX
+
+  vertices:
+  - [0.0, -126.0, -126.0]
+  - [512.0, 126.0, 126.0]
+
+  mesh_dimensions: [128, 64, 64]
+
+  xmin_boundary_name: west
+
+  xmax_boundary_name: east
+
+  ymin_boundary_name: south
+
+  ymax_boundary_name: north
+
+  zmin_boundary_name: lower
+
+  zmax_boundary_name: upper
+

@@ -1,4 +1,4 @@
-Nalu-Wind Documentation 
+Nalu-Wind Documentation
 =======================
 .. toctree::
    :maxdepth: 2

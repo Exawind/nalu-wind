@@ -1,0 +1,135 @@
+################################################################################
+#     This is the input file for an ABL Simulation.
+#     All the parameters in this file will be used to create Nalu inputs.
+################################################################################
+
+##########################################################################
+# These are the example input files and the files which will be generated.
+##########################################################################
+# The old input file which will be modified
+template_input: template_input_files/nrel5MWactuatorLine.i
+# The example pre-process file
+template_preprocess: template_input_files/nalu_preprocess.yaml
+
+# The name of the new input file
+new_input: alm_simulation.yaml
+new_preprocess: alm_preprocess.yaml
+
+# Establish if the simulation is a restart or not (yes/no)
+restart: no
+
+# Uniform inflow wind speed [m/s].
+uniform_inflow: 8.0
+
+######################
+# Material properties
+######################
+# Density [kg/m^3]
+density: 1.
+# Kinematic viscosity [m^2/s].
+nu: 1.0E-5
+
+# This is the section for actuator turbine properties
+actuator:
+
+    # The total number of turbines    
+    n_turbines_glob: 2
+    # The fast time-step. Make sure this is correct in all Fast files
+    dt_fast: 0.00625
+    # How often to write checkpoint
+    n_every_checkpoint: 1000
+
+
+    # This is the list of turbines
+    # To add more turbines, simply add more entries and name the turbines in 
+    # sequential order: Turbine0, Turbine1, ... TurbineN-1, TurbineN
+    Turbines:
+    
+        # Turbines need to be named according to the order:
+        #     Turbine0, Turbine1, ...
+        Turbine0:
+            # The number of actuator points along the blade
+            num_force_pts_blade: 50
+            # Number of actuator points along the tower
+            num_force_pts_tower: 20
+            # The drag coefficient of the nacelle
+            nacelle_cd: 1.0
+            # The frontal reference area of the nacelle
+            nacelle_area: 8.0
+            # The value of epsilon
+            epsilon: [ 12.0, 12.0, 12.0 ]
+            # The position of the base of the turbine
+            turbine_base_pos: [ 126.0, 0.0, -90.0 ]
+            # A position close to the hub (recommended tower height)
+            turbine_hub_pos: [ 0.0, 0.0, 0.0 ]
+            # The name of the restart file name
+            restart_filename: restart_file
+            # The fast input file
+            fast_input_filename: nrel5mw.fst
+            # The name of the turbine
+            turbine_name: machine_one
+
+        Turbine1:
+            # The number of actuator points along the blade
+            num_force_pts_blade: 67
+            # Number of actuator points along the tower
+            num_force_pts_tower: 12
+            # The drag coefficient of the nacelle
+            nacelle_cd: 1.0
+            # The frontal reference area of the nacelle
+            nacelle_area: 8.0
+            # The value of epsilon
+            epsilon: [ 12.0, 12.0, 12.0 ]
+            # The position of the base of the turbine
+            # This is placed 3D from the first one
+            turbine_base_pos: [ 252.0, 0.0, -90.0 ]
+            # A position close to the hub (recommended tower height)
+            turbine_hub_pos: [ 0.0, 0.0, 0.0 ]
+            # The name of the restart file name
+            restart_filename: restart_file
+            # The fast input file
+            fast_input_filename: nrel5mw2.fst
+            # The name of the turbine
+            turbine_name: machine_two
+    
+
+################
+# Time controls
+################
+# Start time of the simulation
+start_time: 0.0
+# Time-step [s]
+time_step: 0.125
+# Total time to run [s]
+total_run_time: 1250
+
+########
+#  Mesh
+########
+# Here are the mesh properties
+mesh:
+  # Generate the mesh or read from an input file (yes/no)
+  generate: yes
+  # The name of the mesh file
+  # If the mesh is generated the preprocessor will generate a mesh
+  # If not the code will read in this mesh
+  mesh_file: mesh_alm.exo
+  # The domain bounds [m]
+  domain_bounds_x: [0.0, 512.0]
+  domain_bounds_y: [-126.0, 126.0]
+  domain_bounds_z: [-126.0, 126.0]
+
+  # The number of grid points in the x, y, z coordinates
+  # Change this variable
+  number_of_cells: [128, 64, 64]
+
+#########
+# Output
+#########
+# How often to write output [s]
+# This is time-steps in nalu input
+output_frequency: 2
+# Output file name. It will create the directory
+# Change .e
+output_data_base_name: output/alm_uniform_inflow.exo
+

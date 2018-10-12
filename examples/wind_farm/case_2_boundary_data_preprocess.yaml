@@ -1,0 +1,21 @@
+# -*- mode: yaml -*-
+#
+# Nalu Preprocessing utility
+#
+# Generate a temperature profile with capping inversion for use with ablNeutralEdge case
+#
+
+# Mandatory section for Nalu preprocessing
+nalu_preprocess:
+  # Name of the input exodus database
+  input_db: mesh_abl.exo
+  output_db: restart_data/precursor.rst
+
+  # Nalu preprocessor expects a list of tasks to be performed on the mesh and
+  # field data structures
+  tasks:
+  - create_bdy_io_mesh
+
+  create_bdy_io_mesh:
+    output_db: boundary_data.exo
+    boundary_parts: [south, west]

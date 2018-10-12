@@ -1,0 +1,78 @@
+# -*- mode: yaml -*-
+#
+# Nalu Preprocessing utility
+#
+# Generate a temperature profile with capping inversion for use with ablNeutralEdge case
+#
+
+nalu_abl_mesh:
+  output_db: mesh_abl.exo
+
+  spec_type: bounding_box
+
+  fluid_part_name: fluid_part
+
+  vertices:
+  - [0.0, 0.0, 0.0]
+  - [500.0, 500.0, 1000.0]
+
+  mesh_dimensions: [50, 50, 100]
+
+  xmin_boundary_name: west
+
+  xmax_boundary_name: east
+
+  ymin_boundary_name: south
+
+  ymax_boundary_name: north
+
+  zmin_boundary_name: lower
+
+  zmax_boundary_name: upper
+
+# Mandatory section for Nalu preprocessing
+nalu_preprocess:
+  # Name of the input exodus database
+  input_db: mesh_abl.exo
+  # Name of the output exodus database
+  output_db: mesh_abl.exo
+
+  # Nalu preprocessor expects a list of tasks to be performed on the mesh and
+  # field data structures
+  tasks:
+  - init_abl_fields
+  - create_bdy_io_mesh
+
+  init_abl_fields:
+
+    # Fluid part is the interior mesh block(s) in the mesh. The default block is
+    # `fluid` if the mesh was generated using `abl_mesh` utility.
+    #
+    # Use `ncdump -v eb_names <exodus_file>` to determine the mesh blocks
+    #
+    fluid_parts: [fluid_part]
+
+    temperature:
+      heights: [0, 650.0, 750.0, 1000.0]
+      values: [300.0, 300.0, 308.0, 308.75]
+
+    velocity:
+      heights:
+      - 0
+      - 90.0
+      values:
+      - - 7.2504622962931995
+        - 3.3809460939255955
+        - 0.0
+      - - 7.2504622962931995
+        - 3.3809460939255955
+        - 0.0
+      perturbations:
+        reference_height: 50.0   # Reference height for damping
+        amplitude: [1.0, 1.0]    # Perturbation amplitudes in Ux and Uy
+        periods: [4.0, 4.0]      # Num. periods in x and y directions
+
+
+  create_bdy_io_mesh:
+    output_db: boundary_data.exo
+    boundary_parts: [west, south]

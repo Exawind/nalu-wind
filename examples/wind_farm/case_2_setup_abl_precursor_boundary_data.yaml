@@ -1,0 +1,77 @@
+################################################################################
+#     This is the input file for an ABL Simulation.
+#     All the parameters in this file will be used to create Nalu inputs.
+################################################################################
+
+##########################################################################
+# These are the example input files and the files which will be generated.
+##########################################################################
+# The old input files which will be modified
+template_input: template_input_files/abl_precursor_boundary_data.yaml
+template_preprocess: template_input_files/boundary_data.yaml
+
+# The name of the new input files
+new_input: case_2_abl_precursor_boundary_data.yaml
+new_preprocess: case_2_boundary_data_preprocess.yaml
+
+# Establish if the simulation is a restart or not (yes/no)
+restart: no
+
+
+################
+# Time controls
+################
+# Time-step [s]
+time_step: 0.5
+# Total number of time to run [s]
+total_run_time: 50
+# Start time (used when there is a restart)
+restart_time: 20.
+
+
+########
+#  Mesh
+########
+# Here are the mesh properties
+mesh:
+  # Generate the mesh or read from an input file (yes/no)
+  generate: no
+  # The name of the mesh file
+  # If the mesh is generated the preprocessor will generate a mesh
+  # If not the code will read in this mesh
+  mesh_file: restart_data/precursor.rst
+  # The domain bounds [m]
+  domain_bounds_x: [0.0, 500.0]
+  domain_bounds_y: [0.0, 500.0]
+  domain_bounds_z: [0.0, 1000.0]
+
+  # The number of grid points in the x, y, z coordinates
+  # Change this variable
+  number_of_cells: [50, 50, 100]
+
+#########
+# Output
+#########
+# How often to write output [s]
+# This is time-steps in nalu input
+output_frequency: 10000
+# Output file name. It will create the directory
+# Change .e
+output_data_base_name: case_2_output/precursor.exo
+
+# These are the plane averaged statistics
+boundary_layer_statistics:
+  # The file to write output (netcdf)
+  stats_output_file: abl_statistics_sampling.nc
+  # How often sample the statistics
+  time_hist_output_frequency: 1
+
+# These are used to sample boundary data
+boundary_data_sampling:
+  # The mesh used to read and create the planes
+  # This should be the original ABL mesh
+  input_mesh: mesh_abl.exo
+  # The name of the data file which data will be written
+  boundary_data_file: boundary_data.exo
+  # The boundaries to be saved
+  boundaries: [west, south]

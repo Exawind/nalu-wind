@@ -1,0 +1,156 @@
+################################################################################
+#     This is the input file for an ABL Simulation.
+#     All the parameters in this file will be used to create Nalu inputs.
+################################################################################
+
+##########################################################################
+# These are the example input files and the files which will be generated.
+##########################################################################
+# The old input files which will be modified
+template_input: template_input_files/wind_farm.yaml
+template_preprocess: template_input_files/boundary_data.yaml
+
+# The name of the new input files
+new_input: case_3_wind_farm.yaml
+new_preprocess: case_3_preprocess.yaml
+
+# Establish if the simulation is a restart or not (yes/no)
+restart: no
+
+######################
+# Material properties
+######################
+# Density [kg/m^3]
+density:              1.
+# Kinematic viscosity [m^2/s].
+nu:                   1.0E-5
+# Reference potential temperature [K].
+TRef:                 300.0
+# Latitude on the Earth of the site [deg].
+latitude:             41.3
+
+##############
+# Bottom wall
+##############
+# Wall-normal component of temperature flux at wall.
+# A negative value is flux into domain [K-m/s].
+qwall:               0.
+# Surface roughness (m).
+z0:                   0.15
+
+# This is the section for actuator turbine properties
+actuator:
+
+    # The total number of turbines    
+    n_turbines_glob: 2
+    # The fast time-step. Make sure this is correct in all Fast files
+    dt_fast: 0.00625
+    # How often to write checkpoint
+    n_every_checkpoint: 1000
+
+
+    # This is the list of turbines
+    # To add more turbines, simply add more entries and name the turbines in 
+    # sequential order: Turbine0, Turbine1, ... TurbineN-1, TurbineN
+    Turbines:
+    
+        # Turbines need to be named according to the order:
+        #     Turbine0, Turbine1, ...
+        Turbine0:
+            # The number of actuator points along the blade
+            num_force_pts_blade: 50
+            # Number of actuator points along the tower
+            num_force_pts_tower: 20
+            # The drag coefficient of the nacelle
+            nacelle_cd: 1.0
+            # The frontal reference area of the nacelle
+            nacelle_area: 8.0
+            # The value of epsilon
+            epsilon: [ 12.0, 12.0, 12.0 ]
+            # The position of the base of the turbine
+            turbine_base_pos: [ 150.0, 150.0, 0.0 ]
+            # A position close to the hub (recommended tower height)
+            turbine_hub_pos: [ 0.0, 0.0, 0.0 ]
+            # The name of the restart file name
+            restart_filename: restart_file
+            # The fast input file
+            fast_input_filename: nrel5mw.fst
+            # The name of the turbine
+            turbine_name: machine_one
+
+        Turbine1:
+            # The number of actuator points along the blade
+            num_force_pts_blade: 67
+            # Number of actuator points along the tower
+            num_force_pts_tower: 12
+            # The drag coefficient of the nacelle
+            nacelle_cd: 1.0
+            # The frontal reference area of the nacelle
+            nacelle_area: 8.0
+            # The value of epsilon
+            epsilon: [ 12.0, 12.0, 12.0 ]
+            # The position of the base of the turbine
+            # This is placed 3D from the first one
+            turbine_base_pos: [ 250.0, 250.0, 0.0 ]
+            # A position close to the hub (recommended tower height)
+            turbine_hub_pos: [ 0.0, 0.0, 0.0 ]
+            # The name of the restart file name
+            restart_filename: restart_file
+            # The fast input file
+            fast_input_filename: nrel5mw2.fst
+            # The name of the turbine
+            turbine_name: machine_two
+
+
+################
+# Time controls
+################
+# Time-step [s]
+time_step: 0.5
+# Total number of time to run [s]
+total_run_time: 50
+# Start time (used when there is a restart)
+restart_time: 20.
+start_time: 20.
+
+
+########
+#  Mesh
+########
+# Here are the mesh properties
+mesh:
+  # Generate the mesh or read from an input file (yes/no)
+  generate: no
+  # The name of the mesh file
+  # If the mesh is generated the preprocessor will generate a mesh
+  # If not the code will read in this mesh
+  mesh_file: restart_data/precursor.rst
+  # The domain bounds [m]
+  domain_bounds_x: [0.0, 500.0]
+  domain_bounds_y: [0.0, 500.0]
+  domain_bounds_z: [0.0, 1000.0]
+
+  # The number of grid points in the x, y, z coordinates
+  # Change this variable
+  number_of_cells: [50, 50, 100]
+
+#########
+# Output
+#########
+# How often to write output [s]
+# This is time-steps in nalu input
+output_frequency: 10000
+# Output file name. It will create the directory
+# Change .e
+output_data_base_name: case_3_output/precursor.exo
+
+# These are used to specify an inflow/outflow boundary condition
+inflow_outflow:
+  # This is the boundary data
+  input_mesh: boundaryData/boundary_data.exo
+  # The name of the data file which data will be written
+  boundary_data_file: boundary_data.exo
+  # The boundaries to be saved
+  inflow: [west, south]
+  open: [east, north]
+

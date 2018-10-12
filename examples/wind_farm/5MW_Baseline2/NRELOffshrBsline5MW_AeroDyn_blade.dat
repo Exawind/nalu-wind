@@ -1,0 +1,16 @@
+------- AERODYN v15.00.* BLADE DEFINITION INPUT FILE -------------------------------------
+NREL 5.0 MW offshore baseline aerodynamic blade input properties; note that we need to add the aerodynamic center to this file
+======  Blade Properties =================================================================
+         7   NumBlNds           - Number of blade nodes used in the analysis (-)
+  BlSpn        BlCrvAC        BlSwpAC        BlCrvAng       BlTwist        BlChord          BlAFID
+   (m)           (m)            (m)            (deg)         (deg)           (m)              (-)
+0.0000000E+00  0.0000000E+00  0.0000000E+00 0.0000000E+00  1.3308000E+01  3.5420000E+00        1
+1.0250000E+01 -1.0909141E-01 -4.6120149E-01 0.0000000E+00  1.3308000E+01  4.5570000E+00        3
+2.2550000E+01 -8.3186967E-02 -5.2457001E-01 0.0000000E+00  9.0110000E+00  4.2490000E+00        5
+3.4850000E+01 -4.0899260E-02 -4.3583519E-01 0.0000000E+00  5.3610000E+00  3.5020000E+00        7
+4.3050000E+01 -2.0511081E-02 -3.7569051E-01 0.0000000E+00  3.1250000E+00  3.0100000E+00        8
+5.4666700E+01 -4.3546914E-03 -2.8909220E-01 0.0000000E+00  8.6300000E-01  2.3130000E+00        8
+6.1499900E+01 -3.2815226E-04 -1.7737470E-01 0.0000000E+00  1.0600000E-01  1.4190000E+00        8
+
+!bjj: because of precision in the BD-AD coupling, 61.5m didn't work, so I changed it to 61.4999m
+6.1500000E+01 -3.2815226E-04 -1.7737470E-01 0.0000000E+00  1.0600000E-01  1.4190000E+00        8

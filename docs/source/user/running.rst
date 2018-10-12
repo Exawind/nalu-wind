@@ -20,14 +20,3 @@ additional files:
    nalu_run/nalux
    nalu_run/nalu_inp
    nalu_run/McAlisterLessonsLearned
-
-
-Examples
---------
-
-Here we describe any examples we have for users to try running Nalu-Wind.
-
-Tutorials
----------
-
-Here we describe any tutorials that may be further in-depth than examples.
