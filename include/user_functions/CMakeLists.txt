@@ -8,6 +8,7 @@ add_sources(GlobalHeaderList
    ConvectingTaylorVortexPressureAuxFunction.h
    ConvectingTaylorVortexVelocityAuxFunction.h
    FlowPastCylinderTempAuxFunction.h
+   GaussianWakeVelocityAuxFunction.h
    KovasznayPressureAuxFunction.h
    KovasznayVelocityAuxFunction.h
    LinearRampMeshDisplacementAuxFunction.h

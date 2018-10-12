@@ -88,7 +88,7 @@ realms:
           mass_fraction: 1.0
 
       specifications:
- 
+
         # Density here was computed such that P_ref = rho_ref*(R/mw)*300K
         - name: density
           type: constant

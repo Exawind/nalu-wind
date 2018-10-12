@@ -34,6 +34,7 @@ add_sources(GlobalUnitSourceList
    UnitTestSimdContAdvElem.C
    UnitTestSimdMomentum.C
    UnitTestSingleHexPromotion.C
+   UnitTestSpinnerLidarPattern.C
    UnitTestSuppAlgDataSharing.C
    UnitTestTpetra.C
    UnitTestUtils.C

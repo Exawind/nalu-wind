@@ -23,6 +23,10 @@ namespace nalu{
     return (1.0e6*std::numeric_limits<double>::min());
   }
 
+  inline constexpr double small_positive_value() {
+    return 1.0e2*std::numeric_limits<double>::epsilon();
+  }
+
   template <typename ScalarType>
   KOKKOS_FORCEINLINE_FUNCTION ScalarType vecnorm_sq2(const ScalarType* x) {
     return (x[0] * x[0] + x[1] * x[1]);
@@ -31,6 +35,14 @@ namespace nalu{
   template <typename ScalarType>
   KOKKOS_FORCEINLINE_FUNCTION ScalarType vecnorm_sq3(const ScalarType* x) {
     return (x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
+  }
+
+  template <typename ScalarType>
+  void normalize_vec3(ScalarType* x) {
+    const ScalarType invmag = 1.0 / stk::math::sqrt(vecnorm_sq3(x));
+    x[0] *= invmag;
+    x[1] *= invmag;
+    x[2] *= invmag;
   }
 
   template <typename ScalarType>
