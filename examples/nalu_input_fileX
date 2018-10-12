@@ -139,7 +139,7 @@ class mapping_object_class():
             # Normal temperature gradient
             'TGradUpper': self.set_top_temperature_gradient,
             # Turbines
-            'Turbines': self.set_turbines,
+            'actuator': self.set_turbines,
             # The boundary data sampling
             'boundary_data_sampling': self.set_boundary_data_sampling,
             # How often to write restart files

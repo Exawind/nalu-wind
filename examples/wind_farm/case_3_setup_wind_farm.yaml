@@ -17,6 +17,27 @@ new_preprocess: case_3_preprocess.yaml
 # Establish if the simulation is a restart or not (yes/no)
 restart: no
 
+######################
+# Material properties
+######################
+# Density [kg/m^3]
+density:              1.
+# Kinematic viscosity [m^2/s].
+nu:                   1.0E-5
+# Reference potential temperature [K].
+TRef:                 300.0
+# Latitude on the Earth of the site [deg].
+latitude:             41.3
+
+##############
+# Bottom wall
+##############
+# Wall-normal component of temperature flux at wall.
+# A negative value is flux into domain [K-m/s].
+qwall:               0.
+# Surface roughness (m).
+z0:                   0.15
+
 # This is the section for actuator turbine properties
 actuator:
 
@@ -90,6 +111,7 @@ time_step: 0.5
 total_run_time: 50
 # Start time (used when there is a restart)
 restart_time: 20.
+start_time: 20.
 
 
 ########

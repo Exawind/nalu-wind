@@ -1,3 +1,6 @@
+.. _alm_example:
+
+
 Actuator Line Model in Uniform Inflow
 -------------------------------------
 
