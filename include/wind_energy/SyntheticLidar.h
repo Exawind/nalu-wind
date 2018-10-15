@@ -72,9 +72,6 @@ public:
   std::unique_ptr<DataProbeSpecInfo> determine_line_of_site_info(const YAML::Node& node);
 private:
   void load(const YAML::Node& node);
-  void write_netcdf();
-  void setup_transfer();
-
 
   SpinnerLidarSegmentGenerator segGen;
 
