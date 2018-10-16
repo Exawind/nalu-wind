@@ -182,6 +182,12 @@ add_sources(GlobalSourceList
    UnitTests.C
 )
 
+if(ENABLE_FFTW)
+   add_sources(GlobalSourceList
+      AssembleMomentumEdgeABLTopBC.C
+   )
+endif()
+
 if(ENABLE_OPENFAST)
    add_sources(GlobalSourceList
       ActuatorLineFAST.C

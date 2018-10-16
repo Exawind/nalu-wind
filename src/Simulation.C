@@ -165,6 +165,9 @@ void Simulation::run()
 void Simulation::high_level_banner() {
 
   std::vector<std::string> additionalTPLs;
+#ifdef NALU_USES_FFTW
+  additionalTPLs.push_back("FFTW");
+#endif
 #ifdef NALU_USES_OPENFAST
   additionalTPLs.push_back("OpenFAST");
 #endif

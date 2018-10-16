@@ -26,7 +26,9 @@
 #include <AssembleMomentumElemWallFunctionSolverAlgorithm.h>
 #include <AssembleMomentumElemABLWallFunctionSolverAlgorithm.h>
 #include <AssembleMomentumEdgeABLWallFunctionSolverAlgorithm.h>
+#ifdef NALU_USES_FFTW
 #include <AssembleMomentumEdgeABLTopBC.h>
+#endif
 #include <AssembleMomentumNonConformalSolverAlgorithm.h>
 #include <AssembleNodalGradAlgorithmDriver.h>
 #include <AssembleNodalGradPAlgorithmDriver.h>
@@ -2064,6 +2066,7 @@ MomentumEquationSystem::register_symmetry_bc(
 //--------------------------------------------------------------------------
 //-------- register_abltop_bc ------------------------------------------------
 //--------------------------------------------------------------------------
+#ifdef NALU_USES_FFTW
 void
 MomentumEquationSystem::register_abltop_bc(
   stk::mesh::Part *part,
@@ -2147,6 +2150,7 @@ MomentumEquationSystem::register_abltop_bc(
     }
   }
 }
+#endif
 
 //--------------------------------------------------------------------------
 //-------- register_non_conformal_bc ---------------------------------------
@@ -3075,6 +3079,7 @@ ContinuityEquationSystem::register_symmetry_bc(
 //--------------------------------------------------------------------------
 //-------- register_abltop_bc ----------------------------------------------
 //--------------------------------------------------------------------------
+#ifdef NALU_USES_FFTW
 void
 ContinuityEquationSystem::register_abltop_bc(
   stk::mesh::Part *part,
@@ -3240,6 +3245,7 @@ ContinuityEquationSystem::register_abltop_bc(
   }
 
 }
+#endif
     
 
 //--------------------------------------------------------------------------
