@@ -115,9 +115,6 @@ if(ENABLE_TIOGA)
   add_definitions("-DNALU_USES_TIOGA")
 endif()
 
-find_package(FFTW REQUIRED)
-include_directories(SYSTEM ${FFTW_INCLUDE_DIRS})
-
 ########################### NALU #####################################
 # Add any extra flags based on compiler and/or OS
 message("-- CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
