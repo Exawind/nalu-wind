@@ -2066,7 +2066,6 @@ MomentumEquationSystem::register_symmetry_bc(
 //--------------------------------------------------------------------------
 //-------- register_abltop_bc ------------------------------------------------
 //--------------------------------------------------------------------------
-#ifdef NALU_USES_FFTW
 void
 MomentumEquationSystem::register_abltop_bc(
   stk::mesh::Part *part,
@@ -2074,12 +2073,14 @@ MomentumEquationSystem::register_abltop_bc(
   const ABLTopBoundaryConditionData & abltopBCData)
 {
   auto userData = abltopBCData.userData_;
+
   if (!userData.ABLTopBC_) {
     SymmetryBoundaryConditionData symData(abltopBCData.boundaryConditions_);
     register_symmetry_bc(part, partTopo, symData);
     return;
   }
 
+#ifdef NALU_USES_FFTW
   auto& meta_data = realm_.meta_data();
   // algorithm type
   const AlgorithmType algType = TOP_ABL;
@@ -2149,8 +2150,10 @@ MomentumEquationSystem::register_abltop_bc(
       
     }
   }
-}
+#else
+  throw std::runtime_error("Cannot initialize ABL top BC because FFTW support is mising.\n Set ENABLE_FFTW to ON in nalu-wind/CMakeLists.txt, reconfigure and recompile.");
 #endif
+}
 
 //--------------------------------------------------------------------------
 //-------- register_non_conformal_bc ---------------------------------------
@@ -3079,7 +3082,6 @@ ContinuityEquationSystem::register_symmetry_bc(
 //--------------------------------------------------------------------------
 //-------- register_abltop_bc ----------------------------------------------
 //--------------------------------------------------------------------------
-#ifdef NALU_USES_FFTW
 void
 ContinuityEquationSystem::register_abltop_bc(
   stk::mesh::Part *part,
@@ -3087,12 +3089,14 @@ ContinuityEquationSystem::register_abltop_bc(
   const ABLTopBoundaryConditionData &abltopBCData)
 {
   auto userData = abltopBCData.userData_;
+
   if (!userData.ABLTopBC_) {
     SymmetryBoundaryConditionData symData(abltopBCData.boundaryConditions_);
     register_symmetry_bc(part, partTopo, symData);
     return;
   }
 
+#ifdef NALU_USES_FFTW
   // algorithm type
   const AlgorithmType algType = TOP_ABL;
 
@@ -3244,8 +3248,10 @@ ContinuityEquationSystem::register_abltop_bc(
     }
   }
 
-}
+#else
+  throw std::runtime_error("Cannot initialize ABL top BC because FFTW support is mising.\n Set ENABLE_FFTW to ON in nalu-wind/CMakeLists.txt, reconfigure and recompile.");
 #endif
+}
     
 
 //--------------------------------------------------------------------------
