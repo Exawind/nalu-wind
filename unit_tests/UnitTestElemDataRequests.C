@@ -16,7 +16,6 @@
 void do_the_test(const sierra::nalu::ElemDataRequests& dataReq)
 {
   sierra::nalu::ElemDataRequestsNGP ngpDataReq(dataReq);
-  ngpDataReq.copy_to_device();
 
   unsigned numCorrectTests = 0;
   auto team_exec = sierra::nalu::get_device_team_policy(1, 0, 0);

@@ -64,7 +64,7 @@
 #include <kernel/KernelBuilderLog.h>
 
 // kernels
-#include <AssembleElemSolverAlgorithm.h>
+#include <AssembleFaceElemSolverAlgorithm.h>
 #include <kernel/ScalarMassElemKernel.h>
 #include <kernel/ScalarAdvDiffElemKernel.h>
 #include <kernel/ScalarUpwAdvDiffElemKernel.h>

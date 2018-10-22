@@ -11,7 +11,7 @@
 
 #include <stk_mesh/base/BulkData.hpp>
 
-#include <ElemDataRequests.h>
+#include <ElemDataRequestsNGP.h>
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
 
@@ -23,7 +23,7 @@ namespace nalu{
 struct SharedMemData {
     SharedMemData(const sierra::nalu::TeamHandleType& team,
          const stk::mesh::BulkData& bulk,
-         const ElemDataRequests& dataNeededByKernels,
+         const ElemDataRequestsNGP& dataNeededByKernels,
          unsigned nodesPerEntity,
          unsigned rhsSize)
      : simdPrereqData(team, bulk, nodesPerEntity, dataNeededByKernels)
@@ -56,8 +56,8 @@ struct SharedMemData {
 struct SharedMemData_FaceElem {
     SharedMemData_FaceElem(const sierra::nalu::TeamHandleType& team,
          const stk::mesh::BulkData& bulk,
-         const ElemDataRequests& faceDataNeeded,
-         const ElemDataRequests& elemDataNeeded,
+         const ElemDataRequestsNGP& faceDataNeeded,
+         const ElemDataRequestsNGP& elemDataNeeded,
          const ScratchMeInfo& meElemInfo,
          unsigned rhsSize)
      : simdFaceViews(team, bulk, meElemInfo.nodesPerFace_, faceDataNeeded),
