@@ -54,6 +54,9 @@ struct FieldInfo {
   FieldInfo(const stk::mesh::FieldBase* fld, unsigned tensorDim1, unsigned tensorDim2)
   : field(fld), scalarsDim1(tensorDim1), scalarsDim2(tensorDim2)
   {}
+  FieldInfo()
+  : field(nullptr), scalarsDim1(0), scalarsDim2(0)
+  {}
 
   const stk::mesh::FieldBase* field;
   unsigned scalarsDim1;

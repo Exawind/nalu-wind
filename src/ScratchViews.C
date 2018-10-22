@@ -87,13 +87,13 @@ void gather_elem_node_field(const stk::mesh::FieldBase& field,
   }
 }
 
-int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDim)
+int get_num_scalars_pre_req_data(ElemDataRequestsNGP& dataNeeded, int nDim)
 {
   /* master elements are allowed to be null if they are not required */
-  MasterElement *meFC  = dataNeededBySuppAlgs.get_cvfem_face_me();
-  MasterElement *meSCS = dataNeededBySuppAlgs.get_cvfem_surface_me();
-  MasterElement *meSCV = dataNeededBySuppAlgs.get_cvfem_volume_me();
-  MasterElement *meFEM = dataNeededBySuppAlgs.get_fem_volume_me();
+  MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
+  MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
+  MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
+  MasterElement *meFEM = dataNeeded.get_fem_volume_me();
   
   const bool faceDataNeeded = meFC != nullptr
     && meSCS == nullptr && meSCV == nullptr && meFEM == nullptr;
@@ -115,8 +115,9 @@ int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDi
   const int numFemIp = meFEM != nullptr ? meFEM->numIntPoints_ : 0;
   int numScalars = 0;
   
-  const FieldSet& neededFields = dataNeededBySuppAlgs.get_fields();
-  for(const FieldInfo& fieldInfo : neededFields) {
+  const ElemDataRequestsNGP::FieldInfoView& neededFields = dataNeeded.get_fields();
+  for(unsigned f=0; f<neededFields.size(); ++f) {
+    const FieldInfo& fieldInfo = neededFields(f);
     stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
     unsigned scalarsPerEntity = fieldInfo.scalarsDim1;
     unsigned entitiesPerElem = fieldEntityRank==stk::topology::NODE_RANK ? nodesPerEntity : 1;
@@ -130,18 +131,18 @@ int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDi
     numScalars += entitiesPerElem*scalarsPerEntity;
   }
 
-  for (auto it = dataNeededBySuppAlgs.get_coordinates_map().begin();
-       it != dataNeededBySuppAlgs.get_coordinates_map().end(); ++it)
-  {
-    const std::set<ELEM_DATA_NEEDED>& dataEnums =
-      dataNeededBySuppAlgs.get_data_enums(it->first);
+  const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+  for(unsigned i=0; i<coordsTypes.size(); ++i) {
+    auto cType = coordsTypes(i);
+    const ElemDataRequestsNGP::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
     int dndxLength = 0, dndxLengthFC = 0, gUpperLength = 0, gLowerLength = 0;
 
     // Updated logic for data sharing of deriv and det_j
     bool needDeriv = false; bool needDerivScv = false; bool needDerivFem = false; bool needDerivFC = false;
     bool needDetj = false; bool needDetjScv = false; bool needDetjFem = false; bool needDetjFC = false;
 
-    for(ELEM_DATA_NEEDED data : dataEnums) {
+    for(unsigned d=0; d<dataEnums.size(); ++d) {
+      ELEM_DATA_NEEDED data = dataEnums(d);
       switch(data)
       {
         case FC_AREAV:
@@ -219,7 +220,7 @@ int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDi
   return numScalars + 8;
 }
 
-int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo)
+int get_num_scalars_pre_req_data(ElemDataRequestsNGP& dataNeeded, int nDim, const ScratchMeInfo &meInfo)
 {
   const int nodesPerEntity = meInfo.nodalGatherSize_;
   const int numFaceIp = meInfo.numFaceIp_;
@@ -228,8 +229,9 @@ int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDi
   const int numFemIp = meInfo.numFemIp_;
   int numScalars = 0;
 
-  const FieldSet& neededFields = dataNeededBySuppAlgs.get_fields();
-  for(const FieldInfo& fieldInfo : neededFields) {
+  const ElemDataRequestsNGP::FieldInfoView& neededFields = dataNeeded.get_fields();
+  for(unsigned f=0; f<neededFields.size(); ++f) {
+    const FieldInfo& fieldInfo = neededFields(f);
     stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
     unsigned scalarsPerEntity = fieldInfo.scalarsDim1;
     unsigned entitiesPerElem = fieldEntityRank==stk::topology::NODE_RANK ? nodesPerEntity : 1;
@@ -243,18 +245,18 @@ int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDi
     numScalars += entitiesPerElem*scalarsPerEntity;
   }
 
-  for (auto it = dataNeededBySuppAlgs.get_coordinates_map().begin();
-       it != dataNeededBySuppAlgs.get_coordinates_map().end(); ++it)
-  {
-    const std::set<ELEM_DATA_NEEDED>& dataEnums =
-      dataNeededBySuppAlgs.get_data_enums(it->first);
+  const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+  for(unsigned i=0; i<coordsTypes.size(); ++i) {
+    auto cType = coordsTypes(i);
     int dndxLength = 0, dndxLengthFC = 0, gUpperLength = 0, gLowerLength = 0;
 
     // Updated logic for data sharing of deriv and det_j
     bool needDeriv = false; bool needDerivScv = false; bool needDerivFem = false; bool needDerivFC = false;
     bool needDetj = false; bool needDetjScv = false; bool needDetjFem = false; bool needDetjFC = false;
 
-    for(ELEM_DATA_NEEDED data : dataEnums) {
+    const ElemDataRequestsNGP::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
+    for(unsigned d=0; d<dataEnums.size(); ++d) {
+      ELEM_DATA_NEEDED data = dataEnums(d);
       switch(data)
       {
         case FC_AREAV:
@@ -334,7 +336,7 @@ int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDi
 
 
 void fill_pre_req_data(
-  ElemDataRequests& dataNeeded,
+  ElemDataRequestsNGP& dataNeeded,
   const stk::mesh::BulkData& bulkData,
   stk::mesh::Entity elem,
   ScratchViews<double>& prereqData,
@@ -348,8 +350,9 @@ void fill_pre_req_data(
   MasterElement *meFEM = dataNeeded.get_fem_volume_me();
   prereqData.elemNodes = bulkData.begin_nodes(elem);
 
-  const FieldSet& neededFields = dataNeeded.get_fields();
-  for(const FieldInfo& fieldInfo : neededFields) {
+  const ElemDataRequestsNGP::FieldInfoView& neededFields = dataNeeded.get_fields();
+  for(unsigned f=0; f<neededFields.size(); ++f) {
+    const FieldInfo& fieldInfo = neededFields(f);
     stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
     unsigned scalarsDim1 = fieldInfo.scalarsDim1;
     bool isTensorField = fieldInfo.scalarsDim2 > 1;
@@ -396,22 +399,23 @@ void fill_pre_req_data(
 
   if (fillMEViews)
   {
-    for (auto it = dataNeeded.get_coordinates_map().begin();
-         it != dataNeeded.get_coordinates_map().end(); ++it) {
-      auto cType = it->first;
-      auto coordField = it->second;
-  
-      const std::set<ELEM_DATA_NEEDED>& dataEnums = dataNeeded.get_data_enums(cType);
+    const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+    const ElemDataRequestsNGP::FieldView& coordsFields = dataNeeded.get_coordinates_fields();
+    for(unsigned i=0; i<coordsTypes.size(); ++i) {
+      auto cType = coordsTypes(i);
+      const stk::mesh::FieldBase* coordField = coordsFields(i);
+
+      const ElemDataRequestsNGP::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
       SharedMemView<double**>* coordsView = &prereqData.get_scratch_view_2D(*coordField);
       auto& meData = prereqData.get_me_views(cType);
-  
+
       meData.fill_master_element_views(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM);
     }
   }
 }
 
 void fill_master_element_views(
-  ElemDataRequests& dataNeeded,
+  ElemDataRequestsNGP& dataNeeded,
   const stk::mesh::BulkData& bulkData,
   ScratchViews<DoubleType>& prereqData,
   int faceOrdinal)
@@ -421,15 +425,16 @@ void fill_master_element_views(
     MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
     MasterElement *meFEM = dataNeeded.get_fem_volume_me();
 
-    for (auto it = dataNeeded.get_coordinates_map().begin();
-         it != dataNeeded.get_coordinates_map().end(); ++it) {
-      auto cType = it->first;
-      auto coordField = it->second;
-  
-      const std::set<ELEM_DATA_NEEDED>& dataEnums = dataNeeded.get_data_enums(cType);
+    const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+    const ElemDataRequestsNGP::FieldView& coordsFields = dataNeeded.get_coordinates_fields();
+    for(unsigned i=0; i<coordsTypes.size(); ++i) {
+      auto cType = coordsTypes(i);
+      const stk::mesh::FieldBase* coordField = coordsFields(i);
+
+      const ElemDataRequestsNGP::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
       SharedMemView<DoubleType**>* coordsView = &prereqData.get_scratch_view_2D(*coordField);
       auto& meData = prereqData.get_me_views(cType);
-  
+
       meData.fill_master_element_views_new_me(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM, faceOrdinal);
     }
 }
