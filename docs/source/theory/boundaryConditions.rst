@@ -427,7 +427,7 @@ The procedure for applying the boundary condition is as follows:
 
    \tau_{s_i} = \lambda_s u_{||_i} = \frac{\kappa\rho u_\tau}{\log(z/z_0) - \psi^\prime (z/L)},
 
-.. _theory_abltop_bc:
+.. _abl_top_conditions:
 
 Atmospheric Boundary Layer Top Conditions
 +++++++++++++++++++++++++++++++++++++++++

@@ -27,14 +27,15 @@ linear_solvers:
     kspace: 75
     output_level: 0
     recompute_preconditioner: no
-    muelu_xml_file_name: ../../xml/milestone.xml
+    muelu_xml_file_name: ./milestone.xml
+
 
 # Specify the differnt physics realms, just the fluid realm in this case.
 realms:
 
   # The fluid realm
   - name: fluidRealm
-    mesh: ../../mesh/ablHill3d.exo
+    mesh: ./ablHill3d.exo
     use_edges: yes
     automatic_decomposition_type: rcb
 

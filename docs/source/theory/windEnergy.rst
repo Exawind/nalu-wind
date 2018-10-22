@@ -306,21 +306,10 @@ flux for modeling stratified flows.
 Top boundary condition
 ~~~~~~~~~~~~~~~~~~~~~~
 
-For problems with minimal streamline curvature near the upper boundary 
-(e.g. nearly flat terrain, negligible turbine blockage), a 
-:ref:`symmetry BC <theory_symmetry_bc>` (slip wall) can be when modeling 
-wind farm problems. By default a zero vertical temperature gradient will
-be imposed for the enthalpy equation when the symmetry boundary condition
-is used.  If a non-zero normal temperature gradient is required to
-drive the flow to a desired temperaure profile, e.g., a capping inversion,
-then the :ref:`abltop BC <theory_abltop_bc>` can be used.  In this case
-the user_data input normal_temperature_gradient: value will set the normal
-temperature gradient to value at the top boundary.
-
-For cases with significant terrain features or significant turbine blockage,
-the :ref:`abltop BC <theory_abltop_bc>` can also be used to achieve an 
-open boundary that allows for both inflows and outflows at the domain
-top.  See the :ref:`abltop BC <theory_abltop_bc>` documentation for details.
+For momentum, a :ref:`symmetry BC <theory_symmetry_bc>` is used when modeling
+wind farm problems. For enthalpy equation, a normal temperature gradient can be
+specified to drive the flow to a desired temperaure profile, e.g., capping
+inversion temperature profile.
 
 Inlet conditions
 ~~~~~~~~~~~~~~~~
