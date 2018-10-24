@@ -103,6 +103,10 @@ class EquationSystems
     const std::string targetName,
     const SymmetryBoundaryConditionData &symmetryBCData);
 
+  void register_abltop_bc(
+    const std::string targetName,
+    const ABLTopBoundaryConditionData &ablTopBCData);
+
   void register_periodic_bc(
     const std::string targetNameMaster,
     const std::string targetNameSlave,

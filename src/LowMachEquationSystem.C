@@ -26,6 +26,9 @@
 #include <AssembleMomentumElemWallFunctionSolverAlgorithm.h>
 #include <AssembleMomentumElemABLWallFunctionSolverAlgorithm.h>
 #include <AssembleMomentumEdgeABLWallFunctionSolverAlgorithm.h>
+#ifdef NALU_USES_FFTW
+#include <AssembleMomentumEdgeABLTopBC.h>
+#endif
 #include <AssembleMomentumNonConformalSolverAlgorithm.h>
 #include <AssembleNodalGradAlgorithmDriver.h>
 #include <AssembleNodalGradPAlgorithmDriver.h>
@@ -244,6 +247,7 @@ LowMachEquationSystem::LowMachEquationSystem(
     dualNodalVolume_(NULL),
     edgeAreaVec_(NULL),
     surfaceForceAndMomentAlgDriver_(NULL),
+    xyBCType_(2,0),
     isInit_(true)
 {
   // push back EQ to manager
@@ -1988,7 +1992,7 @@ void
 MomentumEquationSystem::register_symmetry_bc(
   stk::mesh::Part *part,
   const stk::topology &partTopo,
-  const SymmetryBoundaryConditionData &/*symmetryBCData*/)
+  const SymmetryBoundaryConditionData & symmetryBCData)
 {
   // algorithm type
   const AlgorithmType algType = SYMMETRY;
@@ -2012,21 +2016,21 @@ MomentumEquationSystem::register_symmetry_bc(
 
   if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_) {
     // solver algs; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
-      = solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      SolverAlgorithm *theAlg = NULL;
-      if ( realm_.realmUsesEdges_ ) {
-        theAlg = new AssembleMomentumEdgeSymmetrySolverAlgorithm(realm_, part, this);
-      }
-      else {
-        theAlg = new AssembleMomentumElemSymmetrySolverAlgorithm(realm_, part, this);
-      }
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
-    }
+	    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
+		    = solverAlgDriver_->solverAlgMap_.find(algType);
+	    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
+		    SolverAlgorithm *theAlg = NULL;
+		    if ( realm_.realmUsesEdges_ ) {
+			    theAlg = new AssembleMomentumEdgeSymmetrySolverAlgorithm(realm_, part,this);
+		    }
+		    else {
+			    theAlg = new AssembleMomentumElemSymmetrySolverAlgorithm(realm_, part, this);
+		    }
+		    solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+	    }
+	    else {
+		    itsi->second->partVec_.push_back(part);
+	    }
   }
   else {
     auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
@@ -2057,6 +2061,98 @@ MomentumEquationSystem::register_symmetry_bc(
       
     }
   }
+}
+
+//--------------------------------------------------------------------------
+//-------- register_abltop_bc ------------------------------------------------
+//--------------------------------------------------------------------------
+void
+MomentumEquationSystem::register_abltop_bc(
+  stk::mesh::Part *part,
+  const stk::topology &partTopo,
+  const ABLTopBoundaryConditionData & abltopBCData)
+{
+  auto userData = abltopBCData.userData_;
+
+  if (!userData.ABLTopBC_) {
+    SymmetryBoundaryConditionData symData(abltopBCData.boundaryConditions_);
+    register_symmetry_bc(part, partTopo, symData);
+    return;
+  }
+
+#ifdef NALU_USES_FFTW
+  auto& meta_data = realm_.meta_data();
+  // algorithm type
+  const AlgorithmType algType = TOP_ABL;
+  auto user_data = abltopBCData.userData_;
+
+  VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
+  GenericFieldType &dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
+
+  // push mesh part
+  notProjectedPart_.push_back(part);
+
+  // non-solver; contribution to Gjui; allow for element-based shifted
+  if ( !managePNG_ ) {
+    std::map<AlgorithmType, Algorithm *>::iterator it
+      = assembleNodalGradAlgDriver_->algMap_.find(algType);
+    if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
+      Algorithm *theAlg
+        = new AssembleNodalGradUBoundaryAlgorithm(realm_, part, &velocityNp1, &dudxNone, edgeNodalGradient_);
+      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
+    }
+    else {
+      it->second->partVec_.push_back(part);
+    }
+  }
+
+  if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_) {
+    // solver algs; lhs
+  std::string bcFieldName = realm_.solutionOptions_->activateOpenMdotCorrection_?"velocity_bc" : "cont_velocity_bc";
+  VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, bcFieldName));
+  stk::mesh::put_field(*theBcField, *part, 3);
+      auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
+      if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
+  	SolverAlgorithm* theAlg = new AssembleMomentumEdgeABLTopBC(realm_, 
+          part, this, user_data.grid_dims_, user_data.horiz_bcs_,
+          user_data.z_sample_);
+	solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
+      }	else {
+	it->second->partVec_.push_back(part);	
+      }	
+  }
+  else {
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+
+    stk::topology elemTopo = get_elem_topo(realm_, *part);
+
+    AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+
+    std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
+      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "symm");
+
+    auto& activeKernels = faceElemSolverAlg->activeKernels_;
+
+    if (solverAlgWasBuilt) {
+
+      const stk::mesh::MetaData& metaData = realm_.meta_data();
+      const std::string viscName = realm_.is_turbulent()
+        ? "effective_viscosity_u" : "viscosity";
+      
+      build_face_elem_topo_kernel_automatic<MomentumSymmetryElemKernel>
+        (partTopo, elemTopo, *this, activeKernels, "momentum_symmetry",
+         metaData, *realm_.solutionOptions_,
+         metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity"),
+         metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName),
+         faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_
+         );
+      
+    }
+  }
+#else
+  throw std::runtime_error("Cannot initialize ABL top BC because FFTW support is mising.\n Set ENABLE_FFTW to ON in nalu-wind/CMakeLists.txt, reconfigure and recompile.");
+#endif
 }
 
 //--------------------------------------------------------------------------
@@ -2982,6 +3078,181 @@ ContinuityEquationSystem::register_symmetry_bc(
     }
   }
 }
+
+//--------------------------------------------------------------------------
+//-------- register_abltop_bc ----------------------------------------------
+//--------------------------------------------------------------------------
+void
+ContinuityEquationSystem::register_abltop_bc(
+  stk::mesh::Part *part,
+  const stk::topology &partTopo,
+  const ABLTopBoundaryConditionData &abltopBCData)
+{
+  auto userData = abltopBCData.userData_;
+
+  if (!userData.ABLTopBC_) {
+    SymmetryBoundaryConditionData symData(abltopBCData.boundaryConditions_);
+    register_symmetry_bc(part, partTopo, symData);
+    return;
+  }
+
+#ifdef NALU_USES_FFTW
+  // algorithm type
+  const AlgorithmType algType = TOP_ABL;
+
+  if ( !realm_.realmUsesEdges_ )
+    throw std::runtime_error("ABLTopBoundaryCondition::Error you must use the edge-based scheme");
+
+  ScalarFieldType &pressureNone = pressure_->field_of_state(stk::mesh::StateNone);
+  VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
+
+/*
+  // register boundary data; cont_velocity_bc
+  if ( !realm_.solutionOptions_->activateOpenMdotCorrection_ ) {
+  std::string bcFieldName = realm_.solutionOptions_->activateOpenMdotCorrection_?"velocity_bc" : "cont_velocity_bc";
+    VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, bcFieldName));
+    stk::mesh::put_field(*theBcField, *part, nDim);
+    
+    // extract the value for user specified velocity and save off the AuxFunction
+    InflowUserData userData = inflowBCData.userData_;
+    std::string velocityName = "velocity";
+    UserDataType theDataType = get_bc_data_type(userData, velocityName);
+    
+    AuxFunction *theAuxFunc = NULL;
+    if ( CONSTANT_UD == theDataType ) {
+      Velocity ux = userData.u_;
+      std::vector<double> userSpec(nDim);
+      userSpec[0] = ux.ux_;
+      userSpec[1] = ux.uy_;
+      if ( nDim > 2)
+        userSpec[2] = ux.uz_;
+      
+      // new it
+      theAuxFunc = new ConstantAuxFunction(0, nDim, userSpec);    
+    }
+    else if ( FUNCTION_UD == theDataType ) {
+      // extract the name/params
+      std::string fcnName = get_bc_function_name(userData, velocityName);
+      std::vector<double> theParams = get_bc_function_params(userData, velocityName);
+      if ( theParams.size() == 0 )
+        NaluEnv::self().naluOutputP0() << "function parameter size is zero" << std::endl;
+      // switch on the name found...
+      if ( fcnName == "convecting_taylor_vortex" ) {
+        theAuxFunc = new ConvectingTaylorVortexVelocityAuxFunction(0,nDim);
+      }
+      else if ( fcnName == "SteadyTaylorVortex" ) {
+        theAuxFunc = new SteadyTaylorVortexVelocityAuxFunction(0,nDim);
+      }
+      else if ( fcnName == "VariableDensity" ) {
+        theAuxFunc = new VariableDensityVelocityAuxFunction(0,nDim);
+      }
+      else if ( fcnName == "VariableDensityNonIso" ) {
+        theAuxFunc = new VariableDensityVelocityAuxFunction(0,nDim);
+      }
+      else if ( fcnName == "kovasznay") {
+        theAuxFunc = new KovasznayVelocityAuxFunction(0,nDim);
+      }
+      else if ( fcnName == "TaylorGreen") {
+        theAuxFunc = new TaylorGreenVelocityAuxFunction(0, nDim);
+      }
+      else if ( fcnName == "BoussinesqNonIso") {
+        theAuxFunc = new BoussinesqNonIsoVelocityAuxFunction(0, nDim);
+      }
+      else {
+        throw std::runtime_error("ContEquationSystem::register_inflow_bc: limited functions supported");
+      }
+    }
+    else {
+      throw std::runtime_error("ContEquationSystem::register_inflow_bc: only constant and user function supported");
+    }
+
+    
+    // bc data alg
+    AuxFunctionAlgorithm *auxAlg
+      = new AuxFunctionAlgorithm(realm_, part,
+                                 theBcField, theAuxFunc,
+                                 stk::topology::NODE_RANK);
+    
+    // how to populate the field?
+    if ( userData.externalData_ ) {
+      // xfer will handle population; only need to populate the initial value
+      realm_.initCondAlg_.push_back(auxAlg);
+    }
+    else {
+      // put it on bcData
+      bcDataAlg_.push_back(auxAlg);
+    }
+  }
+*/
+
+  // non-solver; contribution to Gjp; allow for element-based shifted
+  if ( !managePNG_ ) {
+    std::map<AlgorithmType, Algorithm *>::iterator it
+      = assembleNodalGradPAlgDriver_->algMap_.find(algType);
+    if ( it == assembleNodalGradPAlgDriver_->algMap_.end() ) {
+      Algorithm *theAlg 
+        = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &pressureNone, &dpdxNone, edgeNodalGradient_);
+      assembleNodalGradPAlgDriver_->algMap_[algType] = theAlg;
+    }
+    else {
+      it->second->partVec_.push_back(part);
+    }
+  }
+
+  // check to see if we are using shifted as inflow is shared
+  const bool useShifted = !elementContinuityEqs_ ? true : realm_.get_cvfem_shifted_mdot();
+
+  // non-solver inflow mdot - shared by both elem/edge
+  std::map<AlgorithmType, Algorithm *>::iterator itmd =
+    computeMdotAlgDriver_->algMap_.find(algType);
+  if ( itmd == computeMdotAlgDriver_->algMap_.end() ) {
+    ComputeMdotInflowAlgorithm *theAlg
+      = new ComputeMdotInflowAlgorithm(realm_, part, useShifted);
+    computeMdotAlgDriver_->algMap_[algType] = theAlg;
+  }
+  else {
+    itmd->second->partVec_.push_back(part);
+  }
+  
+  // solver; lhs
+  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {      
+
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    
+    AssembleElemSolverAlgorithm* solverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+    
+    std::tie(solverAlg, solverAlgWasBuilt) 
+      = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "inflow");
+    
+    ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+    auto& activeKernels = solverAlg->activeKernels_;
+    
+    if (solverAlgWasBuilt) {
+      build_face_topo_kernel_automatic<ContinuityInflowElemKernel>
+        (partTopo, *this, activeKernels, "continuity_inflow",
+         realm_.bulk_data(), *realm_.solutionOptions_, useShifted, dataPreReqs);
+    }
+
+  }
+  else {
+    std::map<AlgorithmType, SolverAlgorithm *>::iterator its =
+      solverAlgDriver_->solverAlgMap_.find(algType);
+    if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
+      AssembleContinuityInflowSolverAlgorithm *theAlg
+        = new AssembleContinuityInflowSolverAlgorithm(realm_, part, this, useShifted);
+      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+    }
+    else {
+      its->second->partVec_.push_back(part);
+    }
+  }
+
+#else
+  throw std::runtime_error("Cannot initialize ABL top BC because FFTW support is mising.\n Set ENABLE_FFTW to ON in nalu-wind/CMakeLists.txt, reconfigure and recompile.");
+#endif
+}
+    
 
 //--------------------------------------------------------------------------
 //-------- register_non_conformal_bc ---------------------------------------

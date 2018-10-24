@@ -179,6 +179,14 @@ public:
     const stk::topology &theTopo,
     const SymmetryBoundaryConditionData &symmetryBCData) {}
 
+  virtual void register_abltop_bc(
+    stk::mesh::Part *part,
+    const stk::topology &theTopo,
+    const ABLTopBoundaryConditionData &abltopBCData) {
+      SymmetryBoundaryConditionData simData(abltopBCData.boundaryConditions_);
+      register_symmetry_bc( part, theTopo, simData );
+    }
+
   virtual void register_periodic_bc(
     stk::mesh::Part *partMaster,
     stk::mesh::Part *partSlave,

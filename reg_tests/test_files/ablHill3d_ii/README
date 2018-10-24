@@ -1,0 +1,4 @@
+This is a test of the abltop potential flow upper boundary condition for
+the flow over a 3D Gaussian hill.  Inflow/outflow is used both in the east-west
+and north-south directions.  The mean wind is directed from the south south 
+west (210 degrees).

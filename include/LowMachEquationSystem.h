@@ -98,6 +98,8 @@ public:
 
   SurfaceForceAndMomentAlgorithmDriver *surfaceForceAndMomentAlgDriver_;
 
+  std::vector<int> xyBCType_;
+
   bool isInit_;
 
 };
@@ -147,6 +149,11 @@ public:
     stk::mesh::Part *part,
     const stk::topology &partTopo,
     const SymmetryBoundaryConditionData &symmetryBCData);
+
+  virtual void register_abltop_bc(
+    stk::mesh::Part *part,
+    const stk::topology &partTopo,
+    const ABLTopBoundaryConditionData &ablTopBCData);
 
   virtual void register_non_conformal_bc(
     stk::mesh::Part *part,
@@ -232,6 +239,11 @@ public:
     stk::mesh::Part *part,
     const stk::topology &theTopo,
     const SymmetryBoundaryConditionData &symmetryBCData);
+
+  virtual void register_abltop_bc(
+    stk::mesh::Part *part,
+    const stk::topology &partTopo,
+    const ABLTopBoundaryConditionData &ablTopBCData);
 
   virtual void register_non_conformal_bc(
     stk::mesh::Part *part,

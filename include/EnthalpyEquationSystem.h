@@ -66,6 +66,11 @@ public:
     const stk::topology &theTopo,
     const SymmetryBoundaryConditionData &symmetryBCData);
 
+  virtual void register_abltop_bc(
+    stk::mesh::Part *part,
+    const stk::topology &theTopo,
+    const ABLTopBoundaryConditionData &abltopBCData);
+
   virtual void register_non_conformal_bc(
     stk::mesh::Part *part,
     const stk::topology &theTopo);

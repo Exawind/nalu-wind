@@ -9,6 +9,7 @@ option(ENABLE_TESTS "Enable regression testing." OFF)
 option(ENABLE_DOCUMENTATION "Build documentation." OFF)
 option(ENABLE_SPHINX_API_DOCS "Link Doxygen API docs to Sphinx" OFF)
 option(ENABLE_WIND_UTILS "Build wind utils along with Nalu-Wind" OFF)
+option(ENABLE_FFTW "Use the FFTW library to support ABLTopBC" OFF)
 option(ENABLE_OPENFAST
        "Use OPENFAST tpl to get actuator line positions and forces" OFF)
 option(ENABLE_PARAVIEW_CATALYST
@@ -80,6 +81,17 @@ if(ENABLE_HYPRE)
   include_directories(SYSTEM ${HYPRE_INCLUDE_DIRS})
   add_definitions("-DNALU_USES_HYPRE")
 endif(ENABLE_HYPRE)
+
+############################ FFTW ######################################
+if(ENABLE_FFTW)
+  set(CMAKE_PREFIX_PATH ${FFTW_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(FFTW  REQUIRED)
+  if(FFTW_FOUND)
+    message("-- Found FFTW = ${FFTW_DIR}")
+  endif()
+  include_directories(${FFTW_INCLUDE_DIRS})
+  add_definitions("-DNALU_USES_FFTW")
+endif(ENABLE_FFTW)
 
 ########################## OPENFAST ####################################
 if(ENABLE_OPENFAST)
@@ -215,6 +227,7 @@ include_directories(${CMAKE_BINARY_DIR}/include)
 add_library(nalu ${NALU_SOURCES})
 target_link_libraries(nalu ${Trilinos_LIBRARIES})
 target_link_libraries(nalu ${YAML_CPP_LIBRARIES})
+target_link_libraries(nalu ${FFTW_LIBRARIES})
 target_link_libraries(nalu ${MPI_CXX_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_C_LIBRARIES})
 
 if(ENABLE_OPENFAST)

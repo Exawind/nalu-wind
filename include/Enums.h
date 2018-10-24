@@ -40,7 +40,9 @@ enum AlgorithmType{
    *
    * \sa FixPressureAtNodeAlgorithm
    */
-  REF_PRESSURE = 15
+  REF_PRESSURE = 15, 
+ 
+  TOP_ABL = 16
 };
 
 enum BoundaryConditionType{
@@ -50,7 +52,8 @@ enum BoundaryConditionType{
   SYMMETRY_BC  = 4,
   PERIODIC_BC  = 5,
   NON_CONFORMAL_BC = 6,
-  OVERSET_BC = 7
+  OVERSET_BC = 7,
+  ABLTOP_BC  = 8
 };
 
 enum EquationType {
