@@ -124,7 +124,7 @@ realms:
     # Boundary conditions are periodic on the north, south, east, and west
     # sides.  The lower boundary condition is a wall that uses an atmospheric
     # rough wall shear stress model.  The upper boundary is a stress free
-    # rigid lid applied through symmetry, but the temperature is set to hold
+    # rigid lid,  the temperature is set to hold
     # a specified boundary normal gradient that matches the stable layer
     # immediately below.
     boundary_conditions:
@@ -139,10 +139,12 @@ realms:
       periodic_user_data:
         search_tolerance: 0.0001 
 
-    - symmetry_boundary_condition: bc_upper
+    - abltop_boundary_condition: bc_upper
       target_name: upper
-      symmetry_user_data:
+      abltop_user_data:
+        potential_flow_bc: false
         normal_temperature_gradient: -0.003
+
 
     - wall_boundary_condition: bc_lower
       target_name: lower

@@ -495,7 +495,7 @@ class mapping_object_class():
         for var in self.yaml_input['realms'][0]['boundary_conditions']:
 
             # Top boundary condition
-            if 'symmetry_boundary_condition' in var.keys():
+            if 'abltop_boundary_condition' in var.keys():
 
                 # If the gradient is specified, use that value, if not, compute
                 #     it from the initial condition
@@ -505,7 +505,7 @@ class mapping_object_class():
                                 self.yaml_setup['temperature_heights'][-1]
                                 - self.yaml_setup['temperature_heights'][-2])
                 # Assign the initial condition
-                var['symmetry_user_data']['normal_temperature_gradient'] = \
+                var['abltop_user_data']['normal_temperature_gradient'] = \
                     TGradUpper
 
 
@@ -721,9 +721,9 @@ class mapping_object_class():
         # Loop through all the boundary conditions and modify accordingly
         for var in self.yaml_input['realms'][0]['boundary_conditions']:
             # Top boundary condition
-            if 'symmetry_boundary_condition' in var.keys():
+            if 'abltop_boundary_condition' in var.keys():
                 # Read the upper wall temperature gradient
-                var['symmetry_user_data']['normal_temperature_gradient'] = Tg
+                var['abltop_user_data']['normal_temperature_gradient'] = Tg
 
 
     def set_boundary_layer_statistics(self):
