@@ -72,9 +72,11 @@ endfunction(add_test_r_cat)
 #=============================================================================
 # Regression tests
 #=============================================================================
-add_test_r(ablHill3d_pp 4)
-add_test_r(ablHill3d_ip 4)
-add_test_r(ablHill3d_ii 4)
+if (ENABLE_FFTW)
+  add_test_r(ablHill3d_pp 4)
+  add_test_r(ablHill3d_ip 4)
+  add_test_r(ablHill3d_ii 4)
+endif()
 add_test_r_cat(ablNeutralEdge 8 2)
 add_test_r(ablStableElem 4)
 add_test_r_rst(ablUnstableEdge 4)
