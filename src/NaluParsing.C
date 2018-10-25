@@ -1168,6 +1168,10 @@ namespace YAML
   bool convert<sierra::nalu::SymmetryUserData>::decode(const Node& node,
     sierra::nalu::SymmetryUserData& symmetryData)
   {
+    // Normal temperature gradient for ABL top BC is now implemented in
+    // abltop_boundary_condition. Throw error to inform user of the change
+    if (node["normal_temperature_gradient"])
+      throw std::runtime_error("SymmetryBoundaryConditionData: Normal temperature gradient for ABL top boundary must use abltop_boundary_condition");
     return true;
   }
 

@@ -166,9 +166,9 @@ realms:
       - 0.0
       temperature: 300.0
       external_data: yes
-  - symmetry_boundary_condition: bc_upper
+  - abltop_boundary_condition: bc_upper
     target_name: upper
-    symmetry_user_data:
+    abltop_user_data:
       normal_temperature_gradient: -0.003
 
   - wall_boundary_condition: bc_lower

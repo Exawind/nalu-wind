@@ -925,8 +925,6 @@ EnthalpyEquationSystem::register_symmetry_bc(
   ScalarFieldType &enthalpyNp1 = enthalpy_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dhdxNone = dhdx_->field_of_state(stk::mesh::StateNone);
 
-  stk::mesh::MetaData &meta_data = realm_.meta_data();
-
   // extract user data
   SymmetryUserData userData = symmetryBCData.userData_;
   std::string temperatureName = "temperature";
