@@ -184,6 +184,30 @@ realms:
         - source_term_parameters:
             momentum: [0.000135, 0.0, 0.0]
 
+    data_probes:
+
+      output_frequency: 1
+      search_method: stk_kdtree
+      search_tolerance: 1.0e-3
+      search_expansion_factor: 2.0
+
+      lidar_specifications:
+        from_target_part: [Unspecified-2-HEX]
+        inner_prism_initial_theta: 90
+        inner_prism_rotation_rate: 3.5
+        inner_prism_azimuth: 15.2
+        outer_prism_initial_theta: 90
+        outer_prism_rotation_rate: 6.5
+        outer_prism_azimuth: 15.2
+        scan_time: 2 #seconds
+        number_of_samples: 984
+        points_along_line: 100
+        center: [500,500,100]
+        beam_length: 1.0
+        axis: [1,0,0]
+        ground_direction: [0,0,1]
+
+
     output:
       output_data_base_name: abl_1km_cube.e
       output_frequency: 5

@@ -13,6 +13,9 @@
 #include <Realm.h>
 #include <Simulation.h>
 
+#include <stk_io/StkMeshIoBroker.hpp>
+#include <nalu_make_unique.h>
+
 // xfer
 #include <xfer/Transfer.h>
 #include <xfer/Transfers.h>
@@ -82,7 +85,8 @@ DataProbePostProcessing::DataProbePostProcessing(
     w_(26),
     searchMethodName_("none"),
     searchTolerance_(1.0e-4),
-    searchExpansionFactor_(1.5)
+    searchExpansionFactor_(1.5),
+    exoName_("data_probes.exo")
 {
   // load the data
   load(node);
@@ -115,6 +119,18 @@ DataProbePostProcessing::load(
     NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::load" << std::endl;
 
     // extract the frequency of output
+    std::string outFormat = "text";
+    get_if_present(y_dataProbe, "output_format", outFormat, outFormat);
+
+    if (case_insensitive_compare(outFormat, "exodus")) {
+      useExo_ = true;
+      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Using exodus format..." << std::endl;
+    }
+    else {
+      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Using text format..." << std::endl;
+    }
+    get_if_present(y_dataProbe, "exodus_name", exoName_, exoName_);
+
     get_if_present(y_dataProbe, "output_frequency", outputFreq_, outputFreq_);
 
     // transfer specifications
@@ -122,7 +138,7 @@ DataProbePostProcessing::load(
     get_if_present(y_dataProbe, "search_tolerance", searchTolerance_, searchTolerance_);
     get_if_present(y_dataProbe, "search_expansion_factor", searchExpansionFactor_, searchExpansionFactor_);
 
-    const YAML::Node y_specs = expect_sequence(y_dataProbe, "specifications", false);
+    const YAML::Node y_specs = expect_sequence(y_dataProbe, "specifications", true);
     if (y_specs) {
 
       // each specification can have multiple probes
@@ -257,6 +273,12 @@ DataProbePostProcessing::load(
   }
 }
 
+void
+DataProbePostProcessing::add_external_data_probe_spec_info(DataProbeSpecInfo* dpsInfo)
+{
+  dataProbeSpecInfo_.push_back(dpsInfo);
+}
+
 //--------------------------------------------------------------------------
 //-------- setup -----------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -309,6 +331,7 @@ DataProbePostProcessing::setup()
           
       // loop over probes... register all fields within the ProbInfo on each part
       for ( int p = 0; p < probeInfo->numProbes_; ++p ) {
+
         // extract the part
         stk::mesh::Part *probePart = probeInfo->part_[p];
         // everyone needs coordinates to be registered
@@ -316,8 +339,10 @@ DataProbePostProcessing::setup()
           =  &(metaData.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates"));
         stk::mesh::put_field_on_mesh(*coordinates, *probePart, nDim, nullptr);
         // now the general set of fields for this probe
-        for ( size_t j = 0; j < probeSpec->fieldInfo_.size(); ++j ) 
+        for ( size_t j = 0; j < probeSpec->fieldInfo_.size(); ++j )  {
+
           register_field(probeSpec->fieldInfo_[j].first, probeSpec->fieldInfo_[j].second, metaData, probePart);
+        }
       }
     }
   }
@@ -386,8 +411,8 @@ DataProbePostProcessing::initialize()
           // check if nodes exists. If they do, did the number of points match?
           if ( nodesExist ) {
             if ( checkNumPoints != numPoints ) {
-              std::cout << "Number of points specified within input file does not match nodes that exists: " << probePart->name() << std::endl;
-              std::cout << "The old and new node count is as follows: " << numPoints << " " << checkNumPoints << std::endl;
+              NaluEnv::self().naluOutput()  << "Number of points specified within input file does not match nodes that exists: " << probePart->name() << std::endl;
+              NaluEnv::self().naluOutput()  << "The old and new node count is as follows: " << numPoints << " " << checkNumPoints << std::endl;
               probeInfo->numPoints_[j] = checkNumPoints;
             }
           }
@@ -456,11 +481,34 @@ DataProbePostProcessing::initialize()
     }
   }
 
-  create_inactive_selector();
 
+  create_inactive_selector();
   create_transfer();
+
+  if (useExo_) {
+    create_exodus();
+  }
 }
-  
+
+
+void DataProbePostProcessing::create_exodus()
+{
+  io = make_unique<stk::io::StkMeshIoBroker>(realm_.bulk_data().parallel());
+  io->set_bulk_data(realm_.bulk_data());
+  fileIndex_ = io->create_output_mesh(exoName_, stk::io::WRITE_RESULTS);
+
+  for (const auto* probeSpec : dataProbeSpecInfo_) {
+    for (const auto& fieldInfo : probeSpec->fieldInfo_) {
+      const auto& meta = realm_.meta_data();
+      ThrowRequireMsg(meta.get_field(stk::topology::NODE_RANK, fieldInfo.first) != nullptr,
+        "No field named `" + fieldInfo.first + "' of node rank");
+      io->add_field(fileIndex_, *meta.get_field(stk::topology::NODE_RANK, fieldInfo.first));
+    }
+  }
+  io->set_subset_selector(fileIndex_, inactiveSelector_);
+}
+
+
 //--------------------------------------------------------------------------
 //-------- register_field --------------------------------------------------
 //--------------------------------------------------------------------------
@@ -496,7 +544,6 @@ DataProbePostProcessing::create_inactive_selector()
       }
     }
   }
-
   inactiveSelector_ = stk::mesh::selectUnion(allTheParts_);
 }
 
@@ -584,7 +631,12 @@ DataProbePostProcessing::execute()
   if ( isOutput ) {
     // execute and provide results...
     transfers_->execute();
-    provide_output(currentTime);
+    if (useExo_) {
+      provide_output_exodus(currentTime);
+    }
+    else {
+      provide_output_txt(currentTime);
+    }
   }
 }
 
@@ -592,9 +644,11 @@ DataProbePostProcessing::execute()
 //-------- provide_output --------------------------------------------------
 //--------------------------------------------------------------------------
 void
-DataProbePostProcessing::provide_output(
+DataProbePostProcessing::provide_output_txt(
   const double currentTime)
 { 
+  NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Writing dataprobes..." << std::endl;
+
   stk::mesh::MetaData &metaData = realm_.meta_data();
   VectorFieldType *coordinates 
     = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
@@ -681,6 +735,13 @@ DataProbePostProcessing::provide_output(
       }
     }
   }
+}
+
+void
+DataProbePostProcessing::provide_output_exodus(const double currentTime)
+{
+  NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Writing dataprobes..." << std::endl;
+  io->process_output_request(fileIndex_, currentTime);
 }
 
 //--------------------------------------------------------------------------
