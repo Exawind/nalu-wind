@@ -14,7 +14,7 @@ struct Segment
 {
   Segment() = default;
   Segment(std::array<double, 3> tip, std::array<double,3> tail)
-  : tip_{tip}, tail_{tail} {};
+  : tip_(tip), tail_(tail) {};
 
   std::array<double, 3> tip_{{}};
   std::array<double, 3> tail_{{}};
