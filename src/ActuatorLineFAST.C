@@ -13,6 +13,7 @@
 #include <NaluEnv.h>
 #include <Realm.h>
 #include <Simulation.h>
+#include <nalu_make_unique.h>
 
 // master elements
 #include <master_element/MasterElement.h>
@@ -782,12 +783,12 @@ ActuatorLineFAST::create_actuator_line_point_info_map() {
               break;
           }
           
-	  actuatorPointInfoMap_.emplace(np, new ActuatorLineFASTPointInfo
+	  actuatorPointInfoMap_.insert(std::make_pair(np, make_unique<ActuatorLineFASTPointInfo>
       (
         iTurb, centroidCoords,
         searchRadius, epsilon,
         FAST.getForceNodeType(iTurb, np)
-      )
+      ))
     );
 
 	  np=np+1;

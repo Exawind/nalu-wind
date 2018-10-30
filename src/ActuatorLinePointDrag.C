@@ -12,6 +12,7 @@
 #include <NaluEnv.h>
 #include <Realm.h>
 #include <Simulation.h>
+#include <nalu_make_unique.h>
 
 // master elements
 #include <master_element/MasterElement.h>
@@ -560,11 +561,11 @@ ActuatorLinePointDrag::create_actuator_line_point_info_map() {
         boundingSphereVec_.push_back(theSphere);
 
         // create the point info and push back to map
-        actuatorPointInfoMap_.emplace(
-          localPointId, new ActuatorLinePointDragPointInfo( centroidCoords,
+        actuatorPointInfoMap_.insert(
+          std::make_pair(localPointId, make_unique<ActuatorLinePointDragPointInfo>( centroidCoords,
                                       actuatorLineInfo->radius_, actuatorLineInfo->omega_,
                                        actuatorLineInfo->gaussDecayRadius_, velocity)
-        );
+          ));
       }
     }
   }
