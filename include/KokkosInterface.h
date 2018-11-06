@@ -67,6 +67,13 @@ inline HostTeamPolicy get_host_team_policy(const size_t sz, const size_t bytes_p
 }
 
 inline DeviceTeamPolicy get_device_team_policy(const size_t sz, const size_t bytes_per_team,
+    const size_t bytes_per_thread, const int threads_per_team)
+{
+  DeviceTeamPolicy policy(sz, threads_per_team);
+  return policy.set_scratch_size(0, Kokkos::PerTeam(bytes_per_team), Kokkos::PerThread(bytes_per_thread));
+}
+
+inline DeviceTeamPolicy get_device_team_policy(const size_t sz, const size_t bytes_per_team,
     const size_t bytes_per_thread)
 {
   DeviceTeamPolicy policy(sz, Kokkos::AUTO);

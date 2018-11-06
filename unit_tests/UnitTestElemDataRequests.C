@@ -18,7 +18,10 @@ void do_the_test(const sierra::nalu::ElemDataRequests& dataReq)
   sierra::nalu::ElemDataRequestsNGP ngpDataReq(dataReq);
 
   unsigned numCorrectTests = 0;
-  auto team_exec = sierra::nalu::get_device_team_policy(1, 0, 0);
+  int threadsPerTeam = 1;
+  size_t bytesPerTeam = 0;
+  size_t bytesPerThread = 0;
+  auto team_exec = sierra::nalu::get_device_team_policy(1, bytesPerTeam, bytesPerThread, threadsPerTeam);
   Kokkos::parallel_reduce(team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team, unsigned& localNumTests)
   {
     if (ngpDataReq.get_fields().size() == 3) {
