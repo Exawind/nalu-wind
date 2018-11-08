@@ -25,6 +25,7 @@ public:
 
   virtual ~ConvectingTaylorVortexVelocityAuxFunction() {}
   
+  using AuxFunction::do_evaluate;
   virtual void do_evaluate(
     const double * coords,
     const double time,

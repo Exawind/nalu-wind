@@ -31,6 +31,12 @@ class Quad42DSCV : public MasterElement
 {
 public:
   using Traits = AlgTraitsQuad4_2D;
+  using MasterElement::determinant;
+  using MasterElement::grad_op;
+  using MasterElement::shifted_grad_op;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
+
   Quad42DSCV();
   virtual ~Quad42DSCV();
 
@@ -73,6 +79,10 @@ class Quad42DSCS : public MasterElement
 {
 public:
   using Traits = AlgTraitsQuad4_2D;
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
+
   Quad42DSCS();
   virtual ~Quad42DSCS();
 

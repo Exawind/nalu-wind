@@ -17,11 +17,11 @@ namespace nalu{
 class FlowPastCylinderTempAuxFunction : public AuxFunction
 {
 public:
-
   FlowPastCylinderTempAuxFunction();
 
   virtual ~FlowPastCylinderTempAuxFunction() {}
   
+  using AuxFunction::do_evaluate;
   virtual void do_evaluate(
     const double * coords,
     const double time,
