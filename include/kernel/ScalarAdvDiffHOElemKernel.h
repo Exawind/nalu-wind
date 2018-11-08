@@ -41,6 +41,7 @@ public:
 
   void setup(const TimeIntegrator& ti) final { projTimeScale_ = ti.get_time_step() / ti.get_gamma1(); }
 
+  using Kernel::execute;
   void execute(
     SharedMemView<DoubleType**>&,
     SharedMemView<DoubleType*>&,

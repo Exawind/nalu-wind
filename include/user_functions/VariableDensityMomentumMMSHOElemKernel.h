@@ -35,6 +35,7 @@ public:
     SolutionOptions& solnOpts,
     ElemDataRequests& dataPreReqs);
 
+  using Kernel::execute;
   void execute(
     SharedMemView<DoubleType**>&,
     SharedMemView<DoubleType*>&,

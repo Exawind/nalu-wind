@@ -41,6 +41,7 @@ public:
     bool);
 
   void setup(const TimeIntegrator& ti) { projTimeScale_ = ti.get_time_step() / ti.get_gamma1(); }
+  using Kernel::execute;
   void execute(SharedMemView<DoubleType**>&, SharedMemView<DoubleType*>&, ScratchViewsHO<DoubleType>&);
 private:
   const bool reduced_sens_;

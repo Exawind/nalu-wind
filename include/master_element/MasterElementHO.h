@@ -405,6 +405,9 @@ private:
 class HigherOrderEdge2DSCS final: public MasterElement
 {
 public:
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+
   explicit HigherOrderEdge2DSCS(
     ElementDescription elem,
     LagrangeBasis basis,

@@ -38,6 +38,7 @@ public:
 
   void setup(const TimeIntegrator& ti) final;
 
+  using Kernel::execute;
   void execute(
     SharedMemView<DoubleType**>&,
     SharedMemView<DoubleType*>&,

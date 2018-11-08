@@ -120,6 +120,7 @@ public:
   {
   }
 
+  using sierra::nalu::Kernel::execute;
   virtual void execute(
     sierra::nalu::SharedMemView<DoubleType**> &lhs,
     sierra::nalu::SharedMemView<DoubleType*> &rhs,
