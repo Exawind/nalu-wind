@@ -18,6 +18,11 @@ namespace nalu{
 class TetSCV : public MasterElement
 {
 public:
+  using MasterElement::determinant;
+  using MasterElement::grad_op;
+  using MasterElement::shifted_grad_op;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   TetSCV();
   virtual ~TetSCV();
@@ -60,6 +65,9 @@ public:
 class TetSCS : public MasterElement
 {
 public:
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   TetSCS();
   virtual ~TetSCS();

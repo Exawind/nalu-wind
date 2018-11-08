@@ -25,6 +25,9 @@ public:
 
   const int * ipNodeMap(int ordinal = 0);
 
+  using MasterElement::determinant;
+  using MasterElement::shifted_grad_op;
+
   // NGP-ready methods first
   void determinant(
     SharedMemView<DoubleType**>& coords,
@@ -76,6 +79,8 @@ public:
   virtual ~HexSCS();
 
   const int * ipNodeMap(int ordinal = 0);
+
+  using MasterElement::determinant;
 
   // NGP-ready methods first
   void shape_fcn(

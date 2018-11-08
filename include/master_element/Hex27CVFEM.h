@@ -32,6 +32,8 @@ class HexahedralP2Element : public MasterElement
 {
 public:
   using AlgTraits = AlgTraitsHex27;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   HexahedralP2Element();
   virtual ~HexahedralP2Element() {}
@@ -203,6 +205,9 @@ public:
 
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
+  using MasterElement::determinant;
+  using MasterElement::grad_op;
+  using MasterElement::shifted_grad_op;
 
   void shape_fcn(SharedMemView<DoubleType**> &shpfc) final;
   void shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc) final;
@@ -269,6 +274,7 @@ public:
 
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
+  using MasterElement::determinant;
 
   void shape_fcn(SharedMemView<DoubleType**> &shpfc);
   void shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc);
@@ -471,6 +477,8 @@ class Quad93DSCS : public HexahedralP2Element
 public:
   Quad93DSCS();
   virtual ~Quad93DSCS() {}
+
+  using MasterElement::determinant;
 
   const int * ipNodeMap(int ordinal = 0);
 

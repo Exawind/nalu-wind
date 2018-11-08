@@ -18,6 +18,7 @@ namespace nalu{
 class Quad3DSCS : public MasterElement
 {
 public:
+  using MasterElement::determinant;
 
   Quad3DSCS();
   virtual ~Quad3DSCS();

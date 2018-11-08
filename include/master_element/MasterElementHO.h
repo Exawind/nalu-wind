@@ -35,6 +35,10 @@ class TensorProductQuadratureRule;
 class HigherOrderHexSCV final: public MasterElement
 {
 public:
+  using MasterElement::determinant;
+  using MasterElement::grad_op;
+  using MasterElement::shape_fcn;
+
   HigherOrderHexSCV(
     ElementDescription elem,
     LagrangeBasis basis,
@@ -92,6 +96,12 @@ private:
 class HigherOrderHexSCS final: public MasterElement
 {
 public:
+  using MasterElement::determinant;
+  using MasterElement::grad_op;
+  using MasterElement::shape_fcn;
+  using MasterElement::gij;
+  using MasterElement::face_grad_op;
+
   HigherOrderHexSCS(
     ElementDescription elem,
     LagrangeBasis basis,
@@ -185,6 +195,9 @@ private:
 class HigherOrderQuad3DSCS final: public MasterElement
 {
 public:
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+
   HigherOrderQuad3DSCS(
     ElementDescription elem,
     LagrangeBasis basis,
@@ -237,6 +250,10 @@ private:
 class HigherOrderQuad2DSCV final: public MasterElement
 {
 public:
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::grad_op;
+
   HigherOrderQuad2DSCV(
     ElementDescription elem,
     LagrangeBasis basis,
@@ -291,6 +308,12 @@ private:
 class HigherOrderQuad2DSCS final: public MasterElement
 {
 public:
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::grad_op;
+  using MasterElement::face_grad_op;
+  using MasterElement::gij;
+
   HigherOrderQuad2DSCS(
     ElementDescription elem,
     LagrangeBasis basis,
