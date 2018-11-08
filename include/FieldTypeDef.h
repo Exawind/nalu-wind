@@ -11,6 +11,7 @@
 
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
+#include <stk_ngp/Ngp.hpp>
 
 #ifdef NALU_USES_HYPRE
 #include "HYPRE_utilities.h"
@@ -23,6 +24,9 @@ namespace nalu{
 typedef stk::mesh::Field<double>  ScalarFieldType;
 typedef stk::mesh::Field<stk::mesh::EntityId> GlobalIdFieldType;
 typedef stk::mesh::Field<int>  ScalarIntFieldType;
+typedef ngp::Field<double>  NGPDoubleFieldType;
+typedef ngp::Field<stk::mesh::EntityId> NGPGlobalIdFieldType;
+typedef ngp::Field<int>  NGPScalarIntFieldType;
 
 // define vector field typedef; however, what is the value of Cartesian?
 typedef stk::mesh::Field<double, stk::mesh::Cartesian>  VectorFieldType;
