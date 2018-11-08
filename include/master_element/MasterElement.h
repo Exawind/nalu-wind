@@ -515,6 +515,9 @@ class Edge32DSCS : public QuadrilateralP2Element
 public:
   Edge32DSCS();
   virtual ~Edge32DSCS() {}
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   const int * ipNodeMap(int ordinal = 0);
 
