@@ -115,15 +115,11 @@ ComputeMdotElemOpenAlgorithm::execute()
   std::vector<double> ws_face_coordinates;
   std::vector<double> ws_Gpdx;
   std::vector<double> ws_density;
+  std::vector<double> ws_udiag;
   std::vector<double> ws_bcPressure;
   // master element
   std::vector<double> ws_shape_function;
   std::vector<double> ws_face_shape_function;
-
-  // time step; scale projection time scale by pstabFac (no divide by here)
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
-  const double projTimeScale = dt/gamma1*pstabFac;
 
   // deal with interpolation procedure
   const double interpTogether = realm_.get_mdot_interp();
@@ -135,6 +131,9 @@ ComputeMdotElemOpenAlgorithm::execute()
 
   // deal with state
   ScalarFieldType &densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
+
+  ScalarFieldType* Udiag = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "momentum_diag");
 
   // define vector of parent topos; should always be UNITY in size
   std::vector<stk::topology> parentTopo;
@@ -170,6 +169,7 @@ ComputeMdotElemOpenAlgorithm::execute()
     ws_vrtm.resize(nodesPerFace*nDim);
     ws_Gpdx.resize(nodesPerFace*nDim);
     ws_density.resize(nodesPerFace);
+    ws_udiag.resize(nodesPerFace);
     ws_bcPressure.resize(nodesPerFace);
     ws_shape_function.resize(numScsIp*nodesPerElement);
     ws_face_shape_function.resize(numScsBip*nodesPerFace);
@@ -180,6 +180,7 @@ ComputeMdotElemOpenAlgorithm::execute()
     double *p_vrtm = &ws_vrtm[0];
     double *p_Gpdx = &ws_Gpdx[0];
     double *p_density = &ws_density[0];
+    double *p_udiag = &ws_udiag[0];
     double *p_bcPressure = &ws_bcPressure[0];
     double *p_shape_function = &ws_shape_function[0];
     double *p_face_shape_function = &ws_face_shape_function[0];
@@ -218,6 +219,7 @@ ComputeMdotElemOpenAlgorithm::execute()
         // gather scalars
         p_density[ni]    = *stk::mesh::field_data(densityNp1, node);
         p_bcPressure[ni] = *stk::mesh::field_data(*pressureBc_, node);
+        p_udiag[ni] = *stk::mesh::field_data(*Udiag, node);
 
         // gather vectors
         double * vrtm = stk::mesh::field_data(*velocityRTM_, node);
@@ -277,6 +279,7 @@ ComputeMdotElemOpenAlgorithm::execute()
           p_coordScs[j] = 0.0;
         }
         double rhoBip = 0.0;
+        double projTimeScaleBip = 0.0;
 
         // interpolate to bip
         double pBip = 0.0;
@@ -286,13 +289,14 @@ ComputeMdotElemOpenAlgorithm::execute()
           const double r = p_face_shape_function[offSetSF_face+ic];
           const double rhoIC = p_density[ic];
           rhoBip += r*rhoIC;
+          projTimeScaleBip += r / p_udiag[ic];
           pBip += r*p_bcPressure[ic];
           const int offSetFN = ic*nDim;
           const int offSetEN = fn*nDim;
           for ( int j = 0; j < nDim; ++j ) {
             p_uBip[j] += r*p_vrtm[offSetFN+j];
             p_rho_uBip[j] += r*rhoIC*p_vrtm[offSetFN+j];
-            p_GpdxBip[j] += r*p_Gpdx[offSetFN+j];
+            p_GpdxBip[j] += r*p_Gpdx[offSetFN+j] / p_udiag[ic];
             p_coordBip[j] += r*p_coordinates[offSetEN+j];
           }
         }
@@ -319,7 +323,7 @@ ComputeMdotElemOpenAlgorithm::execute()
           axdx += axj*dxj;
           asq += axj*axj;
           tmdot += (interpTogether*p_rho_uBip[j] + om_interpTogether*rhoBip*p_uBip[j] 
-                    + projTimeScale*p_GpdxBip[j])*axj;
+                    + p_GpdxBip[j])*axj;
         }
 	
         const double inv_axdx = 1.0/axdx;
@@ -334,7 +338,7 @@ ComputeMdotElemOpenAlgorithm::execute()
         }
 
         // final mdot
-        tmdot -= projTimeScale*((pBip-pScs)*asq*inv_axdx + noc*includeNOC);
+        tmdot -= projTimeScaleBip*((pBip-pScs)*asq*inv_axdx + noc*includeNOC)*pstabFac;
         // scatter to mdot and accumulate
         mdot[ip] = tmdot;
         mdotOpen += tmdot;
