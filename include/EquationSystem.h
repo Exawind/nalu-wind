@@ -315,6 +315,8 @@ public:
   /// List of tasks to be performed after each EquationSystem::solve_and_update
   std::vector<AlgorithmDriver*> postIterAlgDriver_;
 
+  std::string dofName_{"undefined"};
+
   bool extractDiagonal_{false};
 
   // owner equation system

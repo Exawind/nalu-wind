@@ -110,6 +110,9 @@ public:
 
   ElemDataRequests dataNeededByKernels_;
   stk::mesh::EntityRank entityRank_;
+
+  //! Relaxation factor to be applied to the diagonal term
+  double diagRelaxFactor_{1.0};
   unsigned nodesPerEntity_;
   int rhsSize_;
   const bool interleaveMEViews_;

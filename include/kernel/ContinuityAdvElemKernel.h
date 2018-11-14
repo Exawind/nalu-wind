@@ -59,6 +59,7 @@ private:
   ScalarFieldType *pressure_{nullptr};
   ScalarFieldType *densityNp1_{nullptr};
   VectorFieldType *coordinates_{nullptr};
+  ScalarFieldType *Udiag_{nullptr};
 
   double projTimeScale_{1.0};
 

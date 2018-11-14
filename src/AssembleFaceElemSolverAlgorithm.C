@@ -15,6 +15,7 @@
 #include <FieldTypeDef.h>
 #include <LinearSystem.h>
 #include <Realm.h>
+#include <SolutionOptions.h>
 #include <TimeIntegrator.h>
 
 // kernel
@@ -61,6 +62,10 @@ AssembleFaceElemSolverAlgorithm::AssembleFaceElemSolverAlgorithm(
     rhsSize_(nodesPerFace*eqSystem->linsys_->numDof()),
     interleaveMEViews_(interleaveMEViews)
 {
+  if (eqSystem->dofName_ != "pressure") {
+    diagRelaxFactor_ = realm.solutionOptions_->get_relaxation_factor(
+      eqSystem->dofName_);
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -96,6 +101,8 @@ AssembleFaceElemSolverAlgorithm::execute()
         for(int simdIndex=0; simdIndex<smdata.numSimdFaces; ++simdIndex) {
           extract_vector_lane(smdata.simdrhs, simdIndex, smdata.rhs);
           extract_vector_lane(smdata.simdlhs, simdIndex, smdata.lhs);
+          for (unsigned ir=0; ir < nodesPerElem_*numDof_; ++ir)
+            smdata.lhs(ir, ir) /= diagRelaxFactor_;
           apply_coeff(nodesPerElem_, smdata.connectedNodes[simdIndex],
                       smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         }

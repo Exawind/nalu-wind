@@ -259,6 +259,9 @@ LowMachEquationSystem::LowMachEquationSystem(
   momentumEqSys_= new MomentumEquationSystem(eqSystems);
   continuityEqSys_ = new ContinuityEquationSystem(eqSystems, elementContinuityEqs_);
 
+  momentumEqSys_->dofName_ = "velocity";
+  continuityEqSys_->dofName_ = "pressure";
+
   // inform realm
   realm_.hasFluids_ = true;
 }
@@ -942,6 +945,8 @@ MomentumEquationSystem::MomentumEquationSystem(
     projectedNodalGradEqs_(NULL),
     firstPNGResidual_(0.0)
 {
+  dofName_ = "velocity";
+
   // extract solver name and solver object
   std::string solverName = realm_.equationSystems_.get_solver_block_name("velocity");
   LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_MOMENTUM);
@@ -2598,6 +2603,7 @@ ContinuityEquationSystem::ContinuityEquationSystem(
     computeMdotAlgDriver_(new ComputeMdotAlgorithmDriver(realm_)),
     projectedNodalGradEqs_(NULL)
 {
+  dofName_ = "pressure";
 
   // message to user
   if ( realm_.realmUsesEdges_ && elementContinuityEqs_)

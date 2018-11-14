@@ -143,7 +143,8 @@ protected:
       dpdx(&meta.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx", 3/*num-states*/)), 
       density(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "density", 3/*num-states*/)), 
       viscosity(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity")),
-      pressure(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure"))
+      pressure(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure")),
+      udiag(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "momentum_diag"))
     {
       double one = 1.0;
       sierra::nalu::HexSCS hex8SCS;
@@ -154,6 +155,7 @@ protected:
       stk::mesh::put_field_on_mesh(*density, meta.universal_part(), 1, &one);
       stk::mesh::put_field_on_mesh(*viscosity, meta.universal_part(), 1, &one);
       stk::mesh::put_field_on_mesh(*pressure, meta.universal_part(), 1, &one);
+      stk::mesh::put_field_on_mesh(*udiag, meta.universal_part(), 1, &one);
     }
 
     GenericFieldType* massFlowRate;
@@ -163,6 +165,7 @@ protected:
     ScalarFieldType* density;
     ScalarFieldType* viscosity;
     ScalarFieldType* pressure;
+    ScalarFieldType* udiag;
 };
 
 class Hex8ElementWithBCFields : public ::testing::Test
