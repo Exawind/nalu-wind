@@ -86,6 +86,8 @@ DataProbePostProcessing::DataProbePostProcessing(
     searchMethodName_("none"),
     searchTolerance_(1.0e-4),
     searchExpansionFactor_(1.5),
+    probeType_(DataProbeSampleType::STEPCOUNT),
+    previousTime_(0.0),
     exoName_("data_probes.exo")
 {
   // load the data
@@ -132,6 +134,18 @@ DataProbePostProcessing::load(
     get_if_present(y_dataProbe, "exodus_name", exoName_, exoName_);
 
     get_if_present(y_dataProbe, "output_frequency", outputFreq_, outputFreq_);
+
+    get_if_present(y_dataProbe, "begin_sampling_after", previousTime_, previousTime_);
+
+    bool sampleInTime = false;
+    get_if_present(y_dataProbe, "sample_based_on_time", sampleInTime, sampleInTime);
+    probeType_ = sampleInTime ? DataProbeSampleType::APRXFREQUENCY : DataProbeSampleType::STEPCOUNT;
+
+    if(outputFreq_ != static_cast<int>(outputFreq_)
+        && probeType_==DataProbeSampleType::STEPCOUNT)
+    {
+      throw std::runtime_error("output_frequency must be an integer unless sample_based_on_time: on");
+    }
 
     // transfer specifications
     get_if_present(y_dataProbe, "search_method", searchMethodName_, searchMethodName_);
@@ -205,7 +219,7 @@ DataProbePostProcessing::load(
             // name; which is the part name of choice
             const YAML::Node nameNode = y_los["name"];
             if ( nameNode )
-	      probeInfo->partName_[ilos] = nameNode.as<std::string>() ;
+              probeInfo->partName_[ilos] = nameNode.as<std::string>() ;
             else
               throw std::runtime_error("DataProbePostProcessing: lacking the name");
 
@@ -468,7 +482,7 @@ DataProbePostProcessing::initialize()
         
         const int numPoints = probeInfo->numPoints_[j];
         for ( int p = 0; p < nDim; ++p )
-          dx[p] = (tipC[p] - tailC[p])/(double)(numPoints-1);
+          dx[p] = (tipC[p] - tailC[p])/(double)(std::max(numPoints-1,1));
         
         // now populate the coordinates; can use a simple loop rather than buckets
         for ( size_t n = 0; n < nodeVec.size(); ++n ) {
@@ -626,7 +640,19 @@ DataProbePostProcessing::execute()
   // only do work if this is an output step
   const double currentTime = realm_.get_current_time();
   const int timeStepCount = realm_.get_time_step_count();
-  const bool isOutput = timeStepCount % outputFreq_ == 0;
+  bool isOutput = false;
+  switch (probeType_){
+    case DataProbeSampleType::STEPCOUNT:
+      isOutput = timeStepCount % static_cast<int>(outputFreq_) == 0;
+      break;
+    case DataProbeSampleType::APRXFREQUENCY:
+      isOutput = currentTime>=previousTime_+outputFreq_;
+      previousTime_ = isOutput ? currentTime : previousTime_;
+      break;
+    default:
+      std::runtime_error("A DataProbe was not assigned a type.");
+      break;
+  }
 
   if ( isOutput ) {
     // execute and provide results...

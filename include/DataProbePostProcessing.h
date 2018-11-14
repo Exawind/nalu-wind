@@ -42,6 +42,11 @@ class Realm;
 class Transfer;
 class Transfers;
 
+enum class DataProbeSampleType{
+  STEPCOUNT,
+  APRXFREQUENCY
+};
+
 class DataProbeInfo {
 public:
   DataProbeInfo() { }
@@ -130,7 +135,7 @@ public:
   Realm &realm_;
 
   // frequency of output
-  int outputFreq_;
+  double outputFreq_;
 
   // width for output
   int w_;
@@ -150,9 +155,13 @@ public:
   // hold the transfers
   Transfers *transfers_;
 
+
+  DataProbeSampleType probeType_;
+
 private:
   std::unique_ptr<stk::io::StkMeshIoBroker> io;
 
+  double previousTime_;
   bool useExo_{false};
   std::string exoName_;
   size_t fileIndex_;
