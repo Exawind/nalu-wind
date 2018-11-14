@@ -15,6 +15,7 @@
 #include <NonConformalInfo.h>
 #include <NonConformalManager.h>
 #include <Realm.h>
+#include <SolutionOptions.h>
 #include <master_element/MasterElement.h>
 
 // stk_mesh/base/fem
@@ -90,6 +91,8 @@ AssembleMomentumNonConformalSolverAlgorithm::execute()
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
   const int nDim = meta_data.spatial_dimension();
+  const std::string dofName = "velocity";
+  const double relaxFacU = realm_.solutionOptions_->get_relaxation_factor(dofName);
 
   // space for LHS/RHS; nodesPerElem*nodesPerElem and nodesPerElem
   std::vector<double> lhs;
@@ -539,6 +542,10 @@ AssembleMomentumNonConformalSolverAlgorithm::execute()
             }
           }
         }
+        // relax the diagonal term before applying to the matrix
+        const int numRows = totalNodes * nDim;
+        for (int ir =0; ir < numRows; ir++)
+          p_lhs[ir * (numRows + 1)] /= relaxFacU;
         apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
       }
     }
