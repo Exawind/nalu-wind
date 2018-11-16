@@ -177,6 +177,10 @@ add_sources(GlobalSourceList
    TurbViscSmagorinskyAlgorithm.C
    TurbViscWaleAlgorithm.C
    TurbulenceAveragingPostProcessing.C
+   AssembleWallDistEdgeSolverAlgorithm.C
+   AssembleWallDistNonConformalAlgorithm.C
+   WallDistEquationSystem.C
+   WallDistSrcNodeSuppAlg.C
    UnitTests.C
 )
 
