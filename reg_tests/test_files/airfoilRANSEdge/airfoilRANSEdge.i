@@ -67,8 +67,14 @@ realms:
         turbulent_ke: solve_scalar
         specific_dissipation_rate: solve_scalar
         pressure: solve_cont
+        ndtw: solve_cont
 
       systems:
+
+        - WallDistance:
+            name: myNDTW
+            max_iterations: 1
+            convergence_tolerance: 1e-8
 
         - LowMachEOM:
             name: myLowMach
@@ -175,9 +181,6 @@ realms:
             turbulent_ke: element
             specific_dissipation_rate: element
     
-        - input_variables_from_file:
-            minimum_distance_to_wall: ndtw
-
         - relaxation_factor:
             velocity: 0.7
             pressure: 0.3
@@ -203,6 +206,7 @@ realms:
        - turbulent_ke
        - specific_dissipation_rate
        - turbulent_viscosity
+       - minimum_distance_to_wall
 
 Time_Integrators:
   - StandardTimeIntegrator:
