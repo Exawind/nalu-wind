@@ -5,6 +5,7 @@ project(Nalu CXX C Fortran)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ########################## OPTIONS #####################################
+option(ENABLE_CUDA "Enable build targeting GPU" OFF)
 option(ENABLE_TESTS "Enable regression testing." OFF)
 option(ENABLE_DOCUMENTATION "Build documentation." OFF)
 option(ENABLE_SPHINX_API_DOCS "Link Doxygen API docs to Sphinx" OFF)
@@ -80,6 +81,10 @@ if(ENABLE_FFTW)
   include_directories(${FFTW_INCLUDE_DIRS})
   add_definitions("-DNALU_USES_FFTW")
 endif(ENABLE_FFTW)
+
+if(ENABLE_CUDA)
+    add_definitions(-DUSE_STK_SIMD_NONE)
+endif()
 
 ############################ HYPRE #####################################
 if(ENABLE_HYPRE)
