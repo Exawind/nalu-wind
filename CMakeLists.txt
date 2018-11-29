@@ -10,13 +10,13 @@ option(ENABLE_DOCUMENTATION "Build documentation." OFF)
 option(ENABLE_SPHINX_API_DOCS "Link Doxygen API docs to Sphinx" OFF)
 option(ENABLE_WIND_UTILS "Build wind utils along with Nalu-Wind" OFF)
 option(ENABLE_FFTW "Use the FFTW library to support ABLTopBC" OFF)
+option(ENABLE_HYPRE "Use HYPRE Solver library" OFF)
 option(ENABLE_OPENFAST
        "Use OPENFAST tpl to get actuator line positions and forces" OFF)
 option(ENABLE_PARAVIEW_CATALYST
       "Enable ParaView Catalyst. Requires external installation of Trilinos Catalyst IOSS adapter."
        OFF)
 option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
-option(ENABLE_HYPRE "Use HYPRE Solver library" OFF)
 option(ENABLE_WARNINGS "Add -Wall to show compiler warnings" ON)
 option(ENABLE_EXTRA_WARNINGS "Add -Wextra to show even more compiler warnings" OFF)
 
@@ -70,6 +70,17 @@ else()
   message(FATAL_ERROR "YAML-CPP NOT FOUND")
 endif()
 
+############################ FFTW ######################################
+if(ENABLE_FFTW)
+  set(CMAKE_PREFIX_PATH ${FFTW_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(FFTW REQUIRED)
+  if(FFTW_FOUND)
+    message("-- Found FFTW = ${FFTW_DIR}")
+  endif()
+  include_directories(${FFTW_INCLUDE_DIRS})
+  add_definitions("-DNALU_USES_FFTW")
+endif(ENABLE_FFTW)
+
 ############################ HYPRE #####################################
 if(ENABLE_HYPRE)
   set(CMAKE_PREFIX_PATH ${HYPRE_DIR} ${CMAKE_PREFIX_PATH})
@@ -81,17 +92,6 @@ if(ENABLE_HYPRE)
   include_directories(SYSTEM ${HYPRE_INCLUDE_DIRS})
   add_definitions("-DNALU_USES_HYPRE")
 endif(ENABLE_HYPRE)
-
-############################ FFTW ######################################
-if(ENABLE_FFTW)
-  set(CMAKE_PREFIX_PATH ${FFTW_DIR} ${CMAKE_PREFIX_PATH})
-  find_package(FFTW  REQUIRED)
-  if(FFTW_FOUND)
-    message("-- Found FFTW = ${FFTW_DIR}")
-  endif()
-  include_directories(${FFTW_INCLUDE_DIRS})
-  add_definitions("-DNALU_USES_FFTW")
-endif(ENABLE_FFTW)
 
 ########################## OPENFAST ####################################
 if(ENABLE_OPENFAST)
@@ -227,8 +227,15 @@ include_directories(${CMAKE_BINARY_DIR}/include)
 add_library(nalu ${NALU_SOURCES})
 target_link_libraries(nalu ${Trilinos_LIBRARIES})
 target_link_libraries(nalu ${YAML_CPP_LIBRARIES})
-target_link_libraries(nalu ${FFTW_LIBRARIES})
 target_link_libraries(nalu ${MPI_CXX_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_C_LIBRARIES})
+
+if(ENABLE_FFTW)
+  target_link_libraries(nalu ${FFTW_LIBRARIES})
+endif()
+
+if(ENABLE_HYPRE)
+  target_link_libraries(nalu ${HYPRE_LIBRARIES})
+endif()
 
 if(ENABLE_OPENFAST)
   target_link_libraries(nalu ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
@@ -236,10 +243,6 @@ endif()
 
 if(ENABLE_TIOGA)
   target_link_libraries(nalu ${TIOGA_LIBRARIES})
-endif()
-
-if(ENABLE_HYPRE)
-  target_link_libraries(nalu ${HYPRE_LIBRARIES})
 endif()
 
 message("-- CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
