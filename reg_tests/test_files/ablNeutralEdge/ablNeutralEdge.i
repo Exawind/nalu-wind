@@ -145,7 +145,6 @@ realms:
         potential_flow_bc: false
         normal_temperature_gradient: -0.003
 
-
     - wall_boundary_condition: bc_lower
       target_name: lower
       wall_user_data:
@@ -263,8 +262,8 @@ realms:
       time_hist_output_frequency: 2
 
     # This defines the ABL forcing to drive the winds to 8 m/s from
-    # 245 degrees (southwest) at 90 m above the surface in a planar 
-    # averaged sense.  
+    # 245 degrees (southwest) at 90 m above the surface in a planar
+    # averaged sense.
     abl_forcing:
       output_format: "abl_%s_sources.dat"
       momentum:

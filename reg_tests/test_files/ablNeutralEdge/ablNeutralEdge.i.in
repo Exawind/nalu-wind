@@ -88,7 +88,7 @@ realms:
           mass_fraction: 1.0
 
       specifications:
- 
+
         # Density here was computed such that P_ref = rho_ref*(R/mw)*300K
         - name: density
           type: constant
@@ -144,7 +144,6 @@ realms:
       abltop_user_data:
         potential_flow_bc: false
         normal_temperature_gradient: -0.003
-
 
     - wall_boundary_condition: bc_lower
       target_name: lower
@@ -283,7 +282,6 @@ realms:
         velocity_z:
           - [0.0, 0.0]
           - [90000.0, 0.0]
-
 
 # This defines the time step size, count, etc.
 Time_Integrators:
