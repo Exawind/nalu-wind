@@ -51,5 +51,12 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
                 ${CMAKE_CURRENT_SOURCE_DIR}/xml
                 ${CMAKE_CURRENT_BINARY_DIR}/xml)
 
+# Allow oversubscribing OpenMPI on a Mac during testing
+# TODO: Don't inject the oversubscribe flag if not OpenMPI, e.g. MPICH
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(MPIEXEC_OVERSUBSCRIBE_FLAG "--oversubscribe")
+  set(MPIEXEC_PREFLAGS "${MPIEXEC_OVERSUBSCRIBE_FLAG} ${MPIEXEC_PREFLAGS}")
+endif()
+
 # Add tests in list
 include(${CMAKE_CURRENT_SOURCE_DIR}/CTestList.cmake)
