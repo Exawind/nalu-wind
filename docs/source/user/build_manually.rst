@@ -276,7 +276,7 @@ Prepare:
     mkdir build
     cd build
 
-Now create a do-configTrilnos script with the following recommended options:
+Now create a ``do-configTrilnos`` script with the following recommended options:
 
 .. code-block:: bash
 
@@ -424,6 +424,10 @@ Make sure all other paths to netcdf, hdf5, etc., are correct.
 ParaView Catalyst
 ~~~~~~~~~~~~~~~~~
 
+.. note::
+
+     The scripts referred to in the following section are available in the Nalu-Wind git history but have since been removed.
+
 Optionally enable `ParaView Catalyst <https://www.paraview.org/in-situ/>`__
 for in-situ visualization with Nalu-Wind. These instructions can be skipped if 
 you do not require in-situ visualization with Nalu-Wind.
@@ -491,6 +495,10 @@ top of the file to the root build directory path.
 
 Nalu-Wind
 ~~~~~~~~~
+
+.. note::
+
+     The scripts referred to in the following section are available in the Nalu-Wind git history but have since been removed.
 
 Nalu-Wind is provided `here <https://github.com/exawind/nalu-wind>`__. The master branch of Nalu-Wind typically matches with the master branch or develop branch of Trilinos. If it is necessary to build an older version of Nalu-Wind, refer to the history of the Nalu git repo for instructions on doing so.
 
