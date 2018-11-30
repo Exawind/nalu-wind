@@ -274,7 +274,11 @@ Prepare:
     git clone https://github.com/trilinos/Trilinos.git
     cd $nalu_build_dir/packages/Trilinos
     mkdir build
+    cd build
 
+Now create a ``do-configTrilinos`` script with the following recommended options:
+
+.. literalinclude:: example_build.sh
 
 HYPRE
 ~~~~~
@@ -309,40 +313,25 @@ HYPRE library and link to it when building Nalu-Wind.
 Build
 *****
 
-Place into the build directory, one of the ``do-configTrilinos_*`` files, that can be obtained from the Nalu-Wind repo.
+Place into the build directory, the ``do-configTrilinos`` script created from the recommended Trilinos configuration listed above.
 
-``do-configTrilinos_*`` will be used to run cmake to build trilinos correctly for Nalu-Wind. Note that there are two files: one for 'release' and the other 'debug'. The files can be found on the Nalu-Wind GitHub site or copied from ``$nalu_build_dir/packages/nalu-wind/build``, which is created in the Nalu-Wind build step documented below. For example:
-
-Pull latest version of ``do-configTrilinos_*`` from Nalu-Wind's GitHub site:
-
-::
-
-    curl -o $nalu_build_dir/packages/Trilinos/build/do-configTrilinos_release https://github.com/Exawind/nalu-wind/blob/master/build/do-configTrilinos_release
-
-Or if you create the Nalu-Wind directory as directed below, simply copy one of the ``do-configTrilinos_*`` files from local copy of Nalu-Wind's git repository:
-
-::
-
-    cp $nalu_build_dir/packages/nalu-wind/build/do-configTrilinos_release $nalu_build_dir/packages/Trilinos/build
-
-Now edit ``do-configTrilinos_release`` to modify the paths so they point to ``$nalu_build_dir/install``.
-
-::
-
-    cd $nalu_build_dir/packages/Trilinos/build
-    chmod +x do-configTrilinos_release
+``do-configTrilinos`` will be used to run cmake to build trilinos correctly for Nalu-Wind.
 
 Make sure all other paths to netcdf, hdf5, etc., are correct.
 
 ::
 
-    ./do-configTrilinos_release
+    ./do-configTrilinos
     make
     make install
 
 
 ParaView Catalyst
 ~~~~~~~~~~~~~~~~~
+
+.. note::
+
+     The scripts referred to in the following section are available in the Nalu-Wind git history but have since been removed. Refer to `this script <https://github.com/Exawind/build-test/blob/master/configs/machines/peregrine/do-config-nalu-wind-peregrine.sh>`__  as a template for building Nalu-Wind.
 
 Optionally enable `ParaView Catalyst <https://www.paraview.org/in-situ/>`__
 for in-situ visualization with Nalu-Wind. These instructions can be skipped if 
@@ -411,6 +400,10 @@ top of the file to the root build directory path.
 
 Nalu-Wind
 ~~~~~~~~~
+
+.. note::
+
+     The scripts referred to in the following section are available in the Nalu-Wind git history but have since been removed. Refer to `this script <https://github.com/Exawind/build-test/blob/master/configs/machines/peregrine/do-config-nalu-wind-peregrine.sh>`__  as a template for building Nalu-Wind.
 
 Nalu-Wind is provided `here <https://github.com/exawind/nalu-wind>`__. The master branch of Nalu-Wind typically matches with the master branch or develop branch of Trilinos. If it is necessary to build an older version of Nalu-Wind, refer to the history of the Nalu git repo for instructions on doing so.
 

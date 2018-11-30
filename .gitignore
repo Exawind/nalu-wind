@@ -1,12 +1,5 @@
 *~
-/build/CMakeFiles/
-/build/bin/
-/build/libnalu.a
-/build/libnalu.so
-/build/naluX
-/build/cmake_install.cmake
-/build/Makefile
-/build/CMakeCache.txt
+/build
 *.swp
 /GCC_4.4.4_OPT/
 /LAMENT_GCC_4.4.4_OPT/
