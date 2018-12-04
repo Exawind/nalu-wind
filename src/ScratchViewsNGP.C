@@ -32,7 +32,11 @@ void gather_elem_node_tensor_field(const NGPDoubleFieldType& field,
                             const ngp::Mesh::ConnectedNodes& elemNodes,
                             SharedMemView<double***,DeviceShmem>& shmemView)
 {
-  ThrowRequireMsg(numNodes==(int)elemNodes.size(),"gather_elem_node_tensor_field, numNodes="<<numNodes<<" but elemNodes.size()="<<elemNodes.size());
+  if (numNodes!=(int)elemNodes.size())
+    NGP_ThrowRequireMsg(
+      numNodes==(int)elemNodes.size(),
+      "gather_elem_node_tensor_field, numNodes = " + std::to_string(numNodes) +
+      "mismatch with elemNodes.size() = " + std::to_string(elemNodes.size()));
   for(int i=0; i<numNodes; ++i) {
     const double* dataPtr = static_cast<const double*>(&field.get(ngpMesh, elemNodes[i], 0));
     unsigned counter = 0;
@@ -103,7 +107,7 @@ int get_num_scalars_pre_req_data(ElemDataRequestsGPU& dataNeeded, int nDim)
   const bool elemDataNeeded = meFC == nullptr
     && (meSCS != nullptr || meSCV != nullptr || meFEM != nullptr);
 
-  ThrowRequireMsg(faceDataNeeded != elemDataNeeded,
+  NGP_ThrowRequireMsg(faceDataNeeded != elemDataNeeded,
     "An algorithm has been registered with conflicting face/element data requests");
 
   const int nodesPerEntity = meSCS != nullptr ? meSCS->nodesPerElement_
@@ -123,7 +127,7 @@ int get_num_scalars_pre_req_data(ElemDataRequestsGPU& dataNeeded, int nDim)
 
     // Catch errors if user requests nodal field but has not registered any
     // MasterElement we need to get nodesPerEntity
-    ThrowRequire(entitiesPerElem > 0);
+    NGP_ThrowRequire(entitiesPerElem > 0);
     if (fieldInfo.scalarsDim2 > 1) {
       scalarsPerEntity *= fieldInfo.scalarsDim2;
     }
@@ -242,7 +246,7 @@ int get_num_scalars_pre_req_data(ElemDataRequestsGPU& dataNeeded, int nDim, cons
 
     // Catch errors if user requests nodal field but has not registered any
     // MasterElement we need to get nodesPerEntity
-    ThrowRequire(entitiesPerElem > 0);
+    NGP_ThrowRequire(entitiesPerElem > 0);
     if (fieldInfo.scalarsDim2 > 1) {
       scalarsPerEntity *= fieldInfo.scalarsDim2;
     }
@@ -399,7 +403,7 @@ void fill_pre_req_data(
       }
     }
     else {
-      ThrowRequireMsg(false,"Unknown stk-rank" << fieldEntityRank);
+      NGP_ThrowRequireMsg(false,"Unknown stk-rank in ScratchViewsNGP.C::fill_pre_req_data" );
     }
   } 
 

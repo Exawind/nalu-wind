@@ -23,6 +23,7 @@
 
 #include <set>
 #include <type_traits>
+#include <string>
 
 namespace sierra{
 namespace nalu{
@@ -146,7 +147,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   MasterElementViews<T>& get_me_views(const COORDS_TYPES cType)
   {
-    ThrowRequire(hasCoordField[cType] == true);
+    NGP_ThrowRequire(hasCoordField[cType] == true);
     return meViews[cType];
   }
   KOKKOS_INLINE_FUNCTION
@@ -653,7 +654,7 @@ void ScratchViewsNGP<T,TEAMHANDLETYPE,SHMEM>::create_needed_field_views(const TE
       }
     }
     else {
-      ThrowRequireMsg(false,"Unknown stk-rank" << fieldEntityRank);
+      NGP_ThrowRequireMsg(false,"Unknown stk-rank in ScratchViewsNGP<T,TEAMHANDLETYPE,SHMEM>::create_needed_field_views: " + std::to_string(fieldEntityRank));
     }
   }
 
