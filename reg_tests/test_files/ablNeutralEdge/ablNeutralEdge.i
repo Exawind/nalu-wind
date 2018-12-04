@@ -88,7 +88,7 @@ realms:
           mass_fraction: 1.0
 
       specifications:
- 
+
         # Density here was computed such that P_ref = rho_ref*(R/mw)*300K
         - name: density
           type: constant
@@ -124,7 +124,7 @@ realms:
     # Boundary conditions are periodic on the north, south, east, and west
     # sides.  The lower boundary condition is a wall that uses an atmospheric
     # rough wall shear stress model.  The upper boundary is a stress free
-    # rigid lid applied through symmetry, but the temperature is set to hold
+    # rigid lid, but the temperature is set to hold
     # a specified boundary normal gradient that matches the stable layer
     # immediately below.
     boundary_conditions:
@@ -139,9 +139,10 @@ realms:
       periodic_user_data:
         search_tolerance: 0.0001 
 
-    - symmetry_boundary_condition: bc_upper
+    - abltop_boundary_condition: bc_upper
       target_name: upper
-      symmetry_user_data:
+      abltop_user_data:
+        potential_flow_bc: false
         normal_temperature_gradient: -0.003
 
     - wall_boundary_condition: bc_lower
@@ -261,8 +262,8 @@ realms:
       time_hist_output_frequency: 2
 
     # This defines the ABL forcing to drive the winds to 8 m/s from
-    # 245 degrees (southwest) at 90 m above the surface in a planar 
-    # averaged sense.  
+    # 245 degrees (southwest) at 90 m above the surface in a planar
+    # averaged sense.
     abl_forcing:
       output_format: "abl_%s_sources.dat"
       momentum:

@@ -77,6 +77,7 @@
 #endif
 
 #include <wind_energy/ABLForcingAlgorithm.h>
+#include <wind_energy/SyntheticLidar.h>
 
 // props; algs, evaluators and data
 #include <property_evaluator/GenericPropAlgorithm.h>
@@ -574,9 +575,17 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
   std::vector<const YAML::Node *> foundProbe;
   NaluParsingHelper::find_nodes_given_key("data_probes", node, foundProbe);
   if ( foundProbe.size() > 0 ) {
-    if ( foundProbe.size() != 1 )
+    if ( foundProbe.size() != 1 ) {
       throw std::runtime_error("look_ahead_and_create::error: Too many data probe blocks");
+    }
     dataProbePostProcessing_ =  new DataProbePostProcessing(*this, *foundProbe[0]);
+
+    const YAML::Node lidar_spec = (*foundProbe[0])["data_probes"]["lidar_specifications"];
+    if (lidar_spec) {
+      LidarLineOfSite lidarLOS;
+      auto lidarDBSpec = lidarLOS.determine_line_of_site_info(lidar_spec);
+      dataProbePostProcessing_->add_external_data_probe_spec_info(lidarDBSpec.release());
+    }
   }
 
   // look for Actuator
@@ -949,8 +958,9 @@ Realm::setup_post_processing_algorithms()
     turbulenceAveragingPostProcessing_->setup();
 
   // check for data probes
-  if ( NULL != dataProbePostProcessing_ )
+  if ( NULL != dataProbePostProcessing_ ) {
     dataProbePostProcessing_->setup();
+  }
 
   // check for actuator line
   if ( NULL != actuator_ )
@@ -988,6 +998,9 @@ Realm::setup_bc()
         break;
       case SYMMETRY_BC:
         equationSystems_.register_symmetry_bc(name, *reinterpret_cast<const SymmetryBoundaryConditionData *>(&bc));
+        break;
+      case ABLTOP_BC:
+        equationSystems_.register_abltop_bc(name, *reinterpret_cast<const ABLTopBoundaryConditionData *>(&bc));
         break;
       case PERIODIC_BC:
       {
@@ -3155,19 +3168,6 @@ Realm::register_open_bc(
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
-
-
-  if (solutionOptions_->explicitlyZeroOpenPressureGradient_) {
-    const double zero = 0;
-    VectorFieldType& averageNormal =
-        metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "average_open_normal");
-    stk::mesh::put_field_on_mesh(averageNormal, *part, nDim, &zero);
-
-    const int zeroInt = 0 ;
-    ScalarIntFieldType& faceConnectionCount =
-        metaData_->declare_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "open_face_connection_count");
-    stk::mesh::put_field_on_mesh(faceConnectionCount, *part, &zeroInt);
-  }
 
 
   //====================================================

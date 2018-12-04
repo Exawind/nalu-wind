@@ -174,7 +174,7 @@ AssembleCourantReynoldsElemAlgorithm::execute()
         double udotx = 0.0;
         double dxSq = 0.0;
         for ( int j = 0; j < nDim; ++j ) {
-          double ujIp = 0.5*(p_vrtm[il*nDim+j]+p_vrtm[il*nDim+j]);
+          double ujIp = 0.5*(p_vrtm[ir*nDim+j]+p_vrtm[il*nDim+j]);
           double dxj = p_coordinates[ir*nDim+j] - p_coordinates[il*nDim+j];
           udotx += dxj*ujIp;
           dxSq += dxj*dxj;

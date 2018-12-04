@@ -14,7 +14,7 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 
-#include <ElemDataRequests.h>
+#include <ElemDataRequestsNGP.h>
 #include <master_element/MasterElement.h>
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
@@ -58,12 +58,12 @@ public:
 
   int create_master_element_views(
     const TeamHandleType& team,
-    const std::set<ELEM_DATA_NEEDED>& dataEnums,
+    const ElemDataRequestsNGP::DataEnumView& dataEnums,
     int nDim, int nodesPerFace, int nodesPerElem,
     int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 
   void fill_master_element_views(
-    const std::set<ELEM_DATA_NEEDED>& dataEnums,
+    const ElemDataRequestsNGP::DataEnumView& dataEnums,
     SharedMemView<double**>* coordsView,
     MasterElement* meFC,
     MasterElement* meSCS,
@@ -72,7 +72,7 @@ public:
     int faceOrdinal = 0);
 
   void fill_master_element_views_new_me(
-    const std::set<ELEM_DATA_NEEDED>& dataEnums,
+    const ElemDataRequestsNGP::DataEnumView& dataEnums,
     SharedMemView<DoubleType**>* coordsView,
     MasterElement* meFC,
     MasterElement* meSCS,
@@ -111,12 +111,12 @@ public:
   ScratchViews(const TeamHandleType& team,
                const stk::mesh::BulkData& bulkData,
                int nodesPerEntity,
-               const ElemDataRequests& dataNeeded);
+               const ElemDataRequestsNGP& dataNeeded);
 
   ScratchViews(const TeamHandleType& team,
                const stk::mesh::BulkData& bulkData,
                const ScratchMeInfo &meInfo,
-               const ElemDataRequests& dataNeeded);
+               const ElemDataRequestsNGP& dataNeeded);
 
   virtual ~ScratchViews() {
     for(ViewHolder* vh : fieldViews) {
@@ -152,12 +152,12 @@ public:
 
 private:
   void create_needed_field_views(const TeamHandleType& team,
-                                 const ElemDataRequests& dataNeeded,
+                                 const ElemDataRequestsNGP& dataNeeded,
                                  const stk::mesh::BulkData& bulkData,
                                  int nodesPerElem);
 
   void create_needed_master_element_views(const TeamHandleType& team,
-                                          const ElemDataRequests& dataNeeded,
+                                          const ElemDataRequestsNGP& dataNeeded,
                                           int nDim, int nodesPerFace, int nodesPerElem,
                                           int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 
@@ -202,7 +202,7 @@ SharedMemView<T****>& ScratchViews<T>::get_scratch_view_4D(const stk::mesh::Fiel
 template<typename T>
 int MasterElementViews<T>::create_master_element_views(
   const TeamHandleType& team,
-  const std::set<ELEM_DATA_NEEDED>& dataEnums,
+  const ElemDataRequestsNGP::DataEnumView& dataEnums,
   int nDim, int nodesPerFace, int nodesPerElem,
   int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
 {
@@ -210,8 +210,8 @@ int MasterElementViews<T>::create_master_element_views(
   bool needDeriv = false; bool needDerivScv = false; bool needDerivFem = false; bool needDerivFC = false;
   bool needDetj = false; bool needDetjScv = false; bool needDetjFem = false; bool needDetjFC = false;
   bool femGradOp = false; bool femShiftedGradOp = false;
-  for(ELEM_DATA_NEEDED data : dataEnums) {
-    switch(data)
+  for(unsigned i=0; i<dataEnums.size(); ++i) {
+    switch(dataEnums(i))
     {
       case FC_AREAV:
           ThrowRequireMsg(numFaceIp > 0, "ERROR, meFC must be non-null if FC_AREAV is requested.");
@@ -355,7 +355,7 @@ int MasterElementViews<T>::create_master_element_views(
 
 template<typename T>
 void MasterElementViews<T>::fill_master_element_views(
-  const std::set<ELEM_DATA_NEEDED>& dataEnums,
+  const ElemDataRequestsNGP::DataEnumView& dataEnums,
   SharedMemView<double**>* coordsView,
   MasterElement* meFC,
   MasterElement* meSCS,
@@ -368,8 +368,8 @@ void MasterElementViews<T>::fill_master_element_views(
                 "Cannot populate MasterElement Views for non-double data types");
 
   double error = 0.0;
-  for(ELEM_DATA_NEEDED data : dataEnums) {
-    switch(data)
+  for(unsigned i=0; i<dataEnums.size(); ++i) {
+    switch(dataEnums(i))
     {
       case FC_AREAV:
         ThrowRequireMsg(false, "ERROR, non-interleaving FC_AREAV is not supported.");
@@ -429,7 +429,7 @@ void MasterElementViews<T>::fill_master_element_views(
 
 template<typename T>
 void MasterElementViews<T>::fill_master_element_views_new_me(
-  const std::set<ELEM_DATA_NEEDED>& dataEnums,
+  const ElemDataRequestsNGP::DataEnumView& dataEnums,
   SharedMemView<DoubleType**>* coordsView,
   MasterElement* meFC,
   MasterElement* meSCS,
@@ -437,8 +437,8 @@ void MasterElementViews<T>::fill_master_element_views_new_me(
   MasterElement* meFEM,
   int faceOrdinal)
 {
-  for(ELEM_DATA_NEEDED data : dataEnums) {
-    switch(data)
+  for(unsigned i=0; i<dataEnums.size(); ++i) {
+    switch(dataEnums(i))
     {
       case FC_AREAV:
         ThrowRequireMsg(false, "FC_AREAV not implemented yet.");
@@ -508,7 +508,7 @@ template<typename T>
 ScratchViews<T>::ScratchViews(const TeamHandleType& team,
              const stk::mesh::BulkData& bulkData,
              int nodalGatherSize,
-             const ElemDataRequests& dataNeeded)
+             const ElemDataRequestsNGP& dataNeeded)
 {
   /* master elements are allowed to be null if they are not required */
   MasterElement *meFC = dataNeeded.get_cvfem_face_me();
@@ -536,7 +536,7 @@ template<typename T>
 ScratchViews<T>::ScratchViews(const TeamHandleType& team,
              const stk::mesh::BulkData& bulkData,
              const ScratchMeInfo &meInfo,
-             const ElemDataRequests& dataNeeded)
+             const ElemDataRequestsNGP& dataNeeded)
 {
   int nDim = bulkData.mesh_meta_data().spatial_dimension();
   create_needed_field_views(team, dataNeeded, bulkData, meInfo.nodalGatherSize_);
@@ -545,7 +545,7 @@ ScratchViews<T>::ScratchViews(const TeamHandleType& team,
 
 template<typename T>
 void ScratchViews<T>::create_needed_field_views(const TeamHandleType& team,
-                               const ElemDataRequests& dataNeeded,
+                               const ElemDataRequestsNGP& dataNeeded,
                                const stk::mesh::BulkData& bulkData,
                                int nodesPerEntity)
 {
@@ -554,8 +554,9 @@ void ScratchViews<T>::create_needed_field_views(const TeamHandleType& team,
   unsigned numFields = meta.get_fields().size();
   fieldViews.resize(numFields, nullptr);
 
-  const FieldSet& neededFields = dataNeeded.get_fields();
-  for(const FieldInfo& fieldInfo : neededFields) {
+  const ElemDataRequestsNGP::FieldInfoView& neededFields = dataNeeded.get_fields();
+  for(unsigned i=0; i<neededFields.size(); ++i) {
+    const FieldInfo& fieldInfo = neededFields(i);
     stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
     unsigned scalarsDim1 = fieldInfo.scalarsDim1;
     unsigned scalarsDim2 = fieldInfo.scalarsDim2;
@@ -599,51 +600,52 @@ void ScratchViews<T>::create_needed_field_views(const TeamHandleType& team,
 
 template<typename T>
 void ScratchViews<T>::create_needed_master_element_views(const TeamHandleType& team,
-                                        const ElemDataRequests& dataNeeded,
+                                        const ElemDataRequestsNGP& dataNeeded,
                                         int nDim, int nodesPerFace, int nodesPerElem,
                                         int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
 {
   int numScalars = 0;
 
-  for (auto it = dataNeeded.get_coordinates_map().begin();
-       it != dataNeeded.get_coordinates_map().end(); ++it) {
-    hasCoordField[it->first] = true;
-    numScalars += meViews[it->first].create_master_element_views(
-      team, dataNeeded.get_data_enums(it->first),
+  const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+
+  for(unsigned i=0; i<coordsTypes.size(); ++i) {
+    hasCoordField[coordsTypes(i)] = true;
+    numScalars += meViews[coordsTypes(i)].create_master_element_views(
+      team, dataNeeded.get_data_enums(coordsTypes(i)),
       nDim, nodesPerFace, nodesPerElem, numFaceIp, numScsIp, numScvIp, numFemIp);
   }
 
   num_bytes_required += numScalars * sizeof(T);
 }
 
-int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDim);
-int get_num_scalars_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
+int get_num_scalars_pre_req_data(ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim);
+int get_num_scalars_pre_req_data(ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
 
-void fill_pre_req_data(ElemDataRequests& dataNeeded,
+void fill_pre_req_data(ElemDataRequestsNGP& dataNeeded,
                        const stk::mesh::BulkData& bulkData,
                        stk::mesh::Entity elem,
                        ScratchViews<double>& prereqData,
                        bool fillMEViews = true);
 
-void fill_master_element_views(ElemDataRequests& dataNeeded,
+void fill_master_element_views(ElemDataRequestsNGP& dataNeeded,
                                const stk::mesh::BulkData& bulkData,
                                ScratchViews<DoubleType>& prereqData,
                                int faceOrdinal = 0);
 
 template<typename T = double>
-int get_num_bytes_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDim)
+int get_num_bytes_pre_req_data(ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim)
 {
   return sizeof(T) * get_num_scalars_pre_req_data(dataNeededBySuppAlgs, nDim);
 }
 template<typename T = double>
-int get_num_bytes_pre_req_data(ElemDataRequests& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo)
+int get_num_bytes_pre_req_data(ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo)
 {
   return sizeof(T) * get_num_scalars_pre_req_data(dataNeededBySuppAlgs, nDim, meInfo);
 }
 
 inline
 int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchIdsSize, int nDim,
-                                      ElemDataRequests& dataNeededByKernels)
+                                      ElemDataRequestsNGP& dataNeededByKernels)
 {
     int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int) +
                            get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim);
@@ -653,8 +655,8 @@ int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchI
 
 inline
 int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchIdsSize, int nDim,
-                                      sierra::nalu::ElemDataRequests& faceDataNeeded,
-                                      sierra::nalu::ElemDataRequests& elemDataNeeded,
+                                      sierra::nalu::ElemDataRequestsNGP& faceDataNeeded,
+                                      sierra::nalu::ElemDataRequestsNGP& elemDataNeeded,
                                       const sierra::nalu::ScratchMeInfo &meInfo)
 {
     int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int)

@@ -35,6 +35,7 @@ public:
     std::string, std::string,
     ElemDataRequests&);
 
+  using Kernel::execute;
   void execute(
     SharedMemView<DoubleType**>&,
     SharedMemView<DoubleType*>&,

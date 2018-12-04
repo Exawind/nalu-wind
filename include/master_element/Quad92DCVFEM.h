@@ -31,6 +31,10 @@ namespace nalu{
 class Quad92DSCV : public QuadrilateralP2Element
 {
 public:
+  using MasterElement::determinant;
+  using MasterElement::grad_op;
+  using MasterElement::shifted_grad_op;
+
   Quad92DSCV();
   virtual ~Quad92DSCV() {}
 
@@ -74,6 +78,8 @@ private:
 class Quad92DSCS : public QuadrilateralP2Element
 {
 public:
+  using MasterElement::determinant;
+
   Quad92DSCS();
   virtual ~Quad92DSCS() {}
 

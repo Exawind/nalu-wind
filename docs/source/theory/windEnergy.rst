@@ -88,7 +88,7 @@ as shown below
    :label: abl_pottemp
 
    \frac{\partial}{\partial t} \left(\bar{\rho}\, \widetilde{\theta}\right) +
-   \frac{\partial}{\partial t} \left(\bar{\rho}\, \widetilde{u}_j \widetilde{\theta} \right) = - \frac{\partial}{\partial x_j} \hat{q}_j
+   \frac{\partial}{\partial x_j} \left(\bar{\rho}\, \widetilde{u}_j \widetilde{\theta} \right) = - \frac{\partial}{\partial x_j} \hat{q}_j
 
 where, :math:`\hat{q}_j` represents the temperature transport due to molecular and SFS
 turbulence effects. Due to the high Reynolds number associated with ABL flows,
@@ -118,7 +118,7 @@ equation. The enthalpy equation solved in wind energy problems is shown below
    :label: abl_enth
 
    \frac{\partial}{\partial t} \left(\bar{\rho}\, \widetilde{T}\right) +
-   \frac{\partial}{\partial t} \left(\bar{\rho}\, \widetilde{u}_j \widetilde{T} \right) = - \frac{\partial}{\partial x_j} q_j
+   \frac{\partial}{\partial x_j} \left(\bar{\rho}\, \widetilde{u}_j \widetilde{T} \right) = - \frac{\partial}{\partial x_j} q_j
 
 It is noted here that the terms :math:`\hat{q}_j` (Eq. :eq:`abl_pottemp`) and
 :math:`q_j` (Eq. :eq:`abl_enth`) are not equivalent and must be scaled
@@ -306,10 +306,21 @@ flux for modeling stratified flows.
 Top boundary condition
 ~~~~~~~~~~~~~~~~~~~~~~
 
-For momentum, a :ref:`symmetry BC <theory_symmetry_bc>` is used when modeling
-wind farm problems. For enthalpy equation, a normal temperature gradient can be
-specified to drive the flow to a desired temperaure profile, e.g., capping
-inversion temperature profile.
+For problems with minimal streamline curvature near the upper boundary 
+(e.g. nearly flat terrain, negligible turbine blockage), a 
+:ref:`symmetry BC <theory_symmetry_bc>` (slip wall) can be when modeling 
+wind farm problems. By default a zero vertical temperature gradient will
+be imposed for the enthalpy equation when the symmetry boundary condition
+is used.  If a non-zero normal temperature gradient is required to
+drive the flow to a desired temperaure profile, e.g., a capping inversion,
+then the :ref:`abltop BC <theory_abltop_bc>` can be used.  In this case
+the user_data input normal_temperature_gradient: value will set the normal
+temperature gradient to value at the top boundary.
+
+For cases with significant terrain features or significant turbine blockage,
+the :ref:`abltop BC <theory_abltop_bc>` can also be used to achieve an 
+open boundary that allows for both inflows and outflows at the domain
+top.  See the :ref:`abltop BC <theory_abltop_bc>` documentation for details.
 
 Inlet conditions
 ~~~~~~~~~~~~~~~~

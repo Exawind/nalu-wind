@@ -140,9 +140,9 @@ realms:
       periodic_user_data:
         search_tolerance: 0.0001
 
-    - symmetry_boundary_condition: bc_upper
+    - abltop_boundary_condition: bc_upper
       target_name: upper
-      symmetry_user_data:
+      abltop_user_data:
         normal_temperature_gradient: -0.003
 
     - wall_boundary_condition: bc_lower

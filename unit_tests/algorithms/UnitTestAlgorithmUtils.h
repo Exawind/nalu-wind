@@ -15,6 +15,8 @@
 #include "SupplementalAlgorithm.h"
 #include "UnitTestKokkosUtils.h"
 
+#ifndef KOKKOS_HAVE_CUDA
+
 namespace unit_test_algorithm_utils {
 
 /** Driver class that mimics Assemble*SolverAlgorithm
@@ -73,5 +75,7 @@ private:
 };
 
 }
+
+#endif /* KOKKOS_HAVE_CUDA */
 
 #endif /* UNITTESTALGORITHMUTILS_H */

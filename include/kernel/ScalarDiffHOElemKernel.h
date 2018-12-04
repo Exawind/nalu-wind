@@ -44,6 +44,7 @@ public:
         << timer_jac << ", timer_resid: " << timer_resid << "\n----" << std::endl;
   }
 
+  using Kernel::execute;
   void execute(
     SharedMemView<DoubleType**>&,
     SharedMemView<DoubleType*>&,

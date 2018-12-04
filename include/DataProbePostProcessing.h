@@ -14,9 +14,13 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <memory>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Selector.hpp>
+
+#include <stk_io/StkMeshIoBroker.hpp>
+
 
 // stk forwards
 namespace stk {
@@ -37,6 +41,11 @@ namespace nalu{
 class Realm;
 class Transfer;
 class Transfers;
+
+enum class DataProbeSampleType{
+  STEPCOUNT,
+  APRXFREQUENCY
+};
 
 class DataProbeInfo {
 public:
@@ -85,6 +94,8 @@ public:
   void load(
     const YAML::Node & node);
 
+  void add_external_data_probe_spec_info(DataProbeSpecInfo* dpsInfo);
+
   // setup part creation and nodal field registration (before populate_mesh())
   void setup();
 
@@ -106,11 +117,16 @@ public:
   // create the transfer and hold the vector in the DataProbePostProcessing class
   void create_transfer();
 
+  // optionally create an exodus database
+  void create_exodus();
+
   // populate nodal field and output norms (if appropriate)
   void execute();
 
   // output to a file
-  void provide_output(const double currentTime);
+  void provide_output_txt(const double currentTime);
+  void provide_output_exodus(const double currentTime);
+
   
   // provide the inactive selector
   stk::mesh::Selector &get_inactive_selector();
@@ -119,7 +135,7 @@ public:
   Realm &realm_;
 
   // frequency of output
-  int outputFreq_;
+  double outputFreq_;
 
   // width for output
   int w_;
@@ -138,6 +154,17 @@ public:
 
   // hold the transfers
   Transfers *transfers_;
+
+
+  DataProbeSampleType probeType_;
+
+private:
+  std::unique_ptr<stk::io::StkMeshIoBroker> io;
+
+  double previousTime_;
+  bool useExo_{false};
+  std::string exoName_;
+  size_t fileIndex_;
 };
 
 } // namespace nalu

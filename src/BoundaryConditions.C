@@ -69,6 +69,13 @@ BoundaryCondition * BoundaryCondition::load(const YAML::Node & node)
                     << " on " << symmetryBC.targetName_ << std::endl;
     return &symmetryBC;
   }
+  else if (node["abltop_boundary_condition"]) {
+    ABLTopBoundaryConditionData& abltopBC = *new ABLTopBoundaryConditionData(*parent());
+    node >> abltopBC;
+    NaluEnv::self().naluOutputP0() << "ABLTop BC name:    " << abltopBC.bcName_
+                    << " on " << abltopBC.targetName_ << std::endl;
+    return &abltopBC;
+  }
   else if (node["periodic_boundary_condition"]) {
     PeriodicBoundaryConditionData& periodicBC = *new PeriodicBoundaryConditionData(*parent());
     node >> periodicBC;

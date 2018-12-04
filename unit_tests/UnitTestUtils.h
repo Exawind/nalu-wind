@@ -65,7 +65,6 @@ std::array<double,9> random_linear_transformation(int dim, double scale,std::mt1
 
 const double tol = 1.e-10;
 
-#ifndef KOKKOS_HAVE_CUDA
 class Hex8Mesh : public ::testing::Test
 {
 protected:
@@ -302,8 +301,6 @@ class ABLWallFunctionHex8ElementWithBCFields : public Hex8ElementWithBCFields
   double ypSpec_;
 
 };  
-
-#endif
 
 #endif
 

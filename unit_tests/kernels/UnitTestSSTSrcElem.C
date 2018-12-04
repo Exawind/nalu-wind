@@ -176,6 +176,8 @@ static constexpr double rhs[8] = {
 } // namespace hex8_golds
 } // anonymous namespace
 
+#ifndef KOKKOS_HAVE_CUDA
+
 TEST_F(SSTKernelHex8Mesh, turbkineticenergysstsrcelem)
 {
 
@@ -205,9 +207,9 @@ TEST_F(SSTKernelHex8Mesh, turbkineticenergysstsrcelem)
 
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::TurbKineticEnergySSTSrcElemKernel;
   unit_test_kernel_utils::expect_all_near(
@@ -245,9 +247,9 @@ TEST_F(SSTKernelHex8Mesh, turbkineticenergysstdessrcelem)
 
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::TurbKineticEnergySSTDESSrcElemKernel;
   unit_test_kernel_utils::expect_all_near(
@@ -285,9 +287,9 @@ TEST_F(SSTKernelHex8Mesh, specificdissipationratesstsrcelem)
 
   helperObjs.assembleElemSolverAlg->execute();
 
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.dimension(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.dimension(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::SpecificDissipationRateSSTSrcElemKernel;
   unit_test_kernel_utils::expect_all_near(
@@ -295,3 +297,6 @@ TEST_F(SSTKernelHex8Mesh, specificdissipationratesstsrcelem)
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs);
 }
+
+#endif
+

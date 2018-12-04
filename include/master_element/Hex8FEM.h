@@ -22,6 +22,11 @@ public:
   Hex8FEM();
   virtual ~Hex8FEM();
 
+  using MasterElement::grad_op;
+  using MasterElement::shifted_grad_op;
+  using MasterElement::face_grad_op;
+  using MasterElement::gij;
+
   void grad_op(
     const int nelem,
     const double *coords,

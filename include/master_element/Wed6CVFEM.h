@@ -20,6 +20,12 @@ public:
   WedSCV();
   virtual ~WedSCV();
 
+  using MasterElement::determinant;
+  using MasterElement::grad_op;
+  using MasterElement::shifted_grad_op;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
+
   const int * ipNodeMap(int ordinal = 0);
 
   void determinant(
@@ -60,6 +66,10 @@ class WedSCS : public MasterElement
 public:
   WedSCS();
   virtual ~WedSCS();
+
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   const int * ipNodeMap(int ordinal = 0);
 

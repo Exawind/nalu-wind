@@ -40,6 +40,7 @@ public:
 
   virtual ~MomentumNSOKeElemKernel() {}
 
+  using Kernel::execute;
   virtual void execute(
     SharedMemView<DoubleType**>&,
     SharedMemView<DoubleType*>&,

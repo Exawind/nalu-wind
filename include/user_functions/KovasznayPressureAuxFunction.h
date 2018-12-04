@@ -23,6 +23,7 @@ public:
 
   virtual ~KovasznayPressureAuxFunction() {}
   
+  using AuxFunction::do_evaluate;
   virtual void do_evaluate(
     const double * coords,
     const double time,
@@ -47,6 +48,7 @@ public:
 
   virtual ~KovasznayPressureGradientAuxFunction() {}
 
+  using AuxFunction::do_evaluate;
   virtual void do_evaluate(
     const double * coords,
     const double time,

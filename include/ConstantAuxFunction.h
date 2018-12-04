@@ -19,6 +19,7 @@ namespace nalu{
 class ConstantAuxFunction : public AuxFunction
 {
 public:
+  using AuxFunction::do_evaluate;
 
   ConstantAuxFunction(
     const unsigned beginPos,

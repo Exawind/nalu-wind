@@ -42,6 +42,7 @@ public:
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve
    */
+  using Kernel::execute;
   virtual void execute(
     SharedMemView<DoubleType**> &lhs,
     SharedMemView<DoubleType*> &rhs,

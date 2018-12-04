@@ -1,5 +1,5 @@
 ############################ BASE ######################################
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 3.10.0)
 project(Nalu CXX C Fortran)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -9,13 +9,14 @@ option(ENABLE_TESTS "Enable regression testing." OFF)
 option(ENABLE_DOCUMENTATION "Build documentation." OFF)
 option(ENABLE_SPHINX_API_DOCS "Link Doxygen API docs to Sphinx" OFF)
 option(ENABLE_WIND_UTILS "Build wind utils along with Nalu-Wind" OFF)
+option(ENABLE_FFTW "Use the FFTW library to support ABLTopBC" OFF)
+option(ENABLE_HYPRE "Use HYPRE Solver library" OFF)
 option(ENABLE_OPENFAST
        "Use OPENFAST tpl to get actuator line positions and forces" OFF)
 option(ENABLE_PARAVIEW_CATALYST
       "Enable ParaView Catalyst. Requires external installation of Trilinos Catalyst IOSS adapter."
        OFF)
 option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
-option(ENABLE_HYPRE "Use HYPRE Solver library" OFF)
 option(ENABLE_WARNINGS "Add -Wall to show compiler warnings" ON)
 option(ENABLE_EXTRA_WARNINGS "Add -Wextra to show even more compiler warnings" OFF)
 
@@ -48,9 +49,6 @@ else(Trilinos_BUILD_SHARED_LIBS)
   set(Nalu_LIBRARY_TYPE STATIC)
 endif(Trilinos_BUILD_SHARED_LIBS)
 
-# Set Nalu's compilers, CMAKE_FIND_LIBRARY_PREFIXES
-# and CMAKE_FIND_LIBRARY_SUFFIXES, etc, after inheriting settings from Trilinos
-
 ############################ YAML ######################################
 set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
 find_package(YAML-CPP QUIET)
@@ -71,6 +69,17 @@ if(YAML-CPP_FOUND)
 else()
   message(FATAL_ERROR "YAML-CPP NOT FOUND")
 endif()
+
+############################ FFTW ######################################
+if(ENABLE_FFTW)
+  set(CMAKE_PREFIX_PATH ${FFTW_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(FFTW REQUIRED)
+  if(FFTW_FOUND)
+    message("-- Found FFTW = ${FFTW_DIR}")
+  endif()
+  include_directories(${FFTW_INCLUDE_DIRS})
+  add_definitions("-DNALU_USES_FFTW")
+endif(ENABLE_FFTW)
 
 ############################ HYPRE #####################################
 if(ENABLE_HYPRE)
@@ -220,16 +229,20 @@ target_link_libraries(nalu ${Trilinos_LIBRARIES})
 target_link_libraries(nalu ${YAML_CPP_LIBRARIES})
 target_link_libraries(nalu ${MPI_CXX_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_C_LIBRARIES})
 
+if(ENABLE_FFTW)
+  target_link_libraries(nalu ${FFTW_LIBRARIES})
+endif()
+
+if(ENABLE_HYPRE)
+  target_link_libraries(nalu ${HYPRE_LIBRARIES})
+endif()
+
 if(ENABLE_OPENFAST)
   target_link_libraries(nalu ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
 endif()
 
 if(ENABLE_TIOGA)
   target_link_libraries(nalu ${TIOGA_LIBRARIES})
-endif()
-
-if(ENABLE_HYPRE)
-  target_link_libraries(nalu ${HYPRE_LIBRARIES})
 endif()
 
 message("-- CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
@@ -302,3 +315,6 @@ if (ENABLE_WIND_UTILS)
       ")
   endif()
 endif()
+
+# Note if you are interested in using Xcode for development,
+# refer to instructions in https://github.com/Exawind/nalu-wind/pull/22

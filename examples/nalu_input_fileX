@@ -266,13 +266,13 @@ class mapping_object_class():
     def set_boundary_data_sampling(self):
         '''
         Function to set the boundary data sampling
-        
+
         This is used to create a mesh for the boundaries, and sample the
         boundary data from a precursor simulation to be used as a boundary
         condition for wind farm simulations.
         '''
         # The initial mesh file
-        
+
         # The file to be written
         file_name = self.yaml_setup['boundary_data_sampling']['boundary_data_file']
         # The list of boundaries
@@ -282,10 +282,10 @@ class mapping_object_class():
         tasks = self.yaml_preprocess['nalu_preprocess']['tasks']
 
         # Add the mesh input
-        if self.yaml_setup['boundary_data_sampling']['input_mesh']: 
+        if self.yaml_setup['boundary_data_sampling']['input_mesh']:
             self.yaml_preprocess['nalu_preprocess']['input_db'] = \
                 self.yaml_setup['boundary_data_sampling']['input_mesh']
-    
+
         # Create the task
         if 'create_bdy_io_mesh' not in tasks:
             tasks.append('create_bdy_io_mesh')
@@ -308,12 +308,12 @@ class mapping_object_class():
         # Replace the list
         self.yaml_input['transfers'] = new_transfers
 
-        # Specify the detail in the ioRealm 
+        # Specify the detail in the ioRealm
         # Notice this is the second realm (index=1)
         self.yaml_input['realms'][1]['mesh'] = file_name
 
-        # Change the name of the boundaries  
-        specs = self.yaml_input['realms'][1]['field_registration']['specifications'] 
+        # Change the name of the boundaries
+        specs = self.yaml_input['realms'][1]['field_registration']['specifications']
         for field in specs:
             field['target_name'] = list_of_boundaries
 
@@ -323,7 +323,7 @@ class mapping_object_class():
 
     def set_inflow_outflow(self):
         '''
-        Function to set the boundary conditions        
+        Function to set the boundary conditions
         '''
 
         # The list of inflow/outflow BC
@@ -387,8 +387,8 @@ class mapping_object_class():
                   spec['target_name'] = self.yaml_setup['inflow_outflow']['inflow']
         except:
             print('input_variables_from_file_restoration_time not set')
-                    
-            
+
+
     def set_velocity(self):
         '''
         Function to setup the velocity entries in the file
@@ -495,7 +495,7 @@ class mapping_object_class():
         for var in self.yaml_input['realms'][0]['boundary_conditions']:
 
             # Top boundary condition
-            if 'symmetry_boundary_condition' in var.keys():
+            if 'abltop_boundary_condition' in var.keys():
 
                 # If the gradient is specified, use that value, if not, compute
                 #     it from the initial condition
@@ -505,7 +505,7 @@ class mapping_object_class():
                                 self.yaml_setup['temperature_heights'][-1]
                                 - self.yaml_setup['temperature_heights'][-2])
                 # Assign the initial condition
-                var['symmetry_user_data']['normal_temperature_gradient'] = \
+                var['abltop_user_data']['normal_temperature_gradient'] = \
                     TGradUpper
 
 
@@ -721,9 +721,9 @@ class mapping_object_class():
         # Loop through all the boundary conditions and modify accordingly
         for var in self.yaml_input['realms'][0]['boundary_conditions']:
             # Top boundary condition
-            if 'symmetry_boundary_condition' in var.keys():
+            if 'abltop_boundary_condition' in var.keys():
                 # Read the upper wall temperature gradient
-                var['symmetry_user_data']['normal_temperature_gradient'] = Tg
+                var['abltop_user_data']['normal_temperature_gradient'] = Tg
 
 
     def set_boundary_layer_statistics(self):

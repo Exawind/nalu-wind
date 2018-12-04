@@ -463,6 +463,43 @@ EquationSystems::register_symmetry_bc(
 }
 
 //--------------------------------------------------------------------------
+//-------- register_abltop_bc --------------------------------------------
+//--------------------------------------------------------------------------
+void
+EquationSystems::register_abltop_bc(
+  const std::string targetName,
+  const ABLTopBoundaryConditionData &abltopBCData)
+{
+  stk::mesh::MetaData &meta_data = realm_.meta_data();
+
+  stk::mesh::Part *targetPart = meta_data.get_part(targetName);
+  if ( NULL == targetPart ) {
+    NaluEnv::self().naluOutputP0() << "Sorry, no part name found by the name " << targetName << std::endl;
+    throw std::runtime_error("ABLTop::fatal_error()");
+  }
+  else {
+    // found the part
+    const std::vector<stk::mesh::Part*> & mesh_parts = targetPart->subsets();
+    for( std::vector<stk::mesh::Part*>::const_iterator i = mesh_parts.begin();
+         i != mesh_parts.end(); ++i )
+    {
+      stk::mesh::Part * const part = *i ;
+      const stk::topology the_topo = part->topology();
+      if ( !(meta_data.side_rank() == part->primary_entity_rank()) ) {
+        NaluEnv::self().naluOutputP0() << "Sorry, part is not a face " << targetName;
+        throw std::runtime_error("ABLTop::fatal_error()");
+      }
+      else {
+        realm_.register_abltop_bc(part, the_topo);
+        EquationSystemVector::iterator ii;
+        for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii )
+          (*ii)->register_abltop_bc(part, the_topo, abltopBCData);
+      }
+    }
+  }
+}
+
+//--------------------------------------------------------------------------
 //-------- register_periodic_bc --------------------------------------------
 //--------------------------------------------------------------------------
 void

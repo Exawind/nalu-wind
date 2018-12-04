@@ -39,7 +39,11 @@ class PyrSCV : public MasterElement
 {
 public:
   using AlgTraits = AlgTraitsPyr5;
-
+  using MasterElement::determinant;
+  using MasterElement::grad_op;
+  using MasterElement::shifted_grad_op;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   PyrSCV();
   virtual ~PyrSCV();
@@ -88,6 +92,9 @@ class PyrSCS : public MasterElement
 {
 public:
   using AlgTraits = AlgTraitsPyr5;
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   PyrSCS();
   virtual ~PyrSCS();

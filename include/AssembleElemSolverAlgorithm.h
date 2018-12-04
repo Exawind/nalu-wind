@@ -11,7 +11,7 @@
 
 #include<Realm.h>
 #include<SolverAlgorithm.h>
-#include<ElemDataRequests.h>
+#include<ElemDataRequestsNGP.h>
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
 #include<ScratchViews.h>
@@ -30,10 +30,6 @@ namespace sierra{
 namespace nalu{
 
 class MasterElement;
-
-int
-calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchIdsSize, int nDim,
-                                      ElemDataRequests& dataNeededByKernels);
 
 class AssembleElemSolverAlgorithm : public SolverAlgorithm
 {
@@ -56,9 +52,11 @@ public:
     const int lhsSize = rhsSize_*rhsSize_;
     const int scratchIdsSize = rhsSize_;
 
+   ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_);
+
    const int bytes_per_team = 0;
    const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(lhsSize, rhsSize_, scratchIdsSize,
-                                                                    meta_data.spatial_dimension(), dataNeededByKernels_);
+                                                                    meta_data.spatial_dimension(), dataNeededNGP);
    stk::mesh::Selector elemSelector =
            meta_data.locally_owned_part()
          & stk::mesh::selectUnion(partVec_)
@@ -76,7 +74,7 @@ public:
                     "AssembleElemSolverAlgorithm expected nodesPerEntity_ = "
                     <<nodesPerEntity_<<", but b.topology().num_nodes() = "<<b.topology().num_nodes());
  
-     SharedMemData smdata(team, bulk_data, dataNeededByKernels_, nodesPerEntity_, rhsSize_);
+     SharedMemData smdata(team, bulk_data, dataNeededNGP, nodesPerEntity_, rhsSize_);
 
      const size_t bucketLen   = b.size();
      const size_t simdBucketLen = get_num_simd_groups(bucketLen);
@@ -89,14 +87,14 @@ public:
        for(int simdElemIndex=0; simdElemIndex<numSimdElems; ++simdElemIndex) {
          stk::mesh::Entity element = b[bktIndex*simdLen + simdElemIndex];
          smdata.elemNodes[simdElemIndex] = bulk_data.begin_nodes(element);
-         fill_pre_req_data(dataNeededByKernels_, bulk_data, element,
+         fill_pre_req_data(dataNeededNGP, bulk_data, element,
                            *smdata.prereqData[simdElemIndex], interleaveMEViews_);
        }
  
        copy_and_interleave(smdata.prereqData, numSimdElems, smdata.simdPrereqData, interleaveMEViews_);
  
        if (!interleaveMEViews_) {
-         fill_master_element_views(dataNeededByKernels_, bulk_data, smdata.simdPrereqData);
+         fill_master_element_views(dataNeededNGP, bulk_data, smdata.simdPrereqData);
        }
 
        lambdaFunc(smdata);

@@ -1,6 +1,7 @@
 add_sources(GlobalSourceList
    ABLProfileFunction.C
    ActuatorLinePointDrag.C
+   Actuator.C
    Algorithm.C
    AlgorithmDriver.C
    AssembleContinuityEdgeOpenSolverAlgorithm.C
@@ -28,6 +29,7 @@ add_sources(GlobalSourceList
    AssembleMomentumNonConformalSolverAlgorithm.C
    AssembleNodalGradAlgorithmDriver.C
    AssembleNodalGradBoundaryAlgorithm.C
+   AssembleNodalGradPOpenBoundaryAlgorithm.C
    AssembleNodalGradEdgeAlgorithm.C
    AssembleNodalGradElemAlgorithm.C
    AssembleNodalGradNonConformalAlgorithm.C
@@ -179,6 +181,12 @@ add_sources(GlobalSourceList
    TurbulenceAveragingPostProcessing.C
    UnitTests.C
 )
+
+if(ENABLE_FFTW)
+   add_sources(GlobalSourceList
+      AssembleMomentumEdgeABLTopBC.C
+   )
+endif()
 
 if(ENABLE_OPENFAST)
    add_sources(GlobalSourceList

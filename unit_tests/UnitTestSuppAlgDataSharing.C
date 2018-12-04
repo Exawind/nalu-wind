@@ -11,7 +11,7 @@
 #include <stk_util/parallel/Parallel.hpp>
 #include <Kokkos_Core.hpp>
 
-#include <ElemDataRequests.h>
+#include <ElemDataRequestsNGP.h>
 #include <ScratchViews.h>
 
 #include "UnitTestKokkosUtils.h"
@@ -116,22 +116,23 @@ public:
       //a topology would be available.
       dataNeededByKernels_.add_cvfem_surface_me(sierra::nalu::MasterElementRepo::get_surface_master_element(stk::topology::HEX_8));
 
+      sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_);
       const int bytes_per_team = 0;
-      const int bytes_per_thread = get_num_bytes_pre_req_data(dataNeededByKernels_, meta.spatial_dimension());
+      const int bytes_per_thread = get_num_bytes_pre_req_data(dataNeededNGP, meta.spatial_dimension());
       auto team_exec = sierra::nalu::get_host_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);
       Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
       {
           const stk::mesh::Bucket& bkt = *elemBuckets[team.league_rank()];
           stk::topology topo = bkt.topology();
 
-          sierra::nalu::ScratchViews<double> prereqData(team, bulkData_, topo.num_nodes(), dataNeededByKernels_);
+          sierra::nalu::ScratchViews<double> prereqData(team, bulkData_, topo.num_nodes(), dataNeededNGP);
 
           // See get_num_bytes_pre_req_data for padding
           EXPECT_EQ(static_cast<unsigned>(bytes_per_thread), prereqData.total_bytes() + 8 * sizeof(double));
 
           Kokkos::parallel_for(Kokkos::TeamThreadRange(team, bkt.size()), [&](const size_t& jj)
           {
-             fill_pre_req_data(dataNeededByKernels_, bulkData_, bkt[jj], prereqData);
+             fill_pre_req_data(dataNeededNGP, bulkData_, bkt[jj], prereqData);
             
              for(SuppAlg* alg : suppAlgs_) {
                alg->elem_execute(topo, prereqData);

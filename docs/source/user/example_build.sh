@@ -1,4 +1,6 @@
-# The base directory where mpi is located.  
+#!/bin/bash
+
+# The base directory where mpi is located.
 # From here you should be able to find include/mpi.h bin/mpicxx, bin/mpiexec, etc.
 mpi_base_dir=/PathToMPI
 nalu_build_dir=/PathToScratchBuild
@@ -45,10 +47,10 @@ cmake \
 -DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES=OFF \
 -DTrilinos_ALLOW_NO_PACKAGES:BOOL=OFF \
 -DTPL_ENABLE_MPI=ON \
-  -DMPI_BASE_DIR:PATH=$mpi_base_dir \
+-DMPI_BASE_DIR:PATH=$mpi_base_dir \
 -DTPL_ENABLE_SuperLU=ON \
-  -DSuperLU_INCLUDE_DIRS:PATH=$superlu_inc_dir \
-  -DSuperLU_LIBRARY_DIRS:PATH=$superlu_lib_dir \
+-DSuperLU_INCLUDE_DIRS:PATH=$superlu_inc_dir \
+-DSuperLU_LIBRARY_DIRS:PATH=$superlu_lib_dir \
 -DTrilinos_ENABLE_Epetra:BOOL=OFF \
 -DTrilinos_ENABLE_Tpetra:BOOL=ON \
 -DTrilinos_ENABLE_ML:BOOL=OFF \

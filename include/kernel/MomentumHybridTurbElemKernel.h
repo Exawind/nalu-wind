@@ -38,6 +38,7 @@ public:
 
   virtual ~MomentumHybridTurbElemKernel() {}
 
+  using Kernel::execute;
   virtual void execute(
     SharedMemView<DoubleType**>&,
     SharedMemView<DoubleType*>&,

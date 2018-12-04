@@ -33,6 +33,7 @@ public:
   typedef Kokkos::View<COORDS_TYPES*, Kokkos::LayoutRight, MemSpace> CoordsTypesView;
   typedef Kokkos::View<ELEM_DATA_NEEDED*, Kokkos::LayoutRight, MemSpace> DataEnumView;
   typedef Kokkos::View<FieldPtr*, Kokkos::LayoutRight, MemSpace> FieldView;
+  typedef Kokkos::View<FieldInfo*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
   ElemDataRequestsNGP(const ElemDataRequests& dataReq)
     : dataEnums(),
@@ -43,7 +44,10 @@ public:
       hostCoordsFieldsTypes_(),
       fields(),
       hostFields(),
-      meFC_(nullptr), meSCS_(nullptr), meSCV_(nullptr), meFEM_(nullptr)
+      meFC_(dataReq.get_cvfem_face_me()),
+      meSCS_(dataReq.get_cvfem_surface_me()),
+      meSCV_(dataReq.get_cvfem_volume_me()),
+      meFEM_(dataReq.get_fem_volume_me())
   {
     fill_host_data_enums(dataReq, CURRENT_COORDINATES);
     fill_host_data_enums(dataReq, MODEL_COORDINATES);
@@ -51,22 +55,11 @@ public:
     fill_host_fields(dataReq);
 
     fill_host_coords_fields(dataReq);
+
+    copy_to_device();
   }
 
   ~ElemDataRequestsNGP() {}
-
-  void copy_to_device()
-  {
-    if (hostDataEnums[CURRENT_COORDINATES].size() > 0) {
-      Kokkos::deep_copy(dataEnums[CURRENT_COORDINATES], hostDataEnums[CURRENT_COORDINATES]);
-    }
-    if (hostDataEnums[MODEL_COORDINATES].size() > 0) {
-      Kokkos::deep_copy(dataEnums[MODEL_COORDINATES], hostDataEnums[MODEL_COORDINATES]);
-    }
-    Kokkos::deep_copy(coordsFields_, hostCoordsFields_);
-    Kokkos::deep_copy(coordsFieldsTypes_, hostCoordsFieldsTypes_);
-    Kokkos::deep_copy(fields, hostFields);
-  }
 
   void add_cvfem_face_me(MasterElement *meFC)
   { meFC_ = meFC; }
@@ -93,7 +86,7 @@ public:
   { return coordsFieldsTypes_; }
 
   KOKKOS_FUNCTION
-  const FieldView& get_fields() const { return fields; }  
+  const FieldInfoView& get_fields() const { return fields; }  
 
   MasterElement *get_cvfem_face_me() const {return meFC_;}
   MasterElement *get_cvfem_volume_me() const {return meSCV_;}
@@ -101,6 +94,19 @@ public:
   MasterElement *get_fem_volume_me() const {return meFEM_;}
 
 private:
+  void copy_to_device()
+  {
+    if (hostDataEnums[CURRENT_COORDINATES].size() > 0) {
+      Kokkos::deep_copy(dataEnums[CURRENT_COORDINATES], hostDataEnums[CURRENT_COORDINATES]);
+    }
+    if (hostDataEnums[MODEL_COORDINATES].size() > 0) {
+      Kokkos::deep_copy(dataEnums[MODEL_COORDINATES], hostDataEnums[MODEL_COORDINATES]);
+    }
+    Kokkos::deep_copy(coordsFields_, hostCoordsFields_);
+    Kokkos::deep_copy(coordsFieldsTypes_, hostCoordsFieldsTypes_);
+    Kokkos::deep_copy(fields, hostFields);
+  }
+
   void fill_host_data_enums(const ElemDataRequests& dataReq, COORDS_TYPES ctype)
   {
     if (dataReq.get_data_enums(ctype).size() > 0) {
@@ -115,11 +121,11 @@ private:
 
   void fill_host_fields(const ElemDataRequests& dataReq)
   {
-    fields = FieldView("Fields", dataReq.get_fields().size());
+    fields = FieldInfoView("Fields", dataReq.get_fields().size());
     hostFields = Kokkos::create_mirror_view(fields);
     unsigned i = 0;
     for(const FieldInfo& finfo : dataReq.get_fields()) {
-      hostFields(i++) = {finfo.field};
+      hostFields(i++) = finfo;
     }
   }
  
@@ -147,8 +153,8 @@ private:
   CoordsTypesView coordsFieldsTypes_;
   CoordsTypesView::HostMirror hostCoordsFieldsTypes_;
 
-  FieldView fields;
-  FieldView::HostMirror hostFields;
+  FieldInfoView fields;
+  FieldInfoView::HostMirror hostFields;
 
   MasterElement *meFC_;
   MasterElement *meSCS_;

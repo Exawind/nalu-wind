@@ -24,6 +24,7 @@ public:
     dataNeeded.add_gathered_nodal_field(*scalarQ, 1);
   }
 
+  using sierra::nalu::Kernel::execute;
   virtual void execute(
     sierra::nalu::SharedMemView<DoubleType**>& lhs,
     sierra::nalu::SharedMemView<DoubleType*>& rhs,

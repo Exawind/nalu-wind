@@ -57,7 +57,7 @@ public:
   }
   virtual void setup(const double time) {}
 
-private:
+protected:
 
   // Derived classes must at_least implement this method
   virtual void do_evaluate(
@@ -82,7 +82,6 @@ private:
     do_evaluate(coords, time, spatialDimension, numPoints, fieldPtr, fieldSize, 0, fieldSize);
   }
 
-protected:
   const unsigned beginPos_;
   const unsigned endPos_;
 };

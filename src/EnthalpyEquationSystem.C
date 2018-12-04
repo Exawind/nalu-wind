@@ -64,7 +64,7 @@
 #include <kernel/KernelBuilderLog.h>
 
 // kernels
-#include <AssembleElemSolverAlgorithm.h>
+#include <AssembleFaceElemSolverAlgorithm.h>
 #include <kernel/ScalarMassElemKernel.h>
 #include <kernel/ScalarAdvDiffElemKernel.h>
 #include <kernel/ScalarUpwAdvDiffElemKernel.h>
@@ -925,10 +925,46 @@ EnthalpyEquationSystem::register_symmetry_bc(
   ScalarFieldType &enthalpyNp1 = enthalpy_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dhdxNone = dhdx_->field_of_state(stk::mesh::StateNone);
 
+  // extract user data
+  SymmetryUserData userData = symmetryBCData.userData_;
+  std::string temperatureName = "temperature";
+  
+  // non-solver; dhdx; allow for element-based shifted
+  if ( !managePNG_ ) {
+    std::map<AlgorithmType, Algorithm *>::iterator it
+      = assembleNodalGradAlgDriver_->algMap_.find(algType);
+    if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
+      Algorithm *theAlg 
+        = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
+      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
+    }
+    else {
+      it->second->partVec_.push_back(part);
+    }
+  }
+}
+
+//--------------------------------------------------------------------------
+//-------- register_abltop_bc ----------------------------------------------
+//--------------------------------------------------------------------------
+void
+EnthalpyEquationSystem::register_abltop_bc(
+  stk::mesh::Part *part,
+  const stk::topology &/*theTopo*/,
+  const ABLTopBoundaryConditionData &abltopBCData)
+{
+
+  // algorithm type
+  const AlgorithmType algType = INFLOW;
+
+  // np1
+  ScalarFieldType &enthalpyNp1 = enthalpy_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dhdxNone = dhdx_->field_of_state(stk::mesh::StateNone);
+
   stk::mesh::MetaData &meta_data = realm_.meta_data();
 
   // extract user data
-  SymmetryUserData userData = symmetryBCData.userData_;
+  ABLTopUserData userData = abltopBCData.userData_;
   std::string temperatureName = "temperature";
   
 

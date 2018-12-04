@@ -177,15 +177,15 @@ public:
 
   virtual const int * adjacentNodes() {
     throw std::runtime_error("adjacentNodes not implemented");
-    return NULL;}
+    }
 
   virtual const int * scsIpEdgeOrd() {
     throw std::runtime_error("scsIpEdgeOrd not implemented");
-    return NULL;}
+    }
 
   virtual const int * ipNodeMap(int ordinal = 0) {
       throw std::runtime_error("ipNodeMap not implemented");
-      return NULL;}
+     }
 
   virtual void shape_fcn(
     double *shpfc) {
@@ -202,14 +202,14 @@ public:
   virtual int opposingFace(
     const int ordinal, const int node) {
     throw std::runtime_error("opposingFace not implemented"); 
-    return 0; }
+    }
 
   virtual double isInElement(
     const double *elemNodalCoord,
     const double *pointCoord,
     double *isoParCoord) {
     throw std::runtime_error("isInElement not implemented"); 
-    return 1.0e6; }
+    }
 
   virtual void interpolatePoint(
     const int &nComp,
@@ -280,6 +280,8 @@ class QuadrilateralP2Element : public MasterElement
 {
 public:
   using Traits = AlgTraitsQuad9_2D;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   QuadrilateralP2Element();
   virtual ~QuadrilateralP2Element() {}
@@ -377,6 +379,10 @@ public:
   Tri2DSCV();
   virtual ~Tri2DSCV();
 
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
+
   const int * ipNodeMap(int ordinal = 0);
 
   void determinant(
@@ -404,6 +410,10 @@ public:
 
   Tri3DSCS();
   virtual ~Tri3DSCS();
+
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   const int * ipNodeMap(int ordinal = 0);
 
@@ -455,6 +465,9 @@ class Edge2DSCS : public MasterElement
 public:
   Edge2DSCS();
   virtual ~Edge2DSCS();
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   const int * ipNodeMap(int ordinal = 0);
 
@@ -502,6 +515,9 @@ class Edge32DSCS : public QuadrilateralP2Element
 public:
   Edge32DSCS();
   virtual ~Edge32DSCS() {}
+  using MasterElement::determinant;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   const int * ipNodeMap(int ordinal = 0);
 
