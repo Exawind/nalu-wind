@@ -836,6 +836,29 @@ Hex27SCV::jacobian_determinant(
 }
 
 //--------------------------------------------------------------------------
+//-------- Mij -------------------------------------------------------------
+//--------------------------------------------------------------------------
+void Hex27SCV::Mij(
+  const double *coords,
+  double *metric,
+  double *deriv)
+{
+  SIERRA_FORTRAN(threed_mij)
+    ( &nodesPerElement_,
+      &numIntPoints_,
+      deriv,
+      coords, metric);
+}
+//--------------------------------------------------------------------------
+void Hex27SCV::Mij(
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& metric,
+  SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_3d<AlgTraits>(referenceGradWeights_, coords, metric);
+}
+
+//--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 Hex27SCS::Hex27SCS()
@@ -1668,6 +1691,29 @@ void Hex27SCS::gij(
       }
     }
   }
+}
+
+//--------------------------------------------------------------------------
+//-------- Mij -------------------------------------------------------------
+//--------------------------------------------------------------------------
+void Hex27SCS::Mij(
+  const double *coords,
+  double *metric,
+  double *deriv)
+{
+  SIERRA_FORTRAN(threed_mij)
+    ( &nodesPerElement_,
+      &numIntPoints_,
+      deriv,
+      coords, metric);
+}
+//--------------------------------------------------------------------------
+void Hex27SCS::Mij(
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& metric,
+  SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_3d<AlgTraits>(referenceGradWeights_, coords, metric);
 }
 
 //--------------------------------------------------------------------------

@@ -143,6 +143,7 @@ void interleave_me_views(MasterElementViews<DoubleType>& dest,
   interleave_1D(dest.scv_volume, src.scv_volume, simdIndex);
   interleave_3D(dest.gijUpper, src.gijUpper, simdIndex);
   interleave_3D(dest.gijLower, src.gijLower, simdIndex);
+  interleave_3D(dest.metric, src.metric, simdIndex);
 }
 
 inline

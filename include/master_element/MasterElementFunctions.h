@@ -16,6 +16,8 @@
 #include <SimdInterface.h>
 #include <Kokkos_Core.hpp>
 
+#include <EigenDecomposition.h>
+
 #include <stk_util/util/ReportHandler.hpp>
 
 #include <vector>
@@ -62,13 +64,13 @@ namespace nalu {
 
     ThrowAssert(AlgTraits::nodesPerElement_ == referenceGradWeights.extent(1));
     ThrowAssert(AlgTraits::nDim_            == referenceGradWeights.extent(2));
-    for (int i=0; i<dim; ++i) 
+    for (int i=0; i<dim; ++i)
       ThrowAssert(weights.extent(i) == referenceGradWeights.extent(i));
 
     for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
       NALU_ALIGNED ftype jact[dim][dim];
-      for (int i=0; i<dim; ++i) 
-        for (int j=0; j<dim; ++j) 
+      for (int i=0; i<dim; ++i)
+        for (int j=0; j<dim; ++j)
           jact[i][j] = ftype(0.0);
 
       NALU_ALIGNED ftype refGrad[AlgTraits::nodesPerElement_][dim];
@@ -173,6 +175,70 @@ namespace nalu {
       glo(ip, 2, 0) = glo(ip, 0, 2);
       glo(ip, 2, 1) = glo(ip, 1, 2);
       glo(ip, 2, 2) = inv_detj * (gup(ip, 0, 0) * gup(ip, 1, 1) - gup(ip, 0, 1) * gup(ip, 0, 1));
+    }
+  }
+
+  template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
+  void generic_Mij_3d(
+    const GradViewType& referenceGradWeights,
+    const CoordViewType& coords,
+    OutputViewType& metric)
+  {
+    using ftype = typename CoordViewType::value_type;
+    using otype = typename OutputViewType::value_type;
+    static_assert(std::is_same<ftype, typename GradViewType::value_type>::value,
+      "Incompatiable value type for views");
+    static_assert(std::is_same<ftype, typename OutputViewType::value_type>::value,
+      "Incompatiable value type for views");
+    static_assert(GradViewType::Rank == 3, "grad view assumed to be 3D");
+    static_assert(CoordViewType::Rank == 2, "Coordinate view assumed to be 2D");
+    static_assert(OutputViewType::Rank == 3, "Mij view assumed to be 3D");
+    static_assert(AlgTraits::nDim_ == 3, "3D method");
+
+    for (unsigned ip = 0; ip < referenceGradWeights.extent(0); ++ip) {
+
+      ftype jac[3][3] = { {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0} };
+      for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+        jac[0][0] += referenceGradWeights(ip, n, 0) * coords(n, 0);
+        jac[0][1] += referenceGradWeights(ip, n, 1) * coords(n, 0);
+        jac[0][2] += referenceGradWeights(ip, n, 2) * coords(n, 0);
+
+        jac[1][0] += referenceGradWeights(ip, n, 0) * coords(n, 1);
+        jac[1][1] += referenceGradWeights(ip, n, 1) * coords(n, 1);
+        jac[1][2] += referenceGradWeights(ip, n, 2) * coords(n, 1);
+
+        jac[2][0] += referenceGradWeights(ip, n, 0) * coords(n, 2);
+        jac[2][1] += referenceGradWeights(ip, n, 1) * coords(n, 2);
+        jac[2][2] += referenceGradWeights(ip, n, 2) * coords(n, 2);
+      }
+
+      // Here we calculate Mij^2 = J J^T
+      otype M[3][3];
+      M[0][0] = jac[0][0] * jac[0][0] + jac[0][1] * jac[0][1] + jac[0][2] * jac[0][2];
+      M[0][1] = jac[0][0] * jac[1][0] + jac[0][1] * jac[1][1] + jac[0][2] * jac[1][2];
+      M[0][2] = jac[0][0] * jac[2][0] + jac[0][1] * jac[2][1] + jac[0][2] * jac[2][2];
+
+      M[1][0] = M[0][1];
+      M[1][1] = jac[1][0] * jac[1][0] + jac[1][1] * jac[1][1] + jac[1][2] * jac[1][2];
+      M[1][2] = jac[1][0] * jac[2][0] + jac[1][1] * jac[2][1] + jac[1][2] * jac[2][2];
+
+      M[2][0] = M[0][2];
+      M[2][1] = M[1][2];
+      M[2][2] = jac[2][0] * jac[2][0] + jac[2][1] * jac[2][1] + jac[2][2] * jac[2][2];
+
+      // Now we take the sqrt(M^2) using eigenvalue decomposition, i.e. M = A sqrt(L) A^T
+      // where M^2 = A L A^T since M^2 is symmetric positive definite as is M
+      otype Q[3][3];
+      otype D[3][3];
+      EigenDecomposition::sym_diagonalize<otype>(M, Q, D);
+
+      // At this point we have Q, the eigenvectors and D the eigenvalues of Mij^2, so to
+      // create Mij, we use Q sqrt(D) Q^T
+      for (unsigned i = 0; i < 3; i++)
+        for (unsigned j = 0; j < 3; j++)
+          metric(ip,i,j) = Q[i][0]*Q[j][0]*stk::math::sqrt(D[0][0]) +
+                           Q[i][1]*Q[j][1]*stk::math::sqrt(D[1][1]) +
+                           Q[i][2]*Q[j][2]*stk::math::sqrt(D[2][2]);
     }
   }
 

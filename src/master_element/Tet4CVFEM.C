@@ -287,6 +287,29 @@ TetSCV::tet_shape_fcn(
 }
 
 //--------------------------------------------------------------------------
+//-------- Mij ------------------------------------------------------------
+//--------------------------------------------------------------------------
+void TetSCV::Mij(
+  const double *coords,
+  double *metric,
+  double *deriv)
+{
+  SIERRA_FORTRAN(threed_mij)
+    ( &nodesPerElement_,
+      &numIntPoints_,
+      deriv,
+      coords, metric);
+}
+//-------------------------------------------------------------------------
+void TetSCV::Mij(
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_3d<AlgTraitsTet4>(deriv, coords, metric);
+}
+
+//--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 TetSCS::TetSCS()
@@ -741,7 +764,7 @@ void TetSCS::shifted_face_grad_op(
 }
 
 //--------------------------------------------------------------------------
-//-------- guij ------------------------------------------------------------
+//-------- gij ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void TetSCS::gij(
     SharedMemView<DoubleType**>& coords,
@@ -763,6 +786,29 @@ void TetSCS::gij(
       &numIntPoints_,
       deriv,
       coords, gupperij, glowerij);
+}
+ 
+//--------------------------------------------------------------------------
+//-------- Mij ------------------------------------------------------------
+//--------------------------------------------------------------------------
+void TetSCS::Mij(
+  const double *coords,
+  double *metric,
+  double *deriv)
+{
+  SIERRA_FORTRAN(threed_mij)
+    ( &nodesPerElement_,
+      &numIntPoints_,
+      deriv,
+      coords, metric);
+}
+//-------------------------------------------------------------------------
+void TetSCS::Mij(
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_3d<AlgTraitsTet4>(deriv, coords, metric);
 }
 
 //--------------------------------------------------------------------------

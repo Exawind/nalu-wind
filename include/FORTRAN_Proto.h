@@ -195,7 +195,21 @@ SIERRA_FORTRAN( threed_gij ) ( const int* npe,
                                const double* coords,
                                double* gupperij,
                                double* glowerij);
-                                         
+
+extern "C" void
+SIERRA_FORTRAN( twod_mij ) ( const int* npe,
+                             const int* numint,
+                             double *deriv,
+                             const double* coords,
+                             double* metric);
+
+extern "C" void
+SIERRA_FORTRAN( threed_mij ) ( const int* npe,
+                               const int* numint,
+                               double *deriv,
+                               const double* coords,
+                               double* metric);
+
 extern "C" void
 SIERRA_FORTRAN( tet_gradient_operator ) ( const int*  nelem,
                                           const int* npe,

@@ -3,6 +3,7 @@ add_sources(GlobalUnitSourceList
    UnitTestABLWallFunction.C
    UnitTestBasicKokkos.C
    UnitTestCreateOnDevice.C
+   UnitTestEigenDecomposition.C
    UnitTestElemDataRequests.C
    UnitTestElemSuppAlg.C
    UnitTestElementDescription.C
@@ -20,6 +21,7 @@ add_sources(GlobalUnitSourceList
    UnitTestLocalGraphArrays.C
    UnitTestMasterElements.C
    UnitTestMetricTensor.C
+   UnitTestMijTensor.C
    UnitTestMovingAverage.C
    UnitTestNGPMasterElements.C
    UnitTestNgpMesh1.C

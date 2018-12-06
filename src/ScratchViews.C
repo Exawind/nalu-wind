@@ -135,7 +135,7 @@ int get_num_scalars_pre_req_data(ElemDataRequestsNGP& dataNeeded, int nDim)
   for(unsigned i=0; i<coordsTypes.size(); ++i) {
     auto cType = coordsTypes(i);
     const ElemDataRequestsNGP::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
-    int dndxLength = 0, dndxLengthFC = 0, gUpperLength = 0, gLowerLength = 0;
+    int dndxLength = 0, dndxLengthFC = 0, gUpperLength = 0, gLowerLength = 0, metricLength = 0;
 
     // Updated logic for data sharing of deriv and det_j
     bool needDeriv = false; bool needDerivScv = false; bool needDerivFem = false; bool needDerivFC = false;
@@ -179,6 +179,11 @@ int get_num_scalars_pre_req_data(ElemDataRequestsNGP& dataNeeded, int nDim)
           gLowerLength = nDim*nDim*numScsIp;
           needDeriv = true;
           numScalars += (gUpperLength + gLowerLength );
+          break;
+        case SCV_MIJ:
+          metricLength = nDim*nDim*numScvIp;
+          needDeriv = true;
+          numScalars += metricLength;
           break;
         case FEM_GRAD_OP:
         case FEM_SHIFTED_GRAD_OP:
