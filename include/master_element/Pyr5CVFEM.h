@@ -64,11 +64,21 @@ public:
     SharedMemView<DoubleType***>& gradop,
     SharedMemView<DoubleType***>& deriv);
 
+  void Mij(
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv);
+
   void determinant(
     const int nelem,
     const double *coords,
     double *areav,
     double * error );
+
+  void Mij(
+    const double *coords,
+    double *metric,
+    double *deriv);
 
   void shape_fcn(
     double *shpfc);
@@ -157,6 +167,16 @@ public:
     const double *coords,
     double *gupperij,
     double *glowerij,
+    double *deriv);
+
+  void Mij(
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv);
+
+  void Mij(
+    const double *coords,
+    double *metric,
     double *deriv);
 
   const int * adjacentNodes();

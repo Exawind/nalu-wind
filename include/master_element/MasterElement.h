@@ -110,6 +110,13 @@ public:
     throw std::runtime_error("gij using SharedMemView is not implemented");
   }
 
+  virtual void Mij(
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv) {
+    throw std::runtime_error("Mij using SharedMemView is not implemented");
+  }
+
   virtual void determinant(
     SharedMemView<DoubleType**>& coords,
     SharedMemView<DoubleType*>& volume) {
@@ -148,6 +155,12 @@ public:
     double *glowerij,
     double *deriv) {
     throw std::runtime_error("gij not implemented");}
+
+  virtual void Mij(
+    const double *coords,
+    double *metric,
+    double *deriv) {
+    throw std::runtime_error("Mij not implemented");}
 
   virtual void nodal_grad_op(
     const int nelem,

@@ -303,6 +303,29 @@ WedSCV::wedge_shape_fcn(
 }
 
 //--------------------------------------------------------------------------
+//-------- Mij ------------------------------------------------------------
+//--------------------------------------------------------------------------
+void WedSCV::Mij(
+  const double *coords,
+  double *metric,
+  double *deriv)
+{
+  SIERRA_FORTRAN(threed_mij)
+    ( &nodesPerElement_,
+      &numIntPoints_,
+      deriv,
+      coords, metric);
+}
+//-------------------------------------------------------------------------
+void WedSCV::Mij(
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& metric,
+  SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_3d<AlgTraitsWed6>(deriv, coords, metric);
+}
+
+//--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WedSCS::WedSCS()
@@ -859,7 +882,7 @@ void WedSCS::gij(
 }
 
 //--------------------------------------------------------------------------
-//-------- guij ------------------------------------------------------------
+//-------- gij ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void WedSCS::gij(
   const double *coords,
@@ -872,6 +895,29 @@ void WedSCS::gij(
       &numIntPoints_,
       deriv,
       coords, gupperij, glowerij);
+}
+
+//--------------------------------------------------------------------------
+//-------- Mij ------------------------------------------------------------
+//--------------------------------------------------------------------------
+void WedSCS::Mij(
+  const double *coords,
+  double *metric,
+  double *deriv)
+{
+  SIERRA_FORTRAN(threed_mij)
+    ( &nodesPerElement_,
+      &numIntPoints_,
+      deriv,
+      coords, metric);
+}
+//-------------------------------------------------------------------------
+void WedSCS::Mij(
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& metric,
+  SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_3d<AlgTraitsWed6>(deriv, coords, metric);
 }
 
 //--------------------------------------------------------------------------

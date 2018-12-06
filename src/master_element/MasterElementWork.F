@@ -3058,6 +3058,291 @@ c
       return
       end
 
+      subroutine twod_mij( npe,
+     *    nint, deriv, cordel, metric )
+c
+c***********************************************************************
+c
+      implicit none
+
+      integer npe, nint
+      double precision deriv, cordel, metric
+
+      dimension deriv(2,npe,nint),
+     *          cordel(2,npe),
+     *          metric(2,2,nint)
+c
+      integer ki, kn, i, j
+      double precision dx_ds
+      dimension dx_ds(2,2)
+      double precision realmin
+      double precision trace, det, lambda1, lambda2, norm
+      double precision ev
+      dimension ev(2,2)
+      realmin = 2.2250738585072014d-308
+
+      do ki = 1,nint
+c     zero out
+         dx_ds(1,1) = 0.d0
+         dx_ds(1,2) = 0.d0
+         dx_ds(2,1) = 0.d0
+         dx_ds(2,2) = 0.d0
+c
+c calculate the jacobian at the integration station -
+         do kn = 1,npe
+c
+            dx_ds(1,1) = dx_ds(1,1)+deriv(1,kn,ki)*cordel(1,kn)
+            dx_ds(1,2) = dx_ds(1,2)+deriv(2,kn,ki)*cordel(1,kn)
+c
+            dx_ds(2,1) = dx_ds(2,1)+deriv(1,kn,ki)*cordel(2,kn)
+            dx_ds(2,2) = dx_ds(2,2)+deriv(2,kn,ki)*cordel(2,kn)
+c
+         end do
+c
+         do i = 1, 2
+            do j = 1, 2
+               metric(i,j,ki) =
+     $              dx_ds(i,1)*dx_ds(j,1)+dx_ds(i,2)*dx_ds(j,2)
+            end do
+         end do
+
+c Eigenvalue decomposition of metric^2 to get metric
+         trace = metric(1,1,ki) + metric(2,2,ki)
+         det = metric(1,1,ki)*metric(2,2,ki) -
+     $              metric(2,1,ki)*metric(1,2,ki)
+     
+c calculate eigenvalues
+         lambda1 = trace/2.0 + (trace*trace/4.0 - det)**0.5
+         lambda2 = trace/2.0 - (trace*trace/4.0 - det)**0.5
+
+c calculate first eigenvector
+         ev(1,1) = -metric(2,1,ki)
+         ev(1,2) =  metric(1,1,ki) - lambda1
+     
+         norm = (ev(1,1)*ev(1,1) + ev(1,2)*ev(1,2))**0.5
+         ev(1,1) = ev(1,1)/norm
+         ev(1,2) = ev(1,2)/norm
+     
+c calculate second eigenvector
+         ev(2,1) = -metric(2,2,ki) + lambda2
+         ev(2,2) =  metric(1,2,ki)
+     
+         norm = (ev(2,1)*ev(2,1) + ev(2,2)*ev(2,2))**0.5
+         ev(2,1) = ev(2,1)/norm;
+         ev(2,2) = ev(2,2)/norm;
+     
+c special case when diagonal entries were 0, we already had a diagonal matrix
+         if (metric(1,2,ki) .eq. 0.0) then 
+            ev(1,1) = 1.0 
+            ev(2,1) = 0.0 
+            ev(1,2) = 0.0
+            ev(2,2) = 1.0
+         endif  
+
+c calculate sqrt of Mij^2 to get the metric tensor
+         do i = 1,2
+            do j = 1,2
+               metric(j,i,ki) = ev(1,i)*ev(1,j)*lambda1**0.5 + 
+     $              ev(2,i)*ev(2,j)*lambda2**0.5
+           end do
+         end do
+c     
+      end do
+c      
+      return
+      end
+
+      subroutine threed_mij( npe,
+     *    nint, deriv, cordel, metric )
+c       
+c***********************************************************************
+c
+      implicit none
+
+      integer npe, nint
+      double precision deriv, cordel, metric
+
+      dimension deriv(3,npe,nint),
+     *          cordel(3,npe),
+     *          metric(3,3,nint)
+c
+      integer ki, kn, i, j
+      double precision dx_ds
+      dimension dx_ds(3,3)
+      double precision realmin
+      double precision sqw, sqx, sqy, sqz, tmp1, tmp2, mqq
+      double precision AQ, Q, D
+      dimension AQ(3,3), Q(3,3), D(3,3)
+      double precision thet, sgn, t, c
+      integer k0, k1, k2
+      double precision o, m
+      dimension o(3), m(3)
+      double precision qq, jr
+      dimension qq(4), jr(4)
+      integer maxsteps
+      realmin = 2.2250738585072014d-308
+
+      do ki = 1,nint
+c     zero out
+         dx_ds(1,1) = 0.d0
+         dx_ds(1,2) = 0.d0
+         dx_ds(1,3) = 0.d0
+         dx_ds(2,1) = 0.d0
+         dx_ds(2,2) = 0.d0
+         dx_ds(2,3) = 0.d0
+         dx_ds(3,1) = 0.d0
+         dx_ds(3,2) = 0.d0
+         dx_ds(3,3) = 0.d0
+c 
+c calculate the jacobian at the integration station -
+         do kn = 1,npe
+c
+            dx_ds(1,1) = dx_ds(1,1)+deriv(1,kn,ki)*cordel(1,kn)
+            dx_ds(2,1) = dx_ds(2,1)+deriv(2,kn,ki)*cordel(1,kn)
+            dx_ds(3,1) = dx_ds(3,1)+deriv(3,kn,ki)*cordel(1,kn)
+c     
+            dx_ds(1,2) = dx_ds(1,2)+deriv(1,kn,ki)*cordel(2,kn)
+            dx_ds(2,2) = dx_ds(2,2)+deriv(2,kn,ki)*cordel(2,kn)
+            dx_ds(3,2) = dx_ds(3,2)+deriv(3,kn,ki)*cordel(2,kn)
+c     
+            dx_ds(1,3) = dx_ds(1,3)+deriv(1,kn,ki)*cordel(3,kn)
+            dx_ds(2,3) = dx_ds(2,3)+deriv(2,kn,ki)*cordel(3,kn)
+            dx_ds(3,3) = dx_ds(3,3)+deriv(3,kn,ki)*cordel(3,kn)
+c     
+         end do
+c
+         do i = 1, 3
+            do j = 1, 3
+               metric(i,j,ki) =
+     $              dx_ds(1,i)*dx_ds(1,j)+dx_ds(2,i)*dx_ds(2,j)
+     $              +dx_ds(3,i)*dx_ds(3,j)
+            end do
+         end do
+c TODO: integrate with EigenDecomposition.h if possible
+         maxsteps = 24
+         qq(1) = 0.0
+         qq(2) = 0.0
+         qq(3) = 0.0
+         qq(4) = 1.0
+
+         do i=1, maxsteps
+c quat to matrix
+            sqx      = qq(1)*qq(1);
+            sqy      = qq(2)*qq(2);
+            sqz      = qq(3)*qq(3);
+            sqw      = qq(4)*qq(4);
+            Q(1,1)  = ( sqx - sqy - sqz + sqw);
+            Q(2,2)  = (-sqx + sqy - sqz + sqw);
+            Q(3,3)  = (-sqx - sqy + sqz + sqw);
+            tmp1     = qq(1)*qq(2);
+            tmp2     = qq(3)*qq(4);
+            Q(1,2)  = 2.0 * (tmp1 + tmp2);
+            Q(2,1)  = 2.0 * (tmp1 - tmp2);
+            tmp1     = qq(1)*qq(3);
+            tmp2     = qq(2)*qq(4);
+            Q(1,3)  = 2.0 * (tmp1 - tmp2);
+            Q(3,1)  = 2.0 * (tmp1 + tmp2);
+            tmp1     = qq(2)*qq(3);
+            tmp2     = qq(1)*qq(4);
+            Q(2,3)  = 2.0 * (tmp1 + tmp2);
+            Q(3,2)  = 2.0 * (tmp1 - tmp2);
+
+c AQ = A * Q
+            AQ(1,1) = Q(1,1)*metric(1,1,ki)+
+     $                   Q(1,2)*metric(2,1,ki)+Q(1,3)*metric(3,1,ki)
+            AQ(2,1) = Q(2,1)*metric(1,1,ki)+
+     $                   Q(2,2)*metric(2,1,ki)+Q(2,3)*metric(3,1,ki)
+            AQ(3,1) = Q(3,1)*metric(1,1,ki)+
+     $                   Q(3,2)*metric(2,1,ki)+Q(3,3)*metric(3,1,ki)
+            AQ(1,2) = Q(1,1)*metric(2,1,ki)+
+     $                   Q(1,2)*metric(2,2,ki)+Q(1,3)*metric(3,2,ki)
+            AQ(2,2) = Q(2,1)*metric(2,1,ki)+
+     $                   Q(2,2)*metric(2,2,ki)+Q(2,3)*metric(3,2,ki)
+            AQ(3,2) = Q(3,1)*metric(2,1,ki)+
+     $                   Q(3,2)*metric(2,2,ki)+Q(3,3)*metric(3,2,ki)
+            AQ(1,3) = Q(1,1)*metric(3,1,ki)+
+     $                   Q(1,2)*metric(3,2,ki)+Q(1,3)*metric(3,3,ki)
+            AQ(2,3) = Q(2,1)*metric(3,1,ki)+
+     $                   Q(2,2)*metric(3,2,ki)+Q(2,3)*metric(3,3,ki)
+            AQ(3,3) = Q(3,1)*metric(3,1,ki)+
+     $                   Q(3,2)*metric(3,2,ki)+Q(3,3)*metric(3,3,ki)
+c D = Qt * AQ
+            D(1,1) = AQ(1,1)*Q(1,1)+AQ(1,2)*Q(1,2)+AQ(1,3)*Q(1,3)
+            D(2,1) = AQ(1,1)*Q(2,1)+AQ(1,2)*Q(2,2)+AQ(1,3)*Q(2,3)
+            D(3,1) = AQ(1,1)*Q(3,1)+AQ(1,2)*Q(3,2)+AQ(1,3)*Q(3,3)
+            D(1,2) = AQ(2,1)*Q(1,1)+AQ(2,2)*Q(1,2)+AQ(2,3)*Q(1,3)
+            D(2,2) = AQ(2,1)*Q(2,1)+AQ(2,2)*Q(2,2)+AQ(2,3)*Q(2,3)
+            D(3,2) = AQ(2,1)*Q(3,1)+AQ(2,2)*Q(3,2)+AQ(2,3)*Q(3,3)
+            D(1,3) = AQ(3,1)*Q(1,1)+AQ(3,2)*Q(1,2)+AQ(3,3)*Q(1,3)
+            D(2,3) = AQ(3,1)*Q(2,1)+AQ(3,2)*Q(2,2)+AQ(3,3)*Q(2,3)
+            D(3,3) = AQ(3,1)*Q(3,1)+AQ(3,2)*Q(3,2)+AQ(3,3)*Q(3,3)
+            o(1)    = D(3,2)
+            o(2)    = D(3,1)
+            o(3)    = D(2,1)
+            m(1)    = abs(o(1))
+            m(2)    = abs(o(2))
+            m(3)    = abs(o(3))
+
+            if (m(1) .gt. m(2) .and. m(1) .gt. m(3)) then
+               k0 = 1
+            else if (m(2) .gt. m(3)) then
+               k0 = 2
+            else
+               k0 = 3
+            end if
+c index of largest element of offdiag
+            k1   = mod(k0-1+1,3)+1
+            k2   = mod(k0-1+2,3)+1
+c diagonal already
+            if (o(k0) .eq. 0.0) cycle
+            thet = (D(k2,k2)-D(k1,k1))/(2.0*o(k0))
+            sgn  = sign((1.0D0),thet)
+            thet = abs(thet)
+            if (thet .lt. 1e6) then
+               t = sgn / (thet + sqrt(thet*thet+1.0))
+            else
+               t = sgn / (thet + thet)
+            end if
+            c    = 1.0/sqrt(t*t+1.0) 
+            if(c .eq. 1.0) exit
+c
+            jr(1)  = 0.0
+            jr(2)  = 0.0
+            jr(3)  = 0.0
+            jr(4)  = 0.0
+c using half angle identity sin(a/2) = sqrt((1-cos(a))/2)
+            jr(k0) = sgn*sqrt((1.0-c)/2.0)
+c since our quat-to-matrix convention was for v*M instead of M*v
+            jr(k0) = jr(k0) * (-1.0)
+            jr(4)  = sqrt(1.0 - jr(k0) * jr(k0))
+c reached limits of floating point precision
+            if (jr(4) .eq. 1.0) exit
+c
+            qq(1) = (qq(4)*jr(1)+qq(1)*jr(4)+qq(2)*jr(3)-qq(3)*jr(2))
+            qq(2) = (qq(4)*jr(2)-qq(1)*jr(3)+qq(2)*jr(4)+qq(3)*jr(1))
+            qq(3) = (qq(4)*jr(3)+qq(1)*jr(2)-qq(2)*jr(1)+qq(3)*jr(4))
+            qq(4) = (qq(4)*jr(4)-qq(1)*jr(1)-qq(2)*jr(2)-qq(3)*jr(3))
+            mqq  = sqrt(qq(1)*qq(1)+qq(2)*qq(2)+qq(3)*qq(3)+qq(4)*qq(4))
+            qq(1) = qq(1)/mqq
+            qq(2) = qq(2)/mqq
+            qq(3) = qq(3)/mqq
+            qq(4) = qq(4)/mqq
+         end do 
+
+c At this point we have Q, the eigenvectors and D the eigenvalues of Mij^2, so to 
+c create Mij, we use Q sqrt(D) Q^T
+         do i = 1, 3
+            do j = 1, 3
+               metric(j,i,ki) = Q(1,i)*Q(1,j)*sqrt(D(1,1)) + 
+     $           Q(2,i)*Q(2,j)*sqrt(D(2,2))+ Q(3,i)*Q(3,j)*sqrt(D(3,3))
+            end do
+         end do
+
+      end do
+c      
+      return
+      end
+
       subroutine tet_gradient_operator( nelem, npe,
      *    nint, deriv, cordel, gradop, det_j, err, nerr )
 c
