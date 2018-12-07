@@ -346,7 +346,7 @@ AssembleScalarEigenEdgeSolverAlgorithm::execute()
       }
      
       // perform the decomposition
-      EigenDecomposition::sym_diagonalize<double>(b_, Q_, D_);
+      EigenDecomposition::sym_diagonalize(b_, Q_, D_);
 
       // sort D
       sort(D_);
@@ -355,7 +355,7 @@ AssembleScalarEigenEdgeSolverAlgorithm::execute()
       perturb(D_);
 
       // form new stress
-      EigenDecomposition::reconstruct_matrix_from_decomposition<double>(D_, Q_, b_);
+      EigenDecomposition::reconstruct_matrix_from_decomposition(D_, Q_, b_);
 
       // remove normalization; add in tke (possibly perturbed)
       const double turbKeIpPert = std::max(turbKeIp*(1.0 + perturbTurbKe_), 1.0e-16);

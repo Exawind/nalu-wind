@@ -301,88 +301,15 @@ void Quad92DSCV::Mij(
   double *metric,
   double *deriv)
 {
-  SIERRA_FORTRAN(twod_mij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
-      deriv,
-      coords, metric);
+  generic_Mij_2d<AlgTraitsQuad9_2D>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 void Quad92DSCV::Mij(
   SharedMemView<DoubleType**>& coords,
   SharedMemView<DoubleType***>& metric,
-  SharedMemView<DoubleType***>& deriv) {
-
-  const int npe  = Traits::nodesPerElement_;
-  const int nint = Traits::numScsIp_;
-
-  DoubleType dx_ds[2][2];
-  DoubleType norm;
-  DoubleType ev[2][2];
-
-  // loop over integration points
-  for (int ki=0; ki<nint; ++ki) {
-    dx_ds[0][0] = 0.0;
-    dx_ds[0][1] = 0.0;
-    dx_ds[1][0] = 0.0;
-    dx_ds[1][1] = 0.0;
-
-    // calculate the jacobian at the integration station by looping over nodes
-    for (int kn=0; kn<npe; ++kn) {
-      dx_ds[0][0] += deriv(ki,kn,0)*coords(kn,0);
-      dx_ds[0][1] += deriv(ki,kn,1)*coords(kn,0);
-      dx_ds[1][0] += deriv(ki,kn,0)*coords(kn,1);
-      dx_ds[1][1] += deriv(ki,kn,1)*coords(kn,1);
-    }
-
-    // Mij^2 = J J^T
-    for (int i=0; i<2; ++i) {
-      for (int j=0; j<2; ++j) {
-        metric(ki,j,i) = dx_ds[i][0]*dx_ds[j][0]+dx_ds[i][1]*dx_ds[j][1];
-      }
-    }
-
-    // To get the square root of Mij^2, we note that this is a Sym Pos Def
-    // matrix and thus Mij^(1/2) = A sqrt(L) A^T where Mij^2 = ALA^T is the 
-    // eigendecomposition of Mij^2
-    const DoubleType trace = metric(ki,0,0) + metric(ki,1,1);
-    const DoubleType det = metric(ki,0,0)*metric(ki,1,1) - metric(ki,0,1)*metric(ki,1,0);
-
-    // calculate eigenvalues
-    const DoubleType lambda1 = trace/2.0 + stk::math::pow(trace*trace/4.0 - det, 0.5);
-    const DoubleType lambda2 = trace/2.0 - stk::math::pow(trace*trace/4.0 - det, 0.5);
-
-    //calculate first eigenvector
-    ev[0][0] = -metric(ki,0,1);
-    ev[1][0] = metric(ki,0,0) - lambda1;
-
-    norm = stk::math::sqrt(ev[0][0]*ev[0][0] + ev[1][0]*ev[1][0]);
-    ev[0][0] = ev[0][0]/norm;
-    ev[1][0] = ev[1][0]/norm;
-
-    // calculate second eigenvector
-    ev[0][1] = -(metric(ki,1,1) -lambda2);
-    ev[1][1] = metric(ki,1,0);
-
-    norm = stk::math::sqrt(ev[0][1]*ev[0][1] + ev[1][1]*ev[1][1]);
-    ev[0][1] = ev[0][1]/norm;
-    ev[1][1] = ev[1][1]/norm;
-
-    // special case when diagonal entries were 0, we already had a diagonal matrix
-    ev[0][0] = stk::math::if_then_else(metric(ki,1,0) == 0.0, 1.0, ev[0][0]);
-    ev[0][1] = stk::math::if_then_else(metric(ki,1,0) == 0.0, 0.0, ev[0][1]);
-    ev[1][0] = stk::math::if_then_else(metric(ki,1,0) == 0.0, 0.0, ev[1][0]);
-    ev[1][1] = stk::math::if_then_else(metric(ki,1,0) == 0.0, 1.0, ev[1][1]);
-
-    // calculate sqrt of Mij^2 to get the metric tensor
-    for (int i=0; i<2; ++i) {
-      for (int j=0; j<2; ++j) {
-        metric(ki,i,j) = ev[i][0]*ev[j][0]*stk::math::sqrt(lambda1) +
-                         ev[i][1]*ev[j][1]*stk::math::sqrt(lambda2);
-      }
-    }
-
-  }
+  SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_2d<AlgTraitsQuad9_2D>(deriv, coords, metric);
 }
 
 //--------------------------------------------------------------------------
@@ -964,88 +891,15 @@ void Quad92DSCS::Mij(
   double *metric,
   double *deriv)
 {
-  SIERRA_FORTRAN(twod_mij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
-      deriv,
-      coords, metric);
+  generic_Mij_2d<AlgTraitsQuad9_2D>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 void Quad92DSCS::Mij(
   SharedMemView<DoubleType**>& coords,
   SharedMemView<DoubleType***>& metric,
-  SharedMemView<DoubleType***>& deriv) {
-
-  const int npe  = Traits::nodesPerElement_;
-  const int nint = Traits::numScsIp_;
-
-  DoubleType dx_ds[2][2];
-  DoubleType norm;
-  DoubleType ev[2][2];
-
-  // loop over integration points
-  for (int ki=0; ki<nint; ++ki) {
-    dx_ds[0][0] = 0.0;
-    dx_ds[0][1] = 0.0;
-    dx_ds[1][0] = 0.0;
-    dx_ds[1][1] = 0.0;
-
-    // calculate the jacobian at the integration station by looping over nodes
-    for (int kn=0; kn<npe; ++kn) {
-      dx_ds[0][0] += deriv(ki,kn,0)*coords(kn,0);
-      dx_ds[0][1] += deriv(ki,kn,1)*coords(kn,0);
-      dx_ds[1][0] += deriv(ki,kn,0)*coords(kn,1);
-      dx_ds[1][1] += deriv(ki,kn,1)*coords(kn,1);
-    }
-
-    // Mij^2 = J J^T
-    for (int i=0; i<2; ++i) {
-      for (int j=0; j<2; ++j) {
-        metric(ki,j,i) = dx_ds[i][0]*dx_ds[j][0]+dx_ds[i][1]*dx_ds[j][1];
-      }
-    }
-
-    // To get the square root of Mij^2, we note that this is a Sym Pos Def
-    // matrix and thus Mij^(1/2) = A sqrt(L) A^T where Mij^2 = ALA^T is the 
-    // eigendecomposition of Mij^2
-    const DoubleType trace = metric(ki,0,0) + metric(ki,1,1);
-    const DoubleType det = metric(ki,0,0)*metric(ki,1,1) - metric(ki,0,1)*metric(ki,1,0);
-
-    // calculate eigenvalues
-    const DoubleType lambda1 = trace/2.0 + stk::math::pow(trace*trace/4.0 - det, 0.5);
-    const DoubleType lambda2 = trace/2.0 - stk::math::pow(trace*trace/4.0 - det, 0.5);
-
-    //calculate first eigenvector
-    ev[0][0] = -metric(ki,0,1);
-    ev[1][0] = metric(ki,0,0) - lambda1;
-
-    norm = stk::math::sqrt(ev[0][0]*ev[0][0] + ev[1][0]*ev[1][0]);
-    ev[0][0] = ev[0][0]/norm;
-    ev[1][0] = ev[1][0]/norm;
-
-    // calculate second eigenvector
-    ev[0][1] = -(metric(ki,1,1) -lambda2);
-    ev[1][1] = metric(ki,1,0); 
-
-    norm = stk::math::sqrt(ev[0][1]*ev[0][1] + ev[1][1]*ev[1][1]);
-    ev[0][1] = ev[0][1]/norm;
-    ev[1][1] = ev[1][1]/norm;
-
-    // special case when diagonal entries were 0, we already had a diagonal matrix
-    ev[0][0] = stk::math::if_then_else(metric(ki,1,0) == 0.0, 1.0, ev[0][0]);
-    ev[0][1] = stk::math::if_then_else(metric(ki,1,0) == 0.0, 0.0, ev[0][1]);
-    ev[1][0] = stk::math::if_then_else(metric(ki,1,0) == 0.0, 0.0, ev[1][0]);
-    ev[1][1] = stk::math::if_then_else(metric(ki,1,0) == 0.0, 1.0, ev[1][1]);
-
-    // calculate sqrt of Mij^2 to get the metric tensor
-    for (int i=0; i<2; ++i) {
-      for (int j=0; j<2; ++j) {
-        metric(ki,i,j) = ev[i][0]*ev[j][0]*stk::math::sqrt(lambda1) +
-                         ev[i][1]*ev[j][1]*stk::math::sqrt(lambda2);
-      }
-    }
-
-  }
+  SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_2d<AlgTraitsQuad9_2D>(deriv, coords, metric);
 }
 
 //--------------------------------------------------------------------------

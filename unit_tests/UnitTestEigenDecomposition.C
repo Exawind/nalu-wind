@@ -75,7 +75,7 @@ TEST(TestEigen, testeigendecomp3d)
 {
   double Q_[3][3], D_[3][3];
 
-  sierra::nalu::EigenDecomposition::sym_diagonalize<double>(A3d_fixed, Q_, D_);
+  sierra::nalu::EigenDecomposition::sym_diagonalize(A3d_fixed, Q_, D_);
 
   // Perform tests -- lambda evaluated in Mathematica
   const double tol = 5.e-14;
@@ -91,7 +91,7 @@ TEST(TestEigen, testeigendecomp2d)
 {
   double Q_[2][2], D_[2][2];
 
-  sierra::nalu::EigenDecomposition::sym_diagonalize<double>(A2d_fixed, Q_, D_);
+  sierra::nalu::EigenDecomposition::sym_diagonalize(A2d_fixed, Q_, D_);
 
   // Perform tests -- lambda evaluated in Mathematica
   const double tol = 5.e-14;
@@ -109,8 +109,8 @@ TEST(TestEigen, testeigendecompandreconstruct3d)
 {
   double b_[3][3], Q_[3][3], D_[3][3];
 
-  sierra::nalu::EigenDecomposition::sym_diagonalize<double>(A3d_rand, Q_, D_);
-  sierra::nalu::EigenDecomposition::reconstruct_matrix_from_decomposition<double>(D_, Q_, b_);
+  sierra::nalu::EigenDecomposition::sym_diagonalize(A3d_rand, Q_, D_);
+  sierra::nalu::EigenDecomposition::reconstruct_matrix_from_decomposition(D_, Q_, b_);
 
   // Perform tests
   const double tol = 5.e-14;
@@ -129,8 +129,8 @@ TEST(TestEigen, testeigendecompandreconstruct2d)
 {
   double b_[2][2], Q_[2][2], D_[2][2];
 
-  sierra::nalu::EigenDecomposition::sym_diagonalize<double>(A2d_rand, Q_, D_);
-  sierra::nalu::EigenDecomposition::reconstruct_matrix_from_decomposition<double>(D_, Q_, b_);
+  sierra::nalu::EigenDecomposition::sym_diagonalize(A2d_rand, Q_, D_);
+  sierra::nalu::EigenDecomposition::reconstruct_matrix_from_decomposition(D_, Q_, b_);
 
   // Perform tests
   const double tol = 5.e-14;
@@ -165,7 +165,7 @@ TEST(TestEigen, testeigendecomp3d_simd)
   A3d_fixed_simd[2][1] = A3d_fixed_simd[1][2];
  
 
-  sierra::nalu::EigenDecomposition::sym_diagonalize<DoubleType>(A3d_fixed_simd, Q_, D_);
+  sierra::nalu::EigenDecomposition::sym_diagonalize(A3d_fixed_simd, Q_, D_);
 
   // Perform tests -- lambda evaluated in Mathematica
   const double tol = 5.e-14;
@@ -191,7 +191,7 @@ TEST(TestEigen, testeigendecomp2d_simd)
   }
   A2d_fixed_simd[1][0] = A2d_fixed_simd[0][1];
 
-  sierra::nalu::EigenDecomposition::sym_diagonalize<DoubleType>(A2d_fixed_simd, Q_, D_);
+  sierra::nalu::EigenDecomposition::sym_diagonalize(A2d_fixed_simd, Q_, D_);
 
   // Perform tests -- lambda evaluated in Mathematica
   const double tol = 5.e-14;
@@ -235,8 +235,8 @@ TEST(TestEigen, testeigendecompandreconstruct3d_simd)
   A3d_rand_simd[2][0] = A3d_rand_simd[0][2];
   A3d_rand_simd[2][1] = A3d_rand_simd[1][2];
 
-  sierra::nalu::EigenDecomposition::sym_diagonalize<DoubleType>(A3d_rand_simd, Q_, D_);
-  sierra::nalu::EigenDecomposition::reconstruct_matrix_from_decomposition<DoubleType>(D_, Q_, b_);
+  sierra::nalu::EigenDecomposition::sym_diagonalize(A3d_rand_simd, Q_, D_);
+  sierra::nalu::EigenDecomposition::reconstruct_matrix_from_decomposition(D_, Q_, b_);
 
   // Perform tests
   const double tol = 5.e-14;
@@ -271,8 +271,8 @@ TEST(TestEigen, testeigendecompandreconstruct2d_simd)
   }
   A2d_rand_simd[1][0] = A2d_rand_simd[0][1];
 
-  sierra::nalu::EigenDecomposition::sym_diagonalize<DoubleType>(A2d_rand_simd, Q_, D_);
-  sierra::nalu::EigenDecomposition::reconstruct_matrix_from_decomposition<DoubleType>(D_, Q_, b_);
+  sierra::nalu::EigenDecomposition::sym_diagonalize(A2d_rand_simd, Q_, D_);
+  sierra::nalu::EigenDecomposition::reconstruct_matrix_from_decomposition(D_, Q_, b_);
 
   // Perform tests
   const double tol = 5.e-14;

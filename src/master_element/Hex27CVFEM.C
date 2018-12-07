@@ -843,11 +843,7 @@ void Hex27SCV::Mij(
   double *metric,
   double *deriv)
 {
-  SIERRA_FORTRAN(threed_mij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
-      deriv,
-      coords, metric);
+  generic_Mij_3d<AlgTraits>(numIntPoints_, deriv, coords, metric);
 }
 //--------------------------------------------------------------------------
 void Hex27SCV::Mij(
@@ -1701,11 +1697,7 @@ void Hex27SCS::Mij(
   double *metric,
   double *deriv)
 {
-  SIERRA_FORTRAN(threed_mij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
-      deriv,
-      coords, metric);
+  generic_Mij_3d<AlgTraits>(numIntPoints_, deriv, coords, metric);
 }
 //--------------------------------------------------------------------------
 void Hex27SCS::Mij(
