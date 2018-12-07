@@ -33,7 +33,10 @@ class ActuatorLineFASTInfo : public ActuatorInfo {
 public:
   ActuatorLineFASTInfo();
   ~ActuatorLineFASTInfo();
-  Coordinates epsilon_; ///< The Gaussian spreading width in (chordwise, spanwise, thickness) directions
+  // epsilon / chord in (chord direction, tangential to chord, and spanwise)
+  Coordinates epsilon_chord_;
+  // The minimum epsilon allowed in the simulation [m]
+  Coordinates epsilon_min_;
 };
 
 /** Class that holds all of the search action for each actuator point
@@ -143,10 +146,10 @@ public:
     const double *pointForce,
     double *nodeForce);
 
-  // isotropic Gaussian projection function.
-  double isotropic_Gaussian_projection(
+  // Gaussian projection function.
+  double Gaussian_projection(
     const int &nDim,
-    const double &dis,
+    double *dis,
     const Coordinates &epsilon);
 
   // Spread the actuator force to a node vector

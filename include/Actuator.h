@@ -52,6 +52,10 @@ public:
   int processorId_;
   int numPoints_;
   std::string turbineName_;
+  // epsilon / chord in (chord direction, tangential to chord, and spanwise)
+  Coordinates epsilon_chord_;
+  // The minimum epsilon allowed in the simulation [m]
+  Coordinates epsilon_min_;
 };
 
 class ActuatorPointInfo{
@@ -156,10 +160,12 @@ public:
     const double *fieldAtNodes,
     double *pointField);
 
-  double compute_distance(
-    const int &nDim,
-    const double *elemCentroid,
-    const double *pointCentroid);
+    // distance from element centroid to point centroid
+    void compute_distance(
+      const int &nDim,
+      const double *elemCentroid,
+      const double *pointCentroid,
+      double *distance);
 
 //------------------------------------------------------------------
   // hold the realm

@@ -399,18 +399,19 @@ Actuator::interpolate_field(
     fieldAtNodes,
     pointField);
 }
-double
+
+void
 Actuator::compute_distance(
-  const int &nDim,
-  const double *elemCentroid,
-  const double *pointCentroid)
+    const int &nDim,
+    const double *elemCentroid,
+    const double *pointCentroid,
+    double *distance)
 {
-  double distance = 0.0;
-  for ( int j = 0; j < nDim; ++j )
-    distance += std::pow(elemCentroid[j] - pointCentroid[j], 2);
-  distance = std::sqrt(distance);
-  return distance;
+    for ( int j = 0; j < nDim; ++j )
+        distance[j] = elemCentroid[j] - pointCentroid[j];
+    //~ return distance;
 }
+
 
 }
 }

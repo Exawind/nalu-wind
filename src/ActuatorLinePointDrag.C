@@ -665,7 +665,7 @@ ActuatorLinePointDrag::spread_actuator_force_to_node_vec(
 
       stk::mesh::Entity node = *iNode;
       const double * node_coords = (double*)stk::mesh::field_data(coordinates, node );
-      const double radius = compute_distance(nDim, node_coords, actuator_node_coordinates);
+      const double radius = 1.; //compute_distance(nDim, node_coords, actuator_node_coordinates);
       // project the force to this node with projection function
       compute_node_drag_given_radius(nDim, radius, epsilon, &actuator_force[0], &ws_nodeForce[0]);
       double * sourceTerm = (double*)stk::mesh::field_data(actuator_source, node );

@@ -66,6 +66,7 @@ ActuatorLineFASTPointInfo::ActuatorLineFASTPointInfo(
   size_t globTurbId,
   Point centroidCoords,
   double searchRadius,
+  // The values of epsilon [m]
   Coordinates epsilon,
   fast::ActuatorNodeType nType
   )
@@ -126,28 +127,32 @@ ActuatorLineFAST::compute_node_force_given_weight(
 }
 
 /**
- * This method calculates the isotropic Gaussian projection of width epsilon of
- * a unit body force at the actuator point to another point at a distance *dis*
- * \f[
- * g(dis) = \frac{1}{\pi^{3/2}} \epsilon^3} e^{-\left( dis/ \epsilon \right)^2}
- * \f]
+ * This method calculates the 3D Gaussian projection  of a unit body force at
+ * the actuator point to another point at a vector distance *dis*
 */
 double
-ActuatorLineFAST::isotropic_Gaussian_projection(
-  const int &nDim,
-  const double &dis,
-  const Coordinates &epsilon)
+ActuatorLineFAST::Gaussian_projection(
+    const int &nDim,
+    double *dis,
+    const Coordinates &epsilon)
 {
-  // Compute the force projection weight at this location using an
-  // isotropic Gaussian.
-  double g;
-  const double pi = acos(-1.0);
-  if ( nDim == 2 )
-    g = (1.0 / (pow(epsilon.x_,2.0) * pi)) * exp(-pow((dis/epsilon.x_),2.0));
-  else
-    g = (1.0 / (pow(epsilon.x_,3.0) * pow(pi,1.5))) * exp(-pow((dis/epsilon.x_),2.0));
+    // Compute the force projection weight at this location using a
+    // Gaussian function.
+    double g;
+    const double pi = acos(-1.0);
+    if ( nDim == 2 )
+        g = (1.0 / (epsilon.x_ * epsilon.y_ * pi)) *
+                    exp(-pow((dis[0]/epsilon.x_),2.0)
+                        -pow((dis[1]/epsilon.y_),2.0)
+                    );
+    else
+        g = (1.0 / (epsilon.x_ * epsilon.y_ * epsilon.z_ * pow(pi,1.5))) *
+                exp(-pow((dis[0]/epsilon.x_),2.0)
+                    -pow((dis[1]/epsilon.y_),2.0)
+                    -pow((dis[2]/epsilon.z_),2.0)
+                    );
 
-  return g;
+    return g;
 }
 
 
@@ -208,12 +213,40 @@ ActuatorLineFAST::load(
 
           get_required(cur_turbine, "turbine_name", actuatorLineInfo->turbineName_)  ;
 
-	  // Force projection function properties
-	  const YAML::Node epsilon = cur_turbine["epsilon"];
-	  if ( epsilon )
-	    actuatorLineInfo->epsilon_ = epsilon.as<Coordinates>() ;
-	  else
-	    throw std::runtime_error("ActuatorLineFAST: lacking epsilon vector");
+          // The value epsilon / chord [non-dimensional]
+          // This is a vector containing the values for:
+          //   - chord aligned (x),
+          //   - tangential to chord (y),
+          //   - spanwise (z)
+          const YAML::Node epsilon_chord =
+                                      cur_turbine["epsilon_chord"];
+          if ( epsilon_chord )
+              actuatorLineInfo->epsilon_chord_ =
+                                  epsilon_chord.as<Coordinates>();
+          else
+              throw std::runtime_error(
+                  "ActuatorLineFAST: lacking epsilon/chord vector");
+
+          // The minimum value of epsilon [m]
+          // This is a vector containing the values for:
+          //   - chord aligned (x),
+          //   - tangential to chord (y),
+          //   - spanwise (z)
+          const YAML::Node epsilon_min =
+                                      cur_turbine["epsilon_min"];
+          if ( epsilon_min )
+              actuatorLineInfo->epsilon_min_ =
+                                  epsilon_min.as<Coordinates>();
+          else
+              throw std::runtime_error(
+                  "ActuatorLineFAST: lacking epsilon min vector");
+
+//	  // Force projection function properties
+//	  const YAML::Node epsilon = cur_turbine["epsilon"];
+//	  if ( epsilon )
+//	    actuatorLineInfo->epsilon_ = epsilon.as<Coordinates>() ;
+//	  else
+//	    throw std::runtime_error("ActuatorLineFAST: lacking epsilon vector");
 
 	  readTurbineData(iTurb, fi, y_actuatorLine["Turbine" + std::to_string(iTurb)] );
 	} else {
@@ -729,7 +762,13 @@ ActuatorLineFAST::create_actuator_line_point_info_map() {
 	  // move the coordinates; set the velocity... may be better on the lineInfo object
 	  FAST.getForceNodeCoordinates(currentCoords, np, iTurb);
 
-          double searchRadius = actuatorLineInfo->epsilon_.x_ * sqrt(log(1.0/0.001));
+          // Get the chord from inside of FAST to compute epsilon
+          double chord = FAST.getChord(np, iTurb);
+
+          // The radius of the searching. This is given in terms of epsilon.x
+          //   but it should be the maximum of epsilon.x/y/z/.
+          //   Most of the time epsilon.x is the maximum so this is fine for now
+          double searchRadius = actuatorLineInfo->epsilon_min_.x_ * sqrt(log(1.0/0.001));
 
 	  for ( int j = 0; j < nDim; ++j )
 	    centroidCoords[j] = currentCoords[j];
@@ -756,33 +795,41 @@ ActuatorLineFAST::create_actuator_line_point_info_map() {
                   if (nac_cd>0){
                       // This model is used to set the momentum thickness
                       // of the wake (Martinez-Tossas PhD Thesis 2017)
-                      float tmpEps = std::sqrt(2.0 / pi * nac_cd * nac_area); 
+                      float tmpEps = std::sqrt(2.0 / pi * nac_cd * nac_area);
                       epsilon.x_ = tmpEps;
                       epsilon.y_ = tmpEps;
                       epsilon.z_ = tmpEps;
                   }
-                  
+
                   // If no nacelle force just specify the standard value
                   // (it will not be used)
                   else{
-                      epsilon = actuatorLineInfo->epsilon_;
-                      //~ epsilon.y_ = actuatorLineInfo->epsilon_;
-                      //~ epsilon.z_ = actuatorLineInfo->epsilon_;
+                      epsilon.x_ = actuatorLineInfo->epsilon_min_.x_;
+                      epsilon.y_ = actuatorLineInfo->epsilon_min_.y_;
+                      epsilon.z_ = actuatorLineInfo->epsilon_min_.z_;
                       }
 
               }
               break;
           }
           case fast::BLADE:
-              epsilon = actuatorLineInfo->epsilon_;
+              epsilon.x_ = std::max(
+                      actuatorLineInfo->epsilon_chord_.x_ * chord,
+                      actuatorLineInfo->epsilon_min_.x_);
+              epsilon.y_ = std::max(
+                      actuatorLineInfo->epsilon_chord_.y_ * chord,
+                      actuatorLineInfo->epsilon_min_.y_);
+              epsilon.z_ = std::max(
+                      actuatorLineInfo->epsilon_chord_.z_ * chord,
+                      actuatorLineInfo->epsilon_min_.z_);
               break;
           case fast::TOWER:
-              epsilon = actuatorLineInfo->epsilon_;
+              epsilon = actuatorLineInfo->epsilon_min_;
               break;
-          default: throw std::runtime_error("Actuator line model node type not valid"); 
+          default: throw std::runtime_error("Actuator line model node type not valid");
               break;
           }
-          
+
 	  actuatorPointInfoMap_.insert(std::make_pair(np, make_unique<ActuatorLineFASTPointInfo>
       (
         iTurb, centroidCoords,
@@ -851,16 +898,22 @@ ActuatorLineFAST::spread_actuator_force_to_node_vec(
 {
     std::vector<double> ws_nodeForce(nDim);
 
+    // This is the distance vector
+    std::vector<double> distance(nDim);
+
     std::set<stk::mesh::Entity>::iterator iNode;
     for (iNode = nodeVec.begin(); iNode != nodeVec.end(); ++iNode ) {
 
       stk::mesh::Entity node = *iNode;
       const double * node_coords = (double*)stk::mesh::field_data(coordinates, node );
       const double * dVol = (double*)stk::mesh::field_data(dual_nodal_volume, node );
+
       // compute distance
-      const double distance = compute_distance(nDim, node_coords, actuator_node_coordinates);
+      compute_distance(nDim, node_coords, actuator_node_coordinates,
+          distance.data());
       // project the force to this node with projection function
-      double gA = isotropic_Gaussian_projection(nDim, distance, epsilon);
+      double gA = Gaussian_projection(nDim, distance.data(), epsilon);
+
       compute_node_force_given_weight(nDim, gA, &actuator_force[0], &ws_nodeForce[0]);
       double * sourceTerm = (double*)stk::mesh::field_data(actuator_source, node );
       for ( int j=0; j < nDim; ++j ) sourceTerm[j] += ws_nodeForce[j];
