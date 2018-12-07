@@ -310,11 +310,7 @@ void WedSCV::Mij(
   double *metric,
   double *deriv)
 {
-  SIERRA_FORTRAN(threed_mij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
-      deriv,
-      coords, metric);
+  generic_Mij_3d<AlgTraitsWed6>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 void WedSCV::Mij(
@@ -905,11 +901,7 @@ void WedSCS::Mij(
   double *metric,
   double *deriv)
 {
-  SIERRA_FORTRAN(threed_mij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
-      deriv,
-      coords, metric);
+  generic_Mij_3d<AlgTraitsWed6>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 void WedSCS::Mij(

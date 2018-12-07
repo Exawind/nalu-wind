@@ -67,8 +67,6 @@ void ComputeMetricTensorElemAlgorithm::execute() {
     MasterElement *meSCV =
         sierra::nalu::MasterElementRepo::get_volume_master_element(
             b.topology());
-    // MasterElement *meSCS =
-    // sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
 
     // extract master element specifics
     const int nodesPerElement = meSCV->nodesPerElement_;
@@ -133,11 +131,6 @@ void ComputeMetricTensorElemAlgorithm::execute() {
                 p_Mij[ip * nDim * nDim + i * nDim + j] / numScvIp;
     }
   }
-
-  // Since Mij is element based , dont need to deal with periodicity
-  // if (realm_.hasPeriodic_) {
-  //  realm_.periodic_field_update(Mij_, nDim*nDim);
-  //}
 }
 
 } // namespace nalu

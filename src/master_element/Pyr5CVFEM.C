@@ -532,11 +532,7 @@ void PyrSCS::Mij(
   double *metric,
   double *deriv)
 {
-  SIERRA_FORTRAN(threed_mij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
-      deriv,
-      coords, metric);
+  generic_Mij_3d<AlgTraitsPyr5>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 void PyrSCS::Mij(
@@ -1338,11 +1334,7 @@ void PyrSCV::Mij(
   double *metric,
   double *deriv)
 {
-  SIERRA_FORTRAN(threed_mij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
-      deriv,
-      coords, metric);
+  generic_Mij_3d<AlgTraitsPyr5>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 void PyrSCV::Mij(

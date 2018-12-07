@@ -294,11 +294,7 @@ void TetSCV::Mij(
   double *metric,
   double *deriv)
 {
-  SIERRA_FORTRAN(threed_mij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
-      deriv,
-      coords, metric);
+  generic_Mij_3d<AlgTraitsTet4>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 void TetSCV::Mij(
@@ -796,11 +792,7 @@ void TetSCS::Mij(
   double *metric,
   double *deriv)
 {
-  SIERRA_FORTRAN(threed_mij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
-      deriv,
-      coords, metric);
+  generic_Mij_3d<AlgTraitsTet4>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
 void TetSCS::Mij(
