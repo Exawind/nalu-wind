@@ -51,7 +51,8 @@ void do_the_test_ngp(const sierra::nalu::ElemDataRequests& dataReq)
 
 void do_the_test_gpu(const sierra::nalu::ElemDataRequests& dataReq)
 {
-  sierra::nalu::ElemDataRequestsGPU ngpDataReq(dataReq);
+  unsigned totalNumFields_guess = 10;
+  sierra::nalu::ElemDataRequestsGPU ngpDataReq(dataReq, totalNumFields_guess);
 
   unsigned numCorrectTests = 0;
   int threadsPerTeam = 1;

@@ -32,11 +32,9 @@ void gather_elem_node_tensor_field(const NGPDoubleFieldType& field,
                             const ngp::Mesh::ConnectedNodes& elemNodes,
                             SharedMemView<double***,DeviceShmem>& shmemView)
 {
-  if (numNodes!=(int)elemNodes.size())
-    NGP_ThrowRequireMsg(
+  NGP_ThrowRequireMsg(
       numNodes==(int)elemNodes.size(),
-      "gather_elem_node_tensor_field, numNodes = " + std::to_string(numNodes) +
-      "mismatch with elemNodes.size() = " + std::to_string(elemNodes.size()));
+      "gather_elem_node_tensor_field, numNodes = mismatch with elemNodes.size()"  );   
   for(int i=0; i<numNodes; ++i) {
     const double* dataPtr = static_cast<const double*>(&field.get(ngpMesh, elemNodes[i], 0));
     unsigned counter = 0;

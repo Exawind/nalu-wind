@@ -52,10 +52,9 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
 
   EXPECT_EQ(2u, dataReq.get_fields().size());
 
-  sierra::nalu::ElemDataRequestsGPU dataNGP(dataReq);
-
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
-  stk::mesh::Selector all_local = meta.universal_part() & meta.locally_owned_part();
+
+  sierra::nalu::ElemDataRequestsGPU dataNGP(dataReq, meta.get_fields().size());
 
   const int numNodes = elemTopo.num_nodes();
   const int rhsSize = numNodes;
@@ -65,8 +64,11 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   const unsigned pressureOrdinal = pressure->mesh_meta_data_ordinal();
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::calculate_shared_mem_bytes_per_thread(lhsSize, rhsSize, rhsSize,
-                                                                      meta.spatial_dimension(), dataNGP);
+  const int bytes_per_thread =
+    (sierra::nalu::calculate_shared_mem_bytes_per_thread(
+       lhsSize, rhsSize, rhsSize, meta.spatial_dimension(), dataNGP) +
+     (rhsSize + lhsSize) * sizeof(double) * sierra::nalu::simdLen) * 2;
+
   const bool interleaveMEViews = false;
 
   int numResults = 5;
@@ -77,18 +79,17 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   result.template sync<typename IntViewType::execution_space>();
 
   ngp::Mesh ngpMesh(bulk);
-  int totalNumFields = meta.get_fields().size();
 
   TestKernel testKernel(velocityOrdinal, pressureOrdinal);
 
-  int threadsPerTeam = 1;
-  auto team_exec = sierra::nalu::get_device_team_policy(ngpMesh.num_buckets(stk::topology::ELEM_RANK), bytes_per_team, bytes_per_thread, threadsPerTeam);
+  int threads_per_team = 1;
+  auto team_exec = sierra::nalu::get_device_team_policy(ngpMesh.num_buckets(stk::topology::ELEM_RANK), bytes_per_team, bytes_per_thread, threads_per_team);
 
   Kokkos::parallel_for(team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team)
   {
     const ngp::Mesh::BucketType& b = ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
 
-    sierra::nalu::ScratchViewsNGP<double> scrviews(team, ngpMesh.get_spatial_dimension(), totalNumFields, numNodes, dataNGP);
+    sierra::nalu::ScratchViewsNGP<double> scrviews(team, ngpMesh.get_spatial_dimension(), numNodes, dataNGP);
 
     sierra::nalu::SharedMemView<double**,ShmemType> simdlhs =
         sierra::nalu::get_shmem_view_2D<double,TeamType,ShmemType>(team, rhsSize, rhsSize);
@@ -131,3 +132,41 @@ TEST_F(Hex8MeshWithNSOFields, ScratchViews)
   do_the_test(bulk, pressure, velocity);
 }
 
+#ifdef KOKKOS_HAVE_CUDA
+
+using DeviceSpace = Kokkos::Cuda;
+using DeviceShmem = DeviceSpace::scratch_memory_space;
+using DynamicScheduleType = Kokkos::Schedule<Kokkos::Dynamic>;
+using DeviceTeamHandleType = Kokkos::TeamPolicy<DeviceSpace, DynamicScheduleType>::member_type;
+template <typename T, typename SHMEM>
+using SharedMemView = Kokkos::View<T, Kokkos::LayoutRight, SHMEM, Kokkos::MemoryUnmanaged>;
+
+void do_kokkos_test()
+{
+
+  const int bytes_per_team = 2048;
+  const int bytes_per_thread = 2048;
+  int threads_per_team = 1;
+  unsigned N = 1;
+
+  Kokkos::TeamPolicy<DeviceSpace> team_exec(N, threads_per_team);
+
+  Kokkos::parallel_for(
+    team_exec.set_scratch_size(
+      1, Kokkos::PerTeam(bytes_per_team), Kokkos::PerThread(bytes_per_thread)),
+    KOKKOS_LAMBDA(const DeviceTeamHandleType& team)
+    {
+      int len = 50;
+      SharedMemView<double*,DeviceShmem> shview =
+        Kokkos::subview(SharedMemView<double**,DeviceShmem>(
+                          team.team_scratch(1), team.team_size(), len),
+                        team.team_rank(), Kokkos::ALL());
+    });
+}
+
+TEST_F(Hex8MeshWithNSOFields, teamSize)
+{
+  do_kokkos_test();
+}
+
+#endif

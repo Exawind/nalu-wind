@@ -47,13 +47,14 @@ public:
   typedef Kokkos::View<NGPDoubleFieldType*, Kokkos::LayoutRight, MemSpace> FieldView;
   typedef Kokkos::View<FieldInfoNGP*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
-  ElemDataRequestsGPU(const ElemDataRequests& dataReq)
+  ElemDataRequestsGPU(const ElemDataRequests& dataReq, unsigned totalFields)
     : dataEnums(),
       hostDataEnums(),
       coordsFields_(),
       hostCoordsFields_(),
       coordsFieldsTypes_(),
       hostCoordsFieldsTypes_(),
+      totalNumFields(totalFields),
       fields(),
       hostFields(),
       meFC_(dataReq.get_cvfem_face_me()),
@@ -98,6 +99,9 @@ public:
 
   KOKKOS_FUNCTION
   const FieldInfoView& get_fields() const { return fields; }  
+
+  KOKKOS_FUNCTION
+  unsigned get_total_num_fields() const { return totalNumFields; }
 
   KOKKOS_FUNCTION
   MasterElement *get_cvfem_face_me() const {return meFC_;}
@@ -168,6 +172,7 @@ private:
   CoordsTypesView coordsFieldsTypes_;
   CoordsTypesView::HostMirror hostCoordsFieldsTypes_;
 
+  unsigned totalNumFields;
   FieldInfoView fields;
   FieldInfoView::HostMirror hostFields;
 

@@ -117,14 +117,12 @@ public:
   KOKKOS_FUNCTION
   ScratchViewsNGP(const TEAMHANDLETYPE& team,
                unsigned nDim,
-               unsigned totalNumFields,
                int nodesPerEntity,
                const ElemDataRequestsGPU& dataNeeded);
 
   KOKKOS_FUNCTION
   ScratchViewsNGP(const TEAMHANDLETYPE& team,
                unsigned nDim,
-               unsigned totalNumFields,
                const ScratchMeInfo &meInfo,
                const ElemDataRequestsGPU& dataNeeded);
 
@@ -158,8 +156,8 @@ public:
 
   ngp::Mesh::ConnectedNodes elemNodes;
 
-  KOKKOS_INLINE_FUNCTION       MultiDimViews<T>& get_field_views()       { return fieldViews; }
-  KOKKOS_INLINE_FUNCTION const MultiDimViews<T>& get_field_views() const { return fieldViews; }
+  KOKKOS_INLINE_FUNCTION       MultiDimViews<T,TEAMHANDLETYPE,SHMEM>& get_field_views()       { return fieldViews; }
+  KOKKOS_INLINE_FUNCTION const MultiDimViews<T,TEAMHANDLETYPE,SHMEM>& get_field_views() const { return fieldViews; }
 
 private:
   KOKKOS_FUNCTION
@@ -173,7 +171,7 @@ private:
                                           int nDim, int nodesPerFace, int nodesPerElem,
                                           int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 
-  MultiDimViews<T> fieldViews;
+  MultiDimViews<T,TEAMHANDLETYPE,SHMEM> fieldViews;
   MasterElementViews<T> meViews[MAX_COORDS_TYPES];
   bool hasCoordField[MAX_COORDS_TYPES] = {false, false};
   int num_bytes_required{0};
@@ -571,10 +569,9 @@ template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
 KOKKOS_FUNCTION
 ScratchViewsNGP<T,TEAMHANDLETYPE,SHMEM>::ScratchViewsNGP(const TEAMHANDLETYPE& team,
              unsigned nDim,
-             unsigned totalNumFields,
              int nodalGatherSize,
              const ElemDataRequestsGPU& dataNeeded)
- : fieldViews(team, totalNumFields, count_needed_field_views(dataNeeded))
+ : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
   /* master elements are allowed to be null if they are not required */
 //  MasterElement *meFC = dataNeeded.get_cvfem_face_me();
@@ -601,10 +598,9 @@ template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
 KOKKOS_FUNCTION
 ScratchViewsNGP<T,TEAMHANDLETYPE,SHMEM>::ScratchViewsNGP(const TEAMHANDLETYPE& team,
              unsigned nDim,
-             unsigned totalNumFields,
              const ScratchMeInfo &meInfo,
              const ElemDataRequestsGPU& dataNeeded)
- : fieldViews(team, totalNumFields, count_needed_field_views(dataNeeded))
+ : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
   create_needed_field_views(team, dataNeeded, meInfo.nodalGatherSize_);
   create_needed_master_element_views(team, dataNeeded, nDim, meInfo.nodesPerFace_, meInfo.nodesPerElement_, meInfo.numFaceIp_, meInfo.numScsIp_, meInfo.numScvIp_, meInfo.numFemIp_);
@@ -654,7 +650,9 @@ void ScratchViewsNGP<T,TEAMHANDLETYPE,SHMEM>::create_needed_field_views(const TE
       }
     }
     else {
-      NGP_ThrowRequireMsg(false,"Unknown stk-rank in ScratchViewsNGP<T,TEAMHANDLETYPE,SHMEM>::create_needed_field_views: " + std::to_string(fieldEntityRank));
+      NGP_ThrowRequireMsg(
+        false,
+        "Unknown stk-rank in ScratchViewsNGP<T,TEAMHANDLETYPE,SHMEM>::create_needed_field_views");
     }
   }
 
@@ -712,8 +710,10 @@ inline
 int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchIdsSize, int nDim,
                                       ElemDataRequestsGPU& dataNeededByKernels)
 {
-    int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int) +
-                           get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim);
+    int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int)
+                         + get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim)
+                         + MultiDimViews<double>::bytes_needed(dataNeededByKernels.get_total_num_fields(),
+                                                 count_needed_field_views(dataNeededByKernels));
     bytes_per_thread *= 2*simdLen;
     return bytes_per_thread;
 }
@@ -726,7 +726,11 @@ int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchI
 {
     int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int)
                          + sierra::nalu::get_num_bytes_pre_req_data<double>(faceDataNeeded, nDim)
-                         + sierra::nalu::get_num_bytes_pre_req_data<double>(elemDataNeeded, nDim, meInfo);
+                         + sierra::nalu::get_num_bytes_pre_req_data<double>(elemDataNeeded, nDim, meInfo)
+                         + MultiDimViews<double>::bytes_needed(faceDataNeeded.get_total_num_fields(),
+                                                 count_needed_field_views(faceDataNeeded))
+                         + MultiDimViews<double>::bytes_needed(elemDataNeeded.get_total_num_fields(),
+                                                 count_needed_field_views(elemDataNeeded));
     bytes_per_thread *= 2*simdLen;
     return bytes_per_thread;
 }
