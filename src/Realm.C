@@ -71,7 +71,6 @@
 
 // actuator line
 #include <Actuator.h>
-#include <ActuatorLinePointDrag.h>
 #ifdef NALU_USES_OPENFAST
 #include <ActuatorLineFAST.h>
 #endif
@@ -598,10 +597,6 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     if ( (*foundActuator[0])["actuator"]["type"] ) {
       const std::string ActuatorTypeName = (*foundActuator[0])["actuator"]["type"].as<std::string>() ;
       switch ( ActuatorTypeMap[ActuatorTypeName] ) {
-      case ActuatorType::ActLinePointDrag : {
-	actuator_ =  new ActuatorLinePointDrag(*this, *foundActuator[0]);
-	break;
-      }
       case ActuatorType::ActLineFAST : {
 #ifdef NALU_USES_OPENFAST
 	actuator_ =  new ActuatorLineFAST(*this, *foundActuator[0]);
