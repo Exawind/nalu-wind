@@ -194,7 +194,7 @@ ContinuityOpenElemKernel<BcAlgTraits>::execute(
     for ( int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic ) {
       const int faceNodeNumber = face_node_ordinals[ic];
       const DoubleType r = vf_shape_function_(ip,ic);
-      lhs(nearestNode,faceNodeNumber) += r*penaltyFac_*inverseLengthScale*aMag*pstabFac_ * projTimeScaleBip;
+      lhs(nearestNode,faceNodeNumber) += r*penaltyFac_*inverseLengthScale*aMag*pstabFac_ * projTimeScaleBip / projTimeScale_;
     }
     
     // element-based gradient; divide by projTimeScale
@@ -202,11 +202,11 @@ ContinuityOpenElemKernel<BcAlgTraits>::execute(
       DoubleType lhsFac = 0.0;
       for ( int j = 0; j < BcAlgTraits::nDim_; ++j )
         lhsFac += -v_dndx_lhs(ip,ic,j)*vf_exposedAreaVec(ip,j);
-      lhs(nearestNode,ic) += lhsFac*pstabFac_ * projTimeScaleBip;
+      lhs(nearestNode,ic) += lhsFac*pstabFac_ * projTimeScaleBip / projTimeScale_;
     }
     
     // residual
-    rhs(nearestNode) -= mdot;
+    rhs(nearestNode) -= mdot / projTimeScale_;
   }
 }
 

@@ -111,7 +111,7 @@ ContinuityInflowElemKernel<BcAlgTraits>::execute(
       mDot += (interpTogether_*w_rho_uBip[j] + om_interpTogether_*rhoBip*w_uBip[j])*vf_exposedAreaVec(ip,j);
     }
     
-    rhs(nearestNode) -= mDot;
+    rhs(nearestNode) -= mDot / projTimeScale_;
   } 
 }
 

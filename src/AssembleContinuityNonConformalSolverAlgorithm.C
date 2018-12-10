@@ -112,6 +112,11 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
   const double interpTogether = realm_.get_mdot_interp();
   const double om_interpTogether = 1.0-interpTogether;
 
+  // Classic Nalu projection timescale
+  const double dt = realm_.get_time_step();
+  const double gamma1 = realm_.get_gamma1();
+  const double tauScale = dt / gamma1;
+
   // space for LHS/RHS; nodesPerElem*nodesPerElem and nodesPerElem
   std::vector<double> lhs;
   std::vector<double> rhs;
@@ -608,11 +613,11 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
         
         // form residual
         const int nn = ipNodeMap[currentGaussPointId];
-        p_rhs[nn] -= mdot;
+        p_rhs[nn] -= mdot / tauScale;
 
         // set-up row for matrix
         const int rowR = nn*totalNodes;
-        double lhsFac = penaltyIp*c_amag;
+        double lhsFac = penaltyIp*c_amag / tauScale;
         
         // sensitivities; current face (penalty); use general shape function for this single ip
         meFCCurrent->general_shape_fcn(1, &currentIsoParCoords[0], &ws_c_general_shape_function[0]);
@@ -631,7 +636,7 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
             const double dndxj = p_c_dndx[offSetDnDx+j];
             lhscd -= dndxj*nxj;
           }
-          p_lhs[rowR+ic] += 0.5*lhscd*c_amag*includePstab_ * projTimeScaleIp;
+          p_lhs[rowR+ic] += 0.5*lhscd*c_amag*includePstab_ * projTimeScaleIp / tauScale;
         }
 
         // sensitivities; opposing face (penalty); use general shape function for this single ip
@@ -639,7 +644,7 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
         for ( int ic = 0; ic < opposingNodesPerFace; ++ic ) {
           const int icnn = o_face_node_ordinals[ic];
           const double r = p_o_general_shape_function[ic];
-          p_lhs[rowR+icnn+currentNodesPerElement] -= r*lhsFac * projTimeScaleIp;
+          p_lhs[rowR+icnn+currentNodesPerElement] -= r*lhsFac * projTimeScaleIp / tauScale;
         }
         
         // sensitivities; opposing element (diffusion)
@@ -651,7 +656,7 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
             const double dndxj = p_o_dndx[offSetDnDx+j];
             lhscd -= dndxj*nxj;
           }
-          p_lhs[rowR+ic+currentNodesPerElement] -= 0.5*lhscd*c_amag*includePstab_*projTimeScaleIp;
+          p_lhs[rowR+ic+currentNodesPerElement] -= 0.5*lhscd*c_amag*includePstab_*projTimeScaleIp / tauScale;
         }
 
         apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);

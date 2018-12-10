@@ -95,6 +95,11 @@ AssembleContinuityElemOpenSolverAlgorithm::execute()
   const double includeNOC 
     = (realm_.get_noc_usage(dofName) == true) ? 1.0 : 0.0;
 
+  // Classic Nalu projection timescale
+  const double dt = realm_.get_time_step();
+  const double gamma1 = realm_.get_gamma1();
+  const double tauScale = dt / gamma1;
+
   // extract global algorithm options, if active
   const double mdotCorrection = realm_.solutionOptions_->activateOpenMdotCorrection_ 
     ? realm_.solutionOptions_->mdotAlgOpenCorrection_
@@ -383,14 +388,14 @@ AssembleContinuityElemOpenSolverAlgorithm::execute()
 
         for ( int ic = 0; ic < nodesPerElement; ++ic ) {
           const double r = p_shape_function_lhs[offSetSF_elem+ic];
-          p_lhs[rowR+ic] += r*asq*inv_axdx*pstabFac * projTimeScaleBip;
+          p_lhs[rowR+ic] += r*asq*inv_axdx*pstabFac * projTimeScaleBip / tauScale;
         }
         
         // final mdot
         mdot += -projTimeScaleBip*((pBip-pScs)*asq*inv_axdx*pstabFac + noc*includeNOC*pstabFac);
 
         // residual
-        p_rhs[nearestNode] -= mdot;
+        p_rhs[nearestNode] -= mdot / tauScale;
       }
 
       apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);

@@ -90,6 +90,11 @@ AssembleContinuityElemSolverAlgorithm::execute()
   const double interpTogether = realm_.get_mdot_interp();
   const double om_interpTogether = 1.0-interpTogether;
 
+  // Classic Nalu projection timescale
+  const double dt = realm_.get_time_step();
+  const double gamma1 = realm_.get_gamma1();
+  const double tauScale = dt / gamma1;
+
   // space for LHS/RHS; nodesPerElem*nodesPerElem and nodesPerElem
   std::vector<double> lhs;
   std::vector<double> rhs;
@@ -306,10 +311,10 @@ AssembleContinuityElemSolverAlgorithm::execute()
           }
 
           // assemble to lhs; left
-          p_lhs[rowL+ic] += lhsfac * projTimeScaleIp;
+          p_lhs[rowL+ic] += lhsfac * projTimeScaleIp / tauScale;
 
           // assemble to lhs; right
-          p_lhs[rowR+ic] -= lhsfac * projTimeScaleIp;
+          p_lhs[rowR+ic] -= lhsfac * projTimeScaleIp / tauScale;
 
         }
 
@@ -321,8 +326,8 @@ AssembleContinuityElemSolverAlgorithm::execute()
         }
 
         // residual; left and right
-        p_rhs[il] -= mdot;
-        p_rhs[ir] += mdot;
+        p_rhs[il] -= mdot / tauScale;
+        p_rhs[ir] += mdot / tauScale;
       }
 
       // call supplemental

@@ -84,6 +84,11 @@ AssembleContinuityEdgeSolverAlgorithm::execute()
   const double nocFac
     = (realm_.get_noc_usage(dofName) == true) ? 1.0 : 0.0;
 
+  // Classic Nalu projection timescale
+  const double dt = realm_.get_time_step();
+  const double gamma1 = realm_.get_gamma1();
+  const double tauScale = dt / gamma1;
+
   // deal with interpolation procedure
   const double interpTogether = realm_.get_mdot_interp();
   const double om_interpTogether = 1.0-interpTogether;
@@ -188,7 +193,8 @@ AssembleContinuityEdgeSolverAlgorithm::execute()
           - kxj*GjIp*nocFac;
       }
 
-      const double lhsfac = -asq*inv_axdx*projTimeScale;
+      tmdot /= tauScale;
+      const double lhsfac = -asq*inv_axdx*projTimeScale / tauScale;
 
       /*
         lhs[0] = IL,IL; lhs[1] = IL,IR; IR,IL; IR,IR

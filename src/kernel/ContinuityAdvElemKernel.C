@@ -152,8 +152,8 @@ ContinuityAdvElemKernel<AlgTraits>::execute(
         lhsfac += -v_dndx_lhs(ip, ic, j) * v_scs_areav(ip, j) * projTimeScaleIP;
       }
 
-      lhs(il,ic) += lhsfac;
-      lhs(ir,ic) -= lhsfac;
+      lhs(il,ic) += lhsfac / projTimeScale_;
+      lhs(ir,ic) -= lhsfac / projTimeScale_;
     }
 
     // assemble mdot
@@ -164,8 +164,8 @@ ContinuityAdvElemKernel<AlgTraits>::execute(
     }
 
     // residuals
-    rhs(il) -= mdot;
-    rhs(ir) += mdot;
+    rhs(il) -= mdot / projTimeScale_;
+    rhs(ir) += mdot / projTimeScale_;
   }
 }
 

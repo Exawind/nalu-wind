@@ -87,6 +87,11 @@ AssembleContinuityEdgeOpenSolverAlgorithm::execute()
   const double nocFac
     = (realm_.get_noc_usage(dofName) == true) ? 1.0 : 0.0;
 
+  // Classic Nalu projection timescale
+  const double dt = realm_.get_time_step();
+  const double gamma1 = realm_.get_gamma1();
+  const double tauScale = dt / gamma1;
+
   // extract global algorithm options, if active
   const double mdotCorrection = realm_.solutionOptions_->activateOpenMdotCorrection_ 
     ? realm_.solutionOptions_->mdotAlgOpenCorrection_
@@ -238,10 +243,10 @@ AssembleContinuityEdgeOpenSolverAlgorithm::execute()
         }
 
         // rhs
-        p_rhs[nearestNode] -= tmdot;
+        p_rhs[nearestNode] -= tmdot / tauScale;
 
         // lhs right; IR, IL; IR, IR
-        double lhsfac = asq*inv_axdx*pstabFac*projTimeScale;
+        double lhsfac = asq*inv_axdx*pstabFac*projTimeScale / tauScale;
         p_lhs[rowR+nearestNode] += 0.5*lhsfac;
         p_lhs[rowR+opposingNode] += 0.5*lhsfac;
       }

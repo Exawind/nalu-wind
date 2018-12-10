@@ -115,7 +115,7 @@ ContinuityMassElemKernel<AlgTraits>::execute(
 
     const DoubleType scV = v_scv_volume(ip);
     rhs(nearestNode) += - ( gamma1_ * rhoNp1 + gamma2_ * rhoN +
-                            gamma3_ * rhoNm1 ) * scV / dt_ ;
+                            gamma3_ * rhoNm1 ) * scV / dt_ / projTimeScale;
 
     // manage LHS : N/A
   }
