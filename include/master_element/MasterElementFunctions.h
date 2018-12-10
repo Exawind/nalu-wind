@@ -375,7 +375,7 @@ namespace nalu {
   {
     static_assert(AlgTraits::nDim_ == 3, "3D method");
 
-    for (unsigned ip = 0; ip < numIntPoints; ++ip) {
+    for (int ip = 0; ip < numIntPoints; ++ip) {
 
       double jac[3][3] = { {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0} };
       for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
