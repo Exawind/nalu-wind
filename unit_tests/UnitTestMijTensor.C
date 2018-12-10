@@ -329,7 +329,7 @@ TEST(MijTensorNGP, hex27_simd) {
     const double *coords = stk::mesh::field_data(coordField, nodes[j]);
 
     DoubleType coordsDT[dim];
-    for (unsigned k = 0; k < dim; ++k)
+    for (int k = 0; k < dim; ++k)
       coordsDT[k] = coords[k];
 
     sierra::nalu::matvec33(QDT, coordsDT, &v_coords(j, 0));
