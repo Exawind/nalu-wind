@@ -5,6 +5,7 @@ project(Nalu CXX C Fortran)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ########################## OPTIONS #####################################
+option(ENABLE_CUDA "Enable build targeting GPU" OFF)
 option(ENABLE_TESTS "Enable regression testing." OFF)
 option(ENABLE_DOCUMENTATION "Build documentation." OFF)
 option(ENABLE_SPHINX_API_DOCS "Link Doxygen API docs to Sphinx" OFF)
@@ -68,6 +69,10 @@ if(YAML-CPP_FOUND)
   message("-- Found YAML-CPP = ${YAML_DIR}")
 else()
   message(FATAL_ERROR "YAML-CPP NOT FOUND")
+endif()
+
+if(ENABLE_CUDA)
+    add_definitions(-DUSE_STK_SIMD_NONE)
 endif()
 
 ############################ FFTW ######################################
@@ -143,6 +148,9 @@ if(ENABLE_EXTRA_WARNINGS)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")
+if (ENABLE_CUDA)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Trilinos_CXX_COMPILER_FLAGS}")
+endif()
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${EXTRA_Fortran_FLAGS}")
 
 if (OPENMP_FOUND)

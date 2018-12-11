@@ -28,6 +28,7 @@ add_sources(GlobalUnitSourceList
    UnitTestPecletFunction.C
    UnitTestQuadElementPromotion.C
    UnitTestRealm.C
+   UnitTestScratchViews.C
    UnitTestShmemAlignment.C
    UnitTestSideIsInElement.C
    UnitTestSideNodeOrdinals.C
