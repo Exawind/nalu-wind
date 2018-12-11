@@ -67,7 +67,7 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   const int bytes_per_thread =
     (sierra::nalu::calculate_shared_mem_bytes_per_thread(
        lhsSize, rhsSize, rhsSize, meta.spatial_dimension(), dataNGP) +
-     (rhsSize + lhsSize) * sizeof(double) * sierra::nalu::simdLen) * 2;
+     (rhsSize + lhsSize) * sizeof(double) * sierra::nalu::simdLen);
 
   const bool interleaveMEViews = false;
 
