@@ -71,6 +71,10 @@ else()
   message(FATAL_ERROR "YAML-CPP NOT FOUND")
 endif()
 
+if(ENABLE_CUDA)
+    add_definitions(-DUSE_STK_SIMD_NONE)
+endif()
+
 ############################ FFTW ######################################
 if(ENABLE_FFTW)
   set(CMAKE_PREFIX_PATH ${FFTW_DIR} ${CMAKE_PREFIX_PATH})
@@ -81,10 +85,6 @@ if(ENABLE_FFTW)
   include_directories(${FFTW_INCLUDE_DIRS})
   add_definitions("-DNALU_USES_FFTW")
 endif(ENABLE_FFTW)
-
-if(ENABLE_CUDA)
-    add_definitions(-DUSE_STK_SIMD_NONE)
-endif()
 
 ############################ HYPRE #####################################
 if(ENABLE_HYPRE)
