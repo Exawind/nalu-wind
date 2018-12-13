@@ -6,41 +6,30 @@
 /*------------------------------------------------------------------------*/
 
 
-// nalu
-#include <overset/AssembleOversetSolverConstraintAlgorithm.h>
-#include <EquationSystem.h>
+#include "overset/AssembleOversetWallDistAlgorithm.h"
+#include "EquationSystem.h"
+#include "FieldTypeDef.h"
+#include "LinearSystem.h"
+#include "Realm.h"
+#include "SolverAlgorithm.h"
+#include "TimeIntegrator.h"
+#include "master_element/MasterElement.h"
+#include "overset/OversetManager.h"
+#include "overset/OversetInfo.h"
 
-#include <LinearSystem.h>
-#include <Realm.h>
-#include <TimeIntegrator.h>
+#include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/Field.hpp"
+#include "stk_mesh/base/FieldParallel.hpp"
+#include "stk_mesh/base/GetEntities.hpp"
+#include "stk_mesh/base/MetaData.hpp"
+#include "stk_mesh/base/Part.hpp"
 
-// master element
-#include <master_element/MasterElement.h>
-
-// overset
-#include <overset/OversetManager.h>
-#include <overset/OversetInfo.h>
-
-// stk_mesh/base/fem
-#include <stk_mesh/base/BulkData.hpp>
-#include <stk_mesh/base/Field.hpp>
-#include <stk_mesh/base/FieldParallel.hpp>
-#include <stk_mesh/base/GetEntities.hpp>
-#include <stk_mesh/base/MetaData.hpp>
-#include <stk_mesh/base/Part.hpp>
+#include <cmath>
 
 namespace sierra{
 namespace nalu{
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// AssembleOversetSolverConstraintAlgorithm - add LHS/RHS for scalar
-//==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
-AssembleOversetSolverConstraintAlgorithm::AssembleOversetSolverConstraintAlgorithm(
+AssembleOversetWallDistAlgorithm::AssembleOversetWallDistAlgorithm(
   Realm &realm,
   stk::mesh::Part *part,
   EquationSystem *eqSystem,
@@ -49,22 +38,15 @@ AssembleOversetSolverConstraintAlgorithm::AssembleOversetSolverConstraintAlgorit
 {}
 
 void
-AssembleOversetSolverConstraintAlgorithm::execute()
+AssembleOversetWallDistAlgorithm::execute()
 {
   // first thing to do is to zero out the row (lhs and rhs)
   prepare_constraints();
-
-  // Turn off diagonal extraction when using (1/diagA) formulation
-  eqSystem_->extractDiagonal_ = false;
 
   // extract the rank
   const int theRank = NaluEnv::self().parallel_rank();
 
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
-
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
-  const double tauScale = gamma1 / dt;
 
   // space for LHS/RHS (nodesPerElem+1)*numDof*(nodesPerElem+1)*numDof; (nodesPerElem+1)*numDof
   std::vector<double> lhs;
@@ -75,10 +57,10 @@ AssembleOversetSolverConstraintAlgorithm::execute()
 
   // master element data
   std::vector <double > ws_general_shape_function;
- 
+
   // interpolate nodal values to point-in-elem
   const int sizeOfDof = eqSystem_->linsys_->numDof();
- 
+
   // size interpolated value
   std::vector<double> qNp1Orphan(sizeOfDof, 0.0);
 
@@ -99,13 +81,14 @@ AssembleOversetSolverConstraintAlgorithm::execute()
 
     // extract the owning rank for this node
     const int nodeRank = bulkData.parallel_owner_rank(orphanNode);
-    
-    // check to see if this node is locally owned by this rank; we only want to process locally owned nodes, not shared
-    if ( theRank != nodeRank )
+
+    // check to see if this node is locally owned by this rank; we only want to
+    // process locally owned nodes, not shared
+    if (theRank != nodeRank)
       continue;
 
     const double* dVol = stk::mesh::field_data(*dualNodalVolume_, orphanNode);
-    const double multFac = tauScale * dVol[0];
+    const double multFac = std::cbrt(dVol[0]);
 
     // get master element type for this contactInfo
     MasterElement *meSCS  = infoObject->meSCS_;
@@ -123,13 +106,13 @@ AssembleOversetSolverConstraintAlgorithm::execute()
     scratchVals.resize(rhsSize);
     connected_nodes.resize(npePlusOne);
 
-    // algorithm related; element 
+    // algorithm related; element
     ws_general_shape_function.resize(nodesPerElement);
-   
+
     // pointer to lhs/rhs
     double *p_lhs = &lhs[0];
     double *p_rhs = &rhs[0];
-    
+
     // zeroing of lhs/rhs
     for ( int k = 0; k < lhsSize; ++k ) {
       p_lhs[k] = 0.0;
@@ -137,47 +120,48 @@ AssembleOversetSolverConstraintAlgorithm::execute()
     for ( int k = 0; k < rhsSize; ++k ) {
       p_rhs[k] = 0.0;
     }
-    
+
     // extract nodal value for scalarQ
     const double *qNp1Nodal = (double *)stk::mesh::field_data(*fieldQ_, orphanNode);
-    
+
     stk::mesh::Entity const* elem_node_rels = bulkData.begin_nodes(owningElement);
     const int num_nodes = bulkData.num_nodes(owningElement);
 
-    // now load the elemental values for future interpolation; fill in connected nodes; first connected node is orhpan
+    // now load the elemental values for future interpolation; fill in connected
+    // nodes; first connected node is orhpan
     connected_nodes[0] = orphanNode;
-    for ( int ni = 0; ni < num_nodes; ++ni ) {
+    for (int ni = 0; ni < num_nodes; ++ni) {
       stk::mesh::Entity node = elem_node_rels[ni];
-      connected_nodes[ni+1] = node;
+      connected_nodes[ni + 1] = node;
 
-      const double *qNp1 = (double *)stk::mesh::field_data(*fieldQ_, node );
-      for ( int i = 0; i < sizeOfDof; ++i ) {
-        elemNodalQ[i*nodesPerElement + ni] = qNp1[i];
+      const double* qNp1 = (double*)stk::mesh::field_data(*fieldQ_, node);
+      for (int i = 0; i < sizeOfDof; ++i) {
+        elemNodalQ[i * nodesPerElement + ni] = qNp1[i];
       }
     }
 
     // interpolate dof to elemental ips (assigns qNp1)
     meSCS->interpolatePoint(
-      sizeOfDof,
-      &(infoObject->isoParCoords_[0]),
-      &elemNodalQ[0],
+      sizeOfDof, &(infoObject->isoParCoords_[0]), &elemNodalQ[0],
       &qNp1Orphan[0]);
-    
+
     // lhs; extract general shape function
-    meSCS->general_shape_fcn(1, &(infoObject->isoParCoords_[0]), &ws_general_shape_function[0]);
+    meSCS->general_shape_fcn(
+      1, &(infoObject->isoParCoords_[0]), &ws_general_shape_function[0]);
 
     // rhs; orphan node is defined to be the zeroth connected node
-    for ( int i = 0; i < sizeOfDof; ++i) {
+    for (int i = 0; i < sizeOfDof; ++i) {
       const int rowOi = i * npePlusOne * sizeOfDof;
       const double residual = qNp1Nodal[i] - qNp1Orphan[i];
       p_rhs[i] = -residual * multFac;
 
-      // row is zero by design (first connected node is the orphan node); assign it fully
-      p_lhs[rowOi+i] = multFac;
+      // row is zero by design (first connected node is the orphan node); assign
+      // it fully
+      p_lhs[rowOi + i] = multFac;
 
-      for ( int ic = 0; ic < nodesPerElement; ++ic ) {
-        const int indexR = i + sizeOfDof*(ic+1);
-        const int rOiR = rowOi+indexR;
+      for (int ic = 0; ic < nodesPerElement; ++ic) {
+        const int indexR = i + sizeOfDof * (ic + 1);
+        const int rOiR = rowOi + indexR;
         p_lhs[rOiR] -= ws_general_shape_function[ic] * multFac;
       }
     }

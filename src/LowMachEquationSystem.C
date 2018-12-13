@@ -190,6 +190,7 @@
 #include <user_functions/KovasznayPressureAuxFunction.h>
 
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
+#include <overset/AssembleOversetPressureAlgorithm.h>
 
 #include <user_functions/OneTwoTenVelocityAuxFunction.h>
 
@@ -2520,6 +2521,7 @@ MomentumEquationSystem::assemble_and_solve(
   auto& meta = realm_.meta_data();
   auto& bulk = realm_.bulk_data();
 
+  extractDiagonal_ = (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV);
   // Reset timescale field before momentum solve
   {
     double projTimeScale = 0.0;
@@ -2584,6 +2586,8 @@ MomentumEquationSystem::assemble_and_solve(
       realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)
     stk::mesh::communicate_field_data(
       *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
+  if (realm_.hasOverset_)
+    realm_.overset_orphan_node_field_update(Udiag_, 1, 1);
 }
 
 //==========================================================================
@@ -3683,6 +3687,23 @@ ContinuityEquationSystem::compute_projected_nodal_gradient()
   }
   else {
     projectedNodalGradEqs_->solve_and_update_external();
+  }
+}
+
+void
+ContinuityEquationSystem::create_constraint_algorithm(
+  stk::mesh::FieldBase* theField)
+{
+  const AlgorithmType algType = OVERSET;
+
+  auto it = solverAlgDriver_->solverConstraintAlgMap_.find(algType);
+  if (it == solverAlgDriver_->solverConstraintAlgMap_.end()) {
+    AssembleOversetPressureAlgorithm* theAlg
+      = new AssembleOversetPressureAlgorithm(realm_, nullptr, this, theField);
+    solverAlgDriver_->solverConstraintAlgMap_[algType] = theAlg;
+  } else {
+    throw std::runtime_error("ContinuityEquationSystem::register_overset_bc: "
+                             "Multiple invocations of overset is not allowed");
   }
 }
 

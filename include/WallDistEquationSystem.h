@@ -63,6 +63,8 @@ public:
 
   virtual void register_overset_bc();
 
+  virtual void create_constraint_algorithm(stk::mesh::FieldBase*);
+
   void solve_and_update();
 
   void initialize();

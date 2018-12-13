@@ -6,8 +6,8 @@
 /*------------------------------------------------------------------------*/
 
 
-#ifndef AssembleOversetSolverConstraintAlgorithm_h
-#define AssembleOversetSolverConstraintAlgorithm_h
+#ifndef AssembleOversetWallDistAlgorithm_h
+#define AssembleOversetWallDistAlgorithm_h
 
 #include "overset/OversetConstraintBase.h"
 
@@ -23,24 +23,27 @@ namespace nalu{
 
 class Realm;
 
-class AssembleOversetSolverConstraintAlgorithm : public OversetConstraintBase
+/** Populate the Continuity linear system for the overset constraint rows
+ *
+ *  This algorithm will reset the fringe rows for the pressure Poisson solve and
+ *  populate them with the interpolation coefficients based on the donor
+ *  element. The constraint equation is scaled by the projection time scale and
+ *  dual nodal volume to make this row well behaved compared to its neighbors.
+ *
+ */
+class AssembleOversetWallDistAlgorithm : public OversetConstraintBase
 {
 public:
 
-  AssembleOversetSolverConstraintAlgorithm(
+  AssembleOversetWallDistAlgorithm(
     Realm &realm,
     stk::mesh::Part *part,
     EquationSystem *eqSystem,
     stk::mesh::FieldBase *fieldQ);
 
-  virtual ~AssembleOversetSolverConstraintAlgorithm() = default;
+  virtual ~AssembleOversetWallDistAlgorithm() = default;
 
   virtual void execute();
-
-private:
-  AssembleOversetSolverConstraintAlgorithm() = delete;
-  AssembleOversetSolverConstraintAlgorithm(
-    const AssembleOversetSolverConstraintAlgorithm&) = delete;
 };
 
 } // namespace nalu

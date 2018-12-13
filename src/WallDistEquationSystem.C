@@ -41,6 +41,7 @@
 #include "kernel/KernelBuilder.h"
 
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
+#include "overset/AssembleOversetWallDistAlgorithm.h"
 
 #include "stk_mesh/base/Part.hpp"
 #include "stk_mesh/base/MetaData.hpp"
@@ -493,6 +494,23 @@ WallDistEquationSystem::compute_wall_distance()
       *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
   if (realm_.hasOverset_)
     realm_.overset_orphan_node_field_update(wallDistance_, 1, 1);
+}
+
+void
+WallDistEquationSystem::create_constraint_algorithm(
+  stk::mesh::FieldBase* theField)
+{
+  const AlgorithmType algType = OVERSET;
+
+  auto it = solverAlgDriver_->solverConstraintAlgMap_.find(algType);
+  if (it == solverAlgDriver_->solverConstraintAlgMap_.end()) {
+    AssembleOversetWallDistAlgorithm* theAlg
+      = new AssembleOversetWallDistAlgorithm(realm_, nullptr, this, theField);
+    solverAlgDriver_->solverConstraintAlgMap_[algType] = theAlg;
+  } else {
+    throw std::runtime_error("WallDistEquationSystem::register_overset_bc: "
+                             "Multiple invocations of overset is not allowed");
+  }
 }
 
 }  // nalu
