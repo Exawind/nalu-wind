@@ -64,7 +64,7 @@ public:
     stk::mesh::Part *part,
     EquationSystem *eqSystem, std::vector<int>& grid_dims_,
     std::vector<int>& horiz_bcs_, double z_sample_);
-  virtual ~AssembleMomentumEdgeABLTopBC() {}
+  virtual ~AssembleMomentumEdgeABLTopBC();
   virtual void initialize_connectivity();
 
   /** Main function to compute and set the boundary values.
