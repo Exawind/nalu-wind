@@ -2156,7 +2156,7 @@ MomentumEquationSystem::register_abltop_bc(
     //       faceElemSolverAlg->elemDataNeeded_);
     // }
     throw std::runtime_error("MomentumEqSys: Consolidated algorithm not "
-                             "supported at this time for ABL Top BC.")
+                             "supported at this time for ABL Top BC.");
   }
 #else
   throw std::runtime_error(
