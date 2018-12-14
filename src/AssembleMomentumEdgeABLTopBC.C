@@ -63,6 +63,32 @@ AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
   bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "cont_velocity_bc");
 }
 
+AssembleMomentumEdgeABLTopBC::~AssembleMomentumEdgeABLTopBC()
+{
+  switch (horizBCType_) {
+  case 0:
+    fftw_destroy_plan(planFourier2dF_);
+    fftw_destroy_plan(planFourier2dB_);
+    break;
+
+  case 1:
+    fftw_destroy_plan(planSinx_);
+    fftw_destroy_plan(planCosx_);
+    fftw_destroy_plan(planFourieryF_);
+    fftw_destroy_plan(planFourieryB_);
+    break;
+
+  case 3:
+    fftw_destroy_plan(planSinx_);
+    fftw_destroy_plan(planCosx_);
+    fftw_destroy_plan(planSiny_);
+    fftw_destroy_plan(planCosy_);
+    break;
+  }
+
+  fftw_cleanup();
+}
+
 //--------------------------------------------------------------------------
 //-------- initialize_connectivity -----------------------------------------
 //--------------------------------------------------------------------------
@@ -269,9 +295,10 @@ AssembleMomentumEdgeABLTopBC::initialize()
       fftw_plan_r2r_1d(ny+1, work.data(), work.data(), FFTW_REDFT00, flags);
     break;
     default:
-      printf("%s\n","BC not yet implemented");
-      exit(0);
-  }
+      throw std::runtime_error(
+        "AssembleMomentumEdgeABLTopBC::initialize(): Invalid value for "
+        "horizBCType_. Must be 0, 1, or 3.");
+    }
 
   // Determine the vertical mesh distribution by sampling at the middle
   // of the ix=0 face.
