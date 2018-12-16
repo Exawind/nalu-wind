@@ -43,19 +43,30 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
-  Realm &realm,
-  stk::mesh::Part *part,
-  EquationSystem *eqSystem, std::vector<int>& grid_dims, 
-  std::vector<int>& horiz_bcs, double z_sample)
+  Realm& realm,
+  stk::mesh::Part* part,
+  EquationSystem* eqSystem,
+  std::vector<int>& grid_dims,
+  std::vector<int>& horiz_bcs,
+  double z_sample)
   : SolverAlgorithm(realm, part, eqSystem),
-  imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2]), 
-  xInflowWeight_(jmax_), yInflowWeight_(imax_),
-  nodeMapSamp_(imax_*jmax_), nodeMapBC_(imax_*jmax_), nodeMapM1_(imax_*jmax_),
-  nodeMapXInflow_(jmax_), nodeMapYInflow_(imax_),
-  indexMapSampGlobal_(imax_*jmax_), indexMapBC_(imax_*jmax_),
-  sampleDistrib_(1000), displ_(1000+1), 
-  horizBC_(horiz_bcs.begin(),horiz_bcs.end()), zSample_(z_sample),
-  needToInitialize_(true)
+    imax_(grid_dims[0]),
+    jmax_(grid_dims[1]),
+    kmax_(grid_dims[2]),
+    xInflowWeight_(jmax_),
+    yInflowWeight_(imax_),
+    nodeMapSamp_(imax_ * jmax_),
+    nodeMapBC_(imax_ * jmax_),
+    nodeMapM1_(imax_ * jmax_),
+    nodeMapXInflow_(jmax_),
+    nodeMapYInflow_(imax_),
+    indexMapSampGlobal_(imax_ * jmax_),
+    indexMapBC_(imax_ * jmax_),
+    sampleDistrib_(realm.bulk_data().parallel_size()),
+    displ_(realm.bulk_data().parallel_size()),
+    horizBC_(horiz_bcs.begin(), horiz_bcs.end()),
+    zSample_(z_sample),
+    needToInitialize_(true)
 {
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -397,7 +408,8 @@ AssembleMomentumEdgeABLTopBC::initialize()
       stk::mesh::Entity nodeSamp =
         bulk_data.get_entity(stk::topology::NODE_RANK,IdNodeSamp);
 
-      if (bulk_data.is_valid(nodeSamp)) {
+      if (bulk_data.is_valid(nodeSamp) &&
+          bulk_data.bucket(nodeSamp).owned()) {
         nodeMapSamp_[count] = nodeSamp;
         indexMapSamp[count] = iy*nx + ix;
         count ++;
@@ -433,7 +445,8 @@ AssembleMomentumEdgeABLTopBC::initialize()
       stk::mesh::Entity nodeM1 =
         bulk_data.get_entity(stk::topology::NODE_RANK,IdNodeM1);
 
-      if (bulk_data.is_valid(nodeBC)) {
+      if (bulk_data.is_valid(nodeBC) &&
+          bulk_data.bucket(nodeBC).owned()) {
         nodeMapBC_[ count] = nodeBC;
         nodeMapM1_[ count] = nodeM1;
         indexMapBC_[count] = iy*imax_ + ix;
@@ -577,9 +590,12 @@ AssembleMomentumEdgeABLTopBC::initialize()
                 MPI_INT, bulk_data.parallel());
 
   displ_[0] = 0;
+  size_t globalSize = 0;
   for (i=1; i<nprocs+1; ++i) { 
     displ_[i] = displ_[i-1] + sampleDistrib_[i-1];
+    globalSize += sampleDistrib_[i-1];
   }
+  indexMapSampGlobal_.resize(globalSize);
 
   MPI_Allgatherv(indexMapSamp.data(), nSamp, MPI_INT, 
                  indexMapSampGlobal_.data(), sampleDistrib_.data(), 
