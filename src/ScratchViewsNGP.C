@@ -349,10 +349,10 @@ void fill_pre_req_data(
   ScratchViewsNGP<double,DeviceTeamHandleType,DeviceShmem>& prereqData,
   bool fillMEViews)
 {
-  MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
-  MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
-  MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
-  MasterElement *meFEM = dataNeeded.get_fem_volume_me();
+  //MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
+  //MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
+  //MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
+  //MasterElement *meFEM = dataNeeded.get_fem_volume_me();
 
   stk::mesh::FastMeshIndex entityIndex = ngpMesh.fast_mesh_index(entity);
   prereqData.elemNodes = ngpMesh.get_nodes(entityRank, entityIndex);
@@ -404,7 +404,7 @@ void fill_pre_req_data(
       NGP_ThrowRequireMsg(false,"Unknown stk-rank in ScratchViewsNGP.C::fill_pre_req_data" );
     }
   } 
-
+/*
   if (fillMEViews)
   {
     const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
@@ -420,8 +420,10 @@ void fill_pre_req_data(
 //      meData.fill_master_element_views(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM);
     }
   }
+*/
 }
 
+/*
 void fill_master_element_views(
   ElemDataRequestsGPU& dataNeeded,
   ScratchViewsNGP<DoubleType>& prereqData,
@@ -445,7 +447,7 @@ void fill_master_element_views(
 //      meData.fill_master_element_views_new_me(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM, faceOrdinal);
     }
 }
-
+*/
 }
 }
 
