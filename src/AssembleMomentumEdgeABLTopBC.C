@@ -63,7 +63,7 @@ AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
     indexMapSampGlobal_(imax_ * jmax_),
     indexMapBC_(imax_ * jmax_),
     sampleDistrib_(realm.bulk_data().parallel_size()),
-    displ_(realm.bulk_data().parallel_size()),
+    displ_(realm.bulk_data().parallel_size()+1),
     horizBC_(horiz_bcs.begin(), horiz_bcs.end()),
     zSample_(z_sample),
     needToInitialize_(true)

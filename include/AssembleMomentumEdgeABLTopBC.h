@@ -33,7 +33,7 @@
 
 #include<SolverAlgorithm.h>
 #include<FieldTypeDef.h>
-#include<complex.h> // Must proceed fftw3.h in order to get native c complex
+#include<complex> // Must proceed fftw3.h in order to get native c complex
 #include<fftw3.h>
 
 namespace stk {
