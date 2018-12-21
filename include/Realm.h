@@ -50,7 +50,7 @@ class Algorithm;
 class AlgorithmDriver;
 class AuxFunctionAlgorithm;
 class ComputeGeometryAlgorithmDriver;
-// class OversetManager;
+
 class NonConformalManager;
 class ErrorIndicatorAlgorithmDriver;
 #if defined (NALU_USES_PERCEPT)
@@ -68,6 +68,7 @@ class MasterElement;
 class PropertyEvaluator;
 class HDF5FilePtr;
 class Transfer;
+class MeshMotionAlg;
 
 class SolutionNormPostProcessing;
 class TurbulenceAveragingPostProcessing;
@@ -151,7 +152,6 @@ class Realm {
   void delete_edges();
   void commit();
 
-  void process_mesh_motion();
   void compute_centroid_on_parts(
     std::vector<std::string> partNames,
     std::vector<double> &centroid);
@@ -167,20 +167,8 @@ class Realm {
   // overset boundary condition requires elemental field registration
   bool query_for_overset();
 
-  void set_omega(
-    stk::mesh::Part *targetPart,
-    double omega);
-  void set_current_displacement(
-    stk::mesh::Part *targetPart,
-    const std::vector<double> &centroidCoords,
-    const std::vector<double> &unitVec);
   void set_current_coordinates(
     stk::mesh::Part *targetPart);
-  void set_mesh_velocity(
-    stk::mesh::Part *targetPart,
-    const std::vector<double> &centroidCoords,
-    const std::vector<double> &unitVec);
-  void mesh_velocity_cross_product(double *o, double *c, double *u);
 
   // non-conformal-like algorithm suppoer
   void initialize_non_conformal();
@@ -438,6 +426,7 @@ class Realm {
   Actuator *actuator_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
+  MeshMotionAlg* meshMotionAlg_{nullptr};
 
   std::vector<Algorithm *> propertyAlg_;
   std::map<PropertyIdentifier, ScalarFieldType *> propertyMap_;

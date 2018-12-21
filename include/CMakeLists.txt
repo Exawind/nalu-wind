@@ -134,7 +134,6 @@ add_sources(GlobalHeaderList
    MassFractionEquationSystem.h
    MaterialProperty.h
    MaterialPropertys.h
-   MeshMotionInfo.h
    MixtureFractionEquationSystem.h
    MomentumABLForceSrcNodeSuppAlg.h
    MomentumActuatorSrcNodeSuppAlg.h

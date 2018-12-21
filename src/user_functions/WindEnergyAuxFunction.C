@@ -7,7 +7,6 @@
 
 
 #include <user_functions/WindEnergyAuxFunction.h>
-#include <MeshMotionInfo.h>
 #include <PecletFunction.h>
 #include <Realm.h>
 #include <SolutionOptions.h>
@@ -40,24 +39,37 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
     tanhFunction_ = new TanhFunction<double>(c1, c2);
   }
 
-  // extract mesh info 
   if (theStringParams.size() < 1 )
     throw std::runtime_error("Wind_energy user function requires at least one string parameter");
-  const std::string meshMotionBlockName = theStringParams[0];
 
-  // find the mesh motion info object
-  std::map<std::string, MeshMotionInfo *>::const_iterator iterFind;
-  MeshMotionInfo *meshInfo = NULL;
-  iterFind = realm.solutionOptions_->meshMotionInfoMap_.find(meshMotionBlockName);
-  if ( iterFind != realm.solutionOptions_->meshMotionInfoMap_.end() )
-    meshInfo = iterFind->second;
-  else 
-    throw std::runtime_error("WindEnergyAuxFunction::error() Can not find mesh motion block name " + meshMotionBlockName);       
-  
-  // set the data; generalize for 2D and 3D
-  const double mmOmega = meshInfo->omega_;
-  std::vector<double> unitVec = meshInfo->unitVec_;
-  std::vector<double> centroid = meshInfo->centroid_;
+  // get yaml mesh motion node
+  const YAML::Node& meshMotionNode = realm.solutionOptions_->meshMotionNode_;
+  const int numMotion = meshMotionNode.size();
+
+  // declare temporary variables
+  std::string motionName;
+  YAML::Node motionNode;
+
+  for ( size_t i = 0; i < numMotion; ++i ) {
+    get_required( meshMotionNode[i], "name", motionName );
+    if ( motionName == theStringParams[0] ) {
+      motionNode = meshMotionNode[i];
+      break;
+    }
+  }
+
+  if( motionName.empty() )
+    throw std::runtime_error("WindEnergyAuxFunction::error() Can not find mesh motion name " + theStringParams[0]);
+
+  // extract omega, unit vector, and centroid
+  double mmOmega;
+  get_required(motionNode, "omega", mmOmega);
+  std::vector<double> unitVec;
+  get_required(motionNode, "unit_vector", unitVec);
+  std::vector<double> centroid;
+  get_required(motionNode, "centroid_coordinates", centroid);
+
+  // fill member variables
   for ( size_t i = 0; i < 3; ++i ) {
     omegaMM_[i] = mmOmega*unitVec[i];
     centroidMM_[i] = centroid[i];
