@@ -60,6 +60,8 @@ void FrameInertial::update_coordinates_velocity(const double time)
 
 void FrameInertial::compute_transformation(const double time)
 {
+  inertialFrame_ = refFrame_;
+
   for (auto& mm: meshMotionVec_)
   {
     // build and get transformation matrix
