@@ -51,6 +51,9 @@ public:
   const transMatType& get_trans_mat() const {
     return transMat_; }
 
+  void set_computed_centroid( std::vector<double>& centroid ) {
+    std::copy_n(centroid.begin(), threeDVecSize, computedCentroid_.begin()); };
+
   static const transMatType identityMat_;
 
 protected:
@@ -63,6 +66,13 @@ protected:
    * allowing representation of all affine transformations
    */
   transMatType transMat_ = identityMat_;
+
+  /** Computed centroid
+   *
+   * A 3x1 vector storing the centroid computed respective
+   * to a collection of parts defined in the input file
+   */
+  threeDVecType computedCentroid_;
 
   double startTime_{0.0};
   double endTime_{DBL_MAX};

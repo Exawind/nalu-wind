@@ -2,16 +2,18 @@
 #define MESHMOTIONALG_H
 
 #include "FrameBase.h"
+#include "Realm.h"
 
 namespace sierra{
 namespace nalu{
+
+class Realm;
 
 class MeshMotionAlg
 {
 public:
   MeshMotionAlg(
-    stk::mesh::MetaData&,
-    stk::mesh::BulkData&,
+    Realm&,
     const YAML::Node&);
 
   ~MeshMotionAlg() {}
@@ -25,6 +27,13 @@ private:
   MeshMotionAlg(const MeshMotionAlg&) = delete;
 
   void load(const YAML::Node&);
+
+  void post_load();
+
+  void compute_set_centroid();
+
+  //! Reference to the realm
+  Realm& realm_;
 
   //! Reference to the STK Mesh MetaData object
   stk::mesh::MetaData& meta_;

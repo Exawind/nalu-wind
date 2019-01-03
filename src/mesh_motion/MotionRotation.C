@@ -30,14 +30,16 @@ void MotionRotation::load(const YAML::Node& node)
     useOmega_ = false;
     angle_ = node["angle"].as<double>();
   }
-  // ensure only 1 of omega or angle is specified
-  assert((node["omega"]>eps_) + (node["angle"]>eps_) == 1);
 
   axis_ = node["axis"].as<threeDVecType>();
-  origin_ = node["origin"].as<threeDVecType>();
 
-  assert(axis_.size() == threeDVecSize);
-  assert(origin_.size() == threeDVecSize);
+  // get origin based on if it was defined or is to be computed
+  if( !computedCentroid_.empty() )
+    origin_ = computedCentroid_;
+  else if( node["origin"] )
+    origin_ = node["origin"].as<threeDVecType>();
+  else
+    throw std::runtime_error("MotionRotation: Origin/centroid not set");
 }
 
 void MotionRotation::build_transformation(

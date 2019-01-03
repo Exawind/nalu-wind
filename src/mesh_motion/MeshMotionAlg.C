@@ -10,16 +10,17 @@ namespace sierra{
 namespace nalu{
 
 MeshMotionAlg::MeshMotionAlg(
-stk::mesh::MetaData& meta,
-stk::mesh::BulkData& bulk,
+Realm& realm,
 const YAML::Node& node
-) : meta_(meta),
-    bulk_(bulk)
+) : realm_(realm),
+    meta_(*realm.metaData_),
+    bulk_(*realm.bulkData_)
 {
   if( meta_.spatial_dimension() != 3 )
-    throw std::runtime_error("MeshMotion: Mesh motion is set up for only 3D meshes");
+    throw std::runtime_error("MeshMotion: Mesh motion is set up exclusively for 3D meshes");
 
   load(node);
+  post_load();
 }
 
 void MeshMotionAlg::load(const YAML::Node& node)
@@ -60,6 +61,12 @@ void MeshMotionAlg::load(const YAML::Node& node)
   }
 }
 
+void MeshMotionAlg::post_load()
+{
+  // compute centroid for all parts as requested in input file
+  compute_set_centroid();
+}
+
 void MeshMotionAlg::initialize( const double time )
 {
   for (int i=0; i < frameVec_.size(); i++)
@@ -83,6 +90,33 @@ void MeshMotionAlg::execute(const double time)
   for (int i=0; i < frameVec_.size(); i++)
     if( !frameVec_[i]->is_inertial() )
       frameVec_[i]->update_coordinates_velocity(time);
+}
+
+void MeshMotionAlg::compute_set_centroid()
+{
+  std::vector<std::string> partsForCentroid;
+
+  // collect all parts associated with frames instructed to compute their own centroids
+  for (int i=0; i < frameVec_.size(); i++)
+  {
+    if( frameVec_[i]->compute_centroid() )
+    {
+      std::vector<std::string> frameParts = frameVec_[i]->get_part_names();
+      partsForCentroid.insert( partsForCentroid.end(), frameParts.begin(), frameParts.end() );
+    }
+  }
+
+  /// A 3x1 vector that defines the centroid of a collection of parts
+  std::vector<double> computedCentroid;
+
+  // compute centroid only if any part was instructed to do so
+  if(partsForCentroid.size() > 0)
+    realm_.compute_centroid_on_parts( partsForCentroid, computedCentroid );
+
+  // set the centroid for relevant frames
+  for (int i=0; i < frameVec_.size(); i++)
+    if( frameVec_[i]->compute_centroid() )
+      frameVec_[i]->set_computed_centroid(computedCentroid);
 }
 
 } // nalu

@@ -30,11 +30,14 @@ void MotionScaling::load(const YAML::Node& node)
     useVelocity_ = false;
     factor_ = node["factor"].as<threeDVecType>();
   }
-  // ensure only 1 of velocity or displacement vector is specified
-  assert(velocity_.size() + factor_.size() == threeDVecSize);
 
-  origin_ = node["origin"].as<threeDVecType>();
-  assert(origin_.size() == threeDVecSize);
+  // get origin based on if it was defined or is to be computed
+  if( !computedCentroid_.empty() )
+    origin_ = computedCentroid_;
+  else if( node["origin"] )
+    origin_ = node["origin"].as<threeDVecType>();
+  else
+    throw std::runtime_error("MotionScaling: Origin/centroid not set");
 }
 
 void MotionScaling::build_transformation(

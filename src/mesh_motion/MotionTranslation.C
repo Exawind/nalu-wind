@@ -30,8 +30,6 @@ void MotionTranslation::load(const YAML::Node& node)
     useVelocity_ = false;
     displacement_ = node["displacement"].as<threeDVecType>();
   }
-  // ensure only 1 of velocity or displacement vector is specified
-  assert(velocity_.size() + displacement_.size() == 3);
 }
 
 void MotionTranslation::build_transformation(

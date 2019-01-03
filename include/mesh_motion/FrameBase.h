@@ -26,18 +26,26 @@ public:
 
   virtual ~FrameBase() {}
 
-  void setup();
-
   virtual void update_coordinates_velocity(const double) = 0;
 
   virtual const MotionBase::transMatType& get_inertial_frame() const {
     throw std::runtime_error("FrameNonInertial: Invalid access of inertial frame"); };
 
+  const std::vector<std::string> get_part_names() const {
+    return partNamesVec_; }
+
   void set_ref_frame( MotionBase::transMatType& frame ) {
     refFrame_ = frame; }
 
+  void set_computed_centroid( std::vector<double>& centroid ) {
+    for (int i=0; i < meshMotionVec_.size(); i++)
+      meshMotionVec_[i]->set_computed_centroid(centroid); }
+
   const bool is_inertial() const {
     return isInertial_; }
+
+  const bool compute_centroid() const {
+    return computeCentroid_; }
 
 protected:
   //! Reference to the STK Mesh MetaData object
@@ -72,6 +80,8 @@ protected:
   MotionBase::transMatType refFrame_ = MotionBase::identityMat_;
 
   const bool isInertial_;
+
+  bool computeCentroid_ = false;
 
 private:
     FrameBase() = delete;

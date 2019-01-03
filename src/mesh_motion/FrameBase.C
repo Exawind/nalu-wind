@@ -6,6 +6,8 @@
 #include "mesh_motion/MotionScaling.h"
 #include "mesh_motion/MotionTranslation.h"
 
+#include <NaluParsing.h>
+
 // stk_mesh/base/fem
 #include <stk_mesh/base/FieldBLAS.hpp>
 
@@ -32,6 +34,9 @@ void FrameBase::load(const YAML::Node& node)
     const auto& fparts = node["mesh_parts"];
     partNamesVec_ = fparts.as<std::vector<std::string>>();
   }
+
+  // check if centroid needs to be computed
+  get_if_present(node, "compute_centroid", computeCentroid_, computeCentroid_);
 
   // extract the motions in the current group
   const auto& motions = node["motion"];
@@ -61,39 +66,6 @@ void FrameBase::load(const YAML::Node& node)
       throw std::runtime_error("MeshMotion: Invalid mesh motion type: " + type);
 
   } // end for loop - i index
-}
-
-void FrameBase::setup()
-{
-  // check if any parts have been associated with current frame
-  if (partNamesVec_.size() == 0)
-    return;
-
-  VectorFieldType& coordinates = meta_.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType& current_coordinates = meta_.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType& mesh_displacement = meta_.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_displacement");
-  VectorFieldType& mesh_velocity = meta_.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_velocity");
-
-  // store all parts associated with current motion frame
-  for (auto pName: partNamesVec_) {
-    stk::mesh::Part* part = meta_.get_part(pName);
-    if (nullptr == part)
-      throw std::runtime_error(
-        "MeshMotion: Invalid part name encountered: " + pName);
-    else
-      partVec_.push_back(part);
-  } // end for loop - partNamesVec_
-
-  for (auto* p: partVec_) {
-    stk::mesh::put_field(coordinates, *p);
-    stk::mesh::put_field(current_coordinates, *p);
-    stk::mesh::put_field(mesh_displacement, *p);
-    stk::mesh::put_field(mesh_velocity, *p);
-  } // end for loop - partVec_
 }
 
 } // nalu

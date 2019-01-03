@@ -767,7 +767,7 @@ Realm::load(const YAML::Node & node)
 
   // instantiate mesh motion class
   if ( solutionOptions_->meshMotion_ ) {
-    meshMotionAlg_ = new MeshMotionAlg(*metaData_, *bulkData_, solutionOptions_->meshMotionNode_);
+    meshMotionAlg_ = new MeshMotionAlg( *this, solutionOptions_->meshMotionNode_);
   }
 
   // post processing
@@ -2603,6 +2603,9 @@ Realm::compute_centroid_on_parts(
   stk::ParallelMachine comm = NaluEnv::self().parallel_comm();
   stk::all_reduce_min(comm, minCoord, g_minCoord, 3);
   stk::all_reduce_max(comm, maxCoord, g_maxCoord, 3);
+
+  // ensure the centroid is size number of dimensions
+  centroid.resize(nDim);
   for ( int j = 0; j < nDim; ++j )
     centroid[j] = 0.5*(g_maxCoord[j] + g_minCoord[j]);
 }

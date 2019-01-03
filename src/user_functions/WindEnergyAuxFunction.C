@@ -66,8 +66,16 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
   get_required(motionNode, "omega", mmOmega);
   std::vector<double> unitVec;
   get_required(motionNode, "unit_vector", unitVec);
-  std::vector<double> centroid;
-  get_required(motionNode, "centroid_coordinates", centroid);
+
+  // check if centroid needs to be computed
+  std::vector<double> centroid(3,0.0);
+  if ( motionNode["compute_centroids"] ) {
+    std::vector<std::string> partNames = motionNode["mesh_parts"].as<std::vector<std::string>>();
+    realm.compute_centroid_on_parts( partNames, centroid );
+  }
+  else {
+    get_required(motionNode, "centroid_coordinates", centroid);
+  }
 
   // fill member variables
   for ( size_t i = 0; i < 3; ++i ) {
