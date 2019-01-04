@@ -20,6 +20,13 @@
 namespace sierra{
 namespace nalu{
 
+/**
+ * This class is obsolete in regards to the new mesh motion framework.
+ * While the mesh motion framework can handle any kind of a motions,
+ * this class is restricted to rotation which in turn restrict the motion
+ * of any wall to rotation.
+ */
+
 WindEnergyAuxFunction::WindEnergyAuxFunction(
   const unsigned beginPos,
   const unsigned endPos,
@@ -44,28 +51,46 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
 
   // get yaml mesh motion node
   const YAML::Node& meshMotionNode = realm.solutionOptions_->meshMotionNode_;
-  const int numMotion = meshMotionNode.size();
 
   // declare temporary variables
+  std::string frameName;
   std::string motionName;
+
+  YAML::Node frameNode;
   YAML::Node motionNode;
 
-  for ( size_t i = 0; i < numMotion; ++i ) {
-    get_required( meshMotionNode[i], "name", motionName );
-    if ( motionName == theStringParams[0] ) {
-      motionNode = meshMotionNode[i];
+  // extract the correct motion frame
+  const int numFrame = meshMotionNode.size();
+  for ( size_t i = 0; i < numFrame; ++i ) {
+    get_required( meshMotionNode[i], "name", frameName );
+    if ( frameName == theStringParams[0] ) {
+      frameNode = meshMotionNode[i];
       break;
     }
   }
 
-  if( motionName.empty() )
-    throw std::runtime_error("WindEnergyAuxFunction::error() Can not find mesh motion name " + theStringParams[0]);
+  if( !frameNode )
+    throw std::runtime_error("WindEnergyAuxFunction::error() Can not find mesh motion frame name " + theStringParams[0]);
 
-  // extract omega, unit vector, and centroid
+  // extract the rotation motion from the frame
+  const YAML::Node& minfo = frameNode["motion"];
+  const int numMotion = minfo.size();
+  for ( size_t i = 0; i < numMotion; ++i ) {
+    get_required( minfo[i], "type", motionName );
+    if ( motionName == "rotation" ) {
+      motionNode = minfo[i];
+      break;
+    }
+  }
+
+  if( !motionNode )
+    throw std::runtime_error("WindEnergyAuxFunction::error() Can not find rotation motion in frame " + theStringParams[0]);
+
+  // extract omega, unit vector, and centroid from the motion node
   double mmOmega;
   get_required(motionNode, "omega", mmOmega);
   std::vector<double> unitVec;
-  get_required(motionNode, "unit_vector", unitVec);
+  get_required(motionNode, "axis", unitVec);
 
   // check if centroid needs to be computed
   std::vector<double> centroid(3,0.0);
@@ -74,7 +99,7 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
     realm.compute_centroid_on_parts( partNames, centroid );
   }
   else {
-    get_required(motionNode, "centroid_coordinates", centroid);
+    get_required(motionNode, "centroid", centroid);
   }
 
   // fill member variables

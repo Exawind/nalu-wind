@@ -68,5 +68,24 @@ void FrameBase::load(const YAML::Node& node)
   } // end for loop - i index
 }
 
+void FrameBase::setup()
+{
+  // check if any parts have been associated with current frame
+  if (partNamesVec_.size() == 0 && isInertial_)
+    return;
+  else
+    assert (partNamesVec_.size() > 0);
+
+  // store all parts associated with current motion frame
+  for (auto pName: partNamesVec_) {
+    stk::mesh::Part* part = meta_.get_part(pName);
+    if (nullptr == part)
+      throw std::runtime_error(
+        "MeshMotion: Invalid part name encountered: " + pName);
+    else
+      partVec_.push_back(part);
+  }
+}
+
 } // nalu
 } // sierra

@@ -13,8 +13,8 @@ MeshMotionAlg::MeshMotionAlg(
 Realm& realm,
 const YAML::Node& node
 ) : realm_(realm),
-    meta_(*realm.metaData_),
-    bulk_(*realm.bulkData_)
+    meta_(*(realm.metaData_)),
+    bulk_(*(realm.bulkData_))
 {
   if( meta_.spatial_dimension() != 3 )
     throw std::runtime_error("MeshMotion: Mesh motion is set up exclusively for 3D meshes");
@@ -26,8 +26,7 @@ const YAML::Node& node
 void MeshMotionAlg::load(const YAML::Node& node)
 {
   // get motion information for entire mesh
-  const auto& minfo = node["motion_group"];
-  const int num_groups = minfo.size();
+  const int num_groups = node.size();
   frameVec_.resize(num_groups);
 
   // temporary vector to store frame names
@@ -36,7 +35,7 @@ void MeshMotionAlg::load(const YAML::Node& node)
   for (int i=0; i < num_groups; i++) {
 
     // extract current motion group info
-    const auto& ginfo = minfo[i];
+    const auto& ginfo = node[i];
 
     // get name of motion group
     frameNames[i] = ginfo["name"].as<std::string>();
@@ -78,6 +77,8 @@ void MeshMotionAlg::initialize( const double time )
       MotionBase::transMatType ref_frame = frameVec_[ref_ind]->get_inertial_frame();
       frameVec_[i]->set_ref_frame(ref_frame);
     }
+
+    frameVec_[i]->setup();
 
     // update coordinates only if frame is inertial or time > 0.0
     if( (frameVec_[i]->is_inertial()) || (time > 0.0) )

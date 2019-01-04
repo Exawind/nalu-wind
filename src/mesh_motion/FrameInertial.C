@@ -14,7 +14,7 @@ void FrameInertial::update_coordinates_velocity(const double time)
   compute_transformation(time);
 
   // check if any parts have been associated with current frame
-  if (partNamesVec_.size() == 0)
+  if (partVec_.size() == 0)
     return;
 
   const int ndim = meta_.spatial_dimension();

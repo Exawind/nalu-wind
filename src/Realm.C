@@ -517,14 +517,14 @@ Realm::initialize()
 
   populate_boundary_data();
 
-  if ( solutionOptions_->meshMotion_ )
-    meshMotionAlg_->initialize( get_current_time() );
-
-  if ( has_mesh_deformation() )
+  if ( has_mesh_deformation() || solutionOptions_->meshMotion_ )
     init_current_coordinates();
 
   if ( hasPeriodic_ )
     periodicManager_->build_constraints();
+
+  if ( solutionOptions_->meshMotion_ )
+    meshMotionAlg_->initialize( get_current_time() );
 
   compute_geometry();
 
@@ -765,7 +765,7 @@ Realm::load(const YAML::Node & node)
   create_mesh();
   spatialDimension_ = metaData_->spatial_dimension();
 
-  // instantiate mesh motion class
+  // instantiate mesh motion class once the mesh has been created
   if ( solutionOptions_->meshMotion_ ) {
     meshMotionAlg_ = new MeshMotionAlg( *this, solutionOptions_->meshMotionNode_);
   }
@@ -3509,6 +3509,7 @@ Realm::initial_work()
 
   if ( solutionOptions_->meshMotion_ )
     meshMotionAlg_->initialize( get_current_time() );
+
   equationSystems_.initial_work();
 }
 

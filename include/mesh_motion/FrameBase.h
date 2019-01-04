@@ -26,6 +26,8 @@ public:
 
   virtual ~FrameBase() {}
 
+  void setup();
+
   virtual void update_coordinates_velocity(const double) = 0;
 
   virtual const MotionBase::transMatType& get_inertial_frame() const {

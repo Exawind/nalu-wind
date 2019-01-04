@@ -11,7 +11,7 @@ namespace nalu{
 
 void FrameNonInertial::update_coordinates_velocity(const double time)
 {
-  assert (partNamesVec_.size() > 0);
+  assert (partVec_.size() > 0);
 
   const int ndim = meta_.spatial_dimension();
 
