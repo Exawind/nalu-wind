@@ -48,8 +48,7 @@ public:
   virtual ~ActuatorFASTPointInfo();
   size_t globTurbId_; ///< Global turbine number.
   Coordinates epsilon_; ///< The Gaussian spreading width in (chordwise, spanwise, thickness) directions for this actuator point.
-  fast::ActuatorNodeType nodeType_; ///< HUB, BLADE, TOWER or Disk - Defined by an enum.
-  std::vector<int> myFastPoints_;
+  fast::ActuatorNodeType nodeType_; ///< HUB, BLADE, or TOWER - Defined by an enum.
 
 };
 
@@ -104,13 +103,9 @@ public:
     const YAML::Node &node);
   virtual ~ActuatorFAST();
 
-  // TODO(psakiev) add theta sampling value to read
   // load all of the options
   void load(
     const YAML::Node & node) override;
-
-  // called within load for separate functionality in subclasses
-  virtual void load_class_specific( const YAML::Node& node) = 0;
 
   // load the options for each turbine
   void readTurbineData(int iTurb, fast::fastInputs & fi, YAML::Node turbNode);
@@ -133,7 +128,6 @@ public:
   // determine processor bounding box in the mesh
   void populate_candidate_procs();
 
-  // TODO(psakiev) add points for sampling in azimuthal direction
   // fill in the map that will hold point and ghosted elements
   void create_actuator_point_info_map();
 
@@ -142,7 +136,12 @@ public:
   // populate nodal field and output norms (if appropriate)
   void execute() override;
 
-  virtual void execute_class_specific() = 0;
+  virtual void execute_class_specific(
+    const int nDim,
+    const stk::mesh::FieldBase * coordinates,
+    stk::mesh::FieldBase * actuator_source,
+    const stk::mesh::FieldBase * dual_nodal_volume
+    ) = 0;
 
   // centroid of the element
   void compute_elem_centroid(
@@ -189,6 +188,8 @@ public:
     std::vector<double> & thr,
     std::vector<double> & tor);
 
+  std::string write_turbine_points_to_string(std::size_t turbNum, int width, int precision);
+
   int tStepRatio_;  ///< Ratio of Nalu time step to FAST time step (dtNalu/dtFAST) - Should be an integral number
 
   // bounding box data types for stk_search
@@ -199,6 +200,8 @@ public:
 
   fast::fastInputs fi; ///< Object to hold input information for OpenFAST
   fast::OpenFAST FAST; ///< OpenFAST C++ API handle
+
+  std::size_t numFastPoints_;
 
   std::vector<std::vector<double>> thrust;
   std::vector<std::vector<double>> torque;

@@ -52,20 +52,66 @@ ActuatorLineFAST::ActuatorLineFAST(
   : ActuatorFAST(realm, node)
 {}
 
-ActuatorLineFAST::~ActuatorLineFAST()
-{
-  FAST.end(); // Call destructors in FAST_cInterface
-}
-
-void ActuatorLineFAST::load_class_specific( const YAML::Node& node){}
-
 void ActuatorLineFAST::update_class_specific(){
   ActuatorFAST::update();
 }
 
 void ActuatorLineFAST::create_point_info_map_class_specific(){}
 
-void ActuatorLineFAST::execute_class_specific(){}
+void ActuatorLineFAST::execute_class_specific(
+  const int nDim,
+  const stk::mesh::FieldBase * coordinates,
+  stk::mesh::FieldBase * actuator_source,
+  const stk::mesh::FieldBase * dual_nodal_volume
+  ){
+
+   std::vector<double> ws_pointForce(nDim);
+  // loop over map and assemble source terms
+  for (auto&& iterPoint : actuatorPointInfoMap_) {
+
+    // actuator line info object of interest
+    auto infoObject = dynamic_cast<ActuatorFASTPointInfo*>(iterPoint.second.get());
+    int np = static_cast<int>(iterPoint.first);
+    if( infoObject==NULL){
+      throw std::runtime_error("Object in ActuatorPointInfo is not the correct type.  Should be ActuatorFASTPointInfo.");
+    }
+
+    FAST.getForce(ws_pointForce, np, infoObject->globTurbId_);
+
+    std::vector<double> hubPos(3);
+    std::vector<double> hubShftVec(3);
+    int iTurbGlob = infoObject->globTurbId_;
+    FAST.getHubPos(hubPos, iTurbGlob);
+    FAST.getHubShftDir(hubShftVec, iTurbGlob);
+
+    // get the vector of elements
+    std::set<stk::mesh::Entity> nodeVec = infoObject->nodeVec_;
+
+    switch (infoObject->nodeType_) {
+    case fast::HUB:
+    case fast::BLADE:
+    case fast::TOWER:
+      spread_actuator_force_to_node_vec(
+        nDim,
+        nodeVec,
+        ws_pointForce,
+        &(infoObject->centroidCoords_[0]),
+        *coordinates,
+        *actuator_source,
+        *dual_nodal_volume,
+        infoObject->epsilon_,
+        hubPos,
+        hubShftVec,
+        thrust[iTurbGlob],
+        torque[iTurbGlob]
+               );
+      break;
+    case fast::ActuatorNodeType_END:
+      break;
+    }
+
+}
+}
 
 std::string ActuatorLineFAST::get_class_name(){
   return "ActuatorLineFAST";

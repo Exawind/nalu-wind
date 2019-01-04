@@ -48,7 +48,7 @@ Actuator::Actuator(
     const YAML::Node & /* node */):realm_(realm),
     searchMethod_(stk::search::KDTREE),
     needToGhostCount_(0),
-    actuatorGhosting_(NULL){}
+    actuatorGhosting_(NULL){ load(node); }
 
 Actuator::~Actuator()
 {}
@@ -57,7 +57,7 @@ void Actuator::load( const YAML::Node &y_node){
   // check for any data probes
   const YAML::Node y_actuator = y_node["actuator"];
   if (y_actuator) {
-    NaluEnv::self().naluOutputP0() << get_class_name() + "::load" << std::endl;
+    NaluEnv::self().naluOutputP0() << "Actuator::load" << std::endl;
 
     // search specifications
     std::string searchMethodName = "na";
@@ -69,7 +69,7 @@ void Actuator::load( const YAML::Node &y_node){
     else if ( searchMethodName == "stk_kdtree" )
       searchMethod_ = stk::search::KDTREE;
     else
-      NaluEnv::self().naluOutputP0() << get_class_name() + "::search method not declared; will use stk_kdtree" << std::endl;
+      NaluEnv::self().naluOutputP0() << "Actuator::search method not declared; will use stk_kdtree" << std::endl;
 
     // extract the set of from target names; each spec is homogeneous in this respect
     const YAML::Node searchTargets = y_actuator["search_target_part"];

@@ -93,9 +93,10 @@ ActuatorFASTPointInfo::~ActuatorFASTPointInfo()
 ActuatorFAST::ActuatorFAST(
   Realm &realm,
   const YAML::Node &node)
-  : Actuator(realm, node)
+  : Actuator(realm, node),
+    numFastPoints_(0)
 {
-  Actuator::load(node);
+  //Actuator::load(node);
   // load the data
   load(node);
 
@@ -157,8 +158,6 @@ void
 ActuatorFAST::load(
   const YAML::Node & y_node)
 {
-  // call parent class load
-  Actuator::load(y_node);
   // check for any data probes
   const YAML::Node y_actuator= y_node["actuator"];
   if (y_actuator) {
@@ -204,9 +203,9 @@ ActuatorFAST::load(
 	  const YAML::Node cur_turbine = y_actuator["Turbine"+std::to_string(iTurb)];
 
 	  actuatorInfo_.emplace_back(new ActuatorFASTInfo());
-	  auto actuatoFASTInfo = dynamic_cast<ActuatorFASTInfo*>(actuatorInfo_.back().get());
+	  auto actuatorFASTInfo = dynamic_cast<ActuatorFASTInfo*>(actuatorInfo_.back().get());
 
-          get_required(cur_turbine, "turbine_name", actuatorFASTInfo->turbineName_)  ;
+          get_required(cur_turbine, "turbine_name", actuatorFASTInfo->turbineName_);
 
 	  // Force projection function properties
 	  const YAML::Node epsilon = cur_turbine["epsilon"];
@@ -224,7 +223,6 @@ ActuatorFAST::load(
     } else {
       throw std::runtime_error("Number of turbines <= 0 ");
     }
-    load_class_specific(y_actuator);
     FAST.setInputs(fi);
   }
 }
@@ -432,7 +430,6 @@ ActuatorFAST::execute()
   // fixed size scratch
   std::vector<double> ws_pointGasVelocity(nDim);
   std::vector<double> ws_elemCentroid(nDim);
-  std::vector<double> ws_pointForce(nDim);
   std::vector<double> ws_nodeForce(nDim);
   double ws_pointGasDensity;
   //  double ws_pointGasViscosity;
@@ -470,11 +467,10 @@ ActuatorFAST::execute()
   }
 
   // loop over map and get velocity at points
-  int np=0;
-  for (auto&& iterPoint : actuatorPointInfoMap_){
+  for (std::size_t np=0; np<numFastPoints_; np++ ){
 
     // actuator line info object of interest
-    auto infoObject = dynamic_cast<ActuatorFASTPointInfo*>(iterPoint.second.get());
+    auto infoObject = dynamic_cast<ActuatorFASTPointInfo*>(actuatorPointInfoMap_.at(np).get());
     if( infoObject==NULL){
       throw std::runtime_error("Object in ActuatorPointInfo is not the correct type.  Should be ActuatorFASTPointInfo.");
     }
@@ -512,10 +508,8 @@ ActuatorFAST::execute()
     // interpolate density
     interpolate_field(1, bestElem, bulkData, infoObject->isoParCoords_.data(),
                       &ws_density_[0], &ws_pointGasDensity);
-    // TODO(psakiev) differentiate sizes
-    FAST.setVelocityForceNode(ws_pointGasVelocity, np, infoObject->globTurbId_);
-    np = np + 1;
-
+    int nNp = (int) np;
+    FAST.setVelocityForceNode(ws_pointGasVelocity, nNp, infoObject->globTurbId_);
   }
 
 
@@ -544,69 +538,9 @@ ActuatorFAST::execute()
     }
   }
 
-  // if disk average azimuthally, else do nothing
-  execute_class_specific();
-
-  // loop over map and assemble source terms
-  // add np to class then disk can represent same thing
-  // only use np to get force
-  np = 0;
-  for (auto&& iterPoint : actuatorPointInfoMap_) {
-
-    // actuator line info object of interest
-    auto infoObject = dynamic_cast<ActuatorFASTPointInfo*>(iterPoint.second.get());
-    if( infoObject==NULL){
-      throw std::runtime_error("Object in ActuatorPointInfo is not the correct type.  Should be ActuatorFASTPointInfo.");
-    }
-
-    // loop for n in my np_vec myForce += getForce(n)
-    // don't need velocity interp for ghost points
-    // only need to average here
-    // still need ghosting  and best element to transfer forces
-    //
-    // setup:
-    //    is actuatorLine bool
-    //    who are my associated points in fast (same radius and are actuatorLine)
-    // execute:
-    //    if actuatorLine interp velocity and run fast
-    //    compute force by looping over my fast nodes, and average
-    FAST.getForce(ws_pointForce, np, infoObject->globTurbId_);
-
-    std::vector<double> hubPos(3);
-    std::vector<double> hubShftVec(3);
-    int iTurbGlob = infoObject->globTurbId_;
-    FAST.getHubPos(hubPos, iTurbGlob);
-    // throw on disk ?? no shifting
-    FAST.getHubShftDir(hubShftVec, iTurbGlob);
-
-    // get the vector of elements
-    std::set<stk::mesh::Entity> nodeVec = infoObject->nodeVec_;
-
-    switch (infoObject->nodeType_) {
-    case fast::HUB:
-    case fast::BLADE:
-    case fast::TOWER:
-      spread_actuator_force_to_node_vec(
-        nDim,
-        nodeVec,  // from point obj this loop
-        ws_pointForce,  // from fast this loop
-        &(infoObject->centroidCoords_[0]),
-        *coordinates, // field ref before loop
-        *actuator_source, //field  before loop
-        *dualNodalVolume, // dield ref before loop
-        infoObject->epsilon_,
-        hubPos, // from fast this loop
-        hubShftVec, // from fast this loop
-        thrust[iTurbGlob], // from fast output
-        torque[iTurbGlob] // from fast output
-               );
-      break;
-    case fast::ActuatorNodeType_END:
-      break;
-    }
-
-    np=np+1;
-}
+  // if disk average azimuthally
+  // apply the forcing terms
+  execute_class_specific(nDim, coordinates, actuator_source, dualNodalVolume);
 
   if ( FAST.isDebug() ) {
     for(size_t iTurb=0; iTurb < nTurbinesGlob; iTurb++) {
@@ -744,7 +678,6 @@ ActuatorFAST::create_actuator_point_info_map() {
       std::vector<double> currentCoords (3,0.0);
 
       // loop over all points for this turbine
-      // TODO(psakiev) augment?
       const int numForcePts = FAST.get_numForcePts(iTurb); // Total number of elements
 
       if (! FAST.isDryRun() ) {
@@ -826,7 +759,10 @@ ActuatorFAST::create_actuator_point_info_map() {
     }
 
   }
-
+  numFastPoints_ = actuatorPointInfoMap_.size();
+  // execute this outside of loop so actuatorPoints that go into fast are
+  // contiguous in the vectors (i.e. the first FAST.get_numForcePts() number of points
+  // are the actuator lines, and whatever comes after them are the swept points)
   create_point_info_map_class_specific();
 
 }
@@ -928,6 +864,35 @@ ActuatorFAST::add_thrust_torque_contrib(
     tor[1] += (rPerpShft[2]*nodeForce[0] - rPerpShft[0]*nodeForce[2]) * dVol;
     tor[2] += (rPerpShft[0]*nodeForce[1] - rPerpShft[1]*nodeForce[0]) * dVol;
 
+}
+
+std::string
+ActuatorFAST::write_turbine_points_to_string(std::size_t turbNum, int width, int precision){
+  std::ostringstream stream;
+  // header
+  stream << std::setw(width) << std::left << "ID" <<",";
+  stream << std::setw(width) << std::left << "TYPE" << ",";
+  stream << std::setw(width) << std::left << "X"<<",";
+  stream << std::setw(width) << std::left << "Y"<<",";
+  stream << std::setw(width) << std::left << "Z";
+  stream << std::endl;
+
+  //data
+  for( auto&& point : actuatorPointInfoMap_){
+    auto fastPoint = dynamic_cast<ActuatorFASTPointInfo*>(point.second.get());
+    const std::size_t id = point.first;
+    if(fastPoint->globTurbId_ == turbNum){
+      stream << std::setw(width) << std::setprecision(precision) <<std::left << id << ",";
+      stream << std::setw(width) << std::setprecision(precision) <<std::left << fastPoint->nodeType_ << ",";
+      stream << std::setw(width) << std::setprecision(precision) <<std::left << fastPoint->centroidCoords_[0] << ",";
+      stream << std::setw(width) << std::setprecision(precision) <<std::left << fastPoint->centroidCoords_[1] << ",";
+      stream << std::setw(width) << std::setprecision(precision) <<std::left << fastPoint->centroidCoords_[2];
+      stream << std::endl;
+    }
+  }
+
+
+  return stream.str();
 }
 
 } // namespace nalu

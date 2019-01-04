@@ -192,7 +192,9 @@ endif()
 
 if(ENABLE_OPENFAST)
    add_sources(GlobalSourceList
+      ActuatorFAST.C
       ActuatorLineFAST.C
+      ActuatorDiskFAST.C
    )
 endif()
 

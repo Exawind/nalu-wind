@@ -30,15 +30,18 @@ public:
   ActuatorLineFAST(
     Realm &realm,
     const YAML::Node &node);
-  ~ActuatorLineFAST();
+  ~ActuatorLineFAST()=default;
 
   std::string get_class_name() override;
 
-  void load_class_specific(const YAML::Node& node) override;
-
   void update_class_specific() override;
 
-  void execute_class_specific() override;
+  void execute_class_specific(
+    const int nDim,
+    const stk::mesh::FieldBase * coordinates,
+    stk::mesh::FieldBase * actuator_source,
+    const stk::mesh::FieldBase * dual_nodal_volume
+    ) override;
 
   void create_point_info_map_class_specific() override;
 
