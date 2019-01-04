@@ -77,13 +77,18 @@ void FrameBase::setup()
     assert (partNamesVec_.size() > 0);
 
   // store all parts associated with current motion frame
+  int numParts = partNamesVec_.size();
+  partVec_.resize(numParts);
+
+  for (int i=0; i < numParts; i++)
+
   for (auto pName: partNamesVec_) {
     stk::mesh::Part* part = meta_.get_part(pName);
     if (nullptr == part)
       throw std::runtime_error(
         "MeshMotion: Invalid part name encountered: " + pName);
     else
-      partVec_.push_back(part);
+      partVec_[i] = part;
   }
 }
 

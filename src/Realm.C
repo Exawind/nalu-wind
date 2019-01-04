@@ -3507,9 +3507,6 @@ Realm::initial_work()
       bdyLayerStats_->execute();
   }
 
-  if ( solutionOptions_->meshMotion_ )
-    meshMotionAlg_->initialize( get_current_time() );
-
   equationSystems_.initial_work();
 }
 
