@@ -60,8 +60,7 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
   YAML::Node motionNode;
 
   // extract the correct motion frame
-  const int numFrame = meshMotionNode.size();
-  for ( size_t i = 0; i < numFrame; ++i ) {
+  for ( size_t i = 0; i < meshMotionNode.size(); ++i ) {
     get_required( meshMotionNode[i], "name", frameName );
     if ( frameName == theStringParams[0] ) {
       frameNode = meshMotionNode[i];
@@ -74,8 +73,7 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
 
   // extract the rotation motion from the frame
   const YAML::Node& minfo = frameNode["motion"];
-  const int numMotion = minfo.size();
-  for ( size_t i = 0; i < numMotion; ++i ) {
+  for ( size_t i = 0; i < minfo.size(); ++i ) {
     get_required( minfo[i], "type", motionName );
     if ( motionName == "rotation" ) {
       motionNode = minfo[i];

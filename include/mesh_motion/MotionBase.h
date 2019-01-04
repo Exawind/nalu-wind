@@ -3,6 +3,7 @@
 
 #include "yaml-cpp/yaml.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cfloat>
 

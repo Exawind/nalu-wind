@@ -40,7 +40,7 @@ public:
     refFrame_ = frame; }
 
   void set_computed_centroid( std::vector<double>& centroid ) {
-    for (int i=0; i < meshMotionVec_.size(); i++)
+    for (size_t i=0; i < meshMotionVec_.size(); i++)
       meshMotionVec_[i]->set_computed_centroid(centroid); }
 
   const bool is_inertial() const {
