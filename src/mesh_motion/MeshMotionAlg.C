@@ -68,7 +68,7 @@ void MeshMotionAlg::post_load()
 
 void MeshMotionAlg::initialize( const double time )
 {
-  for (int i=0; i < frameVec_.size(); i++)
+  for (size_t i=0; i < frameVec_.size(); i++)
   {
     // set reference frame if they exist
     if( refFrameMap_.find(i) != refFrameMap_.end() )
@@ -88,7 +88,7 @@ void MeshMotionAlg::initialize( const double time )
 
 void MeshMotionAlg::execute(const double time)
 {
-  for (int i=0; i < frameVec_.size(); i++)
+  for (size_t i=0; i < frameVec_.size(); i++)
     if( !frameVec_[i]->is_inertial() )
       frameVec_[i]->update_coordinates_velocity(time);
 }
@@ -98,7 +98,7 @@ void MeshMotionAlg::compute_set_centroid()
   std::vector<std::string> partsForCentroid;
 
   // collect all parts associated with frames instructed to compute their own centroids
-  for (int i=0; i < frameVec_.size(); i++)
+  for (size_t i=0; i < frameVec_.size(); i++)
   {
     if( frameVec_[i]->compute_centroid() )
     {
@@ -115,7 +115,7 @@ void MeshMotionAlg::compute_set_centroid()
     realm_.compute_centroid_on_parts( partsForCentroid, computedCentroid );
 
   // set the centroid for relevant frames
-  for (int i=0; i < frameVec_.size(); i++)
+  for (size_t i=0; i < frameVec_.size(); i++)
     if( frameVec_[i]->compute_centroid() )
       frameVec_[i]->set_computed_centroid(computedCentroid);
 }
