@@ -31,15 +31,14 @@ void MotionRotation::load(const YAML::Node& node)
     angle_ = node["angle"].as<double>();
   }
 
-  axis_ = node["axis"].as<threeDVecType>();
+  if( node["axis"] )
+    axis_ = node["axis"].as<threeDVecType>();
 
   // get origin based on if it was defined or is to be computed
   if( computeCentroid_ )
     origin_ = computedCentroid_;
   else if( node["centroid"] )
     origin_ = node["centroid"].as<threeDVecType>();
-  else
-    throw std::runtime_error("MotionRotation: Center of rotation not defined in input file");
 }
 
 void MotionRotation::build_transformation(

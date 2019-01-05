@@ -35,8 +35,8 @@ private:
 
   void rotation_mat(const double);
 
-  threeDVecType origin_;
-  threeDVecType axis_;
+  threeDVecType origin_ = {{0.0,0.0,0.0}};
+  threeDVecType axis_ = {{0.0,0.0,0.0}};
 
   double omega_{0.0};
   double angle_{0.0};

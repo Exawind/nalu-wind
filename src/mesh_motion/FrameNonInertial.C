@@ -5,6 +5,7 @@
 #include <stk_mesh/base/FieldBLAS.hpp>
 
 #include <cassert>
+#include <iostream>
 
 namespace sierra{
 namespace nalu{
@@ -13,7 +14,7 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
 {
   assert (partVec_.size() > 0);
 
-  const int ndim = meta_.spatial_dimension();
+  const int nDim = meta_.spatial_dimension();
 
   VectorFieldType* modelCoords = meta_.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
@@ -40,27 +41,39 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
       double* dx = stk::mesh::field_data(*displacement, node);
       double* velxyz = stk::mesh::field_data(*meshVelocity, node);
 
+      // temporary current and model coords for a generic 2D and 3D implementation
+      double mX[3] = {0.0,0.0,0.0};
+      double cX[3] = {0.0,0.0,0.0};
+
+      // copy over model coordinates
+      for ( int i = 0; i < nDim; ++i )
+        mX[i] = oldxyz[i];
+
       // compute composite transformation matrix
-      MotionBase::transMatType trans_mat = compute_transformation(time,oldxyz);
+      MotionBase::transMatType trans_mat = compute_transformation(time,mX);
 
       // perform matrix multiplication between transformation matrix
       // and old coordinates to obtain current coordinates
-      for (int d = 0; d < ndim; d++) {
-        xyz[d] = trans_mat[d][0]*oldxyz[0]
-                +trans_mat[d][1]*oldxyz[1]
-                +trans_mat[d][2]*oldxyz[2]
+      for (int d = 0; d < nDim; d++) {
+        xyz[d] = trans_mat[d][0]*mX[0]
+                +trans_mat[d][1]*mX[1]
+                +trans_mat[d][2]*mX[2]
                 +trans_mat[d][3];
 
-        dx[d] = xyz[d] - oldxyz[d];
+        dx[d] = xyz[d] - mX[d];
       } // end for loop - d index
+
+      // copy over model coordinates
+      for ( int i = 0; i < nDim; ++i )
+        cX[i] = xyz[i];
 
       // compute velocity vector on current node resulting from all
       // motions in current motion frame
       for (auto& mm: meshMotionVec_)
       {
-        MotionBase::threeDVecType mm_vel = mm->compute_velocity(time,trans_mat,xyz);
+        MotionBase::threeDVecType mm_vel = mm->compute_velocity(time,trans_mat,cX);
 
-        for (int d = 0; d < ndim; d++)
+        for (int d = 0; d < nDim; d++)
           velxyz[d] += mm_vel[d];
       } // end for loop - mm
 

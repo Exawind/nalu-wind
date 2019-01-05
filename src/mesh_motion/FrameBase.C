@@ -32,7 +32,11 @@ void FrameBase::load(const YAML::Node& node)
   if (node["mesh_parts"])
   {
     const auto& fparts = node["mesh_parts"];
-    partNamesVec_ = fparts.as<std::vector<std::string>>();
+
+    if (fparts.Type() == YAML::NodeType::Scalar)
+      partNamesVec_.push_back(fparts.as<std::string>());
+    else
+      partNamesVec_ = fparts.as<std::vector<std::string>>();
   }
 
   // check if centroid needs to be computed
@@ -80,13 +84,11 @@ void FrameBase::setup()
   int numParts = partNamesVec_.size();
   partVec_.resize(numParts);
 
-  for (int i=0; i < numParts; i++)
-
-  for (auto pName: partNamesVec_) {
-    stk::mesh::Part* part = meta_.get_part(pName);
+  for (int i=0; i < numParts; i++) {
+    stk::mesh::Part* part = meta_.get_part(partNamesVec_[i]);
     if (nullptr == part)
       throw std::runtime_error(
-        "MeshMotion: Invalid part name encountered: " + pName);
+        "MeshMotion: Invalid part name encountered: " + partNamesVec_[i]);
     else
       partVec_[i] = part;
   }

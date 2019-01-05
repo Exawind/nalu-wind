@@ -36,8 +36,6 @@ void MotionScaling::load(const YAML::Node& node)
     origin_ = computedCentroid_;
   else if( node["centroid"] )
     origin_ = node["centroid"].as<threeDVecType>();
-  else
-    throw std::runtime_error("MotionScaling: Center of scaling not defined in input file");
 }
 
 void MotionScaling::build_transformation(

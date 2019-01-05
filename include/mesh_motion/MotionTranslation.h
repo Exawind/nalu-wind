@@ -35,8 +35,8 @@ private:
 
   void translation_mat(const threeDVecType&);
 
-  threeDVecType displacement_;
-  threeDVecType velocity_;
+  threeDVecType displacement_ = {{0.0,0.0,0.0}};
+  threeDVecType velocity_ = {{0.0,0.0,0.0}};
 
   bool useVelocity_;
 };

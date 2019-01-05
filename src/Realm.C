@@ -2605,7 +2605,6 @@ Realm::compute_centroid_on_parts(
   stk::all_reduce_max(comm, maxCoord, g_maxCoord, 3);
 
   // ensure the centroid is size number of dimensions
-  centroid.resize(nDim);
   for ( int j = 0; j < nDim; ++j )
     centroid[j] = 0.5*(g_maxCoord[j] + g_minCoord[j]);
 }

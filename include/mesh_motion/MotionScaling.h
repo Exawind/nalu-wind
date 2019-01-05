@@ -35,9 +35,9 @@ private:
 
   void scaling_mat(const threeDVecType&);
 
-  threeDVecType factor_;
-  threeDVecType velocity_;
-  threeDVecType origin_;
+  threeDVecType factor_ = {{0.0,0.0,0.0}};
+  threeDVecType velocity_ = {{0.0,0.0,0.0}};
+  threeDVecType origin_ = {{0.0,0.0,0.0}};
 
   bool useVelocity_;
 };

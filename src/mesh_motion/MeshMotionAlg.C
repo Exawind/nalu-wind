@@ -16,9 +16,6 @@ const YAML::Node& node
     meta_(*(realm.metaData_)),
     bulk_(*(realm.bulkData_))
 {
-  if( meta_.spatial_dimension() != 3 )
-    throw std::runtime_error("MeshMotion: Mesh motion is set up exclusively for 3D meshes");
-
   load(node);
   post_load();
 }
@@ -108,7 +105,7 @@ void MeshMotionAlg::compute_set_centroid()
   }
 
   /// A 3x1 vector that defines the centroid of a collection of parts
-  std::vector<double> computedCentroid;
+  std::vector<double> computedCentroid(MotionBase::threeDVecSize,0.0);
 
   // compute centroid only if any part was instructed to do so
   if(partsForCentroid.size() > 0)
