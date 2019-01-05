@@ -38,7 +38,8 @@ void MeshMotionAlg::load(const YAML::Node& node)
     frameNames[i] = ginfo["name"].as<std::string>();
 
     // get frame definition of motion group
-    std::string frame = ginfo["frame"].as<std::string>();
+    std::string frame;
+    get_required(ginfo, "frame", frame);
 
     if( frame == "inertial" )
       frameVec_[i].reset(new FrameInertial(meta_, bulk_, ginfo));
