@@ -5,7 +5,6 @@
 #include <stk_mesh/base/FieldBLAS.hpp>
 
 #include <cassert>
-#include <iostream>
 
 namespace sierra{
 namespace nalu{

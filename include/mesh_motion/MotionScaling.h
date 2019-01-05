@@ -39,7 +39,7 @@ private:
   threeDVecType velocity_ = {{0.0,0.0,0.0}};
   threeDVecType origin_ = {{0.0,0.0,0.0}};
 
-  bool useVelocity_;
+  bool useVelocity_ = false;
 };
 
 

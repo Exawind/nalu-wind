@@ -38,7 +38,7 @@ private:
   threeDVecType displacement_ = {{0.0,0.0,0.0}};
   threeDVecType velocity_ = {{0.0,0.0,0.0}};
 
-  bool useVelocity_;
+  bool useVelocity_ = false;
 };
 
 } // nalu

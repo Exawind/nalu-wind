@@ -42,7 +42,6 @@ void FrameInertial::update_coordinates_velocity(const double time)
       double* oldxyz = stk::mesh::field_data(*modelCoords, node);
       double* xyz = stk::mesh::field_data(*currCoords, node);
       double* dx = stk::mesh::field_data(*displacement, node);
-      double* velxyz = stk::mesh::field_data(*meshVelocity, node);
 
       // temporary model coords for a generic 2D and 3D implementation
       double mX[3] = {0.0,0.0,0.0};
