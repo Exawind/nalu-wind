@@ -89,7 +89,7 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
   get_if_present(motionNode, "omega", mmOmega, mmOmega);
 
   std::vector<double> unitVec = {0.0,0.0,1.0};
-  if (motionNode["motion"])
+  if (motionNode["axis"])
     get_required(motionNode, "axis", unitVec);
 
   // check if centroid needs to be computed
