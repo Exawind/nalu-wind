@@ -92,8 +92,8 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
 
   // check if centroid needs to be computed
   std::vector<double> centroid(3,0.0);
-  if ( motionNode["compute_centroids"] ) {
-    std::vector<std::string> partNames = motionNode["mesh_parts"].as<std::vector<std::string>>();
+  if ( frameNode["compute_centroids"] ) {
+    std::vector<std::string> partNames = frameNode["mesh_parts"].as<std::vector<std::string>>();
     realm.compute_centroid_on_parts( partNames, centroid );
   }
   else {
