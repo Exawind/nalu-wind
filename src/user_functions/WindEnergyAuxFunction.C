@@ -85,10 +85,12 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
     throw std::runtime_error("WindEnergyAuxFunction::error() Can not find rotation motion in frame " + theStringParams[0]);
 
   // extract omega, unit vector, and centroid from the motion node
-  double mmOmega;
-  get_required(motionNode, "omega", mmOmega);
-  std::vector<double> unitVec;
-  get_required(motionNode, "axis", unitVec);
+  double mmOmega = 0.0;
+  get_if_present(motionNode, "omega", mmOmega, mmOmega);
+
+  std::vector<double> unitVec = {0.0,0.0,1.0};
+  if (motionNode["motion"])
+    get_required(motionNode, "axis", unitVec);
 
   // check if centroid needs to be computed
   std::vector<double> centroid(3,0.0);
@@ -97,7 +99,8 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
     realm.compute_centroid_on_parts( partNames, centroid );
   }
   else {
-    get_required(motionNode, "centroid", centroid);
+    if (motionNode["centroid"])
+      get_required(motionNode, "centroid", centroid);
   }
 
   // fill member variables
