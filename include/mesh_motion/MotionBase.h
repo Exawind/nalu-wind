@@ -53,8 +53,7 @@ public:
     return transMat_; }
 
   void set_computed_centroid( std::vector<double>& centroid ) {
-    computeCentroid_ = true;
-    std::copy_n(centroid.begin(), threeDVecSize, computedCentroid_.begin()); };
+    std::copy_n(centroid.begin(), threeDVecSize, origin_.begin()); };
 
   static const transMatType identityMat_;
 
@@ -74,9 +73,7 @@ protected:
    * A 3x1 vector storing the centroid computed respective
    * to a collection of parts defined in the input file
    */
-  threeDVecType computedCentroid_;
-
-  bool computeCentroid_ = false;
+  threeDVecType origin_ = {{0.0,0.0,0.0}};
 
   double startTime_{0.0};
   double endTime_{DBL_MAX};

@@ -37,7 +37,6 @@ private:
 
   threeDVecType factor_ = {{0.0,0.0,0.0}};
   threeDVecType velocity_ = {{0.0,0.0,0.0}};
-  threeDVecType origin_ = {{0.0,0.0,0.0}};
 
   bool useVelocity_ = false;
 };

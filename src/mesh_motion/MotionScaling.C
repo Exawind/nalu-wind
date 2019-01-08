@@ -32,9 +32,7 @@ void MotionScaling::load(const YAML::Node& node)
   }
 
   // get origin based on if it was defined or is to be computed
-  if( computeCentroid_ )
-    origin_ = computedCentroid_;
-  else if( node["centroid"] )
+  if( node["centroid"] )
     origin_ = node["centroid"].as<threeDVecType>();
 }
 

@@ -15,12 +15,12 @@ namespace sierra{
 namespace nalu{
 
 FrameBase::FrameBase(
-  stk::mesh::MetaData& meta,
-  stk::mesh::BulkData& bulk,
+  Realm& realm,
   const YAML::Node& node,
   bool isInertial
-) : meta_(meta),
-    bulk_(bulk),
+) : realm_(realm),
+    meta_(*(realm.metaData_)),
+    bulk_(*(realm.bulkData_)),
     isInertial_(isInertial)
 {
   load(node);
@@ -91,6 +91,13 @@ void FrameBase::setup()
         "MeshMotion: Invalid part name encountered: " + partNamesVec_[i]);
     else
       partVec_[i] = part;
+  }
+
+  // compute and set centroid if requested
+  if(computeCentroid_) {
+    std::vector<double> computedCentroid(3,0.0);
+    realm_.compute_centroid_on_parts( partNamesVec_, computedCentroid );
+    set_computed_centroid( computedCentroid );
   }
 }
 

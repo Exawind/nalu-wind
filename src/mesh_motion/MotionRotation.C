@@ -1,6 +1,8 @@
 
 #include "mesh_motion/MotionRotation.h"
 
+#include <NaluEnv.h>
+
 #include <cmath>
 
 namespace sierra{
@@ -33,11 +35,11 @@ void MotionRotation::load(const YAML::Node& node)
 
   if( node["axis"] )
     axis_ = node["axis"].as<threeDVecType>();
+  else
+    NaluEnv::self().naluOutputP0() << "MotionRotation: axis of rotation not supplied; will use 0,0,1" << std::endl;
 
   // get origin based on if it was defined or is to be computed
-  if( computeCentroid_ )
-    origin_ = computedCentroid_;
-  else if( node["centroid"] )
+  if( node["centroid"] )
     origin_ = node["centroid"].as<threeDVecType>();
 }
 

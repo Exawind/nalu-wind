@@ -94,8 +94,16 @@ WindEnergyAuxFunction::WindEnergyAuxFunction(
 
   // check if centroid needs to be computed
   std::vector<double> centroid(3,0.0);
+
   if ( frameNode["compute_centroids"] ) {
-    std::vector<std::string> partNames = frameNode["mesh_parts"].as<std::vector<std::string>>();
+    const auto& fparts = frameNode["mesh_parts"];
+
+    std::vector<std::string> partNames;
+    if (fparts.Type() == YAML::NodeType::Scalar)
+      partNames.push_back(fparts.as<std::string>());
+    else
+      partNames = fparts.as<std::vector<std::string>>();
+
     realm.compute_centroid_on_parts( partNames, centroid );
   }
   else {

@@ -15,10 +15,9 @@ class FrameInertial : public FrameBase
 {
 public:
   FrameInertial(
-    stk::mesh::MetaData& meta,
-    stk::mesh::BulkData& bulk,
+    Realm& realm,
     const YAML::Node& node
-) : FrameBase(meta,bulk,node,true) {}
+) : FrameBase(realm,node,true) {}
 
   virtual ~FrameInertial() {}
 

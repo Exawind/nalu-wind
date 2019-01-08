@@ -2,7 +2,6 @@
 #define MESHMOTIONALG_H
 
 #include "FrameBase.h"
-#include "Realm.h"
 
 namespace sierra{
 namespace nalu{
@@ -28,18 +27,10 @@ private:
 
   void load(const YAML::Node&);
 
-  void post_load();
-
   void compute_set_centroid();
 
   //! Reference to the realm
   Realm& realm_;
-
-  //! Reference to the STK Mesh MetaData object
-  stk::mesh::MetaData& meta_;
-
-  //! Reference to the STK Mesh BulkData object
-  stk::mesh::BulkData& bulk_;
 
   /** Motion frame vector
    *

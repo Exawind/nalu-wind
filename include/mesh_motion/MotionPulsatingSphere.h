@@ -37,8 +37,6 @@ private:
 
   double amplitude_{1.0};
   double frequency_{1.0};
-
-  threeDVecType origin_;
 };
 
 } // nalu
