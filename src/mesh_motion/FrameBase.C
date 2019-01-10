@@ -67,7 +67,7 @@ void FrameBase::load(const YAML::Node& node)
     else if (type == "translation")
       meshMotionVec_[i].reset(new MotionTranslation(motion_def));
     else
-      throw std::runtime_error("MeshMotion: Invalid mesh motion type: " + type);
+      throw std::runtime_error("FrameBase: Invalid mesh motion type: " + type);
 
   } // end for loop - i index
 }
