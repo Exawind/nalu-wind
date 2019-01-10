@@ -88,7 +88,7 @@ void FrameBase::setup()
     stk::mesh::Part* part = meta_.get_part(partNamesVec_[i]);
     if (nullptr == part)
       throw std::runtime_error(
-        "MeshMotion: Invalid part name encountered: " + partNamesVec_[i]);
+        "FrameBase: Invalid part name encountered: " + partNamesVec_[i]);
     else
       partVec_[i] = part;
   }
