@@ -75,9 +75,8 @@ void MeshMotionAlg::initialize( const double time )
       frameVec_[i]->set_ref_frame(ref_frame);
     }
 
-    // update coordinates only if frame is inertial or time > 0.0
-    if( (frameVec_[i]->is_inertial()) || (time > 0.0) )
-      frameVec_[i]->update_coordinates_velocity(time);
+    // update coordinates and velocity
+    frameVec_[i]->update_coordinates_velocity(time);
   }
 }
 
