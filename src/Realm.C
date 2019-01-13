@@ -287,7 +287,7 @@ Realm::~Realm()
   }
 
   // any bc data
-  std::vector<AuxFunctionAlgorithm *>::iterator iaux;
+  std::vector<Algorithm *>::iterator iaux;
   for( iaux=bcDataAlg_.begin(); iaux!=bcDataAlg_.end(); ++iaux )
     delete *iaux;
 

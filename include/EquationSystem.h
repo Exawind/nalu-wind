@@ -285,7 +285,7 @@ public:
 
   virtual void post_converged_work() {}
 
-  std::vector<AuxFunctionAlgorithm *> bcDataAlg_;
+  std::vector<Algorithm *> bcDataAlg_;
   std::vector<Algorithm *> bcDataMapAlg_;
   std::vector<Algorithm *> copyStateAlg_;
   

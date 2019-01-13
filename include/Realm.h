@@ -538,7 +538,7 @@ class Realm {
   stk::mesh::PartVector basePartVector_;
   stk::mesh::PartVector superPartVector_;
 
-  std::vector<AuxFunctionAlgorithm *> bcDataAlg_;
+  std::vector<Algorithm *> bcDataAlg_;
 
   // transfer information; three types
   std::vector<Transfer *> multiPhysicsTransferVec_;

@@ -51,7 +51,6 @@ add_sources(GlobalHeaderList
    VariableDensityNonIsoTemperatureAuxFunction.h
    VariableDensityPressureAuxFunction.h
    VariableDensityVelocityAuxFunction.h
-   WindEnergyAuxFunction.h
    WindEnergyTaylorVortexAuxFunction.h
    WindEnergyTaylorVortexPressureAuxFunction.h
 )
