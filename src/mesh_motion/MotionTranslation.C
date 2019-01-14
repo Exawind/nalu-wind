@@ -1,6 +1,8 @@
 
 #include "mesh_motion/MotionTranslation.h"
 
+#include <NaluParsing.h>
+
 #include <cmath>
 
 namespace sierra{
@@ -14,22 +16,17 @@ MotionTranslation::MotionTranslation(const YAML::Node& node)
 
 void MotionTranslation::load(const YAML::Node& node)
 {
-  if(node["start_time"])
-    startTime_ = node["start_time"].as<double>();
+  get_if_present(node, "start_time", startTime_, startTime_);
 
-  if(node["end_time"])
-    endTime_ = node["end_time"].as<double>();
+  get_if_present(node, "end_time", endTime_, endTime_);
 
-  // rotation could be based on angular velocity or angle
-  if(node["velocity"]){
-    useVelocity_ = true;
-    velocity_ = node["velocity"].as<threeDVecType>();
-  }
-  if(node["displacement"])
-  {
-    useVelocity_ = false;
-    displacement_ = node["displacement"].as<threeDVecType>();
-  }
+  // translation could be based on velocity or displacement
+  get_if_present(node, "velocity", velocity_, velocity_);
+
+  get_if_present(node, "displacement", displacement_, displacement_);
+
+  // default approach is to use a constant displacement
+  useVelocity_ = ( node["velocity"] ? true : false);
 }
 
 void MotionTranslation::build_transformation(

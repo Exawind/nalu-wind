@@ -1739,6 +1739,8 @@ MomentumEquationSystem::register_wall_bc(
   stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
 
   if(realm_.solutionOptions_->meshMotion_) {
+    NaluEnv::self().naluOutputP0() << "MomentumEquationSystem::register_wall_bc(): Mesh motion active! Velocity definition under wall_user_data will be ignored" << std::endl;
+
     // get the mesh velocity field
     VectorFieldType* meshVelocity = meta_data.get_field<VectorFieldType>(
       stk::topology::NODE_RANK, "mesh_velocity");

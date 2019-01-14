@@ -1,6 +1,8 @@
 
 #include "mesh_motion/MotionScaling.h"
 
+#include <NaluParsing.h>
+
 #include <cmath>
 
 namespace sierra{
@@ -14,22 +16,17 @@ MotionScaling::MotionScaling(const YAML::Node& node)
 
 void MotionScaling::load(const YAML::Node& node)
 {
-  if(node["start_time"])
-    startTime_ = node["start_time"].as<double>();
+  get_if_present(node, "start_time", startTime_, startTime_);
 
-  if(node["end_time"])
-    endTime_ = node["end_time"].as<double>();
+  get_if_present(node, "end_time", endTime_, endTime_);
 
   // scaling could be based on velocity or factor
-  if(node["velocity"]){
-    useVelocity_ = true;
-    velocity_ = node["velocity"].as<threeDVecType>();
-  }
-  if(node["factor"])
-  {
-    useVelocity_ = false;
-    factor_ = node["factor"].as<threeDVecType>();
-  }
+  get_if_present(node, "velocity", velocity_, velocity_);
+
+  get_if_present(node, "factor", factor_, factor_);
+
+  // default approach is to use a constant factor
+  useVelocity_ = ( node["velocity"] ? true : false);
 
   // get origin based on if it was defined or is to be computed
   if( node["centroid"] )

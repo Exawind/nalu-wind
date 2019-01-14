@@ -2,6 +2,7 @@
 #include "mesh_motion/MotionRotation.h"
 
 #include <NaluEnv.h>
+#include <NaluParsing.h>
 
 #include <cmath>
 
@@ -16,22 +17,17 @@ MotionRotation::MotionRotation(const YAML::Node& node)
 
 void MotionRotation::load(const YAML::Node& node)
 {
-  if(node["start_time"])
-    startTime_ = node["start_time"].as<double>();
+  get_if_present(node, "start_time", startTime_, startTime_);
 
-  if(node["end_time"])
-    endTime_ = node["end_time"].as<double>();
+  get_if_present(node, "end_time", endTime_, endTime_);
 
   // rotation could be based on angular velocity or angle
-  if(node["omega"]){
-    useOmega_ = true;
-    omega_ = node["omega"].as<double>();
-  }
-  if(node["angle"])
-  {
-    useOmega_ = false;
-    angle_ = node["angle"].as<double>();
-  }
+  get_if_present(node, "omega", omega_, omega_);
+
+  get_if_present(node, "angle", angle_, angle_);
+
+  // default approach is to use omega
+  useOmega_ = ( node["angle"] ? false : true);
 
   if( node["axis"] )
     axis_ = node["axis"].as<threeDVecType>();

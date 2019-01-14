@@ -1,6 +1,8 @@
 
 #include "mesh_motion/MotionPulsatingSphere.h"
 
+#include <NaluParsing.h>
+
 #include <cmath>
 
 namespace sierra{
@@ -14,17 +16,13 @@ MotionPulsatingSphere::MotionPulsatingSphere(const YAML::Node& node)
 
 void MotionPulsatingSphere::load(const YAML::Node& node)
 {
-  if(node["start_time"])
-    startTime_ = node["start_time"].as<double>();
+  get_if_present(node, "start_time", startTime_, startTime_);
 
-  if(node["end_time"])
-    endTime_ = node["end_time"].as<double>();
+  get_if_present(node, "end_time", endTime_, endTime_);
 
-  if(node["amplitude"])
-    amplitude_ = node["amplitude"].as<double>();
+  get_if_present(node, "amplitude", amplitude_, amplitude_);
 
-  if(node["frequency"])
-    frequency_ = node["frequency"].as<double>();
+  get_if_present(node, "frequency", frequency_, frequency_);
 
   origin_ = node["origin"].as<threeDVecType>();
   assert(origin_.size() == threeDVecSize);
