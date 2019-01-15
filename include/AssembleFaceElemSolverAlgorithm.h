@@ -45,6 +45,7 @@ public:
   void run_face_elem_algorithm(stk::mesh::BulkData& bulk, LambdaFunction lamdbaFunc)
   {
       int nDim = bulk.mesh_meta_data().spatial_dimension();
+      int totalNumFields = bulk.mesh_meta_data().get_fields().size();
 
       sierra::nalu::MasterElement* meFC = faceDataNeeded_.get_cvfem_face_me();
       sierra::nalu::MasterElement* meSCS = faceDataNeeded_.get_cvfem_surface_me();
@@ -60,8 +61,8 @@ public:
 
       int rhsSize = meElemInfo.nodalGatherSize_*numDof_, lhsSize = rhsSize*rhsSize, scratchIdsSize = rhsSize;
 
-      ElemDataRequestsNGP faceDataNGP(faceDataNeeded_);
-      ElemDataRequestsNGP elemDataNGP(elemDataNeeded_);
+      ElemDataRequestsNGP faceDataNGP(faceDataNeeded_, totalNumFields);
+      ElemDataRequestsNGP elemDataNGP(elemDataNeeded_, totalNumFields);
 
       const int bytes_per_team = 0;
       const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(lhsSize, rhsSize, scratchIdsSize,
