@@ -35,8 +35,9 @@ public:
   typedef Kokkos::View<FieldPtr*, Kokkos::LayoutRight, MemSpace> FieldView;
   typedef Kokkos::View<FieldInfo*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
-  ElemDataRequestsNGP(const ElemDataRequests& dataReq)
-    : dataEnums(),
+  ElemDataRequestsNGP(const ElemDataRequests& dataReq, unsigned totalFields)
+    : totalNumFields(totalFields),
+      dataEnums(),
       hostDataEnums(),
       coordsFields_(),
       hostCoordsFields_(),
@@ -93,6 +94,8 @@ public:
   MasterElement *get_cvfem_surface_me() const {return meSCS_;}
   MasterElement *get_fem_volume_me() const {return meFEM_;}
 
+  unsigned get_total_num_fields() const { return totalNumFields; }
+
 private:
   void copy_to_device()
   {
@@ -145,6 +148,7 @@ private:
     }
   }
 
+  unsigned totalNumFields;
   DataEnumView dataEnums[MAX_COORDS_TYPES];
   DataEnumView::HostMirror hostDataEnums[MAX_COORDS_TYPES];
 
