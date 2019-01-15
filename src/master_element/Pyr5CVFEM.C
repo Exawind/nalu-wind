@@ -525,6 +525,25 @@ PyrSCV::shifted_pyr_shape_fcn(
 }
 
 //--------------------------------------------------------------------------
+//-------- Mij -------------------------------------------------------------
+//--------------------------------------------------------------------------
+void PyrSCS::Mij(
+  const double *coords,
+  double *metric,
+  double *deriv)
+{
+  generic_Mij_3d<AlgTraitsPyr5>(numIntPoints_, deriv, coords, metric);
+}
+//-------------------------------------------------------------------------
+void PyrSCS::Mij(
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_3d<AlgTraitsPyr5>(deriv, coords, metric);
+}
+
+//--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 PyrSCS::PyrSCS()
@@ -1305,6 +1324,25 @@ void PyrSCS::gij(
       &numIntPoints_,
       deriv,
       coords, gupperij, glowerij);
+}
+
+//--------------------------------------------------------------------------
+//-------- Mij -------------------------------------------------------------
+//--------------------------------------------------------------------------
+void PyrSCV::Mij(
+  const double *coords,
+  double *metric,
+  double *deriv)
+{
+  generic_Mij_3d<AlgTraitsPyr5>(numIntPoints_, deriv, coords, metric);
+}
+//-------------------------------------------------------------------------
+void PyrSCV::Mij(
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_3d<AlgTraitsPyr5>(deriv, coords, metric);
 }
 
 //--------------------------------------------------------------------------

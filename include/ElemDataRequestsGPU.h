@@ -6,43 +6,55 @@
 /*------------------------------------------------------------------------*/
 
 
-#ifndef ElemDataRequestsNGP_h
-#define ElemDataRequestsNGP_h
+#ifndef ElemDataRequestsGPU_h
+#define ElemDataRequestsGPU_h
 
 #include <KokkosInterface.h>
 #include <Kokkos_Core.hpp>
 #include <ElemDataRequests.h>
+#include <FieldTypeDef.h>
+#include <stk_ngp/Ngp.hpp>
 
 namespace sierra{
 namespace nalu{
 
-//Temporary placeholder to allow storing field pointers in
-//kokkos views (see FieldView typedef below).
-//This won't be necessary when we get stk's ngp::Field because
-//those are stored by value (intended to be copied rather than
-//referenced through pointers).
-struct FieldPtr {
-  const stk::mesh::FieldBase* ptr;
+struct FieldInfoNGP {
+  FieldInfoNGP(const stk::mesh::FieldBase* fld, unsigned scalars)
+  : field(fld->get_mesh(), *fld), scalarsDim1(scalars), scalarsDim2(0)
+  {}  
+  FieldInfoNGP(const stk::mesh::FieldBase* fld, unsigned tensorDim1, unsigned tensorDim2)
+  : field(fld->get_mesh(), *fld), scalarsDim1(tensorDim1), scalarsDim2(tensorDim2)
+  {}  
+  KOKKOS_FUNCTION
+  FieldInfoNGP(const FieldInfoNGP& rhs)
+  : field(rhs.field), scalarsDim1(rhs.scalarsDim1), scalarsDim2(rhs.scalarsDim2)
+  {}
+  KOKKOS_FUNCTION
+  FieldInfoNGP()
+  : field(), scalarsDim1(0), scalarsDim2(0)
+  {}
 
-  operator const stk::mesh::FieldBase*() const { return ptr; }
+  NGPDoubleFieldType field;
+  unsigned scalarsDim1;
+  unsigned scalarsDim2;
 };
 
-class ElemDataRequestsNGP
+class ElemDataRequestsGPU
 {
 public:
   typedef Kokkos::View<COORDS_TYPES*, Kokkos::LayoutRight, MemSpace> CoordsTypesView;
   typedef Kokkos::View<ELEM_DATA_NEEDED*, Kokkos::LayoutRight, MemSpace> DataEnumView;
-  typedef Kokkos::View<FieldPtr*, Kokkos::LayoutRight, MemSpace> FieldView;
-  typedef Kokkos::View<FieldInfo*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
+  typedef Kokkos::View<NGPDoubleFieldType*, Kokkos::LayoutRight, MemSpace> FieldView;
+  typedef Kokkos::View<FieldInfoNGP*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
-  ElemDataRequestsNGP(const ElemDataRequests& dataReq, unsigned totalFields)
-    : totalNumFields(totalFields),
-      dataEnums(),
+  ElemDataRequestsGPU(const ElemDataRequests& dataReq, unsigned totalFields)
+    : dataEnums(),
       hostDataEnums(),
       coordsFields_(),
       hostCoordsFields_(),
       coordsFieldsTypes_(),
       hostCoordsFieldsTypes_(),
+      totalNumFields(totalFields),
       fields(),
       hostFields(),
       meFC_(dataReq.get_cvfem_face_me()),
@@ -54,13 +66,12 @@ public:
     fill_host_data_enums(dataReq, MODEL_COORDINATES);
 
     fill_host_fields(dataReq);
-
     fill_host_coords_fields(dataReq);
 
     copy_to_device();
   }
 
-  ~ElemDataRequestsNGP() {}
+  ~ElemDataRequestsGPU() {}
 
   void add_cvfem_face_me(MasterElement *meFC)
   { meFC_ = meFC; }
@@ -89,12 +100,17 @@ public:
   KOKKOS_FUNCTION
   const FieldInfoView& get_fields() const { return fields; }  
 
-  MasterElement *get_cvfem_face_me() const {return meFC_;}
-  MasterElement *get_cvfem_volume_me() const {return meSCV_;}
-  MasterElement *get_cvfem_surface_me() const {return meSCS_;}
-  MasterElement *get_fem_volume_me() const {return meFEM_;}
-
+  KOKKOS_FUNCTION
   unsigned get_total_num_fields() const { return totalNumFields; }
+
+  KOKKOS_FUNCTION
+  MasterElement *get_cvfem_face_me() const {return meFC_;}
+  KOKKOS_FUNCTION
+  MasterElement *get_cvfem_volume_me() const {return meSCV_;}
+  KOKKOS_FUNCTION
+  MasterElement *get_cvfem_surface_me() const {return meSCS_;}
+  KOKKOS_FUNCTION
+  MasterElement *get_fem_volume_me() const {return meFEM_;}
 
 private:
   void copy_to_device()
@@ -128,7 +144,7 @@ private:
     hostFields = Kokkos::create_mirror_view(fields);
     unsigned i = 0;
     for(const FieldInfo& finfo : dataReq.get_fields()) {
-      hostFields(i++) = finfo;
+      hostFields(i++) = FieldInfoNGP(finfo.field, finfo.scalarsDim1, finfo.scalarsDim2);
     }
   }
  
@@ -142,13 +158,12 @@ private:
 
     unsigned i = 0;
     for(auto iter : dataReq.get_coordinates_map()) {
-      hostCoordsFields_(i) = {iter.second};
+      hostCoordsFields_(i) = NGPDoubleFieldType(iter.second->get_mesh(), *iter.second);
       hostCoordsFieldsTypes_(i) = iter.first;
       ++i;
     }
   }
 
-  unsigned totalNumFields;
   DataEnumView dataEnums[MAX_COORDS_TYPES];
   DataEnumView::HostMirror hostDataEnums[MAX_COORDS_TYPES];
 
@@ -157,6 +172,7 @@ private:
   CoordsTypesView coordsFieldsTypes_;
   CoordsTypesView::HostMirror hostCoordsFieldsTypes_;
 
+  unsigned totalNumFields;
   FieldInfoView fields;
   FieldInfoView::HostMirror hostFields;
 

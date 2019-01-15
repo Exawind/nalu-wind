@@ -34,7 +34,7 @@ using ScalarAlignedVector = AlignedVector<DoubleType>;
 
 static constexpr int simdLen = stk::simd::ndoubles;
 
-inline
+KOKKOS_INLINE_FUNCTION
 size_t get_num_simd_groups(size_t length)
 {
     size_t numSimdGroups = length/simdLen;
@@ -45,7 +45,7 @@ size_t get_num_simd_groups(size_t length)
     return numSimdGroups;
 }
 
-inline
+KOKKOS_INLINE_FUNCTION
 int get_length_of_next_simd_group(int index, int length)
 {
   int nextLength = simdLen;

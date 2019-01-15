@@ -116,7 +116,7 @@ public:
       //a topology would be available.
       dataNeededByKernels_.add_cvfem_surface_me(sierra::nalu::MasterElementRepo::get_surface_master_element(stk::topology::HEX_8));
 
-      sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_);
+      sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_, meta.get_fields().size());
       const int bytes_per_team = 0;
       const int bytes_per_thread = get_num_bytes_pre_req_data(dataNeededNGP, meta.spatial_dimension());
       auto team_exec = sierra::nalu::get_host_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);

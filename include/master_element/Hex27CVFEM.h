@@ -223,6 +223,16 @@ public:
     SharedMemView<DoubleType***>&gradop,
     SharedMemView<DoubleType***>&deriv);
 
+  void Mij(
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv);
+
+  void Mij(
+    const double *coords,
+    double *metric,
+    double *deriv);
+
   void determinant(
     const int nelem,
     const double *coords,
@@ -301,6 +311,16 @@ public:
     int face_ordinal,
     SharedMemView<DoubleType**>& coords,
     SharedMemView<DoubleType***>& gradop) final;
+
+  void Mij(
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv);
+
+  void Mij(
+    const double *coords,
+    double *metric,
+    double *deriv);
 
   void determinant(
     const int nelem,

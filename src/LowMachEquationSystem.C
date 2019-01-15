@@ -2108,50 +2108,61 @@ MomentumEquationSystem::register_abltop_bc(
 
   if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_) {
     // solver algs; lhs
-  std::string bcFieldName = realm_.solutionOptions_->activateOpenMdotCorrection_?"velocity_bc" : "cont_velocity_bc";
-  VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, bcFieldName));
-  stk::mesh::put_field(*theBcField, *part, 3);
-      auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
-      if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
-  	SolverAlgorithm* theAlg = new AssembleMomentumEdgeABLTopBC(realm_, 
-          part, this, user_data.grid_dims_, user_data.horiz_bcs_,
+    std::string bcFieldName =
+        realm_.solutionOptions_->activateOpenMdotCorrection_
+            ? "velocity_bc"
+            : "cont_velocity_bc";
+    VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>(
+        stk::topology::NODE_RANK, bcFieldName));
+    stk::mesh::put_field_on_mesh(*theBcField, *part, 3, nullptr);
+
+    auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
+    if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
+      SolverAlgorithm *theAlg = new AssembleMomentumEdgeABLTopBC(
+          realm_, part, this, user_data.grid_dims_, user_data.horiz_bcs_,
           user_data.z_sample_);
-	solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
-      }	else {
-	it->second->partVec_.push_back(part);	
-      }	
-  }
-  else {
-    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-
-    stk::topology elemTopo = get_elem_topo(realm_, *part);
-
-    AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
-    bool solverAlgWasBuilt = false;
-
-    std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
-      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "symm");
-
-    auto& activeKernels = faceElemSolverAlg->activeKernels_;
-
-    if (solverAlgWasBuilt) {
-
-      const stk::mesh::MetaData& metaData = realm_.meta_data();
-      const std::string viscName = realm_.is_turbulent()
-        ? "effective_viscosity_u" : "viscosity";
-      
-      build_face_elem_topo_kernel_automatic<MomentumSymmetryElemKernel>
-        (partTopo, elemTopo, *this, activeKernels, "momentum_symmetry",
-         metaData, *realm_.solutionOptions_,
-         metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity"),
-         metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName),
-         faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_
-         );
-      
+      solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
+    } else {
+      it->second->partVec_.push_back(part);
     }
+  } else {
+    // auto &solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+
+    // stk::topology elemTopo = get_elem_topo(realm_, *part);
+
+    // AssembleFaceElemSolverAlgorithm *faceElemSolverAlg = nullptr;
+    // bool solverAlgWasBuilt = false;
+
+    // std::tie(faceElemSolverAlg, solverAlgWasBuilt) =
+    //     build_or_add_part_to_face_elem_solver_alg(
+    //         algType, *this, *part, elemTopo, solverAlgMap, "symm");
+
+    // auto &activeKernels = faceElemSolverAlg->activeKernels_;
+
+    // if (solverAlgWasBuilt) {
+
+    //   const stk::mesh::MetaData &metaData = realm_.meta_data();
+    //   const std::string viscName =
+    //       realm_.is_turbulent() ? "effective_viscosity_u" : "viscosity";
+
+    //   build_face_elem_topo_kernel_automatic<MomentumSymmetryElemKernel>(
+    //       partTopo, elemTopo, *this, activeKernels, "momentum_symmetry",
+    //       metaData, *realm_.solutionOptions_,
+    //       metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK,
+    //                                           "velocity"),
+    //       metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK,
+    //                                           viscName),
+    //       faceElemSolverAlg->faceDataNeeded_,
+    //       faceElemSolverAlg->elemDataNeeded_);
+    // }
+    throw std::runtime_error("MomentumEqSys: Consolidated algorithm not "
+                             "supported at this time for ABL Top BC.");
   }
 #else
-  throw std::runtime_error("Cannot initialize ABL top BC because FFTW support is mising.\n Set ENABLE_FFTW to ON in nalu-wind/CMakeLists.txt, reconfigure and recompile.");
+  throw std::runtime_error(
+      "Cannot initialize ABL top BC because FFTW support is mising.\n Set "
+      "ENABLE_FFTW to ON in nalu-wind/CMakeLists.txt, reconfigure and "
+      "recompile.");
 #endif
 }
 

@@ -25,6 +25,7 @@ public:
 
   virtual ~PerturbedShearLayerVelocityAuxFunction() {}
   
+  using AuxFunction::do_evaluate;
   virtual void do_evaluate(
     const double * coords,
     const double time,
@@ -44,6 +45,7 @@ public:
 
   virtual ~PerturbedShearLayerMixFracAuxFunction() {}
 
+  using AuxFunction::do_evaluate;
   virtual void do_evaluate(
     const double * coords,
     const double time,

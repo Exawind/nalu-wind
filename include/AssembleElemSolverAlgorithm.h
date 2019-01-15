@@ -52,7 +52,7 @@ public:
     const int lhsSize = rhsSize_*rhsSize_;
     const int scratchIdsSize = rhsSize_;
 
-   ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_);
+   ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_, meta_data.get_fields().size());
 
    const int bytes_per_team = 0;
    const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(lhsSize, rhsSize_, scratchIdsSize,

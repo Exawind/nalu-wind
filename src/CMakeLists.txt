@@ -89,7 +89,6 @@ add_sources(GlobalSourceList
    DirichletBC.C
    EffectiveDiffFluxCoeffAlgorithm.C
    EffectiveSSTDiffFluxCoeffAlgorithm.C
-   EigenDecomposition.C
    ElemDataRequests.C
    EnthalpyABLSrcNodeSuppAlg.C
    EnthalpyEffectiveDiffFluxCoeffAlgorithm.C
@@ -151,6 +150,7 @@ add_sources(GlobalSourceList
    ScalarMassBackwardEulerNodeSuppAlg.C
    ScalarMassElemSuppAlgDep.C
    ScratchViews.C
+   ScratchViewsNGP.C
    ShearStressTransportEquationSystem.C
    SimpleErrorIndicatorElemAlgorithm.C
    SimpleErrorIndicatorScalarElemAlgorithm.C

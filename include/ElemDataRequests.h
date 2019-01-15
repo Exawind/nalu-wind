@@ -13,6 +13,7 @@
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_ngp/Ngp.hpp>
 
 #include <set>
 
@@ -29,6 +30,8 @@ enum ELEM_DATA_NEEDED {
   SCS_GRAD_OP,
   SCS_SHIFTED_GRAD_OP,
   SCS_GIJ,
+  SCS_MIJ,
+  SCV_MIJ,
   SCV_VOLUME,
   SCV_GRAD_OP,
   SCV_SHIFTED_GRAD_OP,
@@ -87,12 +90,11 @@ public:
     COORDS_TYPES cType = CURRENT_COORDINATES
   )
   {
-    auto it = coordsFields_.find(cType);
-    ThrowRequireMsg(
-      it != coordsFields_.end(),
-      "ElemDataRequests::add_master_element_call: Coordinates field (" +
-      CoordinatesTypeNames[cType] +
-      ") must be registered to ElemDataRequests before registering MasterElement calls");
+   auto it = coordsFields_.find(cType);
+   NGP_ThrowRequireMsg(
+     it != coordsFields_.end(),
+     "ElemDataRequests:add_master_element_call: Coordinates field "
+     "must be registered to ElemDataRequests before registering MasterElement");
     dataEnums[cType].insert(data);
   }
 
@@ -141,11 +143,10 @@ public:
     const COORDS_TYPES cType) const
   {
     auto it = coordsFields_.find(cType);
-    ThrowRequireMsg(
+    NGP_ThrowRequireMsg(
       it != coordsFields_.end(),
-      "ElemDataRequests::get_coordinates_field: Coordinates field (" +
-      CoordinatesTypeNames[cType] +
-      ") must be registered to ElemDataRequests before access");
+     "ElemDataRequests:add_master_element_call: Coordinates field "
+     "must be registered to ElemDataRequests before access");
     return it->second;
   }
 
@@ -158,7 +159,6 @@ public:
   MasterElement *get_cvfem_volume_me() const {return meSCV_;}
   MasterElement *get_cvfem_surface_me() const {return meSCS_;}
   MasterElement *get_fem_volume_me() const {return meFEM_;}
-
 
 private:
   std::array<std::set<ELEM_DATA_NEEDED>, MAX_COORDS_TYPES> dataEnums;

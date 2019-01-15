@@ -287,6 +287,32 @@ Quad92DSCV::jacobian_determinant(
 }
 
 //--------------------------------------------------------------------------
+//-------- Metric Tensor Mij------------------------------------------------
+//--------------------------------------------------------------------------
+// This function computes the metric tensor Mij = (J J^T)^(1/2) where J is
+// the Jacobian.  This is needed for the UT-A Hybrid LES model.  For
+// reference please consult the Nalu theory manual description of the UT-A
+// Hybrid LES model or S. Haering's PhD thesis: Anisotropic hybrid turbulence 
+// modeling with specific application to the simulation of pulse-actuated 
+// dynamic stall control.
+//--------------------------------------------------------------------------
+void Quad92DSCV::Mij(
+  const double *coords,
+  double *metric,
+  double *deriv)
+{
+  generic_Mij_2d<AlgTraitsQuad9_2D>(numIntPoints_, deriv, coords, metric);
+}
+//-------------------------------------------------------------------------
+void Quad92DSCV::Mij(
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& metric,
+  SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_2d<AlgTraitsQuad9_2D>(deriv, coords, metric);
+}
+
+//--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 Quad92DSCS::Quad92DSCS()
@@ -848,6 +874,32 @@ void Quad92DSCS::gij(
       &numIntPoints_,
       deriv,
       coords, gupperij, glowerij);
+}
+
+//--------------------------------------------------------------------------
+//-------- Metric Tensor Mij------------------------------------------------
+//--------------------------------------------------------------------------
+// This function computes the metric tensor Mij = (J J^T)^(1/2) where J is
+// the Jacobian.  This is needed for the UT-A Hybrid LES model.  For
+// reference please consult the Nalu theory manual description of the UT-A
+// Hybrid LES model or S. Haering's PhD thesis: Anisotropic hybrid turbulence 
+// modeling with specific application to the simulation of pulse-actuated 
+// dynamic stall control.
+//--------------------------------------------------------------------------
+void Quad92DSCS::Mij(
+  const double *coords,
+  double *metric,
+  double *deriv)
+{
+  generic_Mij_2d<AlgTraitsQuad9_2D>(numIntPoints_, deriv, coords, metric);
+}
+//-------------------------------------------------------------------------
+void Quad92DSCS::Mij(
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& metric,
+  SharedMemView<DoubleType***>& deriv)
+{
+  generic_Mij_2d<AlgTraitsQuad9_2D>(deriv, coords, metric);
 }
 
 //--------------------------------------------------------------------------

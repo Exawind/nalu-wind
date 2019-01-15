@@ -125,7 +125,7 @@ public:
   
       const stk::mesh::BucketVector& elemBuckets = bulkData_.get_buckets(stk::topology::ELEM_RANK, meta.locally_owned_part());
   
-      sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_);
+      sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_, meta.get_fields().size());
       const int bytes_per_team = 0;
       const int bytes_per_thread = get_num_bytes_pre_req_data(dataNeededNGP, meta.spatial_dimension());
       auto team_exec = sierra::nalu::get_host_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);

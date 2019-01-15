@@ -582,7 +582,7 @@ void calc_mass_flow_rate_scs(
     meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded);
+  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data(
@@ -664,7 +664,7 @@ void calc_projected_nodal_gradient_interior(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded);
+  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data(dataNeededNGP, meta.spatial_dimension()) ;
@@ -743,7 +743,7 @@ void calc_projected_nodal_gradient_interior(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded);
+  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data(dataNeededNGP, meta.spatial_dimension()) ;
@@ -825,7 +825,7 @@ void calc_projected_nodal_gradient_boundary(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(meta.side_rank(), selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded);
+  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data(dataNeededNGP, meta.spatial_dimension()) ;
@@ -899,7 +899,7 @@ void calc_projected_nodal_gradient_boundary(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(meta.side_rank(), selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded);
+  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data(dataNeededNGP, meta.spatial_dimension()) ;
@@ -970,7 +970,7 @@ void calc_dual_nodal_volume(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded);
+  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data(dataNeededNGP, meta.spatial_dimension()) ;

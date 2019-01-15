@@ -54,11 +54,21 @@ public:
     SharedMemView<DoubleType***>& gradop,
     SharedMemView<DoubleType***>& deriv) override ;
 
+  void Mij(
+    SharedMemView<DoubleType** >& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv) override ;
+
   void determinant(
     const int nelem,
     const double *coords,
     double *areav,
     double * error ) override ;
+
+  void Mij(
+    const double *coords,
+    double *metric,
+    double *deriv) override ;
 
 private:
   void set_interior_info();
@@ -143,6 +153,16 @@ public:
     const double *coords,
     double *gupperij,
     double *glowerij,
+    double *deriv) override ;
+
+  void Mij(
+    SharedMemView<DoubleType** >& coords,
+    SharedMemView<DoubleType***>& metric,
+    SharedMemView<DoubleType***>& deriv) override ;
+
+  void Mij(
+    const double *coords,
+    double *metric,
     double *deriv) override ;
 
   const int * adjacentNodes() override ;
