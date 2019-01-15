@@ -16,7 +16,8 @@
 
 void do_the_test_ngp(const sierra::nalu::ElemDataRequests& dataReq)
 {
-  sierra::nalu::ElemDataRequestsNGP ngpDataReq(dataReq);
+  unsigned totalNumFields_guess = 10;
+  sierra::nalu::ElemDataRequestsNGP ngpDataReq(dataReq, totalNumFields_guess);
 
   unsigned numCorrectTests = 0;
   int threadsPerTeam = 1;
