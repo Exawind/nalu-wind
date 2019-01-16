@@ -203,7 +203,7 @@ void TiogaBlock::update_iblank_cell()
   }
 }
 
-void TiogaBlock::get_donor_info(tioga& tg, stk::mesh::EntityProcVec& egvec)
+void TiogaBlock::get_donor_info(TIOGA::tioga& tg, stk::mesh::EntityProcVec& egvec)
 {
   // Do nothing if this mesh block isn't present in this MPI Rank
   if (num_nodes_ < 1) return;
@@ -447,7 +447,7 @@ void TiogaBlock::reset_iblank_data()
     iblank_cell_[i] = 1;
 }
 
-void TiogaBlock::register_block(tioga& tg)
+void TiogaBlock::register_block(TIOGA::tioga& tg)
 {
   // Do nothing if this mesh block isn't present in this MPI Rank
   if (num_nodes_ < 1) return;
