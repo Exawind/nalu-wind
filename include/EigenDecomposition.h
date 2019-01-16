@@ -100,7 +100,6 @@ void reconstruct_matrix_from_decomposition(const T (&D)[2][2],
   // mat-vec, A = (Q*D)*QT = B*QT
   matrix_matrix_multiply(B, QT, A);
 }
-
 //--------------------------------------------------------------------------
 //-------- symmetric diagonalize (3D) --------------------------------------
 //--------------------------------------------------------------------------
@@ -223,15 +222,9 @@ void sym_diagonalize(const T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3]) {
 
     jr[3] = stk::math::sqrt(1.0f - jrL * jrL);
 
-    // FIXME: Is there a better way to deal with the exit condition than having
-    // to hack to examine each object in the SIMD array.  Maybe some sort of
-    // max/min operation?
-    int cnt = 0;
-    for (int simdIndex = 0; simdIndex < simdLen; ++simdIndex)
-      if (stk::simd::get_data(jr[3], simdIndex) == 1.0)
-        cnt++;
-
-    if (cnt == simdLen) {
+    const auto check_one = jr[3]==1.0;
+    const bool exit_now = stk::simd::are_all(check_one);
+    if (exit_now){
       break; // reached limits of floating point precision
     }
 
