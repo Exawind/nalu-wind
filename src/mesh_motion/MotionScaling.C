@@ -20,13 +20,8 @@ void MotionScaling::load(const YAML::Node& node)
 
   get_if_present(node, "end_time", endTime_, endTime_);
 
-  // scaling could be based on velocity or factor
-  get_if_present(node, "velocity", velocity_, velocity_);
-
-  get_if_present(node, "factor", factor_, factor_);
-
-  // default approach is to use a constant factor
-  useVelocity_ = ( node["velocity"] ? true : false);
+  if( node["factor"] )
+    factor_ = node["factor"].as<threeDVecType>();
 
   // get origin based on if it was defined or is to be computed
   if( node["centroid"] )
@@ -37,18 +32,7 @@ void MotionScaling::build_transformation(
   const double time,
   const double* xyz)
 {
-  if( (time >= (startTime_-eps_)) && (time <= (endTime_+eps_)) )
-  {
-    // determine current displacement
-    threeDVecType factor = {};
-    if (useVelocity_)
-      for (int d=0; d < threeDVecSize; d++)
-        factor[d] = velocity_[d]*(time-startTime_);
-    else
-      factor = factor_;
-
-    scaling_mat(factor);
-  }
+  scaling_mat(factor_);
 }
 
 void MotionScaling::scaling_mat(const threeDVecType& factor)
@@ -79,36 +63,6 @@ void MotionScaling::scaling_mat(const threeDVecType& factor)
 
   // composite addition of motions
   transMat_ = add_motion(curr_trans_mat_,transMat_);
-}
-
-MotionBase::threeDVecType MotionScaling::compute_velocity(
-  double time,
-  const transMatType& comp_trans,
-  double* xyz )
-{
-  threeDVecType vel = {};
-
-  if( (time >= (startTime_-eps_)) && (time <= (endTime_+eps_)) )
-  {
-    // transform the origin of the rotating body
-    threeDVecType trans_origin = {};
-    for (int d = 0; d < threeDVecSize; d++) {
-      trans_origin[d] = comp_trans[d][0]*origin_[0]
-                       +comp_trans[d][1]*origin_[1]
-                       +comp_trans[d][2]*origin_[2]
-                       +comp_trans[d][3];
-    }
-
-    for (int d=0; d < threeDVecSize; d++)
-    {
-      int signum = (-eps_ < xyz[d]-trans_origin[d]) -
-                           (xyz[d]-trans_origin[d] < eps_);
-
-      vel[d] = signum * velocity_[d];
-    }
-  }
-
-  return vel;
 }
 
 } // nalu

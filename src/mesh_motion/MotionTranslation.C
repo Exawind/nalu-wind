@@ -21,9 +21,11 @@ void MotionTranslation::load(const YAML::Node& node)
   get_if_present(node, "end_time", endTime_, endTime_);
 
   // translation could be based on velocity or displacement
-  get_if_present(node, "velocity", velocity_, velocity_);
+  if( node["velocity"] )
+     velocity_ = node["velocity"].as<threeDVecType>();
 
-  get_if_present(node, "displacement", displacement_, displacement_);
+  if( node["displacement"] )
+    displacement_ = node["displacement"].as<threeDVecType>();
 
   // default approach is to use a constant displacement
   useVelocity_ = ( node["velocity"] ? true : false);

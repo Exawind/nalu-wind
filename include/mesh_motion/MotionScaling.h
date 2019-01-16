@@ -25,7 +25,10 @@ public:
   virtual threeDVecType compute_velocity(
     double time,
     const transMatType& comp_trans,
-    double* xyz );
+    double* xyz ) {
+    throw std::runtime_error(
+      "MotionScaling:compute_velocity() Scaling is not setup to be used as a non-inertial motion");
+  }
 
 private:
   MotionScaling() = delete;
@@ -36,9 +39,6 @@ private:
   void scaling_mat(const threeDVecType&);
 
   threeDVecType factor_ = {{0.0,0.0,0.0}};
-  threeDVecType velocity_ = {{0.0,0.0,0.0}};
-
-  bool useVelocity_ = false;
 };
 
 
