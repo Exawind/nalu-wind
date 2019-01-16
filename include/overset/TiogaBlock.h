@@ -13,7 +13,9 @@
 #include <memory>
 #include <string>
 
+namespace TIOGA {
 class tioga;
+}
 
 namespace tioga_nalu {
 
@@ -80,7 +82,7 @@ public:
    *  overset holecutting that overrides the default TIOGA behavior of selecting
    *  donor and receptor points based on local cell volume.
    */
-  void register_block(tioga&);
+  void register_block(TIOGA::tioga&);
 
   /** Update iblanks after connectivity updates
    */
@@ -98,7 +100,7 @@ public:
    *  @param tg Reference to TIOGA API object (provided by TiogaSTKIface).
    *  @param egvec List of {donorElement, receptorMPIRank} pairs to be populated
    */
-  void get_donor_info(tioga&, stk::mesh::EntityProcVec&);
+  void get_donor_info(TIOGA::tioga&, stk::mesh::EntityProcVec&);
 
   // Accessors
 

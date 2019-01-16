@@ -37,7 +37,7 @@ TiogaSTKIface::TiogaSTKIface(
 ) : oversetManager_(oversetManager),
     meta_(*oversetManager.metaData_),
     bulk_(*oversetManager.bulkData_),
-    tg_(new tioga()),
+    tg_(new TIOGA::tioga()),
     inactivePartName_("nalu_overset_hole_elements")
 {
   load(node);
