@@ -56,13 +56,16 @@ void MeshMotionAlg::load(const YAML::Node& node)
       if( it ==  frameNames.end() )
         throw std::runtime_error("MeshMotion: Invalid reference frame: " + refFrameName);
 
-      refFrameMap_[i] = std::distance(frameNames.begin(), it);
+      refFrameMap_[i] = frameVec_[std::distance(frameNames.begin(), it)];
     }
   }
 }
 
 void MeshMotionAlg::initialize( const double time )
 {
+  if(isInit_)
+    throw std::runtime_error("MeshMotionAlg::initialize(): Re-initialization of MeshMotionAlg not valid");
+
   for (size_t i=0; i < frameVec_.size(); i++)
   {
     frameVec_[i]->setup();
@@ -70,14 +73,15 @@ void MeshMotionAlg::initialize( const double time )
     // set reference frame if they exist
     if( refFrameMap_.find(i) != refFrameMap_.end() )
     {
-      int ref_ind = refFrameMap_[i];
-      MotionBase::transMatType ref_frame = frameVec_[ref_ind]->get_inertial_frame();
+      MotionBase::transMatType ref_frame = refFrameMap_[i]->get_inertial_frame();
       frameVec_[i]->set_ref_frame(ref_frame);
     }
 
     // update coordinates and velocity
     frameVec_[i]->update_coordinates_velocity(time);
   }
+
+  isInit_ = true;
 }
 
 void MeshMotionAlg::execute(const double time)

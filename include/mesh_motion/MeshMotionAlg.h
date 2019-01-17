@@ -37,14 +37,17 @@ private:
    *  Vector of type of frame of corresponding motion
    *  Size is the number of motion groups in input file
    */
-  std::vector<std::unique_ptr<FrameBase>> frameVec_;
+  std::vector<std::shared_ptr<FrameBase>> frameVec_;
 
   /** Reference frame map
    *
-   *  Map between frame indices and corresponding reference frame indices
+   *  Map between frame indices and corresponding reference frame
    *  Size is the number of motion groups with reference frames
    */
-  std::map<int, int> refFrameMap_;
+  std::map<int, std::shared_ptr<FrameBase>> refFrameMap_;
+
+  //! flag to guard against multiple invocations of initialize()
+  bool isInit_ = false;
 };
 
 } // nalu
