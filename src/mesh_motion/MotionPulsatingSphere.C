@@ -32,7 +32,9 @@ void MotionPulsatingSphere::build_transformation(
   const double time,
   const double* xyz)
 {
-  if( (time >= (startTime_-eps_)) && (time <= (endTime_+eps_)) )
+  double eps = std::numeric_limits<double>::epsilon();
+
+  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
     scaling_mat(time,xyz);
 }
 
@@ -83,7 +85,9 @@ MotionBase::threeDVecType MotionPulsatingSphere::compute_velocity(
 {
   threeDVecType vel = {};
 
-  if( (time >= (startTime_-eps_)) && (time <= (endTime_+eps_)) )
+  double eps = std::numeric_limits<double>::epsilon();
+
+  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
   {
     double radius = std::sqrt( std::pow(xyz[0]-origin_[0],2)
                               +std::pow(xyz[1]-origin_[1],2)
@@ -94,7 +98,7 @@ MotionBase::threeDVecType MotionPulsatingSphere::compute_velocity(
 
     for (int d=0; d < threeDVecSize; d++)
     {
-      int signum = (-eps_ < xyz[d]-origin_[d]) - (xyz[d]-origin_[d] < eps_);
+      int signum = (-eps < xyz[d]-origin_[d]) - (xyz[d]-origin_[d] < eps);
       vel[d] = signum * pulsating_velocity * (xyz[d]-origin_[d]);
     }
   }

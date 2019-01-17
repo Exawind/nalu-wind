@@ -43,7 +43,9 @@ void MotionRotation::build_transformation(
   const double time,
   const double* xyz)
 {
-  if( (time >= (startTime_-eps_)) && (time <= (endTime_+eps_)) )
+  double eps = std::numeric_limits<double>::epsilon();
+
+  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
   {
     // determine current angle
     double curr_angle = 0.0;
@@ -117,7 +119,9 @@ MotionBase::threeDVecType MotionRotation::compute_velocity(
 {
   threeDVecType vel = {};
 
-  if( (time >= (startTime_-eps_)) && (time <= (endTime_+eps_)) )
+  double eps = std::numeric_limits<double>::epsilon();
+
+  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
   {
     // construct unit vector
     threeDVecType unitVec = {};

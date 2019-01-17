@@ -76,8 +76,7 @@ protected:
   threeDVecType origin_ = {{0.0,0.0,0.0}};
 
   double startTime_{0.0};
-  double endTime_{DBL_MAX};
-  const double eps_{1e-14};
+  double endTime_{std::numeric_limits<double>::max()};
 
 private:
     MotionBase(const MotionBase&) = delete;

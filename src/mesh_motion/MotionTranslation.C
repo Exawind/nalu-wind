@@ -35,7 +35,9 @@ void MotionTranslation::build_transformation(
   const double time,
   const double* xyz)
 {
-  if( (time >= (startTime_-eps_)) && (time <= (endTime_+eps_)) )
+  double eps = std::numeric_limits<double>::epsilon();
+
+  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
   {
     // determine translation based on user defined input
     if (useVelocity_)
@@ -68,7 +70,9 @@ MotionBase::threeDVecType MotionTranslation::compute_velocity(
 {
   threeDVecType vel = {};
 
-  if( (time >= (startTime_-eps_)) && (time <= (endTime_+eps_)) )
+  double eps = std::numeric_limits<double>::epsilon();
+
+  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
     vel = velocity_;
 
   return vel;
