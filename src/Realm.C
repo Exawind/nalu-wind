@@ -287,9 +287,8 @@ Realm::~Realm()
   }
 
   // any bc data
-  std::vector<Algorithm *>::iterator iaux;
-  for( iaux=bcDataAlg_.begin(); iaux!=bcDataAlg_.end(); ++iaux )
-    delete *iaux;
+  for( auto ialg: bcDataAlg_ )
+    delete ialg;
 
   delete solutionOptions_;
   delete outputInfo_;
@@ -324,8 +323,6 @@ Realm::~Realm()
   if (NULL != ablForcingAlg_) delete ablForcingAlg_;
 
   if (nullptr != bdyLayerStats_) delete bdyLayerStats_;
-
-  if ( nullptr != meshMotionAlg_ ) delete meshMotionAlg_;
 
   if (nullptr != oversetManager_) delete oversetManager_;
 
@@ -767,7 +764,7 @@ Realm::load(const YAML::Node & node)
 
   // instantiate mesh motion class once the mesh has been created
   if ( solutionOptions_->meshMotion_ ) {
-    meshMotionAlg_ = new MeshMotionAlg( *this, solutionOptions_->meshMotionNode_);
+    meshMotionAlg_.reset(new MeshMotionAlg( *this, solutionOptions_->meshMotionNode_));
   }
 
   // post processing

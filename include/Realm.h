@@ -426,7 +426,7 @@ class Realm {
   Actuator *actuator_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
-  MeshMotionAlg* meshMotionAlg_{nullptr};
+  std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
 
   std::vector<Algorithm *> propertyAlg_;
   std::map<PropertyIdentifier, ScalarFieldType *> propertyMap_;
