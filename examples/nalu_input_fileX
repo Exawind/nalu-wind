@@ -562,8 +562,8 @@ class mapping_object_class():
             self.yaml_input['realms'][0]['actuator']['simStart'] = 'init'
 
         # Start time for the turbines
-        self.yaml_input['realms'][0]['actuator']['t_start'] = \
-            self.yaml_setup['start_time']
+#        self.yaml_input['realms'][0]['actuator']['t_start'] = \
+#            self.yaml_setup['start_time']
 
         # Maximum time
         self.yaml_input['realms'][0]['actuator']['t_max'] = \

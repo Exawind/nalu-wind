@@ -27,7 +27,7 @@ linear_solvers:
   kspace: 75
   output_level: 0
   recompute_preconditioner: no
-  muelu_xml_file_name: ./milestone.xml
+  muelu_xml_file_name: ../milestone.xml
 
 
 # Specify the differnt physics realms.  Here, we just have one for the fluid.
@@ -35,9 +35,9 @@ realms:
 
   # The fluid realm that uses the 5 km x 5 km x 1 km atmospheric LES mesh.
 - name: fluidRealm
-  mesh: mesh_abl.exo
+  mesh: ../case1/restart_data/precursor.rst
   use_edges: yes
-  automatic_decomposition_type: rcb
+    #~ automatic_decomposition_type: rcb
 
     # This defines the equations to be solved: momentum, pressure, static enthalpy,
     # and subgrid-scale turbulent kinetic energy.  The equation system will be iterated
@@ -80,7 +80,7 @@ realms:
 
     constant_specification:
       universal_gas_constant: 8314.4621
-      reference_pressure: 101325.0
+      reference_pressure: 86011.67689655174
 
     reference_quantities:
     - species_name: Air
@@ -92,11 +92,11 @@ realms:
         # Density here was computed such that P_ref = rho_ref*(R/mw)*300K
     - name: density
       type: constant
-      value: 1.178037722969475
+      value: 1.
 
     - name: viscosity
       type: constant
-      value: 1.2E-5
+      value: 1e-05
 
     - name: specific_heat
       type: constant
@@ -130,16 +130,42 @@ realms:
     # immediately below.
   boundary_conditions:
 
-  - periodic_boundary_condition: bc_north_south
-    target_name: [north, south]
-    periodic_user_data:
-      search_tolerance: 0.0001
-
-  - periodic_boundary_condition: bc_east_west
-    target_name: [east, west]
-    periodic_user_data:
-      search_tolerance: 0.0001
-
+  - open_boundary_condition: bc_open_north
+    target_name: north
+    open_user_data:
+      velocity:
+      - 5.0
+      - 5.0
+      - 0.0
+      temperature: 300.0
+      pressure: 0.0
+  - open_boundary_condition: bc_open_east
+    target_name: east
+    open_user_data:
+      velocity:
+      - 5.0
+      - 5.0
+      - 0.0
+      temperature: 300.0
+      pressure: 0.0
+  - inflow_boundary_condition: bc_inflow_south
+    target_name: south
+    inflow_user_data:
+      velocity:
+      - 5.0
+      - 5.0
+      - 0.0
+      temperature: 300.0
+      external_data: yes
+  - inflow_boundary_condition: bc_inflow_west
+    target_name: west
+    inflow_user_data:
+      velocity:
+      - 5.0
+      - 5.0
+      - 0.0
+      temperature: 300.0
+      external_data: yes
   - abltop_boundary_condition: bc_upper
     target_name: upper
     abltop_user_data:
@@ -150,9 +176,9 @@ realms:
     wall_user_data:
       velocity: [0, 0, 0]
       use_abl_wall_function: yes
-      heat_flux: 0.0
+      heat_flux: 0.
       reference_temperature: 300.0
-      roughness_height: 0.1
+      roughness_height: 0.15
       gravity_vector_component: 3
 
   solution_options:
@@ -203,13 +229,13 @@ realms:
         - rodi
 
     - user_constants:
-        reference_density: 1.178037722969475
+        reference_density: 1.
         reference_temperature: 300.0
         gravity: [0.0, 0.0, -9.81]
         thermal_expansion_coefficient: 3.33333333e-3
         east_vector: [1.0, 0.0, 0.0]
         north_vector: [0.0, 1.0, 0.0]
-        latitude: 45.0
+        latitude: 41.3
         earth_angular_velocity: 7.2921159e-5
 
     - limiter:
@@ -238,9 +264,48 @@ realms:
         velocity: velocity
         temperature: temperature
 
+  actuator:
+    type: ActLineFAST
+    search_method: boost_rtree
+    search_target_part: fluid_part
 
+    n_turbines_glob: 2
+    dry_run: false
+    debug: true
+    simStart: init
+    t_start: 0.0
+    t_max: 50
+    dt_fast: 0.00625
+    n_every_checkpoint: 1000
+
+    Turbine0:
+      num_force_pts_blade: 50
+      num_force_pts_tower: 20
+      nacelle_cd: 1.0
+      nacelle_area: 8.0
+      air_density: 1.
+      epsilon: [12.0, 12.0, 12.0]
+      turbine_base_pos: [150.0, 150.0, 0.0]
+      turbine_hub_pos: [0.0, 0.0, 0.0]
+      restart_filename: restart_file
+      fast_input_filename: nrel5mw.fst
+      turb_id: 1
+      turbine_name: machine_one
+    Turbine1:
+      num_force_pts_blade: 67
+      num_force_pts_tower: 12
+      nacelle_cd: 1.0
+      nacelle_area: 8.0
+      air_density: 1.
+      epsilon: [12.0, 12.0, 12.0]
+      turbine_base_pos: [250.0, 250.0, 0.0]
+      turbine_hub_pos: [0.0, 0.0, 0.0]
+      restart_filename: restart_file
+      fast_input_filename: nrel5mw2.fst
+      turb_id: 2
+      turbine_name: machine_two
   output:
-    output_data_base_name: output/abl_5km_5km_1km_neutral.exo
+    output_data_base_name: case_3_output/precursor.exo
     output_frequency: 10000
     output_node_set: no
     output_variables:
@@ -257,10 +322,10 @@ realms:
     # details of the driving wind forcing.
   boundary_layer_statistics:
     target_name: [fluid_part]
-    stats_output_file: abl_statistics.nc
+    stats_output_file: abl_statistics_wind_farm.nc
     compute_temperature_statistics: yes
     output_frequency: 10000
-    time_hist_output_frequency: 1
+    time_hist_output_frequency: 2
 
     # This defines the ABL forcing to drive the winds to 8 m/s from
     # 245 degrees (southwest) at 90 m above the surface in a planar
@@ -285,61 +350,86 @@ realms:
 
   restart:
     restart_data_base_name: rst/prescursor.rst
-    output_frequency: 1000
+    restart_frequency: 1000
+    restart_start: 0
+
+    restart_time: 20.
+- name: ioRealm
+  mesh: ../case2/boundaryData/boundary_data.exo
+  type: external_field_provider
+#   automatic_decomposition_type: rcb
+
+  field_registration:
+    specifications:
+
+    - field_name: velocity_bc
+      target_name: &id001 [west, south]
+      field_size: 3
+      field_type: node_rank
+
+    - field_name: cont_velocity_bc
+      target_name: *id001
+      field_size: 3
+      field_type: node_rank
+
+    - field_name: temperature_bc
+      target_name: *id001
+      field_size: 1
+      field_type: node_rank
+
+    - field_name: turbulent_ke_bc
+      target_name: *id001
+      field_size: 1
+      field_type: node_rank
+
+  solution_options:
+    name: myOptions
+    input_variables_interpolate_in_time: yes
+    input_variables_from_file_restoration_time: 20.
+
+    options:
+    - input_variables_from_file:
+        velocity_bc: velocity_bc
+        cont_velocity_bc: cont_velocity_bc
+        temperature_bc: temperature_bc
+        turbulent_ke_bc: turbulent_ke_bc
 
 transfers:
-### Fluid to ....
-
 - name: south
   type: geometric
-  realm_pair: [fluidRealm, ioRealm]
+  realm_pair: [ioRealm, fluidRealm]
   mesh_part_pair: [south, south]
-  objective: input_output
+  objective: external_data
+  search_tolerance: 5.0e-4
   transfer_variables:
-  - [velocity, velocity_bc]
-  - [velocity, cont_velocity_bc]
-  - [temperature, temperature_bc]
-  - [turbulent_ke, turbulent_ke_bc]
-
-- name: north
-  type: geometric
-  realm_pair: [fluidRealm, ioRealm]
-  mesh_part_pair: [north, north]
-  objective: input_output
-  transfer_variables:
-  - [velocity, velocity_bc]
-  - [velocity, cont_velocity_bc]
-  - [temperature, temperature_bc]
-  - [turbulent_ke, turbulent_ke_bc]
-
-- name: east
-  type: geometric
-  realm_pair: [fluidRealm, ioRealm]
-  mesh_part_pair: [east, east]
-  objective: input_output
-  transfer_variables:
-  - [velocity, velocity_bc]
-  - [velocity, cont_velocity_bc]
-  - [temperature, temperature_bc]
-  - [turbulent_ke, turbulent_ke_bc]
+  - [velocity_bc, velocity]
+  - [velocity_bc, velocity_bc]
+  - [temperature_bc, temperature]
+  - [temperature_bc, temperature_bc]
+  - [turbulent_ke_bc, tke_bc]
+  - [turbulent_ke_bc, turbulent_ke]
 
 - name: west
   type: geometric
-  realm_pair: [fluidRealm, ioRealm]
+  realm_pair: [ioRealm, fluidRealm]
   mesh_part_pair: [west, west]
-  objective: input_output
+  objective: external_data
+  search_tolerance: 5.0e-4
   transfer_variables:
-  - [velocity, velocity_bc]
-  - [velocity, cont_velocity_bc]
-  - [temperature, temperature_bc]
-  - [turbulent_ke, turbulent_ke_bc]
+  - [velocity_bc, velocity]
+  - [velocity_bc, velocity_bc]
+  - [temperature_bc, temperature]
+  - [temperature_bc, temperature_bc]
+  - [turbulent_ke_bc, tke_bc]
+  - [turbulent_ke_bc, turbulent_ke]
+
 
 # This defines the time step size, count, etc.
 Time_Integrators:
 - StandardTimeIntegrator:
     name: ti_1
     start_time: 0.0
-    termination_step_count: 1000
+    termination_step_count: 100
     time_step: 0.5
     time_stepping_type: fixed
     time_step_count: 0
@@ -347,3 +437,4 @@ Time_Integrators:
 
     realms:
     - fluidRealm
+    - ioRealm

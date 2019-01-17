@@ -7,8 +7,8 @@
 # These are the example input files and the files which will be generated.
 ##########################################################################
 # The old input files which will be modified
-template_input: template_input_files/abl_precursor_boundary_data.yaml
-template_preprocess: template_input_files/boundary_data.yaml
+template_input: ./template_input_files/abl_precursor_boundary_data.yaml
+template_preprocess: ./template_input_files/boundary_data.yaml
 
 # The name of the new input files
 new_input: case_2_abl_precursor_boundary_data.yaml
@@ -39,7 +39,7 @@ mesh:
   # The name of the mesh file
   # If the mesh is generated the preprocessor will generate a mesh
   # If not the code will read in this mesh
-  mesh_file: restart_data/precursor.rst
+  mesh_file: ../case1/restart_data/precursor.rst
   # The domain bounds [m]
   domain_bounds_x: [0.0, 500.0]
   domain_bounds_y: [0.0, 500.0]
@@ -70,7 +70,7 @@ boundary_layer_statistics:
 boundary_data_sampling:
   # The mesh used to read and create the planes
   # This should be the original ABL mesh
-  input_mesh: mesh_abl.exo
+  input_mesh: ../case1/mesh_abl.exo
   # The name of the data file which data will be written
   boundary_data_file: boundary_data.exo
   # The boundaries to be saved

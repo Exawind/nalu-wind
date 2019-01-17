@@ -8,8 +8,8 @@
 # Mandatory section for Nalu preprocessing
 nalu_preprocess:
   # Name of the input exodus database
-  input_db: mesh_abl.exo
-  output_db: restart_data/precursor.rst
+  input_db: ../case1/mesh_abl.exo
+  output_db: ../case1/restart_data/precursor.rst
 
   # Nalu preprocessor expects a list of tasks to be performed on the mesh and
   # field data structures

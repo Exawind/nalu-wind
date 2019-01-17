@@ -224,8 +224,16 @@ ActuatorLineFAST::load(
               actuatorLineInfo->epsilon_chord_ =
                                   epsilon_chord.as<Coordinates>();
           else
-              throw std::runtime_error(
-                  "ActuatorLineFAST: lacking epsilon/chord vector");
+//              throw std::runtime_error(
+//                  "ActuatorLineFAST: lacking epsilon/chord vector");
+              // If epsilon/chord is not given, set it to zero, such
+              // that it is smaller than the standard epsilon and
+              // will not be used
+              {
+                  actuatorLineInfo->epsilon_chord_.x_ = 0.;
+                  actuatorLineInfo->epsilon_chord_.y_ = 0.;
+                  actuatorLineInfo->epsilon_chord_.z_ = 0.;
+              }
 
           // The minimum value of epsilon [m]
           // This is a vector containing the values for:
@@ -233,7 +241,7 @@ ActuatorLineFAST::load(
           //   - tangential to chord (y),
           //   - spanwise (z)
           const YAML::Node epsilon_min =
-                                      cur_turbine["epsilon_min"];
+                                      cur_turbine["epsilon"];
           if ( epsilon_min )
               actuatorLineInfo->epsilon_min_ =
                                   epsilon_min.as<Coordinates>();

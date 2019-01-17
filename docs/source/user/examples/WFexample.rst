@@ -29,26 +29,26 @@ The only difference is that now, the boundary data is sampled.
 
   2. Go to the directory where the case is::
 
-      cd nalu-wind/examples/wind_farm/
+      cd nalu-wind/examples/wind_farm/case1/
 
-  3. Modify the ``case_1_setup_abl_precursor.yaml`` file to include all the necessary simulation
+  3. Modify the ``setup.yaml`` file to include all the necessary simulation
      parameters.
 
-  4. Run the executable and provide the ``case_1_setup_abl_precursor.yaml`` file as input::
+  4. Run the executable and provide the ``setup.yaml`` file as input::
 
-      ../nalu_input_fileX -s case_1_setup_abl_precursor.yaml
+      ../../nalu_input_fileX -s setup.yaml
 
   5. Generate the mesh::
 
-      ./abl_mesh -i case_1_precursor_preprocess.yaml
+      ../abl_mesh -i case_1_precursor_preprocess.yaml
 
   6. Generate the initial condition::
 
-      ./nalu_preprocess -i case_1_precursor_preprocess.yaml
+      ../nalu_preprocess -i case_1_precursor_preprocess.yaml
 
   7. Run the nalu executable::
 
-      mpirun -np 8 naluX -i case_1_precursor_simulation.yaml
+      mpirun -np 8 ../naluX -i case_1_precursor_simulation.yaml
 
      In this example 8 processors are used, but any number of processors could
      be used.
@@ -73,23 +73,23 @@ This is the same as the previous simulation, but with 2 changes:
 
 2. Go to the directory where the case is::
 
-    cd nalu-wind/examples/wind_farm/
+    cd nalu-wind/examples/wind_farm/case2
 
-3. Modify the ``case_2_setup_abl_precursor_boundary_data.yaml`` file to include all
+3. Modify the ``setup.yaml`` file to include all
    the necessary simulation parameters.
 
 4. Run the executable and provide the ``case_2_setup_abl_precursor_boundary_data.yaml``
    file as input::
 
-     ../nalu_input_fileX -s case_2_setup_abl_precursor_boundary_data.yaml
+     ../../nalu_input_fileX -s setup.yaml
 
 5. Generate the boundary data to sample::
 
-     ./nalu_preprocess -i case_2_boundary_data_preprocess.yaml
+     ../nalu_preprocess -i case_2_boundary_data_preprocess.yaml
 
 6. Run the nalu executable::
 
-    mpirun -np 8 naluX -i case_2_abl_precursor_boundary_data.yaml
+    mpirun -np 8 ../naluX -i case_2_abl_precursor_boundary_data.yaml
 
    In this example 8 processors are used, but any number of processors could
    be used.
@@ -116,18 +116,18 @@ Full instructions are provided in
 
 2. Go to the directory where the case is::
 
-    cd nalu-wind/examples/wind_farm/
+    cd nalu-wind/examples/wind_farm/case3
 
-3. Modify the ``case_3_setup_wind_farm.yaml`` file to include all the necessary simulation
+3. Modify the ``setup.yaml`` file to include all the necessary simulation
    parameters.
 
-4. Run the executable and provide the ``case_3_setup_wind_farm.yaml`` file as input::
+4. Run the executable and provide the ``setup.yaml`` file as input::
 
-     ../nalu_input_fileX -s case_3_setup_wind_farm.yaml
+     ../../nalu_input_fileX -s setup.yaml
 
 5. Run the nalu executable::
 
-    mpirun -np 8 naluX -i case_3_wind_farm.yaml
+    mpirun -np 8 ../naluX -i case_3_wind_farm.yaml
 
    In this example 8 processors are used, but any number of processors could
    be used.
