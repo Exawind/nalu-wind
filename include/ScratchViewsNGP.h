@@ -39,18 +39,6 @@ struct ScratchMeInfo {
   int numFemIp_;
 };
 
-struct ViewHolder {
-  virtual ~ViewHolder() {}
-  int dim_;
-};
-
-template<typename T>
-struct ViewT : public ViewHolder {
-  ViewT(T view, int dim) : view_(view) {dim_ = dim;}
-  virtual ~ViewT(){}
-  T view_;
-};
-
 template<typename T>
 class MasterElementViews
 {
@@ -558,7 +546,7 @@ NumNeededViews count_needed_field_views(const ElemDataRequestsGPU& dataNeeded)
       }
     }
     else {
-//      ThrowRequireMsg(false,"Unknown stk-rank" << fieldEntityRank);
+      NGP_ThrowRequireMsg(false,"Unknown stk-rank");
     }
   }
 

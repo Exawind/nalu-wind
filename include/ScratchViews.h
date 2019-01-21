@@ -18,6 +18,7 @@
 #include <master_element/MasterElement.h>
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
+#include <MultiDimViews.h>
 
 #include <set>
 #include <type_traits>
@@ -35,17 +36,48 @@ struct ScratchMeInfo {
   int numFemIp_;
 };
 
-struct ViewHolder {
-  virtual ~ViewHolder() {}
-  int dim_;
-};
+KOKKOS_INLINE_FUNCTION
+NumNeededViews count_needed_field_views(const ElemDataRequestsNGP& dataNeeded)
+{
+  NumNeededViews numNeededViews = {0, 0, 0, 0};
 
-template<typename T>
-struct ViewT : public ViewHolder {
-  ViewT(T view, int dim) : view_(view) {dim_ = dim;}
-  virtual ~ViewT(){}
-  T view_;
-};
+  const ElemDataRequestsNGP::FieldInfoView& neededFields = dataNeeded.get_fields();
+  for(unsigned i=0; i<neededFields.size(); ++i) {
+    FieldInfo& fieldInfo = neededFields(i);
+    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
+    unsigned scalarsDim1 = fieldInfo.scalarsDim1;
+    unsigned scalarsDim2 = fieldInfo.scalarsDim2;
+
+    if (fieldEntityRank==stk::topology::EDGE_RANK ||
+        fieldEntityRank==stk::topology::FACE_RANK ||
+        fieldEntityRank==stk::topology::ELEM_RANK) {
+      if (scalarsDim2 == 0) {
+        numNeededViews.num1DViews++;
+      }
+      else {
+        numNeededViews.num2DViews++;
+      }
+    }
+    else if (fieldEntityRank==stk::topology::NODE_RANK) {
+      if (scalarsDim2 == 0) {
+        if (scalarsDim1 == 1) {
+          numNeededViews.num1DViews++;
+        }
+        else {
+          numNeededViews.num2DViews++;
+        }
+      }
+      else {
+          numNeededViews.num3DViews++;
+      }
+    }
+    else {
+      ThrowRequireMsg(false,"Unknown stk-rank" << fieldEntityRank);
+    }
+  }
+
+  return numNeededViews;
+}
 
 template<typename T>
 class MasterElementViews
@@ -120,9 +152,6 @@ public:
                const ElemDataRequestsNGP& dataNeeded);
 
   virtual ~ScratchViews() {
-    for(ViewHolder* vh : fieldViews) {
-      delete vh;
-    }
   }
 
   inline
@@ -149,7 +178,8 @@ public:
 
   const stk::mesh::Entity* elemNodes;
 
-  inline const std::vector<ViewHolder*>& get_field_views() const { return fieldViews; }
+  inline const MultiDimViews<T,TeamHandleType,HostShmem>& get_field_views() const { return fieldViews; }
+  inline MultiDimViews<T,TeamHandleType,HostShmem>& get_field_views() { return fieldViews; }
 
 private:
   void create_needed_field_views(const TeamHandleType& team,
@@ -162,7 +192,7 @@ private:
                                           int nDim, int nodesPerFace, int nodesPerElem,
                                           int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 
-  std::vector<ViewHolder*> fieldViews;
+  MultiDimViews<T,TeamHandleType, HostShmem> fieldViews;
   MasterElementViews<T> meViews[MAX_COORDS_TYPES];
   bool hasCoordField[MAX_COORDS_TYPES] = {false, false};
   int num_bytes_required{0};
@@ -171,33 +201,33 @@ private:
 template<typename T>
 SharedMemView<T*>& ScratchViews<T>::get_scratch_view_1D(const stk::mesh::FieldBase& field)
 { 
-  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 1D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
-  ViewT<SharedMemView<T*>>* vt = static_cast<ViewT<SharedMemView<T*>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
-  return vt->view_;
+//  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 1D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
+//  ViewT<SharedMemView<T*>>* vt = static_cast<ViewT<SharedMemView<T*>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
+  return fieldViews.get_scratch_view_1D(field.mesh_meta_data_ordinal());
 }
 
 template<typename T>
 SharedMemView<T**>& ScratchViews<T>::get_scratch_view_2D(const stk::mesh::FieldBase& field)
 { 
-  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 2D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
-  ViewT<SharedMemView<T**>>* vt = static_cast<ViewT<SharedMemView<T**>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
-  return vt->view_;
+//  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 2D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
+//  ViewT<SharedMemView<T**>>* vt = static_cast<ViewT<SharedMemView<T**>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
+  return fieldViews.get_scratch_view_2D(field.mesh_meta_data_ordinal());
 }
 
 template<typename T>
 SharedMemView<T***>& ScratchViews<T>::get_scratch_view_3D(const stk::mesh::FieldBase& field)
 { 
-  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 3D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
-  ViewT<SharedMemView<T***>>* vt = static_cast<ViewT<SharedMemView<T***>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
-  return vt->view_;
+//  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 3D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
+//  ViewT<SharedMemView<T***>>* vt = static_cast<ViewT<SharedMemView<T***>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
+  return fieldViews.get_scratch_view_3D(field.mesh_meta_data_ordinal());
 }
 
 template<typename T>
 SharedMemView<T****>& ScratchViews<T>::get_scratch_view_4D(const stk::mesh::FieldBase& field)
 {
-  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 4D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
-  ViewT<SharedMemView<T****>>* vt = static_cast<ViewT<SharedMemView<T****>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
-  return vt->view_;
+//  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 4D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
+//  ViewT<SharedMemView<T****>>* vt = static_cast<ViewT<SharedMemView<T****>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
+  return fieldViews.get_scratch_view_4D(field.mesh_meta_data_ordinal());
 }
 
 template<typename T>
@@ -537,6 +567,7 @@ ScratchViews<T>::ScratchViews(const TeamHandleType& team,
              const stk::mesh::BulkData& bulkData,
              int nodalGatherSize,
              const ElemDataRequestsNGP& dataNeeded)
+ : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
   /* master elements are allowed to be null if they are not required */
   MasterElement *meFC = dataNeeded.get_cvfem_face_me();
@@ -565,6 +596,7 @@ ScratchViews<T>::ScratchViews(const TeamHandleType& team,
              const stk::mesh::BulkData& bulkData,
              const ScratchMeInfo &meInfo,
              const ElemDataRequestsNGP& dataNeeded)
+ : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
   int nDim = bulkData.mesh_meta_data().spatial_dimension();
   create_needed_field_views(team, dataNeeded, bulkData, meInfo.nodalGatherSize_);
@@ -578,9 +610,6 @@ void ScratchViews<T>::create_needed_field_views(const TeamHandleType& team,
                                int nodesPerEntity)
 {
   int numScalars = 0;
-  const stk::mesh::MetaData& meta = bulkData.mesh_meta_data();
-  unsigned numFields = meta.get_fields().size();
-  fieldViews.resize(numFields, nullptr);
 
   const ElemDataRequestsNGP::FieldInfoView& neededFields = dataNeeded.get_fields();
   for(unsigned i=0; i<neededFields.size(); ++i) {
@@ -593,27 +622,27 @@ void ScratchViews<T>::create_needed_field_views(const TeamHandleType& team,
         fieldEntityRank==stk::topology::FACE_RANK ||
         fieldEntityRank==stk::topology::ELEM_RANK) {
       if (scalarsDim2 == 0) {
-        fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = new ViewT<SharedMemView<T*>>(get_shmem_view_1D<T>(team, scalarsDim1), 1);
+        fieldViews.add_1D_view(fieldInfo.field->mesh_meta_data_ordinal(), get_shmem_view_1D<T>(team, scalarsDim1));
         numScalars += scalarsDim1;
       }
       else {
-        fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = new ViewT<SharedMemView<T**>>(get_shmem_view_2D<T>(team, scalarsDim1, scalarsDim2),2);
+        fieldViews.add_2D_view(fieldInfo.field->mesh_meta_data_ordinal(), get_shmem_view_2D<T>(team, scalarsDim1, scalarsDim2));
         numScalars += scalarsDim1 * scalarsDim2;
       }
     }
     else if (fieldEntityRank==stk::topology::NODE_RANK) {
       if (scalarsDim2 == 0) {
         if (scalarsDim1 == 1) {
-          fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = new ViewT<SharedMemView<T*>>(get_shmem_view_1D<T>(team, nodesPerEntity),1);
+          fieldViews.add_1D_view(fieldInfo.field->mesh_meta_data_ordinal(), get_shmem_view_1D<T>(team, nodesPerEntity));
           numScalars += nodesPerEntity;
         }
         else {
-          fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = new ViewT<SharedMemView<T**>>(get_shmem_view_2D<T>(team, nodesPerEntity, scalarsDim1),2);
+          fieldViews.add_2D_view(fieldInfo.field->mesh_meta_data_ordinal(), get_shmem_view_2D<T>(team, nodesPerEntity, scalarsDim1));
           numScalars += nodesPerEntity*scalarsDim1;
         }
       }
       else {
-          fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = new ViewT<SharedMemView<T***>>(get_shmem_view_3D<T>(team, nodesPerEntity, scalarsDim1, scalarsDim2),3);
+          fieldViews.add_3D_view(fieldInfo.field->mesh_meta_data_ordinal(), get_shmem_view_3D<T>(team, nodesPerEntity, scalarsDim1, scalarsDim2));
           numScalars += nodesPerEntity*scalarsDim1*scalarsDim2;
       }
     }
@@ -676,7 +705,10 @@ int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchI
                                       ElemDataRequestsNGP& dataNeededByKernels)
 {
     int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int) +
-                           get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim);
+                         + get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim)
+                         + MultiDimViews<double>::bytes_needed(dataNeededByKernels.get_total_num_fields(),
+                                                 count_needed_field_views(dataNeededByKernels));
+
     bytes_per_thread *= 2*simdLen;
     return bytes_per_thread;
 }
@@ -689,7 +721,12 @@ int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchI
 {
     int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int)
                          + sierra::nalu::get_num_bytes_pre_req_data<double>(faceDataNeeded, nDim)
-                         + sierra::nalu::get_num_bytes_pre_req_data<double>(elemDataNeeded, nDim, meInfo);
+                         + sierra::nalu::get_num_bytes_pre_req_data<double>(elemDataNeeded, nDim, meInfo)
+                         + MultiDimViews<double>::bytes_needed(faceDataNeeded.get_total_num_fields(),
+                                                 count_needed_field_views(faceDataNeeded))
+                         + MultiDimViews<double>::bytes_needed(elemDataNeeded.get_total_num_fields(),
+                                                 count_needed_field_views(elemDataNeeded));
+
     bytes_per_thread *= 2*simdLen;
     return bytes_per_thread;
 }
