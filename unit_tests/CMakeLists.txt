@@ -2,6 +2,7 @@ add_sources(GlobalUnitSourceList
    UnitTest1ElemCoordCheck.C
    UnitTestABLWallFunction.C
    UnitTestBasicKokkos.C
+   UnitTestCopyAndInterleave.C
    UnitTestCreateOnDevice.C
    UnitTestEigenDecomposition.C
    UnitTestElemDataRequests.C

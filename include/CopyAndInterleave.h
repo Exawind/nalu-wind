@@ -9,52 +9,29 @@
 #ifndef CopyAndInterleave_h
 #define CopyAndInterleave_h
 
-#include <ElemDataRequests.h>
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
 #include <ScratchViews.h>
+#include <MultiDimViews.h>
 
 namespace sierra{
 namespace nalu{
 
-template<typename DTYPE>
-void interleave_3D(SharedMemView<DTYPE***>& dview, const SharedMemView<double***>& sview, int simdIndex)
+template<typename SimdViewType, typename ViewType>
+void interleave(SimdViewType& dview, const ViewType& sview, int simdIndex)
 {
   int sz = dview.size();
-  DTYPE* data = dview.data();
-  double* src = sview.data();
+  typename SimdViewType::pointer_type data = dview.data();
+  typename ViewType::pointer_type src = sview.data();
   for(int i=0; i<sz; ++i) {
     stk::simd::set_data(data[i], simdIndex, src[i]);
   }
 }
 
-template<typename DTYPE>
-void interleave_2D(SharedMemView<DTYPE**>& dview, const SharedMemView<double**>& sview, int simdIndex)
+template<typename SimdViewType>
+void interleave(SimdViewType& dview, const double* sviews[], int simdElems)
 {
-  int sz = dview.size();
-  DTYPE* data = dview.data();
-  double* src = sview.data();
-  for(int i=0; i<sz; ++i) {
-    stk::simd::set_data(data[i], simdIndex, src[i]);
-  }
-}
-
-template<typename DTYPE>
-void interleave_1D(SharedMemView<DTYPE*>& dview, const SharedMemView<double*>& sview, int simdIndex)
-{
-  int dim = dview.extent(0);
-
-  DTYPE* data = dview.data();
-  double* src = sview.data();
-  for(int i=0; i<dim; ++i) {
-    stk::simd::set_data(data[i], simdIndex, src[i]);
-  }
-}
-
-template<typename DTYPE>
-void interleave_1D(SharedMemView<DTYPE*>& dview, const double* sviews[], int simdElems)
-{
-    int dim = dview.extent(0);
+    int dim = dview.size();
     DoubleType* dptr = dview.data();
     for(int i=0; i<dim; ++i) {
         DoubleType& d = dptr[i];
@@ -64,86 +41,56 @@ void interleave_1D(SharedMemView<DTYPE*>& dview, const double* sviews[], int sim
     }
 }
 
-template<typename DTYPE>
-void interleave_2D(SharedMemView<DTYPE**>& dview, const double* sviews[], int simdElems)
-{
-    int len = dview.extent(0)*dview.extent(1);
-    DoubleType* d = dview.data();
-    for(int idx=0; idx<len; ++idx) {
-        DoubleType& dv = d[idx];
-        for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
-            stk::simd::set_data(dv, simdIndex, sviews[simdIndex][idx]);
-        }
-    }
-}
-
-template<typename DTYPE>
-void interleave_3D(SharedMemView<DTYPE***>& dview, const double* sviews[], int simdElems)
-{
-    int len = dview.extent(0)*dview.extent(1)*dview.extent(2);
-    DoubleType* d = dview.data();
-    for(int idx=0; idx<len; ++idx) {
-        DoubleType& dv = d[idx];
-        for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
-            stk::simd::set_data(dv, simdIndex, sviews[simdIndex][idx]);
-        }
-    }
-}
-
-inline
-void interleave_1D(ViewHolder* dest, const ViewHolder* sviews[], int simdElems)
-{
-    const double* smemviews[stk::simd::ndoubles] = {nullptr};
-    SharedMemView<DoubleType*>& dmemview = static_cast<ViewT<SharedMemView<DoubleType*>>*>(dest)->view_;
-    for(int i=0; i<simdElems; ++i) {
-        smemviews[i] = static_cast<const ViewT<SharedMemView<double*>>*>(sviews[i])->view_.data();
-    }
-
-    interleave_1D(dmemview, smemviews, simdElems);
-}
-
-inline
-void interleave_2D(ViewHolder* dest, const ViewHolder* sviews[], int simdElems)
-{
-    const double* smemviews[stk::simd::ndoubles] = {nullptr};
-    SharedMemView<DoubleType**>& dmemview = static_cast<ViewT<SharedMemView<DoubleType**>>*>(dest)->view_;
-    for(int i=0; i<simdElems; ++i) {
-        smemviews[i] = static_cast<const ViewT<SharedMemView<double**>>*>(sviews[i])->view_.data();
-    }
-
-    interleave_2D(dmemview, smemviews, simdElems);
-}
-
-inline
-void interleave_3D(ViewHolder* dest, const ViewHolder* sviews[], int simdElems)
-{
-    const double* smemviews[stk::simd::ndoubles] = {nullptr};
-    SharedMemView<DoubleType***>& dmemview = static_cast<ViewT<SharedMemView<DoubleType***>>*>(dest)->view_;
-    for(int i=0; i<simdElems; ++i) {
-        smemviews[i] = static_cast<const ViewT<SharedMemView<double***>>*>(sviews[i])->view_.data();
-    }
-
-    interleave_3D(dmemview, smemviews, simdElems);
-}
-
 inline
 void interleave_me_views(MasterElementViews<DoubleType>& dest,
                          const MasterElementViews<double>& src,
                          int simdIndex)
 {
-  interleave_2D(dest.scs_areav, src.scs_areav, simdIndex);
-  interleave_3D(dest.dndx, src.dndx, simdIndex);
-  interleave_3D(dest.dndx_scv, src.dndx_scv, simdIndex);
-  interleave_3D(dest.dndx_shifted, src.dndx_shifted, simdIndex);
-  interleave_3D(dest.dndx_fem, src.dndx_fem, simdIndex);
-  interleave_3D(dest.deriv, src.deriv, simdIndex);
-  interleave_3D(dest.deriv_fem, src.deriv_fem, simdIndex);
-  interleave_1D(dest.det_j, src.det_j, simdIndex);
-  interleave_1D(dest.det_j_fem, src.det_j_fem, simdIndex);
-  interleave_1D(dest.scv_volume, src.scv_volume, simdIndex);
-  interleave_3D(dest.gijUpper, src.gijUpper, simdIndex);
-  interleave_3D(dest.gijLower, src.gijLower, simdIndex);
-  interleave_3D(dest.metric, src.metric, simdIndex);
+  interleave(dest.scs_areav, src.scs_areav, simdIndex);
+  interleave(dest.dndx, src.dndx, simdIndex);
+  interleave(dest.dndx_scv, src.dndx_scv, simdIndex);
+  interleave(dest.dndx_shifted, src.dndx_shifted, simdIndex);
+  interleave(dest.dndx_fem, src.dndx_fem, simdIndex);
+  interleave(dest.deriv, src.deriv, simdIndex);
+  interleave(dest.deriv_fem, src.deriv_fem, simdIndex);
+  interleave(dest.det_j, src.det_j, simdIndex);
+  interleave(dest.det_j_fem, src.det_j_fem, simdIndex);
+  interleave(dest.scv_volume, src.scv_volume, simdIndex);
+  interleave(dest.gijUpper, src.gijUpper, simdIndex);
+  interleave(dest.gijLower, src.gijLower, simdIndex);
+  interleave(dest.metric, src.metric, simdIndex);
+}
+
+template<typename MultiDimViewsType, typename SimdMultiDimViewsType>
+inline
+void copy_and_interleave(const MultiDimViewsType ** data,
+                         int simdElems,
+                         SimdMultiDimViewsType& simdData)
+{
+  const double* src[stk::simd::ndoubles] = {nullptr};
+  unsigned numViews = simdData.views_1D_size;
+  for(unsigned viewIndex=0; viewIndex<numViews; ++viewIndex) {
+    for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
+      src[simdIndex] = data[simdIndex]->views_1D[viewIndex].data();
+    }
+    interleave(simdData.views_1D[viewIndex], src, simdElems);
+  }
+
+  numViews = simdData.views_2D_size;
+  for(unsigned viewIndex=0; viewIndex<numViews; ++viewIndex) {
+    for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
+      src[simdIndex] = data[simdIndex]->views_2D[viewIndex].data();
+    }
+    interleave(simdData.views_2D[viewIndex], src, simdElems);
+  }
+
+  numViews = simdData.views_3D_size;
+  for(unsigned viewIndex=0; viewIndex<numViews; ++viewIndex) {
+    for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
+      src[simdIndex] = data[simdIndex]->views_3D[viewIndex].data();
+    }
+    interleave(simdData.views_3D[viewIndex], src, simdElems);
+  }
 }
 
 inline
@@ -152,26 +99,14 @@ void copy_and_interleave(std::unique_ptr<ScratchViews<double>>* data,
                          ScratchViews<DoubleType>& simdData,
                          bool copyMEViews = true)
 {
-    const std::vector<ViewHolder*>& simdFieldViews = simdData.get_field_views();
-    const ViewHolder* fViews[stk::simd::ndoubles] = {nullptr};
+    MultiDimViews<DoubleType,TeamHandleType,HostShmem>& simdFieldViews = simdData.get_field_views();
+    const MultiDimViews<double,TeamHandleType,HostShmem>* fViews[stk::simd::ndoubles] = {nullptr};
 
-    const size_t numFieldViews = simdFieldViews.size();
-    for(size_t fieldViewsIndex=0; fieldViewsIndex<numFieldViews; ++fieldViewsIndex) {
-      if (simdFieldViews[fieldViewsIndex] != nullptr) {
-        for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
-          fViews[simdIndex] = data[simdIndex]->get_field_views()[fieldViewsIndex];
-        }
-        switch(simdFieldViews[fieldViewsIndex]->dim_) {
-        case 1: interleave_1D(simdFieldViews[fieldViewsIndex], fViews, simdElems); break;
-        case 2: interleave_2D(simdFieldViews[fieldViewsIndex], fViews, simdElems); break;
-        case 3: interleave_3D(simdFieldViews[fieldViewsIndex], fViews, simdElems); break;
-        default: ThrowRequireMsg(simdFieldViews[fieldViewsIndex]->dim_ > 0 &&
-                                 simdFieldViews[fieldViewsIndex]->dim_ < 4,
-                                 "ERROR, view dim out of range: "<<simdFieldViews[fieldViewsIndex]->dim_);
-                 break;
-        }
-      }
+    for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
+      fViews[simdIndex] = &data[simdIndex]->get_field_views();
     }
+
+    copy_and_interleave(fViews, simdElems, simdFieldViews);
 
     if (copyMEViews)
     {
