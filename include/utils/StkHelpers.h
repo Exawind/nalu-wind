@@ -55,6 +55,34 @@ stk::topology get_elem_topo(const Realm& realm, const stk::mesh::Part& surfacePa
   return elemTopo;
 }
 
+void add_downward_relations(
+  const stk::mesh::BulkData& bulk,
+  std::vector<stk::mesh::EntityKey>& entityKeys);
+
+void keep_elems_not_already_ghosted(
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::EntityProcVec& alreadyGhosted,
+  stk::mesh::EntityProcVec& elemsToGhost);
+
+void fill_send_ghosts_to_remove_from_ghosting(
+  const stk::mesh::EntityProcVec& curSendGhosts,
+  const stk::mesh::EntityProcVec& intersection,
+  stk::mesh::EntityProcVec& sendGhostsToRemove);
+
+void communicate_to_fill_recv_ghosts_to_remove(
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::EntityProcVec& sendGhostsToRemove,
+  std::vector<stk::mesh::EntityKey>& recvGhostsToRemove);
+
+void keep_only_elems(
+  const stk::mesh::BulkData& bulk, stk::mesh::EntityProcVec& entityProcs);
+
+void compute_precise_ghosting_lists(
+  const stk::mesh::BulkData& bulk,
+  stk::mesh::EntityProcVec& elemsToGhost,
+  stk::mesh::EntityProcVec& curSendGhosts,
+  std::vector<stk::mesh::EntityKey>& recvGhostsToRemove);
+
 } // namespace nalu
 } // namespace sierra
 
