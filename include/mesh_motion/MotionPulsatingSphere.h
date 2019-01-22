@@ -24,7 +24,7 @@ public:
    */
   virtual ThreeDVecType compute_velocity(
     double time,
-    const TransMatType& comp_trans,
+    const TransMatType& compTrans,
     double* xyz );
 
 private:

@@ -36,7 +36,7 @@ public:
    */
   virtual ThreeDVecType compute_velocity(
     double time,
-    const TransMatType& comp_trans,
+    const TransMatType& compTrans,
     double* xyz ) = 0;
 
   /** Composite addition of motions

@@ -45,24 +45,24 @@ void MotionScaling::scaling_mat(const ThreeDVecType& factor)
   transMat_[2][3] = -origin_[2];
 
   // Build matrix for scaling object
-  TransMatType curr_trans_mat_ = {};
+  TransMatType currTransMat = {};
 
-  curr_trans_mat_[0][0] = factor[0];
-  curr_trans_mat_[1][1] = factor[1];
-  curr_trans_mat_[2][2] = factor[2];
-  curr_trans_mat_[3][3] = 1.0;
+  currTransMat[0][0] = factor[0];
+  currTransMat[1][1] = factor[1];
+  currTransMat[2][2] = factor[2];
+  currTransMat[3][3] = 1.0;
 
   // composite addition of motions in current group
-  transMat_ = add_motion(curr_trans_mat_,transMat_);
+  transMat_ = add_motion(currTransMat,transMat_);
 
   // Build matrix for translating object back to its origin
-  reset_mat(curr_trans_mat_);
-  curr_trans_mat_[0][3] = origin_[0];
-  curr_trans_mat_[1][3] = origin_[1];
-  curr_trans_mat_[2][3] = origin_[2];
+  reset_mat(currTransMat);
+  currTransMat[0][3] = origin_[0];
+  currTransMat[1][3] = origin_[1];
+  currTransMat[2][3] = origin_[2];
 
   // composite addition of motions
-  transMat_ = add_motion(curr_trans_mat_,transMat_);
+  transMat_ = add_motion(currTransMat,transMat_);
 }
 
 } // nalu

@@ -65,7 +65,7 @@ void MotionTranslation::translation_mat(const ThreeDVecType& curr_disp)
 
 MotionBase::ThreeDVecType MotionTranslation::compute_velocity(
   double time,
-  const TransMatType& comp_trans,
+  const TransMatType& compTrans,
   double* xyz )
 {
   ThreeDVecType vel = {};

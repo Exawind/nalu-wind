@@ -83,38 +83,38 @@ void MotionRotation::rotation_mat(const double angle)
   const double q3 = sinang * axis_[2]/mag;
 
   // rotation matrix based on quaternion
-  TransMatType curr_trans_mat_ = {};
+  TransMatType currTransMat = {};
   // 1st row
-  curr_trans_mat_[0][0] = q0*q0 + q1*q1 - q2*q2 - q3*q3;
-  curr_trans_mat_[0][1] = 2.0*(q1*q2 - q0*q3);
-  curr_trans_mat_[0][2] = 2.0*(q0*q2 + q1*q3);
+  currTransMat[0][0] = q0*q0 + q1*q1 - q2*q2 - q3*q3;
+  currTransMat[0][1] = 2.0*(q1*q2 - q0*q3);
+  currTransMat[0][2] = 2.0*(q0*q2 + q1*q3);
   // 2nd row
-  curr_trans_mat_[1][0] = 2.0*(q1*q2 + q0*q3);
-  curr_trans_mat_[1][1] = q0*q0 - q1*q1 + q2*q2 - q3*q3;
-  curr_trans_mat_[1][2] = 2.0*(q2*q3 - q0*q1);
+  currTransMat[1][0] = 2.0*(q1*q2 + q0*q3);
+  currTransMat[1][1] = q0*q0 - q1*q1 + q2*q2 - q3*q3;
+  currTransMat[1][2] = 2.0*(q2*q3 - q0*q1);
   // 3rd row
-  curr_trans_mat_[2][0] = 2.0*(q1*q3 - q0*q2);
-  curr_trans_mat_[2][1] = 2.0*(q0*q1 + q2*q3);
-  curr_trans_mat_[2][2] = q0*q0 - q1*q1 - q2*q2 + q3*q3;
+  currTransMat[2][0] = 2.0*(q1*q3 - q0*q2);
+  currTransMat[2][1] = 2.0*(q0*q1 + q2*q3);
+  currTransMat[2][2] = q0*q0 - q1*q1 - q2*q2 + q3*q3;
   // 4th row
-  curr_trans_mat_[3][3] = 1.0;
+  currTransMat[3][3] = 1.0;
 
   // composite addition of motions in current group
-  transMat_ = add_motion(curr_trans_mat_,transMat_);
+  transMat_ = add_motion(currTransMat,transMat_);
 
   // Build matrix for translating object back to its origin
-  reset_mat(curr_trans_mat_);
-  curr_trans_mat_[0][3] = origin_[0];
-  curr_trans_mat_[1][3] = origin_[1];
-  curr_trans_mat_[2][3] = origin_[2];
+  reset_mat(currTransMat);
+  currTransMat[0][3] = origin_[0];
+  currTransMat[1][3] = origin_[1];
+  currTransMat[2][3] = origin_[2];
 
   // composite addition of motions
-  transMat_ = add_motion(curr_trans_mat_,transMat_);
+  transMat_ = add_motion(currTransMat,transMat_);
 }
 
 MotionBase::ThreeDVecType MotionRotation::compute_velocity(
   double time,
-  const TransMatType& comp_trans,
+  const TransMatType& compTrans,
   double* xyz )
 {
   ThreeDVecType vel = {};
@@ -136,19 +136,19 @@ MotionBase::ThreeDVecType MotionRotation::compute_velocity(
     unitVec[2] = axis_[2]/mag;
 
     // transform the origin of the rotating body
-    ThreeDVecType trans_origin = {};
+    ThreeDVecType transOrigin = {};
     for (int d = 0; d < threeDVecSize; d++) {
-      trans_origin[d] = comp_trans[d][0]*origin_[0]
-                       +comp_trans[d][1]*origin_[1]
-                       +comp_trans[d][2]*origin_[2]
-                       +comp_trans[d][3];
+      transOrigin[d] = compTrans[d][0]*origin_[0]
+                      +compTrans[d][1]*origin_[1]
+                      +compTrans[d][2]*origin_[2]
+                      +compTrans[d][3];
     }
 
     // compute relative coords and vector omega (dimension 3) for general cross product
     ThreeDVecType relCoord = {};
     ThreeDVecType vecOmega = {};
     for (int d=0; d < threeDVecSize; d++) {
-      relCoord[d] = xyz[d] - trans_origin[d];
+      relCoord[d] = xyz[d] - transOrigin[d];
       vecOmega[d] = omega_*unitVec[d];
     }
 
