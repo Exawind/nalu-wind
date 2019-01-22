@@ -22,9 +22,9 @@ public:
    *                           for points other than xyz
    * @param[in] xyz            Transformed coordinates
    */
-  virtual threeDVecType compute_velocity(
+  virtual ThreeDVecType compute_velocity(
     double time,
-    const transMatType& comp_trans,
+    const TransMatType& comp_trans,
     double* xyz ) {
     throw std::runtime_error(
       "MotionScaling:compute_velocity() Scaling is not setup to be used as a non-inertial motion");
@@ -36,9 +36,9 @@ private:
 
   void load(const YAML::Node&);
 
-  void scaling_mat(const threeDVecType&);
+  void scaling_mat(const ThreeDVecType&);
 
-  threeDVecType factor_ = {{0.0,0.0,0.0}};
+  ThreeDVecType factor_ = {{0.0,0.0,0.0}};
 };
 
 

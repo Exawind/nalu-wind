@@ -21,11 +21,11 @@ void MotionScaling::load(const YAML::Node& node)
   get_if_present(node, "end_time", endTime_, endTime_);
 
   if( node["factor"] )
-    factor_ = node["factor"].as<threeDVecType>();
+    factor_ = node["factor"].as<ThreeDVecType>();
 
   // get origin based on if it was defined or is to be computed
   if( node["centroid"] )
-    origin_ = node["centroid"].as<threeDVecType>();
+    origin_ = node["centroid"].as<ThreeDVecType>();
 }
 
 void MotionScaling::build_transformation(
@@ -35,7 +35,7 @@ void MotionScaling::build_transformation(
   scaling_mat(factor_);
 }
 
-void MotionScaling::scaling_mat(const threeDVecType& factor)
+void MotionScaling::scaling_mat(const ThreeDVecType& factor)
 {
   reset_mat(transMat_);
 
@@ -45,7 +45,7 @@ void MotionScaling::scaling_mat(const threeDVecType& factor)
   transMat_[2][3] = -origin_[2];
 
   // Build matrix for scaling object
-  transMatType curr_trans_mat_ = {};
+  TransMatType curr_trans_mat_ = {};
 
   curr_trans_mat_[0][0] = factor[0];
   curr_trans_mat_[1][1] = factor[1];

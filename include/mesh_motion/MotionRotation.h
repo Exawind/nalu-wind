@@ -22,9 +22,9 @@ public:
    *                           for points other than xyz
    * @param[in] xyz            Transformed coordinates
    */
-  virtual threeDVecType compute_velocity(
+  virtual ThreeDVecType compute_velocity(
     double time,
-    const transMatType& comp_trans,
+    const TransMatType& comp_trans,
     double* xyz );
 
 private:
@@ -35,7 +35,7 @@ private:
 
   void rotation_mat(const double);
 
-  threeDVecType axis_ = {{0.0,0.0,1.0}};
+  ThreeDVecType axis_ = {{0.0,0.0,1.0}};
 
   double omega_{0.0};
   double angle_{0.0};

@@ -30,13 +30,13 @@ public:
 
   virtual void update_coordinates_velocity(const double) = 0;
 
-  virtual const MotionBase::transMatType& get_inertial_frame() const {
+  virtual const MotionBase::TransMatType& get_inertial_frame() const {
     throw std::runtime_error("FrameNonInertial: Invalid access of inertial frame"); };
 
   const std::vector<std::string> get_part_names() const {
     return partNamesVec_; }
 
-  void set_ref_frame( MotionBase::transMatType& frame ) {
+  void set_ref_frame( MotionBase::TransMatType& frame ) {
     refFrame_ = frame; }
 
   void set_computed_centroid( std::vector<double>& centroid ) {
@@ -79,7 +79,7 @@ protected:
    * A 4x4 matrix that defines the reference frame for subsequent motions
    * It is initialized to an identity matrix
    */
-  MotionBase::transMatType refFrame_ = MotionBase::identityMat_;
+  MotionBase::TransMatType refFrame_ = MotionBase::identityMat_;
 
   const bool isInertial_;
 

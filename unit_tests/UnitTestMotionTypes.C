@@ -10,7 +10,7 @@
 namespace {
 
 std::vector<double> transform(
-  const sierra::nalu::MotionBase::transMatType& transMat,
+  const sierra::nalu::MotionBase::TransMatType& transMat,
   const double* xyz )
 {
   std::vector<double> transCoord(3,0.0);
@@ -58,7 +58,7 @@ TEST(Motion, RotationOmega)
   EXPECT_NEAR(norm[1], gold_norm_y, tol);
   EXPECT_NEAR(norm[2], gold_norm_z, tol);
 
-  sierra::nalu::MotionBase::threeDVecType vel =
+  sierra::nalu::MotionBase::ThreeDVecType vel =
     rotClass.compute_velocity(time, rotClass.get_trans_mat(), &xyz[0]);
 
   const double gold_norm_vx = -3.0;

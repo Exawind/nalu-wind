@@ -73,7 +73,7 @@ void MeshMotionAlg::initialize( const double time )
     // set reference frame if they exist
     if( refFrameMap_.find(i) != refFrameMap_.end() )
     {
-      MotionBase::transMatType ref_frame = refFrameMap_[i]->get_inertial_frame();
+      MotionBase::TransMatType ref_frame = refFrameMap_[i]->get_inertial_frame();
       frameVec_[i]->set_ref_frame(ref_frame);
     }
 

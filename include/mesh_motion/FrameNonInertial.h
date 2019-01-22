@@ -31,7 +31,7 @@ private:
      *
      * @return 4x4 matrix representing composite addition of motions
      */
-    MotionBase::transMatType compute_transformation(
+    MotionBase::TransMatType compute_transformation(
       const double,
       const double*);
 };

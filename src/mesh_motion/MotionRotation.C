@@ -30,13 +30,13 @@ void MotionRotation::load(const YAML::Node& node)
   useOmega_ = ( node["angle"] ? false : true);
 
   if( node["axis"] )
-    axis_ = node["axis"].as<threeDVecType>();
+    axis_ = node["axis"].as<ThreeDVecType>();
   else
     NaluEnv::self().naluOutputP0() << "MotionRotation: axis of rotation not supplied; will use 0,0,1" << std::endl;
 
   // get origin based on if it was defined or is to be computed
   if( node["centroid"] )
-    origin_ = node["centroid"].as<threeDVecType>();
+    origin_ = node["centroid"].as<ThreeDVecType>();
 }
 
 void MotionRotation::build_transformation(
@@ -83,7 +83,7 @@ void MotionRotation::rotation_mat(const double angle)
   const double q3 = sinang * axis_[2]/mag;
 
   // rotation matrix based on quaternion
-  transMatType curr_trans_mat_ = {};
+  TransMatType curr_trans_mat_ = {};
   // 1st row
   curr_trans_mat_[0][0] = q0*q0 + q1*q1 - q2*q2 - q3*q3;
   curr_trans_mat_[0][1] = 2.0*(q1*q2 - q0*q3);
@@ -112,19 +112,19 @@ void MotionRotation::rotation_mat(const double angle)
   transMat_ = add_motion(curr_trans_mat_,transMat_);
 }
 
-MotionBase::threeDVecType MotionRotation::compute_velocity(
+MotionBase::ThreeDVecType MotionRotation::compute_velocity(
   double time,
-  const transMatType& comp_trans,
+  const TransMatType& comp_trans,
   double* xyz )
 {
-  threeDVecType vel = {};
+  ThreeDVecType vel = {};
 
   double eps = std::numeric_limits<double>::epsilon();
 
   if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
   {
     // construct unit vector
-    threeDVecType unitVec = {};
+    ThreeDVecType unitVec = {};
 
     double mag = 0.0;
     for (int d=0; d < threeDVecSize; d++)
@@ -136,7 +136,7 @@ MotionBase::threeDVecType MotionRotation::compute_velocity(
     unitVec[2] = axis_[2]/mag;
 
     // transform the origin of the rotating body
-    threeDVecType trans_origin = {};
+    ThreeDVecType trans_origin = {};
     for (int d = 0; d < threeDVecSize; d++) {
       trans_origin[d] = comp_trans[d][0]*origin_[0]
                        +comp_trans[d][1]*origin_[1]
@@ -145,8 +145,8 @@ MotionBase::threeDVecType MotionRotation::compute_velocity(
     }
 
     // compute relative coords and vector omega (dimension 3) for general cross product
-    threeDVecType relCoord = {};
-    threeDVecType vecOmega = {};
+    ThreeDVecType relCoord = {};
+    ThreeDVecType vecOmega = {};
     for (int d=0; d < threeDVecSize; d++) {
       relCoord[d] = xyz[d] - trans_origin[d];
       vecOmega[d] = omega_*unitVec[d];

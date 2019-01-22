@@ -22,9 +22,9 @@ public:
    *                           for points other than xyz
    * @param[in] xyz            Transformed coordinates
    */
-  virtual threeDVecType compute_velocity(
+  virtual ThreeDVecType compute_velocity(
     double time,
-    const transMatType& comp_trans,
+    const TransMatType& comp_trans,
     double* xyz );
 
 private:
@@ -33,10 +33,10 @@ private:
 
   void load(const YAML::Node&);
 
-  void translation_mat(const threeDVecType&);
+  void translation_mat(const ThreeDVecType&);
 
-  threeDVecType displacement_ = {{0.0,0.0,0.0}};
-  threeDVecType velocity_ = {{0.0,0.0,0.0}};
+  ThreeDVecType displacement_ = {{0.0,0.0,0.0}};
+  ThreeDVecType velocity_ = {{0.0,0.0,0.0}};
 
   bool useVelocity_ = false;
 };

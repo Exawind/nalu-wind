@@ -4,17 +4,17 @@
 namespace sierra{
 namespace nalu{
 
-const MotionBase::transMatType MotionBase::identityMat_
+const MotionBase::TransMatType MotionBase::identityMat_
   = {{{1,0,0,0},
       {0,1,0,0},
       {0,0,1,0},
       {0,0,0,1}}};
 
-MotionBase::transMatType MotionBase::add_motion(
-    const transMatType& motionL,
-    const transMatType& motionR)
+MotionBase::TransMatType MotionBase::add_motion(
+    const TransMatType& motionL,
+    const TransMatType& motionR)
 {
-  transMatType comp_trans_mat_ = {};
+  TransMatType comp_trans_mat_ = {};
 
   for (int r = 0; r < transMatSize; r++) {
     for (int c = 0; c < transMatSize; c++) {

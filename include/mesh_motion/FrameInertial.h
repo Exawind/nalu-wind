@@ -23,7 +23,7 @@ public:
 
   void update_coordinates_velocity(const double time);
 
-  const MotionBase::transMatType& get_inertial_frame() const {
+  const MotionBase::TransMatType& get_inertial_frame() const {
     return inertialFrame_; }
 
 private:
@@ -37,7 +37,7 @@ private:
      * A 4x4 matrix that defines the composite inertial frame
      * It is initialized to an identity matrix
      */
-    MotionBase::transMatType inertialFrame_ = MotionBase::identityMat_;
+    MotionBase::TransMatType inertialFrame_ = MotionBase::identityMat_;
 };
 
 } // nalu

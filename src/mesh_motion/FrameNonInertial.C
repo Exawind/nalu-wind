@@ -49,7 +49,7 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
         mX[i] = oldxyz[i];
 
       // compute composite transformation matrix
-      MotionBase::transMatType trans_mat = compute_transformation(time,mX);
+      MotionBase::TransMatType trans_mat = compute_transformation(time,mX);
 
       // perform matrix multiplication between transformation matrix
       // and old coordinates to obtain current coordinates
@@ -70,7 +70,7 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
       // motions in current motion frame
       for (auto& mm: meshMotionVec_)
       {
-        MotionBase::threeDVecType mm_vel = mm->compute_velocity(time,trans_mat,cX);
+        MotionBase::ThreeDVecType mm_vel = mm->compute_velocity(time,trans_mat,cX);
 
         for (int d = 0; d < nDim; d++)
           velxyz[d] += mm_vel[d];
@@ -81,12 +81,12 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
 
 }
 
-MotionBase::transMatType FrameNonInertial::compute_transformation(
+MotionBase::TransMatType FrameNonInertial::compute_transformation(
   const double time,
   const double* xyz)
 {
   // all non-inertial frame motions are based off of the reference frame
-  MotionBase::transMatType comp_trans_mat = refFrame_;
+  MotionBase::TransMatType comp_trans_mat = refFrame_;
 
   for (auto& mm: meshMotionVec_)
   {

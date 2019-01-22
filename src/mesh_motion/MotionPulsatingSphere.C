@@ -24,7 +24,7 @@ void MotionPulsatingSphere::load(const YAML::Node& node)
 
   get_if_present(node, "frequency", frequency_, frequency_);
 
-  origin_ = node["origin"].as<threeDVecType>();
+  origin_ = node["origin"].as<ThreeDVecType>();
   assert(origin_.size() == threeDVecSize);
 }
 
@@ -58,7 +58,7 @@ void MotionPulsatingSphere::scaling_mat(
   transMat_[2][3] = -origin_[2];
 
   // Build matrix for scaling object
-  transMatType curr_trans_mat_ = {};
+  TransMatType curr_trans_mat_ = {};
 
   curr_trans_mat_[0][0] = uniform_scaling;
   curr_trans_mat_[1][1] = uniform_scaling;
@@ -78,12 +78,12 @@ void MotionPulsatingSphere::scaling_mat(
   transMat_ = add_motion(curr_trans_mat_,transMat_);
 }
 
-MotionBase::threeDVecType MotionPulsatingSphere::compute_velocity(
+MotionBase::ThreeDVecType MotionPulsatingSphere::compute_velocity(
   double time,
-  const transMatType& comp_trans,
+  const TransMatType& comp_trans,
   double* xyz )
 {
-  threeDVecType vel = {};
+  ThreeDVecType vel = {};
 
   double eps = std::numeric_limits<double>::epsilon();
 

@@ -15,11 +15,11 @@ class MotionBase
 public:
   //! Define matrix type alias
   static constexpr int transMatSize = 4;
-  using transMatType = std::array<std::array<double, transMatSize>, transMatSize>;
+  using TransMatType = std::array<std::array<double, transMatSize>, transMatSize>;
 
   //! Define 3D vector type alias
   static constexpr int threeDVecSize = 3;
-  using threeDVecType = std::array<double, threeDVecSize>;
+  using ThreeDVecType = std::array<double, threeDVecSize>;
 
   MotionBase() {}
 
@@ -34,9 +34,9 @@ public:
    *                           for points other than xyz
    * @param[in] xyz            Transformed coordinates
    */
-  virtual threeDVecType compute_velocity(
+  virtual ThreeDVecType compute_velocity(
     double time,
-    const transMatType& comp_trans,
+    const TransMatType& comp_trans,
     double* xyz ) = 0;
 
   /** Composite addition of motions
@@ -45,20 +45,20 @@ public:
    * @param[in] motionR Right matrix in composite transformation of matrices
    * @return    4x4 matrix representing composite addition of motions
    */
-  transMatType add_motion(
-    const transMatType& motionL,
-    const transMatType& motionR);
+  TransMatType add_motion(
+    const TransMatType& motionL,
+    const TransMatType& motionR);
 
-  const transMatType& get_trans_mat() const {
+  const TransMatType& get_trans_mat() const {
     return transMat_; }
 
   void set_computed_centroid( std::vector<double>& centroid ) {
     std::copy_n(centroid.begin(), threeDVecSize, origin_.begin()); };
 
-  static const transMatType identityMat_;
+  static const TransMatType identityMat_;
 
 protected:
-  void reset_mat(transMatType& mat) {
+  void reset_mat(TransMatType& mat) {
     mat = identityMat_; }
 
   /** Transformation matrix
@@ -66,14 +66,14 @@ protected:
    * A 4x4 matrix that combines rotation, translation, scaling,
    * allowing representation of all affine transformations
    */
-  transMatType transMat_ = identityMat_;
+  TransMatType transMat_ = identityMat_;
 
   /** Computed centroid
    *
    * A 3x1 vector storing the centroid computed respective
    * to a collection of parts defined in the input file
    */
-  threeDVecType origin_ = {{0.0,0.0,0.0}};
+  ThreeDVecType origin_ = {{0.0,0.0,0.0}};
 
   double startTime_{0.0};
   double endTime_{std::numeric_limits<double>::max()};

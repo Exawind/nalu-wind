@@ -22,10 +22,10 @@ void MotionTranslation::load(const YAML::Node& node)
 
   // translation could be based on velocity or displacement
   if( node["velocity"] )
-     velocity_ = node["velocity"].as<threeDVecType>();
+     velocity_ = node["velocity"].as<ThreeDVecType>();
 
   if( node["displacement"] )
-    displacement_ = node["displacement"].as<threeDVecType>();
+    displacement_ = node["displacement"].as<ThreeDVecType>();
 
   // default approach is to use a constant displacement
   useVelocity_ = ( node["velocity"] ? true : false);
@@ -42,7 +42,7 @@ void MotionTranslation::build_transformation(
     // determine translation based on user defined input
     if (useVelocity_)
     {
-      threeDVecType curr_disp = {};
+      ThreeDVecType curr_disp = {};
       for (int d=0; d < threeDVecSize; d++)
         curr_disp[d] = velocity_[d]*(time-startTime_);
 
@@ -53,7 +53,7 @@ void MotionTranslation::build_transformation(
   }
 }
 
-void MotionTranslation::translation_mat(const threeDVecType& curr_disp)
+void MotionTranslation::translation_mat(const ThreeDVecType& curr_disp)
 {
   reset_mat(transMat_);
 
@@ -63,12 +63,12 @@ void MotionTranslation::translation_mat(const threeDVecType& curr_disp)
   transMat_[2][3] = curr_disp[2];
 }
 
-MotionBase::threeDVecType MotionTranslation::compute_velocity(
+MotionBase::ThreeDVecType MotionTranslation::compute_velocity(
   double time,
-  const transMatType& comp_trans,
+  const TransMatType& comp_trans,
   double* xyz )
 {
-  threeDVecType vel = {};
+  ThreeDVecType vel = {};
 
   double eps = std::numeric_limits<double>::epsilon();
 
