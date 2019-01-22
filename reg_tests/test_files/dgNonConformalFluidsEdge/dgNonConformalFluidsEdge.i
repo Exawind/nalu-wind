@@ -109,23 +109,23 @@ realms:
         velocity: [0.0,0.0]
         mixture_fraction: 0.0
 
+    mesh_motion:
+    - name: mmOne
+      mesh_parts: [block_1]
+      frame: non_inertial
+      motion:
+       - type: rotation
+         omega: 1.0
+
+    - name: mmTwo
+      mesh_parts: [block_2]
+      frame: non_inertial
+      motion:
+       - type: rotation
+         omega: 0.0
+
     solution_options:
       name: myOptions
-
-      mesh_motion:
-      - name: mmOne
-        mesh_parts: [block_1]
-        frame: non_inertial
-        motion:
-         - type: rotation
-           omega: 1.0
-
-      - name: mmTwo
-        mesh_parts: [block_2]
-        frame: non_inertial
-        motion:
-         - type: rotation
-           omega: 0.0
 
       options:
         - hybrid_factor:

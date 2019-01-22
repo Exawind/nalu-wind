@@ -101,23 +101,23 @@ realms:
         background_cut_block: block_3
         background_cut_surface: surface_101
 
+    mesh_motion:
+    - name: mmOne
+      mesh_parts: block_1
+      frame: non_inertial
+      motion:
+       - type: rotation
+         omega: 0.0
+
+    - name: mmTwo
+      mesh_parts: block_2
+      frame: non_inertial
+      motion:
+       - type: rotation
+         omega: 0.0
+
     solution_options:
       name: myOptions
-
-      mesh_motion:
-      - name: mmOne
-        mesh_parts: block_1
-        frame: non_inertial
-        motion:
-         - type: rotation
-           omega: 0.0
-
-      - name: mmTwo
-        mesh_parts: block_2
-        frame: non_inertial
-        motion:
-         - type: rotation
-           omega: 0.0
 
       options:
 

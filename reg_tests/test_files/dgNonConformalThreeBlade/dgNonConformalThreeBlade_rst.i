@@ -160,13 +160,7 @@ realms:
         expand_box_percentage: 5.0
         search_tolerance: 0.01
 
-    solution_options:
-      name: myOptions
-
-      use_consolidated_solver_algorithm: yes
-      use_consolidated_face_elem_bc_algorithm: yes
-
-      mesh_motion:
+    mesh_motion:
 
       - name: mmBackground
         mesh_parts: [block_1]
@@ -192,7 +186,7 @@ realms:
          - type: rotation
            omega: 6.28
            axis: [0.0,0.0,1.0]
-
+           
       - name: mmBot_ss6
         mesh_parts: [block_4]
         frame: non_inertial
@@ -201,6 +195,12 @@ realms:
          - type: rotation
            omega: -1.57
            axis: [0.0,0.0,1.0]
+
+    solution_options:
+      name: myOptions
+
+      use_consolidated_solver_algorithm: yes
+      use_consolidated_face_elem_bc_algorithm: yes
 
       options:
 

@@ -202,9 +202,6 @@ public:
   // read any fields from input files
   std::map<std::string, std::string> inputVarFromFileMap_;
 
-  // mesh motion
-  YAML::Node meshMotionNode_;
-
   std::vector<double> gravity_;
 
   // Coriolis source term

@@ -157,46 +157,46 @@ realms:
         expand_box_percentage: 5.0
         search_tolerance: 0.01
 
+    mesh_motion:
+
+      - name: mmBackground
+        mesh_parts: [block_1]
+        frame: non_inertial
+        motion:
+         - type: rotation
+           omega: 0.0
+
+      - name: mmFront_ss5
+        mesh_parts: [block_2]
+        frame: non_inertial
+        compute_centroid: yes
+        motion:
+         - type: rotation
+           omega: 3.14
+           axis: [0.0,0.0,1.0]
+
+      - name: mmTop_ss7
+        mesh_parts: [block_3]
+        frame: non_inertial
+        compute_centroid: yes
+        motion:
+         - type: rotation
+           omega: 6.28
+           axis: [0.0,0.0,1.0]
+
+      - name: mmBot_ss6
+        mesh_parts: [block_4]
+        frame: non_inertial
+        compute_centroid: yes
+        motion:
+         - type: rotation
+           omega: 1.57
+           axis: [0.0,0.0,-1.0]
+
     solution_options:
       name: myOptions
 
       use_consolidated_solver_algorithm: yes
-
-      mesh_motion:
-
-        - name: mmBackground
-          mesh_parts: [block_1]
-          frame: non_inertial
-          motion:
-           - type: rotation
-             omega: 0.0
-
-        - name: mmFront_ss5
-          mesh_parts: [block_2]
-          frame: non_inertial
-          compute_centroid: yes
-          motion:
-           - type: rotation
-             omega: 3.14
-             axis: [0.0,0.0,1.0]
-
-        - name: mmTop_ss7
-          mesh_parts: [block_3]
-          frame: non_inertial
-          compute_centroid: yes
-          motion:
-           - type: rotation
-             omega: 6.28
-             axis: [0.0,0.0,1.0]
-
-        - name: mmBot_ss6
-          mesh_parts: [block_4]
-          frame: non_inertial
-          compute_centroid: yes
-          motion:
-           - type: rotation
-             omega: 1.57
-             axis: [0.0,0.0,-1.0]
 
       options:
 

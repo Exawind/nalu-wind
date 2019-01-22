@@ -70,27 +70,27 @@ realms:
           type: constant
           value: 1.8e-4
 
+    mesh_motion:
+      - name: mmOne
+        mesh_parts: [block_1, block_2, block_3, block_4, block_5, block_6, block_7, block_8]
+        frame: non_inertial
+        motion:
+         - type: rotation
+           omega: 5.0
+           axis: [0.0,0.0,1.0]
+
+      - name: mmTwo
+        mesh_parts: [block_9, block_10, block_11, block_12, block_13, block_14, block_15, block_16, block_17, block_18, block_19]
+        frame: non_inertial
+        motion:
+         - type: rotation
+           omega: 0.0
+
     solution_options:
       name: myOptions
       turbulence_model: laminar
 
       use_consolidated_solver_algorithm: yes
-
-      mesh_motion:
-        - name: mmOne
-          mesh_parts: [block_1, block_2, block_3, block_4, block_5, block_6, block_7, block_8]
-          frame: non_inertial
-          motion:
-           - type: rotation
-             omega: 5.0
-             axis: [0.0,0.0,1.0]
-
-        - name: mmTwo
-          mesh_parts: [block_9, block_10, block_11, block_12, block_13, block_14, block_15, block_16, block_17, block_18, block_19]
-          frame: non_inertial
-          motion:
-           - type: rotation
-             omega: 0.0
 
       options:
 

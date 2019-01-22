@@ -762,11 +762,6 @@ Realm::load(const YAML::Node & node)
   create_mesh();
   spatialDimension_ = metaData_->spatial_dimension();
 
-  // instantiate mesh motion class once the mesh has been created
-  if ( solutionOptions_->meshMotion_ ) {
-    meshMotionAlg_.reset(new MeshMotionAlg( *this, solutionOptions_->meshMotionNode_));
-  }
-
   // post processing
   postProcessingInfo_->load(node);
 
@@ -788,6 +783,23 @@ Realm::load(const YAML::Node & node)
     NaluEnv::self().naluOutputP0() << "EqSys/options Review:      " << std::endl;
     NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
     equationSystems_.load(node);
+  }
+
+  // second set of options: mesh motion... this means that the Realm will expect to provide mesh motion
+  const YAML::Node meshMotionNode = expect_sequence(node, "mesh_motion", true);
+  if (meshMotionNode)
+  {
+    // has a user stated that mesh motion is external?
+    if ( solutionOptions_->meshDeformation_ ) {
+      NaluEnv::self().naluOutputP0() << "mesh motion set to external (will prevail over mesh motion specification)!" << std::endl;
+    }
+    else {
+      // mesh motion is active
+      solutionOptions_->meshMotion_ = true;
+
+      // instantiate mesh motion class once the mesh has been created
+      meshMotionAlg_.reset(new MeshMotionAlg( *this, meshMotionNode));
+    }
   }
 
   // set number of nodes, check job run size

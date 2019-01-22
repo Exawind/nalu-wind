@@ -384,22 +384,6 @@ SolutionOptions::load(const YAML::Node & y_node)
       }
     }
 
-    // second set of options: mesh motion... this means that the Realm will expect to provide mesh motion
-    const YAML::Node y_mesh_motion = expect_sequence(y_solution_options, "mesh_motion", optional);
-    if (y_mesh_motion)
-    {
-      // mesh motion is active
-      meshMotion_ = true;
-
-      // has a user stated that mesh motion is external?
-      if ( meshDeformation_ ) {
-        NaluEnv::self().naluOutputP0() << "mesh motion set to external (will prevail over mesh motion specification)!" << std::endl;
-      }
-      else {
-        meshMotionNode_ = y_mesh_motion;
-      }
-    }
-
     const YAML::Node fix_pressure = expect_map(y_solution_options, "fix_pressure_at_node", optional);
     if (fix_pressure) {
       needPressureReference_ = true;

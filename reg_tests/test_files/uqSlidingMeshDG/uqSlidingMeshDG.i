@@ -140,25 +140,25 @@ realms:
         expand_box_percentage: 5.0
         search_tolerance: 0.01
 
+    mesh_motion:
+     - name: mmOne
+       mesh_parts: [block_1, block_2, block_3, block_4, block_5]
+       frame: non_inertial
+       motion:
+        - type: rotation
+          omega: 1.0
+          axis: [0.0,0.0,1.0]
+
+     - name: mmTwo
+       mesh_parts: [block_6, block_7]
+       frame: non_inertial
+       motion:
+        - type: rotation
+          omega: 0.0
+
     solution_options:
       name: myOptions
       turbulence_model: ksgs
-
-      mesh_motion:
-       - name: mmOne
-         mesh_parts: [block_1, block_2, block_3, block_4, block_5]
-         frame: non_inertial
-         motion:
-          - type: rotation
-            omega: 1.0
-            axis: [0.0,0.0,1.0]
-
-       - name: mmTwo
-         mesh_parts: [block_6, block_7]
-         frame: non_inertial
-         motion:
-          - type: rotation
-            omega: 0.0
 
       options:
         - hybrid_factor:
