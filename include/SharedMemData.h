@@ -22,14 +22,14 @@ namespace nalu{
 
 struct SharedMemData {
     SharedMemData(const sierra::nalu::TeamHandleType& team,
-         const stk::mesh::BulkData& bulk,
+         unsigned nDim,
          const ElemDataRequestsNGP& dataNeededByKernels,
          unsigned nodesPerEntity,
          unsigned rhsSize)
-     : simdPrereqData(team, bulk, nodesPerEntity, dataNeededByKernels)
+     : simdPrereqData(team, nDim, nodesPerEntity, dataNeededByKernels)
     {
         for(int simdIndex=0; simdIndex<simdLen; ++simdIndex) {
-          prereqData[simdIndex] = std::unique_ptr<ScratchViews<double> >(new ScratchViews<double>(team, bulk, nodesPerEntity, dataNeededByKernels));
+          prereqData[simdIndex] = std::unique_ptr<ScratchViews<double> >(new ScratchViews<double>(team, nDim, nodesPerEntity, dataNeededByKernels));
         }
         simdrhs = get_shmem_view_1D<DoubleType>(team, rhsSize);
         simdlhs = get_shmem_view_2D<DoubleType>(team, rhsSize, rhsSize);
@@ -55,17 +55,17 @@ struct SharedMemData {
 
 struct SharedMemData_FaceElem {
     SharedMemData_FaceElem(const sierra::nalu::TeamHandleType& team,
-         const stk::mesh::BulkData& bulk,
+         unsigned nDim,
          const ElemDataRequestsNGP& faceDataNeeded,
          const ElemDataRequestsNGP& elemDataNeeded,
          const ScratchMeInfo& meElemInfo,
          unsigned rhsSize)
-     : simdFaceViews(team, bulk, meElemInfo.nodesPerFace_, faceDataNeeded),
-       simdElemViews(team, bulk, meElemInfo, elemDataNeeded)
+     : simdFaceViews(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded),
+       simdElemViews(team, nDim, meElemInfo, elemDataNeeded)
     {
         for(int simdIndex=0; simdIndex<simdLen; ++simdIndex) {
-          faceViews[simdIndex] = std::unique_ptr<ScratchViews<double> >(new ScratchViews<double>(team, bulk, meElemInfo.nodesPerFace_, faceDataNeeded));
-          elemViews[simdIndex] = std::unique_ptr<ScratchViews<double> >(new ScratchViews<double>(team, bulk, meElemInfo, elemDataNeeded));
+          faceViews[simdIndex] = std::unique_ptr<ScratchViews<double> >(new ScratchViews<double>(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded));
+          elemViews[simdIndex] = std::unique_ptr<ScratchViews<double> >(new ScratchViews<double>(team, nDim, meElemInfo, elemDataNeeded));
         }
         simdrhs = get_shmem_view_1D<DoubleType>(team, rhsSize);
         simdlhs = get_shmem_view_2D<DoubleType>(team, rhsSize, rhsSize);

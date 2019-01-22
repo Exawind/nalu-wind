@@ -598,7 +598,7 @@ void calc_mass_flow_rate_scs(
       EXPECT_EQ(b.topology(), topo);
 
       sierra::nalu::ScratchViews<double> preReqData(
-        team, bulk, topo.num_nodes(), dataNeededNGP);
+        team, ndim, topo.num_nodes(), dataNeededNGP);
 
       Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
@@ -680,7 +680,7 @@ void calc_projected_nodal_gradient_interior(
     EXPECT_EQ(b.topology(), topo);
 
     sierra::nalu::ScratchViews<double> preReqData(
-      team, bulk, topo.num_nodes(), dataNeededNGP);
+      team, ndim, topo.num_nodes(), dataNeededNGP);
 
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
@@ -759,7 +759,7 @@ void calc_projected_nodal_gradient_interior(
     EXPECT_EQ(b.topology(), topo);
 
     sierra::nalu::ScratchViews<double> preReqData(
-      team, bulk, topo.num_nodes(), dataNeededNGP);
+      team, ndim, topo.num_nodes(), dataNeededNGP);
 
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
@@ -840,7 +840,7 @@ void calc_projected_nodal_gradient_boundary(
 
     EXPECT_EQ(b.topology(), topo);
 
-    sierra::nalu::ScratchViews<double> preReqData(team, bulk, topo.num_nodes(), dataNeededNGP);
+    sierra::nalu::ScratchViews<double> preReqData(team, ndim, topo.num_nodes(), dataNeededNGP);
 
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
@@ -915,7 +915,7 @@ void calc_projected_nodal_gradient_boundary(
     EXPECT_EQ(b.topology(), topo);
 
     sierra::nalu::ScratchViews<double> preReqData(
-      team, bulk, topo.num_nodes(), dataNeededNGP);
+      team, ndim, topo.num_nodes(), dataNeededNGP);
 
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
@@ -986,7 +986,7 @@ void calc_dual_nodal_volume(
     EXPECT_EQ(b.topology(), topo);
 
     sierra::nalu::ScratchViews<double> preReqData(
-      team, bulk, topo.num_nodes(), dataNeededNGP);
+      team, ndim, topo.num_nodes(), dataNeededNGP);
 
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {

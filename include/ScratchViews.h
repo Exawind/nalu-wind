@@ -135,19 +135,19 @@ public:
   SharedMemView<T***> metric;
 };
 
-template<typename T>
+template<typename T, typename TEAMHANDLETYPE=TeamHandleType, typename SHMEM=HostShmem>
 class ScratchViews
 {
 public:
   typedef T value_type;
 
-  ScratchViews(const TeamHandleType& team,
-               const stk::mesh::BulkData& bulkData,
+  ScratchViews(const TEAMHANDLETYPE& team,
+               unsigned nDim,
                int nodesPerEntity,
                const ElemDataRequestsNGP& dataNeeded);
 
-  ScratchViews(const TeamHandleType& team,
-               const stk::mesh::BulkData& bulkData,
+  ScratchViews(const TEAMHANDLETYPE& team,
+               unsigned nDim,
                const ScratchMeInfo &meInfo,
                const ElemDataRequestsNGP& dataNeeded);
 
@@ -155,16 +155,16 @@ public:
   }
 
   inline
-  SharedMemView<T*>& get_scratch_view_1D(const stk::mesh::FieldBase& field);
+  SharedMemView<T*,SHMEM>& get_scratch_view_1D(const stk::mesh::FieldBase& field);
 
   inline
-  SharedMemView<T**>& get_scratch_view_2D(const stk::mesh::FieldBase& field);
+  SharedMemView<T**,SHMEM>& get_scratch_view_2D(const stk::mesh::FieldBase& field);
 
   inline
-  SharedMemView<T***>& get_scratch_view_3D(const stk::mesh::FieldBase& field);
+  SharedMemView<T***,SHMEM>& get_scratch_view_3D(const stk::mesh::FieldBase& field);
 
   inline
-  SharedMemView<T****>& get_scratch_view_4D(const stk::mesh::FieldBase& field);
+  SharedMemView<T****,SHMEM>& get_scratch_view_4D(const stk::mesh::FieldBase& field);
 
   inline
   MasterElementViews<T>& get_me_views(const COORDS_TYPES cType)
@@ -178,52 +178,51 @@ public:
 
   const stk::mesh::Entity* elemNodes;
 
-  inline const MultiDimViews<T,TeamHandleType,HostShmem>& get_field_views() const { return fieldViews; }
-  inline MultiDimViews<T,TeamHandleType,HostShmem>& get_field_views() { return fieldViews; }
+  inline       MultiDimViews<T,TEAMHANDLETYPE,SHMEM>& get_field_views()       { return fieldViews; }
+  inline const MultiDimViews<T,TEAMHANDLETYPE,SHMEM>& get_field_views() const { return fieldViews; }
 
 private:
-  void create_needed_field_views(const TeamHandleType& team,
+  void create_needed_field_views(const TEAMHANDLETYPE& team,
                                  const ElemDataRequestsNGP& dataNeeded,
-                                 const stk::mesh::BulkData& bulkData,
                                  int nodesPerElem);
 
-  void create_needed_master_element_views(const TeamHandleType& team,
+  void create_needed_master_element_views(const TEAMHANDLETYPE& team,
                                           const ElemDataRequestsNGP& dataNeeded,
                                           int nDim, int nodesPerFace, int nodesPerElem,
                                           int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 
-  MultiDimViews<T,TeamHandleType, HostShmem> fieldViews;
+  MultiDimViews<T,TEAMHANDLETYPE, SHMEM> fieldViews;
   MasterElementViews<T> meViews[MAX_COORDS_TYPES];
   bool hasCoordField[MAX_COORDS_TYPES] = {false, false};
   int num_bytes_required{0};
 };
 
-template<typename T>
-SharedMemView<T*>& ScratchViews<T>::get_scratch_view_1D(const stk::mesh::FieldBase& field)
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+SharedMemView<T*,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_1D(const stk::mesh::FieldBase& field)
 { 
 //  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 1D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
 //  ViewT<SharedMemView<T*>>* vt = static_cast<ViewT<SharedMemView<T*>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
   return fieldViews.get_scratch_view_1D(field.mesh_meta_data_ordinal());
 }
 
-template<typename T>
-SharedMemView<T**>& ScratchViews<T>::get_scratch_view_2D(const stk::mesh::FieldBase& field)
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+SharedMemView<T**,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_2D(const stk::mesh::FieldBase& field)
 { 
 //  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 2D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
 //  ViewT<SharedMemView<T**>>* vt = static_cast<ViewT<SharedMemView<T**>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
   return fieldViews.get_scratch_view_2D(field.mesh_meta_data_ordinal());
 }
 
-template<typename T>
-SharedMemView<T***>& ScratchViews<T>::get_scratch_view_3D(const stk::mesh::FieldBase& field)
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+SharedMemView<T***,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_3D(const stk::mesh::FieldBase& field)
 { 
 //  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 3D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
 //  ViewT<SharedMemView<T***>>* vt = static_cast<ViewT<SharedMemView<T***>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
   return fieldViews.get_scratch_view_3D(field.mesh_meta_data_ordinal());
 }
 
-template<typename T>
-SharedMemView<T****>& ScratchViews<T>::get_scratch_view_4D(const stk::mesh::FieldBase& field)
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+SharedMemView<T****,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_4D(const stk::mesh::FieldBase& field)
 {
 //  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 4D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
 //  ViewT<SharedMemView<T****>>* vt = static_cast<ViewT<SharedMemView<T****>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
@@ -562,9 +561,9 @@ void MasterElementViews<T>::fill_master_element_views_new_me(
   }
 }
 
-template<typename T>
-ScratchViews<T>::ScratchViews(const TeamHandleType& team,
-             const stk::mesh::BulkData& bulkData,
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
+             unsigned nDim,
              int nodalGatherSize,
              const ElemDataRequestsNGP& dataNeeded)
  : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
@@ -575,7 +574,6 @@ ScratchViews<T>::ScratchViews(const TeamHandleType& team,
   MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
   MasterElement *meFEM = dataNeeded.get_fem_volume_me();
 
-  int nDim = bulkData.mesh_meta_data().spatial_dimension();
   int nodesPerFace = meFC != nullptr ? meFC->nodesPerElement_ : 0;
   int nodesPerElem = meSCS != nullptr
           ? meSCS->nodesPerElement_ : meSCV != nullptr
@@ -586,27 +584,25 @@ ScratchViews<T>::ScratchViews(const TeamHandleType& team,
   int numScvIp = meSCV != nullptr ? meSCV->numIntPoints_ : 0;
   int numFemIp = meFEM != nullptr ? meFEM->numIntPoints_ : 0;
 
-  create_needed_field_views(team, dataNeeded, bulkData, nodalGatherSize);
+  create_needed_field_views(team, dataNeeded, nodalGatherSize);
 
   create_needed_master_element_views(team, dataNeeded, nDim, nodesPerFace, nodesPerElem, numFaceIp, numScsIp, numScvIp, numFemIp);
 }
 
-template<typename T>
-ScratchViews<T>::ScratchViews(const TeamHandleType& team,
-             const stk::mesh::BulkData& bulkData,
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
+             unsigned nDim,
              const ScratchMeInfo &meInfo,
              const ElemDataRequestsNGP& dataNeeded)
  : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
-  int nDim = bulkData.mesh_meta_data().spatial_dimension();
-  create_needed_field_views(team, dataNeeded, bulkData, meInfo.nodalGatherSize_);
+  create_needed_field_views(team, dataNeeded, meInfo.nodalGatherSize_);
   create_needed_master_element_views(team, dataNeeded, nDim, meInfo.nodesPerFace_, meInfo.nodesPerElement_, meInfo.numFaceIp_, meInfo.numScsIp_, meInfo.numScvIp_, meInfo.numFemIp_);
 }
 
-template<typename T>
-void ScratchViews<T>::create_needed_field_views(const TeamHandleType& team,
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_field_views(const TEAMHANDLETYPE& team,
                                const ElemDataRequestsNGP& dataNeeded,
-                               const stk::mesh::BulkData& bulkData,
                                int nodesPerEntity)
 {
   int numScalars = 0;
@@ -655,8 +651,8 @@ void ScratchViews<T>::create_needed_field_views(const TeamHandleType& team,
   num_bytes_required += numScalars * sizeof(T);
 }
 
-template<typename T>
-void ScratchViews<T>::create_needed_master_element_views(const TeamHandleType& team,
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_master_element_views(const TEAMHANDLETYPE& team,
                                         const ElemDataRequestsNGP& dataNeeded,
                                         int nDim, int nodesPerFace, int nodesPerElem,
                                         int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
@@ -685,7 +681,6 @@ void fill_pre_req_data(ElemDataRequestsNGP& dataNeeded,
                        bool fillMEViews = true);
 
 void fill_master_element_views(ElemDataRequestsNGP& dataNeeded,
-                               const stk::mesh::BulkData& bulkData,
                                ScratchViews<DoubleType>& prereqData,
                                int faceOrdinal = 0);
 
