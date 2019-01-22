@@ -31,8 +31,6 @@ size_t adjust_up_to_alignment_boundary(size_t input, size_t alignment)
   return input;
 }
 
-constexpr unsigned maxViewsPerDim = 25;
-
 template<typename T, typename TEAMHANDLETYPE=DeviceTeamHandleType, typename SHMEM=DeviceShmem>
 class MultiDimViews {
 public:
@@ -142,6 +140,8 @@ public:
   }
 
 public:
+  static const unsigned maxViewsPerDim = 25;
+
   SharedMemView<int*,SHMEM> indices;
   SharedMemView1D views_1D[maxViewsPerDim];
   unsigned views_1D_size;
