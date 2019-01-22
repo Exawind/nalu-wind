@@ -74,7 +74,7 @@ public:
                     "AssembleElemSolverAlgorithm expected nodesPerEntity_ = "
                     <<nodesPerEntity_<<", but b.topology().num_nodes() = "<<b.topology().num_nodes());
  
-     SharedMemData smdata(team, bulk_data, dataNeededNGP, nodesPerEntity_, rhsSize_);
+     SharedMemData smdata(team, meta_data.spatial_dimension(), dataNeededNGP, nodesPerEntity_, rhsSize_);
 
      const size_t bucketLen   = b.size();
      const size_t simdBucketLen = get_num_simd_groups(bucketLen);
@@ -94,7 +94,7 @@ public:
        copy_and_interleave(smdata.prereqData, numSimdElems, smdata.simdPrereqData, interleaveMEViews_);
  
        if (!interleaveMEViews_) {
-         fill_master_element_views(dataNeededNGP, bulk_data, smdata.simdPrereqData);
+         fill_master_element_views(dataNeededNGP, smdata.simdPrereqData);
        }
 
        lambdaFunc(smdata);

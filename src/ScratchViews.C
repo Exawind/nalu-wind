@@ -421,7 +421,6 @@ void fill_pre_req_data(
 
 void fill_master_element_views(
   ElemDataRequestsNGP& dataNeeded,
-  const stk::mesh::BulkData& bulkData,
   ScratchViews<DoubleType>& prereqData,
   int faceOrdinal)
 {
