@@ -12,13 +12,14 @@ namespace nalu{
 
 MeshMotionAlg::MeshMotionAlg(
 Realm& realm,
-const YAML::Node& node
-) : realm_(realm)
+const YAML::Node& node)
 {
-  load(node);
+  load(realm, node);
 }
 
-void MeshMotionAlg::load(const YAML::Node& node)
+void MeshMotionAlg::load(
+  Realm& realm,
+  const YAML::Node& node)
 {
   // get motion information for entire mesh
   const int num_groups = node.size();
@@ -40,9 +41,9 @@ void MeshMotionAlg::load(const YAML::Node& node)
     get_required(ginfo, "frame", frame);
 
     if( frame == "inertial" )
-      frameVec_[i].reset(new FrameInertial(realm_, ginfo));
+      frameVec_[i].reset(new FrameInertial(realm, ginfo));
     else if( frame == "non_inertial" )
-      frameVec_[i].reset(new FrameNonInertial(realm_, ginfo));
+      frameVec_[i].reset(new FrameNonInertial(realm, ginfo));
     else
       throw std::runtime_error("MeshMotion: Invalid frame type: " + frame);
 

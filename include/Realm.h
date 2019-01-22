@@ -152,10 +152,6 @@ class Realm {
   void delete_edges();
   void commit();
 
-  void compute_centroid_on_parts(
-    std::vector<std::string> partNames,
-    std::vector<double> &centroid);
-
   void init_current_coordinates();
 
   std::string get_coordinates_name();

@@ -18,8 +18,7 @@ FrameBase::FrameBase(
   Realm& realm,
   const YAML::Node& node,
   bool isInertial
-) : realm_(realm),
-    meta_(*(realm.metaData_)),
+) : meta_(*(realm.metaData_)),
     bulk_(*(realm.bulkData_)),
     isInertial_(isInertial)
 {
@@ -97,9 +96,56 @@ void FrameBase::setup()
   // compute and set centroid if requested
   if(computeCentroid_) {
     std::vector<double> computedCentroid(3,0.0);
-    realm_.compute_centroid_on_parts( partNamesVec_, computedCentroid );
+    compute_centroid_on_parts( computedCentroid );
     set_computed_centroid( computedCentroid );
   }
+}
+
+void FrameBase::compute_centroid_on_parts(
+  std::vector<double>& centroid)
+{
+  // set min/max
+  const int nDim = meta_.spatial_dimension();
+  ThrowRequire(nDim <= 3);
+
+  const double largeNumber = 1.0e16;
+  double minCoord[3] = {largeNumber, largeNumber, largeNumber};
+  double maxCoord[3] = {-largeNumber, -largeNumber, -largeNumber};
+
+  // model coords are fine in this case
+  VectorFieldType *modelCoords = meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+
+  // select all nodes
+  stk::mesh::Selector sel = stk::mesh::selectUnion(partVec_);
+
+  // select all locally owned nodes for bounding box
+  stk::mesh::BucketVector const& bkts = bulk_.get_buckets( stk::topology::NODE_RANK, sel );
+  for ( stk::mesh::BucketVector::const_iterator ib = bkts.begin(); ib != bkts.end() ; ++ib ) {
+    stk::mesh::Bucket & b = **ib ;
+    const stk::mesh::Bucket::size_type length   = b.size();
+    double * mCoord = stk::mesh::field_data(*modelCoords, b);
+    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
+      minCoord[0] = std::min(minCoord[0], mCoord[k*nDim+0]);
+      maxCoord[0] = std::max(maxCoord[0], mCoord[k*nDim+0]);
+      minCoord[1] = std::min(minCoord[1], mCoord[k*nDim+1]);
+      maxCoord[1] = std::max(maxCoord[1], mCoord[k*nDim+1]);
+      if (nDim == 3) {
+        minCoord[2] = std::min(minCoord[2], mCoord[k*nDim+2]);
+        maxCoord[2] = std::max(maxCoord[2], mCoord[k*nDim+2]);
+      }
+    }
+  }
+
+  // parallel reduction on min/max
+  double g_minCoord[3] = {};
+  double g_maxCoord[3] = {};
+  stk::ParallelMachine comm = NaluEnv::self().parallel_comm();
+  stk::all_reduce_min(comm, minCoord, g_minCoord, 3);
+  stk::all_reduce_max(comm, maxCoord, g_maxCoord, 3);
+
+  // ensure the centroid is size number of dimensions
+  for ( int j = 0; j < nDim; ++j )
+    centroid[j] = 0.5*(g_maxCoord[j] + g_minCoord[j]);
 }
 
 } // nalu

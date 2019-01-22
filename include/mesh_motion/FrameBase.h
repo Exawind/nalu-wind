@@ -47,9 +47,6 @@ public:
     return isInertial_; }
 
 protected:
-  //! Reference to the realm
-  Realm& realm_;
-
   //! Reference to the STK Mesh MetaData object
   stk::mesh::MetaData& meta_;
 
@@ -90,6 +87,9 @@ private:
     FrameBase(const FrameBase&) = delete;
 
     void load(const YAML::Node&);
+
+    void compute_centroid_on_parts(
+      std::vector<double> &centroid);
 };
 
 } // nalu

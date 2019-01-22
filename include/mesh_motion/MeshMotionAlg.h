@@ -25,12 +25,11 @@ private:
   MeshMotionAlg() = delete;
   MeshMotionAlg(const MeshMotionAlg&) = delete;
 
-  void load(const YAML::Node&);
+  void load(
+    Realm& realm,
+    const YAML::Node&);
 
   void compute_set_centroid();
-
-  //! Reference to the realm
-  Realm& realm_;
 
   /** Motion frame vector
    *
