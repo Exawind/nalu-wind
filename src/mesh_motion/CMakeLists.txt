@@ -3,4 +3,15 @@ add_sources(GlobalSourceList
    AssemblePressureForceBCSolverAlgorithm.C
    MeshDisplacementEquationSystem.C
    MeshDisplacementMassBackwardEulerNodeSuppAlg.C
+   FrameBase.C
+   FrameInertial.C
+   FrameNonInertial.C
+   MeshDisplacementEquationSystem.C
+   MeshDisplacementMassBackwardEulerNodeSuppAlg.C
+   MeshMotionAlg.C
+   MotionBase.C
+   MotionPulsatingSphere.C
+   MotionRotation.C
+   MotionScaling.C
+   MotionTranslation.C
 )

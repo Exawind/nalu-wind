@@ -9,7 +9,6 @@
 #include <SolutionOptions.h>
 #include <Enums.h>
 #include <NaluEnv.h>
-#include <MeshMotionInfo.h>
 #include <FixPressureAtNodeInfo.h>
 
 // basic c++
@@ -109,11 +108,6 @@ SolutionOptions::SolutionOptions()
 //--------------------------------------------------------------------------
 SolutionOptions::~SolutionOptions()
 {
-  std::map<std::string, MeshMotionInfo *>::iterator it;
-  for ( it = meshMotionInfoMap_.begin(); it!= meshMotionInfoMap_.end(); ++it ) {
-    MeshMotionInfo *info = it->second;
-    delete info;
-  }
 }
 
 //--------------------------------------------------------------------------
@@ -386,78 +380,6 @@ SolutionOptions::load(const YAML::Node & y_node)
                       << std::endl;
           }
           throw std::runtime_error("unknown solution option: "+ NaluParsingHelper::info(y_option));
-        }
-      }
-    }
-
-    // second set of options: mesh motion... this means that the Realm will expect to provide rotation-based motion
-    const YAML::Node y_mesh_motion = expect_sequence(y_solution_options, "mesh_motion", optional);
-    if (y_mesh_motion)
-    {
-      // mesh motion is active
-      meshMotion_ = true;
-
-      // has a user stated that mesh motion is external?
-      if ( meshDeformation_ ) {
-        NaluEnv::self().naluOutputP0() << "mesh motion set to external (will prevail over mesh motion specification)!" << std::endl;
-      }
-      else {        
-        for (size_t ioption = 0; ioption < y_mesh_motion.size(); ++ioption) {
-          const YAML::Node &y_option = y_mesh_motion[ioption];
-          
-          // extract mesh motion name and omega value
-          std::string motionName = "na";
-          get_required(y_option, "name", motionName);
-          double omega = 0.0;
-          get_required(y_option, "omega", omega);
-          
-          // now fill in name
-          std::vector<std::string> meshMotionBlock;
-          const YAML::Node &targets = y_option["target_name"];
-          if (targets.Type() == YAML::NodeType::Scalar) {
-            meshMotionBlock.resize(1);
-            meshMotionBlock[0] = targets.as<std::string>() ;
-          }
-          else {
-            meshMotionBlock.resize(targets.size());
-            for (size_t i=0; i < targets.size(); ++i) {
-              meshMotionBlock[i] = targets[i].as<std::string>() ;
-            }
-          }
-          
-          // look for centroid coordinates; optional, provide a default
-          std::vector<double> cCoordsVec(3,0.0); 
-          const YAML::Node coordsVecNode = y_option["centroid_coordinates"];
-          if ( coordsVecNode ) {
-            for ( size_t i = 0; i < coordsVecNode.size(); ++i )
-              cCoordsVec[i] = coordsVecNode[i].as<double>();
-          }
-          
-          // check for calculation of centroid
-          bool computeCentroid = false;
-          get_if_present(y_option, "compute_centroid", computeCentroid, computeCentroid);
-          // user specified prevails
-          if ( coordsVecNode && computeCentroid ) {
-            NaluEnv::self().naluOutputP0() 
-              << "centroid_coordinates and compute_centroid both active, user-specified centroid will prevail" << std::endl;
-            computeCentroid = false;
-          }
-
-          // look for unit vector; provide default
-          std::vector<double> unitVec(3,0.0); 
-          const YAML::Node uV = y_option["unit_vector"];
-          if ( uV ) {
-            for ( size_t i = 0; i < uV.size(); ++i )
-              unitVec[i] = uV[i].as<double>() ;
-          }
-          else {
-            NaluEnv::self().naluOutputP0() << "SolutionOptions::load() unit_vector not supplied; will use 0,0,1" << std::endl;
-            unitVec[2] = 1.0;
-          }
-          
-          MeshMotionInfo *meshInfo = new MeshMotionInfo(meshMotionBlock, omega, cCoordsVec, unitVec, computeCentroid);
-          // set the map
-          meshMotionInfoMap_[motionName] = meshInfo;
         }
       }
     }

@@ -152,7 +152,6 @@
 #include <user_functions/ConvectingTaylorVortexPressureAuxFunction.h>
 #include <user_functions/TornadoAuxFunction.h>
 
-#include <user_functions/WindEnergyAuxFunction.h>
 #include <user_functions/WindEnergyTaylorVortexAuxFunction.h>
 #include <user_functions/WindEnergyTaylorVortexPressureAuxFunction.h>
 
@@ -1739,55 +1738,70 @@ MomentumEquationSystem::register_wall_bc(
   VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, bcFieldName));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
 
-  // extract the value for user specified velocity and save off the AuxFunction
-  AuxFunction *theAuxFunc = NULL;
-  std::string velocityName = "velocity";
+  if(realm_.solutionOptions_->meshMotion_) {
+    NaluEnv::self().naluOutputP0() << "MomentumEquationSystem::register_wall_bc(): Mesh motion active! Velocity definition under wall_user_data will be ignored" << std::endl;
 
-  if ( bc_data_specified(userData, velocityName) ) {
+    // get the mesh velocity field
+    VectorFieldType* meshVelocity = meta_data.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_velocity");
 
-    UserDataType theDataType = get_bc_data_type(userData, velocityName);
-    if ( CONSTANT_UD == theDataType ) {
-      // constant data type specification
-      Velocity ux = userData.u_;
-      std::vector<double> userSpec(nDim);
-      userSpec[0] = ux.ux_;
-      userSpec[1] = ux.uy_;
-      if ( nDim > 2)
-        userSpec[2] = ux.uz_;
-      theAuxFunc = new ConstantAuxFunction(0, nDim, userSpec);
-    }
-    else if ( FUNCTION_UD == theDataType ) {
-      // extract the name and parameters (double and string)
-      std::string fcnName = get_bc_function_name(userData, velocityName);
-      // switch on the name found...
-      if ( fcnName == "tornado" ) {
-        theAuxFunc = new TornadoAuxFunction(0,nDim);
-      }
-      else if ( fcnName == "wind_energy" ) {
-        std::vector<std::string> theStringParams  = get_bc_function_string_params(userData, velocityName);
-     	theAuxFunc = new WindEnergyAuxFunction(0,nDim, theStringParams, realm_);
-      }
-      else {
-        throw std::runtime_error("Only wind_energy and tornado user functions supported");
-      }
-    }
-  }
-  else {
-    throw std::runtime_error("Invalid Wall Data Specification; must provide const or fcn for velocity");
-  }
-
-  AuxFunctionAlgorithm *auxAlg
-    = new AuxFunctionAlgorithm(realm_, part,
-                               theBcField, theAuxFunc,
+    // create algorithm to copy mesh velocity to wall velocity
+    CopyFieldAlgorithm *wallVelCopyAlg
+      = new CopyFieldAlgorithm(realm_, part,
+                               meshVelocity, theBcField,
+                               0, nDim,
                                stk::topology::NODE_RANK);
 
-  // check to see if this is an FSI interface to determine how we handle velocity population
-  if ( userData.isFsiInterface_ ) {
-    // xfer will handle population; only need to populate the initial value
-    realm_.initCondAlg_.push_back(auxAlg);
+    bcDataAlg_.push_back(wallVelCopyAlg);
   }
   else {
-    bcDataAlg_.push_back(auxAlg);
+    // extract the value for user specified velocity and save off the AuxFunction
+    AuxFunction *theAuxFunc = NULL;
+    Algorithm* auxAlg = NULL;
+
+    std::string velocityName = "velocity";
+
+    if ( bc_data_specified(userData, velocityName) ) {
+
+      UserDataType theDataType = get_bc_data_type(userData, velocityName);
+      if ( CONSTANT_UD == theDataType ) {
+        // constant data type specification
+        Velocity ux = userData.u_;
+        std::vector<double> userSpec(nDim);
+        userSpec[0] = ux.ux_;
+        userSpec[1] = ux.uy_;
+        if ( nDim > 2)
+          userSpec[2] = ux.uz_;
+        theAuxFunc = new ConstantAuxFunction(0, nDim, userSpec);
+      }
+      else if ( FUNCTION_UD == theDataType ) {
+        // extract the name and parameters (double and string)
+        std::string fcnName = get_bc_function_name(userData, velocityName);
+        // switch on the name found...
+        if ( fcnName == "tornado" ) {
+          theAuxFunc = new TornadoAuxFunction(0,nDim);
+        }
+        else {
+          throw std::runtime_error("Only wind_energy and tornado user functions supported");
+        }
+      }
+    }
+    else {
+      throw std::runtime_error("Invalid Wall Data Specification; must provide const or fcn for velocity");
+    }
+
+    auxAlg = new AuxFunctionAlgorithm(realm_, part,
+      theBcField, theAuxFunc,
+      stk::topology::NODE_RANK);
+
+    // check to see if this is an FSI interface to determine how we handle velocity population
+    if ( userData.isFsiInterface_ ) {
+      // xfer will handle population; only need to populate the initial value
+      realm_.initCondAlg_.push_back(auxAlg);
+    }
+    else {
+      bcDataAlg_.push_back(auxAlg);
+    }
   }
   
   // copy velocity_bc to velocity np1

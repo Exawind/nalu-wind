@@ -21,7 +21,6 @@
 namespace sierra{
 namespace nalu{
 
-class MeshMotionInfo;
 struct FixPressureAtNodeInfo;
 
 enum ErrorIndicatorType {
@@ -202,9 +201,6 @@ public:
   
   // read any fields from input files
   std::map<std::string, std::string> inputVarFromFileMap_;
-
-  // mesh motion
-  std::map<std::string, MeshMotionInfo *> meshMotionInfoMap_;
 
   std::vector<double> gravity_;
 

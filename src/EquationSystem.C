@@ -77,7 +77,7 @@ EquationSystem::~EquationSystem()
     delete linsys_;
 
   // initial conditions and bc prop
-  std::vector<AuxFunctionAlgorithm *>::iterator ii;
+  std::vector<Algorithm *>::iterator ii;
   for( ii=bcDataAlg_.begin(); ii!=bcDataAlg_.end(); ++ii )
     delete *ii;
 
