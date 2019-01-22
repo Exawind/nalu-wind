@@ -38,7 +38,7 @@ public :
 class Rectangle : public Shape {
   const double length_,width_;
 public :
-  KOKKOS_FORCEINLINE_FUNCTION Rectangle(const double l,const double w):Shape(),length_(l),width_(w) {
+  Rectangle(const double l,const double w):Shape(),length_(l),width_(w) {
     copy_to_device(*this);
   }
   KOKKOS_FORCEINLINE_FUNCTION Rectangle(const Rectangle &r):Shape(),length_(r.length_),width_(r.width_) {} 
@@ -51,7 +51,7 @@ public :
 class Circle : public Shape {
   const double radius_;
 public :
-  KOKKOS_FORCEINLINE_FUNCTION Circle(const double radius):Shape(),radius_(radius) {
+  Circle(const double radius):Shape(),radius_(radius) {
     copy_to_device(*this);
   }
   KOKKOS_FORCEINLINE_FUNCTION Circle(const Circle &c):Shape(),radius_(c.radius_) {} 

@@ -14,6 +14,7 @@ add_sources(GlobalUnitSourceList
    UnitTestHex27FaceNodeOrdering.C
    UnitTestHexElementPromotion.C
    UnitTestHexMasterElements.C
+   UnitTestHexMasterElementsNgp.C
    UnitTestHexSCVDeterminant.C
    UnitTestIntegrationRule.C
    UnitTestKokkosME.C
