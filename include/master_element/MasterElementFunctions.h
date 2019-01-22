@@ -30,7 +30,7 @@
 namespace sierra {
 namespace nalu {
 
-  template<typename ftype> inline void cofactorMatrix(ftype adjJac[][3], const ftype jact[][3]) {
+  template<typename ftype> KOKKOS_INLINE_FUNCTION void cofactorMatrix(ftype adjJac[][3], const ftype jact[][3]) {
     adjJac[0][0] = jact[1][1] * jact[2][2] - jact[2][1] * jact[1][2];
     adjJac[0][1] = jact[1][2] * jact[2][0] - jact[2][2] * jact[1][0];
     adjJac[0][2] = jact[1][0] * jact[2][1] - jact[2][0] * jact[1][1];
@@ -43,7 +43,7 @@ namespace nalu {
     adjJac[2][1] = jact[0][2] * jact[1][0] - jact[1][2] * jact[0][0];
     adjJac[2][2] = jact[0][0] * jact[1][1] - jact[1][0] * jact[0][1];
   }
-  template<typename ftype> inline void cofactorMatrix(ftype adjJac[][2], const ftype jact[][2]) {
+  template<typename ftype> KOKKOS_INLINE_FUNCTION void cofactorMatrix(ftype adjJac[][2], const ftype jact[][2]) {
     adjJac[0][0] =  jact[1][1];
     adjJac[0][1] = -jact[1][0];
     adjJac[1][0] = -jact[0][1];
@@ -51,6 +51,7 @@ namespace nalu {
   }
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
+  KOKKOS_FUNCTION
   void generic_grad_op(const GradViewType& referenceGradWeights, const CoordViewType& coords, OutputViewType& weights)
   {
     constexpr int dim = AlgTraits::nDim_;

@@ -19,11 +19,11 @@
 namespace sierra{
 namespace nalu{
 
-  inline constexpr double tiny_positive_value() {
+  KOKKOS_INLINE_FUNCTION constexpr double tiny_positive_value() {
     return (1.0e6*std::numeric_limits<double>::min());
   }
 
-  inline constexpr double small_positive_value() {
+  KOKKOS_INLINE_FUNCTION constexpr double small_positive_value() {
     return 1.0e2*std::numeric_limits<double>::epsilon();
   }
 

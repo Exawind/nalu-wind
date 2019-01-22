@@ -21,6 +21,18 @@ T* create_device_expression(const T & rhs)
   });
   return t;
 }
+
+template <typename T>
+inline 
+T* create_device_expression()
+{
+  const std::string debuggingName(typeid(T).name());
+  T* t = kokkos_malloc_on_device<T>(debuggingName);
+  kokkos_parallel_for(debuggingName, 1, [&] (const int i) {
+    new (t) T(); 
+  });
+  return t;
+}
 } // namespace nalu
 } // namespace sierra
 
