@@ -38,6 +38,7 @@ realms:
         velocity: solve_scalar
         pressure: solve_cont
         enthalpy: solve_scalar
+        turbulent_ke: solve_scalar
 
       systems:
 
@@ -51,6 +52,11 @@ realms:
             max_iterations: 1
             convergence_tolerance: 1e-5
 
+        - TurbKineticEnergy:
+            name: myTke
+            max_iterations: 1
+            convergence_tolerance: 1.e-5
+
     material_properties:
 
       target_name: block_1
@@ -61,7 +67,7 @@ realms:
 
       reference_quantities:
         - species_name: N2
-          mw: 14.0
+          mw: 28.0
           mass_fraction: 0.767
 
         - species_name: O2
@@ -106,7 +112,8 @@ realms:
           pressure: 0
           velocity: [0,0]  
           temperature: 300.0
-  
+          turbulent_ke: 1.0e-16
+
     boundary_conditions:
 
     - wall_boundary_condition: bc_bottom
@@ -114,17 +121,20 @@ realms:
       wall_user_data:
         velocity: [0,0,0]
         temperature: 305.0
+        turbulent_ke: 0.0 
 
     - inflow_boundary_condition: bc_inflow
       target_name: surface_2
       inflow_user_data:
         velocity: [0,0,0.50]
+        turbulent_ke: 1.0 
         temperature: 350.0
 
     - wall_boundary_condition: bc_pipe
       target_name: surface_3
       wall_user_data:
         velocity: [0,0,0]
+        turbulent_ke: 0.0 
 
     - open_boundary_condition: bc_side
       target_name: surface_4
@@ -132,6 +142,7 @@ realms:
         velocity: [0,0,0]
         pressure: 0.0
         temperature: 300.0
+        turbulent_ke: 1.0e-16 
 
     - open_boundary_condition: bc_top
       target_name: surface_5
@@ -139,13 +150,17 @@ realms:
         velocity: [0,0,0]
         pressure: 0.0
         temperature: 300.0
+        turbulent_ke: 1.0e-16
 
     solution_options:
       name: myOptions
+      turbulence_model: ksgs
+
       options:
         - hybrid_factor:
             velocity: 1.0
             enthalpy: 1.0
+            turbulent_ke: 1.0
 
         - laminar_prandtl:
             enthalpy: 1.0
@@ -155,11 +170,18 @@ realms:
 
         - source_terms:
             continuity: density_time_derivative
+            turbulent_ke: rodi
+            momentum: buoyancy
+
+        - user_constants:
+            gravity: [0.0,-9.81,0.0]
+            reference_density: 1.17154
 
         - limiter:
             pressure: no
             velocity: no
             enthalpy: yes 
+            turbulent_ke: yes 
 
     output:
       output_data_base_name: nonIsoElemOpenJet.e
@@ -170,6 +192,8 @@ realms:
        - pressure
        - temperature
        - enthalpy
+       - turbulent_ke
+       - density
 
 Time_Integrators:
   - StandardTimeIntegrator:
