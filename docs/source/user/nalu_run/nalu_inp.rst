@@ -313,7 +313,8 @@ Realm subsection                 Purpose
 :inpfile:`initial_conditions`    Initial conditions for the various fields
 :inpfile:`boundary_conditions`   Boundary condition for the different fields
 :inpfile:`material_properties`   Material properties (e.g., fluid density, viscosity etc.)
-:inpfile:`solution_options`      Discretization, numerical stability, and mesh motion options
+:inpfile:`solution_options`      Discretization and numerical stability
+:inpfile:`mesh_motion`           Mesh motion
 :inpfile:`output`                Solution output options (file, frequency, etc.)
 :inpfile:`restart`               Optional: Restart options (restart time, checkpoint frequency etc.)
 :inpfile:`time_step_control`     Optional: Parameters determining variable timestepping
@@ -853,24 +854,15 @@ Material Properties
                primary_value: 1.967e-4
                secondary_value: 1.85e-4
 
-Solution Options
-````````````````
-
-.. inpfile:: solution_options
-
-   The section provides a combination of discretization, numerical stability,
-   and mesh motion properties required for various physical equations during the
-   simulation.
-
 Mesh Motion
-+++++++++++++++++++++++
+```````````
 
-.. inpfile:: solution_options.mesh_motion
+.. inpfile:: mesh_motion
 
-   This section describes the rigid body motion undergone by the entire mesh. The
-   mesh motion description follows the concept of reference frames in multi-body
-   representation of physical domains, with entry under :inpfile:`solution_options.mesh_motion`
-   describing a motion frame as shown below.
+   This subsection of the of the realm describes the rigid body motion undergone 
+   by the entire mesh. The mesh motion description follows the concept of 
+   reference frames in multi-body representation of physical domains, with entry 
+   under :inpfile:`mesh_motion` describing a motion frame as shown below.
 
    Example:
 
