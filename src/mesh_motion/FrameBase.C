@@ -55,7 +55,8 @@ void FrameBase::load(const YAML::Node& node)
     const auto& motion_def = motions[i];
 
     // motion type should always be defined by the user
-    std::string type = motion_def["type"].as<std::string>();
+    std::string type;
+    get_required(motion_def, "type", type);
 
     // determine type of mesh motion based on user definition in input file
     if (type == "pulsating_sphere")
