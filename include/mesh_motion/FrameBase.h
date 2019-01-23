@@ -43,7 +43,7 @@ public:
     for (size_t i=0; i < meshMotionVec_.size(); i++)
       meshMotionVec_[i]->set_computed_centroid(centroid); }
 
-  const bool is_inertial() const {
+  bool is_inertial() const {
     return isInertial_; }
 
 protected:
