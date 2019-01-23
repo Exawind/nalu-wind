@@ -6,7 +6,8 @@
 /*------------------------------------------------------------------------*/
 
 /** @file ActuatorLineFAST.h
- *  @brief A class to couple Nalu with OpenFAST for actuator line simulations of wind turbines
+ *  @brief A class to couple Nalu with OpenFAST for actuator line simulations of
+ * wind turbines
  *
  */
 
@@ -19,18 +20,16 @@
 // OpenFAST C++ API
 #include "OpenFAST.H"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
-class ActuatorLineFAST: public ActuatorFAST {
+class ActuatorLineFAST : public ActuatorFAST
+{
 public:
-
-  ActuatorLineFAST(
-    Realm &realm,
-    const YAML::Node &node);
-  ~ActuatorLineFAST()=default;
+  ActuatorLineFAST(Realm& realm, const YAML::Node& node);
+  ~ActuatorLineFAST() = default;
 
   std::string get_class_name() override;
 
@@ -38,17 +37,14 @@ public:
 
   void execute_class_specific(
     const int nDim,
-    const stk::mesh::FieldBase * coordinates,
-    stk::mesh::FieldBase * actuator_source,
-    const stk::mesh::FieldBase * dual_nodal_volume
-    ) override;
+    const stk::mesh::FieldBase* coordinates,
+    stk::mesh::FieldBase* actuator_source,
+    const stk::mesh::FieldBase* dual_nodal_volume) override;
 
   void create_point_info_map_class_specific() override;
-
 };
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif
