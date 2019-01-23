@@ -16,22 +16,7 @@
 
 #include "ActuatorFAST.h"
 #include "gtest/gtest_prod.h"
-//TODO(psakiev):: Function to define radial sample points line (cone)
 //TODO(psakiev):: Decide which is better, varying spreading, or varying sampling radially
-
-/*
- * Implementation:
- * -------------------------------------------------------------
- * Put disk points into normal point map after the normal points
- * for actuator lines are computed.
- * The points are mapped between the actuator line points
- * -------------------------------------------------------------
- *    - pros:
- *        * execution of force spreading is the same
- *        * ghosting, search same
- *    - cons:
- *        * have to figure out a way to only send a portion of the points to fast
- */
 
 namespace sierra{
 namespace nalu{
@@ -47,7 +32,32 @@ public:
   ~ActuatorDiskFASTInfo()=default;
   int bladeSweptPts_;
 };
-
+/** Class for an Actuator Disk
+ *
+ *  This class creates an actuator disk by sampling the flow field
+ *  with an OpenFAST Actuator line model.  As a result it inherits the
+ *  majority of its functionality from the ActuatorFAST class.
+ *
+ *  The procedure for the disk is:
+ *
+ *  1) After the actuator line data structures are created additional
+ *     points are added in between the lines at each discrete radial location.
+ *     The points are inserted with a periodic Bezier curve (Sanchez-Reyes, 2009)
+ *     which is a parametric curve over the interval t \in [0, 2pi].
+ *     Since these points are in-between the actuator lines they are refered to as
+ *     'swept points' throughout the code.
+ *
+ *     The Bezier function can capture the coning affects, and if desired (not implemented now)
+ *     distortion of the disk due to blade motion.  Currently the point positions for the
+ *     disk and lines are never updated.
+ *
+ *  2) During a run the actuator line proceeds as normal, but prior to forces being
+ *     sent back to nalu-wind the force is averaged between the blades at each discrete
+ *     radial location.  This average value is then spread evenly across all the points
+ *     at the given radius (swept and line points), and this is the force that is sent
+ *     back to nalu-wind at all the discrete points.
+ *
+ */
 class ActuatorDiskFAST : public ActuatorFAST{
 public:
   ActuatorDiskFAST( Realm &realm, const YAML::Node &node);
@@ -70,9 +80,12 @@ public:
   std::string get_class_name() override;
 
 protected:
-  std::map<int,std::vector<std::vector<double>>> loadAverageMap_;
+  Point get_blade_point_location(int turbineNum, int bladeNum, int radiusIndex);
+  int number_of_swept_points(int numBlades, double radius, double targetArcLength);
+  void add_swept_points_to_map();
+  std::map<int,std::vector<std::vector<double>>> averageForcesMap_;
   std::map<std::size_t,int> pointRadiusMap_;
-  std::map<int,int> sweptPointMap_; //{globTurbNo : num points between actuator lines}
+  std::map<int,int> numSweptPointMap_; //{globTurbNo : numPoints between blades}
 };
 
 /** Implementation of a periodic Bezier curve (Sanchez-Reyes, 2009) to connect points at a specific radius
@@ -100,18 +113,6 @@ private:
   FRIEND_TEST(ActuatorDiskFAST,SweptPointLocatorBasis);
 
 };
-
-// free functions
-int ComputeNumberOfSweptPoints(double radius, int numBlades, double targetArcLength);
-int FindClosestIndex(const double radius, std::vector<double> vecRad);
-std::vector<double> NormalizedDirection(const std::vector<double>& p1, const std::vector<double>& p2);
-Point SweptPointLocation(
-  const int nBlades,
-  const int nTotalPoints,
-  const int nCurrentPoint,
-  const Point& pointLoc,
-  const std::vector<double>& hubLoc,
-  const std::vector<double>& axis);
 
 } // namespace nalu
 } // namespace sierra

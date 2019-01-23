@@ -44,11 +44,12 @@ public:
 class ActuatorFASTPointInfo : public ActuatorPointInfo{
 public:
   ActuatorFASTPointInfo(
-    size_t globTurbId, Point centroidCoords, double searchRadius, Coordinates epsilon, fast::ActuatorNodeType nType);
+    size_t globTurbId, Point centroidCoords, double searchRadius, Coordinates epsilon, fast::ActuatorNodeType nType, int forceInd);
   virtual ~ActuatorFASTPointInfo();
   size_t globTurbId_; ///< Global turbine number.
   Coordinates epsilon_; ///< The Gaussian spreading width in (chordwise, spanwise, thickness) directions for this actuator point.
   fast::ActuatorNodeType nodeType_; ///< HUB, BLADE, or TOWER - Defined by an enum.
+  int forcePntIndex_; ///< The index this point resides in the total number of force points for the tower i.e. i \in [0,numForcePnts-1]
 
 };
 

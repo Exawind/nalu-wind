@@ -13,6 +13,7 @@
 #include <NaluEnv.h>
 #include <Realm.h>
 #include <Simulation.h>
+#include <nalu_make_unique.h>
 
 // master elements
 #include <master_element/MasterElement.h>
@@ -66,7 +67,8 @@ ActuatorFASTPointInfo::ActuatorFASTPointInfo(
   Point centroidCoords,
   double searchRadius,
   Coordinates epsilon,
-  fast::ActuatorNodeType nType
+  fast::ActuatorNodeType nType,
+  int forceInd
   )
   : ActuatorPointInfo(
       centroidCoords,
@@ -76,7 +78,8 @@ ActuatorFASTPointInfo::ActuatorFASTPointInfo(
     ),
     globTurbId_(globTurbId),
     epsilon_(epsilon),
-    nodeType_(nType)
+    nodeType_(nType),
+    forcePntIndex_(forceInd)
 {
   // nothing to do
 }
@@ -740,13 +743,14 @@ ActuatorFAST::create_actuator_point_info_map() {
               break;
           }
           
-          actuatorPointInfoMap_.emplace(np, new ActuatorFASTPointInfo
+          actuatorPointInfoMap_.insert(std::make_pair(np, make_unique<ActuatorFASTPointInfo>
             (
               iTurb, centroidCoords,
               searchRadius, epsilon,
-              FAST.getForceNodeType(iTurb, np)
+              FAST.getForceNodeType(iTurb, np),
+              iNode
             )
-          );
+          ));
           np=np+1;
         }
 

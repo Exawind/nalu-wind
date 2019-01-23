@@ -21,40 +21,6 @@
 namespace sierra{
 namespace nalu{
 
-TEST(ActuatorDiskFAST, SweptPointLocation){
-  const double PI {std::acos(-1.0)};
-  std::vector<double> hub={1,1,1};
-  Point point={1,1,2};
-  std::vector<double> axis={0,1,0};
-  const int nPoints = 3;
-  for (int nBlades=1; nBlades<4; nBlades++){
-    const double dTheta = 2.0*PI/nBlades/(nPoints+1);
-
-    for (int j=0; j<nPoints; j++){
-
-      double expectTheta = dTheta*(j+1);
-      if(expectTheta>PI){
-        expectTheta = 2.0*PI-expectTheta;
-      }
-
-      Point result=SweptPointLocation(nBlades,3,j,point,hub,axis);
-
-      double radius{0};
-      double dot{0};
-      for (int i=0; i<3; i++){
-        radius += (result[i]-hub[i])*(result[i]-hub[i]);
-        dot+=(result[i]-hub[i])*(point[i]-hub[i]);
-      }
-
-      // Ensure that angle is incremented by dTheta and radius stays constant
-      // during mapping process.
-      double resultTheta = std::acos(dot/radius);
-
-      EXPECT_DOUBLE_EQ(expectTheta, resultTheta) << "Blades: " << nBlades << " Point Number: " << j;
-      EXPECT_DOUBLE_EQ(1.0, std::sqrt(radius));
-    }
-  }
-}
 template<class T>
 double F_distance(T& p1, T& p2){
   double d = 0;
@@ -171,115 +137,8 @@ TEST(ActuatorDiskFAST, PointsOnACircle){
         << "Failure at t=: "<< t << " was calculated as " <<Ap[0] << ", "<<Ap[1] <<", " <<Ap[2]<<std::endl;
     i++;
   }
-
-
 }
 
-TEST(ActuatorDiskFAST, FindClosestIndex){
-  std::mt19937::result_type seed = std::time(0);
-  auto fn_real_rand = std::bind(std::uniform_real_distribution<double>(0,1),std::mt19937(seed));
-
-  for (int i=0; i<20; i++){
-    // create a vec of random values between 0 and 1
-    std::vector<double> listOfRadius(20);
-    for(auto&& value : listOfRadius){
-      value = fn_real_rand();
-    }
-
-    // sort and remove duplicates
-    std::sort(listOfRadius.begin(), listOfRadius.end());
-    auto it = std::unique(listOfRadius.begin(), listOfRadius.end());
-
-    if(it!=listOfRadius.end()){
-      listOfRadius.resize(std::distance(listOfRadius.begin(),it));
-    }
-
-    // generate a random radial value
-    double radius = fn_real_rand();
-
-    // find closest
-    int closest = FindClosestIndex(radius, listOfRadius);
-
-    // check
-    bool isClosest = true;
-    std::ostringstream fail_test_message;
-    fail_test_message << "Failure of iteration " << i+1 << " of 20" << std::endl;
-    fail_test_message << "Vector: " << std::endl;
-    for (auto&& v : listOfRadius){
-      fail_test_message << std::to_string(v) << ", ";
-    }
-    fail_test_message << std::endl;
-    if(closest<listOfRadius.size()-1){
-      if(std::fabs(listOfRadius[closest]-radius) > std::fabs(listOfRadius[closest+1]-radius) ){
-        isClosest = false;
-        fail_test_message
-          << " Radius value: "
-          << std::to_string(radius)
-          << std::endl
-          << " Function Match (delta): " << listOfRadius[closest]
-          << " (" <<std::fabs(listOfRadius[closest]-radius) << ")"
-          << std::endl
-          << " Closer Value (delta): " << listOfRadius[closest+1]
-          << " (" <<std::fabs(listOfRadius[closest+1]-radius) << ")"
-          << std::endl
-          << " Function and Closer Indices: " << closest << " " << closest+1
-          << std::endl;
-      }
-    }
-    if(closest>0){
-      if(std::fabs(listOfRadius[closest]-radius) > std::fabs(listOfRadius[closest-1]-radius)){
-        isClosest = false;
-        fail_test_message
-          << " Radius value: "
-          << std::to_string(radius)
-          << std::endl
-          << " Function Match (delta): " << listOfRadius[closest]
-          << " (" <<std::fabs(listOfRadius[closest]-radius) << ")"
-          << std::endl
-          << " Closer Value (delta): " << listOfRadius[closest-1]
-          << " (" <<std::fabs(listOfRadius[closest-1]-radius) << ")"
-          << std::endl
-          << " Function and Closer Indices: " << closest << " " << closest-1
-          << std::endl;
-      }
-    }
-    EXPECT_TRUE(isClosest) << fail_test_message.str();
-  }
-
-}
-
-TEST(ActuatorDiskFAST, NormalizedDirection){
-  std::vector<double> p1(3),p2(3),n(3);
-  p1[0]=0; p1[1]=0; p1[2]=0;
-  p2[0]=1; p2[1]=1; p2[2]=1;
-  double s3 = 1.0/std::sqrt(3.0);
-
-  n = NormalizedDirection(p2,p1);
-  EXPECT_DOUBLE_EQ(s3,n[0]);
-  EXPECT_DOUBLE_EQ(s3,n[1]);
-  EXPECT_DOUBLE_EQ(s3,n[2]);
-
-  p2[1]*=-1.0;
-  n = NormalizedDirection(p2,p1);
-  EXPECT_DOUBLE_EQ(s3,n[0]);
-  EXPECT_DOUBLE_EQ(-s3,n[1]);
-  EXPECT_DOUBLE_EQ(s3,n[2]);
-
-  p2[0]*=2.0; p2[1]*=-2.0; p2[2]*=2.0;
-  n = NormalizedDirection(p2,p1);
-  EXPECT_DOUBLE_EQ(s3,n[0]);
-  EXPECT_DOUBLE_EQ(s3,n[1]);
-  EXPECT_DOUBLE_EQ(s3,n[2]);
-
-  p2[0]+=2.0; p2[1]+=2.0; p2[2]+=2.0;
-  p1[0]+=2.0; p1[1]+=2.0; p1[2]+=2.0;
-  n = NormalizedDirection(p2,p1);
-  EXPECT_DOUBLE_EQ(s3,n[0]);
-  EXPECT_DOUBLE_EQ(s3,n[1]);
-  EXPECT_DOUBLE_EQ(s3,n[2]);
-
-
-}
 
 }
 }
