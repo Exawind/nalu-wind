@@ -352,6 +352,14 @@ class Realm {
   stk::mesh::MetaData & meta_data();
   const stk::mesh::MetaData & meta_data() const;
 
+  inline ngp::Mesh& ngp_mesh()
+  {
+    if (!ngpMesh_) {
+      ngpMesh_.reset(new ngp::Mesh(*bulkData_));
+    }
+    return *ngpMesh_;
+  }
+
   // inactive part
   stk::mesh::Selector get_inactive_selector();
 
@@ -639,6 +647,9 @@ class Realm {
    * systems.
    */
   bool hypreIsActive_{false};
+
+protected:
+  std::unique_ptr<ngp::Mesh> ngpMesh_;
 
 };
 

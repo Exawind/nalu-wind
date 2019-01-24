@@ -1885,6 +1885,9 @@ Realm::pre_timestep_work()
       set_hypre_global_id();
     }
 
+    // Reset the ngp::Mesh instance
+    ngpMesh_.reset(new ngp::Mesh(*bulkData_));
+
     // now re-initialize linear system
     equationSystems_.reinitialize_linear_system();
 
