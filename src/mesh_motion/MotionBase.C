@@ -5,10 +5,10 @@ namespace sierra{
 namespace nalu{
 
 const MotionBase::TransMatType MotionBase::identityMat_
-  = {{{1,0,0,0},
-      {0,1,0,0},
-      {0,0,1,0},
-      {0,0,0,1}}};
+  = {{{{1,0,0,0}},
+      {{0,1,0,0}},
+      {{0,0,1,0}},
+      {{0,0,0,1}}}};
 
 MotionBase::TransMatType MotionBase::add_motion(
     const TransMatType& motionL,
