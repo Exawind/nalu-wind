@@ -19,6 +19,7 @@ False         CavitCheck         - Perform cavitation check? (flag)
         0.1   FluidDepth         - Water depth above mid-hub height (m) [used only when CavitCheck=True]
 ======  Blade-Element/Momentum Theory Options  ====================================================== [used only when WakeMod=1]
           2   SkewMod            - Type of skewed-wake correction model (switch) {1=uncoupled, 2=Pitt/Peters, 3=coupled} [used only when WakeMod=1]
+"default"     SkewModFactor - Constant used in Pitt/Peters skewed wake model {or "default" is 15/32*pi} (-) [used only when SkewMod=2; unused when WakeMod=0]
 True          TipLoss            - Use the Prandtl tip-loss model? (flag) [used only when WakeMod=1]
 True          HubLoss            - Use the Prandtl hub-loss model? (flag) [used only when WakeMod=1]
 true          TanInd             - Include tangential induction in BEMT calculations? (flag) [used only when WakeMod=1]

@@ -238,7 +238,7 @@ class mapping_object_class():
         else:
 
             # Delete the mesh entry from the pre-processing file
-            del(self.yaml_preprocess['nalu_abl_mesh'])
+            # del(self.yaml_preprocess['nalu_abl_mesh'])
 
             print('Mesh will not be generated')
 
