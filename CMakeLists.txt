@@ -78,7 +78,7 @@ endif()
 ############################ FFTW ######################################
 if(ENABLE_FFTW)
   set(CMAKE_PREFIX_PATH ${FFTW_DIR} ${CMAKE_PREFIX_PATH})
-  find_package(FFTW REQUIRED)
+  find_package(FFTW QUIET REQUIRED)
   if(FFTW_FOUND)
     message("-- Found FFTW = ${FFTW_DIR}")
   endif()
@@ -89,7 +89,6 @@ endif(ENABLE_FFTW)
 ############################ HYPRE #####################################
 if(ENABLE_HYPRE)
   set(CMAKE_PREFIX_PATH ${HYPRE_DIR} ${CMAKE_PREFIX_PATH})
-  # Quiet down HYPRE's own "found" output to be consistent with others
   find_package(HYPRE QUIET REQUIRED)
   if(HYPRE_FOUND)
     message("-- Found HYPRE = ${HYPRE_DIR}")
