@@ -556,7 +556,7 @@ NumNeededViews count_needed_field_views(const ElemDataRequestsGPU& dataNeeded)
 template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
 KOKKOS_FUNCTION
 ScratchViewsNGP<T,TEAMHANDLETYPE,SHMEM>::ScratchViewsNGP(const TEAMHANDLETYPE& team,
-             unsigned nDim,
+             unsigned /* nDim */,
              int nodalGatherSize,
              const ElemDataRequestsGPU& dataNeeded)
  : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))

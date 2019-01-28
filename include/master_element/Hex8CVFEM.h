@@ -492,7 +492,7 @@ template<typename ViewType>
 KOKKOS_FUNCTION
 void
 HexSCS::hex8_shape_fcn(
-  const int  &npts,
+  const int  & /* npts */,
   const double *isoParCoord,
   ViewType &shape_fcn)
 {
