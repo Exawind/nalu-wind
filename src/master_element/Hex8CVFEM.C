@@ -26,36 +26,9 @@ namespace nalu{
 HexSCV::HexSCV()
   : MasterElement()
 {
-  nDim_ = 3;
-  nodesPerElement_ = 8;
-  numIntPoints_ = 8;
-
-  // define ip node mappings
-  ipNodeMap_.resize(8);
-  ipNodeMap_[0] = 0; ipNodeMap_[1] = 1; ipNodeMap_[2] = 2; ipNodeMap_[3] = 3;
-  ipNodeMap_[4] = 4; ipNodeMap_[5] = 5; ipNodeMap_[6] = 6; ipNodeMap_[7] = 7;
-
-  // standard integration location
-  intgLoc_.resize(24);
-  intgLoc_[0]  = -0.25; intgLoc_[1]  = -0.25; intgLoc_[2]  = -0.25;
-  intgLoc_[3]  = +0.25; intgLoc_[4]  = -0.25; intgLoc_[5]  = -0.25;
-  intgLoc_[6]  = +0.25; intgLoc_[7]  = +0.25; intgLoc_[8]  = -0.25;
-  intgLoc_[9]  = -0.25; intgLoc_[10] = +0.25; intgLoc_[11] = -0.25;
-  intgLoc_[12] = -0.25; intgLoc_[13] = -0.25; intgLoc_[14] = +0.25;
-  intgLoc_[15] = +0.25; intgLoc_[16] = -0.25; intgLoc_[17] = +0.25;
-  intgLoc_[18] = +0.25; intgLoc_[19] = +0.25; intgLoc_[20] = +0.25;
-  intgLoc_[21] = -0.25; intgLoc_[22] = +0.25; intgLoc_[23] = +0.25;
-
-  // shifted integration location
-  intgLocShift_.resize(24);
-  intgLocShift_[0]  = -0.5; intgLocShift_[1]  = -0.5; intgLocShift_[2]  = -0.5;
-  intgLocShift_[3]  = +0.5; intgLocShift_[4]  = -0.5; intgLocShift_[5]  = -0.5;
-  intgLocShift_[6]  = +0.5; intgLocShift_[7]  = +0.5; intgLocShift_[8]  = -0.5;
-  intgLocShift_[9]  = -0.5; intgLocShift_[10] = +0.5; intgLocShift_[11] = -0.5;
-  intgLocShift_[12] = -0.5; intgLocShift_[13] = -0.5; intgLocShift_[14] = +0.5;
-  intgLocShift_[15] = +0.5; intgLocShift_[16] = -0.5; intgLocShift_[17] = +0.5;
-  intgLocShift_[18] = +0.5; intgLocShift_[19] = +0.5; intgLocShift_[20] = +0.5;
-  intgLocShift_[21] = -0.5; intgLocShift_[22] = +0.5; intgLocShift_[23] = +0.5;
+  MasterElement::ipNodeMap_       .assign(ipNodeMap_,        8+ipNodeMap_);
+  MasterElement::intgLoc_         .assign(intgLoc_,         24+intgLoc_);
+  MasterElement::intgLocShift_    .assign(intgLocShift_,    24+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------

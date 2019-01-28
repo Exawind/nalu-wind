@@ -16,6 +16,8 @@ namespace nalu {
 
 class HexSCS;
 class HexSCV;
+class Hex27SCS;
+class Hex27SCV;
 
 // limited supported now (P=1 3D elements)
 struct AlgTraitsHex8 {
@@ -36,6 +38,8 @@ struct AlgTraitsHex27 {
   static constexpr int numScvIp_ = 216;
   static constexpr int numGp_ = 27; // for FEM (not supported)
   static constexpr stk::topology::topology_t topo_ = stk::topology::HEX_27;
+  using            masterElementScs_ = Hex27SCS;
+  using            masterElementScv_ = Hex27SCV;
 };
 
 struct AlgTraitsTet4 {
