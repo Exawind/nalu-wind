@@ -315,6 +315,7 @@ void check_derivatives(
       EXPECT_NEAR(stk::simd::get_data(hostResults(j,d),0), polyResult[j][d], 1.0e-12);
     }
   }
+  sierra::nalu::MasterElementRepo::clear();
 }
 
 class MasterElementHexSerialNGP : public ::testing::Test
