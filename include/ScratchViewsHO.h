@@ -97,7 +97,7 @@ private:
 template<typename T>
 ScratchViewsHO<T>::ScratchViewsHO(const TeamHandleType& team,
              const stk::mesh::BulkData& bulkData,
-             int order, int dim,
+             int order, int /* dim */,
              const ElemDataRequests& dataNeeded)
 {
   int numScalars = 0;

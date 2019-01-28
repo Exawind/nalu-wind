@@ -233,7 +233,7 @@ template<typename T>
 int MasterElementViews<T>::create_master_element_views(
   const TeamHandleType& team,
   const ElemDataRequestsNGP::DataEnumView& dataEnums,
-  int nDim, int nodesPerFace, int nodesPerElem,
+  int nDim, int /* nodesPerFace */, int nodesPerElem,
   int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
 {
   int numScalars = 0;
@@ -394,11 +394,11 @@ template<typename T>
 void MasterElementViews<T>::fill_master_element_views(
   const ElemDataRequestsNGP::DataEnumView& dataEnums,
   SharedMemView<double**>* coordsView,
-  MasterElement* meFC,
+  MasterElement* /* meFC */,
   MasterElement* meSCS,
   MasterElement* meSCV,
   MasterElement* meFEM,
-  int faceOrdinal)
+  int /* faceOrdinal */)
 {
   // Guard against calling MasterElement methods on SIMD data structures
   static_assert(std::is_same<T, double>::value,
@@ -478,7 +478,7 @@ template<typename T>
 void MasterElementViews<T>::fill_master_element_views_new_me(
   const ElemDataRequestsNGP::DataEnumView& dataEnums,
   SharedMemView<DoubleType**>* coordsView,
-  MasterElement* meFC,
+  MasterElement* /* meFC */,
   MasterElement* meSCS,
   MasterElement* meSCV,
   MasterElement* meFEM,

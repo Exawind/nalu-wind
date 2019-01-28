@@ -303,7 +303,7 @@ namespace nalu{
   };
 
    template <template <typename> class T, typename... Args>
-  Kernel* build_face_elem_topo_kernel(int dimension,
+  Kernel* build_face_elem_topo_kernel(int /* dimension */,
                                       stk::topology faceTopo, stk::topology elemTopo,
                                       Args&&... args)
   {
@@ -462,7 +462,7 @@ namespace nalu{
 
   inline std::pair<AssembleFaceElemSolverAlgorithm*, bool>
   build_or_add_part_to_face_elem_solver_alg(
-    AlgorithmType algType,
+    AlgorithmType /* algType */,
     EquationSystem& eqSys,
     stk::mesh::Part& part,
     stk::topology elemTopo,

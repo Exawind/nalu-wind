@@ -23,9 +23,9 @@ public:
    * @param[in] xyz            Transformed coordinates
    */
   virtual ThreeDVecType compute_velocity(
-    double time,
-    const TransMatType& compTrans,
-    double* xyz ) {
+    double /* time */,
+    const TransMatType& /* compTrans */,
+    double* /* xyz */) {
     throw std::runtime_error(
       "MotionScaling:compute_velocity() Scaling is not setup to be used as a non-inertial motion");
   }

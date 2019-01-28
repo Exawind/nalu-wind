@@ -52,140 +52,140 @@ public:
 
   // NGP-ready methods first
   virtual void shape_fcn(
-    SharedMemView<DoubleType**> &shpfc) {
+    SharedMemView<DoubleType**> &/* shpfc */) {
     throw std::runtime_error("shape_fcn using SharedMemView is not implemented");}
 
   virtual void shifted_shape_fcn(
-    SharedMemView<DoubleType**> &shpfc) {
+    SharedMemView<DoubleType**> &/* shpfc */) {
     throw std::runtime_error("shifted_shape_fcn using SharedMemView is not implemented");}
 
   virtual void grad_op(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv) {
+    SharedMemView<DoubleType**>&/* coords */,
+    SharedMemView<DoubleType***>&/* gradop */,
+    SharedMemView<DoubleType***>&/* deriv */) {
     throw std::runtime_error("grad_op using SharedMemView is not implemented");}
 
   virtual void shifted_grad_op(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv) {
+    SharedMemView<DoubleType**>&/* coords */,
+    SharedMemView<DoubleType***>&/* gradop */,
+    SharedMemView<DoubleType***>&/* deriv */) {
     throw std::runtime_error("shifted_grad_op using SharedMemView is not implemented");}
 
   virtual void face_grad_op(
-    int face_ordinal,
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop) {
+    int /* face_ordinal */,
+    SharedMemView<DoubleType**>& /* coords */,
+    SharedMemView<DoubleType***>& /* gradop */) {
     throw std::runtime_error("face_grad_op using SharedMemView is not implemented");}
 
   virtual void shifted_face_grad_op(
-    int face_ordinal,
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop) {
+    int /* face_ordinal */,
+    SharedMemView<DoubleType**>& /* coords */,
+    SharedMemView<DoubleType***>& /* gradop */) {
     throw std::runtime_error("shifted_face_grad_op using SharedMemView is not implemented");}
 
   virtual void grad_op_fem(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv,
-    SharedMemView<DoubleType*>&det_j) {
+    SharedMemView<DoubleType**>&/* coords */,
+    SharedMemView<DoubleType***>&/* gradop */,
+    SharedMemView<DoubleType***>&/* deriv */,
+    SharedMemView<DoubleType*>& /*det_j*/) {
     throw std::runtime_error("grad_op using SharedMemView is not implemented");}
 
   virtual void shifted_grad_op_fem(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv,
-    SharedMemView<DoubleType*>&det_j) {
+    SharedMemView<DoubleType**>&/* coords */,
+    SharedMemView<DoubleType***>&/* gradop */,
+    SharedMemView<DoubleType***>&/* deriv */,
+    SharedMemView<DoubleType*>& /*det_j*/) {
     throw std::runtime_error("shifted_grad_op using SharedMemView is not implemented");}
 
   virtual void determinant(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType**>&areav) {
+    SharedMemView<DoubleType**>&/* coords */,
+    SharedMemView<DoubleType**>&/* areav */) {
     throw std::runtime_error("determinant using SharedMemView is not implemented");}
 
   virtual void gij(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gupper,
-    SharedMemView<DoubleType***>& glower,
-    SharedMemView<DoubleType***>& deriv) {
+    SharedMemView<DoubleType**>& /* coords */,
+    SharedMemView<DoubleType***>& /* gupper */,
+    SharedMemView<DoubleType***>& /* glower */,
+    SharedMemView<DoubleType***>& /* deriv */) {
     throw std::runtime_error("gij using SharedMemView is not implemented");
   }
 
   virtual void Mij(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& metric,
-    SharedMemView<DoubleType***>& deriv) {
+    SharedMemView<DoubleType**>& /* coords */,
+    SharedMemView<DoubleType***>& /* metric */,
+    SharedMemView<DoubleType***>& /* deriv */) {
     throw std::runtime_error("Mij using SharedMemView is not implemented");
   }
 
   virtual void determinant(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType*>& volume) {
+    SharedMemView<DoubleType**>& /* coords */,
+    SharedMemView<DoubleType*>& /* volume */) {
     throw std::runtime_error("scv determinant using SharedMemView is not implemented");
   }
 
   // non-NGP-ready methods second
   virtual void determinant(
-    const int nelem,
-    const double *coords,
-    double *volume,
-    double * error ) {
+    const int /* nelem */,
+    const double * /* coords */,
+    double * /* volume */,
+    double * /* error  */) {
     throw std::runtime_error("determinant not implemented");}
 
   virtual void grad_op(
-    const int nelem,
-    const double *coords,
-    double *gradop,
-    double *deriv,
-    double *det_j,
-    double * error ) {
+    const int /* nelem */,
+    const double * /* coords */,
+    double * /* gradop */,
+    double * /* deriv */,
+    double * /* det_j */,
+    double * /* error  */) {
     throw std::runtime_error("grad_op not implemented");}
 
   virtual void shifted_grad_op(
-    const int nelem,
-    const double *coords,
-    double *gradop,
-    double *deriv,
-    double *det_j,
-    double * error ) {
+    const int /* nelem */,
+    const double * /* coords */,
+    double * /* gradop */,
+    double * /* deriv */,
+    double * /* det_j */,
+    double * /* error  */) {
     throw std::runtime_error("shifted_grad_op not implemented");}
 
   virtual void gij(
-    const double *coords,
-    double *gupperij,
-    double *glowerij,
-    double *deriv) {
+    const double * /* coords */,
+    double * /* gupperij */,
+    double * /* glowerij */,
+    double * /* deriv */) {
     throw std::runtime_error("gij not implemented");}
 
   virtual void Mij(
-    const double *coords,
-    double *metric,
-    double *deriv) {
+    const double * /* coords */,
+    double * /* metric */,
+    double * /* deriv */) {
     throw std::runtime_error("Mij not implemented");}
 
   virtual void nodal_grad_op(
-    const int nelem,
-    double *deriv,
-    double * error ) {
+    const int /* nelem */,
+    double * /* deriv */,
+    double * /* error  */) {
     throw std::runtime_error("nodal_grad_op not implemented");}
 
 
   virtual void face_grad_op(
-    const int nelem,
-    const int face_ordinal,
-    const double *coords,
-    double *gradop,
-    double *det_j,
-    double * error ) {
+    const int /* nelem */,
+    const int /* face_ordinal */,
+    const double * /* coords */,
+    double * /* gradop */,
+    double * /* det_j */,
+    double * /* error  */) {
     throw std::runtime_error("face_grad_op not implemented; avoid this element type at open bcs, walls and symms");}
 
 
   virtual void shifted_face_grad_op(
-     const int nelem,
-     const int face_ordinal,
-     const double *coords,
-     double *gradop,
-     double *det_j,
-     double * error ) {
+     const int /* nelem */,
+     const int /* face_ordinal */,
+     const double * /* coords */,
+     double * /* gradop */,
+     double * /* det_j */,
+     double * /* error  */) {
      throw std::runtime_error("shifted_face_grad_op not implemented");}
 
   virtual const int * adjacentNodes() {
@@ -196,70 +196,70 @@ public:
     throw std::runtime_error("scsIpEdgeOrd not implemented");
     }
 
-  virtual const int * ipNodeMap(int ordinal = 0) {
+  virtual const int * ipNodeMap(int /* ordinal */ = 0) {
       throw std::runtime_error("ipNodeMap not implemented");
      }
 
   virtual void shape_fcn(
-    double *shpfc) {
+    double * /* shpfc */) {
     throw std::runtime_error("shape_fcn not implemented"); }
 
   virtual void shifted_shape_fcn(
-    double *shpfc) {
+    double * /* shpfc */) {
     throw std::runtime_error("shifted_shape_fcn not implemented"); }
 
   virtual int opposingNodes(
-    const int ordinal, const int node) {
+    const int /* ordinal */, const int /* node */) {
     throw std::runtime_error("opposingNodes not implemented"); }
 
   virtual int opposingFace(
-    const int ordinal, const int node) {
+    const int /* ordinal */, const int /* node */) {
     throw std::runtime_error("opposingFace not implemented"); 
     }
 
   virtual double isInElement(
-    const double *elemNodalCoord,
-    const double *pointCoord,
-    double *isoParCoord) {
+    const double * /* elemNodalCoord */,
+    const double * /* pointCoord */,
+    double * /* isoParCoord */) {
     throw std::runtime_error("isInElement not implemented"); 
     }
 
   virtual void interpolatePoint(
-    const int &nComp,
-    const double *isoParCoord,
-    const double *field,
-    double *result) {
+    const int & /* nComp */,
+    const double * /* isoParCoord */,
+    const double * /* field */,
+    double * /* result */) {
     throw std::runtime_error("interpolatePoint not implemented"); }
   
   virtual void general_shape_fcn(
-    const int numIp,
-    const double *isoParCoord,
-    double *shpfc) {
+    const int /* numIp */,
+    const double * /* isoParCoord */,
+    double * /* shpfc */) {
     throw std::runtime_error("general_shape_fcn not implement"); }
 
   virtual void general_face_grad_op(
-    const int face_ordinal,
-    const double *isoParCoord,
-    const double *coords,
-    double *gradop,
-    double *det_j,
-    double * error ) {
+    const int /* face_ordinal */,
+    const double * /* isoParCoord */,
+    const double * /* coords */,
+    double * /* gradop */,
+    double * /* det_j */,
+    double * /* error  */) {
     throw std::runtime_error("general_face_grad_op not implemented");}
 
   virtual void general_normal(
-    const double *isoParCoord,
-    const double *coords,
-    double *normal) {
+    const double * /* isoParCoord */,
+    const double * /* coords */,
+    double * /* normal */) {
     throw std::runtime_error("general_normal not implemented");}
 
   virtual void sidePcoords_to_elemPcoords(
-    const int & side_ordinal,
-    const int & npoints,
-    const double *side_pcoords,
-    double *elem_pcoords) {
+    const int & /* side_ordinal */,
+    const int & /* npoints */,
+    const double * /* side_pcoords */,
+    double * /* elem_pcoords */) {
     throw std::runtime_error("sidePcoords_to_elemPcoords");}
 
-  virtual const int* side_node_ordinals(int sideOrdinal) {
+  virtual const int* side_node_ordinals(int /* sideOrdinal */) {
     throw std::runtime_error("side_node_ordinals not implemented");
   }
 
