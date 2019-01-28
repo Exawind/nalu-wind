@@ -21,7 +21,7 @@ class TestKernel
 {
   public:
     TestKernel(unsigned vOrdinal, unsigned pOrdinal)
-     : velocityOrdinal(vOrdinal), pressureOrdinal(pOrdinal)
+     //: velocityOrdinal(vOrdinal), pressureOrdinal(pOrdinal)
    {}
 
   KOKKOS_FUNCTION
@@ -34,8 +34,8 @@ class TestKernel
   }
 
 private:
-  unsigned velocityOrdinal;
-  unsigned pressureOrdinal;
+  //unsigned velocityOrdinal;
+  //unsigned pressureOrdinal;
 };
 
 typedef Kokkos::DualView<int*, Kokkos::LayoutRight, sierra::nalu::DeviceSpace> IntViewType;
