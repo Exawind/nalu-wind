@@ -195,7 +195,7 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(ScalarOpenAdvElemKernel);
+INSTANTIATE_KERNEL_FACE_ELEMENT(ScalarOpenAdvElemKernel)
 
 }  // nalu
 }  // sierra

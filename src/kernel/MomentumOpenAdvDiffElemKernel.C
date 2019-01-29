@@ -386,7 +386,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumOpenAdvDiffElemKernel);
+INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumOpenAdvDiffElemKernel)
 
 }  // nalu
 }  // sierra

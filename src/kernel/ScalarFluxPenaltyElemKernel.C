@@ -166,7 +166,7 @@ ScalarFluxPenaltyElemKernel<BcAlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(ScalarFluxPenaltyElemKernel);
+INSTANTIATE_KERNEL_FACE_ELEMENT(ScalarFluxPenaltyElemKernel)
 
 }  // nalu
 }  // sierra

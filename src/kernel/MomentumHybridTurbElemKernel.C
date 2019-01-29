@@ -203,7 +203,7 @@ MomentumHybridTurbElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumHybridTurbElemKernel);
+INSTANTIATE_KERNEL(MomentumHybridTurbElemKernel)
 
 } // namespace nalu
 } // namespace sierra

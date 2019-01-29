@@ -115,7 +115,7 @@ ContinuityInflowElemKernel<BcAlgTraits>::execute(
   } 
 }
 
-INSTANTIATE_KERNEL_FACE(ContinuityInflowElemKernel);
+INSTANTIATE_KERNEL_FACE(ContinuityInflowElemKernel)
 
 }  // nalu
 }  // sierra

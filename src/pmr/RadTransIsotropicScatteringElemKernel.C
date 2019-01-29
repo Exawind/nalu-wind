@@ -88,7 +88,7 @@ RadTransIsotropicScatteringElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(RadTransIsotropicScatteringElemKernel);
+INSTANTIATE_KERNEL(RadTransIsotropicScatteringElemKernel)
 
 }  // nalu
 }  // sierra

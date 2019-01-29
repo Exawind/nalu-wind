@@ -165,7 +165,7 @@ MomentumSymmetryElemKernel<BcAlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumSymmetryElemKernel);
+INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumSymmetryElemKernel)
 
 }  // nalu
 }  // sierra

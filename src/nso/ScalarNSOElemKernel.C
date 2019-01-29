@@ -259,7 +259,7 @@ ScalarNSOElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(ScalarNSOElemKernel);
+INSTANTIATE_KERNEL(ScalarNSOElemKernel)
 
 }  // nalu
 }  // sierra

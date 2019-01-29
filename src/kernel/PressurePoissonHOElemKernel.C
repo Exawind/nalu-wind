@@ -94,7 +94,7 @@ PressurePoissonHOElemKernel<AlgTraits>::execute(
   tensor_assembly::scalar_diffusion_lhs(ops_, metric, v_lhs, reduced_sens_);
 }
 
-INSTANTIATE_KERNEL_HOSGL(PressurePoissonHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(PressurePoissonHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

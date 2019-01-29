@@ -89,7 +89,7 @@ ContinuityMassHOElemKernel<AlgTraits>::execute(
   tensor_assembly::density_dt_rhs(ops_, vol, gamma_, rhom1, rhop0, rhop1, v_rhs);
 }
 
-INSTANTIATE_KERNEL_HOSGL(ContinuityMassHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(ContinuityMassHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

@@ -31,7 +31,7 @@ namespace {
     TEST(x, hex8##_##y)   { y(stk::topology::HEX_8); } \
     TEST(x, hex27##_##y)   { y(stk::topology::HEX_27); }
 
-TEST_ALL_TOPOS(MasterElementSideNodeOrdinals, side_node_ordinals_are_same_as_stk);
+TEST_ALL_TOPOS(MasterElementSideNodeOrdinals, side_node_ordinals_are_same_as_stk)
 
 
 

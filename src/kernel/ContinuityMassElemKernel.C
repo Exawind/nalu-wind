@@ -121,7 +121,7 @@ ContinuityMassElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(ContinuityMassElemKernel);
+INSTANTIATE_KERNEL(ContinuityMassElemKernel)
 
 }  // nalu
 }  // sierra

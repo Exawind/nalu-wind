@@ -100,7 +100,7 @@ VariableDensityMomentumMMSHOElemKernel<AlgTraits>::execute(
   ops_.volume(sourceVec, v_rhs);
 }
 
-INSTANTIATE_KERNEL_HOSGL(VariableDensityMomentumMMSHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(VariableDensityMomentumMMSHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

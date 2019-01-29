@@ -127,5 +127,5 @@ namespace
     TEST(x, hex8##_##y)   { y(stk::topology::HEX_8); } \
     TEST(x, hex27##_##y)  { y(stk::topology::HEX_27); }
 
-TEST_ALL_VALID_TOPOS(SideIsInElement, check_side_is_in_element);
+TEST_ALL_VALID_TOPOS(SideIsInElement, check_side_is_in_element)
 
