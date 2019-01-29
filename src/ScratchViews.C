@@ -678,7 +678,7 @@ void fill_pre_req_data(
   stk::mesh::EntityRank entityRank,
   stk::mesh::Entity entity,
   ScratchViews<double,DeviceTeamHandleType,DeviceShmem>& prereqData,
-  bool fillMEViews)
+  bool  /* fillMEViews */)
 {
   //MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
   //MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();

@@ -190,7 +190,7 @@ struct TrigFieldFunction
       std::cos(a * pi * z));
   }
 
-  void tensor_turbulent_viscosity(const double* coords, double* qField) const
+  void tensor_turbulent_viscosity(const double*  /* coords */, double* qField) const
   {
     // mu_1j
     qField[0] = 0.1;

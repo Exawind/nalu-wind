@@ -124,7 +124,7 @@ public:
   virtual void execute(
     sierra::nalu::SharedMemView<DoubleType**> &lhs,
     sierra::nalu::SharedMemView<DoubleType*> &rhs,
-    sierra::nalu::ScratchViews<DoubleType> &scratchViews)
+    sierra::nalu::ScratchViews<DoubleType> & /* scratchViews */)
   {
     EXPECT_EQ(numNodesPerElem*numNodesPerElem, lhs.size());
     EXPECT_EQ(numNodesPerElem, rhs.size());

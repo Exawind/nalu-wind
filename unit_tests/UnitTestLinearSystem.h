@@ -24,27 +24,27 @@ public:
   virtual ~TestLinearSystem() {}
 
   // Graph/Matrix Construction
-  virtual void buildNodeGraph(const stk::mesh::PartVector & parts) {}
-  virtual void buildFaceToNodeGraph(const stk::mesh::PartVector & parts) {}
-  virtual void buildEdgeToNodeGraph(const stk::mesh::PartVector & parts) {}
-  virtual void buildElemToNodeGraph(const stk::mesh::PartVector & parts) {}
-  virtual void buildReducedElemToNodeGraph(const stk::mesh::PartVector & parts) {}
-  virtual void buildFaceElemToNodeGraph(const stk::mesh::PartVector & parts) {}
-  virtual void buildNonConformalNodeGraph(const stk::mesh::PartVector & parts) {}
-  virtual void buildOversetNodeGraph(const stk::mesh::PartVector & parts) {}
+  virtual void buildNodeGraph(const stk::mesh::PartVector &  /* parts */) {}
+  virtual void buildFaceToNodeGraph(const stk::mesh::PartVector &  /* parts */) {}
+  virtual void buildEdgeToNodeGraph(const stk::mesh::PartVector &  /* parts */) {}
+  virtual void buildElemToNodeGraph(const stk::mesh::PartVector &  /* parts */) {}
+  virtual void buildReducedElemToNodeGraph(const stk::mesh::PartVector &  /* parts */) {}
+  virtual void buildFaceElemToNodeGraph(const stk::mesh::PartVector &  /* parts */) {}
+  virtual void buildNonConformalNodeGraph(const stk::mesh::PartVector &  /* parts */) {}
+  virtual void buildOversetNodeGraph(const stk::mesh::PartVector &  /* parts */) {}
   virtual void finalizeLinearSystem() {}
 
   // Matrix Assembly
   virtual void zeroSystem() {}
 
   virtual void sumInto(
-      unsigned numEntities,
-      const stk::mesh::Entity* entities,
+      unsigned  /* numEntities */,
+      const stk::mesh::Entity*  /* entities */,
       const sierra::nalu::SharedMemView<const double*> & rhs,
       const sierra::nalu::SharedMemView<const double**> & lhs,
-      const sierra::nalu::SharedMemView<int*> & localIds,
-      const sierra::nalu::SharedMemView<int*> & sortPermutation,
-      const char * trace_tag
+      const sierra::nalu::SharedMemView<int*> &  /* localIds */,
+      const sierra::nalu::SharedMemView<int*> &  /* sortPermutation */,
+      const char *  /* trace_tag */
       )
   {
     if (numSumIntoCalls_ == 0) {
@@ -63,12 +63,12 @@ public:
   }
 
   virtual void sumInto(
-    const std::vector<stk::mesh::Entity> & sym_meshobj,
-    std::vector<int> &scratchIds,
-    std::vector<double> &scratchVals,
+    const std::vector<stk::mesh::Entity> &  /* sym_meshobj */,
+    std::vector<int> & /* scratchIds */,
+    std::vector<double> & /* scratchVals */,
     const std::vector<double> & rhs,
     const std::vector<double> & lhs,
-    const char *trace_tag=0
+    const char * /* trace_tag */=0
     )
   {
     if (numSumIntoCalls_ == 0) {
@@ -89,29 +89,29 @@ public:
   }
 
   virtual void applyDirichletBCs(
-    stk::mesh::FieldBase * solutionField,
-    stk::mesh::FieldBase * bcValuesField,
-    const stk::mesh::PartVector & parts,
-    const unsigned beginPos,
-    const unsigned endPos)
+    stk::mesh::FieldBase *  /* solutionField */,
+    stk::mesh::FieldBase *  /* bcValuesField */,
+    const stk::mesh::PartVector &  /* parts */,
+    const unsigned  /* beginPos */,
+    const unsigned  /* endPos */)
   {}
 
   virtual void prepareConstraints(
-    const unsigned beginPos,
-    const unsigned endPos)
+    const unsigned  /* beginPos */,
+    const unsigned  /* endPos */)
   {}
 
   // Solve
-  virtual int solve(stk::mesh::FieldBase * linearSolutionField) { return -1; }
+  virtual int solve(stk::mesh::FieldBase *  /* linearSolutionField */) { return -1; }
   virtual void loadComplete() {}
 
-  virtual void writeToFile(const char * filename, bool useOwned=true) {}
-  virtual void writeSolutionToFile(const char * filename, bool useOwned=true) {}
+  virtual void writeToFile(const char *  /* filename */, bool  /* useOwned */=true) {}
+  virtual void writeSolutionToFile(const char *  /* filename */, bool  /* useOwned */=true) {}
 
   virtual void resetRows(
-    std::vector<stk::mesh::Entity> nodeList,
-    const unsigned beginPos,
-    const unsigned endPos) {}
+    std::vector<stk::mesh::Entity>  /* nodeList */,
+    const unsigned  /* beginPos */,
+    const unsigned  /* endPos */) {}
 
   unsigned numSumIntoCalls_;
   Kokkos::View<double**> lhs_;
@@ -120,8 +120,8 @@ public:
 protected:
   virtual void beginLinearSystemConstruction() {}
   virtual void checkError(
-    const int err_code,
-    const char * msg) {}
+    const int  /* err_code */,
+    const char *  /* msg */) {}
 };
 
 }

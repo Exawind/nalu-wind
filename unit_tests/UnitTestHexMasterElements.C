@@ -95,7 +95,7 @@ void check_interpolation(
   const stk::topology& topo,
   sierra::nalu::MasterElement& me,
   unsigned poly_order,
-  bool usingNGP = false)
+  bool  /* usingNGP */ = false)
 {
   // Check that we can interpolate a random 3D polynomial
   // to the integration points

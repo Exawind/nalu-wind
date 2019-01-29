@@ -118,7 +118,7 @@ void compare_old_scs_shifted_grad_op( const sierra::nalu::SharedMemView<DoubleTy
 void compare_old_scs_gij(const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
                          const sierra::nalu::SharedMemView<DoubleType***>& v_gijUpper,
                          const sierra::nalu::SharedMemView<DoubleType***>& v_gijLower,
-                         const sierra::nalu::SharedMemView<DoubleType***>& v_deriv,
+                         const sierra::nalu::SharedMemView<DoubleType***>&  /* v_deriv */,
                          sierra::nalu::MasterElement* meSCS)
 {
   int len = v_gijUpper.extent(0)*v_gijUpper.extent(1)*v_gijUpper.extent(2);

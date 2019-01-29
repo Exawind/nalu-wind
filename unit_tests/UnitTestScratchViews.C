@@ -20,24 +20,24 @@ using ShmemType = sierra::nalu::DeviceShmem;
 class TestKernel
 {
   public:
-    TestKernel(unsigned vOrdinal, unsigned pOrdinal)
+    TestKernel(unsigned  /* vOrdinal */, unsigned  /* pOrdinal */)
      //: velocityOrdinal(vOrdinal), pressureOrdinal(pOrdinal)
    {}
 
   KOKKOS_FUNCTION
   void execute(
-    sierra::nalu::SharedMemView<double**,ShmemType> &lhs,
-    sierra::nalu::SharedMemView<double*,ShmemType> &rhs,
-    sierra::nalu::ScratchViews<sierra::nalu::DoubleType,TeamType,ShmemType> &scratchViews) const
+    sierra::nalu::SharedMemView<double**,ShmemType> & /* lhs */,
+    sierra::nalu::SharedMemView<double*,ShmemType> & /* rhs */,
+    sierra::nalu::ScratchViews<sierra::nalu::DoubleType,TeamType,ShmemType> & /* scratchViews */) const
   {
     printf("TestKernel::execute!!\n");
   }
 
   KOKKOS_FUNCTION
   void execute(
-    sierra::nalu::SharedMemView<double**,ShmemType> &lhs,
-    sierra::nalu::SharedMemView<double*,ShmemType> &rhs,
-    sierra::nalu::ScratchViews<double,TeamType,ShmemType> &scratchViews) const
+    sierra::nalu::SharedMemView<double**,ShmemType> & /* lhs */,
+    sierra::nalu::SharedMemView<double*,ShmemType> & /* rhs */,
+    sierra::nalu::ScratchViews<double,TeamType,ShmemType> & /* scratchViews */) const
   {
     printf("TestKernel::execute!!\n");
   }
