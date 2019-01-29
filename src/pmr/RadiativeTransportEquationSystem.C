@@ -471,8 +471,8 @@ RadiativeTransportEquationSystem::register_edge_fields(
 //--------------------------------------------------------------------------
 void
 RadiativeTransportEquationSystem::register_element_fields(
-  stk::mesh::Part *part,
-  const stk::topology &theTopo)
+  stk::mesh::Part * /* part */,
+  const stk::topology & /* theTopo */)
 {
   // n/a
 }

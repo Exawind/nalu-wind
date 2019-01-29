@@ -128,7 +128,7 @@ Quad3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc)
 //--------------------------------------------------------------------------
 void
 Quad3DSCS::quad4_shape_fcn(
-  const int  &npts,
+  const int  & /* npts */,
   const double *isoParCoord,
   SharedMemView<DoubleType**> &shape_fcn)
 {

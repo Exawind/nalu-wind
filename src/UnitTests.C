@@ -28,7 +28,7 @@ namespace nalu{
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
 
-void UnitTests::load(const YAML::Node & node)
+void UnitTests::load(const YAML::Node &  /* node */)
 {
 }
 

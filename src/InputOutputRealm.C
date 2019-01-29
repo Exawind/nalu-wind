@@ -170,7 +170,7 @@ InputOutputRealm::load(const YAML::Node & node)
 //--------------------------------------------------------------------------
 double
 InputOutputRealm::populate_restart(
-  double &timeStepNm1, int &timeStepCount)
+  double & /* timeStepNm1 */, int & /* timeStepCount */)
 {
   return get_current_time();
 }

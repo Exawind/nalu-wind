@@ -72,7 +72,7 @@ ContinuityMassHOElemKernel<AlgTraits>::setup(const TimeIntegrator& timeIntegrato
 //--------------------------------------------------------------------------
 template <class AlgTraits> void
 ContinuityMassHOElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType**>& lhs,
+  SharedMemView<DoubleType**>&  /* lhs */,
   SharedMemView<DoubleType*>& rhs,
   ScratchViewsHO<DoubleType>& scratchViews)
 {

@@ -33,7 +33,7 @@ void MotionTranslation::load(const YAML::Node& node)
 
 void MotionTranslation::build_transformation(
   const double time,
-  const double* xyz)
+  const double*  /* xyz */)
 {
   double eps = std::numeric_limits<double>::epsilon();
 
@@ -65,8 +65,8 @@ void MotionTranslation::translation_mat(const ThreeDVecType& curr_disp)
 
 MotionBase::ThreeDVecType MotionTranslation::compute_velocity(
   double time,
-  const TransMatType& compTrans,
-  double* xyz )
+  const TransMatType&  /* compTrans */,
+  double*  /* xyz */ )
 {
   ThreeDVecType vel = {};
 

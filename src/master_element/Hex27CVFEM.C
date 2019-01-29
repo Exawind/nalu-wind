@@ -731,7 +731,7 @@ void Hex27SCV::shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc)
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
 void Hex27SCV::determinant(
-  const int nelem,
+  const int  /* nelem */,
   const double *coords,
   double *volume,
   double *error)
@@ -849,7 +849,7 @@ void Hex27SCV::Mij(
 void Hex27SCV::Mij(
   SharedMemView<DoubleType**>& coords,
   SharedMemView<DoubleType***>& metric,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType***>&  /* deriv */)
 {
   generic_Mij_3d<AlgTraits>(referenceGradWeights_, coords, metric);
 }
@@ -1703,7 +1703,7 @@ void Hex27SCS::Mij(
 void Hex27SCS::Mij(
   SharedMemView<DoubleType**>& coords,
   SharedMemView<DoubleType***>& metric,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType***>&  /* deriv */)
 {
   generic_Mij_3d<AlgTraits>(referenceGradWeights_, coords, metric);
 }
@@ -1713,7 +1713,7 @@ void Hex27SCS::Mij(
 //--------------------------------------------------------------------------
 void
 Hex27SCS::general_face_grad_op(
-  const int face_ordinal,
+  const int  /* face_ordinal */,
   const double *isoParCoord,
   const double *coords,
   double *gradop,
@@ -2032,7 +2032,7 @@ Quad93DSCS::determinant(
   const int nelem,
   const double *coords,
   double *areav,
-  double *error)
+  double * /* error */)
 {
   std::array<double,3> areaVector;
 

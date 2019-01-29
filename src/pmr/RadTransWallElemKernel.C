@@ -26,7 +26,7 @@ template<typename BcAlgTraits>
 RadTransWallElemKernel<BcAlgTraits>::RadTransWallElemKernel(
   const stk::mesh::BulkData& bulkData,
   RadiativeTransportEquationSystem *radEqSystem,
-  const bool &useShifted,
+  const bool & /* useShifted */,
   ElemDataRequests &dataPreReqs)
   : Kernel(),
     radEqSystem_(radEqSystem),

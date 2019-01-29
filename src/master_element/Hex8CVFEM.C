@@ -927,7 +927,7 @@ HexSCS::general_shape_fcn(
 //--------------------------------------------------------------------------
 void
 HexSCS::general_face_grad_op(
-  const int face_ordinal,
+  const int  /* face_ordinal */,
   const double *isoParCoord,
   const double *coords,
   double *gradop,

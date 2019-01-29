@@ -1068,8 +1068,8 @@ MomentumEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 MomentumEquationSystem::register_element_fields(
-  stk::mesh::Part *part,
-  const stk::topology &theTopo)
+  stk::mesh::Part * /* part */,
+  const stk::topology & /* theTopo */)
 {
   // nothing as of yet
 }
@@ -1079,7 +1079,7 @@ MomentumEquationSystem::register_element_fields(
 //--------------------------------------------------------------------------
 void
 MomentumEquationSystem::register_edge_fields(
-  stk::mesh::Part *part)
+  stk::mesh::Part * /* part */)
 {
   // nothing as of yet
 }
@@ -2006,7 +2006,7 @@ void
 MomentumEquationSystem::register_symmetry_bc(
   stk::mesh::Part *part,
   const stk::topology &partTopo,
-  const SymmetryBoundaryConditionData & symmetryBCData)
+  const SymmetryBoundaryConditionData &  /* symmetryBCData */)
 {
   // algorithm type
   const AlgorithmType algType = SYMMETRY;
@@ -2521,8 +2521,8 @@ ContinuityEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 ContinuityEquationSystem::register_element_fields(
-  stk::mesh::Part *part,
-  const stk::topology &theTopo)
+  stk::mesh::Part * /* part */,
+  const stk::topology & /* theTopo */)
 {
   // nothing as of yet
 }
@@ -2925,7 +2925,7 @@ void
 ContinuityEquationSystem::register_open_bc(
   stk::mesh::Part *part,
   const stk::topology &partTopo,
-  const OpenBoundaryConditionData &openBCData)
+  const OpenBoundaryConditionData & /* openBCData */)
 {
 
   const AlgorithmType algType = OPEN;
@@ -3050,7 +3050,7 @@ void
 ContinuityEquationSystem::register_wall_bc(
   stk::mesh::Part *part,
   const stk::topology &/*theTopo*/,
-  const WallBoundaryConditionData &wallBCData)
+  const WallBoundaryConditionData & /* wallBCData */)
 {
 
   // algorithm type
@@ -3081,7 +3081,7 @@ void
 ContinuityEquationSystem::register_symmetry_bc(
   stk::mesh::Part *part,
   const stk::topology &/*theTopo*/,
-  const SymmetryBoundaryConditionData &symmetryBCData)
+  const SymmetryBoundaryConditionData & /* symmetryBCData */)
 {
 
   // algorithm type
