@@ -158,7 +158,7 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::execute(
   }  
 }
 
-INSTANTIATE_KERNEL_FACE(MomentumWallFunctionElemKernel);
+INSTANTIATE_KERNEL_FACE(MomentumWallFunctionElemKernel)
 
 }  // nalu
 }  // sierra

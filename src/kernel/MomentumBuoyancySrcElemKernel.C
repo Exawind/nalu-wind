@@ -91,7 +91,7 @@ MomentumBuoyancySrcElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumBuoyancySrcElemKernel);
+INSTANTIATE_KERNEL(MomentumBuoyancySrcElemKernel)
 
 }  // nalu
 }  // sierra

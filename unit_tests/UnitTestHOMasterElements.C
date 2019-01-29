@@ -849,16 +849,16 @@ constexpr int MAX_POLY_ORDER = 5;
     } \
 }
 
-TEST_IPS(check_interpolation_quad, 10, 1.0e-10);
-TEST_IPS(check_interpolation_hex, 10, 1.0e-10);
-TEST_IPS(check_derivative_quad, 10, 1.0e-10);
-TEST_IPS(check_derivative_hex, 10, 1.0e-10);
-TEST_POLY_SINGLE(check_volume_quadrature_quad, 1.0e-10);
-TEST_POLY_SINGLE(check_volume_quadrature_hex, 1.0e-10);
-TEST_POLY_SINGLE(check_is_in_element_quad, 1.0e-10);
-TEST_POLY_SINGLE(check_is_in_element_hex, 1.0e-10);
-TEST_POLY_SINGLE(check_is_not_in_element_quad, 1.0e-10);
-TEST_POLY_SINGLE(check_is_not_in_element_hex, 1.0e-10);
-TEST_POLY_SINGLE(check_point_interpolation_quad, 1.0e-8);
-TEST_POLY_SINGLE(check_point_interpolation_hex, 1.0e-8);
-TEST_POLY_SINGLE(check_scv_grad_op_hex, 1.0e-8);
+TEST_IPS(check_interpolation_quad, 10, 1.0e-10)
+TEST_IPS(check_interpolation_hex, 10, 1.0e-10)
+TEST_IPS(check_derivative_quad, 10, 1.0e-10)
+TEST_IPS(check_derivative_hex, 10, 1.0e-10)
+TEST_POLY_SINGLE(check_volume_quadrature_quad, 1.0e-10)
+TEST_POLY_SINGLE(check_volume_quadrature_hex, 1.0e-10)
+TEST_POLY_SINGLE(check_is_in_element_quad, 1.0e-10)
+TEST_POLY_SINGLE(check_is_in_element_hex, 1.0e-10)
+TEST_POLY_SINGLE(check_is_not_in_element_quad, 1.0e-10)
+TEST_POLY_SINGLE(check_is_not_in_element_hex, 1.0e-10)
+TEST_POLY_SINGLE(check_point_interpolation_quad, 1.0e-8)
+TEST_POLY_SINGLE(check_point_interpolation_hex, 1.0e-8)
+TEST_POLY_SINGLE(check_scv_grad_op_hex, 1.0e-8)

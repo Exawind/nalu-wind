@@ -208,7 +208,7 @@ SpecificDissipationRateSSTSrcElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(SpecificDissipationRateSSTSrcElemKernel);
+INSTANTIATE_KERNEL(SpecificDissipationRateSSTSrcElemKernel)
 
 } // namespace nalu
 } // namespace sierra

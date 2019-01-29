@@ -226,7 +226,7 @@ ScalarNSOKeElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(ScalarNSOKeElemKernel);
+INSTANTIATE_KERNEL(ScalarNSOKeElemKernel)
 
 }  // nalu
 }  // sierra

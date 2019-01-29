@@ -90,7 +90,7 @@ MomentumBuoyancySrcHOElemKernel<AlgTraits>::execute(
   ops_.volume(buoyancy_src, v_rhs);
 }
 
-INSTANTIATE_KERNEL_HOSGL(MomentumBuoyancySrcHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(MomentumBuoyancySrcHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

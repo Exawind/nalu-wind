@@ -126,7 +126,7 @@ MomentumCoriolisSrcElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumCoriolisSrcElemKernel);
+INSTANTIATE_KERNEL(MomentumCoriolisSrcElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

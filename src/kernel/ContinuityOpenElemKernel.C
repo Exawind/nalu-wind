@@ -204,7 +204,7 @@ ContinuityOpenElemKernel<BcAlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(ContinuityOpenElemKernel);
+INSTANTIATE_KERNEL_FACE_ELEMENT(ContinuityOpenElemKernel)
 
 }  // nalu
 }  // sierra

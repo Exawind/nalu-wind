@@ -170,7 +170,7 @@ MomentumMassElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumMassElemKernel);
+INSTANTIATE_KERNEL(MomentumMassElemKernel)
 
 }  // nalu
 }  // sierra

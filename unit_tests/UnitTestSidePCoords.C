@@ -119,5 +119,5 @@ namespace
     TEST(x, hex8##_##y)   { y(stk::topology::HEX_8); } \
     TEST(x, hex27##_##y)  { y(stk::topology::HEX_27); }
 
-TEST_ALL_TOPOS_NO_PYR(SidePCoords, check_elem_to_side_coords);
+TEST_ALL_TOPOS_NO_PYR(SidePCoords, check_elem_to_side_coords)
 

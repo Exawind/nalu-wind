@@ -111,7 +111,7 @@ MomentumAdvDiffHOElemKernel<AlgTraits>::execute(
   tensor_assembly::momentum_advdiff_lhs(ops_, mdot, laplacian_metric, v_lhs, reduced_sens_);
 }
 
-INSTANTIATE_KERNEL_HOSGL(MomentumAdvDiffHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(MomentumAdvDiffHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

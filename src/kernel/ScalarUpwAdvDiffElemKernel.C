@@ -269,7 +269,7 @@ ScalarUpwAdvDiffElemKernel<AlgTraits>::van_leer(
   return limit;
 }
 
-INSTANTIATE_KERNEL(ScalarUpwAdvDiffElemKernel);
+INSTANTIATE_KERNEL(ScalarUpwAdvDiffElemKernel)
 
 }  // nalu
 }  // sierra

@@ -111,7 +111,7 @@ ScalarDiffElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(ScalarDiffElemKernel);
+INSTANTIATE_KERNEL(ScalarDiffElemKernel)
 
 }  // nalu
 }  // sierra

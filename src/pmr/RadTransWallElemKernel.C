@@ -117,7 +117,7 @@ RadTransWallElemKernel<BcAlgTraits>::execute(
   } 
 }
 
-INSTANTIATE_KERNEL_FACE(RadTransWallElemKernel);
+INSTANTIATE_KERNEL_FACE(RadTransWallElemKernel)
 
 }  // nalu
 }  // sierra
