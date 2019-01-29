@@ -41,8 +41,8 @@ protected:
     const std::vector<stk::mesh::Entity> & sym_meshobj,
     std::vector<int> &scratchIds,
     std::vector<double> &scratchVals,
-    const std::vector<double> &rhs,
-    const std::vector<double> &lhs,
+    std::vector<double> &rhs,
+    std::vector<double> &lhs,
     const char *trace_tag=0);
   
   void apply_coeff(
@@ -50,8 +50,8 @@ protected:
     const stk::mesh::Entity* symMeshobjs,
     const SharedMemView<int*> & scratchIds,
     const SharedMemView<int*> & sortPermutation,
-    const SharedMemView<const double*> & rhs,
-    const SharedMemView<const double**> & lhs,
+    SharedMemView<double*> & rhs,
+    SharedMemView<double**> & lhs,
     const char *trace_tag);
 
   EquationSystem *eqSystem_;

@@ -40,6 +40,18 @@ OversetConstraintBase::prepare_constraints()
   const int sysEnd = eqSystem_->linsys_->numDof();
 
   eqSystem_->linsys_->prepareConstraints(sysStart, sysEnd);
+
+  reset_hole_rows();
+}
+
+void
+OversetConstraintBase::reset_hole_rows()
+{
+  const auto& holeRows = realm_.oversetManager_->holeNodes_;
+  const int& numDof = eqSystem_->linsys_->numDof();
+
+  // Reset existing entries and zero out the entire row
+  eqSystem_->linsys_->resetRows(holeRows, 0, numDof, 1.0, 0.0);
 }
 
 }  // nalu
