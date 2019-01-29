@@ -175,7 +175,7 @@ PyrSCV::ipNodeMap(
   return &ipNodeMap_[0];
 }
 
-DoubleType polyhedral_volume_by_faces(int ncoords, const DoubleType volcoords[][3],
+DoubleType polyhedral_volume_by_faces(int  /* ncoords */, const DoubleType volcoords[][3],
                                       int ntriangles, const int triangleFaceTable[][3])
 {
   DoubleType xface[3];
@@ -1184,7 +1184,7 @@ double PyrSCS::isInElement(
 //--------------------------------------------------------------------------
 void 
 PyrSCS::general_face_grad_op(
-  const int face_ordinal,
+  const int  /* face_ordinal */,
   const double *isoParCoord,
   const double *coords,
   double *gradop,

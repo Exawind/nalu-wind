@@ -41,7 +41,7 @@ void MotionRotation::load(const YAML::Node& node)
 
 void MotionRotation::build_transformation(
   const double time,
-  const double* xyz)
+  const double*  /* xyz */)
 {
   double eps = std::numeric_limits<double>::epsilon();
 

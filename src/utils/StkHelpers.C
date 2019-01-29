@@ -45,7 +45,7 @@ add_downward_relations(
 
 void
 keep_elems_not_already_ghosted(
-  const stk::mesh::BulkData& bulk,
+  const stk::mesh::BulkData&  /* bulk */,
   const stk::mesh::EntityProcVec& alreadyGhosted,
   stk::mesh::EntityProcVec& elemsToGhost)
 {

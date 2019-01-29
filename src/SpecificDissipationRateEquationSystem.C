@@ -644,7 +644,7 @@ void
 SpecificDissipationRateEquationSystem::register_symmetry_bc(
   stk::mesh::Part *part,
   const stk::topology &/*theTopo*/,
-  const SymmetryBoundaryConditionData &symmetryBCData)
+  const SymmetryBoundaryConditionData & /* symmetryBCData */)
 {
 
   // algorithm type

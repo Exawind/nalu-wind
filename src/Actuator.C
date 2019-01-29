@@ -45,7 +45,7 @@ namespace nalu{
 
 Actuator::Actuator(
     Realm &realm,
-    const YAML::Node &node):realm_(realm),
+    const YAML::Node & /* node */):realm_(realm),
     searchMethod_(stk::search::KDTREE),
     needToGhostCount_(0),
     actuatorGhosting_(NULL){}
@@ -355,7 +355,7 @@ Actuator::gather_field_for_interp(
 //--------------------------------------------------------------------------
 double
 Actuator::compute_volume(
-  const int &nDim,
+  const int & /* nDim */,
   stk::mesh::Entity elem,
   const stk::mesh::BulkData & bulkData)
 {

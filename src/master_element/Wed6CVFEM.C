@@ -1216,7 +1216,7 @@ WedSCS::parametric_distance(const std::vector<double> &x)
 //--------------------------------------------------------------------------
 void
 WedSCS::general_face_grad_op(
-  const int face_ordinal,
+  const int  /* face_ordinal */,
   const double *isoParCoord,
   const double *coords,
   double *gradop,

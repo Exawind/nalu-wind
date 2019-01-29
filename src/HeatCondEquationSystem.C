@@ -260,7 +260,7 @@ HeatCondEquationSystem::register_edge_fields(
 void
 HeatCondEquationSystem::register_element_fields(
   stk::mesh::Part *part,
-  const stk::topology &theTopo)
+  const stk::topology & /* theTopo */)
 {
   stk::mesh::MetaData &meta_data = realm_.meta_data();
   

@@ -1033,7 +1033,7 @@ BSpline5D::BSpline5D( const int order,
   compute_control_pts( x1, x2, x3, x4, x5, phi );
 }
 //--------------------------------------------------------------------
-BSpline5D::BSpline5D( const bool allowClipping )
+BSpline5D::BSpline5D( const bool  /* allowClipping */ )
   : BSpline( 0, 5 ),
     n1_(0), n2_(0), n3_(0), n4_(0), n5_(0),
     sp1_( NULL )

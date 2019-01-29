@@ -1052,7 +1052,7 @@ TurbulenceAveragingPostProcessing::compute_resolved_stress(
 //--------------------------------------------------------------------------
 void
 TurbulenceAveragingPostProcessing::compute_sfs_stress(
-  const std::string &averageBlockName,
+  const std::string & /* averageBlockName */,
   const double &oldTimeFilter,
   const double &zeroCurrent,
   const double &dt,
@@ -1177,7 +1177,7 @@ TurbulenceAveragingPostProcessing::compute_temperature_sfs_flux(
 //--------------------------------------------------------------------------
 void
 TurbulenceAveragingPostProcessing::compute_vorticity(
-  const std::string &averageBlockName,
+  const std::string & /* averageBlockName */,
   stk::mesh::Selector s_all_nodes)
 {
   stk::mesh::MetaData & metaData = realm_.meta_data();
@@ -1222,7 +1222,7 @@ TurbulenceAveragingPostProcessing::compute_vorticity(
 //--------------------------------------------------------------------------
 void
 TurbulenceAveragingPostProcessing::compute_q_criterion(
-  const std::string &averageBlockName,
+  const std::string & /* averageBlockName */,
   stk::mesh::Selector s_all_nodes)
 {
   stk::mesh::MetaData & metaData = realm_.meta_data();
@@ -1277,7 +1277,7 @@ TurbulenceAveragingPostProcessing::compute_q_criterion(
 //--------------------------------------------------------------------------
 void
 TurbulenceAveragingPostProcessing::compute_lambda_ci(
-  const std::string &averageBlockName,
+  const std::string & /* averageBlockName */,
   stk::mesh::Selector s_all_nodes)
 {
   stk::mesh::MetaData & metaData = realm_.meta_data();
@@ -1401,7 +1401,7 @@ TurbulenceAveragingPostProcessing::compute_lambda_ci(
 //--------------------------------------------------------------------------
 void
 TurbulenceAveragingPostProcessing::compute_mean_resolved_ke(
-  const std::string &averageBlockName,
+  const std::string & /* averageBlockName */,
   stk::mesh::Selector s_all_nodes)
 {
   stk::mesh::MetaData & metaData = realm_.meta_data();

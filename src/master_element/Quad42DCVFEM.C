@@ -1060,7 +1060,7 @@ Quad42DSCS::general_shape_fcn(
 //--------------------------------------------------------------------------
 void 
 Quad42DSCS::general_face_grad_op(
-  const int face_ordinal,
+  const int  /* face_ordinal */,
   const double *isoParCoord,
   const double *coords,
   double *gradop,

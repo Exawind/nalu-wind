@@ -27,7 +27,7 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WaterDensityTPropertyEvaluator::WaterDensityTPropertyEvaluator(
-  stk::mesh::MetaData &metaData)
+  stk::mesh::MetaData & /* metaData */)
   : PropertyEvaluator(),
     aw_(+765.33),
     bw_(+1.8142),
@@ -66,7 +66,7 @@ WaterDensityTPropertyEvaluator::execute(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WaterViscosityTPropertyEvaluator::WaterViscosityTPropertyEvaluator(
-  stk::mesh::MetaData &metaData)
+  stk::mesh::MetaData & /* metaData */)
   : PropertyEvaluator(),
     aw_(+9.67e-2),
     bw_(-8.207e-4),
@@ -106,7 +106,7 @@ WaterViscosityTPropertyEvaluator::execute(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WaterSpecHeatTPropertyEvaluator::WaterSpecHeatTPropertyEvaluator(
-  stk::mesh::MetaData &metaData)
+  stk::mesh::MetaData & /* metaData */)
   : PropertyEvaluator(),
     aw_(28.07),
     bw_(-2.817e-1),
@@ -147,7 +147,7 @@ WaterSpecHeatTPropertyEvaluator::execute(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WaterEnthalpyTPropertyEvaluator::WaterEnthalpyTPropertyEvaluator(
-  stk::mesh::MetaData &metaData)
+  stk::mesh::MetaData & /* metaData */)
   : PropertyEvaluator(),
     aw_(28.07),
     bw_(-2.817e-1),
@@ -174,7 +174,7 @@ WaterEnthalpyTPropertyEvaluator::~WaterEnthalpyTPropertyEvaluator()
 double
 WaterEnthalpyTPropertyEvaluator::execute(
   double *indVarList,
-  stk::mesh::Entity node)
+  stk::mesh::Entity  /* node */)
 {
   const double T = indVarList[0];
   const double hWT = compute_h(T);
@@ -203,7 +203,7 @@ WaterEnthalpyTPropertyEvaluator::compute_h(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 WaterThermalCondTPropertyEvaluator::WaterThermalCondTPropertyEvaluator(
-  stk::mesh::MetaData &metaData)
+  stk::mesh::MetaData & /* metaData */)
   : PropertyEvaluator(),
     aw_(-0.5752),
     bw_(+6.397e-3),

@@ -61,7 +61,7 @@ MomentumBuoyancySrcHOElemKernel<AlgTraits>::MomentumBuoyancySrcHOElemKernel(
 //--------------------------------------------------------------------------
 template <class AlgTraits> void
 MomentumBuoyancySrcHOElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType**>& lhs,
+  SharedMemView<DoubleType**>&  /* lhs */,
   SharedMemView<DoubleType*>& rhs,
   ScratchViewsHO<DoubleType>& scratchViews)
 {

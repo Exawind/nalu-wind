@@ -758,7 +758,7 @@ HigherOrderHexSCS::opposingFace(
 //--------------------------------------------------------------------------
 void
 HigherOrderHexSCS::determinant(
-  const int nelem,
+  const int  /* nelem */,
   const double *coords,
   double *areav,
   double *error)

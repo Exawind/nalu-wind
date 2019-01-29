@@ -30,7 +30,7 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 ScalarGclNodeSuppAlg::ScalarGclNodeSuppAlg(
-  ScalarFieldType *scalarQNp1,
+  ScalarFieldType * /* scalarQNp1 */,
   Realm &realm)
   : SupplementalAlgorithm(realm),
     scalarQNp1_(NULL),
