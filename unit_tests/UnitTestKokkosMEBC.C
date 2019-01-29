@@ -70,7 +70,7 @@ void test_MEBC_views(int faceOrdinal, const std::vector<sierra::nalu::ELEM_DATA_
   }
 
   // Execute the loop and perform all tests
-  driver.execute([&](sierra::nalu::SharedMemData_FaceElem& smdata) {
+  driver.execute([&](sierra::nalu::SharedMemData_FaceElem<sierra::nalu::TeamHandleType,sierra::nalu::HostShmem>& smdata) {
 
     sierra::nalu::SharedMemView<DoubleType**>& v_coords = smdata.simdElemViews.get_scratch_view_2D(*driver.coordinates_);
     auto& meViews = smdata.simdElemViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);

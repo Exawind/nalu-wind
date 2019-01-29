@@ -84,7 +84,7 @@ public:
                        "AssembleFaceElemSolverAlgorithm expected nodesPerEntity_ = "
                        <<nodesPerFace_<<", but b.topology().num_nodes() = "<<b.topology().num_nodes());
 
-        SharedMemData_FaceElem smdata(team, nDim, faceDataNGP, elemDataNGP, meElemInfo, rhsSize);
+        SharedMemData_FaceElem<TeamHandleType,HostShmem> smdata(team, nDim, faceDataNGP, elemDataNGP, meElemInfo, rhsSize);
 
         const size_t bucketLen   = b.size();
         const size_t simdBucketLen = sierra::nalu::get_num_simd_groups(bucketLen);
@@ -117,8 +117,14 @@ public:
             smdata.numSimdFaces = simdFaceIndex;
             numFacesProcessed += simdFaceIndex;
   
+#ifndef KOKKOS_ENABLE_CUDA
+//When we GPU-ize AssembleFaceElemSolverAlgorithm, 'lambdaFunc' below will need to operate
+//on the non-simd smdata.faceViews etc... since we aren't going to copy_and_interleave. We will probably
+//want to make smdata.simdFaceViews be a pointer/reference to smdata.faceViews[0] in some way...
             copy_and_interleave(smdata.faceViews, smdata.numSimdFaces, smdata.simdFaceViews, interleaveMeViews);
             copy_and_interleave(smdata.elemViews, smdata.numSimdFaces, smdata.simdElemViews, interleaveMeViews);
+//for now this simply isn't ready for GPU.
+#endif
             fill_master_element_views(faceDataNGP, smdata.simdFaceViews, smdata.elemFaceOrdinal);
             fill_master_element_views(elemDataNGP, smdata.simdElemViews, smdata.elemFaceOrdinal);
   

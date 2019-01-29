@@ -85,7 +85,7 @@ AssembleFaceElemSolverAlgorithm::execute()
   }
 
   run_face_elem_algorithm(bulk_data,
-    [&](sierra::nalu::SharedMemData_FaceElem &smdata)
+    [&](sierra::nalu::SharedMemData_FaceElem<TeamHandleType,HostShmem> &smdata)
     {
         set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
         set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());

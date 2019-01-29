@@ -105,7 +105,7 @@ TEST_F(Hex8Mesh, faceElemBasic)
                                     faceElemAlg.faceDataNeeded_, faceElemAlg.elemDataNeeded_);
 
   faceElemAlg.run_face_elem_algorithm(bulk,
-          [&](sierra::nalu::SharedMemData_FaceElem &smdata)
+          [&](sierra::nalu::SharedMemData_FaceElem<sierra::nalu::TeamHandleType,sierra::nalu::HostShmem> &smdata)
       {
         faceElemKernel.execute(smdata.simdFaceViews, smdata.simdElemViews, smdata.numSimdFaces, smdata.elemFaceOrdinal);
       });

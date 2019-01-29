@@ -154,7 +154,7 @@ void test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
   sierra::nalu::MasterElement* meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
 
   // Execute the loop and perform all tests
-  driver.execute([&](sierra::nalu::SharedMemData& smdata) {
+  driver.execute([&](sierra::nalu::SharedMemData<sierra::nalu::TeamHandleType,sierra::nalu::HostShmem>& smdata) {
       // Extract data from scratchViews
       sierra::nalu::SharedMemView<DoubleType**>& v_coords = smdata.simdPrereqData.get_scratch_view_2D(
         *driver.coordinates_);
