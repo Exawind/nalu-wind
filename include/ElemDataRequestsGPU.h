@@ -39,13 +39,26 @@ struct FieldInfoNGP {
   unsigned scalarsDim2;
 };
 
+KOKKOS_INLINE_FUNCTION
+stk::mesh::EntityRank get_entity_rank(const FieldInfoNGP& fieldInfo)
+{
+  return fieldInfo.field.get_rank();
+}
+
+KOKKOS_INLINE_FUNCTION
+unsigned get_field_ordinal(const FieldInfoNGP& fieldInfo)
+{
+  return fieldInfo.field.get_ordinal();
+}
+
 class ElemDataRequestsGPU
 {
 public:
+  typedef FieldInfoNGP FieldInfoType;
   typedef Kokkos::View<COORDS_TYPES*, Kokkos::LayoutRight, MemSpace> CoordsTypesView;
   typedef Kokkos::View<ELEM_DATA_NEEDED*, Kokkos::LayoutRight, MemSpace> DataEnumView;
   typedef Kokkos::View<NGPDoubleFieldType*, Kokkos::LayoutRight, MemSpace> FieldView;
-  typedef Kokkos::View<FieldInfoNGP*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
+  typedef Kokkos::View<FieldInfoType*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
   ElemDataRequestsGPU(const ElemDataRequests& dataReq, unsigned totalFields)
     : dataEnums(),
@@ -144,7 +157,7 @@ private:
     hostFields = Kokkos::create_mirror_view(fields);
     unsigned i = 0;
     for(const FieldInfo& finfo : dataReq.get_fields()) {
-      hostFields(i++) = FieldInfoNGP(finfo.field, finfo.scalarsDim1, finfo.scalarsDim2);
+      hostFields(i++) = FieldInfoType(finfo.field, finfo.scalarsDim1, finfo.scalarsDim2);
     }
   }
  

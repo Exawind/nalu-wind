@@ -150,7 +150,6 @@ add_sources(GlobalSourceList
    ScalarMassBackwardEulerNodeSuppAlg.C
    ScalarMassElemSuppAlgDep.C
    ScratchViews.C
-   ScratchViewsNGP.C
    ShearStressTransportEquationSystem.C
    SimpleErrorIndicatorElemAlgorithm.C
    SimpleErrorIndicatorScalarElemAlgorithm.C
