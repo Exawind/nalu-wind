@@ -2304,7 +2304,7 @@ MomentumEquationSystem::initialize()
 
   // We need an estimate of projTimeScale for the computational of mdot in
   // initialization phase
-  if (!realm_.restarted_simulation()) {
+  if (!realm_.restarted_simulation() || !extractDiagonal_) {
     const double dt = realm_.get_time_step();
     const double gamma1 = realm_.get_gamma1();
     stk::mesh::field_fill(gamma1/dt, *Udiag_);
