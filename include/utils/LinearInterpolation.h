@@ -116,7 +116,7 @@ linear_interp(
         << "WARNING: Out of bound values encountered during interpolation"
         << std::endl;
     // no break here... allow fallthrough
-
+        __attribute__ ((fallthrough));
     case OutOfBounds::CLAMP:
       yout = yinp[idx.second];
       break;
