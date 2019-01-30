@@ -277,6 +277,46 @@ Thus, the final set of equations solved at each outer iteration is
    -{\bf L_1} \Delta P^{**} &= - {\bf D} \rho \widehat{u} - {\bf D} \tau_2 {\bf G} P^{*} + {\bf L_2} P^{*} + b \\
    u_i^{n+1} &= u_i^{**} - \frac{\tau_3}{\rho} {\bf G} \Delta P^{**}
 
+Approximations for the Schur complement
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Nalu-Wind implements two options for approximating the Schur complement for the
+split velocity-pressure solution of the incompressible momentum and continuity
+equation. The two options are:
+
+.. math::
+
+   \tau = \tau_1 = \tau_2 = \tau_3 &= \Delta t \quad \mathrm{Original implementation}\\
+   & = (A_{ii})^{-1} \quad \mathrm{Alternate algorithm}
+
+where :math:`A_{ii}` is the diagonal entry of the momentum linear system. The
+latter option is similar to the SIMPLE and PIMPLE implementations in OpenFOAM
+and is used for simulations with RANS and hybrid RANS-LES models with large
+Courant numbers.
+
+Underrelaxation for momentum and scalar transport
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, Nalu-Wind applies no underrelaxation during the solution of the
+Navier-Stokes equations. However, in RANS simulations at large timesteps some
+underrelaxation might be necessary to restore the diagonal dominance of the
+transport equations. User has the option to specify underrelaxation through the
+input files. When underrelaxation is applied, the advection and diffusion
+contributions to the diagonal term are modifed by dividing these terms by the
+underrelaxation factor. It must be noted that the underrelaxation is only
+applied to the advective and viscous contributions in the diagonal term and not
+the time derivative term.
+
+.. math::
+
+   A_{ii} = -\frac{\sum_{i \neq j} A_{ij}}{\omega} + \frac{\gamma_1 \rho \Delta V}{\Delta T}
+
+The pressure update can also be underrelaxed by specifying the appropriate
+relaxation factor in the input file. When this option is activated, the full
+pressure update, in a given Picard iteration step, is used to project the
+velocity and mass flow rate and the relaxation is applied to the pressure
+solution at the end of the Picard iteration.
+
 Initial & Boundary Conditions
 -----------------------------
 

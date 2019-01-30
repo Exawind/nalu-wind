@@ -87,6 +87,11 @@ AssembleContinuityEdgeOpenSolverAlgorithm::execute()
   const double nocFac
     = (realm_.get_noc_usage(dofName) == true) ? 1.0 : 0.0;
 
+  // Classic Nalu projection timescale
+  const double dt = realm_.get_time_step();
+  const double gamma1 = realm_.get_gamma1();
+  const double tauScale = dt / gamma1;
+
   // extract global algorithm options, if active
   const double mdotCorrection = realm_.solutionOptions_->activateOpenMdotCorrection_ 
     ? realm_.solutionOptions_->mdotAlgOpenCorrection_
@@ -102,15 +107,12 @@ AssembleContinuityEdgeOpenSolverAlgorithm::execute()
   std::vector<double> scratchVals;
   std::vector<stk::mesh::Entity> connected_nodes;
 
-  // time step
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
-  const double projTimeScale = dt/gamma1;
-
   // interpolation for mdot uses nearest node, therefore, n/a
 
   // deal with state
   ScalarFieldType &densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType* Udiag = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "momentum_diag");
 
   // define vector of parent topos; should always be UNITY in size
   std::vector<stk::topology> parentTopo;
@@ -208,6 +210,9 @@ AssembleContinuityEdgeOpenSolverAlgorithm::execute()
         const double densityR       = *stk::mesh::field_data(densityNp1, nodeR );
         const double bcPressure     = *stk::mesh::field_data(*pressureBc_, nodeR );
 
+        const double udiagR = *stk::mesh::field_data(*Udiag, nodeR);
+        const double projTimeScale = 1.0 / udiagR;
+
         // offset for bip area vector
         const int faceOffSet = ip*nDim;
 
@@ -238,10 +243,10 @@ AssembleContinuityEdgeOpenSolverAlgorithm::execute()
         }
 
         // rhs
-        p_rhs[nearestNode] -= tmdot/projTimeScale;
+        p_rhs[nearestNode] -= tmdot / tauScale;
 
         // lhs right; IR, IL; IR, IR
-        double lhsfac = asq*inv_axdx*pstabFac;
+        double lhsfac = asq*inv_axdx*pstabFac*projTimeScale / tauScale;
         p_lhs[rowR+nearestNode] += 0.5*lhsfac;
         p_lhs[rowR+opposingNode] += 0.5*lhsfac;
       }

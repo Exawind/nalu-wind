@@ -136,6 +136,7 @@ public:
 
   ElemDataRequests faceDataNeeded_;
   ElemDataRequests elemDataNeeded_;
+  double diagRelaxFactor_{1.0};
   unsigned numDof_;
   unsigned nodesPerFace_;
   unsigned nodesPerElem_;

@@ -46,6 +46,7 @@ ContinuityOpenElemKernel<BcAlgTraits>::ContinuityOpenElemKernel(
   pressureBc_ = metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, solnOpts.activateOpenMdotCorrection_ 
                                                     ? "pressure" : "pressure_bc");
   density_ = metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+  Udiag_ = metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "momentum_diag");
   exposedAreaVec_ = metaData.get_field<GenericFieldType>(metaData.side_rank(), "exposed_area_vector");
   
   // extract master elements
@@ -59,6 +60,7 @@ ContinuityOpenElemKernel<BcAlgTraits>::ContinuityOpenElemKernel(
   faceDataPreReqs.add_gathered_nodal_field(*pressure_, 1);
   faceDataPreReqs.add_gathered_nodal_field(*pressureBc_, 1);
   faceDataPreReqs.add_gathered_nodal_field(*density_, 1);
+  faceDataPreReqs.add_gathered_nodal_field(*Udiag_, 1);
   faceDataPreReqs.add_gathered_nodal_field(*velocityRTM_, BcAlgTraits::nDim_);
   faceDataPreReqs.add_gathered_nodal_field(*Gpdx_, BcAlgTraits::nDim_);  
   faceDataPreReqs.add_face_field(*exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
@@ -111,6 +113,7 @@ ContinuityOpenElemKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType*>& vf_pressureBc = faceScratchViews.get_scratch_view_1D(*pressureBc_);
   SharedMemView<DoubleType**>& vf_Gpdx = faceScratchViews.get_scratch_view_2D(*Gpdx_);
   SharedMemView<DoubleType*>& vf_density = faceScratchViews.get_scratch_view_1D(*density_);
+  SharedMemView<DoubleType*>& vf_udiag = faceScratchViews.get_scratch_view_1D(*Udiag_);
   SharedMemView<DoubleType**>& vf_vrtm = faceScratchViews.get_scratch_view_2D(*velocityRTM_);
   SharedMemView<DoubleType**>& vf_exposedAreaVec = faceScratchViews.get_scratch_view_2D(*exposedAreaVec_);
  
@@ -155,16 +158,19 @@ ContinuityOpenElemKernel<BcAlgTraits>::execute(
     DoubleType pBip = 0.0;
     DoubleType pbcBip = 0.0;
     DoubleType rhoBip = 0.0;
+    DoubleType projTimeScaleBip = 0.0;
     for ( int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic ) {
       const DoubleType r = vf_shape_function_(ip,ic);
       const DoubleType rhoIC = vf_density(ic);
+      const DoubleType udiagInv = 1.0 / vf_udiag(ic);
       rhoBip += r*rhoIC;
       pBip += r*vf_pressure(ic);
       pbcBip += r*vf_pressureBc(ic);
+      projTimeScaleBip += r * udiagInv;
       for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
         w_uBip[j] += r*vf_vrtm(ic,j);
         w_rho_uBip[j] += r*rhoIC*vf_vrtm(ic,j);
-        w_GpdxBip[j] += r*vf_Gpdx(ic,j);
+        w_GpdxBip[j] += r*vf_Gpdx(ic,j) * udiagInv;
       }
     }
     
@@ -177,18 +183,18 @@ ContinuityOpenElemKernel<BcAlgTraits>::execute(
     }
     
     // form mdot; rho*uj*Aj - projT*(dpdxj - Gjp)*Aj + penaltyFac*projTimeScale*invL*(pBip - pbcBip)*aMag
-    DoubleType mdot = -mdotCorrection_ + penaltyFac_*projTimeScale_*inverseLengthScale*(pBip - pbcBip)*aMag*pstabFac_;
+    DoubleType mdot = -mdotCorrection_ + penaltyFac_*projTimeScaleBip*inverseLengthScale*(pBip - pbcBip)*aMag*pstabFac_;
     for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
       const DoubleType axj = vf_exposedAreaVec(ip,j);
       mdot += (interpTogether_*w_rho_uBip[j] + om_interpTogether_*rhoBip*w_uBip[j] 
-               - projTimeScale_*(w_dpdxBip[j] - w_GpdxBip[j])*pstabFac_)*axj;
+               - (projTimeScaleBip * w_dpdxBip[j] - w_GpdxBip[j])*pstabFac_)*axj;
     }
     
     // face-based penalty; divide by projTimeScale
     for ( int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic ) {
       const int faceNodeNumber = face_node_ordinals[ic];
       const DoubleType r = vf_shape_function_(ip,ic);
-      lhs(nearestNode,faceNodeNumber) += r*penaltyFac_*inverseLengthScale*aMag*pstabFac_;
+      lhs(nearestNode,faceNodeNumber) += r*penaltyFac_*inverseLengthScale*aMag*pstabFac_ * projTimeScaleBip / projTimeScale_;
     }
     
     // element-based gradient; divide by projTimeScale
@@ -196,11 +202,11 @@ ContinuityOpenElemKernel<BcAlgTraits>::execute(
       DoubleType lhsFac = 0.0;
       for ( int j = 0; j < BcAlgTraits::nDim_; ++j )
         lhsFac += -v_dndx_lhs(ip,ic,j)*vf_exposedAreaVec(ip,j);
-      lhs(nearestNode,ic) += lhsFac*pstabFac_;
+      lhs(nearestNode,ic) += lhsFac*pstabFac_ * projTimeScaleBip / projTimeScale_;
     }
     
     // residual
-    rhs(nearestNode) -= mdot/projTimeScale_;
+    rhs(nearestNode) -= mdot / projTimeScale_;
   }
 }
 

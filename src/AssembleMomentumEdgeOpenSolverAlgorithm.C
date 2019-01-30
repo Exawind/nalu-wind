@@ -85,8 +85,10 @@ AssembleMomentumEdgeOpenSolverAlgorithm::execute()
   const int nDim = meta_data.spatial_dimension();
 
   // nearest face entrainment
+  const std::string dofName = "velocity";
   const double nfEntrain = realm_.solutionOptions_->nearestFaceEntrain_;
   const double om_nfEntrain = 1.0-nfEntrain;
+  const double relaxFacU = realm_.solutionOptions_->get_relaxation_factor(dofName);
 
   // space for dui/dxj; the modified gradient with NOC
   std::vector<double> duidxj(nDim*nDim);
@@ -296,7 +298,7 @@ AssembleMomentumEdgeOpenSolverAlgorithm::execute()
           p_rhs[indexR] -= diffFlux;
           double lhsFac = -viscBip*asq*inv_axdx*om_nxinxi;
           p_lhs[rRiL_i] -= lhsFac;
-          p_lhs[rRiR_i] += lhsFac;
+          p_lhs[rRiR_i] += lhsFac / relaxFacU;
 
           const double axi = areaVec[faceOffSet+i];
 
@@ -311,7 +313,7 @@ AssembleMomentumEdgeOpenSolverAlgorithm::execute()
             const int rRiR_j = rowR+colR;
 
             p_lhs[rRiL_j] -= lhsFac;
-            p_lhs[rRiR_j] += lhsFac;
+            p_lhs[rRiR_j] += lhsFac / relaxFacU;
 
             if ( i == j ) {
               // nothing
@@ -321,15 +323,15 @@ AssembleMomentumEdgeOpenSolverAlgorithm::execute()
 
               lhsFac = viscBip*asq*inv_axdx*nxinxj;
               p_lhs[rRiL_j] -= lhsFac;
-              p_lhs[rRiR_j] += lhsFac;
+              p_lhs[rRiR_j] += lhsFac / relaxFacU;
 
               lhsFac = viscBip*axj*axj*inv_axdx*nxinxj;
               p_lhs[rRiL_j] -= lhsFac;
-              p_lhs[rRiR_j] += lhsFac;
+              p_lhs[rRiR_j] += lhsFac / relaxFacU;
 
               lhsFac = viscBip*axj*axi*inv_axdx*nxinxj;
               p_lhs[rRiL_i] -= lhsFac;
-              p_lhs[rRiR_i] += lhsFac;
+              p_lhs[rRiR_i] += lhsFac / relaxFacU;
             }
           }
         }
@@ -345,7 +347,7 @@ AssembleMomentumEdgeOpenSolverAlgorithm::execute()
             const int rRiR = rowR+indexR;
 
             p_rhs[indexR] -= tmdot*uNp1R[i];
-            p_lhs[rRiR] += tmdot;
+            p_lhs[rRiR] += tmdot / relaxFacU;
           }
         }
         else {
@@ -367,7 +369,7 @@ AssembleMomentumEdgeOpenSolverAlgorithm::execute()
               const int colL = opposingNode*nDim + j;
               const int colR = nearestNode*nDim + j;
 
-              p_lhs[rowR+colR] +=  tmdot*(nfEntrain + om_nfEntrain*0.5)*p_nx[i]*p_nx[j];
+              p_lhs[rowR+colR] +=  tmdot*(nfEntrain + om_nfEntrain*0.5)*p_nx[i]*p_nx[j] / relaxFacU;
               p_lhs[rowR+colL] +=  tmdot*om_nfEntrain*0.5*p_nx[i]*p_nx[j];
 
             }

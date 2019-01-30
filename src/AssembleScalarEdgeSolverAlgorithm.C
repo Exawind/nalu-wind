@@ -13,6 +13,7 @@
 #include <LinearSystem.h>
 #include <PecletFunction.h>
 #include <Realm.h>
+#include <SolutionOptions.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -103,6 +104,7 @@ AssembleScalarEdgeSolverAlgorithm::execute()
   const double alpha = realm_.get_alpha_factor(dofName);
   const double alphaUpw = realm_.get_alpha_upw_factor(dofName);
   const double hoUpwind = realm_.get_upw_factor(dofName);
+  const double relaxFac = realm_.solutionOptions_->get_relaxation_factor(dofName);
   const bool useLimiter = realm_.primitive_uses_limiter(dofName);
 
   // one minus flavor
@@ -255,13 +257,13 @@ AssembleScalarEdgeSolverAlgorithm::execute()
       double diffFlux = lhsfac*(qNp1R - qNp1L) + nonOrth;
 
       // first left
-      p_lhs[0] = -lhsfac;
+      p_lhs[0] = -lhsfac / relaxFac;
       p_lhs[1] = +lhsfac;
       p_rhs[0] = -diffFlux;
 
       // now right
       p_lhs[2] = +lhsfac;
-      p_lhs[3] = -lhsfac;
+      p_lhs[3] = -lhsfac / relaxFac;
       p_rhs[1] = diffFlux;
 
       //====================================
@@ -286,22 +288,22 @@ AssembleScalarEdgeSolverAlgorithm::execute()
       // upwind advection (includes 4th); left node
       double alhsfac = 0.5*(tmdot+std::abs(tmdot))*pecfac*alphaUpw
         + 0.5*alpha*om_pecfac*tmdot;
-      p_lhs[0] += alhsfac;
+      p_lhs[0] += alhsfac / relaxFac;
       p_lhs[2] -= alhsfac;
 
       // upwind advection; right node
       alhsfac = 0.5*(tmdot-std::abs(tmdot))*pecfac*alphaUpw
         + 0.5*alpha*om_pecfac*tmdot;
-      p_lhs[3] -= alhsfac;
+      p_lhs[3] -= alhsfac / relaxFac;
       p_lhs[1] += alhsfac;
 
       // central; left; collect terms on alpha and alphaUpw
       alhsfac = 0.5*tmdot*(pecfac*om_alphaUpw + om_pecfac*om_alpha);
-      p_lhs[0] += alhsfac;
+      p_lhs[0] += alhsfac / relaxFac;
       p_lhs[1] += alhsfac;
       // central; right; collect terms on alpha and alphaUpw
       p_lhs[2] -= alhsfac;
-      p_lhs[3] -= alhsfac;
+      p_lhs[3] -= alhsfac / relaxFac;
 
       // total flux left
       p_rhs[0] -= aflux;

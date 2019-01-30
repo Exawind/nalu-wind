@@ -165,6 +165,16 @@ SolutionOptions::load(const YAML::Node & y_node)
     // quadrature type for high order
     get_if_present(y_solution_options, "tensor_product_cvfem", newHO_);
 
+    std::string projected_timescale_type = "default";
+    get_if_present(y_solution_options, "projected_timescale_type",
+                   projected_timescale_type, projected_timescale_type);
+    if (projected_timescale_type == "default")
+      tscaleType_ = TSCALE_DEFAULT;
+    else if (projected_timescale_type == "momentum_diag_inv")
+      tscaleType_ = TSCALE_UDIAGINV;
+    else
+      throw std::runtime_error("SolutionOptions: Invalid option provided for projected_timescale_type");
+
     // extract turbulence model; would be nice if we could parse an enum..
     std::string specifiedTurbModel;
     std::string defaultTurbModel = "laminar";
@@ -233,6 +243,9 @@ SolutionOptions::load(const YAML::Node & y_node)
         }
         else if (expect_map(y_option, "upw_factor", optional)) {
           y_option["upw_factor"] >> upwMap_ ;
+        }
+        else if (expect_map(y_option, "relaxation_factor", optional)) {
+          y_option["relaxation_factor"] >> relaxFactorMap_;
         }
         else if (expect_map(y_option, "limiter", optional)) {
           y_option["limiter"] >> limiterMap_ ;
@@ -644,6 +657,18 @@ SolutionOptions::get_upw_factor(const std::string& dofName) const
   auto iter = upwMap_.find(dofName);
 
   if (iter != upwMap_.end())
+    factor = iter->second;
+
+  return factor;
+}
+
+double
+SolutionOptions::get_relaxation_factor(const std::string& dofName) const
+{
+  double factor = relaxFactorDefault_;
+
+  auto iter = relaxFactorMap_.find(dofName);
+  if (iter != relaxFactorMap_.end())
     factor = iter->second;
 
   return factor;

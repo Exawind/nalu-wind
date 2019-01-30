@@ -277,12 +277,16 @@ public:
           stk::topology::NODE_RANK, "density",2)),
       pressure_(
         &meta_.declare_field<ScalarFieldType>(
-          stk::topology::NODE_RANK, "pressure",2))
+          stk::topology::NODE_RANK, "pressure",2)),
+      Udiag_(
+        &meta_.declare_field<ScalarFieldType>(
+          stk::topology::NODE_RANK, "momentum_diag", 2))
   {
     stk::mesh::put_field_on_mesh(*velocity_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*dpdx_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*density_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*pressure_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*Udiag_, meta_.universal_part(), 1, nullptr);
   }
 
   virtual ~LowMachKernelHex8Mesh() {}
@@ -295,12 +299,14 @@ public:
     unit_test_kernel_utils::pressure_test_function(bulk_, *coordinates_, *pressure_);
     unit_test_kernel_utils::dpdx_test_function(bulk_, *coordinates_, *dpdx_);
     stk::mesh::field_fill(1.0, *density_);
+    stk::mesh::field_fill(1.0, *Udiag_);
   }
 
   VectorFieldType* velocity_{nullptr};
   VectorFieldType* dpdx_{nullptr};
   ScalarFieldType* density_{nullptr};
   ScalarFieldType* pressure_{nullptr};
+  ScalarFieldType* Udiag_{nullptr};
 };
 
 class ContinuityKernelHex8Mesh : public LowMachKernelHex8Mesh
