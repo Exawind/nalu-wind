@@ -29,6 +29,9 @@ HexSCV::HexSCV()
   MasterElement::ipNodeMap_       .assign(ipNodeMap_,        8+ipNodeMap_);
   MasterElement::intgLoc_         .assign(intgLoc_,         24+intgLoc_);
   MasterElement::intgLocShift_    .assign(intgLocShift_,    24+intgLocShift_);
+  MasterElement::nDim_                  = nDim_;
+  MasterElement::nodesPerElement_       = nodesPerElement_;
+  MasterElement::numIntPoints_          = numIntPoints_;
 }
 
 //--------------------------------------------------------------------------
@@ -197,21 +200,25 @@ void HexSCV::Mij(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 HexSCS::HexSCS() : MasterElement() { 
-MasterElement::nDim_                  = nDim_;
-MasterElement::nodesPerElement_       = nodesPerElement_;
-MasterElement::numIntPoints_          = numIntPoints_;
-MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
-MasterElement::lrscv_           .assign(lrscv_,       24+lrscv_);
-MasterElement::ipNodeMap_       .assign(ipNodeMap_,   24+ipNodeMap_);
-MasterElement::oppNode_         .assign(oppNode_,     24+oppNode_);
-MasterElement::nodeLoc_         .assign(&nodeLoc_[0][0],  24+&nodeLoc_[0][0]);
-MasterElement::oppFace_         .assign(oppFace_,     24+oppFace_);
-MasterElement::intgLoc_         .assign(intgLoc_,     36+intgLoc_);
-MasterElement::intgLocShift_    .assign(intgLocShift_,36+intgLocShift_);
-MasterElement::scsIpEdgeOrd_    .assign(scsIpEdgeOrd_,12+scsIpEdgeOrd_);
-MasterElement::sideNodeOrdinals_.assign(&sideNodeOrdinals_[0][0],24+&sideNodeOrdinals_[0][0]);
-MasterElement::intgExpFace_     .assign(&intgExpFace_[0][0][0],  72+&intgExpFace_[0][0][0]);
-MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0],72+&intgExpFaceShift_[0][0][0]);
+  MasterElement::nDim_                  = nDim_;
+  MasterElement::nodesPerElement_       = nodesPerElement_;
+  MasterElement::numIntPoints_          = numIntPoints_;
+  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
+  MasterElement::lrscv_           .assign(lrscv_,       24+lrscv_);
+  MasterElement::ipNodeMap_       .assign(ipNodeMap_,   24+ipNodeMap_);
+  MasterElement::oppNode_         .assign(oppNode_,     24+oppNode_);
+  MasterElement::nodeLoc_         .assign(&nodeLoc_[0][0],  24+&nodeLoc_[0][0]);
+  MasterElement::oppFace_         .assign(oppFace_,     24+oppFace_);
+  MasterElement::intgLoc_         .assign(intgLoc_,     36+intgLoc_);
+  MasterElement::intgLocShift_    .assign(intgLocShift_,36+intgLocShift_);
+  MasterElement::scsIpEdgeOrd_    .assign(scsIpEdgeOrd_,12+scsIpEdgeOrd_);
+  MasterElement::sideNodeOrdinals_.assign(&sideNodeOrdinals_[0][0],24+&sideNodeOrdinals_[0][0]);
+  MasterElement::intgExpFace_     .assign(&intgExpFace_[0][0][0],  72+&intgExpFace_[0][0][0]);
+  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0],72+&intgExpFaceShift_[0][0][0]);
+  MasterElement::nDim_                  = nDim_;
+  MasterElement::nodesPerElement_       = nodesPerElement_;
+  MasterElement::numIntPoints_          = numIntPoints_;
+  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
 }
 
 //--------------------------------------------------------------------------
