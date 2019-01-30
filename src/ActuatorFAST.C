@@ -183,6 +183,7 @@ ActuatorFAST::load(const YAML::Node& y_node)
       }
 
       fi.globTurbineData.resize(fi.nTurbinesGlob);
+
       for (int iTurb = 0; iTurb < fi.nTurbinesGlob; iTurb++) {
         if (y_actuator["Turbine" + std::to_string(iTurb)]) {
 
@@ -195,6 +196,12 @@ ActuatorFAST::load(const YAML::Node& y_node)
 
           get_required(
             cur_turbine, "turbine_name", actuatorFASTInfo->turbineName_);
+
+          std::string turbFileName;
+          get_if_present(cur_turbine, "file_to_dump_turb_pts", turbFileName);
+          if (!turbFileName.empty()) {
+            actuatorFASTInfo->fileToDumpPoints_ = turbFileName;
+          }
 
           // Force projection function properties
           const YAML::Node epsilon = cur_turbine["epsilon"];
@@ -938,6 +945,25 @@ ActuatorFAST::write_turbine_points_to_string(
   return stream.str();
 }
 
+void
+ActuatorFAST::dump_turbine_points_to_file(std::size_t turbNum)
+{
+  auto turbInfo =
+    dynamic_cast<ActuatorFASTInfo*>(actuatorInfo_.at(turbNum).get());
+  std::string fileToDumpTo = turbInfo->fileToDumpPoints_;
+
+  if (
+    !fileToDumpTo.empty() &&
+    FAST.get_procNo(turbNum) == NaluEnv::self().parallel_rank()) {
+    NaluEnv::self().naluOutput() << "Dumping turbine " << turbNum
+                                 << " to file: " << fileToDumpTo << std::endl;
+    std::ofstream csvOut;
+    csvOut.open(fileToDumpTo, std::ofstream::out);
+    std::string actOut = write_turbine_points_to_string(turbNum, 10, 8);
+    csvOut << actOut;
+    csvOut.close();
+  }
+}
+
 } // namespace nalu
 } // namespace sierra
-

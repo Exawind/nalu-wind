@@ -5,7 +5,6 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-
 #include <ActuatorLineFAST.h>
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>

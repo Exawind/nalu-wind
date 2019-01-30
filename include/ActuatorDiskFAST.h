@@ -88,8 +88,8 @@ protected:
   void add_swept_points_to_map();
   std::map<int, std::vector<std::vector<double>>> averageForcesMap_;
   std::map<std::size_t, int> pointRadiusMap_;
-  std::map<int, int>
-    numSweptPointMap_; //{globTurbNo : numPoints between blades}
+  std::map<int, std::vector<int>>
+    numSweptPointMap_; //{globTurbNo : numPoints between blades at each radius}
 };
 
 /** Implementation of a periodic Bezier curve (Sanchez-Reyes, 2009) to connect
@@ -108,6 +108,8 @@ public:
   void update_point_location(int i, Point p);
   static int binomial_coefficient(int n, int v);
   std::vector<Point> get_control_points();
+  double get_radius(int pntNum);
+  Point get_centriod();
 
 private:
   const int order_ = 2; // fix order at 2 for 3 point sampling

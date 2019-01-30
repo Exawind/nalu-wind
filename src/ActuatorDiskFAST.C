@@ -34,11 +34,14 @@ void
 ActuatorDiskFAST::parse_disk_specific(const YAML::Node& y_node)
 {
   int nSwept = 0;
+  int nFpts = 0;
   const YAML::Node y_actuator = y_node["actuator"];
   for (int i = 0; i < fi.nTurbinesGlob; i++) {
     const YAML::Node cur_turbine = y_actuator["Turbine" + std::to_string(i)];
     get_required(cur_turbine, "num_swept_pts", nSwept);
-    numSweptPointMap_.insert(std::make_pair(i, nSwept));
+    get_required(cur_turbine, "num_force_pts_blade", nFpts);
+    numSweptPointMap_.insert(
+      std::make_pair(i, std::vector<int>(nFpts, nSwept)));
   }
 }
 
@@ -89,11 +92,11 @@ ActuatorDiskFAST::execute_class_specific(
     std::vector<std::vector<double>>& avgVec = turbine.second;
     const int np = turbine.first;
     const double numBlades = static_cast<double>(FAST.get_numBlades(np));
-    const int numSweptPoints = numSweptPointMap_.at(np);
+    std::vector<int>& numSweptPoints = numSweptPointMap_.at(np);
 
     for (std::size_t i = 0; i < avgVec.size(); i++) {
       for (std::size_t j = 0; j < 3; j++) {
-        avgVec[i][j] /= numBlades * (numSweptPoints + 1);
+        avgVec[i][j] /= numBlades * (numSweptPoints[i] + 1);
       }
     }
   }
@@ -171,7 +174,7 @@ ActuatorDiskFAST::add_swept_points_to_map()
       const int numPntsBlade = FAST.get_numForcePtsBlade(iTurb);
       const int numBlades = FAST.get_numBlades(iTurb);
 
-      const int mySwept = numSweptPointMap_.at(iTurb);
+      std::vector<int> mySwept = numSweptPointMap_.at(iTurb);
 
       const auto actuatorInfo =
         dynamic_cast<ActuatorFASTInfo*>(actuatorInfo_[iTurb].get());
@@ -184,18 +187,27 @@ ActuatorDiskFAST::add_swept_points_to_map()
 
       // loop over each radial location and insert the correct number of points
       // for that radius this could be made to vary radially later on
-      for (int i = 0; i < numPntsBlade; i++) {
+      double firstRadius = -100.0;
+
+      for (int i = numPntsBlade - 1; i >= 0; i--) {
         for (int j = 0; j < numBlades; j++) {
           locator.update_point_location(
             j, get_blade_point_location(iTurb, j, i));
         }
-        const double dtheta = 2.0 * M_PI / (numBlades * (mySwept + 1));
+        // get radius and update mySwept
+        double radius = locator.get_radius(0);
+        if (firstRadius < 0.0) {
+          firstRadius = radius;
+        }
+        double radiusRatio = std::ceil(radius / firstRadius);
+        mySwept[i] *= radiusRatio;
 
         // periodic function has blades points at pi/3, pi, and 5*pi/3
         // this is due to the way the control points are defined
         double theta = M_PI / 3.0;
         for (int b = 0; b < numBlades; b++) {
-          for (int j = 0; j < mySwept; j++) {
+          const double dtheta = 2.0 * M_PI / (numBlades * (mySwept[i] + 1));
+          for (int j = 0; j < mySwept[i]; j++) {
             theta += dtheta;
             centroidCoords = locator(theta);
 
@@ -219,14 +231,10 @@ ActuatorDiskFAST::add_swept_points_to_map()
           theta += dtheta;
         }
       }
+      // if a turbine was asked to be dumped this will write
+      // its points to a file
+      ActuatorFAST::dump_turbine_points_to_file(iTurb);
     }
-    /*
-    std::ofstream csvOut;
-    csvOut.open("/Users/psakiev/Desktop/turbine"+std::to_string(iTurb)+".csv",
-    std::ofstream::out); std::string actOut =
-    ActuatorFAST::write_turbine_points_to_string(iTurb, 10, 8); csvOut <<
-    actOut; csvOut.close();
-    */
   }
 }
 
@@ -363,6 +371,40 @@ SweptPointLocator::get_control_points()
 {
   generate_control_points();
   return controlPoints_;
+}
+
+Point
+SweptPointLocator::get_centriod()
+{
+  Point centroid = {0.0, 0.0, 0.0};
+
+  for (int i = 0; i < 3; i++) {
+    centroid[0] += bladePoints_[i][0];
+    centroid[1] += bladePoints_[i][1];
+    centroid[2] += bladePoints_[i][2];
+  }
+
+  centroid[0] /= 3.0;
+  centroid[1] /= 3.0;
+  centroid[2] /= 3.0;
+
+  return centroid;
+}
+
+double
+SweptPointLocator::get_radius(int pntNum)
+{
+  if (!controlPointsCurrent_) {
+    generate_control_points();
+  }
+  double distance{0.0};
+  Point centroid = get_centriod();
+
+  for (int i = 0; i < 3; i++) {
+    distance += std::pow(bladePoints_[pntNum][i] - centroid[i], 2.0);
+  }
+
+  return std::sqrt(distance);
 }
 
 } // namespace nalu

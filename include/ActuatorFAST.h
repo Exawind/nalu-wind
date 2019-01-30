@@ -37,6 +37,7 @@ public:
   virtual ~ActuatorFASTInfo();
   Coordinates epsilon_; ///< The Gaussian spreading width in (chordwise,
                         ///< spanwise, thickness) directions
+  std::string fileToDumpPoints_;
 };
 
 /** Class that holds all of the search action for each actuator point
@@ -222,6 +223,8 @@ public:
 
   std::string
   write_turbine_points_to_string(std::size_t turbNum, int width, int precision);
+
+  void dump_turbine_points_to_file(std::size_t turbNum);
 
   int tStepRatio_; ///< Ratio of Nalu time step to FAST time step
                    ///< (dtNalu/dtFAST) - Should be an integral number
