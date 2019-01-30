@@ -309,41 +309,37 @@ namespace nalu{
   {
     switch(faceTopo.value()) {
       case stk::topology::QUAD_4:
-        if ( elemTopo == stk::topology::HEX_8 ) {
-          return new T<AlgTraitsQuad4Hex8>(std::forward<Args>(args)...);
-        }
-        else if ( elemTopo == stk::topology::PYRAMID_5 ) {
-          return new T<AlgTraitsQuad4Pyr5>(std::forward<Args>(args)...);
-        }
-        else if ( elemTopo == stk::topology::WEDGE_6 ) {
-          return new T<AlgTraitsQuad4Wed6>(std::forward<Args>(args)...);
-        }
-        else {
-          ThrowRequireMsg(false,
-                          "Quad4 exposed face is not attached to either a hex8, pyr5, or wedge6.");
+        switch(elemTopo) {
+          case stk::topology::HEX_8: 
+            return new T<AlgTraitsQuad4Hex8>(std::forward<Args>(args)...);
+          case stk::topology::PYRAMID_5:
+            return new T<AlgTraitsQuad4Pyr5>(std::forward<Args>(args)...);
+          case stk::topology::WEDGE_6:
+            return new T<AlgTraitsQuad4Wed6>(std::forward<Args>(args)...);
+          default:
+            ThrowRequireMsg(false,
+              "Quad4 exposed face is not attached to either a hex8, pyr5, or wedge6.");
         }
       case stk::topology::QUAD_9:
         return new T<AlgTraitsQuad9Hex27>(std::forward<Args>(args)...);
       case stk::topology::TRI_3:
-        if ( elemTopo == stk::topology::TET_4 ) {
-          return new T<AlgTraitsTri3Tet4>(std::forward<Args>(args)...);
-        }
-        else if ( elemTopo == stk::topology::PYRAMID_5 ) {
-          return new T<AlgTraitsTri3Pyr5>(std::forward<Args>(args)...);
-        }
-        else if ( elemTopo == stk::topology::WEDGE_6 ) {
-          return new T<AlgTraitsTri3Wed6>(std::forward<Args>(args)...);
-        }
-        else {   
-          ThrowRequireMsg(false,
-                          "Tri3 exposed face is not attached to either a tet4, pyr5, or wedge6.");
+        switch(elemTopo) {
+          case stk::topology::TET_4:
+            return new T<AlgTraitsTri3Tet4>(std::forward<Args>(args)...);
+          case stk::topology::PYRAMID_5:
+            return new T<AlgTraitsTri3Pyr5>(std::forward<Args>(args)...);
+          case stk::topology::WEDGE_6:
+            return new T<AlgTraitsTri3Wed6>(std::forward<Args>(args)...);
+          default :
+            ThrowRequireMsg(false,
+              "Tri3 exposed face is not attached to either a tet4, pyr5, or wedge6.");
         }
       case stk::topology::LINE_2:
-        if (elemTopo == stk::topology::TRI_3_2D) {
-          return new T<AlgTraitsEdge2DTri32D>(std::forward<Args>(args)...);
-        }
-        else {
-          return new T<AlgTraitsEdge2DQuad42D>(std::forward<Args>(args)...);
+        switch(elemTopo) {
+          case stk::topology::TRI_3_2D: 
+            return new T<AlgTraitsEdge2DTri32D>(std::forward<Args>(args)...);
+          default :
+            return new T<AlgTraitsEdge2DQuad42D>(std::forward<Args>(args)...);
         }
       case stk::topology::LINE_3:
         return new T<AlgTraitsEdge32DQuad92D>(std::forward<Args>(args)...);

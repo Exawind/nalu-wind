@@ -328,11 +328,11 @@ TEST(MijTensorNGP, hex27_simd) {
   for (unsigned j = 0; j < topo.num_nodes(); ++j) {
     const double *coords = stk::mesh::field_data(coordField, nodes[j]);
 
-    DoubleType coordsDT[dim];
+    std::vector<DoubleType> coordsDT(dim);
     for (int k = 0; k < dim; ++k)
       coordsDT[k] = coords[k];
 
-    sierra::nalu::matvec33(QDT, coordsDT, &v_coords(j, 0));
+    sierra::nalu::matvec33(QDT, coordsDT.data(), &v_coords(j, 0));
   }
 
   Kokkos::View<DoubleType ***> mij_tensor("mij_tensor", AlgTraits::numScsIp_,

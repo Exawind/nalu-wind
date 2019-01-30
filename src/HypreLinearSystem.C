@@ -535,7 +535,8 @@ HypreLinearSystem::get_entity_hypre_id(const stk::mesh::Entity& node)
   HypreIntType hid = *stk::mesh::field_data(*realm_.hypreGlobalId_, mnode);
 
 #ifndef NDEBUG
-  if ((hid < 0) || (((hid+1) * numDof_ - 1) > maxRowID_)) {
+  HypreIntType chk = ((hid+1) * numDof_ - 1);
+  if ((hid < 0) || (chk > maxRowID_)) {
     std::cerr << bulk.parallel_rank() << "\t"
               << hid << "\t" << iLower_ << "\t" << iUpper_ << std::endl;
     throw std::runtime_error("BAD STK to hypre conversion");
