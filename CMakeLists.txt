@@ -145,7 +145,7 @@ if(ENABLE_ALL_WARNINGS)
       # ifort doesn't like -Wall
       set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wall")
     else()
-      # ifort always reports some diagnostics we don't necessarily care about
+      # Intel always reports some diagnostics we don't necessarily care about
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -diag-disable:11074,11076")
     endif()
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
