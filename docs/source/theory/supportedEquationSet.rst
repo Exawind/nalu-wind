@@ -1063,5 +1063,5 @@ gradients of a field :math:`\phi`.
 .. math::
 
    \nabla^2 \phi &= 1 \\
-   d &= \pm \sqrt{\sum_{j=1,3} \left( \frac{\partial \phi}{\partial x_j} \right)^2 +
+   d &= \sqrt{\sum_{j=1,3} \left( \frac{\partial \phi}{\partial x_j} \right)^2 \pm 
    \sqrt{\sum_{j=1,3} \left( \frac{\partial \phi}{\partial x_j} \right)^2 + 2 \phi
