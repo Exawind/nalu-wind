@@ -103,7 +103,7 @@ WallDistElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(WallDistElemKernel);
+INSTANTIATE_KERNEL(WallDistElemKernel)
 
 } // namespace nalu
 } // namespace sierra

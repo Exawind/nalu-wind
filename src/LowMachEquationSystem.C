@@ -2468,7 +2468,7 @@ MomentumEquationSystem::compute_projected_nodal_gradient()
 void
 MomentumEquationSystem::save_diagonal_term(
   const std::vector<stk::mesh::Entity>& entities,
-  const std::vector<int>& scratchIds,
+  const std::vector<int>& /* scratchIds */,
   const std::vector<double>& lhs)
 {
   auto& bulk = realm_.bulk_data();
