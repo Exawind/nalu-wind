@@ -267,6 +267,57 @@ public:
   bool within_tolerance(const double & val, const double & tol);
   double vector_norm_sq(const double * vect, int len);
 
+  virtual int ndim() const {return nDim_;} 
+  virtual void ndim(const int n) {nDim_=n;} 
+
+  virtual int nodes_per_element() const {return nodesPerElement_;} 
+  virtual void nodes_per_element(const int n) {nodesPerElement_=n;} 
+
+  virtual int num_integration_points() const {return numIntPoints_;} 
+  virtual void num_integration_points(const int n) {numIntPoints_=n;} 
+
+  virtual double scal_to_standard_iso_factor() const {return scaleToStandardIsoFac_;} 
+  virtual void scal_to_standard_iso_factor(const double n) {scaleToStandardIsoFac_=n;} 
+
+  virtual const std::vector<int>& lr_scv() const {return lrscv_;} 
+  virtual void lr_scv(const std::vector<int>& v) {lrscv_=v;} 
+
+  virtual const std::vector<int>& ip_node_map() const {return ipNodeMap_;} 
+  virtual void ip_node_map(const std::vector<int>& v) {ipNodeMap_=v;} 
+
+  virtual const std::vector<int>& opposing_nodes() const {return oppNode_;} 
+  virtual void opposing_nodes(const std::vector<int>& v) {oppNode_=v;} 
+
+  virtual const std::vector<int>& opposing_face() const {return oppFace_;} 
+  virtual void opposing_face(const std::vector<int>& v) {oppFace_=v;} 
+
+  virtual const std::vector<double>& integration_locations() const {return intgLoc_;} 
+  virtual void integration_locations(const std::vector<double>& v) {intgLoc_=v;} 
+
+  virtual const std::vector<double>& integration_location_shift() const {return intgLocShift_;} 
+  virtual void integration_location_shift(const std::vector<double>& v) {intgLocShift_=v;} 
+
+  virtual const std::vector<double>& integration_exp_face() const {return intgExpFace_;} 
+  virtual void integration_exp_face(const std::vector<double>& v) {intgExpFace_=v;} 
+
+  virtual const std::vector<double>& integration_exp_face_shift() const {return intgExpFaceShift_;} 
+  virtual void integration_exp_face_shift(const std::vector<double>& v) {intgExpFaceShift_=v;} 
+
+  virtual const std::vector<double>& node_locations() const {return nodeLoc_;} 
+  virtual void node_locations(const std::vector<double>& v) {nodeLoc_=v;} 
+
+  virtual const std::vector<int>& side_node_ordinals() const {return sideNodeOrdinals_;} 
+  virtual void side_node_ordinals(const std::vector<int>& v) {sideNodeOrdinals_=v;} 
+
+  virtual const std::vector<int>& side_offsets() const {return sideOffset_;} 
+  virtual void side_offsets(const std::vector<int>& v) {sideOffset_=v;} 
+
+  virtual const std::vector<int>& scs_ip_edge_ordinals() const {return scsIpEdgeOrd_;} 
+  virtual void scs_ip_edge_ordinals(const std::vector<int>& v) {scsIpEdgeOrd_=v;} 
+
+  virtual const std::vector<double>& weights() const {return weights_;} 
+  virtual void weights(const std::vector<double>& v) {weights_=v;} 
+
   int nDim_;
   int nodesPerElement_;
   int numIntPoints_;
