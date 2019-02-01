@@ -67,6 +67,7 @@ private:
   double gamma1_{0.0};
   double gamma2_{0.0};
   double gamma3_{0.0};
+  double diagRelaxFactor_{1.0};
   const bool lumpedMass_;
 
   /// Integration point to node mapping

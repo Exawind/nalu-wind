@@ -111,11 +111,11 @@ ContinuityInflowElemKernel<BcAlgTraits>::execute(
       mDot += (interpTogether_*w_rho_uBip[j] + om_interpTogether_*rhoBip*w_uBip[j])*vf_exposedAreaVec(ip,j);
     }
     
-    rhs(nearestNode) -= mDot/projTimeScale_;
+    rhs(nearestNode) -= mDot / projTimeScale_;
   } 
 }
 
-INSTANTIATE_KERNEL_FACE(ContinuityInflowElemKernel);
+INSTANTIATE_KERNEL_FACE(ContinuityInflowElemKernel)
 
 }  // nalu
 }  // sierra

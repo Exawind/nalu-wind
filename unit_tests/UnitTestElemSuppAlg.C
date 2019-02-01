@@ -39,7 +39,7 @@ void element_discrete_laplacian_kernel_3d(
       elemData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
     sierra::nalu::SharedMemView<double***>& dndx =
       elemData.get_me_views(sierra::nalu::CURRENT_COORDINATES).dndx;
-    const stk::mesh::Entity* elemNodes = elemData.elemNodes;
+    ngp::Mesh::ConnectedNodes elemNodes = elemData.elemNodes;
 
     for (int ip = 0; ip < numScsIp; ++ip ) {
 
@@ -127,7 +127,7 @@ public:
   
       sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_, meta.get_fields().size());
       const int bytes_per_team = 0;
-      const int bytes_per_thread = get_num_bytes_pre_req_data(dataNeededNGP, meta.spatial_dimension());
+      const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension());
       auto team_exec = sierra::nalu::get_host_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);
       Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
       {

@@ -153,7 +153,7 @@ TurbKineticEnergyKsgsDesignOrderSrcElemKernel<AlgTraits>::execute(
   }
 } 
   
-INSTANTIATE_KERNEL(TurbKineticEnergyKsgsDesignOrderSrcElemKernel);
+INSTANTIATE_KERNEL(TurbKineticEnergyKsgsDesignOrderSrcElemKernel)
 
 }  // nalu
 }  // sierra

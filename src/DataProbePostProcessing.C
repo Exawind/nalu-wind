@@ -626,7 +626,7 @@ DataProbePostProcessing::create_transfer()
 //--------------------------------------------------------------------------
 void
 DataProbePostProcessing::review(
-  const DataProbeInfo *probeInfo)
+  const DataProbeInfo * /* probeInfo */)
 {
   // may or may not want this
 }

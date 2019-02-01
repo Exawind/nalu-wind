@@ -104,7 +104,7 @@ namespace nalu{
 
     return name;
   }
-  std::string super_subset_part_name(const std::string& base_name, int numElemNodes, int numSideNodes)
+  std::string super_subset_part_name(const std::string& base_name, int  /* numElemNodes */, int  /* numSideNodes */)
   {
     // subsetted part name.  Goes like "surfacese_super512_superside64_1"
     // Ioss doesn't recognize "superside" but does recognize the "super" tag

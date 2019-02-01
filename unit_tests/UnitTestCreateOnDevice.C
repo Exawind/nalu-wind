@@ -71,13 +71,13 @@ TEST(CreateDeviceExpression, Shapes)
   Shape *c_dev = c->device_copy<Shape>();
 
   double r_area;
-  auto r_on_device = [&] (int i, double &a) {
+  auto r_on_device = [&] (int  /* i */, double &a) {
     a = r_dev->area();
   };
   sierra::nalu::kokkos_parallel_reduce(1, r_on_device, r_area, "Call Rectangle on Device.");
 
   double c_area;
-  auto c_on_device = [&] (int i, double &a) {
+  auto c_on_device = [&] (int  /* i */, double &a) {
     a = c_dev->area();
   };
   sierra::nalu::kokkos_parallel_reduce(1, c_on_device, c_area, "Call Circle on Device.");

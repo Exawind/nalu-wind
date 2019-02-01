@@ -29,8 +29,8 @@ void MotionScaling::load(const YAML::Node& node)
 }
 
 void MotionScaling::build_transformation(
-  const double time,
-  const double* xyz)
+  const double  /* time */,
+  const double*  /* xyz */)
 {
   scaling_mat(factor_);
 }

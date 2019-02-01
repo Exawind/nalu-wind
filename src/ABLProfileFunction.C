@@ -143,7 +143,7 @@ NeutralABLProfileFunction::~NeutralABLProfileFunction()
 //-------- velocity ---------------------------------------------------------
 //--------------------------------------------------------------------------
 double
-NeutralABLProfileFunction::velocity(const double znorm) const
+NeutralABLProfileFunction::velocity(const double /* znorm */) const
 {
   return 0.0;
 }
@@ -152,7 +152,7 @@ NeutralABLProfileFunction::velocity(const double znorm) const
 //-------- temperature ---------------------------------------------------------
 //--------------------------------------------------------------------------
 double
-NeutralABLProfileFunction::temperature(const double znorm) const
+NeutralABLProfileFunction::temperature(const double /* znorm */) const
 {
   return 0.0;
 }

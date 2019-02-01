@@ -18,8 +18,8 @@ option(ENABLE_PARAVIEW_CATALYST
       "Enable ParaView Catalyst. Requires external installation of Trilinos Catalyst IOSS adapter."
        OFF)
 option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
-option(ENABLE_WARNINGS "Add -Wall to show compiler warnings" ON)
-option(ENABLE_EXTRA_WARNINGS "Add -Wextra to show even more compiler warnings" OFF)
+option(ENABLE_ALL_WARNINGS "Show most warnings for most compilers" ON)
+option(ENABLE_WERROR "Warnings are errors" OFF)
 
 set(CMAKE_CXX_STANDARD 11)       # Set nalu-wind C++11 standard
 set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions
@@ -78,7 +78,7 @@ endif()
 ############################ FFTW ######################################
 if(ENABLE_FFTW)
   set(CMAKE_PREFIX_PATH ${FFTW_DIR} ${CMAKE_PREFIX_PATH})
-  find_package(FFTW REQUIRED)
+  find_package(FFTW QUIET REQUIRED)
   if(FFTW_FOUND)
     message("-- Found FFTW = ${FFTW_DIR}")
   endif()
@@ -89,7 +89,6 @@ endif(ENABLE_FFTW)
 ############################ HYPRE #####################################
 if(ENABLE_HYPRE)
   set(CMAKE_PREFIX_PATH ${HYPRE_DIR} ${CMAKE_PREFIX_PATH})
-  # Quiet down HYPRE's own "found" output to be consistent with others
   find_package(HYPRE QUIET REQUIRED)
   if(HYPRE_FOUND)
     message("-- Found HYPRE = ${HYPRE_DIR}")
@@ -138,13 +137,26 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   set(EXTRA_Fortran_FLAGS "")
 endif()
 
-if(ENABLE_WARNINGS)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wall")
+# Logic for showing and handling warnings
+if(ENABLE_ALL_WARNINGS)
+  # GCC, Clang, and Intel seem to accept these
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+    if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+      # ifort doesn't like -Wall
+      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wall")
+    else()
+      # Intel always reports some diagnostics we don't necessarily care about
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -diag-disable:11074,11076")
+    endif()
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7.0)
+      # Avoid notes about -faligned-new with GCC > 7
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new")
+    endif()
 endif()
-if(ENABLE_EXTRA_WARNINGS)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -pedantic")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wextra -pedantic")
+# Make warnings errors
+if(ENABLE_WERROR)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Werror")
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")

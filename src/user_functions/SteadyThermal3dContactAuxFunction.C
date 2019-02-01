@@ -30,7 +30,7 @@ SteadyThermal3dContactAuxFunction::SteadyThermal3dContactAuxFunction() :
 void
 SteadyThermal3dContactAuxFunction::do_evaluate(
   const double *coords,
-  const double t,
+  const double /* t */,
   const unsigned spatialDimension,
   const unsigned numPoints,
   double * fieldPtr,

@@ -182,11 +182,13 @@ ShearStressTransportEquationSystem::solve_and_update()
       sstMaxLengthScaleAlgDriver_->execute();
 
     isInit_ = false;
-  }
+  } else if (realm_.has_mesh_motion()) {
+    if (realm_.currentNonlinearIteration_ == 1)
+      clip_min_distance_to_wall();
 
-  // FIXME: Push to geometry algorithm? DES distance if mesh motion is active
-  if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ && realm_.solutionOptions_->meshMotion_ )                                                    
-    sstMaxLengthScaleAlgDriver_->execute();
+    if (SST_DES == realm_.solutionOptions_->turbulenceModel_)
+      sstMaxLengthScaleAlgDriver_->execute();
+  }
 
   // compute blending for SST model
   compute_f_one_blending();

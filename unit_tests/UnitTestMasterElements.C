@@ -605,21 +605,21 @@ protected:
     TEST_F(x, hex8##_##y)   { y(stk::topology::HEX_8); }
 
 // Patch tests: pyramids fail
-TEST_F_ALL_TOPOS_NO_PYR(MasterElement, scs_interpolation);
-TEST_F_ALL_TOPOS_NO_PYR(MasterElement, scs_derivative);
-TEST_F_ALL_TOPOS_NO_PYR(MasterElement, scv_interpolation);
-TEST_F_ALL_TOPOS_NO_PYR(MasterElement, volume_integration);
+TEST_F_ALL_TOPOS_NO_PYR(MasterElement, scs_interpolation)
+TEST_F_ALL_TOPOS_NO_PYR(MasterElement, scs_derivative)
+TEST_F_ALL_TOPOS_NO_PYR(MasterElement, scv_interpolation)
+TEST_F_ALL_TOPOS_NO_PYR(MasterElement, volume_integration)
 
 // Pyramid fails since the reference element
 // since the constant Jacobian assumption is violated
-TEST_F_ALL_TOPOS_NO_PYR(MasterElement, is_in_element);
+TEST_F_ALL_TOPOS_NO_PYR(MasterElement, is_in_element)
 
 // Pyramid works. Doesn't work for higher-order elements sicne they have more ips than nodes
-TEST_F_ALL_P1_TOPOS(MasterElement, scv_shifted_ips_are_nodal);
-TEST_F_ALL_P1_TOPOS(MasterElement, exposed_face_shifted_ips_are_nodal);
+TEST_F_ALL_P1_TOPOS(MasterElement, scv_shifted_ips_are_nodal)
+TEST_F_ALL_P1_TOPOS(MasterElement, exposed_face_shifted_ips_are_nodal)
 
 // works fore everything
-TEST_F_ALL_TOPOS(MasterElement, is_not_in_element);
-TEST_F_ALL_TOPOS(MasterElement, particle_interpolation); // includes an isInElement call
+TEST_F_ALL_TOPOS(MasterElement, is_not_in_element)
+TEST_F_ALL_TOPOS(MasterElement, particle_interpolation)
 
-TEST_F_ALL_P1_TOPOS(MasterElement, general_shape_fcn);
+TEST_F_ALL_P1_TOPOS(MasterElement, general_shape_fcn)

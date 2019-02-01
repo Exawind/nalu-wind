@@ -109,7 +109,7 @@ double poly_der(
   return val;
 }
 
-template <typename AlgTraits>
+template <typename AlgTraits, typename ME, bool SCS>
 void check_interpolation(
   const stk::mesh::MetaData& meta,
   const stk::mesh::BulkData& bulk)
@@ -117,16 +117,19 @@ void check_interpolation(
   // Check that we can interpolate a random 3D polynomial of order poly_order
   // to the integration points
 
-  using ME             = typename AlgTraits::masterElementScs_;
   const int dim        = AlgTraits::nDim_;
   const int num_nodes  = AlgTraits::nodesPerElement_;
-  const int num_int_pt = AlgTraits::numScsIp_;
+  const int num_int_pt = SCS ? AlgTraits::numScsIp_ : AlgTraits::numScvIp_;
   const int poly_order = num_nodes == 8 ? 1 : 2;
  
   ngp::Mesh ngpMesh(bulk);
 
-  ME    *me = dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_));
-  ME *ngpMe = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
+  ME    *me = SCS ? 
+    dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_)):
+    dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_));
+  ME *ngpMe = SCS ? 
+    dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>()):
+    dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_volume_master_element<AlgTraits>());
   ThrowRequire(me);
   ThrowRequire(ngpMe);
 
@@ -173,8 +176,8 @@ void check_interpolation(
   {
     const ngp::Mesh::BucketType& b = ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
 
-    sierra::nalu::SharedMemView<DoubleType**,ShmemType> shpfc = 
-       sierra::nalu::get_shmem_view_2D<DoubleType,TeamType,ShmemType>(team, num_int_pt, num_nodes);
+    using ViewType = sierra::nalu::SharedMemView<DoubleType**,ShmemType>;
+    ViewType shpfc = sierra::nalu::get_shmem_view_2D<DoubleType,TeamType,ShmemType>(team, num_int_pt, num_nodes);
 
     const size_t bucketLen   = b.size();
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, bucketLen), [&](const size_t& bktIndex)
@@ -190,7 +193,7 @@ void check_interpolation(
           coords[i] = ngpCoordField.get(ngpMesh, nodes[n], i);
         ws_field[n] = poly_val<dim,poly_order>(coeffs, coords.data());
       }
-      ngpMe->shape_fcn(shpfc);
+      ngpMe->template shape_fcn<ViewType>(shpfc);
       for (int j = 0; j < num_int_pt; ++j) {
         for (int i = 0; i < num_nodes; ++i) {
           ngpResults[j] += shpfc(j,i) * ws_field[i];
@@ -355,7 +358,8 @@ TEST_F(MasterElementHexSerialNGP, hex8_scs_interpolation)
 {
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
-    check_interpolation<sierra::nalu::AlgTraitsHex8> (meta, bulk);
+    using AlgTraits = sierra::nalu::AlgTraitsHex8;
+    check_interpolation<AlgTraits, AlgTraits::masterElementScs_, true> (meta, bulk);
   }
 }
 
@@ -363,8 +367,8 @@ TEST_F(MasterElementHexSerialNGP, hex8_scv_interpolation)
 {
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
-    sierra::nalu::HexSCV hexscv;
-    //check_interpolation<sierra::nalu::AlgTraitsHex8>(meta, bulk, hexscv);
+    using AlgTraits = sierra::nalu::AlgTraitsHex8;
+    check_interpolation<AlgTraits, AlgTraits::masterElementScv_, false>(meta, bulk);
   }
 }
 
@@ -380,8 +384,8 @@ TEST_F(MasterElementHexSerialNGP, hex27_scs_interpolation)
 {
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_2_hex_27();
-    sierra::nalu::Hex27SCS hex27scs;
-    //check_interpolation<sierra::nalu::AlgTraitsHex27>(meta, bulk, hex27scs);
+    //using AlgTraits = sierra::nalu::AlgTraitsHex27;
+    //check_interpolation<AlgTraits, AlgTraits::masterElementScs_, true>(meta, bulk);
   }
 }
 

@@ -144,5 +144,5 @@ template <int p> void mms()
 
 }
 //--------------------------------------------------------------
-TEST_POLY(ScalarAdvDiff, mms, 22);
+TEST_POLY(ScalarAdvDiff, mms, 22)
 }}

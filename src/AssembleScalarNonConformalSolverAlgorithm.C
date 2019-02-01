@@ -15,6 +15,7 @@
 #include <NonConformalInfo.h>
 #include <NonConformalManager.h>
 #include <Realm.h>
+#include <SolutionOptions.h>
 #include <TimeIntegrator.h>
 #include <master_element/MasterElement.h>
 
@@ -90,6 +91,8 @@ AssembleScalarNonConformalSolverAlgorithm::execute()
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
   const int nDim = meta_data.spatial_dimension();
+  const std::string dofName = scalarQ_->name();
+  const double relaxFac = realm_.solutionOptions_->get_relaxation_factor(dofName);
 
   // space for LHS/RHS; nodesPerElem*nodesPerElem and nodesPerElem
   std::vector<double> lhs;
@@ -487,7 +490,12 @@ AssembleScalarNonConformalSolverAlgorithm::execute()
           }
           p_lhs[rowR+ic+currentNodesPerElement] -= opposingDiffFluxCoeffBip*lhscd*c_amag/2.0;
         }
-        
+
+        // relax the diagonal term before applying to the matrix
+        for (int ir=0; ir < totalNodes; ir++) {
+          p_lhs[ir * (totalNodes + 1)] /= relaxFac;
+        }
+
         apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
       }
     }

@@ -322,7 +322,7 @@ MomentumUpwAdvDiffElemKernel<AlgTraits>::van_leer(
   return limit;
 }
 
-INSTANTIATE_KERNEL(MomentumUpwAdvDiffElemKernel);
+INSTANTIATE_KERNEL(MomentumUpwAdvDiffElemKernel)
 
 }  // nalu
 }  // sierra

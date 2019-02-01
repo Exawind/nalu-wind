@@ -173,7 +173,7 @@ TurbKineticEnergySSTSrcElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(TurbKineticEnergySSTSrcElemKernel);
+INSTANTIATE_KERNEL(TurbKineticEnergySSTSrcElemKernel)
 
 } // namespace nalu
 } // namespace sierra

@@ -93,7 +93,7 @@ MomentumBuoyancyBoussinesqSrcElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumBuoyancyBoussinesqSrcElemKernel);
+INSTANTIATE_KERNEL(MomentumBuoyancyBoussinesqSrcElemKernel)
 
 }  // nalu
 }  // sierra

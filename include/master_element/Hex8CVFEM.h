@@ -15,6 +15,33 @@
 namespace sierra{
 namespace nalu{
 
+template<typename ViewType>
+KOKKOS_INLINE_FUNCTION
+void hex8_shape_fcn(
+  const int    & npts,
+  const double * isoParCoord,
+  ViewType &shape_fcn)
+{
+  const DoubleType half   = 0.50;
+  const DoubleType one4th = 0.25;
+  const DoubleType one8th = 0.125;
+  for ( int j = 0; j < npts; ++j ) {
+
+    const DoubleType s1 = isoParCoord[j*3];
+    const DoubleType s2 = isoParCoord[j*3+1];
+    const DoubleType s3 = isoParCoord[j*3+2];
+
+    shape_fcn(j,0) = one8th + one4th*(-s1 - s2 - s3) + half*( s2*s3 + s3*s1 + s1*s2 ) - s1*s2*s3;
+    shape_fcn(j,1) = one8th + one4th*( s1 - s2 - s3) + half*( s2*s3 - s3*s1 - s1*s2 ) + s1*s2*s3;
+    shape_fcn(j,2) = one8th + one4th*( s1 + s2 - s3) + half*(-s2*s3 - s3*s1 + s1*s2 ) - s1*s2*s3;
+    shape_fcn(j,3) = one8th + one4th*(-s1 + s2 - s3) + half*(-s2*s3 + s3*s1 - s1*s2 ) + s1*s2*s3;
+    shape_fcn(j,4) = one8th + one4th*(-s1 - s2 + s3) + half*(-s2*s3 - s3*s1 + s1*s2 ) + s1*s2*s3;
+    shape_fcn(j,5) = one8th + one4th*( s1 - s2 + s3) + half*(-s2*s3 + s3*s1 - s1*s2 ) - s1*s2*s3;
+    shape_fcn(j,6) = one8th + one4th*( s1 + s2 + s3) + half*( s2*s3 + s3*s1 + s1*s2 ) + s1*s2*s3;
+    shape_fcn(j,7) = one8th + one4th*(-s1 + s2 + s3) + half*( s2*s3 - s3*s1 - s1*s2 ) - s1*s2*s3;
+  }
+}
+
 // Hex 8 subcontrol volume
 class HexSCV : public MasterElement
 {
@@ -28,6 +55,8 @@ public:
 
   using MasterElement::determinant;
   using MasterElement::shifted_grad_op;
+  using MasterElement::shifted_shape_fcn;
+  using MasterElement::shape_fcn;
 
   // NGP-ready methods first
   void determinant(
@@ -68,14 +97,47 @@ public:
     double *metric,
     double *deriv);
 
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
+
+  template<typename ViewType>
+  KOKKOS_FUNCTION
+  void shape_fcn(ViewType &shpfc);
 
   void shape_fcn(
     double *shpfc);
 
   void shifted_shape_fcn(
     double *shpfc);
+
+
+  const int nDim_ = 3;
+  const int nodesPerElement_ = 8;
+  const int numIntPoints_ = 8;
+ 
+   // define ip node mappings
+  const int ipNodeMap_[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+ 
+   // standard integration location
+  const double intgLoc_[24] = {
+   -0.25,  -0.25,  -0.25,
+   +0.25,  -0.25,  -0.25,
+   +0.25,  +0.25,  -0.25,
+   -0.25,  +0.25,  -0.25,
+   -0.25,  -0.25,  +0.25,
+   +0.25,  -0.25,  +0.25,
+   +0.25,  +0.25,  +0.25,
+   -0.25,  +0.25,  +0.25};
+ 
+  // shifted integration location
+  const double intgLocShift_[24] = {
+   -0.5,  -0.5,  -0.5,
+   +0.5,  -0.5,  -0.5,
+   +0.5,  +0.5,  -0.5,
+   -0.5,  +0.5,  -0.5,
+   -0.5,  -0.5,  +0.5,
+   +0.5,  -0.5,  +0.5,
+   +0.5,  +0.5,  +0.5,
+   -0.5,  +0.5,  +0.5};
+
 };
 
 // Hex 8 subcontrol surface
@@ -103,13 +165,6 @@ public:
 
   void shifted_shape_fcn(
     SharedMemView<DoubleType**> &shpfc);
-
-  template<typename ViewType>
-  KOKKOS_FUNCTION
-  void hex8_shape_fcn(
-    const int  &numIp,
-    const double *isoParCoord,
-    ViewType &shpfc);
 
   void hex8_gradient_operator(
     const int nodesPerElem,
@@ -469,6 +524,14 @@ void hex8_derivative(
   }
 }
 
+template<typename ViewType>
+KOKKOS_FUNCTION
+void
+HexSCV::shape_fcn(ViewType &shpfc)
+{
+  hex8_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+}
+
 template<typename ViewTypeCoord, typename ViewTypeGrad>
 KOKKOS_FUNCTION
 void HexSCS::grad_op(
@@ -487,43 +550,6 @@ HexSCS::shape_fcn(ViewType &shpfc)
 {
   hex8_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
-
-template<typename ViewType>
-KOKKOS_FUNCTION
-void
-HexSCS::hex8_shape_fcn(
-  const int  & /* npts */,
-  const double *isoParCoord,
-  ViewType &shape_fcn)
-{
-  const DoubleType half = 0.50;
-  const DoubleType one4th = 0.25;
-  const DoubleType one8th = 0.125;
-  for ( int j = 0; j < numIntPoints_; ++j ) {
-
-    const DoubleType s1 = isoParCoord[j*3];
-    const DoubleType s2 = isoParCoord[j*3+1];
-    const DoubleType s3 = isoParCoord[j*3+2];
-
-    shape_fcn(j,0) = one8th + one4th*(-s1 - s2 - s3)
-      + half*( s2*s3 + s3*s1 + s1*s2 ) - s1*s2*s3;
-    shape_fcn(j,1) = one8th + one4th*( s1 - s2 - s3)
-      + half*( s2*s3 - s3*s1 - s1*s2 ) + s1*s2*s3;
-    shape_fcn(j,2) = one8th + one4th*( s1 + s2 - s3)
-      + half*(-s2*s3 - s3*s1 + s1*s2 ) - s1*s2*s3;
-    shape_fcn(j,3) = one8th + one4th*(-s1 + s2 - s3)
-      + half*(-s2*s3 + s3*s1 - s1*s2 ) + s1*s2*s3;
-    shape_fcn(j,4) = one8th + one4th*(-s1 - s2 + s3)
-      + half*(-s2*s3 - s3*s1 + s1*s2 ) + s1*s2*s3;
-    shape_fcn(j,5) = one8th + one4th*( s1 - s2 + s3)
-      + half*(-s2*s3 + s3*s1 - s1*s2 ) - s1*s2*s3;
-    shape_fcn(j,6) = one8th + one4th*( s1 + s2 + s3)
-      + half*( s2*s3 + s3*s1 + s1*s2 ) + s1*s2*s3;
-    shape_fcn(j,7) = one8th + one4th*(-s1 + s2 + s3)
-      + half*( s2*s3 - s3*s1 - s1*s2 ) - s1*s2*s3;
-  }
-}
-
 
 } // namespace nalu
 } // namespace Sierra

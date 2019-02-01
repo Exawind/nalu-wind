@@ -133,6 +133,8 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
     projectedNodalGradEqs_(NULL),
     isInit_(true)
 {
+  dofName_ = "turbulent_ke";
+
   // extract solver name and solver object
   std::string solverName = realm_.equationSystems_.get_solver_block_name("turbulent_ke");
   LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_TURBULENT_KE);
@@ -798,7 +800,7 @@ void
 TurbKineticEnergyEquationSystem::register_symmetry_bc(
   stk::mesh::Part *part,
   const stk::topology &/*theTopo*/,
-  const SymmetryBoundaryConditionData &symmetryBCData)
+  const SymmetryBoundaryConditionData & /* symmetryBCData */)
 {
 
   // algorithm type

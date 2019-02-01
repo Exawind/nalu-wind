@@ -74,10 +74,10 @@ AssembleContinuityInflowSolverAlgorithm::execute()
 
   const int nDim = meta_data.spatial_dimension();
 
-  // time step
+  // Classic Nalu projection timescale
   const double dt = realm_.get_time_step();
   const double gamma1 = realm_.get_gamma1();
-  const double projTimeScale = dt/gamma1;
+  const double tauScale = dt / gamma1;
 
   // deal with interpolation procedure
   const double interpTogether = realm_.get_mdot_interp();
@@ -211,7 +211,8 @@ AssembleContinuityInflowSolverAlgorithm::execute()
         for ( int j=0; j < nDim; ++j ) {
           mdot += (interpTogether*p_rho_uIp[j] + om_interpTogether*rhoIp*p_uIp[j])*areaVec[ip*nDim+j];
         }
-        p_rhs[nn] += -mdot/projTimeScale;
+
+        p_rhs[nn] += -mdot / tauScale;
       }
 
       apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);

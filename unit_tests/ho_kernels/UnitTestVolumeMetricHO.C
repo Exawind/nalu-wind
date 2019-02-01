@@ -84,7 +84,7 @@ template <int p> void check_scv_volumes()
 
 }
 
-TEST_POLY(VolumeHO, check_scv_volumes, 4);
+TEST_POLY(VolumeHO, check_scv_volumes, 4)
 
 }
 }

@@ -114,6 +114,8 @@ SpecificDissipationRateEquationSystem::SpecificDissipationRateEquationSystem(
     assembleNodalGradAlgDriver_(new AssembleNodalGradAlgorithmDriver(realm_, "specific_dissipation_rate", "dwdx")),
     diffFluxCoeffAlgDriver_(new AlgorithmDriver(realm_))
 {
+  dofName_ = "specific_dissipation_rate";
+
   // extract solver name and solver object
   std::string solverName = realm_.equationSystems_.get_solver_block_name("specific_dissipation_rate");
   LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_SPEC_DISS_RATE);
@@ -644,7 +646,7 @@ void
 SpecificDissipationRateEquationSystem::register_symmetry_bc(
   stk::mesh::Part *part,
   const stk::topology &/*theTopo*/,
-  const SymmetryBoundaryConditionData &symmetryBCData)
+  const SymmetryBoundaryConditionData & /* symmetryBCData */)
 {
 
   // algorithm type

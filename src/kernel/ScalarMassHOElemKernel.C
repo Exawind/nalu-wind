@@ -110,7 +110,7 @@ ScalarMassHOElemKernel<AlgTraits>::execute(
   tensor_assembly::scalar_dt_lhs(ops_, vol, gamma_[0], rhop1, v_lhs);
 }
 
-INSTANTIATE_KERNEL_HOSGL(ScalarMassHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(ScalarMassHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

@@ -69,11 +69,11 @@ public:
 void
 PerturbedShearLayerVelocityAuxFunction::do_evaluate(
   const double *coords,
-  const double t,
+  const double /* t */,
   const unsigned /*spatialDimension*/,
   const unsigned numPoints,
   double * fieldPtr,
-  const unsigned fieldSize,
+  const unsigned  /* fieldSize */,
   const unsigned /*beginPos*/,
   const unsigned /*endPos*/) const
 {
@@ -101,11 +101,11 @@ PerturbedShearLayerMixFracAuxFunction::PerturbedShearLayerMixFracAuxFunction() :
 void
 PerturbedShearLayerMixFracAuxFunction::do_evaluate(
   const double *coords,
-  const double t,
+  const double /* t */,
   const unsigned spatialDimension,
   const unsigned numPoints,
   double * fieldPtr,
-  const unsigned fieldSize,
+  const unsigned  /* fieldSize */,
   const unsigned /*beginPos*/,
   const unsigned /*endPos*/) const
 {

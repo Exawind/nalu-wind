@@ -66,6 +66,18 @@ struct FieldInfo {
   unsigned scalarsDim2;
 };
 
+inline
+stk::mesh::EntityRank get_entity_rank(const FieldInfo& fieldInfo)
+{
+  return fieldInfo.field->entity_rank();
+}
+
+inline
+unsigned get_field_ordinal(const FieldInfo& fieldInfo)
+{
+  return fieldInfo.field->mesh_meta_data_ordinal();
+}
+
 struct FieldInfoLess {
   bool operator()(const FieldInfo& lhs, const FieldInfo& rhs) const
   {

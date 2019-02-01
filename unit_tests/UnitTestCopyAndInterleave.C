@@ -37,7 +37,7 @@ void do_the_interleave_test()
       views[i] = sierra::nalu::get_shmem_view_1D<double,TeamType,ShmemType>(team, N);
     }
 
-    Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](const size_t& index)
+    Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](const size_t&  /* index */)
     {
       for(int i=0; i<sierra::nalu::simdLen; ++i) {
         for(int j=0; j<N; ++j) {
@@ -129,7 +129,7 @@ void do_the_multidimviews_test()
       multiDimViews[i]->add_3D_view(5, sierra::nalu::get_shmem_view_3D<double,TeamType,ShmemType>(team, N, N, N));
     }
 
-    Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](const size_t& index)
+    Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](const size_t&  /* index */)
     {
       for(int i=0; i<sierra::nalu::simdLen; ++i) {
         Kokkos::deep_copy(multiDimViews[i]->get_scratch_view_1D(0), i+1);

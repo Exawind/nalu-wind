@@ -143,6 +143,7 @@
 // basic c++
 #include <map>
 #include <cmath>
+#include <limits>
 #include <utility>
 #include <stdint.h>
 
@@ -251,7 +252,7 @@ namespace nalu{
     wallTimeStart_(stk::wall_time()),
     doPromotion_(false),
     promotionOrder_(0u),
-    inputMeshIdx_(-1),
+    inputMeshIdx_(std::numeric_limits<size_t>::max()),
     node_(node)
 {
   // deal with specialty options that live off of the realm; 

@@ -125,5 +125,5 @@ namespace {
   }
 }
 //--------------------------------------------------------------
-TEST_POLY(PressurePoissonHex, mms, 22);
+TEST_POLY(PressurePoissonHex, mms, 22)
 }}

@@ -42,7 +42,7 @@ AssembleScalarElemDiffSolverAlgorithm::AssembleScalarElemDiffSolverAlgorithm(
   stk::mesh::Part *part,
   EquationSystem *eqSystem,
   ScalarFieldType *scalarQ,
-  VectorFieldType *dqdx,
+  VectorFieldType * /* dqdx */,
   ScalarFieldType *diffFluxCoeff)
   : SolverAlgorithm(realm, part, eqSystem),
     scalarQ_(scalarQ),

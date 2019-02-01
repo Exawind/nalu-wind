@@ -232,7 +232,7 @@ void Quad92DSCV::shifted_grad_op(
 }
 
 void Quad92DSCV::determinant(
-  const int nelem,
+  const int  /* nelem */,
   const double *coords,
   double *volume,
   double *error)

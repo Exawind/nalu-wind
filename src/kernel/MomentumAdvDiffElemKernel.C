@@ -187,7 +187,7 @@ MomentumAdvDiffElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumAdvDiffElemKernel);
+INSTANTIATE_KERNEL(MomentumAdvDiffElemKernel)
 
 }  // nalu
 }  // sierra

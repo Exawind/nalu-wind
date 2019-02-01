@@ -497,11 +497,11 @@ void laplacian_residual_timing()
 }
 //--------------------------------------------------------------
 TEST_POLY(HexDiffusion, check_diffusion_jacobian_is_consistent, 4)
-TEST_POLY(HexDiffusion, check_diffusion_jacobian, 4);
-TEST_POLY(HexDiffusion, mms, 20);
+TEST_POLY(HexDiffusion, check_diffusion_jacobian, 4)
+TEST_POLY(HexDiffusion, mms, 20)
 
 #ifndef DNDEBUG
-TEST_POLY(HexDiffusion, check_laplacian_coefficients, 18);
+TEST_POLY(HexDiffusion, check_laplacian_coefficients, 18)
 TEST_POLY_to5(HexDiffusion, laplacian_jacobian_timing)
 TEST_POLY_to5(HexDiffusion, laplacian_residual_timing)
 #endif

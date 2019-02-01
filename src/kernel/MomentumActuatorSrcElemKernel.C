@@ -103,7 +103,7 @@ MomentumActuatorSrcElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumActuatorSrcElemKernel);
+INSTANTIATE_KERNEL(MomentumActuatorSrcElemKernel)
 
 }  // nalu
 }  // sierra

@@ -381,7 +381,7 @@ template <int p> void scv_integration_hex()
 
 
 }
-TEST_POLY(HOOperators, scs_interp_hex, 5);
-TEST_POLY(HOOperators, scs_grad_hex, 5);
-TEST_POLY(HOOperators, nodal_grad_hex, 5);
-TEST_POLY(HOOperators, scv_integration_hex, 5);
+TEST_POLY(HOOperators, scs_interp_hex, 5)
+TEST_POLY(HOOperators, scs_grad_hex, 5)
+TEST_POLY(HOOperators, nodal_grad_hex, 5)
+TEST_POLY(HOOperators, scv_integration_hex, 5)

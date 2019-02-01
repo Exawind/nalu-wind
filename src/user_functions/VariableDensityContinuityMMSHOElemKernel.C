@@ -84,7 +84,7 @@ VariableDensityContinuityMMSHOElemKernel<AlgTraits>::execute(
   });
 }
 
-INSTANTIATE_KERNEL_HOSGL(VariableDensityContinuityMMSHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(VariableDensityContinuityMMSHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

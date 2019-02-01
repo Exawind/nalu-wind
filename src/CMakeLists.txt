@@ -150,7 +150,6 @@ add_sources(GlobalSourceList
    ScalarMassBackwardEulerNodeSuppAlg.C
    ScalarMassElemSuppAlgDep.C
    ScratchViews.C
-   ScratchViewsNGP.C
    ShearStressTransportEquationSystem.C
    SimpleErrorIndicatorElemAlgorithm.C
    SimpleErrorIndicatorScalarElemAlgorithm.C
@@ -178,6 +177,10 @@ add_sources(GlobalSourceList
    TurbViscSmagorinskyAlgorithm.C
    TurbViscWaleAlgorithm.C
    TurbulenceAveragingPostProcessing.C
+   AssembleWallDistEdgeSolverAlgorithm.C
+   AssembleWallDistNonConformalAlgorithm.C
+   WallDistEquationSystem.C
+   WallDistSrcNodeSuppAlg.C
    UnitTests.C
 )
 

@@ -120,7 +120,7 @@ MomentumMassHOElemKernel<AlgTraits>::execute(
   tensor_assembly::momentum_dt_lhs(ops_, vol, gamma_[0], rhop1, v_lhs);
 }
 
-INSTANTIATE_KERNEL_HOSGL(MomentumMassHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(MomentumMassHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

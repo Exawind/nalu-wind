@@ -61,6 +61,7 @@ private:
   ScalarFieldType *pressure_{nullptr};
   ScalarFieldType *pressureBc_{nullptr};
   ScalarFieldType *density_{nullptr};
+  ScalarFieldType *Udiag_{nullptr};
   GenericFieldType *exposedAreaVec_{nullptr};
 
   double projTimeScale_{1.0};

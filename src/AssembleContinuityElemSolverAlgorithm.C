@@ -86,14 +86,14 @@ AssembleContinuityElemSolverAlgorithm::execute()
 
   const int nDim = meta_data.spatial_dimension();
 
-  // time step
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
-  const double projTimeScale = dt/gamma1;
-
   // deal with interpolation procedure
   const double interpTogether = realm_.get_mdot_interp();
   const double om_interpTogether = 1.0-interpTogether;
+
+  // Classic Nalu projection timescale
+  const double dt = realm_.get_time_step();
+  const double gamma1 = realm_.get_gamma1();
+  const double tauScale = dt / gamma1;
 
   // space for LHS/RHS; nodesPerElem*nodesPerElem and nodesPerElem
   std::vector<double> lhs;
@@ -113,6 +113,7 @@ AssembleContinuityElemSolverAlgorithm::execute()
   std::vector<double> ws_coordinates;
   std::vector<double> ws_pressure;
   std::vector<double> ws_density;
+  std::vector<double> ws_udiag;
 
   // geometry related to populate
   std::vector<double> ws_scs_areav;
@@ -136,6 +137,8 @@ AssembleContinuityElemSolverAlgorithm::execute()
 
   // deal with state
   ScalarFieldType &densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType* Udiag = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "momentum_diag");
 
   // define some common selectors
   stk::mesh::Selector s_locally_owned_union = meta_data.locally_owned_part()
@@ -172,6 +175,7 @@ AssembleContinuityElemSolverAlgorithm::execute()
     ws_coordinates.resize(nodesPerElement*nDim);
     ws_pressure.resize(nodesPerElement);
     ws_density.resize(nodesPerElement);
+    ws_udiag.resize(nodesPerElement);
     ws_scs_areav.resize(numScsIp*nDim);
     ws_dndx.resize(nDim*numScsIp*nodesPerElement);
     ws_dndx_lhs.resize(nDim*numScsIp*nodesPerElement);
@@ -187,6 +191,7 @@ AssembleContinuityElemSolverAlgorithm::execute()
     double *p_coordinates = &ws_coordinates[0];
     double *p_pressure = &ws_pressure[0];
     double *p_density = &ws_density[0];
+    double *p_udiag = &ws_udiag[0];
     double *p_scs_areav = &ws_scs_areav[0];
     double *p_dndx = &ws_dndx[0];
     double *p_dndx_lhs = shiftPoisson_ ? &ws_dndx[0] : reducedSensitivities_ ? &ws_dndx_lhs[0] : &ws_dndx[0];
@@ -235,6 +240,7 @@ AssembleContinuityElemSolverAlgorithm::execute()
         // gather scalars
         p_pressure[ni] = *stk::mesh::field_data(*pressure_, node );
         p_density[ni]  = *stk::mesh::field_data(densityNp1, node );
+        p_udiag[ni] = *stk::mesh::field_data(*Udiag, node);
 
         // gather vectors
         const int niNdim = ni*nDim;
@@ -277,20 +283,27 @@ AssembleContinuityElemSolverAlgorithm::execute()
           p_dpdxIp[j] = 0.0;
         }
         double rhoIp = 0.0;
+        double projTimeScaleIp = 0.0;
 
         const int offSet = ip*nodesPerElement;
+        for ( int ic = 0; ic < nodesPerElement; ++ic ) {
+          const double r = p_shape_function[offSet+ic];
+          projTimeScaleIp += r / p_udiag[ic];
+        }
+
         for ( int ic = 0; ic < nodesPerElement; ++ic ) {
 
           const double r = p_shape_function[offSet+ic];
           const double nodalPressure = p_pressure[ic];
           const double nodalRho = p_density[ic];
+          const double nodalUdiagInv = 1.0 / p_udiag[ic];
 
           rhoIp += r*nodalRho;
 
           double lhsfac = 0.0;
           const int offSetDnDx = nDim*nodesPerElement*ip + ic*nDim;
           for ( int j = 0; j < nDim; ++j ) {
-            p_GpdxIp[j] += r*p_Gpdx[nDim*ic+j];
+            p_GpdxIp[j] += r*p_Gpdx[nDim*ic+j] * nodalUdiagInv;
             p_uIp[j] += r*p_vrtm[nDim*ic+j];
             p_rho_uIp[j] += r*nodalRho*p_vrtm[nDim*ic+j];
             p_dpdxIp[j] += p_dndx[offSetDnDx+j]*nodalPressure;
@@ -298,10 +311,10 @@ AssembleContinuityElemSolverAlgorithm::execute()
           }
 
           // assemble to lhs; left
-          p_lhs[rowL+ic] += lhsfac;
+          p_lhs[rowL+ic] += lhsfac * projTimeScaleIp / tauScale;
 
           // assemble to lhs; right
-          p_lhs[rowR+ic] -= lhsfac;
+          p_lhs[rowR+ic] -= lhsfac * projTimeScaleIp / tauScale;
 
         }
 
@@ -309,12 +322,12 @@ AssembleContinuityElemSolverAlgorithm::execute()
         double mdot = 0.0;
         for ( int j = 0; j < nDim; ++j ) {
           mdot += (interpTogether*p_rho_uIp[j] + om_interpTogether*rhoIp*p_uIp[j] 
-                   - projTimeScale*(p_dpdxIp[j] - p_GpdxIp[j]))*p_scs_areav[ip*nDim+j];
+                   - (projTimeScaleIp * p_dpdxIp[j] - p_GpdxIp[j]))*p_scs_areav[ip*nDim+j];
         }
 
         // residual; left and right
-        p_rhs[il] -= mdot/projTimeScale;
-        p_rhs[ir] += mdot/projTimeScale;
+        p_rhs[il] -= mdot / tauScale;
+        p_rhs[ir] += mdot / tauScale;
       }
 
       // call supplemental

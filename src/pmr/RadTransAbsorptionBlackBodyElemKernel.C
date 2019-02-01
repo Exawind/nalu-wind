@@ -106,7 +106,7 @@ RadTransAbsorptionBlackBodyElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(RadTransAbsorptionBlackBodyElemKernel);
+INSTANTIATE_KERNEL(RadTransAbsorptionBlackBodyElemKernel)
 
 }  // nalu
 }  // sierra

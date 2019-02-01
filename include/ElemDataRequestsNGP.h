@@ -30,10 +30,11 @@ struct FieldPtr {
 class ElemDataRequestsNGP
 {
 public:
+  typedef FieldInfo FieldInfoType;
   typedef Kokkos::View<COORDS_TYPES*, Kokkos::LayoutRight, MemSpace> CoordsTypesView;
   typedef Kokkos::View<ELEM_DATA_NEEDED*, Kokkos::LayoutRight, MemSpace> DataEnumView;
   typedef Kokkos::View<FieldPtr*, Kokkos::LayoutRight, MemSpace> FieldView;
-  typedef Kokkos::View<FieldInfo*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
+  typedef Kokkos::View<FieldInfoType*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
   ElemDataRequestsNGP(const ElemDataRequests& dataReq, unsigned totalFields)
     : totalNumFields(totalFields),
@@ -127,7 +128,7 @@ private:
     fields = FieldInfoView("Fields", dataReq.get_fields().size());
     hostFields = Kokkos::create_mirror_view(fields);
     unsigned i = 0;
-    for(const FieldInfo& finfo : dataReq.get_fields()) {
+    for(const FieldInfoType& finfo : dataReq.get_fields()) {
       hostFields(i++) = finfo;
     }
   }

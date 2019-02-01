@@ -138,7 +138,7 @@ promote_elements_hex(
   const VectorFieldType& coordField,
   const stk::mesh::PartVector& partsToBePromoted,
   stk::mesh::Part& edgePart,
-  stk::mesh::Part& facePart)
+  stk::mesh::Part&  /* facePart */)
 {
   ThrowRequire(check_parts_for_promotion(partsToBePromoted));
   ThrowRequireMsg(!bulk.is_automatic_aura_on(), "Promotion not yet tested for automatic aura");
@@ -598,7 +598,7 @@ add_face_nodes_to_elem_connectivity(
 //--------------------------------------------------------------------------
 void
 add_volume_nodes_to_elem_connectivity(
-  const stk::mesh::BulkData& bulk,
+  const stk::mesh::BulkData&  /* bulk */,
   const ElementDescription& desc,
   const ConnectivityMap& volumeConnectivity,
   const stk::mesh::Entity elem,

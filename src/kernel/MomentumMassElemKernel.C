@@ -80,6 +80,9 @@ MomentumMassElemKernel<AlgTraits>::MomentumMassElemKernel(
   dataPreReqs.add_gathered_nodal_field(*velocityNp1_, AlgTraits::nDim_);
   dataPreReqs.add_gathered_nodal_field(*Gjp_, AlgTraits::nDim_);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
+
+  const std::string dofName = "velocity";
+  diagRelaxFactor_ = solnOpts.get_relaxation_factor(dofName);
 }
 
 template<typename AlgTraits>
@@ -160,7 +163,7 @@ MomentumMassElemKernel<AlgTraits>::execute(
     for (int ic=0; ic < AlgTraits::nodesPerElement_; ++ic) {
       const int icNdim = ic * AlgTraits::nDim_;
       const DoubleType r = v_shape_function_(ip, ic);
-      const DoubleType lhsfac = r * gamma1_ * rhoNp1 * scV / dt_;
+      const DoubleType lhsfac = r * gamma1_ * rhoNp1 * scV / dt_ * diagRelaxFactor_;
 
       for (int j=0; j<AlgTraits::nDim_; ++j) {
         const int indexNN = nnNdim + j;
@@ -170,7 +173,7 @@ MomentumMassElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumMassElemKernel);
+INSTANTIATE_KERNEL(MomentumMassElemKernel)
 
 }  // nalu
 }  // sierra

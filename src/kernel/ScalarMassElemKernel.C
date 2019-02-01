@@ -77,6 +77,8 @@ ScalarMassElemKernel<AlgTraits>::ScalarMassElemKernel(
   dataPreReqs.add_gathered_nodal_field(*densityN_, 1);
   dataPreReqs.add_gathered_nodal_field(*densityNp1_, 1);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
+
+  diagRelaxFactor_ = solnOpts.get_relaxation_factor(scalarQ->name());
 }
 
 template<typename AlgTraits>
@@ -152,13 +154,13 @@ ScalarMassElemKernel<AlgTraits>::execute(
     for ( int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic ) {
       // save off shape function
       const DoubleType r = v_shape_function_(ip,ic);
-      const DoubleType lhsfac = r*gamma1_*rhoNp1Scv*scV/dt_;
+      const DoubleType lhsfac = r*gamma1_*rhoNp1Scv*scV/dt_ * diagRelaxFactor_;
       lhs(nearestNode,ic) += lhsfac;
     }
   }
 }
 
-INSTANTIATE_KERNEL(ScalarMassElemKernel);
+INSTANTIATE_KERNEL(ScalarMassElemKernel)
 
 }  // nalu
 }  // sierra
