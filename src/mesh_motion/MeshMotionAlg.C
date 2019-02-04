@@ -4,6 +4,8 @@
 #include "mesh_motion/FrameInertial.h"
 #include "mesh_motion/FrameNonInertial.h"
 
+#include "NaluParsing.h"
+
 #include <cassert>
 #include <iostream>
 
@@ -11,14 +13,14 @@ namespace sierra{
 namespace nalu{
 
 MeshMotionAlg::MeshMotionAlg(
-Realm& realm,
-const YAML::Node& node)
+  stk::mesh::BulkData& bulk,
+  const YAML::Node& node)
 {
-  load(realm, node);
+  load(bulk, node);
 }
 
 void MeshMotionAlg::load(
-  Realm& realm,
+  stk::mesh::BulkData& bulk,
   const YAML::Node& node)
 {
   // get motion information for entire mesh
@@ -41,9 +43,9 @@ void MeshMotionAlg::load(
     get_required(ginfo, "frame", frame);
 
     if( frame == "inertial" )
-      frameVec_[i].reset(new FrameInertial(realm, ginfo));
+      frameVec_[i].reset(new FrameInertial(bulk, ginfo));
     else if( frame == "non_inertial" )
-      frameVec_[i].reset(new FrameNonInertial(realm, ginfo));
+      frameVec_[i].reset(new FrameNonInertial(bulk, ginfo));
     else
       throw std::runtime_error("MeshMotion: Invalid frame type: " + frame);
 
