@@ -15,7 +15,6 @@
 #define ActuatorDiskFAST_h
 
 #include "ActuatorFAST.h"
-#include "gtest/gtest_prod.h"
 // TODO(psakiev):: Decide which is better, varying spreading, or varying
 // sampling radially
 
@@ -120,7 +119,6 @@ private:
   std::vector<Point> controlPoints_;
   bool controlPointsCurrent_;
 
-  FRIEND_TEST(ActuatorDiskFAST, SweptPointLocatorBasis);
 };
 
 } // namespace nalu

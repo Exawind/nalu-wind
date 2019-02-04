@@ -57,13 +57,6 @@ F_RotateAboutAxis(
   return pPrime;
 }
 
-TEST(ActuatorDiskFAST, SweptPointLocatorBasis)
-{
-  SweptPointLocator alpha;
-  EXPECT_DOUBLE_EQ(2.0 / 3.0, alpha.periodic_basis(0.0));
-  EXPECT_DOUBLE_EQ(
-    2.0 / 3.0 * std::pow(std::cos(0.5), 2.0), alpha.periodic_basis(1.0));
-}
 
 TEST(ActuatorDiskFAST, PointsOnACircle)
 {
