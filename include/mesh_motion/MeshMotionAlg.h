@@ -6,13 +6,11 @@
 namespace sierra{
 namespace nalu{
 
-class Realm;
-
 class MeshMotionAlg
 {
 public:
   MeshMotionAlg(
-    Realm&,
+    stk::mesh::BulkData& bulk,
     const YAML::Node&);
 
   ~MeshMotionAlg() {}
@@ -26,7 +24,7 @@ private:
   MeshMotionAlg(const MeshMotionAlg&) = delete;
 
   void load(
-    Realm& realm,
+    stk::mesh::BulkData&,
     const YAML::Node&);
 
   void compute_set_centroid();

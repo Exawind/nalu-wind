@@ -15,9 +15,9 @@ class FrameNonInertial : public FrameBase
 {
 public:
   FrameNonInertial(
-    Realm& realm,
+    stk::mesh::BulkData& bulk,
     const YAML::Node& node
-) : FrameBase(realm,node,false) {}
+) : FrameBase(bulk,node,false) {}
 
   virtual ~FrameNonInertial() {}
 
