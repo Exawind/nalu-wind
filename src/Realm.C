@@ -799,7 +799,7 @@ Realm::load(const YAML::Node & node)
       solutionOptions_->meshMotion_ = true;
 
       // instantiate mesh motion class once the mesh has been created
-      meshMotionAlg_.reset(new MeshMotionAlg( *this, meshMotionNode));
+      meshMotionAlg_.reset(new MeshMotionAlg( *bulkData_, meshMotionNode));
     }
   }
 

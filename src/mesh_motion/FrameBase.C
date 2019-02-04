@@ -15,11 +15,11 @@ namespace sierra{
 namespace nalu{
 
 FrameBase::FrameBase(
-  Realm& realm,
+  stk::mesh::BulkData& bulk,
   const YAML::Node& node,
   bool isInertial
-) : meta_(*(realm.metaData_)),
-    bulk_(*(realm.bulkData_)),
+) : bulk_(bulk),
+    meta_(bulk.mesh_meta_data()),
     isInertial_(isInertial)
 {
   load(node);

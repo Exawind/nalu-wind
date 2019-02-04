@@ -2,7 +2,6 @@
 #define FRAMEBASE_H
 
 #include "MotionBase.h"
-#include "Realm.h"
 
 // stk base header files
 #include "stk_mesh/base/CoordinateSystems.hpp"
@@ -20,7 +19,7 @@ class FrameBase
 {
 public:
   FrameBase(
-    Realm&,
+    stk::mesh::BulkData&,
     const YAML::Node&,
     bool);
 
@@ -47,11 +46,11 @@ public:
     return isInertial_; }
 
 protected:
-  //! Reference to the STK Mesh MetaData object
-  stk::mesh::MetaData& meta_;
-
   //! Reference to the STK Mesh BulkData object
   stk::mesh::BulkData& bulk_;
+
+  //! Reference to the STK Mesh MetaData object
+  stk::mesh::MetaData& meta_;
 
   /** Motion vector
    *
