@@ -165,6 +165,7 @@ private:
   bool useExo_{false};
   std::string exoName_;
   size_t fileIndex_;
+  size_t precisionvar_;
 };
 
 } // namespace nalu
