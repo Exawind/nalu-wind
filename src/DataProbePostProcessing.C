@@ -89,7 +89,7 @@ DataProbePostProcessing::DataProbePostProcessing(
     probeType_(DataProbeSampleType::STEPCOUNT),
     previousTime_(0.0),
     exoName_("data_probes.exo"),
-	precisionvar_(8)
+    precisionvar_(8)
 {
   // load the data
   load(node);
