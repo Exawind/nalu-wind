@@ -244,9 +244,9 @@ void TiogaBlock::get_donor_info(TIOGA::tioga& tg, stk::mesh::EntityProcVec& egve
   int idx = 0;
   for(int i=0; i<(4*dcount); i += 4) {
     int procid = receptorInfo[i];
-    int nweights = receptorInfo[i+3];           // Offset to get the donor element
+    int nweights = receptorInfo[i+3];       // Offset to get the donor element
     int elemid_tmp = inode[idx + nweights]; // Local index for lookup
-    int elemID = elemid_map_[elemid_tmp];       // Global ID of element
+    auto elemID = elemid_map_[elemid_tmp];  // Global ID of element
 
     // Move the offset index for next call
     idx += nweights + 1;

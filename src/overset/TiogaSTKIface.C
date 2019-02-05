@@ -430,7 +430,7 @@ TiogaSTKIface::get_receptor_info()
     int nid = receptors[i];                          // TiogaBlock node index
     int mtag = receptors[i+1] - 1;                   // Block index
     int donorID = receptors[i+2];                    // STK Global ID of the donor element
-    int nodeID = blocks_[mtag]->node_id_map()[nid];  // STK Global ID of the fringe node
+    auto nodeID = blocks_[mtag]->node_id_map()[nid]; // STK Global ID of the fringe node
     stk::mesh::Entity node = bulk_.get_entity(stk::topology::NODE_RANK, nodeID);
 
     if (!bulk_.bucket(node).owned()) {
