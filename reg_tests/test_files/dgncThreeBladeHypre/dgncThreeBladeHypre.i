@@ -159,13 +159,6 @@ realms:
 
     mesh_motion:
 
-      - name: mmBackground
-        mesh_parts: [block_1]
-        frame: non_inertial
-        motion:
-         - type: rotation
-           omega: 0.0
-
       - name: mmFront_ss5
         mesh_parts: [block_2]
         frame: non_inertial
