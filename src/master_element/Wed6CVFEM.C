@@ -224,6 +224,31 @@ void WedSCV::grad_op(
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
 }
 
+void WedSCV::grad_op(
+  const int nelem,
+  const double *coords,
+  double *gradop,
+  double *deriv,
+  double *det_j,
+  double *error)
+{
+  int lerr = 0;
+
+  wedge_derivative(numIntPoints_, &intgLoc_[0], deriv);
+
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
+  SIERRA_FORTRAN(wed_gradient_operator) (
+      &nelem,
+      &npe,
+      &nint,
+      deriv,
+      coords, gradop, det_j, error, &lerr );
+
+  if ( lerr )
+    NaluEnv::self().naluOutput() << "sorry, negative WedSCV volume.." << std::endl;
+}
+
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
@@ -234,6 +259,52 @@ void WedSCV::shifted_grad_op(
 {
   wed_deriv(numIntPoints_, &intgLocShift_[0], deriv);
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
+}
+
+//--------------------------------------------------------------------------
+//-------- wedge_derivative --------------------------------------------------
+//--------------------------------------------------------------------------
+void WedSCV::wedge_derivative(
+  const int npts,
+  const double *intgLoc,
+  double *deriv)
+{
+  // d3d(c,s,j) = deriv[c + 3*(s + 6*j)] = deriv[c+3s+18j]
+
+  for (int  j = 0; j < npts; ++j) {
+
+    int k  = j*3;
+    const int p = 18*j;
+
+    const double r  = intgLoc[k];
+    const double s  = intgLoc[k+1];
+    const double t  = 1.0 - r - s;
+    const double xi = intgLoc[k + 2];
+
+    deriv[0+3*0+p] = -0.5 * (1.0 - xi);  // d(N_1)/ d(r)  = deriv[0]
+    deriv[1+3*0+p] = -0.5 * (1.0 - xi);  // d(N_1)/ d(s)  = deriv[1]
+    deriv[2+3*0+p] = -0.5 * t;           // d(N_1)/ d(xi) = deriv[2]
+
+    deriv[0+3*1+p] =  0.5 * (1.0 - xi);  // d(N_2)/ d(r)  = deriv[0 + 3]
+    deriv[1+3*1+p] =  0.0;               // d(N_2)/ d(s)  = deriv[1 + 3]
+    deriv[2+3*1+p] = -0.5 * r;           // d(N_2)/ d(xi) = deriv[2 + 3]
+
+    deriv[0+3*2+p] =  0.0;               // d(N_3)/ d(r)  = deriv[0 + 6]
+    deriv[1+3*2+p] =  0.5 * (1.0 - xi);  // d(N_3)/ d(s)  = deriv[1 + 6]
+    deriv[2+3*2+p] = -0.5 * s;           // d(N_3)/ d(xi) = deriv[2 + 6]
+
+    deriv[0+3*3+p] = -0.5 * (1.0 + xi);  // d(N_4)/ d(r)  = deriv[0 + 9]
+    deriv[1+3*3+p] = -0.5 * (1.0 + xi);  // d(N_4)/ d(s)  = deriv[1 + 9]
+    deriv[2+3*3+p] =  0.5 * t;           // d(N_4)/ d(xi) = deriv[2 + 9]
+
+    deriv[0+3*4+p] =  0.5 * (1.0 + xi);  // d(N_5)/ d(r)  = deriv[0 + 12]
+    deriv[1+3*4+p] =  0.0;               // d(N_5)/ d(s)  = deriv[1 + 12]
+    deriv[2+3*4+p] =  0.5 * r;           // d(N_5)/ d(xi) = deriv[2 + 12]
+
+    deriv[0+3*5+p] =  0.0;               // d(N_6)/ d(r)  = deriv[0 + 15]
+    deriv[1+3*5+p] =  0.5 * (1.0 + xi);  // d(N_6)/ d(s)  = deriv[1 + 15]
+    deriv[2+3*5+p] =  0.5 * s;           // d(N_6)/ d(xi) = deriv[2 + 15]
+  }
 }
 
 //--------------------------------------------------------------------------

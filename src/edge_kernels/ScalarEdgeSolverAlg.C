@@ -24,7 +24,8 @@ ScalarEdgeSolverAlg::ScalarEdgeSolverAlg(
   EquationSystem* eqSystem,
   ScalarFieldType* scalarQ,
   VectorFieldType* dqdx,
-  ScalarFieldType* diffFluxCoeff
+  ScalarFieldType* diffFluxCoeff,
+  const bool useAvgMdot
 ) : AssembleEdgeSolverAlgorithm(realm, part, eqSystem),
     dofName_(scalarQ->name())
 {
@@ -39,7 +40,11 @@ ScalarEdgeSolverAlg::ScalarEdgeSolverAlg(
   diffFluxCoeff_ = diffFluxCoeff->mesh_meta_data_ordinal();
   density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
-  massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
+  if (useAvgMdot) {
+    massFlowRate_ = get_field_ordinal(meta, "average_mass_flow_rate", stk::topology::EDGE_RANK);
+  } else {
+    massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
+  }
 
   pecletFunction_ = eqSystem->ngp_create_peclet_function<double>(dofName_);
 }

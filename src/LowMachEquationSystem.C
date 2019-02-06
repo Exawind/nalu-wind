@@ -81,6 +81,8 @@
 #include <SolutionOptions.h>
 #include <SolverAlgorithmDriver.h>
 #include <TurbViscSmagorinskyAlgorithm.h>
+#include <TurbViscSSTAlgorithm.h>
+#include <TurbViscSSTTAMSAlgorithm.h>
 #include <TurbViscWaleAlgorithm.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <FixPressureAtNodeAlgorithm.h>
@@ -103,6 +105,7 @@
 #include <kernel/MomentumBuoyancyBoussinesqSrcElemKernel.h>
 #include <kernel/MomentumBuoyancySrcElemKernel.h>
 #include <kernel/MomentumCoriolisSrcElemKernel.h>
+#include <kernel/MomentumBodyForceSrcElemKernel.h>
 #include <kernel/MomentumMassElemKernel.h>
 #include <kernel/MomentumUpwAdvDiffElemKernel.h>
 
@@ -162,8 +165,11 @@
 #include <nso/MomentumNSOSijElemKernel.h>
 #include <nso/MomentumNSOGradElemSuppAlg.h>
 
-// hybrid turbulence
-#include <kernel/MomentumHybridTurbElemKernel.h>
+// UT Austin Hybrid TAMS kernels
+#include <edge_kernels/AssembleTAMSEdgeKernelAlg.h>
+#include <node_kernels/MomentumSSTTAMSForcingNodeKernel.h>
+#include <kernel/MomentumSSTTAMSDiffElemKernel.h>
+#include <kernel/MomentumSSTTAMSForcingElemKernel.h>
 
 // user function
 #include <user_functions/ConvectingTaylorVortexVelocityAuxFunction.h>
@@ -1151,7 +1157,6 @@ void
 MomentumEquationSystem::register_interior_algorithm(
   stk::mesh::Part *part)
 {
-
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
   const AlgorithmType algMass = SRC;
@@ -1190,6 +1195,11 @@ MomentumEquationSystem::register_interior_algorithm(
       SolverAlgorithm *theSolverAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
         theSolverAlg = new MomentumEdgeSolverAlg(realm_, part, this);
+        if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS) {
+          SolverAlgorithm *theSolverSrcAlg = NULL;
+          theSolverSrcAlg = new AssembleTAMSEdgeKernelAlg(realm_, part, this);
+          solverAlgDriver_->solverAlgMap_[SRC] = theSolverSrcAlg;
+        } 
       }
       else {
         theSolverAlg = new AssembleMomentumElemSolverAlgorithm(realm_, part, this);
@@ -1279,14 +1289,14 @@ MomentumEquationSystem::register_interior_algorithm(
     kb.build_topo_kernel_if_requested<MomentumAdvDiffElemKernel>
       ("advection_diffusion",
        realm_.bulk_data(), *realm_.solutionOptions_, velocity_,
-       realm_.is_turbulent()? evisc_ : visc_,
-       dataPreReqs);
+       ((realm_.is_turbulent()) && (realm_.solutionOptions_->turbulenceModel_ != SST_TAMS)) ? 
+       evisc_ : visc_, dataPreReqs);
 
     kb.build_topo_kernel_if_requested<MomentumUpwAdvDiffElemKernel>
       ("upw_advection_diffusion",
        realm_.bulk_data(), *realm_.solutionOptions_, this, velocity_,
-       realm_.is_turbulent()? evisc_ : visc_, dudx_,
-       dataPreReqs);
+       ((realm_.is_turbulent()) && (realm_.solutionOptions_->turbulenceModel_ != SST_TAMS)) ? 
+       evisc_ : visc_, dudx_, dataPreReqs);
 
     kb.build_topo_kernel_if_requested<MomentumActuatorSrcElemKernel>
         ("actuator",
@@ -1348,6 +1358,14 @@ MomentumEquationSystem::register_interior_algorithm(
       ("lumped_EarthCoriolis",
        realm_.bulk_data(), *realm_.solutionOptions_, velocity_, dataPreReqs, true);
 
+    kb.build_topo_kernel_if_requested<MomentumBodyForceSrcElemKernel>
+      ("body_force",
+       realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs);
+
+    kb.build_topo_kernel_if_requested<MomentumBodyForceSrcElemKernel>
+      ("lumped_body_force",
+       realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs);
+
     kb.build_sgl_kernel_if_requested<MomentumAdvDiffHOElemKernel>
       ("experimental_ho_advection_diffusion",
        realm_.bulk_data(), *realm_.solutionOptions_, velocity_,
@@ -1376,6 +1394,15 @@ MomentumEquationSystem::register_interior_algorithm(
       ("experimental_ho_buoyancy",
         realm_.bulk_data(), *realm_.solutionOptions_,  dataPreReqsHO);
 
+    // UT Austin Hybrid TAMS model implementation for subgrid quantities
+    kb.build_topo_kernel_if_requested<MomentumSSTTAMSDiffElemKernel>
+      ("sst_tams",
+       realm_.bulk_data(), *realm_.solutionOptions_, tvisc_, dataPreReqs);
+
+    kb.build_topo_kernel_if_requested<MomentumSSTTAMSForcingElemKernel>
+      ("sst_tams_forcing",
+       realm_.bulk_data(), *realm_.solutionOptions_, visc_, tvisc_, dataPreReqs);
+
     kb.report();
  
   }
@@ -1402,6 +1429,8 @@ MomentumEquationSystem::register_interior_algorithm(
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         if (!elementMassAlg)
           nodeAlg.add_kernel<MomentumMassBDFNodeKernel>(realm_.bulk_data());
+        if ( realm_.solutionOptions_->turbulenceModel_ == SST_TAMS )
+          nodeAlg.add_kernel<MomentumSSTTAMSForcingNodeKernel>(realm_.bulk_data(), *realm_.solutionOptions_);
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         bool added = true;
@@ -1530,6 +1559,10 @@ MomentumEquationSystem::register_interior_algorithm(
         tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_));
         break;
 
+      case SST_TAMS:
+        tviscAlg_.reset(new TurbViscSSTTAMSAlgorithm(realm_, part));
+        break;
+
       default:
         throw std::runtime_error("Unsupported turbulence model provided");
       }
@@ -1537,7 +1570,6 @@ MomentumEquationSystem::register_interior_algorithm(
       tviscAlg_->partVec_.push_back(part);
     }
   }
-
 }
 
 //--------------------------------------------------------------------------

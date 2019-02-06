@@ -198,6 +198,32 @@ void TetSCV::grad_op(
   generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
 }
 
+void TetSCV::grad_op(
+  const int nelem,
+  const double *coords,
+  double *gradop,
+  double *deriv,
+  double *det_j,
+  double *error)
+{
+  int lerr = 0;
+
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
+  SIERRA_FORTRAN(tet_derivative)
+    ( &nint, deriv );
+
+  SIERRA_FORTRAN(tet_gradient_operator)
+    ( &nelem,
+      &npe,
+      &nint,
+      deriv,
+      coords, gradop, det_j, error, &lerr );
+
+  if ( lerr )
+    NaluEnv::self().naluOutput() << "sorry, negative TetSCV volume.." << std::endl;
+}
+
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------

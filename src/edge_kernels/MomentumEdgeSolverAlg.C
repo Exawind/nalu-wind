@@ -33,8 +33,12 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   const std::string velName = "velocity";
   velocity_ = get_field_ordinal(meta, velName, stk::mesh::StateNP1);
 
-  const std::string viscName =
-    realm.is_turbulent() ? "effective_viscosity_u" : "viscosity";
+  std::string viscName;
+  if ((realm.is_turbulent()) && (realm.solutionOptions_->turbulenceModel_ != SST_TAMS))
+       viscName = "effective_viscosity_u";
+  else 
+       viscName = "viscosity";
+
   viscosity_ = get_field_ordinal(meta, viscName);
   density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   dudx_ = get_field_ordinal(meta, "dudx");

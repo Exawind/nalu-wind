@@ -111,6 +111,9 @@ public:
   VectorFieldType* dhdx_{nullptr};
   ScalarFieldType* specificHeat_{nullptr};
   ScalarFieldType* tkebc_{nullptr};
+  GenericFieldType* avgDudx_{nullptr};
+  ScalarFieldType* avgTime_{nullptr};
+  ScalarFieldType* avgDensity_{nullptr};
 };
 
 struct NodeSuppHelper {

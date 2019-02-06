@@ -37,7 +37,8 @@ public:
     const SolutionOptions&,
     ScalarFieldType*,
     ScalarFieldType*,
-    ElemDataRequests&);
+    ElemDataRequests&,
+    const bool useAvgMdot = false);
 
   KOKKOS_FUNCTION ScalarAdvDiffElemKernel() = default;
 

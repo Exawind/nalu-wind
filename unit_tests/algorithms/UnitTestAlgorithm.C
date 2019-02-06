@@ -99,6 +99,13 @@ TestTurbulenceAlgorithm::declare_fields()
   tkebc_ = &(meta.declare_field<ScalarFieldType>(
        stk::topology::NODE_RANK, "open_tke_bc"));
 
+  avgDudx_ = (&meta.declare_field<GenericFieldType>(
+       stk::topology::NODE_RANK, "average_dudx"));
+  avgTime_ = (&meta.declare_field<ScalarFieldType>(
+       stk::topology::NODE_RANK, "average_time"));
+  avgDensity_ = (&meta.declare_field<ScalarFieldType>(
+       stk::topology::NODE_RANK, "average_density"));
+
   stk::mesh::put_field_on_mesh(*density_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*viscosity_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*tke_, meta.universal_part(), 1, nullptr);
@@ -116,6 +123,9 @@ TestTurbulenceAlgorithm::declare_fields()
   stk::mesh::put_field_on_mesh(*dhdx_, meta.universal_part(), spatialDim, nullptr);
   stk::mesh::put_field_on_mesh(*specificHeat_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*tkebc_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*avgDudx_, meta.universal_part(), spatialDim * spatialDim, nullptr);
+  stk::mesh::put_field_on_mesh(*avgTime_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*avgDensity_, meta.universal_part(), 1, nullptr);
 }
 
 void
@@ -141,4 +151,7 @@ TestTurbulenceAlgorithm::fill_mesh_and_init_fields(const std::string mesh_spec)
   unit_test_kernel_utils::dhdx_test_function(bulk, *coordinates_, *dhdx_);
   stk::mesh::field_fill(1000.0, *specificHeat_);
   stk::mesh::field_fill(10.0, *openMassFlowRate_);
+  unit_test_kernel_utils::dudx_test_function(bulk, *coordinates_, *avgDudx_);
+  stk::mesh::field_fill(1.0, *avgTime_);
+  stk::mesh::field_fill(1.0, *avgDensity_);
 }

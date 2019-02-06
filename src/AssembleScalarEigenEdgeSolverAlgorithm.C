@@ -48,7 +48,8 @@ AssembleScalarEigenEdgeSolverAlgorithm::AssembleScalarEigenEdgeSolverAlgorithm(
   ScalarFieldType *thermalCond,
   ScalarFieldType *specHeat,
   ScalarFieldType *turbViscosity,
-  const double turbSigma)
+  const double turbSigma,
+  const bool useAvgMdot /*false*/)
   : SolverAlgorithm(realm, part, eqSystem),
     meshMotion_(realm_.does_mesh_move()),
     includeDivU_(realm_.get_divU()),
@@ -79,7 +80,11 @@ AssembleScalarEigenEdgeSolverAlgorithm::AssembleScalarEigenEdgeSolverAlgorithm(
     velocityRTM_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
   coordinates_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
   density_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  massFlowRate_ = meta_data.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "mass_flow_rate");
+  if (useAvgMdot) {
+    massFlowRate_ = meta_data.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "average_mass_flow_rate");
+  } else {
+    massFlowRate_ = meta_data.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "mass_flow_rate");
+  }
   edgeAreaVec_ = meta_data.get_field<VectorFieldType>(stk::topology::EDGE_RANK, "edge_area_vector");
 
   // EXTRA GGDH

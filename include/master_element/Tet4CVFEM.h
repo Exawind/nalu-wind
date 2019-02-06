@@ -42,6 +42,14 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>&gradop,
     SharedMemView<DoubleType***, DeviceShmem>&deriv) override;
 
+  void grad_op(
+    const int nelem,
+    const double *coords,
+    double *gradop,
+    double *deriv,
+    double *det_j,
+    double * error ) override;
+
   KOKKOS_FUNCTION void shifted_grad_op(
     SharedMemView<DoubleType**, DeviceShmem>&coords,
     SharedMemView<DoubleType***, DeviceShmem>&gradop,

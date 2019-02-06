@@ -90,6 +90,7 @@ public:
   bool get_skew_symmetric(const std::string&) const;
 
   std::vector<double> get_gravity_vector(const unsigned nDim) const;
+  std::vector<double> get_bodyForce_vector(const unsigned nDim) const;
  
   double get_turb_model_constant(
     TurbulenceModelConstant turbModelEnum) const;
@@ -219,6 +220,7 @@ public:
   std::map<std::string, std::string> inputVarFromFileMap_;
 
   std::vector<double> gravity_;
+  std::vector<double> bodyForce_;
 
   // Coriolis source term
   std::vector<double> eastVector_;
@@ -235,6 +237,7 @@ public:
 
   bool newHO_;
 
+  bool resetTAMSAverages_;
 };
 
 } // namespace nalu

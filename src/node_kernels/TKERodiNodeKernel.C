@@ -9,7 +9,7 @@
 
 
 
-#include "node_kernels/TurbKineticEnergyRodiNodeKernel.h"
+#include "node_kernels/TKERodiNodeKernel.h"
 #include "node_kernels/NodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
@@ -25,15 +25,15 @@ namespace nalu{
 //==========================================================================
 // Class Definition
 //==========================================================================
-// TurbKineticEnergyRodiNodeKernel Pb = beta*mu^t/Pr^t gi/Cp dh/dxi
+// TKERodiNodeKernel Pb = beta*mu^t/Pr^t gi/Cp dh/dxi
 //==========================================================================
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-TurbKineticEnergyRodiNodeKernel::TurbKineticEnergyRodiNodeKernel(
+TKERodiNodeKernel::TKERodiNodeKernel(
     const stk::mesh::MetaData& meta,
     const SolutionOptions& solnOpts) 
-  : NGPNodeKernel<TurbKineticEnergyRodiNodeKernel>(),
+  : NGPNodeKernel<TKERodiNodeKernel>(),
 
     dhdxID_             (get_field_ordinal(meta, "dhdx")),
     specificHeatID_     (get_field_ordinal(meta, "specific_heat")),
@@ -53,7 +53,7 @@ TurbKineticEnergyRodiNodeKernel::TurbKineticEnergyRodiNodeKernel(
 //-------- setup -----------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-TurbKineticEnergyRodiNodeKernel::setup(Realm &realm)
+TKERodiNodeKernel::setup(Realm &realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
   dhdx_            = fieldMgr.get_field<double>(dhdxID_);
@@ -68,7 +68,7 @@ TurbKineticEnergyRodiNodeKernel::setup(Realm &realm)
 //-------- execute ----------------------------------------------------
 //--------------------------------------------------------------------------
 void
-TurbKineticEnergyRodiNodeKernel::execute(
+TKERodiNodeKernel::execute(
   NodeKernelTraits::LhsType& /*lhs*/,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)

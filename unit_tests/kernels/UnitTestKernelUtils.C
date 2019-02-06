@@ -265,7 +265,7 @@ private:
   static constexpr double tkenot{1.0};
 
   /// Factor for adaptivity parameter field
-  static constexpr double alphanot{1.0};
+  static constexpr double alphanot{0.5};
 
   /// Factor for sdr field
   static constexpr double sdrnot{1.0};
@@ -297,7 +297,7 @@ void init_trigonometric_field(
 
   if ((fieldName == "velocity") || (fieldName == "velocity_bc"))
     funcPtr = &TrigFieldFunction::velocity;
-  else if (fieldName == "dudx")
+  else if ((fieldName == "dudx") || (fieldName == "average_dudx"))
     funcPtr = &TrigFieldFunction::dudx;
   else if (fieldName == "pressure")
     funcPtr = &TrigFieldFunction::pressure;
@@ -309,7 +309,7 @@ void init_trigonometric_field(
     funcPtr = &TrigFieldFunction::density;
   else if (fieldName == "turbulent_ke")
     funcPtr = &TrigFieldFunction::tke;
-  else if (fieldName == "adaptivity_parameter")
+  else if (fieldName == "k_ratio")
     funcPtr = &TrigFieldFunction::alpha;
   else if (fieldName == "dkdx")
     funcPtr = &TrigFieldFunction::dkdx;

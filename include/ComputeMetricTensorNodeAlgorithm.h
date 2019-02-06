@@ -8,8 +8,8 @@
 //
 
 
-#ifndef COMPUTEMETRICTENSORELEMALGORITHM_H
-#define COMPUTEMETRICTENSORELEMALGORITHM_H
+#ifndef COMPUTEMETRICTENSORNODEALGORITHM_H
+#define COMPUTEMETRICTENSORNODEALGORITHM_H
 
 #include <Algorithm.h>
 #include <FieldTypeDef.h>
@@ -18,19 +18,23 @@ namespace sierra {
 namespace nalu {
 
 class Realm;
-class ComputeMetricTensorElemAlgorithm : public Algorithm {
+class ComputeMetricTensorNodeAlgorithm : public Algorithm {
 public:
-  ComputeMetricTensorElemAlgorithm(Realm &realm, stk::mesh::Part *part);
-  virtual ~ComputeMetricTensorElemAlgorithm() {}
+  ComputeMetricTensorNodeAlgorithm(Realm &realm, stk::mesh::Part *part);
+  virtual ~ComputeMetricTensorNodeAlgorithm();
 
   virtual void execute();
 
+  std::ofstream tmpFile;
+
   VectorFieldType *coordinates_{nullptr};
-  GenericFieldType *Mij_{nullptr};
+  GenericFieldType *nodalMij_{nullptr};
+  ScalarFieldType *dualNodalVolume_{nullptr};
 
   std::vector<double> ws_coordinates;
   std::vector<double> ws_dndx;
   std::vector<double> ws_deriv;
+  std::vector<double> ws_scv_volume;
   std::vector<double> ws_det_j;
   std::vector<double> ws_Mij;
 };

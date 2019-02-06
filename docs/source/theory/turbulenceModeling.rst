@@ -172,32 +172,11 @@ SST RANS Model
 As noted, Nalu-Wind does support a SST RANS-based model (the reader is
 referred to the SST equation set description).
 
-UT-A Hybrid Turbulence Model
-++++++++++++++++++++++++++++
+UT-A Hybrid Turbulence Model (TAMS)
++++++++++++++++++++++++++++++++++++
 
-Work is in progress for implementing the UT-A hybrid turbulence model
-as initially described by S. Haering, "Anisotropic hybrid turbulence
-modeling with specific application to the simulation of pulse-actuated
-dynamic stall control" (Ph.D. thesis, University of Texas-Austin,
-2015).
-
-In this modeling approach, the eddy viscosity is defined as a tensor,
-:math:`\mu_{ij}^{t}`, to account for anisotropy present in the
-underlying turbulence or introduced by the mesh. The SGS source term
-for Equation :eq:`favmom` becomes
-
-.. math::
-
-   \int \alpha \tau^{sgs}_{ij} n_j \, {\rm d}S
-
-where :math:`\alpha` is an adaptivity parameter used to adjust the
-resolved and modeled fields in response to the ability of the mesh to
-support the resolved turbulence. The SGS stress is then defined as
-
-.. math::
-
-   \tau^{sgs}_{ij} = \mu_{ik}^t \frac{\partial \widetilde{u}_j }{\partial x_k} + \mu_{jk}^t \frac{\partial \widetilde{u}_i }{\partial x_k} - \frac{2}{3} \rho k \delta_{ij}.
-
+Nalu-Wind supports the Time Averaged Model Split (TAMS) model. The
+reader is referred to the TAMS equation set for more details.
 
 Wall Models
 +++++++++++

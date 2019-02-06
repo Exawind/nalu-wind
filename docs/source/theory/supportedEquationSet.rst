@@ -2,9 +2,9 @@ Supported Equation Set
 ----------------------
 
 This section provides an overview of the currently supported equation
-sets. Equations will be decribed in integral form with assumed Favre
+sets. Equations will be described in integral form with assumed Favre
 averaging. However, the laminar counterparts are supported in the code
-base and are obtain in the user file by ommitting a turbulence model
+base and are obtain in the user file by omitting a turbulence model
 specification.
 
 Conservation of Mass
@@ -73,11 +73,11 @@ and the traceless rate-of-strain tensor defined as follows:
    = \widetilde S_{ij} - \frac{1}{3} \frac{\partial \widetilde u_k }{\partial x_k}\delta_{ij}.
 
 In a low Mach flow, as described in the low Mach theory section, the
-above pressure, :math:`\bar P` is the purturbation about the
+above pressure, :math:`\bar P` is the perturbation about the
 thermodynamic pressure, :math:`P^{th}`. In a low speed compressible
 flow, i.e., flows confined to a closed domain with energy or mass
-addition in which the continuity equation has been modifed to accomodate
-accoustics, this pressure is interpreted at the thermodynamic pressure
+addition in which the continuity equation has been modified to accommodate
+acoustics, this pressure is interpreted at the thermodynamic pressure
 itself.
 
 For LES, :math:`\tau^{sgs}_{ij}` that appears in Equation :eq:`favmom` and
@@ -507,7 +507,7 @@ velocity,
 and :math:`\Delta t` is the time-scale between when the source term is computed
 (time :math:`t`) and when it is applied (time :math:`t + \Delta t`).
 This is typically chosen to be the simulation time-step.
-In the case of an ABL simulation with flat terrain, the voulme averaging is done
+In the case of an ABL simulation with flat terrain, the volume averaging is done
 over an infinitesimally thin slice in the :math:`x` and :math:`y` directions,
 such that the body force is only a
 function of height :math:`z` and time :math:`t`.
@@ -529,7 +529,7 @@ is added to the enthalpy equation:
 
 where :math:`\theta_{\rm ref}` is the desired spatial averaged temperature,
 :math:`\left< \theta \right>` is the spatial averaged temperature,
-:math:`C_p` is the heat capcity,
+:math:`C_p` is the heat capacity,
 :math:`\alpha_\theta` is the relaxation factor,
 and
 :math:`\Delta t` is the time-scale.
@@ -614,7 +614,7 @@ unity and
    \widetilde{Y}_n = 1 - \sum_{j \ne n}^{n} \widetilde{Y}_j .
 
 Finally, the reaction rate source term is expected to be added based on
-an operator split approach wherebye the set of ODEs are integrated over
+an operator split approach whereby the set of ODEs are integrated over
 the full time step. The chemical kinetic source terms can be
 sub-integrated within a time step using a stiff ODE integrator package.
 
@@ -786,7 +786,7 @@ The DES technique is also supported in the code base when the SST model
 is activated. This model seeks to formally relax the RANS-based approach
 and allows for a theoretical basis to allow for transient flows. The
 method follows the method of Temporally Filtered NS formulation as
-decribed by Tieszen, :cite:`Tieszen:2005`.
+described by Tieszen, :cite:`Tieszen:2005`.
 
 The SST DES model simply changes the turbulent kinetic energy equation
 to include a new minimum scale that manipulates the dissipation term.
@@ -801,6 +801,316 @@ and :math:`c_{DES}` represents a blended set of DES constants:
 :math:`c_{{DES}_1} = 0.78` and :math:`c_{{DES}_2} = 0.61`. The length
 scale, :math:`l_{DES}` is the maximum edge length scale touching a given
 node.
+
+Time Averaged Model Split (TAMS) Formulation
+++++++++++++++++++++++++++++++++++++++++++++
+
+The TAMS approach is a recently developed hybrid technique by Haering, 
+Oliver and Moser :cite:`Haering:2018`.  In this approach a triple
+decomposition is used, breaking the instantaneous velocity field into
+an average component :math:`<u_i>`, a resolved fluctuation :math:`u_i^>` 
+and an unresolved fluctuation :math:`u_i^<`.  The subgrid stress is
+split into two terms, :math:`\tau_{ij} = \tau_{ij}^{SGRS} + 
+\tau_{ij}^{SGET}`, with :math:`\tau_{ij}^{SGRS}` modeling the mean 
+subgrid stress, taking on the form of a standard RANS subgrid stress
+model and :math:`\tau_{ij}^{SGET}` representing the energy transfer
+from the resolved to the modeled scales.  In addition, a forcing stress
+:math:`F_i` is added to the momentum equations to induce the transfer
+of energy from the modeled to the resolved scales.  Thus the TAMS
+approach solves the following momentum equation
+
+.. math::
+   :label: tams-mom-les
+
+   &\int \frac{\partial \bar{\rho} \widetilde{u}_i}{\partial t}
+   {\rm d}V + \int \bar{\rho} \widetilde{u}_i \widetilde{u}_j n_j {\rm d}S
+   + \int \left( \bar{P} + \frac{2}{3} \bar{\rho} k \right)
+   n_i {\rm d}S = \\
+   & \int 2 \mu \left( \widetilde{S}_{ij} - \frac{1}{3}
+   \widetilde{S}_{kk} \delta_{ij} \right) n_j {\rm d}S
+   + \int \left(\bar{\rho} - \rho_{\circ} \right) g_i {\rm d}V + \\
+   & \int 2 \mu_t \left( <S_{ij}> - \frac{1}{3}
+   <S_{kk}> \delta_{ij} \right) n_j {\rm d}S
+   + \int \left( \mu_{ik}^t \widetilde{u}_j + \mu_{jk}^t \widetilde{u}_i \right) n_k {\rm d}S 
+   + \int f_i {\rm d}V. 
+
+   
+Split subgrid model stress
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In a typical Hybrid RANS/LES approach, the observation that the LES
+and RANS equations take on the same mathematical form is leveraged,
+relying simply on a modified turbulent viscosity coefficient that
+takes into account the ability to resolve some turbulent content.  Due
+to deficiencies in this approach as discussed in Haering et
+al. :cite:`HaeringAIAA`, an alternative approach where the modeled term
+is split into two contributions, one representing the impact on the
+mean flow and one the impact on the resolved fluctuations, from the
+unresolved content, is used in the Time-Averaged Model Split (TAMS)
+formulation.
+
+Starting by substitution of a triple decomposition of the flow
+variables, :math:`\phi = \langle \phi \rangle + \phi^> + \phi^<`, with
+:math:`\langle \cdot \rangle` representing a mean quantity, :math:`\phi^>` a
+resolved fluctuation and :math:`\phi^<` an unresolved fluctuation and
+dropping all terms that have an unresolved fluctuation in them (since
+by definition, these terms cannot be resolved and thus must be
+modeled) we get the following momentum equation:
+
+.. math::
+
+   \frac{\partial \overline{u_i}}{\partial t} +
+   \frac{\partial \overline{u_i} \ \overline{u_j}}{\partial x_j}
+   = -\frac{1}{\rho} \left( \frac{\partial \overline{P}}{\partial x_i} \right) + 
+   \nu \frac{\partial^2 \overline{u_i}}{\partial x_j \partial x_j} + 
+   \frac{\partial \tau_{ij}^M}{\partial x_j} + F_i
+
+
+Note that here, :math:`\overline{\phi} = \langle \phi \rangle + \phi^>`
+represents an instantaneous resolved quantity and :math:`F_i` is a forcing
+term discussed in Sec. :ref:`TAMS forcing <tamsforcing>`.
+
+The model term in TAMS, :math:`\tau_{ij}^M` is split into two pieces,
+the first representing the impact of the unresolved scales on the mean
+flow, referred to as :math:`\tau_{ij}^{SGRS}`, since this mimics the
+purpose of RANS models and seeks to model the subgrid Reynolds Stress
+(SGRS).  The second term represents the impact of the unresolved
+scales on the resolved fluctuations which acts to capture energy
+transfer from the resolved fluctuations to the unresolved
+fluctuations, which as Haering et al. points out, is really the
+primary function of typical LES SGS models.  As this term models
+subgrid energy transfer (SGET), it is referred to as
+:math:`\tau_{ij}^{SGET}`.
+
+:math:`\tau_{ij}^{SGRS}` is modeled using a typical RANS model, but since in
+the hybrid context, some turbulence is resolved, the magnitude of the
+stress tensor is reduced through a scaling by :math:`\alpha = 1 -
+k_{res}/k_{tot}`, where :math:`k_{tot}` is your total kinetic energy, taken
+from the RANS model and :math:`k_{res} = 0.5 \langle u_i^> u_i^> \rangle`, a
+measure of the average resolved turbulent kinetic energy.
+
+:math:`\tau_{ij}^{SGET}` is modeled using the M43 SGS model discussed
+in Haering et al. :cite:`HaeringAIAA`.  This uses an anisotropic
+representation, :math:`\tau_{ij} = \nu_{jk} \partial_k u_i + \nu_{ik}
+\partial_k u_j`, of the stress tensor and a tensorial eddy viscosity,
+:math:`\nu_{ij} = C(\mathcal{M}) \langle \epsilon \rangle^{1/3}
+\mathcal{M}_{ij}^{4/3}`, with :math:`C`, a coefficient determined as a
+function of the eigenvalues of :math:`\mathcal{M}`, a metric tensor
+measure of the grid and :math:`\langle \epsilon \rangle` inferred from
+the RANS model.
+
+So this produces the final form for the TAMS model term,
+
+.. math::
+
+   \begin{aligned}
+   \tau_{ij}^M &= \tau_{ij}^{SGRS} + \tau_{ij}^{SGET} \\
+   &= 2 \alpha \nu^{RANS}_t \langle S_{ij} \rangle - \frac{2}{3} \alpha k_{tot} \delta_{ij} + C(\mathcal{M}) \langle \epsilon \rangle^{1/3} \left( \mathcal{M}_{jk}^{4/3} \frac{\partial u_i^>}{\partial x_k} + \mathcal{M}_{ik}^{4/3} \frac{\partial u_j^>}{\partial x_k} \right).
+   \end{aligned}
+
+The TAMS model terms are implemented for the consolidated element
+scheme in *MomentumSSTTAMSDiffElemKernel* and for the edge based
+scheme in *MomentumSSTTAMSDiffEdgeKernel*.
+
+The contributions to :math:`\tau_{ij}^M` to the mean flow use a model
+based on the mean strain rate tensor, :math:`\langle S_{ij} \rangle`
+and thus is assumed to change slowly relative to changes in the
+instantaneous flow, thus its implementation is carried out explicitly
+(no LHS contribution) in the above mentioned code.  For the SGET term,
+which is based on the fluctuating velocity gradients, we make the
+following substitution, :math:`\phi^> = \overline{\phi} - \langle \phi
+\rangle`.  The mean component is again treated explicitly, while the
+instantaneous component is treated implicitly (using a LHS
+contribution).  It is our belief that this should not have an impact
+on stability, but a formal analysis of this has not been carried out
+at this time.
+
+Adding this decomposition of the fluctuating terms leads to the
+following form for the TAMS model,
+
+.. math::
+
+   \begin{aligned}
+   \tau_{ij}^M &= \tau_{ij}^{SGRS} + \tau_{ij}^{SGET} \\
+   &= 2 \alpha \nu^{RANS}_t \langle S_{ij} \rangle - \frac{2}{3} \alpha k_{tot} \delta_{ij} &- C(\mathcal{M}) \langle \epsilon \rangle^{1/3} \left( \mathcal{M}_{jk}^{4/3} \frac{\partial \langle u_i \rangle}{\partial x_k} + \mathcal{M}_{ik}^{4/3} \frac{\partial \langle u_j \rangle}{\partial x_k} \right)
+   \\
+   & &+ C(\mathcal{M}) \langle \epsilon \rangle^{1/3} \left( \mathcal{M}_{jk}^{4/3} \frac{\partial \overline{u_i}}{\partial x_k} + \mathcal{M}_{ik}^{4/3} \frac{\partial \overline{u_j}}{\partial x_k} \right).
+   \end{aligned}
+
+The isotropic component, :math:`2 \alpha k_{tot}\delta_{ij}/3` is
+brought into the pressure term and is thus not included in the
+implementations discussed above.
+
+Averaging functions
+~~~~~~~~~~~~~~~~~~~
+
+The averaging algorithms are invoked as part of the
+*TAMSEquationSystem* and are called from the *post_converged_work*
+function so that they are only executed at the conclusion of the time
+step, once the final :math:`\phi^{n+1}` flow quantities have been
+determined.  The *TAMSEquationSystem* is invoked last, so to ensure
+that this is also done initially, so that the initial step has correct
+average quantities, the averaging functions are also called in the
+*initial_work* function.
+
+The main averaging algorithm is
+*ComputeSSTTAMSAveragesNodeAlgorithm*. The averaging function is
+solving a simple causal average equation:
+
+.. math::
+
+   \frac{\partial \langle \phi \rangle}{\partial t} = \frac{1}{T_{RANS}}\left( \phi - \langle \phi \rangle \right)
+
+Here :math:`\langle \cdot \rangle` refers to a mean (time-averaged)
+quantity and :math:`T_{RANS}` is the timescale of the turbulence
+determined by the underlying RANS scalars (:math:`1 / (\beta^*\omega)`
+in SST).  Note that currently the time scale is stored in a nodal
+field and calculated in the *TurbViscSSTTAMSAlgorithm* algorithm.
+
+We can discretize the causal average equation explicitly to produce
+the implemented form:
+
+.. math::
+
+   \begin{aligned}
+   \langle \phi^{n+1} \rangle &= \langle \phi^{n} \rangle + \frac{\Delta t}{T_{RANS}}\left( \phi^{n} - \langle \phi^{n} \rangle \right) \\
+   \langle \phi^{n+1} \rangle &= \frac{\Delta t}{T_{RANS}}\phi^{n} + \left( 1 - \frac{\Delta t}{T_{RANS}} \right) \langle \phi^{n} \rangle
+   \end{aligned}
+
+The averaging is carried out for velocities (:math:`u_i`), velocity
+gradients (:math:`\partial u_i / \partial x_j`), pressure (:math:`P`),
+density (:math:`\rho`), resolved turbulent kinetic energy
+(:math:`k_{res} = 0.5 u^>_i u^>_i`) and the kinetic energy production
+:math:`\left( \mathcal{P}_k = \langle S_{ij} \rangle \left(
+\tau_{ij}^{SGRS} - u^>_i u^>_j \right) \right)`.  Note that :math:`^>`
+is used to denote a resolved fluctuation, i.e. :math:`\phi^> = \phi -
+\langle \phi \rangle`.
+
+Dynamic Hybrid Diagnostics
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Typically in a hybrid model, it is necessary to have diagnostics that
+assess the ability of the grid to resolve turbulent content and to aid
+in its introduction.  In TAMS, there are two main diagnostic
+quantities, :math:`\alpha = 1 - k_{res}/k_{tot}` and a resolution
+adequacy parameter, :math:`r_k`, which is used to evaluate where in
+the flow the grid and the amount of resolved turbulent content is
+inconsistent.
+
+:math:`\alpha` is a straight-forward calculation.  Limiters are
+applied to :math:`\alpha` to realize the RANS and DNS limits.  In the
+RANS limit, :math:`k_{res} = 0` and thus :math:`\alpha = 1`, so
+:math:`\alpha` is limited from evaluation above 1.  In the DNS limit,
+the ratio of the approximate Kolmogorov velocity scale to total TKE is
+used as a lower bound,
+
+.. math::
+
+   \alpha = \max \left( 1 - \frac{k_{res}}{k_{tot}}, \frac{(\nu \epsilon)^{1/2}}{k_{tot}} \right).
+
+The resolution adequacy parameter is based on the ratio between the
+anisotropic grid metric tensor, :math:`\mathcal{M} = \mathcal{J}^T J`, where
+:math:`\mathcal{J}` is the mapping from a unit cube to the cell, and the
+length scale associated with the model production.  It takes the form,
+
+.. math::
+
+   r_k = \left( \frac{3}{2 \langle v^2 \rangle} \right)^{3/2} \max_{\lambda}(\mathcal{P}_{ik}^{SGS} \mathcal{M}_{kj}).
+
+For the RANS models used in Nalu-Wind, :math:`\langle v^2 \rangle
+\approx 5\nu_{RANS}/T_{RANS}`.  :math:`\mathcal{P}_{ij}^{SGS} =
+\frac{1}{2} ( \tau_{ik} \partial \overline{u}_k / \partial x_j +
+\tau_{jk} \partial \overline{u}_k / \partial x_i)` is the full subgrid
+production tensor, with :math:`\tau_{ij} = \tau_{ij}^{SGRS} +
+\tau_{ij}^{SGET} + \frac{2}{3} \alpha k_{tot} \delta_{ij}`.
+
+
+.. _tamsforcing:
+
+Forcing Term
+~~~~~~~~~~~~
+
+When the grid is capable of resolving some turbulent content, the
+model will want to reduce the modeled stress and allow for resolved
+turbulence to contribute the remaining piece of the total stress.  As
+discussed in Haering et al.~ :cite:`HaeringAIAA` and the observation of
+"modeled-stress depletion" in other hybrid approaches, such as DES, a
+mechanism for inducing resolved turbulent fluctuations at proper
+energy levels and timescales to match your reduction of the modeled
+stress is needed.  TAMS resolves this issue through the use of an
+active forcing term, designed to introduce turbulent fluctuations into
+regions of the grid where turbulent content can be supported.  The
+implications of the specific form and method of introduction for this
+forcing term is still an area of ongoing research, but for now,
+empirical testing has shown great success with a simple turbulent
+structure based off of Taylor-Green vortices.
+
+The forcing term :math:`F_i` is determined by first specifying an
+auxiliary field based off of a Taylor-Green vortex:
+
+.. math::
+
+   \begin{aligned}
+   h_1 &= \frac{1}{3} \cos(a_x x'_1) \sin(a_y x'_2) \sin(a_z x'_3), \\
+   h_2 &= - \sin(a_x x'_1) \cos(a_y x'_2) \sin(a_z x'_3), \\
+   h_3 &= \frac{2}{3} \sin(a_x x'_1) \sin(a_y x'_2) \cos(a_z x'_3), \\
+   \end{aligned}
+
+with :math:`\mathbf{x'} = \mathbf{x} + \langle \mathbf{u} \rangle t`
+and :math:`a_i = \pi / \mathbb{P}_i`. :math:`\mathbb{P}` is determined
+as follows,
+
+.. math::
+
+   \begin{aligned}
+   l  &= \frac{4 (\alpha k)^{3/2}}{\epsilon} \\
+   l  &= \min \left( \max \left( l, 70 \frac{\nu^{3/4}}{\epsilon^{1/4}} \right), d \right) \\\\
+   l'_i &= \min \left( \max \left( l, 2\mathcal{M}_{ii} \right), L_{p_i} \right) \\
+   f_i  &= \mathrm{nint}\left( \frac{L_{p_i}}{l'_i} \right) \\
+   \mathbb{P}_i &= \frac{L_{p_i}}{f_i},
+   \end{aligned}
+
+where :math:`L_{p_i}` is related to the periodic domain size and is
+user specified.  With the initial TG vortex field, :math:`h_i`,
+determined, we now determine a scaling factor (:math:`\eta`) for the
+forcing.
+
+.. math::
+
+   \begin{aligned}
+   T_\alpha &= \max \left( \alpha k / \epsilon, 6 \sqrt{\nu / \epsilon} \right) \\
+   F_{tar} &= 8 \sqrt{\alpha v^2} / T_\alpha \\\\
+   \mathcal{P}_r &= \Delta t F_{tar} \left( h_i u_i^{>} \right) \\\\
+   \theta &= \left \{ 
+   \begin{aligned}
+   \sqrt{\langle r_k \rangle} - 1 &\qquad \langle r_k \rangle \ge 1 \\
+   1 - 1 / \sqrt{\langle r_k \rangle} &\qquad \langle r_k \rangle < 1
+   \end{aligned}
+   \right. \\
+   \alpha_{sgn} &= \tanh(\theta) \\\\
+   S_\alpha &= \left \{ 
+   \begin{aligned}
+   \alpha_{sgn} - (1 + \alpha_{kol} - \alpha)\alpha_{sgn} &\qquad \alpha_{sgn} < 0, \ \alpha \le \alpha_{kol} \\
+   \alpha_{sgn} - \alpha \alpha_{sgn} &\qquad \alpha_{sgn} \ge 0, \ \alpha \ge 1 \\
+   \alpha_{sgn} &\qquad \mathrm{else}
+   \end{aligned}
+   \right. \\\\
+   \eta &= \left \{ 
+   \begin{aligned}
+   -F_{tar} S_{\alpha} &\qquad \langle r_k \rangle < 1, \ \mathcal{P}_r \ge 0 \\
+   0 &\qquad \mathrm{else}
+   \end{aligned}
+   \right. \\
+   \end{aligned}
+
+Now the final forcing field, :math:`F_i = \eta h_i`.  Since this is
+being added as a source term to the momentum solve, at this time we
+are not projecting onto a divergence free field and are instead
+allowing that to pass into the continuity solve, where the
+intermediate velocity field with the forcing will then be projected
+onto a divergence free field. This is implemented in the element
+kernels as *MomentumSSTTAMSForcingElemKernel* and the node kernels as
+*MomentumSSTTAMSForcingNodeKernel*.
 
 Solid Stress
 ++++++++++++
@@ -925,7 +1235,7 @@ provide mesh displacements to the mesh smoothing realm. The mesh
 smoothing procedure provides the boundary velocity, mesh velocity and
 projected nodal gradients of the mesh velocity to the fluids realm.
 Finally, the fluids solve is to provide the surface force at the desired
-solids surface. Currently, the pressure is transfered from the fluids
+solids surface. Currently, the pressure is transferred from the fluids
 realm to the solids realm. The ideal view of FSI is to solve the solids
 pde at the half time step. As such, in time, the
 :math:`P^{n+\frac{1}{2}}` is expected. The
@@ -970,11 +1280,11 @@ Botzmann radiative transport is
 
 
 where :math:`\mu_a` is the absorption coeffiecient, :math:`\mu_s` is
-the scattering coefficeint, :math:`I(s)` is the intensity along the
+the scattering coefficient, :math:`I(s)` is the intensity along the
 direction :math:`s_i`, :math:`T` is the temperature and the scalar flux
 is :math:`G`. The black body radiation, :math:`I_b`, is defined by
 :math:`\frac{\sigma T^4}{\pi}`. Note that for situations in which the
-scattering coefficient is zero, the RTE reduces to a set of liniear,
+scattering coefficient is zero, the RTE reduces to a set of linear,
 decoupled equations for each intensity to be solved.
 
 The flux divergence may be written as a difference between the radiative
@@ -1052,7 +1362,7 @@ where it is implied that :math:`\alpha = \epsilon`.
 Wall Distance Computation
 +++++++++++++++++++++++++
 
-RANS and DES simulations using ..math:`k-\omega` :ref:`SST <eqn_komega_sst>` or
+RANS and DES simulations using :math:`k-\omega` :ref:`SST <eqn_komega_sst>` or
 :ref:`SST-DES <eqn_sst_des>` equations requires the specification of a *wall
 distance* for computing various turbulence parameters. For static mesh
 simulations this field can be generated using a pre-processing step and provided

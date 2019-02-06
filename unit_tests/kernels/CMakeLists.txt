@@ -12,12 +12,14 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumBuoyancyBoussinesqSrcElem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumBuoyancySrcElem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumCoriolisSrcElem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumHybridTurbElem.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumSSTTAMSForcingSrcElem.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumSSTTAMSDiffElem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumMassElem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumNSOElem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumNSOKeElem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumUpwAdvDiffElem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSSTSrcElem.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSSTTAMSSrcElem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarAdvDiffElem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarMassElem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarDiffElem.C

@@ -56,6 +56,7 @@ public:
 
   void initial_work();
   void post_adapt_work();
+  void initialize_mdot();
 
   void clip_min_distance_to_wall();
   void compute_f_one_blending();
@@ -75,7 +76,8 @@ public:
 
   // saved of mesh parts that are for wall bcs
   std::vector<stk::mesh::Part *> wallBcPart_;
-     
+
+  bool resetTAMSAverages_;     
 };
 
 } // namespace nalu
