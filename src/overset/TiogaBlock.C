@@ -108,7 +108,8 @@ void TiogaBlock::initialize()
 
 void TiogaBlock::update_coords()
 {
-  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_);
+  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_)
+    & (meta_.locally_owned_part() | meta_.globally_shared_part());
   const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
     stk::topology::NODE_RANK, mesh_selector);
   VectorFieldType* coords = meta_.get_field<VectorFieldType>(
@@ -171,7 +172,8 @@ TiogaBlock::update_iblanks()
   ScalarIntFieldType* ibf =
     meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
 
-  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_);
+  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_)
+    & (meta_.locally_owned_part() | meta_.globally_shared_part());
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
 

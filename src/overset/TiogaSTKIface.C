@@ -121,8 +121,6 @@ void TiogaSTKIface::execute()
 {
   reset_data_structures();
 
-  initialize_ghosting();
-
   // Update the coordinates for TIOGA and register updates to the TIOGA mesh block.
   for (auto& tb: blocks_) {
     tb->update_coords();
@@ -195,24 +193,46 @@ void TiogaSTKIface::reset_data_structures()
 
 void TiogaSTKIface::update_ghosting()
 {
-  uint64_t g_ghostCount = 0;
-  uint64_t nGhostLocal = elemsToGhost_.size();
-  stk::all_reduce_sum(bulk_.parallel(), &nGhostLocal, &g_ghostCount, 1);
+  stk::mesh::Ghosting* ovsetGhosting = oversetManager_.oversetGhosting_;
+  std::vector<stk::mesh::EntityKey> recvGhostsToRemove;
 
-  if (g_ghostCount > 0) {
+  if (ovsetGhosting != nullptr) {
+    stk::mesh::EntityProcVec currentSendGhosts;
+    ovsetGhosting->send_list(currentSendGhosts);
+
+    sierra::nalu::compute_precise_ghosting_lists(
+      bulk_, elemsToGhost_, currentSendGhosts, recvGhostsToRemove);
+  }
+
+  size_t local[2] = {elemsToGhost_.size(), recvGhostsToRemove.size()};
+  size_t global[2] = {0, 0};
+  stk::all_reduce_sum(bulk_.parallel(), local, global, 2);
+
+  if ((global[0] > 0) || (global[1] > 0)) {
     bulk_.modification_begin();
+    if (ovsetGhosting == nullptr) {
+      const std::string ghostName = "nalu_overset_ghosting";
+      oversetManager_.oversetGhosting_ = &(bulk_.create_ghosting(ghostName));
+    }
     bulk_.change_ghosting(
-      *(oversetManager_.oversetGhosting_), elemsToGhost_);
+      *(oversetManager_.oversetGhosting_), elemsToGhost_, recvGhostsToRemove);
     bulk_.modification_end();
 
-    sierra::nalu::populate_ghost_comm_procs(bulk_, *oversetManager_.oversetGhosting_, oversetManager_.ghostCommProcs_);
+    sierra::nalu::populate_ghost_comm_procs(
+      bulk_, *(oversetManager_.oversetGhosting_), oversetManager_.ghostCommProcs_);
 
 #if 1
     sierra::nalu::NaluEnv::self().naluOutputP0()
-      << "TIOGA: Overset algorithm will ghost " << g_ghostCount << " entities"
+      << "TIOGA: Overset algorithm will ghost " << global[0] << " elements"
       << std::endl;
 #endif
   }
+#if 1
+  else {
+    sierra::nalu::NaluEnv::self().naluOutputP0()
+      << "TIOGA: Overset ghosting unchanged for this timestep" << std::endl;
+  }
+#endif
 }
 
 void TiogaSTKIface::populate_inactive_part()
