@@ -199,8 +199,8 @@ ActuatorDiskFAST::add_swept_points_to_map()
         if (firstRadius < 0.0) {
           firstRadius = radius;
         }
-        double radiusRatio = std::ceil(radius / firstRadius);
-        mySwept[i] *= radiusRatio;
+        double radiusRatio = radius / firstRadius;
+        mySwept[i] = (int)((double)mySwept[i]*radiusRatio);
 
         // periodic function has blades points at pi/3, pi, and 5*pi/3
         // this is due to the way the control points are defined
