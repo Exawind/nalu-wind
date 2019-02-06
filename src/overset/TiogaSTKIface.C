@@ -423,14 +423,17 @@ TiogaSTKIface::get_receptor_info()
   // TIOGA returns a integer array that contains 3 entries per receptor node:
   //   - the local node index within the tioga mesh data array
   //   - the local mesh tag (block index) for that mesh during registration
-  //   - the STK global ID for the donor element
+  //   - the STK global ID for the donor element (can be 8-byte or 4-byte)
   //
   size_t ncount = receptors.size();
   stk::mesh::EntityId  donorID = std::numeric_limits<stk::mesh::EntityId>::max();
 #ifdef TIOGA_HAS_UINT64T
-  int rec_offset = 4;
+  // The donor ID is stored in 2 4-byte integer entries (2 + 2 = 4). See above
+  // for description on what is returned for each receptor node.
+  const int rec_offset = 4;
 #else
-  int rec_offset = 3;
+  // The donor ID is stored in a single 4-byte integer entry (2 + 1 = 3)
+  const int rec_offset = 3;
 #endif
   for (size_t i=0; i<ncount; i+=rec_offset) {
     int nid = receptors[i];                          // TiogaBlock node index
