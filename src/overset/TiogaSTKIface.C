@@ -19,7 +19,7 @@
 #include "master_element/MasterElement.h"
 #include "stk_util/parallel/ParallelReduce.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
-#include <stk_mesh/base/SkinBoundary.hpp>
+#include "stk_mesh/base/SkinBoundary.hpp"
 
 
 #include <iostream>
@@ -75,12 +75,14 @@ void TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
     tb->setup(bcPartVec);
   }
 
-  // Initialize the inactive part
-  oversetManager_.inActivePart_ = &meta_.declare_part(
-    inactivePartName_, stk::topology::ELEM_RANK);
+  if (populateInactivePart_) {
+    // Initialize the inactive part
+    oversetManager_.inActivePart_ = &meta_.declare_part(
+      inactivePartName_, stk::topology::ELEM_RANK);
 
-  oversetManager_.backgroundSurfacePart_ = &meta_.declare_part(
-    "nalu_overset_fringe_boundary", stk::topology::ELEM_RANK);
+    oversetManager_.backgroundSurfacePart_ = &meta_.declare_part(
+      "nalu_overset_fringe_boundary", stk::topology::ELEM_RANK);
+  }
 }
 
 void TiogaSTKIface::initialize()
@@ -95,8 +97,6 @@ void TiogaSTKIface::initialize()
     << "TIOGA: Initializing overset mesh blocks: " << std::endl;
   for (auto& tb: blocks_) {
     tb->initialize();
-    sierra::nalu::NaluEnv::self().naluOutputP0()
-      << "\t" << tb->block_name() << std::endl;
   }
   sierra::nalu::NaluEnv::self().naluOutputP0()
     << "TIOGA: Initialized " << blocks_.size() << " overset blocks" << std::endl;
@@ -149,8 +149,6 @@ void TiogaSTKIface::execute()
 
   get_receptor_info();
 
-  // TODO: Combine bulk modification for ghosting and inactive part population
-
   // Collect all elements to be ghosted and update ghosting so that the elements
   // are available when generating {fringeNode, donorElement} pairs in the next
   // step.
@@ -165,8 +163,8 @@ void TiogaSTKIface::execute()
 void TiogaSTKIface::reset_data_structures()
 {
   // Reset inactivePart_
-  bulk_.modification_begin();
-  {
+  if (populateInactivePart_) {
+    bulk_.modification_begin();
     stk::mesh::Part* inactivePart = oversetManager_.inActivePart_;
     stk::mesh::PartVector add_parts;
     stk::mesh::PartVector remove_parts;
@@ -180,8 +178,8 @@ void TiogaSTKIface::reset_data_structures()
     for (auto elem: fringeElems_) {
       bulk_.change_entity_parts(elem, add_parts, fringe_remove_parts);
     }
+    bulk_.modification_end();
   }
-  bulk_.modification_end();
 
   holeElems_.clear();
   fringeElems_.clear();
