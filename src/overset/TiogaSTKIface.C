@@ -408,10 +408,20 @@ TiogaSTKIface::get_receptor_info()
   //   - the STK global ID for the donor element
   //
   size_t ncount = receptors.size();
-  for (size_t i=0; i<ncount; i+=3) {
+  stk::mesh::EntityId  donorID = std::numeric_limits<stk::mesh::EntityId>::max();
+#ifdef TIOGA_HAS_UINT64T
+  int rec_offset = 4;
+#else
+  int rec_offset = 3;
+#endif
+  for (size_t i=0; i<ncount; i+=rec_offset) {
     int nid = receptors[i];                          // TiogaBlock node index
     int mtag = receptors[i+1] - 1;                   // Block index
-    int donorID = receptors[i+2];                    // STK Global ID of the donor element
+#ifdef TIOGA_HAS_UINT64T
+    std::memcpy(&donorID, &receptors[i+2], sizeof(uint64_t));
+#else
+    donorID = receptors[i+2];                    // STK Global ID of the donor element
+#endif
     auto nodeID = blocks_[mtag]->node_id_map()[nid]; // STK Global ID of the fringe node
     stk::mesh::Entity node = bulk_.get_entity(stk::topology::NODE_RANK, nodeID);
 
