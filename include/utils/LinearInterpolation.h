@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <utility>
 
-#if defined (__GNUC__) && (4 < __GNUC__)
+#if defined(__GNUC__) && (7 < __GNUC__)
 #define NALU_CASE_FALLTHROUGH __attribute__ ((fallthrough));
 #else
 #define NALU_CASE_FALLTHROUGH 
