@@ -71,7 +71,7 @@ private:
   const bool lumpedMass_;
 
   /// Integration point to node mapping
-  const int* ipNodeMap_;
+  Kokkos::View<int[AlgTraits::numScvIp_]> ipNodeMap_{"ip_node_map"};
 
   /// Shape functions
   AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]> v_shape_function_ {"view_shape_func"};

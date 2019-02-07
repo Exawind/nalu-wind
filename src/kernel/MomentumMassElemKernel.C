@@ -32,8 +32,7 @@ MomentumMassElemKernel<AlgTraits>::MomentumMassElemKernel(
   ElemDataRequests& dataPreReqs,
   const bool lumpedMass)
   : Kernel(),
-    lumpedMass_(lumpedMass),
-    ipNodeMap_(sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_)->ipNodeMap())
+    lumpedMass_(lumpedMass)
 {
 
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
@@ -61,6 +60,8 @@ MomentumMassElemKernel<AlgTraits>::MomentumMassElemKernel(
 
   MasterElement* meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
 
+  // Initialize ipNodeMap_
+  get_scv_ipnodemap<AlgTraits>(meSCV->ipNodeMap(), ipNodeMap_);
   // compute shape function
   if ( lumpedMass_ )
     get_scv_shape_fn_data<AlgTraits>([&](double* ptr){meSCV->shifted_shape_fcn(ptr);}, v_shape_function_);
