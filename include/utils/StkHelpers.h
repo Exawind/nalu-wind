@@ -83,6 +83,37 @@ void compute_precise_ghosting_lists(
   stk::mesh::EntityProcVec& curSendGhosts,
   std::vector<stk::mesh::EntityKey>& recvGhostsToRemove);
 
+/** Return a field ordinal given the name of the field
+ */
+inline
+unsigned get_field_ordinal(
+  const stk::mesh::MetaData& meta,
+  const std::string fieldName,
+  const stk::mesh::EntityRank entity_rank = stk::topology::NODE_RANK)
+{
+  stk::mesh::FieldBase* field = meta.get_field(entity_rank, fieldName);
+  ThrowAssertMsg((field != nullptr), "Requested field does not exist: " + fieldName);
+  return field->mesh_meta_data_ordinal();
+}
+
+/** Return a field ordinal for a particular state
+ *
+ */
+inline
+unsigned get_field_ordinal(
+  const stk::mesh::MetaData& meta,
+  const std::string fieldName,
+  const stk::mesh::FieldState state,
+  const stk::mesh::EntityRank entity_rank = stk::topology::NODE_RANK)
+{
+  const auto* field = meta.get_field(entity_rank, fieldName);
+  ThrowAssertMsg((field != nullptr), "Requested field does not exist: " + fieldName);
+  ThrowAssertMsg((field->is_state_valid(state)), "Requested invalid state: " + fieldName);
+
+  const auto* fState = field->field_state(state);
+  return fState->mesh_meta_data_ordinal();
+}
+
 } // namespace nalu
 } // namespace sierra
 
