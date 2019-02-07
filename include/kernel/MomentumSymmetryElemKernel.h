@@ -53,10 +53,10 @@ public:
 private:
   MomentumSymmetryElemKernel() = delete;
 
-  ScalarFieldType *viscosity_{nullptr};
-  VectorFieldType *velocityNp1_{nullptr};
-  VectorFieldType *coordinates_{nullptr};
-  GenericFieldType *exposedAreaVec_{nullptr};
+  unsigned viscosity_      {stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1_    {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_    {stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
 
   const double includeDivU_;
   const bool shiftedGradOp_;

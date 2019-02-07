@@ -42,7 +42,7 @@ private:
   WallDistElemKernel() = delete;
   WallDistElemKernel(const WallDistElemKernel&) = delete;
 
-  VectorFieldType *coordinates_{nullptr};
+  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
 
   // work arrays
   Kokkos::View<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]> v_shape_function_{"view_shape_function"};
