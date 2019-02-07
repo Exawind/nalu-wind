@@ -14,6 +14,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -42,27 +43,23 @@ ContinuityAdvElemKernel<AlgTraits>::ContinuityAdvElemKernel(
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   std::string velocity_name = meshMotion_ ? "velocity_rtm" : "velocity";
 
-  velocityRTM_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, velocity_name);
-  Gpdx_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx");
-  pressure_ = metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure");
-  ScalarFieldType *density = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "density");
-  densityNp1_ = &(density->field_of_state(stk::mesh::StateNP1));
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
-  Udiag_ = metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "momentum_diag");
+  velocityRTM_ = get_field_ordinal(metaData, velocity_name);
+  Gpdx_ = get_field_ordinal(metaData, "dpdx");
+  pressure_ = get_field_ordinal(metaData, "pressure");
+  densityNp1_ = get_field_ordinal(metaData, "density", stk::mesh::StateNP1);
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+  Udiag_ = get_field_ordinal(metaData, "momentum_diag");
 
   MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
   dataPreReqs.add_cvfem_surface_me(meSCS);
 
   // fields and data
-  dataPreReqs.add_coordinates_field(*coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*velocityRTM_, AlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*densityNp1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*pressure_, 1);
-  dataPreReqs.add_gathered_nodal_field(*Udiag_, 1);
-  dataPreReqs.add_gathered_nodal_field(*Gpdx_, AlgTraits::nDim_);
+  dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(velocityRTM_, AlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(densityNp1_, 1);
+  dataPreReqs.add_gathered_nodal_field(pressure_, 1);
+  dataPreReqs.add_gathered_nodal_field(Udiag_, 1);
+  dataPreReqs.add_gathered_nodal_field(Gpdx_, AlgTraits::nDim_);
   dataPreReqs.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
 
   // manage dndx
@@ -103,12 +100,12 @@ ContinuityAdvElemKernel<AlgTraits>::execute(
   NALU_ALIGNED DoubleType w_Gpdx_Ip [AlgTraits::nDim_];
   NALU_ALIGNED DoubleType w_dpdxIp  [AlgTraits::nDim_];
 
-  SharedMemView<DoubleType*>& v_densityNp1 = scratchViews.get_scratch_view_1D(*densityNp1_);
-  SharedMemView<DoubleType*>& v_pressure = scratchViews.get_scratch_view_1D(*pressure_);
-  SharedMemView<DoubleType*>& v_udiag = scratchViews.get_scratch_view_1D(*Udiag_);
+  SharedMemView<DoubleType*>& v_densityNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
+  SharedMemView<DoubleType*>& v_pressure = scratchViews.get_scratch_view_1D(pressure_);
+  SharedMemView<DoubleType*>& v_udiag = scratchViews.get_scratch_view_1D(Udiag_);
 
-  SharedMemView<DoubleType**>& v_velocity = scratchViews.get_scratch_view_2D(*velocityRTM_);
-  SharedMemView<DoubleType**>& v_Gpdx = scratchViews.get_scratch_view_2D(*Gpdx_);
+  SharedMemView<DoubleType**>& v_velocity = scratchViews.get_scratch_view_2D(velocityRTM_);
+  SharedMemView<DoubleType**>& v_Gpdx = scratchViews.get_scratch_view_2D(Gpdx_);
 
   SharedMemView<DoubleType**>& v_scs_areav = scratchViews.get_me_views(CURRENT_COORDINATES).scs_areav;
 

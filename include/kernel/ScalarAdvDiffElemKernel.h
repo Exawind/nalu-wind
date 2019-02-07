@@ -50,10 +50,10 @@ public:
 private:
   ScalarAdvDiffElemKernel() = delete;
 
-  ScalarFieldType *scalarQ_{nullptr};
-  ScalarFieldType *diffFluxCoeff_{nullptr};
-  VectorFieldType *coordinates_{nullptr};
-  GenericFieldType *massFlowRate_{nullptr};
+  unsigned scalarQ_ {stk::mesh::InvalidOrdinal};
+  unsigned diffFluxCoeff_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
+  unsigned massFlowRate_ {stk::mesh::InvalidOrdinal};
 
   /// Left right node indicators
   const int* lrscv_;

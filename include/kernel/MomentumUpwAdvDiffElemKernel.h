@@ -62,13 +62,13 @@ private:
 
   const SolutionOptions &solnOpts_;
   
-  VectorFieldType *velocityNp1_{nullptr};
-  VectorFieldType *coordinates_{nullptr};
-  ScalarFieldType *density_{nullptr};
-  ScalarFieldType *viscosity_{nullptr};
-  GenericFieldType *Gju_{nullptr};
-  GenericFieldType *massFlowRate_{nullptr};
-  VectorFieldType *velocityRTM_{nullptr};
+  unsigned velocityNp1_  {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_  {stk::mesh::InvalidOrdinal};
+  unsigned density_      {stk::mesh::InvalidOrdinal};
+  unsigned viscosity_    {stk::mesh::InvalidOrdinal};
+  unsigned Gju_          {stk::mesh::InvalidOrdinal};
+  unsigned massFlowRate_ {stk::mesh::InvalidOrdinal};
+  unsigned velocityRTM_  {stk::mesh::InvalidOrdinal};
 
   const int* lrscv_;
 

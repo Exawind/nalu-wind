@@ -48,8 +48,8 @@ public:
 private:
   MomentumBuoyancyBoussinesqSrcElemKernel() = delete;
 
-  ScalarFieldType *temperatureNp1_{nullptr};
-  VectorFieldType *coordinates_{nullptr};
+  unsigned temperatureNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
 
   double rhoRef_;
   double tRef_;
