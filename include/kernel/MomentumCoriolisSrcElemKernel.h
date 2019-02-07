@@ -45,9 +45,9 @@ private:
   MomentumCoriolisSrcElemKernel() = delete;
 
   CoriolisSrc cor_;
-  VectorFieldType *velocityNp1_{nullptr};
-  ScalarFieldType *densityNp1_{nullptr};
-  VectorFieldType *coordinates_{nullptr};
+  unsigned velocityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned densityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
 
   const int* ipNodeMap_;
 

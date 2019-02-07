@@ -47,12 +47,12 @@ public:
 private:
   MomentumHybridTurbElemKernel() = delete;
 
-  VectorFieldType* velocityNp1_{nullptr};
-  ScalarFieldType* densityNp1_{nullptr};
-  ScalarFieldType* tkeNp1_{nullptr};
-  ScalarFieldType* alphaNp1_{nullptr};
-  GenericFieldType* mutij_{nullptr};
-  VectorFieldType* coordinates_{nullptr};
+  unsigned  velocityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  densityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  tkeNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  alphaNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  mutij_ {stk::mesh::InvalidOrdinal};
+  unsigned  coordinates_ {stk::mesh::InvalidOrdinal};
 
   // master element
   const int* lrscv_;

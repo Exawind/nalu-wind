@@ -13,6 +13,7 @@
 
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 #include "stk_mesh/base/BulkData.hpp"
 
@@ -33,8 +34,7 @@ WallDistElemKernel<AlgTraits>::WallDistElemKernel(
 {
   const auto& meta = bulkData.mesh_meta_data();
 
-  coordinates_ = meta.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
+  coordinates_ = get_field_ordinal(meta, solnOpts.get_coordinates_name());
 
   MasterElement* meSCS =
     MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
@@ -47,7 +47,7 @@ WallDistElemKernel<AlgTraits>::WallDistElemKernel(
   dataPreReqs.add_cvfem_surface_me(meSCS);
   dataPreReqs.add_cvfem_volume_me(meSCV);
   dataPreReqs.add_coordinates_field(
-    *coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+    coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
   dataPreReqs.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
 
