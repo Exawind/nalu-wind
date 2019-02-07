@@ -397,6 +397,16 @@ SolutionOptions::load(const YAML::Node & y_node)
       }
     }
 
+    // Handle old mesh motion section and throw an error early if the user is
+    // attempting to use an old file with the latest branch
+    if (y_solution_options["mesh_motion"]) {
+      NaluEnv::self().naluOutput()
+        << "SolutionOptions: Detected mesh motion section within solution_options. "
+        "This is no longer supported. Please update your input file appropriately"
+        << std::endl;
+      throw std::runtime_error("mesh_motion in solution_options is deprecated.");
+    }
+
     const YAML::Node fix_pressure = expect_map(y_solution_options, "fix_pressure_at_node", optional);
     if (fix_pressure) {
       needPressureReference_ = true;
