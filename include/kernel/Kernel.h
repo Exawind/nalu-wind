@@ -24,6 +24,28 @@ namespace nalu {
 class TimeIntegrator;
 class SolutionOptions;
 
+template<typename AlgTraits, typename ViewType>
+void get_scv_ipnodemap(const int* ipNodeMap, ViewType& ip_view)
+{
+  static_assert(ViewType::Rank == 1u, "1D View");
+  ThrowRequireMsg(ip_view.extent_int(0) == AlgTraits::numScvIp_,
+                  "Inconsistent number of scv IPs");
+
+  for (int i=0; i < AlgTraits::numScvIp_; ++i)
+    ip_view(i) = ipNodeMap[i];
+}
+
+template<typename AlgTraits, typename ViewType>
+void get_scs_ipnodemap(const int* ipNodeMap, ViewType& ip_view)
+{
+  static_assert(ViewType::Rank == 1u, "1D View");
+  ThrowRequireMsg(ip_view.extent_int(0) == AlgTraits::numScsIp_,
+                  "Inconsistent number of scs IPs");
+
+  for (int i=0; i < AlgTraits::numScsIp_; ++i)
+    ip_view(i) = ipNodeMap[i];
+}
+
 template<typename AlgTraits, typename LambdaFunction, typename ViewType>
 void get_scv_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_view)
 {
