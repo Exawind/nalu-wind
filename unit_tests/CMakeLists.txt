@@ -59,6 +59,12 @@ add_sources(GlobalUnitHeaderList
    UnitTestViewUtils.h
 )
 
+if(ENABLE_OPENFAST)
+   add_sources(GlobalUnitSourceList
+      UnitTestActuatorDiskFAST.C
+   )
+endif()
+
 add_subdirectory(algorithms)
 add_subdirectory(kernels)
 add_subdirectory(ho_kernels)

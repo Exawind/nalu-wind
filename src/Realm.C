@@ -76,6 +76,7 @@
 #include <ActuatorLinePointDrag.h>
 #ifdef NALU_USES_OPENFAST
 #include <ActuatorLineFAST.h>
+#include <ActuatorDiskFAST.h>
 #endif
 
 #include <wind_energy/ABLForcingAlgorithm.h>
@@ -607,6 +608,14 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
       case ActuatorType::ActLineFAST : {
 #ifdef NALU_USES_OPENFAST
 	actuator_ =  new ActuatorLineFAST(*this, *foundActuator[0]);
+#else
+	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
+#endif
+	break;
+      }
+      case ActuatorType::ActDiskFAST : {
+#ifdef NALU_USES_OPENFAST
+	actuator_ =  new ActuatorDiskFAST(*this, *foundActuator[0]);
 #else
 	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
 #endif
