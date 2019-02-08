@@ -29,7 +29,7 @@ Currently Nalu-Wind supports two types of wind simulations:
   of turbulent ABL inflow profiles that are used as inlet conditions in
   subsequent wind farm simulations. The primary purpose of these simulations are
   to trigger turbulence generation and obtain velocity and temperature profiles
-  that have *converged* to a stastitic equilibrium.
+  that have *converged* to a statistic equilibrium.
 
 **Wind farm simulation with turbines as actuator sources**
 
@@ -137,7 +137,7 @@ farm applications.
 Numerical Discretization & Stabilization
 ----------------------------------------
 
-Nalu-Wind provides two dicretization approaches
+Nalu-Wind provides two discretization approaches
 
 **Control Volume Finite Element Method (CVFEM)**
 
@@ -506,21 +506,67 @@ The drag body force is then
 where :math:`\vec{r}` is the position vector between the fluid point of
 interest and the center of the Gaussian force.
 
-Nalu -- OpenFAST Coupling Algorithm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 The actuator line implementation allows for flexible blades that are not
-necessarily straight (prebend and sweep). The current implementation requires a
+necessarily straight (pre-bend and sweep). The current implementation requires a
 fixed time step when coupled to OpenFAST, but allows the time step in Nalu-Wind to be
 an integral multiple of the OpenFAST time step. At present, a simple time lagged
 FSI model is used to interface Nalu-Wind with the turbine model in OpenFAST:
 
   + The velocity at time step at time step :math:`n` is sampled at the actuator
     points and sent to OpenFAST,
-  + OpenFAST advances the turbines upto the next Nalu-Wind time step :math:`n+1`,
+  + OpenFAST advances the turbines up-to the next Nalu-Wind time step :math:`n+1`,
   + The body forces at the actuator points are converted to the source terms of the momentum 
     equation to advance Nalu-Wind to the next time step :math:`n+1`.
     
 This FSI algorithm is expected to be only first order accurate in time. We are
 currently working on improving the FSI coupling scheme to be second order
 accurate in time.
+
+Nalu-Wind -- Actuator Disk Model via OpenFAST
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An actuator disk model is implemented in Nalu-Wind by using an OpenFAST actuator line to 
+sample the flow and compute the forcing.  The actuator line is held stationary which leads
+to computational savings during execution because there is only 1 search operation in the 
+initial setup.
+
+The forces are gathered at each actuator line point, and the total force at each discrete 
+radial location (:math:`r_j` where :math:`j \in [1,N_R]`) is computed using 
+:eq:`diskTotalForce`.
+
+.. math::
+
+   :label: diskTotalForce
+   \mathbf{F}_{total}(r_j) = \sum_{i=1}^{N_B} \mathbf{F}(r_j, \theta_i)
+
+where :math:`N_B` and :math:`N_R` are the number of blades and number of radial points 
+respectively. 
+
+:math:`\mathbf{F}_{total}(r_j)` is then spread evenly across the original actuator line points
+and additional 'swept-points' that are added in between the actuator lines. The swept-points
+can either be non-uniformly or uniformly distributed along the azimuthal direction (left and right
+images in figure :numref:`actdisk-sample-fig`).  The non-uniform distribution uses the distance 
+between points along the embedded actuator line blades as the arc-length between points in the
+azimuthal direction.  This is the default behavior.  If uniform spacing is desired then 
+`num_swept_pts` must be specified in the input deck.  This is the number of points between 
+the actuator lines, so in figure :numref:`actdisk-sample-fig` the `num_swept_pts` is 3.
+
+.. _actdisk-sample-fig:
+
+.. figure:: images/actuatorDisk.png
+   :align: center
+   :width: 250px
+
+   Actuator Disk with non-uniform (left) and uniform (right) sampling in the azimuthal direction.
+
+The force that is spread across all the points at a given radius is then calculated as
+:eq:`diskAppliedForce`.
+
+.. math::
+
+   :label: diskAppliedForce
+   \mathbf{f}(r_j) = \frac{\mathbf{F}_{total}(r_j)}{N_B*(N_{S,j}+1)}
+
+where :math:`N_{S,j}` is the number of swept points for a given radius.  The index j is used
+because this value varies between radii when non-uniform azimuthal sampling is applied.
+
