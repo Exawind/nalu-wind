@@ -79,9 +79,9 @@ void MotionPulsatingSphere::scaling_mat(
 }
 
 MotionBase::ThreeDVecType MotionPulsatingSphere::compute_velocity(
-  double time,
+  const double time,
   const TransMatType&  /* compTrans */,
-  double* xyz )
+  const double* xyz )
 {
   ThreeDVecType vel = {};
 
