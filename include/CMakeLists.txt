@@ -204,7 +204,9 @@ add_sources(GlobalHeaderList
 
 if(ENABLE_OPENFAST)
    add_sources(GlobalHeaderList
+   	  ActuatorFAST.h
       ActuatorLineFAST.h
+      ActuatorDiskFAST.h
    )
 endif()
 
