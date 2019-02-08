@@ -24,7 +24,6 @@ add_sources(GlobalUnitSourceList
    UnitTestMasterElements.C
    UnitTestMetricTensor.C
    UnitTestMijTensor.C
-   UnitTestMotionTypes.C
    UnitTestMovingAverage.C
    UnitTestNGPMasterElements.C
    UnitTestNgpMesh1.C
@@ -62,3 +61,4 @@ add_sources(GlobalUnitHeaderList
 add_subdirectory(algorithms)
 add_subdirectory(kernels)
 add_subdirectory(ho_kernels)
+add_subdirectory(mesh_motion)
