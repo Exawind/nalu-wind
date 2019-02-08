@@ -376,13 +376,9 @@ Actuator::gather_field_for_interp(
 //--------------------------------------------------------------------------
 double
 Actuator::compute_volume(
-<<<<<<< HEAD
   const int & /* nDim */,
   stk::mesh::Entity elem,
   const stk::mesh::BulkData & bulkData)
-=======
-  const int& nDim, stk::mesh::Entity elem, const stk::mesh::BulkData& bulkData)
->>>>>>> Update formatting and remove unnecessary ifdefs
 {
   // extract master element from the bucket in which the element resides
   const stk::topology& elemTopo = bulkData.bucket(elem).topology();
