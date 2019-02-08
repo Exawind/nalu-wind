@@ -13,19 +13,19 @@ public:
 
   virtual ~MotionRotation() {}
 
-  virtual void build_transformation(const double, const double* = nullptr);
+  virtual void build_transformation(double, const double* = nullptr);
 
   /** Function to compute motion-specific velocity
    *
    * @param[in] time           Current time
-   * @param[in] comp_trans_mat Transformation matrix
+   * @param[in] compTrans      Transformation matrix
    *                           for points other than xyz
    * @param[in] xyz            Transformed coordinates
    */
   virtual ThreeDVecType compute_velocity(
-    double time,
+    const double time,
     const TransMatType& compTrans,
-    double* xyz );
+    const double* xyz );
 
 private:
   MotionRotation() = delete;

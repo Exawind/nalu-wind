@@ -40,13 +40,16 @@ void MotionRotation::load(const YAML::Node& node)
 }
 
 void MotionRotation::build_transformation(
-  const double time,
+  double time,
   const double*  /* xyz */)
 {
   double eps = std::numeric_limits<double>::epsilon();
 
-  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
+  if(time >= (startTime_-eps))
   {
+    if(time >= (endTime_+eps))
+      time = endTime_;
+
     // determine current angle
     double curr_angle = 0.0;
     if (useOmega_)
@@ -113,9 +116,9 @@ void MotionRotation::rotation_mat(const double angle)
 }
 
 MotionBase::ThreeDVecType MotionRotation::compute_velocity(
-  double time,
+  const double time,
   const TransMatType& compTrans,
-  double* xyz )
+  const double* xyz )
 {
   ThreeDVecType vel = {};
 

@@ -23,9 +23,9 @@ public:
    * @param[in] xyz            Transformed coordinates
    */
   virtual ThreeDVecType compute_velocity(
-    double time,
+    const double time,
     const TransMatType& compTrans,
-    double* xyz );
+    const double* xyz );
 
 private:
   MotionPulsatingSphere() = delete;

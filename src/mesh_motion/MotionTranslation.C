@@ -32,13 +32,16 @@ void MotionTranslation::load(const YAML::Node& node)
 }
 
 void MotionTranslation::build_transformation(
-  const double time,
+  double time,
   const double*  /* xyz */)
 {
   double eps = std::numeric_limits<double>::epsilon();
 
-  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
+  if(time >= (startTime_-eps))
   {
+    if(time >= (endTime_+eps))
+      time = endTime_;
+
     // determine translation based on user defined input
     if (useVelocity_)
     {
@@ -64,9 +67,9 @@ void MotionTranslation::translation_mat(const ThreeDVecType& curr_disp)
 }
 
 MotionBase::ThreeDVecType MotionTranslation::compute_velocity(
-  double time,
+  const double time,
   const TransMatType&  /* compTrans */,
-  double*  /* xyz */ )
+  const double*  /* xyz */ )
 {
   ThreeDVecType vel = {};
 
