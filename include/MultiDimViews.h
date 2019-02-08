@@ -42,15 +42,13 @@ public:
   static constexpr unsigned bytesPerUnsigned = sizeof(unsigned);
 
   KOKKOS_FUNCTION
-  MultiDimViews(const TEAMHANDLETYPE& team,
-                unsigned maxOrdinal,
+  MultiDimViews(const TEAMHANDLETYPE& /* team */,
+                unsigned /* maxOrdinal */,
                 const NumNeededViews& numNeededViews)
   : //indices(get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team,
     //        adjust_up_to_alignment_boundary((maxOrdinal+1)*bytesPerUnsigned, KOKKOS_MEMORY_ALIGNMENT)/bytesPerUnsigned)),
-    views_1D(), views_1D_size(0),
-    views_2D(), views_2D_size(0),
-    views_3D(), views_3D_size(0),
-    views_4D(), views_4D_size(0)
+    views_1D(), views_2D(), views_3D(), views_4D(), 
+    views_1D_size(0), views_2D_size(0), views_3D_size(0), views_4D_size(0)
   {
     if (numNeededViews.num1DViews > maxViewsPerDim ||
         numNeededViews.num2DViews > maxViewsPerDim ||
