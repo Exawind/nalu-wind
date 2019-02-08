@@ -68,28 +68,37 @@ void copy_and_interleave(const MultiDimViewsType ** data,
                          SimdMultiDimViewsType& simdData)
 {
   const double* src[stk::simd::ndoubles] = {nullptr};
-  unsigned numViews = simdData.views_1D_size;
+  unsigned numViews = simdData.get_num_1D_views();
   for(unsigned viewIndex=0; viewIndex<numViews; ++viewIndex) {
     for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
-      src[simdIndex] = data[simdIndex]->views_1D[viewIndex].data();
+      src[simdIndex] = data[simdIndex]->get_1D_view_by_index(viewIndex).data();
+      NGP_ThrowAssert(data[simdIndex]->get_1D_view_by_index(viewIndex).size() == simdData.get_1D_view_by_index(viewIndex).size());
+      NGP_ThrowAssert(src[simdIndex][0] == data[simdIndex]->get_1D_view_by_index(viewIndex).data()[0]);
+      NGP_ThrowAssert(src[simdIndex] != nullptr);
     }
-    interleave(simdData.views_1D[viewIndex], src, simdElems);
+    interleave(simdData.get_1D_view_by_index(viewIndex), src, simdElems);
   }
 
-  numViews = simdData.views_2D_size;
+  numViews = simdData.get_num_2D_views();
   for(unsigned viewIndex=0; viewIndex<numViews; ++viewIndex) {
     for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
-      src[simdIndex] = data[simdIndex]->views_2D[viewIndex].data();
+      src[simdIndex] = data[simdIndex]->get_2D_view_by_index(viewIndex).data();
+      NGP_ThrowAssert(data[simdIndex]->get_2D_view_by_index(viewIndex).size() == simdData.get_2D_view_by_index(viewIndex).size());
+      NGP_ThrowAssert(src[simdIndex][0] == data[simdIndex]->get_2D_view_by_index(viewIndex).data()[0]);
+      NGP_ThrowAssert(src[simdIndex] != nullptr);
     }
-    interleave(simdData.views_2D[viewIndex], src, simdElems);
+    interleave(simdData.get_2D_view_by_index(viewIndex), src, simdElems);
   }
 
-  numViews = simdData.views_3D_size;
+  numViews = simdData.get_num_3D_views();
   for(unsigned viewIndex=0; viewIndex<numViews; ++viewIndex) {
     for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
-      src[simdIndex] = data[simdIndex]->views_3D[viewIndex].data();
+      src[simdIndex] = data[simdIndex]->get_3D_view_by_index(viewIndex).data();
+      NGP_ThrowAssert(data[simdIndex]->get_3D_view_by_index(viewIndex).size() == simdData.get_3D_view_by_index(viewIndex).size());
+      NGP_ThrowAssert(src[simdIndex][0] == data[simdIndex]->get_3D_view_by_index(viewIndex).data()[0]);
+      NGP_ThrowAssert(src[simdIndex] != nullptr);
     }
-    interleave(simdData.views_3D[viewIndex], src, simdElems);
+    interleave(simdData.get_3D_view_by_index(viewIndex), src, simdElems);
   }
 }
 
