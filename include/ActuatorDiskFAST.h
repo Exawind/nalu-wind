@@ -89,6 +89,7 @@ protected:
   std::map<std::size_t, int> pointRadiusMap_;
   std::map<int, std::vector<int>>
     numSweptPointMap_; //{globTurbNo : numPoints between blades at each radius}
+  bool useUniformAziSampling_{false};
 };
 
 /** Implementation of a periodic Bezier curve (Sanchez-Reyes, 2009) to connect
@@ -118,7 +119,6 @@ private:
   std::vector<Point> bladePoints_;
   std::vector<Point> controlPoints_;
   bool controlPointsCurrent_;
-
 };
 
 } // namespace nalu

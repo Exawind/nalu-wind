@@ -38,7 +38,8 @@ ActuatorDiskFAST::parse_disk_specific(const YAML::Node& y_node)
   const YAML::Node y_actuator = y_node["actuator"];
   for (int i = 0; i < fi.nTurbinesGlob; i++) {
     const YAML::Node cur_turbine = y_actuator["Turbine" + std::to_string(i)];
-    get_required(cur_turbine, "num_swept_pts", nSwept);
+    get_if_present(cur_turbine, "num_swept_pts", nSwept);
+    useUniformAziSampling_ = nSwept != 0;
     get_required(cur_turbine, "num_force_pts_blade", nFpts);
     numSweptPointMap_.insert(
       std::make_pair(i, std::vector<int>(nFpts, nSwept)));
@@ -174,7 +175,7 @@ ActuatorDiskFAST::add_swept_points_to_map()
       const int numPntsBlade = FAST.get_numForcePtsBlade(iTurb);
       const int numBlades = FAST.get_numBlades(iTurb);
 
-      std::vector<int> mySwept = numSweptPointMap_.at(iTurb);
+      std::vector<int>& mySwept = numSweptPointMap_.at(iTurb);
 
       const auto actuatorInfo =
         dynamic_cast<ActuatorFASTInfo*>(actuatorInfo_[iTurb].get());
@@ -186,8 +187,18 @@ ActuatorDiskFAST::add_swept_points_to_map()
       double searchRadius = actuatorInfo->epsilon_.x_ * sqrt(log(1.0 / 0.001));
 
       // loop over each radial location and insert the correct number of points
-      // for that radius this could be made to vary radially later on
-      double firstRadius = -100.0;
+
+      // compute dR for non-uniform azimuthal averaging
+      // we will make the arc length between points equal to
+      // dR for the non-uniform sampling
+      Point r1, r2;
+      r1 = get_blade_point_location(iTurb, 0, 0);
+      r2 = get_blade_point_location(iTurb, 0, 1);
+      double dR = 0;
+      for (int d = 0; d < 3; d++) {
+        dR += std::pow(r1[d] - r2[d], 2);
+      }
+      dR = std::sqrt(dR);
 
       for (int i = numPntsBlade - 1; i >= 0; i--) {
         for (int j = 0; j < numBlades; j++) {
@@ -196,11 +207,10 @@ ActuatorDiskFAST::add_swept_points_to_map()
         }
         // get radius and update mySwept
         double radius = locator.get_radius(0);
-        if (firstRadius < 0.0) {
-          firstRadius = radius;
+
+        if (!useUniformAziSampling_) {
+          mySwept[i] = (int)(2.0 * M_PI * radius / numBlades / dR);
         }
-        double radiusRatio = radius / firstRadius;
-        mySwept[i] = (int)((double)mySwept[i]*radiusRatio);
 
         // periodic function has blades points at pi/3, pi, and 5*pi/3
         // this is due to the way the control points are defined
