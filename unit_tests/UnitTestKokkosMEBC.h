@@ -30,7 +30,9 @@ public:
      : comm_(MPI_COMM_WORLD),
        meta_(BcAlgTraits::nDim_),
        bulk_(meta_, comm_),
-       faceOrdinal_(faceOrdinal)
+       faceOrdinal_(faceOrdinal),
+       faceDataNeeded_(meta_),
+       elemDataNeeded_(meta_)
    {
      if (doInit)
        fill_mesh_and_init_data(doPerturb);

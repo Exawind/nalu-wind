@@ -103,7 +103,9 @@ class TestAlgorithm
 {
 public:
   TestAlgorithm(stk::mesh::BulkData& bulk)
-  : suppAlgs_(), bulkData_(bulk)
+  : suppAlgs_(),
+    dataNeededByKernels_(bulk.mesh_meta_data()),
+    bulkData_(bulk)
   {}
 
   void execute()
@@ -203,7 +205,7 @@ TEST_F(Hex8Mesh, inconsistent_field_requests)
 
     fill_mesh("generated:10x10x10");
 
-    sierra::nalu::ElemDataRequests prereqData;
+    sierra::nalu::ElemDataRequests prereqData(meta);
 
     prereqData.add_gathered_nodal_field(nodalScalarField, 1);
     EXPECT_THROW(prereqData.add_gathered_nodal_field(nodalScalarField, 2), std::logic_error);

@@ -565,7 +565,7 @@ void calc_mass_flow_rate_scs(
   const int ndim = meta.spatial_dimension();
   EXPECT_EQ(ndim, 3);
 
-  sierra::nalu::ElemDataRequests dataNeeded;
+  sierra::nalu::ElemDataRequests dataNeeded(meta);
 
   const ScalarFieldType& densityNp1 = density.field_of_state(stk::mesh::StateNP1);
   const VectorFieldType& velocityNp1 = velocity.field_of_state(stk::mesh::StateNP1);
@@ -650,7 +650,7 @@ void calc_projected_nodal_gradient_interior(
   const int ndim = meta.spatial_dimension();
   EXPECT_EQ(ndim, 3);
 
-  sierra::nalu::ElemDataRequests dataNeeded;
+  sierra::nalu::ElemDataRequests dataNeeded(meta);
 
   auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
 
@@ -729,7 +729,7 @@ void calc_projected_nodal_gradient_interior(
   const int ndim = meta.spatial_dimension();
   EXPECT_EQ(ndim, 3);
 
-  sierra::nalu::ElemDataRequests dataNeeded;
+  sierra::nalu::ElemDataRequests dataNeeded(meta);
 
   auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
 
@@ -811,7 +811,7 @@ void calc_projected_nodal_gradient_boundary(
   EXPECT_EQ(ndim, 3);
   EXPECT_EQ(topo.rank(), meta.side_rank());
 
-  sierra::nalu::ElemDataRequests dataNeeded;
+  sierra::nalu::ElemDataRequests dataNeeded(meta);
 
   auto meBC = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
 
@@ -885,7 +885,7 @@ void calc_projected_nodal_gradient_boundary(
   EXPECT_EQ(ndim, 3);
   EXPECT_EQ(topo.rank(), meta.side_rank());
 
-  sierra::nalu::ElemDataRequests dataNeeded;
+  sierra::nalu::ElemDataRequests dataNeeded(meta);
 
   auto meBC = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
 
@@ -959,7 +959,7 @@ void calc_dual_nodal_volume(
   const int ndim = meta.spatial_dimension();
   EXPECT_EQ(ndim, 3);
 
-  sierra::nalu::ElemDataRequests dataNeeded;
+  sierra::nalu::ElemDataRequests dataNeeded(meta);
 
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(topo);
 

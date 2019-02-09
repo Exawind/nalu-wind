@@ -116,7 +116,9 @@ class TestElemAlgorithmWithSuppAlgViews
 {
 public:
   TestElemAlgorithmWithSuppAlgViews(stk::mesh::BulkData& bulk)
-  : suppAlgs_(), bulkData_(bulk)
+  : suppAlgs_(),
+    dataNeededByKernels_(bulk.mesh_meta_data()),
+    bulkData_(bulk)
   {}
 
   void execute()
