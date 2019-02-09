@@ -16,9 +16,15 @@ MotionPulsatingSphere::MotionPulsatingSphere(const YAML::Node& node)
 
 void MotionPulsatingSphere::load(const YAML::Node& node)
 {
+  // perturb start and end times with a small value for
+  // accurate comparison with floats
+  double eps = std::numeric_limits<double>::epsilon();
+
   get_if_present(node, "start_time", startTime_, startTime_);
+  startTime_ = startTime_-eps;
 
   get_if_present(node, "end_time", endTime_, endTime_);
+  endTime_ = endTime_+eps;
 
   get_if_present(node, "amplitude", amplitude_, amplitude_);
 
@@ -32,10 +38,11 @@ void MotionPulsatingSphere::build_transformation(
   const double time,
   const double* xyz)
 {
-  double eps = std::numeric_limits<double>::epsilon();
+  if(time < (startTime_)) return;
 
-  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
-    scaling_mat(time,xyz);
+  double motionTime = (time < endTime_)? time : endTime_;
+
+  scaling_mat(motionTime,xyz);
 }
 
 void MotionPulsatingSphere::scaling_mat(
@@ -85,22 +92,21 @@ MotionBase::ThreeDVecType MotionPulsatingSphere::compute_velocity(
 {
   ThreeDVecType vel = {};
 
+  if( (time < startTime_) || (time > endTime_) ) return vel;
+
+  double radius = std::sqrt( std::pow(xyz[0]-origin_[0],2)
+                            +std::pow(xyz[1]-origin_[1],2)
+                            +std::pow(xyz[2]-origin_[2],2));
+
+  double pulsatingVelocity =
+    amplitude_ * std::sin(2*M_PI*frequency_*time) * 2*M_PI*frequency_ / radius;
+
   double eps = std::numeric_limits<double>::epsilon();
 
-  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
+  for (int d=0; d < threeDVecSize; d++)
   {
-    double radius = std::sqrt( std::pow(xyz[0]-origin_[0],2)
-                              +std::pow(xyz[1]-origin_[1],2)
-                              +std::pow(xyz[2]-origin_[2],2));
-
-    double pulsatingVelocity =
-      amplitude_ * std::sin(2*M_PI*frequency_*time) * 2*M_PI*frequency_ / radius;
-
-    for (int d=0; d < threeDVecSize; d++)
-    {
-      int signum = (-eps < xyz[d]-origin_[d]) - (xyz[d]-origin_[d] < eps);
-      vel[d] = signum * pulsatingVelocity * (xyz[d]-origin_[d]);
-    }
+    int signum = (-eps < xyz[d]-origin_[d]) - (xyz[d]-origin_[d] < eps);
+    vel[d] = signum * pulsatingVelocity * (xyz[d]-origin_[d]);
   }
 
   return vel;

@@ -16,10 +16,6 @@ MotionScaling::MotionScaling(const YAML::Node& node)
 
 void MotionScaling::load(const YAML::Node& node)
 {
-  get_if_present(node, "start_time", startTime_, startTime_);
-
-  get_if_present(node, "end_time", endTime_, endTime_);
-
   if( node["factor"] )
     factor_ = node["factor"].as<ThreeDVecType>();
 
