@@ -54,6 +54,7 @@ AssembleElemSolverAlgorithm::AssembleElemSolverAlgorithm(
   unsigned nodesPerEntity,
   bool interleaveMEViews)
   : SolverAlgorithm(realm, part, eqSystem),
+    dataNeededByKernels_(realm.meta_data()),
     entityRank_(entityRank),
     nodesPerEntity_(nodesPerEntity),
     rhsSize_(nodesPerEntity*eqSystem->linsys_->numDof()),

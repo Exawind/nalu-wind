@@ -29,7 +29,8 @@ public:
   KokkosMEViews(bool doInit=true, bool doPerturb=false)
     : comm_(MPI_COMM_WORLD),
       meta_(AlgTraits::nDim_),
-      bulk_(meta_, comm_)
+      bulk_(meta_, comm_),
+      dataNeeded_(meta_)
   {
     if (doInit)
       fill_mesh_and_init_data(doPerturb);

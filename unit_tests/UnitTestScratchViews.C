@@ -52,7 +52,7 @@ typedef Kokkos::DualView<int*, Kokkos::LayoutRight, sierra::nalu::DeviceSpace> I
 void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* pressure, sierra::nalu::VectorFieldType* velocity)
 {
   stk::topology elemTopo = stk::topology::HEX_8;
-  sierra::nalu::ElemDataRequests dataReq;
+  sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
   dataReq.add_cvfem_volume_me(meSCV);
 
@@ -144,7 +144,7 @@ TEST_F(Hex8MeshWithNSOFields, ScratchViews)
 void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* pressure, sierra::nalu::VectorFieldType* velocity)
 {
   stk::topology elemTopo = stk::topology::HEX_8;
-  sierra::nalu::ElemDataRequests dataReq;
+  sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
   dataReq.add_cvfem_volume_me(meSCV);
 

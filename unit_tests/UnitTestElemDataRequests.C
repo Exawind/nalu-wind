@@ -91,7 +91,7 @@ TEST_F(Hex8MeshWithNSOFields, ElemDataRequestsNGP)
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
   stk::topology elemTopo = stk::topology::HEX_8;
 
-  sierra::nalu::ElemDataRequests dataReq;
+  sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
   dataReq.add_cvfem_volume_me(meSCV);
 
@@ -111,7 +111,7 @@ TEST_F(Hex8MeshWithNSOFields, ElemDataRequestsGPU)
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
   stk::topology elemTopo = stk::topology::HEX_8;
 
-  sierra::nalu::ElemDataRequests dataReq;
+  sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
   dataReq.add_cvfem_volume_me(meSCV);
 
