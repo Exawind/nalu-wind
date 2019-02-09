@@ -25,7 +25,7 @@ public:
 
   virtual ~MotionBase() {}
 
-  virtual void build_transformation(double, const double* = nullptr) = 0;
+  virtual void build_transformation(const double, const double* = nullptr) = 0;
 
   /** Function to compute motion-specific velocity
    *

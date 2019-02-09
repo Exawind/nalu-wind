@@ -17,9 +17,15 @@ MotionRotation::MotionRotation(const YAML::Node& node)
 
 void MotionRotation::load(const YAML::Node& node)
 {
+  // perturb start and end times with a small value for
+  // accurate comparison with floats
+  double eps = std::numeric_limits<double>::epsilon();
+
   get_if_present(node, "start_time", startTime_, startTime_);
+  startTime_ = startTime_-eps;
 
   get_if_present(node, "end_time", endTime_, endTime_);
+  endTime_ = endTime_+eps;
 
   // rotation could be based on angular velocity or angle
   get_if_present(node, "omega", omega_, omega_);
@@ -43,22 +49,18 @@ void MotionRotation::build_transformation(
   double time,
   const double*  /* xyz */)
 {
-  double eps = std::numeric_limits<double>::epsilon();
+  if(time < (startTime_)) return;
 
-  if(time >= (startTime_-eps))
-  {
-    if(time >= (endTime_+eps))
-      time = endTime_;
+  double motionTime = (time < endTime_)? time : endTime_;
 
-    // determine current angle
-    double curr_angle = 0.0;
-    if (useOmega_)
-      curr_angle = omega_*(time-startTime_);
-    else
-      curr_angle = angle_*M_PI/180;
+  // determine current angle
+  double curr_angle = 0.0;
+  if (useOmega_)
+    curr_angle = omega_*(motionTime-startTime_);
+  else
+    curr_angle = angle_*M_PI/180;
 
-    rotation_mat(curr_angle);
-  }
+  rotation_mat(curr_angle);
 }
 
 void MotionRotation::rotation_mat(const double angle)
@@ -122,44 +124,41 @@ MotionBase::ThreeDVecType MotionRotation::compute_velocity(
 {
   ThreeDVecType vel = {};
 
-  double eps = std::numeric_limits<double>::epsilon();
+  if( (time < startTime_) || (time > endTime_) ) return vel;
 
-  if( (time >= (startTime_-eps)) && (time <= (endTime_+eps)) )
-  {
-    // construct unit vector
-    ThreeDVecType unitVec = {};
+  // construct unit vector
+  ThreeDVecType unitVec = {};
 
-    double mag = 0.0;
-    for (int d=0; d < threeDVecSize; d++)
-      mag += axis_[d] * axis_[d];
-    mag = std::sqrt(mag);
+  double mag = 0.0;
+  for (int d=0; d < threeDVecSize; d++)
+    mag += axis_[d] * axis_[d];
+  mag = std::sqrt(mag);
 
-    unitVec[0] = axis_[0]/mag;
-    unitVec[1] = axis_[1]/mag;
-    unitVec[2] = axis_[2]/mag;
+  unitVec[0] = axis_[0]/mag;
+  unitVec[1] = axis_[1]/mag;
+  unitVec[2] = axis_[2]/mag;
 
-    // transform the origin of the rotating body
-    ThreeDVecType transOrigin = {};
-    for (int d = 0; d < threeDVecSize; d++) {
-      transOrigin[d] = compTrans[d][0]*origin_[0]
-                      +compTrans[d][1]*origin_[1]
-                      +compTrans[d][2]*origin_[2]
-                      +compTrans[d][3];
-    }
-
-    // compute relative coords and vector omega (dimension 3) for general cross product
-    ThreeDVecType relCoord = {};
-    ThreeDVecType vecOmega = {};
-    for (int d=0; d < threeDVecSize; d++) {
-      relCoord[d] = xyz[d] - transOrigin[d];
-      vecOmega[d] = omega_*unitVec[d];
-    }
-
-    // cross product v = \omega \cross \x
-    vel[0] = vecOmega[1]*relCoord[2] - vecOmega[2]*relCoord[1];
-    vel[1] = vecOmega[2]*relCoord[0] - vecOmega[0]*relCoord[2];
-    vel[2] = vecOmega[0]*relCoord[1] - vecOmega[1]*relCoord[0];
+  // transform the origin of the rotating body
+  ThreeDVecType transOrigin = {};
+  for (int d = 0; d < threeDVecSize; d++) {
+    transOrigin[d] = compTrans[d][0]*origin_[0]
+                    +compTrans[d][1]*origin_[1]
+                    +compTrans[d][2]*origin_[2]
+                    +compTrans[d][3];
   }
+
+  // compute relative coords and vector omega (dimension 3) for general cross product
+  ThreeDVecType relCoord = {};
+  ThreeDVecType vecOmega = {};
+  for (int d=0; d < threeDVecSize; d++) {
+    relCoord[d] = xyz[d] - transOrigin[d];
+    vecOmega[d] = omega_*unitVec[d];
+  }
+
+  // cross product v = \omega \cross \x
+  vel[0] = vecOmega[1]*relCoord[2] - vecOmega[2]*relCoord[1];
+  vel[1] = vecOmega[2]*relCoord[0] - vecOmega[0]*relCoord[2];
+  vel[2] = vecOmega[0]*relCoord[1] - vecOmega[1]*relCoord[0];
 
   return vel;
 }
