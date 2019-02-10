@@ -98,20 +98,6 @@ public:
   {
   }
 
-  ElemDataRequests& operator=(const ElemDataRequests& other)
-  {
-    dataEnums = other.dataEnums;
-    coordsFields_ = other.coordsFields_;
-    fields = other.fields;
-    meFC_ = other.meFC_;
-    meSCS_ = other.meSCS_;
-    meSCV_ = other.meSCV_;
-    meFEM_ = other.meFEM_;
-
-    return *this;
-  }
-
-
   void add_master_element_call(
     ELEM_DATA_NEEDED data,
     COORDS_TYPES cType = CURRENT_COORDINATES

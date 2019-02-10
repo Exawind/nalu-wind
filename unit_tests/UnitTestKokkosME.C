@@ -147,7 +147,7 @@ void test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
 
   // Register ME data requests
   for(sierra::nalu::ELEM_DATA_NEEDED request : requests) {
-    driver.dataNeeded_.add_master_element_call(request, sierra::nalu::CURRENT_COORDINATES);
+    driver.dataNeeded().add_master_element_call(request, sierra::nalu::CURRENT_COORDINATES);
   }
 
   sierra::nalu::MasterElement* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
