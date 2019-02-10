@@ -66,7 +66,8 @@ void test_MEBC_views(int faceOrdinal, const std::vector<sierra::nalu::ELEM_DATA_
 
   // Register ME data requests
   for(sierra::nalu::ELEM_DATA_NEEDED request : elem_requests) {
-    driver.elemDataNeeded_.add_master_element_call(request, sierra::nalu::CURRENT_COORDINATES);
+    driver.elemDataNeeded().add_master_element_call(
+      request, sierra::nalu::CURRENT_COORDINATES);
   }
 
   // Execute the loop and perform all tests
