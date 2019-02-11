@@ -42,11 +42,11 @@ public:
   static constexpr unsigned bytesPerUnsigned = sizeof(unsigned);
 
   KOKKOS_FUNCTION
-  MultiDimViews(const TEAMHANDLETYPE& /* team */,
-                unsigned /* maxOrdinal */,
+  MultiDimViews(const TEAMHANDLETYPE& team,
+                unsigned maxOrdinal,
                 const NumNeededViews& numNeededViews)
-  : //indices(get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team,
-    //        adjust_up_to_alignment_boundary((maxOrdinal+1)*bytesPerUnsigned, KOKKOS_MEMORY_ALIGNMENT)/bytesPerUnsigned)),
+  : indices(get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team,
+            adjust_up_to_alignment_boundary((maxOrdinal+1)*bytesPerUnsigned, KOKKOS_MEMORY_ALIGNMENT)/bytesPerUnsigned)),
     views_1D(), views_2D(), views_3D(), views_4D(), 
     views_1D_size(0), views_2D_size(0), views_3D_size(0), views_4D_size(0)
   {
@@ -236,10 +236,8 @@ public:
 
 public:
   static const unsigned maxViewsPerDim = 25;
-  static const unsigned maxPossibleOrdinals = 128;
 
-//  SharedMemView<int*,SHMEM> indices;
-  NALU_ALIGNED int indices[maxPossibleOrdinals];
+  SharedMemView<int*,SHMEM> indices;
 #ifndef KOKKOS_ENABLE_CUDA
   SharedMemView1D* views_1D[maxViewsPerDim];
   SharedMemView2D* views_2D[maxViewsPerDim];
