@@ -89,8 +89,8 @@ TEST(ActuatorDiskFAST, PointsOnACircle)
   int i = 0;
   while (i < 20) {
     std::ostringstream message;
-    for (int i = 0; i < 3; i++) {
-      hub[i] = fn_np_real_rand();
+    for (int ih = 0; ih < 3; ih++) {
+      hub[ih] = fn_np_real_rand();
     }
 
     const int index = fn_int_rand();
