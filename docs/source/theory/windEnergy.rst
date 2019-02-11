@@ -543,9 +543,10 @@ where :math:`N_B` and :math:`N_R` are the number of blades and number of radial 
 respectively. 
 
 :math:`\mathbf{F}_{total}(r_j)` is then spread evenly across the original actuator line points
-and additional 'swept-points' that are added in between the actuator lines. The swept-points
-can either be non-uniformly or uniformly distributed along the azimuthal direction (left and right
-images in figure :numref:`actdisk-sample-fig`).  The non-uniform distribution uses the distance 
+and additional 'swept-points' that are added in between the actuator lines. The swept-points are 
+always uniformly distributed azimuthally, but the number of swept points can either be non-uniformly
+or uniformly distributed along the radial direction (left and right images in 
+figure :numref:`actdisk-sample-fig`).  The non-uniform distribution uses the distance 
 between points along the embedded actuator line blades as the arc-length between points in the
 azimuthal direction.  This is the default behavior.  If uniform spacing is desired then 
 `num_swept_pts` must be specified in the input deck.  This is the number of points between 
@@ -568,5 +569,5 @@ The force that is spread across all the points at a given radius is then calcula
    \mathbf{f}(r_j) = \frac{\mathbf{F}_{total}(r_j)}{N_B*(N_{S,j}+1)}
 
 where :math:`N_{S,j}` is the number of swept points for a given radius.  The index j is used
-because this value varies between radii when non-uniform azimuthal sampling is applied.
+because this value varies between radii when non-uniform sampling is applied.
 
