@@ -73,8 +73,8 @@ void copy_and_interleave(const MultiDimViewsType ** data,
     for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
       src[simdIndex] = data[simdIndex]->get_1D_view_by_index(viewIndex).data();
       NGP_ThrowAssert(data[simdIndex]->get_1D_view_by_index(viewIndex).size() == simdData.get_1D_view_by_index(viewIndex).size());
-      NGP_ThrowAssert(src[simdIndex][0] == data[simdIndex]->get_1D_view_by_index(viewIndex).data()[0]);
       NGP_ThrowAssert(src[simdIndex] != nullptr);
+      NGP_ThrowAssert(src[simdIndex][0] == data[simdIndex]->get_1D_view_by_index(viewIndex).data()[0]);
     }
     interleave(simdData.get_1D_view_by_index(viewIndex), src, simdElems);
   }
@@ -84,8 +84,8 @@ void copy_and_interleave(const MultiDimViewsType ** data,
     for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
       src[simdIndex] = data[simdIndex]->get_2D_view_by_index(viewIndex).data();
       NGP_ThrowAssert(data[simdIndex]->get_2D_view_by_index(viewIndex).size() == simdData.get_2D_view_by_index(viewIndex).size());
-      NGP_ThrowAssert(src[simdIndex][0] == data[simdIndex]->get_2D_view_by_index(viewIndex).data()[0]);
       NGP_ThrowAssert(src[simdIndex] != nullptr);
+      NGP_ThrowAssert(src[simdIndex][0] == data[simdIndex]->get_2D_view_by_index(viewIndex).data()[0]);
     }
     interleave(simdData.get_2D_view_by_index(viewIndex), src, simdElems);
   }
@@ -95,8 +95,8 @@ void copy_and_interleave(const MultiDimViewsType ** data,
     for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
       src[simdIndex] = data[simdIndex]->get_3D_view_by_index(viewIndex).data();
       NGP_ThrowAssert(data[simdIndex]->get_3D_view_by_index(viewIndex).size() == simdData.get_3D_view_by_index(viewIndex).size());
-      NGP_ThrowAssert(src[simdIndex][0] == data[simdIndex]->get_3D_view_by_index(viewIndex).data()[0]);
       NGP_ThrowAssert(src[simdIndex] != nullptr);
+      NGP_ThrowAssert(src[simdIndex][0] == data[simdIndex]->get_3D_view_by_index(viewIndex).data()[0]);
     }
     interleave(simdData.get_3D_view_by_index(viewIndex), src, simdElems);
   }
