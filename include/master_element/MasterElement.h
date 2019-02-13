@@ -338,12 +338,13 @@ public:
 
   // FEM
   std::vector<double>weights_;
+
 };
 
 class QuadrilateralP2Element : public MasterElement
 {
 public:
-  using Traits = AlgTraitsQuad9_2D;
+  using AlgTraits = AlgTraitsQuad9_2D;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
@@ -443,6 +444,7 @@ public:
   Tri2DSCV();
   virtual ~Tri2DSCV();
 
+  using AlgTraits = AlgTraitsTri3_2D;
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
@@ -475,6 +477,7 @@ public:
   Tri3DSCS();
   virtual ~Tri3DSCS();
 
+  using AlgTraits = AlgTraitsTri3;
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;

@@ -20,6 +20,7 @@ public:
   WedSCV();
   virtual ~WedSCV();
 
+  using AlgTraits = AlgTraitsWed6;
   using MasterElement::determinant;
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
@@ -77,6 +78,7 @@ public:
   WedSCS();
   virtual ~WedSCS();
 
+  using AlgTraits = AlgTraitsWed6;
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;

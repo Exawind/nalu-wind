@@ -22,6 +22,7 @@ public:
   Hex8FEM();
   virtual ~Hex8FEM();
 
+  using AlgTraits = AlgTraitsHex8;
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
   using MasterElement::face_grad_op;

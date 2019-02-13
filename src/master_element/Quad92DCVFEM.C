@@ -167,8 +167,8 @@ Quad92DSCV::jacobian_determinant(
   DoubleType dx_ds1 = 0.0;  DoubleType dx_ds2 = 0.0;
   DoubleType dy_ds1 = 0.0;  DoubleType dy_ds2 = 0.0;
 
-  for (int node = 0; node < Traits::nodesPerElement_; ++node) {
-    const int vector_offset = node * Traits::nDim_;
+  for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
+    const int vector_offset = node * AlgTraits::nDim_;
 
     const DoubleType xCoord = elemNodalCoords(node,0);
     const DoubleType yCoord = elemNodalCoords(node,1);
@@ -191,7 +191,7 @@ void Quad92DSCV::determinant(
   SharedMemView<DoubleType**> &coords,
   SharedMemView<DoubleType*>  &volume) 
 {
-    for (int ip = 0; ip < Traits::numScvIp_; ++ip) {
+    for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
       const int grad_offset = nDim_ * nodesPerElement_ * ip;
 
       //weighted jacobian determinant
@@ -207,28 +207,28 @@ void Quad92DSCV::grad_op(
     SharedMemView<DoubleType**>& coords,
     SharedMemView<DoubleType***>& gradop,
     SharedMemView<DoubleType***>& deriv) {
-  for (int ki=0,j=0; ki<Traits::numScsIp_; ++ki) {
-    for (int kn=0; kn<Traits::nodesPerElement_; ++kn) {
-      for (int n=0; n<Traits::nDim_; ++n,++j) {
+  for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
+    for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
+      for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
         deriv(ki,kn,n) = shapeDerivs_[j];
       }
     }
   }
-  quad_gradient_operator<Traits::numScsIp_,Traits::nodesPerElement_>(coords, gradop, deriv);
+  quad_gradient_operator<AlgTraits::numScsIp_,AlgTraits::nodesPerElement_>(coords, gradop, deriv);
 }
 
 void Quad92DSCV::shifted_grad_op(
     SharedMemView<DoubleType**>& coords,
     SharedMemView<DoubleType***>& gradop,
     SharedMemView<DoubleType***>& deriv) {
-  for (int ki=0,j=0; ki<Traits::numScsIp_; ++ki) {
-    for (int kn=0; kn<Traits::nodesPerElement_; ++kn) {
-      for (int n=0; n<Traits::nDim_; ++n,++j) {
+  for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
+    for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
+      for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
         deriv(ki,kn,n) = shapeDerivsShift_[j];
       }
     }
   }
-  quad_gradient_operator<Traits::numScsIp_,Traits::nodesPerElement_>(coords, gradop, deriv);
+  quad_gradient_operator<AlgTraits::numScsIp_,AlgTraits::nodesPerElement_>(coords, gradop, deriv);
 }
 
 void Quad92DSCV::determinant(
@@ -237,7 +237,7 @@ void Quad92DSCV::determinant(
   double *volume,
   double *error)
 {
-    for (int ip = 0; ip < Traits::numScvIp_; ++ip) {
+    for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
       const int grad_offset = nDim_ * nodesPerElement_ * ip;
 
       //weighted jacobian determinant
@@ -265,7 +265,7 @@ Quad92DSCV::jacobian_determinant(
   double dx_ds1 = 0.0;  double dx_ds2 = 0.0;
   double dy_ds1 = 0.0;  double dy_ds2 = 0.0;
 
-  for (int node = 0; node < Traits::nodesPerElement_; ++node) {
+  for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
     const int vector_offset = node * nDim_;
 
     const double xCoord = elemNodalCoords[vector_offset + 0];
@@ -596,11 +596,11 @@ Quad92DSCS::determinant(
   //returns the normal vector (dyds,-dxds) for constant t curves
   //returns the normal vector (dydt,-dxdt) for constant s curves
 
-  constexpr int dim = Traits::nDim_;
-  constexpr int ipsPerDirection = Traits::numScsIp_ / dim;
-  static_assert ( ipsPerDirection * dim == Traits::numScsIp_, "Number of ips incorrect");
+  constexpr int dim = AlgTraits::nDim_;
+  constexpr int ipsPerDirection = AlgTraits::numScsIp_ / dim;
+  static_assert ( ipsPerDirection * dim == AlgTraits::numScsIp_, "Number of ips incorrect");
 
-  constexpr int deriv_increment = dim * Traits::nodesPerElement_;
+  constexpr int deriv_increment = dim * AlgTraits::nodesPerElement_;
 
   int index = 0;
 
@@ -619,7 +619,7 @@ Quad92DSCS::determinant(
   }
 
   // Multiply with the integration point weighting
-  for (int ip = 0; ip < Traits::numScsIp_; ++ip) {
+  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
     double weight = ipInfo_[ip].weight;
     areav(ip,0) *= weight;
     areav(ip,1) *= weight;
@@ -638,11 +638,11 @@ Quad92DSCS::determinant(
 
   ThrowRequireMsg(nelem == 1, "P2 elements are processed one-at-a-time");
 
-  constexpr int dim = Traits::nDim_;
-  constexpr int ipsPerDirection = Traits::numScsIp_ / dim;
-  static_assert ( ipsPerDirection * dim == Traits::numScsIp_, "Number of ips incorrect");
+  constexpr int dim = AlgTraits::nDim_;
+  constexpr int ipsPerDirection = AlgTraits::numScsIp_ / dim;
+  static_assert ( ipsPerDirection * dim == AlgTraits::numScsIp_, "Number of ips incorrect");
 
-  constexpr int deriv_increment = dim * Traits::nodesPerElement_;
+  constexpr int deriv_increment = dim * AlgTraits::nodesPerElement_;
 
   int index = 0;
 
@@ -661,7 +661,7 @@ Quad92DSCS::determinant(
   }
 
   // Multiply with the integration point weighting
-  for (int ip = 0; ip < Traits::numScsIp_; ++ip) {
+  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
     double weight = ipInfo_[ip].weight;
     areav[ip * dim + 0] *= weight;
     areav[ip * dim + 1] *= weight;
@@ -674,14 +674,14 @@ void Quad92DSCS::grad_op(
     SharedMemView<DoubleType**>& coords,
     SharedMemView<DoubleType***>& gradop,
     SharedMemView<DoubleType***>& deriv) {
-  for (int ki=0,j=0; ki<Traits::numScsIp_; ++ki) {
-    for (int kn=0; kn<Traits::nodesPerElement_; ++kn) {
-      for (int n=0; n<Traits::nDim_; ++n,++j) {
+  for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
+    for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
+      for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
         deriv(ki,kn,n) = shapeDerivs_[j];
       }
     }
   }
-  quad_gradient_operator<Traits::numScsIp_,Traits::nodesPerElement_>(coords, gradop, deriv);
+  quad_gradient_operator<AlgTraits::numScsIp_,AlgTraits::nodesPerElement_>(coords, gradop, deriv);
 }
 
 void Quad92DSCS::grad_op(
@@ -694,7 +694,7 @@ void Quad92DSCS::grad_op(
 {
   int lerr = 0;
 
-  constexpr int numShapeDerivs = Traits::numScsIp_*Traits::nodesPerElement_*Traits::nDim_;
+  constexpr int numShapeDerivs = AlgTraits::numScsIp_*AlgTraits::nodesPerElement_*AlgTraits::nDim_;
   for (int j = 0; j < numShapeDerivs; ++j) {
     deriv[j] = shapeDerivs_[j];
   }
@@ -718,14 +718,14 @@ void Quad92DSCS::shifted_grad_op(
     SharedMemView<DoubleType**>& coords,
     SharedMemView<DoubleType***>& gradop,
     SharedMemView<DoubleType***>& deriv) {
-  for (int ki=0,j=0; ki<Traits::numScsIp_; ++ki) {
-    for (int kn=0; kn<Traits::nodesPerElement_; ++kn) {
-      for (int n=0; n<Traits::nDim_; ++n,++j) {
+  for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
+    for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
+      for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
         deriv(ki,kn,n) = shapeDerivsShift_[j];
       }
     }
   }
-  quad_gradient_operator<Traits::numScsIp_,Traits::nodesPerElement_>(coords, gradop, deriv);
+  quad_gradient_operator<AlgTraits::numScsIp_,AlgTraits::nodesPerElement_>(coords, gradop, deriv);
 }
 
 void Quad92DSCS::shifted_grad_op(
@@ -738,7 +738,7 @@ void Quad92DSCS::shifted_grad_op(
 {
   int lerr = 0;
 
-  constexpr int numShapeDerivs = Traits::numScsIp_*Traits::nodesPerElement_*Traits::nDim_;
+  constexpr int numShapeDerivs = AlgTraits::numScsIp_*AlgTraits::nodesPerElement_*AlgTraits::nDim_;
   for (int j = 0; j < numShapeDerivs; ++j) {
     deriv[j] = shapeDerivsShift_[j];
   }
@@ -823,8 +823,8 @@ void Quad92DSCS::gij(
   SharedMemView<DoubleType***>& glower,
   SharedMemView<DoubleType***>& deriv) {
 
-  constexpr int npe  = Traits::nodesPerElement_;
-  constexpr int nint = Traits::numScsIp_;
+  constexpr int npe  = AlgTraits::nodesPerElement_;
+  constexpr int nint = AlgTraits::numScsIp_;
 
   DoubleType dx_ds[2][2], ds_dx[2][2];
 
@@ -947,7 +947,7 @@ Quad92DSCS::area_vector(
       Jacobian::T_DIRECTION : Jacobian::S_DIRECTION;
 
   DoubleType dxdr = 0.0;  DoubleType dydr = 0.0;
-  for (int node = 0; node < Traits::nodesPerElement_; ++node) {
+  for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
     const int vector_offset = nDim_ * node;
     const DoubleType xCoord = elemNodalCoords(node,0);
     const DoubleType yCoord = elemNodalCoords(node,1);
@@ -969,7 +969,7 @@ Quad92DSCS::area_vector(
       Jacobian::T_DIRECTION : Jacobian::S_DIRECTION;
 
   double dxdr = 0.0;  double dydr = 0.0;
-  for (int node = 0; node < Traits::nodesPerElement_; ++node) {
+  for (int node = 0; node < AlgTraits::nodesPerElement_; ++node) {
     const int vector_offset = nDim_ * node;
     const double xCoord = elemNodalCoords[vector_offset+0];
     const double yCoord = elemNodalCoords[vector_offset+1];

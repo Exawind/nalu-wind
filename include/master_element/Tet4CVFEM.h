@@ -18,6 +18,7 @@ namespace nalu{
 class TetSCV : public MasterElement
 {
 public:
+  using AlgTraits = AlgTraitsTet4;
   using MasterElement::determinant;
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
@@ -75,6 +76,7 @@ public:
 class TetSCS : public MasterElement
 {
 public:
+  using AlgTraits = AlgTraitsTet4;
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;

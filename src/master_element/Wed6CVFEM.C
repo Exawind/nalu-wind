@@ -61,7 +61,7 @@ void wed_deriv(
 WedSCV::WedSCV()
   : MasterElement()
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 6;
   numIntPoints_ = 6;
 
@@ -327,7 +327,7 @@ void WedSCV::Mij(
 WedSCS::WedSCS()
   : MasterElement()
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 6;
   numIntPoints_ = 9;
 

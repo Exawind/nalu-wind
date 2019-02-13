@@ -127,7 +127,7 @@ void shifted_pyr_deriv(const int npts,
 PyrSCV::PyrSCV()
   : MasterElement()
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 5;
   numIntPoints_ = 5; 
 
@@ -549,7 +549,7 @@ void PyrSCS::Mij(
 PyrSCS::PyrSCS()
   : MasterElement()
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 5;
   numIntPoints_ = 12;
 
