@@ -21,7 +21,7 @@ Quad3DSCS::Quad3DSCS()
   : MasterElement(),
     elemThickness_(0.1)
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 4;
   numIntPoints_ = 4;
   scaleToStandardIsoFac_ = 2.0;

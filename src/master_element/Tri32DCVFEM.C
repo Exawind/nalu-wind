@@ -101,7 +101,7 @@ void tri_gradient_operator(
 Tri32DSCV::Tri32DSCV()
   : MasterElement()
 {
-  nDim_ = 2;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 3;
   numIntPoints_ = 3;
 
@@ -358,7 +358,7 @@ void Tri32DSCV::Mij(
 Tri32DSCS::Tri32DSCS()
   : MasterElement()
 {
-  nDim_ = 2;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 3;
   numIntPoints_ = 3;
 

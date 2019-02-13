@@ -107,7 +107,7 @@ void quad_gradient_operator(const SharedMemView<DoubleType***>& deriv,
 Quad42DSCV::Quad42DSCV()
   : MasterElement()
 {
-  nDim_ = 2;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 4;
   numIntPoints_ = 4;
 
@@ -233,7 +233,7 @@ void Quad42DSCV::grad_op(
   SharedMemView<DoubleType***>& deriv) {
 
   quad_derivative(intgLoc_, deriv);
-  quad_gradient_operator<Traits::numScsIp_, Traits::nodesPerElement_>(deriv, coords, gradop);
+  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(deriv, coords, gradop);
 }
 
 void Quad42DSCV::determinant(
@@ -258,7 +258,7 @@ void Quad42DSCV::shifted_grad_op(
   SharedMemView<DoubleType***>& deriv) {
 
   quad_derivative(intgLocShift_, deriv);
-  quad_gradient_operator<Traits::numScsIp_, Traits::nodesPerElement_>(deriv, coords, gradop);
+  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(deriv, coords, gradop);
 }
 
 //--------------------------------------------------------------------------
@@ -332,7 +332,7 @@ void Quad42DSCV::Mij(
 Quad42DSCS::Quad42DSCS()
   : MasterElement()
 {
-  nDim_ = 2;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 4;
   numIntPoints_ = 4;
   scaleToStandardIsoFac_ = 2.0;
@@ -556,7 +556,7 @@ void Quad42DSCS::grad_op(
   SharedMemView<DoubleType***>& deriv) {
 
   quad_derivative(intgLoc_, deriv);
-  quad_gradient_operator<Traits::numScsIp_, Traits::nodesPerElement_>(deriv, coords, gradop);
+  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(deriv, coords, gradop);
 }
 
 void Quad42DSCS::grad_op(
@@ -591,7 +591,7 @@ void Quad42DSCS::shifted_grad_op(
   SharedMemView<DoubleType***>& gradop,
   SharedMemView<DoubleType***>& deriv) {
   quad_derivative(intgLocShift_, deriv);
-  quad_gradient_operator<Traits::numScsIp_, Traits::nodesPerElement_>(deriv, coords, gradop);
+  quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(deriv, coords, gradop);
 }
 
 void Quad42DSCS::shifted_grad_op(

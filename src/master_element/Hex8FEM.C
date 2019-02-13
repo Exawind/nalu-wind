@@ -107,7 +107,7 @@ namespace {
 Hex8FEM::Hex8FEM()
   : MasterElement()
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 8;
   numIntPoints_ = 8;
 
@@ -188,7 +188,7 @@ void Hex8FEM::grad_op_fem(
   SharedMemView<DoubleType*>&det_j)
 {
   hex8_fem_derivative(numIntPoints_, &intgLoc_[0], deriv);
-  generic_grad_op_3d<AlgTraitsHex8>(deriv, coords, gradop, det_j);
+  generic_grad_op_3d<AlgTraits>(deriv, coords, gradop, det_j);
 }
 
 //--------------------------------------------------------------------------
@@ -225,7 +225,7 @@ void Hex8FEM::shifted_grad_op_fem(
   SharedMemView<DoubleType*>&det_j)
 {
   hex8_fem_derivative(numIntPoints_, &intgLocShift_[0], deriv);
-  generic_grad_op_3d<AlgTraitsHex8>(deriv, coords, gradop, det_j);
+  generic_grad_op_3d<AlgTraits>(deriv, coords, gradop, det_j);
 }
 
 //--------------------------------------------------------------------------

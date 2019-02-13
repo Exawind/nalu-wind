@@ -60,7 +60,7 @@ void tet_deriv(DerivType& deriv)
 TetSCV::TetSCV()
   : MasterElement()
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 4;
   numIntPoints_ = 4;
 
@@ -311,7 +311,7 @@ void TetSCV::Mij(
 TetSCS::TetSCS()
   : MasterElement()
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 4;
   numIntPoints_ = 6;
 

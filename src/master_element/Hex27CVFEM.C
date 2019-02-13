@@ -31,7 +31,7 @@ HexahedralP2Element::HexahedralP2Element()
     nodes1D_(3),
     numQuad_(2)
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = nodes1D_ * nodes1D_ * nodes1D_;
 
   // map the standard stk node numbering to a tensor-product style node numbering (i.e. node (m,l,k) -> m+npe*l+npe^2*k)
