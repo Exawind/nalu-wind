@@ -206,7 +206,6 @@ void check_interpolation(
   for (int j = 0 ; j < num_int_pt; ++j) {
     EXPECT_NEAR(stk::simd::get_data(hostResults(j),0), polyResult[j], 1.0e-12);
   }
-  sierra::nalu::MasterElementRepo::clear();
 }
 
 template <typename AlgTraits>
@@ -377,8 +376,7 @@ TEST_F(MasterElementHexSerialNGP, hex8_scs_derivatives)
 {
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_1_hex_8();
-    using AlgTraits = sierra::nalu::AlgTraitsHex8;
-    check_derivatives<AlgTraits>(meta, bulk);
+    check_derivatives<sierra::nalu::AlgTraitsHex8>(meta, bulk);
   }
 }
 
@@ -386,8 +384,8 @@ TEST_F(MasterElementHexSerialNGP, hex27_scs_interpolation)
 {
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_2_hex_27();
-    using AlgTraits = sierra::nalu::AlgTraitsHex27;
-    check_interpolation<AlgTraits, AlgTraits::masterElementScs_, true>(meta, bulk);
+    //using AlgTraits = sierra::nalu::AlgTraitsHex27;
+    //check_interpolation<AlgTraits, AlgTraits::masterElementScs_, true>(meta, bulk);
   }
 }
 
@@ -395,8 +393,8 @@ TEST_F(MasterElementHexSerialNGP, hex27_scv_interpolation)
 {
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_2_hex_27();
-    using AlgTraits = sierra::nalu::AlgTraitsHex27;
-    check_interpolation<AlgTraits, AlgTraits::masterElementScv_, false>(meta, bulk);
+    sierra::nalu::Hex27SCV hex27scv;
+    //check_interpolation<sierra::nalu::AlgTraitsHex27>(meta, bulk, hex27scv);
   }
 }
 
@@ -404,8 +402,8 @@ TEST_F(MasterElementHexSerialNGP, hex27_scs_derivatives)
 {
   if (stk::parallel_machine_size(comm) == 1) {
     setup_poly_order_2_hex_27();
-    using AlgTraits = sierra::nalu::AlgTraitsHex27;
-    check_derivatives<AlgTraits>(meta, bulk);
+    sierra::nalu::Hex27SCS hex27scs;
+    //check_derivatives<3,2>(bulk, topo, hex27scs);
   }
 }
 
