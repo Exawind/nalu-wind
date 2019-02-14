@@ -1,6 +1,8 @@
 #ifndef STKHELPERS_H
 #define STKHELPERS_H
 
+#include <element_promotion/PromotedPartHelper.h>
+
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Ghosting.hpp>
@@ -37,6 +39,10 @@ void populate_ghost_comm_procs(const stk::mesh::BulkData& bulk_data, stk::mesh::
 inline
 stk::topology get_elem_topo(const Realm& realm, const stk::mesh::Part& surfacePart)
 {
+  if (realm.doPromotion_) {
+    return get_promoted_elem_topo(realm.spatialDimension_, realm.promotionOrder_);
+  }
+
   std::vector<const stk::mesh::Part*> blockParts = realm.meta_data().get_blocks_touching_surface(&surfacePart);
 
   ThrowRequireMsg(blockParts.size() >= 1, "Error, expected at least 1 block for surface "<<surfacePart.name());

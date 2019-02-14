@@ -15,6 +15,9 @@
 #include <element_promotion/HexNElementDescription.h>
 #include <element_promotion/QuadNElementDescription.h>
 
+#include <AlgTraits.h>
+#include <KokkosInterface.h>
+
 #include <vector>
 #include <array>
 
@@ -169,6 +172,10 @@ public:
     return shapeDerivs_;
   }
 
+  void face_grad_op(
+    int face_ordinal,
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& gradop) final;
 
 private:
   void set_interior_info();
@@ -189,6 +196,8 @@ private:
   std::vector<double> expFaceShapeDerivs_;
   std::vector<ContourData> ipInfo_;
   int ipsPerFace_;
+
+  AlignedViewType<DoubleType**[3]> expRefGradWeights_;
 };
 
 // 3D Quad 9

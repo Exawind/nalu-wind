@@ -331,9 +331,11 @@ HexahedralP2Element::eval_shape_derivs_at_shifted_ips()
 void
 HexahedralP2Element::eval_shape_derivs_at_face_ips()
 {
-  expFaceShapeDerivs_.resize(numIntPoints_*nodesPerElement_*nDim_);
+  const int numFaceIntPoints = intgExpFace_.size() / 3; // 216, same as numIntPoints_
+  ThrowAssert(intgExpFace_.size() % 3 == 0);
+  expFaceShapeDerivs_.resize(numFaceIntPoints*nodesPerElement_*nDim_);
   hex27_shape_deriv(
-    numIntPoints_,
+    numFaceIntPoints,
     intgExpFace_.data(),
     expFaceShapeDerivs_.data()
   );

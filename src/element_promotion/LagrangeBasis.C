@@ -96,7 +96,7 @@ LagrangeBasis::LagrangeBasis(
   :  indicesMap_(indicesMap),
      basis1D_(nodeLocs),
      numNodes1D_(nodeLocs.size()),
-     polyOrder_(numNodes1D_),
+     polyOrder_(numNodes1D_-1),
      dim_(indicesMap[0].size())
 {
   for (auto& indices : indicesMap) {

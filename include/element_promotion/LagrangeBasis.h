@@ -64,7 +64,7 @@ public:
 
   double tensor_lagrange_interpolant(unsigned dimension, const double* x, const int* node_ordinals) const;
 
-  unsigned num_nodes() { return numNodes_; }
+  unsigned num_nodes() const { return numNodes_; }
 
   std::vector<std::vector<int>> indicesMap_;
 

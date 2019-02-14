@@ -303,10 +303,35 @@ namespace nalu{
   };
 
    template <template <typename> class T, typename... Args>
-  Kernel* build_face_elem_topo_kernel(int /* dimension */,
+  Kernel* build_face_elem_topo_kernel(int dimension,
                                       stk::topology faceTopo, stk::topology elemTopo,
                                       Args&&... args)
   {
+   if (elemTopo.is_superelement()) {
+     int poly_order = poly_order_from_topology(dimension, elemTopo);
+
+     if (dimension == 2) {
+       switch (poly_order)
+      {
+         case 2: return new T<AlgTraitsEdgePQuadPGL<2>>(std::forward<Args>(args)...);
+         case 3: return new T<AlgTraitsEdgePQuadPGL<3>>(std::forward<Args>(args)...);
+         case 4: return new T<AlgTraitsEdgePQuadPGL<4>>(std::forward<Args>(args)...);
+         case USER_POLY_ORDER: return new T<AlgTraitsEdgePQuadPGL<USER_POLY_ORDER>>(std::forward<Args>(args)...);
+         default: return nullptr;
+      }
+     }
+     else {
+       switch (poly_order)
+      {
+         case 2: return new T<AlgTraitsQuadPHexPGL<2>>(std::forward<Args>(args)...);
+         case 3: return new T<AlgTraitsQuadPHexPGL<3>>(std::forward<Args>(args)...);
+         case 4: return new T<AlgTraitsQuadPHexPGL<4>>(std::forward<Args>(args)...);
+         case USER_POLY_ORDER: return new T<AlgTraitsQuadPHexPGL<USER_POLY_ORDER>>(std::forward<Args>(args)...);
+         default: return nullptr;
+      }
+     }
+   }
+
     switch(faceTopo.value()) {
       case stk::topology::QUAD_4:
         switch(elemTopo) {
@@ -369,10 +394,30 @@ namespace nalu{
     }
     else {
       int poly_order = poly_order_from_topology(dimension, topo);
-      throw std::runtime_error("PMR exposed surface bc does not support promoted element type: " + std::to_string(poly_order));
+      if ( dimension == 2) {
+        switch(poly_order)
+        {
+          case 2: return new T<AlgTraitsEdgeGL<2>>(std::forward<Args>(args)...);
+          case 3: return new T<AlgTraitsEdgeGL<2>>(std::forward<Args>(args)...);
+          case 4: return new T<AlgTraitsEdgeGL<2>>(std::forward<Args>(args)...);
+          case USER_POLY_ORDER:  return new T<AlgTraitsEdgeGL<USER_POLY_ORDER>>(std::forward<Args>(args)...);
+          default: return nullptr;
+        }
+      }
+      else {
+        switch(poly_order)
+        {
+          case 2: return new T<AlgTraitsQuadGL<2>>(std::forward<Args>(args)...);
+          case 3: return new T<AlgTraitsQuadGL<3>>(std::forward<Args>(args)...);
+          case 4: return new T<AlgTraitsQuadGL<4>>(std::forward<Args>(args)...);
+          case USER_POLY_ORDER:  return new T<AlgTraitsQuadGL<USER_POLY_ORDER>>(std::forward<Args>(args)...);
+          default: return nullptr;
+        }
+      }
     }
   }
-  
+
+
   template <template <typename> class T, typename... Args>
   bool build_topo_kernel_if_requested(
     stk::topology topo,

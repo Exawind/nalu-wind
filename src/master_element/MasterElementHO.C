@@ -5,6 +5,7 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 #include <master_element/MasterElementHO.h>
+#include <master_element/MasterElementFunctions.h>
 #include <master_element/MasterElementUtils.h>
 #include <master_element/TensorOps.h>
 
@@ -14,6 +15,8 @@
 #include <NaluEnv.h>
 #include <master_element/MasterElement.h>
 #include <FORTRAN_Proto.h>
+
+#include <BuildTemplates.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 
@@ -321,6 +324,10 @@ void HigherOrderHexSCV::grad_op(
 }
 
 //--------------------------------------------------------------------------
+int ip_per_face(const TensorProductQuadratureRule& quad, const LagrangeBasis& basis) {
+  return quad.num_quad() * quad.num_quad() * (basis.polyOrder_+1)*(basis.polyOrder_+1);
+}
+//--------------------------------------------------------------------------
 HigherOrderHexSCS::HigherOrderHexSCS(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -328,7 +335,8 @@ HigherOrderHexSCS::HigherOrderHexSCS(
 : MasterElement(),
   elem_(std::move(elem)),
   basis_(std::move(basis)),
-  quadrature_(std::move(quadrature))
+  quadrature_(std::move(quadrature)),
+  expRefGradWeights_("reference_gradient_weights", 6*ip_per_face(quadrature,basis), basis.num_nodes())
 {
   ndim(elem_.dimension);
   nodesPerElement_ = elem_.nodesPerElement;
@@ -342,6 +350,19 @@ HigherOrderHexSCS::HigherOrderHexSCS(
   shapeFunctionVals_ = basis_.eval_basis_weights(intgLoc_);
   shapeDerivs_ = basis_.eval_deriv_weights(intgLoc_);
   expFaceShapeDerivs_ = basis_.eval_deriv_weights(intgExpFace_);
+
+  {
+    const int numFaceIps = 6*ip_per_face(quadrature,basis);
+    int deriv_index = 0;
+    for (int ip = 0; ip < numFaceIps; ++ip) {
+      for (int n = 0; n < nodesPerElement_; ++n) {
+        for (int d = 0; d < 3; ++d) {
+          expRefGradWeights_(ip,n,d) = expFaceShapeDerivs_[deriv_index];
+          ++deriv_index;
+        }
+      }
+    }
+  }
 }
 //--------------------------------------------------------------------------
 void
@@ -981,6 +1002,36 @@ void HigherOrderHexSCS::interpolatePoint(
   const auto& weights = basis_.point_interpolation_weights(isoParCoord);
   for (int n = 0; n < nComp; ++n) {
     result[n] = ddot(weights.data(), field + n * nodesPerElement_, nodesPerElement_);
+  }
+}
+
+template <int p> void internal_face_grad_op(
+  int face_ordinal,
+  const AlignedViewType<DoubleType**[3]>& expReferenceGradWeights,
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& gradop )
+{
+  using traits = AlgTraitsQuadPHexPGL<p>;
+  const int offset = traits::numFaceIp_ * face_ordinal;
+  auto range = std::make_pair(offset, offset + traits::numFaceIp_);
+  auto face_weights = Kokkos::subview(expReferenceGradWeights, range, Kokkos::ALL(), Kokkos::ALL());
+  generic_grad_op<AlgTraitsHexGL<p>>(face_weights, coords, gradop);
+}
+
+void HigherOrderHexSCS::face_grad_op(
+  int face_ordinal,
+  SharedMemView<DoubleType**>& coords,
+  SharedMemView<DoubleType***>& gradop)
+{
+  switch(elem_.polyOrder) {
+    case 2: return internal_face_grad_op<2>(face_ordinal, expRefGradWeights_, coords, gradop);
+    case 3: return internal_face_grad_op<3>(face_ordinal, expRefGradWeights_, coords, gradop);
+    case 4: return internal_face_grad_op<4>(face_ordinal, expRefGradWeights_, coords, gradop);
+    case USER_POLY_ORDER: return internal_face_grad_op<USER_POLY_ORDER>(face_ordinal, expRefGradWeights_, coords, gradop);
+    default: {
+      throw std::runtime_error("Invalid poly order " + std::to_string(elem_.polyOrder) + " for kernels");
+      return;
+    }
   }
 }
 
