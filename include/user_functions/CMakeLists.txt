@@ -33,7 +33,10 @@ add_sources(GlobalHeaderList
    SteadyThermalContactSrcNodeSuppAlg.h
    TaylorGreenPressureAuxFunction.h
    TaylorGreenVelocityAuxFunction.h
+   TGMMSElemKernel.h
    TGMMSHOElemKernel.h
+   TGMMSHOElemKernel.h
+   TGMMSMomentumSrcNodeSuppAlg.h
    TornadoAuxFunction.h
    VariableDensityContinuityMMSHOElemKernel.h
    VariableDensityContinuitySrcElemSuppAlg.h

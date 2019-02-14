@@ -33,7 +33,9 @@ add_sources(GlobalSourceList
    SteadyThermalContactSrcNodeSuppAlg.C
    TaylorGreenPressureAuxFunction.C
    TaylorGreenVelocityAuxFunction.C
+   TGMMSElemKernel.C
    TGMMSHOElemKernel.C
+   TGMMSMomentumSrcNodeSuppAlg.C
    TornadoAuxFunction.C
    VariableDensityContinuityMMSHOElemKernel.C
    VariableDensityContinuitySrcElemSuppAlg.C

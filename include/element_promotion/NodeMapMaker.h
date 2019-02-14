@@ -14,10 +14,8 @@ namespace stk { struct topology; }
 namespace sierra {
 namespace nalu{
 
-Kokkos::View<int*> make_node_map(int p, stk::topology base_topo, bool isPromoted = false);
-Kokkos::View<int*> make_inverse_node_map(int p, stk::topology base_topo, bool isPromoted = false);
-Kokkos::View<int*> make_node_map(int p, int dim, bool isPromoted = false);
-Kokkos::View<int*> make_inverse_node_map(int p, int dim, bool isPromoted = false);
+Kokkos::View<int*> make_node_map(int p, stk::topology topo);
+Kokkos::View<int*> make_inverse_node_map(int p, stk::topology topo);
 
 } // namespace nalu
 } // namespace sierra

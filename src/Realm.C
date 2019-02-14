@@ -4410,8 +4410,8 @@ Realm::setup_element_promotion()
       superTargetNames_.push_back(superName);
 
       // Create elements for future use
-      sierra::nalu::MasterElementRepo::get_surface_master_element(superPart->topology(), meta_data().spatial_dimension(), "GaussLegendre");
-      sierra::nalu::MasterElementRepo::get_volume_master_element(superPart->topology(), meta_data().spatial_dimension(), "GaussLegendre");
+      MasterElementRepo::get_surface_master_element(superPart->topology(), meta_data().spatial_dimension(), "GaussLegendre");
+      MasterElementRepo::get_volume_master_element(superPart->topology(), meta_data().spatial_dimension(), "GaussLegendre");
     }
   }
 
@@ -4434,12 +4434,17 @@ Realm::setup_element_promotion()
           metaData_->declare_part_subset(*superSuperset, *superFacePart);
 
           // Create elements for future use
-          sierra::nalu::MasterElementRepo::get_surface_master_element(sideTopo, meta_data().spatial_dimension(), "GaussLegendre");
-          sierra::nalu::MasterElementRepo::get_volume_master_element(sideTopo, meta_data().spatial_dimension(), "GaussLegendre");
+          MasterElementRepo::get_surface_master_element(sideTopo, meta_data().spatial_dimension(), "GaussLegendre");
+          MasterElementRepo::get_volume_master_element(sideTopo, meta_data().spatial_dimension(), "GaussLegendre");
         }
       }
     }
   }
+  auto sideTopo = (metaData_->spatial_dimension() == 2) ?
+      stk::create_superedge_topology(desc_->nodesPerSide)
+    : stk::create_superface_topology(desc_->nodesPerSide);
+  MasterElementRepo::get_surface_master_element(sideTopo, meta_data().spatial_dimension(), "GaussLegendre");
+  MasterElementRepo::get_volume_master_element(sideTopo, meta_data().spatial_dimension(), "GaussLegendre");
 
   metaData_->declare_part("edge_part", stk::topology::EDGE_RANK);
   if (metaData_->spatial_dimension() == 3) {

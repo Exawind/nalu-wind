@@ -28,6 +28,7 @@ add_sources(GlobalHeaderList
    AssembleMomentumElemSolverAlgorithm.h
    AssembleMomentumElemSymmetrySolverAlgorithm.h
    AssembleMomentumElemWallFunctionSolverAlgorithm.h
+   AssembleMomentumInflowSolverAlgorithm.h
    AssembleMomentumNonConformalSolverAlgorithm.h
    AssembleNodalGradAlgorithmDriver.h
    AssembleNodalGradBoundaryAlgorithm.h

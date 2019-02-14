@@ -13,6 +13,7 @@ add_sources(GlobalHeaderList
    MomentumBuoyancySrcElemKernel.h
    MomentumBuoyancySrcHOElemKernel.h
    MomentumCoriolisSrcElemKernel.h
+   MomentumInflowElemKernel.h
    MomentumHybridTurbElemKernel.h
    MomentumMassElemKernel.h
    MomentumMassHOElemKernel.h

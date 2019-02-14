@@ -50,7 +50,7 @@ AssembleElemSolverAlgorithmHO::AssembleElemSolverAlgorithmHO(
     nodesPerEntity_(nodesPerEntity),
     rhsSize_(nodesPerEntity * ndof_),
     lhsSize_(rhsSize_*rhsSize_),
-    defaultPermutation_(make_node_map(polyOrder_, dim_, part->topology().is_super_topology())),
+    defaultPermutation_(make_node_map(polyOrder_, part->topology())),
     gatherer_(polyOrder_+1, defaultPermutation_),
     dataNeededByKernels_(realm.meta_data())
 {

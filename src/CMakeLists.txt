@@ -26,6 +26,7 @@ add_sources(GlobalSourceList
    AssembleMomentumElemSolverAlgorithm.C
    AssembleMomentumElemSymmetrySolverAlgorithm.C
    AssembleMomentumElemWallFunctionSolverAlgoirthm.C
+   AssembleMomentumInflowSolverAlgorithm.C
    AssembleMomentumNonConformalSolverAlgorithm.C
    AssembleNodalGradAlgorithmDriver.C
    AssembleNodalGradBoundaryAlgorithm.C

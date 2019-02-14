@@ -322,7 +322,6 @@ void HigherOrderHexSCV::grad_op(
     grad_offset += grad_inc;
   }
 }
-
 //--------------------------------------------------------------------------
 int ip_per_face(const TensorProductQuadratureRule& quad, const LagrangeBasis& basis) {
   return quad.num_quad() * quad.num_quad() * (basis.polyOrder_+1)*(basis.polyOrder_+1);

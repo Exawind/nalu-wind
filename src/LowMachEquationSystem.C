@@ -130,12 +130,13 @@
 #include <kernel/ContinuityMassHOElemKernel.h>
 
 //mms kernels
+#include <user_functions/TGMMSElemKernel.h>
 #include <user_functions/TGMMSHOElemKernel.h>
-
 
 // bc kernels
 #include <kernel/ContinuityInflowElemKernel.h>
 #include <kernel/ContinuityOpenElemKernel.h>
+#include <kernel/MomentumInflowElemKernel.h>
 #include <kernel/MomentumOpenAdvDiffElemKernel.h>
 #include <kernel/MomentumSymmetryElemKernel.h>
 #include <kernel/MomentumWallFunctionElemKernel.h>
@@ -169,6 +170,8 @@
 #include <user_functions/VariableDensityContinuitySrcNodeSuppAlg.h>
 #include <user_functions/VariableDensityMomentumSrcElemSuppAlg.h>
 #include <user_functions/VariableDensityMomentumSrcNodeSuppAlg.h>
+
+#include <user_functions/TGMMSMomentumSrcNodeSuppAlg.h>
 
 #include <user_functions/VariableDensityMomentumMMSHOElemKernel.h>
 #include <user_functions/VariableDensityContinuityMMSHOElemKernel.h>
@@ -422,6 +425,20 @@ LowMachEquationSystem::register_interior_algorithm(
     }
   }
 }
+
+void
+LowMachEquationSystem::register_inflow_bc(
+  stk::mesh::Part *part,
+  const stk::topology &theTopo,
+  const InflowBoundaryConditionData& /*inflowBCData*/)
+{
+  stk::mesh::MetaData &metaData = realm_.meta_data();
+  if ( !realm_.solutionOptions_->activateOpenMdotCorrection_ ) {
+    VectorFieldType *theBcField = &(metaData.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "cont_velocity_bc"));
+    stk::mesh::put_field_on_mesh(*theBcField, *part, metaData.spatial_dimension(), nullptr);
+  }
+}
+
 
 //--------------------------------------------------------------------------
 //-------- register_open_bc ------------------------------------------------
@@ -1322,6 +1339,10 @@ MomentumEquationSystem::register_interior_algorithm(
       ("lumped_EarthCoriolis",
        realm_.bulk_data(), *realm_.solutionOptions_, velocity_, dataPreReqs, true);
 
+    kb.build_topo_kernel_if_requested<TGMMSElemKernel>
+      ("tgmms",
+        realm_.bulk_data(), *realm_.solutionOptions_,  dataPreReqs);
+
     kb.build_sgl_kernel_if_requested<MomentumAdvDiffHOElemKernel>
       ("experimental_ho_advection_diffusion",
        realm_.bulk_data(), *realm_.solutionOptions_, velocity_,
@@ -1439,6 +1460,9 @@ MomentumEquationSystem::register_interior_algorithm(
           }
           else if ( sourceName == "EarthCoriolis") {
             suppAlg = new MomentumCoriolisSrcNodeSuppAlg(realm_);
+          }
+          else if ( sourceName == "tgmms") {
+            suppAlg = new TGMMSMomentumSrcNodeSuppAlg(realm_);
           }
           else {
             throw std::runtime_error("MomentumNodalSrcTerms::Error Source term is not supported: " + sourceName);
@@ -1569,6 +1593,9 @@ MomentumEquationSystem::register_inflow_bc(
     else if ( fcnName == "kovasznay") {
       theAuxFunc = new KovasznayVelocityAuxFunction(0,nDim);
     }
+    else if ( fcnName == "OneTwoTenVelocity" ) {
+      theAuxFunc = new OneTwoTenVelocityAuxFunction(0,nDim);
+    }
     else {
       throw std::runtime_error("MomentumEquationSystem::register_inflow_bc: limited functions supported");
     }
@@ -1615,18 +1642,35 @@ MomentumEquationSystem::register_inflow_bc(
     }
   }
 
-  // Dirichlet bc
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =
-    solverAlgDriver_->solverDirichAlgMap_.find(algType);
-  if ( itd == solverAlgDriver_->solverDirichAlgMap_.end() ) {
-    DirichletBC *theAlg
-      = new DirichletBC(realm_, this, part, &velocityNp1, theBcField, 0, nDim);
-    solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
+  // solver; lhs
+  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    stk::topology elemTopo = get_elem_topo(realm_, *part);
+    AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+
+    std::tie(faceElemSolverAlg, solverAlgWasBuilt)
+      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "inflow");
+
+    auto& activeKernels = faceElemSolverAlg->activeKernels_;
+
+    if (solverAlgWasBuilt) {
+      build_face_elem_topo_kernel_automatic<MomentumInflowElemKernel>
+        (part->topology(), elemTopo, *this, activeKernels, "momentum_inflow",
+         realm_.bulk_data(), *realm_.solutionOptions_,
+         faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
+    }
   }
   else {
-    itd->second->partVec_.push_back(part);
+    auto itd = solverAlgDriver_->solverDirichAlgMap_.find(algType);
+    if ( itd == solverAlgDriver_->solverDirichAlgMap_.end() ) {
+      solverAlgDriver_->solverDirichAlgMap_[algType] =
+          new DirichletBC(realm_, this, part, &velocityNp1, theBcField, 0, nDim);
+    }
+    else {
+      itd->second->partVec_.push_back(part);
+    }
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -2985,6 +3029,9 @@ ContinuityEquationSystem::register_inflow_bc(
       }
       else if ( fcnName == "BoussinesqNonIso") {
         theAuxFunc = new BoussinesqNonIsoVelocityAuxFunction(0, nDim);
+      }
+      else if ( fcnName == "OneTwoTenVelocity" ) {
+        theAuxFunc = new OneTwoTenVelocityAuxFunction(0,nDim);
       }
       else {
         throw std::runtime_error("ContEquationSystem::register_inflow_bc: limited functions supported");

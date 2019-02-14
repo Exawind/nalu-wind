@@ -53,7 +53,7 @@ template class ClassName<AlgTraitsEdge32DQuad92D>;                \
 // 2,3,4 and one that can be set at compile time
 
 #ifndef USER_POLY_ORDER
-#define USER_POLY_ORDER 5
+#define USER_POLY_ORDER 1
 #endif
 
 #define INSTANTIATE_POLY_TEMPLATE(ClassName,BaseTraitsName)       \

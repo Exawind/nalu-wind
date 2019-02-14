@@ -15,6 +15,10 @@
 namespace sierra{
 namespace nalu{
 
+/** Series expansion solution for the laminar velocity profile
+ *  of a one by two by ten duct flow
+ */
+//
 class OneTwoTenVelocityAuxFunction : public AuxFunction
 {
 public:

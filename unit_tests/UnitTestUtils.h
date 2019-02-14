@@ -176,6 +176,7 @@ class Hex8ElementWithBCFields : public ::testing::Test
       bulk(meta, MPI_COMM_WORLD),
       velocity(meta.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity")),
       bcVelocity(meta.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "wall_velocity_bc")),
+      inflowbcVelocity(meta.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "cont_velocity_bc")),
       density(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "density")),
       viscosity(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity")),
       bcHeatFlux(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "heat_flux_bc")),
@@ -198,6 +199,8 @@ class Hex8ElementWithBCFields : public ::testing::Test
     
     stk::mesh::put_field_on_mesh(velocity, meta.universal_part(), 3, oneVecThree);
     stk::mesh::put_field_on_mesh(bcVelocity, meta.universal_part(), 3, oneVecThree);
+    stk::mesh::put_field_on_mesh(inflowbcVelocity, meta.universal_part(), 3, oneVecThree);
+
     stk::mesh::put_field_on_mesh(density, meta.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(viscosity, meta.universal_part(), 1, &one);
     stk::mesh::put_field_on_mesh(bcHeatFlux, meta.universal_part(), 1, nullptr);
@@ -225,6 +228,7 @@ class Hex8ElementWithBCFields : public ::testing::Test
   stk::mesh::BulkData bulk;
   VectorFieldType& velocity;
   VectorFieldType& bcVelocity;
+  VectorFieldType& inflowbcVelocity;
   ScalarFieldType& density;
   ScalarFieldType& viscosity;
   ScalarFieldType& bcHeatFlux;
