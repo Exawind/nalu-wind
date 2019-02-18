@@ -26,52 +26,11 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 HexahedralP2Element::HexahedralP2Element()
-  : MasterElement(),
-    scsDist_(std::sqrt(3.0)/3.0),
-    nodes1D_(3),
-    numQuad_(2)
+  : MasterElement()
 {
   ndim(AlgTraits::nDim_);
   nodesPerElement_ = nodes1D_ * nodes1D_ * nodes1D_;
-
-  // map the standard stk node numbering to a tensor-product style node numbering (i.e. node (m,l,k) -> m+npe*l+npe^2*k)
-  stkNodeMap_ = {
-                   0,  8,  1, // bottom front edge
-                  11, 21,  9, // bottom mid-front edge
-                   3, 10,  2, // bottom back edge
-                  12, 25, 13, // mid-top front edge
-                  23, 20, 24, // mid-top mid-front edge
-                  15, 26, 14, // mid-top back edge
-                   4, 16,  5, // top front edge
-                  19, 22, 17, // top mid-front edge
-                   7, 18,  6  // top back edge
-                };
-
-  sideNodeOrdinals_ = {
-       0, 1, 5, 4, 8,13,16,12,25, //ordinal 0
-       1, 2, 6, 5, 9,14,17,13,24, //ordinal 1
-       2, 3, 7, 6,10,15,18,14,26, //ordinal 2
-       0, 4, 7, 3,12,19,15,11,23, //ordinal 3
-       0, 3, 2, 1,11,10, 9, 8,21, //ordinal 4
-       4, 5, 6, 7,16,17,18,19,22  //ordinal 5
-  };
-
-  // a padded list of the scs locations
-  scsEndLoc_ = { -1.0, -scsDist_, scsDist_, 1.0 };
-}
-
-//--------------------------------------------------------------------------
-//-------- set_quadrature_rule ---------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexahedralP2Element::set_quadrature_rule()
-{
-  gaussAbscissaeShift_ = {-1.0,-1.0,0.0,0.0,+1.0,+1.0};
-
-  std::tie(gaussAbscissae_, gaussWeight_) = gauss_legendre_rule(numQuad_);
-  for (unsigned j = 0; j < gaussWeight_.size(); ++j) {
-    gaussWeight_[j] *= 0.5; // change from standard Gauss weights
-  }
+  MasterElement::sideNodeOrdinals_.assign   (&sideNodeOrdinals_[0][0], 54+&sideNodeOrdinals_[0][0]);
 }
 
 //--------------------------------------------------------------------------
@@ -196,7 +155,7 @@ double HexahedralP2Element::isInElement(
 int
 HexahedralP2Element::tensor_product_node_map(int i, int j, int k) const
 {
-   return stkNodeMap_[i + nodes1D_ * (j + nodes1D_ * k)];
+   return stkNodeMap_[k][j][i];
 }
 
 //--------------------------------------------------------------------------
@@ -626,9 +585,6 @@ HexahedralP2Element::hex27_shape_deriv(
 Hex27SCV::Hex27SCV()
   : HexahedralP2Element()
 {
-  // set up the one-dimensional quadrature rule
-  set_quadrature_rule();
-
   // set up integration rule and relevant maps for scvs
   set_interior_info();
 
@@ -862,9 +818,6 @@ void Hex27SCV::Mij(
 Hex27SCS::Hex27SCS()
   : HexahedralP2Element()
 {
-  // set up the one-dimensional quadrature rule
-  set_quadrature_rule();
-
   // set up integration rule and relevant maps on scs
   set_interior_info();
 
@@ -1305,7 +1258,7 @@ Hex27SCS::side_node_ordinals(
   int ordinal)
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
-  return &sideNodeOrdinals_[ordinal*9];
+  return sideNodeOrdinals_[ordinal];
 }
 
 //--------------------------------------------------------------------------
@@ -1806,9 +1759,6 @@ Quad93DSCS::Quad93DSCS()
   : HexahedralP2Element(),
     surfaceDimension_(2)
 {
-  // set up the one-dimensional quadrature rule
-  set_quadrature_rule();
-
   // set up integration rule and relevant maps on scs
   set_interior_info();
 

@@ -410,7 +410,6 @@ protected:
   int numQuad_;
 
   //quadrature info
-  std::vector<double> gaussAbscissae1D_;
   std::vector<double> gaussAbscissae_;
   std::vector<double> gaussAbscissaeShift_;
   std::vector<double> gaussWeight_;
