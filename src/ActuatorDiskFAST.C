@@ -20,9 +20,6 @@
 namespace sierra {
 namespace nalu {
 
-ActuatorDiskFASTInfo::ActuatorDiskFASTInfo()
-  : ActuatorFASTInfo(), bladeSweptPts_(-1){};
-
 // constructor
 ActuatorDiskFAST::ActuatorDiskFAST(Realm& realm, const YAML::Node& node)
   : ActuatorFAST(realm, node)

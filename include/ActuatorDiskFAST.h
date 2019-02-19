@@ -29,9 +29,7 @@ namespace nalu {
 class ActuatorDiskFASTInfo : public ActuatorFASTInfo
 {
 public:
-  ActuatorDiskFASTInfo();
-  ~ActuatorDiskFASTInfo() = default;
-  int bladeSweptPts_;
+  int bladeSweptPts_{-1};
 };
 /** Class for an Actuator Disk
  *
