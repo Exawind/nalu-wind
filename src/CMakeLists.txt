@@ -181,7 +181,6 @@ add_sources(GlobalSourceList
    AssembleWallDistNonConformalAlgorithm.C
    WallDistEquationSystem.C
    WallDistSrcNodeSuppAlg.C
-   UnitTests.C
 )
 
 if(ENABLE_FFTW)

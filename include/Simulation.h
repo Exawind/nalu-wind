@@ -23,7 +23,6 @@ class LinearSolvers;
 class TimeIntegrator;
 class Realms;
 class Transfers;
-class UnitTests;
 
 class Simulation {
 public:
@@ -51,10 +50,7 @@ public:
   Transfers * transfers_;
   LinearSolvers *linearSolvers_;
 
-  UnitTests *unitTests_;
-
   static bool debug_;
-  bool runOnlyUnitTests_;
   int serializedIOGroupSize_;
 };
 

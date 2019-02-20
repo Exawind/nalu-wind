@@ -198,7 +198,6 @@ add_sources(GlobalHeaderList
    TurbViscSmagorinskyAlgorithm.h
    TurbViscWaleAlgorithm.h
    TurbulenceAveragingPostProcessing.h
-   UnitTests.h
    nalu_make_unique.h
 )
 

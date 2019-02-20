@@ -16,7 +16,6 @@
 #include <xfer/Transfers.h>
 #include <TimeIntegrator.h>
 #include <LinearSolvers.h>
-#include <UnitTests.h>
 #include <NaluVersionInfo.h>
 
 #include <Ioss_SerializeIO.h>
@@ -44,7 +43,6 @@ Simulation::Simulation(const YAML::Node& root_node) :
     realms_(NULL),
     transfers_(NULL),
     linearSolvers_(NULL),
-    unitTests_(NULL),
     serializedIOGroupSize_(0)
 {}
 
@@ -53,7 +51,6 @@ Simulation::~Simulation() {
   delete transfers_;
   delete timeIntegrator_;
   delete linearSolvers_;
-  if (unitTests_) delete unitTests_;
 }
 
 // Timers
@@ -86,13 +83,6 @@ void Simulation::load(const YAML::Node & node)
 {
 
   high_level_banner();
-
-  if (node["UnitTests"])
-    {
-      NaluEnv::self().naluOutputP0() << "\n\n Running Unit Tests \n\n" << std::endl;
-      sierra::nalu::UnitTests unit_tests(*this);
-      unit_tests.load(node);
-    }
 
   // load the linear solver configs
   linearSolvers_ = new LinearSolvers(*this);
@@ -153,12 +143,6 @@ void Simulation::run()
   NaluEnv::self().naluOutputP0() << "Simulation Shall Commence: number of processors = " << NaluEnv::self().parallel_size() << std::endl;
   NaluEnv::self().naluOutputP0() << "*******************************************************" << std::endl;
 
-  if (unitTests_)
-    {
-      unitTests_->run();
-      if (runOnlyUnitTests_)
-        return;
-    }
   timeIntegrator_->integrate_realm();
 }
 
