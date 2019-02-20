@@ -157,6 +157,9 @@ public:
   const int * ipNodeMap(int ordinal = 0) final;
 
   const int * side_node_ordinals(int ordinal = 0) final;
+  virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
+  virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
+
 
   int opposingNodes(
     const int ordinal, const int node) final;

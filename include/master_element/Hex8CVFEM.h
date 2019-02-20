@@ -315,6 +315,7 @@ public:
     double *elem_pcoords);
 
   const int* side_node_ordinals(int sideOrdinal) final;
+  using MasterElement::side_node_ordinals;
 
   double parametric_distance(const std::vector<double> &x);
 

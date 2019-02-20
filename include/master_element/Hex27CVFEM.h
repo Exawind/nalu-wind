@@ -413,6 +413,7 @@ public:
     const int ordinal, const int node);
 
   const int* side_node_ordinals(int sideOrdinal) final;
+  using MasterElement::side_node_ordinals;
 
   const InterpWeightType& shape_function_values()
   { return interpWeights_; }

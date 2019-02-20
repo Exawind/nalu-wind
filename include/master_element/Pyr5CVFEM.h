@@ -252,6 +252,8 @@ public:
     double *error);
 
   const int* side_node_ordinals(int sideOrdinal) final;
+  virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
+  virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
 
   double parametric_distance(const std::array<double,3>& x);
 
