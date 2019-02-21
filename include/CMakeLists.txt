@@ -64,7 +64,7 @@ add_sources(GlobalHeaderList
    BucketLoop.h
    BuildTemplates.h
    ComputeABLWallFrictionVelocityAlgorithm.h
-   ComputeDivMeshVelocity.h
+   ComputeDivergence.h
    ComputeGeometryAlgorithmDriver.h
    ComputeGeometryBoundaryAlgorithm.h
    ComputeGeometryInteriorAlgorithm.h

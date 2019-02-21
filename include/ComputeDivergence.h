@@ -5,8 +5,8 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#ifndef COMPUTEDIVMESHVELOCITY_H
-#define COMPUTEDIVMESHVELOCITY_H
+#ifndef COMPUTEDIVERGENCE_H
+#define COMPUTEDIVERGENCE_H
 
 #include <FieldTypeDef.h>
 
@@ -21,17 +21,21 @@ namespace mesh {
 namespace sierra {
 namespace nalu {
 
-class ComputeDivMeshVelocity
+class ComputeDivergence
 {
 
 public:
-  ComputeDivMeshVelocity();
-  ~ComputeDivMeshVelocity();
+  ComputeDivergence();
+  ~ComputeDivergence();
 
-  void execute(stk::mesh::BulkData & bulk, stk::mesh::PartVector & partVec);
+  void execute(
+    stk::mesh::BulkData &,
+    stk::mesh::PartVector &,
+    stk::mesh::FieldBase *,
+    stk::mesh::FieldBase * );
 };
     
 }
 }
 
-#endif /* COMPUTEDIVMESHVELOCITY_H */
+#endif /* COMPUTEDIVERGENCE_H */

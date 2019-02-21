@@ -5,7 +5,7 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#include "ComputeDivMeshVelocity.h"
+#include "ComputeDivergence.h"
 
 #include <master_element/MasterElement.h>
 
@@ -20,17 +20,19 @@
 namespace sierra {
 namespace nalu {
 
-ComputeDivMeshVelocity::ComputeDivMeshVelocity() {
+ComputeDivergence::ComputeDivergence() {
    
 }
 
-ComputeDivMeshVelocity::~ComputeDivMeshVelocity() {
+ComputeDivergence::~ComputeDivergence() {
    
 }
 
-void ComputeDivMeshVelocity::execute(
+void ComputeDivergence::execute(
     stk::mesh::BulkData & bulk,
-    stk::mesh::PartVector & partVec)
+    stk::mesh::PartVector & partVec,
+    stk::mesh::FieldBase * vectorField,
+    stk::mesh::FieldBase * scalarField )
 {
 
   stk::mesh::MetaData & meta = bulk.mesh_meta_data();
@@ -38,15 +40,13 @@ void ComputeDivMeshVelocity::execute(
 
   VectorFieldType* coordinates_ = meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates");
   
-  VectorFieldType* meshVelocity_ = meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
   ScalarFieldType* dualVol_ = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
-  ScalarFieldType* divMV_ = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity");
 
-  stk::mesh::field_fill(0.0, *divMV_);
+  stk::mesh::field_fill(0.0, *scalarField);
   
   std::vector<double> ws_coordinates;
   std::vector<double> ws_scs_areav;
-  std::vector<double> ws_mesh_velocity;
+  std::vector<double> ws_mesh_vector;
 
   std::vector<double> ws_shape_function;
 
@@ -64,7 +64,7 @@ void ComputeDivMeshVelocity::execute(
       const int numScsIp = meSCS->numIntPoints_;
       const int *lrscv = meSCS->adjacentNodes();
       
-      ws_mesh_velocity.resize(nodesPerElement*nDim);
+      ws_mesh_vector.resize(nodesPerElement*nDim);
       ws_coordinates.resize(nodesPerElement*nDim);
       ws_scs_areav.resize(numScsIp*nDim);
       
@@ -82,11 +82,11 @@ void ComputeDivMeshVelocity::execute(
               stk::mesh::Entity node = node_rels[ni];
 
               const double * coords =  stk::mesh::field_data(*coordinates_, node);
-              const double * mv   =  stk::mesh::field_data(*meshVelocity_, node);
+              const double * mv   =  (double*)stk::mesh::field_data(*vectorField, node);
               
               for (int iDim=0; iDim < nDim; iDim++) {
                   ws_coordinates[ni*nDim+iDim] = coords[iDim];
-                  ws_mesh_velocity[ni*nDim+iDim] = mv[iDim];
+                  ws_mesh_vector[ni*nDim+iDim] = mv[iDim];
               }
           }
 
@@ -108,19 +108,19 @@ void ComputeDivMeshVelocity::execute(
               stk::mesh::Entity nodeR = node_rels[ir];
 
               // pointer to fields to assemble
-              double *divMVL = stk::mesh::field_data(*divMV_, nodeL);
-              double *divMVR = stk::mesh::field_data(*divMV_, nodeR);
+              double *divMVL = (double*)stk::mesh::field_data(*scalarField, nodeL);
+              double *divMVR = (double*)stk::mesh::field_data(*scalarField, nodeR);
 
               double *dualVolL = stk::mesh::field_data(*dualVol_, nodeL);
               double *dualVolR = stk::mesh::field_data(*dualVol_, nodeR);
               
-              //Compute mesh velocity at this ip
+              //Compute mesh vector at this ip
               for ( int j = 0; j < nDim; ++j )
                   mvIp[j] = 0.0;
               for ( int ic = 0; ic < nodesPerElement; ++ic ) {
                   const double r = ws_shape_function[offSetSF+ic];
                   for (int j=0; j < nDim; j++)
-                      mvIp[j] += r * ws_mesh_velocity[ic*nDim+j];
+                      mvIp[j] += r * ws_mesh_vector[ic*nDim+j];
               }
 
               //Compute dot product with area

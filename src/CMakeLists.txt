@@ -59,7 +59,7 @@ add_sources(GlobalSourceList
    AveragingInfo.C
    BoundaryConditions.C
    ComputeABLWallFrictionVelocityAlgorithm.C
-   ComputeDivMeshVelocity.C
+   ComputeDivergence.C
    ComputeGeometryAlgorithmDriver.C
    ComputeGeometryBoundaryAlgorithm.C
    ComputeGeometryInteriorAlgorithm.C
