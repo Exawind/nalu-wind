@@ -12,8 +12,9 @@
 
 namespace stk {
 namespace mesh {
-class Part;
-typedef std::vector<Part*> PartVector;
+  class BulkData;
+  class Part;
+  typedef std::vector<Part*> PartVector;
 }
 }
 
@@ -27,7 +28,7 @@ public:
   ComputeDivMeshVelocity();
   ~ComputeDivMeshVelocity();
 
-  void execute(stk::mesh::PartVector & partVec);
+  void execute(stk::mesh::BulkData & bulk, stk::mesh::PartVector & partVec);
 };
     
 }
