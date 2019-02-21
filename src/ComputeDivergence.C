@@ -28,7 +28,7 @@ ComputeDivergence::~ComputeDivergence() {
    
 }
 
-void ComputeDivergence::execute(
+void ComputeDivergence::operate(
     stk::mesh::BulkData & bulk,
     stk::mesh::PartVector & partVec,
     stk::mesh::FieldBase * vectorField,

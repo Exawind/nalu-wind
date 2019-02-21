@@ -28,7 +28,7 @@ public:
   ComputeDivergence();
   ~ComputeDivergence();
 
-  void execute(
+  void operate(
     stk::mesh::BulkData &,
     stk::mesh::PartVector &,
     stk::mesh::FieldBase *,
