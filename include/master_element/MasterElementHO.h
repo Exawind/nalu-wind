@@ -384,6 +384,8 @@ public:
     const int ordinal, const int node) final;
 
   const int * side_node_ordinals(int ordinal = 0) final;
+  virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
+  virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
 
   std::vector<double> shape_functions() {
     return shapeFunctionVals_;
