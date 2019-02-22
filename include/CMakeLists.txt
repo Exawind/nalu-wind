@@ -80,7 +80,6 @@ add_sources(GlobalHeaderList
    ComputeMdotNonConformalAlgorithm.h
    ComputeSSTMaxLengthScaleElemAlgorithm.h
    ComputeTurbKineticEnergyWallFunctionAlgorithm.h
-   ComputeVectorDivergence.h
    ComputeWallFrictionVelocityAlgorithm.h
    ComputeWallModelSDRWallAlgorithm.h
    ConstantAuxFunction.h

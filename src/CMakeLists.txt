@@ -75,7 +75,6 @@ add_sources(GlobalSourceList
    ComputeMdotNonConformalAlgorithm.C
    ComputeSSTMaxLengthScaleElemAlgorithm.C
    ComputeTurbKineticEnergyWallFunctionAlgorithm.C
-   ComputeVectorDivergence.C
    ComputeWallFrictionVelocityAlgorithm.C
    ComputeWallModelSDRWallAlgorithm.C
    ConstantAuxFunction.C
