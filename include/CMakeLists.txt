@@ -64,7 +64,6 @@ add_sources(GlobalHeaderList
    BucketLoop.h
    BuildTemplates.h
    ComputeABLWallFrictionVelocityAlgorithm.h
-   ComputeDivergence.h
    ComputeGeometryAlgorithmDriver.h
    ComputeGeometryBoundaryAlgorithm.h
    ComputeGeometryInteriorAlgorithm.h
@@ -81,6 +80,7 @@ add_sources(GlobalHeaderList
    ComputeMdotNonConformalAlgorithm.h
    ComputeSSTMaxLengthScaleElemAlgorithm.h
    ComputeTurbKineticEnergyWallFunctionAlgorithm.h
+   ComputeVectorDivergence.h
    ComputeWallFrictionVelocityAlgorithm.h
    ComputeWallModelSDRWallAlgorithm.h
    ConstantAuxFunction.h

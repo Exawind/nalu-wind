@@ -5,7 +5,7 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#include "ComputeDivergence.h"
+#include "ComputeVectorDivergence.h"
 
 #include <master_element/MasterElement.h>
 
@@ -20,15 +20,7 @@
 namespace sierra {
 namespace nalu {
 
-ComputeDivergence::ComputeDivergence() {
-   
-}
-
-ComputeDivergence::~ComputeDivergence() {
-   
-}
-
-void ComputeDivergence::operate(
+void ComputeVectorDivergence(
     stk::mesh::BulkData & bulk,
     stk::mesh::PartVector & partVec,
     stk::mesh::FieldBase * vectorField,
