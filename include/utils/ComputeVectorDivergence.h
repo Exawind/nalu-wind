@@ -25,7 +25,8 @@ void compute_vector_divergence(
   stk::mesh::BulkData &,
   stk::mesh::PartVector &,
   stk::mesh::FieldBase *,
-  stk::mesh::FieldBase * );
+  stk::mesh::FieldBase *,
+  const bool hasMeshDeformation = false );
 
 }
 }
