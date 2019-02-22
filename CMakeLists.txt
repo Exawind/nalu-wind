@@ -20,6 +20,7 @@ option(ENABLE_PARAVIEW_CATALYST
 option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
 option(ENABLE_ALL_WARNINGS "Show most warnings for most compilers" ON)
 option(ENABLE_WERROR "Warnings are errors" OFF)
+option(ENABLE_OPENMP "Enable OpenMP flags" ON)
 
 set(CMAKE_CXX_STANDARD 11)       # Set nalu-wind C++11 standard
 set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions
@@ -30,7 +31,9 @@ include_directories(SYSTEM ${MPI_C_INCLUDE_PATH})
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
 include_directories(SYSTEM ${MPI_Fortran_INCLUDE_PATH})
 
-find_package(OpenMP)
+if(ENABLE_OPENMP)
+  find_package(OpenMP)
+endif()
 
 ########################## TRILINOS ####################################
 set(CMAKE_PREFIX_PATH ${Trilinos_DIR} ${CMAKE_PREFIX_PATH})
