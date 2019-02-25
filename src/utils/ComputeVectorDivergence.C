@@ -35,8 +35,6 @@ void compute_vector_divergence(
 
   ScalarFieldType* dualVol = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
 
-  stk::mesh::field_fill(0.0, *scalarField);
-
   std::vector<double> wsCoordinates;
   std::vector<double> wsScsArea;
   std::vector<double> wsMeshVector;
@@ -49,6 +47,9 @@ void compute_vector_divergence(
           & stk::mesh::selectUnion(partVec);
   const auto& bkts =
       bulk.get_buckets( stk::topology::ELEMENT_RANK, sel );
+
+  // reset divergence field
+  stk::mesh::field_fill(0.0, *scalarField, sel);
 
   for (auto b: bkts) {
     MasterElement *meSCS =
@@ -108,8 +109,8 @@ void compute_vector_divergence(
         double *dualVolR = stk::mesh::field_data(*dualVol, nodeR);
 
         //Compute mesh vector at this ip
-        for ( int j = 0; j < nDim; ++j )
-          mvIp[j] = 0.0;
+        for ( int j = 0; j < nDim; ++j ) mvIp[j] = 0.0;
+
         for ( int ic = 0; ic < nodesPerElement; ++ic ) {
           const double r = ws_shape_function[offSetSF+ic];
           for (int j=0; j < nDim; j++)
