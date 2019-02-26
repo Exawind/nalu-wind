@@ -234,10 +234,15 @@ public:
     double *elem_pcoords) override;
 
   const int* side_node_ordinals(int sideOrdinal) final;
-  virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
-  virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
 
 private :
+  const int sideNodeOrdinals_[4][2] = {
+      {0, 1},
+      {1, 2},
+      {2, 3},
+      {3, 0} 
+  };
+
   void face_grad_op(
     const int face_ordinal,
     const bool shifted,

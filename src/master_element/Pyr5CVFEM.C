@@ -668,14 +668,6 @@ PyrSCS::PyrSCS()
   intgExpFace_[42] =  0.5;            intgExpFace_[43] =  0.5;            intgExpFace_[44] = 0.0;
   intgExpFace_[45] =  0.5;            intgExpFace_[46] = -0.5;            intgExpFace_[47] = 0.0;
 
-  sideNodeOrdinals_ = {
-      0, 1, 4,    // ordinal 0
-      1, 2, 4,    // ordinal 1
-      2, 3, 4,    // ordinal 2
-      0, 4, 3,    // ordinal 3
-      0, 3, 2, 1  // ordinal 4
-  };
-
   ipNodeMap_.resize(16);
   // Face 0
   ipNodeMap_[0]  = 0; ipNodeMap_[1]  = 1; ipNodeMap_[2]  = 4;

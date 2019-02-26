@@ -108,13 +108,6 @@ QuadrilateralP2Element::QuadrilateralP2Element()
                   3, 6, 2  // top row of nodes
                 };
 
-  sideNodeOrdinals_ = {
-      0, 1, 4,
-      1, 2, 5,
-      2, 3, 6,
-      3, 0, 7
-  };
-
   // a padded list of scs locations
   scsEndLoc_ = { -1.0, -scsDist_, scsDist_, +1.0 };
 }

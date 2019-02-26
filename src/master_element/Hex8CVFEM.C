@@ -212,7 +212,6 @@ HexSCS::HexSCS() : MasterElement() {
   MasterElement::intgLoc_         .assign(intgLoc_,     36+intgLoc_);
   MasterElement::intgLocShift_    .assign(intgLocShift_,36+intgLocShift_);
   MasterElement::scsIpEdgeOrd_    .assign(scsIpEdgeOrd_,12+scsIpEdgeOrd_);
-  MasterElement::sideNodeOrdinals_.assign(&sideNodeOrdinals_[0][0],24+&sideNodeOrdinals_[0][0]);
   MasterElement::intgExpFace_     .assign(&intgExpFace_[0][0][0],  72+&intgExpFace_[0][0][0]);
   MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0],72+&intgExpFaceShift_[0][0][0]);
   MasterElement::nDim_                  = nDim_;

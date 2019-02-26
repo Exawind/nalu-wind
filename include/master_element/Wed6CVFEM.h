@@ -231,8 +231,14 @@ public:
   double parametric_distance( const std::vector<double> &x);
 
   const int* side_node_ordinals(int sideOrdinal) final;
-  virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
-  virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
+private:
+  const int sideNodeOrdinals_[18] = {
+      0, 1, 4, 3, // ordinal 0
+      1, 2, 5, 4, // ordinal 1
+      0, 3, 5, 2, // ordinal 2
+      0, 2, 1,    // ordinal 3
+      3, 4, 5     // ordinal 4
+  };
 };
 
 

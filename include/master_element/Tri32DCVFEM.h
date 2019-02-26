@@ -239,10 +239,13 @@ public:
     double *elem_pcoords) override;
 
   const int* side_node_ordinals(int sideOrdinal) final;
-  virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
-  virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
 
-
+private:
+  const int sideNodeOrdinals_[3][2] = {
+     {0, 1},  // ordinal 0
+     {1, 2},  // ordinal 1
+     {2, 0}   // ordinal 2
+  };
 };
 
 } // namespace nalu

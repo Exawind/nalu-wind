@@ -440,14 +440,6 @@ WedSCS::WedSCS()
   // face 4;
   ipNodeMap_[16] = 3; ipNodeMap_[17] = 4; ipNodeMap_[18] = 5; ipNodeMap_[19] = 0; // empty
 
-  sideNodeOrdinals_ = {
-      0, 1, 4, 3, // ordinal 0
-      1, 2, 5, 4, // ordinal 1
-      0, 3, 5, 2, // ordinal 2
-      0, 2, 1,    // ordinal 3
-      3, 4, 5     // ordinal 4
-  };
-
   // ordinal to vector offset map.  Really only convenient for the wedge.
   sideOffset_ = { 0, 4, 8, 12, 15};
 

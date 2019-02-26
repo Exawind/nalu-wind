@@ -252,8 +252,6 @@ public:
     double *error);
 
   const int* side_node_ordinals(int sideOrdinal) final;
-  virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
-  virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
 
   double parametric_distance(const std::array<double,3>& x);
 
@@ -267,6 +265,15 @@ public:
     const double *isoParCoord,
     const double *field,
     double *result);
+
+private :
+  const int sideNodeOrdinals_[16] = {
+      0, 1, 4,    // ordinal 0
+      1, 2, 4,    // ordinal 1
+      2, 3, 4,    // ordinal 2
+      0, 4, 3,    // ordinal 3
+      0, 3, 2, 1  // ordinal 4
+  };
 
 };
 

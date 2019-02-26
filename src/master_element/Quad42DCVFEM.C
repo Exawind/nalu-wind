@@ -411,13 +411,6 @@ Quad42DSCS::Quad42DSCS()
   // face 3;
   ipNodeMap_[6] = 3;  ipNodeMap_[7] = 0; 
 
-  sideNodeOrdinals_ = {
-      0, 1,
-      1, 2,
-      2, 3,
-      3, 0
-  };
-
   std::vector<std::vector<double>> nodeLocations =
   {
       {-0.5,-0.5}, {+0.5,-0.5},
@@ -465,7 +458,7 @@ Quad42DSCS::side_node_ordinals(
   int ordinal)
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
-  return &sideNodeOrdinals_[ordinal*2];
+  return sideNodeOrdinals_[ordinal];
 }
 
 //--------------------------------------------------------------------------

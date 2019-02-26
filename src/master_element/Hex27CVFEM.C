@@ -30,7 +30,6 @@ HexahedralP2Element::HexahedralP2Element()
 {
   ndim(AlgTraits::nDim_);
   nodesPerElement_ = nodes1D_ * nodes1D_ * nodes1D_;
-  MasterElement::sideNodeOrdinals_.assign   (&sideNodeOrdinals_[0][0], 54+&sideNodeOrdinals_[0][0]);
 }
 
 //--------------------------------------------------------------------------

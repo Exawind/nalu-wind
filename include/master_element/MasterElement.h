@@ -259,10 +259,6 @@ public:
     double * /* elem_pcoords */) {
     throw std::runtime_error("sidePcoords_to_elemPcoords");}
 
-  virtual const int* side_node_ordinals(int /* sideOrdinal */) {
-    throw std::runtime_error("side_node_ordinals not implemented");
-  }
-
   double isoparametric_mapping(const double b, const double a, const double xi) const;
   bool within_tolerance(const double & val, const double & tol);
   double vector_norm_sq(const double * vect, int len);
@@ -306,9 +302,6 @@ public:
   virtual const std::vector<double>& node_locations() const {return nodeLoc_;} 
   virtual void node_locations(const std::vector<double>& v) {nodeLoc_=v;} 
 
-  virtual const std::vector<int>& side_node_ordinals() const {return sideNodeOrdinals_;} 
-  virtual void side_node_ordinals(const std::vector<int>& v) {sideNodeOrdinals_=v;} 
-
   virtual const std::vector<int>& side_offsets() const {return sideOffset_;} 
   virtual void side_offsets(const std::vector<int>& v) {sideOffset_=v;} 
 
@@ -317,6 +310,10 @@ public:
 
   virtual const std::vector<double>& weights() const {return weights_;} 
   virtual void weights(const std::vector<double>& v) {weights_=v;} 
+
+  virtual const int* side_node_ordinals(int /* sideOrdinal */) {
+    throw std::runtime_error("side_node_ordinals not implemented");
+  }
 
   int nDim_;
   int nodesPerElement_;
@@ -332,7 +329,6 @@ public:
   std::vector<double> intgExpFace_;
   std::vector<double> intgExpFaceShift_;
   std::vector<double> nodeLoc_;
-  std::vector<int> sideNodeOrdinals_;
   std::vector<int> sideOffset_;
   std::vector<int> scsIpEdgeOrd_;
 
@@ -422,6 +418,14 @@ protected:
   std::vector<double> shapeDerivs_;
   std::vector<double> shapeDerivsShift_;
   std::vector<double> expFaceShapeDerivs_;
+
+  const int sideNodeOrdinals_[12] =  {
+      0, 1, 4,
+      1, 2, 5,
+      2, 3, 6,
+      3, 0, 7 
+  };
+
 private:
   void quad9_shape_fcn(
     int npts,

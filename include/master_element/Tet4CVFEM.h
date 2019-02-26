@@ -224,8 +224,13 @@ public:
   double parametric_distance(const double* x);
 
   const int* side_node_ordinals(int sideOrdinal) final;
-  virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
-  virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
+private:
+  const int sideNodeOrdinals_[4][3] = {
+     {0, 1, 3}, //ordinal 0
+     {1, 2, 3}, //ordinal 1
+     {0, 3, 2}, //ordinal 2
+     {0, 2, 1}  //ordinal 3
+  };
 };
 
 } // namespace nalu

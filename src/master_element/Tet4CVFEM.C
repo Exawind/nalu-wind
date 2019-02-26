@@ -403,13 +403,6 @@ TetSCS::TetSCS()
   // face 3;
   ipNodeMap_[9] = 0; ipNodeMap_[10] = 2; ipNodeMap_[11] = 1;
 
-  sideNodeOrdinals_ = {
-      0, 1, 3, //ordinal 0
-      1, 2, 3, //ordinal 1
-      0, 3, 2, //ordinal 2
-      0, 2, 1  //ordinal 3
-  };
-
   std::vector<std::vector<double>> nodeLocations =
   {
       {0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}
@@ -457,7 +450,7 @@ TetSCS::side_node_ordinals(
   int ordinal)
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
-  return &sideNodeOrdinals_[ordinal*3];
+  return sideNodeOrdinals_[ordinal];
 }
 
 //--------------------------------------------------------------------------

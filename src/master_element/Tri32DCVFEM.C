@@ -425,13 +425,6 @@ Tri32DSCS::Tri32DSCS()
   // face 2;
   ipNodeMap_[4] = 2;  ipNodeMap_[5] = 0;  
 
-
-  sideNodeOrdinals_ = {
-      0, 1,  // ordinal 0
-      1, 2,  // ordinal 1
-      2, 0   // ordinal 2
-  };
-
   std::vector<std::vector<double>> nodeLocations =
   {
       {0.0,0.0}, {1.0,0}, {0.0,1.0}
@@ -477,7 +470,7 @@ Tri32DSCS::side_node_ordinals(
   int ordinal)
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
-  return &sideNodeOrdinals_[ordinal*2];
+  return sideNodeOrdinals_[ordinal];
 }
 
 //--------------------------------------------------------------------------
