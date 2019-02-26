@@ -16,6 +16,8 @@ namespace {
 
   const double coeffSum = vecCoeff[0]+vecCoeff[1]+vecCoeff[2];
 
+  const int fullStencilSize = 8;
+
   const double testTol = 1e-12;
 }
 
@@ -38,7 +40,7 @@ TEST(utils, compute_vector_divergence)
   stk::mesh::put_field_on_mesh(*divV, realm.meta_data().universal_part(), nullptr);
 
   // create mesh
-  const std::string meshSpec("generated:2x2x2");
+  const std::string meshSpec("generated:4x4x4");
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
 
   // creat dual volumes
@@ -81,7 +83,8 @@ TEST(utils, compute_vector_divergence)
 
       double* divVal = stk::mesh::field_data(*divV, node);
 
-      EXPECT_NEAR(divVal[0], coeffSum, testTol);
+      if( realm.bulk_data().num_elements(node) == fullStencilSize )
+        EXPECT_NEAR(divVal[0], coeffSum, testTol);
 
     } // end for loop - in index
   } // end for loop - bkts
