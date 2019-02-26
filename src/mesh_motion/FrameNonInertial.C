@@ -100,5 +100,14 @@ MotionBase::TransMatType FrameNonInertial::compute_transformation(
   return comp_trans_mat;
 }
 
+void FrameNonInertial::post_work()
+{
+  // flag denoting if mesh velocity divergence already computed
+  bool computedMeshVelDiv = false;
+
+  for (auto& mm: meshMotionVec_)
+    mm->post_work(bulk_,partVec_,computedMeshVelDiv);
+}
+
 } // nalu
 } // sierra

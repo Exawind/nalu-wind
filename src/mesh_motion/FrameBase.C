@@ -59,7 +59,7 @@ void FrameBase::load(const YAML::Node& node)
 
     // determine type of mesh motion based on user definition in input file
     if (type == "pulsating_sphere")
-      meshMotionVec_[i].reset(new MotionPulsatingSphere(motion_def));
+      meshMotionVec_[i].reset(new MotionPulsatingSphere(meta_,motion_def));
     else if (type == "rotation")
       meshMotionVec_[i].reset(new MotionRotation(motion_def));
     else if (type == "scaling")

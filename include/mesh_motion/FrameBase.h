@@ -12,9 +12,6 @@
 namespace sierra{
 namespace nalu{
 
-typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
-typedef stk::mesh::Field<double> ScalarFieldType;
-
 class FrameBase
 {
 public:
@@ -44,6 +41,8 @@ public:
 
   bool is_inertial() const {
     return isInertial_; }
+
+  virtual void post_work() {};
 
 protected:
   //! Reference to the STK Mesh BulkData object
@@ -82,13 +81,13 @@ protected:
   bool computeCentroid_ = false;
 
 private:
-    FrameBase() = delete;
-    FrameBase(const FrameBase&) = delete;
+  FrameBase() = delete;
+  FrameBase(const FrameBase&) = delete;
 
-    void load(const YAML::Node&);
+  void load(const YAML::Node&);
 
-    void compute_centroid_on_parts(
-      std::vector<double> &centroid);
+  void compute_centroid_on_parts(
+    std::vector<double> &centroid);
 };
 
 } // nalu

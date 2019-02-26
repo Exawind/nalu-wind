@@ -24,16 +24,18 @@ public:
   void update_coordinates_velocity(const double time);
 
 private:
-    FrameNonInertial() = delete;
-    FrameNonInertial(const FrameNonInertial&) = delete;
+  FrameNonInertial() = delete;
+  FrameNonInertial(const FrameNonInertial&) = delete;
 
-    /** Compute transformation matrix
-     *
-     * @return 4x4 matrix representing composite addition of motions
-     */
-    MotionBase::TransMatType compute_transformation(
-      const double,
-      const double*);
+  /** Compute transformation matrix
+   *
+   * @return 4x4 matrix representing composite addition of motions
+   */
+  MotionBase::TransMatType compute_transformation(
+    const double,
+    const double*);
+
+  void post_work();
 };
 
 } // nalu
