@@ -50,10 +50,12 @@ void do_the_test_ngp(const sierra::nalu::ElemDataRequests& dataReq)
   EXPECT_EQ(5u, numCorrectTests);
 }
 
-void do_the_test_gpu(const sierra::nalu::ElemDataRequests& dataReq)
+void do_the_test_gpu(const sierra::nalu::ElemDataRequests& dataReq,
+                     stk::mesh::BulkData& bulk)
 {
   unsigned totalNumFields_guess = 10;
-  sierra::nalu::ElemDataRequestsGPU ngpDataReq(dataReq, totalNumFields_guess);
+  ngp::FieldManager fieldMgr(bulk);
+  sierra::nalu::ElemDataRequestsGPU ngpDataReq(fieldMgr, dataReq, totalNumFields_guess);
 
   unsigned numCorrectTests = 0;
   int threadsPerTeam = 1;
@@ -123,6 +125,6 @@ TEST_F(Hex8MeshWithNSOFields, ElemDataRequestsGPU)
 
   EXPECT_EQ(3u, dataReq.get_fields().size());
 
-  do_the_test_gpu(dataReq);
+  do_the_test_gpu(dataReq, bulk);
 }
 

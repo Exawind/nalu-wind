@@ -62,8 +62,9 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   EXPECT_EQ(2u, dataReq.get_fields().size());
 
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
+  ngp::FieldManager fieldMgr(bulk);
 
-  sierra::nalu::ElemDataRequestsGPU dataNGP(dataReq, meta.get_fields().size());
+  sierra::nalu::ElemDataRequestsGPU dataNGP(fieldMgr, dataReq, meta.get_fields().size());
 
   const int numNodes = elemTopo.num_nodes();
   const int rhsSize = numNodes;
@@ -154,8 +155,9 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
   EXPECT_EQ(2u, dataReq.get_fields().size());
 
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
+  ngp::FieldManager fieldMgr(bulk);
 
-  sierra::nalu::ElemDataRequestsGPU dataNGP(dataReq, meta.get_fields().size());
+  sierra::nalu::ElemDataRequestsGPU dataNGP(fieldMgr, dataReq, meta.get_fields().size());
 
   const int numNodes = elemTopo.num_nodes();
   const int rhsSize = numNodes;
