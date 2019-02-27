@@ -60,29 +60,13 @@ void tet_deriv(DerivType& deriv)
 TetSCV::TetSCV()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 4;
-  numIntPoints_ = 4;
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
 
-  // define ip node mappings
-  ipNodeMap_.resize(4);
-  ipNodeMap_[0] = 0; ipNodeMap_[1] = 1; ipNodeMap_[2] = 2; ipNodeMap_[3] = 3;
-
-  // standard integration location
-  intgLoc_.resize(12);
-  const double seventeen96ths = 17.0/96.0;
-  const double fourfive96ths  = 45.0/96.0;
-  intgLoc_[0] = seventeen96ths; intgLoc_[1]  = seventeen96ths; intgLoc_[2]  = seventeen96ths; // vol 1
-  intgLoc_[3] = fourfive96ths;  intgLoc_[4]  = seventeen96ths; intgLoc_[5]  = seventeen96ths; // vol 2
-  intgLoc_[6] = seventeen96ths; intgLoc_[7]  = fourfive96ths;  intgLoc_[8]  = seventeen96ths; // vol 3
-  intgLoc_[9] = seventeen96ths; intgLoc_[10] = seventeen96ths; intgLoc_[11] = fourfive96ths;  // vol 4
-
-  // shifted
-  intgLocShift_.resize(12);
-  intgLocShift_[0] = 0.0; intgLocShift_[1]  = 0.0;  intgLocShift_[2] = 0.0;
-  intgLocShift_[3] = 1.0; intgLocShift_[4]  = 0.0;  intgLocShift_[5] = 0.0;
-  intgLocShift_[6] = 0.0; intgLocShift_[7]  = 1.0;  intgLocShift_[8] = 0.0;
-  intgLocShift_[9] = 0.0; intgLocShift_[10] = 0.0; intgLocShift_[11] = 1.0;
+  MasterElement::ipNodeMap_.assign(ipNodeMap_, 4+ipNodeMap_);
+  MasterElement::intgLoc_.assign(&intgLoc_[0][0],           12+&intgLoc_[0][0]);
+  MasterElement::intgLocShift_.assign(&intgLocShift_[0][0], 12+&intgLocShift_[0][0]);
 }
 
 //--------------------------------------------------------------------------
@@ -101,7 +85,7 @@ TetSCV::ipNodeMap(
   int /*ordinal*/)
 {
   // define scv->node mappings
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 //--------------------------------------------------------------------------
@@ -252,7 +236,7 @@ void TetSCV::determinant(
 void
 TetSCV::shape_fcn(double *shpfc)
 {
-  tet_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  tet_shape_fcn(numIntPoints_, intgLoc_[0], shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -261,7 +245,7 @@ TetSCV::shape_fcn(double *shpfc)
 void
 TetSCV::shifted_shape_fcn(double *shpfc)
 {
-  tet_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  tet_shape_fcn(numIntPoints_, intgLocShift_[0], shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -311,116 +295,36 @@ void TetSCV::Mij(
 TetSCS::TetSCS()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 4;
-  numIntPoints_ = 6;
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
 
   // define L/R mappings
-  lrscv_.resize(12);
-  lrscv_[0]  = 0; lrscv_[1]  = 1;
-  lrscv_[2]  = 1; lrscv_[3]  = 2;
-  lrscv_[4]  = 0; lrscv_[5]  = 2;
-  lrscv_[6]  = 0; lrscv_[7]  = 3;
-  lrscv_[8]  = 1; lrscv_[9]  = 3;
-  lrscv_[10] = 2; lrscv_[11] = 3;
+  MasterElement::lrscv_.assign(lrscv_,  12+lrscv_);
+  MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,  numIntPoints_+scsIpEdgeOrd_);
+  MasterElement::oppNode_.assign(&oppNode_[0][0], 12+&oppNode_[0][0]);
+  MasterElement::oppFace_.assign(&oppFace_[0][0], 12+&oppFace_[0][0]);
 
-  // elem-edge mapping from ip
-  scsIpEdgeOrd_.resize(numIntPoints_);
-  scsIpEdgeOrd_[0] = 0; scsIpEdgeOrd_[1] = 1; scsIpEdgeOrd_[2] = 2; 
-  scsIpEdgeOrd_[3] = 3; scsIpEdgeOrd_[4] = 4; scsIpEdgeOrd_[5] = 5;
- 
-  // define opposing node
-  oppNode_.resize(12);
-  // face 0
-  oppNode_[0] = 2; oppNode_[1] = 2;  oppNode_[2] = 2;
-  // face 1
-  oppNode_[3] = 0; oppNode_[4] = 0;  oppNode_[5] = 0;
-  // face 2
-  oppNode_[6] = 1; oppNode_[7] = 1;  oppNode_[8] = 1;
-  // face 3
-  oppNode_[9] = 3; oppNode_[10] = 3; oppNode_[11] = 3;
+  MasterElement::intgLoc_.assign(intgLoc_,  18+intgLoc_);
+  MasterElement::intgLocShift_.assign(intgLocShift_,  18+intgLocShift_);
 
-  // define opposing face
-  oppFace_.resize(12);
-  // face 0
-  oppFace_[0]  = 2; oppFace_[1] = 1;  oppFace_[2] = 5;
-  // face 1
-  oppFace_[3]  = 0; oppFace_[4] = 2;  oppFace_[5] = 3;
-  // face 2
-  oppFace_[6]  = 0; oppFace_[7] = 4;  oppFace_[8] = 1;
-  // face 3
-  oppFace_[9]  = 3; oppFace_[10] = 5; oppFace_[11] = 4;
+  MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 36+&intgExpFace_[0][0][0]);
 
-  // standard integration location
-  intgLoc_.resize(18);
-  const double thirteen36ths = 13.0/36.0;
-  const double five36ths = 5.0/36.0;
-  intgLoc_[0]  =  thirteen36ths; intgLoc_[1]  = five36ths;     intgLoc_[2]  = five36ths; // surf 1    1->2
-  intgLoc_[3]  =  thirteen36ths; intgLoc_[4]  = thirteen36ths; intgLoc_[5]  = five36ths; // surf 2    2->3
-  intgLoc_[6]  =  five36ths;     intgLoc_[7]  = thirteen36ths; intgLoc_[8]  = five36ths; // surf 3    1->3
-  intgLoc_[9]  =  five36ths ;    intgLoc_[10] = five36ths;     intgLoc_[11] = thirteen36ths; // surf 4    1->4
-  intgLoc_[12] =  thirteen36ths; intgLoc_[13] = five36ths;     intgLoc_[14] = thirteen36ths; // surf 5    2->4
-  intgLoc_[15] =  five36ths;     intgLoc_[16] = thirteen36ths; intgLoc_[17] = thirteen36ths; // surf 6    3->4
+  MasterElement::ipNodeMap_.assign(&ipNodeMap_[0][0], 12+&ipNodeMap_[0][0]);
 
-  // shifted
-  intgLocShift_.resize(36);
-  intgLocShift_[0]  =  0.50; intgLocShift_[1]  =  0.00; intgLocShift_[2]  =  0.00; // surf 1    1->2
-  intgLocShift_[3]  =  0.50; intgLocShift_[4]  =  0.50; intgLocShift_[5]  =  0.00; // surf 2    2->3
-  intgLocShift_[6]  =  0.00; intgLocShift_[7]  =  0.50; intgLocShift_[8]  =  0.00; // surf 3    1->3
-  intgLocShift_[9]  =  0.00; intgLocShift_[10] =  0.00; intgLocShift_[11] =  0.50; // surf 4    1->4
-  intgLocShift_[12] =  0.50; intgLocShift_[13] =  0.00; intgLocShift_[14] =  0.50; // surf 5    2->4
-  intgLocShift_[15] =  0.00; intgLocShift_[16] =  0.50; intgLocShift_[17] =  0.50; // surf 6    3->4
+  const double nodeLocations[4][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}};
 
-  // exposed face
-  intgExpFace_.resize(36);
-  const double seven36ths = 7.0/36.0;
-  const double eleven18ths = 11.0/18.0;
-  // face 0; nodes 0,1,3: scs 0, 1, 2
-  intgExpFace_[0]  = seven36ths;  intgExpFace_[1]  =  0.00; intgExpFace_[2]  = seven36ths;
-  intgExpFace_[3]  = eleven18ths; intgExpFace_[4]  =  0.00; intgExpFace_[5]  = seven36ths;
-  intgExpFace_[6]  = seven36ths;  intgExpFace_[7]  =  0.00; intgExpFace_[8]  = eleven18ths;
-  // face 1; nodes 1,2,3; scs 0, 1, 2
-  intgExpFace_[9]  = eleven18ths; intgExpFace_[10] = seven36ths;  intgExpFace_[11] = seven36ths;
-  intgExpFace_[12] = seven36ths;  intgExpFace_[13] = eleven18ths; intgExpFace_[14] = seven36ths;
-  intgExpFace_[15] = seven36ths;  intgExpFace_[16] = seven36ths;  intgExpFace_[17] = eleven18ths;
-  // face 2; nodes 0,3,2; scs 0, 1, 2
-  intgExpFace_[18] =  0.00;      intgExpFace_[19] = seven36ths;  intgExpFace_[20] = seven36ths;
-  intgExpFace_[21] =  0.00;      intgExpFace_[22] = seven36ths;  intgExpFace_[23] = eleven18ths;
-  intgExpFace_[24] =  0.00;      intgExpFace_[25] = eleven18ths; intgExpFace_[26] = seven36ths;
-  //face 3; nodes 0, 2, 1; scs 0, 1, 2
-  intgExpFace_[27] = seven36ths;  intgExpFace_[28] = seven36ths;  intgExpFace_[29] =  0.00;
-  intgExpFace_[30] = eleven18ths; intgExpFace_[31] = seven36ths;  intgExpFace_[32] =  0.00;
-  intgExpFace_[33] = seven36ths;  intgExpFace_[34] = eleven18ths; intgExpFace_[35] =  0.00;
-
-  // boundary integration point ip node mapping (ip on an ordinal to local node number)
-  ipNodeMap_.resize(12); // 3 ips * 4 faces
-  // face 0;
-  ipNodeMap_[0] = 0;  ipNodeMap_[1] = 1;  ipNodeMap_[2] = 3; 
-  // face 1; 
-  ipNodeMap_[3] = 1;  ipNodeMap_[4] = 2;  ipNodeMap_[5] = 3; 
-  // face 2;
-  ipNodeMap_[6] = 0;  ipNodeMap_[7] = 3;  ipNodeMap_[8] = 2;  
-  // face 3;
-  ipNodeMap_[9] = 0; ipNodeMap_[10] = 2; ipNodeMap_[11] = 1;
-
-  std::vector<std::vector<double>> nodeLocations =
-  {
-      {0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}
-  };
-
-  intgExpFaceShift_.resize(3*3*4);
-  int index = 0;
   stk::topology topo = stk::topology::TET_4;
   for (unsigned k = 0; k < topo.num_sides(); ++k) {
     stk::topology side_topo = topo.side_topology(k);
     const int* ordinals = side_node_ordinals(k);
     for (unsigned n = 0; n < side_topo.num_nodes(); ++n) {
-      intgExpFaceShift_[3*index + 0] = nodeLocations[ordinals[n]][0];
-      intgExpFaceShift_[3*index + 1] = nodeLocations[ordinals[n]][1];
-      intgExpFaceShift_[3*index + 2] = nodeLocations[ordinals[n]][2];
-      ++index;
+      intgExpFaceShift_[k][n][0] = nodeLocations[ordinals[n]][0];
+      intgExpFaceShift_[k][n][1] = nodeLocations[ordinals[n]][1];
+      intgExpFaceShift_[k][n][2] = nodeLocations[ordinals[n]][2];
     }
   }
+  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0], 36+&intgExpFaceShift_[0][0][0]);
 }
 
 //--------------------------------------------------------------------------
@@ -439,7 +343,7 @@ TetSCS::ipNodeMap(
   int ordinal)
 {
   // define ip->node mappings for each face (ordinal); 
-  return &ipNodeMap_[ordinal*3];
+  return ipNodeMap_[ordinal];
 }
 
 //--------------------------------------------------------------------------
@@ -863,7 +767,7 @@ TetSCS::opposingNodes(
   const int ordinal,
   const int node)
 {
-  return oppNode_[ordinal*3+node];
+  return oppNode_[ordinal][node];
 }
 
 //--------------------------------------------------------------------------
@@ -874,7 +778,7 @@ TetSCS::opposingFace(
   const int ordinal,
   const int node)
 {
-  return oppFace_[ordinal*3+node];
+  return oppFace_[ordinal][node];
 }
 
 //--------------------------------------------------------------------------
