@@ -51,7 +51,7 @@ struct SharedMemData {
 
     SharedMemData(const TEAMHANDLETYPE& team,
          unsigned nDim,
-         const ElemDataRequestsNGP& dataNeededByKernels,
+         const ElemDataRequestsNGPDep& dataNeededByKernels,
          unsigned nodesPerEntity,
          unsigned rhsSize)
      : simdPrereqData(team, nDim, nodesPerEntity, dataNeededByKernels)
@@ -119,8 +119,8 @@ struct SharedMemData_FaceElem {
 
     SharedMemData_FaceElem(const TEAMHANDLETYPE& team,
          unsigned nDim,
-         const ElemDataRequestsNGP& faceDataNeeded,
-         const ElemDataRequestsNGP& elemDataNeeded,
+         const ElemDataRequestsNGPDep& faceDataNeeded,
+         const ElemDataRequestsNGPDep& elemDataNeeded,
          const ScratchMeInfo& meElemInfo,
          unsigned rhsSize)
      : simdFaceViews(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded),

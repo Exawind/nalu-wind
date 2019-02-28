@@ -419,7 +419,7 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
   return numScalars + 8;
 }
 
-int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeeded, int nDim)
+int get_num_scalars_pre_req_data(const ElemDataRequestsNGPDep& dataNeeded, int nDim)
 {
   /* master elements are allowed to be null if they are not required */
   MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
@@ -447,7 +447,7 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeeded, int nDim
   const int numFemIp = meFEM != nullptr ? meFEM->numIntPoints_ : 0;
   int numScalars = 0;
   
-  const ElemDataRequestsNGP::FieldInfoView& neededFields = dataNeeded.get_fields();
+  const ElemDataRequestsNGPDep::FieldInfoView& neededFields = dataNeeded.get_fields();
   for(unsigned f=0; f<neededFields.size(); ++f) {
     const FieldInfo& fieldInfo = neededFields(f);
     stk::mesh::EntityRank fieldEntityRank = get_entity_rank(fieldInfo);
@@ -463,10 +463,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeeded, int nDim
     numScalars += entitiesPerElem*scalarsPerEntity;
   }
 
-  const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+  const ElemDataRequestsNGPDep::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
   for(unsigned i=0; i<coordsTypes.size(); ++i) {
     auto cType = coordsTypes(i);
-    const ElemDataRequestsNGP::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
+    const ElemDataRequestsNGPDep::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
     int dndxLength = 0, dndxLengthFC = 0, gUpperLength = 0, gLowerLength = 0, metricLength = 0;
 
     // Updated logic for data sharing of deriv and det_j
@@ -557,7 +557,7 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeeded, int nDim
   return numScalars + 8;
 }
 
-int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeeded, int nDim, const ScratchMeInfo &meInfo)
+int get_num_scalars_pre_req_data(const ElemDataRequestsNGPDep& dataNeeded, int nDim, const ScratchMeInfo &meInfo)
 {
   const int nodesPerEntity = meInfo.nodalGatherSize_;
   const int numFaceIp = meInfo.numFaceIp_;
@@ -566,7 +566,7 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeeded, int nDim
   const int numFemIp = meInfo.numFemIp_;
   int numScalars = 0;
 
-  const ElemDataRequestsNGP::FieldInfoView& neededFields = dataNeeded.get_fields();
+  const ElemDataRequestsNGPDep::FieldInfoView& neededFields = dataNeeded.get_fields();
   for(unsigned f=0; f<neededFields.size(); ++f) {
     const FieldInfo& fieldInfo = neededFields(f);
     stk::mesh::EntityRank fieldEntityRank = get_entity_rank(fieldInfo);
@@ -582,7 +582,7 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeeded, int nDim
     numScalars += entitiesPerElem*scalarsPerEntity;
   }
 
-  const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+  const ElemDataRequestsNGPDep::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
   for(unsigned i=0; i<coordsTypes.size(); ++i) {
     auto cType = coordsTypes(i);
     int dndxLength = 0, dndxLengthFC = 0, gUpperLength = 0, gLowerLength = 0;
@@ -591,7 +591,7 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeeded, int nDim
     bool needDeriv = false; bool needDerivScv = false; bool needDerivFem = false; bool needDerivFC = false;
     bool needDetj = false; bool needDetjScv = false; bool needDetjFem = false; bool needDetjFC = false;
 
-    const ElemDataRequestsNGP::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
+    const ElemDataRequestsNGPDep::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
     for(unsigned d=0; d<dataEnums.size(); ++d) {
       ELEM_DATA_NEEDED data = dataEnums(d);
       switch(data)
@@ -678,12 +678,14 @@ void fill_pre_req_data(
   stk::mesh::EntityRank entityRank,
   stk::mesh::Entity entity,
   ScratchViews<double,DeviceTeamHandleType,DeviceShmem>& prereqData,
-  bool  /* fillMEViews */)
+  bool fillMEViews)
 {
-  //MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
-  //MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
-  //MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
-  //MasterElement *meFEM = dataNeeded.get_fem_volume_me();
+#ifndef KOKKOS_HAVE_CUDA
+  MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
+  MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
+  MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
+  MasterElement *meFEM = dataNeeded.get_fem_volume_me();
+#endif
 
   stk::mesh::FastMeshIndex entityIndex = ngpMesh.fast_mesh_index(entity);
   prereqData.elemNodes = ngpMesh.get_nodes(entityRank, entityIndex);
@@ -735,7 +737,8 @@ void fill_pre_req_data(
       NGP_ThrowRequireMsg(false,"Unknown stk-rank in ScratchViewsNGP.C::fill_pre_req_data" );
     }
   }
-/*
+
+#ifndef KOKKOS_HAVE_CUDA
   if (fillMEViews)
   {
     const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
@@ -748,14 +751,14 @@ void fill_pre_req_data(
       auto* coordsView = &prereqData.get_scratch_view_2D(coordField.get_ordinal());
       auto& meData = prereqData.get_me_views(cType);
 
-//      meData.fill_master_element_views(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM);
+      meData.fill_master_element_views(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM);
     }
   }
-*/
+#endif
 }
 
 void fill_pre_req_data(
-  const ElemDataRequestsNGP& dataNeeded,
+  const ElemDataRequestsNGPDep& dataNeeded,
   const stk::mesh::BulkData& bulkData,
   stk::mesh::Entity elem,
   ScratchViews<double,TeamHandleType,HostShmem>& prereqData,
@@ -769,7 +772,7 @@ void fill_pre_req_data(
   MasterElement *meFEM = dataNeeded.get_fem_volume_me();
   prereqData.elemNodes = ngp::Mesh::ConnectedNodes(bulkData.begin_nodes(elem), bulkData.num_nodes(elem));
 
-  const ElemDataRequestsNGP::FieldInfoView& neededFields = dataNeeded.get_fields();
+  const ElemDataRequestsNGPDep::FieldInfoView& neededFields = dataNeeded.get_fields();
   for(unsigned f=0; f<neededFields.size(); ++f) {
     const FieldInfo& fieldInfo = neededFields(f);
     stk::mesh::EntityRank fieldEntityRank = get_entity_rank(fieldInfo);
@@ -818,13 +821,13 @@ void fill_pre_req_data(
 
   if (fillMEViews)
   {
-    const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
-    const ElemDataRequestsNGP::FieldView& coordsFields = dataNeeded.get_coordinates_fields();
+    const ElemDataRequestsNGPDep::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+    const ElemDataRequestsNGPDep::FieldView& coordsFields = dataNeeded.get_coordinates_fields();
     for(unsigned i=0; i<coordsTypes.size(); ++i) {
       auto cType = coordsTypes(i);
       const stk::mesh::FieldBase* coordField = coordsFields(i);
 
-      const ElemDataRequestsNGP::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
+      const ElemDataRequestsNGPDep::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
       auto coordsView = &prereqData.get_scratch_view_2D(*coordField);
       auto& meData = prereqData.get_me_views(cType);
 

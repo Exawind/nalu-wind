@@ -92,7 +92,7 @@ public:
 
   int create_master_element_views(
     const TeamHandleType& team,
-    const ElemDataRequestsNGP::DataEnumView& dataEnums,
+    const ElemDataRequestsNGPDep::DataEnumView& dataEnums,
     int nDim, int nodesPerFace, int nodesPerElem,
     int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 
@@ -105,7 +105,7 @@ public:
 #endif
 
   void fill_master_element_views(
-    const ElemDataRequestsNGP::DataEnumView& dataEnums,
+    const ElemDataRequestsNGPDep::DataEnumView& dataEnums,
     SharedMemView<double**>* coordsView,
     MasterElement* meFC,
     MasterElement* meSCS,
@@ -114,7 +114,7 @@ public:
     int faceOrdinal = 0);
 
   void fill_master_element_views_new_me(
-    const ElemDataRequestsNGP::DataEnumView& dataEnums,
+    const ElemDataRequestsNGPDep::DataEnumView& dataEnums,
     SharedMemView<DoubleType**>* coordsView,
     MasterElement* meFC,
     MasterElement* meSCS,
@@ -207,7 +207,7 @@ public:
   ScratchViews(const TEAMHANDLETYPE& team,
                unsigned nDim,
                int nodesPerEntity,
-               const ElemDataRequestsNGP& dataNeeded);
+               const ElemDataRequestsNGPDep& dataNeeded);
 
   KOKKOS_FUNCTION
   ScratchViews(const TEAMHANDLETYPE& team,
@@ -219,7 +219,7 @@ public:
   ScratchViews(const TEAMHANDLETYPE& team,
                unsigned nDim,
                const ScratchMeInfo &meInfo,
-               const ElemDataRequestsNGP& dataNeeded);
+               const ElemDataRequestsNGPDep& dataNeeded);
 
   KOKKOS_FUNCTION
   ScratchViews(const TEAMHANDLETYPE& team,
@@ -277,7 +277,7 @@ public:
 
 private:
   void create_needed_master_element_views(const TEAMHANDLETYPE& team,
-                                          const ElemDataRequestsNGP& dataNeeded,
+                                          const ElemDataRequestsNGPDep& dataNeeded,
                                           int nDim, int nodesPerFace, int nodesPerElem,
                                           int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 
@@ -355,7 +355,7 @@ SharedMemView<T****,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_vi
 template<typename T>
 int MasterElementViews<T>::create_master_element_views(
   const TeamHandleType& team,
-  const ElemDataRequestsNGP::DataEnumView& dataEnums,
+  const ElemDataRequestsNGPDep::DataEnumView& dataEnums,
   int nDim, int /* nodesPerFace */, int nodesPerElem,
   int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
 {
@@ -678,7 +678,7 @@ int MasterElementViews<T>::create_master_element_views(
 
 template<typename T>
 void MasterElementViews<T>::fill_master_element_views(
-  const ElemDataRequestsNGP::DataEnumView& dataEnums,
+  const ElemDataRequestsNGPDep::DataEnumView& dataEnums,
   SharedMemView<double**>* coordsView,
   MasterElement* /* meFC */,
   MasterElement* meSCS,
@@ -762,7 +762,7 @@ void MasterElementViews<T>::fill_master_element_views(
 
 template<typename T>
 void MasterElementViews<T>::fill_master_element_views_new_me(
-  const ElemDataRequestsNGP::DataEnumView& dataEnums,
+  const ElemDataRequestsNGPDep::DataEnumView& dataEnums,
   SharedMemView<DoubleType**>* coordsView,
   MasterElement* /* meFC */,
   MasterElement* meSCS,
@@ -851,7 +851,7 @@ template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
 ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
              unsigned nDim,
              int nodalGatherSize,
-             const ElemDataRequestsNGP& dataNeeded)
+             const ElemDataRequestsNGPDep& dataNeeded)
  : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
   num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, nodalGatherSize, fieldViews) * sizeof(T);
@@ -911,7 +911,7 @@ template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
 ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
              unsigned nDim,
              const ScratchMeInfo &meInfo,
-             const ElemDataRequestsNGP& dataNeeded)
+             const ElemDataRequestsNGPDep& dataNeeded)
  : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
   num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, meInfo.nodalGatherSize_, fieldViews) * sizeof(T);
@@ -935,13 +935,13 @@ ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
 
 template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
 void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_master_element_views(const TEAMHANDLETYPE& team,
-                                        const ElemDataRequestsNGP& dataNeeded,
+                                        const ElemDataRequestsNGPDep& dataNeeded,
                                         int nDim, int nodesPerFace, int nodesPerElem,
                                         int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
 {
   int numScalars = 0;
 
-  const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+  const ElemDataRequestsNGPDep::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
 
   for(unsigned i=0; i<coordsTypes.size(); ++i) {
     hasCoordField[coordsTypes(i)] = true;
@@ -976,12 +976,12 @@ void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_master_element_views(co
   num_bytes_required += numScalars * sizeof(T);
 }
 
-int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim);
-int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
+int get_num_scalars_pre_req_data(const ElemDataRequestsNGPDep& dataNeededBySuppAlgs, int nDim);
+int get_num_scalars_pre_req_data(const ElemDataRequestsNGPDep& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
 int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim);
 int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
 
-void fill_pre_req_data(const ElemDataRequestsNGP& dataNeeded,
+void fill_pre_req_data(const ElemDataRequestsNGPDep& dataNeeded,
                        const stk::mesh::BulkData& bulkData,
                        stk::mesh::Entity elem,
                        ScratchViews<double,TeamHandleType,HostShmem>& prereqData,
@@ -1006,14 +1006,14 @@ void fill_master_element_views(ELEMDATAREQUESTSTYPE& dataNeeded,
     MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
     MasterElement *meFEM = dataNeeded.get_fem_volume_me();
 
-    const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
-    const ElemDataRequestsNGP::FieldView& coordsFields = dataNeeded.get_coordinates_fields();
+    const typename ELEMDATAREQUESTSTYPE::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+    const typename ELEMDATAREQUESTSTYPE::FieldView& coordsFields = dataNeeded.get_coordinates_fields();
     for(unsigned i=0; i<coordsTypes.size(); ++i) {
       auto cType = coordsTypes(i);
-      const stk::mesh::FieldBase* coordField = coordsFields(i);
+      const typename ELEMDATAREQUESTSTYPE::FieldType* coordField = coordsFields(i);
 
-      const ElemDataRequestsNGP::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
-      auto* coordsView = &prereqData.get_scratch_view_2D(*coordField);
+      const typename ELEMDATAREQUESTSTYPE::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
+      auto* coordsView = &prereqData.get_scratch_view_2D(get_field_ordinal(*coordField));
       auto& meData = prereqData.get_me_views(cType);
 
       meData.fill_master_element_views_new_me(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM, faceOrdinal);

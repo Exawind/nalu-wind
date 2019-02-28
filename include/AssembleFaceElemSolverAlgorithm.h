@@ -61,8 +61,8 @@ public:
 
       int rhsSize = meElemInfo.nodalGatherSize_*numDof_, lhsSize = rhsSize*rhsSize, scratchIdsSize = rhsSize;
 
-      ElemDataRequestsNGP faceDataNGP(faceDataNeeded_, totalNumFields);
-      ElemDataRequestsNGP elemDataNGP(elemDataNeeded_, totalNumFields);
+      ElemDataRequestsNGPDep faceDataNGP(faceDataNeeded_, totalNumFields);
+      ElemDataRequestsNGPDep elemDataNGP(elemDataNeeded_, totalNumFields);
 
       const int bytes_per_team = 0;
       const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(lhsSize, rhsSize, scratchIdsSize,

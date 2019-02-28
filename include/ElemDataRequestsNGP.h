@@ -27,16 +27,23 @@ struct FieldPtr {
   operator const stk::mesh::FieldBase*() const { return ptr; }
 };
 
-class ElemDataRequestsNGP
+inline
+unsigned get_field_ordinal(const stk::mesh::FieldBase& field)
+{
+  return field.mesh_meta_data_ordinal();
+}
+
+class ElemDataRequestsNGPDep
 {
 public:
   typedef FieldInfo FieldInfoType;
+  typedef stk::mesh::FieldBase FieldType;
   typedef Kokkos::View<COORDS_TYPES*, Kokkos::LayoutRight, MemSpace> CoordsTypesView;
   typedef Kokkos::View<ELEM_DATA_NEEDED*, Kokkos::LayoutRight, MemSpace> DataEnumView;
   typedef Kokkos::View<FieldPtr*, Kokkos::LayoutRight, MemSpace> FieldView;
   typedef Kokkos::View<FieldInfoType*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
-  ElemDataRequestsNGP(const ElemDataRequests& dataReq, unsigned totalFields)
+  ElemDataRequestsNGPDep(const ElemDataRequests& dataReq, unsigned totalFields)
     : totalNumFields(totalFields),
       dataEnums(),
       hostDataEnums(),
@@ -61,7 +68,7 @@ public:
     copy_to_device();
   }
 
-  ~ElemDataRequestsNGP() {}
+  ~ElemDataRequestsNGPDep() {}
 
   void add_cvfem_face_me(MasterElement *meFC)
   { meFC_ = meFC; }

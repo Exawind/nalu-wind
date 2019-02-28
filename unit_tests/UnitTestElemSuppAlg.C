@@ -127,7 +127,10 @@ public:
   
       const stk::mesh::BucketVector& elemBuckets = bulkData_.get_buckets(stk::topology::ELEM_RANK, meta.locally_owned_part());
   
-      sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_, meta.get_fields().size());
+      ngp::Mesh ngpMesh(bulkData_);
+      ngp::FieldManager fieldMgr(bulkData_);
+
+      sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeededByKernels_, meta.get_fields().size());
       const int bytes_per_team = 0;
       const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension());
       auto team_exec = sierra::nalu::get_host_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);
@@ -141,11 +144,11 @@ public:
 
           Kokkos::parallel_for(Kokkos::TeamThreadRange(team, bkt.size()), [&](const size_t& jj)
           {
-             fill_pre_req_data(dataNeededNGP, bulkData_, bkt[jj], prereqData);
-            
-             for(SuppAlg* alg : suppAlgs_) {
-               alg->elem_execute(topo, *meSCS, prereqData);
-             }
+            fill_pre_req_data(dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, bkt[jj], prereqData);
+
+            for(SuppAlg* alg : suppAlgs_) {
+              alg->elem_execute(topo, *meSCS, prereqData);
+            }
           });
       });
   }

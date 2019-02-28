@@ -58,10 +58,17 @@ unsigned get_field_ordinal(const FieldInfoNGP& fieldInfo)
   return fieldInfo.field.get_ordinal();
 }
 
+KOKKOS_INLINE_FUNCTION
+unsigned get_field_ordinal(const NGPDoubleFieldType& field)
+{
+  return field.get_ordinal();
+}
+
 class ElemDataRequestsGPU
 {
 public:
   typedef FieldInfoNGP FieldInfoType;
+  typedef NGPDoubleFieldType FieldType;
   typedef Kokkos::View<COORDS_TYPES*, Kokkos::LayoutRight, MemSpace> CoordsTypesView;
   typedef Kokkos::View<ELEM_DATA_NEEDED*, Kokkos::LayoutRight, MemSpace> DataEnumView;
   typedef Kokkos::View<NGPDoubleFieldType*, Kokkos::LayoutRight, MemSpace> FieldView;
