@@ -23,6 +23,7 @@ namespace nalu {
 void compute_vector_divergence(
   stk::mesh::BulkData & bulk,
   stk::mesh::PartVector & partVec,
+  stk::mesh::PartVector & bndyPartVec,
   stk::mesh::FieldBase * vectorField,
   stk::mesh::FieldBase * scalarField,
   const bool hasMeshDeformation )
@@ -34,6 +35,9 @@ void compute_vector_divergence(
   VectorFieldType* coordinates = meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, coordName);
 
   ScalarFieldType* dualVol = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
+
+  GenericFieldType *exposedAreaVec
+      = meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
 
   std::vector<double> wsCoordinates;
   std::vector<double> wsScsArea;
@@ -129,6 +133,72 @@ void compute_vector_divergence(
     }
 
   }
+
+  stk::mesh::Selector face_sel = meta.locally_owned_part()
+      & stk::mesh::selectUnion(bndyPartVec);
+  const auto& face_bkts =
+      bulk.get_buckets( meta.side_rank(), face_sel );
+
+  for (auto b: face_bkts) {
+    // extract master element
+    MasterElement *meFC =
+        MasterElementRepo::get_surface_master_element(b->topology());
+    const int nodesPerFace = meFC->nodesPerElement_;
+    const int numScsIp = meFC->numIntPoints_;
+    const int *ipNodeMap = meFC->ipNodeMap();
+
+    wsMeshVector.resize(nodesPerFace*nDim);
+    ws_shape_function.resize(numScsIp*nodesPerFace);
+    meFC->shape_fcn(ws_shape_function.data());
+
+    size_t length = b->size();
+    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
+
+      // face data
+      const double * areaVec = (double*)stk::mesh::field_data(*exposedAreaVec, *b, k);
+
+      stk::mesh::Entity const * face_node_rels = b->begin_nodes(k);
+      int num_nodes = b->num_nodes(k);
+
+      // sanity check on num nodes
+      ThrowAssert( num_nodes == nodesPerFace );
+
+      for ( int ni = 0; ni < num_nodes; ++ni ) {
+        stk::mesh::Entity node = face_node_rels[ni];
+        const double * mv = (double*)stk::mesh::field_data(*vectorField, node);
+        for (int iDim=0; iDim < nDim; iDim++)
+            wsMeshVector[ni*nDim+iDim] = mv[iDim];
+      }
+
+      // start assembly
+      for ( int ip = 0; ip < numScsIp; ++ip ) {
+
+        // nearest node
+        const int nn = ipNodeMap[ip];
+        stk::mesh::Entity nodeNN = face_node_rels[nn];
+        double *divMV = (double*)stk::mesh::field_data(*scalarField, nodeNN);
+        double *volNN = (double*)stk::mesh::field_data(*dualVol, nodeNN);
+
+        // interpolate to scs point; operate on saved off ws_field
+        for ( int j = 0; j < nDim; ++j )
+            mvIp[j] = 0.0;
+        const int offSet = ip*nodesPerFace;
+        for ( int ic = 0; ic < nodesPerFace; ++ic ) {
+            for (int iDim=0; iDim < nDim; iDim++)
+                mvIp[iDim] += ws_shape_function[offSet+ic]
+                    *wsMeshVector[ic*nDim+iDim];
+        }
+
+        //Compute dot product with area
+        double mvDotArea = 0.0;
+        for ( int j = 0; j < nDim; ++j )
+          mvDotArea += mvIp[j]*areaVec[ip*nDim+j];
+        *divMV += mvDotArea/(*volNN);
+
+      }
+    }
+  }
+
 
 }
 
