@@ -127,33 +127,14 @@ void shifted_pyr_deriv(const int npts,
 PyrSCV::PyrSCV()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 5;
-  numIntPoints_ = 5; 
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_; 
 
-  // define ip node mappings
-  ipNodeMap_.resize(5);
-  ipNodeMap_[0] = 0; ipNodeMap_[1] = 1; ipNodeMap_[2] = 2; ipNodeMap_[3] = 3;
-  ipNodeMap_[4] = 4;
+  MasterElement::ipNodeMap_.assign(ipNodeMap_, ipNodeMap_+5);
 
-  // standard integration location
-  intgLoc_.resize(15);
-  const double one69r384 = 169.0/384.0;
-  const double five77r3840 = 577.0/3840.0;
-  const double seven73r1560 = 773.0/1560.0;
-  intgLoc_[0]  = -one69r384; intgLoc_[1]  = -one69r384; intgLoc_[2]  = five77r3840;  // vol 0
-  intgLoc_[3]  =  one69r384; intgLoc_[4]  = -one69r384; intgLoc_[5]  = five77r3840;  // vol 1
-  intgLoc_[6]  =  one69r384; intgLoc_[7]  =  one69r384; intgLoc_[8]  = five77r3840;  // vol 2
-  intgLoc_[9]  = -one69r384; intgLoc_[10] =  one69r384; intgLoc_[11] = five77r3840;  // vol 3
-  intgLoc_[12] =   0.0;      intgLoc_[13] =   0.0;      intgLoc_[14] = seven73r1560; // vol 4
-
-  // shifted
-  intgLocShift_.resize(15);
-  intgLocShift_[0]  = -1.0; intgLocShift_[1]  = -1.0; intgLocShift_[2]  = 0.0;  // vol 0
-  intgLocShift_[3]  =  1.0; intgLocShift_[4]  = -1.0; intgLocShift_[5]  = 0.0;  // vol 1
-  intgLocShift_[6]  =  1.0; intgLocShift_[7]  =  1.0; intgLocShift_[8]  = 0.0;  // vol 2
-  intgLocShift_[9]  = -1.0; intgLocShift_[10] =  1.0; intgLocShift_[11] = 0.0;  // vol 3
-  intgLocShift_[12] =  0.0; intgLocShift_[13] =  0.0; intgLocShift_[14] = 1.0;  // vol 4
+  MasterElement::intgLoc_.assign(intgLoc_, intgLoc_+15);
+  MasterElement::intgLocShift_.assign(intgLocShift_, intgLocShift_+15);
 }
 
 //--------------------------------------------------------------------------
@@ -543,162 +524,52 @@ void PyrSCS::Mij(
   generic_Mij_3d<AlgTraitsPyr5>(deriv, coords, metric);
 }
 
+void fill_intg_exp_face_shift(double* intgExpFaceShift, const int* sideNodeOrdinals)
+{
+  const double nodeLocations[5][3] = {
+    {-1.0, -1.0, +0.0}, {+1.0, -1.0, +0.0}, {+1.0, +1.0, +0.0}, {-1.0, +1.0, +0.0},
+    {0.0, 0.0, +1.0}
+  };
+
+  int index = 0;
+  stk::topology topo = stk::topology::PYRAMID_5;
+  for (unsigned k = 0; k < topo.num_sides(); ++k) {
+    stk::topology side_topo = topo.side_topology(k);
+    const int* ordinals = &sideNodeOrdinals[k*3];
+    for (unsigned n = 0; n < side_topo.num_nodes(); ++n) {
+      intgExpFaceShift[3*index + 0] = nodeLocations[ordinals[n]][0];
+      intgExpFaceShift[3*index + 1] = nodeLocations[ordinals[n]][1];
+      intgExpFaceShift[3*index + 2] = nodeLocations[ordinals[n]][2];
+      ++index;
+    }
+  }
+}
+
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 PyrSCS::PyrSCS()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 5;
-  numIntPoints_ = 12;
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
 
-  // define L/R mappings
-  lrscv_.resize(24);
-  lrscv_[0]  = 0; lrscv_[1]  = 1;
-  lrscv_[2]  = 1; lrscv_[3]  = 2;
-  lrscv_[4]  = 2; lrscv_[5]  = 3;
-  lrscv_[6]  = 0; lrscv_[7]  = 3;
-  lrscv_[8]  = 0; lrscv_[9]  = 4;
-  lrscv_[10] = 0; lrscv_[11] = 4;
-  lrscv_[12] = 1; lrscv_[13] = 4;
-  lrscv_[14] = 1; lrscv_[15] = 4;
-  lrscv_[16] = 2; lrscv_[17] = 4;
-  lrscv_[18] = 2; lrscv_[19] = 4;
-  lrscv_[20] = 3; lrscv_[21] = 4;
-  lrscv_[22] = 3; lrscv_[23] = 4;
+  MasterElement::lrscv_.assign(lrscv_, lrscv_+24);
 
-  // elem-edge map from ip
-  scsIpEdgeOrd_.resize(numIntPoints_);
-  scsIpEdgeOrd_[0]  = 0; scsIpEdgeOrd_[1]  = 1; 
-  scsIpEdgeOrd_[2]  = 2; scsIpEdgeOrd_[3]  = 3; 
-  scsIpEdgeOrd_[4]  = 4; scsIpEdgeOrd_[5]  = 4; 
-  scsIpEdgeOrd_[6]  = 5; scsIpEdgeOrd_[7]  = 5;
-  scsIpEdgeOrd_[8]  = 6; scsIpEdgeOrd_[9]  = 6;
-  scsIpEdgeOrd_[10] = 7; scsIpEdgeOrd_[11] = 7;
+  MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, scsIpEdgeOrd_+AlgTraits::numScsIp_);
+  MasterElement::oppNode_.assign(oppNode_, oppNode_+20);
+  MasterElement::oppFace_.assign(oppFace_, oppFace_+20);
 
-  // define opposing node
-  // opposing node for node 4 is never uniquely defined: pick one
-  oppNode_.resize(20);
-  // face 0; nodes 0,1,4
-  oppNode_[0] = 3; oppNode_[1] = 2; oppNode_[2] = 2; oppNode_[3] = -1;
-  // face 1; nodes 1,2,4
-  oppNode_[4] = 0; oppNode_[5] = 3; oppNode_[6] = 3; oppNode_[7] = -1;
-  // face 2; nodes 2,3,4
-  oppNode_[8] = 1; oppNode_[9] = 0; oppNode_[10] = 0; oppNode_[11] = -1;
-  // face 3; nodes 0,4,3
-  oppNode_[12] = 1; oppNode_[13] = 1; oppNode_[14] = 2; oppNode_[15] = -1;
-  // face 4; nodes 0,3,2,1
-  oppNode_[16] = 4; oppNode_[17] = 4; oppNode_[18] = 4; oppNode_[19] = 4;
+  MasterElement::intgLoc_.assign(intgLoc_, intgLoc_+36);
+  MasterElement::intgLocShift_.assign(intgLocShift_, intgLocShift_+36);
 
-  // define opposing face
-  // the 5th node maps to two opposing sub-faces, we pick one
-  oppFace_.resize(20);
-  // face 0
-  oppFace_[0] = 3;  oppFace_[1] = 1;  oppFace_[2] = 8;  oppFace_[3] = -1;
-  // face 1
-  oppFace_[4] = 0;  oppFace_[5] = 2;  oppFace_[6] = 10; oppFace_[7] = -1;
-  // face 2
-  oppFace_[8] = 1;  oppFace_[9] = 3;  oppFace_[10] = 4; oppFace_[11] = -1;
-  // face 3
-  oppFace_[12] = 0; oppFace_[13] = 6; oppFace_[14] = 2; oppFace_[15] = -1;
-  // face 4
-  oppFace_[16] = 4; oppFace_[17] = 10; oppFace_[18] = 8; oppFace_[19] = 6;
+  MasterElement::intgExpFace_.assign(intgExpFace_, intgExpFace_+48);
 
-  // standard integration location
-  intgLoc_.resize(36);
-  const double twentynine63rd = 29.0/63.0;
-  const double fortyone315th = 41.0/315.0;
-  const double two9th = 2.0/9.0;
-  const double thirteen45th = 13.0/45.0;
-  const double seven18th = 7.0/18.0;
-  intgLoc_[0]  = 0.0;             intgLoc_[1]  = -twentynine63rd; intgLoc_[2]  = fortyone315th; // surf 0  1->2
-  intgLoc_[3]  = twentynine63rd;  intgLoc_[4]  = 0.0;             intgLoc_[5]  = fortyone315th; // surf 1  2->3
-  intgLoc_[6]  = 0.0;             intgLoc_[7]  = twentynine63rd;  intgLoc_[8]  = fortyone315th; // surf 2  3->4
-  intgLoc_[9]  = -twentynine63rd; intgLoc_[10] = 0.0;             intgLoc_[11] = fortyone315th; // surf 3  1->4
-  intgLoc_[12] = -two9th;         intgLoc_[13] = -two9th;         intgLoc_[14] = thirteen45th;  // surf 4  1->5 inner
-  intgLoc_[15] = -seven18th;      intgLoc_[16] = -seven18th;      intgLoc_[17] = seven18th;     // surf 5  1->5 outer
-  intgLoc_[18] = two9th;          intgLoc_[19] = -two9th;         intgLoc_[20] = thirteen45th;  // surf 6  2->5 inner
-  intgLoc_[21] = seven18th;       intgLoc_[22] = -seven18th;      intgLoc_[23] = seven18th;     // surf 7  2->5 outer
-  intgLoc_[24] = two9th;          intgLoc_[25] = two9th;          intgLoc_[26] = thirteen45th;  // surf 8  3->5 inner
-  intgLoc_[27] = seven18th;       intgLoc_[28] = seven18th;       intgLoc_[29] = seven18th;     // surf 9  3->5 outer
-  intgLoc_[30] = -two9th;         intgLoc_[31] = two9th;          intgLoc_[32] = thirteen45th;  // surf 10  4->5 inner
-  intgLoc_[33] = -seven18th;      intgLoc_[34] = seven18th;       intgLoc_[35] = seven18th;     // surf 11  4->5 outer
+  MasterElement::ipNodeMap_.assign(ipNodeMap_, ipNodeMap_+16);
 
-  // shifted
-  intgLocShift_.resize(36);
-  intgLocShift_[0]  =  0.00; intgLocShift_[1]  = -1.00; intgLocShift_[2]  =  0.00; // surf 1    1->2
-  intgLocShift_[3]  =  1.00; intgLocShift_[4]  =  0.00; intgLocShift_[5]  =  0.00; // surf 2    2->3
-  intgLocShift_[6]  =  0.00; intgLocShift_[7]  =  1.00; intgLocShift_[8]  =  0.00; // surf 3    3->4
-  intgLocShift_[9]  = -1.00; intgLocShift_[10] =  0.00; intgLocShift_[11] =  0.00; // surf 4    1->4
-  intgLocShift_[12] = -0.50; intgLocShift_[13] = -0.50; intgLocShift_[14] =  0.50; // surf 5    1->5 I
-  intgLocShift_[15] = -0.50; intgLocShift_[16] = -0.50; intgLocShift_[17] =  0.50; // surf 6    1->5 O
-  intgLocShift_[18] =  0.50; intgLocShift_[19] = -0.50; intgLocShift_[20] =  0.50; // surf 7    2->5 I
-  intgLocShift_[21] =  0.50; intgLocShift_[22] = -0.50; intgLocShift_[23] =  0.50; // surf 8    2->5 O
-  intgLocShift_[24] =  0.50; intgLocShift_[25] =  0.50; intgLocShift_[26] =  0.50; // surf 9    3->5 I 
-  intgLocShift_[27] =  0.50; intgLocShift_[28] =  0.50; intgLocShift_[29] =  0.50; // surf 10   3->5 O
-  intgLocShift_[30] = -0.50; intgLocShift_[31] =  0.50; intgLocShift_[32] =  0.50; // surf 11   4->5 I 
-  intgLocShift_[33] = -0.50; intgLocShift_[34] =  0.50; intgLocShift_[35] =  0.50; // surf 12   4->5 O
-
-  // exposed face
-  intgExpFace_.resize(48);
-  const double seven36th = 7.0/36.0;
-  const double twentynine36th = 29.0/36.0;
-  const double five12th = 5.0/12.0;
-  const double eleven18th = 11.0/18.0;
-  // face 0; nodes 0,1,4: scs 0, 1, 2
-  intgExpFace_[0]  = -five12th;       intgExpFace_[1]  = -twentynine36th; intgExpFace_[2]  = seven36th;
-  intgExpFace_[3]  =  five12th;       intgExpFace_[4]  = -twentynine36th; intgExpFace_[5]  = seven36th;
-  intgExpFace_[6]  =  0.0;            intgExpFace_[7]  = -seven18th;      intgExpFace_[8]  = eleven18th;
-  // face 1; nodes 1,2,4; scs 0, 1, 2
-  intgExpFace_[9]  = twentynine36th;  intgExpFace_[10] = -five12th;       intgExpFace_[11] = seven36th;
-  intgExpFace_[12] = twentynine36th;  intgExpFace_[13] =  five12th;       intgExpFace_[14] = seven36th;
-  intgExpFace_[15] = seven18th;       intgExpFace_[16] =  0.0;            intgExpFace_[17] = eleven18th;
-  // face 2; nodes 2,3,4; scs 0, 1, 2
-  intgExpFace_[18] =  five12th;       intgExpFace_[19] = twentynine36th;  intgExpFace_[20] = seven36th;
-  intgExpFace_[21] = -five12th;       intgExpFace_[22] = twentynine36th;  intgExpFace_[23] = seven36th;
-  intgExpFace_[24] =  0.00;           intgExpFace_[25] = seven18th;       intgExpFace_[26] = eleven18th;
-  //face 3; nodes 0,4,3; scs 0, 1, 2
-  intgExpFace_[27] = -twentynine36th; intgExpFace_[28] = -five12th;       intgExpFace_[29] = seven36th;
-  intgExpFace_[30] = -seven18th;      intgExpFace_[31] = 0.0;             intgExpFace_[32] = eleven18th;
-  intgExpFace_[33] = -twentynine36th; intgExpFace_[34] =  five12th;       intgExpFace_[35] = seven36th;
-  // face 4; nodes 0,3,2,1; scs 0, 1, 2
-  intgExpFace_[36] = -0.5;            intgExpFace_[37] = -0.5;            intgExpFace_[38] = 0.0;
-  intgExpFace_[39] = -0.5;            intgExpFace_[40] =  0.5;            intgExpFace_[41] = 0.0;
-  intgExpFace_[42] =  0.5;            intgExpFace_[43] =  0.5;            intgExpFace_[44] = 0.0;
-  intgExpFace_[45] =  0.5;            intgExpFace_[46] = -0.5;            intgExpFace_[47] = 0.0;
-
-  ipNodeMap_.resize(16);
-  // Face 0
-  ipNodeMap_[0]  = 0; ipNodeMap_[1]  = 1; ipNodeMap_[2]  = 4;
-  // Face 1
-  ipNodeMap_[3]  = 1; ipNodeMap_[4]  = 2; ipNodeMap_[5]  = 4;
-  // Face 2
-  ipNodeMap_[6]  = 2; ipNodeMap_[7]  = 3; ipNodeMap_[8]  = 4;
-  // Face 3
-  ipNodeMap_[9]  = 0; ipNodeMap_[10] = 4; ipNodeMap_[11] = 3;
-  // Face 4 (quad face)
-  ipNodeMap_[12] = 0; ipNodeMap_[13] = 3; ipNodeMap_[14] = 2; ipNodeMap_[15] = 1;
-
-  std::vector<std::vector<double>> nodeLocations =
-  {
-    {-1.0, -1.0, +0.0}, {+1.0, -1.0, +0.0}, {+1.0, +1.0, +0.0}, {-1.0, +1.0, +0.0},
-    {0.0, 0.0, +1.0}
-  };
-
-  intgExpFaceShift_.resize(48);
-  int index = 0;
-  stk::topology topo = stk::topology::PYRAMID_5;
-  for (unsigned k = 0; k < topo.num_sides(); ++k) {
-    stk::topology side_topo = topo.side_topology(k);
-    const int* ordinals = side_node_ordinals(k);
-    for (unsigned n = 0; n < side_topo.num_nodes(); ++n) {
-      intgExpFaceShift_[3*index + 0] = nodeLocations[ordinals[n]][0];
-      intgExpFaceShift_[3*index + 1] = nodeLocations[ordinals[n]][1];
-      intgExpFaceShift_[3*index + 2] = nodeLocations[ordinals[n]][2];
-      ++index;
-    }
-  }
+  fill_intg_exp_face_shift(intgExpFaceShift_, sideNodeOrdinals_);
+  MasterElement::intgExpFaceShift_.assign(intgExpFaceShift_,intgExpFaceShift_+48);
 }
 
 //--------------------------------------------------------------------------
