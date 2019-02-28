@@ -2,6 +2,7 @@
 #include <limits>
 
 #include "ComputeGeometryInteriorAlgorithm.h"
+#include "ComputeGeometryBoundaryAlgorithm.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "utils/ComputeVectorDivergence.h"
@@ -36,16 +37,24 @@ TEST(utils, compute_vector_divergence)
   VectorFieldType *meshVec = &(realm.meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_vector"));
   stk::mesh::put_field_on_mesh(*meshVec, realm.meta_data().universal_part(), nDim, nullptr);
 
+  const sierra::nalu::MasterElement* meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(stk::topology::QUAD_4);
+  const int numScsIp = meFC->numIntPoints_;
+  GenericFieldType *exposedAreaVec = &(realm.meta_data().declare_field<GenericFieldType>(realm.meta_data().side_rank(), "exposed_area_vector"));
+  stk::mesh::put_field_on_mesh(*exposedAreaVec, realm.meta_data().universal_part(), nDim*numScsIp , nullptr);
+
   ScalarFieldType *divV = &(realm.meta_data().declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_vector"));
   stk::mesh::put_field_on_mesh(*divV, realm.meta_data().universal_part(), nullptr);
 
   // create mesh
-  const std::string meshSpec("generated:4x4x4");
+  const std::string meshSpec("generated:1x1x1");
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
 
   // creat dual volumes
   sierra::nalu::ComputeGeometryInteriorAlgorithm geomAlg(realm, &(realm.meta_data().universal_part()));
   geomAlg.execute();
+
+  sierra::nalu::ComputeGeometryBoundaryAlgorithm bndyGeomAlg(realm, realm.meta_data().get_part("surface_1"));
+  bndyGeomAlg.execute();
 
   // get coordinate field
   VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
@@ -73,7 +82,11 @@ TEST(utils, compute_vector_divergence)
   // compute divergence
   stk::mesh::PartVector partVec;
   partVec.push_back( &(realm.meta_data().universal_part()) );
-  sierra::nalu::compute_vector_divergence( realm.bulk_data(), partVec, meshVec, divV );
+  stk::mesh::PartVector bndyPartVec;
+  bndyPartVec.push_back( realm.meta_data().get_part("surface_1") );
+  sierra::nalu::compute_vector_divergence( realm.bulk_data(),
+                                           partVec, bndyPartVec,
+                                           meshVec, divV );
 
   // check values
   for (auto b: bkts) {
@@ -83,8 +96,8 @@ TEST(utils, compute_vector_divergence)
 
       double* divVal = stk::mesh::field_data(*divV, node);
 
-      if( realm.bulk_data().num_elements(node) == fullStencilSize )
-        EXPECT_NEAR(divVal[0], coeffSum, testTol);
+//      if( realm.bulk_data().num_elements(node) == fullStencilSize )
+      EXPECT_NEAR(divVal[0], coeffSum, testTol);
 
     } // end for loop - in index
   } // end for loop - bkts
