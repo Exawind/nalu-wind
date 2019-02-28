@@ -106,7 +106,7 @@ void FrameNonInertial::post_work()
   bool computedMeshVelDiv = false;
 
   for (auto& mm: meshMotionVec_)
-    mm->post_work(bulk_,partVec_,computedMeshVelDiv);
+    mm->post_work(bulk_,partVec_,partVecBc_,computedMeshVelDiv);
 }
 
 } // nalu

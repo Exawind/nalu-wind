@@ -126,6 +126,7 @@ MotionBase::ThreeDVecType MotionPulsatingSphere::compute_velocity(
 void MotionPulsatingSphere::post_work(
   stk::mesh::BulkData& bulk,
   stk::mesh::PartVector& partVec,
+  stk::mesh::PartVector& partVecBc,
   bool& computedMeshVelDiv)
 {
   if(computedMeshVelDiv) return;
@@ -137,7 +138,7 @@ void MotionPulsatingSphere::post_work(
   ScalarFieldType* meshDivVelocity = bulk.mesh_meta_data().get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "div_mesh_velocity");
 
-  //compute_vector_divergence(bulk, partVec, meshVelocity, meshDivVelocity);
+  compute_vector_divergence(bulk, partVec, partVecBc, meshVelocity, meshDivVelocity);
   computedMeshVelDiv = true;
 }
 

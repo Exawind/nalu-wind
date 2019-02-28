@@ -29,9 +29,6 @@ public:
   virtual const MotionBase::TransMatType& get_inertial_frame() const {
     throw std::runtime_error("FrameNonInertial: Invalid access of inertial frame"); };
 
-  const std::vector<std::string> get_part_names() const {
-    return partNamesVec_; }
-
   void set_ref_frame( MotionBase::TransMatType& frame ) {
     refFrame_ = frame; }
 
@@ -57,17 +54,17 @@ protected:
    */
   std::vector<std::unique_ptr<MotionBase>> meshMotionVec_;
 
-  /** Motion part names
-   *
-   *  A vector of size number of parts
-   */
-  std::vector<std::string> partNamesVec_;
-
   /** Motion parts
    *
    *  A vector of size number of parts
    */
   stk::mesh::PartVector partVec_;
+
+  /** Motion parts on Bc
+   *
+   *  A vector of size number of parts required for divergence computation
+   */
+  stk::mesh::PartVector partVecBc_;
 
   /** Reference frame
    *
@@ -85,6 +82,8 @@ private:
   FrameBase(const FrameBase&) = delete;
 
   void load(const YAML::Node&);
+
+  void populate_part_vec(const YAML::Node&);
 
   void compute_centroid_on_parts(
     std::vector<double> &centroid);

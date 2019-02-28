@@ -60,6 +60,7 @@ public:
   virtual void post_work(
     stk::mesh::BulkData&,
     stk::mesh::PartVector&,
+    stk::mesh::PartVector&,
     bool&) {};
 
   static const TransMatType identityMat_;
