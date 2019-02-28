@@ -46,7 +46,7 @@ void compute_vector_divergence(
 
   std::vector<double> ws_shape_function;
 
-  std::array<double,3> mvIp;
+  std::vector<double> mvIp(nDim,0.0);
 
   stk::mesh::Selector sel = meta.locally_owned_part()
                           & stk::mesh::selectUnion(partVec);
