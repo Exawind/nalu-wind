@@ -14,6 +14,7 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
+#include <stk_mesh/base/FieldParallel.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 
@@ -37,7 +38,7 @@ void compute_vector_divergence(
   ScalarFieldType* dualVol = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
 
   GenericFieldType *exposedAreaVec
-      = meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
+  = meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
 
   std::vector<double> wsCoordinates;
   std::vector<double> wsScsArea;
@@ -48,7 +49,7 @@ void compute_vector_divergence(
   std::array<double,3> mvIp;
 
   stk::mesh::Selector sel = meta.locally_owned_part()
-          & stk::mesh::selectUnion(partVec);
+                          & stk::mesh::selectUnion(partVec);
   const auto& bkts =
       bulk.get_buckets( stk::topology::ELEMENT_RANK, sel );
 
@@ -58,6 +59,7 @@ void compute_vector_divergence(
   for (auto b: bkts) {
     MasterElement *meSCS =
         MasterElementRepo::get_surface_master_element(b->topology());
+
     const int nodesPerElement = meSCS->nodesPerElement_;
     const int numScsIp = meSCS->numIntPoints_;
     const int *lrscv = meSCS->adjacentNodes();
@@ -80,7 +82,7 @@ void compute_vector_divergence(
         stk::mesh::Entity node = node_rels[ni];
 
         const double * coords =  stk::mesh::field_data(*coordinates, node);
-        const double * mv   =  (double*)stk::mesh::field_data(*vectorField, node);
+        const double * mv =  (double*)stk::mesh::field_data(*vectorField, node);
 
         for (int iDim=0; iDim < nDim; iDim++) {
           wsCoordinates[ni*nDim+iDim] = coords[iDim];
@@ -117,6 +119,7 @@ void compute_vector_divergence(
 
         for ( int ic = 0; ic < nodesPerElement; ++ic ) {
           const double r = ws_shape_function[offSetSF+ic];
+
           for (int j=0; j < nDim; j++)
             mvIp[j] += r * wsMeshVector[ic*nDim+j];
         }
@@ -134,8 +137,14 @@ void compute_vector_divergence(
 
   }
 
+  // sum up interior divergence values and return if boundary part not specified
+  if(bndyPartVec.size() == 0) {
+    stk::mesh::parallel_sum(bulk, {scalarField});
+    return;
+  }
+
   stk::mesh::Selector face_sel = meta.locally_owned_part()
-      & stk::mesh::selectUnion(bndyPartVec);
+                               & stk::mesh::selectUnion(bndyPartVec);
   const auto& face_bkts =
       bulk.get_buckets( meta.side_rank(), face_sel );
 
@@ -143,6 +152,7 @@ void compute_vector_divergence(
     // extract master element
     MasterElement *meFC =
         MasterElementRepo::get_surface_master_element(b->topology());
+
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsIp = meFC->numIntPoints_;
     const int *ipNodeMap = meFC->ipNodeMap();
@@ -166,8 +176,9 @@ void compute_vector_divergence(
       for ( int ni = 0; ni < num_nodes; ++ni ) {
         stk::mesh::Entity node = face_node_rels[ni];
         const double * mv = (double*)stk::mesh::field_data(*vectorField, node);
+
         for (int iDim=0; iDim < nDim; iDim++)
-            wsMeshVector[ni*nDim+iDim] = mv[iDim];
+          wsMeshVector[ni*nDim+iDim] = mv[iDim];
       }
 
       // start assembly
@@ -181,25 +192,28 @@ void compute_vector_divergence(
 
         // interpolate to scs point; operate on saved off ws_field
         for ( int j = 0; j < nDim; ++j )
-            mvIp[j] = 0.0;
+          mvIp[j] = 0.0;
+
         const int offSet = ip*nodesPerFace;
+
         for ( int ic = 0; ic < nodesPerFace; ++ic ) {
-            for (int iDim=0; iDim < nDim; iDim++)
-                mvIp[iDim] += ws_shape_function[offSet+ic]
-                    *wsMeshVector[ic*nDim+iDim];
+          for (int iDim=0; iDim < nDim; iDim++)
+            mvIp[iDim] += ws_shape_function[offSet+ic]
+                        * wsMeshVector[ic*nDim+iDim];
         }
 
         //Compute dot product with area
         double mvDotArea = 0.0;
         for ( int j = 0; j < nDim; ++j )
           mvDotArea += mvIp[j]*areaVec[ip*nDim+j];
+
         *divMV += mvDotArea/(*volNN);
 
       }
     }
   }
-
-
+  // parallel sum the divergence across all processors
+  stk::mesh::parallel_sum(bulk, {scalarField});
 }
 
 }

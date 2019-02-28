@@ -1,11 +1,14 @@
 #include <gtest/gtest.h>
 #include <limits>
 
+#include <ComputeGeometryAlgorithmDriver.h>
 #include "ComputeGeometryInteriorAlgorithm.h"
 #include "ComputeGeometryBoundaryAlgorithm.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "utils/ComputeVectorDivergence.h"
+
+#include <stk_mesh/base/FieldParallel.hpp>
 
 #include "UnitTestRealm.h"
 #include "UnitTestUtils.h"
@@ -16,8 +19,6 @@ namespace {
   const std::vector<double> vecCoeff {7.0, 2.5, -3.0};
 
   const double coeffSum = vecCoeff[0]+vecCoeff[1]+vecCoeff[2];
-
-  const int fullStencilSize = 8;
 
   const double testTol = 1e-12;
 }
@@ -46,12 +47,13 @@ TEST(utils, compute_vector_divergence)
   stk::mesh::put_field_on_mesh(*divV, realm.meta_data().universal_part(), nullptr);
 
   // create mesh
-  const std::string meshSpec("generated:1x1x1");
+  const std::string meshSpec("generated:4x4x4");
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
 
-  // creat dual volumes
+  // create dual volumes
   sierra::nalu::ComputeGeometryInteriorAlgorithm geomAlg(realm, &(realm.meta_data().universal_part()));
   geomAlg.execute();
+  stk::mesh::parallel_sum(realm.bulk_data(), {duaNdlVol});
 
   sierra::nalu::ComputeGeometryBoundaryAlgorithm bndyGeomAlg(realm, realm.meta_data().get_part("surface_1"));
   bndyGeomAlg.execute();
@@ -72,7 +74,6 @@ TEST(utils, compute_vector_divergence)
       double* vecField = stk::mesh::field_data(*meshVec, node);
       double* xyz = stk::mesh::field_data( *modelCoords, node);
 
-
       for( int d = 0; d < nDim; d++)
         vecField[d] = vecCoeff[d]*xyz[d];
 
@@ -82,21 +83,27 @@ TEST(utils, compute_vector_divergence)
   // compute divergence
   stk::mesh::PartVector partVec;
   partVec.push_back( &(realm.meta_data().universal_part()) );
+
   stk::mesh::PartVector bndyPartVec;
   bndyPartVec.push_back( realm.meta_data().get_part("surface_1") );
+
   sierra::nalu::compute_vector_divergence( realm.bulk_data(),
                                            partVec, bndyPartVec,
                                            meshVec, divV );
 
+  // create new selector for locally owned parts
+  sel = stk::mesh::Selector(realm.meta_data().universal_part())
+      & realm.meta_data().locally_owned_part();
+  const auto& lclBkts = realm.bulk_data().get_buckets(stk::topology::NODE_RANK, sel);
+
   // check values
-  for (auto b: bkts) {
+  for (auto b: lclBkts) {
     for (size_t in=0; in < b->size(); in++) {
 
       auto node = (*b)[in]; // mesh node and NOT YAML node
 
       double* divVal = stk::mesh::field_data(*divV, node);
 
-//      if( realm.bulk_data().num_elements(node) == fullStencilSize )
       EXPECT_NEAR(divVal[0], coeffSum, testTol);
 
     } // end for loop - in index
