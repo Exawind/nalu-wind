@@ -441,7 +441,6 @@ private :
   };
 
   double intgExpFaceShift_[48] = {0};
->>>>>>> eca49fb... Convert Pyramid master-elements to have primitive private data.
 };
 
 } // namespace nalu
