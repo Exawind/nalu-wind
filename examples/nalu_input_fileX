@@ -148,6 +148,8 @@ class mapping_object_class():
             'restart_time': self.set_restart_time,
             # Inflow/outflow boundary condition
             'inflow_outflow': self.set_inflow_outflow,
+            # The planes used for sampling
+            'plane_sampling': self.set_sampling_planes,
         }
 
     def map_all(self):
@@ -773,6 +775,64 @@ class mapping_object_class():
         '''
         self.yaml_input['realms'][0]['output']['output_frequency'] = \
             self.yaml_setup['output_frequency']
+
+    def set_sampling_planes(self):
+        '''
+        Set all the sampling planes
+        '''
+        # Loop through all the planes
+        for plane in self.yaml_setup['plane_sampling']:
+            
+            # The realm name
+            realm=plane['name'] + 'Realm'
+
+            # The target name
+            parts=plane['parts']
+
+            # This is a realm for this plane
+            plane_dict = {
+              'name': realm,
+              'mesh': plane['name'] + '.exo',
+              'type': 'input_output',
+              'automatic_decomposition_type': 'rcb',
+              'field_registration': 
+                  {'specifications': 
+                      [ {'field_name': 'velocity',
+                         'target_name': parts,
+                         'field_size': 3,
+                         'field_type': 'node_rank', 
+                        }
+                      ],
+                  },
+              'output':
+                  {'output_data_base_name': 'plane_sampling/'+ plane['name'] + '.exo',
+                   'output_frequency': 1,
+                   'output_node_set': 'no',
+                   'output_variables': ['velocity'],
+                  }
+              }
+            
+            # Append the realm for this plane
+            self.yaml_input['realms'].append(plane_dict)
+
+            for part in parts:
+                #~ print (part)
+                # The dictionary to specify that transfers will happen
+                transfer_dict = {
+                    'name': part,
+                    'type': 'geometric',
+                    'realm_pair': [self.yaml_input['realms'][0]['name'], realm],
+                    'mesh_part_pair': ['fluid', part],  
+                    'objective': 'input_output',
+                    'transfer_variables': ['velocity', 'velocity']
+                    }
+    
+                # Append the transfer for this plane
+                self.yaml_input['transfers'].append(transfer_dict)
+            
+
+
+
 
     @staticmethod
     def open_yaml_file(file_input):
