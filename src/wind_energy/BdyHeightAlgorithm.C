@@ -18,6 +18,7 @@
 #include <numeric>
 #include <cmath>
 #include <limits>
+#include <cstdint>
 
 namespace sierra {
 namespace nalu {
@@ -55,7 +56,7 @@ RectilinearMeshHeightAlg::calc_height_levels(
   const int iz = wallNormIndex_ - 1;
 
   // Determine unique height levels local to this proc
-  std::unordered_set<int> hLevels;
+  std::unordered_set<uint64_t> hLevels;
   for (auto b: bkts) {
     for (size_t in = 0; in < b->size(); in++) {
       auto node = (*b)[in];
@@ -71,7 +72,7 @@ RectilinearMeshHeightAlg::calc_height_levels(
   const int nprocs = bulk.parallel_size();
   const int numLevelsLocal = hLevels.size();
   // Convert set to vector for MPI Send/Recv
-  std::vector<int> hLevelsVec(numLevelsLocal);
+  std::vector<uint64_t> hLevelsVec(numLevelsLocal);
 
   std::copy(hLevels.begin(), hLevels.end(), hLevelsVec.begin());
 
@@ -83,24 +84,24 @@ RectilinearMeshHeightAlg::calc_height_levels(
   // Estimate total levels that must be gathered
   int nTotalLvls = std::accumulate(lvlsPerProc.begin(), lvlsPerProc.end(), 0);
   std::vector<int> offsets(nprocs+1, 0);
-  std::vector<int> allLevels(nTotalLvls);
+  std::vector<uint64_t> allLevels(nTotalLvls);
 
   offsets[0] = 0;
   for (int i=1; i <= nprocs; i++)
     offsets[i] = offsets[i-1] + lvlsPerProc[i-1];
 
   // All-to-all gather so that everyone knows what levels exist globally
-  MPI_Allgatherv(hLevelsVec.data(), numLevelsLocal, MPI_INT,
+  MPI_Allgatherv(hLevelsVec.data(), numLevelsLocal, MPI_UINT64_T,
                  allLevels.data(), lvlsPerProc.data(), offsets.data(),
-                 MPI_INT, bulk.parallel());
+                 MPI_UINT64_T, bulk.parallel());
 
   // Find the unique height levels across all MPI ranks
-  std::unordered_set<int> gLevels;
+  std::unordered_set<uint64_t> gLevels;
   for (auto ht: allLevels) gLevels.insert(ht);
 
   // Sort height levels in ascending order
   const size_t nHeights = gLevels.size();
-  std::vector<int> gLevelsVec(nHeights);
+  std::vector<uint64_t> gLevelsVec(nHeights);
   std::copy(gLevels.begin(), gLevels.end(), gLevelsVec.begin());
   std::sort(gLevelsVec.begin(), gLevelsVec.end());
 
