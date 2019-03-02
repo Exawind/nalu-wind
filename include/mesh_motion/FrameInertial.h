@@ -17,14 +17,20 @@ public:
   FrameInertial(
     stk::mesh::BulkData& bulk,
     const YAML::Node& node
-) : FrameBase(bulk,node,true) {}
+) : FrameBase(bulk,node,true)
+  {
+  }
 
-  virtual ~FrameInertial() {}
+  virtual ~FrameInertial()
+  {
+  }
 
   void update_coordinates_velocity(const double time);
 
-  const MotionBase::TransMatType& get_inertial_frame() const {
-    return inertialFrame_; }
+  const MotionBase::TransMatType& get_inertial_frame() const
+  {
+    return inertialFrame_;
+  }
 
 private:
     FrameInertial() = delete;

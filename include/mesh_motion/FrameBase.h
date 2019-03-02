@@ -20,26 +20,38 @@ public:
     const YAML::Node&,
     bool);
 
-  virtual ~FrameBase() {}
+  virtual ~FrameBase()
+  {
+  }
 
   void setup();
 
   virtual void update_coordinates_velocity(const double) = 0;
 
-  virtual const MotionBase::TransMatType& get_inertial_frame() const {
-    throw std::runtime_error("FrameNonInertial: Invalid access of inertial frame"); };
+  virtual const MotionBase::TransMatType& get_inertial_frame() const
+  {
+    throw std::runtime_error("FrameNonInertial: Invalid access of inertial frame");
+  };
 
-  void set_ref_frame( MotionBase::TransMatType& frame ) {
-    refFrame_ = frame; }
+  void set_ref_frame( MotionBase::TransMatType& frame )
+  {
+    refFrame_ = frame;
+  }
 
-  void set_computed_centroid( std::vector<double>& centroid ) {
+  void set_computed_centroid( std::vector<double>& centroid )
+  {
     for (size_t i=0; i < meshMotionVec_.size(); i++)
-      meshMotionVec_[i]->set_computed_centroid(centroid); }
+      meshMotionVec_[i]->set_computed_centroid(centroid);
+  }
 
-  bool is_inertial() const {
-    return isInertial_; }
+  bool is_inertial() const
+  {
+    return isInertial_;
+  }
 
-  virtual void post_work() {};
+  virtual void post_work()
+  {
+  }
 
 protected:
   //! Reference to the STK Mesh BulkData object

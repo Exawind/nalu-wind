@@ -22,14 +22,14 @@ namespace sierra {
 namespace nalu {
 
 void compute_vector_divergence(
-  stk::mesh::BulkData & bulk,
-  stk::mesh::PartVector & partVec,
-  stk::mesh::PartVector & bndyPartVec,
-  stk::mesh::FieldBase * vectorField,
-  stk::mesh::FieldBase * scalarField,
+  stk::mesh::BulkData& bulk,
+  stk::mesh::PartVector& partVec,
+  stk::mesh::PartVector& bndyPartVec,
+  stk::mesh::FieldBase* vectorField,
+  stk::mesh::FieldBase* scalarField,
   const bool hasMeshDeformation )
 {
-  stk::mesh::MetaData & meta = bulk.mesh_meta_data();
+  stk::mesh::MetaData& meta = bulk.mesh_meta_data();
   const int nDim = meta.spatial_dimension();
 
   const std::string coordName = hasMeshDeformation ? "current_coordinates" : "coordinates";
@@ -37,7 +37,7 @@ void compute_vector_divergence(
 
   ScalarFieldType* dualVol = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
 
-  GenericFieldType *exposedAreaVec
+  GenericFieldType* exposedAreaVec
   = meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
 
   std::vector<double> wsCoordinates;
@@ -57,12 +57,12 @@ void compute_vector_divergence(
   stk::mesh::field_fill(0.0, *scalarField, sel);
 
   for (auto b: bkts) {
-    MasterElement *meSCS =
+    MasterElement* meSCS =
         MasterElementRepo::get_surface_master_element(b->topology());
 
     const int nodesPerElement = meSCS->nodesPerElement_;
     const int numScsIp = meSCS->numIntPoints_;
-    const int *lrscv = meSCS->adjacentNodes();
+    const int* lrscv = meSCS->adjacentNodes();
 
     wsMeshVector.resize(nodesPerElement*nDim);
     wsCoordinates.resize(nodesPerElement*nDim);
@@ -75,14 +75,14 @@ void compute_vector_divergence(
     size_t length = b->size();
     for ( size_t k = 0 ; k < length ; ++k ) {
 
-      stk::mesh::Entity const * node_rels = b->begin_nodes(k);
+      const stk::mesh::Entity* node_rels = b->begin_nodes(k);
       int num_nodes = b->num_nodes(k);
 
       for ( int ni = 0; ni < num_nodes; ++ni ) {
         stk::mesh::Entity node = node_rels[ni];
 
-        const double * coords =  stk::mesh::field_data(*coordinates, node);
-        const double * mv =  (double*)stk::mesh::field_data(*vectorField, node);
+        const double* coords =  stk::mesh::field_data(*coordinates, node);
+        const double* mv =  (double*)stk::mesh::field_data(*vectorField, node);
 
         for (int iDim=0; iDim < nDim; iDim++) {
           wsCoordinates[ni*nDim+iDim] = coords[iDim];
@@ -108,11 +108,11 @@ void compute_vector_divergence(
         stk::mesh::Entity nodeR = node_rels[ir];
 
         // pointer to fields to assemble
-        double *divMVL = (double*)stk::mesh::field_data(*scalarField, nodeL);
-        double *divMVR = (double*)stk::mesh::field_data(*scalarField, nodeR);
+        double* divMVL = (double*)stk::mesh::field_data(*scalarField, nodeL);
+        double* divMVR = (double*)stk::mesh::field_data(*scalarField, nodeR);
 
-        double *dualVolL = stk::mesh::field_data(*dualVol, nodeL);
-        double *dualVolR = stk::mesh::field_data(*dualVol, nodeR);
+        double* dualVolL = stk::mesh::field_data(*dualVol, nodeL);
+        double* dualVolR = stk::mesh::field_data(*dualVol, nodeR);
 
         //Compute mesh vector at this ip
         for ( int j = 0; j < nDim; ++j ) mvIp[j] = 0.0;
@@ -150,12 +150,12 @@ void compute_vector_divergence(
 
   for (auto b: face_bkts) {
     // extract master element
-    MasterElement *meFC =
+    MasterElement* meFC =
         MasterElementRepo::get_surface_master_element(b->topology());
 
     const int nodesPerFace = meFC->nodesPerElement_;
     const int numScsIp = meFC->numIntPoints_;
-    const int *ipNodeMap = meFC->ipNodeMap();
+    const int* ipNodeMap = meFC->ipNodeMap();
 
     wsMeshVector.resize(nodesPerFace*nDim);
     ws_shape_function.resize(numScsIp*nodesPerFace);
@@ -165,9 +165,9 @@ void compute_vector_divergence(
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
 
       // face data
-      const double * areaVec = (double*)stk::mesh::field_data(*exposedAreaVec, *b, k);
+      const double* areaVec = (double*)stk::mesh::field_data(*exposedAreaVec, *b, k);
 
-      stk::mesh::Entity const * face_node_rels = b->begin_nodes(k);
+      const stk::mesh::Entity* face_node_rels = b->begin_nodes(k);
       int num_nodes = b->num_nodes(k);
 
       // sanity check on num nodes
@@ -175,7 +175,7 @@ void compute_vector_divergence(
 
       for ( int ni = 0; ni < num_nodes; ++ni ) {
         stk::mesh::Entity node = face_node_rels[ni];
-        const double * mv = (double*)stk::mesh::field_data(*vectorField, node);
+        const double* mv = (double*)stk::mesh::field_data(*vectorField, node);
 
         for (int iDim=0; iDim < nDim; iDim++)
           wsMeshVector[ni*nDim+iDim] = mv[iDim];
@@ -187,8 +187,8 @@ void compute_vector_divergence(
         // nearest node
         const int nn = ipNodeMap[ip];
         stk::mesh::Entity nodeNN = face_node_rels[nn];
-        double *divMV = (double*)stk::mesh::field_data(*scalarField, nodeNN);
-        double *volNN = (double*)stk::mesh::field_data(*dualVol, nodeNN);
+        double* divMV = (double*)stk::mesh::field_data(*scalarField, nodeNN);
+        double* volNN = (double*)stk::mesh::field_data(*dualVol, nodeNN);
 
         // interpolate to scs point; operate on saved off ws_field
         for ( int j = 0; j < nDim; ++j )

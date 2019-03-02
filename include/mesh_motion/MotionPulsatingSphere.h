@@ -13,7 +13,9 @@ public:
     stk::mesh::MetaData&,
       const YAML::Node&);
 
-  virtual ~MotionPulsatingSphere() {}
+  virtual ~MotionPulsatingSphere()
+  {
+  }
 
   virtual void build_transformation(const double, const double*);
 

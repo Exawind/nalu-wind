@@ -17,9 +17,13 @@ public:
   FrameNonInertial(
     stk::mesh::BulkData& bulk,
     const YAML::Node& node
-) : FrameBase(bulk,node,false) {}
+) : FrameBase(bulk,node,false)
+  {
+  }
 
-  virtual ~FrameNonInertial() {}
+  virtual ~FrameNonInertial()
+  {
+  }
 
   void update_coordinates_velocity(const double time);
 

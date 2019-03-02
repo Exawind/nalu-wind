@@ -138,7 +138,7 @@ void MotionPulsatingSphere::post_work(
   ScalarFieldType* meshDivVelocity = bulk.mesh_meta_data().get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "div_mesh_velocity");
 
-  compute_vector_divergence(bulk, partVec, partVecBc, meshVelocity, meshDivVelocity);
+  compute_vector_divergence(bulk, partVec, partVecBc, meshVelocity, meshDivVelocity, true);
   computedMeshVelDiv = true;
 }
 
