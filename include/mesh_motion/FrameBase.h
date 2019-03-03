@@ -31,7 +31,7 @@ public:
   virtual const MotionBase::TransMatType& get_inertial_frame() const
   {
     throw std::runtime_error("FrameNonInertial: Invalid access of inertial frame");
-  };
+  }
 
   void set_ref_frame( MotionBase::TransMatType& frame )
   {

@@ -63,7 +63,7 @@ public:
   void set_computed_centroid( std::vector<double>& centroid )
   {
     std::copy_n(centroid.begin(), threeDVecSize, origin_.begin());
-  };
+  }
 
   virtual void post_work(
     stk::mesh::BulkData&,
@@ -71,7 +71,7 @@ public:
     stk::mesh::PartVector&,
     bool&)
   {
-  };
+  }
 
   static const TransMatType identityMat_;
 
