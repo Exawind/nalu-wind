@@ -1,6 +1,8 @@
 #ifndef MOTIONBASE_H
 #define MOTIONBASE_H
 
+#include <FieldTypeDef.h>
+
 #include "yaml-cpp/yaml.h"
 
 #include <algorithm>
@@ -21,9 +23,13 @@ public:
   static constexpr int threeDVecSize = 3;
   using ThreeDVecType = std::array<double, threeDVecSize>;
 
-  MotionBase() {}
+  MotionBase()
+  {
+  }
 
-  virtual ~MotionBase() {}
+  virtual ~MotionBase()
+  {
+  }
 
   virtual void build_transformation(const double, const double* = nullptr) = 0;
 
@@ -49,17 +55,31 @@ public:
     const TransMatType& motionL,
     const TransMatType& motionR);
 
-  const TransMatType& get_trans_mat() const {
-    return transMat_; }
+  const TransMatType& get_trans_mat() const
+  {
+    return transMat_;
+  }
 
-  void set_computed_centroid( std::vector<double>& centroid ) {
-    std::copy_n(centroid.begin(), threeDVecSize, origin_.begin()); };
+  void set_computed_centroid( std::vector<double>& centroid )
+  {
+    std::copy_n(centroid.begin(), threeDVecSize, origin_.begin());
+  }
+
+  virtual void post_work(
+    stk::mesh::BulkData&,
+    stk::mesh::PartVector&,
+    stk::mesh::PartVector&,
+    bool&)
+  {
+  }
 
   static const TransMatType identityMat_;
 
 protected:
-  void reset_mat(TransMatType& mat) {
-    mat = identityMat_; }
+  void reset_mat(TransMatType& mat)
+  {
+    mat = identityMat_;
+  }
 
   /** Transformation matrix
    *

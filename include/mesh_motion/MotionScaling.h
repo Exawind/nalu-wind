@@ -11,7 +11,10 @@ class MotionScaling : public MotionBase
 public:
   MotionScaling(const YAML::Node&);
 
-  virtual ~MotionScaling() {}
+  virtual ~MotionScaling()
+  {
+
+  }
 
   virtual void build_transformation(const double, const double* = nullptr);
 
@@ -25,7 +28,8 @@ public:
   virtual ThreeDVecType compute_velocity(
     const double /* time */,
     const TransMatType& /* compTrans */,
-    const double* /* xyz */) {
+    const double* /* xyz */)
+  {
     throw std::runtime_error(
       "MotionScaling:compute_velocity() Scaling is not setup to be used as a non-inertial motion");
   }

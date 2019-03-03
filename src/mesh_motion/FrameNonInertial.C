@@ -25,7 +25,8 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
     stk::topology::NODE_RANK, "mesh_velocity");
 
   // get the parts in the current motion frame
-  stk::mesh::Selector sel = stk::mesh::selectUnion(partVec_);
+  stk::mesh::Selector sel = stk::mesh::selectUnion(partVec_) &
+      (meta_.locally_owned_part() | meta_.globally_shared_part());
   const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
 
   // always reset velocity field
@@ -78,7 +79,6 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
 
     } // end for loop - in index
   } // end for loop - bkts
-
 }
 
 MotionBase::TransMatType FrameNonInertial::compute_transformation(
@@ -98,6 +98,15 @@ MotionBase::TransMatType FrameNonInertial::compute_transformation(
   }
 
   return comp_trans_mat;
+}
+
+void FrameNonInertial::post_work()
+{
+  // flag denoting if mesh velocity divergence already computed
+  bool computedMeshVelDiv = false;
+
+  for (auto& mm: meshMotionVec_)
+    mm->post_work(bulk_,partVec_,partVecBc_,computedMeshVelDiv);
 }
 
 } // nalu

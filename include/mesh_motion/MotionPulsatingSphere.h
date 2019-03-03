@@ -9,9 +9,13 @@ namespace nalu{
 class MotionPulsatingSphere : public MotionBase
 {
 public:
-  MotionPulsatingSphere(const YAML::Node&);
+  MotionPulsatingSphere(
+    stk::mesh::MetaData&,
+      const YAML::Node&);
 
-  virtual ~MotionPulsatingSphere() {}
+  virtual ~MotionPulsatingSphere()
+  {
+  }
 
   virtual void build_transformation(const double, const double*);
 
@@ -27,6 +31,17 @@ public:
     const TransMatType& compTrans,
     const double* xyz );
 
+  /** perform post work for this motion
+   *
+   * @param[in] computedMeshVelDiv flag to denote if divergence of
+   *                               mesh velocity already computed
+   */
+  void post_work(
+    stk::mesh::BulkData&,
+    stk::mesh::PartVector&,
+    stk::mesh::PartVector&,
+    bool& computedMeshVelDiv );
+
 private:
   MotionPulsatingSphere() = delete;
   MotionPulsatingSphere(const MotionPulsatingSphere&) = delete;
@@ -35,8 +50,8 @@ private:
 
   void scaling_mat(const double, const double*);
 
-  double amplitude_{1.0};
-  double frequency_{1.0};
+  double amplitude_{0.0};
+  double frequency_{0.0};
 };
 
 } // nalu

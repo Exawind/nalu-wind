@@ -11,7 +11,9 @@ class MotionRotation : public MotionBase
 public:
   MotionRotation(const YAML::Node&);
 
-  virtual ~MotionRotation() {}
+  virtual ~MotionRotation()
+  {
+  }
 
   virtual void build_transformation(const double, const double* = nullptr);
 

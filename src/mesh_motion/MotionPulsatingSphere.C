@@ -1,17 +1,27 @@
-
 #include "mesh_motion/MotionPulsatingSphere.h"
 
 #include <NaluParsing.h>
+#include "utils/ComputeVectorDivergence.h"
+
+// stk_mesh/base/fem
+#include <stk_mesh/base/FieldBLAS.hpp>
 
 #include <cmath>
 
 namespace sierra{
 namespace nalu{
 
-MotionPulsatingSphere::MotionPulsatingSphere(const YAML::Node& node)
+MotionPulsatingSphere::MotionPulsatingSphere(
+  stk::mesh::MetaData& meta,
+  const YAML::Node& node)
   : MotionBase()
 {
   load(node);
+
+  // declare divergence of mesh velocity for this motion
+  ScalarFieldType *divV = &(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
+  stk::mesh::put_field_on_mesh(*divV, meta.universal_part(), nullptr);
+  stk::mesh::field_fill(0.0, *divV);
 }
 
 void MotionPulsatingSphere::load(const YAML::Node& node)
@@ -30,8 +40,9 @@ void MotionPulsatingSphere::load(const YAML::Node& node)
 
   get_if_present(node, "frequency", frequency_, frequency_);
 
-  origin_ = node["origin"].as<ThreeDVecType>();
-  assert(origin_.size() == threeDVecSize);
+  // get origin based on if it was defined
+  if( node["centroid"] )
+    origin_ = node["centroid"].as<ThreeDVecType>();
 }
 
 void MotionPulsatingSphere::build_transformation(
@@ -110,6 +121,25 @@ MotionBase::ThreeDVecType MotionPulsatingSphere::compute_velocity(
   }
 
   return vel;
+}
+
+void MotionPulsatingSphere::post_work(
+  stk::mesh::BulkData& bulk,
+  stk::mesh::PartVector& partVec,
+  stk::mesh::PartVector& partVecBc,
+  bool& computedMeshVelDiv)
+{
+  if(computedMeshVelDiv) return;
+
+  // compute divergence of mesh velocity
+  VectorFieldType* meshVelocity = bulk.mesh_meta_data().get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_velocity");
+
+  ScalarFieldType* meshDivVelocity = bulk.mesh_meta_data().get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "div_mesh_velocity");
+
+  compute_vector_divergence(bulk, partVec, partVecBc, meshVelocity, meshDivVelocity, true);
+  computedMeshVelDiv = true;
 }
 
 } // nalu

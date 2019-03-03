@@ -28,15 +28,7 @@ FrameBase::FrameBase(
 void FrameBase::load(const YAML::Node& node)
 {
   // get any part names associated with current motion group
-  if (node["mesh_parts"])
-  {
-    const auto& fparts = node["mesh_parts"];
-
-    if (fparts.Type() == YAML::NodeType::Scalar)
-      partNamesVec_.push_back(fparts.as<std::string>());
-    else
-      partNamesVec_ = fparts.as<std::vector<std::string>>();
-  }
+  populate_part_vec(node);
 
   // check if centroid needs to be computed
   get_if_present(node, "compute_centroid", computeCentroid_, computeCentroid_);
@@ -59,7 +51,7 @@ void FrameBase::load(const YAML::Node& node)
 
     // determine type of mesh motion based on user definition in input file
     if (type == "pulsating_sphere")
-      meshMotionVec_[i].reset(new MotionPulsatingSphere(motion_def));
+      meshMotionVec_[i].reset(new MotionPulsatingSphere(meta_,motion_def));
     else if (type == "rotation")
       meshMotionVec_[i].reset(new MotionRotation(motion_def));
     else if (type == "scaling")
@@ -72,27 +64,65 @@ void FrameBase::load(const YAML::Node& node)
   } // end for loop - i index
 }
 
-void FrameBase::setup()
+void FrameBase::populate_part_vec(const YAML::Node& node)
 {
-  // check if any parts have been associated with current frame
-  if (partNamesVec_.size() == 0 && isInertial_)
+  // if nor parts specified and frame is inertial, return
+  if (!node["mesh_parts"] && isInertial_)
     return;
+
+  // declare temporary part name vectors
+  std::vector<std::string> partNamesVec;
+  std::vector<std::string> partNamesVecBc;
+
+  // populate volume parts
+  const auto& fparts = node["mesh_parts"];
+
+  if (fparts.Type() == YAML::NodeType::Scalar)
+    partNamesVec.push_back(fparts.as<std::string>());
   else
-    assert (partNamesVec_.size() > 0);
+    partNamesVec = fparts.as<std::vector<std::string>>();
+
+  assert (partNamesVec.size() > 0);
 
   // store all parts associated with current motion frame
-  int numParts = partNamesVec_.size();
+  int numParts = partNamesVec.size();
   partVec_.resize(numParts);
 
   for (int i=0; i < numParts; i++) {
-    stk::mesh::Part* part = meta_.get_part(partNamesVec_[i]);
+    stk::mesh::Part* part = meta_.get_part(partNamesVec[i]);
     if (nullptr == part)
       throw std::runtime_error(
-        "FrameBase: Invalid part name encountered: " + partNamesVec_[i]);
+        "FrameBase: Invalid part name encountered: " + partNamesVec[i]);
     else
       partVec_[i] = part;
   }
 
+  // populate bc parts if any defined
+  if (!node["mesh_parts_bc"])
+    return;
+
+  const auto& fpartsBc = node["mesh_parts_bc"];
+  if (fpartsBc.Type() == YAML::NodeType::Scalar)
+    partNamesVecBc.push_back(fparts.as<std::string>());
+  else
+    partNamesVecBc = fparts.as<std::vector<std::string>>();
+
+  // store all Bc parts associated with current motion frame
+  numParts = partNamesVecBc.size();
+  partVecBc_.resize(numParts);
+
+  for (int i=0; i < numParts; i++) {
+    stk::mesh::Part* part = meta_.get_part(partNamesVecBc[i]);
+    if (nullptr == part)
+      throw std::runtime_error(
+        "FrameBase: Invalid part name encountered: " + partNamesVecBc[i]);
+    else
+      partVecBc_[i] = part;
+  }
+}
+
+void FrameBase::setup()
+{
   // compute and set centroid if requested
   if(computeCentroid_) {
     std::vector<double> computedCentroid(3,0.0);

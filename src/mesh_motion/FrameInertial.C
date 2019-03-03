@@ -29,7 +29,8 @@ void FrameInertial::update_coordinates_velocity(const double time)
     stk::topology::NODE_RANK, "mesh_velocity");
 
   // get the parts in the current motion frame
-  stk::mesh::Selector sel = stk::mesh::selectUnion(partVec_);
+  stk::mesh::Selector sel = stk::mesh::selectUnion(partVec_) &
+      (meta_.locally_owned_part() | meta_.globally_shared_part());
   const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
 
   // always reset velocity field
