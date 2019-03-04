@@ -58,16 +58,16 @@ TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
     coeffs[j] = coeff(rng);
   }
 
-  std::vector<double> polyResult(me.numIntPoints_ * dim);
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  std::vector<double> polyResult(me.num_integration_points() * dim);
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int d = 0; d < dim; ++d) {
       polyResult[j*dim+d] = coeffs[d];
     }
   }
 
-  std::vector<double> ws_field(me.nodesPerElement_);
-  Kokkos::View<double**> ws_coords("coords", me.nodesPerElement_, dim);
-  for (int j = 0; j < me.nodesPerElement_; ++j) {
+  std::vector<double> ws_field(me.nodes_per_element());
+  Kokkos::View<double**> ws_coords("coords", me.nodes_per_element(), dim);
+  for (int j = 0; j < me.nodes_per_element(); ++j) {
     const double* coords = stk::mesh::field_data(coordField, node_rels[j]);
     for (int d = 0; d < dim; ++d) {
       ws_coords(j, d) = coords[d];
@@ -75,7 +75,7 @@ TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
     ws_field[j] = linear_scalar_value(dim, a, coeffs.data(), coords);
   }
 
-  Kokkos::View<double***> meGrad("grad", me.numIntPoints_, me.nodesPerElement_, dim);
+  Kokkos::View<double***> meGrad("grad", me.num_integration_points(), me.nodes_per_element(), dim);
 
   using AlgTraits = sierra::nalu::AlgTraitsHex27;
   using GradViewType = Kokkos::View<double[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
@@ -98,9 +98,9 @@ TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
   }
   std::cout << "Time per iteration: " << (duration/nIt)*1000 << "(ms)" <<std::endl;
 
-  std::vector<double> meResult(me.numIntPoints_ * dim, 0.0);
-  for (int ip = 0; ip < me.numIntPoints_; ++ip) {
-    for (int n = 0; n < me.nodesPerElement_; ++n) {
+  std::vector<double> meResult(me.num_integration_points() * dim, 0.0);
+  for (int ip = 0; ip < me.num_integration_points(); ++ip) {
+    for (int n = 0; n < me.nodes_per_element(); ++n) {
       for (int d = 0; d < dim; ++d) {
         meResult[ip*dim+d] += meGrad(ip,n,d) * ws_field[n];
       }
@@ -122,7 +122,7 @@ TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
   const auto* node_rels = bulk.begin_nodes(elem);
   sierra::nalu::Tri32DSCS me;
   auto& coordField = *static_cast<const VectorFieldType*>(meta.coordinate_field());
-  int dim = me.nDim_;
+  int dim = me.ndim();
 
   std::mt19937 rng;
   rng.seed(std::mt19937::default_seed);
@@ -134,16 +134,16 @@ TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
     coeffs[j] = coeff(rng);
   }
 
-  std::vector<double> polyResult(me.numIntPoints_ * dim);
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  std::vector<double> polyResult(me.num_integration_points() * dim);
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int d = 0; d < dim; ++d) {
       polyResult[j*dim+d] = coeffs[d];
     }
   }
 
-  std::vector<double> ws_field(me.nodesPerElement_);
-  Kokkos::View<double**> ws_coords("coords", me.nodesPerElement_, dim);
-  for (int j = 0; j < me.nodesPerElement_; ++j) {
+  std::vector<double> ws_field(me.nodes_per_element());
+  Kokkos::View<double**> ws_coords("coords", me.nodes_per_element(), dim);
+  for (int j = 0; j < me.nodes_per_element(); ++j) {
     const double* coords = stk::mesh::field_data(coordField, node_rels[j]);
     for (int d = 0; d < dim; ++d) {
       ws_coords(j, d) = coords[d];
@@ -151,12 +151,12 @@ TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
     ws_field[j] = linear_scalar_value(dim, a, coeffs.data(), coords);
   }
 
-  Kokkos::View<double***> meGrad("grad", me.numIntPoints_, me.nodesPerElement_, dim);
+  Kokkos::View<double***> meGrad("grad", me.num_integration_points(), me.nodes_per_element(), dim);
 
   using AlgTraits = sierra::nalu::AlgTraitsTri3_2D;
 
-  Kokkos::View<double***> refGrad("reference_gradient_weights", me.numIntPoints_, me.nodesPerElement_, dim);
-  for (int j=0; j<me.numIntPoints_; ++j) {
+  Kokkos::View<double***> refGrad("reference_gradient_weights", me.num_integration_points(), me.nodes_per_element(), dim);
+  for (int j=0; j<me.num_integration_points(); ++j) {
     refGrad(j,0,0) = -1.0;
     refGrad(j,1,0) =  1.0;
     refGrad(j,2,0) =  0.0;
@@ -180,9 +180,9 @@ TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
   }
   std::cout << "Time per iteration: " << (duration/nIt)*1000 << "(ms)" <<std::endl;
 
-  std::vector<double> meResult(me.numIntPoints_ * dim, 0.0);
-  for (int ip = 0; ip < me.numIntPoints_; ++ip) {
-    for (int n = 0; n < me.nodesPerElement_; ++n) {
+  std::vector<double> meResult(me.num_integration_points() * dim, 0.0);
+  for (int ip = 0; ip < me.num_integration_points(); ++ip) {
+    for (int n = 0; n < me.nodes_per_element(); ++n) {
       for (int d = 0; d < dim; ++d) {
         meResult[ip*dim+d] += meGrad(ip,n,d) * ws_field[n];
       }
@@ -216,22 +216,22 @@ TEST(Hex27SCV, detj)
     coeffs[j] = coeff(rng);
   }
 
-  std::vector<double> polyResult(me.numIntPoints_ * dim);
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  std::vector<double> polyResult(me.num_integration_points() * dim);
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int d = 0; d < dim; ++d) {
       polyResult[j*dim+d] = coeffs[d];
     }
   }
 
-  Kokkos::View<double**> ws_coords("coords", me.nodesPerElement_, dim);
-  for (int j = 0; j < me.nodesPerElement_; ++j) {
+  Kokkos::View<double**> ws_coords("coords", me.nodes_per_element(), dim);
+  for (int j = 0; j < me.nodes_per_element(); ++j) {
     const double* coords = stk::mesh::field_data(coordField, node_rels[j]);
     for (int d = 0; d < dim; ++d) {
       ws_coords(j, d) = coords[d];
     }
   }
 
-  Kokkos::View<double*> meDetj("detj", me.numIntPoints_);
+  Kokkos::View<double*> meDetj("detj", me.num_integration_points());
 
   using AlgTraits = sierra::nalu::AlgTraitsHex27;
   using GradViewType = Kokkos::View<double[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
@@ -264,7 +264,7 @@ TEST(Hex27SCV, detj)
   exactVolumeType[2] = 0.125 * cornerType * centerType * centerType;
   exactVolumeType[3] = 0.125 * centerType * centerType * centerType;
 
-  for (int ip = 0 ; ip < me.numIntPoints_; ++ip) {
+  for (int ip = 0 ; ip < me.num_integration_points(); ++ip) {
     EXPECT_GT(meDetj(ip), tol);
     for (int i = 0; i < nTypes; ++i) {
       if (std::abs(exactVolumeType[i] - meDetj(ip)) < tol) {
@@ -300,22 +300,22 @@ TEST(Hex27SCS, area_vec)
     coeffs[j] = coeff(rng);
   }
 
-  std::vector<double> polyResult(me.numIntPoints_ * dim);
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  std::vector<double> polyResult(me.num_integration_points() * dim);
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int d = 0; d < dim; ++d) {
       polyResult[j*dim+d] = coeffs[d];
     }
   }
 
-  Kokkos::View<double**> ws_coords("coords", me.nodesPerElement_, dim);
-  for (int j = 0; j < me.nodesPerElement_; ++j) {
+  Kokkos::View<double**> ws_coords("coords", me.nodes_per_element(), dim);
+  for (int j = 0; j < me.nodes_per_element(); ++j) {
     const double* coords = stk::mesh::field_data(coordField, node_rels[j]);
     for (int d = 0; d < dim; ++d) {
       ws_coords(j, d) = coords[d];
     }
   }
 
-  Kokkos::View<double**> meAreav("area_vec", me.numIntPoints_, dim);
+  Kokkos::View<double**> meAreav("area_vec", me.num_integration_points(), dim);
 
   using AlgTraits = sierra::nalu::AlgTraitsHex27;
   using GradViewType = Kokkos::View<double[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
@@ -341,7 +341,7 @@ TEST(Hex27SCS, area_vec)
   exactAreaType[2] = 1.0 / 3.0;
 
 
-  for (int ip = 0 ; ip < me.numIntPoints_; ++ip) {
+  for (int ip = 0 ; ip < me.num_integration_points(); ++ip) {
     double mag = meAreav(ip, 0) * meAreav(ip, 0) + meAreav(ip, 1) * meAreav(ip, 1) + meAreav(ip, 2) * meAreav(ip, 2);
     EXPECT_GT(mag, tol);
 
