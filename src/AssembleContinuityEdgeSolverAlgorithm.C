@@ -84,10 +84,10 @@ AssembleContinuityEdgeSolverAlgorithm::execute()
   const double nocFac
     = (realm_.get_noc_usage(dofName) == true) ? 1.0 : 0.0;
 
-  // time step
+  // Classic Nalu projection timescale
   const double dt = realm_.get_time_step();
   const double gamma1 = realm_.get_gamma1();
-  const double projTimeScale = dt/gamma1;
+  const double tauScale = dt / gamma1;
 
   // deal with interpolation procedure
   const double interpTogether = realm_.get_mdot_interp();
@@ -110,6 +110,8 @@ AssembleContinuityEdgeSolverAlgorithm::execute()
 
   // deal with state
   ScalarFieldType &densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType* Udiag = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "momentum_diag");
 
   // define some common selectors
   stk::mesh::Selector s_locally_owned_union = meta_data.locally_owned_part()
@@ -160,6 +162,11 @@ AssembleContinuityEdgeSolverAlgorithm::execute()
       const double densityL = *stk::mesh::field_data(densityNp1, nodeL);
       const double densityR = *stk::mesh::field_data(densityNp1, nodeR);
 
+      const double udiagL = *stk::mesh::field_data(*Udiag, nodeL);
+      const double udiagR = *stk::mesh::field_data(*Udiag, nodeR);
+
+      const double projTimeScale = 0.5 * (1.0/udiagL + 1.0/udiagR);
+
       // compute geometry
       double axdx = 0.0;
       double asq = 0.0;
@@ -181,12 +188,13 @@ AssembleContinuityEdgeSolverAlgorithm::execute()
         const double kxj = axj - asq*inv_axdx*dxj; // NOC
         const double rhoUjIp = 0.5*(densityR*vrtmR[j] + densityL*vrtmL[j]);
         const double ujIp = 0.5*(vrtmR[j] + vrtmL[j]);
-        const double GjIp = 0.5*(GpdxR[j] + GpdxL[j]);
-        tmdot += (interpTogether*rhoUjIp + om_interpTogether*rhoIp*ujIp + projTimeScale*GjIp)*axj 
-          - projTimeScale*kxj*GjIp*nocFac;
+        const double GjIp = 0.5*(GpdxR[j] / udiagR + GpdxL[j] / udiagL);
+        tmdot += (interpTogether*rhoUjIp + om_interpTogether*rhoIp*ujIp + GjIp)*axj
+          - kxj*GjIp*nocFac;
       }
 
-      const double lhsfac = -asq*inv_axdx;
+      tmdot /= tauScale;
+      const double lhsfac = -asq*inv_axdx*projTimeScale / tauScale;
 
       /*
         lhs[0] = IL,IL; lhs[1] = IL,IR; IR,IL; IR,IR
@@ -195,12 +203,12 @@ AssembleContinuityEdgeSolverAlgorithm::execute()
       // first left
       p_lhs[0] = -lhsfac;
       p_lhs[1] = +lhsfac;
-      p_rhs[0] = -tmdot/projTimeScale;
+      p_rhs[0] = -tmdot;
 
       // now right
       p_lhs[2] = +lhsfac;
       p_lhs[3] = -lhsfac;
-      p_rhs[1] = tmdot/projTimeScale;
+      p_rhs[1] = tmdot;
 
       apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
 

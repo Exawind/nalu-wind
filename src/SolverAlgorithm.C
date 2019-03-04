@@ -52,6 +52,9 @@ SolverAlgorithm::apply_coeff(
   const std::vector<double> & lhs, const char *trace_tag)
 {
   eqSystem_->linsys_->sumInto(sym_meshobj, scratchIds, scratchVals, rhs, lhs, trace_tag);
+
+  if (eqSystem_->extractDiagonal_)
+    eqSystem_->save_diagonal_term(sym_meshobj, scratchIds, lhs);
 }
 
 void
@@ -65,6 +68,9 @@ SolverAlgorithm::apply_coeff(
   const char *trace_tag)
 {
   eqSystem_->linsys_->sumInto(numMeshobjs, symMeshobjs, rhs, lhs, scratchIds, sortPermutation, trace_tag);
+
+  if (eqSystem_->extractDiagonal_)
+    eqSystem_->save_diagonal_term(numMeshobjs, symMeshobjs, lhs);
 }
 
 } // namespace nalu

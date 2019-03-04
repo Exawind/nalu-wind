@@ -14,6 +14,7 @@
 
 // template and scratch space
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -34,8 +35,8 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
   ElemDataRequests &faceDataPreReqs,
   ElemDataRequests &elemDataPreReqs)
   : Kernel(),
-    viscosity_(viscosity),
-    Gjui_(Gjui),
+    viscosity_(viscosity->mesh_meta_data_ordinal()),
+    Gjui_(Gjui->mesh_meta_data_ordinal()),
     alphaUpw_(solnOpts.get_alpha_upw_factor("velocity")),
     om_alphaUpw_(1.0-alphaUpw_),
     hoUpwind_(solnOpts.get_upw_factor("velocity")),
@@ -49,16 +50,16 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
     pecletFunction_(eqSystem->create_peclet_function<DoubleType>(velocity->name()))
 {
   // save off fields
-  velocityNp1_ = &(velocity->field_of_state(stk::mesh::StateNP1));
+  velocityNp1_ = velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
   if ( solnOpts.does_mesh_move() )
-    velocityRTM_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm");
+    velocityRTM_ = get_field_ordinal(metaData, "velocity_rtm");
   else
-    velocityRTM_ = velocity;
-  coordinates_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
-  density_ = metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  exposedAreaVec_ = metaData.get_field<GenericFieldType>(metaData.side_rank(), "exposed_area_vector");
-  openMassFlowRate_ = metaData.get_field<GenericFieldType>(metaData.side_rank(), "open_mass_flow_rate");
-  velocityBc_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "open_velocity_bc");
+    velocityRTM_ = velocity->mesh_meta_data_ordinal();
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+  density_ = get_field_ordinal(metaData, "density");
+  exposedAreaVec_ = get_field_ordinal(metaData, "exposed_area_vector", metaData.side_rank());
+  openMassFlowRate_ = get_field_ordinal(metaData, "open_mass_flow_rate", metaData.side_rank());
+  velocityBc_ = get_field_ordinal(metaData, "open_velocity_bc");
   
   // extract master elements
   MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
@@ -68,19 +69,19 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);
 
   // fields and data; face and then element
-  faceDataPreReqs.add_gathered_nodal_field(*viscosity_, 1);
-  faceDataPreReqs.add_gathered_nodal_field(*velocityNp1_, BcAlgTraits::nDim_);
-  faceDataPreReqs.add_gathered_nodal_field(*velocityBc_, BcAlgTraits::nDim_);
-  faceDataPreReqs.add_gathered_nodal_field(*Gjui_, BcAlgTraits::nDim_, BcAlgTraits::nDim_);
-  faceDataPreReqs.add_coordinates_field(*coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
-  faceDataPreReqs.add_face_field(*exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
-  faceDataPreReqs.add_face_field(*openMassFlowRate_, BcAlgTraits::numFaceIp_);
+  faceDataPreReqs.add_gathered_nodal_field(viscosity_, 1);
+  faceDataPreReqs.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
+  faceDataPreReqs.add_gathered_nodal_field(velocityBc_, BcAlgTraits::nDim_);
+  faceDataPreReqs.add_gathered_nodal_field(Gjui_, BcAlgTraits::nDim_, BcAlgTraits::nDim_);
+  faceDataPreReqs.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  faceDataPreReqs.add_face_field(openMassFlowRate_, BcAlgTraits::numFaceIp_);
 
-  elemDataPreReqs.add_coordinates_field(*coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
-  elemDataPreReqs.add_gathered_nodal_field(*velocityNp1_, BcAlgTraits::nDim_);
-  elemDataPreReqs.add_gathered_nodal_field(*velocityRTM_, BcAlgTraits::nDim_);
-  elemDataPreReqs.add_gathered_nodal_field(*viscosity_, 1);
-  elemDataPreReqs.add_gathered_nodal_field(*density_, 1);
+  elemDataPreReqs.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  elemDataPreReqs.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
+  elemDataPreReqs.add_gathered_nodal_field(velocityRTM_, BcAlgTraits::nDim_);
+  elemDataPreReqs.add_gathered_nodal_field(viscosity_, 1);
+  elemDataPreReqs.add_gathered_nodal_field(density_, 1);
  
   if ( shiftedGradOp_ )
     elemDataPreReqs.add_master_element_call(SCS_SHIFTED_FACE_GRAD_OP, CURRENT_COORDINATES);
@@ -128,20 +129,20 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
   const int *face_node_ordinals = meSCS_->side_node_ordinals(elemFaceOrdinal);
  
   // face
-  SharedMemView<DoubleType*>& vf_viscosity = faceScratchViews.get_scratch_view_1D(*viscosity_);
-  SharedMemView<DoubleType**>& vf_velocityNp1 = faceScratchViews.get_scratch_view_2D(*velocityNp1_);
-  SharedMemView<DoubleType**>& vf_bcVelocity = faceScratchViews.get_scratch_view_2D(*velocityBc_);
-  SharedMemView<DoubleType***>& vf_Gjui = faceScratchViews.get_scratch_view_3D(*Gjui_);
-  SharedMemView<DoubleType**>& vf_coordinates = faceScratchViews.get_scratch_view_2D(*coordinates_);
-  SharedMemView<DoubleType**>& vf_exposedAreaVec = faceScratchViews.get_scratch_view_2D(*exposedAreaVec_);
-  SharedMemView<DoubleType*>& vf_openMassFlowRate = faceScratchViews.get_scratch_view_1D(*openMassFlowRate_);
+  SharedMemView<DoubleType*>& vf_viscosity = faceScratchViews.get_scratch_view_1D(viscosity_);
+  SharedMemView<DoubleType**>& vf_velocityNp1 = faceScratchViews.get_scratch_view_2D(velocityNp1_);
+  SharedMemView<DoubleType**>& vf_bcVelocity = faceScratchViews.get_scratch_view_2D(velocityBc_);
+  SharedMemView<DoubleType***>& vf_Gjui = faceScratchViews.get_scratch_view_3D(Gjui_);
+  SharedMemView<DoubleType**>& vf_coordinates = faceScratchViews.get_scratch_view_2D(coordinates_);
+  SharedMemView<DoubleType**>& vf_exposedAreaVec = faceScratchViews.get_scratch_view_2D(exposedAreaVec_);
+  SharedMemView<DoubleType*>& vf_openMassFlowRate = faceScratchViews.get_scratch_view_1D(openMassFlowRate_);
   
   // element
-  SharedMemView<DoubleType**>& v_coordinates = elemScratchViews.get_scratch_view_2D(*coordinates_);
-  SharedMemView<DoubleType**>& v_velocityNp1 = elemScratchViews.get_scratch_view_2D(*velocityNp1_);
-  SharedMemView<DoubleType**>& v_vrtm = elemScratchViews.get_scratch_view_2D(*velocityRTM_);
-  SharedMemView<DoubleType*>& v_viscosity = elemScratchViews.get_scratch_view_1D(*viscosity_);
-  SharedMemView<DoubleType*>& v_density = elemScratchViews.get_scratch_view_1D(*density_);
+  SharedMemView<DoubleType**>& v_coordinates = elemScratchViews.get_scratch_view_2D(coordinates_);
+  SharedMemView<DoubleType**>& v_velocityNp1 = elemScratchViews.get_scratch_view_2D(velocityNp1_);
+  SharedMemView<DoubleType**>& v_vrtm = elemScratchViews.get_scratch_view_2D(velocityRTM_);
+  SharedMemView<DoubleType*>& v_viscosity = elemScratchViews.get_scratch_view_1D(viscosity_);
+  SharedMemView<DoubleType*>& v_density = elemScratchViews.get_scratch_view_1D(density_);
   SharedMemView<DoubleType***>& v_dndx = shiftedGradOp_
     ? elemScratchViews.get_me_views(CURRENT_COORDINATES).dndx_shifted_fc_scs
     : elemScratchViews.get_me_views(CURRENT_COORDINATES).dndx_fc_scs;
@@ -386,7 +387,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumOpenAdvDiffElemKernel);
+INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumOpenAdvDiffElemKernel)
 
 }  // nalu
 }  // sierra

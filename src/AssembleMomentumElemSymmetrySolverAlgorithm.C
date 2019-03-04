@@ -76,7 +76,9 @@ AssembleMomentumElemSymmetrySolverAlgorithm::execute()
   // extract user options (allow to potentially change over time)
   const std::string dofName = "velocity";
   const bool useShiftedGradOp = realm_.get_shifted_grad_op(dofName);
- 
+
+  const double relaxFacU = realm_.solutionOptions_->get_relaxation_factor(dofName);
+
   // space for LHS/RHS; nodesPerElem*nDim*nodesPerElem*nDim and nodesPerElem*nDim
   std::vector<double> lhs;
   std::vector<double> rhs;
@@ -314,6 +316,12 @@ AssembleMomentumElemSymmetrySolverAlgorithm::execute()
             }
           }
         }
+      }
+
+      // relax the diagonal term before applying to the matrix
+      const int npeNdim = nodesPerElement*nDim;
+      for (int ir=0; ir < npeNdim; ir++) {
+        p_lhs[ir * (npeNdim + 1)] /= relaxFacU;
       }
 
       apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);

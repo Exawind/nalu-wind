@@ -15,6 +15,9 @@
 #include <element_promotion/HexNElementDescription.h>
 #include <element_promotion/QuadNElementDescription.h>
 
+#include <AlgTraits.h>
+#include <KokkosInterface.h>
+
 #include <vector>
 #include <array>
 
@@ -169,6 +172,10 @@ public:
     return shapeDerivs_;
   }
 
+  void face_grad_op(
+    int face_ordinal,
+    SharedMemView<DoubleType**>& coords,
+    SharedMemView<DoubleType***>& gradop) final;
 
 private:
   void set_interior_info();
@@ -184,11 +191,14 @@ private:
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
 
+  std::vector<int> sideNodeOrdinals_;
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> expFaceShapeDerivs_;
   std::vector<ContourData> ipInfo_;
   int ipsPerFace_;
+
+  AlignedViewType<DoubleType**[3]> expRefGradWeights_;
 };
 
 // 3D Quad 9
@@ -372,6 +382,8 @@ public:
     const int ordinal, const int node) final;
 
   const int * side_node_ordinals(int ordinal = 0) final;
+  virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
+  virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
 
   std::vector<double> shape_functions() {
     return shapeFunctionVals_;
@@ -395,6 +407,7 @@ private:
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
 
+  std::vector<int> sideNodeOrdinals_;
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<ContourData> ipInfo_;

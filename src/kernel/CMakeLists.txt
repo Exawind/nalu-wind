@@ -36,5 +36,6 @@ add_sources(GlobalSourceList
    TurbKineticEnergyKsgsSrcElemKernel.C
    TurbKineticEnergySSTDESSrcElemKernel.C
    TurbKineticEnergySSTSrcElemKernel.C
+   WallDistElemKernel.C
 )
 

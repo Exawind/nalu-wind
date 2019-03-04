@@ -44,7 +44,7 @@ MaterialProperty::~MaterialProperty()
 //-------- load ------------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-MaterialProperty::load(const YAML::Node &node) 
+MaterialProperty::load(const YAML::Node & /* node */) 
 {
   // nothing...
 }

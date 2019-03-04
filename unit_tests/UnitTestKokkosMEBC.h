@@ -57,7 +57,14 @@ public:
      coordinates_ = static_cast<const VectorFieldType*>( meta_.coordinate_field());
 
      EXPECT_TRUE(coordinates_ != nullptr);
-     elemDataNeeded_.add_coordinates_field(*coordinates_, BcAlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
+
+     const int numDof = 1;
+     helperObjs_.reset(new FaceElemHelperObjects(
+       bulk_, BcAlgTraits::faceTopo_, BcAlgTraits::elemTopo_, numDof,
+       partVec_[0]));
+
+     elemDataNeeded().add_coordinates_field(
+       *coordinates_, BcAlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
    }
 
    void init_me_data()
@@ -65,24 +72,29 @@ public:
      meFC_ = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
      meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_);
      // Register them to ElemDataRequests
-    faceDataNeeded_.add_cvfem_face_me(meFC_);
-    elemDataNeeded_.add_cvfem_surface_me(meSCS_);
+    faceDataNeeded().add_cvfem_face_me(meFC_);
+    elemDataNeeded().add_cvfem_surface_me(meSCS_);
    }
 
    template<typename LambdaFunction>
    void execute(LambdaFunction func)
    {
-     int numDof = 1;
      ThrowRequireMsg(partVec_.size()==1, "KokkosMEViews unit-test assumes partVec_.size==1");
      ThrowRequireMsg(!bulk_.get_buckets(meta_.side_rank(), *partVec_[0]).empty(), "part does not contain side-ranked elements");
-     FaceElemHelperObjects helperObjs(bulk_, BcAlgTraits::faceTopo_, BcAlgTraits::elemTopo_, numDof, partVec_[0]);
 
-     sierra::nalu::AssembleFaceElemSolverAlgorithm& alg = *helperObjs.assembleFaceElemSolverAlg;
-     alg.faceDataNeeded_ = faceDataNeeded_;
-     alg.elemDataNeeded_ = elemDataNeeded_;
-
+     sierra::nalu::AssembleFaceElemSolverAlgorithm& alg = *(helperObjs_->assembleFaceElemSolverAlg);
      alg.run_face_elem_algorithm(bulk_, func);
    }
+
+  sierra::nalu::ElemDataRequests& faceDataNeeded()
+  {
+    return helperObjs_->assembleFaceElemSolverAlg->faceDataNeeded_;
+  }
+
+  sierra::nalu::ElemDataRequests& elemDataNeeded()
+  {
+    return helperObjs_->assembleFaceElemSolverAlg->elemDataNeeded_;
+  }
 
    stk::ParallelMachine comm_;
    stk::mesh::MetaData meta_;
@@ -91,8 +103,8 @@ public:
    stk::mesh::PartVector partVec_;
    const VectorFieldType* coordinates_{nullptr};
 
-   sierra::nalu::ElemDataRequests faceDataNeeded_;
-   sierra::nalu::ElemDataRequests elemDataNeeded_;
+   std::unique_ptr<FaceElemHelperObjects> helperObjs_;
+
    sierra::nalu::MasterElement* meFC_{nullptr};
    sierra::nalu::MasterElement* meSCV_{nullptr};
    sierra::nalu::MasterElement* meSCS_{nullptr};

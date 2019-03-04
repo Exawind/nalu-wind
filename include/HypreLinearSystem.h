@@ -196,8 +196,8 @@ public:
    */
   virtual void loadComplete();
 
-  virtual void writeToFile(const char * filename, bool useOwned=true) {}
-  virtual void writeSolutionToFile(const char * filename, bool useOwned=true) {}
+  virtual void writeToFile(const char * /* filename */, bool /* useOwned */ =true) {}
+  virtual void writeSolutionToFile(const char * /* filename */, bool /* useOwned */ =true) {}
 
 protected:
   /** Prepare the instance for system construction

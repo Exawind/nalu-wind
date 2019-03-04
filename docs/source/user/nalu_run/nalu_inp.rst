@@ -313,7 +313,8 @@ Realm subsection                 Purpose
 :inpfile:`initial_conditions`    Initial conditions for the various fields
 :inpfile:`boundary_conditions`   Boundary condition for the different fields
 :inpfile:`material_properties`   Material properties (e.g., fluid density, viscosity etc.)
-:inpfile:`solution_options`      Discretization options
+:inpfile:`solution_options`      Discretization and numerical stability
+:inpfile:`mesh_motion`           Mesh motion
 :inpfile:`output`                Solution output options (file, frequency, etc.)
 :inpfile:`restart`               Optional: Restart options (restart time, checkpoint frequency etc.)
 :inpfile:`time_step_control`     Optional: Parameters determining variable timestepping
@@ -636,26 +637,10 @@ definition of the Monin-Obukhov length scale calculation.  The
 entry :inpfile:`reference_temperature` is the reference temperature
 used in calculation of the Monin-Obukhov length scale.
 
-When there is mesh motion involved the wall boundary must specify a user
-function to determine relative velocity at the surface.
-
-.. code-block:: yaml
-
-   # Wall boundary specification with mesh motion
-   - wall_boundary_condition: bc_cylinder
-     target_name: cylinder_wall
-     wall_user_data:
-       user_function_name:
-         velocity: wind_energy
-       user_function_string_parameters:
-         velocity: [cylinder]
-
-The misnomer ``wind_energy`` is a pre-defined *user function* that provides the
-correct velocity at the wall accounting for relative mesh motion with respect to
-fluid and doesn't specifically deal with any wind energy simulation. The
-``user_function_string_parameters`` contains a YAML mapping of fields, e.g.
-velocity, to the list of *names* provided in the :inpfile:`soln_opts.mesh_motion`
-entry in the :inpfile:`solution_options` section.
+When there is mesh motion involved the wall boundary velocity takes the value of
+the mesh_velocity along the part represented by :inpfile:`bc.target_name`. In
+such a scenario all information under :inpfile:`bc.wall_user_data` is rendered
+unused.
 
 Example of wall boundary with a custom user function for temperature at the wall
 
@@ -869,6 +854,75 @@ Material Properties
                primary_value: 1.967e-4
                secondary_value: 1.85e-4
 
+Mesh Motion
+```````````
+
+.. inpfile:: mesh_motion
+
+   This subsection of the of the realm describes the rigid body motion undergone 
+   by the entire mesh. The mesh motion description follows the concept of 
+   reference frames in multi-body representation of physical domains, with entry 
+   under :inpfile:`mesh_motion` describing a motion frame as shown below.
+
+   Example:
+
+   .. code-block:: yaml
+
+      mesh_motion:
+       - name: scale_background
+        mesh_parts: [ Unspecified-3-HEX ]
+        frame: inertial
+        motion:
+         - type: scaling
+           factor: [1.2, 1.0, 1.2]
+           origin: [5.0, 0.05, 0.0]
+
+         - name: scale_near_body
+           frame: inertial
+           motion:
+            - type: scaling
+              factor: [1.2, 1.0, 1.2]
+              origin: [0.0, 0.05, 0.0]
+
+         - name: trans_rot_near_body
+           mesh_parts: [ Unspecified-2-HEX ]
+           frame: non_inertial
+           reference: scale_near_body
+           motion:
+            - type: rotation
+              omega: 12.0
+              axis: [0.0, 1.0, 0.0]
+              origin: [0.0, 0.05, 0.0]
+
+            - type: translation
+              start_time: 100.0
+              end_time: 200.0
+              velocity: [0.05, 0.0, 0.0]
+
+.. inpfile:: mesh_motion.name
+
+   Name of motion frame.
+
+.. inpfile:: mesh_motion.mesh_parts
+
+   Mesh parts associated with respective motion frame.
+
+.. inpfile:: mesh_motion.frame
+
+   Type of motion frame. Frames described as ``inertial`` are one time motions
+   executed at the start of the simulation. Frames described as ``non_nertial``
+   are executed throughout the simulation unless specified using ``start_time`` and
+   ``end_time``.
+
+.. inpfile:: mesh_motion.frame
+
+   Name of the reference frame off of which the current motion frame is described.
+
+.. inpfile:: mesh_motion.motion
+
+   Type of motion the current frame undergoes. Every frame is free to undergo one
+   or multiple motions simultaneously.
+
 Output Options
 ``````````````
 
@@ -999,7 +1053,7 @@ Time-step Control Options
 
    Maximum allowable increase in ``dt`` over a given timestep.
 
-Actuator 
+Actuator
 ````````
 
 .. inpfile:: actuator
@@ -1008,13 +1062,13 @@ Actuator
    sample section is shown below for running actuator line simulations
    coupled to OpenFAST with two turbines.
 
-.. code-block:: yaml   
-   
+.. code-block:: yaml
+
      actuator:
        type: ActLineFAST
        search_method: boost_rtree
        search_target_part: Unspecified-2-HEX
-       
+
        n_turbines_glob: 2
        dry_run:  False
        debug:    False
@@ -1022,7 +1076,7 @@ Actuator
        simStart: init # init/trueRestart/restartDriverInitFAST
        t_max:    5.0
        n_every_checkpoint: 100
-       
+
        Turbine0:
          procNo: 0
          num_force_pts_blade: 50
@@ -1034,7 +1088,7 @@ Actuator
          FAST_input_filename: "Test01.fst"
          turb_id:  1
          turbine_name: machine_zero
-    
+
        Turbine1:
          procNo: 0
          num_force_pts_blade: 50
@@ -1065,13 +1119,13 @@ Actuator
    Total number of turbines in the simulation. The input file must contain a number of turbine specific sections (`Turbine0`, `Turbine1`, ..., `Turbine(n-1)`) that is consistent with `nTurbinesGlob`.
 
 .. inpfile:: actuator.debug
-   
+
    Enable debug outputs if set to true
 
 .. inpfile:: actuator.dry_run
 
    The simulation will not run if dryRun is set to true. However, the simulation will read the input files, allocate turbines to processors and prepare to run the individual turbine instances. This flag is useful to test the setup of the simulation before running it.
-   
+
 .. inpfile:: actuator.simStart
 
    Flag indicating whether the simulation starts from scratch or restart. ``simStart`` takes on one of three values:
@@ -1079,9 +1133,9 @@ Actuator
    * ``init`` - Use this option when starting a simulation from `t=0s`.
    * ``trueRestart`` - While OpenFAST allows for restart of a turbine simulation, external components like the Bladed style controller may not. Use this option when all components of the simulation are known to restart.
    * ``restartDriverInitFAST`` - When the ``restartDriverInitFAST`` option is selected, the individual turbine models start from `t=0s` and run up to the specified restart time using the inflow data stored at the actuator nodes from a hdf5 file. The C++ API stores the inflow data at the actuator nodes in a hdf5 file at every OpenFAST time step and then reads it back when using this restart option. This restart option is especially useful when the glue code is a CFD solver.
-   
+
 .. inpfile:: actuator.t_start
-   
+
    Start time of the simulation
 
 .. inpfile:: actuator.t_end
@@ -1103,7 +1157,7 @@ Actuator
 
 .. inpfile:: actuator.n_every_checkpoint
 
-   Restart files will be written every so many time steps   
+   Restart files will be written every so many time steps
 
 **Turbine specific input options**
 
@@ -1112,31 +1166,31 @@ Actuator
    The position of the turbine base for actuator-line simulations
 
 .. inpfile:: actuator.num_force_pts_blade
-   
-   The number of actuator points along each blade for actuator-line simulations   
-   
+
+   The number of actuator points along each blade for actuator-line simulations
+
 .. inpfile:: actuator.num_force_pts_tower
 
    The number of actuator points along the tower for actuator-line simulations.
-  
+
 .. inpfile:: actuator.epsilon
 
    The spreading width :math:`\epsilon` in the Gaussian spreading function in the `[chordwise, spanwise, chord normal]` coordinate system to spread the forces from the actuator point to the nodes. Nalu-Wind currently only supports an isotropic Gaussian spreading function and uses only the value in the first component along the `chordwise` direction.
-   
+
 .. inpfile:: actuator.restart_filename
 
    The checkpoint file for this turbine when restarting a simulation
-   
+
 .. inpfile:: actuator.FAST_input_filename
 
    The FAST input file for this turbine
-  
+
 .. inpfile:: actuator.turb_id
 
    A unique turbine id for each turbine
 
 .. include:: ./turbine_modeling.rst
-       
+
 
 Turbulence averaging
 ````````````````````

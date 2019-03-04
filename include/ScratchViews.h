@@ -15,9 +15,11 @@
 #include <stk_mesh/base/BulkData.hpp>
 
 #include <ElemDataRequestsNGP.h>
+#include <ElemDataRequestsGPU.h>
 #include <master_element/MasterElement.h>
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
+#include <MultiDimViews.h>
 
 #include <set>
 #include <type_traits>
@@ -35,17 +37,49 @@ struct ScratchMeInfo {
   int numFemIp_;
 };
 
-struct ViewHolder {
-  virtual ~ViewHolder() {}
-  int dim_;
-};
+template<typename ELEMDATAREQUESTSTYPE>
+KOKKOS_INLINE_FUNCTION
+NumNeededViews count_needed_field_views(const ELEMDATAREQUESTSTYPE& dataNeeded)
+{
+  NumNeededViews numNeededViews = {0, 0, 0, 0};
 
-template<typename T>
-struct ViewT : public ViewHolder {
-  ViewT(T view, int dim) : view_(view) {dim_ = dim;}
-  virtual ~ViewT(){}
-  T view_;
-};
+  const typename ELEMDATAREQUESTSTYPE::FieldInfoView& neededFields = dataNeeded.get_fields();
+  for(unsigned i=0; i<neededFields.size(); ++i) {
+    const typename ELEMDATAREQUESTSTYPE::FieldInfoType& fieldInfo = neededFields(i);
+    stk::mesh::EntityRank fieldEntityRank = get_entity_rank(fieldInfo);
+    unsigned scalarsDim1 = fieldInfo.scalarsDim1;
+    unsigned scalarsDim2 = fieldInfo.scalarsDim2;
+
+    if (fieldEntityRank==stk::topology::EDGE_RANK ||
+        fieldEntityRank==stk::topology::FACE_RANK ||
+        fieldEntityRank==stk::topology::ELEM_RANK) {
+      if (scalarsDim2 == 0) {
+        numNeededViews.num1DViews++;
+      }
+      else {
+        numNeededViews.num2DViews++;
+      }
+    }
+    else if (fieldEntityRank==stk::topology::NODE_RANK) {
+      if (scalarsDim2 == 0) {
+        if (scalarsDim1 == 1) {
+          numNeededViews.num1DViews++;
+        }
+        else {
+          numNeededViews.num2DViews++;
+        }
+      }
+      else {
+          numNeededViews.num3DViews++;
+      }
+    }
+    else {
+      NGP_ThrowRequireMsg(false,"Unknown stk-rank");
+    }
+  }
+
+  return numNeededViews;
+}
 
 template<typename T>
 class MasterElementViews
@@ -61,6 +95,14 @@ public:
     const ElemDataRequestsNGP::DataEnumView& dataEnums,
     int nDim, int nodesPerFace, int nodesPerElem,
     int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
+
+#ifdef KOKKOS_ENABLE_CUDA
+  int create_master_element_views(
+    const DeviceTeamHandleType& team,
+    const ElemDataRequestsGPU::DataEnumView& dataEnums,
+    int nDim, int nodesPerFace, int nodesPerElem,
+    int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
+#endif
 
   void fill_master_element_views(
     const ElemDataRequestsNGP::DataEnumView& dataEnums,
@@ -103,39 +145,115 @@ public:
   SharedMemView<T***> metric;
 };
 
-template<typename T>
+template<typename T,typename SHMEM,typename TEAMHANDLETYPE,typename ELEMDATAREQUESTSTYPE, typename MULTIDIMVIEWSTYPE>
+KOKKOS_FUNCTION
+int create_needed_field_views(const TEAMHANDLETYPE& team,
+                               const ELEMDATAREQUESTSTYPE& dataNeeded,
+                               int nodesPerEntity,
+                               MULTIDIMVIEWSTYPE& fieldViews)
+{
+  int numScalars = 0;
+
+  const typename ELEMDATAREQUESTSTYPE::FieldInfoView& neededFields = dataNeeded.get_fields();
+  for(unsigned i=0; i<neededFields.size(); ++i) {
+    const typename ELEMDATAREQUESTSTYPE::FieldInfoType& fieldInfo = neededFields(i);
+    stk::mesh::EntityRank fieldEntityRank = get_entity_rank(fieldInfo);
+    unsigned scalarsDim1 = fieldInfo.scalarsDim1;
+    unsigned scalarsDim2 = fieldInfo.scalarsDim2;
+
+    if (fieldEntityRank==stk::topology::EDGE_RANK ||
+        fieldEntityRank==stk::topology::FACE_RANK ||
+        fieldEntityRank==stk::topology::ELEM_RANK) {
+      if (scalarsDim2 == 0) {
+        fieldViews.add_1D_view(get_field_ordinal(fieldInfo), get_shmem_view_1D<T,TEAMHANDLETYPE,SHMEM>(team, scalarsDim1));
+        numScalars += scalarsDim1;
+      }
+      else {
+        fieldViews.add_2D_view(get_field_ordinal(fieldInfo), get_shmem_view_2D<T,TEAMHANDLETYPE,SHMEM>(team, scalarsDim1, scalarsDim2));
+        numScalars += scalarsDim1 * scalarsDim2;
+      }
+    }
+    else if (fieldEntityRank==stk::topology::NODE_RANK) {
+      if (scalarsDim2 == 0) {
+        if (scalarsDim1 == 1) {
+          fieldViews.add_1D_view(get_field_ordinal(fieldInfo), get_shmem_view_1D<T,TEAMHANDLETYPE,SHMEM>(team, nodesPerEntity));
+          numScalars += nodesPerEntity;
+        }
+        else {
+          fieldViews.add_2D_view(get_field_ordinal(fieldInfo), get_shmem_view_2D<T,TEAMHANDLETYPE,SHMEM>(team, nodesPerEntity, scalarsDim1));
+          numScalars += nodesPerEntity*scalarsDim1;
+        }
+      }
+      else {
+          fieldViews.add_3D_view(get_field_ordinal(fieldInfo), get_shmem_view_3D<T,TEAMHANDLETYPE,SHMEM>(team, nodesPerEntity, scalarsDim1, scalarsDim2));
+          numScalars += nodesPerEntity*scalarsDim1*scalarsDim2;
+      }
+    }
+    else {
+      ThrowRequireMsg(false,"Unknown stk-rank" << fieldEntityRank);
+    }
+  }
+
+  return numScalars;
+}
+
+template<typename T, typename TEAMHANDLETYPE=TeamHandleType, typename SHMEM=HostShmem>
 class ScratchViews
 {
 public:
   typedef T value_type;
 
-  ScratchViews(const TeamHandleType& team,
-               const stk::mesh::BulkData& bulkData,
+  KOKKOS_FUNCTION
+  ScratchViews(const TEAMHANDLETYPE& team,
+               unsigned nDim,
                int nodesPerEntity,
                const ElemDataRequestsNGP& dataNeeded);
 
-  ScratchViews(const TeamHandleType& team,
-               const stk::mesh::BulkData& bulkData,
+  KOKKOS_FUNCTION
+  ScratchViews(const TEAMHANDLETYPE& team,
+               unsigned nDim,
+               int nodesPerEntity,
+               const ElemDataRequestsGPU& dataNeeded);
+
+  KOKKOS_FUNCTION
+  ScratchViews(const TEAMHANDLETYPE& team,
+               unsigned nDim,
                const ScratchMeInfo &meInfo,
                const ElemDataRequestsNGP& dataNeeded);
 
+  KOKKOS_FUNCTION
+  ScratchViews(const TEAMHANDLETYPE& team,
+               unsigned nDim,
+               const ScratchMeInfo &meInfo,
+               const ElemDataRequestsGPU& dataNeeded);
+
+  KOKKOS_FUNCTION
   virtual ~ScratchViews() {
-    for(ViewHolder* vh : fieldViews) {
-      delete vh;
-    }
   }
 
   inline
-  SharedMemView<T*>& get_scratch_view_1D(const stk::mesh::FieldBase& field);
+  SharedMemView<T*,SHMEM>& get_scratch_view_1D(const stk::mesh::FieldBase& field);
 
   inline
-  SharedMemView<T**>& get_scratch_view_2D(const stk::mesh::FieldBase& field);
+  SharedMemView<T**,SHMEM>& get_scratch_view_2D(const stk::mesh::FieldBase& field);
 
   inline
-  SharedMemView<T***>& get_scratch_view_3D(const stk::mesh::FieldBase& field);
+  SharedMemView<T***,SHMEM>& get_scratch_view_3D(const stk::mesh::FieldBase& field);
 
   inline
-  SharedMemView<T****>& get_scratch_view_4D(const stk::mesh::FieldBase& field);
+  SharedMemView<T****,SHMEM>& get_scratch_view_4D(const stk::mesh::FieldBase& field);
+
+  KOKKOS_INLINE_FUNCTION
+  SharedMemView<T*,SHMEM>& get_scratch_view_1D(const unsigned fieldOrdinal);
+
+  KOKKOS_INLINE_FUNCTION
+  SharedMemView<T**,SHMEM>& get_scratch_view_2D(const unsigned fieldOrdinal);
+
+  KOKKOS_INLINE_FUNCTION
+  SharedMemView<T***,SHMEM>& get_scratch_view_3D(const unsigned fieldOrdinal);
+
+  KOKKOS_INLINE_FUNCTION
+  SharedMemView<T****,SHMEM>& get_scratch_view_4D(const unsigned fieldOrdinal);
 
   inline
   MasterElementViews<T>& get_me_views(const COORDS_TYPES cType)
@@ -143,68 +261,102 @@ public:
     ThrowRequire(hasCoordField[cType] == true);
     return meViews[cType];
   }
-  inline bool has_coord_field(const COORDS_TYPES cType) const { return hasCoordField[cType]; }
 
-  inline int total_bytes() const { return num_bytes_required; }
+  KOKKOS_INLINE_FUNCTION
+  bool has_coord_field(const COORDS_TYPES cType) const { return hasCoordField[cType]; }
 
-  const stk::mesh::Entity* elemNodes;
+  KOKKOS_INLINE_FUNCTION
+  int total_bytes() const { return num_bytes_required; }
 
-  inline const std::vector<ViewHolder*>& get_field_views() const { return fieldViews; }
+  ngp::Mesh::ConnectedNodes elemNodes;
+
+  KOKKOS_INLINE_FUNCTION
+        MultiDimViews<T,TEAMHANDLETYPE,SHMEM>& get_field_views()       { return fieldViews; }
+  KOKKOS_INLINE_FUNCTION
+  const MultiDimViews<T,TEAMHANDLETYPE,SHMEM>& get_field_views() const { return fieldViews; }
 
 private:
-  void create_needed_field_views(const TeamHandleType& team,
-                                 const ElemDataRequestsNGP& dataNeeded,
-                                 const stk::mesh::BulkData& bulkData,
-                                 int nodesPerElem);
-
-  void create_needed_master_element_views(const TeamHandleType& team,
+  void create_needed_master_element_views(const TEAMHANDLETYPE& team,
                                           const ElemDataRequestsNGP& dataNeeded,
                                           int nDim, int nodesPerFace, int nodesPerElem,
                                           int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 
-  std::vector<ViewHolder*> fieldViews;
+  void create_needed_master_element_views(const TEAMHANDLETYPE& team,
+                                          const ElemDataRequestsGPU& dataNeeded,
+                                          int nDim, int nodesPerFace, int nodesPerElem,
+                                          int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
+
+  MultiDimViews<T,TEAMHANDLETYPE, SHMEM> fieldViews;
   MasterElementViews<T> meViews[MAX_COORDS_TYPES];
   bool hasCoordField[MAX_COORDS_TYPES] = {false, false};
   int num_bytes_required{0};
 };
 
-template<typename T>
-SharedMemView<T*>& ScratchViews<T>::get_scratch_view_1D(const stk::mesh::FieldBase& field)
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+SharedMemView<T*,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_1D(const stk::mesh::FieldBase& field)
 { 
-  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 1D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
-  ViewT<SharedMemView<T*>>* vt = static_cast<ViewT<SharedMemView<T*>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
-  return vt->view_;
+//  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 1D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
+//  ViewT<SharedMemView<T*>>* vt = static_cast<ViewT<SharedMemView<T*>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
+  return fieldViews.get_scratch_view_1D(field.mesh_meta_data_ordinal());
 }
 
-template<typename T>
-SharedMemView<T**>& ScratchViews<T>::get_scratch_view_2D(const stk::mesh::FieldBase& field)
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+SharedMemView<T**,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_2D(const stk::mesh::FieldBase& field)
 { 
-  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 2D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
-  ViewT<SharedMemView<T**>>* vt = static_cast<ViewT<SharedMemView<T**>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
-  return vt->view_;
+//  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 2D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
+//  ViewT<SharedMemView<T**>>* vt = static_cast<ViewT<SharedMemView<T**>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
+  return fieldViews.get_scratch_view_2D(field.mesh_meta_data_ordinal());
 }
 
-template<typename T>
-SharedMemView<T***>& ScratchViews<T>::get_scratch_view_3D(const stk::mesh::FieldBase& field)
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+SharedMemView<T***,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_3D(const stk::mesh::FieldBase& field)
 { 
-  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 3D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
-  ViewT<SharedMemView<T***>>* vt = static_cast<ViewT<SharedMemView<T***>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
-  return vt->view_;
+//  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 3D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
+//  ViewT<SharedMemView<T***>>* vt = static_cast<ViewT<SharedMemView<T***>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
+  return fieldViews.get_scratch_view_3D(field.mesh_meta_data_ordinal());
 }
 
-template<typename T>
-SharedMemView<T****>& ScratchViews<T>::get_scratch_view_4D(const stk::mesh::FieldBase& field)
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+SharedMemView<T****,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_4D(const stk::mesh::FieldBase& field)
 {
-  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 4D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
-  ViewT<SharedMemView<T****>>* vt = static_cast<ViewT<SharedMemView<T****>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
-  return vt->view_;
+//  ThrowAssertMsg(fieldViews[field.mesh_meta_data_ordinal()] != nullptr, "ScratchViews ERROR, trying to get 4D scratch-view for field "<<field.name()<<" which wasn't declared as pre-req field.");
+//  ViewT<SharedMemView<T****>>* vt = static_cast<ViewT<SharedMemView<T****>>*>(fieldViews[field.mesh_meta_data_ordinal()]);
+  return fieldViews.get_scratch_view_4D(field.mesh_meta_data_ordinal());
+}
+
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+  KOKKOS_INLINE_FUNCTION
+SharedMemView<T*,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_1D(const unsigned fieldOrdinal)
+{ 
+  return fieldViews.get_scratch_view_1D(fieldOrdinal);
+}
+
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+  KOKKOS_INLINE_FUNCTION
+SharedMemView<T**,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_2D(const unsigned fieldOrdinal)
+{ 
+  return fieldViews.get_scratch_view_2D(fieldOrdinal);
+}
+
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+  KOKKOS_INLINE_FUNCTION
+SharedMemView<T***,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_3D(const unsigned fieldOrdinal)
+{
+  return fieldViews.get_scratch_view_3D(fieldOrdinal);
+}
+
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+  KOKKOS_INLINE_FUNCTION
+SharedMemView<T****,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_view_4D(const unsigned fieldOrdinal)
+{
+  return fieldViews.get_scratch_view_4D(fieldOrdinal);
 }
 
 template<typename T>
 int MasterElementViews<T>::create_master_element_views(
   const TeamHandleType& team,
   const ElemDataRequestsNGP::DataEnumView& dataEnums,
-  int nDim, int nodesPerFace, int nodesPerElem,
+  int nDim, int /* nodesPerFace */, int nodesPerElem,
   int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
 {
   int numScalars = 0;
@@ -361,15 +513,178 @@ int MasterElementViews<T>::create_master_element_views(
   return numScalars;
 }
 
+#ifdef KOKKOS_ENABLE_CUDA
+template<typename T>
+int MasterElementViews<T>::create_master_element_views(
+  const DeviceTeamHandleType& team,
+  const ElemDataRequestsGPU::DataEnumView& dataEnums,
+  int nDim, int nodesPerFace, int nodesPerElem,
+  int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
+{
+  int numScalars = 0;
+  bool needDeriv = false; bool needDerivScv = false; bool needDerivFem = false; bool needDerivFC = false;
+  bool needDetj = false; bool needDetjScv = false; bool needDetjFem = false; bool needDetjFC = false;
+  bool femGradOp = false; bool femShiftedGradOp = false;
+  for(unsigned i=0; i<dataEnums.size(); ++i) {
+    switch(dataEnums(i))
+    {
+      case FC_AREAV:
+          ThrowRequireMsg(numFaceIp > 0, "ERROR, meFC must be non-null if FC_AREAV is requested.");
+          fc_areav = get_shmem_view_2D<T>(team, numFaceIp, nDim);
+          numScalars += numFaceIp * nDim;
+          break;
+      case SCS_FACE_GRAD_OP:
+          ThrowRequireMsg(numFaceIp > 0, "ERROR, meSCS must be non-null if SCS_FACE_GRAD_OP is requested.");
+          dndx_fc_scs = get_shmem_view_3D<T>(team, numFaceIp, nodesPerElem, nDim);
+          numScalars += nodesPerElem * numFaceIp * nDim;
+          needDerivFC = true;
+          needDetjFC = true;
+          break;
+      case SCS_SHIFTED_FACE_GRAD_OP:
+          ThrowRequireMsg(numFaceIp > 0, "ERROR, meSCS must be non-null if SCS_SHIFTED_FACE_GRAD_OP is requested.");
+          dndx_shifted_fc_scs = get_shmem_view_3D<T>(team, numFaceIp, nodesPerElem, nDim);
+          numScalars += nodesPerElem * numFaceIp * nDim;
+          needDerivFC = true;
+          needDetjFC = true;
+          break;
+      case SCS_AREAV:
+         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_AREAV is requested.");
+         scs_areav = get_shmem_view_2D<T>(team, numScsIp, nDim);
+         numScalars += numScsIp * nDim;
+         break;
+
+      case SCS_GRAD_OP:
+         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_GRAD_OP is requested.");
+         dndx = get_shmem_view_3D<T>(team, numScsIp, nodesPerElem, nDim);
+         numScalars += nodesPerElem * numScsIp * nDim;
+         needDeriv = true;
+         needDetj = true;
+         break;
+
+      case SCS_SHIFTED_GRAD_OP:
+        ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_SHIFTED_GRAD_OP is requested.");
+        dndx_shifted = get_shmem_view_3D<T>(team, numScsIp, nodesPerElem, nDim);
+        numScalars += nodesPerElem * numScsIp * nDim;
+        needDeriv = true;
+        needDetj = true;
+        break;
+
+      case SCS_GIJ:
+         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_GIJ is requested.");
+         gijUpper = get_shmem_view_3D<T>(team, numScsIp, nDim, nDim);
+         gijLower = get_shmem_view_3D<T>(team, numScsIp, nDim, nDim);
+         numScalars += 2 * numScsIp * nDim * nDim;
+         needDeriv = true;
+         break;
+
+      case SCV_MIJ:
+         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCV must be non-null if SCV_MIJ is requested.");
+         metric = get_shmem_view_3D<T>(team, numScvIp, nDim, nDim);
+         numScalars += numScvIp * nDim * nDim;
+         needDeriv = true;
+         break;
+
+      case SCV_VOLUME:
+         ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_VOLUME is requested.");
+         scv_volume = get_shmem_view_1D<T>(team, numScvIp);
+         numScalars += numScvIp;
+         break;
+
+      case SCV_GRAD_OP:
+         ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_GRAD_OP is requested.");
+         dndx_scv = get_shmem_view_3D<T>(team, numScvIp, nodesPerElem, nDim);
+         numScalars += nodesPerElem * numScvIp * nDim;
+         needDerivScv = true;
+         needDetjScv = true;
+         break;
+
+      case SCV_SHIFTED_GRAD_OP:
+         ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_SHIFTED_GRAD_OP is requested.");
+         dndx_scv_shifted = get_shmem_view_3D<T>(team, numScvIp, nodesPerElem, nDim);
+         numScalars += nodesPerElem * numScvIp * nDim;
+         needDerivScv = true;
+         needDetjScv = true;
+         break;
+
+      case FEM_GRAD_OP:
+         ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_GRAD_OP is requested.");
+         dndx_fem = get_shmem_view_3D<T>(team, numFemIp, nodesPerElem, nDim);
+         numScalars += nodesPerElem * numFemIp * nDim;
+         needDerivFem = true;
+         needDetjFem = true;
+         femGradOp = true;
+         break;
+
+      case FEM_SHIFTED_GRAD_OP:
+         ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_SHIFTED_GRAD_OP is requested.");
+         dndx_fem = get_shmem_view_3D<T>(team, numFemIp, nodesPerElem, nDim);
+         numScalars += nodesPerElem * numFemIp * nDim;
+         needDerivFem = true;
+         needDetjFem = true;
+         femShiftedGradOp = true;
+         break;
+
+      default: break;
+    }
+  }
+
+  if (needDerivFC) {
+    deriv_fc_scs = get_shmem_view_3D<T>(team, numFaceIp,nodesPerElem,nDim);
+    numScalars += numFaceIp * nodesPerElem * nDim;
+  }
+
+  if (needDeriv) {
+    deriv = get_shmem_view_3D<T>(team, numScsIp,nodesPerElem,nDim);
+    numScalars += numScsIp * nodesPerElem * nDim;
+  }
+
+  if (needDerivScv) {
+    deriv_scv = get_shmem_view_3D<T>(team, numScvIp,nodesPerElem,nDim);
+    numScalars += numScvIp * nodesPerElem * nDim;
+  }
+
+  if (needDerivFem) {
+    deriv_fem = get_shmem_view_3D<T>(team, numFemIp,nodesPerElem,nDim);
+    numScalars += numFemIp * nodesPerElem * nDim;
+  }
+
+  if (needDetjFC) {
+    det_j_fc_scs = get_shmem_view_1D<T>(team, numFaceIp);
+    numScalars += numFaceIp;
+  }
+
+  if (needDetj) {
+    det_j = get_shmem_view_1D<T>(team, numScsIp);
+    numScalars += numScsIp;
+  }
+
+  if (needDetjScv) {
+    det_j_scv = get_shmem_view_1D<T>(team, numScvIp);
+    numScalars += numScvIp;
+  }
+
+  if (needDetjFem) {
+    det_j_fem = get_shmem_view_1D<T>(team, numFemIp);
+    numScalars += numFemIp;
+  }
+
+  // error check
+  if ( femGradOp && femShiftedGradOp )
+    ThrowRequireMsg(numFemIp > 0, "ERROR, femGradOp and femShiftedGradOp both requested.");
+
+  return numScalars;
+}
+#endif
+
 template<typename T>
 void MasterElementViews<T>::fill_master_element_views(
   const ElemDataRequestsNGP::DataEnumView& dataEnums,
   SharedMemView<double**>* coordsView,
-  MasterElement* meFC,
+  MasterElement* /* meFC */,
   MasterElement* meSCS,
   MasterElement* meSCV,
   MasterElement* meFEM,
-  int faceOrdinal)
+  int /* faceOrdinal */)
 {
   // Guard against calling MasterElement methods on SIMD data structures
   static_assert(std::is_same<T, double>::value,
@@ -449,7 +764,7 @@ template<typename T>
 void MasterElementViews<T>::fill_master_element_views_new_me(
   const ElemDataRequestsNGP::DataEnumView& dataEnums,
   SharedMemView<DoubleType**>* coordsView,
-  MasterElement* meFC,
+  MasterElement* /* meFC */,
   MasterElement* meSCS,
   MasterElement* meSCV,
   MasterElement* meFEM,
@@ -532,19 +847,22 @@ void MasterElementViews<T>::fill_master_element_views_new_me(
   }
 }
 
-template<typename T>
-ScratchViews<T>::ScratchViews(const TeamHandleType& team,
-             const stk::mesh::BulkData& bulkData,
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
+             unsigned nDim,
              int nodalGatherSize,
              const ElemDataRequestsNGP& dataNeeded)
+ : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
+  num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, nodalGatherSize, fieldViews) * sizeof(T);
+
+#ifndef KOKKOS_ENABLE_CUDA
   /* master elements are allowed to be null if they are not required */
   MasterElement *meFC = dataNeeded.get_cvfem_face_me();
   MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
   MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
   MasterElement *meFEM = dataNeeded.get_fem_volume_me();
 
-  int nDim = bulkData.mesh_meta_data().spatial_dimension();
   int nodesPerFace = meFC != nullptr ? meFC->nodesPerElement_ : 0;
   int nodesPerElem = meSCS != nullptr
           ? meSCS->nodesPerElement_ : meSCV != nullptr
@@ -555,79 +873,68 @@ ScratchViews<T>::ScratchViews(const TeamHandleType& team,
   int numScvIp = meSCV != nullptr ? meSCV->numIntPoints_ : 0;
   int numFemIp = meFEM != nullptr ? meFEM->numIntPoints_ : 0;
 
-  create_needed_field_views(team, dataNeeded, bulkData, nodalGatherSize);
+  create_needed_master_element_views(team, dataNeeded, nDim, nodesPerFace, nodesPerElem, numFaceIp, numScsIp, numScvIp, numFemIp);
+#endif
+}
+
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
+             unsigned nDim,
+             int nodalGatherSize,
+             const ElemDataRequestsGPU& dataNeeded)
+ : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
+{
+  num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, nodalGatherSize, fieldViews) * sizeof(T);
+
+#ifndef KOKKOS_ENABLE_CUDA
+  /* master elements are allowed to be null if they are not required */
+  MasterElement *meFC = dataNeeded.get_cvfem_face_me();
+  MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
+  MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
+  MasterElement *meFEM = dataNeeded.get_fem_volume_me();
+
+  int nodesPerFace = meFC != nullptr ? meFC->nodesPerElement_ : 0;
+  int nodesPerElem = meSCS != nullptr
+          ? meSCS->nodesPerElement_ : meSCV != nullptr
+          ? meSCV->nodesPerElement_ : meFEM != nullptr
+          ? meFEM->nodesPerElement_ : 0;
+  int numFaceIp= meFC  != nullptr ? meFC->numIntPoints_  : 0;
+  int numScsIp = meSCS != nullptr ? meSCS->numIntPoints_ : 0;
+  int numScvIp = meSCV != nullptr ? meSCV->numIntPoints_ : 0;
+  int numFemIp = meFEM != nullptr ? meFEM->numIntPoints_ : 0;
 
   create_needed_master_element_views(team, dataNeeded, nDim, nodesPerFace, nodesPerElem, numFaceIp, numScsIp, numScvIp, numFemIp);
+#endif
 }
 
-template<typename T>
-ScratchViews<T>::ScratchViews(const TeamHandleType& team,
-             const stk::mesh::BulkData& bulkData,
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
+             unsigned nDim,
              const ScratchMeInfo &meInfo,
              const ElemDataRequestsNGP& dataNeeded)
+ : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
-  int nDim = bulkData.mesh_meta_data().spatial_dimension();
-  create_needed_field_views(team, dataNeeded, bulkData, meInfo.nodalGatherSize_);
+  num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, meInfo.nodalGatherSize_, fieldViews) * sizeof(T);
+#ifndef KOKKOS_ENABLE_CUDA
   create_needed_master_element_views(team, dataNeeded, nDim, meInfo.nodesPerFace_, meInfo.nodesPerElement_, meInfo.numFaceIp_, meInfo.numScsIp_, meInfo.numScvIp_, meInfo.numFemIp_);
+#endif
 }
 
-template<typename T>
-void ScratchViews<T>::create_needed_field_views(const TeamHandleType& team,
-                               const ElemDataRequestsNGP& dataNeeded,
-                               const stk::mesh::BulkData& bulkData,
-                               int nodesPerEntity)
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
+             unsigned nDim,
+             const ScratchMeInfo &meInfo,
+             const ElemDataRequestsGPU& dataNeeded)
+ : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
-  int numScalars = 0;
-  const stk::mesh::MetaData& meta = bulkData.mesh_meta_data();
-  unsigned numFields = meta.get_fields().size();
-  fieldViews.resize(numFields, nullptr);
-
-  const ElemDataRequestsNGP::FieldInfoView& neededFields = dataNeeded.get_fields();
-  for(unsigned i=0; i<neededFields.size(); ++i) {
-    const FieldInfo& fieldInfo = neededFields(i);
-    stk::mesh::EntityRank fieldEntityRank = fieldInfo.field->entity_rank();
-    unsigned scalarsDim1 = fieldInfo.scalarsDim1;
-    unsigned scalarsDim2 = fieldInfo.scalarsDim2;
-
-    if (fieldEntityRank==stk::topology::EDGE_RANK ||
-        fieldEntityRank==stk::topology::FACE_RANK ||
-        fieldEntityRank==stk::topology::ELEM_RANK) {
-      if (scalarsDim2 == 0) {
-        fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = new ViewT<SharedMemView<T*>>(get_shmem_view_1D<T>(team, scalarsDim1), 1);
-        numScalars += scalarsDim1;
-      }
-      else {
-        fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = new ViewT<SharedMemView<T**>>(get_shmem_view_2D<T>(team, scalarsDim1, scalarsDim2),2);
-        numScalars += scalarsDim1 * scalarsDim2;
-      }
-    }
-    else if (fieldEntityRank==stk::topology::NODE_RANK) {
-      if (scalarsDim2 == 0) {
-        if (scalarsDim1 == 1) {
-          fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = new ViewT<SharedMemView<T*>>(get_shmem_view_1D<T>(team, nodesPerEntity),1);
-          numScalars += nodesPerEntity;
-        }
-        else {
-          fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = new ViewT<SharedMemView<T**>>(get_shmem_view_2D<T>(team, nodesPerEntity, scalarsDim1),2);
-          numScalars += nodesPerEntity*scalarsDim1;
-        }
-      }
-      else {
-          fieldViews[fieldInfo.field->mesh_meta_data_ordinal()] = new ViewT<SharedMemView<T***>>(get_shmem_view_3D<T>(team, nodesPerEntity, scalarsDim1, scalarsDim2),3);
-          numScalars += nodesPerEntity*scalarsDim1*scalarsDim2;
-      }
-    }
-    else {
-      ThrowRequireMsg(false,"Unknown stk-rank" << fieldEntityRank);
-    }
-  }
-
-  // Track total bytes required for field allocations
-  num_bytes_required += numScalars * sizeof(T);
+  num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, meInfo.nodalGatherSize_, fieldViews) * sizeof(T);
+#ifndef KOKKOS_ENABLE_CUDA
+  create_needed_master_element_views(team, dataNeeded, nDim, meInfo.nodesPerFace_, meInfo.nodesPerElement_, meInfo.numFaceIp_, meInfo.numScsIp_, meInfo.numScvIp_, meInfo.numFemIp_);
+#endif
 }
 
-template<typename T>
-void ScratchViews<T>::create_needed_master_element_views(const TeamHandleType& team,
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_master_element_views(const TEAMHANDLETYPE& team,
                                         const ElemDataRequestsNGP& dataNeeded,
                                         int nDim, int nodesPerFace, int nodesPerElem,
                                         int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
@@ -646,50 +953,115 @@ void ScratchViews<T>::create_needed_master_element_views(const TeamHandleType& t
   num_bytes_required += numScalars * sizeof(T);
 }
 
-int get_num_scalars_pre_req_data(ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim);
-int get_num_scalars_pre_req_data(ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
+template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
+void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_master_element_views(const TEAMHANDLETYPE& team,
+                                        const ElemDataRequestsGPU& dataNeeded,
+                                        int nDim, int nodesPerFace, int nodesPerElem,
+                                        int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
+{
+  int numScalars = 0;
 
-void fill_pre_req_data(ElemDataRequestsNGP& dataNeeded,
+//going to have to fix this for GPU !!!
+#ifndef KOKKOS_ENABLE_CUDA
+  const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+
+  for(unsigned i=0; i<coordsTypes.size(); ++i) {
+    hasCoordField[coordsTypes(i)] = true;
+    numScalars += meViews[coordsTypes(i)].create_master_element_views(
+      team, dataNeeded.get_data_enums(coordsTypes(i)),
+      nDim, nodesPerFace, nodesPerElem, numFaceIp, numScsIp, numScvIp, numFemIp);
+  }
+#endif
+
+  num_bytes_required += numScalars * sizeof(T);
+}
+
+int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim);
+int get_num_scalars_pre_req_data(const ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
+int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim);
+int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
+
+void fill_pre_req_data(const ElemDataRequestsNGP& dataNeeded,
                        const stk::mesh::BulkData& bulkData,
                        stk::mesh::Entity elem,
-                       ScratchViews<double>& prereqData,
+                       ScratchViews<double,TeamHandleType,HostShmem>& prereqData,
                        bool fillMEViews = true);
 
-void fill_master_element_views(ElemDataRequestsNGP& dataNeeded,
-                               const stk::mesh::BulkData& bulkData,
-                               ScratchViews<DoubleType>& prereqData,
-                               int faceOrdinal = 0);
+KOKKOS_FUNCTION
+void fill_pre_req_data(const ElemDataRequestsGPU& dataNeeded,
+                       const ngp::Mesh& ngpMesh,
+                       stk::mesh::EntityRank entityRank,
+                       stk::mesh::Entity elem,
+                       ScratchViews<double,DeviceTeamHandleType,DeviceShmem>& prereqData,
+                       bool fillMEViews = true);
 
-template<typename T = double>
-int get_num_bytes_pre_req_data(ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim)
+template<typename ELEMDATAREQUESTSTYPE,typename SCRATCHVIEWSTYPE>
+void fill_master_element_views(ELEMDATAREQUESTSTYPE& dataNeeded,
+                               SCRATCHVIEWSTYPE& prereqData,
+                               int faceOrdinal = 0)
+{
+#ifndef KOKKOS_ENABLE_CUDA
+    MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
+    MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
+    MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
+    MasterElement *meFEM = dataNeeded.get_fem_volume_me();
+
+    const ElemDataRequestsNGP::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+    const ElemDataRequestsNGP::FieldView& coordsFields = dataNeeded.get_coordinates_fields();
+    for(unsigned i=0; i<coordsTypes.size(); ++i) {
+      auto cType = coordsTypes(i);
+      const stk::mesh::FieldBase* coordField = coordsFields(i);
+
+      const ElemDataRequestsNGP::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
+      auto* coordsView = &prereqData.get_scratch_view_2D(*coordField);
+      auto& meData = prereqData.get_me_views(cType);
+
+      meData.fill_master_element_views_new_me(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM, faceOrdinal);
+    }
+#endif
+}
+
+
+template<typename T, typename ELEMDATAREQUESTSTYPE>
+int get_num_bytes_pre_req_data(const ELEMDATAREQUESTSTYPE& dataNeededBySuppAlgs, int nDim)
 {
   return sizeof(T) * get_num_scalars_pre_req_data(dataNeededBySuppAlgs, nDim);
 }
-template<typename T = double>
-int get_num_bytes_pre_req_data(ElemDataRequestsNGP& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo)
+template<typename T, typename ELEMDATAREQUESTSTYPE>
+int get_num_bytes_pre_req_data(const ELEMDATAREQUESTSTYPE& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo)
 {
   return sizeof(T) * get_num_scalars_pre_req_data(dataNeededBySuppAlgs, nDim, meInfo);
 }
 
+template<typename ELEMDATAREQUESTSTYPE>
 inline
 int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchIdsSize, int nDim,
-                                      ElemDataRequestsNGP& dataNeededByKernels)
+                                          const ELEMDATAREQUESTSTYPE& dataNeededByKernels)
 {
     int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int) +
-                           get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim);
+                         + get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim)
+                         + MultiDimViews<double>::bytes_needed(dataNeededByKernels.get_total_num_fields(),
+                                                 count_needed_field_views(dataNeededByKernels));
+
     bytes_per_thread *= 2*simdLen;
     return bytes_per_thread;
 }
 
+template<typename ELEMDATAREQUESTSTYPE>
 inline
 int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchIdsSize, int nDim,
-                                      sierra::nalu::ElemDataRequestsNGP& faceDataNeeded,
-                                      sierra::nalu::ElemDataRequestsNGP& elemDataNeeded,
+                                      const ELEMDATAREQUESTSTYPE& faceDataNeeded,
+                                      const ELEMDATAREQUESTSTYPE& elemDataNeeded,
                                       const sierra::nalu::ScratchMeInfo &meInfo)
 {
     int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int)
                          + sierra::nalu::get_num_bytes_pre_req_data<double>(faceDataNeeded, nDim)
-                         + sierra::nalu::get_num_bytes_pre_req_data<double>(elemDataNeeded, nDim, meInfo);
+                         + sierra::nalu::get_num_bytes_pre_req_data<double>(elemDataNeeded, nDim, meInfo)
+                         + MultiDimViews<double>::bytes_needed(faceDataNeeded.get_total_num_fields(),
+                                                 count_needed_field_views(faceDataNeeded))
+                         + MultiDimViews<double>::bytes_needed(elemDataNeeded.get_total_num_fields(),
+                                                 count_needed_field_views(elemDataNeeded));
+
     bytes_per_thread *= 2*simdLen;
     return bytes_per_thread;
 }

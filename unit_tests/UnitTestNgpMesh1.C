@@ -1,17 +1,18 @@
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
-#include <stk_util/environment/WallTime.hpp>
-#include <stk_mesh/base/BulkData.hpp>
-#include <stk_mesh/base/GetEntities.hpp>
+#include "stk_util/environment/WallTime.hpp"
+#include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/GetEntities.hpp"
 
 #include "UnitTestUtils.h"
+#include "UnitTestRealm.h"
 
-#include <SimdInterface.h>
-#include <ElemDataRequests.h>
+#include "SimdInterface.h"
+#include "ElemDataRequests.h"
 
-#include <stk_ngp/Ngp.hpp>
+#include "stk_ngp/Ngp.hpp"
 
-void test_ngp_mesh_1(const stk::mesh::BulkData& bulk)
+void test_ngp_mesh_1(const stk::mesh::BulkData& bulk, ngp::Mesh& ngpMesh)
 {
   stk::topology elemTopo = stk::topology::HEX_8;
 
@@ -24,8 +25,6 @@ void test_ngp_mesh_1(const stk::mesh::BulkData& bulk)
     numStkElements += b->size();
   }
   unsigned expectedNodesPerElem = elemTopo.num_nodes();
-
-  ngp::Mesh ngpMesh(bulk);
 
   Kokkos::View<unsigned*,sierra::nalu::MemSpace> ngpResults("ngpResults", 2);
   Kokkos::View<unsigned*,sierra::nalu::MemSpace>::HostMirror hostResults = Kokkos::create_mirror_view(ngpResults);
@@ -63,11 +62,15 @@ void test_ngp_mesh_1(const stk::mesh::BulkData& bulk)
   EXPECT_EQ(numStkElements, hostResults(1));
 }
 
-TEST_F(Hex8MeshWithNSOFields, ngpMesh1)
+TEST(NgpMesh, realmNgpMesh)
 {
-  fill_mesh_and_initialize_test_fields("generated:2x2x2");
+  const std::string meshSpec("generated:2x2x2");
 
-  test_ngp_mesh_1(bulk);
+  unit_test_utils::NaluTest naluObj;
+  sierra::nalu::Realm& realm = naluObj.create_realm();
+  unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
+
+  test_ngp_mesh_1(realm.bulk_data(), realm.ngp_mesh());
 }
 
 void test_ngp_mesh_field_values(const stk::mesh::BulkData& bulk, 

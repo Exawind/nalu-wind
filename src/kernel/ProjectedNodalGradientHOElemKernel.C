@@ -79,7 +79,7 @@ ProjectedNodalGradientHOElemKernel<AlgTraits>::execute(
   tensor_assembly::green_gauss_lhs(ops_, vol, v_lhs);
 }
 
-INSTANTIATE_KERNEL_HOSGL(ProjectedNodalGradientHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(ProjectedNodalGradientHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

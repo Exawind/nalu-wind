@@ -33,20 +33,20 @@ public:
   virtual void setup() {}
 
   virtual void elem_execute(
-    double *lhs,
-    double *rhs,
-    stk::mesh::Entity element,
-    MasterElement *meSCS,
-    MasterElement *meSCV) {}
+    double * /* lhs */,
+    double * /* rhs */,
+    stk::mesh::Entity  /* element */,
+    MasterElement * /* meSCS */,
+    MasterElement * /* meSCV */) {}
   
   virtual void node_execute(
-    double *lhs,
-    double *rhs,
-    stk::mesh::Entity node) {}
+    double * /* lhs */,
+    double * /* rhs */,
+    stk::mesh::Entity  /* node */) {}
   
   virtual void elem_resize(
-    MasterElement *meSCS,
-    MasterElement *meSCV) {}
+    MasterElement * /* meSCS */,
+    MasterElement * /* meSCV */) {}
 
   Realm &realm_;  
 };

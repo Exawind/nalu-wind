@@ -21,7 +21,6 @@
 namespace sierra{
 namespace nalu{
 
-class MeshMotionInfo;
 struct FixPressureAtNodeInfo;
 
 enum ErrorIndicatorType {
@@ -34,6 +33,14 @@ enum ErrorIndicatorType {
   EIT_SIMPLE_DUDX2        = EIT_SIMPLE_BASE + (1 << 6)
 };
 
+/** Form of projection timescale used in pressure equation
+ *
+ */
+enum ProjTScaleType {
+  TSCALE_DEFAULT = 0,  //!< Original Nalu implementation
+  TSCALE_UDIAGINV = 1, //!< 1/diag(A_p) implementation
+  NUM_TSCALE_TYPES
+};
 
 class SolutionOptions
 {
@@ -71,6 +78,8 @@ public:
 
   double get_upw_factor(const std::string&) const;
 
+  double get_relaxation_factor(const std::string&) const;
+
   bool primitive_uses_limiter(const std::string&) const;
 
   bool get_shifted_grad_op(const std::string&) const;
@@ -90,6 +99,8 @@ public:
   double alphaDefault_;
   double alphaUpwDefault_;
   double upwDefault_;
+  // Relaxation factors for equations
+  double relaxFactorDefault_{1.0};
   double lamScDefault_;
   double turbScDefault_;
   double turbPrDefault_;
@@ -172,6 +183,7 @@ public:
   std::map<std::string, double> alphaMap_;
   std::map<std::string, double> alphaUpwMap_;
   std::map<std::string, double> upwMap_;
+  std::map<std::string, double> relaxFactorMap_;
   std::map<std::string, bool> limiterMap_;
   std::map<std::string, std::string> tanhFormMap_;
   std::map<std::string, double> tanhTransMap_;
@@ -203,9 +215,6 @@ public:
   // read any fields from input files
   std::map<std::string, std::string> inputVarFromFileMap_;
 
-  // mesh motion
-  std::map<std::string, MeshMotionInfo *> meshMotionInfoMap_;
-
   std::vector<double> gravity_;
 
   // Coriolis source term
@@ -216,6 +225,8 @@ public:
   bool needPressureReference_{false};
 
   std::unique_ptr<FixPressureAtNodeInfo> fixPressureInfo_;
+
+  ProjTScaleType tscaleType_{TSCALE_DEFAULT};
 
   std::string name_;
 

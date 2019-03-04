@@ -82,7 +82,7 @@ TGMMSHOElemKernel<AlgTraits>::execute(
   ops_.volume(sourceVec, v_rhs);
 }
 
-INSTANTIATE_KERNEL_HOSGL(TGMMSHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(TGMMSHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

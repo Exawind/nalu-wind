@@ -92,7 +92,7 @@ MomentumBuoyancySrcElemSuppAlgDep::setup()
 //--------------------------------------------------------------------------
 void
 MomentumBuoyancySrcElemSuppAlgDep::elem_execute(
-  double *lhs,
+  double * /* lhs */,
   double *rhs,
   stk::mesh::Entity element,
   MasterElement */*meSCS*/,

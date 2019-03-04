@@ -177,7 +177,6 @@ public:
 
   const int* side_node_ordinals(int sideOrdinal) final;
 
-
 private:
   void set_interior_info();
   void set_boundary_info();

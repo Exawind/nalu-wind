@@ -6,7 +6,8 @@
 /*------------------------------------------------------------------------*/
 
 /** @file ActuatorLineFAST.h
- *  @brief A class to couple Nalu with OpenFAST for actuator line simulations of wind turbines
+ *  @brief A class to couple Nalu with OpenFAST for actuator line simulations of
+ * wind turbines
  *
  */
 
@@ -14,16 +15,17 @@
 #define ActuatorLineFAST_h
 
 #include <stk_util/parallel/ParallelVectorConcat.hpp>
-#include "Actuator.h"
+#include "ActuatorFAST.h"
 
 // OpenFAST C++ API
 #include "OpenFAST.H"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 class Realm;
 
+<<<<<<< HEAD
 /** Class that holds all of the information relevant to each turbine
  *
  *
@@ -182,19 +184,28 @@ public:
   // bounding box data types for stk_search
   std::vector<boundingSphere> boundingHubSphereVec_; ///< bounding box around the hub point of each turbine
   std::vector<boundingElementBox> boundingProcBoxVec_; ///< bounding box around all the nodes residing locally on each processor
+=======
+class ActuatorLineFAST : public ActuatorFAST
+{
+public:
+  ActuatorLineFAST(Realm& realm, const YAML::Node& node);
+  ~ActuatorLineFAST() = default;
+>>>>>>> upstream/master
 
   std::string get_class_name() override;
 
-  fast::fastInputs fi; ///< Object to hold input information for OpenFAST
-  fast::OpenFAST FAST; ///< OpenFAST C++ API handle
+  void update_class_specific() override;
 
-  std::vector<std::vector<double>> thrust;
-  std::vector<std::vector<double>> torque;
+  void execute_class_specific(
+    const int nDim,
+    const stk::mesh::FieldBase* coordinates,
+    stk::mesh::FieldBase* actuator_source,
+    const stk::mesh::FieldBase* dual_nodal_volume) override;
 
+  void create_point_info_map_class_specific() override;
 };
 
-
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
 
 #endif

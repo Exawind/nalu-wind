@@ -28,6 +28,7 @@
 #include <TurbKineticEnergyEquationSystem.h>
 #include <pmr/RadiativeTransportEquationSystem.h>
 #include <mesh_motion/MeshDisplacementEquationSystem.h>
+#include "WallDistEquationSystem.h"
 
 #include <vector>
 
@@ -171,6 +172,10 @@ void EquationSystems::load(const YAML::Node & y_node)
           get_if_present_no_default(y_eqsys, "deform_wrt_model_coordinates", deformWrtModelCoords);
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = MeshDisplacement " << std::endl;
           eqSys = new MeshDisplacementEquationSystem(*this, activateMass, deformWrtModelCoords);
+        }
+        else if (expect_map(y_system, "WallDistance", true)) {
+          y_eqsys = expect_map(y_system, "WallDistance", true);
+          eqSys = new WallDistEquationSystem(*this);
         }
         else {
           if (!NaluEnv::self().parallel_rank()) {

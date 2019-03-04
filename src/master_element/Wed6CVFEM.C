@@ -61,7 +61,7 @@ void wed_deriv(
 WedSCV::WedSCV()
   : MasterElement()
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 6;
   numIntPoints_ = 6;
 
@@ -327,7 +327,7 @@ void WedSCV::Mij(
 WedSCS::WedSCS()
   : MasterElement()
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 6;
   numIntPoints_ = 9;
 
@@ -439,14 +439,6 @@ WedSCS::WedSCS()
   ipNodeMap_[12] = 0; ipNodeMap_[13] = 2; ipNodeMap_[14] = 1; ipNodeMap_[15] = 0; //empty
   // face 4;
   ipNodeMap_[16] = 3; ipNodeMap_[17] = 4; ipNodeMap_[18] = 5; ipNodeMap_[19] = 0; // empty
-
-  sideNodeOrdinals_ = {
-      0, 1, 4, 3, // ordinal 0
-      1, 2, 5, 4, // ordinal 1
-      0, 3, 5, 2, // ordinal 2
-      0, 2, 1,    // ordinal 3
-      3, 4, 5     // ordinal 4
-  };
 
   // ordinal to vector offset map.  Really only convenient for the wedge.
   sideOffset_ = { 0, 4, 8, 12, 15};
@@ -1216,7 +1208,7 @@ WedSCS::parametric_distance(const std::vector<double> &x)
 //--------------------------------------------------------------------------
 void
 WedSCS::general_face_grad_op(
-  const int face_ordinal,
+  const int  /* face_ordinal */,
   const double *isoParCoord,
   const double *coords,
   double *gradop,

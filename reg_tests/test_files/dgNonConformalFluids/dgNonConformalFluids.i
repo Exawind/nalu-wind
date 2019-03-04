@@ -8,7 +8,7 @@ linear_solvers:
   - name: solve_scalar
     type: tpetra
     method: gmres
-    preconditioner: sgs 
+    preconditioner: sgs
     tolerance: 1e-5
     max_iterations: 50
     kspace: 50
@@ -16,8 +16,8 @@ linear_solvers:
 
   - name: solve_cont
     type: tpetra
-    method: gmres 
-    preconditioner: muelu 
+    method: gmres
+    preconditioner: muelu
     tolerance: 1e-5
     max_iterations: 50
     kspace: 50
@@ -28,13 +28,13 @@ realms:
 
   - name: realm_1
     mesh: ../../mesh/NACA.g
-    use_edges: no  
-    check_for_missing_bcs: no     
+    use_edges: no
+    check_for_missing_bcs: no
 
     equation_systems:
       name: theEqSys
-      max_iterations: 2 
-   
+      max_iterations: 2
+
       solver_system_specification:
         pressure: solve_cont
         velocity: solve_scalar
@@ -97,13 +97,13 @@ realms:
       current_target_name: surface_5
       opposing_target_name: surface_6
       non_conformal_user_data:
-        expand_box_percentage: 50.0 
+        expand_box_percentage: 50.0
 
     - non_conformal_boundary_condition: bc_out_in
       current_target_name: surface_6
       opposing_target_name: surface_5
       non_conformal_user_data:
-        expand_box_percentage: 50.0 
+        expand_box_percentage: 50.0
 
     - wall_boundary_condition: bc_wing
       target_name: surface_7
@@ -111,17 +111,16 @@ realms:
         velocity: [0.0,0.0]
         mixture_fraction: 0.0
 
+    mesh_motion:
+    - name: mmOne
+      mesh_parts: [block_1]
+      frame: non_inertial
+      motion:
+       - type: rotation
+         omega: 1.0
+             
     solution_options:
       name: myOptions
-
-      mesh_motion:
-        - name: mmOne
-          target_name: [block_1]
-          omega: 1.0
-
-        - name: mmTwo
-          target_name: [block_2]
-          omega: 0.0
 
       options:
         - hybrid_factor:
@@ -134,19 +133,19 @@ realms:
     output:
       output_data_base_name: output.e
       output_frequency: 10
-      output_node_set: no 
+      output_node_set: no
       output_variables:
        - dual_nodal_volume
        - velocity
        - pressure
        - mixture_fraction
        - mesh_displacement
-        
+
 Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
-      termination_step_count: 100 
+      termination_step_count: 100
       time_step: 0.0050
       time_stepping_type: fixed
       time_step_count: 0

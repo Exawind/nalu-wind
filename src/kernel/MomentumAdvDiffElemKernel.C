@@ -13,6 +13,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -31,17 +32,15 @@ MomentumAdvDiffElemKernel<AlgTraits>::MomentumAdvDiffElemKernel(
   ScalarFieldType* viscosity,
   ElemDataRequests& dataPreReqs)
   : Kernel(),
-    viscosity_(viscosity),
+    viscosity_(viscosity->mesh_meta_data_ordinal()),
     lrscv_(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_)->adjacentNodes()),
     includeDivU_(solnOpts.includeDivU_),
     shiftedGradOp_(solnOpts.get_shifted_grad_op(velocity->name()))
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  velocityNp1_ = &(velocity->field_of_state(stk::mesh::StateNP1));
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
-  massFlowRate_ = metaData.get_field<GenericFieldType>(
-    stk::topology::ELEMENT_RANK, "mass_flow_rate_scs");
+  velocityNp1_ = velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+  massFlowRate_ = get_field_ordinal(metaData, "mass_flow_rate_scs", stk::topology::ELEM_RANK);
 
   MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
 
@@ -54,10 +53,10 @@ MomentumAdvDiffElemKernel<AlgTraits>::MomentumAdvDiffElemKernel(
   dataPreReqs.add_cvfem_surface_me(meSCS);
 
   // fields and data; mdot not gathered as element data
-  dataPreReqs.add_coordinates_field(*coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*velocityNp1_, AlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*viscosity_, 1);
-  dataPreReqs.add_element_field(*massFlowRate_, AlgTraits::numScsIp_);
+  dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(velocityNp1_, AlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(viscosity_, 1);
+  dataPreReqs.add_element_field(massFlowRate_, AlgTraits::numScsIp_);
   dataPreReqs.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
   if ( shiftedGradOp_ )
     dataPreReqs.add_master_element_call(SCS_SHIFTED_GRAD_OP, CURRENT_COORDINATES);
@@ -78,9 +77,9 @@ MomentumAdvDiffElemKernel<AlgTraits>::execute(
 {
   NALU_ALIGNED DoubleType w_uIp[AlgTraits::nDim_];
 
-  SharedMemView<DoubleType**>& v_uNp1 = scratchViews.get_scratch_view_2D(*velocityNp1_);
-  SharedMemView<DoubleType*>& v_viscosity = scratchViews.get_scratch_view_1D(*viscosity_);
-  SharedMemView<DoubleType*>& v_mdot = scratchViews.get_scratch_view_1D(*massFlowRate_);
+  SharedMemView<DoubleType**>& v_uNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
+  SharedMemView<DoubleType*>& v_viscosity = scratchViews.get_scratch_view_1D(viscosity_);
+  SharedMemView<DoubleType*>& v_mdot = scratchViews.get_scratch_view_1D(massFlowRate_);
 
   SharedMemView<DoubleType**>& v_scs_areav = scratchViews.get_me_views(CURRENT_COORDINATES).scs_areav;
   SharedMemView<DoubleType***>& v_dndx = shiftedGradOp_
@@ -187,7 +186,7 @@ MomentumAdvDiffElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumAdvDiffElemKernel);
+INSTANTIATE_KERNEL(MomentumAdvDiffElemKernel)
 
 }  // nalu
 }  // sierra

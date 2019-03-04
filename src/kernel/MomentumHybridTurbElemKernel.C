@@ -14,6 +14,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -37,19 +38,13 @@ MomentumHybridTurbElemKernel<AlgTraits>::MomentumHybridTurbElemKernel(
     shiftedGradOp_(solnOpts.get_shifted_grad_op("velocity"))
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  velocityNp1_ =
-    metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-  densityNp1_ =
-    metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  tkeNp1_ = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "turbulent_ke");
-  alphaNp1_ = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "adaptivity_parameter");
-  mutij_ = metaData.get_field<GenericFieldType>(
-    stk::topology::NODE_RANK, "tensor_turbulent_viscosity");
+  velocityNp1_ = get_field_ordinal(metaData, "velocity");
+  densityNp1_ = get_field_ordinal(metaData, "density");
+  tkeNp1_ = get_field_ordinal(metaData, "turbulent_ke");
+  alphaNp1_ = get_field_ordinal(metaData, "adaptivity_parameter");
+  mutij_ = get_field_ordinal(metaData, "tensor_turbulent_viscosity");
 
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
   MasterElement* meSCS =
     sierra::nalu::MasterElementRepo::get_surface_master_element(
@@ -62,13 +57,13 @@ MomentumHybridTurbElemKernel<AlgTraits>::MomentumHybridTurbElemKernel(
 
   // fields
   dataPreReqs.add_coordinates_field(
-    *coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*velocityNp1_, AlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*densityNp1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*tkeNp1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*alphaNp1_, 1);
+    coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(velocityNp1_, AlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(densityNp1_, 1);
+  dataPreReqs.add_gathered_nodal_field(tkeNp1_, 1);
+  dataPreReqs.add_gathered_nodal_field(alphaNp1_, 1);
   dataPreReqs.add_gathered_nodal_field(
-    *mutij_, AlgTraits::nDim_, AlgTraits::nDim_);
+    mutij_, AlgTraits::nDim_, AlgTraits::nDim_);
 
   // master element data
   dataPreReqs.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
@@ -89,15 +84,15 @@ MomentumHybridTurbElemKernel<AlgTraits>::execute(
   NALU_ALIGNED DoubleType w_mutijScs[AlgTraits::nDim_ * AlgTraits::nDim_];
 
   SharedMemView<DoubleType**>& v_uNp1 =
-    scratchViews.get_scratch_view_2D(*velocityNp1_);
+    scratchViews.get_scratch_view_2D(velocityNp1_);
   SharedMemView<DoubleType*>& v_rhoNp1 =
-    scratchViews.get_scratch_view_1D(*densityNp1_);
+    scratchViews.get_scratch_view_1D(densityNp1_);
   SharedMemView<DoubleType*>& v_tkeNp1 =
-    scratchViews.get_scratch_view_1D(*tkeNp1_);
+    scratchViews.get_scratch_view_1D(tkeNp1_);
   SharedMemView<DoubleType*>& v_alphaNp1 =
-    scratchViews.get_scratch_view_1D(*alphaNp1_);
+    scratchViews.get_scratch_view_1D(alphaNp1_);
   SharedMemView<DoubleType***>& v_mutij =
-    scratchViews.get_scratch_view_3D(*mutij_);
+    scratchViews.get_scratch_view_3D(mutij_);
 
   SharedMemView<DoubleType**>& v_scs_areav =
     scratchViews.get_me_views(CURRENT_COORDINATES).scs_areav;
@@ -203,7 +198,7 @@ MomentumHybridTurbElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumHybridTurbElemKernel);
+INSTANTIATE_KERNEL(MomentumHybridTurbElemKernel)
 
 } // namespace nalu
 } // namespace sierra

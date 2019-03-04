@@ -238,7 +238,7 @@ MomentumNSOKeElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumNSOKeElemKernel);
+INSTANTIATE_KERNEL(MomentumNSOKeElemKernel)
 
 }  // nalu
 }  // sierra

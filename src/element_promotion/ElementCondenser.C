@@ -150,7 +150,7 @@ ElementCondenser::condense(
 //--------------------------------------------------------------------------
 void ElementCondenser::compute_interior_update(
   double* lhs, const double* rhs,
-  const double* boundary_values, double* delta_interior_values)
+  const double* /* boundary_values */, double* delta_interior_values)
 {
   // Computes an update to the interior values given the updated rhs vector
   // and the elemental linear system

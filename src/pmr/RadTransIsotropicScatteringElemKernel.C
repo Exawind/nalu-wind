@@ -61,7 +61,7 @@ RadTransIsotropicScatteringElemKernel<AlgTraits>::~RadTransIsotropicScatteringEl
 template<typename AlgTraits>
 void
 RadTransIsotropicScatteringElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType **>&lhs,
+  SharedMemView<DoubleType **>& /* lhs */,
   SharedMemView<DoubleType *>&rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
@@ -88,7 +88,7 @@ RadTransIsotropicScatteringElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(RadTransIsotropicScatteringElemKernel);
+INSTANTIATE_KERNEL(RadTransIsotropicScatteringElemKernel)
 
 }  // nalu
 }  // sierra

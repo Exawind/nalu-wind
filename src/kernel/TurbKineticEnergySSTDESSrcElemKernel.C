@@ -11,6 +11,7 @@
 
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -40,26 +41,15 @@ TurbKineticEnergySSTDESSrcElemKernel<AlgTraits>::
                  ->ipNodeMap())
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  ScalarFieldType* tke = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "turbulent_ke");
-  tkeNp1_ = &tke->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType* sdr = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "specific_dissipation_rate");
-  sdrNp1_ = &sdr->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType* density =
-    metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  densityNp1_ = &density->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType* velocity =
-    metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-  velocityNp1_ = &(velocity->field_of_state(stk::mesh::StateNP1));
-  tvisc_ = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "turbulent_viscosity");
-  maxLengthScale_ = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "sst_max_length_scale");
-  fOneBlend_ = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "sst_f_one_blending");
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
+  tkeNp1_ = get_field_ordinal(metaData, "turbulent_ke", stk::mesh::StateNP1);
+  sdrNp1_ = get_field_ordinal(metaData, "specific_dissipation_rate", stk::mesh::StateNP1);
+  densityNp1_ = get_field_ordinal(metaData, "density", stk::mesh::StateNP1);
+  velocityNp1_ = get_field_ordinal(metaData, "velocity", stk::mesh::StateNP1);
+  tvisc_ = get_field_ordinal(metaData, "turbulent_viscosity");
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+  maxLengthScale_ = get_field_ordinal(metaData, "sst_max_length_scale");
+  fOneBlend_ = get_field_ordinal(metaData, "sst_f_one_blending");
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
   MasterElement* meSCV =
     sierra::nalu::MasterElementRepo::get_volume_master_element(
@@ -78,14 +68,14 @@ TurbKineticEnergySSTDESSrcElemKernel<AlgTraits>::
 
   // fields and data
   dataPreReqs.add_coordinates_field(
-    *coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*tkeNp1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*sdrNp1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*densityNp1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*velocityNp1_, AlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*tvisc_, 1);
-  dataPreReqs.add_gathered_nodal_field(*maxLengthScale_, 1);
-  dataPreReqs.add_gathered_nodal_field(*fOneBlend_, 1);
+    coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(tkeNp1_, 1);
+  dataPreReqs.add_gathered_nodal_field(sdrNp1_, 1);
+  dataPreReqs.add_gathered_nodal_field(densityNp1_, 1);
+  dataPreReqs.add_gathered_nodal_field(velocityNp1_, AlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(tvisc_, 1);
+  dataPreReqs.add_gathered_nodal_field(maxLengthScale_, 1);
+  dataPreReqs.add_gathered_nodal_field(fOneBlend_, 1);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
   if (shiftedGradOp_)
     dataPreReqs.add_master_element_call(
@@ -110,19 +100,19 @@ TurbKineticEnergySSTDESSrcElemKernel<AlgTraits>::execute(
   NALU_ALIGNED DoubleType w_dudx[AlgTraits::nDim_][AlgTraits::nDim_];
 
   SharedMemView<DoubleType*>& v_tkeNp1 =
-    scratchViews.get_scratch_view_1D(*tkeNp1_);
+    scratchViews.get_scratch_view_1D(tkeNp1_);
   SharedMemView<DoubleType*>& v_sdrNp1 =
-    scratchViews.get_scratch_view_1D(*sdrNp1_);
+    scratchViews.get_scratch_view_1D(sdrNp1_);
   SharedMemView<DoubleType*>& v_densityNp1 =
-    scratchViews.get_scratch_view_1D(*densityNp1_);
+    scratchViews.get_scratch_view_1D(densityNp1_);
   SharedMemView<DoubleType**>& v_velocityNp1 =
-    scratchViews.get_scratch_view_2D(*velocityNp1_);
+    scratchViews.get_scratch_view_2D(velocityNp1_);
   SharedMemView<DoubleType*>& v_tvisc =
-    scratchViews.get_scratch_view_1D(*tvisc_);
+    scratchViews.get_scratch_view_1D(tvisc_);
   SharedMemView<DoubleType*>& v_maxLengthScale =
-    scratchViews.get_scratch_view_1D(*maxLengthScale_);
+    scratchViews.get_scratch_view_1D(maxLengthScale_);
   SharedMemView<DoubleType*>& v_fOneBlend =
-    scratchViews.get_scratch_view_1D(*fOneBlend_);
+    scratchViews.get_scratch_view_1D(fOneBlend_);
   SharedMemView<DoubleType***>& v_dndx =
     shiftedGradOp_
       ? scratchViews.get_me_views(CURRENT_COORDINATES).dndx_scv_shifted
@@ -199,7 +189,7 @@ TurbKineticEnergySSTDESSrcElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(TurbKineticEnergySSTDESSrcElemKernel);
+INSTANTIATE_KERNEL(TurbKineticEnergySSTDESSrcElemKernel)
 
 } // namespace nalu
 } // namespace sierra

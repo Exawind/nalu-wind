@@ -16,8 +16,20 @@ T* create_device_expression(const T & rhs)
   T* t = kokkos_malloc_on_device<T>(debuggingName);
   // Bring rhs into local scope for capture to device.
   const T RHS(rhs);
-  kokkos_parallel_for(debuggingName, 1, [&] (const int i) {
+  kokkos_parallel_for(debuggingName, 1, [&] (const int /* i */) {
     new (t) T(RHS); 
+  });
+  return t;
+}
+
+template <typename T>
+inline 
+T* create_device_expression()
+{
+  const std::string debuggingName(typeid(T).name());
+  T* t = kokkos_malloc_on_device<T>(debuggingName);
+  kokkos_parallel_for(debuggingName, 1, [&] (const int /* i */) {
+    new (t) T(); 
   });
   return t;
 }

@@ -31,7 +31,7 @@ BoussinesqNonIsoVelocityAuxFunction::BoussinesqNonIsoVelocityAuxFunction(
 void
 BoussinesqNonIsoVelocityAuxFunction::do_evaluate(
   const double *coords,
-  const double t,
+  const double /* t */,
   const unsigned /*spatialDimension*/,
   const unsigned numPoints,
   double * fieldPtr,

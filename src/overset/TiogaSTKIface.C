@@ -19,7 +19,7 @@
 #include "master_element/MasterElement.h"
 #include "stk_util/parallel/ParallelReduce.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
-#include <stk_mesh/base/SkinBoundary.hpp>
+#include "stk_mesh/base/SkinBoundary.hpp"
 
 
 #include <iostream>
@@ -37,7 +37,7 @@ TiogaSTKIface::TiogaSTKIface(
 ) : oversetManager_(oversetManager),
     meta_(*oversetManager.metaData_),
     bulk_(*oversetManager.bulkData_),
-    tg_(new tioga()),
+    tg_(new TIOGA::tioga()),
     inactivePartName_("nalu_overset_hole_elements")
 {
   load(node);
@@ -75,12 +75,14 @@ void TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
     tb->setup(bcPartVec);
   }
 
-  // Initialize the inactive part
-  oversetManager_.inActivePart_ = &meta_.declare_part(
-    inactivePartName_, stk::topology::ELEM_RANK);
+  if (populateInactivePart_) {
+    // Initialize the inactive part
+    oversetManager_.inActivePart_ = &meta_.declare_part(
+      inactivePartName_, stk::topology::ELEM_RANK);
 
-  oversetManager_.backgroundSurfacePart_ = &meta_.declare_part(
-    "nalu_overset_fringe_boundary", stk::topology::ELEM_RANK);
+    oversetManager_.backgroundSurfacePart_ = &meta_.declare_part(
+      "nalu_overset_fringe_boundary", stk::topology::ELEM_RANK);
+  }
 }
 
 void TiogaSTKIface::initialize()
@@ -95,8 +97,6 @@ void TiogaSTKIface::initialize()
     << "TIOGA: Initializing overset mesh blocks: " << std::endl;
   for (auto& tb: blocks_) {
     tb->initialize();
-    sierra::nalu::NaluEnv::self().naluOutputP0()
-      << "\t" << tb->block_name() << std::endl;
   }
   sierra::nalu::NaluEnv::self().naluOutputP0()
     << "TIOGA: Initialized " << blocks_.size() << " overset blocks" << std::endl;
@@ -120,8 +120,6 @@ void TiogaSTKIface::initialize_ghosting()
 void TiogaSTKIface::execute()
 {
   reset_data_structures();
-
-  initialize_ghosting();
 
   // Update the coordinates for TIOGA and register updates to the TIOGA mesh block.
   for (auto& tb: blocks_) {
@@ -151,8 +149,6 @@ void TiogaSTKIface::execute()
 
   get_receptor_info();
 
-  // TODO: Combine bulk modification for ghosting and inactive part population
-
   // Collect all elements to be ghosted and update ghosting so that the elements
   // are available when generating {fringeNode, donorElement} pairs in the next
   // step.
@@ -167,8 +163,8 @@ void TiogaSTKIface::execute()
 void TiogaSTKIface::reset_data_structures()
 {
   // Reset inactivePart_
-  bulk_.modification_begin();
-  {
+  if (populateInactivePart_) {
+    bulk_.modification_begin();
     stk::mesh::Part* inactivePart = oversetManager_.inActivePart_;
     stk::mesh::PartVector add_parts;
     stk::mesh::PartVector remove_parts;
@@ -182,8 +178,8 @@ void TiogaSTKIface::reset_data_structures()
     for (auto elem: fringeElems_) {
       bulk_.change_entity_parts(elem, add_parts, fringe_remove_parts);
     }
+    bulk_.modification_end();
   }
-  bulk_.modification_end();
 
   holeElems_.clear();
   fringeElems_.clear();
@@ -195,24 +191,46 @@ void TiogaSTKIface::reset_data_structures()
 
 void TiogaSTKIface::update_ghosting()
 {
-  uint64_t g_ghostCount = 0;
-  uint64_t nGhostLocal = elemsToGhost_.size();
-  stk::all_reduce_sum(bulk_.parallel(), &nGhostLocal, &g_ghostCount, 1);
+  stk::mesh::Ghosting* ovsetGhosting = oversetManager_.oversetGhosting_;
+  std::vector<stk::mesh::EntityKey> recvGhostsToRemove;
 
-  if (g_ghostCount > 0) {
+  if (ovsetGhosting != nullptr) {
+    stk::mesh::EntityProcVec currentSendGhosts;
+    ovsetGhosting->send_list(currentSendGhosts);
+
+    sierra::nalu::compute_precise_ghosting_lists(
+      bulk_, elemsToGhost_, currentSendGhosts, recvGhostsToRemove);
+  }
+
+  size_t local[2] = {elemsToGhost_.size(), recvGhostsToRemove.size()};
+  size_t global[2] = {0, 0};
+  stk::all_reduce_sum(bulk_.parallel(), local, global, 2);
+
+  if ((global[0] > 0) || (global[1] > 0)) {
     bulk_.modification_begin();
+    if (ovsetGhosting == nullptr) {
+      const std::string ghostName = "nalu_overset_ghosting";
+      oversetManager_.oversetGhosting_ = &(bulk_.create_ghosting(ghostName));
+    }
     bulk_.change_ghosting(
-      *(oversetManager_.oversetGhosting_), elemsToGhost_);
+      *(oversetManager_.oversetGhosting_), elemsToGhost_, recvGhostsToRemove);
     bulk_.modification_end();
 
-    sierra::nalu::populate_ghost_comm_procs(bulk_, *oversetManager_.oversetGhosting_, oversetManager_.ghostCommProcs_);
+    sierra::nalu::populate_ghost_comm_procs(
+      bulk_, *(oversetManager_.oversetGhosting_), oversetManager_.ghostCommProcs_);
 
 #if 1
     sierra::nalu::NaluEnv::self().naluOutputP0()
-      << "TIOGA: Overset algorithm will ghost " << g_ghostCount << " entities"
+      << "TIOGA: Overset algorithm will ghost " << global[0] << " elements"
       << std::endl;
 #endif
   }
+#if 1
+  else {
+    sierra::nalu::NaluEnv::self().naluOutputP0()
+      << "TIOGA: Overset ghosting unchanged for this timestep" << std::endl;
+  }
+#endif
 }
 
 void TiogaSTKIface::populate_inactive_part()
@@ -405,14 +423,27 @@ TiogaSTKIface::get_receptor_info()
   // TIOGA returns a integer array that contains 3 entries per receptor node:
   //   - the local node index within the tioga mesh data array
   //   - the local mesh tag (block index) for that mesh during registration
-  //   - the STK global ID for the donor element
+  //   - the STK global ID for the donor element (can be 8-byte or 4-byte)
   //
   size_t ncount = receptors.size();
-  for (size_t i=0; i<ncount; i+=3) {
+  stk::mesh::EntityId  donorID = std::numeric_limits<stk::mesh::EntityId>::max();
+#ifdef TIOGA_HAS_UINT64T
+  // The donor ID is stored in 2 4-byte integer entries (2 + 2 = 4). See above
+  // for description on what is returned for each receptor node.
+  const int rec_offset = 4;
+#else
+  // The donor ID is stored in a single 4-byte integer entry (2 + 1 = 3)
+  const int rec_offset = 3;
+#endif
+  for (size_t i=0; i<ncount; i+=rec_offset) {
     int nid = receptors[i];                          // TiogaBlock node index
     int mtag = receptors[i+1] - 1;                   // Block index
-    int donorID = receptors[i+2];                    // STK Global ID of the donor element
-    int nodeID = blocks_[mtag]->node_id_map()[nid];  // STK Global ID of the fringe node
+#ifdef TIOGA_HAS_UINT64T
+    std::memcpy(&donorID, &receptors[i+2], sizeof(uint64_t));
+#else
+    donorID = receptors[i+2];                    // STK Global ID of the donor element
+#endif
+    auto nodeID = blocks_[mtag]->node_id_map()[nid]; // STK Global ID of the fringe node
     stk::mesh::Entity node = bulk_.get_entity(stk::topology::NODE_RANK, nodeID);
 
     if (!bulk_.bucket(node).owned()) {

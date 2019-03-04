@@ -20,91 +20,18 @@
 namespace sierra{
 namespace nalu{
 
-//-------- hex8_derivative -------------------------------------------------
-template <typename DerivType>
-void hex8_derivative(
-  const int npts,
-  const double *intgLoc,
-  DerivType &deriv)
-{
-  const DoubleType half = 0.50;
-  const DoubleType one4th = 0.25;
-  for (int  ip = 0; ip < npts; ++ip) {
-    const DoubleType s1 = intgLoc[ip*3];
-    const DoubleType s2 = intgLoc[ip*3+1];
-    const DoubleType s3 = intgLoc[ip*3+2];
-    const DoubleType s1s2 = s1*s2;
-    const DoubleType s2s3 = s2*s3;
-    const DoubleType s1s3 = s1*s3;
-
-    // shape function derivative in the s1 direction -
-    deriv(ip,0,0) = half*( s3 + s2 ) - s2s3 - one4th;
-    deriv(ip,1,0) = half*(-s3 - s2 ) + s2s3 + one4th;
-    deriv(ip,2,0) = half*(-s3 + s2 ) - s2s3 + one4th;
-    deriv(ip,3,0) = half*( s3 - s2 ) + s2s3 - one4th;
-    deriv(ip,4,0) = half*(-s3 + s2 ) + s2s3 - one4th;
-    deriv(ip,5,0) = half*( s3 - s2 ) - s2s3 + one4th;
-    deriv(ip,6,0) = half*( s3 + s2 ) + s2s3 + one4th;
-    deriv(ip,7,0) = half*(-s3 - s2 ) - s2s3 - one4th;
-
-    // shape function derivative in the s2 direction -
-    deriv(ip,0,1) = half*( s3 + s1 ) - s1s3 - one4th;
-    deriv(ip,1,1) = half*( s3 - s1 ) + s1s3 - one4th;
-    deriv(ip,2,1) = half*(-s3 + s1 ) - s1s3 + one4th;
-    deriv(ip,3,1) = half*(-s3 - s1 ) + s1s3 + one4th;
-    deriv(ip,4,1) = half*(-s3 + s1 ) + s1s3 - one4th;
-    deriv(ip,5,1) = half*(-s3 - s1 ) - s1s3 - one4th;
-    deriv(ip,6,1) = half*( s3 + s1 ) + s1s3 + one4th;
-    deriv(ip,7,1) = half*( s3 - s1 ) - s1s3 + one4th;
-
-    // shape function derivative in the s3 direction -
-    deriv(ip,0,2) = half*( s2 + s1 ) - s1s2 - one4th;
-    deriv(ip,1,2) = half*( s2 - s1 ) + s1s2 - one4th;
-    deriv(ip,2,2) = half*(-s2 - s1 ) - s1s2 - one4th;
-    deriv(ip,3,2) = half*(-s2 + s1 ) + s1s2 - one4th;
-    deriv(ip,4,2) = half*(-s2 - s1 ) + s1s2 + one4th;
-    deriv(ip,5,2) = half*(-s2 + s1 ) - s1s2 + one4th;
-    deriv(ip,6,2) = half*( s2 + s1 ) + s1s2 + one4th;
-    deriv(ip,7,2) = half*( s2 - s1 ) - s1s2 + one4th;
-  }
-}
-
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 HexSCV::HexSCV()
   : MasterElement()
 {
-  nDim_ = 3;
-  nodesPerElement_ = 8;
-  numIntPoints_ = 8;
-
-  // define ip node mappings
-  ipNodeMap_.resize(8);
-  ipNodeMap_[0] = 0; ipNodeMap_[1] = 1; ipNodeMap_[2] = 2; ipNodeMap_[3] = 3;
-  ipNodeMap_[4] = 4; ipNodeMap_[5] = 5; ipNodeMap_[6] = 6; ipNodeMap_[7] = 7;
-
-  // standard integration location
-  intgLoc_.resize(24);
-  intgLoc_[0]  = -0.25; intgLoc_[1]  = -0.25; intgLoc_[2]  = -0.25;
-  intgLoc_[3]  = +0.25; intgLoc_[4]  = -0.25; intgLoc_[5]  = -0.25;
-  intgLoc_[6]  = +0.25; intgLoc_[7]  = +0.25; intgLoc_[8]  = -0.25;
-  intgLoc_[9]  = -0.25; intgLoc_[10] = +0.25; intgLoc_[11] = -0.25;
-  intgLoc_[12] = -0.25; intgLoc_[13] = -0.25; intgLoc_[14] = +0.25;
-  intgLoc_[15] = +0.25; intgLoc_[16] = -0.25; intgLoc_[17] = +0.25;
-  intgLoc_[18] = +0.25; intgLoc_[19] = +0.25; intgLoc_[20] = +0.25;
-  intgLoc_[21] = -0.25; intgLoc_[22] = +0.25; intgLoc_[23] = +0.25;
-
-  // shifted integration location
-  intgLocShift_.resize(24);
-  intgLocShift_[0]  = -0.5; intgLocShift_[1]  = -0.5; intgLocShift_[2]  = -0.5;
-  intgLocShift_[3]  = +0.5; intgLocShift_[4]  = -0.5; intgLocShift_[5]  = -0.5;
-  intgLocShift_[6]  = +0.5; intgLocShift_[7]  = +0.5; intgLocShift_[8]  = -0.5;
-  intgLocShift_[9]  = -0.5; intgLocShift_[10] = +0.5; intgLocShift_[11] = -0.5;
-  intgLocShift_[12] = -0.5; intgLocShift_[13] = -0.5; intgLocShift_[14] = +0.5;
-  intgLocShift_[15] = +0.5; intgLocShift_[16] = -0.5; intgLocShift_[17] = +0.5;
-  intgLocShift_[18] = +0.5; intgLocShift_[19] = +0.5; intgLocShift_[20] = +0.5;
-  intgLocShift_[21] = -0.5; intgLocShift_[22] = +0.5; intgLocShift_[23] = +0.5;
+  MasterElement::ipNodeMap_       .assign(ipNodeMap_,        8+ipNodeMap_);
+  MasterElement::intgLoc_         .assign(intgLoc_,         24+intgLoc_);
+  MasterElement::intgLocShift_    .assign(intgLocShift_,    24+intgLocShift_);
+  MasterElement::nDim_                  = nDim_;
+  MasterElement::nodesPerElement_       = nodesPerElement_;
+  MasterElement::numIntPoints_          = numIntPoints_;
 }
 
 //--------------------------------------------------------------------------
@@ -272,194 +199,25 @@ void HexSCV::Mij(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-HexSCS::HexSCS()
-  : MasterElement()
-{
-  nDim_ = 3;
-  nodesPerElement_ = 8;
-  numIntPoints_ = 12;
-  scaleToStandardIsoFac_ = 2.0;
-
-  // define L/R mappings
-  lrscv_.resize(24);
-  lrscv_[0]  = 0; lrscv_[1]  = 1;
-  lrscv_[2]  = 1; lrscv_[3]  = 2;
-  lrscv_[4]  = 2; lrscv_[5]  = 3;
-  lrscv_[6]  = 0; lrscv_[7]  = 3;
-  lrscv_[8]  = 4; lrscv_[9]  = 5;
-  lrscv_[10] = 5; lrscv_[11] = 6;
-  lrscv_[12] = 6; lrscv_[13] = 7;
-  lrscv_[14] = 4; lrscv_[15] = 7;
-  lrscv_[16] = 0; lrscv_[17] = 4;
-  lrscv_[18] = 1; lrscv_[19] = 5;
-  lrscv_[20] = 2; lrscv_[21] = 6;
-  lrscv_[22] = 3; lrscv_[23] = 7;
-
-  // elem-edge mapping from ip
-  scsIpEdgeOrd_.resize(numIntPoints_);
-  scsIpEdgeOrd_[0]  = 0;  scsIpEdgeOrd_[1]  = 1; 
-  scsIpEdgeOrd_[2]  = 2;  scsIpEdgeOrd_[3]  = 3; 
-  scsIpEdgeOrd_[4]  = 4;  scsIpEdgeOrd_[5]  = 5; 
-  scsIpEdgeOrd_[6]  = 6;  scsIpEdgeOrd_[7]  = 7;
-  scsIpEdgeOrd_[8]  = 8;  scsIpEdgeOrd_[9]  = 9;
-  scsIpEdgeOrd_[10] = 10; scsIpEdgeOrd_[11] = 11;
-
-  // define opposing node
-  oppNode_.resize(24);
-  // face 0
-  oppNode_[0] = 3; oppNode_[1] = 2; oppNode_[2] = 6; oppNode_[3] = 7;
-  // face 1
-  oppNode_[4] = 0; oppNode_[5] = 3; oppNode_[6] = 7; oppNode_[7] = 4;
-  // face 2
-  oppNode_[8] = 1; oppNode_[9] = 0; oppNode_[10] = 4; oppNode_[11] = 5;
-  // face 3
-  oppNode_[12] = 1; oppNode_[13] = 5; oppNode_[14] = 6; oppNode_[15] = 2;
-  // face 4
-  oppNode_[16] = 4; oppNode_[17] = 7; oppNode_[18] = 6; oppNode_[19] = 5;
-  // face 5
-  oppNode_[20] = 0; oppNode_[21] = 1; oppNode_[22] = 2; oppNode_[23] = 3;
-
-  // define opposing face
-  oppFace_.resize(24);
-  // face 0
-  oppFace_[0]  = 3;  oppFace_[1] = 1;  oppFace_[2] = 5;   oppFace_[3] = 7;
-  // face 1
-  oppFace_[4]  = 0;  oppFace_[5] = 2;  oppFace_[6] = 6;   oppFace_[7] = 4;
-  // face 2
-  oppFace_[8]  = 1;  oppFace_[9] = 3;  oppFace_[10] = 7;  oppFace_[11] = 5;
-  // face 3
-  oppFace_[12] = 0; oppFace_[13] = 4;  oppFace_[14] = 6;  oppFace_[15] = 2;
-  // face 4
-  oppFace_[16] = 8; oppFace_[17] = 11; oppFace_[18] = 10; oppFace_[19] = 9;
-  // face 5
-  oppFace_[20] = 8; oppFace_[21] = 9;  oppFace_[22] = 10; oppFace_[23] = 11;
-
-  // standard integration location
-  intgLoc_.resize(36);
-  intgLoc_[0]  =  0.00; intgLoc_[1]  = -0.25; intgLoc_[2]  = -0.25; // surf 1    1->2
-  intgLoc_[3]  =  0.25; intgLoc_[4]  =  0.00; intgLoc_[5]  = -0.25; // surf 2    2->3
-  intgLoc_[6]  =  0.00; intgLoc_[7]  =  0.25; intgLoc_[8]  = -0.25; // surf 3    3->4
-  intgLoc_[9]  = -0.25; intgLoc_[10] =  0.00; intgLoc_[11] = -0.25; // surf 4    1->4
-  intgLoc_[12] =  0.00; intgLoc_[13] = -0.25; intgLoc_[14] =  0.25; // surf 5    5->6
-  intgLoc_[15] =  0.25; intgLoc_[16] =  0.00; intgLoc_[17] =  0.25; // surf 6    6->7
-  intgLoc_[18] =  0.00; intgLoc_[19] =  0.25; intgLoc_[20] =  0.25; // surf 7    7->8
-  intgLoc_[21] = -0.25; intgLoc_[22] =  0.00; intgLoc_[23] =  0.25; // surf 8    5->8
-  intgLoc_[24] = -0.25; intgLoc_[25] = -0.25; intgLoc_[26] =  0.00; // surf 9    1->5
-  intgLoc_[27] =  0.25; intgLoc_[28] = -0.25; intgLoc_[29] =  0.00; // surf 10   2->6
-  intgLoc_[30] =  0.25; intgLoc_[31] =  0.25; intgLoc_[32] =  0.00; // surf 11   3->7
-  intgLoc_[33] = -0.25; intgLoc_[34] =  0.25; intgLoc_[35] =  0.00; // surf 12   4->8
-
-  // shifted
-  intgLocShift_.resize(36);
-  intgLocShift_[0]  =  0.00; intgLocShift_[1]  = -0.50; intgLocShift_[2]  = -0.50; // surf 1    1->2
-  intgLocShift_[3]  =  0.50; intgLocShift_[4]  =  0.00; intgLocShift_[5]  = -0.50; // surf 2    2->3
-  intgLocShift_[6]  =  0.00; intgLocShift_[7]  =  0.50; intgLocShift_[8]  = -0.50; // surf 3    3->4
-  intgLocShift_[9]  = -0.50; intgLocShift_[10] =  0.00; intgLocShift_[11] = -0.50; // surf 4    1->4
-  intgLocShift_[12] =  0.00; intgLocShift_[13] = -0.50; intgLocShift_[14] =  0.50; // surf 5    5->6
-  intgLocShift_[15] =  0.50; intgLocShift_[16] =  0.00; intgLocShift_[17] =  0.50; // surf 6    6->7
-  intgLocShift_[18] =  0.00; intgLocShift_[19] =  0.50; intgLocShift_[20] =  0.50; // surf 7    7->8
-  intgLocShift_[21] = -0.50; intgLocShift_[22] =  0.00; intgLocShift_[23] =  0.50; // surf 8    5->8
-  intgLocShift_[24] = -0.50; intgLocShift_[25] = -0.50; intgLocShift_[26] =  0.00; // surf 9    1->5
-  intgLocShift_[27] =  0.50; intgLocShift_[28] = -0.50; intgLocShift_[29] =  0.00; // surf 10   2->6
-  intgLocShift_[30] =  0.50; intgLocShift_[31] =  0.50; intgLocShift_[32] =  0.00; // surf 11   3->7
-  intgLocShift_[33] = -0.50; intgLocShift_[34] =  0.50; intgLocShift_[35] =  0.00; // surf 12   4->8
-
-  // exposed face
-  intgExpFace_.resize(72);
-  // face 0; scs 0, 1, 2, 3
-  intgExpFace_[0]  = -0.25; intgExpFace_[1]  = -0.50; intgExpFace_[2]  = -0.25;
-  intgExpFace_[3]  =  0.25; intgExpFace_[4]  = -0.50; intgExpFace_[5]  = -0.25;
-  intgExpFace_[6]  =  0.25; intgExpFace_[7]  = -0.50; intgExpFace_[8]  =  0.25;
-  intgExpFace_[9]  = -0.25; intgExpFace_[10] = -0.50; intgExpFace_[11] =  0.25;
-  // face 1; scs 0, 1, 2, 3
-  intgExpFace_[12] =  0.50; intgExpFace_[13] = -0.25; intgExpFace_[14] = -0.25;
-  intgExpFace_[15] =  0.50; intgExpFace_[16] =  0.25; intgExpFace_[17] = -0.25;
-  intgExpFace_[18] =  0.50; intgExpFace_[19] =  0.25; intgExpFace_[20] =  0.25;
-  intgExpFace_[21] =  0.50; intgExpFace_[22] = -0.25; intgExpFace_[23] =  0.25;
-  // face 2; scs 0, 1, 2, 3
-  intgExpFace_[24] =  0.25; intgExpFace_[25] =  0.50; intgExpFace_[26] = -0.25;
-  intgExpFace_[27] = -0.25; intgExpFace_[28] =  0.50; intgExpFace_[29] = -0.25;
-  intgExpFace_[30] = -0.25; intgExpFace_[31] =  0.50; intgExpFace_[32] =  0.25;
-  intgExpFace_[33] =  0.25; intgExpFace_[34] =  0.50; intgExpFace_[35] =  0.25;
-  // face 3; scs 0, 1, 2, 3
-  intgExpFace_[36] = -0.50; intgExpFace_[37] = -0.25; intgExpFace_[38] = -0.25;
-  intgExpFace_[39] = -0.50; intgExpFace_[40] = -0.25; intgExpFace_[41] =  0.25;
-  intgExpFace_[42] = -0.50; intgExpFace_[43] =  0.25; intgExpFace_[44] =  0.25;
-  intgExpFace_[45] = -0.50; intgExpFace_[46] =  0.25; intgExpFace_[47] = -0.25;
-  // face 4; scs 0, 1, 2, 3
-  intgExpFace_[48] = -0.25; intgExpFace_[49] = -0.25; intgExpFace_[50] = -0.50;
-  intgExpFace_[51] = -0.25; intgExpFace_[52] =  0.25; intgExpFace_[53] = -0.50;
-  intgExpFace_[54] =  0.25; intgExpFace_[55] =  0.25; intgExpFace_[56] = -0.50;
-  intgExpFace_[57] =  0.25; intgExpFace_[58] = -0.25; intgExpFace_[59] = -0.50;
-  // face 5; scs 0, 1, 2, 3
-  intgExpFace_[60] = -0.25; intgExpFace_[61] = -0.25; intgExpFace_[62] =  0.50;
-  intgExpFace_[63] =  0.25; intgExpFace_[64] = -0.25; intgExpFace_[65] =  0.50;
-  intgExpFace_[66] =  0.25; intgExpFace_[67] =  0.25; intgExpFace_[68] =  0.50;
-  intgExpFace_[69] = -0.25; intgExpFace_[70] =  0.25; intgExpFace_[71] =  0.50;
-
-  // boundary integration point ip node mapping (ip on an ordinal to local node number)
-  ipNodeMap_.resize(24); // 4 ips * 6 faces
-  // face 0;
-  ipNodeMap_[0] = 0;  ipNodeMap_[1] = 1;  ipNodeMap_[2] = 5;  ipNodeMap_[3] = 4;
-  // face 1;
-  ipNodeMap_[4] = 1;  ipNodeMap_[5] = 2;  ipNodeMap_[6] = 6;  ipNodeMap_[7] = 5;
-  // face 2;
-  ipNodeMap_[8] = 2;  ipNodeMap_[9] = 3;  ipNodeMap_[10] = 7; ipNodeMap_[11] = 6;
-  // face 3;
-  ipNodeMap_[12] = 0; ipNodeMap_[13] = 4; ipNodeMap_[14] = 7; ipNodeMap_[15] = 3;
-  // face 4;
-  ipNodeMap_[16] = 0; ipNodeMap_[17] = 3; ipNodeMap_[18] = 2; ipNodeMap_[19] = 1;
-  // face 5;
-  ipNodeMap_[20] = 4; ipNodeMap_[21] = 5; ipNodeMap_[22] = 6; ipNodeMap_[23] = 7;
-
-  // nodes for collocation calculations
-  nodeLoc_.resize(24);
-  // node 0
-  nodeLoc_[0] = -0.5; nodeLoc_[1] = -0.5; nodeLoc_[2] = -0.5;
-  // node 1
-  nodeLoc_[3] =  0.5; nodeLoc_[4] = -0.5; nodeLoc_[5] = -0.5;
-  // node 2
-  nodeLoc_[6] =  0.5; nodeLoc_[7] =  0.5; nodeLoc_[8] = -0.5;
-  // node 3
-  nodeLoc_[9] = -0.5; nodeLoc_[10] =  0.5; nodeLoc_[11] = -0.5;
-  // node 4
-  nodeLoc_[12] = -0.5; nodeLoc_[13] = -0.5; nodeLoc_[14] =  0.5;
-  // node 5
-  nodeLoc_[15] =  0.5; nodeLoc_[16] = -0.5; nodeLoc_[17] =  0.5;
-  // node 6
-  nodeLoc_[18] =  0.5; nodeLoc_[19] =  0.5; nodeLoc_[20] =  0.5;
-  // node 7
-  nodeLoc_[21] = -0.5; nodeLoc_[22] =  0.5; nodeLoc_[23] =  0.5;
-
-  // mapping from a side ordinal to the node ordinals on that side
-  sideNodeOrdinals_ = {
-      0, 1, 5, 4, // ordinal 0
-      1, 2, 6, 5, // ordinal 1
-      2, 3, 7, 6, // ordinal 2
-      0, 4, 7, 3, // ordinal 3
-      0, 3, 2, 1, // ordinal 4
-      4, 5, 6, 7  // ordinal 5
-  };
-
-  std::vector<std::vector<double>> nodeLocations =
-  {
-      {-0.5,-0.5,-0.5}, {+0.5,-0.5,-0.5}, {+0.5,+0.5,-0.5}, {-0.5,+0.5,-0.5},
-      {-0.5,-0.5,+0.5}, {+0.5,-0.5,+0.5}, {+0.5,+0.5,+0.5}, {-0.5,+0.5,+0.5}
-  };
-
-  intgExpFaceShift_.resize(72);
-  int index = 0;
-  stk::topology topo = stk::topology::HEX_8;
-  for (unsigned k = 0; k < topo.num_sides(); ++k) {
-    stk::topology side_topo = topo.side_topology(k);
-    const int* ordinals = side_node_ordinals(k);
-    for (unsigned n = 0; n < side_topo.num_nodes(); ++n) {
-      intgExpFaceShift_[3*index + 0] = nodeLocations[ordinals[n]][0];
-      intgExpFaceShift_[3*index + 1] = nodeLocations[ordinals[n]][1];
-      intgExpFaceShift_[3*index + 2] = nodeLocations[ordinals[n]][2];
-      ++index;
-    }
-  }
+HexSCS::HexSCS() : MasterElement() { 
+  MasterElement::nDim_                  = nDim_;
+  MasterElement::nodesPerElement_       = nodesPerElement_;
+  MasterElement::numIntPoints_          = numIntPoints_;
+  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
+  MasterElement::lrscv_           .assign(lrscv_,       24+lrscv_);
+  MasterElement::ipNodeMap_       .assign(ipNodeMap_,   24+ipNodeMap_);
+  MasterElement::oppNode_         .assign(oppNode_,     24+oppNode_);
+  MasterElement::nodeLoc_         .assign(&nodeLoc_[0][0],  24+&nodeLoc_[0][0]);
+  MasterElement::oppFace_         .assign(oppFace_,     24+oppFace_);
+  MasterElement::intgLoc_         .assign(intgLoc_,     36+intgLoc_);
+  MasterElement::intgLocShift_    .assign(intgLocShift_,36+intgLocShift_);
+  MasterElement::scsIpEdgeOrd_    .assign(scsIpEdgeOrd_,12+scsIpEdgeOrd_);
+  MasterElement::intgExpFace_     .assign(&intgExpFace_[0][0][0],  72+&intgExpFace_[0][0][0]);
+  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0],72+&intgExpFaceShift_[0][0][0]);
+  MasterElement::nDim_                  = nDim_;
+  MasterElement::nodesPerElement_       = nodesPerElement_;
+  MasterElement::numIntPoints_          = numIntPoints_;
+  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
 }
 
 //--------------------------------------------------------------------------
@@ -498,43 +256,6 @@ void
 HexSCS::shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc)
 {
   hex8_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
-}
-
-//--------------------------------------------------------------------------
-//-------- hex8_shape_fcn --------------------------------------------------
-//--------------------------------------------------------------------------
-void
-HexSCS::hex8_shape_fcn(
-  const int  &npts,
-  const double *isoParCoord,
-  SharedMemView<DoubleType**> &shape_fcn)
-{
-  const DoubleType half = 0.50;
-  const DoubleType one4th = 0.25;
-  const DoubleType one8th = 0.125;
-  for ( int j = 0; j < numIntPoints_; ++j ) {
-
-    const DoubleType s1 = isoParCoord[j*3];
-    const DoubleType s2 = isoParCoord[j*3+1];
-    const DoubleType s3 = isoParCoord[j*3+2];
-
-    shape_fcn(j,0) = one8th + one4th*(-s1 - s2 - s3)
-      + half*( s2*s3 + s3*s1 + s1*s2 ) - s1*s2*s3;
-    shape_fcn(j,1) = one8th + one4th*( s1 - s2 - s3)
-      + half*( s2*s3 - s3*s1 - s1*s2 ) + s1*s2*s3;
-    shape_fcn(j,2) = one8th + one4th*( s1 + s2 - s3)
-      + half*(-s2*s3 - s3*s1 + s1*s2 ) - s1*s2*s3;
-    shape_fcn(j,3) = one8th + one4th*(-s1 + s2 - s3)
-      + half*(-s2*s3 + s3*s1 - s1*s2 ) + s1*s2*s3;
-    shape_fcn(j,4) = one8th + one4th*(-s1 - s2 + s3)
-      + half*(-s2*s3 - s3*s1 + s1*s2 ) + s1*s2*s3;
-    shape_fcn(j,5) = one8th + one4th*( s1 - s2 + s3)
-      + half*(-s2*s3 + s3*s1 - s1*s2 ) - s1*s2*s3;
-    shape_fcn(j,6) = one8th + one4th*( s1 + s2 + s3)
-      + half*( s2*s3 + s3*s1 + s1*s2 ) + s1*s2*s3;
-    shape_fcn(j,7) = one8th + one4th*(-s1 + s2 + s3)
-      + half*( s2*s3 - s3*s1 - s1*s2 ) - s1*s2*s3;
-  }
 }
 
 //--------------------------------------------------------------------------
@@ -607,7 +328,7 @@ const int *
 HexSCS::side_node_ordinals(int ordinal)
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
-  return &sideNodeOrdinals_[ordinal*4];
+  return sideNodeOrdinals_[ordinal];
 }
 
 //--------------------------------------------------------------------------
@@ -692,7 +413,7 @@ void HexSCS::face_grad_op(
   SharedMemView<DoubleType***>& gradop)
 {
   using traits = AlgTraitsQuad4Hex8;
-  const std::vector<double> &exp_face = shifted ? intgExpFaceShift_ : intgExpFace_;
+  const double *exp_face = shifted ? &intgExpFaceShift_[0][0][0] : &intgExpFace_[0][0][0];
 
   constexpr int derivSize = traits::numFaceIp_ * traits::nodesPerElement_ * traits::nDim_;
   DoubleType psi[derivSize];
@@ -722,7 +443,6 @@ void HexSCS::face_grad_op(
 {
   int lerr = 0;
   int npf = 4;
-  int ndim = 3;
 
   const int nface = 1;
   double dpsi[24];
@@ -731,10 +451,9 @@ void HexSCS::face_grad_op(
 
     for ( int k=0; k<npf; k++ ) {
 
-      const int row = 12*face_ordinal + k*ndim;
       SIERRA_FORTRAN(hex_derivative)
         ( &nface,
-          &intgExpFace_[row], dpsi );
+          intgExpFace_[face_ordinal][k], dpsi );
 
       SIERRA_FORTRAN(hex_gradient_operator)
         ( &nface,
@@ -771,7 +490,6 @@ void HexSCS::shifted_face_grad_op(
 {
   int lerr = 0;
   int npf = 4;
-  int ndim = 3;
 
   const int nface = 1;
   double dpsi[24];
@@ -780,10 +498,9 @@ void HexSCS::shifted_face_grad_op(
 
     for ( int k=0; k<npf; k++ ) {
 
-      const int row = 12*face_ordinal + k*ndim;
       SIERRA_FORTRAN(hex_derivative)
         ( &nface,
-          &intgExpFaceShift_[row], dpsi );
+          intgExpFaceShift_[face_ordinal][k], dpsi );
 
       SIERRA_FORTRAN(hex_gradient_operator)
         ( &nface,
@@ -1189,7 +906,7 @@ HexSCS::general_shape_fcn(
 //--------------------------------------------------------------------------
 void
 HexSCS::general_face_grad_op(
-  const int face_ordinal,
+  const int  /* face_ordinal */,
   const double *isoParCoord,
   const double *coords,
   double *gradop,

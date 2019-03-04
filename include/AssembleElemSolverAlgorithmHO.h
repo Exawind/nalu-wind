@@ -35,7 +35,7 @@ class MasterElement;
 
 
 inline std::array<stk::mesh::Entity, simdLen>
-load_simd_elems(const stk::mesh::Bucket& b, int bktIndex, int bucketLen, int numSimdElems)
+load_simd_elems(const stk::mesh::Bucket& b, int bktIndex, int /* bucketLen */, int numSimdElems)
 {
   std::array<stk::mesh::Entity, simdLen> simdElems;
   for (int simdElemIndex = 0; simdElemIndex < numSimdElems; ++simdElemIndex) {

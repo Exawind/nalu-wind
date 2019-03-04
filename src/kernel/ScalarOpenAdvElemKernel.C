@@ -14,6 +14,7 @@
 
 // template and scratch space
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -35,10 +36,10 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
   ElemDataRequests &faceDataPreReqs,
   ElemDataRequests &elemDataPreReqs)
   : Kernel(),
-    scalarQ_(scalarQ),
-    bcScalarQ_(bcScalarQ),
-    Gjq_(Gjq),
-    diffFluxCoeff_(diffFluxCoeff),
+    scalarQ_(scalarQ->mesh_meta_data_ordinal()),
+    bcScalarQ_(bcScalarQ->mesh_meta_data_ordinal()),
+    Gjq_(Gjq->mesh_meta_data_ordinal()),
+    diffFluxCoeff_(diffFluxCoeff->mesh_meta_data_ordinal()),
     alphaUpw_(solnOpts.get_alpha_upw_factor(scalarQ->name())),
     om_alphaUpw_(1.0-alphaUpw_),
     hoUpwind_(solnOpts.get_upw_factor(scalarQ->name())),
@@ -47,13 +48,11 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
     pecletFunction_(eqSystem->create_peclet_function<DoubleType>(scalarQ->name()))
 {
   // save off fields
-  if ( solnOpts.does_mesh_move() )
-    velocityRTM_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm");
-  else
-    velocityRTM_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-  coordinates_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
-  density_ = metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  openMassFlowRate_ = metaData.get_field<GenericFieldType>(metaData.side_rank(), "open_mass_flow_rate");
+  const std::string vrtm_name = solnOpts.does_mesh_move()? "velocity_rtm" : "velocity";
+  velocityRTM_ = get_field_ordinal(metaData, vrtm_name);
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+  density_ = get_field_ordinal(metaData, "density");
+  openMassFlowRate_ = get_field_ordinal(metaData, "open_mass_flow_rate", metaData.side_rank());
   
   // extract master elements
   MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
@@ -63,21 +62,24 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);
 
   // fields and data; face and then element
-  faceDataPreReqs.add_coordinates_field(*coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
-  faceDataPreReqs.add_gathered_nodal_field(*Gjq_, BcAlgTraits::nDim_);
-  faceDataPreReqs.add_gathered_nodal_field(*scalarQ_, 1);
-  faceDataPreReqs.add_gathered_nodal_field(*bcScalarQ_, 1);
-  faceDataPreReqs.add_face_field(*openMassFlowRate_, BcAlgTraits::numFaceIp_);
+  faceDataPreReqs.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  faceDataPreReqs.add_gathered_nodal_field(Gjq_, BcAlgTraits::nDim_);
+  faceDataPreReqs.add_gathered_nodal_field(scalarQ_, 1);
+  faceDataPreReqs.add_gathered_nodal_field(bcScalarQ_, 1);
+  faceDataPreReqs.add_face_field(openMassFlowRate_, BcAlgTraits::numFaceIp_);
 
-  elemDataPreReqs.add_coordinates_field(*coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
-  elemDataPreReqs.add_gathered_nodal_field(*velocityRTM_, BcAlgTraits::nDim_);
-  elemDataPreReqs.add_gathered_nodal_field(*diffFluxCoeff_, 1);
-  elemDataPreReqs.add_gathered_nodal_field(*density_, 1);
+  elemDataPreReqs.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  elemDataPreReqs.add_gathered_nodal_field(velocityRTM_, BcAlgTraits::nDim_);
+  elemDataPreReqs.add_gathered_nodal_field(diffFluxCoeff_, 1);
+  elemDataPreReqs.add_gathered_nodal_field(density_, 1);
 
   // never shift properties
-  const bool skewSymmetric = solnOpts.get_skew_symmetric(scalarQ_->name());
-  get_face_shape_fn_data<BcAlgTraits>([&](double* ptr){skewSymmetric ? meFC->shifted_shape_fcn(ptr) : meFC->shape_fcn(ptr);}, 
-                                      vf_adv_shape_function_);
+  const bool skewSymmetric = solnOpts.get_skew_symmetric(scalarQ->name());
+  get_face_shape_fn_data<BcAlgTraits>(
+    [&](double* ptr) {
+      skewSymmetric ? meFC->shifted_shape_fcn(ptr) : meFC->shape_fcn(ptr);
+    },
+    vf_adv_shape_function_);
 }
 
 template<typename BcAlgTraits>
@@ -101,17 +103,17 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::execute(
   const int *face_node_ordinals = meSCS_->side_node_ordinals(elemFaceOrdinal);
  
   // face
-  SharedMemView<DoubleType*>& vf_scalarQ = faceScratchViews.get_scratch_view_1D(*scalarQ_);
-  SharedMemView<DoubleType*>& vf_bcScalarQ = faceScratchViews.get_scratch_view_1D(*bcScalarQ_);
-  SharedMemView<DoubleType**>& vf_Gjq = faceScratchViews.get_scratch_view_2D(*Gjq_);
-  SharedMemView<DoubleType**>& vf_coordinates = faceScratchViews.get_scratch_view_2D(*coordinates_);
-  SharedMemView<DoubleType*>& vf_openMassFlowRate = faceScratchViews.get_scratch_view_1D(*openMassFlowRate_);
+  SharedMemView<DoubleType*>& vf_scalarQ = faceScratchViews.get_scratch_view_1D(scalarQ_);
+  SharedMemView<DoubleType*>& vf_bcScalarQ = faceScratchViews.get_scratch_view_1D(bcScalarQ_);
+  SharedMemView<DoubleType**>& vf_Gjq = faceScratchViews.get_scratch_view_2D(Gjq_);
+  SharedMemView<DoubleType**>& vf_coordinates = faceScratchViews.get_scratch_view_2D(coordinates_);
+  SharedMemView<DoubleType*>& vf_openMassFlowRate = faceScratchViews.get_scratch_view_1D(openMassFlowRate_);
   
   // element
-  SharedMemView<DoubleType**>& v_coordinates = elemScratchViews.get_scratch_view_2D(*coordinates_);
-  SharedMemView<DoubleType**>& v_vrtm = elemScratchViews.get_scratch_view_2D(*velocityRTM_);
-  SharedMemView<DoubleType*>& v_diffFluxCoeff = elemScratchViews.get_scratch_view_1D(*diffFluxCoeff_);
-  SharedMemView<DoubleType*>& v_density = elemScratchViews.get_scratch_view_1D(*density_);
+  SharedMemView<DoubleType**>& v_coordinates = elemScratchViews.get_scratch_view_2D(coordinates_);
+  SharedMemView<DoubleType**>& v_vrtm = elemScratchViews.get_scratch_view_2D(velocityRTM_);
+  SharedMemView<DoubleType*>& v_diffFluxCoeff = elemScratchViews.get_scratch_view_1D(diffFluxCoeff_);
+  SharedMemView<DoubleType*>& v_density = elemScratchViews.get_scratch_view_1D(density_);
 
   for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
     
@@ -195,7 +197,7 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(ScalarOpenAdvElemKernel);
+INSTANTIATE_KERNEL_FACE_ELEMENT(ScalarOpenAdvElemKernel)
 
 }  // nalu
 }  // sierra

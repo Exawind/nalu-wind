@@ -108,7 +108,8 @@ void TiogaBlock::initialize()
 
 void TiogaBlock::update_coords()
 {
-  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_);
+  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_)
+    & (meta_.locally_owned_part() | meta_.globally_shared_part());
   const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
     stk::topology::NODE_RANK, mesh_selector);
   VectorFieldType* coords = meta_.get_field<VectorFieldType>(
@@ -171,7 +172,8 @@ TiogaBlock::update_iblanks()
   ScalarIntFieldType* ibf =
     meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
 
-  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_);
+  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_)
+    & (meta_.locally_owned_part() | meta_.globally_shared_part());
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
 
@@ -203,7 +205,7 @@ void TiogaBlock::update_iblank_cell()
   }
 }
 
-void TiogaBlock::get_donor_info(tioga& tg, stk::mesh::EntityProcVec& egvec)
+void TiogaBlock::get_donor_info(TIOGA::tioga& tg, stk::mesh::EntityProcVec& egvec)
 {
   // Do nothing if this mesh block isn't present in this MPI Rank
   if (num_nodes_ < 1) return;
@@ -242,9 +244,9 @@ void TiogaBlock::get_donor_info(tioga& tg, stk::mesh::EntityProcVec& egvec)
   int idx = 0;
   for(int i=0; i<(4*dcount); i += 4) {
     int procid = receptorInfo[i];
-    int nweights = receptorInfo[i+3];           // Offset to get the donor element
+    int nweights = receptorInfo[i+3];       // Offset to get the donor element
     int elemid_tmp = inode[idx + nweights]; // Local index for lookup
-    int elemID = elemid_map_[elemid_tmp];       // Global ID of element
+    auto elemID = elemid_map_[elemid_tmp];  // Global ID of element
 
     // Move the offset index for next call
     idx += nweights + 1;
@@ -447,7 +449,7 @@ void TiogaBlock::reset_iblank_data()
     iblank_cell_[i] = 1;
 }
 
-void TiogaBlock::register_block(tioga& tg)
+void TiogaBlock::register_block(TIOGA::tioga& tg)
 {
   // Do nothing if this mesh block isn't present in this MPI Rank
   if (num_nodes_ < 1) return;

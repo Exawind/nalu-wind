@@ -683,6 +683,8 @@ For simulations in which a buoyancy source term is desired, the code supports th
 
 .. math:: P_b = \beta \frac{\mu^T}{Pr} g_i \frac{\partial T}{\partial x_i}.
 
+.. _eqn_komega_sst:
+
 Shear Stress Transport (SST) RANS Model Suite
 +++++++++++++++++++++++++++++++++++++++++++++
 
@@ -772,6 +774,8 @@ The final parameter is
 
    arg_{2} = \max\left( \frac{2 \sqrt{k}}{\beta^* \omega y},
    \frac{500 \mu}{\bar{\rho} \omega y^{2}} \right).
+
+.. _eqn_sst_des:
 
 Direct Eddy Simulation (DES) Formulation
 ++++++++++++++++++++++++++++++++++++++++
@@ -1042,3 +1046,22 @@ Kirchoff’s Law that relates emissivity, transmissivity and reflectivity,
    \rho + \tau + \epsilon = 1.
 
 where it is implied that :math:`\alpha = \epsilon`.
+
+Wall Distance Computation
++++++++++++++++++++++++++
+
+RANS and DES simulations using ..math:`k-\omega` :ref:`SST <eqn_komega_sst>` or
+:ref:`SST-DES <eqn_sst_des>` equations requires the specification of a *wall
+distance* for computing various turbulence parameters. For static mesh
+simulations this field can be generated using a pre-processing step and provided
+as an input in the mesh database. However, for moving mesh simulations, e.g.,
+blade resolved wind turbine simulations, this field must be computed throughout
+the course of the simulation. Nalu-Wind implements a Poisson equation
+(:cite:`Tucker2003`) to determine the wall distance :math:`d` using the
+gradients of a field :math:`\phi`.
+
+.. math::
+
+   \nabla^2 \phi &= 1 \\
+   d &= \sqrt{\sum_{j=1,3} \left( \frac{\partial \phi}{\partial x_j} \right)^2 \pm 
+   \sqrt{\sum_{j=1,3} \left( \frac{\partial \phi}{\partial x_j} \right)^2 + 2 \phi

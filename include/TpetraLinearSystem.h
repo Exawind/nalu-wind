@@ -126,7 +126,7 @@ public:
   void writeToFile(const char * filename, bool useOwned=true);
   void printInfo(bool useOwned=true);
   void writeSolutionToFile(const char * filename, bool useOwned=true);
-  size_t lookup_myLID(MyLIDMapType& myLIDs, stk::mesh::EntityId entityId, const char* msg=nullptr, stk::mesh::Entity entity = stk::mesh::Entity())
+  size_t lookup_myLID(MyLIDMapType& myLIDs, stk::mesh::EntityId entityId, const char* /* msg */ =nullptr, stk::mesh::Entity /* entity */ = stk::mesh::Entity())
   {
     return myLIDs[entityId];
   }
@@ -143,7 +143,7 @@ private:
 
   void beginLinearSystemConstruction();
 
-  void checkError( const int err_code, const char * msg) {}
+  void checkError( const int /* err_code */, const char * /* msg */) {}
 
   void compute_send_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
          const std::vector<std::vector<stk::mesh::Entity> >& connections,

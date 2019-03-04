@@ -120,7 +120,7 @@ namespace {
 
 }
 
-TEST_POLY(DiffusionMetricHO, check_orthogonal, 4);
+TEST_POLY(DiffusionMetricHO, check_orthogonal, 4)
 
 }
 }

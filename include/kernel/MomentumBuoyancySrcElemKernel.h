@@ -48,8 +48,8 @@ public:
 private:
   MomentumBuoyancySrcElemKernel() = delete;
 
-  ScalarFieldType *densityNp1_{nullptr};
-  VectorFieldType *coordinates_{nullptr};
+  unsigned densityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
 
   double rhoRef_;
   AlignedViewType<DoubleType[AlgTraits::nDim_]> gravity_{ "v_gravity"};

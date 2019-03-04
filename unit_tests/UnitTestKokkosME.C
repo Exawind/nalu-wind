@@ -118,7 +118,7 @@ void compare_old_scs_shifted_grad_op( const sierra::nalu::SharedMemView<DoubleTy
 void compare_old_scs_gij(const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
                          const sierra::nalu::SharedMemView<DoubleType***>& v_gijUpper,
                          const sierra::nalu::SharedMemView<DoubleType***>& v_gijLower,
-                         const sierra::nalu::SharedMemView<DoubleType***>& v_deriv,
+                         const sierra::nalu::SharedMemView<DoubleType***>&  /* v_deriv */,
                          sierra::nalu::MasterElement* meSCS)
 {
   int len = v_gijUpper.extent(0)*v_gijUpper.extent(1)*v_gijUpper.extent(2);
@@ -147,14 +147,14 @@ void test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
 
   // Register ME data requests
   for(sierra::nalu::ELEM_DATA_NEEDED request : requests) {
-    driver.dataNeeded_.add_master_element_call(request, sierra::nalu::CURRENT_COORDINATES);
+    driver.dataNeeded().add_master_element_call(request, sierra::nalu::CURRENT_COORDINATES);
   }
 
   sierra::nalu::MasterElement* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
   sierra::nalu::MasterElement* meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
 
   // Execute the loop and perform all tests
-  driver.execute([&](sierra::nalu::SharedMemData& smdata) {
+  driver.execute([&](sierra::nalu::SharedMemData<sierra::nalu::TeamHandleType,sierra::nalu::HostShmem>& smdata) {
       // Extract data from scratchViews
       sierra::nalu::SharedMemView<DoubleType**>& v_coords = smdata.simdPrereqData.get_scratch_view_2D(
         *driver.coordinates_);

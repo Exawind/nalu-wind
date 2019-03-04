@@ -13,6 +13,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -36,11 +37,12 @@ ContinuityInflowElemKernel<BcAlgTraits>::ContinuityInflowElemKernel(
     ipNodeMap_(sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::topo_)->ipNodeMap())
  {
   // save off fields
-  const stk::mesh::MetaData &metaData = bulkData.mesh_meta_data();
-  velocityBC_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, solnOpts.activateOpenMdotCorrection_ 
-                                                    ? "velocity_bc" : "cont_velocity_bc");
-  densityBC_ = metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  exposedAreaVec_ = metaData.get_field<GenericFieldType>(metaData.side_rank(), "exposed_area_vector");
+  const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
+  const std::string velbc_name =
+    solnOpts.activateOpenMdotCorrection_ ? "velocity_bc" : "cont_velocity_bc";
+  velocityBC_ = get_field_ordinal(metaData, velbc_name);
+  densityBC_ = get_field_ordinal(metaData, "density");
+  exposedAreaVec_ = get_field_ordinal(metaData, "exposed_area_vector", metaData.side_rank());
   
   MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::topo_);
   
@@ -48,9 +50,9 @@ ContinuityInflowElemKernel<BcAlgTraits>::ContinuityInflowElemKernel(
   dataPreReqs.add_cvfem_face_me(meFC);
   
   // required fields
-  dataPreReqs.add_gathered_nodal_field(*velocityBC_, BcAlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*densityBC_, 1);
-  dataPreReqs.add_face_field(*exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(velocityBC_, BcAlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(densityBC_, 1);
+  dataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   
   if ( useShifted )
     get_face_shape_fn_data<BcAlgTraits>([&](double* ptr){meFC->shifted_shape_fcn(ptr);}, vf_shape_function_);
@@ -81,9 +83,9 @@ ContinuityInflowElemKernel<BcAlgTraits>::execute(
   NALU_ALIGNED DoubleType w_uBip[BcAlgTraits::nDim_];
   NALU_ALIGNED DoubleType w_rho_uBip[BcAlgTraits::nDim_];
   
-  SharedMemView<DoubleType**>& vf_velocityBC = scratchViews.get_scratch_view_2D(*velocityBC_);
-  SharedMemView<DoubleType*>& vf_density = scratchViews.get_scratch_view_1D(*densityBC_);
-  SharedMemView<DoubleType**>& vf_exposedAreaVec = scratchViews.get_scratch_view_2D(*exposedAreaVec_);
+  SharedMemView<DoubleType**>& vf_velocityBC = scratchViews.get_scratch_view_2D(velocityBC_);
+  SharedMemView<DoubleType*>& vf_density = scratchViews.get_scratch_view_1D(densityBC_);
+  SharedMemView<DoubleType**>& vf_exposedAreaVec = scratchViews.get_scratch_view_2D(exposedAreaVec_);
   
   for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
     
@@ -111,11 +113,11 @@ ContinuityInflowElemKernel<BcAlgTraits>::execute(
       mDot += (interpTogether_*w_rho_uBip[j] + om_interpTogether_*rhoBip*w_uBip[j])*vf_exposedAreaVec(ip,j);
     }
     
-    rhs(nearestNode) -= mDot/projTimeScale_;
+    rhs(nearestNode) -= mDot / projTimeScale_;
   } 
 }
 
-INSTANTIATE_KERNEL_FACE(ContinuityInflowElemKernel);
+INSTANTIATE_KERNEL_FACE(ContinuityInflowElemKernel)
 
 }  // nalu
 }  // sierra

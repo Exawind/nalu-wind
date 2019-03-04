@@ -38,7 +38,7 @@ public :
 class Rectangle : public Shape {
   const double length_,width_;
 public :
-  KOKKOS_FORCEINLINE_FUNCTION Rectangle(const double l,const double w):Shape(),length_(l),width_(w) {
+  Rectangle(const double l,const double w):Shape(),length_(l),width_(w) {
     copy_to_device(*this);
   }
   KOKKOS_FORCEINLINE_FUNCTION Rectangle(const Rectangle &r):Shape(),length_(r.length_),width_(r.width_) {} 
@@ -51,7 +51,7 @@ public :
 class Circle : public Shape {
   const double radius_;
 public :
-  KOKKOS_FORCEINLINE_FUNCTION Circle(const double radius):Shape(),radius_(radius) {
+  Circle(const double radius):Shape(),radius_(radius) {
     copy_to_device(*this);
   }
   KOKKOS_FORCEINLINE_FUNCTION Circle(const Circle &c):Shape(),radius_(c.radius_) {} 
@@ -71,13 +71,13 @@ TEST(CreateDeviceExpression, Shapes)
   Shape *c_dev = c->device_copy<Shape>();
 
   double r_area;
-  auto r_on_device = [&] (int i, double &a) {
+  auto r_on_device = [&] (int  /* i */, double &a) {
     a = r_dev->area();
   };
   sierra::nalu::kokkos_parallel_reduce(1, r_on_device, r_area, "Call Rectangle on Device.");
 
   double c_area;
-  auto c_on_device = [&] (int i, double &a) {
+  auto c_on_device = [&] (int  /* i */, double &a) {
     a = c_dev->area();
   };
   sierra::nalu::kokkos_parallel_reduce(1, c_on_device, c_area, "Call Circle on Device.");

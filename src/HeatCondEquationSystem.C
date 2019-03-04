@@ -260,7 +260,7 @@ HeatCondEquationSystem::register_edge_fields(
 void
 HeatCondEquationSystem::register_element_fields(
   stk::mesh::Part *part,
-  const stk::topology &theTopo)
+  const stk::topology & /* theTopo */)
 {
   stk::mesh::MetaData &meta_data = realm_.meta_data();
   
@@ -729,7 +729,7 @@ HeatCondEquationSystem::register_wall_bc(
     stk::mesh::put_field_on_mesh(*alphaField, *part, nullptr);
   
     // aux algs
-    AuxFunctionAlgorithm *alphaAuxAlg;
+    AuxFunctionAlgorithm *alphaAuxAlg = nullptr;
     if (isRobinCHT)
     {
       RobinCouplingParameter alpha = userData.robinCouplingParameter_;
@@ -743,7 +743,7 @@ HeatCondEquationSystem::register_wall_bc(
                                              stk::topology::NODE_RANK);
     }
 
-    AuxFunctionAlgorithm *htcAuxAlg;
+    AuxFunctionAlgorithm *htcAuxAlg = nullptr;
     if (isConvectionCHT)
     {
       HeatTransferCoefficient htc = userData.heatTransferCoefficient_;

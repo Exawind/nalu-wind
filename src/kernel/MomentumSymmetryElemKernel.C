@@ -12,6 +12,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -30,15 +31,14 @@ MomentumSymmetryElemKernel<BcAlgTraits>::MomentumSymmetryElemKernel(
   ElemDataRequests &faceDataPreReqs,
   ElemDataRequests &elemDataPreReqs)
   : Kernel(),
-    viscosity_(viscosity),
+    viscosity_(viscosity->mesh_meta_data_ordinal()),
     includeDivU_(solnOpts.includeDivU_),
     shiftedGradOp_(solnOpts.get_shifted_grad_op(velocity->name())),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_))
 {
-  velocityNp1_ = &(velocity->field_of_state(stk::mesh::StateNP1));
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
-  exposedAreaVec_ = metaData.get_field<GenericFieldType>(metaData.side_rank(), "exposed_area_vector");
+  velocityNp1_ = velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+  exposedAreaVec_ = get_field_ordinal(metaData, "exposed_area_vector", metaData.side_rank());
 
   // extract master elements
   MasterElement* meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
@@ -48,10 +48,10 @@ MomentumSymmetryElemKernel<BcAlgTraits>::MomentumSymmetryElemKernel(
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);
 
   // fields and data; face and then element
-  faceDataPreReqs.add_gathered_nodal_field(*viscosity_, 1);
-  faceDataPreReqs.add_face_field(*exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
-  elemDataPreReqs.add_coordinates_field(*coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
-  elemDataPreReqs.add_gathered_nodal_field(*velocityNp1_, BcAlgTraits::nDim_);
+  faceDataPreReqs.add_gathered_nodal_field(viscosity_, 1);
+  faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  elemDataPreReqs.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  elemDataPreReqs.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
 
   if ( shiftedGradOp_ )
     elemDataPreReqs.add_master_element_call(SCS_SHIFTED_FACE_GRAD_OP, CURRENT_COORDINATES);
@@ -79,11 +79,11 @@ MomentumSymmetryElemKernel<BcAlgTraits>::execute(
   DoubleType w_nx[BcAlgTraits::nDim_];
 
   // face
-  SharedMemView<DoubleType*>& vf_viscosity = faceScratchViews.get_scratch_view_1D(*viscosity_);
-  SharedMemView<DoubleType**>& vf_exposedAreaVec = faceScratchViews.get_scratch_view_2D(*exposedAreaVec_);
+  SharedMemView<DoubleType*>& vf_viscosity = faceScratchViews.get_scratch_view_1D(viscosity_);
+  SharedMemView<DoubleType**>& vf_exposedAreaVec = faceScratchViews.get_scratch_view_2D(exposedAreaVec_);
  
   // element
-  SharedMemView<DoubleType**>& v_uNp1 = elemScratchViews.get_scratch_view_2D(*velocityNp1_);
+  SharedMemView<DoubleType**>& v_uNp1 = elemScratchViews.get_scratch_view_2D(velocityNp1_);
   SharedMemView<DoubleType***>& v_dndx = shiftedGradOp_
     ? elemScratchViews.get_me_views(CURRENT_COORDINATES).dndx_shifted_fc_scs
     : elemScratchViews.get_me_views(CURRENT_COORDINATES).dndx_fc_scs;
@@ -165,7 +165,7 @@ MomentumSymmetryElemKernel<BcAlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumSymmetryElemKernel);
+INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumSymmetryElemKernel)
 
 }  // nalu
 }  // sierra

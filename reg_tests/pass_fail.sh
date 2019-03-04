@@ -91,10 +91,10 @@ main() {
   passStatus="$?"
   performanceTime=`grep "STKPERF: Total Time" ${testName}.log  | awk '{print $4}'`
   if [ ${passStatus} -eq 0 ]; then
-      echo -e "..${testName}........... PASSED":" " ${performanceTime} " s"
+      printf "%-35s PASSED: %10.4f s\n" ${testName} ${performanceTime}
       exit 0
   else
-      echo -e "..${testName}........... FAILED":" " ${performanceTime} " s" " max diff: " ${maxSolutionDiff}
+      printf "%-35s FAILED: %10.4f s max-diff: %.6e\n" ${testName} ${performanceTime} ${maxSolutionDiff}
       exit 1
   fi
 }

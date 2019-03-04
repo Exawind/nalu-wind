@@ -13,6 +13,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -33,11 +34,9 @@ MomentumActuatorSrcElemKernel<AlgTraits>::MomentumActuatorSrcElemKernel(
     ipNodeMap_(sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_)->ipNodeMap())
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  actuator_source_
-      = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source");
-  actuator_source_lhs_
-      = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source_lhs");
-  coordinates_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
+  actuator_source_ = get_field_ordinal(metaData, "actuator_source");
+  actuator_source_lhs_ = get_field_ordinal(metaData, "actuator_source_lhs");
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
   MasterElement* meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
 
@@ -52,9 +51,9 @@ MomentumActuatorSrcElemKernel<AlgTraits>::MomentumActuatorSrcElemKernel(
   dataPreReqs.add_cvfem_volume_me(meSCV);
 
   // fields and data
-  dataPreReqs.add_coordinates_field(*coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*actuator_source_, AlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*actuator_source_lhs_, AlgTraits::nDim_);
+  dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(actuator_source_, AlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(actuator_source_lhs_, AlgTraits::nDim_);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
 }
 
@@ -69,8 +68,8 @@ MomentumActuatorSrcElemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType*>& rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
-  SharedMemView<DoubleType**>& v_actuator_source = scratchViews.get_scratch_view_2D(*actuator_source_);
-  SharedMemView<DoubleType**>& v_actuator_source_lhs = scratchViews.get_scratch_view_2D(*actuator_source_lhs_);
+  SharedMemView<DoubleType**>& v_actuator_source = scratchViews.get_scratch_view_2D(actuator_source_);
+  SharedMemView<DoubleType**>& v_actuator_source_lhs = scratchViews.get_scratch_view_2D(actuator_source_lhs_);
   SharedMemView<DoubleType*>& v_scv_volume = scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
 
   for (int ip=0; ip < AlgTraits::numScvIp_; ++ip) {
@@ -103,7 +102,7 @@ MomentumActuatorSrcElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumActuatorSrcElemKernel);
+INSTANTIATE_KERNEL(MomentumActuatorSrcElemKernel)
 
 }  // nalu
 }  // sierra

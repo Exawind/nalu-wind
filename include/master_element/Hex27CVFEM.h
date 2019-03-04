@@ -165,18 +165,38 @@ protected:
     const double *pointCoord,
     double *isoParCoord);
 
-  const double scsDist_;
-  const int nodes1D_;
-  const int numQuad_;
+  const double scsDist_ = std::sqrt(3.0)/3.0;
+  const int nodes1D_    = 3;
+  const int numQuad_    = 2;
 
   // quadrature info
-  std::vector<double> gaussAbscissae1D_;
-  std::vector<double> gaussAbscissae_;
-  std::vector<double> gaussAbscissaeShift_;
-  std::vector<double> gaussWeight_;
-  std::vector<double> scsEndLoc_;
+  const double gaussAbscissae_[2] = {-std::sqrt(3.0)/3.0, std::sqrt(3.0)/3.0};
+  const double gaussWeight_[2]    = {0.5, 0.5};
+  const double gaussAbscissaeShift_[6] = {-1.0, -1.0, 0.0, 0.0,  1.0, 1.0};
 
-  std::vector<int> stkNodeMap_;
+  const double scsEndLoc_[4] =  { -1.0, -scsDist_, scsDist_, 1.0 };
+ 
+  // map the standard stk node numbering to a tensor-product style node numbering (i.e. node (m,l,k) -> m+npe*l+npe^2*k)
+  const int    stkNodeMap_[3][3][3] = {
+                {{ 0,  8,  1}, // bottom front edge
+                 {11, 21,  9}, // bottom mid-front edge
+                 { 3, 10,  2}},// bottom back edge
+                {{12, 25, 13}, // mid-top front edge
+                 {23, 20, 24}, // mid-top mid-front edge
+                 {15, 26, 14}},// mid-top back edge
+                {{ 4, 16,  5}, // top front edge
+                 {19, 22, 17}, // top mid-front edge
+                 { 7, 18,  6}} // top back edge
+                };
+
+  const int  sideNodeOrdinals_[6][9] = {
+      {0, 1, 5, 4, 8,13,16,12,25}, //ordinal 0
+      {1, 2, 6, 5, 9,14,17,13,24}, //ordinal 1
+      {2, 3, 7, 6,10,15,18,14,26}, //ordinal 2
+      {0, 4, 7, 3,12,19,15,11,23}, //ordinal 3
+      {0, 3, 2, 1,11,10, 9, 8,21}, //ordinal 4
+      {4, 5, 6, 7,16,17,18,19,22}  //ordinal 5
+  };
 
   std::vector<double> shapeFunctions_;
   std::vector<double> shapeFunctionsShift_;
@@ -209,6 +229,7 @@ public:
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
 
+  template<typename ViewType> KOKKOS_FUNCTION void shape_fcn(ViewType &shpfc);
   void shape_fcn(SharedMemView<DoubleType**> &shpfc) final;
   void shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc) final;
   void determinant(SharedMemView<DoubleType**>& coords, SharedMemView<DoubleType*>& volume) final;
@@ -286,8 +307,17 @@ public:
   using MasterElement::shifted_shape_fcn;
   using MasterElement::determinant;
 
+  template<typename ViewType> KOKKOS_FUNCTION void shape_fcn(ViewType &shpfc);
   void shape_fcn(SharedMemView<DoubleType**> &shpfc);
   void shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc);
+
+  template<typename ViewTypeCoord, typename ViewTypeGrad>
+  KOKKOS_FUNCTION
+  void grad_op(
+    ViewTypeCoord& coords,
+    ViewTypeGrad&  gradop,
+    ViewTypeGrad&  deriv);
+ 
 
   void grad_op(
     SharedMemView<DoubleType**>&coords,
@@ -383,6 +413,7 @@ public:
     const int ordinal, const int node);
 
   const int* side_node_ordinals(int sideOrdinal) final;
+  using MasterElement::side_node_ordinals;
 
   const InterpWeightType& shape_function_values()
   { return interpWeights_; }
@@ -564,6 +595,44 @@ private:
   std::vector<double> ipWeight_;
   const int surfaceDimension_;
 };
+
+template<typename ViewType> 
+KOKKOS_FUNCTION void Hex27SCV::shape_fcn(ViewType &shpfc)
+{
+  for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
+    for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+      shpfc(ip,n) = interpWeights_(ip,n);
+    }
+  }
+}
+template<typename ViewType> 
+KOKKOS_FUNCTION void Hex27SCS::shape_fcn(ViewType &shpfc)
+{
+  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
+    for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+      shpfc(ip,n) = interpWeights_(ip,n);
+    }
+  }
+}
+
+
+template<typename ViewTypeCoord, typename ViewTypeGrad>
+KOKKOS_FUNCTION void Hex27SCS::grad_op(
+  ViewTypeCoord& coords,
+  ViewTypeGrad&  gradop,
+  ViewTypeGrad&  deriv)
+{
+  generic_grad_op<AlgTraits>(referenceGradWeights_, coords, gradop);
+
+  // copy derivs as well.  These aren't used, but are part of the interface
+  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
+    for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+      for (int d = 0; d < AlgTraits::nDim_; ++d) {
+        deriv(ip,n,d) = referenceGradWeights_(ip,n,d);
+      }
+    }
+  }
+}
 
 
 } // namespace nalu

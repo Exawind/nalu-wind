@@ -208,7 +208,7 @@ RadTransAdvectionSUCVElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(RadTransAdvectionSUCVElemKernel);
+INSTANTIATE_KERNEL(RadTransAdvectionSUCVElemKernel)
 
 }  // nalu
 }  // sierra

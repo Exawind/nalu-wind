@@ -9,7 +9,6 @@
 #include <SolutionOptions.h>
 #include <Enums.h>
 #include <NaluEnv.h>
-#include <MeshMotionInfo.h>
 #include <FixPressureAtNodeInfo.h>
 
 // basic c++
@@ -109,11 +108,6 @@ SolutionOptions::SolutionOptions()
 //--------------------------------------------------------------------------
 SolutionOptions::~SolutionOptions()
 {
-  std::map<std::string, MeshMotionInfo *>::iterator it;
-  for ( it = meshMotionInfoMap_.begin(); it!= meshMotionInfoMap_.end(); ++it ) {
-    MeshMotionInfo *info = it->second;
-    delete info;
-  }
 }
 
 //--------------------------------------------------------------------------
@@ -170,6 +164,16 @@ SolutionOptions::load(const YAML::Node & y_node)
     
     // quadrature type for high order
     get_if_present(y_solution_options, "tensor_product_cvfem", newHO_);
+
+    std::string projected_timescale_type = "default";
+    get_if_present(y_solution_options, "projected_timescale_type",
+                   projected_timescale_type, projected_timescale_type);
+    if (projected_timescale_type == "default")
+      tscaleType_ = TSCALE_DEFAULT;
+    else if (projected_timescale_type == "momentum_diag_inv")
+      tscaleType_ = TSCALE_UDIAGINV;
+    else
+      throw std::runtime_error("SolutionOptions: Invalid option provided for projected_timescale_type");
 
     // extract turbulence model; would be nice if we could parse an enum..
     std::string specifiedTurbModel;
@@ -239,6 +243,9 @@ SolutionOptions::load(const YAML::Node & y_node)
         }
         else if (expect_map(y_option, "upw_factor", optional)) {
           y_option["upw_factor"] >> upwMap_ ;
+        }
+        else if (expect_map(y_option, "relaxation_factor", optional)) {
+          y_option["relaxation_factor"] >> relaxFactorMap_;
         }
         else if (expect_map(y_option, "limiter", optional)) {
           y_option["limiter"] >> limiterMap_ ;
@@ -390,76 +397,14 @@ SolutionOptions::load(const YAML::Node & y_node)
       }
     }
 
-    // second set of options: mesh motion... this means that the Realm will expect to provide rotation-based motion
-    const YAML::Node y_mesh_motion = expect_sequence(y_solution_options, "mesh_motion", optional);
-    if (y_mesh_motion)
-    {
-      // mesh motion is active
-      meshMotion_ = true;
-
-      // has a user stated that mesh motion is external?
-      if ( meshDeformation_ ) {
-        NaluEnv::self().naluOutputP0() << "mesh motion set to external (will prevail over mesh motion specification)!" << std::endl;
-      }
-      else {        
-        for (size_t ioption = 0; ioption < y_mesh_motion.size(); ++ioption) {
-          const YAML::Node &y_option = y_mesh_motion[ioption];
-          
-          // extract mesh motion name and omega value
-          std::string motionName = "na";
-          get_required(y_option, "name", motionName);
-          double omega = 0.0;
-          get_required(y_option, "omega", omega);
-          
-          // now fill in name
-          std::vector<std::string> meshMotionBlock;
-          const YAML::Node &targets = y_option["target_name"];
-          if (targets.Type() == YAML::NodeType::Scalar) {
-            meshMotionBlock.resize(1);
-            meshMotionBlock[0] = targets.as<std::string>() ;
-          }
-          else {
-            meshMotionBlock.resize(targets.size());
-            for (size_t i=0; i < targets.size(); ++i) {
-              meshMotionBlock[i] = targets[i].as<std::string>() ;
-            }
-          }
-          
-          // look for centroid coordinates; optional, provide a default
-          std::vector<double> cCoordsVec(3,0.0); 
-          const YAML::Node coordsVecNode = y_option["centroid_coordinates"];
-          if ( coordsVecNode ) {
-            for ( size_t i = 0; i < coordsVecNode.size(); ++i )
-              cCoordsVec[i] = coordsVecNode[i].as<double>();
-          }
-          
-          // check for calculation of centroid
-          bool computeCentroid = false;
-          get_if_present(y_option, "compute_centroid", computeCentroid, computeCentroid);
-          // user specified prevails
-          if ( coordsVecNode && computeCentroid ) {
-            NaluEnv::self().naluOutputP0() 
-              << "centroid_coordinates and compute_centroid both active, user-specified centroid will prevail" << std::endl;
-            computeCentroid = false;
-          }
-
-          // look for unit vector; provide default
-          std::vector<double> unitVec(3,0.0); 
-          const YAML::Node uV = y_option["unit_vector"];
-          if ( uV ) {
-            for ( size_t i = 0; i < uV.size(); ++i )
-              unitVec[i] = uV[i].as<double>() ;
-          }
-          else {
-            NaluEnv::self().naluOutputP0() << "SolutionOptions::load() unit_vector not supplied; will use 0,0,1" << std::endl;
-            unitVec[2] = 1.0;
-          }
-          
-          MeshMotionInfo *meshInfo = new MeshMotionInfo(meshMotionBlock, omega, cCoordsVec, unitVec, computeCentroid);
-          // set the map
-          meshMotionInfoMap_[motionName] = meshInfo;
-        }
-      }
+    // Handle old mesh motion section and throw an error early if the user is
+    // attempting to use an old file with the latest branch
+    if (y_solution_options["mesh_motion"]) {
+      NaluEnv::self().naluOutput()
+        << "SolutionOptions: Detected mesh motion section within solution_options. "
+        "This is no longer supported. Please update your input file appropriately"
+        << std::endl;
+      throw std::runtime_error("mesh_motion in solution_options is deprecated.");
     }
 
     const YAML::Node fix_pressure = expect_map(y_solution_options, "fix_pressure_at_node", optional);
@@ -722,6 +667,18 @@ SolutionOptions::get_upw_factor(const std::string& dofName) const
   auto iter = upwMap_.find(dofName);
 
   if (iter != upwMap_.end())
+    factor = iter->second;
+
+  return factor;
+}
+
+double
+SolutionOptions::get_relaxation_factor(const std::string& dofName) const
+{
+  double factor = relaxFactorDefault_;
+
+  auto iter = relaxFactorMap_.find(dofName);
+  if (iter != relaxFactorMap_.end())
     factor = iter->second;
 
   return factor;

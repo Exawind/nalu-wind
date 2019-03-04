@@ -13,6 +13,7 @@
 #include <LinearSystem.h>
 #include <PecletFunction.h>
 #include <Realm.h>
+#include <SolutionOptions.h>
 #include <TimeIntegrator.h>
 #include <master_element/MasterElement.h>
 
@@ -105,6 +106,8 @@ AssembleScalarElemOpenSolverAlgorithm::execute()
   const double alphaUpw = realm_.get_alpha_upw_factor(dofName);
   const double hoUpwind = realm_.get_upw_factor(dofName);
   const bool skewSymmetric = realm_.get_skew_symmetric(dofName);
+
+  const double relaxFac = realm_.solutionOptions_->get_relaxation_factor(dofName);
 
   // one minus flavor..
   const double om_alphaUpw = 1.0-alphaUpw;
@@ -348,6 +351,11 @@ AssembleScalarElemOpenSolverAlgorithm::execute()
           const double aflux = tmdot*qIpEntrain;
           p_rhs[nearestNode] -= aflux;
         }
+      }
+
+      // relax the diagonal term before applying to the matrix
+      for (int ir=0; ir < nodesPerElement; ir++) {
+        p_lhs[ir * (nodesPerElement + 1)] /= relaxFac;
       }
 
       apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);

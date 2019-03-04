@@ -15,6 +15,7 @@
 #include <FieldTypeDef.h>
 #include <LinearSystem.h>
 #include <Realm.h>
+#include <SolutionOptions.h>
 #include <TimeIntegrator.h>
 
 #include <kernel/Kernel.h>
@@ -53,11 +54,16 @@ AssembleElemSolverAlgorithm::AssembleElemSolverAlgorithm(
   unsigned nodesPerEntity,
   bool interleaveMEViews)
   : SolverAlgorithm(realm, part, eqSystem),
+    dataNeededByKernels_(realm.meta_data()),
     entityRank_(entityRank),
     nodesPerEntity_(nodesPerEntity),
     rhsSize_(nodesPerEntity*eqSystem->linsys_->numDof()),
     interleaveMEViews_(interleaveMEViews)
 {
+  if (eqSystem->dofName_ != "pressure") {
+    diagRelaxFactor_ = realm.solutionOptions_->get_relaxation_factor(
+      eqSystem->dofName_);
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -82,7 +88,7 @@ AssembleElemSolverAlgorithm::execute()
   for ( size_t i = 0; i < activeKernelsSize; ++i )
     activeKernels_[i]->setup(*realm_.timeIntegrator_);
 
-  run_algorithm(bulk_data, [&](SharedMemData& smdata)
+  run_algorithm(bulk_data, [&](SharedMemData<TeamHandleType,HostShmem>& smdata)
   {
       set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
       set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());
@@ -94,6 +100,8 @@ AssembleElemSolverAlgorithm::execute()
       for(int simdElemIndex=0; simdElemIndex<smdata.numSimdElems; ++simdElemIndex) {
         extract_vector_lane(smdata.simdrhs, simdElemIndex, smdata.rhs);
         extract_vector_lane(smdata.simdlhs, simdElemIndex, smdata.lhs);
+        for (int ir=0; ir < rhsSize_; ++ir)
+          smdata.lhs(ir, ir) /= diagRelaxFactor_;
         apply_coeff(nodesPerEntity_, smdata.elemNodes[simdElemIndex],
                     smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
       }

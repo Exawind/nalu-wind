@@ -67,7 +67,7 @@ SteadyThermalContactSrcHOElemKernel<AlgTraits>::execute(
   });
 }
 
-INSTANTIATE_KERNEL_HOSGL(SteadyThermalContactSrcHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(SteadyThermalContactSrcHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

@@ -13,6 +13,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -32,15 +33,15 @@ ScalarFluxPenaltyElemKernel<BcAlgTraits>::ScalarFluxPenaltyElemKernel(
   ElemDataRequests &faceDataPreReqs,
   ElemDataRequests &elemDataPreReqs)
   : Kernel(),
-    scalarQ_(scalarQ),
-    bcScalarQ_(bcScalarQ),
-    diffFluxCoeff_(diffFluxCoeff),
+    scalarQ_(scalarQ->mesh_meta_data_ordinal()),
+    bcScalarQ_(bcScalarQ->mesh_meta_data_ordinal()),
+    diffFluxCoeff_(diffFluxCoeff->mesh_meta_data_ordinal()),
     penaltyFac_(2.0),
     shiftedGradOp_(solnOpts.get_shifted_grad_op("pressure")),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_))
 {
-  coordinates_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
-  exposedAreaVec_ = metaData.get_field<GenericFieldType>(metaData.side_rank(), "exposed_area_vector");
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+  exposedAreaVec_ = get_field_ordinal(metaData, "exposed_area_vector", metaData.side_rank());
   
   // extract master elements
   MasterElement* meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
@@ -50,12 +51,12 @@ ScalarFluxPenaltyElemKernel<BcAlgTraits>::ScalarFluxPenaltyElemKernel(
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);
 
   // fields and data; face and then element
-  faceDataPreReqs.add_gathered_nodal_field(*scalarQ_, 1);
-  faceDataPreReqs.add_gathered_nodal_field(*bcScalarQ_, 1);
-  faceDataPreReqs.add_gathered_nodal_field(*diffFluxCoeff_, 1);
-  faceDataPreReqs.add_face_field(*exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
-  elemDataPreReqs.add_coordinates_field(*coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
-  elemDataPreReqs.add_gathered_nodal_field(*scalarQ_, 1);
+  faceDataPreReqs.add_gathered_nodal_field(scalarQ_, 1);
+  faceDataPreReqs.add_gathered_nodal_field(bcScalarQ_, 1);
+  faceDataPreReqs.add_gathered_nodal_field(diffFluxCoeff_, 1);
+  faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  elemDataPreReqs.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  elemDataPreReqs.add_gathered_nodal_field(scalarQ_, 1);
   
   // manage dndx
   if ( shiftedGradOp_ )
@@ -84,13 +85,13 @@ ScalarFluxPenaltyElemKernel<BcAlgTraits>::execute(
   const int *face_node_ordinals = meSCS_->side_node_ordinals(elemFaceOrdinal);
  
   // face
-  SharedMemView<DoubleType*>& vf_scalarQ = faceScratchViews.get_scratch_view_1D(*scalarQ_);
-  SharedMemView<DoubleType*>& vf_bcScalarQ = faceScratchViews.get_scratch_view_1D(*bcScalarQ_);
-  SharedMemView<DoubleType*>& vf_diffFluxCoeff = faceScratchViews.get_scratch_view_1D(*diffFluxCoeff_);
-  SharedMemView<DoubleType**>& vf_exposedAreaVec = faceScratchViews.get_scratch_view_2D(*exposedAreaVec_);
+  SharedMemView<DoubleType*>& vf_scalarQ = faceScratchViews.get_scratch_view_1D(scalarQ_);
+  SharedMemView<DoubleType*>& vf_bcScalarQ = faceScratchViews.get_scratch_view_1D(bcScalarQ_);
+  SharedMemView<DoubleType*>& vf_diffFluxCoeff = faceScratchViews.get_scratch_view_1D(diffFluxCoeff_);
+  SharedMemView<DoubleType**>& vf_exposedAreaVec = faceScratchViews.get_scratch_view_2D(exposedAreaVec_);
  
   // element
-  SharedMemView<DoubleType*>& v_scalarQ = elemScratchViews.get_scratch_view_1D(*scalarQ_);
+  SharedMemView<DoubleType*>& v_scalarQ = elemScratchViews.get_scratch_view_1D(scalarQ_);
 
   // dndx for both rhs and lhs
   SharedMemView<DoubleType***>& v_dndx = shiftedGradOp_ 
@@ -166,7 +167,7 @@ ScalarFluxPenaltyElemKernel<BcAlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(ScalarFluxPenaltyElemKernel);
+INSTANTIATE_KERNEL_FACE_ELEMENT(ScalarFluxPenaltyElemKernel)
 
 }  // nalu
 }  // sierra

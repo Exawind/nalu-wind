@@ -17,7 +17,7 @@ SpinnerLidarSegmentGenerator::SpinnerLidarSegmentGenerator(
 : innerPrism_(inner),
   outerPrism_(outer),
   beamLength_(in_beamLength)
-{};
+{}
 
 void
 SpinnerLidarSegmentGenerator::load(const YAML::Node& node)

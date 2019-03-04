@@ -66,6 +66,18 @@ struct FieldInfo {
   unsigned scalarsDim2;
 };
 
+inline
+stk::mesh::EntityRank get_entity_rank(const FieldInfo& fieldInfo)
+{
+  return fieldInfo.field->entity_rank();
+}
+
+inline
+unsigned get_field_ordinal(const FieldInfo& fieldInfo)
+{
+  return fieldInfo.field->mesh_meta_data_ordinal();
+}
+
 struct FieldInfoLess {
   bool operator()(const FieldInfo& lhs, const FieldInfo& rhs) const
   {
@@ -78,10 +90,11 @@ typedef std::set<FieldInfo,FieldInfoLess> FieldSet;
 class ElemDataRequests
 {
 public:
-  ElemDataRequests()
-    : dataEnums(),
+  ElemDataRequests(const stk::mesh::MetaData& meta)
+    : meta_(meta),
+      dataEnums(),
       coordsFields_(),
-    fields(), meFC_(nullptr), meSCS_(nullptr), meSCV_(nullptr), meFEM_(nullptr)
+      fields(), meFC_(nullptr), meSCS_(nullptr), meSCV_(nullptr), meFEM_(nullptr)
   {
   }
 
@@ -110,10 +123,50 @@ public:
   void add_ip_field(const stk::mesh::FieldBase& field, unsigned tensorDim1, unsigned tensorDim2);
   void add_element_field(const stk::mesh::FieldBase& field, unsigned tensorDim1, unsigned tensorDim2);
 
+  inline void add_gathered_nodal_field(unsigned field, unsigned scalarsPerNode)
+  {
+    add_gathered_nodal_field(*meta_.get_fields()[field], scalarsPerNode);
+  }
+
+  inline void add_gathered_nodal_field(
+    unsigned field, unsigned tensorDim1, unsigned tensorDim2)
+  {
+    add_gathered_nodal_field(
+      *meta_.get_fields()[field], tensorDim1, tensorDim2);
+  }
+
+  inline void add_face_field(unsigned field, unsigned scalarsPerFace)
+  {
+    add_face_field(*meta_.get_fields()[field], scalarsPerFace);
+  }
+
+  inline void add_element_field(unsigned field, unsigned scalarsPerElement)
+  {
+    add_element_field(*meta_.get_fields()[field], scalarsPerElement);
+  }
+
+  inline void
+  add_face_field(unsigned field, unsigned tensorDim1, unsigned tensorDim2)
+  {
+    add_face_field(*meta_.get_fields()[field], tensorDim1, tensorDim2);
+  }
+
+  inline void
+  add_element_field(unsigned field, unsigned tensorDim1, unsigned tensorDim2)
+  {
+    add_element_field(*meta_.get_fields()[field], tensorDim1, tensorDim2);
+  }
+
   void add_coordinates_field(
     const stk::mesh::FieldBase& field,
     unsigned scalarsPerNode,
     COORDS_TYPES cType);
+
+  inline void add_coordinates_field(
+    unsigned field, unsigned scalarsPerNode, COORDS_TYPES cType)
+  {
+    add_coordinates_field(*meta_.get_fields()[field], scalarsPerNode, cType);
+  }
 
   void add_cvfem_face_me(MasterElement *meFC)
   {
@@ -161,6 +214,7 @@ public:
   MasterElement *get_fem_volume_me() const {return meFEM_;}
 
 private:
+  const stk::mesh::MetaData& meta_;
   std::array<std::set<ELEM_DATA_NEEDED>, MAX_COORDS_TYPES> dataEnums;
   std::map<COORDS_TYPES, const stk::mesh::FieldBase*> coordsFields_;
   FieldSet fields;

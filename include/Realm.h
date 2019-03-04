@@ -50,7 +50,7 @@ class Algorithm;
 class AlgorithmDriver;
 class AuxFunctionAlgorithm;
 class ComputeGeometryAlgorithmDriver;
-// class OversetManager;
+
 class NonConformalManager;
 class ErrorIndicatorAlgorithmDriver;
 #if defined (NALU_USES_PERCEPT)
@@ -68,6 +68,7 @@ class MasterElement;
 class PropertyEvaluator;
 class HDF5FilePtr;
 class Transfer;
+class MeshMotionAlg;
 
 class SolutionNormPostProcessing;
 class TurbulenceAveragingPostProcessing;
@@ -151,11 +152,6 @@ class Realm {
   void delete_edges();
   void commit();
 
-  void process_mesh_motion();
-  void compute_centroid_on_parts(
-    std::vector<std::string> partNames,
-    std::vector<double> &centroid);
-
   void init_current_coordinates();
 
   std::string get_coordinates_name();
@@ -167,20 +163,8 @@ class Realm {
   // overset boundary condition requires elemental field registration
   bool query_for_overset();
 
-  void set_omega(
-    stk::mesh::Part *targetPart,
-    double omega);
-  void set_current_displacement(
-    stk::mesh::Part *targetPart,
-    const std::vector<double> &centroidCoords,
-    const std::vector<double> &unitVec);
   void set_current_coordinates(
     stk::mesh::Part *targetPart);
-  void set_mesh_velocity(
-    stk::mesh::Part *targetPart,
-    const std::vector<double> &centroidCoords,
-    const std::vector<double> &unitVec);
-  void mesh_velocity_cross_product(double *o, double *c, double *u);
 
   // non-conformal-like algorithm suppoer
   void initialize_non_conformal();
@@ -264,7 +248,7 @@ class Realm {
   virtual void populate_boundary_data();
   virtual void boundary_data_to_state_data();
   virtual double populate_variables_from_input(const double currentTime);
-  virtual void populate_external_variables_from_input(const double currentTime) {}
+  virtual void populate_external_variables_from_input(const double /* currentTime */) {}
   virtual double populate_restart( double &timeStepNm1, int &timeStepCount);
   virtual void populate_derived_quantities();
   virtual void evaluate_properties();
@@ -368,6 +352,14 @@ class Realm {
   stk::mesh::MetaData & meta_data();
   const stk::mesh::MetaData & meta_data() const;
 
+  inline ngp::Mesh& ngp_mesh()
+  {
+    if (!ngpMesh_) {
+      ngpMesh_.reset(new ngp::Mesh(*bulkData_));
+    }
+    return *ngpMesh_;
+  }
+
   // inactive part
   stk::mesh::Selector get_inactive_selector();
 
@@ -438,6 +430,7 @@ class Realm {
   Actuator *actuator_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
+  std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
 
   std::vector<Algorithm *> propertyAlg_;
   std::map<PropertyIdentifier, ScalarFieldType *> propertyMap_;
@@ -549,7 +542,7 @@ class Realm {
   stk::mesh::PartVector basePartVector_;
   stk::mesh::PartVector superPartVector_;
 
-  std::vector<AuxFunctionAlgorithm *> bcDataAlg_;
+  std::vector<Algorithm *> bcDataAlg_;
 
   // transfer information; three types
   std::vector<Transfer *> multiPhysicsTransferVec_;
@@ -654,6 +647,9 @@ class Realm {
    * systems.
    */
   bool hypreIsActive_{false};
+
+protected:
+  std::unique_ptr<ngp::Mesh> ngpMesh_;
 
 };
 

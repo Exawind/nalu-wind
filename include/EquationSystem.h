@@ -9,7 +9,8 @@
 #ifndef EquationSystem_h
 #define EquationSystem_h
 
-#include<NaluParsing.h>
+#include "KokkosInterface.h"
+#include "NaluParsing.h"
 #include "Realm.h"
 #include "PecletFunction.h"
 
@@ -62,14 +63,14 @@ public:
 
   // base class with desired default no-op
   virtual void register_nodal_fields(
-    stk::mesh::Part *part) {}
+    stk::mesh::Part * /* part */) {}
 
   virtual void register_edge_fields(
-    stk::mesh::Part *part) {}
+    stk::mesh::Part * /* part */) {}
 
   virtual void register_element_fields(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo) {}
+    stk::mesh::Part * /* part */,
+    const stk::topology & /* theTopo */) {}
 
   // since Equation systems hold other equations systems
   // defaults are provided for all methods below
@@ -148,7 +149,7 @@ public:
     stk::mesh::FieldBase *deltaSolution);
   virtual void predict_state() {}
   virtual void register_interior_algorithm(
-    stk::mesh::Part *part) {}
+    stk::mesh::Part * /* part */) {}
   virtual void provide_output() {}
   virtual void pre_timestep_work();
   virtual void reinitialize_linear_system() {}
@@ -160,24 +161,24 @@ public:
   virtual bool system_is_converged();
   
   virtual void register_wall_bc(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo,
-    const WallBoundaryConditionData &wallBCData) {}
+    stk::mesh::Part * /* part */,
+    const stk::topology & /* theTopo */,
+    const WallBoundaryConditionData & /* wallBCData */) {}
 
   virtual void register_inflow_bc(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo,
-    const InflowBoundaryConditionData &inflowBCData) {}
+    stk::mesh::Part * /* part */,
+    const stk::topology & /* theTopo */,
+    const InflowBoundaryConditionData & /* inflowBCData */) {}
 
   virtual void register_open_bc(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo,
-    const OpenBoundaryConditionData &openBCData) {}
+    stk::mesh::Part * /* part */,
+    const stk::topology & /* theTopo */,
+    const OpenBoundaryConditionData & /* openBCData */) {}
 
   virtual void register_symmetry_bc(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo,
-    const SymmetryBoundaryConditionData &symmetryBCData) {}
+    stk::mesh::Part * /* part */,
+    const stk::topology & /* theTopo */,
+    const SymmetryBoundaryConditionData & /* symmetryBCData */) {}
 
   virtual void register_abltop_bc(
     stk::mesh::Part *part,
@@ -188,15 +189,15 @@ public:
     }
 
   virtual void register_periodic_bc(
-    stk::mesh::Part *partMaster,
-    stk::mesh::Part *partSlave,
-    const stk::topology &theTopoMaster,
-    const stk::topology &theTopoSlave,
-    const PeriodicBoundaryConditionData &periodicBCData) {}
+    stk::mesh::Part * /* partMaster */,
+    stk::mesh::Part * /* partSlave */,
+    const stk::topology & /* theTopoMaster */,
+    const stk::topology & /* theTopoSlave */,
+    const PeriodicBoundaryConditionData & /* periodicBCData */) {}
   
   virtual void register_non_conformal_bc(
-    stk::mesh::Part *part,
-    const stk::topology &theTopo) {}
+    stk::mesh::Part * /* part */,
+    const stk::topology & /* theTopo */) {}
 
   virtual void register_overset_bc() {}
 
@@ -204,13 +205,13 @@ public:
     stk::mesh::FieldBase *theField);
 
   virtual void register_surface_pp_algorithm(
-    const PostProcessingData &theData,
-    stk::mesh::PartVector &partVector) {}
+    const PostProcessingData & /* theData */,
+    stk::mesh::PartVector & /* partVector */) {}
 
   virtual void register_initial_condition_fcn(
-    stk::mesh::Part *part,
-    const std::map<std::string, std::string> &theNames,
-    const std::map<std::string, std::vector<double> > &theParams) {}
+    stk::mesh::Part * /* part */,
+    const std::map<std::string, std::string> & /* theNames */,
+    const std::map<std::string, std::vector<double> > & /* theParams */) {}
 
   // rip through the propertyAlg_
   virtual void evaluate_properties();
@@ -285,7 +286,19 @@ public:
 
   virtual void post_converged_work() {}
 
-  std::vector<AuxFunctionAlgorithm *> bcDataAlg_;
+  virtual void save_diagonal_term(
+    const std::vector<stk::mesh::Entity>&,
+    const std::vector<int>&,
+    const std::vector<double>&
+  ) {}
+
+  virtual void save_diagonal_term(
+    unsigned,
+    const stk::mesh::Entity*,
+    const SharedMemView<const double**>&
+  ) {}
+
+  std::vector<Algorithm *> bcDataAlg_;
   std::vector<Algorithm *> bcDataMapAlg_;
   std::vector<Algorithm *> copyStateAlg_;
   
@@ -301,6 +314,10 @@ public:
 
   /// List of tasks to be performed after each EquationSystem::solve_and_update
   std::vector<AlgorithmDriver*> postIterAlgDriver_;
+
+  std::string dofName_{"undefined"};
+
+  bool extractDiagonal_{false};
 
   // owner equation system
   /*EquationSystem *ownerEqs_;*/

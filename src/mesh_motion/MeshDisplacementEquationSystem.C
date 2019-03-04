@@ -214,8 +214,8 @@ MeshDisplacementEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 MeshDisplacementEquationSystem::register_element_fields(
-  stk::mesh::Part *part,
-  const stk::topology &theTopo)
+  stk::mesh::Part * /* part */,
+  const stk::topology & /* theTopo */)
 {
   // n/a
 }
@@ -284,7 +284,7 @@ MeshDisplacementEquationSystem::register_interior_algorithm(
 void
 MeshDisplacementEquationSystem::register_wall_bc(
   stk::mesh::Part *part,
-  const stk::topology &theTopo,
+  const stk::topology & /* theTopo */,
   const WallBoundaryConditionData &wallBCData)
 {
 

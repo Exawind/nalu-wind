@@ -34,7 +34,6 @@
 #include <LinearSystem.h>
 #include <master_element/MasterElement.h>
 #include <MaterialPropertys.h>
-#include <MeshMotionInfo.h>
 #include <NaluParsing.h>
 #include <NonConformalManager.h>
 #include <NonConformalInfo.h>
@@ -52,6 +51,9 @@
 #include <element_promotion/ElementDescription.h>
 #include <element_promotion/PromotedPartHelper.h>
 #include <master_element/MasterElementHO.h>
+
+// mesh motion
+#include <mesh_motion/MeshMotionAlg.h>
 
 #include <nalu_make_unique.h>
 
@@ -73,6 +75,7 @@
 #include <Actuator.h>
 #ifdef NALU_USES_OPENFAST
 #include <ActuatorLineFAST.h>
+#include <ActuatorDiskFAST.h>
 #endif
 
 #include <wind_energy/ABLForcingAlgorithm.h>
@@ -140,6 +143,7 @@
 // basic c++
 #include <map>
 #include <cmath>
+#include <limits>
 #include <utility>
 #include <stdint.h>
 
@@ -248,7 +252,7 @@ namespace nalu{
     wallTimeStart_(stk::wall_time()),
     doPromotion_(false),
     promotionOrder_(0u),
-    inputMeshIdx_(-1),
+    inputMeshIdx_(std::numeric_limits<size_t>::max()),
     node_(node)
 {
   // deal with specialty options that live off of the realm; 
@@ -284,9 +288,8 @@ Realm::~Realm()
   }
 
   // any bc data
-  std::vector<AuxFunctionAlgorithm *>::iterator iaux;
-  for( iaux=bcDataAlg_.begin(); iaux!=bcDataAlg_.end(); ++iaux )
-    delete *iaux;
+  for( auto ialg: bcDataAlg_ )
+    delete ialg;
 
   delete solutionOptions_;
   delete outputInfo_;
@@ -512,14 +515,14 @@ Realm::initialize()
 
   populate_boundary_data();
 
-  if ( solutionOptions_->meshMotion_ )
-    process_mesh_motion();
-
-  if ( has_mesh_deformation() )
+  if ( has_mesh_deformation() || solutionOptions_->meshMotion_ )
     init_current_coordinates();
 
   if ( hasPeriodic_ )
     periodicManager_->build_constraints();
+
+  if ( solutionOptions_->meshMotion_ )
+    meshMotionAlg_->initialize( get_current_time() );
 
   compute_geometry();
 
@@ -600,6 +603,14 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
       case ActuatorType::ActLineFAST : {
 #ifdef NALU_USES_OPENFAST
 	actuator_ =  new ActuatorLineFAST(*this, *foundActuator[0]);
+#else
+	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
+#endif
+	break;
+      }
+      case ActuatorType::ActDiskFAST : {
+#ifdef NALU_USES_OPENFAST
+	actuator_ =  new ActuatorDiskFAST(*this, *foundActuator[0]);
 #else
 	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
 #endif
@@ -777,6 +788,23 @@ Realm::load(const YAML::Node & node)
     NaluEnv::self().naluOutputP0() << "EqSys/options Review:      " << std::endl;
     NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
     equationSystems_.load(node);
+  }
+
+  // second set of options: mesh motion... this means that the Realm will expect to provide mesh motion
+  const YAML::Node meshMotionNode = expect_sequence(node, "mesh_motion", true);
+  if (meshMotionNode)
+  {
+    // has a user stated that mesh motion is external?
+    if ( solutionOptions_->meshDeformation_ ) {
+      NaluEnv::self().naluOutputP0() << "mesh motion set to external (will prevail over mesh motion specification)!" << std::endl;
+    }
+    else {
+      // mesh motion is active
+      solutionOptions_->meshMotion_ = true;
+
+      // instantiate mesh motion class once the mesh has been created
+      meshMotionAlg_.reset(new MeshMotionAlg( *bulkData_, meshMotionNode));
+    }
   }
 
   // set number of nodes, check job run size
@@ -1847,7 +1875,7 @@ Realm::pre_timestep_work()
   // check for mesh motion
   if ( solutionOptions_->meshMotion_ ) {
 
-    process_mesh_motion();
+    meshMotionAlg_->execute( get_current_time() );
     compute_geometry();
 
     // and non-conformal algorithm
@@ -1861,6 +1889,9 @@ Realm::pre_timestep_work()
       // Only need to reset HYPRE IDs when overset inactive rows change
       set_hypre_global_id();
     }
+
+    // Reset the ngp::Mesh instance
+    ngpMesh_.reset(new ngp::Mesh(*bulkData_));
 
     // now re-initialize linear system
     equationSystems_.reinitialize_linear_system();
@@ -2532,214 +2563,6 @@ Realm::query_for_overset()
 }
 
 //--------------------------------------------------------------------------
-//-------- process_mesh_motion ---------------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::process_mesh_motion()
-{
-  // extract parameters; allows for omega to change
-  std::map<std::string, MeshMotionInfo *>::const_iterator iter;
-  for ( iter = solutionOptions_->meshMotionInfoMap_.begin();
-        iter != solutionOptions_->meshMotionInfoMap_.end(); ++iter) {
-
-    // extract mesh info object
-    MeshMotionInfo *meshInfo = iter->second;
-
-    // mesh motion block, omega and centroid coordinates
-    const double theOmega = meshInfo->omega_;
-    std::vector<std::string> meshMotionBlock = meshInfo->meshMotionBlock_;
-    std::vector<double> unitVec = meshInfo->unitVec_;
-
-    // extract compute centroid option
-    const bool computeCentroid = meshInfo->computeCentroid_;
-    const bool computeCentroidCompleted = meshInfo->computeCentroidCompleted_;
-    if ( computeCentroid && !computeCentroidCompleted ) {
-      NaluEnv::self().naluOutputP0() << "Realm::process_mesh_motion() Centroid for: " << iter->first << std::endl;
-      compute_centroid_on_parts(meshMotionBlock, meshInfo->centroid_);
-      // tell the user
-      const int nDim = metaData_->spatial_dimension();
-      for ( int j = 0; j < nDim; ++j ) {
-        NaluEnv::self().naluOutputP0() << "  centroid[" << j << "] = " << meshInfo->centroid_[j] <<  std::endl;
-      }
-      meshInfo->computeCentroidCompleted_ = true;
-    }
-
-    // proceed with setting mesh motion information on the Nalu mesh
-    for (size_t k = 0; k < meshMotionBlock.size(); ++k ) {
-      
-      stk::mesh::Part *targetPart = metaData_->get_part(meshMotionBlock[k]);
-      
-      if ( NULL == targetPart ) {
-        throw std::runtime_error("Realm::process_mesh_motion() Error Error, no part name found" + meshMotionBlock[k]);
-      }
-      else {
-        set_omega(targetPart, theOmega);
-        set_current_displacement(targetPart, meshInfo->centroid_, unitVec);
-        set_current_coordinates(targetPart);
-        set_mesh_velocity(targetPart, meshInfo->centroid_, unitVec);
-      }
-    }
-  }
-}
-
-//--------------------------------------------------------------------------
-//-------- compute_centroid_on_parts ---------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::compute_centroid_on_parts(
-  std::vector<std::string> partNames,
-  std::vector<double> &centroid)
-{
-  stk::mesh::PartVector partVec;
-  for (size_t k = 0; k < partNames.size(); ++k ) {
-    stk::mesh::Part *targetPart = metaData_->get_part(partNames[k]);
-    if ( NULL == targetPart ) {
-      throw std::runtime_error("Realm::compute_centroid() Error Error, no part name found" + partNames[k]);
-    }
-    else {
-      partVec.push_back(targetPart);
-    }
-  }
-
-  // set min/max
-  const int nDim = metaData_->spatial_dimension();
-  ThrowRequire(nDim <= 3);
-
-  const double largeNumber = 1.0e16;
-  double minCoord[3] = {largeNumber, largeNumber, largeNumber};
-  double maxCoord[3] = {-largeNumber, -largeNumber, -largeNumber};
-
-  // model coords are fine in this case
-  VectorFieldType *modelCoords = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-
-  // select all nodes
-  stk::mesh::Selector s_all_nodes = stk::mesh::selectUnion(partVec);
-
-  // select all locally owned nodes for bounding box
-  stk::mesh::BucketVector const& node_buckets = bulkData_->get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-    double * mCoord = stk::mesh::field_data(*modelCoords, b);
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      minCoord[0] = std::min(minCoord[0], mCoord[k*nDim+0]);
-      maxCoord[0] = std::max(maxCoord[0], mCoord[k*nDim+0]);
-      minCoord[1] = std::min(minCoord[1], mCoord[k*nDim+1]);
-      maxCoord[1] = std::max(maxCoord[1], mCoord[k*nDim+1]);
-      if (nDim == 3) {
-        minCoord[2] = std::min(minCoord[2], mCoord[k*nDim+2]);
-        maxCoord[2] = std::max(maxCoord[2], mCoord[k*nDim+2]);
-      }
-    }
-  }
-
-  // parallel reduction on min/max
-  double g_minCoord[3] = {};
-  double g_maxCoord[3] = {};
-  stk::ParallelMachine comm = NaluEnv::self().parallel_comm();
-  stk::all_reduce_min(comm, minCoord, g_minCoord, 3);
-  stk::all_reduce_max(comm, maxCoord, g_maxCoord, 3);
-  for ( int j = 0; j < nDim; ++j )
-    centroid[j] = 0.5*(g_maxCoord[j] + g_minCoord[j]);
-}
-
-
-//--------------------------------------------------------------------------
-//-------- set_omega -------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::set_omega(
-  stk::mesh::Part *targetPart,
-  double scalarOmega)
-{
-  // deal with tanh blending
-  const double omegaBlend = get_tanh_blending("omega");
-  ScalarFieldType *omega = metaData_->get_field<ScalarFieldType>(stk::topology::NODE_RANK, "omega");
-  
-  stk::mesh::Selector s_all_nodes = stk::mesh::Selector(*targetPart);
-
-  stk::mesh::BucketVector const& node_buckets = bulkData_->get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-    double * bigO = stk::mesh::field_data(*omega, b);
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      bigO[k] = scalarOmega*omegaBlend;
-    }
-  }
-}
-
-//--------------------------------------------------------------------------
-//-------- set_current_displacement ----------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::set_current_displacement(
-  stk::mesh::Part *targetPart,
-  const std::vector<double> &centroidCoords,
-  const std::vector<double> &unitVec)
-{
-  const int nDim = metaData_->spatial_dimension();
-  const double currentTime = get_current_time();
-
-  // local space; Nalu current coords and rotated coords; generalized for 2D and 3D
-  double mcX[3] = {0.0,0.0,0.0};
-  double rcX[3] = {0.0,0.0,0.0};
-
-  VectorFieldType *modelCoords = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType *displacement = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement");
-  ScalarFieldType *omega = metaData_->get_field<ScalarFieldType>(stk::topology::NODE_RANK, "omega");
-
-  stk::mesh::Selector s_all_nodes = stk::mesh::Selector(*targetPart);
-
-  stk::mesh::BucketVector const& node_buckets = bulkData_->get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-    const double * bigO = stk::mesh::field_data(*omega, b);
-    const double * mCoords = stk::mesh::field_data(*modelCoords, b);
-    double * dx = stk::mesh::field_data(*displacement, b);
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-      // extract omega
-      const double theO = bigO[k];
-
-      const int kNdim = k*nDim;
-    
-      // load the current and model coords
-      for ( int i = 0; i < nDim; ++i ) {
-        mcX[i] = mCoords[kNdim+i];
-      }
-
-      const double cX = mcX[0] - centroidCoords[0];
-      const double cY = mcX[1] - centroidCoords[1];
-      const double cZ = mcX[2] - centroidCoords[2];
-
-      const double sinOTby2 = sin(theO*currentTime*0.5);
-      const double cosOTby2 = cos(theO*currentTime*0.5);
-      
-      const double q0 = cosOTby2;
-      const double q1 = sinOTby2*unitVec[0];
-      const double q2 = sinOTby2*unitVec[1];
-      const double q3 = sinOTby2*unitVec[2];    
-      
-      // rotated model coordinates; converted to displacement; add back in centroid
-      rcX[0] = (q0*q0 + q1*q1 - q2*q2 - q3*q3)*cX + 2.0*(q1*q2 - q0*q3)*cY + 2.0*(q0*q2 + q1*q3)*cZ - mcX[0] + centroidCoords[0];
-      rcX[1] = 2.0*(q1*q2 + q0*q3)*cX + (q0*q0 - q1*q1 + q2*q2 - q3*q3)*cY + 2.0*(q2*q3 - q0*q1)*cZ - mcX[1] + centroidCoords[1];
-      rcX[2] = 2.0*(q1*q3 - q0*q2)*cX + 2.0*(q0*q1 + q2*q3)*cY + (q0*q0 - q1*q1 - q2*q2 + q3*q3)*cZ - mcX[2] + centroidCoords[2];
-      
-      // set displacement
-      for ( int i = 0; i < nDim; ++i ) {
-        dx[kNdim+i] = rcX[i];
-      }
-    }
-  }
-}
-
-//--------------------------------------------------------------------------
 //-------- set_current_coordinates -----------------------------------------
 //--------------------------------------------------------------------------
 void
@@ -2768,74 +2591,6 @@ Realm::set_current_coordinates(
         cCoords[offSet+j] = mCoords[offSet+j] + dx[offSet+j];
     }
   }
-}
-
-//--------------------------------------------------------------------------
-//-------- set_mesh_velocity -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::set_mesh_velocity(
-  stk::mesh::Part *targetPart,
-  const std::vector<double> &centroidCoords,
-  const std::vector<double> &unitVec)
-{
-  const int nDim = metaData_->spatial_dimension();
-
-  // local space; omega*normal, coords, velocity and Nalu current coords
-  double oX[3] = {0.0,0.0,0.0};
-  double cX[3] = {0.0,0.0,0.0};
-  double uX[3] = {0.0,0.0,0.0};
-  double ccX[3] = {0.0,0.0,0.0};
-  
-  VectorFieldType *currentCoords = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType *meshVelocity = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
-  ScalarFieldType *omega = metaData_->get_field<ScalarFieldType>(stk::topology::NODE_RANK, "omega");
-
-  stk::mesh::Selector s_all_nodes = stk::mesh::Selector(*targetPart);
-
-  stk::mesh::BucketVector const& node_buckets = bulkData_->get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-    const double * cCoords = stk::mesh::field_data(*currentCoords, b);
-    const double * bigO = stk::mesh::field_data(*omega, b);
-    double * vnp1 = stk::mesh::field_data(*meshVelocity, b);
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      const int offSet = k*nDim;
-
-      // define distance from centroid and compute cross product
-      const double theO = bigO[k];
-
-      // load the current coords
-      for ( int i = 0; i < nDim; ++i ) {
-        ccX[i] = cCoords[offSet+i];    
-      }
-      
-      // compute relative coords and vector omega (dimension 3) for general cross product
-      for ( unsigned i = 0; i < 3; ++i ) {
-        cX[i] = ccX[i] - centroidCoords[i];    
-        oX[i] = theO*unitVec[i];
-      }
-      
-      mesh_velocity_cross_product(oX, cX, uX);
-      
-      for ( int i = 0; i < nDim; ++i ) {
-        vnp1[offSet+i] =  uX[i];
-      }
-    }
-  }
-}
-
-//--------------------------------------------------------------------------
-//-------- mesh_velocity_cross_product -------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::mesh_velocity_cross_product(double *o, double *c, double *u)
-{
-  u[0] = o[1]*c[2] - o[2]*c[1];
-  u[1] = o[2]*c[0] - o[0]*c[2];
-  u[2] = o[0]*c[1] - o[1]*c[0];
 }
 
 //--------------------------------------------------------------------------
@@ -3014,11 +2769,7 @@ Realm::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*meshVelocity, *part, nDim, nullptr);
     VectorFieldType *velocityRTM = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm"));
     stk::mesh::put_field_on_mesh(*velocityRTM, *part, nDim, nullptr);
-    // only internal mesh motion requires rotation rate
-    if ( solutionOptions_->meshMotion_ ) {
-      ScalarFieldType *omega = &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "omega"));
-      stk::mesh::put_field_on_mesh(*omega, *part, nullptr);
-    }
+
     // only external mesh deformation requires dvi/dxj (for GCL)
     if ( solutionOptions_->externalMeshDeformation_) {
       ScalarFieldType *divV = &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
@@ -3708,8 +3459,6 @@ Realm::initial_work()
       bdyLayerStats_->execute();
   }
 
-  if ( solutionOptions_->meshMotion_ )
-    process_mesh_motion();
   equationSystems_.initial_work();
 }
 

@@ -54,19 +54,20 @@ public:
 private:
   MomentumMassElemKernel() = delete;
 
-  VectorFieldType *velocityNm1_{nullptr};
-  VectorFieldType *velocityN_{nullptr};
-  VectorFieldType *velocityNp1_{nullptr};
-  ScalarFieldType *densityNm1_{nullptr};
-  ScalarFieldType *densityN_{nullptr};
-  ScalarFieldType *densityNp1_{nullptr};
-  VectorFieldType *Gjp_{nullptr};
-  VectorFieldType *coordinates_{nullptr};
+  unsigned velocityNm1_ {stk::mesh::InvalidOrdinal};
+  unsigned velocityN_   {stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned densityNm1_  {stk::mesh::InvalidOrdinal};
+  unsigned densityN_    {stk::mesh::InvalidOrdinal};
+  unsigned densityNp1_  {stk::mesh::InvalidOrdinal};
+  unsigned Gjp_         {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
 
   double dt_{0.0};
   double gamma1_{0.0};
   double gamma2_{0.0};
   double gamma3_{0.0};
+  double diagRelaxFactor_{1.0};
   const bool lumpedMass_;
 
   /// Integration point to node mapping

@@ -272,7 +272,7 @@ AssembleMomentumEdgeABLTopBC::initialize()
 
   // Define fft plans.
 
-  unsigned flags=0;
+  unsigned flags=FFTW_ESTIMATE;
 
   switch (horizBCType_) {
     case 0:

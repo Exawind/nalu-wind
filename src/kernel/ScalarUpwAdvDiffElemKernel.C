@@ -15,6 +15,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -36,9 +37,9 @@ ScalarUpwAdvDiffElemKernel<AlgTraits>::ScalarUpwAdvDiffElemKernel(
   ElemDataRequests& dataPreReqs)
   : Kernel(),
     solnOpts_(solnOpts),
-    scalarQ_(scalarQ),
-    Gjq_(Gjq),
-    diffFluxCoeff_(diffFluxCoeff),
+    scalarQ_(scalarQ->mesh_meta_data_ordinal()),
+    Gjq_(Gjq->mesh_meta_data_ordinal()),
+    diffFluxCoeff_(diffFluxCoeff->mesh_meta_data_ordinal()),
     lrscv_(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_)->adjacentNodes()),
     dofName_(scalarQ->name()),
     alpha_(solnOpts.get_alpha_factor(dofName_)),
@@ -52,19 +53,12 @@ ScalarUpwAdvDiffElemKernel<AlgTraits>::ScalarUpwAdvDiffElemKernel(
 {
   // Save of required fields
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
-  massFlowRate_ = metaData.get_field<GenericFieldType>(
-    stk::topology::ELEMENT_RANK, "mass_flow_rate_scs");
-  density_ = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "density");
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+  massFlowRate_ = get_field_ordinal(metaData, "mass_flow_rate_scs", stk::topology::ELEM_RANK);
+  density_ = get_field_ordinal(metaData, "density");
 
-  if (solnOpts.does_mesh_move())
-    velocityRTM_ = metaData.get_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "velocity_rtm");
-  else
-    velocityRTM_ = metaData.get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "velocity");
+  const std::string vrtm_name = solnOpts.does_mesh_move()? "velocity_rtm" : "velocity";
+  velocityRTM_ = get_field_ordinal(metaData, vrtm_name);
 
   MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
   
@@ -77,13 +71,13 @@ ScalarUpwAdvDiffElemKernel<AlgTraits>::ScalarUpwAdvDiffElemKernel(
   dataPreReqs.add_cvfem_surface_me(meSCS);
 
   // fields and data; mdot not gathered
-  dataPreReqs.add_gathered_nodal_field(*velocityRTM_, AlgTraits::nDim_);
-  dataPreReqs.add_coordinates_field(*coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*Gjq, AlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*scalarQ, 1);
-  dataPreReqs.add_gathered_nodal_field(*density_, 1);
-  dataPreReqs.add_gathered_nodal_field(*diffFluxCoeff, 1);
-  dataPreReqs.add_element_field(*massFlowRate_, AlgTraits::numScsIp_);
+  dataPreReqs.add_gathered_nodal_field(velocityRTM_, AlgTraits::nDim_);
+  dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(Gjq_, AlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(scalarQ_, 1);
+  dataPreReqs.add_gathered_nodal_field(density_, 1);
+  dataPreReqs.add_gathered_nodal_field(diffFluxCoeff_, 1);
+  dataPreReqs.add_element_field(massFlowRate_, AlgTraits::numScsIp_);
   dataPreReqs.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
   if ( shiftedGradOp_ )
     dataPreReqs.add_master_element_call(SCS_SHIFTED_GRAD_OP, CURRENT_COORDINATES);
@@ -121,13 +115,13 @@ ScalarUpwAdvDiffElemKernel<AlgTraits>::execute(
   /// Scratch space to hold coordinates at the integration point
   NALU_ALIGNED DoubleType w_coordIp[AlgTraits::nDim_];
 
-  SharedMemView<DoubleType**>& v_velocityRTM = scratchViews.get_scratch_view_2D(*velocityRTM_);
-  SharedMemView<DoubleType**>& v_coordinates = scratchViews.get_scratch_view_2D(*coordinates_);
-  SharedMemView<DoubleType**>& v_Gjq = scratchViews.get_scratch_view_2D(*Gjq_);
-  SharedMemView<DoubleType*>& v_scalarQ = scratchViews.get_scratch_view_1D(*scalarQ_);
-  SharedMemView<DoubleType*>& v_density = scratchViews.get_scratch_view_1D(*density_);
-  SharedMemView<DoubleType*>& v_diffFluxCoeff = scratchViews.get_scratch_view_1D(*diffFluxCoeff_);
-  SharedMemView<DoubleType*>& v_mdot = scratchViews.get_scratch_view_1D(*massFlowRate_);
+  SharedMemView<DoubleType**>& v_velocityRTM = scratchViews.get_scratch_view_2D(velocityRTM_);
+  SharedMemView<DoubleType**>& v_coordinates = scratchViews.get_scratch_view_2D(coordinates_);
+  SharedMemView<DoubleType**>& v_Gjq = scratchViews.get_scratch_view_2D(Gjq_);
+  SharedMemView<DoubleType*>& v_scalarQ = scratchViews.get_scratch_view_1D(scalarQ_);
+  SharedMemView<DoubleType*>& v_density = scratchViews.get_scratch_view_1D(density_);
+  SharedMemView<DoubleType*>& v_diffFluxCoeff = scratchViews.get_scratch_view_1D(diffFluxCoeff_);
+  SharedMemView<DoubleType*>& v_mdot = scratchViews.get_scratch_view_1D(massFlowRate_);
 
   SharedMemView<DoubleType**>& v_scs_areav = scratchViews.get_me_views(CURRENT_COORDINATES).scs_areav;
   SharedMemView<DoubleType***>& v_dndx = shiftedGradOp_
@@ -269,7 +263,7 @@ ScalarUpwAdvDiffElemKernel<AlgTraits>::van_leer(
   return limit;
 }
 
-INSTANTIATE_KERNEL(ScalarUpwAdvDiffElemKernel);
+INSTANTIATE_KERNEL(ScalarUpwAdvDiffElemKernel)
 
 }  // nalu
 }  // sierra

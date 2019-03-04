@@ -24,7 +24,7 @@ void do_the_test_ngp(const sierra::nalu::ElemDataRequests& dataReq)
   size_t bytesPerTeam = 0;
   size_t bytesPerThread = 0;
   auto team_exec = sierra::nalu::get_device_team_policy(1, bytesPerTeam, bytesPerThread, threadsPerTeam);
-  Kokkos::parallel_reduce(team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team, unsigned& localNumTests)
+  Kokkos::parallel_reduce(team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType&  /* team */, unsigned& localNumTests)
   {
     if (ngpDataReq.get_fields().size() == 3) {
       ++localNumTests;
@@ -60,7 +60,7 @@ void do_the_test_gpu(const sierra::nalu::ElemDataRequests& dataReq)
   size_t bytesPerTeam = 0;
   size_t bytesPerThread = 0;
   auto team_exec = sierra::nalu::get_device_team_policy(1, bytesPerTeam, bytesPerThread, threadsPerTeam);
-  Kokkos::parallel_reduce(team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team, unsigned& localNumTests)
+  Kokkos::parallel_reduce(team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType&  /* team */, unsigned& localNumTests)
   {
     if (ngpDataReq.get_fields().size() == 3) {
       ++localNumTests;
@@ -91,7 +91,7 @@ TEST_F(Hex8MeshWithNSOFields, ElemDataRequestsNGP)
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
   stk::topology elemTopo = stk::topology::HEX_8;
 
-  sierra::nalu::ElemDataRequests dataReq;
+  sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
   dataReq.add_cvfem_volume_me(meSCV);
 
@@ -111,7 +111,7 @@ TEST_F(Hex8MeshWithNSOFields, ElemDataRequestsGPU)
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
   stk::topology elemTopo = stk::topology::HEX_8;
 
-  sierra::nalu::ElemDataRequests dataReq;
+  sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
   dataReq.add_cvfem_volume_me(meSCV);
 

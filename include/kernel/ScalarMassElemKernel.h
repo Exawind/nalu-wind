@@ -55,18 +55,19 @@ public:
 private:
   ScalarMassElemKernel() = delete;
 
-  ScalarFieldType *scalarQNm1_{nullptr};
-  ScalarFieldType *scalarQN_{nullptr};
-  ScalarFieldType *scalarQNp1_{nullptr};
-  ScalarFieldType *densityNm1_{nullptr};
-  ScalarFieldType *densityN_{nullptr};
-  ScalarFieldType *densityNp1_{nullptr};
-  VectorFieldType *coordinates_{nullptr};
+  unsigned scalarQNm1_ {stk::mesh::InvalidOrdinal};
+  unsigned scalarQN_ {stk::mesh::InvalidOrdinal};
+  unsigned scalarQNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned densityNm1_ {stk::mesh::InvalidOrdinal};
+  unsigned densityN_ {stk::mesh::InvalidOrdinal};
+  unsigned densityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
 
   double dt_{0.0};
   double gamma1_{0.0};
   double gamma2_{0.0};
   double gamma3_{0.0};
+  double diagRelaxFactor_{1.0};
   const bool lumpedMass_;
 
   /// Integration point to node mapping

@@ -13,6 +13,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -32,18 +33,18 @@ ScalarDiffFemKernel<AlgTraits>::ScalarDiffFemKernel(
   ElemDataRequests& dataPreReqs)
   : Kernel(),
     bulkData_(&bulkData),
-    scalarQ_(scalarQ),
-    diffFluxCoeff_(diffFluxCoeff),
+    scalarQ_(scalarQ->mesh_meta_data_ordinal()),
+    diffFluxCoeff_(diffFluxCoeff->mesh_meta_data_ordinal()),
     meFEM_(new Hex8FEM()),
     ipWeight_(&meFEM_->weights_[0]),
-    shiftedGradOp_(solnOpts.get_shifted_grad_op(scalarQ_->name()))
+    shiftedGradOp_(solnOpts.get_shifted_grad_op(scalarQ->name()))
 {
   ThrowRequireMsg(AlgTraits::topo_ == stk::topology::HEX_8,
                   "FEM_DIFF only available for hexes currently");
 
   // Save of required fields
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  coordinates_ = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  coordinates_ = get_field_ordinal(metaData, "coordinates");
 
   // master element, shape function is shifted consistently
   if ( shiftedGradOp_ )
@@ -54,9 +55,9 @@ ScalarDiffFemKernel<AlgTraits>::ScalarDiffFemKernel(
   dataPreReqs.add_fem_volume_me(meFEM_);
 
   // fields and data
-  dataPreReqs.add_coordinates_field(*coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*scalarQ_, 1);
-  dataPreReqs.add_gathered_nodal_field(*diffFluxCoeff_, 1);
+  dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(scalarQ_, 1);
+  dataPreReqs.add_gathered_nodal_field(diffFluxCoeff_, 1);
   if ( shiftedGradOp_ )
     dataPreReqs.add_master_element_call(FEM_SHIFTED_GRAD_OP, CURRENT_COORDINATES);
   else
@@ -76,8 +77,8 @@ ScalarDiffFemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType*>& rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
-  SharedMemView<DoubleType*>& v_scalarQ = scratchViews.get_scratch_view_1D(*scalarQ_);
-  SharedMemView<DoubleType*>& v_diffFluxCoeff = scratchViews.get_scratch_view_1D(*diffFluxCoeff_);
+  SharedMemView<DoubleType*>& v_scalarQ = scratchViews.get_scratch_view_1D(scalarQ_);
+  SharedMemView<DoubleType*>& v_diffFluxCoeff = scratchViews.get_scratch_view_1D(diffFluxCoeff_);
   
   SharedMemView<DoubleType***>& v_dndx = scratchViews.get_me_views(CURRENT_COORDINATES).dndx_fem;
   SharedMemView<DoubleType*>& v_det_j = scratchViews.get_me_views(CURRENT_COORDINATES).det_j_fem;
@@ -115,7 +116,7 @@ ScalarDiffFemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(ScalarDiffFemKernel);
+INSTANTIATE_KERNEL(ScalarDiffFemKernel)
 
 }  // nalu
 }  // sierra

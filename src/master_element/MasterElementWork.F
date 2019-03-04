@@ -1811,6 +1811,7 @@ c***********************************************************************
 c
 c
       implicit none
+      integer nelem, npe, nint, nerr
       dimension cordel(2,npe,nelem),
      .          vol(nelem,nint),
      .          err(nelem)
@@ -1819,7 +1820,6 @@ c
       double precision cordel, vol, err
       double precision deriv, shape_fcn
       double precision xi, xigp
-      integer nelem, npe, nint, nerr
 c
 c     Gaussian quadrature points within an interval [-.25,+.25]
 c
@@ -1964,10 +1964,10 @@ c***********************************************************************
 c
       implicit none
 c
+      integer nelem, npe, nint
       dimension cordel(2,npe,nelem),
      *          area_vec(2,nelem,nint)
       double precision cordel, area_vec
-      integer nelem, npe, nint
 c
       dimension coord_mid_face(2,4)
       double precision coord_mid_face
@@ -2072,10 +2072,10 @@ c***********************************************************************
 c
       implicit none
 c
+      integer nelem, npe, nint
       dimension cordel(2,npe,nelem),
      *          area_vec(2,nelem,nint)
       double precision cordel, area_vec
-      integer nelem, npe, nint
 c
       dimension coord_mid_face(2,3)
       double precision coord_mid_face
@@ -2177,11 +2177,11 @@ c***********************************************************************
 c
       implicit none
 c
+      integer nelem, npe, nint, nerr
       dimension cordel(2,npe,nelem),
      .          vol(nelem,nint),
      .          err(nelem)
       double precision cordel, vol, err
-      integer nelem, npe, nint, nerr
 
       dimension deriv(2,4), shape_fcn(4)
       dimension xyval(2,4,3)

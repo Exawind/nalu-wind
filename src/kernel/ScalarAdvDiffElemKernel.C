@@ -13,6 +13,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -31,17 +32,15 @@ ScalarAdvDiffElemKernel<AlgTraits>::ScalarAdvDiffElemKernel(
   ScalarFieldType* diffFluxCoeff,
   ElemDataRequests& dataPreReqs)
   : Kernel(),
-    scalarQ_(scalarQ),
-    diffFluxCoeff_(diffFluxCoeff),
+    scalarQ_(scalarQ->mesh_meta_data_ordinal()),
+    diffFluxCoeff_(diffFluxCoeff->mesh_meta_data_ordinal()),
     lrscv_(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_)->adjacentNodes()),
     shiftedGradOp_(solnOpts.get_shifted_grad_op(scalarQ->name()))
 {
   // Save of required fields
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
-  massFlowRate_ = metaData.get_field<GenericFieldType>(
-    stk::topology::ELEMENT_RANK, "mass_flow_rate_scs");
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+  massFlowRate_ = get_field_ordinal(metaData, "mass_flow_rate_scs", stk::topology::ELEM_RANK);
 
   MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
 
@@ -53,10 +52,10 @@ ScalarAdvDiffElemKernel<AlgTraits>::ScalarAdvDiffElemKernel(
   dataPreReqs.add_cvfem_surface_me(meSCS);
 
   // fields and data
-  dataPreReqs.add_coordinates_field(*coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*scalarQ_, 1);
-  dataPreReqs.add_gathered_nodal_field(*diffFluxCoeff_, 1);
-  dataPreReqs.add_element_field(*massFlowRate_, AlgTraits::numScsIp_);
+  dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(scalarQ_, 1);
+  dataPreReqs.add_gathered_nodal_field(diffFluxCoeff_, 1);
+  dataPreReqs.add_element_field(massFlowRate_, AlgTraits::numScsIp_);
   dataPreReqs.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
   if ( shiftedGradOp_ )
     dataPreReqs.add_master_element_call(SCS_SHIFTED_GRAD_OP, CURRENT_COORDINATES);
@@ -75,9 +74,9 @@ ScalarAdvDiffElemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType*>& rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
-  SharedMemView<DoubleType*>& v_scalarQ = scratchViews.get_scratch_view_1D(*scalarQ_);
-  SharedMemView<DoubleType*>& v_diffFluxCoeff = scratchViews.get_scratch_view_1D(*diffFluxCoeff_);
-  SharedMemView<DoubleType*>& v_mdot = scratchViews.get_scratch_view_1D(*massFlowRate_);
+  SharedMemView<DoubleType*>& v_scalarQ = scratchViews.get_scratch_view_1D(scalarQ_);
+  SharedMemView<DoubleType*>& v_diffFluxCoeff = scratchViews.get_scratch_view_1D(diffFluxCoeff_);
+  SharedMemView<DoubleType*>& v_mdot = scratchViews.get_scratch_view_1D(massFlowRate_);
 
   SharedMemView<DoubleType**>& v_scs_areav = scratchViews.get_me_views(CURRENT_COORDINATES).scs_areav;
   SharedMemView<DoubleType***>& v_dndx = shiftedGradOp_
@@ -128,7 +127,7 @@ ScalarAdvDiffElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(ScalarAdvDiffElemKernel);
+INSTANTIATE_KERNEL(ScalarAdvDiffElemKernel)
 
 }  // nalu
 }  // sierra

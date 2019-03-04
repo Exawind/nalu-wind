@@ -14,6 +14,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -39,14 +40,13 @@ ContinuityMassElemKernel<AlgTraits>::ContinuityMassElemKernel(
 
   ScalarFieldType* density = metaData.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density");
-  densityN_ = &(density->field_of_state(stk::mesh::StateN));
-  densityNp1_ = &(density->field_of_state(stk::mesh::StateNP1));
+  densityN_ = density->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal();
+  densityNp1_ = density->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
   if (density->number_of_states() == 2)
     densityNm1_ = densityN_;
   else
-    densityNm1_ = &(density->field_of_state(stk::mesh::StateNM1));
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
+    densityNm1_ = density->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
   MasterElement *meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
 
@@ -60,10 +60,10 @@ ContinuityMassElemKernel<AlgTraits>::ContinuityMassElemKernel(
   dataPreReqs.add_cvfem_volume_me(meSCV);
 
   // fields and data
-  dataPreReqs.add_coordinates_field(*coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*densityNm1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*densityN_, 1);
-  dataPreReqs.add_gathered_nodal_field(*densityNp1_, 1);
+  dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(densityNm1_, 1);
+  dataPreReqs.add_gathered_nodal_field(densityN_, 1);
+  dataPreReqs.add_gathered_nodal_field(densityNp1_, 1);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
 }
 
@@ -91,11 +91,11 @@ ContinuityMassElemKernel<AlgTraits>::execute(
   const DoubleType projTimeScale = dt_/gamma1_;
 
   SharedMemView<DoubleType*>& v_densityNm1 = scratchViews.get_scratch_view_1D(
-    *densityNm1_);
+    densityNm1_);
   SharedMemView<DoubleType*>& v_densityN = scratchViews.get_scratch_view_1D(
-    *densityN_);
+    densityN_);
   SharedMemView<DoubleType*>& v_densityNp1 = scratchViews.get_scratch_view_1D(
-    *densityNp1_);
+    densityNp1_);
 
   SharedMemView<DoubleType*>& v_scv_volume = scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
 
@@ -121,7 +121,7 @@ ContinuityMassElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(ContinuityMassElemKernel);
+INSTANTIATE_KERNEL(ContinuityMassElemKernel)
 
 }  // nalu
 }  // sierra

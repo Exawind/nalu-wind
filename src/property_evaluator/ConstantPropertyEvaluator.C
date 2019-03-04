@@ -38,7 +38,7 @@ ConstantPropertyEvaluator::~ConstantPropertyEvaluator()
 //--------------------------------------------------------------------------
 double
 ConstantPropertyEvaluator::execute(
-  double *indVarList,
+  double * /* indVarList */,
   stk::mesh::Entity /*node*/)
 {
   return value_;

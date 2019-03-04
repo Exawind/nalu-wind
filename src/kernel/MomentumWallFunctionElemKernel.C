@@ -12,6 +12,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -34,18 +35,18 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::MomentumWallFunctionElemKernel(
     ipNodeMap_(sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::topo_)->ipNodeMap())
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  VectorFieldType *velocity = metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-  velocityNp1_ = &(velocity->field_of_state(stk::mesh::StateNP1));
-  bcVelocity_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "wall_velocity_bc");
-  density_ = metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  viscosity_ = metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
-  exposedAreaVec_ = metaData.get_field<GenericFieldType>(metaData.side_rank(), "exposed_area_vector");
-  wallFrictionVelocityBip_ = metaData.get_field<GenericFieldType>(metaData.side_rank(), "wall_friction_velocity_bip");
-  wallNormalDistanceBip_ = metaData.get_field<GenericFieldType>(metaData.side_rank(), "wall_normal_distance_bip");
-  VectorFieldType *coordinates = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
- 
+  velocityNp1_ = get_field_ordinal(metaData, "velocity", stk::mesh::StateNP1);
+  bcVelocity_ = get_field_ordinal(metaData, "wall_velocity_bc");
+  density_ = get_field_ordinal(metaData, "density");
+  viscosity_ = get_field_ordinal(metaData, "viscosity");
+  exposedAreaVec_ =
+    get_field_ordinal(metaData, "exposed_area_vector", metaData.side_rank());
+  wallFrictionVelocityBip_ = get_field_ordinal(
+    metaData, "wall_friction_velocity_bip", metaData.side_rank());
+  wallNormalDistanceBip_ = get_field_ordinal(
+    metaData, "wall_normal_distance_bip", metaData.side_rank());
+  unsigned coordinates = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+
   MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::topo_);
  
   // compute and save shape function
@@ -55,14 +56,14 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::MomentumWallFunctionElemKernel(
   dataPreReqs.add_cvfem_face_me(meFC);
  
   // fields and data; mdot not gathered as element data
-  dataPreReqs.add_coordinates_field(*coordinates, BcAlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*velocityNp1_, BcAlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*bcVelocity_, BcAlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*density_, 1);
-  dataPreReqs.add_gathered_nodal_field(*viscosity_, 1);
-  dataPreReqs.add_face_field(*exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
-  dataPreReqs.add_face_field(*wallFrictionVelocityBip_, BcAlgTraits::numFaceIp_);
-  dataPreReqs.add_face_field(*wallNormalDistanceBip_, BcAlgTraits::numFaceIp_);
+  dataPreReqs.add_coordinates_field(coordinates, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(bcVelocity_, BcAlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(density_, 1);
+  dataPreReqs.add_gathered_nodal_field(viscosity_, 1);
+  dataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  dataPreReqs.add_face_field(wallFrictionVelocityBip_, BcAlgTraits::numFaceIp_);
+  dataPreReqs.add_face_field(wallNormalDistanceBip_, BcAlgTraits::numFaceIp_);
 }
 
 template<class BcAlgTraits>
@@ -80,13 +81,13 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::execute(
   DoubleType w_uBcBip[BcAlgTraits::nDim_];
   DoubleType w_unitNormal[BcAlgTraits::nDim_];
 
-  SharedMemView<DoubleType**>& v_uNp1 = scratchViews.get_scratch_view_2D(*velocityNp1_);
-  SharedMemView<DoubleType**>& v_bcVelocity = scratchViews.get_scratch_view_2D(*bcVelocity_);
-  SharedMemView<DoubleType*>& v_density = scratchViews.get_scratch_view_1D(*density_);
-  SharedMemView<DoubleType*>& v_viscosity = scratchViews.get_scratch_view_1D(*viscosity_);
-  SharedMemView<DoubleType**>& vf_exposedAreaVec = scratchViews.get_scratch_view_2D(*exposedAreaVec_);
-  SharedMemView<DoubleType*>& vf_utau = scratchViews.get_scratch_view_1D(*wallFrictionVelocityBip_);
-  SharedMemView<DoubleType*>& vf_yp = scratchViews.get_scratch_view_1D(*wallNormalDistanceBip_);
+  SharedMemView<DoubleType**>& v_uNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
+  SharedMemView<DoubleType**>& v_bcVelocity = scratchViews.get_scratch_view_2D(bcVelocity_);
+  SharedMemView<DoubleType*>& v_density = scratchViews.get_scratch_view_1D(density_);
+  SharedMemView<DoubleType*>& v_viscosity = scratchViews.get_scratch_view_1D(viscosity_);
+  SharedMemView<DoubleType**>& vf_exposedAreaVec = scratchViews.get_scratch_view_2D(exposedAreaVec_);
+  SharedMemView<DoubleType*>& vf_utau = scratchViews.get_scratch_view_1D(wallFrictionVelocityBip_);
+  SharedMemView<DoubleType*>& vf_yp = scratchViews.get_scratch_view_1D(wallNormalDistanceBip_);
 
   for ( int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip ) {
         
@@ -158,7 +159,7 @@ MomentumWallFunctionElemKernel<BcAlgTraits>::execute(
   }  
 }
 
-INSTANTIATE_KERNEL_FACE(MomentumWallFunctionElemKernel);
+INSTANTIATE_KERNEL_FACE(MomentumWallFunctionElemKernel)
 
 }  // nalu
 }  // sierra

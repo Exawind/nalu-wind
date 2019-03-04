@@ -73,6 +73,7 @@ enum EquationType {
   EQ_PNG_H = 13,
   EQ_PNG_U = 14,
   EQ_PNG_TKE = 15, // FIXME... Last PNG managed like this..
+  EQ_WALL_DISTANCE = 16,
   EquationSystemType_END
 };
 
@@ -92,7 +93,8 @@ static const std::string EquationTypeMap[] = {
   "PNG_Z",
   "PNG_H",
   "PNG_U",
-  "PNG_TKE"
+  "PNG_TKE",
+  "Wall_Distance"
 };
 
 enum UserDataType {
@@ -225,10 +227,15 @@ static const std::string TurbulenceModelConstantNames[] = {
 enum ActuatorType {
   ActLinePointDrag = 0,
   ActLineFAST = 1,
+  ActDiskFAST = 2,
   ActuatorType_END
 };
 
- static std::map<std::string, ActuatorType> ActuatorTypeMap = { {"ActLinePointDrag",ActuatorType::ActLinePointDrag}, {"ActLineFAST",ActuatorType::ActLineFAST}};
+ static std::map<std::string, ActuatorType> ActuatorTypeMap = {
+     {"ActLinePointDrag",ActuatorType::ActLinePointDrag},
+     {"ActLineFAST",ActuatorType::ActLineFAST},
+     {"ActDiskFAST",ActuatorType::ActDiskFAST}
+ };
 
 } // namespace nalu
 } // namespace Sierra

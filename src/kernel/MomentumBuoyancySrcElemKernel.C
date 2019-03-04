@@ -13,6 +13,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -33,11 +34,8 @@ MomentumBuoyancySrcElemKernel<AlgTraits>::MomentumBuoyancySrcElemKernel(
     ipNodeMap_(sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_)->ipNodeMap())
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  ScalarFieldType *density = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "density");
-  densityNp1_ = &(density->field_of_state(stk::mesh::StateNP1));
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
+  densityNp1_ = get_field_ordinal(metaData, "density", stk::mesh::StateNP1);
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
   
   const std::vector<double>& solnOptsGravity = solnOpts.get_gravity_vector(AlgTraits::nDim_);
   for (int i = 0; i < AlgTraits::nDim_; i++)
@@ -51,8 +49,8 @@ MomentumBuoyancySrcElemKernel<AlgTraits>::MomentumBuoyancySrcElemKernel(
   dataPreReqs.add_cvfem_volume_me(meSCV);
 
   // fields and data
-  dataPreReqs.add_coordinates_field(*coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*densityNp1_, 1);
+  dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(densityNp1_, 1);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
 }
 
@@ -67,7 +65,7 @@ MomentumBuoyancySrcElemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType*>& rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
-  SharedMemView<DoubleType*>& v_densityNp1 = scratchViews.get_scratch_view_1D(*densityNp1_);
+  SharedMemView<DoubleType*>& v_densityNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
   SharedMemView<DoubleType*>& v_scv_volume = scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
 
   for (int ip=0; ip < AlgTraits::numScvIp_; ++ip) {
@@ -91,7 +89,7 @@ MomentumBuoyancySrcElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumBuoyancySrcElemKernel);
+INSTANTIATE_KERNEL(MomentumBuoyancySrcElemKernel)
 
 }  // nalu
 }  // sierra

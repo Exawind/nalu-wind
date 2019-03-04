@@ -97,7 +97,7 @@ QuadrilateralP2Element::QuadrilateralP2Element()
     nodes1D_(3),
     numQuad_(2)
 {
-  nDim_ = 2;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = nodes1D_ * nodes1D_;
 
   // map the standard stk (refinement consistent) node numbering
@@ -107,13 +107,6 @@ QuadrilateralP2Element::QuadrilateralP2Element()
                   7, 8, 5, // middle row of nodes
                   3, 6, 2  // top row of nodes
                 };
-
-  sideNodeOrdinals_ = {
-      0, 1, 4,
-      1, 2, 5,
-      2, 3, 6,
-      3, 0, 7
-  };
 
   // a padded list of scs locations
   scsEndLoc_ = { -1.0, -scsDist_, scsDist_, +1.0 };
@@ -502,7 +495,7 @@ QuadrilateralP2Element::sidePcoords_to_elemPcoords(
 Tri2DSCV::Tri2DSCV()
   : MasterElement()
 {
-  nDim_ = 2;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 3;
   numIntPoints_ = 3;
 
@@ -604,7 +597,7 @@ void Tri2DSCV::determinant(
 Tri3DSCS::Tri3DSCS()
   : MasterElement()
 {
-  nDim_ = 3;
+  ndim(AlgTraits::nDim_);
   nodesPerElement_ = 3;
   numIntPoints_ = 3;
 

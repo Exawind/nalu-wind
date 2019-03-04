@@ -90,11 +90,6 @@ ComputeMdotElemAlgorithm::execute()
 
   const int nDim = meta_data.spatial_dimension();
 
-  // time step
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
-  const double projTimeScale = dt/gamma1;
-
   // deal with interpolation procedure
   const double interpTogether = realm_.get_mdot_interp();
   const double om_interpTogether = 1.0-interpTogether;
@@ -105,6 +100,7 @@ ComputeMdotElemAlgorithm::execute()
   std::vector<double> ws_coordinates;
   std::vector<double> ws_pressure;
   std::vector<double> ws_density;
+  std::vector<double> ws_udiag;
 
   // geometry related to populate
   std::vector<double> ws_scs_areav;
@@ -127,6 +123,9 @@ ComputeMdotElemAlgorithm::execute()
 
   // deal with state
   ScalarFieldType &densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
+
+  ScalarFieldType* Udiag = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "momentum_diag");
 
   // define some common selectors
   stk::mesh::Selector s_locally_owned_union = meta_data.locally_owned_part()
@@ -153,6 +152,7 @@ ComputeMdotElemAlgorithm::execute()
     ws_coordinates.resize(nodesPerElement*nDim);
     ws_pressure.resize(nodesPerElement);
     ws_density.resize(nodesPerElement);
+    ws_udiag.resize(nodesPerElement);
     ws_scs_areav.resize(numScsIp*nDim);
     ws_dndx.resize(nDim*numScsIp*nodesPerElement);
     ws_deriv.resize(nDim*numScsIp*nodesPerElement);
@@ -165,6 +165,7 @@ ComputeMdotElemAlgorithm::execute()
     double *p_coordinates = &ws_coordinates[0];
     double *p_pressure = &ws_pressure[0];
     double *p_density = &ws_density[0];
+    double *p_udiag = &ws_udiag[0];
     double *p_scs_areav = &ws_scs_areav[0];
     double *p_dndx = &ws_dndx[0];
     double *p_shape_function = &ws_shape_function[0];
@@ -199,6 +200,7 @@ ComputeMdotElemAlgorithm::execute()
         // gather scalars
         p_pressure[ni] = *stk::mesh::field_data(*pressure_, node);
         p_density[ni]  = *stk::mesh::field_data(densityNp1, node);
+        p_udiag[ni] = *stk::mesh::field_data(*Udiag, node);
 
         // gather vectors
         const int offSet = ni*nDim;
@@ -229,6 +231,7 @@ ComputeMdotElemAlgorithm::execute()
           p_dpdxIp[j] = 0.0;
         }
         double rhoIp = 0.0;
+        double projTimeScaleIp = 0.0;
 
         const int offSet = ip*nodesPerElement;
         for ( int ic = 0; ic < nodesPerElement; ++ic ) {
@@ -236,12 +239,14 @@ ComputeMdotElemAlgorithm::execute()
           const double r = p_shape_function[offSet+ic];
           const double nodalPressure = p_pressure[ic];
           const double nodalRho = p_density[ic];
+          const double uDiagInv = 1.0 / p_udiag[ic];
 
           rhoIp += r*nodalRho;
+          projTimeScaleIp += r / p_udiag[ic];
 
           const int offSetDnDx = nDim*nodesPerElement*ip + ic*nDim;
           for ( int j = 0; j < nDim; ++j ) {
-            p_GpdxIp[j] += r*p_Gpdx[nDim*ic+j];
+            p_GpdxIp[j] += r*p_Gpdx[nDim*ic+j] * uDiagInv;
             p_uIp[j] += r*p_vrtm[nDim*ic+j];
             p_rho_uIp[j] += r*nodalRho*p_vrtm[nDim*ic+j];
             p_dpdxIp[j] += p_dndx[offSetDnDx+j]*nodalPressure;
@@ -252,7 +257,7 @@ ComputeMdotElemAlgorithm::execute()
         double tmdot = 0.0;
         for ( int j = 0; j < nDim; ++j ) {
           tmdot += (interpTogether*p_rho_uIp[j] + om_interpTogether*rhoIp*p_uIp[j] 
-                    - projTimeScale*(p_dpdxIp[j] - p_GpdxIp[j]))*p_scs_areav[ip*nDim+j];
+                    - (projTimeScaleIp * p_dpdxIp[j] - p_GpdxIp[j]))*p_scs_areav[ip*nDim+j];
         }
 
         mdot[ip] = tmdot;

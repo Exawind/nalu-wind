@@ -20,6 +20,7 @@ public:
   WedSCV();
   virtual ~WedSCV();
 
+  using AlgTraits = AlgTraitsWed6;
   using MasterElement::determinant;
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
@@ -77,6 +78,7 @@ public:
   WedSCS();
   virtual ~WedSCS();
 
+  using AlgTraits = AlgTraitsWed6;
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
@@ -229,6 +231,14 @@ public:
   double parametric_distance( const std::vector<double> &x);
 
   const int* side_node_ordinals(int sideOrdinal) final;
+private:
+  const int sideNodeOrdinals_[18] = {
+      0, 1, 4, 3, // ordinal 0
+      1, 2, 5, 4, // ordinal 1
+      0, 3, 5, 2, // ordinal 2
+      0, 2, 1,    // ordinal 3
+      3, 4, 5     // ordinal 4
+  };
 };
 
 

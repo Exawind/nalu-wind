@@ -14,6 +14,7 @@
 // template and scratch space
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
@@ -38,24 +39,23 @@ ScalarMassElemKernel<AlgTraits>::ScalarMassElemKernel(
   // save off fields
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
 
-  scalarQN_ = &(scalarQ->field_of_state(stk::mesh::StateN));
-  scalarQNp1_ = &(scalarQ->field_of_state(stk::mesh::StateNP1));
+  scalarQN_ = scalarQ->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal();
+  scalarQNp1_ = scalarQ->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
   if (scalarQ->number_of_states() == 2)
     scalarQNm1_ = scalarQN_;
   else
-    scalarQNm1_ = &(scalarQ->field_of_state(stk::mesh::StateNM1));
+    scalarQNm1_ = scalarQ->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
 
   ScalarFieldType* density = metaData.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density");
-  densityN_ = &(density->field_of_state(stk::mesh::StateN));
-  densityNp1_ = &(density->field_of_state(stk::mesh::StateNP1));
+  densityN_ = density->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal();
+  densityNp1_ = density->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
 
   if (density->number_of_states() == 2)
     densityNm1_ = densityN_;
   else
-    densityNm1_ = &(density->field_of_state(stk::mesh::StateNM1));
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
+    densityNm1_ = density->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
   MasterElement *meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
 
@@ -69,14 +69,16 @@ ScalarMassElemKernel<AlgTraits>::ScalarMassElemKernel(
   dataPreReqs.add_cvfem_volume_me(meSCV);
 
   // fields and data
-  dataPreReqs.add_coordinates_field(*coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*scalarQNm1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*scalarQN_, 1);
-  dataPreReqs.add_gathered_nodal_field(*scalarQNp1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*densityNm1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*densityN_, 1);
-  dataPreReqs.add_gathered_nodal_field(*densityNp1_, 1);
+  dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(scalarQNm1_, 1);
+  dataPreReqs.add_gathered_nodal_field(scalarQN_, 1);
+  dataPreReqs.add_gathered_nodal_field(scalarQNp1_, 1);
+  dataPreReqs.add_gathered_nodal_field(densityNm1_, 1);
+  dataPreReqs.add_gathered_nodal_field(densityN_, 1);
+  dataPreReqs.add_gathered_nodal_field(densityNp1_, 1);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
+
+  diagRelaxFactor_ = solnOpts.get_relaxation_factor(scalarQ->name());
 }
 
 template<typename AlgTraits>
@@ -101,17 +103,17 @@ ScalarMassElemKernel<AlgTraits>::execute(
   ScratchViews<DoubleType>& scratchViews)
 {
   SharedMemView<DoubleType*>& v_qNm1 = scratchViews.get_scratch_view_1D(
-    *scalarQNm1_);
+    scalarQNm1_);
   SharedMemView<DoubleType*>& v_qN = scratchViews.get_scratch_view_1D(
-    *scalarQN_);
+    scalarQN_);
   SharedMemView<DoubleType*>& v_qNp1 = scratchViews.get_scratch_view_1D(
-    *scalarQNp1_);
+    scalarQNp1_);
   SharedMemView<DoubleType*>& v_rhoNm1 = scratchViews.get_scratch_view_1D(
-    *densityNm1_);
+    densityNm1_);
   SharedMemView<DoubleType*>& v_rhoN = scratchViews.get_scratch_view_1D(
-    *densityN_);
+    densityN_);
   SharedMemView<DoubleType*>& v_rhoNp1 = scratchViews.get_scratch_view_1D(
-    *densityNp1_);
+    densityNp1_);
 
   SharedMemView<DoubleType*>& v_scv_volume = scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
 
@@ -152,13 +154,13 @@ ScalarMassElemKernel<AlgTraits>::execute(
     for ( int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic ) {
       // save off shape function
       const DoubleType r = v_shape_function_(ip,ic);
-      const DoubleType lhsfac = r*gamma1_*rhoNp1Scv*scV/dt_;
+      const DoubleType lhsfac = r*gamma1_*rhoNp1Scv*scV/dt_ * diagRelaxFactor_;
       lhs(nearestNode,ic) += lhsfac;
     }
   }
 }
 
-INSTANTIATE_KERNEL(ScalarMassElemKernel);
+INSTANTIATE_KERNEL(ScalarMassElemKernel)
 
 }  // nalu
 }  // sierra

@@ -147,7 +147,7 @@ HypreUVWLinearSystem::sumInto(
   const SharedMemView<const double**>& lhs,
   const SharedMemView<int*>&,
   const SharedMemView<int*>&,
-  const char* trace_tag)
+  const char*  /* trace_tag */)
 {
   HypreIntType numRows = numEntities;
   const HypreIntType bufSize = idBuffer_.size();
@@ -193,11 +193,11 @@ HypreUVWLinearSystem::sumInto(
 void
 HypreUVWLinearSystem::sumInto(
   const std::vector<stk::mesh::Entity>& entities,
-  std::vector<int>& scratchIds,
+  std::vector<int>&  /* scratchIds */,
   std::vector<double>& scratchVals,
   const std::vector<double>& rhs,
   const std::vector<double>& lhs,
-  const char* trace_tag)
+  const char*  /* trace_tag */)
 {
   const size_t n_obj = entities.size();
   HypreIntType numRows = n_obj;

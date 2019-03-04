@@ -30,7 +30,7 @@ namespace nalu{
 class Quad42DSCV : public MasterElement
 {
 public:
-  using Traits = AlgTraitsQuad4_2D;
+  using AlgTraits = AlgTraitsQuad4_2D;
   using MasterElement::determinant;
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
@@ -88,7 +88,7 @@ public:
 class Quad42DSCS : public MasterElement
 {
 public:
-  using Traits = AlgTraitsQuad4_2D;
+  using AlgTraits = AlgTraitsQuad4_2D;
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
@@ -234,7 +234,15 @@ public:
     double *elem_pcoords) override;
 
   const int* side_node_ordinals(int sideOrdinal) final;
+
 private :
+  const int sideNodeOrdinals_[4][2] = {
+      {0, 1},
+      {1, 2},
+      {2, 3},
+      {3, 0} 
+  };
+
   void face_grad_op(
     const int face_ordinal,
     const bool shifted,

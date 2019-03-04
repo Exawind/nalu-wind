@@ -103,7 +103,9 @@ class TestAlgorithm
 {
 public:
   TestAlgorithm(stk::mesh::BulkData& bulk)
-  : suppAlgs_(), bulkData_(bulk)
+  : suppAlgs_(),
+    dataNeededByKernels_(bulk.mesh_meta_data()),
+    bulkData_(bulk)
   {}
 
   void execute()
@@ -118,14 +120,14 @@ public:
 
       sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_, meta.get_fields().size());
       const int bytes_per_team = 0;
-      const int bytes_per_thread = get_num_bytes_pre_req_data(dataNeededNGP, meta.spatial_dimension());
+      const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension());
       auto team_exec = sierra::nalu::get_host_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);
       Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
       {
           const stk::mesh::Bucket& bkt = *elemBuckets[team.league_rank()];
           stk::topology topo = bkt.topology();
 
-          sierra::nalu::ScratchViews<double> prereqData(team, bulkData_, topo.num_nodes(), dataNeededNGP);
+          sierra::nalu::ScratchViews<double> prereqData(team, meta.spatial_dimension(), topo.num_nodes(), dataNeededNGP);
 
           // See get_num_bytes_pre_req_data for padding
           EXPECT_EQ(static_cast<unsigned>(bytes_per_thread), prereqData.total_bytes() + 8 * sizeof(double));
@@ -203,7 +205,7 @@ TEST_F(Hex8Mesh, inconsistent_field_requests)
 
     fill_mesh("generated:10x10x10");
 
-    sierra::nalu::ElemDataRequests prereqData;
+    sierra::nalu::ElemDataRequests prereqData(meta);
 
     prereqData.add_gathered_nodal_field(nodalScalarField, 1);
     EXPECT_THROW(prereqData.add_gathered_nodal_field(nodalScalarField, 2), std::logic_error);

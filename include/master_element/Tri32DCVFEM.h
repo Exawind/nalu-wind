@@ -30,6 +30,7 @@ namespace nalu{
 class Tri32DSCV : public MasterElement
 {
 public:
+  using AlgTraits = AlgTraitsTri3_2D;
   using MasterElement::determinant;
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
@@ -88,6 +89,7 @@ public:
 class Tri32DSCS : public MasterElement
 {
 public:
+  using AlgTraits = AlgTraitsTri3_2D;
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
@@ -238,7 +240,12 @@ public:
 
   const int* side_node_ordinals(int sideOrdinal) final;
 
-
+private:
+  const int sideNodeOrdinals_[3][2] = {
+     {0, 1},  // ordinal 0
+     {1, 2},  // ordinal 1
+     {2, 0}   // ordinal 2
+  };
 };
 
 } // namespace nalu

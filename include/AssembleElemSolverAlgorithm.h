@@ -74,7 +74,7 @@ public:
                     "AssembleElemSolverAlgorithm expected nodesPerEntity_ = "
                     <<nodesPerEntity_<<", but b.topology().num_nodes() = "<<b.topology().num_nodes());
  
-     SharedMemData smdata(team, bulk_data, dataNeededNGP, nodesPerEntity_, rhsSize_);
+     SharedMemData<TeamHandleType,HostShmem> smdata(team, meta_data.spatial_dimension(), dataNeededNGP, nodesPerEntity_, rhsSize_);
 
      const size_t bucketLen   = b.size();
      const size_t simdBucketLen = get_num_simd_groups(bucketLen);
@@ -91,10 +91,16 @@ public:
                            *smdata.prereqData[simdElemIndex], interleaveMEViews_);
        }
  
+#ifndef KOKKOS_ENABLE_CUDA
+//When we GPU-ize AssembleElemSolverAlgorithm, 'lambdaFunc' below will need to operate
+//on smdata.prereqData[0] since we aren't going to copy_and_interleave. We will probably
+//want to make smdata.simdPrereqData to be a pointer/reference to smdata.prereqData[0] in some way...
        copy_and_interleave(smdata.prereqData, numSimdElems, smdata.simdPrereqData, interleaveMEViews_);
+//for now this simply isn't ready for GPU.
+#endif
  
        if (!interleaveMEViews_) {
-         fill_master_element_views(dataNeededNGP, bulk_data, smdata.simdPrereqData);
+         fill_master_element_views(dataNeededNGP, smdata.simdPrereqData);
        }
 
        lambdaFunc(smdata);
@@ -104,6 +110,9 @@ public:
 
   ElemDataRequests dataNeededByKernels_;
   stk::mesh::EntityRank entityRank_;
+
+  //! Relaxation factor to be applied to the diagonal term
+  double diagRelaxFactor_{1.0};
   unsigned nodesPerEntity_;
   int rhsSize_;
   const bool interleaveMEViews_;
