@@ -101,25 +101,14 @@ void tri_gradient_operator(
 Tri32DSCV::Tri32DSCV()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 3;
-  numIntPoints_ = 3;
+  MasterElement::nDim_            = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_    = numIntPoints_;
 
   // define ip node mappings
-  ipNodeMap_.resize(3);
-  ipNodeMap_[0] = 0; ipNodeMap_[1] = 1; ipNodeMap_[2] = 2;
-
-  intgLoc_ = {
-      5.0/24.0, 5.0/24.0,
-      7.0/12.0, 5.0/24.0,
-      5.0/24.0, 7.0/12.0
-  };
-
-  intgLocShift_ = {
-      0.0,  0.0,
-      1.0,  0.0,
-      0.0,  1.0
-  };
+  MasterElement::ipNodeMap_.assign   (ipNodeMap_,    3+ipNodeMap_);
+  MasterElement::intgLoc_.assign     (intgLoc_,      6+intgLoc_);
+  MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -138,7 +127,7 @@ Tri32DSCV::ipNodeMap(
   int /*ordinal*/)
 {
   // define scv->node mappings
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 //--------------------------------------------------------------------------
@@ -156,7 +145,7 @@ Tri32DSCV::shape_fcn(double *shpfc)
 void
 Tri32DSCV::shifted_shape_fcn(double *shpfc)
 {
-  tri_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  tri_shape_fcn(numIntPoints_, intgLocShift_, shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -358,89 +347,43 @@ void Tri32DSCV::Mij(
 Tri32DSCS::Tri32DSCS()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 3;
-  numIntPoints_ = 3;
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
 
   // define L/R mappings
-  lrscv_.resize(6);
-  lrscv_[0]  = 0; lrscv_[1]  = 1;
-  lrscv_[2]  = 1; lrscv_[3]  = 2;
-  lrscv_[4]  = 0; lrscv_[5]  = 2;
+  MasterElement::lrscv_.assign(lrscv_, 6+lrscv_);
 
   // elem-edge mapping from ip
-  scsIpEdgeOrd_.resize(numIntPoints_);
-  scsIpEdgeOrd_[0] = 0; scsIpEdgeOrd_[1] = 1; scsIpEdgeOrd_[2] = 2; 
-
+  MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, 3+scsIpEdgeOrd_);
   // define opposing node
-  oppNode_.resize(6);
-  // face 0; nodes 0,1
-  oppNode_[0] = 2; oppNode_[1] = 2;
-  // face 1; nodes 1,2
-  oppNode_[2] = 0; oppNode_[3] = 0;
-  // face 2; nodes 2,0
-  oppNode_[4] = 1; oppNode_[5] = 1;
-
+  MasterElement::oppNode_.assign(&oppNode_[0][0], 6+&oppNode_[0][0]);
   // define opposing face
-  oppFace_.resize(6);
-  // face 0
-  oppFace_[0]  = 2; oppFace_[1] = 1;
-  // face 1
-  oppFace_[2]  = 0; oppFace_[3] = 2;
-  // face 2
-  oppFace_[4]  = 1; oppFace_[5] = 0;  
-
+  MasterElement::oppFace_.assign(&oppFace_[0][0], 6+&oppFace_[0][0]);
   // standard integration location
-  const double five12ths = 5.0/12.0;
-  const double one6th = 1.0/6.0;
-  intgLoc_.resize(6);    
-  intgLoc_[0] = five12ths; intgLoc_[1] = one6th;    // surf 1; 0->1
-  intgLoc_[2] = five12ths; intgLoc_[3] = five12ths; // surf 2; 1->3
-  intgLoc_[4] = one6th;    intgLoc_[5] = five12ths; // surf 3; 0->2
-
+  MasterElement::intgLoc_.assign(intgLoc_, 6+intgLoc_);
   // shifted
-  intgLocShift_.resize(6);
-  intgLocShift_[0] = 0.50; intgLocShift_[1] = 0.00;  // surf 1; 0->1
-  intgLocShift_[2] = 0.50; intgLocShift_[3] = 0.50;  // surf 1; 1->3
-  intgLocShift_[4] = 0.00; intgLocShift_[5] = 0.50;  // surf 1; 0->2
-
+  MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
   // exposed face
-  intgExpFace_.resize(12);
-  // face 0; scs 0, 1; nodes 0,1
-  intgExpFace_[0]  = 0.25; intgExpFace_[1]  = 0.00; 
-  intgExpFace_[2]  = 0.75; intgExpFace_[3]  = 0.00;
-  // face 1; scs 0, 1; nodes 1,2
-  intgExpFace_[4]  = 0.75; intgExpFace_[5]  = 0.25;
-  intgExpFace_[6]  = 0.25; intgExpFace_[7]  = 0.75;
-  // face 2, surf 0, 1; nodes 2,0
-  intgExpFace_[8]  = 0.00; intgExpFace_[9]  = 0.75;
-  intgExpFace_[10] = 0.00; intgExpFace_[11] = 0.25;
+  MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 12+&intgExpFace_[0][0][0]);
   
   // boundary integration point ip node mapping (ip on an ordinal to local node number)
-  ipNodeMap_.resize(6); // 2 ips * 3 faces
-  // face 0;
-  ipNodeMap_[0] = 0;  ipNodeMap_[1] = 1; 
-  // face 1; 
-  ipNodeMap_[2] = 1;  ipNodeMap_[3] = 2; 
-  // face 2;
-  ipNodeMap_[4] = 2;  ipNodeMap_[5] = 0;  
+  MasterElement::ipNodeMap_.assign(&ipNodeMap_[0][0], 6+&ipNodeMap_[0][0]);
 
-  std::vector<std::vector<double>> nodeLocations =
-  {
+  std::array<std::array<double,2>,3> nodeLocations =
+  {{
       {0.0,0.0}, {1.0,0}, {0.0,1.0}
-  };
-  intgExpFaceShift_.resize(12);
-  int index = 0;
+  }};
   stk::topology topo = stk::topology::TRIANGLE_3_2D;
   for (unsigned k = 0; k < topo.num_sides(); ++k) {
     stk::topology side_topo = topo.side_topology(k);
     const int* ordinals = side_node_ordinals(k);
     for (unsigned n = 0; n < side_topo.num_nodes(); ++n) {
-      intgExpFaceShift_[2*index + 0] = nodeLocations[ordinals[n]][0];
-      intgExpFaceShift_[2*index + 1] = nodeLocations[ordinals[n]][1];
-      ++index;
+      intgExpFaceShift_[k][n][0] = nodeLocations[ordinals[n]][0];
+      intgExpFaceShift_[k][n][1] = nodeLocations[ordinals[n]][1];
     }
   }
+  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0], 12+&intgExpFaceShift_[0][0][0]);
 }
 
 //--------------------------------------------------------------------------
@@ -459,7 +402,7 @@ Tri32DSCS::ipNodeMap(
   int ordinal)
 {
   // define ip->node mappings for each face (ordinal); 
-  return &ipNodeMap_[ordinal*2];
+  return ipNodeMap_[ordinal];
 }
 
 //--------------------------------------------------------------------------
@@ -824,7 +767,7 @@ const int *
 Tri32DSCS::adjacentNodes()
 {
   // define L/R mappings
-  return &lrscv_[0];
+  return lrscv_;
 }
 
 //--------------------------------------------------------------------------
@@ -833,7 +776,7 @@ Tri32DSCS::adjacentNodes()
 const int *
 Tri32DSCS::scsIpEdgeOrd()
 {
-  return &scsIpEdgeOrd_[0];
+  return scsIpEdgeOrd_;
 }
 
 //--------------------------------------------------------------------------
@@ -842,7 +785,7 @@ Tri32DSCS::scsIpEdgeOrd()
 void
 Tri32DSCS::shape_fcn(double *shpfc)
 {
-  tri_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  tri_shape_fcn(numIntPoints_, intgLoc_, shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -851,7 +794,7 @@ Tri32DSCS::shape_fcn(double *shpfc)
 void
 Tri32DSCS::shifted_shape_fcn(double *shpfc)
 {
-  tri_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  tri_shape_fcn(numIntPoints_, intgLocShift_, shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -882,7 +825,7 @@ Tri32DSCS::opposingNodes(
   const int ordinal,
   const int node)
 {
-  return oppNode_[ordinal*2+node];
+  return oppNode_[ordinal][node];
 }
 
 //--------------------------------------------------------------------------
@@ -893,7 +836,7 @@ Tri32DSCS::opposingFace(
   const int ordinal,
   const int node)
 {
-  return oppFace_[ordinal*2+node];
+  return oppFace_[ordinal][node];
 }
 
 //--------------------------------------------------------------------------

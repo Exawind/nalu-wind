@@ -83,6 +83,26 @@ public:
     const double *par_coord,
     double* shape_fcn);
 
+private :
+  const int nDim_ = AlgTraits::nDim_;
+  const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
+  const int numIntPoints_ = AlgTraits::numScvIp_; 
+
+  // define ip node mappings
+  const int ipNodeMap_[3] = {0, 1, 2}; 
+
+  const double intgLoc_[6] = {
+      5.0/24.0, 5.0/24.0,
+      7.0/12.0, 5.0/24.0,
+      5.0/24.0, 7.0/12.0
+  };
+
+  const double intgLocShift_[6] = {
+      0.0,  0.0, 
+      1.0,  0.0, 
+      0.0,  1.0  
+  };
+
 };
 
 // 2D Tri 3 subcontrol surface
@@ -241,11 +261,71 @@ public:
   const int* side_node_ordinals(int sideOrdinal) final;
 
 private:
+  const int nDim_ = AlgTraits::nDim_;
+  const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
+  const int numIntPoints_ = AlgTraits::numScsIp_; 
+
   const int sideNodeOrdinals_[3][2] = {
      {0, 1},  // ordinal 0
      {1, 2},  // ordinal 1
      {2, 0}   // ordinal 2
   };
+
+  // define L/R mappings
+  const int lrscv_[6] = {
+   0,  1, 
+   1,  2, 
+   0,  2};
+
+  // elem-edge mapping from ip
+  const int scsIpEdgeOrd_[AlgTraits::numScsIp_] = {0, 1, 2}; 
+
+  // define opposing node
+  const int oppNode_[3][2] = 
+  {{2,  2},  // face 0; nodes 0,1
+   {0,  0},  // face 1; nodes 1,2
+   {1,  1}}; // face 2; nodes 2,0
+
+  // define opposing face
+  const int oppFace_[3][2] = 
+  {{2,  1},    // face 0 
+   {0,  2},    // face 1 
+   {1,  0}};   // face 2 
+
+  // standard integration location
+  const double five12ths = 5.0/12.0;
+  const double one6th = 1.0/6.0;
+  const double intgLoc_[6] =  
+  {five12ths,  one6th,     // surf 1: 0->1
+   five12ths,  five12ths,  // surf 2: 1->3
+   one6th,     five12ths}; // surf 3: 0->2
+ 
+  // shifted
+  const double intgLocShift_[6] =
+  {0.50,  0.00,  // surf 1: 0->1
+   0.50,  0.50,  // surf 1: 1->3
+   0.00,  0.50}; // surf 1: 0->2
+ 
+  // exposed face
+  const double intgExpFace_[3][2][2] =   
+  // face 0: scs 0, 1: nodes 0,1
+  {{{0.25,  0.00},
+    {0.75,  0.00}},
+  // face 1: scs 0, 1: nodes 1,2
+   {{0.75,  0.25},
+    {0.25,  0.75}},
+  // face 2: surf 0, 1: nodes 2,0
+   {{0.00,  0.75},
+    {0.00,  0.25}}};
+
+  // boundary integration point ip node mapping (ip on an ordinal to local node number)
+  const int ipNodeMap_[3][2]= // 2 ips * 3 faces
+    {{0,   1},   // face 0
+     {1,   2},   // face 1
+     {2,   0}};  // face 2
+
+  double intgExpFaceShift_[3][2][2]={0};
+
 };
 
 } // namespace nalu
