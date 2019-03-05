@@ -13,7 +13,9 @@ public:
     stk::mesh::BulkData& bulk,
     const YAML::Node&);
 
-  ~MeshMotionAlg() {}
+  ~MeshMotionAlg()
+  {
+  }
 
   void initialize(const double);
 

@@ -168,7 +168,8 @@ TEST(meshMotion, meshMotionAlg_initialize)
     stk::topology::NODE_RANK, "mesh_velocity");
 
   // get the parts in the current motion frame
-  stk::mesh::Selector sel = stk::mesh::Selector(realm.meta_data().universal_part());
+  stk::mesh::Selector sel = stk::mesh::Selector(realm.meta_data().universal_part())
+    & (realm.meta_data().locally_owned_part() | realm.meta_data().globally_shared_part());
   const auto& bkts = realm.bulk_data().get_buckets(stk::topology::NODE_RANK, sel);
 
   /////////////////////////////////////////////////////////////
@@ -231,7 +232,8 @@ TEST(meshMotion, meshMotionAlg_execute)
     stk::topology::NODE_RANK, "mesh_velocity");
 
   // get the parts in the current motion frame
-  stk::mesh::Selector sel = stk::mesh::Selector(realm.meta_data().universal_part());
+  stk::mesh::Selector sel = stk::mesh::Selector(realm.meta_data().universal_part())
+    & (realm.meta_data().locally_owned_part() | realm.meta_data().globally_shared_part());
   const auto& bkts = realm.bulk_data().get_buckets(stk::topology::NODE_RANK, sel);
 
   /////////////////////////////////////////////////////////////

@@ -89,9 +89,13 @@ void MeshMotionAlg::initialize( const double time )
 
 void MeshMotionAlg::execute(const double time)
 {
-  for (size_t i=0; i < frameVec_.size(); i++)
+  for (size_t i=0; i < frameVec_.size(); i++) {
+
     if( !frameVec_[i]->is_inertial() )
       frameVec_[i]->update_coordinates_velocity(time);
+
+    frameVec_[i]->post_work();
+  }
 }
 
 } // nalu

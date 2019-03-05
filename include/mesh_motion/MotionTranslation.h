@@ -11,7 +11,9 @@ class MotionTranslation : public MotionBase
 public:
   MotionTranslation(const YAML::Node&);
 
-  virtual ~MotionTranslation() {}
+  virtual ~MotionTranslation()
+  {
+  }
 
   virtual void build_transformation(const double, const double* = nullptr);
 
