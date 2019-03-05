@@ -76,6 +76,7 @@ struct SharedMemData {
     }
 
     const stk::mesh::Entity* elemNodes[simdLen];
+    ngp::Mesh::ConnectedNodes ngpElemNodes[simdLen];
     int numSimdElems;
 #ifdef KOKKOS_ENABLE_CUDA
     ScratchViews<double,TEAMHANDLETYPE,SHMEM> prereqData_byValue;
@@ -140,6 +141,7 @@ struct SharedMemData_FaceElem {
     }
 
     const stk::mesh::Entity* connectedNodes[simdLen];
+    ngp::Mesh::ConnectedNodes ngpConnectedNodes[simdLen];
     int numSimdFaces;
     int elemFaceOrdinal;
     std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM>> faceViews[simdLen];

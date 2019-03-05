@@ -197,7 +197,7 @@ int create_needed_field_views(const TEAMHANDLETYPE& team,
   return numScalars;
 }
 
-template<typename T, typename TEAMHANDLETYPE=TeamHandleType, typename SHMEM=HostShmem>
+template<typename T, typename TEAMHANDLETYPE=DeviceTeamHandleType, typename SHMEM=DeviceShmem>
 class ScratchViews
 {
 public:
@@ -1010,10 +1010,10 @@ void fill_master_element_views(ELEMDATAREQUESTSTYPE& dataNeeded,
     const typename ELEMDATAREQUESTSTYPE::FieldView& coordsFields = dataNeeded.get_coordinates_fields();
     for(unsigned i=0; i<coordsTypes.size(); ++i) {
       auto cType = coordsTypes(i);
-      const typename ELEMDATAREQUESTSTYPE::FieldType* coordField = coordsFields(i);
+      const typename ELEMDATAREQUESTSTYPE::FieldType coordField = coordsFields(i);
 
       const typename ELEMDATAREQUESTSTYPE::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
-      auto* coordsView = &prereqData.get_scratch_view_2D(get_field_ordinal(*coordField));
+      auto* coordsView = &prereqData.get_scratch_view_2D(coordField.get_ordinal());
       auto& meData = prereqData.get_me_views(cType);
 
       meData.fill_master_element_views_new_me(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM, faceOrdinal);

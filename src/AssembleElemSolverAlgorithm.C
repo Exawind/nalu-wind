@@ -88,7 +88,7 @@ AssembleElemSolverAlgorithm::execute()
   for ( size_t i = 0; i < activeKernelsSize; ++i )
     activeKernels_[i]->setup(*realm_.timeIntegrator_);
 
-  run_algorithm(bulk_data, [&](SharedMemData<TeamHandleType,HostShmem>& smdata)
+  run_algorithm(bulk_data, [&](SharedMemData<DeviceTeamHandleType,DeviceShmem>& smdata)
   {
       set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
       set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());
