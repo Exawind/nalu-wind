@@ -324,7 +324,7 @@ private:
      {1,   2},   // face 1
      {2,   0}};  // face 2
 
-  double intgExpFaceShift_[3][2][2]={0};
+  double intgExpFaceShift_[3][2][2];
 
 };
 
