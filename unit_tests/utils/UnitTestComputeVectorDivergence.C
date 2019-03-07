@@ -62,7 +62,8 @@ TEST(utils, compute_vector_divergence)
   VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
 
   // get the universal part
-  stk::mesh::Selector sel = stk::mesh::Selector(realm.meta_data().universal_part());
+  stk::mesh::Selector sel = stk::mesh::Selector(realm.meta_data().universal_part())
+                          & (realm.meta_data().locally_owned_part() | realm.meta_data().globally_shared_part());
   const auto& bkts = realm.bulk_data().get_buckets(stk::topology::NODE_RANK, sel);
 
   // fill mesh velocity vector
@@ -91,13 +92,8 @@ TEST(utils, compute_vector_divergence)
                                            partVec, bndyPartVec,
                                            meshVec, divV );
 
-  // create new selector for locally owned parts
-  sel = stk::mesh::Selector(realm.meta_data().universal_part())
-      & realm.meta_data().locally_owned_part();
-  const auto& lclBkts = realm.bulk_data().get_buckets(stk::topology::NODE_RANK, sel);
-
   // check values
-  for (auto b: lclBkts) {
+  for (auto b: bkts) {
     for (size_t in=0; in < b->size(); in++) {
 
       auto node = (*b)[in]; // mesh node and NOT YAML node

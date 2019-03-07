@@ -48,7 +48,7 @@ void compute_vector_divergence(
 
   std::vector<double> mvIp(nDim,0.0);
 
-  stk::mesh::Selector sel = meta.locally_owned_part()
+  stk::mesh::Selector sel = ( meta.locally_owned_part() | meta.globally_shared_part() )
                           & stk::mesh::selectUnion(partVec);
   const auto& bkts =
       bulk.get_buckets( stk::topology::ELEMENT_RANK, sel );
