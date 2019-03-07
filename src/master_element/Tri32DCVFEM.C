@@ -370,9 +370,9 @@ Tri32DSCS::Tri32DSCS()
   // boundary integration point ip node mapping (ip on an ordinal to local node number)
   MasterElement::ipNodeMap_.assign(&ipNodeMap_[0][0], 6+&ipNodeMap_[0][0]);
 
-  std::array<std::array<double,2>,3> nodeLocations =
+  const std::array<std::array<double,2>,3> nodeLocations =
   {{
-      {0.0,0.0}, {1.0,0}, {0.0,1.0}
+      {{0.0,0.0}}, {{1.0,0}}, {{0.0,1.0}}
   }};
   stk::topology topo = stk::topology::TRIANGLE_3_2D;
   for (unsigned k = 0; k < topo.num_sides(); ++k) {
