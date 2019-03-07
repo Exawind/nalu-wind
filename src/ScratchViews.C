@@ -680,7 +680,7 @@ void fill_pre_req_data(
   ScratchViews<double,DeviceTeamHandleType,DeviceShmem>& prereqData,
   bool fillMEViews)
 {
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
   MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
   MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
   MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
@@ -738,7 +738,7 @@ void fill_pre_req_data(
     }
   }
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
   if (fillMEViews)
   {
     const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();

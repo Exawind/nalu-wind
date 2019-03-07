@@ -88,7 +88,8 @@ AssembleElemSolverAlgorithm::execute()
   for ( size_t i = 0; i < activeKernelsSize; ++i )
     activeKernels_[i]->setup(*realm_.timeIntegrator_);
 
-  run_algorithm(bulk_data, [&](SharedMemData<DeviceTeamHandleType,DeviceShmem>& smdata)
+#ifndef KOKKOS_ENABLE_CUDA
+  run_algorithm(bulk_data, KOKKOS_LAMBDA(SharedMemData<DeviceTeamHandleType,DeviceShmem>& smdata)
   {
       set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
       set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());
@@ -106,6 +107,7 @@ AssembleElemSolverAlgorithm::execute()
                     smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
       }
   });
+#endif
 }
 
 } // namespace nalu

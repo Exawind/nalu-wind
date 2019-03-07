@@ -95,7 +95,9 @@ public:
   {
     ThrowAssertMsg(partVec_.size()==1, "KokkosMEViews unit-test assumes partVec_.size==1");
 
+#ifndef KOKKOS_ENABLE_CUDA
     helperObjs_->assembleElemSolverAlg->run_algorithm(bulk_, func);
+#endif
   }
 
   inline sierra::nalu::ElemDataRequests& dataNeeded()

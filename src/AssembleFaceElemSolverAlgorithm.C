@@ -91,8 +91,9 @@ AssembleFaceElemSolverAlgorithm::execute()
     kernel->setup(*realm_.timeIntegrator_);
   }
 
+#ifndef KOKKOS_ENABLE_CUDA
   run_face_elem_algorithm(bulk_data,
-    [&](sierra::nalu::SharedMemData_FaceElem<DeviceTeamHandleType,DeviceShmem> &smdata)
+    KOKKOS_LAMBDA(sierra::nalu::SharedMemData_FaceElem<DeviceTeamHandleType,DeviceShmem> &smdata)
     {
         set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
         set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());
@@ -110,6 +111,7 @@ AssembleFaceElemSolverAlgorithm::execute()
         }
     }
   );
+#endif
 }
 
 } // namespace nalu

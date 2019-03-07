@@ -197,7 +197,7 @@ int create_needed_field_views(const TEAMHANDLETYPE& team,
   return numScalars;
 }
 
-template<typename T, typename TEAMHANDLETYPE=DeviceTeamHandleType, typename SHMEM=DeviceShmem>
+template<typename T, typename TEAMHANDLETYPE=TeamHandleType, typename SHMEM=HostShmem>
 class ScratchViews
 {
 public:
@@ -228,8 +228,7 @@ public:
                const ElemDataRequestsGPU& dataNeeded);
 
   KOKKOS_FUNCTION
-  virtual ~ScratchViews() {
-  }
+  ~ScratchViews() = default;
 
   inline
   SharedMemView<T*,SHMEM>& get_scratch_view_1D(const stk::mesh::FieldBase& field);

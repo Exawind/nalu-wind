@@ -75,6 +75,8 @@ public:
 
 } //anonymous namespace
 
+#ifndef KOKKOS_ENABLE_CUDA
+
 TEST_F(Hex8Mesh, faceElemBasic)
 {
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) {
@@ -223,3 +225,5 @@ TEST_F(Hex8ElementWithBCFields, faceElemScalarOpen)
 
   faceElemAlg.execute();
 }
+
+#endif

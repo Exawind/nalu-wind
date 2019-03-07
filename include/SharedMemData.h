@@ -75,6 +75,9 @@ struct SharedMemData {
         sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
     }
 
+    KOKKOS_FUNCTION
+    ~SharedMemData() = default;
+
     const stk::mesh::Entity* elemNodes[simdLen];
     ngp::Mesh::ConnectedNodes ngpElemNodes[simdLen];
     int numSimdElems;
