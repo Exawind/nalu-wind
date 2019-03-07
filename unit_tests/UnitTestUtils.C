@@ -674,7 +674,7 @@ std::array<double,9> random_linear_transformation(int dim, double scale, std::mt
 
 }//namespace unit_test_utils
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 void Hex8Mesh::check_discrete_laplacian(double exactLaplacian)
 {

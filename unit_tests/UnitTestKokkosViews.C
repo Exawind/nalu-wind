@@ -17,7 +17,7 @@
 
 namespace {
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 //following tests can't run on cuda due to variety of reasons, including
 //use of std::vectors, use of MasterElement functions (defined for host), etc.
 
@@ -401,7 +401,7 @@ TEST_F(Hex8Mesh, indexing_views)
     check_discrete_laplacian(exactLaplacian);
 }
 
-//end of stuff that's ifndef'd for KOKKOS_HAVE_CUDA
+//end of stuff that's ifndef'd for KOKKOS_ENABLE_CUDA
 #endif
 
 }

@@ -20,7 +20,7 @@
 
 namespace {
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 void element_discrete_laplacian_kernel_3d(
                        sierra::nalu::MasterElement& meSCS,
@@ -187,7 +187,7 @@ TEST_F(Hex8Mesh, elem_supp_alg_views)
     delete suppAlg;
 }
 
-//end of stuff that's ifndef'd for KOKKOS_HAVE_CUDA
+//end of stuff that's ifndef'd for KOKKOS_ENABLE_CUDA
 #endif
 
 }

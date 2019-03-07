@@ -251,7 +251,7 @@ public:
   const VectorFieldType* coordinates_{nullptr};
 };
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 /** Test Fixture for Low-Mach Kernels
  *

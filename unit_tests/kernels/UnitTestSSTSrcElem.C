@@ -176,7 +176,7 @@ static constexpr double rhs[8] = {
 } // namespace hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(SSTKernelHex8Mesh, turbkineticenergysstsrcelem)
 {

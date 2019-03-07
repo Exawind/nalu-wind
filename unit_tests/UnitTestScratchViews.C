@@ -234,7 +234,7 @@ TEST_F(Hex8MeshWithNSOFields, SharedMemData)
   do_the_smdata_test(bulk, pressure, velocity);
 }
 
-#ifdef KOKKOS_HAVE_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
 
 using DeviceSpace = Kokkos::Cuda;
 using DeviceShmem = DeviceSpace::scratch_memory_space;

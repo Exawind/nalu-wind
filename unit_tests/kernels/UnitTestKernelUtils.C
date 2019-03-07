@@ -551,7 +551,7 @@ void dhdx_test_function(
   init_trigonometric_field(bulk, coordinates, dhdx);
 }
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 void calc_mass_flow_rate_scs(
   const stk::mesh::BulkData& bulk,
@@ -1056,7 +1056,7 @@ void calc_projected_nodal_gradient(
   }
 }
 
-#endif // KOKKOS_HAVE_CUDA
+#endif // KOKKOS_ENABLE_CUDA
 
 void expect_all_near(
   const Kokkos::View<double*>& calcValue,

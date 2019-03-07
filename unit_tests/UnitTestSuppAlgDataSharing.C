@@ -19,7 +19,7 @@
 
 namespace {
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 using sierra::nalu::SharedMemView;
 
@@ -221,7 +221,7 @@ TEST_F(Hex8Mesh, inconsistent_field_requests)
     EXPECT_THROW(prereqData.add_element_field(elemTensorField, 5), std::logic_error);
 }
 
-//end of stuff that's ifndef'd for KOKKOS_HAVE_CUDA
+//end of stuff that's ifndef'd for KOKKOS_ENABLE_CUDA
 #endif
 
 }

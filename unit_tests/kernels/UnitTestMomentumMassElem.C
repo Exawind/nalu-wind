@@ -141,7 +141,7 @@ static constexpr double rhs[24] = {
 } // hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(MomentumKernelHex8Mesh, momentum_time_derivative)
 {
