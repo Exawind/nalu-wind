@@ -113,6 +113,16 @@ public:
       const char * trace_tag
   );
 
+  virtual void sumInto(
+    unsigned numEntities,
+    const ngp::Mesh::ConnectedNodes& entities,
+    const SharedMemView<const double*> & rhs,
+    const SharedMemView<const double**> & lhs,
+    const SharedMemView<int*> & localIds,
+    const SharedMemView<int*> & sortPermutation,
+    const char * trace_tag
+  );
+
   /** Update coefficients of a particular row(s) in the linear system
    *
    *  The core method of this class, it updates the matrix and RHS based on the

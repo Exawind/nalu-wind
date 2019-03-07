@@ -103,7 +103,7 @@ AssembleElemSolverAlgorithm::execute()
         extract_vector_lane(smdata.simdlhs, simdElemIndex, smdata.lhs);
         for (int ir=0; ir < rhsSize_; ++ir)
           smdata.lhs(ir, ir) /= diagRelaxFactor_;
-        apply_coeff(nodesPerEntity_, smdata.elemNodes[simdElemIndex],
+        apply_coeff(nodesPerEntity_, smdata.ngpElemNodes[simdElemIndex],
                     smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
       }
   });

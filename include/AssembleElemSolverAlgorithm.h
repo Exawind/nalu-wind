@@ -100,10 +100,6 @@ public:
               const auto elemIndex = ngpMesh.fast_mesh_index(element);
               smdata.ngpElemNodes[simdElemIndex] =
                 ngpMesh.get_nodes(entityRank_, elemIndex);
-#ifndef KOKKOS_ENABLE_CUDA
-              smdata.elemNodes[simdElemIndex] =
-                smdata.ngpElemNodes[simdElemIndex].data();
-#endif
               fill_pre_req_data(
                 dataNeededNGP, ngpMesh, entityRank_, element,
                 *smdata.prereqData[simdElemIndex], interleaveMEViews_);

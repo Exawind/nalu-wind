@@ -127,10 +127,6 @@ public:
 
                   smdata.ngpConnectedNodes[simdFaceIndex] =
                     ngpMesh.get_nodes(stk::topology::ELEMENT_RANK, elemIndex);
-#ifndef KOKKOS_ENABLE_CUDA
-                  smdata.connectedNodes[simdFaceIndex] =
-                    smdata.ngpConnectedNodes[simdFaceIndex].data();
-#endif
                   smdata.elemFaceOrdinal = thisElemFaceOrdinal;
                   elemFaceOrdinal = thisElemFaceOrdinal;
                   sierra::nalu::fill_pre_req_data(

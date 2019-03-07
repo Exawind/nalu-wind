@@ -63,6 +63,31 @@ public:
   }
 
   virtual void sumInto(
+    unsigned  /* numEntities */,
+    const ngp::Mesh::ConnectedNodes&  /* entities */,
+    const sierra::nalu::SharedMemView<const double*> & rhs,
+    const sierra::nalu::SharedMemView<const double**> & lhs,
+    const sierra::nalu::SharedMemView<int*> &  /* localIds */,
+    const sierra::nalu::SharedMemView<int*> &  /* sortPermutation */,
+    const char *  /* trace_tag */
+  )
+  {
+    if (numSumIntoCalls_ == 0) {
+      rhs_ = Kokkos::View<double*>("rhs_",rhs.extent(0));
+      for(size_t i=0; i<rhs.extent(0); ++i) {
+        rhs_(i) = rhs(i);
+      }
+      lhs_ = Kokkos::View<double**>("lhs_",lhs.extent(0), lhs.extent(1));
+      for(size_t i=0; i<lhs.extent(0); ++i) {
+        for(size_t j=0; j<lhs.extent(1); ++j) {
+          lhs_(i,j) = lhs(i,j);
+        }
+      }
+    }
+    Kokkos::atomic_add(&numSumIntoCalls_, 1u);
+  }
+
+  virtual void sumInto(
     const std::vector<stk::mesh::Entity> &  /* sym_meshobj */,
     std::vector<int> & /* scratchIds */,
     std::vector<double> & /* scratchVals */,

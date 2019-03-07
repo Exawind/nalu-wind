@@ -78,7 +78,6 @@ struct SharedMemData {
     KOKKOS_FUNCTION
     ~SharedMemData() = default;
 
-    const stk::mesh::Entity* elemNodes[simdLen];
     ngp::Mesh::ConnectedNodes ngpElemNodes[simdLen];
     int numSimdElems;
 #ifdef KOKKOS_ENABLE_CUDA
@@ -143,7 +142,6 @@ struct SharedMemData_FaceElem {
         sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
     }
 
-    const stk::mesh::Entity* connectedNodes[simdLen];
     ngp::Mesh::ConnectedNodes ngpConnectedNodes[simdLen];
     int numSimdFaces;
     int elemFaceOrdinal;

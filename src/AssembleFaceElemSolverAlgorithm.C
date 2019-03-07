@@ -106,7 +106,7 @@ AssembleFaceElemSolverAlgorithm::execute()
           extract_vector_lane(smdata.simdlhs, simdIndex, smdata.lhs);
           for (unsigned ir=0; ir < nodesPerElem_*numDof_; ++ir)
             smdata.lhs(ir, ir) /= diagRelaxFactor_;
-          apply_coeff(nodesPerElem_, smdata.connectedNodes[simdIndex],
+          apply_coeff(nodesPerElem_, smdata.ngpConnectedNodes[simdIndex],
                       smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         }
     }
