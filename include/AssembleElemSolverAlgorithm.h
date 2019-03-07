@@ -11,7 +11,6 @@
 
 #include<Realm.h>
 #include<SolverAlgorithm.h>
-#include<ElemDataRequestsNGP.h>
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
 #include<ScratchViews.h>
