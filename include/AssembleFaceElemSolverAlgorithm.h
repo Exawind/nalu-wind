@@ -82,14 +82,16 @@ public:
         buckets.size(), bytes_per_team, bytes_per_thread);
       Kokkos::parallel_for(
         team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {
-          auto bktId = buckets[team.league_rank()];
+          auto bktId = buckets.device_get(team.league_rank());
           auto& b = ngpMesh.get_bucket(sideRank, bktId);
 
+#ifndef KOKKOS_ENABLE_CUDA
           ThrowAssertMsg(
             b.topology().num_nodes() == (unsigned)nodesPerFace_,
             "AssembleFaceElemSolverAlgorithm expected nodesPerEntity_ = "
               << nodesPerFace_ << ", but b.topology().num_nodes() = "
               << b.topology().num_nodes());
+#endif
 
           SharedMemData_FaceElem<DeviceTeamHandleType, DeviceShmem> smdata(
             team, nDim, faceDataNGP, elemDataNGP, meElemInfo, rhsSize);
@@ -121,7 +123,6 @@ public:
                     break;
                   }
 
-                  // const stk::mesh::Entity* elems = bulk.begin_elements(face);
                   const auto& elems = ngpMesh.get_elements(sideRank, ngpFaceIndex);
                   const auto elemIndex = ngpMesh.fast_mesh_index(elems[0]);
 
@@ -152,12 +153,13 @@ public:
                 copy_and_interleave(
                   smdata.elemViews, smdata.numSimdFaces, smdata.simdElemViews,
                   interleaveMeViews);
-//for now this simply isn't ready for GPU.
-#endif
+
                 fill_master_element_views(
                   faceDataNGP, smdata.simdFaceViews, smdata.elemFaceOrdinal);
                 fill_master_element_views(
                   elemDataNGP, smdata.simdElemViews, smdata.elemFaceOrdinal);
+//for now this simply isn't ready for GPU.
+#endif
 
                 lamdbaFunc(smdata);
               } while (numFacesProcessed < simdGroupLen);

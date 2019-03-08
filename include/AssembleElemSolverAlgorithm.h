@@ -68,22 +68,29 @@ public:
     const auto& elem_buckets =
       ngp::get_bucket_ids(bulk_data, entityRank_, elemSelector);
 
+    // Create local copies of class data
+    const auto entityRank = entityRank_;
+    const auto nodesPerEntity = nodesPerEntity_;
+    const auto rhsSize = rhsSize_;
+    const auto interleaveMEViews = interleaveMEViews_;
+
     auto team_exec = sierra::nalu::get_device_team_policy(
       elem_buckets.size(), bytes_per_team, bytes_per_thread);
     Kokkos::parallel_for(
       team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {
-        auto bktId = elem_buckets[team.league_rank()];
-        auto& b = ngpMesh.get_bucket(entityRank_, bktId);
+        auto bktId = elem_buckets.device_get(team.league_rank());
+        auto& b = ngpMesh.get_bucket(entityRank, bktId);
 
+#ifndef KOKKOS_ENABLE_CUDA
         ThrowAssertMsg(
           b.topology().num_nodes() == (unsigned)nodesPerEntity_,
           "AssembleElemSolverAlgorithm expected nodesPerEntity_ = "
             << nodesPerEntity_
             << ", but b.topology().num_nodes() = " << b.topology().num_nodes());
+#endif
 
         SharedMemData<DeviceTeamHandleType, DeviceShmem> smdata(
-          team, nDim, dataNeededNGP, nodesPerEntity_,
-          rhsSize_);
+          team, nDim, dataNeededNGP, nodesPerEntity, rhsSize);
 
         const size_t bucketLen = b.size();
         const size_t simdBucketLen = get_num_simd_groups(bucketLen);
@@ -98,10 +105,10 @@ public:
               stk::mesh::Entity element = b[bktIndex * simdLen + simdElemIndex];
               const auto elemIndex = ngpMesh.fast_mesh_index(element);
               smdata.ngpElemNodes[simdElemIndex] =
-                ngpMesh.get_nodes(entityRank_, elemIndex);
+                ngpMesh.get_nodes(entityRank, elemIndex);
               fill_pre_req_data(
-                dataNeededNGP, ngpMesh, entityRank_, element,
-                *smdata.prereqData[simdElemIndex], interleaveMEViews_);
+                dataNeededNGP, ngpMesh, entityRank, element,
+                *smdata.prereqData[simdElemIndex], interleaveMEViews);
             }
 
 #ifndef KOKKOS_ENABLE_CUDA
@@ -113,12 +120,11 @@ public:
             copy_and_interleave(
               smdata.prereqData, numSimdElems, smdata.simdPrereqData,
               interleaveMEViews_);
-//for now this simply isn't ready for GPU.
-#endif
-
             if (!interleaveMEViews_) {
               fill_master_element_views(dataNeededNGP, smdata.simdPrereqData);
             }
+//for now this simply isn't ready for GPU.
+#endif
 
             lambdaFunc(smdata);
           });

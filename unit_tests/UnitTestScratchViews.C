@@ -45,7 +45,7 @@ class TestKernel
   void execute(
     sierra::nalu::SharedMemView<sierra::nalu::DoubleType**,ShmemType> & /* lhs */,
     sierra::nalu::SharedMemView<sierra::nalu::DoubleType*,ShmemType> & rhs,
-    sierra::nalu::ScratchViews<sierra::nalu::DoubleType,TeamType,ShmemType> &  scratchViews) const
+    sierra::nalu::ScratchViews<double,TeamType,ShmemType> &  scratchViews) const
   {
     auto& v_vel = scratchViews.get_scratch_view_2D(velocityOrdinal);
     auto& v_pres = scratchViews.get_scratch_view_1D(pressureOrdinal);
@@ -164,7 +164,7 @@ void do_assemble_elem_solver_test(
   solverAlg.run_algorithm(
     bulk,
     KOKKOS_LAMBDA(sierra::nalu::SharedMemData<TeamType, ShmemType> & smdata) {
-       testKernel.execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
+       testKernel.execute(smdata.simdlhs, smdata.simdrhs, *smdata.prereqData[0]);
     });
 }
 
