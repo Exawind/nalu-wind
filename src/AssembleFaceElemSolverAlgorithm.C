@@ -85,19 +85,17 @@ AssembleFaceElemSolverAlgorithm::initialize_connectivity()
 void
 AssembleFaceElemSolverAlgorithm::execute()
 {
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-
   for (auto kernel : activeKernels_) {
     kernel->setup(*realm_.timeIntegrator_);
   }
 
-#ifndef KOKKOS_ENABLE_CUDA
-  run_face_elem_algorithm(bulk_data,
+  run_face_elem_algorithm(realm_.bulk_data(),
     KOKKOS_LAMBDA(sierra::nalu::SharedMemData_FaceElem<DeviceTeamHandleType,DeviceShmem> &smdata)
     {
         set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
         set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());
 
+#ifndef KOKKOS_ENABLE_CUDA
         for (auto kernel : activeKernels_)
           kernel->execute( smdata.simdlhs, smdata.simdrhs, smdata.simdFaceViews, smdata.simdElemViews, smdata.elemFaceOrdinal );
 
@@ -109,9 +107,8 @@ AssembleFaceElemSolverAlgorithm::execute()
           apply_coeff(nodesPerElem_, smdata.ngpConnectedNodes[simdIndex],
                       smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         }
-    }
-  );
 #endif
+    });
 }
 
 } // namespace nalu
