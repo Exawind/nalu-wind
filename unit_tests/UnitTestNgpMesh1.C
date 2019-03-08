@@ -62,7 +62,7 @@ void test_ngp_mesh_1(const stk::mesh::BulkData& bulk, ngp::Mesh& ngpMesh)
   EXPECT_EQ(numStkElements, hostResults(1));
 }
 
-TEST(NgpMesh, realmNgpMesh)
+TEST(NgpMesh, NGPMesh)
 {
   const std::string meshSpec("generated:2x2x2");
 
@@ -147,7 +147,7 @@ void test_ngp_mesh_field_values(const stk::mesh::BulkData& bulk,
   }
 }
 
-TEST_F(Hex8MeshWithNSOFields, ngpMeshField)
+TEST_F(Hex8MeshWithNSOFields, NGPMeshField)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 

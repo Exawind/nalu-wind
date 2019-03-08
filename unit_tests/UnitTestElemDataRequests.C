@@ -51,7 +51,7 @@ void do_the_test_gpu(const sierra::nalu::ElemDataRequests& dataReq,
   EXPECT_EQ(5u, numCorrectTests);
 }
 
-TEST_F(Hex8MeshWithNSOFields, ElemDataRequestsGPU)
+TEST_F(Hex8MeshWithNSOFields, NGPElemDataRequests)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
   stk::topology elemTopo = stk::topology::HEX_8;

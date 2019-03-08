@@ -146,7 +146,7 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   }
 }
 
-TEST_F(Hex8MeshWithNSOFields, ScratchViews)
+TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
@@ -275,7 +275,7 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
   }
 }
 
-TEST_F(Hex8MeshWithNSOFields, SharedMemData)
+TEST_F(Hex8MeshWithNSOFields, NGPSharedMemData)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
@@ -314,7 +314,7 @@ void do_kokkos_test()
     });
 }
 
-TEST_F(Hex8MeshWithNSOFields, teamSize)
+TEST_F(Hex8MeshWithNSOFields, NGPteamSize)
 {
   do_kokkos_test();
 }
