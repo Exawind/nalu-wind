@@ -8,6 +8,7 @@
 #include <stk_mesh/base/GetEntities.hpp>
 
 #include <master_element/Hex27CVFEM.h>
+#include <master_element/Quad93DCVFEM.h>
 
 #include "UnitTestUtils.h"
 
@@ -72,7 +73,7 @@ void check_Hex27_face_ip_node_ordering(const stk::mesh::BulkData& bulk)
 
       const int* ipNodeMap = hexSCS.ipNodeMap(ordinal);
       const int* faceIpNodeMap = quadSCS.ipNodeMap();
-      for (int ip = 0; ip < quadSCS.numIntPoints_; ++ip) {
+      for (int ip = 0; ip < quadSCS.num_integration_points(); ++ip) {
         const int elemIpNearestNode = ipNodeMap[ip];
         const int faceIpNearestNode = faceIpNodeMap[ip];
 
