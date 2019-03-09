@@ -40,6 +40,8 @@ public:
 
   const int * ipNodeMap(int ordinal = 0) final;
 
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
   void shape_fcn(double *shpfc) final;
   void shifted_shape_fcn(double *shpfc) final;
 
@@ -70,6 +72,7 @@ public:
     const double *coords,
     double *normal) final;
 
+  using MasterElement::num_integration_points;
   int num_integration_points() const {return numIntPoints_;}
 
 private:
