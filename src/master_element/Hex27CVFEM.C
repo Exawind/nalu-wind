@@ -28,8 +28,9 @@ namespace nalu{
 HexahedralP2Element::HexahedralP2Element()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = nodes1D_ * nodes1D_ * nodes1D_;
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
 }
 
 //--------------------------------------------------------------------------
@@ -249,8 +250,7 @@ HexahedralP2Element::shifted_shape_fcn(double* shpfc)
 void
 HexahedralP2Element::eval_shape_functions_at_ips()
 {
-  shapeFunctions_.resize(numIntPoints_*nodesPerElement_);
-  hex27_shape_fcn(numIntPoints_, intgLoc_.data(), shapeFunctions_.data());
+  hex27_shape_fcn(numIntPoints_, intgLoc_, shapeFunctions_);
 }
 
 //--------------------------------------------------------------------------
@@ -259,8 +259,7 @@ HexahedralP2Element::eval_shape_functions_at_ips()
 void
 HexahedralP2Element::eval_shape_derivs_at_ips()
 {
-  shapeDerivs_.resize(numIntPoints_*nodesPerElement_*nDim_);
-  hex27_shape_deriv(numIntPoints_, intgLoc_.data(), shapeDerivs_.data());
+  hex27_shape_deriv(numIntPoints_, intgLoc_, shapeDerivs_);
 }
 
 //--------------------------------------------------------------------------
@@ -269,8 +268,7 @@ HexahedralP2Element::eval_shape_derivs_at_ips()
 void
 HexahedralP2Element::eval_shape_functions_at_shifted_ips()
 {
-  shapeFunctionsShift_.resize(numIntPoints_*nodesPerElement_);
-  hex27_shape_fcn(numIntPoints_, intgLocShift_.data(), shapeFunctionsShift_.data());
+  hex27_shape_fcn(numIntPoints_, intgLocShift_, shapeFunctionsShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -279,8 +277,7 @@ HexahedralP2Element::eval_shape_functions_at_shifted_ips()
 void
 HexahedralP2Element::eval_shape_derivs_at_shifted_ips()
 {
-  shapeDerivsShift_.resize(numIntPoints_*nodesPerElement_*nDim_);
-  hex27_shape_deriv(numIntPoints_, intgLocShift_.data(), shapeDerivsShift_.data());
+  hex27_shape_deriv(numIntPoints_, intgLocShift_, shapeDerivsShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -289,13 +286,10 @@ HexahedralP2Element::eval_shape_derivs_at_shifted_ips()
 void
 HexahedralP2Element::eval_shape_derivs_at_face_ips()
 {
-  const int numFaceIntPoints = intgExpFace_.size() / 3; // 216, same as numIntPoints_
-  ThrowAssert(intgExpFace_.size() % 3 == 0);
-  expFaceShapeDerivs_.resize(numFaceIntPoints*nodesPerElement_*nDim_);
   hex27_shape_deriv(
-    numFaceIntPoints,
-    intgExpFace_.data(),
-    expFaceShapeDerivs_.data()
+    numFaceIps_,
+    intgExpFace_,
+    expFaceShapeDerivs_
   );
 }
 
@@ -606,16 +600,6 @@ Hex27SCV::Hex27SCV()
 void
 Hex27SCV::set_interior_info()
 {
-  //1D integration rule per sub-control volume
-  numIntPoints_ = (nodes1D_ * nodes1D_  * nodes1D_) * ( numQuad_ * numQuad_ * numQuad_); // 216
-  ThrowRequire(numIntPoints_ == AlgTraits::numScvIp_);
-
-  // define ip node mappings
-  ipNodeMap_.resize(numIntPoints_);
-  intgLoc_.resize(numIntPoints_*nDim_);
-  intgLocShift_.resize(numIntPoints_*nDim_);
-  ipWeight_.resize(numIntPoints_);
-
   // tensor product nodes (3x3x3) x tensor product quadrature (2 x 2 x 2)
   int vector_index = 0; int scalar_index = 0;
   for (int n = 0; n < nodes1D_; ++n) {
@@ -653,6 +637,9 @@ Hex27SCV::set_interior_info()
       }
     }
   }
+  MasterElement::ipNodeMap_.assign(ipNodeMap_, numIntPoints_+ipNodeMap_);
+  MasterElement::intgLocShift_.assign(intgLocShift_, numIntPoints_*nDim_+intgLocShift_);
+  MasterElement::intgLoc_.assign(intgLoc_, numIntPoints_*nDim_+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -663,7 +650,7 @@ Hex27SCV::ipNodeMap(
   int /*ordinal*/)
 {
   // define scv->node mappings
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 //--------------------------------------------------------------------------
@@ -831,7 +818,7 @@ Hex27SCS::Hex27SCS()
   referenceGradWeights_ = copy_deriv_weights_to_view<GradWeightType>(shapeDerivs_);
 
   eval_shape_functions_at_shifted_ips();
-  interpWeights_ = copy_interpolation_weights_to_view<InterpWeightType>(shapeFunctions_);
+  shiftedInterpWeights_ = copy_interpolation_weights_to_view<InterpWeightType>(shapeFunctionsShift_);
 
   eval_shape_derivs_at_shifted_ips();
   shiftedReferenceGradWeights_ = copy_deriv_weights_to_view<GradWeightType>(shapeDerivsShift_);
@@ -847,31 +834,12 @@ void
 Hex27SCS::set_interior_info()
 {
   const int surfacesPerDirection = nodes1D_ - 1; // 2
-  const int ipsPerSurface = (numQuad_*numQuad_)*(nodes1D_*nodes1D_); // 36
-  const int numSurfaces = surfacesPerDirection * nDim_; // 6
-
-  numIntPoints_ = numSurfaces*ipsPerSurface; // 216
-  ThrowRequire(numIntPoints_ == AlgTraits::numScsIp_);
-
-  const int numVectorPoints = numIntPoints_*nDim_; // 648
-
-  // define L/R mappings
-  lrscv_.resize(2*numIntPoints_); // size = 432
-
-  // standard integration location
-  intgLoc_.resize(numVectorPoints);
-
-  // shifted
-  intgLocShift_.resize(numVectorPoints);
-
-  // Save quadrature weight and directionality information
-  ipInfo_.resize(numIntPoints_);
 
   // a list of the scs locations in 1D
-  const std::vector<double> scsLoc = { -scsDist_, scsDist_ };
+  const double scsLoc[2] = { -scsDist_, scsDist_ };
 
   // correct orientation of area vector
-  const std::vector<double> orientation = {-1.0, +1.0};
+  const double orientation[2] = {-1.0, +1.0};
 
   // specify integration point locations in a dimension-by-dimension manner
   //u direction: bottom-top (0-1)
@@ -1003,6 +971,9 @@ Hex27SCS::set_interior_info()
       }
     }
   }
+  MasterElement::intgLocShift_.assign(intgLocShift_, numIntPoints_*nDim_+intgLocShift_);
+  MasterElement::intgLoc_.assign(intgLoc_, numIntPoints_*nDim_+intgLocShift_);
+  MasterElement::lrscv_.assign(lrscv_, 2*numIntPoints_+lrscv_);
 }
 
 //--------------------------------------------------------------------------
@@ -1011,36 +982,26 @@ Hex27SCS::set_interior_info()
 void
 Hex27SCS::set_boundary_info()
 {
-  const int numFaces = 2 * nDim_; // 6
-  const int nodesPerFace = nodes1D_ * nodes1D_; // 9
-  ipsPerFace_ = nodesPerFace * (numQuad_ * numQuad_); // 36
-  const int numFaceIps = numFaces * ipsPerFace_; // 216 = numIntPoints_ for this element
-
-  oppFace_.resize(numFaceIps);
-  ipNodeMap_.resize(numFaceIps);
-  oppNode_.resize(numFaceIps);
-  intgExpFace_.resize(numFaceIps*nDim_); // size = 648
-
   // face ordinal to tensor-product style node ordering
-  const std::vector<int> stkFaceNodeMap = {
-                                            0,  8,  1, 12, 25, 13,  4, 16,  5, // face 0(2): front face (cclockwise)
-                                            1,  9,  2, 13, 24, 14,  5, 17,  6, // face 1(5): right face (cclockwise)
-                                            3, 10,  2, 15, 26, 14,  7, 18,  6, // face 2(3): back face  (clockwise)
-                                            0, 11,  3, 12, 23, 15,  4, 19,  7, // face 3(4): left face  (clockwise)
-                                            0,  8,  1, 11, 21, 9,   3, 10,  2, // face 4(0): bottom face (clockwise)
-                                            4, 16,  5, 19, 22,  17, 7, 18,  6  // face 5(1): top face (cclockwise)
-                                          };
+  const int stkFaceNodeMap[54] = {
+            0,  8,  1, 12, 25, 13,  4, 16,  5, // face 0(2): front face (cclockwise)
+            1,  9,  2, 13, 24, 14,  5, 17,  6, // face 1(5): right face (cclockwise)
+            3, 10,  2, 15, 26, 14,  7, 18,  6, // face 2(3): back face  (clockwise)
+            0, 11,  3, 12, 23, 15,  4, 19,  7, // face 3(4): left face  (clockwise)
+            0,  8,  1, 11, 21, 9,   3, 10,  2, // face 4(0): bottom face (clockwise)
+            4, 16,  5, 19, 22,  17, 7, 18,  6  // face 5(1): top face (cclockwise)
+            };
 
 
   // tensor-product style access to the map
   auto face_node_number = [=] (int i, int j, int faceOrdinal)
   {
-    return stkFaceNodeMap[i + nodes1D_ * j + nodesPerFace * faceOrdinal];
+    return stkFaceNodeMap[i + nodes1D_ * j + nodesPerFace_ * faceOrdinal];
   };
 
   // map face ip ordinal to nearest sub-control surface ip ordinal
   // sub-control surface renumbering
-  const std::vector<int> faceToSurface = { 2, 5, 3, 4, 0, 1 };
+  const int faceToSurface[6] = { 2, 5, 3, 4, 0, 1 };
   auto opp_face_map = [=] ( int k, int l, int i, int j, int face_index)
   {
     int face_offset = faceToSurface[face_index] * ipsPerFace_;
@@ -1054,7 +1015,7 @@ Hex27SCS::set_boundary_info()
   };
 
   // location of the faces in the correct order
-  const std::vector<double> faceLoc = {-1.0, +1.0, +1.0, -1.0, -1.0, +1.0};
+  const double faceLoc[6] = {-1.0, +1.0, +1.0, -1.0, -1.0, +1.0};
 
   // Set points face-by-face
   int vector_index = 0; int scalar_index = 0; int faceOrdinal = 0;
@@ -1226,6 +1187,10 @@ Hex27SCS::set_boundary_info()
       }
     }
   }
+  MasterElement::intgExpFace_.assign(intgExpFace_, numFaceIps_*nDim_+intgExpFace_);
+  MasterElement::oppFace_.assign(oppFace_, numFaceIps_+oppFace_);
+  MasterElement::ipNodeMap_.assign(ipNodeMap_, numFaceIps_+ipNodeMap_);
+  MasterElement::oppNode_.assign(oppNode_,numFaceIps_+oppNode_);
 }
 
 //--------------------------------------------------------------------------
@@ -1235,7 +1200,7 @@ const int *
 Hex27SCS::adjacentNodes()
 {
   // define L/R mappings
-  return &lrscv_[0];
+  return lrscv_;
 }
 
 //--------------------------------------------------------------------------
@@ -1619,9 +1584,11 @@ void Hex27SCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int numIntPoints = numIntPoints_;
+  const int nodesPerElement = nodesPerElement_;
   SIERRA_FORTRAN(threed_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &nodesPerElement,
+      &numIntPoints,
       deriv,
       coords, gupperij, glowerij);
 }
