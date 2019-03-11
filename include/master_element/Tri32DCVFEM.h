@@ -17,7 +17,6 @@
 #include "SimdInterface.h"
 #include "KokkosInterface.h"
 
-#include <vector>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -242,7 +241,7 @@ public:
     double *result) override;
 
   double tri_parametric_distance(
-    const std::vector<double> &x);
+    const std::array<double,2> &x);
   
   void general_face_grad_op(
     const int face_ordinal,
