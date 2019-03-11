@@ -11,6 +11,8 @@
 
 #include "master_element/MasterElement.h"
 
+#include <array>
+
 namespace sierra{
 namespace nalu{
 
@@ -76,9 +78,36 @@ public:
     const double * elem_nodal_coor,
     double * normal_vector );
   
-  double parametric_distance(const std::vector<double> &x);
+  double parametric_distance(const std::array<double,3> &x);
 
   const double elemThickness_;
+
+
+private:
+
+  static const int nDim_ = AlgTraits::nDim_;
+  static const int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static const int numIntPoints_ = AlgTraits::numScsIp_;
+  const double scaleToStandardIsoFac_ = 2.0;
+
+  // define ip node mappings; ordinal size = 1
+  const int ipNodeMap_[nodesPerElement_] = {0, 1, 2, 3};
+
+  // standard integration location
+  const double intgLoc_[8] = { 
+   -0.25,  -0.25, // surf 1
+    0.25,  -0.25, // surf 2
+    0.25,   0.25, // surf 3
+   -0.25,   0.25};// surf 4
+
+  // shifted
+  const double intgLocShift_[8] = { 
+   -0.50,  -0.50, // surf 1
+    0.50,  -0.50, // surf 2
+    0.50,   0.50, // surf 3
+   -0.50,   0.50};// surf 4  
+
+
 };
     
 } // namespace nalu
