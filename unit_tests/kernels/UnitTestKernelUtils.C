@@ -10,6 +10,7 @@
 
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
+#include <stk_ngp/NgpFieldManager.hpp>
 
 #include <cmath>
 
@@ -551,10 +552,10 @@ void dhdx_test_function(
   init_trigonometric_field(bulk, coordinates, dhdx);
 }
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 void calc_mass_flow_rate_scs(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   const ScalarFieldType& density,
@@ -582,7 +583,9 @@ void calc_mass_flow_rate_scs(
     meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
+  ngp::Mesh ngpMesh(bulk);
+  ngp::FieldManager fieldMgr(bulk);
+  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(
@@ -603,7 +606,9 @@ void calc_mass_flow_rate_scs(
       Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
           stk::mesh::Entity element = b[k];
-          sierra::nalu::fill_pre_req_data(dataNeededNGP, bulk, element, preReqData);
+          sierra::nalu::fill_pre_req_data(
+            dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
+            preReqData);
 
           std::vector<double> rhoU(ndim);
           std::vector<double> v_shape_function(
@@ -639,7 +644,7 @@ void calc_mass_flow_rate_scs(
 }
 
 void calc_projected_nodal_gradient_interior(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   const ScalarFieldType& dnv,
@@ -664,7 +669,9 @@ void calc_projected_nodal_gradient_interior(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
+  ngp::Mesh ngpMesh(bulk);
+  ngp::FieldManager fieldMgr(bulk);
+  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
@@ -685,7 +692,9 @@ void calc_projected_nodal_gradient_interior(
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
       stk::mesh::Entity element = b[k];
-      sierra::nalu::fill_pre_req_data(dataNeededNGP, bulk, element, preReqData);
+      sierra::nalu::fill_pre_req_data(
+        dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
+        preReqData);
 
       meSCS->shape_fcn(v_shape_function.data());
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
@@ -718,7 +727,7 @@ void calc_projected_nodal_gradient_interior(
 }
 
 void calc_projected_nodal_gradient_interior(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   const ScalarFieldType& dnv,
@@ -743,7 +752,9 @@ void calc_projected_nodal_gradient_interior(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
+  ngp::Mesh ngpMesh(bulk);
+  ngp::FieldManager fieldMgr(bulk);
+  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
@@ -764,7 +775,9 @@ void calc_projected_nodal_gradient_interior(
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
       stk::mesh::Entity element = b[k];
-      sierra::nalu::fill_pre_req_data(dataNeededNGP, bulk, element, preReqData);
+      sierra::nalu::fill_pre_req_data(
+        dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
+        preReqData);
 
       meSCS->shape_fcn(v_shape_function.data());
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
@@ -799,7 +812,7 @@ void calc_projected_nodal_gradient_interior(
 }
 
 void calc_projected_nodal_gradient_boundary(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   const ScalarFieldType& dnv,
@@ -825,7 +838,9 @@ void calc_projected_nodal_gradient_boundary(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(meta.side_rank(), selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
+  ngp::Mesh ngpMesh(bulk);
+  ngp::FieldManager fieldMgr(bulk);
+  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
@@ -845,7 +860,8 @@ void calc_projected_nodal_gradient_boundary(
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
       stk::mesh::Entity face = b[k];
-      sierra::nalu::fill_pre_req_data(dataNeededNGP, bulk, face, preReqData);
+      sierra::nalu::fill_pre_req_data(
+        dataNeededNGP, ngpMesh, meta.side_rank(), face, preReqData);
 
       meBC->shape_fcn(v_shape_function.data());
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
@@ -873,7 +889,7 @@ void calc_projected_nodal_gradient_boundary(
 }
 
 void calc_projected_nodal_gradient_boundary(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   const ScalarFieldType& dnv,
@@ -899,7 +915,9 @@ void calc_projected_nodal_gradient_boundary(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(meta.side_rank(), selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
+  ngp::Mesh ngpMesh(bulk);
+  ngp::FieldManager fieldMgr(bulk);
+  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
@@ -920,7 +938,8 @@ void calc_projected_nodal_gradient_boundary(
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
       stk::mesh::Entity face = b[k];
-      sierra::nalu::fill_pre_req_data(dataNeededNGP, bulk, face, preReqData);
+      sierra::nalu::fill_pre_req_data(
+        dataNeededNGP, ngpMesh, meta.side_rank(), face, preReqData);
 
       meBC->shape_fcn(v_shape_function.data());
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
@@ -950,7 +969,7 @@ void calc_projected_nodal_gradient_boundary(
 }
 
 void calc_dual_nodal_volume(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   const ScalarFieldType& dnvField)
@@ -970,7 +989,9 @@ void calc_dual_nodal_volume(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  sierra::nalu::ElemDataRequestsNGP dataNeededNGP(dataNeeded, meta.get_fields().size());
+  ngp::Mesh ngpMesh(bulk);
+  ngp::FieldManager fieldMgr(bulk);
+  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
@@ -991,7 +1012,9 @@ void calc_dual_nodal_volume(
     Kokkos::parallel_for(
       Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
       stk::mesh::Entity element = b[k];
-      sierra::nalu::fill_pre_req_data(dataNeededNGP, bulk, element, preReqData);
+      sierra::nalu::fill_pre_req_data(
+        dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
+        preReqData);
 
       auto v_scv_vol = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scv_volume;
       const ngp::Mesh::ConnectedNodes node_rels = preReqData.elemNodes;
@@ -1006,7 +1029,7 @@ void calc_dual_nodal_volume(
 }
 
 void calc_projected_nodal_gradient(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   ScalarFieldType& dnv,
@@ -1032,7 +1055,7 @@ void calc_projected_nodal_gradient(
 }
 
 void calc_projected_nodal_gradient(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   ScalarFieldType& dnv,
@@ -1056,7 +1079,7 @@ void calc_projected_nodal_gradient(
   }
 }
 
-#endif // KOKKOS_HAVE_CUDA
+#endif // KOKKOS_ENABLE_CUDA
 
 void expect_all_near(
   const Kokkos::View<double*>& calcValue,

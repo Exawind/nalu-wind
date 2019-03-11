@@ -15,7 +15,7 @@
 #include "SupplementalAlgorithm.h"
 #include "UnitTestKokkosUtils.h"
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 namespace unit_test_algorithm_utils {
 
@@ -76,6 +76,6 @@ private:
 
 }
 
-#endif /* KOKKOS_HAVE_CUDA */
+#endif /* KOKKOS_ENABLE_CUDA */
 
 #endif /* UNITTESTALGORITHMUTILS_H */

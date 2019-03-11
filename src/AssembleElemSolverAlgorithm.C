@@ -81,20 +81,18 @@ AssembleElemSolverAlgorithm::initialize_connectivity()
 void
 AssembleElemSolverAlgorithm::execute()
 {
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-
-  // set any data
-  const size_t activeKernelsSize = activeKernels_.size();
-  for ( size_t i = 0; i < activeKernelsSize; ++i )
+  for ( size_t i = 0; i < activeKernels_.size(); ++i )
     activeKernels_[i]->setup(*realm_.timeIntegrator_);
 
-  run_algorithm(bulk_data, [&](SharedMemData<TeamHandleType,HostShmem>& smdata)
-  {
+  run_algorithm(
+    realm_.bulk_data(),
+    KOKKOS_LAMBDA(SharedMemData<DeviceTeamHandleType, DeviceShmem> & smdata) {
       set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
       set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());
 
+#ifndef KOKKOS_ENABLE_CUDA
       // call supplemental; gathers happen inside the elem_execute method
-      for ( size_t i = 0; i < activeKernelsSize; ++i )
+      for ( size_t i = 0; i < activeKernels_.size(); ++i )
         activeKernels_[i]->execute( smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData );
 
       for(int simdElemIndex=0; simdElemIndex<smdata.numSimdElems; ++simdElemIndex) {
@@ -102,10 +100,11 @@ AssembleElemSolverAlgorithm::execute()
         extract_vector_lane(smdata.simdlhs, simdElemIndex, smdata.lhs);
         for (int ir=0; ir < rhsSize_; ++ir)
           smdata.lhs(ir, ir) /= diagRelaxFactor_;
-        apply_coeff(nodesPerEntity_, smdata.elemNodes[simdElemIndex],
+        apply_coeff(nodesPerEntity_, smdata.ngpElemNodes[simdElemIndex],
                     smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
       }
-  });
+#endif
+    });
 }
 
 } // namespace nalu

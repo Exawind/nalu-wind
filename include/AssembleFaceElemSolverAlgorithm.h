@@ -11,6 +11,7 @@
 
 #include <SolverAlgorithm.h>
 #include <ElemDataRequests.h>
+#include <Realm.h>
 #include <ScratchViews.h>
 #include <SimdInterface.h>
 #include <SharedMemData.h>
@@ -24,8 +25,6 @@ class Part;
 
 namespace sierra{
 namespace nalu{
-
-class Realm;
 
 class AssembleFaceElemSolverAlgorithm : public SolverAlgorithm
 {
@@ -61,77 +60,111 @@ public:
 
       int rhsSize = meElemInfo.nodalGatherSize_*numDof_, lhsSize = rhsSize*rhsSize, scratchIdsSize = rhsSize;
 
-      ElemDataRequestsNGP faceDataNGP(faceDataNeeded_, totalNumFields);
-      ElemDataRequestsNGP elemDataNGP(elemDataNeeded_, totalNumFields);
+      const ngp::Mesh& ngpMesh = realm_.ngp_mesh();
+      const ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+      ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataNeeded_, totalNumFields);
+      ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataNeeded_, totalNumFields);
 
       const int bytes_per_team = 0;
-      const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(lhsSize, rhsSize, scratchIdsSize,
-                                                                       nDim, faceDataNGP, elemDataNGP, meElemInfo);
+      const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(
+        lhsSize, rhsSize, scratchIdsSize, nDim, faceDataNGP, elemDataNGP,
+        meElemInfo);
 
       const bool interleaveMeViews = false;
 
-      stk::mesh::Selector s_locally_owned_union = bulk.mesh_meta_data().locally_owned_part() 
-        &stk::mesh::selectUnion(partVec_);
+      stk::mesh::Selector s_locally_owned_union =
+        bulk.mesh_meta_data().locally_owned_part() &
+        stk::mesh::selectUnion(partVec_);
       stk::mesh::EntityRank sideRank = bulk.mesh_meta_data().side_rank();
-      stk::mesh::BucketVector const& buckets = bulk.get_buckets(sideRank, s_locally_owned_union );
+      const auto& buckets = ngp::get_bucket_ids(bulk, sideRank, s_locally_owned_union);
 
-      auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
-      Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
-      {
-        stk::mesh::Bucket & b = *buckets[team.league_rank()];
+      auto team_exec = sierra::nalu::get_device_team_policy(
+        buckets.size(), bytes_per_team, bytes_per_thread);
+      Kokkos::parallel_for(
+        team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {
+          auto bktId = buckets.device_get(team.league_rank());
+          auto& b = ngpMesh.get_bucket(sideRank, bktId);
 
-        ThrowAssertMsg(b.topology().num_nodes() == (unsigned)nodesPerFace_,
-                       "AssembleFaceElemSolverAlgorithm expected nodesPerEntity_ = "
-                       <<nodesPerFace_<<", but b.topology().num_nodes() = "<<b.topology().num_nodes());
-
-        SharedMemData_FaceElem<TeamHandleType,HostShmem> smdata(team, nDim, faceDataNGP, elemDataNGP, meElemInfo, rhsSize);
-
-        const size_t bucketLen   = b.size();
-        const size_t simdBucketLen = sierra::nalu::get_num_simd_groups(bucketLen);
-
-        Kokkos::parallel_for(Kokkos::TeamThreadRange(team, simdBucketLen), [&](const size_t& bktIndex)
-        {
-          size_t simdGroupLen = sierra::nalu::get_length_of_next_simd_group(bktIndex, bucketLen);
-          size_t numFacesProcessed = 0;
-          do {
-            int elemFaceOrdinal = -1;
-            int simdFaceIndex = 0;
-            while((numFacesProcessed+simdFaceIndex)<simdGroupLen) {
-              stk::mesh::Entity face = b[bktIndex*simdLen + numFacesProcessed + simdFaceIndex];
-              ThrowAssertMsg(bulk.num_elements(face)==1, "Expecting just 1 element attached to face!");
-              int thisElemFaceOrdinal = bulk.begin_element_ordinals(face)[0];
-
-              if (elemFaceOrdinal >= 0 && thisElemFaceOrdinal != elemFaceOrdinal) {
-                break;
-              }
-
-              const stk::mesh::Entity* elems = bulk.begin_elements(face);
-  
-              smdata.connectedNodes[simdFaceIndex] = bulk.begin_nodes(elems[0]);
-              smdata.elemFaceOrdinal = thisElemFaceOrdinal;
-              elemFaceOrdinal = thisElemFaceOrdinal;
-              sierra::nalu::fill_pre_req_data(faceDataNGP, bulk, face, *smdata.faceViews[simdFaceIndex], interleaveMeViews);
-              sierra::nalu::fill_pre_req_data(elemDataNGP, bulk, elems[0], *smdata.elemViews[simdFaceIndex], interleaveMeViews);
-              ++simdFaceIndex;
-            }
-            smdata.numSimdFaces = simdFaceIndex;
-            numFacesProcessed += simdFaceIndex;
-  
 #ifndef KOKKOS_ENABLE_CUDA
-//When we GPU-ize AssembleFaceElemSolverAlgorithm, 'lambdaFunc' below will need to operate
-//on the non-simd smdata.faceViews etc... since we aren't going to copy_and_interleave. We will probably
-//want to make smdata.simdFaceViews be a pointer/reference to smdata.faceViews[0] in some way...
-            copy_and_interleave(smdata.faceViews, smdata.numSimdFaces, smdata.simdFaceViews, interleaveMeViews);
-            copy_and_interleave(smdata.elemViews, smdata.numSimdFaces, smdata.simdElemViews, interleaveMeViews);
+          ThrowAssertMsg(
+            b.topology().num_nodes() == (unsigned)nodesPerFace_,
+            "AssembleFaceElemSolverAlgorithm expected nodesPerEntity_ = "
+              << nodesPerFace_ << ", but b.topology().num_nodes() = "
+              << b.topology().num_nodes());
+#endif
+
+          SharedMemData_FaceElem<DeviceTeamHandleType, DeviceShmem> smdata(
+            team, nDim, faceDataNGP, elemDataNGP, meElemInfo, rhsSize);
+
+          const size_t bucketLen = b.size();
+          const size_t simdBucketLen =
+            sierra::nalu::get_num_simd_groups(bucketLen);
+
+          Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(team, simdBucketLen),
+            [&](const size_t& bktIndex) {
+              size_t simdGroupLen = sierra::nalu::get_length_of_next_simd_group(
+                bktIndex, bucketLen);
+              size_t numFacesProcessed = 0;
+              do {
+                int elemFaceOrdinal = -1;
+                int simdFaceIndex = 0;
+                while ((numFacesProcessed + simdFaceIndex) < simdGroupLen) {
+                  stk::mesh::Entity face =
+                    b[bktIndex * simdLen + numFacesProcessed + simdFaceIndex];
+                  const auto ngpFaceIndex = ngpMesh.fast_mesh_index(face);
+                  // ThrowAssertMsg(
+                  //   bulk.num_elements(face) == 1,
+                  //   "Expecting just 1 element attached to face!");
+                  int thisElemFaceOrdinal =
+                    ngpMesh.get_element_ordinals(sideRank, ngpFaceIndex)[0];
+
+                  if (elemFaceOrdinal >= 0 && thisElemFaceOrdinal != elemFaceOrdinal) {
+                    break;
+                  }
+
+                  const auto& elems = ngpMesh.get_elements(sideRank, ngpFaceIndex);
+                  const auto elemIndex = ngpMesh.fast_mesh_index(elems[0]);
+
+                  smdata.ngpConnectedNodes[simdFaceIndex] =
+                    ngpMesh.get_nodes(stk::topology::ELEMENT_RANK, elemIndex);
+                  smdata.elemFaceOrdinal = thisElemFaceOrdinal;
+                  elemFaceOrdinal = thisElemFaceOrdinal;
+                  sierra::nalu::fill_pre_req_data(
+                    faceDataNGP, ngpMesh, sideRank, face,
+                    *smdata.faceViews[simdFaceIndex], interleaveMeViews);
+                  sierra::nalu::fill_pre_req_data(
+                    elemDataNGP, ngpMesh, stk::topology::ELEMENT_RANK, elems[0],
+                    *smdata.elemViews[simdFaceIndex], interleaveMeViews);
+                  ++simdFaceIndex;
+                }
+                smdata.numSimdFaces = simdFaceIndex;
+                numFacesProcessed += simdFaceIndex;
+
+#ifndef KOKKOS_ENABLE_CUDA
+                // When we GPU-ize AssembleFaceElemSolverAlgorithm, 'lambdaFunc'
+                // below will need to operate on the non-simd smdata.faceViews
+                // etc... since we aren't going to copy_and_interleave. We will
+                // probably want to make smdata.simdFaceViews be a
+                // pointer/reference to smdata.faceViews[0] in some way...
+                copy_and_interleave(
+                  smdata.faceViews, smdata.numSimdFaces, smdata.simdFaceViews,
+                  interleaveMeViews);
+                copy_and_interleave(
+                  smdata.elemViews, smdata.numSimdFaces, smdata.simdElemViews,
+                  interleaveMeViews);
+
+                fill_master_element_views(
+                  faceDataNGP, smdata.simdFaceViews, smdata.elemFaceOrdinal);
+                fill_master_element_views(
+                  elemDataNGP, smdata.simdElemViews, smdata.elemFaceOrdinal);
 //for now this simply isn't ready for GPU.
 #endif
-            fill_master_element_views(faceDataNGP, smdata.simdFaceViews, smdata.elemFaceOrdinal);
-            fill_master_element_views(elemDataNGP, smdata.simdElemViews, smdata.elemFaceOrdinal);
-  
-            lamdbaFunc(smdata);
-          } while(numFacesProcessed < simdGroupLen);
+
+                lamdbaFunc(smdata);
+              } while (numFacesProcessed < simdGroupLen);
+            });
         });
-      });
   }
 
   ElemDataRequests faceDataNeeded_;

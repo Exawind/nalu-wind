@@ -132,7 +132,7 @@ void dhdx_test_function(
   VectorFieldType& dhdx);
 
 void calc_mass_flow_rate_scs(
-  const stk::mesh::BulkData&,
+  stk::mesh::BulkData&,
   const stk::topology&,
   const VectorFieldType&,
   const ScalarFieldType&,
@@ -140,7 +140,7 @@ void calc_mass_flow_rate_scs(
   const GenericFieldType&);
 
 void calc_projected_nodal_gradient(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   ScalarFieldType& dualNodalVolume,
@@ -148,7 +148,7 @@ void calc_projected_nodal_gradient(
   VectorFieldType& vectorField);
 
 void calc_projected_nodal_gradient(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   ScalarFieldType& dualNodalVolume,
@@ -251,7 +251,7 @@ public:
   const VectorFieldType* coordinates_{nullptr};
 };
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 /** Test Fixture for Low-Mach Kernels
  *

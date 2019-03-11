@@ -22,7 +22,7 @@
 #define POINTER_RESTRICT
 #endif
 
-#ifdef KOKKOS_HAVE_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
 #define NONCONST_LAMBDA [&]__host__
 #else
 #define NONCONST_LAMBDA [&]
@@ -31,7 +31,7 @@
 namespace sierra {
 namespace nalu {
 
-#ifdef KOKKOS_HAVE_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
    typedef Kokkos::CudaUVMSpace::memory_space    MemSpace;
 #elif defined(KOKKOS_HAVE_OPENMP)
    typedef Kokkos::OpenMP       MemSpace;

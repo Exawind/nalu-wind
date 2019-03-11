@@ -13,6 +13,7 @@
 #include <KokkosInterface.h>
 
 #include <stk_mesh/base/Entity.hpp>
+#include <stk_ngp/Ngp.hpp>
 #include <vector>
 
 namespace sierra{
@@ -52,6 +53,15 @@ protected:
     const SharedMemView<int*> & sortPermutation,
     SharedMemView<double*> & rhs,
     SharedMemView<double**> & lhs,
+    const char *trace_tag);
+
+  void apply_coeff(
+    unsigned numMeshobjs,
+    const ngp::Mesh::ConnectedNodes& symMeshobjs,
+    const SharedMemView<int*> & scratchIds,
+    const SharedMemView<int*> & sortPermutation,
+    const SharedMemView<const double*> & rhs,
+    const SharedMemView<const double**> & lhs,
     const char *trace_tag);
 
   EquationSystem *eqSystem_;

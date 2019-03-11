@@ -21,6 +21,8 @@
 #include <stk_mesh/base/Entity.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 
+#include <stk_ngp/Ngp.hpp>
+
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -88,6 +90,15 @@ public:
       const SharedMemView<int*> & localIds,
       const SharedMemView<int*> & sortPermutation,
       const char * trace_tag);
+
+  void sumInto(
+    unsigned numEntities,
+    const ngp::Mesh::ConnectedNodes& entities,
+    const SharedMemView<const double*> & rhs,
+    const SharedMemView<const double**> & lhs,
+    const SharedMemView<int*> & localIds,
+    const SharedMemView<int*> & sortPermutation,
+    const char * trace_tag);
 
   void sumInto(
     const std::vector<stk::mesh::Entity> & entities,

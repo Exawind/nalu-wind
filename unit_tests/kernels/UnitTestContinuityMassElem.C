@@ -11,7 +11,7 @@
 
 #include "kernel/ContinuityMassElemKernel.h"
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(ContinuityKernelHex8Mesh, density_time_derivative)
 {

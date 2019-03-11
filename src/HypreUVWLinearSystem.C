@@ -192,6 +192,59 @@ HypreUVWLinearSystem::sumInto(
 
 void
 HypreUVWLinearSystem::sumInto(
+  unsigned numEntities,
+  const ngp::Mesh::ConnectedNodes& entities,
+  const SharedMemView<const double*>& rhs,
+  const SharedMemView<const double**>& lhs,
+  const SharedMemView<int*>&,
+  const SharedMemView<int*>&,
+  const char*  /* trace_tag */)
+{
+#ifndef KOKKOS_ENABLE_CUDA
+  HypreIntType numRows = numEntities;
+  const HypreIntType bufSize = idBuffer_.size();
+
+  ThrowAssertMsg(lhs.is_contiguous(), "LHS assumed contiguous");
+  ThrowAssertMsg(rhs.is_contiguous(), "RHS assumed contiguous");
+  if (bufSize < numRows) {
+    idBuffer_.resize(numRows);
+    scratchRowVals_.resize(numRows);
+  }
+
+  for (size_t in=0; in < numEntities; in++) {
+    idBuffer_[in] = get_entity_hypre_id(entities[in]);
+  }
+
+  for (size_t in=0; in < numEntities; in++) {
+    int ix = in * nDim_;
+    HypreIntType hid = idBuffer_[in];
+
+    if (checkSkippedRows_) {
+      auto it = skippedRows_.find(hid);
+      if (it != skippedRows_.end()) continue;
+    }
+
+    int offset = 0;
+    for (int c=0; c < numRows; c++) {
+      scratchRowVals_[c] = lhs(ix, offset);
+      offset += nDim_;
+    }
+    HYPRE_IJMatrixAddToValues(
+      mat_, 1, &numRows, &hid, &idBuffer_[0], &scratchRowVals_[0]);
+
+    for (int d=0; d < nDim_; d++) {
+      int ir = ix + d;
+      HYPRE_IJVectorAddToValues(rhs_[d], 1, &hid, &rhs[ir]);
+    }
+
+    if ((hid >= iLower_) && (hid <= iUpper_))
+      rowFilled_[hid - iLower_] = RS_FILLED;
+  }
+#endif
+}
+
+void
+HypreUVWLinearSystem::sumInto(
   const std::vector<stk::mesh::Entity>& entities,
   std::vector<int>&  /* scratchIds */,
   std::vector<double>& scratchVals,

@@ -184,6 +184,12 @@ public:
     const SharedMemView<const double**>&
   );
 
+  virtual void save_diagonal_term(
+    unsigned,
+    const ngp::Mesh::ConnectedNodes&,
+    const SharedMemView<const double**>&
+  );
+
   virtual void assemble_and_solve(
     stk::mesh::FieldBase *deltaSolution);
 

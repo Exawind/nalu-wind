@@ -82,8 +82,10 @@ public:
      ThrowRequireMsg(partVec_.size()==1, "KokkosMEViews unit-test assumes partVec_.size==1");
      ThrowRequireMsg(!bulk_.get_buckets(meta_.side_rank(), *partVec_[0]).empty(), "part does not contain side-ranked elements");
 
+#ifndef KOKKOS_ENABLE_CUDA
      sierra::nalu::AssembleFaceElemSolverAlgorithm& alg = *(helperObjs_->assembleFaceElemSolverAlg);
      alg.run_face_elem_algorithm(bulk_, func);
+#endif
    }
 
   sierra::nalu::ElemDataRequests& faceDataNeeded()

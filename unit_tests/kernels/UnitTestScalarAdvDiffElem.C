@@ -36,7 +36,7 @@ namespace advection_diffusion {
 } // hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 /// Scalar advection/diffusion (will use mixture fraction as scalar)
 TEST_F(MixtureFractionKernelHex8Mesh, advection_diffusion)

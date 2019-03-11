@@ -147,5 +147,21 @@ SolverAlgorithm::apply_coeff(
     eqSystem_->save_diagonal_term(numMeshobjs, symMeshobjs, lhs);
 }
 
+void
+SolverAlgorithm::apply_coeff(
+  unsigned numMeshobjs,
+  const ngp::Mesh::ConnectedNodes& symMeshobjs,
+  const SharedMemView<int*> & scratchIds,
+  const SharedMemView<int*> & sortPermutation,
+  const SharedMemView<const double*> & rhs,
+  const SharedMemView<const double**> & lhs,
+  const char *trace_tag)
+{
+  eqSystem_->linsys_->sumInto(numMeshobjs, symMeshobjs, rhs, lhs, scratchIds, sortPermutation, trace_tag);
+
+  if (eqSystem_->extractDiagonal_)
+    eqSystem_->save_diagonal_term(numMeshobjs, symMeshobjs, lhs);
+}
+
 } // namespace nalu
 } // namespace Sierra

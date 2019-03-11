@@ -62,7 +62,7 @@ void test_ngp_mesh_1(const stk::mesh::BulkData& bulk, ngp::Mesh& ngpMesh)
   EXPECT_EQ(numStkElements, hostResults(1));
 }
 
-TEST(NgpMesh, realmNgpMesh)
+TEST(NgpMesh, NGPMesh)
 {
   const std::string meshSpec("generated:2x2x2");
 
@@ -121,8 +121,10 @@ void test_ngp_mesh_field_values(const stk::mesh::BulkData& bulk,
     });
   });
 
-  ngpVelocity.copy_device_to_host(bulk, *velocity);
-  ngpMassFlowRate.copy_device_to_host(bulk, *massFlowRate);
+  ngpVelocity.modify_on_device();
+  ngpMassFlowRate.modify_on_device();
+  ngpVelocity.copy_device_to_host();
+  ngpMassFlowRate.copy_device_to_host();
 
   const double tol = 1.0e-16;
   for (const stk::mesh::Bucket* b : elemBuckets)
@@ -145,7 +147,7 @@ void test_ngp_mesh_field_values(const stk::mesh::BulkData& bulk,
   }
 }
 
-TEST_F(Hex8MeshWithNSOFields, ngpMeshField)
+TEST_F(Hex8MeshWithNSOFields, NGPMeshField)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 

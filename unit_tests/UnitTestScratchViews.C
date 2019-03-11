@@ -20,8 +20,8 @@ using ShmemType = sierra::nalu::DeviceShmem;
 class TestKernel
 {
   public:
-    TestKernel(unsigned  /* vOrdinal */, unsigned  /* pOrdinal */)
-     //: velocityOrdinal(vOrdinal), pressureOrdinal(pOrdinal)
+    TestKernel(unsigned vOrdinal, unsigned pOrdinal)
+     : velocityOrdinal(vOrdinal), pressureOrdinal(pOrdinal)
    {}
 
   KOKKOS_FUNCTION
@@ -42,9 +42,20 @@ class TestKernel
     printf("TestKernel::execute!!\n");
   }
 
+  void execute(
+    sierra::nalu::SharedMemView<sierra::nalu::DoubleType**,ShmemType> & /* lhs */,
+    sierra::nalu::SharedMemView<sierra::nalu::DoubleType*,ShmemType> & rhs,
+    sierra::nalu::ScratchViews<double,TeamType,ShmemType> &  scratchViews) const
+  {
+    auto& v_vel = scratchViews.get_scratch_view_2D(velocityOrdinal);
+    auto& v_pres = scratchViews.get_scratch_view_1D(pressureOrdinal);
+
+    rhs(0) += v_vel(0, 0) + v_pres(0);
+  }
+
 private:
-  //unsigned velocityOrdinal;
-  //unsigned pressureOrdinal;
+  unsigned velocityOrdinal;
+  unsigned pressureOrdinal;
 };
 
 typedef Kokkos::DualView<int*, Kokkos::LayoutRight, sierra::nalu::DeviceSpace> IntViewType;
@@ -62,8 +73,9 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   EXPECT_EQ(2u, dataReq.get_fields().size());
 
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
+  ngp::FieldManager fieldMgr(bulk);
 
-  sierra::nalu::ElemDataRequestsGPU dataNGP(dataReq, meta.get_fields().size());
+  sierra::nalu::ElemDataRequestsGPU dataNGP(fieldMgr, dataReq, meta.get_fields().size());
 
   const int numNodes = elemTopo.num_nodes();
   const int rhsSize = numNodes;
@@ -134,11 +146,46 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   }
 }
 
-TEST_F(Hex8MeshWithNSOFields, ScratchViews)
+TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
   do_the_test(bulk, pressure, velocity);
+}
+
+void do_assemble_elem_solver_test(
+  stk::mesh::BulkData& bulk,
+  sierra::nalu::AssembleElemSolverAlgorithm& solverAlg,
+  unsigned velocityOrdinal,
+  unsigned pressureOrdinal)
+{
+  TestKernel testKernel(velocityOrdinal, pressureOrdinal);
+
+  solverAlg.run_algorithm(
+    bulk,
+    KOKKOS_LAMBDA(sierra::nalu::SharedMemData<TeamType, ShmemType> & smdata) {
+       testKernel.execute(smdata.simdlhs, smdata.simdrhs, *smdata.prereqData[0]);
+    });
+}
+
+TEST_F(Hex8MeshWithNSOFields, NGPAssembleElemSolver)
+{
+  fill_mesh_and_initialize_test_fields("generated:2x2x2");
+
+  unit_test_utils::HelperObjects helperObjs(bulk, stk::topology::HEX_8, 1, partVec[0]);
+  auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
+  auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
+
+  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(stk::topology::HEX_8);
+  dataNeeded.add_cvfem_volume_me(meSCV);
+  dataNeeded.add_gathered_nodal_field(*velocity, 3);
+  dataNeeded.add_gathered_nodal_field(*pressure, 1);
+
+  EXPECT_EQ(2u, dataNeeded.get_fields().size());
+
+  do_assemble_elem_solver_test(
+    bulk, *assembleElemSolverAlg, velocity->mesh_meta_data_ordinal(),
+    pressure->mesh_meta_data_ordinal());
 }
 
 void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* pressure, sierra::nalu::VectorFieldType* velocity)
@@ -154,8 +201,9 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
   EXPECT_EQ(2u, dataReq.get_fields().size());
 
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
+  ngp::FieldManager fieldMgr(bulk);
 
-  sierra::nalu::ElemDataRequestsGPU dataNGP(dataReq, meta.get_fields().size());
+  sierra::nalu::ElemDataRequestsGPU dataNGP(fieldMgr, dataReq, meta.get_fields().size());
 
   const int numNodes = elemTopo.num_nodes();
   const int rhsSize = numNodes;
@@ -227,14 +275,14 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
   }
 }
 
-TEST_F(Hex8MeshWithNSOFields, SharedMemData)
+TEST_F(Hex8MeshWithNSOFields, NGPSharedMemData)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
   do_the_smdata_test(bulk, pressure, velocity);
 }
 
-#ifdef KOKKOS_HAVE_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
 
 using DeviceSpace = Kokkos::Cuda;
 using DeviceShmem = DeviceSpace::scratch_memory_space;
@@ -266,7 +314,7 @@ void do_kokkos_test()
     });
 }
 
-TEST_F(Hex8MeshWithNSOFields, teamSize)
+TEST_F(Hex8MeshWithNSOFields, NGPteamSize)
 {
   do_kokkos_test();
 }

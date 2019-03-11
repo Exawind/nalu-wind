@@ -102,14 +102,15 @@ void copy_and_interleave(const MultiDimViewsType ** data,
   }
 }
 
+#ifndef KOKKOS_ENABLE_CUDA
 inline
 void copy_and_interleave(std::unique_ptr<ScratchViews<double>>* data,
                          int simdElems,
                          ScratchViews<DoubleType>& simdData,
                          bool copyMEViews = true)
 {
-    MultiDimViews<DoubleType,TeamHandleType,HostShmem>& simdFieldViews = simdData.get_field_views();
-    const MultiDimViews<double,TeamHandleType,HostShmem>* fViews[stk::simd::ndoubles] = {nullptr};
+    MultiDimViews<DoubleType, TeamHandleType, HostShmem>& simdFieldViews = simdData.get_field_views();
+    const MultiDimViews<double, TeamHandleType, HostShmem>* fViews[stk::simd::ndoubles] = {nullptr};
 
     for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
       fViews[simdIndex] = &data[simdIndex]->get_field_views();
@@ -129,6 +130,7 @@ void copy_and_interleave(std::unique_ptr<ScratchViews<double>>* data,
       }
     }
 }
+#endif
 
 inline
 void extract_vector_lane(const SharedMemView<DoubleType*>& simdrhs, int simdIndex, SharedMemView<double*>& rhs)

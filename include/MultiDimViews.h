@@ -72,6 +72,7 @@ public:
 #endif
   }
 
+  KOKKOS_FUNCTION
   ~MultiDimViews()
   {
 #ifndef KOKKOS_ENABLE_CUDA

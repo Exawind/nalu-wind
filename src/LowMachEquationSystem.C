@@ -2515,6 +2515,30 @@ MomentumEquationSystem::save_diagonal_term(
 }
 
 void
+MomentumEquationSystem::save_diagonal_term(
+  unsigned nEntities,
+  const ngp::Mesh::ConnectedNodes& entities,
+  const SharedMemView<const double**>& lhs)
+{
+#ifndef KOKKOS_ENABLE_CUDA
+  auto& bulk = realm_.bulk_data();
+  const int nDim = realm_.spatialDimension_;
+  constexpr bool forceAtomic = !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
+
+  for (unsigned in=0; in < nEntities; in++) {
+    const auto naluID = *stk::mesh::field_data(*realm_.naluGlobalId_, entities[in]);
+    const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluID);
+    int ix = in * nDim;
+    double* diagVal = (double*) stk::mesh::field_data(*Udiag_, mnode);
+    if (forceAtomic)
+      Kokkos::atomic_add(diagVal, lhs(ix, ix));
+    else
+      diagVal[0] += lhs(ix, ix);
+  }
+#endif
+}
+
+void
 MomentumEquationSystem::assemble_and_solve(
   stk::mesh::FieldBase* deltaSolution)
 {

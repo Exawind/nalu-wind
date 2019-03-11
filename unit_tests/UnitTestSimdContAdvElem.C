@@ -14,7 +14,7 @@
 #include <ElemDataRequests.h>
 #include <ScratchViews.h>
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(Hex8MeshWithNSOFields, continuityAdvElem)
 {
