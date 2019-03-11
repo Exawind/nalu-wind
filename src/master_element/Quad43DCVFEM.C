@@ -10,6 +10,8 @@
 
 #include "FORTRAN_Proto.h"
 
+#include <array>
+
 namespace sierra{
 namespace nalu{
 
@@ -21,31 +23,17 @@ Quad3DSCS::Quad3DSCS()
   : MasterElement(),
     elemThickness_(0.1)
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 4;
-  numIntPoints_ = 4;
-  scaleToStandardIsoFac_ = 2.0;
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
+  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
 
   // define ip node mappings; ordinal size = 1
-  ipNodeMap_.resize(4);
-  ipNodeMap_[0] = 0;
-  ipNodeMap_[1] = 1;
-  ipNodeMap_[2] = 2;
-  ipNodeMap_[3] = 3;
-
+  MasterElement::ipNodeMap_.assign(ipNodeMap_, 4+ipNodeMap_);
   // standard integration location
-  intgLoc_.resize(8);    
-  intgLoc_[0]  = -0.25; intgLoc_[1] = -0.25; // surf 1
-  intgLoc_[2]  =  0.25; intgLoc_[3] = -0.25; // surf 2
-  intgLoc_[4]  =  0.25; intgLoc_[5] =  0.25; // surf 3
-  intgLoc_[6]  = -0.25; intgLoc_[7] =  0.25; // surf 4
-
+  MasterElement::intgLoc_.assign(intgLoc_, 8+intgLoc_);    
   // shifted
-  intgLocShift_.resize(8);    
-  intgLocShift_[0]  = -0.50; intgLocShift_[1] = -0.50; // surf 1
-  intgLocShift_[2]  =  0.50; intgLocShift_[3] = -0.50; // surf 2
-  intgLocShift_[4]  =  0.50; intgLocShift_[5] =  0.50; // surf 3
-  intgLocShift_[6]  = -0.50; intgLocShift_[7] =  0.50; // surf 4  
+  MasterElement::intgLocShift_.assign(intgLocShift_, 8+intgLocShift_);    
 }
 
 //--------------------------------------------------------------------------
@@ -64,7 +52,7 @@ Quad3DSCS::ipNodeMap(
   int /*ordinal*/)
 {
   // define ip->node mappings for each face (single ordinal); 
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 //--------------------------------------------------------------------------
@@ -91,8 +79,9 @@ void Quad3DSCS::determinant(
 void
 Quad3DSCS::shape_fcn(double *shpfc)
 {
+  const int numIntPoints = numIntPoints_;
   SIERRA_FORTRAN(quad3d_shape_fcn)
-    (&numIntPoints_,&intgLoc_[0],shpfc);
+    (&numIntPoints,intgLoc_,shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -101,8 +90,9 @@ Quad3DSCS::shape_fcn(double *shpfc)
 void
 Quad3DSCS::shifted_shape_fcn(double *shpfc)
 {
+  const int numIntPoints = numIntPoints_;
   SIERRA_FORTRAN(quad3d_shape_fcn)
-    (&numIntPoints_,&intgLocShift_[0],shpfc);
+    (&numIntPoints,intgLocShift_,shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -111,7 +101,7 @@ Quad3DSCS::shifted_shape_fcn(double *shpfc)
 void
 Quad3DSCS::shape_fcn(SharedMemView<DoubleType**> &shpfc)
 {
-  quad4_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  quad4_shape_fcn(numIntPoints_, intgLoc_, shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -120,7 +110,7 @@ Quad3DSCS::shape_fcn(SharedMemView<DoubleType**> &shpfc)
 void
 Quad3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc)
 {
-  quad4_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  quad4_shape_fcn(numIntPoints_, intgLocShift_, shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -178,7 +168,7 @@ Quad3DSCS::isInElement(
   // (must translate this also)
   // d = (scaled) distance in (x,y,z) space from point (xp,yp,zp) to the
   //     surface defined by the face element (the distance is scaled by
-  //     the length of the non-unit normal vector; rescaling of d is done
+  //     the length of the non-unit normal; rescaling of d is done
   //     following the NR iteration below).
 
   double xp = pointCoord[0] - elemNodalCoord[0];
@@ -194,14 +184,14 @@ Quad3DSCS::isInElement(
   double xcur[3];          // current (x,y,z) point on element surface
   double normal[3];        // (non-unit) normal computed at xcur
 
-  // Solution vector solcur[3] = {xi,eta,d}
+  // Solution solcur[3] = {xi,eta,d}
   double solcur[3] = {-0.5,-0.5,-0.5};     // initial guess
   double deltasol[] = {1.0,1.0, 1.0};
 
   int i = 0;
   do
   {
-    // Update guess vector
+    // Update guess point
     solcur[0] += deltasol[0];
     solcur[1] += deltasol[1];
     solcur[2] += deltasol[2];
@@ -269,8 +259,8 @@ Quad3DSCS::isInElement(
   } while ( !within_tolerance( vector_norm_sq(deltasol,3), isInElemConverged)
 	    && ++i < maxNonlinearIter );
 
-  // Fill in solution vector; only include the distance (in the third
-  // solution vector slot) if npar_coord = 3 (this is how the user
+  // Fill in solution; only include the distance (in the third
+  // solution slot) if npar_coord = 3 (this is how the user
   // requests it)
 
   isoParCoord[0] = std::numeric_limits<double>::max();
@@ -281,7 +271,7 @@ Quad3DSCS::isInElement(
   if (i < maxNonlinearIter) {
     isoParCoord[0] = solcur[0] + deltasol[0];
     isoParCoord[1] = solcur[1] + deltasol[1];
-    // Rescale the distance vector by the length of the (non-unit) normal vector,
+    // Rescale the distance by the length of the (non-unit) normal,
     // which was used above in the NR iteration.
     const double area   = std::sqrt(vector_norm_sq(normal,3));
     const double length = std::sqrt(area);
@@ -290,7 +280,7 @@ Quad3DSCS::isInElement(
     //if ( npar_coord == 3 ) par_coor[2] = par_coor_2;
     isoParCoord[2] = par_coor_2;
 
-    std::vector<double> xtmp(3);
+    std::array<double,3> xtmp;
     xtmp[0] = isoParCoord[0];
     xtmp[1] = isoParCoord[1];
     xtmp[2] = isoParCoord[2];
@@ -343,10 +333,10 @@ Quad3DSCS::non_unit_face_normal(
 }
 
 double 
-Quad3DSCS::parametric_distance(const std::vector<double> &x)
+Quad3DSCS::parametric_distance(const std::array<double,3> &x)
 {
   const int NCOORD   = 3;
-  std::vector<double> y(NCOORD);
+  std::array<double,NCOORD> y;
   
   for (int i=0; i<NCOORD; ++i) {
     y[i] = std::abs(x[i]);
