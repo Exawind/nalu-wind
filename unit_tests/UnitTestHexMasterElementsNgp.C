@@ -157,7 +157,6 @@ void check_interpolation(
   const auto* const coordField = bulk.mesh_meta_data().coordinate_field();
   EXPECT_TRUE(coordField != nullptr);
   ngp::Field<double> ngpCoordField(bulk, *coordField);
-  ngpCoordField.copy_host_to_device(bulk, *coordField);
 
   Kokkos::View<DoubleType*,sierra::nalu::MemSpace> ngpResults("ngpResults", num_int_pt);
   Kokkos::View<DoubleType*,sierra::nalu::MemSpace>::HostMirror hostResults = Kokkos::create_mirror_view(ngpResults);
@@ -256,7 +255,6 @@ void check_derivatives(
   const auto* const coordField = bulk.mesh_meta_data().coordinate_field();
   EXPECT_TRUE(coordField != nullptr);
   ngp::Field<double> ngpCoordField(bulk, *coordField);
-  ngpCoordField.copy_host_to_device(bulk, *coordField);
 
   Kokkos::View<DoubleType**,sierra::nalu::MemSpace> ngpResults("ngpResults", num_int_pt, dim);
   Kokkos::View<DoubleType**,sierra::nalu::MemSpace>::HostMirror hostResults = Kokkos::create_mirror_view(ngpResults);

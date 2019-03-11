@@ -123,8 +123,8 @@ void test_ngp_mesh_field_values(const stk::mesh::BulkData& bulk,
 
   ngpVelocity.modify_on_device();
   ngpMassFlowRate.modify_on_device();
-  ngpVelocity.copy_device_to_host();
-  ngpMassFlowRate.copy_device_to_host();
+  ngpVelocity.sync_to_host();
+  ngpMassFlowRate.sync_to_host();
 
   const double tol = 1.0e-16;
   for (const stk::mesh::Bucket* b : elemBuckets)
