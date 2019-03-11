@@ -54,7 +54,7 @@ if(SPHINX_FOUND)
       add_custom_target(sphinx-pdf
         COMMAND ${SPHINX_EXECUTABLE} -M latexpdf
         "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}"
-        -c ${CMAKE_CURRENT_BINARY_DIR} ${SPHINX_OPTS})
+        -c ${CMAKE_CURRENT_SOURCE_DIR} ${SPHINX_OPTS})
     endif()
   endif()
 else()
