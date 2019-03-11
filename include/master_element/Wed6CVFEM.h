@@ -10,6 +10,8 @@
 
 #include "master_element/MasterElement.h"
 
+#include <array>
+
 namespace sierra {
 namespace nalu {
 
@@ -255,7 +257,7 @@ public:
 
   // helper functions to isInElement
   double parametric_distance( const double X, const double Y);
-  double parametric_distance( const std::vector<double> &x);
+  double parametric_distance( const std::array<double,3> &x);
 
   const int* side_node_ordinals(int sideOrdinal) final;
 private:
@@ -365,7 +367,7 @@ private:
     0,  2,  1,  0, // face 3 empty
     3,  4,  5,  0};// face 4 empty
 
-  // ordinal to vector offset map.  Really only convenient for the wedge.
+  // ordinal to offset map.  Really only convenient for the wedge.
   const int sideOffset_[5] = {0, 4, 8, 12, 15};
 
   double intgExpFaceShift_[54]; // no blanked entries
