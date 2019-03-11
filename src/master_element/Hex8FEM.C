@@ -107,38 +107,14 @@ namespace {
 Hex8FEM::Hex8FEM()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 8;
-  numIntPoints_ = 8;
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
 
   // weights; -1:1
-  weights_.resize(numIntPoints_);
-  for ( int k = 0; k < numIntPoints_; ++k )
-    weights_[k] = 1.0;
-
-  // standard integration location +/ sqrt(3)/3
-  intgLoc_.resize(24);
-  const double gIP = std::sqrt(3.0)/3.0;
-  intgLoc_[0]  = -gIP; intgLoc_[1]  = -gIP; intgLoc_[2]  = -gIP; 
-  intgLoc_[3]  = +gIP; intgLoc_[4]  = -gIP; intgLoc_[5]  = -gIP; 
-  intgLoc_[6]  = +gIP; intgLoc_[7]  = +gIP; intgLoc_[8]  = -gIP;
-  intgLoc_[9]  = -gIP; intgLoc_[10] = +gIP; intgLoc_[11] = -gIP;
-  intgLoc_[12] = -gIP; intgLoc_[13] = -gIP; intgLoc_[14] = +gIP;
-  intgLoc_[15] = +gIP; intgLoc_[16] = -gIP; intgLoc_[17] = +gIP;
-  intgLoc_[18] = +gIP; intgLoc_[19] = +gIP; intgLoc_[20] = +gIP;
-  intgLoc_[21] = -gIP; intgLoc_[22] = +gIP; intgLoc_[23] = +gIP;
-
-  // shifted to nodes (Gauss Lobatto)
-  intgLocShift_.resize(24);
-  const double glIP = 1.0;
-  intgLocShift_[0]  = -glIP; intgLocShift_[1]  = -glIP; intgLocShift_[2]  = -glIP; 
-  intgLocShift_[3]  = +glIP; intgLocShift_[4]  = -glIP; intgLocShift_[5]  = -glIP; 
-  intgLocShift_[6]  = +glIP; intgLocShift_[7]  = +glIP; intgLocShift_[8]  = -glIP;
-  intgLocShift_[9]  = -glIP; intgLocShift_[10] = +glIP; intgLocShift_[11] = -glIP;
-  intgLocShift_[12] = -glIP; intgLocShift_[13] = -glIP; intgLocShift_[14] = +glIP;
-  intgLocShift_[15] = +glIP; intgLocShift_[16] = -glIP; intgLocShift_[17] = +glIP;
-  intgLocShift_[18] = +glIP; intgLocShift_[19] = +glIP; intgLocShift_[20] = +glIP;
-  intgLocShift_[21] = -glIP; intgLocShift_[22] = +glIP; intgLocShift_[23] = +glIP;
+  MasterElement::weights_.assign(weights_, numIntPoints_+weights_);
+  MasterElement::intgLoc_.assign(intgLoc_, 24+intgLoc_);
+  MasterElement::intgLocShift_.assign(intgLocShift_, 24+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -167,12 +143,14 @@ void Hex8FEM::grad_op(
 {
   int lerr = 0;
 
-  hex8_fem_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  hex8_fem_derivative(numIntPoints_, intgLoc_, deriv);
   
+  const int numIntPoints=numIntPoints_;
+  const int nodesPerElement=nodesPerElement_;
   SIERRA_FORTRAN(hex_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &nodesPerElement,
+      &numIntPoints,
       deriv,
       coords, gradop, det_j, error, &lerr ); 
 }
@@ -187,7 +165,7 @@ void Hex8FEM::grad_op_fem(
   SharedMemView<DoubleType***>&deriv,
   SharedMemView<DoubleType*>&det_j)
 {
-  hex8_fem_derivative(numIntPoints_, &intgLoc_[0], deriv);
+  hex8_fem_derivative(numIntPoints_, intgLoc_, deriv);
   generic_grad_op_3d<AlgTraits>(deriv, coords, gradop, det_j);
 }
 
@@ -204,12 +182,14 @@ void Hex8FEM::shifted_grad_op(
 {
   int lerr = 0;
 
-  hex8_fem_derivative(numIntPoints_, &intgLocShift_[0], deriv);
+  hex8_fem_derivative(numIntPoints_, intgLocShift_, deriv);
   
+  const int numIntPoints=numIntPoints_;
+  const int nodesPerElement=nodesPerElement_;
   SIERRA_FORTRAN(hex_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &nodesPerElement,
+      &numIntPoints,
       deriv,
       coords, gradop, det_j, error, &lerr ); 
 }
@@ -224,7 +204,7 @@ void Hex8FEM::shifted_grad_op_fem(
   SharedMemView<DoubleType***>&deriv,
   SharedMemView<DoubleType*>&det_j)
 {
-  hex8_fem_derivative(numIntPoints_, &intgLocShift_[0], deriv);
+  hex8_fem_derivative(numIntPoints_, intgLocShift_, deriv);
   generic_grad_op_3d<AlgTraits>(deriv, coords, gradop, det_j);
 }
 
@@ -247,6 +227,7 @@ void Hex8FEM::face_grad_op(
   double dpsi[24];
   double grad[24];
   
+  const int nodesPerElement=nodesPerElement_;
   for ( int n=0; n<nelem; n++ ) {
     
     for ( int k=0; k<npf; k++ ) {
@@ -258,7 +239,7 @@ void Hex8FEM::face_grad_op(
       
       SIERRA_FORTRAN(hex_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &nodesPerElement,
           &nface,
           dpsi,
           &coords[24*n], grad, &det_j[npf*n+k], error, &lerr );
@@ -291,7 +272,7 @@ Hex8FEM::general_shape_fcn(
 void
 Hex8FEM::shape_fcn(double *shpfc)
 {
-  hex8_fem_shape_fcn(numIntPoints_,&intgLoc_[0],shpfc);
+  hex8_fem_shape_fcn(numIntPoints_,intgLoc_,shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -300,7 +281,7 @@ Hex8FEM::shape_fcn(double *shpfc)
 void
 Hex8FEM::shifted_shape_fcn(double *shpfc)
 {
-  hex8_fem_shape_fcn(numIntPoints_,&intgLocShift_[0],shpfc);
+  hex8_fem_shape_fcn(numIntPoints_,intgLocShift_,shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -309,7 +290,7 @@ Hex8FEM::shifted_shape_fcn(double *shpfc)
 void
 Hex8FEM::shape_fcn(SharedMemView<DoubleType**> &shpfc)
 {
-  hex8_fem_shape_fcn(numIntPoints_,&intgLoc_[0],shpfc);
+  hex8_fem_shape_fcn(numIntPoints_,intgLoc_,shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -318,7 +299,7 @@ Hex8FEM::shape_fcn(SharedMemView<DoubleType**> &shpfc)
 void
 Hex8FEM::shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc)
 {
-  hex8_fem_shape_fcn(numIntPoints_,&intgLocShift_[0],shpfc);
+  hex8_fem_shape_fcn(numIntPoints_,intgLocShift_,shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -330,9 +311,11 @@ void Hex8FEM::gij(
   double *glowerij,
   double *deriv)
 {
+  const int numIntPoints=numIntPoints_;
+  const int nodesPerElement=nodesPerElement_;
   SIERRA_FORTRAN(threed_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &nodesPerElement,
+      &numIntPoints,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -342,7 +325,7 @@ void Hex8FEM::gij(
 //--------------------------------------------------------------------------
 void
 Hex8FEM::hex8_fem_shape_fcn(
-  const int  &numIp,
+  const int  numIp,
   const double *isoParCoord, 
   double *shpfc)
 {
@@ -372,7 +355,7 @@ Hex8FEM::hex8_fem_shape_fcn(
 //--------------------------------------------------------------------------
 void
 Hex8FEM::hex8_fem_shape_fcn(
-  const int  &numIp,
+  const int  numIp,
   const double *isoParCoord,
   SharedMemView<DoubleType**> shpfc)
 {
