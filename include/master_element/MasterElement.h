@@ -335,63 +335,6 @@ public:
 
 };
 
-// 3D Tri 3
-class Tri3DSCS : public MasterElement
-{
-public:
-
-  Tri3DSCS();
-  virtual ~Tri3DSCS();
-
-  using AlgTraits = AlgTraitsTri3;
-  using MasterElement::determinant;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
-
-  const int * ipNodeMap(int ordinal = 0);
-
-  void determinant(
-    const int nelem,
-    const double *coords,
-    double *areav,
-    double * error );
-
-  void shape_fcn(
-     double *shpfc);
-
-   void shifted_shape_fcn(
-     double *shpfc);
-
-   void tri_shape_fcn(
-     const int &npts,
-     const double *par_coord,
-     double* shape_fcn);
-
-   double isInElement(
-     const double *elemNodalCoord,
-     const double *pointCoord,
-     double *isoParCoord);
-
-  double parametric_distance(
-    const std::vector<double> &x);
-
-  void interpolatePoint(
-    const int &nComp,
-    const double *isoParCoord,
-    const double *field,
-    double *result);
-
-  void general_shape_fcn(
-    const int numIp,
-    const double *isoParCoord,
-    double *shpfc);
-
-  void general_normal(
-    const double *isoParCoord,
-    const double *coords,
-    double *normal);
-};
-
 // edge 2d
 class Edge2DSCS : public MasterElement
 {

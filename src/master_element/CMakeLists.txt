@@ -20,6 +20,7 @@ add_sources(GlobalSourceList
    Quad93DCVFEM.C
    Tet4CVFEM.C
    Tri32DCVFEM.C
+   Tri33DCVFEM.C
    Wed6CVFEM.C
    Edge32DCVFEM.C
 )
