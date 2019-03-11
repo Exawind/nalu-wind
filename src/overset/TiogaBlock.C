@@ -108,8 +108,7 @@ void TiogaBlock::initialize()
 
 void TiogaBlock::update_coords()
 {
-  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_)
-    & (meta_.locally_owned_part() | meta_.globally_shared_part());
+  stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
     stk::topology::NODE_RANK, mesh_selector);
   VectorFieldType* coords = meta_.get_field<VectorFieldType>(
@@ -172,8 +171,7 @@ TiogaBlock::update_iblanks(std::vector<stk::mesh::Entity>& holeNodes)
   ScalarIntFieldType* ibf =
     meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
 
-  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_)
-    & (meta_.locally_owned_part() | meta_.globally_shared_part());
+  stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts =
     bulk_.get_buckets(stk::topology::NODE_RANK, mesh_selector);
 
@@ -195,8 +193,7 @@ void TiogaBlock::update_iblank_cell()
   ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
     stk::topology::ELEM_RANK, "iblank_cell");
 
-  stk::mesh::Selector mesh_selector = meta_.locally_owned_part() &
-    stk::mesh::selectUnion(blkParts_);
+  stk::mesh::Selector mesh_selector = get_elem_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
     stk::topology::ELEM_RANK, mesh_selector);
 
@@ -280,9 +277,22 @@ inline void TiogaBlock::names_to_parts(
   }
 }
 
+stk::mesh::Selector
+TiogaBlock::get_node_selector(stk::mesh::PartVector& parts)
+{
+  return stk::mesh::selectUnion(parts) &
+         (meta_.locally_owned_part() | meta_.globally_shared_part());
+}
+
+stk::mesh::Selector
+TiogaBlock::get_elem_selector(stk::mesh::PartVector& parts)
+{
+  return stk::mesh::selectUnion(parts) & meta_.locally_owned_part();
+}
+
 void TiogaBlock::process_nodes()
 {
-  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(blkParts_);
+  stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
     stk::topology::NODE_RANK, mesh_selector);
   VectorFieldType* coords = meta_.get_field<VectorFieldType>(
@@ -321,7 +331,7 @@ void TiogaBlock::process_nodes()
 
 void TiogaBlock::process_wallbc()
 {
-  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(wallParts_);
+  stk::mesh::Selector mesh_selector = get_node_selector(wallParts_);
   const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
     stk::topology::NODE_RANK, mesh_selector);
 
@@ -345,7 +355,7 @@ void TiogaBlock::process_wallbc()
 
 void TiogaBlock::process_ovsetbc()
 {
-  stk::mesh::Selector mesh_selector = stk::mesh::selectUnion(ovsetParts_);
+  stk::mesh::Selector mesh_selector = get_node_selector(ovsetParts_);
   const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
     stk::topology::NODE_RANK, mesh_selector);
 
@@ -369,8 +379,7 @@ void TiogaBlock::process_ovsetbc()
 
 void TiogaBlock::process_elements()
 {
-  stk::mesh::Selector mesh_selector = meta_.locally_owned_part() &
-    stk::mesh::selectUnion(blkParts_);
+  stk::mesh::Selector mesh_selector = get_elem_selector(blkParts_);
   const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
     stk::topology::ELEM_RANK, mesh_selector);
 

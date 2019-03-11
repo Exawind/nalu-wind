@@ -38,7 +38,8 @@ TiogaSTKIface::TiogaSTKIface(
     meta_(*oversetManager.metaData_),
     bulk_(*oversetManager.bulkData_),
     tg_(new TIOGA::tioga()),
-    inactivePartName_("nalu_overset_hole_elements")
+    inactivePartName_("nalu_overset_hole_elements"),
+    coordsName_(oversetManager_.realm_.get_coordinates_name())
 {
   load(node);
 }
@@ -51,16 +52,15 @@ TiogaSTKIface::load(const YAML::Node& node)
 {
   const YAML::Node& oset_groups = node["mesh_group"];
 
-  std::string coords_name = oversetManager_.realm_.get_coordinates_name();
   int num_meshes = oset_groups.size();
   blocks_.resize(num_meshes);
 
   for (int i = 0; i < num_meshes; i++) {
-    blocks_[i].reset(new TiogaBlock(meta_, bulk_, oset_groups[i], coords_name, i + 1));
+    blocks_[i].reset(new TiogaBlock(meta_, bulk_, oset_groups[i], coordsName_, i + 1));
   }
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
-      << "TIOGA: Using coordinates field: " << coords_name << std::endl;
+      << "TIOGA: Using coordinates field: " << coordsName_ << std::endl;
 
   if (node["tioga_populate_inactive_part"])
     populateInactivePart_ = node["tioga_populate_inactive_part"].as<bool>();
@@ -231,6 +231,14 @@ void TiogaSTKIface::update_ghosting()
       << "TIOGA: Overset ghosting unchanged for this timestep" << std::endl;
   }
 #endif
+
+  // Communicate coordinates field when populating oversetInfoVec
+  if (oversetManager_.oversetGhosting_ != nullptr) {
+    VectorFieldType* coords = meta_.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, coordsName_);
+    std::vector<const stk::mesh::FieldBase*> fVec = {coords};
+    stk::mesh::communicate_field_data(*oversetManager_.oversetGhosting_, fVec);
+  }
 }
 
 void TiogaSTKIface::populate_inactive_part()

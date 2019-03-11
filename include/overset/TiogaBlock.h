@@ -161,6 +161,17 @@ private:
    */
   void print_summary();
 
+  /** Return a selector for accessing nodes for use with TIOGA API
+   *
+   *  This is necessary to avoid selecting nodes that are ghosted and can cause
+   *  issues with the hole-cutting logic.
+   */
+  stk::mesh::Selector get_node_selector(stk::mesh::PartVector&);
+
+  /** Return a selector for accessing elements for use with TIOGA API
+   */
+  stk::mesh::Selector get_elem_selector(stk::mesh::PartVector&);
+
   //! Reference to the STK Mesh MetaData object
   stk::mesh::MetaData& meta_;
 
