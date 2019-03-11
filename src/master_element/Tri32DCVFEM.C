@@ -856,7 +856,7 @@ Tri32DSCS::isInElement(
   double y[2] = { elemNodalCoord[4] - elemNodalCoord[3],
 		elemNodalCoord[5] - elemNodalCoord[3] };
 
-  // Translate position vector of point in same manner
+  // Translate position of point in same manner
 
   double xp = pointCoord[0] - elemNodalCoord[0];
   double yp = pointCoord[1] - elemNodalCoord[3];
@@ -886,7 +886,7 @@ Tri32DSCS::isInElement(
   double x_nod_new[2] = { len12, len13*cos_theta};
   double y_nod_new[2] = {  0.0, len13*sin_theta};
 
-  // find direction cosines transform position vector of
+  // find direction cosines transform position of
   // point to be checked into new coordinate system
   // direction cosines of new x axis along side 12
 
@@ -908,7 +908,7 @@ Tri32DSCS::isInElement(
     ypnew*( x_nod_new[1] - x_nod_new[0] ) / Area2;
   isoParCoord[1] = ( xpnew*y_nod_new[1] - ypnew*x_nod_new[1] ) / Area2;
 
-  std::vector<double> w(2);
+  std::array<double,2> w;
   w[0]=isoParCoord[0];
   w[1]=isoParCoord[1];
 
@@ -926,7 +926,7 @@ Tri32DSCS::isInElement(
 //--------------------------------------------------------------------------
 double
 Tri32DSCS::tri_parametric_distance(
-  const std::vector<double> &x)
+  const std::array<double,2> &x)
 {
   const double X=x[0] - 1./3.;
   const double Y=x[1] - 1./3.;
