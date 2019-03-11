@@ -87,15 +87,46 @@ public:
     double *glowerij,
     double *deriv);
 
+  // weights; -1:1
+  double weights_[8] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+
 private:
+  static const int nDim = AlgTraits::nDim_;
+  static const int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static const int numIntPoints_ = AlgTraits::numScvIp_;
+
+  // shifted to nodes (Gauss Lobatto)
+  const double glIP = 1.0;
+  const double intgLocShift_[24] = {
+   -glIP,  -glIP,  -glIP, 
+   +glIP,  -glIP,  -glIP, 
+   +glIP,  +glIP,  -glIP,
+   -glIP,  +glIP,  -glIP,
+   -glIP,  -glIP,  +glIP,
+   +glIP,  -glIP,  +glIP,
+   +glIP,  +glIP,  +glIP,
+   -glIP,  +glIP,  +glIP};
+
+  // standard integration location +/ sqrt(3)/3
+  const double gIP = std::sqrt(3.0)/3.0;
+  const double  intgLoc_[24] = {
+   -gIP,  -gIP,  -gIP, 
+   +gIP,  -gIP,  -gIP, 
+   +gIP,  +gIP,  -gIP,
+   -gIP,  +gIP,  -gIP,
+   -gIP,  -gIP,  +gIP,
+   +gIP,  -gIP,  +gIP,
+   +gIP,  +gIP,  +gIP,
+   -gIP,  +gIP,  +gIP};
+
 
   void hex8_fem_shape_fcn(
-    const int  &numIp,
+    const int  numIp,
     const double *isoParCoord,
     double *shpfc);
 
   void hex8_fem_shape_fcn(
-    const int  &numIp,
+    const int  numIp,
     const double *isoParCoord,
     SharedMemView<DoubleType**> shpfc);
 
