@@ -151,6 +151,9 @@ private:
   //! consistent.
   std::vector<stk::mesh::EntityId> donorIDs_;
 
+  //! Name of the coordinates field (for moving mesh simulations)
+  std::string coordsName_;
+
   //! Set the symmetry direction for TIOGA, default is z-direction (3)
   int symmetryDir_{3};
 
