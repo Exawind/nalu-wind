@@ -9,6 +9,8 @@
 #ifndef Hex8CVFEM_h
 #define Hex8CVFEM_h
 
+#include <array>
+
 #include<master_element/MasterElement.h>
 #include <master_element/MasterElementFunctions.h>
 
@@ -317,7 +319,7 @@ public:
   const int* side_node_ordinals(int sideOrdinal) final;
   using MasterElement::side_node_ordinals;
 
-  double parametric_distance(const std::vector<double> &x);
+  double parametric_distance(const std::array<double,3> &x);
 
   const int nDim_            = 3;
   const int nodesPerElement_ = 8;

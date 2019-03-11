@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <array>
 
 namespace sierra{
 namespace nalu{
@@ -825,7 +826,7 @@ HexSCS::isInElement(
     par_coor[1] = etanew;
     par_coor[2] = zetanew;
 
-    std::vector<double> xtmp(3);
+    std::array<double,3> xtmp;
     xtmp[0] = par_coor[0];
     xtmp[1] = par_coor[1];
     xtmp[2] = par_coor[2];
@@ -994,9 +995,9 @@ HexSCS::sidePcoords_to_elemPcoords(
 //--------------------------------------------------------------------------
 //-------- parametric_distance ---------------------------------------------
 //--------------------------------------------------------------------------
-double HexSCS::parametric_distance(const std::vector<double> &x)
+double HexSCS::parametric_distance(const std::array<double,3> &x)
 {
-  std::vector<double> y(3);
+  std::array<double,3> y;
   for (int i=0; i<3; ++i) {
     y[i] = std::fabs(x[i]);
   }

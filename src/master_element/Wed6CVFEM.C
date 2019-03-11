@@ -11,6 +11,8 @@
 #include "FORTRAN_Proto.h"
 #include "NaluEnv.h"
 
+#include <array>
+
 namespace sierra {
 namespace nalu {
 
@@ -330,7 +332,7 @@ WedSCS::WedSCS()
   MasterElement::ipNodeMap_.assign(ipNodeMap_, 20+ipNodeMap_); // 4 ips (pick quad) * 5 faces
 
   MasterElement::sideOffset_.assign(sideOffset_, 5+sideOffset_);
-  const std::vector<std::vector<double>> nodeLocations =
+  const double nodeLocations[6][3] =
   {
       {0.0,0.0, -1.0}, {+1.0, 0.0, -1.0}, {0.0, +1.0, -1.0},
       {0.0,0.0, +1.0}, {+1.0, 0.0, +1.0}, {0.0, +1.0, +1.0}
@@ -1002,7 +1004,7 @@ WedSCS::isInElement(
     isoParCoord[0] = rnew;
     isoParCoord[1] = snew;
     isoParCoord[2] = xinew;
-    std::vector<double> xx = { isoParCoord[0], isoParCoord[1], isoParCoord[2] };
+    std::array<double,3> xx = {{isoParCoord[0], isoParCoord[1], isoParCoord[2]}};
 
     dist = parametric_distance(xx);
   }
@@ -1077,7 +1079,7 @@ WedSCS::parametric_distance(const double X, const double Y)
 //-------- parametric_distance ---------------------------------------------
 //--------------------------------------------------------------------------
 double
-WedSCS::parametric_distance(const std::vector<double> &x)
+WedSCS::parametric_distance(const std::array<double,3> &x)
 {
   const double X = x[0] - 1./3.;
   const double Y = x[1] - 1./3.;
