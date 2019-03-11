@@ -173,9 +173,11 @@ public:
    *  proceed.
    */
   virtual void resetRows(
-    std::vector<stk::mesh::Entity>,
+    const std::vector<stk::mesh::Entity>&,
     const unsigned,
-    const unsigned)
+    const unsigned,
+    const double,
+    const double)
   {
     checkSkippedRows_ = false;
   }

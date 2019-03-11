@@ -115,9 +115,11 @@ public:
    *  @param endPos Terminating index (1 for scalar quantities; nDim for vectors)
    */
   virtual void resetRows(
-    std::vector<stk::mesh::Entity> nodeList,
+    const std::vector<stk::mesh::Entity>& nodeList,
     const unsigned beginPos,
-    const unsigned endPos) = 0;
+    const unsigned endPos,
+    const double diag_value = 0.0,
+    const double rhs_residual = 0.0) = 0;
 
   // Solve
   virtual int solve(stk::mesh::FieldBase * linearSolutionField)=0;

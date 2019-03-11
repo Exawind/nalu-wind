@@ -86,7 +86,7 @@ public:
 
   /** Update iblanks after connectivity updates
    */
-  void update_iblanks();
+  void update_iblanks(std::vector<stk::mesh::Entity>&);
 
   /** Update element iblanks after connectivity updates
    */

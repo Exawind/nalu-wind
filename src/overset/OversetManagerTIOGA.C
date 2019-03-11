@@ -61,6 +61,7 @@ OversetManagerTIOGA::initialize()
 
   delete_info_vec();
   oversetInfoVec_.clear();
+  holeNodes_.clear();
 
   tiogaIface_.execute();
 

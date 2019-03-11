@@ -167,7 +167,7 @@ TiogaBlock::update_connectivity()
 }
 
 void
-TiogaBlock::update_iblanks()
+TiogaBlock::update_iblanks(std::vector<stk::mesh::Entity>& holeNodes)
 {
   ScalarIntFieldType* ibf =
     meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
@@ -182,6 +182,10 @@ TiogaBlock::update_iblanks()
     int* ib = stk::mesh::field_data(*ibf, *b);
     for (size_t in = 0; in < b->size(); in++) {
       ib[in] = iblank_[ip++];
+
+      if (ib[in] == 0) {
+        holeNodes.push_back((*b)[in]);
+      }
     }
   }
 }

@@ -516,6 +516,10 @@ Realm::initialize()
 
   populate_boundary_data();
 
+  ScalarIntFieldType* iblank = metaData_->get_field<ScalarIntFieldType>(
+    stk::topology::NODE_RANK, "iblank");
+  stk::mesh::field_fill(1, *iblank);
+
   if ( has_mesh_deformation() || solutionOptions_->meshMotion_ )
     init_current_coordinates();
 
@@ -887,6 +891,7 @@ Realm::setup_nodal_fields()
   // loop over all material props targets and register nodal fields
   std::vector<std::string> targetNames = get_physics_target_names();
   equationSystems_.register_nodal_fields(targetNames);
+
 }
 
 //--------------------------------------------------------------------------
@@ -2781,6 +2786,10 @@ Realm::register_nodal_fields(
       stk::mesh::put_field_on_mesh(*divV, *part, nullptr);
     }
   }
+
+  ScalarIntFieldType& iblank = metaData_->declare_field<ScalarIntFieldType>(
+    stk::topology::NODE_RANK, "iblank");
+  stk::mesh::put_field_on_mesh(iblank, *part, nullptr);
 }
 
 //--------------------------------------------------------------------------

@@ -1698,14 +1698,15 @@ TpetraLinearSystem::prepareConstraints(
 
 void
 TpetraLinearSystem::resetRows(
-  const std::vector<stk::mesh::Entity> nodeList,
+  const std::vector<stk::mesh::Entity>& nodeList,
   const unsigned beginPos,
-  const unsigned endPos)
+  const unsigned endPos,
+  const double diag_value,
+  const double rhs_residual)
 {
   Teuchos::ArrayView<const LocalOrdinal> indices;
   Teuchos::ArrayView<const double> values;
   std::vector<double> new_values;
-  constexpr double rhs_residual = 0.0;
   const bool internalMatrixIsSorted = true;
 
   for (auto node: nodeList) {
@@ -1725,13 +1726,14 @@ TpetraLinearSystem::resetRows(
         throw std::runtime_error("logic error: localId > maxSharedNotOwnedRowId");
       }
 
+      const double dval = useOwned ? diag_value : 0.0;
       // Adjust the LHS; zero out all entries (including diagonal)
       matrix->getLocalRowView(actualLocalId, indices, values);
       const size_t rowLength = values.size();
       if (rowLength > 0) {
         new_values.resize(rowLength);
         for (size_t i=0; i < rowLength; i++) {
-          new_values[i] = 0.0;
+          new_values[i] = (indices[i] == localId) ? dval : 0.0;
         }
         local_matrix.replaceValues(actualLocalId, &indices[0], rowLength, new_values.data(), internalMatrixIsSorted);
       }

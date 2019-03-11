@@ -109,9 +109,11 @@ public:
   virtual void writeSolutionToFile(const char *  /* filename */, bool  /* useOwned */=true) {}
 
   virtual void resetRows(
-    std::vector<stk::mesh::Entity>  /* nodeList */,
+    const std::vector<stk::mesh::Entity>&  /* nodeList */,
     const unsigned  /* beginPos */,
-    const unsigned  /* endPos */) {}
+    const unsigned  /* endPos */,
+    const double,
+    const double) {}
 
   unsigned numSumIntoCalls_;
   Kokkos::View<double**> lhs_;

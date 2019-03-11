@@ -133,7 +133,7 @@ void TiogaSTKIface::execute()
 
   for (auto& tb: blocks_) {
     // Update IBLANK information at nodes and elements
-    tb->update_iblanks();
+    tb->update_iblanks(oversetManager_.holeNodes_);
     tb->update_iblank_cell();
 
     // For each block determine donor elements that needs to be ghosted to other
