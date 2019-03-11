@@ -440,38 +440,6 @@ private:
   ) const;
 };
 
-// 2D Tri 3 subcontrol volume
-class Tri2DSCV : public MasterElement
-{
-public:
-  Tri2DSCV();
-  virtual ~Tri2DSCV();
-
-  using AlgTraits = AlgTraitsTri3_2D;
-  using MasterElement::determinant;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
-
-  const int * ipNodeMap(int ordinal = 0);
-
-  void determinant(
-    const int nelem,
-    const double *coords,
-    double *areav,
-    double * error );
-
-  void shape_fcn(
-    double *shpfc);
-
-  void shifted_shape_fcn(
-    double *shpfc);
-
-  void tri_shape_fcn(
-    const int &npts,
-    const double *par_coord,
-    double* shape_fcn);
-};
-
 // 3D Tri 3
 class Tri3DSCS : public MasterElement
 {
