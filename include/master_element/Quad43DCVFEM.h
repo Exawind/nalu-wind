@@ -36,7 +36,6 @@ public:
     SharedMemView<DoubleType**> &shpfc);
 
   void quad4_shape_fcn(
-    const int  &numIp,
     const double *isoParCoord,
     SharedMemView<DoubleType**> &shpfc);
 
