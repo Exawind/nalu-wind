@@ -9,11 +9,12 @@ namespace nalu{
 class MotionScaling : public MotionBase
 {
 public:
-  MotionScaling(const YAML::Node&);
+  MotionScaling(
+    stk::mesh::MetaData&,
+    const YAML::Node&);
 
   virtual ~MotionScaling()
   {
-
   }
 
   virtual void build_transformation(const double, const double* = nullptr);
@@ -25,14 +26,21 @@ public:
    *                           for points other than xyz
    * @param[in] xyz            Transformed coordinates
    */
-  virtual ThreeDVecType compute_velocity(
+  ThreeDVecType compute_velocity(
     const double /* time */,
     const TransMatType& /* compTrans */,
-    const double* /* xyz */)
-  {
-    throw std::runtime_error(
-      "MotionScaling:compute_velocity() Scaling is not setup to be used as a non-inertial motion");
-  }
+    const double* /* xyz */);
+
+  /** perform post work for this motion
+   *
+   * @param[in] computedMeshVelDiv flag to denote if divergence of
+   *                               mesh velocity already computed
+   */
+  void post_work(
+    stk::mesh::BulkData&,
+    stk::mesh::PartVector&,
+    stk::mesh::PartVector&,
+    bool& computedMeshVelDiv );
 
 private:
   MotionScaling() = delete;
@@ -43,6 +51,9 @@ private:
   void scaling_mat(const ThreeDVecType&);
 
   ThreeDVecType factor_ = {{0.0,0.0,0.0}};
+  ThreeDVecType rate_ = {{0.0,0.0,0.0}};
+
+  bool useRate_ = false;
 };
 
 
