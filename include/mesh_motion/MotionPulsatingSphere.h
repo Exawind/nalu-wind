@@ -11,7 +11,7 @@ class MotionPulsatingSphere : public MotionBase
 public:
   MotionPulsatingSphere(
     stk::mesh::MetaData&,
-      const YAML::Node&);
+    const YAML::Node&);
 
   virtual ~MotionPulsatingSphere()
   {

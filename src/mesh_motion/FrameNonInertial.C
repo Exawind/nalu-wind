@@ -63,7 +63,7 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
         dx[d] = xyz[d] - mX[d];
       } // end for loop - d index
 
-      // copy over model coordinates
+      // copy over current coordinates
       for ( int i = 0; i < nDim; ++i )
         cX[i] = xyz[i];
 

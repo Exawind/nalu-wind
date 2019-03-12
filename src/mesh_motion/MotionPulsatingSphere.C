@@ -69,6 +69,7 @@ void MotionPulsatingSphere::scaling_mat(
   double curr_radius = radius + amplitude_*(1 - std::cos(2*M_PI*frequency_*time));
 
   double uniform_scaling = curr_radius/radius;
+  if(radius == 0.0) uniform_scaling = 1.0;
 
   // Build matrix for translating object to cartesian origin
   transMat_[0][3] = -origin_[0];
@@ -112,13 +113,11 @@ MotionBase::ThreeDVecType MotionPulsatingSphere::compute_velocity(
   double pulsatingVelocity =
     amplitude_ * std::sin(2*M_PI*frequency_*time) * 2*M_PI*frequency_ / radius;
 
-  double eps = std::numeric_limits<double>::epsilon();
+  // account for zero radius
+  if(radius == 0) pulsatingVelocity = 0;
 
   for (int d=0; d < threeDVecSize; d++)
-  {
-    int signum = (-eps < xyz[d]-origin_[d]) - (xyz[d]-origin_[d] < eps);
-    vel[d] = signum * pulsatingVelocity * (xyz[d]-origin_[d]);
-  }
+    vel[d] = pulsatingVelocity * (xyz[d]-origin_[d]);
 
   return vel;
 }
