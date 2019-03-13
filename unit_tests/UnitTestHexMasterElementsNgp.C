@@ -109,6 +109,8 @@ double poly_der(
   return val;
 }
 
+#ifndef KOKKOS_ENABLE_CUDA
+
 template <typename AlgTraits, typename ME, bool SCS>
 void check_interpolation(
   const stk::mesh::MetaData& meta,
@@ -406,6 +408,8 @@ TEST_F(MasterElementHexSerialNGP, hex27_scs_derivatives)
     check_derivatives<AlgTraits>(meta, bulk);
   }
 }
+
+#endif
 
 }//namespace
 

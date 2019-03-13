@@ -25,13 +25,13 @@ public :
   void delete_device_copy() {
     sierra::nalu::kokkos_free_on_device(deviceCopy_);
   }
-  template<class T> T* device_copy() const {return dynamic_cast<T*>(deviceCopy_);}
 };
 
 class Shape : public Deviceable {
 public :
   KOKKOS_FORCEINLINE_FUNCTION Shape() {} 
   virtual ~Shape() {}
+  KOKKOS_FUNCTION
   virtual double area() const = 0;
 };
 
@@ -43,6 +43,7 @@ public :
   }
   KOKKOS_FORCEINLINE_FUNCTION Rectangle(const Rectangle &r):Shape(),length_(r.length_),width_(r.width_) {} 
   virtual ~Rectangle(){}
+  KOKKOS_FUNCTION
   virtual double area() const final {
     return length_ * width_;
   }
@@ -56,10 +57,24 @@ public :
   }
   KOKKOS_FORCEINLINE_FUNCTION Circle(const Circle &c):Shape(),radius_(c.radius_) {} 
   virtual ~Circle(){}
+  KOKKOS_FUNCTION
   virtual double area() const final {
     return 3.14159265 * radius_ * radius_;
   }
 };
+
+template<typename T>
+double do_shape_test(Shape* s)
+{
+  Shape* s_dev = sierra::nalu::create_device_expression<T>(
+      *dynamic_cast<T*>(s));
+  double area = 0.0;
+  Kokkos::parallel_reduce(1, KOKKOS_LAMBDA(int, double &a) {
+      a = s_dev->area();
+      }, area);
+
+  return area;
+}
 
 
 TEST(CreateDeviceExpression, Shapes) 
@@ -67,20 +82,9 @@ TEST(CreateDeviceExpression, Shapes)
   // Create a couple of virtual classes on host and device.
   Shape *r = new Rectangle(4,5);
   Shape *c = new Circle(2);
-  Shape *r_dev = r->device_copy<Shape>();
-  Shape *c_dev = c->device_copy<Shape>();
 
-  double r_area;
-  auto r_on_device = [&] (int  /* i */, double &a) {
-    a = r_dev->area();
-  };
-  sierra::nalu::kokkos_parallel_reduce(1, r_on_device, r_area, "Call Rectangle on Device.");
-
-  double c_area;
-  auto c_on_device = [&] (int  /* i */, double &a) {
-    a = c_dev->area();
-  };
-  sierra::nalu::kokkos_parallel_reduce(1, c_on_device, c_area, "Call Circle on Device.");
+  double r_area = do_shape_test<Rectangle>(r);
+  double c_area = do_shape_test<Circle>(c);
 
   EXPECT_EQ(r_area, r->area()) << "Area of a 4x5 Rectangle on device and host";
   EXPECT_EQ(c_area, c->area()) << "Area of a radius 2 Circle on device and host";
