@@ -96,9 +96,12 @@ void get_face_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_vi
 class Kernel
 {
 public:
+  KOKKOS_FORCEINLINE_FUNCTION
   Kernel() = default;
 
-  virtual ~Kernel() {}
+  virtual ~Kernel() = default;
+
+  virtual Kernel* create_on_device() { return this; }
 
   /** Perform pre-timestep work for the computational kernel
    */
@@ -129,8 +132,67 @@ public:
     ScratchViews<DoubleType> & /* elemScratchViews */,
     int /* elemFaceOrdinal */)
   {}
+
+  /** Execute for NGP Kernels
+   *
+   */
+  KOKKOS_FUNCTION
+  virtual void execute(
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<double, DeviceTeamHandleType, DeviceShmem>&)
+  {}
 };
 
+/** Kernel that can be transferred to a device
+ *
+ */
+template<typename T>
+class NGPKernel : public Kernel
+{
+public:
+  KOKKOS_FORCEINLINE_FUNCTION
+  NGPKernel() = default;
+
+  virtual ~NGPKernel()
+  {
+    if (deviceCopy_ != nullptr)
+      kokkos_free_on_device(deviceCopy_);
+  }
+
+  virtual Kernel* create_on_device() final
+  {
+    if (deviceCopy_ != nullptr)
+      kokkos_free_on_device(deviceCopy_);
+    deviceCopy_ = create_device_expression<T>(*dynamic_cast<T*>(this));
+    return deviceCopy_;
+  }
+
+  T* device_copy() const { return deviceCopy_; }
+
+protected:
+  T* deviceCopy_{nullptr};
+};
+
+/** Wrapper object to hold pointers to kernel instances within a Kokkos::View
+ *
+ */
+struct NGPKernelInfo
+{
+  KOKKOS_FUNCTION
+  NGPKernelInfo() = default;
+
+  NGPKernelInfo(Kernel& kernel)
+  {
+    kernel_ = kernel.create_on_device();
+  }
+
+  operator Kernel*() const
+  { return kernel_; }
+
+private:
+  Kernel* kernel_{nullptr};
+};
 
 }  // nalu
 }  // sierra
