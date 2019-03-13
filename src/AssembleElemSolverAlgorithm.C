@@ -81,8 +81,24 @@ AssembleElemSolverAlgorithm::initialize_connectivity()
 void
 AssembleElemSolverAlgorithm::execute()
 {
-  for ( size_t i = 0; i < activeKernels_.size(); ++i )
+  using NGPKernelInfoView =
+    Kokkos::View<NGPKernelInfo*, Kokkos::LayoutRight, MemSpace>;
+
+  const size_t numKernels = activeKernels_.size();
+  for ( size_t i = 0; i < numKernels; ++i )
     activeKernels_[i]->setup(*realm_.timeIntegrator_);
+
+  NGPKernelInfoView ngpKernels("NGPKernelView", numKernels);
+
+  {
+    NGPKernelInfoView::HostMirror hostKernelView =
+      Kokkos::create_mirror_view(ngpKernels);
+
+    for (size_t i=0; i < numKernels; i++)
+      hostKernelView(i) = NGPKernelInfo(*activeKernels_[i]);
+
+    Kokkos::deep_copy(ngpKernels, hostKernelView);
+  }
 
   run_algorithm(
     realm_.bulk_data(),
@@ -90,11 +106,16 @@ AssembleElemSolverAlgorithm::execute()
       set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
       set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());
 
-#ifndef KOKKOS_ENABLE_CUDA
-      // call supplemental; gathers happen inside the elem_execute method
-      for ( size_t i = 0; i < activeKernels_.size(); ++i )
-        activeKernels_[i]->execute( smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData );
+      for (size_t i=0; i < numKernels; i++) {
+        Kernel* kernel = ngpKernels(i);
+#ifdef KOKKOS_ENABLE_CUDA
+        kernel->execute(smdata.simdlhs, smdata.simdrhs, *smdata.prereqData[0]);
+#else
+        kernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
+#endif
+      }
 
+#ifndef KOKKOS_ENABLE_CUDA
       for(int simdElemIndex=0; simdElemIndex<smdata.numSimdElems; ++simdElemIndex) {
         extract_vector_lane(smdata.simdrhs, simdElemIndex, smdata.rhs);
         extract_vector_lane(smdata.simdlhs, simdElemIndex, smdata.lhs);
