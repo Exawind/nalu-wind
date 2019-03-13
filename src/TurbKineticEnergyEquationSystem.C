@@ -26,6 +26,7 @@
 #include <DirichletBC.h>
 #include <EffectiveDiffFluxCoeffAlgorithm.h>
 #include <EffectiveSSTDiffFluxCoeffAlgorithm.h>
+#include <EffectiveDESABLDiffFluxCoeffAgorithm.h>
 #include <EquationSystem.h>
 #include <EquationSystems.h>
 #include <Enums.h>
@@ -49,6 +50,7 @@
 #include <TurbKineticEnergySSTDESNodeSourceSuppAlg.h>
 #include <TurbKineticEnergyKsgsBuoyantElemSuppAlg.h>
 #include <TurbKineticEnergyRodiNodeSourceSuppAlg.h>
+#include <TurbKineticEnergyDESABLNodeSourceSuppAlg.h>
 
 #include <SolverAlgorithmDriver.h>
 
@@ -148,8 +150,8 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   realm_.push_equation_to_systems(this);
 
   // sanity check on turbulence model
-  if ( (turbulenceModel_ != SST) && (turbulenceModel_ != KSGS) && (turbulenceModel_ != SST_DES) ) {
-    throw std::runtime_error("User has requested TurbKinEnergyEqs, however, turbulence model is not KSGS, SST or SST_DES");
+  if ( (turbulenceModel_ != SST) && (turbulenceModel_ != KSGS) && (turbulenceModel_ != SST_DES) && (turbulenceModel_ != ABL_DES_BLEND) {
+    throw std::runtime_error("User has requested TurbKinEnergyEqs, however, turbulence model is not KSGS, SST, SST_DES or ABL_DES_BLEND");
   }
 
   // create projected nodal gradient equation system
@@ -360,8 +362,12 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           theSrc = new TurbKineticEnergySSTDESNodeSourceSuppAlg(realm_);
         }
         break;
+      case ABL_DES_BLEND:
+        {
+          theSrc = new TurbKineticEnergyDESABLNodeSourceSuppAlg(realm_); 
+	}
       default:
-        throw std::runtime_error("Unsupported turbulence model in TurbKe: only SST, SST_DES and Ksgs supported");
+        throw std::runtime_error("Unsupported turbulence model in TurbKe: only SST, SST_DES, ABL_DES_BLENDING and Ksgs supported");
       }
       theAlg->supplementalAlg_.push_back(theSrc);
       
@@ -490,8 +496,17 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         effDiffAlg = new EffectiveSSTDiffFluxCoeffAlgorithm(realm_, part, visc_, tvisc_, evisc_, sigmaKOne, sigmaKTwo);
       }
       break;
+      case ABL_DES_BLEND:
+      {
+        const double lamSc  = realm_.get_lam_schmidt(tke_->name());   
+	const double turbSc = realm_.get_lam_schmidt(tke_->name()); 	
+        const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
+	const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);
+        effDiffAlg = new EffectiveDESABLDiffFluxCoeffAlgorithm(realm_, part, visc_, tvisc_, evisc_, lamSc, turbSc, sigmaKOne, sigmaKTwo);
+      }	      
+      break;
       default:
-        throw std::runtime_error("Unsupported turbulence model in TurbKe: only SST, SST_DES and Ksgs supported");
+        throw std::runtime_error("Unsupported turbulence model in TurbKe: only SST, SST_DES, ABL_DES_BLEND and Ksgs supported");
     }
     diffFluxCoeffAlgDriver_->algMap_[algType] = effDiffAlg;
   }

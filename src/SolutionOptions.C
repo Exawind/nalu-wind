@@ -633,6 +633,9 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_ci] = 0.9;
   turbModelConstantMap_[TM_elog] = 9.8;
   turbModelConstantMap_[TM_yplus_crit] = 11.63;
+  turbModelConstantMap_[TM_power] = 1;
+  turbModelConstantMap_[TM_bnd_dist] = 0.0001;
+  turbModelConstantMap_[TM_sp_dist] = 0.01; 
 }
 
 

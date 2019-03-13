@@ -147,7 +147,7 @@ TurbKineticEnergySSTDESSrcElemKernel<AlgTraits>::execute(
       sdr += r * v_sdrNp1(ic);
       tvisc += r * v_tvisc(ic);
       maxLengthScale += r * v_maxLengthScale(ic);
-      fOneBlend += r * v_fOneBlend(ic);
+      fOneBlend += r * v_fOneBlend(ic);   //value computed at integration points
 
       for (int i = 0; i < AlgTraits::nDim_; ++i) {
         const DoubleType ui = v_velocityNp1(ic, i);

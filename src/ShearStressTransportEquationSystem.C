@@ -52,6 +52,7 @@ ShearStressTransportEquationSystem::ShearStressTransportEquationSystem(
     sdr_(NULL),
     minDistanceToWall_(NULL),
     fOneBlending_(NULL),
+    fABLBlending_(NULL),
     maxLengthScale_(NULL),
     isInit_(true),
     sstMaxLengthScaleAlgDriver_(NULL)
@@ -108,14 +109,24 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*fOneBlending_, *part, nullptr);
   
   // DES model
-  if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) {
+  if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ || ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_ ) {
     maxLengthScale_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_max_length_scale"));
     stk::mesh::put_field_on_mesh(*maxLengthScale_, *part, nullptr);
   }
 
+  //ABL DES blending model
+  if ( ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_) {
+
+    fABLBlending_ = &(meta_data.declare_field<ScalarFieledType>(stk::topology::NODE_RANK, "abl_des_f_blending"));
+    stk::mesh::put_field_on_mesh(*fABLBlending_, *part, nullptr);   
+  }   
+
+
+
   // add to restart field
   realm_.augment_restart_variable_list("minimum_distance_to_wall");
   realm_.augment_restart_variable_list("sst_f_one_blending");
+  realm_.augment_restart_variable_list("abl_des_f_blending"); 
 }
 
 
@@ -130,7 +141,7 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
   
-  if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) {
+  if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ || ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_ ) {
 
     if ( NULL == sstMaxLengthScaleAlgDriver_ )
       sstMaxLengthScaleAlgDriver_ = new AlgorithmDriver(realm_);
@@ -178,21 +189,28 @@ ShearStressTransportEquationSystem::solve_and_update()
     clip_min_distance_to_wall();
     
     // deal with DES option
-    if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ )
+    if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ || ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_ )
       sstMaxLengthScaleAlgDriver_->execute();
+      compute_f_ABLBlending();    
 
     isInit_ = false;
   } else if (realm_.has_mesh_motion()) {
     if (realm_.currentNonlinearIteration_ == 1)
       clip_min_distance_to_wall();
 
-    if (SST_DES == realm_.solutionOptions_->turbulenceModel_)
-      sstMaxLengthScaleAlgDriver_->execute();
-  }
+
+   if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_ || ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_) && realm_.solutionOptions_->meshMotion_) {                                                     
+    sstMaxLengthScaleAlgDriver_->execute();
+
+    if( ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_)
+      compute_f_ABLBlending();
+
+   }
+ }
 
   // compute blending for SST model
   compute_f_one_blending();
-
+ 
   // SST effective viscosity for k and omega
   tkeEqSys_->compute_effective_diff_flux_coeff();
   sdrEqSys_->compute_effective_diff_flux_coeff();
@@ -291,9 +309,15 @@ ShearStressTransportEquationSystem::post_adapt_work()
   if ( realm_.process_adaptivity() ) {
     NaluEnv::self().naluOutputP0() << "--ShearStressTransportEquationSystem::post_adapt_work()" << std::endl;
 
-    if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ )
-      sstMaxLengthScaleAlgDriver_->execute();
+    if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ || ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_ ) {
 
+      sstMaxLengthScaleAlgDriver_->execute();
+    
+      if (ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_)   
+        compute_f_ABLBlending();
+
+        
+    }
     // wall values
     tkeEqSys_->compute_wall_model_parameters();
     sdrEqSys_->compute_wall_model_parameters();
@@ -553,6 +577,65 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
     }
   }
 }
+
+//------------------------------------------------------------------------------
+//--------- compute_f_ABLBlending ----------------------------------------------
+//------------------------------------------------------------------------------
+void 
+ShearStressTransportEquationSystem::compute_f_ABLBlending()
+{
+
+  stk::mesh::MetaData &meta_data = realm_.meta_data();
+ 
+  const double power    = realm_.get_turb_model_constant(TM_power);
+  const double bnd_dist = realm_.get_turb_model_constant(TM_bnd_dist);
+  const double sp_dist  = realm_.get_turb_model_constant(TM_sp_dist);
+
+  stk::mesh::Selector s_all_nodes
+    = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
+    &stk::mesh::selectField(*fABLBlending_);
+
+  stk::mesh::BucketVector const& node_buckets =
+    realm_.getbuckets( stk::topology::NODE_RANK, s_all_nodes );
+
+  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
+        ib != node_buckets.end() ; ++ib) {
+    stk::mesh::Bucket & b = **ib ;
+    const stk::mesh::Bucket::size_type length  = b.size();
+
+
+   const double * minD = stk::mesh::field_data(*minDistanceToWall_,b);  
+   const double * tmpf = stk::mesh::field_data(*fABLBlending_, b);
+   
+   for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k) {
+
+
+      const double signum = 0.0;
+      const double cablb  = 0.5;
+      
+
+      if (std::signbit(bnd_dist - minD[k]) == 0) {
+       
+          signum = -1.0; 
+      } 
+      else if (std::signbit(bnd_dist - minD[k]) == 1) {
+      
+         signum =  1.0; 
+
+      } 
+
+      const double argabl = (signum*(bnd_dist -minD[k])/sp_dist);
+      const double pargabl = std::pow(argabl,power);
+
+       tmpf[k] = cablb*std::tanh(pargabl) + cablb;      
+
+      //recursive loop instead of std::pow better implementation?
+
+
+    }
+  }
+}
+
 
 } // namespace nalu
 } // namespace Sierra

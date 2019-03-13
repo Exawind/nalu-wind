@@ -102,6 +102,7 @@
 #include <TurbViscKsgsAlgorithm.h>
 #include <TurbViscSmagorinskyAlgorithm.h>
 #include <TurbViscSSTAlgorithm.h>
+#include <TurbViscDESABLAlgorithm.h>
 #include <TurbViscWaleAlgorithm.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <FixPressureAtNodeAlgorithm.h>
@@ -1485,6 +1486,9 @@ MomentumEquationSystem::register_interior_algorithm(
         case SST: case SST_DES:
           theAlg = new TurbViscSSTAlgorithm(realm_, part);
           break;
+	case ABL_DES_BLEND:
+          theAlg = new TurbViscDESABLAlgorithm(realm_, part);
+     	  break;    	
         default:
           throw std::runtime_error("non-supported turb model");
       }

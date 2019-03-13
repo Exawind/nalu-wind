@@ -155,6 +155,7 @@ enum TurbulenceModel {
   WALE = 3,
   SST = 4,
   SST_DES = 5,
+  ABL_DES_BLEND =6;
   TurbulenceModel_END
 };  
 
@@ -165,7 +166,8 @@ static const std::string TurbulenceModelNames[] = {
   "smagorinsky",
   "wale",
   "sst",
-  "sst_des"};
+  "sst_des",
+  "abl_des_blend"};
 
 enum TurbulenceModelConstant {
   TM_cMu = 0,
@@ -193,7 +195,10 @@ enum TurbulenceModelConstant {
   TM_ci = 22,
   TM_elog = 23,
   TM_yplus_crit = 24,
-  TM_END = 25
+  TM_power = 25,
+  TM_bnd_dist =26,
+  TM_sp_dist = 27, 
+  TM_END = 28
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -222,6 +227,9 @@ static const std::string TurbulenceModelConstantNames[] = {
   "ci",
   "Elog",
   "yplus_crit",
+  "power",
+  "bnd_distance",
+  "spreading_distance", 
   "END"};
 
 enum ActuatorType {

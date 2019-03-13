@@ -56,6 +56,7 @@ public:
 
   void clip_min_distance_to_wall();
   void compute_f_one_blending();
+  void compute_f_ABLBlending();
   void update_and_clip();
 
   TurbKineticEnergyEquationSystem *tkeEqSys_;
@@ -65,6 +66,7 @@ public:
   ScalarFieldType *sdr_;
   ScalarFieldType *minDistanceToWall_;
   ScalarFieldType *fOneBlending_;
+  ScalarFieldType *fABLBlending_;
   ScalarFieldType *maxLengthScale_;
 
   bool isInit_;

@@ -26,6 +26,7 @@
 #include <CopyFieldAlgorithm.h>
 #include <DirichletBC.h>
 #include <EffectiveSSTDiffFluxCoeffAlgorithm.h>
+#include <EffectiveDESABLDiffFluxCoeffAlgorithm.h>
 #include <EquationSystem.h>
 #include <EquationSystems.h>
 #include <Enums.h>
@@ -45,6 +46,7 @@
 #include <SolutionOptions.h>
 #include <TimeIntegrator.h>
 #include <SpecificDissipationRateSSTNodeSourceSuppAlg.h>
+#include <SpecificDissipationRateDESABLNodeSourceSuppAlg.h>
 #include <SolverAlgorithmDriver.h>
 
 // template for supp algs
@@ -314,9 +316,22 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       }
 
       // now create the src alg for sdr source
-      SpecificDissipationRateSSTNodeSourceSuppAlg *theSrc
-        = new SpecificDissipationRateSSTNodeSourceSuppAlg(realm_);
-      theAlg->supplementalAlg_.push_back(theSrc);
+      SupplementalAlgorithm *theSrc = NULL;
+        switch(turbulenceModel_) {
+          break;
+	case SST: case SST_DES:
+          {
+            theSrc = new SpecificDissipationRateSSTNodeSourceSuppAlg(realm_);
+          }
+          break;
+        case ABL_DES_BLEND:
+          {
+            theSrc = new SpecificDissipationRateDESABLNodeSourceSuppAlg(realm_);
+          }
+        default:
+          throw std::runtime_error("Unsupported turbulence model in specific dissipation rate: only SST, SST_DES and ABL_DES_BLENDING supported");
+        }
+        theAlg->supplementalAlg_.push_back(theSrc);
 
       // Add src term supp alg...; limited number supported
       std::map<std::string, std::vector<std::string> >::iterator isrc
@@ -408,10 +423,27 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
   std::map<AlgorithmType, Algorithm *>::iterator itev =
     diffFluxCoeffAlgDriver_->algMap_.find(algType);
   if ( itev == diffFluxCoeffAlgDriver_->algMap_.end() ) {
-    const double sigmaWOne = realm_.get_turb_model_constant(TM_sigmaWOne);
-    const double sigmaWTwo = realm_.get_turb_model_constant(TM_sigmaWTwo);
-    EffectiveSSTDiffFluxCoeffAlgorithm *effDiffAlg
-      = new EffectiveSSTDiffFluxCoeffAlgorithm(realm_, part, visc_, tvisc_, evisc_, sigmaWOne, sigmaWTwo);
+      Algorithm *effDiffAlg = NULL;
+    switch(turbulenceModel_){
+    case SST: case SST_DES:	    
+    {
+     const double sigmaWOne = realm_.get_turb_model_constant(TM_sigmaWOne);
+     const double sigmaWTwo = realm_.get_turb_model_constant(TM_sigmaWTwo);
+     effDiffAlg  = new EffectiveSSTDiffFluxCoeffAlgorithm(realm_, part, visc_, tvisc_, evisc_, sigmaWOne, sigmaWTwo);
+    }
+    break;
+    case ABL_DES_BLEND:
+    {
+     const double lamSc  = realm_.get_lam_schmidt(tke_->name());
+     const double turbSc = realm_.get_lam_schmidt(tke_->name());
+     const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
+     const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);
+     effDiffAlg = new EffectiveDESABLDiffFluxCoeffAlgorithm(realm_, part, visc_, tvisc_, evisc_, lamSc, turbSc, sigmaKOne, sigmaKTwo);
+    }	    
+    break;
+    default:
+        throw std::runtime_error("Unsupported turbulence model in specific dissipation rate: only SST, SST_DES and ABL_DES_BLEND are supported");
+    }
     diffFluxCoeffAlgDriver_->algMap_[algType] = effDiffAlg;
   }
   else {
