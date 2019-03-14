@@ -194,7 +194,8 @@ realms:
       target_name: [surface_4, surface_5, surface_6]
 
   - name: ioRealm
-    mesh:  elemBackStepLRSST.e
+    mesh:  elemBackStepLRSST.@test_mesh_db_extension@
+    mesh_db_type: @test_mesh_db_type@
     type: initialization
 
     field_registration:

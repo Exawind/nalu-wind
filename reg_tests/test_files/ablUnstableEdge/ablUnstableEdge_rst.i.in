@@ -207,7 +207,8 @@ realms:
        - viscosity
 
   - name: ioRealm
-    mesh: abl_io_results.e
+    mesh: abl_io_results.@test_mesh_db_extension@
+    mesh_db_type: @test_mesh_db_type@
     type: external_field_provider
 
     field_registration:
