@@ -15,6 +15,8 @@
 
 #include "stk_ngp/Ngp.hpp"
 
+#include <memory>
+
 using TeamType = sierra::nalu::DeviceTeamHandleType;
 using ShmemType = sierra::nalu::DeviceShmem;
 
@@ -30,8 +32,9 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelBasic)
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 
-  TestContinuityKernel* testKernel = new TestContinuityKernel(bulk, dataNeeded);
-  assembleElemSolverAlg->activeKernels_.push_back(testKernel);
+  std::unique_ptr<TestContinuityKernel> testKernel(
+    new TestContinuityKernel(bulk, dataNeeded));
+  assembleElemSolverAlg->activeKernels_.push_back(testKernel.get());
 
   EXPECT_EQ(3u, dataNeeded.get_fields().size());
   EXPECT_EQ(1u, assembleElemSolverAlg->activeKernels_.size());
@@ -66,8 +69,9 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelRunAlg)
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 
-  TestContinuityKernel* testKernel = new TestContinuityKernel(bulk, dataNeeded);
-  assembleElemSolverAlg->activeKernels_.push_back(testKernel);
+  std::unique_ptr<TestContinuityKernel> testKernel(
+    new TestContinuityKernel(bulk, dataNeeded));
+  assembleElemSolverAlg->activeKernels_.push_back(testKernel.get());
 
   EXPECT_EQ(3u, dataNeeded.get_fields().size());
   EXPECT_EQ(1u, assembleElemSolverAlg->activeKernels_.size());
@@ -87,8 +91,9 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelExecute)
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 
-  TestContinuityKernel* testKernel = new TestContinuityKernel(bulk, dataNeeded);
-  assembleElemSolverAlg->activeKernels_.push_back(testKernel);
+  std::unique_ptr<TestContinuityKernel> testKernel(
+    new TestContinuityKernel(bulk, dataNeeded));
+  assembleElemSolverAlg->activeKernels_.push_back(testKernel.get());
 
   EXPECT_EQ(3u, dataNeeded.get_fields().size());
   EXPECT_EQ(1u, assembleElemSolverAlg->activeKernels_.size());

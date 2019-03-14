@@ -73,8 +73,7 @@ double do_shape_test(Shape* s)
       a = s_dev->area();
       }, area);
 
-  delete s_dev;
-
+  sierra::nalu::kokkos_free_on_device(s_dev);
   return area;
 }
 

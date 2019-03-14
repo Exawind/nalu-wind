@@ -32,6 +32,7 @@ struct HelperObjects {
 
   ~HelperObjects()
   {
+    assembleElemSolverAlg->activeKernels_.clear();
     delete assembleElemSolverAlg;
     realm.metaData_ = nullptr;
     realm.bulkData_ = nullptr;
