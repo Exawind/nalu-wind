@@ -73,6 +73,8 @@ double do_shape_test(Shape* s)
       a = s_dev->area();
       }, area);
 
+  delete s_dev;
+
   return area;
 }
 
