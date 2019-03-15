@@ -155,9 +155,12 @@ if(ENABLE_OPENFAST)
    add_subdirectory(test_files/nrel5MWactuatorLine)
 endif(ENABLE_OPENFAST)
 if(ENABLE_TIOGA)
-  add_test_r(oversetRotCylinder 4)
   add_test_r(oversetSphereTIOGA 8)
 endif(ENABLE_TIOGA)
+
+if (ENABLE_TIOGA AND ENABLE_HYPRE)
+  add_test_r(oversetRotCylinder 4)
+endif()
 
 #=============================================================================
 # Convergence tests
