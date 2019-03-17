@@ -78,8 +78,29 @@ public:
   void shifted_shape_fcn(
     double *shpfc) override ;
   
+private:
+   static constexpr int nDim_ = AlgTraits::nDim_;
+   static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+   static constexpr int numIntPoints_ = AlgTraits::numScvIp_;
+   
+  // define ip node mappings
+  const int ipNodeMap_[4] = {0, 1, 2, 3}; 
+
+  // standard integration location
+  const double intgLoc_[8] = { 
+   -0.25,  -0.25, 
+   +0.25,  -0.25, 
+   +0.25,  +0.25, 
+   -0.25,  +0.25};
+
+  // shifted integration location
+  const double intgLocShift_[8] = {
+   -0.50,  -0.50, 
+   +0.50,  -0.50, 
+   +0.50,  +0.50, 
+   -0.50,  +0.50};
+
   void quad_shape_fcn(
-    const int &npts,
     const double *par_coord, 
     double* shape_fcn) ;
 };
@@ -198,11 +219,6 @@ public:
   void shifted_shape_fcn(
     double *shpfc) override;
   
-  void quad_shape_fcn(
-    const int &npts,
-    const double *par_coord, 
-    double* shape_fcn) ;
-
   double isInElement(
     const double *elemNodalCoord,
     const double *pointCoord,
@@ -236,6 +252,64 @@ public:
   const int* side_node_ordinals(int sideOrdinal) final;
 
 private :
+
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_ = AlgTraits::numScsIp_;
+  static constexpr double scaleToStandardIsoFac_ = 2.0;
+
+  // define L/R mappings
+  const int lrscv_[8] = {
+   0,  1, 
+   1,  2, 
+   2,  3, 
+   0,  3};
+  
+  // elem-edge mapping from ip
+  const int scsIpEdgeOrd_[numIntPoints_] = {0, 1, 2, 3};
+
+  // define opposing node
+  const int oppNode_[4][2] = {
+    {3,  2}, // face 0; nodes 0,1
+    {0,  3}, // face 1; nodes 1,2
+    {1,  0}, // face 2; nodes 2,3
+    {2,  1}};// face 3; nodes 3,0
+
+  // define opposing face
+  const int oppFace_[4][2] = {
+    {3,  1},  // face 0
+    {0,  2},  // face 1
+    {1,  3},  // face 2 
+    {2,  0}}; // face 3
+
+  // standard integration location
+  const double intgLoc_[8] = { 
+    0.00,  -0.25, // surf 1; 1->2
+    0.25,   0.00, // surf 2; 2->3
+    0.00,   0.25, // surf 3; 3->4
+   -0.25,   0.00};// surf 3; 1->5
+
+  // shifted
+  const double intgLocShift_[8] = {
+    0.00,  -0.50,
+    0.50,   0.00,
+    0.00,   0.50,
+   -0.50,   0.00};
+
+  // exposed face
+  const double intgExpFace_[4][2][2] = {
+  {{-0.25,  -0.50}, { 0.25, -0.50}},  // face 0; scs 0, 1; nodes 0,1 
+  {{ 0.50,  -0.25}, { 0.50,  0.25}},  // face 1; scs 0, 1; nodes 1,2 
+  {{ 0.25,   0.50}, {-0.25,  0.50}},  // face 2, surf 0, 1; nodes 2,3
+  {{-0.50,   0.25}, {-0.50, -0.25}}}; // face 3, surf 0, 1; nodes 3,0
+
+  // boundary integration point ip node mapping (ip on an ordinal to local node number)
+  const int ipNodeMap_[4][2] = { // 2 ips * 4 faces
+   {0,   1},   // face 0; 
+   {1,   2},   // face 1; 
+   {2,   3},   // face 2; 
+   {3,   0}};  // face 3; 
+
   const int sideNodeOrdinals_[4][2] = {
       {0, 1},
       {1, 2},
@@ -243,11 +317,17 @@ private :
       {3, 0} 
   };
 
+  double intgExpFaceShift_[4][2][2];
+
   void face_grad_op(
     const int face_ordinal,
     const bool shifted,
     SharedMemView<DoubleType**>& coords,
     SharedMemView<DoubleType***>& gradop);
+
+  void quad_shape_fcn(
+    const double *par_coord, 
+    double* shape_fcn) ;
 
 };
 
