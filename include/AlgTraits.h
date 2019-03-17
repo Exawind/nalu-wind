@@ -18,6 +18,17 @@ class HexSCS;
 class HexSCV;
 class Hex27SCS;
 class Hex27SCV;
+class TetSCS;
+class TetSCV;
+class PyrSCS;
+class PyrSCV;
+class WedSCS;
+class WedSCV;
+class Quad42DSCS;
+class Quad42DSCV;
+class Quad93DSCS;
+class Tri32DSCS;
+class Tri32DSCV;
 
 // limited supported now (P=1 3D elements)
 struct AlgTraitsHex8 {
@@ -49,6 +60,8 @@ struct AlgTraitsTet4 {
   static constexpr int numScvIp_ = 4;
   static constexpr int numGp_ = 4; // for FEM (not supported)
   static constexpr stk::topology::topology_t topo_ = stk::topology::TET_4;
+  using            masterElementScs_ = TetSCS;
+  using            masterElementScv_ = TetSCV;
 };
 
 struct AlgTraitsPyr5 {
@@ -58,6 +71,8 @@ struct AlgTraitsPyr5 {
   static constexpr int numScvIp_ = 5;
   static constexpr int numGp_ = 5; // for FEM (not supported)
   static constexpr stk::topology::topology_t topo_ = stk::topology::PYRAMID_5;
+  using            masterElementScs_ = PyrSCS;
+  using            masterElementScv_ = PyrSCV;
 };
 
 struct AlgTraitsWed6 {
@@ -67,6 +82,8 @@ struct AlgTraitsWed6 {
   static constexpr int numScvIp_ = 6;
   static constexpr int numGp_ = 6; // for FEM (not supported)
   static constexpr stk::topology::topology_t topo_ = stk::topology::WEDGE_6;
+  using            masterElementScs_ = WedSCS;
+  using            masterElementScv_ = WedSCV;
 };
 
 struct AlgTraitsQuad4_2D {
@@ -76,6 +93,8 @@ struct AlgTraitsQuad4_2D {
   static constexpr int numScvIp_ = 4;
   static constexpr int numGp_ = 4; // for FEM (not supported)
   static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_4_2D;
+  using            masterElementScs_ = Quad42DSCS;
+  using            masterElementScv_ = Quad42DSCV;
 };
 
 struct AlgTraitsQuad9_2D {
@@ -85,6 +104,7 @@ struct AlgTraitsQuad9_2D {
   static constexpr int numScvIp_ = 36;
   static constexpr int numGp_ = 9; // for FEM (not supported)
   static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_9_2D;
+  using            masterElementScs_ = Quad93DSCS;
 };
 
 struct AlgTraitsTri3_2D {
@@ -94,6 +114,8 @@ struct AlgTraitsTri3_2D {
   static constexpr int numScvIp_ = 3;
   static constexpr int numGp_ = 3; // for FEM (not supported)
   static constexpr stk::topology::topology_t topo_ = stk::topology::TRI_3_2D;
+  using            masterElementScs_ = Tri32DSCS;
+  using            masterElementScv_ = Tri32DSCV;
 };
 
 template <int p> constexpr int nGL() { return (p % 2 == 0) ? p / 2 + 1 : (p + 1) / 2; }
