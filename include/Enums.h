@@ -155,7 +155,7 @@ enum TurbulenceModel {
   WALE = 3,
   SST = 4,
   SST_DES = 5,
-  ABL_DES_BLEND =6;
+  ABL_DES_BLEND = 6,
   TurbulenceModel_END
 };  
 

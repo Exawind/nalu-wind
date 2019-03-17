@@ -36,6 +36,7 @@ TurbViscDESABLAlgorithm::TurbViscDESABLAlgorithm(
   : Algorithm(realm, part),
     aOne_(realm.get_turb_model_constant(TM_aOne)),
     betaStar_(realm.get_turb_model_constant(TM_betaStar)),
+    cmuEps_(realm.get_turb_model_constant(TM_cmuEps)),	
     density_(NULL),
     viscosity_(NULL),
     tke_(NULL),
@@ -44,7 +45,7 @@ TurbViscDESABLAlgorithm::TurbViscDESABLAlgorithm(
     dudx_(NULL),
     tvisc_(NULL),
     fABLBlending_(NULL),	
-    cmuEps_(realm.get_turb_model_constant(TM_cmuEps))	
+    dualNodalVolume_(NULL)
 {
   // 2003 variant; basically, sijMag replaces vorticityMag
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -56,6 +57,7 @@ TurbViscDESABLAlgorithm::TurbViscDESABLAlgorithm(
   dudx_ = meta_data.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
   tvisc_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity");
   fABLBlending_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK,"abl_des_f_blending");
+  dualNodalVolume_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
 }
 
 //--------------------------------------------------------------------------
@@ -90,6 +92,7 @@ TurbViscDESABLAlgorithm::execute()
     const double *sdr = stk::mesh::field_data(*sdr_, b);
     const double *minD = stk::mesh::field_data(*minDistance_, b);
     const double *fABLBlend = stk::mesh::field_data(*fABLBlending_, b);
+    const double *dualNodalVolume = stk::mesh::field_data(*dualNodalVolume_, b);
     double *tvisc = stk::mesh::field_data(*tvisc_, b);
 
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
@@ -115,7 +118,7 @@ TurbViscDESABLAlgorithm::execute()
       
       const double filter = std::pow(dualNodalVolume[k], invNdim);
 
-      double tviscsgs = cmuEps*density[k]*std::sqrt(tke[k])*filter;
+      double tviscsgs = cmuEps*rho[k]*std::sqrt(tke[k])*filter;
      
       double tviscdes = aOne_*rho[k]*tke[k]/std::max(aOne_*sdr[k], sijMag*fTwo);
 

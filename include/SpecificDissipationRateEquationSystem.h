@@ -87,7 +87,9 @@ public:
   ScalarFieldType *sdrWallBc_;
   ScalarFieldType *assembledWallSdr_;
   ScalarFieldType *assembledWallArea_;
-  
+   
+  const TurbulenceModel turbulenceModel_;  
+
   AssembleNodalGradAlgorithmDriver *assembleNodalGradAlgDriver_;
   AlgorithmDriver *diffFluxCoeffAlgDriver_;
   std::vector<Algorithm *> wallModelAlg_;

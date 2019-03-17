@@ -39,7 +39,7 @@ public:
   ScalarFieldType *tkeNp1_;
   ScalarFieldType *densityNp1_;
   ScalarFieldType *fOneBlend_;
-  SclarFieldType  *fABLBlending_;
+  ScalarFieldType *fABLBlending_;
   ScalarFieldType *tvisc_;
   GenericFieldType *dudx_;
   VectorFieldType *dkdx_;

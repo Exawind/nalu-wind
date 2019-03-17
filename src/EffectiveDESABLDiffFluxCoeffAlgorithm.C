@@ -30,7 +30,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-EffectiveDESABLDiffFluxCoeffAlgorithm::EffectiveSSTDiffFluxCoeffAlgorithm(
+EffectiveDESABLDiffFluxCoeffAlgorithm::EffectiveDESABLDiffFluxCoeffAlgorithm(
   Realm &realm,
   stk::mesh::Part *part,
   ScalarFieldType *visc,
@@ -61,7 +61,7 @@ EffectiveDESABLDiffFluxCoeffAlgorithm::EffectiveSSTDiffFluxCoeffAlgorithm(
 //-------- execute ---------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-EffectiveDESABLTDiffFluxCoeffAlgorithm::execute()
+EffectiveDESABLDiffFluxCoeffAlgorithm::execute()
 {
 
   const double invSigmaLam = 1.0/sigmaLam_;

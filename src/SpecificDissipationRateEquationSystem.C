@@ -113,6 +113,7 @@ SpecificDissipationRateEquationSystem::SpecificDissipationRateEquationSystem(
     sdrWallBc_(NULL),
     assembledWallSdr_(NULL),
     assembledWallArea_(NULL),
+    turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
     assembleNodalGradAlgDriver_(new AssembleNodalGradAlgorithmDriver(realm_, "specific_dissipation_rate", "dwdx")),
     diffFluxCoeffAlgDriver_(new AlgorithmDriver(realm_))
 {
@@ -328,6 +329,7 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
           {
             theSrc = new SpecificDissipationRateDESABLNodeSourceSuppAlg(realm_);
           }
+	  break;
         default:
           throw std::runtime_error("Unsupported turbulence model in specific dissipation rate: only SST, SST_DES and ABL_DES_BLENDING supported");
         }
@@ -434,11 +436,11 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
     break;
     case ABL_DES_BLEND:
     {
-     const double lamSc  = realm_.get_lam_schmidt(tke_->name());
-     const double turbSc = realm_.get_lam_schmidt(tke_->name());
-     const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
-     const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);
-     effDiffAlg = new EffectiveDESABLDiffFluxCoeffAlgorithm(realm_, part, visc_, tvisc_, evisc_, lamSc, turbSc, sigmaKOne, sigmaKTwo);
+     const double lamSc  = realm_.get_lam_schmidt(sdr_->name());
+     const double turbSc = realm_.get_turb_schmidt(sdr_->name());
+     const double sigmaWOne = realm_.get_turb_model_constant(TM_sigmaWOne);
+     const double sigmaWTwo = realm_.get_turb_model_constant(TM_sigmaWTwo);
+     effDiffAlg = new EffectiveDESABLDiffFluxCoeffAlgorithm(realm_, part, visc_, tvisc_, evisc_, lamSc, turbSc, sigmaWOne, sigmaWTwo);
     }	    
     break;
     default:

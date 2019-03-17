@@ -26,7 +26,7 @@
 #include <DirichletBC.h>
 #include <EffectiveDiffFluxCoeffAlgorithm.h>
 #include <EffectiveSSTDiffFluxCoeffAlgorithm.h>
-#include <EffectiveDESABLDiffFluxCoeffAgorithm.h>
+#include <EffectiveDESABLDiffFluxCoeffAlgorithm.h>
 #include <EquationSystem.h>
 #include <EquationSystems.h>
 #include <Enums.h>
@@ -150,7 +150,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   realm_.push_equation_to_systems(this);
 
   // sanity check on turbulence model
-  if ( (turbulenceModel_ != SST) && (turbulenceModel_ != KSGS) && (turbulenceModel_ != SST_DES) && (turbulenceModel_ != ABL_DES_BLEND) {
+  if ( (turbulenceModel_ != SST) && (turbulenceModel_ != KSGS) && (turbulenceModel_ != SST_DES) && (turbulenceModel_ != ABL_DES_BLEND)) {
     throw std::runtime_error("User has requested TurbKinEnergyEqs, however, turbulence model is not KSGS, SST, SST_DES or ABL_DES_BLEND");
   }
 
@@ -366,6 +366,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         {
           theSrc = new TurbKineticEnergyDESABLNodeSourceSuppAlg(realm_); 
 	}
+        break;
       default:
         throw std::runtime_error("Unsupported turbulence model in TurbKe: only SST, SST_DES, ABL_DES_BLENDING and Ksgs supported");
       }
@@ -499,7 +500,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
       case ABL_DES_BLEND:
       {
         const double lamSc  = realm_.get_lam_schmidt(tke_->name());   
-	const double turbSc = realm_.get_lam_schmidt(tke_->name()); 	
+	const double turbSc = realm_.get_turb_schmidt(tke_->name()); 	
         const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
 	const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);
         effDiffAlg = new EffectiveDESABLDiffFluxCoeffAlgorithm(realm_, part, visc_, tvisc_, evisc_, lamSc, turbSc, sigmaKOne, sigmaKTwo);
@@ -1129,7 +1130,6 @@ TurbKineticEnergyEquationSystem::manage_projected_nodal_gradient(
   projectedNodalGradEqs_->set_data_map(OPEN_BC, "turbulent_ke");
   projectedNodalGradEqs_->set_data_map(SYMMETRY_BC, "turbulent_ke");
 }
-
 //--------------------------------------------------------------------------
 //-------- compute_projected_nodal_gradient() ---------------------------------------
 //--------------------------------------------------------------------------

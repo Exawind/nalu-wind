@@ -29,7 +29,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-SpecificDissipationRateDESABLNodeSourceSuppAlg::SpecificDissipationRateSSTNodeSourceSuppAlg(
+SpecificDissipationRateDESABLNodeSourceSuppAlg::SpecificDissipationRateDESABLNodeSourceSuppAlg(
   Realm &realm)
   : SupplementalAlgorithm(realm),
     sigmaWTwo_(realm.get_turb_model_constant(TM_sigmaWTwo)),

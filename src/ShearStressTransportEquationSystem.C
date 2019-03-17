@@ -117,7 +117,7 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   //ABL DES blending model
   if ( ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_) {
 
-    fABLBlending_ = &(meta_data.declare_field<ScalarFieledType>(stk::topology::NODE_RANK, "abl_des_f_blending"));
+    fABLBlending_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "abl_des_f_blending"));
     stk::mesh::put_field_on_mesh(*fABLBlending_, *part, nullptr);   
   }   
 
@@ -191,22 +191,25 @@ ShearStressTransportEquationSystem::solve_and_update()
     // deal with DES option
     if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ || ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_ )
       sstMaxLengthScaleAlgDriver_->execute();
-      compute_f_ABLBlending();    
+    
+    if( ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_)
+     compute_f_ABLBlending();    
 
     isInit_ = false;
-  } else if (realm_.has_mesh_motion()) {
-    if (realm_.currentNonlinearIteration_ == 1)
+ } else if (realm_.has_mesh_motion()) {
+ 
+   if (realm_.currentNonlinearIteration_ == 1)
       clip_min_distance_to_wall();
 
 
-   if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_ || ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_) && realm_.solutionOptions_->meshMotion_) {                                                     
-    sstMaxLengthScaleAlgDriver_->execute();
+   if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_ || ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_) && realm_.solutionOptions_->meshMotion_)                                                  
+      sstMaxLengthScaleAlgDriver_->execute();
 
     if( ABL_DES_BLEND == realm_.solutionOptions_->turbulenceModel_)
       compute_f_ABLBlending();
 
    }
- }
+
 
   // compute blending for SST model
   compute_f_one_blending();
@@ -596,7 +599,7 @@ ShearStressTransportEquationSystem::compute_f_ABLBlending()
     &stk::mesh::selectField(*fABLBlending_);
 
   stk::mesh::BucketVector const& node_buckets =
-    realm_.getbuckets( stk::topology::NODE_RANK, s_all_nodes );
+    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
 
   for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
         ib != node_buckets.end() ; ++ib) {
@@ -605,18 +608,18 @@ ShearStressTransportEquationSystem::compute_f_ABLBlending()
 
 
    const double * minD = stk::mesh::field_data(*minDistanceToWall_,b);  
-   const double * tmpf = stk::mesh::field_data(*fABLBlending_, b);
+   double * tmpf = stk::mesh::field_data(*fABLBlending_, b);
    
    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k) {
 
 
-      const double signum = 0.0;
+      double signum = 0.0;
       const double cablb  = 0.5;
       
 
       if (std::signbit(bnd_dist - minD[k]) == 0) {
        
-          signum = -1.0; 
+         signum = -1.0; 
       } 
       else if (std::signbit(bnd_dist - minD[k]) == 1) {
       

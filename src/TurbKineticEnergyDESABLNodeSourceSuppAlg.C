@@ -119,13 +119,14 @@ TurbKineticEnergyDESABLNodeSourceSuppAlg::node_execute(
   
   double Dkdes = rho*tke*sqrtTke/lDES;
 
-  if ( Pk > tkeProdLimitRatio_*Dk )
-    Pk = tkeProdLimitRatio_*Dk;
-   
   //ABLDES blending of source terms RHS and LHS  
   double Dk = Dksgs*fABLBlend + (1.0-fABLBlend)*Dkdes; 
+
   
-  double LinTerm = cEps_*rho*std::sqrt(tke)/filter*fABLBlend + (1-fABLBlending)*rho/lDES*sqrtTke;  
+  if ( Pk > tkeProdLimitRatio_*Dk )
+    Pk = tkeProdLimitRatio_*Dk;
+ 
+  double LinTerm = cEps_*rho*std::sqrt(tke)/filter*fABLBlend + (1-fABLBlend)*rho/lDES*sqrtTke;  
  
  
  

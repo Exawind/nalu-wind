@@ -40,7 +40,7 @@ public:
   GenericFieldType *dudx_;
   ScalarFieldType *tvisc_;
   ScalarFieldType *fABLBlending_;
-  
+  ScalarFieldType *dualNodalVolume_;
 };
 
 } // namespace nalu
