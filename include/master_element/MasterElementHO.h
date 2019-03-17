@@ -178,6 +178,8 @@ public:
     SharedMemView<DoubleType***>& gradop) final;
 
 private:
+  std::vector<int> lrscv_;
+
   void set_interior_info();
   void set_boundary_info();
 
@@ -394,6 +396,8 @@ public:
   }
 
 private:
+  std::vector<int> lrscv_;
+
   void set_interior_info();
   void set_boundary_info();
 

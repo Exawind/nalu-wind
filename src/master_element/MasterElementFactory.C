@@ -18,6 +18,7 @@
 #include "master_element/Quad92DCVFEM.h"
 #include "master_element/Quad93DCVFEM.h"
 #include "master_element/Tri32DCVFEM.h"
+#include "master_element/Edge32DCVFEM.h"
 #include "master_element/MasterElementHO.h"
 
 #include "NaluEnv.h"

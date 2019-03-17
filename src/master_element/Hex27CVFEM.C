@@ -973,7 +973,6 @@ Hex27SCS::set_interior_info()
   }
   MasterElement::intgLocShift_.assign(intgLocShift_, numIntPoints_*nDim_+intgLocShift_);
   MasterElement::intgLoc_.assign(intgLoc_, numIntPoints_*nDim_+intgLocShift_);
-  MasterElement::lrscv_.assign(lrscv_, 2*numIntPoints_+lrscv_);
 }
 
 //--------------------------------------------------------------------------

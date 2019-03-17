@@ -351,9 +351,6 @@ Tri32DSCS::Tri32DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // define L/R mappings
-  MasterElement::lrscv_.assign(lrscv_, 6+lrscv_);
-
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, 3+scsIpEdgeOrd_);
   // define opposing node

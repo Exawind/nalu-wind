@@ -299,8 +299,6 @@ TetSCS::TetSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // define L/R mappings
-  MasterElement::lrscv_.assign(lrscv_,  12+lrscv_);
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,  numIntPoints_+scsIpEdgeOrd_);
   MasterElement::oppNode_.assign(&oppNode_[0][0], 12+&oppNode_[0][0]);
   MasterElement::oppFace_.assign(&oppFace_[0][0], 12+&oppFace_[0][0]);
@@ -707,7 +705,7 @@ const int *
 TetSCS::adjacentNodes()
 {
   // define L/R mappings
-  return &lrscv_[0];
+  return lrscv_;
 }
 
 //--------------------------------------------------------------------------
