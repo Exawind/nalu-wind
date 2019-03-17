@@ -275,8 +275,7 @@ public:
   virtual double scal_to_standard_iso_factor() const {return scaleToStandardIsoFac_;} 
   virtual void scal_to_standard_iso_factor(const double n) {scaleToStandardIsoFac_=n;} 
 
-  virtual const std::vector<int>& lr_scv() const {return lrscv_;} 
-  virtual void lr_scv(const std::vector<int>& v) {lrscv_=v;} 
+  virtual const int *adjacentNodes() const {throw std::runtime_error("adjacentNodes");} 
 
   virtual const std::vector<int>& ip_node_map() const {return ipNodeMap_;} 
   virtual void ip_node_map(const std::vector<int>& v) {ipNodeMap_=v;} 
@@ -320,7 +319,6 @@ public:
   int numIntPoints_;
   double scaleToStandardIsoFac_;
 
-  std::vector<int> lrscv_;
   std::vector<int> ipNodeMap_;
   std::vector<int> oppNode_;
   std::vector<int> oppFace_;
@@ -335,109 +333,6 @@ public:
   // FEM
   std::vector<double>weights_;
 
-};
-
-class QuadrilateralP2Element : public MasterElement
-{
-public:
-  using AlgTraits = AlgTraitsQuad9_2D;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
-
-  QuadrilateralP2Element();
-  virtual ~QuadrilateralP2Element() {}
-
-  void shape_fcn(double *shpfc);
-  void shifted_shape_fcn(double *shpfc);
-protected:
-  struct ContourData {
-    Jacobian::Direction direction;
-    double weight;
-  };
-
-  void set_quadrature_rule();
-  void GLLGLL_quadrature_weights();
-
-  int tensor_product_node_map(int i, int j) const;
-
-  double gauss_point_location(
-    int nodeOrdinal,
-    int gaussPointOrdinal) const;
-
-  double shifted_gauss_point_location(
-    int nodeOrdinal,
-    int gaussPointOrdinal) const;
-
-  double tensor_product_weight(
-    int s1Node, int s2Node,
-    int s1Ip, int s2Ip) const;
-
-  double tensor_product_weight(int s1Node, int s1Ip) const;
-
-  double parametric_distance(const std::array<double, 2>& x);
-
-  virtual void interpolatePoint(
-    const int &nComp,
-    const double *isoParCoord,
-    const double *field,
-    double *result);
-
-  virtual double isInElement(
-    const double *elemNodalCoord,
-    const double *pointCoord,
-    double *isoParCoord);
-
-  virtual void sidePcoords_to_elemPcoords(
-    const int & side_ordinal,
-    const int & npoints,
-    const double *side_pcoords,
-    double *elem_pcoords);
-
-  void eval_shape_functions_at_ips();
-  void eval_shape_functions_at_shifted_ips();
-
-  void eval_shape_derivs_at_ips();
-  void eval_shape_derivs_at_shifted_ips();
-
-  void eval_shape_derivs_at_face_ips();
-
-  const double scsDist_;
-  const int nodes1D_;
-  int numQuad_;
-
-  //quadrature info
-  std::vector<double> gaussAbscissae_;
-  std::vector<double> gaussAbscissaeShift_;
-  std::vector<double> gaussWeight_;
-
-  std::vector<int> stkNodeMap_;
-  std::vector<double> scsEndLoc_;
-
-  std::vector<double> shapeFunctions_;
-  std::vector<double> shapeFunctionsShift_;
-  std::vector<double> shapeDerivs_;
-  std::vector<double> shapeDerivsShift_;
-  std::vector<double> expFaceShapeDerivs_;
-
-  const int sideNodeOrdinals_[12] =  {
-      0, 1, 4,
-      1, 2, 5,
-      2, 3, 6,
-      3, 0, 7 
-  };
-
-private:
-  void quad9_shape_fcn(
-    int npts,
-    const double *par_coord,
-    double* shape_fcn
-  ) const;
-
-  void quad9_shape_deriv(
-    int npts,
-    const double *par_coord,
-    double* shape_fcn
-  ) const;
 };
 
 // 3D Tri 3
@@ -545,45 +440,6 @@ public:
   double parametric_distance(const std::vector<double> &x);
 
   const double elemThickness_;  
-};
-
-// edge 2d
-class Edge32DSCS : public QuadrilateralP2Element
-{
-public:
-  Edge32DSCS();
-  virtual ~Edge32DSCS() {}
-  using MasterElement::determinant;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
-
-  const int * ipNodeMap(int ordinal = 0);
-
-  void determinant(
-    const int nelem,
-    const double *coords,
-    double *areav,
-    double * error );
-
-  void shape_fcn(
-    double *shpfc);
-
-  void shifted_shape_fcn(
-    double *shpfc);
-
-  void interpolatePoint(
-    const int &nComp,
-    const double *isoParCoord,
-    const double *field,
-    double *result);
-
-private:
-  void area_vector(
-    const double *POINTER_RESTRICT coords,
-    const double s,
-    double *POINTER_RESTRICT areaVector) const;
-
-  std::vector<double> ipWeight_;
 };
 
 } // namespace nalu

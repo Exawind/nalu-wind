@@ -555,8 +555,6 @@ PyrSCS::PyrSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  MasterElement::lrscv_.assign(lrscv_, lrscv_+24);
-
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, scsIpEdgeOrd_+AlgTraits::numScsIp_);
   MasterElement::oppNode_.assign(oppNode_, oppNode_+20);
   MasterElement::oppFace_.assign(oppFace_, oppFace_+20);
@@ -1215,7 +1213,7 @@ const int *
 PyrSCS::adjacentNodes()
 {
   // define L/R mappings
-  return &lrscv_[0];
+  return lrscv_;
 }
 
 //--------------------------------------------------------------------------

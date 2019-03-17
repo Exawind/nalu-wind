@@ -22,4 +22,5 @@ add_sources(GlobalHeaderList
    Tet4CVFEM.h
    Tri32DCVFEM.h
    Wed6CVFEM.h
+   Edge32DCVFEM.h
 )

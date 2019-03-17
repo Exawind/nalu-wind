@@ -416,7 +416,7 @@ public:
     const double *side_pcoords,
     double *elem_pcoords);
 
-  const int * adjacentNodes();
+  virtual const int * adjacentNodes() final;
 
   const int * ipNodeMap(int ordinal = 0);
 

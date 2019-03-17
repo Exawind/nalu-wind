@@ -27,6 +27,113 @@
 namespace sierra{
 namespace nalu{
 
+
+
+class QuadrilateralP2Element : public MasterElement
+{
+public:
+  using AlgTraits = AlgTraitsQuad9_2D;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
+
+  QuadrilateralP2Element();
+  virtual ~QuadrilateralP2Element() {}
+
+  void shape_fcn(double *shpfc);
+  void shifted_shape_fcn(double *shpfc);
+protected:
+  struct ContourData {
+    Jacobian::Direction direction;
+    double weight;
+  };  
+
+  void set_quadrature_rule();
+  void GLLGLL_quadrature_weights();
+
+  int tensor_product_node_map(int i, int j) const;
+
+  double gauss_point_location(
+    int nodeOrdinal,
+    int gaussPointOrdinal) const;
+
+  double shifted_gauss_point_location(
+    int nodeOrdinal,
+    int gaussPointOrdinal) const;
+
+  double tensor_product_weight(
+    int s1Node, int s2Node,
+    int s1Ip, int s2Ip) const;
+
+  double tensor_product_weight(int s1Node, int s1Ip) const;
+
+  double parametric_distance(const std::array<double, 2>& x); 
+
+  virtual void interpolatePoint(
+    const int &nComp,
+    const double *isoParCoord,
+    const double *field,
+    double *result);
+
+  virtual double isInElement(
+    const double *elemNodalCoord,
+    const double *pointCoord,
+    double *isoParCoord);
+
+  virtual void sidePcoords_to_elemPcoords(
+    const int & side_ordinal,
+    const int & npoints,
+    const double *side_pcoords,
+    double *elem_pcoords);
+
+  void eval_shape_functions_at_ips();
+  void eval_shape_functions_at_shifted_ips();
+
+  void eval_shape_derivs_at_ips();
+  void eval_shape_derivs_at_shifted_ips();
+
+  void eval_shape_derivs_at_face_ips();
+
+  const double scsDist_;
+  const int nodes1D_;
+  int numQuad_;
+
+  //quadrature info
+  std::vector<int> lrscv_;
+  std::vector<double> gaussAbscissae_;
+  std::vector<double> gaussAbscissaeShift_;
+  std::vector<double> gaussWeight_;
+
+  std::vector<int> stkNodeMap_;
+  std::vector<double> scsEndLoc_;
+
+  std::vector<double> shapeFunctions_;
+  std::vector<double> shapeFunctionsShift_;
+  std::vector<double> shapeDerivs_;
+  std::vector<double> shapeDerivsShift_;
+  std::vector<double> expFaceShapeDerivs_;
+
+  const int sideNodeOrdinals_[12] =  {
+      0, 1, 4,
+      1, 2, 5,
+      2, 3, 6,
+      3, 0, 7 
+  };  
+
+
+private:
+  void quad9_shape_fcn(
+    int npts,
+    const double *par_coord,
+    double* shape_fcn
+  ) const;
+
+  void quad9_shape_deriv(
+    int npts,
+    const double *par_coord,
+    double* shape_fcn
+  ) const;
+};
+
 // 3D Quad 27 subcontrol volume
 class Quad92DSCV : public QuadrilateralP2Element
 {
@@ -165,7 +272,7 @@ public:
     double *metric,
     double *deriv) override ;
 
-  const int * adjacentNodes() override ;
+  virtual const int * adjacentNodes() final ;
 
   const int * ipNodeMap(int ordinal = 0) override ;
 
@@ -178,6 +285,8 @@ public:
   const int* side_node_ordinals(int sideOrdinal) final;
 
 private:
+  std::vector<ContourData> ipInfo_;
+
   void set_interior_info();
   void set_boundary_info();
 
@@ -192,7 +301,6 @@ private:
     double *POINTER_RESTRICT shapeDeriv,
     double *POINTER_RESTRICT areaVector ) const;
 
-  std::vector<ContourData> ipInfo_;
   int ipsPerFace_;
 };
 

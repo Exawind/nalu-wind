@@ -206,7 +206,7 @@ public:
     double *metric,
     double *deriv);
 
-  const int * adjacentNodes();
+  virtual const int * adjacentNodes() final;
 
   const int * scsIpEdgeOrd();
 

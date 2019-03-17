@@ -29,6 +29,7 @@ class Quad42DSCV;
 class Quad93DSCS;
 class Tri32DSCS;
 class Tri32DSCV;
+class Edge32DSCS;
 
 // limited supported now (P=1 3D elements)
 struct AlgTraitsHex8 {
@@ -226,6 +227,7 @@ struct AlgTraitsEdge3_2D
   static constexpr int numScsIp_ = 6;
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::LINE_3;
+  using            masterElementScs_ = Edge32DSCS;
 };
 
 template <int p>

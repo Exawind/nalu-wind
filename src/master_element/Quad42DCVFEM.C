@@ -326,8 +326,6 @@ Quad42DSCS::Quad42DSCS()
   MasterElement::numIntPoints_ = numIntPoints_;
   MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
 
-  // define L/R mappings
-  MasterElement::lrscv_.assign(lrscv_, 8+lrscv_);
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,numIntPoints_+scsIpEdgeOrd_);
   // define opposing node

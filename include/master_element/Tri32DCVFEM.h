@@ -202,7 +202,7 @@ public:
     double *metric,
     double *deriv) override;
 
-  const int * adjacentNodes() override;
+  const int * adjacentNodes() final;
 
   const int * scsIpEdgeOrd() override;
 
