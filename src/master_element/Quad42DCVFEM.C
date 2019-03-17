@@ -36,7 +36,7 @@ namespace sierra{
 namespace nalu{
 
 //-------- quad_derivative -----------------------------------------------------
-void quad_derivative(const std::vector<double> &par_coord, 
+void quad_derivative(const double *par_coord, 
                      SharedMemView<DoubleType***>& deriv) {
   const double half = 0.5;
   const size_t npts = deriv.extent(0);
@@ -107,27 +107,16 @@ void quad_gradient_operator(const SharedMemView<DoubleType***>& deriv,
 Quad42DSCV::Quad42DSCV()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 4;
-  numIntPoints_ = 4;
+  MasterElement::nDim_=nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
 
   // define ip node mappings
-  ipNodeMap_.resize(4);
-  ipNodeMap_[0] = 0; ipNodeMap_[1] = 1; ipNodeMap_[2] = 2; ipNodeMap_[3] = 3;
-
+  MasterElement::ipNodeMap_.assign(ipNodeMap_, 4+ipNodeMap_);
   // standard integration location
-  intgLoc_.resize(8);    
-  intgLoc_[0]  = -0.25; intgLoc_[1]  = -0.25; 
-  intgLoc_[2]  = +0.25; intgLoc_[3]  = -0.25; 
-  intgLoc_[4]  = +0.25; intgLoc_[5]  = +0.25; 
-  intgLoc_[6]  = -0.25; intgLoc_[7]  = +0.25; 
-
+  MasterElement::intgLoc_.assign(intgLoc_, 8+intgLoc_);    
   // shifted integration location
-  intgLocShift_.resize(8);    
-  intgLocShift_[0]  = -0.50; intgLocShift_[1]  = -0.50; 
-  intgLocShift_[2]  = +0.50; intgLocShift_[3]  = -0.50; 
-  intgLocShift_[4]  = +0.50; intgLocShift_[5]  = +0.50; 
-  intgLocShift_[6]  = -0.50; intgLocShift_[7]  = +0.50; 
+  MasterElement::intgLocShift_.assign(intgLocShift_, 8+intgLocShift_);    
 }
 
 //--------------------------------------------------------------------------
@@ -146,7 +135,7 @@ Quad42DSCV::ipNodeMap(
   int /*ordinal*/)
 {
   // define scv->node mappings
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 //--------------------------------------------------------------------------
@@ -243,9 +232,10 @@ void Quad42DSCV::determinant(
   double *error)
 {
   int lerr = 0;
-
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(quad_scv_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords,
+    ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
 }
 
@@ -267,7 +257,7 @@ void Quad42DSCV::shifted_grad_op(
 void
 Quad42DSCV::shape_fcn(double *shpfc)
 {
-  quad_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  quad_shape_fcn(intgLoc_, shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -276,7 +266,7 @@ Quad42DSCV::shape_fcn(double *shpfc)
 void
 Quad42DSCV::shifted_shape_fcn(double *shpfc)
 {
-  quad_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  quad_shape_fcn(intgLocShift_, shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -284,11 +274,10 @@ Quad42DSCV::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 Quad42DSCV::quad_shape_fcn(
-  const int  &npts,
   const double *isoParCoord, 
   double *shape_fcn)
 {
-  for (int j = 0; j < npts; ++j ) {
+  for (int j = 0; j < numIntPoints_; ++j ) {
     const int fourj = 4*j;
     const int k = 2*j;
     const double s1 = isoParCoord[k];
@@ -332,102 +321,43 @@ void Quad42DSCV::Mij(
 Quad42DSCS::Quad42DSCS()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 4;
-  numIntPoints_ = 4;
-  scaleToStandardIsoFac_ = 2.0;
+  MasterElement::nDim_=nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
+  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
 
   // define L/R mappings
-  lrscv_.resize(8);
-  lrscv_[0]  = 0; lrscv_[1]  = 1;
-  lrscv_[2]  = 1; lrscv_[3]  = 2;
-  lrscv_[4]  = 2; lrscv_[5]  = 3;
-  lrscv_[6]  = 0; lrscv_[7]  = 3;
-  
+  MasterElement::lrscv_.assign(lrscv_, 8+lrscv_);
   // elem-edge mapping from ip
-  scsIpEdgeOrd_.resize(numIntPoints_);
-  scsIpEdgeOrd_[0] = 0; scsIpEdgeOrd_[1] = 1;
-  scsIpEdgeOrd_[2] = 2; scsIpEdgeOrd_[3] = 3;
-
+  MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,numIntPoints_+scsIpEdgeOrd_);
   // define opposing node
-  oppNode_.resize(8);
-  // face 0; nodes 0,1
-  oppNode_[0] = 3; oppNode_[1] = 2;
-  // face 1; nodes 1,2
-  oppNode_[2] = 0; oppNode_[3] = 3;
-  // face 2; nodes 2,3
-  oppNode_[4] = 1; oppNode_[5] = 0;
-  // face 3; nodes 3,0
-  oppNode_[6] = 2; oppNode_[7] = 1;
-
+  MasterElement::oppNode_.assign(&oppNode_[0][0], 8+&oppNode_[0][0]);
   // define opposing face
-  oppFace_.resize(8);
-  // face 0
-  oppFace_[0]  = 3; oppFace_[1] = 1;
-  // face 1
-  oppFace_[2]  = 0; oppFace_[3] = 2;
-  // face 2
-  oppFace_[4]  = 1; oppFace_[5] = 3;  
-  // face 3
-  oppFace_[6]  = 2; oppFace_[7] = 0;
-
+  MasterElement::oppFace_.assign(&oppFace_[0][0], 8+&oppFace_[0][0]);
   // standard integration location
-  intgLoc_.resize(8);    
-  intgLoc_[0] =  0.00; intgLoc_[1] = -0.25; // surf 1; 1->2
-  intgLoc_[2] =  0.25; intgLoc_[3] =  0.00; // surf 2; 2->3
-  intgLoc_[4] =  0.00; intgLoc_[5] =  0.25; // surf 3; 3->4
-  intgLoc_[6] = -0.25; intgLoc_[7] =  0.00; // surf 3; 1->5
-
+  MasterElement::intgLoc_.assign(intgLoc_, 8+intgLoc_);    
   // shifted
-  intgLocShift_.resize(8);
-  intgLocShift_[0] =  0.00; intgLocShift_[1] = -0.50;
-  intgLocShift_[2] =  0.50; intgLocShift_[3] =  0.00;
-  intgLocShift_[4] =  0.00; intgLocShift_[5] =  0.50;
-  intgLocShift_[6] = -0.50; intgLocShift_[7] =  0.00;
-
+  MasterElement::intgLocShift_.assign(intgLocShift_, 8+intgLocShift_);
   // exposed face
-  intgExpFace_.resize(16);
-  // face 0; scs 0, 1; nodes 0,1
-  intgExpFace_[0]  = -0.25; intgExpFace_[1]  = -0.50; 
-  intgExpFace_[2]  =  0.25; intgExpFace_[3]  = -0.50;
-  // face 1; scs 0, 1; nodes 1,2
-  intgExpFace_[4]  =  0.50; intgExpFace_[5]  = -0.25;
-  intgExpFace_[6]  =  0.50; intgExpFace_[7]  =  0.25;
-  // face 2, surf 0, 1; nodes 2,3
-  intgExpFace_[8]  =  0.25; intgExpFace_[9]  =  0.50;
-  intgExpFace_[10] = -0.25; intgExpFace_[11] =  0.50;
-  // face 3, surf 0, 1; nodes 3,0
-  intgExpFace_[12] = -0.50; intgExpFace_[13] =  0.25;
-  intgExpFace_[14] = -0.50; intgExpFace_[15] = -0.25; 
-
+  MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 16+&intgExpFace_[0][0][0]);
   // boundary integration point ip node mapping (ip on an ordinal to local node number)
-  ipNodeMap_.resize(8); // 2 ips * 4 faces
-  // face 0;
-  ipNodeMap_[0] = 0;  ipNodeMap_[1] = 1;  
-  // face 1;
-  ipNodeMap_[2] = 1;  ipNodeMap_[3] = 2; 
-  // face 2; 
-  ipNodeMap_[4] = 2;  ipNodeMap_[5] = 3;  
-  // face 3;
-  ipNodeMap_[6] = 3;  ipNodeMap_[7] = 0; 
+  MasterElement::ipNodeMap_.assign(&ipNodeMap_[0][0], 8+&ipNodeMap_[0][0]); // 2 ips * 4 faces
 
-  std::vector<std::vector<double>> nodeLocations =
+  const double nodeLocations[4][2] =
   {
       {-0.5,-0.5}, {+0.5,-0.5},
       {+0.5,+0.5}, {-0.5,+0.5}
   };
-  intgExpFaceShift_.resize(16);
-  int index = 0;
   stk::topology topo = stk::topology::QUADRILATERAL_4_2D;
   for (unsigned k = 0; k < topo.num_sides(); ++k) {
     stk::topology side_topo = topo.side_topology(k);
     const int* ordinals = side_node_ordinals(k);
     for (unsigned n = 0; n < side_topo.num_nodes(); ++n) {
-      intgExpFaceShift_[2*index + 0] = nodeLocations[ordinals[n]][0];
-      intgExpFaceShift_[2*index + 1] = nodeLocations[ordinals[n]][1];
-      ++index;
+      intgExpFaceShift_[k][n][0] = nodeLocations[ordinals[n]][0];
+      intgExpFaceShift_[k][n][1] = nodeLocations[ordinals[n]][1];
     }
   }
+  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0], 16+&intgExpFaceShift_[0][0][0]);
 }
 
 //--------------------------------------------------------------------------
@@ -446,7 +376,7 @@ Quad42DSCS::ipNodeMap(
   int ordinal)
 {
   // define ip->node mappings for each face (ordinal); 
-  return &ipNodeMap_[ordinal*2];
+  return ipNodeMap_[ordinal];
 }
 
 
@@ -533,8 +463,10 @@ void Quad42DSCS::determinant(
   double *areav,
   double *error)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(quad_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords, areav );
+    ( &nelem, &npe, &nint, coords, areav );
 
   // all is always well; no error checking
   *error = 0;
@@ -562,13 +494,15 @@ void Quad42DSCS::grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(quad_derivative)
-    ( &numIntPoints_, &intgLoc_[0], deriv );
+    ( &nint, intgLoc_, deriv );
   
   SIERRA_FORTRAN(quad_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
   
@@ -597,13 +531,15 @@ void Quad42DSCS::shifted_grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(quad_derivative)
-    ( &numIntPoints_, &intgLocShift_[0], deriv );
+    ( &nint, intgLocShift_, deriv );
 
   SIERRA_FORTRAN(quad_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -622,12 +558,10 @@ void Quad42DSCS::face_grad_op(
 {
   using traits = AlgTraitsEdge2DQuad42D;
 
-  const std::vector<double> &p = shifted ? intgExpFaceShift_: intgExpFace_;
   constexpr int derivSize = traits::numFaceIp_ * traits::nodesPerElement_ * traits::nDim_;
   DoubleType psi[derivSize];
   SharedMemView<DoubleType***> deriv(psi, traits::numFaceIp_, traits::nodesPerElement_, traits::nDim_);
-  const int len = 2*traits::numFaceIp_;
-  const std::vector<double> exp_face(&p[len*face_ordinal], &p[len*(face_ordinal+1)]);
+  const double *exp_face = shifted ? intgExpFaceShift_[face_ordinal][0]: intgExpFace_[face_ordinal][0];
   quad_derivative(exp_face, deriv);
   generic_grad_op<traits>(deriv, coords, gradop);
 }
@@ -651,7 +585,6 @@ void Quad42DSCS::face_grad_op(
 {
   int lerr = 0;
   int npf = 2;
-  int ndim = 2;
 
   const int nface = 1;
   double dpsi[8];
@@ -660,13 +593,13 @@ void Quad42DSCS::face_grad_op(
     
     for ( int k=0; k<npf; k++ ) {
       
-      const int row = 4*face_ordinal + k*ndim;
       SIERRA_FORTRAN(quad_derivative)
-        ( &nface, &intgExpFace_[row], dpsi );
+        ( &nface, intgExpFace_[face_ordinal][k], dpsi );
       
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(quad_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[8*n], &gradop[k*nelem*8+n*8], &det_j[npf*n+k], error, &lerr );
@@ -700,7 +633,6 @@ void Quad42DSCS::shifted_face_grad_op(
 {
   int lerr = 0;
   int npf = 2;
-  int ndim = 2;
 
   const int nface = 1;
   double dpsi[8];
@@ -709,13 +641,13 @@ void Quad42DSCS::shifted_face_grad_op(
 
     for ( int k=0; k<npf; k++ ) {
 
-      const int row = 4*face_ordinal + k*ndim;
       SIERRA_FORTRAN(quad_derivative)
-        ( &nface, &intgExpFaceShift_[row], dpsi );
+        ( &nface, intgExpFaceShift_[face_ordinal][k], dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(quad_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[8*n], &gradop[k*nelem*8+n*8], &det_j[npf*n+k], error, &lerr );
@@ -782,9 +714,11 @@ void Quad42DSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(twod_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -822,7 +756,7 @@ const int *
 Quad42DSCS::adjacentNodes()
 {
   // define L/R mappings
-  return &lrscv_[0];
+  return lrscv_;
 }
 
 //--------------------------------------------------------------------------
@@ -831,7 +765,7 @@ Quad42DSCS::adjacentNodes()
 const int *
 Quad42DSCS::scsIpEdgeOrd()
 {
-  return &scsIpEdgeOrd_[0];
+  return scsIpEdgeOrd_;
 }
 
 //--------------------------------------------------------------------------
@@ -842,7 +776,7 @@ Quad42DSCS::opposingNodes(
   const int ordinal,
   const int node)
 {
-  return oppNode_[ordinal*2+node];
+  return oppNode_[ordinal][node];
 }
 
 //--------------------------------------------------------------------------
@@ -853,7 +787,7 @@ Quad42DSCS::opposingFace(
   const int ordinal,
   const int node)
 {
-  return oppFace_[ordinal*2+node];
+  return oppFace_[ordinal][node];
 }
 
 //--------------------------------------------------------------------------
@@ -862,7 +796,7 @@ Quad42DSCS::opposingFace(
 void
 Quad42DSCS::shape_fcn(double *shpfc)
 {
-  quad_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+  quad_shape_fcn(intgLoc_, shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -871,7 +805,7 @@ Quad42DSCS::shape_fcn(double *shpfc)
 void
 Quad42DSCS::shifted_shape_fcn(double *shpfc)
 {
-  quad_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+  quad_shape_fcn(intgLocShift_, shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -879,11 +813,10 @@ Quad42DSCS::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 Quad42DSCS::quad_shape_fcn(
-  const int  &npts,
   const double *isoParCoord, 
   double *shape_fcn)
 {
-  for (int j = 0; j < npts; ++j ) {
+  for (int j = 0; j < numIntPoints_; ++j ) {
     const int fourj = 4*j;
     const int k = 2*j;
     const double s1 = isoParCoord[k];
@@ -1066,11 +999,12 @@ Quad42DSCS::general_face_grad_op(
   double dpsi[8];
 
   SIERRA_FORTRAN(quad_derivative)
-    ( &nface, &isoParCoord[0], dpsi );
+    ( &nface, isoParCoord, dpsi );
       
+  const int npe  = nodesPerElement_;
   SIERRA_FORTRAN(quad_gradient_operator)
     ( &nface,
-      &nodesPerElement_,
+      &npe,
       &nface,
       dpsi,
       &coords[0], &gradop[0], &det_j[0], error, &lerr );
