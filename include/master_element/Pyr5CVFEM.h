@@ -46,7 +46,7 @@ public:
   PyrSCV();
   virtual ~PyrSCV();
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,
@@ -136,7 +136,7 @@ public:
   PyrSCS();
   virtual ~PyrSCS();
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,

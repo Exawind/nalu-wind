@@ -27,7 +27,6 @@ namespace nalu{
 HexSCV::HexSCV()
   : MasterElement()
 {
-  MasterElement::ipNodeMap_       .assign(ipNodeMap_,        8+ipNodeMap_);
   MasterElement::intgLoc_         .assign(intgLoc_,         24+intgLoc_);
   MasterElement::intgLocShift_    .assign(intgLocShift_,    24+intgLocShift_);
   MasterElement::nDim_                  = nDim_;
@@ -48,10 +47,10 @@ HexSCV::~HexSCV()
 //--------------------------------------------------------------------------
 const int *
 HexSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 //--------------------------------------------------------------------------
@@ -205,7 +204,6 @@ HexSCS::HexSCS() : MasterElement() {
   MasterElement::nodesPerElement_       = nodesPerElement_;
   MasterElement::numIntPoints_          = numIntPoints_;
   MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
-  MasterElement::ipNodeMap_       .assign(ipNodeMap_,   24+ipNodeMap_);
   MasterElement::oppNode_         .assign(oppNode_,     24+oppNode_);
   MasterElement::nodeLoc_         .assign(&nodeLoc_[0][0],  24+&nodeLoc_[0][0]);
   MasterElement::oppFace_         .assign(oppFace_,     24+oppFace_);
@@ -233,7 +231,7 @@ HexSCS::~HexSCS()
 //--------------------------------------------------------------------------
 const int *
 HexSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal);
   return &ipNodeMap_[ordinal*4];

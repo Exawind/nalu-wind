@@ -233,7 +233,7 @@ public:
   Hex27SCV();
   virtual ~Hex27SCV() {}
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
@@ -418,7 +418,7 @@ public:
 
   virtual const int * adjacentNodes() final;
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   int opposingNodes(
     const int ordinal, const int node);

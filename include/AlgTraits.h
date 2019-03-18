@@ -29,7 +29,9 @@ class Quad42DSCV;
 class Quad93DSCS;
 class Tri32DSCS;
 class Tri32DSCV;
+class Tri3DSCS;
 class Edge32DSCS;
+class Edge2DSCS;
 
 // limited supported now (P=1 3D elements)
 struct AlgTraitsHex8 {
@@ -206,6 +208,7 @@ struct AlgTraitsTri3
   static constexpr int numScsIp_ = 3;
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::TRI_3;
+  using            masterElementScs_ = Tri3DSCS;
 };
 
 struct AlgTraitsEdge_2D
@@ -216,6 +219,7 @@ struct AlgTraitsEdge_2D
   static constexpr int numScsIp_ = 2;
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::LINE_2;
+  using            masterElementScs_ = Edge2DSCS;
 };
 
 

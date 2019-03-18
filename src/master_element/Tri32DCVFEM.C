@@ -106,7 +106,6 @@ Tri32DSCV::Tri32DSCV()
   MasterElement::numIntPoints_    = numIntPoints_;
 
   // define ip node mappings
-  MasterElement::ipNodeMap_.assign   (ipNodeMap_,    3+ipNodeMap_);
   MasterElement::intgLoc_.assign     (intgLoc_,      6+intgLoc_);
   MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
 }
@@ -124,7 +123,7 @@ Tri32DSCV::~Tri32DSCV()
 //--------------------------------------------------------------------------
 const int *
 Tri32DSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
   return ipNodeMap_;
@@ -153,7 +152,7 @@ Tri32DSCV::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 Tri32DSCV::tri_shape_fcn(
-  const int  &npts,
+  const int   npts,
   const double *isoParCoord,
   double *shape_fcn)
 {
@@ -364,9 +363,6 @@ Tri32DSCS::Tri32DSCS()
   // exposed face
   MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 12+&intgExpFace_[0][0][0]);
   
-  // boundary integration point ip node mapping (ip on an ordinal to local node number)
-  MasterElement::ipNodeMap_.assign(&ipNodeMap_[0][0], 6+&ipNodeMap_[0][0]);
-
   const std::array<std::array<double,2>,3> nodeLocations =
   {{
       {{0.0,0.0}}, {{1.0,0}}, {{0.0,1.0}}
@@ -396,7 +392,7 @@ Tri32DSCS::~Tri32DSCS()
 //--------------------------------------------------------------------------
 const int *
 Tri32DSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal); 
   return ipNodeMap_[ordinal];
@@ -799,7 +795,7 @@ Tri32DSCS::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 Tri32DSCS::tri_shape_fcn(
-  const int  &npts,
+  const int   npts,
   const double *isoParCoord, 
   double *shape_fcn)
 {

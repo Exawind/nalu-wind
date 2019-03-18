@@ -40,7 +40,7 @@ public:
   Quad42DSCV();
   virtual ~Quad42DSCV();
 
-  const int * ipNodeMap(int ordinal = 0) override;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**> &coords,
@@ -117,7 +117,7 @@ public:
   Quad42DSCS();
   virtual ~Quad42DSCS();
 
-  const int * ipNodeMap(int ordinal = 0) override;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,

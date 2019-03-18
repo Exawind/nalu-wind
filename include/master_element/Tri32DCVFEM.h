@@ -39,7 +39,7 @@ public:
   Tri32DSCV();
   virtual ~Tri32DSCV();
 
-  const int * ipNodeMap(int ordinal = 0) override;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**> &coords,
@@ -78,7 +78,7 @@ public:
     double *shpfc) override;
 
   void tri_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord,
     double* shape_fcn);
 
@@ -116,7 +116,7 @@ public:
   Tri32DSCS();
   virtual ~Tri32DSCS();
 
-  const int * ipNodeMap(int ordinal = 0) override;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,
@@ -213,7 +213,7 @@ public:
     double *shpfc) override;
   
   void tri_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 

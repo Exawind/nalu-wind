@@ -221,7 +221,7 @@ HigherOrderHexSCV::shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 const int *
 HigherOrderHexSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
   return &ipNodeMap_[0];
@@ -749,7 +749,7 @@ HigherOrderHexSCS::adjacentNodes()
 //--------------------------------------------------------------------------
 const int *
 HigherOrderHexSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal);
   return &ipNodeMap_[ordinal*ipsPerFace_];
@@ -1109,7 +1109,7 @@ HigherOrderQuad3DSCS::shape_fcn(double* shpfc)
 //--------------------------------------------------------------------------
 const int *
 HigherOrderQuad3DSCS::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define ip->node mappings for each face (single ordinal);
   return &ipNodeMap_[0];
@@ -1242,7 +1242,7 @@ HigherOrderQuad2DSCV::shape_fcn(double *shpfc)
 }
 //--------------------------------------------------------------------------
 const int *
-HigherOrderQuad2DSCV::ipNodeMap(int /*ordinal*/)
+HigherOrderQuad2DSCV::ipNodeMap(int /*ordinal*/) const
 {
   return &ipNodeMap_[0];
 }
@@ -1636,7 +1636,7 @@ HigherOrderQuad2DSCS::shape_fcn(double *shpfc)
 }
 //--------------------------------------------------------------------------
 const int *
-HigherOrderQuad2DSCS::ipNodeMap(int ordinal)
+HigherOrderQuad2DSCS::ipNodeMap(int ordinal) const
 {
   // define ip->node mappings for each face (ordinal);
   return &ipNodeMap_[ordinal*ipsPerFace_];
@@ -1851,7 +1851,7 @@ HigherOrderEdge2DSCS::HigherOrderEdge2DSCS(
 }
 //--------------------------------------------------------------------------
 const int *
-HigherOrderEdge2DSCS::ipNodeMap(int /*ordinal*/)
+HigherOrderEdge2DSCS::ipNodeMap(int /*ordinal*/) const
 {
   return &ipNodeMap_[0];
 }

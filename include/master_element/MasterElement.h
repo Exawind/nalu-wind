@@ -196,7 +196,7 @@ public:
     throw std::runtime_error("scsIpEdgeOrd not implemented");
     }
 
-  virtual const int * ipNodeMap(int /* ordinal */ = 0) {
+  virtual const int * ipNodeMap(int /* ordinal */ = 0) const {
       throw std::runtime_error("ipNodeMap not implemented");
      }
 
@@ -277,9 +277,6 @@ public:
 
   virtual const int *adjacentNodes() const {throw std::runtime_error("adjacentNodes");} 
 
-  virtual const std::vector<int>& ip_node_map() const {return ipNodeMap_;} 
-  virtual void ip_node_map(const std::vector<int>& v) {ipNodeMap_=v;} 
-
   virtual const std::vector<int>& opposing_nodes() const {return oppNode_;} 
   virtual void opposing_nodes(const std::vector<int>& v) {oppNode_=v;} 
 
@@ -319,7 +316,6 @@ public:
   int numIntPoints_;
   double scaleToStandardIsoFac_;
 
-  std::vector<int> ipNodeMap_;
   std::vector<int> oppNode_;
   std::vector<int> oppFace_;
   std::vector<double> intgLoc_;
@@ -341,11 +337,12 @@ class Edge2DSCS : public MasterElement
 public:
   Edge2DSCS();
   virtual ~Edge2DSCS();
+  using AlgTraits = AlgTraitsEdge_2D;
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     const int nelem,
@@ -383,6 +380,16 @@ public:
   double parametric_distance(const std::vector<double> &x);
 
   const double elemThickness_;  
+
+private :
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_ = AlgTraits::numScsIp_;
+  static constexpr double scaleToStandardIsoFac_ = 2.0;
+  const int ipNodeMap_[2] = {0,1};
+  const double intgLoc_[2] = {-0.25, 0.25};
+  const double intgLocShift_[2] = {-0.50, 0.50};
+
 };
 
 } // namespace nalu

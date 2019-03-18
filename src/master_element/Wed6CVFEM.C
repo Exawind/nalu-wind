@@ -67,8 +67,6 @@ WedSCV::WedSCV()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // define ip node mappings
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, 6+ipNodeMap_);
   // standard integration location
   MasterElement::intgLoc_.assign(intgLoc_, 18+intgLoc_);
   // shifted
@@ -88,7 +86,7 @@ WedSCV::~WedSCV()
 //--------------------------------------------------------------------------
 const int *
 WedSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
   return &ipNodeMap_[0];
@@ -326,9 +324,6 @@ WedSCS::WedSCS()
   // exposed face
   MasterElement::intgExpFace_.assign(intgExpFace_, 60+intgExpFace_);
 
-  // boundary integration point ip node mapping (ip on an ordinal to local node number)
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, 20+ipNodeMap_); // 4 ips (pick quad) * 5 faces
-
   MasterElement::sideOffset_.assign(sideOffset_, 5+sideOffset_);
   const double nodeLocations[6][3] =
   {
@@ -362,7 +357,7 @@ WedSCS::~WedSCS()
 //--------------------------------------------------------------------------
 const int *
 WedSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal);
   return &ipNodeMap_[ordinal*4];

@@ -38,7 +38,7 @@ public:
 
   using MasterElement::determinant;
 
-  const int * ipNodeMap(int ordinal = 0) final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;

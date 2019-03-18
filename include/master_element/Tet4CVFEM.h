@@ -28,7 +28,7 @@ public:
   TetSCV();
   virtual ~TetSCV();
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,
@@ -108,7 +108,7 @@ public:
   TetSCS();
   virtual ~TetSCS();
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   virtual void determinant(
     SharedMemView<DoubleType**>&coords,

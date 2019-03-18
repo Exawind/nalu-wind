@@ -53,7 +53,7 @@ public:
   HexSCV();
   virtual ~HexSCV();
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::determinant;
   using MasterElement::shifted_grad_op;
@@ -153,7 +153,7 @@ public:
   HexSCS();
   virtual ~HexSCS();
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::determinant;
 

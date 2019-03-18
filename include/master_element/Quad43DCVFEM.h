@@ -26,7 +26,7 @@ public:
   Quad3DSCS();
   virtual ~Quad3DSCS();
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
  
   // NGP-ready methods first
   void shape_fcn(
