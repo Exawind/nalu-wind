@@ -36,9 +36,6 @@ class Edge32DSCS : public MasterElement
 public:
 
   using AlgTraits = AlgTraitsEdge3_2D;
-  using MasterElement::determinant;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
 
   Edge32DSCS();
   virtual ~Edge32DSCS() {}
