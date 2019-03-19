@@ -20,6 +20,7 @@ class Hex8FEM : public MasterElement
 public:
 
   Hex8FEM();
+  KOKKOS_FUNCTION
   virtual ~Hex8FEM();
 
   using AlgTraits = AlgTraitsHex8;

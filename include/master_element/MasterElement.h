@@ -48,6 +48,7 @@ class MasterElement
 {
 public:
   MasterElement();
+  KOKKOS_FUNCTION
   virtual ~MasterElement();
 
   // NGP-ready methods first
@@ -340,6 +341,7 @@ class Edge2DSCS : public MasterElement
 {
 public:
   Edge2DSCS();
+  KOKKOS_FUNCTION
   virtual ~Edge2DSCS();
   using MasterElement::determinant;
   using MasterElement::shape_fcn;

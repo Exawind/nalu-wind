@@ -24,6 +24,7 @@ public:
   using MasterElement::determinant;
 
   Quad3DSCS();
+  KOKKOS_FUNCTION
   virtual ~Quad3DSCS();
 
   const int * ipNodeMap(int ordinal = 0);

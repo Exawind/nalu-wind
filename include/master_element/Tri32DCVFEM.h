@@ -37,6 +37,7 @@ public:
   using MasterElement::shifted_shape_fcn;
 
   Tri32DSCV();
+  KOKKOS_FUNCTION
   virtual ~Tri32DSCV();
 
   const int * ipNodeMap(int ordinal = 0) override;
@@ -114,6 +115,7 @@ public:
   using MasterElement::shifted_shape_fcn;
 
   Tri32DSCS();
+  KOKKOS_FUNCTION
   virtual ~Tri32DSCS();
 
   const int * ipNodeMap(int ordinal = 0) override;
