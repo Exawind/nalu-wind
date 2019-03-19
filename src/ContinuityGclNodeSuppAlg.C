@@ -37,7 +37,9 @@ ContinuityGclNodeSuppAlg::ContinuityGclNodeSuppAlg(
     dualNdVolN_(NULL),
     dualNdVolNp1_(NULL),
     dt_(0.0),
-    gamma1_(1.0)
+    gamma1_(1.0),
+    gamma2_(0.0),
+    gamma3_(0.0)
 {
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -60,6 +62,9 @@ void
 ContinuityGclNodeSuppAlg::setup()
 {
   gamma1_ = realm_.get_gamma1();
+  gamma2_ = realm_.get_gamma2();
+  gamma3_ = realm_.get_gamma3();
+
   dt_ = realm_.timeIntegrator_->get_time_step();
 }
 
@@ -80,9 +85,11 @@ ContinuityGclNodeSuppAlg::node_execute(
   const double dualVolumeN = *stk::mesh::field_data(*dualNdVolN_, node );
   const double dualVolumeNp1 = *stk::mesh::field_data(*dualNdVolNp1_, node );
 
-  double volRate = (1.5*dualVolumeNp1 - 2.0*dualVolumeN + 0.5*dualVolumeNm1) / dt_ / dualVolumeNp1;
+  double volRate = (gamma1_*dualVolumeNp1 + gamma2_*dualVolumeN + gamma3_*dualVolumeNm1) / dt_ / dualVolumeNp1;
 
-  rhs[0] -= rhoNp1*divV*dualVolumeNp1/projTimeScale;
+  // the term divV comes from the Reynold's transport theorem for moving bodies with changing volume
+  // the term (volRate-divV) is the GCL law which presents non-zero errors in a discretized setting
+  rhs[0] -= rhoNp1*(divV - (volRate-divV))*dualVolumeNp1/projTimeScale;
   lhs[0] += 0.0;
 }
 

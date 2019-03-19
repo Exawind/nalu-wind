@@ -38,7 +38,10 @@ MomentumGclSrcNodeSuppAlg::MomentumGclSrcNodeSuppAlg(
     divV_(NULL),
     dualNdVolN_(NULL),
     dualNdVolNp1_(NULL),
-    nDim_(1)
+    nDim_(1),
+    gamma1_(0.0),
+    gamma2_(0.0),
+    gamma3_(0.0)
 {
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -64,7 +67,11 @@ MomentumGclSrcNodeSuppAlg::MomentumGclSrcNodeSuppAlg(
 void
 MomentumGclSrcNodeSuppAlg::setup()
 {
-  // all set up in constructor
+  gamma1_ = realm_.get_gamma1();
+  gamma2_ = realm_.get_gamma2();
+  gamma3_ = realm_.get_gamma3();
+
+  dt_ = realm_.timeIntegrator_->get_time_step();
 }
 
 //--------------------------------------------------------------------------
@@ -76,13 +83,6 @@ MomentumGclSrcNodeSuppAlg::node_execute(
   double *rhs,
   stk::mesh::Entity node)
 {
-  auto* inactivePart = realm_.meta_data().get_part("out-HEX");
-
-  stk::mesh::PartVector partVec;
-  partVec.push_back(inactivePart);
-
-  if(realm_.bulk_data().bucket(node).member_any(partVec)) return;
-
   // rhs-= rho*u*div(v)
   const double *uNp1 = stk::mesh::field_data(*velocityNp1_, node );
   const double rhoNp1 = *stk::mesh::field_data(*densityNp1_, node );
@@ -91,10 +91,11 @@ MomentumGclSrcNodeSuppAlg::node_execute(
   const double dualVolumeN = *stk::mesh::field_data(*dualNdVolN_, node );
   const double dualVolumeNp1 = *stk::mesh::field_data(*dualNdVolNp1_, node );
 
-  double dt = realm_.timeIntegrator_->get_time_step();
-  double volRate = (1.5*dualVolumeNp1 - 2.0*dualVolumeN + 0.5*dualVolumeNm1) / dt / dualVolumeNp1;
+  double volRate = (gamma1_*dualVolumeNp1 + gamma2_*dualVolumeN + gamma3_*dualVolumeNm1) / dt_ / dualVolumeNp1;
 
-  const double fac = rhoNp1*divV*dualVolumeNp1;
+  // the term divV comes from the Reynold's transport theorem for moving bodies with changing volume
+  // the term (volRate-divV) is the GCL law which presents non-zero errors in a discretized setting
+  const double fac = rhoNp1*(divV - (volRate-divV))*dualVolumeNp1;
   for ( int i = 0; i < nDim_; ++i ) {
     rhs[i] -= fac*uNp1[i];
   }

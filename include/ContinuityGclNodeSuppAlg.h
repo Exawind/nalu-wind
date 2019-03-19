@@ -42,6 +42,8 @@ public:
   ScalarFieldType *dualNdVolNp1_;
   double dt_;
   double gamma1_;
+  double gamma2_;
+  double gamma3_;
 };
 
 } // namespace nalu
