@@ -153,6 +153,7 @@ namespace nalu{
   }
 
 
+KOKKOS_FUNCTION
 HigherOrderHexSCV::HigherOrderHexSCV(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -328,6 +329,7 @@ int ip_per_face(const TensorProductQuadratureRule& quad, const LagrangeBasis& ba
   return quad.num_quad() * quad.num_quad() * (basis.polyOrder_+1)*(basis.polyOrder_+1);
 }
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HigherOrderHexSCS::HigherOrderHexSCS(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -1038,6 +1040,7 @@ void HigherOrderHexSCS::face_grad_op(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HigherOrderQuad3DSCS::HigherOrderQuad3DSCS(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -1179,6 +1182,7 @@ HigherOrderQuad3DSCS::area_vector(
   areaVector[2] = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
 }
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HigherOrderQuad2DSCV::HigherOrderQuad2DSCV(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -1335,6 +1339,7 @@ void HigherOrderQuad2DSCV::grad_op(
   }
 }
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HigherOrderQuad2DSCS::HigherOrderQuad2DSCS(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -1818,6 +1823,7 @@ void HigherOrderQuad2DSCS::gij(
       coords, gupperij, glowerij);
 }
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HigherOrderEdge2DSCS::HigherOrderEdge2DSCS(
   ElementDescription elem,
   LagrangeBasis basis,

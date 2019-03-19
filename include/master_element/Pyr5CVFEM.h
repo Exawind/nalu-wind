@@ -46,7 +46,7 @@ public:
   KOKKOS_FUNCTION
   PyrSCV();
   KOKKOS_FUNCTION
-  virtual ~PyrSCV();
+  virtual ~PyrSCV() = default;
 
   const int * ipNodeMap(int ordinal = 0);
 
@@ -136,9 +136,10 @@ public:
   using MasterElement::shifted_shape_fcn;
   using MasterElement::adjacentNodes;
 
+  KOKKOS_FUNCTION
   PyrSCS();
   KOKKOS_FUNCTION
-  virtual ~PyrSCS();
+  virtual ~PyrSCS() = default;
 
   const int * ipNodeMap(int ordinal = 0);
 
