@@ -33,6 +33,7 @@ class Tri3DSCS : public MasterElement
 public:
 
   Tri3DSCS();
+  KOKKOS_FUNCTION
   virtual ~Tri3DSCS();
 
   using AlgTraits = AlgTraitsTri3;

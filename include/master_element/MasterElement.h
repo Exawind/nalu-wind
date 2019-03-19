@@ -48,6 +48,7 @@ class MasterElement
 {
 public:
   MasterElement();
+  KOKKOS_FUNCTION
   virtual ~MasterElement();
 
   // NGP-ready methods first
@@ -336,6 +337,7 @@ class Edge2DSCS : public MasterElement
 {
 public:
   Edge2DSCS();
+  KOKKOS_FUNCTION
   virtual ~Edge2DSCS();
   using AlgTraits = AlgTraitsEdge_2D;
   using MasterElement::determinant;

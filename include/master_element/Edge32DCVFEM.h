@@ -38,6 +38,7 @@ public:
   using AlgTraits = AlgTraitsEdge3_2D;
 
   Edge32DSCS();
+  KOKKOS_FUNCTION
   virtual ~Edge32DSCS() {}
   using MasterElement::determinant;
   using MasterElement::shape_fcn;

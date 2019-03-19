@@ -34,6 +34,7 @@ class Quad93DSCS : public MasterElement
 public:
   using AlgTraits = AlgTraitsQuad9;
   Quad93DSCS();
+  KOKKOS_FUNCTION
   virtual ~Quad93DSCS() {}
 
   using MasterElement::determinant;

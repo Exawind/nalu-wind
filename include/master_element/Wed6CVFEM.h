@@ -20,6 +20,7 @@ class WedSCV : public MasterElement
 {
 public:
   WedSCV();
+  KOKKOS_FUNCTION
   virtual ~WedSCV();
 
   using AlgTraits = AlgTraitsWed6;
@@ -105,6 +106,7 @@ class WedSCS : public MasterElement
 {
 public:
   WedSCS();
+  KOKKOS_FUNCTION
   virtual ~WedSCS();
 
   using AlgTraits = AlgTraitsWed6;

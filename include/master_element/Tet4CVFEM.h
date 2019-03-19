@@ -26,6 +26,7 @@ public:
   using MasterElement::shifted_shape_fcn;
 
   TetSCV();
+  KOKKOS_FUNCTION
   virtual ~TetSCV();
 
   virtual const int * ipNodeMap(int ordinal = 0) const final;
@@ -107,6 +108,7 @@ public:
   using MasterElement::adjacentNodes;
 
   TetSCS();
+  KOKKOS_FUNCTION
   virtual ~TetSCS();
 
   virtual const int * ipNodeMap(int ordinal = 0) const final;
