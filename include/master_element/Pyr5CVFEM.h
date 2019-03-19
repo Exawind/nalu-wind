@@ -43,7 +43,9 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
+  KOKKOS_FUNCTION
   PyrSCV();
+  KOKKOS_FUNCTION
   virtual ~PyrSCV();
 
   const int * ipNodeMap(int ordinal = 0);
@@ -135,6 +137,7 @@ public:
   using MasterElement::adjacentNodes;
 
   PyrSCS();
+  KOKKOS_FUNCTION
   virtual ~PyrSCS();
 
   const int * ipNodeMap(int ordinal = 0);

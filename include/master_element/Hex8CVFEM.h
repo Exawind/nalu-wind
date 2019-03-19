@@ -51,6 +51,7 @@ public:
   using AlgTraits = AlgTraitsHex8;
 
   HexSCV();
+  KOKKOS_FUNCTION
   virtual ~HexSCV();
 
   const int * ipNodeMap(int ordinal = 0);
@@ -152,6 +153,7 @@ public:
 
 
   HexSCS();
+  KOKKOS_FUNCTION
   virtual ~HexSCS();
 
   const int * ipNodeMap(int ordinal = 0);

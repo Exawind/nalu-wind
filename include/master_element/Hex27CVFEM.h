@@ -36,6 +36,7 @@ public:
   using MasterElement::shifted_shape_fcn;
 
   HexahedralP2Element();
+  KOKKOS_FUNCTION
   virtual ~HexahedralP2Element() {}
 
   void shape_fcn(double *shpfc);
@@ -231,6 +232,7 @@ class Hex27SCV : public HexahedralP2Element
 
 public:
   Hex27SCV();
+  KOKKOS_FUNCTION
   virtual ~Hex27SCV() {}
 
   const int * ipNodeMap(int ordinal = 0);
@@ -315,6 +317,7 @@ class Hex27SCS : public HexahedralP2Element
 
 public:
   Hex27SCS();
+  KOKKOS_FUNCTION
   virtual ~Hex27SCS() {}
 
   using MasterElement::shape_fcn;

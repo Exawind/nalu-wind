@@ -47,6 +47,7 @@ public:
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
 
+  KOKKOS_FUNCTION
   virtual ~HigherOrderHexSCV() {}
 
   void shape_fcn(double *shpfc) final;
@@ -110,6 +111,7 @@ public:
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
+  KOKKOS_FUNCTION
   virtual ~HigherOrderHexSCS() {}
 
   void shape_fcn(double *shpfc) final;
@@ -216,6 +218,7 @@ public:
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
 
+  KOKKOS_FUNCTION
   virtual ~HigherOrderQuad3DSCS() {}
 
   void shape_fcn(double *shpfc) final;
@@ -271,6 +274,7 @@ public:
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
+  KOKKOS_FUNCTION
   virtual ~HigherOrderQuad2DSCV() {}
 
   void shape_fcn(double *shpfc) final;
@@ -332,6 +336,7 @@ public:
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
+  KOKKOS_FUNCTION
   virtual ~HigherOrderQuad2DSCS() {}
 
   void shape_fcn(double *shpfc) final;
@@ -431,6 +436,7 @@ public:
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
+  KOKKOS_FUNCTION
   virtual ~HigherOrderEdge2DSCS() {}
 
   const int * ipNodeMap(int ordinal = 0) final;

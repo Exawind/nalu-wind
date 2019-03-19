@@ -38,6 +38,7 @@ public:
   using MasterElement::shifted_shape_fcn;
 
   Quad42DSCV();
+  KOKKOS_FUNCTION
   virtual ~Quad42DSCV();
 
   const int * ipNodeMap(int ordinal = 0) override;
@@ -116,6 +117,7 @@ public:
   using MasterElement::adjacentNodes;
 
   Quad42DSCS();
+  KOKKOS_FUNCTION
   virtual ~Quad42DSCS();
 
   const int * ipNodeMap(int ordinal = 0) override;

@@ -37,6 +37,7 @@ public:
   using MasterElement::shifted_shape_fcn;
 
   QuadrilateralP2Element();
+  KOKKOS_FUNCTION
   virtual ~QuadrilateralP2Element() {}
 
   void shape_fcn(double *shpfc);
@@ -143,6 +144,7 @@ public:
   using MasterElement::shifted_grad_op;
 
   Quad92DSCV();
+  KOKKOS_FUNCTION
   virtual ~Quad92DSCV() {}
 
   const int * ipNodeMap(int ordinal = 0) override ;
@@ -199,6 +201,7 @@ public:
   using MasterElement::adjacentNodes;
 
   Quad92DSCS();
+  KOKKOS_FUNCTION
   virtual ~Quad92DSCS() {}
 
   void determinant(
