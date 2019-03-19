@@ -320,6 +320,7 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
   using MasterElement::determinant;
+  using MasterElement::adjacentNodes;
 
   template<typename ViewType> KOKKOS_FUNCTION void shape_fcn(ViewType &shpfc);
   void shape_fcn(SharedMemView<DoubleType**> &shpfc);

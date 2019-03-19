@@ -112,6 +112,7 @@ public:
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
+  using MasterElement::adjacentNodes;
 
   Tri32DSCS();
   virtual ~Tri32DSCS();

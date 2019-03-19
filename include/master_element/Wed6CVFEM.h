@@ -111,6 +111,7 @@ public:
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
+  using MasterElement::adjacentNodes;
 
   virtual const int * ipNodeMap(int ordinal = 0) const final;
 

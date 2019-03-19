@@ -148,6 +148,7 @@ class HexSCS : public MasterElement
 public:
   using AlgTraits = AlgTraitsHex8;
   using AlgTraitsFace = AlgTraitsQuad4;
+  using MasterElement::adjacentNodes;
 
 
   HexSCS();

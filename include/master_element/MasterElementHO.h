@@ -105,6 +105,7 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::gij;
   using MasterElement::face_grad_op;
+  using MasterElement::adjacentNodes;
 
   HigherOrderHexSCS(
     ElementDescription elem,
@@ -329,6 +330,7 @@ public:
   using MasterElement::grad_op;
   using MasterElement::face_grad_op;
   using MasterElement::gij;
+  using MasterElement::adjacentNodes;
 
   HigherOrderQuad2DSCS(
     ElementDescription elem,
