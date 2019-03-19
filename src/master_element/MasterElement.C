@@ -37,6 +37,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 MasterElement::MasterElement()
   : nDim_(0),
     nodesPerElement_(0),
@@ -44,15 +45,6 @@ MasterElement::MasterElement()
     scaleToStandardIsoFac_(1.0)
 {
   // nothing else
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-KOKKOS_FUNCTION
-MasterElement::~MasterElement()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------
@@ -92,6 +84,7 @@ MasterElement::vector_norm_sq( const double * vect, int len )
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 Edge2DSCS::Edge2DSCS()
   : MasterElement(),
     elemThickness_(0.01)
@@ -102,15 +95,6 @@ Edge2DSCS::Edge2DSCS()
   MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
   MasterElement::intgLoc_.assign(intgLoc_, 2+intgLoc_);
   MasterElement::intgLocShift_.assign(intgLocShift_, 2+intgLocShift_);
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-KOKKOS_FUNCTION
-Edge2DSCS::~Edge2DSCS()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------

@@ -36,9 +36,10 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
+  KOKKOS_FUNCTION
   Tri32DSCV();
   KOKKOS_FUNCTION
-  virtual ~Tri32DSCV();
+  virtual ~Tri32DSCV() = default;
 
   virtual const int * ipNodeMap(int ordinal = 0) const final;
 
@@ -115,9 +116,10 @@ public:
   using MasterElement::shifted_shape_fcn;
   using MasterElement::adjacentNodes;
 
+  KOKKOS_FUNCTION
   Tri32DSCS();
   KOKKOS_FUNCTION
-  virtual ~Tri32DSCS();
+  virtual ~Tri32DSCS() = default;
 
   virtual const int * ipNodeMap(int ordinal = 0) const final;
 

@@ -19,9 +19,10 @@ namespace nalu {
 class WedSCV : public MasterElement
 {
 public:
+  KOKKOS_FUNCTION
   WedSCV();
   KOKKOS_FUNCTION
-  virtual ~WedSCV();
+  virtual ~WedSCV() = default;
 
   using AlgTraits = AlgTraitsWed6;
   using MasterElement::determinant;
@@ -105,9 +106,10 @@ private:
 class WedSCS : public MasterElement
 {
 public:
+  KOKKOS_FUNCTION
   WedSCS();
   KOKKOS_FUNCTION
-  virtual ~WedSCS();
+  virtual ~WedSCS() = default;
 
   using AlgTraits = AlgTraitsWed6;
   using MasterElement::determinant;

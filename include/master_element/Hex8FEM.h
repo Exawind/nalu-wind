@@ -19,9 +19,10 @@ class Hex8FEM : public MasterElement
 {
 public:
 
+  KOKKOS_FUNCTION
   Hex8FEM();
   KOKKOS_FUNCTION
-  virtual ~Hex8FEM();
+  virtual ~Hex8FEM() = default;
 
   using AlgTraits = AlgTraitsHex8;
   using MasterElement::grad_op;
