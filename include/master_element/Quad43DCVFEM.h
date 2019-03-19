@@ -23,9 +23,10 @@ public:
   using AlgTraits = AlgTraitsQuad4;
   using MasterElement::determinant;
 
+  KOKKOS_FUNCTION
   Quad3DSCS();
   KOKKOS_FUNCTION
-  virtual ~Quad3DSCS();
+  virtual ~Quad3DSCS() = default;
 
   const int * ipNodeMap(int ordinal = 0);
  

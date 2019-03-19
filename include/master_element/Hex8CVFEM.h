@@ -52,7 +52,7 @@ public:
 
   HexSCV();
   KOKKOS_FUNCTION
-  virtual ~HexSCV();
+  virtual ~HexSCV() = default;
 
   const int * ipNodeMap(int ordinal = 0);
 
@@ -154,7 +154,7 @@ public:
 
   HexSCS();
   KOKKOS_FUNCTION
-  virtual ~HexSCS();
+  virtual ~HexSCS() = default;
 
   const int * ipNodeMap(int ordinal = 0);
 

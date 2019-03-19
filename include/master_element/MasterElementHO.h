@@ -42,6 +42,7 @@ public:
   using MasterElement::grad_op;
   using MasterElement::shape_fcn;
 
+  KOKKOS_FUNCTION
   HigherOrderHexSCV(
     ElementDescription elem,
     LagrangeBasis basis,
@@ -107,6 +108,7 @@ public:
   using MasterElement::face_grad_op;
   using MasterElement::adjacentNodes;
 
+  KOKKOS_FUNCTION
   HigherOrderHexSCS(
     ElementDescription elem,
     LagrangeBasis basis,
@@ -213,6 +215,7 @@ public:
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
 
+  KOKKOS_FUNCTION
   HigherOrderQuad3DSCS(
     ElementDescription elem,
     LagrangeBasis basis,
@@ -270,6 +273,7 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::grad_op;
 
+  KOKKOS_FUNCTION
   HigherOrderQuad2DSCV(
     ElementDescription elem,
     LagrangeBasis basis,
@@ -332,6 +336,7 @@ public:
   using MasterElement::gij;
   using MasterElement::adjacentNodes;
 
+  KOKKOS_FUNCTION
   HigherOrderQuad2DSCS(
     ElementDescription elem,
     LagrangeBasis basis,
@@ -432,12 +437,13 @@ public:
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
 
+  KOKKOS_FUNCTION
   explicit HigherOrderEdge2DSCS(
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
   KOKKOS_FUNCTION
-  virtual ~HigherOrderEdge2DSCS() {}
+  virtual ~HigherOrderEdge2DSCS() = default;
 
   const int * ipNodeMap(int ordinal = 0) final;
 

@@ -43,13 +43,13 @@ struct ElementDescription;
 class MasterElement;
 
 
-
 class MasterElement
 {
 public:
+  KOKKOS_FUNCTION
   MasterElement();
   KOKKOS_FUNCTION
-  virtual ~MasterElement();
+  virtual ~MasterElement() {} // = default is apparently not allowed for virtual destructors...
 
   // NGP-ready methods first
   virtual void shape_fcn(
@@ -340,9 +340,10 @@ public:
 class Edge2DSCS : public MasterElement
 {
 public:
+  KOKKOS_FUNCTION
   Edge2DSCS();
   KOKKOS_FUNCTION
-  virtual ~Edge2DSCS();
+  virtual ~Edge2DSCS() = default;
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
