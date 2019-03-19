@@ -196,6 +196,7 @@ class Quad92DSCS : public QuadrilateralP2Element
 {
 public:
   using MasterElement::determinant;
+  using MasterElement::adjacentNodes;
 
   Quad92DSCS();
   virtual ~Quad92DSCS() {}

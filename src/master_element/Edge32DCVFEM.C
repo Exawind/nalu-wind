@@ -68,10 +68,9 @@ Edge32DSCS::gauss_point_location(
   const int nodeOrdinal,
   const int gaussPointOrdinal) const
 {
-  auto ga = gauss_legendre_rule(numQuad_).first;
    return isoparametric_mapping( scsEndLoc_[nodeOrdinal+1],
      scsEndLoc_[nodeOrdinal],
-     ga[gaussPointOrdinal] );
+     gaussAbscissae_[gaussPointOrdinal] );
 }
 
 //--------------------------------------------------------------------------
@@ -79,9 +78,11 @@ Edge32DSCS::gauss_point_location(
 //--------------------------------------------------------------------------
 void Edge32DSCS::set_quadrature_rule()
 {
-  auto gw = gauss_legendre_rule(numQuad_).second;
-  for (unsigned j = 0; j < numIntPoints_; ++j) {
+  std::vector<double> ga, gw;
+  std::tie(ga, gw) = gauss_legendre_rule(numQuad_);
+  for (unsigned j = 0; j < numQuad_; ++j) {
     gaussWeight_[j] = gw[j] * 0.5;
+    gaussAbscissae_[j] = ga[j];
   }
 }
 

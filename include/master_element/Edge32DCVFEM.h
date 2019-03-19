@@ -73,8 +73,6 @@ private:
   const double scsDist_ = std::sqrt(3.0)/3.0;
   const double scsEndLoc_[4] = { -1.0, -scsDist_, scsDist_, +1.0};
 
-  const double gaussAbscissaeShift_[numIntPoints_] = {-1.0, -1.0, 0.0, 0.0, +1.0, +1.0};
-
   const double intgLocShift_[numIntPoints_] = {
     -1.00,  -1.00,
      0.00,   0.00,
@@ -83,7 +81,8 @@ private:
   int ipNodeMap_[numIntPoints_];
   double intgLoc_[numIntPoints_];
   double ipWeight_[numIntPoints_];
-  double gaussWeight_[numIntPoints_];
+  double gaussWeight_[numQuad_];
+  double gaussAbscissae_[numQuad_];
 
 
   void set_quadrature_rule();
