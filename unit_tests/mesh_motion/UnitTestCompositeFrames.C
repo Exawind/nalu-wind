@@ -111,14 +111,15 @@ namespace {
   std::vector<double> eval_vel(
     const double time,
     const sierra::nalu::MotionBase::TransMatType& transMat,
-    double* xyz )
+    const double* mxyz,
+    const double* cxyz )
   {
     std::vector<double> vel(3,0.0);
 
     // perform rotation transformation
     sierra::nalu::MotionRotation rotClass(rotNode);
     sierra::nalu::MotionBase::ThreeDVecType motionVel =
-      rotClass.compute_velocity(time, transMat, xyz);
+      rotClass.compute_velocity(time, transMat, mxyz, cxyz);
 
     for (size_t d = 0; d < vel.size(); d++)
       vel[d] += motionVel[d];
@@ -130,7 +131,7 @@ namespace {
     if( (time >= (startTime-testTol)) && (time <= (endTime+testTol)) )
     {
       sierra::nalu::MotionTranslation transClass(transNode);
-      motionVel = transClass.compute_velocity(time, transMat, xyz);
+      motionVel = transClass.compute_velocity(time, transMat, mxyz, cxyz);
 
       for (size_t d = 0; d < vel.size(); d++)
         vel[d] += motionVel[d];
@@ -190,7 +191,7 @@ TEST(meshMotion, meshMotionAlg_initialize)
         eval_transformation(realm, currTime, oxyz);
 
       std::vector<double> gold_norm_xyz = eval_coords(transMat, oxyz);
-      std::vector<double> gold_norm_vel = eval_vel(currTime, transMat, &gold_norm_xyz[0]);
+      std::vector<double> gold_norm_vel = eval_vel(currTime, transMat, oxyz, &gold_norm_xyz[0]);
 
       EXPECT_NEAR(xyz[0], gold_norm_xyz[0], testTol);
       EXPECT_NEAR(xyz[1], gold_norm_xyz[1], testTol);
@@ -258,7 +259,7 @@ TEST(meshMotion, meshMotionAlg_execute)
         eval_transformation(realm,currTime, oxyz);
 
       std::vector<double> gold_norm_xyz = eval_coords(transMat, oxyz);
-      std::vector<double> gold_norm_vel = eval_vel(currTime, transMat, &gold_norm_xyz[0]);
+      std::vector<double> gold_norm_vel = eval_vel(currTime, transMat, oxyz, &gold_norm_xyz[0]);
 
       EXPECT_NEAR(xyz[0], gold_norm_xyz[0], testTol);
       EXPECT_NEAR(xyz[1], gold_norm_xyz[1], testTol);

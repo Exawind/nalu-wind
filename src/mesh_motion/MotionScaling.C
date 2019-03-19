@@ -108,20 +108,30 @@ void MotionScaling::scaling_mat(const ThreeDVecType& factor)
 
 MotionBase::ThreeDVecType MotionScaling::compute_velocity(
   const double time,
-  const TransMatType&  /* compTrans */,
-  const double* xyz )
+  const TransMatType& compTrans,
+  const double* mxyz,
+  const double* /* cxyz */ )
 {
   ThreeDVecType vel = {};
 
   if( (time < startTime_) || (time > endTime_) ) return vel;
 
+  // transform the origin of the scaling body
+  ThreeDVecType transOrigin = {};
+  for (int d = 0; d < threeDVecSize; d++) {
+    transOrigin[d] = compTrans[d][0]*origin_[0]
+                    +compTrans[d][1]*origin_[1]
+                    +compTrans[d][2]*origin_[2]
+                    +compTrans[d][3];
+  }
+
   for (int d=0; d < threeDVecSize; d++)
-    vel[d] = rate_[d] * (xyz[d]-origin_[d]);
+    vel[d] = rate_[d] * (mxyz[d]-transOrigin[d]);
 
   return vel;
 }
 
-void MotionScaling::post_work(
+void MotionScaling::post_compute_geometry(
   stk::mesh::BulkData& bulk,
   stk::mesh::PartVector& partVec,
   stk::mesh::PartVector& partVecBc,

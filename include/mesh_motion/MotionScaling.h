@@ -24,19 +24,21 @@ public:
    * @param[in] time           Current time
    * @param[in] compTrans      Transformation matrix
    *                           for points other than xyz
-   * @param[in] xyz            Transformed coordinates
+   * @param[in] mxyz           Model coordinates
+   * @param[in] mxyz           Transformed coordinates
    */
-  ThreeDVecType compute_velocity(
-    const double /* time */,
-    const TransMatType& /* compTrans */,
-    const double* /* xyz */);
+  virtual ThreeDVecType compute_velocity(
+    const double time,
+    const TransMatType& compTrans,
+    const double* mxyz,
+    const double* cxyz );
 
-  /** perform post work for this motion
+  /** perform post compute geometry work for this motion
    *
    * @param[in] computedMeshVelDiv flag to denote if divergence of
    *                               mesh velocity already computed
    */
-  void post_work(
+  void post_compute_geometry(
     stk::mesh::BulkData&,
     stk::mesh::PartVector&,
     stk::mesh::PartVector&,

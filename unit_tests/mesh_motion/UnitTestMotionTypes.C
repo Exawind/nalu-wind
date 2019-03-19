@@ -60,7 +60,7 @@ TEST(meshMotion, rotation_omega)
   EXPECT_NEAR(norm[2], gold_norm_z, testTol);
 
   sierra::nalu::MotionBase::ThreeDVecType vel =
-    rotClass.compute_velocity(time, rotClass.get_trans_mat(), &xyz[0]);
+    rotClass.compute_velocity(time, rotClass.get_trans_mat(), nullptr, &xyz[0]);
 
   const double gold_norm_vx = -3.0;
   const double gold_norm_vy =  6.6;
