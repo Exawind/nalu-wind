@@ -275,7 +275,7 @@ void
 WallDistEquationSystem::register_wall_bc(
   stk::mesh::Part* part,
   const stk::topology&,
-  const WallBoundaryConditionData&)
+  const WallBoundaryConditionData& wallBCData)
 {
   const AlgorithmType algType = WALL;
 
@@ -305,8 +305,14 @@ WallDistEquationSystem::register_wall_bc(
                              stk::topology::NODE_RANK);
   bcDataAlg_.push_back(auxAlg);
 
-  // Dirichlet BC
-  {
+  // For terrain BC, the wall distance calculations must not compute the
+  // distance normal to this wall, but must compute distance from the nearest
+  // turbine, so we will disable Dirichlet for the terrain walls.
+  WallUserData userData = wallBCData.userData_;
+  const bool ablWallFunctionActivated = userData.ablWallFunctionApproach_;
+
+  // Apply Dirichlet BC on non-ABL wall boundaries
+  if (!ablWallFunctionActivated) {
     auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
     if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
       DirichletBC* theAlg
