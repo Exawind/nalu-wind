@@ -405,7 +405,8 @@ RadiativeTransportEquationSystem::register_nodal_fields(
   iTmp_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "iTmp"));
   stk::mesh::put_field_on_mesh(*iTmp_, *part, nullptr);
 
-  dualNodalVolume_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume", numStates));
+  const int numVolStates = realm_.does_mesh_move ? realm_.number_of_states() : 1;
+  dualNodalVolume_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
   stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
   realm_.augment_restart_variable_list("dual_nodal_volume");
 
@@ -445,7 +446,7 @@ RadiativeTransportEquationSystem::register_nodal_fields(
     realm_.augment_property_map(SCATTERING_COEFF_ID, scatteringCoeff_);
   
   // make sure all states are properly populated (restart can handle this)
-  if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
+  if ( numVolStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
     ScalarFieldType &dualNdVolN = dualNodalVolume_->field_of_state(stk::mesh::StateN);
     ScalarFieldType &dualNdVolNp1 = dualNodalVolume_->field_of_state(stk::mesh::StateNP1);
 
