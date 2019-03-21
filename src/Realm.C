@@ -531,7 +531,8 @@ Realm::initialize()
 
   compute_geometry();
 
-  meshMotionAlg_->post_compute_geometry();
+  if ( solutionOptions_->meshMotion_ )
+    meshMotionAlg_->post_compute_geometry();
 
   if ( hasNonConformal_ )
     initialize_non_conformal();
