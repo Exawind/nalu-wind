@@ -314,7 +314,7 @@ LowMachEquationSystem::register_nodal_fields(
   const int numVolStates = realm_.does_mesh_move() ? realm_.number_of_states() : 1;
   dualNodalVolume_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
   stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
-  realm_.augment_restart_variable_list("dual_nodal_volume");
+  if (numVolStates > 1) realm_.augment_restart_variable_list("dual_nodal_volume");
 
   // make sure all states are properly populated (restart can handle this)
   if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
