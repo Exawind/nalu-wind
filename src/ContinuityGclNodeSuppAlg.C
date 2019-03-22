@@ -50,7 +50,7 @@ ContinuityGclNodeSuppAlg::ContinuityGclNodeSuppAlg(
   divV_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity");
 
   ScalarFieldType *dualNdVol = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
-  dualNdVolNm1_ = &(dualNdVol->field_of_state(stk::mesh::StateNM1));
+  dualNdVolNm1_ = realm_.number_of_states() == 2 ? &(dualNdVol->field_of_state(stk::mesh::StateN)) : &(dualNdVol->field_of_state(stk::mesh::StateNM1));
   dualNdVolN_ = &(dualNdVol->field_of_state(stk::mesh::StateN));
   dualNdVolNp1_ = &(dualNdVol->field_of_state(stk::mesh::StateNP1));
 }
