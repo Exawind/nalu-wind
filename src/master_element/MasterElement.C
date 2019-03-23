@@ -89,33 +89,22 @@ Edge2DSCS::Edge2DSCS()
   : MasterElement(),
     elemThickness_(0.01)
 {
-  nDim_ = 2;
-  nodesPerElement_ = 2;
-  numIntPoints_ = 2;
-  scaleToStandardIsoFac_ = 2.0;
-
-  // define ip node mappings; ordinal size = 1
-  ipNodeMap_.resize(2);
-  ipNodeMap_[0] = 0;
-  ipNodeMap_[1] = 1;
-
-  intgLoc_.resize(2);
-  intgLoc_[0]  =  -0.25; intgLoc_[1]  = 0.25;
- 
-  intgLocShift_.resize(2);
-  intgLocShift_[0]  =  -0.50; intgLocShift_[1]  = 0.50; 
-  
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
+  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
+  MasterElement::intgLoc_.assign(intgLoc_, 2+intgLoc_);
+  MasterElement::intgLocShift_.assign(intgLocShift_, 2+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
 const int *
-Edge2DSCS::ipNodeMap(
-  int /*ordinal*/)
+Edge2DSCS::ipNodeMap(int /*ordinal*/) const
 {
   // define ip->node mappings for each face (single ordinal); 
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 //--------------------------------------------------------------------------
@@ -129,8 +118,11 @@ void Edge2DSCS::determinant(
 {
   int lerr = 0;
 
+  const int npe = nodesPerElement_;
+  const int nint = numIntPoints_;
+
   SIERRA_FORTRAN(edge2d_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_,
+    ( &nelem, &npe, &nint,
       coords, areav );
 
   // fake check

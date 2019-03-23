@@ -42,7 +42,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~Quad42DSCV() = default;
 
-  const int * ipNodeMap(int ordinal = 0) override;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**> &coords,
@@ -122,7 +122,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~Quad42DSCS() = default;
 
-  const int * ipNodeMap(int ordinal = 0) override;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,

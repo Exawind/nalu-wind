@@ -99,6 +99,7 @@ protected:
   int numQuad_;
 
   //quadrature info
+  std::vector<int> ipNodeMap_;
   std::vector<int> lrscv_;
   std::vector<double> gaussAbscissae_;
   std::vector<double> gaussAbscissaeShift_;
@@ -147,7 +148,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~Quad92DSCV() {}
 
-  const int * ipNodeMap(int ordinal = 0) override ;
+  virtual const int * ipNodeMap(int ordinal = 0) const final ;
 
   void determinant(
     SharedMemView<DoubleType**> &coords,
@@ -278,7 +279,7 @@ public:
 
   virtual const int * adjacentNodes() final ;
 
-  const int * ipNodeMap(int ordinal = 0) override ;
+  virtual const int * ipNodeMap(int ordinal = 0) const final ;
 
   int opposingNodes(
     const int ordinal, const int node) override ;

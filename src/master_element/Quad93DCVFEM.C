@@ -88,7 +88,6 @@ Quad93DSCS::set_interior_info()
        }
      }
    }
-   MasterElement::ipNodeMap_.assign(ipNodeMap_, numIntPoints_+ipNodeMap_);
    MasterElement::intgLoc_.assign(intgLoc_, numIntPoints_*surfaceDimension_+intgLoc_); // size = 72
    MasterElement::intgLocShift_.assign(intgLocShift_, numIntPoints_*surfaceDimension_+intgLocShift_); // size = 72
 
@@ -299,7 +298,7 @@ Quad93DSCS::quad9_shape_deriv(
 //--------------------------------------------------------------------------
 const int *
 Quad93DSCS::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define ip->node mappings for each face (single ordinal);
   return ipNodeMap_;

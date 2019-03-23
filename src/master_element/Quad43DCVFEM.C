@@ -29,8 +29,6 @@ Quad3DSCS::Quad3DSCS()
   MasterElement::numIntPoints_ = numIntPoints_;
   MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
 
-  // define ip node mappings; ordinal size = 1
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, 4+ipNodeMap_);
   // standard integration location
   MasterElement::intgLoc_.assign(intgLoc_, 8+intgLoc_);    
   // shifted
@@ -42,7 +40,7 @@ Quad3DSCS::Quad3DSCS()
 //--------------------------------------------------------------------------
 const int *
 Quad3DSCS::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define ip->node mappings for each face (single ordinal); 
   return ipNodeMap_;

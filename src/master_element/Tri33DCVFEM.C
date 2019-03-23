@@ -33,29 +33,14 @@ KOKKOS_FUNCTION
 Tri3DSCS::Tri3DSCS()
   : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = 3;
-  numIntPoints_ = 3;
-
-  // define ip node mappings; ordinal size = 1
-  ipNodeMap_.resize(3);
-  ipNodeMap_[0] = 0;
-  ipNodeMap_[1] = 1;
-  ipNodeMap_[2] = 2;
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
 
   // standard integration location
-  intgLoc_.resize(6);
-  const double seven36ths = 7.0/36.0;
-  const double eleven18ths = 11.0/18.0;
-  intgLoc_[0]  = seven36ths;  intgLoc_[1] = seven36ths;  // surf 1
-  intgLoc_[2]  = eleven18ths; intgLoc_[3] = seven36ths;  // surf 2
-  intgLoc_[4]  = seven36ths;  intgLoc_[5] = eleven18ths; // surf 3
-
+  MasterElement::intgLoc_.assign(intgLoc_, 6+intgLoc_);
   // shifted
-  intgLocShift_.resize(6);
-  intgLocShift_[0]  =  0.00; intgLocShift_[1] =  0.00; // surf 1
-  intgLocShift_[2]  =  1.00; intgLocShift_[3] =  0.00; // surf 2
-  intgLocShift_[4]  =  0.00; intgLocShift_[5] =  1.00; // surf 3
+  MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -63,10 +48,10 @@ Tri3DSCS::Tri3DSCS()
 //--------------------------------------------------------------------------
 const int *
 Tri3DSCS::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define ip->node mappings for each face (single ordinal); 
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 //--------------------------------------------------------------------------
@@ -80,8 +65,10 @@ void Tri3DSCS::determinant(
 {
   int lerr = 0;
 
+  const int npe = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tri3d_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_,
+    ( &nelem, &npe, &nint,
       coords, areav );
 
   // fake check
@@ -111,7 +98,7 @@ Tri3DSCS::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 Tri3DSCS::tri_shape_fcn(
-  const int  &npts,
+  const int     npts,
   const double *isoParCoord,
   double *shape_fcn)
 {
