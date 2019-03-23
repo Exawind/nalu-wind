@@ -338,7 +338,7 @@ NonConformalInfo::construct_bounding_points()
       }
 
       // extract isoparametric coords on current face from meFC
-      const double *intgLoc = useShifted ? &meFC->intgLocShift_[0] : &meFC->intgLoc_[0];
+      const double *intgLoc = useShifted ? &meFC->intgLocShift_[0] : meFC->integration_locations();
       
       // copy these coordinates
       for ( int j = 0; j < nDim; ++j ) {

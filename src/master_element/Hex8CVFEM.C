@@ -27,7 +27,6 @@ namespace nalu{
 HexSCV::HexSCV()
   : MasterElement()
 {
-  MasterElement::intgLoc_         .assign(intgLoc_,         24+intgLoc_);
   MasterElement::intgLocShift_    .assign(intgLocShift_,    24+intgLocShift_);
   MasterElement::nDim_                  = nDim_;
   MasterElement::nodesPerElement_       = nodesPerElement_;
@@ -197,8 +196,6 @@ HexSCS::HexSCS() : MasterElement() {
   MasterElement::numIntPoints_          = numIntPoints_;
   MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
   MasterElement::nodeLoc_         .assign(&nodeLoc_[0][0],  24+&nodeLoc_[0][0]);
-  MasterElement::oppFace_         .assign(oppFace_,     24+oppFace_);
-  MasterElement::intgLoc_         .assign(intgLoc_,     36+intgLoc_);
   MasterElement::intgLocShift_    .assign(intgLocShift_,36+intgLocShift_);
   MasterElement::scsIpEdgeOrd_    .assign(scsIpEdgeOrd_,12+scsIpEdgeOrd_);
   MasterElement::intgExpFace_     .assign(&intgExpFace_[0][0][0],  72+&intgExpFace_[0][0][0]);

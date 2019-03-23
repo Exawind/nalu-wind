@@ -84,6 +84,11 @@ public:
     const double *par_coord,
     double* shape_fcn);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+
+
 private :
   const int nDim_ = AlgTraits::nDim_;
   const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
@@ -264,6 +269,9 @@ public:
 
   const int* side_node_ordinals(int sideOrdinal) final;
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
 private:
   const int nDim_ = AlgTraits::nDim_;
   const int nodesPerElement_ = AlgTraits::nodesPerElement_; 

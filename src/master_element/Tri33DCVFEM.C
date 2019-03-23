@@ -37,8 +37,6 @@ Tri3DSCS::Tri3DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // standard integration location
-  MasterElement::intgLoc_.assign(intgLoc_, 6+intgLoc_);
   // shifted
   MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
 }

@@ -74,6 +74,10 @@ public:
     const double *coords,
     double *normal);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+
   double parametric_distance(const std::vector<double> &x);
 
   const double elemThickness_;  

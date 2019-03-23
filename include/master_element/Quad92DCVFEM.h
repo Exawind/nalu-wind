@@ -86,10 +86,10 @@ protected:
     const double *side_pcoords,
     double *elem_pcoords);
 
-  void eval_shape_functions_at_ips();
+  void eval_shape_functions_at_ips(const double*);
   void eval_shape_functions_at_shifted_ips();
 
-  void eval_shape_derivs_at_ips();
+  void eval_shape_derivs_at_ips(const double*);
   void eval_shape_derivs_at_shifted_ips();
 
   void eval_shape_derivs_at_face_ips();
@@ -194,10 +194,15 @@ public:
     double *metric,
     double *deriv) override ;
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+
 private:
   static const int numIntPoints_ = AlgTraits::numScvIp_;
 
   int ipNodeMap_[nodes1D_][nodes1D_][numQuad_][numQuad_]; //[numIntPoints_];
+  double intgLoc_[numIntPoints_*nDim_];
 
   void set_interior_info();
 
@@ -307,6 +312,10 @@ public:
 
   const int* side_node_ordinals(int sideOrdinal) final;
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+
 private:
   std::vector<ContourData> ipInfo_;
 
@@ -316,6 +325,8 @@ private:
 
   int ipNodeMap_[numFaces_][nodes1D_][numQuad_]; //[numIntPoints_];
   int oppNode_  [numIntPoints_];
+  int oppFace_  [numIntPoints_];
+  double intgLoc_[numIntPoints_*nDim_];
 
   void set_interior_info();
   void set_boundary_info();

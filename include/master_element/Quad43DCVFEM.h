@@ -84,6 +84,10 @@ public:
   const double elemThickness_;
 
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+
 private:
 
   static const int nDim_ = AlgTraits::nDim_;

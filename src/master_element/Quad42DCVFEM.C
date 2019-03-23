@@ -112,8 +112,6 @@ Quad42DSCV::Quad42DSCV()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // standard integration location
-  MasterElement::intgLoc_.assign(intgLoc_, 8+intgLoc_);    
   // shifted integration location
   MasterElement::intgLocShift_.assign(intgLocShift_, 8+intgLocShift_);    
 }
@@ -320,10 +318,6 @@ Quad42DSCS::Quad42DSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,numIntPoints_+scsIpEdgeOrd_);
-  // define opposing face
-  MasterElement::oppFace_.assign(&oppFace_[0][0], 8+&oppFace_[0][0]);
-  // standard integration location
-  MasterElement::intgLoc_.assign(intgLoc_, 8+intgLoc_);    
   // shifted
   MasterElement::intgLocShift_.assign(intgLocShift_, 8+intgLocShift_);
   // exposed face

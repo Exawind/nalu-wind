@@ -81,6 +81,10 @@ public:
   }
 
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
   void set_interior_info();
 
@@ -95,6 +99,7 @@ private:
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> ipWeights_;
+  std::vector<double> intgLoc_;
   std::vector<int> ipNodeMap_;
 };
 
@@ -183,6 +188,10 @@ public:
     SharedMemView<DoubleType**>& coords,
     SharedMemView<DoubleType***>& gradop) final;
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
   std::vector<int> lrscv_;
   std::vector<int> oppNode_;
@@ -204,8 +213,10 @@ private:
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> expFaceShapeDerivs_;
+  std::vector<double> intgLoc_;
   std::vector<ContourData> ipInfo_;
   std::vector<int> ipNodeMap_;
+  std::vector<int> oppFace_;
   int ipsPerFace_;
 
   AlignedViewType<DoubleType**[3]> expRefGradWeights_;
@@ -249,6 +260,10 @@ public:
     return ipWeights_;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
   void set_interior_info();
   void eval_shape_functions_at_ips();
@@ -266,6 +281,7 @@ private:
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> ipWeights_;
+  std::vector<double> intgLoc_;
   std::vector<int> ipNodeMap_;
   int surfaceDimension_;
 };
@@ -315,6 +331,10 @@ public:
     return ipWeights_;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
   void set_interior_info();
 
@@ -329,6 +349,7 @@ private:
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> ipWeights_;
+  std::vector<double> intgLoc_;
   std::vector<int> ipNodeMap_;
 };
 class HigherOrderQuad2DSCS final: public MasterElement
@@ -412,6 +433,10 @@ public:
     return shapeDerivs_;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
   std::vector<int> lrscv_;
 
@@ -431,11 +456,13 @@ private:
   std::vector<int> sideNodeOrdinals_;
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
+  std::vector<double> intgLoc_;
   std::vector<ContourData> ipInfo_;
   std::vector<int> ipNodeMap_;
   int ipsPerFace_;
   std::vector<double> expFaceShapeDerivs_;
   std::vector<int> oppNode_;
+  std::vector<int> oppFace_;
 };
 
 class HigherOrderEdge2DSCS final: public MasterElement
@@ -475,6 +502,10 @@ public:
     return ipWeights_;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
   void area_vector(
     const double* POINTER_RESTRICT elemNodalCoords,
@@ -488,6 +519,7 @@ private:
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> ipWeights_;
+  std::vector<double> intgLoc_;
   std::vector<int> ipNodeMap_;
 };
 

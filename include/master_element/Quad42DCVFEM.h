@@ -80,6 +80,10 @@ public:
   void shifted_shape_fcn(
     double *shpfc) override ;
   
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+
 private:
    static constexpr int nDim_ = AlgTraits::nDim_;
    static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
@@ -255,6 +259,10 @@ public:
     double *elem_pcoords) override;
 
   const int* side_node_ordinals(int sideOrdinal) final;
+
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
 
 private :
 
