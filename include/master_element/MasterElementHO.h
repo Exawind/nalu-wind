@@ -185,6 +185,7 @@ public:
 
 private:
   std::vector<int> lrscv_;
+  std::vector<int> oppNode_;
 
   void set_interior_info();
   void set_boundary_info();
@@ -434,6 +435,7 @@ private:
   std::vector<int> ipNodeMap_;
   int ipsPerFace_;
   std::vector<double> expFaceShapeDerivs_;
+  std::vector<int> oppNode_;
 };
 
 class HigherOrderEdge2DSCS final: public MasterElement

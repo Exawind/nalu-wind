@@ -346,8 +346,6 @@ Tri32DSCS::Tri32DSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, 3+scsIpEdgeOrd_);
-  // define opposing node
-  MasterElement::oppNode_.assign(&oppNode_[0][0], 6+&oppNode_[0][0]);
   // define opposing face
   MasterElement::oppFace_.assign(&oppFace_[0][0], 6+&oppFace_[0][0]);
   // standard integration location

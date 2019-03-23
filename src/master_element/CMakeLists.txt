@@ -23,4 +23,5 @@ add_sources(GlobalSourceList
    Tri33DCVFEM.C
    Wed6CVFEM.C
    Edge32DCVFEM.C
+   Edge22DCVFEM.C
 )

@@ -38,24 +38,10 @@ namespace nalu{
 //-------- constructor------------------------------------------------------
 //--------------------------------------------------------------------------
 QuadrilateralP2Element::QuadrilateralP2Element()
-  : MasterElement(),
-    scsDist_(std::sqrt(3.0)/3.0),
-    nodes1D_(3),
-    numQuad_(2)
+  : MasterElement()
 {
-  ndim(AlgTraits::nDim_);
-  nodesPerElement_ = nodes1D_ * nodes1D_;
-
-  // map the standard stk (refinement consistent) node numbering
-  // to a tensor-product style node numbering (i.e. node (m,l,k) -> m+npe*l+npe^2*k)
-  stkNodeMap_ = { 
-                  0, 4, 1, // bottom row of nodes
-                  7, 8, 5, // middle row of nodes
-                  3, 6, 2  // top row of nodes
-                };
-
-  // a padded list of scs locations
-  scsEndLoc_ = { -1.0, -scsDist_, scsDist_, +1.0 };
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
 }
 
 //--------------------------------------------------------------------------
@@ -64,11 +50,11 @@ QuadrilateralP2Element::QuadrilateralP2Element()
 void
 QuadrilateralP2Element::set_quadrature_rule()
 {
-  gaussAbscissaeShift_ = {-1.0,-1.0,0.0,0.0,+1.0,+1.0};
-  std::tie(gaussAbscissae_, gaussWeight_) = gauss_legendre_rule(numQuad_);
-  for (unsigned j = 0; j < gaussWeight_.size(); ++j) {
-    gaussWeight_[j] *= 0.5;
-  }
+  std::vector<double> ga, gw;
+  std::tie(ga, gw) = gauss_legendre_rule(numQuad_);
+
+  for (unsigned j = 0; j < numQuad_; ++j) gaussAbscissae_[j] =     ga[j];
+  for (unsigned j = 0; j < numQuad_; ++j) gaussWeight_   [j] = 0.5*gw[j];
 }
 
 //--------------------------------------------------------------------------
@@ -77,7 +63,7 @@ QuadrilateralP2Element::set_quadrature_rule()
 int
 QuadrilateralP2Element::tensor_product_node_map(int i, int j) const
 {
-   return stkNodeMap_[i+nodes1D_*j];
+   return stkNodeMap_[j][i];
 }
 
 //--------------------------------------------------------------------------
@@ -100,7 +86,7 @@ QuadrilateralP2Element::shifted_gauss_point_location(
   int nodeOrdinal,
   int gaussPointOrdinal) const
 {
-  return gaussAbscissaeShift_[nodeOrdinal*numQuad_ + gaussPointOrdinal];
+  return gaussAbscissaeShift_[nodeOrdinal][gaussPointOrdinal];
 }
 //--------------------------------------------------------------------------
 //-------- tensor_product_weight -------------------------------------------
@@ -487,6 +473,7 @@ void quad_gradient_operator(SharedMemView<DoubleType** >& coords,
 Quad92DSCV::Quad92DSCV()
 : QuadrilateralP2Element()
 {
+  MasterElement::numIntPoints_ = numIntPoints_;
   // set up the one-dimensional quadrature rule
   set_quadrature_rule();
 
@@ -507,11 +494,7 @@ Quad92DSCV::Quad92DSCV()
 void
 Quad92DSCV::set_interior_info()
 {
-  //1D integration rule per sub-control volume
-  numIntPoints_ = (nodes1D_ * nodes1D_) * ( numQuad_ * numQuad_ ); // 36
-
   // define ip node mappings
-  ipNodeMap_.resize(numIntPoints_);
   intgLoc_.resize(numIntPoints_*nDim_); // size = 72
   intgLocShift_.resize(numIntPoints_*nDim_); // size = 72
   ipWeight_.resize(numIntPoints_);
@@ -535,7 +518,7 @@ Quad92DSCV::set_interior_info()
           ipWeight_[scalar_index] = tensor_product_weight(k,l,i,j);
 
           //sub-control volume association
-          ipNodeMap_[scalar_index] = nodeNumber;
+          ipNodeMap_[l][k][j][i] = nodeNumber;
 
           // increment indices
           ++scalar_index;
@@ -554,7 +537,7 @@ Quad92DSCV::ipNodeMap(
   int /*ordinal*/) const
 {
  // define scv->node mappings
- return &ipNodeMap_[0];
+ return &ipNodeMap_[0][0][0][0];
 }
 
 //--------------------------------------------------------------------------
@@ -719,6 +702,7 @@ void Quad92DSCV::Mij(
 Quad92DSCS::Quad92DSCS()
   : QuadrilateralP2Element()
 {
+  MasterElement::numIntPoints_ = numIntPoints_;
   // set up the one-dimensional quadrature rule
   set_quadrature_rule();
 
@@ -744,10 +728,6 @@ void
 Quad92DSCS::set_interior_info()
 {
   const int linesPerDirection = nodes1D_ - 1; // 2
-  const int ipsPerLine = numQuad_ * nodes1D_;
-  const int numLines = linesPerDirection * nDim_;
-
-  numIntPoints_ = numLines * ipsPerLine; // 24
 
   // define L/R mappings
   lrscv_.resize(2*numIntPoints_); // size = 48
@@ -854,16 +834,8 @@ Quad92DSCS::set_interior_info()
 void
 Quad92DSCS::set_boundary_info()
 {
-  const int numFaces = 2*nDim_;
-  const int nodesPerFace = nodes1D_;
-  ipsPerFace_ = nodesPerFace*numQuad_;
-
-  const int numFaceIps = numFaces*ipsPerFace_; // 24 -- different from numIntPoints_ for p > 2 ?
-
-  oppFace_.resize(numFaceIps);
-  ipNodeMap_.resize(numFaceIps);
-  oppNode_.resize(numFaceIps);
-  intgExpFace_.resize(numFaceIps*nDim_);
+  oppFace_.resize(numIntPoints_);
+  intgExpFace_.resize(numIntPoints_*nDim_);
 
   const std::vector<int> stkFaceNodeMap = {
                                             0, 4, 1, //face 0, bottom face
@@ -888,7 +860,7 @@ Quad92DSCS::set_boundary_info()
     int oppNode = tensor_product_node_map(k,1);
 
     for (int j = 0; j < numQuad_; ++j) {
-      ipNodeMap_[scalar_index] = nearNode;
+      ipNodeMap_[0][k][j] = nearNode;
       oppNode_[scalar_index] = oppNode;
       oppFace_[scalar_index] = oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
 
@@ -908,7 +880,7 @@ Quad92DSCS::set_boundary_info()
     int oppNode = tensor_product_node_map(1,k);
 
     for (int j = 0; j < numQuad_; ++j) {
-      ipNodeMap_[scalar_index] = nearNode;
+      ipNodeMap_[1][k][j] = nearNode;
       oppNode_[scalar_index] = oppNode;
       oppFace_[scalar_index] = oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
 
@@ -929,7 +901,7 @@ Quad92DSCS::set_boundary_info()
     const int nearNode = face_node_number(nodes1D_-k-1,faceOrdinal);
     int oppNode = tensor_product_node_map(k,1);
     for (int j = 0; j < numQuad_; ++j) {
-      ipNodeMap_[scalar_index] = nearNode;
+      ipNodeMap_[2][k][j] = nearNode;
       oppNode_[scalar_index] = oppNode;
       oppFace_[scalar_index] = (ipsPerFace_-1) - oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
 
@@ -949,7 +921,7 @@ Quad92DSCS::set_boundary_info()
     const int nearNode = face_node_number(nodes1D_-k-1,faceOrdinal);
     int oppNode = tensor_product_node_map(1,k);
     for (int j = 0; j < numQuad_; ++j) {
-      ipNodeMap_[scalar_index] = nearNode;
+      ipNodeMap_[2][k][j] = nearNode;
       oppNode_[scalar_index] = oppNode;
       oppFace_[scalar_index] = (ipsPerFace_-1) - oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
 
@@ -972,7 +944,7 @@ Quad92DSCS::ipNodeMap(
   int ordinal) const
 {
   // define ip->node mappings for each face (ordinal); 
-  return &ipNodeMap_[ordinal*ipsPerFace_];
+  return &ipNodeMap_[ordinal][0][0];
 }
 
 //--------------------------------------------------------------------------
@@ -1100,10 +1072,12 @@ void Quad92DSCS::grad_op(
     deriv[j] = shapeDerivs_[j];
   }
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(quad_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -1144,10 +1118,12 @@ void Quad92DSCS::shifted_grad_op(
     deriv[j] = shapeDerivsShift_[j];
   }
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(quad_gradient_operator)
   ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -1196,9 +1172,10 @@ void Quad92DSCS::face_grad_op(
   for (int ip = 0; ip < ipsPerFace_; ++ip) {
     const int grad_offset = nDim_ * nodesPerElement_ * ip;
 
+    const int npe  = AlgTraits::nodesPerElement_;
     SIERRA_FORTRAN(quad_gradient_operator)
     ( & nface,
-        &nodesPerElement_,
+        &npe,
         &nface,
         &offsetFaceDerivs[grad_offset],
         coords,
@@ -1270,9 +1247,11 @@ void Quad92DSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(twod_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
