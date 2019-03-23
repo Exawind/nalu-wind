@@ -261,8 +261,8 @@ public:
     throw std::runtime_error("sidePcoords_to_elemPcoords");}
 
   double isoparametric_mapping(const double b, const double a, const double xi) const;
-  bool within_tolerance(const double & val, const double & tol);
-  double vector_norm_sq(const double * vect, int len);
+  bool within_tolerance(const double & val, const double & tol) const;
+  double vector_norm_sq(const double * vect, int len) const;
 
   virtual int ndim() const {return nDim_;} 
   virtual void ndim(const int n) {nDim_=n;} 
@@ -278,8 +278,8 @@ public:
 
   virtual const int *adjacentNodes() const {throw std::runtime_error("adjacentNodes");} 
 
-  virtual const std::vector<int>& opposing_nodes() const {return oppNode_;} 
-  virtual void opposing_nodes(const std::vector<int>& v) {oppNode_=v;} 
+  //virtual const std::vector<int>& opposing_nodes() const {return oppNode_;} 
+  //virtual void opposing_nodes(const std::vector<int>& v) {oppNode_=v;} 
 
   virtual const std::vector<int>& opposing_face() const {return oppFace_;} 
   virtual void opposing_face(const std::vector<int>& v) {oppFace_=v;} 
@@ -317,7 +317,7 @@ public:
   int numIntPoints_;
   double scaleToStandardIsoFac_;
 
-  std::vector<int> oppNode_;
+  //std::vector<int> oppNode_;
   std::vector<int> oppFace_;
   std::vector<double> intgLoc_;
   std::vector<double> intgLocShift_;
@@ -329,69 +329,6 @@ public:
 
   // FEM
   std::vector<double>weights_;
-
-};
-
-// edge 2d
-class Edge2DSCS : public MasterElement
-{
-public:
-  KOKKOS_FUNCTION
-  Edge2DSCS();
-  KOKKOS_FUNCTION
-  virtual ~Edge2DSCS() = default;
-  using AlgTraits = AlgTraitsEdge_2D;
-  using MasterElement::determinant;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
-
-  virtual const int * ipNodeMap(int ordinal = 0) const final;
-
-  void determinant(
-    const int nelem,
-    const double *coords,
-    double *areav,
-    double * error );
-
-  void shape_fcn(
-    double *shpfc);
-
-  void shifted_shape_fcn(
-    double *shpfc);
-
-  double isInElement(
-    const double *elemNodalCoord,
-    const double *pointCoord,
-    double *isoParCoord);
-  
-  void interpolatePoint(
-    const int &nComp,
-    const double *isoParCoord,
-    const double *field,
-    double *result);
-
-  void general_shape_fcn(
-    const int numIp,
-    const double *isoParCoord,
-    double *shpfc);
-
-  void general_normal(
-    const double *isoParCoord,
-    const double *coords,
-    double *normal);
-
-  double parametric_distance(const std::vector<double> &x);
-
-  const double elemThickness_;  
-
-private :
-  static constexpr int nDim_ = AlgTraits::nDim_;
-  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
-  static constexpr int numIntPoints_ = AlgTraits::numScsIp_;
-  static constexpr double scaleToStandardIsoFac_ = 2.0;
-  const int ipNodeMap_[2] = {0,1};
-  const double intgLoc_[2] = {-0.25, 0.25};
-  const double intgLocShift_[2] = {-0.50, 0.50};
 
 };
 

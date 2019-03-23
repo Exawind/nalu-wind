@@ -549,7 +549,6 @@ PyrSCS::PyrSCS()
   MasterElement::numIntPoints_ = numIntPoints_;
 
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, scsIpEdgeOrd_+AlgTraits::numScsIp_);
-  MasterElement::oppNode_.assign(oppNode_, oppNode_+20);
   MasterElement::oppFace_.assign(oppFace_, oppFace_+20);
 
   MasterElement::intgLoc_.assign(intgLoc_, intgLoc_+36);

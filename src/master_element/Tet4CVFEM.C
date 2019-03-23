@@ -293,7 +293,6 @@ TetSCS::TetSCS()
   MasterElement::numIntPoints_ = numIntPoints_;
 
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,  numIntPoints_+scsIpEdgeOrd_);
-  MasterElement::oppNode_.assign(&oppNode_[0][0], 12+&oppNode_[0][0]);
   MasterElement::oppFace_.assign(&oppFace_[0][0], 12+&oppFace_[0][0]);
 
   MasterElement::intgLoc_.assign(intgLoc_,  18+intgLoc_);

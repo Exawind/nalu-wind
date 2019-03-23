@@ -308,8 +308,6 @@ WedSCS::WedSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, numIntPoints_+scsIpEdgeOrd_); 
-  // define opposing node
-  MasterElement::oppNode_.assign(oppNode_, 20+oppNode_);
   // define opposing face
   MasterElement::oppFace_.assign(oppFace_, 20+oppFace_);
   MasterElement::intgLoc_.assign(intgLoc_, 27+intgLoc_);

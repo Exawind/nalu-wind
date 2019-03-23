@@ -19,6 +19,7 @@
 #include "master_element/Quad93DCVFEM.h"
 #include "master_element/Tri32DCVFEM.h"
 #include "master_element/Edge32DCVFEM.h"
+#include "master_element/Edge22DCVFEM.h"
 #include "master_element/Tri33DCVFEM.h"
 #include "master_element/MasterElementHO.h"
 

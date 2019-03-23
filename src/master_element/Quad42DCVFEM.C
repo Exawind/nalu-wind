@@ -320,8 +320,6 @@ Quad42DSCS::Quad42DSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,numIntPoints_+scsIpEdgeOrd_);
-  // define opposing node
-  MasterElement::oppNode_.assign(&oppNode_[0][0], 8+&oppNode_[0][0]);
   // define opposing face
   MasterElement::oppFace_.assign(&oppFace_[0][0], 8+&oppFace_[0][0]);
   // standard integration location

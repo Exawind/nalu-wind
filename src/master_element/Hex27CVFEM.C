@@ -1187,7 +1187,6 @@ Hex27SCS::set_boundary_info()
   }
   MasterElement::intgExpFace_.assign(intgExpFace_, numFaceIps_*nDim_+intgExpFace_);
   MasterElement::oppFace_.assign(oppFace_, numFaceIps_+oppFace_);
-  MasterElement::oppNode_.assign(oppNode_,numFaceIps_+oppNode_);
 }
 
 //--------------------------------------------------------------------------

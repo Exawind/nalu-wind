@@ -196,7 +196,6 @@ HexSCS::HexSCS() : MasterElement() {
   MasterElement::nodesPerElement_       = nodesPerElement_;
   MasterElement::numIntPoints_          = numIntPoints_;
   MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
-  MasterElement::oppNode_         .assign(oppNode_,     24+oppNode_);
   MasterElement::nodeLoc_         .assign(&nodeLoc_[0][0],  24+&nodeLoc_[0][0]);
   MasterElement::oppFace_         .assign(oppFace_,     24+oppFace_);
   MasterElement::intgLoc_         .assign(intgLoc_,     36+intgLoc_);
