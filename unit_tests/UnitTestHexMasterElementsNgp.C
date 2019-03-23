@@ -153,7 +153,7 @@ void check_interpolation(
 
   std::vector<double> polyResult(num_int_pt);
   for (int j = 0; j < num_int_pt; ++j) {
-    polyResult[j] = poly_val<dim,poly_order>(coeffs, &me->intgLoc_[j*dim]);
+    polyResult[j] = poly_val<dim,poly_order>(coeffs, &me->integration_locations()[j*dim]);
   }
 
   const auto* const coordField = bulk.mesh_meta_data().coordinate_field();
@@ -250,7 +250,7 @@ void check_derivatives(
   std::array<std::array<double,dim>,num_int_pt> polyResult;
   for (int j = 0; j < num_int_pt; ++j) {
     for (unsigned d = 0; d < dim; ++d) {
-      polyResult[j][d] = poly_der<dim,poly_order>(coeffs, &me->intgLoc_[j*dim], d);
+      polyResult[j][d] = poly_der<dim,poly_order>(coeffs, &me->integration_locations()[j*dim], d);
     }
   }
 

@@ -106,8 +106,6 @@ Tri32DSCV::Tri32DSCV()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_    = numIntPoints_;
 
-  // define ip node mappings
-  MasterElement::intgLoc_.assign     (intgLoc_,      6+intgLoc_);
   MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
 }
 
@@ -346,10 +344,6 @@ Tri32DSCS::Tri32DSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, 3+scsIpEdgeOrd_);
-  // define opposing face
-  MasterElement::oppFace_.assign(&oppFace_[0][0], 6+&oppFace_[0][0]);
-  // standard integration location
-  MasterElement::intgLoc_.assign(intgLoc_, 6+intgLoc_);
   // shifted
   MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
   // exposed face

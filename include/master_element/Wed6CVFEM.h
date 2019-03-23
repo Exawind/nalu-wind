@@ -73,6 +73,11 @@ public:
     const int &npts,
     const double *par_coord,
     double* shape_fcn);
+
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+
 private:
   const int nDim_ = AlgTraits::nDim_;
   const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
@@ -265,6 +270,10 @@ public:
   double parametric_distance( const std::array<double,3> &x);
 
   const int* side_node_ordinals(int sideOrdinal) final;
+
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
 private:
   const int nDim_ = AlgTraits::nDim_;
   const int nodesPerElement_ = AlgTraits::nodesPerElement_; 

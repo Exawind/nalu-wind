@@ -64,6 +64,9 @@ public:
     const double *field,
     double *result);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
 private:
   static constexpr int nDim_ = AlgTraits::nDim_;
   static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;

@@ -273,19 +273,14 @@ public:
   virtual int num_integration_points() const {return numIntPoints_;} 
   virtual void num_integration_points(const int n) {numIntPoints_=n;} 
 
+  virtual const double* integration_locations() const { 
+   throw std::runtime_error("integration_locations not implemented");
+  }
+
   virtual double scal_to_standard_iso_factor() const {return scaleToStandardIsoFac_;} 
   virtual void scal_to_standard_iso_factor(const double n) {scaleToStandardIsoFac_=n;} 
 
   virtual const int *adjacentNodes() const {throw std::runtime_error("adjacentNodes");} 
-
-  //virtual const std::vector<int>& opposing_nodes() const {return oppNode_;} 
-  //virtual void opposing_nodes(const std::vector<int>& v) {oppNode_=v;} 
-
-  virtual const std::vector<int>& opposing_face() const {return oppFace_;} 
-  virtual void opposing_face(const std::vector<int>& v) {oppFace_=v;} 
-
-  virtual const std::vector<double>& integration_locations() const {return intgLoc_;} 
-  virtual void integration_locations(const std::vector<double>& v) {intgLoc_=v;} 
 
   virtual const std::vector<double>& integration_location_shift() const {return intgLocShift_;} 
   virtual void integration_location_shift(const std::vector<double>& v) {intgLocShift_=v;} 
@@ -317,9 +312,6 @@ public:
   int numIntPoints_;
   double scaleToStandardIsoFac_;
 
-  //std::vector<int> oppNode_;
-  std::vector<int> oppFace_;
-  std::vector<double> intgLoc_;
   std::vector<double> intgLocShift_;
   std::vector<double> intgExpFace_;
   std::vector<double> intgExpFaceShift_;

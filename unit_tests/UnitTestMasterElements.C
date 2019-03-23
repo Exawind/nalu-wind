@@ -74,7 +74,7 @@ void check_interpolation_at_ips(
   rng.seed(0);
   auto linField = make_random_linear_field(dim,rng);
 
-  const auto& intgLoc = me.intgLoc_;
+  const auto& intgLoc = me.integration_locations();
   std::vector<double> polyResult(me.numIntPoints_);
   for (int j = 0; j < me.numIntPoints_; ++j) {
     polyResult[j] = linField(&intgLoc[j*dim]);

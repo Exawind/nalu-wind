@@ -111,6 +111,9 @@ public:
   void shifted_shape_fcn(
     double *shpfc);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
 
   const int nDim_ = 3;
   const int nodesPerElement_ = 8;
@@ -323,6 +326,10 @@ public:
   using MasterElement::side_node_ordinals;
 
   double parametric_distance(const std::array<double,3> &x);
+
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
 
   const int nDim_            = 3;
   const int nodesPerElement_ = 8;

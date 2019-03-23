@@ -68,8 +68,6 @@ WedSCV::WedSCV()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // standard integration location
-  MasterElement::intgLoc_.assign(intgLoc_, 18+intgLoc_);
   // shifted
   MasterElement::intgLocShift_.assign(intgLocShift_, 18+intgLocShift_);
 }
@@ -308,9 +306,6 @@ WedSCS::WedSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, numIntPoints_+scsIpEdgeOrd_); 
-  // define opposing face
-  MasterElement::oppFace_.assign(oppFace_, 20+oppFace_);
-  MasterElement::intgLoc_.assign(intgLoc_, 27+intgLoc_);
   // shifted
   MasterElement::intgLocShift_.assign(intgLocShift_, 27+intgLocShift_);
   // exposed face

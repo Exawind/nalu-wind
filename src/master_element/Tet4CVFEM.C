@@ -65,7 +65,6 @@ TetSCV::TetSCV()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  MasterElement::intgLoc_.assign(&intgLoc_[0][0],           12+&intgLoc_[0][0]);
   MasterElement::intgLocShift_.assign(&intgLocShift_[0][0], 12+&intgLocShift_[0][0]);
 }
 
@@ -293,9 +292,7 @@ TetSCS::TetSCS()
   MasterElement::numIntPoints_ = numIntPoints_;
 
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,  numIntPoints_+scsIpEdgeOrd_);
-  MasterElement::oppFace_.assign(&oppFace_[0][0], 12+&oppFace_[0][0]);
 
-  MasterElement::intgLoc_.assign(intgLoc_,  18+intgLoc_);
   MasterElement::intgLocShift_.assign(intgLocShift_,  18+intgLocShift_);
 
   MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 36+&intgExpFace_[0][0][0]);

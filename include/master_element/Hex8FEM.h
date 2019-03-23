@@ -89,6 +89,10 @@ public:
     double *glowerij,
     double *deriv);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+
   // weights; -1:1
   double weights_[8] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
 

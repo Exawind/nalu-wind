@@ -109,6 +109,9 @@ public:
     return referenceGradWeights;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
 
   static const int nDim_       = AlgTraits::nDim_;
   static const int numIntPoints_ = AlgTraits::numScsIp_; // = AlgTraits::numScvIp_

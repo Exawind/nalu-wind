@@ -638,7 +638,6 @@ Hex27SCV::set_interior_info()
     }
   }
   MasterElement::intgLocShift_.assign(intgLocShift_, numIntPoints_*nDim_+intgLocShift_);
-  MasterElement::intgLoc_.assign(intgLoc_, numIntPoints_*nDim_+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -971,7 +970,6 @@ Hex27SCS::set_interior_info()
     }
   }
   MasterElement::intgLocShift_.assign(intgLocShift_, numIntPoints_*nDim_+intgLocShift_);
-  MasterElement::intgLoc_.assign(intgLoc_, numIntPoints_*nDim_+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -1186,7 +1184,6 @@ Hex27SCS::set_boundary_info()
     }
   }
   MasterElement::intgExpFace_.assign(intgExpFace_, numFaceIps_*nDim_+intgExpFace_);
-  MasterElement::oppFace_.assign(oppFace_, numFaceIps_+oppFace_);
 }
 
 //--------------------------------------------------------------------------

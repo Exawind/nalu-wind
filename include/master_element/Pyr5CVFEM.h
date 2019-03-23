@@ -96,6 +96,10 @@ public:
     const double *par_coord, 
     double* shape_fcn);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+
 private:
   const int nDim_ = AlgTraits::nDim_;
   const int nodesPerElement_ = AlgTraits::nodesPerElement_;

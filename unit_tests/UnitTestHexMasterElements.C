@@ -126,7 +126,7 @@ void check_interpolation(
 
   std::vector<double> polyResult(me.numIntPoints_);
   for (int j = 0; j < me.numIntPoints_; ++j) {
-    polyResult[j] = poly_val(coeffs, &me.intgLoc_[j*dim]);
+    polyResult[j] = poly_val(coeffs, &me.integration_locations()[j*dim]);
   }
 
   const auto* nodes = bulk.begin_nodes(elem);
@@ -186,7 +186,7 @@ void check_derivatives(
   std::vector<double> polyResult(me.numIntPoints_ * dim);
   for (int j = 0; j < me.numIntPoints_; ++j) {
     for (unsigned d = 0; d < dim; ++d) {
-      polyResult[j*dim+d] = poly_der(coeffs, &me.intgLoc_[j*dim], d);
+      polyResult[j*dim+d] = poly_der(coeffs, &me.integration_locations()[j*dim], d);
     }
   }
 

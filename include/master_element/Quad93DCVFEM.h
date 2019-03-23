@@ -76,6 +76,10 @@ public:
   using MasterElement::num_integration_points;
   int num_integration_points() const {return numIntPoints_;}
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+
 private:
   static const int nDim_       = AlgTraits::nDim_;  
   static const int nodesPerElement_ = AlgTraits::nodesPerElement_;

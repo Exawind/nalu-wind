@@ -45,7 +45,6 @@ Edge2DSCS::Edge2DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
   MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
-  MasterElement::intgLoc_.assign(intgLoc_, 2+intgLoc_);
   MasterElement::intgLocShift_.assign(intgLocShift_, 2+intgLocShift_);
 }
 

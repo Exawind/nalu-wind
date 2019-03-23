@@ -132,7 +132,6 @@ PyrSCV::PyrSCV()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_; 
 
-  MasterElement::intgLoc_.assign(intgLoc_, intgLoc_+15);
   MasterElement::intgLocShift_.assign(intgLocShift_, intgLocShift_+15);
 }
 
@@ -549,9 +548,7 @@ PyrSCS::PyrSCS()
   MasterElement::numIntPoints_ = numIntPoints_;
 
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, scsIpEdgeOrd_+AlgTraits::numScsIp_);
-  MasterElement::oppFace_.assign(oppFace_, oppFace_+20);
 
-  MasterElement::intgLoc_.assign(intgLoc_, intgLoc_+36);
   MasterElement::intgLocShift_.assign(intgLocShift_, intgLocShift_+36);
 
   MasterElement::intgExpFace_.assign(intgExpFace_, intgExpFace_+48);

@@ -142,20 +142,20 @@ QuadrilateralP2Element::shifted_shape_fcn(double* shpfc)
 //-------- eval_shape_functions_at_ips -------------------------------------
 //--------------------------------------------------------------------------
 void
-QuadrilateralP2Element::eval_shape_functions_at_ips()
+QuadrilateralP2Element::eval_shape_functions_at_ips(const double *intgloc)
 {
   shapeFunctions_.resize(numIntPoints_*nodesPerElement_);
-  quad9_shape_fcn(numIntPoints_, intgLoc_.data(), shapeFunctions_.data());
+  quad9_shape_fcn(numIntPoints_, intgloc, shapeFunctions_.data());
 }
 
 //--------------------------------------------------------------------------
 //-------- eval_shape_derivs_at_ips ----------------------------------------
 //--------------------------------------------------------------------------
 void
-QuadrilateralP2Element::eval_shape_derivs_at_ips()
+QuadrilateralP2Element::eval_shape_derivs_at_ips(const double *intgloc)
 {
   shapeDerivs_.resize(numIntPoints_*nodesPerElement_*nDim_);
-  quad9_shape_deriv(numIntPoints_, intgLoc_.data(), shapeDerivs_.data());
+  quad9_shape_deriv(numIntPoints_, intgloc, shapeDerivs_.data());
 }
 
 //--------------------------------------------------------------------------
@@ -170,7 +170,7 @@ QuadrilateralP2Element::eval_shape_functions_at_shifted_ips()
 
 
 //--------------------------------------------------------------------------
-//-------- eval_shape_derivs_at_ips ----------------------------------------
+//-------- eval_shape_derivs_at_shifted_ips ----------------------------------------
 //--------------------------------------------------------------------------
 void
 QuadrilateralP2Element::eval_shape_derivs_at_shifted_ips()
@@ -481,8 +481,8 @@ Quad92DSCV::Quad92DSCV()
   set_interior_info();
 
   // compute and save shape functions and derivatives at ips
-  eval_shape_functions_at_ips();
-  eval_shape_derivs_at_ips();
+  eval_shape_functions_at_ips(intgLoc_);
+  eval_shape_derivs_at_ips(intgLoc_);
 
   eval_shape_functions_at_shifted_ips();
   eval_shape_derivs_at_shifted_ips();
@@ -495,7 +495,6 @@ void
 Quad92DSCV::set_interior_info()
 {
   // define ip node mappings
-  intgLoc_.resize(numIntPoints_*nDim_); // size = 72
   intgLocShift_.resize(numIntPoints_*nDim_); // size = 72
   ipWeight_.resize(numIntPoints_);
 
@@ -713,8 +712,8 @@ Quad92DSCS::Quad92DSCS()
   set_boundary_info();
 
   // compute and save shape functions and derivatives at ips
-  eval_shape_functions_at_ips();
-  eval_shape_derivs_at_ips();
+  eval_shape_functions_at_ips(intgLoc_);
+  eval_shape_derivs_at_ips(intgLoc_);
   eval_shape_derivs_at_face_ips();
 
   eval_shape_functions_at_shifted_ips();
@@ -731,9 +730,6 @@ Quad92DSCS::set_interior_info()
 
   // define L/R mappings
   lrscv_.resize(2*numIntPoints_); // size = 48
-
-  // standard integration location
-  intgLoc_.resize(numIntPoints_*nDim_); // size = 48
 
   // shifted
   intgLocShift_.resize(numIntPoints_*nDim_);
@@ -834,7 +830,6 @@ Quad92DSCS::set_interior_info()
 void
 Quad92DSCS::set_boundary_info()
 {
-  oppFace_.resize(numIntPoints_);
   intgExpFace_.resize(numIntPoints_*nDim_);
 
   const std::vector<int> stkFaceNodeMap = {
