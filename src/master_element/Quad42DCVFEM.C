@@ -112,8 +112,6 @@ Quad42DSCV::Quad42DSCV()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // define ip node mappings
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, 4+ipNodeMap_);
   // standard integration location
   MasterElement::intgLoc_.assign(intgLoc_, 8+intgLoc_);    
   // shifted integration location
@@ -125,7 +123,7 @@ Quad42DSCV::Quad42DSCV()
 //--------------------------------------------------------------------------
 const int *
 Quad42DSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
   return ipNodeMap_;
@@ -332,8 +330,6 @@ Quad42DSCS::Quad42DSCS()
   MasterElement::intgLocShift_.assign(intgLocShift_, 8+intgLocShift_);
   // exposed face
   MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 16+&intgExpFace_[0][0][0]);
-  // boundary integration point ip node mapping (ip on an ordinal to local node number)
-  MasterElement::ipNodeMap_.assign(&ipNodeMap_[0][0], 8+&ipNodeMap_[0][0]); // 2 ips * 4 faces
 
   const double nodeLocations[4][2] =
   {
@@ -357,7 +353,7 @@ Quad42DSCS::Quad42DSCS()
 //--------------------------------------------------------------------------
 const int *
 Quad42DSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal); 
   return ipNodeMap_[ordinal];

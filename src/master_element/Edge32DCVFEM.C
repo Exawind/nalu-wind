@@ -55,7 +55,6 @@ Edge32DSCS::Edge32DSCS()
       ++scalar_index;
     }
   }
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, numIntPoints_+ipNodeMap_);
   MasterElement::intgLoc_.assign(intgLoc_, numIntPoints_+intgLoc_);
   MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
 }
@@ -102,7 +101,7 @@ double Edge32DSCS::tensor_product_weight(const int s1Node, const int s1Ip) const
 //--------------------------------------------------------------------------
 const int *
 Edge32DSCS::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define ip->node mappings for each face (single ordinal); 
   return ipNodeMap_;

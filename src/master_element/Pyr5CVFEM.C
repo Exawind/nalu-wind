@@ -132,8 +132,6 @@ PyrSCV::PyrSCV()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_; 
 
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, ipNodeMap_+5);
-
   MasterElement::intgLoc_.assign(intgLoc_, intgLoc_+15);
   MasterElement::intgLocShift_.assign(intgLocShift_, intgLocShift_+15);
 }
@@ -144,10 +142,10 @@ PyrSCV::PyrSCV()
 KOKKOS_FUNCTION
 const int *
 PyrSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 DoubleType polyhedral_volume_by_faces(int  /* ncoords */, const DoubleType volcoords[][3],
@@ -558,8 +556,6 @@ PyrSCS::PyrSCS()
   MasterElement::intgLocShift_.assign(intgLocShift_, intgLocShift_+36);
 
   MasterElement::intgExpFace_.assign(intgExpFace_, intgExpFace_+48);
-
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, ipNodeMap_+16);
 
   fill_intg_exp_face_shift(intgExpFaceShift_, sideNodeOrdinals_);
   MasterElement::intgExpFaceShift_.assign(intgExpFaceShift_,intgExpFaceShift_+48);
@@ -1313,7 +1309,7 @@ PyrSCS::opposingFace(
 //--------------------------------------------------------------------------
 const int *
 PyrSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal); 
   return &ipNodeMap_[ordinal*3];

@@ -54,7 +54,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~HexSCV() = default;
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::determinant;
   using MasterElement::shifted_grad_op;
@@ -156,7 +156,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~HexSCS() = default;
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::determinant;
 

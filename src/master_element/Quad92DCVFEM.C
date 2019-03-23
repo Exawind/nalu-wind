@@ -551,7 +551,7 @@ Quad92DSCV::set_interior_info()
 //--------------------------------------------------------------------------
 const int *
 Quad92DSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
  // define scv->node mappings
  return &ipNodeMap_[0];
@@ -969,7 +969,7 @@ Quad92DSCS::set_boundary_info()
 //--------------------------------------------------------------------------
 const int *
 Quad92DSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal); 
   return &ipNodeMap_[ordinal*ipsPerFace_];

@@ -65,7 +65,6 @@ TetSCV::TetSCV()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, 4+ipNodeMap_);
   MasterElement::intgLoc_.assign(&intgLoc_[0][0],           12+&intgLoc_[0][0]);
   MasterElement::intgLocShift_.assign(&intgLocShift_[0][0], 12+&intgLocShift_[0][0]);
 }
@@ -75,7 +74,7 @@ TetSCV::TetSCV()
 //--------------------------------------------------------------------------
 const int *
 TetSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
   return ipNodeMap_;
@@ -302,8 +301,6 @@ TetSCS::TetSCS()
 
   MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 36+&intgExpFace_[0][0][0]);
 
-  MasterElement::ipNodeMap_.assign(&ipNodeMap_[0][0], 12+&ipNodeMap_[0][0]);
-
   const double nodeLocations[4][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}};
 
   stk::topology topo = stk::topology::TET_4;
@@ -324,7 +321,7 @@ TetSCS::TetSCS()
 //--------------------------------------------------------------------------
 const int *
 TetSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal); 
   return ipNodeMap_[ordinal];

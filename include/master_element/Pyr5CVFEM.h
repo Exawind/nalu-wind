@@ -48,7 +48,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~PyrSCV() = default;
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,
@@ -141,7 +141,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~PyrSCS() = default;
 
-  const int * ipNodeMap(int ordinal = 0);
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,

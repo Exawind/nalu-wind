@@ -637,7 +637,6 @@ Hex27SCV::set_interior_info()
       }
     }
   }
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, numIntPoints_+ipNodeMap_);
   MasterElement::intgLocShift_.assign(intgLocShift_, numIntPoints_*nDim_+intgLocShift_);
   MasterElement::intgLoc_.assign(intgLoc_, numIntPoints_*nDim_+intgLocShift_);
 }
@@ -647,7 +646,7 @@ Hex27SCV::set_interior_info()
 //--------------------------------------------------------------------------
 const int *
 Hex27SCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
   return ipNodeMap_;
@@ -1188,7 +1187,6 @@ Hex27SCS::set_boundary_info()
   }
   MasterElement::intgExpFace_.assign(intgExpFace_, numFaceIps_*nDim_+intgExpFace_);
   MasterElement::oppFace_.assign(oppFace_, numFaceIps_+oppFace_);
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, numFaceIps_+ipNodeMap_);
   MasterElement::oppNode_.assign(oppNode_,numFaceIps_+oppNode_);
 }
 
@@ -1207,7 +1205,7 @@ Hex27SCS::adjacentNodes()
 //--------------------------------------------------------------------------
 const int *
 Hex27SCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal);
   return &ipNodeMap_[ordinal*ipsPerFace_];
