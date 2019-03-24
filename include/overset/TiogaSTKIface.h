@@ -73,22 +73,9 @@ private:
    */
   void load(const YAML::Node&);
 
-  /** STK Custom Ghosting to transfer donor elements to receptor's MPI rank
-   *
-   *  This method declares the STK custom ghosting object, actual updates are
-   *  performed by the update_ghosting method.
-   */
-  void initialize_ghosting();
-
   /** Ghost donor elements to receptor MPI ranks
    */
   void update_ghosting();
-
-  /** \deprecated{Populate the {fringe node, donor element} pair data structure}
-   *
-   *  \sa get_receptor_info, populate_overset_info
-   */
-  void update_fringe_info();
 
   /** Update the inactive part with hole elements
    */
