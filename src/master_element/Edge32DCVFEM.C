@@ -55,7 +55,6 @@ Edge32DSCS::Edge32DSCS()
       ++scalar_index;
     }
   }
-  MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------

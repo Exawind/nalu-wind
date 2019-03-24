@@ -102,6 +102,7 @@ protected:
   std::vector<double> shapeDerivs_;
   std::vector<double> shapeDerivsShift_;
   std::vector<double> expFaceShapeDerivs_;
+  std::vector<double> intgLocShift_;
 
   const int sideNodeOrdinals_[12] =  {
       0, 1, 4,

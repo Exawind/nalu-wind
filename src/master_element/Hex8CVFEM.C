@@ -27,7 +27,6 @@ namespace nalu{
 HexSCV::HexSCV()
   : MasterElement()
 {
-  MasterElement::intgLocShift_    .assign(intgLocShift_,    24+intgLocShift_);
   MasterElement::nDim_                  = nDim_;
   MasterElement::nodesPerElement_       = nodesPerElement_;
   MasterElement::numIntPoints_          = numIntPoints_;
@@ -55,8 +54,10 @@ void HexSCV::determinant(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_scv_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords,
+    ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
 
 }
@@ -120,14 +121,16 @@ void HexSCV::grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_derivative)
-    ( &numIntPoints_,
+    ( &nint,
       &intgLoc_[0], deriv );
 
   SIERRA_FORTRAN(hex_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -153,8 +156,9 @@ void HexSCV::shifted_grad_op(
 void
 HexSCV::shape_fcn(double *shpfc)
 {
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_shape_fcn)
-    (&numIntPoints_,&intgLoc_[0],shpfc);
+    (&nint,&intgLoc_[0],shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -163,8 +167,9 @@ HexSCV::shape_fcn(double *shpfc)
 void
 HexSCV::shifted_shape_fcn(double *shpfc)
 {
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_shape_fcn)
-    (&numIntPoints_,&intgLocShift_[0],shpfc);
+    (&nint,&intgLocShift_[0],shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -196,7 +201,6 @@ HexSCS::HexSCS() : MasterElement() {
   MasterElement::numIntPoints_          = numIntPoints_;
   MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
   MasterElement::nodeLoc_         .assign(&nodeLoc_[0][0],  24+&nodeLoc_[0][0]);
-  MasterElement::intgLocShift_    .assign(intgLocShift_,36+intgLocShift_);
   MasterElement::scsIpEdgeOrd_    .assign(scsIpEdgeOrd_,12+scsIpEdgeOrd_);
   MasterElement::intgExpFace_     .assign(&intgExpFace_[0][0][0],  72+&intgExpFace_[0][0][0]);
   MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0],72+&intgExpFaceShift_[0][0][0]);
@@ -318,8 +322,10 @@ void HexSCS::determinant(
   double *areav,
   double *error)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords, areav );
+    ( &nelem, &npe, &nint, coords, areav );
 
   // all is always well; no error checking
   *error = 0;
@@ -338,14 +344,16 @@ void HexSCS::grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_derivative)
-    ( &numIntPoints_,
+    ( &nint,
       &intgLoc_[0], deriv );
 
   SIERRA_FORTRAN(hex_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -366,14 +374,16 @@ void HexSCS::shifted_grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_derivative)
-    ( &numIntPoints_,
+    ( &nint,
       &intgLocShift_[0], deriv );
 
   SIERRA_FORTRAN(hex_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -433,9 +443,10 @@ void HexSCS::face_grad_op(
         ( &nface,
           intgExpFace_[face_ordinal][k], dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(hex_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[24*n], &gradop[k*nelem*24+n*24], &det_j[npf*n+k], error, &lerr );
@@ -480,9 +491,10 @@ void HexSCS::shifted_face_grad_op(
         ( &nface,
           intgExpFaceShift_[face_ordinal][k], dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(hex_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[24*n], &gradop[k*nelem*24+n*24], &det_j[npf*n+k], error, &lerr );
@@ -502,9 +514,11 @@ void HexSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(threed_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -567,8 +581,9 @@ HexSCS::scsIpEdgeOrd()
 void
 HexSCS::shape_fcn(double *shpfc)
 {
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_shape_fcn)
-    (&numIntPoints_,&intgLoc_[0],shpfc);
+    (&nint,&intgLoc_[0],shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -577,8 +592,9 @@ HexSCS::shape_fcn(double *shpfc)
 void
 HexSCS::shifted_shape_fcn(double *shpfc)
 {
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_shape_fcn)
-    (&numIntPoints_,&intgLocShift_[0],shpfc);
+    (&nint,&intgLocShift_[0],shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -899,9 +915,10 @@ HexSCS::general_face_grad_op(
   SIERRA_FORTRAN(hex_derivative)
     ( &nface, &isoParCoord[0], dpsi );
 
+  const int npe  = nodesPerElement_;
   SIERRA_FORTRAN(hex_gradient_operator)
     ( &nface,
-      &nodesPerElement_,
+      &npe,
       &nface,
       dpsi,
       &coords[0], &gradop[0], &det_j[0], error, &lerr );

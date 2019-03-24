@@ -36,9 +36,6 @@ Tri3DSCS::Tri3DSCS()
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-
-  // shifted
-  MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------

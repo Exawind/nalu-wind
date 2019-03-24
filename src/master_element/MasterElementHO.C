@@ -184,7 +184,6 @@ HigherOrderHexSCV::set_interior_info()
   // define ip node mappings
   ipNodeMap_.resize(numIntPoints_);
   intgLoc_.resize(numIntPoints_*nDim_);
-  intgLocShift_.resize(numIntPoints_*nDim_);
   ipWeights_.resize(numIntPoints_);
 
   // tensor product nodes x tensor product quadrature
@@ -382,9 +381,6 @@ HigherOrderHexSCS::set_interior_info()
 
   // standard integration location
   intgLoc_.resize(numVectorPoints);
-
-  // shifted
-  intgLocShift_.resize(numVectorPoints);
 
   // Save quadrature weight and directionality information
   ipInfo_.resize(numIntPoints_);
@@ -1073,7 +1069,6 @@ HigherOrderQuad3DSCS::set_interior_info()
   // define ip node mappings
   ipNodeMap_.resize(numIntPoints_);
   intgLoc_.resize(numIntPoints_*surfaceDimension_);
-  intgLocShift_.resize(numIntPoints_*surfaceDimension_);
   ipWeights_.resize(numIntPoints_);
 
   // tensor product nodes x tensor product quadrature
@@ -1213,7 +1208,6 @@ HigherOrderQuad2DSCV::set_interior_info()
   // define ip node mappings
   ipNodeMap_.resize(numIntPoints_);
   intgLoc_.resize(numIntPoints_*nDim_);
-  intgLocShift_.resize(numIntPoints_*nDim_);
   ipWeights_.resize(numIntPoints_);
 
   // tensor product nodes x tensor product quadrature
@@ -1424,9 +1418,6 @@ HigherOrderQuad2DSCS::set_interior_info()
 
   // standard integration location
   intgLoc_.resize(numIntPoints_*nDim_);
-
-  // shifted
-  intgLocShift_.resize(numIntPoints_*nDim_);
 
   ipInfo_.resize(numIntPoints_);
 

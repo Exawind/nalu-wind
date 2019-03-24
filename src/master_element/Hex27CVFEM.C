@@ -637,7 +637,6 @@ Hex27SCV::set_interior_info()
       }
     }
   }
-  MasterElement::intgLocShift_.assign(intgLocShift_, numIntPoints_*nDim_+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -969,7 +968,6 @@ Hex27SCS::set_interior_info()
       }
     }
   }
-  MasterElement::intgLocShift_.assign(intgLocShift_, numIntPoints_*nDim_+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------

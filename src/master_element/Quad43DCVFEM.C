@@ -28,9 +28,6 @@ Quad3DSCS::Quad3DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
   MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
-
-  // shifted
-  MasterElement::intgLocShift_.assign(intgLocShift_, 8+intgLocShift_);    
 }
 
 //--------------------------------------------------------------------------

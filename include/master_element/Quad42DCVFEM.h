@@ -83,6 +83,9 @@ public:
   virtual const double* integration_locations() const final {
     return intgLoc_;
   }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
 private:
    static constexpr int nDim_ = AlgTraits::nDim_;
@@ -262,6 +265,9 @@ public:
 
   virtual const double* integration_locations() const final {
     return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
   }
 
 private :
