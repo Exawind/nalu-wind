@@ -67,9 +67,6 @@ WedSCV::WedSCV()
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-
-  // shifted
-  MasterElement::intgLocShift_.assign(intgLocShift_, 18+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -225,8 +222,10 @@ void WedSCV::determinant(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(wed_scv_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords,
+    ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
 }
 
@@ -254,7 +253,7 @@ WedSCV::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 WedSCV::wedge_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *isoParCoord,
   double *shape_fcn)
 {
@@ -306,8 +305,6 @@ WedSCS::WedSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, numIntPoints_+scsIpEdgeOrd_); 
-  // shifted
-  MasterElement::intgLocShift_.assign(intgLocShift_, 27+intgLocShift_);
   // exposed face
   MasterElement::intgExpFace_.assign(intgExpFace_, 60+intgExpFace_);
 
@@ -470,8 +467,10 @@ void WedSCS::determinant(
   double *areav,
   double *error)
 {
+  const int nint = numIntPoints_;
+  const int npe  = nodesPerElement_;
   SIERRA_FORTRAN(wed_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords, areav );
+    ( &nelem, &npe, &nint, coords, areav );
 
   // all is always well; no error checking
   *error = 0;
@@ -513,10 +512,12 @@ void WedSCS::grad_op(
 
   wedge_derivative(numIntPoints_, &intgLoc_[0], deriv);
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(wed_gradient_operator) (
       &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -539,10 +540,12 @@ void WedSCS::shifted_grad_op(
 
   wedge_derivative(numIntPoints_, &intgLocShift_[0], deriv);
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(wed_gradient_operator) (
       &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -623,9 +626,10 @@ WedSCS::face_grad_op(
       const int row = 12*face_ordinal + k*ndim;
       wedge_derivative(nface, &intgExpFace_[row], dpsi);
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(wed_gradient_operator) (
           &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[18*n], &gradop[k*nelem*18+n*18], &det_j[npf*n+k], error, &lerr );
@@ -704,9 +708,10 @@ WedSCS::shifted_face_grad_op(
       const int row = (sideOffset_[face_ordinal]+k)*ndim;
       wedge_derivative(nface, &intgExpFaceShift_[row], dpsi);
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(wed_gradient_operator) (
           &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[18*n], &gradop[k*nelem*18+n*18], &det_j[npf*n+k], error, &lerr );
@@ -737,9 +742,11 @@ void WedSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(threed_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -1014,7 +1021,7 @@ WedSCS::interpolatePoint(
 //--------------------------------------------------------------------------
 void
 WedSCS::wedge_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *isoParCoord,
   double *shape_fcn)
 {
@@ -1080,9 +1087,10 @@ WedSCS::general_face_grad_op(
 
   wedge_derivative(nface, &isoParCoord[0], dpsi);
 
+  const int npe = nodesPerElement_;
   SIERRA_FORTRAN(wed_gradient_operator)
     ( &nface,
-      &nodesPerElement_,
+      &npe,
       &nface,
       dpsi,
       &coords[0], &gradop[0], &det_j[0], error, &lerr );

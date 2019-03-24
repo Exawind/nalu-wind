@@ -88,7 +88,6 @@ Quad93DSCS::set_interior_info()
        }
      }
    }
-   MasterElement::intgLocShift_.assign(intgLocShift_, numIntPoints_*surfaceDimension_+intgLocShift_); // size = 72
 }
 
 //--------------------------------------------------------------------------

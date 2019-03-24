@@ -114,7 +114,6 @@ Hex8FEM::Hex8FEM()
 
   // weights; -1:1
   MasterElement::weights_.assign(weights_, numIntPoints_+weights_);
-  MasterElement::intgLocShift_.assign(intgLocShift_, 24+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------

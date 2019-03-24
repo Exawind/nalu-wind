@@ -87,23 +87,26 @@ public:
     double *shpfc);
   
   void pyr_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 
   void shifted_pyr_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 
   virtual const double* integration_locations() const final {
     return intgLoc_;
   }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
 private:
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_;
-  const int numIntPoints_ = AlgTraits::numScvIp_;
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_ = AlgTraits::numScvIp_;
 
   const int ipNodeMap_[AlgTraits::nodesPerElement_] = {
    0, 1,  2,  3,  4
@@ -113,7 +116,7 @@ private:
   const double five77r3840 = 577.0/3840.0;
   const double seven73r1560 = 773.0/1560.0;
 
-  const double intgLoc_[15] = {
+  const double intgLoc_[numIntPoints_*nDim_] = {
   -one69r384,  -one69r384,  five77r3840,  // vol 0
    one69r384,  -one69r384,  five77r3840,  // vol 1
    one69r384,   one69r384,  five77r3840,  // vol 2
@@ -226,12 +229,12 @@ public:
     double *shpfc);
   
   void pyr_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 
   void shifted_pyr_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 
@@ -302,10 +305,16 @@ public:
     const double *field,
     double *result);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 private :
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_;
-  const int numIntPoints_ = AlgTraits::numScsIp_;
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_ = AlgTraits::numScsIp_;
 
   const int sideNodeOrdinals_[16] = {
       0, 1, 4,    // ordinal 0

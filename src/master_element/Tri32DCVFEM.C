@@ -105,8 +105,6 @@ Tri32DSCV::Tri32DSCV()
   MasterElement::nDim_            = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_    = numIntPoints_;
-
-  MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
 }
 
 //--------------------------------------------------------------------------
@@ -299,8 +297,10 @@ void Tri32DSCV::determinant(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tri_scv_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords,
+    ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
 }
 
@@ -344,8 +344,6 @@ Tri32DSCS::Tri32DSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, 3+scsIpEdgeOrd_);
-  // shifted
-  MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
   // exposed face
   MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 12+&intgExpFace_[0][0][0]);
   
@@ -457,8 +455,10 @@ void Tri32DSCS::determinant(
   double *areav,
   double *error)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tri_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords, areav );
+    ( &nelem, &npe, &nint, coords, areav );
 
   // all is always well; no error checking
   *error = 0;
@@ -485,13 +485,15 @@ void Tri32DSCS::grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tri_derivative)
-    ( &numIntPoints_, deriv );
+    ( &nint, deriv );
   
   SIERRA_FORTRAN(tri_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
   
@@ -520,13 +522,15 @@ void Tri32DSCS::shifted_grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tri_derivative)
-    ( &numIntPoints_, deriv );
+    ( &nint, deriv );
 
   SIERRA_FORTRAN(tri_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -575,9 +579,10 @@ void Tri32DSCS::face_grad_op(
       SIERRA_FORTRAN(tri_derivative)
         ( &nface, dpsi );
       
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(tri_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[12*n], grad, &det_j[npf*n+k], error, &lerr );
@@ -628,9 +633,10 @@ void Tri32DSCS::shifted_face_grad_op(
       SIERRA_FORTRAN(tri_derivative)
         ( &nface, dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(tri_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[12*n], &gradop[k*nelem*6+n*6], &det_j[npf*n+k], error, &lerr );
@@ -698,9 +704,11 @@ void Tri32DSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(twod_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -949,9 +957,10 @@ Tri32DSCS::general_face_grad_op(
   SIERRA_FORTRAN(tri_derivative)
     ( &nface, dpsi );
       
+  const int npe  = nodesPerElement_;
   SIERRA_FORTRAN(tri_gradient_operator)
     ( &nface,
-      &nodesPerElement_,
+      &npe,
       &nface,
       dpsi,
       &coords[0], &gradop[0], &det_j[0], error, &lerr );

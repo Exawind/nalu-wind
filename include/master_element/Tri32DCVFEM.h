@@ -87,12 +87,15 @@ public:
   virtual const double* integration_locations() const final {
     return intgLoc_;
   }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
 
 private :
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
-  const int numIntPoints_ = AlgTraits::numScvIp_; 
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_; 
+  static constexpr int numIntPoints_ = AlgTraits::numScvIp_; 
 
   // define ip node mappings
   const int ipNodeMap_[3] = {0, 1, 2}; 
@@ -272,10 +275,13 @@ public:
   virtual const double* integration_locations() const final {
     return intgLoc_;
   }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 private:
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
-  const int numIntPoints_ = AlgTraits::numScsIp_; 
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_; 
+  static constexpr int numIntPoints_ = AlgTraits::numScsIp_; 
 
   const int sideNodeOrdinals_[3][2] = {
      {0, 1},  // ordinal 0

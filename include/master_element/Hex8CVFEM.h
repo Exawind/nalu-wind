@@ -20,7 +20,7 @@ namespace nalu{
 template<typename ViewType>
 KOKKOS_INLINE_FUNCTION
 void hex8_shape_fcn(
-  const int    & npts,
+  const int      npts,
   const double * isoParCoord,
   ViewType &shape_fcn)
 {
@@ -114,16 +114,19 @@ public:
   virtual const double* integration_locations() const final {
     return intgLoc_;
   }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
-  const int nDim_ = 3;
-  const int nodesPerElement_ = 8;
-  const int numIntPoints_ = 8;
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_ = AlgTraits::numScvIp_;
  
    // define ip node mappings
   const int ipNodeMap_[8] = {0, 1, 2, 3, 4, 5, 6, 7};
  
    // standard integration location
-  const double intgLoc_[24] = {
+  const double intgLoc_[numIntPoints_*nDim_] = {
    -0.25,  -0.25,  -0.25,
    +0.25,  -0.25,  -0.25,
    +0.25,  +0.25,  -0.25,
@@ -330,14 +333,17 @@ public:
   virtual const double* integration_locations() const final {
     return intgLoc_;
   }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
-  const int nDim_            = 3;
-  const int nodesPerElement_ = 8;
-  const int numIntPoints_   = 12;
-  const double scaleToStandardIsoFac_ = 2.0;
+  static constexpr int nDim_            = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_    = AlgTraits::numScsIp_;
+  static constexpr double scaleToStandardIsoFac_ = 2.0;
 
   // standard integration location
-  const double  intgLoc_  [36] = {
+  const double  intgLoc_  [numIntPoints_*nDim_] = {
     0.00,  -0.25,  -0.25, // surf 1    1->2
     0.25,   0.00,  -0.25, // surf 2    2->3
     0.00,   0.25,  -0.25, // surf 3    3->4

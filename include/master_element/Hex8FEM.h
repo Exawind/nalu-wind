@@ -92,12 +92,15 @@ public:
   virtual const double* integration_locations() const final {
     return intgLoc_;
   }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
   // weights; -1:1
   double weights_[8] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
 
 private:
-  static const int nDim = AlgTraits::nDim_;
+  static const int nDim_ = AlgTraits::nDim_;
   static const int nodesPerElement_ = AlgTraits::nodesPerElement_;
   static const int numIntPoints_ = AlgTraits::numScvIp_;
 
@@ -115,7 +118,7 @@ private:
 
   // standard integration location +/ sqrt(3)/3
   const double gIP = std::sqrt(3.0)/3.0;
-  const double  intgLoc_[24] = {
+  const double  intgLoc_[numIntPoints_*nDim_] = {
    -gIP,  -gIP,  -gIP, 
    +gIP,  -gIP,  -gIP, 
    +gIP,  +gIP,  -gIP,
