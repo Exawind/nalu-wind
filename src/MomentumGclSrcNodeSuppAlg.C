@@ -36,6 +36,7 @@ MomentumGclSrcNodeSuppAlg::MomentumGclSrcNodeSuppAlg(
     velocityNp1_(NULL),
     densityNp1_(NULL),
     divV_(NULL),
+    dualNdVolNm1_(NULL),
     dualNdVolN_(NULL),
     dualNdVolNp1_(NULL),
     nDim_(1),

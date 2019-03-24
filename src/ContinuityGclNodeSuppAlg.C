@@ -34,6 +34,7 @@ ContinuityGclNodeSuppAlg::ContinuityGclNodeSuppAlg(
   : SupplementalAlgorithm(realm),
     densityNp1_(NULL),
     divV_(NULL),
+    dualNdVolNm1_(NULL),
     dualNdVolN_(NULL),
     dualNdVolNp1_(NULL),
     dt_(0.0),
