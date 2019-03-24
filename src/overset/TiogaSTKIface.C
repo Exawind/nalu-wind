@@ -39,7 +39,6 @@ TiogaSTKIface::TiogaSTKIface(
     meta_(*oversetManager.metaData_),
     bulk_(*oversetManager.bulkData_),
     tg_(new TIOGA::tioga()),
-    inactivePartName_("nalu_overset_hole_elements"),
     coordsName_(oversetManager_.realm_.get_coordinates_name())
 {
   load(node);
@@ -63,9 +62,6 @@ TiogaSTKIface::load(const YAML::Node& node)
   sierra::nalu::NaluEnv::self().naluOutputP0()
       << "TIOGA: Using coordinates field: " << coordsName_ << std::endl;
 
-  if (node["tioga_populate_inactive_part"])
-    populateInactivePart_ = node["tioga_populate_inactive_part"].as<bool>();
-
   if (node["tioga_symmetry_direction"])
     symmetryDir_ = node["tioga_symmetry_direction"].as<int>();
 }
@@ -74,15 +70,6 @@ void TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
 {
   for (auto& tb: blocks_) {
     tb->setup(bcPartVec);
-  }
-
-  if (populateInactivePart_) {
-    // Initialize the inactive part
-    oversetManager_.inActivePart_ = &meta_.declare_part(
-      inactivePartName_, stk::topology::ELEM_RANK);
-
-    oversetManager_.backgroundSurfacePart_ = &meta_.declare_part(
-      "nalu_overset_fringe_boundary", stk::topology::ELEM_RANK);
   }
 }
 
@@ -140,35 +127,12 @@ void TiogaSTKIface::execute()
   // step.
   update_ghosting();
 
-  if (populateInactivePart_) populate_inactive_part();
-
   // Update overset fringe connectivity information for Constraint based algorithm
   populate_overset_info();
 }
 
 void TiogaSTKIface::reset_data_structures()
 {
-  // Reset inactivePart_
-  if (populateInactivePart_) {
-    bulk_.modification_begin();
-    stk::mesh::Part* inactivePart = oversetManager_.inActivePart_;
-    stk::mesh::PartVector add_parts;
-    stk::mesh::PartVector remove_parts;
-    remove_parts.push_back(inactivePart);
-    for (auto elem : holeElems_) {
-      bulk_.change_entity_parts(elem, add_parts, remove_parts);
-    }
-
-    stk::mesh::PartVector fringe_remove_parts;
-    fringe_remove_parts.push_back(oversetManager_.backgroundSurfacePart_);
-    for (auto elem: fringeElems_) {
-      bulk_.change_entity_parts(elem, add_parts, fringe_remove_parts);
-    }
-    bulk_.modification_end();
-  }
-
-  holeElems_.clear();
-  fringeElems_.clear();
   elemsToGhost_.clear();
   donorIDs_.clear();
   receptorIDs_.clear();
@@ -225,56 +189,6 @@ void TiogaSTKIface::update_ghosting()
     std::vector<const stk::mesh::FieldBase*> fVec = {coords};
     stk::mesh::communicate_field_data(*oversetManager_.oversetGhosting_, fVec);
   }
-}
-
-void TiogaSTKIface::populate_inactive_part()
-{
-  stk::mesh::PartVector toParts;
-  stk::mesh::PartVector fringeParts;
-  toParts.push_back(oversetManager_.inActivePart_);
-  fringeParts.push_back(oversetManager_.backgroundSurfacePart_);
-
-  // Gather all the "hole" elements that are not solved for, or cannot have a
-  // valid solution because the nodes lie within a solid body and add it to the
-  // inactive part. The rows in the linear system matrix for these nodes will be
-  // removed during the linear system reinitialization.
-  bulk_.modification_begin();
-  {
-    for (auto& tb: blocks_) {
-      auto iblank_cell = tb->iblank_cell();
-      auto elem_gid = tb->elem_id_map();
-
-      for (size_t i=0; i<iblank_cell.size(); i++) {
-        auto ib = iblank_cell[i];
-
-        if (ib == 0) {
-          stk::mesh::Entity elem = bulk_.get_entity(
-            stk::topology::ELEM_RANK, elem_gid[i]);
-          bulk_.change_entity_parts(elem, toParts);
-          holeElems_.push_back(elem);
-        }
-        else if (ib == -1) {
-          stk::mesh::Entity elem = bulk_.get_entity(
-            stk::topology::ELEM_RANK, elem_gid[i]);
-          bulk_.change_entity_parts(elem, fringeParts);
-          fringeElems_.push_back(elem);
-        }
-      }
-    }
-  }
-  bulk_.modification_end();
-
-  oversetManager_.orphanPointSurfaceVecBackground_.push_back(
-    oversetManager_.backgroundSurfacePart_);
-
-#if 1
-  size_t numHolesLocal = holeElems_.size();
-  size_t numHolesGlobal = 0;
-  stk::all_reduce_sum(bulk_.parallel(), &numHolesLocal, 
-          &numHolesGlobal, 1);
-  sierra::nalu::NaluEnv::self().naluOutputP0()
-      << "TIOGA: Num. inactive elements: " << numHolesGlobal << std::endl;
-#endif
 }
 
 void

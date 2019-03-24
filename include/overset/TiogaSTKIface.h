@@ -77,10 +77,6 @@ private:
    */
   void update_ghosting();
 
-  /** Update the inactive part with hole elements
-   */
-  void populate_inactive_part();
-
   /** Reset all connectivity data structures when recomputing connectivity
    */
   void reset_data_structures();
@@ -119,15 +115,6 @@ private:
   //! MPI ranks
   stk::mesh::EntityProcVec elemsToGhost_;
 
-  //! Name of part holding hole elements
-  std::string inactivePartName_;
-
-  //! List of hole elements
-  std::vector<stk::mesh::Entity> holeElems_;
-
-  //! List of fringe elements
-  std::vector<stk::mesh::Entity> fringeElems_;
-
   //! List of receptor nodes that are shared entities across MPI ranks. This
   //! information is used to synchronize the field vs. fringe point status for
   //! these shared nodes across processor boundaries.
@@ -143,9 +130,6 @@ private:
 
   //! Set the symmetry direction for TIOGA, default is z-direction (3)
   int symmetryDir_{3};
-
-  //! User option to determine whether inactive part is generated with TIOGA
-  bool populateInactivePart_{true};
 };
 
 
