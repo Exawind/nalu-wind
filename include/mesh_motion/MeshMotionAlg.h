@@ -21,8 +21,6 @@ public:
 
   void execute(const double);
 
-  void post_compute_geometry();
-
 private:
   MeshMotionAlg() = delete;
   MeshMotionAlg(const MeshMotionAlg&) = delete;

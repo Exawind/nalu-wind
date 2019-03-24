@@ -66,7 +66,7 @@ TEST(meshMotion, composite_motions)
 
   // compute rotational velocity in absence of translation
   sierra::nalu::MotionBase::ThreeDVecType rotVel =
-    rotClass.compute_velocity(time, rotClass.get_trans_mat(), xyz, &rotCoord[0]);
+    rotClass.compute_velocity(time, rotClass.get_trans_mat(), &rotCoord[0]);
 
   // initialize the mesh translation class
   sierra::nalu::MotionTranslation transClass(transNode);
@@ -76,7 +76,7 @@ TEST(meshMotion, composite_motions)
 
   // compute rotational velocity in absence of translation
   sierra::nalu::MotionBase::ThreeDVecType compVelRot =
-    rotClass.compute_velocity(time, comp_trans, xyz, &newCoord[0]);
+    rotClass.compute_velocity(time, comp_trans, &newCoord[0]);
 
   // ensure the rotational componenets of the velocity remains same
   EXPECT_NEAR(compVelRot[0], rotVel[0], testTol);

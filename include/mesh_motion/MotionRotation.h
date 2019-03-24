@@ -22,14 +22,12 @@ public:
    * @param[in] time           Current time
    * @param[in] compTrans      Transformation matrix
    *                           for points other than xyz
-   * @param[in] mxyz           Model coordinates
-   * @param[in] mxyz           Transformed coordinates
+   * @param[in] xyz            Transformed coordinates
    */
   virtual ThreeDVecType compute_velocity(
     const double time,
     const TransMatType& compTrans,
-    const double* mxyz,
-    const double* cxyz );
+    const double* xyz );
 
 private:
   MotionRotation() = delete;

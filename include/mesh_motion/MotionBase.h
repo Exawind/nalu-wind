@@ -38,14 +38,12 @@ public:
    * @param[in] time           Current time
    * @param[in] compTrans      Transformation matrix
    *                           for points other than xyz
-   * @param[in] mxyz           Model coordinates
-   * @param[in] mxyz           Transformed coordinates
+   * @param[in] xyz            Transformed coordinates
    */
   virtual ThreeDVecType compute_velocity(
     const double time,
     const TransMatType& compTrans,
-    const double* mxyz,
-    const double* cxyz ) = 0;
+    const double* xyz ) = 0;
 
   /** Composite addition of motions
    *
@@ -67,7 +65,7 @@ public:
     std::copy_n(centroid.begin(), threeDVecSize, origin_.begin());
   }
 
-  virtual void post_compute_geometry(
+  virtual void post_work(
     stk::mesh::BulkData&,
     stk::mesh::PartVector&,
     stk::mesh::PartVector&,

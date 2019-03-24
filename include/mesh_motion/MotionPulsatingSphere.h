@@ -11,7 +11,7 @@ class MotionPulsatingSphere : public MotionBase
 public:
   MotionPulsatingSphere(
     stk::mesh::MetaData&,
-    const YAML::Node&);
+      const YAML::Node&);
 
   virtual ~MotionPulsatingSphere()
   {
@@ -22,23 +22,21 @@ public:
   /** Function to compute motion-specific velocity
    *
    * @param[in] time           Current time
-   * @param[in] compTrans      Transformation matrix
+   * @param[in] comp_trans_mat Transformation matrix
    *                           for points other than xyz
-   * @param[in] mxyz           Model coordinates
-   * @param[in] mxyz           Transformed coordinates
+   * @param[in] xyz            Transformed coordinates
    */
   virtual ThreeDVecType compute_velocity(
     const double time,
     const TransMatType& compTrans,
-    const double* mxyz,
-    const double* cxyz );
+    const double* xyz );
 
-  /** perform post compute geometry work for this motion
+  /** perform post work for this motion
    *
    * @param[in] computedMeshVelDiv flag to denote if divergence of
    *                               mesh velocity already computed
    */
-  void post_compute_geometry(
+  void post_work(
     stk::mesh::BulkData&,
     stk::mesh::PartVector&,
     stk::mesh::PartVector&,

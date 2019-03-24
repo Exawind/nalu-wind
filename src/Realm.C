@@ -531,9 +531,6 @@ Realm::initialize()
 
   compute_geometry();
 
-  if ( solutionOptions_->meshMotion_ )
-    meshMotionAlg_->post_compute_geometry();
-
   if ( hasNonConformal_ )
     initialize_non_conformal();
 
@@ -1889,10 +1886,7 @@ Realm::pre_timestep_work()
   if ( solutionOptions_->meshMotion_ ) {
 
     meshMotionAlg_->execute( get_current_time() );
-
     compute_geometry();
-
-    meshMotionAlg_->post_compute_geometry();
 
     // and non-conformal algorithm
     if ( hasNonConformal_ )

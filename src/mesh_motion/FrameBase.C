@@ -55,7 +55,7 @@ void FrameBase::load(const YAML::Node& node)
     else if (type == "rotation")
       meshMotionVec_[i].reset(new MotionRotation(motion_def));
     else if (type == "scaling")
-      meshMotionVec_[i].reset(new MotionScaling(meta_,motion_def));
+      meshMotionVec_[i].reset(new MotionScaling(motion_def));
     else if (type == "translation")
       meshMotionVec_[i].reset(new MotionTranslation(motion_def));
     else

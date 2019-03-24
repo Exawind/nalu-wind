@@ -311,34 +311,20 @@ LowMachEquationSystem::register_nodal_fields(
   realm_.augment_property_map(VISCOSITY_ID, viscosity_);
 
   // dual nodal volume (should push up...)
-  const int numVolStates = realm_.does_mesh_move() ? realm_.number_of_states() : 1;
-  dualNodalVolume_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
+  dualNodalVolume_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume"));
   stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
-  if (numVolStates > 1) realm_.augment_restart_variable_list("dual_nodal_volume");
 
   // make sure all states are properly populated (restart can handle this)
   if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
     ScalarFieldType &densityN = density_->field_of_state(stk::mesh::StateN);
     ScalarFieldType &densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
 
-    CopyFieldAlgorithm *theCopyAlgDens
+    CopyFieldAlgorithm *theCopyAlg
       = new CopyFieldAlgorithm(realm_, part,
                                &densityNp1, &densityN,
                                0, 1,
                                stk::topology::NODE_RANK);
-    copyStateAlg_.push_back(theCopyAlgDens);
-
-    if ( numVolStates <= 2 ) return;
-
-    ScalarFieldType &dualNdVolN = dualNodalVolume_->field_of_state(stk::mesh::StateN);
-    ScalarFieldType &dualNdVolNp1 = dualNodalVolume_->field_of_state(stk::mesh::StateNP1);
-
-    CopyFieldAlgorithm *theCopyAlgDlNdVol
-      = new CopyFieldAlgorithm(realm_, part,
-                               &dualNdVolNp1, &dualNdVolN,
-                               0, 1,
-                               stk::topology::NODE_RANK);
-    copyStateAlg_.push_back(theCopyAlgDlNdVol);
+    copyStateAlg_.push_back(theCopyAlg);
   }
 }
 
