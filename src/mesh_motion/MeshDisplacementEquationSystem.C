@@ -173,9 +173,8 @@ MeshDisplacementEquationSystem::register_nodal_fields(
   currentCoordinates_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
   stk::mesh::put_field_on_mesh(*currentCoordinates_, *part, nDim, nullptr);
 
-  dualNodalVolume_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume", numStates));
+  dualNodalVolume_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume"));
   stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
-  realm_.augment_restart_variable_list("dual_nodal_volume");
 
   // properties
   if ( activateMass_ ) {
@@ -195,16 +194,16 @@ MeshDisplacementEquationSystem::register_nodal_fields(
   realm_.augment_property_map(LAME_LAMBDA_ID, lameMu_);
 
   // make sure all states are properly populated (restart can handle this)
-  if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
-    ScalarFieldType &dualNdVolN = dualNodalVolume_->field_of_state(stk::mesh::StateN);
-    ScalarFieldType &dualNdVolNp1 = dualNodalVolume_->field_of_state(stk::mesh::StateNP1);
+  if ( numStates > 2 && !realm_.restarted_simulation() ) {
+    VectorFieldType &meshDisplacementN = meshDisplacement_->field_of_state(stk::mesh::StateN);
+    VectorFieldType &meshDisplacementNp1 = meshDisplacement_->field_of_state(stk::mesh::StateNP1);
 
-    CopyFieldAlgorithm *theCopyAlgDlNdVol
+    CopyFieldAlgorithm *theCopyAlg
       = new CopyFieldAlgorithm(realm_, part,
-                               &dualNdVolNp1, &dualNdVolN,
-                               0, 1,
+                               &meshDisplacementNp1, &meshDisplacementN,
+                               0, nDim,
                                stk::topology::NODE_RANK);
-    copyStateAlg_.push_back(theCopyAlgDlNdVol);
+    copyStateAlg_.push_back(theCopyAlg);
   }
 
 }

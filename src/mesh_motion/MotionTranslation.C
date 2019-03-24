@@ -39,7 +39,7 @@ void MotionTranslation::load(const YAML::Node& node)
 
 void MotionTranslation::build_transformation(
   const double time,
-  const double* /* mxyz */ )
+  const double*  /* xyz */)
 {
   if(time < (startTime_)) return;
 
@@ -71,8 +71,7 @@ void MotionTranslation::translation_mat(const ThreeDVecType& curr_disp)
 MotionBase::ThreeDVecType MotionTranslation::compute_velocity(
   const double time,
   const TransMatType&  /* compTrans */,
-  const double* /* mxyz */,
-  const double* /* cxyz */ )
+  const double*  /* xyz */ )
 {
   ThreeDVecType vel = {};
 

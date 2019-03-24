@@ -49,7 +49,7 @@ public:
     return isInertial_;
   }
 
-  virtual void post_compute_geometry()
+  virtual void post_work()
   {
   }
 

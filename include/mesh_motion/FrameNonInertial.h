@@ -27,8 +27,6 @@ public:
 
   void update_coordinates_velocity(const double time);
 
-  void post_compute_geometry();
-
 private:
   FrameNonInertial() = delete;
   FrameNonInertial(const FrameNonInertial&) = delete;
@@ -40,6 +38,8 @@ private:
   MotionBase::TransMatType compute_transformation(
     const double,
     const double*);
+
+  void post_work();
 };
 
 } // nalu

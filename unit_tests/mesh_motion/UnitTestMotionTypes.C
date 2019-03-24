@@ -5,8 +5,6 @@
 #include "mesh_motion/MotionScaling.h"
 #include "mesh_motion/MotionTranslation.h"
 
-#include "UnitTestRealm.h"
-
 namespace {
 
   const double testTol = 1e-14;
@@ -60,7 +58,7 @@ TEST(meshMotion, rotation_omega)
   EXPECT_NEAR(norm[2], gold_norm_z, testTol);
 
   sierra::nalu::MotionBase::ThreeDVecType vel =
-    rotClass.compute_velocity(time, rotClass.get_trans_mat(), nullptr, &xyz[0]);
+    rotClass.compute_velocity(time, rotClass.get_trans_mat(), &xyz[0]);
 
   const double gold_norm_vx = -3.0;
   const double gold_norm_vy =  6.6;
@@ -110,12 +108,8 @@ TEST(meshMotion, scaling)
 
   YAML::Node scaleNode = YAML::Load(scaleInfo);
 
-  // create realm
-  unit_test_utils::NaluTest naluObj;
-  sierra::nalu::Realm& realm = naluObj.create_realm();
-
   // initialize the mesh scaling class
-  sierra::nalu::MotionScaling scaleClass(realm.meta_data(), scaleNode);
+  sierra::nalu::MotionScaling scaleClass(scaleNode);
 
   // build transformation
   const double time = 0.0;
