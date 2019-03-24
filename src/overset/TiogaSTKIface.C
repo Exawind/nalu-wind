@@ -97,6 +97,7 @@ void TiogaSTKIface::execute()
   // Update the coordinates for TIOGA and register updates to the TIOGA mesh block.
   for (auto& tb: blocks_) {
     tb->update_coords();
+    tb->update_element_volumes();
     tb->register_block(*tg_);
   }
 
