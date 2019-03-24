@@ -69,18 +69,21 @@ public:
     double *shpfc);
   
   void tet_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 
   virtual const double* integration_locations() const final {
     return &intgLoc_[0][00];
   }
+  virtual const double* integration_location_shift() const final {
+    return &intgLocShift_[0][0];
+  }
 
 private:
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
-  const int numIntPoints_ = AlgTraits::numScvIp_; 
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_; 
+  static constexpr int numIntPoints_ = AlgTraits::numScvIp_; 
 
   // define ip node mappings
   const int ipNodeMap_[4] = { 0, 1, 2, 3};
@@ -215,7 +218,7 @@ public:
     double *shpfc);
 
   void tet_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord,
     double* shape_fcn);
 
@@ -262,11 +265,14 @@ public:
   virtual const double* integration_locations() const final {
     return intgLoc_;
   }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
 private:
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
-  const int numIntPoints_ = AlgTraits::numScsIp_; 
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_; 
+  static constexpr int numIntPoints_ = AlgTraits::numScsIp_; 
 
   const int sideNodeOrdinals_[4][3] = {
      {0, 1, 3}, //ordinal 0

@@ -282,8 +282,9 @@ public:
 
   virtual const int *adjacentNodes() const {throw std::runtime_error("adjacentNodes");} 
 
-  virtual const std::vector<double>& integration_location_shift() const {return intgLocShift_;} 
-  virtual void integration_location_shift(const std::vector<double>& v) {intgLocShift_=v;} 
+  virtual const double* integration_location_shift() const {
+    throw std::runtime_error("adjacentNodes not implimented");
+  }
 
   virtual const std::vector<double>& integration_exp_face() const {return intgExpFace_;} 
   virtual void integration_exp_face(const std::vector<double>& v) {intgExpFace_=v;} 
@@ -312,7 +313,6 @@ public:
   int numIntPoints_;
   double scaleToStandardIsoFac_;
 
-  std::vector<double> intgLocShift_;
   std::vector<double> intgExpFace_;
   std::vector<double> intgExpFaceShift_;
   std::vector<double> nodeLoc_;

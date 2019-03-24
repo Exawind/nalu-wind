@@ -175,9 +175,10 @@ void check_scv_shifted_ips_are_nodal(
     }
   }
 
-  const auto& shiftedIps = meSV.intgLocShift_;
-  EXPECT_EQ(ws_coords.size(), shiftedIps.size()) << "P1 test";
-  for (unsigned j = 0; j < shiftedIps.size(); ++j) {
+  const int nint = meSV.numIntPoints_*meSV.nDim_;
+  const double* shiftedIps = meSV.integration_location_shift();
+  EXPECT_EQ(ws_coords.size(), nint) << "P1 test";
+  for (int j = 0; j < nint; ++j) {
     EXPECT_NEAR(ws_coords[j], shiftedIps[j], tol);
   }
 }

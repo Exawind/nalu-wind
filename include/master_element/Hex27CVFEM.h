@@ -112,6 +112,9 @@ public:
   virtual const double* integration_locations() const final {
     return intgLoc_;
   }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
   static const int nDim_       = AlgTraits::nDim_;
   static const int numIntPoints_ = AlgTraits::numScsIp_; // = AlgTraits::numScvIp_

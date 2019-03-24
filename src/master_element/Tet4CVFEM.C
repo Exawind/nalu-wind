@@ -64,8 +64,6 @@ TetSCV::TetSCV()
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-
-  MasterElement::intgLocShift_.assign(&intgLocShift_[0][0], 12+&intgLocShift_[0][0]);
 }
 
 //--------------------------------------------------------------------------
@@ -216,8 +214,10 @@ void TetSCV::determinant(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tet_scv_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords,
+    ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
 }
 
@@ -244,7 +244,7 @@ TetSCV::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 TetSCV::tet_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *par_coord, 
   double *shape_fcn)
 {
@@ -292,8 +292,6 @@ TetSCS::TetSCS()
   MasterElement::numIntPoints_ = numIntPoints_;
 
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,  numIntPoints_+scsIpEdgeOrd_);
-
-  MasterElement::intgLocShift_.assign(intgLocShift_,  18+intgLocShift_);
 
   MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 36+&intgExpFace_[0][0][0]);
 
@@ -447,8 +445,10 @@ void TetSCS::determinant(
   double *areav,
   double *error)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tet_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords, areav );
+    ( &nelem, &npe, &nint, coords, areav );
 
   // all is always well; no error checking
   *error = 0;
@@ -477,13 +477,15 @@ void TetSCS::grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tet_derivative)
-    ( &numIntPoints_, deriv );
+    ( &nint, deriv );
   
   SIERRA_FORTRAN(tet_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -514,13 +516,15 @@ void TetSCS::shifted_grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tet_derivative)
-    ( &numIntPoints_, deriv );
+    ( &nint, deriv );
 
   SIERRA_FORTRAN(tet_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -553,9 +557,10 @@ void TetSCS::face_grad_op(
       SIERRA_FORTRAN(tet_derivative)
         ( &nface, dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(tet_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[12*n], &gradop[k*nelem*12+n*12], &det_j[npf*n+k], error, &lerr );
@@ -620,9 +625,10 @@ void TetSCS::shifted_face_grad_op(
       SIERRA_FORTRAN(tet_derivative)
         ( &nface, dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(tet_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[12*n], &gradop[k*nelem*12+n*12], &det_j[npf*n+k], error, &lerr );
@@ -651,9 +657,11 @@ void TetSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(threed_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -719,7 +727,7 @@ TetSCS::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 TetSCS::tet_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *par_coord, 
   double *shape_fcn)
 {
@@ -885,9 +893,10 @@ TetSCS::general_face_grad_op(
   SIERRA_FORTRAN(tet_derivative)
     ( &nface, dpsi );
 
+  const int npe  = nodesPerElement_;
   SIERRA_FORTRAN(tet_gradient_operator)
     ( &nface,
-      &nodesPerElement_,
+      &npe,
       &nface,
       dpsi,
       &coords[0], &gradop[0], &det_j[0], error, &lerr );
