@@ -86,6 +86,7 @@ WallDistEquationSystem::load(const YAML::Node& node)
   EquationSystem::load(node);
 
   get_if_present(node, "update_frequency", updateFreq_, updateFreq_);
+  get_if_present(node, "force_init_on_restart", forceInitOnRestart_, forceInitOnRestart_);
 }
 
 void
@@ -407,7 +408,12 @@ WallDistEquationSystem::initialize()
   // Reset init flag if this is a restarted simulation. The wall distance field
   // is available from the restart file, so we only want to recompute it at
   // user-specified frequency.
-  isInit_ = !realm_.restarted_simulation();
+  //
+  // The user option can override this and force a recompute. This option is
+  // useful when "restarting" from a mapped file, e.g., wind-farm mesh where the
+  // ABL precursor solution was mapped and is used to initialize the solution
+  // using restart section in the input file.
+  isInit_ = forceInitOnRestart_ || !realm_.restarted_simulation();
 }
 
 void

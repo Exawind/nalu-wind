@@ -95,6 +95,9 @@ private:
   const bool managePNG_;
 
   bool isInit_{true};
+
+  //! User option to force recomputation of wall distance on restart
+  bool forceInitOnRestart_{false};
 };
 
 }  // nalu
