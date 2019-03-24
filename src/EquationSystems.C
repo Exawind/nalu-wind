@@ -275,6 +275,8 @@ EquationSystems::register_element_fields(
   const std::vector<std::string> targetNames )
 {
   stk::mesh::MetaData &meta_data = realm_.meta_data();
+  ScalarFieldType& elemVolume = meta_data.declare_field<ScalarFieldType>(
+    stk::topology::ELEMENT_RANK, "element_volume");
   
   for ( size_t itarget = 0; itarget < targetNames.size(); ++itarget ) {
     stk::mesh::Part *targetPart = meta_data.get_part(targetNames[itarget]);
@@ -290,6 +292,8 @@ EquationSystems::register_element_fields(
       EquationSystemVector::iterator ii;
       for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii )
         (*ii)->register_element_fields(targetPart, the_topo);
+
+      stk::mesh::put_field_on_mesh(elemVolume, *targetPart, 1, nullptr);
     }
   }
 }
