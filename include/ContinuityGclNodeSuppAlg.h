@@ -37,9 +37,13 @@ public:
   
   ScalarFieldType *densityNp1_;
   ScalarFieldType *divV_;
-  ScalarFieldType *dualNodalVolume_;
+  ScalarFieldType *dualNdVolNm1_;
+  ScalarFieldType *dualNdVolN_;
+  ScalarFieldType *dualNdVolNp1_;
   double dt_;
   double gamma1_;
+  double gamma2_;
+  double gamma3_;
 };
 
 } // namespace nalu

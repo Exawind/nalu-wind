@@ -63,7 +63,7 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
         dx[d] = xyz[d] - mX[d];
       } // end for loop - d index
 
-      // copy over model coordinates
+      // copy over current coordinates
       for ( int i = 0; i < nDim; ++i )
         cX[i] = xyz[i];
 
@@ -71,7 +71,7 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
       // motions in current motion frame
       for (auto& mm: meshMotionVec_)
       {
-        MotionBase::ThreeDVecType mm_vel = mm->compute_velocity(time,trans_mat,cX);
+        MotionBase::ThreeDVecType mm_vel = mm->compute_velocity(time,trans_mat,mX,cX);
 
         for (int d = 0; d < nDim; d++)
           velxyz[d] += mm_vel[d];
@@ -100,13 +100,13 @@ MotionBase::TransMatType FrameNonInertial::compute_transformation(
   return comp_trans_mat;
 }
 
-void FrameNonInertial::post_work()
+void FrameNonInertial::post_compute_geometry()
 {
   // flag denoting if mesh velocity divergence already computed
   bool computedMeshVelDiv = false;
 
   for (auto& mm: meshMotionVec_)
-    mm->post_work(bulk_,partVec_,partVecBc_,computedMeshVelDiv);
+    mm->post_compute_geometry(bulk_,partVec_,partVecBc_,computedMeshVelDiv);
 }
 
 } // nalu

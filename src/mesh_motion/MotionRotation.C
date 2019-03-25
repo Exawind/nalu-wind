@@ -120,7 +120,8 @@ void MotionRotation::rotation_mat(const double angle)
 MotionBase::ThreeDVecType MotionRotation::compute_velocity(
   const double time,
   const TransMatType& compTrans,
-  const double* xyz )
+  const double* /* mxyz */,
+  const double* cxyz )
 {
   ThreeDVecType vel = {};
 
@@ -151,7 +152,7 @@ MotionBase::ThreeDVecType MotionRotation::compute_velocity(
   ThreeDVecType relCoord = {};
   ThreeDVecType vecOmega = {};
   for (int d=0; d < threeDVecSize; d++) {
-    relCoord[d] = xyz[d] - transOrigin[d];
+    relCoord[d] = cxyz[d] - transOrigin[d];
     vecOmega[d] = omega_*unitVec[d];
   }
 
