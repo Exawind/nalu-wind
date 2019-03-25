@@ -119,8 +119,10 @@ WallDistEquationSystem::register_nodal_fields(
   coordinates_ = &(meta.declare_field<VectorFieldType>(
                      stk::topology::NODE_RANK, realm_.get_coordinates_name()));
   stk::mesh::put_field_on_mesh(*coordinates_, *part, nDim, nullptr);
+
+  const int numVolStates = realm_.does_mesh_move() ? realm_.number_of_states() : 1;
   dualNodalVolume_ = &(meta.declare_field<ScalarFieldType>(
-                         stk::topology::NODE_RANK, "dual_nodal_volume"));
+                         stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
   stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
 }
 

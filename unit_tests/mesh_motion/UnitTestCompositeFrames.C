@@ -55,6 +55,7 @@ namespace {
   const double testTol = 1e-12;
 
   sierra::nalu::MotionBase::TransMatType eval_transformation(
+    sierra::nalu::Realm& realm,
     double time,
     const double* xyz)
   {
@@ -63,7 +64,7 @@ namespace {
       = sierra::nalu::MotionBase::identityMat_;
 
     // perform scaling transformation
-    sierra::nalu::MotionScaling scaleClass(scaleNode);
+    sierra::nalu::MotionScaling scaleClass(realm.meta_data(), scaleNode);
     scaleClass.build_transformation(time, xyz);
     comp_trans = scaleClass.add_motion(scaleClass.get_trans_mat(), comp_trans);
 
@@ -110,14 +111,15 @@ namespace {
   std::vector<double> eval_vel(
     const double time,
     const sierra::nalu::MotionBase::TransMatType& transMat,
-    double* xyz )
+    const double* mxyz,
+    const double* cxyz )
   {
     std::vector<double> vel(3,0.0);
 
     // perform rotation transformation
     sierra::nalu::MotionRotation rotClass(rotNode);
     sierra::nalu::MotionBase::ThreeDVecType motionVel =
-      rotClass.compute_velocity(time, transMat, xyz);
+      rotClass.compute_velocity(time, transMat, mxyz, cxyz);
 
     for (size_t d = 0; d < vel.size(); d++)
       vel[d] += motionVel[d];
@@ -129,7 +131,7 @@ namespace {
     if( (time >= (startTime-testTol)) && (time <= (endTime+testTol)) )
     {
       sierra::nalu::MotionTranslation transClass(transNode);
-      motionVel = transClass.compute_velocity(time, transMat, xyz);
+      motionVel = transClass.compute_velocity(time, transMat, mxyz, cxyz);
 
       for (size_t d = 0; d < vel.size(); d++)
         vel[d] += motionVel[d];
@@ -186,10 +188,10 @@ TEST(meshMotion, meshMotionAlg_initialize)
       double*  vel = stk::mesh::field_data(*meshVelocity, node);
 
       sierra::nalu::MotionBase::TransMatType transMat =
-        eval_transformation(currTime, oxyz);
+        eval_transformation(realm, currTime, oxyz);
 
       std::vector<double> gold_norm_xyz = eval_coords(transMat, oxyz);
-      std::vector<double> gold_norm_vel = eval_vel(currTime, transMat, &gold_norm_xyz[0]);
+      std::vector<double> gold_norm_vel = eval_vel(currTime, transMat, oxyz, &gold_norm_xyz[0]);
 
       EXPECT_NEAR(xyz[0], gold_norm_xyz[0], testTol);
       EXPECT_NEAR(xyz[1], gold_norm_xyz[1], testTol);
@@ -254,10 +256,10 @@ TEST(meshMotion, meshMotionAlg_execute)
       double*  vel = stk::mesh::field_data(*meshVelocity, node);
 
       sierra::nalu::MotionBase::TransMatType transMat =
-        eval_transformation(currTime, oxyz);
+        eval_transformation(realm,currTime, oxyz);
 
       std::vector<double> gold_norm_xyz = eval_coords(transMat, oxyz);
-      std::vector<double> gold_norm_vel = eval_vel(currTime, transMat, &gold_norm_xyz[0]);
+      std::vector<double> gold_norm_vel = eval_vel(currTime, transMat, oxyz, &gold_norm_xyz[0]);
 
       EXPECT_NEAR(xyz[0], gold_norm_xyz[0], testTol);
       EXPECT_NEAR(xyz[1], gold_norm_xyz[1], testTol);
