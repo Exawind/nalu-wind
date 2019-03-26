@@ -120,6 +120,9 @@ if(ENABLE_TIOGA)
   endif()
   include_directories(${TIOGA_INCLUDE_DIRS})
   add_definitions("-DNALU_USES_TIOGA")
+  if(TIOGA_HAS_NODEGID)
+    add_definitions("-DTIOGA_HAS_NODEGID")
+  endif()
 endif()
 
 ########################### NALU #####################################

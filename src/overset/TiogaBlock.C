@@ -485,6 +485,9 @@ void TiogaBlock::register_block(TIOGA::tioga& tg)
     num_cells_.data(),  // Number of cells for each topology
     tioga_conn_,        // Element node connectivity information
     elemid_map_.data()  // Global ID for the element array
+#ifdef TIOGA_HAS_NODEGID
+    ,nodeid_map_.data() // Global ID for the node array
+#endif
   );
   // Indicate that we want element IBLANK information returned
   tg.set_cell_iblank(meshtag_, iblank_cell_.data());
