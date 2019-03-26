@@ -324,6 +324,7 @@ private:
    0.50,  0.50,  // surf 1: 1->3
    0.00,  0.50}; // surf 1: 0->2
  
+#if 0
   // exposed face
   const double intgExpFace_[3][2][2] =   
   // face 0: scs 0, 1: nodes 0,1
@@ -335,6 +336,7 @@ private:
   // face 2: surf 0, 1: nodes 2,0
    {{0.00,  0.75},
     {0.00,  0.25}}};
+#endif
 
   // boundary integration point ip node mapping (ip on an ordinal to local node number)
   const int ipNodeMap_[3][2]= // 2 ips * 3 faces

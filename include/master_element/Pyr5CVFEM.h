@@ -365,6 +365,7 @@ private :
    4, 4, 4, 4
   };
 
+#if 0
   // define opposing face
   // the 5th node maps to two opposing sub-faces, we pick one
   const int oppFace_[20] = {
@@ -379,6 +380,7 @@ private :
   //face 4
   4, 10, 8,  6
   };
+#endif
 
   const double twentynine63rd = 29.0/63.0;
   const double fortyone315th = 41.0/315.0;

@@ -321,6 +321,7 @@ private:
     0.50,  0.00,  0.50, // surf 5    2->4
     0.00,  0.50,  0.50};// surf 6    3->4
 
+#if 0
   // exposed face
   const double seven36ths = 7.0/36.0;
   const double eleven18ths = 11.0/18.0;
@@ -341,6 +342,7 @@ private:
   {{seven36ths,   seven36ths,    0.00},
    {eleven18ths,  seven36ths,    0.00},
    {seven36ths,   eleven18ths,   0.00}}};
+#endif
 
   // boundary integration point ip node mapping (ip on an ordinal to local node number)
   const int ipNodeMap_[4][3] = { // 3 ips * 4 faces

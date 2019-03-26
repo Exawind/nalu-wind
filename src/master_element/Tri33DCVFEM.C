@@ -197,7 +197,7 @@ Tri3DSCS::isInElement(
 
   if (3 == npar_coord) par_coor[2] = zpnew/std::sqrt(Area2);
 
-  std::array<double,3> w = { par_coor[0], par_coor[1], zpnew/std::sqrt(Area2) };
+  std::array<double,3> w = {{par_coor[0], par_coor[1], zpnew/std::sqrt(Area2)}};
 
   par_coor[0] = w[1];
   par_coor[1] = 1.0-w[0]-w[1];
