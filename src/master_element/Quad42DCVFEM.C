@@ -315,8 +315,6 @@ Quad42DSCS::Quad42DSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,numIntPoints_+scsIpEdgeOrd_);
-  // exposed face
-  MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 16+&intgExpFace_[0][0][0]);
 
   const double nodeLocations[4][2] =
   {
@@ -332,7 +330,6 @@ Quad42DSCS::Quad42DSCS()
       intgExpFaceShift_[k][n][1] = nodeLocations[ordinals[n]][1];
     }
   }
-  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0], 16+&intgExpFaceShift_[0][0][0]);
 }
 
 //--------------------------------------------------------------------------

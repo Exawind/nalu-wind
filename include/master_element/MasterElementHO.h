@@ -214,6 +214,7 @@ private:
   std::vector<double> shapeDerivs_;
   std::vector<double> expFaceShapeDerivs_;
   std::vector<double> intgLoc_;
+  std::vector<double> intgExpFace_;
   std::vector<ContourData> ipInfo_;
   std::vector<int> ipNodeMap_;
   std::vector<int> oppFace_;
@@ -463,6 +464,7 @@ private:
   std::vector<double> expFaceShapeDerivs_;
   std::vector<int> oppNode_;
   std::vector<int> oppFace_;
+  std::vector<double> intgExpFace_;
 };
 
 class HigherOrderEdge2DSCS final: public MasterElement

@@ -546,13 +546,8 @@ PyrSCS::PyrSCS()
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, scsIpEdgeOrd_+AlgTraits::numScsIp_);
-
-  MasterElement::intgExpFace_.assign(intgExpFace_, intgExpFace_+48);
-
   fill_intg_exp_face_shift(intgExpFaceShift_, sideNodeOrdinals_);
-  MasterElement::intgExpFaceShift_.assign(intgExpFaceShift_,intgExpFaceShift_+48);
 }
 
 //--------------------------------------------------------------------------

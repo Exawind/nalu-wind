@@ -344,8 +344,6 @@ Tri32DSCS::Tri32DSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, 3+scsIpEdgeOrd_);
-  // exposed face
-  MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 12+&intgExpFace_[0][0][0]);
   
   const std::array<std::array<double,2>,3> nodeLocations =
   {{
@@ -360,7 +358,6 @@ Tri32DSCS::Tri32DSCS()
       intgExpFaceShift_[k][n][1] = nodeLocations[ordinals[n]][1];
     }
   }
-  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0], 12+&intgExpFaceShift_[0][0][0]);
 }
 
 //--------------------------------------------------------------------------
