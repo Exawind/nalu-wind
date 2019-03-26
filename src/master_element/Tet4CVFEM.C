@@ -293,8 +293,6 @@ TetSCS::TetSCS()
 
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,  numIntPoints_+scsIpEdgeOrd_);
 
-  MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 36+&intgExpFace_[0][0][0]);
-
   const double nodeLocations[4][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}};
 
   stk::topology topo = stk::topology::TET_4;
@@ -307,7 +305,6 @@ TetSCS::TetSCS()
       intgExpFaceShift_[k][n][2] = nodeLocations[ordinals[n]][2];
     }
   }
-  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0], 36+&intgExpFaceShift_[0][0][0]);
 }
 
 //--------------------------------------------------------------------------

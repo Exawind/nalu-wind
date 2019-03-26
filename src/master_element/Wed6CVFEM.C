@@ -305,8 +305,6 @@ WedSCS::WedSCS()
 
   // elem-edge mapping from ip
   MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, numIntPoints_+scsIpEdgeOrd_); 
-  // exposed face
-  MasterElement::intgExpFace_.assign(intgExpFace_, 60+intgExpFace_);
 
   MasterElement::sideOffset_.assign(sideOffset_, 5+sideOffset_);
   const double nodeLocations[6][3] =

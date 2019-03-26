@@ -286,11 +286,13 @@ public:
     throw std::runtime_error("adjacentNodes not implimented");
   }
 
-  virtual const std::vector<double>& integration_exp_face() const {return intgExpFace_;} 
-  virtual void integration_exp_face(const std::vector<double>& v) {intgExpFace_=v;} 
+  virtual const double *integration_exp_face() const {
+    throw std::runtime_error("integration_exp_face not implimented");
+  }
 
-  virtual const std::vector<double>& integration_exp_face_shift() const {return intgExpFaceShift_;} 
-  virtual void integration_exp_face_shift(const std::vector<double>& v) {intgExpFaceShift_=v;} 
+  virtual const double *integration_exp_face_shift() const {
+    throw std::runtime_error("integration_exp_face_shift not implimented");
+  }
 
   virtual const std::vector<double>& node_locations() const {return nodeLoc_;} 
   virtual void node_locations(const std::vector<double>& v) {nodeLoc_=v;} 
@@ -313,8 +315,6 @@ public:
   int numIntPoints_;
   double scaleToStandardIsoFac_;
 
-  std::vector<double> intgExpFace_;
-  std::vector<double> intgExpFaceShift_;
   std::vector<double> nodeLoc_;
   std::vector<int> sideOffset_;
   std::vector<int> scsIpEdgeOrd_;

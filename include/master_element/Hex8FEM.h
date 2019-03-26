@@ -129,6 +129,7 @@ private:
    -gIP,  +gIP,  +gIP};
 
 
+  double intgExpFace_[72];
   void hex8_fem_shape_fcn(
     const int  numIp,
     const double *isoParCoord,
