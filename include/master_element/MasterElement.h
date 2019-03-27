@@ -294,15 +294,6 @@ public:
     throw std::runtime_error("integration_exp_face_shift not implimented");
   }
 
-  virtual const std::vector<double>& node_locations() const {return nodeLoc_;} 
-  virtual void node_locations(const std::vector<double>& v) {nodeLoc_=v;} 
-
-  virtual const std::vector<int>& side_offsets() const {return sideOffset_;} 
-  virtual void side_offsets(const std::vector<int>& v) {sideOffset_=v;} 
-
-  virtual const std::vector<int>& scs_ip_edge_ordinals() const {return scsIpEdgeOrd_;} 
-  virtual void scs_ip_edge_ordinals(const std::vector<int>& v) {scsIpEdgeOrd_=v;} 
-
   virtual const std::vector<double>& weights() const {return weights_;} 
   virtual void weights(const std::vector<double>& v) {weights_=v;} 
 
@@ -314,10 +305,6 @@ public:
   int nodesPerElement_;
   int numIntPoints_;
   double scaleToStandardIsoFac_;
-
-  std::vector<double> nodeLoc_;
-  std::vector<int> sideOffset_;
-  std::vector<int> scsIpEdgeOrd_;
 
   // FEM
   std::vector<double>weights_;

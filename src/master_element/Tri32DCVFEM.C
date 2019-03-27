@@ -342,9 +342,6 @@ Tri32DSCS::Tri32DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // elem-edge mapping from ip
-  MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, 3+scsIpEdgeOrd_);
-  
   const std::array<std::array<double,2>,3> nodeLocations =
   {{
       {{0.0,0.0}}, {{1.0,0}}, {{0.0,1.0}}

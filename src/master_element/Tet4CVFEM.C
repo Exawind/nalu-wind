@@ -291,8 +291,6 @@ TetSCS::TetSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,  numIntPoints_+scsIpEdgeOrd_);
-
   const double nodeLocations[4][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}};
 
   stk::topology topo = stk::topology::TET_4;
