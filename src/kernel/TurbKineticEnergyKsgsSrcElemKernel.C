@@ -10,6 +10,7 @@
 #include "Enums.h"
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 
 // template and scratch space
 #include "BuildTemplates.h"

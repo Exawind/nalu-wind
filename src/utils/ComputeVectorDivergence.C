@@ -8,6 +8,7 @@
 #include "utils/ComputeVectorDivergence.h"
 
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 #include <stk_mesh/base/Part.hpp>
 #include <stk_mesh/base/Entity.hpp>

@@ -7,6 +7,7 @@
 
 #include "kernel/MomentumSymmetryElemKernel.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 #include "SolutionOptions.h"
 
 // template and scratch space

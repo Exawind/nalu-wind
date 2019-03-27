@@ -9,6 +9,7 @@
 #include "UnitTestKokkosME.h"
 #include "UnitTestKokkosMEGold.h"
 
+#include <master_element/MasterElementFactory.h>
 void check_that_values_match(const sierra::nalu::SharedMemView<DoubleType*>& values,
                              const double* oldValues)
 {

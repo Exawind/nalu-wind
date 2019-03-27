@@ -303,7 +303,7 @@ void HexSCS::determinant(
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
 const int *
-HexSCS::side_node_ordinals(int ordinal)
+HexSCS::side_node_ordinals (int ordinal) const
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
   return sideNodeOrdinals_[ordinal];

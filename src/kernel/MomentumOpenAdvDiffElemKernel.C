@@ -8,6 +8,7 @@
 #include "kernel/MomentumOpenAdvDiffElemKernel.h"
 #include "EquationSystem.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 #include "PecletFunction.h"
 #include "SolutionOptions.h"
 #include "BuildTemplates.h"

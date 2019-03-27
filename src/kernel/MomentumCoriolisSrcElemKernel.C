@@ -8,6 +8,7 @@
 #include "kernel/MomentumCoriolisSrcElemKernel.h"
 #include "AlgTraits.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 #include "master_element/TensorOps.h"
 #include "SolutionOptions.h"
 #include "CoriolisSrc.h"

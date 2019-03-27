@@ -2,6 +2,7 @@
 #include <stk_topology/topology.hpp>
 #include "UnitTestUtils.h"
 
+#include <master_element/MasterElementFactory.h>
 namespace {
 
   void side_node_ordinals_are_same_as_stk(stk::topology topo)

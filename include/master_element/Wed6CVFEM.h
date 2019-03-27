@@ -272,7 +272,7 @@ public:
   double parametric_distance( const double X, const double Y);
   double parametric_distance( const std::array<double,3> &x);
 
-  const int* side_node_ordinals(int sideOrdinal) final;
+  const int* side_node_ordinals(int sideOrdinal) const final;
 
   virtual const double* integration_locations() const final {
     return intgLoc_;

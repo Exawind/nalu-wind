@@ -13,6 +13,7 @@
 #include "ScratchViews.h"
 #include "utils/StkHelpers.h"
 
+#include "master_element/MasterElementFactory.h"
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
 #include <stk_mesh/base/MetaData.hpp>

@@ -754,7 +754,7 @@ HigherOrderHexSCS::ipNodeMap(
 }
 //--------------------------------------------------------------------------
 const int *
-HigherOrderHexSCS::side_node_ordinals(int ordinal)
+HigherOrderHexSCS::side_node_ordinals (int ordinal) const
 {
   return elem_.side_node_ordinals(ordinal);
 }
@@ -1639,7 +1639,7 @@ HigherOrderQuad2DSCS::ipNodeMap(int ordinal) const
 }
 //--------------------------------------------------------------------------
 const int *
-HigherOrderQuad2DSCS::side_node_ordinals(int ordinal)
+HigherOrderQuad2DSCS::side_node_ordinals(int ordinal) const
 {
   return elem_.side_node_ordinals(ordinal);
 }

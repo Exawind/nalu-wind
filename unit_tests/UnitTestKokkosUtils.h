@@ -2,6 +2,7 @@
 #define _UnitTestKokkosUtils_h_
 
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 #include <stk_mesh/base/Types.hpp>
 #include <stk_mesh/base/Bucket.hpp>
 #include <Kokkos_Core.hpp>

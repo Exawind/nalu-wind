@@ -18,6 +18,9 @@
 #include <array>
 #include "../ScratchViewsHO.h"
 
+#include <master_element/MasterElementFactory.h>
+
+
 namespace sierra {
 namespace nalu {
 

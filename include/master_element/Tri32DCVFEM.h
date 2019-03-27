@@ -270,7 +270,7 @@ public:
     const double *side_pcoords,
     double *elem_pcoords) override;
 
-  const int* side_node_ordinals(int sideOrdinal) final;
+  const int* side_node_ordinals(int sideOrdinal) const final;
 
   virtual const double* integration_locations() const final {
     return intgLoc_;

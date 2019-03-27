@@ -10,7 +10,6 @@
 #define Quad92DCVFEM_h  
 
 #include <master_element/MasterElement.h>
-#include <master_element/MasterElementFactory.h>
 
 #include <AlgTraits.h>
 
@@ -312,7 +311,7 @@ public:
   int opposingFace(
     const int ordinal, const int node) override ;
 
-  const int* side_node_ordinals(int sideOrdinal) final;
+  const int* side_node_ordinals(int sideOrdinal) const final;
 
   virtual const double* integration_locations() const final {
     return intgLoc_;

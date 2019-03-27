@@ -23,6 +23,7 @@
 #include "TpetraLinearSystem.h"
 #include "SimdInterface.h"
 
+#include <master_element/MasterElementFactory.h>
 #include <string>
 
 sierra::nalu::TpetraLinearSystem*
