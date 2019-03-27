@@ -18,6 +18,7 @@
 #include "KokkosInterface.h"
 #include "SimdInterface.h"
 
+#include "master_element/MasterElementFactory.h"
 #include "UnitTestHelperObjects.h"
 
 namespace unit_test_utils {

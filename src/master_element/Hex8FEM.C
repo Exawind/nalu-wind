@@ -111,9 +111,6 @@ Hex8FEM::Hex8FEM()
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-
-  // weights; -1:1
-  MasterElement::weights_.assign(weights_, numIntPoints_+weights_);
 }
 
 //--------------------------------------------------------------------------

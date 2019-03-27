@@ -9,19 +9,13 @@
 #ifndef MasterElement_h
 #define MasterElement_h
 
-#include <master_element/MasterElementFactory.h>
-
 #include <AlgTraits.h>
 
 // NGP-based includes
 #include "SimdInterface.h"
 #include "KokkosInterface.h"
 
-#include <vector>
-#include <cstdlib>
 #include <stdexcept>
-#include <string>
-#include <array>
 
 namespace stk {
   struct topology;
@@ -273,42 +267,19 @@ public:
   virtual int num_integration_points() const {return numIntPoints_;} 
   virtual void num_integration_points(const int n) {numIntPoints_=n;} 
 
-  virtual const double* integration_locations() const { 
-   throw std::runtime_error("integration_locations not implemented");
-  }
-
   virtual double scal_to_standard_iso_factor() const {return scaleToStandardIsoFac_;} 
   virtual void scal_to_standard_iso_factor(const double n) {scaleToStandardIsoFac_=n;} 
 
-  virtual const int *adjacentNodes() const {throw std::runtime_error("adjacentNodes");} 
-
-  virtual const double* integration_location_shift() const {
-    throw std::runtime_error("adjacentNodes not implimented");
-  }
-
-  virtual const double *integration_exp_face() const {
-    throw std::runtime_error("integration_exp_face not implimented");
-  }
-
-  virtual const double *integration_exp_face_shift() const {
-    throw std::runtime_error("integration_exp_face_shift not implimented");
-  }
-
-  virtual const std::vector<double>& weights() const {return weights_;} 
-  virtual void weights(const std::vector<double>& v) {weights_=v;} 
-
-  virtual const int* side_node_ordinals(int /* sideOrdinal */) {
-    throw std::runtime_error("side_node_ordinals not implemented");
-  }
+  virtual const int   * adjacentNodes()              const {throw std::runtime_error("adjacentNodes not implimented");}
+  virtual const double* integration_locations()      const {throw std::runtime_error("integration_locations not implemented");}
+  virtual const double* integration_location_shift() const {throw std::runtime_error("adjacentNodes not implimented");}
+  virtual const double* integration_exp_face_shift() const {throw std::runtime_error("integration_exp_face_shift not implimented");}
+  virtual const int   * side_node_ordinals(int)      const {throw std::runtime_error("side_node_ordinals not implemented");}
 
   int nDim_;
   int nodesPerElement_;
   int numIntPoints_;
   double scaleToStandardIsoFac_;
-
-  // FEM
-  std::vector<double>weights_;
-
 };
 
 } // namespace nalu

@@ -14,6 +14,7 @@
 #include <Realm.h>
 #include <TimeIntegrator.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 #include <SolutionOptions.h>
 
 // stk_mesh/base/fem

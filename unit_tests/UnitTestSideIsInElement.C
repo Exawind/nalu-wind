@@ -16,6 +16,7 @@
 #include <nalu_make_unique.h>
 #include <NaluEnv.h>
 
+#include <master_element/MasterElementFactory.h>
 #include <memory>
 #include <tuple>
 #include <random>

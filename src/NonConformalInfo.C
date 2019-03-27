@@ -10,6 +10,7 @@
 #include <NonConformalManager.h>
 #include <DgInfo.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 #include <Realm.h>
 #include <NaluEnv.h>
 

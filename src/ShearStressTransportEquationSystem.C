@@ -11,6 +11,7 @@
 #include <ComputeSSTMaxLengthScaleElemAlgorithm.h>
 #include <FieldFunctions.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 #include <NaluEnv.h>
 #include <SpecificDissipationRateEquationSystem.h>
 #include <SolutionOptions.h>

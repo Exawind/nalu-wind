@@ -33,6 +33,7 @@
 #include <FieldTypeDef.h>
 #include <LinearSystem.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 #include <MaterialPropertys.h>
 #include <NaluParsing.h>
 #include <NonConformalManager.h>

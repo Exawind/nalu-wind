@@ -8,6 +8,7 @@
 #include "pmr/RadTransWallElemKernel.h"
 #include "pmr/RadiativeTransportEquationSystem.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 
 // template and scratch space
 #include "BuildTemplates.h"

@@ -7,6 +7,8 @@
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
 
+#include <master_element/MasterElementFactory.h>
+
 #include <SimdInterface.h>
 #include <ElemDataRequests.h>
 #include <ElemDataRequestsGPU.h>

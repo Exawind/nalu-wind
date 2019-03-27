@@ -553,8 +553,8 @@ PyrSCS::PyrSCS()
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
 const int *
-PyrSCS::side_node_ordinals(
-  int ordinal)
+PyrSCS::side_node_ordinals (
+  int ordinal) const
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
   return &sideNodeOrdinals_[ordinal*3];

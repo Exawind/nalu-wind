@@ -14,6 +14,7 @@
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 #include <ABLProfileFunction.h>
 
 // stk_mesh/base/fem

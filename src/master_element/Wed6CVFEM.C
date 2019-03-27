@@ -337,8 +337,7 @@ WedSCS::ipNodeMap(
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
 const int *
-WedSCS::side_node_ordinals(
-  int ordinal)
+WedSCS::side_node_ordinals ( int ordinal) const
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
   return &sideNodeOrdinals_[sideOffset_[ordinal]];

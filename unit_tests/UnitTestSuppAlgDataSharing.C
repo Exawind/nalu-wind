@@ -13,6 +13,7 @@
 #include <stk_util/parallel/Parallel.hpp>
 #include <Kokkos_Core.hpp>
 
+#include <master_element/MasterElementFactory.h>
 #include <ElemDataRequestsGPU.h>
 #include <ScratchViews.h>
 
