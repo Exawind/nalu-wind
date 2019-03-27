@@ -303,10 +303,6 @@ WedSCS::WedSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // elem-edge mapping from ip
-  MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, numIntPoints_+scsIpEdgeOrd_); 
-
-  MasterElement::sideOffset_.assign(sideOffset_, 5+sideOffset_);
   const double nodeLocations[6][3] =
   {
       {0.0,0.0, -1.0}, {+1.0, 0.0, -1.0}, {0.0, +1.0, -1.0},

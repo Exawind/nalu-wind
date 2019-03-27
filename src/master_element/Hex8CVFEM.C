@@ -200,8 +200,6 @@ HexSCS::HexSCS() : MasterElement() {
   MasterElement::nodesPerElement_       = nodesPerElement_;
   MasterElement::numIntPoints_          = numIntPoints_;
   MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
-  MasterElement::nodeLoc_         .assign(&nodeLoc_[0][0],  24+&nodeLoc_[0][0]);
-  MasterElement::scsIpEdgeOrd_    .assign(scsIpEdgeOrd_,12+scsIpEdgeOrd_);
   MasterElement::nDim_                  = nDim_;
   MasterElement::nodesPerElement_       = nodesPerElement_;
   MasterElement::numIntPoints_          = numIntPoints_;
