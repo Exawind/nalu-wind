@@ -104,7 +104,7 @@ AssembleHeatCondWallSolverAlgorithm::execute()
     // extract master element specifics
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
-    const int numScsIp = meFC->numIntPoints_;
+    const int numScsIp = meFC->num_integration_points();
 
     // resize some things; matrix related
     const int lhsSize = nodesPerFace*nodesPerFace;

@@ -218,7 +218,7 @@ ComputeMdotAlgorithmDriver::compute_accumulation()
 
     // extract master element specifics
     const int nodesPerElement = meSCV->nodesPerElement_;
-    const int numScvIp = meSCV->numIntPoints_;
+    const int numScvIp = meSCV->num_integration_points();
 
     // resize
     ws_shape_function.resize(numScvIp*nodesPerElement);
@@ -317,7 +317,7 @@ ComputeMdotAlgorithmDriver::correct_open_mdot(const double finalCorrection)
       
       // face master element
       MasterElement *meFC = MasterElementRepo::get_surface_master_element(b.topology());
-      const int numScsBip = meFC->numIntPoints_;
+      const int numScsBip = meFC->num_integration_points();
       
       const stk::mesh::Bucket::size_type length   = b.size();
       

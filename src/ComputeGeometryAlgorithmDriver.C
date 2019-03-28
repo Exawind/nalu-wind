@@ -183,7 +183,7 @@ ComputeGeometryAlgorithmDriver::check_jacobians()
 
       // extract master element specifics
       const int nodesPerElement = meSCV->nodesPerElement_;
-      const int numScvIp = meSCV->numIntPoints_;
+      const int numScvIp = meSCV->num_integration_points();
 
       // resize
       ws_coordinates.resize(nodesPerElement*nDim);

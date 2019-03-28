@@ -659,7 +659,7 @@ ActuatorLinePointDrag::assemble_lhs_to_best_elem_nodes(
   const stk::topology& elemTopo = bulkData.bucket(elem).topology();
   MasterElement* meSCV =
     sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
-  const int numScvIp = meSCV->numIntPoints_;
+  const int numScvIp = meSCV->num_integration_points();
 
   // extract elem_node_relations
   stk::mesh::Entity const* elem_node_rels = bulkData.begin_nodes(elem);

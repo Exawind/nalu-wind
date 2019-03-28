@@ -32,7 +32,7 @@ void find_max_nodes_and_ips(const stk::mesh::BucketVector& buckets,
     stk::topology topo = bptr->topology();
     maxNodesPerElement = std::max(maxNodesPerElement, (int)topo.num_nodes());
     sierra::nalu::MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
-    maxScsIp = std::max(maxScsIp, meSCS->numIntPoints_);
+    maxScsIp = std::max(maxScsIp, meSCS->num_integration_points());
     numEntities += bptr->size();
   }
   std::cout<<"num entities: "<<numEntities<<std::endl;
@@ -87,7 +87,7 @@ public:
           [&](stk::topology topo, sierra::nalu::MasterElement& meSCS)
           {
               const int nodesPerElem = topo.num_nodes();
-              resizer(nodesPerElem, meSCS.numIntPoints_);
+              resizer(nodesPerElem, meSCS.num_integration_points());
           }
           ,
           [&](stk::mesh::Entity elem, stk::topology topo, sierra::nalu::MasterElement& meSCS)
@@ -103,7 +103,7 @@ public:
               double* p_det_j = det_j.data();
               const int* lrscv = meSCS.adjacentNodes();
       
-              const int numScsIp = meSCS.numIntPoints_;
+              const int numScsIp = meSCS.num_integration_points();
               const int nodesPerElem = topo.num_nodes();
               for(int n=0; n<nodesPerElem; ++n) {
                   const double* nodeCoords = stk::mesh::field_data(*coordField, elemNodes[n]);
@@ -309,7 +309,7 @@ public:
         sierra::nalu::MasterElement& meSCS = *sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
 
         const int nodesPerElem = topo.num_nodes();
-        const int numScsIp = meSCS.numIntPoints_;
+        const int numScsIp = meSCS.num_integration_points();
 
         sierra::nalu::SharedMemView<double**> elemNodeCoords = sierra::nalu::get_shmem_view_2D<double>(team, nodesPerElem, nDim);
         sierra::nalu::SharedMemView<double*> elemNodePressures = sierra::nalu::get_shmem_view_1D<double>(team, nodesPerElem);

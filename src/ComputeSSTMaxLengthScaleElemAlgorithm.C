@@ -98,7 +98,7 @@ ComputeSSTMaxLengthScaleElemAlgorithm::execute()
     MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
 
     // extract master element specifics
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
     const int *lrscv = meSCS->adjacentNodes();
 
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {

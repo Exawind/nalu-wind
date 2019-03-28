@@ -31,7 +31,7 @@ void element_discrete_laplacian_kernel_3d(
 {
     const int nDim = 3;
     const int nodesPerElem = meSCS.nodesPerElement_;
-    const int numScsIp = meSCS.numIntPoints_;
+    const int numScsIp = meSCS.num_integration_points();
 
     const int* lrscv = meSCS.adjacentNodes();
 

@@ -71,7 +71,7 @@ ComputeGeometryBoundaryAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerElement = meFC->nodesPerElement_;
-    const int numScsIp = meFC->numIntPoints_;
+    const int numScsIp = meFC->num_integration_points();
 
     // define scratch field
     std::vector<double > ws_coordinates(nodesPerElement*nDim);

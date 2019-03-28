@@ -66,7 +66,7 @@ SteadyTaylorVortexMomentumSrcElemSuppAlg::elem_resize(
   MasterElement *meSCV)
 {
   const int nodesPerElement = meSCV->nodesPerElement_;
-  const int numScvIp = meSCV->numIntPoints_;
+  const int numScvIp = meSCV->num_integration_points();
   ws_shape_function_.resize(numScvIp*nodesPerElement);
   ws_coordinates_.resize(nDim_*nodesPerElement);
   ws_scv_volume_.resize(numScvIp);
@@ -101,7 +101,7 @@ SteadyTaylorVortexMomentumSrcElemSuppAlg::elem_execute(
   // pointer to ME methods
   const int *ipNodeMap = meSCV->ipNodeMap();
   const int nodesPerElement = meSCV->nodesPerElement_;
-  const int numScvIp = meSCV->numIntPoints_;
+  const int numScvIp = meSCV->num_integration_points();
   
   // gather
   stk::mesh::Entity const *  node_rels = bulkData_->begin_nodes(element);

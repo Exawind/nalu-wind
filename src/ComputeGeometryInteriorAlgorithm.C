@@ -85,7 +85,7 @@ ComputeGeometryInteriorAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerElement = meSCV->nodesPerElement_;
-    const int numScvIp = meSCV->numIntPoints_;
+    const int numScvIp = meSCV->num_integration_points();
     const int *ipNodeMap = meSCV->ipNodeMap();
 
     // define scratch field
@@ -145,7 +145,7 @@ ComputeGeometryInteriorAlgorithm::execute()
 
       // extract master element specifics
       const int nodesPerElement = meSCS->nodesPerElement_;
-      const int numScsIp = meSCS->numIntPoints_;
+      const int numScsIp = meSCS->num_integration_points();
       const int *lrscv = meSCS->adjacentNodes();
       const int *scsIpEdgeOrd = meSCS->scsIpEdgeOrd();
 

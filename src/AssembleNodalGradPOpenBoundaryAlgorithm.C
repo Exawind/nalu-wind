@@ -100,9 +100,9 @@ AssembleNodalGradPOpenBoundaryAlgorithm::execute()
     MasterElement& meSCS = *MasterElementRepo::get_surface_master_element(topoVec[0]);
 
     const int nodesPerFace = meFC.nodesPerElement_;
-    const int numFaceScsIp = meFC.numIntPoints_;
+    const int numFaceScsIp = meFC.num_integration_points();
     const int nodesPerElement = meSCS.nodesPerElement_;
-    const int numElemScsIp = meSCS.numIntPoints_;
+    const int numElemScsIp = meSCS.num_integration_points();
 
     const int *ipNodeMap = meFC.ipNodeMap();
 
