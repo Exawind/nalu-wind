@@ -38,11 +38,11 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 KOKKOS_FUNCTION
-MasterElement::MasterElement()
+MasterElement::MasterElement(const double scaleToStandardIsoFac)
   : nDim_(0),
     nodesPerElement_(0),
-    scaleToStandardIsoFac_(1.0),
-    numIntPoints_(0)
+    numIntPoints_(0),
+    scaleToStandardIsoFac_(scaleToStandardIsoFac)
 {
   // nothing else
 }

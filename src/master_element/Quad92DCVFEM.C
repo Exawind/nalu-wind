@@ -728,9 +728,6 @@ Quad92DSCS::set_interior_info()
 {
   const int linesPerDirection = nodes1D_ - 1; // 2
 
-  // define L/R mappings
-  lrscv_.resize(2*numIntPoints_); // size = 48
-
   // shifted
   intgLocShift_.resize(numIntPoints_*nDim_);
 
@@ -1283,7 +1280,7 @@ const int *
 Quad92DSCS::adjacentNodes()
 {
   // define L/R mappings
-  return lrscv_.data();
+  return lrscv_;
 }
 
 //--------------------------------------------------------------------------

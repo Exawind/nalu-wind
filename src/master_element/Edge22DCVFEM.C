@@ -38,13 +38,12 @@ namespace nalu{
 //--------------------------------------------------------------------------
 KOKKOS_FUNCTION
 Edge2DSCS::Edge2DSCS()
-  : MasterElement(),
+  : MasterElement(Edge2DSCS::scaleToStandardIsoFac_),
     elemThickness_(0.01)
 {
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
 }
 
 //--------------------------------------------------------------------------

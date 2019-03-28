@@ -32,8 +32,6 @@ Quad93DSCS::Quad93DSCS()
   MasterElement::numIntPoints_ = numIntPoints_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
 
-  
-
   // set up integration rule and relevant maps on scs
   set_interior_info();
 
