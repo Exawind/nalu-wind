@@ -196,11 +196,10 @@ void HexSCV::Mij(
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 HexSCS::HexSCS()  
-  : MasterElement() {
+  : MasterElement(HexSCS::scaleToStandardIsoFac_) {
   MasterElement::nDim_                  = nDim_;
   MasterElement::nodesPerElement_       = nodesPerElement_;
   MasterElement::numIntPoints_          = numIntPoints_;
-  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
 }
 
 //--------------------------------------------------------------------------

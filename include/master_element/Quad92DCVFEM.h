@@ -94,7 +94,6 @@ protected:
   void eval_shape_derivs_at_face_ips();
 
   //quadrature info
-  std::vector<int> lrscv_;
 
   std::vector<double> shapeFunctions_;
   std::vector<double> shapeFunctionsShift_;
@@ -328,6 +327,8 @@ private:
   int oppNode_  [numIntPoints_];
   int oppFace_  [numIntPoints_];
   double intgLoc_[numIntPoints_*nDim_];
+
+  int lrscv_[2*numIntPoints_];
 
   void set_interior_info();
   void set_boundary_info();

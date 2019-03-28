@@ -306,12 +306,11 @@ void Quad42DSCV::Mij(
 //--------------------------------------------------------------------------
 KOKKOS_FUNCTION
 Quad42DSCS::Quad42DSCS()
-  : MasterElement() 
+  : MasterElement(Quad42DSCS::scaleToStandardIsoFac_) 
 {
   MasterElement::nDim_=nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
 
   const double nodeLocations[4][2] =
   {

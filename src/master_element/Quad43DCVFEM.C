@@ -21,13 +21,12 @@ namespace nalu{
 //--------------------------------------------------------------------------
 KOKKOS_FUNCTION
 Quad3DSCS::Quad3DSCS()  
-  : MasterElement(),
+  : MasterElement(Quad3DSCS::scaleToStandardIsoFac_),
     elemThickness_(0.1)
 {
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
 }
 
 //--------------------------------------------------------------------------

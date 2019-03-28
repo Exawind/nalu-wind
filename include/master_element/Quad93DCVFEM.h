@@ -73,9 +73,6 @@ public:
     const double *coords,
     double *normal) final;
 
-  using MasterElement::num_integration_points;
-  int num_integration_points() const {return numIntPoints_;}
-
   virtual const double* integration_locations() const final {
     return intgLoc_;
   }

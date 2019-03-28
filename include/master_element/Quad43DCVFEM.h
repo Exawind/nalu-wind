@@ -96,7 +96,7 @@ private:
   static const int nDim_ = AlgTraits::nDim_;
   static const int nodesPerElement_ = AlgTraits::nodesPerElement_;
   static const int numIntPoints_ = AlgTraits::numScsIp_;
-  const double scaleToStandardIsoFac_ = 2.0;
+  static constexpr double scaleToStandardIsoFac_ = 2.0;
 
   // define ip node mappings; ordinal size = 1
   const int ipNodeMap_[nodesPerElement_] = {0, 1, 2, 3};

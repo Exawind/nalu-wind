@@ -41,7 +41,7 @@ class MasterElement
 {
 public:
   KOKKOS_FUNCTION
-  MasterElement();
+  MasterElement(const double scaleToStandardIsoFac=1.0);
   KOKKOS_FUNCTION
   virtual ~MasterElement() {} // = default is apparently not allowed for virtual destructors...
 
@@ -258,17 +258,10 @@ public:
   bool within_tolerance(const double & val, const double & tol) const;
   double vector_norm_sq(const double * vect, int len) const;
 
-  virtual int ndim() const {return nDim_;} 
-  virtual void ndim(const int n) {nDim_=n;} 
-
-  virtual int nodes_per_element() const {return nodesPerElement_;} 
-  virtual void nodes_per_element(const int n) {nodesPerElement_=n;} 
-
-  virtual int num_integration_points() const {return numIntPoints_;} 
-  virtual void num_integration_points(const int n) {numIntPoints_=n;} 
-
-  virtual double scal_to_standard_iso_factor() const {return scaleToStandardIsoFac_;} 
-  virtual void scal_to_standard_iso_factor(const double n) {scaleToStandardIsoFac_=n;} 
+  virtual int ndim()                           const {return nDim_;} 
+  virtual int nodes_per_element()              const {return nodesPerElement_;} 
+          int num_integration_points()         const {return numIntPoints_;} 
+          double scal_to_standard_iso_factor() const {return scaleToStandardIsoFac_;} 
 
   virtual const int   * adjacentNodes()              const {throw std::runtime_error("adjacentNodes not implimented");}
   virtual const double* integration_locations()      const {throw std::runtime_error("integration_locations not implemented");}
@@ -276,12 +269,13 @@ public:
   virtual const double* integration_exp_face_shift() const {throw std::runtime_error("integration_exp_face_shift not implimented");}
   virtual const int   * side_node_ordinals(int)      const {throw std::runtime_error("side_node_ordinals not implemented");}
 
+
   int nDim_;
   int nodesPerElement_;
-  double scaleToStandardIsoFac_;
-
 protected:
   int numIntPoints_;
+private:
+  const double scaleToStandardIsoFac_;
 };
 
 } // namespace nalu

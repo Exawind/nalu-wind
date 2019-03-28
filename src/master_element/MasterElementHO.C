@@ -163,7 +163,7 @@ HigherOrderHexSCV::HigherOrderHexSCV(
     basis_(std::move(basis)),
     quadrature_(std::move(quadrature))
 {
-  ndim(elem_.dimension);
+  MasterElement::nDim_ = elem_.dimension;
   nodesPerElement_ = elem_.nodesPerElement;
 
   // set up integration rule and relevant maps for scvs
@@ -339,7 +339,7 @@ HigherOrderHexSCS::HigherOrderHexSCS(
   quadrature_(std::move(quadrature)),
   expRefGradWeights_("reference_gradient_weights", 6*ip_per_face(quadrature,basis), basis.num_nodes())
 {
-  ndim(elem_.dimension);
+  MasterElement::nDim_ = elem_.dimension;
   nodesPerElement_ = elem_.nodesPerElement;
 
   // set up integration rule and relevant maps on scs
@@ -1047,7 +1047,7 @@ HigherOrderQuad3DSCS::HigherOrderQuad3DSCS(
   quadrature_(std::move(quadrature))
 {
   surfaceDimension_ = 2;
-  ndim(3);
+  MasterElement::nDim_ = 3;
   nodesPerElement_ = elem_.nodes1D * elem_.nodes1D;
 
   // set up integration rule and relevant maps on scs
@@ -1187,7 +1187,7 @@ HigherOrderQuad2DSCV::HigherOrderQuad2DSCV(
   basis_(std::move(basis)),
   quadrature_(std::move(quadrature))
 {
-  ndim(elem_.dimension);
+  MasterElement::nDim_ = elem_.dimension;
   nodesPerElement_ = elem_.nodesPerElement;
 
   // set up integration rule and relevant maps for scvs
@@ -1343,7 +1343,7 @@ HigherOrderQuad2DSCS::HigherOrderQuad2DSCS(
   basis_(std::move(basis)),
   quadrature_(std::move(quadrature))
 {
-  ndim(elem_.dimension);
+  MasterElement::nDim_ = elem_.dimension;
   nodesPerElement_ = elem_.nodesPerElement;
 
   // set up integration rule and relevant maps for scs
@@ -1824,7 +1824,7 @@ HigherOrderEdge2DSCS::HigherOrderEdge2DSCS(
   basis_(basis),
   quadrature_(quadrature)
 {
-  ndim(2);
+  MasterElement::nDim_ = 2;
   nodesPerElement_ = elem_.nodes1D;
   numIntPoints_ = quadrature_.num_quad() * elem_.nodes1D;
 
