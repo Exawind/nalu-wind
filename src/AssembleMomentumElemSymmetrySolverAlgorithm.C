@@ -131,7 +131,7 @@ AssembleMomentumElemSymmetrySolverAlgorithm::execute()
     // face master element
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerFace =meFC->nodesPerElement_;
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
 
     // resize some things; matrix related
     const int lhsSize = nodesPerElement*nDim*nodesPerElement*nDim;

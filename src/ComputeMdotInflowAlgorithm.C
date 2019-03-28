@@ -105,7 +105,7 @@ ComputeMdotInflowAlgorithm::execute()
     // extract master element specifics
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
 
     // algorithm related
     ws_densityBC.resize(nodesPerFace);

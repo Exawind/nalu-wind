@@ -104,7 +104,7 @@ PstabErrorIndicatorElemAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerElement = meSCS->nodesPerElement_;
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
 
     // algorithm related
     ws_Gpdx.resize(nodesPerElement*nDim);

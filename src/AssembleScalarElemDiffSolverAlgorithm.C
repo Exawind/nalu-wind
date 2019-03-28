@@ -121,7 +121,7 @@ AssembleScalarElemDiffSolverAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerElement = meSCS->nodesPerElement_;
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
     const int *lrscv = meSCS->adjacentNodes();
 
     // resize some things; matrix related

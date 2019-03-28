@@ -76,8 +76,8 @@ void check_interpolation_at_ips(
   auto linField = make_random_linear_field(dim,rng);
 
   const auto& intgLoc = me.integration_locations();
-  std::vector<double> polyResult(me.numIntPoints_);
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  std::vector<double> polyResult(me.num_integration_points());
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     polyResult[j] = linField(&intgLoc[j*dim]);
   }
 
@@ -86,12 +86,12 @@ void check_interpolation_at_ips(
     ws_field[j] = linField(stk::mesh::field_data(coordField, node_rels[j]));
   }
 
-  std::vector<double> meResult(me.numIntPoints_, 0.0);
+  std::vector<double> meResult(me.num_integration_points(), 0.0);
 
-  std::vector<double> meShapeFunctions(me.nodesPerElement_ * me.numIntPoints_);
+  std::vector<double> meShapeFunctions(me.nodesPerElement_ * me.num_integration_points());
   me.shape_fcn(meShapeFunctions.data());
 
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int i = 0; i < me.nodesPerElement_; ++i) {
       meResult[j] += meShapeFunctions[j*me.nodesPerElement_+i] * ws_field[i];
     }
@@ -114,8 +114,8 @@ void check_derivatives_at_ips(
   rng.seed(0);
   auto linField = make_random_linear_field(dim,rng);
 
-  std::vector<double> polyResult(me.numIntPoints_ * dim);
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  std::vector<double> polyResult(me.num_integration_points() * dim);
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int d = 0; d < dim; ++d) {
       polyResult[j*dim+d] = linField.b[d];
     }
@@ -131,16 +131,16 @@ void check_derivatives_at_ips(
     ws_field[j] = linField(coords);
   }
 
-  std::vector<double> meResult(me.numIntPoints_ * dim, 0.0);
-  std::vector<double> meGrad(me.numIntPoints_ * me.nodesPerElement_ * dim);
-  std::vector<double> meDeriv(me.numIntPoints_ * me.nodesPerElement_ * dim);
-  std::vector<double> meDetj(me.numIntPoints_);
+  std::vector<double> meResult(me.num_integration_points() * dim, 0.0);
+  std::vector<double> meGrad(me.num_integration_points() * me.nodesPerElement_ * dim);
+  std::vector<double> meDeriv(me.num_integration_points() * me.nodesPerElement_ * dim);
+  std::vector<double> meDetj(me.num_integration_points());
 
   double error = 0.0;
   me.grad_op(1, ws_coords.data(), meGrad.data(), meDeriv.data(), meDetj.data(), &error);
   EXPECT_EQ(error, 0.0);
 
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     for (int i = 0; i < me.nodesPerElement_; ++i) {
       for (int d = 0; d < dim; ++d) {
         meResult[j*dim+d] += meGrad[j*me.nodesPerElement_*dim + i * dim + d] * ws_field[i];
@@ -176,7 +176,7 @@ void check_scv_shifted_ips_are_nodal(
     }
   }
 
-  const int nint = meSV.numIntPoints_*meSV.nDim_;
+  const int nint = meSV.num_integration_points()*meSV.nDim_;
   const double* shiftedIps = meSV.integration_location_shift();
   EXPECT_EQ(ws_coords.size(), nint) << "P1 test";
   for (int j = 0; j < nint; ++j) {
@@ -216,15 +216,15 @@ void check_volume_integration(
   ASSERT_TRUE(detQR > 1.0e-15);
 
   double error = 0;
-  std::vector<double> volume_integration_weights(meSV.numIntPoints_);
+  std::vector<double> volume_integration_weights(meSV.num_integration_points());
   meSV.determinant(1, ws_coords.data(), volume_integration_weights.data(), &error);
   ASSERT_DOUBLE_EQ(error, 0);
 
-  std::vector<double> skewed_volume_integration_weights(meSV.numIntPoints_);
+  std::vector<double> skewed_volume_integration_weights(meSV.num_integration_points());
   meSV.determinant(1, ws_coords_mapped.data(), skewed_volume_integration_weights.data(), &error);
   ASSERT_DOUBLE_EQ(error, 0);
 
-  for (int k = 0; k < meSV.numIntPoints_; ++k) {
+  for (int k = 0; k < meSV.num_integration_points(); ++k) {
     EXPECT_NEAR(detQR*volume_integration_weights[k], skewed_volume_integration_weights[k], tol);
   }
 

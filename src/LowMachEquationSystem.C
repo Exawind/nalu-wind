@@ -357,7 +357,7 @@ LowMachEquationSystem::register_element_fields(
   if ( elementContinuityEqs_ ) {
     // extract master element and get scs points
     MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(theTopo);
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
     GenericFieldType *massFlowRate = &(meta_data.declare_field<GenericFieldType>(stk::topology::ELEMENT_RANK, "mass_flow_rate_scs"));
     stk::mesh::put_field_on_mesh(*massFlowRate, *part, numScsIp , nullptr);
   }
@@ -503,7 +503,7 @@ LowMachEquationSystem::register_open_bc(
 
   // mdot at open bc; register field
   MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(theTopo);
-  const int numScsBip = meFC->numIntPoints_;
+  const int numScsBip = meFC->num_integration_points();
   GenericFieldType *mdotBip 
     = &(metaData.declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData.side_rank()), 
                                                  "open_mass_flow_rate"));
@@ -1892,7 +1892,7 @@ MomentumEquationSystem::register_wall_bc(
 
     // integration point; size it based on number of boundary integration points
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(partTopo);
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
 
     stk::topology::rank_t sideRank = static_cast<stk::topology::rank_t>(meta_data.side_rank());
     GenericFieldType *wallFrictionVelocityBip 
@@ -2245,7 +2245,7 @@ MomentumEquationSystem::register_non_conformal_bc(
 
   // mdot at nc bc; register field; require topo and num ips
   MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(theTopo);
-  const int numScsBip = meFC->numIntPoints_;
+  const int numScsBip = meFC->num_integration_points();
 
   stk::topology::rank_t sideRank = static_cast<stk::topology::rank_t>(meta_data.side_rank());
   GenericFieldType *mdotBip =
@@ -3495,7 +3495,7 @@ ContinuityEquationSystem::register_non_conformal_bc(
 
   // mdot at nc bc; register field; require topo and num ips
   MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(theTopo);
-  const int numScsBip = meFC->numIntPoints_;
+  const int numScsBip = meFC->num_integration_points();
   
   stk::topology::rank_t sideRank = static_cast<stk::topology::rank_t>(meta_data.side_rank());
   GenericFieldType *mdotBip =

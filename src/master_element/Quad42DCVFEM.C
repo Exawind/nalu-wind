@@ -306,7 +306,7 @@ void Quad42DSCV::Mij(
 //--------------------------------------------------------------------------
 KOKKOS_FUNCTION
 Quad42DSCS::Quad42DSCS()
-  : MasterElement()
+  : MasterElement() 
 {
   MasterElement::nDim_=nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;

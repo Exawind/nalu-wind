@@ -54,9 +54,9 @@ public:
       meElemInfo.nodalGatherSize_ = nodesPerElem_;
       meElemInfo.nodesPerFace_ = nodesPerFace_;
       meElemInfo.nodesPerElement_ = nodesPerElem_;
-      meElemInfo.numFaceIp_ = meFC != nullptr ? meFC->numIntPoints_ : 0;
-      meElemInfo.numScsIp_ = meSCS != nullptr ? meSCS->numIntPoints_ : 0;
-      meElemInfo.numScvIp_ = meSCV != nullptr ? meSCV->numIntPoints_ : 0;
+      meElemInfo.numFaceIp_ = meFC != nullptr ? meFC->num_integration_points() : 0;
+      meElemInfo.numScsIp_ = meSCS != nullptr ? meSCS->num_integration_points() : 0;
+      meElemInfo.numScvIp_ = meSCV != nullptr ? meSCV->num_integration_points() : 0;
 
       int rhsSize = meElemInfo.nodalGatherSize_*numDof_, lhsSize = rhsSize*rhsSize, scratchIdsSize = rhsSize;
 

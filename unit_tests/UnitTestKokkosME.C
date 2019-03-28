@@ -127,7 +127,7 @@ void compare_old_scs_gij(const sierra::nalu::SharedMemView<DoubleType**>& v_coor
   copy_DoubleType0_to_double(v_coords, coords);
   std::vector<double> gijUpper(len, 0.0);
   std::vector<double> gijLower(len, 0.0);
-  int gradOpLen = meSCS->nodesPerElement_ * meSCS->numIntPoints_ * meSCS->nDim_;
+  int gradOpLen = meSCS->nodesPerElement_ * meSCS->num_integration_points() * meSCS->nDim_;
   std::vector<double> grad_op(gradOpLen, 0.0);
   std::vector<double> deriv(gradOpLen, 0.0);
   std::vector<double> det_j(len, 0.0);

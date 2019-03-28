@@ -612,7 +612,7 @@ void calc_mass_flow_rate_scs(
 
           std::vector<double> rhoU(ndim);
           std::vector<double> v_shape_function(
-            meSCS->numIntPoints_ * meSCS->nodesPerElement_);
+            meSCS->num_integration_points() * meSCS->nodesPerElement_);
           meSCS->shape_fcn(v_shape_function.data());
           double *mdot = stk::mesh::field_data(massFlowRate, element);
           auto& v_densityNp1 = preReqData.get_scratch_view_1D(densityNp1);
@@ -620,7 +620,7 @@ void calc_mass_flow_rate_scs(
           auto& v_scs_areav = preReqData.get_me_views(
             sierra::nalu::CURRENT_COORDINATES).scs_areav;
 
-          for (int ip=0; ip < meSCS->numIntPoints_; ++ip) {
+          for (int ip=0; ip < meSCS->num_integration_points(); ++ip) {
             for (int j=0; j < ndim; ++j) {
               rhoU[j] = 0.0;
             }
@@ -676,7 +676,7 @@ void calc_projected_nodal_gradient_interior(
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
 
-  auto v_shape_function = Kokkos::View<double**>("shape_function", meSCS->numIntPoints_, meSCS->nodesPerElement_);
+  auto v_shape_function = Kokkos::View<double**>("shape_function", meSCS->num_integration_points(), meSCS->nodesPerElement_);
 
   auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
 
@@ -703,7 +703,7 @@ void calc_projected_nodal_gradient_interior(
       const ngp::Mesh::ConnectedNodes node_rels = preReqData.elemNodes;
       const int* lrscv = meSCS->adjacentNodes();
 
-      for (int ip = 0; ip < meSCS->numIntPoints_; ++ip) {
+      for (int ip = 0; ip < meSCS->num_integration_points(); ++ip) {
         double qIp = 0.0;
         for (int n = 0; n < meSCS->nodesPerElement_; ++n) {
           qIp += v_shape_function(ip, n) * v_scalar(n);
@@ -759,7 +759,7 @@ void calc_projected_nodal_gradient_interior(
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
 
-  auto v_shape_function = Kokkos::View<double**>("shape_function", meSCS->numIntPoints_, meSCS->nodesPerElement_);
+  auto v_shape_function = Kokkos::View<double**>("shape_function", meSCS->num_integration_points(), meSCS->nodesPerElement_);
 
   auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
 
@@ -787,7 +787,7 @@ void calc_projected_nodal_gradient_interior(
       const int* lrscv = meSCS->adjacentNodes();
 
       for (int di = 0; di < ndim; ++di) {
-        for (int ip = 0; ip < meSCS->numIntPoints_; ++ip) {
+        for (int ip = 0; ip < meSCS->num_integration_points(); ++ip) {
           double qIp = 0.0;
           for (int n = 0; n < meSCS->nodesPerElement_; ++n) {
             qIp += v_shape_function(ip, n) * v_vector(n,di);
@@ -845,7 +845,7 @@ void calc_projected_nodal_gradient_boundary(
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
 
-  auto v_shape_function = Kokkos::View<double**>("shape_function", meBC->numIntPoints_, meBC->nodesPerElement_);
+  auto v_shape_function = Kokkos::View<double**>("shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
 
   auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
 
@@ -870,7 +870,7 @@ void calc_projected_nodal_gradient_boundary(
       const ngp::Mesh::ConnectedNodes node_rels = preReqData.elemNodes;
       const int* ipNodeMap = meBC->ipNodeMap();
 
-      for (int ip = 0; ip < meBC->numIntPoints_; ++ip) {
+      for (int ip = 0; ip < meBC->num_integration_points(); ++ip) {
         double qIp = 0.0;
         for (int n = 0; n < meBC->nodesPerElement_; ++n) {
           qIp += v_shape_function(ip, n) * v_scalar(n);
@@ -922,7 +922,7 @@ void calc_projected_nodal_gradient_boundary(
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
 
-  auto v_shape_function = Kokkos::View<double**>("shape_function", meBC->numIntPoints_, meBC->nodesPerElement_);
+  auto v_shape_function = Kokkos::View<double**>("shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
 
   auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
 
@@ -949,7 +949,7 @@ void calc_projected_nodal_gradient_boundary(
       const int* ipNodeMap = meBC->ipNodeMap();
 
       for (int di = 0; di < ndim; ++di) {
-        for (int ip = 0; ip < meBC->numIntPoints_; ++ip) {
+        for (int ip = 0; ip < meBC->num_integration_points(); ++ip) {
           double qIp = 0.0;
           for (int n = 0; n < meBC->nodesPerElement_; ++n) {
             qIp += v_shape_function(ip, n) * v_vector(n,di);
@@ -996,7 +996,7 @@ void calc_dual_nodal_volume(
   const int bytes_per_team = 0;
   const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
 
-  auto v_shape_function = Kokkos::View<double**>("shape_function", meSCV->numIntPoints_, meSCV->nodesPerElement_);
+  auto v_shape_function = Kokkos::View<double**>("shape_function", meSCV->num_integration_points(), meSCV->nodesPerElement_);
 
   auto team_exec = sierra::nalu::get_host_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
 
@@ -1020,7 +1020,7 @@ void calc_dual_nodal_volume(
       const ngp::Mesh::ConnectedNodes node_rels = preReqData.elemNodes;
       const int* ipNodeMap = meSCV->ipNodeMap();
 
-      for (int ip = 0; ip < meSCV->numIntPoints_; ++ip) {
+      for (int ip = 0; ip < meSCV->num_integration_points(); ++ip) {
         double volIp = v_scv_vol(ip);
         Kokkos::atomic_add(stk::mesh::field_data(dnvField, node_rels[ipNodeMap[ip]]),volIp);
       }

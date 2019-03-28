@@ -86,7 +86,7 @@ AssembleNodalGradBoundaryAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerFace = meFC->nodesPerElement_;
-    const int numScsIp = meFC->numIntPoints_;
+    const int numScsIp = meFC->num_integration_points();
     const int *ipNodeMap = meFC->ipNodeMap();
 
     // algorithm related

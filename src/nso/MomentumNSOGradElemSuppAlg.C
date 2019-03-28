@@ -81,7 +81,7 @@ MomentumNSOGradElemSuppAlg::elem_resize(
   MasterElement */*meSCV*/)
 {
   const int nodesPerElement = meSCS->nodesPerElement_;
-  const int numScsIp = meSCS->numIntPoints_;
+  const int numScsIp = meSCS->num_integration_points();
 
   // resize; geometry
   ws_scs_areav_.resize(numScsIp*nDim_);
@@ -127,7 +127,7 @@ MomentumNSOGradElemSuppAlg::elem_execute(
 {
   // details on this element topo
   const int nodesPerElement = meSCS->nodesPerElement_;
-  const int numScsIp = meSCS->numIntPoints_;
+  const int numScsIp = meSCS->num_integration_points();
   const int *lrscv = meSCS->adjacentNodes();    
   
   // gather

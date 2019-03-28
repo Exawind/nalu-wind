@@ -2845,7 +2845,7 @@ Realm::register_wall_bc(
 
   // register fields
   MasterElement *meFC = MasterElementRepo::get_surface_master_element(theTopo);
-  const int numScsIp = meFC->numIntPoints_;
+  const int numScsIp = meFC->num_integration_points();
 
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
@@ -2888,7 +2888,7 @@ Realm::register_inflow_bc(
 
   // register fields
   MasterElement *meFC = MasterElementRepo::get_surface_master_element(theTopo);
-  const int numScsIp = meFC->numIntPoints_;
+  const int numScsIp = meFC->num_integration_points();
 
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
@@ -2930,7 +2930,7 @@ Realm::register_open_bc(
 
   // register fields
   MasterElement *meFC = MasterElementRepo::get_surface_master_element(theTopo);
-  const int numScsIp = meFC->numIntPoints_;
+  const int numScsIp = meFC->num_integration_points();
 
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
@@ -2973,7 +2973,7 @@ Realm::register_symmetry_bc(
 
   // register fields
   MasterElement *meFC = MasterElementRepo::get_surface_master_element(theTopo);
-  const int numScsIp = meFC->numIntPoints_;
+  const int numScsIp = meFC->num_integration_points();
 
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
@@ -3078,7 +3078,7 @@ Realm::register_non_conformal_bc(
   
   // register fields
   MasterElement *meFC = MasterElementRepo::get_surface_master_element(theTopo);
-  const int numScsIp = meFC->numIntPoints_;
+  const int numScsIp = meFC->num_integration_points();
   
   // exposed area vector
   GenericFieldType *exposedAreaVec_

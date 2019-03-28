@@ -278,8 +278,10 @@ public:
 
   int nDim_;
   int nodesPerElement_;
-  int numIntPoints_;
   double scaleToStandardIsoFac_;
+
+protected:
+  int numIntPoints_;
 };
 
 } // namespace nalu

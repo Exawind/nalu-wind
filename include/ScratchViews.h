@@ -849,10 +849,10 @@ ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
           ? meSCS->nodesPerElement_ : meSCV != nullptr
           ? meSCV->nodesPerElement_ : meFEM != nullptr
           ? meFEM->nodesPerElement_ : 0;
-  int numFaceIp= meFC  != nullptr ? meFC->numIntPoints_  : 0;
-  int numScsIp = meSCS != nullptr ? meSCS->numIntPoints_ : 0;
-  int numScvIp = meSCV != nullptr ? meSCV->numIntPoints_ : 0;
-  int numFemIp = meFEM != nullptr ? meFEM->numIntPoints_ : 0;
+  int numFaceIp= meFC  != nullptr ? meFC->num_integration_points()  : 0;
+  int numScsIp = meSCS != nullptr ? meSCS->num_integration_points() : 0;
+  int numScvIp = meSCV != nullptr ? meSCV->num_integration_points() : 0;
+  int numFemIp = meFEM != nullptr ? meFEM->num_integration_points() : 0;
 
   create_needed_master_element_views(team, dataNeeded, nDim, nodesPerFace, nodesPerElem, numFaceIp, numScsIp, numScvIp, numFemIp);
 #endif

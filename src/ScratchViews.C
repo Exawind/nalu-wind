@@ -211,10 +211,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
     numScalars += entitiesPerElem*scalarsPerEntity;
   }
 
-  const int numFaceIp = meFC != nullptr ? meFC->numIntPoints_ : 0;
-  const int numScsIp = meSCS != nullptr ? meSCS->numIntPoints_ : 0;
-  const int numScvIp = meSCV != nullptr ? meSCV->numIntPoints_ : 0;
-  const int numFemIp = meFEM != nullptr ? meFEM->numIntPoints_ : 0;
+  const int numFaceIp = meFC != nullptr ? meFC->num_integration_points() : 0;
+  const int numScsIp = meSCS != nullptr ? meSCS->num_integration_points() : 0;
+  const int numScvIp = meSCV != nullptr ? meSCV->num_integration_points() : 0;
+  const int numFemIp = meFEM != nullptr ? meFEM->num_integration_points() : 0;
 
   const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
   for(unsigned i=0; i<coordsTypes.size(); ++i) {

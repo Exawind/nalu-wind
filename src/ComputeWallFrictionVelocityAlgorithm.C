@@ -136,7 +136,7 @@ ComputeWallFrictionVelocityAlgorithm::execute()
     // face master element
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerFace = b.topology().num_nodes();
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
 
     // mapping from ip to nodes for this ordinal; face perspective (use with face_node_relations)
     const int *faceIpNodeMap = meFC->ipNodeMap();

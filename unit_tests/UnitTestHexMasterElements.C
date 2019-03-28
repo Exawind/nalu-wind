@@ -124,8 +124,8 @@ void check_interpolation(
     }
   }
 
-  std::vector<double> polyResult(me.numIntPoints_);
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  std::vector<double> polyResult(me.num_integration_points());
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     polyResult[j] = poly_val(coeffs, &me.integration_locations()[j*dim]);
   }
 
@@ -135,11 +135,11 @@ void check_interpolation(
     ws_field[j] = poly_val(coeffs, coords);
   }
 
-  std::vector<double> meResult(me.numIntPoints_, 0.0);
-  std::vector<double> meShapeFunctions(me.numIntPoints_ * topo.num_nodes());
+  std::vector<double> meResult(me.num_integration_points(), 0.0);
+  std::vector<double> meShapeFunctions(me.num_integration_points() * topo.num_nodes());
   me.shape_fcn(meShapeFunctions.data());
   
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     for (unsigned i = 0; i < topo.num_nodes(); ++i) {
       meResult[j] += meShapeFunctions[j*topo.num_nodes()+i] * ws_field[i];
     }
@@ -183,8 +183,8 @@ void check_derivatives(
     }
   }
 
-  std::vector<double> polyResult(me.numIntPoints_ * dim);
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  std::vector<double> polyResult(me.num_integration_points() * dim);
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     for (unsigned d = 0; d < dim; ++d) {
       polyResult[j*dim+d] = poly_der(coeffs, &me.integration_locations()[j*dim], d);
     }
@@ -200,16 +200,16 @@ void check_derivatives(
     ws_field[j] = poly_val(coeffs, coords);
   }
 
-  std::vector<double> meResult(me.numIntPoints_ * dim, 0.0);
-  std::vector<double> meGrad(me.numIntPoints_ * topo.num_nodes() * dim);
-  std::vector<double> meDeriv(me.numIntPoints_ * topo.num_nodes() * dim);
-  std::vector<double> meDetj(me.numIntPoints_);
+  std::vector<double> meResult(me.num_integration_points() * dim, 0.0);
+  std::vector<double> meGrad(me.num_integration_points() * topo.num_nodes() * dim);
+  std::vector<double> meDeriv(me.num_integration_points() * topo.num_nodes() * dim);
+  std::vector<double> meDetj(me.num_integration_points());
 
   double error = 0.0;
   me.grad_op(1,ws_coords.data(), meGrad.data(), meDeriv.data(), meDetj.data(), &error);
   EXPECT_EQ(error, 0.0);
 
-  for (int j = 0; j < me.numIntPoints_; ++j) {
+  for (int j = 0; j < me.num_integration_points(); ++j) {
     for (unsigned i = 0; i < topo.num_nodes(); ++i) {
       for (unsigned d = 0; d < dim; ++d) {
         meResult[j*dim+d] += meGrad[j*topo.num_nodes()*dim + i * dim + d] * ws_field[i];

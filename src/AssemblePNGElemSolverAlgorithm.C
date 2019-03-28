@@ -112,8 +112,8 @@ AssemblePNGElemSolverAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerElement = meSCS->nodesPerElement_;
-    const int numScsIp = meSCS->numIntPoints_;
-    const int numScvIp = meSCV->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
+    const int numScvIp = meSCV->num_integration_points();
 
     // mappings for this element, SCS and SCV
     const int *lrscv = meSCS->adjacentNodes();
