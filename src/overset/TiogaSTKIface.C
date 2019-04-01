@@ -39,7 +39,6 @@ TiogaSTKIface::TiogaSTKIface(
     meta_(*oversetManager.metaData_),
     bulk_(*oversetManager.bulkData_),
     tg_(new TIOGA::tioga()),
-    inactivePartName_("nalu_overset_hole_elements"),
     coordsName_(oversetManager_.realm_.get_coordinates_name())
 {
   load(node);
@@ -53,36 +52,31 @@ TiogaSTKIface::load(const YAML::Node& node)
 {
   const YAML::Node& oset_groups = node["mesh_group"];
 
+  if (node["tioga_options"])
+    tiogaOpts_.load(node["tioga_options"]);
+
   int num_meshes = oset_groups.size();
   blocks_.resize(num_meshes);
 
   for (int i = 0; i < num_meshes; i++) {
-    blocks_[i].reset(new TiogaBlock(meta_, bulk_, oset_groups[i], coordsName_, i + 1));
+    blocks_[i].reset(new TiogaBlock(
+      meta_, bulk_, tiogaOpts_, oset_groups[i], coordsName_, i + 1));
   }
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
       << "TIOGA: Using coordinates field: " << coordsName_ << std::endl;
 
-  if (node["tioga_populate_inactive_part"])
-    populateInactivePart_ = node["tioga_populate_inactive_part"].as<bool>();
-
   if (node["tioga_symmetry_direction"])
-    symmetryDir_ = node["tioga_symmetry_direction"].as<int>();
+    sierra::nalu::NaluEnv::self().naluOutputP0()
+      << "WARNING!! TiogaSTKIface: tioga_symmetry_direction is no longer supported. "
+      << "Use tioga_options to specify options that control TIOGA behavior"
+      << std::endl;
 }
 
 void TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
 {
   for (auto& tb: blocks_) {
     tb->setup(bcPartVec);
-  }
-
-  if (populateInactivePart_) {
-    // Initialize the inactive part
-    oversetManager_.inActivePart_ = &meta_.declare_part(
-      inactivePartName_, stk::topology::ELEM_RANK);
-
-    oversetManager_.backgroundSurfacePart_ = &meta_.declare_part(
-      "nalu_overset_fringe_boundary", stk::topology::ELEM_RANK);
   }
 }
 
@@ -92,7 +86,7 @@ void TiogaSTKIface::initialize()
                        bulk_.parallel_rank(),
                        bulk_.parallel_size());
 
-  tg_->setSymmetry(symmetryDir_);
+  tiogaOpts_.set_options(*tg_);
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
     << "TIOGA: Initializing overset mesh blocks: " << std::endl;
@@ -103,21 +97,6 @@ void TiogaSTKIface::initialize()
     << "TIOGA: Initialized " << blocks_.size() << " overset blocks" << std::endl;
 }
 
-void TiogaSTKIface::initialize_ghosting()
-{
-  // TODO: Update ghosting modification to use optimized version in
-  // Non-conformal case.
-  stk::mesh::Ghosting* ovsetGhosting = oversetManager_.oversetGhosting_;
-  bulk_.modification_begin();
-  if (ovsetGhosting == nullptr) {
-    const std::string ghostName = "nalu_overset_ghosting";
-    oversetManager_.oversetGhosting_ = &(bulk_.create_ghosting(ghostName));
-  } else {
-    bulk_.destroy_ghosting(*(oversetManager_.oversetGhosting_));
-  }
-  bulk_.modification_end();
-}
-
 void TiogaSTKIface::execute()
 {
   reset_data_structures();
@@ -125,12 +104,14 @@ void TiogaSTKIface::execute()
   // Update the coordinates for TIOGA and register updates to the TIOGA mesh block.
   for (auto& tb: blocks_) {
     tb->update_coords();
+    tb->update_element_volumes();
     tb->register_block(*tg_);
   }
 
   // Determine overset connectivity
   tg_->profile();
   tg_->performConnectivity();
+  if (tiogaOpts_.reduce_fringes()) tg_->reduce_fringes();
 
   for (auto& tb: blocks_) {
     // Update IBLANK information at nodes and elements
@@ -155,35 +136,12 @@ void TiogaSTKIface::execute()
   // step.
   update_ghosting();
 
-  if (populateInactivePart_) populate_inactive_part();
-
   // Update overset fringe connectivity information for Constraint based algorithm
   populate_overset_info();
 }
 
 void TiogaSTKIface::reset_data_structures()
 {
-  // Reset inactivePart_
-  if (populateInactivePart_) {
-    bulk_.modification_begin();
-    stk::mesh::Part* inactivePart = oversetManager_.inActivePart_;
-    stk::mesh::PartVector add_parts;
-    stk::mesh::PartVector remove_parts;
-    remove_parts.push_back(inactivePart);
-    for (auto elem : holeElems_) {
-      bulk_.change_entity_parts(elem, add_parts, remove_parts);
-    }
-
-    stk::mesh::PartVector fringe_remove_parts;
-    fringe_remove_parts.push_back(oversetManager_.backgroundSurfacePart_);
-    for (auto elem: fringeElems_) {
-      bulk_.change_entity_parts(elem, add_parts, fringe_remove_parts);
-    }
-    bulk_.modification_end();
-  }
-
-  holeElems_.clear();
-  fringeElems_.clear();
   elemsToGhost_.clear();
   donorIDs_.clear();
   receptorIDs_.clear();
@@ -240,177 +198,6 @@ void TiogaSTKIface::update_ghosting()
     std::vector<const stk::mesh::FieldBase*> fVec = {coords};
     stk::mesh::communicate_field_data(*oversetManager_.oversetGhosting_, fVec);
   }
-}
-
-void TiogaSTKIface::populate_inactive_part()
-{
-  stk::mesh::PartVector toParts;
-  stk::mesh::PartVector fringeParts;
-  toParts.push_back(oversetManager_.inActivePart_);
-  fringeParts.push_back(oversetManager_.backgroundSurfacePart_);
-
-  // Gather all the "hole" elements that are not solved for, or cannot have a
-  // valid solution because the nodes lie within a solid body and add it to the
-  // inactive part. The rows in the linear system matrix for these nodes will be
-  // removed during the linear system reinitialization.
-  bulk_.modification_begin();
-  {
-    for (auto& tb: blocks_) {
-      auto iblank_cell = tb->iblank_cell();
-      auto elem_gid = tb->elem_id_map();
-
-      for (size_t i=0; i<iblank_cell.size(); i++) {
-        auto ib = iblank_cell[i];
-
-        if (ib == 0) {
-          stk::mesh::Entity elem = bulk_.get_entity(
-            stk::topology::ELEM_RANK, elem_gid[i]);
-          bulk_.change_entity_parts(elem, toParts);
-          holeElems_.push_back(elem);
-        }
-        else if (ib == -1) {
-          stk::mesh::Entity elem = bulk_.get_entity(
-            stk::topology::ELEM_RANK, elem_gid[i]);
-          bulk_.change_entity_parts(elem, fringeParts);
-          fringeElems_.push_back(elem);
-        }
-      }
-    }
-  }
-  bulk_.modification_end();
-
-  oversetManager_.orphanPointSurfaceVecBackground_.push_back(
-    oversetManager_.backgroundSurfacePart_);
-
-#if 1
-  size_t numHolesLocal = holeElems_.size();
-  size_t numHolesGlobal = 0;
-  stk::all_reduce_sum(bulk_.parallel(), &numHolesLocal, 
-          &numHolesGlobal, 1);
-  sierra::nalu::NaluEnv::self().naluOutputP0()
-      << "TIOGA: Num. inactive elements: " << numHolesGlobal << std::endl;
-#endif
-}
-
-void TiogaSTKIface::update_fringe_info()
-{
-  auto& realm = oversetManager_.realm_;
-  auto& osetInfo = oversetManager_.oversetInfoVec_;
-  int nDim = meta_.spatial_dimension();
-  std::vector<double> elemCoords;
-
-  // Ask TIOGA for the fringe points and their corresponding donor element
-  // information
-  std::vector<int> receptors;
-  tg_->getReceptorInfo(receptors);
-
-  // Before we begin ensure that we have cleaned up oversetInfoVec
-  ThrowAssert(osetInfo.size() == 0);
-
-  VectorFieldType *coords = meta_.get_field<VectorFieldType>
-    (stk::topology::NODE_RANK, realm.get_coordinates_name());
-  ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
-          stk::topology::NODE_RANK, "iblank");
-  int nbadnodes = 0;
-
-  // Process TIOGA receptors array and fill in the oversetInfoVec used for
-  // subsequent Nalu computations.
-  //
-  // TIOGA returns a integer array that contains 3 entries per receptor node:
-  //   - the local node index within the tioga mesh data array
-  //   - the local mesh tag (block index) for that mesh during registration
-  //   - the STK global ID for the donor element
-  //
-  size_t ncount = receptors.size();
-  for (size_t i=0; i<ncount; i+=3) {
-    int nid = receptors[i];                          // TiogaBlock node index
-    int mtag = receptors[i+1] - 1;                   // Block index
-    int donorID = receptors[i+2];                    // STK Global ID of the donor element
-    int nodeID = blocks_[mtag]->node_id_map()[nid];  // STK Global ID of the fringe node
-    stk::mesh::Entity node = bulk_.get_entity(stk::topology::NODE_RANK, nodeID);
-    stk::mesh::Entity elem = bulk_.get_entity(stk::topology::ELEM_RANK, donorID);
-
-    if (!bulk_.bucket(node).owned()) {
-        int ibval = *stk::mesh::field_data(*ibf, node);
-
-        if (ibval > -1) {
-            nbadnodes++;
-            std::cerr << mtag << "\t" << nodeID << "\t" << donorID 
-                << "\t" << ibval << std::endl;
-        }
-        //continue;
-    }
-
-#ifndef NDEBUG
-    // The donor element must have already been ghosted to the required MPI rank,
-    // so validity check should always succeed.
-    if (!bulk_.is_valid(elem))
-      throw std::runtime_error(
-        "Invalid element encountered in overset mesh connectivity");
-#endif
-
-    // At this point, we have all the necessary information to create an
-    // OversetInfo instance for this {receptor node, donor element} pair.
-    sierra::nalu::OversetInfo* oinfo = new sierra::nalu::OversetInfo(node, nDim);
-    osetInfo.push_back(oinfo);
-
-    // Store away the coordinates for this receptor node for later use
-    const double* xyz = stk::mesh::field_data(*coords, node);
-    for (int i=0; i<nDim; i++) {
-      oinfo->nodalCoords_[i] = xyz[i];
-    }
-
-    const stk::topology elemTopo = bulk_.bucket(elem).topology();
-    const stk::mesh::Entity* enodes = bulk_.begin_nodes(elem);
-    sierra::nalu::MasterElement* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
-    int num_nodes = bulk_.num_nodes(elem);
-    elemCoords.resize(nDim*num_nodes);
-
-    for (int ni=0; ni < num_nodes; ++ni) {
-      stk::mesh::Entity enode = enodes[ni];
-      const double* xyz = stk::mesh::field_data(*coords, enode);
-      for (int j=0; j < nDim; j++) {
-        const int offset = j * num_nodes + ni;
-        elemCoords[offset] = xyz[j];
-      }
-    }
-
-    const double nearestDistance = meSCS->isInElement(
-      elemCoords.data(),
-      oinfo->nodalCoords_.data(),
-      oinfo->isoParCoords_.data());
-
-#if 0
-    if (nearestDistance > (1.0 + 1.0e-8))
-      sierra::nalu::NaluEnv::self().naluOutput()
-        << "TIOGA WARNING: In pair (" << nodeID << ", " << donorID << "): "
-        << "iso-parametric distance is greater than 1.0: " << nearestDistance
-        << std::endl;
-#endif
-
-    oinfo->owningElement_ = elem;
-    oinfo->meSCS_ = meSCS;
-    oinfo->bestX_ = nearestDistance;
-    oinfo->elemIsGhosted_ = bulk_.bucket(elem).owned()? 0 : 1;
-  }
-
-#if 1
-  // Debugging information
-  size_t numFringeLocal = osetInfo.size();
-  size_t numFringeGlobal = 0;
-  stk::all_reduce_sum(bulk_.parallel(), &numFringeLocal, &numFringeGlobal, 1);
-
-  sierra::nalu::NaluEnv::self().naluOutputP0()
-    << "TIOGA: Num. receptor nodes = " << numFringeGlobal
-    << std::endl;
-
-  int nbadnodesGlobal = 0;
-  stk::all_reduce_sum(bulk_.parallel(), &nbadnodes, &nbadnodesGlobal, 1);
-  sierra::nalu::NaluEnv::self().naluOutputP0()
-    << "TIOGA: Num. inconsistent nodes = " << nbadnodesGlobal
-    << std::endl;
-
-#endif
 }
 
 void

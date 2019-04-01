@@ -8,6 +8,7 @@
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
 
+#include "overset/TiogaOptions.h"
 #include "yaml-cpp/yaml.h"
 
 #include <vector>
@@ -73,26 +74,9 @@ private:
    */
   void load(const YAML::Node&);
 
-  /** STK Custom Ghosting to transfer donor elements to receptor's MPI rank
-   *
-   *  This method declares the STK custom ghosting object, actual updates are
-   *  performed by the update_ghosting method.
-   */
-  void initialize_ghosting();
-
   /** Ghost donor elements to receptor MPI ranks
    */
   void update_ghosting();
-
-  /** \deprecated{Populate the {fringe node, donor element} pair data structure}
-   *
-   *  \sa get_receptor_info, populate_overset_info
-   */
-  void update_fringe_info();
-
-  /** Update the inactive part with hole elements
-   */
-  void populate_inactive_part();
 
   /** Reset all connectivity data structures when recomputing connectivity
    */
@@ -121,6 +105,8 @@ private:
   //! Reference to the STK BulkData object
   stk::mesh::BulkData& bulk_;
 
+  TiogaOptions tiogaOpts_;
+
   //! List of TIOGA data structures for each mesh block participating in overset
   //! connectivity
   std::vector<std::unique_ptr<TiogaBlock>> blocks_;
@@ -131,15 +117,6 @@ private:
   //! Work array used to hold donor elements that require ghosting to receptor
   //! MPI ranks
   stk::mesh::EntityProcVec elemsToGhost_;
-
-  //! Name of part holding hole elements
-  std::string inactivePartName_;
-
-  //! List of hole elements
-  std::vector<stk::mesh::Entity> holeElems_;
-
-  //! List of fringe elements
-  std::vector<stk::mesh::Entity> fringeElems_;
 
   //! List of receptor nodes that are shared entities across MPI ranks. This
   //! information is used to synchronize the field vs. fringe point status for
@@ -153,12 +130,6 @@ private:
 
   //! Name of the coordinates field (for moving mesh simulations)
   std::string coordsName_;
-
-  //! Set the symmetry direction for TIOGA, default is z-direction (3)
-  int symmetryDir_{3};
-
-  //! User option to determine whether inactive part is generated with TIOGA
-  bool populateInactivePart_{true};
 };
 
 

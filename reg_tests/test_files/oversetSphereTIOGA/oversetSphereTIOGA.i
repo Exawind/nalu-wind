@@ -125,6 +125,8 @@ realms:
     - overset_boundary_condition: bc_overset
       overset_connectivity_type: tioga
       overset_user_data:
+        tioga_options:
+          set_resolutions: no
         mesh_group:
           - overset_name: interior
             mesh_parts:

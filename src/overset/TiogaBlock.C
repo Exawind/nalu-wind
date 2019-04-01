@@ -25,11 +25,13 @@ namespace tioga_nalu {
 TiogaBlock::TiogaBlock(
   stk::mesh::MetaData& meta,
   stk::mesh::BulkData& bulk,
+  TiogaOptions& opts,
   const YAML::Node& node,
   const std::string coords_name,
   const int meshtag
 ) : meta_(meta),
     bulk_(bulk),
+    tiogaOpts_(opts),
     coords_name_(coords_name),
     ndim_(meta_.spatial_dimension()),
     meshtag_(meshtag),
@@ -113,6 +115,9 @@ void TiogaBlock::update_coords()
     stk::topology::NODE_RANK, mesh_selector);
   VectorFieldType* coords = meta_.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, coords_name_);
+  ScalarFieldType* nodeVol = meta_.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
+
 
 #if 0
   std::vector<double> bboxMin(3);
@@ -138,6 +143,9 @@ void TiogaBlock::update_coords()
         bboxMax[i] = std::max(pt[i], bboxMax[i]);
 #endif
       }
+
+      double* nVol = stk::mesh::field_data(*nodeVol, node);
+      node_res_[ip] = *nVol;
       ip++;
     }
   }
@@ -154,6 +162,36 @@ void TiogaBlock::update_coords()
       << "\t" << gMax[0] << ", " << gMax[1] << ", " << gMax[2] 
       << std::endl;
 #endif
+}
+
+void
+TiogaBlock::update_element_volumes()
+{
+  stk::mesh::Selector mesh_selector = get_elem_selector(blkParts_);
+  const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
+    stk::topology::ELEM_RANK, mesh_selector);
+  ScalarFieldType* elemVolume = meta_.get_field<ScalarFieldType>(
+    stk::topology::ELEMENT_RANK, "element_volume");
+
+  const int ntypes = conn_map_.size();
+  std::map<int, size_t> elem_offsets;
+  size_t eoffset = 0;
+  for (int i=0; i < ntypes; i++) {
+    int idx = num_verts_[i];
+    elem_offsets[idx] = eoffset;
+    eoffset += num_cells_[i];
+  }
+
+  for (auto b: mbkts) {
+    double* eVol = stk::mesh::field_data(*elemVolume, *b);
+    const int npe = b->topology().num_nodes();
+    int ep = elem_offsets[npe];
+
+    for (size_t ie=0; ie < b->size(); ++ie)
+      cell_res_[ep++] = eVol[ie];
+
+    elem_offsets[npe] = ep;
+  }
 }
 
 void
@@ -297,6 +335,8 @@ void TiogaBlock::process_nodes()
     stk::topology::NODE_RANK, mesh_selector);
   VectorFieldType* coords = meta_.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, coords_name_);
+  ScalarFieldType* nodeVol = meta_.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
 
   int ncount = 0;
   for (auto b: mbkts) ncount += b->size();
@@ -305,7 +345,7 @@ void TiogaBlock::process_nodes()
     num_nodes_ = ncount;
     xyz_.resize(ndim_ * num_nodes_);
     iblank_.resize(num_nodes_, 1);
-    node_res_.resize(num_nodes_, 1.0*meshtag_);
+    node_res_.resize(num_nodes_);
 
     // Should we clear node_map_???
     // node_map_.clear();
@@ -319,9 +359,12 @@ void TiogaBlock::process_nodes()
       stk::mesh::EntityId nid = bulk_.identifier(node);
 
       double* pt = stk::mesh::field_data(*coords, node);
+      double* nVol = stk::mesh::field_data(*nodeVol, node);
       for (int i=0; i < ndim_; i++) {
         xyz_[ip * ndim_ + i] = pt[i];
       }
+
+      node_res_[ip] = *nVol;
       node_map_[nid] = ip + 1; // TIOGA uses 1-based indexing
       nodeid_map_[ip] = nid;
       ip++;
@@ -409,31 +452,33 @@ void TiogaBlock::process_elements()
 
   std::map<int, int> conn_ids;        // Topo -> array index lookup table
   std::map<int, size_t> conn_offsets; // Topo -> array offset lookup table
+  std::map<int, size_t> elem_offsets;
 
   // 3. Populate TIOGA data structures
   int idx = 0;
-  int cres_count = 0;
+  size_t eoffset = 0;
   for (auto kv: conn_map_) {
     num_verts_[idx] = kv.first;
     num_cells_[idx] = kv.second;
     connect_[idx].resize(kv.first * kv.second);
     conn_ids[kv.first] = idx;
     conn_offsets[kv.first] = 0;
+    elem_offsets[kv.first] = eoffset;
     idx++;
-    cres_count += kv.first * kv.second;
+    eoffset += kv.second;
   }
 
   int tot_elems = std::accumulate(num_cells_.begin(), num_cells_.end(), 0);
   elemid_map_.resize(tot_elems);
   iblank_cell_.resize(tot_elems);
-  cell_res_.resize(cres_count, 1.0*meshtag_);
+  cell_res_.resize(tot_elems);
 
   // 4. Create connectivity map based on local node index (xyz_)
-  int ep = 0;
   for (auto b: mbkts) {
     const int npe = b->num_nodes(0);
     const int idx = conn_ids[npe];
     int offset = conn_offsets[npe];
+    int ep = elem_offsets[npe];
     for (size_t in=0; in < b->size(); in++) {
       const stk::mesh::Entity elem = (*b)[in];
       const stk::mesh::EntityId eid = bulk_.identifier(elem);
@@ -445,6 +490,7 @@ void TiogaBlock::process_elements()
       }
     }
     conn_offsets[npe] = offset;
+    elem_offsets[npe] = ep;
   }
 
   // TIOGA expects a ptr-to-ptr data structure for connectivity
@@ -491,7 +537,10 @@ void TiogaBlock::register_block(TIOGA::tioga& tg)
   );
   // Indicate that we want element IBLANK information returned
   tg.set_cell_iblank(meshtag_, iblank_cell_.data());
-  // tg.setResolutions(meshtag_, node_res_.data(), cell_res_.data());
+
+  // Register cell/node resolutions for TIOGA
+  if (tiogaOpts_.set_resolutions())
+    tg.setResolutions(meshtag_, node_res_.data(), cell_res_.data());
 }
 
 void TiogaBlock::print_summary()
