@@ -146,6 +146,15 @@ OutputInfo::load(
         outputFieldNameSet_.insert(fieldName);
       }
     }
+
+    if (y_output["disabled_output_variables"]) {
+      auto& node = y_output["disabled_output_variables"];
+      auto numFields = node.size();
+      for (size_t i =0; i < numFields; ++i) {
+        auto fieldName = node[i].as<std::string>();
+        disabledOutputSet_.insert(fieldName);
+      }
+    }
   }
   
   // output for restart

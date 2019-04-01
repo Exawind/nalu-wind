@@ -71,6 +71,8 @@ public:
   Ioss::PropertyManager *restartPropertyManager_;
 
   std::set<std::string> outputFieldNameSet_;
+  //! List of fields explicity disabled by user for output
+  std::set<std::string> disabledOutputSet_;
   std::set<std::string> restartFieldNameSet_;
 
 };

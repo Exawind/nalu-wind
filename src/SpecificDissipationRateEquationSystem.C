@@ -161,6 +161,7 @@ SpecificDissipationRateEquationSystem::register_nodal_fields(
   // register dof; set it as a restart variable
   sdr_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "specific_dissipation_rate", numStates));
   stk::mesh::put_field_on_mesh(*sdr_, *part, nullptr);
+  realm_.augment_output_variable_list("specific_dissipation_rate");
   realm_.augment_restart_variable_list("specific_dissipation_rate");
 
   dwdx_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dwdx"));

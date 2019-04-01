@@ -279,6 +279,7 @@ EnthalpyEquationSystem::register_nodal_fields(
   // temperature required in restart
   temperature_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "temperature"));
   stk::mesh::put_field_on_mesh(*temperature_, *part, nullptr);
+  realm_.augment_output_variable_list("temperature");
   realm_.augment_restart_variable_list("temperature");
 
   dhdx_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dhdx"));

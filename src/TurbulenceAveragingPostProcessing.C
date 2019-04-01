@@ -291,12 +291,14 @@ TurbulenceAveragingPostProcessing::setup()
         const std::string vorticityName = "vorticity";
         VectorFieldType *vortField = &(metaData.declare_field<VectorFieldType>(stk::topology::NODE_RANK, vorticityName));
         stk::mesh::put_field_on_mesh(*vortField, *targetPart, vortSize, nullptr);
+        realm_.augment_output_variable_list(vorticityName);
       }
 
       if ( avInfo->computeQcriterion_ ) {
         const std::string QcritName = "q_criterion";
         const int sizeOfField = 1;
         register_field(QcritName, sizeOfField, metaData, targetPart);
+        realm_.augment_output_variable_list(QcritName);
       }
 
       if ( avInfo->computeLambdaCI_ ) {
@@ -554,14 +556,6 @@ TurbulenceAveragingPostProcessing::review(
       NaluEnv::self().naluOutputP0() << "Sub-filter scale Stress will be computed; add sfs_stress to output"<< std::endl;
   }
 
-  if ( avInfo->computeVorticity_ ) {
-    NaluEnv::self().naluOutputP0() << "Vorticity will be computed; add vorticity to output"<< std::endl;
-  }
-  
-  if ( avInfo->computeQcriterion_ ) {
-    NaluEnv::self().naluOutputP0() << "Q criterion will be computed; add q_criterion to output"<< std::endl;
-  }
-  
   if ( avInfo->computeLambdaCI_ ) {
     NaluEnv::self().naluOutputP0() << "Lambda CI will be computed; add lambda_ci to output"<< std::endl;
   }

@@ -1043,6 +1043,7 @@ MomentumEquationSystem::register_nodal_fields(
   // register dof; set it as a restart variable
   velocity_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity", numStates));
   stk::mesh::put_field_on_mesh(*velocity_, *part, nDim, nullptr);
+  realm_.augment_output_variable_list("velocity");
   realm_.augment_restart_variable_list("velocity");
 
   dudx_ =  &(meta_data.declare_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx"));
@@ -1061,6 +1062,7 @@ MomentumEquationSystem::register_nodal_fields(
   if ( realm_.is_turbulent() ) {
     tvisc_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity"));
     stk::mesh::put_field_on_mesh(*tvisc_, *part, nullptr);
+    realm_.augment_output_variable_list("turbulent_viscosity");
     evisc_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "effective_viscosity_u"));
     stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
   }
@@ -2704,6 +2706,7 @@ ContinuityEquationSystem::register_nodal_fields(
   // register dof; set it as a restart variable
   pressure_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure"));
   stk::mesh::put_field_on_mesh(*pressure_, *part, nullptr);
+  realm_.augment_output_variable_list("pressure");
   realm_.augment_restart_variable_list("pressure");
 
   dpdx_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx"));

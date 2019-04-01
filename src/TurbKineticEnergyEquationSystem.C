@@ -185,6 +185,7 @@ TurbKineticEnergyEquationSystem::register_nodal_fields(
   // register dof; set it as a restart variable
   tke_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_ke", numStates));
   stk::mesh::put_field_on_mesh(*tke_, *part, nullptr);
+  realm_.augment_output_variable_list("turbulent_ke");
   realm_.augment_restart_variable_list("turbulent_ke");
 
   dkdx_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dkdx"));

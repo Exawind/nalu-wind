@@ -2182,9 +2182,12 @@ Realm::create_output_mesh()
     ioBroker_->use_nodeset_for_part_nodes_fields(resultsFileIndex_, outputInfo_->outputNodeSet_);
 
     // FIXME: add_field can take user-defined output name, not just varName
+    auto& disabledFields = outputInfo_->disabledOutputSet_;
     for ( std::set<std::string>::iterator itorSet = outputInfo_->outputFieldNameSet_.begin();
         itorSet != outputInfo_->outputFieldNameSet_.end(); ++itorSet ) {
       std::string varName = *itorSet;
+      if (disabledFields.find(varName) != disabledFields.end())
+        continue;
       stk::mesh::FieldBase *theField = stk::mesh::get_field_by_name(varName, *metaData_);
       if ( NULL == theField ) {
         NaluEnv::self().naluOutputP0() << " Sorry, no field by the name " << varName << std::endl;
@@ -2780,6 +2783,8 @@ Realm::register_nodal_fields(
   if ( solutionOptions_->meshMotion_ || solutionOptions_->externalMeshDeformation_) {
     VectorFieldType *displacement = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement"));
     stk::mesh::put_field_on_mesh(*displacement, *part, nDim, nullptr);
+    augment_output_variable_list("mesh_displacement");
+
     VectorFieldType *currentCoords = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
     stk::mesh::put_field_on_mesh(*currentCoords, *part, nDim, nullptr);
     VectorFieldType *meshVelocity = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity"));
@@ -2797,6 +2802,8 @@ Realm::register_nodal_fields(
   ScalarIntFieldType& iblank = metaData_->declare_field<ScalarIntFieldType>(
     stk::topology::NODE_RANK, "iblank");
   stk::mesh::put_field_on_mesh(iblank, *part, nullptr);
+  if (query_for_overset())
+    augment_output_variable_list("iblank");
 }
 
 //--------------------------------------------------------------------------
