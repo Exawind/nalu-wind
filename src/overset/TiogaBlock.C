@@ -25,11 +25,13 @@ namespace tioga_nalu {
 TiogaBlock::TiogaBlock(
   stk::mesh::MetaData& meta,
   stk::mesh::BulkData& bulk,
+  TiogaOptions& opts,
   const YAML::Node& node,
   const std::string coords_name,
   const int meshtag
 ) : meta_(meta),
     bulk_(bulk),
+    tiogaOpts_(opts),
     coords_name_(coords_name),
     ndim_(meta_.spatial_dimension()),
     meshtag_(meshtag),
@@ -537,7 +539,8 @@ void TiogaBlock::register_block(TIOGA::tioga& tg)
   tg.set_cell_iblank(meshtag_, iblank_cell_.data());
 
   // Register cell/node resolutions for TIOGA
-  tg.setResolutions(meshtag_, node_res_.data(), cell_res_.data());
+  if (tiogaOpts_.set_resolutions())
+    tg.setResolutions(meshtag_, node_res_.data(), cell_res_.data());
 }
 
 void TiogaBlock::print_summary()

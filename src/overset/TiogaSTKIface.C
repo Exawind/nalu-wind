@@ -52,18 +52,25 @@ TiogaSTKIface::load(const YAML::Node& node)
 {
   const YAML::Node& oset_groups = node["mesh_group"];
 
+  if (node["tioga_options"])
+    tiogaOpts_.load(node["tioga_options"]);
+
   int num_meshes = oset_groups.size();
   blocks_.resize(num_meshes);
 
   for (int i = 0; i < num_meshes; i++) {
-    blocks_[i].reset(new TiogaBlock(meta_, bulk_, oset_groups[i], coordsName_, i + 1));
+    blocks_[i].reset(new TiogaBlock(
+      meta_, bulk_, tiogaOpts_, oset_groups[i], coordsName_, i + 1));
   }
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
       << "TIOGA: Using coordinates field: " << coordsName_ << std::endl;
 
   if (node["tioga_symmetry_direction"])
-    symmetryDir_ = node["tioga_symmetry_direction"].as<int>();
+    sierra::nalu::NaluEnv::self().naluOutputP0()
+      << "WARNING!! TiogaSTKIface: tioga_symmetry_direction is no longer supported. "
+      << "Use tioga_options to specify options that control TIOGA behavior"
+      << std::endl;
 }
 
 void TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
@@ -79,7 +86,7 @@ void TiogaSTKIface::initialize()
                        bulk_.parallel_rank(),
                        bulk_.parallel_size());
 
-  tg_->setSymmetry(symmetryDir_);
+  tiogaOpts_.set_options(*tg_);
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
     << "TIOGA: Initializing overset mesh blocks: " << std::endl;
@@ -104,6 +111,7 @@ void TiogaSTKIface::execute()
   // Determine overset connectivity
   tg_->profile();
   tg_->performConnectivity();
+  if (tiogaOpts_.reduce_fringes()) tg_->reduce_fringes();
 
   for (auto& tb: blocks_) {
     // Update IBLANK information at nodes and elements

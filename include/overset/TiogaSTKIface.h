@@ -8,6 +8,7 @@
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
 
+#include "overset/TiogaOptions.h"
 #include "yaml-cpp/yaml.h"
 
 #include <vector>
@@ -104,6 +105,8 @@ private:
   //! Reference to the STK BulkData object
   stk::mesh::BulkData& bulk_;
 
+  TiogaOptions tiogaOpts_;
+
   //! List of TIOGA data structures for each mesh block participating in overset
   //! connectivity
   std::vector<std::unique_ptr<TiogaBlock>> blocks_;
@@ -127,9 +130,6 @@ private:
 
   //! Name of the coordinates field (for moving mesh simulations)
   std::string coordsName_;
-
-  //! Set the symmetry direction for TIOGA, default is z-direction (3)
-  int symmetryDir_{3};
 };
 
 

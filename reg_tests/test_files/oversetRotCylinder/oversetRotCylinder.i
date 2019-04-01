@@ -118,8 +118,9 @@ realms:
     - overset_boundary_condition: bc_overset
       overset_connectivity_type: tioga
       overset_user_data:
-        tioga_populate_inactive_part: no
-        tioga_symmetry_direction: 2
+        tioga_options:
+          symmetry_direction: 2
+          set_resolutions: no
         mesh_group:
           - overset_name: interior
             mesh_parts: [ Unspecified-2-HEX ]

@@ -7,6 +7,7 @@
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
 
+#include "overset/TiogaOptions.h"
 #include "yaml-cpp/yaml.h"
 
 #include <vector>
@@ -43,6 +44,7 @@ class TiogaBlock
 public:
   TiogaBlock(stk::mesh::MetaData&,
              stk::mesh::BulkData&,
+             TiogaOptions&,
              const YAML::Node&,
              const std::string,
              const int);
@@ -183,6 +185,9 @@ private:
 
   //! Reference to the STK Mesh BulkData object
   stk::mesh::BulkData& bulk_;
+
+  //! Options controlling TIOGA holecutting
+  TiogaOptions tiogaOpts_;
 
   //! Part names for the nodes for this mesh block
   std::vector<std::string> blkNames_;
