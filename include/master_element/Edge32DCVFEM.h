@@ -17,7 +17,6 @@
 #include "SimdInterface.h"
 #include "KokkosInterface.h"
 
-#include <vector>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -88,11 +87,9 @@ private:
   int ipNodeMap_[numIntPoints_];
   double intgLoc_[numIntPoints_];
   double ipWeight_[numIntPoints_];
-  double gaussWeight_[numQuad_];
-  double gaussAbscissae_[numQuad_];
+  const double gaussWeight_[numQuad_] = { 0.5, 0.5 };
+  const double gaussAbscissae_[numQuad_]={-std::sqrt(3.0)/3.0, std::sqrt(3.0)/3.0 };
 
-
-  void set_quadrature_rule();
   double tensor_product_weight(const int s1Node, const int s1Ip) const;
   double gauss_point_location(const int nodeOrdinal, const int gaussPointOrdinal) const;
 

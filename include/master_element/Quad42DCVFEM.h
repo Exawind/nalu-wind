@@ -17,7 +17,6 @@
 #include "SimdInterface.h"
 #include "KokkosInterface.h"
 
-#include <vector>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>

@@ -20,7 +20,6 @@
 
 #include <master_element/DirectionMacros.h>
 
-#include <vector>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -37,7 +36,7 @@ namespace nalu {
     const ViewType& area)
   {
     /**
-     * Form up the area vector consistently with the triangulation used
+     * Form up the area vec consistently with the triangulation used
      * in the Grandy algorithm, on each subcontrol volume hex
      *
      * "Efficient computation of volume of
