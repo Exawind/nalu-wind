@@ -524,6 +524,8 @@ LowMachEquationSystem::register_surface_pp_algorithm(
   stk::mesh::MetaData &meta_data = realm_.meta_data();
   VectorFieldType *pressureForce =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "pressure_force"));
   stk::mesh::put_field_on_mesh(*pressureForce, stk::mesh::selectUnion(partVector), meta_data.spatial_dimension(), nullptr);
+  VectorFieldType *viscousForce =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "viscous_force"));
+  stk::mesh::put_field_on_mesh(*viscousForce, stk::mesh::selectUnion(partVector), meta_data.spatial_dimension(), nullptr);
   ScalarFieldType *tauWall =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "tau_wall"));
   stk::mesh::put_field_on_mesh(*tauWall, stk::mesh::selectUnion(partVector), nullptr);
   ScalarFieldType *yplus =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "yplus"));
@@ -531,6 +533,7 @@ LowMachEquationSystem::register_surface_pp_algorithm(
  
   // force output for these variables
   realm_.augment_output_variable_list(pressureForce->name());
+  realm_.augment_output_variable_list(viscousForce->name());
   realm_.augment_output_variable_list(tauWall->name());
   realm_.augment_output_variable_list(yplus->name());
 
