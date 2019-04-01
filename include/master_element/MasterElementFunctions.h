@@ -20,7 +20,6 @@
 
 #include <stk_util/util/ReportHandler.hpp>
 
-#include <vector>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>

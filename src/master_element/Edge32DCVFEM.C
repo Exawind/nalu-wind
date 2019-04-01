@@ -41,9 +41,6 @@ Edge32DSCS::Edge32DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // set up the one-dimensional quadrature rule
-  set_quadrature_rule();
-
   const int stk1DNodeMap[3] = { 0, 2, 1 };
 
   int scalar_index = 0;
@@ -68,19 +65,6 @@ Edge32DSCS::gauss_point_location(
    return isoparametric_mapping( scsEndLoc_[nodeOrdinal+1],
      scsEndLoc_[nodeOrdinal],
      gaussAbscissae_[gaussPointOrdinal] );
-}
-
-//--------------------------------------------------------------------------
-//-------- set_quadrature_rule ---------------------------------------------
-//--------------------------------------------------------------------------
-void Edge32DSCS::set_quadrature_rule()
-{
-  std::vector<double> ga, gw;
-  std::tie(ga, gw) = gauss_legendre_rule(numQuad_);
-  for (unsigned j = 0; j < numQuad_; ++j) {
-    gaussWeight_[j] = gw[j] * 0.5;
-    gaussAbscissae_[j] = ga[j];
-  }
 }
 
 //--------------------------------------------------------------------------

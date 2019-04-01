@@ -17,7 +17,7 @@
 #include "SimdInterface.h"
 #include "KokkosInterface.h"
 
-#include <vector>
+#include <array>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -80,7 +80,7 @@ public:
   virtual const double* integration_location_shift() const final {
     return intgLocShift_;
   }
-  double parametric_distance(const std::vector<double> &x);
+  double parametric_distance(const std::array<double,2> &x);
 
   const double elemThickness_;  
 
