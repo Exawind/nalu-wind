@@ -227,7 +227,7 @@ void check_derivatives(
   ngp::Mesh ngpMesh(bulk);
 
   ME    *me = dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_));
-  ME *ngpMe = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
+  auto *ngpMe = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
   ThrowRequire(me);
   ThrowRequire(ngpMe);
 
