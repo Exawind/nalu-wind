@@ -37,9 +37,10 @@ public:
     velocity_    = sierra::nalu::get_field_ordinal(meta, "velocity");
     pressure_    = sierra::nalu::get_field_ordinal(meta, "pressure");
 
-    meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
+    auto* meSCS =
+      sierra::nalu::MasterElementRepo::get_surface_master_element(stk::topology::HEX_8);
 
-    dataReq.add_cvfem_surface_me(meSCS_);
+    dataReq.add_cvfem_surface_me(meSCS);
 
     dataReq.add_coordinates_field(coordinates_, AlgTraits::nDim_,
                                   sierra::nalu::CURRENT_COORDINATES);
@@ -63,8 +64,6 @@ private:
   unsigned coordinates_ {stk::mesh::InvalidOrdinal};
   unsigned velocity_    {stk::mesh::InvalidOrdinal};
   unsigned pressure_    {stk::mesh::InvalidOrdinal};
-
-  sierra::nalu::MasterElement* meSCS_;
 };
 
 template<typename AlgTraits>
@@ -87,15 +86,10 @@ TestContinuityKernel<AlgTraits>::execute(
   sierra::nalu::SharedMemView<DoubleType*, ShmemType>& rhs,
   sierra::nalu::ScratchViews<double, TeamType, ShmemType>& scratchViews)
 {
-  // Get the integration point to node mapping
-  const int* ipNodeMap = meSCS_->ipNodeMap(3);
-
   auto& v_velocity = scratchViews.get_scratch_view_2D(velocity_);
   auto& v_pressure = scratchViews.get_scratch_view_1D(pressure_);
 
   rhs(0) = v_velocity(0, 0) + v_pressure(0);
-
-  printf("ipNodeMap[2] = %d; expected = 7\n", ipNodeMap[2]);
 }
 
 } // unit_test_ngp_kernels
