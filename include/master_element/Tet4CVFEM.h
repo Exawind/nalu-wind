@@ -30,7 +30,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~TetSCV() = default;
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,
@@ -121,7 +121,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~TetSCS() = default;
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   virtual void determinant(
     SharedMemView<DoubleType**>&coords,
