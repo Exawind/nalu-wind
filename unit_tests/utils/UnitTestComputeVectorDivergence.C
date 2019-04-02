@@ -35,6 +35,10 @@ TEST(utils, compute_vector_divergence)
   ScalarFieldType *duaNdlVol = &(realm.meta_data().declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume"));
   stk::mesh::put_field_on_mesh(*duaNdlVol, realm.meta_data().universal_part(), nullptr);
 
+  ScalarFieldType& elemVol = realm.meta_data().declare_field<ScalarFieldType>(
+    stk::topology::ELEMENT_RANK, "element_volume");
+  stk::mesh::put_field_on_mesh(elemVol, realm.meta_data().universal_part(), nullptr);
+
   VectorFieldType *meshVec = &(realm.meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_vector"));
   stk::mesh::put_field_on_mesh(*meshVec, realm.meta_data().universal_part(), nDim, nullptr);
 
