@@ -191,8 +191,13 @@ public:
     throw std::runtime_error("scsIpEdgeOrd not implemented");
     }
 
-  virtual const int * ipNodeMap(int /* ordinal */ = 0) const {
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int /* ordinal */ = 0) const {
+#ifndef KOKKOS_ENABLE_CUDA
       throw std::runtime_error("ipNodeMap not implemented");
+#else
+      printf("Invalid ipNodeMap call on GPUs");
+      return nullptr;
+#endif
      }
 
   virtual void shape_fcn(
