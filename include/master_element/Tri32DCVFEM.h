@@ -41,7 +41,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~Tri32DSCV() = default;
 
-  virtual const int * ipNodeMap(int ordinal = 0) const final;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**> &coords,
@@ -129,7 +129,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~Tri32DSCS() = default;
 
-  virtual const int * ipNodeMap(int ordinal = 0) const final;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,
