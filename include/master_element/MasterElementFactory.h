@@ -38,11 +38,11 @@ namespace nalu{
       std::string quadType = "GaussLegendre");
 
     template<typename AlgTraits>
-    static MasterElement*
+    static typename AlgTraits::masterElementScv_*
     get_volume_master_element();
 
     template<typename AlgTraits>
-    static MasterElement*
+    static typename AlgTraits::masterElementScs_*
     get_surface_master_element();
 
     static void clear();
@@ -54,15 +54,13 @@ namespace nalu{
     static std::map<stk::topology, MasterElement*> &surfaceMeMapDev();
 
     template<typename AlgTraits, typename ME>
-    static MasterElement* get_master_element(
+    static ME* get_master_element(
       std::map<stk::topology, MasterElement*> &meMapDev
     );
   };
 
-  template <typename AlgTraits, typename ME>
-  MasterElement*
-  MasterElementRepo::get_master_element(
-    std::map<stk::topology, MasterElement*>& meMap)
+  template<typename AlgTraits, typename ME>
+  ME* MasterElementRepo::get_master_element(std::map<stk::topology, MasterElement*> &meMap)
   {
     const stk::topology theTopo = AlgTraits::topo_;
 
@@ -71,17 +69,19 @@ namespace nalu{
       meMap[theTopo] = sierra::nalu::create_device_expression<ME>();
     }
     MasterElement* theElem = meMap.at(theTopo);
-    return theElem;
+    ME* theME = dynamic_cast<ME*>(theElem);
+    ThrowRequire(theME);
+    return theME;
   }
 
   template<typename AlgTraits>
-  MasterElement* MasterElementRepo::get_volume_master_element()
+  typename AlgTraits::masterElementScv_* MasterElementRepo::get_volume_master_element()
   {
     return get_master_element<AlgTraits, typename AlgTraits::masterElementScv_>(volumeMeMapDev());
   }
 
   template<typename AlgTraits>
-  MasterElement* MasterElementRepo::get_surface_master_element()
+  typename AlgTraits::masterElementScs_* MasterElementRepo::get_surface_master_element()
   {
     return get_master_element<AlgTraits, typename AlgTraits::masterElementScs_>(surfaceMeMapDev());
   }
