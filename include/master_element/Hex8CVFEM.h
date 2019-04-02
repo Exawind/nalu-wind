@@ -50,11 +50,13 @@ class HexSCV : public MasterElement
 public:
   using AlgTraits = AlgTraitsHex8;
 
+  KOKKOS_FUNCTION
   HexSCV();
+
   KOKKOS_FUNCTION
   virtual ~HexSCV() = default;
 
-  virtual const int * ipNodeMap(int ordinal = 0) const final;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::determinant;
   using MasterElement::shifted_grad_op;
@@ -158,11 +160,13 @@ public:
   using MasterElement::adjacentNodes;
 
 
+  KOKKOS_FUNCTION
   HexSCS();
+
   KOKKOS_FUNCTION
   virtual ~HexSCS() = default;
 
-  virtual const int * ipNodeMap(int ordinal = 0) const final;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::determinant;
 
