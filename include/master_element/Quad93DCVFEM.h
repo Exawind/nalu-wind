@@ -39,7 +39,7 @@ public:
 
   using MasterElement::determinant;
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;

@@ -52,7 +52,7 @@ public:
   virtual ~HigherOrderHexSCV() {}
 
   void shape_fcn(double *shpfc) final;
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     const int nelem,
@@ -165,7 +165,7 @@ public:
 
   const int * adjacentNodes() final;
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   const int * side_node_ordinals(int ordinal = 0) const final;
 
@@ -241,7 +241,7 @@ public:
 
   void shape_fcn(double *shpfc) final;
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     const int nelem,
@@ -304,7 +304,7 @@ public:
 
   void shape_fcn(double *shpfc) final;
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     const int nelem,
@@ -414,7 +414,7 @@ public:
 
   const int * adjacentNodes() final;
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   int opposingNodes(
     const int ordinal, const int node) final;
@@ -481,7 +481,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~HigherOrderEdge2DSCS() = default;
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     const int nelem,

@@ -28,7 +28,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~Quad3DSCS() = default;
 
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+  virtual const int * ipNodeMap(int ordinal = 0) const final;
  
   // NGP-ready methods first
   void shape_fcn(
