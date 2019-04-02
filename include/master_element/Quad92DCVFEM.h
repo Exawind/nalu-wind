@@ -162,7 +162,7 @@ public:
   KOKKOS_FUNCTION
   virtual ~Quad92DSCV() {}
 
-  virtual const int * ipNodeMap(int ordinal = 0) const final ;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final ;
 
   void determinant(
     SharedMemView<DoubleType**> &coords,
@@ -302,7 +302,7 @@ public:
 
   virtual const int * adjacentNodes() final ;
 
-  virtual const int * ipNodeMap(int ordinal = 0) const final ;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final ;
 
   int opposingNodes(
     const int ordinal, const int node) override ;
