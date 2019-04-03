@@ -84,7 +84,7 @@ Quad3DSCS::shifted_shape_fcn(double *shpfc)
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Quad3DSCS::shape_fcn(SharedMemView<DoubleType**> &shpfc)
+Quad3DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
 {
   quad4_shape_fcn(intgLoc_, shpfc);
 }
@@ -93,7 +93,7 @@ Quad3DSCS::shape_fcn(SharedMemView<DoubleType**> &shpfc)
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
 void
-Quad3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc)
+Quad3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
 {
   quad4_shape_fcn(intgLocShift_, shpfc);
 }
@@ -104,7 +104,7 @@ Quad3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc)
 void
 Quad3DSCS::quad4_shape_fcn(
   const double *isoParCoord,
-  SharedMemView<DoubleType**> &shape_fcn)
+  SharedMemView<DoubleType**, DeviceShmem> &shape_fcn)
 {
   // -1/2:1/2 isoparametric range
   const DoubleType half = 0.50;

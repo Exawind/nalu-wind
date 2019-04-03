@@ -423,9 +423,9 @@ QuadrilateralP2Element::sidePcoords_to_elemPcoords(
 
 //-------- quad_gradient_operator ---------------------------------------------------------
 template <int nint, int npe>
-void quad_gradient_operator(SharedMemView<DoubleType** >& coords,
-                            SharedMemView<DoubleType***>& gradop,
-                            SharedMemView<DoubleType***>& deriv) {
+void quad_gradient_operator(SharedMemView<DoubleType**, DeviceShmem>& coords,
+                            SharedMemView<DoubleType***, DeviceShmem>& gradop,
+                            SharedMemView<DoubleType***, DeviceShmem>& deriv) {
       
   DoubleType dx_ds1, dx_ds2;
   DoubleType dy_ds1, dy_ds2;
@@ -544,7 +544,7 @@ Quad92DSCV::ipNodeMap(
 //--------------------------------------------------------------------------
 DoubleType
 Quad92DSCV::jacobian_determinant(
-  const SharedMemView<DoubleType**> &elemNodalCoords,      
+  const SharedMemView<DoubleType**, DeviceShmem> &elemNodalCoords,      
   const double *POINTER_RESTRICT shapeDerivs) const
 {
   DoubleType dx_ds1 = 0.0;  DoubleType dx_ds2 = 0.0;
@@ -571,8 +571,8 @@ Quad92DSCV::jacobian_determinant(
 }
 
 void Quad92DSCV::determinant(
-  SharedMemView<DoubleType**> &coords,
-  SharedMemView<DoubleType*>  &volume) 
+  SharedMemView<DoubleType**, DeviceShmem> &coords,
+  SharedMemView<DoubleType*, DeviceShmem>  &volume) 
 {
     for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
       const int grad_offset = nDim_ * nodesPerElement_ * ip;
@@ -587,9 +587,9 @@ void Quad92DSCV::determinant(
 } 
 
 void Quad92DSCV::grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv) {
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) {
   for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
     for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
       for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
@@ -601,9 +601,9 @@ void Quad92DSCV::grad_op(
 }
 
 void Quad92DSCV::shifted_grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv) {
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) {
   for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
     for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
       for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
@@ -688,9 +688,9 @@ void Quad92DSCV::Mij(
 }
 //-------------------------------------------------------------------------
 void Quad92DSCV::Mij(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& metric,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& metric,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_Mij_2d<AlgTraitsQuad9_2D>(deriv, coords, metric);
 }
@@ -954,8 +954,8 @@ Quad92DSCS::side_node_ordinals ( int ordinal) const
 //--------------------------------------------------------------------------
 void 
 Quad92DSCS::determinant(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType**>& areav) 
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& areav) 
 {
   //returns the normal vector (dyds,-dxds) for constant t curves
   //returns the normal vector (dydt,-dxdt) for constant s curves
@@ -1035,9 +1035,9 @@ Quad92DSCS::determinant(
 }
 
 void Quad92DSCS::grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv) {
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) {
   for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
     for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
       for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
@@ -1081,9 +1081,9 @@ void Quad92DSCS::grad_op(
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
 void Quad92DSCS::shifted_grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv) {
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) {
   for (int ki=0,j=0; ki<AlgTraits::numScsIp_; ++ki) {
     for (int kn=0; kn<AlgTraits::nodesPerElement_; ++kn) {
       for (int n=0; n<AlgTraits::nDim_; ++n,++j) {
@@ -1127,14 +1127,14 @@ void Quad92DSCS::shifted_grad_op(
 //--------------------------------------------------------------------------
 void Quad92DSCS::face_grad_op(
   int face_ordinal,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop)
 {
   using traits = AlgTraitsEdge32DQuad92D;
 
   constexpr int derivSize = traits::numFaceIp_ * traits::nodesPerElement_ * traits::nDim_;
   DoubleType psi[derivSize];
-  SharedMemView<DoubleType***> deriv(psi, traits::numFaceIp_, traits::nodesPerElement_, traits::nDim_);
+  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, traits::numFaceIp_, traits::nodesPerElement_, traits::nDim_);
   constexpr int offset = traits::nDim_*traits::numFaceIp_*traits::nodesPerElement_;
   const double* exp_face = &expFaceShapeDerivs_[offset*face_ordinal];
   for (int i=0,n=0; i<traits::numFaceIp_; ++i)
@@ -1187,10 +1187,10 @@ void Quad92DSCS::face_grad_op(
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
 void Quad92DSCS::gij(
-  SharedMemView<DoubleType** >& coords,
-  SharedMemView<DoubleType***>& gupper,
-  SharedMemView<DoubleType***>& glower,
-  SharedMemView<DoubleType***>& deriv) {
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gupper,
+  SharedMemView<DoubleType***, DeviceShmem>& glower,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv) {
 
   constexpr int npe  = AlgTraits::nodesPerElement_;
   constexpr int nint = AlgTraits::numScsIp_;
@@ -1266,9 +1266,9 @@ void Quad92DSCS::Mij(
 }
 //-------------------------------------------------------------------------
 void Quad92DSCS::Mij(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& metric,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& metric,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_Mij_2d<AlgTraitsQuad9_2D>(deriv, coords, metric);
 }
@@ -1310,7 +1310,7 @@ Quad92DSCS::opposingFace(
 //--------------------------------------------------------------------------
 template <Jacobian::Direction direction> void
 Quad92DSCS::area_vector(
-  const SharedMemView<DoubleType**>& elemNodalCoords,             
+  const SharedMemView<DoubleType**, DeviceShmem>& elemNodalCoords,             
   double *POINTER_RESTRICT shapeDeriv,
   DoubleType *POINTER_RESTRICT normalVec ) const
 {

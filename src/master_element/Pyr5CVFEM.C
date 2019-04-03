@@ -38,6 +38,7 @@ namespace nalu{
 
 //-------- pyr_deriv -------------------------------------------------------
 template <typename DerivType>
+KOKKOS_FUNCTION
 void pyr_deriv(const int npts,
   const double *intgLoc,
   DerivType& deriv)
@@ -86,6 +87,7 @@ void pyr_deriv(const int npts,
 
 //-------- shifted_pyr_deriv -------------------------------------------------------
 template <typename DerivType>
+KOKKOS_FUNCTION
 void shifted_pyr_deriv(const int npts,
   const double *intgLoc,
   DerivType& deriv)
@@ -247,8 +249,8 @@ DoubleType octohedron_volume_by_triangle_facets(const DoubleType volcoords[10][3
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
 void PyrSCV::determinant(
-    SharedMemView<DoubleType**>& cordel,
-    SharedMemView<DoubleType*>& vol)
+    SharedMemView<DoubleType**, DeviceShmem>& cordel,
+    SharedMemView<DoubleType*, DeviceShmem>& vol)
 {
   int npe = nodesPerElement_;
   int nscv = numIntPoints_;
@@ -385,9 +387,9 @@ void PyrSCV::determinant(
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
 void PyrSCV::grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv)
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   pyr_deriv(numIntPoints_, &intgLoc_[0], deriv);
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
@@ -397,9 +399,9 @@ void PyrSCV::grad_op(
 //-------- shifted_grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
 void PyrSCV::shifted_grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv)
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   shifted_pyr_deriv(numIntPoints_, &intgLocShift_[0], deriv);
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
@@ -508,9 +510,9 @@ void PyrSCS::Mij(
 }
 //-------------------------------------------------------------------------
 void PyrSCS::Mij(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& metric,
-    SharedMemView<DoubleType***>& deriv)
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& metric,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_Mij_3d<AlgTraitsPyr5>(deriv, coords, metric);
 }
@@ -564,8 +566,8 @@ PyrSCS::side_node_ordinals (
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
 void PyrSCS::determinant(
-    SharedMemView<DoubleType**>& cordel,
-    SharedMemView<DoubleType**>& areav)
+    SharedMemView<DoubleType**, DeviceShmem>& cordel,
+    SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
   const int pyramidEdgeFacetTable[12][4] = {
     { 5,  9, 18, 12},  // sc face 1  -- points from 1 -> 2
@@ -711,9 +713,9 @@ void PyrSCS::determinant(
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
 void PyrSCS::grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv)
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   pyr_deriv(numIntPoints_, &intgLoc_[0], deriv);
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
@@ -748,9 +750,9 @@ void PyrSCS::grad_op(
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
 void PyrSCS::shifted_grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv)
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   shifted_pyr_deriv(numIntPoints_, &intgLocShift_[0], deriv);
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
@@ -826,8 +828,8 @@ void PyrSCS::face_grad_op(
 //--------------------------------------------------------------------------
 void PyrSCS::face_grad_op(
   int face_ordinal,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop)
 {
   using tri_traits = AlgTraitsTri3Wed6;
   using quad_traits = AlgTraitsQuad4Wed6;
@@ -837,7 +839,7 @@ void PyrSCS::face_grad_op(
   NALU_ALIGNED DoubleType psi[maxDerivSize];
 
   const int numFaceIps = (face_ordinal == 4) ? quad_traits::numFaceIp_ : tri_traits::numFaceIp_;
-  SharedMemView<DoubleType***> deriv(psi, numFaceIps, AlgTraitsPyr5::nodesPerElement_, dim);
+  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, numFaceIps, AlgTraitsPyr5::nodesPerElement_, dim);
 
   const int offset = tri_traits::numFaceIp_ * face_ordinal;
   pyr_deriv(numFaceIps, &intgExpFace_[dim * offset], deriv);
@@ -849,8 +851,8 @@ void PyrSCS::face_grad_op(
 //--------------------------------------------------------------------------
 void PyrSCS::shifted_face_grad_op(
   int face_ordinal,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop)
 {
   using tri_traits = AlgTraitsTri3Wed6;
   using quad_traits = AlgTraitsQuad4Wed6;
@@ -860,7 +862,7 @@ void PyrSCS::shifted_face_grad_op(
   NALU_ALIGNED DoubleType psi[maxDerivSize];
 
   const int numFaceIps = (face_ordinal == 4) ? quad_traits::numFaceIp_ : tri_traits::numFaceIp_;
-  SharedMemView<DoubleType***> deriv(psi, numFaceIps, AlgTraitsPyr5::nodesPerElement_, dim);
+  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, numFaceIps, AlgTraitsPyr5::nodesPerElement_, dim);
 
   const int offset = tri_traits::numFaceIp_ * face_ordinal;
   shifted_pyr_deriv(numFaceIps, &intgExpFaceShift_[dim * offset], deriv);
@@ -1146,10 +1148,10 @@ void PyrSCS::shifted_pyr_derivative(
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
 void PyrSCS::gij( 
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gupper,
-    SharedMemView<DoubleType***>& glower,
-    SharedMemView<DoubleType***>& deriv)
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gupper,
+    SharedMemView<DoubleType***, DeviceShmem>& glower,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_gij_3d<AlgTraitsPyr5>(deriv, coords, gupper, glower);
 }
@@ -1181,9 +1183,9 @@ void PyrSCV::Mij(
 }
 //-------------------------------------------------------------------------
 void PyrSCV::Mij(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& metric,
-    SharedMemView<DoubleType***>& deriv)
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& metric,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_Mij_3d<AlgTraitsPyr5>(deriv, coords, metric);
 }

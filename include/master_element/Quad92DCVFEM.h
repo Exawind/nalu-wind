@@ -164,24 +164,24 @@ public:
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final ;
 
-  void determinant(
-    SharedMemView<DoubleType**> &coords,
-    SharedMemView<DoubleType*> &vol) override ;
+  KOKKOS_FUNCTION void determinant(
+    SharedMemView<DoubleType**, DeviceShmem> &coords,
+    SharedMemView<DoubleType*, DeviceShmem> &vol) override ;
 
-  void grad_op(
-    SharedMemView<DoubleType** >& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv) override ;
+  KOKKOS_FUNCTION void grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override ;
 
-  void shifted_grad_op(
-    SharedMemView<DoubleType** >& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv) override ;
+  KOKKOS_FUNCTION void shifted_grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override ;
 
-  void Mij(
-    SharedMemView<DoubleType** >& coords,
-    SharedMemView<DoubleType***>& metric,
-    SharedMemView<DoubleType***>& deriv) override ;
+  KOKKOS_FUNCTION void Mij(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& metric,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override ;
 
   void determinant(
     const int nelem,
@@ -207,7 +207,7 @@ private:
   void set_interior_info();
 
   DoubleType jacobian_determinant(
-    const SharedMemView<DoubleType**> &coords,
+    const SharedMemView<DoubleType**, DeviceShmem> &coords,
     const double *POINTER_RESTRICT shapeDerivs ) const;
 
   double jacobian_determinant(
@@ -228,9 +228,9 @@ public:
   KOKKOS_FUNCTION
   virtual ~Quad92DSCS() {}
 
-  void determinant(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType**>& areav) override ;
+  KOKKOS_FUNCTION void determinant(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType**, DeviceShmem>& areav) override ;
 
   void determinant(
     const int nelem,
@@ -238,10 +238,10 @@ public:
     double *areav,
     double * error ) override ;
 
-  void grad_op(
-    SharedMemView<DoubleType** >& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv) override ;
+  KOKKOS_FUNCTION void grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override ;
 
   void grad_op(
     const int nelem,
@@ -251,10 +251,10 @@ public:
     double *det_j,
     double * error ) override ;
 
-  void shifted_grad_op(
-    SharedMemView<DoubleType** >& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv) override ;
+  KOKKOS_FUNCTION void shifted_grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override ;
 
   void shifted_grad_op(
     const int nelem,
@@ -265,10 +265,10 @@ public:
     double * error ) override ;
 
 
-  void face_grad_op(
+  KOKKOS_FUNCTION void face_grad_op(
     int face_ordinal,
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop) final;
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
 
   void face_grad_op(
     const int nelem,
@@ -278,11 +278,11 @@ public:
     double *det_j,
     double * error ) override ;
 
-  void gij(
-    SharedMemView<DoubleType** >& coords,
-    SharedMemView<DoubleType***>& gupper,
-    SharedMemView<DoubleType***>& glower,
-    SharedMemView<DoubleType***>& deriv) override ;
+  KOKKOS_FUNCTION void gij(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gupper,
+    SharedMemView<DoubleType***, DeviceShmem>& glower,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override ;
 
   void gij(
     const double *coords,
@@ -290,10 +290,10 @@ public:
     double *glowerij,
     double *deriv) override ;
 
-  void Mij(
-    SharedMemView<DoubleType** >& coords,
-    SharedMemView<DoubleType***>& metric,
-    SharedMemView<DoubleType***>& deriv) override ;
+  KOKKOS_FUNCTION void Mij(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& metric,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) override ;
 
   void Mij(
     const double *coords,
@@ -335,7 +335,7 @@ private:
 
   template <Jacobian::Direction direction> void
   area_vector(
-    const SharedMemView<DoubleType**>& elemNodalCoords,
+    const SharedMemView<DoubleType**, DeviceShmem>& elemNodalCoords,
     double *POINTER_RESTRICT shapeDeriv,
     DoubleType *POINTER_RESTRICT areaVector ) const;
   template <Jacobian::Direction direction> void

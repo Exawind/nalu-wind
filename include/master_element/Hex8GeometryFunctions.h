@@ -30,7 +30,7 @@ namespace sierra {
 namespace nalu {
 
   template <typename ViewType>
-  void quad_area_by_triangulation(
+  KOKKOS_FUNCTION void quad_area_by_triangulation(
     int ics,
     const typename ViewType::value_type areacoords[4][3],
     const ViewType& area)
@@ -78,7 +78,7 @@ namespace nalu {
   }
 
   template <typename RealType>
-  RealType hex_volume_grandy(RealType scvcoords[8][3])
+  KOKKOS_FUNCTION RealType hex_volume_grandy(RealType scvcoords[8][3])
   {
     /**
      * The Grandy algorithm for computing the volume of a multilinear box
@@ -165,7 +165,7 @@ namespace nalu {
   }
 
   template <typename RealType>
-  RealType bhex_volume_grandy(RealType scvcoords[8][3])
+  KOKKOS_FUNCTION RealType bhex_volume_grandy(RealType scvcoords[8][3])
   {
     /**
      * The Grandy algorithm for computing the volume of a multilinear box
@@ -263,7 +263,7 @@ namespace nalu {
   }
 
   template <typename CoordViewType>
-  void subdivide_hex_8(CoordViewType coords, typename CoordViewType::value_type coordv[27][3])
+  KOKKOS_FUNCTION void subdivide_hex_8(CoordViewType coords, typename CoordViewType::value_type coordv[27][3])
   {
     /**
      * Subdivide the coordinates of a hex8 element into 8 hexs along edge, face, and volume midpoints
