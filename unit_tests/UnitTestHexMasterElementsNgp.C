@@ -109,7 +109,6 @@ double poly_der(
   return val;
 }
 
-#ifndef KOKKOS_ENABLE_CUDA
 
 template <typename AlgTraits, typename ME, bool SCS>
 void check_interpolation(
@@ -129,9 +128,9 @@ void check_interpolation(
   ME    *me = SCS ? 
     dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_)):
     dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_));
-  ME *ngpMe = SCS ? 
-    dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>()):
-    dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_volume_master_element<AlgTraits>());
+  auto *ngpMe = SCS ? 
+    (sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>()):
+    (sierra::nalu::MasterElementRepo::get_volume_master_element<AlgTraits>());
   ThrowRequire(me);
   ThrowRequire(ngpMe);
 
@@ -194,7 +193,7 @@ void check_interpolation(
           coords[i] = ngpCoordField.get(ngpMesh, nodes[n], i);
         ws_field[n] = poly_val<dim,poly_order>(coeffs, coords.data());
       }
-      ngpMe->template shape_fcn<ViewType>(shpfc);
+      ngpMe->shape_fcn(shpfc);
       for (int j = 0; j < num_int_pt; ++j) {
         for (int i = 0; i < num_nodes; ++i) {
           ngpResults[j] += shpfc(j,i) * ws_field[i];
@@ -339,11 +338,13 @@ protected:
       unit_test_utils::create_one_reference_element(bulk, stk::topology::HEX_8);
     }
 
+#ifndef KOKKOS_ENABLE_CUDA
     void setup_poly_order_2_hex_27() {
       poly_order = 2;
       topo = stk::topology::HEX_27;
       unit_test_utils::create_one_reference_element(bulk, stk::topology::HEX_27);
     }
+#endif
 
     stk::ParallelMachine comm;
     unsigned spatialDimension;
@@ -381,6 +382,8 @@ TEST_F(MasterElementHexSerialNGP, hex8_scs_derivatives)
     check_derivatives<AlgTraits>(meta, bulk);
   }
 }
+
+#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(MasterElementHexSerialNGP, hex27_scs_interpolation)
 {

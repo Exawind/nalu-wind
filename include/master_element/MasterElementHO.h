@@ -183,10 +183,10 @@ public:
     return shapeDerivs_;
   }
 
-  void face_grad_op(
+  KOKKOS_FUNCTION void face_grad_op(
     int face_ordinal,
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop) final;
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
 
   virtual const double* integration_locations() const final {
     return intgLoc_.data();

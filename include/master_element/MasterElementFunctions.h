@@ -51,7 +51,7 @@ namespace nalu {
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
   KOKKOS_FUNCTION
-  void generic_grad_op(const GradViewType& referenceGradWeights, const CoordViewType& coords, OutputViewType& weights)
+  KOKKOS_FUNCTION void generic_grad_op(const GradViewType& referenceGradWeights, const CoordViewType& coords, OutputViewType& weights)
   {
     constexpr int dim = AlgTraits::nDim_;
 
@@ -110,7 +110,7 @@ namespace nalu {
   }
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
-  void generic_gij_3d(
+  KOKKOS_FUNCTION void generic_gij_3d(
     const GradViewType& referenceGradWeights,
     const CoordViewType& coords,
     OutputViewType& gup,
@@ -179,7 +179,7 @@ namespace nalu {
   }
 
   template <typename AlgTraits>
-  void generic_Mij_2d(const int numIntPoints, const double *deriv,
+  KOKKOS_FUNCTION void generic_Mij_2d(const int numIntPoints, const double *deriv,
                       const double *coords, double *metric) {
     static_assert(AlgTraits::nDim_ == 2, "2D method");
 
@@ -273,7 +273,7 @@ namespace nalu {
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType,
             typename OutputViewType>
-  void generic_Mij_2d(const GradViewType &referenceGradWeights,
+  KOKKOS_FUNCTION void generic_Mij_2d(const GradViewType &referenceGradWeights,
                       const CoordViewType &coords, OutputViewType &metric) {
     using ftype = typename CoordViewType::value_type;
     static_assert(std::is_same<ftype, typename GradViewType::value_type>::value,
@@ -424,7 +424,7 @@ namespace nalu {
   }
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
-  void generic_Mij_3d(
+  KOKKOS_FUNCTION void generic_Mij_3d(
     const GradViewType& referenceGradWeights,
     const CoordViewType& coords,
     OutputViewType& metric)
@@ -490,7 +490,7 @@ namespace nalu {
   }
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
-  void generic_determinant_3d(GradViewType referenceGradWeights, CoordViewType coords, OutputViewType detj)
+  KOKKOS_FUNCTION void generic_determinant_3d(GradViewType referenceGradWeights, CoordViewType coords, OutputViewType detj)
   {
     using ftype = typename CoordViewType::value_type;
     static_assert(std::is_same<ftype, typename GradViewType::value_type>::value,  "Incompatiable value type for views");

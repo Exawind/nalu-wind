@@ -46,23 +46,23 @@ public:
     double *det_j,
     double * error );
 
-  void grad_op_fem(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv,
-    SharedMemView<DoubleType*>&det_j) final;
+  KOKKOS_FUNCTION void grad_op_fem(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType***, DeviceShmem>&gradop,
+    SharedMemView<DoubleType***, DeviceShmem>&deriv,
+    SharedMemView<DoubleType*, DeviceShmem>&det_j) final;
 
-  void shifted_grad_op_fem(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv,
-    SharedMemView<DoubleType*>&det_j) final;
+  KOKKOS_FUNCTION void shifted_grad_op_fem(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType***, DeviceShmem>&gradop,
+    SharedMemView<DoubleType***, DeviceShmem>&deriv,
+    SharedMemView<DoubleType*, DeviceShmem>&det_j) final;
 
-  void shape_fcn(
-    SharedMemView<DoubleType**> &shpfc) final;
+  KOKKOS_FUNCTION void shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) final;
 
-  void shifted_shape_fcn(
-    SharedMemView<DoubleType**> &shpfc) final;
+  KOKKOS_FUNCTION void shifted_shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) final;
 
   void face_grad_op(
     const int nelem,
@@ -135,18 +135,18 @@ private:
     const double *isoParCoord,
     double *shpfc);
 
-  void hex8_fem_shape_fcn(
+  KOKKOS_FUNCTION void hex8_fem_shape_fcn(
     const int  numIp,
     const double *isoParCoord,
-    SharedMemView<DoubleType**> shpfc);
+    SharedMemView<DoubleType**, DeviceShmem> shpfc);
 
   void hex8_fem_derivative(
     const int npt, const double* par_coord,
     double* deriv);
 
-  void hex8_fem_derivative(
+  KOKKOS_FUNCTION void hex8_fem_derivative(
     const int npt, const double* par_coord,
-    SharedMemView<DoubleType***> deriv);
+    SharedMemView<DoubleType***, DeviceShmem> deriv);
 };
     
 } // namespace nalu

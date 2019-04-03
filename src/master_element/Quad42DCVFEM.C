@@ -37,7 +37,7 @@ namespace nalu{
 
 //-------- quad_derivative -----------------------------------------------------
 void quad_derivative(const double *par_coord, 
-                     SharedMemView<DoubleType***>& deriv) {
+                     SharedMemView<DoubleType***, DeviceShmem>& deriv) {
   const double half = 0.5;
   const size_t npts = deriv.extent(0);
 
@@ -60,9 +60,9 @@ void quad_derivative(const double *par_coord,
 
 //-------- quad_gradient_operator -----------------------------------------------------
 template<int nint, int npe>
-void quad_gradient_operator(const SharedMemView<DoubleType***>& deriv,
-                            const SharedMemView<DoubleType**>&  coords,
-                            SharedMemView<DoubleType***>& gradop) {
+void quad_gradient_operator(const SharedMemView<DoubleType***, DeviceShmem>& deriv,
+                            const SharedMemView<DoubleType**, DeviceShmem>&  coords,
+                            SharedMemView<DoubleType***, DeviceShmem>& gradop) {
 
   for (size_t ki=0; ki<nint; ++ki) {
     DoubleType dx_ds1 = 0.0;
@@ -128,8 +128,8 @@ Quad42DSCV::ipNodeMap(
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
 void Quad42DSCV::determinant(
-  SharedMemView<DoubleType**> &coords,
-  SharedMemView<DoubleType*> &vol) {
+  SharedMemView<DoubleType**, DeviceShmem> &coords,
+  SharedMemView<DoubleType*, DeviceShmem> &vol) {
 
   const int npe  = nodesPerElement_;
   const int nint = numIntPoints_;
@@ -203,9 +203,9 @@ void Quad42DSCV::determinant(
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
 void Quad42DSCV::grad_op(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop,
-  SharedMemView<DoubleType***>& deriv) {
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv) {
 
   quad_derivative(intgLoc_, deriv);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(deriv, coords, gradop);
@@ -229,9 +229,9 @@ void Quad42DSCV::determinant(
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
 void Quad42DSCV::shifted_grad_op(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop,
-  SharedMemView<DoubleType***>& deriv) {
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv) {
 
   quad_derivative(intgLocShift_, deriv);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(deriv, coords, gradop);
@@ -294,9 +294,9 @@ void Quad42DSCV::Mij(
 }
 //-------------------------------------------------------------------------
 void Quad42DSCV::Mij(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& metric,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& metric,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_Mij_2d<AlgTraitsQuad4_2D>(deriv, coords, metric);
 }
@@ -354,8 +354,8 @@ Quad42DSCS::side_node_ordinals ( int ordinal) const
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
 void Quad42DSCS::determinant(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType**>& areav) {
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& areav) {
   const double zero   = 0.0;
   const double one    = 1.0;
   const double half   = 0.5;
@@ -435,9 +435,9 @@ void Quad42DSCS::determinant(
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
 void Quad42DSCS::grad_op(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop,
-  SharedMemView<DoubleType***>& deriv) {
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv) {
 
   quad_derivative(intgLoc_, deriv);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(deriv, coords, gradop);
@@ -473,9 +473,9 @@ void Quad42DSCS::grad_op(
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
 void Quad42DSCS::shifted_grad_op(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop,
-  SharedMemView<DoubleType***>& deriv) {
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv) {
   quad_derivative(intgLocShift_, deriv);
   quad_gradient_operator<AlgTraits::numScsIp_, AlgTraits::nodesPerElement_>(deriv, coords, gradop);
 }
@@ -512,14 +512,14 @@ void Quad42DSCS::shifted_grad_op(
 void Quad42DSCS::face_grad_op(
   const int face_ordinal,
   const bool shifted,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop)
 {
   using traits = AlgTraitsEdge2DQuad42D;
 
   constexpr int derivSize = traits::numFaceIp_ * traits::nodesPerElement_ * traits::nDim_;
   DoubleType psi[derivSize];
-  SharedMemView<DoubleType***> deriv(psi, traits::numFaceIp_, traits::nodesPerElement_, traits::nDim_);
+  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, traits::numFaceIp_, traits::nodesPerElement_, traits::nDim_);
   const double *exp_face = shifted ? intgExpFaceShift_[face_ordinal][0]: intgExpFace_[face_ordinal][0];
   quad_derivative(exp_face, deriv);
   generic_grad_op<traits>(deriv, coords, gradop);
@@ -527,8 +527,8 @@ void Quad42DSCS::face_grad_op(
 
 void Quad42DSCS::face_grad_op(
   int face_ordinal,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop)
 {
   constexpr bool shifted = false;
   face_grad_op(face_ordinal, shifted, coords, gradop);
@@ -575,8 +575,8 @@ void Quad42DSCS::face_grad_op(
 //--------------------------------------------------------------------------
 void Quad42DSCS::shifted_face_grad_op(
   int face_ordinal,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop)
 {
   constexpr bool shifted = true;
   face_grad_op(face_ordinal, shifted, coords, gradop);
@@ -622,10 +622,10 @@ void Quad42DSCS::shifted_face_grad_op(
 //-------- gij -------------------------------------------------------------
 //--------------------------------------------------------------------------
 void Quad42DSCS::gij(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gupper,
-  SharedMemView<DoubleType***>& glower,
-  SharedMemView<DoubleType***>& deriv) {
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gupper,
+  SharedMemView<DoubleType***, DeviceShmem>& glower,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv) {
      
   const int npe  = nodesPerElement_;
   const int nint = numIntPoints_;
@@ -701,9 +701,9 @@ void Quad42DSCS::Mij(
 }
 //-------------------------------------------------------------------------
 void Quad42DSCS::Mij(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& metric,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& metric,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_Mij_2d<AlgTraitsQuad4_2D>(deriv, coords, metric);
 }

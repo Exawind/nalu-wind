@@ -46,76 +46,73 @@ public:
   virtual ~MasterElement() {} // = default is apparently not allowed for virtual destructors...
 
   // NGP-ready methods first
-  virtual void shape_fcn(
-    SharedMemView<DoubleType**> &/* shpfc */) {
-    throw std::runtime_error("shape_fcn using SharedMemView is not implemented");}
-
-  virtual void shifted_shape_fcn(
-    SharedMemView<DoubleType**> &/* shpfc */) {
-    throw std::runtime_error("shifted_shape_fcn using SharedMemView is not implemented");}
-
-  virtual void grad_op(
-    SharedMemView<DoubleType**>&/* coords */,
-    SharedMemView<DoubleType***>&/* gradop */,
-    SharedMemView<DoubleType***>&/* deriv */) {
-    throw std::runtime_error("grad_op using SharedMemView is not implemented");}
-
-  virtual void shifted_grad_op(
-    SharedMemView<DoubleType**>&/* coords */,
-    SharedMemView<DoubleType***>&/* gradop */,
-    SharedMemView<DoubleType***>&/* deriv */) {
-    throw std::runtime_error("shifted_grad_op using SharedMemView is not implemented");}
-
-  virtual void face_grad_op(
-    int /* face_ordinal */,
-    SharedMemView<DoubleType**>& /* coords */,
-    SharedMemView<DoubleType***>& /* gradop */) {
-    throw std::runtime_error("face_grad_op using SharedMemView is not implemented");}
-
-  virtual void shifted_face_grad_op(
-    int /* face_ordinal */,
-    SharedMemView<DoubleType**>& /* coords */,
-    SharedMemView<DoubleType***>& /* gradop */) {
-    throw std::runtime_error("shifted_face_grad_op using SharedMemView is not implemented");}
-
-  virtual void grad_op_fem(
-    SharedMemView<DoubleType**>&/* coords */,
-    SharedMemView<DoubleType***>&/* gradop */,
-    SharedMemView<DoubleType***>&/* deriv */,
-    SharedMemView<DoubleType*>& /*det_j*/) {
-    throw std::runtime_error("grad_op using SharedMemView is not implemented");}
-
-  virtual void shifted_grad_op_fem(
-    SharedMemView<DoubleType**>&/* coords */,
-    SharedMemView<DoubleType***>&/* gradop */,
-    SharedMemView<DoubleType***>&/* deriv */,
-    SharedMemView<DoubleType*>& /*det_j*/) {
-    throw std::runtime_error("shifted_grad_op using SharedMemView is not implemented");}
-
-  virtual void determinant(
-    SharedMemView<DoubleType**>&/* coords */,
-    SharedMemView<DoubleType**>&/* areav */) {
-    throw std::runtime_error("determinant using SharedMemView is not implemented");}
-
-  virtual void gij(
-    SharedMemView<DoubleType**>& /* coords */,
-    SharedMemView<DoubleType***>& /* gupper */,
-    SharedMemView<DoubleType***>& /* glower */,
-    SharedMemView<DoubleType***>& /* deriv */) {
-    throw std::runtime_error("gij using SharedMemView is not implemented");
+  KOKKOS_FUNCTION virtual void shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &/* shpfc */) {
   }
 
-  virtual void Mij(
-    SharedMemView<DoubleType**>& /* coords */,
-    SharedMemView<DoubleType***>& /* metric */,
-    SharedMemView<DoubleType***>& /* deriv */) {
-    throw std::runtime_error("Mij using SharedMemView is not implemented");
+  KOKKOS_FUNCTION virtual void shifted_shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &/* shpfc */) {
   }
 
-  virtual void determinant(
-    SharedMemView<DoubleType**>& /* coords */,
-    SharedMemView<DoubleType*>& /* volume */) {
-    throw std::runtime_error("scv determinant using SharedMemView is not implemented");
+  KOKKOS_FUNCTION virtual void grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>&/* coords */,
+    SharedMemView<DoubleType***, DeviceShmem>&/* gradop */,
+    SharedMemView<DoubleType***, DeviceShmem>&/* deriv */) {
+  }
+
+  KOKKOS_FUNCTION virtual void shifted_grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>&/* coords */,
+    SharedMemView<DoubleType***, DeviceShmem>&/* gradop */,
+    SharedMemView<DoubleType***, DeviceShmem>&/* deriv */) {
+  }
+
+  KOKKOS_FUNCTION virtual void face_grad_op(
+    int /* face_ordinal */,
+    SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
+    SharedMemView<DoubleType***, DeviceShmem>& /* gradop */) {
+  }
+
+  KOKKOS_FUNCTION virtual void shifted_face_grad_op(
+    int /* face_ordinal */,
+    SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
+    SharedMemView<DoubleType***, DeviceShmem>& /* gradop */) {
+  }
+
+  KOKKOS_FUNCTION virtual void grad_op_fem(
+    SharedMemView<DoubleType**, DeviceShmem>&/* coords */,
+    SharedMemView<DoubleType***, DeviceShmem>&/* gradop */,
+    SharedMemView<DoubleType***, DeviceShmem>&/* deriv */,
+    SharedMemView<DoubleType*, DeviceShmem>& /*det_j*/) {
+  }
+
+  KOKKOS_FUNCTION virtual void shifted_grad_op_fem(
+    SharedMemView<DoubleType**, DeviceShmem>&/* coords */,
+    SharedMemView<DoubleType***, DeviceShmem>&/* gradop */,
+    SharedMemView<DoubleType***, DeviceShmem>&/* deriv */,
+    SharedMemView<DoubleType*, DeviceShmem>& /*det_j*/) {
+  }
+
+  KOKKOS_FUNCTION virtual void determinant(
+    SharedMemView<DoubleType**, DeviceShmem>&/* coords */,
+    SharedMemView<DoubleType**, DeviceShmem>&/* areav */) {
+  }
+
+  KOKKOS_FUNCTION virtual void gij(
+    SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
+    SharedMemView<DoubleType***, DeviceShmem>& /* gupper */,
+    SharedMemView<DoubleType***, DeviceShmem>& /* glower */,
+    SharedMemView<DoubleType***, DeviceShmem>& /* deriv */) {
+  }
+
+  KOKKOS_FUNCTION virtual void Mij(
+    SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
+    SharedMemView<DoubleType***, DeviceShmem>& /* metric */,
+    SharedMemView<DoubleType***, DeviceShmem>& /* deriv */) {
+  }
+
+  KOKKOS_FUNCTION virtual void determinant(
+    SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
+    SharedMemView<DoubleType*, DeviceShmem>& /* volume */) {
   }
 
   // non-NGP-ready methods second

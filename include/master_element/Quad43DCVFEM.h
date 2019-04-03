@@ -31,15 +31,15 @@ public:
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
  
   // NGP-ready methods first
-  void shape_fcn(
-    SharedMemView<DoubleType**> &shpfc);
+  KOKKOS_FUNCTION void shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
 
-  void shifted_shape_fcn(
-    SharedMemView<DoubleType**> &shpfc);
+  KOKKOS_FUNCTION void shifted_shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
 
-  void quad4_shape_fcn(
+  KOKKOS_FUNCTION void quad4_shape_fcn(
     const double *isoParCoord,
-    SharedMemView<DoubleType**> &shpfc);
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
 
   void determinant(
     const int nelem,

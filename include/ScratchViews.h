@@ -105,7 +105,7 @@ public:
 
   void fill_master_element_views(
     const ElemDataRequestsGPU::DataEnumView& dataEnums,
-    SharedMemView<double**>* coordsView,
+    SharedMemView<double**, DeviceShmem>* coordsView,
     MasterElement* meFC,
     MasterElement* meSCS,
     MasterElement* meSCV,
@@ -114,7 +114,7 @@ public:
 
   void fill_master_element_views_new_me(
     const ElemDataRequestsGPU::DataEnumView& dataEnums,
-    SharedMemView<DoubleType**>* coordsView,
+    SharedMemView<DoubleType**, DeviceShmem>* coordsView,
     MasterElement* meFC,
     MasterElement* meSCS,
     MasterElement* meSCV,
@@ -660,7 +660,7 @@ int MasterElementViews<T>::create_master_element_views(
 template<typename T>
 void MasterElementViews<T>::fill_master_element_views(
   const ElemDataRequestsGPU::DataEnumView& dataEnums,
-  SharedMemView<double**>* coordsView,
+  SharedMemView<double**, DeviceShmem>* coordsView,
   MasterElement* /* meFC */,
   MasterElement* meSCS,
   MasterElement* meSCV,
@@ -744,7 +744,7 @@ void MasterElementViews<T>::fill_master_element_views(
 template<typename T>
 void MasterElementViews<T>::fill_master_element_views_new_me(
   const ElemDataRequestsGPU::DataEnumView& dataEnums,
-  SharedMemView<DoubleType**>* coordsView,
+  SharedMemView<DoubleType**, DeviceShmem>* coordsView,
   MasterElement* /* meFC */,
   MasterElement* meSCS,
   MasterElement* meSCV,
