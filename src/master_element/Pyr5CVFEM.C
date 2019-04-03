@@ -124,36 +124,25 @@ void shifted_pyr_deriv(const int npts,
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 PyrSCV::PyrSCV()
   : MasterElement()
 {
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_; 
-
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, ipNodeMap_+5);
-
-  MasterElement::intgLoc_.assign(intgLoc_, intgLoc_+15);
-  MasterElement::intgLocShift_.assign(intgLocShift_, intgLocShift_+15);
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-PyrSCV::~PyrSCV()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------
 //-------- ipNodeMap -------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 const int *
 PyrSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 DoubleType polyhedral_volume_by_faces(int  /* ncoords */, const DoubleType volcoords[][3],
@@ -425,8 +414,10 @@ void PyrSCV::determinant(
 
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(pyr_scv_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords,
+    ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
 }
 
@@ -454,7 +445,7 @@ PyrSCV::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 PyrSCV::pyr_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *par_coord, 
   double *shape_fcn)
 {
@@ -485,7 +476,7 @@ PyrSCV::pyr_shape_fcn(
 //--------------------------------------------------------------------------
 void
 PyrSCV::shifted_pyr_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *par_coord, 
   double *shape_fcn)
 {
@@ -548,44 +539,22 @@ void fill_intg_exp_face_shift(double* intgExpFaceShift, const int* sideNodeOrdin
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 PyrSCS::PyrSCS()
   : MasterElement()
 {
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-
-  MasterElement::lrscv_.assign(lrscv_, lrscv_+24);
-
-  MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, scsIpEdgeOrd_+AlgTraits::numScsIp_);
-  MasterElement::oppNode_.assign(oppNode_, oppNode_+20);
-  MasterElement::oppFace_.assign(oppFace_, oppFace_+20);
-
-  MasterElement::intgLoc_.assign(intgLoc_, intgLoc_+36);
-  MasterElement::intgLocShift_.assign(intgLocShift_, intgLocShift_+36);
-
-  MasterElement::intgExpFace_.assign(intgExpFace_, intgExpFace_+48);
-
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, ipNodeMap_+16);
-
   fill_intg_exp_face_shift(intgExpFaceShift_, sideNodeOrdinals_);
-  MasterElement::intgExpFaceShift_.assign(intgExpFaceShift_,intgExpFaceShift_+48);
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-PyrSCS::~PyrSCS()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
 const int *
-PyrSCS::side_node_ordinals(
-  int ordinal)
+PyrSCS::side_node_ordinals (
+  int ordinal) const
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
   return &sideNodeOrdinals_[ordinal*3];
@@ -729,8 +698,10 @@ void PyrSCS::determinant(
   double *areav,
   double *error)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(pyr_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords, areav );
+    ( &nelem, &npe, &nint, coords, areav );
 
   // all is always well; no error checking
   *error = 0;
@@ -760,10 +731,12 @@ void PyrSCS::grad_op(
 
   pyr_derivative(numIntPoints_, &intgLoc_[0], deriv);
   
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(pyr_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -795,10 +768,12 @@ void PyrSCS::shifted_grad_op(
 
   shifted_pyr_derivative(numIntPoints_, &intgLocShift_[0], deriv);
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(pyr_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -832,9 +807,10 @@ void PyrSCS::face_grad_op(
       const int row = 9*face_ordinal + k*ndim;
       pyr_derivative(nface, &intgExpFace_[row], dpsi);
       
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(pyr_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[15*n], &gradop[k*nelem*15+n*15], &det_j[npf*n+k], error, &lerr );
@@ -916,9 +892,10 @@ void PyrSCS::shifted_face_grad_op(
       const int row = 9*face_ordinal + k*ndim;
       shifted_pyr_derivative(nface, &p_intgExp[row], dpsi);
 
+      const int npe = nodesPerElement_;
       SIERRA_FORTRAN(pyr_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[15*n], &gradop[k*nelem*15+n*15], &det_j[npf*n+k], error, &lerr );
@@ -1061,9 +1038,10 @@ PyrSCS::general_face_grad_op(
 
   pyr_derivative(nface, &isoParCoord[0], dpsi);
       
+  const int npe = nodesPerElement_;
   SIERRA_FORTRAN(pyr_gradient_operator)
     ( &nface,
-      &nodesPerElement_,
+      &npe,
       &nface,
       dpsi,
       &coords[0], &gradop[0], &det_j[0], error, &lerr );
@@ -1182,9 +1160,11 @@ void PyrSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(threed_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -1215,7 +1195,7 @@ const int *
 PyrSCS::adjacentNodes()
 {
   // define L/R mappings
-  return &lrscv_[0];
+  return lrscv_;
 }
 
 //--------------------------------------------------------------------------
@@ -1250,7 +1230,7 @@ PyrSCS::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 PyrSCS::pyr_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *par_coord, 
   double *shape_fcn)
 {
@@ -1281,7 +1261,7 @@ PyrSCS::pyr_shape_fcn(
 //--------------------------------------------------------------------------
 void
 PyrSCS::shifted_pyr_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *par_coord, 
   double *shape_fcn)
 {
@@ -1328,7 +1308,7 @@ PyrSCS::opposingFace(
 //--------------------------------------------------------------------------
 const int *
 PyrSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal); 
   return &ipNodeMap_[ordinal*3];

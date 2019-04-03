@@ -7,7 +7,6 @@
 #ifndef TensorOps_h
 #define TensorOps_h
 
-#include <vector>
 #include <array>
 #include <limits>
 

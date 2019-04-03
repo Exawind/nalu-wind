@@ -14,6 +14,7 @@
 #include <ElemDataRequests.h>
 #include <FieldTypeDef.h>
 #include <stk_ngp/Ngp.hpp>
+#include <stk_ngp/NgpFieldManager.hpp>
 
 namespace sierra{
 namespace nalu{
@@ -24,7 +25,13 @@ struct FieldInfoNGP {
   {}  
   FieldInfoNGP(const stk::mesh::FieldBase* fld, unsigned tensorDim1, unsigned tensorDim2)
   : field(fld->get_mesh(), *fld), scalarsDim1(tensorDim1), scalarsDim2(tensorDim2)
-  {}  
+  {}
+  FieldInfoNGP(NGPDoubleFieldType& fld, unsigned scalars)
+    : field(fld), scalarsDim1(scalars), scalarsDim2(0)
+  {}
+  FieldInfoNGP(NGPDoubleFieldType& fld, unsigned tensorDim1, unsigned tensorDim2)
+    : field(fld), scalarsDim1(tensorDim1), scalarsDim2(tensorDim2)
+  {}
   KOKKOS_FUNCTION
   FieldInfoNGP(const FieldInfoNGP& rhs)
   : field(rhs.field), scalarsDim1(rhs.scalarsDim1), scalarsDim2(rhs.scalarsDim2)
@@ -51,16 +58,25 @@ unsigned get_field_ordinal(const FieldInfoNGP& fieldInfo)
   return fieldInfo.field.get_ordinal();
 }
 
+KOKKOS_INLINE_FUNCTION
+unsigned get_field_ordinal(const NGPDoubleFieldType& field)
+{
+  return field.get_ordinal();
+}
+
 class ElemDataRequestsGPU
 {
 public:
   typedef FieldInfoNGP FieldInfoType;
+  typedef NGPDoubleFieldType FieldType;
   typedef Kokkos::View<COORDS_TYPES*, Kokkos::LayoutRight, MemSpace> CoordsTypesView;
   typedef Kokkos::View<ELEM_DATA_NEEDED*, Kokkos::LayoutRight, MemSpace> DataEnumView;
   typedef Kokkos::View<NGPDoubleFieldType*, Kokkos::LayoutRight, MemSpace> FieldView;
   typedef Kokkos::View<FieldInfoType*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
-  ElemDataRequestsGPU(const ElemDataRequests& dataReq, unsigned totalFields)
+  ElemDataRequestsGPU(
+    const ngp::FieldManager& fieldMgr,
+    const ElemDataRequests& dataReq, unsigned totalFields)
     : dataEnums(),
       hostDataEnums(),
       coordsFields_(),
@@ -78,8 +94,8 @@ public:
     fill_host_data_enums(dataReq, CURRENT_COORDINATES);
     fill_host_data_enums(dataReq, MODEL_COORDINATES);
 
-    fill_host_fields(dataReq);
-    fill_host_coords_fields(dataReq);
+    fill_host_fields(dataReq, fieldMgr);
+    fill_host_coords_fields(dataReq, fieldMgr);
 
     copy_to_device();
   }
@@ -151,17 +167,21 @@ private:
     }
   }
 
-  void fill_host_fields(const ElemDataRequests& dataReq)
+  void fill_host_fields(
+    const ElemDataRequests& dataReq, const ngp::FieldManager& fieldMgr)
   {
     fields = FieldInfoView("Fields", dataReq.get_fields().size());
     hostFields = Kokkos::create_mirror_view(fields);
     unsigned i = 0;
-    for(const FieldInfo& finfo : dataReq.get_fields()) {
-      hostFields(i++) = FieldInfoType(finfo.field, finfo.scalarsDim1, finfo.scalarsDim2);
+    for (const FieldInfo& finfo : dataReq.get_fields()) {
+      hostFields(i++) = FieldInfoType(
+        fieldMgr.get_field<double>(finfo.field->mesh_meta_data_ordinal()),
+        finfo.scalarsDim1, finfo.scalarsDim2);
     }
   }
- 
-  void fill_host_coords_fields(const ElemDataRequests& dataReq)
+
+  void fill_host_coords_fields(
+    const ElemDataRequests& dataReq, const ngp::FieldManager& fieldMgr)
   {
     coordsFields_ = FieldView("CoordsFields", dataReq.get_coordinates_map().size());
     coordsFieldsTypes_ = CoordsTypesView("CoordsFieldsTypes", dataReq.get_coordinates_map().size());
@@ -170,8 +190,9 @@ private:
     hostCoordsFieldsTypes_ = Kokkos::create_mirror_view(coordsFieldsTypes_);
 
     unsigned i = 0;
-    for(auto iter : dataReq.get_coordinates_map()) {
-      hostCoordsFields_(i) = NGPDoubleFieldType(iter.second->get_mesh(), *iter.second);
+    for (auto iter : dataReq.get_coordinates_map()) {
+      hostCoordsFields_(i) =
+        fieldMgr.get_field<double>(iter.second->mesh_meta_data_ordinal());
       hostCoordsFieldsTypes_(i) = iter.first;
       ++i;
     }

@@ -57,24 +57,13 @@ void tet_deriv(DerivType& deriv)
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 TetSCV::TetSCV()
   : MasterElement()
 {
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-
-  MasterElement::ipNodeMap_.assign(ipNodeMap_, 4+ipNodeMap_);
-  MasterElement::intgLoc_.assign(&intgLoc_[0][0],           12+&intgLoc_[0][0]);
-  MasterElement::intgLocShift_.assign(&intgLocShift_[0][0], 12+&intgLocShift_[0][0]);
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-TetSCV::~TetSCV()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------
@@ -82,7 +71,7 @@ TetSCV::~TetSCV()
 //--------------------------------------------------------------------------
 const int *
 TetSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
   return ipNodeMap_;
@@ -225,8 +214,10 @@ void TetSCV::determinant(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tet_scv_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords,
+    ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
 }
 
@@ -253,7 +244,7 @@ TetSCV::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 TetSCV::tet_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *par_coord, 
   double *shape_fcn)
 {
@@ -292,25 +283,13 @@ void TetSCV::Mij(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 TetSCS::TetSCS()
   : MasterElement()
 {
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
-
-  // define L/R mappings
-  MasterElement::lrscv_.assign(lrscv_,  12+lrscv_);
-  MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_,  numIntPoints_+scsIpEdgeOrd_);
-  MasterElement::oppNode_.assign(&oppNode_[0][0], 12+&oppNode_[0][0]);
-  MasterElement::oppFace_.assign(&oppFace_[0][0], 12+&oppFace_[0][0]);
-
-  MasterElement::intgLoc_.assign(intgLoc_,  18+intgLoc_);
-  MasterElement::intgLocShift_.assign(intgLocShift_,  18+intgLocShift_);
-
-  MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 36+&intgExpFace_[0][0][0]);
-
-  MasterElement::ipNodeMap_.assign(&ipNodeMap_[0][0], 12+&ipNodeMap_[0][0]);
 
   const double nodeLocations[4][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}};
 
@@ -324,15 +303,6 @@ TetSCS::TetSCS()
       intgExpFaceShift_[k][n][2] = nodeLocations[ordinals[n]][2];
     }
   }
-  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0], 36+&intgExpFaceShift_[0][0][0]);
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-TetSCS::~TetSCS()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------
@@ -340,7 +310,7 @@ TetSCS::~TetSCS()
 //--------------------------------------------------------------------------
 const int *
 TetSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal); 
   return ipNodeMap_[ordinal];
@@ -350,8 +320,7 @@ TetSCS::ipNodeMap(
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
 const int *
-TetSCS::side_node_ordinals(
-  int ordinal)
+TetSCS::side_node_ordinals ( int ordinal) const
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
   return sideNodeOrdinals_[ordinal];
@@ -470,8 +439,10 @@ void TetSCS::determinant(
   double *areav,
   double *error)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tet_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords, areav );
+    ( &nelem, &npe, &nint, coords, areav );
 
   // all is always well; no error checking
   *error = 0;
@@ -500,13 +471,15 @@ void TetSCS::grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tet_derivative)
-    ( &numIntPoints_, deriv );
+    ( &nint, deriv );
   
   SIERRA_FORTRAN(tet_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -537,13 +510,15 @@ void TetSCS::shifted_grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tet_derivative)
-    ( &numIntPoints_, deriv );
+    ( &nint, deriv );
 
   SIERRA_FORTRAN(tet_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -576,9 +551,10 @@ void TetSCS::face_grad_op(
       SIERRA_FORTRAN(tet_derivative)
         ( &nface, dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(tet_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[12*n], &gradop[k*nelem*12+n*12], &det_j[npf*n+k], error, &lerr );
@@ -643,9 +619,10 @@ void TetSCS::shifted_face_grad_op(
       SIERRA_FORTRAN(tet_derivative)
         ( &nface, dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(tet_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[12*n], &gradop[k*nelem*12+n*12], &det_j[npf*n+k], error, &lerr );
@@ -674,9 +651,11 @@ void TetSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(threed_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -707,7 +686,7 @@ const int *
 TetSCS::adjacentNodes()
 {
   // define L/R mappings
-  return &lrscv_[0];
+  return lrscv_;
 }
 
 //--------------------------------------------------------------------------
@@ -742,7 +721,7 @@ TetSCS::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 TetSCS::tet_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *par_coord, 
   double *shape_fcn)
 {
@@ -908,9 +887,10 @@ TetSCS::general_face_grad_op(
   SIERRA_FORTRAN(tet_derivative)
     ( &nface, dpsi );
 
+  const int npe  = nodesPerElement_;
   SIERRA_FORTRAN(tet_gradient_operator)
     ( &nface,
-      &nodesPerElement_,
+      &npe,
       &nface,
       dpsi,
       &coords[0], &gradop[0], &det_j[0], error, &lerr );

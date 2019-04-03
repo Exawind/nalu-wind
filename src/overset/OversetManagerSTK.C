@@ -9,6 +9,7 @@
 #include <NaluParsing.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 #include <utils/StkHelpers.h>
 
 // overset

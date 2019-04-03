@@ -11,6 +11,8 @@
 
 #include "master_element/MasterElement.h"
 
+#include <array>
+
 namespace sierra{
 namespace nalu{
 
@@ -21,10 +23,12 @@ public:
   using AlgTraits = AlgTraitsQuad4;
   using MasterElement::determinant;
 
+  KOKKOS_FUNCTION
   Quad3DSCS();
-  virtual ~Quad3DSCS();
+  KOKKOS_FUNCTION
+  virtual ~Quad3DSCS() = default;
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
  
   // NGP-ready methods first
   void shape_fcn(
@@ -34,7 +38,6 @@ public:
     SharedMemView<DoubleType**> &shpfc);
 
   void quad4_shape_fcn(
-    const int  &numIp,
     const double *isoParCoord,
     SharedMemView<DoubleType**> &shpfc);
 
@@ -76,9 +79,43 @@ public:
     const double * elem_nodal_coor,
     double * normal_vector );
   
-  double parametric_distance(const std::vector<double> &x);
+  double parametric_distance(const std::array<double,3> &x);
 
   const double elemThickness_;
+
+
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
+
+private:
+
+  static const int nDim_ = AlgTraits::nDim_;
+  static const int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static const int numIntPoints_ = AlgTraits::numScsIp_;
+  static constexpr double scaleToStandardIsoFac_ = 2.0;
+
+  // define ip node mappings; ordinal size = 1
+  const int ipNodeMap_[nodesPerElement_] = {0, 1, 2, 3};
+
+  // standard integration location
+  const double intgLoc_[8] = { 
+   -0.25,  -0.25, // surf 1
+    0.25,  -0.25, // surf 2
+    0.25,   0.25, // surf 3
+   -0.25,   0.25};// surf 4
+
+  // shifted
+  const double intgLocShift_[8] = { 
+   -0.50,  -0.50, // surf 1
+    0.50,  -0.50, // surf 2
+    0.50,   0.50, // surf 3
+   -0.50,   0.50};// surf 4  
+
+
 };
     
 } // namespace nalu

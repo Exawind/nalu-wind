@@ -9,6 +9,8 @@
 #ifndef Hex8CVFEM_h
 #define Hex8CVFEM_h
 
+#include <array>
+
 #include<master_element/MasterElement.h>
 #include <master_element/MasterElementFunctions.h>
 
@@ -18,7 +20,7 @@ namespace nalu{
 template<typename ViewType>
 KOKKOS_INLINE_FUNCTION
 void hex8_shape_fcn(
-  const int    & npts,
+  const int      npts,
   const double * isoParCoord,
   ViewType &shape_fcn)
 {
@@ -48,10 +50,13 @@ class HexSCV : public MasterElement
 public:
   using AlgTraits = AlgTraitsHex8;
 
+  KOKKOS_FUNCTION
   HexSCV();
-  virtual ~HexSCV();
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION
+  virtual ~HexSCV() = default;
+
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::determinant;
   using MasterElement::shifted_grad_op;
@@ -108,16 +113,22 @@ public:
   void shifted_shape_fcn(
     double *shpfc);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
-  const int nDim_ = 3;
-  const int nodesPerElement_ = 8;
-  const int numIntPoints_ = 8;
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_ = AlgTraits::numScvIp_;
  
    // define ip node mappings
   const int ipNodeMap_[8] = {0, 1, 2, 3, 4, 5, 6, 7};
  
    // standard integration location
-  const double intgLoc_[24] = {
+  const double intgLoc_[numIntPoints_*nDim_] = {
    -0.25,  -0.25,  -0.25,
    +0.25,  -0.25,  -0.25,
    +0.25,  +0.25,  -0.25,
@@ -146,12 +157,16 @@ class HexSCS : public MasterElement
 public:
   using AlgTraits = AlgTraitsHex8;
   using AlgTraitsFace = AlgTraitsQuad4;
+  using MasterElement::adjacentNodes;
 
 
+  KOKKOS_FUNCTION
   HexSCS();
-  virtual ~HexSCS();
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION
+  virtual ~HexSCS() = default;
+
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::determinant;
 
@@ -268,7 +283,7 @@ public:
     double *metric,
     double *deriv);
 
-  const int * adjacentNodes();
+  virtual const int * adjacentNodes() final;
 
   const int * scsIpEdgeOrd();
 
@@ -314,18 +329,25 @@ public:
     const double *side_pcoords,
     double *elem_pcoords);
 
-  const int* side_node_ordinals(int sideOrdinal) final;
+  const int* side_node_ordinals(int sideOrdinal) const final;
   using MasterElement::side_node_ordinals;
 
-  double parametric_distance(const std::vector<double> &x);
+  double parametric_distance(const std::array<double,3> &x);
 
-  const int nDim_            = 3;
-  const int nodesPerElement_ = 8;
-  const int numIntPoints_   = 12;
-  const double scaleToStandardIsoFac_ = 2.0;
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
+
+  static constexpr int nDim_            = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_    = AlgTraits::numScsIp_;
+  static constexpr double scaleToStandardIsoFac_ = 2.0;
 
   // standard integration location
-  const double  intgLoc_  [36] = {
+  const double  intgLoc_  [numIntPoints_*nDim_] = {
     0.00,  -0.25,  -0.25, // surf 1    1->2
     0.25,   0.00,  -0.25, // surf 2    2->3
     0.00,   0.25,  -0.25, // surf 3    3->4

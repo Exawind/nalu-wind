@@ -10,6 +10,7 @@
 #include <NonConformalManager.h>
 #include <DgInfo.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 #include <Realm.h>
 #include <NaluEnv.h>
 
@@ -193,7 +194,7 @@ NonConformalInfo::construct_dgInfo()
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     
     // master element-specific values
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
 
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
 
@@ -282,7 +283,7 @@ NonConformalInfo::construct_bounding_points()
     MasterElement *meFC = firstDgInfo->meFCCurrent_;
     
     // master element-specific values
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
     const int nodesPerFace = meFC->nodesPerElement_;
    
     // algorithm related; face
@@ -338,7 +339,7 @@ NonConformalInfo::construct_bounding_points()
       }
 
       // extract isoparametric coords on current face from meFC
-      const double *intgLoc = useShifted ? &meFC->intgLocShift_[0] : &meFC->intgLoc_[0];
+      const double *intgLoc = useShifted ? meFC->integration_location_shift() : meFC->integration_locations();
       
       // copy these coordinates
       for ( int j = 0; j < nDim; ++j ) {
@@ -346,7 +347,7 @@ NonConformalInfo::construct_bounding_points()
       }
       
       // save face iso-parametric coordinates; extract conversion factor from CVFEM to isInElement
-      const double conversionFac = meFC->scaleToStandardIsoFac_;
+      const double conversionFac = meFC->scal_to_standard_iso_factor();
       for ( int j = 0; j < nDim-1; ++j ) {
         dgInfo->currentIsoParCoords_[j] = conversionFac*intgLoc[currentFaceIp*(nDim-1)+j]; 
       }

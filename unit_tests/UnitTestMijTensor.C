@@ -31,14 +31,14 @@ namespace {
 std::vector<double> calculate_mij_tensor(sierra::nalu::MasterElement &me,
                                          const std::vector<double> &ws_coords) {
   double scs_error = 0.0;
-  int gradSize = me.numIntPoints_ * me.nodesPerElement_ * me.nDim_;
+  int gradSize = me.num_integration_points() * me.nodesPerElement_ * me.nDim_;
   std::vector<double> ws_dndx(gradSize);
   std::vector<double> ws_deriv(gradSize);
-  std::vector<double> ws_det_j(me.numIntPoints_);
+  std::vector<double> ws_det_j(me.num_integration_points());
   me.grad_op(1, ws_coords.data(), ws_dndx.data(), ws_deriv.data(),
              ws_det_j.data(), &scs_error);
 
-  int metricSize = me.nDim_ * me.nDim_ * me.numIntPoints_;
+  int metricSize = me.nDim_ * me.nDim_ * me.num_integration_points();
   std::vector<double> mij_tensor(metricSize);
   me.Mij(ws_coords.data(), mij_tensor.data(), ws_deriv.data());
 
@@ -99,7 +99,7 @@ void test_metric_for_topo_2D(stk::topology topo, double tol) {
 
   std::vector<double> mij_tensor = calculate_mij_tensor(*mescs, ws_coords);
 
-  for (int ip = 0; ip < mescs->numIntPoints_; ++ip) {
+  for (int ip = 0; ip < mescs->num_integration_points(); ++ip) {
     for (unsigned i = 0; i < 2; i++) {
       for (unsigned j = 0; j < 2; j++) {
         EXPECT_NEAR(mij_tensor[4 * ip + (i * 2 + j)], mij_exact[i][j], tol);
@@ -162,7 +162,7 @@ void test_metric_for_topo_3D(stk::topology topo, double tol) {
 
   std::vector<double> mij_tensor = calculate_mij_tensor(*mescs, ws_coords);
 
-  for (int ip = 0; ip < mescs->numIntPoints_; ++ip) {
+  for (int ip = 0; ip < mescs->num_integration_points(); ++ip) {
     for (unsigned i = 0; i < 3; i++) {
       for (unsigned j = 0; j < 3; j++) {
         EXPECT_NEAR(mij_tensor[9 * ip + (i * 3 + j)], mij_exact[i][j], tol);
@@ -263,7 +263,7 @@ TEST(MijTensorNGP, hex27) {
 
   sierra::nalu::generic_Mij_3d<AlgTraits>(refGrad, v_coords, mij_tensor);
 
-  for (int ip = 0; ip < mescs.numIntPoints_; ++ip) {
+  for (int ip = 0; ip < mescs.num_integration_points(); ++ip) {
     for (int d_outer = 0; d_outer < 3; ++d_outer) {
       for (int d_inner = 0; d_inner < 3; ++d_inner) {
         EXPECT_NEAR(mij_tensor(ip, d_outer, d_inner),
@@ -345,7 +345,7 @@ TEST(MijTensorNGP, hex27_simd) {
 
   sierra::nalu::generic_Mij_3d<AlgTraits>(refGrad, v_coords, mij_tensor);
 
-  for (int ip = 0; ip < mescs.numIntPoints_; ++ip) {
+  for (int ip = 0; ip < mescs.num_integration_points(); ++ip) {
     for (int d_outer = 0; d_outer < 3; ++d_outer) {
       for (int d_inner = 0; d_inner < 3; ++d_inner) {
         EXPECT_NEAR(stk::simd::get_data(mij_tensor(ip, d_outer, d_inner), 0),

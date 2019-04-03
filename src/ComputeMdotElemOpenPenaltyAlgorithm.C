@@ -14,6 +14,7 @@
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -154,7 +155,7 @@ ComputeMdotElemOpenPenaltyAlgorithm::execute()
     // face master element
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerFace = b.topology().num_nodes();
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
 
     // algorithm related; element (exposed face and element)
     ws_coordinates.resize(nodesPerElement*nDim);

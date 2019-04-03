@@ -18,7 +18,7 @@
 
 #include <stk_util/util/ReportHandler.hpp>
 
-#include <vector>
+#include <array>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -36,6 +36,7 @@ public:
   using MasterElement::shifted_shape_fcn;
 
   HexahedralP2Element();
+  KOKKOS_FUNCTION
   virtual ~HexahedralP2Element() {}
 
   void shape_fcn(double *shpfc);
@@ -43,7 +44,7 @@ public:
 
 
   template <typename ViewType>
-  ViewType copy_interpolation_weights_to_view(const std::vector<double>& interps)
+  ViewType copy_interpolation_weights_to_view(const double* interps)
   {
     ViewType interpWeights{"interpolation_weights"};
 
@@ -60,7 +61,7 @@ public:
 
 
   template <typename ViewType>
-  ViewType copy_deriv_weights_to_view(const std::vector<double>& derivs)
+  ViewType copy_deriv_weights_to_view(const double* derivs)
   {
     ViewType referenceGradWeights{"reference_gradient_weights"};
 
@@ -108,9 +109,17 @@ public:
     return referenceGradWeights;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
+  static const int nDim_       = AlgTraits::nDim_;
+  static const int numIntPoints_ = AlgTraits::numScsIp_; // = AlgTraits::numScvIp_
 
-
+  double intgLoc_            [numIntPoints_*nDim_];
 protected:
   struct ContourData {
     Jacobian::Direction direction;
@@ -165,17 +174,31 @@ protected:
     const double *pointCoord,
     double *isoParCoord);
 
-  const double scsDist_ = std::sqrt(3.0)/3.0;
-  const int nodes1D_    = 3;
-  const int numQuad_    = 2;
+  static const int nodes1D_    = 3;
+  static const int numQuad_    = 2;
+  static const int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static const int numFaces_ = 2 * nDim_; // 6
+  static const int nodesPerFace_ = nodes1D_ * nodes1D_; // 9
+  static const int ipsPerFace_  = nodesPerFace_ * (numQuad_ * numQuad_); // 36
+  static const int numFaceIps_ = numFaces_ * ipsPerFace_; // 216 = numIntPoints_ for this element
+
 
   // quadrature info
   const double gaussAbscissae_[2] = {-std::sqrt(3.0)/3.0, std::sqrt(3.0)/3.0};
   const double gaussWeight_[2]    = {0.5, 0.5};
   const double gaussAbscissaeShift_[6] = {-1.0, -1.0, 0.0, 0.0,  1.0, 1.0};
 
+  const double scsDist_ = std::sqrt(3.0)/3.0;
   const double scsEndLoc_[4] =  { -1.0, -scsDist_, scsDist_, 1.0 };
  
+  double intgExpFace_        [numFaceIps_*nDim_]; // size = 648
+  double expFaceShapeDerivs_ [numFaceIps_*nodesPerElement_*nDim_];
+  double shapeFunctions_     [numIntPoints_*nodesPerElement_];
+  double shapeFunctionsShift_[numIntPoints_*nodesPerElement_];
+  double shapeDerivs_        [numIntPoints_*nodesPerElement_*nDim_];
+  double shapeDerivsShift_   [numIntPoints_*nodesPerElement_*nDim_];
+  double intgLocShift_       [numIntPoints_*nDim_];
+
   // map the standard stk node numbering to a tensor-product style node numbering (i.e. node (m,l,k) -> m+npe*l+npe^2*k)
   const int    stkNodeMap_[3][3][3] = {
                 {{ 0,  8,  1}, // bottom front edge
@@ -198,17 +221,13 @@ protected:
       {4, 5, 6, 7,16,17,18,19,22}  //ordinal 5
   };
 
-  std::vector<double> shapeFunctions_;
-  std::vector<double> shapeFunctionsShift_;
-  std::vector<double> shapeDerivs_;
-  std::vector<double> shapeDerivsShift_;
-  std::vector<double> expFaceShapeDerivs_;
-private:
   void hex27_shape_fcn(
     int npts,
     const double *par_coord,
     double* shape_fcn
   ) const;
+
+
 };
 
 // 3D Quad 27 subcontrol volume
@@ -219,9 +238,10 @@ class Hex27SCV : public HexahedralP2Element
 
 public:
   Hex27SCV();
+  KOKKOS_FUNCTION
   virtual ~Hex27SCV() {}
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
@@ -277,6 +297,10 @@ public:
 
 
 private:
+
+  int ipNodeMap_   [numIntPoints_];
+  double ipWeight_ [numIntPoints_];
+
   void set_interior_info();
 
   double jacobian_determinant(
@@ -288,8 +312,6 @@ private:
 
   InterpWeightType shiftedInterpWeights_;
   GradWeightType shiftedReferenceGradWeights_;
-
-  std::vector<double> ipWeight_;
 };
 
 // 3D Hex 27 subcontrol surface
@@ -301,11 +323,13 @@ class Hex27SCS : public HexahedralP2Element
 
 public:
   Hex27SCS();
+  KOKKOS_FUNCTION
   virtual ~Hex27SCS() {}
 
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
   using MasterElement::determinant;
+  using MasterElement::adjacentNodes;
 
   template<typename ViewType> KOKKOS_FUNCTION void shape_fcn(ViewType &shpfc);
   void shape_fcn(SharedMemView<DoubleType**> &shpfc);
@@ -402,9 +426,9 @@ public:
     const double *side_pcoords,
     double *elem_pcoords);
 
-  const int * adjacentNodes();
+  virtual const int * adjacentNodes() final;
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   int opposingNodes(
     const int ordinal, const int node);
@@ -412,7 +436,7 @@ public:
   int opposingFace(
     const int ordinal, const int node);
 
-  const int* side_node_ordinals(int sideOrdinal) final;
+  const int* side_node_ordinals(int sideOrdinal) const final;
   using MasterElement::side_node_ordinals;
 
   const InterpWeightType& shape_function_values()
@@ -461,9 +485,16 @@ public:
   }
 
 protected:
-  std::vector<ContourData> ipInfo_;
+  ContourData ipInfo_[numIntPoints_];
 
 private:
+
+  int lrscv_[2*numIntPoints_];
+  int oppFace_  [numFaceIps_];
+  int ipNodeMap_[numFaceIps_];
+  int oppNode_  [numFaceIps_];
+
+
   void set_interior_info();
   void set_boundary_info();
 
@@ -519,81 +550,6 @@ private:
 
   ExpGradWeightType expReferenceGradWeights_;
 
-  int ipsPerFace_;
-};
-
-// 3D Quad 9
-class Quad93DSCS : public HexahedralP2Element
-{
-public:
-  Quad93DSCS();
-  virtual ~Quad93DSCS() {}
-
-  using MasterElement::determinant;
-
-  const int * ipNodeMap(int ordinal = 0);
-
-  void determinant(
-    const int nelem,
-    const double *coords,
-    double *areav,
-    double * error );
-
-  double isInElement(
-    const double *elemNodalCoord,
-    const double *pointCoord,
-    double *isoParCoord);
-
-  void interpolatePoint(
-    const int &nComp,
-    const double *isoParCoord,
-    const double *field,
-    double *result);
-
-  void general_shape_fcn(
-    const int numIp,
-    const double *isoParCoord,
-    double *shpfc);
-
-  void general_normal(
-    const double *isoParCoord,
-    const double *coords,
-    double *normal);
-
-private:
-  void set_interior_info();
-  void eval_shape_functions_at_ips() final;
-  void eval_shape_derivs_at_ips() final;
-
-  void eval_shape_functions_at_shifted_ips() final;
-  void eval_shape_derivs_at_shifted_ips() final;
-
-  void area_vector(
-    const double *POINTER_RESTRICT coords,
-    const double *POINTER_RESTRICT shapeDerivs,
-    double *POINTER_RESTRICT areaVector) const;
-
-  void quad9_shape_fcn(
-    int npts,
-    const double *par_coord,
-    double* shape_fcn
-  ) const;
-
-  void quad9_shape_deriv(
-    int npts,
-    const double *par_coord,
-    double* shape_fcn
-  ) const;
-
-  void non_unit_face_normal(
-    const double *isoParCoord,
-    const double *elemNodalCoord,
-    double *normalVector);
-
-  double parametric_distance(const std::vector<double> &x);
-
-  std::vector<double> ipWeight_;
-  const int surfaceDimension_;
 };
 
 template<typename ViewType> 

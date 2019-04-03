@@ -427,7 +427,7 @@ check_volume_quadrature_quad(int polyOrder, double tol)
   }
 
   approxInt.assign(approxInt.size(), 0.0);
-  for (int ip = 0; ip < masterElement.numIntPoints_; ++ip) {
+  for (int ip = 0; ip < masterElement.num_integration_points(); ++ip) {
     double interpValue = 0.0;
     for (int nodeNumber = 0; nodeNumber < elemDesc->nodesPerElement; ++nodeNumber) {
       interpValue += interpWeights[ip*elemDesc->nodesPerElement+nodeNumber] * nodalValues[nodeNumber];
@@ -489,7 +489,7 @@ check_volume_quadrature_hex(int polyOrder, double tol)
   }
 
   approxInt.assign(approxInt.size(), 0.0);
-  for (int ip = 0; ip < masterElement.numIntPoints_; ++ip) {
+  for (int ip = 0; ip < masterElement.num_integration_points(); ++ip) {
     double interpValue = 0.0;
     for (int nodeNumber = 0; nodeNumber < elemDesc->nodesPerElement; ++nodeNumber) {
       interpValue += interpWeights[ip*elemDesc->nodesPerElement+nodeNumber] * nodalValues[nodeNumber];
@@ -806,16 +806,16 @@ void check_scv_grad_op_hex(int poly_order, double tol)
     }
   }
 
-  const int derivSize = masterElement.numIntPoints_* desc->nodesPerElement * dim;
+  const int derivSize = masterElement.num_integration_points()* desc->nodesPerElement * dim;
   std::vector<double> ws_gradop(derivSize);
   std::vector<double> ws_deriv(derivSize);
-  std::vector<double> ws_detj(masterElement.numIntPoints_);
+  std::vector<double> ws_detj(masterElement.num_integration_points());
   double error = 0;
   masterElement.grad_op(1,ws_coords.data(), ws_gradop.data(), ws_deriv.data(), ws_detj.data(), &error);
 
-  Kokkos::View<double***> dndx_scv(ws_gradop.data(), masterElement.numIntPoints_, masterElement.nodesPerElement_, dim);
+  Kokkos::View<double***> dndx_scv(ws_gradop.data(), masterElement.num_integration_points(), masterElement.nodesPerElement_, dim);
 
-  for (int ip = 0; ip < masterElement.numIntPoints_; ++ip) {
+  for (int ip = 0; ip < masterElement.num_integration_points(); ++ip) {
     double dqdxIp[3] = {0,0,0};
     for (int n = 0; n < masterElement.nodesPerElement_; ++n) {
       for (int d = 0; d < dim; ++d) {

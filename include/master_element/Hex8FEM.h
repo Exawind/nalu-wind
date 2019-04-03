@@ -19,8 +19,10 @@ class Hex8FEM : public MasterElement
 {
 public:
 
+  KOKKOS_FUNCTION
   Hex8FEM();
-  virtual ~Hex8FEM();
+  KOKKOS_FUNCTION
+  virtual ~Hex8FEM() = default;
 
   using AlgTraits = AlgTraitsHex8;
   using MasterElement::grad_op;
@@ -87,15 +89,54 @@ public:
     double *glowerij,
     double *deriv);
 
-private:
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
+  // weights; -1:1
+  double weights_[8] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+
+private:
+  static const int nDim_ = AlgTraits::nDim_;
+  static const int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static const int numIntPoints_ = AlgTraits::numScvIp_;
+
+  // shifted to nodes (Gauss Lobatto)
+  const double glIP = 1.0;
+  const double intgLocShift_[24] = {
+   -glIP,  -glIP,  -glIP, 
+   +glIP,  -glIP,  -glIP, 
+   +glIP,  +glIP,  -glIP,
+   -glIP,  +glIP,  -glIP,
+   -glIP,  -glIP,  +glIP,
+   +glIP,  -glIP,  +glIP,
+   +glIP,  +glIP,  +glIP,
+   -glIP,  +glIP,  +glIP};
+
+  // standard integration location +/ sqrt(3)/3
+  const double gIP = std::sqrt(3.0)/3.0;
+  const double  intgLoc_[numIntPoints_*nDim_] = {
+   -gIP,  -gIP,  -gIP, 
+   +gIP,  -gIP,  -gIP, 
+   +gIP,  +gIP,  -gIP,
+   -gIP,  +gIP,  -gIP,
+   -gIP,  -gIP,  +gIP,
+   +gIP,  -gIP,  +gIP,
+   +gIP,  +gIP,  +gIP,
+   -gIP,  +gIP,  +gIP};
+
+
+  double intgExpFace_[72];
   void hex8_fem_shape_fcn(
-    const int  &numIp,
+    const int  numIp,
     const double *isoParCoord,
     double *shpfc);
 
   void hex8_fem_shape_fcn(
-    const int  &numIp,
+    const int  numIp,
     const double *isoParCoord,
     SharedMemView<DoubleType**> shpfc);
 

@@ -42,15 +42,17 @@ public:
   using MasterElement::grad_op;
   using MasterElement::shape_fcn;
 
+  KOKKOS_FUNCTION
   HigherOrderHexSCV(
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
 
+  KOKKOS_FUNCTION
   virtual ~HigherOrderHexSCV() {}
 
   void shape_fcn(double *shpfc) final;
-  const int * ipNodeMap(int ordinal = 0) final;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     const int nelem,
@@ -79,6 +81,10 @@ public:
   }
 
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
   void set_interior_info();
 
@@ -93,6 +99,8 @@ private:
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> ipWeights_;
+  std::vector<double> intgLoc_;
+  std::vector<int> ipNodeMap_;
 };
 
 // 3D Hex 27 subcontrol surface
@@ -104,11 +112,14 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::gij;
   using MasterElement::face_grad_op;
+  using MasterElement::adjacentNodes;
 
+  KOKKOS_FUNCTION
   HigherOrderHexSCS(
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
+  KOKKOS_FUNCTION
   virtual ~HigherOrderHexSCS() {}
 
   void shape_fcn(double *shpfc) final;
@@ -154,9 +165,9 @@ public:
 
   const int * adjacentNodes() final;
 
-  const int * ipNodeMap(int ordinal = 0) final;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
-  const int * side_node_ordinals(int ordinal = 0) final;
+  const int * side_node_ordinals(int ordinal = 0) const final;
 
   int opposingNodes(
     const int ordinal, const int node) final;
@@ -177,7 +188,14 @@ public:
     SharedMemView<DoubleType**>& coords,
     SharedMemView<DoubleType***>& gradop) final;
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
+  std::vector<int> lrscv_;
+  std::vector<int> oppNode_;
+
   void set_interior_info();
   void set_boundary_info();
 
@@ -195,7 +213,11 @@ private:
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> expFaceShapeDerivs_;
+  std::vector<double> intgLoc_;
+  std::vector<double> intgExpFace_;
   std::vector<ContourData> ipInfo_;
+  std::vector<int> ipNodeMap_;
+  std::vector<int> oppFace_;
   int ipsPerFace_;
 
   AlignedViewType<DoubleType**[3]> expRefGradWeights_;
@@ -208,16 +230,18 @@ public:
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
 
+  KOKKOS_FUNCTION
   HigherOrderQuad3DSCS(
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
 
+  KOKKOS_FUNCTION
   virtual ~HigherOrderQuad3DSCS() {}
 
   void shape_fcn(double *shpfc) final;
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     const int nelem,
@@ -237,6 +261,10 @@ public:
     return ipWeights_;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
   void set_interior_info();
   void eval_shape_functions_at_ips();
@@ -254,6 +282,8 @@ private:
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> ipWeights_;
+  std::vector<double> intgLoc_;
+  std::vector<int> ipNodeMap_;
   int surfaceDimension_;
 };
 
@@ -264,15 +294,17 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::grad_op;
 
+  KOKKOS_FUNCTION
   HigherOrderQuad2DSCV(
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
+  KOKKOS_FUNCTION
   virtual ~HigherOrderQuad2DSCV() {}
 
   void shape_fcn(double *shpfc) final;
 
-  const int * ipNodeMap(int ordinal = 0) final;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     const int nelem,
@@ -300,6 +332,10 @@ public:
     return ipWeights_;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
   void set_interior_info();
 
@@ -314,6 +350,8 @@ private:
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> ipWeights_;
+  std::vector<double> intgLoc_;
+  std::vector<int> ipNodeMap_;
 };
 class HigherOrderQuad2DSCS final: public MasterElement
 {
@@ -323,11 +361,14 @@ public:
   using MasterElement::grad_op;
   using MasterElement::face_grad_op;
   using MasterElement::gij;
+  using MasterElement::adjacentNodes;
 
+  KOKKOS_FUNCTION
   HigherOrderQuad2DSCS(
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
+  KOKKOS_FUNCTION
   virtual ~HigherOrderQuad2DSCS() {}
 
   void shape_fcn(double *shpfc) final;
@@ -373,7 +414,7 @@ public:
 
   const int * adjacentNodes() final;
 
-  const int * ipNodeMap(int ordinal = 0) final;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   int opposingNodes(
     const int ordinal, const int node) final;
@@ -381,7 +422,7 @@ public:
   int opposingFace(
     const int ordinal, const int node) final;
 
-  const int * side_node_ordinals(int ordinal = 0) final;
+  const int * side_node_ordinals(int ordinal = 0) const final;
   virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
   virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
 
@@ -393,7 +434,13 @@ public:
     return shapeDerivs_;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
+  std::vector<int> lrscv_;
+
   void set_interior_info();
   void set_boundary_info();
 
@@ -410,9 +457,14 @@ private:
   std::vector<int> sideNodeOrdinals_;
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
+  std::vector<double> intgLoc_;
   std::vector<ContourData> ipInfo_;
+  std::vector<int> ipNodeMap_;
   int ipsPerFace_;
   std::vector<double> expFaceShapeDerivs_;
+  std::vector<int> oppNode_;
+  std::vector<int> oppFace_;
+  std::vector<double> intgExpFace_;
 };
 
 class HigherOrderEdge2DSCS final: public MasterElement
@@ -421,13 +473,15 @@ public:
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
 
+  KOKKOS_FUNCTION
   explicit HigherOrderEdge2DSCS(
     ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
-  virtual ~HigherOrderEdge2DSCS() {}
+  KOKKOS_FUNCTION
+  virtual ~HigherOrderEdge2DSCS() = default;
 
-  const int * ipNodeMap(int ordinal = 0) final;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     const int nelem,
@@ -450,6 +504,10 @@ public:
     return ipWeights_;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_.data();
+  }
+
 private:
   void area_vector(
     const double* POINTER_RESTRICT elemNodalCoords,
@@ -463,6 +521,8 @@ private:
   std::vector<double> shapeFunctionVals_;
   std::vector<double> shapeDerivs_;
   std::vector<double> ipWeights_;
+  std::vector<double> intgLoc_;
+  std::vector<int> ipNodeMap_;
 };
 
 } // namespace nalu

@@ -12,6 +12,7 @@
 #include <Realm.h>
 #include <FieldTypeDef.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -62,6 +63,8 @@ ComputeGeometryInteriorAlgorithm::execute()
 
   // extract field always germane
   ScalarFieldType *dualNodalVolume = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  ScalarFieldType *elemVolume = meta_data.get_field<ScalarFieldType>(
+    stk::topology::ELEMENT_RANK, "element_volume");
   VectorFieldType *coordinates = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
  
   // setup for buckets; union parts and ask for locally owned
@@ -82,9 +85,11 @@ ComputeGeometryInteriorAlgorithm::execute()
     // extract master element
     MasterElement *meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(b.topology());
 
+    double* elemVol = stk::mesh::field_data(*elemVolume, b);
+
     // extract master element specifics
     const int nodesPerElement = meSCV->nodesPerElement_;
-    const int numScvIp = meSCV->numIntPoints_;
+    const int numScvIp = meSCV->num_integration_points();
     const int *ipNodeMap = meSCV->ipNodeMap();
 
     // define scratch field
@@ -116,6 +121,9 @@ ComputeGeometryInteriorAlgorithm::execute()
       double scv_error = 0.0;
       meSCV->determinant(1, &ws_coordinates[0], &ws_scv_volume[0], &scv_error);
 
+      // zero out the element volume data
+      elemVol[k] = 0.0;
+
       // assemble dual volume while scattering ip volume
       for ( int ip = 0; ip < numScvIp; ++ip ) {
         // nearest node for this ip
@@ -124,6 +132,9 @@ ComputeGeometryInteriorAlgorithm::execute()
         double * dualcv = stk::mesh::field_data(*dualNodalVolume, node);
         // augment nodal dual volume
         *dualcv += ws_scv_volume[ip];
+
+        // accumulate the element volume
+        elemVol[k] += ws_scv_volume[ip];
       }
     }
   }
@@ -144,7 +155,7 @@ ComputeGeometryInteriorAlgorithm::execute()
 
       // extract master element specifics
       const int nodesPerElement = meSCS->nodesPerElement_;
-      const int numScsIp = meSCS->numIntPoints_;
+      const int numScsIp = meSCS->num_integration_points();
       const int *lrscv = meSCS->adjacentNodes();
       const int *scsIpEdgeOrd = meSCS->scsIpEdgeOrd();
 

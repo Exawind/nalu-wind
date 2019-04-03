@@ -184,6 +184,12 @@ public:
     const SharedMemView<const double**>&
   );
 
+  virtual void save_diagonal_term(
+    unsigned,
+    const ngp::Mesh::ConnectedNodes&,
+    const SharedMemView<const double**>&
+  );
+
   virtual void assemble_and_solve(
     stk::mesh::FieldBase *deltaSolution);
 
@@ -278,6 +284,8 @@ public:
   virtual void manage_projected_nodal_gradient(
     EquationSystems& eqSystems);
   virtual void compute_projected_nodal_gradient();
+
+  virtual void create_constraint_algorithm(stk::mesh::FieldBase*);
   
   const bool elementContinuityEqs_;
   const bool managePNG_;

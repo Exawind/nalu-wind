@@ -14,6 +14,7 @@
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>

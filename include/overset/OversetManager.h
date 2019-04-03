@@ -84,6 +84,8 @@ public:
 
   std::vector<OversetInfo*> oversetInfoVec_;
 
+  std::vector<stk::mesh::Entity> holeNodes_;
+
   std::vector<int> ghostCommProcs_;
 
 private:

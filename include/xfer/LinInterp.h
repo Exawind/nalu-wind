@@ -18,6 +18,7 @@
 
 #include <Realm.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 
 namespace sierra{
 namespace nalu{

@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <array>
 
 namespace sierra{
 namespace nalu{
@@ -26,20 +27,9 @@ namespace nalu{
 HexSCV::HexSCV()
   : MasterElement()
 {
-  MasterElement::ipNodeMap_       .assign(ipNodeMap_,        8+ipNodeMap_);
-  MasterElement::intgLoc_         .assign(intgLoc_,         24+intgLoc_);
-  MasterElement::intgLocShift_    .assign(intgLocShift_,    24+intgLocShift_);
   MasterElement::nDim_                  = nDim_;
   MasterElement::nodesPerElement_       = nodesPerElement_;
   MasterElement::numIntPoints_          = numIntPoints_;
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-HexSCV::~HexSCV()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------
@@ -47,10 +37,10 @@ HexSCV::~HexSCV()
 //--------------------------------------------------------------------------
 const int *
 HexSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
-  return &ipNodeMap_[0];
+  return ipNodeMap_;
 }
 
 //--------------------------------------------------------------------------
@@ -64,8 +54,10 @@ void HexSCV::determinant(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_scv_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords,
+    ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
 
 }
@@ -129,14 +121,16 @@ void HexSCV::grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_derivative)
-    ( &numIntPoints_,
+    ( &nint,
       &intgLoc_[0], deriv );
 
   SIERRA_FORTRAN(hex_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -162,8 +156,9 @@ void HexSCV::shifted_grad_op(
 void
 HexSCV::shape_fcn(double *shpfc)
 {
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_shape_fcn)
-    (&numIntPoints_,&intgLoc_[0],shpfc);
+    (&nint,&intgLoc_[0],shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -172,8 +167,9 @@ HexSCV::shape_fcn(double *shpfc)
 void
 HexSCV::shifted_shape_fcn(double *shpfc)
 {
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_shape_fcn)
-    (&numIntPoints_,&intgLocShift_[0],shpfc);
+    (&nint,&intgLocShift_[0],shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -199,33 +195,11 @@ void HexSCV::Mij(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-HexSCS::HexSCS() : MasterElement() { 
+HexSCS::HexSCS()  
+  : MasterElement(HexSCS::scaleToStandardIsoFac_) {
   MasterElement::nDim_                  = nDim_;
   MasterElement::nodesPerElement_       = nodesPerElement_;
   MasterElement::numIntPoints_          = numIntPoints_;
-  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
-  MasterElement::lrscv_           .assign(lrscv_,       24+lrscv_);
-  MasterElement::ipNodeMap_       .assign(ipNodeMap_,   24+ipNodeMap_);
-  MasterElement::oppNode_         .assign(oppNode_,     24+oppNode_);
-  MasterElement::nodeLoc_         .assign(&nodeLoc_[0][0],  24+&nodeLoc_[0][0]);
-  MasterElement::oppFace_         .assign(oppFace_,     24+oppFace_);
-  MasterElement::intgLoc_         .assign(intgLoc_,     36+intgLoc_);
-  MasterElement::intgLocShift_    .assign(intgLocShift_,36+intgLocShift_);
-  MasterElement::scsIpEdgeOrd_    .assign(scsIpEdgeOrd_,12+scsIpEdgeOrd_);
-  MasterElement::intgExpFace_     .assign(&intgExpFace_[0][0][0],  72+&intgExpFace_[0][0][0]);
-  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0],72+&intgExpFaceShift_[0][0][0]);
-  MasterElement::nDim_                  = nDim_;
-  MasterElement::nodesPerElement_       = nodesPerElement_;
-  MasterElement::numIntPoints_          = numIntPoints_;
-  MasterElement::scaleToStandardIsoFac_ = scaleToStandardIsoFac_;
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-HexSCS::~HexSCS()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------
@@ -233,7 +207,7 @@ HexSCS::~HexSCS()
 //--------------------------------------------------------------------------
 const int *
 HexSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal);
   return &ipNodeMap_[ordinal*4];
@@ -325,7 +299,7 @@ void HexSCS::determinant(
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
 const int *
-HexSCS::side_node_ordinals(int ordinal)
+HexSCS::side_node_ordinals (int ordinal) const
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
   return sideNodeOrdinals_[ordinal];
@@ -340,8 +314,10 @@ void HexSCS::determinant(
   double *areav,
   double *error)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords, areav );
+    ( &nelem, &npe, &nint, coords, areav );
 
   // all is always well; no error checking
   *error = 0;
@@ -360,14 +336,16 @@ void HexSCS::grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_derivative)
-    ( &numIntPoints_,
+    ( &nint,
       &intgLoc_[0], deriv );
 
   SIERRA_FORTRAN(hex_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -388,14 +366,16 @@ void HexSCS::shifted_grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_derivative)
-    ( &numIntPoints_,
+    ( &nint,
       &intgLocShift_[0], deriv );
 
   SIERRA_FORTRAN(hex_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -455,9 +435,10 @@ void HexSCS::face_grad_op(
         ( &nface,
           intgExpFace_[face_ordinal][k], dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(hex_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[24*n], &gradop[k*nelem*24+n*24], &det_j[npf*n+k], error, &lerr );
@@ -502,9 +483,10 @@ void HexSCS::shifted_face_grad_op(
         ( &nface,
           intgExpFaceShift_[face_ordinal][k], dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(hex_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[24*n], &gradop[k*nelem*24+n*24], &det_j[npf*n+k], error, &lerr );
@@ -524,9 +506,11 @@ void HexSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(threed_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -571,7 +555,7 @@ const int *
 HexSCS::adjacentNodes()
 {
   // define L/R mappings
-  return &lrscv_[0];
+  return lrscv_;
 }
 
 //--------------------------------------------------------------------------
@@ -589,8 +573,9 @@ HexSCS::scsIpEdgeOrd()
 void
 HexSCS::shape_fcn(double *shpfc)
 {
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_shape_fcn)
-    (&numIntPoints_,&intgLoc_[0],shpfc);
+    (&nint,&intgLoc_[0],shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -599,8 +584,9 @@ HexSCS::shape_fcn(double *shpfc)
 void
 HexSCS::shifted_shape_fcn(double *shpfc)
 {
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(hex_shape_fcn)
-    (&numIntPoints_,&intgLocShift_[0],shpfc);
+    (&nint,&intgLocShift_[0],shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -825,7 +811,7 @@ HexSCS::isInElement(
     par_coor[1] = etanew;
     par_coor[2] = zetanew;
 
-    std::vector<double> xtmp(3);
+    std::array<double,3> xtmp;
     xtmp[0] = par_coor[0];
     xtmp[1] = par_coor[1];
     xtmp[2] = par_coor[2];
@@ -921,9 +907,10 @@ HexSCS::general_face_grad_op(
   SIERRA_FORTRAN(hex_derivative)
     ( &nface, &isoParCoord[0], dpsi );
 
+  const int npe  = nodesPerElement_;
   SIERRA_FORTRAN(hex_gradient_operator)
     ( &nface,
-      &nodesPerElement_,
+      &npe,
       &nface,
       dpsi,
       &coords[0], &gradop[0], &det_j[0], error, &lerr );
@@ -994,9 +981,9 @@ HexSCS::sidePcoords_to_elemPcoords(
 //--------------------------------------------------------------------------
 //-------- parametric_distance ---------------------------------------------
 //--------------------------------------------------------------------------
-double HexSCS::parametric_distance(const std::vector<double> &x)
+double HexSCS::parametric_distance(const std::array<double,3> &x)
 {
-  std::vector<double> y(3);
+  std::array<double,3> y;
   for (int i=0; i<3; ++i) {
     y[i] = std::fabs(x[i]);
   }

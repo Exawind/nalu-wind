@@ -14,6 +14,7 @@
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -118,7 +119,7 @@ AssembleContinuityInflowSolverAlgorithm::execute()
     // extract master element specifics
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
     const int *ipNodeMap = meFC->ipNodeMap();
 
     // resize some things; matrix related

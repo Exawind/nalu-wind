@@ -8,6 +8,7 @@
 #include "utils/ComputeVectorDivergence.h"
 
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 #include <stk_mesh/base/Part.hpp>
 #include <stk_mesh/base/Entity.hpp>
@@ -48,7 +49,7 @@ void compute_vector_divergence(
 
   std::vector<double> mvIp(nDim,0.0);
 
-  stk::mesh::Selector sel = meta.locally_owned_part()
+  stk::mesh::Selector sel = ( meta.locally_owned_part() | meta.globally_shared_part() )
                           & stk::mesh::selectUnion(partVec);
   const auto& bkts =
       bulk.get_buckets( stk::topology::ELEMENT_RANK, sel );
@@ -61,7 +62,7 @@ void compute_vector_divergence(
         MasterElementRepo::get_surface_master_element(b->topology());
 
     const int nodesPerElement = meSCS->nodesPerElement_;
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
     const int* lrscv = meSCS->adjacentNodes();
 
     wsMeshVector.resize(nodesPerElement*nDim);
@@ -154,7 +155,7 @@ void compute_vector_divergence(
         MasterElementRepo::get_surface_master_element(b->topology());
 
     const int nodesPerFace = meFC->nodesPerElement_;
-    const int numScsIp = meFC->numIntPoints_;
+    const int numScsIp = meFC->num_integration_points();
     const int* ipNodeMap = meFC->ipNodeMap();
 
     wsMeshVector.resize(nodesPerFace*nDim);

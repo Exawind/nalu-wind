@@ -153,6 +153,7 @@ namespace nalu{
   }
 
 
+KOKKOS_FUNCTION
 HigherOrderHexSCV::HigherOrderHexSCV(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -162,7 +163,7 @@ HigherOrderHexSCV::HigherOrderHexSCV(
     basis_(std::move(basis)),
     quadrature_(std::move(quadrature))
 {
-  ndim(elem_.dimension);
+  MasterElement::nDim_ = elem_.dimension;
   nodesPerElement_ = elem_.nodesPerElement;
 
   // set up integration rule and relevant maps for scvs
@@ -183,7 +184,6 @@ HigherOrderHexSCV::set_interior_info()
   // define ip node mappings
   ipNodeMap_.resize(numIntPoints_);
   intgLoc_.resize(numIntPoints_*nDim_);
-  intgLocShift_.resize(numIntPoints_*nDim_);
   ipWeights_.resize(numIntPoints_);
 
   // tensor product nodes x tensor product quadrature
@@ -221,7 +221,7 @@ HigherOrderHexSCV::shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 const int *
 HigherOrderHexSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
   return &ipNodeMap_[0];
@@ -328,6 +328,7 @@ int ip_per_face(const TensorProductQuadratureRule& quad, const LagrangeBasis& ba
   return quad.num_quad() * quad.num_quad() * (basis.polyOrder_+1)*(basis.polyOrder_+1);
 }
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HigherOrderHexSCS::HigherOrderHexSCS(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -338,7 +339,7 @@ HigherOrderHexSCS::HigherOrderHexSCS(
   quadrature_(std::move(quadrature)),
   expRefGradWeights_("reference_gradient_weights", 6*ip_per_face(quadrature,basis), basis.num_nodes())
 {
-  ndim(elem_.dimension);
+  MasterElement::nDim_ = elem_.dimension;
   nodesPerElement_ = elem_.nodesPerElement;
 
   // set up integration rule and relevant maps on scs
@@ -380,9 +381,6 @@ HigherOrderHexSCS::set_interior_info()
 
   // standard integration location
   intgLoc_.resize(numVectorPoints);
-
-  // shifted
-  intgLocShift_.resize(numVectorPoints);
 
   // Save quadrature weight and directionality information
   ipInfo_.resize(numIntPoints_);
@@ -749,14 +747,14 @@ HigherOrderHexSCS::adjacentNodes()
 //--------------------------------------------------------------------------
 const int *
 HigherOrderHexSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal);
   return &ipNodeMap_[ordinal*ipsPerFace_];
 }
 //--------------------------------------------------------------------------
 const int *
-HigherOrderHexSCS::side_node_ordinals(int ordinal)
+HigherOrderHexSCS::side_node_ordinals (int ordinal) const
 {
   return elem_.side_node_ordinals(ordinal);
 }
@@ -1038,6 +1036,7 @@ void HigherOrderHexSCS::face_grad_op(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HigherOrderQuad3DSCS::HigherOrderQuad3DSCS(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -1048,7 +1047,7 @@ HigherOrderQuad3DSCS::HigherOrderQuad3DSCS(
   quadrature_(std::move(quadrature))
 {
   surfaceDimension_ = 2;
-  ndim(3);
+  MasterElement::nDim_ = 3;
   nodesPerElement_ = elem_.nodes1D * elem_.nodes1D;
 
   // set up integration rule and relevant maps on scs
@@ -1070,7 +1069,6 @@ HigherOrderQuad3DSCS::set_interior_info()
   // define ip node mappings
   ipNodeMap_.resize(numIntPoints_);
   intgLoc_.resize(numIntPoints_*surfaceDimension_);
-  intgLocShift_.resize(numIntPoints_*surfaceDimension_);
   ipWeights_.resize(numIntPoints_);
 
   // tensor product nodes x tensor product quadrature
@@ -1109,7 +1107,7 @@ HigherOrderQuad3DSCS::shape_fcn(double* shpfc)
 //--------------------------------------------------------------------------
 const int *
 HigherOrderQuad3DSCS::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define ip->node mappings for each face (single ordinal);
   return &ipNodeMap_[0];
@@ -1179,6 +1177,7 @@ HigherOrderQuad3DSCS::area_vector(
   areaVector[2] = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
 }
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HigherOrderQuad2DSCV::HigherOrderQuad2DSCV(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -1188,7 +1187,7 @@ HigherOrderQuad2DSCV::HigherOrderQuad2DSCV(
   basis_(std::move(basis)),
   quadrature_(std::move(quadrature))
 {
-  ndim(elem_.dimension);
+  MasterElement::nDim_ = elem_.dimension;
   nodesPerElement_ = elem_.nodesPerElement;
 
   // set up integration rule and relevant maps for scvs
@@ -1209,7 +1208,6 @@ HigherOrderQuad2DSCV::set_interior_info()
   // define ip node mappings
   ipNodeMap_.resize(numIntPoints_);
   intgLoc_.resize(numIntPoints_*nDim_);
-  intgLocShift_.resize(numIntPoints_*nDim_);
   ipWeights_.resize(numIntPoints_);
 
   // tensor product nodes x tensor product quadrature
@@ -1242,7 +1240,7 @@ HigherOrderQuad2DSCV::shape_fcn(double *shpfc)
 }
 //--------------------------------------------------------------------------
 const int *
-HigherOrderQuad2DSCV::ipNodeMap(int /*ordinal*/)
+HigherOrderQuad2DSCV::ipNodeMap(int /*ordinal*/) const
 {
   return &ipNodeMap_[0];
 }
@@ -1335,6 +1333,7 @@ void HigherOrderQuad2DSCV::grad_op(
   }
 }
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HigherOrderQuad2DSCS::HigherOrderQuad2DSCS(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -1344,7 +1343,7 @@ HigherOrderQuad2DSCS::HigherOrderQuad2DSCS(
   basis_(std::move(basis)),
   quadrature_(std::move(quadrature))
 {
-  ndim(elem_.dimension);
+  MasterElement::nDim_ = elem_.dimension;
   nodesPerElement_ = elem_.nodesPerElement;
 
   // set up integration rule and relevant maps for scs
@@ -1419,9 +1418,6 @@ HigherOrderQuad2DSCS::set_interior_info()
 
   // standard integration location
   intgLoc_.resize(numIntPoints_*nDim_);
-
-  // shifted
-  intgLocShift_.resize(numIntPoints_*nDim_);
 
   ipInfo_.resize(numIntPoints_);
 
@@ -1636,14 +1632,14 @@ HigherOrderQuad2DSCS::shape_fcn(double *shpfc)
 }
 //--------------------------------------------------------------------------
 const int *
-HigherOrderQuad2DSCS::ipNodeMap(int ordinal)
+HigherOrderQuad2DSCS::ipNodeMap(int ordinal) const
 {
   // define ip->node mappings for each face (ordinal);
   return &ipNodeMap_[ordinal*ipsPerFace_];
 }
 //--------------------------------------------------------------------------
 const int *
-HigherOrderQuad2DSCS::side_node_ordinals(int ordinal)
+HigherOrderQuad2DSCS::side_node_ordinals(int ordinal) const
 {
   return elem_.side_node_ordinals(ordinal);
 }
@@ -1818,6 +1814,7 @@ void HigherOrderQuad2DSCS::gij(
       coords, gupperij, glowerij);
 }
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 HigherOrderEdge2DSCS::HigherOrderEdge2DSCS(
   ElementDescription elem,
   LagrangeBasis basis,
@@ -1827,7 +1824,7 @@ HigherOrderEdge2DSCS::HigherOrderEdge2DSCS(
   basis_(basis),
   quadrature_(quadrature)
 {
-  ndim(2);
+  MasterElement::nDim_ = 2;
   nodesPerElement_ = elem_.nodes1D;
   numIntPoints_ = quadrature_.num_quad() * elem_.nodes1D;
 
@@ -1851,7 +1848,7 @@ HigherOrderEdge2DSCS::HigherOrderEdge2DSCS(
 }
 //--------------------------------------------------------------------------
 const int *
-HigherOrderEdge2DSCS::ipNodeMap(int /*ordinal*/)
+HigherOrderEdge2DSCS::ipNodeMap(int /*ordinal*/) const
 {
   return &ipNodeMap_[0];
 }

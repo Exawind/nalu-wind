@@ -14,6 +14,8 @@
 #include "Realm.h"
 #include "PecletFunction.h"
 
+#include <stk_ngp/Ngp.hpp>
+
 namespace stk{
 struct topology;
 namespace mesh{
@@ -295,6 +297,12 @@ public:
   virtual void save_diagonal_term(
     unsigned,
     const stk::mesh::Entity*,
+    const SharedMemView<const double**>&
+  ) {}
+
+  virtual void save_diagonal_term(
+    unsigned,
+    const ngp::Mesh::ConnectedNodes&,
     const SharedMemView<const double**>&
   ) {}
 

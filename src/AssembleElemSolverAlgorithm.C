@@ -81,31 +81,51 @@ AssembleElemSolverAlgorithm::initialize_connectivity()
 void
 AssembleElemSolverAlgorithm::execute()
 {
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
+  using NGPKernelInfoView =
+    Kokkos::View<NGPKernelInfo*, Kokkos::LayoutRight, MemSpace>;
 
-  // set any data
-  const size_t activeKernelsSize = activeKernels_.size();
-  for ( size_t i = 0; i < activeKernelsSize; ++i )
+  const size_t numKernels = activeKernels_.size();
+  for ( size_t i = 0; i < numKernels; ++i )
     activeKernels_[i]->setup(*realm_.timeIntegrator_);
 
-  run_algorithm(bulk_data, [&](SharedMemData<TeamHandleType,HostShmem>& smdata)
+  NGPKernelInfoView ngpKernels("NGPKernelView", numKernels);
+
   {
+    NGPKernelInfoView::HostMirror hostKernelView =
+      Kokkos::create_mirror_view(ngpKernels);
+
+    for (size_t i=0; i < numKernels; i++)
+      hostKernelView(i) = NGPKernelInfo(*activeKernels_[i]);
+
+    Kokkos::deep_copy(ngpKernels, hostKernelView);
+  }
+
+  run_algorithm(
+    realm_.bulk_data(),
+    KOKKOS_LAMBDA(SharedMemData<DeviceTeamHandleType, DeviceShmem> & smdata) {
       set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
       set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());
 
-      // call supplemental; gathers happen inside the elem_execute method
-      for ( size_t i = 0; i < activeKernelsSize; ++i )
-        activeKernels_[i]->execute( smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData );
+      for (size_t i=0; i < numKernels; i++) {
+        Kernel* kernel = ngpKernels(i);
+#ifdef KOKKOS_ENABLE_CUDA
+        kernel->execute(smdata.simdlhs, smdata.simdrhs, *smdata.prereqData[0]);
+#else
+        kernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
+#endif
+      }
 
+#ifndef KOKKOS_ENABLE_CUDA
       for(int simdElemIndex=0; simdElemIndex<smdata.numSimdElems; ++simdElemIndex) {
         extract_vector_lane(smdata.simdrhs, simdElemIndex, smdata.rhs);
         extract_vector_lane(smdata.simdlhs, simdElemIndex, smdata.lhs);
         for (int ir=0; ir < rhsSize_; ++ir)
           smdata.lhs(ir, ir) /= diagRelaxFactor_;
-        apply_coeff(nodesPerEntity_, smdata.elemNodes[simdElemIndex],
+        apply_coeff(nodesPerEntity_, smdata.ngpElemNodes[simdElemIndex],
                     smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
       }
-  });
+#endif
+    });
 }
 
 } // namespace nalu

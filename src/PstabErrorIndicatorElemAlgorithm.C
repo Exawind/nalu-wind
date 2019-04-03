@@ -13,6 +13,7 @@
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -103,7 +104,7 @@ PstabErrorIndicatorElemAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerElement = meSCS->nodesPerElement_;
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
 
     // algorithm related
     ws_Gpdx.resize(nodesPerElement*nDim);

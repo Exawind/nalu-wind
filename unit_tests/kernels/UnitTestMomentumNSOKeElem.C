@@ -268,7 +268,7 @@ namespace nso_ke {
 } // hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(MomentumKernelHex8Mesh, nso_ke)
 {

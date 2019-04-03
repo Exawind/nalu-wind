@@ -41,6 +41,7 @@
 #include "kernel/KernelBuilder.h"
 
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
+#include "overset/AssembleOversetWallDistAlgorithm.h"
 
 #include "stk_mesh/base/Part.hpp"
 #include "stk_mesh/base/MetaData.hpp"
@@ -85,6 +86,7 @@ WallDistEquationSystem::load(const YAML::Node& node)
   EquationSystem::load(node);
 
   get_if_present(node, "update_frequency", updateFreq_, updateFreq_);
+  get_if_present(node, "force_init_on_restart", forceInitOnRestart_, forceInitOnRestart_);
 }
 
 void
@@ -117,8 +119,10 @@ WallDistEquationSystem::register_nodal_fields(
   coordinates_ = &(meta.declare_field<VectorFieldType>(
                      stk::topology::NODE_RANK, realm_.get_coordinates_name()));
   stk::mesh::put_field_on_mesh(*coordinates_, *part, nDim, nullptr);
+
+  const int numVolStates = realm_.does_mesh_move() ? realm_.number_of_states() : 1;
   dualNodalVolume_ = &(meta.declare_field<ScalarFieldType>(
-                         stk::topology::NODE_RANK, "dual_nodal_volume"));
+                         stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
   stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
 }
 
@@ -274,7 +278,7 @@ void
 WallDistEquationSystem::register_wall_bc(
   stk::mesh::Part* part,
   const stk::topology&,
-  const WallBoundaryConditionData&)
+  const WallBoundaryConditionData& wallBCData)
 {
   const AlgorithmType algType = WALL;
 
@@ -304,8 +308,14 @@ WallDistEquationSystem::register_wall_bc(
                              stk::topology::NODE_RANK);
   bcDataAlg_.push_back(auxAlg);
 
-  // Dirichlet BC
-  {
+  // For terrain BC, the wall distance calculations must not compute the
+  // distance normal to this wall, but must compute distance from the nearest
+  // turbine, so we will disable Dirichlet for the terrain walls.
+  WallUserData userData = wallBCData.userData_;
+  const bool ablWallFunctionActivated = userData.ablWallFunctionApproach_;
+
+  // Apply Dirichlet BC on non-ABL wall boundaries
+  if (!ablWallFunctionActivated) {
     auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
     if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
       DirichletBC* theAlg
@@ -400,7 +410,12 @@ WallDistEquationSystem::initialize()
   // Reset init flag if this is a restarted simulation. The wall distance field
   // is available from the restart file, so we only want to recompute it at
   // user-specified frequency.
-  isInit_ = !realm_.restarted_simulation();
+  //
+  // The user option can override this and force a recompute. This option is
+  // useful when "restarting" from a mapped file, e.g., wind-farm mesh where the
+  // ABL precursor solution was mapped and is used to initialize the solution
+  // using restart section in the input file.
+  isInit_ = forceInitOnRestart_ || !realm_.restarted_simulation();
 }
 
 void
@@ -493,6 +508,23 @@ WallDistEquationSystem::compute_wall_distance()
       *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
   if (realm_.hasOverset_)
     realm_.overset_orphan_node_field_update(wallDistance_, 1, 1);
+}
+
+void
+WallDistEquationSystem::create_constraint_algorithm(
+  stk::mesh::FieldBase* theField)
+{
+  const AlgorithmType algType = OVERSET;
+
+  auto it = solverAlgDriver_->solverConstraintAlgMap_.find(algType);
+  if (it == solverAlgDriver_->solverConstraintAlgMap_.end()) {
+    AssembleOversetWallDistAlgorithm* theAlg
+      = new AssembleOversetWallDistAlgorithm(realm_, nullptr, this, theField);
+    solverAlgDriver_->solverConstraintAlgMap_[algType] = theAlg;
+  } else {
+    throw std::runtime_error("WallDistEquationSystem::register_overset_bc: "
+                             "Multiple invocations of overset is not allowed");
+  }
 }
 
 }  // nalu

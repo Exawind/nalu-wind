@@ -25,10 +25,12 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
+  KOKKOS_FUNCTION
   TetSCV();
-  virtual ~TetSCV();
+  KOKKOS_FUNCTION
+  virtual ~TetSCV() = default;
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,
@@ -67,13 +69,21 @@ public:
     double *shpfc);
   
   void tet_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
+
+  virtual const double* integration_locations() const final {
+    return &intgLoc_[0][00];
+  }
+  virtual const double* integration_location_shift() const final {
+    return &intgLocShift_[0][0];
+  }
+
 private:
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
-  const int numIntPoints_ = AlgTraits::numScvIp_; 
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_; 
+  static constexpr int numIntPoints_ = AlgTraits::numScvIp_; 
 
   // define ip node mappings
   const int ipNodeMap_[4] = { 0, 1, 2, 3};
@@ -104,11 +114,14 @@ public:
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
+  using MasterElement::adjacentNodes;
 
+  KOKKOS_FUNCTION
   TetSCS();
-  virtual ~TetSCS();
+  KOKKOS_FUNCTION
+  virtual ~TetSCS() = default;
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   virtual void determinant(
     SharedMemView<DoubleType**>&coords,
@@ -194,7 +207,7 @@ public:
     double *metric,
     double *deriv);
 
-  const int * adjacentNodes();
+  virtual const int * adjacentNodes() final;
 
   const int * scsIpEdgeOrd();
 
@@ -205,7 +218,7 @@ public:
     double *shpfc);
 
   void tet_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord,
     double* shape_fcn);
 
@@ -247,11 +260,19 @@ public:
 
   double parametric_distance(const double* x);
 
-  const int* side_node_ordinals(int sideOrdinal) final;
+  const int* side_node_ordinals(int sideOrdinal) const final;
+
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
+
 private:
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
-  const int numIntPoints_ = AlgTraits::numScsIp_; 
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_; 
+  static constexpr int numIntPoints_ = AlgTraits::numScsIp_; 
 
   const int sideNodeOrdinals_[4][3] = {
      {0, 1, 3}, //ordinal 0
@@ -300,6 +321,7 @@ private:
     0.50,  0.00,  0.50, // surf 5    2->4
     0.00,  0.50,  0.50};// surf 6    3->4
 
+#if 0
   // exposed face
   const double seven36ths = 7.0/36.0;
   const double eleven18ths = 11.0/18.0;
@@ -320,6 +342,7 @@ private:
   {{seven36ths,   seven36ths,    0.00},
    {eleven18ths,  seven36ths,    0.00},
    {seven36ths,   eleven18ths,   0.00}}};
+#endif
 
   // boundary integration point ip node mapping (ip on an ordinal to local node number)
   const int ipNodeMap_[4][3] = { // 3 ips * 4 faces

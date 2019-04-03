@@ -132,7 +132,7 @@ void dhdx_test_function(
   VectorFieldType& dhdx);
 
 void calc_mass_flow_rate_scs(
-  const stk::mesh::BulkData&,
+  stk::mesh::BulkData&,
   const stk::topology&,
   const VectorFieldType&,
   const ScalarFieldType&,
@@ -140,7 +140,7 @@ void calc_mass_flow_rate_scs(
   const GenericFieldType&);
 
 void calc_projected_nodal_gradient(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   ScalarFieldType& dualNodalVolume,
@@ -148,7 +148,7 @@ void calc_projected_nodal_gradient(
   VectorFieldType& vectorField);
 
 void calc_projected_nodal_gradient(
-  const stk::mesh::BulkData& bulk,
+  stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
   ScalarFieldType& dualNodalVolume,
@@ -251,7 +251,7 @@ public:
   const VectorFieldType* coordinates_{nullptr};
 };
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 /** Test Fixture for Low-Mach Kernels
  *
@@ -334,7 +334,7 @@ public:
           stk::topology::NODE_RANK, "temperature"))
   {
     const auto& meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(stk::topology::HEX_8);
-    stk::mesh::put_field_on_mesh(*massFlowRate_, meta_.universal_part(), meSCS->numIntPoints_, nullptr);
+    stk::mesh::put_field_on_mesh(*massFlowRate_, meta_.universal_part(), meSCS->num_integration_points(), nullptr);
     stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*dudx_, meta_.universal_part(), spatialDim_ * spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*temperature_, meta_.universal_part(), 1, nullptr);
@@ -519,7 +519,7 @@ public:
     stk::mesh::put_field_on_mesh(*velocity_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*density_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(*massFlowRate_, meta_.universal_part(), meSCS->numIntPoints_, nullptr);
+    stk::mesh::put_field_on_mesh(*massFlowRate_, meta_.universal_part(), meSCS->num_integration_points(), nullptr);
   }
   virtual ~MixtureFractionKernelHex8Mesh() {}
 

@@ -109,6 +109,8 @@ double poly_der(
   return val;
 }
 
+#ifndef KOKKOS_ENABLE_CUDA
+
 template <typename AlgTraits, typename ME, bool SCS>
 void check_interpolation(
   const stk::mesh::MetaData& meta,
@@ -151,13 +153,12 @@ void check_interpolation(
 
   std::vector<double> polyResult(num_int_pt);
   for (int j = 0; j < num_int_pt; ++j) {
-    polyResult[j] = poly_val<dim,poly_order>(coeffs, &me->intgLoc_[j*dim]);
+    polyResult[j] = poly_val<dim,poly_order>(coeffs, &me->integration_locations()[j*dim]);
   }
 
   const auto* const coordField = bulk.mesh_meta_data().coordinate_field();
   EXPECT_TRUE(coordField != nullptr);
   ngp::Field<double> ngpCoordField(bulk, *coordField);
-  ngpCoordField.copy_host_to_device(bulk, *coordField);
 
   Kokkos::View<DoubleType*,sierra::nalu::MemSpace> ngpResults("ngpResults", num_int_pt);
   Kokkos::View<DoubleType*,sierra::nalu::MemSpace>::HostMirror hostResults = Kokkos::create_mirror_view(ngpResults);
@@ -226,7 +227,7 @@ void check_derivatives(
   ngp::Mesh ngpMesh(bulk);
 
   ME    *me = dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_));
-  ME *ngpMe = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
+  auto *ngpMe = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
   ThrowRequire(me);
   ThrowRequire(ngpMe);
 
@@ -249,14 +250,13 @@ void check_derivatives(
   std::array<std::array<double,dim>,num_int_pt> polyResult;
   for (int j = 0; j < num_int_pt; ++j) {
     for (unsigned d = 0; d < dim; ++d) {
-      polyResult[j][d] = poly_der<dim,poly_order>(coeffs, &me->intgLoc_[j*dim], d);
+      polyResult[j][d] = poly_der<dim,poly_order>(coeffs, &me->integration_locations()[j*dim], d);
     }
   }
 
   const auto* const coordField = bulk.mesh_meta_data().coordinate_field();
   EXPECT_TRUE(coordField != nullptr);
   ngp::Field<double> ngpCoordField(bulk, *coordField);
-  ngpCoordField.copy_host_to_device(bulk, *coordField);
 
   Kokkos::View<DoubleType**,sierra::nalu::MemSpace> ngpResults("ngpResults", num_int_pt, dim);
   Kokkos::View<DoubleType**,sierra::nalu::MemSpace>::HostMirror hostResults = Kokkos::create_mirror_view(ngpResults);
@@ -408,6 +408,8 @@ TEST_F(MasterElementHexSerialNGP, hex27_scs_derivatives)
     check_derivatives<AlgTraits>(meta, bulk);
   }
 }
+
+#endif
 
 }//namespace
 

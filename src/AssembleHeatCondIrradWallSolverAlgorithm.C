@@ -14,6 +14,8 @@
 #include <Realm.h>
 #include <TimeIntegrator.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -104,7 +106,7 @@ AssembleHeatCondIrradWallSolverAlgorithm::execute()
     // extract master element specifics
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
-    const int numScsIp = meFC->numIntPoints_;
+    const int numScsIp = meFC->num_integration_points();
 
     // resize some things; matrix related
     const int lhsSize = nodesPerFace*nodesPerFace;

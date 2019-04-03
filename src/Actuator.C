@@ -14,6 +14,8 @@
 
 // master elements
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
+
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -380,22 +382,22 @@ Actuator::compute_volume(
     stk::mesh::Entity elem,
     const stk::mesh::BulkData & bulkData)
 {
-    // extract master element from the bucket in which the element resides
-    const stk::topology& elemTopo = bulkData.bucket(elem).topology();
-    MasterElement* meSCV =
-        sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
-    const int numScvIp = meSCV->numIntPoints_;
+  // extract master element from the bucket in which the element resides
+  const stk::topology& elemTopo = bulkData.bucket(elem).topology();
+  MasterElement* meSCV =
+    sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
+  const int numScvIp = meSCV->num_integration_points();
 
-    // compute scv for this element
-    ws_scv_volume_.resize(numScvIp);
-    double scv_error = 0.0;
-    meSCV->determinant(1, &ws_coordinates_[0], &ws_scv_volume_[0], &scv_error);
+  // compute scv for this element
+  ws_scv_volume_.resize(numScvIp);
+  double scv_error = 0.0;
+  meSCV->determinant(1, &ws_coordinates_[0], &ws_scv_volume_[0], &scv_error);
 
-    double elemVolume = 0.0;
-    for (int ip = 0; ip < numScvIp; ++ip) {
-        elemVolume += ws_scv_volume_[ip];
-    }
-    return elemVolume;
+  double elemVolume = 0.0;
+  for (int ip = 0; ip < numScvIp; ++ip) {
+    elemVolume += ws_scv_volume_[ip];
+  }
+  return elemVolume;
 }
 
 //--------------------------------------------------------------------------

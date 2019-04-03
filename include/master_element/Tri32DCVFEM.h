@@ -17,7 +17,6 @@
 #include "SimdInterface.h"
 #include "KokkosInterface.h"
 
-#include <vector>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -37,10 +36,12 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
+  KOKKOS_FUNCTION
   Tri32DSCV();
-  virtual ~Tri32DSCV();
+  KOKKOS_FUNCTION
+  virtual ~Tri32DSCV() = default;
 
-  const int * ipNodeMap(int ordinal = 0) override;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**> &coords,
@@ -79,14 +80,22 @@ public:
     double *shpfc) override;
 
   void tri_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord,
     double* shape_fcn);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
+
+
 private :
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
-  const int numIntPoints_ = AlgTraits::numScvIp_; 
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_; 
+  static constexpr int numIntPoints_ = AlgTraits::numScvIp_; 
 
   // define ip node mappings
   const int ipNodeMap_[3] = {0, 1, 2}; 
@@ -113,11 +122,14 @@ public:
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
+  using MasterElement::adjacentNodes;
 
+  KOKKOS_FUNCTION
   Tri32DSCS();
-  virtual ~Tri32DSCS();
+  KOKKOS_FUNCTION
+  virtual ~Tri32DSCS() = default;
 
-  const int * ipNodeMap(int ordinal = 0) override;
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,
@@ -203,7 +215,7 @@ public:
     double *metric,
     double *deriv) override;
 
-  const int * adjacentNodes() override;
+  const int * adjacentNodes() final;
 
   const int * scsIpEdgeOrd() override;
 
@@ -214,7 +226,7 @@ public:
     double *shpfc) override;
   
   void tri_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 
@@ -242,7 +254,7 @@ public:
     double *result) override;
 
   double tri_parametric_distance(
-    const std::vector<double> &x);
+    const std::array<double,2> &x);
   
   void general_face_grad_op(
     const int face_ordinal,
@@ -258,12 +270,18 @@ public:
     const double *side_pcoords,
     double *elem_pcoords) override;
 
-  const int* side_node_ordinals(int sideOrdinal) final;
+  const int* side_node_ordinals(int sideOrdinal) const final;
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 private:
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_; 
-  const int numIntPoints_ = AlgTraits::numScsIp_; 
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_; 
+  static constexpr int numIntPoints_ = AlgTraits::numScsIp_; 
 
   const int sideNodeOrdinals_[3][2] = {
      {0, 1},  // ordinal 0
@@ -306,6 +324,7 @@ private:
    0.50,  0.50,  // surf 1: 1->3
    0.00,  0.50}; // surf 1: 0->2
  
+#if 0
   // exposed face
   const double intgExpFace_[3][2][2] =   
   // face 0: scs 0, 1: nodes 0,1
@@ -317,6 +336,7 @@ private:
   // face 2: surf 0, 1: nodes 2,0
    {{0.00,  0.75},
     {0.00,  0.25}}};
+#endif
 
   // boundary integration point ip node mapping (ip on an ordinal to local node number)
   const int ipNodeMap_[3][2]= // 2 ips * 3 faces
@@ -324,7 +344,7 @@ private:
      {1,   2},   // face 1
      {2,   0}};  // face 2
 
-  double intgExpFaceShift_[3][2][2]={0};
+  double intgExpFaceShift_[3][2][2];
 
 };
 

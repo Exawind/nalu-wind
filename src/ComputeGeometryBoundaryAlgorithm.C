@@ -12,6 +12,7 @@
 #include <Realm.h>
 #include <FieldTypeDef.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -70,7 +71,7 @@ ComputeGeometryBoundaryAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerElement = meFC->nodesPerElement_;
-    const int numScsIp = meFC->numIntPoints_;
+    const int numScsIp = meFC->num_integration_points();
 
     // define scratch field
     std::vector<double > ws_coordinates(nodesPerElement*nDim);

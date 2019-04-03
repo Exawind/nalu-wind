@@ -30,7 +30,7 @@ static constexpr double lhs[8][8] = {
 } // hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 /// Scalar diffusion kernel applied to heat conduction equation
 TEST_F(HeatCondKernelHex8Mesh, cvfem_diff)

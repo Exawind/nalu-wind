@@ -13,6 +13,7 @@
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 
+#include <master_element/MasterElementFactory.h>
 #include <nalu_make_unique.h>
 #include <NaluEnv.h>
 
@@ -60,7 +61,7 @@ namespace
       const auto& b = *ib;
 
       auto* meSide = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
-      std::vector<double> sideInterpWeights(meSide->numIntPoints_ * meSide->nodesPerElement_, 0.0);
+      std::vector<double> sideInterpWeights(meSide->num_integration_points() * meSide->nodesPerElement_, 0.0);
       meSide->shape_fcn(sideInterpWeights.data());
 
       for (size_t k = 0; k < b.size(); ++k) {

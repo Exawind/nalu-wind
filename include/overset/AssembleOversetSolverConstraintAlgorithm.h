@@ -9,8 +9,7 @@
 #ifndef AssembleOversetSolverConstraintAlgorithm_h
 #define AssembleOversetSolverConstraintAlgorithm_h
 
-#include<SolverAlgorithm.h>
-#include<FieldTypeDef.h>
+#include "overset/OversetConstraintBase.h"
 
 namespace stk {
 namespace mesh {
@@ -24,7 +23,7 @@ namespace nalu{
 
 class Realm;
 
-class AssembleOversetSolverConstraintAlgorithm : public SolverAlgorithm
+class AssembleOversetSolverConstraintAlgorithm : public OversetConstraintBase
 {
 public:
 
@@ -33,15 +32,15 @@ public:
     stk::mesh::Part *part,
     EquationSystem *eqSystem,
     stk::mesh::FieldBase *fieldQ);
-  virtual ~AssembleOversetSolverConstraintAlgorithm() {}
-  virtual void initialize_connectivity();
-  virtual void execute();
-  virtual void prepare_constraints();
 
-  // interface assumes that the correct state was provided
-  stk::mesh::FieldBase *fieldQ_;
-  
-  std::vector< const stk::mesh::FieldBase *> ghostFieldVec_;
+  virtual ~AssembleOversetSolverConstraintAlgorithm() = default;
+
+  virtual void execute();
+
+private:
+  AssembleOversetSolverConstraintAlgorithm() = delete;
+  AssembleOversetSolverConstraintAlgorithm(
+    const AssembleOversetSolverConstraintAlgorithm&) = delete;
 };
 
 } // namespace nalu

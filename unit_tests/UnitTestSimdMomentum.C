@@ -13,7 +13,7 @@
 #include <nso/MomentumNSOElemKernel.h>
 #include <ElemDataRequests.h>
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(Hex8MeshWithNSOFields, twoMomentumKernels)
 {

@@ -11,7 +11,6 @@
 
 #include <stk_mesh/base/BulkData.hpp>
 
-#include <ElemDataRequestsNGP.h>
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
 
@@ -49,33 +48,10 @@ struct SharedMemData {
         sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
     }
 
-    SharedMemData(const TEAMHANDLETYPE& team,
-         unsigned nDim,
-         const ElemDataRequestsNGP& dataNeededByKernels,
-         unsigned nodesPerEntity,
-         unsigned rhsSize)
-     : simdPrereqData(team, nDim, nodesPerEntity, dataNeededByKernels)
-#ifdef KOKKOS_ENABLE_CUDA
-      ,prereqData_byValue(team, nDim, nodesPerEntity, dataNeededByKernels)
-#endif
-    {
-#ifndef KOKKOS_ENABLE_CUDA
-        for(int simdIndex=0; simdIndex<simdLen; ++simdIndex) {
-          prereqData[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, nodesPerEntity, dataNeededByKernels));
-        }
-#else
-        prereqData[0] = &prereqData_byValue;
-#endif
-        simdrhs = get_shmem_view_1D<DoubleType,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
-        simdlhs = get_shmem_view_2D<DoubleType,TEAMHANDLETYPE,SHMEM>(team, rhsSize, rhsSize);
-        rhs = get_shmem_view_1D<double,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
-        lhs = get_shmem_view_2D<double,TEAMHANDLETYPE,SHMEM>(team, rhsSize, rhsSize);
+    KOKKOS_FUNCTION
+    ~SharedMemData() = default;
 
-        scratchIds = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
-        sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
-    }
-
-    const stk::mesh::Entity* elemNodes[simdLen];
+    ngp::Mesh::ConnectedNodes ngpElemNodes[simdLen];
     int numSimdElems;
 #ifdef KOKKOS_ENABLE_CUDA
     ScratchViews<double,TEAMHANDLETYPE,SHMEM> prereqData_byValue;
@@ -117,29 +93,7 @@ struct SharedMemData_FaceElem {
         sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
     }
 
-    SharedMemData_FaceElem(const TEAMHANDLETYPE& team,
-         unsigned nDim,
-         const ElemDataRequestsNGP& faceDataNeeded,
-         const ElemDataRequestsNGP& elemDataNeeded,
-         const ScratchMeInfo& meElemInfo,
-         unsigned rhsSize)
-     : simdFaceViews(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded),
-       simdElemViews(team, nDim, meElemInfo, elemDataNeeded)
-    {
-        for(int simdIndex=0; simdIndex<simdLen; ++simdIndex) {
-          faceViews[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded));
-          elemViews[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, meElemInfo, elemDataNeeded));
-        }
-        simdrhs = get_shmem_view_1D<DoubleType,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
-        simdlhs = get_shmem_view_2D<DoubleType,TEAMHANDLETYPE,SHMEM>(team, rhsSize, rhsSize);
-        rhs = get_shmem_view_1D<double,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
-        lhs = get_shmem_view_2D<double,TEAMHANDLETYPE,SHMEM>(team, rhsSize, rhsSize);
-
-        scratchIds = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
-        sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
-    }
-
-    const stk::mesh::Entity* connectedNodes[simdLen];
+    ngp::Mesh::ConnectedNodes ngpConnectedNodes[simdLen];
     int numSimdFaces;
     int elemFaceOrdinal;
     std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM>> faceViews[simdLen];

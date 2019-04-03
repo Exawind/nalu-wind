@@ -43,10 +43,12 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
+  KOKKOS_FUNCTION
   PyrSCV();
-  virtual ~PyrSCV();
+  KOKKOS_FUNCTION
+  virtual ~PyrSCV() = default;
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,
@@ -85,19 +87,26 @@ public:
     double *shpfc);
   
   void pyr_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 
   void shifted_pyr_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
+
 private:
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_;
-  const int numIntPoints_ = AlgTraits::numScvIp_;
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_ = AlgTraits::numScvIp_;
 
   const int ipNodeMap_[AlgTraits::nodesPerElement_] = {
    0, 1,  2,  3,  4
@@ -107,7 +116,7 @@ private:
   const double five77r3840 = 577.0/3840.0;
   const double seven73r1560 = 773.0/1560.0;
 
-  const double intgLoc_[15] = {
+  const double intgLoc_[numIntPoints_*nDim_] = {
   -one69r384,  -one69r384,  five77r3840,  // vol 0
    one69r384,  -one69r384,  five77r3840,  // vol 1
    one69r384,   one69r384,  five77r3840,  // vol 2
@@ -132,11 +141,14 @@ public:
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
+  using MasterElement::adjacentNodes;
 
+  KOKKOS_FUNCTION
   PyrSCS();
-  virtual ~PyrSCS();
+  KOKKOS_FUNCTION
+  virtual ~PyrSCS() = default;
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   void determinant(
     SharedMemView<DoubleType**>& coords,
@@ -206,7 +218,7 @@ public:
     double *metric,
     double *deriv);
 
-  const int * adjacentNodes();
+  virtual const int * adjacentNodes() final;
 
   const int * scsIpEdgeOrd();
 
@@ -217,12 +229,12 @@ public:
     double *shpfc);
   
   void pyr_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 
   void shifted_pyr_shape_fcn(
-    const int &npts,
+    const int npts,
     const double *par_coord, 
     double* shape_fcn);
 
@@ -278,7 +290,7 @@ public:
     double *det_j,
     double *error);
 
-  const int* side_node_ordinals(int sideOrdinal) final;
+  const int* side_node_ordinals(int sideOrdinal) const final;
 
   double parametric_distance(const std::array<double,3>& x);
 
@@ -293,10 +305,16 @@ public:
     const double *field,
     double *result);
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 private :
-  const int nDim_ = AlgTraits::nDim_;
-  const int nodesPerElement_ = AlgTraits::nodesPerElement_;
-  const int numIntPoints_ = AlgTraits::numScsIp_;
+  static constexpr int nDim_ = AlgTraits::nDim_;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numIntPoints_ = AlgTraits::numScsIp_;
 
   const int sideNodeOrdinals_[16] = {
       0, 1, 4,    // ordinal 0
@@ -347,6 +365,7 @@ private :
    4, 4, 4, 4
   };
 
+#if 0
   // define opposing face
   // the 5th node maps to two opposing sub-faces, we pick one
   const int oppFace_[20] = {
@@ -361,6 +380,7 @@ private :
   //face 4
   4, 10, 8,  6
   };
+#endif
 
   const double twentynine63rd = 29.0/63.0;
   const double fortyone315th = 41.0/315.0;

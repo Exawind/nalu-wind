@@ -20,7 +20,7 @@ TEST(BasicKokkos, discover_execution_space)
         std::cout << "Kokkos::OpenMP is available. (Control num-threads via env-var OMP_NUM_THREADS)" << std::endl;
 #endif
 
-#ifdef KOKKOS_HAVE_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
         std::cout << "Kokkos::Cuda is available." << std::endl;
 #endif
         std::cout << "Default execution space info: ";

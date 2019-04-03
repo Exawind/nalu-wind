@@ -98,25 +98,13 @@ void tri_gradient_operator(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 Tri32DSCV::Tri32DSCV()
   : MasterElement()
 {
   MasterElement::nDim_            = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_    = numIntPoints_;
-
-  // define ip node mappings
-  MasterElement::ipNodeMap_.assign   (ipNodeMap_,    3+ipNodeMap_);
-  MasterElement::intgLoc_.assign     (intgLoc_,      6+intgLoc_);
-  MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-Tri32DSCV::~Tri32DSCV()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------
@@ -124,7 +112,7 @@ Tri32DSCV::~Tri32DSCV()
 //--------------------------------------------------------------------------
 const int *
 Tri32DSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
   return ipNodeMap_;
@@ -153,7 +141,7 @@ Tri32DSCV::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 Tri32DSCV::tri_shape_fcn(
-  const int  &npts,
+  const int   npts,
   const double *isoParCoord,
   double *shape_fcn)
 {
@@ -309,8 +297,10 @@ void Tri32DSCV::determinant(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tri_scv_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords,
+    ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
 }
 
@@ -344,6 +334,7 @@ void Tri32DSCV::Mij(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 Tri32DSCS::Tri32DSCS()
   : MasterElement()
 {
@@ -351,28 +342,9 @@ Tri32DSCS::Tri32DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
-  // define L/R mappings
-  MasterElement::lrscv_.assign(lrscv_, 6+lrscv_);
-
-  // elem-edge mapping from ip
-  MasterElement::scsIpEdgeOrd_.assign(scsIpEdgeOrd_, 3+scsIpEdgeOrd_);
-  // define opposing node
-  MasterElement::oppNode_.assign(&oppNode_[0][0], 6+&oppNode_[0][0]);
-  // define opposing face
-  MasterElement::oppFace_.assign(&oppFace_[0][0], 6+&oppFace_[0][0]);
-  // standard integration location
-  MasterElement::intgLoc_.assign(intgLoc_, 6+intgLoc_);
-  // shifted
-  MasterElement::intgLocShift_.assign(intgLocShift_, 6+intgLocShift_);
-  // exposed face
-  MasterElement::intgExpFace_.assign(&intgExpFace_[0][0][0], 12+&intgExpFace_[0][0][0]);
-  
-  // boundary integration point ip node mapping (ip on an ordinal to local node number)
-  MasterElement::ipNodeMap_.assign(&ipNodeMap_[0][0], 6+&ipNodeMap_[0][0]);
-
-  std::array<std::array<double,2>,3> nodeLocations =
+  const std::array<std::array<double,2>,3> nodeLocations =
   {{
-      {0.0,0.0}, {1.0,0}, {0.0,1.0}
+      {{0.0,0.0}}, {{1.0,0}}, {{0.0,1.0}}
   }};
   stk::topology topo = stk::topology::TRIANGLE_3_2D;
   for (unsigned k = 0; k < topo.num_sides(); ++k) {
@@ -383,15 +355,6 @@ Tri32DSCS::Tri32DSCS()
       intgExpFaceShift_[k][n][1] = nodeLocations[ordinals[n]][1];
     }
   }
-  MasterElement::intgExpFaceShift_.assign(&intgExpFaceShift_[0][0][0], 12+&intgExpFaceShift_[0][0][0]);
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-Tri32DSCS::~Tri32DSCS()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------
@@ -399,7 +362,7 @@ Tri32DSCS::~Tri32DSCS()
 //--------------------------------------------------------------------------
 const int *
 Tri32DSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal); 
   return ipNodeMap_[ordinal];
@@ -409,8 +372,7 @@ Tri32DSCS::ipNodeMap(
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
 const int *
-Tri32DSCS::side_node_ordinals(
-  int ordinal)
+Tri32DSCS::side_node_ordinals ( int ordinal) const
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
   return sideNodeOrdinals_[ordinal];
@@ -486,8 +448,10 @@ void Tri32DSCS::determinant(
   double *areav,
   double *error)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tri_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords, areav );
+    ( &nelem, &npe, &nint, coords, areav );
 
   // all is always well; no error checking
   *error = 0;
@@ -514,13 +478,15 @@ void Tri32DSCS::grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tri_derivative)
-    ( &numIntPoints_, deriv );
+    ( &nint, deriv );
   
   SIERRA_FORTRAN(tri_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
   
@@ -549,13 +515,15 @@ void Tri32DSCS::shifted_grad_op(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(tri_derivative)
-    ( &numIntPoints_, deriv );
+    ( &nint, deriv );
 
   SIERRA_FORTRAN(tri_gradient_operator)
     ( &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -604,9 +572,10 @@ void Tri32DSCS::face_grad_op(
       SIERRA_FORTRAN(tri_derivative)
         ( &nface, dpsi );
       
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(tri_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[12*n], grad, &det_j[npf*n+k], error, &lerr );
@@ -657,9 +626,10 @@ void Tri32DSCS::shifted_face_grad_op(
       SIERRA_FORTRAN(tri_derivative)
         ( &nface, dpsi );
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(tri_gradient_operator)
         ( &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[12*n], &gradop[k*nelem*6+n*6], &det_j[npf*n+k], error, &lerr );
@@ -727,9 +697,11 @@ void Tri32DSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(twod_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -802,7 +774,7 @@ Tri32DSCS::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 void
 Tri32DSCS::tri_shape_fcn(
-  const int  &npts,
+  const int   npts,
   const double *isoParCoord, 
   double *shape_fcn)
 {
@@ -856,7 +828,7 @@ Tri32DSCS::isInElement(
   double y[2] = { elemNodalCoord[4] - elemNodalCoord[3],
 		elemNodalCoord[5] - elemNodalCoord[3] };
 
-  // Translate position vector of point in same manner
+  // Translate position of point in same manner
 
   double xp = pointCoord[0] - elemNodalCoord[0];
   double yp = pointCoord[1] - elemNodalCoord[3];
@@ -886,7 +858,7 @@ Tri32DSCS::isInElement(
   double x_nod_new[2] = { len12, len13*cos_theta};
   double y_nod_new[2] = {  0.0, len13*sin_theta};
 
-  // find direction cosines transform position vector of
+  // find direction cosines transform position of
   // point to be checked into new coordinate system
   // direction cosines of new x axis along side 12
 
@@ -908,7 +880,7 @@ Tri32DSCS::isInElement(
     ypnew*( x_nod_new[1] - x_nod_new[0] ) / Area2;
   isoParCoord[1] = ( xpnew*y_nod_new[1] - ypnew*x_nod_new[1] ) / Area2;
 
-  std::vector<double> w(2);
+  std::array<double,2> w;
   w[0]=isoParCoord[0];
   w[1]=isoParCoord[1];
 
@@ -926,7 +898,7 @@ Tri32DSCS::isInElement(
 //--------------------------------------------------------------------------
 double
 Tri32DSCS::tri_parametric_distance(
-  const std::vector<double> &x)
+  const std::array<double,2> &x)
 {
   const double X=x[0] - 1./3.;
   const double Y=x[1] - 1./3.;
@@ -978,9 +950,10 @@ Tri32DSCS::general_face_grad_op(
   SIERRA_FORTRAN(tri_derivative)
     ( &nface, dpsi );
       
+  const int npe  = nodesPerElement_;
   SIERRA_FORTRAN(tri_gradient_operator)
     ( &nface,
-      &nodesPerElement_,
+      &npe,
       &nface,
       dpsi,
       &coords[0], &gradop[0], &det_j[0], error, &lerr );

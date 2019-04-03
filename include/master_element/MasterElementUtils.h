@@ -7,7 +7,6 @@
 #ifndef MasterElementUtils_h
 #define MasterElementUtils_h
 
-#include <vector>
 #include <array>
 #include <limits>
 

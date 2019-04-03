@@ -32,7 +32,7 @@ TEST_F(TestTurbulenceAlgorithm, turbviscksgsalgorithm)
   EXPECT_NEAR(norm, gold_norm, tol);
 }
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(TestTurbulenceAlgorithm, turbkineticenergyksgsnodesourcesuppalg)
 {

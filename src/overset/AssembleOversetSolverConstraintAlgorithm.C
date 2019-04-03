@@ -9,9 +9,7 @@
 // nalu
 #include <overset/AssembleOversetSolverConstraintAlgorithm.h>
 #include <EquationSystem.h>
-#include <SolverAlgorithm.h>
 
-#include <FieldTypeDef.h>
 #include <LinearSystem.h>
 #include <Realm.h>
 #include <TimeIntegrator.h>
@@ -47,35 +45,26 @@ AssembleOversetSolverConstraintAlgorithm::AssembleOversetSolverConstraintAlgorit
   stk::mesh::Part *part,
   EquationSystem *eqSystem,
   stk::mesh::FieldBase *fieldQ)
-  : SolverAlgorithm(realm, part, eqSystem),
-    fieldQ_(fieldQ)
-{
-  // populate fieldVec
-  ghostFieldVec_.push_back(fieldQ_);
-}
+  : OversetConstraintBase(realm, part, eqSystem, fieldQ)
+{}
 
-//--------------------------------------------------------------------------
-//-------- initialize_connectivity -----------------------------------------
-//--------------------------------------------------------------------------
-void
-AssembleOversetSolverConstraintAlgorithm::initialize_connectivity()
-{
-  eqSystem_->linsys_->buildOversetNodeGraph(partVec_);
-}
-
-//--------------------------------------------------------------------------
-//-------- execute ---------------------------------------------------------
-//--------------------------------------------------------------------------
 void
 AssembleOversetSolverConstraintAlgorithm::execute()
 {
   // first thing to do is to zero out the row (lhs and rhs)
   prepare_constraints();
 
+  // Turn off diagonal extraction when using (1/diagA) formulation
+  eqSystem_->extractDiagonal_ = false;
+
   // extract the rank
   const int theRank = NaluEnv::self().parallel_rank();
 
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
+
+  const double dt = realm_.get_time_step();
+  const double gamma1 = realm_.get_gamma1();
+  const double tauScale = gamma1 / dt;
 
   // space for LHS/RHS (nodesPerElem+1)*numDof*(nodesPerElem+1)*numDof; (nodesPerElem+1)*numDof
   std::vector<double> lhs;
@@ -114,6 +103,9 @@ AssembleOversetSolverConstraintAlgorithm::execute()
     // check to see if this node is locally owned by this rank; we only want to process locally owned nodes, not shared
     if ( theRank != nodeRank )
       continue;
+
+    const double* dVol = stk::mesh::field_data(*dualNodalVolume_, orphanNode);
+    const double multFac = tauScale * dVol[0];
 
     // get master element type for this contactInfo
     MasterElement *meSCS  = infoObject->meSCS_;
@@ -178,32 +170,22 @@ AssembleOversetSolverConstraintAlgorithm::execute()
     for ( int i = 0; i < sizeOfDof; ++i) {
       const int rowOi = i * npePlusOne * sizeOfDof;
       const double residual = qNp1Nodal[i] - qNp1Orphan[i];
-      p_rhs[i] = -residual;
+      p_rhs[i] = -residual * multFac;
 
       // row is zero by design (first connected node is the orphan node); assign it fully
-      p_lhs[rowOi+i] += 1.0;
+      p_lhs[rowOi+i] = multFac;
 
       for ( int ic = 0; ic < nodesPerElement; ++ic ) {
         const int indexR = i + sizeOfDof*(ic+1);
         const int rOiR = rowOi+indexR;
-        p_lhs[rOiR] -= ws_general_shape_function[ic];
+        p_lhs[rOiR] -= ws_general_shape_function[ic] * multFac;
       }
     }
 
     // apply to linear system
-    apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
+    // don't use apply_coeff here as it checks for overset logic
+    eqSystem_->linsys_->sumInto(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
   }
-}
-
-//--------------------------------------------------------------------------
-//-------- prepare_constraints ---------------------------------------------
-//--------------------------------------------------------------------------
-void
-AssembleOversetSolverConstraintAlgorithm::prepare_constraints()
-{
-  const int sysStart = 0;
-  const int sysEnd = eqSystem_->linsys_->numDof();
-  eqSystem_->linsys_->prepareConstraints(sysStart,sysEnd);
 }
 
 } // namespace nalu

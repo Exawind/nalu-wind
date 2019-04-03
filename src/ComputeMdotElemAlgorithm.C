@@ -13,6 +13,7 @@
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 #include <NaluEnv.h>
 
 // stk_mesh/base/fem
@@ -144,7 +145,7 @@ ComputeMdotElemAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerElement = meSCS->nodesPerElement_;
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
 
     // algorithm related
     ws_vrtm.resize(nodesPerElement*nDim);

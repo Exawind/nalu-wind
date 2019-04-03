@@ -272,7 +272,7 @@ static constexpr double lhs[24][24] = {
 } // namespace hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(HybridTurbKernelHex8Mesh, MomentumHybridTurbElemKernel)
 {

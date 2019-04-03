@@ -63,6 +63,8 @@ public:
 
   virtual void register_overset_bc();
 
+  virtual void create_constraint_algorithm(stk::mesh::FieldBase*);
+
   void solve_and_update();
 
   void initialize();
@@ -93,6 +95,9 @@ private:
   const bool managePNG_;
 
   bool isInit_{true};
+
+  //! User option to force recomputation of wall distance on restart
+  bool forceInitOnRestart_{false};
 };
 
 }  // nalu
