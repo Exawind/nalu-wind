@@ -51,14 +51,12 @@ AssembleElemSolverAlgorithm::AssembleElemSolverAlgorithm(
   stk::mesh::Part *part,
   EquationSystem *eqSystem,
   stk::mesh::EntityRank entityRank,
-  unsigned nodesPerEntity,
-  bool interleaveMEViews)
+  unsigned nodesPerEntity)
   : SolverAlgorithm(realm, part, eqSystem),
     dataNeededByKernels_(realm.meta_data()),
     entityRank_(entityRank),
     nodesPerEntity_(nodesPerEntity),
-    rhsSize_(nodesPerEntity*eqSystem->linsys_->numDof()),
-    interleaveMEViews_(interleaveMEViews)
+    rhsSize_(nodesPerEntity*eqSystem->linsys_->numDof())
 {
   if (eqSystem->dofName_ != "pressure") {
     diagRelaxFactor_ = realm.solutionOptions_->get_relaxation_factor(

@@ -34,8 +34,7 @@ public:
     stk::mesh::Part *part,
     EquationSystem *eqSystem,
     unsigned nodesPerFace,
-    unsigned nodesPerElem,
-    bool interleaveMeViews = true);
+    unsigned nodesPerElem);
   virtual ~AssembleFaceElemSolverAlgorithm() {}
   virtual void initialize_connectivity();
   virtual void execute();
@@ -69,8 +68,6 @@ public:
       const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(
         lhsSize, rhsSize, scratchIdsSize, nDim, faceDataNGP, elemDataNGP,
         meElemInfo);
-
-      const bool interleaveMeViews = false;
 
       stk::mesh::Selector s_locally_owned_union =
         bulk.mesh_meta_data().locally_owned_part() &
@@ -132,10 +129,10 @@ public:
                   elemFaceOrdinal = thisElemFaceOrdinal;
                   sierra::nalu::fill_pre_req_data(
                     faceDataNGP, ngpMesh, sideRank, face,
-                    *smdata.faceViews[simdFaceIndex], interleaveMeViews);
+                    *smdata.faceViews[simdFaceIndex]);
                   sierra::nalu::fill_pre_req_data(
                     elemDataNGP, ngpMesh, stk::topology::ELEMENT_RANK, elems[0],
-                    *smdata.elemViews[simdFaceIndex], interleaveMeViews);
+                    *smdata.elemViews[simdFaceIndex]);
                   ++simdFaceIndex;
                 }
                 smdata.numSimdFaces = simdFaceIndex;
@@ -148,11 +145,9 @@ public:
                 // probably want to make smdata.simdFaceViews be a
                 // pointer/reference to smdata.faceViews[0] in some way...
                 copy_and_interleave(
-                  smdata.faceViews, smdata.numSimdFaces, smdata.simdFaceViews,
-                  interleaveMeViews);
+                  smdata.faceViews, smdata.numSimdFaces, smdata.simdFaceViews);
                 copy_and_interleave(
-                  smdata.elemViews, smdata.numSimdFaces, smdata.simdElemViews,
-                  interleaveMeViews);
+                  smdata.elemViews, smdata.numSimdFaces, smdata.simdElemViews);
 
                 fill_master_element_views(
                   faceDataNGP, smdata.simdFaceViews, smdata.elemFaceOrdinal);
@@ -174,7 +169,6 @@ public:
   unsigned nodesPerFace_;
   unsigned nodesPerElem_;
   int rhsSize_;
-  const bool interleaveMEViews_;
 };
 
 } // namespace nalu

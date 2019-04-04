@@ -609,6 +609,7 @@ void calc_mass_flow_rate_scs(
           sierra::nalu::fill_pre_req_data(
             dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
             preReqData);
+          sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
           std::vector<double> rhoU(ndim);
           std::vector<double> v_shape_function(
@@ -695,6 +696,7 @@ void calc_projected_nodal_gradient_interior(
       sierra::nalu::fill_pre_req_data(
         dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
         preReqData);
+      sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
       meSCS->shape_fcn(v_shape_function.data());
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
@@ -778,6 +780,7 @@ void calc_projected_nodal_gradient_interior(
       sierra::nalu::fill_pre_req_data(
         dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
         preReqData);
+      sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
       meSCS->shape_fcn(v_shape_function.data());
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
@@ -862,6 +865,7 @@ void calc_projected_nodal_gradient_boundary(
       stk::mesh::Entity face = b[k];
       sierra::nalu::fill_pre_req_data(
         dataNeededNGP, ngpMesh, meta.side_rank(), face, preReqData);
+      sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
       meBC->shape_fcn(v_shape_function.data());
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
@@ -940,6 +944,7 @@ void calc_projected_nodal_gradient_boundary(
       stk::mesh::Entity face = b[k];
       sierra::nalu::fill_pre_req_data(
         dataNeededNGP, ngpMesh, meta.side_rank(), face, preReqData);
+      sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
       meBC->shape_fcn(v_shape_function.data());
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
@@ -1015,6 +1020,7 @@ void calc_dual_nodal_volume(
       sierra::nalu::fill_pre_req_data(
         dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
         preReqData);
+      sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
       auto v_scv_vol = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scv_volume;
       const ngp::Mesh::ConnectedNodes node_rels = preReqData.elemNodes;

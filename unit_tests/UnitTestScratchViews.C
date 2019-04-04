@@ -91,8 +91,6 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
        lhsSize, rhsSize, rhsSize, meta.spatial_dimension(), dataNGP) +
      (rhsSize + lhsSize) * sizeof(double) * sierra::nalu::simdLen);
 
-  const bool interleaveMEViews = false;
-
   int numResults = 5;
   IntViewType result("result", numResults);
 
@@ -125,7 +123,7 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
     {
         stk::mesh::Entity element = b[bktIndex];
         sierra::nalu::fill_pre_req_data(dataNGP, ngpMesh, stk::topology::ELEM_RANK, element,
-                          scrviews, interleaveMEViews);
+                          scrviews);
         auto& velocityView = scrviews.get_scratch_view_2D(velocityOrdinal);
         auto& pressureView = scrviews.get_scratch_view_1D(pressureOrdinal);
 
@@ -219,8 +217,6 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
        lhsSize, rhsSize, rhsSize, meta.spatial_dimension(), dataNGP) +
      (rhsSize + lhsSize) * sizeof(double) * sierra::nalu::simdLen);
 
-  const bool interleaveMEViews = false;
-
   int numResults = 5;
   IntViewType result("result", numResults);
 
@@ -248,11 +244,11 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
     {
         stk::mesh::Entity element = b[bktIndex];
         sierra::nalu::fill_pre_req_data(dataNGP, ngpMesh, stk::topology::ELEM_RANK, element,
-                          *smdata.prereqData[0], interleaveMEViews);
+                          *smdata.prereqData[0]);
 
 #ifndef KOKKOS_ENABLE_CUDA
 //no copy-interleave needed on GPU since no simd.
-        sierra::nalu::copy_and_interleave(smdata.prereqData, 1, smdata.simdPrereqData, interleaveMEViews);
+        sierra::nalu::copy_and_interleave(smdata.prereqData, 1, smdata.simdPrereqData);
 #endif
 
         auto& velocityView = smdata.prereqData[0]->get_scratch_view_2D(velocityOrdinal);

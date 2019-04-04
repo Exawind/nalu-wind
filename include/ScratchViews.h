@@ -103,7 +103,7 @@ public:
     int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 #endif
 
-  void fill_master_element_views(
+  void fill_master_element_views_new_me(
     const ElemDataRequestsGPU::DataEnumView& dataEnums,
     SharedMemView<double**, DeviceShmem>* coordsView,
     MasterElement* meFC,
@@ -658,7 +658,7 @@ int MasterElementViews<T>::create_master_element_views(
 #endif
 
 template<typename T>
-void MasterElementViews<T>::fill_master_element_views(
+void MasterElementViews<T>::fill_master_element_views_new_me(
   const ElemDataRequestsGPU::DataEnumView& dataEnums,
   SharedMemView<double**, DeviceShmem>* coordsView,
   MasterElement* /* meFC */,
@@ -902,8 +902,7 @@ void fill_pre_req_data(const ElemDataRequestsGPU& dataNeeded,
                        const ngp::Mesh& ngpMesh,
                        stk::mesh::EntityRank entityRank,
                        stk::mesh::Entity elem,
-                       ScratchViews<double,DeviceTeamHandleType,DeviceShmem>& prereqData,
-                       bool fillMEViews = true);
+                       ScratchViews<double,DeviceTeamHandleType,DeviceShmem>& prereqData);
 
 template<typename ELEMDATAREQUESTSTYPE,typename SCRATCHVIEWSTYPE>
 void fill_master_element_views(ELEMDATAREQUESTSTYPE& dataNeeded,
