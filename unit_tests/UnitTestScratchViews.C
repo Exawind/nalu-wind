@@ -65,13 +65,17 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
 {
   stk::topology elemTopo = stk::topology::HEX_8;
   sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
-  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
+  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<sierra::nalu::AlgTraitsHex8>();
   dataReq.add_cvfem_volume_me(meSCV);
 
+  auto* coordsField = bulk.mesh_meta_data().coordinate_field();
+
+  dataReq.add_coordinates_field(*coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
   dataReq.add_gathered_nodal_field(*velocity, 3);
   dataReq.add_gathered_nodal_field(*pressure, 1);
+  dataReq.add_master_element_call(sierra::nalu::SCV_VOLUME, sierra::nalu::CURRENT_COORDINATES);
 
-  EXPECT_EQ(2u, dataReq.get_fields().size());
+  EXPECT_EQ(3u, dataReq.get_fields().size());
 
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
   ngp::FieldManager fieldMgr(bulk);
@@ -175,12 +179,15 @@ TEST_F(Hex8MeshWithNSOFields, NGPAssembleElemSolver)
   auto* assembleElemSolverAlg = helperObjs.assembleElemSolverAlg;
   auto& dataNeeded = assembleElemSolverAlg->dataNeededByKernels_;
 
-  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(stk::topology::HEX_8);
+  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<sierra::nalu::AlgTraitsHex8>();
   dataNeeded.add_cvfem_volume_me(meSCV);
+  auto* coordsField = bulk.mesh_meta_data().coordinate_field();
+
+  dataNeeded.add_coordinates_field(*coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
   dataNeeded.add_gathered_nodal_field(*velocity, 3);
   dataNeeded.add_gathered_nodal_field(*pressure, 1);
 
-  EXPECT_EQ(2u, dataNeeded.get_fields().size());
+  EXPECT_EQ(3u, dataNeeded.get_fields().size());
 
   do_assemble_elem_solver_test(
     bulk, *assembleElemSolverAlg, velocity->mesh_meta_data_ordinal(),
@@ -191,13 +198,17 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
 {
   stk::topology elemTopo = stk::topology::HEX_8;
   sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
-  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(elemTopo);
+  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<sierra::nalu::AlgTraitsHex8>();
   dataReq.add_cvfem_volume_me(meSCV);
 
+  auto* coordsField = bulk.mesh_meta_data().coordinate_field();
+
+  dataReq.add_coordinates_field(*coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
   dataReq.add_gathered_nodal_field(*velocity, 3);
   dataReq.add_gathered_nodal_field(*pressure, 1);
+  dataReq.add_master_element_call(sierra::nalu::SCV_VOLUME, sierra::nalu::CURRENT_COORDINATES);
 
-  EXPECT_EQ(2u, dataReq.get_fields().size());
+  EXPECT_EQ(3u, dataReq.get_fields().size());
 
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
   ngp::FieldManager fieldMgr(bulk);
