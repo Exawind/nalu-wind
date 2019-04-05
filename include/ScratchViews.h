@@ -731,12 +731,13 @@ void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_master_element_views(co
 int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim);
 int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
 
+template<typename T>
 KOKKOS_FUNCTION
 void fill_pre_req_data(const ElemDataRequestsGPU& dataNeeded,
                        const ngp::Mesh& ngpMesh,
                        stk::mesh::EntityRank entityRank,
                        stk::mesh::Entity elem,
-                       ScratchViews<double,DeviceTeamHandleType,DeviceShmem>& prereqData);
+                       ScratchViews<T,DeviceTeamHandleType,DeviceShmem>& prereqData);
 
 template<typename ELEMDATAREQUESTSTYPE,typename SCRATCHVIEWSTYPE>
 KOKKOS_FUNCTION

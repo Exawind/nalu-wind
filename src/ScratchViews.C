@@ -415,13 +415,14 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
   return numScalars + 8;
 }
 
+template<typename T>
 KOKKOS_FUNCTION
 void fill_pre_req_data(
   const ElemDataRequestsGPU& dataNeeded,
   const ngp::Mesh& ngpMesh,
   stk::mesh::EntityRank entityRank,
   stk::mesh::Entity entity,
-  ScratchViews<double,DeviceTeamHandleType,DeviceShmem>& prereqData)
+  ScratchViews<T,DeviceTeamHandleType,DeviceShmem>& prereqData)
 {
   stk::mesh::FastMeshIndex entityIndex = ngpMesh.fast_mesh_index(entity);
   prereqData.elemNodes = ngpMesh.get_nodes(entityRank, entityIndex);
@@ -475,6 +476,21 @@ void fill_pre_req_data(
   }
 }
 
+template
+void fill_pre_req_data(
+  const ElemDataRequestsGPU& dataNeeded,
+  const ngp::Mesh& ngpMesh,
+  stk::mesh::EntityRank entityRank,
+  stk::mesh::Entity entity,
+  ScratchViews<double, DeviceTeamHandleType,DeviceShmem>& prereqData);
+
+template
+void fill_pre_req_data(
+  const ElemDataRequestsGPU& dataNeeded,
+  const ngp::Mesh& ngpMesh,
+  stk::mesh::EntityRank entityRank,
+  stk::mesh::Entity entity,
+  ScratchViews<DoubleType, DeviceTeamHandleType,DeviceShmem>& prereqData);
 }
 }
 
