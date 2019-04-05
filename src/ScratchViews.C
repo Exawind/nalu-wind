@@ -38,11 +38,10 @@ void gather_elem_node_tensor_field(const NGPDoubleFieldType& field,
       numNodes==(int)elemNodes.size(),
       "gather_elem_node_tensor_field, numNodes = mismatch with elemNodes.size()"  );   
   for(int i=0; i<numNodes; ++i) {
-    const double* dataPtr = static_cast<const double*>(&field.get(ngpMesh, elemNodes[i], 0));
     unsigned counter = 0;
     for(int d1=0; d1<tensorDim1; ++d1) { 
       for(int d2=0; d2<tensorDim2; ++d2) {
-        shmemView(i,d1,d2) = dataPtr[counter++];
+        shmemView(i,d1,d2) = field.get(ngpMesh, elemNodes[i], counter++);
       }   
     }   
   }
@@ -73,10 +72,9 @@ void gather_elem_node_field_3D(const NGPDoubleFieldType& field,
                                ViewType& shmemView)
 {
   for(unsigned i=0; i<elemNodes.size(); ++i) {
-    const double* dataPtr = &field.get(ngpMesh, elemNodes[i], 0); 
-    shmemView(i,0) = dataPtr[0];
-    shmemView(i,1) = dataPtr[1];
-    shmemView(i,2) = dataPtr[2];
+    shmemView(i,0) = field.get(ngpMesh, elemNodes[i], 0);
+    shmemView(i,1) = field.get(ngpMesh, elemNodes[i], 1);
+    shmemView(i,2) = field.get(ngpMesh, elemNodes[i], 2);
   }
 }
 
@@ -89,9 +87,8 @@ void gather_elem_node_field(const NGPDoubleFieldType& field,
                             ViewType& shmemView)
 {
   for(unsigned i=0; i<elemNodes.size(); ++i) {
-    const double* dataPtr = &field.get(ngpMesh, elemNodes[i], 0);
     for(int d=0; d<scalarsPerNode; ++d) {
-      shmemView(i,d) = dataPtr[d];
+      shmemView(i,d) = field.get(ngpMesh, elemNodes[i], d);
     }
   }
 }
