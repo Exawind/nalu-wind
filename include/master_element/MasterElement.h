@@ -262,7 +262,7 @@ public:
 
   virtual int ndim()                           const {return nDim_;} 
   virtual int nodes_per_element()              const {return nodesPerElement_;} 
-          int num_integration_points()         const {return numIntPoints_;} 
+  KOKKOS_FUNCTION int num_integration_points() const {return numIntPoints_;}
           double scal_to_standard_iso_factor() const {return scaleToStandardIsoFac_;} 
 
   virtual const int   * adjacentNodes()              const {throw std::runtime_error("adjacentNodes not implimented");}

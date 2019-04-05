@@ -18,6 +18,7 @@ namespace sierra{
 namespace nalu{
 
 template<typename SimdViewType, typename ViewType>
+KOKKOS_FUNCTION
 void interleave(SimdViewType& dview, const ViewType& sview, int simdIndex)
 {
   int sz = dview.size();
@@ -29,6 +30,7 @@ void interleave(SimdViewType& dview, const ViewType& sview, int simdIndex)
 }
 
 template<typename SimdViewType>
+KOKKOS_FUNCTION
 void interleave(SimdViewType& dview, const double* sviews[], int simdElems)
 {
     int dim = dview.size();
@@ -42,7 +44,7 @@ void interleave(SimdViewType& dview, const double* sviews[], int simdElems)
 }
 
 template<typename MultiDimViewsType, typename SimdMultiDimViewsType>
-inline
+KOKKOS_INLINE_FUNCTION
 void copy_and_interleave(const MultiDimViewsType ** data,
                          int simdElems,
                          SimdMultiDimViewsType& simdData)
@@ -99,7 +101,7 @@ void copy_and_interleave(std::unique_ptr<ScratchViews<double>>* data,
 }
 #endif
 
-inline
+KOKKOS_INLINE_FUNCTION
 void extract_vector_lane(const SharedMemView<DoubleType*>& simdrhs, int simdIndex, SharedMemView<double*>& rhs)
 {
   int dim = simdrhs.extent(0);
@@ -110,7 +112,7 @@ void extract_vector_lane(const SharedMemView<DoubleType*>& simdrhs, int simdInde
   }
 }
 
-inline
+KOKKOS_INLINE_FUNCTION
 void extract_vector_lane(const SharedMemView<DoubleType**>& simdlhs, int simdIndex, SharedMemView<double**>& lhs)
 {
   int len = simdlhs.extent(0)*simdlhs.extent(1);
