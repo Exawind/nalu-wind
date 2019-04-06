@@ -45,7 +45,10 @@ public:
                                   sierra::nalu::CURRENT_COORDINATES);
     dataReq.add_gathered_nodal_field(velocity_, AlgTraits::nDim_);
     dataReq.add_gathered_nodal_field(pressure_, 1);
-    dataReq.add_master_element_call(sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+    dataReq.add_master_element_call(
+      sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+    dataReq.add_master_element_call(
+      sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
   }
 
   using sierra::nalu::Kernel::execute;
@@ -82,12 +85,15 @@ TestContinuityKernel<AlgTraits>::execute(
 
   auto& v_velocity = scratchViews.get_scratch_view_2D(velocity_);
   auto& v_pressure = scratchViews.get_scratch_view_1D(pressure_);
-  auto& scs_areav = scratchViews.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
+
+  auto& meViews = scratchViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+  auto& scs_areav = meViews.scs_areav;
+  auto& v_shape_fcn = meViews.scs_shape_fcn;
 
   printf("ipNodeMap[2] = %d (7); SCS areav[2, 0] = %f\n", ipNodeMap[2],
          stk::simd::get_data(scs_areav(2, 0), 0));
 
-  rhs(0) = v_velocity(0, 0) + v_pressure(0);
+  rhs(0) = v_velocity(0, 0) + v_pressure(0) * v_shape_fcn(0, 0);
 }
 
 template<typename AlgTraits>
