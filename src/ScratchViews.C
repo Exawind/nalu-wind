@@ -55,12 +55,11 @@ void gather_elem_tensor_field(const NGPDoubleFieldType& field,
                               int tensorDim2,
                               ViewType& shmemView)
 {
-  const double* dataPtr = static_cast<const double*>(&field.get(elem, 0));
   unsigned counter = 0;
-  for(int d1=0; d1<tensorDim1; ++d1) { 
+  for(int d1=0; d1<tensorDim1; ++d1) {
     for(int d2=0; d2<tensorDim2; ++d2) {
-      shmemView(d1,d2) = dataPtr[counter++];
-    }   
+      shmemView(d1,d2) = field.get(elem, counter++);
+    }
   }
 }
 
