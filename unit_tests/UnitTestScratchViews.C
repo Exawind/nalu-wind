@@ -54,12 +54,25 @@ class TestKernel
     rhs(0) += v_vel(0, 0) + v_pres(0);
   }
 
+  KOKKOS_FUNCTION
+  void execute(
+    sierra::nalu::SharedMemView<sierra::nalu::DoubleType**,ShmemType> & /* lhs */,
+    sierra::nalu::SharedMemView<sierra::nalu::DoubleType*,ShmemType> & rhs,
+    sierra::nalu::ScratchViews<DoubleType,TeamType,ShmemType> &  scratchViews) const
+  {
+    auto& v_vel = scratchViews.get_scratch_view_2D(velocityOrdinal);
+    auto& v_pres = scratchViews.get_scratch_view_1D(pressureOrdinal);
+
+    rhs(0) += v_vel(0, 0) + v_pres(0);
+  }
+
 private:
   unsigned velocityOrdinal;
   unsigned pressureOrdinal;
 };
 
 typedef Kokkos::DualView<int*, Kokkos::LayoutRight, sierra::nalu::DeviceSpace> IntViewType;
+typedef Kokkos::DualView<double*, Kokkos::LayoutRight, sierra::nalu::DeviceSpace> DoubleTypeView;
 
 void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* pressure, sierra::nalu::VectorFieldType* velocity)
 {
@@ -228,12 +241,11 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
        lhsSize, rhsSize, rhsSize, meta.spatial_dimension(), dataNGP) +
      (rhsSize + lhsSize) * sizeof(double) * sierra::nalu::simdLen);
 
-  int numResults = 5;
-  IntViewType result("result", numResults);
-
-  Kokkos::deep_copy(result.h_view, 0);
-  result.template modify<typename IntViewType::host_mirror_space>();
-  result.template sync<typename IntViewType::execution_space>();
+  int numResults = sierra::nalu::AlgTraitsHex8::numScvIp_;
+  DoubleTypeView scv_check("scv_volume", numResults);
+  Kokkos::deep_copy(scv_check.h_view, 0.0);
+  scv_check.template modify<typename DoubleTypeView::host_mirror_space>();
+  scv_check.template sync<typename DoubleTypeView::execution_space>();
 
   ngp::Mesh ngpMesh(bulk);
 
@@ -254,33 +266,36 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, bucketLen), [&](const size_t& bktIndex)
     {
         stk::mesh::Entity element = b[bktIndex];
-        sierra::nalu::fill_pre_req_data(dataNGP, ngpMesh, stk::topology::ELEM_RANK, element,
-                          *smdata.prereqData[0]);
 
 #ifndef KOKKOS_ENABLE_CUDA
-//no copy-interleave needed on GPU since no simd.
+        sierra::nalu::fill_pre_req_data(
+          dataNGP, ngpMesh, stk::topology::ELEM_RANK, element, *smdata.prereqData[0]);
         sierra::nalu::copy_and_interleave(smdata.prereqData, 1, smdata.simdPrereqData);
+#else
+        // no copy-interleave needed on GPU since no simd.
+        sierra::nalu::fill_pre_req_data(
+          dataNGP, ngpMesh, stk::topology::ELEM_RANK, element, smdata.simdPrereqData);
 #endif
+        sierra::nalu::fill_master_element_views(dataNGP, smdata.simdPrereqData);
 
-        auto& velocityView = smdata.prereqData[0]->get_scratch_view_2D(velocityOrdinal);
-        auto& pressureView = smdata.prereqData[0]->get_scratch_view_1D(pressureOrdinal);
+        // Copy over SCV volume to temporary array for checking on host
+        //
+        // This assumes that the test mesh has 8 (2x2x2) elements, and so we
+        // save off one integration point from each element for checks on GPU.
+        auto& scv_volume = smdata.simdPrereqData.get_me_views(
+          sierra::nalu::CURRENT_COORDINATES).scv_volume;
+        scv_check.d_view(bktIndex % numResults) =
+          stk::simd::get_data(scv_volume(bktIndex % numResults), 0);
 
-        result.d_view(0) = (pressureView(0) - 1.0) < 1.e-9 ? 1 : 0;
-        result.d_view(1) = (pressureView(7) - 1.0) < 1.e-9 ? 1 : 0;
-        result.d_view(2) = (velocityView(6,0) - 1.0) < 1.e-9 ? 1 : 0;
-        result.d_view(3) = (velocityView(6,1) - 0.0) < 1.e-9 ? 1 : 0;
-        result.d_view(4) = (velocityView(6,2) - 0.0) < 1.e-9 ? 1 : 0;
-
-        testKernel.execute(smdata.lhs, smdata.rhs, smdata.simdPrereqData);
+        testKernel.execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
     });
   });
 
-  result.modify<IntViewType::execution_space>();
-  result.sync<IntViewType::host_mirror_space>();
+  scv_check.modify<DoubleTypeView::execution_space>();
+  scv_check.sync<DoubleTypeView::host_mirror_space>();
 
-  for(int i=0; i<numResults; ++i) {
-    EXPECT_EQ(1, result.h_view(i));
-  }
+  for (int i=0; i < numResults; ++i)
+    EXPECT_NEAR(scv_check.h_view(i), 0.125, 1.0e-8);
 }
 
 TEST_F(Hex8MeshWithNSOFields, NGPSharedMemData)
