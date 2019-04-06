@@ -48,10 +48,12 @@ public:
   }
 
   using sierra::nalu::Kernel::execute;
+
+  KOKKOS_FUNCTION
   void execute(
-    sierra::nalu::SharedMemView<DoubleType**>&,
-    sierra::nalu::SharedMemView<DoubleType*>&,
-    sierra::nalu::ScratchViews<DoubleType>&);
+    sierra::nalu::SharedMemView<DoubleType**, ShmemType>&,
+    sierra::nalu::SharedMemView<DoubleType*, ShmemType>&,
+    sierra::nalu::ScratchViews<DoubleType, TeamType, ShmemType>&);
 
   KOKKOS_FUNCTION
   virtual void execute(
@@ -70,9 +72,9 @@ private:
 template<typename AlgTraits>
 void
 TestContinuityKernel<AlgTraits>::execute(
-  sierra::nalu::SharedMemView<DoubleType**>&,
-  sierra::nalu::SharedMemView<DoubleType*>& rhs,
-  sierra::nalu::ScratchViews<DoubleType>& scratchViews)
+  sierra::nalu::SharedMemView<DoubleType**, ShmemType>&,
+  sierra::nalu::SharedMemView<DoubleType*, ShmemType>& rhs,
+  sierra::nalu::ScratchViews<DoubleType, TeamType, ShmemType>& scratchViews)
 {
   auto& v_velocity = scratchViews.get_scratch_view_2D(velocity_);
   auto& v_pressure = scratchViews.get_scratch_view_1D(pressure_);
