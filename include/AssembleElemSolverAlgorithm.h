@@ -110,17 +110,12 @@ public:
             }
 
 #ifndef KOKKOS_ENABLE_CUDA
-            // When we GPU-ize AssembleElemSolverAlgorithm, 'lambdaFunc' below
-            // will need to operate on smdata.prereqData[0] since we aren't going
-            // to copy_and_interleave. We will probably want to make
-            // smdata.simdPrereqData to be a pointer/reference to
-            // smdata.prereqData[0] in some way...
+            // No need to interleave on GPUs
             copy_and_interleave(
               smdata.prereqData, numSimdElems, smdata.simdPrereqData);
-            fill_master_element_views(dataNeededNGP, smdata.simdPrereqData);
-//for now this simply isn't ready for GPU.
 #endif
 
+            fill_master_element_views(dataNeededNGP, smdata.simdPrereqData);
             lambdaFunc(smdata);
           });
       });

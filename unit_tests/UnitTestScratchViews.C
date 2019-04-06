@@ -180,7 +180,14 @@ void do_assemble_elem_solver_test(
   solverAlg.run_algorithm(
     bulk,
     KOKKOS_LAMBDA(sierra::nalu::SharedMemData<TeamType, ShmemType> & smdata) {
-       testKernel.execute(smdata.simdlhs, smdata.simdrhs, *smdata.prereqData[0]);
+      auto& scv_volume =
+        smdata.simdPrereqData.get_me_views(sierra::nalu::CURRENT_COORDINATES)
+          .scv_volume;
+
+      printf(
+        "SCV volume = %f; expected = 0.125\n",
+        stk::simd::get_data(scv_volume(4), 0));
+      testKernel.execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
     });
 }
 
@@ -199,6 +206,8 @@ TEST_F(Hex8MeshWithNSOFields, NGPAssembleElemSolver)
   dataNeeded.add_coordinates_field(*coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
   dataNeeded.add_gathered_nodal_field(*velocity, 3);
   dataNeeded.add_gathered_nodal_field(*pressure, 1);
+  dataNeeded.add_master_element_call(
+    sierra::nalu::SCV_VOLUME, sierra::nalu::CURRENT_COORDINATES);
 
   EXPECT_EQ(3u, dataNeeded.get_fields().size());
 
