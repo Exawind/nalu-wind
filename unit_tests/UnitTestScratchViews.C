@@ -266,15 +266,12 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, bucketLen), [&](const size_t& bktIndex)
     {
         stk::mesh::Entity element = b[bktIndex];
-
-#ifndef KOKKOS_ENABLE_CUDA
         sierra::nalu::fill_pre_req_data(
           dataNGP, ngpMesh, stk::topology::ELEM_RANK, element, *smdata.prereqData[0]);
-        sierra::nalu::copy_and_interleave(smdata.prereqData, 1, smdata.simdPrereqData);
-#else
+
+#ifndef KOKKOS_ENABLE_CUDA
         // no copy-interleave needed on GPU since no simd.
-        sierra::nalu::fill_pre_req_data(
-          dataNGP, ngpMesh, stk::topology::ELEM_RANK, element, smdata.simdPrereqData);
+        sierra::nalu::copy_and_interleave(smdata.prereqData, 1, smdata.simdPrereqData);
 #endif
         sierra::nalu::fill_master_element_views(dataNGP, smdata.simdPrereqData);
 
