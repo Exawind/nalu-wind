@@ -106,11 +106,7 @@ AssembleElemSolverAlgorithm::execute()
 
       for (size_t i=0; i < numKernels; i++) {
         Kernel* kernel = ngpKernels(i);
-#ifdef KOKKOS_ENABLE_CUDA
-        kernel->execute(smdata.simdlhs, smdata.simdrhs, *smdata.prereqData[0]);
-#else
         kernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
-#endif
       }
 
 #ifndef KOKKOS_ENABLE_CUDA
