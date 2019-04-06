@@ -43,6 +43,8 @@ struct SharedMemData {
 
         scratchIds = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
         sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
+
+        simdPrereqData.fill_static_meviews(dataNeededByKernels);
     }
 
     KOKKOS_FUNCTION
