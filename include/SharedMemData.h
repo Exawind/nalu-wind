@@ -28,16 +28,13 @@ struct SharedMemData {
          unsigned nodesPerEntity,
          unsigned rhsSize)
      : simdPrereqData(team, nDim, nodesPerEntity, dataNeededByKernels)
-#ifdef KOKKOS_ENABLE_CUDA
-      ,prereqData_byValue(team, nDim, nodesPerEntity, dataNeededByKernels)
-#endif
     {
 #ifndef KOKKOS_ENABLE_CUDA
         for(int simdIndex=0; simdIndex<simdLen; ++simdIndex) {
           prereqData[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, nodesPerEntity, dataNeededByKernels));
         }
 #else
-        prereqData[0] = &prereqData_byValue;
+        prereqData[0] = &simdPrereqData;
 #endif
         simdrhs = get_shmem_view_1D<DoubleType,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
         simdlhs = get_shmem_view_2D<DoubleType,TEAMHANDLETYPE,SHMEM>(team, rhsSize, rhsSize);
@@ -54,8 +51,7 @@ struct SharedMemData {
     ngp::Mesh::ConnectedNodes ngpElemNodes[simdLen];
     int numSimdElems;
 #ifdef KOKKOS_ENABLE_CUDA
-    ScratchViews<double,TEAMHANDLETYPE,SHMEM> prereqData_byValue;
-    ScratchViews<double,TEAMHANDLETYPE,SHMEM>* prereqData[1];
+    ScratchViews<DoubleType,TEAMHANDLETYPE,SHMEM>* prereqData[1];
 #else
     std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM>> prereqData[simdLen];
 #endif
