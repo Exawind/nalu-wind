@@ -306,9 +306,11 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
 
 TEST_F(Hex8MeshWithNSOFields, NGPSharedMemData)
 {
-  fill_mesh_and_initialize_test_fields("generated:2x2x2");
+  if (stk::parallel_machine_size(comm) == 1) {
+    fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-  do_the_smdata_test(bulk, pressure, velocity);
+    do_the_smdata_test(bulk, pressure, velocity);
+  }
 }
 
 #ifdef KOKKOS_ENABLE_CUDA
