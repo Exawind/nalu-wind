@@ -35,6 +35,7 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
+  KOKKOS_FUNCTION
   QuadrilateralP2Element();
   KOKKOS_FUNCTION
   virtual ~QuadrilateralP2Element() {}
@@ -146,6 +147,7 @@ public:
   using MasterElement::shifted_shape_fcn;
   using MasterElement::shifted_grad_op;
 
+  KOKKOS_FUNCTION
   Quad92DSCV();
   KOKKOS_FUNCTION
   virtual ~Quad92DSCV() {}
@@ -223,6 +225,7 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
+  KOKKOS_FUNCTION
   Quad92DSCS();
   KOKKOS_FUNCTION
   virtual ~Quad92DSCS() {}
