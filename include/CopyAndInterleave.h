@@ -18,6 +18,7 @@ namespace sierra{
 namespace nalu{
 
 template<typename SimdViewType, typename ViewType>
+KOKKOS_FUNCTION
 void interleave(SimdViewType& dview, const ViewType& sview, int simdIndex)
 {
   int sz = dview.size();
@@ -29,6 +30,7 @@ void interleave(SimdViewType& dview, const ViewType& sview, int simdIndex)
 }
 
 template<typename SimdViewType>
+KOKKOS_FUNCTION
 void interleave(SimdViewType& dview, const double* sviews[], int simdElems)
 {
     int dim = dview.size();
@@ -41,28 +43,8 @@ void interleave(SimdViewType& dview, const double* sviews[], int simdElems)
     }
 }
 
-inline
-void interleave_me_views(MasterElementViews<DoubleType>& dest,
-                         const MasterElementViews<double>& src,
-                         int simdIndex)
-{
-  interleave(dest.scs_areav, src.scs_areav, simdIndex);
-  interleave(dest.dndx, src.dndx, simdIndex);
-  interleave(dest.dndx_scv, src.dndx_scv, simdIndex);
-  interleave(dest.dndx_shifted, src.dndx_shifted, simdIndex);
-  interleave(dest.dndx_fem, src.dndx_fem, simdIndex);
-  interleave(dest.deriv, src.deriv, simdIndex);
-  interleave(dest.deriv_fem, src.deriv_fem, simdIndex);
-  interleave(dest.det_j, src.det_j, simdIndex);
-  interleave(dest.det_j_fem, src.det_j_fem, simdIndex);
-  interleave(dest.scv_volume, src.scv_volume, simdIndex);
-  interleave(dest.gijUpper, src.gijUpper, simdIndex);
-  interleave(dest.gijLower, src.gijLower, simdIndex);
-  interleave(dest.metric, src.metric, simdIndex);
-}
-
 template<typename MultiDimViewsType, typename SimdMultiDimViewsType>
-inline
+KOKKOS_INLINE_FUNCTION
 void copy_and_interleave(const MultiDimViewsType ** data,
                          int simdElems,
                          SimdMultiDimViewsType& simdData)
@@ -106,8 +88,7 @@ void copy_and_interleave(const MultiDimViewsType ** data,
 inline
 void copy_and_interleave(std::unique_ptr<ScratchViews<double>>* data,
                          int simdElems,
-                         ScratchViews<DoubleType>& simdData,
-                         bool copyMEViews = true)
+                         ScratchViews<DoubleType>& simdData)
 {
     MultiDimViews<DoubleType, TeamHandleType, HostShmem>& simdFieldViews = simdData.get_field_views();
     const MultiDimViews<double, TeamHandleType, HostShmem>* fViews[stk::simd::ndoubles] = {nullptr};
@@ -117,22 +98,10 @@ void copy_and_interleave(std::unique_ptr<ScratchViews<double>>* data,
     }
 
     copy_and_interleave(fViews, simdElems, simdFieldViews);
-
-    if (copyMEViews)
-    {
-      for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
-        if (simdData.has_coord_field(CURRENT_COORDINATES)) {
-          interleave_me_views(simdData.get_me_views(CURRENT_COORDINATES), data[simdIndex]->get_me_views(CURRENT_COORDINATES), simdIndex);
-        }
-        if (simdData.has_coord_field(MODEL_COORDINATES)) {
-          interleave_me_views(simdData.get_me_views(MODEL_COORDINATES), data[simdIndex]->get_me_views(MODEL_COORDINATES), simdIndex);
-        }
-      }
-    }
 }
 #endif
 
-inline
+KOKKOS_INLINE_FUNCTION
 void extract_vector_lane(const SharedMemView<DoubleType*>& simdrhs, int simdIndex, SharedMemView<double*>& rhs)
 {
   int dim = simdrhs.extent(0);
@@ -143,7 +112,7 @@ void extract_vector_lane(const SharedMemView<DoubleType*>& simdrhs, int simdInde
   }
 }
 
-inline
+KOKKOS_INLINE_FUNCTION
 void extract_vector_lane(const SharedMemView<DoubleType**>& simdlhs, int simdIndex, SharedMemView<double**>& lhs)
 {
   int len = simdlhs.extent(0)*simdlhs.extent(1);

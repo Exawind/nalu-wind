@@ -53,7 +53,7 @@ void kernel_runalg_test(
   solverAlg.run_algorithm(
     bulk,
     KOKKOS_LAMBDA(sierra::nalu::SharedMemData<TeamType, ShmemType> & smdata) {
-      testKernel->execute(smdata.simdlhs, smdata.simdrhs, *smdata.prereqData[0]);
+      testKernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
     });
 }
 

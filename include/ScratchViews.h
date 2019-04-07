@@ -80,68 +80,65 @@ NumNeededViews count_needed_field_views(const ELEMDATAREQUESTSTYPE& dataNeeded)
   return numNeededViews;
 }
 
-template<typename T>
+template<typename T, typename TEAMHANDLETYPE, typename SHMEM>
 class MasterElementViews
 {
 public:
   typedef T value_type;
 
+  KOKKOS_FUNCTION
   MasterElementViews() = default;
+
+  KOKKOS_FUNCTION
   virtual ~MasterElementViews() = default;
 
+  KOKKOS_FUNCTION
   int create_master_element_views(
-    const TeamHandleType& team,
+    const TEAMHANDLETYPE& team,
     const ElemDataRequestsGPU::DataEnumView& dataEnums,
     int nDim, int nodesPerFace, int nodesPerElem,
     int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
-
-#ifdef KOKKOS_ENABLE_CUDA
-  int create_master_element_views(
-    const DeviceTeamHandleType& team,
-    const ElemDataRequestsGPU::DataEnumView& dataEnums,
-    int nDim, int nodesPerFace, int nodesPerElem,
-    int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
-#endif
-
-  void fill_master_element_views(
-    const ElemDataRequestsGPU::DataEnumView& dataEnums,
-    SharedMemView<double**, DeviceShmem>* coordsView,
-    MasterElement* meFC,
-    MasterElement* meSCS,
-    MasterElement* meSCV,
-    MasterElement* meFEM,
-    int faceOrdinal = 0);
 
   void fill_master_element_views_new_me(
     const ElemDataRequestsGPU::DataEnumView& dataEnums,
-    SharedMemView<DoubleType**, DeviceShmem>* coordsView,
+    SharedMemView<double**, SHMEM>* coordsView,
     MasterElement* meFC,
     MasterElement* meSCS,
     MasterElement* meSCV,
     MasterElement* meFEM,
     int faceOrdinal = 0);
 
-  SharedMemView<T**> fc_areav;
-  SharedMemView<T**> scs_areav;
-  SharedMemView<T***> dndx_fc_scs;
-  SharedMemView<T***> dndx_shifted_fc_scs;
-  SharedMemView<T***> dndx;
-  SharedMemView<T***> dndx_shifted;
-  SharedMemView<T***> dndx_scv;
-  SharedMemView<T***> dndx_scv_shifted;
-  SharedMemView<T***> dndx_fem;
-  SharedMemView<T***> deriv_fc_scs;
-  SharedMemView<T***> deriv;
-  SharedMemView<T***> deriv_scv;
-  SharedMemView<T***> deriv_fem;
-  SharedMemView<T*> det_j_fc_scs;
-  SharedMemView<T*> det_j;
-  SharedMemView<T*> det_j_scv;
-  SharedMemView<T*> det_j_fem;
-  SharedMemView<T*> scv_volume;
-  SharedMemView<T***> gijUpper;
-  SharedMemView<T***> gijLower;
-  SharedMemView<T***> metric;
+  KOKKOS_FUNCTION
+  void fill_master_element_views_new_me(
+    const ElemDataRequestsGPU::DataEnumView& dataEnums,
+    SharedMemView<DoubleType**, SHMEM>* coordsView,
+    MasterElement* meFC,
+    MasterElement* meSCS,
+    MasterElement* meSCV,
+    MasterElement* meFEM,
+    int faceOrdinal = 0);
+
+  SharedMemView<T**, SHMEM> fc_areav;
+  SharedMemView<T**, SHMEM> scs_areav;
+  SharedMemView<T***, SHMEM> dndx_fc_scs;
+  SharedMemView<T***, SHMEM> dndx_shifted_fc_scs;
+  SharedMemView<T***, SHMEM> dndx;
+  SharedMemView<T***, SHMEM> dndx_shifted;
+  SharedMemView<T***, SHMEM> dndx_scv;
+  SharedMemView<T***, SHMEM> dndx_scv_shifted;
+  SharedMemView<T***, SHMEM> dndx_fem;
+  SharedMemView<T***, SHMEM> deriv_fc_scs;
+  SharedMemView<T***, SHMEM> deriv;
+  SharedMemView<T***, SHMEM> deriv_scv;
+  SharedMemView<T***, SHMEM> deriv_fem;
+  SharedMemView<T*, SHMEM> det_j_fc_scs;
+  SharedMemView<T*, SHMEM> det_j;
+  SharedMemView<T*, SHMEM> det_j_scv;
+  SharedMemView<T*, SHMEM> det_j_fem;
+  SharedMemView<T*, SHMEM> scv_volume;
+  SharedMemView<T***, SHMEM> gijUpper;
+  SharedMemView<T***, SHMEM> gijLower;
+  SharedMemView<T***, SHMEM> metric;
 };
 
 template<typename T,typename SHMEM,typename TEAMHANDLETYPE,typename ELEMDATAREQUESTSTYPE, typename MULTIDIMVIEWSTYPE>
@@ -241,10 +238,10 @@ public:
   KOKKOS_INLINE_FUNCTION
   SharedMemView<T****,SHMEM>& get_scratch_view_4D(const unsigned fieldOrdinal);
 
-  inline
-  MasterElementViews<T>& get_me_views(const COORDS_TYPES cType)
+  KOKKOS_INLINE_FUNCTION
+  MasterElementViews<T, TEAMHANDLETYPE, SHMEM>& get_me_views(const COORDS_TYPES cType)
   {
-    ThrowRequire(hasCoordField[cType] == true);
+    NGP_ThrowRequire(hasCoordField[cType] == true);
     return meViews[cType];
   }
 
@@ -262,13 +259,14 @@ public:
   const MultiDimViews<T,TEAMHANDLETYPE,SHMEM>& get_field_views() const { return fieldViews; }
 
 private:
+  KOKKOS_FUNCTION
   void create_needed_master_element_views(const TEAMHANDLETYPE& team,
                                           const ElemDataRequestsGPU& dataNeeded,
                                           int nDim, int nodesPerFace, int nodesPerElem,
                                           int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 
   MultiDimViews<T,TEAMHANDLETYPE, SHMEM> fieldViews;
-  MasterElementViews<T> meViews[MAX_COORDS_TYPES];
+  MasterElementViews<T, TEAMHANDLETYPE, SHMEM> meViews[MAX_COORDS_TYPES];
   bool hasCoordField[MAX_COORDS_TYPES] = {false, false};
   int num_bytes_required{0};
 };
@@ -333,9 +331,9 @@ SharedMemView<T****,SHMEM>& ScratchViews<T,TEAMHANDLETYPE,SHMEM>::get_scratch_vi
   return fieldViews.get_scratch_view_4D(fieldOrdinal);
 }
 
-template<typename T>
-int MasterElementViews<T>::create_master_element_views(
-  const TeamHandleType& team,
+template<typename T, typename TEAMHANDLETYPE, typename SHMEM>
+int MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::create_master_element_views(
+  const TEAMHANDLETYPE& team,
   const ElemDataRequestsGPU::DataEnumView& dataEnums,
   int nDim, int /* nodesPerFace */, int nodesPerElem,
   int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
@@ -348,86 +346,86 @@ int MasterElementViews<T>::create_master_element_views(
     switch(dataEnums(i))
     {
       case FC_AREAV:
-          ThrowRequireMsg(numFaceIp > 0, "ERROR, meFC must be non-null if FC_AREAV is requested.");
-          fc_areav = get_shmem_view_2D<T>(team, numFaceIp, nDim);
+          NGP_ThrowRequireMsg(numFaceIp > 0, "ERROR, meFC must be non-null if FC_AREAV is requested.");
+          fc_areav = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numFaceIp, nDim);
           numScalars += numFaceIp * nDim;
           break;
       case SCS_FACE_GRAD_OP:
-          ThrowRequireMsg(numFaceIp > 0, "ERROR, meSCS must be non-null if SCS_FACE_GRAD_OP is requested.");
-          dndx_fc_scs = get_shmem_view_3D<T>(team, numFaceIp, nodesPerElem, nDim);
+          NGP_ThrowRequireMsg(numFaceIp > 0, "ERROR, meSCS must be non-null if SCS_FACE_GRAD_OP is requested.");
+          dndx_fc_scs = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numFaceIp, nodesPerElem, nDim);
           numScalars += nodesPerElem * numFaceIp * nDim;
           needDerivFC = true;
           needDetjFC = true;
           break;
       case SCS_SHIFTED_FACE_GRAD_OP:
-          ThrowRequireMsg(numFaceIp > 0, "ERROR, meSCS must be non-null if SCS_SHIFTED_FACE_GRAD_OP is requested.");
-          dndx_shifted_fc_scs = get_shmem_view_3D<T>(team, numFaceIp, nodesPerElem, nDim);
+          NGP_ThrowRequireMsg(numFaceIp > 0, "ERROR, meSCS must be non-null if SCS_SHIFTED_FACE_GRAD_OP is requested.");
+          dndx_shifted_fc_scs = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numFaceIp, nodesPerElem, nDim);
           numScalars += nodesPerElem * numFaceIp * nDim;
           needDerivFC = true;
           needDetjFC = true;
           break;
       case SCS_AREAV:
-         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_AREAV is requested.");
-         scs_areav = get_shmem_view_2D<T>(team, numScsIp, nDim);
+         NGP_ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_AREAV is requested.");
+         scs_areav = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numScsIp, nDim);
          numScalars += numScsIp * nDim;
          break;
 
       case SCS_GRAD_OP:
-         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_GRAD_OP is requested.");
-         dndx = get_shmem_view_3D<T>(team, numScsIp, nodesPerElem, nDim);
+         NGP_ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_GRAD_OP is requested.");
+         dndx = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numScsIp, nodesPerElem, nDim);
          numScalars += nodesPerElem * numScsIp * nDim;
          needDeriv = true;
          needDetj = true;
          break;
 
       case SCS_SHIFTED_GRAD_OP:
-        ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_SHIFTED_GRAD_OP is requested.");
-        dndx_shifted = get_shmem_view_3D<T>(team, numScsIp, nodesPerElem, nDim);
+        NGP_ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_SHIFTED_GRAD_OP is requested.");
+        dndx_shifted = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numScsIp, nodesPerElem, nDim);
         numScalars += nodesPerElem * numScsIp * nDim;
         needDeriv = true;
         needDetj = true;
         break;
 
       case SCS_GIJ:
-         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_GIJ is requested.");
-         gijUpper = get_shmem_view_3D<T>(team, numScsIp, nDim, nDim);
-         gijLower = get_shmem_view_3D<T>(team, numScsIp, nDim, nDim);
+         NGP_ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_GIJ is requested.");
+         gijUpper = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numScsIp, nDim, nDim);
+         gijLower = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numScsIp, nDim, nDim);
          numScalars += 2 * numScsIp * nDim * nDim;
          needDeriv = true;
          break;
 
       case SCV_MIJ:
-         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCV must be non-null if SCV_MIJ is requested.");
-         metric = get_shmem_view_3D<T>(team, numScvIp, nDim, nDim);
+         NGP_ThrowRequireMsg(numScsIp > 0, "ERROR, meSCV must be non-null if SCV_MIJ is requested.");
+         metric = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numScvIp, nDim, nDim);
          numScalars += numScvIp * nDim * nDim;
          needDeriv = true;
          break;
 
       case SCV_VOLUME:
-         ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_VOLUME is requested.");
-         scv_volume = get_shmem_view_1D<T>(team, numScvIp);
+         NGP_ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_VOLUME is requested.");
+         scv_volume = get_shmem_view_1D<T, TEAMHANDLETYPE, SHMEM>(team, numScvIp);
          numScalars += numScvIp;
          break;
 
       case SCV_GRAD_OP:
-         ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_GRAD_OP is requested.");
-         dndx_scv = get_shmem_view_3D<T>(team, numScvIp, nodesPerElem, nDim);
+         NGP_ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_GRAD_OP is requested.");
+         dndx_scv = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numScvIp, nodesPerElem, nDim);
          numScalars += nodesPerElem * numScvIp * nDim;
          needDerivScv = true;
          needDetjScv = true;
          break;
 
       case SCV_SHIFTED_GRAD_OP:
-         ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_SHIFTED_GRAD_OP is requested.");
-         dndx_scv_shifted = get_shmem_view_3D<T>(team, numScvIp, nodesPerElem, nDim);
+         NGP_ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_SHIFTED_GRAD_OP is requested.");
+         dndx_scv_shifted = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numScvIp, nodesPerElem, nDim);
          numScalars += nodesPerElem * numScvIp * nDim;
          needDerivScv = true;
          needDetjScv = true;
          break;
 
       case FEM_GRAD_OP:
-         ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_GRAD_OP is requested.");
-         dndx_fem = get_shmem_view_3D<T>(team, numFemIp, nodesPerElem, nDim);
+         NGP_ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_GRAD_OP is requested.");
+         dndx_fem = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numFemIp, nodesPerElem, nDim);
          numScalars += nodesPerElem * numFemIp * nDim;
          needDerivFem = true;
          needDetjFem = true;
@@ -435,8 +433,8 @@ int MasterElementViews<T>::create_master_element_views(
          break;
 
       case FEM_SHIFTED_GRAD_OP:
-         ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_SHIFTED_GRAD_OP is requested.");
-         dndx_fem = get_shmem_view_3D<T>(team, numFemIp, nodesPerElem, nDim);
+         NGP_ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_SHIFTED_GRAD_OP is requested.");
+         dndx_fem = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numFemIp, nodesPerElem, nDim);
          numScalars += nodesPerElem * numFemIp * nDim;
          needDerivFem = true;
          needDetjFem = true;
@@ -448,219 +446,56 @@ int MasterElementViews<T>::create_master_element_views(
   }
 
   if (needDerivFC) {
-    deriv_fc_scs = get_shmem_view_3D<T>(team, numFaceIp,nodesPerElem,nDim);
+    deriv_fc_scs = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numFaceIp,nodesPerElem,nDim);
     numScalars += numFaceIp * nodesPerElem * nDim;
   }
 
   if (needDeriv) {
-    deriv = get_shmem_view_3D<T>(team, numScsIp,nodesPerElem,nDim);
+    deriv = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numScsIp,nodesPerElem,nDim);
     numScalars += numScsIp * nodesPerElem * nDim;
   }
 
   if (needDerivScv) {
-    deriv_scv = get_shmem_view_3D<T>(team, numScvIp,nodesPerElem,nDim);
+    deriv_scv = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numScvIp,nodesPerElem,nDim);
     numScalars += numScvIp * nodesPerElem * nDim;
   }
 
   if (needDerivFem) {
-    deriv_fem = get_shmem_view_3D<T>(team, numFemIp,nodesPerElem,nDim);
+    deriv_fem = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numFemIp,nodesPerElem,nDim);
     numScalars += numFemIp * nodesPerElem * nDim;
   }
 
   if (needDetjFC) {
-    det_j_fc_scs = get_shmem_view_1D<T>(team, numFaceIp);
+    det_j_fc_scs = get_shmem_view_1D<T, TEAMHANDLETYPE, SHMEM>(team, numFaceIp);
     numScalars += numFaceIp;
   }
 
   if (needDetj) {
-    det_j = get_shmem_view_1D<T>(team, numScsIp);
+    det_j = get_shmem_view_1D<T, TEAMHANDLETYPE, SHMEM>(team, numScsIp);
     numScalars += numScsIp;
   }
 
   if (needDetjScv) {
-    det_j_scv = get_shmem_view_1D<T>(team, numScvIp);
+    det_j_scv = get_shmem_view_1D<T, TEAMHANDLETYPE, SHMEM>(team, numScvIp);
     numScalars += numScvIp;
   }
 
   if (needDetjFem) {
-    det_j_fem = get_shmem_view_1D<T>(team, numFemIp);
+    det_j_fem = get_shmem_view_1D<T, TEAMHANDLETYPE, SHMEM>(team, numFemIp);
     numScalars += numFemIp;
   }
 
   // error check
   if ( femGradOp && femShiftedGradOp )
-    ThrowRequireMsg(numFemIp > 0, "ERROR, femGradOp and femShiftedGradOp both requested.");
+    NGP_ThrowRequireMsg(numFemIp > 0, "ERROR, femGradOp and femShiftedGradOp both requested.");
 
   return numScalars;
 }
 
-#ifdef KOKKOS_ENABLE_CUDA
-template<typename T>
-int MasterElementViews<T>::create_master_element_views(
-  const DeviceTeamHandleType& team,
+template<typename T, typename TEAMHANDLETYPE, typename SHMEM>
+void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new_me(
   const ElemDataRequestsGPU::DataEnumView& dataEnums,
-  int nDim, int nodesPerFace, int nodesPerElem,
-  int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
-{
-  int numScalars = 0;
-  bool needDeriv = false; bool needDerivScv = false; bool needDerivFem = false; bool needDerivFC = false;
-  bool needDetj = false; bool needDetjScv = false; bool needDetjFem = false; bool needDetjFC = false;
-  bool femGradOp = false; bool femShiftedGradOp = false;
-  for(unsigned i=0; i<dataEnums.size(); ++i) {
-    switch(dataEnums(i))
-    {
-      case FC_AREAV:
-          ThrowRequireMsg(numFaceIp > 0, "ERROR, meFC must be non-null if FC_AREAV is requested.");
-          fc_areav = get_shmem_view_2D<T>(team, numFaceIp, nDim);
-          numScalars += numFaceIp * nDim;
-          break;
-      case SCS_FACE_GRAD_OP:
-          ThrowRequireMsg(numFaceIp > 0, "ERROR, meSCS must be non-null if SCS_FACE_GRAD_OP is requested.");
-          dndx_fc_scs = get_shmem_view_3D<T>(team, numFaceIp, nodesPerElem, nDim);
-          numScalars += nodesPerElem * numFaceIp * nDim;
-          needDerivFC = true;
-          needDetjFC = true;
-          break;
-      case SCS_SHIFTED_FACE_GRAD_OP:
-          ThrowRequireMsg(numFaceIp > 0, "ERROR, meSCS must be non-null if SCS_SHIFTED_FACE_GRAD_OP is requested.");
-          dndx_shifted_fc_scs = get_shmem_view_3D<T>(team, numFaceIp, nodesPerElem, nDim);
-          numScalars += nodesPerElem * numFaceIp * nDim;
-          needDerivFC = true;
-          needDetjFC = true;
-          break;
-      case SCS_AREAV:
-         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_AREAV is requested.");
-         scs_areav = get_shmem_view_2D<T>(team, numScsIp, nDim);
-         numScalars += numScsIp * nDim;
-         break;
-
-      case SCS_GRAD_OP:
-         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_GRAD_OP is requested.");
-         dndx = get_shmem_view_3D<T>(team, numScsIp, nodesPerElem, nDim);
-         numScalars += nodesPerElem * numScsIp * nDim;
-         needDeriv = true;
-         needDetj = true;
-         break;
-
-      case SCS_SHIFTED_GRAD_OP:
-        ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_SHIFTED_GRAD_OP is requested.");
-        dndx_shifted = get_shmem_view_3D<T>(team, numScsIp, nodesPerElem, nDim);
-        numScalars += nodesPerElem * numScsIp * nDim;
-        needDeriv = true;
-        needDetj = true;
-        break;
-
-      case SCS_GIJ:
-         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_GIJ is requested.");
-         gijUpper = get_shmem_view_3D<T>(team, numScsIp, nDim, nDim);
-         gijLower = get_shmem_view_3D<T>(team, numScsIp, nDim, nDim);
-         numScalars += 2 * numScsIp * nDim * nDim;
-         needDeriv = true;
-         break;
-
-      case SCV_MIJ:
-         ThrowRequireMsg(numScsIp > 0, "ERROR, meSCV must be non-null if SCV_MIJ is requested.");
-         metric = get_shmem_view_3D<T>(team, numScvIp, nDim, nDim);
-         numScalars += numScvIp * nDim * nDim;
-         needDeriv = true;
-         break;
-
-      case SCV_VOLUME:
-         ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_VOLUME is requested.");
-         scv_volume = get_shmem_view_1D<T>(team, numScvIp);
-         numScalars += numScvIp;
-         break;
-
-      case SCV_GRAD_OP:
-         ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_GRAD_OP is requested.");
-         dndx_scv = get_shmem_view_3D<T>(team, numScvIp, nodesPerElem, nDim);
-         numScalars += nodesPerElem * numScvIp * nDim;
-         needDerivScv = true;
-         needDetjScv = true;
-         break;
-
-      case SCV_SHIFTED_GRAD_OP:
-         ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_SHIFTED_GRAD_OP is requested.");
-         dndx_scv_shifted = get_shmem_view_3D<T>(team, numScvIp, nodesPerElem, nDim);
-         numScalars += nodesPerElem * numScvIp * nDim;
-         needDerivScv = true;
-         needDetjScv = true;
-         break;
-
-      case FEM_GRAD_OP:
-         ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_GRAD_OP is requested.");
-         dndx_fem = get_shmem_view_3D<T>(team, numFemIp, nodesPerElem, nDim);
-         numScalars += nodesPerElem * numFemIp * nDim;
-         needDerivFem = true;
-         needDetjFem = true;
-         femGradOp = true;
-         break;
-
-      case FEM_SHIFTED_GRAD_OP:
-         ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_SHIFTED_GRAD_OP is requested.");
-         dndx_fem = get_shmem_view_3D<T>(team, numFemIp, nodesPerElem, nDim);
-         numScalars += nodesPerElem * numFemIp * nDim;
-         needDerivFem = true;
-         needDetjFem = true;
-         femShiftedGradOp = true;
-         break;
-
-      default: break;
-    }
-  }
-
-  if (needDerivFC) {
-    deriv_fc_scs = get_shmem_view_3D<T>(team, numFaceIp,nodesPerElem,nDim);
-    numScalars += numFaceIp * nodesPerElem * nDim;
-  }
-
-  if (needDeriv) {
-    deriv = get_shmem_view_3D<T>(team, numScsIp,nodesPerElem,nDim);
-    numScalars += numScsIp * nodesPerElem * nDim;
-  }
-
-  if (needDerivScv) {
-    deriv_scv = get_shmem_view_3D<T>(team, numScvIp,nodesPerElem,nDim);
-    numScalars += numScvIp * nodesPerElem * nDim;
-  }
-
-  if (needDerivFem) {
-    deriv_fem = get_shmem_view_3D<T>(team, numFemIp,nodesPerElem,nDim);
-    numScalars += numFemIp * nodesPerElem * nDim;
-  }
-
-  if (needDetjFC) {
-    det_j_fc_scs = get_shmem_view_1D<T>(team, numFaceIp);
-    numScalars += numFaceIp;
-  }
-
-  if (needDetj) {
-    det_j = get_shmem_view_1D<T>(team, numScsIp);
-    numScalars += numScsIp;
-  }
-
-  if (needDetjScv) {
-    det_j_scv = get_shmem_view_1D<T>(team, numScvIp);
-    numScalars += numScvIp;
-  }
-
-  if (needDetjFem) {
-    det_j_fem = get_shmem_view_1D<T>(team, numFemIp);
-    numScalars += numFemIp;
-  }
-
-  // error check
-  if ( femGradOp && femShiftedGradOp )
-    ThrowRequireMsg(numFemIp > 0, "ERROR, femGradOp and femShiftedGradOp both requested.");
-
-  return numScalars;
-}
-#endif
-
-template<typename T>
-void MasterElementViews<T>::fill_master_element_views(
-  const ElemDataRequestsGPU::DataEnumView& dataEnums,
-  SharedMemView<double**, DeviceShmem>* coordsView,
+  SharedMemView<double**, SHMEM>* coordsView,
   MasterElement* /* meFC */,
   MasterElement* meSCS,
   MasterElement* meSCV,
@@ -741,10 +576,10 @@ void MasterElementViews<T>::fill_master_element_views(
   }
 }
 
-template<typename T>
-void MasterElementViews<T>::fill_master_element_views_new_me(
+template<typename T, typename TEAMHANDLETYPE, typename SHMEM>
+void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new_me(
   const ElemDataRequestsGPU::DataEnumView& dataEnums,
-  SharedMemView<DoubleType**, DeviceShmem>* coordsView,
+  SharedMemView<DoubleType**, SHMEM>* coordsView,
   MasterElement* /* meFC */,
   MasterElement* meSCS,
   MasterElement* meSCV,
@@ -755,73 +590,79 @@ void MasterElementViews<T>::fill_master_element_views_new_me(
     switch(dataEnums(i))
     {
       case FC_AREAV:
-        ThrowRequireMsg(false, "FC_AREAV not implemented yet.");
+        NGP_ThrowRequireMsg(false, "FC_AREAV not implemented yet.");
         break;
       case SCS_AREAV:
-         ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_AREAV is requested.");
-         ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_AREAV requested.");
+         NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_AREAV is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_AREAV requested.");
          meSCS->determinant(*coordsView, scs_areav);
          break;
+#ifndef KOKKOS_ENABLE_CUDA
       case SCS_FACE_GRAD_OP:
-         ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_FACE_GRAD_OP is requested.");
-         ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_FACE_GRAD_OP requested.");
+         NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_FACE_GRAD_OP is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_FACE_GRAD_OP requested.");
          meSCS->face_grad_op(faceOrdinal, *coordsView, dndx_fc_scs);
        break;
       case SCS_SHIFTED_FACE_GRAD_OP:
-         ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_SHIFTED_FACE_GRAD_OP is requested.");
-         ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_SHIFTED_FACE_GRAD_OP requested.");
+         NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_SHIFTED_FACE_GRAD_OP is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_SHIFTED_FACE_GRAD_OP requested.");
          meSCS->shifted_face_grad_op(faceOrdinal, *coordsView, dndx_shifted_fc_scs);
        break;
+#endif
       case SCS_GRAD_OP:
-         ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_GRAD_OP is requested.");
-         ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_GRAD_OP requested.");
+         NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_GRAD_OP is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_GRAD_OP requested.");
          meSCS->grad_op(*coordsView, dndx, deriv);
          break;
       case SCS_SHIFTED_GRAD_OP:
-        ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_GRAD_OP is requested.");
-        ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_GRAD_OP requested.");
+        NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_GRAD_OP is requested.");
+        NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_GRAD_OP requested.");
         meSCS->shifted_grad_op(*coordsView, dndx_shifted, deriv);
         break;
+#ifndef KOKKOS_ENABLE_CUDA
       case SCS_GIJ:
-         ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_GIJ is requested.");
-         ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_GIJ requested.");
+         NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_GIJ is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_GIJ requested.");
          meSCS->gij(*coordsView, gijUpper, gijLower, deriv);
          break;
       case SCS_MIJ:
-         ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCV needs to be non-null if SCS_MIJ is requested.");
-         ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_MIJ requested.");
+         NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCV needs to be non-null if SCS_MIJ is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_MIJ requested.");
          meSCS->Mij(*coordsView, metric, deriv);
          break;
       case SCV_MIJ:
-         ThrowRequireMsg(meSCV != nullptr, "ERROR, meSCV needs to be non-null if SCV_MIJ is requested.");
-         ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_MIJ requested.");
+         NGP_ThrowRequireMsg(meSCV != nullptr, "ERROR, meSCV needs to be non-null if SCV_MIJ is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_MIJ requested.");
          meSCV->Mij(*coordsView, metric, deriv_scv);
          break;
+#endif
       case SCV_VOLUME:
-         ThrowRequireMsg(meSCV != nullptr, "ERROR, meSCV needs to be non-null if SCV_VOLUME is requested.");
-         ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_VOLUME requested.");
+         NGP_ThrowRequireMsg(meSCV != nullptr, "ERROR, meSCV needs to be non-null if SCV_VOLUME is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_VOLUME requested.");
          meSCV->determinant(*coordsView, scv_volume);
          break;
       case SCV_GRAD_OP:
-        ThrowRequireMsg(meSCV != nullptr, "ERROR, meSCV needs to be non-null if SCV_GRAD_OP is requested.");
-        ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_GRAD_OP requested.");
+        NGP_ThrowRequireMsg(meSCV != nullptr, "ERROR, meSCV needs to be non-null if SCV_GRAD_OP is requested.");
+        NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_GRAD_OP requested.");
         meSCV->grad_op(*coordsView, dndx_scv, deriv_scv);
         break;
       case SCV_SHIFTED_GRAD_OP:
-        ThrowRequireMsg(meSCV != nullptr, "ERROR, meSCV needs to be non-null if SCV_SHIFTED_GRAD_OP is requested.");
-        ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_SHIFTED_GRAD_OP requested.");
+        NGP_ThrowRequireMsg(meSCV != nullptr, "ERROR, meSCV needs to be non-null if SCV_SHIFTED_GRAD_OP is requested.");
+        NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_SHIFTED_GRAD_OP requested.");
         meSCV->shifted_grad_op(*coordsView, dndx_scv_shifted, deriv_scv);
         break;
+#ifndef KOKKOS_ENABLE_CUDA
       case FEM_GRAD_OP:
-         ThrowRequireMsg(meFEM != nullptr, "ERROR, meFEM needs to be non-null if FEM_GRAD_OP is requested.");
-         ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but FEM_GRAD_OP requested.");
+         NGP_ThrowRequireMsg(meFEM != nullptr, "ERROR, meFEM needs to be non-null if FEM_GRAD_OP is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but FEM_GRAD_OP requested.");
          meFEM->grad_op_fem(*coordsView, dndx_fem, deriv_fem, det_j_fem);
          break;
       case FEM_SHIFTED_GRAD_OP:
-         ThrowRequireMsg(meFEM != nullptr, "ERROR, meFEM needs to be non-null if FEM_SHIFTED_GRAD_OP is requested.");
-         ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but FEM_GRAD_OP requested.");
+         NGP_ThrowRequireMsg(meFEM != nullptr, "ERROR, meFEM needs to be non-null if FEM_SHIFTED_GRAD_OP is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but FEM_GRAD_OP requested.");
          meFEM->shifted_grad_op_fem(*coordsView, dndx_fem, deriv_fem, det_j_fem);
          break;
+#endif
 
       default: break;
     }
@@ -837,7 +678,6 @@ ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
 {
   num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, nodalGatherSize, fieldViews) * sizeof(T);
 
-#ifndef KOKKOS_ENABLE_CUDA
   /* master elements are allowed to be null if they are not required */
   MasterElement *meFC = dataNeeded.get_cvfem_face_me();
   MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
@@ -855,7 +695,6 @@ ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
   int numFemIp = meFEM != nullptr ? meFEM->num_integration_points() : 0;
 
   create_needed_master_element_views(team, dataNeeded, nDim, nodesPerFace, nodesPerElem, numFaceIp, numScsIp, numScvIp, numFemIp);
-#endif
 }
 
 template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
@@ -866,9 +705,7 @@ ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
  : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
 {
   num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, meInfo.nodalGatherSize_, fieldViews) * sizeof(T);
-#ifndef KOKKOS_ENABLE_CUDA
   create_needed_master_element_views(team, dataNeeded, nDim, meInfo.nodesPerFace_, meInfo.nodesPerElement_, meInfo.numFaceIp_, meInfo.numScsIp_, meInfo.numScvIp_, meInfo.numFemIp_);
-#endif
 }
 
 template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
@@ -879,8 +716,6 @@ void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_master_element_views(co
 {
   int numScalars = 0;
 
-//going to have to fix this for GPU !!!
-#ifndef KOKKOS_ENABLE_CUDA
   const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
 
   for(unsigned i=0; i<coordsTypes.size(); ++i) {
@@ -889,7 +724,6 @@ void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_master_element_views(co
       team, dataNeeded.get_data_enums(coordsTypes(i)),
       nDim, nodesPerFace, nodesPerElem, numFaceIp, numScsIp, numScvIp, numFemIp);
   }
-#endif
 
   num_bytes_required += numScalars * sizeof(T);
 }
@@ -897,20 +731,20 @@ void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_master_element_views(co
 int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim);
 int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
 
+template<typename T>
 KOKKOS_FUNCTION
 void fill_pre_req_data(const ElemDataRequestsGPU& dataNeeded,
                        const ngp::Mesh& ngpMesh,
                        stk::mesh::EntityRank entityRank,
                        stk::mesh::Entity elem,
-                       ScratchViews<double,DeviceTeamHandleType,DeviceShmem>& prereqData,
-                       bool fillMEViews = true);
+                       ScratchViews<T,DeviceTeamHandleType,DeviceShmem>& prereqData);
 
 template<typename ELEMDATAREQUESTSTYPE,typename SCRATCHVIEWSTYPE>
+KOKKOS_FUNCTION
 void fill_master_element_views(ELEMDATAREQUESTSTYPE& dataNeeded,
                                SCRATCHVIEWSTYPE& prereqData,
                                int faceOrdinal = 0)
 {
-#ifndef KOKKOS_ENABLE_CUDA
     MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
     MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
     MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
@@ -928,7 +762,6 @@ void fill_master_element_views(ELEMDATAREQUESTSTYPE& dataNeeded,
 
       meData.fill_master_element_views_new_me(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM, faceOrdinal);
     }
-#endif
 }
 
 

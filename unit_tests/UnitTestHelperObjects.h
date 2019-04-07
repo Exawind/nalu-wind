@@ -27,7 +27,7 @@ struct HelperObjects {
     realm.metaData_ = &bulk.mesh_meta_data();
     realm.bulkData_ = &bulk;
     eqSystem.linsys_ = linsys;
-    assembleElemSolverAlg = new sierra::nalu::AssembleElemSolverAlgorithm(realm, part, &eqSystem, topo.rank(), topo.num_nodes(), false);
+    assembleElemSolverAlg = new sierra::nalu::AssembleElemSolverAlgorithm(realm, part, &eqSystem, topo.rank(), topo.num_nodes());
   }
 
   ~HelperObjects()
@@ -55,7 +55,7 @@ struct FaceElemHelperObjects : HelperObjects {
   FaceElemHelperObjects(stk::mesh::BulkData& bulk, stk::topology faceTopo, stk::topology elemTopo, int numDof, stk::mesh::Part* part)
   : HelperObjects(bulk, elemTopo, numDof, part)
   {
-    assembleFaceElemSolverAlg = new sierra::nalu::AssembleFaceElemSolverAlgorithm(realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes(), false);
+    assembleFaceElemSolverAlg = new sierra::nalu::AssembleFaceElemSolverAlgorithm(realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes());
   }
 
   ~FaceElemHelperObjects() {    delete assembleFaceElemSolverAlg;
