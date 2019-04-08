@@ -106,6 +106,8 @@ public:
 
   virtual Kernel* create_on_device() { return this; }
 
+  virtual void free_on_device() {}
+
   /** Perform pre-timestep work for the computational kernel
    */
   virtual void setup(const TimeIntegrator&) {}
@@ -168,16 +170,25 @@ public:
 
   virtual ~NGPKernel()
   {
-    if (deviceCopy_ != nullptr)
+    if (deviceCopy_ != nullptr) {
       kokkos_free_on_device(deviceCopy_);
+      deviceCopy_ = nullptr;
+    }
   }
 
   virtual Kernel* create_on_device() final
   {
-    if (deviceCopy_ != nullptr)
-      kokkos_free_on_device(deviceCopy_);
+    free_on_device();
     deviceCopy_ = create_device_expression<T>(*dynamic_cast<T*>(this));
     return deviceCopy_;
+  }
+
+  virtual void free_on_device() final
+  {
+    if (deviceCopy_ != nullptr) {
+      kokkos_free_on_device(deviceCopy_);
+      deviceCopy_ = nullptr;
+    }
   }
 
   T* device_copy() const { return deviceCopy_; }
