@@ -251,8 +251,6 @@ public:
   const VectorFieldType* coordinates_{nullptr};
 };
 
-#ifndef KOKKOS_ENABLE_CUDA
-
 /** Test Fixture for Low-Mach Kernels
  *
  *  This test fixture performs the following actions:
@@ -594,7 +592,5 @@ public:
   VectorFieldType* actuator_source_lhs_{nullptr};
 
 };
-
-#endif
 
 #endif /* UNITTESTKERNELUTILS_H */
