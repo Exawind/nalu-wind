@@ -11,6 +11,7 @@
 
 #include "kernel/ContinuityAdvElemKernel.h"
 
+#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
 namespace advection_default {
@@ -58,10 +59,10 @@ static constexpr double lhs[8][8] = {
 } // hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_ENABLE_CUDA
+#endif
 
 /// Continuity advection with default Solution options
-TEST_F(ContinuityKernelHex8Mesh, advection_default)
+TEST_F(ContinuityKernelHex8Mesh, NGP_advection_default)
 {
   fill_mesh_and_init_fields();
 
@@ -93,6 +94,7 @@ TEST_F(ContinuityKernelHex8Mesh, advection_default)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -101,13 +103,14 @@ TEST_F(ContinuityKernelHex8Mesh, advection_default)
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs);
+#endif
 }
 
 /// Continuity advection kernel
 ///
 /// `reduced_sens_cvfem_poisson: true`
 ///
-TEST_F(ContinuityKernelHex8Mesh, advection_reduced_sens_cvfem_poisson)
+TEST_F(ContinuityKernelHex8Mesh, NGP_advection_reduced_sens_cvfem_poisson)
 {
   fill_mesh_and_init_fields();
 
@@ -139,6 +142,7 @@ TEST_F(ContinuityKernelHex8Mesh, advection_reduced_sens_cvfem_poisson)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -147,13 +151,14 @@ TEST_F(ContinuityKernelHex8Mesh, advection_reduced_sens_cvfem_poisson)
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs);
+#endif
 }
 
 /// Continuity advection kernel
 ///
 /// `shift_cvfem_poisson: true`
 ///
-TEST_F(ContinuityKernelHex8Mesh, advection_reduced_shift_cvfem_poisson)
+TEST_F(ContinuityKernelHex8Mesh, NGP_advection_reduced_shift_cvfem_poisson)
 {
   fill_mesh_and_init_fields();
 
@@ -185,6 +190,7 @@ TEST_F(ContinuityKernelHex8Mesh, advection_reduced_shift_cvfem_poisson)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -193,7 +199,5 @@ TEST_F(ContinuityKernelHex8Mesh, advection_reduced_shift_cvfem_poisson)
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs);
-}
-
 #endif
-
+}
