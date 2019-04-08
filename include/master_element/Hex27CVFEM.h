@@ -429,7 +429,7 @@ public:
     const double *side_pcoords,
     double *elem_pcoords);
 
-  virtual const int * adjacentNodes() final;
+  KOKKOS_FUNCTION virtual const int * adjacentNodes() final;
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 

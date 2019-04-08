@@ -214,7 +214,7 @@ public:
      double *metric,
      double *deriv) override ;
 
-  virtual const int * adjacentNodes() final;
+  KOKKOS_FUNCTION virtual const int * adjacentNodes() final;
 
   const int * scsIpEdgeOrd() override;
 

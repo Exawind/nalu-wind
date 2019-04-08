@@ -163,7 +163,7 @@ public:
       const double *field,
       double *result) final;
 
-  const int * adjacentNodes() final;
+  KOKKOS_FUNCTION const int * adjacentNodes() final;
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
@@ -412,7 +412,7 @@ public:
       const double *field,
       double *result) final;
 
-  const int * adjacentNodes() final;
+  KOKKOS_FUNCTION const int * adjacentNodes() final;
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
