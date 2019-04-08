@@ -27,7 +27,7 @@ class ElemDataRequests;
 /** CMM (BDF2) for continuity equation (pressure DOF)
  */
 template<typename AlgTraits>
-class ContinuityAdvElemKernel: public Kernel
+class ContinuityAdvElemKernel: public NGPKernel<ContinuityAdvElemKernel<AlgTraits>>
 {
 public:
   ContinuityAdvElemKernel(
@@ -35,7 +35,10 @@ public:
     const SolutionOptions&,
     ElemDataRequests&);
 
-  virtual ~ContinuityAdvElemKernel();
+  KOKKOS_FUNCTION
+  ContinuityAdvElemKernel() = default;
+
+  virtual ~ContinuityAdvElemKernel() = default;
 
   /** Perform pre-timestep work for the computational kernel
    */
@@ -45,14 +48,14 @@ public:
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  ContinuityAdvElemKernel() = delete;
-
   // extract fields; nodal
   unsigned velocityRTM_ {stk::mesh::InvalidOrdinal};
   unsigned Gpdx_ {stk::mesh::InvalidOrdinal};
@@ -70,10 +73,7 @@ private:
   const double interpTogether_;
   const double om_interpTogether_;
 
-  // scratch space
-  AlignedViewType<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]> v_shape_function_ { "view_shape_func" };
-
-  const int* lrscv_;
+  MasterElement* meSCS_{nullptr};
 };
 
 }  // nalu
