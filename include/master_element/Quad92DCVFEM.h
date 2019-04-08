@@ -39,15 +39,12 @@ public:
   KOKKOS_FUNCTION
   virtual ~QuadrilateralP2Element() {}
 
-  void shape_fcn(double *shpfc);
-  void shifted_shape_fcn(double *shpfc);
 protected:
   struct ContourData {
     Jacobian::Direction direction;
     double weight;
   };  
 
-  void set_quadrature_rule();
   void GLLGLL_quadrature_weights();
 
   int tensor_product_node_map(int i, int j) const;
@@ -85,23 +82,12 @@ protected:
     const double *side_pcoords,
     double *elem_pcoords);
 
-  void eval_shape_functions_at_ips(const double*);
-  void eval_shape_functions_at_shifted_ips();
-
   void eval_shape_derivs_at_ips(const double*);
-  void eval_shape_derivs_at_shifted_ips();
 
   void eval_shape_derivs_at_face_ips();
 
   //quadrature info
 
-  std::vector<double> shapeFunctions_;
-  std::vector<double> shapeFunctionsShift_;
-  std::vector<double> shapeDerivs_;
-  std::vector<double> shapeDerivsShift_;
-  std::vector<double> expFaceShapeDerivs_;
-  std::vector<double> intgLocShift_;
-  std::vector<double> intgExpFace_;
 
   const int sideNodeOrdinals_[12] =  {
       0, 1, 4,
@@ -134,8 +120,8 @@ protected:
                                                            { 0.0, 0.0},
                                                            {+1.0,+1.0}};
 
-  double gaussAbscissae_[numQuad_];
-  double gaussWeight_   [numQuad_];
+  const double gaussAbscissae_[numQuad_]={-std::sqrt(3.0)/3.0, std::sqrt(3.0)/3.0 };
+  const double gaussWeight_[numQuad_] = { 0.5, 0.5 };
 
   void quad9_shape_fcn(
     int npts,
@@ -163,6 +149,9 @@ public:
   virtual ~Quad92DSCV() {}
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final ;
+
+  void shape_fcn(double *shpfc);
+  void shifted_shape_fcn(double *shpfc);
 
   KOKKOS_FUNCTION void determinant(
     SharedMemView<DoubleType**, DeviceShmem> &coords,
@@ -199,10 +188,17 @@ public:
   }
 
 private:
-  static const int numIntPoints_ = AlgTraits::numScvIp_;
+  static constexpr int numIntPoints_ = AlgTraits::numScvIp_;
 
   int ipNodeMap_[nodes1D_][nodes1D_][numQuad_][numQuad_]; //[numIntPoints_];
   double intgLoc_[numIntPoints_*nDim_];
+  double shapeFunctions_[numIntPoints_*nodesPerElement_];
+  double shapeFunctionsShift_[numIntPoints_*nodesPerElement_];
+  double intgLocShift_[numIntPoints_*nDim_];
+  double shapeDerivsShift_[numIntPoints_*nodesPerElement_*nDim_];
+  double shapeDerivs_[numIntPoints_*nodesPerElement_*nDim_];
+  double expFaceShapeDerivs_[numIntPoints_*nodesPerElement_*nDim_];
+  double ipWeight_[numIntPoints_];
 
   void set_interior_info();
 
@@ -214,7 +210,6 @@ private:
     const double *POINTER_RESTRICT elemNodalCoords,
     const double *POINTER_RESTRICT shapeDerivs ) const;
 
-  std::vector<double> ipWeight_;
 };
 
 // 3D Hex 27 subcontrol surface
@@ -227,6 +222,9 @@ public:
   Quad92DSCS();
   KOKKOS_FUNCTION
   virtual ~Quad92DSCS() {}
+
+  void shape_fcn(double *shpfc);
+  void shifted_shape_fcn(double *shpfc);
 
   KOKKOS_FUNCTION void determinant(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -317,18 +315,27 @@ public:
   }
 
 private:
-  std::vector<ContourData> ipInfo_;
 
-  static const int numIntPoints_ = AlgTraits::numScsIp_;
-  static const int ipsPerFace_ = nodes1D_*numQuad_;
-  static const int numFaces_   = 2*nDim_;
+  static constexpr int numIntPoints_ = AlgTraits::numScsIp_;
+  static constexpr int ipsPerFace_ = nodes1D_*numQuad_;
+  static constexpr int numFaces_   = 2*nDim_;
 
-  int ipNodeMap_[numFaces_][nodes1D_][numQuad_]; //[numIntPoints_];
-  int oppNode_  [numIntPoints_];
-  int oppFace_  [numIntPoints_];
+  int ipNodeMap_ [numFaces_][nodes1D_][numQuad_]; //[numIntPoints_];
+  int oppNode_   [numIntPoints_];
+  int oppFace_   [numIntPoints_];
   double intgLoc_[numIntPoints_*nDim_];
 
+  double shapeFunctions_[numIntPoints_*nodesPerElement_];
+  double shapeFunctionsShift_[numIntPoints_*nodesPerElement_];
+  double intgLocShift_[numIntPoints_*nDim_];
+  double shapeDerivsShift_[numIntPoints_*nodesPerElement_*nDim_];
+  double shapeDerivs_[numIntPoints_*nodesPerElement_*nDim_];
+  double expFaceShapeDerivs_[numIntPoints_*nodesPerElement_*nDim_];
+  double intgExpFace_[numIntPoints_*nDim_];
+
   int lrscv_[2*numIntPoints_];
+
+  ContourData ipInfo_[numIntPoints_];
 
   void set_interior_info();
   void set_boundary_info();
