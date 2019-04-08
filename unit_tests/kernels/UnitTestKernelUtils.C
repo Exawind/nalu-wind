@@ -552,8 +552,84 @@ void dhdx_test_function(
   init_trigonometric_field(bulk, coordinates, dhdx);
 }
 
+
+void calc_mass_flow_rate_scs(
+  stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const ScalarFieldType& density,
+  const VectorFieldType& velocity,
+  const GenericFieldType& massFlowRate)
+{
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+  EXPECT_EQ(ndim, 3);
+
+  const ScalarFieldType& densityNp1 = density.field_of_state(stk::mesh::StateNP1);
+  const VectorFieldType& velocityNp1 = velocity.field_of_state(stk::mesh::StateNP1);
+  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+
+  std::vector<double> v_shape_fcn(meSCS->num_integration_points() * meSCS->nodesPerElement_);
+  meSCS->shape_fcn(v_shape_fcn.data());
+
+  const int numScsIp = meSCS->num_integration_points();
+  const int nodesPerElem = meSCS->nodesPerElement_;
+  std::vector<double> w_rho(nodesPerElem);
+  std::vector<double> w_vel(ndim * nodesPerElem);
+  std::vector<double> w_coords(ndim * nodesPerElem);
+  std::vector<double> w_scs_areav(numScsIp * ndim);
+
+  const stk::mesh::Selector selector =
+    meta.locally_owned_part() | meta.globally_shared_part();
+  const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
+
+  for (auto b: buckets) {
+    const auto bktlen = b->size();
+
+    for (size_t ie = 0; ie < bktlen; ++ie) {
+      double* mdot = stk::mesh::field_data(massFlowRate, *b, ie);
+
+      auto* elem_nodes = b->begin_nodes(ie);
+      const auto num_nodes = b->num_nodes(ie);
+
+      for (size_t in = 0; in < num_nodes; ++in) {
+        const auto node = elem_nodes[in];
+        w_rho[in] = *stk::mesh::field_data(densityNp1, node);
+        const double* vel = stk::mesh::field_data(velocityNp1, node);
+        const double* coords = stk::mesh::field_data(coordinates, node);
+
+        for (int d=0; d < ndim; ++d) {
+          w_vel[in * ndim + d] = vel[d];
+          w_coords[in * ndim + d] = coords[d];
+        }
+      }
+
+      double scs_error = 0;
+      meSCS->determinant(1, w_coords.data(), w_scs_areav.data(), &scs_error);
+
+      for (int ip = 0; ip < numScsIp; ++ip) {
+        std::vector<double> rhoU(ndim, 0.0);
+
+        const int offset = ip * nodesPerElem;
+        for (int ic=0; ic < nodesPerElem; ++ic) {
+          const double r = v_shape_fcn[offset + ic];
+          for (int d = 0; d < ndim; d++)
+            rhoU[d] += r * w_rho[ic] * w_vel[ic * ndim + d];
+        }
+
+        double tmdot = 0.0;
+        for (int d = 0; d < ndim; d++)
+          tmdot += rhoU[d] * w_scs_areav[ip * ndim + d];
+
+        mdot[ip] = tmdot;
+      }
+    }
+  }
+}
+
 #ifndef KOKKOS_ENABLE_CUDA
 
+#if 0
 void calc_mass_flow_rate_scs(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
@@ -643,6 +719,7 @@ void calc_mass_flow_rate_scs(
         });
     });
 }
+#endif
 
 void calc_projected_nodal_gradient_interior(
   stk::mesh::BulkData& bulk,
