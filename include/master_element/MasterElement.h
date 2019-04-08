@@ -194,8 +194,12 @@ public:
      double * /* error  */) {
      throw std::runtime_error("shifted_face_grad_op not implemented");}
 
-  virtual const int * adjacentNodes() {
+  KOKKOS_FUNCTION virtual const int * adjacentNodes() {
+#ifndef KOKKOS_ENABLE_CUDA
     throw std::runtime_error("adjacentNodes not implemented");
+#else
+    return nullptr;
+#endif
     }
 
   virtual const int * scsIpEdgeOrd() {
@@ -279,7 +283,13 @@ public:
   KOKKOS_FUNCTION int num_integration_points() const {return numIntPoints_;}
           double scal_to_standard_iso_factor() const {return scaleToStandardIsoFac_;} 
 
-  virtual const int   * adjacentNodes()              const {throw std::runtime_error("adjacentNodes not implimented");}
+  KOKKOS_FUNCTION virtual const int   * adjacentNodes()              const {
+#ifndef KOKKOS_ENABLE_CUDA
+    throw std::runtime_error("adjacentNodes not implimented");
+#else
+    return nullptr;
+#endif
+  }
   virtual const double* integration_locations()      const {throw std::runtime_error("integration_locations not implemented");}
   virtual const double* integration_location_shift() const {throw std::runtime_error("adjacentNodes not implimented");}
   virtual const double* integration_exp_face_shift() const {throw std::runtime_error("integration_exp_face_shift not implimented");}

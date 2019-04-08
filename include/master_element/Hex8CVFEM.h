@@ -288,7 +288,7 @@ public:
     double *metric,
     double *deriv);
 
-  virtual const int * adjacentNodes() final;
+  KOKKOS_FUNCTION virtual const int * adjacentNodes() final;
 
   const int * scsIpEdgeOrd();
 
