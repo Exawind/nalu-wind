@@ -142,6 +142,8 @@ class Quad92DSCV : public QuadrilateralP2Element
 public:
   using MasterElement::determinant;
   using MasterElement::grad_op;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
   using MasterElement::shifted_grad_op;
 
   Quad92DSCV();
@@ -218,6 +220,8 @@ class Quad92DSCS : public QuadrilateralP2Element
 public:
   using MasterElement::determinant;
   using MasterElement::adjacentNodes;
+  using MasterElement::shape_fcn;
+  using MasterElement::shifted_shape_fcn;
 
   Quad92DSCS();
   KOKKOS_FUNCTION
