@@ -199,7 +199,7 @@ private:
   double intgLocShift_[numIntPoints_*nDim_];
   double shapeDerivsShift_[numIntPoints_*nodesPerElement_*nDim_];
   double shapeDerivs_[numIntPoints_*nodesPerElement_*nDim_];
-  double expFaceShapeDerivs_[numIntPoints_*nodesPerElement_*nDim_];
+  //double expFaceShapeDerivs_[numIntPoints_*nodesPerElement_*nDim_];
   double ipWeight_[numIntPoints_];
 
   void set_interior_info();
