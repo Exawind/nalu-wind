@@ -145,6 +145,15 @@ public:
     SharedMemView<DoubleType*, DeviceShmem>&,
     ScratchViews<double, DeviceTeamHandleType, DeviceShmem>&)
   {}
+
+#ifdef KOKKOS_ENABLE_CUDA
+  KOKKOS_FUNCTION
+  virtual void execute(
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&)
+  {}
+#endif
 };
 
 /** Kernel that can be transferred to a device

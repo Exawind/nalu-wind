@@ -146,6 +146,7 @@ public:
           Kokkos::parallel_for(Kokkos::TeamThreadRange(team, bkt.size()), [&](const size_t& jj)
           {
             fill_pre_req_data(dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, bkt[jj], prereqData);
+            fill_master_element_views(dataNeededNGP, prereqData);
 
             for(SuppAlg* alg : suppAlgs_) {
               alg->elem_execute(topo, *meSCS, prereqData);

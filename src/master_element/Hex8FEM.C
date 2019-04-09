@@ -148,10 +148,10 @@ void Hex8FEM::grad_op(
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
 void Hex8FEM::grad_op_fem(
-  SharedMemView<DoubleType**>&coords,
-  SharedMemView<DoubleType***>&gradop,
-  SharedMemView<DoubleType***>&deriv,
-  SharedMemView<DoubleType*>&det_j)
+  SharedMemView<DoubleType**, DeviceShmem>&coords,
+  SharedMemView<DoubleType***, DeviceShmem>&gradop,
+  SharedMemView<DoubleType***, DeviceShmem>&deriv,
+  SharedMemView<DoubleType*, DeviceShmem>&det_j)
 {
   hex8_fem_derivative(numIntPoints_, intgLoc_, deriv);
   generic_grad_op_3d<AlgTraits>(deriv, coords, gradop, det_j);
@@ -187,10 +187,10 @@ void Hex8FEM::shifted_grad_op(
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
 void Hex8FEM::shifted_grad_op_fem(
-  SharedMemView<DoubleType**>&coords,
-  SharedMemView<DoubleType***>&gradop,
-  SharedMemView<DoubleType***>&deriv,
-  SharedMemView<DoubleType*>&det_j)
+  SharedMemView<DoubleType**, DeviceShmem>&coords,
+  SharedMemView<DoubleType***, DeviceShmem>&gradop,
+  SharedMemView<DoubleType***, DeviceShmem>&deriv,
+  SharedMemView<DoubleType*, DeviceShmem>&det_j)
 {
   hex8_fem_derivative(numIntPoints_, intgLocShift_, deriv);
   generic_grad_op_3d<AlgTraits>(deriv, coords, gradop, det_j);
@@ -276,7 +276,7 @@ Hex8FEM::shifted_shape_fcn(double *shpfc)
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Hex8FEM::shape_fcn(SharedMemView<DoubleType**> &shpfc)
+Hex8FEM::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
 {
   hex8_fem_shape_fcn(numIntPoints_,intgLoc_,shpfc);
 }
@@ -285,7 +285,7 @@ Hex8FEM::shape_fcn(SharedMemView<DoubleType**> &shpfc)
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
 void
-Hex8FEM::shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc)
+Hex8FEM::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
 {
   hex8_fem_shape_fcn(numIntPoints_,intgLocShift_,shpfc);
 }
@@ -345,7 +345,7 @@ void
 Hex8FEM::hex8_fem_shape_fcn(
   const int  numIp,
   const double *isoParCoord,
-  SharedMemView<DoubleType**> shpfc)
+  SharedMemView<DoubleType**, DeviceShmem> shpfc)
 {
   // -1:1 isoparametric range
   for ( int ip = 0; ip < numIp; ++ip ) {
@@ -405,7 +405,7 @@ Hex8FEM::hex8_fem_derivative(
 void
 Hex8FEM::hex8_fem_derivative(
   const int npt, const double* par_coord,
-  SharedMemView<DoubleType***> deriv)
+  SharedMemView<DoubleType***, DeviceShmem> deriv)
 {
   for (int ip = 0; ip < npt; ++ip) {
     DoubleType x = par_coord[ip*3+0];

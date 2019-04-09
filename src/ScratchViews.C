@@ -38,11 +38,10 @@ void gather_elem_node_tensor_field(const NGPDoubleFieldType& field,
       numNodes==(int)elemNodes.size(),
       "gather_elem_node_tensor_field, numNodes = mismatch with elemNodes.size()"  );   
   for(int i=0; i<numNodes; ++i) {
-    const double* dataPtr = static_cast<const double*>(&field.get(ngpMesh, elemNodes[i], 0));
     unsigned counter = 0;
     for(int d1=0; d1<tensorDim1; ++d1) { 
       for(int d2=0; d2<tensorDim2; ++d2) {
-        shmemView(i,d1,d2) = dataPtr[counter++];
+        shmemView(i,d1,d2) = field.get(ngpMesh, elemNodes[i], counter++);
       }   
     }   
   }
@@ -56,12 +55,11 @@ void gather_elem_tensor_field(const NGPDoubleFieldType& field,
                               int tensorDim2,
                               ViewType& shmemView)
 {
-  const double* dataPtr = static_cast<const double*>(&field.get(elem, 0));
   unsigned counter = 0;
-  for(int d1=0; d1<tensorDim1; ++d1) { 
+  for(int d1=0; d1<tensorDim1; ++d1) {
     for(int d2=0; d2<tensorDim2; ++d2) {
-      shmemView(d1,d2) = dataPtr[counter++];
-    }   
+      shmemView(d1,d2) = field.get(elem, counter++);
+    }
   }
 }
 
@@ -73,10 +71,9 @@ void gather_elem_node_field_3D(const NGPDoubleFieldType& field,
                                ViewType& shmemView)
 {
   for(unsigned i=0; i<elemNodes.size(); ++i) {
-    const double* dataPtr = &field.get(ngpMesh, elemNodes[i], 0); 
-    shmemView(i,0) = dataPtr[0];
-    shmemView(i,1) = dataPtr[1];
-    shmemView(i,2) = dataPtr[2];
+    shmemView(i,0) = field.get(ngpMesh, elemNodes[i], 0);
+    shmemView(i,1) = field.get(ngpMesh, elemNodes[i], 1);
+    shmemView(i,2) = field.get(ngpMesh, elemNodes[i], 2);
   }
 }
 
@@ -89,9 +86,8 @@ void gather_elem_node_field(const NGPDoubleFieldType& field,
                             ViewType& shmemView)
 {
   for(unsigned i=0; i<elemNodes.size(); ++i) {
-    const double* dataPtr = &field.get(ngpMesh, elemNodes[i], 0);
     for(int d=0; d<scalarsPerNode; ++d) {
-      shmemView(i,d) = dataPtr[d];
+      shmemView(i,d) = field.get(ngpMesh, elemNodes[i], d);
     }
   }
 }
@@ -419,22 +415,15 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
   return numScalars + 8;
 }
 
+template<typename T>
 KOKKOS_FUNCTION
 void fill_pre_req_data(
   const ElemDataRequestsGPU& dataNeeded,
   const ngp::Mesh& ngpMesh,
   stk::mesh::EntityRank entityRank,
   stk::mesh::Entity entity,
-  ScratchViews<double,DeviceTeamHandleType,DeviceShmem>& prereqData,
-  bool fillMEViews)
+  ScratchViews<T,DeviceTeamHandleType,DeviceShmem>& prereqData)
 {
-#ifndef KOKKOS_ENABLE_CUDA
-  MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
-  MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
-  MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
-  MasterElement *meFEM = dataNeeded.get_fem_volume_me();
-#endif
-
   stk::mesh::FastMeshIndex entityIndex = ngpMesh.fast_mesh_index(entity);
   prereqData.elemNodes = ngpMesh.get_nodes(entityRank, entityIndex);
   int nodesPerElem = prereqData.elemNodes.size();
@@ -485,26 +474,23 @@ void fill_pre_req_data(
       NGP_ThrowRequireMsg(false,"Unknown stk-rank in ScratchViewsNGP.C::fill_pre_req_data" );
     }
   }
-
-#ifndef KOKKOS_ENABLE_CUDA
-  if (fillMEViews)
-  {
-    const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
-    const ElemDataRequestsGPU::FieldView& coordsFields = dataNeeded.get_coordinates_fields();
-    for(unsigned i=0; i<coordsTypes.size(); ++i) {
-      auto cType = coordsTypes(i);
-      auto& coordField = coordsFields(i);
-
-      const ElemDataRequestsGPU::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
-      auto* coordsView = &prereqData.get_scratch_view_2D(coordField.get_ordinal());
-      auto& meData = prereqData.get_me_views(cType);
-
-      meData.fill_master_element_views(dataEnums, coordsView, meFC, meSCS, meSCV, meFEM);
-    }
-  }
-#endif
 }
 
+template
+void fill_pre_req_data(
+  const ElemDataRequestsGPU& dataNeeded,
+  const ngp::Mesh& ngpMesh,
+  stk::mesh::EntityRank entityRank,
+  stk::mesh::Entity entity,
+  ScratchViews<double, DeviceTeamHandleType,DeviceShmem>& prereqData);
+
+template
+void fill_pre_req_data(
+  const ElemDataRequestsGPU& dataNeeded,
+  const ngp::Mesh& ngpMesh,
+  stk::mesh::EntityRank entityRank,
+  stk::mesh::Entity entity,
+  ScratchViews<DoubleType, DeviceTeamHandleType,DeviceShmem>& prereqData);
 }
 }
 

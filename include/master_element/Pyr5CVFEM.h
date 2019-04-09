@@ -50,24 +50,24 @@ public:
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
-  void determinant(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType*>& vol);
+  KOKKOS_FUNCTION void determinant(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType*, DeviceShmem>& vol);
 
-  void grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv);
+  KOKKOS_FUNCTION void grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
-  void shifted_grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv);
+  KOKKOS_FUNCTION void shifted_grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
-  void Mij(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& metric,
-    SharedMemView<DoubleType***>& deriv);
+  KOKKOS_FUNCTION void Mij(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& metric,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
   void determinant(
     const int nelem,
@@ -150,9 +150,9 @@ public:
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
-  void determinant(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType**>& areav);
+  KOKKOS_FUNCTION void determinant(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType**, DeviceShmem>& areav);
 
   void determinant(
     const int nelem,
@@ -160,10 +160,10 @@ public:
     double *areav,
     double * error );
 
-  void grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv);
+  KOKKOS_FUNCTION void grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
   void grad_op(
     const int nelem,
@@ -173,10 +173,10 @@ public:
     double *det_j,
     double * error );
 
-  void shifted_grad_op(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop,
-    SharedMemView<DoubleType***>& deriv);
+  KOKKOS_FUNCTION void shifted_grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
   void shifted_grad_op(
     const int nelem,
@@ -196,11 +196,11 @@ public:
     const double *intLoc,
     double *deriv);
 
-  void gij( 
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gupper,
-    SharedMemView<DoubleType***>& glower,
-    SharedMemView<DoubleType***>& deriv);
+  KOKKOS_FUNCTION void gij( 
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gupper,
+    SharedMemView<DoubleType***, DeviceShmem>& glower,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
   void gij(
     const double *coords,
@@ -208,10 +208,10 @@ public:
     double *glowerij,
     double *deriv);
 
-  void Mij(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& metric,
-    SharedMemView<DoubleType***>& deriv);
+  KOKKOS_FUNCTION void Mij(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& metric,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
   void Mij(
     const double *coords,
@@ -264,10 +264,10 @@ public:
     double *det_j,
     double *error);
 
-  void face_grad_op(
+  KOKKOS_FUNCTION void face_grad_op(
     int face_ordinal,
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop) final;
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
 
   void shifted_face_grad_op(
     const int nelem,
@@ -277,10 +277,10 @@ public:
     double *det_j,
     double * error );
 
-  void shifted_face_grad_op(
+  KOKKOS_FUNCTION void shifted_face_grad_op(
     int face_ordinal,
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop) final;
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
 
   void general_face_grad_op(
     const int face_ordinal,

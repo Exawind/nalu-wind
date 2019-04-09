@@ -53,16 +53,14 @@ AssembleFaceElemSolverAlgorithm::AssembleFaceElemSolverAlgorithm(
   stk::mesh::Part *part,
   EquationSystem *eqSystem,
   unsigned nodesPerFace,
-  unsigned nodesPerElem,
-  bool interleaveMEViews)
+  unsigned nodesPerElem)
   : SolverAlgorithm(realm, part, eqSystem),
     faceDataNeeded_(realm.meta_data()),
     elemDataNeeded_(realm.meta_data()),
     numDof_(eqSystem->linsys_->numDof()),
     nodesPerFace_(nodesPerFace),
     nodesPerElem_(nodesPerElem),
-    rhsSize_(nodesPerFace*eqSystem->linsys_->numDof()),
-    interleaveMEViews_(interleaveMEViews)
+    rhsSize_(nodesPerFace*eqSystem->linsys_->numDof())
 {
   if (eqSystem->dofName_ != "pressure") {
     diagRelaxFactor_ = realm.solutionOptions_->get_relaxation_factor(

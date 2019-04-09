@@ -95,11 +95,12 @@ namespace nalu{
                       topo == stk::topology::WEDGE_6 ||
                       topo == stk::topology::TETRAHEDRON_4 ||
                       topo == stk::topology::PYRAMID_5);
+    ThrowRequireMsg(!isNotNGP, "Consolidated algorithm called on non-NGP MasterElement");
 
     auto itc = solverAlgs.find(algName);
     bool createNewAlg = itc == solverAlgs.end();
     if (createNewAlg) {
-      auto* theSolverAlg = new AssembleElemSolverAlgorithm(eqSys.realm_, &part, &eqSys, stk::topology::ELEMENT_RANK, topo.num_nodes(), isNotNGP);
+      auto* theSolverAlg = new AssembleElemSolverAlgorithm(eqSys.realm_, &part, &eqSys, stk::topology::ELEMENT_RANK, topo.num_nodes());
       ThrowRequire(theSolverAlg != nullptr);
 
       NaluEnv::self().naluOutputP0() << "Created the following interior elem alg: " << algName << std::endl;
@@ -521,12 +522,13 @@ namespace nalu{
                       elemTopo == stk::topology::WEDGE_6 ||
                       elemTopo == stk::topology::TETRAHEDRON_4 ||
                       elemTopo == stk::topology::PYRAMID_5);
+    ThrowRequireMsg(!isNotNGP, "Consolidated algorithm called on non-NGP MasterElement");
 
     auto itc = solverAlgs.find(algName);
     bool createNewAlg = itc == solverAlgs.end();
     if (createNewAlg) {
-      auto* theSolverAlg = new AssembleFaceElemSolverAlgorithm(eqSys.realm_, &part, &eqSys,
-                                            topo.num_nodes(), elemTopo.num_nodes(), isNotNGP);
+      auto* theSolverAlg = new AssembleFaceElemSolverAlgorithm(
+        eqSys.realm_, &part, &eqSys, topo.num_nodes(), elemTopo.num_nodes());
       ThrowRequire(theSolverAlg != nullptr);
 
       NaluEnv::self().naluOutputP0() << "Created the following bc face/elem alg: " << algName << std::endl;
@@ -561,12 +563,14 @@ namespace nalu{
                       topo == stk::topology::TRI_3 ||
                       topo == stk::topology::LINE_2 ||
                       topo == stk::topology::LINE_3 );
+    ThrowRequireMsg(!isNotNGP, "Consolidated algorithm called on non-NGP MasterElement");
 
     auto itc = solverAlgs.find(algName);
     bool createNewAlg = itc == solverAlgs.end();
     if (createNewAlg) {
-      auto* theSolverAlg = new AssembleElemSolverAlgorithm(eqSys.realm_, &part, &eqSys, 
-                                                           eqSys.realm_.meta_data().side_rank(), topo.num_nodes(), isNotNGP);
+      auto* theSolverAlg = new AssembleElemSolverAlgorithm(
+        eqSys.realm_, &part, &eqSys, eqSys.realm_.meta_data().side_rank(),
+        topo.num_nodes());
       ThrowRequire(theSolverAlg != nullptr);
 
       NaluEnv::self().naluOutputP0() << "Created the following bc face alg: " << algName << std::endl;

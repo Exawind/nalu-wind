@@ -1006,8 +1006,8 @@ void HigherOrderHexSCS::interpolatePoint(
 template <int p> void internal_face_grad_op(
   int face_ordinal,
   const AlignedViewType<DoubleType**[3]>& expReferenceGradWeights,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop )
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop )
 {
   using traits = AlgTraitsQuadPHexPGL<p>;
   const int offset = traits::numFaceIp_ * face_ordinal;
@@ -1018,8 +1018,8 @@ template <int p> void internal_face_grad_op(
 
 void HigherOrderHexSCS::face_grad_op(
   int face_ordinal,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop)
 {
   switch(elem_.polyOrder) {
     case 2: return internal_face_grad_op<2>(face_ordinal, expRefGradWeights_, coords, gradop);
@@ -1027,7 +1027,7 @@ void HigherOrderHexSCS::face_grad_op(
     case 4: return internal_face_grad_op<4>(face_ordinal, expRefGradWeights_, coords, gradop);
     case USER_POLY_ORDER: return internal_face_grad_op<USER_POLY_ORDER>(face_ordinal, expRefGradWeights_, coords, gradop);
     default: {
-      throw std::runtime_error("Invalid poly order " + std::to_string(elem_.polyOrder) + " for kernels");
+      //throw std::runtime_error("Invalid poly order " + std::to_string(elem_.polyOrder) + " for kernels");
       return;
     }
   }

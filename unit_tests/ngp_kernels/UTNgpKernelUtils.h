@@ -45,13 +45,16 @@ public:
                                   sierra::nalu::CURRENT_COORDINATES);
     dataReq.add_gathered_nodal_field(velocity_, AlgTraits::nDim_);
     dataReq.add_gathered_nodal_field(pressure_, 1);
+    dataReq.add_master_element_call(sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
   }
 
   using sierra::nalu::Kernel::execute;
+
+  KOKKOS_FUNCTION
   void execute(
-    sierra::nalu::SharedMemView<DoubleType**>&,
-    sierra::nalu::SharedMemView<DoubleType*>&,
-    sierra::nalu::ScratchViews<DoubleType>&);
+    sierra::nalu::SharedMemView<DoubleType**, ShmemType>&,
+    sierra::nalu::SharedMemView<DoubleType*, ShmemType>&,
+    sierra::nalu::ScratchViews<DoubleType, TeamType, ShmemType>&);
 
   KOKKOS_FUNCTION
   virtual void execute(
@@ -70,12 +73,19 @@ private:
 template<typename AlgTraits>
 void
 TestContinuityKernel<AlgTraits>::execute(
-  sierra::nalu::SharedMemView<DoubleType**>&,
-  sierra::nalu::SharedMemView<DoubleType*>& rhs,
-  sierra::nalu::ScratchViews<DoubleType>& scratchViews)
+  sierra::nalu::SharedMemView<DoubleType**, ShmemType>&,
+  sierra::nalu::SharedMemView<DoubleType*, ShmemType>& rhs,
+  sierra::nalu::ScratchViews<DoubleType, TeamType, ShmemType>& scratchViews)
 {
+  // Get the integration point to node mapping
+  const int* ipNodeMap = meSCS_->ipNodeMap(3);
+
   auto& v_velocity = scratchViews.get_scratch_view_2D(velocity_);
   auto& v_pressure = scratchViews.get_scratch_view_1D(pressure_);
+  auto& scs_areav = scratchViews.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
+
+  printf("ipNodeMap[2] = %d (7); SCS areav[2, 0] = %f\n", ipNodeMap[2],
+         stk::simd::get_data(scs_areav(2, 0), 0));
 
   rhs(0) = v_velocity(0, 0) + v_pressure(0);
 }

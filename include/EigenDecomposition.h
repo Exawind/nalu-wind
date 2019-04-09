@@ -21,6 +21,7 @@ namespace EigenDecomposition {
 //-------- symmetric diagonalize (2D) --------------------------------------
 //--------------------------------------------------------------------------
 template <class T>
+KOKKOS_FUNCTION
 void sym_diagonalize(const T (&A)[2][2], T (&Q)[2][2], T (&D)[2][2]) {
   // Note that A must be symmetric here
   const T trace = A[0][0] + A[1][1];
@@ -104,6 +105,7 @@ void reconstruct_matrix_from_decomposition(const T (&D)[2][2],
 //-------- symmetric diagonalize (3D) --------------------------------------
 //--------------------------------------------------------------------------
 template <class T>
+KOKKOS_FUNCTION
 void sym_diagonalize(const T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3]) {
   /*
     obtained from:

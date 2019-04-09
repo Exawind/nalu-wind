@@ -38,8 +38,7 @@ public:
     stk::mesh::Part *part,
     EquationSystem *eqSystem,
     stk::mesh::EntityRank entityRank,
-    unsigned nodesPerEntity,
-    bool interleaveMeViews = true);
+    unsigned nodesPerEntity);
   virtual ~AssembleElemSolverAlgorithm() {}
   virtual void initialize_connectivity();
   virtual void execute();
@@ -72,7 +71,6 @@ public:
     const auto entityRank = entityRank_;
     const auto nodesPerEntity = nodesPerEntity_;
     const auto rhsSize = rhsSize_;
-    const auto interleaveMEViews = interleaveMEViews_;
 
     auto team_exec = sierra::nalu::get_device_team_policy(
       elem_buckets.size(), bytes_per_team, bytes_per_thread);
@@ -108,24 +106,16 @@ public:
                 ngpMesh.get_nodes(entityRank, elemIndex);
               fill_pre_req_data(
                 dataNeededNGP, ngpMesh, entityRank, element,
-                *smdata.prereqData[simdElemIndex], interleaveMEViews);
+                *smdata.prereqData[simdElemIndex]);
             }
 
 #ifndef KOKKOS_ENABLE_CUDA
-            // When we GPU-ize AssembleElemSolverAlgorithm, 'lambdaFunc' below
-            // will need to operate on smdata.prereqData[0] since we aren't going
-            // to copy_and_interleave. We will probably want to make
-            // smdata.simdPrereqData to be a pointer/reference to
-            // smdata.prereqData[0] in some way...
+            // No need to interleave on GPUs
             copy_and_interleave(
-              smdata.prereqData, numSimdElems, smdata.simdPrereqData,
-              interleaveMEViews_);
-            if (!interleaveMEViews_) {
-              fill_master_element_views(dataNeededNGP, smdata.simdPrereqData);
-            }
-//for now this simply isn't ready for GPU.
+              smdata.prereqData, numSimdElems, smdata.simdPrereqData);
 #endif
 
+            fill_master_element_views(dataNeededNGP, smdata.simdPrereqData);
             lambdaFunc(smdata);
           });
       });
@@ -138,7 +128,6 @@ public:
   double diagRelaxFactor_{1.0};
   unsigned nodesPerEntity_;
   int rhsSize_;
-  const bool interleaveMEViews_;
 };
 
 } // namespace nalu
