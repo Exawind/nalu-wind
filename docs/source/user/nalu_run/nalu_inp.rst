@@ -1177,6 +1177,10 @@ Actuator
 
    The spreading width :math:`\epsilon` in the Gaussian spreading function in the `[chordwise, spanwise, chord normal]` coordinate system to spread the forces from the actuator point to the nodes. Nalu-Wind currently only supports an isotropic Gaussian spreading function and uses only the value in the first component along the `chordwise` direction.
 
+.. inpfile:: actuator.epsilon_chord
+
+   This is the ratio epsilon/chord in every direction. If this option is specified, the code will choose a value of epsilon at every location that is chord*(epsilon/chord). A value of epsilon_chord of 0.25 is recommended as the optimal value. To avoid numerical insabilities, the code will choose the maximum value between (epsilon/chord)*chord and the value of actuator.epsilon specified.
+
 .. inpfile:: actuator.restart_filename
 
    The checkpoint file for this turbine when restarting a simulation
