@@ -22,8 +22,6 @@ public:
   using MasterElement::determinant;
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
 
   KOKKOS_FUNCTION
   TetSCV();
@@ -62,12 +60,23 @@ public:
     double *metric,
     double *deriv);
 
+  KOKKOS_FUNCTION virtual void shape_fcn(
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+
   void shape_fcn(
     double *shpfc);
+
+  KOKKOS_FUNCTION virtual void shifted_shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
   void shifted_shape_fcn(
     double *shpfc);
   
+  void tet_shape_fcn(
+    const int npts,
+    const double *par_coord, 
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) const;
+
   void tet_shape_fcn(
     const int npts,
     const double *par_coord, 
@@ -112,8 +121,6 @@ class TetSCS : public MasterElement
 public:
   using AlgTraits = AlgTraitsTet4;
   using MasterElement::determinant;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
   using MasterElement::adjacentNodes;
 
   KOKKOS_FUNCTION
@@ -211,11 +218,22 @@ public:
 
   const int * scsIpEdgeOrd();
 
+  KOKKOS_FUNCTION virtual void shape_fcn(
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+
   void shape_fcn(
     double *shpfc);
 
+  KOKKOS_FUNCTION virtual void shifted_shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+
   void shifted_shape_fcn(
     double *shpfc);
+
+  void tet_shape_fcn(
+    const int npts,
+    const double *par_coord,
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) const;
 
   void tet_shape_fcn(
     const int npts,
