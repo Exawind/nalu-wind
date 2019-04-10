@@ -127,7 +127,6 @@ class Quad42DSCS : public MasterElement
 public:
   using AlgTraits = AlgTraitsQuad4_2D;
   using MasterElement::determinant;
-  using MasterElement::shifted_shape_fcn;
   using MasterElement::adjacentNodes;
 
   KOKKOS_FUNCTION
