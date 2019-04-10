@@ -240,9 +240,14 @@ void Quad42DSCV::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
-void 
+void
 Quad42DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) {
   quad_shape_fcn(intgLoc_, shpfc);
+}
+
+void
+Quad42DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) {
+  quad_shape_fcn(intgLocShift_, shpfc);
 }
 
 void
@@ -776,6 +781,11 @@ Quad42DSCS::opposingFace(
 void 
 Quad42DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) {
   quad_shape_fcn(intgLoc_, shpfc);
+}
+
+void
+Quad42DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) {
+  quad_shape_fcn(intgLocShift_, shpfc);
 }
 
 void
