@@ -29,7 +29,7 @@ namespace nalu {
 class ActuatorDiskFASTInfo : public ActuatorFASTInfo
 {
 public:
-    int bladeSweptPts_{-1};
+  int bladeSweptPts_{-1};
 };
 /** Class for an Actuator Disk
  *
@@ -60,34 +60,34 @@ public:
 class ActuatorDiskFAST : public ActuatorFAST
 {
 public:
-    ActuatorDiskFAST(Realm& realm, const YAML::Node& node);
+  ActuatorDiskFAST(Realm& realm, const YAML::Node& node);
 
-    ~ActuatorDiskFAST() = default;
+  ~ActuatorDiskFAST() = default;
 
-    void parse_disk_specific(const YAML::Node& node);
+  void parse_disk_specific(const YAML::Node& node);
 
-    void create_point_info_map_class_specific() override;
+  void create_point_info_map_class_specific() override;
 
-    void update_class_specific() override;
+  void update_class_specific() override;
 
-    void execute_class_specific(
-        const int nDim,
-        const stk::mesh::FieldBase* coordinates,
-        stk::mesh::FieldBase* actuator_source,
-        const stk::mesh::FieldBase* dual_nodal_volume) override;
+  void execute_class_specific(
+    const int nDim,
+    const stk::mesh::FieldBase* coordinates,
+    stk::mesh::FieldBase* actuator_source,
+    const stk::mesh::FieldBase* dual_nodal_volume) override;
 
-    std::string get_class_name() override;
+  std::string get_class_name() override;
 
 protected:
-    Point get_blade_point_location(int turbineNum, int bladeNum, int radiusIndex);
-    int
-    number_of_swept_points(int numBlades, double radius, double targetArcLength);
-    void add_swept_points_to_map();
-    std::map<int, std::vector<std::vector<double>>> averageForcesMap_;
-    std::map<std::size_t, int> pointRadiusMap_;
-    std::map<int, std::vector<int>>
-                                 numSweptPointMap_; //{globTurbNo : numPoints between blades at each radius}
-    bool useUniformAziSampling_{false};
+  Point get_blade_point_location(int turbineNum, int bladeNum, int radiusIndex);
+  int
+  number_of_swept_points(int numBlades, double radius, double targetArcLength);
+  void add_swept_points_to_map();
+  std::map<int, std::vector<std::vector<double>>> averageForcesMap_;
+  std::map<std::size_t, int> pointRadiusMap_;
+  std::map<int, std::vector<int>>
+                               numSweptPointMap_; //{globTurbNo : numPoints between blades at each radius}
+  bool useUniformAziSampling_{false};
 };
 
 /** Implementation of a periodic Bezier curve (Sanchez-Reyes, 2009) to connect
@@ -100,23 +100,23 @@ protected:
 class SweptPointLocator
 {
 public:
-    SweptPointLocator();
-    ~SweptPointLocator() = default;
-    Point operator()(double t);
-    void update_point_location(int i, Point p);
-    static int binomial_coefficient(int n, int v);
-    std::vector<Point> get_control_points();
-    double get_radius(int pntNum);
-    Point get_centriod();
+  SweptPointLocator();
+  ~SweptPointLocator() = default;
+  Point operator()(double t);
+  void update_point_location(int i, Point p);
+  static int binomial_coefficient(int n, int v);
+  std::vector<Point> get_control_points();
+  double get_radius(int pntNum);
+  Point get_centriod();
 
 private:
-    const int order_ = 2; // fix order at 2 for 3 point sampling
-    const double delta_ = 2.0 * std::acos(-1.0) / (order_ + 1);
-    double periodic_basis(double t);
-    void generate_control_points();
-    std::vector<Point> bladePoints_;
-    std::vector<Point> controlPoints_;
-    bool controlPointsCurrent_;
+  const int order_ = 2; // fix order at 2 for 3 point sampling
+  const double delta_ = 2.0 * std::acos(-1.0) / (order_ + 1);
+  double periodic_basis(double t);
+  void generate_control_points();
+  std::vector<Point> bladePoints_;
+  std::vector<Point> controlPoints_;
+  bool controlPointsCurrent_;
 };
 
 } // namespace nalu
