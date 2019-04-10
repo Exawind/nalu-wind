@@ -41,9 +41,14 @@ public:
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
+  KOKKOS_FUNCTION virtual void shape_fcn(
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+
   void shape_fcn(double *shpfc) final;
+
+  KOKKOS_FUNCTION virtual void shifted_shape_fcn (
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+
   void shifted_shape_fcn(double *shpfc) final;
 
   void determinant(
