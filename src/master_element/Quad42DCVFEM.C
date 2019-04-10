@@ -240,6 +240,11 @@ void Quad42DSCV::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
+void 
+Quad42DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) {
+  quad_shape_fcn(intgLoc_, shpfc);
+}
+
 void
 Quad42DSCV::shape_fcn(double *shpfc)
 {
@@ -258,20 +263,36 @@ Quad42DSCV::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 //-------- quad_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
+void 
+Quad42DSCV::quad_shape_fcn(
+  const double *isoParCoord, 
+  SharedMemView<DoubleType**, DeviceShmem> &shape)
+{
+  for (int j = 0; j < numIntPoints_; ++j ) {
+    const int k = 2*j;
+    const double s1 = isoParCoord[k];
+    const double s2 = isoParCoord[k+1];
+    shape(j,0) = 1.0/4.0 + 0.5*(-s1 - s2 ) + s1*s2;
+    shape(j,1) = 1.0/4.0 + 0.5*( s1 - s2 ) - s1*s2;
+    shape(j,2) = 1.0/4.0 + 0.5*( s1 + s2 ) + s1*s2;
+    shape(j,3) = 1.0/4.0 + 0.5*(-s1 + s2 ) - s1*s2;
+  }
+}
+
 void
 Quad42DSCV::quad_shape_fcn(
   const double *isoParCoord, 
-  double *shape_fcn)
+  double *shape)
 {
   for (int j = 0; j < numIntPoints_; ++j ) {
     const int fourj = 4*j;
     const int k = 2*j;
     const double s1 = isoParCoord[k];
     const double s2 = isoParCoord[k+1];
-    shape_fcn[    fourj] = 1.0/4.0 + 0.5*(-s1 - s2 ) + s1*s2;
-    shape_fcn[1 + fourj] = 1.0/4.0 + 0.5*( s1 - s2 ) - s1*s2;
-    shape_fcn[2 + fourj] = 1.0/4.0 + 0.5*( s1 + s2 ) + s1*s2;
-    shape_fcn[3 + fourj] = 1.0/4.0 + 0.5*(-s1 + s2 ) - s1*s2;
+    shape[    fourj] = 1.0/4.0 + 0.5*(-s1 - s2 ) + s1*s2;
+    shape[1 + fourj] = 1.0/4.0 + 0.5*( s1 - s2 ) - s1*s2;
+    shape[2 + fourj] = 1.0/4.0 + 0.5*( s1 + s2 ) + s1*s2;
+    shape[3 + fourj] = 1.0/4.0 + 0.5*(-s1 + s2 ) - s1*s2;
   }
 }
 
@@ -752,6 +773,11 @@ Quad42DSCS::opposingFace(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
+void 
+Quad42DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) {
+  quad_shape_fcn(intgLoc_, shpfc);
+}
+
 void
 Quad42DSCS::shape_fcn(double *shpfc)
 {
@@ -773,17 +799,32 @@ Quad42DSCS::shifted_shape_fcn(double *shpfc)
 void
 Quad42DSCS::quad_shape_fcn(
   const double *isoParCoord, 
-  double *shape_fcn)
+  SharedMemView<DoubleType**, DeviceShmem> &shape) 
+{
+  for (int j = 0; j < numIntPoints_; ++j ) {
+    const int k = 2*j;
+    const double s1 = isoParCoord[k];
+    const double s2 = isoParCoord[k+1];
+    shape(j,0) = 1.0/4.0 + 0.5*(-s1 - s2 ) + s1*s2;
+    shape(j,1) = 1.0/4.0 + 0.5*( s1 - s2 ) - s1*s2;
+    shape(j,2) = 1.0/4.0 + 0.5*( s1 + s2 ) + s1*s2;
+    shape(j,3) = 1.0/4.0 + 0.5*(-s1 + s2 ) - s1*s2;
+  }
+}
+void
+Quad42DSCS::quad_shape_fcn(
+  const double *isoParCoord, 
+  double *shape)
 {
   for (int j = 0; j < numIntPoints_; ++j ) {
     const int fourj = 4*j;
     const int k = 2*j;
     const double s1 = isoParCoord[k];
     const double s2 = isoParCoord[k+1];
-    shape_fcn[    fourj] = 1.0/4.0 + 0.5*(-s1 - s2 ) + s1*s2;
-    shape_fcn[1 + fourj] = 1.0/4.0 + 0.5*( s1 - s2 ) - s1*s2;
-    shape_fcn[2 + fourj] = 1.0/4.0 + 0.5*( s1 + s2 ) + s1*s2;
-    shape_fcn[3 + fourj] = 1.0/4.0 + 0.5*(-s1 + s2 ) - s1*s2;
+    shape[    fourj] = 1.0/4.0 + 0.5*(-s1 - s2 ) + s1*s2;
+    shape[1 + fourj] = 1.0/4.0 + 0.5*( s1 - s2 ) - s1*s2;
+    shape[2 + fourj] = 1.0/4.0 + 0.5*( s1 + s2 ) + s1*s2;
+    shape[3 + fourj] = 1.0/4.0 + 0.5*(-s1 + s2 ) - s1*s2;
   }
 }
 

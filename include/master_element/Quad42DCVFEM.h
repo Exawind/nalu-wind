@@ -33,7 +33,6 @@ public:
   using MasterElement::determinant;
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
-  using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
   KOKKOS_FUNCTION
@@ -73,6 +72,9 @@ public:
      double *metric,
      double *deriv) override ;
 
+  KOKKOS_FUNCTION virtual void shape_fcn(
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+
   void shape_fcn(
     double *shpfc) override ;
 
@@ -110,6 +112,10 @@ private:
 
   void quad_shape_fcn(
     const double *par_coord, 
+    SharedMemView<DoubleType**, DeviceShmem> &shape_fcn);
+
+  void quad_shape_fcn(
+    const double *par_coord, 
     double* shape_fcn) ;
 };
 
@@ -119,7 +125,6 @@ class Quad42DSCS : public MasterElement
 public:
   using AlgTraits = AlgTraitsQuad4_2D;
   using MasterElement::determinant;
-  using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
   using MasterElement::adjacentNodes;
 
@@ -223,6 +228,9 @@ public:
 
   int opposingFace(
     const int ordinal, const int node) override;
+
+  KOKKOS_FUNCTION virtual void shape_fcn(
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
   void shape_fcn(
     double *shpfc) override;
@@ -345,7 +353,11 @@ private :
 
   void quad_shape_fcn(
     const double *par_coord, 
-    double* shape_fcn) ;
+    SharedMemView<DoubleType**, DeviceShmem> &shape);
+
+  void quad_shape_fcn(
+    const double *par_coord, 
+    double* shape) ;
 
 };
 
