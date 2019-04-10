@@ -63,9 +63,12 @@ public:
   using MasterElement::shifted_shape_fcn;
   using MasterElement::shape_fcn;
 
+  // NGP-ready methods first
   KOKKOS_FUNCTION void shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc);
 
-  // NGP-ready methods first
+  KOKKOS_FUNCTION void shifted_shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+
   KOKKOS_FUNCTION void determinant(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType*, DeviceShmem>& volume);

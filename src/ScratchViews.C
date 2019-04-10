@@ -229,6 +229,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
         case FC_AREAV:
           numScalars += nDim * numFaceIp;
           break;
+        case FC_SHAPE_FCN:
+        case FC_SHIFTED_SHAPE_FCN:
+          numScalars += numFaceIp * nodesPerEntity;
+          break;
         case SCS_AREAV:
           numScalars += nDim * numScsIp;
           break;
@@ -246,6 +250,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
           needDetj = true;
           numScalars += dndxLength;
           break;
+        case SCS_SHAPE_FCN:
+        case SCS_SHIFTED_SHAPE_FCN:
+          numScalars += nodesPerEntity*numScsIp;
+          break;
         case SCV_VOLUME:
           numScalars += numScvIp;
           break;
@@ -254,6 +262,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
           needDerivScv = true;
           needDetjScv = true;
           numScalars += dndxLength;
+          break;
+        case SCV_SHAPE_FCN:
+        case SCV_SHIFTED_SHAPE_FCN:
+          numScalars += nodesPerEntity*numScvIp;
           break;
         case SCS_GIJ:
           gUpperLength = nDim*nDim*numScsIp;
@@ -267,6 +279,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
           needDerivFem = true;
           needDetjFem = true;
           numScalars += dndxLength;
+          break;
+        case FEM_SHAPE_FCN:
+        case FEM_SHIFTED_SHAPE_FCN:
+          numScalars += nodesPerEntity*numFemIp;
           break;
         default: break;
       }
@@ -343,6 +359,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
         case FC_AREAV:
           numScalars += nDim * numFaceIp;
           break;
+        case FC_SHAPE_FCN:
+        case FC_SHIFTED_SHAPE_FCN:
+          numScalars += numFaceIp * nodesPerEntity;
+          break;
         case SCS_AREAV:
           numScalars += nDim * numScsIp;
           break;
@@ -360,6 +380,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
           needDetj = true;
           numScalars += dndxLength;
           break;
+        case SCS_SHAPE_FCN:
+        case SCS_SHIFTED_SHAPE_FCN:
+          numScalars += nodesPerEntity*numScsIp;
+          break;
         case SCV_VOLUME:
           numScalars += numScvIp;
           break;
@@ -368,6 +392,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
           needDerivScv = true;
           needDetjScv = true;
           numScalars += dndxLength;
+          break;
+        case SCV_SHAPE_FCN:
+        case SCV_SHIFTED_SHAPE_FCN:
+          numScalars += nodesPerEntity*numScvIp;
           break;
         case SCS_GIJ:
           gUpperLength = nDim*nDim*numScsIp;
@@ -381,6 +409,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
           needDerivFem = true;
           needDetjFem = true;
           numScalars += dndxLength;
+          break;
+        case FEM_SHAPE_FCN:
+        case FEM_SHIFTED_SHAPE_FCN:
+          numScalars += nodesPerEntity*numFemIp;
           break;
         default: break;
       }

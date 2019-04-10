@@ -99,6 +99,14 @@ public:
     int nDim, int nodesPerFace, int nodesPerElem,
     int numFaceIp, int numScsIp, int numScvIp, int numFemIp);
 
+  KOKKOS_FUNCTION
+  void fill_static_meviews(
+    const ElemDataRequestsGPU::DataEnumView& dataEnums,
+    MasterElement* meFC,
+    MasterElement* meSCS,
+    MasterElement* meSCV,
+    MasterElement* meFEM);
+
   void fill_master_element_views_new_me(
     const ElemDataRequestsGPU::DataEnumView& dataEnums,
     SharedMemView<double**, SHMEM>* coordsView,
@@ -139,6 +147,14 @@ public:
   SharedMemView<T***, SHMEM> gijUpper;
   SharedMemView<T***, SHMEM> gijLower;
   SharedMemView<T***, SHMEM> metric;
+  SharedMemView<T**, SHMEM> fc_shape_fcn;
+  SharedMemView<T**, SHMEM> fc_shifted_shape_fcn;
+  SharedMemView<T**, SHMEM> scs_shape_fcn;
+  SharedMemView<T**, SHMEM> scs_shifted_shape_fcn;
+  SharedMemView<T**, SHMEM> scv_shape_fcn;
+  SharedMemView<T**, SHMEM> scv_shifted_shape_fcn;
+  SharedMemView<T**, SHMEM> fem_shape_fcn;
+  SharedMemView<T**, SHMEM> fem_shifted_shape_fcn;
 };
 
 template<typename T,typename SHMEM,typename TEAMHANDLETYPE,typename ELEMDATAREQUESTSTYPE, typename MULTIDIMVIEWSTYPE>
@@ -258,6 +274,9 @@ public:
   KOKKOS_INLINE_FUNCTION
   const MultiDimViews<T,TEAMHANDLETYPE,SHMEM>& get_field_views() const { return fieldViews; }
 
+  KOKKOS_FUNCTION
+  void fill_static_meviews(const ElemDataRequestsGPU&);
+
 private:
   KOKKOS_FUNCTION
   void create_needed_master_element_views(const TEAMHANDLETYPE& team,
@@ -335,7 +354,7 @@ template<typename T, typename TEAMHANDLETYPE, typename SHMEM>
 int MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::create_master_element_views(
   const TEAMHANDLETYPE& team,
   const ElemDataRequestsGPU::DataEnumView& dataEnums,
-  int nDim, int /* nodesPerFace */, int nodesPerElem,
+  int nDim, int nodesPerFace, int nodesPerElem,
   int numFaceIp, int numScsIp, int numScvIp, int numFemIp)
 {
   int numScalars = 0;
@@ -350,6 +369,16 @@ int MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::create_master_element_views(
           fc_areav = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numFaceIp, nDim);
           numScalars += numFaceIp * nDim;
           break;
+      case FC_SHAPE_FCN:
+        NGP_ThrowRequireMsg(numFaceIp > 0, "ERROR, meFC must be non-null if FC_SHAPE_FCN is requested");
+        fc_shape_fcn = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numFaceIp, nodesPerFace);
+        numScalars += numFaceIp * nodesPerFace;
+        break;
+      case FC_SHIFTED_SHAPE_FCN:
+        NGP_ThrowRequireMsg(numFaceIp > 0, "ERROR, meFC must be non-null if FC_SHIFTED_SHAPE_FCN is requested");
+        fc_shifted_shape_fcn = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numFaceIp, nodesPerFace);
+        numScalars += numFaceIp * nodesPerFace;
+        break;
       case SCS_FACE_GRAD_OP:
           NGP_ThrowRequireMsg(numFaceIp > 0, "ERROR, meSCS must be non-null if SCS_FACE_GRAD_OP is requested.");
           dndx_fc_scs = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numFaceIp, nodesPerElem, nDim);
@@ -401,6 +430,18 @@ int MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::create_master_element_views(
          needDeriv = true;
          break;
 
+      case SCS_SHAPE_FCN:
+        NGP_ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_SHAPE_FCN is requested");
+        scs_shape_fcn = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numScsIp, nodesPerElem);
+        numScalars += numScsIp * nodesPerElem;
+        break;
+
+      case SCS_SHIFTED_SHAPE_FCN:
+        NGP_ThrowRequireMsg(numScsIp > 0, "ERROR, meSCS must be non-null if SCS_SHIFTED_SHAPE_FCN is requested");
+        scs_shifted_shape_fcn = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numScsIp, nodesPerElem);
+        numScalars += numScsIp * nodesPerElem;
+        break;
+
       case SCV_VOLUME:
          NGP_ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_VOLUME is requested.");
          scv_volume = get_shmem_view_1D<T, TEAMHANDLETYPE, SHMEM>(team, numScvIp);
@@ -423,6 +464,18 @@ int MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::create_master_element_views(
          needDetjScv = true;
          break;
 
+      case SCV_SHAPE_FCN:
+        NGP_ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_SHAPE_FCN is requested");
+        scv_shape_fcn = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numScvIp, nodesPerElem);
+        numScalars += numScvIp * nodesPerElem;
+        break;
+
+      case SCV_SHIFTED_SHAPE_FCN:
+        NGP_ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_SHIFTED_SHAPE_FCN is requested");
+        scv_shifted_shape_fcn = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numScvIp, nodesPerElem);
+        numScalars += numScvIp * nodesPerElem;
+        break;
+
       case FEM_GRAD_OP:
          NGP_ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_GRAD_OP is requested.");
          dndx_fem = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numFemIp, nodesPerElem, nDim);
@@ -440,6 +493,18 @@ int MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::create_master_element_views(
          needDetjFem = true;
          femShiftedGradOp = true;
          break;
+
+      case FEM_SHAPE_FCN:
+        NGP_ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_SHAPE_FCN is requested");
+        fem_shape_fcn = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numFemIp, nodesPerElem);
+        numScalars += numFemIp * nodesPerElem;
+        break;
+
+      case FEM_SHIFTED_SHAPE_FCN:
+        NGP_ThrowRequireMsg(numFemIp > 0, "ERROR, meFEM must be non-null if FEM_SHIFTED_SHAPE_FCN is requested");
+        fem_shifted_shape_fcn = get_shmem_view_2D<T, TEAMHANDLETYPE, SHMEM>(team, numFemIp, nodesPerElem);
+        numScalars += numFemIp * nodesPerElem;
+        break;
 
       default: break;
     }
@@ -572,6 +637,55 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
 
       default:
         break;
+    }
+  }
+}
+
+template<typename T, typename TEAMHANDLETYPE, typename SHMEM>
+void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_static_meviews(
+  const ElemDataRequestsGPU::DataEnumView& dataEnums,
+  MasterElement* meFC,
+  MasterElement* meSCS,
+  MasterElement* meSCV,
+  MasterElement* meFEM)
+{
+  for(unsigned i=0; i<dataEnums.size(); ++i) {
+    switch(dataEnums(i))
+    {
+    case FC_SHAPE_FCN:
+      meFC->shape_fcn(fc_shape_fcn);
+      break;
+
+    case FC_SHIFTED_SHAPE_FCN:
+      meFC->shifted_shape_fcn(fc_shifted_shape_fcn);
+      break;
+
+    case SCS_SHAPE_FCN:
+      meSCS->shape_fcn(scs_shape_fcn);
+      break;
+
+    case SCS_SHIFTED_SHAPE_FCN:
+      meSCS->shifted_shape_fcn(scs_shifted_shape_fcn);
+      break;
+
+    case SCV_SHAPE_FCN:
+      meSCV->shape_fcn(scv_shape_fcn);
+      break;
+
+    case SCV_SHIFTED_SHAPE_FCN:
+      meSCV->shifted_shape_fcn(scv_shifted_shape_fcn);
+      break;
+
+    case FEM_SHAPE_FCN:
+      meFEM->shape_fcn(fem_shape_fcn);
+      break;
+
+    case FEM_SHIFTED_SHAPE_FCN:
+      meFEM->shifted_shape_fcn(fem_shifted_shape_fcn);
+      break;
+
+    default:
+      break;
     }
   }
 }
@@ -726,6 +840,27 @@ void ScratchViews<T,TEAMHANDLETYPE,SHMEM>::create_needed_master_element_views(co
   }
 
   num_bytes_required += numScalars * sizeof(T);
+}
+
+template <typename T, typename TEAMHANDLETYPE, typename SHMEM>
+void
+ScratchViews<T, TEAMHANDLETYPE, SHMEM>::fill_static_meviews(
+  const ElemDataRequestsGPU& dataNeeded)
+{
+  MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
+  MasterElement *meSCS = dataNeeded.get_cvfem_surface_me();
+  MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
+  MasterElement *meFEM = dataNeeded.get_fem_volume_me();
+
+  const typename ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
+  for(unsigned i=0; i<coordsTypes.size(); ++i) {
+    auto cType = coordsTypes(i);
+
+    const typename ElemDataRequestsGPU::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
+    auto& meData = get_me_views(cType);
+
+    meData.fill_static_meviews(dataEnums, meFC, meSCS, meSCV, meFEM);
+  }
 }
 
 int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim);
