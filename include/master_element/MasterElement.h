@@ -15,6 +15,8 @@
 #include "SimdInterface.h"
 #include "KokkosInterface.h"
 
+#include "stk_util/util/ReportHandler.hpp"
+
 #include <stdexcept>
 
 namespace stk {
@@ -48,34 +50,40 @@ public:
   // NGP-ready methods first
   KOKKOS_FUNCTION virtual void shape_fcn(
     SharedMemView<DoubleType**, DeviceShmem> &/* shpfc */) {
+    NGP_ThrowErrorMsg("MasterElement::shape_fcn not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void shifted_shape_fcn(
     SharedMemView<DoubleType**, DeviceShmem> &/* shpfc */) {
+    NGP_ThrowErrorMsg("MasterElement::shifted_shape_fcn not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void grad_op(
     SharedMemView<DoubleType**, DeviceShmem>&/* coords */,
     SharedMemView<DoubleType***, DeviceShmem>&/* gradop */,
     SharedMemView<DoubleType***, DeviceShmem>&/* deriv */) {
+    NGP_ThrowErrorMsg("MasterElement::grad_op not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void shifted_grad_op(
     SharedMemView<DoubleType**, DeviceShmem>&/* coords */,
     SharedMemView<DoubleType***, DeviceShmem>&/* gradop */,
     SharedMemView<DoubleType***, DeviceShmem>&/* deriv */) {
+    NGP_ThrowErrorMsg("MasterElement::shifted_grad_op not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void face_grad_op(
     int /* face_ordinal */,
     SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
     SharedMemView<DoubleType***, DeviceShmem>& /* gradop */) {
+    NGP_ThrowErrorMsg("MasterElement::face_grad_op not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void shifted_face_grad_op(
     int /* face_ordinal */,
     SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
     SharedMemView<DoubleType***, DeviceShmem>& /* gradop */) {
+    NGP_ThrowErrorMsg("MasterElement::shifted_face_grad_op not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void grad_op_fem(
@@ -83,6 +91,7 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>&/* gradop */,
     SharedMemView<DoubleType***, DeviceShmem>&/* deriv */,
     SharedMemView<DoubleType*, DeviceShmem>& /*det_j*/) {
+    NGP_ThrowErrorMsg("MasterElement::grad_op_fem not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void shifted_grad_op_fem(
@@ -90,11 +99,13 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>&/* gradop */,
     SharedMemView<DoubleType***, DeviceShmem>&/* deriv */,
     SharedMemView<DoubleType*, DeviceShmem>& /*det_j*/) {
+    NGP_ThrowErrorMsg("MasterElement::shifted_grad_op_fem not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void determinant(
     SharedMemView<DoubleType**, DeviceShmem>&/* coords */,
     SharedMemView<DoubleType**, DeviceShmem>&/* areav */) {
+    NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void gij(
@@ -102,17 +113,20 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>& /* gupper */,
     SharedMemView<DoubleType***, DeviceShmem>& /* glower */,
     SharedMemView<DoubleType***, DeviceShmem>& /* deriv */) {
+    NGP_ThrowErrorMsg("MasterElement::gij not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void Mij(
     SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
     SharedMemView<DoubleType***, DeviceShmem>& /* metric */,
     SharedMemView<DoubleType***, DeviceShmem>& /* deriv */) {
+    NGP_ThrowErrorMsg("MasterElement::Mij not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void determinant(
     SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
     SharedMemView<DoubleType*, DeviceShmem>& /* volume */) {
+    NGP_ThrowErrorMsg("MasterElement::determinant not implemented for element");
   }
 
   // non-NGP-ready methods second
