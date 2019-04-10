@@ -152,8 +152,8 @@ public:
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final ;
 
-  void shape_fcn(double *shpfc);
-  void shifted_shape_fcn(double *shpfc);
+  void shape_fcn(double *shpfc) override;
+  void shifted_shape_fcn(double *shpfc) override;
 
   KOKKOS_FUNCTION void determinant(
     SharedMemView<DoubleType**, DeviceShmem> &coords,
@@ -227,8 +227,8 @@ public:
   KOKKOS_FUNCTION
   virtual ~Quad92DSCS() {}
 
-  void shape_fcn(double *shpfc);
-  void shifted_shape_fcn(double *shpfc);
+  void shape_fcn(double *shpfc) override;
+  void shifted_shape_fcn(double *shpfc) override;
 
   KOKKOS_FUNCTION void determinant(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
