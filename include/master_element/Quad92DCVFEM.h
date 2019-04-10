@@ -32,8 +32,6 @@ class QuadrilateralP2Element : public MasterElement
 {
 public:
   using AlgTraits = AlgTraitsQuad9_2D;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
 
   QuadrilateralP2Element();
   KOKKOS_FUNCTION
@@ -142,8 +140,6 @@ class Quad92DSCV : public QuadrilateralP2Element
 public:
   using MasterElement::determinant;
   using MasterElement::grad_op;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
   using MasterElement::shifted_grad_op;
 
   Quad92DSCV();
@@ -152,7 +148,14 @@ public:
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final ;
 
+  KOKKOS_FUNCTION virtual void shape_fcn(
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+
   void shape_fcn(double *shpfc);
+
+  KOKKOS_FUNCTION virtual void shifted_shape_fcn (
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+
   void shifted_shape_fcn(double *shpfc);
 
   KOKKOS_FUNCTION void determinant(
@@ -220,14 +223,19 @@ class Quad92DSCS : public QuadrilateralP2Element
 public:
   using MasterElement::determinant;
   using MasterElement::adjacentNodes;
-  using MasterElement::shape_fcn;
-  using MasterElement::shifted_shape_fcn;
 
   Quad92DSCS();
   KOKKOS_FUNCTION
   virtual ~Quad92DSCS() {}
 
+  KOKKOS_FUNCTION virtual void shape_fcn(
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+
   void shape_fcn(double *shpfc);
+
+  KOKKOS_FUNCTION virtual void shifted_shape_fcn (
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
+
   void shifted_shape_fcn(double *shpfc);
 
   KOKKOS_FUNCTION void determinant(

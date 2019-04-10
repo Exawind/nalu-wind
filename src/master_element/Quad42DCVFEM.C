@@ -255,6 +255,12 @@ Quad42DSCV::shape_fcn(double *shpfc)
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
 void
+Quad42DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) 
+{
+  quad_shape_fcn(intgLocShift_, shpfc);
+}
+
+void
 Quad42DSCV::shifted_shape_fcn(double *shpfc)
 {
   quad_shape_fcn(intgLocShift_, shpfc);
@@ -787,6 +793,12 @@ Quad42DSCS::shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
+void
+Quad42DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) 
+{
+  quad_shape_fcn(intgLocShift_, shpfc);
+}
+
 void
 Quad42DSCS::shifted_shape_fcn(double *shpfc)
 {

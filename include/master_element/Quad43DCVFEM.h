@@ -32,10 +32,10 @@ public:
  
   // NGP-ready methods first
   KOKKOS_FUNCTION void shape_fcn(
-    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
   KOKKOS_FUNCTION void shifted_shape_fcn(
-    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
   KOKKOS_FUNCTION void quad4_shape_fcn(
     const double *isoParCoord,

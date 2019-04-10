@@ -33,7 +33,6 @@ public:
   using MasterElement::determinant;
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
-  using MasterElement::shifted_shape_fcn;
 
   KOKKOS_FUNCTION
   Quad42DSCV();
@@ -77,6 +76,9 @@ public:
 
   void shape_fcn(
     double *shpfc) override ;
+
+  KOKKOS_FUNCTION virtual void shifted_shape_fcn (
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
   void shifted_shape_fcn(
     double *shpfc) override ;
@@ -125,7 +127,6 @@ class Quad42DSCS : public MasterElement
 public:
   using AlgTraits = AlgTraitsQuad4_2D;
   using MasterElement::determinant;
-  using MasterElement::shifted_shape_fcn;
   using MasterElement::adjacentNodes;
 
   KOKKOS_FUNCTION
@@ -234,6 +235,9 @@ public:
 
   void shape_fcn(
     double *shpfc) override;
+
+  KOKKOS_FUNCTION virtual void shifted_shape_fcn (
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
   void shifted_shape_fcn(
     double *shpfc) override;
