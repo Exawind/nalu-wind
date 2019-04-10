@@ -68,6 +68,12 @@ HexSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
   hex8_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
 
+void
+HexSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  hex8_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+}
+
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
