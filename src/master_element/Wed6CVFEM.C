@@ -16,6 +16,27 @@
 namespace sierra {
 namespace nalu {
 
+template<typename ViewType>
+KOKKOS_FUNCTION void wed_shape_fcn(
+  const int  npts,
+  const double *isoParCoord,
+  ViewType& shape_fcn)
+{
+  for (int j = 0; j < npts; ++j ) {
+    int k    = 3 * j;
+    double r    = isoParCoord[k];
+    double s    = isoParCoord[k + 1];
+    double t    = 1.0 - r - s;
+    double xi   = isoParCoord[k + 2];
+    shape_fcn(j, 0) = 0.5 * t * (1.0 - xi);
+    shape_fcn(j, 1) = 0.5 * r * (1.0 - xi);
+    shape_fcn(j, 2) = 0.5 * s * (1.0 - xi);
+    shape_fcn(j, 3) = 0.5 * t * (1.0 + xi);
+    shape_fcn(j, 4) = 0.5 * r * (1.0 + xi);
+    shape_fcn(j, 5) = 0.5 * s * (1.0 + xi);
+  }
+}
+
 //-------- wed_deriv -------------------------------------------------------
 template <typename DerivType>
 KOKKOS_FUNCTION
@@ -230,6 +251,19 @@ void WedSCV::determinant(
       volume, error, &lerr );
 }
 
+KOKKOS_FUNCTION void
+WedSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  wed_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+}
+
+KOKKOS_FUNCTION void
+WedSCV::shifted_shape_fcn(
+  SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  wed_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+}
+
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -247,7 +281,6 @@ WedSCV::shifted_shape_fcn(double *shpfc)
 {
   wedge_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
-
 
 //--------------------------------------------------------------------------
 //-------- wedge_shape_fcn -------------------------------------------------
@@ -804,6 +837,19 @@ WedSCS::opposingFace(
   const int node)
 {
   return oppFace_[ordinal*4+node];
+}
+
+KOKKOS_FUNCTION void
+WedSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  wed_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+}
+
+KOKKOS_FUNCTION void
+WedSCS::shifted_shape_fcn(
+  SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  wed_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
 
 //--------------------------------------------------------------------------
