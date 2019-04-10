@@ -195,25 +195,18 @@ public:
      throw std::runtime_error("shifted_face_grad_op not implemented");}
 
   KOKKOS_FUNCTION virtual const int * adjacentNodes() {
-#ifndef KOKKOS_ENABLE_CUDA
-    throw std::runtime_error("adjacentNodes not implemented");
-#else
+    NGP_ThrowErrorMsg("MasterElement::adjacentNodes not implemented");
     return nullptr;
-#endif
-    }
+  }
 
   virtual const int * scsIpEdgeOrd() {
     throw std::runtime_error("scsIpEdgeOrd not implemented");
-    }
+  }
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int /* ordinal */ = 0) const {
-#ifndef KOKKOS_ENABLE_CUDA
-      throw std::runtime_error("ipNodeMap not implemented");
-#else
-      printf("Invalid ipNodeMap call on GPUs");
-      return nullptr;
-#endif
-     }
+    NGP_ThrowErrorMsg("MasterElement::ipNodeMap not implemented");
+    return nullptr;
+  }
 
   virtual void shape_fcn(
     double * /* shpfc */) {
