@@ -733,7 +733,6 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_GRAD_OP requested.");
         meSCS->shifted_grad_op(*coordsView, dndx_shifted, deriv);
         break;
-#ifndef KOKKOS_ENABLE_CUDA
       case SCS_GIJ:
          NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_GIJ is requested.");
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_GIJ requested.");
@@ -749,7 +748,6 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_MIJ requested.");
          meSCV->Mij(*coordsView, metric, deriv_scv);
          break;
-#endif
       case SCV_VOLUME:
          NGP_ThrowRequireMsg(meSCV != nullptr, "ERROR, meSCV needs to be non-null if SCV_VOLUME is requested.");
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_VOLUME requested.");
