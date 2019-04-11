@@ -11,6 +11,7 @@
 
 #include "kernel/MomentumAdvDiffElemKernel.h"
 
+#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
 namespace advection_diffusion {
@@ -270,10 +271,9 @@ static constexpr double lhs[24][24] = {
 } // advection_diffusion
 } // hex8_golds
 } // anonymous namespace
+#endif
 
-#ifndef KOKKOS_ENABLE_CUDA
-
-TEST_F(MomentumKernelHex8Mesh, advection_diffusion)
+TEST_F(MomentumKernelHex8Mesh, NGP_advection_diffusion)
 {
   fill_mesh_and_init_fields();
 
@@ -297,6 +297,7 @@ TEST_F(MomentumKernelHex8Mesh, advection_diffusion)
   // Populate LHS and RHS
   helperObjs.assembleElemSolverAlg->execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
@@ -304,7 +305,5 @@ TEST_F(MomentumKernelHex8Mesh, advection_diffusion)
   namespace gold_values = ::hex8_golds::advection_diffusion;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->lhs_, gold_values::lhs);
-}
-
 #endif
-
+}
