@@ -98,7 +98,7 @@ unsigned get_field_ordinal(
   const stk::mesh::EntityRank entity_rank = stk::topology::NODE_RANK)
 {
   stk::mesh::FieldBase* field = meta.get_field(entity_rank, fieldName);
-  ThrowAssertMsg((field != nullptr), "Requested field does not exist: " + fieldName);
+  ThrowRequireMsg((field != nullptr), "Requested field does not exist: " + fieldName);
   return field->mesh_meta_data_ordinal();
 }
 
@@ -113,8 +113,8 @@ unsigned get_field_ordinal(
   const stk::mesh::EntityRank entity_rank = stk::topology::NODE_RANK)
 {
   const auto* field = meta.get_field(entity_rank, fieldName);
-  ThrowAssertMsg((field != nullptr), "Requested field does not exist: " + fieldName);
-  ThrowAssertMsg((field->is_state_valid(state)), "Requested invalid state: " + fieldName);
+  ThrowRequireMsg((field != nullptr), "Requested field does not exist: " + fieldName);
+  ThrowRequireMsg((field->is_state_valid(state)), "Requested invalid state: " + fieldName);
 
   const auto* fState = field->field_state(state);
   return fState->mesh_meta_data_ordinal();
