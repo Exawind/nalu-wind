@@ -45,34 +45,34 @@ public:
     const int nelem,
     const double *coords,
     double *areav,
-    double * error );
+    double * error ) override;
 
   void shape_fcn(
-    double *shpfc);
+    double *shpfc) override;
 
   void shifted_shape_fcn(
-    double *shpfc);
+    double *shpfc) override;
 
   double isInElement(
     const double *elemNodalCoord,
     const double *pointCoord,
-    double *isoParCoord);
+    double *isoParCoord) override;
   
   void interpolatePoint(
     const int &nComp,
     const double *isoParCoord,
     const double *field,
-    double *result);
+    double *result) override;
 
   void general_shape_fcn(
     const int numIp,
     const double *isoParCoord,
-    double *shpfc);
+    double *shpfc) override;
 
   void general_normal(
     const double *isoParCoord,
     const double *coords,
-    double *normal);
+    double *normal) override;
 
   void non_unit_face_normal(
     const double * par_coord,
