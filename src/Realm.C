@@ -267,6 +267,9 @@ namespace nalu{
 //--------------------------------------------------------------------------
 Realm::~Realm()
 {
+  ngpFieldMgr_.reset();
+  ngpMesh_.reset();
+
   delete bulkData_;
   delete metaData_;
   delete ioBroker_;
