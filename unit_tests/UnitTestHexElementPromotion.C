@@ -15,6 +15,8 @@
 #include <stk_unit_tests/stk_mesh_fixtures/HexFixture.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 
+#include <master_element/HexPCVFEM.h>
+
 #include <master_element/MasterElementHO.h>
 
 #include <element_promotion/PromotedPartHelper.h>
@@ -209,9 +211,9 @@ protected:
    void compute_dual_nodal_volume()
    {
      auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
-     auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", poly_order);
+     auto quad = sierra::nalu::TensorProductQuadratureRule(poly_order);
 
-     sierra::nalu::HigherOrderHexSCV meSCV(*elemDesc, basis, quad);
+     sierra::nalu::HigherOrderHexSCV meSCV(basis, quad);
 
      // extract master element specifics
      const int nodesPerElement = meSCV.nodesPerElement_;
@@ -249,9 +251,9 @@ protected:
    void compute_projected_nodal_gradient_interior()
    {
      auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
-     auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", poly_order);
+     auto quad = sierra::nalu::TensorProductQuadratureRule(poly_order);
 
-     sierra::nalu::HigherOrderHexSCS meSCS(*elemDesc, basis, quad);
+     sierra::nalu::HigherOrderHexSCS meSCS(basis, quad);
 
      auto numScsIp = meSCS.num_integration_points();
      auto nodesPerElement = meSCS.nodesPerElement_;
@@ -317,7 +319,7 @@ protected:
    void compute_projected_nodal_gradient_boundary()
    {
      auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMapBC, elemDesc->nodeLocs1D);
-     auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", poly_order);
+     auto quad = sierra::nalu::TensorProductQuadratureRule(poly_order);
 
      sierra::nalu::HigherOrderQuad3DSCS meBC(*elemDesc, basis, quad);
 

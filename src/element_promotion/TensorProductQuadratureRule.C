@@ -11,149 +11,86 @@
 #include <cmath>
 #include <stdexcept>
 #include <tuple>
+#include <vector>
 
 namespace sierra{
 namespace nalu{
 
-TensorProductQuadratureRule::TensorProductQuadratureRule(std::string type, int polyOrder)
-{
-  scsLoc_ = gauss_legendre_rule(polyOrder).first;
+int gauss_points_required_for_order(int order) { return (order % 2 == 0) ? order / 2 + 1 : (order + 1) / 2; }
 
-  // pad the scs surfaces with the end-points of the element (-1 and +1)
-  scsEndLoc_ = pad_end_points(scsLoc_, -1, +1);
-
-  if (type == "GaussLegendre") {
-    numQuad_ =  (polyOrder % 2 == 0) ? polyOrder/2 + 1 : (polyOrder+1)/2;
-    std::tie(abscissae_, weights_) = gauss_legendre_rule(numQuad_);
-    double isoparametricFactor = 0.5;
-    for (auto& weight : weights_) {
-      weight *= isoparametricFactor;
-    }
-    useSGL_ = false;
-  }
-  else if (type == "SGL") {
-    int numNodes = polyOrder+1;
-    numQuad_ = 1; // only 1 quadrature point per scv
-    std::tie(abscissae_, weights_) = SGL_quadrature_rule(numNodes, scsEndLoc_.data());
-    useSGL_ = true;
-  }
-  else {
-    ThrowRequireMsg(false, "Invalid quadrature type");
-  }
-}
-//--------------------------------------------------------------------------
-TensorProductQuadratureRule::TensorProductQuadratureRule(
-  std::string type,
-  int numQuad,
-  std::vector<double>& scsLocs)
-: numQuad_(numQuad)
+int integration_points_required(int poly, QuadratureRuleType quadType)
 {
-  // pad the scs surfaces with the end-points of the element (-1 and +1)
-  scsEndLoc_.resize(scsLocs.size()+2);
-  scsEndLoc_[0] = -1.0;
+  switch (quadType)
+  {
+    case QuadratureRuleType::MINIMUM_GAUSS: return gauss_points_required_for_order(poly);
+    case QuadratureRuleType::DOUBLE_GAUSS: return gauss_points_required_for_order(2*poly);
+  }
+  ThrowAssert(false);
+  return -1;
+}
 
-  for (unsigned j = 0; j < scsLocs.size();++j) {
-    scsEndLoc_[j+1] = scsLocs[j];
-  }
-  scsEndLoc_[scsLocs.size()+1] = +1.0;
+TensorProductQuadratureRule::TensorProductQuadratureRule(int polyOrder, QuadratureRuleType quadType)
+: numQuad_(integration_points_required(polyOrder, quadType)),
+  scsLoc_("scs_locations", polyOrder),
+  scsEndLoc_("scs_locations_with_end_points", polyOrder + 2),
+  abscissae_("gauss_abscissae", numQuad_),
+  weights_("gauss_point_weights", numQuad_)
+{
+  ThrowAssert(numQuad_ > 0);
 
-  if (type == "GaussLegendre") {
-    std::tie(abscissae_, weights_) = gauss_legendre_rule(numQuad);
-    double isoparametricFactor = 0.5;
-    for (auto& weight : weights_) {
-      weight *= isoparametricFactor;
-    }
-    useSGL_ = false;
+  auto scsLoc = gauss_legendre_rule(polyOrder).first;
+  for (int k = 0; k < polyOrder; ++k) {
+    scsLoc_[k] = scsLoc[k];
   }
-  else if (type == "SGL") {
-    int numNodes = scsLocs.size()+1;
-    numQuad_ = 1; // only 1 quadrature point per scv
-    std::tie(abscissae_, weights_) = SGL_quadrature_rule(numNodes, scsEndLoc_.data());
-    useSGL_ = true;
+
+  auto scsEndLoc = pad_end_points(scsLoc, -1, +1);
+  for (int k = 0; k < polyOrder + 2; ++k) {
+    scsEndLoc_[k] = scsEndLoc[k];
   }
+
+  std::vector<double> abscissae;
+  std::vector<double> weights;
+  std::tie(abscissae, weights) = gauss_legendre_rule(numQuad_);
+  const double isoParametricFactor = 0.5;
+
+  for (int k = 0; k < numQuad_; ++k) {
+    abscissae_[k] = abscissae[k];
+    weights_[k] = isoParametricFactor * weights[k];
+  }
+
 }
-//--------------------------------------------------------------------------
-double
-TensorProductQuadratureRule::isoparametric_mapping(
-  const double b,
-  const double a,
-  const double xi) const
+
+double isoparametric_map(double xl, double xr, double x) { return 0.5 * (x * (xr - xl) +  (xl + xr)); }
+
+double TensorProductQuadratureRule::integration_point_location(int nodeOrd, int ipOrd) const
 {
-  return (0.5*(xi*(b-a) + (a+b)));
+  return isoparametric_map(scsEndLoc_[nodeOrd], scsEndLoc_[nodeOrd + 1], abscissae_[ipOrd]);
 }
-//--------------------------------------------------------------------------
-double
-TensorProductQuadratureRule::integration_point_location(
-  int nodeOrdinal,
-  int gaussPointOrdinal) const
+
+double TensorProductQuadratureRule::integration_point_weight(int s1Node, int s1Ip) const
 {
-  double location1D;
-  if (!useSGL_) {
-    location1D = isoparametric_mapping(
-      scsEndLoc_[nodeOrdinal+1],
-      scsEndLoc_[nodeOrdinal],
-      abscissae_[gaussPointOrdinal] );
-  }
-  else {
-    location1D = abscissae_[nodeOrdinal];
-  }
-  return location1D;
+  const double Ls1 = (scsEndLoc_[s1Node + 1] - scsEndLoc_[s1Node]) * weights_[s1Ip];
+  const double weightedIsoparametricLength = Ls1;
+  return weightedIsoparametricLength;
 }
-//--------------------------------------------------------------------------
-double
-TensorProductQuadratureRule::integration_point_weight(
+
+double TensorProductQuadratureRule::integration_point_weight(int s1Node, int s2Node, int s1Ip, int s2Ip) const
+{
+  const double Ls1 = (scsEndLoc_[s1Node + 1] - scsEndLoc_[s1Node]) * weights_[s1Ip];
+  const double Ls2 = (scsEndLoc_[s2Node + 1] - scsEndLoc_[s2Node]) * weights_[s2Ip];
+  const double weightedIsoparametricArea = Ls1 * Ls2;
+  return weightedIsoparametricArea;
+}
+
+double TensorProductQuadratureRule::integration_point_weight(
   int s1Node, int s2Node, int s3Node,
   int s1Ip, int s2Ip, int s3Ip) const
 {
-  double weight;
-  if (!useSGL_) {
-    const double Ls1 = scsEndLoc_[s1Node+1]-scsEndLoc_[s1Node];
-    const double Ls2 = scsEndLoc_[s2Node+1]-scsEndLoc_[s2Node];
-    const double Ls3 = scsEndLoc_[s3Node+1]-scsEndLoc_[s3Node];
-    const double isoparametricArea = Ls1 * Ls2 * Ls3;
-
-    weight = isoparametricArea
-           * weights_[s1Ip]
-           * weights_[s2Ip]
-           * weights_[s3Ip];
-   }
-   else {
-     weight = 1.0; // weights will be applied in the assembly
-   }
-   return weight;
-}
-//--------------------------------------------------------------------------
-double
-TensorProductQuadratureRule::integration_point_weight(
-  int s1Node, int s2Node,
-  int s1Ip, int s2Ip) const
-{
-  //surface integration
-  double weight;
-  if (!useSGL_) {
-    const double Ls1 = scsEndLoc_[s1Node+1]-scsEndLoc_[s1Node];
-    const double Ls2 = scsEndLoc_[s2Node+1]-scsEndLoc_[s2Node];
-    const double isoparametricArea = Ls1 * Ls2;
-    weight = isoparametricArea * weights_[s1Ip] * weights_[s2Ip];
-  }
-  else {
-    weight = 1.0; // weights will be applied in the assembly
-  }
-  return weight;
-}
-//--------------------------------------------------------------------------
-double
-TensorProductQuadratureRule::integration_point_weight(int s1Node, int s1Ip) const
-{
-  double weight;
-  if (!useSGL_) {
-    const double isoparametricLength = scsEndLoc_[s1Node+1]-scsEndLoc_[s1Node];
-    weight = isoparametricLength * weights_[s1Ip];
-  }
-  else {
-    weight = 1.0; // weights will be applied in the assembly
-  }
-  return weight;
+  const double Ls1 = (scsEndLoc_[s1Node + 1] - scsEndLoc_[s1Node]) * weights_[s1Ip];
+  const double Ls2 = (scsEndLoc_[s2Node + 1] - scsEndLoc_[s2Node]) * weights_[s2Ip];
+  const double Ls3 = (scsEndLoc_[s3Node + 1] - scsEndLoc_[s3Node]) * weights_[s3Ip];
+  const double weightedIsoparametricVolume = Ls1 * Ls2 * Ls3;
+  return weightedIsoparametricVolume;
 }
 
 }  // namespace nalu

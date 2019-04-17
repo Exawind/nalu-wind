@@ -8,8 +8,11 @@
 #define MasterElementHO_h
 
 #include <master_element/MasterElement.h>
+
 #include <element_promotion/TensorProductQuadratureRule.h>
 #include <element_promotion/LagrangeBasis.h>
+
+
 
 #include <element_promotion/ElementDescription.h>
 #include <element_promotion/HexNElementDescription.h>
@@ -34,194 +37,6 @@ struct HexNElementDescription;
 
 class LagrangeBasis;
 class TensorProductQuadratureRule;
-
-class HigherOrderHexSCV final: public MasterElement
-{
-public:
-  using MasterElement::determinant;
-  using MasterElement::grad_op;
-  using MasterElement::shape_fcn;
-
-  KOKKOS_FUNCTION
-  HigherOrderHexSCV(
-    ElementDescription elem,
-    LagrangeBasis basis,
-    TensorProductQuadratureRule quadrature);
-
-  KOKKOS_FUNCTION
-  virtual ~HigherOrderHexSCV() {}
-
-  void shape_fcn(double *shpfc) final;
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
-
-  void determinant(
-    const int nelem,
-    const double *coords,
-    double *volume,
-    double * error ) final;
-
-  void grad_op(
-    const int nelem,
-    const double *coords,
-    double *gradop,
-    double *deriv,
-    double *det_j,
-    double * error) final;
-
-  std::vector<double> shape_functions() {
-    return shapeFunctionVals_;
-  }
-
-  std::vector<double> shape_function_derivatives() {
-    return shapeDerivs_;
-  }
-
-  std::vector<double> ip_weights() {
-    return ipWeights_;
-  }
-
-
-  virtual const double* integration_locations() const final {
-    return intgLoc_.data();
-  }
-
-private:
-  void set_interior_info();
-
-  double jacobian_determinant(
-    const double* POINTER_RESTRICT elemNodalCoords,
-    const double* POINTER_RESTRICT shapeDerivs ) const;
-
-  const ElementDescription elem_;
-  LagrangeBasis basis_;
-  const TensorProductQuadratureRule quadrature_;
-
-  std::vector<double> shapeFunctionVals_;
-  std::vector<double> shapeDerivs_;
-  std::vector<double> ipWeights_;
-  std::vector<double> intgLoc_;
-  std::vector<int> ipNodeMap_;
-};
-
-// 3D Hex 27 subcontrol surface
-class HigherOrderHexSCS final: public MasterElement
-{
-public:
-  using MasterElement::determinant;
-  using MasterElement::grad_op;
-  using MasterElement::shape_fcn;
-  using MasterElement::gij;
-  using MasterElement::face_grad_op;
-  using MasterElement::adjacentNodes;
-
-  KOKKOS_FUNCTION
-  HigherOrderHexSCS(
-    ElementDescription elem,
-    LagrangeBasis basis,
-    TensorProductQuadratureRule quadrature);
-  KOKKOS_FUNCTION
-  virtual ~HigherOrderHexSCS() {}
-
-  void shape_fcn(double *shpfc) final;
-
-  void determinant(
-    const int nelem,
-    const double *coords,
-    double *areav,
-    double * error) final;
-
-  void grad_op(
-    const int nelem,
-    const double *coords,
-    double *gradop,
-    double *deriv,
-    double *det_j,
-    double * error) final;
-
-  void face_grad_op(
-    const int nelem,
-    const int face_ordinal,
-    const double *coords,
-    double *gradop,
-    double *det_j,
-    double * error) final;
-
-  void gij(
-    const double *coords,
-    double *gupperij,
-    double *glowerij,
-    double *deriv) final;
-
-  double isInElement(
-      const double *elemNodalCoord,
-      const double *pointCoord,
-      double *isoParCoord) final;
-
-  void interpolatePoint(
-      const int &nComp,
-      const double *isoParCoord,
-      const double *field,
-      double *result) final;
-
-  KOKKOS_FUNCTION const int * adjacentNodes() final;
-
-  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
-
-  const int * side_node_ordinals(int ordinal = 0) const final;
-
-  int opposingNodes(
-    const int ordinal, const int node) final;
-
-  int opposingFace(
-    const int ordinal, const int node) final;
-
-  std::vector<double> shape_functions() {
-    return shapeFunctionVals_;
-  }
-
-  std::vector<double> shape_function_derivatives() {
-    return shapeDerivs_;
-  }
-
-  KOKKOS_FUNCTION void face_grad_op(
-    int face_ordinal,
-    SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
-
-  virtual const double* integration_locations() const final {
-    return intgLoc_.data();
-  }
-
-private:
-  std::vector<int> lrscv_;
-  std::vector<int> oppNode_;
-
-  void set_interior_info();
-  void set_boundary_info();
-
-  template <Jacobian::Direction direction> void
-  area_vector(
-    const double *POINTER_RESTRICT elemNodalCoords,
-    double *POINTER_RESTRICT shapeDeriv,
-    double *POINTER_RESTRICT areaVector) const;
-
-  const ElementDescription elem_;
-  LagrangeBasis basis_;
-  const TensorProductQuadratureRule quadrature_;
-
-  std::vector<int> sideNodeOrdinals_;
-  std::vector<double> shapeFunctionVals_;
-  std::vector<double> shapeDerivs_;
-  std::vector<double> expFaceShapeDerivs_;
-  std::vector<double> intgLoc_;
-  std::vector<double> intgExpFace_;
-  std::vector<ContourData> ipInfo_;
-  std::vector<int> ipNodeMap_;
-  std::vector<int> oppFace_;
-  int ipsPerFace_;
-
-  AlignedViewType<DoubleType**[3]> expRefGradWeights_;
-};
 
 // 3D Quad 9
 class HigherOrderQuad3DSCS final: public MasterElement
@@ -249,17 +64,8 @@ public:
     double *areav,
     double * error );
 
-  std::vector<double> shape_functions() {
-    return shapeFunctionVals_;
-  }
-
-  std::vector<double> shape_function_derivatives() {
-    return shapeDerivs_;
-  }
-
-  std::vector<double> ip_weights() {
-    return ipWeights_;
-  }
+  const double* shape_functions() const { return shapeFunctionVals_.data(); }
+  const double* ip_weights() const { return ipWeights_.data(); }
 
   virtual const double* integration_locations() const final {
     return intgLoc_.data();
@@ -279,8 +85,8 @@ private:
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
 
-  std::vector<double> shapeFunctionVals_;
-  std::vector<double> shapeDerivs_;
+  Kokkos::View<double**>  shapeFunctionVals_;
+  Kokkos::View<double***>  shapeDerivs_;
   std::vector<double> ipWeights_;
   std::vector<double> intgLoc_;
   std::vector<int> ipNodeMap_;
@@ -320,17 +126,11 @@ public:
     double *det_j,
     double * error) final;
 
-  std::vector<double> shape_functions() {
-    return shapeFunctionVals_;
-  }
 
-  std::vector<double> shape_function_derivatives() {
-    return shapeDerivs_;
-  }
 
-  std::vector<double> ip_weights() {
-    return ipWeights_;
-  }
+  const double* shape_functions() const { return shapeFunctionVals_.data(); }
+  const double* ip_weights() const { return ipWeights_.data(); }
+
 
   virtual const double* integration_locations() const final {
     return intgLoc_.data();
@@ -347,8 +147,8 @@ private:
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
 
-  std::vector<double> shapeFunctionVals_;
-  std::vector<double> shapeDerivs_;
+  Kokkos::View<double**> shapeFunctionVals_;
+  Kokkos::View<double***>  shapeDerivs_;
   std::vector<double> ipWeights_;
   std::vector<double> intgLoc_;
   std::vector<int> ipNodeMap_;
@@ -426,14 +226,6 @@ public:
   virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
   virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
 
-  std::vector<double> shape_functions() {
-    return shapeFunctionVals_;
-  }
-
-  std::vector<double> shape_function_derivatives() {
-    return shapeDerivs_;
-  }
-
   virtual const double* integration_locations() const final {
     return intgLoc_.data();
   }
@@ -455,13 +247,13 @@ private:
   const TensorProductQuadratureRule quadrature_;
 
   std::vector<int> sideNodeOrdinals_;
-  std::vector<double> shapeFunctionVals_;
-  std::vector<double> shapeDerivs_;
+  Kokkos::View<double**> shapeFunctionVals_;
+  Kokkos::View<double***>  shapeDerivs_;
   std::vector<double> intgLoc_;
   std::vector<ContourData> ipInfo_;
   std::vector<int> ipNodeMap_;
   int ipsPerFace_;
-  std::vector<double> expFaceShapeDerivs_;
+  Kokkos::View<double***> expFaceShapeDerivs_;
   std::vector<int> oppNode_;
   std::vector<int> oppFace_;
   std::vector<double> intgExpFace_;
@@ -492,21 +284,12 @@ public:
   void shape_fcn(
     double *shpfc) final;
 
-  std::vector<double> shape_functions() {
-    return shapeFunctionVals_;
-  }
-
-  std::vector<double> shape_function_derivatives() {
-    return shapeDerivs_;
-  }
-
-  std::vector<double> ip_weights() {
-    return ipWeights_;
-  }
-
   virtual const double* integration_locations() const final {
     return intgLoc_.data();
   }
+
+  const double* shape_functions() const { return shapeFunctionVals_.data(); }
+  const double* ip_weights() const { return ipWeights_.data(); }
 
 private:
   void area_vector(
@@ -518,8 +301,8 @@ private:
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
 
-  std::vector<double> shapeFunctionVals_;
-  std::vector<double> shapeDerivs_;
+  Kokkos::View<double**> shapeFunctionVals_;
+  Kokkos::View<double***> shapeDerivs_;
   std::vector<double> ipWeights_;
   std::vector<double> intgLoc_;
   std::vector<int> ipNodeMap_;

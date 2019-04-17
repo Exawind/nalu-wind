@@ -5,6 +5,7 @@ add_sources(GlobalSourceList
    CalculatePolyhedralArea.F
    CalculatePolyhedralVolume.F
    CalculateQuadArea.F
+   HexPCVFEM.C
    Hex27CVFEM.C
    Hex8CVFEM.C
    Hex8FEM.C

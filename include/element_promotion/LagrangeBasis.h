@@ -7,6 +7,8 @@
 #ifndef LagrangeBasis_h
 #define LagrangeBasis_h
 
+#include <Kokkos_Core.hpp>
+
 #include <vector>
 
 namespace sierra{
@@ -16,66 +18,47 @@ class Lagrange1D
 {
 public:
   Lagrange1D(const double* nodeLocs, int order);
+  Lagrange1D(Kokkos::View<double*> nodeLocs);
 
-  Lagrange1D(std::vector<double> nodeLocs);
-
-  Lagrange1D(int order);
-
-  virtual ~Lagrange1D();
-
+  ~Lagrange1D();
   double interpolation_weight(double x, unsigned nodeNumber) const;
-
   double derivative_weight(double x, unsigned nodeNumber) const;
-
 private:
   void set_lagrange_weights();
-  std::vector<double> lagrangeWeights_;
-  std::vector<double> nodeLocs_;
+  Kokkos::View<double*> nodeLocs_;
+  Kokkos::View<double*> barycentricWeights_;
 };
 
 class LagrangeBasis
 {
 public:
-  LagrangeBasis(
-    const std::vector<std::vector<int>>&  indicesMap,
-    const std::vector<double>& nodeLocs
-  );
+  LagrangeBasis(const std::vector<std::vector<int>>& indicesMap, const std::vector<double>& nodeLocs);
+  ~LagrangeBasis();
+  Kokkos::View<double**> eval_basis_weights(const double* intgLoc, int nInt) const;
+  Kokkos::View<double**> eval_basis_weights(const Kokkos::View<double**>& intgLoc) const;
+  Kokkos::View<double***> eval_deriv_weights(const double* intgLoc, int nInt) const;
+  Kokkos::View<double***> eval_deriv_weights(const Kokkos::View<double**>& intgLoc) const;
 
-  virtual ~LagrangeBasis();
 
-  std::vector<double> eval_basis_weights(
-    const std::vector<double>& intgLoc) const;
+  const Kokkos::View<double*>& point_interpolation_weights(const double* isoParCoords);
+  const Kokkos::View<double**>& point_derivative_weights(const double* isoParCoords);
 
-  std::vector<double> eval_deriv_weights(
-    const std::vector<double>& intgLoc) const;
-
-  void interpolation_weights(const double* isoParCoord, double* weights) const;
-  void derivative_weights(const double* isoParCoord, double* weights) const;
-
-  const std::vector<double>& point_interpolation_weights(const double* isoParCoords);
-  const std::vector<double>& point_derivative_weights(const double* isoParCoords);
-
-  double tensor_lagrange_derivative(
-    unsigned dimension,
-    const double* x,
-    const int* node_ordinals,
-    unsigned derivativeDirection
-  ) const;
-
-  double tensor_lagrange_interpolant(unsigned dimension, const double* x, const int* node_ordinals) const;
-
+  unsigned order() const { return polyOrder_; }
   unsigned num_nodes() const { return numNodes_; }
 
-  std::vector<std::vector<int>> indicesMap_;
+private:
+  void fill_interpolation_weights(const double* isoParCoord, double* weights) const;
+  void fill_derivative_weights(const double* isoParCoord, double* weights) const;
 
-  std::vector<double> interpWeightsAtPoint_;
-  std::vector<double> derivWeightsAtPoint_;
-
+  const unsigned polyOrder_;
   const Lagrange1D basis1D_;
-  unsigned numNodes1D_;
-  unsigned numNodes_;
-  unsigned polyOrder_;
+  const unsigned numNodes1D_;
   const unsigned dim_;
+  const unsigned numNodes_;
+
+  Kokkos::View<int**> indicesMap_;
+  Kokkos::View<double*> interpWeightsAtPoint_;
+  Kokkos::View<double**> derivWeightsAtPoint_;
 };
 
 
