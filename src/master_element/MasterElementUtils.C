@@ -54,17 +54,17 @@ namespace nalu{
       const auto& deriv = basis.point_derivative_weights(guess.data());
       std::array<double, dim * dim> jact{};
       for(int j = 0; j < nNodes; ++j) {
-        jact[0] += deriv[0 + j * dim] * elemNodalCoords[j + 0 * nNodes];
-        jact[1] += deriv[1 + j * dim] * elemNodalCoords[j + 0 * nNodes];
-        jact[2] += deriv[2 + j * dim] * elemNodalCoords[j + 0 * nNodes];
+        jact[0] += deriv(j, 0) * elemNodalCoords[j + 0 * nNodes];
+        jact[1] += deriv(j, 1) * elemNodalCoords[j + 0 * nNodes];
+        jact[2] += deriv(j, 2) * elemNodalCoords[j + 0 * nNodes];
 
-        jact[3] += deriv[0 + j * dim] * elemNodalCoords[j + 1 * nNodes];
-        jact[4] += deriv[1 + j * dim] * elemNodalCoords[j + 1 * nNodes];
-        jact[5] += deriv[2 + j * dim] * elemNodalCoords[j + 1 * nNodes];
+        jact[3] += deriv(j, 0) * elemNodalCoords[j + 1 * nNodes];
+        jact[4] += deriv(j, 1) * elemNodalCoords[j + 1 * nNodes];
+        jact[5] += deriv(j, 2) * elemNodalCoords[j + 1 * nNodes];
 
-        jact[6] += deriv[0 + j * dim] * elemNodalCoords[j + 2 * nNodes];
-        jact[7] += deriv[1 + j * dim] * elemNodalCoords[j + 2 * nNodes];
-        jact[8] += deriv[2 + j * dim] * elemNodalCoords[j + 2 * nNodes];
+        jact[6] += deriv(j, 0) * elemNodalCoords[j + 2 * nNodes];
+        jact[7] += deriv(j, 1) * elemNodalCoords[j + 2 * nNodes];
+        jact[8] += deriv(j, 2) * elemNodalCoords[j + 2 * nNodes];
       }
 
       // apply its inverse on the error vector
@@ -119,10 +119,10 @@ namespace nalu{
       const auto& deriv = basis.point_derivative_weights(guess.data());
       std::array<double, dim * dim> jact{};
       for(int j = 0; j < nNodes; ++j) {
-        jact[0] += deriv[0 + j * dim] * elemNodalCoords[j + 0 * nNodes];
-        jact[1] += deriv[1 + j * dim] * elemNodalCoords[j + 0 * nNodes];
-        jact[2] += deriv[0 + j * dim] * elemNodalCoords[j + 1 * nNodes];
-        jact[3] += deriv[1 + j * dim] * elemNodalCoords[j + 1 * nNodes];
+        jact[0] += deriv(j,0) * elemNodalCoords[j + 0 * nNodes];
+        jact[1] += deriv(j,1) * elemNodalCoords[j + 0 * nNodes];
+        jact[2] += deriv(j,0) * elemNodalCoords[j + 1 * nNodes];
+        jact[3] += deriv(j,1) * elemNodalCoords[j + 1 * nNodes];
       }
 
       // apply its inverse on the error vector

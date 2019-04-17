@@ -10,16 +10,17 @@ add_sources(GlobalUnitSourceList
    UnitTestElementDescription.C
    UnitTestFieldUtils.C
    UnitTestGetDofStatus.C
-   UnitTestHOMasterElements.C
    UnitTestHex27FaceNodeOrdering.C
    UnitTestHexElementPromotion.C
    UnitTestHexMasterElements.C
    UnitTestHexMasterElementsNgp.C
    UnitTestHexSCVDeterminant.C
+   UnitTestHOMasterElements.C
    UnitTestIntegrationRule.C
    UnitTestKokkosME.C
    UnitTestKokkosMEBC.C
    UnitTestKokkosViews.C
+   UnitTestLagrangeInterpolants.C
    UnitTestLocalGraphArrays.C
    UnitTestMasterElements.C
    UnitTestMetricTensor.C

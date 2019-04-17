@@ -175,13 +175,13 @@ protected:
     const double *pointCoord,
     double *isoParCoord);
 
-  static const int nodes1D_    = 3;
-  static const int numQuad_    = 2;
-  static const int nodesPerElement_ = AlgTraits::nodesPerElement_;
-  static const int numFaces_ = 2 * nDim_; // 6
-  static const int nodesPerFace_ = nodes1D_ * nodes1D_; // 9
-  static const int ipsPerFace_  = nodesPerFace_ * (numQuad_ * numQuad_); // 36
-  static const int numFaceIps_ = numFaces_ * ipsPerFace_; // 216 = numIntPoints_ for this element
+  static constexpr int nodes1D_    = 3;
+  static constexpr int numQuad_    = 2;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numFaces_ = 2 * nDim_; // 6
+  static constexpr int nodesPerFace_ = nodes1D_ * nodes1D_; // 9
+  static constexpr int ipsPerFace_  = nodesPerFace_ * (numQuad_ * numQuad_); // 36
+  static constexpr int numFaceIps_ = numFaces_ * ipsPerFace_; // 216 = numIntPoints_ for this element
 
 
   // quadrature info
@@ -201,7 +201,7 @@ protected:
   double intgLocShift_       [numIntPoints_*nDim_];
 
   // map the standard stk node numbering to a tensor-product style node numbering (i.e. node (m,l,k) -> m+npe*l+npe^2*k)
-  const int    stkNodeMap_[3][3][3] = {
+  const int stkNodeMap_[3][3][3] = {
                 {{ 0,  8,  1}, // bottom front edge
                  {11, 21,  9}, // bottom mid-front edge
                  { 3, 10,  2}},// bottom back edge

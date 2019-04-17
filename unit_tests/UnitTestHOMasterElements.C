@@ -13,6 +13,8 @@
 
 #include <element_promotion/ElementDescription.h>
 #include <master_element/MasterElementHO.h>
+#include <master_element/HexPCVFEM.h>
+
 #include <element_promotion/QuadratureRule.h>
 #include <element_promotion/LagrangeBasis.h>
 #include <element_promotion/TensorProductQuadratureRule.h>
@@ -105,18 +107,16 @@ check_interpolation_quad(int polyOrder, int numIps, double tol)
   std::uniform_real_distribution<double> loc(-1.05, 1.05);
 
   int nodesPerElement = elemDesc->nodesPerElement;
-  std::vector<double> intgLoc(numIps * elemDesc->dimension);
+  Kokkos::View<double**> intgLoc("intg", numIps, elemDesc->dimension);
   std::vector<double> coeffsX(elemDesc->polyOrder+1);
   std::vector<double> coeffsY(elemDesc->polyOrder+1);
   std::vector<double> nodalValues(nodesPerElement);
-  std::vector<double> interpWeights(numIps * nodesPerElement);
   std::vector<double> exactInterp(numIps);
   std::vector<double> approxInterp(numIps);
 
   for (int ip = 0; ip < numIps; ++ip) {
-    int offset = ip * elemDesc->dimension;
-    intgLoc[offset + 0] = loc(rng);
-    intgLoc[offset + 1] = loc(rng);
+    intgLoc(ip, 0) = loc(rng);
+    intgLoc(ip, 1) = loc(rng);
   }
 
   for (int k = 0; k < elemDesc->polyOrder+1; ++k) {
@@ -124,7 +124,7 @@ check_interpolation_quad(int polyOrder, int numIps, double tol)
     coeffsY[k] = coeff(rng);
   }
 
-  interpWeights = basis.eval_basis_weights(intgLoc);
+  auto interpWeights = basis.eval_basis_weights(intgLoc);
 
   for (int i = 0; i < elemDesc->nodes1D; ++i) {
     for (int j = 0; j < elemDesc->nodes1D; ++j) {
@@ -134,20 +134,16 @@ check_interpolation_quad(int polyOrder, int numIps, double tol)
     }
   }
 
-  int offset_1 = 0;
   for (int ip = 0; ip < numIps; ++ip) {
     exactInterp[ip] =
-          poly_val(coeffsX, intgLoc[offset_1 + 0])
-        * poly_val(coeffsY, intgLoc[offset_1 + 1]);
-    offset_1 += 2;
+          poly_val(coeffsX, intgLoc(ip, 0))
+        * poly_val(coeffsY, intgLoc(ip, 1));
   }
 
   for (int ip = 0; ip < numIps; ++ip) {
-    int ip_offset = ip * nodesPerElement;
     double val = 0.0;
     for (int nodeNumber = 0; nodeNumber < nodesPerElement; ++nodeNumber) {
-      int offset = ip_offset + nodeNumber;
-      val += interpWeights[offset] * nodalValues[nodeNumber];
+      val += interpWeights(ip, nodeNumber) * nodalValues[nodeNumber];
     }
     approxInterp[ip] = val;
   }
@@ -172,20 +168,18 @@ check_interpolation_hex(int polyOrder, int numIps, double tol)
   std::uniform_real_distribution<double> loc(-1.05, 1.05);
 
   int nodesPerElement = elemDesc->nodesPerElement;
-  std::vector<double> intgLoc(numIps * elemDesc->dimension);
+  Kokkos::View<double**> intgLoc("intg", numIps, elemDesc->dimension);
   std::vector<double> coeffsX(elemDesc->polyOrder+1);
   std::vector<double> coeffsY(elemDesc->polyOrder+1);
   std::vector<double> coeffsZ(elemDesc->polyOrder+1);
   std::vector<double> nodalValues(nodesPerElement);
-  std::vector<double> interpWeights(numIps * nodesPerElement);
   std::vector<double> exactInterp(numIps);
   std::vector<double> approxInterp(numIps);
 
   for (int ip = 0; ip < numIps; ++ip) {
-    int offset = ip * elemDesc->dimension;
-    intgLoc[offset + 0] = loc(rng);
-    intgLoc[offset + 1] = loc(rng);
-    intgLoc[offset + 2] = loc(rng);
+    intgLoc(ip, 0) = loc(rng);
+    intgLoc(ip, 1) = loc(rng);
+    intgLoc(ip, 2) = loc(rng);
   }
 
   for (int k = 0; k < elemDesc->polyOrder+1; ++k) {
@@ -194,7 +188,7 @@ check_interpolation_hex(int polyOrder, int numIps, double tol)
     coeffsZ[k] = coeff(rng);
   }
 
-  interpWeights = basis.eval_basis_weights(intgLoc);
+  auto interpWeights = basis.eval_basis_weights(intgLoc);
 
   for (int i = 0; i < elemDesc->nodes1D; ++i) {
     for (int j = 0; j < elemDesc->nodes1D; ++j) {
@@ -208,19 +202,16 @@ check_interpolation_hex(int polyOrder, int numIps, double tol)
   }
 
   for (int ip = 0; ip < numIps; ++ip) {
-    int offset = ip*elemDesc->dimension;
     exactInterp[ip] =
-          poly_val(coeffsX, intgLoc[offset + 0])
-        * poly_val(coeffsY, intgLoc[offset + 1])
-        * poly_val(coeffsZ, intgLoc[offset + 2]);
+          poly_val(coeffsX, intgLoc(ip, 0))
+        * poly_val(coeffsY, intgLoc(ip, 1))
+        * poly_val(coeffsZ, intgLoc(ip, 2));
   }
 
   for (int ip = 0; ip < numIps; ++ip) {
-    int ip_offset = ip * nodesPerElement;
     double val = 0.0;
     for (int nodeNumber = 0; nodeNumber < nodesPerElement; ++nodeNumber) {
-      int offset = ip_offset + nodeNumber;
-      val += interpWeights[offset] * nodalValues[nodeNumber];
+      val += interpWeights(ip, nodeNumber) * nodalValues[nodeNumber];
     }
     approxInterp[ip] = val;
   }
@@ -244,19 +235,18 @@ check_derivative_quad(int polyOrder, int numIps, double tol)
   std::uniform_real_distribution<double> coeff(-1.0,1.0);
   std::uniform_real_distribution<double> loc(-1.05,1.05);
 
-  std::vector<double> intgLoc(numIps*elemDesc->dimension);
+  Kokkos::View<double**> intgLoc("intg", numIps, elemDesc->dimension);
   std::vector<double> coeffsX(elemDesc->polyOrder+1);
   std::vector<double> coeffsY(elemDesc->polyOrder+1);
   std::vector<double> exactDeriv(numIps*elemDesc->dimension);
   std::vector<double> approxDeriv(numIps*elemDesc->dimension);
 
   for (int ip = 0; ip < numIps; ++ip) {
-    int offset = ip*elemDesc->dimension;
-    intgLoc[offset+0] = loc(rng);
-    intgLoc[offset+1] = loc(rng);
+    intgLoc(ip,0) = loc(rng);
+    intgLoc(ip,1) = loc(rng);
   }
 
-  std::vector<double> diffWeights = basis.eval_deriv_weights(intgLoc);
+  auto diffWeights = basis.eval_deriv_weights(intgLoc);
 
   for (int k = 0; k < elemDesc->polyOrder+1; ++k) {
     coeffsX[k] = coeff(rng);
@@ -276,20 +266,19 @@ check_derivative_quad(int polyOrder, int numIps, double tol)
   for (int ip = 0; ip < numIps; ++ip) {
     int offset = ip*elemDesc->dimension;
     exactDeriv[offset + 0] =
-          poly_der(coeffsX, intgLoc[offset])
-        * poly_val(coeffsY, intgLoc[offset + 1]);
+          poly_der(coeffsX, intgLoc(ip, 0))
+        * poly_val(coeffsY, intgLoc(ip, 1));
     exactDeriv[offset + 1] =
-          poly_val(coeffsX, intgLoc[offset])
-        * poly_der(coeffsY, intgLoc[offset + 1]);
+          poly_val(coeffsX, intgLoc(ip, 0))
+        * poly_der(coeffsY, intgLoc(ip, 1));
   }
 
   for (int ip = 0; ip < numIps; ++ip) {
     double dndx = 0.0;
     double dndy = 0.0;
     for (int node = 0; node < elemDesc->nodesPerElement; ++node) {
-      int deriv_offset = (ip*elemDesc->nodesPerElement+node)*elemDesc->dimension;
-      dndx += diffWeights[deriv_offset + 0] * nodalValues[node];
-      dndy += diffWeights[deriv_offset + 1] * nodalValues[node];
+      dndx += diffWeights(ip, node, 0) * nodalValues[node];
+      dndy += diffWeights(ip, node, 1) * nodalValues[node];
     }
     approxDeriv[ip*elemDesc->dimension+0] = dndx;
     approxDeriv[ip*elemDesc->dimension+1] = dndy;
@@ -328,7 +317,7 @@ check_derivative_hex(int polyOrder, int numIps, double tol)
     intgLoc[offset+2] = loc(rng);
   }
 
-  std::vector<double> diffWeights = basis.eval_deriv_weights(intgLoc);
+  auto diffWeights = basis.eval_deriv_weights(intgLoc.data(), numIps);
 
   for (int k = 0; k < elemDesc->polyOrder+1; ++k) {
     coeffsX[k] = coeff(rng);
@@ -369,10 +358,9 @@ check_derivative_hex(int polyOrder, int numIps, double tol)
     double dndy = 0.0;
     double dndz = 0.0;
     for (int node = 0; node < elemDesc->nodesPerElement; ++node) {
-      int deriv_offset = (ip*elemDesc->nodesPerElement+node)*elemDesc->dimension;
-      dndx += diffWeights[deriv_offset + 0] * nodalValues[node];
-      dndy += diffWeights[deriv_offset + 1] * nodalValues[node];
-      dndz += diffWeights[deriv_offset + 2] * nodalValues[node];
+      dndx += diffWeights(ip, node, 0) * nodalValues[node];
+      dndy += diffWeights(ip, node, 1) * nodalValues[node];
+      dndz += diffWeights(ip, node, 2) * nodalValues[node];
     }
     approxDeriv[ip*elemDesc->dimension+0] = dndx;
     approxDeriv[ip*elemDesc->dimension+1] = dndy;
@@ -396,11 +384,11 @@ check_volume_quadrature_quad(int polyOrder, double tol)
 
   auto elemDesc = sierra::nalu::ElementDescription::create(2, polyOrder);
   auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", elemDesc->polyOrder);
+  auto quad = sierra::nalu::TensorProductQuadratureRule(elemDesc->polyOrder);
   auto masterElement = sierra::nalu::HigherOrderQuad2DSCV(*elemDesc, basis, quad);
 
-  const auto& interpWeights  = masterElement.shape_functions();
-  const auto& ipWeights = masterElement.ip_weights();
+  const auto* interpWeights = masterElement.shape_functions();
+  const auto* ipWeights = masterElement.ip_weights();
   const auto* ipNodeMap = masterElement.ipNodeMap();
   const auto& scsEndLoc = quad.scs_end_loc();
   std::vector<double> approxInt(elemDesc->nodesPerElement);
@@ -452,11 +440,11 @@ check_volume_quadrature_hex(int polyOrder, double tol)
 
   auto elemDesc = sierra::nalu::ElementDescription::create(3, polyOrder);
   auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", elemDesc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderHexSCV(*elemDesc, basis, quad);
+  auto quad = sierra::nalu::TensorProductQuadratureRule(elemDesc->polyOrder);
+  auto masterElement = sierra::nalu::HigherOrderHexSCV(basis, quad);
 
-  const auto& interpWeights = masterElement.shape_functions();
-  const auto& ipWeights = masterElement.ip_weights();
+  const auto* interpWeights = masterElement.shape_functions();
+  const auto* ipWeights = masterElement.ip_weights();
   const auto* ipNodeMap = masterElement.ipNodeMap();
   const auto& scsEndLoc = quad.scs_end_loc();
   std::vector<double> approxInt(elemDesc->nodesPerElement);
@@ -506,8 +494,8 @@ void check_is_in_element_hex(int poly_order, double tol)
 {
   auto desc = sierra::nalu::ElementDescription::create(3,  poly_order);
   auto basis = sierra::nalu::LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", desc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderHexSCS(*desc, basis, quad);
+  auto quad = sierra::nalu::TensorProductQuadratureRule(desc->polyOrder);
+  auto masterElement = sierra::nalu::HigherOrderHexSCS(basis, quad);
   constexpr int dim = 3;
 
   std::mt19937 rng;
@@ -554,8 +542,8 @@ void check_is_not_in_element_hex(int poly_order, double tol)
   constexpr int dim = 3;
   auto desc = sierra::nalu::ElementDescription::create(dim,  poly_order);
   auto basis = sierra::nalu::LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", desc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderHexSCS(*desc, basis, quad);
+  auto quad = sierra::nalu::TensorProductQuadratureRule(desc->polyOrder);
+  auto masterElement = sierra::nalu::HigherOrderHexSCS(basis, quad);
 
 
   std::array<double, dim> exterior_pt = {{ 100., 100., 100.}};
@@ -583,8 +571,8 @@ void check_point_interpolation_hex(int poly_order, double tol)
 {
   auto desc = sierra::nalu::ElementDescription::create(3,  poly_order);
   auto basis = sierra::nalu::LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", desc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderHexSCS(*desc, basis, quad);
+  auto quad = sierra::nalu::TensorProductQuadratureRule(desc->polyOrder);
+  auto masterElement = sierra::nalu::HigherOrderHexSCS(basis, quad);
   constexpr int dim = 3;
 
   std::mt19937 rng;
@@ -645,7 +633,7 @@ void check_is_in_element_quad(int poly_order, double tol)
   constexpr int dim = 2;
   auto desc = sierra::nalu::ElementDescription::create(dim,  poly_order);
   auto basis = sierra::nalu::LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", desc->polyOrder);
+  auto quad = sierra::nalu::TensorProductQuadratureRule(desc->polyOrder);
   auto masterElement = sierra::nalu::HigherOrderQuad2DSCS(*desc, basis, quad);
 
   std::mt19937 rng;
@@ -689,7 +677,7 @@ void check_is_not_in_element_quad(int poly_order, double tol)
   constexpr int dim = 2;
   auto desc = sierra::nalu::ElementDescription::create(dim,  poly_order);
   auto basis = sierra::nalu::LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", desc->polyOrder);
+  auto quad = sierra::nalu::TensorProductQuadratureRule(desc->polyOrder);
   auto masterElement = sierra::nalu::HigherOrderQuad2DSCS(*desc, basis, quad);
 
 
@@ -716,7 +704,7 @@ void check_point_interpolation_quad(int poly_order, double tol)
   constexpr int dim = 2;
   auto desc = sierra::nalu::ElementDescription::create(dim,  poly_order);
   auto basis = sierra::nalu::LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", desc->polyOrder);
+  auto quad = sierra::nalu::TensorProductQuadratureRule(desc->polyOrder);
   auto masterElement = sierra::nalu::HigherOrderQuad2DSCS(*desc, basis, quad);
 
   std::mt19937 rng;
@@ -772,8 +760,8 @@ void check_scv_grad_op_hex(int poly_order, double tol)
 {
   auto desc = sierra::nalu::ElementDescription::create(3,  poly_order);
   auto basis = sierra::nalu::LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
-  auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", desc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderHexSCS(*desc, basis, quad);
+  auto quad = sierra::nalu::TensorProductQuadratureRule(desc->polyOrder);
+  auto masterElement = sierra::nalu::HigherOrderHexSCS(basis, quad);
   constexpr int dim = 3;
 
   std::vector<double> ws_field(desc->nodesPerElement);
