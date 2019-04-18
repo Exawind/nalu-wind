@@ -32,25 +32,19 @@ ScalarAdvDiffElemKernel<AlgTraits>::ScalarAdvDiffElemKernel(
   ScalarFieldType* scalarQ,
   ScalarFieldType* diffFluxCoeff,
   ElemDataRequests& dataPreReqs)
-  : Kernel(),
-    scalarQ_(scalarQ->mesh_meta_data_ordinal()),
+  : scalarQ_(scalarQ->mesh_meta_data_ordinal()),
     diffFluxCoeff_(diffFluxCoeff->mesh_meta_data_ordinal()),
-    lrscv_(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_)->adjacentNodes()),
-    shiftedGradOp_(solnOpts.get_shifted_grad_op(scalarQ->name()))
+    shiftedGradOp_(solnOpts.get_shifted_grad_op(scalarQ->name())),
+    skewSymmetric_(solnOpts.get_skew_symmetric(scalarQ->name()))
 {
-  // Save of required fields
+  // Save off required fields
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
   massFlowRate_ = get_field_ordinal(metaData, "mass_flow_rate_scs", stk::topology::ELEM_RANK);
 
-  MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
+  meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
 
-  get_scs_shape_fn_data<AlgTraits>([&](double* ptr){meSCS->shape_fcn(ptr);}, v_shape_function_);
-  const bool skewSymmetric = solnOpts.get_skew_symmetric(scalarQ->name());
-  get_scs_shape_fn_data<AlgTraits>([&](double* ptr){skewSymmetric ? meSCS->shifted_shape_fcn(ptr) : meSCS->shape_fcn(ptr);}, 
-                                   v_adv_shape_function_);
-
-  dataPreReqs.add_cvfem_surface_me(meSCS);
+  dataPreReqs.add_cvfem_surface_me(meSCS_);
 
   // fields and data
   dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
@@ -62,34 +56,38 @@ ScalarAdvDiffElemKernel<AlgTraits>::ScalarAdvDiffElemKernel(
     dataPreReqs.add_master_element_call(SCS_SHIFTED_GRAD_OP, CURRENT_COORDINATES);
   else
     dataPreReqs.add_master_element_call(SCS_GRAD_OP, CURRENT_COORDINATES);
-}
 
-template<typename AlgTraits>
-ScalarAdvDiffElemKernel<AlgTraits>::~ScalarAdvDiffElemKernel()
-{}
+  dataPreReqs.add_master_element_call(SCS_SHAPE_FCN, CURRENT_COORDINATES);
+
+  if (skewSymmetric_)
+    dataPreReqs.add_master_element_call(SCS_SHIFTED_SHAPE_FCN, CURRENT_COORDINATES);
+}
 
 template<typename AlgTraits>
 void
 ScalarAdvDiffElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType**>& lhs,
-  SharedMemView<DoubleType*>& rhs,
-  ScratchViews<DoubleType>& scratchViews)
+  SharedMemView<DoubleType**, DeviceShmem>& lhs,
+  SharedMemView<DoubleType*, DeviceShmem>& rhs,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
-  SharedMemView<DoubleType*>& v_scalarQ = scratchViews.get_scratch_view_1D(scalarQ_);
-  SharedMemView<DoubleType*>& v_diffFluxCoeff = scratchViews.get_scratch_view_1D(diffFluxCoeff_);
-  SharedMemView<DoubleType*>& v_mdot = scratchViews.get_scratch_view_1D(massFlowRate_);
+  auto& v_scalarQ = scratchViews.get_scratch_view_1D(scalarQ_);
+  auto& v_diffFluxCoeff = scratchViews.get_scratch_view_1D(diffFluxCoeff_);
+  auto& v_mdot = scratchViews.get_scratch_view_1D(massFlowRate_);
 
-  SharedMemView<DoubleType**>& v_scs_areav = scratchViews.get_me_views(CURRENT_COORDINATES).scs_areav;
-  SharedMemView<DoubleType***>& v_dndx = shiftedGradOp_
-    ? scratchViews.get_me_views(CURRENT_COORDINATES).dndx_shifted 
-    : scratchViews.get_me_views(CURRENT_COORDINATES).dndx;
+  auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
+  auto& v_scs_areav = meViews.scs_areav;
+  auto& v_dndx = shiftedGradOp_ ? meViews.dndx_shifted : meViews.dndx;
+  auto& v_shape_function = meViews.scs_shape_fcn;
+  auto& v_adv_shape_function = skewSymmetric_ ? meViews.scs_shifted_shape_fcn : meViews.scs_shape_fcn;
+
+  const int* lrscv = meSCS_->adjacentNodes();
 
   // start the assembly
   for ( int ip = 0; ip < AlgTraits::numScsIp_; ++ip ) {
 
     // left and right nodes for this ip
-    const int il = lrscv_[2*ip];
-    const int ir = lrscv_[2*ip+1];
+    const int il = lrscv[2*ip];
+    const int ir = lrscv[2*ip+1];
 
     // save off mdot
     const DoubleType tmdot = v_mdot(ip);
@@ -97,7 +95,7 @@ ScalarAdvDiffElemKernel<AlgTraits>::execute(
     // compute ip property and
     DoubleType diffFluxCoeffIp = 0.0;
     for ( int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic ) {
-      const DoubleType r = v_shape_function_(ip,ic);
+      const DoubleType r = v_shape_function(ip,ic);
       diffFluxCoeffIp += r*v_diffFluxCoeff(ic);
     }
 
@@ -107,7 +105,7 @@ ScalarAdvDiffElemKernel<AlgTraits>::execute(
     for ( int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic ) {
 
       // advection
-      const DoubleType lhsfacAdv = v_adv_shape_function_(ip,ic)*tmdot;
+      const DoubleType lhsfacAdv = v_adv_shape_function(ip,ic)*tmdot;
       qAdv += lhsfacAdv*v_scalarQ(ic);
 
       // diffusion
