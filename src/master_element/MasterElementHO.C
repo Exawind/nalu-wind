@@ -471,7 +471,7 @@ HigherOrderQuad2DSCS::HigherOrderQuad2DSCS(
   // compute and save shape functions and derivatives at ips
   shapeFunctionVals_ = basis_.eval_basis_weights(intgLoc_.data(), numIntPoints_);
   shapeDerivs_ = basis_.eval_deriv_weights(intgLoc_.data(), numIntPoints_);
-  expFaceShapeDerivs_ = basis.eval_deriv_weights(intgExpFace_.data(), numIntPoints_);
+  expFaceShapeDerivs_ = basis_.eval_deriv_weights(intgExpFace_.data(), 4*ipsPerFace_);
 }
 
 double parametric_distance_quad(const double* x)
