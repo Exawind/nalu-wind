@@ -172,16 +172,16 @@ namespace nalu{
 
     if (topo.is_superedge()) {
       ThrowRequire(desc->baseTopo == stk::topology::QUAD_4_2D);
-      return make_unique<HigherOrderEdge2DSCS>(*desc, basis, quad);
+      return make_unique<HigherOrderEdge2DSCS>(basis, quad);
     }
 
     if (topo.is_superface()) {
       ThrowRequire(desc->baseTopo == stk::topology::HEX_8);
-      return make_unique<HigherOrderQuad3DSCS>(*desc, basis, quad);
+      return make_unique<HigherOrderQuad3DSCS>(basis, quad);
     }
 
     if (topo.is_superelement() && desc->baseTopo == stk::topology::QUAD_4_2D) {
-      return make_unique<HigherOrderQuad2DSCS>(*desc, basis, quad);
+      return make_unique<HigherOrderQuad2DSCS>(basis, quad);
     }
 
     if (topo.is_superelement() && desc->baseTopo == stk::topology::HEX_8) {
@@ -210,7 +210,7 @@ namespace nalu{
 
     switch (desc->baseTopo.value()) {
       case stk::topology::QUADRILATERAL_4_2D:
-        return make_unique<HigherOrderQuad2DSCV>(*desc, basis, quad);
+        return make_unique<HigherOrderQuad2DSCV>(basis, quad);
       case stk::topology::HEXAHEDRON_8:
         return make_unique<HigherOrderHexSCV>(basis, quad);
       default:
