@@ -92,6 +92,7 @@ TpetraLinearSolverConfig::load(const YAML::Node & node)
   else if (precond_ == "muelu") {
     muelu_xml_file_ = std::string("milestone.xml");
     get_if_present(node, "muelu_xml_file_name", muelu_xml_file_, muelu_xml_file_);
+    paramsPrecond_->set("xml parameter file", muelu_xml_file_);
     useMueLu_ = true;
   }
   else {
