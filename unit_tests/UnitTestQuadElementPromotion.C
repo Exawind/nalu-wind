@@ -177,7 +177,7 @@ class PromoteElementQuadTest : public ::testing::Test
       {
         auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
         auto quad = sierra::nalu::TensorProductQuadratureRule(poly_order);
-        sierra::nalu::HigherOrderQuad2DSCV meSCV(*elemDesc, basis, quad);
+        sierra::nalu::HigherOrderQuad2DSCV meSCV(basis, quad);
 
         // extract master element specifics
         const int nodesPerElement = meSCV.nodesPerElement_;
@@ -216,7 +216,7 @@ class PromoteElementQuadTest : public ::testing::Test
       {
         auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
         auto quad = sierra::nalu::TensorProductQuadratureRule(poly_order);
-        sierra::nalu::HigherOrderQuad2DSCS meSCS(*elemDesc, basis, quad);
+        sierra::nalu::HigherOrderQuad2DSCS meSCS(basis, quad);
 
         auto numScsIp = meSCS.num_integration_points();
         auto nodesPerElement = meSCS.nodesPerElement_;
@@ -278,7 +278,7 @@ class PromoteElementQuadTest : public ::testing::Test
 
         auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMapBC, elemDesc->nodeLocs1D);
         auto quad = sierra::nalu::TensorProductQuadratureRule(poly_order);
-        sierra::nalu::HigherOrderEdge2DSCS meBC(*elemDesc, basis, quad);
+        sierra::nalu::HigherOrderEdge2DSCS meBC(basis, quad);
 
         auto numScsIp = meBC.num_integration_points();
         auto nodesPerFace = meBC.nodesPerElement_;

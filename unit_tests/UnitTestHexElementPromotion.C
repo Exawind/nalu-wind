@@ -321,7 +321,7 @@ protected:
      auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMapBC, elemDesc->nodeLocs1D);
      auto quad = sierra::nalu::TensorProductQuadratureRule(poly_order);
 
-     sierra::nalu::HigherOrderQuad3DSCS meBC(*elemDesc, basis, quad);
+     sierra::nalu::HigherOrderQuad3DSCS meBC(basis, quad);
 
      auto numScsIp = meBC.num_integration_points();
      auto nodesPerFace = meBC.nodesPerElement_;

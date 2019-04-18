@@ -11,29 +11,17 @@
 
 #include <element_promotion/TensorProductQuadratureRule.h>
 #include <element_promotion/LagrangeBasis.h>
+#include <element_promotion/NodeMapMaker.h>
 
 
-
-#include <element_promotion/ElementDescription.h>
-#include <element_promotion/HexNElementDescription.h>
-#include <element_promotion/QuadNElementDescription.h>
 
 #include <AlgTraits.h>
 #include <KokkosInterface.h>
 
-#include <vector>
 #include <array>
 
 namespace sierra{
 namespace nalu{
-
-  struct ContourData {
-    Jacobian::Direction direction;
-    double weight;
-  };
-
-struct ElementDescription;
-struct HexNElementDescription;
 
 class LagrangeBasis;
 class TensorProductQuadratureRule;
@@ -47,7 +35,6 @@ public:
 
   KOKKOS_FUNCTION
   HigherOrderQuad3DSCS(
-    ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
 
@@ -79,17 +66,18 @@ private:
   void area_vector(
     const double* POINTER_RESTRICT elemNodalCoords,
     const double* POINTER_RESTRICT shapeDeriv,
-    std::array<double,3>& areaVector) const;
+    Kokkos::View<double[3]> areaVector) const;
 
-  const ElementDescription elem_;
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
+  const Kokkos::View<int**> nodeMap;
+  const int nodes1D_;
 
   Kokkos::View<double**>  shapeFunctionVals_;
   Kokkos::View<double***>  shapeDerivs_;
-  std::vector<double> ipWeights_;
-  std::vector<double> intgLoc_;
-  std::vector<int> ipNodeMap_;
+  Kokkos::View<double*> ipWeights_;
+  Kokkos::View<double**> intgLoc_;
+  Kokkos::View<int*> ipNodeMap_;
   int surfaceDimension_;
 };
 
@@ -102,7 +90,6 @@ public:
 
   KOKKOS_FUNCTION
   HigherOrderQuad2DSCV(
-    ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
   KOKKOS_FUNCTION
@@ -143,15 +130,16 @@ private:
     const double* POINTER_RESTRICT elemNodalCoords,
     const double* POINTER_RESTRICT shapeDerivs ) const;
 
-  const ElementDescription elem_;
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
+  const Kokkos::View<int**> nodeMap;
+  const int nodes1D_;
 
   Kokkos::View<double**> shapeFunctionVals_;
   Kokkos::View<double***>  shapeDerivs_;
-  std::vector<double> ipWeights_;
-  std::vector<double> intgLoc_;
-  std::vector<int> ipNodeMap_;
+  Kokkos::View<double*> ipWeights_;
+  Kokkos::View<double**> intgLoc_;
+  Kokkos::View<int*> ipNodeMap_;
 };
 class HigherOrderQuad2DSCS final: public MasterElement
 {
@@ -165,7 +153,6 @@ public:
 
   KOKKOS_FUNCTION
   HigherOrderQuad2DSCS(
-    ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
   KOKKOS_FUNCTION
@@ -223,15 +210,13 @@ public:
     const int ordinal, const int node) final;
 
   const int * side_node_ordinals(int ordinal = 0) const final;
-  virtual const std::vector<int>& side_node_ordinals() const final {return sideNodeOrdinals_;};
-  virtual void side_node_ordinals(const std::vector<int>& v) final {sideNodeOrdinals_=v;};
 
   virtual const double* integration_locations() const final {
     return intgLoc_.data();
   }
 
 private:
-  std::vector<int> lrscv_;
+  Kokkos::View<int*> lrscv_;
 
   void set_interior_info();
   void set_boundary_info();
@@ -242,21 +227,23 @@ private:
     double *POINTER_RESTRICT shapeDeriv,
     double *POINTER_RESTRICT normalVec ) const;
 
-  const ElementDescription elem_;
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
+  const Kokkos::View<int**> nodeMap;
+  const Kokkos::View<int**> faceNodeMap;
+  const Kokkos::View<int**> sideNodeOrdinals_;
+  const int nodes1D_;
 
-  std::vector<int> sideNodeOrdinals_;
   Kokkos::View<double**> shapeFunctionVals_;
   Kokkos::View<double***>  shapeDerivs_;
-  std::vector<double> intgLoc_;
-  std::vector<ContourData> ipInfo_;
-  std::vector<int> ipNodeMap_;
+  Kokkos::View<double*> ipWeights_;
+  Kokkos::View<double**> intgLoc_;
+  Kokkos::View<int*> ipNodeMap_;
   int ipsPerFace_;
   Kokkos::View<double***> expFaceShapeDerivs_;
-  std::vector<int> oppNode_;
-  std::vector<int> oppFace_;
-  std::vector<double> intgExpFace_;
+  Kokkos::View<int*> oppNode_;
+  Kokkos::View<int*> oppFace_;
+  Kokkos::View<double**> intgExpFace_;
 };
 
 class HigherOrderEdge2DSCS final: public MasterElement
@@ -267,7 +254,6 @@ public:
 
   KOKKOS_FUNCTION
   explicit HigherOrderEdge2DSCS(
-    ElementDescription elem,
     LagrangeBasis basis,
     TensorProductQuadratureRule quadrature);
   KOKKOS_FUNCTION
@@ -295,17 +281,18 @@ private:
   void area_vector(
     const double* POINTER_RESTRICT elemNodalCoords,
     const double* POINTER_RESTRICT shapeDeriv,
-    std::array<double,2>& areaVector) const;
+    Kokkos::View<double[2]> areaVector) const;
 
-  const ElementDescription elem_;
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
+  const Kokkos::View<int*> nodeMap;
+  const int nodes1D_;
 
   Kokkos::View<double**> shapeFunctionVals_;
   Kokkos::View<double***> shapeDerivs_;
-  std::vector<double> ipWeights_;
-  std::vector<double> intgLoc_;
-  std::vector<int> ipNodeMap_;
+  Kokkos::View<double*> ipWeights_;
+  Kokkos::View<double**> intgLoc_;
+  Kokkos::View<int*> ipNodeMap_;
 };
 
 } // namespace nalu

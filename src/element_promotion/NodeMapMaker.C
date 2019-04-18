@@ -124,6 +124,18 @@ Kokkos::View<int**> make_side_node_ordinal_map_quad(int p)
   return face_node_map;
 }
 
+Kokkos::View<int*> make_node_map_edge(int p)
+{
+  const int nodes1D = p +1;
+  Kokkos::View<int*> edge_node_map("edge_node_map", nodes1D);
+  edge_node_map(0) = 0;
+  edge_node_map(p) = 1;
+  for(int i = 1; i<p; i++){
+    edge_node_map(i) = i+1;
+  }
+  return edge_node_map;
+}
+
 
 } // namespace nalu
 } // namespace Sierra

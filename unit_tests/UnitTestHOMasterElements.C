@@ -385,7 +385,7 @@ check_volume_quadrature_quad(int polyOrder, double tol)
   auto elemDesc = sierra::nalu::ElementDescription::create(2, polyOrder);
   auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
   auto quad = sierra::nalu::TensorProductQuadratureRule(elemDesc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderQuad2DSCV(*elemDesc, basis, quad);
+  auto masterElement = sierra::nalu::HigherOrderQuad2DSCV(basis, quad);
 
   const auto* interpWeights = masterElement.shape_functions();
   const auto* ipWeights = masterElement.ip_weights();
@@ -634,7 +634,7 @@ void check_is_in_element_quad(int poly_order, double tol)
   auto desc = sierra::nalu::ElementDescription::create(dim,  poly_order);
   auto basis = sierra::nalu::LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
   auto quad = sierra::nalu::TensorProductQuadratureRule(desc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderQuad2DSCS(*desc, basis, quad);
+  auto masterElement = sierra::nalu::HigherOrderQuad2DSCS(basis, quad);
 
   std::mt19937 rng;
   rng.seed(0);
@@ -678,7 +678,7 @@ void check_is_not_in_element_quad(int poly_order, double tol)
   auto desc = sierra::nalu::ElementDescription::create(dim,  poly_order);
   auto basis = sierra::nalu::LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
   auto quad = sierra::nalu::TensorProductQuadratureRule(desc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderQuad2DSCS(*desc, basis, quad);
+  auto masterElement = sierra::nalu::HigherOrderQuad2DSCS(basis, quad);
 
 
   std::array<double, dim> exterior_pt = {{ 100., 100.}};
@@ -705,7 +705,7 @@ void check_point_interpolation_quad(int poly_order, double tol)
   auto desc = sierra::nalu::ElementDescription::create(dim,  poly_order);
   auto basis = sierra::nalu::LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
   auto quad = sierra::nalu::TensorProductQuadratureRule(desc->polyOrder);
-  auto masterElement = sierra::nalu::HigherOrderQuad2DSCS(*desc, basis, quad);
+  auto masterElement = sierra::nalu::HigherOrderQuad2DSCS(basis, quad);
 
   std::mt19937 rng;
   rng.seed(0);

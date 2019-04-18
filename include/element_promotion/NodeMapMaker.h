@@ -19,13 +19,15 @@ namespace nalu
 Kokkos::View<int***> make_node_map_hex(int, bool  = false);
 Kokkos::View<int***> make_inverse_node_map_hex(int, bool = false);
 
-Kokkos::View<int**> make_node_map_quad(int, bool  = false);
+Kokkos::View<int**> make_node_map_quad(int);
 
 Kokkos::View<int***> make_face_node_map_hex(int);
 Kokkos::View<int**> make_face_node_map_quad(int);
 
 Kokkos::View<int**> make_side_node_ordinal_map_hex(int);
 Kokkos::View<int**> make_side_node_ordinal_map_quad(int);
+
+Kokkos::View<int*> make_node_map_edge(int);
 
 
 
