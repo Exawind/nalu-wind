@@ -11,6 +11,8 @@
 
 #include "kernel/ScalarAdvDiffElemKernel.h"
 
+#ifndef KOKKOS_ENABLE_CUDA
+
 namespace {
 namespace hex8_golds {
 namespace advection_diffusion {
@@ -30,11 +32,11 @@ namespace advection_diffusion {
   static constexpr double rhs[8] = {
     -0.0000023386569023, -0.0000259997889658, 0.0000269085331417, 0.0000040683119211, 0.0000089806982989, 0.0000318761782412, 0.0000172325914019, -0.0000607278671367, };
 
-
-
 } // advection_diffusion
 } // hex8_golds
 } // anonymous namespace
+
+#endif
 
 /// Scalar advection/diffusion (will use mixture fraction as scalar)
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion)
