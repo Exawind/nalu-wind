@@ -152,8 +152,8 @@ HypreUVWLinearSystem::sumInto(
   HypreIntType numRows = numEntities;
   const HypreIntType bufSize = idBuffer_.size();
 
-  ThrowAssertMsg(lhs.is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.is_contiguous(), "RHS assumed contiguous");
+  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
   if (bufSize < numRows) {
     idBuffer_.resize(numRows);
     scratchRowVals_.resize(numRows);
@@ -204,8 +204,8 @@ HypreUVWLinearSystem::sumInto(
   HypreIntType numRows = numEntities;
   const HypreIntType bufSize = idBuffer_.size();
 
-  ThrowAssertMsg(lhs.is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.is_contiguous(), "RHS assumed contiguous");
+  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
   if (bufSize < numRows) {
     idBuffer_.resize(numRows);
     scratchRowVals_.resize(numRows);

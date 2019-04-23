@@ -27,7 +27,7 @@ class ElemDataRequests;
 /** CMM (BDF2/BE) for scalar equation
  */
 template<typename AlgTraits>
-class ScalarMassElemKernel: public Kernel
+class ScalarMassElemKernel: public NGPKernel<ScalarMassElemKernel<AlgTraits>>
 {
 public:
   ScalarMassElemKernel(
@@ -35,9 +35,11 @@ public:
     const SolutionOptions&,
     ScalarFieldType*,
     ElemDataRequests&,
-    const bool);
+    const bool lumpedMass);
 
-  virtual ~ScalarMassElemKernel();
+  KOKKOS_FUNCTION ScalarMassElemKernel() = default;
+
+  virtual ~ScalarMassElemKernel() = default;
 
   /** Perform pre-timestep work for the computational kernel
    */
@@ -47,14 +49,14 @@ public:
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  ScalarMassElemKernel() = delete;
-
   unsigned scalarQNm1_ {stk::mesh::InvalidOrdinal};
   unsigned scalarQN_ {stk::mesh::InvalidOrdinal};
   unsigned scalarQNp1_ {stk::mesh::InvalidOrdinal};
@@ -70,11 +72,7 @@ private:
   double diagRelaxFactor_{1.0};
   const bool lumpedMass_;
 
-  /// Integration point to node mapping
-  const int* ipNodeMap_;
-
-  /// Shape functions
-  AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]> v_shape_function_ {"view_shape_func"};
+  MasterElement* meSCV_ {nullptr};
 };
 
 }  // nalu
