@@ -67,7 +67,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass)
   // Initialize the kernel
   std::unique_ptr<sierra::nalu::Kernel> massKernel(
     new sierra::nalu::ScalarMassElemKernel<sierra::nalu::AlgTraitsHex8>(
-     bulk_, solnOpts_, scalarQ_, helperObjs.assembleElemSolverAlg->dataNeededByKernels_, false));
+     bulk_, solnOpts_, mixFraction_, helperObjs.assembleElemSolverAlg->dataNeededByKernels_, false));
 
   // Register the kernel for execution
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(massKernel.get());
@@ -79,20 +79,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-
-//  std::cerr.precision(14);
-//  for(unsigned i=0; i<helperObjs.linsys->lhs_.extent(0); ++i) {
-//    std::cerr<<"{";
-//    for(unsigned j=0; j<helperObjs.linsys->lhs_.extent(1); ++j) {
-//      std::cerr<< helperObjs.linsys->lhs_(i,j)<<", ";
-//    }
-//    std::cerr<<"}"<<std::endl;
-//  }
-//  std::cerr<<"{";
-//  for(unsigned i=0; i<helperObjs.linsys->lhs_.extent(0); ++i) {
-//    std::cerr<< helperObjs.linsys->rhs_(i)<<", ";
-//  }
-//  std::cerr<<"}"<<std::endl;
 
   namespace gold_values = hex8_golds::scalar_mass;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);

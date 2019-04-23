@@ -72,9 +72,6 @@ private:
   double diagRelaxFactor_{1.0};
   const bool lumpedMass_;
 
-  /// Integration point to node mapping
-  const int* ipNodeMap_;
-
   MasterElement* meSCV_ {nullptr};
 };
 

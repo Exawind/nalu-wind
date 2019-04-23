@@ -40,6 +40,25 @@ struct HelperObjects {
     delete naluObj;
   }
 
+  void print_lhs_and_rhs() const
+  {
+    auto oldPrec = std::cerr.precision();
+    std::cerr.precision(14);
+    for(unsigned i=0; i<linsys->lhs_.extent(0); ++i) {
+      std::cerr<<"{";
+      for(unsigned j=0; j<linsys->lhs_.extent(1); ++j) {
+        std::cerr<< linsys->lhs_(i,j)<<", ";
+      }
+      std::cerr<<"}"<<std::endl;
+    }
+    std::cerr<<"rhs: {";
+    for(unsigned i=0; i<linsys->lhs_.extent(0); ++i) {
+      std::cerr<< linsys->rhs_(i)<<", ";
+    }
+    std::cerr<<"}"<<std::endl;
+    std::cerr.precision(oldPrec);
+  }
+
   YAML::Node yamlNode;
   YAML::Node realmDefaultNode;
   unit_test_utils::NaluTest* naluObj;
