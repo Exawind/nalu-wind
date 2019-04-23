@@ -390,8 +390,8 @@ HypreLinearSystem::sumInto(
   HypreIntType numRows = n_obj * numDof_;
   const HypreIntType bufSize = idBuffer_.size();
 
-  ThrowAssertMsg(lhs.is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.is_contiguous(), "RHS assumed contiguous");
+  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
   if (bufSize < numRows) idBuffer_.resize(numRows);
 
   for (size_t in=0; in < n_obj; in++) {
@@ -442,8 +442,8 @@ HypreLinearSystem::sumInto(
   HypreIntType numRows = n_obj * numDof_;
   const HypreIntType bufSize = idBuffer_.size();
 
-  ThrowAssertMsg(lhs.is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.is_contiguous(), "RHS assumed contiguous");
+  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
   if (bufSize < numRows) idBuffer_.resize(numRows);
 
   for (size_t in=0; in < n_obj; in++) {
