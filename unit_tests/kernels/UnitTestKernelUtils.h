@@ -491,9 +491,7 @@ public:
   MixtureFractionKernelHex8Mesh()
     : TestKernelHex8Mesh(),
     mixFraction_(&meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK,
-                                                       "mixture_fraction")),
-    scalarQ_(&meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK,
-                                                    "scalarQ", 2)),
+                                                       "mixture_fraction", 2)),
     velocity_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK,
                                                     "velocity")),
     density_(&meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK,
@@ -516,7 +514,6 @@ public:
   {
     const auto& meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(stk::topology::HEX_8);
     stk::mesh::put_field_on_mesh(*mixFraction_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(*scalarQ_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*velocity_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*density_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
@@ -529,7 +526,6 @@ public:
     fill_mesh(doPerturb);
 
     unit_test_kernel_utils::mixture_fraction_test_function(bulk_, *coordinates_, *mixFraction_, amf_, znot_);
-    unit_test_kernel_utils::mixture_fraction_test_function(bulk_, *coordinates_, *scalarQ_, amf_, znot_);
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocity_);
     unit_test_kernel_utils::inverse_property_from_mixture_fraction_test_function(bulk_, *mixFraction_, *density_,
                                                                                  rhoPrimary_, rhoSecondary_);
@@ -540,7 +536,6 @@ public:
   }
 
   ScalarFieldType* mixFraction_{nullptr};
-  ScalarFieldType* scalarQ_{nullptr};
   VectorFieldType* velocity_{nullptr};
   ScalarFieldType* density_{nullptr};
   ScalarFieldType* viscosity_{nullptr};
