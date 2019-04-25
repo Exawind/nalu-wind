@@ -18,6 +18,7 @@ add_sources(GlobalUnitSourceList
    UnitTestScalarMassElem.C
    UnitTestScalarDiffElem.C
    UnitTestSteadyThermal3dContactSrcElem.C
+   UnitTestWallDistElem.C
 )
 
 add_sources(GlobalUnitHeaderList
