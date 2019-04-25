@@ -26,27 +26,17 @@ WallDistElemKernel<AlgTraits>::WallDistElemKernel(
   const stk::mesh::BulkData& bulkData,
   const SolutionOptions& solnOpts,
   ElemDataRequests& dataPreReqs)
-  : Kernel(),
-    lrscv_(MasterElementRepo::get_surface_master_element(AlgTraits::topo_)
-             ->adjacentNodes()),
-    ipNodeMap_(MasterElementRepo::get_volume_master_element(AlgTraits::topo_)
-                 ->ipNodeMap()),
-    shiftPoisson_(solnOpts.get_shifted_grad_op("ndtw"))
+  : shiftPoisson_(solnOpts.get_shifted_grad_op("ndtw"))
 {
   const auto& meta = bulkData.mesh_meta_data();
 
   coordinates_ = get_field_ordinal(meta, solnOpts.get_coordinates_name());
 
-  MasterElement* meSCS =
-    MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
-  MasterElement* meSCV =
-    MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
+  meSCS_ = MasterElementRepo::get_surface_master_element<AlgTraits>();
+  meSCV_ = MasterElementRepo::get_volume_master_element<AlgTraits>();
 
-  get_scs_shape_fn_data<AlgTraits>(
-    [&](double* ptr) { meSCS->shape_fcn(ptr); }, v_shape_function_);
-
-  dataPreReqs.add_cvfem_surface_me(meSCS);
-  dataPreReqs.add_cvfem_volume_me(meSCV);
+  dataPreReqs.add_cvfem_surface_me(meSCS_);
+  dataPreReqs.add_cvfem_volume_me(meSCV_);
   dataPreReqs.add_coordinates_field(
     coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
@@ -57,35 +47,24 @@ WallDistElemKernel<AlgTraits>::WallDistElemKernel(
 }
 
 template <typename AlgTraits>
-WallDistElemKernel<AlgTraits>::~WallDistElemKernel()
-{
-}
-
-template <typename AlgTraits>
-void
-WallDistElemKernel<AlgTraits>::setup(const TimeIntegrator&)
-{
-}
-
-template <typename AlgTraits>
 void
 WallDistElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType**>& lhs,
-  SharedMemView<DoubleType*>& rhs,
-  ScratchViews<DoubleType>& scratchViews)
+  SharedMemView<DoubleType**, DeviceShmem>& lhs,
+  SharedMemView<DoubleType*, DeviceShmem>& rhs,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
-  SharedMemView<DoubleType*>& v_scv_volume =
-    scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
-  SharedMemView<DoubleType**>& v_scs_areav =
-    scratchViews.get_me_views(CURRENT_COORDINATES).scs_areav;
-  SharedMemView<DoubleType***>& v_dndx =
-    shiftPoisson_ ? scratchViews.get_me_views(CURRENT_COORDINATES).dndx_shifted
-                  : scratchViews.get_me_views(CURRENT_COORDINATES).dndx;
+  const auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
+  const auto& v_scv_volume = meViews.scv_volume;
+  const auto& v_scs_areav = meViews.scs_areav;
+  const auto& v_dndx = shiftPoisson_ ? meViews.dndx_shifted : meViews.dndx;
+
+  const auto* lrscv = meSCS_->adjacentNodes();
+  const auto* ipNodeMap = meSCV_->ipNodeMap();
 
   // Populate LHS first
   for (int ip = 0; ip < AlgTraits::numScsIp_; ip++) {
-    const int il = lrscv_[2 * ip];
-    const int ir = lrscv_[2 * ip + 1];
+    const int il = lrscv[2 * ip];
+    const int ir = lrscv[2 * ip + 1];
 
     for (int ic = 0; ic < AlgTraits::nodesPerElement_; ic++) {
       DoubleType lhsfac = 0.0;
@@ -99,7 +78,7 @@ WallDistElemKernel<AlgTraits>::execute(
 
   // Populate RHS next
   for (int ip = 0; ip < AlgTraits::numScvIp_; ip++) {
-    const int nearestNode = ipNodeMap_[ip];
+    const int nearestNode = ipNodeMap[ip];
     rhs(nearestNode) += v_scv_volume(ip);
   }
 }

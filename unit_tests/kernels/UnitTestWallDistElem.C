@@ -43,7 +43,7 @@ static constexpr double lhs[8][8] = {
 } // anonymous
 #endif
 
-TEST_F(WallDistKernelHex8Mesh, wall_dist)
+TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
 {
   fill_mesh();
 
@@ -76,7 +76,7 @@ TEST_F(WallDistKernelHex8Mesh, wall_dist)
 #endif
 }
 
-TEST_F(WallDistKernelHex8Mesh, wall_dist_shifted)
+TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_shifted)
 {
   fill_mesh();
 
