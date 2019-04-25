@@ -20,7 +20,7 @@ class MasterElement;
 class ElemDataRequests;
 
 template<typename AlgTraits>
-class WallDistElemKernel : public Kernel
+class WallDistElemKernel : public NGPKernel<WallDistElemKernel<AlgTraits>>
 {
 public:
   WallDistElemKernel(
@@ -28,27 +28,22 @@ public:
     const SolutionOptions&,
     ElemDataRequests&);
 
-  virtual ~WallDistElemKernel();
+  KOKKOS_FUNCTION WallDistElemKernel() = default;
 
-  virtual void setup(const TimeIntegrator&);
+  KOKKOS_FUNCTION virtual ~WallDistElemKernel() = default;
 
   using Kernel::execute;
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  WallDistElemKernel() = delete;
-  WallDistElemKernel(const WallDistElemKernel&) = delete;
-
   unsigned coordinates_ {stk::mesh::InvalidOrdinal};
 
-  // work arrays
-  Kokkos::View<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]> v_shape_function_{"view_shape_function"};
-
-  const int* lrscv_;
-  const int* ipNodeMap_;
+  MasterElement* meSCS_{nullptr};
+  MasterElement* meSCV_{nullptr};
 
   const bool shiftPoisson_{false};
 };
