@@ -66,7 +66,7 @@ private:
   void area_vector(
     const double* POINTER_RESTRICT elemNodalCoords,
     const double* POINTER_RESTRICT shapeDeriv,
-    Kokkos::View<double[3]> areaVector) const;
+    std::array<double,3>& areaVector) const;
 
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
@@ -281,7 +281,7 @@ private:
   void area_vector(
     const double* POINTER_RESTRICT elemNodalCoords,
     const double* POINTER_RESTRICT shapeDeriv,
-    Kokkos::View<double[2]> areaVector) const;
+    std::array<double,2>& areaVector) const;
 
   LagrangeBasis basis_;
   const TensorProductQuadratureRule quadrature_;
