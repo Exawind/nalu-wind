@@ -29,14 +29,10 @@ TurbKineticEnergySSTSrcElemKernel<AlgTraits>::TurbKineticEnergySSTSrcElemKernel(
   const SolutionOptions& solnOpts,
   ElemDataRequests& dataPreReqs,
   const bool lumpedMass)
-  : Kernel(),
-    lumpedMass_(lumpedMass),
+  : lumpedMass_(lumpedMass),
     shiftedGradOp_(solnOpts.get_shifted_grad_op("velocity")),
     betaStar_(solnOpts.get_turb_model_constant(TM_betaStar)),
-    tkeProdLimitRatio_(solnOpts.get_turb_model_constant(TM_tkeProdLimitRatio)),
-    ipNodeMap_(sierra::nalu::MasterElementRepo::get_volume_master_element(
-                 AlgTraits::topo_)
-                 ->ipNodeMap())
+    tkeProdLimitRatio_(solnOpts.get_turb_model_constant(TM_tkeProdLimitRatio))
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   tkeNp1_ = get_field_ordinal(metaData, "turbulent_ke", stk::mesh::StateNP1);
@@ -46,20 +42,10 @@ TurbKineticEnergySSTSrcElemKernel<AlgTraits>::TurbKineticEnergySSTSrcElemKernel(
   tvisc_ = get_field_ordinal(metaData, "turbulent_viscosity");
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
-  MasterElement* meSCV =
-    sierra::nalu::MasterElementRepo::get_volume_master_element(
-      AlgTraits::topo_);
-
-  // compute shape function
-  if (lumpedMass_)
-    get_scv_shape_fn_data<AlgTraits>(
-      [&](double* ptr) { meSCV->shifted_shape_fcn(ptr); }, v_shape_function_);
-  else
-    get_scv_shape_fn_data<AlgTraits>(
-      [&](double* ptr) { meSCV->shape_fcn(ptr); }, v_shape_function_);
+  meSCV_ = MasterElementRepo::get_volume_master_element<AlgTraits>();
 
   // add master elements
-  dataPreReqs.add_cvfem_volume_me(meSCV);
+  dataPreReqs.add_cvfem_volume_me(meSCV_);
 
   // fields and data
   dataPreReqs.add_coordinates_field(
@@ -78,41 +64,33 @@ TurbKineticEnergySSTSrcElemKernel<AlgTraits>::TurbKineticEnergySSTSrcElemKernel(
 }
 
 template <typename AlgTraits>
-TurbKineticEnergySSTSrcElemKernel<
-  AlgTraits>::~TurbKineticEnergySSTSrcElemKernel()
-{
-}
-
-template <typename AlgTraits>
 void
 TurbKineticEnergySSTSrcElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType**>& lhs,
-  SharedMemView<DoubleType*>& rhs,
-  ScratchViews<DoubleType>& scratchViews)
+  SharedMemView<DoubleType**, DeviceShmem>& lhs,
+  SharedMemView<DoubleType*, DeviceShmem>& rhs,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
   NALU_ALIGNED DoubleType w_dudx[AlgTraits::nDim_][AlgTraits::nDim_];
 
-  SharedMemView<DoubleType*>& v_tkeNp1 =
-    scratchViews.get_scratch_view_1D(tkeNp1_);
-  SharedMemView<DoubleType*>& v_sdrNp1 =
-    scratchViews.get_scratch_view_1D(sdrNp1_);
-  SharedMemView<DoubleType*>& v_densityNp1 =
-    scratchViews.get_scratch_view_1D(densityNp1_);
-  SharedMemView<DoubleType**>& v_velocityNp1 =
-    scratchViews.get_scratch_view_2D(velocityNp1_);
-  SharedMemView<DoubleType*>& v_tvisc =
-    scratchViews.get_scratch_view_1D(tvisc_);
-  SharedMemView<DoubleType***>& v_dndx =
-    shiftedGradOp_
-      ? scratchViews.get_me_views(CURRENT_COORDINATES).dndx_scv_shifted
-      : scratchViews.get_me_views(CURRENT_COORDINATES).dndx_scv;
-  SharedMemView<DoubleType*>& v_scv_volume =
-    scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
+  const auto& v_tkeNp1 = scratchViews.get_scratch_view_1D(tkeNp1_);
+  const auto& v_sdrNp1 = scratchViews.get_scratch_view_1D(sdrNp1_);
+  const auto& v_densityNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
+  const auto& v_velocityNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
+  const auto& v_tvisc = scratchViews.get_scratch_view_1D(tvisc_);
+
+  auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
+  const auto& v_dndx = shiftedGradOp_ ? meViews.dndx_scv_shifted : meViews.dndx_scv;
+  const auto& v_scv_volume = meViews.scv_volume;
+  auto& v_shape_function = meViews.scv_shape_fcn;
+  const auto* ipNodeMap = meSCV_->ipNodeMap();
+
+  if (lumpedMass_)
+    v_shape_function = meViews.scv_shifted_shape_fcn;
 
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
 
     // nearest node to ip
-    const int nearestNode = ipNodeMap_[ip];
+    const int nearestNode = ipNodeMap[ip];
 
     // save off scvol
     const DoubleType scV = v_scv_volume(ip);
@@ -127,7 +105,7 @@ TurbKineticEnergySSTSrcElemKernel<AlgTraits>::execute(
 
     for (int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic) {
 
-      const DoubleType r = v_shape_function_(ip, ic);
+      const DoubleType r = v_shape_function(ip, ic);
 
       rho += r * v_densityNp1(ic);
       tke += r * v_tkeNp1(ic);
@@ -160,7 +138,7 @@ TurbKineticEnergySSTSrcElemKernel<AlgTraits>::execute(
     // assemble RHS and LHS
     rhs(nearestNode) += (Pk - Dk) * scV;
     for (int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic) {
-      lhs(nearestNode, ic) += v_shape_function_(ip, ic) * tkeFac * scV;
+      lhs(nearestNode, ic) += v_shape_function(ip, ic) * tkeFac * scV;
     }
   }
 }
