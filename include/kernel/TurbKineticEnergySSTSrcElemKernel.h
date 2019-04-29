@@ -39,8 +39,9 @@ public:
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve
    */
-  KOKKOS_FUNCTION
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
     SharedMemView<DoubleType**, DeviceShmem>&,
     SharedMemView<DoubleType*, DeviceShmem>&,
