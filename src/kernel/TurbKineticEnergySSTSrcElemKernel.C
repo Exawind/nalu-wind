@@ -61,6 +61,10 @@ TurbKineticEnergySSTSrcElemKernel<AlgTraits>::TurbKineticEnergySSTSrcElemKernel(
       SCV_SHIFTED_GRAD_OP, CURRENT_COORDINATES);
   else
     dataPreReqs.add_master_element_call(SCV_GRAD_OP, CURRENT_COORDINATES);
+
+  dataPreReqs.add_master_element_call(SCV_SHAPE_FCN, CURRENT_COORDINATES);
+  if (lumpedMass_)
+    dataPreReqs.add_master_element_call(SCV_SHIFTED_SHAPE_FCN, CURRENT_COORDINATES);
 }
 
 template <typename AlgTraits>
@@ -81,11 +85,8 @@ TurbKineticEnergySSTSrcElemKernel<AlgTraits>::execute(
   auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
   const auto& v_dndx = shiftedGradOp_ ? meViews.dndx_scv_shifted : meViews.dndx_scv;
   const auto& v_scv_volume = meViews.scv_volume;
-  auto& v_shape_function = meViews.scv_shape_fcn;
+  auto& v_shape_function = lumpedMass_ ? meViews.scv_shifted_shape_fcn : meViews.scv_shape_fcn;
   const auto* ipNodeMap = meSCV_->ipNodeMap();
-
-  if (lumpedMass_)
-    v_shape_function = meViews.scv_shifted_shape_fcn;
 
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
 
