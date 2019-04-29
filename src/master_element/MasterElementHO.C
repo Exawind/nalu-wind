@@ -235,7 +235,7 @@ HigherOrderQuad3DSCS::determinant(
 {
   ThrowRequireMsg(nelem == 1, "determinant is executed one element at a time for HO");
 
-  Kokkos::View<double[3]> areaVector("areaVector");
+  std::array<double,3> areaVector;
   int grad_offset = 0;
   int grad_inc = surfaceDimension_ * nodesPerElement_;
 
@@ -257,7 +257,7 @@ void
 HigherOrderQuad3DSCS::area_vector(
   const double* POINTER_RESTRICT elemNodalCoords,
   const double* POINTER_RESTRICT shapeDeriv,
-  Kokkos::View<double[3]> areaVector) const
+  std::array<double,3>& areaVector) const
 {
   // return the normal area vector given shape derivatives dnds OR dndt
   double dx_ds1 = 0.0; double dy_ds1 = 0.0; double dz_ds1 = 0.0;
@@ -285,9 +285,9 @@ HigherOrderQuad3DSCS::area_vector(
   }
 
   //cross product
-  areaVector(0) = dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2;
-  areaVector(1) = dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2;
-  areaVector(2) = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
+  areaVector[0] = dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2;
+  areaVector[1] = dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2;
+  areaVector[2] = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
 }
 
 KOKKOS_FUNCTION
@@ -644,14 +644,14 @@ HigherOrderQuad2DSCS::set_boundary_info()
   int oppFaceIndex = 0;
   for (int k = 0; k < nodes1D_; ++k) {
     const int nearNode = face_node_number(k,faceOrdinal);
-    int oppNode = nodeMap(1, k);
+    int oppNode = nodeMap(k, 1);
 
     for (int j = 0; j < quadrature_.num_quad(); ++j) {
       ipNodeMap_(scalar_index) = nearNode;
       oppNode_(scalar_index) = oppNode;
       oppFace_(scalar_index) = oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
 
-      intgExpFace_(scalar_index, 0) = intgLoc_(oppFace_(scalar_index)*nDim_, 0);
+      intgExpFace_(scalar_index, 0) = intgLoc_(oppFace_(scalar_index), 0);
       intgExpFace_(scalar_index, 1) = faceLoc[faceOrdinal];
 
       ++scalar_index;
@@ -671,13 +671,12 @@ HigherOrderQuad2DSCS::set_boundary_info()
       oppFace_(scalar_index) = oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
 
       intgExpFace_(scalar_index, 0) = faceLoc[faceOrdinal];
-      intgExpFace_(scalar_index, 1) = intgLoc_(oppFace_(scalar_index)*nDim_, 1);
+      intgExpFace_(scalar_index, 1) = intgLoc_(oppFace_(scalar_index), 1);
 
       ++scalar_index;
       ++oppFaceIndex;
     }
   }
-
 
   faceOrdinal = 2; //top face
   oppFaceIndex = 0;
@@ -691,7 +690,7 @@ HigherOrderQuad2DSCS::set_boundary_info()
       oppNode_(scalar_index) = oppNode;
       oppFace_(scalar_index) = (ipsPerFace_-1) - oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
 
-      intgExpFace_(scalar_index, 0) = intgLoc_(oppFace_(scalar_index)*nDim_, 0);
+      intgExpFace_(scalar_index, 0) = intgLoc_(oppFace_(scalar_index), 0);
       intgExpFace_(scalar_index, 1) = faceLoc[faceOrdinal];
 
       ++scalar_index;
@@ -711,7 +710,7 @@ HigherOrderQuad2DSCS::set_boundary_info()
       oppFace_(scalar_index) = (ipsPerFace_-1) - oppFaceIndex + faceToLine[faceOrdinal]*ipsPerFace_;
 
       intgExpFace_(scalar_index, 0)   = faceLoc[faceOrdinal];
-      intgExpFace_(scalar_index, 1) = intgLoc_(oppFace_(scalar_index)*nDim_, 1);
+      intgExpFace_(scalar_index, 1) = intgLoc_(oppFace_(scalar_index), 1);
 
       ++scalar_index;
       ++oppFaceIndex;
@@ -954,7 +953,7 @@ HigherOrderEdge2DSCS::determinant(
   double *areav,
   double *error)
 {
-  Kokkos::View<double[2]> areaVector("areaVector");
+  std::array<double,2> areaVector;
   *error = 0.0;
   ThrowRequireMsg(nelem == 1, "determinant is executed one element at a time for HO");
 
@@ -969,8 +968,8 @@ HigherOrderEdge2DSCS::determinant(
       areaVector );
 
     // weight the area vector with the Gauss-quadrature weight for this IP
-    areav[vec_offset + 0] = ipWeights_(ip) * areaVector(0);
-    areav[vec_offset + 1] = ipWeights_(ip) * areaVector(1);
+    areav[vec_offset + 0] = ipWeights_(ip) * areaVector[0];
+    areav[vec_offset + 1] = ipWeights_(ip) * areaVector[1];
 
     grad_offset += grad_inc;
     vec_offset += nDim_;
@@ -990,7 +989,7 @@ void
 HigherOrderEdge2DSCS::area_vector(
   const double* POINTER_RESTRICT elemNodalCoords,
   const double* POINTER_RESTRICT shapeDeriv,
-  Kokkos::View<double[2]> areaVector) const
+  std::array<double,2>& areaVector) const
 {
   double dxdr = 0.0;  double dydr = 0.0;
   int vector_offset = 0;
@@ -1003,8 +1002,8 @@ HigherOrderEdge2DSCS::area_vector(
 
     vector_offset += nDim_;
   }
-  areaVector(0) =  dydr;
-  areaVector(1) = -dxdr;
+  areaVector[0] =  dydr;
+  areaVector[1] = -dxdr;
 }
 
 }  // namespace nalu
