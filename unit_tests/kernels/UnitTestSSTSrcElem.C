@@ -224,9 +224,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_src_elem)
 #endif
 }
 
-#ifndef KOKKOS_ENABLE_CUDA
-
-TEST_F(SSTKernelHex8Mesh, turb_kinetic_energy_sst_des_src_elem)
+TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_des_src_elem)
 {
 
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
@@ -255,6 +253,8 @@ TEST_F(SSTKernelHex8Mesh, turb_kinetic_energy_sst_des_src_elem)
 
   helperObjs.assembleElemSolverAlg->execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
+
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -265,9 +265,9 @@ TEST_F(SSTKernelHex8Mesh, turb_kinetic_energy_sst_des_src_elem)
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs);
 
-}
-
 #endif
+
+}
 
 TEST_F(SSTKernelHex8Mesh, NGP_specific_dissipation_rate_sst_src_elem)
 {
