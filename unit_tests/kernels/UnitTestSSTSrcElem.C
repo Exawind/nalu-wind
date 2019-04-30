@@ -224,8 +224,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_src_elem)
 #endif
 }
 
-
-TEST_F(SSTKernelHex8Mesh, turb_kinetic_energy_sst_des_src_elem)
+TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_des_src_elem)
 {
 
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
@@ -269,7 +268,6 @@ TEST_F(SSTKernelHex8Mesh, turb_kinetic_energy_sst_des_src_elem)
 #endif
 
 }
-
 
 TEST_F(SSTKernelHex8Mesh, NGP_specific_dissipation_rate_sst_src_elem)
 {
