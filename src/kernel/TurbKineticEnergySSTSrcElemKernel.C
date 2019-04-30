@@ -82,10 +82,10 @@ TurbKineticEnergySSTSrcElemKernel<AlgTraits>::execute(
   const auto& v_velocityNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
   const auto& v_tvisc = scratchViews.get_scratch_view_1D(tvisc_);
 
-  auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
+  const auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
   const auto& v_dndx = shiftedGradOp_ ? meViews.dndx_scv_shifted : meViews.dndx_scv;
   const auto& v_scv_volume = meViews.scv_volume;
-  auto& v_shape_function = lumpedMass_ ? meViews.scv_shifted_shape_fcn : meViews.scv_shape_fcn;
+  const auto& v_shape_function = lumpedMass_ ? meViews.scv_shifted_shape_fcn : meViews.scv_shape_fcn;
   const auto* ipNodeMap = meSCV_->ipNodeMap();
 
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
