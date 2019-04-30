@@ -23,7 +23,7 @@ class MasterElement;
 class ElemDataRequests;
 
 template <typename AlgTraits>
-class TurbKineticEnergySSTDESSrcElemKernel : public Kernel
+class TurbKineticEnergySSTDESSrcElemKernel : public NGPKernel<TurbKineticEnergySSTDESSrcElemKernel<AlgTraits>>
 {
 public:
   TurbKineticEnergySSTDESSrcElemKernel(
@@ -32,20 +32,22 @@ public:
     ElemDataRequests&,
     const bool);
 
-  virtual ~TurbKineticEnergySSTDESSrcElemKernel();
+  KOKKOS_FUNCTION TurbKineticEnergySSTDESSrcElemKernel() = default;
+
+  KOKKOS_FUNCTION virtual ~TurbKineticEnergySSTDESSrcElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  TurbKineticEnergySSTDESSrcElemKernel() = delete;
-
   unsigned  tkeNp1_ {stk::mesh::InvalidOrdinal};
   unsigned  sdrNp1_ {stk::mesh::InvalidOrdinal};
   unsigned  densityNp1_ {stk::mesh::InvalidOrdinal};
@@ -62,11 +64,7 @@ private:
   double cDESke_{0.0};
   double cDESkw_{0.0};
 
-  const int* ipNodeMap_;
-
-  // scratch space
-  AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]>
-    v_shape_function_{"v_shape_function"};
+  MasterElement* meSCV_{nullptr};
 };
 
 } // namespace nalu
