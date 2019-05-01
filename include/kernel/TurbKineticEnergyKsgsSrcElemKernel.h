@@ -26,7 +26,7 @@ class ElemDataRequests;
 /** Add Ksgs source term for kernel-based algorithm approach
  */
 template<typename AlgTraits>
-class TurbKineticEnergyKsgsSrcElemKernel: public Kernel
+class TurbKineticEnergyKsgsSrcElemKernel: public NGPKernel<TurbKineticEnergyKsgsSrcElemKernel<AlgTraits>>
 {
 public:
   TurbKineticEnergyKsgsSrcElemKernel(
@@ -34,20 +34,22 @@ public:
     const SolutionOptions&,
     ElemDataRequests&);
 
-  virtual ~TurbKineticEnergyKsgsSrcElemKernel();
+  KOKKOS_FUNCTION TurbKineticEnergyKsgsSrcElemKernel() = default;
+
+  KOKKOS_FUNCTION virtual ~TurbKineticEnergyKsgsSrcElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  TurbKineticEnergyKsgsSrcElemKernel() = delete;
-
   unsigned coordinates_ {stk::mesh::InvalidOrdinal};
   unsigned tkeNp1_ {stk::mesh::InvalidOrdinal};
   unsigned densityNp1_ {stk::mesh::InvalidOrdinal};
@@ -57,9 +59,8 @@ private:
 
   double cEps_{0.0};
   double tkeProdLimitRatio_{0.0};
-  
-  /// Integration point to node mapping
-  const int* ipNodeMap_;
+
+  MasterElement* meSCV_{nullptr};
 };
 
 }  // nalu
