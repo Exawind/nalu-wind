@@ -35,10 +35,15 @@ class ActuatorFASTInfo : public ActuatorInfo
 public:
     ActuatorFASTInfo();
     virtual ~ActuatorFASTInfo();
-    //~ Coordinates epsilon_; ///< The Gaussian spreading width in (chordwise,
-    //~ ///< spanwise, thickness) directions
+    // The Gaussian spreading width (chordwise, spanwise, thickness)
+    Coordinates epsilon_; 
+
     // epsilon / chord in (chord direction, tangential to chord, and spanwise)
     Coordinates epsilon_chord_;
+
+    // The value of epsilon used for the tower [m]
+    Coordinates epsilon_tower_;
+
     // The minimum epsilon allowed in the simulation [m]
     // in the (chordwise, spanwise, thickness) directions
     Coordinates epsilon_min_;
@@ -209,7 +214,10 @@ public:
     void spread_actuator_force_to_node_vec(
         const int& nDim,
         std::set<stk::mesh::Entity>& nodeVec,
+        // The force vector
         const std::vector<double>& actuator_force,
+        // The tensor to indicate the orientation of the airfoil sections
+        const std::vector<double>& orientation_tensor,
         const double* actuator_node_coordinates,
         const stk::mesh::FieldBase& coordinates,
         stk::mesh::FieldBase& actuator_source,

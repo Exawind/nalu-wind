@@ -120,18 +120,29 @@ ActuatorDiskFAST::execute_class_specific(
     // get the vector of elements
     std::set<stk::mesh::Entity> nodeVec = infoObject->nodeVec_;
 
+    // Declare the unit vector orientation matrix
+    // This is meant to not rotate the coordinate system
+    // The ordering of this matrix is: xx, xy, xz, yx, yy, yz, zx, zy, zz
+    const std::vector<double> orientation_tensor
+        {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+
     switch (infoObject->nodeType_) {
     case fast::HUB:
     case fast::TOWER:
       FAST.getForce(ws_pointForce, np, iTurbGlob);
       spread_actuator_force_to_node_vec(
-        nDim, nodeVec, ws_pointForce, &(infoObject->centroidCoords_[0]),
+        nDim, nodeVec, ws_pointForce, 
+        // orientation tensor (does not change anything in the actuator disk)
+        orientation_tensor,
+        &(infoObject->centroidCoords_[0]),
         *coordinates, *actuator_source, *dualNodalVolume, infoObject->epsilon_,
         hubPos, hubShftVec, thrust[iTurbGlob], torque[iTurbGlob]);
       break;
     case fast::BLADE:
       spread_actuator_force_to_node_vec(
         nDim, nodeVec, averageForcesMap_.at(iTurbGlob)[pointRadiusMap_.at(np)],
+        // orientation tensor (does not change anything in the actuator disk)
+        orientation_tensor,
         &(infoObject->centroidCoords_[0]), *coordinates, *actuator_source,
         *dualNodalVolume, infoObject->epsilon_, hubPos, hubShftVec,
         thrust[iTurbGlob], torque[iTurbGlob]);
@@ -181,7 +192,7 @@ ActuatorDiskFAST::add_swept_points_to_map()
                                  "type. It should be ActuatorFASTInfo.");
       }
       // set up search params and constants for this fastPoint
-      double searchRadius = actuatorInfo->epsilon_min_.x_ * sqrt(log(1.0 / 0.001));
+      double searchRadius = actuatorInfo->epsilon_.x_ * sqrt(log(1.0 / 0.001));
 
       // loop over each radial location and insert the correct number of points
 
@@ -229,8 +240,7 @@ ActuatorDiskFAST::add_swept_points_to_map()
                                            np,
                                            make_unique<ActuatorFASTPointInfo>(
                                              iTurb, centroidCoords, searchRadius,
-                                             actuatorInfo->epsilon_min_, // TODO(psakiev)::scale epsilon based on
-                                             // the arc length ratio with the tip
+                                             actuatorInfo->epsilon_,
                                              fast::BLADE, i)));
             pointRadiusMap_.insert(std::make_pair(np, i));
           }
