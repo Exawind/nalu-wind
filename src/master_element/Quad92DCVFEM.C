@@ -455,6 +455,17 @@ Quad92DSCV::ipNodeMap(
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
+Quad92DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  for (int i = 0; i < numIntPoints_ ; ++i) {
+    for (int j = 0; j < nodesPerElement_; ++j) {
+      const int ni = i*nodesPerElement_ + j;
+      shpfc(i,j) = shapeFunctions_[ni];
+    }
+  }
+}
+
+void
 Quad92DSCV::shape_fcn(double* shpfc)
 {
   for (int ni = 0; ni < numIntPoints_ * nodesPerElement_; ++ni) {
@@ -465,6 +476,17 @@ Quad92DSCV::shape_fcn(double* shpfc)
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
+void
+Quad92DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  for (int i = 0; i < numIntPoints_ ; ++i) {
+    for (int j = 0; j < nodesPerElement_; ++j) {
+      const int ni = i*nodesPerElement_ + j;
+      shpfc(i,j) = shapeFunctionsShift_[ni];
+    }
+  }
+}
+
 void
 Quad92DSCV::shifted_shape_fcn(double* shpfc)
 {
@@ -864,6 +886,17 @@ Quad92DSCS::ipNodeMap(
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
+Quad92DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  for (int i = 0; i < numIntPoints_ ; ++i) {
+    for (int j = 0; j < nodesPerElement_; ++j) {
+      const int ni = i*nodesPerElement_ + j;
+      shpfc(i,j) = shapeFunctions_[ni];
+    }
+  }
+}
+
+void
 Quad92DSCS::shape_fcn(double* shpfc)
 {
   for (int ni = 0; ni < numIntPoints_ * nodesPerElement_; ++ni) {
@@ -874,6 +907,17 @@ Quad92DSCS::shape_fcn(double* shpfc)
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
+void
+Quad92DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  for (int i = 0; i < numIntPoints_ ; ++i) {
+    for (int j = 0; j < nodesPerElement_; ++j) {
+      const int ni = i*nodesPerElement_ + j;
+      shpfc(i,j) = shapeFunctionsShift_[ni];
+    }
+  }
+}
+
 void
 Quad92DSCS::shifted_shape_fcn(double* shpfc)
 {

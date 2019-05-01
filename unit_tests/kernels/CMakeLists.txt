@@ -15,8 +15,10 @@ add_sources(GlobalUnitSourceList
    UnitTestMomentumNSOKeElem.C
    UnitTestSSTSrcElem.C
    UnitTestScalarAdvDiffElem.C
+   UnitTestScalarMassElem.C
    UnitTestScalarDiffElem.C
    UnitTestSteadyThermal3dContactSrcElem.C
+   UnitTestWallDistElem.C
 )
 
 add_sources(GlobalUnitHeaderList

@@ -36,6 +36,53 @@
 namespace sierra{
 namespace nalu{
 
+template<typename ViewType>
+KOKKOS_FUNCTION void pyramid_shape_fcn(
+  const int npts,
+  const double* par_coord,
+  ViewType& shape_fcn)
+{
+  const double eps = std::numeric_limits<double>::epsilon();
+
+  for ( int j = 0; j < npts; ++j ) {
+    const int k     = 3*j;
+    const double r    = par_coord[k+0];
+    const double s    = par_coord[k+1];
+    const double t_tmp    = par_coord[k+2];
+
+    const double one_minus_t = 1.0 - t_tmp;
+    const double t = (std::fabs(one_minus_t) > eps) ? t_tmp : 1.0 + std::copysign(eps, one_minus_t);
+    const double quarter_inv_tm1 = 0.25 / (1.0 - t);
+
+    shape_fcn(j, 0) = (1.0 - r - t) * (1.0 - s - t) * quarter_inv_tm1;
+    shape_fcn(j, 1) = (1.0 + r - t) * (1.0 - s - t) * quarter_inv_tm1;
+    shape_fcn(j, 2) = (1.0 + r - t) * (1.0 + s - t) * quarter_inv_tm1;
+    shape_fcn(j, 3) = (1.0 - r - t) * (1.0 + s - t) * quarter_inv_tm1;
+    shape_fcn(j, 4) = t;
+  }
+}
+
+template<typename ViewType>
+KOKKOS_FUNCTION void pyramid_shifted_shape_fcn(
+  const int npts,
+  const double* par_coord,
+  ViewType& shape_fcn)
+{
+  const double one  = 1.0;
+  for ( int j = 0; j < npts; ++j ) {
+    const int k     = 3*j;
+    const double r    = par_coord[k+0];
+    const double s    = par_coord[k+1];
+    const double t    = par_coord[k+2];
+
+    shape_fcn(j, 0) = 0.25*(1.0-r)*(1.0-s)*(one-t);
+    shape_fcn(j, 1) = 0.25*(1.0+r)*(1.0-s)*(one-t);
+    shape_fcn(j, 2) = 0.25*(1.0+r)*(1.0+s)*(one-t);
+    shape_fcn(j, 3) = 0.25*(1.0-r)*(1.0+s)*(one-t);
+    shape_fcn(j, 4) = t;
+  }
+}
+
 //-------- pyr_deriv -------------------------------------------------------
 template <typename DerivType>
 KOKKOS_FUNCTION
@@ -423,6 +470,18 @@ void PyrSCV::determinant(
       volume, error, &lerr );
 }
 
+KOKKOS_FUNCTION void
+PyrSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  pyramid_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+}
+
+KOKKOS_FUNCTION void
+PyrSCV::shifted_shape_fcn(
+  SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  pyramid_shifted_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+}
 
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
@@ -1207,6 +1266,19 @@ const int *
 PyrSCS::scsIpEdgeOrd()
 {
   return &scsIpEdgeOrd_[0];
+}
+
+KOKKOS_FUNCTION void
+PyrSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  pyramid_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+}
+
+KOKKOS_FUNCTION void
+PyrSCS::shifted_shape_fcn(
+  SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  pyramid_shifted_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
 
 //--------------------------------------------------------------------------

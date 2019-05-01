@@ -33,9 +33,7 @@ ScalarMassElemKernel<AlgTraits>::ScalarMassElemKernel(
   ScalarFieldType* scalarQ,
   ElemDataRequests& dataPreReqs,
   const bool lumpedMass)
-  : Kernel(),
-    lumpedMass_(lumpedMass),
-    ipNodeMap_(sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_)->ipNodeMap())
+  : lumpedMass_(lumpedMass)
 {
   // save off fields
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
@@ -58,16 +56,14 @@ ScalarMassElemKernel<AlgTraits>::ScalarMassElemKernel(
     densityNm1_ = density->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
-  MasterElement *meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
+  dataPreReqs.add_coordinates_field(get_field_ordinal(metaData, solnOpts.get_coordinates_name()),
+                                    AlgTraits::nDim_, CURRENT_COORDINATES);
 
-  // compute shape function
-  if ( lumpedMass_ )
-    get_scv_shape_fn_data<AlgTraits>([&](double* ptr){meSCV->shifted_shape_fcn(ptr);}, v_shape_function_);
-  else
-    get_scv_shape_fn_data<AlgTraits>([&](double* ptr){meSCV->shape_fcn(ptr);}, v_shape_function_);
+  meSCV_ = sierra::nalu::MasterElementRepo::get_volume_master_element<AlgTraits>();
+  dataPreReqs.add_cvfem_volume_me(meSCV_);
 
-  // add master elements
-  dataPreReqs.add_cvfem_volume_me(meSCV);
+  dataPreReqs.add_master_element_call(
+      (lumpedMass_ ? SCV_SHIFTED_SHAPE_FCN : SCV_SHAPE_FCN), CURRENT_COORDINATES);
 
   // fields and data
   dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
@@ -83,10 +79,6 @@ ScalarMassElemKernel<AlgTraits>::ScalarMassElemKernel(
 }
 
 template<typename AlgTraits>
-ScalarMassElemKernel<AlgTraits>::~ScalarMassElemKernel()
-{}
-
-template<typename AlgTraits>
 void
 ScalarMassElemKernel<AlgTraits>::setup(const TimeIntegrator& timeIntegrator)
 {
@@ -99,29 +91,26 @@ ScalarMassElemKernel<AlgTraits>::setup(const TimeIntegrator& timeIntegrator)
 template<typename AlgTraits>
 void
 ScalarMassElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType **>& lhs,
-  SharedMemView<DoubleType *>&rhs,
-  ScratchViews<DoubleType>& scratchViews)
+  SharedMemView<DoubleType **, DeviceShmem>& lhs,
+  SharedMemView<DoubleType *, DeviceShmem>&rhs,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
-  SharedMemView<DoubleType*>& v_qNm1 = scratchViews.get_scratch_view_1D(
-    scalarQNm1_);
-  SharedMemView<DoubleType*>& v_qN = scratchViews.get_scratch_view_1D(
-    scalarQN_);
-  SharedMemView<DoubleType*>& v_qNp1 = scratchViews.get_scratch_view_1D(
-    scalarQNp1_);
-  SharedMemView<DoubleType*>& v_rhoNm1 = scratchViews.get_scratch_view_1D(
-    densityNm1_);
-  SharedMemView<DoubleType*>& v_rhoN = scratchViews.get_scratch_view_1D(
-    densityN_);
-  SharedMemView<DoubleType*>& v_rhoNp1 = scratchViews.get_scratch_view_1D(
-    densityNp1_);
+  auto& v_qNm1 = scratchViews.get_scratch_view_1D(scalarQNm1_);
+  auto& v_qN = scratchViews.get_scratch_view_1D(scalarQN_);
+  auto& v_qNp1 = scratchViews.get_scratch_view_1D(scalarQNp1_);
+  auto& v_rhoNm1 = scratchViews.get_scratch_view_1D(densityNm1_);
+  auto& v_rhoN = scratchViews.get_scratch_view_1D(densityN_);
+  auto& v_rhoNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
+  auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
+  auto& v_scv_volume = meViews.scv_volume;
+  auto& v_shape_function = lumpedMass_ ? meViews.scv_shifted_shape_fcn : meViews.scv_shape_fcn;
 
-  SharedMemView<DoubleType*>& v_scv_volume = scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
+  const int* ipNodeMap = meSCV_->ipNodeMap();
 
   for ( int ip = 0; ip < AlgTraits::numScvIp_; ++ip ) {
 
     // nearest node to ip
-    const int nearestNode = ipNodeMap_[ip];
+    const int nearestNode = ipNodeMap[ip];
 
     // zero out; scalar
     DoubleType qNm1Scv = 0.0;
@@ -133,7 +122,7 @@ ScalarMassElemKernel<AlgTraits>::execute(
 
     for ( int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic ) {
       // save off shape function
-      const DoubleType r = v_shape_function_(ip,ic);
+      const DoubleType r = v_shape_function(ip,ic);
 
       // scalar q
       qNm1Scv += r*v_qNm1(ic);
@@ -154,7 +143,7 @@ ScalarMassElemKernel<AlgTraits>::execute(
     // manage LHS
     for ( int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic ) {
       // save off shape function
-      const DoubleType r = v_shape_function_(ip,ic);
+      const DoubleType r = v_shape_function(ip,ic);
       const DoubleType lhsfac = r*gamma1_*rhoNp1Scv*scV/dt_ * diagRelaxFactor_;
       lhs(nearestNode,ic) += lhsfac;
     }

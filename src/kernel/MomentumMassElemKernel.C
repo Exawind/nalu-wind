@@ -32,11 +32,8 @@ MomentumMassElemKernel<AlgTraits>::MomentumMassElemKernel(
   const SolutionOptions& solnOpts,
   ElemDataRequests& dataPreReqs,
   const bool lumpedMass)
-  : Kernel(),
-    lumpedMass_(lumpedMass),
-    ipNodeMap_(sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_)->ipNodeMap())
+  : lumpedMass_(lumpedMass)
 {
-
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   VectorFieldType *velocity = metaData.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "velocity");
@@ -60,16 +57,10 @@ MomentumMassElemKernel<AlgTraits>::MomentumMassElemKernel(
   Gjp_ = get_field_ordinal(metaData, "dpdx");
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
-  MasterElement* meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
-
-  // compute shape function
-  if ( lumpedMass_ )
-    get_scv_shape_fn_data<AlgTraits>([&](double* ptr){meSCV->shifted_shape_fcn(ptr);}, v_shape_function_);
-  else
-    get_scv_shape_fn_data<AlgTraits>([&](double* ptr){meSCV->shape_fcn(ptr);}, v_shape_function_);
+  meSCV_ = sierra::nalu::MasterElementRepo::get_volume_master_element<AlgTraits>();
 
   // add master elements
-  dataPreReqs.add_cvfem_volume_me(meSCV);
+  dataPreReqs.add_cvfem_volume_me(meSCV_);
 
   // fields and data
   dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
@@ -81,14 +72,12 @@ MomentumMassElemKernel<AlgTraits>::MomentumMassElemKernel(
   dataPreReqs.add_gathered_nodal_field(velocityNp1_, AlgTraits::nDim_);
   dataPreReqs.add_gathered_nodal_field(Gjp_, AlgTraits::nDim_);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
+  dataPreReqs.add_master_element_call(
+    (lumpedMass_ ? SCV_SHIFTED_SHAPE_FCN : SCV_SHAPE_FCN), CURRENT_COORDINATES);
 
   const std::string dofName = "velocity";
   diagRelaxFactor_ = solnOpts.get_relaxation_factor(dofName);
 }
-
-template<typename AlgTraits>
-MomentumMassElemKernel<AlgTraits>::~MomentumMassElemKernel()
-{}
 
 template<typename AlgTraits>
 void
@@ -103,27 +92,31 @@ MomentumMassElemKernel<AlgTraits>::setup(const TimeIntegrator& timeIntegrator)
 template<typename AlgTraits>
 void
 MomentumMassElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType**>& lhs,
-  SharedMemView<DoubleType *>& rhs,
-  ScratchViews<DoubleType>& scratchViews)
+  SharedMemView<DoubleType**, DeviceShmem>& lhs,
+  SharedMemView<DoubleType*, DeviceShmem>& rhs,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
   NALU_ALIGNED DoubleType w_uNm1 [AlgTraits::nDim_];
   NALU_ALIGNED DoubleType w_uN   [AlgTraits::nDim_];
   NALU_ALIGNED DoubleType w_uNp1 [AlgTraits::nDim_];
   NALU_ALIGNED DoubleType w_Gjp  [AlgTraits::nDim_];
 
-  SharedMemView<DoubleType*>& v_densityNm1 = scratchViews.get_scratch_view_1D(densityNm1_);
-  SharedMemView<DoubleType*>& v_densityN = scratchViews.get_scratch_view_1D(densityN_);
-  SharedMemView<DoubleType*>& v_densityNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
-  SharedMemView<DoubleType**>& v_velocityNm1 = scratchViews.get_scratch_view_2D(velocityNm1_);
-  SharedMemView<DoubleType**>& v_velocityN = scratchViews.get_scratch_view_2D(velocityN_);
-  SharedMemView<DoubleType**>& v_velocityNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
-  SharedMemView<DoubleType**>& v_Gpdx = scratchViews.get_scratch_view_2D(Gjp_);
+  auto& v_densityNm1 = scratchViews.get_scratch_view_1D(densityNm1_);
+  auto& v_densityN = scratchViews.get_scratch_view_1D(densityN_);
+  auto& v_densityNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
+  auto& v_velocityNm1 = scratchViews.get_scratch_view_2D(velocityNm1_);
+  auto& v_velocityN = scratchViews.get_scratch_view_2D(velocityN_);
+  auto& v_velocityNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
+  auto& v_Gpdx = scratchViews.get_scratch_view_2D(Gjp_);
 
-  SharedMemView<DoubleType*>& v_scv_volume = scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
+  auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
+  auto& v_scv_volume = meViews.scv_volume;
+  auto& v_shape_function = lumpedMass_ ? meViews.scv_shifted_shape_fcn : meViews.scv_shape_fcn;
+
+  const int* ipNodeMap = meSCV_->ipNodeMap();
 
   for (int ip=0; ip < AlgTraits::numScvIp_; ++ip) {
-    const int nearestNode = ipNodeMap_[ip];
+    const int nearestNode = ipNodeMap[ip];
 
     DoubleType rhoNm1 = 0.0;
     DoubleType rhoN   = 0.0;
@@ -136,7 +129,7 @@ MomentumMassElemKernel<AlgTraits>::execute(
     }
 
     for (int ic=0; ic < AlgTraits::nodesPerElement_; ++ic) {
-      const DoubleType r = v_shape_function_(ip, ic);
+      const DoubleType r = v_shape_function(ip, ic);
 
       rhoNm1 += r * v_densityNm1(ic);
       rhoN   += r * v_densityN(ic);
@@ -163,7 +156,7 @@ MomentumMassElemKernel<AlgTraits>::execute(
     // Compute LHS
     for (int ic=0; ic < AlgTraits::nodesPerElement_; ++ic) {
       const int icNdim = ic * AlgTraits::nDim_;
-      const DoubleType r = v_shape_function_(ip, ic);
+      const DoubleType r = v_shape_function(ip, ic);
       const DoubleType lhsfac = r * gamma1_ * rhoNp1 * scV / dt_ * diagRelaxFactor_;
 
       for (int j=0; j<AlgTraits::nDim_; ++j) {

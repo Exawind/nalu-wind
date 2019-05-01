@@ -17,49 +17,38 @@
 namespace sierra{
 namespace nalu{
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// Lagrange1D - Provides the set of weights for interpolating and taking
-// derivatives for a 1-dimensional element ordered from left-to-right
-//===========================================================================
-Lagrange1D::Lagrange1D(int poly_order)
+
+Kokkos::View<double*> barycentric_weights(const Kokkos::View<double*>& nodelocs)
 {
-  nodeLocs_ = gauss_lobatto_legendre_rule(poly_order+1).first;
-  set_lagrange_weights();
-}
-//--------------------------------------------------------------------------
-Lagrange1D::Lagrange1D(const double* nodeLocs, int order)
-{
-  nodeLocs_.resize(order+1);
-  for (int j = 0; j < order + 1; ++j) {
-    nodeLocs_[j] = nodeLocs[j];
-  }
-  set_lagrange_weights();
-}
-//--------------------------------------------------------------------------
-Lagrange1D::Lagrange1D(std::vector<double> nodeLocs) : nodeLocs_(std::move(nodeLocs))
-{
-  set_lagrange_weights();
-}
-//--------------------------------------------------------------------------
-Lagrange1D::~Lagrange1D() = default;
-//--------------------------------------------------------------------------
-void
-Lagrange1D::set_lagrange_weights()
-{
-  const auto numNodes = nodeLocs_.size();
-  lagrangeWeights_.assign(numNodes,1.0);
+  const auto numNodes = nodelocs.extent(0);
+  auto barycentricWeights = Kokkos::View<double*>("barycentric_weights", numNodes);
+  for (unsigned k = 0; k < numNodes; ++k) barycentricWeights[k] = 1.0;
+
   for (unsigned i = 0; i < numNodes; ++i) {
     for (unsigned j = 0; j < numNodes; ++j) {
       if ( i != j ) {
-        lagrangeWeights_[i] *= (nodeLocs_[i]-nodeLocs_[j]);
+        barycentricWeights[i] *= (nodelocs[i] - nodelocs[j]);
       }
     }
-    lagrangeWeights_[i] = 1.0 / lagrangeWeights_[i];
+    barycentricWeights[i] = 1.0 / barycentricWeights[i];
   }
+  return barycentricWeights;
 }
-//--------------------------------------------------------------------------
+
+Lagrange1D::Lagrange1D(const double* nodeLocs, int p)
+: nodeLocs_("node_locs", p + 1)
+{
+  for (int k = 0; k < p + 1; ++k) {
+    nodeLocs_[k] = nodeLocs[k];
+  }
+  barycentricWeights_ = barycentric_weights(nodeLocs_);
+}
+
+Lagrange1D::Lagrange1D(Kokkos::View<double*> nodeLocs)
+: nodeLocs_(nodeLocs), barycentricWeights_(barycentric_weights(nodeLocs)) {}
+
+Lagrange1D::~Lagrange1D() = default;
+
 double
 Lagrange1D::interpolation_weight(double x, unsigned nodeNumber) const
 {
@@ -69,11 +58,10 @@ Lagrange1D::interpolation_weight(double x, unsigned nodeNumber) const
       numerator *= (x - nodeLocs_[j]);
     }
   }
-  return (numerator * lagrangeWeights_[nodeNumber]);
+  return (numerator * barycentricWeights_[nodeNumber]);
 }
-//--------------------------------------------------------------------------
-double
-Lagrange1D::derivative_weight(double x, unsigned nodeNumber) const
+
+double Lagrange1D::derivative_weight(double x, unsigned nodeNumber) const
 {
   double outer = 0.0;
   for (unsigned j = 0; j < nodeLocs_.size(); ++j) {
@@ -87,119 +75,100 @@ Lagrange1D::derivative_weight(double x, unsigned nodeNumber) const
       outer += inner;
     }
   }
-  return (outer * lagrangeWeights_[nodeNumber]);
+  return (outer * barycentricWeights_[nodeNumber]);
 }
-//--------------------------------------------------------------------------
+
 LagrangeBasis::LagrangeBasis(
   const std::vector<std::vector<int>>& indicesMap,
   const std::vector<double>& nodeLocs)
-  :  indicesMap_(indicesMap),
-     basis1D_(nodeLocs),
+  :  polyOrder_(nodeLocs.size() - 1),
+     basis1D_(nodeLocs.data(), polyOrder_),
      numNodes1D_(nodeLocs.size()),
-     polyOrder_(numNodes1D_-1),
-     dim_(indicesMap[0].size())
+     dim_(indicesMap[0].size()),
+     numNodes_(std::pow(nodeLocs.size(), indicesMap[0].size())),
+     indicesMap_("index_map", indicesMap.size(), indicesMap[0].size()),
+     interpWeightsAtPoint_("interp_weights_at_point", numNodes_),
+     derivWeightsAtPoint_("deriv_weights_at_point", numNodes_, dim_)
 {
-  for (auto& indices : indicesMap) {
-    ThrowRequire(indices.size() == dim_);
-  }
-
-  numNodes_ = std::pow(numNodes1D_, dim_);
-
-  interpWeightsAtPoint_.resize(numNodes_);
-  derivWeightsAtPoint_.resize(numNodes_ * dim_);
-}
-//--------------------------------------------------------------------------
-LagrangeBasis::~LagrangeBasis() = default;
-//--------------------------------------------------------------------------
-void LagrangeBasis::interpolation_weights(const double* isoParCoords, double* weights) const
-{
-  for (unsigned nodeNumber = 0; nodeNumber < numNodes_; ++nodeNumber) {
-    const int* idx = indicesMap_[nodeNumber].data();
-    weights[nodeNumber] = tensor_lagrange_interpolant(dim_, isoParCoords, idx);
-  }
-}
-//--------------------------------------------------------------------------
-void LagrangeBasis::derivative_weights(const double* isoParCoords, double* weights) const
-{
-  int derivIndex = 0;
-  for (unsigned nodeNumber = 0; nodeNumber < numNodes_; ++nodeNumber) {
-    const int* idx = indicesMap_[nodeNumber].data();
+  for (unsigned k = 0; k < indicesMap.size(); ++k) {
+    ThrowRequire(indicesMap[k].size() == dim_);
     for (unsigned d = 0; d < dim_; ++d) {
-      weights[derivIndex] = tensor_lagrange_derivative(dim_, isoParCoords, idx, d);
-      ++derivIndex;
+      indicesMap_(k, d) = indicesMap.at(k).at(d);
     }
   }
 }
-//--------------------------------------------------------------------------
-const std::vector<double>& LagrangeBasis::point_interpolation_weights(const double* isoParCoords)
+
+LagrangeBasis::~LagrangeBasis() = default;
+
+void LagrangeBasis::fill_interpolation_weights(const double* isoParCoords, double* weights) const
 {
-  interpolation_weights(isoParCoords, interpWeightsAtPoint_.data());
+  for (unsigned k = 0; k < numNodes_; ++k) {
+    double interpolant_weight = 1.0;
+    for (unsigned d = 0; d < dim_; ++d) {
+      interpolant_weight *= basis1D_.interpolation_weight(isoParCoords[d], indicesMap_(k, d));
+    }
+    weights[k] = interpolant_weight;
+  }
+}
+
+void LagrangeBasis::fill_derivative_weights(const double* isoParCoords, double* weights) const
+{
+  for (unsigned k = 0; k < numNodes_; ++k) {
+    for (unsigned dj = 0; dj < dim_; ++dj) {
+      double derivative_weight = 1.0;
+      for (unsigned di = 0; di < dim_; ++di) {
+        const double x = isoParCoords[di];
+        const int mapped_k = indicesMap_(k, di);
+        derivative_weight *= (di == dj) ?
+            basis1D_.derivative_weight(x, mapped_k) : basis1D_.interpolation_weight(x, mapped_k);
+      }
+      weights[k * dim_ + dj] = derivative_weight;
+    }
+  }
+}
+
+const Kokkos::View<double*>& LagrangeBasis::point_interpolation_weights(const double* isoParCoords)
+{
+  fill_interpolation_weights(isoParCoords, interpWeightsAtPoint_.data());
   return interpWeightsAtPoint_;
 }
-//--------------------------------------------------------------------------
-const std::vector<double>& LagrangeBasis::point_derivative_weights(const double* isoParCoords)
+
+const Kokkos::View<double**>& LagrangeBasis::point_derivative_weights(const double* isoParCoords)
 {
-  derivative_weights(isoParCoords, derivWeightsAtPoint_.data());
+  fill_derivative_weights(isoParCoords, derivWeightsAtPoint_.data());
   return derivWeightsAtPoint_;
 }
-//--------------------------------------------------------------------------
-std::vector<double>
-LagrangeBasis::eval_basis_weights(const std::vector<double>& intgLoc) const
-{
-  auto numIps = intgLoc.size() / dim_;
-  ThrowAssert(numIps * dim_ == intgLoc.size());
 
-  std::vector<double> interpolationWeights(numIps*numNodes_);
-  for (unsigned ip = 0; ip < numIps; ++ip) {
-    interpolation_weights(&intgLoc[ip*dim_], &interpolationWeights[ip*numNodes_]);
+Kokkos::View<double**> LagrangeBasis::eval_basis_weights(const double* intgLoc, int nInt) const
+{
+  ThrowAssert(numNodes_ > 0);
+  ThrowAssert(nInt > 0);
+  Kokkos::View<double**> interpWeights("interp_weights", nInt, numNodes_);
+  for (int ip = 0; ip < nInt; ++ip) {
+    fill_interpolation_weights(&intgLoc[ip*dim_], &interpWeights(ip, 0));
   }
-  return interpolationWeights;
+  return interpWeights;
 }
-//--------------------------------------------------------------------------
-std::vector<double>
-LagrangeBasis::eval_deriv_weights(const std::vector<double>& intgLoc) const
-{
-  auto numIps = intgLoc.size()/dim_;
-  auto numNodes = std::pow(numNodes1D_,dim_);
-  std::vector<double> derivWeights(numIps * numNodes * dim_);
 
-  for (unsigned ip = 0; ip < numIps; ++ip) {
-    derivative_weights(&intgLoc[ip*dim_], &derivWeights[ip*dim_*numNodes_]);
+Kokkos::View<double**> LagrangeBasis::eval_basis_weights(const Kokkos::View<double**>& intgLoc) const
+{
+  return eval_basis_weights(intgLoc.data(), intgLoc.extent_int(0));
+}
+
+Kokkos::View<double***> LagrangeBasis::eval_deriv_weights(const double* intgLoc, int nInt) const
+{
+  Kokkos::View<double***> derivWeights("derivative_weights", nInt, numNodes_, dim_);
+  for (int ip = 0; ip < nInt; ++ip) {
+    fill_derivative_weights(&intgLoc[ip*dim_], &derivWeights(ip, 0, 0));
   }
   return derivWeights;
 }
-//--------------------------------------------------------------------------
-double
-LagrangeBasis::tensor_lagrange_interpolant(
-  unsigned dimension,
-  const double* x,
-  const int* node_ordinals) const
+
+Kokkos::View<double***> LagrangeBasis::eval_deriv_weights(const Kokkos::View<double**>& intgLoc) const
 {
-  double interpolant_weight = 1.0;
-  for (unsigned j = 0; j < dimension; ++j) {
-    interpolant_weight *= basis1D_.interpolation_weight(x[j], node_ordinals[j]);
-  }
-  return interpolant_weight;
+  return eval_deriv_weights(intgLoc.data(), intgLoc.extent_int(0));
 }
-//--------------------------------------------------------------------------
-double
-LagrangeBasis::tensor_lagrange_derivative(
-  unsigned dimension,
-  const double* x,
-  const int* node_ordinals,
-  unsigned derivativeDirection) const
-{
-  double derivativeWeight = 1.0;
-  for (unsigned j = 0; j < dimension; ++j) {
-    if (j == derivativeDirection) {
-      derivativeWeight *= basis1D_.derivative_weight(x[j], node_ordinals[j]);
-    }
-    else {
-      derivativeWeight *= basis1D_.interpolation_weight(x[j], node_ordinals[j]);
-    }
-  }
-  return derivativeWeight;
-}
+
 
 }  // namespace naluUnit
 } // namespace sierra

@@ -49,7 +49,7 @@ struct FieldGatherer
 public:
   // Gather fields with ordinals permuted into a tensor product order
 
-  FieldGatherer(int n1D, const Kokkos::View<int*>& defaultPermutation) :
+  FieldGatherer(int n1D, const Kokkos::View<int***>& defaultPermutation) :
     n1D_(n1D), defaultPermutation_(defaultPermutation) {};
 
   void gather_elem_node_field_3D(const stk::mesh::FieldBase& field,
@@ -60,7 +60,7 @@ public:
     for (int k = 0; k < n1D_; ++k) {
       for (int j = 0; j < n1D_; ++j) {
         for (int i = 0; i < n1D_; ++i) {
-          const int permutationIndex = defaultPermutation_((k * n1D_ + j) * n1D_ + i);
+          const int permutationIndex = defaultPermutation_(k,j,i);
           for (int simdIndex = 0; simdIndex < numSimdElems; ++simdIndex) {
             stk::simd::set_data(shmemView(k, j, i), simdIndex,
               *static_cast<const double*>(stk::mesh::field_data(field, elemNodes[simdIndex][permutationIndex])));
@@ -78,7 +78,7 @@ public:
     for (int k = 0; k < n1D_; ++k) {
       for (int j = 0; j < n1D_; ++j) {
         for (int i = 0; i < n1D_; ++i) {
-          const int permutationIndex = defaultPermutation_((k * n1D_ + j) * n1D_ + i);
+          const int permutationIndex = defaultPermutation_(k,j,i);
           for (int simdIndex = 0; simdIndex < numSimdElems; ++simdIndex) {
             const double* dataPtr = static_cast<const double*>(stk::mesh::field_data(field,
               elemNodes[simdIndex][permutationIndex]));
@@ -93,7 +93,7 @@ public:
 
   const int n1D_;
 private:
-  const Kokkos::View<int*> defaultPermutation_;
+  const Kokkos::View<int***> defaultPermutation_;
 };
 
 inline void fill_pre_req_data(
@@ -246,7 +246,7 @@ public:
   const int rhsSize_;
   const int lhsSize_;
 
-  const Kokkos::View<int*> defaultPermutation_;
+  const Kokkos::View<int***> defaultPermutation_;
   Kokkos::View<int*> vecDefaultPermutation_;
   const FieldGatherer gatherer_;
 

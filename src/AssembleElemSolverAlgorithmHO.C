@@ -50,13 +50,13 @@ AssembleElemSolverAlgorithmHO::AssembleElemSolverAlgorithmHO(
     nodesPerEntity_(nodesPerEntity),
     rhsSize_(nodesPerEntity * ndof_),
     lhsSize_(rhsSize_*rhsSize_),
-    defaultPermutation_(make_node_map(polyOrder_, dim_, part->topology().is_super_topology())),
+    defaultPermutation_(make_node_map_hex(polyOrder_, part->topology().is_super_topology())),
     gatherer_(polyOrder_+1, defaultPermutation_),
     dataNeededByKernels_(realm.meta_data())
 {
   vecDefaultPermutation_ = Kokkos::View<int*>("inverse_permutation", rhsSize_);
   for (int j = 0; j < nodesPerEntity_; ++j) {
-    const int permuted_j = defaultPermutation_[j];
+    const int permuted_j = defaultPermutation_.data()[j];
     for (int d = 0; d < ndof_; ++d) {
       vecDefaultPermutation_[j * ndof_ + d] = permuted_j * ndof_ + d;
     }

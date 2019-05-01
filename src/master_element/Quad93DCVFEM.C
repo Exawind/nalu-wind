@@ -128,6 +128,17 @@ Quad93DSCS::eval_shape_derivs_at_shifted_ips()
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
+Quad93DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  for (int i = 0; i < numIntPoints_ ; ++i) {
+    for (int j = 0; j < nodesPerElement_; ++j) {
+      const int ni = i*nodesPerElement_ + j; 
+      shpfc(i,j) = shapeFunctions_[ni];
+    }    
+  }
+}
+
+void
 Quad93DSCS::shape_fcn(double* shpfc)
 {
   for (int ip = 0; ip < numIntPoints_ * nodesPerElement_; ++ip) {
@@ -137,6 +148,17 @@ Quad93DSCS::shape_fcn(double* shpfc)
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
+void
+Quad93DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  for (int i = 0; i < numIntPoints_ ; ++i) {
+    for (int j = 0; j < nodesPerElement_; ++j) {
+      const int ni = i*nodesPerElement_ + j; 
+      shpfc(i,j) = shapeFunctionsShift_[ni];
+    }    
+  }
+}
+
 void
 Quad93DSCS::shifted_shape_fcn(double* shpfc)
 {

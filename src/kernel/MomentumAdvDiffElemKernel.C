@@ -32,26 +32,20 @@ MomentumAdvDiffElemKernel<AlgTraits>::MomentumAdvDiffElemKernel(
   VectorFieldType* velocity,
   ScalarFieldType* viscosity,
   ElemDataRequests& dataPreReqs)
-  : Kernel(),
-    viscosity_(viscosity->mesh_meta_data_ordinal()),
-    lrscv_(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_)->adjacentNodes()),
+  : viscosity_(viscosity->mesh_meta_data_ordinal()),
     includeDivU_(solnOpts.includeDivU_),
-    shiftedGradOp_(solnOpts.get_shifted_grad_op(velocity->name()))
+    shiftedGradOp_(solnOpts.get_shifted_grad_op(velocity->name())),
+    skewSymmetric_(solnOpts.get_skew_symmetric(velocity->name()))
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   velocityNp1_ = velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
   massFlowRate_ = get_field_ordinal(metaData, "mass_flow_rate_scs", stk::topology::ELEM_RANK);
 
-  MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
-
-  get_scs_shape_fn_data<AlgTraits>([&](double* ptr){meSCS->shape_fcn(ptr);}, v_shape_function_);
-  const bool skewSymmetric = solnOpts.get_skew_symmetric(velocity->name());
-  get_scs_shape_fn_data<AlgTraits>([&](double* ptr){skewSymmetric ? meSCS->shifted_shape_fcn(ptr) : meSCS->shape_fcn(ptr);}, 
-                                   v_adv_shape_function_);
+  meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
 
   // add master elements
-  dataPreReqs.add_cvfem_surface_me(meSCS);
+  dataPreReqs.add_cvfem_surface_me(meSCS_);
 
   // fields and data; mdot not gathered as element data
   dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
@@ -63,35 +57,39 @@ MomentumAdvDiffElemKernel<AlgTraits>::MomentumAdvDiffElemKernel(
     dataPreReqs.add_master_element_call(SCS_SHIFTED_GRAD_OP, CURRENT_COORDINATES);
   else
     dataPreReqs.add_master_element_call(SCS_GRAD_OP, CURRENT_COORDINATES);
-}
 
-template<class AlgTraits>
-MomentumAdvDiffElemKernel<AlgTraits>::~MomentumAdvDiffElemKernel()
-{}
+  dataPreReqs.add_master_element_call(SCS_SHAPE_FCN, CURRENT_COORDINATES);
+
+  if (skewSymmetric_)
+    dataPreReqs.add_master_element_call(SCS_SHIFTED_SHAPE_FCN, CURRENT_COORDINATES);
+}
 
 template<class AlgTraits>
 void
 MomentumAdvDiffElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType **>& lhs,
-  SharedMemView<DoubleType *>& rhs,
-  ScratchViews<DoubleType>& scratchViews)
+  SharedMemView<DoubleType**, DeviceShmem>& lhs,
+  SharedMemView<DoubleType*, DeviceShmem>& rhs,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
   NALU_ALIGNED DoubleType w_uIp[AlgTraits::nDim_];
 
-  SharedMemView<DoubleType**>& v_uNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
-  SharedMemView<DoubleType*>& v_viscosity = scratchViews.get_scratch_view_1D(viscosity_);
-  SharedMemView<DoubleType*>& v_mdot = scratchViews.get_scratch_view_1D(massFlowRate_);
+  auto& v_uNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
+  auto& v_viscosity = scratchViews.get_scratch_view_1D(viscosity_);
+  auto& v_mdot = scratchViews.get_scratch_view_1D(massFlowRate_);
 
-  SharedMemView<DoubleType**>& v_scs_areav = scratchViews.get_me_views(CURRENT_COORDINATES).scs_areav;
-  SharedMemView<DoubleType***>& v_dndx = shiftedGradOp_
-    ? scratchViews.get_me_views(CURRENT_COORDINATES).dndx_shifted 
-    : scratchViews.get_me_views(CURRENT_COORDINATES).dndx;
+  auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
+  auto& v_scs_areav = meViews.scs_areav;
+  auto& v_dndx = shiftedGradOp_ ? meViews.dndx_shifted : meViews.dndx;
+  auto& v_shape_function = meViews.scs_shape_fcn;
+  auto& v_adv_shape_function = skewSymmetric_ ? meViews.scs_shifted_shape_fcn : meViews.scs_shape_fcn;
+
+  const int* lrscv = meSCS_->adjacentNodes();
 
   for ( int ip = 0; ip < AlgTraits::numScsIp_; ++ip ) {
 
     // left and right nodes for this ip
-    const int il = lrscv_[2*ip];
-    const int ir = lrscv_[2*ip+1];
+    const int il = lrscv[2*ip];
+    const int ir = lrscv[2*ip+1];
 
     // save off some offsets
     const int ilNdim = il*AlgTraits::nDim_;
@@ -107,8 +105,8 @@ MomentumAdvDiffElemKernel<AlgTraits>::execute(
       w_uIp[i] = 0.0;
 
     for ( int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic ) {
-      const DoubleType r = v_shape_function_(ip,ic);
-      const DoubleType rAdv = v_adv_shape_function_(ip,ic);
+      const DoubleType r = v_shape_function(ip,ic);
+      const DoubleType rAdv = v_adv_shape_function(ip,ic);
       muIp += r*v_viscosity(ic);
       for ( int j = 0; j < AlgTraits::nDim_; ++j ) {
         const DoubleType uj = v_uNp1(ic,j);
@@ -142,7 +140,7 @@ MomentumAdvDiffElemKernel<AlgTraits>::execute(
       const int icNdim = ic*AlgTraits::nDim_;
 
       // advection and diffusion
-      const DoubleType lhsfacAdv = v_adv_shape_function_(ip,ic)*tmdot;
+      const DoubleType lhsfacAdv = v_adv_shape_function(ip,ic)*tmdot;
 
       for ( int i = 0; i < AlgTraits::nDim_; ++i ) {
 

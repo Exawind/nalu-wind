@@ -226,6 +226,12 @@ void TetSCV::determinant(
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
+TetSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  tet_shape_fcn(numIntPoints_, intgLoc_[0], shpfc);
+}
+
+void
 TetSCV::shape_fcn(double *shpfc)
 {
   tet_shape_fcn(numIntPoints_, intgLoc_[0], shpfc);
@@ -235,6 +241,12 @@ TetSCV::shape_fcn(double *shpfc)
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
 void
+TetSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  tet_shape_fcn(numIntPoints_, intgLocShift_[0], shpfc);
+}
+
+void
 TetSCV::shifted_shape_fcn(double *shpfc)
 {
   tet_shape_fcn(numIntPoints_, intgLocShift_[0], shpfc);
@@ -243,6 +255,24 @@ TetSCV::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 //-------- tet_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
+void
+TetSCV::tet_shape_fcn(
+  const int  npts,
+  const double *par_coord, 
+  SharedMemView<DoubleType**, DeviceShmem> &shpfc) const
+{
+  for (int j = 0; j < npts; ++j ) {
+    const int k = 3*j;
+    const double xi = par_coord[k];
+    const double eta = par_coord[k+1];
+    const double zeta = par_coord[k+2];
+    shpfc(j,0) = 1.0 - xi - eta - zeta;
+    shpfc(j,1) = xi;
+    shpfc(j,2) = eta;
+    shpfc(j,3) = zeta;
+  }
+}
+
 void
 TetSCV::tet_shape_fcn(
   const int  npts,
@@ -703,6 +733,12 @@ TetSCS::scsIpEdgeOrd()
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
+TetSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  tet_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+}
+
+void
 TetSCS::shape_fcn(double *shpfc)
 {
   tet_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
@@ -712,6 +748,12 @@ TetSCS::shape_fcn(double *shpfc)
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
 void
+TetSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  tet_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+}
+
+void
 TetSCS::shifted_shape_fcn(double *shpfc)
 {
   tet_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
@@ -720,6 +762,24 @@ TetSCS::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 //-------- tet_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
+void
+TetSCS::tet_shape_fcn(
+  const int  npts,
+  const double *par_coord, 
+  SharedMemView<DoubleType**, DeviceShmem> &shpfc) const
+{
+  for (int j = 0; j < npts; ++j ) {
+    const int k = 3*j;
+    const double xi = par_coord[k];
+    const double eta = par_coord[k+1];
+    const double zeta = par_coord[k+2];
+    shpfc(j,0) = 1.0 - xi - eta - zeta;
+    shpfc(j,1) = xi;
+    shpfc(j,2) = eta;
+    shpfc(j,3) = zeta;
+  }
+}
+
 void
 TetSCS::tet_shape_fcn(
   const int  npts,

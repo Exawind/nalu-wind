@@ -251,8 +251,6 @@ public:
   const VectorFieldType* coordinates_{nullptr};
 };
 
-#ifndef KOKKOS_ENABLE_CUDA
-
 /** Test Fixture for Low-Mach Kernels
  *
  *  This test fixture performs the following actions:
@@ -493,11 +491,11 @@ public:
   MixtureFractionKernelHex8Mesh()
     : TestKernelHex8Mesh(),
     mixFraction_(&meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK,
-                                                       "mixture_fraction")),
+                                                       "mixture_fraction", 2)),
     velocity_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK,
                                                     "velocity")),
     density_(&meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK,
-                                                   "density")),
+                                                   "density", 2)),
     viscosity_(&meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK,
                                                      "viscosity")),
     effectiveViscosity_(&meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK,
@@ -595,6 +593,7 @@ public:
 
 };
 
-#endif
+class WallDistKernelHex8Mesh : public TestKernelHex8Mesh
+{};
 
 #endif /* UNITTESTKERNELUTILS_H */

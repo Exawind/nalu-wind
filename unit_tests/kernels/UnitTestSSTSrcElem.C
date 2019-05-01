@@ -13,6 +13,8 @@
 #include "kernel/TurbKineticEnergySSTDESSrcElemKernel.h"
 #include "kernel/SpecificDissipationRateSSTSrcElemKernel.h"
 
+#ifndef KOKKOS_ENABLE_CUDA
+
 namespace {
 namespace hex8_golds {
 namespace TurbKineticEnergySSTSrcElemKernel {
@@ -176,9 +178,9 @@ static constexpr double rhs[8] = {
 } // namespace hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_ENABLE_CUDA
+#endif
 
-TEST_F(SSTKernelHex8Mesh, turbkineticenergysstsrcelem)
+TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_src_elem)
 {
 
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
@@ -207,6 +209,8 @@ TEST_F(SSTKernelHex8Mesh, turbkineticenergysstsrcelem)
 
   helperObjs.assembleElemSolverAlg->execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
+
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -216,9 +220,11 @@ TEST_F(SSTKernelHex8Mesh, turbkineticenergysstsrcelem)
     helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs);
+
+#endif
 }
 
-TEST_F(SSTKernelHex8Mesh, turbkineticenergysstdessrcelem)
+TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_des_src_elem)
 {
 
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
@@ -247,6 +253,8 @@ TEST_F(SSTKernelHex8Mesh, turbkineticenergysstdessrcelem)
 
   helperObjs.assembleElemSolverAlg->execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
+
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -256,9 +264,12 @@ TEST_F(SSTKernelHex8Mesh, turbkineticenergysstdessrcelem)
     helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs);
+
+#endif
+
 }
 
-TEST_F(SSTKernelHex8Mesh, specificdissipationratesstsrcelem)
+TEST_F(SSTKernelHex8Mesh, NGP_specific_dissipation_rate_sst_src_elem)
 {
 
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
@@ -287,6 +298,8 @@ TEST_F(SSTKernelHex8Mesh, specificdissipationratesstsrcelem)
 
   helperObjs.assembleElemSolverAlg->execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
+
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -296,7 +309,7 @@ TEST_F(SSTKernelHex8Mesh, specificdissipationratesstsrcelem)
     helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs);
-}
 
 #endif
+}
 

@@ -9,7 +9,20 @@
 #ifndef BuildTemplates_h
 #define BuildTemplates_h
 
-#include <AlgTraits.h>
+#include "AlgTraits.h"
+#include "master_element/Hex8CVFEM.h"
+#include "master_element/Hex27CVFEM.h"
+#include "master_element/Tet4CVFEM.h"
+#include "master_element/Pyr5CVFEM.h"
+#include "master_element/Wed6CVFEM.h"
+#include "master_element/Quad43DCVFEM.h"
+#include "master_element/Quad42DCVFEM.h"
+#include "master_element/Quad92DCVFEM.h"
+#include "master_element/Quad93DCVFEM.h"
+#include "master_element/Tri32DCVFEM.h"
+#include "master_element/Edge32DCVFEM.h"
+#include "master_element/Edge22DCVFEM.h"
+#include "master_element/Tri33DCVFEM.h"
 
 namespace sierra{
 namespace nalu{
