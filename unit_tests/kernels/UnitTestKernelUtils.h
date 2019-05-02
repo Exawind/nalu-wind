@@ -356,6 +356,48 @@ public:
   ScalarFieldType* temperature_{nullptr};
 };
 
+/** Test Fixture for the Ksgs Kernels
+ *
+ */
+class KsgsKernelHex8Mesh : public LowMachKernelHex8Mesh
+{
+public:
+  KsgsKernelHex8Mesh()
+    : LowMachKernelHex8Mesh(),
+      tke_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "turbulent_ke")),
+      tvisc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "turbulent_viscosity")),
+      dnvField_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "dual_nodal_volume")),
+      dudx_(&meta_.declare_field<GenericFieldType>(
+          stk::topology::NODE_RANK, "dudx"))
+  {
+    stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*dnvField_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*dudx_, meta_.universal_part(), spatialDim_ * spatialDim_, nullptr);
+  }
+
+  virtual ~KsgsKernelHex8Mesh() {}
+
+  virtual void fill_mesh_and_init_fields(bool doPerturb = false)
+  {
+    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb);
+    stk::mesh::field_fill(0.3, *tvisc_);
+    unit_test_kernel_utils::density_test_function(
+      bulk_, *coordinates_, *density_);
+    unit_test_kernel_utils::tke_test_function(bulk_, *coordinates_, *tke_);
+    stk::mesh::field_fill(0.125, *dnvField_);
+    unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
+  }
+
+  ScalarFieldType* tke_{nullptr};
+  ScalarFieldType* tvisc_{nullptr};
+  ScalarFieldType* dnvField_{nullptr};
+  GenericFieldType* dudx_{nullptr};
+};
+
 /** Test Fixture for the SST Kernels
  *
  */
