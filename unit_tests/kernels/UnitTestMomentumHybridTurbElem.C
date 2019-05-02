@@ -274,7 +274,7 @@ static constexpr double lhs[24][24] = {
 } // anonymous namespace
 #endif
 
-TEST_F(HybridTurbKernelHex8Mesh, NGP_MomentumHybridTurbElemKernel)
+TEST_F(HybridTurbKernelHex8Mesh, NGP_momentum_hybrid_turb_elem_kernel)
 {
   fill_mesh_and_init_fields();
 
