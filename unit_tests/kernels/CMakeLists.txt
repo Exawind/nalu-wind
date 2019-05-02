@@ -19,6 +19,7 @@ add_sources(GlobalUnitSourceList
    UnitTestScalarDiffElem.C
    UnitTestSteadyThermal3dContactSrcElem.C
    UnitTestTurbKineticEnergyKsgsSrcElemKernel.C
+   UnitTestTurbKineticEnergyKsgsDesignOrderSrcElemKernel.C
    UnitTestWallDistElem.C
 )
 
