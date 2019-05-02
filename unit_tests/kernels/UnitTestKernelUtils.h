@@ -131,12 +131,6 @@ void dhdx_test_function(
   const VectorFieldType& coordinates,
   VectorFieldType& dhdx);
 
-void calc_dual_nodal_volume(
-  stk::mesh::BulkData& bulk,
-  const stk::topology& topo,
-  const VectorFieldType& coordinates,
-  const ScalarFieldType& dnvField);
-
 void calc_mass_flow_rate_scs(
   stk::mesh::BulkData&,
   const stk::topology&,
@@ -394,7 +388,7 @@ public:
     unit_test_kernel_utils::density_test_function(
       bulk_, *coordinates_, *density_);
     unit_test_kernel_utils::tke_test_function(bulk_, *coordinates_, *tke_);
-    unit_test_kernel_utils::calc_dual_nodal_volume(bulk_, stk::topology::HEX_8, *coordinates_, *dnvField_);
+    stk::mesh::field_fill(0.125, *dnvField_);
     unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
   }
 
