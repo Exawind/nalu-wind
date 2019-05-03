@@ -544,6 +544,7 @@ public:
                                                               "effective_viscosity")),
     massFlowRate_(&meta_.declare_field<GenericFieldType>(stk::topology::ELEM_RANK,
                                                          "mass_flow_rate_scs")),
+    dzdx_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dzdx")),
 
     znot_(1.0),
     amf_(2.0),
@@ -560,6 +561,7 @@ public:
     stk::mesh::put_field_on_mesh(*density_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*massFlowRate_, meta_.universal_part(), meSCS->num_integration_points(), nullptr);
+    stk::mesh::put_field_on_mesh(*dzdx_, meta_.universal_part(), spatialDim_, nullptr);
   }
   virtual ~MixtureFractionKernelHex8Mesh() {}
 
@@ -583,6 +585,7 @@ public:
   ScalarFieldType* viscosity_{nullptr};
   ScalarFieldType* effectiveViscosity_{nullptr};
   GenericFieldType* massFlowRate_{nullptr};
+  VectorFieldType* dzdx_{nullptr};
 
   const double znot_;
   const double amf_;
