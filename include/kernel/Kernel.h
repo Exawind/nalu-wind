@@ -168,13 +168,14 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   NGPKernel() = default;
 
-  virtual ~NGPKernel()
-  {
-    if (deviceCopy_ != nullptr) {
-      kokkos_free_on_device(deviceCopy_);
-      deviceCopy_ = nullptr;
-    }
-  }
+  // Implementation note
+  //
+  // The destructor does not free the deviceCopy_ instance. This is done to
+  // eliminate the warnings issued when compiling with nvcc for GPU builds.
+  // Instead the `deviceCopy_` is freed by explicitly calling `free_on_device`
+  // from sierra::nalu::Algorithm::~Algorithm() before freeing the host pointers
+  // stored in `activeKernels_`
+  KOKKOS_FUNCTION virtual ~NGPKernel() = default;
 
   virtual Kernel* create_on_device() final
   {
