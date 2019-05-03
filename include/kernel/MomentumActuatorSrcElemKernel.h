@@ -26,7 +26,7 @@ class ElemDataRequests;
 /** CMM buoyancy term for momentum equation (velocity DOF)
  */
 template<typename AlgTraits>
-class MomentumActuatorSrcElemKernel: public Kernel
+class MomentumActuatorSrcElemKernel: public NGPKernel<MomentumActuatorSrcElemKernel<AlgTraits>>
 {
 public:
   MomentumActuatorSrcElemKernel(
@@ -35,28 +35,28 @@ public:
     ElemDataRequests&,
     bool lumped);
 
-  virtual ~MomentumActuatorSrcElemKernel();
+  KOKKOS_FUNCTION MomentumActuatorSrcElemKernel() = default;
+  KOKKOS_FUNCTION virtual ~MomentumActuatorSrcElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  MomentumActuatorSrcElemKernel() = delete;
-
   unsigned actuator_source_     {stk::mesh::InvalidOrdinal};
   unsigned actuator_source_lhs_ {stk::mesh::InvalidOrdinal};
   unsigned coordinates_         {stk::mesh::InvalidOrdinal};
 
-  const int* ipNodeMap_;
+  const bool lumpedMass_;
 
-  // scratch space
-  AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]> v_shape_function_ { "v_shape_func" };
+  MasterElement* meSCV_{nullptr};
 };
 
 }  // nalu
