@@ -13,6 +13,8 @@
 #include "NaluParsing.h"
 #include "Realm.h"
 #include "PecletFunction.h"
+#include "NGPInstance.h"
+#include "SimdInterface.h"
 
 #include <stk_ngp/Ngp.hpp>
 
@@ -222,6 +224,10 @@ public:
   template<typename T>
   PecletFunction<T>* create_peclet_function( const std::string dofName);
 
+  /** Create and return an instance of PecletFunction on device for use with Kernel
+   */
+  PecletFunction<DoubleType>* ngp_create_peclet_function(const std::string& dofName);
+
   virtual void load(const YAML::Node & node)
   {
     get_required(node, "name", userSuppliedName_);
@@ -249,6 +255,9 @@ public:
 
   // driver that holds all solver algorithms
   SolverAlgorithmDriver *solverAlgDriver_;
+
+  //! Track NGP instances of PecletFunction
+  std::vector<PecletFunction<DoubleType>*> ngpPecletFunctions_;
 
   double timerAssemble_;
   double timerLoadComplete_;
