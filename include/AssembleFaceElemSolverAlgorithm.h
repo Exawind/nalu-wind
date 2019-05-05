@@ -56,7 +56,6 @@ public:
       meElemInfo.numFaceIp_ = meFC != nullptr ? meFC->num_integration_points() : 0;
       meElemInfo.numScsIp_ = meSCS != nullptr ? meSCS->num_integration_points() : 0;
       meElemInfo.numScvIp_ = meSCV != nullptr ? meSCV->num_integration_points() : 0;
-
       int rhsSize = meElemInfo.nodalGatherSize_*numDof_, lhsSize = rhsSize*rhsSize, scratchIdsSize = rhsSize;
 
       const ngp::Mesh& ngpMesh = realm_.ngp_mesh();
@@ -139,22 +138,17 @@ public:
                 numFacesProcessed += simdFaceIndex;
 
 #ifndef KOKKOS_ENABLE_CUDA
-                // When we GPU-ize AssembleFaceElemSolverAlgorithm, 'lambdaFunc'
-                // below will need to operate on the non-simd smdata.faceViews
-                // etc... since we aren't going to copy_and_interleave. We will
-                // probably want to make smdata.simdFaceViews be a
-                // pointer/reference to smdata.faceViews[0] in some way...
+                // No need to interleave on GPUs
                 copy_and_interleave(
                   smdata.faceViews, smdata.numSimdFaces, smdata.simdFaceViews);
                 copy_and_interleave(
                   smdata.elemViews, smdata.numSimdFaces, smdata.simdElemViews);
+#endif
 
                 fill_master_element_views(
                   faceDataNGP, smdata.simdFaceViews, smdata.elemFaceOrdinal);
                 fill_master_element_views(
                   elemDataNGP, smdata.simdElemViews, smdata.elemFaceOrdinal);
-//for now this simply isn't ready for GPU.
-#endif
 
                 lamdbaFunc(smdata);
               } while (numFacesProcessed < simdGroupLen);

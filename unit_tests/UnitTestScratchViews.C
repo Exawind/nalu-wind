@@ -90,6 +90,12 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
 
   EXPECT_EQ(3u, dataReq.get_fields().size());
 
+  sierra::nalu::ScratchMeInfo meInfo;
+  meInfo.nodalGatherSize_ = elemTopo.num_nodes();
+  meInfo.nodesPerFace_ = 4;
+  meInfo.nodesPerElement_ = elemTopo.num_nodes();
+  meInfo.numScvIp_ = meSCV->num_integration_points();
+
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
   ngp::FieldManager fieldMgr(bulk);
 
@@ -126,7 +132,7 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   {
     const ngp::Mesh::BucketType& b = ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
 
-    sierra::nalu::ScratchViews<double,TeamType,ShmemType> scrviews(team, ngpMesh.get_spatial_dimension(), numNodes, dataNGP);
+    sierra::nalu::ScratchViews<double,TeamType,ShmemType> scrviews(team, ngpMesh.get_spatial_dimension(), meInfo, dataNGP);
 
     sierra::nalu::SharedMemView<double**,ShmemType> simdlhs =
         sierra::nalu::get_shmem_view_2D<double,TeamType,ShmemType>(team, rhsSize, rhsSize);
