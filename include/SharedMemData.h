@@ -78,10 +78,15 @@ struct SharedMemData_FaceElem {
      : simdFaceViews(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded),
        simdElemViews(team, nDim, meElemInfo, elemDataNeeded)
     {
+#ifndef KOKKOS_ENABLE_CUDA
         for(int simdIndex=0; simdIndex<simdLen; ++simdIndex) {
           faceViews[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded));
           elemViews[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, meElemInfo, elemDataNeeded));
         }
+#else
+        faceViews[0] = &simdFaceViews;
+        elemViews[0] = &simdElemViews;
+#endif
         simdrhs = get_shmem_view_1D<DoubleType,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
         simdlhs = get_shmem_view_2D<DoubleType,TEAMHANDLETYPE,SHMEM>(team, rhsSize, rhsSize);
         rhs = get_shmem_view_1D<double,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
@@ -94,8 +99,13 @@ struct SharedMemData_FaceElem {
     ngp::Mesh::ConnectedNodes ngpConnectedNodes[simdLen];
     int numSimdFaces;
     int elemFaceOrdinal;
+#ifdef KOKKOS_ENABLE_CUDA
+    ScratchViews<DoubleType,TEAMHANDLETYPE,SHMEM>* faceViews[1];
+    ScratchViews<DoubleType,TEAMHANDLETYPE,SHMEM>* elemViews[1];
+#else
     std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM>> faceViews[simdLen];
     std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM>> elemViews[simdLen];
+#endif
     ScratchViews<DoubleType,TEAMHANDLETYPE,SHMEM> simdFaceViews;
     ScratchViews<DoubleType,TEAMHANDLETYPE,SHMEM> simdElemViews;
     SharedMemView<DoubleType*,SHMEM> simdrhs;
