@@ -69,6 +69,7 @@ struct SharedMemData {
 
 template<typename TEAMHANDLETYPE, typename SHMEM>
 struct SharedMemData_FaceElem {
+    KOKKOS_FUNCTION
     SharedMemData_FaceElem(const TEAMHANDLETYPE& team,
          unsigned nDim,
          const ElemDataRequestsGPU& faceDataNeeded,
@@ -94,7 +95,13 @@ struct SharedMemData_FaceElem {
 
         scratchIds = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
         sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
+
+        simdFaceViews.fill_static_meviews(faceDataNeeded);
+        simdElemViews.fill_static_meviews(elemDataNeeded);
     }
+
+    KOKKOS_FUNCTION
+    ~SharedMemData_FaceElem() = default;
 
     ngp::Mesh::ConnectedNodes ngpConnectedNodes[simdLen];
     int numSimdFaces;

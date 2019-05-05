@@ -56,7 +56,6 @@ public:
       meElemInfo.numFaceIp_ = meFC != nullptr ? meFC->num_integration_points() : 0;
       meElemInfo.numScsIp_ = meSCS != nullptr ? meSCS->num_integration_points() : 0;
       meElemInfo.numScvIp_ = meSCV != nullptr ? meSCV->num_integration_points() : 0;
-
       int rhsSize = meElemInfo.nodalGatherSize_*numDof_, lhsSize = rhsSize*rhsSize, scratchIdsSize = rhsSize;
 
       const ngp::Mesh& ngpMesh = realm_.ngp_mesh();

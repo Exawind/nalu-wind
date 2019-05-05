@@ -27,13 +27,22 @@ namespace sierra{
 namespace nalu{
 
 struct ScratchMeInfo {
-  int nodalGatherSize_;
-  int nodesPerFace_;
-  int nodesPerElement_;
-  int numFaceIp_;
-  int numScsIp_;
-  int numScvIp_;
-  int numFemIp_;
+  KOKKOS_FUNCTION
+  ScratchMeInfo() = default;
+
+  KOKKOS_FUNCTION
+  ScratchMeInfo(const ScratchMeInfo&) = default;
+
+  KOKKOS_FUNCTION
+  ~ScratchMeInfo() = default;
+
+  int nodalGatherSize_ = 0;
+  int nodesPerFace_ = 0;
+  int nodesPerElement_ = 0;
+  int numFaceIp_ = 0;
+  int numScsIp_ = 0;
+  int numScvIp_ = 0;
+  int numFemIp_ = 0;
 };
 
 template<typename ELEMDATAREQUESTSTYPE>
