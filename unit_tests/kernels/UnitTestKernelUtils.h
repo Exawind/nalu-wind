@@ -371,24 +371,28 @@ class MomentumKernelHex8Mesh : public LowMachKernelHex8Mesh
 public:
   MomentumKernelHex8Mesh()
     : LowMachKernelHex8Mesh(),
-      massFlowRate_(
-        &meta_.declare_field<GenericFieldType>(
-          stk::topology::ELEM_RANK, "mass_flow_rate_scs")),
-      viscosity_(
-        &meta_.declare_field<ScalarFieldType>(
-          stk::topology::NODE_RANK, "viscosity")),
-      dudx_(
-        &meta_.declare_field<GenericFieldType>(
-          stk::topology::NODE_RANK, "dudx")),
-     temperature_(
-        &meta_.declare_field<ScalarFieldType>(
-          stk::topology::NODE_RANK, "temperature"))
+      massFlowRate_(&meta_.declare_field<GenericFieldType>(
+        stk::topology::ELEM_RANK, "mass_flow_rate_scs")),
+      viscosity_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "viscosity")),
+      dudx_(&meta_.declare_field<GenericFieldType>(
+        stk::topology::NODE_RANK, "dudx")),
+      temperature_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "temperature")),
+      openMassFlowRate_(&meta_.declare_field<GenericFieldType>(
+        meta_.side_rank(), "open_mass_flow_rate")),
+      openVelocityBC_(&meta_.declare_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "open_velocity_bc"))
   {
     const auto& meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(stk::topology::HEX_8);
     stk::mesh::put_field_on_mesh(*massFlowRate_, meta_.universal_part(), meSCS->num_integration_points(), nullptr);
     stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*dudx_, meta_.universal_part(), spatialDim_ * spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*temperature_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *openMassFlowRate_, meta_.universal_part(),
+      sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+    stk::mesh::put_field_on_mesh(*openVelocityBC_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
   virtual ~MomentumKernelHex8Mesh() {}
@@ -402,12 +406,17 @@ public:
     unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
     stk::mesh::field_fill(0.1, *viscosity_);
     stk::mesh::field_fill(300.0, *temperature_);
+    unit_test_kernel_utils::calc_open_mass_flow_rate(
+      bulk_, stk::topology::QUAD_4, *coordinates_, *density_, *velocity_,
+      *exposedAreaVec_, *openMassFlowRate_);
   }
 
   GenericFieldType* massFlowRate_{nullptr};
   ScalarFieldType* viscosity_{nullptr};
   GenericFieldType* dudx_{nullptr};
   ScalarFieldType* temperature_{nullptr};
+  GenericFieldType* openMassFlowRate_{nullptr};
+  VectorFieldType* openVelocityBC_{nullptr};
 };
 
 /** Test Fixture for the Ksgs Kernels
