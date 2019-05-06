@@ -131,6 +131,13 @@ void dhdx_test_function(
   const VectorFieldType& coordinates,
   VectorFieldType& dhdx);
 
+void calc_exposed_area_vec(
+  const stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  GenericFieldType& exposedAreaVec
+);
+
 void calc_mass_flow_rate_scs(
   stk::mesh::BulkData&,
   const stk::topology&,
@@ -138,6 +145,15 @@ void calc_mass_flow_rate_scs(
   const ScalarFieldType&,
   const VectorFieldType&,
   const GenericFieldType&);
+
+void calc_open_mass_flow_rate(
+  stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const ScalarFieldType& density,
+  const VectorFieldType& velocity,
+  const GenericFieldType& exposedAreaVec,
+  const GenericFieldType& massFlowRate);
 
 void calc_projected_nodal_gradient(
   stk::mesh::BulkData& bulk,
