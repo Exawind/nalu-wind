@@ -86,7 +86,7 @@ protected:
   std::map<int, std::vector<std::vector<double>>> averageForcesMap_;
   std::map<std::size_t, int> pointRadiusMap_;
   std::map<int, std::vector<int>>
-    numSweptPointMap_; //{globTurbNo : numPoints between blades at each radius}
+                               numSweptPointMap_; //{globTurbNo : numPoints between blades at each radius}
   bool useUniformAziSampling_{false};
 };
 

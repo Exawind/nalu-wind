@@ -66,7 +66,7 @@ function(add_test_r_cat testname np ncat)
         add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${nalu_ex_catalyst_name} -i ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}/${testname}_catalyst.i -o ${testname}.log && ${CMAKE_CURRENT_SOURCE_DIR}/pass_fail_catalyst.sh ${testname} ${ncat}")
         set_tests_properties(${testname} PROPERTIES TIMEOUT 1000 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "regression")
         file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
-        set(CATALYST_FILE_INPUT_DECK_COMMAND "catalyst_file_name: catalyst.txt")       
+        set(CATALYST_FILE_INPUT_DECK_COMMAND "catalyst_file_name: catalyst.txt")
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/${testname}.i.in
                        ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}/${testname}_catalyst.i @ONLY)
         file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/catalyst.txt
@@ -86,7 +86,6 @@ if(NOT ENABLE_CUDA)
   add_test_r(ablStableElem 4)
   add_test_r_rst(ablUnstableEdge 4)
   add_test_r(ablUnstableEdge_ra 4)
-  add_test_r(actuatorLine 8)
   add_test_r(concentricRad 4)
   add_test_r(cvfemHC 8)
   add_test_r(dgMMS 6)
@@ -171,11 +170,11 @@ if(NOT ENABLE_CUDA)
   if(ENABLE_TIOGA)
     add_test_r(oversetSphereTIOGA 8)
   endif(ENABLE_TIOGA)
-  
+
   if (ENABLE_TIOGA AND ENABLE_HYPRE)
     add_test_r(oversetRotCylinder 4)
   endif()
-  
+
   #=============================================================================
   # Convergence tests
   #=============================================================================
@@ -183,13 +182,13 @@ if(NOT ENABLE_CUDA)
   add_test_v3(cvfemHexHC_P3 8)
   add_test_v3(hoVortex_P2 8)
   add_test_v3(steadyTaylorVortex_P4 8)
-  
+
   #=============================================================================
   # Unit tests
   #=============================================================================
   add_test_u(unitTest1 1)
   add_test_u(unitTest2 2)
-  
+
   #=============================================================================
   # Performance tests
   #=============================================================================

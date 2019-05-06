@@ -1,6 +1,5 @@
 add_sources(GlobalSourceList
    ABLProfileFunction.C
-   ActuatorLinePointDrag.C
    Actuator.C
    Algorithm.C
    AlgorithmDriver.C

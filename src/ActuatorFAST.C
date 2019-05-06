@@ -60,6 +60,7 @@ ActuatorFASTPointInfo::ActuatorFASTPointInfo(
   size_t globTurbId,
   Point centroidCoords,
   double searchRadius,
+  // The values of epsilon [m]
   Coordinates epsilon,
   fast::ActuatorNodeType nType,
   int forceInd)
@@ -114,19 +115,26 @@ ActuatorFAST::compute_node_force_given_weight(
  * \f]
  */
 double
-ActuatorFAST::isotropic_Gaussian_projection(
-  const int& nDim, const double& dis, const Coordinates& epsilon)
+ActuatorFAST::Gaussian_projection(
+  const int &nDim,
+  double *dis,
+  const Coordinates &epsilon)
 {
-  // Compute the force projection weight at this location using an
-  // isotropic Gaussian.
+  // Compute the force projection weight at this location using a
+  // Gaussian function.
   double g;
   const double pi = acos(-1.0);
-  if (nDim == 2)
-    g =
-      (1.0 / (pow(epsilon.x_, 2.0) * pi)) * exp(-pow((dis / epsilon.x_), 2.0));
+  if ( nDim == 2 )
+    g = (1.0 / (epsilon.x_ * epsilon.y_ * pi)) *
+        exp(-pow((dis[0]/epsilon.x_),2.0)
+            -pow((dis[1]/epsilon.y_),2.0)
+           );
   else
-    g = (1.0 / (pow(epsilon.x_, 3.0) * pow(pi, 1.5))) *
-        exp(-pow((dis / epsilon.x_), 2.0));
+    g = (1.0 / (epsilon.x_ * epsilon.y_ * epsilon.z_ * pow(pi,1.5))) *
+        exp(-pow((dis[0]/epsilon.x_),2.0)
+            -pow((dis[1]/epsilon.y_),2.0)
+            -pow((dis[2]/epsilon.z_),2.0)
+           );
 
   return g;
 }
@@ -170,10 +178,10 @@ ActuatorFAST::load(const YAML::Node& y_node)
       get_required(
         y_actuator, "t_max",
         fi.tMax); // tMax is the total duration to which you want to run FAST.
-                  // This should be the same or greater than the max time given
-                  // in the FAST fst file. Choose this carefully as FAST writes
-                  // the output file only at this point if you choose the binary
-                  // file output.
+      // This should be the same or greater than the max time given
+      // in the FAST fst file. Choose this carefully as FAST writes
+      // the output file only at this point if you choose the binary
+      // file output.
 
       if (y_actuator["super_controller"]) {
         get_required(y_actuator, "super_controller", fi.scStatus);
@@ -203,12 +211,70 @@ ActuatorFAST::load(const YAML::Node& y_node)
             actuatorFASTInfo->fileToDumpPoints_ = turbFileName;
           }
 
-          // Force projection function properties
-          const YAML::Node epsilon = cur_turbine["epsilon"];
-          if (epsilon)
-            actuatorFASTInfo->epsilon_ = epsilon.as<Coordinates>();
+          // The value epsilon / chord [non-dimensional]
+          // This is a vector containing the values for:
+          //   - chord aligned (x),
+          //   - tangential to chord (y),
+          //   - spanwise (z)
+          const YAML::Node epsilon_chord = cur_turbine["epsilon_chord"];
+
+          // If epsilon/chord is given, store it,
+          // If it is not given, set it to zero, such
+          // that it is smaller than the standard epsilon and
+          // will not be used
+          if ( epsilon_chord )
+          {
+            // epsilon / chord
+            actuatorFASTInfo->epsilon_chord_ = epsilon_chord.as<Coordinates>();
+
+            // Minimum epsilon allowed in simulation. This is required when
+            //   specifying epsilon/chord
+            get_required(cur_turbine, "epsilon_min",
+              actuatorFASTInfo->epsilon_min_);
+          }
+          // Set all unused epsilon values to zero
           else
-            throw std::runtime_error("ActuatorFAST: lacking epsilon vector");
+          {
+            actuatorFASTInfo->epsilon_chord_.x_ = 0.;
+            actuatorFASTInfo->epsilon_chord_.y_ = 0.;
+            actuatorFASTInfo->epsilon_chord_.z_ = 0.;
+            actuatorFASTInfo->epsilon_min_.x_ = 0.;
+            actuatorFASTInfo->epsilon_min_.y_ = 0.;
+            actuatorFASTInfo->epsilon_min_.z_ = 0.;
+          }
+
+          // The value of epsilon [m]
+          // This is a vector containing the values for:
+          //   - chord aligned (x),
+          //   - tangential to chord (y),
+          //   - spanwise (z)
+          const YAML::Node epsilon = cur_turbine["epsilon"];
+
+          // Check if epsilon is given and store it.
+          if ( epsilon ) {
+            // Store the minimum epsilon
+            actuatorFASTInfo->epsilon_ = epsilon.as<Coordinates>();
+          }
+          // If epsilon/chord is given and not standard epsilon, then assign
+          //   the minimum epsilon as standard epsilon
+          else  if (epsilon_chord) {
+            // Get the minimum epsilon
+            actuatorFASTInfo->epsilon_ = actuatorFASTInfo->epsilon_min_;
+          }
+          // If none of the conditions are met, throw an error
+          else {
+            throw std::runtime_error(
+              "ActuatorLineFAST: lacking epsilon vector");
+          }
+
+          // An epsilon value used for the tower
+          const YAML::Node epsilon_tower = cur_turbine["epsilon_tower"];
+          // If epsilon tower is given store it.
+          // If not, use the standard epsilon value
+          if ( epsilon_tower )
+            actuatorFASTInfo->epsilon_tower_ = epsilon_tower.as<Coordinates>();
+          else
+            actuatorFASTInfo->epsilon_tower_ = actuatorFASTInfo->epsilon_;
 
           readTurbineData(
             iTurb, fi, y_actuator["Turbine" + std::to_string(iTurb)]);
@@ -275,10 +341,10 @@ ActuatorFAST::setup()
   double dtNalu = realm_.get_time_step_from_file();
   tStepRatio_ = dtNalu / fi.dtFAST;
   if (std::abs(dtNalu - tStepRatio_ * fi.dtFAST) < 0.001) { // TODO: Fix
-                                                            // arbitrary number
-                                                            // 0.001
+    // arbitrary number
+    // 0.001
     NaluEnv::self().naluOutputP0()
-      << "Time step ratio  dtNalu/dtFAST: " << tStepRatio_ << std::endl;
+        << "Time step ratio  dtNalu/dtFAST: " << tStepRatio_ << std::endl;
   } else {
     throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
                              "an integral multiple of FAST time step");
@@ -332,8 +398,8 @@ ActuatorFAST::allocateTurbinesToProcs()
 
   int iTurb = 0;
   std::vector<
-    std::pair<boundingSphere::second_type, boundingElementBox::second_type>>::
-    const_iterator ii;
+  std::pair<boundingSphere::second_type, boundingElementBox::second_type>>::
+      const_iterator ii;
   for (ii = searchKeyPair_.begin(); ii != searchKeyPair_.end(); ++ii) {
     const unsigned box_proc = ii->second.proc();
 
@@ -428,19 +494,19 @@ ActuatorFAST::execute()
 
   // extract fields
   VectorFieldType* coordinates = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, realm_.get_coordinates_name());
+                                   stk::topology::NODE_RANK, realm_.get_coordinates_name());
   VectorFieldType* velocity =
     metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
   VectorFieldType* actuator_source = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "actuator_source");
+                                       stk::topology::NODE_RANK, "actuator_source");
   ScalarFieldType* actuator_source_lhs = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "actuator_source_lhs");
+      stk::topology::NODE_RANK, "actuator_source_lhs");
   ScalarFieldType* g =
     metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "g");
   ScalarFieldType* density =
     metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   ScalarFieldType* dualNodalVolume = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume");
+                                       stk::topology::NODE_RANK, "dual_nodal_volume");
   // deal with proper viscosity
   //  const std::string viscName = realm_.is_turbulent() ? "effective_viscosity"
   //  : "viscosity"; ScalarFieldType *viscosity
@@ -577,11 +643,11 @@ ActuatorFAST::execute()
   if (FAST.isDebug()) {
     for (size_t iTurb = 0; iTurb < nTurbinesGlob; iTurb++) {
       NaluEnv::self().naluOutput()
-        << "  Thrust[" << iTurb << "] = " << thrust[iTurb][0] << " "
-        << thrust[iTurb][1] << " " << thrust[iTurb][2] << " " << std::endl;
+          << "  Thrust[" << iTurb << "] = " << thrust[iTurb][0] << " "
+          << thrust[iTurb][1] << " " << thrust[iTurb][2] << " " << std::endl;
       NaluEnv::self().naluOutput()
-        << "  Torque[" << iTurb << "] = " << torque[iTurb][0] << " "
-        << torque[iTurb][1] << " " << torque[iTurb][2] << " " << std::endl;
+          << "  Torque[" << iTurb << "] = " << torque[iTurb][0] << " "
+          << torque[iTurb][1] << " " << torque[iTurb][2] << " " << std::endl;
 
       int processorId = FAST.get_procNo(iTurb);
       if (NaluEnv::self().parallel_rank() == processorId) {
@@ -591,15 +657,15 @@ ActuatorFAST::execute()
         FAST.computeTorqueThrust(iTurb, tmpTorque, tmpThrust);
 
         NaluEnv::self().naluOutput()
-          << "  Thrust ratio actual/correct = ["
-          << thrust[iTurb][0] / tmpThrust[0] << " "
-          << thrust[iTurb][1] / tmpThrust[1] << " "
-          << thrust[iTurb][2] / tmpThrust[2] << "] " << std::endl;
+            << "  Thrust ratio actual/correct = ["
+            << thrust[iTurb][0] / tmpThrust[0] << " "
+            << thrust[iTurb][1] / tmpThrust[1] << " "
+            << thrust[iTurb][2] / tmpThrust[2] << "] " << std::endl;
         NaluEnv::self().naluOutput()
-          << "  Torque ratio actual/correct = ["
-          << torque[iTurb][0] / tmpTorque[0] << " "
-          << torque[iTurb][1] / tmpTorque[1] << " "
-          << torque[iTurb][2] / tmpTorque[2] << "] " << std::endl;
+            << "  Torque ratio actual/correct = ["
+            << torque[iTurb][0] / tmpTorque[0] << " "
+            << torque[iTurb][1] / tmpTorque[1] << " "
+            << torque[iTurb][2] / tmpTorque[2] << "] " << std::endl;
       }
     }
   }
@@ -623,7 +689,7 @@ ActuatorFAST::populate_candidate_procs()
 
   // fields
   VectorFieldType* coordinates = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, realm_.get_coordinates_name());
+                                   stk::topology::NODE_RANK, realm_.get_coordinates_name());
 
   // point data structures
   //  Point minCorner, maxCorner;
@@ -736,8 +802,95 @@ ActuatorFAST::create_actuator_point_info_map()
           // lineInfo object
           FAST.getForceNodeCoordinates(currentCoords, np, iTurb);
 
-          double searchRadius =
-            actuatorInfo->epsilon_.x_ * sqrt(log(1.0 / 0.001));
+          // Get the chord from inside of FAST to compute epsilon
+          double chord = FAST.getChord(np, iTurb);
+
+          // create the point info and push back to map
+          Coordinates epsilon;
+          
+          // Go through all cases depending on what kind of actuator point it is
+          switch (FAST.getForceNodeType(iTurb, np)) {
+
+          case fast::HUB: {
+
+            // The drag coefficient from the nacelle
+            float nac_cd = FAST.get_nacelleCd(iTurb);
+
+            // Compute epsilon only if drag coefficient is greater than zero
+            if (nac_cd > 0) {
+
+              // Calculate epsilon for hub node based on cd and area here
+              float nac_area = FAST.get_nacelleArea(iTurb);
+
+              // The constant pi
+              const float pi = acos(-1.0);
+
+              // This model is used to set the momentum thickness
+              // of the wake (Martinez-Tossas PhD Thesis 2017)
+              float tmpEps = std::sqrt(2.0 / pi * nac_cd * nac_area);
+              epsilon.x_ = tmpEps;
+              epsilon.y_ = tmpEps;
+              epsilon.z_ = tmpEps;
+            }
+
+            // If no nacelle force just specify the standard value
+            // (it will not be used)
+            else {
+              epsilon = actuatorInfo->epsilon_;
+            }
+
+            break;
+
+            }
+
+          // The epsilon along each blade point
+          case fast::BLADE:
+
+            // Use epsilon based on the maximum between
+            //   epsilon
+            //   optimal epsilon (epsilon/chord)
+            //   and the minimum epsilon because of grid resolution)
+            // x direction
+            epsilon.x_ = std::max(
+                           std::max(
+                             actuatorInfo->epsilon_chord_.x_ * chord,
+                               actuatorInfo->epsilon_min_.x_),
+                               actuatorInfo->epsilon_.x_);
+            // y direction
+            epsilon.y_ = std::max(
+                           std::max(
+                             actuatorInfo->epsilon_chord_.y_ * chord,
+                               actuatorInfo->epsilon_min_.y_),
+                               actuatorInfo->epsilon_.y_);
+
+            // z direction
+            epsilon.z_ = std::max(
+                           std::max(
+                             actuatorInfo->epsilon_chord_.z_ * chord,
+                               actuatorInfo->epsilon_min_.z_),
+                               actuatorInfo->epsilon_.z_);
+
+            break;
+
+          // The value of epsilon related to the grid resolution
+          case fast::TOWER:
+            epsilon = actuatorInfo->epsilon_tower_;
+            break;
+
+          // If no case, throw an error
+          default:
+
+            throw std::runtime_error("Actuator line model node type not valid");
+
+            break;
+
+          }
+
+          // The radius of the searching. This is given in terms of 
+          //   the maximum of epsilon.x/y/z/.
+          double searchRadius = 
+            std::max(epsilon.x_, std::max(epsilon.y_, epsilon.z_))
+              * sqrt(log(1.0/0.001));
 
           for (int j = 0; j < nDim; ++j)
             centroidCoords[j] = currentCoords[j];
@@ -747,59 +900,29 @@ ActuatorFAST::create_actuator_point_info_map()
             Sphere(centroidCoords, searchRadius), theIdent);
           boundingSphereVec_.push_back(theSphere);
 
-          // create the point info and push back to map
-          Coordinates epsilon;
-          switch (FAST.getForceNodeType(iTurb, np)) {
-          case fast::HUB: {
-            // Calculate epsilon for hub node based on cd and area here
-            float nac_area = FAST.get_nacelleArea(iTurb);
-            float nac_cd = FAST.get_nacelleCd(iTurb);
-
-            // The constant pi
-            const float pi = acos(-1.0);
-
-            for (int j = 0; j < nDim; j++) {
-
-              // Compute epsilon only if drag coefficient is greater than zero
-              if (nac_cd > 0) {
-                // This model is used to set the momentum thickness
-                // of the wake (Martinez-Tossas PhD Thesis 2017)
-                float tmpEps = std::sqrt(2.0 / pi * nac_cd * nac_area);
-                epsilon.x_ = tmpEps;
-                epsilon.y_ = tmpEps;
-                epsilon.z_ = tmpEps;
-              }
-
-              // If no nacelle force just specify the standard value
-              // (it will not be used)
-              else {
-                epsilon = actuatorInfo->epsilon_;
-              }
-            }
-            break;
-          }
-          case fast::BLADE:
-            epsilon = actuatorInfo->epsilon_;
-            break;
-          case fast::TOWER:
-            epsilon = actuatorInfo->epsilon_;
-            break;
-          default:
-            throw std::runtime_error("Actuator line model node type not valid");
-            break;
-          }
-
           actuatorPointInfoMap_.insert(std::make_pair(
-            np, make_unique<ActuatorFASTPointInfo>(
-                  iTurb, centroidCoords, searchRadius, epsilon,
-                  FAST.getForceNodeType(iTurb, np), iNode)));
+                         np, make_unique<ActuatorFASTPointInfo>(
+                           iTurb, centroidCoords, searchRadius, epsilon,
+                           FAST.getForceNodeType(iTurb, np), iNode)));
+
+          // Print the value of epsilon to the screen
+          NaluEnv::self().naluOutput()
+            << "  The value of epsilon for actuator point "
+            << iNode
+            << " is "
+            << epsilon.x_ << "[m] "
+            << epsilon.y_ << "[m] "
+            << epsilon.z_ << "[m] "
+            << " " << std::endl;
+
+          // Counter for the number of blade points
           np = np + 1;
         }
 
       } else {
         NaluEnv::self().naluOutput()
-          << "Proc " << NaluEnv::self().parallel_rank() << " glob iTurb "
-          << iTurb << std::endl;
+            << "Proc " << NaluEnv::self().parallel_rank() << " glob iTurb "
+            << iTurb << std::endl;
       }
     }
   }
@@ -838,6 +961,8 @@ ActuatorFAST::spread_actuator_force_to_node_vec(
   const int& nDim,
   std::set<stk::mesh::Entity>& nodeVec,
   const std::vector<double>& actuator_force,
+  // The tensor to indicate the orientation of the airfoil sections
+  const std::vector<double>& orientation_tensor,
   const double* actuator_node_coordinates,
   const stk::mesh::FieldBase& coordinates,
   stk::mesh::FieldBase& actuator_source,
@@ -850,21 +975,65 @@ ActuatorFAST::spread_actuator_force_to_node_vec(
 {
   std::vector<double> ws_nodeForce(nDim);
 
+  // This is the distance vector
+  std::vector<double> distance(nDim);
+  // This is the distance vector projected onto the blade coordinate system
+  std::vector<double> distance_projected(nDim, 0.0);
+
+  // Loop through all the mesh points influenced by the body force
   std::set<stk::mesh::Entity>::iterator iNode;
   for (iNode = nodeVec.begin(); iNode != nodeVec.end(); ++iNode) {
 
     stk::mesh::Entity node = *iNode;
+
     const double* node_coords =
       (double*)stk::mesh::field_data(coordinates, node);
+
     const double* dVol =
       (double*)stk::mesh::field_data(dual_nodal_volume, node);
+
     // compute distance
-    const double distance =
-      compute_distance(nDim, node_coords, actuator_node_coordinates);
+    compute_distance(nDim, node_coords, actuator_node_coordinates,
+                     distance.data());
+
+    // Now project the distance into the blade reference frame
+    // The ordering of the rotation matrix is: 
+    //   xx [0], xy [1], xz [2], yx [3], yy [4], yz [5], zx [6], zy [7], zz [8]
+    // First loop through every direction
+    for (int j = 0; j < nDim; ++j){
+
+      // Initialize the disnace to zero
+      distance_projected[j] = 0.0;
+
+      // Now compute the matrix multiplication
+      // This implementation allows for 2D and 3D
+      // This loop is used to go through elemnts of the rotation matrix
+      // The projection from (x1, y1, z1) to (x2, y2, z2) is:
+      // x2 = x1 * xx + y1 * yx + z1 * zx
+      // y2 = x1 * xy + y1 * yy + z1 * zy
+      // z2 = x1 * xz + y1 * yz + z1 * zz
+      for (int k = 0; k < nDim; k++){
+
+        // The coordinates in this distance have the first two element switched 
+        // thickness, chord, spanwise (notice this is the OpenFAST definition)
+        distance_projected[j] += distance[k] * orientation_tensor[j + k * nDim];
+      }
+    }
+    // Switch components 0 and 1 to be consistent with OpenFAST
+    // The new distances are given in:
+    //   chord (0), thickness (1), and spanwise (2) directions
+    distance_projected[0] = distance_projected[0] + distance_projected[1];
+    distance_projected[1] = distance_projected[0] - distance_projected[1];
+    distance_projected[0] = distance_projected[0] - distance_projected[1];
+    
     // project the force to this node with projection function
-    double gA = isotropic_Gaussian_projection(nDim, distance, epsilon);
+    // To de-activate tje projection use distance.data() instead of 
+    //   distance_projected.data()
+    double gA = Gaussian_projection(nDim, distance_projected.data(), epsilon);
+
     compute_node_force_given_weight(
       nDim, gA, &actuator_force[0], &ws_nodeForce[0]);
+
     double* sourceTerm = (double*)stk::mesh::field_data(actuator_source, node);
     for (int j = 0; j < nDim; ++j)
       sourceTerm[j] += ws_nodeForce[j];

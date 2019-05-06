@@ -74,18 +74,18 @@ public:
 
   Point centroidCoords_; ///< The coordinates of the actuator point.
   double searchRadius_; ///< Elements within this search radius will be affected
-                        ///< by this actuator point.
+  ///< by this actuator point.
   double bestX_; ///< A number returned by stk::isInElement that determines
-                 ///< whether an actuator point is inside (< 1) or outside an
-                 ///< element (> 1). However, we choose the bestElem_ for this
-                 ///< actuator point to be the one with the lowest bestX_.
+  ///< whether an actuator point is inside (< 1) or outside an
+  ///< element (> 1). However, we choose the bestElem_ for this
+  ///< actuator point to be the one with the lowest bestX_.
   stk::mesh::Entity
-    bestElem_; ///< The element within which the actuator point lies.
+  bestElem_; ///< The element within which the actuator point lies.
   std::vector<double>
-    isoParCoords_; ///< The isoparametric coordinates of the bestElem_.
+  isoParCoords_; ///< The isoparametric coordinates of the bestElem_.
   std::set<stk::mesh::Entity>
-    nodeVec_; ///< A list of nodes that are part of elements that lie within the
-              ///< searchRadius_ around the actuator point.
+  nodeVec_; ///< A list of nodes that are part of elements that lie within the
+  ///< searchRadius_ around the actuator point.
 };
 
 class Actuator
@@ -165,8 +165,12 @@ public:
     const double* fieldAtNodes,
     double* pointField);
 
-  double compute_distance(
-    const int& nDim, const double* elemCentroid, const double* pointCentroid);
+  // distance from element centroid to point centroid
+  void compute_distance(
+    const int &nDim,
+    const double *elemCentroid,
+    const double *pointCentroid,
+    double *distance);
 
   //------------------------------------------------------------------
   // hold the realm

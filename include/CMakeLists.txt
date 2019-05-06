@@ -2,7 +2,6 @@ add_sources(GlobalHeaderList
    ABLForcingAlgorithm.h
    ABLProfileFunction.h
    Actuator.h
-   ActuatorLinePointDrag.h
    AlgTraits.h
    Algorithm.h
    AlgorithmDriver.h

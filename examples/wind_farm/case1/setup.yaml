@@ -7,8 +7,8 @@
 # These are the example input files and the files which will be generated.
 ##########################################################################
 # The old input files which will be modified
-template_input: template_input_files/abl_precursor.yaml
-template_preprocess: template_input_files/nalu_preprocess.yaml
+template_input: ./template_input_files/abl_precursor.yaml
+template_preprocess: ./template_input_files/nalu_preprocess.yaml
 
 # The name of the new input files
 new_input: case_1_precursor_simulation.yaml

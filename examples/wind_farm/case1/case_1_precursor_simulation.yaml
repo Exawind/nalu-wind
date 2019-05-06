@@ -27,7 +27,7 @@ linear_solvers:
   kspace: 75
   output_level: 0
   recompute_preconditioner: no
-  muelu_xml_file_name: ./milestone.xml
+  muelu_xml_file_name: ../milestone.xml
 
 
 # Specify the differnt physics realms.  Here, we just have one for the fluid.
@@ -35,9 +35,9 @@ realms:
 
   # The fluid realm that uses the 5 km x 5 km x 1 km atmospheric LES mesh.
 - name: fluidRealm
-  mesh: restart_data/precursor.rst
+  mesh: mesh_abl.exo
   use_edges: yes
-    #~ automatic_decomposition_type: rcb
+  automatic_decomposition_type: rcb
 
     # This defines the equations to be solved: momentum, pressure, static enthalpy,
     # and subgrid-scale turbulent kinetic energy.  The equation system will be iterated
@@ -80,7 +80,7 @@ realms:
 
     constant_specification:
       universal_gas_constant: 8314.4621
-      reference_pressure: 101325.0
+      reference_pressure: 86011.67689655174
 
     reference_quantities:
     - species_name: Air
@@ -92,11 +92,11 @@ realms:
         # Density here was computed such that P_ref = rho_ref*(R/mw)*300K
     - name: density
       type: constant
-      value: 1.178037722969475
+      value: 1.
 
     - name: viscosity
       type: constant
-      value: 1.2E-5
+      value: 1e-05
 
     - name: specific_heat
       type: constant
@@ -143,16 +143,16 @@ realms:
   - abltop_boundary_condition: bc_upper
     target_name: upper
     abltop_user_data:
-      normal_temperature_gradient: -0.003
+      normal_temperature_gradient: 0.003
 
   - wall_boundary_condition: bc_lower
     target_name: lower
     wall_user_data:
       velocity: [0, 0, 0]
       use_abl_wall_function: yes
-      heat_flux: 0.0
+      heat_flux: 0.
       reference_temperature: 300.0
-      roughness_height: 0.1
+      roughness_height: 0.15
       gravity_vector_component: 3
 
   solution_options:
@@ -203,13 +203,13 @@ realms:
         - rodi
 
     - user_constants:
-        reference_density: 1.178037722969475
+        reference_density: 1.
         reference_temperature: 300.0
         gravity: [0.0, 0.0, -9.81]
         thermal_expansion_coefficient: 3.33333333e-3
         east_vector: [1.0, 0.0, 0.0]
         north_vector: [0.0, 1.0, 0.0]
-        latitude: 45.0
+        latitude: 41.3
         earth_angular_velocity: 7.2921159e-5
 
     - limiter:
@@ -240,7 +240,7 @@ realms:
 
 
   output:
-    output_data_base_name: case_2_output/precursor.exo
+    output_data_base_name: output/abl_5km_5km_1km_neutral.exo
     output_frequency: 10000
     output_node_set: no
     output_variables:
@@ -257,7 +257,7 @@ realms:
     # details of the driving wind forcing.
   boundary_layer_statistics:
     target_name: [fluid_part]
-    stats_output_file: abl_statistics_sampling.nc
+    stats_output_file: abl_statistics.nc
     compute_temperature_statistics: yes
     output_frequency: 10000
     time_hist_output_frequency: 1
@@ -270,93 +270,34 @@ realms:
     momentum:
       type: computed
       relaxation_factor: 1.0
-      heights: [90.0]
+      heights:
+      - 90.0
       velocity_x:
-      - [0.0, 7.250462296293199]
-      - [900000.0, 7.250462296293199]
-
+      - - 0.0
+        - 7.2504622962931995
+      - - 1000000000.0
+        - 7.2504622962931995
       velocity_y:
-      - [0.0, 3.380946093925596]
-      - [90000.0, 3.380946093925596]
-
+      - - 0.0
+        - 3.3809460939255955
+      - - 1000000000.0
+        - 3.3809460939255955
       velocity_z:
-      - [0.0, 0.0]
-      - [90000.0, 0.0]
-
+      - - 0.0
+        - 0.0
+      - - 1000000000.0
+        - 0.0
   restart:
-    restart_data_base_name: rst/prescursor.rst
-    output_frequency: 1000
-
-    restart_time: 20.
-- name: ioRealm
-  mesh: boundary_data.exo
-  type: input_output
-  automatic_decomposition_type: rcb
-
-  field_registration:
-    specifications:
-
-    - field_name: velocity_bc
-      target_name: &id001 [west, south]
-      field_size: 3
-      field_type: node_rank
-
-    - field_name: cont_velocity_bc
-      target_name: *id001
-      field_size: 3
-      field_type: node_rank
-
-    - field_name: temperature_bc
-      target_name: *id001
-      field_size: 1
-      field_type: node_rank
-
-    - field_name: turbulent_ke_bc
-      target_name: *id001
-      field_size: 1
-      field_type: node_rank
-
-  output:
-    output_data_base_name: ./boundaryData/boundary_data.exo
-    output_frequency: 1
-    output_node_set: no
-    output_variables:
-    - velocity_bc
-    - cont_velocity_bc
-    - temperature_bc
-    - turbulent_ke_bc
-
-transfers:
-### Fluid to ....
-
-- name: south
-  type: geometric
-  realm_pair: [fluidRealm, ioRealm]
-  mesh_part_pair: [south, south]
-  objective: input_output
-  transfer_variables:
-  - [velocity, velocity_bc]
-  - [velocity, cont_velocity_bc]
-  - [temperature, temperature_bc]
-  - [turbulent_ke, turbulent_ke_bc]
-
-- name: west
-  type: geometric
-  realm_pair: [fluidRealm, ioRealm]
-  mesh_part_pair: [west, west]
-  objective: input_output
-  transfer_variables:
-  - [velocity, velocity_bc]
-  - [velocity, cont_velocity_bc]
-  - [temperature, temperature_bc]
-  - [turbulent_ke, turbulent_ke_bc]
+    restart_data_base_name: ./restart_data/precursor.rst
+    restart_frequency: 10
+    restart_start: 0
 
 # This defines the time step size, count, etc.
 Time_Integrators:
 - StandardTimeIntegrator:
     name: ti_1
     start_time: 0.0
-    termination_step_count: 100
+    termination_step_count: 40
     time_step: 0.5
     time_stepping_type: fixed
     time_step_count: 0
@@ -364,4 +305,3 @@ Time_Integrators:
 
     realms:
     - fluidRealm
-    - ioRealm

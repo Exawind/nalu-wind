@@ -1175,7 +1175,36 @@ Actuator
 
 .. inpfile:: actuator.epsilon
 
-   The spreading width :math:`\epsilon` in the Gaussian spreading function in the `[chordwise, spanwise, chord normal]` coordinate system to spread the forces from the actuator point to the nodes. Nalu-Wind currently only supports an isotropic Gaussian spreading function and uses only the value in the first component along the `chordwise` direction.
+   The spreading width :math:`\epsilon` in the Gaussian spreading function in 
+   the `[chordwise, thickness, spanwise]` coordinate system to spread the 
+   forces from the actuator point to the nodes. 
+   In the case of the actuator disk, only the first value in the chordwise 
+   direction is used for the uniform isotropic Gaussian.
+
+.. inpfile:: actuator.epsilon_chord
+
+   This is the ratio :math:`\epsilon/c` in every direction 
+   `[chordwise, thickness, spanwise]`. If this option is 
+   specified, the code will choose a value of :math:`\epsilon` at every 
+   location that 
+   is :math:`c * \epsilon/c`. To avoid numerical insabilities, 
+   the code will choose the maximum value between :math:`c * \epsilon/c` 
+   and the value of ``actuator.epsilon_min`` specified.
+
+.. inpfile:: actuator.epsilon_min
+
+   This is the minimum value of :math:`\epsilon` in the Gaussian spreading 
+   function in the `[chordwise, thickness, spanwise]` coordinate system 
+   to spread the forces from the actuator point to the nodes. 
+   This option is required if the option ``actuator.epsilon_chord`` 
+   is specified.
+
+.. inpfile:: actuator.epsilon_tower
+
+   The spreading width :math:`\epsilon` in the Gaussian spreading function in 
+   the inertial `[x, y, z]` reference frame. 
+   If this value is not speficied, then ``actuator.epsilon`` or 
+   ``actuator.epsilon_min`` will be used.
 
 .. inpfile:: actuator.restart_filename
 

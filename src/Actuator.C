@@ -75,8 +75,8 @@ Actuator::load(const YAML::Node& y_node)
       searchMethod_ = stk::search::KDTREE;
     else
       NaluEnv::self().naluOutputP0()
-        << "Actuator::search method not declared; will use stk_kdtree"
-        << std::endl;
+          << "Actuator::search method not declared; will use stk_kdtree"
+          << std::endl;
 
     // extract the set of from target names; each spec is homogeneous in this
     // respect
@@ -103,7 +103,7 @@ Actuator::populate_candidate_elements()
 
   // fields
   VectorFieldType* coordinates = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, realm_.get_coordinates_name());
+                                   stk::topology::NODE_RANK, realm_.get_coordinates_name());
 
   // point data structures
   Point minCorner, maxCorner;
@@ -184,14 +184,14 @@ Actuator::manage_ghosting()
     1);
   if (g_needToGhostCount > 0) {
     NaluEnv::self().naluOutputP0()
-      << get_class_name() + " alg will ghost a number of entities: "
-      << g_needToGhostCount << std::endl;
+        << get_class_name() + " alg will ghost a number of entities: "
+        << g_needToGhostCount << std::endl;
     bulkData.modification_begin();
     bulkData.change_ghosting(*actuatorGhosting_, elemsToGhost_);
     bulkData.modification_end();
   } else {
     NaluEnv::self().naluOutputP0()
-      << get_class_name() + " alg will NOT ghost entities: " << std::endl;
+        << get_class_name() + " alg will NOT ghost entities: " << std::endl;
   }
 }
 
@@ -204,12 +204,12 @@ Actuator::complete_search()
 
   // extract fields
   VectorFieldType* coordinates = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, realm_.get_coordinates_name());
+                                   stk::topology::NODE_RANK, realm_.get_coordinates_name());
 
   // now proceed with the standard search
   std::vector<
-    std::pair<boundingSphere::second_type, boundingElementBox::second_type>>::
-    const_iterator ii;
+  std::pair<boundingSphere::second_type, boundingElementBox::second_type>>::
+      const_iterator ii;
   for (ii = searchKeyPair_.begin(); ii != searchKeyPair_.end(); ++ii) {
 
     const uint64_t thePt = ii->first.id();
@@ -255,8 +255,8 @@ Actuator::complete_search()
       // find isoparametric points
       std::vector<double> isoParCoords(nDim);
       const double nearestDistance = meSCS->isInElement(
-        &elementCoords[0], &(actuatorPointInfo->centroidCoords_[0]),
-        &(isoParCoords[0]));
+                                       &elementCoords[0], &(actuatorPointInfo->centroidCoords_[0]),
+                                       &(isoParCoords[0]));
 
       // save off best element and its isoparametric coordinates for this point
       if (nearestDistance < actuatorPointInfo->bestX_) {
@@ -289,8 +289,8 @@ Actuator::determine_elems_to_ghost()
   // lowest effort is to ghost elements to the owning rank of the point; can
   // just as easily do the opposite
   std::vector<
-    std::pair<boundingSphere::second_type, boundingElementBox::second_type>>::
-    const_iterator ii;
+  std::pair<boundingSphere::second_type, boundingElementBox::second_type>>::
+      const_iterator ii;
   for (ii = searchKeyPair_.begin(); ii != searchKeyPair_.end(); ++ii) {
 
     const uint64_t theBox = ii->second.id();
@@ -420,15 +420,17 @@ Actuator::interpolate_field(
   // interpolate velocity to this best point
   meSCS->interpolatePoint(sizeOfField, isoParCoords, fieldAtNodes, pointField);
 }
-double
+
+void
 Actuator::compute_distance(
-  const int& nDim, const double* elemCentroid, const double* pointCentroid)
+  const int &nDim,
+  const double *elemCentroid,
+  const double *pointCentroid,
+  double *distance)
 {
-  double distance = 0.0;
-  for (int j = 0; j < nDim; ++j)
-    distance += std::pow(elemCentroid[j] - pointCentroid[j], 2);
-  distance = std::sqrt(distance);
-  return distance;
+  for ( int j = 0; j < nDim; ++j )
+    distance[j] = elemCentroid[j] - pointCentroid[j];
+  //~ return distance;
 }
 
 } // namespace nalu

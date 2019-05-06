@@ -27,7 +27,7 @@ linear_solvers:
     kspace: 75
     output_level: 0
     recompute_preconditioner: no
-    muelu_xml_file_name: ./milestone.xml
+    muelu_xml_file_name: ../milestone.xml
 
 
 # Specify the differnt physics realms.  Here, we just have one for the fluid.
@@ -131,22 +131,12 @@ realms:
     boundary_conditions:
 
     - periodic_boundary_condition: bc_north_south
-      target_name: north
+      target_name: [north, south]
       periodic_user_data:
         search_tolerance: 0.0001
 
     - periodic_boundary_condition: bc_east_west
-      target_name: east
-      periodic_user_data:
-        search_tolerance: 0.0001
-
-    - periodic_boundary_condition: bc_north_south
-      target_name: south
-      periodic_user_data:
-        search_tolerance: 0.0001
-
-    - periodic_boundary_condition: bc_east_west
-      target_name: west
+      target_name: [east, west]
       periodic_user_data:
         search_tolerance: 0.0001
 
@@ -248,33 +238,6 @@ realms:
             velocity: velocity
             temperature: temperature
 
-    actuator:
-      type: ActLineFAST
-      search_method: boost_rtree
-      search_target_part: fluid_part
-
-      n_turbines_glob: 1
-      dry_run:  False
-      debug:    True
-      simStart: init
-      t_start: 0.0
-      t_max:    0.625
-      dt_fast: 0.00625
-      n_every_checkpoint: 100
-
-      Turbine0:
-        num_force_pts_blade: 50
-        num_force_pts_tower: 20
-        nacelle_cd: 1.0
-        nacelle_area: 8.0
-        air_density: 1.225
-        epsilon: [ 5.0, 5.0, 5.0 ]
-        turbine_base_pos: [ 0.0, 0.0, 0.0 ]
-        turbine_hub_pos: [ 0.0, 0.0, 90.0 ]
-        restart_filename: "blah"
-        fast_input_filename: "nrel5mw.fst"
-        turb_id:  1
-        turbine_name: machine_one
 
     output:
       output_data_base_name: abl_5km_5km_1km_neutral.e
@@ -294,7 +257,7 @@ realms:
     # details of the driving wind forcing.
     boundary_layer_statistics:
       target_name: [ fluid_part ]
-      stats_output_file: "abl_statistics_wind_farm.nc"
+      stats_output_file: "abl_statistics.nc"
       compute_temperature_statistics: yes
       output_frequency: 10000
       time_hist_output_frequency: 2
@@ -322,107 +285,93 @@ realms:
 
     restart:
       restart_data_base_name: rst/prescursor.rst
-      restart_frequency: 1000
-      restart_start: 0
+      output_frequency: 1000
 
   - name: ioRealm
-    mesh: data.exo
-    type: external_field_provider
-#   automatic_decomposition_type: rcb
+    mesh: io_transfer_3planes.exo
+    type: input_output
+    automatic_decomposition_type: rcb
 
     field_registration:
       specifications:
 
         - field_name: velocity_bc
-          target_name: [north, west]
+          target_name: [south, west, north]
           field_size: 3
           field_type: node_rank
 
         - field_name: cont_velocity_bc
-          target_name: [north, west]
+          target_name: [south, west, north]
           field_size: 3
           field_type: node_rank
 
         - field_name: temperature_bc
-          target_name: [north, west]
+          target_name: [south, west, north]
           field_size: 1
           field_type: node_rank
 
         - field_name: turbulent_ke_bc
-          target_name: [north, west]
+          target_name: [south, west, north]
           field_size: 1
           field_type: node_rank
 
-    solution_options:
-      name: myOptions
-      input_variables_interpolate_in_time: yes
-      input_variables_from_file_restoration_time: 20000.0
-
-      options:
-        - input_variables_from_file:
-            velocity_bc: velocity_bc
-            cont_velocity_bc: cont_velocity_bc
-            temperature_bc: temperature_bc
-            turbulent_ke_bc: turbulent_ke_bc
+    output:
+      output_data_base_name: boundaryData/boundaryData.e
+      output_frequency: 1
+      output_node_set: no
+      output_variables:
+       - velocity_bc
+       - cont_velocity_bc
+       - temperature_bc
+       - turbulent_ke_bc
 
 transfers:
-  - name: north
-    type: geometric
-    realm_pair: [ioRealm, fluidRealm]
-    mesh_part_pair: [north, north]
-    objective: external_data
-    search_tolerance: 5.0e-4
-    transfer_variables:
-      - [velocity_bc, velocity]
-      - [velocity_bc, velocity_bc]
-      - [temperature_bc, temperature]
-      - [temperature_bc, temperature_bc]
-      - [turbulent_ke_bc, tke_bc]
-      - [turbulent_ke_bc, turbulent_ke]
-      
-  - name: south
-    type: geometric
-    realm_pair: [ioRealm, fluidRealm]
-    mesh_part_pair: [south, south]
-    objective: external_data
-    search_tolerance: 5.0e-4
-    transfer_variables:
-      - [velocity_bc, velocity]
-      - [velocity_bc, velocity_bc]
-      - [temperature_bc, temperature]
-      - [temperature_bc, temperature_bc]
-      - [turbulent_ke_bc, tke_bc]
-      - [turbulent_ke_bc, turbulent_ke]
-      
-  - name: east
-    type: geometric
-    realm_pair: [ioRealm, fluidRealm]
-    mesh_part_pair: [east, east]
-    objective: external_data
-    search_tolerance: 5.0e-4
-    transfer_variables:
-      - [velocity_bc, velocity]
-      - [velocity_bc, velocity_bc]
-      - [temperature_bc, temperature]
-      - [temperature_bc, temperature_bc]
-      - [turbulent_ke_bc, tke_bc]
-      - [turbulent_ke_bc, turbulent_ke]
-      
-  - name: west
-    type: geometric
-    realm_pair: [ioRealm, fluidRealm]
-    mesh_part_pair: [west, west]
-    objective: external_data
-    search_tolerance: 5.0e-4
-    transfer_variables:
-      - [velocity_bc, velocity]
-      - [velocity_bc, velocity_bc]
-      - [temperature_bc, temperature]
-      - [temperature_bc, temperature_bc]
-      - [turbulent_ke_bc, tke_bc]
-      - [turbulent_ke_bc, turbulent_ke]
-      
-      
+### Fluid to ....
+
+   - name: south
+     type: geometric
+     realm_pair: [fluidRealm, ioRealm]
+     mesh_part_pair: [south, south]
+     objective: input_output
+     transfer_variables:
+       - [velocity, velocity_bc]
+       - [velocity, cont_velocity_bc]
+       - [temperature, temperature_bc]
+       - [turbulent_ke, turbulent_ke_bc]
+
+   - name: north
+     type: geometric
+     realm_pair: [fluidRealm, ioRealm]
+     mesh_part_pair: [north, north]
+     objective: input_output
+     transfer_variables:
+       - [velocity, velocity_bc]
+       - [velocity, cont_velocity_bc]
+       - [temperature, temperature_bc]
+       - [turbulent_ke, turbulent_ke_bc]
+
+   - name: east
+     type: geometric
+     realm_pair: [fluidRealm, ioRealm]
+     mesh_part_pair: [east, east]
+     objective: input_output
+     transfer_variables:
+       - [velocity, velocity_bc]
+       - [velocity, cont_velocity_bc]
+       - [temperature, temperature_bc]
+       - [turbulent_ke, turbulent_ke_bc]
+
+   - name: west
+     type: geometric
+     realm_pair: [fluidRealm, ioRealm]
+     mesh_part_pair: [west, west]
+     objective: input_output
+     transfer_variables:
+       - [velocity, velocity_bc]
+       - [velocity, cont_velocity_bc]
+       - [temperature, temperature_bc]
+       - [turbulent_ke, turbulent_ke_bc]
+
 # This defines the time step size, count, etc.
 Time_Integrators:
   - StandardTimeIntegrator:
