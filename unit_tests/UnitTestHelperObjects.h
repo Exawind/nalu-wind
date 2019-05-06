@@ -77,7 +77,10 @@ struct FaceElemHelperObjects : HelperObjects {
     assembleFaceElemSolverAlg = new sierra::nalu::AssembleFaceElemSolverAlgorithm(realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes());
   }
 
-  ~FaceElemHelperObjects() {    delete assembleFaceElemSolverAlg;
+  ~FaceElemHelperObjects()
+  {
+    assembleFaceElemSolverAlg->activeKernels_.clear();
+    delete assembleFaceElemSolverAlg;
   }
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
