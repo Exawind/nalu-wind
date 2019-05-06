@@ -602,7 +602,10 @@ public:
     massFlowRate_(&meta_.declare_field<GenericFieldType>(stk::topology::ELEM_RANK,
                                                          "mass_flow_rate_scs")),
     dzdx_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dzdx")),
-
+    exposedAreaVec_(&meta_.declare_field<GenericFieldType>(
+                      meta_.side_rank(), "exposed_area_vector")),
+    openMassFlowRate_(&meta_.declare_field<GenericFieldType>(meta_.side_rank(),
+                                                         "open_mass_flow_rate")),
     znot_(1.0),
     amf_(2.0),
     lamSc_(0.9),
@@ -619,6 +622,12 @@ public:
     stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*massFlowRate_, meta_.universal_part(), meSCS->num_integration_points(), nullptr);
     stk::mesh::put_field_on_mesh(*dzdx_, meta_.universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *exposedAreaVec_, meta_.universal_part(),
+      spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *openMassFlowRate_, meta_.universal_part(),
+      sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
   }
   virtual ~MixtureFractionKernelHex8Mesh() {}
 
@@ -635,6 +644,12 @@ public:
                                                                          viscPrimary_, viscSecondary_);
     unit_test_kernel_utils::calc_mass_flow_rate_scs(
       bulk_, stk::topology::HEX_8, *coordinates_, *density_, *velocity_, *massFlowRate_);
+    unit_test_kernel_utils::calc_exposed_area_vec(
+      bulk_, sierra::nalu::AlgTraitsQuad4::topo_, *coordinates_,
+      *exposedAreaVec_);
+    unit_test_kernel_utils::calc_open_mass_flow_rate(
+      bulk_, stk::topology::QUAD_4, *coordinates_, *density_, *velocity_,
+      *exposedAreaVec_, *openMassFlowRate_);
   }
 
   ScalarFieldType* mixFraction_{nullptr};
@@ -644,6 +659,8 @@ public:
   ScalarFieldType* effectiveViscosity_{nullptr};
   GenericFieldType* massFlowRate_{nullptr};
   VectorFieldType* dzdx_{nullptr};
+  GenericFieldType* exposedAreaVec_{nullptr};
+  GenericFieldType* openMassFlowRate_{nullptr};
 
   const double znot_;
   const double amf_;
