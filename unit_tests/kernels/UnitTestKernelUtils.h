@@ -298,7 +298,10 @@ public:
           stk::topology::NODE_RANK, "momentum_diag", 2)),
       exposedAreaVec_(
         &meta_.declare_field<GenericFieldType>(
-          meta_.side_rank(), "exposed_area_vector"))
+          meta_.side_rank(), "exposed_area_vector")),
+      velocityBC_(
+        &meta_.declare_field<VectorFieldType>(
+          stk::topology::NODE_RANK, "velocity_bc"))
   {
     stk::mesh::put_field_on_mesh(*velocity_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*dpdx_, meta_.universal_part(), spatialDim_, nullptr);
@@ -308,6 +311,7 @@ public:
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta_.universal_part(),
       spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+    stk::mesh::put_field_on_mesh(*velocityBC_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
   virtual ~LowMachKernelHex8Mesh() {}
@@ -325,6 +329,7 @@ public:
     unit_test_kernel_utils::calc_exposed_area_vec(
       bulk_, sierra::nalu::AlgTraitsQuad4::topo_, *coordinates_,
       *exposedAreaVec_);
+    unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocityBC_);
   }
 
   VectorFieldType* velocity_{nullptr};
@@ -333,6 +338,7 @@ public:
   ScalarFieldType* pressure_{nullptr};
   ScalarFieldType* Udiag_{nullptr};
   GenericFieldType* exposedAreaVec_{nullptr};
+  VectorFieldType* velocityBC_{nullptr};
 };
 
 class ContinuityKernelHex8Mesh : public LowMachKernelHex8Mesh

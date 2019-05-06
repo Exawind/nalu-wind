@@ -290,7 +290,7 @@ void init_trigonometric_field(
   const auto fieldName = qField.name();
   FieldInitFunction funcPtr = nullptr;
 
-  if (fieldName == "velocity")
+  if ((fieldName == "velocity") || (fieldName == "velocity_bc"))
     funcPtr = &TrigFieldFunction::velocity;
   else if (fieldName == "dudx")
     funcPtr = &TrigFieldFunction::dudx;
