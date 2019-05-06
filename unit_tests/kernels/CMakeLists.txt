@@ -1,6 +1,7 @@
 add_sources(GlobalUnitSourceList
    UnitTestContinuityAdvElem.C
    UnitTestContinuityMassElem.C
+   UnitTestContinuityOpenElem.C
    UnitTestFaceBasic.C
    UnitTestFaceElemBasic.C
    UnitTestKernelUtils.C
