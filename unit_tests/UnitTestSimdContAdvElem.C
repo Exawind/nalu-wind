@@ -45,7 +45,7 @@ TEST_F(Hex8MeshWithNSOFields, continuityAdvElem)
 
   double startTime = stk::wall_time();
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
   double elapsedTimeSimd = stk::wall_time() - startTime;
 
