@@ -38,7 +38,7 @@ MomentumBuoyancySrcElemKernel<AlgTraits>::MomentumBuoyancySrcElemKernel(
   
   const std::vector<double>& solnOptsGravity = solnOpts.get_gravity_vector(AlgTraits::nDim_);
   for (int i = 0; i < AlgTraits::nDim_; i++)
-    gravity_(i) = solnOptsGravity[i];
+    gravity_[i] = solnOptsGravity[i];
 
   meSCV_ = MasterElementRepo::get_volume_master_element<AlgTraits>();
 
@@ -78,7 +78,7 @@ MomentumBuoyancySrcElemKernel<AlgTraits>::execute(
     const int nnNdim = nearestNode * AlgTraits::nDim_;
     const DoubleType fac = (rhoNp1 - rhoRef_) * scV;
     for (int j=0; j < AlgTraits::nDim_; j++) {
-      rhs(nnNdim + j) += fac * gravity_(j);
+      rhs(nnNdim + j) += fac * gravity_[j];
     }
 
     // No LHS contributions
