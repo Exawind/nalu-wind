@@ -60,7 +60,7 @@ TEST_F(Hex8Mesh, faceBasic)
   TestFaceKernel faceKernel(faceTopo, scalarQ, helperObjs.assembleElemSolverAlg->dataNeededByKernels_);
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(&faceKernel);
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
   unsigned expectedNumFaces = 6;
   EXPECT_EQ(expectedNumFaces, faceKernel.numTimesExecuted_);
