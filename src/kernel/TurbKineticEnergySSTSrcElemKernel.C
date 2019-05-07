@@ -62,9 +62,10 @@ TurbKineticEnergySSTSrcElemKernel<AlgTraits>::TurbKineticEnergySSTSrcElemKernel(
   else
     dataPreReqs.add_master_element_call(SCV_GRAD_OP, CURRENT_COORDINATES);
 
-  dataPreReqs.add_master_element_call(SCV_SHAPE_FCN, CURRENT_COORDINATES);
   if (lumpedMass_)
     dataPreReqs.add_master_element_call(SCV_SHIFTED_SHAPE_FCN, CURRENT_COORDINATES);
+  else
+    dataPreReqs.add_master_element_call(SCV_SHAPE_FCN, CURRENT_COORDINATES);
 }
 
 template <typename AlgTraits>
