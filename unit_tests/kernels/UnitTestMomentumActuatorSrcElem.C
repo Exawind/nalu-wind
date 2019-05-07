@@ -11,7 +11,7 @@
 
 #include "kernel/MomentumActuatorSrcElemKernel.h"
 
-TEST_F(ActuatorSourceKernelHex8Mesh, actuator_source)
+TEST_F(ActuatorSourceKernelHex8Mesh, NGP_actuator_source)
 {
   fill_mesh_and_init_fields();
 
