@@ -292,7 +292,7 @@ TEST_F(MomentumKernelHex8Mesh, nso_ke)
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);

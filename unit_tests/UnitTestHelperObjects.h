@@ -7,6 +7,7 @@
 #include "AssembleElemSolverAlgorithm.h"
 #include "AssembleFaceElemSolverAlgorithm.h"
 #include "EquationSystem.h"
+#include "kernel/Kernel.h"
 
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_topology/topology.hpp>
@@ -32,12 +33,19 @@ struct HelperObjects {
 
   ~HelperObjects()
   {
-    assembleElemSolverAlg->activeKernels_.clear();
     delete assembleElemSolverAlg;
     realm.metaData_ = nullptr;
     realm.bulkData_ = nullptr;
 
     delete naluObj;
+  }
+
+  virtual void execute()
+  {
+    assembleElemSolverAlg->execute();
+    for (auto kern: assembleElemSolverAlg->activeKernels_)
+      kern->free_on_device();
+    assembleElemSolverAlg->activeKernels_.clear();
   }
 
   void print_lhs_and_rhs() const
@@ -79,8 +87,15 @@ struct FaceElemHelperObjects : HelperObjects {
 
   ~FaceElemHelperObjects()
   {
-    assembleFaceElemSolverAlg->activeKernels_.clear();
     delete assembleFaceElemSolverAlg;
+  }
+
+  virtual void execute() override
+  {
+    assembleFaceElemSolverAlg->execute();
+    for (auto kern: assembleFaceElemSolverAlg->activeKernels_)
+      kern->free_on_device();
+    assembleFaceElemSolverAlg->activeKernels_.clear();
   }
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;

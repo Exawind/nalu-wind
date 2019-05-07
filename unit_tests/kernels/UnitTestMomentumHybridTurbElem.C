@@ -297,7 +297,7 @@ TEST_F(HybridTurbKernelHex8Mesh, NGP_momentum_hybrid_turb_elem_kernel)
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);

@@ -57,7 +57,7 @@ TEST_F(ContinuityKernelHex8Mesh, inflow)
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(inflowKernel.get());
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 4u);

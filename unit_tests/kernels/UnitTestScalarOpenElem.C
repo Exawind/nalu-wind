@@ -71,7 +71,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
   helperObjs.assembleFaceElemSolverAlg->activeKernels_.push_back(openKernel.get());
 
   // Populate LHS and RHS
-  helperObjs.assembleFaceElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);

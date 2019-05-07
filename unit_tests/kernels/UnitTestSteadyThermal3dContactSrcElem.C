@@ -48,7 +48,7 @@ TEST_F(HeatCondKernelHex8Mesh, steady_3d_thermal)
   // Add to kernels to be tested
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);

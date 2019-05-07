@@ -207,7 +207,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_src_elem)
   // Add to kernels to be tested
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
 
@@ -251,7 +251,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_des_src_elem)
   // Add to kernels to be tested
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
 
@@ -296,7 +296,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_specific_dissipation_rate_sst_src_elem)
   // Add to kernels to be tested
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
 

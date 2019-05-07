@@ -92,7 +92,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_advection_default)
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(advKernel.get());
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
@@ -140,7 +140,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_advection_reduced_sens_cvfem_poisson)
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(advKernel.get());
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
@@ -188,7 +188,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_advection_reduced_shift_cvfem_poisson)
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(advKernel.get());
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);

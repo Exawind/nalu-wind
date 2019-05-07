@@ -71,7 +71,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_kinetic_energy_ksgs_design_order_src_elem_ke
   // Add to kernels to be tested
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
 
