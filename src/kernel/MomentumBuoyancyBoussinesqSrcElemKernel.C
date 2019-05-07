@@ -36,10 +36,11 @@ MomentumBuoyancyBoussinesqSrcElemKernel<AlgTraits>::MomentumBuoyancyBoussinesqSr
 
   temperatureNp1_ = get_field_ordinal(metaData, "temperature", stk::mesh::StateNP1);
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
-  
+
   const std::vector<double>& solnOptsGravity = solnOpts.get_gravity_vector(AlgTraits::nDim_);
+
   for (int i = 0; i < AlgTraits::nDim_; i++)
-    gravity_(i) = solnOptsGravity[i];
+    gravity_[i] = solnOptsGravity[i];
 
   tRef_ = solnOpts.referenceTemperature_;
   rhoRef_ = solnOpts.referenceDensity_;
@@ -83,7 +84,7 @@ MomentumBuoyancyBoussinesqSrcElemKernel<AlgTraits>::execute(
     const int nnNdim = nearestNode * AlgTraits::nDim_;
     const DoubleType fac = -rhoRef_ * beta_ * (temperatureIp - tRef_) * scV;
     for (int j=0; j < AlgTraits::nDim_; ++j) {
-      rhs(nnNdim + j) += fac * gravity_(j);
+      rhs(nnNdim + j) += fac * gravity_[j];
     }
 
     // No LHS contributions

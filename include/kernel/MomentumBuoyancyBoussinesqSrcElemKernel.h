@@ -56,7 +56,7 @@ private:
   double rhoRef_;
   double tRef_;
   double beta_;
-  AlignedViewType<DoubleType[AlgTraits::nDim_]> gravity_{ "v_gravity"};
+  NALU_ALIGNED DoubleType gravity_[3];
 
   MasterElement* meSCV_{nullptr};
 };
