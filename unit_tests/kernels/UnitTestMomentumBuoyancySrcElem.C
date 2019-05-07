@@ -13,7 +13,7 @@
 
 #include <random>
 
-TEST_F(MomentumKernelHex8Mesh, NGP_buoyancy)
+TEST_F(MomentumKernelHex8Mesh, NGP_momentum_buoyancy_src_elem)
 {
   std::mt19937 rng;
   rng.seed(0); // fixed seed
