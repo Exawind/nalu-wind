@@ -243,8 +243,10 @@ public:
 
   void fill_mesh(bool doPerturb = false, bool generateSidesets = false)
   {
+    const std::string baseMeshSpec =
+      "generated:1x1x" + std::to_string(bulk_.parallel_size());
     const std::string meshSpec =
-      generateSidesets ?  "generated:1x1x1|sideset:xXyYzZ" : "generated:1x1x1";
+      generateSidesets ? (baseMeshSpec + "|sideset:xXyYzZ") : baseMeshSpec;
     unit_test_utils::fill_hex8_mesh(meshSpec, bulk_);
     if (doPerturb) {
       unit_test_utils::perturb_coord_hex_8(bulk_, 0.125);

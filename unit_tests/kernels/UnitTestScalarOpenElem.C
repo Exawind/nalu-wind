@@ -34,6 +34,8 @@ static constexpr double lhs[8][8] = {
 
 TEST_F(MixtureFractionKernelHex8Mesh, open_advection)
 {
+  if (bulk_.parallel_size() > 1) return;
+
   const bool doPerturb = false;
   const bool generateSidesets = true;
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
