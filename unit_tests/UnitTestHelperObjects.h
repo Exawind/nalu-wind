@@ -31,7 +31,7 @@ struct HelperObjects {
     assembleElemSolverAlg = new sierra::nalu::AssembleElemSolverAlgorithm(realm, part, &eqSystem, topo.rank(), topo.num_nodes());
   }
 
-  ~HelperObjects()
+  virtual ~HelperObjects()
   {
     delete assembleElemSolverAlg;
     realm.metaData_ = nullptr;
@@ -85,7 +85,7 @@ struct FaceElemHelperObjects : HelperObjects {
     assembleFaceElemSolverAlg = new sierra::nalu::AssembleFaceElemSolverAlgorithm(realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes());
   }
 
-  ~FaceElemHelperObjects()
+  virtual ~FaceElemHelperObjects()
   {
     delete assembleFaceElemSolverAlg;
   }
