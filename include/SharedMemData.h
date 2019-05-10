@@ -124,6 +124,31 @@ struct SharedMemData_FaceElem {
     SharedMemView<int*,SHMEM> sortPermutation;
 };
 
+template<typename TEAMHANDLETYPE, typename SHMEM>
+struct SharedMemData_Edge {
+  KOKKOS_FUNCTION
+  SharedMemData_Edge(
+    const TEAMHANDLETYPE& team,
+    unsigned nDim,
+    const ElemDataRequestsGPU& dataNeededByKernels,
+    unsigned nodesPerEntity,
+    unsigned rhsSize
+  ) : preReqData(team, nDim, nodesPerEntity, dataNeededByKernels)
+  {
+    rhs = get_shmem_view_1D<double, TEAMHANDLETYPE, SHMEM>(team, rhsSize);
+    lhs = get_shmem_view_2D<double, TEAMHANDLETYPE, SHMEM>(team, rhsSize, rhsSize);
+    scratchIds = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
+    sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
+  }
+
+  ngp::Mesh::ConnectedNodes ngpElemNodes;
+  ScratchViews<double, TEAMHANDLETYPE, SHMEM> preReqData;
+  SharedMemView<double*,SHMEM> rhs;
+  SharedMemView<double**,SHMEM> lhs;
+
+  SharedMemView<int*,SHMEM> scratchIds;
+  SharedMemView<int*,SHMEM> sortPermutation;
+};
 } // namespace nalu
 } // namespace Sierra
 

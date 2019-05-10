@@ -1,0 +1,109 @@
+/*------------------------------------------------------------------------*/
+/*  Copyright 2019 National Renewable Energy Laboratory.                  */
+/*  This software is released under the license detailed                  */
+/*  in the file, LICENSE, which is located in the top-level Nalu          */
+/*  directory structure                                                   */
+/*------------------------------------------------------------------------*/
+
+#ifndef ASSEMBLEEDGESOLVERALGORITHM_H
+#define ASSEMBLEEDGESOLVERALGORITHM_H
+
+#include "SolverAlgorithm.h"
+#include "ElemDataRequests.h"
+#include "ElemDataRequestsGPU.h"
+#include "Realm.h"
+#include "ScratchViews.h"
+#include "SharedMemData.h"
+
+namespace stk {
+namespace mesh {
+class Part;
+}
+}
+
+namespace sierra {
+namespace nalu {
+
+class AssembleEdgeSolverAlgorithm : public SolverAlgorithm
+{
+public:
+  using DblType = double;
+  using ShmemDataType = SharedMemData_Edge<DeviceTeamHandleType, DeviceShmem>;
+
+  AssembleEdgeSolverAlgorithm(
+    Realm& realm,
+    stk::mesh::Part* part,
+    EquationSystem* eqSystem);
+
+  AssembleEdgeSolverAlgorithm() = delete;
+  AssembleEdgeSolverAlgorithm(const AssembleEdgeSolverAlgorithm&) = delete;
+
+  virtual ~AssembleEdgeSolverAlgorithm() = default;
+
+  virtual void initialize_connectivity();
+
+  template<typename LambdaFunction>
+  void run_algorithm(stk::mesh::BulkData& bulk, LambdaFunction lambdaFunc)
+  {
+    const auto& meta = bulk.mesh_meta_data();
+    const int ndim = meta.spatial_dimension();
+
+    const auto& ngpMesh = realm_.ngp_mesh();
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    ElemDataRequestsGPU dataNeededNGP(
+      fieldMgr, dataNeeded_, meta.get_fields().size());
+
+    const int bytes_per_team = 0;
+    const int bytes_per_thread = calc_shmem_bytes_per_thread_edge(
+      rhsSize_, dataNeededNGP);
+
+    stk::mesh::Selector sel = meta.locally_owned_part() &
+                              stk::mesh::selectUnion(partVec_) &
+                              !(realm_.get_inactive_selector());
+
+    const auto& buckets = ngp::get_bucket_ids(bulk, entityRank_, sel);
+    auto team_exec = get_device_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
+
+    // Create local copies of class data
+    const auto entityRank = entityRank_;
+    const auto nodesPerEntity = nodesPerEntity_;
+    const auto rhsSize = rhsSize_;
+
+    Kokkos::parallel_for(
+      team_exec, KOKKOS_LAMBDA(const DeviceTeamHandleType& team) {
+        auto bktId = buckets.device_get(team.league_rank());
+        auto& b = ngpMesh.get_bucket(entityRank, bktId);
+
+        ShmemDataType smdata(
+          team, ndim, dataNeededNGP, nodesPerEntity, rhsSize);
+
+        const size_t bktLen = b.size();
+        Kokkos::parallel_for(
+          Kokkos::TeamThreadRange(team, bktLen),
+          [&](const size_t& bktIndex) {
+            auto edge = b[bktIndex];
+            const auto edgeIndex = ngpMesh.fast_mesh_index(edge);
+            smdata.ngpElemNodes = ngpMesh.get_nodes(entityRank, edgeIndex);
+            fill_pre_req_data(dataNeededNGP, ngpMesh, entityRank, edge, smdata.preReqData);
+
+            lambdaFunc(smdata, edgeIndex);
+          });
+      });
+  }
+
+protected:
+  ElemDataRequests dataNeeded_;
+
+  const stk::mesh::EntityRank entityRank_{stk::topology::EDGE_RANK};
+  const int nodesPerEntity_{2};
+  static constexpr int nDimMax_{3};
+  const int nodeL{0};
+  const int nodeR{1};
+  const int rhsSize_;
+};
+
+}  // nalu
+}  // sierra
+
+
+#endif /* ASSEMBLEEDGESOLVERALGORITHM_H */
