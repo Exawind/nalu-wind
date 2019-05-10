@@ -13,6 +13,7 @@ add_sources(GlobalSourceList
    AssembleElemSolverAlgorithm.C
    AssembleElemSolverAlgorithmHO.C
    AssembleFaceElemSolverAlgorithm.C
+   AssembleEdgeSolverAlgorithm.C
    AssembleHeatCondIrradWallSolverAlgorithm.C
    AssembleHeatCondWallSolverAlgorithm.C
    AssembleMomentumEdgeABLWallFunctionSolverAlgorithm.C
@@ -214,6 +215,7 @@ endif()
 
 add_subdirectory(element_promotion)
 add_subdirectory(kernel)
+add_subdirectory(edge_kernels)
 add_subdirectory(master_element)
 add_subdirectory(mesh_motion)
 add_subdirectory(nso)

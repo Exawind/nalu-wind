@@ -932,6 +932,17 @@ int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchI
     return bytes_per_thread;
 }
 
+inline
+int calc_shmem_bytes_per_thread_edge(int rhsSize)
+{
+  // LHS (RHS^2) + RHS
+  const int matSize = rhsSize * (1 + rhsSize) * sizeof(double);
+  // Scratch IDs and search permutations (will be optimized later)
+  const int idSize = 2 * rhsSize * sizeof(int);
+
+  return (matSize + idSize);
+}
+
 template<typename ELEMDATAREQUESTSTYPE>
 inline
 int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchIdsSize, int nDim,
