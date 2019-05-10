@@ -22,7 +22,7 @@ struct HelperObjects {
     realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
     eqSystems(realm),
     eqSystem(eqSystems),
-    linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem)),
+    linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem, topo)),
     assembleElemSolverAlg(nullptr)
   {
     realm.metaData_ = &bulk.mesh_meta_data();

@@ -312,7 +312,7 @@ public:
   virtual void save_diagonal_term(
     unsigned,
     const ngp::Mesh::ConnectedNodes&,
-    const SharedMemView<const double**>&
+    const SharedMemView<const double**,DeviceShmem>&
   ) {}
 
   std::vector<Algorithm *> bcDataAlg_;

@@ -94,10 +94,10 @@ public:
   void sumInto(
     unsigned numEntities,
     const ngp::Mesh::ConnectedNodes& entities,
-    const SharedMemView<const double*> & rhs,
-    const SharedMemView<const double**> & lhs,
-    const SharedMemView<int*> & localIds,
-    const SharedMemView<int*> & sortPermutation,
+    const SharedMemView<const double*,DeviceShmem> & rhs,
+    const SharedMemView<const double**,DeviceShmem> & lhs,
+    const SharedMemView<int*,DeviceShmem> & localIds,
+    const SharedMemView<int*,DeviceShmem> & sortPermutation,
     const char * trace_tag);
 
   void sumInto(

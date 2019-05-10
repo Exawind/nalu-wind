@@ -172,23 +172,23 @@ void calc_projected_nodal_gradient(
   GenericFieldType& tensorField);
 
 void expect_all_near(
-  const Kokkos::View<double*>& calcValue,
+  const Kokkos::View<double*,Kokkos::LayoutRight,sierra::nalu::MemSpace>& calcValue,
   const double* exactValue,
   const double tol = 1.0e-15);
 
 void expect_all_near(
-  const Kokkos::View<double*>& calcValue,
+  const Kokkos::View<double*,Kokkos::LayoutRight,sierra::nalu::MemSpace>& calcValue,
   const double exactValue,
   const double tol = 1.0e-15);
 
 void expect_all_near(
-  const Kokkos::View<double**>& calcValue,
+  const Kokkos::View<double**,Kokkos::LayoutRight,sierra::nalu::MemSpace>& calcValue,
   const double* exactValue,
   const double tol = 1.0e-15);
 
 template<int N>
 void expect_all_near(
-  const Kokkos::View<double**>& calcValue,
+  const Kokkos::View<double**,Kokkos::LayoutRight,sierra::nalu::MemSpace>& calcValue,
   const double (*exactValue)[N],
   const double tol = 1.0e-15)
 {
@@ -205,7 +205,7 @@ void expect_all_near(
 
 template<int N>
 void expect_all_near(
-  const Kokkos::View<double**>& calcValue,
+  const Kokkos::View<double**,Kokkos::LayoutRight,sierra::nalu::MemSpace>& calcValue,
   const double exactValue,
   const double tol = 1.0e-15)
 {
