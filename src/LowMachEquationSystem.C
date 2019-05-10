@@ -130,6 +130,8 @@
 #include <kernel/PressurePoissonHOElemKernel.h>
 #include <kernel/ContinuityMassHOElemKernel.h>
 
+#include <edge_kernels/ContinuityEdgeSolverAlg.h>
+
 //mms kernels
 #include <user_functions/TGMMSHOElemKernel.h>
 
@@ -2797,8 +2799,9 @@ ContinuityEquationSystem::register_interior_algorithm(
     std::map<AlgorithmType, SolverAlgorithm *>::iterator its =
       solverAlgDriver_->solverAlgMap_.find(algType);
     if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssembleContinuityEdgeSolverAlgorithm *theAlg
-        = new AssembleContinuityEdgeSolverAlgorithm(realm_, part, this);
+      // AssembleContinuityEdgeSolverAlgorithm *theAlg
+      //   = new AssembleContinuityEdgeSolverAlgorithm(realm_, part, this);
+      auto* theAlg = new ContinuityEdgeSolverAlg(realm_, part, this);
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
     }
     else {
