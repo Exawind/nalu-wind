@@ -129,11 +129,7 @@ struct SharedMemData_Edge {
   KOKKOS_FUNCTION
   SharedMemData_Edge(
     const TEAMHANDLETYPE& team,
-    unsigned nDim,
-    const ElemDataRequestsGPU& dataNeededByKernels,
-    unsigned nodesPerEntity,
-    unsigned rhsSize
-  ) : preReqData(team, nDim, nodesPerEntity, dataNeededByKernels)
+    unsigned rhsSize)
   {
     rhs = get_shmem_view_1D<double, TEAMHANDLETYPE, SHMEM>(team, rhsSize);
     lhs = get_shmem_view_2D<double, TEAMHANDLETYPE, SHMEM>(team, rhsSize, rhsSize);
@@ -142,7 +138,6 @@ struct SharedMemData_Edge {
   }
 
   ngp::Mesh::ConnectedNodes ngpElemNodes;
-  ScratchViews<double, TEAMHANDLETYPE, SHMEM> preReqData;
   SharedMemView<double*,SHMEM> rhs;
   SharedMemView<double**,SHMEM> lhs;
 

@@ -46,16 +46,10 @@ public:
   void run_algorithm(stk::mesh::BulkData& bulk, LambdaFunction lambdaFunc)
   {
     const auto& meta = bulk.mesh_meta_data();
-    const int ndim = meta.spatial_dimension();
-
     const auto& ngpMesh = realm_.ngp_mesh();
-    const auto& fieldMgr = realm_.ngp_field_manager();
-    ElemDataRequestsGPU dataNeededNGP(
-      fieldMgr, dataNeeded_, meta.get_fields().size());
 
     const int bytes_per_team = 0;
-    const int bytes_per_thread = calc_shmem_bytes_per_thread_edge(
-      rhsSize_, dataNeededNGP);
+    const int bytes_per_thread = calc_shmem_bytes_per_thread_edge(rhsSize_);
 
     stk::mesh::Selector sel = meta.locally_owned_part() &
                               stk::mesh::selectUnion(partVec_) &
@@ -64,7 +58,7 @@ public:
     const auto& buckets = ngp::get_bucket_ids(bulk, entityRank_, sel);
     auto team_exec = get_device_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
 
-    // Create local copies of class data
+    // Create local copies of class data for device capture
     const auto entityRank = entityRank_;
     const auto nodesPerEntity = nodesPerEntity_;
     const auto rhsSize = rhsSize_;
@@ -74,8 +68,7 @@ public:
         auto bktId = buckets.device_get(team.league_rank());
         auto& b = ngpMesh.get_bucket(entityRank, bktId);
 
-        ShmemDataType smdata(
-          team, ndim, dataNeededNGP, nodesPerEntity, rhsSize);
+        ShmemDataType smdata(team, rhsSize);
 
         const size_t bktLen = b.size();
         Kokkos::parallel_for(
@@ -84,9 +77,18 @@ public:
             auto edge = b[bktIndex];
             const auto edgeIndex = ngpMesh.fast_mesh_index(edge);
             smdata.ngpElemNodes = ngpMesh.get_nodes(entityRank, edgeIndex);
-            fill_pre_req_data(dataNeededNGP, ngpMesh, entityRank, edge, smdata.preReqData);
 
-            lambdaFunc(smdata, edgeIndex);
+            const auto nodeL = ngpMesh.fast_mesh_index(smdata.ngpElemNodes[0]);
+            const auto nodeR = ngpMesh.fast_mesh_index(smdata.ngpElemNodes[1]);
+
+            lambdaFunc(smdata, edgeIndex, nodeL, nodeR);
+
+#ifndef KOKKOS_ENABLE_CUDA
+            // TODO: scratchIds and sort permutations could be optimized away for edge based
+            apply_coeff(
+              nodesPerEntity, smdata.ngpElemNodes, smdata.scratchIds,
+              smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
+#endif
           });
       });
   }
@@ -94,11 +96,9 @@ public:
 protected:
   ElemDataRequests dataNeeded_;
 
-  const stk::mesh::EntityRank entityRank_{stk::topology::EDGE_RANK};
-  const int nodesPerEntity_{2};
+  static constexpr stk::mesh::EntityRank entityRank_{stk::topology::EDGE_RANK};
+  static constexpr int nodesPerEntity_{2};
   static constexpr int nDimMax_{3};
-  const int nodeL{0};
-  const int nodeR{1};
   const int rhsSize_;
 };
 

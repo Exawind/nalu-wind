@@ -18,7 +18,6 @@ ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
 ) : AssembleEdgeSolverAlgorithm(realm, part, eqSystem)
 {
   const auto& meta = realm.meta_data();
-  const int ndim = meta.spatial_dimension();
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
   const std::string velField = realm.does_mesh_move()? "velocity_rtm" : "velocity";
@@ -28,13 +27,6 @@ ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
   Gpdx_ = get_field_ordinal(meta, "dpdx");
   edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   Udiag_ = get_field_ordinal(meta, "momentum_diag");
-
-  dataNeeded_.add_coordinates_field(coordinates_, ndim, CURRENT_COORDINATES);
-  dataNeeded_.add_gathered_nodal_field(velocityRTM_, ndim);
-  dataNeeded_.add_gathered_nodal_field(densityNp1_, 1);
-  dataNeeded_.add_gathered_nodal_field(pressure_, 1);
-  dataNeeded_.add_gathered_nodal_field(Udiag_, 1);
-  dataNeeded_.add_gathered_nodal_field(Gpdx_, ndim);
 }
 
 void
@@ -56,74 +48,78 @@ ContinuityEdgeSolverAlg::execute()
   const DblType interpTogether = realm_.get_mdot_interp();
   const DblType om_interpTogether = (1.0 - interpTogether);
 
+  // STK ngp::Field instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto coordinates = fieldMgr.get_field<double>(coordinates_);
+  const auto velocity = fieldMgr.get_field<double>(velocityRTM_);
+  const auto Gpdx = fieldMgr.get_field<double>(Gpdx_);
+  const auto density = fieldMgr.get_field<double>(densityNp1_);
+  const auto pressure = fieldMgr.get_field<double>(pressure_);
+  const auto udiag = fieldMgr.get_field<double>(Udiag_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
 
   run_algorithm(
     realm_.bulk_data(),
-    KOKKOS_LAMBDA(ShmemDataType& smdata, const stk::mesh::FastMeshIndex & edge)
+    KOKKOS_LAMBDA(
+      ShmemDataType& smdata,
+      const stk::mesh::FastMeshIndex& edge,
+      const stk::mesh::FastMeshIndex& nodeL,
+      const stk::mesh::FastMeshIndex& nodeR)
     {
-      auto& scrViews = smdata.preReqData;
-      const auto& v_coords = scrViews.get_scratch_view_2D(coordinates_);
-      const auto& v_velocity = scrViews.get_scratch_view_2D(velocityRTM_);
-      const auto& v_Gpdx = scrViews.get_scratch_view_2D(Gpdx_);
-      const auto& v_density = scrViews.get_scratch_view_1D(densityNp1_);
-      const auto& v_pressure = scrViews.get_scratch_view_1D(pressure_);
-      const auto& v_udiag = scrViews.get_scratch_view_1D(Udiag_);
-
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[nDimMax_];
+      // Populate area vector work array
       for (int d=0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(edge, d);
 
-      const DblType projTimeScale = 0.5 * (1.0 / v_udiag(nodeL) + 1.0 / v_udiag(nodeR));
-      const DblType rhoIp = 0.5 * (v_density(nodeL) + v_density(nodeR));
+      const DblType pressureL = pressure.get(nodeL, 0);
+      const DblType pressureR = pressure.get(nodeR, 0);
 
-      // Compute geometry
+      const DblType densityL = density.get(nodeL, 0);
+      const DblType densityR = density.get(nodeR, 0);
+
+      const DblType udiagL = udiag.get(nodeL, 0);
+      const DblType udiagR = udiag.get(nodeR, 0);
+
+      const DblType projTimeScale = 0.5 * (1.0/udiagL + 1.0/udiagR);
+      const DblType rhoIp = 0.5 * (densityL + densityR);
+
       DblType axdx = 0.0;
       DblType asq = 0.0;
       for (int d=0; d < ndim; ++d) {
-        const DblType dxj = v_coords(nodeR, d) - v_coords(nodeL, d);
+        const DblType dxj = coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
       }
       const DblType inv_axdx = 1.0 / axdx;
 
-      DblType tmdot = -projTimeScale * (v_pressure(nodeR) - v_pressure(nodeL)) *
-                      asq * inv_axdx;
+      DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
       for (int d = 0; d < ndim; ++d) {
-        const DblType dxj = v_coords(nodeR, d) - v_coords(nodeL, d);
+        const DblType dxj =
+          coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         // non-orthogonal correction
         const DblType kxj = av[d] - asq * inv_axdx * dxj;
-        const DblType rhoUjIp = 0.5 * (v_density(nodeR) * v_velocity(nodeR, d) +
-                                       v_density(nodeL) * v_velocity(nodeL, d));
-        const DblType ujIp = 0.5 * (v_velocity(nodeL, d) + v_velocity(nodeR, d));
-        const DblType GjIp = 0.5 * (v_Gpdx(nodeR, d) / v_udiag(nodeR) +
-                                    v_Gpdx(nodeL, d) / v_udiag(nodeL));
-
+        const DblType rhoUjIp = 0.5 * (densityR * velocity.get(nodeR, d) +
+                                       densityL * velocity.get(nodeL, d));
+        const DblType ujIp = 0.5 * (velocity.get(nodeR, d) + velocity.get(nodeL, d));
+        const DblType GjIp = 0.5 * (Gpdx.get(nodeR, d) / udiagR +
+                                    Gpdx.get(nodeL, d) / udiagL);
         tmdot += (interpTogether * rhoUjIp +
                   om_interpTogether * rhoIp * ujIp + GjIp) * av[d]
           - kxj * GjIp * nocFac;
       }
-
       tmdot /= tauScale;
       const DblType lhsfac = -asq * inv_axdx * projTimeScale / tauScale;
 
       // Left node entries
-      smdata.lhs(nodeL, nodeL) = -lhsfac;
-      smdata.lhs(nodeL, nodeR) = +lhsfac;
-      smdata.rhs(nodeL) = -tmdot;
+      smdata.lhs(0, 0) = -lhsfac;
+      smdata.lhs(0, 1) = +lhsfac;
+      smdata.rhs(0) = -tmdot;
 
       // Right node entries
-      smdata.lhs(nodeR, nodeL) = +lhsfac;
-      smdata.lhs(nodeR, nodeR) = -lhsfac;
-      smdata.rhs(nodeR) = tmdot;
-
-#ifndef KOKKOS_ENABLE_CUDA
-      apply_coeff(
-        nodesPerEntity_, smdata.ngpElemNodes, smdata.scratchIds,
-        smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
-#endif
+      smdata.lhs(1, 0) = +lhsfac;
+      smdata.lhs(1, 1) = -lhsfac;
+      smdata.rhs(1) = tmdot;
     });
 }
 

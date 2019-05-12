@@ -932,19 +932,15 @@ int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchI
     return bytes_per_thread;
 }
 
-template<typename DATAREQUESTSTYPE>
 inline
-int calc_shmem_bytes_per_thread_edge(int rhsSize, const DATAREQUESTSTYPE& dataNeeded)
+int calc_shmem_bytes_per_thread_edge(int rhsSize)
 {
   // LHS (RHS^2) + RHS
   const int matSize = rhsSize * (1 + rhsSize) * sizeof(double);
   // Scratch IDs and search permutations (will be optimized later)
   const int idSize = 2 * rhsSize * sizeof(int);
-  const int mdvSize = MultiDimViews<double>::bytes_needed(
-    dataNeeded.get_total_num_fields(),
-    count_needed_field_views(dataNeeded));
 
-  return (matSize + idSize + mdvSize);
+  return (matSize + idSize);
 }
 
 template<typename ELEMDATAREQUESTSTYPE>
