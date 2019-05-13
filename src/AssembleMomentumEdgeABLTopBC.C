@@ -43,24 +43,61 @@ namespace nalu{
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
 AssembleMomentumEdgeABLTopBC::AssembleMomentumEdgeABLTopBC(
-  Realm &realm,
-  stk::mesh::Part *part,
-  EquationSystem *eqSystem, std::vector<int>& grid_dims, 
-  std::vector<int>& horiz_bcs, double z_sample)
+  Realm& realm,
+  stk::mesh::Part* part,
+  EquationSystem* eqSystem,
+  std::vector<int>& grid_dims,
+  std::vector<int>& horiz_bcs,
+  double z_sample)
   : SolverAlgorithm(realm, part, eqSystem),
-  imax_(grid_dims[0]), jmax_(grid_dims[1]), kmax_(grid_dims[2]), 
-  xInflowWeight_(jmax_), yInflowWeight_(imax_),
-  nodeMapSamp_(imax_*jmax_), nodeMapBC_(imax_*jmax_), nodeMapM1_(imax_*jmax_),
-  nodeMapXInflow_(jmax_), nodeMapYInflow_(imax_),
-  indexMapSampGlobal_(imax_*jmax_), indexMapBC_(imax_*jmax_),
-  sampleDistrib_(1000), displ_(1000+1), 
-  horizBC_(horiz_bcs.begin(),horiz_bcs.end()), zSample_(z_sample),
-  needToInitialize_(true)
+    imax_(grid_dims[0]),
+    jmax_(grid_dims[1]),
+    kmax_(grid_dims[2]),
+    xInflowWeight_(jmax_),
+    yInflowWeight_(imax_),
+    nodeMapSamp_(imax_ * jmax_),
+    nodeMapBC_(imax_ * jmax_),
+    nodeMapM1_(imax_ * jmax_),
+    nodeMapXInflow_(jmax_),
+    nodeMapYInflow_(imax_),
+    indexMapSampGlobal_(imax_ * jmax_),
+    indexMapBC_(imax_ * jmax_),
+    sampleDistrib_(realm.bulk_data().parallel_size()),
+    displ_(realm.bulk_data().parallel_size()+1),
+    horizBC_(horiz_bcs.begin(), horiz_bcs.end()),
+    zSample_(z_sample),
+    needToInitialize_(true)
 {
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
   velocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
   bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "cont_velocity_bc");
+}
+
+AssembleMomentumEdgeABLTopBC::~AssembleMomentumEdgeABLTopBC()
+{
+  switch (horizBCType_) {
+  case 0:
+    fftw_destroy_plan(planFourier2dF_);
+    fftw_destroy_plan(planFourier2dB_);
+    break;
+
+  case 1:
+    fftw_destroy_plan(planSinx_);
+    fftw_destroy_plan(planCosx_);
+    fftw_destroy_plan(planFourieryF_);
+    fftw_destroy_plan(planFourieryB_);
+    break;
+
+  case 3:
+    fftw_destroy_plan(planSinx_);
+    fftw_destroy_plan(planCosx_);
+    fftw_destroy_plan(planSiny_);
+    fftw_destroy_plan(planCosy_);
+    break;
+  }
+
+  fftw_cleanup();
 }
 
 //--------------------------------------------------------------------------
@@ -235,7 +272,7 @@ AssembleMomentumEdgeABLTopBC::initialize()
 
   // Define fft plans.
 
-  unsigned flags=0;
+  unsigned flags=FFTW_ESTIMATE;
 
   switch (horizBCType_) {
     case 0:
@@ -269,9 +306,10 @@ AssembleMomentumEdgeABLTopBC::initialize()
       fftw_plan_r2r_1d(ny+1, work.data(), work.data(), FFTW_REDFT00, flags);
     break;
     default:
-      printf("%s\n","BC not yet implemented");
-      exit(0);
-  }
+      throw std::runtime_error(
+        "AssembleMomentumEdgeABLTopBC::initialize(): Invalid value for "
+        "horizBCType_. Must be 0, 1, or 3.");
+    }
 
   // Determine the vertical mesh distribution by sampling at the middle
   // of the ix=0 face.
@@ -370,7 +408,8 @@ AssembleMomentumEdgeABLTopBC::initialize()
       stk::mesh::Entity nodeSamp =
         bulk_data.get_entity(stk::topology::NODE_RANK,IdNodeSamp);
 
-      if (bulk_data.is_valid(nodeSamp)) {
+      if (bulk_data.is_valid(nodeSamp) &&
+          bulk_data.bucket(nodeSamp).owned()) {
         nodeMapSamp_[count] = nodeSamp;
         indexMapSamp[count] = iy*nx + ix;
         count ++;
@@ -406,7 +445,8 @@ AssembleMomentumEdgeABLTopBC::initialize()
       stk::mesh::Entity nodeM1 =
         bulk_data.get_entity(stk::topology::NODE_RANK,IdNodeM1);
 
-      if (bulk_data.is_valid(nodeBC)) {
+      if (bulk_data.is_valid(nodeBC) &&
+          bulk_data.bucket(nodeBC).owned()) {
         nodeMapBC_[ count] = nodeBC;
         nodeMapM1_[ count] = nodeM1;
         indexMapBC_[count] = iy*imax_ + ix;
@@ -550,9 +590,12 @@ AssembleMomentumEdgeABLTopBC::initialize()
                 MPI_INT, bulk_data.parallel());
 
   displ_[0] = 0;
+  size_t globalSize = 0;
   for (i=1; i<nprocs+1; ++i) { 
     displ_[i] = displ_[i-1] + sampleDistrib_[i-1];
+    globalSize += sampleDistrib_[i-1];
   }
+  indexMapSampGlobal_.resize(globalSize);
 
   MPI_Allgatherv(indexMapSamp.data(), nSamp, MPI_INT, 
                  indexMapSampGlobal_.data(), sampleDistrib_.data(), 

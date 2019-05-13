@@ -11,7 +11,9 @@
 
 #include "BuildTemplates.h"
 #include "ScratchViews.h"
+#include "utils/StkHelpers.h"
 
+#include "master_element/MasterElementFactory.h"
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>
 #include <stk_mesh/base/MetaData.hpp>
@@ -28,112 +30,79 @@ TurbKineticEnergySSTDESSrcElemKernel<AlgTraits>::
     const SolutionOptions& solnOpts,
     ElemDataRequests& dataPreReqs,
     const bool lumpedMass)
-  : Kernel(),
-    lumpedMass_(lumpedMass),
+  : lumpedMass_(lumpedMass),
     shiftedGradOp_(solnOpts.get_shifted_grad_op("velocity")),
     betaStar_(solnOpts.get_turb_model_constant(TM_betaStar)),
     tkeProdLimitRatio_(solnOpts.get_turb_model_constant(TM_tkeProdLimitRatio)),
     cDESke_(solnOpts.get_turb_model_constant(TM_cDESke)),
-    cDESkw_(solnOpts.get_turb_model_constant(TM_cDESkw)),
-    ipNodeMap_(sierra::nalu::MasterElementRepo::get_volume_master_element(
-                 AlgTraits::topo_)
-                 ->ipNodeMap())
+    cDESkw_(solnOpts.get_turb_model_constant(TM_cDESkw))
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  ScalarFieldType* tke = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "turbulent_ke");
-  tkeNp1_ = &tke->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType* sdr = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "specific_dissipation_rate");
-  sdrNp1_ = &sdr->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType* density =
-    metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  densityNp1_ = &density->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType* velocity =
-    metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-  velocityNp1_ = &(velocity->field_of_state(stk::mesh::StateNP1));
-  tvisc_ = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "turbulent_viscosity");
-  maxLengthScale_ = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "sst_max_length_scale");
-  fOneBlend_ = metaData.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "sst_f_one_blending");
-  coordinates_ = metaData.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
+  tkeNp1_ = get_field_ordinal(metaData, "turbulent_ke", stk::mesh::StateNP1);
+  sdrNp1_ = get_field_ordinal(metaData, "specific_dissipation_rate", stk::mesh::StateNP1);
+  densityNp1_ = get_field_ordinal(metaData, "density", stk::mesh::StateNP1);
+  velocityNp1_ = get_field_ordinal(metaData, "velocity", stk::mesh::StateNP1);
+  tvisc_ = get_field_ordinal(metaData, "turbulent_viscosity");
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
+  maxLengthScale_ = get_field_ordinal(metaData, "sst_max_length_scale");
+  fOneBlend_ = get_field_ordinal(metaData, "sst_f_one_blending");
+  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
-  MasterElement* meSCV =
-    sierra::nalu::MasterElementRepo::get_volume_master_element(
-      AlgTraits::topo_);
-
-  // compute shape function
-  if (lumpedMass_)
-    get_scv_shape_fn_data<AlgTraits>(
-      [&](double* ptr) { meSCV->shifted_shape_fcn(ptr); }, v_shape_function_);
-  else
-    get_scv_shape_fn_data<AlgTraits>(
-      [&](double* ptr) { meSCV->shape_fcn(ptr); }, v_shape_function_);
+  meSCV_ = MasterElementRepo::get_volume_master_element<AlgTraits>();
 
   // add master elements
-  dataPreReqs.add_cvfem_volume_me(meSCV);
+  dataPreReqs.add_cvfem_volume_me(meSCV_);
 
   // fields and data
   dataPreReqs.add_coordinates_field(
-    *coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
-  dataPreReqs.add_gathered_nodal_field(*tkeNp1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*sdrNp1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*densityNp1_, 1);
-  dataPreReqs.add_gathered_nodal_field(*velocityNp1_, AlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*tvisc_, 1);
-  dataPreReqs.add_gathered_nodal_field(*maxLengthScale_, 1);
-  dataPreReqs.add_gathered_nodal_field(*fOneBlend_, 1);
+    coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  dataPreReqs.add_gathered_nodal_field(tkeNp1_, 1);
+  dataPreReqs.add_gathered_nodal_field(sdrNp1_, 1);
+  dataPreReqs.add_gathered_nodal_field(densityNp1_, 1);
+  dataPreReqs.add_gathered_nodal_field(velocityNp1_, AlgTraits::nDim_);
+  dataPreReqs.add_gathered_nodal_field(tvisc_, 1);
+  dataPreReqs.add_gathered_nodal_field(maxLengthScale_, 1);
+  dataPreReqs.add_gathered_nodal_field(fOneBlend_, 1);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
   if (shiftedGradOp_)
     dataPreReqs.add_master_element_call(
       SCV_SHIFTED_GRAD_OP, CURRENT_COORDINATES);
   else
     dataPreReqs.add_master_element_call(SCV_GRAD_OP, CURRENT_COORDINATES);
-}
 
-template <typename AlgTraits>
-TurbKineticEnergySSTDESSrcElemKernel<
-  AlgTraits>::~TurbKineticEnergySSTDESSrcElemKernel()
-{
+  if (lumpedMass_)
+    dataPreReqs.add_master_element_call(SCV_SHIFTED_SHAPE_FCN, CURRENT_COORDINATES);
+  else
+    dataPreReqs.add_master_element_call(SCV_SHAPE_FCN, CURRENT_COORDINATES);
 }
 
 template <typename AlgTraits>
 void
 TurbKineticEnergySSTDESSrcElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType**>& lhs,
-  SharedMemView<DoubleType*>& rhs,
-  ScratchViews<DoubleType>& scratchViews)
+  SharedMemView<DoubleType**, DeviceShmem>& lhs,
+  SharedMemView<DoubleType*, DeviceShmem>& rhs,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
   NALU_ALIGNED DoubleType w_dudx[AlgTraits::nDim_][AlgTraits::nDim_];
 
-  SharedMemView<DoubleType*>& v_tkeNp1 =
-    scratchViews.get_scratch_view_1D(*tkeNp1_);
-  SharedMemView<DoubleType*>& v_sdrNp1 =
-    scratchViews.get_scratch_view_1D(*sdrNp1_);
-  SharedMemView<DoubleType*>& v_densityNp1 =
-    scratchViews.get_scratch_view_1D(*densityNp1_);
-  SharedMemView<DoubleType**>& v_velocityNp1 =
-    scratchViews.get_scratch_view_2D(*velocityNp1_);
-  SharedMemView<DoubleType*>& v_tvisc =
-    scratchViews.get_scratch_view_1D(*tvisc_);
-  SharedMemView<DoubleType*>& v_maxLengthScale =
-    scratchViews.get_scratch_view_1D(*maxLengthScale_);
-  SharedMemView<DoubleType*>& v_fOneBlend =
-    scratchViews.get_scratch_view_1D(*fOneBlend_);
-  SharedMemView<DoubleType***>& v_dndx =
-    shiftedGradOp_
-      ? scratchViews.get_me_views(CURRENT_COORDINATES).dndx_scv_shifted
-      : scratchViews.get_me_views(CURRENT_COORDINATES).dndx_scv;
-  SharedMemView<DoubleType*>& v_scv_volume =
-    scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
+  const auto& v_tkeNp1 = scratchViews.get_scratch_view_1D(tkeNp1_);
+  const auto& v_sdrNp1 = scratchViews.get_scratch_view_1D(sdrNp1_);
+  const auto& v_densityNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
+  const auto& v_velocityNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
+  const auto& v_tvisc = scratchViews.get_scratch_view_1D(tvisc_);
+  const auto& v_maxLengthScale = scratchViews.get_scratch_view_1D(maxLengthScale_);
+  const auto& v_fOneBlend = scratchViews.get_scratch_view_1D(fOneBlend_);
+
+  const auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
+  const auto& v_dndx = shiftedGradOp_ ? meViews.dndx_scv_shifted : meViews.dndx_scv;
+  const auto& v_scv_volume = meViews.scv_volume;
+  const auto& v_shape_function = lumpedMass_ ? meViews.scv_shifted_shape_fcn : meViews.scv_shape_fcn;
+  const auto* ipNodeMap = meSCV_->ipNodeMap();
 
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
 
     // nearest node to ip
-    const int nearestNode = ipNodeMap_[ip];
+    const int nearestNode = ipNodeMap[ip];
 
     // save off scvol
     const DoubleType scV = v_scv_volume(ip);
@@ -150,7 +119,7 @@ TurbKineticEnergySSTDESSrcElemKernel<AlgTraits>::execute(
 
     for (int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic) {
 
-      const DoubleType r = v_shape_function_(ip, ic);
+      const DoubleType r = v_shape_function(ip, ic);
 
       rho += r * v_densityNp1(ic);
       tke += r * v_tkeNp1(ic);
@@ -194,12 +163,12 @@ TurbKineticEnergySSTDESSrcElemKernel<AlgTraits>::execute(
     // assemble RHS and LHS
     rhs(nearestNode) += (Pk - Dk) * scV;
     for (int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic) {
-      lhs(nearestNode, ic) += v_shape_function_(ip, ic) * tkeFac * scV;
+      lhs(nearestNode, ic) += v_shape_function(ip, ic) * tkeFac * scV;
     }
   }
 }
 
-INSTANTIATE_KERNEL(TurbKineticEnergySSTDESSrcElemKernel);
+INSTANTIATE_KERNEL(TurbKineticEnergySSTDESSrcElemKernel)
 
 } // namespace nalu
 } // namespace sierra

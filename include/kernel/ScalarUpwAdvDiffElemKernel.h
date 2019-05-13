@@ -28,7 +28,7 @@ class EquationSystem;
 /** CVFEM scalar upwind advection/diffusion kernel
  */
 template<typename AlgTraits>
-class ScalarUpwAdvDiffElemKernel: public Kernel
+class ScalarUpwAdvDiffElemKernel: public NGPKernel<ScalarUpwAdvDiffElemKernel<AlgTraits>>
 {
 public:
   ScalarUpwAdvDiffElemKernel(
@@ -40,41 +40,30 @@ public:
     ScalarFieldType*,
     ElemDataRequests&);
 
-  virtual ~ScalarUpwAdvDiffElemKernel();
+  KOKKOS_FUNCTION ScalarUpwAdvDiffElemKernel() = default;
 
-  virtual void setup(const TimeIntegrator&);
+  KOKKOS_FUNCTION virtual ~ScalarUpwAdvDiffElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve
    */
   using Kernel::execute;
-  virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
-
-  virtual DoubleType van_leer(
-    const DoubleType &dqm,
-    const DoubleType &dqp);
+  KOKKOS_FUNCTION virtual void execute(
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  ScalarUpwAdvDiffElemKernel() = delete;
+  KOKKOS_FUNCTION
+  DoubleType van_leer(const DoubleType &dqm, const DoubleType &dqp);
 
-  const SolutionOptions& solnOpts_;
-
-  ScalarFieldType *scalarQ_{nullptr};
-  VectorFieldType *Gjq_{nullptr};
-  ScalarFieldType *diffFluxCoeff_{nullptr};
-  VectorFieldType *velocityRTM_{nullptr};
-  ScalarFieldType *density_{nullptr};
-  VectorFieldType *coordinates_{nullptr};
-  GenericFieldType *massFlowRate_{nullptr};
-
-  /// Left right node indicators
-  const int* lrscv_;
-
-  /// Name of the primitive variable (for upwind options lookup in solution options)
-  const std::string dofName_;
+  unsigned scalarQ_ {stk::mesh::InvalidOrdinal};
+  unsigned Gjq_ {stk::mesh::InvalidOrdinal};
+  unsigned diffFluxCoeff_ {stk::mesh::InvalidOrdinal};
+  unsigned velocityRTM_ {stk::mesh::InvalidOrdinal};
+  unsigned density_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
+  unsigned massFlowRate_ {stk::mesh::InvalidOrdinal};
 
   double alpha_;
   double alphaUpw_;
@@ -83,14 +72,13 @@ private:
   double om_alpha_;
   double om_alphaUpw_;
   const bool shiftedGradOp_;
+  const bool skewSymmetric_;
   const double small_{1.0e-16};
 
-  /// Peclet function
+  //! Device pointer to the Peclet function
   PecletFunction<DoubleType>* pecletFunction_{nullptr};
 
-  /// Shape functions
-  AlignedViewType<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]> v_shape_function_ { "v_shape_func" };
-  AlignedViewType<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]> v_adv_shape_function_{"v_adv_shape_function"};
+  MasterElement* meSCS_{nullptr};
 };
 
 }  // nalu

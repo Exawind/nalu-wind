@@ -8,6 +8,7 @@
 #include "user_functions/SteadyThermal3dContactSrcElemKernel.h"
 #include "AlgTraits.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 #include "SolutionOptions.h"
 #include "TimeIntegrator.h"
 
@@ -90,7 +91,7 @@ SteadyThermal3dContactSrcElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(SteadyThermal3dContactSrcElemKernel);
+INSTANTIATE_KERNEL(SteadyThermal3dContactSrcElemKernel)
 
 }  // nalu
 }  // sierra

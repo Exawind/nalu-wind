@@ -33,8 +33,8 @@ namespace nalu {
 
   std::string super_element_part_name(std::string base_name);
 
-  std::string super_subset_part_name(const std::string& base_name, int numElemNodes, int numSideNodes);
-  std::string super_subset_part_name(const std::string& base_name);
+  std::string super_subset_part_name(std::string base_name, int numElemNodes, int numSideNodes);
+  std::string super_subset_part_name(std::string base_name);
 
   stk::mesh::Part* super_elem_part(const stk::mesh::Part& part);
 
@@ -65,6 +65,8 @@ namespace nalu {
   stk::mesh::PartVector append_super_elems_to_part_vector(stk::mesh::PartVector parts);
 
   size_t count_entities(const stk::mesh::BucketVector& buckets);
+
+  stk::topology get_promoted_elem_topo(int dim, int order);
 
 } // namespace nalu
 } // namespace Sierra

@@ -23,6 +23,7 @@
 #include "TpetraLinearSystem.h"
 #include "SimdInterface.h"
 
+#include <master_element/MasterElementFactory.h>
 #include <string>
 
 sierra::nalu::TpetraLinearSystem*
@@ -124,7 +125,7 @@ public:
   virtual void execute(
     sierra::nalu::SharedMemView<DoubleType**> &lhs,
     sierra::nalu::SharedMemView<DoubleType*> &rhs,
-    sierra::nalu::ScratchViews<DoubleType> &scratchViews)
+    sierra::nalu::ScratchViews<DoubleType> & /* scratchViews */)
   {
     EXPECT_EQ(numNodesPerElem*numNodesPerElem, lhs.size());
     EXPECT_EQ(numNodesPerElem, rhs.size());

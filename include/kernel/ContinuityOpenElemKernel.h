@@ -55,13 +55,14 @@ public:
 private:
   ContinuityOpenElemKernel() = delete;
 
-  VectorFieldType *velocityRTM_{nullptr};
-  VectorFieldType *Gpdx_{nullptr};
-  VectorFieldType *coordinates_{nullptr};
-  ScalarFieldType *pressure_{nullptr};
-  ScalarFieldType *pressureBc_{nullptr};
-  ScalarFieldType *density_{nullptr};
-  GenericFieldType *exposedAreaVec_{nullptr};
+  unsigned velocityRTM_ {stk::mesh::InvalidOrdinal};
+  unsigned Gpdx_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
+  unsigned pressure_ {stk::mesh::InvalidOrdinal};
+  unsigned pressureBc_ {stk::mesh::InvalidOrdinal};
+  unsigned density_ {stk::mesh::InvalidOrdinal};
+  unsigned Udiag_ {stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
 
   double projTimeScale_{1.0};
   const double mdotCorrection_{0.0};

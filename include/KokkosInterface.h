@@ -22,7 +22,7 @@
 #define POINTER_RESTRICT
 #endif
 
-#ifdef KOKKOS_HAVE_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
 #define NONCONST_LAMBDA [&]__host__
 #else
 #define NONCONST_LAMBDA [&]
@@ -31,7 +31,7 @@
 namespace sierra {
 namespace nalu {
 
-#ifdef KOKKOS_HAVE_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
    typedef Kokkos::CudaUVMSpace::memory_space    MemSpace;
 #elif defined(KOKKOS_HAVE_OPENMP)
    typedef Kokkos::OpenMP       MemSpace;
@@ -101,19 +101,21 @@ SharedMemView<T***,TeamShmemType> get_shmem_view_3D(const TEAMHANDLETYPE& team, 
   return Kokkos::subview(SharedMemView<T****,TeamShmemType>(team.team_scratch(1), team.team_size(), len1, len2, len3), team.team_rank(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
 }
 
+#ifndef KOKKOS_ENABLE_CUDA
 template<typename T, typename TEAMHANDLETYPE, typename TeamShmemType=HostShmem>
 KOKKOS_FUNCTION
-SharedMemView<T***,TeamShmemType> get_shmem_view_4D(const TEAMHANDLETYPE& team, size_t len1, size_t len2, size_t len3, size_t len4)
+SharedMemView<T****,TeamShmemType> get_shmem_view_4D(const TEAMHANDLETYPE& team, size_t len1, size_t len2, size_t len3, size_t len4)
 {
   return Kokkos::subview(SharedMemView<T*****,TeamShmemType>(team.team_scratch(1), team.team_size(), len1, len2, len3, len4), team.team_rank(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
 }
 
 template<typename T, typename TEAMHANDLETYPE, typename TeamShmemType=HostShmem>
 KOKKOS_FUNCTION
-SharedMemView<T***,TeamShmemType> get_shmem_view_5D(const TEAMHANDLETYPE& team, size_t len1, size_t len2, size_t len3, size_t len4, size_t len5)
+SharedMemView<T*****,TeamShmemType> get_shmem_view_5D(const TEAMHANDLETYPE& team, size_t len1, size_t len2, size_t len3, size_t len4, size_t len5)
 {
   return Kokkos::subview(SharedMemView<T******,TeamShmemType>(team.team_scratch(1), team.team_size(), len1, len2, len3, len4, len5), team.team_rank(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
 }
+#endif
 
 template<typename SizeType, class Function>
 void kokkos_parallel_for(const std::string& debuggingName, SizeType n, Function loop_body)

@@ -148,6 +148,8 @@ class mapping_object_class():
             'restart_time': self.set_restart_time,
             # Inflow/outflow boundary condition
             'inflow_outflow': self.set_inflow_outflow,
+            # The planes used for sampling
+            'plane_sampling': self.set_sampling_planes,
         }
 
     def map_all(self):
@@ -238,7 +240,7 @@ class mapping_object_class():
         else:
 
             # Delete the mesh entry from the pre-processing file
-            del(self.yaml_preprocess['nalu_abl_mesh'])
+            # del(self.yaml_preprocess['nalu_abl_mesh'])
 
             print('Mesh will not be generated')
 
@@ -266,13 +268,13 @@ class mapping_object_class():
     def set_boundary_data_sampling(self):
         '''
         Function to set the boundary data sampling
-        
+
         This is used to create a mesh for the boundaries, and sample the
         boundary data from a precursor simulation to be used as a boundary
         condition for wind farm simulations.
         '''
         # The initial mesh file
-        
+
         # The file to be written
         file_name = self.yaml_setup['boundary_data_sampling']['boundary_data_file']
         # The list of boundaries
@@ -282,10 +284,10 @@ class mapping_object_class():
         tasks = self.yaml_preprocess['nalu_preprocess']['tasks']
 
         # Add the mesh input
-        if self.yaml_setup['boundary_data_sampling']['input_mesh']: 
+        if self.yaml_setup['boundary_data_sampling']['input_mesh']:
             self.yaml_preprocess['nalu_preprocess']['input_db'] = \
                 self.yaml_setup['boundary_data_sampling']['input_mesh']
-    
+
         # Create the task
         if 'create_bdy_io_mesh' not in tasks:
             tasks.append('create_bdy_io_mesh')
@@ -308,12 +310,12 @@ class mapping_object_class():
         # Replace the list
         self.yaml_input['transfers'] = new_transfers
 
-        # Specify the detail in the ioRealm 
+        # Specify the detail in the ioRealm
         # Notice this is the second realm (index=1)
         self.yaml_input['realms'][1]['mesh'] = file_name
 
-        # Change the name of the boundaries  
-        specs = self.yaml_input['realms'][1]['field_registration']['specifications'] 
+        # Change the name of the boundaries
+        specs = self.yaml_input['realms'][1]['field_registration']['specifications']
         for field in specs:
             field['target_name'] = list_of_boundaries
 
@@ -323,7 +325,7 @@ class mapping_object_class():
 
     def set_inflow_outflow(self):
         '''
-        Function to set the boundary conditions        
+        Function to set the boundary conditions
         '''
 
         # The list of inflow/outflow BC
@@ -387,8 +389,8 @@ class mapping_object_class():
                   spec['target_name'] = self.yaml_setup['inflow_outflow']['inflow']
         except:
             print('input_variables_from_file_restoration_time not set')
-                    
-            
+
+
     def set_velocity(self):
         '''
         Function to setup the velocity entries in the file
@@ -562,8 +564,8 @@ class mapping_object_class():
             self.yaml_input['realms'][0]['actuator']['simStart'] = 'init'
 
         # Start time for the turbines
-        self.yaml_input['realms'][0]['actuator']['t_start'] = \
-            self.yaml_setup['start_time']
+#        self.yaml_input['realms'][0]['actuator']['t_start'] = \
+#            self.yaml_setup['start_time']
 
         # Maximum time
         self.yaml_input['realms'][0]['actuator']['t_max'] = \
@@ -773,6 +775,64 @@ class mapping_object_class():
         '''
         self.yaml_input['realms'][0]['output']['output_frequency'] = \
             self.yaml_setup['output_frequency']
+
+    def set_sampling_planes(self):
+        '''
+        Set all the sampling planes
+        '''
+        # Loop through all the planes
+        for plane in self.yaml_setup['plane_sampling']:
+            
+            # The realm name
+            realm=plane['name'] + 'Realm'
+
+            # The target name
+            parts=plane['parts']
+
+            # This is a realm for this plane
+            plane_dict = {
+              'name': realm,
+              'mesh': plane['name'] + '.exo',
+              'type': 'input_output',
+              'automatic_decomposition_type': 'rcb',
+              'field_registration': 
+                  {'specifications': 
+                      [ {'field_name': 'velocity',
+                         'target_name': parts,
+                         'field_size': 3,
+                         'field_type': 'node_rank', 
+                        }
+                      ],
+                  },
+              'output':
+                  {'output_data_base_name': 'plane_sampling/'+ plane['name'] + '.exo',
+                   'output_frequency': 1,
+                   'output_node_set': 'no',
+                   'output_variables': ['velocity'],
+                  }
+              }
+            
+            # Append the realm for this plane
+            self.yaml_input['realms'].append(plane_dict)
+
+            for part in parts:
+                #~ print (part)
+                # The dictionary to specify that transfers will happen
+                transfer_dict = {
+                    'name': part,
+                    'type': 'geometric',
+                    'realm_pair': [self.yaml_input['realms'][0]['name'], realm],
+                    'mesh_part_pair': ['fluid', part],  
+                    'objective': 'input_output',
+                    'transfer_variables': ['velocity', 'velocity']
+                    }
+    
+                # Append the transfer for this plane
+                self.yaml_input['transfers'].append(transfer_dict)
+            
+
+
+
 
     @staticmethod
     def open_yaml_file(file_input):

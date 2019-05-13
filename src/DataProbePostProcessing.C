@@ -88,7 +88,8 @@ DataProbePostProcessing::DataProbePostProcessing(
     searchExpansionFactor_(1.5),
     probeType_(DataProbeSampleType::STEPCOUNT),
     previousTime_(0.0),
-    exoName_("data_probes.exo")
+    exoName_("data_probes.exo"),
+    precisionvar_(8)
 {
   // load the data
   load(node);
@@ -626,7 +627,7 @@ DataProbePostProcessing::create_transfer()
 //--------------------------------------------------------------------------
 void
 DataProbePostProcessing::review(
-  const DataProbeInfo *probeInfo)
+  const DataProbeInfo * /* probeInfo */)
 {
   // may or may not want this
 }
@@ -733,7 +734,7 @@ DataProbePostProcessing::provide_output_txt(
             double * theCoord = (double*)stk::mesh::field_data(*coordinates, node );
             
             // always output time and coordinates
-            myfile << std::left << std::setw(w_) << currentTime << std::setw(w_);
+            myfile << std::left << std::setw(w_) << std::setprecision(precisionvar_) << currentTime << std::setw(w_);
             for ( int jj = 0; jj < nDim; ++jj ) {
               myfile << theCoord[jj] << std::setw(w_);
             }

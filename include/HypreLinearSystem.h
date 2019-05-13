@@ -113,6 +113,16 @@ public:
       const char * trace_tag
   );
 
+  virtual void sumInto(
+    unsigned numEntities,
+    const ngp::Mesh::ConnectedNodes& entities,
+    const SharedMemView<const double*> & rhs,
+    const SharedMemView<const double**> & lhs,
+    const SharedMemView<int*> & localIds,
+    const SharedMemView<int*> & sortPermutation,
+    const char * trace_tag
+  );
+
   /** Update coefficients of a particular row(s) in the linear system
    *
    *  The core method of this class, it updates the matrix and RHS based on the
@@ -173,9 +183,11 @@ public:
    *  proceed.
    */
   virtual void resetRows(
-    std::vector<stk::mesh::Entity>,
+    const std::vector<stk::mesh::Entity>&,
     const unsigned,
-    const unsigned)
+    const unsigned,
+    const double,
+    const double)
   {
     checkSkippedRows_ = false;
   }
@@ -196,8 +208,8 @@ public:
    */
   virtual void loadComplete();
 
-  virtual void writeToFile(const char * filename, bool useOwned=true) {}
-  virtual void writeSolutionToFile(const char * filename, bool useOwned=true) {}
+  virtual void writeToFile(const char * /* filename */, bool /* useOwned */ =true) {}
+  virtual void writeSolutionToFile(const char * /* filename */, bool /* useOwned */ =true) {}
 
 protected:
   /** Prepare the instance for system construction

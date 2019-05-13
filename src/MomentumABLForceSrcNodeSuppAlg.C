@@ -25,7 +25,7 @@ MomentumABLForceSrcNodeSuppAlg::MomentumABLForceSrcNodeSuppAlg(
 
 void
 MomentumABLForceSrcNodeSuppAlg::node_execute(
-  double* lhs, double* rhs, stk::mesh::Entity node)
+  double*  /* lhs */, double* rhs, stk::mesh::Entity node)
 {
   const double dualVol = *stk::mesh::field_data(*dualNodalVolume_, node);
   const double* pt = stk::mesh::field_data(*coords_, node);

@@ -171,7 +171,28 @@ public:
   virtual void manage_projected_nodal_gradient(
      EquationSystems& eqSystems);
    virtual void compute_projected_nodal_gradient();
- 
+
+  virtual void save_diagonal_term(
+    const std::vector<stk::mesh::Entity>&,
+    const std::vector<int>&,
+    const std::vector<double>&
+  );
+
+  virtual void save_diagonal_term(
+    unsigned,
+    const stk::mesh::Entity*,
+    const SharedMemView<const double**>&
+  );
+
+  virtual void save_diagonal_term(
+    unsigned,
+    const ngp::Mesh::ConnectedNodes&,
+    const SharedMemView<const double**>&
+  );
+
+  virtual void assemble_and_solve(
+    stk::mesh::FieldBase *deltaSolution);
+
   const bool managePNG_;
 
   VectorFieldType *velocity_;
@@ -183,6 +204,7 @@ public:
   ScalarFieldType *visc_;
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
+  ScalarFieldType* Udiag_{nullptr};
   
   AssembleNodalGradUAlgorithmDriver *assembleNodalGradAlgDriver_;
   AlgorithmDriver *diffFluxCoeffAlgDriver_;
@@ -262,6 +284,8 @@ public:
   virtual void manage_projected_nodal_gradient(
     EquationSystems& eqSystems);
   virtual void compute_projected_nodal_gradient();
+
+  virtual void create_constraint_algorithm(stk::mesh::FieldBase*);
   
   const bool elementContinuityEqs_;
   const bool managePNG_;

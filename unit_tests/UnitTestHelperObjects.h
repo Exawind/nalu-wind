@@ -7,6 +7,7 @@
 #include "AssembleElemSolverAlgorithm.h"
 #include "AssembleFaceElemSolverAlgorithm.h"
 #include "EquationSystem.h"
+#include "kernel/Kernel.h"
 
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_topology/topology.hpp>
@@ -27,17 +28,43 @@ struct HelperObjects {
     realm.metaData_ = &bulk.mesh_meta_data();
     realm.bulkData_ = &bulk;
     eqSystem.linsys_ = linsys;
-    assembleElemSolverAlg = new sierra::nalu::AssembleElemSolverAlgorithm(realm, part, &eqSystem, topo.rank(), topo.num_nodes(), false);
+    assembleElemSolverAlg = new sierra::nalu::AssembleElemSolverAlgorithm(realm, part, &eqSystem, topo.rank(), topo.num_nodes());
   }
 
-  ~HelperObjects()
+  virtual ~HelperObjects()
   {
-    assembleElemSolverAlg->activeKernels_.clear();
     delete assembleElemSolverAlg;
     realm.metaData_ = nullptr;
     realm.bulkData_ = nullptr;
 
     delete naluObj;
+  }
+
+  virtual void execute()
+  {
+    assembleElemSolverAlg->execute();
+    for (auto kern: assembleElemSolverAlg->activeKernels_)
+      kern->free_on_device();
+    assembleElemSolverAlg->activeKernels_.clear();
+  }
+
+  void print_lhs_and_rhs() const
+  {
+    auto oldPrec = std::cerr.precision();
+    std::cerr.precision(14);
+    for(unsigned i=0; i<linsys->lhs_.extent(0); ++i) {
+      std::cerr<<"{";
+      for(unsigned j=0; j<linsys->lhs_.extent(1); ++j) {
+        std::cerr<< linsys->lhs_(i,j)<<", ";
+      }
+      std::cerr<<"}"<<std::endl;
+    }
+    std::cerr<<"rhs: {";
+    for(unsigned i=0; i<linsys->lhs_.extent(0); ++i) {
+      std::cerr<< linsys->rhs_(i)<<", ";
+    }
+    std::cerr<<"}"<<std::endl;
+    std::cerr.precision(oldPrec);
   }
 
   YAML::Node yamlNode;
@@ -55,10 +82,20 @@ struct FaceElemHelperObjects : HelperObjects {
   FaceElemHelperObjects(stk::mesh::BulkData& bulk, stk::topology faceTopo, stk::topology elemTopo, int numDof, stk::mesh::Part* part)
   : HelperObjects(bulk, elemTopo, numDof, part)
   {
-    assembleFaceElemSolverAlg = new sierra::nalu::AssembleFaceElemSolverAlgorithm(realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes(), false);
+    assembleFaceElemSolverAlg = new sierra::nalu::AssembleFaceElemSolverAlgorithm(realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes());
   }
 
-  ~FaceElemHelperObjects() {    delete assembleFaceElemSolverAlg;
+  virtual ~FaceElemHelperObjects()
+  {
+    delete assembleFaceElemSolverAlg;
+  }
+
+  virtual void execute() override
+  {
+    assembleFaceElemSolverAlg->execute();
+    for (auto kern: assembleFaceElemSolverAlg->activeKernels_)
+      kern->free_on_device();
+    assembleFaceElemSolverAlg->activeKernels_.clear();
   }
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;

@@ -104,7 +104,7 @@ struct HelperObjectsABLWallFunction {
   const double gravity_;
 };
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 /*
   This test calls ABLWallFrictionVelocity::compute_utau() for three cases: neutral, unstable,

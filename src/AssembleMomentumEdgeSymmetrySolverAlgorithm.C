@@ -15,6 +15,7 @@
 #include <SolutionOptions.h>
 
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -74,6 +75,8 @@ AssembleMomentumEdgeSymmetrySolverAlgorithm::execute()
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
   const int nDim = meta_data.spatial_dimension();
+  const std::string dofName = "velocity";
+  const double relaxFacU = realm_.solutionOptions_->get_relaxation_factor(dofName);
 
   // space for dui/dxj; the modified gradient with NOC
   std::vector<double> duidxj(nDim*nDim);
@@ -271,7 +274,7 @@ AssembleMomentumEdgeSymmetrySolverAlgorithm::execute()
           p_rhs[indexR] -= diffFlux;
           double lhsFac = -viscBip*asq*inv_axdx*nx[i]*nx[i];
           p_lhs[rRiL_i] -= lhsFac;
-          p_lhs[rRiR_i] += lhsFac;
+          p_lhs[rRiR_i] += lhsFac / relaxFacU;
 
           const double axi = areaVec[faceOffSet+i];
           const double nxnx = nx[i]*nx[i];
@@ -287,7 +290,7 @@ AssembleMomentumEdgeSymmetrySolverAlgorithm::execute()
             const int rRiR_j = rowR+colR;
 
             p_lhs[rRiL_j] -= lhsFac;
-            p_lhs[rRiR_j] += lhsFac;
+            p_lhs[rRiR_j] += lhsFac / relaxFacU;
 
             if ( i == j ) {
               // nothing
@@ -296,15 +299,15 @@ AssembleMomentumEdgeSymmetrySolverAlgorithm::execute()
 
               lhsFac = -viscBip*asq*inv_axdx*nx[i]*nx[j];
               p_lhs[rRiL_j] -= lhsFac;
-              p_lhs[rRiR_j] += lhsFac;
+              p_lhs[rRiR_j] += lhsFac / relaxFacU;
 
               lhsFac = -viscBip*axj*axj*nx[i]*nx[j];
               p_lhs[rRiL_j] -= lhsFac;
-              p_lhs[rRiR_j] += lhsFac;
+              p_lhs[rRiR_j] += lhsFac / relaxFacU;
 
               lhsFac = -viscBip*axj*axi*nx[i]*nx[j];
               p_lhs[rRiL_i] -= lhsFac;
-              p_lhs[rRiR_i] += lhsFac;
+              p_lhs[rRiR_i] += lhsFac / relaxFacU;
             }
           }
         }

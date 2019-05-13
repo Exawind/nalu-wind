@@ -15,8 +15,10 @@
 #include <LinearSystem.h>
 #include <PecletFunction.h>
 #include <Realm.h>
+#include <SolutionOptions.h>
 #include <SupplementalAlgorithm.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -120,6 +122,8 @@ AssembleScalarElemSolverAlgorithm::execute()
   const bool useShiftedGradOp = realm_.get_shifted_grad_op(dofName);
   const bool skewSymmetric = realm_.get_skew_symmetric(dofName);
 
+  const double relaxFac = realm_.solutionOptions_->get_relaxation_factor(dofName);
+
   // one minus flavor..
   const double om_alpha = 1.0-alpha;
   const double om_alphaUpw = 1.0-alphaUpw;
@@ -180,7 +184,7 @@ AssembleScalarElemSolverAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerElement = meSCS->nodesPerElement_;
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
     const int *lrscv = meSCS->adjacentNodes();
 
     // resize some things; matrix related
@@ -426,6 +430,11 @@ AssembleScalarElemSolverAlgorithm::execute()
       // call supplemental
       for ( size_t i = 0; i < supplementalAlgSize; ++i )
         supplementalAlg_[i]->elem_execute( &lhs[0], &rhs[0], elem, meSCS, meSCV);
+
+      // relax the diagonal term before applying to the matrix
+      for (int ir=0; ir < nodesPerElement; ir++) {
+        p_lhs[ir * (nodesPerElement + 1)] /= relaxFac;
+      }
 
       apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
 

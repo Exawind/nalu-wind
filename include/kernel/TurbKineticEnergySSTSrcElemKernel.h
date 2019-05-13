@@ -23,7 +23,7 @@ class MasterElement;
 class ElemDataRequests;
 
 template <typename AlgTraits>
-class TurbKineticEnergySSTSrcElemKernel : public Kernel
+class TurbKineticEnergySSTSrcElemKernel : public NGPKernel<TurbKineticEnergySSTSrcElemKernel<AlgTraits>>
 {
 public:
   TurbKineticEnergySSTSrcElemKernel(
@@ -32,37 +32,35 @@ public:
     ElemDataRequests&,
     const bool);
 
-  virtual ~TurbKineticEnergySSTSrcElemKernel();
+  KOKKOS_FUNCTION TurbKineticEnergySSTSrcElemKernel() = default;
+
+  KOKKOS_FUNCTION virtual ~TurbKineticEnergySSTSrcElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  TurbKineticEnergySSTSrcElemKernel() = delete;
-
-  ScalarFieldType* tkeNp1_{nullptr};
-  ScalarFieldType* sdrNp1_{nullptr};
-  ScalarFieldType* densityNp1_{nullptr};
-  VectorFieldType* velocityNp1_{nullptr};
-  ScalarFieldType* tvisc_{nullptr};
-  VectorFieldType* coordinates_{nullptr};
+  unsigned  tkeNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  sdrNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  densityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  velocityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  tvisc_ {stk::mesh::InvalidOrdinal};
+  unsigned  coordinates_ {stk::mesh::InvalidOrdinal};
 
   const bool lumpedMass_;
   const bool shiftedGradOp_;
   const double betaStar_;
   double tkeProdLimitRatio_{0.0};
 
-  const int* ipNodeMap_;
-
-  // scratch space
-  AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]>
-    v_shape_function_{"v_shape_function"};
+  MasterElement* meSCV_{nullptr};
 };
 
 } // namespace nalu

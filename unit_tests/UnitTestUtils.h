@@ -17,6 +17,7 @@
 
 #include <master_element/Hex8CVFEM.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 #include <gtest/gtest.h>
 
@@ -143,17 +144,19 @@ protected:
       dpdx(&meta.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx", 3/*num-states*/)), 
       density(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "density", 3/*num-states*/)), 
       viscosity(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity")),
-      pressure(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure"))
+      pressure(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure")),
+      udiag(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "momentum_diag"))
     {
       double one = 1.0;
       sierra::nalu::HexSCS hex8SCS;
-      stk::mesh::put_field_on_mesh(*massFlowRate, meta.universal_part(), hex8SCS.numIntPoints_, &one);
+      stk::mesh::put_field_on_mesh(*massFlowRate, meta.universal_part(), hex8SCS.num_integration_points(), &one);
       stk::mesh::put_field_on_mesh(*Gju, meta.universal_part(), 3, &one);
       stk::mesh::put_field_on_mesh(*velocity, meta.universal_part(), 3, &one);
       stk::mesh::put_field_on_mesh(*dpdx, meta.universal_part(), 3, &one);
       stk::mesh::put_field_on_mesh(*density, meta.universal_part(), 1, &one);
       stk::mesh::put_field_on_mesh(*viscosity, meta.universal_part(), 1, &one);
       stk::mesh::put_field_on_mesh(*pressure, meta.universal_part(), 1, &one);
+      stk::mesh::put_field_on_mesh(*udiag, meta.universal_part(), 1, &one);
     }
 
     GenericFieldType* massFlowRate;
@@ -163,6 +166,7 @@ protected:
     ScalarFieldType* density;
     ScalarFieldType* viscosity;
     ScalarFieldType* pressure;
+    ScalarFieldType* udiag;
 };
 
 class Hex8ElementWithBCFields : public ::testing::Test
@@ -201,9 +205,9 @@ class Hex8ElementWithBCFields : public ::testing::Test
     stk::mesh::put_field_on_mesh(specificHeat, meta.universal_part(), 1, nullptr);    
     
     const sierra::nalu::MasterElement* meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(stk::topology::QUAD_4);
-    stk::mesh::put_field_on_mesh(exposedAreaVec, meta.universal_part(), 3*meFC->numIntPoints_, oneVecTwelve);
-    stk::mesh::put_field_on_mesh(wallFrictionVelocityBip, meta.universal_part(), meFC->numIntPoints_, nullptr);
-    stk::mesh::put_field_on_mesh(wallNormalDistanceBip, meta.universal_part(), meFC->numIntPoints_, nullptr);
+    stk::mesh::put_field_on_mesh(exposedAreaVec, meta.universal_part(), 3*meFC->num_integration_points(), oneVecTwelve);
+    stk::mesh::put_field_on_mesh(wallFrictionVelocityBip, meta.universal_part(), meFC->num_integration_points(), nullptr);
+    stk::mesh::put_field_on_mesh(wallNormalDistanceBip, meta.universal_part(), meFC->num_integration_points(), nullptr);
     
     stk::mesh::put_field_on_mesh(bcVelocityOpen, meta.universal_part(), 3, oneVecThree);
     stk::mesh::put_field_on_mesh(openMdot, meta.universal_part(), 4, oneVecFour);
@@ -275,7 +279,7 @@ class ABLWallFunctionHex8ElementWithBCFields : public Hex8ElementWithBCFields
 
   // Assign some values to the boundary integration point fields
   const sierra::nalu::MasterElement* meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(stk::topology::QUAD_4);
-  const int numScsBip = meFC->numIntPoints_;
+  const int numScsBip = meFC->num_integration_points();
   stk::mesh::BucketVector const& face_buckets =
     bulk.get_buckets( meta.side_rank(), meta.universal_part() );
   for ( stk::mesh::BucketVector::const_iterator ib = face_buckets.begin();

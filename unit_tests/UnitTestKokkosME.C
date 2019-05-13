@@ -9,6 +9,7 @@
 #include "UnitTestKokkosME.h"
 #include "UnitTestKokkosMEGold.h"
 
+#include <master_element/MasterElementFactory.h>
 void check_that_values_match(const sierra::nalu::SharedMemView<DoubleType*>& values,
                              const double* oldValues)
 {
@@ -118,7 +119,7 @@ void compare_old_scs_shifted_grad_op( const sierra::nalu::SharedMemView<DoubleTy
 void compare_old_scs_gij(const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
                          const sierra::nalu::SharedMemView<DoubleType***>& v_gijUpper,
                          const sierra::nalu::SharedMemView<DoubleType***>& v_gijLower,
-                         const sierra::nalu::SharedMemView<DoubleType***>& v_deriv,
+                         const sierra::nalu::SharedMemView<DoubleType***>&  /* v_deriv */,
                          sierra::nalu::MasterElement* meSCS)
 {
   int len = v_gijUpper.extent(0)*v_gijUpper.extent(1)*v_gijUpper.extent(2);
@@ -126,7 +127,7 @@ void compare_old_scs_gij(const sierra::nalu::SharedMemView<DoubleType**>& v_coor
   copy_DoubleType0_to_double(v_coords, coords);
   std::vector<double> gijUpper(len, 0.0);
   std::vector<double> gijLower(len, 0.0);
-  int gradOpLen = meSCS->nodesPerElement_ * meSCS->numIntPoints_ * meSCS->nDim_;
+  int gradOpLen = meSCS->nodesPerElement_ * meSCS->num_integration_points() * meSCS->nDim_;
   std::vector<double> grad_op(gradOpLen, 0.0);
   std::vector<double> deriv(gradOpLen, 0.0);
   std::vector<double> det_j(len, 0.0);
@@ -147,14 +148,14 @@ void test_ME_views(const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& requests)
 
   // Register ME data requests
   for(sierra::nalu::ELEM_DATA_NEEDED request : requests) {
-    driver.dataNeeded_.add_master_element_call(request, sierra::nalu::CURRENT_COORDINATES);
+    driver.dataNeeded().add_master_element_call(request, sierra::nalu::CURRENT_COORDINATES);
   }
 
   sierra::nalu::MasterElement* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
   sierra::nalu::MasterElement* meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
 
   // Execute the loop and perform all tests
-  driver.execute([&](sierra::nalu::SharedMemData& smdata) {
+  driver.execute([&](sierra::nalu::SharedMemData<sierra::nalu::TeamHandleType,sierra::nalu::HostShmem>& smdata) {
       // Extract data from scratchViews
       sierra::nalu::SharedMemView<DoubleType**>& v_coords = smdata.simdPrereqData.get_scratch_view_2D(
         *driver.coordinates_);

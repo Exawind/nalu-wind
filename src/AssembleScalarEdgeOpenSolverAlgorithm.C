@@ -12,8 +12,10 @@
 #include <FieldTypeDef.h>
 #include <LinearSystem.h>
 #include <Realm.h>
+#include <SolutionOptions.h>
 #include <TimeIntegrator.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -84,6 +86,8 @@ AssembleScalarEdgeOpenSolverAlgorithm::execute()
 
   // deal with state
   ScalarFieldType &scalarQNp1 = scalarQ_->field_of_state(stk::mesh::StateNP1);
+  const std::string dofName = scalarQ_->name();
+  const double relaxFac = realm_.solutionOptions_->get_relaxation_factor(dofName);
 
   // define vector of parent topos; should always be UNITY in size
   std::vector<stk::topology> parentTopo;
@@ -190,7 +194,7 @@ AssembleScalarEdgeOpenSolverAlgorithm::execute()
           p_rhs[nearestNode] -= aflux;
 
           // upwind lhs
-          p_lhs[rowR+nearestNode] += tmdot;
+          p_lhs[rowR+nearestNode] += tmdot / relaxFac;
 
         }
         else {

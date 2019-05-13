@@ -21,6 +21,8 @@
 #include <stk_mesh/base/Entity.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 
+#include <stk_ngp/Ngp.hpp>
+
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -90,6 +92,15 @@ public:
       const char * trace_tag);
 
   void sumInto(
+    unsigned numEntities,
+    const ngp::Mesh::ConnectedNodes& entities,
+    const SharedMemView<const double*> & rhs,
+    const SharedMemView<const double**> & lhs,
+    const SharedMemView<int*> & localIds,
+    const SharedMemView<int*> & sortPermutation,
+    const char * trace_tag);
+
+  void sumInto(
     const std::vector<stk::mesh::Entity> & entities,
     std::vector<int> &scratchIds,
     std::vector<double> &scratchVals,
@@ -116,9 +127,11 @@ public:
    *  @param endPos Terminating index (1 for scalar quantities; nDim for vectors)
    */
   virtual void resetRows(
-    const std::vector<stk::mesh::Entity> nodeList,
+    const std::vector<stk::mesh::Entity>& nodeList,
     const unsigned beginPos,
-    const unsigned endPos);
+    const unsigned endPos,
+    const double diag_value = 0.0,
+    const double rhs_residual = 0.0);
 
   // Solve
   int solve(stk::mesh::FieldBase * linearSolutionField);
@@ -126,7 +139,7 @@ public:
   void writeToFile(const char * filename, bool useOwned=true);
   void printInfo(bool useOwned=true);
   void writeSolutionToFile(const char * filename, bool useOwned=true);
-  size_t lookup_myLID(MyLIDMapType& myLIDs, stk::mesh::EntityId entityId, const char* msg=nullptr, stk::mesh::Entity entity = stk::mesh::Entity())
+  size_t lookup_myLID(MyLIDMapType& myLIDs, stk::mesh::EntityId entityId, const char* /* msg */ =nullptr, stk::mesh::Entity /* entity */ = stk::mesh::Entity())
   {
     return myLIDs[entityId];
   }
@@ -143,7 +156,7 @@ private:
 
   void beginLinearSystemConstruction();
 
-  void checkError( const int err_code, const char * msg) {}
+  void checkError( const int /* err_code */, const char * /* msg */) {}
 
   void compute_send_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
          const std::vector<std::vector<stk::mesh::Entity> >& connections,

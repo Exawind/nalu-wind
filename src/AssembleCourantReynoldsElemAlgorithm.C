@@ -15,6 +15,7 @@
 #include <NaluEnv.h>
 #include <TimeIntegrator.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -110,7 +111,7 @@ AssembleCourantReynoldsElemAlgorithm::execute()
 
     // extract master element specifics
     const int nodesPerElement = meSCS->nodesPerElement_;
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
     const int *lrscv = meSCS->adjacentNodes();
 
     // algorithm related

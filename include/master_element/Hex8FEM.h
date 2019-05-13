@@ -19,9 +19,12 @@ class Hex8FEM : public MasterElement
 {
 public:
 
+  KOKKOS_FUNCTION
   Hex8FEM();
-  virtual ~Hex8FEM();
+  KOKKOS_FUNCTION
+  virtual ~Hex8FEM() = default;
 
+  using AlgTraits = AlgTraitsHex8;
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
   using MasterElement::face_grad_op;
@@ -43,23 +46,23 @@ public:
     double *det_j,
     double * error );
 
-  void grad_op_fem(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv,
-    SharedMemView<DoubleType*>&det_j) final;
+  KOKKOS_FUNCTION void grad_op_fem(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType***, DeviceShmem>&gradop,
+    SharedMemView<DoubleType***, DeviceShmem>&deriv,
+    SharedMemView<DoubleType*, DeviceShmem>&det_j) final;
 
-  void shifted_grad_op_fem(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv,
-    SharedMemView<DoubleType*>&det_j) final;
+  KOKKOS_FUNCTION void shifted_grad_op_fem(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType***, DeviceShmem>&gradop,
+    SharedMemView<DoubleType***, DeviceShmem>&deriv,
+    SharedMemView<DoubleType*, DeviceShmem>&det_j) final;
 
-  void shape_fcn(
-    SharedMemView<DoubleType**> &shpfc) final;
+  KOKKOS_FUNCTION void shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) final;
 
-  void shifted_shape_fcn(
-    SharedMemView<DoubleType**> &shpfc) final;
+  KOKKOS_FUNCTION void shifted_shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) final;
 
   void face_grad_op(
     const int nelem,
@@ -86,25 +89,64 @@ public:
     double *glowerij,
     double *deriv);
 
-private:
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
+  // weights; -1:1
+  double weights_[8] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+
+private:
+  static const int nDim_ = AlgTraits::nDim_;
+  static const int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static const int numIntPoints_ = AlgTraits::numScvIp_;
+
+  // shifted to nodes (Gauss Lobatto)
+  const double glIP = 1.0;
+  const double intgLocShift_[24] = {
+   -glIP,  -glIP,  -glIP, 
+   +glIP,  -glIP,  -glIP, 
+   +glIP,  +glIP,  -glIP,
+   -glIP,  +glIP,  -glIP,
+   -glIP,  -glIP,  +glIP,
+   +glIP,  -glIP,  +glIP,
+   +glIP,  +glIP,  +glIP,
+   -glIP,  +glIP,  +glIP};
+
+  // standard integration location +/ sqrt(3)/3
+  const double gIP = std::sqrt(3.0)/3.0;
+  const double  intgLoc_[numIntPoints_*nDim_] = {
+   -gIP,  -gIP,  -gIP, 
+   +gIP,  -gIP,  -gIP, 
+   +gIP,  +gIP,  -gIP,
+   -gIP,  +gIP,  -gIP,
+   -gIP,  -gIP,  +gIP,
+   +gIP,  -gIP,  +gIP,
+   +gIP,  +gIP,  +gIP,
+   -gIP,  +gIP,  +gIP};
+
+
+  double intgExpFace_[72];
   void hex8_fem_shape_fcn(
-    const int  &numIp,
+    const int  numIp,
     const double *isoParCoord,
     double *shpfc);
 
-  void hex8_fem_shape_fcn(
-    const int  &numIp,
+  KOKKOS_FUNCTION void hex8_fem_shape_fcn(
+    const int  numIp,
     const double *isoParCoord,
-    SharedMemView<DoubleType**> shpfc);
+    SharedMemView<DoubleType**, DeviceShmem> shpfc);
 
   void hex8_fem_derivative(
     const int npt, const double* par_coord,
     double* deriv);
 
-  void hex8_fem_derivative(
+  KOKKOS_FUNCTION void hex8_fem_derivative(
     const int npt, const double* par_coord,
-    SharedMemView<DoubleType***> deriv);
+    SharedMemView<DoubleType***, DeviceShmem> deriv);
 };
     
 } // namespace nalu

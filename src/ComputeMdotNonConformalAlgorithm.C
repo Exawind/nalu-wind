@@ -100,11 +100,6 @@ ComputeMdotNonConformalAlgorithm::execute()
 
   const int nDim = meta_data.spatial_dimension();
  
-  // time step
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
-  const double projTimeScale = dt/gamma1;
-
   // deal with interpolation procedure
   const double interpTogether = realm_.get_mdot_interp();
   const double om_interpTogether = 1.0-interpTogether;
@@ -149,6 +144,8 @@ ComputeMdotNonConformalAlgorithm::execute()
   std::vector<double> ws_c_meshVelocity; // only require current
   std::vector<double> ws_c_density;
   std::vector<double> ws_o_density;
+  std::vector<double> ws_c_udiag;
+  std::vector<double> ws_o_udiag;
   std::vector<double> ws_o_coordinates; // only require opposing
 
   // element
@@ -165,6 +162,8 @@ ComputeMdotNonConformalAlgorithm::execute()
 
   // deal with state
   ScalarFieldType &pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType* Udiag = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "momentum_diag");
 
   // parallel communicate ghosted entities
   if ( NULL != realm_.nonConformalManager_->nonConformalGhosting_ )
@@ -226,6 +225,8 @@ ComputeMdotNonConformalAlgorithm::execute()
         ws_c_meshVelocity.resize(currentNodesPerFace*nDim);
         ws_c_density.resize(currentNodesPerFace);
         ws_o_density.resize(opposingNodesPerFace);
+        ws_c_udiag.resize(currentNodesPerFace);
+        ws_o_udiag.resize(opposingNodesPerFace);
         ws_o_coordinates.resize(opposingNodesPerFace*nDim);
 
         // algorithm related; element; dndx will be at a single gauss point
@@ -248,6 +249,8 @@ ComputeMdotNonConformalAlgorithm::execute()
         double *p_c_meshVelocity = &ws_c_meshVelocity[0];
         double *p_c_density = &ws_c_density[0];
         double *p_o_density = &ws_o_density[0];
+        double *p_c_udiag = &ws_c_udiag[0];
+        double *p_o_udiag = &ws_o_udiag[0];
         double *p_o_coordinates = &ws_o_coordinates[0];
 
         // element
@@ -271,6 +274,8 @@ ComputeMdotNonConformalAlgorithm::execute()
           // gather; scalar
           p_c_pressure[ni] = *stk::mesh::field_data(*pressure_, node);
           p_c_density[ni] = *stk::mesh::field_data(*density_, node);
+          const double udiagTmp = *stk::mesh::field_data(*Udiag, node);
+          p_c_udiag[ni] = 1.0 / udiagTmp;
           // gather; vector
           const double *velocity = stk::mesh::field_data(*velocity_, node );
           const double *meshVelocity = stk::mesh::field_data(*meshVelocity_, node );
@@ -279,7 +284,7 @@ ComputeMdotNonConformalAlgorithm::execute()
             const int offSet = i*current_num_face_nodes + ni;        
             p_c_velocity[offSet] = velocity[i];
             p_c_meshVelocity[offSet] = meshVelocity[i];
-            p_c_Gjp[offSet] = Gjp[i];
+            p_c_Gjp[offSet] = Gjp[i] * p_c_udiag[ni];
           }
         }
         
@@ -294,6 +299,8 @@ ComputeMdotNonConformalAlgorithm::execute()
           // gather; scalar
           p_o_pressure[ni] = *stk::mesh::field_data(*pressure_, node);
           p_o_density[ni] = *stk::mesh::field_data(*density_, node);
+          const double udiagTmp = *stk::mesh::field_data(*Udiag, node);
+          p_o_udiag[ni] = 1.0 / udiagTmp;
           // gather; vector
           const double *velocity = stk::mesh::field_data(*velocity_, node );
           const double *Gjp = stk::mesh::field_data(*Gjp_, node );
@@ -301,7 +308,7 @@ ComputeMdotNonConformalAlgorithm::execute()
           for ( int i = 0; i < nDim; ++i ) {
             const int offSet = i*opposing_num_face_nodes + ni;        
             p_o_velocity[offSet] = velocity[i];
-            p_o_Gjp[offSet] = Gjp[i];
+            p_o_Gjp[offSet] = Gjp[i] * p_o_udiag[ni];
             p_o_coordinates[ni*nDim+i] = coords[i];
           }
         }
@@ -436,6 +443,20 @@ ComputeMdotNonConformalAlgorithm::execute()
           &ws_o_pressure[0],
           &opposingPressureBip);
 
+        double curProjTScaleBip = 0.0;
+        meFCCurrent->interpolatePoint(
+          sizeOfScalarField,
+          &(dgInfo->currentIsoParCoords_[0]),
+          &ws_c_udiag[0],
+          &curProjTScaleBip);
+
+        double oppProjTScaleBip = 0.0;
+        meFCOpposing->interpolatePoint(
+          sizeOfScalarField,
+          &(dgInfo->opposingIsoParCoords_[0]),
+          &ws_o_udiag[0],
+          &oppProjTScaleBip);
+
         // velocity
         meFCCurrent->interpolatePoint(
           sizeOfVectorField,
@@ -523,8 +544,9 @@ ComputeMdotNonConformalAlgorithm::execute()
           &ws_c_meshVelocity[0],
           &currentRhoMeshVelocityBip[0]);
 
-        // form mdot                 
-        const double penaltyIp = projTimeScale*0.5*(currentInverseLength + opposingInverseLength);
+        // form mdot
+        const double projTimeScaleIp = 0.5*(curProjTScaleBip + oppProjTScaleBip);
+        const double penaltyIp = projTimeScaleIp*0.5*(currentInverseLength + opposingInverseLength);
 
         double ncFlux = 0.0;
         double ncPstabFlux = 0.0;
@@ -533,13 +555,13 @@ ComputeMdotNonConformalAlgorithm::execute()
           const double oRhoVelocity = interpTogether*opposingRhoVelocityBip[j] + om_interpTogether*opposingDensityBip*opposingVelocityBip[j];
           const double cRhoMeshVelocity = interpTogether*currentRhoMeshVelocityBip[j] + om_interpTogether*currentDensityBip*currentMeshVelocityBip[j];
           ncFlux += 0.5*(cRhoVelocity*p_cNx[j] - oRhoVelocity*p_oNx[j]) - meshMotionFac_*cRhoMeshVelocity*p_cNx[j];
-          const double cPstab = currentDpdxBip[j] - currentGjpBip[j];
-          const double oPstab = opposingDpdxBip[j] - opposingGjpBip[j];
+          const double cPstab = currentDpdxBip[j] * projTimeScaleIp - currentGjpBip[j];
+          const double oPstab = opposingDpdxBip[j]* projTimeScaleIp - opposingGjpBip[j];
           ncPstabFlux += 0.5*(cPstab*p_cNx[j] - oPstab*p_oNx[j]);
         }
 
         // scatter it
-        ncMassFlowRate[currentGaussPointId] = (ncFlux - includePstab_*projTimeScale*ncPstabFlux 
+        ncMassFlowRate[currentGaussPointId] = (ncFlux - includePstab_*ncPstabFlux
                                                + penaltyIp*(currentPressureBip - opposingPressureBip))*c_amag;
       }
     }

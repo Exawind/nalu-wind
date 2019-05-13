@@ -16,6 +16,7 @@
 #include <Simulation.h>
 #include <LinearSolver.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 #include <EquationSystem.h>
 #include <NaluEnv.h>
 #include <utils/StkHelpers.h>
@@ -315,8 +316,8 @@ TpetraLinearSystem::beginLinearSystemConstruction()
   }
   
   const Teuchos::RCP<LinSys::Comm> tpetraComm = Teuchos::rcp(new LinSys::Comm(bulkData.parallel()));
-  ownedRowsMap_ = Teuchos::rcp(new LinSys::Map(Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(), ownedGids, 1, tpetraComm, node_));
-  sharedNotOwnedRowsMap_ = Teuchos::rcp(new LinSys::Map(Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(), sharedNotOwnedGids, 1, tpetraComm, node_));
+  ownedRowsMap_ = Teuchos::rcp(new LinSys::Map(Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(), ownedGids, 1, tpetraComm));
+  sharedNotOwnedRowsMap_ = Teuchos::rcp(new LinSys::Map(Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(), sharedNotOwnedGids, 1, tpetraComm));
 
   exporter_ = Teuchos::rcp(new LinSys::Export(sharedNotOwnedRowsMap_, ownedRowsMap_));
 
@@ -457,7 +458,7 @@ TpetraLinearSystem::buildReducedElemToNodeGraph(const stk::mesh::PartVector & pa
     // extract master element
     MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     // extract master element specifics
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
     const int *lrscv = meSCS->adjacentNodes();
 
     const stk::mesh::Bucket::size_type length   = b.size();
@@ -515,7 +516,7 @@ TpetraLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::PartVector & parts
 }
 
 void
-TpetraLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector &parts)
+TpetraLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector & /* parts */)
 {
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
   beginLinearSystemConstruction();
@@ -569,7 +570,7 @@ TpetraLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector &part
 }
 
 void
-TpetraLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVector &parts)
+TpetraLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVector & /* parts */)
 {
   // extract the rank
   const int theRank = NaluEnv::self().parallel_rank();
@@ -673,7 +674,7 @@ void add_to_length(ViewType& v_owned, ViewType& v_shared, unsigned numDof,
     }
 }
 
-void add_lengths_to_comm(const stk::mesh::BulkData& bulk,
+void add_lengths_to_comm(const stk::mesh::BulkData&  /* bulk */,
                          stk::CommNeighbors& commNeighbors,
                          int entity_a_owner,
                          stk::mesh::EntityId entityId_a,
@@ -1236,7 +1237,7 @@ void fill_in_extra_dof_rows_per_node(LocalGraphArrays& csg, int numDof)
   }
 }
 
-void verify_no_empty_connections(const std::vector<stk::mesh::Entity>& rowEntities,
+void verify_no_empty_connections(const std::vector<stk::mesh::Entity>&  /* rowEntities */,
         const std::vector<std::vector<stk::mesh::Entity> >& connections)
 {
   for(const std::vector<stk::mesh::Entity>& vec : connections) {
@@ -1285,7 +1286,7 @@ TpetraLinearSystem::finalizeLinearSystem()
   fill_owned_and_shared_then_nonowned_ordered_by_proc(optColGids, sourcePIDs, localProc, ownedRowsMap_, sharedNotOwnedRowsMap_, ownersAndGids_, sharedPids_);
 
   const Teuchos::RCP<LinSys::Comm> tpetraComm = Teuchos::rcp(new LinSys::Comm(bulkData.parallel()));
-  totalColsMap_ = Teuchos::rcp(new LinSys::Map(Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(), optColGids, 1, tpetraComm, node_));
+  totalColsMap_ = Teuchos::rcp(new LinSys::Map(Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(), optColGids, 1, tpetraComm));
 
   fill_entity_to_col_LID_mapping();
 
@@ -1453,7 +1454,74 @@ TpetraLinearSystem::sumInto(
       const SharedMemView<const double**> & lhs,
       const SharedMemView<int*> & localIds,
       const SharedMemView<int*> & sortPermutation,
-      const char * trace_tag)
+      const char *  /* trace_tag */)
+{
+  constexpr bool forceAtomic = !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
+
+  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
+  ThrowAssertMsg(localIds.span_is_contiguous(), "localIds assumed contiguous");
+  ThrowAssertMsg(sortPermutation.span_is_contiguous(), "sortPermutation assumed contiguous");
+
+  const int n_obj = numEntities;
+  const int numRows = n_obj * numDof_;
+
+  for(int i = 0; i < n_obj; i++) {
+    const stk::mesh::Entity entity = entities[i];
+    const LocalOrdinal localOffset = entityToColLID_[entity.local_offset()];
+    for(size_t d=0; d < numDof_; ++d) {
+      size_t lid = i*numDof_ + d;
+      localIds[lid] = localOffset + d;
+    }
+  }
+
+  for (int i = 0; i < numRows; ++i) {
+    sortPermutation[i] = i;
+  }
+  Tpetra::Details::shellSortKeysAndValues(localIds.data(), sortPermutation.data(), numRows);
+
+  for (int r = 0; r < numRows; ++r) {
+    int i = sortPermutation[r]/numDof_;
+    LocalOrdinal rowLid = entityToLID_[entities[i].local_offset()];
+    rowLid += sortPermutation[r]%numDof_;
+    const LocalOrdinal cur_perm_index = sortPermutation[r];
+    const double* const cur_lhs = &lhs(cur_perm_index, 0);
+    const double cur_rhs = rhs[cur_perm_index];
+    ThrowAssertMsg(std::isfinite(cur_rhs), "Inf or NAN rhs");
+
+    if(rowLid < maxOwnedRowId_) {
+      sum_into_row(ownedLocalMatrix_.row(rowLid), n_obj, numDof_, localIds.data(), sortPermutation.data(), cur_lhs);
+      if (forceAtomic) {
+        Kokkos::atomic_add(&ownedLocalRhs_(rowLid,0), cur_rhs);
+      }
+      else {
+        ownedLocalRhs_(rowLid,0) += cur_rhs;
+      }
+    }
+    else if (rowLid < maxSharedNotOwnedRowId_) {
+      LocalOrdinal actualLocalId = rowLid - maxOwnedRowId_;
+      sum_into_row(sharedNotOwnedLocalMatrix_.row(actualLocalId), n_obj, numDof_,
+        localIds.data(), sortPermutation.data(), cur_lhs);
+
+      if (forceAtomic) {
+        Kokkos::atomic_add(&sharedNotOwnedLocalRhs_(actualLocalId,0), cur_rhs);
+      }
+      else {
+        sharedNotOwnedLocalRhs_(actualLocalId,0) += cur_rhs;
+      }
+    }
+  }
+}
+
+void
+TpetraLinearSystem::sumInto(
+  unsigned numEntities,
+  const ngp::Mesh::ConnectedNodes& entities,
+  const SharedMemView<const double*> & rhs,
+  const SharedMemView<const double**> & lhs,
+  const SharedMemView<int*> & localIds,
+  const SharedMemView<int*> & sortPermutation,
+  const char *  /* trace_tag */)
 {
   constexpr bool forceAtomic = !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
 
@@ -1516,10 +1584,10 @@ void
 TpetraLinearSystem::sumInto(
   const std::vector<stk::mesh::Entity> & entities,
   std::vector<int> &scratchIds,
-  std::vector<double> &scratchVals,
+  std::vector<double> & /* scratchVals */,
   const std::vector<double> & rhs,
   const std::vector<double> & lhs,
-  const char *trace_tag
+  const char * /* trace_tag */
   )
 {
   const size_t n_obj = entities.size();
@@ -1698,14 +1766,15 @@ TpetraLinearSystem::prepareConstraints(
 
 void
 TpetraLinearSystem::resetRows(
-  const std::vector<stk::mesh::Entity> nodeList,
+  const std::vector<stk::mesh::Entity>& nodeList,
   const unsigned beginPos,
-  const unsigned endPos)
+  const unsigned endPos,
+  const double diag_value,
+  const double rhs_residual)
 {
   Teuchos::ArrayView<const LocalOrdinal> indices;
   Teuchos::ArrayView<const double> values;
   std::vector<double> new_values;
-  constexpr double rhs_residual = 0.0;
   const bool internalMatrixIsSorted = true;
 
   for (auto node: nodeList) {
@@ -1725,13 +1794,14 @@ TpetraLinearSystem::resetRows(
         throw std::runtime_error("logic error: localId > maxSharedNotOwnedRowId");
       }
 
+      const double dval = useOwned ? diag_value : 0.0;
       // Adjust the LHS; zero out all entries (including diagonal)
       matrix->getLocalRowView(actualLocalId, indices, values);
       const size_t rowLength = values.size();
       if (rowLength > 0) {
         new_values.resize(rowLength);
         for (size_t i=0; i < rowLength; i++) {
-          new_values[i] = 0.0;
+          new_values[i] = (indices[i] == localId) ? dval : 0.0;
         }
         local_matrix.replaceValues(actualLocalId, &indices[0], rowLength, new_values.data(), internalMatrixIsSorted);
       }

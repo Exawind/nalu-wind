@@ -17,6 +17,8 @@
 #include <Teuchos_GlobalMPISession.hpp>
 #include <Teuchos_oblackholestream.hpp>
 
+#include <stk_ngp/Ngp.hpp>
+
 #include <vector>
 #include <string>
 
@@ -29,6 +31,7 @@ class Part;
 typedef std::vector< Part * > PartVector ;
 }
 }
+
 namespace sierra{
 namespace nalu{
 
@@ -87,6 +90,14 @@ public:
       )=0;
 
 
+  virtual void sumInto(
+    unsigned numEntities,
+    const ngp::Mesh::ConnectedNodes& entities,
+    const SharedMemView<const double*> & rhs,
+    const SharedMemView<const double**> & lhs,
+    const SharedMemView<int*> & localIds,
+    const SharedMemView<int*> & sortPermutation,
+    const char * trace_tag) = 0;
 
   virtual void sumInto(
     const std::vector<stk::mesh::Entity> & sym_meshobj,
@@ -115,9 +126,11 @@ public:
    *  @param endPos Terminating index (1 for scalar quantities; nDim for vectors)
    */
   virtual void resetRows(
-    std::vector<stk::mesh::Entity> nodeList,
+    const std::vector<stk::mesh::Entity>& nodeList,
     const unsigned beginPos,
-    const unsigned endPos) = 0;
+    const unsigned endPos,
+    const double diag_value = 0.0,
+    const double rhs_residual = 0.0) = 0;
 
   // Solve
   virtual int solve(stk::mesh::FieldBase * linearSolutionField)=0;

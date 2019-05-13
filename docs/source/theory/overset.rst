@@ -128,7 +128,7 @@ Overset Grid Assembly using TIOGA
 
 Topology Independent Overset Grid Assembler (TIOGA) is an open-source
 connectivity package that was developed as an academic/research counterpart for
-PUNDIT (the overset grid assembler used in NASA/Army CREATE A/V program and
+PUNDIT (the overset grid assembler used in HPCMP CREATE™ A/V program and
 HELIOS). The base library has been modified to remove the limitation where each
 MPI rank could only own one mesh block. The code has been extended to handle
 multiple mesh blocks per MPI rank to support Nalu-Wind's mesh decomposition

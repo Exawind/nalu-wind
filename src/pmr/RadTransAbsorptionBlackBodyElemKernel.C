@@ -9,6 +9,7 @@
 #include "AlgTraits.h"
 #include "Enums.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 
 // template and scratch space
 #include "BuildTemplates.h"
@@ -106,7 +107,7 @@ RadTransAbsorptionBlackBodyElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(RadTransAbsorptionBlackBodyElemKernel);
+INSTANTIATE_KERNEL(RadTransAbsorptionBlackBodyElemKernel)
 
 }  // nalu
 }  // sierra

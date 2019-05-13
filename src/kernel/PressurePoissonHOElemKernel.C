@@ -48,20 +48,22 @@ PressurePoissonHOElemKernel<AlgTraits>::PressurePoissonHOElemKernel(
 {
   const stk::mesh::MetaData& meta_data = bulkData.mesh_meta_data();
   coordinates_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, solnOpts.get_coordinates_name());
+  dataPreReqs.add_gathered_nodal_field(*coordinates_, AlgTraits::nDim_);
 
   pressure_ = &meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure")
       ->field_of_state(stk::mesh::StateNone);
+  dataPreReqs.add_gathered_nodal_field(*pressure_, 1);
+
   Gp_ = &meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx")
       ->field_of_state(stk::mesh::StateNone);
+  dataPreReqs.add_gathered_nodal_field(*Gp_, AlgTraits::nDim_);
+
   density_ = &meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density")
       ->field_of_state(stk::mesh::StateNP1);
+  dataPreReqs.add_gathered_nodal_field(*density_, 1);
+
   velocity_ = &meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity")
       ->field_of_state(stk::mesh::StateNP1);
-
-  dataPreReqs.add_gathered_nodal_field(*coordinates_, AlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(*pressure_, 1);
-  dataPreReqs.add_gathered_nodal_field(*density_, 1);
-  dataPreReqs.add_gathered_nodal_field(*Gp_, AlgTraits::nDim_);
   dataPreReqs.add_gathered_nodal_field(*velocity_, AlgTraits::nDim_);
 }
 
@@ -94,7 +96,7 @@ PressurePoissonHOElemKernel<AlgTraits>::execute(
   tensor_assembly::scalar_diffusion_lhs(ops_, metric, v_lhs, reduced_sens_);
 }
 
-INSTANTIATE_KERNEL_HOSGL(PressurePoissonHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(PressurePoissonHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

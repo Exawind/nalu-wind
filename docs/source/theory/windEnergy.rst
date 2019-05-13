@@ -29,7 +29,7 @@ Currently Nalu-Wind supports two types of wind simulations:
   of turbulent ABL inflow profiles that are used as inlet conditions in
   subsequent wind farm simulations. The primary purpose of these simulations are
   to trigger turbulence generation and obtain velocity and temperature profiles
-  that have *converged* to a stastitic equilibrium.
+  that have *converged* to a statistic equilibrium.
 
 **Wind farm simulation with turbines as actuator sources**
 
@@ -137,7 +137,7 @@ farm applications.
 Numerical Discretization & Stabilization
 ----------------------------------------
 
-Nalu-Wind provides two dicretization approaches
+Nalu-Wind provides two discretization approaches
 
 **Control Volume Finite Element Method (CVFEM)**
 
@@ -276,6 +276,46 @@ Thus, the final set of equations solved at each outer iteration is
    & \quad - \frac{ (\gamma_2 \rho^{n} {u_i}^{n} + \gamma_3 \rho^{n-1} {u_i}^{n-1})}{\Delta t} \Delta V \\
    -{\bf L_1} \Delta P^{**} &= - {\bf D} \rho \widehat{u} - {\bf D} \tau_2 {\bf G} P^{*} + {\bf L_2} P^{*} + b \\
    u_i^{n+1} &= u_i^{**} - \frac{\tau_3}{\rho} {\bf G} \Delta P^{**}
+
+Approximations for the Schur complement
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Nalu-Wind implements two options for approximating the Schur complement for the
+split velocity-pressure solution of the incompressible momentum and continuity
+equation. The two options are:
+
+.. math::
+
+   \tau = \tau_1 = \tau_2 = \tau_3 &= \Delta t \quad \mathrm{Original implementation}\\
+   & = (A_{ii})^{-1} \quad \mathrm{Alternate algorithm}
+
+where :math:`A_{ii}` is the diagonal entry of the momentum linear system. The
+latter option is similar to the SIMPLE and PIMPLE implementations in OpenFOAM
+and is used for simulations with RANS and hybrid RANS-LES models with large
+Courant numbers.
+
+Underrelaxation for momentum and scalar transport
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, Nalu-Wind applies no underrelaxation during the solution of the
+Navier-Stokes equations. However, in RANS simulations at large timesteps some
+underrelaxation might be necessary to restore the diagonal dominance of the
+transport equations. User has the option to specify underrelaxation through the
+input files. When underrelaxation is applied, the advection and diffusion
+contributions to the diagonal term are modifed by dividing these terms by the
+underrelaxation factor. It must be noted that the underrelaxation is only
+applied to the advective and viscous contributions in the diagonal term and not
+the time derivative term.
+
+.. math::
+
+   A_{ii} = -\frac{\sum_{i \neq j} A_{ij}}{\omega} + \frac{\gamma_1 \rho \Delta V}{\Delta T}
+
+The pressure update can also be underrelaxed by specifying the appropriate
+relaxation factor in the input file. When this option is activated, the full
+pressure update, in a given Picard iteration step, is used to project the
+velocity and mass flow rate and the relaxation is applied to the pressure
+solution at the end of the Picard iteration.
 
 Initial & Boundary Conditions
 -----------------------------
@@ -466,21 +506,68 @@ The drag body force is then
 where :math:`\vec{r}` is the position vector between the fluid point of
 interest and the center of the Gaussian force.
 
-Nalu -- OpenFAST Coupling Algorithm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 The actuator line implementation allows for flexible blades that are not
-necessarily straight (prebend and sweep). The current implementation requires a
+necessarily straight (pre-bend and sweep). The current implementation requires a
 fixed time step when coupled to OpenFAST, but allows the time step in Nalu-Wind to be
 an integral multiple of the OpenFAST time step. At present, a simple time lagged
 FSI model is used to interface Nalu-Wind with the turbine model in OpenFAST:
 
   + The velocity at time step at time step :math:`n` is sampled at the actuator
     points and sent to OpenFAST,
-  + OpenFAST advances the turbines upto the next Nalu-Wind time step :math:`n+1`,
+  + OpenFAST advances the turbines up-to the next Nalu-Wind time step :math:`n+1`,
   + The body forces at the actuator points are converted to the source terms of the momentum 
     equation to advance Nalu-Wind to the next time step :math:`n+1`.
     
 This FSI algorithm is expected to be only first order accurate in time. We are
 currently working on improving the FSI coupling scheme to be second order
 accurate in time.
+
+Nalu-Wind -- Actuator Disk Model via OpenFAST
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An actuator disk model is implemented in Nalu-Wind by using an OpenFAST actuator line to 
+sample the flow and compute the forcing.  The actuator line is held stationary which leads
+to computational savings during execution because there is only 1 search operation in the 
+initial setup.
+
+The forces are gathered at each actuator line point, and the total force at each discrete 
+radial location (:math:`r_j` where :math:`j \in [1,N_R]`) is computed using 
+:eq:`diskTotalForce`.
+
+.. math::
+
+   :label: diskTotalForce
+   \mathbf{F}_{total}(r_j) = \sum_{i=1}^{N_B} \mathbf{F}(r_j, \theta_i)
+
+where :math:`N_B` and :math:`N_R` are the number of blades and number of radial points 
+respectively. 
+
+:math:`\mathbf{F}_{total}(r_j)` is then spread evenly across the original actuator line points
+and additional 'swept-points' that are added in between the actuator lines. The swept-points are 
+always uniformly distributed azimuthally, but the number of swept points can either be non-uniformly
+or uniformly distributed along the radial direction (left and right images in 
+figure :numref:`actdisk-sample-fig`).  The non-uniform distribution uses the distance 
+between points along the embedded actuator line blades as the arc-length between points in the
+azimuthal direction.  This is the default behavior.  If uniform spacing is desired then 
+`num_swept_pts` must be specified in the input deck.  This is the number of points between 
+the actuator lines, so in figure :numref:`actdisk-sample-fig` the `num_swept_pts` is 3.
+
+.. _actdisk-sample-fig:
+
+.. figure:: images/actuatorDisk.png
+   :align: center
+   :width: 250px
+
+   Actuator Disk with non-uniform (left) and uniform (right) sampling in the azimuthal direction.
+
+The force that is spread across all the points at a given radius is then calculated as
+:eq:`diskAppliedForce`.
+
+.. math::
+
+   :label: diskAppliedForce
+   \mathbf{f}(r_j) = \frac{\mathbf{F}_{total}(r_j)}{N_B*(N_{S,j}+1)}
+
+where :math:`N_{S,j}` is the number of swept points for a given radius.  The index j is used
+because this value varies between radii when non-uniform sampling is applied.
+

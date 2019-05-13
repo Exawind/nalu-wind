@@ -26,7 +26,7 @@ class ElemDataRequests;
 /** Add Ksgs source term for kernel-based algorithm approach
  */
 template<typename AlgTraits>
-class TurbKineticEnergyKsgsDesignOrderSrcElemKernel: public Kernel
+class TurbKineticEnergyKsgsDesignOrderSrcElemKernel: public NGPKernel<TurbKineticEnergyKsgsDesignOrderSrcElemKernel<AlgTraits>>
 {
 public:
   TurbKineticEnergyKsgsDesignOrderSrcElemKernel(
@@ -34,35 +34,33 @@ public:
     const SolutionOptions&,
     ElemDataRequests&);
 
-  virtual ~TurbKineticEnergyKsgsDesignOrderSrcElemKernel();
+  KOKKOS_FUNCTION TurbKineticEnergyKsgsDesignOrderSrcElemKernel() = default;
+
+  KOKKOS_FUNCTION virtual ~TurbKineticEnergyKsgsDesignOrderSrcElemKernel() = default;
   
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  TurbKineticEnergyKsgsDesignOrderSrcElemKernel() = delete;
-  
-  VectorFieldType *coordinates_{nullptr};
-  VectorFieldType *velocityNp1_{nullptr};
-  ScalarFieldType *tkeNp1_{nullptr};
-  ScalarFieldType *densityNp1_{nullptr};
-  ScalarFieldType *tvisc_{nullptr};
-  ScalarFieldType *dualNodalVolume_{nullptr};
+  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned tkeNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned densityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned tvisc_ {stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolume_ {stk::mesh::InvalidOrdinal};
 
   const double cEps_;
   const double tkeProdLimitRatio_;
-  
-  /// Integration point to node mapping
-  const int* ipNodeMap_;
-  
-  // fixed scratch space
-  AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]> v_shape_function_{"v_shape_function"};
+
+  MasterElement* meSCV_{nullptr};
 };
  
 }  // nalu

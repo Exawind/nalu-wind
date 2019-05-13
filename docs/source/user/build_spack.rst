@@ -33,7 +33,7 @@ Checkout the official Spack repo from github (we will checkout into ``${HOME}``)
 Step 3
 ~~~~~~
 
-Add Spack shell support to your ``.profile`` or ``.bash_profile`` etc, by adding the lines:
+Add Spack shell support to your ``.profile`` or ``.bashrc`` etc, by adding the lines:
 
 ::
 
@@ -44,7 +44,7 @@ Step 4
 ~~~~~~
 
 Run the `setup-spack.sh <https://github.com/exawind/build-test/blob/master/configs/setup-spack.sh>`__
-script from the repo which tries to find out what machine your on and then copies the corresponding ``*.yaml`` 
+script from the repo which tries to find out what machine you are on and then copies the corresponding ``*.yaml`` 
 configuration files to your Spack installation:
 
 ::
@@ -84,17 +84,17 @@ using the constraints we've specified in ``shared_constraints.sh`` which specifi
 set of Trilinos options for Nalu-Wind that can shorten the build time.
 
 
-NREL's Peregrine Machine
-------------------------
+NREL's Eagle Machine
+--------------------
 
 The following describes how to build Nalu-Wind and its dependencies
-mostly automatically on NREL's Peregrine machine using Spack. This can also be
+mostly automatically on NREL's Eagle machine using Spack. This can also be
 used as a template to help build Nalu-Wind on any Linux system with Spack.
 
 Step 1
 ~~~~~~
 
-Login to Peregrine, and checkout the ``https://github.com/exawind/build-test.git`` 
+Login to Eagle, and checkout the ``https://github.com/exawind/build-test.git`` 
 repo (we will be cloning into the ${HOME} directory):
 
 ::
@@ -112,20 +112,20 @@ Step 3
 ~~~~~~
 
 Configure your environment in the recommended way. You should purge all 
-modules and load GCC 6.2.0 in your login script. In the example 
-`.bash_profile <https://github.com/exawind/build-test/blob/master/configs/machines/peregrine/dot_bash_profile_peregrine.sh>`__
+modules and load GCC 7.3.0 in your login script. In the example 
+`.bashrc <https://github.com/exawind/build-test/blob/master/configs/machines/eagle/dot_bashrc_eagle.sh>`__
 in the repo we also load Python. If you have problems building with Spack on 
-Peregrine, it is most likely your environment has deviated from this 
+Eagle, it is most likely your environment has deviated from this 
 recommended one. Even when building with the Intel compiler in Spack, 
 this is the recommended environment at login.
 
 ::
 
    module purge
-   module load gcc/6.2.0
+   module load gcc/7.3.0
 
-Also add Spack shell support to your ``.bash_profile`` as shown in the example 
-`.bash_profile <https://github.com/exawind/build-test/blob/master/configs/machines/peregrine/dot_bash_profile_peregrine.sh>`__
+Also add Spack shell support to your ``.bashrc`` as shown in the example 
+`.bashrc <https://github.com/exawind/build-test/blob/master/configs/machines/eagle/dot_bashrc_eagle.sh>`__
 in the repo or the following lines:
 
 ::
@@ -133,13 +133,13 @@ in the repo or the following lines:
    export SPACK_ROOT=${HOME}/spack
    source ${SPACK_ROOT}/share/spack/setup-env.sh
 
-Log out and log back in or source your ``.bash_profile`` to get the Spack 
+Log out and log back in or source your ``.bashrc`` to get the Spack 
 shell support loaded. Try ``spack info nalu-wind`` to see if Spack works.
 
 Step 4
 ~~~~~~
 
-Configure Spack for Peregrine. This is done by running the
+Configure Spack for Eagle. This is done by running the
 `setup-spack.sh <https://github.com/exawind/build-test/blob/master/configs/setup-spack.sh>`__
 script provided which tries finding what machine you're on and copying the corresponding ``*.yaml``
 file to your Spack directory:
@@ -164,22 +164,19 @@ available if you do not set constraints at install time and the newest packages
 may not have been tested to build correctly on NREL machines yet. So specifying
 versions of the TPL dependencies in your packages.yaml file for Spack is recommended.
 
-Install Nalu-Wind using a compute node either interactively 
-(``qsub -V -I -l nodes=1:ppn=24,walltime=4:00:00 -A <allocation> -q short``) 
-with the example script  
-`install_nalu_gcc_peregrine.sh <https://github.com/exawind/build-test/blob/master/install_scripts/install_nalu_gcc_peregrine.sh>`__
-or edit the script to use the correct allocation and ``qsub install_nalu_gcc_peregrine.sh``.
+Install Nalu-Wind using a non-GPU login node with the example script  
+`install_nalu_eagle.sh <https://github.com/exawind/build-test/blob/master/install_scripts/install_nalu_eagle.sh>`__
+or edit the script to use the correct allocation and ``nice ./install_nalu_eagle.sh``.
 
-That's it! Hopefully the ``install_nalu_gcc_peregrine.sh`` 
+That's it! Hopefully the ``install_nalu_eagle.sh`` 
 script installs the entire set of dependencies and you get a working build 
-of Nalu-Wind on Peregrine...after about 2 hours of waiting for it to build.
+of Nalu-Wind on Eagle...after several hours of waiting for it to build.
 
-To build with the Intel compiler, note the necessary commands in 
-`install_nalu_intel_peregrine.sh <https://github.com/exawind/build-test/blob/master/install_scripts/install_nalu_intel_peregrine.sh>`__ 
-batch script (note you will need to point ``${TMPDIR}`` to disk as it defaults to 
-RAM and will cause problems when building Trilinos).
+To build with the Intel compiler, note the necessary change listed in the
+`install_nalu_eagle.sh <https://github.com/exawind/build-test/blob/master/install_scripts/install_nalu_eagle.sh>`__ 
+batch script.
 
-Then to load Nalu-Wind dependencies (and you will need Spack's openmpi for Nalu-Wind now) into your path you 
+To load Nalu-Wind dependencies (you will need Spack's OpenMPI for Nalu-Wind now) into your path you 
 will need to ``spack load openmpi %compiler`` and ``spack load nalu-wind %compiler``, using 
 ``%gcc`` or ``%intel`` to specify which to load.
 
@@ -213,11 +210,4 @@ the dependencies by using ``spack location -i <package>``. For example in the
          ..
    make
 
-There are also scripts available for this according to machine `here <https://github.com/exawind/build-test/blob/master/configs>`__. These scripts may also provide the capability to access and use pre-built dependencies from a shared directory if they are available on the machine. This should allow you to have a build of Nalu-Wind in which you are able to continuosly modify the source code and rebuild.
-
-Development Build of Trilinos 
------------------------------
-
-If you want to go even further into having a development build of Trilinos while
-using TPLs Spack has built for you, checkout Trilinos somewhere and see the example configure 
-script for Trilinos according to machine `here <https://github.com/exawind/build-test/blob/master/configs>`__.
+There are also ``do-config`` scripts available for this according to machine under the configs directory `here <https://github.com/exawind/build-test>`__. These scripts may also provide the capability to access and use pre-built dependencies from a set of modules if they are available on the machine. This should allow you to have a build of Nalu-Wind in which you are able to continuosly modify the source code and rebuild.

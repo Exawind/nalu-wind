@@ -14,6 +14,7 @@
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -92,11 +93,6 @@ ComputeMdotEdgeOpenAlgorithm::execute()
     ? 0.0
     : 1.0;
 
-  // time step; scale projection time scale by pstabFac (no divide by here)
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
-  const double projTimeScale = dt/gamma1*pstabFac;
-
   // interpolation for mdot uses nearest node, therefore, n/a
 
   // set accumulation variables
@@ -105,6 +101,9 @@ ComputeMdotEdgeOpenAlgorithm::execute()
 
   // deal with state
   ScalarFieldType &densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType* Udiag = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "momentum_diag");
+
 
   // define vector of parent topos; should always be UNITY in size
   std::vector<stk::topology> parentTopo;
@@ -172,6 +171,9 @@ ComputeMdotEdgeOpenAlgorithm::execute()
         const double * vrtm =  stk::mesh::field_data(*velocityRTM_, nodeR );
         const double densityR = *stk::mesh::field_data(densityNp1, nodeR );
         const double bcPressure = *stk::mesh::field_data(*pressureBc_, nodeR );
+
+        const double udiagR = *stk::mesh::field_data(*Udiag, nodeR);
+        const double projTimeScale = pstabFac / udiagR;
 
         // offset for bip area vector
         const int faceOffSet = ip*nDim;

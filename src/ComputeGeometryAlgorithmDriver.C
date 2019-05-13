@@ -12,9 +12,9 @@
 #include <AlgorithmDriver.h>
 #include <FieldTypeDef.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 #include <Realm.h>
 #include <SolutionOptions.h>
-#include <master_element/MasterElement.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -183,7 +183,7 @@ ComputeGeometryAlgorithmDriver::check_jacobians()
 
       // extract master element specifics
       const int nodesPerElement = meSCV->nodesPerElement_;
-      const int numScvIp = meSCV->numIntPoints_;
+      const int numScvIp = meSCV->num_integration_points();
 
       // resize
       ws_coordinates.resize(nodesPerElement*nDim);

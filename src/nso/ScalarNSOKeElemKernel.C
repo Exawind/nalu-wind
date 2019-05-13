@@ -8,6 +8,7 @@
 #include "nso/ScalarNSOKeElemKernel.h"
 #include "AlgTraits.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 #include "SolutionOptions.h"
 #include "TimeIntegrator.h"
 
@@ -226,7 +227,7 @@ ScalarNSOKeElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(ScalarNSOKeElemKernel);
+INSTANTIATE_KERNEL(ScalarNSOKeElemKernel)
 
 }  // nalu
 }  // sierra

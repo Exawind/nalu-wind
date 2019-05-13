@@ -18,6 +18,7 @@
 #include "KokkosInterface.h"
 #include "SimdInterface.h"
 
+#include "master_element/MasterElementFactory.h"
 #include "UnitTestHelperObjects.h"
 
 namespace unit_test_utils {
@@ -57,7 +58,10 @@ public:
       meta_.coordinate_field());
 
     EXPECT_TRUE(coordinates_ != nullptr);
-    dataNeeded_.add_coordinates_field(
+
+    const int numDof = 1;
+    helperObjs_.reset(new HelperObjects(bulk_, AlgTraits::topo_, numDof, partVec_[0]));
+    dataNeeded().add_coordinates_field(
       *coordinates_, AlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
   }
 
@@ -68,8 +72,8 @@ public:
     meSCV_ = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
 
     // Register them to ElemDataRequests
-    dataNeeded_.add_cvfem_surface_me(meSCS_);
-    dataNeeded_.add_cvfem_volume_me(meSCV_);
+    dataNeeded().add_cvfem_surface_me(meSCS_);
+    dataNeeded().add_cvfem_volume_me(meSCV_);
 
     // Initialize shape function views
     double scs_data[AlgTraits::numScsIp_*AlgTraits::nodesPerElement_];
@@ -90,14 +94,15 @@ public:
   template<typename LambdaFunction>
   void execute(LambdaFunction func)
   {
-    int numDof = 1;
     ThrowAssertMsg(partVec_.size()==1, "KokkosMEViews unit-test assumes partVec_.size==1");
 
-    HelperObjects helperObjs(bulk_, AlgTraits::topo_, numDof, partVec_[0]);
-    helperObjs.assembleElemSolverAlg->dataNeededByKernels_ = dataNeeded_;
-
-    helperObjs.assembleElemSolverAlg->run_algorithm(bulk_, func);
+#ifndef KOKKOS_ENABLE_CUDA
+    helperObjs_->assembleElemSolverAlg->run_algorithm(bulk_, func);
+#endif
   }
+
+  inline sierra::nalu::ElemDataRequests& dataNeeded()
+  { return helperObjs_->assembleElemSolverAlg->dataNeededByKernels_; }
 
   stk::ParallelMachine comm_;
   stk::mesh::MetaData meta_;
@@ -105,7 +110,8 @@ public:
   stk::mesh::PartVector partVec_;
   const VectorFieldType* coordinates_{nullptr};
 
-  sierra::nalu::ElemDataRequests dataNeeded_;
+  std::unique_ptr<HelperObjects> helperObjs_{nullptr};
+
   sierra::nalu::MasterElement* meFC_{nullptr};
   sierra::nalu::MasterElement* meSCV_{nullptr};
   sierra::nalu::MasterElement* meSCS_{nullptr};

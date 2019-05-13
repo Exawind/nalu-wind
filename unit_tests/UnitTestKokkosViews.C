@@ -10,6 +10,7 @@
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
 
+#include <master_element/MasterElementFactory.h>
 #include <stk_util/parallel/Parallel.hpp>
 #include <Kokkos_Core.hpp>
 
@@ -17,7 +18,7 @@
 
 namespace {
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 //following tests can't run on cuda due to variety of reasons, including
 //use of std::vectors, use of MasterElement functions (defined for host), etc.
 
@@ -31,7 +32,7 @@ void find_max_nodes_and_ips(const stk::mesh::BucketVector& buckets,
     stk::topology topo = bptr->topology();
     maxNodesPerElement = std::max(maxNodesPerElement, (int)topo.num_nodes());
     sierra::nalu::MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
-    maxScsIp = std::max(maxScsIp, meSCS->numIntPoints_);
+    maxScsIp = std::max(maxScsIp, meSCS->num_integration_points());
     numEntities += bptr->size();
   }
   std::cout<<"num entities: "<<numEntities<<std::endl;
@@ -86,7 +87,7 @@ public:
           [&](stk::topology topo, sierra::nalu::MasterElement& meSCS)
           {
               const int nodesPerElem = topo.num_nodes();
-              resizer(nodesPerElem, meSCS.numIntPoints_);
+              resizer(nodesPerElem, meSCS.num_integration_points());
           }
           ,
           [&](stk::mesh::Entity elem, stk::topology topo, sierra::nalu::MasterElement& meSCS)
@@ -102,7 +103,7 @@ public:
               double* p_det_j = det_j.data();
               const int* lrscv = meSCS.adjacentNodes();
       
-              const int numScsIp = meSCS.numIntPoints_;
+              const int numScsIp = meSCS.num_integration_points();
               const int nodesPerElem = topo.num_nodes();
               for(int n=0; n<nodesPerElem; ++n) {
                   const double* nodeCoords = stk::mesh::field_data(*coordField, elemNodes[n]);
@@ -308,7 +309,7 @@ public:
         sierra::nalu::MasterElement& meSCS = *sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
 
         const int nodesPerElem = topo.num_nodes();
-        const int numScsIp = meSCS.numIntPoints_;
+        const int numScsIp = meSCS.num_integration_points();
 
         sierra::nalu::SharedMemView<double**> elemNodeCoords = sierra::nalu::get_shmem_view_2D<double>(team, nodesPerElem, nDim);
         sierra::nalu::SharedMemView<double*> elemNodePressures = sierra::nalu::get_shmem_view_1D<double>(team, nodesPerElem);
@@ -401,7 +402,7 @@ TEST_F(Hex8Mesh, indexing_views)
     check_discrete_laplacian(exactLaplacian);
 }
 
-//end of stuff that's ifndef'd for KOKKOS_HAVE_CUDA
+//end of stuff that's ifndef'd for KOKKOS_ENABLE_CUDA
 #endif
 
 }

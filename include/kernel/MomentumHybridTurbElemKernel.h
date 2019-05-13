@@ -27,7 +27,7 @@ class ElemDataRequests;
  *
  */
 template <typename AlgTraits>
-class MomentumHybridTurbElemKernel : public Kernel
+class MomentumHybridTurbElemKernel : public NGPKernel<MomentumHybridTurbElemKernel<AlgTraits>>
 {
 public:
   MomentumHybridTurbElemKernel(
@@ -36,32 +36,29 @@ public:
     VectorFieldType*,
     ElemDataRequests&);
 
-  virtual ~MomentumHybridTurbElemKernel() {}
+  KOKKOS_FUNCTION MomentumHybridTurbElemKernel() = default;
+
+  KOKKOS_FUNCTION virtual ~MomentumHybridTurbElemKernel() = default;
 
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  MomentumHybridTurbElemKernel() = delete;
-
-  VectorFieldType* velocityNp1_{nullptr};
-  ScalarFieldType* densityNp1_{nullptr};
-  ScalarFieldType* tkeNp1_{nullptr};
-  ScalarFieldType* alphaNp1_{nullptr};
-  GenericFieldType* mutij_{nullptr};
-  VectorFieldType* coordinates_{nullptr};
-
-  // master element
-  const int* lrscv_;
+  unsigned  velocityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  densityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  tkeNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  alphaNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  mutij_ {stk::mesh::InvalidOrdinal};
+  unsigned  coordinates_ {stk::mesh::InvalidOrdinal};
 
   const bool shiftedGradOp_;
 
-  // fixed scratch space
-  AlignedViewType<DoubleType[AlgTraits::numScsIp_][AlgTraits::nodesPerElement_]>
-    v_shape_function_{"v_shape_function"};
+  MasterElement* meSCS_{nullptr};
 };
 
 } // namespace nalu

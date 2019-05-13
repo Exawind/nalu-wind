@@ -74,7 +74,7 @@ VariableDensityEnthalpyMMSHOElemKernel<AlgTraits>::execute(
   });
 }
 
-INSTANTIATE_KERNEL_HOSGL(VariableDensityEnthalpyMMSHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(VariableDensityEnthalpyMMSHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

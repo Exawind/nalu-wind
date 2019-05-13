@@ -11,7 +11,6 @@
 
 #include<Realm.h>
 #include<SolverAlgorithm.h>
-#include<ElemDataRequestsNGP.h>
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
 #include<ScratchViews.h>
@@ -39,8 +38,7 @@ public:
     stk::mesh::Part *part,
     EquationSystem *eqSystem,
     stk::mesh::EntityRank entityRank,
-    unsigned nodesPerEntity,
-    bool interleaveMeViews = true);
+    unsigned nodesPerEntity);
   virtual ~AssembleElemSolverAlgorithm() {}
   virtual void initialize_connectivity();
   virtual void execute();
@@ -49,64 +47,87 @@ public:
   void run_algorithm(stk::mesh::BulkData& bulk_data, LambdaFunction lambdaFunc)
   {
     stk::mesh::MetaData& meta_data = bulk_data.mesh_meta_data();
+    const int nDim = meta_data.spatial_dimension();
     const int lhsSize = rhsSize_*rhsSize_;
     const int scratchIdsSize = rhsSize_;
 
-   ElemDataRequestsNGP dataNeededNGP(dataNeededByKernels_);
+    const ngp::Mesh& ngpMesh = realm_.ngp_mesh();
+    const ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+    ElemDataRequestsGPU dataNeededNGP(
+      fieldMgr, dataNeededByKernels_, meta_data.get_fields().size());
 
-   const int bytes_per_team = 0;
-   const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(lhsSize, rhsSize_, scratchIdsSize,
-                                                                    meta_data.spatial_dimension(), dataNeededNGP);
-   stk::mesh::Selector elemSelector =
-           meta_data.locally_owned_part()
-         & stk::mesh::selectUnion(partVec_)
-         & !realm_.get_inactive_selector();
- 
-   stk::mesh::BucketVector const& elem_buckets =
-           realm_.get_buckets(entityRank_, elemSelector );
- 
-   auto team_exec = sierra::nalu::get_host_team_policy(elem_buckets.size(), bytes_per_team, bytes_per_thread);
-   Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
-   {
-     stk::mesh::Bucket & b = *elem_buckets[team.league_rank()];
- 
-     ThrowAssertMsg(b.topology().num_nodes() == (unsigned)nodesPerEntity_,
-                    "AssembleElemSolverAlgorithm expected nodesPerEntity_ = "
-                    <<nodesPerEntity_<<", but b.topology().num_nodes() = "<<b.topology().num_nodes());
- 
-     SharedMemData smdata(team, bulk_data, dataNeededNGP, nodesPerEntity_, rhsSize_);
+    const int bytes_per_team = 0;
+    const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(
+      lhsSize, rhsSize_, scratchIdsSize, meta_data.spatial_dimension(),
+      dataNeededNGP);
+    stk::mesh::Selector elemSelector = meta_data.locally_owned_part() &
+                                       stk::mesh::selectUnion(partVec_) &
+                                       !realm_.get_inactive_selector();
 
-     const size_t bucketLen   = b.size();
-     const size_t simdBucketLen = get_num_simd_groups(bucketLen);
- 
-     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, simdBucketLen), [&](const size_t& bktIndex)
-     {
-       int numSimdElems = get_length_of_next_simd_group(bktIndex, bucketLen);
-       smdata.numSimdElems = numSimdElems;
- 
-       for(int simdElemIndex=0; simdElemIndex<numSimdElems; ++simdElemIndex) {
-         stk::mesh::Entity element = b[bktIndex*simdLen + simdElemIndex];
-         smdata.elemNodes[simdElemIndex] = bulk_data.begin_nodes(element);
-         fill_pre_req_data(dataNeededNGP, bulk_data, element,
-                           *smdata.prereqData[simdElemIndex], interleaveMEViews_);
-       }
- 
-       copy_and_interleave(smdata.prereqData, numSimdElems, smdata.simdPrereqData, interleaveMEViews_);
- 
-       if (!interleaveMEViews_) {
-         fill_master_element_views(dataNeededNGP, bulk_data, smdata.simdPrereqData);
-       }
+    const auto& elem_buckets =
+      ngp::get_bucket_ids(bulk_data, entityRank_, elemSelector);
 
-       lambdaFunc(smdata);
-     });
-   });
+    // Create local copies of class data
+    const auto entityRank = entityRank_;
+    const auto nodesPerEntity = nodesPerEntity_;
+    const auto rhsSize = rhsSize_;
+
+    auto team_exec = sierra::nalu::get_device_team_policy(
+      elem_buckets.size(), bytes_per_team, bytes_per_thread);
+    Kokkos::parallel_for(
+      team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team) {
+        auto bktId = elem_buckets.device_get(team.league_rank());
+        auto& b = ngpMesh.get_bucket(entityRank, bktId);
+
+#ifndef KOKKOS_ENABLE_CUDA
+        ThrowAssertMsg(
+          b.topology().num_nodes() == (unsigned)nodesPerEntity_,
+          "AssembleElemSolverAlgorithm expected nodesPerEntity_ = "
+            << nodesPerEntity_
+            << ", but b.topology().num_nodes() = " << b.topology().num_nodes());
+#endif
+
+        SharedMemData<DeviceTeamHandleType, DeviceShmem> smdata(
+          team, nDim, dataNeededNGP, nodesPerEntity, rhsSize);
+
+        const size_t bucketLen = b.size();
+        const size_t simdBucketLen = get_num_simd_groups(bucketLen);
+
+        Kokkos::parallel_for(
+          Kokkos::TeamThreadRange(team, simdBucketLen), [&](const size_t& bktIndex) {
+            int numSimdElems =
+              get_length_of_next_simd_group(bktIndex, bucketLen);
+            smdata.numSimdElems = numSimdElems;
+
+            for (int simdElemIndex = 0; simdElemIndex < numSimdElems; ++simdElemIndex) {
+              stk::mesh::Entity element = b[bktIndex * simdLen + simdElemIndex];
+              const auto elemIndex = ngpMesh.fast_mesh_index(element);
+              smdata.ngpElemNodes[simdElemIndex] =
+                ngpMesh.get_nodes(entityRank, elemIndex);
+              fill_pre_req_data(
+                dataNeededNGP, ngpMesh, entityRank, element,
+                *smdata.prereqData[simdElemIndex]);
+            }
+
+#ifndef KOKKOS_ENABLE_CUDA
+            // No need to interleave on GPUs
+            copy_and_interleave(
+              smdata.prereqData, numSimdElems, smdata.simdPrereqData);
+#endif
+
+            fill_master_element_views(dataNeededNGP, smdata.simdPrereqData);
+            lambdaFunc(smdata);
+          });
+      });
   }
 
   ElemDataRequests dataNeededByKernels_;
   stk::mesh::EntityRank entityRank_;
+
+  //! Relaxation factor to be applied to the diagonal term
+  double diagRelaxFactor_{1.0};
   unsigned nodesPerEntity_;
   int rhsSize_;
-  const bool interleaveMEViews_;
 };
 
 } // namespace nalu

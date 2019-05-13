@@ -176,12 +176,12 @@ class PromoteElementQuadTest : public ::testing::Test
       void compute_dual_nodal_volume()
       {
         auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
-        auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", poly_order);
-        sierra::nalu::HigherOrderQuad2DSCV meSCV(*elemDesc, basis, quad);
+        auto quad = sierra::nalu::TensorProductQuadratureRule(poly_order);
+        sierra::nalu::HigherOrderQuad2DSCV meSCV(basis, quad);
 
         // extract master element specifics
         const int nodesPerElement = meSCV.nodesPerElement_;
-        const int numScvIp = meSCV.numIntPoints_;
+        const int numScvIp = meSCV.num_integration_points();
         const int* ipNodeMap = meSCV.ipNodeMap();
 
         // define scratch fields
@@ -215,10 +215,10 @@ class PromoteElementQuadTest : public ::testing::Test
       void compute_projected_nodal_gradient_interior()
       {
         auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMap, elemDesc->nodeLocs1D);
-        auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", poly_order);
-        sierra::nalu::HigherOrderQuad2DSCS meSCS(*elemDesc, basis, quad);
+        auto quad = sierra::nalu::TensorProductQuadratureRule(poly_order);
+        sierra::nalu::HigherOrderQuad2DSCS meSCS(basis, quad);
 
-        auto numScsIp = meSCS.numIntPoints_;
+        auto numScsIp = meSCS.num_integration_points();
         auto nodesPerElement = meSCS.nodesPerElement_;
 
         std::vector<double> ws_scalar(nodesPerElement);
@@ -277,10 +277,10 @@ class PromoteElementQuadTest : public ::testing::Test
       {
 
         auto basis = sierra::nalu::LagrangeBasis(elemDesc->inverseNodeMapBC, elemDesc->nodeLocs1D);
-        auto quad = sierra::nalu::TensorProductQuadratureRule("GaussLegendre", poly_order);
-        sierra::nalu::HigherOrderEdge2DSCS meBC(*elemDesc, basis, quad);
+        auto quad = sierra::nalu::TensorProductQuadratureRule(poly_order);
+        sierra::nalu::HigherOrderEdge2DSCS meBC(basis, quad);
 
-        auto numScsIp = meBC.numIntPoints_;
+        auto numScsIp = meBC.num_integration_points();
         auto nodesPerFace = meBC.nodesPerElement_;
 
         std::vector<double> ws_scalar(nodesPerFace);

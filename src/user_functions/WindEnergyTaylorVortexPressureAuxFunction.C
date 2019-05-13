@@ -64,7 +64,7 @@ WindEnergyTaylorVortexPressureAuxFunction::do_evaluate(
   const unsigned spatialDimension,
   const unsigned numPoints,
   double * fieldPtr,
-  const unsigned fieldSize,
+  const unsigned  /* fieldSize */,
   const unsigned /*beginPos*/,
   const unsigned /*endPos*/) const
 {

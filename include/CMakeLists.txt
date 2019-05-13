@@ -2,7 +2,6 @@ add_sources(GlobalHeaderList
    ABLForcingAlgorithm.h
    ABLProfileFunction.h
    Actuator.h
-   ActuatorLinePointDrag.h
    AlgTraits.h
    Algorithm.h
    AlgorithmDriver.h
@@ -134,7 +133,6 @@ add_sources(GlobalHeaderList
    MassFractionEquationSystem.h
    MaterialProperty.h
    MaterialPropertys.h
-   MeshMotionInfo.h
    MixtureFractionEquationSystem.h
    MomentumABLForceSrcNodeSuppAlg.h
    MomentumActuatorSrcNodeSuppAlg.h
@@ -199,13 +197,14 @@ add_sources(GlobalHeaderList
    TurbViscSmagorinskyAlgorithm.h
    TurbViscWaleAlgorithm.h
    TurbulenceAveragingPostProcessing.h
-   UnitTests.h
    nalu_make_unique.h
 )
 
 if(ENABLE_OPENFAST)
    add_sources(GlobalHeaderList
+   	  ActuatorFAST.h
       ActuatorLineFAST.h
+      ActuatorDiskFAST.h
    )
 endif()
 

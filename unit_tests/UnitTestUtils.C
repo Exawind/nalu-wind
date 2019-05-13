@@ -168,11 +168,6 @@ stk::mesh::Entity create_one_element(
   std::vector<std::vector<double>>& nodeLocations)
 {
   // create just one element
-  std::cout << "ONE ELEMENT CREATED" << std::endl;
-  std::cout << "ONE ELEMENT CREATED" << std::endl;
-  std::cout << "ONE ELEMENT CREATED" << std::endl;
-  std::cout << "ONE ELEMENT CREATED" << std::endl;
-
    auto& meta = bulk.mesh_meta_data();
    stk::mesh::Part& block_1 = meta.declare_part_with_topology("block_1", topo);
    stk::io::put_io_part_attribute(block_1);
@@ -679,7 +674,7 @@ std::array<double,9> random_linear_transformation(int dim, double scale, std::mt
 
 }//namespace unit_test_utils
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 void Hex8Mesh::check_discrete_laplacian(double exactLaplacian)
 {

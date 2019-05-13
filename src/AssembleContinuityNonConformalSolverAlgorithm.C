@@ -108,14 +108,14 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
 
   const int nDim = meta_data.spatial_dimension();
 
-  // continuity equation scales by projection time scale
-  const double dt = realm_.get_time_step();
-  const double gamma1 = realm_.get_gamma1();
-  const double projTimeScale = dt/gamma1;
-  
   // deal with interpolation procedure
   const double interpTogether = realm_.get_mdot_interp();
   const double om_interpTogether = 1.0-interpTogether;
+
+  // Classic Nalu projection timescale
+  const double dt = realm_.get_time_step();
+  const double gamma1 = realm_.get_gamma1();
+  const double tauScale = dt / gamma1;
 
   // space for LHS/RHS; nodesPerElem*nodesPerElem and nodesPerElem
   std::vector<double> lhs;
@@ -164,6 +164,8 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
   std::vector<double> ws_c_meshVelocity; // only require current
   std::vector<double> ws_c_density;
   std::vector<double> ws_o_density;
+  std::vector<double> ws_c_udiag;
+  std::vector<double> ws_o_udiag;
   std::vector<double> ws_o_coordinates; // only require opposing
 
   // element
@@ -182,6 +184,8 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
 
   // deal with state
   ScalarFieldType &pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType* Udiag = meta_data.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "momentum_diag");
 
   // parallel communicate ghosted entities
   if ( NULL != realm_.nonConformalManager_->nonConformalGhosting_ )
@@ -253,6 +257,8 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
         ws_c_meshVelocity.resize(currentNodesPerFace*nDim);
         ws_c_density.resize(currentNodesPerFace);
         ws_o_density.resize(opposingNodesPerFace);
+        ws_c_udiag.resize(currentNodesPerFace);
+        ws_o_udiag.resize(opposingNodesPerFace);
         ws_o_coordinates.resize(opposingNodesPerFace*nDim);
         ws_c_general_shape_function.resize(currentNodesPerFace);
         ws_o_general_shape_function.resize(opposingNodesPerFace);
@@ -281,6 +287,8 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
         double *p_c_meshVelocity = &ws_c_meshVelocity[0];
         double *p_c_density = &ws_c_density[0];
         double *p_o_density = &ws_o_density[0];
+        double *p_c_udiag = &ws_c_udiag[0];
+        double *p_o_udiag = &ws_o_udiag[0];
         double *p_o_coordinates = &ws_o_coordinates[0];
 
         // element
@@ -306,6 +314,8 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
           // gather; scalar
           p_c_pressure[ni] = *stk::mesh::field_data(pressureNp1, node);
           p_c_density[ni] = *stk::mesh::field_data(*density_, node);
+          const double udiagTmp = *stk::mesh::field_data(*Udiag, node);
+          p_c_udiag[ni] = 1.0 / udiagTmp;
           // gather; vector
           const double *velocity = stk::mesh::field_data(*velocity_, node );
           const double *meshVelocity = stk::mesh::field_data(*meshVelocity_, node );
@@ -314,7 +324,7 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
             const int offSet = i*current_num_face_nodes + ni; 
             p_c_velocity[offSet] = velocity[i];
             p_c_meshVelocity[offSet] = meshVelocity[i];
-            p_c_Gjp[offSet] = Gjp[i];
+            p_c_Gjp[offSet] = Gjp[i] * p_c_udiag[ni];
           }
         }
       
@@ -329,6 +339,8 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
           // gather; scalar
           p_o_pressure[ni] = *stk::mesh::field_data(pressureNp1, node);
           p_o_density[ni] = *stk::mesh::field_data(*density_, node);
+          const double udiagTmp = *stk::mesh::field_data(*Udiag, node);
+          p_o_udiag[ni] = 1.0 / udiagTmp;
           // gather; vector
           const double *velocity = stk::mesh::field_data(*velocity_, node );
           const double *Gjp = stk::mesh::field_data(*Gjp_, node );
@@ -336,7 +348,7 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
           for ( int i = 0; i < nDim; ++i ) {
             const int offSet = i*opposing_num_face_nodes + ni;        
             p_o_velocity[offSet] = velocity[i];
-            p_o_Gjp[offSet] = Gjp[i];
+            p_o_Gjp[offSet] = Gjp[i] * p_o_udiag[ni];
             p_o_coordinates[ni*nDim+i] = coords[i];
           }
         }
@@ -475,6 +487,20 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
           &ws_o_pressure[0],
           &opposingPressureBip);
 
+        double curProjTScaleBip = 0.0;
+        meFCCurrent->interpolatePoint(
+          sizeOfScalarField,
+          &(dgInfo->currentIsoParCoords_[0]),
+          &ws_c_udiag[0],
+          &curProjTScaleBip);
+
+        double oppProjTScaleBip = 0.0;
+        meFCOpposing->interpolatePoint(
+          sizeOfScalarField,
+          &(dgInfo->opposingIsoParCoords_[0]),
+          &ws_o_udiag[0],
+          &oppProjTScaleBip);
+
         // velocity
         meFCCurrent->interpolatePoint(
           sizeOfVectorField,
@@ -568,7 +594,8 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
         for ( int p = 0; p < rhsSize; ++p )
           p_rhs[p] = 0.0;
                 
-        const double penaltyIp = projTimeScale*0.5*(currentInverseLength + opposingInverseLength);
+        const double projTimeScaleIp = 0.5*(curProjTScaleBip + oppProjTScaleBip);
+        const double penaltyIp = projTimeScaleIp*0.5*(currentInverseLength + opposingInverseLength);
 
         double ncFlux = 0.0;
         double ncPstabFlux = 0.0;
@@ -577,20 +604,20 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
           const double oRhoVelocity = interpTogether*opposingRhoVelocityBip[j] + om_interpTogether*opposingDensityBip*opposingVelocityBip[j];
           const double cRhoMeshVelocity = interpTogether*currentRhoMeshVelocityBip[j] + om_interpTogether*currentDensityBip*currentMeshVelocityBip[j];
           ncFlux += 0.5*(cRhoVelocity*p_cNx[j] - oRhoVelocity*p_oNx[j]) - meshMotionFac_*cRhoMeshVelocity*p_cNx[j];
-          const double cPstab = currentDpdxBip[j] - currentGjpBip[j];
-          const double oPstab = opposingDpdxBip[j] - opposingGjpBip[j];
+          const double cPstab = currentDpdxBip[j]*projTimeScaleIp - currentGjpBip[j];
+          const double oPstab = opposingDpdxBip[j]*projTimeScaleIp - opposingGjpBip[j];
           ncPstabFlux += 0.5*(cPstab*p_cNx[j] - oPstab*p_oNx[j]);
         }
 
-        const double mdot = (ncFlux - includePstab_*projTimeScale*ncPstabFlux + penaltyIp*(currentPressureBip - opposingPressureBip))*c_amag;
+        const double mdot = (ncFlux - includePstab_*ncPstabFlux + penaltyIp*(currentPressureBip - opposingPressureBip))*c_amag;
         
         // form residual
         const int nn = ipNodeMap[currentGaussPointId];
-        p_rhs[nn] -= mdot/projTimeScale;
+        p_rhs[nn] -= mdot / tauScale;
 
         // set-up row for matrix
         const int rowR = nn*totalNodes;
-        double lhsFac = penaltyIp*c_amag/projTimeScale;
+        double lhsFac = penaltyIp*c_amag / tauScale;
         
         // sensitivities; current face (penalty); use general shape function for this single ip
         meFCCurrent->general_shape_fcn(1, &currentIsoParCoords[0], &ws_c_general_shape_function[0]);
@@ -609,7 +636,7 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
             const double dndxj = p_c_dndx[offSetDnDx+j];
             lhscd -= dndxj*nxj;
           }
-          p_lhs[rowR+ic] += 0.5*lhscd*c_amag*includePstab_;
+          p_lhs[rowR+ic] += 0.5*lhscd*c_amag*includePstab_ * projTimeScaleIp / tauScale;
         }
 
         // sensitivities; opposing face (penalty); use general shape function for this single ip
@@ -617,7 +644,7 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
         for ( int ic = 0; ic < opposingNodesPerFace; ++ic ) {
           const int icnn = o_face_node_ordinals[ic];
           const double r = p_o_general_shape_function[ic];
-          p_lhs[rowR+icnn+currentNodesPerElement] -= r*lhsFac;
+          p_lhs[rowR+icnn+currentNodesPerElement] -= r*lhsFac * projTimeScaleIp / tauScale;
         }
         
         // sensitivities; opposing element (diffusion)
@@ -629,7 +656,7 @@ AssembleContinuityNonConformalSolverAlgorithm::execute()
             const double dndxj = p_o_dndx[offSetDnDx+j];
             lhscd -= dndxj*nxj;
           }
-          p_lhs[rowR+ic+currentNodesPerElement] -= 0.5*lhscd*c_amag*includePstab_;
+          p_lhs[rowR+ic+currentNodesPerElement] -= 0.5*lhscd*c_amag*includePstab_*projTimeScaleIp / tauScale;
         }
 
         apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);

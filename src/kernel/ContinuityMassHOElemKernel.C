@@ -72,7 +72,7 @@ ContinuityMassHOElemKernel<AlgTraits>::setup(const TimeIntegrator& timeIntegrato
 //--------------------------------------------------------------------------
 template <class AlgTraits> void
 ContinuityMassHOElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType**>& lhs,
+  SharedMemView<DoubleType**>&  /* lhs */,
   SharedMemView<DoubleType*>& rhs,
   ScratchViewsHO<DoubleType>& scratchViews)
 {
@@ -89,7 +89,7 @@ ContinuityMassHOElemKernel<AlgTraits>::execute(
   tensor_assembly::density_dt_rhs(ops_, vol, gamma_, rhom1, rhop0, rhop1, v_rhs);
 }
 
-INSTANTIATE_KERNEL_HOSGL(ContinuityMassHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(ContinuityMassHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

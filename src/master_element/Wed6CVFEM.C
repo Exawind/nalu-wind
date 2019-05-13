@@ -11,11 +11,35 @@
 #include "FORTRAN_Proto.h"
 #include "NaluEnv.h"
 
+#include <array>
+
 namespace sierra {
 namespace nalu {
 
+template<typename ViewType>
+KOKKOS_FUNCTION void wed_shape_fcn(
+  const int  npts,
+  const double *isoParCoord,
+  ViewType& shape_fcn)
+{
+  for (int j = 0; j < npts; ++j ) {
+    int k    = 3 * j;
+    double r    = isoParCoord[k];
+    double s    = isoParCoord[k + 1];
+    double t    = 1.0 - r - s;
+    double xi   = isoParCoord[k + 2];
+    shape_fcn(j, 0) = 0.5 * t * (1.0 - xi);
+    shape_fcn(j, 1) = 0.5 * r * (1.0 - xi);
+    shape_fcn(j, 2) = 0.5 * s * (1.0 - xi);
+    shape_fcn(j, 3) = 0.5 * t * (1.0 + xi);
+    shape_fcn(j, 4) = 0.5 * r * (1.0 + xi);
+    shape_fcn(j, 5) = 0.5 * s * (1.0 + xi);
+  }
+}
+
 //-------- wed_deriv -------------------------------------------------------
 template <typename DerivType>
+KOKKOS_FUNCTION
 void wed_deriv(
   const int npts,
   const double* intgLoc,
@@ -58,46 +82,13 @@ void wed_deriv(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 WedSCV::WedSCV()
   : MasterElement()
 {
-  nDim_ = 3;
-  nodesPerElement_ = 6;
-  numIntPoints_ = 6;
-
-  // define ip node mappings
-  ipNodeMap_.resize(6);
-  ipNodeMap_[0] = 0; ipNodeMap_[1] = 1; ipNodeMap_[2] = 2;
-  ipNodeMap_[3] = 3; ipNodeMap_[4] = 4; ipNodeMap_[5] = 5;
-
-  // standard integration location
-  intgLoc_.resize(18);
-
-  const double eleven18ths = 11.0/18.0;
-  const double seven36ths = 7.0/36.0;
-  intgLoc_[0]  = seven36ths;  intgLoc_[1]  = seven36ths;  intgLoc_[2]  = -0.5; // vol 0
-  intgLoc_[3]  = eleven18ths; intgLoc_[4]  = seven36ths;  intgLoc_[5]  = -0.5; // vol 1
-  intgLoc_[6]  = seven36ths;  intgLoc_[7]  = eleven18ths; intgLoc_[8]  = -0.5; // vol 2
-  intgLoc_[9]  = seven36ths;  intgLoc_[10] = seven36ths;  intgLoc_[11] = 0.5;  // vol 3
-  intgLoc_[12] = eleven18ths; intgLoc_[13] = seven36ths;  intgLoc_[14] = 0.5;  // vol 4
-  intgLoc_[15] = seven36ths;  intgLoc_[16] = eleven18ths; intgLoc_[17] = 0.5;  // vol 5
-
-  // shifted
-  intgLocShift_.resize(18);
-  intgLocShift_[0]  = 0.0;  intgLocShift_[1]  = 0.0; intgLocShift_[2]  = -1.0; // vol 0
-  intgLocShift_[3]  = 1.0;  intgLocShift_[4]  = 0.0; intgLocShift_[5]  = -1.0; // vol 1
-  intgLocShift_[6]  = 0.0;  intgLocShift_[7]  = 1.0; intgLocShift_[8]  = -1.0; // vol 2
-  intgLocShift_[9]  = 0.0;  intgLocShift_[10] = 0.0; intgLocShift_[11] =  1.0; // vol 3
-  intgLocShift_[12] = 1.0;  intgLocShift_[13] = 0.0; intgLocShift_[14] = 1.0;  // vol 4
-  intgLocShift_[15] = 0.0;  intgLocShift_[16] = 1.0; intgLocShift_[17] = 1.0;  // vol 5
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-WedSCV::~WedSCV()
-{
-  // does nothing
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
 }
 
 //--------------------------------------------------------------------------
@@ -105,15 +96,15 @@ WedSCV::~WedSCV()
 //--------------------------------------------------------------------------
 const int *
 WedSCV::ipNodeMap(
-  int /*ordinal*/)
+  int /*ordinal*/) const
 {
   // define scv->node mappings
   return &ipNodeMap_[0];
 }
 
 void WedSCV::determinant(
-  SharedMemView<DoubleType**>& coordel,
-  SharedMemView<DoubleType*>& volume)
+  SharedMemView<DoubleType**, DeviceShmem>& coordel,
+  SharedMemView<DoubleType*, DeviceShmem>& volume)
 {
   const int wedSubControlNodeTable[6][8] = {
     { 0, 15, 16, 6, 8, 19, 20, 9    },
@@ -222,9 +213,9 @@ void WedSCV::determinant(
 //-------- grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
 void WedSCV::grad_op(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
@@ -234,9 +225,9 @@ void WedSCV::grad_op(
 //-------- shifted_grad_op -------------------------------------------------
 //--------------------------------------------------------------------------
 void WedSCV::shifted_grad_op(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   wed_deriv(numIntPoints_, &intgLocShift_[0], deriv);
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
@@ -253,9 +244,24 @@ void WedSCV::determinant(
 {
   int lerr = 0;
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(wed_scv_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords,
+    ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
+}
+
+KOKKOS_FUNCTION void
+WedSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  wed_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+}
+
+KOKKOS_FUNCTION void
+WedSCV::shifted_shape_fcn(
+  SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  wed_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -276,13 +282,12 @@ WedSCV::shifted_shape_fcn(double *shpfc)
   wedge_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
 
-
 //--------------------------------------------------------------------------
 //-------- wedge_shape_fcn -------------------------------------------------
 //--------------------------------------------------------------------------
 void
 WedSCV::wedge_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *isoParCoord,
   double *shape_fcn)
 {
@@ -314,9 +319,9 @@ void WedSCV::Mij(
 }
 //-------------------------------------------------------------------------
 void WedSCV::Mij(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& metric,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& metric,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_Mij_3d<AlgTraitsWed6>(deriv, coords, metric);
 }
@@ -324,160 +329,31 @@ void WedSCV::Mij(
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
 WedSCS::WedSCS()
   : MasterElement()
 {
-  nDim_ = 3;
-  nodesPerElement_ = 6;
-  numIntPoints_ = 9;
+  MasterElement::nDim_ = nDim_;
+  MasterElement::nodesPerElement_ = nodesPerElement_;
+  MasterElement::numIntPoints_ = numIntPoints_;
 
-  // define L/R mappings
-  lrscv_.resize(18);
-  lrscv_[0]  = 0; lrscv_[1]  = 1;
-  lrscv_[2]  = 1; lrscv_[3]  = 2;
-  lrscv_[4]  = 0; lrscv_[5]  = 2;
-  lrscv_[6]  = 3; lrscv_[7]  = 4;
-  lrscv_[8]  = 4; lrscv_[9]  = 5;
-  lrscv_[10] = 3; lrscv_[11] = 5;
-  lrscv_[12] = 0; lrscv_[13] = 3;
-  lrscv_[14] = 1; lrscv_[15] = 4;
-  lrscv_[16] = 2; lrscv_[17] = 5;
-
-  // elem-edge mapping from ip
-  scsIpEdgeOrd_.resize(numIntPoints_);
-  scsIpEdgeOrd_[0] = 0; scsIpEdgeOrd_[1] = 1; scsIpEdgeOrd_[2] = 2; 
-  scsIpEdgeOrd_[3] = 3; scsIpEdgeOrd_[4] = 4; scsIpEdgeOrd_[5] = 5; 
-  scsIpEdgeOrd_[6] = 6; scsIpEdgeOrd_[7] = 7; scsIpEdgeOrd_[8] = 8; 
-
-  // define opposing node
-  oppNode_.resize(20);
-  // face 0; nodes 0,1,4,3
-  oppNode_[0] = 2; oppNode_[1] = 2; oppNode_[2] = 5; oppNode_[3] = 5;
-  // face 1; nodes 1,2,5,4
-  oppNode_[4] = 0; oppNode_[5] = 0; oppNode_[6] = 3; oppNode_[7] = 3;
-  // face 2; nodes 0,3,5,2
-  oppNode_[8] = 1; oppNode_[9] = 4; oppNode_[10] = 4; oppNode_[11] = 1;
-  // face 3; nodes 0,2,1
-  oppNode_[12] = 3; oppNode_[13] = 5; oppNode_[14] = 4; oppNode_[15] = -1;
-  // face 4; nodes 3,4,5
-  oppNode_[16] = 0; oppNode_[17] = 1; oppNode_[18] = 2; oppNode_[19] = -1;
-
-  // define opposing face
-  oppFace_.resize(20);
-  // face 0; nodes 0, 1, 4, 3
-  oppFace_[0]  = 2; oppFace_[1]  = 1; oppFace_[2]  = 4;  oppFace_[3]  = 5;
-  // face 1; nodes 1,2,5,4
-  oppFace_[4]  = 0; oppFace_[5]  = 2; oppFace_[6]  = 5;  oppFace_[7]  = 3;
-  // face 2, nodes 0,3,5,2
-  oppFace_[8]  = 0; oppFace_[9]  = 3; oppFace_[10] = 4;  oppFace_[11] = 1;
-  // face 3, nodes 0,2,1
-  oppFace_[12] = 6; oppFace_[13] = 8; oppFace_[14] = 7;  oppFace_[15] = -1;
-  //face 4, nodes 3,4,5
-  oppFace_[16] = 6; oppFace_[17] = 7; oppFace_[18] = 8;  oppFace_[19] = -1;
-
-  // standard integration location
-  const double oneSixth = 1.0/6.0;
-  const double five12th = 5.0/12.0;
-  const double eleven18th = 11.0/18.0;
-  const double seven36th = 7.0/36.0;
-
-  intgLoc_.resize(27);
-  intgLoc_[0]  =  five12th;  intgLoc_[1]  = oneSixth;  intgLoc_[2]  = -0.50; // surf 1    1->2
-  intgLoc_[3]  =  five12th;  intgLoc_[4]  = five12th;  intgLoc_[5]  = -0.50; // surf 2    2->3
-  intgLoc_[6]  =  oneSixth;  intgLoc_[7]  = five12th;  intgLoc_[8]  = -0.50; // surf 3    1->3
-  intgLoc_[9]  =  five12th;  intgLoc_[10] = oneSixth;  intgLoc_[11] =  0.50; // surf 4    4->5
-  intgLoc_[12] =  five12th;  intgLoc_[13] = five12th;  intgLoc_[14] =  0.50; // surf 5    5->6
-  intgLoc_[15] =  oneSixth;  intgLoc_[16] = five12th;  intgLoc_[17] =  0.50; // surf 6    4->6
-  intgLoc_[18] =  seven36th;  intgLoc_[19] = seven36th;  intgLoc_[20] =  0.00; // surf 7    1->4
-  intgLoc_[21] =  eleven18th; intgLoc_[22] = seven36th;  intgLoc_[23] =  0.00; // surf 8    2->5
-  intgLoc_[24] =  seven36th;  intgLoc_[25] = eleven18th; intgLoc_[26] =  0.00; // surf 9    3->6
-
-  // shifted
-  intgLocShift_.resize(27);
-  intgLocShift_[0]  =  0.50; intgLocShift_[1]  =  0.00; intgLocShift_[2]  = -1.00; // surf 1    1->2
-  intgLocShift_[3]  =  0.50; intgLocShift_[4]  =  0.50; intgLocShift_[5]  = -1.00; // surf 2    2->3
-  intgLocShift_[6]  =  0.00; intgLocShift_[7]  =  0.50; intgLocShift_[8]  = -1.00; // surf 3    1->3
-  intgLocShift_[9]  =  0.50; intgLocShift_[10] =  0.00; intgLocShift_[11] =  1.00; // surf 4    4->5
-  intgLocShift_[12] =  0.50; intgLocShift_[13] =  0.50; intgLocShift_[14] =  1.00; // surf 5    5->6
-  intgLocShift_[15] =  0.00; intgLocShift_[16] =  0.50; intgLocShift_[17] =  1.00; // surf 6    4->6
-  intgLocShift_[18] =  0.00; intgLocShift_[19] =  0.00; intgLocShift_[20] =  0.00; // surf 7    1->4
-  intgLocShift_[21] =  1.00; intgLocShift_[22] =  0.00; intgLocShift_[23] =  0.00; // surf 8    2->5
-  intgLocShift_[24] =  0.00; intgLocShift_[25] =  1.00; intgLocShift_[26] =  0.00; // surf 9    3->6
-
-  // exposed face
-  intgExpFace_.resize(60);
-  intgExpFace_[0] = 0.25;       intgExpFace_[1]  = 0.0;       intgExpFace_[2] = -0.5;  // surf 0; nodes 0,1,4,3
-  intgExpFace_[3] = 0.75;       intgExpFace_[4]  = 0.0;       intgExpFace_[5] = -0.5;  // face 0, surf 1
-  intgExpFace_[6] = 0.75;       intgExpFace_[7]  = 0.0;       intgExpFace_[8] =  0.5;  // face 0, surf 2
-  intgExpFace_[9] = 0.25;       intgExpFace_[10] = 0.0;       intgExpFace_[11] = 0.5;  // face 0, surf 3
-  intgExpFace_[12] = 0.75;      intgExpFace_[13] = 0.25;      intgExpFace_[14] = -0.5; // surf 1; nodes 1,2,5,4
-  intgExpFace_[15] = 0.25;      intgExpFace_[16] = 0.75;      intgExpFace_[17] = -0.5; // face 1, surf 1
-  intgExpFace_[18] = 0.25;      intgExpFace_[19] = 0.75;      intgExpFace_[20] =  0.5; // face 1, surf 2
-  intgExpFace_[21] = 0.75;      intgExpFace_[22] = 0.25;      intgExpFace_[23] =  0.5; // face 1, surf 3
-  intgExpFace_[24] = 0.0;       intgExpFace_[25] = 0.25;      intgExpFace_[26] = -0.5; // surf 2; nodes 0,3,5,2
-  intgExpFace_[27] = 0.0;       intgExpFace_[28] = 0.25;      intgExpFace_[29] =  0.5; // face 2, surf 1
-  intgExpFace_[30] = 0.0;       intgExpFace_[31] = 0.75;      intgExpFace_[32] =  0.5; // face 2, surf 2
-  intgExpFace_[33] = 0.0;       intgExpFace_[34] = 0.75;      intgExpFace_[35] = -0.5; // face 2, surf 3
-  intgExpFace_[36] = seven36th;  intgExpFace_[37] = seven36th;  intgExpFace_[38] = -1.0; // surf 3; nodes 0,2,1
-  intgExpFace_[39] = seven36th;  intgExpFace_[40] = eleven18th; intgExpFace_[41] = -1.0; // face 3, surf 1
-  intgExpFace_[42] = eleven18th; intgExpFace_[43] = seven36th;  intgExpFace_[44] = -1.0; // face 3, surf 2
-  intgExpFace_[45] = 0.0;       intgExpFace_[46] = 0.0;       intgExpFace_[47] =  0.0; // (blank)
-  intgExpFace_[48] = seven36th;  intgExpFace_[49] = seven36th;  intgExpFace_[50] = 1.0;  // surf 4; nodes 3,4,5
-  intgExpFace_[51] = eleven18th; intgExpFace_[52] = seven36th;  intgExpFace_[53] = 1.0;  // face 4, surf 1
-  intgExpFace_[54] = seven36th;  intgExpFace_[55] = eleven18th; intgExpFace_[56] = 1.0;  // face 4, surf 2
-  intgExpFace_[57] = 0.0;       intgExpFace_[58] = 0.0;       intgExpFace_[59] = 0.0;  // (blank)
-
-  // boundary integration point ip node mapping (ip on an ordinal to local node number)
-  ipNodeMap_.resize(20); // 4 ips (pick quad) * 5 faces
-  // face 0;
-  ipNodeMap_[0] = 0;  ipNodeMap_[1] = 1;  ipNodeMap_[2] = 4;  ipNodeMap_[3] = 3;
-  // face 1;
-  ipNodeMap_[4] = 1;  ipNodeMap_[5] = 2;  ipNodeMap_[6] = 5;  ipNodeMap_[7] = 4;
-  // face 2;
-  ipNodeMap_[8] = 0;  ipNodeMap_[9] = 3;  ipNodeMap_[10] = 5; ipNodeMap_[11] = 2;
-  // face 3;
-  ipNodeMap_[12] = 0; ipNodeMap_[13] = 2; ipNodeMap_[14] = 1; ipNodeMap_[15] = 0; //empty
-  // face 4;
-  ipNodeMap_[16] = 3; ipNodeMap_[17] = 4; ipNodeMap_[18] = 5; ipNodeMap_[19] = 0; // empty
-
-  sideNodeOrdinals_ = {
-      0, 1, 4, 3, // ordinal 0
-      1, 2, 5, 4, // ordinal 1
-      0, 3, 5, 2, // ordinal 2
-      0, 2, 1,    // ordinal 3
-      3, 4, 5     // ordinal 4
-  };
-
-  // ordinal to vector offset map.  Really only convenient for the wedge.
-  sideOffset_ = { 0, 4, 8, 12, 15};
-
-
-  std::vector<std::vector<double>> nodeLocations =
+  const double nodeLocations[6][3] =
   {
       {0.0,0.0, -1.0}, {+1.0, 0.0, -1.0}, {0.0, +1.0, -1.0},
       {0.0,0.0, +1.0}, {+1.0, 0.0, +1.0}, {0.0, +1.0, +1.0}
   };
-  intgExpFaceShift_.resize(54); // no blanked entries
   int index = 0;
   stk::topology topo = stk::topology::WEDGE_6;
   for (unsigned k = 0; k < topo.num_sides(); ++k) {
     stk::topology side_topo = topo.side_topology(k);
     const int* ordinals = side_node_ordinals(k);
     for (unsigned n = 0; n < side_topo.num_nodes(); ++n) {
-      intgExpFaceShift_.at(3 * index + 0) = nodeLocations[ordinals[n]][0];
-      intgExpFaceShift_.at(3 * index + 1) = nodeLocations[ordinals[n]][1];
-      intgExpFaceShift_.at(3 * index + 2) = nodeLocations[ordinals[n]][2];
+      intgExpFaceShift_[3 * index + 0] = nodeLocations[ordinals[n]][0];
+      intgExpFaceShift_[3 * index + 1] = nodeLocations[ordinals[n]][1];
+      intgExpFaceShift_[3 * index + 2] = nodeLocations[ordinals[n]][2];
       ++index;
     }
   }
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-WedSCS::~WedSCS()
-{
-  // does nothing
 }
 
 //--------------------------------------------------------------------------
@@ -485,7 +361,7 @@ WedSCS::~WedSCS()
 //--------------------------------------------------------------------------
 const int *
 WedSCS::ipNodeMap(
-  int ordinal)
+  int ordinal) const
 {
   // define ip->node mappings for each face (ordinal);
   return &ipNodeMap_[ordinal*4];
@@ -495,16 +371,15 @@ WedSCS::ipNodeMap(
 //-------- side_node_ordinals ----------------------------------------------
 //--------------------------------------------------------------------------
 const int *
-WedSCS::side_node_ordinals(
-  int ordinal)
+WedSCS::side_node_ordinals ( int ordinal) const
 {
   // define face_ordinal->node_ordinal mappings for each face (ordinal);
   return &sideNodeOrdinals_[sideOffset_[ordinal]];
 }
 
 void WedSCS::determinant(
-  SharedMemView<DoubleType**>& coordel,
-  SharedMemView<DoubleType**>& areav)
+  SharedMemView<DoubleType**, DeviceShmem>& coordel,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
 {
   const int wedEdgeFacetTable[9][4] = {
     { 6 ,  9 ,  20 ,  16   }, // sc face 1 -- points from 1 -> 2
@@ -619,17 +494,19 @@ void WedSCS::determinant(
   double *areav,
   double *error)
 {
+  const int nint = numIntPoints_;
+  const int npe  = nodesPerElement_;
   SIERRA_FORTRAN(wed_scs_det)
-    ( &nelem, &nodesPerElement_, &numIntPoints_, coords, areav );
+    ( &nelem, &npe, &nint, coords, areav );
 
   // all is always well; no error checking
   *error = 0;
 }
 
 void WedSCS::grad_op(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
 
@@ -637,9 +514,9 @@ void WedSCS::grad_op(
 }
 
 void WedSCS::shifted_grad_op(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   wed_deriv(numIntPoints_, &intgLocShift_[0], deriv);
 
@@ -662,10 +539,12 @@ void WedSCS::grad_op(
 
   wedge_derivative(numIntPoints_, &intgLoc_[0], deriv);
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(wed_gradient_operator) (
       &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -688,10 +567,12 @@ void WedSCS::shifted_grad_op(
 
   wedge_derivative(numIntPoints_, &intgLocShift_[0], deriv);
 
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(wed_gradient_operator) (
       &nelem,
-      &nodesPerElement_,
-      &numIntPoints_,
+      &npe,
+      &nint,
       deriv,
       coords, gradop, det_j, error, &lerr );
 
@@ -772,9 +653,10 @@ WedSCS::face_grad_op(
       const int row = 12*face_ordinal + k*ndim;
       wedge_derivative(nface, &intgExpFace_[row], dpsi);
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(wed_gradient_operator) (
           &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[18*n], &gradop[k*nelem*18+n*18], &det_j[npf*n+k], error, &lerr );
@@ -791,8 +673,8 @@ WedSCS::face_grad_op(
 //--------------------------------------------------------------------------
 void WedSCS::face_grad_op(
   int face_ordinal,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop)
 {
   using tri_traits = AlgTraitsTri3Wed6;
   using quad_traits = AlgTraitsQuad4Wed6;
@@ -801,7 +683,7 @@ void WedSCS::face_grad_op(
   constexpr int maxDerivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * dim;
   NALU_ALIGNED DoubleType psi[maxDerivSize];
   const int numFaceIps = (face_ordinal < 3) ? quad_traits::numFaceIp_ : tri_traits::numFaceIp_;
-  SharedMemView<DoubleType***> deriv(psi, numFaceIps, AlgTraitsWed6::nodesPerElement_, dim);
+  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, numFaceIps, AlgTraitsWed6::nodesPerElement_, dim);
 
   const int offset = quad_traits::numFaceIp_ * face_ordinal;
   wed_deriv(numFaceIps, &intgExpFace_[dim * offset], deriv);
@@ -812,8 +694,8 @@ void WedSCS::face_grad_op(
 //--------------------------------------------------------------------------
 void WedSCS::shifted_face_grad_op(
   int face_ordinal,
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gradop)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gradop)
 {
   using tri_traits = AlgTraitsTri3Wed6;
   using quad_traits = AlgTraitsQuad4Wed6;
@@ -822,7 +704,7 @@ void WedSCS::shifted_face_grad_op(
   constexpr int maxDerivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * dim;
   NALU_ALIGNED DoubleType psi[maxDerivSize];
   const int numFaceIps = (face_ordinal < 3) ? quad_traits::numFaceIp_ : tri_traits::numFaceIp_;
-  SharedMemView<DoubleType***> deriv(psi, numFaceIps, AlgTraitsWed6::nodesPerElement_, dim);
+  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, numFaceIps, AlgTraitsWed6::nodesPerElement_, dim);
 
   const int offset = sideOffset_[face_ordinal];
   wed_deriv(numFaceIps, &intgExpFaceShift_[dim * offset], deriv);
@@ -853,9 +735,10 @@ WedSCS::shifted_face_grad_op(
       const int row = (sideOffset_[face_ordinal]+k)*ndim;
       wedge_derivative(nface, &intgExpFaceShift_[row], dpsi);
 
+      const int npe  = nodesPerElement_;
       SIERRA_FORTRAN(wed_gradient_operator) (
           &nface,
-          &nodesPerElement_,
+          &npe,
           &nface,
           dpsi,
           &coords[18*n], &gradop[k*nelem*18+n*18], &det_j[npf*n+k], error, &lerr );
@@ -869,10 +752,10 @@ WedSCS::shifted_face_grad_op(
 
 
 void WedSCS::gij(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& gupper,
-  SharedMemView<DoubleType***>& glower,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& gupper,
+  SharedMemView<DoubleType***, DeviceShmem>& glower,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_gij_3d<AlgTraitsWed6>(deriv, coords, gupper, glower);
 }
@@ -886,9 +769,11 @@ void WedSCS::gij(
   double *glowerij,
   double *deriv)
 {
+  const int npe  = nodesPerElement_;
+  const int nint = numIntPoints_;
   SIERRA_FORTRAN(threed_gij)
-    ( &nodesPerElement_,
-      &numIntPoints_,
+    ( &npe,
+      &nint,
       deriv,
       coords, gupperij, glowerij);
 }
@@ -905,9 +790,9 @@ void WedSCS::Mij(
 }
 //-------------------------------------------------------------------------
 void WedSCS::Mij(
-  SharedMemView<DoubleType**>& coords,
-  SharedMemView<DoubleType***>& metric,
-  SharedMemView<DoubleType***>& deriv)
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType***, DeviceShmem>& metric,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   generic_Mij_3d<AlgTraitsWed6>(deriv, coords, metric);
 }
@@ -919,7 +804,7 @@ const int *
 WedSCS::adjacentNodes()
 {
   // define L/R mappings
-  return &lrscv_[0];
+  return lrscv_;
 }
 
 //--------------------------------------------------------------------------
@@ -952,6 +837,19 @@ WedSCS::opposingFace(
   const int node)
 {
   return oppFace_[ordinal*4+node];
+}
+
+KOKKOS_FUNCTION void
+WedSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  wed_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
+}
+
+KOKKOS_FUNCTION void
+WedSCS::shifted_shape_fcn(
+  SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  wed_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -1125,7 +1023,7 @@ WedSCS::isInElement(
     isoParCoord[0] = rnew;
     isoParCoord[1] = snew;
     isoParCoord[2] = xinew;
-    std::vector<double> xx = { isoParCoord[0], isoParCoord[1], isoParCoord[2] };
+    std::array<double,3> xx = {{isoParCoord[0], isoParCoord[1], isoParCoord[2]}};
 
     dist = parametric_distance(xx);
   }
@@ -1163,7 +1061,7 @@ WedSCS::interpolatePoint(
 //--------------------------------------------------------------------------
 void
 WedSCS::wedge_shape_fcn(
-  const int  &npts,
+  const int  npts,
   const double *isoParCoord,
   double *shape_fcn)
 {
@@ -1200,7 +1098,7 @@ WedSCS::parametric_distance(const double X, const double Y)
 //-------- parametric_distance ---------------------------------------------
 //--------------------------------------------------------------------------
 double
-WedSCS::parametric_distance(const std::vector<double> &x)
+WedSCS::parametric_distance(const std::array<double,3> &x)
 {
   const double X = x[0] - 1./3.;
   const double Y = x[1] - 1./3.;
@@ -1216,7 +1114,7 @@ WedSCS::parametric_distance(const std::vector<double> &x)
 //--------------------------------------------------------------------------
 void
 WedSCS::general_face_grad_op(
-  const int face_ordinal,
+  const int  /* face_ordinal */,
   const double *isoParCoord,
   const double *coords,
   double *gradop,
@@ -1229,9 +1127,10 @@ WedSCS::general_face_grad_op(
 
   wedge_derivative(nface, &isoParCoord[0], dpsi);
 
+  const int npe = nodesPerElement_;
   SIERRA_FORTRAN(wed_gradient_operator)
     ( &nface,
-      &nodesPerElement_,
+      &npe,
       &nface,
       dpsi,
       &coords[0], &gradop[0], &det_j[0], error, &lerr );

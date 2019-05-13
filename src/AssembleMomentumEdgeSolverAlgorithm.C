@@ -13,6 +13,7 @@
 #include <LinearSystem.h>
 #include <PecletFunction.h>
 #include <Realm.h>
+#include <SolutionOptions.h>
 
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
@@ -105,6 +106,7 @@ AssembleMomentumEdgeSolverAlgorithm::execute()
   const double alpha = realm_.get_alpha_factor(dofName);
   const double alphaUpw = realm_.get_alpha_upw_factor(dofName);
   const double hoUpwind = realm_.get_upw_factor(dofName);
+  const double relaxFacU = realm_.solutionOptions_->get_relaxation_factor(dofName);
   const bool useLimiter = realm_.primitive_uses_limiter(dofName);
 
   // one minus flavor
@@ -360,22 +362,22 @@ AssembleMomentumEdgeSolverAlgorithm::execute()
         // upwind advection (includes 4th); left node
         double alhsfac = 0.5*(tmdot+std::abs(tmdot))*pecfac*alphaUpw
           + 0.5*alpha*om_pecfac*tmdot;
-        p_lhs[rLiL] += alhsfac;
+        p_lhs[rLiL] += alhsfac / relaxFacU;
         p_lhs[rRiL] -= alhsfac;
 
         // upwind advection (incldues 4th); right node
         alhsfac = 0.5*(tmdot-std::abs(tmdot))*pecfac*alphaUpw
           + 0.5*alpha*om_pecfac*tmdot;
-        p_lhs[rRiR] -= alhsfac;
+        p_lhs[rRiR] -= alhsfac / relaxFacU;
         p_lhs[rLiR] += alhsfac;
 
         // central; left; collect terms on alpha and alphaUpw
         alhsfac = 0.5*tmdot*(pecfac*om_alphaUpw + om_pecfac*om_alpha);
-        p_lhs[rLiL] += alhsfac;
+        p_lhs[rLiL] += alhsfac / relaxFacU;
         p_lhs[rLiR] += alhsfac;
         // central; right
         p_lhs[rRiL] -= alhsfac;
-        p_lhs[rRiR] -= alhsfac;
+        p_lhs[rRiR] -= alhsfac / relaxFacU;
 
         //==============================
         // diffusion second
@@ -383,12 +385,12 @@ AssembleMomentumEdgeSolverAlgorithm::execute()
         const double axi = p_areaVec[i];
 
         //diffusion; row IL
-        p_lhs[rLiL] -= dlhsfac;
+        p_lhs[rLiL] -= dlhsfac / relaxFacU;
         p_lhs[rLiR] += dlhsfac;
 
         // diffusion; row IR
         p_lhs[rRiL] += dlhsfac;
-        p_lhs[rRiR] -= dlhsfac;
+        p_lhs[rRiR] -= dlhsfac / relaxFacU;
 
         // more diffusion; see theory manual
         for ( int j = 0; j < nDim; ++j ) {
@@ -398,12 +400,12 @@ AssembleMomentumEdgeSolverAlgorithm::execute()
           const int colR = j + nDim;
 
           // first left; IL,IL; IL,IR
-          p_lhs[rowL + colL] -= lhsfacNS;
+          p_lhs[rowL + colL] -= lhsfacNS / relaxFacU;
           p_lhs[rowL + colR] += lhsfacNS;
 
           // now right, IR,IL; IR,IR
           p_lhs[rowR + colL] += lhsfacNS;
-          p_lhs[rowR + colR] -= lhsfacNS;
+          p_lhs[rowR + colR] -= lhsfacNS / relaxFacU;
         }
 
       }

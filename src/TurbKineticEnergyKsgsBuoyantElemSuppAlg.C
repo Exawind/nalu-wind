@@ -69,7 +69,7 @@ TurbKineticEnergyKsgsBuoyantElemSuppAlg::elem_resize(
   MasterElement *meSCV)
 {
   const int nodesPerElement = meSCV->nodesPerElement_;
-  const int numScvIp = meSCV->numIntPoints_;
+  const int numScvIp = meSCV->num_integration_points();
 
   // resize
   ws_dndx_.resize(nDim_*numScvIp*nodesPerElement);
@@ -110,7 +110,7 @@ TurbKineticEnergyKsgsBuoyantElemSuppAlg::elem_execute(
   // pointer to ME methods
   const int *ipNodeMap = meSCV->ipNodeMap();
   const int nodesPerElement = meSCV->nodesPerElement_;
-  const int numScvIp = meSCV->numIntPoints_;
+  const int numScvIp = meSCV->num_integration_points();
 
   // gather
   stk::mesh::Entity const *  node_rels = bulkData_->begin_nodes(element);

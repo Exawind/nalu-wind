@@ -20,7 +20,6 @@
 
 #include <stk_util/util/ReportHandler.hpp>
 
-#include <vector>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -30,7 +29,7 @@
 namespace sierra {
 namespace nalu {
 
-  template<typename ftype> inline void cofactorMatrix(ftype adjJac[][3], const ftype jact[][3]) {
+  template<typename ftype> KOKKOS_INLINE_FUNCTION void cofactorMatrix(ftype adjJac[][3], const ftype jact[][3]) {
     adjJac[0][0] = jact[1][1] * jact[2][2] - jact[2][1] * jact[1][2];
     adjJac[0][1] = jact[1][2] * jact[2][0] - jact[2][2] * jact[1][0];
     adjJac[0][2] = jact[1][0] * jact[2][1] - jact[2][0] * jact[1][1];
@@ -43,7 +42,7 @@ namespace nalu {
     adjJac[2][1] = jact[0][2] * jact[1][0] - jact[1][2] * jact[0][0];
     adjJac[2][2] = jact[0][0] * jact[1][1] - jact[1][0] * jact[0][1];
   }
-  template<typename ftype> inline void cofactorMatrix(ftype adjJac[][2], const ftype jact[][2]) {
+  template<typename ftype> KOKKOS_INLINE_FUNCTION void cofactorMatrix(ftype adjJac[][2], const ftype jact[][2]) {
     adjJac[0][0] =  jact[1][1];
     adjJac[0][1] = -jact[1][0];
     adjJac[1][0] = -jact[0][1];
@@ -51,7 +50,8 @@ namespace nalu {
   }
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
-  void generic_grad_op(const GradViewType& referenceGradWeights, const CoordViewType& coords, OutputViewType& weights)
+  KOKKOS_FUNCTION
+  KOKKOS_FUNCTION void generic_grad_op(const GradViewType& referenceGradWeights, const CoordViewType& coords, OutputViewType& weights)
   {
     constexpr int dim = AlgTraits::nDim_;
 
@@ -110,7 +110,7 @@ namespace nalu {
   }
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
-  void generic_gij_3d(
+  KOKKOS_FUNCTION void generic_gij_3d(
     const GradViewType& referenceGradWeights,
     const CoordViewType& coords,
     OutputViewType& gup,
@@ -179,7 +179,7 @@ namespace nalu {
   }
 
   template <typename AlgTraits>
-  void generic_Mij_2d(const int numIntPoints, const double *deriv,
+  KOKKOS_FUNCTION void generic_Mij_2d(const int numIntPoints, const double *deriv,
                       const double *coords, double *metric) {
     static_assert(AlgTraits::nDim_ == 2, "2D method");
 
@@ -273,7 +273,7 @@ namespace nalu {
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType,
             typename OutputViewType>
-  void generic_Mij_2d(const GradViewType &referenceGradWeights,
+  KOKKOS_FUNCTION void generic_Mij_2d(const GradViewType &referenceGradWeights,
                       const CoordViewType &coords, OutputViewType &metric) {
     using ftype = typename CoordViewType::value_type;
     static_assert(std::is_same<ftype, typename GradViewType::value_type>::value,
@@ -424,7 +424,7 @@ namespace nalu {
   }
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
-  void generic_Mij_3d(
+  KOKKOS_FUNCTION void generic_Mij_3d(
     const GradViewType& referenceGradWeights,
     const CoordViewType& coords,
     OutputViewType& metric)
@@ -490,7 +490,7 @@ namespace nalu {
   }
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
-  void generic_determinant_3d(GradViewType referenceGradWeights, CoordViewType coords, OutputViewType detj)
+  KOKKOS_FUNCTION void generic_determinant_3d(GradViewType referenceGradWeights, CoordViewType coords, OutputViewType detj)
   {
     using ftype = typename CoordViewType::value_type;
     static_assert(std::is_same<ftype, typename GradViewType::value_type>::value,  "Incompatiable value type for views");

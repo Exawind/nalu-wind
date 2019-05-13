@@ -8,7 +8,7 @@ linear_solvers:
   - name: solve_scalar
     type: tpetra
     method: gmres
-    preconditioner: sgs 
+    preconditioner: sgs
     tolerance: 1e-5
     max_iterations: 50
     kspace: 50
@@ -16,31 +16,31 @@ linear_solvers:
 
   - name: solve_cont
     type: tpetra
-    method: gmres 
-    preconditioner: muelu 
+    method: gmres
+    preconditioner: muelu
     tolerance: 1e-5
     max_iterations: 50
     kspace: 50
     output_level: 0
     muelu_xml_file_name: ../../xml/milestone_aspect_ratio_smooth.xml
-    recompute_preconditioner: no 
+    recompute_preconditioner: no
     reuse_preconditioner: no
 
 realms:
 
   - name: realm_1
     mesh: ../../mesh/uqvawt_corrected.exo
-    use_edges: no       
-    activate_aura: no 
+    use_edges: no
+    activate_aura: no
 
     time_step_control:
      target_courant: 20.0
      time_step_change_factor: 1.15
-   
+
     equation_systems:
       name: theEqSys
-      max_iterations: 2 
-   
+      max_iterations: 2
+
       solver_system_specification:
         pressure: solve_cont
         velocity: solve_scalar
@@ -70,7 +70,7 @@ realms:
         user_function_name:
          velocity: wind_energy_taylor_vortex
         user_function_parameters:
-         velocity: [-225.0,0.0,50.0,50.0,6.0] 
+         velocity: [-225.0,0.0,50.0,50.0,6.0]
 
     material_properties:
       target_name: [block_1, block_2, block_3, block_4, block_5, block_6, block_7]
@@ -108,7 +108,7 @@ realms:
          velocity: wind_energy
         user_function_string_parameters:
          velocity: [mmOne]
-        use_wall_function: yes 
+        use_wall_function: yes
 
     - wall_boundary_condition: bc_wingL
       target_name: surface_5
@@ -117,7 +117,7 @@ realms:
          velocity: wind_energy
         user_function_string_parameters:
          velocity: [mmOne]
-        use_wall_function: yes 
+        use_wall_function: yes
 
     - wall_boundary_condition: bc_wingR
       target_name: surface_6
@@ -126,33 +126,39 @@ realms:
          velocity: wind_energy
         user_function_string_parameters:
          velocity: [mmOne]
-        use_wall_function: yes 
+        use_wall_function: yes
 
     - non_conformal_boundary_condition: bc_top_out_in
       target_name: [surface_7, surface_8]
       non_conformal_user_data:
-        expand_box_percentage: 5.0 
-        search_tolerance: 0.01 
+        expand_box_percentage: 5.0
+        search_tolerance: 0.01
 
     - non_conformal_boundary_condition: bc_top_out_in
       target_name: [surface_8, surface_7]
       non_conformal_user_data:
-        expand_box_percentage: 5.0 
-        search_tolerance: 0.01 
+        expand_box_percentage: 5.0
+        search_tolerance: 0.01
+
+    mesh_motion:
+     - name: mmOne
+       mesh_parts: [block_1, block_2, block_3, block_4, block_5]
+       frame: non_inertial
+       motion:
+        - type: rotation
+          omega: 1.0
+          axis: [0.0,0.0,1.0]
+
+     - name: mmTwo
+       mesh_parts: [block_6, block_7]
+       frame: non_inertial
+       motion:
+        - type: rotation
+          omega: 0.0
 
     solution_options:
       name: myOptions
       turbulence_model: ksgs
-
-      mesh_motion:
-        - name: mmOne
-          target_name: [block_1, block_2, block_3, block_4, block_5]
-          omega: 1.0
-          unit_vector: [0.0,0.0,1.0]
-
-        - name: mmTwo
-          target_name: [block_6, block_7]
-          omega: 0.0
 
       options:
         - hybrid_factor:
@@ -161,7 +167,7 @@ realms:
 
         - alpha_upw:
             velocity: 1.0
-            turbulent_ke: 1.0 
+            turbulent_ke: 1.0
 
         - limiter:
             pressure: no
@@ -169,7 +175,7 @@ realms:
             turbulent_ke: yes
 
         - projected_nodal_gradient:
-            pressure: edge 
+            pressure: edge
 
         - non_conformal:
             gauss_labatto_quadrature: no
@@ -179,7 +185,7 @@ realms:
     output:
       output_data_base_name: uqSlidingMeshDG.e
       output_frequency: 10
-      output_node_set: no 
+      output_node_set: no
       output_variables:
        - dual_nodal_volume
        - velocity
@@ -196,11 +202,11 @@ realms:
        - element_courant
 
     post_processing:
-    
+
     - type: surface
       physics: surface_force_and_moment
       output_file_name: nalu_s4.dat
-      frequency: 2 
+      frequency: 2
       parameters: [0,0]
       target_name: surface_4
 
@@ -229,16 +235,16 @@ realms:
             - yplus
             - resolved_turbulent_ke
 
-          compute_tke: yes 
+          compute_tke: yes
           compute_reynolds_stress: yes
-         
+
 Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
-      termination_time: 0.04 
+      termination_time: 0.04
       time_step: 0.002
-      time_stepping_type: fixed 
+      time_stepping_type: fixed
       time_step_count: 0
 
       realms:

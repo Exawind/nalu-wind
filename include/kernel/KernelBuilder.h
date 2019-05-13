@@ -95,11 +95,12 @@ namespace nalu{
                       topo == stk::topology::WEDGE_6 ||
                       topo == stk::topology::TETRAHEDRON_4 ||
                       topo == stk::topology::PYRAMID_5);
+    ThrowRequireMsg(!isNotNGP, "Consolidated algorithm called on non-NGP MasterElement");
 
     auto itc = solverAlgs.find(algName);
     bool createNewAlg = itc == solverAlgs.end();
     if (createNewAlg) {
-      auto* theSolverAlg = new AssembleElemSolverAlgorithm(eqSys.realm_, &part, &eqSys, stk::topology::ELEMENT_RANK, topo.num_nodes(), isNotNGP);
+      auto* theSolverAlg = new AssembleElemSolverAlgorithm(eqSys.realm_, &part, &eqSys, stk::topology::ELEMENT_RANK, topo.num_nodes());
       ThrowRequire(theSolverAlg != nullptr);
 
       NaluEnv::self().naluOutputP0() << "Created the following interior elem alg: " << algName << std::endl;
@@ -307,43 +308,64 @@ namespace nalu{
                                       stk::topology faceTopo, stk::topology elemTopo,
                                       Args&&... args)
   {
+   if (elemTopo.is_superelement()) {
+     int poly_order = poly_order_from_topology(dimension, elemTopo);
+
+     if (dimension == 2) {
+       switch (poly_order)
+      {
+         case 2: return new T<AlgTraitsEdgePQuadPGL<2>>(std::forward<Args>(args)...);
+         case 3: return new T<AlgTraitsEdgePQuadPGL<3>>(std::forward<Args>(args)...);
+         case 4: return new T<AlgTraitsEdgePQuadPGL<4>>(std::forward<Args>(args)...);
+         case USER_POLY_ORDER: return new T<AlgTraitsEdgePQuadPGL<USER_POLY_ORDER>>(std::forward<Args>(args)...);
+         default: return nullptr;
+      }
+     }
+     else {
+       switch (poly_order)
+      {
+         case 2: return new T<AlgTraitsQuadPHexPGL<2>>(std::forward<Args>(args)...);
+         case 3: return new T<AlgTraitsQuadPHexPGL<3>>(std::forward<Args>(args)...);
+         case 4: return new T<AlgTraitsQuadPHexPGL<4>>(std::forward<Args>(args)...);
+         case USER_POLY_ORDER: return new T<AlgTraitsQuadPHexPGL<USER_POLY_ORDER>>(std::forward<Args>(args)...);
+         default: return nullptr;
+      }
+     }
+   }
+
     switch(faceTopo.value()) {
       case stk::topology::QUAD_4:
-        if ( elemTopo == stk::topology::HEX_8 ) {
-          return new T<AlgTraitsQuad4Hex8>(std::forward<Args>(args)...);
-        }
-        else if ( elemTopo == stk::topology::PYRAMID_5 ) {
-          return new T<AlgTraitsQuad4Pyr5>(std::forward<Args>(args)...);
-        }
-        else if ( elemTopo == stk::topology::WEDGE_6 ) {
-          return new T<AlgTraitsQuad4Wed6>(std::forward<Args>(args)...);
-        }
-        else {
-          ThrowRequireMsg(false,
-                          "Quad4 exposed face is not attached to either a hex8, pyr5, or wedge6.");
+        switch(elemTopo) {
+          case stk::topology::HEX_8: 
+            return new T<AlgTraitsQuad4Hex8>(std::forward<Args>(args)...);
+          case stk::topology::PYRAMID_5:
+            return new T<AlgTraitsQuad4Pyr5>(std::forward<Args>(args)...);
+          case stk::topology::WEDGE_6:
+            return new T<AlgTraitsQuad4Wed6>(std::forward<Args>(args)...);
+          default:
+            ThrowRequireMsg(false,
+              "Quad4 exposed face is not attached to either a hex8, pyr5, or wedge6.");
         }
       case stk::topology::QUAD_9:
         return new T<AlgTraitsQuad9Hex27>(std::forward<Args>(args)...);
       case stk::topology::TRI_3:
-        if ( elemTopo == stk::topology::TET_4 ) {
-          return new T<AlgTraitsTri3Tet4>(std::forward<Args>(args)...);
-        }
-        else if ( elemTopo == stk::topology::PYRAMID_5 ) {
-          return new T<AlgTraitsTri3Pyr5>(std::forward<Args>(args)...);
-        }
-        else if ( elemTopo == stk::topology::WEDGE_6 ) {
-          return new T<AlgTraitsTri3Wed6>(std::forward<Args>(args)...);
-        }
-        else {   
-          ThrowRequireMsg(false,
-                          "Tri3 exposed face is not attached to either a tet4, pyr5, or wedge6.");
+        switch(elemTopo) {
+          case stk::topology::TET_4:
+            return new T<AlgTraitsTri3Tet4>(std::forward<Args>(args)...);
+          case stk::topology::PYRAMID_5:
+            return new T<AlgTraitsTri3Pyr5>(std::forward<Args>(args)...);
+          case stk::topology::WEDGE_6:
+            return new T<AlgTraitsTri3Wed6>(std::forward<Args>(args)...);
+          default :
+            ThrowRequireMsg(false,
+              "Tri3 exposed face is not attached to either a tet4, pyr5, or wedge6.");
         }
       case stk::topology::LINE_2:
-        if (elemTopo == stk::topology::TRI_3_2D) {
-          return new T<AlgTraitsEdge2DTri32D>(std::forward<Args>(args)...);
-        }
-        else {
-          return new T<AlgTraitsEdge2DQuad42D>(std::forward<Args>(args)...);
+        switch(elemTopo) {
+          case stk::topology::TRI_3_2D: 
+            return new T<AlgTraitsEdge2DTri32D>(std::forward<Args>(args)...);
+          default :
+            return new T<AlgTraitsEdge2DQuad42D>(std::forward<Args>(args)...);
         }
       case stk::topology::LINE_3:
         return new T<AlgTraitsEdge32DQuad92D>(std::forward<Args>(args)...);
@@ -373,10 +395,30 @@ namespace nalu{
     }
     else {
       int poly_order = poly_order_from_topology(dimension, topo);
-      throw std::runtime_error("PMR exposed surface bc does not support promoted element type: " + std::to_string(poly_order));
+      if ( dimension == 2) {
+        switch(poly_order)
+        {
+          case 2: return new T<AlgTraitsEdgeGL<2>>(std::forward<Args>(args)...);
+          case 3: return new T<AlgTraitsEdgeGL<2>>(std::forward<Args>(args)...);
+          case 4: return new T<AlgTraitsEdgeGL<2>>(std::forward<Args>(args)...);
+          case USER_POLY_ORDER:  return new T<AlgTraitsEdgeGL<USER_POLY_ORDER>>(std::forward<Args>(args)...);
+          default: return nullptr;
+        }
+      }
+      else {
+        switch(poly_order)
+        {
+          case 2: return new T<AlgTraitsQuadGL<2>>(std::forward<Args>(args)...);
+          case 3: return new T<AlgTraitsQuadGL<3>>(std::forward<Args>(args)...);
+          case 4: return new T<AlgTraitsQuadGL<4>>(std::forward<Args>(args)...);
+          case USER_POLY_ORDER:  return new T<AlgTraitsQuadGL<USER_POLY_ORDER>>(std::forward<Args>(args)...);
+          default: return nullptr;
+        }
+      }
     }
   }
-  
+
+
   template <template <typename> class T, typename... Args>
   bool build_topo_kernel_if_requested(
     stk::topology topo,
@@ -462,7 +504,7 @@ namespace nalu{
 
   inline std::pair<AssembleFaceElemSolverAlgorithm*, bool>
   build_or_add_part_to_face_elem_solver_alg(
-    AlgorithmType algType,
+    AlgorithmType /* algType */,
     EquationSystem& eqSys,
     stk::mesh::Part& part,
     stk::topology elemTopo,
@@ -480,12 +522,13 @@ namespace nalu{
                       elemTopo == stk::topology::WEDGE_6 ||
                       elemTopo == stk::topology::TETRAHEDRON_4 ||
                       elemTopo == stk::topology::PYRAMID_5);
+    ThrowRequireMsg(!isNotNGP, "Consolidated algorithm called on non-NGP MasterElement");
 
     auto itc = solverAlgs.find(algName);
     bool createNewAlg = itc == solverAlgs.end();
     if (createNewAlg) {
-      auto* theSolverAlg = new AssembleFaceElemSolverAlgorithm(eqSys.realm_, &part, &eqSys,
-                                            topo.num_nodes(), elemTopo.num_nodes(), isNotNGP);
+      auto* theSolverAlg = new AssembleFaceElemSolverAlgorithm(
+        eqSys.realm_, &part, &eqSys, topo.num_nodes(), elemTopo.num_nodes());
       ThrowRequire(theSolverAlg != nullptr);
 
       NaluEnv::self().naluOutputP0() << "Created the following bc face/elem alg: " << algName << std::endl;
@@ -520,12 +563,14 @@ namespace nalu{
                       topo == stk::topology::TRI_3 ||
                       topo == stk::topology::LINE_2 ||
                       topo == stk::topology::LINE_3 );
+    ThrowRequireMsg(!isNotNGP, "Consolidated algorithm called on non-NGP MasterElement");
 
     auto itc = solverAlgs.find(algName);
     bool createNewAlg = itc == solverAlgs.end();
     if (createNewAlg) {
-      auto* theSolverAlg = new AssembleElemSolverAlgorithm(eqSys.realm_, &part, &eqSys, 
-                                                           eqSys.realm_.meta_data().side_rank(), topo.num_nodes(), isNotNGP);
+      auto* theSolverAlg = new AssembleElemSolverAlgorithm(
+        eqSys.realm_, &part, &eqSys, eqSys.realm_.meta_data().side_rank(),
+        topo.num_nodes());
       ThrowRequire(theSolverAlg != nullptr);
 
       NaluEnv::self().naluOutputP0() << "Created the following bc face alg: " << algName << std::endl;

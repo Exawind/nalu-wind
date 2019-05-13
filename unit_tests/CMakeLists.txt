@@ -2,6 +2,7 @@ add_sources(GlobalUnitSourceList
    UnitTest1ElemCoordCheck.C
    UnitTestABLWallFunction.C
    UnitTestBasicKokkos.C
+   UnitTestCopyAndInterleave.C
    UnitTestCreateOnDevice.C
    UnitTestEigenDecomposition.C
    UnitTestElemDataRequests.C
@@ -9,15 +10,17 @@ add_sources(GlobalUnitSourceList
    UnitTestElementDescription.C
    UnitTestFieldUtils.C
    UnitTestGetDofStatus.C
-   UnitTestHOMasterElements.C
    UnitTestHex27FaceNodeOrdering.C
    UnitTestHexElementPromotion.C
    UnitTestHexMasterElements.C
+   UnitTestHexMasterElementsNgp.C
    UnitTestHexSCVDeterminant.C
+   UnitTestHOMasterElements.C
    UnitTestIntegrationRule.C
    UnitTestKokkosME.C
    UnitTestKokkosMEBC.C
    UnitTestKokkosViews.C
+   UnitTestLagrangeInterpolants.C
    UnitTestLocalGraphArrays.C
    UnitTestMasterElements.C
    UnitTestMetricTensor.C
@@ -56,6 +59,15 @@ add_sources(GlobalUnitHeaderList
    UnitTestViewUtils.h
 )
 
+if(ENABLE_OPENFAST)
+   add_sources(GlobalUnitSourceList
+      UnitTestActuatorDiskFAST.C
+   )
+endif()
+
 add_subdirectory(algorithms)
 add_subdirectory(kernels)
 add_subdirectory(ho_kernels)
+add_subdirectory(ngp_kernels)
+add_subdirectory(mesh_motion)
+add_subdirectory(utils)

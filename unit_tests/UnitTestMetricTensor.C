@@ -31,13 +31,13 @@ std::pair<std::vector<double>, std::vector<double>>
 calculate_metric_tensor(sierra::nalu::MasterElement& me, const std::vector<double>& ws_coords)
 {
   double scs_error = 0.0;
-  int gradSize = me.numIntPoints_ * me.nodesPerElement_ * me.nDim_;
+  int gradSize = me.num_integration_points() * me.nodesPerElement_ * me.nDim_;
   std::vector<double> ws_dndx(gradSize);
   std::vector<double> ws_deriv(gradSize);
-  std::vector<double> ws_det_j(me.numIntPoints_);
+  std::vector<double> ws_det_j(me.num_integration_points());
   me.grad_op(1, ws_coords.data(), ws_dndx.data(), ws_deriv.data(), ws_det_j.data(), &scs_error);
 
-  int metricSize = me.nDim_ * me.nDim_ * me.numIntPoints_;
+  int metricSize = me.nDim_ * me.nDim_ * me.num_integration_points();
   std::vector<double> contravariant_metric_tensor(metricSize);
   std::vector<double> covariant_metric_tensor(metricSize);
   me.gij(ws_coords.data(), contravariant_metric_tensor.data(), covariant_metric_tensor.data(), ws_deriv.data());
@@ -82,7 +82,7 @@ void test_metric_for_topo_2D(stk::topology topo, double tol) {
   std::vector<double> contravariant_metric; std::vector<double> covariant_metric;
   std::tie(contravariant_metric, covariant_metric) = calculate_metric_tensor(*mescs, ws_coords);
 
-  for (int ip = 0; ip < mescs->numIntPoints_; ++ip) {
+  for (int ip = 0; ip < mescs->num_integration_points(); ++ip) {
     double identity[4] = {1.0,0.0,0.0,1.0};
     double shouldBeIdentity[4];
     sierra::nalu::mxm22(&contravariant_metric[4*ip], &covariant_metric[4*ip], shouldBeIdentity);
@@ -133,7 +133,7 @@ void test_metric_for_topo_3D(stk::topology topo, double tol) {
   std::vector<double> contravariant_metric; std::vector<double> covariant_metric;
   std::tie(contravariant_metric, covariant_metric) = calculate_metric_tensor(*mescs, ws_coords);
 
-  for (int ip = 0; ip < mescs->numIntPoints_; ++ip) {
+  for (int ip = 0; ip < mescs->num_integration_points(); ++ip) {
     double identity[9] = {
         1.0,0.0,0.0,
         0.0,1.0,0.0,
@@ -233,7 +233,7 @@ TEST(MetricTensorNGP, hex27)
 
   sierra::nalu::generic_gij_3d<sierra::nalu::AlgTraitsHex27>(refGrad, v_coords, gUpper, gLower);
 
-  for (int ip = 0; ip < mescs.numIntPoints_; ++ip) {
+  for (int ip = 0; ip < mescs.num_integration_points(); ++ip) {
     double identity[9] = {
         1.0,0.0,0.0,
         0.0,1.0,0.0,

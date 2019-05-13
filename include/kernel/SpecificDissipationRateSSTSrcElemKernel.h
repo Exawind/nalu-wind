@@ -23,7 +23,7 @@ class MasterElement;
 class ElemDataRequests;
 
 template <typename AlgTraits>
-class SpecificDissipationRateSSTSrcElemKernel : public Kernel
+class SpecificDissipationRateSSTSrcElemKernel : public NGPKernel<SpecificDissipationRateSSTSrcElemKernel<AlgTraits>>
 {
 public:
   SpecificDissipationRateSSTSrcElemKernel(
@@ -32,27 +32,29 @@ public:
     ElemDataRequests&,
     const bool);
 
-  virtual ~SpecificDissipationRateSSTSrcElemKernel();
+  KOKKOS_FUNCTION SpecificDissipationRateSSTSrcElemKernel() = default;
+
+  KOKKOS_FUNCTION virtual ~SpecificDissipationRateSSTSrcElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  SpecificDissipationRateSSTSrcElemKernel() = delete;
-
-  ScalarFieldType* tkeNp1_{nullptr};
-  ScalarFieldType* sdrNp1_{nullptr};
-  ScalarFieldType* densityNp1_{nullptr};
-  VectorFieldType* velocityNp1_{nullptr};
-  ScalarFieldType* tvisc_{nullptr};
-  ScalarFieldType* fOneBlend_{nullptr};
-  VectorFieldType* coordinates_{nullptr};
+  unsigned  tkeNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  sdrNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  densityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  velocityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned  tvisc_ {stk::mesh::InvalidOrdinal};
+  unsigned  fOneBlend_ {stk::mesh::InvalidOrdinal};
+  unsigned  coordinates_ {stk::mesh::InvalidOrdinal};
 
   const bool lumpedMass_;
   const bool shiftedGradOp_;
@@ -64,11 +66,7 @@ private:
   const double gammaTwo_;
   double tkeProdLimitRatio_{0.0};
 
-  const int* ipNodeMap_;
-
-  // scratch space
-  AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]>
-    v_shape_function_{"v_shape_function"};
+  MasterElement* meSCV_{nullptr};
 };
 
 } // namespace nalu

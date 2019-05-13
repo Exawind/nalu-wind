@@ -18,7 +18,7 @@
 
 #include <stk_util/util/ReportHandler.hpp>
 
-#include <vector>
+#include <array>
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
@@ -35,7 +35,9 @@ public:
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
 
+  KOKKOS_FUNCTION
   HexahedralP2Element();
+  KOKKOS_FUNCTION
   virtual ~HexahedralP2Element() {}
 
   void shape_fcn(double *shpfc);
@@ -43,7 +45,7 @@ public:
 
 
   template <typename ViewType>
-  ViewType copy_interpolation_weights_to_view(const std::vector<double>& interps)
+  KOKKOS_FUNCTION ViewType copy_interpolation_weights_to_view(const double* interps)
   {
     ViewType interpWeights{"interpolation_weights"};
 
@@ -60,7 +62,7 @@ public:
 
 
   template <typename ViewType>
-  ViewType copy_deriv_weights_to_view(const std::vector<double>& derivs)
+  KOKKOS_FUNCTION ViewType copy_deriv_weights_to_view(const double* derivs)
   {
     ViewType referenceGradWeights{"reference_gradient_weights"};
 
@@ -77,7 +79,7 @@ public:
   }
 
   template <typename ViewType>
-  ViewType copy_interpolation_weights_to_view()
+  KOKKOS_FUNCTION ViewType copy_interpolation_weights_to_view()
   {
     ViewType interpWeights{"interpolation_weights"};
 
@@ -92,7 +94,7 @@ public:
   }
 
   template <typename ViewType>
-  ViewType copy_deriv_weights_to_view()
+  KOKKOS_FUNCTION ViewType copy_deriv_weights_to_view()
   {
     ViewType referenceGradWeights{"reference_gradient_weights"};
 
@@ -108,9 +110,17 @@ public:
     return referenceGradWeights;
   }
 
+  virtual const double* integration_locations() const final {
+    return intgLoc_;
+  }
+  virtual const double* integration_location_shift() const final {
+    return intgLocShift_;
+  }
 
+  static const int nDim_       = AlgTraits::nDim_;
+  static const int numIntPoints_ = AlgTraits::numScsIp_; // = AlgTraits::numScvIp_
 
-
+  double intgLoc_            [numIntPoints_*nDim_];
 protected:
   struct ContourData {
     Jacobian::Direction direction;
@@ -135,13 +145,13 @@ protected:
     int s1Node, int s2Node,
     int s1Ip, int s2Ip) const;
 
-  virtual void eval_shape_functions_at_ips();
-  virtual void eval_shape_functions_at_shifted_ips();
+  KOKKOS_FUNCTION virtual void eval_shape_functions_at_ips();
+  KOKKOS_FUNCTION virtual void eval_shape_functions_at_shifted_ips();
 
-  virtual void eval_shape_derivs_at_ips();
-  virtual void eval_shape_derivs_at_shifted_ips();
+  KOKKOS_FUNCTION virtual void eval_shape_derivs_at_ips();
+  KOKKOS_FUNCTION virtual void eval_shape_derivs_at_shifted_ips();
 
-  void eval_shape_derivs_at_face_ips();
+  KOKKOS_FUNCTION void eval_shape_derivs_at_face_ips();
 
   void set_quadrature_rule();
   void GLLGLL_quadrature_weights();
@@ -165,30 +175,60 @@ protected:
     const double *pointCoord,
     double *isoParCoord);
 
-  const double scsDist_;
-  const int nodes1D_;
-  const int numQuad_;
+  static constexpr int nodes1D_    = 3;
+  static constexpr int numQuad_    = 2;
+  static constexpr int nodesPerElement_ = AlgTraits::nodesPerElement_;
+  static constexpr int numFaces_ = 2 * nDim_; // 6
+  static constexpr int nodesPerFace_ = nodes1D_ * nodes1D_; // 9
+  static constexpr int ipsPerFace_  = nodesPerFace_ * (numQuad_ * numQuad_); // 36
+  static constexpr int numFaceIps_ = numFaces_ * ipsPerFace_; // 216 = numIntPoints_ for this element
+
 
   // quadrature info
-  std::vector<double> gaussAbscissae1D_;
-  std::vector<double> gaussAbscissae_;
-  std::vector<double> gaussAbscissaeShift_;
-  std::vector<double> gaussWeight_;
-  std::vector<double> scsEndLoc_;
+  const double gaussAbscissae_[2] = {-std::sqrt(3.0)/3.0, std::sqrt(3.0)/3.0};
+  const double gaussWeight_[2]    = {0.5, 0.5};
+  const double gaussAbscissaeShift_[6] = {-1.0, -1.0, 0.0, 0.0,  1.0, 1.0};
 
-  std::vector<int> stkNodeMap_;
+  const double scsDist_ = std::sqrt(3.0)/3.0;
+  const double scsEndLoc_[4] =  { -1.0, -scsDist_, scsDist_, 1.0 };
+ 
+  double intgExpFace_        [numFaceIps_*nDim_]; // size = 648
+  double expFaceShapeDerivs_ [numFaceIps_*nodesPerElement_*nDim_];
+  double shapeFunctions_     [numIntPoints_*nodesPerElement_];
+  double shapeFunctionsShift_[numIntPoints_*nodesPerElement_];
+  double shapeDerivs_        [numIntPoints_*nodesPerElement_*nDim_];
+  double shapeDerivsShift_   [numIntPoints_*nodesPerElement_*nDim_];
+  double intgLocShift_       [numIntPoints_*nDim_];
 
-  std::vector<double> shapeFunctions_;
-  std::vector<double> shapeFunctionsShift_;
-  std::vector<double> shapeDerivs_;
-  std::vector<double> shapeDerivsShift_;
-  std::vector<double> expFaceShapeDerivs_;
-private:
+  // map the standard stk node numbering to a tensor-product style node numbering (i.e. node (m,l,k) -> m+npe*l+npe^2*k)
+  const int stkNodeMap_[3][3][3] = {
+                {{ 0,  8,  1}, // bottom front edge
+                 {11, 21,  9}, // bottom mid-front edge
+                 { 3, 10,  2}},// bottom back edge
+                {{12, 25, 13}, // mid-top front edge
+                 {23, 20, 24}, // mid-top mid-front edge
+                 {15, 26, 14}},// mid-top back edge
+                {{ 4, 16,  5}, // top front edge
+                 {19, 22, 17}, // top mid-front edge
+                 { 7, 18,  6}} // top back edge
+                };
+
+  const int  sideNodeOrdinals_[6][9] = {
+      {0, 1, 5, 4, 8,13,16,12,25}, //ordinal 0
+      {1, 2, 6, 5, 9,14,17,13,24}, //ordinal 1
+      {2, 3, 7, 6,10,15,18,14,26}, //ordinal 2
+      {0, 4, 7, 3,12,19,15,11,23}, //ordinal 3
+      {0, 3, 2, 1,11,10, 9, 8,21}, //ordinal 4
+      {4, 5, 6, 7,16,17,18,19,22}  //ordinal 5
+  };
+
   void hex27_shape_fcn(
     int npts,
     const double *par_coord,
     double* shape_fcn
   ) const;
+
+
 };
 
 // 3D Quad 27 subcontrol volume
@@ -198,10 +238,12 @@ class Hex27SCV : public HexahedralP2Element
   using GradWeightType = AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
 
 public:
+  KOKKOS_FUNCTION
   Hex27SCV();
+  KOKKOS_FUNCTION
   virtual ~Hex27SCV() {}
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
@@ -209,24 +251,25 @@ public:
   using MasterElement::grad_op;
   using MasterElement::shifted_grad_op;
 
-  void shape_fcn(SharedMemView<DoubleType**> &shpfc) final;
-  void shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc) final;
-  void determinant(SharedMemView<DoubleType**>& coords, SharedMemView<DoubleType*>& volume) final;
+  template<typename ViewType> KOKKOS_FUNCTION void shape_fcn(ViewType &shpfc);
+  KOKKOS_FUNCTION void shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) final;
+  KOKKOS_FUNCTION void shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) final;
+  KOKKOS_FUNCTION void determinant(SharedMemView<DoubleType**, DeviceShmem>& coords, SharedMemView<DoubleType*, DeviceShmem>& volume) final;
 
-  void grad_op(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv);
+  KOKKOS_FUNCTION void grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType***, DeviceShmem>&gradop,
+    SharedMemView<DoubleType***, DeviceShmem>&deriv);
 
-  void shifted_grad_op(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv);
+  KOKKOS_FUNCTION void shifted_grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType***, DeviceShmem>&gradop,
+    SharedMemView<DoubleType***, DeviceShmem>&deriv);
 
-  void Mij(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& metric,
-    SharedMemView<DoubleType***>& deriv);
+  KOKKOS_FUNCTION void Mij(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& metric,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
   void Mij(
     const double *coords,
@@ -246,7 +289,7 @@ public:
   { return referenceGradWeights_; }
 
   template <typename GradViewType, typename CoordViewType, typename OutputViewType>
-  void weighted_volumes(GradViewType referenceGradWeights, CoordViewType coords, OutputViewType volume)
+  KOKKOS_FUNCTION void weighted_volumes(GradViewType referenceGradWeights, CoordViewType coords, OutputViewType volume)
   {
     generic_determinant_3d<AlgTraits>(referenceGradWeights, coords, volume);
     for (int ip = 0 ; ip < AlgTraits::numScvIp_; ++ip) {
@@ -256,7 +299,11 @@ public:
 
 
 private:
-  void set_interior_info();
+
+  int ipNodeMap_   [numIntPoints_];
+  double ipWeight_ [numIntPoints_];
+
+  KOKKOS_FUNCTION void set_interior_info();
 
   double jacobian_determinant(
     const double *POINTER_RESTRICT elemNodalCoords,
@@ -267,8 +314,6 @@ private:
 
   InterpWeightType shiftedInterpWeights_;
   GradWeightType shiftedReferenceGradWeights_;
-
-  std::vector<double> ipWeight_;
 };
 
 // 3D Hex 27 subcontrol surface
@@ -279,43 +324,55 @@ class Hex27SCS : public HexahedralP2Element
   using ExpGradWeightType = AlignedViewType<DoubleType[6*AlgTraitsQuad9Hex27::numFaceIp_][AlgTraits::nodesPerElement_][AlgTraits::nDim_]>;
 
 public:
+  KOKKOS_FUNCTION
   Hex27SCS();
+  KOKKOS_FUNCTION
   virtual ~Hex27SCS() {}
 
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;
   using MasterElement::determinant;
+  using MasterElement::adjacentNodes;
 
-  void shape_fcn(SharedMemView<DoubleType**> &shpfc);
-  void shifted_shape_fcn(SharedMemView<DoubleType**> &shpfc);
+  template<typename ViewType> KOKKOS_FUNCTION void shape_fcn(ViewType &shpfc);
+  KOKKOS_FUNCTION void shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+  KOKKOS_FUNCTION void shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc);
 
+  template<typename ViewTypeCoord, typename ViewTypeGrad>
+  KOKKOS_FUNCTION
   void grad_op(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv);
+    ViewTypeCoord& coords,
+    ViewTypeGrad&  gradop,
+    ViewTypeGrad&  deriv);
+ 
 
-  void shifted_grad_op(
-    SharedMemView<DoubleType**>&coords,
-    SharedMemView<DoubleType***>&gradop,
-    SharedMemView<DoubleType***>&deriv);
+  KOKKOS_FUNCTION void grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType***, DeviceShmem>&gradop,
+    SharedMemView<DoubleType***, DeviceShmem>&deriv);
 
-  void determinant(SharedMemView<DoubleType**>&coords,  SharedMemView<DoubleType**>&areav);
+  KOKKOS_FUNCTION void shifted_grad_op(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType***, DeviceShmem>&gradop,
+    SharedMemView<DoubleType***, DeviceShmem>&deriv);
 
-  void gij(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gupper,
-    SharedMemView<DoubleType***>& glower,
-    SharedMemView<DoubleType***>& deriv);
+  KOKKOS_FUNCTION void determinant(SharedMemView<DoubleType**, DeviceShmem>&coords,  SharedMemView<DoubleType**, DeviceShmem>&areav);
 
-  void face_grad_op(
+  KOKKOS_FUNCTION void gij(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gupper,
+    SharedMemView<DoubleType***, DeviceShmem>& glower,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
+
+  KOKKOS_FUNCTION void face_grad_op(
     int face_ordinal,
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& gradop) final;
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
 
-  void Mij(
-    SharedMemView<DoubleType**>& coords,
-    SharedMemView<DoubleType***>& metric,
-    SharedMemView<DoubleType***>& deriv);
+  KOKKOS_FUNCTION void Mij(
+    SharedMemView<DoubleType**, DeviceShmem>& coords,
+    SharedMemView<DoubleType***, DeviceShmem>& metric,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
   void Mij(
     const double *coords,
@@ -372,9 +429,9 @@ public:
     const double *side_pcoords,
     double *elem_pcoords);
 
-  const int * adjacentNodes();
+  KOKKOS_FUNCTION virtual const int * adjacentNodes() final;
 
-  const int * ipNodeMap(int ordinal = 0);
+  KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
   int opposingNodes(
     const int ordinal, const int node);
@@ -382,7 +439,8 @@ public:
   int opposingFace(
     const int ordinal, const int node);
 
-  const int* side_node_ordinals(int sideOrdinal) final;
+  const int* side_node_ordinals(int sideOrdinal) const final;
+  using MasterElement::side_node_ordinals;
 
   const InterpWeightType& shape_function_values()
   { return interpWeights_; }
@@ -391,7 +449,7 @@ public:
   { return referenceGradWeights_; }
 
   template <typename GradViewType, typename CoordViewType, typename OutputViewType>
-  void weighted_area_vectors(GradViewType referenceGradWeights, CoordViewType coords, OutputViewType areav)
+  KOKKOS_FUNCTION void weighted_area_vectors(GradViewType referenceGradWeights, CoordViewType coords, OutputViewType areav)
   {
     using ftype = typename CoordViewType::value_type;
 
@@ -430,9 +488,16 @@ public:
   }
 
 protected:
-  std::vector<ContourData> ipInfo_;
+  ContourData ipInfo_[numIntPoints_];
 
 private:
+
+  int lrscv_[2*numIntPoints_];
+  int oppFace_  [numFaceIps_];
+  int ipNodeMap_[numFaceIps_];
+  int oppNode_  [numFaceIps_];
+
+
   void set_interior_info();
   void set_boundary_info();
 
@@ -448,7 +513,7 @@ private:
     double *POINTER_RESTRICT det_j ) const;
 
   template <int direction, typename GradViewType, typename CoordViewType, typename OutputViewType>
-  void area_vector(int ip, GradViewType referenceGradWeights, CoordViewType coords, OutputViewType areav)
+  KOKKOS_FUNCTION void area_vector(int ip, GradViewType referenceGradWeights, CoordViewType coords, OutputViewType areav)
   {
     constexpr int s1Component = (direction == Jacobian::T_DIRECTION) ? Jacobian::S_DIRECTION : Jacobian::T_DIRECTION;
     constexpr int s2Component = (direction == Jacobian::U_DIRECTION) ? Jacobian::S_DIRECTION : Jacobian::U_DIRECTION;
@@ -488,82 +553,45 @@ private:
 
   ExpGradWeightType expReferenceGradWeights_;
 
-  int ipsPerFace_;
 };
 
-// 3D Quad 9
-class Quad93DSCS : public HexahedralP2Element
+template<typename ViewType> 
+KOKKOS_FUNCTION void Hex27SCV::shape_fcn(ViewType &shpfc)
 {
-public:
-  Quad93DSCS();
-  virtual ~Quad93DSCS() {}
+  for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
+    for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+      shpfc(ip,n) = interpWeights_(ip,n);
+    }
+  }
+}
+template<typename ViewType> 
+KOKKOS_FUNCTION void Hex27SCS::shape_fcn(ViewType &shpfc)
+{
+  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
+    for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+      shpfc(ip,n) = interpWeights_(ip,n);
+    }
+  }
+}
 
-  using MasterElement::determinant;
 
-  const int * ipNodeMap(int ordinal = 0);
+template<typename ViewTypeCoord, typename ViewTypeGrad>
+KOKKOS_FUNCTION void Hex27SCS::grad_op(
+  ViewTypeCoord& coords,
+  ViewTypeGrad&  gradop,
+  ViewTypeGrad&  deriv)
+{
+  generic_grad_op<AlgTraits>(referenceGradWeights_, coords, gradop);
 
-  void determinant(
-    const int nelem,
-    const double *coords,
-    double *areav,
-    double * error );
-
-  double isInElement(
-    const double *elemNodalCoord,
-    const double *pointCoord,
-    double *isoParCoord);
-
-  void interpolatePoint(
-    const int &nComp,
-    const double *isoParCoord,
-    const double *field,
-    double *result);
-
-  void general_shape_fcn(
-    const int numIp,
-    const double *isoParCoord,
-    double *shpfc);
-
-  void general_normal(
-    const double *isoParCoord,
-    const double *coords,
-    double *normal);
-
-private:
-  void set_interior_info();
-  void eval_shape_functions_at_ips() final;
-  void eval_shape_derivs_at_ips() final;
-
-  void eval_shape_functions_at_shifted_ips() final;
-  void eval_shape_derivs_at_shifted_ips() final;
-
-  void area_vector(
-    const double *POINTER_RESTRICT coords,
-    const double *POINTER_RESTRICT shapeDerivs,
-    double *POINTER_RESTRICT areaVector) const;
-
-  void quad9_shape_fcn(
-    int npts,
-    const double *par_coord,
-    double* shape_fcn
-  ) const;
-
-  void quad9_shape_deriv(
-    int npts,
-    const double *par_coord,
-    double* shape_fcn
-  ) const;
-
-  void non_unit_face_normal(
-    const double *isoParCoord,
-    const double *elemNodalCoord,
-    double *normalVector);
-
-  double parametric_distance(const std::vector<double> &x);
-
-  std::vector<double> ipWeight_;
-  const int surfaceDimension_;
-};
+  // copy derivs as well.  These aren't used, but are part of the interface
+  for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
+    for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+      for (int d = 0; d < AlgTraits::nDim_; ++d) {
+        deriv(ip,n,d) = referenceGradWeights_(ip,n,d);
+      }
+    }
+  }
+}
 
 
 } // namespace nalu

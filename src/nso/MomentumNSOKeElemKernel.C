@@ -8,6 +8,7 @@
 #include "nso/MomentumNSOKeElemKernel.h"
 #include "AlgTraits.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 #include "SolutionOptions.h"
 #include "TimeIntegrator.h"
 
@@ -238,7 +239,7 @@ MomentumNSOKeElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(MomentumNSOKeElemKernel);
+INSTANTIATE_KERNEL(MomentumNSOKeElemKernel)
 
 }  // nalu
 }  // sierra

@@ -15,6 +15,7 @@
 #include <SolutionOptions.h>
 #include <TimeIntegrator.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -76,7 +77,9 @@ AssembleMomentumElemSymmetrySolverAlgorithm::execute()
   // extract user options (allow to potentially change over time)
   const std::string dofName = "velocity";
   const bool useShiftedGradOp = realm_.get_shifted_grad_op(dofName);
- 
+
+  const double relaxFacU = realm_.solutionOptions_->get_relaxation_factor(dofName);
+
   // space for LHS/RHS; nodesPerElem*nDim*nodesPerElem*nDim and nodesPerElem*nDim
   std::vector<double> lhs;
   std::vector<double> rhs;
@@ -128,7 +131,7 @@ AssembleMomentumElemSymmetrySolverAlgorithm::execute()
     // face master element
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerFace =meFC->nodesPerElement_;
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
 
     // resize some things; matrix related
     const int lhsSize = nodesPerElement*nDim*nodesPerElement*nDim;
@@ -314,6 +317,12 @@ AssembleMomentumElemSymmetrySolverAlgorithm::execute()
             }
           }
         }
+      }
+
+      // relax the diagonal term before applying to the matrix
+      const int npeNdim = nodesPerElement*nDim;
+      for (int ir=0; ir < npeNdim; ir++) {
+        p_lhs[ir * (npeNdim + 1)] /= relaxFacU;
       }
 
       apply_coeff(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);

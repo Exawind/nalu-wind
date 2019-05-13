@@ -7,17 +7,21 @@
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
 
+#include "overset/TiogaOptions.h"
 #include "yaml-cpp/yaml.h"
 
 #include <vector>
 #include <memory>
 #include <string>
 
+namespace TIOGA {
 class tioga;
+}
 
 namespace tioga_nalu {
 
 typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
+typedef stk::mesh::Field<double> ScalarFieldType;
 typedef stk::mesh::Field<int> ScalarIntFieldType;
 
 /**
@@ -40,6 +44,7 @@ class TiogaBlock
 public:
   TiogaBlock(stk::mesh::MetaData&,
              stk::mesh::BulkData&,
+             TiogaOptions&,
              const YAML::Node&,
              const std::string,
              const int);
@@ -69,6 +74,11 @@ public:
    */
   void update_connectivity();
 
+  /** Update cell volumes
+   *
+   */
+  void update_element_volumes();
+
   /** Register this block with TIOGA
    *
    *  Wrapper method to handle mesh block registration using TIOGA API. In
@@ -80,11 +90,11 @@ public:
    *  overset holecutting that overrides the default TIOGA behavior of selecting
    *  donor and receptor points based on local cell volume.
    */
-  void register_block(tioga&);
+  void register_block(TIOGA::tioga&);
 
   /** Update iblanks after connectivity updates
    */
-  void update_iblanks();
+  void update_iblanks(std::vector<stk::mesh::Entity>&);
 
   /** Update element iblanks after connectivity updates
    */
@@ -98,7 +108,7 @@ public:
    *  @param tg Reference to TIOGA API object (provided by TiogaSTKIface).
    *  @param egvec List of {donorElement, receptorMPIRank} pairs to be populated
    */
-  void get_donor_info(tioga&, stk::mesh::EntityProcVec&);
+  void get_donor_info(TIOGA::tioga&, stk::mesh::EntityProcVec&);
 
   // Accessors
 
@@ -159,11 +169,25 @@ private:
    */
   void print_summary();
 
+  /** Return a selector for accessing nodes for use with TIOGA API
+   *
+   *  This is necessary to avoid selecting nodes that are ghosted and can cause
+   *  issues with the hole-cutting logic.
+   */
+  stk::mesh::Selector get_node_selector(stk::mesh::PartVector&);
+
+  /** Return a selector for accessing elements for use with TIOGA API
+   */
+  stk::mesh::Selector get_elem_selector(stk::mesh::PartVector&);
+
   //! Reference to the STK Mesh MetaData object
   stk::mesh::MetaData& meta_;
 
   //! Reference to the STK Mesh BulkData object
   stk::mesh::BulkData& bulk_;
+
+  //! Options controlling TIOGA holecutting
+  TiogaOptions tiogaOpts_;
 
   //! Part names for the nodes for this mesh block
   std::vector<std::string> blkNames_;

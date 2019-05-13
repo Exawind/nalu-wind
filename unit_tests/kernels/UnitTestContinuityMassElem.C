@@ -11,9 +11,7 @@
 
 #include "kernel/ContinuityMassElemKernel.h"
 
-#ifndef KOKKOS_HAVE_CUDA
-
-TEST_F(ContinuityKernelHex8Mesh, density_time_derivative)
+TEST_F(ContinuityKernelHex8Mesh, NGP_density_time_derivative)
 {
   fill_mesh_and_init_fields();
 
@@ -45,17 +43,19 @@ TEST_F(ContinuityKernelHex8Mesh, density_time_derivative)
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,-12.5);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_,0.0);
+#endif
 }
 
-TEST_F(ContinuityKernelHex8Mesh, density_time_derivative_lumped)
+TEST_F(ContinuityKernelHex8Mesh, NGP_density_time_derivative_lumped)
 {
   fill_mesh_and_init_fields();
 
@@ -87,15 +87,14 @@ TEST_F(ContinuityKernelHex8Mesh, density_time_derivative_lumped)
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,-12.5);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_,0.0);
-}
-
 #endif
-
+}

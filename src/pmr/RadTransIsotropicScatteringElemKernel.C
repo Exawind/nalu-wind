@@ -9,6 +9,7 @@
 #include "AlgTraits.h"
 #include "Enums.h"
 #include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
 
 // template and scratch space
 #include "BuildTemplates.h"
@@ -61,7 +62,7 @@ RadTransIsotropicScatteringElemKernel<AlgTraits>::~RadTransIsotropicScatteringEl
 template<typename AlgTraits>
 void
 RadTransIsotropicScatteringElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType **>&lhs,
+  SharedMemView<DoubleType **>& /* lhs */,
   SharedMemView<DoubleType *>&rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
@@ -88,7 +89,7 @@ RadTransIsotropicScatteringElemKernel<AlgTraits>::execute(
   }
 }
 
-INSTANTIATE_KERNEL(RadTransIsotropicScatteringElemKernel);
+INSTANTIATE_KERNEL(RadTransIsotropicScatteringElemKernel)
 
 }  // nalu
 }  // sierra

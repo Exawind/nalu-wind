@@ -12,6 +12,7 @@
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 #include <NaluEnv.h>
 
 // stk_mesh/base/fem
@@ -60,6 +61,7 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
     coordinates_(NULL),
     pressure_(NULL),
     pressureForce_(NULL),
+    viscousForce_(NULL),
     tauWall_(NULL),
     yplus_(NULL),
     density_(NULL),
@@ -74,6 +76,7 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
   coordinates_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
   pressure_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure");
   pressureForce_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "pressure_force");
+  viscousForce_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "viscous_force");
   tauWall_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tau_wall");
   yplus_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "yplus");
   density_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
@@ -182,7 +185,7 @@ SurfaceForceAndMomentAlgorithm::execute()
     // face master element
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
 
     // mapping from ip to nodes for this ordinal; face perspective (use with face_node_relations)
     const int *faceIpNodeMap = meFC->ipNodeMap();
@@ -272,6 +275,7 @@ SurfaceForceAndMomentAlgorithm::execute()
         const double * coord = stk::mesh::field_data(*coordinates_, node );
         const double *duidxj = stk::mesh::field_data(*dudx_, node );
         double *pressureForce = stk::mesh::field_data(*pressureForce_, node );
+        double *viscousForce = stk::mesh::field_data(*viscousForce_, node );
         double *tauWall = stk::mesh::field_data(*tauWall_, node );
         double *yplus = stk::mesh::field_data(*yplus_, node );
         const double assembledArea = *stk::mesh::field_data(*assembledArea_, node );
@@ -309,6 +313,7 @@ SurfaceForceAndMomentAlgorithm::execute()
           }
           // accumulate viscous force and set tau for component i
           ws_v_force[i] += dflux;
+          viscousForce[i] += ws_v_force[i];
           ws_tau[i] = tauijNj;
         }
         
@@ -431,7 +436,7 @@ SurfaceForceAndMomentAlgorithm::pre_work()
 
     // face master element
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
 
     // mapping from ip to nodes for this ordinal; face perspective (use with face_node_relations)
     const int *faceIpNodeMap = meFC->ipNodeMap();

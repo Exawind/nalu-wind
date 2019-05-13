@@ -26,8 +26,8 @@ public:
 
   using sierra::nalu::Kernel::execute;
   virtual void execute(
-    sierra::nalu::SharedMemView<DoubleType**>& lhs,
-    sierra::nalu::SharedMemView<DoubleType*>& rhs,
+    sierra::nalu::SharedMemView<DoubleType**>&  /* lhs */,
+    sierra::nalu::SharedMemView<DoubleType*>&  /* rhs */,
     sierra::nalu::ScratchViews<DoubleType>& faceViews)
   {
     sierra::nalu::SharedMemView<DoubleType*>& scalarQview = faceViews.get_scratch_view_1D(*scalarQ_);
@@ -60,7 +60,7 @@ TEST_F(Hex8Mesh, faceBasic)
   TestFaceKernel faceKernel(faceTopo, scalarQ, helperObjs.assembleElemSolverAlg->dataNeededByKernels_);
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(&faceKernel);
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
   unsigned expectedNumFaces = 6;
   EXPECT_EQ(expectedNumFaces, faceKernel.numTimesExecuted_);

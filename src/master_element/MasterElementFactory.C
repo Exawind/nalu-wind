@@ -10,17 +10,23 @@
 
 #include "master_element/Hex8CVFEM.h"
 #include "master_element/Hex27CVFEM.h"
+#include "master_element/HexPCVFEM.h"
 #include "master_element/Tet4CVFEM.h"
 #include "master_element/Pyr5CVFEM.h"
 #include "master_element/Wed6CVFEM.h"
 #include "master_element/Quad43DCVFEM.h"
 #include "master_element/Quad42DCVFEM.h"
 #include "master_element/Quad92DCVFEM.h"
+#include "master_element/Quad93DCVFEM.h"
 #include "master_element/Tri32DCVFEM.h"
+#include "master_element/Edge32DCVFEM.h"
+#include "master_element/Edge22DCVFEM.h"
+#include "master_element/Tri33DCVFEM.h"
 #include "master_element/MasterElementHO.h"
 
 #include "NaluEnv.h"
 #include "nalu_make_unique.h"
+#include "utils/CreateDeviceExpression.h"
 
 #include <stk_util/util/ReportHandler.hpp>
 #include <stk_topology/topology.hpp>
@@ -147,7 +153,7 @@ namespace nalu{
   }
   //--------------------------------------------------------------------------
   std::unique_ptr<MasterElement>
-  create_surface_master_element(stk::topology topo, int dimension, std::string quadType)
+  create_surface_master_element(stk::topology topo, int dimension, std::string /*quadType*/)
   {
     if (!topo.is_super_topology()) {
       // regular topologies uses different master element type
@@ -162,24 +168,24 @@ namespace nalu{
         LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D)
       : LagrangeBasis(desc->inverseNodeMapBC, desc->nodeLocs1D);
 
-    auto quad = TensorProductQuadratureRule(quadType, desc->polyOrder);
+    auto quad = TensorProductQuadratureRule(desc->polyOrder);
 
     if (topo.is_superedge()) {
       ThrowRequire(desc->baseTopo == stk::topology::QUAD_4_2D);
-      return make_unique<HigherOrderEdge2DSCS>(*desc, basis, quad);
+      return make_unique<HigherOrderEdge2DSCS>(basis, quad);
     }
 
     if (topo.is_superface()) {
       ThrowRequire(desc->baseTopo == stk::topology::HEX_8);
-      return make_unique<HigherOrderQuad3DSCS>(*desc, basis, quad);
+      return make_unique<HigherOrderQuad3DSCS>(basis, quad);
     }
 
     if (topo.is_superelement() && desc->baseTopo == stk::topology::QUAD_4_2D) {
-      return make_unique<HigherOrderQuad2DSCS>(*desc, basis, quad);
+      return make_unique<HigherOrderQuad2DSCS>(basis, quad);
     }
 
     if (topo.is_superelement() && desc->baseTopo == stk::topology::HEX_8) {
-      return make_unique<HigherOrderHexSCS>(*desc, basis, quad);
+      return make_unique<HigherOrderHexSCS>(basis, quad);
     }
 
     return nullptr;
@@ -189,7 +195,7 @@ namespace nalu{
   create_volume_master_element(
     stk::topology topo,
     int dimension,
-    std::string quadType)
+    std::string /*quadType*/)
   {
     if (!topo.is_super_topology()) {
       // regular topologies uses different master element type
@@ -200,13 +206,13 @@ namespace nalu{
 
     auto desc = ElementDescription::create(dimension, topo);
     auto basis = LagrangeBasis(desc->inverseNodeMap, desc->nodeLocs1D);
-    auto quad = TensorProductQuadratureRule(quadType, desc->polyOrder);
+    auto quad = TensorProductQuadratureRule(desc->polyOrder);
 
     switch (desc->baseTopo.value()) {
       case stk::topology::QUADRILATERAL_4_2D:
-        return make_unique<HigherOrderQuad2DSCV>(*desc, basis, quad);
+        return make_unique<HigherOrderQuad2DSCV>(basis, quad);
       case stk::topology::HEXAHEDRON_8:
-        return make_unique<HigherOrderHexSCV>(*desc, basis, quad);
+        return make_unique<HigherOrderHexSCV>(basis, quad);
       default:
         NaluEnv::self().naluOutputP0() << "High order elements only support base quad4 and hex8 meshes" << std::endl;
         break;
@@ -254,10 +260,37 @@ namespace nalu{
     return theElem;
   }
 
+  std::map<stk::topology, MasterElement*> &MasterElementRepo::volumeMeMapDev() {
+     static std::map<stk::topology, MasterElement*> M;
+     return M;
+  }
+  std::map<stk::topology, MasterElement*> &MasterElementRepo::surfaceMeMapDev() {
+     static std::map<stk::topology, MasterElement*> M;
+     return M;
+  }
+
   void MasterElementRepo::clear()
   {
     surfaceMeMap_.clear();
     volumeMeMap_.clear();
+    for (std::pair<stk::topology, MasterElement*> a : volumeMeMapDev()) {
+      const std::string debuggingName(typeid(MasterElement).name());
+      MasterElement* A=a.second;
+      Kokkos::parallel_for(debuggingName, 1, KOKKOS_LAMBDA (const int /* i */) {
+        A->~MasterElement();
+      });
+      sierra::nalu::kokkos_free_on_device(a.second);
+    }
+    volumeMeMapDev().clear();
+    for (std::pair<stk::topology, MasterElement*> a : surfaceMeMapDev()) {
+      const std::string debuggingName(typeid(MasterElement).name());
+      MasterElement* A=a.second;
+      Kokkos::parallel_for(debuggingName, 1, KOKKOS_LAMBDA (const int /* i */) {
+        A->~MasterElement();
+      });
+      sierra::nalu::kokkos_free_on_device(a.second);
+    }
+    surfaceMeMapDev().clear();
   }
 
 }

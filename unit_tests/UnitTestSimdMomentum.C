@@ -13,7 +13,7 @@
 #include <nso/MomentumNSOElemKernel.h>
 #include <ElemDataRequests.h>
 
-#ifndef KOKKOS_HAVE_CUDA
+#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(Hex8MeshWithNSOFields, twoMomentumKernels)
 {
@@ -56,7 +56,7 @@ TEST_F(Hex8MeshWithNSOFields, twoMomentumKernels)
 
   double startTime = stk::wall_time();
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
   double elapsedTimeSimd = stk::wall_time() - startTime;
   std::cout<<"numElems: "<<numElems<<", elapsedTime Hex8MeshWithNSOFields.twoMomentumKernels: "<<elapsedTimeSimd<<std::endl;

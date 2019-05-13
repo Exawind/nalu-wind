@@ -33,7 +33,7 @@
 
 #include<SolverAlgorithm.h>
 #include<FieldTypeDef.h>
-#include<complex.h> // Must proceed fftw3.h in order to get native c complex
+#include<complex> // Must proceed fftw3.h in order to get native c complex
 #include<fftw3.h>
 
 namespace stk {
@@ -64,7 +64,7 @@ public:
     stk::mesh::Part *part,
     EquationSystem *eqSystem, std::vector<int>& grid_dims_,
     std::vector<int>& horiz_bcs_, double z_sample_);
-  virtual ~AssembleMomentumEdgeABLTopBC() {}
+  virtual ~AssembleMomentumEdgeABLTopBC();
   virtual void initialize_connectivity();
 
   /** Main function to compute and set the boundary values.

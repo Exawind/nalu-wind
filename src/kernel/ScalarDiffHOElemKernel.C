@@ -84,7 +84,7 @@ ScalarDiffHOElemKernel<AlgTraits>::execute(
   timer_resid += std::chrono::duration_cast<std::chrono::duration<double>>(end_time_resid - start_time_resid).count();
 }
 
-INSTANTIATE_KERNEL_HOSGL(ScalarDiffHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(ScalarDiffHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

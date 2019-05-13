@@ -384,14 +384,14 @@ HypreLinearSystem::sumInto(
   const SharedMemView<const double**>& lhs,
   const SharedMemView<int*>&,
   const SharedMemView<int*>&,
-  const char* trace_tag)
+  const char*  /* trace_tag */)
 {
   const size_t n_obj = numEntities;
   HypreIntType numRows = n_obj * numDof_;
   const HypreIntType bufSize = idBuffer_.size();
 
-  ThrowAssertMsg(lhs.is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.is_contiguous(), "RHS assumed contiguous");
+  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
   if (bufSize < numRows) idBuffer_.resize(numRows);
 
   for (size_t in=0; in < n_obj; in++) {
@@ -429,12 +429,66 @@ HypreLinearSystem::sumInto(
 
 void
 HypreLinearSystem::sumInto(
+  unsigned numEntities,
+  const ngp::Mesh::ConnectedNodes& entities,
+  const SharedMemView<const double*>& rhs,
+  const SharedMemView<const double**>& lhs,
+  const SharedMemView<int*>&,
+  const SharedMemView<int*>&,
+  const char*  /* trace_tag */)
+{
+#ifndef KOKKOS_ENABLE_CUDA
+  const size_t n_obj = numEntities;
+  HypreIntType numRows = n_obj * numDof_;
+  const HypreIntType bufSize = idBuffer_.size();
+
+  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
+  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
+  if (bufSize < numRows) idBuffer_.resize(numRows);
+
+  for (size_t in=0; in < n_obj; in++) {
+    HypreIntType hid = get_entity_hypre_id(entities[in]);
+    HypreIntType localOffset = hid * numDof_;
+    for (size_t d=0; d < numDof_; d++) {
+      size_t lid = in * numDof_ + d;
+      idBuffer_[lid] = localOffset + d;
+    }
+  }
+
+  for (size_t in=0; in < n_obj; in++) {
+    int ix = in * numDof_;
+    HypreIntType hid = idBuffer_[ix];
+
+    if (checkSkippedRows_) {
+      auto it = skippedRows_.find(hid);
+      if (it != skippedRows_.end()) continue;
+    }
+
+    for (size_t d=0; d < numDof_; d++) {
+      int ir = ix + d;
+      HypreIntType lid = idBuffer_[ir];
+
+      const double* cur_lhs = &lhs(ir, 0);
+      HYPRE_IJMatrixAddToValues(mat_, 1, &numRows, &lid,
+                                &idBuffer_[0], cur_lhs);
+      HYPRE_IJVectorAddToValues(rhs_, 1, &lid, &rhs[ir]);
+
+      if ((lid >= iLower_) && (lid <= iUpper_))
+        rowFilled_[lid - iLower_] = RS_FILLED;
+    }
+  }
+#endif
+}
+
+
+void
+HypreLinearSystem::sumInto(
   const std::vector<stk::mesh::Entity>& entities,
-  std::vector<int>& scratchIds,
+  std::vector<int>&  /* scratchIds */,
   std::vector<double>& scratchVals,
   const std::vector<double>& rhs,
   const std::vector<double>& lhs,
-  const char* trace_tag)
+  const char*  /* trace_tag */)
 {
   const size_t n_obj = entities.size();
   HypreIntType numRows = n_obj * numDof_;
@@ -535,7 +589,8 @@ HypreLinearSystem::get_entity_hypre_id(const stk::mesh::Entity& node)
   HypreIntType hid = *stk::mesh::field_data(*realm_.hypreGlobalId_, mnode);
 
 #ifndef NDEBUG
-  if ((hid < 0) || (((hid+1) * numDof_ - 1) > maxRowID_)) {
+  HypreIntType chk = ((hid+1) * numDof_ - 1);
+  if ((hid < 0) || (chk > maxRowID_)) {
     std::cerr << bulk.parallel_rank() << "\t"
               << hid << "\t" << iLower_ << "\t" << iUpper_ << std::endl;
     throw std::runtime_error("BAD STK to hypre conversion");

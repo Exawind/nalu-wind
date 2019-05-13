@@ -107,7 +107,7 @@ ScalarAdvDiffHOElemKernel<AlgTraits>::execute(
   tensor_assembly::scalar_advdiff_rhs(ops_, mdot, metric, scalar, v_rhs);
 }
 
-INSTANTIATE_KERNEL_HOSGL(ScalarAdvDiffHOElemKernel);
+INSTANTIATE_KERNEL_HOSGL(ScalarAdvDiffHOElemKernel)
 
 } // namespace nalu
 } // namespace Sierra

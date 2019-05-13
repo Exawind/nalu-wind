@@ -53,9 +53,9 @@ public:
 private:
   ContinuityInflowElemKernel() = delete;
 
-  VectorFieldType *velocityBC_{nullptr};
-  ScalarFieldType *densityBC_{nullptr};
-  GenericFieldType *exposedAreaVec_{nullptr};
+  unsigned velocityBC_ {stk::mesh::InvalidOrdinal};
+  unsigned densityBC_ {stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
 
   const bool useShifted_;
   double projTimeScale_;

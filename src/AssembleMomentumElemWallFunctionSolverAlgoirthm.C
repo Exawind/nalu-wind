@@ -14,6 +14,7 @@
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -125,7 +126,7 @@ AssembleMomentumElemWallFunctionSolverAlgorithm::execute()
     // face master element
     MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerFace = meFC->nodesPerElement_;
-    const int numScsBip = meFC->numIntPoints_;
+    const int numScsBip = meFC->num_integration_points();
 
     // mapping from ip to nodes for this ordinal; face perspective (use with face_node_relations)
     const int *faceIpNodeMap = meFC->ipNodeMap();

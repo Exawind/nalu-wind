@@ -48,13 +48,13 @@ public:
 private:
   MomentumWallFunctionElemKernel() = delete;
   
-  VectorFieldType *velocityNp1_{nullptr};
-  VectorFieldType *bcVelocity_{nullptr};
-  ScalarFieldType *density_{nullptr};
-  ScalarFieldType *viscosity_{nullptr};
-  GenericFieldType *exposedAreaVec_{nullptr};
-  GenericFieldType *wallFrictionVelocityBip_{nullptr};
-  GenericFieldType *wallNormalDistanceBip_{nullptr};
+  unsigned velocityNp1_ {stk::mesh::InvalidOrdinal};
+  unsigned bcVelocity_ {stk::mesh::InvalidOrdinal};
+  unsigned density_ {stk::mesh::InvalidOrdinal};
+  unsigned viscosity_ {stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
+  unsigned wallFrictionVelocityBip_ {stk::mesh::InvalidOrdinal};
+  unsigned wallNormalDistanceBip_ {stk::mesh::InvalidOrdinal};
 
   // turbulence model constants (constant over time and bc surfaces)
   const double elog_;

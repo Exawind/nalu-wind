@@ -8,7 +8,7 @@ linear_solvers:
   - name: solve_scalar
     type: tpetra
     method: gmres
-    preconditioner: sgs 
+    preconditioner: sgs
     tolerance: 1e-5
     max_iterations: 50
     kspace: 50
@@ -16,8 +16,8 @@ linear_solvers:
 
   - name: solve_cont
     type: tpetra
-    method: gmres 
-    preconditioner: muelu 
+    method: gmres
+    preconditioner: muelu
     tolerance: 1e-5
     max_iterations: 50
     kspace: 50
@@ -34,12 +34,12 @@ realms:
 
     equation_systems:
       name: theEqSys
-      max_iterations: 2 
-  
+      max_iterations: 2
+
       solver_system_specification:
         velocity: solve_scalar
         pressure: solve_cont
-   
+
       systems:
 
         - LowMachEOM:
@@ -94,7 +94,7 @@ realms:
 
     - overset_boundary_condition: bc_left
       overset_user_data:
-        percent_overlap: 10.0 
+        percent_overlap: 10.0
         background_block: block_1
         overset_block: block_2
         overset_surface: surface_6
@@ -103,15 +103,6 @@ realms:
 
     solution_options:
       name: myOptions
-
-      mesh_motion:
-        - name: mmOne
-          target_name: block_1
-          omega: 0.0
-
-        - name: mmTwo
-          target_name: block_2
-          omega: 0.0
 
       options:
 
@@ -124,12 +115,12 @@ realms:
 
         - projected_nodal_gradient:
             pressure: element
-            velocity: element 
- 
+            velocity: element
+
     output:
       output_data_base_name: oversetFluids.e
       output_frequency: 20
-      output_node_set: no 
+      output_node_set: no
       output_variables:
        - dual_nodal_volume
        - velocity

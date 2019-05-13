@@ -14,6 +14,7 @@
 #include <Realm.h>
 #include <TimeIntegrator.h>
 #include <master_element/MasterElement.h>
+#include "master_element/MasterElementFactory.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -67,7 +68,7 @@ public:
       coordinates_(coordinates),
       dqdx_(dqdx),
       nDim_(nDim),
-      numScsIp_(meSCS_.numIntPoints_),
+      numScsIp_(meSCS_.num_integration_points()),
       nodesPerElement_(meSCS_.nodesPerElement_),
       p_scalarQ(nodesPerElement_),
       p_dualVolume(nodesPerElement_),
@@ -193,7 +194,7 @@ AssembleNodalGradElemAlgorithm::execute()
     // extract master element
     MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
     const int nodesPerElement = meSCS->nodesPerElement_;
-    const int numScsIp = meSCS->numIntPoints_;
+    const int numScsIp = meSCS->num_integration_points();
     ws_shape_function.resize(numScsIp*nodesPerElement);
     double * p_shape_function = ws_shape_function.data();
     if ( useShifted_ )

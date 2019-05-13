@@ -156,6 +156,6 @@ template <int p> void mms()
 
 }
 //--------------------------------------------------------------
-TEST_POLY(HexMomentumAdvDiff, mms, 20);
+TEST_POLY(HexMomentumAdvDiff, mms, 20)
 }}
 
