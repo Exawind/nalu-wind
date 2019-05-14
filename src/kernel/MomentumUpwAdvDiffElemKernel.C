@@ -36,24 +36,21 @@ MomentumUpwAdvDiffElemKernel<AlgTraits>::MomentumUpwAdvDiffElemKernel(
   ScalarFieldType* viscosity,
   GenericFieldType* Gju,
   ElemDataRequests& dataPreReqs)
-  : Kernel(),
-    solnOpts_(solnOpts),
-    viscosity_(viscosity->mesh_meta_data_ordinal()),
+  : viscosity_(viscosity->mesh_meta_data_ordinal()),
     Gju_(Gju->mesh_meta_data_ordinal()),
-    lrscv_(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_)->adjacentNodes()),
-    dofName_(velocity->name()),
-    alpha_(solnOpts.get_alpha_factor(dofName_)),
-    alphaUpw_(solnOpts.get_alpha_upw_factor(dofName_)),
-    hoUpwind_(solnOpts.get_upw_factor(dofName_)),
-    useLimiter_(solnOpts.primitive_uses_limiter(dofName_)),
+    alpha_(solnOpts.get_alpha_factor(velocity->name())),
+    alphaUpw_(solnOpts.get_alpha_upw_factor(velocity->name())),
+    hoUpwind_(solnOpts.get_upw_factor(velocity->name())),
+    useLimiter_(solnOpts.primitive_uses_limiter(velocity->name())),
     om_alpha_(1.0 - alpha_),
     om_alphaUpw_(1.0 - alphaUpw_),
     includeDivU_(solnOpts.includeDivU_),
     shiftedGradOp_(solnOpts.get_shifted_grad_op(velocity->name())),
-    pecletFunction_(eqSystem->create_peclet_function<DoubleType>(dofName_))
+    skewSymmetric_(solnOpts.get_skew_symmetric(velocity->name())),
+    pecletFunction_(eqSystem->ngp_create_peclet_function(velocity->name()))
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  const std::string vrtmName = solnOpts_.does_mesh_move()? "velocity_rtm" : "velocity";
+  const std::string vrtmName = solnOpts.does_mesh_move()? "velocity_rtm" : "velocity";
 
   velocityNp1_ = velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
   velocityRTM_ = get_field_ordinal(metaData, vrtmName);
@@ -61,15 +58,10 @@ MomentumUpwAdvDiffElemKernel<AlgTraits>::MomentumUpwAdvDiffElemKernel(
   density_ = get_field_ordinal(metaData, "density");
   massFlowRate_ = get_field_ordinal(metaData, "mass_flow_rate_scs", stk::topology::ELEM_RANK);
 
-  MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_);
-
-  get_scs_shape_fn_data<AlgTraits>([&](double* ptr){meSCS->shape_fcn(ptr);}, v_shape_function_);
-  const bool skewSymmetric = solnOpts.get_skew_symmetric(velocity->name());
-  get_scs_shape_fn_data<AlgTraits>([&](double* ptr){skewSymmetric ? meSCS->shifted_shape_fcn(ptr) : meSCS->shape_fcn(ptr);}, 
-                                   v_adv_shape_function_);
+  meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
 
   // add master elements
-  dataPreReqs.add_cvfem_surface_me(meSCS);
+  dataPreReqs.add_cvfem_surface_me(meSCS_);
 
   // fields and data; mdot not gathered as element data
   dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
@@ -84,34 +76,18 @@ MomentumUpwAdvDiffElemKernel<AlgTraits>::MomentumUpwAdvDiffElemKernel(
     dataPreReqs.add_master_element_call(SCS_SHIFTED_GRAD_OP, CURRENT_COORDINATES);
   else
     dataPreReqs.add_master_element_call(SCS_GRAD_OP, CURRENT_COORDINATES);
-}
 
-template<class AlgTraits>
-MomentumUpwAdvDiffElemKernel<AlgTraits>::~MomentumUpwAdvDiffElemKernel()
-{
-  delete pecletFunction_;
-}
-
-template<typename AlgTraits>
-void
-MomentumUpwAdvDiffElemKernel<AlgTraits>::setup(const TimeIntegrator&)
-{
-  alpha_ = solnOpts_.get_alpha_factor(dofName_);
-  alphaUpw_ = solnOpts_.get_alpha_upw_factor(dofName_);
-  hoUpwind_ = solnOpts_.get_upw_factor(dofName_);
-  useLimiter_ = solnOpts_.primitive_uses_limiter(dofName_);
-
-  // one minus flavor..
-  om_alpha_ = 1.0-alpha_;
-  om_alphaUpw_ = 1.0-alphaUpw_;
+  dataPreReqs.add_master_element_call(SCS_SHAPE_FCN, CURRENT_COORDINATES);
+  if (skewSymmetric_)
+    dataPreReqs.add_master_element_call(SCS_SHIFTED_SHAPE_FCN, CURRENT_COORDINATES);
 }
 
 template<class AlgTraits>
 void
 MomentumUpwAdvDiffElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType **>& lhs,
-  SharedMemView<DoubleType *>& rhs,
-  ScratchViews<DoubleType>& scratchViews)
+  SharedMemView<DoubleType**, DeviceShmem>& lhs,
+  SharedMemView<DoubleType*, DeviceShmem>& rhs,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
   NALU_ALIGNED DoubleType w_uIp[AlgTraits::nDim_];
   NALU_ALIGNED DoubleType w_uIpL[AlgTraits::nDim_];
@@ -126,24 +102,27 @@ MomentumUpwAdvDiffElemKernel<AlgTraits>::execute(
     w_limitR[i] = 1.0;
   }
   
-  SharedMemView<DoubleType***>& v_Gju = scratchViews.get_scratch_view_3D(Gju_);
-  SharedMemView<DoubleType**>& v_coordinates = scratchViews.get_scratch_view_2D(coordinates_);
-  SharedMemView<DoubleType**>& v_uNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
-  SharedMemView<DoubleType*>& v_density = scratchViews.get_scratch_view_1D(density_);
-  SharedMemView<DoubleType*>& v_viscosity = scratchViews.get_scratch_view_1D(viscosity_);
-  SharedMemView<DoubleType*>& v_mdot = scratchViews.get_scratch_view_1D(massFlowRate_);
-  SharedMemView<DoubleType**>& v_velocityRTM = scratchViews.get_scratch_view_2D(velocityRTM_);
+  const auto& v_Gju = scratchViews.get_scratch_view_3D(Gju_);
+  const auto& v_coordinates = scratchViews.get_scratch_view_2D(coordinates_);
+  const auto& v_uNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
+  const auto& v_density = scratchViews.get_scratch_view_1D(density_);
+  const auto& v_viscosity = scratchViews.get_scratch_view_1D(viscosity_);
+  const auto& v_mdot = scratchViews.get_scratch_view_1D(massFlowRate_);
+  const auto& v_velocityRTM = scratchViews.get_scratch_view_2D(velocityRTM_);
  
-  SharedMemView<DoubleType**>& v_scs_areav = scratchViews.get_me_views(CURRENT_COORDINATES).scs_areav;
-  SharedMemView<DoubleType***>& v_dndx = shiftedGradOp_
-    ? scratchViews.get_me_views(CURRENT_COORDINATES).dndx_shifted 
-    : scratchViews.get_me_views(CURRENT_COORDINATES).dndx;
+  const auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
+  const auto& v_scs_areav = meViews.scs_areav;
+  const auto& v_dndx = shiftedGradOp_ ? meViews.dndx_shifted : meViews.dndx;
+  const auto& v_shape_function = meViews.scs_shape_fcn;
+  const auto& v_adv_shape_function = skewSymmetric_ ? meViews.scs_shifted_shape_fcn : meViews.scs_shape_fcn;
+
+  const int* lrscv = meSCS_->adjacentNodes();
 
   for ( int ip = 0; ip < AlgTraits::numScsIp_; ++ip ) {
 
     // left and right nodes for this ip
-    const int il = lrscv_[2*ip];
-    const int ir = lrscv_[2*ip+1];
+    const int il = lrscv[2*ip];
+    const int ir = lrscv[2*ip+1];
 
     // save off some offsets
     const int ilNdim = il*AlgTraits::nDim_;
@@ -161,8 +140,8 @@ MomentumUpwAdvDiffElemKernel<AlgTraits>::execute(
     }
 
     for ( int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic ) {
-      const DoubleType r = v_shape_function_(ip,ic);
-      const DoubleType rAdv = v_adv_shape_function_(ip,ic);
+      const DoubleType r = v_shape_function(ip,ic);
+      const DoubleType rAdv = v_adv_shape_function(ip,ic);
       muIp += r*v_viscosity(ic);
       for ( int j = 0; j < AlgTraits::nDim_; ++j ) {
         const DoubleType uj = v_uNp1(ic,j);
@@ -265,7 +244,7 @@ MomentumUpwAdvDiffElemKernel<AlgTraits>::execute(
       // advection and diffusion
       
       // upwind (il/ir) handled above; collect terms on alpha and alphaUpw
-      const DoubleType lhsfacAdv = v_adv_shape_function_(ip,ic)*tmdot*(pecfac*om_alphaUpw_ + om_pecfac*om_alpha_);
+      const DoubleType lhsfacAdv = v_adv_shape_function(ip,ic)*tmdot*(pecfac*om_alphaUpw_ + om_pecfac*om_alpha_);
 
       for ( int i = 0; i < AlgTraits::nDim_; ++i ) {
 

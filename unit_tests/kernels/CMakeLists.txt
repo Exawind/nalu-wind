@@ -15,6 +15,7 @@ add_sources(GlobalUnitSourceList
    UnitTestMomentumMassElem.C
    UnitTestMomentumNSOElem.C
    UnitTestMomentumNSOKeElem.C
+   UnitTestMomentumUpwAdvDiffElem.C
    UnitTestSSTSrcElem.C
    UnitTestScalarAdvDiffElem.C
    UnitTestScalarMassElem.C
