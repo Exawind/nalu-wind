@@ -181,7 +181,7 @@ void expect_all_near(
   const double exactValue,
   const double tol = 1.0e-15);
 
-void expect_all_near(
+void expect_all_near_2d(
   const Kokkos::View<double**>& calcValue,
   const double* exactValue,
   const double tol = 1.0e-15);

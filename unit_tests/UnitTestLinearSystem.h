@@ -10,16 +10,102 @@
 
 #include "LinearSystem.h"
 #include "EquationSystem.h"
+#include "utils/CreateDeviceExpression.h"
 
 namespace unit_test_utils {
+
+template<typename InputLhsType, typename InputRhsType,
+         typename LHSView, typename RHSView>
+KOKKOS_FUNCTION
+void assign(const InputLhsType& inputLhs, const InputRhsType& inputRhs,
+            LHSView lhs, RHSView rhs)
+{
+    for(size_t i=0; i<inputRhs.extent(0); ++i) {
+      rhs(i) = inputRhs(i);
+    }
+    for(size_t i=0; i<inputLhs.extent(0); ++i) {
+      for(size_t j=0; j<inputLhs.extent(1); ++j) {
+        lhs(i,j) = inputLhs(i,j);
+      }
+    }
+}
+
+using LHSView = Kokkos::View<double**>;
+using RHSView = Kokkos::View<double*>;
+
+class TestCoeffApplier : public sierra::nalu::CoeffApplier
+{
+public:
+  KOKKOS_FUNCTION
+  TestCoeffApplier(LHSView& lhs, RHSView& rhs, unsigned numContributionsToAccept = 1)
+  : lhs_(lhs), rhs_(rhs), devicePointer_(nullptr),
+    numContributionsToAccept_(numContributionsToAccept), numContributions_(0)
+  {}
+
+  KOKKOS_FUNCTION
+  TestCoeffApplier(const TestCoeffApplier&) = default;
+
+  KOKKOS_FUNCTION
+  ~TestCoeffApplier()
+  {
+  }
+
+  KOKKOS_FUNCTION
+  void operator()(unsigned /*numEntities*/,
+                  const ngp::Mesh::ConnectedNodes& /*entities*/,
+                  const sierra::nalu::SharedMemView<int*, sierra::nalu::DeviceShmem> & /*localIds*/,
+                  const sierra::nalu::SharedMemView<int*, sierra::nalu::DeviceShmem> & /*sortPermutation*/,
+                  const sierra::nalu::SharedMemView<const double*, sierra::nalu::DeviceShmem> & rhs,
+                  const sierra::nalu::SharedMemView<const double**, sierra::nalu::DeviceShmem> & lhs,
+                  const char * /*trace_tag*/)
+  {
+    if (numContributions_ < numContributionsToAccept_) {
+      assign(lhs, rhs, lhs_, rhs_);
+      ++numContributions_;
+    }
+  }
+
+  void free_device_pointer()
+  {
+    if (this != devicePointer_) {
+      sierra::nalu::kokkos_free_on_device(devicePointer_);
+      devicePointer_ = nullptr;
+    }
+  }
+
+  sierra::nalu::CoeffApplier* device_pointer()
+  {
+    if (devicePointer_ != nullptr) {
+      sierra::nalu::kokkos_free_on_device(devicePointer_);
+      devicePointer_ = nullptr;
+    }
+    devicePointer_ = sierra::nalu::create_device_expression(*this);
+    return devicePointer_;
+  }
+
+private:
+  LHSView lhs_;
+  RHSView rhs_;
+  TestCoeffApplier* devicePointer_;
+  unsigned numContributionsToAccept_;
+  unsigned numContributions_;
+};
 
 class TestLinearSystem : public sierra::nalu::LinearSystem
 {
 public:
-
- TestLinearSystem( sierra::nalu::Realm &realm, const unsigned numDof, sierra::nalu::EquationSystem *eqSys)
+ TestLinearSystem( sierra::nalu::Realm &realm, const unsigned numDof,
+                   sierra::nalu::EquationSystem *eqSys, stk::topology topo)
    : sierra::nalu::LinearSystem(realm, numDof, eqSys, nullptr), numSumIntoCalls_(0)
-  {}
+  {
+    unsigned rhsSize = numDof * topo.num_nodes();
+
+    rhs_ = RHSView("rhs_",rhsSize);
+    lhs_ = LHSView("lhs_",rhsSize, rhsSize);
+
+    hostrhs_ = Kokkos::create_mirror_view(rhs_);
+    hostlhs_ = Kokkos::create_mirror_view(lhs_);
+  }
 
   virtual ~TestLinearSystem() {}
 
@@ -48,41 +134,28 @@ public:
       )
   {
     if (numSumIntoCalls_ == 0) {
-      rhs_ = Kokkos::View<double*>("rhs_",rhs.extent(0));
-      for(size_t i=0; i<rhs.extent(0); ++i) {
-        rhs_(i) = rhs(i);
-      }
-      lhs_ = Kokkos::View<double**>("lhs_",lhs.extent(0), lhs.extent(1));
-      for(size_t i=0; i<lhs.extent(0); ++i) {
-        for(size_t j=0; j<lhs.extent(1); ++j) {
-          lhs_(i,j) = lhs(i,j);
-        }
-      }
+      assign(lhs, rhs, lhs_, rhs_);
     }
     Kokkos::atomic_add(&numSumIntoCalls_, 1u);
+  }
+
+  sierra::nalu::CoeffApplier* get_coeff_applier()
+  {
+    return new TestCoeffApplier(lhs_, rhs_);
   }
 
   virtual void sumInto(
     unsigned  /* numEntities */,
     const ngp::Mesh::ConnectedNodes&  /* entities */,
-    const sierra::nalu::SharedMemView<const double*> & rhs,
-    const sierra::nalu::SharedMemView<const double**> & lhs,
-    const sierra::nalu::SharedMemView<int*> &  /* localIds */,
-    const sierra::nalu::SharedMemView<int*> &  /* sortPermutation */,
+    const sierra::nalu::SharedMemView<const double*,sierra::nalu::DeviceShmem> & rhs,
+    const sierra::nalu::SharedMemView<const double**,sierra::nalu::DeviceShmem> & lhs,
+    const sierra::nalu::SharedMemView<int*,sierra::nalu::DeviceShmem> &  /* localIds */,
+    const sierra::nalu::SharedMemView<int*,sierra::nalu::DeviceShmem> &  /* sortPermutation */,
     const char *  /* trace_tag */
   )
   {
     if (numSumIntoCalls_ == 0) {
-      rhs_ = Kokkos::View<double*>("rhs_",rhs.extent(0));
-      for(size_t i=0; i<rhs.extent(0); ++i) {
-        rhs_(i) = rhs(i);
-      }
-      lhs_ = Kokkos::View<double**>("lhs_",lhs.extent(0), lhs.extent(1));
-      for(size_t i=0; i<lhs.extent(0); ++i) {
-        for(size_t j=0; j<lhs.extent(1); ++j) {
-          lhs_(i,j) = lhs(i,j);
-        }
-      }
+      assign(lhs, rhs, lhs_, rhs_);
     }
     Kokkos::atomic_add(&numSumIntoCalls_, 1u);
   }
@@ -97,13 +170,11 @@ public:
     )
   {
     if (numSumIntoCalls_ == 0) {
-      rhs_ = Kokkos::View<double*>("rhs_",rhs.size());
       for (size_t i=0; i<rhs.size(); ++i) {
         rhs_(i) = rhs[i];
       }
       const size_t numRows = rhs.size();
       ThrowAssert(numRows*numRows == lhs.size());
-      lhs_ = Kokkos::View<double**>("lhs_",numRows, numRows);
       for (size_t i=0; i<numRows; ++i) {
         for (size_t j=0; j<numRows; ++j) {
           lhs_(i,j) = lhs[numRows*i+j];
@@ -141,8 +212,10 @@ public:
     const double) {}
 
   unsigned numSumIntoCalls_;
-  Kokkos::View<double**> lhs_;
-  Kokkos::View<double*> rhs_;
+  LHSView lhs_;
+  LHSView::HostMirror hostlhs_;
+  RHSView rhs_;
+  RHSView::HostMirror hostrhs_;
 
 protected:
   virtual void beginLinearSystemConstruction() {}

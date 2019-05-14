@@ -54,8 +54,6 @@ TEST_F(Hex8MeshWithNSOFields, continuityAdvElem)
   const unsigned numElems = stk::mesh::count_selected_entities(all_local, elemBuckets);
 
   std::cerr<<"numElems: "<<numElems<<", elapsedTime Hex8MeshWithNSOFields.continuityAdvElem: "<<elapsedTimeSimd<<std::endl;
-
-  EXPECT_EQ(numElems, helperObjs.linsys->numSumIntoCalls_);
 }
 
 #endif

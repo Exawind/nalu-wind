@@ -48,7 +48,7 @@ TEST_F(ActuatorSourceKernelHex8Mesh, NGP_actuator_source)
       }
   }
 
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->lhs_,lhsExact.data());
+  unit_test_kernel_utils::expect_all_near_2d(helperObjs.linsys->lhs_,lhsExact.data());
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,rhsExact.data());
 #endif
 }

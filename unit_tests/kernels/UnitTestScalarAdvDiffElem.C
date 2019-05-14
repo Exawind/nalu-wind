@@ -11,8 +11,6 @@
 
 #include "kernel/ScalarAdvDiffElemKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
-
 namespace {
 namespace hex8_golds {
 namespace advection_diffusion {
@@ -35,8 +33,6 @@ namespace advection_diffusion {
 } // advection_diffusion
 } // hex8_golds
 } // anonymous namespace
-
-#endif
 
 /// Scalar advection/diffusion (will use mixture fraction as scalar)
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion)
@@ -63,17 +59,15 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion)
   // Register the kernel for execution
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(advKernel.get());
 
-  // Populate LHS and RHS
+  // Populate LHS and RHS and copy back to host
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
-  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
-  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->hostlhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->hostlhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->hostrhs_.extent(0), 8u);
 
   namespace gold_values = hex8_golds::advection_diffusion;
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
-  unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs);
-#endif
+  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->hostrhs_, gold_values::rhs);
+  unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->hostlhs_, gold_values::lhs);
 }
 

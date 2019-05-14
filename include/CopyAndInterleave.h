@@ -101,8 +101,9 @@ void copy_and_interleave(std::unique_ptr<ScratchViews<double>>* data,
 }
 #endif
 
-KOKKOS_INLINE_FUNCTION
-void extract_vector_lane(const SharedMemView<DoubleType*>& simdrhs, int simdIndex, SharedMemView<double*>& rhs)
+KOKKOS_FUNCTION
+inline
+void extract_vector_lane(const SharedMemView<DoubleType*,DeviceShmem>& simdrhs, int simdIndex, SharedMemView<double*,DeviceShmem>& rhs)
 {
   int dim = simdrhs.extent(0);
   const DoubleType* sr = simdrhs.data();
@@ -112,8 +113,9 @@ void extract_vector_lane(const SharedMemView<DoubleType*>& simdrhs, int simdInde
   }
 }
 
-KOKKOS_INLINE_FUNCTION
-void extract_vector_lane(const SharedMemView<DoubleType**>& simdlhs, int simdIndex, SharedMemView<double**>& lhs)
+KOKKOS_FUNCTION
+inline
+void extract_vector_lane(const SharedMemView<DoubleType**,DeviceShmem>& simdlhs, int simdIndex, SharedMemView<double**,DeviceShmem>& lhs)
 {
   int len = simdlhs.extent(0)*simdlhs.extent(1);
   const DoubleType* sl = simdlhs.data();
