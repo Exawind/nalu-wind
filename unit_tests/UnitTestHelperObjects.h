@@ -46,6 +46,9 @@ struct HelperObjects {
     for (auto kern: assembleElemSolverAlg->activeKernels_)
       kern->free_on_device();
     assembleElemSolverAlg->activeKernels_.clear();
+
+    Kokkos::deep_copy(linsys->hostlhs_, linsys->lhs_);
+    Kokkos::deep_copy(linsys->hostrhs_, linsys->rhs_);
   }
 
   void print_lhs_and_rhs() const

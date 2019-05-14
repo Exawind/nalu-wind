@@ -100,8 +100,10 @@ TpetraLinearSystem::TpetraLinearSystem(
 TpetraLinearSystem::~TpetraLinearSystem()
 {
   // dereference linear solver in safe manner
-  TpetraLinearSolver *linearSolver = reinterpret_cast<TpetraLinearSolver *>(linearSolver_);
-  linearSolver->destroyLinearSolver();
+  if (linearSolver_ != nullptr) {
+    TpetraLinearSolver *linearSolver = reinterpret_cast<TpetraLinearSolver *>(linearSolver_);
+    linearSolver->destroyLinearSolver();
+  }
 }
 
 struct CompareEntityEqualById
