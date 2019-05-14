@@ -1284,7 +1284,7 @@ void calc_projected_nodal_gradient(
 #endif // KOKKOS_ENABLE_CUDA
 
 void expect_all_near(
-  const Kokkos::View<double*,Kokkos::LayoutRight,sierra::nalu::MemSpace>& calcValue,
+  const Kokkos::View<double*>& calcValue,
   const double* exactValue,
   const double tol)
 {
@@ -1296,7 +1296,7 @@ void expect_all_near(
 }
 
 void expect_all_near(
-  const Kokkos::View<double*,Kokkos::LayoutRight,sierra::nalu::MemSpace>& calcValue,
+  const Kokkos::View<double*>& calcValue,
   const double exactValue,
   const double tol)
 {
@@ -1307,8 +1307,8 @@ void expect_all_near(
   }
 }
 
-void expect_all_near(
-  const Kokkos::View<double**,Kokkos::LayoutRight,sierra::nalu::MemSpace>& calcValue,
+void expect_all_near_2d(
+  const Kokkos::View<double**>& calcValue,
   const double* exactValue,
   const double tol)
 {

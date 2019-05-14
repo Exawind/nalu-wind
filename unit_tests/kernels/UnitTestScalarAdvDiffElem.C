@@ -59,11 +59,8 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion)
   // Register the kernel for execution
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(advKernel.get());
 
-  // Populate LHS and RHS
+  // Populate LHS and RHS and copy back to host
   helperObjs.execute();
-
-  Kokkos::deep_copy(helperObjs.linsys->hostlhs_, helperObjs.linsys->lhs_);
-  Kokkos::deep_copy(helperObjs.linsys->hostrhs_, helperObjs.linsys->rhs_);
 
   EXPECT_EQ(helperObjs.linsys->hostlhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->hostlhs_.extent(1), 8u);

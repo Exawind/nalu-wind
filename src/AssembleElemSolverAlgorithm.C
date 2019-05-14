@@ -99,11 +99,14 @@ AssembleElemSolverAlgorithm::execute()
   }
 
   CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
+
+#ifdef KOKKOS_ENABLE_CUDA
   CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
 
   double diagRelaxFactor = diagRelaxFactor_;
   int rhsSize = rhsSize_;
   unsigned nodesPerEntity = nodesPerEntity_;
+#endif
 
   run_algorithm(
     realm_.bulk_data(),
@@ -134,6 +137,7 @@ AssembleElemSolverAlgorithm::execute()
 #endif
     });
 
+  coeffApplier->free_device_pointer();
   delete coeffApplier;
 }
 

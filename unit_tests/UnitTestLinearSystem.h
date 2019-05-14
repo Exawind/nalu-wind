@@ -30,8 +30,8 @@ void assign(const InputLhsType& inputLhs, const InputRhsType& inputRhs,
     }
 }
 
-using LHSView = Kokkos::View<double**,Kokkos::LayoutRight, sierra::nalu::MemSpace>;
-using RHSView = Kokkos::View<double*,Kokkos::LayoutRight, sierra::nalu::MemSpace>;
+using LHSView = Kokkos::View<double**>;
+using RHSView = Kokkos::View<double*>;
 
 class TestCoeffApplier : public sierra::nalu::CoeffApplier
 {
@@ -48,10 +48,6 @@ public:
   KOKKOS_FUNCTION
   ~TestCoeffApplier()
   {
-    if (this != devicePointer_) {
-      sierra::nalu::kokkos_free_on_device(devicePointer_);
-      devicePointer_ = nullptr;
-    }
   }
 
   KOKKOS_FUNCTION
@@ -66,6 +62,14 @@ public:
     if (numContributions_ < numContributionsToAccept_) {
       assign(lhs, rhs, lhs_, rhs_);
       ++numContributions_;
+    }
+  }
+
+  void free_device_pointer()
+  {
+    if (this != devicePointer_) {
+      sierra::nalu::kokkos_free_on_device(devicePointer_);
+      devicePointer_ = nullptr;
     }
   }
 

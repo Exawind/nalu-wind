@@ -57,6 +57,7 @@ public:
                           const SharedMemView<const double**,DeviceShmem> & lhs,
                           const char * trace_tag) = 0;
 
+  virtual void free_device_pointer() = 0;
   virtual CoeffApplier* device_pointer() = 0;
 };
 
@@ -124,6 +125,8 @@ public:
       linSys_.sumInto(numEntities, entities, rhs, lhs, localIds, sortPermutation, trace_tag);
     }
   
+    void free_device_pointer() {}
+
     CoeffApplier* device_pointer() { return this; }
 
   private:

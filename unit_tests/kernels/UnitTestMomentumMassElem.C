@@ -235,6 +235,6 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_time_derivative_lumped)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->lhs_, lhsExact.data());
+  unit_test_kernel_utils::expect_all_near_2d(helperObjs.linsys->lhs_, lhsExact.data());
 #endif
 }
