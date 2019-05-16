@@ -176,8 +176,14 @@ if (OPENMP_FOUND)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
 endif()
 
-message("-- CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
-message("-- CMAKE_Fortran_FLAGS = ${CMAKE_Fortran_FLAGS}")
+# Flags we have added
+message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
+message(STATUS "CMAKE_Fortran_FLAGS = ${CMAKE_Fortran_FLAGS}")
+
+# Build type flags in which CMake adds for us
+string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
+message(STATUS "CMAKE_CXX_FLAGS_${BUILD_TYPE} = ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}")
+message(STATUS "CMAKE_Fortran_FLAGS_${BUILD_TYPE} = ${CMAKE_Fortran_FLAGS_${BUILD_TYPE}}")
 
 if(ENABLE_HYPRE)
   include(CheckSymbolExists)
