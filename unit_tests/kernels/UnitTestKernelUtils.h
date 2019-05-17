@@ -131,12 +131,24 @@ void dhdx_test_function(
   const VectorFieldType& coordinates,
   VectorFieldType& dhdx);
 
+void calc_edge_area_vec(
+  const stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const VectorFieldType& edgeAreaVec);
+
 void calc_exposed_area_vec(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
-  GenericFieldType& exposedAreaVec
-);
+  GenericFieldType& exposedAreaVec);
+
+void calc_mass_flow_rate(
+  const stk::mesh::BulkData&,
+  const VectorFieldType&,
+  const ScalarFieldType&,
+  const VectorFieldType&,
+  ScalarFieldType&);
 
 void calc_mass_flow_rate_scs(
   stk::mesh::BulkData&,
