@@ -235,6 +235,7 @@ public:
   ) : TestLinearSystem(realm, numDof, eqSys, topo)
   {}
 
+  using TestLinearSystem::sumInto;
   virtual void sumInto(
     unsigned  /* numEntities */,
     const ngp::Mesh::ConnectedNodes&  entities,

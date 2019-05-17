@@ -161,7 +161,6 @@ struct EdgeHelperObjects : public HelperObjectsBase
     ThrowRequire(edgeAlg != nullptr);
     edgeAlg->execute();
 
-    EXPECT_EQ(linsys->numSumIntoCalls_, 12);
     Kokkos::deep_copy(linsys->hostlhs_, linsys->lhs_);
     Kokkos::deep_copy(linsys->hostrhs_, linsys->rhs_);
   }
