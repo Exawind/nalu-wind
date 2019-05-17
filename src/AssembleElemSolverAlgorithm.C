@@ -98,9 +98,9 @@ AssembleElemSolverAlgorithm::execute()
     Kokkos::deep_copy(ngpKernels, hostKernelView);
   }
 
-  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
 
 #ifdef KOKKOS_ENABLE_CUDA
+  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
   CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
 
   double diagRelaxFactor = diagRelaxFactor_;
@@ -124,7 +124,7 @@ AssembleElemSolverAlgorithm::execute()
         extract_vector_lane(smdata.simdlhs, simdElemIndex, smdata.lhs);
         for (int ir=0; ir < rhsSize_; ++ir)
           smdata.lhs(ir, ir) /= diagRelaxFactor_;
-        (*coeffApplier)(nodesPerEntity_, smdata.ngpElemNodes[simdElemIndex],
+        apply_coeff(nodesPerEntity_, smdata.ngpElemNodes[simdElemIndex],
                     smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
       }
 #else
@@ -137,8 +137,10 @@ AssembleElemSolverAlgorithm::execute()
 #endif
     });
 
+#ifdef KOKKOS_ENABLE_CUDA
   coeffApplier->free_device_pointer();
   delete coeffApplier;
+#endif
 }
 
 } // namespace nalu
