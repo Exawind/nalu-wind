@@ -147,8 +147,12 @@ public:
 
   int getDofStatus(stk::mesh::Entity node);
 
+  int getRowLID(stk::mesh::Entity node) { return entityToLID_[node.local_offset()]; }
+  int getColLID(stk::mesh::Entity node) { return entityToColLID_[node.local_offset()]; }
+
   Teuchos::RCP<LinSys::Graph>  getOwnedGraph() { return ownedGraph_; }
   Teuchos::RCP<LinSys::Matrix> getOwnedMatrix() { return ownedMatrix_; }
+  Teuchos::RCP<LinSys::Vector> getOwnedRhs() { return ownedRhs_; }
 
 private:
   void buildConnectedNodeGraph(stk::mesh::EntityRank rank,
