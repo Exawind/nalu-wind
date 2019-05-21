@@ -236,8 +236,14 @@ public:
       spatialDim_(3),
       meta_(spatialDim_),
       bulk_(meta_, comm_),
-      solnOpts_()
-  {}
+      solnOpts_(),
+      coordinates_(nullptr),
+      naluGlobalId_(
+        &meta_.declare_field<GlobalIdFieldType>(
+          stk::topology::NODE_RANK, "nalu_global_id",1))
+  {
+    stk::mesh::put_field_on_mesh(*naluGlobalId_, meta_.universal_part(), 1, nullptr);
+  }
 
   virtual ~TestKernelHex8Mesh() {}
 
@@ -268,6 +274,7 @@ public:
   sierra::nalu::SolutionOptions solnOpts_;
 
   const VectorFieldType* coordinates_{nullptr};
+  GlobalIdFieldType* naluGlobalId_{nullptr};
 };
 
 /** Test Fixture for Low-Mach Kernels

@@ -71,3 +71,62 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion)
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->hostlhs_, gold_values::lhs);
 }
 
+TEST_F(MixtureFractionKernelHex8Mesh, advection_diffusion_tpetra)
+{
+  // FIXME: only test on one core
+  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) 
+    return;
+
+  fill_mesh_and_init_fields(true);
+
+  // Setup solution options for default advection kernel
+  solnOpts_.meshMotion_ = false;
+  solnOpts_.meshDeformation_ = false;
+  solnOpts_.externalMeshDeformation_ = false;
+
+  int numDof = 1;
+  unit_test_utils::TpetraHelperObjects helperObjs(bulk_, stk::topology::HEX_8, numDof, partVec_[0]);
+
+  helperObjs.realm.naluGlobalId_ = naluGlobalId_;
+  helperObjs.realm.set_global_id();
+
+  // Initialize the kernel
+  std::unique_ptr<sierra::nalu::Kernel> advKernel(
+    new sierra::nalu::ScalarAdvDiffElemKernel<sierra::nalu::AlgTraitsHex8>(
+     bulk_, solnOpts_, mixFraction_, viscosity_, helperObjs.assembleElemSolverAlg->dataNeededByKernels_));
+
+  // Register the kernel for execution
+  helperObjs.assembleElemSolverAlg->activeKernels_.push_back(advKernel.get());
+
+  // Populate LHS and RHS
+  helperObjs.execute();
+
+  using MatrixType = sierra::nalu::LinSys::Matrix::local_matrix_type;
+  const MatrixType& localMatrix = helperObjs.linsys->getOwnedMatrix()->getLocalMatrix();
+
+  //Ugh, we have confusion of host/device stuff here.
+  const sierra::nalu::host_view_type& localRhs = helperObjs.linsys->getOwnedRhs()->getLocalView<sierra::nalu::DeviceSpace>();
+
+  EXPECT_EQ(8, localMatrix.numRows());
+  EXPECT_EQ(8, localRhs.size());
+
+  namespace gold_values = hex8_golds::advection_diffusion;
+
+  stk::mesh::Entity elem = bulk_.get_entity(stk::topology::ELEM_RANK, 1);
+  const stk::mesh::Entity* elemNodes = bulk_.begin_nodes(elem);
+  unsigned numElemNodes = bulk_.num_nodes(elem);
+
+  for(unsigned i=0; i<numElemNodes; ++i) {
+    int rowId = helperObjs.linsys->getRowLID(elemNodes[i]);
+    KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(rowId);
+    EXPECT_EQ(8, constRowView.length);
+
+    for(unsigned j=0; j<numElemNodes; ++j) {
+      int colId = helperObjs.linsys->getColLID(elemNodes[j]);
+      EXPECT_NEAR(gold_values::lhs[i][j], constRowView.value(colId), 1.e-14);
+    }
+
+    EXPECT_NEAR(gold_values::rhs[i], localRhs(rowId,0), 1.e-14);
+  }
+}
+
