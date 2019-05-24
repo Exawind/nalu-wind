@@ -7,6 +7,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 ########################## OPTIONS #####################################
 option(ENABLE_CUDA "Enable build targeting GPU" OFF)
 option(ENABLE_TESTS "Enable regression testing." OFF)
+option(ENABLE_EXAMPLES "Enable examples." OFF)
 option(ENABLE_DOCUMENTATION "Build documentation." OFF)
 option(ENABLE_SPHINX_API_DOCS "Link Doxygen API docs to Sphinx" OFF)
 option(ENABLE_WIND_UTILS "Build wind utils along with Nalu-Wind" OFF)
@@ -333,6 +334,10 @@ if(ENABLE_TESTS)
    enable_testing()
    include(CTest)
    add_subdirectory(reg_tests)
+endif()
+
+if(ENABLE_EXAMPLES)
+   add_subdirectory(examples)
 endif()
 
 if (ENABLE_WIND_UTILS)
