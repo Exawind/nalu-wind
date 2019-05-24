@@ -55,7 +55,7 @@ Transfer::Transfer(
     name_("none"),
     transferType_("none"),
     transferObjective_("multi_physics"),
-    searchMethodName_("none"),
+    searchMethodName_("stk_kdtree"),
     searchTolerance_(1.0e-4),
     searchExpansionFactor_(1.5)
 {
@@ -340,7 +340,7 @@ void Transfer::allocate_stk_transfer() {
   const std::vector<std::pair<std::string, std::string> > &FromVar = transferVariablesPairName_;
   const stk::ParallelMachine    &fromComm    = fromRealm_->bulk_data().parallel();
 
-  boost::shared_ptr<FromMesh >
+  std::shared_ptr<FromMesh >
     from_mesh (new FromMesh(fromMetaData, fromBulkData, *fromRealm_, fromcoordName, FromVar, fromPartVec_, fromComm));
 
   stk::mesh::MetaData    &toMetaData = toRealm_->meta_data();
@@ -349,7 +349,7 @@ void Transfer::allocate_stk_transfer() {
   const std::vector<std::pair<std::string, std::string> > &toVar = transferVariablesPairName_;
   const stk::ParallelMachine    &toComm    = toRealm_->bulk_data().parallel();
 
-  boost::shared_ptr<ToMesh >
+  std::shared_ptr<ToMesh >
     to_mesh (new ToMesh(toMetaData, toBulkData, *toRealm_, tocoordName, toVar, toPartVec_, toComm, searchTolerance_));
 
   typedef stk::transfer::GeometricTransfer< class LinInterp< class FromMesh, class ToMesh > > STKTransfer;
@@ -372,9 +372,9 @@ void Transfer::ghost_from_elements()
 {
   typedef stk::transfer::GeometricTransfer< class LinInterp< class FromMesh, class ToMesh > > STKTransfer;
 
-  const boost::shared_ptr<STKTransfer> transfer =
-      boost::dynamic_pointer_cast<STKTransfer>(transfer_);
-  const boost::shared_ptr<STKTransfer::MeshA> mesha = transfer->mesha();
+  const std::shared_ptr<STKTransfer> transfer =
+      std::dynamic_pointer_cast<STKTransfer>(transfer_);
+  const std::shared_ptr<STKTransfer::MeshA> mesha = transfer->meshA();
 
   STKTransfer::MeshA::EntityProcVec entity_keys;
   transfer->determine_entities_to_copy(entity_keys);

@@ -15,9 +15,9 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <memory>
 
 // stk_transfer related
-#include <boost/shared_ptr.hpp>
 #include <stk_transfer/TransferBase.hpp>
 
 // stk
@@ -54,7 +54,7 @@ public:
   Transfers *parent();
 
   Transfers &transfers_;
-  boost::shared_ptr<stk::transfer::TransferBase> transfer_;
+  std::shared_ptr<stk::transfer::TransferBase> transfer_;
 
   bool couplingPhysicsSpecified_;
   bool transferVariablesSpecified_;
