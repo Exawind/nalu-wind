@@ -706,8 +706,16 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
   MasterElement* /* meFC */,
   MasterElement* meSCS,
   MasterElement* meSCV,
-  MasterElement* meFEM,
-  int faceOrdinal)
+  MasterElement*
+#ifndef KOKKOS_ENABLE_CUDA
+      meFEM
+#endif
+  ,
+  int
+#ifndef KOKKOS_ENABLE_CUDA
+     faceOrdinal
+#endif
+  )
 {
   for(unsigned i=0; i<dataEnums.size(); ++i) {
     switch(dataEnums(i))
