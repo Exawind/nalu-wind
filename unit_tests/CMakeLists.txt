@@ -49,6 +49,7 @@ add_sources(GlobalUnitSourceList
 add_sources(GlobalUnitHeaderList
    UnitTestFieldUtils.h
    UnitTestHelperObjects.h
+   UnitTestTpetraHelperObjects.h
    UnitTestKokkosME.h
    UnitTestKokkosMEBC.h
    UnitTestKokkosMEGold.h
