@@ -72,7 +72,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion)
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->hostlhs_, gold_values::lhs);
 }
 
-TEST_F(MixtureFractionKernelHex8Mesh, advection_diffusion_tpetra)
+TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion_tpetra)
 {
   // FIXME: only test on one core
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) 
