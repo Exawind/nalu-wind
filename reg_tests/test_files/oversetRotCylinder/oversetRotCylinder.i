@@ -199,9 +199,9 @@ Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
-      termination_step_count: 50
-      time_step: 0.0001
-      time_stepping_type: adaptive
+      termination_step_count: 15
+      time_step: 0.003
+      time_stepping_type: fixed
       time_step_count: 0
       second_order_accuracy: yes
 
