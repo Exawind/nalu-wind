@@ -226,7 +226,6 @@ protected:
   Realm &realm_;
   EquationSystem *eqSys_;
   bool inConstruction_;
-  int writeCounter_;
 
   const unsigned numDof_;
   const std::string eqSysName_;

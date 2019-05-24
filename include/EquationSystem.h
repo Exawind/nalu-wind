@@ -332,6 +332,12 @@ public:
   /// List of tasks to be performed after each EquationSystem::solve_and_update
   std::vector<AlgorithmDriver*> postIterAlgDriver_;
 
+  //! Counter to track the number of linear system outputs
+  //!
+  //! Move this to EquationSystem instead of LinearSystem so that we don't reset
+  //! the counter when performing matrix reinitializations.
+  size_t linsysWriteCounter_{0};
+
   std::string dofName_{"undefined"};
 
   bool extractDiagonal_{false};

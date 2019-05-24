@@ -1879,7 +1879,7 @@ TpetraLinearSystem::solve(
 
   if (linearSolver->getConfig()->getWriteMatrixFiles()) {
     writeSolutionToFile(eqSysName_.c_str());
-    ++writeCounter_;
+    ++eqSys_->linsysWriteCounter_;
   }
 
   copy_tpetra_to_stk(sln_, linearSolutionField);
@@ -2041,7 +2041,7 @@ TpetraLinearSystem::writeToFile(const char * base_filename, bool useOwned)
   Teuchos::RCP<LinSys::Matrix> matrix = useOwned ? ownedMatrix_ : sharedNotOwnedMatrix_;
   Teuchos::RCP<LinSys::Vector> rhs = useOwned ? ownedRhs_ : sharedNotOwnedRhs_;
 
-  const int currentCount = writeCounter_;
+  const int currentCount = eqSys_->linsysWriteCounter_;
 
   if (1)
     {
@@ -2140,7 +2140,7 @@ TpetraLinearSystem::writeSolutionToFile(const char * base_filename, bool useOwne
   const unsigned p_size = bulkData.parallel_size();
 
   Teuchos::RCP<LinSys::Vector> sln = sln_;
-  const int currentCount = writeCounter_;
+  const int currentCount = eqSys_->linsysWriteCounter_;
 
   if (1)
     {
