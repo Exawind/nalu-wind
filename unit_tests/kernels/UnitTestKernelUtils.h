@@ -21,6 +21,8 @@
 
 #include <gtest/gtest.h>
 
+#include "stk_mesh/base/CreateEdges.hpp"
+
 #include <mpi.h>
 #include <vector>
 #include <memory>
@@ -131,12 +133,24 @@ void dhdx_test_function(
   const VectorFieldType& coordinates,
   VectorFieldType& dhdx);
 
+void calc_edge_area_vec(
+  const stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const VectorFieldType& edgeAreaVec);
+
 void calc_exposed_area_vec(
   const stk::mesh::BulkData& bulk,
   const stk::topology& topo,
   const VectorFieldType& coordinates,
-  GenericFieldType& exposedAreaVec
-);
+  GenericFieldType& exposedAreaVec);
+
+void calc_mass_flow_rate(
+  const stk::mesh::BulkData&,
+  const VectorFieldType&,
+  const ScalarFieldType&,
+  const VectorFieldType&,
+  ScalarFieldType&);
 
 void calc_mass_flow_rate_scs(
   stk::mesh::BulkData&,
@@ -257,6 +271,7 @@ public:
     if (doPerturb) {
       unit_test_utils::perturb_coord_hex_8(bulk_, 0.125);
     }
+    stk::mesh::create_edges(bulk_, meta_.universal_part());
 
     partVec_ = {meta_.get_part("block_1")};
 
@@ -310,7 +325,10 @@ public:
           meta_.side_rank(), "exposed_area_vector")),
       velocityBC_(
         &meta_.declare_field<VectorFieldType>(
-          stk::topology::NODE_RANK, "velocity_bc"))
+          stk::topology::NODE_RANK, "velocity_bc")),
+      edgeAreaVec_(
+        &meta_.declare_field<VectorFieldType>(
+          stk::topology::EDGE_RANK, "edge_area_vector"))
   {
     stk::mesh::put_field_on_mesh(*velocity_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*dpdx_, meta_.universal_part(), spatialDim_, nullptr);
@@ -320,6 +338,7 @@ public:
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta_.universal_part(),
       spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+    stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*velocityBC_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
@@ -339,6 +358,8 @@ public:
       bulk_, sierra::nalu::AlgTraitsQuad4::topo_, *coordinates_,
       *exposedAreaVec_);
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocityBC_);
+    unit_test_kernel_utils::calc_edge_area_vec(
+      bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
   }
 
   VectorFieldType* velocity_{nullptr};
@@ -348,6 +369,7 @@ public:
   ScalarFieldType* Udiag_{nullptr};
   GenericFieldType* exposedAreaVec_{nullptr};
   VectorFieldType* velocityBC_{nullptr};
+  VectorFieldType* edgeAreaVec_{nullptr};
 };
 
 class ContinuityKernelHex8Mesh : public LowMachKernelHex8Mesh
@@ -374,6 +396,10 @@ public:
 private:
   ScalarFieldType* pressureBC_{nullptr};
 };
+
+// Provide separate namespace for Edge kernel tests
+class ContinuityEdgeHex8Mesh : public ContinuityKernelHex8Mesh
+{};
 
 class MomentumKernelHex8Mesh : public LowMachKernelHex8Mesh
 {

@@ -68,6 +68,7 @@ endif()
 
 add_subdirectory(algorithms)
 add_subdirectory(kernels)
+add_subdirectory(edge_kernels)
 add_subdirectory(ho_kernels)
 add_subdirectory(ngp_kernels)
 add_subdirectory(mesh_motion)

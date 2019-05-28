@@ -552,6 +552,48 @@ void dhdx_test_function(
   init_trigonometric_field(bulk, coordinates, dhdx);
 }
 
+void calc_mass_flow_rate(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& velocity,
+  const ScalarFieldType& density,
+  const VectorFieldType& edgeAreaVec,
+  ScalarFieldType& massFlowRate)
+{
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+  EXPECT_EQ(ndim, 3);
+
+  const ScalarFieldType& densityNp1 = density.field_of_state(stk::mesh::StateNP1);
+  const VectorFieldType& velocityNp1 = velocity.field_of_state(stk::mesh::StateNP1);
+
+  const stk::mesh::Selector selector =
+    meta.locally_owned_part() | meta.globally_shared_part();
+  const auto& buckets = bulk.get_buckets(stk::topology::EDGE_RANK, selector);
+
+  for (auto b: buckets) {
+    const auto bktlen = b->size();
+    const double* av = stk::mesh::field_data(edgeAreaVec, *b);
+    double* mdot = stk::mesh::field_data(massFlowRate, *b);
+
+    for (size_t ie = 0; ie < bktlen; ++ie) {
+      const auto* edge_nodes = b->begin_nodes(ie);
+      const auto nodeL = edge_nodes[0];
+      const auto nodeR = edge_nodes[1];
+
+      const double* velL = stk::mesh::field_data(velocityNp1, nodeL);
+      const double* velR = stk::mesh::field_data(velocityNp1, nodeR);
+
+      const double rhoL = *stk::mesh::field_data(densityNp1, nodeL);
+      const double rhoR = *stk::mesh::field_data(densityNp1, nodeR);
+
+      double tmdot = 0.0;
+      for (int d=0; d < ndim; ++d)
+        tmdot += 0.5 * (rhoL * velL[d] + rhoR * velR[d]) * av[ie * ndim + d];
+
+      mdot[ie] = tmdot;
+    }
+  }
+}
 
 void calc_mass_flow_rate_scs(
   stk::mesh::BulkData& bulk,
@@ -694,6 +736,80 @@ void calc_open_mass_flow_rate(
           tmdot += rhoU[d] * areaVec[ip * ndim + d];
 
         mdot[ip] = tmdot;
+      }
+    }
+  }
+}
+
+void calc_edge_area_vec(
+  const stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const VectorFieldType& edgeAreaVec)
+{
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+  EXPECT_EQ(ndim, 3);
+
+  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+  const auto npe = meSCS->nodesPerElement_;
+  const auto numScsIp = meSCS->num_integration_points();
+  const int* lrscv = meSCS->adjacentNodes();
+  const int* scsIpEdge = meSCS->scsIpEdgeOrd();
+
+  // Scratch arrays
+  std::vector<double> w_coords(ndim * npe);
+  std::vector<double> w_scs_areav(ndim * numScsIp);
+
+  // Reset edge area vector to zero
+  stk::mesh::field_fill(0.0, edgeAreaVec);
+
+  const stk::mesh::Selector sel = meta.locally_owned_part() | meta.globally_shared_part();
+  const auto& buckets = bulk.get_buckets(stk::topology::ELEMENT_RANK, sel);
+
+  for (auto b: buckets) {
+    ThrowRequire(b->topology() == topo);
+
+    const auto bktlen = b->size();
+    for (size_t ie=0; ie < bktlen; ++ie) {
+      const auto* elem_nodes = b->begin_nodes(ie);
+      const auto num_nodes = b->num_nodes(ie);
+
+      for (size_t in = 0; in < num_nodes; ++in) {
+        const auto node = elem_nodes[in];
+        const double* coords = stk::mesh::field_data(coordinates, node);
+        for (int d=0; d < ndim; ++d) {
+          w_coords[in * ndim + d] = coords[d];
+        }
+      }
+
+      double scs_error = 0.0;
+      meSCS->determinant(1, w_coords.data(), w_scs_areav.data(), &scs_error);
+
+      const auto* elem_edges = b->begin_edges(ie);
+
+      for (int ip=0; ip < numScsIp; ++ip) {
+        const int iedge = scsIpEdge[ip];
+        const auto edge = elem_edges[iedge];
+
+        double* av = stk::mesh::field_data(edgeAreaVec, edge);
+        const auto* edge_nodes = bulk.begin_nodes(edge);
+        // Index of "left" node in the element relations
+        const int iLn = lrscv[2 * ip];
+
+        // STK identifier for the left node according to the element and edge
+        const auto lnElemId = bulk.identifier(elem_nodes[iLn]);
+        const auto lnEdgeId = bulk.identifier(edge_nodes[0]);
+
+        // If the left node on both edge and element are same, then they are
+        // oriented the same way, i.e., sign multiplier is just 1.0, otherwise
+        // reverse sign
+        const double sgn = (lnElemId == lnEdgeId)? 1.0 : -1.0;
+
+        // accumulate contribution from this subcontrol surface to edge area vector
+        for (int d=0; d < ndim; ++d) {
+          av[d] += w_scs_areav[ip * ndim + d] * sgn;
+        }
       }
     }
   }
