@@ -46,20 +46,6 @@ add_sources(GlobalUnitSourceList
    UnitTestUtils.C
 )
 
-add_sources(GlobalUnitHeaderList
-   UnitTestFieldUtils.h
-   UnitTestHelperObjects.h
-   UnitTestTpetraHelperObjects.h
-   UnitTestKokkosME.h
-   UnitTestKokkosMEBC.h
-   UnitTestKokkosMEGold.h
-   UnitTestKokkosUtils.h
-   UnitTestLinearSystem.h
-   UnitTestRealm.h
-   UnitTestUtils.h
-   UnitTestViewUtils.h
-)
-
 if(ENABLE_OPENFAST)
    add_sources(GlobalUnitSourceList
       UnitTestActuatorDiskFAST.C

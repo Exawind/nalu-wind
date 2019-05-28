@@ -39,7 +39,7 @@ else(NOT ${TEST_TOLERANCE} STREQUAL "")
     endif()
   endif()
 endif()
-message("-- Using test tolerance of ${TOLERANCE}")
+message(STATUS "Using test tolerance of ${TOLERANCE}")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
 
