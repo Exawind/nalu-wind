@@ -27,7 +27,3 @@ add_sources(GlobalUnitSourceList
    UnitTestTurbKineticEnergyKsgsDesignOrderSrcElem.C
    UnitTestWallDistElem.C
 )
-
-add_sources(GlobalUnitHeaderList
-   UnitTestKernelUtils.h
-)
