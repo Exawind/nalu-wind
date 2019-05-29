@@ -85,7 +85,7 @@ public:
 
 #ifndef KOKKOS_ENABLE_CUDA
             // TODO: scratchIds and sort permutations could be optimized away for edge based
-            apply_coeff(
+            this->apply_coeff(
               nodesPerEntity, smdata.ngpElemNodes, smdata.scratchIds,
               smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
 #endif
