@@ -70,6 +70,32 @@ inline void destroy(T* obj)
   Kokkos::kokkos_free(obj);
 }
 
+/** Wrapper object to hold device pointers within a Kokkos::View
+ *
+ *  The struct does not own the pointer and will not perform any cleanup within
+ *  its destructor.
+ */
+template<typename T>
+struct NGPCopyHolder
+{
+  KOKKOS_INLINE_FUNCTION
+  NGPCopyHolder() = default;
+
+  KOKKOS_FUNCTION
+  ~NGPCopyHolder() = default;
+
+  NGPCopyHolder(T* instance)
+    : deviceInstance_(instance)
+  {}
+
+  KOKKOS_FUNCTION
+  operator T*() const
+  { return deviceInstance_; }
+
+private:
+  T* deviceInstance_{nullptr};
+};
+
 } // nalu_ngp
 
 }  // nalu
