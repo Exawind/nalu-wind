@@ -12,6 +12,7 @@
 #include "SimdInterface.h"
 #include "ScratchViews.h"
 #include "AlgTraits.h"
+#include "NGPInstance.h"
 
 #include <stk_mesh/base/Entity.hpp>
 
@@ -180,14 +181,14 @@ public:
   virtual Kernel* create_on_device() final
   {
     free_on_device();
-    deviceCopy_ = create_device_expression<T>(*dynamic_cast<T*>(this));
+    deviceCopy_ = nalu_ngp::create<T>(*dynamic_cast<T*>(this));
     return deviceCopy_;
   }
 
   virtual void free_on_device() final
   {
     if (deviceCopy_ != nullptr) {
-      kokkos_free_on_device(deviceCopy_);
+      nalu_ngp::destroy<T>(dynamic_cast<T*>(deviceCopy_));
       deviceCopy_ = nullptr;
     }
   }
@@ -196,26 +197,6 @@ public:
 
 protected:
   T* deviceCopy_{nullptr};
-};
-
-/** Wrapper object to hold pointers to kernel instances within a Kokkos::View
- *
- */
-struct NGPKernelInfo
-{
-  KOKKOS_FUNCTION
-  NGPKernelInfo() = default;
-
-  NGPKernelInfo(Kernel& kernel)
-  {
-    kernel_ = kernel.create_on_device();
-  }
-
-  operator Kernel*() const
-  { return kernel_; }
-
-private:
-  Kernel* kernel_{nullptr};
 };
 
 }  // nalu

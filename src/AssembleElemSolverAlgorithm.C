@@ -19,6 +19,7 @@
 #include <TimeIntegrator.h>
 
 #include <kernel/Kernel.h>
+#include <NGPInstance.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -79,6 +80,7 @@ AssembleElemSolverAlgorithm::initialize_connectivity()
 void
 AssembleElemSolverAlgorithm::execute()
 {
+  using NGPKernelInfo = nalu_ngp::NGPCopyHolder<Kernel>;
   using NGPKernelInfoView =
     Kokkos::View<NGPKernelInfo*, Kokkos::LayoutRight, MemSpace>;
 
@@ -93,7 +95,7 @@ AssembleElemSolverAlgorithm::execute()
       Kokkos::create_mirror_view(ngpKernels);
 
     for (size_t i=0; i < numKernels; i++)
-      hostKernelView(i) = NGPKernelInfo(*activeKernels_[i]);
+      hostKernelView(i) = NGPKernelInfo(activeKernels_[i]->create_on_device());
 
     Kokkos::deep_copy(ngpKernels, hostKernelView);
   }
