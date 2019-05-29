@@ -37,6 +37,8 @@ static constexpr double lhs[8][8] =
 
 TEST_F(ContinuityEdgeHex8Mesh, NGP_advection)
 {
+  if (bulk_.parallel_size() > 1) return;
+
   fill_mesh_and_init_fields();
 
   // Setup solution options for default advection kernel
