@@ -758,6 +758,29 @@ public:
 };
 
 class WallDistKernelHex8Mesh : public TestKernelHex8Mesh
-{};
+{
+public:
+  WallDistKernelHex8Mesh ()
+    : TestKernelHex8Mesh(),
+      edgeAreaVec_(
+        &meta_.declare_field<VectorFieldType>(
+          stk::topology::EDGE_RANK, "edge_area_vector"))
+  {
+    stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
+  }
+
+  virtual ~WallDistKernelHex8Mesh() {}
+
+  virtual void fill_mesh_and_init_fields(
+    bool doPerturb = false, bool generateSidesets = false)
+  {
+    fill_mesh(doPerturb, generateSidesets);
+
+    unit_test_kernel_utils::calc_edge_area_vec(
+      bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
+  }
+
+  VectorFieldType* edgeAreaVec_{nullptr};
+};
 
 #endif /* UNITTESTKERNELUTILS_H */
