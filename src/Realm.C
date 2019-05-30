@@ -1903,6 +1903,7 @@ Realm::pre_timestep_work()
 
     // Reset the ngp::Mesh instance
     ngpMesh_.reset(new ngp::Mesh(*bulkData_));
+    ngpFieldMgr_.reset(new ngp::FieldManager(*bulkData_));
 
     // now re-initialize linear system
     equationSystems_.reinitialize_linear_system();
