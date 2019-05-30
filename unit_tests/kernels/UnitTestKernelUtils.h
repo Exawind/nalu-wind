@@ -254,14 +254,18 @@ public:
       coordinates_(nullptr),
       naluGlobalId_(
         &meta_.declare_field<GlobalIdFieldType>(
-          stk::topology::NODE_RANK, "nalu_global_id",1))
+          stk::topology::NODE_RANK, "nalu_global_id",1)),
+      edgeAreaVec_(
+        &meta_.declare_field<VectorFieldType>(
+          stk::topology::EDGE_RANK, "edge_area_vector"))
   {
     stk::mesh::put_field_on_mesh(*naluGlobalId_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
   virtual ~TestKernelHex8Mesh() {}
 
-  void fill_mesh(bool doPerturb = false, bool generateSidesets = false)
+  void fill_mesh_and_init_fields(bool doPerturb = false, bool generateSidesets = false)
   {
     const std::string baseMeshSpec =
       "generated:1x1x" + std::to_string(bulk_.parallel_size());
@@ -278,6 +282,9 @@ public:
     coordinates_ = static_cast<const VectorFieldType*>(meta_.coordinate_field());
 
     EXPECT_TRUE(coordinates_ != nullptr);
+
+    unit_test_kernel_utils::calc_edge_area_vec(
+      bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
   }
 
   stk::ParallelMachine comm_;
@@ -290,6 +297,7 @@ public:
 
   const VectorFieldType* coordinates_{nullptr};
   GlobalIdFieldType* naluGlobalId_{nullptr};
+  VectorFieldType* edgeAreaVec_{nullptr};
 };
 
 /** Test Fixture for Low-Mach Kernels
@@ -325,10 +333,10 @@ public:
           meta_.side_rank(), "exposed_area_vector")),
       velocityBC_(
         &meta_.declare_field<VectorFieldType>(
-          stk::topology::NODE_RANK, "velocity_bc")),
+          stk::topology::NODE_RANK, "velocity_bc"))/*,
       edgeAreaVec_(
         &meta_.declare_field<VectorFieldType>(
-          stk::topology::EDGE_RANK, "edge_area_vector"))
+          stk::topology::EDGE_RANK, "edge_area_vector"))*/
   {
     stk::mesh::put_field_on_mesh(*velocity_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*dpdx_, meta_.universal_part(), spatialDim_, nullptr);
@@ -338,7 +346,7 @@ public:
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta_.universal_part(),
       spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
-    stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
+    //stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*velocityBC_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
@@ -347,7 +355,7 @@ public:
   virtual void fill_mesh_and_init_fields(
     bool doPerturb = false, bool generateSidesets = false)
   {
-    fill_mesh(doPerturb, generateSidesets);
+    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocity_);
     unit_test_kernel_utils::pressure_test_function(bulk_, *coordinates_, *pressure_);
@@ -358,8 +366,8 @@ public:
       bulk_, sierra::nalu::AlgTraitsQuad4::topo_, *coordinates_,
       *exposedAreaVec_);
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocityBC_);
-    unit_test_kernel_utils::calc_edge_area_vec(
-      bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
+    //unit_test_kernel_utils::calc_edge_area_vec(
+    //  bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
   }
 
   VectorFieldType* velocity_{nullptr};
@@ -369,7 +377,7 @@ public:
   ScalarFieldType* Udiag_{nullptr};
   GenericFieldType* exposedAreaVec_{nullptr};
   VectorFieldType* velocityBC_{nullptr};
-  VectorFieldType* edgeAreaVec_{nullptr};
+  //VectorFieldType* edgeAreaVec_{nullptr};
 };
 
 class ContinuityKernelHex8Mesh : public LowMachKernelHex8Mesh
@@ -611,7 +619,7 @@ public:
 
   void fill_mesh_and_init_fields(bool doPerturb = false)
   {
-    fill_mesh(doPerturb);
+    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb);
 
     unit_test_kernel_utils::temperature_test_function(bulk_, *coordinates_, *temperature_);
     stk::mesh::field_fill(1.0, *thermalCond_);
@@ -678,7 +686,7 @@ public:
   virtual void fill_mesh_and_init_fields(
     bool doPerturb = false, bool generateSidesets = false)
   {
-    fill_mesh(doPerturb, generateSidesets);
+    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
     unit_test_kernel_utils::mixture_fraction_test_function(bulk_, *coordinates_, *mixFraction_, amf_, znot_);
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocity_);
@@ -741,7 +749,7 @@ public:
 
   virtual void fill_mesh_and_init_fields(bool doPerturb = false)
   {
-    fill_mesh(doPerturb);
+    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb);
 
     std::vector<double> act_source(spatialDim_,0.0);
     for(size_t j=0;j<spatialDim_;j++) act_source[j] = j+1;
@@ -758,29 +766,6 @@ public:
 };
 
 class WallDistKernelHex8Mesh : public TestKernelHex8Mesh
-{
-public:
-  WallDistKernelHex8Mesh ()
-    : TestKernelHex8Mesh(),
-      edgeAreaVec_(
-        &meta_.declare_field<VectorFieldType>(
-          stk::topology::EDGE_RANK, "edge_area_vector"))
-  {
-    stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
-  }
-
-  virtual ~WallDistKernelHex8Mesh() {}
-
-  virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false)
-  {
-    fill_mesh(doPerturb, generateSidesets);
-
-    unit_test_kernel_utils::calc_edge_area_vec(
-      bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
-  }
-
-  VectorFieldType* edgeAreaVec_{nullptr};
-};
+{};
 
 #endif /* UNITTESTKERNELUTILS_H */
