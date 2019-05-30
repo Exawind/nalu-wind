@@ -333,10 +333,7 @@ public:
           meta_.side_rank(), "exposed_area_vector")),
       velocityBC_(
         &meta_.declare_field<VectorFieldType>(
-          stk::topology::NODE_RANK, "velocity_bc"))/*,
-      edgeAreaVec_(
-        &meta_.declare_field<VectorFieldType>(
-          stk::topology::EDGE_RANK, "edge_area_vector"))*/
+          stk::topology::NODE_RANK, "velocity_bc"))
   {
     stk::mesh::put_field_on_mesh(*velocity_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*dpdx_, meta_.universal_part(), spatialDim_, nullptr);
@@ -346,7 +343,6 @@ public:
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta_.universal_part(),
       spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
-    //stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*velocityBC_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
@@ -366,8 +362,6 @@ public:
       bulk_, sierra::nalu::AlgTraitsQuad4::topo_, *coordinates_,
       *exposedAreaVec_);
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocityBC_);
-    //unit_test_kernel_utils::calc_edge_area_vec(
-    //  bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
   }
 
   VectorFieldType* velocity_{nullptr};
@@ -377,7 +371,6 @@ public:
   ScalarFieldType* Udiag_{nullptr};
   GenericFieldType* exposedAreaVec_{nullptr};
   VectorFieldType* velocityBC_{nullptr};
-  //VectorFieldType* edgeAreaVec_{nullptr};
 };
 
 class ContinuityKernelHex8Mesh : public LowMachKernelHex8Mesh
