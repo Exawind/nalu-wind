@@ -65,6 +65,18 @@ void gather_elem_tensor_field(const NGPDoubleFieldType& field,
 
 template<typename ViewType>
 KOKKOS_INLINE_FUNCTION
+void gather_elem_vector_field(const NGPDoubleFieldType& field,
+                              stk::mesh::FastMeshIndex elem,
+                              int len,
+                              ViewType& shmemView)
+{
+  for(int i=0; i<len; ++i) {
+    shmemView(i) = field.get(elem, i);
+  }
+}
+
+template<typename ViewType>
+KOKKOS_INLINE_FUNCTION
 void gather_elem_node_field_3D(const NGPDoubleFieldType& field,
                                const ngp::Mesh& ngpMesh,
                                const ngp::Mesh::ConnectedNodes& elemNodes,
@@ -475,10 +487,7 @@ void fill_pre_req_data(
       else {
         auto& shmemView = prereqData.get_scratch_view_1D(get_field_ordinal(fieldInfo));
         unsigned len = shmemView.extent(0);
-        double* fieldDataPtr = static_cast<double*>(&fieldInfo.field.get(entityIndex,0));
-        for(unsigned i=0; i<len; ++i) {
-          shmemView(i) = fieldDataPtr[i];
-        }
+        gather_elem_vector_field(fieldInfo.field, entityIndex, len, shmemView);
       }
     }
     else if (fieldEntityRank == stk::topology::NODE_RANK) {

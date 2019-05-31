@@ -31,10 +31,8 @@ TurbKineticEnergyKsgsSrcElemKernel<AlgTraits>::TurbKineticEnergyKsgsSrcElemKerne
   const stk::mesh::BulkData& bulkData,
   const SolutionOptions& solnOpts,
   ElemDataRequests& dataPreReqs)
-  : Kernel(),
-    cEps_(solnOpts.get_turb_model_constant(TM_cEps)),
-    tkeProdLimitRatio_(solnOpts.get_turb_model_constant(TM_tkeProdLimitRatio)),
-    ipNodeMap_(sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_)->ipNodeMap())
+  : cEps_(solnOpts.get_turb_model_constant(TM_cEps)),
+    tkeProdLimitRatio_(solnOpts.get_turb_model_constant(TM_tkeProdLimitRatio))
 {
   // save off fields
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
@@ -45,10 +43,10 @@ TurbKineticEnergyKsgsSrcElemKernel<AlgTraits>::TurbKineticEnergyKsgsSrcElemKerne
   dualNodalVolume_ = get_field_ordinal(metaData, "dual_nodal_volume");
   Gju_ = get_field_ordinal(metaData, "dudx");
 
-  MasterElement *meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_);
+  meSCV_ = MasterElementRepo::get_volume_master_element<AlgTraits>();
 
   // add master elements
-  dataPreReqs.add_cvfem_volume_me(meSCV);
+  dataPreReqs.add_cvfem_volume_me(meSCV_);
 
   // required fields
   dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
@@ -61,29 +59,22 @@ TurbKineticEnergyKsgsSrcElemKernel<AlgTraits>::TurbKineticEnergyKsgsSrcElemKerne
 }
 
 template<typename AlgTraits>
-TurbKineticEnergyKsgsSrcElemKernel<AlgTraits>::~TurbKineticEnergyKsgsSrcElemKernel()
-{}
-
-template<typename AlgTraits>
 void
 TurbKineticEnergyKsgsSrcElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType **>&lhs,
-  SharedMemView<DoubleType *>&rhs,
-  ScratchViews<DoubleType>& scratchViews)
+  SharedMemView<DoubleType **, DeviceShmem>&lhs,
+  SharedMemView<DoubleType *, DeviceShmem>&rhs,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
-  SharedMemView<DoubleType*>& v_tkeNp1 = scratchViews.get_scratch_view_1D(
-    tkeNp1_);
-  SharedMemView<DoubleType*>& v_densityNp1 = scratchViews.get_scratch_view_1D(
-    densityNp1_);
-  SharedMemView<DoubleType*>& v_tvisc = scratchViews.get_scratch_view_1D(
-    tvisc_);
-  SharedMemView<DoubleType*>& v_dualNodalVolume = scratchViews.get_scratch_view_1D(
-    dualNodalVolume_);
-  SharedMemView<DoubleType***>& v_Gju = scratchViews.get_scratch_view_3D(Gju_);
-  SharedMemView<DoubleType*>& v_scv_volume = scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
+  const auto& v_tkeNp1 = scratchViews.get_scratch_view_1D(tkeNp1_);
+  const auto& v_densityNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
+  const auto& v_tvisc = scratchViews.get_scratch_view_1D(tvisc_);
+  const auto& v_dualNodalVolume = scratchViews.get_scratch_view_1D(dualNodalVolume_);
+  const auto& v_Gju = scratchViews.get_scratch_view_3D(Gju_);
+  const auto& v_scv_volume = scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
+  const auto* ipNodeMap = meSCV_->ipNodeMap();
 
   for (int ip=0; ip < AlgTraits::numScvIp_; ++ip) {
-    const int nearestNode = ipNodeMap_[ip];
+    const int nearestNode = ipNodeMap[ip];
 
     DoubleType Pk = 0.0;
     for ( int i = 0; i < AlgTraits::nDim_; ++i ) {
@@ -100,7 +91,7 @@ TurbKineticEnergyKsgsSrcElemKernel<AlgTraits>::execute(
       : cEps_*v_densityNp1(nearestNode)*stk::math::sqrt(tke)/stk::math::cbrt(v_dualNodalVolume(nearestNode));
 
     // dissipation and production; limited
-    DoubleType Dk = tkeFac * tke;
+    const DoubleType Dk = tkeFac * tke;
     Pk = stk::math::min(Pk, tkeProdLimitRatio_*Dk);
     
     // lhs assembly, all lumped

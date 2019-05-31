@@ -69,6 +69,7 @@ struct SharedMemData {
 
 template<typename TEAMHANDLETYPE, typename SHMEM>
 struct SharedMemData_FaceElem {
+    KOKKOS_FUNCTION
     SharedMemData_FaceElem(const TEAMHANDLETYPE& team,
          unsigned nDim,
          const ElemDataRequestsGPU& faceDataNeeded,
@@ -78,10 +79,15 @@ struct SharedMemData_FaceElem {
      : simdFaceViews(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded),
        simdElemViews(team, nDim, meElemInfo, elemDataNeeded)
     {
+#ifndef KOKKOS_ENABLE_CUDA
         for(int simdIndex=0; simdIndex<simdLen; ++simdIndex) {
           faceViews[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded));
           elemViews[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, meElemInfo, elemDataNeeded));
         }
+#else
+        faceViews[0] = &simdFaceViews;
+        elemViews[0] = &simdElemViews;
+#endif
         simdrhs = get_shmem_view_1D<DoubleType,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
         simdlhs = get_shmem_view_2D<DoubleType,TEAMHANDLETYPE,SHMEM>(team, rhsSize, rhsSize);
         rhs = get_shmem_view_1D<double,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
@@ -89,13 +95,24 @@ struct SharedMemData_FaceElem {
 
         scratchIds = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
         sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
+
+        simdFaceViews.fill_static_meviews(faceDataNeeded);
+        simdElemViews.fill_static_meviews(elemDataNeeded);
     }
+
+    KOKKOS_FUNCTION
+    ~SharedMemData_FaceElem() = default;
 
     ngp::Mesh::ConnectedNodes ngpConnectedNodes[simdLen];
     int numSimdFaces;
     int elemFaceOrdinal;
+#ifdef KOKKOS_ENABLE_CUDA
+    ScratchViews<DoubleType,TEAMHANDLETYPE,SHMEM>* faceViews[1];
+    ScratchViews<DoubleType,TEAMHANDLETYPE,SHMEM>* elemViews[1];
+#else
     std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM>> faceViews[simdLen];
     std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM>> elemViews[simdLen];
+#endif
     ScratchViews<DoubleType,TEAMHANDLETYPE,SHMEM> simdFaceViews;
     ScratchViews<DoubleType,TEAMHANDLETYPE,SHMEM> simdElemViews;
     SharedMemView<DoubleType*,SHMEM> simdrhs;
@@ -107,6 +124,26 @@ struct SharedMemData_FaceElem {
     SharedMemView<int*,SHMEM> sortPermutation;
 };
 
+template<typename TEAMHANDLETYPE, typename SHMEM>
+struct SharedMemData_Edge {
+  KOKKOS_FUNCTION
+  SharedMemData_Edge(
+    const TEAMHANDLETYPE& team,
+    unsigned rhsSize)
+  {
+    rhs = get_shmem_view_1D<double, TEAMHANDLETYPE, SHMEM>(team, rhsSize);
+    lhs = get_shmem_view_2D<double, TEAMHANDLETYPE, SHMEM>(team, rhsSize, rhsSize);
+    scratchIds = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
+    sortPermutation = get_shmem_view_1D<int,TEAMHANDLETYPE,SHMEM>(team, rhsSize);
+  }
+
+  ngp::Mesh::ConnectedNodes ngpElemNodes;
+  SharedMemView<double*,SHMEM> rhs;
+  SharedMemView<double**,SHMEM> lhs;
+
+  SharedMemView<int*,SHMEM> scratchIds;
+  SharedMemView<int*,SHMEM> sortPermutation;
+};
 } // namespace nalu
 } // namespace Sierra
 

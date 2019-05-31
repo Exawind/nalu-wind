@@ -5,8 +5,3 @@ add_sources(GlobalUnitSourceList
    UnitTestRodiAlgorithm.C
    UnitTestSSTAlgorithms.C
 )
-
-add_sources(GlobalUnitHeaderList
-   UnitTestAlgorithm.h
-   UnitTestAlgorithmUtils.h
-)

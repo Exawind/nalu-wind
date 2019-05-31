@@ -45,7 +45,7 @@ static constexpr double lhs[8][8] = {
 
 TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
 {
-  fill_mesh();
+  fill_mesh_and_init_fields();
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
@@ -63,7 +63,7 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(wallKernel.get());
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
@@ -78,7 +78,7 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist)
 
 TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_shifted)
 {
-  fill_mesh();
+  fill_mesh_and_init_fields();
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
@@ -97,7 +97,7 @@ TEST_F(WallDistKernelHex8Mesh, NGP_wall_dist_shifted)
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(wallKernel.get());
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);

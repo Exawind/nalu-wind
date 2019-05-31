@@ -187,7 +187,7 @@ public:
   virtual void save_diagonal_term(
     unsigned,
     const ngp::Mesh::ConnectedNodes&,
-    const SharedMemView<const double**>&
+    const SharedMemView<const double**,DeviceShmem>&
   );
 
   virtual void assemble_and_solve(

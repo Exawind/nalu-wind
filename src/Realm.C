@@ -1898,15 +1898,12 @@ Realm::pre_timestep_work()
       initialize_non_conformal();
 
     // and overset algorithm
-    if ( hasOverset_ ) {
+    if ( hasOverset_ )
       initialize_overset();
-
-      // Only need to reset HYPRE IDs when overset inactive rows change
-      set_hypre_global_id();
-    }
 
     // Reset the ngp::Mesh instance
     ngpMesh_.reset(new ngp::Mesh(*bulkData_));
+    ngpFieldMgr_.reset(new ngp::FieldManager(*bulkData_));
 
     // now re-initialize linear system
     equationSystems_.reinitialize_linear_system();
@@ -3115,6 +3112,10 @@ Realm::setup_overset_bc(
       NaluEnv::self().naluOutputP0()
         << "Realm::setup_overset_bc:: Selecting STK-based overset connectivity algorithm"
         << std::endl;
+      if (solutionOptions_->meshMotion_)
+        NaluEnv::self().naluOutputP0()
+          << "WARNING:: Using STK-based overset with mesh motion has not been tested "
+          << std::endl;
       oversetManager_ = new OversetManagerSTK(*this, oversetBCData.userData_);
       break;
 

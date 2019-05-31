@@ -55,7 +55,6 @@ LinearSystem::LinearSystem(
   : realm_(realm),
     eqSys_(eqSys),
     inConstruction_(false),
-    writeCounter_(0),
     numDof_(numDof),
     eqSysName_(eqSys->name_),
     linearSolver_(linearSolver),

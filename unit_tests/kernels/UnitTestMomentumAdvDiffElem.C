@@ -295,7 +295,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_advection_diffusion)
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);

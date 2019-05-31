@@ -1,6 +1,8 @@
 add_sources(GlobalUnitSourceList
    UnitTestContinuityAdvElem.C
    UnitTestContinuityMassElem.C
+   UnitTestContinuityInflowElem.C
+   UnitTestContinuityOpenElem.C
    UnitTestFaceBasic.C
    UnitTestFaceElemBasic.C
    UnitTestKernelUtils.C
@@ -13,14 +15,15 @@ add_sources(GlobalUnitSourceList
    UnitTestMomentumMassElem.C
    UnitTestMomentumNSOElem.C
    UnitTestMomentumNSOKeElem.C
+   UnitTestMomentumUpwAdvDiffElem.C
    UnitTestSSTSrcElem.C
    UnitTestScalarAdvDiffElem.C
    UnitTestScalarMassElem.C
    UnitTestScalarDiffElem.C
+   UnitTestScalarUpwAdvDiffElem.C
+   UnitTestScalarOpenElem.C
    UnitTestSteadyThermal3dContactSrcElem.C
+   UnitTestTurbKineticEnergyKsgsSrcElem.C
+   UnitTestTurbKineticEnergyKsgsDesignOrderSrcElem.C
    UnitTestWallDistElem.C
-)
-
-add_sources(GlobalUnitHeaderList
-   UnitTestKernelUtils.h
 )

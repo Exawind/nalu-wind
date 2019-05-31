@@ -101,6 +101,9 @@ EquationSystem::~EquationSystem()
   for (auto it = postIterAlgDriver_.begin(); it != postIterAlgDriver_.end(); ++it) {
     delete *it;
   }
+
+  for (auto* pecFunc: ngpPecletFunctions_)
+    nalu_ngp::destroy(pecFunc);
 }
 
 //--------------------------------------------------------------------------
@@ -512,6 +515,24 @@ EquationSystem::post_iter_work()
   for (auto it: postIterAlgDriver_) {
     it->execute();
   }
+}
+
+PecletFunction<DoubleType>*
+EquationSystem::ngp_create_peclet_function(const std::string& dofName)
+{
+  PecletFunction<DoubleType>* pecletFunction = nullptr;
+  if ("classic" == realm_.get_tanh_functional_form(dofName)) {
+    const DoubleType hybridFactor = realm_.get_hybrid_factor(dofName);
+    const DoubleType A = 5.0;
+    pecletFunction = nalu_ngp::create<ClassicPecletFunction<DoubleType>>(A, hybridFactor);
+  } else {
+    const DoubleType c1 = realm_.get_tanh_trans(dofName);
+    const DoubleType c2 = realm_.get_tanh_width(dofName);
+    pecletFunction = nalu_ngp::create<TanhFunction<DoubleType>>(c1, c2);
+  }
+
+  ngpPecletFunctions_.push_back(pecletFunction);
+  return pecletFunction;
 }
 
 } // namespace nalu

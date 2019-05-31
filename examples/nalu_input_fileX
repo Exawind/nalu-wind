@@ -779,8 +779,6 @@ class mapping_object_class():
         self.yaml_input['realms'][0]['output']['output_frequency'] = \
             self.yaml_setup['output_frequency']
 
-
-
     def set_sampling_lines(self):
         '''
         Set all the lines used for sampling
@@ -821,7 +819,6 @@ class mapping_object_class():
             - field_name: pressure
               field_size: 1
         ]
-
 
     def set_sampling_planes(self):
         '''

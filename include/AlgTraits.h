@@ -26,6 +26,7 @@ class WedSCS;
 class WedSCV;
 class Quad42DSCS;
 class Quad42DSCV;
+class Quad3DSCS;
 class Quad92DSCS;
 class Quad92DSCV;
 class Quad93DSCS;
@@ -215,6 +216,7 @@ struct AlgTraitsQuad4
   static constexpr int numScsIp_ = 4;
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_4;
+  using            masterElementScs_ = Quad3DSCS;
 
   static constexpr bool isSuperTopo = false;
 };
@@ -227,6 +229,7 @@ struct AlgTraitsQuad9
   static constexpr int numScsIp_ = 36;
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_9;
+  using            masterElementScs_ = Quad93DSCS;
 
   static constexpr bool isSuperTopo = false;
 };

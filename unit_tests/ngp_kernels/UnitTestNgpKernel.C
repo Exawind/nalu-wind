@@ -42,6 +42,8 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelBasic)
   auto* ngpTestKernel = assembleElemSolverAlg->activeKernels_[0]->create_on_device();
 
   ASSERT_NE(ngpTestKernel, nullptr);
+  assembleElemSolverAlg->activeKernels_.clear();
+  testKernel->free_on_device();
 }
 
 void kernel_runalg_test(
@@ -55,6 +57,8 @@ void kernel_runalg_test(
     KOKKOS_LAMBDA(sierra::nalu::SharedMemData<TeamType, ShmemType> & smdata) {
       testKernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
     });
+
+  solverAlg.activeKernels_[0]->free_on_device();
 }
 
 TEST_F(Hex8MeshWithNSOFields, NGPKernelRunAlg)
@@ -77,6 +81,7 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelRunAlg)
   EXPECT_EQ(1u, assembleElemSolverAlg->activeKernels_.size());
 
   kernel_runalg_test(bulk, *assembleElemSolverAlg);
+  assembleElemSolverAlg->activeKernels_.clear();
 }
 
 TEST_F(Hex8MeshWithNSOFields, NGPKernelExecute)
@@ -98,5 +103,5 @@ TEST_F(Hex8MeshWithNSOFields, NGPKernelExecute)
   EXPECT_EQ(3u, dataNeeded.get_fields().size());
   EXPECT_EQ(1u, assembleElemSolverAlg->activeKernels_.size());
 
-  assembleElemSolverAlg->execute();
+  helperObjs.execute();
 }

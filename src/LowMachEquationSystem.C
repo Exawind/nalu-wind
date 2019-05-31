@@ -2536,7 +2536,7 @@ void
 MomentumEquationSystem::save_diagonal_term(
   unsigned nEntities,
   const ngp::Mesh::ConnectedNodes& entities,
-  const SharedMemView<const double**>& lhs)
+  const SharedMemView<const double**,DeviceShmem>& lhs)
 {
 #ifndef KOKKOS_ENABLE_CUDA
   auto& bulk = realm_.bulk_data();

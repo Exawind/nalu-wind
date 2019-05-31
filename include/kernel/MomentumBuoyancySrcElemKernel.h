@@ -26,7 +26,7 @@ class ElemDataRequests;
 /** CMM buoyancy term for momentum equation (velocity DOF)
  */
 template<typename AlgTraits>
-class MomentumBuoyancySrcElemKernel: public Kernel
+class MomentumBuoyancySrcElemKernel: public NGPKernel<MomentumBuoyancySrcElemKernel<AlgTraits>>
 {
 public:
   MomentumBuoyancySrcElemKernel(
@@ -34,30 +34,28 @@ public:
     const SolutionOptions&,
     ElemDataRequests&);
 
-  virtual ~MomentumBuoyancySrcElemKernel();
+  KOKKOS_FUNCTION MomentumBuoyancySrcElemKernel() = default;
+  KOKKOS_FUNCTION virtual ~MomentumBuoyancySrcElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  MomentumBuoyancySrcElemKernel() = delete;
-
   unsigned densityNp1_ {stk::mesh::InvalidOrdinal};
   unsigned coordinates_ {stk::mesh::InvalidOrdinal};
 
   double rhoRef_;
-  AlignedViewType<DoubleType[AlgTraits::nDim_]> gravity_{ "v_gravity"};
+  NALU_ALIGNED DoubleType gravity_[3];
 
-  const int* ipNodeMap_;
-
-  // scratch space
-  AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]> v_shape_function_ { "v_shape_func" };
+  MasterElement* meSCV_{nullptr};
 };
 
 }  // nalu

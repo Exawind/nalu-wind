@@ -13,9 +13,7 @@
 
 #include <random>
 
-#ifndef KOKKOS_ENABLE_CUDA
-
-TEST_F(MomentumKernelHex8Mesh, buoyancy_boussinesq)
+TEST_F(MomentumKernelHex8Mesh, NGP_buoyancy_boussinesq)
 {
   std::mt19937 rng;
   rng.seed(0); // fixed seed
@@ -43,8 +41,9 @@ TEST_F(MomentumKernelHex8Mesh, buoyancy_boussinesq)
   // Add to kernels to be tested
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
+#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
@@ -57,7 +56,6 @@ TEST_F(MomentumKernelHex8Mesh, buoyancy_boussinesq)
     rhsExact[i] = -0.125 * solnOpts_.gravity_[2] * expFac * (300.0 - solnOpts_.referenceTemperature_);
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,rhsExact.data());
-}
-
 #endif
+}
 

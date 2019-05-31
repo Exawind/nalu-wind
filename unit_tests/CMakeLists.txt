@@ -46,19 +46,6 @@ add_sources(GlobalUnitSourceList
    UnitTestUtils.C
 )
 
-add_sources(GlobalUnitHeaderList
-   UnitTestFieldUtils.h
-   UnitTestHelperObjects.h
-   UnitTestKokkosME.h
-   UnitTestKokkosMEBC.h
-   UnitTestKokkosMEGold.h
-   UnitTestKokkosUtils.h
-   UnitTestLinearSystem.h
-   UnitTestRealm.h
-   UnitTestUtils.h
-   UnitTestViewUtils.h
-)
-
 if(ENABLE_OPENFAST)
    add_sources(GlobalUnitSourceList
       UnitTestActuatorDiskFAST.C
@@ -67,6 +54,7 @@ endif()
 
 add_subdirectory(algorithms)
 add_subdirectory(kernels)
+add_subdirectory(edge_kernels)
 add_subdirectory(ho_kernels)
 add_subdirectory(ngp_kernels)
 add_subdirectory(mesh_motion)

@@ -43,7 +43,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_density_time_derivative)
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
@@ -87,7 +87,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_density_time_derivative_lumped)
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
   // Populate LHS and RHS
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);

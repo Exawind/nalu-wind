@@ -49,9 +49,11 @@ Algorithm::~Algorithm()
   for( ii=supplementalAlg_.begin(); ii!=supplementalAlg_.end(); ++ii )
     delete *ii;
 
-  std::vector<Kernel*>::iterator ij;
-  for (ij = activeKernels_.begin(); ij != activeKernels_.end(); ++ij)
-    delete *ij;
+  for (auto* kern: activeKernels_) {
+    // Free device copies before cleaning up memory on host
+    kern->free_on_device();
+    delete kern;
+  }
 }
 
 } // namespace nalu

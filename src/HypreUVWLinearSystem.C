@@ -343,11 +343,13 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
   HypreUVWSolver* solver = reinterpret_cast<HypreUVWSolver*>(linearSolver_);
 
   if (solver->getConfig()->getWriteMatrixFiles()) {
-    const std::string matFile = eqSysName_ + ".IJM.mat";
+    std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);
+    const std::string matFile = eqSysName_ + ".IJM." + writeCounter + ".mat";
     HYPRE_IJMatrixPrint(mat_, matFile.c_str());
 
     for (int d=0; d < nDim_; d++) {
-      const std::string rhsFile = eqSysName_ + std::to_string(d) + ".IJV.rhs";
+      const std::string rhsFile =
+        eqSysName_ + std::to_string(d) + ".IJV." + writeCounter + ".rhs";
       HYPRE_IJVectorPrint(rhs_[d], rhsFile.c_str());
     }
   }
@@ -365,8 +367,10 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
 
   if (solver->getConfig()->getWriteMatrixFiles()) {
     for (int d=0; d < nDim_; d++) {
-      const std::string slnFile = eqSysName_ + std::to_string(d) + ".IJV.sln";
+      std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);
+      const std::string slnFile = eqSysName_ + std::to_string(d) + ".IJV." + writeCounter + ".sln";
       HYPRE_IJVectorPrint(sln_[d], slnFile.c_str());
+      ++eqSys_->linsysWriteCounter_;
     }
   }
 

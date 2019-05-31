@@ -56,12 +56,10 @@ TEST_F(Hex8MeshWithNSOFields, twoMomentumKernels)
 
   double startTime = stk::wall_time();
 
-  helperObjs.assembleElemSolverAlg->execute();
+  helperObjs.execute();
 
   double elapsedTimeSimd = stk::wall_time() - startTime;
   std::cout<<"numElems: "<<numElems<<", elapsedTime Hex8MeshWithNSOFields.twoMomentumKernels: "<<elapsedTimeSimd<<std::endl;
-
-  EXPECT_EQ(numElems, helperObjs.linsys->numSumIntoCalls_);
 }
 
 #endif

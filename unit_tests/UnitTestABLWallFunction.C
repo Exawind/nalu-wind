@@ -55,14 +55,14 @@ struct HelperObjectsABLWallFrictionVelocity {
 };
 
 struct HelperObjectsABLWallFunction {
-  HelperObjectsABLWallFunction(stk::mesh::BulkData& bulk, int numDof, stk::mesh::Part* part, const double &z0, const double &Tref, const double &gravity)
+  HelperObjectsABLWallFunction(stk::mesh::BulkData& bulk, int numDof, stk::mesh::Part* part, const double &z0, const double &Tref, const double &gravity, stk::topology topo)
   : yamlNode(unit_test_utils::get_default_inputs()),
     realmDefaultNode(unit_test_utils::get_realm_default_node()),
     naluObj(new unit_test_utils::NaluTest(yamlNode)),
     realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
     eqSystems(realm),
     eqSystem(eqSystems),
-    linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem)),
+    linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem, topo)),
     elemABLWallFunctionSolverAlg(nullptr),
     edgeABLWallFunctionSolverAlg(nullptr),
     computeGeomBoundAlg(nullptr),
@@ -179,7 +179,7 @@ TEST_F(ABLWallFunctionHex8ElementWithBCFields, abl_wall_function_elem_alg_rhs) {
 
   SetUp(rho_specified, utau_specified, up_specified, yp_specified);
   double rhs_gold = -rho_specified*utau_specified*utau_specified*aMag;
-  HelperObjectsABLWallFunction helperObjs(bulk, numDof, &meta.universal_part(), z0, Tref, gravity);
+  HelperObjectsABLWallFunction helperObjs(bulk, numDof, &meta.universal_part(), z0, Tref, gravity, stk::topology::HEX_8);
   helperObjs.computeGeomBoundAlg->execute();
 
   // Element alg test
@@ -209,7 +209,7 @@ TEST_F(ABLWallFunctionHex8ElementWithBCFields, abl_wall_function_edge_alg_rhs) {
 
   SetUp(rho_specified, utau_specified, up_specified, yp_specified);
   double rhs_gold = -rho_specified*utau_specified*utau_specified*aMag;
-  HelperObjectsABLWallFunction helperObjs(bulk, numDof, &meta.universal_part(), z0, Tref, gravity);
+  HelperObjectsABLWallFunction helperObjs(bulk, numDof, &meta.universal_part(), z0, Tref, gravity, stk::topology::HEX_8);
   helperObjs.computeGeomBoundAlg->execute();
 
   // Edge alg test
