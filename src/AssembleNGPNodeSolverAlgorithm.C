@@ -77,25 +77,12 @@ void
 AssembleNGPNodeSolverAlgorithm::execute()
 {
   using ShmemDataType = SharedMemData_Node<DeviceTeamHandleType, DeviceShmem>;
-  using NGPKernelInfo = nalu_ngp::NGPCopyHolder<NodeKernel>;
-  using NGPKernelInfoView =
-    Kokkos::View<NGPKernelInfo*, Kokkos::LayoutRight, MemSpace>;
 
   const size_t numKernels = nodeKernels_.size();
   for (auto& kern: nodeKernels_)
     kern->setup(realm_);
 
-  NGPKernelInfoView ngpKernels("NGPNodeKernelView", numKernels);
-
-  {
-    NGPKernelInfoView::HostMirror hostKernelView =
-      Kokkos::create_mirror_view(ngpKernels);
-
-    for (size_t i=0; i < numKernels; i++)
-      hostKernelView(i) = NGPKernelInfo(nodeKernels_[i]->create_on_device());
-
-    Kokkos::deep_copy(ngpKernels, hostKernelView);
-  }
+  auto ngpKernels = nalu_ngp::create_ngp_view<NodeKernel>(nodeKernels_);
 
   const auto& meta = realm_.meta_data();
   const auto& ngpMesh = realm_.ngp_mesh();
