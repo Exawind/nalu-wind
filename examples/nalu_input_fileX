@@ -150,6 +150,8 @@ class mapping_object_class():
             'inflow_outflow': self.set_inflow_outflow,
             # The planes used for sampling
             'plane_sampling': self.set_sampling_planes,
+            # Sample lines
+            'line_sampling': self.set_sampling_lines,
         }
 
     def map_all(self):
@@ -452,8 +454,9 @@ class mapping_object_class():
         U = self.yaml_setup['uniform_inflow']
 
         # Set initial condition
-        self.yaml_input['realms'][0]['boundary_conditions'] \
-            ['initial_conditions'][0]['value']['velocity'] = [U, 0, 0]
+        self.yaml_input['realms'][0]['initial_conditions'] \
+            [0]['value']['velocity'] = [U, 0, 0]
+        print('Error NOT Here')
 
         # Try to change the pre-processing file
         try:
@@ -775,6 +778,50 @@ class mapping_object_class():
         '''
         self.yaml_input['realms'][0]['output']['output_frequency'] = \
             self.yaml_setup['output_frequency']
+
+
+
+    def set_sampling_lines(self):
+        '''
+        Set all the lines used for sampling
+        '''
+        
+        # The yaml input
+        yi = self.yaml_input['realms'][0]['data_probes']
+
+        # First copy the inputs from the setup file
+        yi = self.yaml_setup['line_sampling']
+        
+        # Now modify all the standard values
+        yi['search_method'] = 'stk_kdtree'
+        yi['search_tolerance'] = 1.0e-3
+        yi['search_expansion_factor'] = 2.0
+
+        yi['specifications'] = [            
+            { 'name': 'probe',
+              'from_target_part': self.yaml_input['realms'][0]['mateirals_properties']['target_name'],        
+              'line_of_site_specifications':[
+                  {
+                    # The name of the sampling probe
+                    'name': probeOne,
+                    # The number of points in the line
+                     'number_of_points': N,
+                    # The coordinate of the first point
+                    'tip_coordinates': p1,
+                    # The coordinate of the second point
+                    'tail_coordinates': p2,
+                  }
+                ]
+                for line in lines]
+
+          output_variables:
+            - field_name: velocity
+              field_size: 3
+        
+            - field_name: pressure
+              field_size: 1
+        ]
+
 
     def set_sampling_planes(self):
         '''
