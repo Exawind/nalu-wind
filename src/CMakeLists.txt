@@ -40,6 +40,7 @@ add_sources(GlobalSourceList
    AssembleNodalGradUElemAlgorithm.C
    AssembleNodalGradUNonConformalAlgorithm.C
    AssembleNodeSolverAlgorithm.C
+   AssembleNGPNodeSolverAlgorithm.C
    AssemblePNGBoundarySolverAlgorithm.C
    AssemblePNGElemSolverAlgorithm.C
    AssemblePNGNonConformalSolverAlgorithm.C
