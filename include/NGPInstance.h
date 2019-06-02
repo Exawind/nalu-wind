@@ -70,6 +70,61 @@ inline void destroy(T* obj)
   Kokkos::kokkos_free(obj);
 }
 
+/** Wrapper object to hold device pointers within a Kokkos::View
+ *
+ *  The struct does not own the pointer and will not perform any cleanup within
+ *  its destructor.
+ */
+template<typename T>
+struct NGPCopyHolder
+{
+  KOKKOS_INLINE_FUNCTION
+  NGPCopyHolder() = default;
+
+  KOKKOS_FUNCTION
+  ~NGPCopyHolder() = default;
+
+  NGPCopyHolder(T* instance)
+    : deviceInstance_(instance)
+  {}
+
+  KOKKOS_FUNCTION
+  operator T*() const
+  { return deviceInstance_; }
+
+private:
+  T* deviceInstance_{nullptr};
+};
+
+/** Create a Kokkos::View of instances that can be copied over to the device
+ *
+ *  Given a vector of host pointers to instances, this function will create the
+ *  associated device instance, wrap it in NGPCopyHolder instance and return a
+ *  Kokkos::View of the wrapped objects that is safe to be transferred to the
+ *  device.
+ */
+template<typename T, typename Container>
+Kokkos::View<NGPCopyHolder<T>*, Kokkos::LayoutRight, MemSpace>
+create_ngp_view(const Container& hostVec)
+{
+  using NGPInfo = NGPCopyHolder<T>;
+  using NGPInfoView = Kokkos::View<NGPInfo*, Kokkos::LayoutRight, MemSpace>;
+
+  const size_t numObjects = hostVec.size();
+  const std::string clsName(typeid(T).name());
+  const std::string debuggingName = "NGP" + clsName + "View";
+  NGPInfoView ngpVec(debuggingName, numObjects);
+
+  typename NGPInfoView::HostMirror hostNgpView = Kokkos::create_mirror_view(ngpVec);
+
+  for (size_t i=0; i < numObjects; ++i)
+    hostNgpView(i) = NGPInfo(hostVec[i]->create_on_device());
+
+  Kokkos::deep_copy(ngpVec, hostNgpView);
+
+  return ngpVec;
+}
+
 } // nalu_ngp
 
 }  // nalu

@@ -40,6 +40,7 @@ add_sources(GlobalSourceList
    AssembleNodalGradUElemAlgorithm.C
    AssembleNodalGradUNonConformalAlgorithm.C
    AssembleNodeSolverAlgorithm.C
+   AssembleNGPNodeSolverAlgorithm.C
    AssemblePNGBoundarySolverAlgorithm.C
    AssemblePNGElemSolverAlgorithm.C
    AssemblePNGNonConformalSolverAlgorithm.C
@@ -216,6 +217,7 @@ endif()
 add_subdirectory(element_promotion)
 add_subdirectory(kernel)
 add_subdirectory(edge_kernels)
+add_subdirectory(node_kernels)
 add_subdirectory(master_element)
 add_subdirectory(mesh_motion)
 add_subdirectory(nso)

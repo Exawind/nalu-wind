@@ -19,6 +19,7 @@
 #include <TimeIntegrator.h>
 
 #include <kernel/Kernel.h>
+#include <NGPInstance.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -79,25 +80,11 @@ AssembleElemSolverAlgorithm::initialize_connectivity()
 void
 AssembleElemSolverAlgorithm::execute()
 {
-  using NGPKernelInfoView =
-    Kokkos::View<NGPKernelInfo*, Kokkos::LayoutRight, MemSpace>;
-
   const size_t numKernels = activeKernels_.size();
   for ( size_t i = 0; i < numKernels; ++i )
     activeKernels_[i]->setup(*realm_.timeIntegrator_);
 
-  NGPKernelInfoView ngpKernels("NGPKernelView", numKernels);
-
-  {
-    NGPKernelInfoView::HostMirror hostKernelView =
-      Kokkos::create_mirror_view(ngpKernels);
-
-    for (size_t i=0; i < numKernels; i++)
-      hostKernelView(i) = NGPKernelInfo(*activeKernels_[i]);
-
-    Kokkos::deep_copy(ngpKernels, hostKernelView);
-  }
-
+  auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);
 
 #ifdef KOKKOS_ENABLE_CUDA
   CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
