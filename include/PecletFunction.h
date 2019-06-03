@@ -14,8 +14,13 @@
 namespace sierra{
 namespace nalu{
 
+/** Non-templated empty base class for storing pointers to templated instances
+ */
+class PecletFunctionBase
+{};
+
 template<typename T>
-class PecletFunction
+class PecletFunction : public PecletFunctionBase
 {
 public:
   KOKKOS_FUNCTION PecletFunction() = default;
