@@ -723,6 +723,8 @@ the Menter 2003 model are then
    + \int \left(\frac{\hat\gamma}{\nu_t} P_{k}^{\omega} -
    \hat \beta \bar{\rho} \omega^{2}\right) \text{d}V.
 
+where the value of :math:`\beta^*` is 0.09.
+
 The model coefficients, :math:`\hat\sigma_k`, :math:`\hat\sigma_{\omega}`, :math:`\hat\gamma` and :math:`\hat\beta`
 must also be blended, which is represented by
 
