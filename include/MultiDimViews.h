@@ -49,10 +49,10 @@ public:
     views_1D(), views_2D(), views_3D(), views_4D(), 
     views_1D_size(0), views_2D_size(0), views_3D_size(0), views_4D_size(0)
   {
-    NGP_ThrowRequireMsg((numNeededViews.num1DViews > maxViewsPerDim ||
-                         numNeededViews.num2DViews > maxViewsPerDim ||
-                         numNeededViews.num3DViews > maxViewsPerDim ||
-                         numNeededViews.num4DViews > maxViewsPerDim),
+    NGP_ThrowRequireMsg((numNeededViews.num1DViews <= maxViewsPerDim ||
+                         numNeededViews.num2DViews <= maxViewsPerDim ||
+                         numNeededViews.num3DViews <= maxViewsPerDim ||
+                         numNeededViews.num4DViews <= maxViewsPerDim),
                         "Number of requested views exceed maxViewsPerDim");
 #ifndef KOKKOS_ENABLE_CUDA
     for(unsigned i=0; i<numNeededViews.num1DViews; ++i) { views_1D[i] = nullptr; }
