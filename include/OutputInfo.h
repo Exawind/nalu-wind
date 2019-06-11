@@ -38,7 +38,8 @@ public:
   bool get_restart_shuffle();
   
   std::string outputDBName_;
-  
+  std::string outputMeshDBType_;
+
   // catalyst options
   std::string catalystFileName_;
   std::string catalystParseJson_;

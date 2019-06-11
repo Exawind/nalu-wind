@@ -385,6 +385,7 @@ class Realm {
 
   std::string name_;
   std::string type_;
+  std::string meshDBType_;
   std::string inputDBName_;
   unsigned spatialDimension_;
 

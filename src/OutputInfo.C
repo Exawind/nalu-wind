@@ -30,6 +30,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 OutputInfo::OutputInfo() 
   : outputDBName_("output.e"),
+    outputMeshDBType_("exodus"),
     catalystFileName_(""),
     catalystParseJson_(""),
     paraviewScriptName_(""),
@@ -84,6 +85,9 @@ OutputInfo::load(
 
     // output data base name
     get_if_present(y_output, "output_data_base_name", outputDBName_, outputDBName_);
+
+    // output data base type
+    get_if_present(y_output, "output_mesh_db_type", outputMeshDBType_, outputMeshDBType_);
 
     // catalyst file name
     get_if_present(y_output, "catalyst_file_name", catalystFileName_, catalystFileName_);

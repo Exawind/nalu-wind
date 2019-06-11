@@ -171,6 +171,7 @@ namespace nalu{
   : realms_(realms),
     name_("na"),
     type_("multi_physics"),
+    meshDBType_("exodus"),
     inputDBName_("input_unknown"),
     spatialDimension_(3u),  // for convenience; can always get it from meta data
     realmUsesEdges_(false),
@@ -667,6 +668,7 @@ Realm::load(const YAML::Node & node)
   name_ = node["name"].as<std::string>() ;
   inputDBName_ = node["mesh"].as<std::string>() ;
   get_if_present(node, "type", type_, type_);
+  get_if_present(node, "mesh_db_type", meshDBType_, meshDBType_);
 
   // provide a high level banner
   NaluEnv::self().naluOutputP0() << std::endl;
@@ -2086,7 +2088,7 @@ Realm::create_mesh()
 
   // Initialize meta data (from exodus file); can possibly be a restart file..
   inputMeshIdx_ = ioBroker_->add_mesh_database( 
-   inputDBName_, restarted_simulation() ? stk::io::READ_RESTART : stk::io::READ_MESH );
+   inputDBName_, meshDBType_, restarted_simulation() ? stk::io::READ_RESTART : stk::io::READ_MESH );
   ioBroker_->create_input_mesh();
 
   // declare an exposed part for later bc coverage check
@@ -2152,7 +2154,7 @@ Realm::create_output_mesh()
       resultsFileIndex_ = ioBroker_->create_output_mesh( oname, stk::io::WRITE_RESULTS, *outputInfo_->outputPropertyManager_, "catalyst" );
    }
    else {
-      resultsFileIndex_ = ioBroker_->create_output_mesh( oname, stk::io::WRITE_RESULTS, *outputInfo_->outputPropertyManager_);
+      resultsFileIndex_ = ioBroker_->create_output_mesh( oname, stk::io::WRITE_RESULTS, *outputInfo_->outputPropertyManager_, outputInfo_->outputMeshDBType_.c_str());
    }
 
 #if defined (NALU_USES_PERCEPT)
