@@ -1,2 +1,4 @@
 add_sources(GlobalUnitSourceList
-  UnitTestMomentumBodyForceNode.C)
+  UnitTestMomentumBodyForceNode.C
+  UnitTestMomentumBoussinesqNode.C
+)
