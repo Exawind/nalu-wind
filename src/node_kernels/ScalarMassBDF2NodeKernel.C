@@ -16,7 +16,6 @@ namespace nalu{
 
 ScalarMassBDF2NodeKernel::ScalarMassBDF2NodeKernel(
   const stk::mesh::BulkData& bulk,
-  const std::vector<double>&,
   ScalarFieldType *scalarQ
 ) : NGPNodeKernel<ScalarMassBDF2NodeKernel>()
 {

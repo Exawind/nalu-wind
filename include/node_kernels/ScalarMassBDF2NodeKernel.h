@@ -24,7 +24,6 @@ class ScalarMassBDF2NodeKernel : public NGPNodeKernel<ScalarMassBDF2NodeKernel>
 public:
   ScalarMassBDF2NodeKernel(
     const stk::mesh::BulkData&,
-    const std::vector<double>&,
     ScalarFieldType*);
 
   KOKKOS_FUNCTION
