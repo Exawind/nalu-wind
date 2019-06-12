@@ -75,8 +75,8 @@ typedef Tpetra::Map<LocalOrdinal,GlobalOrdinal,Node>                       Map;
 typedef Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>        MultiVector;
 typedef Teuchos::ArrayRCP<Scalar >                                         OneDVector;
 typedef Teuchos::ArrayRCP<const Scalar >                                   ConstOneDVector;
-typedef Tpetra::Vector<Scalar,LocalOrdinal,GlobalOrdinal,Node>             Vector;
-typedef Vector::dual_view_type::t_host                                     LocalVector;
+/* typedef Tpetra::Vector<Scalar,LocalOrdinal,GlobalOrdinal,Node>             Vector; */
+typedef MultiVector::dual_view_type::t_host                                LocalVector;
 typedef Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>       Matrix;
 typedef Matrix::local_matrix_type                                          LocalMatrix;
 typedef Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>        Operator;
