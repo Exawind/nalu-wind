@@ -5,7 +5,7 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#include "node_kernels/ScalarMassBDF2NodeKernel.h"
+#include "node_kernels/ScalarMassBDFNodeKernel.h"
 #include "Realm.h"
 
 #include "stk_mesh/base/MetaData.hpp"
@@ -14,23 +14,35 @@
 namespace sierra{
 namespace nalu{
 
-ScalarMassBDF2NodeKernel::ScalarMassBDF2NodeKernel(
+ScalarMassBDFNodeKernel::ScalarMassBDFNodeKernel(
   const stk::mesh::BulkData& bulk,
   ScalarFieldType *scalarQ
-) : NGPNodeKernel<ScalarMassBDF2NodeKernel>()
+) : NGPNodeKernel<ScalarMassBDFNodeKernel>()
 {
   const auto& meta = bulk.mesh_meta_data();
-  scalarQNm1ID_ = scalarQ->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
+
   scalarQNID_ = scalarQ->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal();
+
+  if (scalarQ->number_of_states() == 2)
+    scalarQNm1ID_ = scalarQNID_;
+  else
+    scalarQNm1ID_ = scalarQ->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
+
   scalarQNp1ID_ = scalarQ->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
-  densityNm1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNM1);
+
   densityNID_ = get_field_ordinal(meta, "density", stk::mesh::StateN);
+
+  if (scalarQ->number_of_states() == 2)
+    densityNm1ID_ = densityNID_;
+  else
+    densityNm1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNM1);
+
   densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   dualNodalVolumeID_ = get_field_ordinal(meta, "dual_nodal_volume");
 }
 
 void
-ScalarMassBDF2NodeKernel::setup(Realm& realm)
+ScalarMassBDFNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
 
@@ -48,7 +60,7 @@ ScalarMassBDF2NodeKernel::setup(Realm& realm)
 }
 
 void
-ScalarMassBDF2NodeKernel::execute(
+ScalarMassBDFNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)

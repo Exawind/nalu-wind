@@ -5,8 +5,8 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#ifndef SCALARMASSBDF2NODEKERNEL_H
-#define SCALARMASSBDF2NODEKERNEL_H
+#ifndef SCALARMASSBDFNODEKERNEL_H
+#define SCALARMASSBDFNODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
@@ -19,18 +19,18 @@ namespace nalu{
 
 class Realm;
 
-class ScalarMassBDF2NodeKernel : public NGPNodeKernel<ScalarMassBDF2NodeKernel>
+class ScalarMassBDFNodeKernel : public NGPNodeKernel<ScalarMassBDFNodeKernel>
 {
 public:
-  ScalarMassBDF2NodeKernel(
+  ScalarMassBDFNodeKernel(
     const stk::mesh::BulkData&,
     ScalarFieldType*);
 
   KOKKOS_FUNCTION
-  ScalarMassBDF2NodeKernel() = default;
+  ScalarMassBDFNodeKernel() = default;
 
   KOKKOS_FUNCTION
-  virtual ~ScalarMassBDF2NodeKernel() = default;
+  virtual ~ScalarMassBDFNodeKernel() = default;
 
   virtual void setup(Realm&) override;
   

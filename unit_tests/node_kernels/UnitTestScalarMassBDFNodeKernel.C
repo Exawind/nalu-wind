@@ -9,7 +9,7 @@
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
 
-#include "node_kernels/ScalarMassBDF2NodeKernel.h"
+#include "node_kernels/ScalarMassBDFNodeKernel.h"
 
 #ifndef KOKKOS_ENABLE_CUDA
 namespace {
@@ -54,7 +54,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass_node)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::ScalarMassBDF2NodeKernel>(bulk_, mixFraction_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::ScalarMassBDFNodeKernel>(bulk_, mixFraction_);
 
   helperObjs.execute();
 
@@ -66,6 +66,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass_node)
   namespace gold_values = bdf2_golds::scalar_mass;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs, 1.0e-14);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs, 1.0e-14);
+
 #endif
 
 }
