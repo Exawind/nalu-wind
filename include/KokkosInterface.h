@@ -135,6 +135,17 @@ inline T* kokkos_malloc_on_device(const std::string& debuggingName) {
 }
 inline void kokkos_free_on_device(void * ptr) { Kokkos::kokkos_free(ptr); }
 }
+
+template<typename T>
+KOKKOS_FUNCTION
+void set_zero(T* values, unsigned length)
+{
+    for(unsigned i=0; i<length; ++i) {
+        values[i] = 0;
+    }
 }
+
+}
+
 
 #endif /* INCLUDE_KOKKOSINTERFACE_H_ */
