@@ -18,7 +18,7 @@
 // Forward declare templates
 namespace Teuchos {
 
-template <typename T> 
+template <typename T>
 class ArrayRCP;
 
 template <typename T>
@@ -65,6 +65,8 @@ typedef int    LocalOrdinal;  // MUST be signed
 typedef double Scalar;
 
 typedef Kokkos::DualView<size_t*, DeviceSpace>                             RowLengths;
+typedef RowLengths::t_dev                                                  DeviceRowLengths;
+typedef RowLengths::t_host                                                 HostRowLengths;
 typedef Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type                Node;
 typedef Tpetra::CrsGraph< LocalOrdinal, GlobalOrdinal, Node>               Graph;
 typedef typename Graph::local_graph_type                                   LocalGraph;
@@ -75,7 +77,6 @@ typedef Tpetra::Map<LocalOrdinal,GlobalOrdinal,Node>                       Map;
 typedef Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>        MultiVector;
 typedef Teuchos::ArrayRCP<Scalar >                                         OneDVector;
 typedef Teuchos::ArrayRCP<const Scalar >                                   ConstOneDVector;
-/* typedef Tpetra::Vector<Scalar,LocalOrdinal,GlobalOrdinal,Node>             Vector; */
 typedef MultiVector::dual_view_type::t_host                                LocalVector;
 typedef Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>       Matrix;
 typedef Matrix::local_matrix_type                                          LocalMatrix;
