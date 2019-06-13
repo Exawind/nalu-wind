@@ -43,13 +43,6 @@ typedef std::unordered_map<stk::mesh::EntityId, size_t>  MyLIDMapType;
 
 typedef std::pair<stk::mesh::Entity, stk::mesh::Entity> Connection;
 
-  enum DOFStatus {
-    DS_NotSet           = 0,
-    DS_SkippedDOF       = 1 << 1,
-    DS_OwnedDOF         = 1 << 2,
-    DS_SharedNotOwnedDOF = 1 << 3,
-    DS_GhostedDOF       = 1 << 4
-  };
 
 class TpetraLinearSystem : public LinearSystem
 {

@@ -12,8 +12,6 @@
 #include <LinearSolverTypes.h>
 #include <LinearSolverConfig.h>
 
-#include <LinearSolverTypes.h>
-
 #include <Kokkos_DefaultNode.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
@@ -44,9 +42,10 @@ namespace nalu{
 
 /** Type of solvers available in Nalu simulation **/
   enum PetraType {
-    PT_TPETRA,       //!< Nalu Tpetra interface
-    PT_HYPRE,        //!< Direct HYPRE interface
-    PT_HYPRE_SEGREGATED, //!< Direct HYPRE Segregated momentum solver
+    PT_TPETRA,            //!< Nalu Tpetra interface
+    PT_TPETRA_SEGREGATED, //!< Nalu Tpetra interface Segregated solver
+    PT_HYPRE,             //!< Direct HYPRE interface
+    PT_HYPRE_SEGREGATED,  //!< Direct HYPRE Segregated momentum solver
     PT_END
   };
 
@@ -208,7 +207,7 @@ class TpetraLinearSolver : public LinearSolver
     const Teuchos::RCP<Teuchos::ParameterList> paramsPrecond,
     LinearSolvers *linearSolvers);
   virtual ~TpetraLinearSolver() ;
-  
+
     void setSystemObjects(
       Teuchos::RCP<LinSys::Matrix> matrix,
       Teuchos::RCP<LinSys::MultiVector> rhs);
@@ -245,7 +244,9 @@ class TpetraLinearSolver : public LinearSolver
       double & scaledResidual,
       bool isFinalOuterIter);
 
-    virtual PetraType getType() override { return PT_TPETRA; }
+    virtual PetraType getType() override {
+      return (config_->useSegregatedSolver() ? PT_TPETRA_SEGREGATED : PT_TPETRA);
+    }
 
   private:
   //! The solver parameters

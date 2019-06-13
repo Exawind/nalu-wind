@@ -39,7 +39,7 @@ class LinearSolvers {
 public:
   LinearSolvers(Simulation& sim);
   ~LinearSolvers();
-  
+
   /** Parse the `linear_solvers` section from Nalu input file
    */
   void load(const YAML::Node & node);
@@ -52,10 +52,10 @@ public:
   LinearSolver *create_solver(
     std::string solverBlockName,
     EquationType theEQ);
-  
+
   Simulation *root();
   Simulation *parent();
-  
+
   typedef std::map<EquationType, LinearSolver *> SolverMap;
   typedef std::map<std::string, TpetraLinearSolverConfig *> SolverTpetraConfigMap;
   typedef std::map<std::string, HypreLinearSolverConfig*> HypreSolverConfigMap;
@@ -70,7 +70,7 @@ public:
   //! A lookup table of solver configurations against the names provided in the
   //! input file when `type` is `hypre` or `tpetra_hypre`
   HypreSolverConfigMap solverHypreConfig_;
-  
+
   //! Reference to the sierra::nalu::Simulation instance
   Simulation& sim_;
 
