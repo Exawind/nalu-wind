@@ -81,6 +81,9 @@ public:
             const auto nodeL = ngpMesh.fast_mesh_index(smdata.ngpElemNodes[0]);
             const auto nodeR = ngpMesh.fast_mesh_index(smdata.ngpElemNodes[1]);
 
+            set_zero(smdata.rhs.data(), smdata.rhs.size());
+            set_zero(smdata.lhs.data(), smdata.lhs.size());
+
             lambdaFunc(smdata, edgeIndex, nodeL, nodeR);
 
 #ifndef KOKKOS_ENABLE_CUDA

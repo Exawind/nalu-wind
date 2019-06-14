@@ -116,12 +116,8 @@ AssembleNGPNodeSolverAlgorithm::execute()
           const auto nodeIndex = ngpMesh.fast_mesh_index(node);
           smdata.nodeID[0] = node;
 
-          // Reset LHS and RHS
-          for (int i = 0; i < rhsSize; ++i) {
-            smdata.rhs(i) = 0.0;
-            for (int j=0; j < rhsSize; ++j)
-              smdata.lhs(i, j) = 0.0;
-          }
+          set_zero(smdata.rhs.data(), smdata.rhs.size());
+          set_zero(smdata.lhs.data(), smdata.lhs.size());
 
           for (size_t i=0; i < numKernels; ++i) {
             NodeKernel* kernel = ngpKernels(i);

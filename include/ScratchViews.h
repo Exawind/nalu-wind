@@ -970,15 +970,6 @@ int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchI
     return bytes_per_thread;
 }
 
-template<typename T>
-KOKKOS_FUNCTION
-void set_zero(T* values, unsigned length)
-{
-    for(unsigned i=0; i<length; ++i) {
-        values[i] = 0;
-    }
-}
-
 } // namespace nalu
 } // namespace Sierra
 
