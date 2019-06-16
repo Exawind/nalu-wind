@@ -21,7 +21,7 @@ class SolutionOptions;
 class MomentumActuatorNodeKernel : public NGPNodeKernel<MomentumActuatorNodeKernel>
 {
 public:
-  MomentumActuatorNodeKernel(const stk::mesh::BulkData&);
+  MomentumActuatorNodeKernel(const stk::mesh::MetaData&);
 
   KOKKOS_FUNCTION
   MomentumActuatorNodeKernel() = default;
