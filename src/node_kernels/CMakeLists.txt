@@ -4,5 +4,6 @@ add_sources(GlobalSourceList
   MomentumBoussinesqNodeKernel.C
   MomentumMassBDFNodeKernel.C
   MomentumActuatorNodeKernel.C
+  MomentumCoriolisNodeKernel.C
   ScalarMassBDFNodeKernel.C
   )
