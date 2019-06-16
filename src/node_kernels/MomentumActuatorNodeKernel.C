@@ -30,7 +30,7 @@ void MomentumActuatorNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
-  actuatorSrc_     = fieldMgr.get_field<NodeKernelTraits::RhsType>(actuatorSrcID_);
+  actuatorSrc_     = fieldMgr.get_field<double>(actuatorSrcID_);
   actuatorSrcLHS_  = fieldMgr.get_field<double>(actuatorSrcLHSID_);
 }
 
@@ -40,12 +40,12 @@ MomentumActuatorNodeKernel::execute(
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
-  const NodeKernelTraits::RhsType src        = actuatorSrc_.    get(node, 0);
-  const NodeKernelTraits::DblType srcLHS     = actuatorSrcLHS_. get(node, 0);
   const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
 
   for ( int i = 0; i < nDim_; ++i ) {
-    rhs(i)   += dualVolume*src(i);
+    const NodeKernelTraits::DblType src      = actuatorSrc_.    get(node,i);
+    const NodeKernelTraits::DblType srcLHS   = actuatorSrcLHS_. get(node,i);
+    rhs(i)   += dualVolume*src;
     lhs(i,i) += dualVolume*srcLHS; 
   }
 }

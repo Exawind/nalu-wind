@@ -39,7 +39,7 @@ public:
 
 private:
   ngp::Field<double> dualNodalVolume_;
-  ngp::Field<NodeKernelTraits::RhsType> actuatorSrc_;
+  ngp::Field<double> actuatorSrc_;
   ngp::Field<double> actuatorSrcLHS_;
   const int nDim_;
 
