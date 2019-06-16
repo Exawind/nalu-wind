@@ -6,4 +6,5 @@ add_sources(GlobalSourceList
   MomentumActuatorNodeKernel.C
   MomentumCoriolisNodeKernel.C
   ScalarMassBDFNodeKernel.C
+  WallDistNodeKernel.C
   )
