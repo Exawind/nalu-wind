@@ -16,13 +16,12 @@
 namespace sierra{
 namespace nalu{
 
-MomentumActuatorNodeKernel::MomentumActuatorNodeKernel(
-  const stk::mesh::BulkData& bulk 
-) : NGPNodeKernel<MomentumActuatorNodeKernel>(),
-    nDim_(bulk.mesh_meta_data().spatial_dimension()),
-    dualNodalVolumeID_ (get_field_ordinal(bulk.mesh_meta_data(), "dual_nodal_volume")),
-    actuatorSrcID_     (get_field_ordinal(bulk.mesh_meta_data(), "actuator_source")),
-    actuatorSrcLHSID_  (get_field_ordinal(bulk.mesh_meta_data(), "actuator_source_lhs"))
+MomentumActuatorNodeKernel::MomentumActuatorNodeKernel(const stk::mesh::MetaData& meta) 
+  : NGPNodeKernel<MomentumActuatorNodeKernel>(),
+    nDim_              (meta.spatial_dimension()),
+    dualNodalVolumeID_ (get_field_ordinal(meta, "dual_nodal_volume")),
+    actuatorSrcID_     (get_field_ordinal(meta, "actuator_source")),
+    actuatorSrcLHSID_  (get_field_ordinal(meta, "actuator_source_lhs"))
 {
 }
 
