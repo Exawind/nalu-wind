@@ -1,5 +1,5 @@
 /*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
+/*  Copyright 2019 andia Corporation.                                     */
 /*  This software is released under the license detailed                  */
 /*  in the file, LICENSE, which is located in the top-level Nalu          */
 /*  directory structure                                                   */
@@ -15,8 +15,6 @@
 
 namespace sierra{
 namespace nalu{
-
-class SolutionOptions;
 
 class MomentumActuatorNodeKernel : public NGPNodeKernel<MomentumActuatorNodeKernel>
 {
