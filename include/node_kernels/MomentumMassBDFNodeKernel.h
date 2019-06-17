@@ -24,8 +24,7 @@ class MomentumMassBDFNodeKernel : public NGPNodeKernel<MomentumMassBDFNodeKernel
 {
 public:
   MomentumMassBDFNodeKernel(
-    const stk::mesh::BulkData&,
-    ScalarFieldType*);
+    const stk::mesh::BulkData&);
 
   KOKKOS_FUNCTION
   MomentumMassBDFNodeKernel() = default;

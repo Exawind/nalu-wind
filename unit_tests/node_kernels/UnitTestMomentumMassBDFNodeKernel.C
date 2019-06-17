@@ -16,42 +16,22 @@ namespace {
 namespace bdf_golds {
 namespace momentum_mass {
 
-static constexpr double lhs[24][24] = {
-{0.10943331816113, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, -0.12850080171032, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, -0.12850080171032, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0.10943331816113, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.12850080171032, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.10943331816113, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.10943331816113, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.12850080171032, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-};
-
 static constexpr double rhs[24] =
-{-0.21886663632226, -0.25700160342063, -0.25700160342063, -0.25700160342063, -0.25700160342063, -0.21886663632226, -0.25700160342063, -0.21886663632226, -0.25700160342063, -0.21886663632226, -0.25700160342063, -0.21886663632226, -0.25700160342063, -0.21886663632226, -0.21886663632226, -0.21886663632226, -0.21886663632226, -0.25700160342063, -0.21886663632226, -0.25700160342063, 0, -0.25700160342063, 0, 0, };
+{0, 0, 0,
+ -0.056021853088904, -1.0112712429687, 0,
+ 1.0112712429687, -0.056021853088904, 0,
+ 0.53838846959557, -0.65043217577338, 0,
+ 0, 0, 0,
+ -0.056021853088904, -1.0112712429687, 0,
+ 1.0112712429687, -0.056021853088904, 0,
+ 0.53838846959557, -0.65043217577338, 0, };
 
 } // momentum_mass
 } // bdf_golds
 } // anonymous namespace
 #endif
 
-TEST_F(MixtureFractionKernelHex8Mesh, NGP_momentum_mass_node)
+TEST_F(MomentumKernelHex8Mesh, NGP_momentum_mass_node)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
@@ -72,7 +52,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_momentum_mass_node)
 
   helperObjs.realm.timeIntegrator_ = &timeIntegrator;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumMassBDFNodeKernel>(bulk_, mixFraction_);
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumMassBDFNodeKernel>(bulk_);
 
   helperObjs.execute();
 
@@ -80,11 +60,18 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_momentum_mass_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 8);
+
+  // Exact LHS expected
+  std::vector<double> lhsExact(576, 0.0);
+  for (int i=0; i<24; i++)
+    lhsExact[i*24+i] = 1.25;
 
   namespace gold_values = bdf_golds::momentum_mass;
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs, 1.0e-14);
-  unit_test_kernel_utils::expect_all_near<24>(helperObjs.linsys->lhs_, gold_values::lhs, 1.0e-14);
-
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, gold_values::rhs, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near_2d(
+    helperObjs.linsys->lhs_, lhsExact.data());
 #endif
 
 }

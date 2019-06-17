@@ -16,25 +16,27 @@ namespace sierra{
 namespace nalu{
 
 MomentumMassBDFNodeKernel::MomentumMassBDFNodeKernel(
-  const stk::mesh::BulkData& bulk,
-  ScalarFieldType *scalarQ
+  const stk::mesh::BulkData& bulk
 ) : NGPNodeKernel<MomentumMassBDFNodeKernel>(),
     nDim_(bulk.mesh_meta_data().spatial_dimension())
 {
   const auto& meta = bulk.mesh_meta_data();
 
-  velocityNID_ = scalarQ->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal();
+  const auto* velocity = meta.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity");
 
-  if (scalarQ->number_of_states() == 2)
+  velocityNID_ = velocity->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal();
+
+  if (velocity->number_of_states() == 2)
     velocityNm1ID_ = velocityNID_;
   else
-    velocityNm1ID_ = scalarQ->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
+    velocityNm1ID_ = velocity->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
 
-  velocityNp1ID_ = scalarQ->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
+  velocityNp1ID_ = velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
 
   densityNID_ = get_field_ordinal(meta, "density", stk::mesh::StateN);
 
-  if (scalarQ->number_of_states() == 2)
+  if (velocity->number_of_states() == 2)
     densityNm1ID_ = densityNID_;
   else
     densityNm1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNM1);
@@ -71,21 +73,21 @@ MomentumMassBDFNodeKernel::execute(
 {
   const int nDim = nDim_;
 
+  const NodeKernelTraits::DblType rhoNm1     = densityNm1_.get(node, 0);
+  const NodeKernelTraits::DblType rhoN       = densityN_.get(node, 0);
+  const NodeKernelTraits::DblType rhoNp1     = densityNp1_.get(node, 0);
+  const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
+  const NodeKernelTraits::DblType lhsfac     = gamma1_*rhoNp1*dualVolume/dt_;
+
   // deal with lumped mass matrix (diagonal matrix)
   for ( int i = 0; i < nDim; ++i ) {
-    const NodeKernelTraits::DblType uNm1       = velocityNm1_.get(node, i);
-    const NodeKernelTraits::DblType uN         = velocityN_.get(node, i);
-    const NodeKernelTraits::DblType uNp1       = velocityNp1_.get(node, i);
-    const NodeKernelTraits::DblType rhoNm1     = densityNm1_.get(node, i);
-    const NodeKernelTraits::DblType rhoN       = densityN_.get(node, i);
-    const NodeKernelTraits::DblType rhoNp1     = densityNp1_.get(node, i);
-    const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, i);
-    const NodeKernelTraits::DblType dpdx       = dpdx_.get(node, i);
-    const NodeKernelTraits::DblType lhsfac = gamma1_*rhoNp1*dualVolume/dt_;
+    const NodeKernelTraits::DblType uNm1   = velocityNm1_.get(node, i);
+    const NodeKernelTraits::DblType uN     = velocityN_.get(node, i);
+    const NodeKernelTraits::DblType uNp1   = velocityNp1_.get(node, i);
+    const NodeKernelTraits::DblType dpdx   = dpdx_.get(node, i);
 
     rhs(i) += -(gamma1_*rhoNp1*uNp1 + gamma2_*rhoN*uN + gamma3_*rhoNm1*uNm1)*dualVolume/dt_ - dpdx*dualVolume;
-    const int row = i*nDim;
-    lhs(row+i, row+i) += lhsfac;
+    lhs(i, i) += lhsfac;
   }
 }
 
