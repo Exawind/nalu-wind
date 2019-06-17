@@ -1,5 +1,5 @@
 /*------------------------------------------------------------------------*/
-/*  Copyright 2019 andia Corporation.                                     */
+/*  Copyright 2019 Sandia Corporation.                                     */
 /*  This software is released under the license detailed                  */
 /*  in the file, LICENSE, which is located in the top-level Nalu          */
 /*  directory structure                                                   */
