@@ -211,12 +211,12 @@ class TpetraLinearSolver : public LinearSolver
   
     void setSystemObjects(
       Teuchos::RCP<LinSys::Matrix> matrix,
-      Teuchos::RCP<LinSys::Vector> rhs);
+      Teuchos::RCP<LinSys::MultiVector> rhs);
 
     void setupLinearSolver(
-      Teuchos::RCP<LinSys::Vector> sln,
+      Teuchos::RCP<LinSys::MultiVector> sln,
       Teuchos::RCP<LinSys::Matrix> matrix,
-      Teuchos::RCP<LinSys::Vector> rhs,
+      Teuchos::RCP<LinSys::MultiVector> rhs,
       Teuchos::RCP<LinSys::MultiVector> coords);
 
     virtual void destroyLinearSolver() override;
@@ -230,7 +230,7 @@ class TpetraLinearSolver : public LinearSolver
    *  @param[in] sln The solution vector
    *  @param[out] norm The norm of the solution vector
    */
-    int residual_norm(int whichNorm, Teuchos::RCP<LinSys::Vector> sln, double& norm);
+    int residual_norm(int whichNorm, Teuchos::RCP<LinSys::MultiVector> sln, double& norm);
 
   /** Solve the linear system Ax = b
    *
@@ -240,7 +240,7 @@ class TpetraLinearSolver : public LinearSolver
    *  @param[in]  isFinalOuterIter Is this the final outer iteration
    */
     int solve(
-      Teuchos::RCP<LinSys::Vector> sln,
+      Teuchos::RCP<LinSys::MultiVector> sln,
       int & iterationCount,
       double & scaledResidual,
       bool isFinalOuterIter);
@@ -254,7 +254,7 @@ class TpetraLinearSolver : public LinearSolver
   //! The preconditioner parameters
     const Teuchos::RCP<Teuchos::ParameterList> paramsPrecond_;
     Teuchos::RCP<LinSys::Matrix> matrix_;
-    Teuchos::RCP<LinSys::Vector> rhs_;
+    Teuchos::RCP<LinSys::MultiVector> rhs_;
     Teuchos::RCP<LinSys::LinearProblem> problem_;
     Teuchos::RCP<LinSys::SolverManager> solver_;
     Teuchos::RCP<LinSys::Preconditioner> preconditioner_;

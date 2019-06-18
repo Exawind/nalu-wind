@@ -3,4 +3,5 @@ add_sources(GlobalUnitSourceList
   UnitTestMomentumBoussinesqNode.C
   UnitTestMomentumMassBDFNodeKernel.C
   UnitTestScalarMassBDFNodeKernel.C
+  UnitTestMomentumActuatorNodeKernel.C
 )
