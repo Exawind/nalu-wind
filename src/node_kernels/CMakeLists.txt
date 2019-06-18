@@ -3,4 +3,5 @@ add_sources(GlobalSourceList
   MomentumBoussinesqNodeKernel.C
   MomentumActuatorNodeKernel.C
   ScalarMassBDFNodeKernel.C
+  TurbKineticEnergyRodiNodeKernel.C
   )
