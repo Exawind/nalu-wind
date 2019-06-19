@@ -50,7 +50,7 @@ ContinuityMassBDFNodeKernel::setup(Realm& realm)
 
 void
 ContinuityMassBDFNodeKernel::execute(
-  NodeKernelTraits::LhsType& lhs,
+  NodeKernelTraits::LhsType& /*lhs*/,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
@@ -61,7 +61,7 @@ ContinuityMassBDFNodeKernel::execute(
   const NodeKernelTraits::DblType projTimeScale = dt_/gamma1_;
 
   rhs(0) -= (gamma1_*rhoNp1 + gamma2_*rhoN + gamma3_*rhoNm1)*dualVolume/dt_/projTimeScale;
-  lhs(0, 0) += 0.0;
+  //lhs(0, 0) += 0.0;
 }
 
 } // namespace nalu
