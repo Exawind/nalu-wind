@@ -1649,12 +1649,12 @@ bool TpetraLinearSystem::checkForZeroRow(bool useOwned, bool doThrow, bool doPri
     if (global_row_exists[ii] && bulkData.parallel_rank() == 0 && row_sum < 1.e-10) {
       found = true;
       GlobalOrdinal gid = ii+1;
-      stk::mesh::EntityId nid = GLOBAL_ENTITY_ID(gid, numDof_);
+      stk::mesh::EntityId nid = (gid - 1) / numDof_ + 1;
       stk::mesh::Entity node = bulkData.get_entity(stk::topology::NODE_RANK, nid);
       stk::mesh::EntityId naluGlobalId;
       if (bulkData.is_valid(node)) naluGlobalId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
 
-      int idof = GLOBAL_ENTITY_ID_IDOF(gid, numDof_);
+      int idof = (gid - 1) % numDof_;
       GlobalOrdinal GID_check = GID_(nid, numDof_, idof);
       if (doPrint) {
 
