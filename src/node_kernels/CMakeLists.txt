@@ -1,4 +1,5 @@
 add_sources(GlobalSourceList
+  ContinuityMassBackwardEulerNodeKernel.C
   MomentumBodyForceNodeKernel.C
   MomentumBoussinesqNodeKernel.C
   MomentumMassBDFNodeKernel.C
