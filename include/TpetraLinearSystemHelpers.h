@@ -30,10 +30,6 @@ namespace nalu {
 class LocalGraphArrays;
 
 #define GID_(gid, ndof, idof)  ((ndof)*((gid)-1)+(idof)+1)
-#define LID_(lid, ndof, idof)  ((ndof)*((lid))+(idof))
-
-#define GLOBAL_ENTITY_ID(gid, ndof) ((gid-1)/ndof + 1)
-#define GLOBAL_ENTITY_ID_IDOF(gid, ndof) ((gid-1) % ndof)
 
 enum DOFStatus {
   DS_NotSet            = 0,
