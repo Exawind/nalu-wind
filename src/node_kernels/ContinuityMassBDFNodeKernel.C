@@ -58,10 +58,14 @@ ContinuityMassBDFNodeKernel::execute(
   const NodeKernelTraits::DblType rhoN          = densityN_.get(node, 0);
   const NodeKernelTraits::DblType rhoNp1        = densityNp1_.get(node, 0);
   const NodeKernelTraits::DblType dualVolume    = dualNodalVolume_.get(node, 0);
-  const NodeKernelTraits::DblType projTimeScale = dt_/gamma1_;
 
-  rhs(0) -= (gamma1_*rhoNp1 + gamma2_*rhoN + gamma3_*rhoNm1)*dualVolume/dt_/projTimeScale;
+  //original kernel
+  //const NodeKernelTraits::DblType projTimeScale = dt_/gamma1_;
+  //rhs(0) -= (gamma1_*rhoNp1 + gamma2_*rhoN + gamma3_*rhoNm1)*dualVolume/dt_/projTimeScale;
   //lhs(0, 0) += 0.0;
+
+  //simplified kernel
+  rhs(0) -= (gamma1_*rhoNp1 + gamma2_*rhoN + gamma3_*rhoNm1)*(dualVolume/dt_)*(gamma1_/dt_);
 }
 
 } // namespace nalu
