@@ -10,23 +10,23 @@ TEST(BasicKokkos, discover_execution_space)
     int proc = stk::parallel_machine_rank(comm);
 
     if (proc == 0) {
-        std::cout << std::endl;
+        std::cerr << std::endl;
 
-#ifdef KOKKOS_HAVE_SERIAL
-        std::cout << "Kokkos::Serial is available." << std::endl;
+#ifdef KOKKOS_ENABLE_SERIAL
+        std::cerr << "Kokkos::Serial is available." << std::endl;
 #endif
 
-#ifdef KOKKOS_HAVE_OPENMP
-        std::cout << "Kokkos::OpenMP is available. (Control num-threads via env-var OMP_NUM_THREADS)" << std::endl;
+#ifdef KOKKOS_ENABLE_OPENMP
+        std::cerr << "Kokkos::OpenMP is available. (Control num-threads via env-var OMP_NUM_THREADS)" << std::endl;
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
-        std::cout << "Kokkos::Cuda is available." << std::endl;
+        std::cerr << "Kokkos::Cuda is available." << std::endl;
 #endif
-        std::cout << "Default execution space info: ";
-        Kokkos::DefaultExecutionSpace::print_configuration(std::cout);
+        std::cerr << "Default execution space info: ";
+        Kokkos::DefaultExecutionSpace::print_configuration(std::cerr);
 
-        std::cout << std::endl;
+        std::cerr << std::endl;
     }
 }
 
