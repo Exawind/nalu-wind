@@ -6,13 +6,11 @@
 /*------------------------------------------------------------------------*/
 
 
-#ifndef TurbKineticEnergyRodiNodeKernel_h          
-#define TurbKineticEnergyRodiNodeKernel_h          
+#ifndef TURBKINETICENERGYRODINODEKERNEL_H          
+#define TURBKINETICENERGYRODINODEKERNEL_H          
 
-#include <SupplementalAlgorithm.h>
-#include <FieldTypeDef.h>
-
-#include <stk_mesh/base/Entity.hpp>
+#include "node_kernels/NodeKernel.h"
+#include "stk_ngp/Ngp.hpp"
 
 namespace stk{
 namespace mesh{

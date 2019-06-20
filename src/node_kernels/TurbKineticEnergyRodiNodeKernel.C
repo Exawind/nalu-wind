@@ -6,16 +6,14 @@
 /*------------------------------------------------------------------------*/
 
 
-#include "TurbKineticEnergyRodiNodeKernel.h"
-#include "FieldTypeDef.h"
+#include "node_kernels/TurbKineticEnergyRodiNodeKernel.h"
+#include "node_kernels/NodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
-#include "SupplementalAlgorithm.h"
 
 // stk_mesh/base/fem
-#include <stk_mesh/base/Entity.hpp>
 #include <stk_mesh/base/MetaData.hpp>
-#include <stk_mesh/base/BulkData.hpp>
+#include "utils/StkHelpers.h"
 #include <stk_mesh/base/Field.hpp>
 
 namespace sierra{
@@ -64,10 +62,10 @@ TurbKineticEnergyRodiNodeKernel::setup(Realm &realm)
 }
 
 //--------------------------------------------------------------------------
-//-------- node_execute ----------------------------------------------------
+//-------- execute ----------------------------------------------------
 //--------------------------------------------------------------------------
 void
-TurbKineticEnergyRodiNodeKernel::node_execute(
+TurbKineticEnergyRodiNodeKernel::execute(
   NodeKernelTraits::LhsType& /*lhs*/,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
