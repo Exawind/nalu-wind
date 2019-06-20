@@ -167,6 +167,7 @@ add_sources(GlobalSourceList
    SurfaceForceAndMomentWallFunctionAlgorithm.C
    TimeIntegrator.C
    TpetraLinearSystem.C
+   TpetraLinearSystemHelpers.C
    TurbKineticEnergyEquationSystem.C
    TurbKineticEnergyKsgsBuoyantElemSuppAlg.C
    TurbKineticEnergyKsgsNodeSourceSuppAlg.C

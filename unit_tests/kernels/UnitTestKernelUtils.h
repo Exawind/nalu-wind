@@ -746,6 +746,7 @@ public:
     massFlowRate_(&meta_.declare_field<GenericFieldType>(stk::topology::ELEM_RANK,
                                                          "mass_flow_rate_scs")),
     dzdx_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dzdx")),
+    dpdx_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx",2)),
     exposedAreaVec_(&meta_.declare_field<GenericFieldType>(
                       meta_.side_rank(), "exposed_area_vector")),
     openMassFlowRate_(&meta_.declare_field<GenericFieldType>(meta_.side_rank(),
@@ -766,6 +767,7 @@ public:
     stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*massFlowRate_, meta_.universal_part(), meSCS->num_integration_points(), nullptr);
     stk::mesh::put_field_on_mesh(*dzdx_, meta_.universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(*dpdx_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta_.universal_part(),
       spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
@@ -804,6 +806,7 @@ public:
   ScalarFieldType* effectiveViscosity_{nullptr};
   GenericFieldType* massFlowRate_{nullptr};
   VectorFieldType* dzdx_{nullptr};
+  VectorFieldType* dpdx_{nullptr};
   GenericFieldType* exposedAreaVec_{nullptr};
   GenericFieldType* openMassFlowRate_{nullptr};
 
