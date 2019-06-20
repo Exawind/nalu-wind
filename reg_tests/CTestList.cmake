@@ -45,8 +45,13 @@ function(add_test_r_np testname np)
 endfunction(add_test_r_np)
 
 # Standard unit test
-function(add_test_u testname np)
-    add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${utest_ex_name} --gtest_shuffle")
+function(add_test_u testname np shuffle)
+    if(shuffle)
+      set(GTEST_SHUFFLE "--gtest_shuffle")
+    else()
+      unset(GTEST_SHUFFLE)
+    endif()
+    add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${utest_ex_name} ${GTEST_SHUFFLE}")
     set_tests_properties(${testname} PROPERTIES TIMEOUT 1000 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "unit")
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
 endfunction(add_test_u)
@@ -186,8 +191,8 @@ if(NOT ENABLE_CUDA)
   #=============================================================================
   # Unit tests
   #=============================================================================
-  add_test_u(unitTest1 1)
-  add_test_u(unitTest2 2)
+  add_test_u(unitTest1 1 true)
+  add_test_u(unitTest2 2 false)
 
   #=============================================================================
   # Performance tests
