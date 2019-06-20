@@ -45,8 +45,8 @@ function(add_test_r_np testname np)
 endfunction(add_test_r_np)
 
 # Standard unit test
-function(add_test_u testname np shuffle)
-    if(shuffle)
+function(add_test_u testname np)
+    if(${np} EQUAL 1)
       set(GTEST_SHUFFLE "--gtest_shuffle")
     else()
       unset(GTEST_SHUFFLE)
@@ -191,8 +191,8 @@ if(NOT ENABLE_CUDA)
   #=============================================================================
   # Unit tests
   #=============================================================================
-  add_test_u(unitTest1 1 true)
-  add_test_u(unitTest2 2 false)
+  add_test_u(unitTest1 1)
+  add_test_u(unitTest2 2)
 
   #=============================================================================
   # Performance tests
