@@ -14,7 +14,7 @@
 #include <KokkosInterface.h>
 
 #include <Kokkos_DefaultNode.hpp>
-#include <Tpetra_Vector.hpp>
+#include <Tpetra_MultiVector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 
 #include <stk_mesh/base/Types.hpp>
@@ -43,13 +43,6 @@ typedef std::unordered_map<stk::mesh::EntityId, size_t>  MyLIDMapType;
 
 typedef std::pair<stk::mesh::Entity, stk::mesh::Entity> Connection;
 
-  enum DOFStatus {
-    DS_NotSet           = 0,
-    DS_SkippedDOF       = 1 << 1,
-    DS_OwnedDOF         = 1 << 2,
-    DS_SharedNotOwnedDOF = 1 << 3,
-    DS_GhostedDOF       = 1 << 4
-  };
 
 class TpetraLinearSystem : public LinearSystem
 {
@@ -151,7 +144,7 @@ public:
 
   Teuchos::RCP<LinSys::Graph>  getOwnedGraph() { return ownedGraph_; }
   Teuchos::RCP<LinSys::Matrix> getOwnedMatrix() { return ownedMatrix_; }
-  Teuchos::RCP<LinSys::Vector> getOwnedRhs() { return ownedRhs_; }
+  Teuchos::RCP<LinSys::MultiVector> getOwnedRhs() { return ownedRhs_; }
 
   class TpetraLinSysCoeffApplier : public CoeffApplier
   {
@@ -228,7 +221,7 @@ private:
   void fill_entity_to_col_LID_mapping();
 
   void copy_tpetra_to_stk(
-    const Teuchos::RCP<LinSys::Vector> tpetraVector,
+    const Teuchos::RCP<LinSys::MultiVector> tpetraVector,
     stk::mesh::FieldBase * stkField);
 
   // This method copies a stk::mesh::field to a tpetra multivector. Each dof/node is written into a different
@@ -264,18 +257,18 @@ private:
   Teuchos::RCP<LinSys::Graph>  sharedNotOwnedGraph_;
 
   Teuchos::RCP<LinSys::Matrix> ownedMatrix_;
-  Teuchos::RCP<LinSys::Vector> ownedRhs_;
+  Teuchos::RCP<LinSys::MultiVector> ownedRhs_;
   LinSys::LocalMatrix ownedLocalMatrix_;
   LinSys::LocalMatrix sharedNotOwnedLocalMatrix_;
   LinSys::LocalVector ownedLocalRhs_;
   LinSys::LocalVector sharedNotOwnedLocalRhs_;
 
-  Teuchos::RCP<LinSys::Matrix> sharedNotOwnedMatrix_;
-  Teuchos::RCP<LinSys::Vector> sharedNotOwnedRhs_;
+  Teuchos::RCP<LinSys::Matrix>      sharedNotOwnedMatrix_;
+  Teuchos::RCP<LinSys::MultiVector> sharedNotOwnedRhs_;
 
-  Teuchos::RCP<LinSys::Vector> sln_;
-  Teuchos::RCP<LinSys::Vector> globalSln_;
-  Teuchos::RCP<LinSys::Export> exporter_;
+  Teuchos::RCP<LinSys::MultiVector> sln_;
+  Teuchos::RCP<LinSys::MultiVector> globalSln_;
+  Teuchos::RCP<LinSys::Export>      exporter_;
 
   MyLIDMapType myLIDs_;
   Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,MemSpace> entityToColLID_;

@@ -50,6 +50,9 @@ public:
   inline bool reusePreconditioner() const
   { return reusePreconditioner_; }
 
+  inline bool useSegregatedSolver() const
+  { return useSegregatedSolver_; }
+
   std::string get_method() const
   {return method_;}
 
@@ -77,6 +80,7 @@ protected:
 
   bool recomputePreconditioner_{true};
   bool reusePreconditioner_{false};
+  bool useSegregatedSolver_{false};
   bool writeMatrixFiles_{false};
 };
 

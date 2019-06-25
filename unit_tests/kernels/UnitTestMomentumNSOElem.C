@@ -356,8 +356,8 @@ TEST_F(MomentumKernelHex8Mesh, nso_2nd)
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
 
   namespace gold_values = ::hex8_golds::nso_2nd;
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,gold_values::rhs);
-  unit_test_kernel_utils::expect_all_near<24>(helperObjs.linsys->lhs_, gold_values::lhs);
+  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,gold_values::rhs,1.0e-9);
+  unit_test_kernel_utils::expect_all_near<24>(helperObjs.linsys->lhs_, gold_values::lhs,1.0e-9);
 }
 
 TEST_F(MomentumKernelHex8Mesh, nso_2nd_alt)

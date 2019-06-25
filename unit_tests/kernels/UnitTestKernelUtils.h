@@ -255,11 +255,14 @@ public:
       naluGlobalId_(
         &meta_.declare_field<GlobalIdFieldType>(
           stk::topology::NODE_RANK, "nalu_global_id",1)),
+      dnvField_(&meta_.declare_field<ScalarFieldType>(
+                  stk::topology::NODE_RANK, "dual_nodal_volume")),
       edgeAreaVec_(
         &meta_.declare_field<VectorFieldType>(
           stk::topology::EDGE_RANK, "edge_area_vector"))
   {
     stk::mesh::put_field_on_mesh(*naluGlobalId_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*dnvField_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
@@ -283,6 +286,7 @@ public:
 
     EXPECT_TRUE(coordinates_ != nullptr);
 
+    stk::mesh::field_fill(0.125, *dnvField_);
     unit_test_kernel_utils::calc_edge_area_vec(
       bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
   }
@@ -297,6 +301,7 @@ public:
 
   const VectorFieldType* coordinates_{nullptr};
   GlobalIdFieldType* naluGlobalId_{nullptr};
+  ScalarFieldType* dnvField_{nullptr};
   VectorFieldType* edgeAreaVec_{nullptr};
 };
 
@@ -402,6 +407,9 @@ private:
 class ContinuityEdgeHex8Mesh : public ContinuityKernelHex8Mesh
 {};
 
+class ContinuityNodeHex8Mesh : public ContinuityKernelHex8Mesh
+{};
+
 class MomentumKernelHex8Mesh : public LowMachKernelHex8Mesh
 {
 public:
@@ -455,6 +463,13 @@ public:
   VectorFieldType* openVelocityBC_{nullptr};
 };
 
+// Provide separate namespace for Edge kernel tests
+class MomentumEdgeHex8Mesh : public MomentumKernelHex8Mesh
+{};
+
+class MomentumNodeHex8Mesh : public MomentumKernelHex8Mesh
+{};
+
 /** Test Fixture for the Ksgs Kernels
  *
  */
@@ -467,14 +482,11 @@ public:
         stk::topology::NODE_RANK, "turbulent_ke")),
       tvisc_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "turbulent_viscosity")),
-      dnvField_(&meta_.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "dual_nodal_volume")),
       dudx_(&meta_.declare_field<GenericFieldType>(
           stk::topology::NODE_RANK, "dudx"))
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(*dnvField_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*dudx_, meta_.universal_part(), spatialDim_ * spatialDim_, nullptr);
   }
 
@@ -488,13 +500,11 @@ public:
     unit_test_kernel_utils::density_test_function(
       bulk_, *coordinates_, *density_);
     unit_test_kernel_utils::tke_test_function(bulk_, *coordinates_, *tke_);
-    stk::mesh::field_fill(0.125, *dnvField_);
     unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
   }
 
   ScalarFieldType* tke_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
-  ScalarFieldType* dnvField_{nullptr};
   GenericFieldType* dudx_{nullptr};
 };
 
@@ -647,6 +657,7 @@ public:
     massFlowRate_(&meta_.declare_field<GenericFieldType>(stk::topology::ELEM_RANK,
                                                          "mass_flow_rate_scs")),
     dzdx_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dzdx")),
+    dpdx_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx",2)),
     exposedAreaVec_(&meta_.declare_field<GenericFieldType>(
                       meta_.side_rank(), "exposed_area_vector")),
     openMassFlowRate_(&meta_.declare_field<GenericFieldType>(meta_.side_rank(),
@@ -667,6 +678,7 @@ public:
     stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*massFlowRate_, meta_.universal_part(), meSCS->num_integration_points(), nullptr);
     stk::mesh::put_field_on_mesh(*dzdx_, meta_.universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(*dpdx_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
       *exposedAreaVec_, meta_.universal_part(),
       spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
@@ -704,6 +716,7 @@ public:
   ScalarFieldType* effectiveViscosity_{nullptr};
   GenericFieldType* massFlowRate_{nullptr};
   VectorFieldType* dzdx_{nullptr};
+  VectorFieldType* dpdx_{nullptr};
   GenericFieldType* exposedAreaVec_{nullptr};
   GenericFieldType* openMassFlowRate_{nullptr};
 

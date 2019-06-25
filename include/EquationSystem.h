@@ -226,7 +226,8 @@ public:
 
   /** Create and return an instance of PecletFunction on device for use with Kernel
    */
-  PecletFunction<DoubleType>* ngp_create_peclet_function(const std::string& dofName);
+  template<typename T = DoubleType>
+  PecletFunction<T>* ngp_create_peclet_function(const std::string& dofName);
 
   virtual void load(const YAML::Node & node)
   {
@@ -257,7 +258,7 @@ public:
   SolverAlgorithmDriver *solverAlgDriver_;
 
   //! Track NGP instances of PecletFunction
-  std::vector<PecletFunction<DoubleType>*> ngpPecletFunctions_;
+  std::vector<PecletFunctionBase*> ngpPecletFunctions_;
 
   double timerAssemble_;
   double timerLoadComplete_;
@@ -366,6 +367,25 @@ EquationSystem::create_peclet_function(
     const T c2 = realm_.get_tanh_width(dofName);
     pecletFunction = new TanhFunction<T>(c1, c2);
   }
+  return pecletFunction;
+}
+
+template<typename T>
+PecletFunction<T>*
+EquationSystem::ngp_create_peclet_function(const std::string& dofName)
+{
+  PecletFunction<T>* pecletFunction = nullptr;
+  if ("classic" == realm_.get_tanh_functional_form(dofName)) {
+    const T hybridFactor = realm_.get_hybrid_factor(dofName);
+    const T A = 5.0;
+    pecletFunction = nalu_ngp::create<ClassicPecletFunction<T>>(A, hybridFactor);
+  } else {
+    const T c1 = realm_.get_tanh_trans(dofName);
+    const T c2 = realm_.get_tanh_width(dofName);
+    pecletFunction = nalu_ngp::create<TanhFunction<T>>(c1, c2);
+  }
+
+  ngpPecletFunctions_.push_back(pecletFunction);
   return pecletFunction;
 }
 

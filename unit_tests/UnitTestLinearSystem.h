@@ -237,7 +237,7 @@ public:
 
   using TestLinearSystem::sumInto;
   virtual void sumInto(
-    unsigned  /* numEntities */,
+    unsigned numEntities,
     const ngp::Mesh::ConnectedNodes&  entities,
     const sierra::nalu::SharedMemView<const double*,sierra::nalu::DeviceShmem> & rhs,
     const sierra::nalu::SharedMemView<const double**,sierra::nalu::DeviceShmem> & lhs,
@@ -245,15 +245,21 @@ public:
     const sierra::nalu::SharedMemView<int*,sierra::nalu::DeviceShmem> &  /* sortPermutation */,
     const char *  /* trace_tag */)
   {
-    for (size_t i=0; i < rhs.extent(0); ++i) {
-      Kokkos::atomic_add(&rhs_(entities[i].local_offset() - 1), rhs(i));
+    for (unsigned i=0; i < numEntities; ++i) {
+      auto ioff = (entities[i].local_offset() - 1) * numDof();
+      for (unsigned d=0; d < numDof(); ++d)
+        Kokkos::atomic_add(&rhs_(ioff + d), rhs(i * numDof() + d));
     }
-    for (size_t i=0; i < lhs.extent(0); ++i) {
-      for (size_t j=0; j < lhs.extent(1); ++j ) {
-        Kokkos::atomic_add(
-          &lhs_(
-            (entities[i].local_offset() - 1), (entities[j].local_offset() - 1)),
-          lhs(i, j));
+
+    for (unsigned i=0; i < numEntities; ++i) {
+      auto ioff = (entities[i].local_offset() - 1) * numDof();
+      for (unsigned j=0; j < numEntities; ++j) {
+        auto joff = (entities[j].local_offset() - 1) * numDof();
+        for (unsigned d=0; d < numDof(); ++d) {
+          auto ii = i * numDof() + d;
+          auto jj = j * numDof() + d;
+          Kokkos::atomic_add(&lhs_(ioff + d, joff + d), lhs(ii, jj));
+        }
       }
     }
     Kokkos::atomic_add(&numSumIntoCalls_, 1u);

@@ -32,7 +32,25 @@ namespace scalar_mass {
   static constexpr double rhs[8] = {
 -0.00091589254110655, -0.0062063621624234, -0.0012984190416109, -0.0055026555161997, -0.005904879831756, -0.0015624935573955, -0.0068051842105984, -0.00142282082153};
 
-} // advection_diffusion
+} // scalar_mass
+
+namespace scalar_time_derivative_lumped {
+static constexpr double lhs[8][8] = {
+  {0.10943331816113, 0, 0, 0, 0, 0, 0, 0, },
+  {0, -0.12850080171032, 0, 0, 0, 0, 0, 0, },
+  {0, 0, 0.10943331816113, 0, 0, 0, 0, 0, },
+  {0, 0, 0, -0.12850080171032, 0, 0, 0, 0, },
+  {0, 0, 0, 0, -0.12850080171032, 0, 0, 0, },
+  {0, 0, 0, 0, 0, 0.10943331816113, 0, 0, },
+  {0, 0, 0, 0, 0, 0, -0.12850080171032, 0, },
+  {0, 0, 0, 0, 0, 0, 0, 0.10943331816113, },
+};
+
+static constexpr double rhs[8] = {
+  -0.21886663632226, -0.25700160342063, -0.21886663632226,
+  -0.25700160342063, -0.25700160342063, -0.21886663632226,
+  -0.25700160342063, -0.21886663632226, };
+}
 } // hex8_golds
 } // anonymous namespace
 
@@ -86,3 +104,53 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass)
 #endif
 }
 
+TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_time_derivative_lumped)
+{
+  // FIXME: only test on one core
+  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
+    return;
+
+  fill_mesh_and_init_fields(false);
+
+  // Setup solution options for default advection kernel
+  solnOpts_.meshMotion_ = false;
+  solnOpts_.meshDeformation_ = false;
+  solnOpts_.externalMeshDeformation_ = false;
+
+  int numDof = 1;
+  unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::HEX_8, numDof, partVec_[0]);
+
+  sierra::nalu::TimeIntegrator timeIntegrator;
+  timeIntegrator.timeStepN_ = 0.1;
+  timeIntegrator.timeStepNm1_ = 0.1;
+  timeIntegrator.gamma1_ = 1.0;
+  timeIntegrator.gamma2_ = -1.0;
+  timeIntegrator.gamma3_ = 0.0;
+
+  helperObjs.realm.timeIntegrator_ = &timeIntegrator;
+
+  // Initialize the kernel
+  const bool lumpedMass = true;
+  std::unique_ptr<sierra::nalu::Kernel> massKernel(
+    new sierra::nalu::ScalarMassElemKernel<sierra::nalu::AlgTraitsHex8>(
+     bulk_, solnOpts_, mixFraction_,
+     helperObjs.assembleElemSolverAlg->dataNeededByKernels_, lumpedMass));
+
+  // Register the kernel for execution
+  helperObjs.assembleElemSolverAlg->activeKernels_.push_back(massKernel.get());
+
+  // Populate LHS and RHS
+  helperObjs.execute();
+
+#ifndef KOKKOS_ENABLE_CUDA
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
+
+  namespace gold_values = hex8_golds::scalar_time_derivative_lumped;
+  unit_test_kernel_utils::expect_all_near(
+      helperObjs.linsys->rhs_, gold_values::rhs, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near<8>(
+      helperObjs.linsys->lhs_, gold_values::lhs, 1.0e-12);
+#endif
+}

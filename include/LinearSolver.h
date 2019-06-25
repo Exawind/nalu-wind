@@ -12,8 +12,6 @@
 #include <LinearSolverTypes.h>
 #include <LinearSolverConfig.h>
 
-#include <LinearSolverTypes.h>
-
 #include <Kokkos_DefaultNode.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
@@ -44,9 +42,10 @@ namespace nalu{
 
 /** Type of solvers available in Nalu simulation **/
   enum PetraType {
-    PT_TPETRA,       //!< Nalu Tpetra interface
-    PT_HYPRE,        //!< Direct HYPRE interface
-    PT_HYPRE_SEGREGATED, //!< Direct HYPRE Segregated momentum solver
+    PT_TPETRA,            //!< Nalu Tpetra interface
+    PT_TPETRA_SEGREGATED, //!< Nalu Tpetra interface Segregated solver
+    PT_HYPRE,             //!< Direct HYPRE interface
+    PT_HYPRE_SEGREGATED,  //!< Direct HYPRE Segregated momentum solver
     PT_END
   };
 
@@ -208,15 +207,15 @@ class TpetraLinearSolver : public LinearSolver
     const Teuchos::RCP<Teuchos::ParameterList> paramsPrecond,
     LinearSolvers *linearSolvers);
   virtual ~TpetraLinearSolver() ;
-  
+
     void setSystemObjects(
       Teuchos::RCP<LinSys::Matrix> matrix,
-      Teuchos::RCP<LinSys::Vector> rhs);
+      Teuchos::RCP<LinSys::MultiVector> rhs);
 
     void setupLinearSolver(
-      Teuchos::RCP<LinSys::Vector> sln,
+      Teuchos::RCP<LinSys::MultiVector> sln,
       Teuchos::RCP<LinSys::Matrix> matrix,
-      Teuchos::RCP<LinSys::Vector> rhs,
+      Teuchos::RCP<LinSys::MultiVector> rhs,
       Teuchos::RCP<LinSys::MultiVector> coords);
 
     virtual void destroyLinearSolver() override;
@@ -230,7 +229,7 @@ class TpetraLinearSolver : public LinearSolver
    *  @param[in] sln The solution vector
    *  @param[out] norm The norm of the solution vector
    */
-    int residual_norm(int whichNorm, Teuchos::RCP<LinSys::Vector> sln, double& norm);
+    int residual_norm(int whichNorm, Teuchos::RCP<LinSys::MultiVector> sln, double& norm);
 
   /** Solve the linear system Ax = b
    *
@@ -240,12 +239,14 @@ class TpetraLinearSolver : public LinearSolver
    *  @param[in]  isFinalOuterIter Is this the final outer iteration
    */
     int solve(
-      Teuchos::RCP<LinSys::Vector> sln,
+      Teuchos::RCP<LinSys::MultiVector> sln,
       int & iterationCount,
       double & scaledResidual,
       bool isFinalOuterIter);
 
-    virtual PetraType getType() override { return PT_TPETRA; }
+    virtual PetraType getType() override {
+      return (config_->useSegregatedSolver() ? PT_TPETRA_SEGREGATED : PT_TPETRA);
+    }
 
   private:
   //! The solver parameters
@@ -254,7 +255,7 @@ class TpetraLinearSolver : public LinearSolver
   //! The preconditioner parameters
     const Teuchos::RCP<Teuchos::ParameterList> paramsPrecond_;
     Teuchos::RCP<LinSys::Matrix> matrix_;
-    Teuchos::RCP<LinSys::Vector> rhs_;
+    Teuchos::RCP<LinSys::MultiVector> rhs_;
     Teuchos::RCP<LinSys::LinearProblem> problem_;
     Teuchos::RCP<LinSys::SolverManager> solver_;
     Teuchos::RCP<LinSys::Preconditioner> preconditioner_;

@@ -43,26 +43,17 @@ public:
 
   KOKKOS_FUNCTION
   MultiDimViews(const TEAMHANDLETYPE& /*team*/,
-                unsigned maxOrdinal,
+                unsigned /* maxOrdinal */,
                 const NumNeededViews& numNeededViews)
   : indices(),
     views_1D(), views_2D(), views_3D(), views_4D(), 
     views_1D_size(0), views_2D_size(0), views_3D_size(0), views_4D_size(0)
   {
-    if (maxOrdinal > maxFieldOrdinals)
-    {
-        printf("Too many fields (%u), current limit in internal arrays is %u. Code will crash...\n", maxOrdinal, maxFieldOrdinals);
-    }
-
-    if (numNeededViews.num1DViews > maxViewsPerDim ||
-        numNeededViews.num2DViews > maxViewsPerDim ||
-        numNeededViews.num3DViews > maxViewsPerDim ||
-        numNeededViews.num4DViews > maxViewsPerDim)
-    {
-        printf("Too many views per dimension. Each of (%d, %d, %d, %d) must be less than %d. Code will crash...\n",
-               numNeededViews.num1DViews, numNeededViews.num2DViews, numNeededViews.num3DViews, numNeededViews.num4DViews,
-               maxViewsPerDim);
-    }
+    NGP_ThrowRequireMsg((numNeededViews.num1DViews <= maxViewsPerDim ||
+                         numNeededViews.num2DViews <= maxViewsPerDim ||
+                         numNeededViews.num3DViews <= maxViewsPerDim ||
+                         numNeededViews.num4DViews <= maxViewsPerDim),
+                        "Number of requested views exceed maxViewsPerDim");
 #ifndef KOKKOS_ENABLE_CUDA
     for(unsigned i=0; i<numNeededViews.num1DViews; ++i) { views_1D[i] = nullptr; }
     for(unsigned i=0; i<numNeededViews.num2DViews; ++i) { views_2D[i] = nullptr; }
@@ -145,6 +136,7 @@ public:
   KOKKOS_FUNCTION
   void add_1D_view(unsigned ordinal, const SharedMemView1D& view)
   {
+    NGP_ThrowRequire(ordinal < maxFieldOrdinals);
 #ifndef KOKKOS_ENABLE_CUDA
     views_1D[views_1D_size] = new SharedMemView1D;
     *views_1D[views_1D_size] = view;
@@ -158,6 +150,7 @@ public:
   KOKKOS_FUNCTION
   void add_2D_view(unsigned ordinal, const SharedMemView2D& view)
   {
+    NGP_ThrowRequire(ordinal < maxFieldOrdinals);
 #ifndef KOKKOS_ENABLE_CUDA
     views_2D[views_2D_size] = new SharedMemView2D;
     *views_2D[views_2D_size] = view;
@@ -171,6 +164,7 @@ public:
   KOKKOS_FUNCTION
   void add_3D_view(unsigned ordinal, const SharedMemView3D& view)
   {
+    NGP_ThrowRequire(ordinal < maxFieldOrdinals);
 #ifndef KOKKOS_ENABLE_CUDA
     views_3D[views_3D_size] = new SharedMemView3D;
     *views_3D[views_3D_size] = view;
@@ -184,6 +178,7 @@ public:
   KOKKOS_FUNCTION
   void add_4D_view(unsigned ordinal, const SharedMemView4D& view)
   {
+    NGP_ThrowRequire(ordinal < maxFieldOrdinals);
 #ifndef KOKKOS_ENABLE_CUDA
     views_4D[views_4D_size] = new SharedMemView4D;
     *views_4D[views_4D_size] = view;
@@ -241,7 +236,7 @@ public:
 
 public:
   static const unsigned maxViewsPerDim = 25;
-  static const unsigned maxFieldOrdinals = 64;
+  static const unsigned maxFieldOrdinals = 256;
 
   int indices[maxFieldOrdinals];
 #ifndef KOKKOS_ENABLE_CUDA
