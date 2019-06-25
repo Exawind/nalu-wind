@@ -821,4 +821,7 @@ public:
 class WallDistKernelHex8Mesh : public TestKernelHex8Mesh
 {};
 
+class EnthalpyKernelHex8Mesh : public TestKernelHex8Mesh
+{};
+
 #endif /* UNITTESTKERNELUTILS_H */
