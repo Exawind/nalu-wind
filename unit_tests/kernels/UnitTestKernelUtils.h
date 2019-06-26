@@ -465,7 +465,29 @@ public:
 
 // Provide separate namespace for Edge kernel tests
 class MomentumEdgeHex8Mesh : public MomentumKernelHex8Mesh
-{};
+{
+public:
+  MomentumEdgeHex8Mesh()
+    : MomentumKernelHex8Mesh(),
+      massFlowRateEdge_(&meta_.declare_field<ScalarFieldType>(
+                          stk::topology::EDGE_RANK, "mass_flow_rate"))
+  {
+    stk::mesh::put_field_on_mesh(
+      *massFlowRateEdge_, meta_.universal_part(), spatialDim_, nullptr);
+  }
+
+  virtual ~MomentumEdgeHex8Mesh() = default;
+
+  virtual void fill_mesh_and_init_fields(
+    bool doPerturb = false, bool generateSidesets = false)
+  {
+    MomentumKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    unit_test_kernel_utils::calc_mass_flow_rate(
+      bulk_, *velocity_, *density_, *edgeAreaVec_, *massFlowRateEdge_);
+  }
+
+  ScalarFieldType* massFlowRateEdge_{nullptr};
+};
 
 class MomentumNodeHex8Mesh : public MomentumKernelHex8Mesh
 {};
