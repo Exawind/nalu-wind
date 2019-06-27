@@ -12,7 +12,7 @@
 
 #include "node_kernels/TurbKineticEnergyRodiNodeKernel.h"
 
-TEST_F(TurbulenceKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
+TEST_F(KsgsKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
@@ -22,7 +22,7 @@ TEST_F(TurbulenceKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
   std::mt19937 rng;
   rng.seed(0); // fixed seed
 
-  fill_mesh_and_init_fields(false,false);
+  fill_mesh_and_init_fields(false,false,true);
 
   unit_test_utils::NodeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
