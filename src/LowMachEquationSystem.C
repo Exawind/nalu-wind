@@ -213,6 +213,7 @@
 #include <user_functions/OneTwoTenVelocityAuxFunction.h>
 
 #include <user_functions/PerturbedShearLayerAuxFunctions.h>
+#include <user_functions/GaussJetVelocityAuxFunction.h>
 
 // deprecated
 #include <ContinuityMassElemSuppAlgDep.h>
@@ -1578,6 +1579,9 @@ MomentumEquationSystem::register_inflow_bc(
     }
     else if ( fcnName == "wind_energy_power_law") {
       theAuxFunc = new WindEnergyPowerLawAuxFunction(0,nDim,theParams);
+    }
+    else if ( fcnName == "GaussJet") {
+      theAuxFunc = new GaussJetVelocityAuxFunction(0,nDim);
     }
     else {
       throw std::runtime_error("MomentumEquationSystem::register_inflow_bc: limited functions supported");
@@ -3026,6 +3030,9 @@ ContinuityEquationSystem::register_inflow_bc(
       }
       else if ( fcnName == "wind_energy_power_law") {
           theAuxFunc = new WindEnergyPowerLawAuxFunction(0,nDim,theParams);
+      }
+      else if ( fcnName == "GaussJet") {
+        theAuxFunc = new GaussJetVelocityAuxFunction(0,nDim);
       }
       else {
         throw std::runtime_error("ContEquationSystem::register_inflow_bc: limited functions supported");
