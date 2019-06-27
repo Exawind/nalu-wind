@@ -44,9 +44,9 @@ private:
   ngp::Field<double> dualNodalVolume_;
   ngp::Field<double> temperature_;
   const int nDim_;
-  double tRef_;
-  double rhoRef_;
-  double beta_;
+  NodeKernelTraits::DblType tRef_;
+  NodeKernelTraits::DblType rhoRef_;
+  NodeKernelTraits::DblType beta_;
 
   NALU_ALIGNED NodeKernelTraits::DblType forceVector_[NodeKernelTraits::NDimMax];
 
