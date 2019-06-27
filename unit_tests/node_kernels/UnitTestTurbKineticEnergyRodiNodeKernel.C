@@ -17,13 +17,13 @@ TEST_F(TurbulenceKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
+  const int nprocs = bulk_.parallel_size();
   
   std::mt19937 rng;
   rng.seed(0); // fixed seed
 
-  fill_mesh_and_init_fields(false,false);//,"generated:10x10x10");
+  fill_mesh_and_init_fields(false,false);
 
-  
   unit_test_utils::NodeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   // set solution options
@@ -61,12 +61,12 @@ TEST_F(TurbulenceKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
      for (unsigned j=0; j < lhs.extent(1); ++j)
         lhs_norm += lhs(i,j)*lhs(i,j);
 
-  lhs_norm = std::sqrt(lhs_norm);
-  rhs_norm = std::sqrt(rhs_norm);
+  lhs_norm = std::sqrt(lhs_norm/(lhs.extent(0)*lhs.extent(1)/3));
+  rhs_norm = std::sqrt(rhs_norm/(rhs.extent(0)/3));
 
   const double tol = 1e-14;
   const double lhs_gold_norm = 0.0;
-  const double rhs_gold_norm =  0.00085231622856222317;
+  const double rhs_gold_norm = nprocs==1 ? 0.00030133929246584567 : 0.0002760523778561557;
   EXPECT_NEAR(lhs_norm, lhs_gold_norm, tol);
   EXPECT_NEAR(rhs_norm, rhs_gold_norm, tol);
 #endif

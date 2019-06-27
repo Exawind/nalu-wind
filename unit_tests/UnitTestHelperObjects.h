@@ -191,8 +191,6 @@ struct NodeHelperObjects : public HelperObjectsBase
                     realm, part, &eqSystem));
   }
 
-  ~NodeHelperObjects() {}
-
   virtual void execute() override
   {
     nodeAlg->execute();
