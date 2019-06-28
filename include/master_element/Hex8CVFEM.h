@@ -298,10 +298,10 @@ public:
   void shifted_shape_fcn(
     double *shpfc);
 
-  int opposingNodes(
+  KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node);
 
-  int opposingFace(
+  KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node);
 
   double isInElement(

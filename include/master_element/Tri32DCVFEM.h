@@ -236,10 +236,10 @@ public:
     tri_shape_fcn(numIp, isoParCoord, shpfc);
   }
 
-  int opposingNodes(
+  KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node) override;
   
-  int opposingFace(
+  KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node) override;
 
   double isInElement(
