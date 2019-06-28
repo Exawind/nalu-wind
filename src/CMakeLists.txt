@@ -168,6 +168,7 @@ add_sources(GlobalSourceList
    TimeIntegrator.C
    TpetraLinearSystem.C
    TpetraLinearSystemHelpers.C
+   TpetraSegregatedLinearSystem.C
    TurbKineticEnergyEquationSystem.C
    TurbKineticEnergyKsgsBuoyantElemSuppAlg.C
    TurbKineticEnergyKsgsNodeSourceSuppAlg.C

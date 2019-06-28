@@ -8,6 +8,7 @@
 
 #include <LinearSystem.h>
 #include <TpetraLinearSystem.h>
+#include <TpetraSegregatedLinearSystem.h>
 #include <EquationSystem.h>
 #include <Realm.h>
 #include <Simulation.h>
@@ -95,7 +96,7 @@ LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, Equation
     break;
 
   case PT_TPETRA_SEGREGATED:
-    return new TpetraLinearSystem(realm, numDof, eqSys, solver);
+    return new TpetraSegregatedLinearSystem(realm, numDof, eqSys, solver);
     break;
 
 #ifdef NALU_USES_HYPRE
