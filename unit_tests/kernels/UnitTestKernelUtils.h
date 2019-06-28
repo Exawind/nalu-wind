@@ -730,6 +730,8 @@ public:
                       meta_.side_rank(), "exposed_area_vector")),
     openMassFlowRate_(&meta_.declare_field<GenericFieldType>(meta_.side_rank(),
                                                          "open_mass_flow_rate")),
+    massFlowRateEdge_(&meta_.declare_field<ScalarFieldType>(
+                          stk::topology::EDGE_RANK, "mass_flow_rate")),
     znot_(1.0),
     amf_(2.0),
     lamSc_(0.9),
@@ -753,6 +755,8 @@ public:
     stk::mesh::put_field_on_mesh(
       *openMassFlowRate_, meta_.universal_part(),
       sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *massFlowRateEdge_, meta_.universal_part(), spatialDim_, nullptr);
   }
   virtual ~MixtureFractionKernelHex8Mesh() {}
 
@@ -775,6 +779,8 @@ public:
     unit_test_kernel_utils::calc_open_mass_flow_rate(
       bulk_, stk::topology::QUAD_4, *coordinates_, *density_, *velocity_,
       *exposedAreaVec_, *openMassFlowRate_);
+    unit_test_kernel_utils::calc_mass_flow_rate(
+      bulk_, *velocity_, *density_, *edgeAreaVec_, *massFlowRateEdge_);
   }
 
   ScalarFieldType* mixFraction_{nullptr};
@@ -787,6 +793,7 @@ public:
   VectorFieldType* dpdx_{nullptr};
   GenericFieldType* exposedAreaVec_{nullptr};
   GenericFieldType* openMassFlowRate_{nullptr};
+  ScalarFieldType* massFlowRateEdge_{nullptr};
 
   const double znot_;
   const double amf_;
