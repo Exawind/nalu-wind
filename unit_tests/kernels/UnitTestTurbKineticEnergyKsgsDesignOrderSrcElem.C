@@ -51,7 +51,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_kinetic_energy_ksgs_design_order_src_elem_ke
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
     return;
 
-  fill_mesh_and_init_fields();
+  fill_mesh_and_init_fields(false,false,false);
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
