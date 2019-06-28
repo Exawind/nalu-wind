@@ -151,11 +151,11 @@ struct EdgeHelperObjects : public HelperObjectsBase
     if (edgeAlg != nullptr) delete edgeAlg;
   }
 
-  template<typename T>
-  void create(stk::mesh::Part* part)
+  template<typename T, class... Args>
+  void create(stk::mesh::Part* part, Args&&... args)
   {
     ThrowRequire(edgeAlg == nullptr);
-    edgeAlg = new T(realm, part, &eqSystem);
+    edgeAlg = new T(realm, part, &eqSystem, std::forward<Args>(args)...);
   }
 
   virtual void execute() override
