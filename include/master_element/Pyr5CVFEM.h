@@ -256,10 +256,10 @@ public:
     const double *side_pcoords,
     double *elem_pcoords);
 
-  int opposingNodes(
+  KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node);
 
-  int opposingFace(
+  KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node);
 
   void face_grad_op(

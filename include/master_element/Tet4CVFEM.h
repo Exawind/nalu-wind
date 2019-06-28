@@ -236,9 +236,9 @@ public:
     const double *par_coord,
     double* shape_fcn);
 
-  int opposingNodes(const int ordinal, const int node) override;
+  KOKKOS_FUNCTION int opposingNodes(const int ordinal, const int node) override;
 
-  int opposingFace(
+  KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node) override;
 
   double isInElement(

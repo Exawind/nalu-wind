@@ -226,10 +226,10 @@ public:
   
   const int * scsIpEdgeOrd();
 
-  int opposingNodes(
+  KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node);
 
-  int opposingFace(
+  KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node);
 
   void shape_fcn(

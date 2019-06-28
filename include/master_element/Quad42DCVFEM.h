@@ -224,10 +224,10 @@ public:
 
   const int * scsIpEdgeOrd() override;
 
-  int opposingNodes(
+  KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node) override;
 
-  int opposingFace(
+  KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node) override;
 
   KOKKOS_FUNCTION virtual void shape_fcn(

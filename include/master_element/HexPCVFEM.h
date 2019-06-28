@@ -151,10 +151,10 @@ public:
 
   const int * side_node_ordinals(int ordinal = 0) const final;
 
-  int opposingNodes(
+  KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node) final;
 
-  int opposingFace(
+  KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node) final;
 
   KOKKOS_FUNCTION void face_grad_op(
@@ -173,7 +173,7 @@ private:
   void set_interior_info();
   void set_boundary_info();
 
-  int opposing_face_map(int k, int l, int i, int j, int face_index);
+  KOKKOS_FUNCTION int opposing_face_map(int k, int l, int i, int j, int face_index);
 
   template <Jacobian::Direction direction> void
   area_vector(
