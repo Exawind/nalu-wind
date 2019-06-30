@@ -174,7 +174,7 @@ TEST_F(ABLWallFunctionHex8ElementWithBCFields, abl_wall_function_elem_alg_rhs) {
   const double up_specified = 0.15;
   const double yp_specified = 0.25;
   const double aMag = 0.25;
-  const double tolerance = 1.0e-6;
+  const double tolerance = 1.0e-12;
   const int numDof = 3;
 
   SetUp(rho_specified, utau_specified, up_specified, yp_specified);
@@ -204,7 +204,7 @@ TEST_F(ABLWallFunctionHex8ElementWithBCFields, abl_wall_function_edge_alg_rhs) {
   const double up_specified = 0.15;
   const double yp_specified = 0.25;
   const double aMag = 0.25;
-  const double tolerance = 1.0e-6;
+  const double tolerance = 1.0e-12;
   const int numDof = 3;
 
   SetUp(rho_specified, utau_specified, up_specified, yp_specified);
