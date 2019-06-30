@@ -36,6 +36,7 @@ public:
 
   using AlgTraits = AlgTraitsEdge3_2D;
 
+  KOKKOS_FUNCTION
   Edge32DSCS();
   KOKKOS_FUNCTION
   virtual ~Edge32DSCS() {}
