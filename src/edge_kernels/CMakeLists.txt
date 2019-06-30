@@ -6,5 +6,6 @@ add_sources(GlobalSourceList
   WallDistEdgeSolverAlg.C
 
   # Face/edge BC kernels
+  MomentumABLWallFuncEdgeKernel.C
   MomentumSymmetryEdgeKernel.C
   )
