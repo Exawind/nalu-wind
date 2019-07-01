@@ -39,7 +39,7 @@ template<typename T>
 KOKKOS_FORCEINLINE_FUNCTION
 T psim_unstable(const T& zeta, const T gamma = 16.0)
 {
-  static const T half_pi = 0.5 * stk::math::acos(-1.0);
+  static constexpr double half_pi = 1.5707963267948966;
 
   // Actually (1.0 / phim)
   const T phim = stk::math::pow((1.0 - gamma * zeta), 0.25);

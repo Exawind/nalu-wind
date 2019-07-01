@@ -39,7 +39,6 @@ TEST_F(MomentumABLKernelHex8Mesh, NGP_abl_wall_func)
 
   helperObjs.execute();
 
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 1u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 12u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 12u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 12u);
