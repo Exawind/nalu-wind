@@ -489,6 +489,62 @@ public:
   ScalarFieldType* massFlowRateEdge_{nullptr};
 };
 
+class MomentumABLKernelHex8Mesh : public MomentumKernelHex8Mesh
+{
+public:
+  MomentumABLKernelHex8Mesh()
+    : MomentumKernelHex8Mesh(),
+      wallVelocityBC_(&meta_.declare_field<VectorFieldType>(
+                        stk::topology::NODE_RANK, "wall_velocity_bc")),
+      bcHeatFlux_(&meta_.declare_field<ScalarFieldType>(
+                    stk::topology::NODE_RANK, "heat_flux_bc")),
+      specificHeat_(&meta_.declare_field<ScalarFieldType>(
+                      stk::topology::NODE_RANK, "specific_heat")),
+      wallFricVel_(&meta_.declare_field<ScalarFieldType>(
+                     meta_.side_rank(), "wall_friction_velocity_bip")),
+      wallNormDist_(&meta_.declare_field<ScalarFieldType>(
+                      meta_.side_rank(), "wall_normal_distance_bip")),
+      ustar_(kappa_ * uh_ / std::log(zh_ / z0_))
+  {
+    stk::mesh::put_field_on_mesh(
+      *wallVelocityBC_, meta_.universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(*bcHeatFlux_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*specificHeat_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*wallFricVel_, meta_.universal_part(), 4, nullptr);
+    stk::mesh::put_field_on_mesh(*wallNormDist_, meta_.universal_part(), 4, nullptr);
+  }
+
+  virtual ~MomentumABLKernelHex8Mesh() = default;
+
+  virtual void fill_mesh_and_init_fields(
+    bool doPerturb = false, bool generateSidesets = false)
+  {
+    const double vel[3] = {uh_, 0.0, 0.0};
+    const double bcVel[3] = {0.0, 0.0, 0.0};
+    MomentumKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    stk::mesh::field_fill_component(vel, *velocity_);
+    stk::mesh::field_fill_component(bcVel, *wallVelocityBC_);
+    stk::mesh::field_fill(0.0, *bcHeatFlux_);
+    stk::mesh::field_fill(1000.0, *specificHeat_);
+    stk::mesh::field_fill(ustar_, *wallFricVel_);
+    stk::mesh::field_fill(zh_, *wallNormDist_);
+  }
+
+  VectorFieldType* wallVelocityBC_{nullptr};
+  ScalarFieldType* bcHeatFlux_{nullptr};
+  ScalarFieldType* specificHeat_{nullptr};
+  ScalarFieldType* wallFricVel_{nullptr};
+  ScalarFieldType* wallNormDist_{nullptr};
+
+  const double z0_{0.1};
+  const double zh_{0.25};
+  const double uh_{0.15};
+  const double kappa_{0.41};
+  const double gravity_{9.81};
+  const double Tref_{300.0};
+  const double ustar_;
+};
+
 class MomentumNodeHex8Mesh : public MomentumKernelHex8Mesh
 {};
 
