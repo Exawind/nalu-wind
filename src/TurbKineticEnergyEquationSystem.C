@@ -70,6 +70,9 @@
 // bc kernels
 #include <kernel/ScalarOpenAdvElemKernel.h>
 
+// edge kernels
+#include <edge_kernels/ScalarEdgeSolverAlg.h>
+
 // nso
 #include <nso/ScalarNSOElemKernel.h>
 #include <nso/ScalarNSOKeElemSuppAlg.h>
@@ -257,7 +260,8 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
       SolverAlgorithm *theAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
-        theAlg = new AssembleScalarEdgeSolverAlgorithm(realm_, part, this, tke_, dkdx_, evisc_);
+        // theAlg = new AssembleScalarEdgeSolverAlgorithm(realm_, part, this, tke_, dkdx_, evisc_);
+        theAlg = new ScalarEdgeSolverAlg(realm_, part, this, tke_, dkdx_, evisc_);
       }
       else {
         theAlg = new AssembleScalarElemSolverAlgorithm(realm_, part, this, tke_, dkdx_, evisc_);

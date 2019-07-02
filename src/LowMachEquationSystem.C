@@ -141,6 +141,11 @@
 #include <kernel/MomentumSymmetryElemKernel.h>
 #include <kernel/MomentumWallFunctionElemKernel.h>
 
+// edge kernels
+#include <edge_kernels/ContinuityEdgeSolverAlg.h>
+#include <edge_kernels/MomentumEdgeSolverAlg.h>
+#include <edge_kernels/MomentumSymmetryEdgeKernel.h>
+
 // nso
 #include <nso/MomentumNSOElemKernel.h>
 #include <nso/MomentumNSOKeElemKernel.h>
@@ -1182,7 +1187,8 @@ MomentumEquationSystem::register_interior_algorithm(
     if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
       SolverAlgorithm *theSolverAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
-        theSolverAlg = new AssembleMomentumEdgeSolverAlgorithm(realm_, part, this);
+        // theSolverAlg = new AssembleMomentumEdgeSolverAlgorithm(realm_, part, this);
+        theSolverAlg = new MomentumEdgeSolverAlg(realm_, part, this);
       }
       else {
         theSolverAlg = new AssembleMomentumElemSolverAlgorithm(realm_, part, this);
@@ -2793,17 +2799,24 @@ ContinuityEquationSystem::register_interior_algorithm(
       itc->second->partVec_.push_back(part);
     }
 
-    // solver
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator its =
-      solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssembleContinuityEdgeSolverAlgorithm *theAlg
-        = new AssembleContinuityEdgeSolverAlgorithm(realm_, part, this);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+    auto& solverAlgMap =  solverAlgDriver_->solverAlgMap_;
+    const auto it = solverAlgMap.find(algType);
+    if (it == solverAlgMap.end()) {
+      solverAlgMap[algType] = new ContinuityEdgeSolverAlg(realm_, part, this);
+    } else {
+      it->second->partVec_.push_back(part);
     }
-    else {
-      its->second->partVec_.push_back(part);
-    }
+    // // solver
+    // std::map<AlgorithmType, SolverAlgorithm *>::iterator its =
+    //   solverAlgDriver_->solverAlgMap_.find(algType);
+    // if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
+    //   AssembleContinuityEdgeSolverAlgorithm *theAlg
+    //     = new AssembleContinuityEdgeSolverAlgorithm(realm_, part, this);
+    //   solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+    // }
+    // else {
+    //   its->second->partVec_.push_back(part);
+    // }
   }
   else {
 

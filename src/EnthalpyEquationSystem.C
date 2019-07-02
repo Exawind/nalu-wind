@@ -75,6 +75,9 @@
 // bc kernels
 #include <kernel/ScalarOpenAdvElemKernel.h>
 
+// edge kernels
+#include <edge_kernels/ScalarEdgeSolverAlg.h>
+
 // nso
 #include <nso/ScalarNSOElemKernel.h>
 #include <nso/ScalarNSOKeElemKernel.h>
@@ -395,7 +398,8 @@ EnthalpyEquationSystem::register_interior_algorithm(
       SolverAlgorithm *theAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
         if ( !realm_.solutionOptions_->eigenvaluePerturb_ )
-          theAlg = new AssembleScalarEdgeSolverAlgorithm(realm_, part, this, enthalpy_, dhdx_, evisc_);
+          // theAlg = new AssembleScalarEdgeSolverAlgorithm(realm_, part, this, enthalpy_, dhdx_, evisc_);
+          theAlg = new ScalarEdgeSolverAlg(realm_, part, this, enthalpy_, dhdx_, evisc_);
         else
           theAlg = new AssembleScalarEigenEdgeSolverAlgorithm(realm_, part, this, enthalpy_, dhdx_, thermalCond_, specHeat_,
             tvisc_, realm_.get_turb_prandtl(enthalpy_->name()));
