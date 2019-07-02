@@ -23,7 +23,6 @@ class MomentumBoussinesqNodeKernel : public NGPNodeKernel<MomentumBoussinesqNode
 public:
   MomentumBoussinesqNodeKernel(
     const stk::mesh::BulkData&,
-    const std::vector<double>&,
     const SolutionOptions&);
 
   KOKKOS_FUNCTION
@@ -48,13 +47,10 @@ private:
   NodeKernelTraits::DblType rhoRef_;
   NodeKernelTraits::DblType beta_;
 
-  NALU_ALIGNED NodeKernelTraits::DblType forceVector_[NodeKernelTraits::NDimMax];
-
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
   unsigned temperatureID_ {stk::mesh::InvalidOrdinal};
 
   NALU_ALIGNED NodeKernelTraits::DblType gravity_[NodeKernelTraits::NDimMax];
-
 };
 
 } // namespace nalu
