@@ -72,16 +72,9 @@
 #include <LinearSystem.h>
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFactory.h>
-#include <MomentumActuatorSrcNodeSuppAlg.h>
 #include <MomentumBuoyancySrcNodeSuppAlg.h>
-#include <MomentumBoussinesqSrcNodeSuppAlg.h>
 #include <MomentumBoussinesqRASrcNodeSuppAlg.h>
-#include <MomentumBodyForceSrcNodeSuppAlg.h>
-#include <MomentumABLForceSrcNodeSuppAlg.h>
-#include <MomentumCoriolisSrcNodeSuppAlg.h>
 #include <MomentumGclSrcNodeSuppAlg.h>
-#include <MomentumMassBackwardEulerNodeSuppAlg.h>
-#include <MomentumMassBDF2NodeSuppAlg.h>
 #include <NaluEnv.h>
 #include <NaluParsing.h>
 #include <NonConformalManager.h>
@@ -145,6 +138,15 @@
 #include <edge_kernels/ContinuityEdgeSolverAlg.h>
 #include <edge_kernels/MomentumEdgeSolverAlg.h>
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
+
+// node kernels
+#include "node_kernels/NodeKernelUtils.h"
+#include "node_kernels/MomentumABLForceNodeKernel.h"
+#include "node_kernels/MomentumActuatorNodeKernel.h"
+#include "node_kernels/MomentumBodyForceNodeKernel.h"
+#include "node_kernels/MomentumBoussinesqNodeKernel.h"
+#include "node_kernels/MomentumCoriolisNodeKernel.h"
+#include "node_kernels/MomentumMassBDFNodeKernel.h"
 
 // nso
 #include <nso/MomentumNSOElemKernel.h>
@@ -1144,7 +1146,7 @@ MomentumEquationSystem::register_interior_algorithm(
 
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
-  const AlgorithmType algMass = MASS;
+  const AlgorithmType algMass = SRC;
 
   // non-solver CFL alg
   std::map<AlgorithmType, Algorithm *>::iterator it
@@ -1387,62 +1389,83 @@ MomentumEquationSystem::register_interior_algorithm(
   bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
   // solver; time contribution (lumped mass matrix)
   if ( !elementMassAlg || nodal_src_is_requested() ) {
+    // Handle error checking during transition period. Some kernels are handled
+    // through the NGP-ready interface while others are handled via legacy
+    // interface and only supported on CPUs.
+    int ngpSrcSkipped = 0;
+    int nonNgpSrcSkipped = 0;
+    int numUsrSrc = 0;
+
+    // Process NGP-ready nodal source terms first
+    auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
+    process_ngp_node_kernels(
+      solverAlgMap, realm_, part, this,
+      [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
+        if (!elementMassAlg)
+          nodeAlg.add_kernel<MomentumMassBDFNodeKernel>(realm_.bulk_data());
+      },
+      [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
+        bool added = true;
+        if (srcName == "buoyancy_boussinesq") {
+          nodeAlg.add_kernel<MomentumBoussinesqNodeKernel>(
+            realm_.bulk_data(), *realm_.solutionOptions_);
+        }
+        else if (srcName == "body_force") {
+          const auto it = realm_.solutionOptions_->srcTermParamMap_.find("momentum");
+          if (it != realm_.solutionOptions_->srcTermParamMap_.end())
+            nodeAlg.add_kernel<MomentumBodyForceNodeKernel>(
+              realm_.bulk_data(), it->second);
+          else
+            throw std::runtime_error("MomentumEQS::body_force: No force vector found");
+        }
+        else if (srcName == "abl_forcing") {
+          ThrowRequireMsg(
+            ((NULL != realm_.ablForcingAlg_) &&
+             (realm_.ablForcingAlg_ ->momentumForcingOn())),
+            "ERROR! ABL Forcing parameters not "
+            "initialized for momentum");
+          nodeAlg.add_kernel<MomentumABLForceNodeKernel>(
+            realm_.bulk_data(), *realm_.solutionOptions_);
+        }
+        else if (srcName == "actuator") {
+          nodeAlg.add_kernel<MomentumActuatorNodeKernel>(realm_.meta_data());
+        }
+        else if ((srcName == "coriolis") || (srcName == "EarthCoriolis")) {
+          nodeAlg.add_kernel<MomentumCoriolisNodeKernel>(
+            realm_.bulk_data(), *realm_.solutionOptions_);
+        }
+        else {
+          // Encountered a source term not yet supported by NGP
+          added = false;
+          ++ngpSrcSkipped;
+        }
+
+        if (added)
+          NaluEnv::self().naluOutputP0() << "  - " << srcName << std::endl;
+      });
+
+    // Process non-NGP nodal source terms via legacy interface
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itsm =
       solverAlgDriver_->solverAlgMap_.find(algMass);
     if ( itsm == solverAlgDriver_->solverAlgMap_.end() ) {
       AssembleNodeSolverAlgorithm *theAlg
         = new AssembleNodeSolverAlgorithm(realm_, part, this);
       solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
-    
-      // now create the supplemental alg for mass term (only when CMM is not in use)
-      if ( !elementMassAlg ) {
-        if ( realm_.number_of_states() == 2 ) {
-          MomentumMassBackwardEulerNodeSuppAlg *theMass
-            = new MomentumMassBackwardEulerNodeSuppAlg(realm_);
-          theAlg->supplementalAlg_.push_back(theMass);
-        }
-        else {
-          MomentumMassBDF2NodeSuppAlg *theMass
-            = new MomentumMassBDF2NodeSuppAlg(realm_);
-          theAlg->supplementalAlg_.push_back(theMass);
-        }
-      }
 
       // Add src term supp alg...; limited number supported
       std::map<std::string, std::vector<std::string> >::iterator isrc
         = realm_.solutionOptions_->srcTermsMap_.find("momentum");
       if ( isrc != realm_.solutionOptions_->srcTermsMap_.end() ) {
         std::vector<std::string> mapNameVec = isrc->second;
+        numUsrSrc = mapNameVec.size();
         for (size_t k = 0; k < mapNameVec.size(); ++k ) {
           std::string sourceName = mapNameVec[k];
           SupplementalAlgorithm *suppAlg = NULL;
           if (sourceName == "buoyancy" ) {
             suppAlg = new MomentumBuoyancySrcNodeSuppAlg(realm_);
           }
-          else if ( sourceName == "buoyancy_boussinesq") {
-            suppAlg = new MomentumBoussinesqSrcNodeSuppAlg(realm_);
-          }
           else if ( sourceName == "buoyancy_boussinesq_ra") {
             suppAlg = new MomentumBoussinesqRASrcNodeSuppAlg(realm_);
-          }
-          else if ( sourceName == "body_force") {
-            // extract params
-            std::map<std::string, std::vector<double> >::iterator iparams
-              = realm_.solutionOptions_->srcTermParamMap_.find("momentum");
-            if ( iparams != realm_.solutionOptions_->srcTermParamMap_.end()) {
-              std::vector<double> theParams = iparams->second;
-              suppAlg = new MomentumBodyForceSrcNodeSuppAlg(realm_, theParams);
-            }
-            else {
-              throw std::runtime_error("SrcTermsError::body_force: No params found");
-            }
-          }
-          else if ( sourceName == "abl_forcing" ) {
-            ThrowAssertMsg(
-                           ((NULL != realm_.ablForcingAlg_) &&
-                            (realm_.ablForcingAlg_->momentumForcingOn())),
-                           "ERROR! ABL Forcing parameters must be initialized to use Momentum source.");
-            suppAlg = new MomentumABLForceSrcNodeSuppAlg(realm_, realm_.ablForcingAlg_);
           }
           else if ( sourceName == "gcl") {
             suppAlg = new MomentumGclSrcNodeSuppAlg(realm_);
@@ -1459,23 +1482,23 @@ MomentumEquationSystem::register_interior_algorithm(
           else if (sourceName == "BoussinesqNonIso" ) {
             suppAlg = new BoussinesqNonIsoMomentumSrcNodeSuppAlg(realm_);
           }
-          else if ( sourceName == "actuator") {
-            suppAlg = new MomentumActuatorSrcNodeSuppAlg(realm_);
-          }
-          else if ( sourceName == "EarthCoriolis") {
-            suppAlg = new MomentumCoriolisSrcNodeSuppAlg(realm_);
-          }
           else {
-            throw std::runtime_error("MomentumNodalSrcTerms::Error Source term is not supported: " + sourceName);
+            ++nonNgpSrcSkipped;
           }
-          NaluEnv::self().naluOutputP0() << "MomentumNodalSrcTerms::added() " << sourceName << std::endl;
-          theAlg->supplementalAlg_.push_back(suppAlg);
+          if (suppAlg != NULL) {
+            NaluEnv::self().naluOutputP0() << "MomentumNodalSrcTerms::added() " << sourceName << std::endl;
+            theAlg->supplementalAlg_.push_back(suppAlg);
+          }
         }
       }
     }
     else {
       itsm->second->partVec_.push_back(part);
     }
+
+    // Ensure that all user source terms were processed by either interface
+    if ((ngpSrcSkipped + nonNgpSrcSkipped) != numUsrSrc)
+      throw std::runtime_error("Error processing nodal source terms for Momentum");
   }
 
   // effective viscosity alg
