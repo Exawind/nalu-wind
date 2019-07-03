@@ -137,6 +137,7 @@
 // edge kernels
 #include <edge_kernels/ContinuityEdgeSolverAlg.h>
 #include <edge_kernels/MomentumEdgeSolverAlg.h>
+#include <edge_kernels/MomentumABLWallFuncEdgeKernel.h>
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
 
 // node kernels
@@ -1981,23 +1982,37 @@ MomentumEquationSystem::register_wall_bc(
         it_utau->second->partVec_.push_back(part);
       }
 
-      // create lhs/rhs algorithm; generalized for edge (nearest node usage) and element
-      std::map<AlgorithmType, SolverAlgorithm *>::iterator it_wf =
-        solverAlgDriver_->solverAlgMap_.find(wfAlgType);
-      if ( it_wf == solverAlgDriver_->solverAlgMap_.end() ) {
-        SolverAlgorithm *theAlg = NULL;
-        if ( realm_.realmUsesEdges_ ) {
-          theAlg = new AssembleMomentumEdgeABLWallFunctionSolverAlgorithm(realm_, part, this, 
-                                                                          grav, z0, referenceTemperature);
+      if (realm_.realmUsesEdges_) {
+        auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+        AssembleElemSolverAlgorithm* solverAlg = nullptr;
+        bool solverAlgWasBuilt = false;
+
+        std::tie(solverAlg, solverAlgWasBuilt) =
+          build_or_add_part_to_face_bc_solver_alg(
+            *this, *part, solverAlgMap, "wall_fcn");
+
+        ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+        auto& activeKernels = solverAlg->activeKernels_;
+
+        if (solverAlgWasBuilt) {
+          build_face_topo_kernel_automatic<MomentumABLWallFuncEdgeKernel>
+            (partTopo, *this, activeKernels, "momentum_abl_wall",
+             realm_.meta_data(), grav, z0, referenceTemperature,
+             realm_.get_turb_model_constant(TM_kappa), dataPreReqs);
         }
-        else {
-          theAlg = new AssembleMomentumElemABLWallFunctionSolverAlgorithm(realm_, part, this, realm_.realmUsesEdges_, 
-                                                                          grav, z0, referenceTemperature);     
-        }
-        solverAlgDriver_->solverAlgMap_[wfAlgType] = theAlg;
       }
       else {
-        it_wf->second->partVec_.push_back(part);
+        std::map<AlgorithmType, SolverAlgorithm *>::iterator it_wf =
+          solverAlgDriver_->solverAlgMap_.find(wfAlgType);
+        if ( it_wf == solverAlgDriver_->solverAlgMap_.end() ) {
+          auto* theAlg = new AssembleMomentumElemABLWallFunctionSolverAlgorithm(
+            realm_, part, this, realm_.realmUsesEdges_, grav, z0,
+            referenceTemperature);
+          solverAlgDriver_->solverAlgMap_[wfAlgType] = theAlg;
+        }
+        else {
+          it_wf->second->partVec_.push_back(part);
+        }
       }
     }
 
