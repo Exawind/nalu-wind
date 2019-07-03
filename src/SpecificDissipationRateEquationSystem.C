@@ -9,7 +9,6 @@
 #include <SpecificDissipationRateEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <AssembleScalarEdgeOpenSolverAlgorithm.h>
-#include <AssembleScalarEdgeSolverAlgorithm.h>
 #include <AssembleScalarElemSolverAlgorithm.h>
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
@@ -237,7 +236,6 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
-        // theAlg = new AssembleScalarEdgeSolverAlgorithm(realm_, part, this, sdr_, dwdx_, evisc_);
         theAlg = new ScalarEdgeSolverAlg(realm_, part, this, sdr_, dwdx_, evisc_);
       }
       else {

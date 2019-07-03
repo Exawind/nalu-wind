@@ -9,7 +9,6 @@
 #include <TurbKineticEnergyEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <AssembleScalarEdgeOpenSolverAlgorithm.h>
-#include <AssembleScalarEdgeSolverAlgorithm.h>
 #include <AssembleScalarElemSolverAlgorithm.h>
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
@@ -262,7 +261,6 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
       SolverAlgorithm *theAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
-        // theAlg = new AssembleScalarEdgeSolverAlgorithm(realm_, part, this, tke_, dkdx_, evisc_);
         theAlg = new ScalarEdgeSolverAlg(realm_, part, this, tke_, dkdx_, evisc_);
       }
       else {

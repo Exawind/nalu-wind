@@ -10,13 +10,11 @@
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
 #include <AssembleCourantReynoldsElemAlgorithm.h>
-#include <AssembleContinuityEdgeSolverAlgorithm.h>
 #include <AssembleContinuityElemSolverAlgorithm.h>
 #include <AssembleContinuityInflowSolverAlgorithm.h>
 #include <AssembleContinuityEdgeOpenSolverAlgorithm.h>
 #include <AssembleContinuityElemOpenSolverAlgorithm.h>
 #include <AssembleContinuityNonConformalSolverAlgorithm.h>
-#include <AssembleMomentumEdgeSolverAlgorithm.h>
 #include <AssembleMomentumElemSolverAlgorithm.h>
 #include <AssembleMomentumEdgeOpenSolverAlgorithm.h>
 #include <AssembleMomentumElemOpenSolverAlgorithm.h>
@@ -1190,7 +1188,6 @@ MomentumEquationSystem::register_interior_algorithm(
     if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
       SolverAlgorithm *theSolverAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
-        // theSolverAlg = new AssembleMomentumEdgeSolverAlgorithm(realm_, part, this);
         theSolverAlg = new MomentumEdgeSolverAlg(realm_, part, this);
       }
       else {
@@ -2849,17 +2846,6 @@ ContinuityEquationSystem::register_interior_algorithm(
     } else {
       it->second->partVec_.push_back(part);
     }
-    // // solver
-    // std::map<AlgorithmType, SolverAlgorithm *>::iterator its =
-    //   solverAlgDriver_->solverAlgMap_.find(algType);
-    // if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
-    //   AssembleContinuityEdgeSolverAlgorithm *theAlg
-    //     = new AssembleContinuityEdgeSolverAlgorithm(realm_, part, this);
-    //   solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    // }
-    // else {
-    //   its->second->partVec_.push_back(part);
-    // }
   }
   else {
 

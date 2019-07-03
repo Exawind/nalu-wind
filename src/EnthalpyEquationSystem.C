@@ -11,7 +11,6 @@
 #include <AlgorithmDriver.h>
 #include <AssembleScalarFluxBCSolverAlgorithm.h>
 #include <AssembleScalarEdgeOpenSolverAlgorithm.h>
-#include <AssembleScalarEdgeSolverAlgorithm.h>
 #include <AssembleScalarEigenEdgeSolverAlgorithm.h>
 #include <AssembleScalarElemSolverAlgorithm.h>
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
@@ -48,8 +47,6 @@
 #include <Realm.h>
 #include <Realms.h>
 #include <ScalarGclNodeSuppAlg.h>
-#include <ScalarMassBackwardEulerNodeSuppAlg.h>
-#include <ScalarMassBDF2NodeSuppAlg.h>
 #include <ScalarMassElemSuppAlgDep.h>
 #include <Simulation.h>
 #include <TimeIntegrator.h>
@@ -402,7 +399,6 @@ EnthalpyEquationSystem::register_interior_algorithm(
       SolverAlgorithm *theAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
         if ( !realm_.solutionOptions_->eigenvaluePerturb_ )
-          // theAlg = new AssembleScalarEdgeSolverAlgorithm(realm_, part, this, enthalpy_, dhdx_, evisc_);
           theAlg = new ScalarEdgeSolverAlg(realm_, part, this, enthalpy_, dhdx_, evisc_);
         else
           theAlg = new AssembleScalarEigenEdgeSolverAlgorithm(realm_, part, this, enthalpy_, dhdx_, thermalCond_, specHeat_,
