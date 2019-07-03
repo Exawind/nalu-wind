@@ -38,8 +38,6 @@
 #include <Realm.h>
 #include <Realms.h>
 #include <ScalarGclNodeSuppAlg.h>
-#include <ScalarMassBackwardEulerNodeSuppAlg.h>
-#include <ScalarMassBDF2NodeSuppAlg.h>
 #include <ScalarMassElemSuppAlgDep.h>
 #include <Simulation.h>
 #include <SolutionOptions.h>
@@ -61,6 +59,10 @@
 
 // edge kernels
 #include <edge_kernels/ScalarEdgeSolverAlg.h>
+
+// node kernels
+#include <node_kernels/NodeKernelUtils.h>
+#include <node_kernels/ScalarMassBDFNodeKernel.h>
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -288,13 +290,26 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
     }
 
     // time term; src; both nodally lumped
-    const AlgorithmType algMass = MASS;
+    const AlgorithmType algMass = SRC;
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
     std::vector<std::string> checkAlgNames = {
       "specific_dissipation_rate_time_derivative",
       "lumped_specific_dissipation_rate_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
+    auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
+    process_ngp_node_kernels(
+      solverAlgMap, realm_, part, this,
+      [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
+        if (!elementMassAlg)
+          nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
+
+        // TODO: Add SST source terms here
+      },
+      [&](AssembleNGPNodeSolverAlgorithm& /* nodeAlg */, std::string& /* srcName */) {
+        // No source terms available yet
+      });
+
     std::map<AlgorithmType, SolverAlgorithm*>::iterator itsm =
       solverAlgDriver_->solverAlgMap_.find(algMass);
     if (itsm == solverAlgDriver_->solverAlgMap_.end()) {
@@ -302,20 +317,6 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       AssembleNodeSolverAlgorithm *theAlg
         = new AssembleNodeSolverAlgorithm(realm_, part, this);
       solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
-
-      // now create the supplemental alg for mass term
-      if (!elementMassAlg) {
-        if (realm_.number_of_states() == 2) {
-          ScalarMassBackwardEulerNodeSuppAlg *theMass
-            = new ScalarMassBackwardEulerNodeSuppAlg(realm_, sdr_);
-          theAlg->supplementalAlg_.push_back(theMass);
-        }
-        else {
-          ScalarMassBDF2NodeSuppAlg *theMass
-            = new ScalarMassBDF2NodeSuppAlg(realm_, sdr_);
-          theAlg->supplementalAlg_.push_back(theMass);
-        }
-      }
 
       // now create the src alg for sdr source
       SpecificDissipationRateSSTNodeSourceSuppAlg *theSrc
