@@ -2108,23 +2108,19 @@ MomentumEquationSystem::register_symmetry_bc(
     }
   }
 
-  if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_) {
+  if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_
+      && !realm_.realmUsesEdges_) {
     // solver algs; lhs
-	    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
-		    = solverAlgDriver_->solverAlgMap_.find(algType);
-	    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-		    SolverAlgorithm *theAlg = NULL;
-		    if ( realm_.realmUsesEdges_ ) {
-			    theAlg = new AssembleMomentumEdgeSymmetrySolverAlgorithm(realm_, part,this);
-		    }
-		    else {
-			    theAlg = new AssembleMomentumElemSymmetrySolverAlgorithm(realm_, part, this);
-		    }
-		    solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-	    }
-	    else {
-		    itsi->second->partVec_.push_back(part);
-	    }
+    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
+      = solverAlgDriver_->solverAlgMap_.find(algType);
+    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
+      auto* theAlg =
+        new AssembleMomentumElemSymmetrySolverAlgorithm(realm_, part, this);
+      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+    }
+    else {
+      itsi->second->partVec_.push_back(part);
+    }
   }
   else {
     auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
@@ -2133,9 +2129,10 @@ MomentumEquationSystem::register_symmetry_bc(
 
     AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
     bool solverAlgWasBuilt = false;
+    const std::string algName = realm_.realmUsesEdges_ ? "symm_edge" : "symm_elem";
 
     std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
-      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "symm");
+      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, algName);
 
     auto& activeKernels = faceElemSolverAlg->activeKernels_;
 
@@ -2144,15 +2141,23 @@ MomentumEquationSystem::register_symmetry_bc(
       const stk::mesh::MetaData& metaData = realm_.meta_data();
       const std::string viscName = realm_.is_turbulent()
         ? "effective_viscosity_u" : "viscosity";
-      
-      build_face_elem_topo_kernel_automatic<MomentumSymmetryElemKernel>
-        (partTopo, elemTopo, *this, activeKernels, "momentum_symmetry",
-         metaData, *realm_.solutionOptions_,
-         metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity"),
-         metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName),
-         faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_
-         );
-      
+
+      if (realm_.realmUsesEdges_)
+        build_face_elem_topo_kernel_automatic<MomentumSymmetryEdgeKernel>
+          (partTopo, elemTopo, *this, activeKernels, "momentum_symmetry_edge",
+           metaData, *realm_.solutionOptions_,
+           metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity"),
+           metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName),
+           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_
+          );
+      else
+        build_face_elem_topo_kernel_automatic<MomentumSymmetryElemKernel>
+          (partTopo, elemTopo, *this, activeKernels, "momentum_symmetry_elem",
+           metaData, *realm_.solutionOptions_,
+           metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity"),
+           metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName),
+           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_
+          );
     }
   }
 }
