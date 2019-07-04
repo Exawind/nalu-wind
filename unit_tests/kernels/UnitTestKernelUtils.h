@@ -574,13 +574,25 @@ public:
       maxLengthScale_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "sst_max_length_scale")),
       fOneBlend_(&meta_.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "sst_f_one_blending"))
+                   stk::topology::NODE_RANK, "sst_f_one_blending")),
+      dudx_(&meta_.declare_field<GenericFieldType>(
+              stk::topology::NODE_RANK, "dudx")),
+      dkdx_(&meta_.declare_field<VectorFieldType>(
+              stk::topology::NODE_RANK, "dkdx")),
+      dwdx_(&meta_.declare_field<VectorFieldType>(
+              stk::topology::NODE_RANK, "dwdx"))
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*sdr_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*maxLengthScale_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*fOneBlend_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dudx_, meta_.universal_part(), spatialDim_ * spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dkdx_, meta_.universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dwdx_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
   virtual ~SSTKernelHex8Mesh() {}
@@ -597,6 +609,9 @@ public:
     unit_test_kernel_utils::sdr_test_function(bulk_, *coordinates_, *sdr_);
     unit_test_kernel_utils::sst_f_one_blending_test_function(
       bulk_, *coordinates_, *fOneBlend_);
+    unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
+    stk::mesh::field_fill(0.0, *dkdx_);
+    stk::mesh::field_fill(0.0, *dwdx_);
   }
 
   ScalarFieldType* tke_{nullptr};
@@ -604,6 +619,9 @@ public:
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* maxLengthScale_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
+  GenericFieldType* dudx_{nullptr};
+  VectorFieldType* dkdx_{nullptr};
+  VectorFieldType* dwdx_{nullptr};
 };
 
 /** Test Fixture for the Turbulence Kernels
