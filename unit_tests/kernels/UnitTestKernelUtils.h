@@ -504,6 +504,8 @@ public:
                      meta_.side_rank(), "wall_friction_velocity_bip")),
       wallNormDist_(&meta_.declare_field<ScalarFieldType>(
                       meta_.side_rank(), "wall_normal_distance_bip")),
+      tGradBC_(&meta_.declare_field<ScalarFieldType>(
+                 stk::topology::NODE_RANK, "temperature_gradient_bc")),
       ustar_(kappa_ * uh_ / std::log(zh_ / z0_))
   {
     stk::mesh::put_field_on_mesh(
@@ -512,6 +514,7 @@ public:
     stk::mesh::put_field_on_mesh(*specificHeat_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*wallFricVel_, meta_.universal_part(), 4, nullptr);
     stk::mesh::put_field_on_mesh(*wallNormDist_, meta_.universal_part(), 4, nullptr);
+    stk::mesh::put_field_on_mesh(*tGradBC_, meta_.universal_part(), 1, nullptr);
   }
 
   virtual ~MomentumABLKernelHex8Mesh() = default;
@@ -528,6 +531,7 @@ public:
     stk::mesh::field_fill(1000.0, *specificHeat_);
     stk::mesh::field_fill(ustar_, *wallFricVel_);
     stk::mesh::field_fill(zh_, *wallNormDist_);
+    stk::mesh::field_fill(-0.003, *tGradBC_);
   }
 
   VectorFieldType* wallVelocityBC_{nullptr};
@@ -535,6 +539,7 @@ public:
   ScalarFieldType* specificHeat_{nullptr};
   ScalarFieldType* wallFricVel_{nullptr};
   ScalarFieldType* wallNormDist_{nullptr};
+  ScalarFieldType* tGradBC_{nullptr};
 
   const double z0_{0.1};
   const double zh_{0.25};
@@ -546,6 +551,10 @@ public:
 };
 
 class MomentumNodeHex8Mesh : public MomentumKernelHex8Mesh
+{};
+
+// Dummy class to provide namespace for tests
+class EnthalpyABLKernelHex8Mesh : public MomentumABLKernelHex8Mesh
 {};
 
 /** Test Fixture for the SST Kernels

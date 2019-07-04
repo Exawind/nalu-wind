@@ -3,6 +3,7 @@ add_sources(GlobalUnitSourceList
    UnitTestContinuityMassElem.C
    UnitTestContinuityInflowElem.C
    UnitTestContinuityOpenElem.C
+   UnitTestEnthalpyTGradBCElem.C
    UnitTestFaceBasic.C
    UnitTestFaceElemBasic.C
    UnitTestKernelUtils.C
