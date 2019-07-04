@@ -9,5 +9,7 @@ add_sources(GlobalUnitSourceList
   UnitTestScalarMassBDFNodeKernel.C
   UnitTestMomentumActuatorNodeKernel.C
   UnitTestTurbKineticEnergyRodiNodeKernel.C
+  UnitTestSSTNodeKernel.C
+  UnitTestKsgsNodeKernel.C
   UnitTestWallDistNode.C
 )
