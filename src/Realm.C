@@ -1700,7 +1700,7 @@ Realm::makeSureNodesHaveValidTopology()
 {
   //To make sure nodes have valid topology, we have to make sure they are in a part that has NODE topology.
   //So first, let's obtain the node topology part:
-  stk::mesh::Part& nodePart = bulkData_->mesh_meta_data().get_cell_topology_root_part(stk::mesh::get_cell_topology(stk::topology::NODE));
+  const stk::mesh::Part& nodePart = bulkData_->mesh_meta_data().get_topology_root_part(stk::topology::NODE);
   stk::mesh::Selector nodesNotInNodePart = (!nodePart) & bulkData_->mesh_meta_data().locally_owned_part();
 
   //get all the nodes that are *NOT* in nodePart
