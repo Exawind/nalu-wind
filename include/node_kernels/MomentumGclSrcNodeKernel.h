@@ -40,6 +40,7 @@ public:
     NodeKernelTraits::RhsType&,
     const stk::mesh::FastMeshIndex&) override;
 
+private:
   ngp::Field<double> velocityNp1_;
   ngp::Field<double> densityNp1_;
   ngp::Field<double> divV_;
