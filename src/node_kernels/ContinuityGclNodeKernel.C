@@ -59,15 +59,15 @@ ContinuityGclNodeKernel::execute(
   const NodeKernelTraits::DblType projTimeScale = dt_/gamma1_;
   const NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
   const NodeKernelTraits::DblType divV = divV_.get(node, 0);
-  const NodeKernelTraits::DblType dualVolumeNm1 = dualNdVolNm1_.get(node, 0);
-  const NodeKernelTraits::DblType dualVolumeN = dualNdVolN_.get(node, 0);
-  const NodeKernelTraits::DblType dualVolumeNp1 = dualNdVolNp1_.get(node, 0);
+  const NodeKernelTraits::DblType dualNdVolNm1 = dualNdVolNm1_.get(node, 0);
+  const NodeKernelTraits::DblType dualNdVolN = dualNdVolN_.get(node, 0);
+  const NodeKernelTraits::DblType dualNdVolNp1 = dualNdVolNp1_.get(node, 0);
 
-  const NodeKernelTraits::DblType volRate = (gamma1_*dualVolumeNp1 + gamma2_*dualVolumeN + gamma3_*dualVolumeNm1) / dt_ / dualVolumeNp1;
+  const NodeKernelTraits::DblType volRate = (gamma1_*dualNdVolNp1 + gamma2_*dualNdVolN + gamma3_*dualNdVolNm1) / dt_ / dualNdVolNp1;
 
   // the term divV comes from the Reynold's transport theorem for moving bodies with changing volume
   // the term (volRate-divV) is the GCL law which presents non-zero errors in a discretized setting
-  rhs(0) -= rhoNp1*(divV-(volRate-divV))*dualVolumeNp1/projTimeScale;
+  rhs(0) -= rhoNp1*(divV-(volRate-divV))*dualNdVolNp1/projTimeScale;
   //lhs(0, 0) += 0.0;
 }
 
