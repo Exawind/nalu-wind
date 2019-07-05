@@ -9,7 +9,6 @@
 #include <TurbKineticEnergyEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <AssembleScalarEdgeOpenSolverAlgorithm.h>
-#include <AssembleScalarEdgeSolverAlgorithm.h>
 #include <AssembleScalarElemSolverAlgorithm.h>
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
@@ -39,8 +38,6 @@
 #include <Realm.h>
 #include <Realms.h>
 #include <ScalarGclNodeSuppAlg.h>
-#include <ScalarMassBackwardEulerNodeSuppAlg.h>
-#include <ScalarMassBDF2NodeSuppAlg.h>
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <TimeIntegrator.h>
@@ -69,6 +66,13 @@
 
 // bc kernels
 #include <kernel/ScalarOpenAdvElemKernel.h>
+
+// edge kernels
+#include <edge_kernels/ScalarEdgeSolverAlg.h>
+
+// node kernels
+#include <node_kernels/NodeKernelUtils.h>
+#include <node_kernels/ScalarMassBDFNodeKernel.h>
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -257,7 +261,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
       SolverAlgorithm *theAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
-        theAlg = new AssembleScalarEdgeSolverAlgorithm(realm_, part, this, tke_, dkdx_, evisc_);
+        theAlg = new ScalarEdgeSolverAlg(realm_, part, this, tke_, dkdx_, evisc_);
       }
       else {
         theAlg = new AssembleScalarElemSolverAlgorithm(realm_, part, this, tke_, dkdx_, evisc_);
@@ -314,12 +318,25 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     }
     
     // time term; (Pk-Dk); both nodally lumped
-    const AlgorithmType algMass = MASS;
+    const AlgorithmType algMass = SRC;
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
     std::vector<std::string> checkAlgNames = {"turbulent_ke_time_derivative",
                                               "lumped_turbulent_ke_time_derivative"};
     bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
+    auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
+    process_ngp_node_kernels(
+      solverAlgMap, realm_, part, this,
+      [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
+        if (!elementMassAlg)
+          nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), tke_);
+
+        // TODO: Add kSGS/SST/SST_DES source terms here
+      },
+      [&](AssembleNGPNodeSolverAlgorithm& /* nodeAlg */, std::string& /* srcName */) {
+        // No source terms available yet
+      });
+
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itsm =
       solverAlgDriver_->solverAlgMap_.find(algMass);
     if ( itsm == solverAlgDriver_->solverAlgMap_.end() ) {
@@ -327,21 +344,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
       AssembleNodeSolverAlgorithm *theAlg
         = new AssembleNodeSolverAlgorithm(realm_, part, this);
       solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
-      
-      // now create the supplemental alg for mass term
-      if ( !elementMassAlg ) {
-        if ( realm_.number_of_states() == 2 ) {
-          ScalarMassBackwardEulerNodeSuppAlg *theMass
-            = new ScalarMassBackwardEulerNodeSuppAlg(realm_, tke_);
-          theAlg->supplementalAlg_.push_back(theMass);
-        }
-        else {
-          ScalarMassBDF2NodeSuppAlg *theMass
-            = new ScalarMassBDF2NodeSuppAlg(realm_, tke_);
-          theAlg->supplementalAlg_.push_back(theMass);
-        }
-      }
-      
+
       // now create the src alg for tke source
       SupplementalAlgorithm *theSrc = NULL;
       switch(turbulenceModel_) {

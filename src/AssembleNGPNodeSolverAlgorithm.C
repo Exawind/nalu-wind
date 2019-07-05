@@ -79,6 +79,8 @@ AssembleNGPNodeSolverAlgorithm::execute()
   using ShmemDataType = SharedMemData_Node<DeviceTeamHandleType, DeviceShmem>;
 
   const size_t numKernels = nodeKernels_.size();
+  if (numKernels < 1) return;
+
   for (auto& kern: nodeKernels_)
     kern->setup(realm_);
 
