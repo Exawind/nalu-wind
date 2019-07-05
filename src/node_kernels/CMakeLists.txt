@@ -1,4 +1,5 @@
 add_sources(GlobalSourceList
+  ContinuityGclNodeKernel.C
   ContinuityMassBDFNodeKernel.C
   EnthalpyABLForceNodeKernel.C
   MomentumABLForceNodeKernel.C
