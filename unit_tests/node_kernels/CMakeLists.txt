@@ -4,6 +4,7 @@ add_sources(GlobalUnitSourceList
   UnitTestMomentumABLForceNode.C
   UnitTestMomentumBodyForceNode.C
   UnitTestMomentumBoussinesqNode.C
+  UnitTestMomentumGclSrcNodeKernel.C
   UnitTestMomentumMassBDFNodeKernel.C
   UnitTestMomentumCoriolisNode.C
   UnitTestScalarMassBDFNodeKernel.C

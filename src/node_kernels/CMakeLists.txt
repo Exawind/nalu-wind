@@ -4,6 +4,7 @@ add_sources(GlobalSourceList
   MomentumABLForceNodeKernel.C
   MomentumBodyForceNodeKernel.C
   MomentumBoussinesqNodeKernel.C
+  MomentumGclNodeKernel.C
   MomentumMassBDFNodeKernel.C
   MomentumActuatorNodeKernel.C
   MomentumCoriolisNodeKernel.C
