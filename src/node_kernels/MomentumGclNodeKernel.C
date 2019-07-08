@@ -1,0 +1,89 @@
+/*------------------------------------------------------------------------*/
+/*  Copyright 2019 National Renewable Energy Laboratory.                  */
+/*  This software is released under the license detailed                  */
+/*  in the file, LICENSE, which is located in the top-level Nalu          */
+/*  directory structure                                                   */
+/*------------------------------------------------------------------------*/
+
+#include "node_kernels/MomentumGclSrcNodeKernel.h"
+#include "Realm.h"
+
+#include "stk_mesh/base/MetaData.hpp"
+#include "utils/StkHelpers.h"
+
+namespace sierra{
+namespace nalu{
+
+MomentumGclSrcNodeKernel::MomentumGclSrcNodeKernel(
+  const stk::mesh::BulkData& bulk
+) : NGPNodeKernel<MomentumGclSrcNodeKernel>()
+{
+  const auto& meta = bulk.mesh_meta_data();
+
+  //const VectorFieldType *velocity = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "velocity");
+  //const ScalarFieldType *dualNdVol = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  const ScalarFieldType *density = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+
+  velocityNp1ID_ = get_field_ordinal(meta, "velocity", stk::mesh::StateNP1);
+  densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
+  dualNdVolNID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateN);
+  divVID_ = get_field_ordinal(meta, "div_mesh_velocity", stk::mesh::StateNP1);
+
+  if (density->number_of_states() == 2)
+    dualNdVolNm1ID_ = dualNdVolNID_;
+  else
+    dualNdVolNm1ID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNM1);
+
+  dualNdVolNp1ID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNP1);
+
+  nDim_ = meta.spatial_dimension();
+}
+
+void
+MomentumGclSrcNodeKernel::setup(Realm& realm)
+{
+  const auto& fieldMgr = realm.ngp_field_manager();
+
+  velocityNp1_ = fieldMgr.get_field<double>(velocityNp1ID_);
+  densityNp1_ = fieldMgr.get_field<double>(densityNp1ID_);
+  divV_ = fieldMgr.get_field<double>(divVID_);
+  dualNdVolNm1_ = fieldMgr.get_field<double>(dualNdVolNm1ID_);
+  dualNdVolN_ = fieldMgr.get_field<double>(dualNdVolNID_);
+  dualNdVolNp1_ = fieldMgr.get_field<double>(dualNdVolNp1ID_);
+
+  gamma1_ = realm.get_gamma1();
+  gamma2_ = realm.get_gamma2();
+  gamma3_ = realm.get_gamma3();
+
+  dt_ = realm.get_time_step();
+}
+
+void
+MomentumGclSrcNodeKernel::execute(
+  NodeKernelTraits::LhsType& /*lhs*/,
+  NodeKernelTraits::RhsType& rhs,
+  const stk::mesh::FastMeshIndex& node)
+{
+  const int nDim = nDim_;
+
+  const NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
+  const NodeKernelTraits::DblType divV = divV_.get(node, 0);
+  const NodeKernelTraits::DblType dualNdVolNm1 = dualNdVolNm1_.get(node, 0);
+  const NodeKernelTraits::DblType dualNdVolN = dualNdVolN_.get(node, 0);
+  const NodeKernelTraits::DblType dualNdVolNp1 = dualNdVolNp1_.get(node, 0);
+
+  const NodeKernelTraits::DblType volRate = (gamma1_*dualNdVolNp1 + gamma2_*dualNdVolN + gamma3_*dualNdVolNm1) / dt_ / dualNdVolNp1;
+
+  // the term divV comes from the Reynold's transport theorem for moving bodies with changing volume
+  // the term (volRate-divV) is the GCL law which presents non-zero errors in a discretized setting
+  const NodeKernelTraits::DblType fac = rhoNp1*(divV - (volRate-divV))*dualNdVolNp1;
+
+  for ( int i = 0; i < nDim; ++i ) {
+    const NodeKernelTraits::DblType uNp1 = velocityNp1_.get(node, i);
+
+    rhs(i) -= fac*uNp1;
+  }
+}
+
+} // namespace nalu
+} // namespace Sierra
