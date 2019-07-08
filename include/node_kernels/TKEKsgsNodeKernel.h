@@ -47,7 +47,7 @@ private:
   ngp::Field<double> dualNodalVolume_;
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
-  unsigned sdrID_             {stk::mesh::InvalidOrdinal};
+  //unsigned sdrID_             {stk::mesh::InvalidOrdinal};
   unsigned densityID_         {stk::mesh::InvalidOrdinal};
   unsigned tviscID_           {stk::mesh::InvalidOrdinal};
   unsigned dudxID_            {stk::mesh::InvalidOrdinal};
