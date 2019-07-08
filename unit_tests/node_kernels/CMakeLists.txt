@@ -1,4 +1,5 @@
 add_sources(GlobalUnitSourceList
+  UnitTestContinuityGclNodeKernel.C
   UnitTestContinuityMassBDFNodeKernel.C
   UnitTestEnthalpyABLForceNode.C
   UnitTestMomentumABLForceNode.C
