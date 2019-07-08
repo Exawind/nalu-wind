@@ -8,6 +8,7 @@ add_sources(GlobalUnitSourceList
   UnitTestMomentumGclSrcNodeKernel.C
   UnitTestMomentumMassBDFNodeKernel.C
   UnitTestMomentumCoriolisNode.C
+  UnitTestScalarGclNodeKernel.C
   UnitTestScalarMassBDFNodeKernel.C
   UnitTestMomentumActuatorNodeKernel.C
   UnitTestTurbKineticEnergyRodiNodeKernel.C
