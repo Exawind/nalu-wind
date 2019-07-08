@@ -14,6 +14,21 @@
 
 #include <vector>
 
+#ifndef KOKKOS_ENABLE_CUDA
+namespace {
+namespace gold_values {
+namespace momentum_gcl {
+
+static constexpr double rhs[24] =
+{ 0, 0, 0, 0, 0.75845343222651, 0, -0.75845343222651,
+0, 0, -0.44580774201335, 0.44580774201335, 0, 0, 0, 0,
+0, 0.75845343222651, 0, -0.75845343222651, 0, 0, -0.44580774201335, 0.44580774201335, 0, };
+
+} // momentum_gcl
+} // gold_values
+} // anonymous namespace
+#endif
+
 TEST_F(MomentumNodeHex8Mesh, NGP_momentum_gcl_node)
 {
   // Only execute for 1 processor runs
@@ -35,7 +50,6 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_gcl_node)
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumGclSrcNodeKernel>(bulk_);
 
-  helperObjs.print_lhs_and_rhs();
   helperObjs.execute();
 
 #ifndef KOKKOS_ENABLE_CUDA
@@ -44,7 +58,8 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_gcl_node)
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 8u);
 
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 0.0);
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, gold_values::momentum_gcl::rhs, 1.0e-14);
   unit_test_kernel_utils::expect_all_near<24>(helperObjs.linsys->lhs_, 0.0);
 #endif
 }
