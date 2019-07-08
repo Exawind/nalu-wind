@@ -256,13 +256,16 @@ public:
         &meta_.declare_field<GlobalIdFieldType>(
           stk::topology::NODE_RANK, "nalu_global_id",1)),
       dnvField_(&meta_.declare_field<ScalarFieldType>(
-                  stk::topology::NODE_RANK, "dual_nodal_volume")),
+                  stk::topology::NODE_RANK, "dual_nodal_volume",2)),
+      divMeshVelField_(&meta_.declare_field<ScalarFieldType>(
+                  stk::topology::NODE_RANK, "div_mesh_velocity")),
       edgeAreaVec_(
         &meta_.declare_field<VectorFieldType>(
           stk::topology::EDGE_RANK, "edge_area_vector"))
   {
     stk::mesh::put_field_on_mesh(*naluGlobalId_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*dnvField_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*divMeshVelField_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
@@ -287,6 +290,7 @@ public:
     EXPECT_TRUE(coordinates_ != nullptr);
 
     stk::mesh::field_fill(0.125, *dnvField_);
+    stk::mesh::field_fill(1.25, *divMeshVelField_);
     unit_test_kernel_utils::calc_edge_area_vec(
       bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
   }
@@ -302,6 +306,7 @@ public:
   const VectorFieldType* coordinates_{nullptr};
   GlobalIdFieldType* naluGlobalId_{nullptr};
   ScalarFieldType* dnvField_{nullptr};
+  ScalarFieldType* divMeshVelField_{nullptr};
   VectorFieldType* edgeAreaVec_{nullptr};
 };
 

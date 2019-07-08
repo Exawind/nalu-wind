@@ -16,19 +16,8 @@ namespace {
 namespace gold_values {
 namespace scalar_gcl {
 
-static constexpr double lhs[8][8] = {
-{0.10943331816113, 0, 0, 0, 0, 0, 0, 0, },
-{0, -0.12850080171032, 0, 0, 0, 0, 0, 0, },
-{0, 0, -0.12850080171032, 0, 0, 0, 0, 0, },
-{0, 0, 0, 0.10943331816113, 0, 0, 0, 0, },
-{0, 0, 0, 0, -0.12850080171032, 0, 0, 0, },
-{0, 0, 0, 0, 0, 0.10943331816113, 0, 0, },
-{0, 0, 0, 0, 0, 0, 0.10943331816113, 0, },
-{0, 0, 0, 0, 0, 0, 0, -0.12850080171032, },
-};
-
 static constexpr double rhs[8] =
-{-0.21886663632226, -0.25700160342063, -0.25700160342063, -0.21886663632226, -0.25700160342063, -0.21886663632226, -0.21886663632226, -0.25700160342063, };
+{ 0.16414997724169, 0.19275120256547, 0.19275120256547, 0.16414997724169, 0.19275120256547, 0.16414997724169, 0.16414997724169, 0.19275120256547 };
 
 } // scalar_gcl
 } // gold_values
@@ -63,9 +52,8 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_gcl_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
-  namespace gold_values = gold_values::scalar_gcl;
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs, 1.0e-14);
-  unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs, 1.0e-14);
+  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::scalar_gcl::rhs, 1.0e-14);
+  unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, 0.0);
 #endif
 
 }
