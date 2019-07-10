@@ -220,11 +220,13 @@ struct ElemFieldOp
     {
       const auto& fld = obj_.ngpField_;
       const auto* einfo = obj_.edata_.elemInfo;
+
+      // No atomic_add here as only one element active per thread
 #ifdef STK_SIMD_NONE
-      Kokkos::atomic_add(fld.get(einfo[0].meshIdx, ic), stk::simd::get_data(val, 0));
+      fld.get(einfo[0].meshIdx, ic) += stk::simd::get_data(val, 0);
 #else
       for (int is=0; is < obj_.edata_.numSimdElems; ++is) {
-        Kokkos::atomic_add(fld.get(einfo[is].meshIdx, ic), stk::simd::get_data(val, is));
+        fld.get(einfo[is].meshIdx, ic) += stk::simd::get_data(val, is);
       }
 #endif
     }
@@ -249,10 +251,10 @@ struct ElemFieldOp
       const auto& fld = obj_.ngpField_;
       const auto* einfo = obj_.edata_.elemInfo;
 #ifdef STK_SIMD_NONE
-      Kokkos::atomic_add(fld.get(einfo[0].meshIdx, ic), val);
+      fld.get(einfo[0].meshIdx, ic) += val;
 #else
       for (int is=0; is < obj_.edata_.numSimdElems; ++is) {
-        Kokkos::atomic_add(fld.get(einfo[is].meshIdx, ic), val);
+        fld.get(einfo[is].meshIdx, ic) += val;
       }
 #endif
     }
