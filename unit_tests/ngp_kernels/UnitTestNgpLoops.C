@@ -250,8 +250,9 @@ void elem_loop_scratch_views(
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
-    KOKKOS_LAMBDA(ElemSimdData& edata) {
-      const auto ngpVelOp = sierra::nalu::nalu_ngp::simd_field_updater(ngpMesh, ngpVel, edata);
+    KOKKOS_LAMBDA(ElemSimdData & edata) {
+      const auto ngpVelOp = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
+        ngpMesh, ngpVel, edata);
 
       Traits::DblType test = 0.0;
       auto& scrViews = edata.simdScrView;
@@ -265,9 +266,10 @@ void elem_loop_scratch_views(
       for (int i=0; i < numNodes; ++i) {
         volCheck.d_view(i) = stk::simd::get_data(scv_vol(i), 0);
 
-        ngpVelOp.set(i, 0, xVel);
-        ngpVelOp.set(i, 1, yVel);
-        ngpVelOp.set(i, 2, zVel);
+        // Scatter SIMD value to nodes
+        ngpVelOp(i, 0) = xVel;
+        ngpVelOp(i, 1) = yVel;
+        ngpVelOp(i, 2) = zVel;
       }
     });
 
@@ -338,7 +340,7 @@ void calc_mdot_elem_loop(
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata) {
       // SIMD Element field operation handler
-      const auto mdotOps = sierra::nalu::nalu_ngp::simd_field_updater(
+      const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
         ngpMesh, ngpMdot, edata);
 
       NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
@@ -363,7 +365,7 @@ void calc_mdot_elem_loop(
         for (int d=0; d < Hex8Traits::nDim_; ++d)
           tmdot += rhoU[d] * v_area(ip, d);
 
-        mdotOps.ip_set(ip, tmdot);
+        mdotOps(ip) = tmdot;
       }
     });
 

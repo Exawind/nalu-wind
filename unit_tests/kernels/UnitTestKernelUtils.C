@@ -642,8 +642,9 @@ void calc_mass_flow_rate_scs(
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata) {
-      const auto mdotOps = sierra::nalu::nalu_ngp::simd_field_updater(
+      const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
         ngpMesh, ngpMdot, edata);
+
       NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
 
       auto& scrViews = edata.simdScrView;
@@ -668,7 +669,7 @@ void calc_mass_flow_rate_scs(
           tmdot += rhoU[d] * v_area(ip, d);
 
         // Scatter to all elements in this SIMD group
-        mdotOps.ip_set(ip, tmdot);
+        mdotOps(ip) = tmdot;
       }
     });
 
