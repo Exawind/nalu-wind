@@ -62,6 +62,8 @@ struct NodeFieldOp
     Ops(NodeFieldOp<Mesh, Field>& obj) : obj_(obj)
     {}
 
+    KOKKOS_FUNCTION ~Ops() = default;
+
     KOKKOS_INLINE_FUNCTION
     void operator= (const DoubleType& val) const
     {
@@ -161,10 +163,10 @@ struct NodeFieldOp
   }
 
   //! NGP Mesh instance
-  const Mesh& ngpMesh_;
+  const Mesh ngpMesh_;
 
   //! NGP element field to be updated
-  const Field& ngpField_;
+  const Field ngpField_;
 
   //! Connectivity data for SIMD group
   const ElemSimdData<Mesh>& edata_;
@@ -200,6 +202,8 @@ struct ElemFieldOp
     KOKKOS_INLINE_FUNCTION
     Ops(ElemFieldOp<Mesh, Field>& obj) : obj_(obj)
     {}
+
+    KOKKOS_FUNCTION ~Ops() = default;
 
     KOKKOS_INLINE_FUNCTION
     void operator= (const DoubleType& val) const
@@ -286,10 +290,10 @@ struct ElemFieldOp
   }
 
   //! NGP Mesh instance
-  const Mesh& ngpMesh_;
+  const Mesh ngpMesh_;
 
   //! NGP element field to be updated
-  const Field& ngpField_;
+  const Field ngpField_;
 
   //! Connectivity data for SIMD group
   const ElemSimdData<Mesh>& edata_;
