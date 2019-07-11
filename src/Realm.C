@@ -266,8 +266,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 Realm::~Realm()
 {
-  ngpFieldMgr_.reset();
-  ngpMesh_.reset();
+  meshInfo_.reset();
 
   delete bulkData_;
   delete metaData_;
@@ -1902,8 +1901,7 @@ Realm::pre_timestep_work()
       initialize_overset();
 
     // Reset the ngp::Mesh instance
-    ngpMesh_.reset(new ngp::Mesh(*bulkData_));
-    ngpFieldMgr_.reset(new ngp::FieldManager(*bulkData_));
+    meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
 
     // now re-initialize linear system
     equationSystems_.reinitialize_linear_system();
@@ -2099,6 +2097,7 @@ Realm::create_mesh()
     edgesPart_ = &metaData_->declare_part("create_edges_part", stk::topology::EDGE_RANK);
   }
 
+  meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
   // set mesh creation
   const double end_time = NaluEnv::self().nalu_time();
   timerCreateMesh_ = (end_time - start_time);
