@@ -87,6 +87,8 @@ typedef Belos::LinearProblem<Scalar, MultiVector, Operator>                Linea
 typedef Belos::SolverManager<Scalar, MultiVector, Operator>                SolverManager;
 typedef Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>          SolverFactory;
 typedef Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node> Preconditioner;
+
+using EntityToLIDView = Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,LinSysMemSpace>;
 };
 
 
