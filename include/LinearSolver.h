@@ -78,7 +78,7 @@ public:
     rowPointersData = rowPointers.data();
 
     size_t nnz = compute_row_pointers(rowPointers, rowLengths);
-    colIndices = Kokkos::View<LocalOrdinal*,MemSpace>(Kokkos::ViewAllocateWithoutInitializing("colIndices"), nnz);
+    colIndices = Kokkos::View<LocalOrdinal*,LinSysMemSpace>(Kokkos::ViewAllocateWithoutInitializing("colIndices"), nnz);
     Kokkos::deep_copy(colIndices, INVALID);
   }
 
