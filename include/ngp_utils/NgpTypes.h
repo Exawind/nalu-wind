@@ -90,8 +90,8 @@ struct NGPMeshTraits
   using MeshIndex = typename Mesh::MeshIndex;
 
   using ScratchViewsType = ScratchViews<DblType, TeamHandleType, ShmemType>;
-  using EntityInfo = EntityInfo<Mesh>;
-  using BcFaceElemInfo = BcFaceElemInfo<Mesh>;
+  using EntityInfoType = EntityInfo<Mesh>;
+  using BcFaceElemInfoType = BcFaceElemInfo<Mesh>;
 };
 
 
