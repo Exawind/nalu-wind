@@ -34,7 +34,7 @@ struct ElemSimdData
   using MeshTraits = NGPMeshTraits<Mesh>;
   using TeamHandleType = typename MeshTraits::TeamHandleType;
   using ShmemType = typename MeshTraits::ShmemType;
-  using EntityInfo = EntityInfo<Mesh>;
+  using EntityInfoType = EntityInfo<Mesh>;
 
   KOKKOS_INLINE_FUNCTION
   ElemSimdData(
@@ -73,7 +73,7 @@ struct ElemSimdData
 #endif
 
   //! Element connectivity info for each element within the SIMD group
-  EntityInfo elemInfo[simdLen];
+  EntityInfoType elemInfo[simdLen];
 
   //! Number of SIMD elements in this batch
   int numSimdElems;
