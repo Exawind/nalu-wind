@@ -6,6 +6,7 @@
 /*------------------------------------------------------------------------*/
 
 #include <ScratchViews.h>
+#include <ngp_utils/NgpMEUtils.h>
 
 #include <NaluEnv.h>
 
@@ -195,11 +196,7 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
   NGP_ThrowRequireMsg(faceDataNeeded != elemDataNeeded,
     "An algorithm has been registered with conflicting face/element data requests");
 
-  const int nodesPerEntity = meSCS != nullptr ? meSCS->nodesPerElement_
-    : meSCV != nullptr ? meSCV->nodesPerElement_
-    : meFEM != nullptr ? meFEM->nodesPerElement_
-    : meFC  != nullptr ? meFC->nodesPerElement_
-    : 0;
+  const int nodesPerEntity = nodes_per_entity(dataNeeded);
 
   int numScalars = 0;
 
@@ -219,10 +216,10 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
     numScalars += entitiesPerElem*scalarsPerEntity;
   }
 
-  const int numFaceIp = meFC != nullptr ? meFC->num_integration_points() : 0;
-  const int numScsIp = meSCS != nullptr ? meSCS->num_integration_points() : 0;
-  const int numScvIp = meSCV != nullptr ? meSCV->num_integration_points() : 0;
-  const int numFemIp = meFEM != nullptr ? meFEM->num_integration_points() : 0;
+  const int numFaceIp = num_integration_points(dataNeeded, METype::FACE);
+  const int numScsIp  = num_integration_points(dataNeeded, METype::SCS);
+  const int numScvIp  = num_integration_points(dataNeeded, METype::SCV);
+  const int numFemIp  = num_integration_points(dataNeeded, METype::FEM);
 
   const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
   for(unsigned i=0; i<coordsTypes.size(); ++i) {
