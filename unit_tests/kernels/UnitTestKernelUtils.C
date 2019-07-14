@@ -903,7 +903,7 @@ void calc_projected_nodal_gradient_interior(
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
 
   auto v_shape_function = Kokkos::View<double**>("shape_function", meSCS->num_integration_points(), meSCS->nodesPerElement_);
 
@@ -987,7 +987,7 @@ void calc_projected_nodal_gradient_interior(
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
 
   auto v_shape_function = Kokkos::View<double**>("shape_function", meSCS->num_integration_points(), meSCS->nodesPerElement_);
 
@@ -1074,7 +1074,7 @@ void calc_projected_nodal_gradient_boundary(
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
 
   auto v_shape_function = Kokkos::View<double**>("shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
 
@@ -1152,7 +1152,7 @@ void calc_projected_nodal_gradient_boundary(
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
 
   auto v_shape_function = Kokkos::View<double**>("shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
 
@@ -1227,7 +1227,7 @@ void calc_dual_nodal_volume(
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
 
   auto v_shape_function = Kokkos::View<double**>("shape_function", meSCV->num_integration_points(), meSCV->nodesPerElement_);
 
