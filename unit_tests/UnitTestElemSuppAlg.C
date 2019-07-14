@@ -81,6 +81,10 @@ public:
    : discreteLaplacianOfPressure_(discreteLaplacianOfPressure),
      nodalPressureField_(nodalPressureField)
   {
+    // add the master element
+    sierra::nalu::MasterElement* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+    dataNeeded.add_cvfem_surface_me(meSCS);
+
     //here are the element-data pre-requisites we want computed before
     //our elem_execute method is called.
     dataNeeded.add_coordinates_field(*coordField, 3,
@@ -90,10 +94,6 @@ public:
     dataNeeded.add_master_element_call(sierra::nalu::SCS_GRAD_OP,
                                        sierra::nalu::CURRENT_COORDINATES);
     dataNeeded.add_gathered_nodal_field(*nodalPressureField, 1);
-
-    // add the master element
-    sierra::nalu::MasterElement* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
-    dataNeeded.add_cvfem_surface_me(meSCS);
   }
 
   virtual ~DiscreteLaplacianSuppAlg() {}
