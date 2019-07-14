@@ -16,6 +16,7 @@
 #include <SimdInterface.h>
 #include <SharedMemData.h>
 #include <CopyAndInterleave.h>
+#include <ngp_utils/NgpMEUtils.h>
 
 namespace stk {
 namespace mesh {
@@ -45,17 +46,13 @@ public:
       int nDim = bulk.mesh_meta_data().spatial_dimension();
       int totalNumFields = bulk.mesh_meta_data().get_fields().size();
 
-      sierra::nalu::MasterElement* meFC = faceDataNeeded_.get_cvfem_face_me();
-      sierra::nalu::MasterElement* meSCS = faceDataNeeded_.get_cvfem_surface_me();
-      sierra::nalu::MasterElement* meSCV = faceDataNeeded_.get_cvfem_volume_me();
-
       sierra::nalu::ScratchMeInfo meElemInfo;
       meElemInfo.nodalGatherSize_ = nodesPerElem_;
       meElemInfo.nodesPerFace_ = nodesPerFace_;
       meElemInfo.nodesPerElement_ = nodesPerElem_;
-      meElemInfo.numFaceIp_ = meFC != nullptr ? meFC->num_integration_points() : 0;
-      meElemInfo.numScsIp_ = meSCS != nullptr ? meSCS->num_integration_points() : 0;
-      meElemInfo.numScvIp_ = meSCV != nullptr ? meSCV->num_integration_points() : 0;
+      meElemInfo.numFaceIp_ = num_integration_points(faceDataNeeded_, METype::FACE);
+      meElemInfo.numScsIp_  = num_integration_points(elemDataNeeded_, METype::SCS);
+      meElemInfo.numScvIp_  = num_integration_points(elemDataNeeded_, METype::SCV);
       int rhsSize = meElemInfo.nodalGatherSize_*numDof_, lhsSize = rhsSize*rhsSize, scratchIdsSize = rhsSize;
 
       const ngp::Mesh& ngpMesh = realm_.ngp_mesh();
