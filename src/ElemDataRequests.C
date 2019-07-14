@@ -101,6 +101,34 @@ void ElemDataRequests::add_coordinates_field(
   add_gathered_nodal_field(field, scalarsPerNode);
 }
 
+
+void ElemDataRequests::add_master_element_call(
+  ELEM_DATA_NEEDED data,
+  COORDS_TYPES cType)
+{
+  auto it = coordsFields_.find(cType);
+  NGP_ThrowRequireMsg(
+    it != coordsFields_.end(),
+    "ElemDataRequests:add_master_element_call: Coordinates field "
+    "must be registered to ElemDataRequests before registering MasterElement call");
+
+  // Check that the appropriate MasterElement has been registered
+  if ((data >= BEGIN_FC) && (data <= END_FC )) {
+    NGP_ThrowRequire(meFC_ != nullptr);
+  }
+  else if ((data >= BEGIN_SCS) && (data <= END_SCS )) {
+    NGP_ThrowRequire(meSCS_ != nullptr);
+  }
+  else if ((data >= BEGIN_SCV) && (data <= END_SCV )) {
+    NGP_ThrowRequire(meSCV_ != nullptr);
+  }
+  else if ((data >= BEGIN_FEM) && (data <= END_FEM )) {
+    NGP_ThrowRequire(meFEM_ != nullptr);
+  }
+
+  dataEnums[cType].insert(data);
+}
+
 }
 }
 
