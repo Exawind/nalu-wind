@@ -10,6 +10,7 @@
 
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpScratchData.h"
+#include "ngp_utils/NgpMEUtils.h"
 #include "CopyAndInterleave.h"
 #include "ElemDataRequests.h"
 #include "ElemDataRequestsGPU.h"
@@ -85,46 +86,6 @@ inline int ngp_calc_thread_shmem_size(
   const int elemMemSize = ngp_calc_thread_shmem_size<T>(ndim, elemDataReq);
 
   return (faceMemSize + elemMemSize);
-}
-
-/** Get the nodes per element from the MasterElement registered
- *
- *  We need a convenience function because the ME instance is created on the device.
- */
-template<typename DataReqType>
-inline int nodes_per_element(const DataReqType& dataReqIn)
-{
-  int npe = 0;
-  DataReqType dataReq(dataReqIn);
-  Kokkos::parallel_reduce(
-    1, KOKKOS_LAMBDA(int, int& n) {
-      auto* meSCS = dataReq.get_cvfem_surface_me();
-      auto* meSCV = dataReq.get_cvfem_volume_me();
-      n = ((meSCS != nullptr) ? meSCS->nodesPerElement_ :
-           (meSCV != nullptr) ? meSCV->nodesPerElement_ : 0);
-    }, npe);
-
-  NGP_ThrowRequire(npe != 0);
-  return npe;
-}
-
-/** Get the nodes per face from the MasterElement registered
- *
- *  We need a convenience function because the ME instance is created on the device.
- */
-template<typename DataReqType>
-inline int nodes_per_face(const DataReqType& dataReqIn)
-{
-  int npe = 0;
-  DataReqType dataReq(dataReqIn);
-  Kokkos::parallel_reduce(
-    1, KOKKOS_LAMBDA(int, int& n) {
-      auto* meFC = dataReq.get_cvfem_face_me();
-      n = (meFC != nullptr) ? meFC->nodesPerElement_ : 0;
-    }, npe);
-
-  NGP_ThrowRequire(npe != 0);
-  return npe;
 }
 
 } // impl
@@ -270,7 +231,9 @@ void run_elem_algorithm(
 
   ElemDataRequestsGPU dataReqNGP(fieldMgr, dataReqs, meshInfo.num_fields());
 
-  const int nodesPerElement = impl::nodes_per_element(dataReqNGP);
+  const int nodesPerElement = nodes_per_entity(dataReqNGP);
+  NGP_ThrowRequire(nodesPerElement != 0);
+
   const int bytes_per_team = 0;
   const int bytes_per_thread = impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
     ndim, dataReqNGP);
@@ -342,8 +305,11 @@ void run_face_elem_algorithm_nosimd(
   ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs, numFields);
   ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs, numFields);
 
-  const int nodesPerElement = impl::nodes_per_element(elemDataNGP);
-  const int nodesPerFace = impl::nodes_per_face(faceDataNGP);
+  const int nodesPerElement = nodes_per_entity(elemDataNGP);
+  const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
+  NGP_ThrowRequire(nodesPerElement != 0);
+  NGP_ThrowRequire(nodesPerFace != 0);
+
   const int bytes_per_team = 0;
   const int bytes_per_thread = impl::ngp_calc_thread_shmem_size<double>(
     ndim, faceDataNGP, elemDataNGP);
