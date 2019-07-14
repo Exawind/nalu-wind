@@ -27,6 +27,15 @@ enum struct METype
   FEM                           //!< FEM
 };
 
+/** Type of element data requested by the algorithm in ScratchViews
+ */
+enum struct ElemReqType
+{
+  ELEM = 0,
+  FACE,
+  FACE_ELEM
+};
+
 template<typename DataReqType>
 MasterElement* get_me_instance(const DataReqType& dataReq, const METype meType)
 {
