@@ -62,6 +62,8 @@ public:
       const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(
         lhsSize, rhsSize, scratchIdsSize, nDim, faceDataNGP, elemDataNGP);
 
+      const auto nodesPerFace = nodesPerFace_;
+      const auto nodesPerElem = nodesPerElem_;
       stk::mesh::Selector s_locally_owned_union =
         bulk.mesh_meta_data().locally_owned_part() &
         stk::mesh::selectUnion(partVec_);
@@ -84,7 +86,7 @@ public:
 #endif
 
           SharedMemData_FaceElem<DeviceTeamHandleType, DeviceShmem> smdata(
-            team, nDim, faceDataNGP, elemDataNGP, nodesPerFace_, nodesPerElem_,
+            team, nDim, faceDataNGP, elemDataNGP, nodesPerFace, nodesPerElem,
             rhsSize);
 
           const size_t bucketLen = b.size();
