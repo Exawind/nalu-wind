@@ -686,67 +686,75 @@ void calc_open_mass_flow_rate(
   const GenericFieldType& exposedAreaVec,
   const GenericFieldType& massFlowRate)
 {
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
+  const int npe = Quad4Traits::nodesPerFace_;
   EXPECT_EQ(ndim, 3);
+  EXPECT_EQ(topo.num_nodes(), npe);
 
-  const ScalarFieldType& densityNp1 = density.field_of_state(stk::mesh::StateNP1);
-  const VectorFieldType& velocityNp1 = velocity.field_of_state(stk::mesh::StateNP1);
-  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+  // Register necessary element data gathers
+  sierra::nalu::ElemDataRequests dataReq(meta);
+  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element<Quad4Traits>();
+  dataReq.add_cvfem_surface_me(meFC);
+  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_gathered_nodal_field(velocity, ndim);
+  dataReq.add_gathered_nodal_field(density, 1);
+  dataReq.add_face_field(exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
+  dataReq.add_face_field(massFlowRate, Quad4Traits::numFaceIp_);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
 
-  std::vector<double> v_shape_fcn(meFC->num_integration_points() * meFC->nodesPerElement_);
-  meFC->shape_fcn(v_shape_fcn.data());
-
-  const int numScsIp = meFC->num_integration_points();
-  const int nodesPerElem = meFC->nodesPerElement_;
-  std::vector<double> w_rho(nodesPerElem);
-  std::vector<double> w_vel(ndim * nodesPerElem);
-  std::vector<double> w_coords(ndim * nodesPerElem);
-
-  const stk::mesh::Selector selector =
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  const stk::mesh::Selector sel =
     meta.locally_owned_part() | meta.globally_shared_part();
-  const auto& buckets = bulk.get_buckets(meta.side_rank(), selector);
 
-  for (auto b: buckets) {
-    const auto bktlen = b->size();
+  const auto velID = velocity.mesh_meta_data_ordinal();
+  const auto rhoID = density.mesh_meta_data_ordinal();
+  const auto mdotID = massFlowRate.mesh_meta_data_ordinal();
+  const auto areaID = exposedAreaVec.mesh_meta_data_ordinal();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto ngpMdot = fieldMgr.get_field<double>(mdotID);
 
-    for (size_t ie = 0; ie < bktlen; ++ie) {
-      double* mdot = stk::mesh::field_data(massFlowRate, *b, ie);
-      const double* areaVec = stk::mesh::field_data(exposedAreaVec, *b, ie);
+  sierra::nalu::nalu_ngp::run_elem_algorithm(
+    meshInfo, meta.side_rank(), dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
+      const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
+        ngpMesh, ngpMdot, edata);
 
-      auto* elem_nodes = b->begin_nodes(ie);
-      const auto num_nodes = b->num_nodes(ie);
+      NALU_ALIGNED Traits::DblType rhoU[Quad4Traits::nDim_];
 
-      for (size_t in = 0; in < num_nodes; ++in) {
-        const auto node = elem_nodes[in];
-        w_rho[in] = *stk::mesh::field_data(densityNp1, node);
-        const double* vel = stk::mesh::field_data(velocityNp1, node);
-        const double* coords = stk::mesh::field_data(coordinates, node);
+      auto& scrViews = edata.simdScrView;
+      const auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
+      const auto& v_vel = scrViews.get_scratch_view_2D(velID);
+      const auto& v_area = scrViews.get_scratch_view_2D(areaID);
+      const auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& shape_fcn = meViews.scs_shape_fcn;
 
-        for (int d=0; d < ndim; ++d) {
-          w_vel[in * ndim + d] = vel[d];
-          w_coords[in * ndim + d] = coords[d];
+      for (int ip = 0; ip < Quad4Traits::numFaceIp_; ++ip) {
+        for (int d=0; d < Quad4Traits::nDim_; ++d)
+          rhoU[d] = 0.0;
+
+        for (int ic=0; ic < Quad4Traits::nodesPerFace_; ++ic) {
+          const Traits::DblType r = shape_fcn(ip, ic);
+          for (int d=0; d < Quad4Traits::nDim_; ++d)
+            rhoU[d] += r * v_rho(ic) * v_vel(ic, d);
         }
+
+        Traits::DblType tmdot = 0.0;
+        for (int d=0; d < Quad4Traits::nDim_; ++d)
+          tmdot += rhoU[d] * v_area(ip, d);
+
+        mdotOps(ip) = tmdot;
       }
+    });
 
-      for (int ip = 0; ip < numScsIp; ++ip) {
-        std::vector<double> rhoU(ndim, 0.0);
-
-        const int offset = ip * nodesPerElem;
-        for (int ic=0; ic < nodesPerElem; ++ic) {
-          const double r = v_shape_fcn[offset + ic];
-          for (int d = 0; d < ndim; d++)
-            rhoU[d] += r * w_rho[ic] * w_vel[ic * ndim + d];
-        }
-
-        double tmdot = 0.0;
-        for (int d = 0; d < ndim; d++)
-          tmdot += rhoU[d] * areaVec[ip * ndim + d];
-
-        mdot[ip] = tmdot;
-      }
-    }
-  }
+  ngpMdot.modify_on_device();
+  ngpMdot.sync_to_host();
 }
 
 void calc_edge_area_vec(
@@ -829,45 +837,49 @@ void calc_exposed_area_vec(
   const VectorFieldType& coordinates,
   GenericFieldType& exposedAreaVec)
 {
+  using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
+  const int npe = Quad4Traits::nodesPerFace_;
   EXPECT_EQ(ndim, 3);
+  EXPECT_EQ(topo.num_nodes(), npe);
 
-  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
-  const auto npe = meFC->nodesPerElement_;
-  const auto numScsIp = meFC->num_integration_points();
-  std::vector<double> w_coords(ndim * npe);
-  std::vector<double> w_scs_areav(ndim * numScsIp);
+  // Register necessary element data gathers
+  sierra::nalu::ElemDataRequests dataReq(meta);
+  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element<Quad4Traits>();
+  dataReq.add_cvfem_surface_me(meFC);
+  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_face_field(exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
 
-  const stk::mesh::Selector sel = meta.locally_owned_part() | meta.globally_shared_part();
-  const auto& buckets = bulk.get_buckets(meta.side_rank(), sel);
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() | meta.globally_shared_part();
 
-  for (auto b: buckets) {
-    ThrowRequire(b->topology() == topo);
+  const auto areaID = exposedAreaVec.mesh_meta_data_ordinal();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto areaVec = fieldMgr.get_field<double>(areaID);
 
-    const auto bktlen = b->size();
-    for (size_t ie = 0; ie < bktlen; ++ie) {
-      double* areaVec = stk::mesh::field_data(exposedAreaVec, *b, ie);
+  sierra::nalu::nalu_ngp::run_elem_algorithm(
+    meshInfo, meta.side_rank(), dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType & edata) {
+      const auto areaVecOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
+        ngpMesh, areaVec, edata);
+      auto& scrViews = edata.simdScrView;
+      const auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& v_area = meViews.scs_areav;
 
-      const auto* face_nodes = b->begin_nodes(ie);
-      const auto num_nodes = b->num_nodes(ie);
+      for (int ip = 0; ip < Quad4Traits::numFaceIp_; ++ip)
+        for (int d=0; d < Quad4Traits::nDim_; ++d)
+          areaVecOps(ip * Quad4Traits::nDim_ + d) = v_area(ip, d);
+    });
 
-      for (size_t in = 0; in < num_nodes; ++in) {
-        const auto node = face_nodes[in];
-        const double* coords = stk::mesh::field_data(coordinates, node);
-        for (int d=0; d < ndim; ++d) {
-          w_coords[in * ndim + d] = coords[d];
-        }
-      }
-
-      double scs_error = 0.0;
-      meFC->determinant(1, w_coords.data(), w_scs_areav.data(), &scs_error);
-
-      for (int ip = 0; ip < numScsIp; ++ip)
-        for (int d=0; d < ndim; ++d)
-          areaVec[ip * ndim + d] = w_scs_areav[ip * ndim + d];
-    }
-  }
+  areaVec.modify_on_device();
+  areaVec.sync_to_host();
 }
 
 #ifndef KOKKOS_ENABLE_CUDA
