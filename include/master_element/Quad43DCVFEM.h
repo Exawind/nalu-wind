@@ -37,6 +37,10 @@ public:
   KOKKOS_FUNCTION void shifted_shape_fcn(
     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
+  KOKKOS_FUNCTION void determinant(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType**, DeviceShmem>&areav) override;
+
   KOKKOS_FUNCTION void quad4_shape_fcn(
     const double *isoParCoord,
     SharedMemView<DoubleType**, DeviceShmem> &shpfc);
