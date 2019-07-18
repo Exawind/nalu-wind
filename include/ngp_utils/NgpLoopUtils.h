@@ -59,7 +59,8 @@ ngp_calc_thread_shmem_size(
 {
   int preReqSize = get_num_bytes_pre_req_data<T>(dataReq, ndim, reqType);
   int mdvSize = MultiDimViews<T>::bytes_needed(
-    dataReq.get_total_num_fields(), count_needed_field_views(dataReq));
+    dataReq.get_total_num_fields(),
+    count_needed_field_views(dataReq.get_host_fields()));
 
 #ifndef KOKKOS_ENABLE_CUDA
   // On host account for extra data to store the SIMD and non-SIMD versions of
