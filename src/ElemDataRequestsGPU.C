@@ -87,8 +87,8 @@ void ElemDataRequestsGPU::fill_host_coords_fields(
 
   unsigned i = 0;
   for (auto iter : dataReq.get_coordinates_map()) {
-    hostCoordsFields_(i) =
-      fieldMgr.get_field<double>(iter.second->mesh_meta_data_ordinal());
+    hostCoordsFields_(i) = CoordFieldInfo(
+      fieldMgr.get_field<double>(iter.second->mesh_meta_data_ordinal()));
     hostCoordsFieldsTypes_(i) = iter.first;
     ++i;
   }

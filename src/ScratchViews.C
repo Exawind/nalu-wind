@@ -222,12 +222,14 @@ int get_num_scalars_pre_req_data(
 
   int numScalars = 0;
 
-  const ElemDataRequestsGPU::FieldInfoView& neededFields = dataNeeded.get_fields();
-  for(unsigned f=0; f<neededFields.size(); ++f) {
+  const ElemDataRequestsGPU::FieldInfoView::HostMirror& neededFields =
+    dataNeeded.get_host_fields();
+  for (unsigned f = 0; f < neededFields.size(); ++f) {
     const FieldInfoNGP& fieldInfo = neededFields(f);
     stk::mesh::EntityRank fieldEntityRank = fieldInfo.field.get_rank();
     unsigned scalarsPerEntity = fieldInfo.scalarsDim1;
-    unsigned entitiesPerElem = fieldEntityRank==stk::topology::NODE_RANK ? nodesPerEntity : 1;
+    unsigned entitiesPerElem =
+      fieldEntityRank == stk::topology::NODE_RANK ? nodesPerEntity : 1;
 
     if (fieldInfo.scalarsDim2 > 1) {
       scalarsPerEntity *= fieldInfo.scalarsDim2;
@@ -240,10 +242,12 @@ int get_num_scalars_pre_req_data(
   const int numScvIp  = num_integration_points(dataNeeded, METype::SCV);
   const int numFemIp  = num_integration_points(dataNeeded, METype::FEM);
 
-  const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
-  for(unsigned i=0; i<coordsTypes.size(); ++i) {
+  const ElemDataRequestsGPU::CoordsTypesView::HostMirror& coordsTypes =
+    dataNeeded.get_host_coordinates_types();
+  for (unsigned i = 0; i < coordsTypes.size(); ++i) {
     auto cType = coordsTypes(i);
-    const ElemDataRequestsGPU::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
+    const ElemDataRequestsGPU::DataEnumView::HostMirror& dataEnums =
+      dataNeeded.get_host_data_enums(cType);
     int dndxLength = 0, dndxLengthFC = 0, gUpperLength = 0, gLowerLength = 0;
 
     // Updated logic for data sharing of deriv and det_j

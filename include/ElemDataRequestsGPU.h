@@ -46,6 +46,28 @@ struct FieldInfoNGP {
   unsigned scalarsDim2;
 };
 
+struct CoordFieldInfo
+{
+  CoordFieldInfo(NGPDoubleFieldType& fld)
+    : coordField(fld)
+  {}
+
+  KOKKOS_FUNCTION
+  CoordFieldInfo() = default;
+
+  KOKKOS_FUNCTION
+  CoordFieldInfo(const CoordFieldInfo&) = default;
+
+  KOKKOS_FUNCTION
+  ~CoordFieldInfo() = default;
+
+  KOKKOS_FUNCTION
+  operator const NGPDoubleFieldType&() const
+  { return coordField; }
+
+  NGPDoubleFieldType coordField;
+};
+
 KOKKOS_INLINE_FUNCTION
 stk::mesh::EntityRank get_entity_rank(const FieldInfoNGP& fieldInfo)
 {
@@ -71,7 +93,7 @@ public:
   typedef NGPDoubleFieldType FieldType;
   typedef Kokkos::View<COORDS_TYPES*, Kokkos::LayoutRight, MemSpace> CoordsTypesView;
   typedef Kokkos::View<ELEM_DATA_NEEDED*, Kokkos::LayoutRight, MemSpace> DataEnumView;
-  typedef Kokkos::View<NGPDoubleFieldType*, Kokkos::LayoutRight, MemSpace> FieldView;
+  typedef Kokkos::View<CoordFieldInfo*, Kokkos::LayoutRight, MemSpace> FieldView;
   typedef Kokkos::View<FieldInfoType*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
   ElemDataRequestsGPU(
@@ -105,7 +127,23 @@ public:
   { return coordsFieldsTypes_; }
 
   KOKKOS_FUNCTION
-  const FieldInfoView& get_fields() const { return fields; }  
+  const FieldInfoView& get_fields() const { return fields; }
+
+  const DataEnumView::HostMirror&
+  get_host_data_enums(const COORDS_TYPES cType) const
+  { return hostDataEnums[cType]; }
+
+  const FieldView::HostMirror&
+  get_host_coordinates_fields() const
+  { return hostCoordsFields_; }
+
+  const CoordsTypesView::HostMirror&
+  get_host_coordinates_types() const
+  { return hostCoordsFieldsTypes_; }
+
+  const FieldInfoView::HostMirror&
+  get_host_fields() const
+  { return hostFields; }
 
   KOKKOS_FUNCTION
   unsigned get_total_num_fields() const { return totalNumFields; }

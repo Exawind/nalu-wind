@@ -27,15 +27,14 @@
 namespace sierra{
 namespace nalu{
 
-template<typename ELEMDATAREQUESTSTYPE>
+template<typename FieldInfoViewType>
 KOKKOS_INLINE_FUNCTION
-NumNeededViews count_needed_field_views(const ELEMDATAREQUESTSTYPE& dataNeeded)
+NumNeededViews count_needed_field_views(const FieldInfoViewType& neededFields)
 {
   NumNeededViews numNeededViews = {0, 0, 0, 0};
 
-  const typename ELEMDATAREQUESTSTYPE::FieldInfoView& neededFields = dataNeeded.get_fields();
   for(unsigned i=0; i<neededFields.size(); ++i) {
-    const typename ELEMDATAREQUESTSTYPE::FieldInfoType& fieldInfo = neededFields(i);
+    const auto& fieldInfo = neededFields(i);
     stk::mesh::EntityRank fieldEntityRank = get_entity_rank(fieldInfo);
     unsigned scalarsDim1 = fieldInfo.scalarsDim1;
     unsigned scalarsDim2 = fieldInfo.scalarsDim2;
@@ -779,7 +778,7 @@ ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
              unsigned nDim,
              int nodalGatherSize,
              const ElemDataRequestsGPU& dataNeeded)
- : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
+  : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded.get_fields()))
 {
   num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, nodalGatherSize, fieldViews) * sizeof(T);
 
@@ -904,7 +903,7 @@ calculate_shared_mem_bytes_per_thread(
     get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim, reqType) +
     MultiDimViews<double>::bytes_needed(
       dataNeededByKernels.get_total_num_fields(),
-      count_needed_field_views(dataNeededByKernels));
+      count_needed_field_views(dataNeededByKernels.get_host_fields()));
 
   bytes_per_thread *= 2 * simdLen;
   return bytes_per_thread;
@@ -939,10 +938,10 @@ calculate_shared_mem_bytes_per_thread(
       elemDataNeeded, nDim, ElemReqType::FACE_ELEM) +
     MultiDimViews<double>::bytes_needed(
       faceDataNeeded.get_total_num_fields(),
-      count_needed_field_views(faceDataNeeded)) +
+      count_needed_field_views(faceDataNeeded.get_host_fields())) +
     MultiDimViews<double>::bytes_needed(
       elemDataNeeded.get_total_num_fields(),
-      count_needed_field_views(elemDataNeeded));
+      count_needed_field_views(elemDataNeeded.get_host_fields()));
 
   bytes_per_thread *= 2 * simdLen;
   return bytes_per_thread;

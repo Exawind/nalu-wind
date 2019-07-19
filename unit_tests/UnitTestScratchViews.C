@@ -167,6 +167,9 @@ TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
+  const double velVec[3] = {1.0, 0.0, 0.0};
+  stk::mesh::field_fill(velVec, *velocity);
+
   do_the_test(bulk, pressure, velocity);
 }
 
