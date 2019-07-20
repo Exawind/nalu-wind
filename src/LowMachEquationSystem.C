@@ -53,10 +53,7 @@
 #include <ComputeWallFrictionVelocityAlgorithm.h>
 #include <ComputeABLWallFrictionVelocityAlgorithm.h>
 #include <ConstantAuxFunction.h>
-#include <ContinuityGclNodeSuppAlg.h>
 #include <ContinuityLowSpeedCompressibleNodeSuppAlg.h>
-#include <ContinuityMassBackwardEulerNodeSuppAlg.h>
-#include <ContinuityMassBDF2NodeSuppAlg.h>
 #include <CopyFieldAlgorithm.h>
 #include <DirichletBC.h>
 #include <EffectiveDiffFluxCoeffAlgorithm.h>
@@ -72,7 +69,6 @@
 #include <master_element/MasterElementFactory.h>
 #include <MomentumBuoyancySrcNodeSuppAlg.h>
 #include <MomentumBoussinesqRASrcNodeSuppAlg.h>
-#include <MomentumGclSrcNodeSuppAlg.h>
 #include <NaluEnv.h>
 #include <NaluParsing.h>
 #include <NonConformalManager.h>
@@ -146,6 +142,9 @@
 #include "node_kernels/MomentumBoussinesqNodeKernel.h"
 #include "node_kernels/MomentumCoriolisNodeKernel.h"
 #include "node_kernels/MomentumMassBDFNodeKernel.h"
+#include "node_kernels/MomentumGclSrcNodeKernel.h"
+#include "node_kernels/ContinuityGclNodeKernel.h"
+#include "node_kernels/ContinuityMassBDFNodeKernel.h"
 
 // nso
 #include <nso/MomentumNSOElemKernel.h>
@@ -1432,6 +1431,9 @@ MomentumEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<MomentumCoriolisNodeKernel>(
             realm_.bulk_data(), *realm_.solutionOptions_);
         }
+        else if (srcName == "gcl") {
+          nodeAlg.add_kernel<MomentumGclSrcNodeKernel>(realm_.bulk_data());
+        }
         else {
           // Encountered a source term not yet supported by NGP
           added = false;
@@ -1464,9 +1466,6 @@ MomentumEquationSystem::register_interior_algorithm(
           }
           else if ( sourceName == "buoyancy_boussinesq_ra") {
             suppAlg = new MomentumBoussinesqRASrcNodeSuppAlg(realm_);
-          }
-          else if ( sourceName == "gcl") {
-            suppAlg = new MomentumGclSrcNodeSuppAlg(realm_);
           }
           else if (sourceName == "SteadyTaylorVortex" ) {
             suppAlg = new SteadyTaylorVortexMomentumSrcNodeSuppAlg(realm_);
@@ -2955,7 +2954,36 @@ ContinuityEquationSystem::register_interior_algorithm(
   std::map<std::string, std::vector<std::string> >::iterator isrc =
     realm_.solutionOptions_->srcTermsMap_.find("continuity");
   if ( isrc != realm_.solutionOptions_->srcTermsMap_.end() ) {
-    const AlgorithmType algMass = MASS;
+    // Handle error checking during transition period. Some kernels are handled
+    // through the NGP-ready interface while others are handled via legacy
+    // interface and only supported on CPUs.
+    int ngpSrcSkipped = 0;
+    int nonNgpSrcSkipped = 0;
+    int numUsrSrc = 0;
+    {
+      auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
+      process_ngp_node_kernels(
+        solverAlgMap, realm_, part, this,
+        [&](AssembleNGPNodeSolverAlgorithm&) {
+          // Time derivative terms not yet implemented
+        },
+        [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
+          bool added = true;
+          if (srcName == "gcl") {
+            nodeAlg.add_kernel<ContinuityGclNodeKernel>(realm_.bulk_data());
+          }
+          else if (srcName == "density_time_derivative") {
+            nodeAlg.add_kernel<ContinuityMassBDFNodeKernel>(realm_.bulk_data());
+          } else {
+            added = false;
+            ++ngpSrcSkipped;
+          }
+
+          if (added)
+            NaluEnv::self().naluOutputP0() << " - " << srcName << std::endl;
+         });
+    }
+    const AlgorithmType algMass = SRC;
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itsm =
       solverAlgDriver_->solverAlgMap_.find(algMass);
     if ( itsm == solverAlgDriver_->solverAlgMap_.end() ) {
@@ -2963,28 +2991,14 @@ ContinuityEquationSystem::register_interior_algorithm(
       AssembleNodeSolverAlgorithm *theAlg
       = new AssembleNodeSolverAlgorithm(realm_, part, this);
       solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
-      
       std::vector<std::string> mapNameVec = isrc->second;
-      
+      numUsrSrc = mapNameVec.size();
       for (size_t k = 0; k < mapNameVec.size(); ++k ) {
-	
         std::string sourceName = mapNameVec[k];
 
         SupplementalAlgorithm *suppAlg = NULL;
-        if ( sourceName == "density_time_derivative" ) {
-          // now create the supplemental alg for mass term
-          if ( realm_.number_of_states() == 2 ) {
-            suppAlg = new ContinuityMassBackwardEulerNodeSuppAlg(realm_);
-          }
-          else {
-            suppAlg = new ContinuityMassBDF2NodeSuppAlg(realm_);
-          }
-        }
-        else if ( sourceName == "low_speed_compressible" ) {
+        if ( sourceName == "low_speed_compressible" ) {
           suppAlg = new ContinuityLowSpeedCompressibleNodeSuppAlg(realm_);
-        }
-        else if ( sourceName == "gcl" ) {
-          suppAlg = new ContinuityGclNodeSuppAlg(realm_);
         }
         else if ( sourceName == "VariableDensity" ) {
           suppAlg = new VariableDensityContinuitySrcNodeSuppAlg(realm_);
@@ -2993,15 +3007,20 @@ ContinuityEquationSystem::register_interior_algorithm(
           suppAlg = new VariableDensityNonIsoContinuitySrcNodeSuppAlg(realm_);
         }
         else {
-          throw std::runtime_error("ContinuityNodalSrcTerms::Error Source term is not supported: " + sourceName);
+          ++nonNgpSrcSkipped;
         }
-        NaluEnv::self().naluOutputP0() << "ContinuityNodalSrcTerms::added " << sourceName << std::endl;
-        theAlg->supplementalAlg_.push_back(suppAlg);
+        if (suppAlg != NULL) {
+          NaluEnv::self().naluOutputP0() << "ContinuityNodalSrcTerms::added " << sourceName << std::endl;
+          theAlg->supplementalAlg_.push_back(suppAlg);
+        }
       }
     }
     else {
       itsm->second->partVec_.push_back(part);
     }
+    // Ensure that all user source terms were processed by either interface
+    if ((ngpSrcSkipped + nonNgpSrcSkipped) != numUsrSrc)
+      throw std::runtime_error("Error processing nodal source terms for Continuity");
   }
 }
 
