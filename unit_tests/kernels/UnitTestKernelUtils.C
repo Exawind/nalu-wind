@@ -884,6 +884,7 @@ void calc_exposed_area_vec(
 
 #ifndef KOKKOS_ENABLE_CUDA
 
+#if 0
 void calc_projected_nodal_gradient_interior(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
@@ -891,6 +892,185 @@ void calc_projected_nodal_gradient_interior(
   const ScalarFieldType& dnv,
   const ScalarFieldType& scalarField,
   const VectorFieldType& gradField)
+{
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Hex8Traits = sierra::nalu::AlgTraitsHex8;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+  const int npe = Hex8Traits::nodesPerElement_;
+  EXPECT_EQ(ndim, 3);
+  EXPECT_EQ(topo.num_nodes(), npe);
+
+  sierra::nalu::ElemDataRequests dataReq(meta);
+
+  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element<Hex8Traits>();
+
+  dataReq.add_cvfem_surface_me(meSCS);
+  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_gathered_nodal_field(scalarField, 1);
+  dataReq.add_gathered_nodal_field(dnv, 1);
+  dataReq.add_gathered_nodal_field(gradField, ndim);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
+
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() | meta.globally_shared_part();
+
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  const auto gradFieldID = gradField.mesh_meta_data_ordinal();
+  const auto dnvID = dnv.mesh_meta_data_ordinal();
+  const auto scalarID = scalarField.mesh_meta_data_ordinal();
+  auto ngpGradField = fieldMgr.get_field<double>(gradFieldID);
+
+
+  sierra::nalu::nalu_ngp::run_elem_algorithm(
+    meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
+      const auto gradFieldOps = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
+        ngpMesh, ngpGradField, edata);
+      const int* lrscv = meSCS->adjacentNodes();
+      auto& scrView = edata.simdScrView;
+      const auto& v_dnv = scrView.get_scratch_view_1D(dnvID);
+      const auto& v_scalar = scrView.get_scratch_view_1D(scalarID);
+      const auto& meViews = scrView.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& v_areav = meViews.scs_areav;
+      const auto& v_shape_fcn = meViews.scs_shape_fcn;
+
+      for (int ip=0; ip < Hex8Traits::numScsIp_; ++ip) {
+        Traits::DblType qIp = 0.0;
+        for (int n=0; n < Hex8Traits::nodesPerElement_; ++n)
+          qIp += v_shape_fcn(ip, n) * v_scalar(n);
+
+        int il = lrscv[2 * ip];
+        int ir = lrscv[2 * ip + 1];
+
+        for (int d=0; d < Hex8Traits::nDim_; ++d) {
+          Traits::DblType fac = qIp * v_areav(ip, d);
+          Traits::DblType valL = fac / v_dnv(il);
+          Traits::DblType valR = fac / v_dnv(ir);
+
+          gradFieldOps(il, d) += valL;
+          gradFieldOps(ir, d) -= valR;
+        }
+      }
+    });
+}
+#endif
+
+
+template<typename PhiType, typename GradPhiType>
+void calc_projected_nodal_gradient_interior(
+  stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const ScalarFieldType& dnv,
+  const PhiType& phi,
+  const GradPhiType& gradPhi)
+{
+  static_assert(
+    ((std::is_same<PhiType, ScalarFieldType>::value &&
+      std::is_same<GradPhiType, VectorFieldType>::value) ||
+     (std::is_same<PhiType, VectorFieldType>::value &&
+      std::is_same<GradPhiType, GenericFieldType>::value)),
+    "Improper field types passed to nodal gradient calculator");
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Hex8Traits = sierra::nalu::AlgTraitsHex8;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+
+  constexpr int ncomp = std::is_same<
+    typename stk::mesh::FieldTraits<PhiType>::tag1, stk::mesh::Cartesian>::value
+    ? Hex8Traits::nDim_ : 1;
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+  const int npe = Hex8Traits::nodesPerElement_;
+  EXPECT_EQ(ndim, 3);
+  EXPECT_EQ(topo.num_nodes(), npe);
+
+  sierra::nalu::ElemDataRequests dataReq(meta);
+
+  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element<Hex8Traits>();
+
+  dataReq.add_cvfem_surface_me(meSCS);
+  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_gathered_nodal_field(phi, 1);
+  dataReq.add_gathered_nodal_field(dnv, 1);
+  dataReq.add_gathered_nodal_field(gradPhi, ndim);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
+
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() | meta.globally_shared_part();
+
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  const auto gradPhiID = gradPhi.mesh_meta_data_ordinal();
+  const auto dnvID = dnv.mesh_meta_data_ordinal();
+  const auto scalarID = phi.mesh_meta_data_ordinal();
+  auto ngpGradField = fieldMgr.get_field<double>(gradPhiID);
+
+
+  sierra::nalu::nalu_ngp::run_elem_algorithm(
+    meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
+      const auto gradPhiOps = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
+        ngpMesh, ngpGradField, edata);
+      const int* lrscv = meSCS->adjacentNodes();
+      auto& scrView = edata.simdScrView;
+      const auto& v_dnv = scrView.get_scratch_view_1D(dnvID);
+      const auto& v_scalar = scrView.get_scratch_view_1D(scalarID);
+      const auto& meViews = scrView.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& v_areav = meViews.scs_areav;
+      const auto& v_shape_fcn = meViews.scs_shape_fcn;
+
+      for (int di =0; di < ncomp; ++di) {
+        for (int ip=0; ip < Hex8Traits::numScsIp_; ++ip) {
+          Traits::DblType qIp = 0.0;
+          for (int n=0; n < Hex8Traits::nodesPerElement_; ++n)
+            qIp += v_shape_fcn(ip, n) * v_scalar(n);
+
+          int il = lrscv[2 * ip];
+          int ir = lrscv[2 * ip + 1];
+
+          for (int d=0; d < Hex8Traits::nDim_; ++d) {
+            Traits::DblType fac = qIp * v_areav(ip, d);
+            Traits::DblType valL = fac / v_dnv(il);
+            Traits::DblType valR = fac / v_dnv(ir);
+
+            gradPhiOps(il, di * Hex8Traits::nDim_ + d) += valL;
+            gradPhiOps(ir, di * Hex8Traits::nDim_ + d) -= valR;
+          }
+        }
+      }
+    });
+}
+
+template
+void calc_projected_nodal_gradient_interior<ScalarFieldType,VectorFieldType>(
+  stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const ScalarFieldType& dnv,
+  const ScalarFieldType& phi,
+  const VectorFieldType& gradPhi);
+
+template
+void calc_projected_nodal_gradient_interior<VectorFieldType,GenericFieldType>(
+  stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const ScalarFieldType& dnv,
+  const VectorFieldType& phi,
+  const GenericFieldType& gradPhi);
+
+#if 0
 {
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -1053,6 +1233,7 @@ void calc_projected_nodal_gradient_interior(
     });
   });
 }
+#endif
 
 void calc_projected_nodal_gradient_boundary(
   stk::mesh::BulkData& bulk,

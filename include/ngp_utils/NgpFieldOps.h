@@ -89,12 +89,12 @@ struct NodeFieldOp
       const auto* einfo = obj_.edata_.elemInfo;
 #ifdef STK_SIMD_NONE
       Kokkos::atomic_add(
-        fld.get(msh, einfo[0].entityNodes[ni], ic),
+        &fld.get(msh, einfo[0].entityNodes[ni], ic),
         stk::simd::get_data(val, 0));
 #else
       for (int is=0; is < obj_.edata_.numSimdElems; ++is) {
         Kokkos::atomic_add(
-          fld.get(msh, einfo[is].entityNodes[ni], ic),
+          &fld.get(msh, einfo[is].entityNodes[ni], ic),
           stk::simd::get_data(val, is));
       }
 #endif
@@ -122,10 +122,10 @@ struct NodeFieldOp
       const auto& fld = obj_.ngpField_;
       const auto* einfo = obj_.edata_.elemInfo;
 #ifdef STK_SIMD_NONE
-      Kokkos::atomic_add(fld.get(msh, einfo[0].entityNodes[ni], ic), val);
+      Kokkos::atomic_add(&fld.get(msh, einfo[0].entityNodes[ni], ic), val);
 #else
       for (int is=0; is < obj_.edata_.numSimdElems; ++is) {
-        Kokkos::atomic_add(fld.get(msh, einfo[is].entityNodes[ni], ic), val);
+        Kokkos::atomic_add(&fld.get(msh, einfo[is].entityNodes[ni], ic), val);
       }
 #endif
     }
