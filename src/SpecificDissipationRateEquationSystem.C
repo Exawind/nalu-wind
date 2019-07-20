@@ -62,6 +62,8 @@
 // node kernels
 #include <node_kernels/NodeKernelUtils.h>
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
+#include <node_kernels/SDRSSTNodeKernel.h>
+#include <node_kernels/ScalarGclNodeKernel.h>
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -287,8 +289,6 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       itsi->second->partVec_.push_back(part);
     }
 
-    // time term; src; both nodally lumped
-    const AlgorithmType algMass = SRC;
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
     std::vector<std::string> checkAlgNames = {
@@ -302,47 +302,16 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
-        // TODO: Add SST source terms here
+        nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
       },
-      [&](AssembleNGPNodeSolverAlgorithm& /* nodeAlg */, std::string& /* srcName */) {
-        // No source terms available yet
-      });
-
-    std::map<AlgorithmType, SolverAlgorithm*>::iterator itsm =
-      solverAlgDriver_->solverAlgMap_.find(algMass);
-    if (itsm == solverAlgDriver_->solverAlgMap_.end()) {
-      // create the solver alg
-      AssembleNodeSolverAlgorithm *theAlg
-        = new AssembleNodeSolverAlgorithm(realm_, part, this);
-      solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
-
-      // now create the src alg for sdr source
-      SpecificDissipationRateSSTNodeSourceSuppAlg *theSrc
-        = new SpecificDissipationRateSSTNodeSourceSuppAlg(realm_);
-      theAlg->supplementalAlg_.push_back(theSrc);
-
-      // Add src term supp alg...; limited number supported
-      std::map<std::string, std::vector<std::string> >::iterator isrc
-        = realm_.solutionOptions_->srcTermsMap_.find("specific_dissipation_rate");
-      if (isrc != realm_.solutionOptions_->srcTermsMap_.end()) {
-        std::vector<std::string> mapNameVec = isrc->second;
-        for (size_t k = 0; k < mapNameVec.size(); ++k) {
-          std::string sourceName = mapNameVec[k];
-          SupplementalAlgorithm* suppAlg = NULL;
-          if (sourceName == "gcl") {
-            suppAlg = new ScalarGclNodeSuppAlg(sdr_, realm_);
-          }
-          else {
-            throw std::runtime_error("SpecificDissipationRateNodalSrcTerms::Error Source term is not supported: " + sourceName);
-          }
-          NaluEnv::self().naluOutputP0() << "SpecificDissipationRateNodalSrcTerms::added() " << sourceName << std::endl;
-          theAlg->supplementalAlg_.push_back(suppAlg);
+      [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
+        if (srcName == "gcl") {
+          nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), sdr_);
+          NaluEnv::self().naluOutputP0() << " - " << srcName << std::endl;
         }
-      }
-    }
-    else {
-      itsm->second->partVec_.push_back(part);
-    }
+        else
+          throw std::runtime_error("SDREqSys: Invalid source term: " + srcName);
+      });
   }
   else {
     // Homogeneous kernel implementation

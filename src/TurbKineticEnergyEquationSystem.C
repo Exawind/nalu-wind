@@ -37,15 +37,10 @@
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <Realm.h>
 #include <Realms.h>
-#include <ScalarGclNodeSuppAlg.h>
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <TimeIntegrator.h>
-#include <TurbKineticEnergyKsgsNodeSourceSuppAlg.h>
-#include <TurbKineticEnergySSTNodeSourceSuppAlg.h>
-#include <TurbKineticEnergySSTDESNodeSourceSuppAlg.h>
 #include <TurbKineticEnergyKsgsBuoyantElemSuppAlg.h>
-#include <TurbKineticEnergyRodiNodeSourceSuppAlg.h>
 
 #include <SolverAlgorithmDriver.h>
 
@@ -73,6 +68,11 @@
 // node kernels
 #include <node_kernels/NodeKernelUtils.h>
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
+#include <node_kernels/ScalarGclNodeKernel.h>
+#include <node_kernels/TKEKsgsNodeKernel.h>
+#include <node_kernels/TKESSTDESNodeKernel.h>
+#include <node_kernels/TKESSTNodeKernel.h>
+#include <node_kernels/TurbKineticEnergyRodiNodeKernel.h>
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -317,8 +317,6 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
       itsi->second->partVec_.push_back(part);
     }
     
-    // time term; (Pk-Dk); both nodally lumped
-    const AlgorithmType algMass = SRC;
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
     std::vector<std::string> checkAlgNames = {"turbulent_ke_time_derivative",
@@ -331,68 +329,36 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), tke_);
 
-        // TODO: Add kSGS/SST/SST_DES source terms here
+        switch(turbulenceModel_) {
+        case KSGS:
+          nodeAlg.add_kernel<TKEKsgsNodeKernel>(realm_.meta_data());
+          break;
+        case SST:
+          nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
+          break;
+        case SST_DES:
+          nodeAlg.add_kernel<TKESSTDESNodeKernel>(realm_.meta_data());
+          break;
+        default:
+          std::runtime_error("TKEEqSys: Invalid turbulence model, only SST, "
+                             "SST_DES and Ksgs supported");
+          break;
+        }
       },
-      [&](AssembleNGPNodeSolverAlgorithm& /* nodeAlg */, std::string& /* srcName */) {
-        // No source terms available yet
+      [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
+        if (srcName == "rodi") {
+          nodeAlg.add_kernel<TurbKineticEnergyRodiNodeKernel>(
+            realm_.meta_data(), *realm_.solutionOptions_);
+        }
+        else if (srcName == "gcl") {
+          nodeAlg.add_kernel<ScalarGclNodeKernel>(
+            realm_.bulk_data(), tke_);
+        }
+        else
+          throw std::runtime_error("TKEEqSys: Invalid source term " + srcName);
+
+        NaluEnv::self().naluOutputP0() << " -  " << srcName << std::endl;
       });
-
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsm =
-      solverAlgDriver_->solverAlgMap_.find(algMass);
-    if ( itsm == solverAlgDriver_->solverAlgMap_.end() ) {
-      // create the solver alg
-      AssembleNodeSolverAlgorithm *theAlg
-        = new AssembleNodeSolverAlgorithm(realm_, part, this);
-      solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
-
-      // now create the src alg for tke source
-      SupplementalAlgorithm *theSrc = NULL;
-      switch(turbulenceModel_) {
-      case KSGS:
-        {
-          theSrc = new TurbKineticEnergyKsgsNodeSourceSuppAlg(realm_);
-        }
-        break;
-      case SST:
-        {
-          theSrc = new TurbKineticEnergySSTNodeSourceSuppAlg(realm_);
-        }
-        break;
-      case SST_DES:
-        {
-          theSrc = new TurbKineticEnergySSTDESNodeSourceSuppAlg(realm_);
-        }
-        break;
-      default:
-        throw std::runtime_error("Unsupported turbulence model in TurbKe: only SST, SST_DES and Ksgs supported");
-      }
-      theAlg->supplementalAlg_.push_back(theSrc);
-      
-      // Add nodal src term supp alg...; limited number supported
-      std::map<std::string, std::vector<std::string> >::iterator isrc 
-        = realm_.solutionOptions_->srcTermsMap_.find("turbulent_ke");
-      if ( isrc != realm_.solutionOptions_->srcTermsMap_.end() ) {
-        std::vector<std::string> mapNameVec = isrc->second;   
-        for (size_t k = 0; k < mapNameVec.size(); ++k ) {
-          std::string sourceName = mapNameVec[k];
-          SupplementalAlgorithm *suppAlg = NULL;
-          if ( sourceName == "gcl" ) {
-            suppAlg = new ScalarGclNodeSuppAlg(tke_,realm_);
-          }
-          if ( sourceName == "rodi" ) {
-            suppAlg = new TurbKineticEnergyRodiNodeSourceSuppAlg(realm_);
-          }
-          else {
-            throw std::runtime_error("TurbKineticEnergyNodalSrcTerms::Error Source term is not supported: " + sourceName);
-          }
-          NaluEnv::self().naluOutputP0() << "TurbKineticEnergyNodalSrcTerms::added() " << sourceName << std::endl;
-          theAlg->supplementalAlg_.push_back(suppAlg);
-        }
-      }
-    }
-    else {
-      itsm->second->partVec_.push_back(part);
-    }
   }
   else {
     // Homogeneous kernel implementation
