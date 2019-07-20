@@ -189,8 +189,9 @@ int get_num_scalars_pre_req_data(
   MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
   MasterElement *meFEM = dataNeeded.get_fem_volume_me();
 
+  const bool hasSCS = (meSCS != nullptr);
   // A MasterElement corresponding to ELEM_RANK has been registered
-  const bool hasElemME = (meSCS != nullptr || meSCV != nullptr || meFEM != nullptr);
+  const bool hasElemME = (hasSCS || meSCV != nullptr || meFEM != nullptr);
   // A MasterElement corresponding to side_rank() has been registered
   const bool hasFaceME = (meFC != nullptr);
 
@@ -203,17 +204,16 @@ int get_num_scalars_pre_req_data(
 
   case ElemReqType::FACE:
     NGP_ThrowRequireMsg(
-      hasFaceME,
+      hasFaceME || hasSCS,
       "Request SIDE_RANK data, but no SIDE_RANK master element has been registered");
     break;
 
   case ElemReqType::FACE_ELEM:
     // In case of FACE_ELEM register meFC so that numFaceIp can be queried
     NGP_ThrowRequireMsg(
-      (hasElemME && hasFaceME),
+      (hasSCS && hasFaceME),
       "Requesting FACE_ELEM data but does not have necessary MasterElements");
     break;
-
   }
 
   // The previous check guarantees that we get the correct nodesPerEntity for
