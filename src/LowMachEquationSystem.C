@@ -18,12 +18,10 @@
 #include <AssembleMomentumElemSolverAlgorithm.h>
 #include <AssembleMomentumEdgeOpenSolverAlgorithm.h>
 #include <AssembleMomentumElemOpenSolverAlgorithm.h>
-#include <AssembleMomentumEdgeSymmetrySolverAlgorithm.h>
 #include <AssembleMomentumElemSymmetrySolverAlgorithm.h>
 #include <AssembleMomentumEdgeWallFunctionSolverAlgorithm.h>
 #include <AssembleMomentumElemWallFunctionSolverAlgorithm.h>
 #include <AssembleMomentumElemABLWallFunctionSolverAlgorithm.h>
-#include <AssembleMomentumEdgeABLWallFunctionSolverAlgorithm.h>
 #ifdef NALU_USES_FFTW
 #include <AssembleMomentumEdgeABLTopBC.h>
 #endif

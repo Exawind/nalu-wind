@@ -36,12 +36,10 @@
 #include <NaluParsing.h>
 #include <Realm.h>
 #include <Realms.h>
-#include <ScalarGclNodeSuppAlg.h>
 #include <ScalarMassElemSuppAlgDep.h>
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <TimeIntegrator.h>
-#include <SpecificDissipationRateSSTNodeSourceSuppAlg.h>
 #include <SolverAlgorithmDriver.h>
 
 // template for supp algs
