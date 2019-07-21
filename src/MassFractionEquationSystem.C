@@ -9,7 +9,6 @@
 #include <MassFractionEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <AssembleScalarEdgeOpenSolverAlgorithm.h>
-#include <AssembleScalarEdgeSolverAlgorithm.h>
 #include <AssembleScalarElemSolverAlgorithm.h>
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
@@ -35,14 +34,19 @@
 #include <NaluEnv.h>
 #include <Realm.h>
 #include <Realms.h>
-#include <ScalarMassBackwardEulerNodeSuppAlg.h>
-#include <ScalarMassBDF2NodeSuppAlg.h>
 #include <ScalarMassElemSuppAlgDep.h>
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <SolverAlgorithmDriver.h>
 
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
+
+// edge_kernels
+#include <edge_kernels/ScalarEdgeSolverAlg.h>
+
+// node kernels
+#include <node_kernels/NodeKernelUtils.h>
+#include <node_kernels/ScalarMassBDFNodeKernel.h>
 
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
@@ -202,7 +206,7 @@ MassFractionEquationSystem::register_interior_algorithm(
   if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
     SolverAlgorithm *theAlg = NULL;
     if ( realm_.realmUsesEdges_ ) {
-      theAlg = new AssembleScalarEdgeSolverAlgorithm(realm_, part, this, currentMassFraction_, dydx_, evisc_);
+      theAlg = new ScalarEdgeSolverAlg(realm_, part, this, currentMassFraction_, dydx_, evisc_);
     }
     else {
       theAlg = new AssembleScalarElemSolverAlgorithm(realm_, part, this, currentMassFraction_, dydx_, evisc_);
@@ -238,44 +242,22 @@ MassFractionEquationSystem::register_interior_algorithm(
     itsi->second->partVec_.push_back(part);
   }
   
-  // time term; nodally lumped
-  const AlgorithmType algMass = MASS;
   // Check if the user has requested CMM or LMM algorithms; if so, do not
   // include Nodal Mass algorithms
   std::vector<std::string> checkAlgNames = {"mass_fraction_time_derivative",
                                             "lumped_mass_fraction_time_derivative"};
   bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator itsm =
-    solverAlgDriver_->solverAlgMap_.find(algMass);
-  if ( itsm == solverAlgDriver_->solverAlgMap_.end() ) {
-    // create the solver alg
-    AssembleNodeSolverAlgorithm *theAlg
-      = new AssembleNodeSolverAlgorithm(realm_, part, this);
-    solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
-    
-    // now create the supplemental alg for mass term
-    if ( !elementMassAlg ) {
-      if ( realm_.number_of_states() == 2 ) {
-        ScalarMassBackwardEulerNodeSuppAlg *theMass
-          = new ScalarMassBackwardEulerNodeSuppAlg(realm_, currentMassFraction_);
-        theAlg->supplementalAlg_.push_back(theMass);
-      }
-      else {
-        ScalarMassBDF2NodeSuppAlg *theMass
-          = new ScalarMassBDF2NodeSuppAlg(realm_, currentMassFraction_);
-        theAlg->supplementalAlg_.push_back(theMass);
-      }
-    }
-    
-    // Add src term supp alg...; limited number supported (exactly zero)
-    std::map<std::string, std::vector<std::string> >::iterator isrc 
-      = realm_.solutionOptions_->srcTermsMap_.find("mass_fraction");
-    if ( isrc != realm_.solutionOptions_->srcTermsMap_.end() ) {
-      std::vector<std::string> mapNameVec = isrc->second;   
-      if ( mapNameVec.size() > 0 )
-        throw std::runtime_error("MassFractionNodalSrcTerms::Error No source terms supported");
-    }
-  }
+  auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
+  process_ngp_node_kernels(
+    solverAlgMap, realm_, part, this,
+    [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
+      if (!elementMassAlg)
+        nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(
+          realm_.bulk_data(), currentMassFraction_);
+    },
+    [&](AssembleNGPNodeSolverAlgorithm&, std::string&) {
+      throw std::runtime_error("MassFracEqSys: Source terms not supported");
+    });
 
   // effective viscosity alg
   const double lamSc = realm_.get_lam_schmidt(massFraction_->name());
