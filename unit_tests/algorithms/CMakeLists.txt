@@ -4,4 +4,5 @@ add_sources(GlobalUnitSourceList
    UnitTestMomentumBoussinesqSrcNodeSuppAlg.C
    UnitTestRodiAlgorithm.C
    UnitTestSSTAlgorithms.C
+   UnitTestScalarOpenAlgorithm.C
 )
