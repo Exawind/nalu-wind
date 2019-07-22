@@ -21,7 +21,7 @@ GaussJetVelocityAuxFunction::GaussJetVelocityAuxFunction(
   const unsigned beginPos,
   const unsigned endPos) :
   AuxFunction(beginPos, endPos),
-    u_m(1.0) 	// bulk velocity
+    u_m(10.0) 	// bulk velocity
 {
   // does nothing
 }
