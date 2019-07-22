@@ -12,6 +12,14 @@ if(RES_LEN EQUAL 0)
  before running the tests.")
 endif()
 
+set(NALU_GOLD_NORMS_DIR "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH
+  "Custom directory for checking gold norms")
+
+if (NOT ${NALU_GOLD_NORMS_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  message(STATUS "Setting custom gold norms path: ${NALU_GOLD_NORMS_DIR}")
+  set(TEST_TOLERANCE 0.000000000000001)
+endif()
+
 # Set TOLERANCE for testing
 if(NOT ${TEST_TOLERANCE} STREQUAL "")
   set(TOLERANCE ${TEST_TOLERANCE}) # User defined

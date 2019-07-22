@@ -775,7 +775,7 @@ void TpetraLinearSystem::fill_entity_to_row_LID_mapping()
 {
   const stk::mesh::BulkData& bulk = realm_.bulk_data();
   stk::mesh::Selector selector = bulk.mesh_meta_data().universal_part() & !(realm_.get_inactive_selector());
-  entityToLID_ = Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,MemSpace>("entityToLID",bulk.get_size_of_entity_index_space());
+  entityToLID_ = LinSys::EntityToLIDView("entityToLID",bulk.get_size_of_entity_index_space());
   const stk::mesh::BucketVector& nodeBuckets = realm_.get_buckets(stk::topology::NODE_RANK, selector);
   for(const stk::mesh::Bucket* bptr : nodeBuckets) {
     const stk::mesh::Bucket& b = *bptr;
@@ -800,7 +800,7 @@ void TpetraLinearSystem::fill_entity_to_row_LID_mapping()
 void TpetraLinearSystem::fill_entity_to_col_LID_mapping()
 {
     const stk::mesh::BulkData& bulk = realm_.bulk_data();
-    entityToColLID_ = Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,MemSpace>("entityToLID",bulk.get_size_of_entity_index_space());
+    entityToColLID_ = LinSys::EntityToLIDView("entityToLID",bulk.get_size_of_entity_index_space());
     const stk::mesh::BucketVector& nodeBuckets = bulk.buckets(stk::topology::NODE_RANK);
     for(const stk::mesh::Bucket* bptr : nodeBuckets) {
         const stk::mesh::Bucket& b = *bptr;

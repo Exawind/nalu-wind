@@ -92,6 +92,7 @@ add_sources(GlobalSourceList
    EffectiveDiffFluxCoeffAlgorithm.C
    EffectiveSSTDiffFluxCoeffAlgorithm.C
    ElemDataRequests.C
+   ElemDataRequestsGPU.C
    EnthalpyABLSrcNodeSuppAlg.C
    EnthalpyEffectiveDiffFluxCoeffAlgorithm.C
    EnthalpyEquationSystem.C
@@ -168,6 +169,7 @@ add_sources(GlobalSourceList
    TimeIntegrator.C
    TpetraLinearSystem.C
    TpetraLinearSystemHelpers.C
+   TpetraSegregatedLinearSystem.C
    TurbKineticEnergyEquationSystem.C
    TurbKineticEnergyKsgsBuoyantElemSuppAlg.C
    TurbKineticEnergyKsgsNodeSourceSuppAlg.C

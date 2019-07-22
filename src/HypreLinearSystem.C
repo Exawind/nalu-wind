@@ -431,10 +431,10 @@ void
 HypreLinearSystem::sumInto(
   unsigned numEntities,
   const ngp::Mesh::ConnectedNodes& entities,
-  const SharedMemView<const double*>& rhs,
-  const SharedMemView<const double**>& lhs,
-  const SharedMemView<int*>&,
-  const SharedMemView<int*>&,
+  const SharedMemView<const double*, DeviceShmem>& rhs,
+  const SharedMemView<const double**, DeviceShmem>& lhs,
+  const SharedMemView<int*, DeviceShmem>&,
+  const SharedMemView<int*, DeviceShmem>&,
   const char*  /* trace_tag */)
 {
 #ifndef KOKKOS_ENABLE_CUDA

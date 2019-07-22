@@ -81,6 +81,10 @@ public:
    : discreteLaplacianOfPressure_(discreteLaplacianOfPressure),
      nodalPressureField_(nodalPressureField)
   {
+    // add the master element
+    sierra::nalu::MasterElement* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+    dataNeeded.add_cvfem_surface_me(meSCS);
+
     //here are the element-data pre-requisites we want computed before
     //our elem_execute method is called.
     dataNeeded.add_coordinates_field(*coordField, 3,
@@ -90,10 +94,6 @@ public:
     dataNeeded.add_master_element_call(sierra::nalu::SCS_GRAD_OP,
                                        sierra::nalu::CURRENT_COORDINATES);
     dataNeeded.add_gathered_nodal_field(*nodalPressureField, 1);
-
-    // add the master element
-    sierra::nalu::MasterElement* meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
-    dataNeeded.add_cvfem_surface_me(meSCS);
   }
 
   virtual ~DiscreteLaplacianSuppAlg() {}
@@ -133,7 +133,7 @@ public:
 
       sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeededByKernels_, meta.get_fields().size());
       const int bytes_per_team = 0;
-      const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension());
+      const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM);
       auto team_exec = sierra::nalu::get_host_team_policy(elemBuckets.size(), bytes_per_team, bytes_per_thread);
       Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team)
       {

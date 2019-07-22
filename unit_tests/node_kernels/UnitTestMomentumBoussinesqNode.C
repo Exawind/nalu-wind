@@ -21,7 +21,6 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_boussinesq)
   std::mt19937 rng;
   rng.seed(0); // fixed seed
   std::uniform_real_distribution<double> ref_densities(0.8,1.3);
-  const std::vector<double> forceVector{8.0, 8.0, 8.0};
 
   fill_mesh_and_init_fields();
 
@@ -38,7 +37,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_boussinesq)
   unit_test_utils::NodeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumBoussinesqNodeKernel>(
-    bulk_, forceVector, solnOpts_);
+    bulk_, solnOpts_);
 
   helperObjs.execute();
 

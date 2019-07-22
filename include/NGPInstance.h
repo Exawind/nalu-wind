@@ -67,7 +67,7 @@ inline void destroy(T* obj)
   Kokkos::parallel_for(debuggingName, 1, KOKKOS_LAMBDA(const int) {
       obj->~T();
     });
-  Kokkos::kokkos_free(obj);
+  kokkos_free_on_device(obj);
 }
 
 /** Wrapper object to hold device pointers within a Kokkos::View

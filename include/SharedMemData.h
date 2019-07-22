@@ -74,15 +74,16 @@ struct SharedMemData_FaceElem {
          unsigned nDim,
          const ElemDataRequestsGPU& faceDataNeeded,
          const ElemDataRequestsGPU& elemDataNeeded,
-         const ScratchMeInfo& meElemInfo,
+         unsigned nodesPerFace,
+         unsigned nodesPerElem,
          unsigned rhsSize)
-     : simdFaceViews(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded),
-       simdElemViews(team, nDim, meElemInfo, elemDataNeeded)
+     : simdFaceViews(team, nDim, nodesPerFace, faceDataNeeded),
+       simdElemViews(team, nDim, nodesPerElem, elemDataNeeded)
     {
 #ifndef KOKKOS_ENABLE_CUDA
         for(int simdIndex=0; simdIndex<simdLen; ++simdIndex) {
-          faceViews[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, meElemInfo.nodesPerFace_, faceDataNeeded));
-          elemViews[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, meElemInfo, elemDataNeeded));
+          faceViews[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, nodesPerFace, faceDataNeeded));
+          elemViews[simdIndex] = std::unique_ptr<ScratchViews<double,TEAMHANDLETYPE,SHMEM> >(new ScratchViews<double,TEAMHANDLETYPE,SHMEM>(team, nDim, nodesPerElem, elemDataNeeded));
         }
 #else
         faceViews[0] = &simdFaceViews;

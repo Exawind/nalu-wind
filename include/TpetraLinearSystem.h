@@ -154,8 +154,8 @@ public:
                              LinSys::LocalMatrix sharedNotOwnedLclMatrix,
                              LinSys::LocalVector ownedLclRhs,
                              LinSys::LocalVector sharedNotOwnedLclRhs,
-                             Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,MemSpace> entityLIDs,
-                             Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,MemSpace> entityColLIDs,
+                             LinSys::EntityToLIDView entityLIDs,
+                             LinSys::EntityToLIDView entityColLIDs,
                              int maxOwnedRowId, int maxSharedNotOwnedRowId, unsigned numDof)
     : ownedLocalMatrix_(ownedLclMatrix),
       sharedNotOwnedLocalMatrix_(sharedNotOwnedLclMatrix),
@@ -186,8 +186,8 @@ public:
   private:
     LinSys::LocalMatrix ownedLocalMatrix_, sharedNotOwnedLocalMatrix_;
     LinSys::LocalVector ownedLocalRhs_, sharedNotOwnedLocalRhs_;
-    Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,MemSpace> entityToLID_;
-    Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,MemSpace> entityToColLID_;
+    LinSys::EntityToLIDView entityToLID_;
+    LinSys::EntityToLIDView entityToColLID_;
     int maxOwnedRowId_, maxSharedNotOwnedRowId_;
     unsigned numDof_;
     TpetraLinSysCoeffApplier* devicePointer_;
@@ -271,8 +271,8 @@ private:
   Teuchos::RCP<LinSys::Export>      exporter_;
 
   MyLIDMapType myLIDs_;
-  Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,MemSpace> entityToColLID_;
-  Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,MemSpace> entityToLID_;
+  LinSys::EntityToLIDView entityToColLID_;
+  LinSys::EntityToLIDView entityToLID_;
   LocalOrdinal maxOwnedRowId_; // = num_owned_nodes * numDof_
   LocalOrdinal maxSharedNotOwnedRowId_; // = (num_owned_nodes + num_sharedNotOwned_nodes) * numDof_
 

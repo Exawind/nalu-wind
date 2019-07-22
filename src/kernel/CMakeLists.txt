@@ -4,6 +4,7 @@ add_sources(GlobalSourceList
    ContinuityMassElemKernel.C
    ContinuityMassHOElemKernel.C
    ContinuityOpenElemKernel.C
+   EnthalpyTGradBCElemKernel.C
    KernelBuilderLog.C
    MomentumActuatorSrcElemKernel.C
    MomentumAdvDiffElemKernel.C

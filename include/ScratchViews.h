@@ -19,6 +19,7 @@
 #include <KokkosInterface.h>
 #include <SimdInterface.h>
 #include <MultiDimViews.h>
+#include <ngp_utils/NgpMEUtils.h>
 
 #include <set>
 #include <type_traits>
@@ -26,34 +27,14 @@
 namespace sierra{
 namespace nalu{
 
-struct ScratchMeInfo {
-  KOKKOS_FUNCTION
-  ScratchMeInfo() = default;
-
-  KOKKOS_FUNCTION
-  ScratchMeInfo(const ScratchMeInfo&) = default;
-
-  KOKKOS_FUNCTION
-  ~ScratchMeInfo() = default;
-
-  int nodalGatherSize_ = 0;
-  int nodesPerFace_ = 0;
-  int nodesPerElement_ = 0;
-  int numFaceIp_ = 0;
-  int numScsIp_ = 0;
-  int numScvIp_ = 0;
-  int numFemIp_ = 0;
-};
-
-template<typename ELEMDATAREQUESTSTYPE>
+template<typename FieldInfoViewType>
 KOKKOS_INLINE_FUNCTION
-NumNeededViews count_needed_field_views(const ELEMDATAREQUESTSTYPE& dataNeeded)
+NumNeededViews count_needed_field_views(const FieldInfoViewType& neededFields)
 {
   NumNeededViews numNeededViews = {0, 0, 0, 0};
 
-  const typename ELEMDATAREQUESTSTYPE::FieldInfoView& neededFields = dataNeeded.get_fields();
   for(unsigned i=0; i<neededFields.size(); ++i) {
-    const typename ELEMDATAREQUESTSTYPE::FieldInfoType& fieldInfo = neededFields(i);
+    const auto& fieldInfo = neededFields(i);
     stk::mesh::EntityRank fieldEntityRank = get_entity_rank(fieldInfo);
     unsigned scalarsDim1 = fieldInfo.scalarsDim1;
     unsigned scalarsDim2 = fieldInfo.scalarsDim2;
@@ -228,12 +209,6 @@ public:
   ScratchViews(const TEAMHANDLETYPE& team,
                unsigned nDim,
                int nodesPerEntity,
-               const ElemDataRequestsGPU& dataNeeded);
-
-  KOKKOS_FUNCTION
-  ScratchViews(const TEAMHANDLETYPE& team,
-               unsigned nDim,
-               const ScratchMeInfo &meInfo,
                const ElemDataRequestsGPU& dataNeeded);
 
   KOKKOS_FUNCTION
@@ -803,7 +778,7 @@ ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
              unsigned nDim,
              int nodalGatherSize,
              const ElemDataRequestsGPU& dataNeeded)
- : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
+  : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded.get_fields()))
 {
   num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, nodalGatherSize, fieldViews) * sizeof(T);
 
@@ -824,17 +799,6 @@ ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
   int numFemIp = meFEM != nullptr ? meFEM->num_integration_points() : 0;
 
   create_needed_master_element_views(team, dataNeeded, nDim, nodesPerFace, nodesPerElem, numFaceIp, numScsIp, numScvIp, numFemIp);
-}
-
-template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
-ScratchViews<T,TEAMHANDLETYPE,SHMEM>::ScratchViews(const TEAMHANDLETYPE& team,
-             unsigned nDim,
-             const ScratchMeInfo &meInfo,
-             const ElemDataRequestsGPU& dataNeeded)
- : fieldViews(team, dataNeeded.get_total_num_fields(), count_needed_field_views(dataNeeded))
-{
-  num_bytes_required = create_needed_field_views<T,SHMEM>(team, dataNeeded, meInfo.nodalGatherSize_, fieldViews) * sizeof(T);
-  create_needed_master_element_views(team, dataNeeded, nDim, meInfo.nodesPerFace_, meInfo.nodesPerElement_, meInfo.numFaceIp_, meInfo.numScsIp_, meInfo.numScvIp_, meInfo.numFemIp_);
 }
 
 template<typename T,typename TEAMHANDLETYPE,typename SHMEM>
@@ -878,8 +842,9 @@ ScratchViews<T, TEAMHANDLETYPE, SHMEM>::fill_static_meviews(
   }
 }
 
-int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim);
-int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo);
+int get_num_scalars_pre_req_data(
+  const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim,
+  const ElemReqType reqType);
 
 template<typename T>
 KOKKOS_FUNCTION
@@ -914,30 +879,34 @@ void fill_master_element_views(ELEMDATAREQUESTSTYPE& dataNeeded,
     }
 }
 
-
-template<typename T, typename ELEMDATAREQUESTSTYPE>
-int get_num_bytes_pre_req_data(const ELEMDATAREQUESTSTYPE& dataNeededBySuppAlgs, int nDim)
+template <typename T, typename ELEMDATAREQUESTSTYPE>
+int get_num_bytes_pre_req_data(
+  const ELEMDATAREQUESTSTYPE& dataNeededBySuppAlgs,
+  int nDim,
+  const ElemReqType reqType)
 {
-  return sizeof(T) * get_num_scalars_pre_req_data(dataNeededBySuppAlgs, nDim);
-}
-template<typename T, typename ELEMDATAREQUESTSTYPE>
-int get_num_bytes_pre_req_data(const ELEMDATAREQUESTSTYPE& dataNeededBySuppAlgs, int nDim, const ScratchMeInfo &meInfo)
-{
-  return sizeof(T) * get_num_scalars_pre_req_data(dataNeededBySuppAlgs, nDim, meInfo);
+  return sizeof(T) * get_num_scalars_pre_req_data(dataNeededBySuppAlgs, nDim, reqType);
 }
 
-template<typename ELEMDATAREQUESTSTYPE>
-inline
-int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchIdsSize, int nDim,
-                                          const ELEMDATAREQUESTSTYPE& dataNeededByKernels)
+template <typename ELEMDATAREQUESTSTYPE>
+inline int
+calculate_shared_mem_bytes_per_thread(
+  int lhsSize,
+  int rhsSize,
+  int scratchIdsSize,
+  int nDim,
+  const ELEMDATAREQUESTSTYPE& dataNeededByKernels,
+  const ElemReqType reqType = ElemReqType::ELEM)
 {
-    int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int) +
-                         + get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim)
-                         + MultiDimViews<double>::bytes_needed(dataNeededByKernels.get_total_num_fields(),
-                                                 count_needed_field_views(dataNeededByKernels));
+  int bytes_per_thread =
+    (rhsSize + lhsSize) * sizeof(double) + (2 * scratchIdsSize) * sizeof(int) +
+    get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim, reqType) +
+    MultiDimViews<double>::bytes_needed(
+      dataNeededByKernels.get_total_num_fields(),
+      count_needed_field_views(dataNeededByKernels.get_host_fields()));
 
-    bytes_per_thread *= 2*simdLen;
-    return bytes_per_thread;
+  bytes_per_thread *= 2 * simdLen;
+  return bytes_per_thread;
 }
 
 inline
@@ -951,23 +920,31 @@ int calc_shmem_bytes_per_thread_edge(int rhsSize)
   return (matSize + idSize);
 }
 
-template<typename ELEMDATAREQUESTSTYPE>
-inline
-int calculate_shared_mem_bytes_per_thread(int lhsSize, int rhsSize, int scratchIdsSize, int nDim,
-                                      const ELEMDATAREQUESTSTYPE& faceDataNeeded,
-                                      const ELEMDATAREQUESTSTYPE& elemDataNeeded,
-                                      const sierra::nalu::ScratchMeInfo &meInfo)
+template <typename ELEMDATAREQUESTSTYPE>
+inline int
+calculate_shared_mem_bytes_per_thread(
+  int lhsSize,
+  int rhsSize,
+  int scratchIdsSize,
+  int nDim,
+  const ELEMDATAREQUESTSTYPE& faceDataNeeded,
+  const ELEMDATAREQUESTSTYPE& elemDataNeeded)
 {
-    int bytes_per_thread = (rhsSize + lhsSize)*sizeof(double) + (2*scratchIdsSize)*sizeof(int)
-                         + sierra::nalu::get_num_bytes_pre_req_data<double>(faceDataNeeded, nDim)
-                         + sierra::nalu::get_num_bytes_pre_req_data<double>(elemDataNeeded, nDim, meInfo)
-                         + MultiDimViews<double>::bytes_needed(faceDataNeeded.get_total_num_fields(),
-                                                 count_needed_field_views(faceDataNeeded))
-                         + MultiDimViews<double>::bytes_needed(elemDataNeeded.get_total_num_fields(),
-                                                 count_needed_field_views(elemDataNeeded));
+  int bytes_per_thread =
+    (rhsSize + lhsSize) * sizeof(double) + (2 * scratchIdsSize) * sizeof(int) +
+    sierra::nalu::get_num_bytes_pre_req_data<double>(
+      faceDataNeeded, nDim, ElemReqType::FACE) +
+    sierra::nalu::get_num_bytes_pre_req_data<double>(
+      elemDataNeeded, nDim, ElemReqType::FACE_ELEM) +
+    MultiDimViews<double>::bytes_needed(
+      faceDataNeeded.get_total_num_fields(),
+      count_needed_field_views(faceDataNeeded.get_host_fields())) +
+    MultiDimViews<double>::bytes_needed(
+      elemDataNeeded.get_total_num_fields(),
+      count_needed_field_views(elemDataNeeded.get_host_fields()));
 
-    bytes_per_thread *= 2*simdLen;
-    return bytes_per_thread;
+  bytes_per_thread *= 2 * simdLen;
+  return bytes_per_thread;
 }
 
 } // namespace nalu

@@ -35,7 +35,7 @@ public:
     double *rhs,
     stk::mesh::Entity node);
 
-  ScalarFieldType *dhdx_;
+  VectorFieldType *dhdx_;
   ScalarFieldType *specificHeat_;
   ScalarFieldType *tvisc_;
   ScalarFieldType *dualNodalVolume_;
