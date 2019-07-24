@@ -41,6 +41,7 @@ Edge32DSCS::Edge32DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   const int stk1DNodeMap[3] = { 0, 2, 1 };
 
   int scalar_index = 0;
@@ -52,6 +53,7 @@ Edge32DSCS::Edge32DSCS()
       ++scalar_index;
     }
   }
+#endif
 }
 
 //--------------------------------------------------------------------------

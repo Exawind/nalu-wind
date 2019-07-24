@@ -286,11 +286,13 @@ HexahedralP2Element::eval_shape_derivs_at_shifted_ips()
 void
 HexahedralP2Element::eval_shape_derivs_at_face_ips()
 {
+#ifndef KOKKOS_ENABLE_CUDA
   hex27_shape_deriv(
     numFaceIps_,
     intgExpFace_,
     expFaceShapeDerivs_
   );
+#endif
 }
 
 //--------------------------------------------------------------------------
@@ -578,6 +580,7 @@ HexahedralP2Element::hex27_shape_deriv(
 Hex27SCV::Hex27SCV()
   : HexahedralP2Element()
 {
+#ifndef KOKKOS_ENABLE_CUDA
   // set up integration rule and relevant maps for scvs
   set_interior_info();
 
@@ -592,6 +595,7 @@ Hex27SCV::Hex27SCV()
 
   referenceGradWeights_ = copy_deriv_weights_to_view<GradWeightType>(shapeDerivs_);
   shiftedReferenceGradWeights_ = copy_deriv_weights_to_view<GradWeightType>(shapeDerivsShift_);
+#endif
 }
 
 //--------------------------------------------------------------------------
@@ -600,6 +604,7 @@ Hex27SCV::Hex27SCV()
 void
 Hex27SCV::set_interior_info()
 {
+#ifndef KOKKOS_ENABLE_CUDA
   // tensor product nodes (3x3x3) x tensor product quadrature (2 x 2 x 2)
   int vector_index = 0; int scalar_index = 0;
   for (int n = 0; n < nodes1D_; ++n) {
@@ -637,6 +642,7 @@ Hex27SCV::set_interior_info()
       }
     }
   }
+#endif
 }
 
 //--------------------------------------------------------------------------
@@ -801,6 +807,7 @@ void Hex27SCV::Mij(
 Hex27SCS::Hex27SCS()
   : HexahedralP2Element()
 {
+#ifndef KOKKOS_ENABLE_CUDA
   // set up integration rule and relevant maps on scs
   set_interior_info();
 
@@ -822,6 +829,7 @@ Hex27SCS::Hex27SCS()
 
   eval_shape_derivs_at_face_ips();
   expReferenceGradWeights_ = copy_deriv_weights_to_view<ExpGradWeightType>(expFaceShapeDerivs_);
+#endif
 }
 
 //--------------------------------------------------------------------------

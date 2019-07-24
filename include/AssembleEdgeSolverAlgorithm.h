@@ -60,8 +60,11 @@ public:
 
     // Create local copies of class data for device capture
     const auto entityRank = entityRank_;
-    const auto nodesPerEntity = nodesPerEntity_;
     const auto rhsSize = rhsSize_;
+
+#ifndef KOKKOS_ENABLE_CUDA
+    const auto nodesPerEntity = nodesPerEntity_;
+#endif
 
     Kokkos::parallel_for(
       team_exec, KOKKOS_LAMBDA(const DeviceTeamHandleType& team) {

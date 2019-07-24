@@ -2578,13 +2578,13 @@ MomentumEquationSystem::save_diagonal_term(
   }
 }
 
+#ifndef KOKKOS_ENABLE_CUDA
 void
 MomentumEquationSystem::save_diagonal_term(
   unsigned nEntities,
   const ngp::Mesh::ConnectedNodes& entities,
   const SharedMemView<const double**,DeviceShmem>& lhs)
 {
-#ifndef KOKKOS_ENABLE_CUDA
   auto& bulk = realm_.bulk_data();
   const int nDim = realm_.spatialDimension_;
   constexpr bool forceAtomic = !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
@@ -2599,8 +2599,15 @@ MomentumEquationSystem::save_diagonal_term(
     else
       diagVal[0] += lhs(ix, ix);
   }
-#endif
 }
+#else
+void
+MomentumEquationSystem::save_diagonal_term(
+  unsigned,
+  const ngp::Mesh::ConnectedNodes&,
+  const SharedMemView<const double**,DeviceShmem>&)
+{}
+#endif
 
 void
 MomentumEquationSystem::assemble_and_solve(

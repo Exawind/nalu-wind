@@ -37,6 +37,7 @@ double linear_scalar_value(int dim, double a, const double* b, const double* x)
 
 }
 
+#ifndef KOKKOS_ENABLE_CUDA
 TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
 {
   stk::mesh::MetaData meta(3);
@@ -112,6 +113,7 @@ TEST(MasterElementFunctions, generic_grad_op_3d_hex_27)
    EXPECT_NEAR(meResult[j], polyResult[j], tol);
   }
 }
+#endif
 
 TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
 {
@@ -196,6 +198,7 @@ TEST(MasterElementFunctions, generic_grad_op_2d_tri_6)
 }
 
 
+#ifndef KOKKOS_ENABLE_CUDA
 TEST(Hex27SCV, detj)
 {
   stk::mesh::MetaData meta(3);
@@ -357,3 +360,4 @@ TEST(Hex27SCS, area_vec)
   EXPECT_EQ(typeCount[1], 96);
   EXPECT_EQ(typeCount[2], 24);
 }
+#endif
