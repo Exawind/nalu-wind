@@ -32,6 +32,7 @@ Quad93DSCS::Quad93DSCS()
   MasterElement::numIntPoints_ = numIntPoints_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   // set up integration rule and relevant maps on scs
   set_interior_info();
 
@@ -40,6 +41,7 @@ Quad93DSCS::Quad93DSCS()
   eval_shape_derivs_at_ips();
   eval_shape_functions_at_shifted_ips();
   eval_shape_derivs_at_shifted_ips();
+#endif
 }
 
 //--------------------------------------------------------------------------

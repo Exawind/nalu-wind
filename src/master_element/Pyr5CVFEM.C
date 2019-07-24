@@ -426,8 +426,10 @@ void PyrSCV::determinant(
       epyrcoords[inode][k] = coords[pyramidSubcontrolNodeTable[icv][inode]][k];
     }
   }
+#ifndef KOKKOS_ENABLE_CUDA
   // compute volume using an equivalent polyhedron
   vol(icv) = octohedron_volume_by_triangle_facets(epyrcoords);
+#endif
 }
 
 //--------------------------------------------------------------------------
@@ -607,7 +609,9 @@ PyrSCS::PyrSCS()
   MasterElement::nDim_ = nDim_;
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
+#ifndef KOKKOS_ENABLE_CUDA
   fill_intg_exp_face_shift(intgExpFaceShift_, sideNodeOrdinals_);
+#endif
 }
 
 //--------------------------------------------------------------------------

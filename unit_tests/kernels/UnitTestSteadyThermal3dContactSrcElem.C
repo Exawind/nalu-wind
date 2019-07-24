@@ -11,6 +11,7 @@
 
 #include "user_functions/SteadyThermal3dContactSrcElemKernel.h"
 
+#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
 namespace steady_3d_thermal {
@@ -25,7 +26,6 @@ static constexpr double rhs[8] = {
 } // hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_ENABLE_CUDA
 
 /// Steady 3D MMS source term
 TEST_F(HeatCondKernelHex8Mesh, steady_3d_thermal)

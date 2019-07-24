@@ -159,19 +159,23 @@ HigherOrderQuad3DSCS::HigherOrderQuad3DSCS(
 : MasterElement(),
   basis_(std::move(basis)),
   quadrature_(std::move(quadrature)),
+#ifndef KOKKOS_ENABLE_CUDA
   nodeMap(make_node_map_quad(basis.order())),
+#endif
   nodes1D_(basis.order()+1)
 {
   surfaceDimension_ = 2;
   MasterElement::nDim_ = 3;
   nodesPerElement_ = nodes1D_*nodes1D_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   // set up integration rule and relevant maps on scs
   set_interior_info();
 
   // compute and save shape functions and derivatives at ips
   shapeFunctionVals_ = basis_.eval_basis_weights(intgLoc_);
   shapeDerivs_ = basis_.eval_deriv_weights(intgLoc_);
+#endif
 }
 
 void
@@ -297,19 +301,22 @@ HigherOrderQuad2DSCV::HigherOrderQuad2DSCV(
 : MasterElement(),
   basis_(std::move(basis)),
   quadrature_(std::move(quadrature)),
+#ifndef KOKKOS_ENABLE_CUDA
   nodeMap(make_node_map_quad(basis.order())),
+#endif
   nodes1D_(basis.order()+1)
 {
   MasterElement::nDim_ = 2;
   nodesPerElement_ = nodes1D_*nodes1D_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   // set up integration rule and relevant maps for scvs
   set_interior_info();
 
   // compute and save shape functions and derivatives at ips
   shapeFunctionVals_ = basis_.eval_basis_weights(intgLoc_);
   shapeDerivs_ = basis_.eval_deriv_weights(intgLoc_);
-
+#endif
 }
 
 void
@@ -451,15 +458,18 @@ HigherOrderQuad2DSCS::HigherOrderQuad2DSCS(
   TensorProductQuadratureRule quadrature)
 : MasterElement(),
   basis_(std::move(basis)),
-  quadrature_(std::move(quadrature)),
-  nodeMap(make_node_map_quad(basis.order())),
+  quadrature_(std::move(quadrature))
+#ifndef KOKKOS_ENABLE_CUDA
+  , nodeMap(make_node_map_quad(basis.order())),
   faceNodeMap(make_face_node_map_quad(basis.order())),
-  sideNodeOrdinals_(make_side_node_ordinal_map_quad(basis.order())),
-  nodes1D_(basis.order()+1)
+  sideNodeOrdinals_(make_side_node_ordinal_map_quad(basis.order()))
+#endif
+  , nodes1D_(basis.order()+1)
 {
   MasterElement::nDim_ = 2;
   nodesPerElement_ = nodes1D_*nodes1D_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   // set up integration rule and relevant maps for scs
   set_interior_info();
 
@@ -470,6 +480,7 @@ HigherOrderQuad2DSCS::HigherOrderQuad2DSCS(
   shapeFunctionVals_ = basis_.eval_basis_weights(intgLoc_);
   shapeDerivs_ = basis_.eval_deriv_weights(intgLoc_);
   expFaceShapeDerivs_ = basis_.eval_deriv_weights(intgExpFace_);
+#endif
 }
 
 double parametric_distance_quad(const double* x)
@@ -915,13 +926,16 @@ HigherOrderEdge2DSCS::HigherOrderEdge2DSCS(
 : MasterElement(),
   basis_(basis),
   quadrature_(quadrature),
+#ifndef KOKKOS_ENABLE_CUDA
   nodeMap(make_node_map_edge(basis.order())),
+#endif
   nodes1D_(basis.order()+1)
 {
   MasterElement::nDim_ = 2;
   nodesPerElement_ = nodes1D_;
   numIntPoints_ = quadrature_.num_quad() * nodes1D_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   ipNodeMap_= Kokkos::View<int*>("ipNodeMap_", numIntPoints_);
   intgLoc_ =  Kokkos::View<double*[1]>("intgLoc_", numIntPoints_);
   ipWeights_ = Kokkos::View<double*>("ipWeights_",numIntPoints_);
@@ -938,6 +952,7 @@ HigherOrderEdge2DSCS::HigherOrderEdge2DSCS(
   }
   shapeFunctionVals_ = basis_.eval_basis_weights(intgLoc_);
   shapeDerivs_ = basis_.eval_deriv_weights(intgLoc_);
+#endif
 }
 
 const int *

@@ -337,6 +337,7 @@ WedSCS::WedSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   const double nodeLocations[6][3] =
   {
       {0.0,0.0, -1.0}, {+1.0, 0.0, -1.0}, {0.0, +1.0, -1.0},
@@ -354,6 +355,7 @@ WedSCS::WedSCS()
       ++index;
     }
   }
+#endif
 }
 
 //--------------------------------------------------------------------------

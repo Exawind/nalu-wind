@@ -89,8 +89,11 @@ AssembleNGPNodeSolverAlgorithm::execute()
   const auto& meta = realm_.meta_data();
   const auto& ngpMesh = realm_.ngp_mesh();
   const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
-  const int nodesPerEntity = 1;
   const int rhsSize = rhsSize_;
+
+#ifndef KOKKOS_ENABLE_CUDA
+  const int nodesPerEntity = 1;
+#endif
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = calc_shmem_bytes_per_thread(rhsSize);

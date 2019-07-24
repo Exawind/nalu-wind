@@ -70,6 +70,7 @@ public:
 
   void shifted_shape_fcn(double *shpfc) override;
   
+  KOKKOS_FUNCTION
   void tet_shape_fcn(
     const int npts,
     const double *par_coord, 
@@ -226,6 +227,7 @@ public:
 
   void shifted_shape_fcn(double *shpfc) override;
 
+  KOKKOS_FUNCTION
   void tet_shape_fcn(
     const int npts,
     const double *par_coord,

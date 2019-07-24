@@ -322,6 +322,7 @@ TetSCS::TetSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   const double nodeLocations[4][3] = {{0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}};
 
   stk::topology topo = stk::topology::TET_4;
@@ -334,6 +335,7 @@ TetSCS::TetSCS()
       intgExpFaceShift_[k][n][2] = nodeLocations[ordinals[n]][2];
     }
   }
+#endif
 }
 
 //--------------------------------------------------------------------------

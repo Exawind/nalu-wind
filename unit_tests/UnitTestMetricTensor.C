@@ -186,6 +186,7 @@ TEST(MetricTensor, hex27)
 }
 
 
+#ifndef KOKKOS_ENABLE_CUDA
 TEST(MetricTensorNGP, hex27)
 {
   stk::topology topo =  stk::topology::HEX_27;
@@ -250,3 +251,4 @@ TEST(MetricTensorNGP, hex27)
     }
   }
 }
+#endif

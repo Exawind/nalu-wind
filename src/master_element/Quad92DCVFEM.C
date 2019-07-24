@@ -342,6 +342,7 @@ QuadrilateralP2Element::sidePcoords_to_elemPcoords(
 
 //-------- quad_gradient_operator ---------------------------------------------------------
 template <int nint, int npe>
+KOKKOS_FUNCTION
 void quad_gradient_operator(SharedMemView<DoubleType**, DeviceShmem>& coords,
                             SharedMemView<DoubleType***, DeviceShmem>& gradop,
                             SharedMemView<DoubleType***, DeviceShmem>& deriv) {
@@ -393,6 +394,7 @@ Quad92DSCV::Quad92DSCV()
 : QuadrilateralP2Element()
 {
   MasterElement::numIntPoints_ = numIntPoints_;
+#ifndef KOKKOS_ENABLE_CUDA
   // set up integration rule and relevant maps for scvs
   set_interior_info();
 
@@ -401,6 +403,7 @@ Quad92DSCV::Quad92DSCV()
   quad9_shape_deriv(numIntPoints_, intgLoc_,      shapeDerivs_);
   quad9_shape_fcn  (numIntPoints_, intgLocShift_, shapeFunctionsShift_);
   quad9_shape_deriv(numIntPoints_, intgLocShift_, shapeDerivsShift_);
+#endif
 }
 
 //--------------------------------------------------------------------------
@@ -657,6 +660,7 @@ Quad92DSCS::Quad92DSCS()
   : QuadrilateralP2Element()
 {
   MasterElement::numIntPoints_ = numIntPoints_;
+#ifndef KOKKOS_ENABLE_CUDA
   // set up integration rule and relevant maps for scs
   set_interior_info();
 
@@ -669,6 +673,7 @@ Quad92DSCS::Quad92DSCS()
   quad9_shape_deriv(numIntPoints_, intgExpFace_,  expFaceShapeDerivs_);
   quad9_shape_fcn  (numIntPoints_, intgLocShift_, shapeFunctionsShift_);
   quad9_shape_deriv(numIntPoints_, intgLocShift_, shapeDerivsShift_);
+#endif
 }
 
 //--------------------------------------------------------------------------
