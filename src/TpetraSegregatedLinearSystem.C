@@ -905,8 +905,8 @@ void TpetraSegregatedLinearSystem::finalizeLinearSystem()
   ownedRhs_ = Teuchos::rcp(new LinSys::MultiVector(ownedRowsMap_, numDof_));
   sharedNotOwnedRhs_ = Teuchos::rcp(new LinSys::MultiVector(sharedNotOwnedRowsMap_, numDof_));
 
-  ownedLocalRhs_ = ownedRhs_->getLocalView<sierra::nalu::DeviceSpace>();
-  sharedNotOwnedLocalRhs_ = sharedNotOwnedRhs_->getLocalView<sierra::nalu::DeviceSpace>();
+  ownedLocalRhs_ = ownedRhs_->getLocalViewDevice ();
+  sharedNotOwnedLocalRhs_ = sharedNotOwnedRhs_->getLocalViewDevice ();
 
   sln_ = Teuchos::rcp(new LinSys::MultiVector(ownedRowsMap_, numDof_));
 
