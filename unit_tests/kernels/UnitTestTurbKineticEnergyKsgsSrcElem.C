@@ -11,8 +11,6 @@
 
 #include "kernel/TurbKineticEnergyKsgsSrcElemKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
-
 namespace {
 namespace hex8_golds {
 namespace TurbKineticEnergyKsgsSrcElemKernel {
@@ -43,8 +41,6 @@ static constexpr double rhs[8] = {
 } // namespace hex8_golds
 } // anonymous namespace
 
-#endif
-
 TEST_F(KsgsKernelHex8Mesh, NGP_turb_kinetic_energy_ksgs_src_elem_kernel)
 {
 
@@ -73,8 +69,6 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_kinetic_energy_ksgs_src_elem_kernel)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
-
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -85,8 +79,5 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_kinetic_energy_ksgs_src_elem_kernel)
     helperObjs.linsys->rhs_, gold_values::rhs, 1.0e-14);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs, 1.0e-14);
-
-#endif
 }
-
 

@@ -43,7 +43,6 @@ TEST_F(MomentumKernelHex8Mesh, NGP_buoyancy_boussinesq)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
@@ -56,6 +55,5 @@ TEST_F(MomentumKernelHex8Mesh, NGP_buoyancy_boussinesq)
     rhsExact[i] = -0.125 * solnOpts_.gravity_[2] * expFac * (300.0 - solnOpts_.referenceTemperature_);
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,rhsExact.data());
-#endif
 }
 
