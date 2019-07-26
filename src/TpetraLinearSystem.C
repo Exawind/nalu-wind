@@ -915,8 +915,8 @@ void TpetraLinearSystem::finalizeLinearSystem()
   ownedRhs_ = Teuchos::rcp(new LinSys::MultiVector(ownedRowsMap_, 1));
   sharedNotOwnedRhs_ = Teuchos::rcp(new LinSys::MultiVector(sharedNotOwnedRowsMap_, 1));
 
-  ownedLocalRhs_ = ownedRhs_->getLocalViewDevice ();
-  sharedNotOwnedLocalRhs_ = sharedNotOwnedRhs_->getLocalViewDevice() ;
+  ownedLocalRhs_ = ownedRhs_->getLocalView<sierra::nalu::DeviceSpace>();
+  sharedNotOwnedLocalRhs_ = sharedNotOwnedRhs_->getLocalView<sierra::nalu::DeviceSpace>();
 
   sln_ = Teuchos::rcp(new LinSys::MultiVector(ownedRowsMap_, 1));
 
