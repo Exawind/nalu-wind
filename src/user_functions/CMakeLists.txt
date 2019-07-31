@@ -8,6 +8,7 @@ add_sources(GlobalSourceList
    ConvectingTaylorVortexPressureAuxFunction.C
    ConvectingTaylorVortexVelocityAuxFunction.C
    FlowPastCylinderTempAuxFunction.C
+   GaussJetVelocityAuxFunction.C
    KovasznayPressureAuxFunction.C
    KovasznayVelocityAuxFunction.C
    LinearRampMeshDisplacementAuxFunction.C

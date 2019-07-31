@@ -180,6 +180,7 @@
 
 #include <user_functions/TaylorGreenPressureAuxFunction.h>
 #include <user_functions/TaylorGreenVelocityAuxFunction.h>
+#include <user_functions/GaussJetVelocityAuxFunction.h>
 
 #include <user_functions/BoussinesqNonIsoVelocityAuxFunction.h>
 
@@ -1587,6 +1588,9 @@ MomentumEquationSystem::register_inflow_bc(
     }
     else if ( fcnName == "kovasznay") {
       theAuxFunc = new KovasznayVelocityAuxFunction(0,nDim);
+    }
+    else if ( fcnName == "GaussJet") {
+      theAuxFunc = new GaussJetVelocityAuxFunction(0,nDim);
     }
     else {
       throw std::runtime_error("MomentumEquationSystem::register_inflow_bc: limited functions supported");
@@ -3032,6 +3036,9 @@ ContinuityEquationSystem::register_inflow_bc(
       else if ( fcnName == "BoussinesqNonIso") {
         theAuxFunc = new BoussinesqNonIsoVelocityAuxFunction(0, nDim);
       }
+      else if ( fcnName == "GaussJet") {
+         theAuxFunc = new GaussJetVelocityAuxFunction(0,nDim);
+       }
       else {
         throw std::runtime_error("ContEquationSystem::register_inflow_bc: limited functions supported");
       }
