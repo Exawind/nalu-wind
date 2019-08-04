@@ -30,6 +30,35 @@ void assign(const InputLhsType& inputLhs, const InputRhsType& inputRhs,
     }
 }
 
+template<typename LHSView, typename RHSView>
+KOKKOS_FUNCTION
+void edgeSumInto(
+    unsigned numEntities,
+    const ngp::Mesh::ConnectedNodes&  entities,
+    const sierra::nalu::SharedMemView<const double*,sierra::nalu::DeviceShmem> & rhs,
+    const sierra::nalu::SharedMemView<const double**,sierra::nalu::DeviceShmem> & lhs,
+    unsigned numDof,
+    RHSView rhs_, LHSView lhs_)
+{
+  for (unsigned i=0; i < numEntities; ++i) {
+    auto ioff = (entities[i].local_offset() - 1) * numDof;
+    for (unsigned d=0; d < numDof; ++d)
+      Kokkos::atomic_add(&rhs_(ioff + d), rhs(i * numDof + d));
+  }
+
+  for (unsigned i=0; i < numEntities; ++i) {
+    auto ioff = (entities[i].local_offset() - 1) * numDof;
+    for (unsigned j=0; j < numEntities; ++j) {
+      auto joff = (entities[j].local_offset() - 1) * numDof;
+      for (unsigned d=0; d < numDof; ++d) {
+        auto ii = i * numDof + d;
+        auto jj = j * numDof + d;
+        Kokkos::atomic_add(&lhs_(ioff + d, joff + d), lhs(ii, jj));
+      }
+    }
+  }
+}
+
 using LHSView = Kokkos::View<double**>;
 using RHSView = Kokkos::View<double*>;
 
@@ -37,9 +66,9 @@ class TestCoeffApplier : public sierra::nalu::CoeffApplier
 {
 public:
   KOKKOS_FUNCTION
-  TestCoeffApplier(LHSView& lhs, RHSView& rhs, unsigned numContributionsToAccept = 1)
+  TestCoeffApplier(LHSView& lhs, RHSView& rhs, bool isEdge=false, unsigned nDof=1, unsigned numContributionsToAccept=1)
   : lhs_(lhs), rhs_(rhs), devicePointer_(nullptr),
-    numContributionsToAccept_(numContributionsToAccept), numContributions_(0)
+    numContributionsToAccept_(numContributionsToAccept), numContributions_(0), isEdge_(isEdge), numDof_(nDof)
   {}
 
   KOKKOS_FUNCTION
@@ -51,18 +80,23 @@ public:
   }
 
   KOKKOS_FUNCTION
-  void operator()(unsigned /*numEntities*/,
-                  const ngp::Mesh::ConnectedNodes& /*entities*/,
+  void operator()(unsigned numEntities,
+                  const ngp::Mesh::ConnectedNodes& entities,
                   const sierra::nalu::SharedMemView<int*, sierra::nalu::DeviceShmem> & /*localIds*/,
                   const sierra::nalu::SharedMemView<int*, sierra::nalu::DeviceShmem> & /*sortPermutation*/,
                   const sierra::nalu::SharedMemView<const double*, sierra::nalu::DeviceShmem> & rhs,
                   const sierra::nalu::SharedMemView<const double**, sierra::nalu::DeviceShmem> & lhs,
                   const char * /*trace_tag*/)
   {
-    if (numContributions_ < numContributionsToAccept_) {
-      assign(lhs, rhs, lhs_, rhs_);
-      ++numContributions_;
+    if (isEdge_) {
+      edgeSumInto(numEntities, entities, rhs, lhs, numDof_, rhs_, lhs_);
     }
+    else {
+      if (numContributions_ < numContributionsToAccept_) {
+        assign(lhs, rhs, lhs_, rhs_);
+      }
+    }
+    ++numContributions_;
   }
 
   void free_device_pointer()
@@ -89,14 +123,17 @@ private:
   TestCoeffApplier* devicePointer_;
   unsigned numContributionsToAccept_;
   unsigned numContributions_;
+  bool isEdge_;
+  unsigned numDof_;
 };
 
 class TestLinearSystem : public sierra::nalu::LinearSystem
 {
 public:
  TestLinearSystem( sierra::nalu::Realm &realm, const unsigned numDof,
-                   sierra::nalu::EquationSystem *eqSys, stk::topology topo)
-   : sierra::nalu::LinearSystem(realm, numDof, eqSys, nullptr), numSumIntoCalls_(0)
+                   sierra::nalu::EquationSystem *eqSys, stk::topology topo, bool isEdge=false)
+   : sierra::nalu::LinearSystem(realm, numDof, eqSys, nullptr), numSumIntoCalls_(0),
+     numDof_(numDof), isEdge_(isEdge)
   {
     unsigned rhsSize = numDof * topo.num_nodes();
 
@@ -141,7 +178,7 @@ public:
 
   sierra::nalu::CoeffApplier* get_coeff_applier()
   {
-    return new TestCoeffApplier(lhs_, rhs_);
+    return new TestCoeffApplier(lhs_, rhs_, isEdge_, numDof_);
   }
 
   virtual void sumInto(
@@ -216,6 +253,8 @@ public:
   LHSView::HostMirror hostlhs_;
   RHSView rhs_;
   RHSView::HostMirror hostrhs_;
+  unsigned numDof_;
+  bool isEdge_;
 
 protected:
   virtual void beginLinearSystemConstruction() {}
@@ -232,7 +271,8 @@ public:
     const unsigned numDof,
     sierra::nalu::EquationSystem* eqSys,
     stk::topology topo
-  ) : TestLinearSystem(realm, numDof, eqSys, topo)
+  ) : TestLinearSystem(realm, numDof, eqSys, topo, true/*isEdge*/),
+      numDof_(numDof)
   {}
 
   using TestLinearSystem::sumInto;
@@ -245,26 +285,11 @@ public:
     const sierra::nalu::SharedMemView<int*,sierra::nalu::DeviceShmem> &  /* sortPermutation */,
     const char *  /* trace_tag */)
   {
-    for (unsigned i=0; i < numEntities; ++i) {
-      auto ioff = (entities[i].local_offset() - 1) * numDof();
-      for (unsigned d=0; d < numDof(); ++d)
-        Kokkos::atomic_add(&rhs_(ioff + d), rhs(i * numDof() + d));
-    }
-
-    for (unsigned i=0; i < numEntities; ++i) {
-      auto ioff = (entities[i].local_offset() - 1) * numDof();
-      for (unsigned j=0; j < numEntities; ++j) {
-        auto joff = (entities[j].local_offset() - 1) * numDof();
-        for (unsigned d=0; d < numDof(); ++d) {
-          auto ii = i * numDof() + d;
-          auto jj = j * numDof() + d;
-          Kokkos::atomic_add(&lhs_(ioff + d, joff + d), lhs(ii, jj));
-        }
-      }
-    }
+    edgeSumInto(numEntities, entities, rhs, lhs, numDof_, rhs_, lhs_);
     Kokkos::atomic_add(&numSumIntoCalls_, 1u);
   }
 
+  unsigned numDof_;
 };
 
 } // namespace unit_test_utils
