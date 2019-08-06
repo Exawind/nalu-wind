@@ -156,6 +156,15 @@ public:
     SharedMemView<DoubleType*, DeviceShmem>&,
     ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&)
   {}
+
+  KOKKOS_FUNCTION
+  virtual void execute(
+    SharedMemView<DoubleType**,DeviceShmem> & /* lhs */,
+    SharedMemView<DoubleType*,DeviceShmem> & /* rhs */,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem> & /* faceScratchViews */,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem> & /* elemScratchViews */,
+    int /* elemFaceOrdinal */)
+  {}
 #endif
 };
 
