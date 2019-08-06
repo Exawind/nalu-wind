@@ -144,6 +144,9 @@ public:
     hostlhs_ = Kokkos::create_mirror_view(lhs_);
   }
 
+  int getRowLID(stk::mesh::Entity node) const { return node.local_offset() - 1; }
+  int getColLID(stk::mesh::Entity node) const { return node.local_offset() - 1; }
+
   virtual ~TestLinearSystem() {}
 
   // Graph/Matrix Construction
@@ -182,8 +185,8 @@ public:
   }
 
   virtual void sumInto(
-    unsigned  /* numEntities */,
-    const ngp::Mesh::ConnectedNodes&  /* entities */,
+    unsigned  numEntities,
+    const ngp::Mesh::ConnectedNodes&  entities,
     const sierra::nalu::SharedMemView<const double*,sierra::nalu::DeviceShmem> & rhs,
     const sierra::nalu::SharedMemView<const double**,sierra::nalu::DeviceShmem> & lhs,
     const sierra::nalu::SharedMemView<int*,sierra::nalu::DeviceShmem> &  /* localIds */,
@@ -191,8 +194,13 @@ public:
     const char *  /* trace_tag */
   )
   {
-    if (numSumIntoCalls_ == 0) {
-      assign(lhs, rhs, lhs_, rhs_);
+    if (isEdge_) {
+      edgeSumInto(numEntities, entities, rhs, lhs, numDof_, rhs_, lhs_);
+    }
+    else {
+      if (numSumIntoCalls_ == 0) {
+        assign(lhs, rhs, lhs_, rhs_);
+      }
     }
     Kokkos::atomic_add(&numSumIntoCalls_, 1u);
   }
