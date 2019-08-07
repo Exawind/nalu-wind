@@ -8,4 +8,5 @@ add_sources(GlobalSourceList
   # Face/edge BC kernels
   MomentumABLWallFuncEdgeKernel.C
   MomentumSymmetryEdgeKernel.C
+  ScalarEdgeOpenSolverAlg.C
   )

@@ -572,6 +572,8 @@ public:
     : LowMachKernelHex8Mesh(),
       tke_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "turbulent_ke")),
+      tkebc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "bc_turbulent_ke")),
       sdr_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "specific_dissipation_rate")),
       tvisc_(&meta_.declare_field<ScalarFieldType>(
@@ -585,9 +587,12 @@ public:
       dkdx_(&meta_.declare_field<VectorFieldType>(
               stk::topology::NODE_RANK, "dkdx")),
       dwdx_(&meta_.declare_field<VectorFieldType>(
-              stk::topology::NODE_RANK, "dwdx"))
+              stk::topology::NODE_RANK, "dwdx")),
+      openMassFlowRate_(&meta_.declare_field<GenericFieldType>(
+        meta_.side_rank(), "open_mass_flow_rate"))
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tkebc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*sdr_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*maxLengthScale_, meta_.universal_part(), 1, nullptr);
@@ -598,6 +603,13 @@ public:
       *dkdx_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
       *dwdx_, meta_.universal_part(), spatialDim_, nullptr);
+    double initOpenMassFlowRate[sierra::nalu::AlgTraitsQuad4::numScsIp_];
+    for (int i = 0; i < sierra::nalu::AlgTraitsQuad4::numScsIp_; ++i) {
+      initOpenMassFlowRate[i] = 10.0; 
+    }
+    stk::mesh::put_field_on_mesh(
+      *openMassFlowRate_, meta_.universal_part(),
+      sierra::nalu::AlgTraitsQuad4::numScsIp_, initOpenMassFlowRate);
   }
 
   virtual ~SSTKernelHex8Mesh() {}
@@ -620,6 +632,7 @@ public:
   }
 
   ScalarFieldType* tke_{nullptr};
+  ScalarFieldType* tkebc_{nullptr};
   ScalarFieldType* sdr_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* maxLengthScale_{nullptr};
@@ -627,6 +640,7 @@ public:
   GenericFieldType* dudx_{nullptr};
   VectorFieldType* dkdx_{nullptr};
   VectorFieldType* dwdx_{nullptr};
+  GenericFieldType* openMassFlowRate_{nullptr};
 };
 
 /** Test Fixture for the Turbulence Kernels

@@ -97,6 +97,7 @@ public:
   ScalarFieldType* sdr_{nullptr};
   ScalarFieldType* minDistance_{nullptr};
   GenericFieldType* dudx_{nullptr};
+  GenericFieldType* openMassFlowRate_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* maxLengthScale_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
@@ -106,6 +107,7 @@ public:
   VectorFieldType* dwdx_{nullptr};
   VectorFieldType* dhdx_{nullptr};
   ScalarFieldType* specificHeat_{nullptr};
+  ScalarFieldType* tkebc_{nullptr};
 };
 
 struct NodeSuppHelper {
