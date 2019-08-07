@@ -572,6 +572,8 @@ public:
     : LowMachKernelHex8Mesh(),
       tke_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "turbulent_ke")),
+      tkebc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "bc_turbulent_ke")),
       sdr_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "specific_dissipation_rate")),
       tvisc_(&meta_.declare_field<ScalarFieldType>(
@@ -585,9 +587,12 @@ public:
       dkdx_(&meta_.declare_field<VectorFieldType>(
               stk::topology::NODE_RANK, "dkdx")),
       dwdx_(&meta_.declare_field<VectorFieldType>(
-              stk::topology::NODE_RANK, "dwdx"))
+              stk::topology::NODE_RANK, "dwdx")),
+      openMassFlowRate_(&meta_.declare_field<GenericFieldType>(
+        meta_.side_rank(), "open_mass_flow_rate"))
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tkebc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*sdr_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*maxLengthScale_, meta_.universal_part(), 1, nullptr);
@@ -598,6 +603,13 @@ public:
       *dkdx_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
       *dwdx_, meta_.universal_part(), spatialDim_, nullptr);
+    double initOpenMassFlowRate[sierra::nalu::AlgTraitsQuad4::numScsIp_];
+    for (int i = 0; i < sierra::nalu::AlgTraitsQuad4::numScsIp_; ++i) {
+      initOpenMassFlowRate[i] = 10.0; 
+    }
+    stk::mesh::put_field_on_mesh(
+      *openMassFlowRate_, meta_.universal_part(),
+      sierra::nalu::AlgTraitsQuad4::numScsIp_, initOpenMassFlowRate);
   }
 
   virtual ~SSTKernelHex8Mesh() {}
@@ -620,6 +632,7 @@ public:
   }
 
   ScalarFieldType* tke_{nullptr};
+  ScalarFieldType* tkebc_{nullptr};
   ScalarFieldType* sdr_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* maxLengthScale_{nullptr};
@@ -627,6 +640,7 @@ public:
   GenericFieldType* dudx_{nullptr};
   VectorFieldType* dkdx_{nullptr};
   VectorFieldType* dwdx_{nullptr};
+  GenericFieldType* openMassFlowRate_{nullptr};
 };
 
 /** Test Fixture for the Turbulence Kernels
@@ -892,56 +906,6 @@ public:
   const double rhoSecondary_;
   const double viscPrimary_;
   const double viscSecondary_;
-};
-
-/** Test fixture for generic scalar open edge kernels
- *
- *  This test fixture performs the following actions:
- *    - Create a HEX8 mesh with one element
- */
-class ScalarOpenEdgeKernelHex8Mesh : public TestKernelHex8Mesh
-{
-public:
-  ScalarOpenEdgeKernelHex8Mesh()
-    : TestKernelHex8Mesh(),
-    scalarQ_(&meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK,
-                                                       "turbulent_ke", 2)),
-    bcScalarQ_(&meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK,
-                                                       "bc_turbulent_ke")),
-    viscosity_(&meta_.declare_field<ScalarFieldType>(stk::topology::NODE_RANK,
-                                                     "viscosity")),
-    dqdx_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dqdx")),
-    openMassFlowRate_(&meta_.declare_field<GenericFieldType>(meta_.side_rank(),
-                                                         "open_mass_flow_rate"))
-  {
-    stk::mesh::put_field_on_mesh(*scalarQ_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(*bcScalarQ_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(*dqdx_, meta_.universal_part(), spatialDim_, nullptr);
-
-    double initOpenMassFlowRate[sierra::nalu::AlgTraitsQuad4::numScsIp_];
-    for (int i = 0; i < sierra::nalu::AlgTraitsQuad4::numScsIp_; ++i) {
-      initOpenMassFlowRate[i] = 10.0; 
-    }
-    stk::mesh::put_field_on_mesh(
-      *openMassFlowRate_, meta_.universal_part(),
-      sierra::nalu::AlgTraitsQuad4::numScsIp_, initOpenMassFlowRate);
-  }
-  virtual ~ScalarOpenEdgeKernelHex8Mesh() {}
-
-  virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false) override
-  {
-    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
-
-    unit_test_kernel_utils::tke_test_function(bulk_, *coordinates_, *scalarQ_);
-  }
-
-  ScalarFieldType* scalarQ_{nullptr};
-  ScalarFieldType* bcScalarQ_{nullptr};
-  ScalarFieldType* viscosity_{nullptr};
-  VectorFieldType* dqdx_{nullptr};
-  GenericFieldType* openMassFlowRate_{nullptr};
 };
 
 /** Text fixture for actuator source kernels

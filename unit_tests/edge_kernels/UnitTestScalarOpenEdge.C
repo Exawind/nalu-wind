@@ -32,7 +32,7 @@ static constexpr double lhs[8][8] = {
 }
 #endif
 
-TEST_F(ScalarOpenEdgeKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
+TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
 {
   if (bulk_.parallel_size() > 1) return;
 
@@ -52,7 +52,7 @@ TEST_F(ScalarOpenEdgeKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
   std::unique_ptr<sierra::nalu::Kernel> kernel(
     new sierra::nalu::ScalarEdgeOpenSolverAlg<
       sierra::nalu::AlgTraitsQuad4Hex8>(
-      meta_, solnOpts_, scalarQ_, bcScalarQ_, dqdx_, viscosity_, 
+      meta_, solnOpts_, tke_, tkebc_, dkdx_, tvisc_, 
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
       helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));
 

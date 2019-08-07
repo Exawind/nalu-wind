@@ -46,7 +46,7 @@ ScalarEdgeOpenSolverAlg<BcAlgTraits>::ScalarEdgeOpenSolverAlg(
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);
 
   faceDataPreReqs.add_gathered_nodal_field(diffFluxCoeff_, 1);
-  faceDataPreReqs.add_ip_field(openMassFlowRate_, BcAlgTraits::numFaceIp_);
+  faceDataPreReqs.add_face_field(openMassFlowRate_, BcAlgTraits::numFaceIp_);
   elemDataPreReqs.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
   elemDataPreReqs.add_gathered_nodal_field(scalarQ_, 1);
   elemDataPreReqs.add_gathered_nodal_field(bcScalarQ_, 1);

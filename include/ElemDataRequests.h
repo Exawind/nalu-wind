@@ -138,16 +138,6 @@ public:
     add_face_field(*meta_.get_fields()[field], scalarsPerFace);
   }
 
-  inline void add_ip_field(unsigned field, unsigned scalarsPerNode)
-  {
-    add_ip_field(*meta_.get_fields()[field], scalarsPerNode);
-  }
-
-  inline void add_ip_field(unsigned field, unsigned tensorDim1, unsigned tensorDim2)
-  {
-    add_ip_field(*meta_.get_fields()[field], tensorDim1, tensorDim2);
-  }
-
   inline void add_element_field(unsigned field, unsigned scalarsPerElement)
   {
     add_element_field(*meta_.get_fields()[field], scalarsPerElement);
