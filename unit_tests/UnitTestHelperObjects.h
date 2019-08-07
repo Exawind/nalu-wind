@@ -78,9 +78,10 @@ struct HelperObjects : public HelperObjectsBase
     stk::mesh::BulkData& bulk,
     stk::topology topo,
     int numDof,
-    stk::mesh::Part* part
+    stk::mesh::Part* part,
+    bool isEdge = false
   ) : HelperObjectsBase(bulk),
-      linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem, topo))
+      linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem, topo, isEdge))
   {
     eqSystem.linsys_ = linsys;
     assembleElemSolverAlg = new sierra::nalu::AssembleElemSolverAlgorithm(realm, part, &eqSystem, topo.rank(), topo.num_nodes());
@@ -89,6 +90,39 @@ struct HelperObjects : public HelperObjectsBase
   virtual ~HelperObjects()
   {
     delete assembleElemSolverAlg;
+  }
+
+  template<typename LHSType, typename RHSType>
+  void check_against_gold_values(unsigned rhsSize, const LHSType& lhs, const RHSType& rhs)
+  {
+    EXPECT_EQ(rhsSize, linsys->hostlhs_.extent(0));
+    EXPECT_EQ(rhsSize, linsys->hostrhs_.extent(0));
+  
+    stk::mesh::Entity elem = realm.bulkData_->get_entity(stk::topology::ELEM_RANK, 1);
+    const stk::mesh::Entity* elemNodes = realm.bulkData_->begin_nodes(elem);
+    unsigned numElemNodes = realm.bulkData_->num_nodes(elem);
+    unsigned nDof = linsys->numDof();
+    EXPECT_EQ(rhsSize, numElemNodes*nDof);
+  
+    for(unsigned i=0; i<numElemNodes; ++i) {
+      unsigned rowId = linsys->getRowLID(elemNodes[i]);
+      for(unsigned d=0; d<nDof; ++d) {
+        unsigned goldRow = i*nDof+d;
+        unsigned linsysRow = rowId*nDof+d;
+
+        for(unsigned j=0; j<numElemNodes; ++j) {
+          unsigned colId = linsys->getColLID(elemNodes[j]);
+          for(unsigned dd=0; dd<nDof; ++dd) {
+            unsigned goldCol = j*nDof+dd;
+            unsigned linsysCol = colId*nDof+dd;
+
+            EXPECT_NEAR(lhs[goldRow][goldCol], linsys->hostlhs_(linsysRow,linsysCol), 1.e-14);
+          }
+        }
+  
+        EXPECT_NEAR(rhs[goldRow], linsys->hostrhs_(linsysRow), 1.e-14);
+      }
+    }
   }
 
   virtual void execute() override
@@ -112,8 +146,8 @@ struct HelperObjects : public HelperObjectsBase
 };
 
 struct FaceElemHelperObjects : HelperObjects {
-  FaceElemHelperObjects(stk::mesh::BulkData& bulk, stk::topology faceTopo, stk::topology elemTopo, int numDof, stk::mesh::Part* part)
-    : HelperObjects(bulk, elemTopo, numDof, part)
+  FaceElemHelperObjects(stk::mesh::BulkData& bulk, stk::topology faceTopo, stk::topology elemTopo, int numDof, stk::mesh::Part* part, bool isEdge = false)
+    : HelperObjects(bulk, elemTopo, numDof, part, isEdge)
   {
     assembleFaceElemSolverAlg = new sierra::nalu::AssembleFaceElemSolverAlgorithm(realm, part, &eqSystem, faceTopo.num_nodes(), elemTopo.num_nodes());
   }
@@ -129,6 +163,9 @@ struct FaceElemHelperObjects : HelperObjects {
     for (auto kern: assembleFaceElemSolverAlg->activeKernels_)
       kern->free_on_device();
     assembleFaceElemSolverAlg->activeKernels_.clear();
+
+    Kokkos::deep_copy(linsys->hostlhs_, linsys->lhs_);
+    Kokkos::deep_copy(linsys->hostrhs_, linsys->rhs_);
   }
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
