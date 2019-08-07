@@ -311,7 +311,7 @@ impl::NodeFieldOp<Mesh, Field>
 simd_nodal_field_updater(
   const Mesh& mesh, const Field& fld, const ElemSimdData<Mesh>& edata)
 {
-  NGP_ThrowAssert(fld.entity_rank() == stk::topology::NODE_RANK);
+  NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
   return impl::NodeFieldOp<Mesh, Field>{mesh, fld, edata};
 }
 
@@ -324,9 +324,9 @@ simd_elem_field_updater(
   const Mesh& mesh, const Field& fld, const ElemSimdData<Mesh>& edata)
 {
   NGP_ThrowAssert(
-    (fld.entity_rank() == stk::topology::ELEM_RANK)
-    || (fld.entity_rank() == stk::topology::FACE_RANK)
-    || (fld.entity_rank() == stk::topology::EDGE_RANK));
+    (fld.get_rank() == stk::topology::ELEM_RANK)
+    || (fld.get_rank() == stk::topology::FACE_RANK)
+    || (fld.get_rank() == stk::topology::EDGE_RANK));
   return impl::ElemFieldOp<Mesh, Field>{mesh, fld, edata};
 }
 
