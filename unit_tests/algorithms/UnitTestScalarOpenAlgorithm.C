@@ -17,16 +17,16 @@ TEST_F(TestTurbulenceAlgorithm, scalarOpenEdgeAlgorithm)
 {
   sierra::nalu::Realm& realm = this->create_realm();
 
-  fill_mesh_and_init_fields("generated:1x1x1|sideset:xXyYzZ");
+  const int nprocs = this->bulk().parallel_size();
+  std::string proc_num = std::to_string(nprocs);
+  std::string meshSpec = "generated:1x1x"+proc_num+"|sideset:xXyYzZ";
+  fill_mesh_and_init_fields(meshSpec);
 
   stk::mesh::Part* sidePart = meta().get_part("surface_2");
 
   unit_test_utils::FaceElemHelperObjects helperObjs(*realm.bulkData_, stk::topology::QUAD_4, stk::topology::HEX_8, 1, sidePart);
 
-  // Execute
   sierra::nalu::AssembleScalarEdgeOpenSolverAlgorithm alg(realm, sidePart, &helperObjs.eqSystem, tke_, tkebc_, dkdx_, tvisc_);
   alg.execute();
-
-  helperObjs.print_lhs_and_rhs();
 }
 
