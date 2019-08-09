@@ -1,6 +1,6 @@
-breathe
+breathe==4.13.1
 docutils
 Pygments
 pyparsing
-Sphinx
+Sphinx==2.1.2
 sphinxcontrib-bibtex
