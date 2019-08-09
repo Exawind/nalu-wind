@@ -101,7 +101,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Nalu-Wind'
-copyright = u'2018, Nalu-Wind Development Team'
+copyright = u'2019, Nalu-Wind Development Team'
 author = u'Nalu-Wind Team'
 
 # The version info for the project you're documenting, acts as replacement for
