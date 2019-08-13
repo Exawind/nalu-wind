@@ -79,7 +79,7 @@ void TKESSTNodeKernel::execute(
   Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
 
   rhs(0) += (Pk - Dk) * dVol;
-  lhs(0, 0) += betaStar_ * density * sdr * dVol / relaxFac_;
+  lhs(0, 0) += betaStar_ * density * sdr * dVol;
 }
 
 }  // nalu

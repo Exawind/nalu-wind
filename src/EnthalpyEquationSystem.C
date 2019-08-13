@@ -15,7 +15,6 @@
 #include <AssembleScalarElemSolverAlgorithm.h>
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
-#include <AssembleTemperatureNormalGradientBCSolverAlgorithm.h>
 #include <AssembleNodalGradAlgorithmDriver.h>
 #include <AssembleNodalGradEdgeAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
@@ -46,7 +45,6 @@
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <Realm.h>
 #include <Realms.h>
-#include <ScalarGclNodeSuppAlg.h>
 #include <ScalarMassElemSuppAlgDep.h>
 #include <Simulation.h>
 #include <TimeIntegrator.h>
@@ -67,6 +65,7 @@
 
 #include <kernel/ScalarMassHOElemKernel.h>
 #include <kernel/ScalarAdvDiffHOElemKernel.h>
+#include <kernel/EnthalpyTGradBCElemKernel.h>
 
 // bc kernels
 #include <kernel/ScalarOpenAdvElemKernel.h>
@@ -77,6 +76,7 @@
 // node kernels
 #include <node_kernels/NodeKernelUtils.h>
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
+#include <node_kernels/ScalarGclNodeKernel.h>
 #include <node_kernels/EnthalpyABLForceNodeKernel.h>
 
 // nso
@@ -560,6 +560,9 @@ EnthalpyEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<EnthalpyABLForceNodeKernel>(
             realm_.bulk_data(), *realm_.solutionOptions_);
         }
+        else if (srcName == "gcl") {
+          nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), enthalpy_);
+        }
         else {
           added = false;
           ++ngpSrcSkipped;
@@ -598,9 +601,6 @@ EnthalpyEquationSystem::register_interior_algorithm(
           }
           else if ( sourceName == "viscous_work" ) {
             suppAlg = new EnthalpyViscousWorkNodeSuppAlg(realm_);
-          }
-          else if ( sourceName == "gcl" ) {
-            suppAlg = new ScalarGclNodeSuppAlg(enthalpy_,realm_);
           }
           else if (sourceName == "VariableDensityNonIso" ) {
             suppAlg = new VariableDensityNonIsoEnthalpySrcNodeSuppAlg(realm_);
@@ -978,7 +978,7 @@ EnthalpyEquationSystem::register_symmetry_bc(
 void
 EnthalpyEquationSystem::register_abltop_bc(
   stk::mesh::Part *part,
-  const stk::topology &/*theTopo*/,
+  const stk::topology & partTopo,
   const ABLTopBoundaryConditionData &abltopBCData)
 {
 
@@ -1016,17 +1016,24 @@ EnthalpyEquationSystem::register_abltop_bc(
                                  stk::topology::NODE_RANK);
     bcDataAlg_.push_back(auxAlg);
 
-    // solver; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =
-      solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssembleTemperatureNormalGradientBCSolverAlgorithm *theAlg
-        = new AssembleTemperatureNormalGradientBCSolverAlgorithm(realm_, part, this,
-                                                  theBcField, evisc_, specHeat_, realm_.realmUsesEdges_);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
+    {
+      auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+      AssembleElemSolverAlgorithm* solverAlg = nullptr;
+      bool solverAlgWasBuilt = false;
+
+      std::tie(solverAlg, solverAlgWasBuilt) =
+        build_or_add_part_to_face_bc_solver_alg(
+          *this, *part, solverAlgMap, "enthalpy_tgrad");
+
+      ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+      auto& activeKernels = solverAlg->activeKernels_;
+
+      if (solverAlgWasBuilt) {
+        build_face_topo_kernel_automatic<EnthalpyTGradBCElemKernel>(
+          partTopo, *this, activeKernels, "enthalpy_temp_gradient",
+          realm_.bulk_data(), theBcField, evisc_, specHeat_,
+          realm_.get_coordinates_name(), realm_.realmUsesEdges_, dataPreReqs);
+      }
     }
   }
 
