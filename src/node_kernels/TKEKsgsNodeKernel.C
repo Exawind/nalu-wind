@@ -77,7 +77,7 @@ void TKEKsgsNodeKernel::execute(
 
   rhs(0) += (Pk - Dk) * dVol;
   lhs(0, 0) +=
-    1.5 * cEps_ * density * stk::math::sqrt(tke) / filter * dVol / relaxFac_;
+    1.5 * cEps_ * density * stk::math::sqrt(tke) / filter * dVol;
 }
 
 }  // nalu

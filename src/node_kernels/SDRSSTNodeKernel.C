@@ -104,7 +104,7 @@ SDRSSTNodeKernel::execute(
 
   rhs(0) += (Pw - Dw + Sw) * dVol;
   lhs(0, 0) += (2.0 * beta * density * sdr + stk::math::max(Sw / sdr, 0.0)) *
-               dVol / relaxFac_;
+               dVol;
 }
 
 } // namespace nalu
