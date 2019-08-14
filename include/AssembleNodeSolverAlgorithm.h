@@ -31,7 +31,8 @@ public:
     Realm &realm,
     stk::mesh::Part *part,
     EquationSystem *eqSystem);
-  virtual ~AssembleNodeSolverAlgorithm() {}
+
+  virtual ~AssembleNodeSolverAlgorithm() = default;
   virtual void initialize_connectivity();
   virtual void execute();
 
