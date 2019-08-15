@@ -11,7 +11,6 @@
 
 #include "node_kernels/ScalarGclNodeKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace gold_values {
 namespace scalar_gcl {
@@ -22,7 +21,6 @@ static constexpr double rhs[8] =
 } // scalar_gcl
 } // gold_values
 } // anonymous namespace
-#endif
 
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_gcl_node)
 {
@@ -47,13 +45,10 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_gcl_node)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::scalar_gcl::rhs, 1.0e-14);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, 0.0);
-#endif
-
 }
