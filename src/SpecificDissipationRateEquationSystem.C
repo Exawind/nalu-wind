@@ -359,7 +359,7 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
          realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, false);
 
       build_topo_kernel_if_requested<SpecificDissipationRateSSTDESSrcElemKernel>
-        (partTopo, *this, activeKernels, "sst",
+        (partTopo, *this, activeKernels, "sst_des",
          realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, false);
 
       build_topo_kernel_if_requested<SpecificDissipationRateSSTSrcElemKernel>
