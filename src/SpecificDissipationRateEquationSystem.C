@@ -53,6 +53,8 @@
 #include <kernel/ScalarAdvDiffElemKernel.h>
 #include <kernel/ScalarUpwAdvDiffElemKernel.h>
 #include <kernel/SpecificDissipationRateSSTSrcElemKernel.h>
+#include <kernel/SpecificDissipationRateSSTDESSrcElemKernel.h>
+
 
 // edge kernels
 #include <edge_kernels/ScalarEdgeSolverAlg.h>
@@ -61,6 +63,7 @@
 #include <node_kernels/NodeKernelUtils.h>
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
 #include <node_kernels/SDRSSTNodeKernel.h>
+#include <node_kernels/SDRSSTDESNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
 
 // nso
@@ -300,7 +303,13 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
-        nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
+        if (SST_DES == realm_.solutionOptions_->turbulenceModel_){
+          nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
+
+        }
+        else {
+          nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
+        }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {
@@ -349,8 +358,16 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         (partTopo, *this, activeKernels, "sst",
          realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, false);
 
+      build_topo_kernel_if_requested<SpecificDissipationRateSSTDESSrcElemKernel>
+        (partTopo, *this, activeKernels, "sst",
+         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, false);
+
       build_topo_kernel_if_requested<SpecificDissipationRateSSTSrcElemKernel>
         (partTopo, *this, activeKernels, "lumped_sst",
+         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, true);
+
+      build_topo_kernel_if_requested<SpecificDissipationRateSSTDESSrcElemKernel>
+        (partTopo, *this, activeKernels, "lumped_sst_des",
          realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, true);
 
       build_topo_kernel_if_requested<ScalarNSOElemKernel>

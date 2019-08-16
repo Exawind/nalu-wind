@@ -23,6 +23,13 @@ function(add_test_r_rst testname np)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
 endfunction(add_test_r_rst)
 
+# Regression test with input
+function(add_test_r_inp testname np)
+    add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${nalu_ex_name} ${MPIEXEC_POSTFLAGS} -i ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/${testname}.i -o ${testname}.log && ${CMAKE_CURRENT_SOURCE_DIR}/pass_fail.sh ${testname} ${NALU_GOLD_NORMS_DIR}/test_files/${testname}/${testname}.norm.gold ${TOLERANCE}; ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${nalu_ex_name} ${MPIEXEC_POSTFLAGS} -i ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/${testname}_Input.i -o ${testname}_Input.log && ${CMAKE_CURRENT_SOURCE_DIR}/pass_fail.sh ${testname}_Input ${NALU_GOLD_NORMS_DIR}/test_files/${testname}/${testname}_Input.norm.gold ${TOLERANCE}")
+    set_tests_properties(${testname} PROPERTIES TIMEOUT 1500 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "regression")
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
+endfunction(add_test_r_inp)
+
 # Verification test with three resolutions
 function(add_test_v3 testname np)
     add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${nalu_ex_name} ${MPIEXEC_POSTFLAGS} -i ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/${testname}_R0.i -o ${testname}_R0.log && ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${nalu_ex_name} ${MPIEXEC_POSTFLAGS} -i ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/${testname}_R1.i -o ${testname}_R1.log && ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${nalu_ex_name} ${MPIEXEC_POSTFLAGS} -i ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/${testname}_R2.i -o ${testname}_R2.log && python ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/norms.py")
@@ -111,7 +118,7 @@ if(NOT ENABLE_CUDA)
   add_test_r(edgePipeCHT 4)
   add_test_r(ekmanSpiral 4)
   add_test_r(ekmanSpiralConsolidated 4)
-  add_test_r(elemBackStepLRSST 4)
+  add_test_r_inp(elemBackStepLRSST 4)
   add_test_r(elemClosedDomain 2)
   add_test_r(elemHybridFluids 8)
   add_test_r(elemHybridFluidsShift 8)
