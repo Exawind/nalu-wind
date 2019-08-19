@@ -3113,6 +3113,9 @@ ContinuityEquationSystem::register_inflow_bc(
       else if ( fcnName == "BoussinesqNonIso") {
         theAuxFunc = new BoussinesqNonIsoVelocityAuxFunction(0, nDim);
       }
+      else if ( fcnName == "wind_energy_power_law") {
+          theAuxFunc = new WindEnergyPowerLawAuxFunction(0,nDim,theParams);
+      }
       else {
         throw std::runtime_error("ContEquationSystem::register_inflow_bc: limited functions supported");
       }

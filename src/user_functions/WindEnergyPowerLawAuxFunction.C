@@ -23,8 +23,8 @@ WindEnergyPowerLawAuxFunction::WindEnergyPowerLawAuxFunction(
   AuxFunction(beginPos, endPos)
 {
   // check size and populate
-  if ( params.size() != 8 )
-    throw std::runtime_error("Realm::setup_initial_conditions: wind_energy_power_law requires 8 params: ");
+  if ( params.size() != 9 )
+    throw std::runtime_error("Realm::setup_initial_conditions: wind_energy_power_law requires 9 params: ");
   coord_dir_  = int(params[0]);
   y_offset_ = params[1];
   y_ref_ = params[2];
@@ -52,7 +52,11 @@ WindEnergyPowerLawAuxFunction::do_evaluate(
 
     const double y = coords[coord_dir_];
 
-    const double power_law_fn = std::pow( (y - y_offset_)/y_ref_ , shear_exp_ ) * 0.5 * ( std::tanh( (y - y_ref_)) + 1.0) ;
+    double power_law_fn = 0.0;
+
+    if ( (y - y_offset_) > 0.0) {
+        power_law_fn = std::pow( (y - y_offset_)/y_ref_ , shear_exp_ );
+    }
 
     if ( u_mag_* power_law_fn < u_min_)  {
         fieldPtr[0] = u_ref_[0]/u_mag_ * u_min_ ;
