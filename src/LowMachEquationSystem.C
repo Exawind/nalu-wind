@@ -190,6 +190,8 @@
 
 #include <user_functions/BoundaryLayerPerturbationAuxFunction.h>
 
+#include <user_functions/WindEnergyPowerLawAuxFunction.h>
+
 #include <user_functions/KovasznayVelocityAuxFunction.h>
 #include <user_functions/KovasznayPressureAuxFunction.h>
 
@@ -619,6 +621,16 @@ LowMachEquationSystem::register_initial_condition_fcn(
       else {
         throw std::runtime_error("Boundary_layer_perturbation missing parameters");
       }
+    }
+    else if ( fcnName == "wind_energy_power_law") {
+        auto it = theParams.find(dofName);
+        if (it != theParams.end()) {
+            auto& fp = it->second;
+            theAuxFunc = new WindEnergyPowerLawAuxFunction(0,nDim,fp);
+        }
+        else {
+            throw std::runtime_error("Widn Energy Power Law aux function missing parameters in initial condition");
+        }
     }
     else if (fcnName == "kovasznay") {
       theAuxFunc = new KovasznayVelocityAuxFunction(0, nDim);
@@ -1611,6 +1623,9 @@ MomentumEquationSystem::register_inflow_bc(
     }
     else if ( fcnName == "kovasznay") {
       theAuxFunc = new KovasznayVelocityAuxFunction(0,nDim);
+    }
+    else if ( fcnName == "wind_energy_power_law") {
+      theAuxFunc = new WindEnergyPowerLawAuxFunction(0,nDim,theParams);
     }
     else {
       throw std::runtime_error("MomentumEquationSystem::register_inflow_bc: limited functions supported");
