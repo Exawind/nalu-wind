@@ -216,13 +216,16 @@ public:
     double * /* shpfc */) {
     throw std::runtime_error("shifted_shape_fcn not implemented"); }
 
-  virtual int opposingNodes(
+  KOKKOS_FUNCTION virtual int opposingNodes(
     const int /* ordinal */, const int /* node */) {
-    throw std::runtime_error("opposingNodes not implemented"); }
+    NGP_ThrowErrorMsg("opposingNodes not implemented");
+    return -1;
+  }
 
-  virtual int opposingFace(
+  KOKKOS_FUNCTION virtual int opposingFace(
     const int /* ordinal */, const int /* node */) {
-    throw std::runtime_error("opposingFace not implemented"); 
+    NGP_ThrowErrorMsg("opposingFace not implemented"); 
+    return -1;
     }
 
   virtual double isInElement(

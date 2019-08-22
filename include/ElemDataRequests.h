@@ -23,10 +23,10 @@ namespace nalu{
 class MasterElement;
 
 enum ELEM_DATA_NEEDED {
-  FC_AREAV = 0,
+  FC_AREAV = 0, BEGIN_FC = FC_AREAV,
   FC_SHAPE_FCN,
-  FC_SHIFTED_SHAPE_FCN,
-  SCS_AREAV,
+  FC_SHIFTED_SHAPE_FCN, END_FC = FC_SHIFTED_SHAPE_FCN,
+  SCS_AREAV, BEGIN_SCS = SCS_AREAV,
   SCS_FACE_GRAD_OP,
   SCS_SHIFTED_FACE_GRAD_OP,
   SCS_GRAD_OP,
@@ -35,16 +35,16 @@ enum ELEM_DATA_NEEDED {
   SCS_MIJ,
   SCV_MIJ,
   SCS_SHAPE_FCN,
-  SCS_SHIFTED_SHAPE_FCN,
-  SCV_VOLUME,
+  SCS_SHIFTED_SHAPE_FCN, END_SCS = SCS_SHIFTED_SHAPE_FCN,
+  SCV_VOLUME, BEGIN_SCV = SCV_VOLUME,
   SCV_GRAD_OP,
   SCV_SHIFTED_GRAD_OP,
   SCV_SHAPE_FCN,
-  SCV_SHIFTED_SHAPE_FCN,
-  FEM_GRAD_OP,
+  SCV_SHIFTED_SHAPE_FCN, END_SCV = SCV_SHIFTED_SHAPE_FCN,
+  FEM_GRAD_OP, BEGIN_FEM = FEM_GRAD_OP,
   FEM_SHIFTED_GRAD_OP,
   FEM_SHAPE_FCN,
-  FEM_SHIFTED_SHAPE_FCN,
+  FEM_SHIFTED_SHAPE_FCN, END_FEM = FEM_SHIFTED_SHAPE_FCN
 };
 
 enum COORDS_TYPES {
@@ -103,21 +103,11 @@ public:
       dataEnums(),
       coordsFields_(),
       fields(), meFC_(nullptr), meSCS_(nullptr), meSCV_(nullptr), meFEM_(nullptr)
-  {
-  }
+  {}
 
   void add_master_element_call(
     ELEM_DATA_NEEDED data,
-    COORDS_TYPES cType = CURRENT_COORDINATES
-  )
-  {
-   auto it = coordsFields_.find(cType);
-   NGP_ThrowRequireMsg(
-     it != coordsFields_.end(),
-     "ElemDataRequests:add_master_element_call: Coordinates field "
-     "must be registered to ElemDataRequests before registering MasterElement");
-    dataEnums[cType].insert(data);
-  }
+    COORDS_TYPES cType = CURRENT_COORDINATES);
 
   void add_gathered_nodal_field(const stk::mesh::FieldBase& field, unsigned scalarsPerNode);
 
@@ -206,7 +196,7 @@ public:
     auto it = coordsFields_.find(cType);
     NGP_ThrowRequireMsg(
       it != coordsFields_.end(),
-     "ElemDataRequests:add_master_element_call: Coordinates field "
+     "ElemDataRequests:get_coordinates_field: Coordinates field "
      "must be registered to ElemDataRequests before access");
     return it->second;
   }

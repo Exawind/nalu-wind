@@ -35,6 +35,7 @@ namespace sierra{
 namespace nalu{
 
 //-------- tri_derivative -----------------------------------------------------
+KOKKOS_FUNCTION
 void tri_derivative (SharedMemView<DoubleType***, DeviceShmem>& deriv) {
   const int npts = deriv.extent(0); 
   for (int j=0; j<npts; ++j) {
@@ -48,6 +49,7 @@ void tri_derivative (SharedMemView<DoubleType***, DeviceShmem>& deriv) {
 }
 
 //-------- tri_gradient_operator -----------------------------------------------------
+KOKKOS_FUNCTION
 void tri_gradient_operator(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
@@ -342,6 +344,7 @@ Tri32DSCS::Tri32DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   const std::array<std::array<double,2>,3> nodeLocations =
   {{
       {{0.0,0.0}}, {{1.0,0}}, {{0.0,1.0}}
@@ -355,6 +358,7 @@ Tri32DSCS::Tri32DSCS()
       intgExpFaceShift_[k][n][1] = nodeLocations[ordinals[n]][1];
     }
   }
+#endif
 }
 
 //--------------------------------------------------------------------------

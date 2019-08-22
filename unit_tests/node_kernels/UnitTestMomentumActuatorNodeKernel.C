@@ -34,7 +34,6 @@ TEST_F(ActuatorSourceKernelHex8Mesh, NGP_momentum_actuator)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
@@ -52,5 +51,4 @@ TEST_F(ActuatorSourceKernelHex8Mesh, NGP_momentum_actuator)
 
   unit_test_kernel_utils::expect_all_near   (helperObjs.linsys->rhs_,rhsExact.data());
   unit_test_kernel_utils::expect_all_near_2d(helperObjs.linsys->lhs_,lhsExact.data());
-#endif
 }

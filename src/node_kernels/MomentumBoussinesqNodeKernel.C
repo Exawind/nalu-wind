@@ -18,7 +18,6 @@ namespace nalu{
 
 MomentumBoussinesqNodeKernel::MomentumBoussinesqNodeKernel(
   const stk::mesh::BulkData& bulk,
-  const std::vector<double>& params,
   const SolutionOptions& solnOpts
 ) : NGPNodeKernel<MomentumBoussinesqNodeKernel>(),
     nDim_(bulk.mesh_meta_data().spatial_dimension()),
@@ -30,9 +29,6 @@ MomentumBoussinesqNodeKernel::MomentumBoussinesqNodeKernel(
 
   dualNodalVolumeID_ = get_field_ordinal(meta, "dual_nodal_volume");
   temperatureID_ = get_field_ordinal(meta, "temperature");
-
-  for (int i=0; i < nDim_; ++i)
-    forceVector_[i] = params[i];
 
   const std::vector<double>& solnOptsGravity = solnOpts.get_gravity_vector(nDim_);
   for (int i = 0; i < nDim_; i++)

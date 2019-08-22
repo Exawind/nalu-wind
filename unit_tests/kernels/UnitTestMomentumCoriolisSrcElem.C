@@ -15,8 +15,6 @@
 
 #include <random>
 
-#ifndef KOKKOS_ENABLE_CUDA
-
 TEST_F(MomentumKernelHex8Mesh, coriolis)
 {
   fill_mesh_and_init_fields();
@@ -58,7 +56,6 @@ TEST_F(MomentumKernelHex8Mesh, coriolis)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
 
-
   // TEST: checks consistency with the Jacobian in CoriolisSrc
 
   // Exact solution
@@ -71,6 +68,4 @@ TEST_F(MomentumKernelHex8Mesh, coriolis)
   }
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, rhsExact.data());
 }
-
-#endif
 

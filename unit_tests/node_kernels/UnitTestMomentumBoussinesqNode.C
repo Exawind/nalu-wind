@@ -21,7 +21,6 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_boussinesq)
   std::mt19937 rng;
   rng.seed(0); // fixed seed
   std::uniform_real_distribution<double> ref_densities(0.8,1.3);
-  const std::vector<double> forceVector{8.0, 8.0, 8.0};
 
   fill_mesh_and_init_fields();
 
@@ -38,11 +37,10 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_boussinesq)
   unit_test_utils::NodeHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumBoussinesqNodeKernel>(
-    bulk_, forceVector, solnOpts_);
+    bulk_, solnOpts_);
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
@@ -55,5 +53,4 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_boussinesq)
     rhsExact[i] = -0.125 * solnOpts_.gravity_[2] * expFac * (300.0 - solnOpts_.referenceTemperature_);
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_,rhsExact.data());
-#endif
 }

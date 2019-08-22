@@ -12,8 +12,8 @@
 #include "kernel/TurbKineticEnergySSTSrcElemKernel.h"
 #include "kernel/TurbKineticEnergySSTDESSrcElemKernel.h"
 #include "kernel/SpecificDissipationRateSSTSrcElemKernel.h"
+#include "kernel/SpecificDissipationRateSSTDESSrcElemKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
 
 namespace {
 namespace hex8_golds {
@@ -175,10 +175,63 @@ static constexpr double rhs[8] = {
 };
 
 } // namespace SpecificDissipationRateSSTSrcElemKernel
+
+
+namespace SpecificDissipationRateSSTDESSrcElemKernel {
+
+static constexpr double lhs[8][8] = {
+  {
+    0.014088352257161414, 0.0046961174190538043, 0.0015653724730179349,
+    0.0046961174190538043, 0.0046961174190538043, 0.0015653724730179349,
+    0.0005217908243393116, 0.0015653724730179349,
+  },
+  {
+    0.0034334662835608129, 0.01030039885068244, 0.0034334662835608129,
+    0.0011444887611869376, 0.0011444887611869376, 0.0034334662835608129,
+    0.0011444887611869376, 0.00038149625372897923,
+  },
+  {
+    0.00086754973541695217, 0.0026026492062508565, 0.00780794761875257,
+    0.0026026492062508565, 0.00028918324513898408, 0.00086754973541695217,
+    0.0026026492062508565, 0.00086754973541695217,
+  },
+  {
+    0.003434284360902973, 0.0011447614536343243, 0.003434284360902973,
+    0.010302853082708919, 0.0011447614536343243, 0.00038158715121144144,
+    0.0011447614536343243, 0.003434284360902973,
+  },
+  {
+    0.0040893531148636746, 0.0013631177049545581, 0.00045437256831818606,
+    0.0013631177049545581, 0.012268059344591024, 0.0040893531148636746,
+    0.0013631177049545581, 0.0040893531148636746,
+  },
+  {
+    0.00092327669310721344, 0.0027698300793216404, 0.00092327669310721344,
+    0.00030775889770240448, 0.0027698300793216404, 0.0083094902379649213,
+    0.0027698300793216404, 0.00092327669310721344,
+  },
+  {
+    0.00025058674982000032, 0.00075176024946000102, 0.0022552807483800031,
+    0.00075176024946000102, 0.00075176024946000102, 0.0022552807483800031,
+    0.0067658422451400083, 0.0022552807483800031,
+  },
+  {
+    0.0010674069479120892, 0.00035580231597069639, 0.0010674069479120892,
+    0.0032022208437362675, 0.0032022208437362675, 0.0010674069479120892,
+    0.0032022208437362675, 0.0096066625312088028,
+  },
+};
+
+static constexpr double rhs[8] = {
+  -0.0234919792716402,    -0.015488938741822928, -0.012701346228598396,
+  -0.019963104832714122,  -0.013804481873609888, -0.01064155214884124,
+  -0.0097857771214982167, -0.01451935596563356,
+};
+
+} // namespace SpecificDissipationRateSSTDESSrcElemKernel
+
 } // namespace hex8_golds
 } // anonymous namespace
-
-#endif
 
 TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_src_elem)
 {
@@ -209,8 +262,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_src_elem)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
-
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -220,8 +271,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_src_elem)
     helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs);
-
-#endif
 }
 
 TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_des_src_elem)
@@ -253,8 +302,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_des_src_elem)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
-
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -264,8 +311,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_kinetic_energy_sst_des_src_elem)
     helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs);
-
-#endif
 
 }
 
@@ -298,8 +343,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_specific_dissipation_rate_sst_src_elem)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
-
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -309,7 +352,46 @@ TEST_F(SSTKernelHex8Mesh, NGP_specific_dissipation_rate_sst_src_elem)
     helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs);
+}
 
-#endif
+
+TEST_F(SSTKernelHex8Mesh, NGP_specific_dissipation_rate_sst_des_src_elem)
+{
+
+  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
+    return;
+
+  fill_mesh_and_init_fields();
+
+  // Setup solution options
+  solnOpts_.meshMotion_ = false;
+  solnOpts_.meshDeformation_ = false;
+  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.initialize_turbulence_constants();
+
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+
+  // Initialize the kernel
+  std::unique_ptr<sierra::nalu::Kernel> kernel(
+    new sierra::nalu::SpecificDissipationRateSSTDESSrcElemKernel<
+      sierra::nalu::AlgTraitsHex8>(
+      bulk_, solnOpts_, helperObjs.assembleElemSolverAlg->dataNeededByKernels_,
+      false));
+
+  // Add to kernels to be tested
+  helperObjs.assembleElemSolverAlg->activeKernels_.push_back(kernel.get());
+
+  helperObjs.execute();
+
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
+
+  namespace gold_values = hex8_golds::SpecificDissipationRateSSTDESSrcElemKernel;
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, gold_values::rhs);
+  unit_test_kernel_utils::expect_all_near<8>(
+    helperObjs.linsys->lhs_, gold_values::lhs);
 }
 

@@ -79,7 +79,11 @@ public:
    }
 
    template<typename LambdaFunction>
-   void execute(LambdaFunction func)
+   void execute(LambdaFunction 
+#ifndef KOKKOS_ENABLE_CUDA
+       func
+#endif
+       )
    {
      ThrowRequireMsg(partVec_.size()==1, "KokkosMEViews unit-test assumes partVec_.size==1");
      ThrowRequireMsg(!bulk_.get_buckets(meta_.side_rank(), *partVec_[0]).empty(), "part does not contain side-ranked elements");

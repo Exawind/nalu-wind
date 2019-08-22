@@ -54,6 +54,10 @@ ABLForcingAlgorithm::ABLForcingAlgorithm(Realm& realm, const YAML::Node& node)
   load(node);
 }
 
+ABLForcingAlgorithm::ABLForcingAlgorithm(Realm& realm)
+  : realm_(realm)
+{}
+
 ABLForcingAlgorithm::~ABLForcingAlgorithm()
 {}
 

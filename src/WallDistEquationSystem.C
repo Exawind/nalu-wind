@@ -12,8 +12,6 @@
 #include "AssembleNodalGradElemAlgorithm.h"
 #include "AssembleNodalGradBoundaryAlgorithm.h"
 #include "AssembleNodalGradNonConformalAlgorithm.h"
-#include "AssembleNodeSolverAlgorithm.h"
-#include "AssembleWallDistEdgeSolverAlgorithm.h"
 #include "AssembleWallDistNonConformalAlgorithm.h"
 #include "AuxFunction.h"
 #include "AuxFunctionAlgorithm.h"
@@ -34,11 +32,17 @@
 #include "SolutionOptions.h"
 #include "SolverAlgorithm.h"
 #include "SolverAlgorithmDriver.h"
-#include "SupplementalAlgorithm.h"
-#include "WallDistSrcNodeSuppAlg.h"
 
 #include "kernel/WallDistElemKernel.h"
 #include "kernel/KernelBuilder.h"
+
+// edge kernels
+#include "edge_kernels/WallDistEdgeSolverAlg.h"
+
+// node kernels
+#include "AssembleNGPNodeSolverAlgorithm.h"
+#include "node_kernels/NodeKernelUtils.h"
+#include "node_kernels/WallDistNodeKernel.h"
 
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
 #include "overset/AssembleOversetWallDistAlgorithm.h"
@@ -159,7 +163,6 @@ WallDistEquationSystem::register_interior_algorithm(
   stk::mesh::Part *part)
 {
   const AlgorithmType algType = INTERIOR;
-  const AlgorithmType algMass = MASS;
 
   auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
   auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
@@ -186,7 +189,7 @@ WallDistEquationSystem::register_interior_algorithm(
     auto it = solverAlgDriver_->solverAlgMap_.find(algType);
     if (it == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = nullptr;
-        theAlg = new AssembleWallDistEdgeSolverAlgorithm(realm_, part, this);
+        theAlg = new WallDistEdgeSolverAlg(realm_, part, this);
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
     } else {
       it->second->partVec_.push_back(part);
@@ -212,17 +215,14 @@ WallDistEquationSystem::register_interior_algorithm(
   }
 
   if (realm_.realmUsesEdges_) {
-    auto it = solverAlgDriver_->solverAlgMap_.find(algMass);
-    if (it == solverAlgDriver_->solverAlgMap_.end()) {
-      AssembleNodeSolverAlgorithm* theAlg =
-        new AssembleNodeSolverAlgorithm(realm_, part, this);
-      solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
-
-      SupplementalAlgorithm* suppAlg = new WallDistSrcNodeSuppAlg(realm_);
-      theAlg->supplementalAlg_.push_back(suppAlg);
-    } else {
-      it->second->partVec_.push_back(part);
-    }
+    process_ngp_node_kernels(
+      solverAlgDriver_->solverAlgMap_, realm_, part, this,
+      [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
+        nodeAlg.add_kernel<WallDistNodeKernel>(realm_.bulk_data());
+      },
+      [&](AssembleNGPNodeSolverAlgorithm&, std::string&) {
+        // No user defined kernels available
+      });
   }
 }
 

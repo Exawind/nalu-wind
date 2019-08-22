@@ -11,8 +11,6 @@
 
 #include "kernel/ScalarMassElemKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
-
 namespace {
 namespace hex8_golds {
 namespace scalar_mass {
@@ -54,8 +52,6 @@ static constexpr double rhs[8] = {
 } // hex8_golds
 } // anonymous namespace
 
-#endif
-
 /// Scalar advection/diffusion (will use mixture fraction as scalar)
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass)
 {
@@ -93,7 +89,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass)
   // Populate LHS and RHS
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -101,7 +96,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass)
   namespace gold_values = hex8_golds::scalar_mass;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs);
-#endif
 }
 
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_time_derivative_lumped)
@@ -142,7 +136,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_time_derivative_lumped)
   // Populate LHS and RHS
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -152,5 +145,4 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_time_derivative_lumped)
       helperObjs.linsys->rhs_, gold_values::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
       helperObjs.linsys->lhs_, gold_values::lhs, 1.0e-12);
-#endif
 }

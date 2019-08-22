@@ -24,6 +24,7 @@ namespace {
 
   template<typename AlgTraits, typename GradViewType,  typename CoordViewType,
            typename DetjType, typename OutputViewType>
+  KOKKOS_FUNCTION
   void generic_grad_op_3d(
     GradViewType referenceGradWeights,
     CoordViewType coords,

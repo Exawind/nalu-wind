@@ -26,6 +26,8 @@
 
 #include <stk_ngp/NgpFieldManager.hpp>
 
+#include "ngp_utils/NgpMeshInfo.h"
+
 // standard c++
 #include <map>
 #include <string>
@@ -90,6 +92,7 @@ struct ElementDescription;
  */
 class Realm {
  public:
+  using NgpMeshInfo = nalu_ngp::MeshInfo<ngp::Mesh, ngp::FieldManager>;
 
   Realm(Realms&, const YAML::Node & node);
   virtual ~Realm();
@@ -354,20 +357,22 @@ class Realm {
   stk::mesh::MetaData & meta_data();
   const stk::mesh::MetaData & meta_data() const;
 
-  inline ngp::Mesh& ngp_mesh()
+  inline NgpMeshInfo& mesh_info()
   {
-    if (!ngpMesh_) {
-      ngpMesh_.reset(new ngp::Mesh(*bulkData_));
+    if (!meshInfo_) {
+      meshInfo_.reset(new NgpMeshInfo(*bulkData_));
     }
-    return *ngpMesh_;
+    return *meshInfo_;
   }
 
-  inline ngp::FieldManager& ngp_field_manager()
+  inline const ngp::Mesh& ngp_mesh()
   {
-    if (!ngpFieldMgr_) {
-      ngpFieldMgr_.reset(new ngp::FieldManager(*bulkData_));
-    }
-    return *ngpFieldMgr_;
+    return mesh_info().ngp_mesh();
+  }
+
+  inline const ngp::FieldManager& ngp_field_manager()
+  {
+    return mesh_info().ngp_field_manager();
   }
 
   // inactive part
@@ -659,9 +664,7 @@ class Realm {
   bool hypreIsActive_{false};
 
 protected:
-  std::unique_ptr<ngp::Mesh> ngpMesh_;
-
-  std::unique_ptr<ngp::FieldManager> ngpFieldMgr_;
+  std::unique_ptr<NgpMeshInfo> meshInfo_;
 
 };
 

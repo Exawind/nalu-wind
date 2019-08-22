@@ -57,7 +57,7 @@ realms:
     time_step_control:
      target_courant: 25.0
      time_step_change_factor: 1.2
-   
+
     equation_systems:
       name: theEqSys
       max_iterations: 1 
@@ -173,7 +173,7 @@ realms:
             pressure: element
             turbulent_ke: element 
             specific_dissipation_rate: element 
-    
+
         - input_variables_from_file:
             minimum_distance_to_wall: ndtw
 
@@ -194,7 +194,7 @@ realms:
        - turbulent_viscosity
 
     post_processing:
-    
+
     - type: surface
       physics: surface_force_and_moment
       output_file_name: post_process_one.dat

@@ -209,10 +209,12 @@ private:
 
   void set_interior_info();
 
+  KOKKOS_FUNCTION
   DoubleType jacobian_determinant(
     const SharedMemView<DoubleType**, DeviceShmem> &coords,
     const double *POINTER_RESTRICT shapeDerivs ) const;
 
+  KOKKOS_FUNCTION
   double jacobian_determinant(
     const double *POINTER_RESTRICT elemNodalCoords,
     const double *POINTER_RESTRICT shapeDerivs ) const;
@@ -317,10 +319,10 @@ public:
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final ;
 
-  int opposingNodes(
+  KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node) override ;
 
-  int opposingFace(
+  KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node) override ;
 
   const int* side_node_ordinals(int sideOrdinal) const final;
@@ -356,11 +358,13 @@ private:
   void set_boundary_info();
 
   template <Jacobian::Direction direction> void
+  KOKKOS_FUNCTION
   area_vector(
     const SharedMemView<DoubleType**, DeviceShmem>& elemNodalCoords,
     double *POINTER_RESTRICT shapeDeriv,
     DoubleType *POINTER_RESTRICT areaVector ) const;
   template <Jacobian::Direction direction> void
+  KOKKOS_FUNCTION
   area_vector(
     const double *POINTER_RESTRICT elemNodalCoords,
     double *POINTER_RESTRICT shapeDeriv,

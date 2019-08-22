@@ -203,10 +203,10 @@ public:
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
-  int opposingNodes(
+  KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node) final;
 
-  int opposingFace(
+  KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node) final;
 
   const int * side_node_ordinals(int ordinal = 0) const final;

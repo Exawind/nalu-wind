@@ -11,8 +11,6 @@
 
 #include "kernel/ScalarUpwAdvDiffElemKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
-
 namespace {
 namespace hex8_golds {
 namespace advection_diffusion {
@@ -36,8 +34,6 @@ static constexpr double rhs[8] = {
 } // advection_diffusion
 } // hex8_golds
 } // anonymous namespace
-
-#endif
 
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_upw_advection_diffusion)
 {
@@ -69,7 +65,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_upw_advection_diffusion)
   // Populate LHS and RHS
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -77,5 +72,4 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_upw_advection_diffusion)
   namespace gold_values = hex8_golds::advection_diffusion;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, gold_values::lhs);
-#endif
 }

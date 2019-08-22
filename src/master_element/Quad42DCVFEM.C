@@ -36,6 +36,7 @@ namespace sierra{
 namespace nalu{
 
 //-------- quad_derivative -----------------------------------------------------
+KOKKOS_FUNCTION
 void quad_derivative(const double *par_coord, 
                      SharedMemView<DoubleType***, DeviceShmem>& deriv) {
   const double half = 0.5;
@@ -60,6 +61,7 @@ void quad_derivative(const double *par_coord,
 
 //-------- quad_gradient_operator -----------------------------------------------------
 template<int nint, int npe>
+KOKKOS_FUNCTION
 void quad_gradient_operator(const SharedMemView<DoubleType***, DeviceShmem>& deriv,
                             const SharedMemView<DoubleType**, DeviceShmem>&  coords,
                             SharedMemView<DoubleType***, DeviceShmem>& gradop) {
@@ -339,6 +341,7 @@ Quad42DSCS::Quad42DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   const double nodeLocations[4][2] =
   {
       {-0.5,-0.5}, {+0.5,-0.5},
@@ -353,6 +356,7 @@ Quad42DSCS::Quad42DSCS()
       intgExpFaceShift_[k][n][1] = nodeLocations[ordinals[n]][1];
     }
   }
+#endif
 }
 
 //--------------------------------------------------------------------------

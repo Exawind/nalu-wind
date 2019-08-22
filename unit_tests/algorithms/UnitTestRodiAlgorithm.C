@@ -19,7 +19,9 @@ TEST_F(TestTurbulenceAlgorithm, turbkineticenergyrodinodesourcesuppalg)
 {
   sierra::nalu::Realm& realm = this->create_realm();
   
-  fill_mesh_and_init_fields();
+  const int nprocs = this->bulk().parallel_size();
+  std::string meshSpec = "generated:1x1x"+std::to_string(nprocs);
+  fill_mesh_and_init_fields(meshSpec);
 
   // set solution options
   realm.solutionOptions_->gravity_.resize(3);
@@ -42,7 +44,7 @@ TEST_F(TestTurbulenceAlgorithm, turbkineticenergyrodinodesourcesuppalg)
   const double lhs_norm = assembleSuppAlgs.get_lhs_norm();
   const double rhs_norm = assembleSuppAlgs.get_rhs_norm();
   const double lhs_gold_norm = 0.0;
-  const double rhs_gold_norm = 0.000244820116732111;
+  const double rhs_gold_norm = nprocs==1 ? 0.00030133929246584567 : 0.0002760523778561557 ;
   EXPECT_NEAR(lhs_norm, lhs_gold_norm, tol);
   EXPECT_NEAR(rhs_norm, rhs_gold_norm, tol);
 }

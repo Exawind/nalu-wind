@@ -11,12 +11,10 @@
 #include <AlgorithmDriver.h>
 #include <AssembleScalarFluxBCSolverAlgorithm.h>
 #include <AssembleScalarEdgeOpenSolverAlgorithm.h>
-#include <AssembleScalarEdgeSolverAlgorithm.h>
 #include <AssembleScalarEigenEdgeSolverAlgorithm.h>
 #include <AssembleScalarElemSolverAlgorithm.h>
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
-#include <AssembleTemperatureNormalGradientBCSolverAlgorithm.h>
 #include <AssembleNodalGradAlgorithmDriver.h>
 #include <AssembleNodalGradEdgeAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
@@ -47,11 +45,7 @@
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <Realm.h>
 #include <Realms.h>
-#include <ScalarGclNodeSuppAlg.h>
-#include <ScalarMassBackwardEulerNodeSuppAlg.h>
-#include <ScalarMassBDF2NodeSuppAlg.h>
 #include <ScalarMassElemSuppAlgDep.h>
-#include <EnthalpyABLSrcNodeSuppAlg.h>
 #include <Simulation.h>
 #include <TimeIntegrator.h>
 #include <SolverAlgorithmDriver.h>
@@ -71,9 +65,19 @@
 
 #include <kernel/ScalarMassHOElemKernel.h>
 #include <kernel/ScalarAdvDiffHOElemKernel.h>
+#include <kernel/EnthalpyTGradBCElemKernel.h>
 
 // bc kernels
 #include <kernel/ScalarOpenAdvElemKernel.h>
+
+// edge kernels
+#include <edge_kernels/ScalarEdgeSolverAlg.h>
+
+// node kernels
+#include <node_kernels/NodeKernelUtils.h>
+#include <node_kernels/ScalarMassBDFNodeKernel.h>
+#include <node_kernels/ScalarGclNodeKernel.h>
+#include <node_kernels/EnthalpyABLForceNodeKernel.h>
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -395,7 +399,7 @@ EnthalpyEquationSystem::register_interior_algorithm(
       SolverAlgorithm *theAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
         if ( !realm_.solutionOptions_->eigenvaluePerturb_ )
-          theAlg = new AssembleScalarEdgeSolverAlgorithm(realm_, part, this, enthalpy_, dhdx_, evisc_);
+          theAlg = new ScalarEdgeSolverAlg(realm_, part, this, enthalpy_, dhdx_, evisc_);
         else
           theAlg = new AssembleScalarEigenEdgeSolverAlgorithm(realm_, part, this, enthalpy_, dhdx_, thermalCond_, specHeat_,
             tvisc_, realm_.get_turb_prandtl(enthalpy_->name()));
@@ -522,82 +526,104 @@ EnthalpyEquationSystem::register_interior_algorithm(
   }
 
   // time term; nodally lumped
-  const AlgorithmType algMass = MASS;
+  const AlgorithmType algMass = SRC;
   // Check if the user has requested CMM or LMM algorithms; if so, do not
   // include Nodal Mass algorithms
   std::vector<std::string> checkAlgNames = {"enthalpy_time_derivative",
                                             "lumped_enthalpy_time_derivative",
                                             "experimental_ho_enthalpy_time_derivative"};
   bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator itsm =
-    solverAlgDriver_->solverAlgMap_.find(algMass);
-  
-  if ( itsm == solverAlgDriver_->solverAlgMap_.end() ) {
-    // create the solver alg
-    AssembleNodeSolverAlgorithm *theAlg
-      = new AssembleNodeSolverAlgorithm(realm_, part, this);
-    solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
+  if (!elementMassAlg || nodal_src_is_requested()) {
+    // Handle error checking during transition period. Some kernels are handled
+    // through the NGP-ready interface while others are handled via legacy
+    // interface and only supported on CPUs.
+    int ngpSrcSkipped = 0;
+    int nonNgpSrcSkipped = 0;
+    int numUsrSrc = 0;
 
-    // now create the supplemental alg for mass term
-    if ( !elementMassAlg ) {
-      if ( realm_.number_of_states() == 2 ) {
-        ScalarMassBackwardEulerNodeSuppAlg *theMass
-          = new ScalarMassBackwardEulerNodeSuppAlg(realm_, enthalpy_);
-        theAlg->supplementalAlg_.push_back(theMass);
-      }
-      else {
-        ScalarMassBDF2NodeSuppAlg *theMass
-          = new ScalarMassBDF2NodeSuppAlg(realm_, enthalpy_);
-        theAlg->supplementalAlg_.push_back(theMass);
-      }
-    }
-
-    // Add src term supp alg...; limited number supported
-    std::map<std::string, std::vector<std::string> >::iterator isrc 
-      = realm_.solutionOptions_->srcTermsMap_.find("enthalpy");
-    if ( isrc != realm_.solutionOptions_->srcTermsMap_.end() ) {      
-      std::vector<std::string> mapNameVec = isrc->second;
-      for (size_t k = 0; k < mapNameVec.size(); ++k ) {
-        std::string sourceName = mapNameVec[k];
-        SupplementalAlgorithm *suppAlg = NULL;
-        if ( sourceName == "participating_media_radiation" ) {
-          suppAlg = new EnthalpyPmrSrcNodeSuppAlg(realm_);
-        }
-        else if ( sourceName == "low_speed_compressible" ) {
-          suppAlg = new EnthalpyLowSpeedCompressibleNodeSuppAlg(realm_);
-        }
-        else if ( sourceName == "pressure_work" ) {
-          suppAlg = new EnthalpyPressureWorkNodeSuppAlg(realm_);
-        }
-        else if ( sourceName == "viscous_work" ) {
-          suppAlg = new EnthalpyViscousWorkNodeSuppAlg(realm_);
-        }
-        else if ( sourceName == "gcl" ) {
-          suppAlg = new ScalarGclNodeSuppAlg(enthalpy_,realm_);
-        }
-        else if (sourceName == "VariableDensityNonIso" ) {
-          suppAlg = new VariableDensityNonIsoEnthalpySrcNodeSuppAlg(realm_);
-        }
-        else if (sourceName == "BoussinesqNonIso" ) {
-          suppAlg = new BoussinesqNonIsoEnthalpySrcNodeSuppAlg(realm_);
-        }
-        else if (sourceName == "abl_forcing") {
-          ThrowAssertMsg(
+    // Process NGP-ready nodal source terms first
+    auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
+    process_ngp_node_kernels(
+      solverAlgMap, realm_, part, this,
+      [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
+        if (!elementMassAlg)
+          nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), enthalpy_);
+      },
+      [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
+        bool added = true;
+        if (srcName == "abl_forcing") {
+          ThrowRequireMsg(
             ((NULL != realm_.ablForcingAlg_) &&
-             (realm_.ablForcingAlg_->temperatureForcingOn())),
-            "EnthalpyNodalSrcTerms::ERROR! ABL Forcing parameters must be initialized to use temperature source.");
-          suppAlg = new EnthalpyABLSrcNodeSuppAlg(realm_, realm_.ablForcingAlg_);
+             (realm_.ablForcingAlg_ ->temperatureForcingOn())),
+            "ERROR! ABL Forcing parameters not "
+            "initialized for enthalpy");
+          nodeAlg.add_kernel<EnthalpyABLForceNodeKernel>(
+            realm_.bulk_data(), *realm_.solutionOptions_);
+        }
+        else if (srcName == "gcl") {
+          nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), enthalpy_);
         }
         else {
-          throw std::runtime_error("EnthalpyNodalSrcTerms::Error Source term is not supported: " + sourceName);
+          added = false;
+          ++ngpSrcSkipped;
         }
-        NaluEnv::self().naluOutputP0() << "EnthalpyNodalSrcTerms::added() " << sourceName << std::endl;
-        theAlg->supplementalAlg_.push_back(suppAlg);
+
+        if (added)
+          NaluEnv::self().naluOutputP0() << "  - " << srcName << std::endl;
+      });
+
+    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsm =
+      solverAlgDriver_->solverAlgMap_.find(algMass);
+  
+    if ( itsm == solverAlgDriver_->solverAlgMap_.end() ) {
+      // create the solver alg
+      AssembleNodeSolverAlgorithm *theAlg
+        = new AssembleNodeSolverAlgorithm(realm_, part, this);
+      solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
+
+      // Add src term supp alg...; limited number supported
+      std::map<std::string, std::vector<std::string> >::iterator isrc
+        = realm_.solutionOptions_->srcTermsMap_.find("enthalpy");
+      if ( isrc != realm_.solutionOptions_->srcTermsMap_.end() ) {
+        std::vector<std::string> mapNameVec = isrc->second;
+        numUsrSrc = mapNameVec.size();
+        for (size_t k = 0; k < mapNameVec.size(); ++k ) {
+          std::string sourceName = mapNameVec[k];
+          SupplementalAlgorithm *suppAlg = NULL;
+          if ( sourceName == "participating_media_radiation" ) {
+            suppAlg = new EnthalpyPmrSrcNodeSuppAlg(realm_);
+          }
+          else if ( sourceName == "low_speed_compressible" ) {
+            suppAlg = new EnthalpyLowSpeedCompressibleNodeSuppAlg(realm_);
+          }
+          else if ( sourceName == "pressure_work" ) {
+            suppAlg = new EnthalpyPressureWorkNodeSuppAlg(realm_);
+          }
+          else if ( sourceName == "viscous_work" ) {
+            suppAlg = new EnthalpyViscousWorkNodeSuppAlg(realm_);
+          }
+          else if (sourceName == "VariableDensityNonIso" ) {
+            suppAlg = new VariableDensityNonIsoEnthalpySrcNodeSuppAlg(realm_);
+          }
+          else if (sourceName == "BoussinesqNonIso" ) {
+            suppAlg = new BoussinesqNonIsoEnthalpySrcNodeSuppAlg(realm_);
+          }
+          else {
+            ++nonNgpSrcSkipped;
+          }
+          if (suppAlg != NULL) {
+            NaluEnv::self().naluOutputP0() << "EnthalpyNodalSrcTerms::added() " << sourceName << std::endl;
+            theAlg->supplementalAlg_.push_back(suppAlg);
+          }
+        }
       }
     }
-  }
-  else {
-    itsm->second->partVec_.push_back(part);
+    else {
+      itsm->second->partVec_.push_back(part);
+    }
+    // Ensure that all user source terms were processed by either interface
+    if ((ngpSrcSkipped + nonNgpSrcSkipped) != numUsrSrc)
+      throw std::runtime_error("Error processing nodal source terms for Enthalpy");
   }
 
   // effective viscosity alg
@@ -952,7 +978,7 @@ EnthalpyEquationSystem::register_symmetry_bc(
 void
 EnthalpyEquationSystem::register_abltop_bc(
   stk::mesh::Part *part,
-  const stk::topology &/*theTopo*/,
+  const stk::topology & partTopo,
   const ABLTopBoundaryConditionData &abltopBCData)
 {
 
@@ -990,17 +1016,24 @@ EnthalpyEquationSystem::register_abltop_bc(
                                  stk::topology::NODE_RANK);
     bcDataAlg_.push_back(auxAlg);
 
-    // solver; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =
-      solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssembleTemperatureNormalGradientBCSolverAlgorithm *theAlg
-        = new AssembleTemperatureNormalGradientBCSolverAlgorithm(realm_, part, this,
-                                                  theBcField, evisc_, specHeat_, realm_.realmUsesEdges_);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
+    {
+      auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+      AssembleElemSolverAlgorithm* solverAlg = nullptr;
+      bool solverAlgWasBuilt = false;
+
+      std::tie(solverAlg, solverAlgWasBuilt) =
+        build_or_add_part_to_face_bc_solver_alg(
+          *this, *part, solverAlgMap, "enthalpy_tgrad");
+
+      ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+      auto& activeKernels = solverAlg->activeKernels_;
+
+      if (solverAlgWasBuilt) {
+        build_face_topo_kernel_automatic<EnthalpyTGradBCElemKernel>(
+          partTopo, *this, activeKernels, "enthalpy_temp_gradient",
+          realm_.bulk_data(), theBcField, evisc_, specHeat_,
+          realm_.get_coordinates_name(), realm_.realmUsesEdges_, dataPreReqs);
+      }
     }
   }
 

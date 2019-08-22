@@ -4,7 +4,6 @@ add_sources(GlobalSourceList
    Algorithm.C
    AlgorithmDriver.C
    AssembleContinuityEdgeOpenSolverAlgorithm.C
-   AssembleContinuityEdgeSolverAlgorithm.C
    AssembleContinuityElemOpenSolverAlgorithm.C
    AssembleContinuityElemSolverAlgorithm.C
    AssembleContinuityInflowSolverAlgorithm.C
@@ -16,10 +15,7 @@ add_sources(GlobalSourceList
    AssembleEdgeSolverAlgorithm.C
    AssembleHeatCondIrradWallSolverAlgorithm.C
    AssembleHeatCondWallSolverAlgorithm.C
-   AssembleMomentumEdgeABLWallFunctionSolverAlgorithm.C
    AssembleMomentumEdgeOpenSolverAlgorithm.C
-   AssembleMomentumEdgeSolverAlgorithm.C
-   AssembleMomentumEdgeSymmetrySolverAlgorithm.C
    AssembleMomentumEdgeWallFunctionSolverAlgoirthm.C
    AssembleMomentumElemABLWallFunctionSolverAlgorithm.C
    AssembleMomentumElemOpenSolverAlgorithm.C
@@ -47,14 +43,12 @@ add_sources(GlobalSourceList
    AssembleScalarDiffNonConformalSolverAlgorithm.C
    AssembleScalarEdgeDiffSolverAlgorithm.C
    AssembleScalarEdgeOpenSolverAlgorithm.C
-   AssembleScalarEdgeSolverAlgorithm.C
    AssembleScalarEigenEdgeSolverAlgorithm.C
    AssembleScalarElemDiffSolverAlgorithm.C
    AssembleScalarElemOpenSolverAlgorithm.C
    AssembleScalarElemSolverAlgorithm.C
    AssembleScalarFluxBCSolverAlgorithm.C
    AssembleScalarNonConformalSolverAlgorithm.C
-   AssembleTemperatureNormalGradientBCSolverAlgorithm.C
    AssembleWallHeatTransferAlgorithmDriver.C
    AuxFunctionAlgorithm.C
    AveragingInfo.C
@@ -79,10 +73,7 @@ add_sources(GlobalSourceList
    ComputeWallFrictionVelocityAlgorithm.C
    ComputeWallModelSDRWallAlgorithm.C
    ConstantAuxFunction.C
-   ContinuityGclNodeSuppAlg.C
    ContinuityLowSpeedCompressibleNodeSuppAlg.C
-   ContinuityMassBDF2NodeSuppAlg.C
-   ContinuityMassBackwardEulerNodeSuppAlg.C
    ContinuityMassElemSuppAlgDep.C
    CopyFieldAlgorithm.C
    CoriolisSrc.C
@@ -92,7 +83,7 @@ add_sources(GlobalSourceList
    EffectiveDiffFluxCoeffAlgorithm.C
    EffectiveSSTDiffFluxCoeffAlgorithm.C
    ElemDataRequests.C
-   EnthalpyABLSrcNodeSuppAlg.C
+   ElemDataRequestsGPU.C
    EnthalpyEffectiveDiffFluxCoeffAlgorithm.C
    EnthalpyEquationSystem.C
    EnthalpyLowSpeedCompressibleNodeSuppAlg.C
@@ -120,17 +111,9 @@ add_sources(GlobalSourceList
    MaterialProperty.C
    MaterialPropertys.C
    MixtureFractionEquationSystem.C
-   MomentumABLForceSrcNodeSuppAlg.C
-   MomentumActuatorSrcNodeSuppAlg.C
-   MomentumBodyForceSrcNodeSuppAlg.C
    MomentumBoussinesqRASrcNodeSuppAlg.C
-   MomentumBoussinesqSrcNodeSuppAlg.C
    MomentumBuoyancySrcElemSuppAlgDep.C
    MomentumBuoyancySrcNodeSuppAlg.C
-   MomentumCoriolisSrcNodeSuppAlg.C
-   MomentumGclSrcNodeSuppAlg.C
-   MomentumMassBDF2NodeSuppAlg.C
-   MomentumMassBackwardEulerNodeSuppAlg.C
    MomentumMassElemSuppAlgDep.C
    MovingAveragePostProcessor.C
    NaluEnv.C
@@ -146,9 +129,6 @@ add_sources(GlobalSourceList
    PstabErrorIndicatorElemAlgorithm.C
    Realm.C
    Realms.C
-   ScalarGclNodeSuppAlg.C
-   ScalarMassBDF2NodeSuppAlg.C
-   ScalarMassBackwardEulerNodeSuppAlg.C
    ScalarMassElemSuppAlgDep.C
    ScratchViews.C
    ShearStressTransportEquationSystem.C
@@ -160,7 +140,6 @@ add_sources(GlobalSourceList
    SolverAlgorithm.C
    SolverAlgorithmDriver.C
    SpecificDissipationRateEquationSystem.C
-   SpecificDissipationRateSSTNodeSourceSuppAlg.C
    SupplementalAlgorithm.C
    SurfaceForceAndMomentAlgorithm.C
    SurfaceForceAndMomentAlgorithmDriver.C
@@ -168,21 +147,16 @@ add_sources(GlobalSourceList
    TimeIntegrator.C
    TpetraLinearSystem.C
    TpetraLinearSystemHelpers.C
+   TpetraSegregatedLinearSystem.C
    TurbKineticEnergyEquationSystem.C
    TurbKineticEnergyKsgsBuoyantElemSuppAlg.C
-   TurbKineticEnergyKsgsNodeSourceSuppAlg.C
-   TurbKineticEnergyRodiNodeSourceSuppAlg.C
-   TurbKineticEnergySSTDESNodeSourceSuppAlg.C
-   TurbKineticEnergySSTNodeSourceSuppAlg.C
    TurbViscKsgsAlgorithm.C
    TurbViscSSTAlgorithm.C
    TurbViscSmagorinskyAlgorithm.C
    TurbViscWaleAlgorithm.C
    TurbulenceAveragingPostProcessing.C
-   AssembleWallDistEdgeSolverAlgorithm.C
    AssembleWallDistNonConformalAlgorithm.C
    WallDistEquationSystem.C
-   WallDistSrcNodeSuppAlg.C
 )
 
 if(ENABLE_FFTW)

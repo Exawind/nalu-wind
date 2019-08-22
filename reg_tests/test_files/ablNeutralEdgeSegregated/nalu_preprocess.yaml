@@ -1,0 +1,37 @@
+# -*- mode: yaml -*-
+#
+# Nalu Preprocessing utility
+#
+# Generate a temperature profile with capping inversion for use with ablNeutralEdge case
+#
+
+# Mandatory section for Nalu preprocessing
+nalu_preprocess:
+  # Name of the input exodus database
+  input_db: ./abl_5km_5km_1km_neutral.g
+  # Name of the output exodus database
+  output_db: ./abl_5km_5km_1km_neutral.g
+
+  # Nalu preprocessor expects a list of tasks to be performed on the mesh and
+  # field data structures
+  tasks:
+    - init_abl_fields
+
+  init_abl_fields:
+
+    # Fluid part is the interior mesh block(s) in the mesh. The default block is
+    # `fluid` if the mesh was generated using `abl_mesh` utility.
+    #
+    # Use `ncdump -v eb_names <exodus_file>` to determine the mesh blocks
+    #
+    fluid_parts: [fluid]
+
+    temperature:
+      heights: [    0, 650.0, 750.0, 1000.0 ]
+      values:  [300.0, 300.0, 308.0,  308.75]
+
+    velocity:
+      heights: [0.0, 1000.0]
+      values:
+        - [7.250462296293199, 3.380946093925596, 0.0]
+        - [7.250462296293199, 3.380946093925596, 0.0]

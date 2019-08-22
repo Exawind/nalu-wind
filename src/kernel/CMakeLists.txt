@@ -4,6 +4,7 @@ add_sources(GlobalSourceList
    ContinuityMassElemKernel.C
    ContinuityMassHOElemKernel.C
    ContinuityOpenElemKernel.C
+   EnthalpyTGradBCElemKernel.C
    KernelBuilderLog.C
    MomentumActuatorSrcElemKernel.C
    MomentumAdvDiffElemKernel.C
@@ -32,6 +33,7 @@ add_sources(GlobalSourceList
    ScalarOpenAdvElemKernel.C
    ScalarUpwAdvDiffElemKernel.C
    SpecificDissipationRateSSTSrcElemKernel.C
+   SpecificDissipationRateSSTDESSrcElemKernel.C
    TurbKineticEnergyKsgsDesignOrderSrcElemKernel.C
    TurbKineticEnergyKsgsSrcElemKernel.C
    TurbKineticEnergySSTDESSrcElemKernel.C

@@ -46,6 +46,28 @@ struct FieldInfoNGP {
   unsigned scalarsDim2;
 };
 
+struct CoordFieldInfo
+{
+  CoordFieldInfo(NGPDoubleFieldType& fld)
+    : coordField(fld)
+  {}
+
+  KOKKOS_FUNCTION
+  CoordFieldInfo() = default;
+
+  KOKKOS_FUNCTION
+  CoordFieldInfo(const CoordFieldInfo&) = default;
+
+  KOKKOS_FUNCTION
+  ~CoordFieldInfo() = default;
+
+  KOKKOS_FUNCTION
+  operator const NGPDoubleFieldType&() const
+  { return coordField; }
+
+  NGPDoubleFieldType coordField;
+};
+
 KOKKOS_INLINE_FUNCTION
 stk::mesh::EntityRank get_entity_rank(const FieldInfoNGP& fieldInfo)
 {
@@ -71,34 +93,12 @@ public:
   typedef NGPDoubleFieldType FieldType;
   typedef Kokkos::View<COORDS_TYPES*, Kokkos::LayoutRight, MemSpace> CoordsTypesView;
   typedef Kokkos::View<ELEM_DATA_NEEDED*, Kokkos::LayoutRight, MemSpace> DataEnumView;
-  typedef Kokkos::View<NGPDoubleFieldType*, Kokkos::LayoutRight, MemSpace> FieldView;
+  typedef Kokkos::View<CoordFieldInfo*, Kokkos::LayoutRight, MemSpace> FieldView;
   typedef Kokkos::View<FieldInfoType*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
   ElemDataRequestsGPU(
     const ngp::FieldManager& fieldMgr,
-    const ElemDataRequests& dataReq, unsigned totalFields)
-    : dataEnums(),
-      hostDataEnums(),
-      coordsFields_(),
-      hostCoordsFields_(),
-      coordsFieldsTypes_(),
-      hostCoordsFieldsTypes_(),
-      totalNumFields(totalFields),
-      fields(),
-      hostFields(),
-      meFC_(dataReq.get_cvfem_face_me()),
-      meSCS_(dataReq.get_cvfem_surface_me()),
-      meSCV_(dataReq.get_cvfem_volume_me()),
-      meFEM_(dataReq.get_fem_volume_me())
-  {
-    fill_host_data_enums(dataReq, CURRENT_COORDINATES);
-    fill_host_data_enums(dataReq, MODEL_COORDINATES);
-
-    fill_host_fields(dataReq, fieldMgr);
-    fill_host_coords_fields(dataReq, fieldMgr);
-
-    copy_to_device();
-  }
+    const ElemDataRequests& dataReq, unsigned totalFields);
 
   ~ElemDataRequestsGPU() {}
 
@@ -127,7 +127,23 @@ public:
   { return coordsFieldsTypes_; }
 
   KOKKOS_FUNCTION
-  const FieldInfoView& get_fields() const { return fields; }  
+  const FieldInfoView& get_fields() const { return fields; }
+
+  const DataEnumView::HostMirror&
+  get_host_data_enums(const COORDS_TYPES cType) const
+  { return hostDataEnums[cType]; }
+
+  const FieldView::HostMirror&
+  get_host_coordinates_fields() const
+  { return hostCoordsFields_; }
+
+  const CoordsTypesView::HostMirror&
+  get_host_coordinates_types() const
+  { return hostCoordsFieldsTypes_; }
+
+  const FieldInfoView::HostMirror&
+  get_host_fields() const
+  { return hostFields; }
 
   KOKKOS_FUNCTION
   unsigned get_total_num_fields() const { return totalNumFields; }
@@ -142,61 +158,15 @@ public:
   MasterElement *get_fem_volume_me() const {return meFEM_;}
 
 private:
-  void copy_to_device()
-  {
-    if (hostDataEnums[CURRENT_COORDINATES].size() > 0) {
-      Kokkos::deep_copy(dataEnums[CURRENT_COORDINATES], hostDataEnums[CURRENT_COORDINATES]);
-    }
-    if (hostDataEnums[MODEL_COORDINATES].size() > 0) {
-      Kokkos::deep_copy(dataEnums[MODEL_COORDINATES], hostDataEnums[MODEL_COORDINATES]);
-    }
-    Kokkos::deep_copy(coordsFields_, hostCoordsFields_);
-    Kokkos::deep_copy(coordsFieldsTypes_, hostCoordsFieldsTypes_);
-    Kokkos::deep_copy(fields, hostFields);
-  }
+  void copy_to_device();
 
-  void fill_host_data_enums(const ElemDataRequests& dataReq, COORDS_TYPES ctype)
-  {
-    if (dataReq.get_data_enums(ctype).size() > 0) {
-      dataEnums[ctype] = DataEnumView("DataEnumsCurrentCoords", dataReq.get_data_enums(ctype).size());
-      hostDataEnums[ctype] = Kokkos::create_mirror_view(dataEnums[ctype]);
-      unsigned i=0;
-      for(ELEM_DATA_NEEDED d : dataReq.get_data_enums(ctype)) {
-        hostDataEnums[ctype](i++) = d;
-      }
-    }
-  }
+  void fill_host_data_enums(const ElemDataRequests& dataReq, COORDS_TYPES ctype);
 
   void fill_host_fields(
-    const ElemDataRequests& dataReq, const ngp::FieldManager& fieldMgr)
-  {
-    fields = FieldInfoView("Fields", dataReq.get_fields().size());
-    hostFields = Kokkos::create_mirror_view(fields);
-    unsigned i = 0;
-    for (const FieldInfo& finfo : dataReq.get_fields()) {
-      hostFields(i++) = FieldInfoType(
-        fieldMgr.get_field<double>(finfo.field->mesh_meta_data_ordinal()),
-        finfo.scalarsDim1, finfo.scalarsDim2);
-    }
-  }
+    const ElemDataRequests& dataReq, const ngp::FieldManager& fieldMgr);
 
   void fill_host_coords_fields(
-    const ElemDataRequests& dataReq, const ngp::FieldManager& fieldMgr)
-  {
-    coordsFields_ = FieldView("CoordsFields", dataReq.get_coordinates_map().size());
-    coordsFieldsTypes_ = CoordsTypesView("CoordsFieldsTypes", dataReq.get_coordinates_map().size());
-
-    hostCoordsFields_ = Kokkos::create_mirror_view(coordsFields_);
-    hostCoordsFieldsTypes_ = Kokkos::create_mirror_view(coordsFieldsTypes_);
-
-    unsigned i = 0;
-    for (auto iter : dataReq.get_coordinates_map()) {
-      hostCoordsFields_(i) =
-        fieldMgr.get_field<double>(iter.second->mesh_meta_data_ordinal());
-      hostCoordsFieldsTypes_(i) = iter.first;
-      ++i;
-    }
-  }
+    const ElemDataRequests& dataReq, const ngp::FieldManager& fieldMgr);
 
   DataEnumView dataEnums[MAX_COORDS_TYPES];
   DataEnumView::HostMirror hostDataEnums[MAX_COORDS_TYPES];

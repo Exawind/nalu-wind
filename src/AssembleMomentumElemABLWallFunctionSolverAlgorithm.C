@@ -276,7 +276,7 @@ AssembleMomentumElemABLWallFunctionSolverAlgorithm::execute()
         const double eps_heat_flux = 1.0e-8;
         const double largenum = 1.0e8;
         double Lfac;
-        if (TfluxBip < eps_heat_flux) {
+        if (TfluxBip < -eps_heat_flux) {
           p_ABLProfFun = &StableProfFun;
         }
         else if (TfluxBip > eps_heat_flux) {

@@ -14,6 +14,8 @@
 #include "Realm.h"
 #include "ScratchViews.h"
 #include "SharedMemData.h"
+#include "EquationSystem.h"
+#include "LinearSystem.h"
 
 namespace stk {
 namespace mesh {
@@ -60,8 +62,14 @@ public:
 
     // Create local copies of class data for device capture
     const auto entityRank = entityRank_;
-    const auto nodesPerEntity = nodesPerEntity_;
     const auto rhsSize = rhsSize_;
+
+#ifdef KOKKOS_ENABLE_CUDA
+    CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
+    CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
+#endif
+
+    const auto nodesPerEntity = nodesPerEntity_;
 
     Kokkos::parallel_for(
       team_exec, KOKKOS_LAMBDA(const DeviceTeamHandleType& team) {
@@ -91,9 +99,18 @@ public:
             this->apply_coeff(
               nodesPerEntity, smdata.ngpElemNodes, smdata.scratchIds,
               smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
+#else
+            (*deviceCoeffApplier)(
+              nodesPerEntity, smdata.ngpElemNodes, smdata.scratchIds,
+              smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
 #endif
           });
       });
+
+#ifdef KOKKOS_ENABLE_CUDA
+      coeffApplier->free_device_pointer();
+      delete coeffApplier;
+#endif
   }
 
 protected:
