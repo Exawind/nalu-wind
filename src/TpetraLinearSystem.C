@@ -98,8 +98,7 @@ TpetraLinearSystem::~TpetraLinearSystem()
 {
   // dereference linear solver in safe manner
   if (linearSolver_ != nullptr) {
-    TpetraLinearSolver *linearSolver = reinterpret_cast<TpetraLinearSolver *>(linearSolver_);
-    linearSolver->destroyLinearSolver();
+    linearSolver_->destroyLinearSolver();
   }
 }
 

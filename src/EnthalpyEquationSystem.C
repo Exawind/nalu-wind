@@ -1141,6 +1141,9 @@ EnthalpyEquationSystem::initialize()
 void
 EnthalpyEquationSystem::reinitialize_linear_system()
 {
+  // delete linsys
+  delete linsys_;
+
   // delete old solver
   const EquationType theEqID = EQ_ENTHALPY;
   LinearSolver *theSolver = NULL;
@@ -1150,9 +1153,6 @@ EnthalpyEquationSystem::reinitialize_linear_system()
     theSolver = (*iter).second;
     delete theSolver;
   }
-
-  // delete linsys
-  delete linsys_;
 
   // create new solver
   std::string solverName = realm_.equationSystems_.get_solver_block_name("enthalpy");
