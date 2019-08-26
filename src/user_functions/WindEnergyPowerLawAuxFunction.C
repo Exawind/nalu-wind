@@ -6,12 +6,9 @@
 /*------------------------------------------------------------------------*/
 
 #include "user_functions/WindEnergyPowerLawAuxFunction.h"
-#include <algorithm>
 
 // basic c++
 #include <cmath>
-#include <vector>
-#include <stdexcept>
 
 namespace sierra{
 namespace nalu{
@@ -33,8 +30,8 @@ WindEnergyPowerLawAuxFunction::WindEnergyPowerLawAuxFunction(
   u_ref_[1] = params[5];
   u_ref_[2] = params[6];
   u_mag_ = std::sqrt(u_ref_[0] * u_ref_[0] + u_ref_[1] * u_ref_[1] + u_ref_[2] * u_ref_[2]);
-  u_min_ = params[7];
-  u_max_ = params[8];
+  u_min_ = params[7]/u_mag_;
+  u_max_ = params[8]/u_mag_;
 }
 
 void
@@ -58,15 +55,15 @@ WindEnergyPowerLawAuxFunction::do_evaluate(
         power_law_fn = std::pow( (y - y_offset_)/y_ref_ , shear_exp_ );
     }
 
-    if ( u_mag_* power_law_fn < u_min_)  {
-        fieldPtr[0] = u_ref_[0]/u_mag_ * u_min_ ;
-        fieldPtr[1] = u_ref_[1]/u_mag_ * u_min_ ;
-        fieldPtr[2] = u_ref_[2]/u_mag_ * u_min_ ;
+    if ( power_law_fn < u_min_)  {
+        fieldPtr[0] = u_ref_[0] * u_min_ ;
+        fieldPtr[1] = u_ref_[1] * u_min_ ;
+        fieldPtr[2] = u_ref_[2] * u_min_ ;
     }
-    else if ( u_mag_* power_law_fn > u_max_)  {
-        fieldPtr[0] = u_ref_[0]/u_mag_ * u_max_ ;
-        fieldPtr[1] = u_ref_[1]/u_mag_ * u_max_ ;
-        fieldPtr[2] = u_ref_[2]/u_mag_ * u_max_ ;
+    else if ( power_law_fn > u_max_)  {
+        fieldPtr[0] = u_ref_[0] * u_max_ ;
+        fieldPtr[1] = u_ref_[1] * u_max_ ;
+        fieldPtr[2] = u_ref_[2] * u_max_ ;
     }
     else {
         fieldPtr[0] = u_ref_[0] * power_law_fn;

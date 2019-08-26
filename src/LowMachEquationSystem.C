@@ -629,7 +629,7 @@ LowMachEquationSystem::register_initial_condition_fcn(
             theAuxFunc = new WindEnergyPowerLawAuxFunction(0,nDim,fp);
         }
         else {
-            throw std::runtime_error("Widn Energy Power Law aux function missing parameters in initial condition");
+            throw std::runtime_error("Wind Energy Power Law aux function missing parameters in initial condition");
         }
     }
     else if (fcnName == "kovasznay") {

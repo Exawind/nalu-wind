@@ -22,7 +22,7 @@ namespace nalu{
  *  This function is used as an initial or boundary condition,
  *  primarily in simulation of wind turbines under specified shear
  *  with a power law profile. The function implemented is 
- * \f[]
+ * \f[
  *  u = u_{ref} \left ( \frac{y - y_{offset}}{y_{ref}} \right )^{shear_exp} \frac{1}{2} \left ( tanh (y - y_{offset}) + 1 \right )
  * \f]
  */
@@ -50,15 +50,15 @@ public:
   
 private:
 
-    int coord_dir_{2}; // Coordinate direction - 0/1/2
-    double y_offset_{0.0}; //Offset for coordinate
-    double y_ref_{0.0}; // Reference height
-    double shear_exp_{0.12} ; // Exponent for power law
+    int coord_dir_; // Coordinate direction - 0/1/2
+    double y_offset_; //Offset for coordinate
+    double y_ref_; // Reference height
+    double shear_exp_ ; // Exponent for power law
     // Velocity vector at reference height
-    std::array<double,3> u_ref_{{8.0,0.0,0.0}}; 
-    double u_mag_{8.0}; // Velocity magnitude
-    double u_min_{4.0}; // Minimum velocity to cut off power law
-    double u_max_{12.0}; // Maximum velocity to cut off power law
+    std::array<double,3> u_ref_; 
+    double u_mag_; // Velocity magnitude
+    double u_min_; // Minimum velocity to cut off power law
+    double u_max_; // Maximum velocity to cut off power law
 };
 
 } // namespace nalu
