@@ -69,10 +69,10 @@ public:
   KOKKOS_FUNCTION
   TestCoeffApplier(LHSView& lhs, RHSView& rhs, UnsignedView& numSumIntoCalls,
                    bool isEdge=false, unsigned nDof=1, unsigned numContributionsToAccept=1)
-  : lhs_(lhs), rhs_(rhs), devicePointer_(nullptr),
+  : numSumIntoCalls_(numSumIntoCalls),
+    lhs_(lhs), rhs_(rhs), devicePointer_(nullptr),
     numContributionsToAccept_(numContributionsToAccept),
-    isEdge_(isEdge), numDof_(nDof),
-    numSumIntoCalls_(numSumIntoCalls)
+    isEdge_(isEdge), numDof_(nDof)
   {}
 
   KOKKOS_FUNCTION
