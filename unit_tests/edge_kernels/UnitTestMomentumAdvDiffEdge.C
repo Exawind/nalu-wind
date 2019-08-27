@@ -11,7 +11,6 @@
 
 #include "edge_kernels/MomentumEdgeSolverAlg.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
 namespace adv_diff {
@@ -61,7 +60,6 @@ static constexpr double lhs[24][24] = {
 } // adv_diff
 } // hex8_golds
 } // anonymous namespace
-#endif
 
 TEST_F(MomentumEdgeHex8Mesh, NGP_advection_diffusion)
 {
@@ -83,16 +81,14 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_advection_diffusion)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 12);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 12);
 
   namespace gold_values = ::hex8_golds::adv_diff;
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, gold_values::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<24>(
     helperObjs.linsys->lhs_, gold_values::lhs, 1.0e-12);
-#endif
 }

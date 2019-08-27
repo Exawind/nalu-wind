@@ -62,7 +62,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 12);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 12);
 
   namespace gold_values = ::hex8_golds::adv_diff;
   unit_test_kernel_utils::expect_all_near(

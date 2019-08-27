@@ -59,6 +59,7 @@ void edgeSumInto(
   }
 }
 
+using UnsignedView = Kokkos::View<unsigned*>;
 using LHSView = Kokkos::View<double**>;
 using RHSView = Kokkos::View<double*>;
 
@@ -66,9 +67,12 @@ class TestCoeffApplier : public sierra::nalu::CoeffApplier
 {
 public:
   KOKKOS_FUNCTION
-  TestCoeffApplier(LHSView& lhs, RHSView& rhs, bool isEdge=false, unsigned nDof=1, unsigned numContributionsToAccept=1)
+  TestCoeffApplier(LHSView& lhs, RHSView& rhs, UnsignedView& numSumIntoCalls,
+                   bool isEdge=false, unsigned nDof=1, unsigned numContributionsToAccept=1)
   : lhs_(lhs), rhs_(rhs), devicePointer_(nullptr),
-    numContributionsToAccept_(numContributionsToAccept), numContributions_(0), isEdge_(isEdge), numDof_(nDof)
+    numContributionsToAccept_(numContributionsToAccept),
+    isEdge_(isEdge), numDof_(nDof),
+    numSumIntoCalls_(numSumIntoCalls)
   {}
 
   KOKKOS_FUNCTION
@@ -92,11 +96,11 @@ public:
       edgeSumInto(numEntities, entities, rhs, lhs, numDof_, rhs_, lhs_);
     }
     else {
-      if (numContributions_ < numContributionsToAccept_) {
+      if (numSumIntoCalls_(0) < numContributionsToAccept_) {
         assign(lhs, rhs, lhs_, rhs_);
       }
     }
-    ++numContributions_;
+    Kokkos::atomic_add(&numSumIntoCalls_(0), 1u);
   }
 
   void free_device_pointer()
@@ -118,11 +122,11 @@ public:
   }
 
 private:
+  UnsignedView numSumIntoCalls_;
   LHSView lhs_;
   RHSView rhs_;
   TestCoeffApplier* devicePointer_;
   unsigned numContributionsToAccept_;
-  unsigned numContributions_;
   bool isEdge_;
   unsigned numDof_;
 };
@@ -132,14 +136,17 @@ class TestLinearSystem : public sierra::nalu::LinearSystem
 public:
  TestLinearSystem( sierra::nalu::Realm &realm, const unsigned numDof,
                    sierra::nalu::EquationSystem *eqSys, stk::topology topo, bool isEdge=false)
-   : sierra::nalu::LinearSystem(realm, numDof, eqSys, nullptr), numSumIntoCalls_(0),
+   : sierra::nalu::LinearSystem(realm, numDof, eqSys, nullptr),
      numDof_(numDof), isEdge_(isEdge)
   {
     unsigned rhsSize = numDof * topo.num_nodes();
 
+    numSumIntoCalls_ = UnsignedView("numSumIntoCalls_", 1);
+
     rhs_ = RHSView("rhs_",rhsSize);
     lhs_ = LHSView("lhs_",rhsSize, rhsSize);
 
+    hostNumSumIntoCalls_ = Kokkos::create_mirror_view(numSumIntoCalls_);
     hostrhs_ = Kokkos::create_mirror_view(rhs_);
     hostlhs_ = Kokkos::create_mirror_view(lhs_);
   }
@@ -173,15 +180,15 @@ public:
       const char *  /* trace_tag */
       )
   {
-    if (numSumIntoCalls_ == 0) {
+    if (numSumIntoCalls_(0) == 0) {
       assign(lhs, rhs, lhs_, rhs_);
     }
-    Kokkos::atomic_add(&numSumIntoCalls_, 1u);
+    Kokkos::atomic_add(&numSumIntoCalls_(0), 1u);
   }
 
   sierra::nalu::CoeffApplier* get_coeff_applier()
   {
-    return new TestCoeffApplier(lhs_, rhs_, isEdge_, numDof_);
+    return new TestCoeffApplier(lhs_, rhs_, numSumIntoCalls_, isEdge_, numDof_);
   }
 
   virtual void sumInto(
@@ -198,11 +205,11 @@ public:
       edgeSumInto(numEntities, entities, rhs, lhs, numDof_, rhs_, lhs_);
     }
     else {
-      if (numSumIntoCalls_ == 0) {
+      if (numSumIntoCalls_(0) == 0) {
         assign(lhs, rhs, lhs_, rhs_);
       }
     }
-    Kokkos::atomic_add(&numSumIntoCalls_, 1u);
+    Kokkos::atomic_add(&numSumIntoCalls_(0), 1u);
   }
 
   virtual void sumInto(
@@ -214,7 +221,7 @@ public:
     const char * /* trace_tag */=0
     )
   {
-    if (numSumIntoCalls_ == 0) {
+    if (numSumIntoCalls_(0) == 0) {
       for (size_t i=0; i<rhs.size(); ++i) {
         rhs_(i) = rhs[i];
       }
@@ -226,7 +233,7 @@ public:
         }
       }
     }
-    numSumIntoCalls_++;
+    Kokkos::atomic_add(&numSumIntoCalls_(0), 1u);
   }
 
   virtual void applyDirichletBCs(
@@ -256,7 +263,8 @@ public:
     const double,
     const double) {}
 
-  unsigned numSumIntoCalls_;
+  UnsignedView numSumIntoCalls_;
+  UnsignedView::HostMirror hostNumSumIntoCalls_;
   LHSView lhs_;
   LHSView::HostMirror hostlhs_;
   RHSView rhs_;
@@ -294,7 +302,7 @@ public:
     const char *  /* trace_tag */)
   {
     edgeSumInto(numEntities, entities, rhs, lhs, numDof_, rhs_, lhs_);
-    Kokkos::atomic_add(&numSumIntoCalls_, 1u);
+    Kokkos::atomic_add(&numSumIntoCalls_(0), 1u);
   }
 
   unsigned numDof_;

@@ -132,6 +132,7 @@ struct HelperObjects : public HelperObjectsBase
       kern->free_on_device();
     assembleElemSolverAlg->activeKernels_.clear();
 
+    Kokkos::deep_copy(linsys->hostNumSumIntoCalls_, linsys->numSumIntoCalls_);
     Kokkos::deep_copy(linsys->hostlhs_, linsys->lhs_);
     Kokkos::deep_copy(linsys->hostrhs_, linsys->rhs_);
   }
@@ -164,6 +165,7 @@ struct FaceElemHelperObjects : HelperObjects {
       kern->free_on_device();
     assembleFaceElemSolverAlg->activeKernels_.clear();
 
+    Kokkos::deep_copy(linsys->hostNumSumIntoCalls_, linsys->numSumIntoCalls_);
     Kokkos::deep_copy(linsys->hostlhs_, linsys->lhs_);
     Kokkos::deep_copy(linsys->hostrhs_, linsys->rhs_);
   }
@@ -200,6 +202,7 @@ struct EdgeHelperObjects : public HelperObjectsBase
     ThrowRequire(edgeAlg != nullptr);
     edgeAlg->execute();
 
+    Kokkos::deep_copy(linsys->hostNumSumIntoCalls_, linsys->numSumIntoCalls_);
     Kokkos::deep_copy(linsys->hostlhs_, linsys->lhs_);
     Kokkos::deep_copy(linsys->hostrhs_, linsys->rhs_);
   }
@@ -232,6 +235,7 @@ struct NodeHelperObjects : public HelperObjectsBase
   {
     nodeAlg->execute();
 
+    Kokkos::deep_copy(linsys->hostNumSumIntoCalls_, linsys->numSumIntoCalls_);
     Kokkos::deep_copy(linsys->hostlhs_, linsys->lhs_);
     Kokkos::deep_copy(linsys->hostrhs_, linsys->rhs_);
   }
