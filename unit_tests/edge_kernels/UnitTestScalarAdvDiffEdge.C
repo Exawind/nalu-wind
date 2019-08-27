@@ -12,7 +12,6 @@
 
 #include "edge_kernels/ScalarEdgeSolverAlg.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
 namespace adv_diff {
@@ -35,8 +34,6 @@ static constexpr double lhs[8][8] = {
 }
 }
 
-#endif
-
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge)
 {
   if (bulk_.parallel_size() > 1) return;
@@ -58,7 +55,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -69,5 +65,4 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge)
     helperObjs.linsys->rhs_, gold_values::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, gold_values::lhs, 1.0e-12);
-#endif
 }

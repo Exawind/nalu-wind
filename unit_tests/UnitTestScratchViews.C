@@ -167,8 +167,18 @@ TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
 
-  const double velVec[3] = {1.0, 0.0, 0.0};
-  stk::mesh::field_fill(velVec, *velocity);
+  const int nDim = 3;
+  const double velVec[nDim] = {1.0, 0.0, 0.0};
+
+  stk::mesh::EntityVector nodes;
+  stk::mesh::get_entities(bulk, stk::topology::NODE_RANK, nodes);
+
+  for(stk::mesh::Entity node : nodes) {
+    double* fieldData = static_cast<double*>(stk::mesh::field_data(*velocity, node));
+    for(int d=0; d<nDim; ++d) {
+      fieldData[d] = velVec[d];
+    }
+  }
 
   do_the_test(bulk, pressure, velocity);
 }
