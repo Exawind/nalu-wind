@@ -56,7 +56,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_gcl_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 8u);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
 
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, gold_values::momentum_gcl::rhs, 1.0e-14);
