@@ -508,7 +508,7 @@ class mapping_object_class():
                                 - self.yaml_setup['temperature_heights'][-2])
                 # Assign the initial condition
                 var['abltop_user_data']['normal_temperature_gradient'] = \
-                    TGradUpper
+                    -TGradUpper
 
 
     def set_density(self):
