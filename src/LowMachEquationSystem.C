@@ -190,6 +190,7 @@
 
 #include <user_functions/BoundaryLayerPerturbationAuxFunction.h>
 
+#include <user_functions/WindEnergyMomWakeInductionAuxFunction.h>
 #include <user_functions/WindEnergyPowerLawAuxFunction.h>
 
 #include <user_functions/KovasznayVelocityAuxFunction.h>
@@ -630,6 +631,16 @@ LowMachEquationSystem::register_initial_condition_fcn(
         }
         else {
             throw std::runtime_error("Wind Energy Power Law aux function missing parameters in initial condition");
+        }
+    }
+    else if ( fcnName == "wind_energy_mom_wake_induction") {
+        auto it = theParams.find(dofName);
+        if (it != theParams.end()) {
+            auto& fp = it->second;
+            theAuxFunc = new WindEnergyMomWakeInductionAuxFunction(0,nDim,fp);
+        }
+        else {
+            throw std::runtime_error("Wind Energy Momentum Wake/Induction aux function missing parameters in initial condition");
         }
     }
     else if (fcnName == "kovasznay") {

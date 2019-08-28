@@ -51,6 +51,7 @@ add_sources(GlobalSourceList
    VariableDensityNonIsoTemperatureAuxFunction.C
    VariableDensityPressureAuxFunction.C
    VariableDensityVelocityAuxFunction.C
+   WindEnergyMomWakeInductionAuxFunction.C
    WindEnergyPowerLawAuxFunction.C
    WindEnergyTaylorVortexAuxFunction.C
    WindEnergyTaylorVortexPressureAuxFunction.C
