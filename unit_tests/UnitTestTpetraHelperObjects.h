@@ -39,8 +39,88 @@ struct TpetraHelperObjectsBase {
 
   virtual void execute() { }
 
+  void print_lhs_and_rhs() const
+  {
+    auto oldPrec = std::cerr.precision();
+    std::cerr.precision(14);
+
+    using MatrixType = sierra::nalu::LinSys::LocalMatrix;
+    const MatrixType& localMatrix = linsys->getOwnedMatrix()->getLocalMatrix();
+  
+    using VectorType = sierra::nalu::LinSys::LocalVector;
+    const VectorType& localRhs = linsys->getOwnedRhs()->getLocalView<sierra::nalu::DeviceSpace>();
+  
+    int localProc = realm.bulkData_->parallel_rank();
+
+    std::string suffix = std::string("_P")+std::to_string(localProc);
+    std::ostringstream os;
+    os<<"static const std::vector<int> rowOffsets"<<suffix<<" = {";
+    int rowOffset = 0;
+    for(int i=0; i<localMatrix.numRows(); ++i) {
+      KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);
+      os<<rowOffset<<", ";
+      rowOffset += constRowView.length;
+    }
+    os<<rowOffset<<"};"<<std::endl;
+
+    os<<"\nstatic const std::vector<int> cols"<<suffix<<" = {";
+    for(int i=0; i<localMatrix.numRows(); ++i) {
+      KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);
+      for(int j=0; j<constRowView.length; ++j) {
+        os<<constRowView.colidx(j)<<(j<constRowView.length-1 ? ", ":"");
+      }
+      os<<(i<localMatrix.numRows()-1?", ":"");
+    }
+    os<<"};"<<std::endl;
+
+    os<<"\nstatic const std::vector<double> vals"<<suffix<<" = {";
+    for(int i=0; i<localMatrix.numRows(); ++i) {
+      KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);
+      for(int j=0; j<constRowView.length; ++j) {
+        os<<constRowView.value(j)<<(j<constRowView.length-1 ? ", ":"");
+      }
+      os<<(i<localMatrix.numRows()-1?", ":"");
+    }
+    os<<"};"<<std::endl;
+    
+    os<<"\nstatic const std::vector<double> rhs"<<suffix<<" = {";
+    for(int i=0; i<localMatrix.numRows(); ++i) {
+      os<<localRhs(i,0)<<(i<localMatrix.numRows()-1 ? ", ":"");
+    }
+    os<<"};"<<std::endl;
+    std::cerr<<os.str();
+    std::cerr.precision(oldPrec);
+  }
+
+  void check_against_sparse_gold_values(const std::vector<int>& rowOffsets,
+                                        const std::vector<int>& cols,
+                                        const std::vector<double>& vals,
+                                        const std::vector<double>& rhs)
+  {
+    using MatrixType = sierra::nalu::LinSys::LocalMatrix;
+    const MatrixType& localMatrix = linsys->getOwnedMatrix()->getLocalMatrix();
+  
+    using VectorType = sierra::nalu::LinSys::LocalVector;
+    const VectorType& localRhs = linsys->getOwnedRhs()->getLocalView<sierra::nalu::DeviceSpace>();
+  
+    EXPECT_EQ(rowOffsets.size()-1, localMatrix.numRows());
+    EXPECT_EQ(rhs.size(), localRhs.size());
+    EXPECT_EQ(rhs.size(), localMatrix.numRows());
+  
+    for(int i=0; i<localMatrix.numRows(); ++i) {
+      KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);
+
+      for(int j=0; j<constRowView.length; ++j) {
+        EXPECT_EQ(cols[rowOffsets[i]+j], constRowView.colidx(j));
+        EXPECT_NEAR(vals[rowOffsets[i]+j], constRowView.value(j), 1.e-14);
+      }
+
+      EXPECT_NEAR(rhs[i], localRhs(i,0), 1.e-14);
+    }
+  }
+
   template<typename LHSType, typename RHSType>
-  void check_against_gold_values(unsigned rhsSize, const LHSType& lhs, const RHSType& rhs)
+  void check_against_dense_gold_values(unsigned rhsSize, const LHSType& lhs, const RHSType& rhs)
   {
     using MatrixType = sierra::nalu::LinSys::LocalMatrix;
     const MatrixType& localMatrix = linsys->getOwnedMatrix()->getLocalMatrix();
@@ -134,6 +214,41 @@ struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase {
   }
 
   sierra::nalu::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
+};
+
+struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase {
+  TpetraHelperObjectsEdge(stk::mesh::BulkData& bulk, int numDof)
+  : TpetraHelperObjectsBase(bulk, numDof),
+    edgeAlg(nullptr)
+  {
+  }
+
+  virtual ~TpetraHelperObjectsEdge()
+  {
+    delete edgeAlg;
+  }
+
+  template<typename T, class... Args>
+  void create(stk::mesh::Part* part, Args&&... args)
+  {
+    ThrowRequire(edgeAlg == nullptr);
+    edgeAlg = new T(realm, part, &eqSystem, std::forward<Args>(args)...);
+  }
+
+  virtual void execute() override
+  {
+    ThrowRequire(edgeAlg != nullptr);
+    linsys->buildEdgeToNodeGraph({&realm.metaData_->universal_part()});
+    linsys->finalizeLinearSystem();
+
+    edgeAlg->execute();
+
+    for (auto kern: edgeAlg->activeKernels_)
+      kern->free_on_device();
+    edgeAlg->activeKernels_.clear();
+  }
+
+  sierra::nalu::AssembleEdgeSolverAlgorithm* edgeAlg;
 };
 
 }
