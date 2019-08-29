@@ -243,6 +243,8 @@ struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase {
 
     edgeAlg->execute();
 
+    linsys->loadComplete();
+
     for (auto kern: edgeAlg->activeKernels_)
       kern->free_on_device();
     edgeAlg->activeKernels_.clear();
