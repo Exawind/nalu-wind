@@ -14,8 +14,6 @@
 #include "node_kernels/SDRSSTNodeKernel.h"
 #include "node_kernels/SDRSSTDESNodeKernel.h"
 
-
-#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
 namespace tke_sst {
@@ -100,8 +98,6 @@ static constexpr double lhs[8][8] = {
 } // hex8_golds
 }
 
-#endif
-
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 {
   // Only execute for 1 processor runs
@@ -122,7 +118,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -133,7 +128,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
 
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
@@ -156,7 +150,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -167,7 +160,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
 
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
@@ -190,7 +182,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -201,7 +192,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
 
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
@@ -224,7 +214,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
@@ -236,5 +225,4 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
