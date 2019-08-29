@@ -103,6 +103,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion_tpetra)
   helperObjs.execute();
 
   namespace gold_values = hex8_golds::advection_diffusion;
-  helperObjs.check_against_gold_values(8, gold_values::lhs, gold_values::rhs);
+  helperObjs.check_against_dense_gold_values(8, gold_values::lhs, gold_values::rhs);
 }
 
