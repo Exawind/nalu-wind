@@ -877,6 +877,9 @@ Realm::setup_nodal_fields()
   hypreGlobalId_ = &(metaData_->declare_field<HypreIDFieldType>(
                        stk::topology::NODE_RANK, "hypre_global_id"));
 #endif
+  tpetGlobalId_ = &(metaData_->declare_field<TpetIDFieldType>(
+                       stk::topology::NODE_RANK, "tpet_global_id"));
+
   // register global id and rank fields on all parts
   const stk::mesh::PartVector parts = metaData_->get_parts();
   for ( size_t ipart = 0; ipart < parts.size(); ++ipart ) {
@@ -886,6 +889,8 @@ Realm::setup_nodal_fields()
 #ifdef NALU_USES_HYPRE
     stk::mesh::put_field_on_mesh(*hypreGlobalId_, *parts[ipart], nullptr);
 #endif
+    stk::mesh::put_field_on_mesh(*tpetGlobalId_, *parts[ipart], nullptr);
+    stk::mesh::field_fill(std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
   }
 
 

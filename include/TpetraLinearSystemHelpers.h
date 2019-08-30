@@ -74,6 +74,16 @@ void add_lengths_to_comm(const stk::mesh::BulkData&  /* bulk */,
                          const stk::mesh::EntityId* colEntityIds,
                          const int* colOwners);
 
+void add_lengths_to_comm_tpet(const stk::mesh::BulkData&  /* bulk */,
+                              TpetIDFieldType * tpetGID_label,
+                         stk::CommNeighbors& commNeighbors,
+                         int entity_a_owner,
+                         stk::mesh::EntityId entityId_a,
+                              //                         unsigned numDof,
+                         unsigned numColEntities,
+                         const stk::mesh::EntityId* colEntityIds,
+                         const int* colOwners);
+
 void communicate_remote_columns(const stk::mesh::BulkData& bulk,
                                 const std::vector<int>& neighborProcs,
                                 stk::CommNeighbors& commNeighbors,
