@@ -389,12 +389,7 @@ ProjectedNodalGradientEquationSystem::solve_and_update_external()
 
     // update
     double timeA = NaluEnv::self().nalu_time();
-    field_axpby(
-      realm_.meta_data(),
-      realm_.bulk_data(),
-      1.0, *qTmp_,
-      1.0, *dqdx_,
-      realm_.get_activate_aura());
+    solution_update(1.0, *qTmp_, 1.0, *dqdx_);
     double timeB = NaluEnv::self().nalu_time();
     timerAssemble_ += (timeB-timeA);
   }

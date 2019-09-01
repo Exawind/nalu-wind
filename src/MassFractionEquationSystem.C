@@ -722,12 +722,9 @@ MassFractionEquationSystem::solve_and_update()
 
       // update
       timeA = NaluEnv::self().nalu_time();
-      field_axpby(
-        realm_.meta_data(),
-        realm_.bulk_data(),
+      solution_update(
         1.0, *yTmp_,
-        1.0, *currentMassFraction_, 
-        realm_.get_activate_aura());
+        1.0, *currentMassFraction_);
       timeB = NaluEnv::self().nalu_time();
       timerAssemble_ += (timeB-timeA);
 

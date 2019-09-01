@@ -27,6 +27,7 @@
 #include <EquationSystems.h>
 #include <Enums.h>
 #include <FieldFunctions.h>
+#include <FieldFunctions.h>
 #include <LinearSolvers.h>
 #include <LinearSolver.h>
 #include <LinearSystem.h>

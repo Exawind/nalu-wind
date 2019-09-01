@@ -85,6 +85,8 @@
 
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
+#include "ngp_utils/NgpFieldUtils.h"
+
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
 
@@ -1043,6 +1045,8 @@ TurbKineticEnergyEquationSystem::update_and_clip()
       }
     }
   }
+
+  nalu_ngp::copy_field_to_device(realm_.mesh_info(), *tke_);
 
   // parallel assemble clipped value
   if (realm_.debug()) {

@@ -47,6 +47,8 @@
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
 #include "overset/AssembleOversetWallDistAlgorithm.h"
 
+#include "ngp_utils/NgpFieldUtils.h"
+
 #include "stk_mesh/base/Part.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/BulkData.hpp"
@@ -508,6 +510,8 @@ WallDistEquationSystem::compute_wall_distance()
       *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
   if (realm_.hasOverset_)
     realm_.overset_orphan_node_field_update(wallDistance_, 1, 1);
+
+  nalu_ngp::copy_field_to_device(realm_.mesh_info(), *wallDistance_);
 }
 
 void

@@ -15,6 +15,7 @@
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <FieldTypeDef.h>
+#include <FieldFunctions.h>
 #include <NaluParsing.h>
 #include <NaluEnv.h>
 #include <LinearSystem.h>
@@ -24,6 +25,8 @@
 
 // overset
 #include <overset/AssembleOversetSolverConstraintAlgorithm.h>
+
+#include "ngp_utils/NgpFieldUtils.h"
 
 #include <stk_mesh/base/Field.hpp>
 
@@ -515,6 +518,29 @@ EquationSystem::post_iter_work()
   for (auto it: postIterAlgDriver_) {
     it->execute();
   }
+}
+
+void
+EquationSystem::solution_update(
+  const double delta_frac,
+  const stk::mesh::FieldBase& delta,
+  const double field_frac,
+  stk::mesh::FieldBase& field)
+{
+  const auto& meshInfo = realm_.mesh_info();
+
+  // Update the field stored in BulkData
+  field_axpby(
+    meshInfo.meta(),
+    meshInfo.bulk(),
+    delta_frac,
+    delta,
+    field_frac,
+    field,
+    realm_.get_activate_aura());
+
+  // Synchronize with device
+  nalu_ngp::copy_field_to_device(meshInfo, field);
 }
 
 } // namespace nalu

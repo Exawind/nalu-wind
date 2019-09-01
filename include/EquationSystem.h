@@ -236,6 +236,17 @@ public:
     get_required(node, "convergence_tolerance", convergenceTolerance_);
   }
 
+  /** Update field with the delta solution from linear solve
+   *
+   *  This method updates the solution from the linear system solve on host
+   *  (within BulkData) and then synchornizes the field on the device.
+   */
+  virtual void solution_update(
+    const double delta_frac,
+    const stk::mesh::FieldBase& delta,
+    const double field_frac,
+    stk::mesh::FieldBase& field);
+
   Simulation *root();
   EquationSystems *parent();
 

@@ -984,12 +984,9 @@ HeatCondEquationSystem::solve_and_update()
 
     // update
     double timeA = NaluEnv::self().nalu_time();
-    field_axpby(
-      realm_.meta_data(),
-      realm_.bulk_data(),
+    solution_update(
       1.0, *tTmp_,
-      1.0, *temperature_, 
-      realm_.get_activate_aura());
+      1.0, *temperature_);
     double timeB = NaluEnv::self().nalu_time();
     timerAssemble_ += (timeB-timeA);
    

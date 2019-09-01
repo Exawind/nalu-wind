@@ -73,6 +73,8 @@
 
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
+#include "ngp_utils/NgpFieldUtils.h"
+
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
 

@@ -873,12 +873,7 @@ RadiativeTransportEquationSystem::solve_and_update()
       
       // update
       double timeA = NaluEnv::self().nalu_time();
-      field_axpby(
-        realm_.meta_data(),
-        realm_.bulk_data(),
-        1.0, *iTmp_,
-        1.0, *intensity_, 
-        realm_.get_activate_aura());
+      solution_update(1.0, *iTmp_, 1.0, *intensity_);
       double timeB = NaluEnv::self().nalu_time();
       timerAssemble_ += (timeB-timeA);
       

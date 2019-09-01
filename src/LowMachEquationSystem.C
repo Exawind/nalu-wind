@@ -706,12 +706,9 @@ LowMachEquationSystem::solve_and_update()
 
     // update all of velocity
     timeA = NaluEnv::self().nalu_time();
-    field_axpby(
-      realm_.meta_data(),
-      realm_.bulk_data(),
+    solution_update(
       1.0, *momentumEqSys_->uTmp_,
-      1.0, momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1),
-      realm_.get_activate_aura());
+      1.0, momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1));
     timeB = NaluEnv::self().nalu_time();
     momentumEqSys_->timerAssemble_ += (timeB-timeA);
 
@@ -731,12 +728,9 @@ LowMachEquationSystem::solve_and_update()
 
     // update pressure
     timeA = NaluEnv::self().nalu_time();
-    field_axpby(
-      realm_.meta_data(),
-      realm_.bulk_data(),
+    solution_update(
       1.0, *continuityEqSys_->pTmp_,
-      1.0, *continuityEqSys_->pressure_,
-      realm_.get_activate_aura());
+      1.0, *continuityEqSys_->pressure_);
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerAssemble_ += (timeB-timeA);
 
@@ -754,12 +748,9 @@ LowMachEquationSystem::solve_and_update()
     const double relaxFP = realm_.solutionOptions_->get_relaxation_factor(dofName);
     if (std::fabs(1.0 - relaxFP) > 1.0e-3) {
       timeA = NaluEnv::self().nalu_time();
-      field_axpby(
-        realm_.meta_data(),
-        realm_.bulk_data(),
+      solution_update(
         (relaxFP - 1.0), *continuityEqSys_->pTmp_,
-        1.0, *continuityEqSys_->pressure_,
-        realm_.get_activate_aura());
+        1.0, *continuityEqSys_->pressure_);
       continuityEqSys_->compute_projected_nodal_gradient();
       timeB = NaluEnv::self().nalu_time();
       continuityEqSys_->timerAssemble_ += (timeB-timeA);
@@ -810,14 +801,10 @@ LowMachEquationSystem::post_adapt_work()
       continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
       
       // update pressure
-      field_axpby(
-          realm_.meta_data(),
-          realm_.bulk_data(),
-          1.0, *continuityEqSys_->pTmp_,
-          1.0, *continuityEqSys_->pressure_,
-          realm_.get_activate_aura());
+      solution_update(
+        1.0, *continuityEqSys_->pTmp_, 1.0, *continuityEqSys_->pressure_);
     }
-    
+
     // compute mdot
     continuityEqSys_->computeMdotAlgDriver_->execute();
     

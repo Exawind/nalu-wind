@@ -524,12 +524,9 @@ MeshDisplacementEquationSystem::solve_and_update()
 
     // update
     double timeA = NaluEnv::self().nalu_time();
-    field_axpby(
-      realm_.meta_data(),
-      realm_.bulk_data(),
+    solution_update(
       1.0, *dxTmp_,
-      1.0, meshDisplacement_->field_of_state(stk::mesh::StateNP1), 
-      realm_.get_activate_aura());
+      1.0, meshDisplacement_->field_of_state(stk::mesh::StateNP1));
     double timeB = NaluEnv::self().nalu_time();
     timerAssemble_ += (timeB-timeA);
 

@@ -9,7 +9,6 @@
 #include <ShearStressTransportEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <ComputeSSTMaxLengthScaleElemAlgorithm.h>
-#include <FieldFunctions.h>
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFactory.h>
 #include <NaluEnv.h>
@@ -17,6 +16,8 @@
 #include <SolutionOptions.h>
 #include <TurbKineticEnergyEquationSystem.h>
 #include <Realm.h>
+
+#include "ngp_utils/NgpFieldUtils.h"
 
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
@@ -373,6 +374,10 @@ ShearStressTransportEquationSystem::update_and_clip()
       }
     }
   }
+
+  nalu_ngp::copy_field_to_device(realm_.mesh_info(), tkeNp1);
+  nalu_ngp::copy_field_to_device(realm_.mesh_info(), sdrNp1);
+  nalu_ngp::copy_field_to_device(realm_.mesh_info(), *turbViscosity);
 
   // parallel assemble clipped value
   if (realm_.debug()) {
