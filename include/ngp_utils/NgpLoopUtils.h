@@ -108,7 +108,7 @@ inline int ngp_calc_thread_shmem_size(
  */
 template<typename Mesh, typename AlgFunctor>
 void run_entity_algorithm(
-  Mesh& mesh,
+  const Mesh& mesh,
   const stk::topology::rank_t rank,
   const stk::mesh::Selector& sel,
   const AlgFunctor algorithm)
@@ -148,7 +148,7 @@ void run_entity_algorithm(
  */
 template<typename Mesh, typename AlgFunctor>
 void run_edge_algorithm(
-  Mesh& mesh,
+  const Mesh& mesh,
   const stk::mesh::Selector& sel,
   const AlgFunctor algorithm)
 {
@@ -180,7 +180,7 @@ void run_edge_algorithm(
  */
 template<typename Mesh, typename AlgFunctor>
 void run_elem_algorithm(
-  Mesh& mesh,
+  const Mesh& mesh,
   const stk::topology::rank_t rank,
   const stk::mesh::Selector& sel,
   const AlgFunctor algorithm)
@@ -219,7 +219,7 @@ template<
   typename DataReqType,
   typename AlgFunctor>
 void run_elem_algorithm(
-  MeshInfo<Mesh, FieldManager>& meshInfo,
+  const MeshInfo<Mesh, FieldManager>& meshInfo,
   const stk::topology::rank_t rank,
   const DataReqType& dataReqs,
   const stk::mesh::Selector& sel,
@@ -292,7 +292,7 @@ template<
   typename DataReqType,
   typename AlgFunctor>
 void run_face_elem_algorithm_nosimd(
-  MeshInfo<Mesh, FieldManager>& meshInfo,
+  const MeshInfo<Mesh, FieldManager>& meshInfo,
   const DataReqType& faceDataReqs,
   const DataReqType& elemDataReqs,
   const stk::mesh::Selector& sel,
