@@ -28,6 +28,91 @@ namespace nalu {
 namespace nalu_ngp {
 namespace impl {
 
+template<typename Mesh, typename Field>
+struct SimpleNodeFieldOp
+{
+  static_assert(
+    std::is_floating_point<typename Field::value_type>::value,
+    "NGP field must have a floating type");
+
+  /**
+   *  @param ngpMesh Instance of the NGP mesh on device
+   *  @param ngpField The nodal field instance that is being modified
+   *  @param einfo Entity information for this loop instance
+   */
+  KOKKOS_INLINE_FUNCTION
+  SimpleNodeFieldOp(
+    const Mesh& ngpMesh,
+    const Field& ngpField,
+    const EntityInfo<Mesh>& einfo)
+    : ngpMesh_(ngpMesh), ngpField_(ngpField), einfo_(einfo), ops_(*this)
+  {}
+
+  KOKKOS_FUNCTION ~SimpleNodeFieldOp() = default;
+
+  /** Implementation of supported operators for nodal fields
+   */
+  struct Ops
+  {
+    KOKKOS_INLINE_FUNCTION
+    Ops(SimpleNodeFieldOp<Mesh, Field>& obj) : obj_(obj)
+    {}
+
+    KOKKOS_FUNCTION ~Ops() = default;
+
+    KOKKOS_INLINE_FUNCTION
+    void operator=(const double& val) const
+    {
+      const auto& msh = obj_.ngpMesh_;
+      const auto& fld = obj_.ngpField_;
+      const auto& nodes = obj_.einfo_.entityNodes;
+      fld.get(msh, nodes[ni], ic) = val;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator+=(const double& val) const
+    {
+      const auto& msh = obj_.ngpMesh_;
+      const auto& fld = obj_.ngpField_;
+      const auto& nodes = obj_.einfo_.entityNodes;
+      Kokkos::atomic_add(&fld.get(msh, nodes[ni], ic), val);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator-=(const double& val) const { Ops::operator+=(-val); }
+
+    SimpleNodeFieldOp<Mesh, Field>& obj_;
+
+    //! Index of the node in connectivity array
+    unsigned ni;
+
+    //! Component index for the field to be updated
+    unsigned ic;
+  };
+
+  /** Get the operator object to perform field modifications
+   *
+   *  @param n Index of node in the element connectivity array
+   *  @param ic Index of the component
+   */
+  KOKKOS_INLINE_FUNCTION
+  const Ops& operator()(const int n, const int ic = 0) const
+  {
+    ops_.ni = n;
+    ops_.ic = ic;
+    return ops_;
+  }
+
+  //! NGP Mesh instance
+  const Mesh ngpMesh_;
+
+  const Field ngpField_;
+
+  const EntityInfo<Mesh>& einfo_;
+
+  mutable Ops ops_;
+};
+
 /** Update an NGP field registered on NODE_RANK with SIMD right hand sides.
  */
 template <typename Mesh, typename Field>
@@ -328,6 +413,15 @@ simd_elem_field_updater(
     || (fld.get_rank() == stk::topology::FACE_RANK)
     || (fld.get_rank() == stk::topology::EDGE_RANK));
   return impl::ElemFieldOp<Mesh, Field>{mesh, fld, edata};
+}
+
+template<typename Mesh, typename Field>
+impl::SimpleNodeFieldOp<Mesh, Field>
+edge_nodal_field_updater(
+  const Mesh& mesh, const Field& fld, const EntityInfo<Mesh>& einfo)
+{
+  NGP_ThrowAssert(fld.get_rank() == stk::topology::NODE_RANK);
+  return impl::SimpleNodeFieldOp<Mesh, Field>{mesh, fld, einfo};
 }
 
 }  // nalu_ngp
