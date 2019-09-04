@@ -11,15 +11,19 @@
 
 #include "AlgTraits.h"
 #include "AssembleNodalGradEdgeAlgorithm.h"
+#include "AssembleNodalGradUEdgeAlgorithm.h"
 #include "AssembleNodalGradElemAlgorithm.h"
+#include "AssembleNodalGradUElemAlgorithm.h"
 #include "AssembleNodalGradBoundaryAlgorithm.h"
+#include "AssembleNodalGradUBoundaryAlgorithm.h"
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
+#include "ngp_algorithms/NodalGradAlgDriver.h"
 
 #include "stk_mesh/base/CreateEdges.hpp"
 
-TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_edge)
+TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
 {
   fill_mesh_and_init_fields();
 
@@ -37,9 +41,11 @@ TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_edge)
   // sierra::nalu::AssembleNodalGradEdgeAlgorithm edgeAlg(
   //   helperObjs.realm, partVec_[0], tke_, dkdx_);
   // edgeAlg.execute();
-  sierra::nalu::ScalarNodalGradEdgeAlg edgeAlg(
-    helperObjs.realm, partVec_[0], tke_, dkdx_);
-  edgeAlg.execute();
+
+  sierra::nalu::ScalarNodalGradAlgDriver algDriver(helperObjs.realm, "dkdx");
+  algDriver.register_edge_algorithm<sierra::nalu::ScalarNodalGradEdgeAlg>(
+    sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", tke_, dkdx_);
+  algDriver.execute();
 
   {
     std::vector<double> expectedValues = {
@@ -64,7 +70,54 @@ TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_edge)
   }
 }
 
-TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_elem)
+TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
+{
+  fill_mesh_and_init_fields();
+
+  const double xCoeff = 2.0;
+  const double yCoeff = 2.0;
+  const double zCoeff = 2.0;
+
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
+                                           xCoeff, yCoeff, zCoeff);
+  stk::mesh::field_fill(0.0, *dudx_);
+
+  // Reference values from original AssembleNodalGradEdge
+  // sierra::nalu::AssembleNodalGradUEdgeAlgorithm edgeAlg(
+  //   helperObjs.realm, partVec_[0], velocity_, dudx_);
+  // edgeAlg.execute();
+
+  sierra::nalu::VectorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
+  algDriver.register_edge_algorithm<sierra::nalu::VectorNodalGradEdgeAlg>(
+    sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", velocity_, dudx_);
+  algDriver.execute();
+
+  {
+    // Test the `du_i/dx_i \delta_ii` values
+    std::vector<double> expectedValues = {
+      2, 2, 2, -2, 2, 2,
+      2, -2, 2, -2, -2, 2,
+      2, 2, -2, -2, 2, -2,
+      2, -2, -2, -2, -2, -2,
+    };
+
+    const double tol = 1.0e-16;
+    stk::mesh::Selector sel = meta_.universal_part();
+    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+
+    int ii = 0;
+    for (const auto* b: bkts)
+      for (const auto node: *b) {
+        const double* dudx = stk::mesh::field_data(*dudx_, node);
+        for (int i1=0; i1 < 3; ++i1)
+          EXPECT_NEAR(dudx[i1 * 3 + i1], expectedValues[ii++], tol);
+      }
+  }
+}
+
+TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
 {
   fill_mesh_and_init_fields();
 
@@ -82,9 +135,11 @@ TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_elem)
   // sierra::nalu::AssembleNodalGradElemAlgorithm elemAlg(
   //   helperObjs.realm, partVec_[0], tke_, dkdx_);
   // elemAlg.execute();
-  sierra::nalu::ScalarNodalGradElemAlg<sierra::nalu::AlgTraitsHex8> elemAlg(
-    helperObjs.realm, partVec_[0], tke_, dkdx_);
-  elemAlg.execute();
+
+  sierra::nalu::ScalarNodalGradAlgDriver algDriver(helperObjs.realm, "dkdx");
+  algDriver.register_elem_algorithm<sierra::nalu::ScalarNodalGradElemAlg>(
+    sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", tke_, dkdx_);
+  algDriver.execute();
 
   {
     std::vector<double> expectedValues = {
@@ -109,7 +164,7 @@ TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_elem)
   }
 }
 
-TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_elem_shifted)
+TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
 {
   fill_mesh_and_init_fields();
 
@@ -128,9 +183,11 @@ TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_elem_shifted)
   // sierra::nalu::AssembleNodalGradElemAlgorithm elemAlg(
   //   helperObjs.realm, partVec_[0], tke_, dkdx_, useShifted);
   // elemAlg.execute();
-  sierra::nalu::ScalarNodalGradElemAlg<sierra::nalu::AlgTraitsHex8> elemAlg(
-    helperObjs.realm, partVec_[0], tke_, dkdx_, useShifted);
-  elemAlg.execute();
+
+  sierra::nalu::ScalarNodalGradAlgDriver algDriver(helperObjs.realm, "dkdx");
+  algDriver.register_elem_algorithm<sierra::nalu::ScalarNodalGradElemAlg>(
+    sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", tke_, dkdx_, useShifted);
+  algDriver.execute();
 
   {
     std::vector<double> expectedValues = {
@@ -155,7 +212,103 @@ TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_elem_shifted)
   }
 }
 
-TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_bndry)
+TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
+{
+  fill_mesh_and_init_fields();
+
+  const double xCoeff = 2.0;
+  const double yCoeff = 2.0;
+  const double zCoeff = 2.0;
+  const bool useShifted = false;
+
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
+                                           xCoeff, yCoeff, zCoeff);
+  stk::mesh::field_fill(0.0, *dudx_);
+
+  // Reference values from original AssembleNodalGradEdge
+  // sierra::nalu::AssembleNodalGradUElemAlgorithm elemAlg(
+  //   helperObjs.realm, partVec_[0], velocity_, dudx_, useShifted);
+  // elemAlg.execute();
+
+  sierra::nalu::VectorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
+  algDriver.register_elem_algorithm<sierra::nalu::VectorNodalGradElemAlg>(
+    sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", velocity_, dudx_, useShifted);
+  algDriver.execute();
+
+  {
+    // Test the `du_i/dx_i \delta_ii` values
+    std::vector<double> expectedValues = {
+      2, 2, 2, -2, 2, 2,
+      2, -2, 2, -2, -2, 2,
+      2, 2, -2, -2, 2, -2,
+      2, -2, -2, -2, -2, -2,
+    };
+
+    const double tol = 1.0e-16;
+    stk::mesh::Selector sel = meta_.universal_part();
+    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+
+    int ii = 0;
+    for (const auto* b: bkts)
+      for (const auto node: *b) {
+        const double* dudx = stk::mesh::field_data(*dudx_, node);
+        for (int i1=0; i1 < 3; ++i1)
+          EXPECT_NEAR(dudx[i1 * 3 + i1], expectedValues[ii++], tol);
+      }
+  }
+}
+
+TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
+{
+  fill_mesh_and_init_fields();
+
+  const double xCoeff = 2.0;
+  const double yCoeff = 2.0;
+  const double zCoeff = 2.0;
+  const bool useShifted = true;
+
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
+                                           xCoeff, yCoeff, zCoeff);
+  stk::mesh::field_fill(0.0, *dudx_);
+
+  // Reference values from original AssembleNodalGradEdge
+  // sierra::nalu::AssembleNodalGradUEdgeAlgorithm edgeAlg(
+  //   helperObjs.realm, partVec_[0], velocity_, dudx_);
+  // edgeAlg.execute();
+
+  sierra::nalu::VectorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
+  algDriver.register_elem_algorithm<sierra::nalu::VectorNodalGradElemAlg>(
+    sierra::nalu::INTERIOR, partVec_[0], "nodal_grad", velocity_, dudx_, useShifted);
+  algDriver.execute();
+
+  {
+    // Test the `du_i/dx_i \delta_ii` values
+    std::vector<double> expectedValues = {
+      2, 2, 2, -2, 2, 2,
+      2, -2, 2, -2, -2, 2,
+      2, 2, -2, -2, 2, -2,
+      2, -2, -2, -2, -2, -2,
+    };
+
+    const double tol = 1.0e-16;
+    stk::mesh::Selector sel = meta_.universal_part();
+    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+
+    int ii = 0;
+    for (const auto* b: bkts)
+      for (const auto node: *b) {
+        const double* dudx = stk::mesh::field_data(*dudx_, node);
+        for (int i1=0; i1 < 3; ++i1)
+          EXPECT_NEAR(dudx[i1 * 3 + i1], expectedValues[ii++], tol);
+      }
+  }
+}
+
+TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
 {
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -177,9 +330,12 @@ TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_bndry)
   // sierra::nalu::AssembleNodalGradBoundaryAlgorithm elemAlg(
   //   helperObjs.realm, part, tke_, dkdx_, useShifted);
   // elemAlg.execute();
-  sierra::nalu::ScalarNodalGradBndryElemAlg<sierra::nalu::AlgTraitsQuad4> elemAlg(
-    helperObjs.realm, part, tke_, dkdx_, useShifted);
-  elemAlg.execute();
+
+  auto* surfPart = part->subsets()[0];
+  sierra::nalu::ScalarNodalGradAlgDriver algDriver(helperObjs.realm, "dkdx");
+  algDriver.register_face_algorithm<sierra::nalu::ScalarNodalGradBndryElemAlg>(
+    sierra::nalu::WALL, surfPart, "nodal_grad", tke_, dkdx_, useShifted);
+  algDriver.execute();
 
   {
     std::vector<double> expectedValues = {-2, -4, -4, -6};
@@ -199,7 +355,7 @@ TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_bndry)
   }
 }
 
-TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_bndry_shifted)
+TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
 {
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -221,9 +377,12 @@ TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_bndry_shifted)
   // sierra::nalu::AssembleNodalGradBoundaryAlgorithm elemAlg(
   //   helperObjs.realm, part, tke_, dkdx_, useShifted);
   // elemAlg.execute();
-  sierra::nalu::ScalarNodalGradBndryElemAlg<sierra::nalu::AlgTraitsQuad4> elemAlg(
-    helperObjs.realm, part, tke_, dkdx_, useShifted);
-  elemAlg.execute();
+
+  auto* surfPart = part->subsets()[0];
+  sierra::nalu::ScalarNodalGradAlgDriver algDriver(helperObjs.realm, "dkdx");
+  algDriver.register_face_algorithm<sierra::nalu::ScalarNodalGradBndryElemAlg>(
+    sierra::nalu::WALL, surfPart, "nodal_grad", tke_, dkdx_, useShifted);
+  algDriver.execute();
 
   {
     std::vector<double> expectedValues = {-0, -4, -4, -8};
@@ -239,6 +398,56 @@ TEST_F(SSTKernelHex8Mesh, ngp_nodal_grad_bndry_shifted)
         EXPECT_NEAR(dkdx[0], 0.0, tol);
         EXPECT_NEAR(dkdx[1], 0.0, tol);
         EXPECT_NEAR(dkdx[2], expectedValues[ii++], tol);
+      }
+  }
+}
+
+TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
+{
+  const bool doPerturb = false;
+  const bool generateSidesets = true;
+  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+
+  const double xCoeff = 2.0;
+  const double yCoeff = 2.0;
+  const double zCoeff = 2.0;
+  const bool useShifted = false;
+
+  auto* part = meta_.get_part("surface_5");
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::QUAD_4, 1, part);
+  unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
+                                           xCoeff, yCoeff, zCoeff);
+  stk::mesh::field_fill(0.0, *dudx_);
+
+  // Reference values from original
+  // sierra::nalu::AssembleNodalGradUBoundaryAlgorithm elemAlg(
+  //   helperObjs.realm, part, velocity_, dudx_, useShifted);
+  // elemAlg.execute();
+
+  auto* surfPart = part->subsets()[0];
+  sierra::nalu::VectorNodalGradAlgDriver algDriver(helperObjs.realm, "dudx");
+  algDriver.register_face_algorithm<sierra::nalu::VectorNodalGradBndryElemAlg>(
+    sierra::nalu::WALL, surfPart, "nodal_grad", velocity_, dudx_, useShifted);
+  algDriver.execute();
+
+  {
+    // du_i/dz components
+    std::vector<double> expectedValues = {
+      -1, -1, 0, -1, -3, 0,
+      -3, -1, 0, -3, -3, 0,
+    };
+
+    const double tol = 1.0e-16;
+    stk::mesh::Selector sel(*part);
+    const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+
+    int ii = 0;
+    for (const auto* b: bkts)
+      for (const auto node: *b) {
+        const double* dudx = stk::mesh::field_data(*dudx_, node);
+        for (int i1=0; i1 < 3; ++i1)
+          EXPECT_NEAR(dudx[i1 * 3 + 2], expectedValues[ii++], tol);
       }
   }
 }
