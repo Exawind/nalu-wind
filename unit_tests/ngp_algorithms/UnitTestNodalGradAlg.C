@@ -25,6 +25,9 @@
 
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
 {
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
   fill_mesh_and_init_fields();
 
   const double xCoeff = 2.0;
@@ -72,6 +75,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_edge)
 
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
 {
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
   fill_mesh_and_init_fields();
 
   const double xCoeff = 2.0;
@@ -119,6 +125,9 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
 
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
 {
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
   fill_mesh_and_init_fields();
 
   const double xCoeff = 2.0;
@@ -166,6 +175,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem)
 
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
 {
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
   fill_mesh_and_init_fields();
 
   const double xCoeff = 2.0;
@@ -214,6 +226,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_elem_shifted)
 
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
 {
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
   fill_mesh_and_init_fields();
 
   const double xCoeff = 2.0;
@@ -262,6 +277,9 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
 
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
 {
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
   fill_mesh_and_init_fields();
 
   const double xCoeff = 2.0;
@@ -310,6 +328,9 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
 
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
 {
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
   const bool doPerturb = false;
   const bool generateSidesets = true;
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
@@ -357,6 +378,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry)
 
 TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
 {
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
   const bool doPerturb = false;
   const bool generateSidesets = true;
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
@@ -404,6 +428,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_nodal_grad_bndry_shifted)
 
 TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
 {
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
   const bool doPerturb = false;
   const bool generateSidesets = true;
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
