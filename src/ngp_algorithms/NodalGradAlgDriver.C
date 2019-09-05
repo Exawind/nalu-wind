@@ -1,0 +1,87 @@
+/*------------------------------------------------------------------------*/
+/*  Copyright 2019 National Renewable Energy Laboratory.                  */
+/*  This software is released under the license detailed                  */
+/*  in the file, LICENSE, which is located in the top-level Nalu          */
+/*  directory structure                                                   */
+/*------------------------------------------------------------------------*/
+
+#include "ngp_algorithms/NodalGradAlgDriver.h"
+#include "Realm.h"
+
+#include "stk_mesh/base/Field.hpp"
+#include "stk_mesh/base/FieldParallel.hpp"
+#include "stk_mesh/base/FieldBLAS.hpp"
+#include "stk_mesh/base/MetaData.hpp"
+
+namespace sierra {
+namespace nalu {
+
+template<typename GradPhiType>
+NodalGradAlgDriver<GradPhiType>::NodalGradAlgDriver(
+  Realm& realm,
+  const std::string& gradPhiName
+) : NgpAlgDriver(realm),
+    gradPhiName_(gradPhiName)
+{}
+
+
+template<typename GradPhiType>
+void NodalGradAlgDriver<GradPhiType>::pre_work()
+{
+  const auto& meta = realm_.meta_data();
+
+  auto* gradPhi = meta.template get_field<GradPhiType>(
+    stk::topology::NODE_RANK, gradPhiName_);
+
+  stk::mesh::field_fill(0.0, *gradPhi);
+
+  const auto& meshInfo = realm_.mesh_info();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto ngpGradPhi =
+    fieldMgr.template get_field<double>(gradPhi->mesh_meta_data_ordinal());
+
+  ngpGradPhi.set_all(ngpMesh, 0.0);
+}
+
+template<typename GradPhiType>
+void NodalGradAlgDriver<GradPhiType>::post_work()
+{
+  // TODO: Revisit logic after STK updates to ngp parallel updates
+  const auto& meta = realm_.meta_data();
+  const auto& bulk = realm_.bulk_data();
+
+  auto* gradPhi = meta.template get_field<GradPhiType>(
+    stk::topology::NODE_RANK, gradPhiName_);
+  const auto& meshInfo = realm_.mesh_info();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto ngpGradPhi =
+    fieldMgr.template get_field<double>(gradPhi->mesh_meta_data_ordinal());
+
+  ngpGradPhi.modify_on_device();
+  ngpGradPhi.sync_to_host();
+
+  stk::mesh::parallel_sum(bulk, {gradPhi});
+
+  const int dim2 = meta.spatial_dimension();
+  const int dim1 = std::is_same<VectorFieldType, GradPhiType>::value
+    ? 1 : dim2;
+
+  if (realm_.hasPeriodic_) {
+    realm_.periodic_field_update(gradPhi, dim2 * dim1);
+  }
+
+  if (realm_.hasOverset_) {
+    realm_.overset_orphan_node_field_update(gradPhi, dim1, dim2);
+  }
+
+  ngpGradPhi.modify_on_host();
+  ngpGradPhi.sync_to_device();
+}
+
+template class NodalGradAlgDriver<VectorFieldType>;
+template class NodalGradAlgDriver<GenericFieldType>;
+
+}  // nalu
+}  // sierra
