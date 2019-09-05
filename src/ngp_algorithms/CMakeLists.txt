@@ -4,6 +4,7 @@ add_sources(GlobalSourceList
   NodalGradElemAlg.C
   NodalGradBndryElemAlg.C
   EffDiffFluxCoeffAlg.C
+  EnthalpyEffDiffFluxCoeffAlg.C
 
   # Algorithm Drivers
   NgpAlgDriver.C
