@@ -46,14 +46,19 @@ private:
   unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
   unsigned dualNodalVol_ {stk::mesh::InvalidOrdinal};
 
-  const int dim1;
-  const int dim2;
+  //! Number of components (ScalarFieldType = 1; VectorFieldType = nDim)
+  const int dim1_;
+  //! Spatial dimension (2D or 3D)
+  const int dim2_;
 
+  //! Maximum size for static arrays used within device loops
   static constexpr int NDimMax = 3;
 };
 
-using ScalarNodalGradEdgeAlg = NodalGradEdgeAlg<ScalarFieldType, VectorFieldType>;
-using VectorNodalGradEdgeAlg = NodalGradEdgeAlg<VectorFieldType, GenericFieldType>;
+using ScalarNodalGradEdgeAlg =
+  NodalGradEdgeAlg<ScalarFieldType, VectorFieldType>;
+using VectorNodalGradEdgeAlg =
+  NodalGradEdgeAlg<VectorFieldType, GenericFieldType>;
 
 }  // nalu
 }  // sierra

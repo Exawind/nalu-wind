@@ -60,8 +60,11 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
-  // Bring class members into local scope for GPU capture
+
+  // Bring class members into local scope for device capture
   const bool useShifted = useShifted_;
+  const auto dnvID = dualNodalVol_;
+  const auto phiID = phi_;
   auto* meSCS = meSCS_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
@@ -76,8 +79,8 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
       const int* lrscv = meSCS->adjacentNodes();
 
       auto& scrView = edata.simdScrView;
-      const auto& v_dnv = scrView.get_scratch_view_1D(dualNodalVol_);
-      const ViewHelperType v_phi(scrView, phi_);
+      const auto& v_dnv = scrView.get_scratch_view_1D(dnvID);
+      const ViewHelperType v_phi(scrView, phiID);
 
       const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
       const auto& v_areav = meViews.scs_areav;

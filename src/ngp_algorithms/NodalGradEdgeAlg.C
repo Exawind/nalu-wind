@@ -26,8 +26,10 @@ NodalGradEdgeAlg<PhiType, GradPhiType>::NodalGradEdgeAlg(
     edgeAreaVec_(get_field_ordinal(
       realm_.meta_data(), "edge_area_vector", stk::topology::EDGE_RANK)),
     dualNodalVol_(get_field_ordinal(realm_.meta_data(), "dual_nodal_volume")),
-    dim1(std::is_same<PhiType, ScalarFieldType>::value ? 1 : realm_.spatialDimension_),
-    dim2(realm_.spatialDimension_)
+    dim1_(
+      std::is_same<PhiType, ScalarFieldType>::value
+      ? 1 : realm_.spatialDimension_),
+    dim2_(realm_.meta_data().spatial_dimension())
 {}
 
 template <typename PhiType, typename GradPhiType>
@@ -47,6 +49,10 @@ void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_)
     & !(realm_.get_inactive_selector());
+
+  // Bring class members into local scope for device capture
+  const int dim1 = dim1_;
+  const int dim2 = dim2_;
 
   nalu_ngp::run_edge_algorithm(
     ngpMesh, sel,
