@@ -1,3 +1,5 @@
 add_sources(GlobalUnitSourceList
   UnitTestNgpAlgUtils.C
-  UnitTestNodalGradAlg.C)
+  UnitTestNodalGradAlg.C
+  UnitTestDiffFluxCoeffAlg.C
+  )
