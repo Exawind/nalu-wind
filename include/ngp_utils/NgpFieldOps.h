@@ -416,6 +416,7 @@ simd_elem_field_updater(
 }
 
 template<typename Mesh, typename Field>
+KOKKOS_INLINE_FUNCTION
 impl::SimpleNodeFieldOp<Mesh, Field>
 edge_nodal_field_updater(
   const Mesh& mesh, const Field& fld, const EntityInfo<Mesh>& einfo)
