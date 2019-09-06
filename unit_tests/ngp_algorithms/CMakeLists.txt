@@ -3,4 +3,5 @@ add_sources(GlobalUnitSourceList
   UnitTestNodalGradAlg.C
   UnitTestDiffFluxCoeffAlg.C
   UnitTestMdotAlg.C
+  UnitTestTurbViscKsgsAlg.C
   )
