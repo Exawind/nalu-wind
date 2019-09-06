@@ -15,7 +15,7 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_enthalpy_eff_diff_flux_coeff)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
-  LowMachKernelHex8Mesh::fill_mesh_and_init_fields();
+  EnthalpyABLKernelHex8Mesh::fill_mesh_and_init_fields();
 
   const double sigmaTurb = 0.7;
   const bool isTurbulent = true;
@@ -43,7 +43,7 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_enthalpy_eff_diff_flux_coeff)
     for (const auto* b: bkts)
       for (const auto node: *b) {
         const double* evisc = stk::mesh::field_data(*evisc_, node);
-        EXPECT_NEAR(evisc[0], 2.0, tol);
+        EXPECT_NEAR(evisc[0], 1.0, tol);
       }
   }
 }

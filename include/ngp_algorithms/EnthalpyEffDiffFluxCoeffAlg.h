@@ -9,8 +9,8 @@
 #ifndef EnthalpyEffDiffFluxCoeffAlg_h
 #define EnthalpyEffDiffFluxCoeffAlg_h
 
-#include<Algorithm.h>
-#include<FieldTypeDef.h>
+#include"Algorithm.h"
+#include"FieldTypeDef.h"
 
 #include "stk_mesh/base/Types.hpp"
 

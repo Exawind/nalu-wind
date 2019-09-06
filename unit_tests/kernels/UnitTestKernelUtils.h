@@ -558,9 +558,37 @@ public:
 class MomentumNodeHex8Mesh : public MomentumKernelHex8Mesh
 {};
 
-// Dummy class to provide namespace for tests
 class EnthalpyABLKernelHex8Mesh : public MomentumABLKernelHex8Mesh
-{};
+{
+public:
+    EnthalpyABLKernelHex8Mesh() : MomentumABLKernelHex8Mesh(),
+      thermalCond_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "thermal_conductivity")),
+      evisc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "effective_viscosity")),
+      tvisc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "turbulent_viscosity"))
+  {
+    stk::mesh::put_field_on_mesh(*thermalCond_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*evisc_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
+  }
+
+  virtual ~EnthalpyABLKernelHex8Mesh () {}
+
+  virtual void fill_mesh_and_init_fields(
+    bool doPerturb = false, bool generateSidesets = false) override
+  {
+    MomentumABLKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    stk::mesh::field_fill(0.0, *thermalCond_);
+    stk::mesh::field_fill(0.0, *evisc_);
+    stk::mesh::field_fill(0.3, *tvisc_);
+  }
+
+  ScalarFieldType* thermalCond_{nullptr};
+  ScalarFieldType* evisc_{nullptr};
+  ScalarFieldType* tvisc_{nullptr};
+};
 
 /** Test Fixture for the SST Kernels
  *
@@ -951,9 +979,6 @@ public:
 };
 
 class WallDistKernelHex8Mesh : public TestKernelHex8Mesh
-{};
-
-class EnthalpyKernelHex8Mesh : public TestKernelHex8Mesh
 {};
 
 #endif /* UNITTESTKERNELUTILS_H */

@@ -15,7 +15,7 @@
 
 #include <vector>
 
-TEST_F(EnthalpyKernelHex8Mesh, NGP_abl_force)
+TEST_F(EnthalpyABLKernelHex8Mesh, NGP_abl_force)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
