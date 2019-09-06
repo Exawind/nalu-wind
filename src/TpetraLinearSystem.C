@@ -241,10 +241,6 @@ void TpetraLinearSystem::beginLinearSystemConstruction()
   }
 
   std::sort(owned_nodes.begin(), owned_nodes.end(), CompareEntityById(bulkData, realm_.naluGlobalId_) );
-  std::vector<stk::mesh::Entity>::iterator iter = std::unique(owned_nodes.begin(), owned_nodes.end(), CompareEntityEqualById(bulkData, realm_.naluGlobalId_));
-  owned_nodes.erase(iter, owned_nodes.end());
-
-  ThrowRequire((int)maxOwnedRowId_ == (int)(owned_nodes.size()*numDof_)); // if this is never tripped, then the above unique is useless. !!!
 
   // use the Contiguous Map constructor. 
 
@@ -261,19 +257,10 @@ void TpetraLinearSystem::beginLinearSystemConstruction()
 
   GlobalOrdinal gomin   = ownedRowsMap_->getMinGlobalIndex();
 
-  if(realm_.tpetGlobalId_ == nullptr) {
-    std::cout << " beginLinearSystemConstruction tpetGlobalID_ is null"
-              <<std::endl<<std::flush;
-  }
-  ThrowRequire(realm_.naluGlobalId_ != nullptr);
-  ThrowRequire(realm_.tpetGlobalId_ != nullptr);
-
   for(stk::mesh::Entity entity : owned_nodes) {
     const stk::mesh::EntityId entityId = *stk::mesh::field_data(*realm_.naluGlobalId_, entity);
     myLIDs_[entityId] = numDof_*localId++;
     auto *  thisgid = stk::mesh::field_data(*realm_.tpetGlobalId_, entity);
-    ThrowRequire(thisgid != nullptr);
-    ThrowRequireMsg( gomin + numDof_ * gstart != 0 , "gid == 0 in owned node assignment loop");
     auto basegid = gomin + numDof_ * gstart;
     (*thisgid) = basegid;
     for(unsigned idof=0; idof < numDof_; ++ idof) ownedGids.push_back(basegid + idof);
@@ -322,8 +309,6 @@ void TpetraLinearSystem::beginLinearSystemConstruction()
     int owner = bulkData.parallel_owner_rank(masterentity);
     auto basegid = *stk::mesh::field_data(*realm_.tpetGlobalId_, masterentity);
 
-    ThrowRequireMsg(basegid!=0, " shared node loop master tpet gid ");
-    
     if(entity != masterentity) 
       *stk::mesh::field_data(*realm_.tpetGlobalId_, entity) = basegid;
     
@@ -876,13 +861,8 @@ void TpetraLinearSystem::fill_entity_to_col_LID_mapping()
             else
               gid =  * stk::mesh::field_data(*realm_.tpetGlobalId_, node);
 
-            // GlobalOrdinal gid = tpetGIds[i];
-            
             if(gid == 0 || gid == -1 || gid == std::numeric_limits<LinSys::GlobalOrdinal>::max() ) {
-              // This is needed because of a very small chance a ghost node doesn't have a master
-              // with a valid gid. ctests shows that entityToColLID_ is never accessed TpetraLinearSystem
-              // at those locations: CF SumInto and insert_graph_connections.
-              // Question: Can the selector be modified to eliminate ghost nodes from this loop?
+	      // unit_test1 does produce ghost nodes that have a master that don't have a valid tpetGlobalId_
               entityToColLID_[node.local_offset()] = -1;
             }
             else
