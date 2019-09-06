@@ -4,4 +4,5 @@ add_sources(GlobalUnitSourceList
   UnitTestDiffFluxCoeffAlg.C
   UnitTestEnthalpyDiffFluxCoeffAlg.C 
   UnitTestMdotAlg.C
+  UnitTestTurbViscKsgsAlg.C
   )

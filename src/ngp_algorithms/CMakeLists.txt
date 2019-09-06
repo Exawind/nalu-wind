@@ -6,6 +6,7 @@ add_sources(GlobalSourceList
   EffDiffFluxCoeffAlg.C
   EnthalpyEffDiffFluxCoeffAlg.C
   MdotEdgeAlg.C
+  TurbViscKsgsAlg.C
 
   # Algorithm Drivers
   NgpAlgDriver.C
