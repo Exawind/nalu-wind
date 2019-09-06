@@ -15,7 +15,7 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_enthalpy_eff_diff_flux_coeff)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
-  EnthalpyABLKernelHex8Mesh::fill_mesh_and_init_fields();
+  fill_mesh_and_init_fields();
 
   const double sigmaTurb = 0.7;
   const bool isTurbulent = true;
