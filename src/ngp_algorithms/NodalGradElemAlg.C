@@ -115,7 +115,7 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
 #define INSTANTIATE_ALG(AlgTraits)                                             \
   template class NodalGradElemAlg<                                             \
     AlgTraits, ScalarFieldType, VectorFieldType>;                              \
-  template class NodalGradElemAlg<AlgTraits, VectorFieldType, GenericFieldType>;
+  template class NodalGradElemAlg<AlgTraits, VectorFieldType, GenericFieldType>
 
 INSTANTIATE_ALG(AlgTraitsHex8);
 INSTANTIATE_ALG(AlgTraitsHex27);
