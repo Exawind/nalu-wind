@@ -115,7 +115,7 @@ void NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   template class NodalGradBndryElemAlg<                                        \
     AlgTraits, ScalarFieldType, VectorFieldType>;                              \
   template class NodalGradBndryElemAlg<                                        \
-    AlgTraits, VectorFieldType, GenericFieldType>;
+    AlgTraits, VectorFieldType, GenericFieldType>
 
 INSTANTIATE_ALG(AlgTraitsTri3);
 INSTANTIATE_ALG(AlgTraitsQuad4);
