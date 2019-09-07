@@ -77,6 +77,7 @@
 // ngp
 #include <ngp_utils/NgpLoopUtils.h>
 #include <ngp_utils/NgpTypes.h>
+#include <ngp_utils/NgpFieldBLAS.h>
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -1062,10 +1063,18 @@ TurbKineticEnergyEquationSystem::update_and_clip()
 void
 TurbKineticEnergyEquationSystem::predict_state()
 {
-  // copy state n to state np1
-  ScalarFieldType &tkeN = tke_->field_of_state(stk::mesh::StateN);
-  ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
-  field_copy(realm_.meta_data(), realm_.bulk_data(), tkeN, tkeNp1, realm_.get_activate_aura());
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto& tkeN = fieldMgr.get_field<double>(
+    tke_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& tkeNp1 = fieldMgr.get_field<double>(
+    tke_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+    & stk::mesh::selectField(*tke_);
+  nalu_ngp::field_copy(ngpMesh, sel, tkeNp1, tkeN);
 }
 
 //--------------------------------------------------------------------------

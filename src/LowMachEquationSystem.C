@@ -2409,10 +2409,18 @@ MomentumEquationSystem::reinitialize_linear_system()
 void
 MomentumEquationSystem::predict_state()
 {
-  // copy state n to state np1
-  VectorFieldType &uN = velocity_->field_of_state(stk::mesh::StateN);
-  VectorFieldType &uNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
-  field_copy(realm_.meta_data(), realm_.bulk_data(), uN, uNp1, realm_.get_activate_aura());
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto& velN = fieldMgr.get_field<double>(
+    velocity_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& velNp1 = fieldMgr.get_field<double>(
+    velocity_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+    & stk::mesh::selectField(*velocity_);
+  nalu_ngp::field_copy(ngpMesh, sel, velNp1, velN, meta.spatial_dimension());
 }
 
 //--------------------------------------------------------------------------

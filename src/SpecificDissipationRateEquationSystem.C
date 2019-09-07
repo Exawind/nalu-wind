@@ -66,6 +66,9 @@
 #include <node_kernels/SDRSSTDESNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
 
+// ngp
+#include "ngp_utils/NgpFieldBLAS.h"
+
 // nso
 #include <nso/ScalarNSOElemKernel.h>
 #include <nso/ScalarNSOKeElemSuppAlg.h>
@@ -864,10 +867,18 @@ SpecificDissipationRateEquationSystem::compute_wall_model_parameters()
 void
 SpecificDissipationRateEquationSystem::predict_state()
 {
-  // copy state n to state np1
-  ScalarFieldType &sdrN = sdr_->field_of_state(stk::mesh::StateN);
-  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
-  field_copy(realm_.meta_data(), realm_.bulk_data(), sdrN, sdrNp1, realm_.get_activate_aura());
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto& sdrN = fieldMgr.get_field<double>(
+    sdr_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& sdrNp1 = fieldMgr.get_field<double>(
+    sdr_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+    & stk::mesh::selectField(*sdr_);
+  nalu_ngp::field_copy(ngpMesh, sel, sdrNp1, sdrN);
 }
 
 } // namespace nalu
