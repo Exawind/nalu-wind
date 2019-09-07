@@ -100,6 +100,82 @@ void basic_node_loop(
   }
 }
 
+void basic_node_reduce(
+  const stk::mesh::BulkData& bulk,
+  ScalarFieldType& pressure)
+{
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  const double presSet = 4.0;
+
+  const auto& meta = bulk.mesh_meta_data();
+  stk::mesh::Selector sel = meta.universal_part();
+  ngp::Mesh ngpMesh(bulk);
+  ngp::Field<double> ngpPressure(bulk, pressure);
+
+  stk::mesh::field_fill(presSet, pressure);
+
+  double reduceVal = 0.0;
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, double& pSum) {
+      pSum += ngpPressure.get(mi, 0);
+    }, reduceVal);
+
+  double reduceVal1 = 0.0;
+  Kokkos::Sum<double> sum_reducer(reduceVal1);
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, double& pSum) {
+      sum_reducer.join(pSum, ngpPressure.get(mi, 0));
+    }, sum_reducer);
+
+  {
+    double expectedSum = 0.0;
+    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+    const double tol = 1.0e-16;
+    for (const auto* b: bkts) {
+      for (const auto node: *b) {
+        const double* pres = stk::mesh::field_data(pressure, node);
+        expectedSum += pres[0];
+      }
+    }
+    EXPECT_NEAR(reduceVal, expectedSum, tol);
+    EXPECT_NEAR(reduceVal1, expectedSum, tol);
+  }
+}
+
+void basic_node_reduce_minmax(
+  const stk::mesh::BulkData& bulk,
+  const double minGold,
+  const double maxGold)
+{
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+
+  const auto& meta = bulk.mesh_meta_data();
+  const auto& coords =  meta.coordinate_field();
+  stk::mesh::Selector sel = meta.universal_part();
+  ngp::Mesh ngpMesh(bulk);
+  ngp::Field<double> ngpCoords(bulk, *coords);
+
+
+  using value_type = Kokkos::MinMax<double>::value_type;
+  value_type minmax;
+  Kokkos::MinMax<double> minmax_reducer(minmax);
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, value_type& pSum) {
+      const double xcoord = ngpCoords.get(mi, 0);
+      if (xcoord < pSum.min_val) pSum.min_val = xcoord;
+      if (xcoord > pSum.max_val) pSum.max_val = xcoord;
+    }, minmax_reducer);
+
+  {
+    EXPECT_NEAR(minmax.min_val, minGold, tol);
+    EXPECT_NEAR(minmax.max_val, maxGold, tol);
+  }
+}
+
+
 void basic_elem_loop(
   const stk::mesh::BulkData& bulk,
   ScalarFieldType& pressure,
@@ -393,6 +469,20 @@ TEST_F(NgpLoopTest, NGP_basic_node_loop)
   fill_mesh_and_init_fields("generated:2x2x2");
 
   basic_node_loop(bulk, *pressure);
+}
+
+TEST_F(NgpLoopTest, NGP_basic_node_reduce)
+{
+  fill_mesh_and_init_fields("generated:16x16x16");
+
+  basic_node_reduce(bulk, *pressure);
+}
+
+TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmax)
+{
+  fill_mesh_and_init_fields("generated:16x16x16");
+
+  basic_node_reduce_minmax(bulk, 0.0, 16.0);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_elem_loop)
