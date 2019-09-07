@@ -144,6 +144,10 @@
 #include "node_kernels/ContinuityGclNodeKernel.h"
 #include "node_kernels/ContinuityMassBDFNodeKernel.h"
 
+// ngp
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldBLAS.h"
+
 // nso
 #include <nso/MomentumNSOElemKernel.h>
 #include <nso/MomentumNSOKeElemKernel.h>
@@ -853,41 +857,30 @@ LowMachEquationSystem::post_adapt_work()
 void
 LowMachEquationSystem::project_nodal_velocity()
 {
-
   stk::mesh::MetaData & meta_data = realm_.meta_data();
-
   const int nDim = meta_data.spatial_dimension();
 
-  // field that we need
-  VectorFieldType *velocity = momentumEqSys_->velocity_;
-  VectorFieldType &velocityNp1 = velocity->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType *uTmp = momentumEqSys_->uTmp_;
-  VectorFieldType *dpdx = continuityEqSys_->dpdx_;
-  ScalarFieldType &densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType *Udiag = momentumEqSys_->Udiag_;
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  auto uTmp = fieldMgr.get_field<double>(
+    momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
+  const auto dpdx = fieldMgr.get_field<double>(
+    continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
+  const auto Udiag = fieldMgr.get_field<double>(
+    momentumEqSys_->Udiag_->mesh_meta_data_ordinal());
+  const auto velNp1 = fieldMgr.get_field<double>(
+    momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+  const auto rhoNp1 = fieldMgr.get_field<double>(
+    density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
 
   //==========================================================
   // save off dpdx to uTmp (do it everywhere)
   //==========================================================
- 
-  // selector (everywhere dpdx lives) and node_buckets 
-  stk::mesh::Selector s_nodes = stk::mesh::selectField(*dpdx);
-  stk::mesh::BucketVector const& node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_nodes );
-  
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-    double * ut = stk::mesh::field_data(*uTmp, b);
-    double * dp = stk::mesh::field_data(*dpdx, b);
-    
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      const int offSet = k*nDim;
-      for ( int j = 0; j < nDim; ++j ) {
-        ut[offSet+j] = dp[offSet+j];
-      }
-    }
+  {
+    const stk::mesh::Selector sel =
+      stk::mesh::selectField(*continuityEqSys_->dpdx_);
+    nalu_ngp::field_copy(ngpMesh, sel, uTmp, dpdx, nDim);
   }
 
   //==========================================================
@@ -898,37 +891,22 @@ LowMachEquationSystem::project_nodal_velocity()
   //==========================================================
   // project u, u^n+1 = u^k+1 - dt/rho*(Gjp^N+1 - uTmp);
   //==========================================================
-  
-  // selector and node_buckets (only projected nodes)
-  stk::mesh::Selector s_projected_nodes
-    = (!stk::mesh::selectUnion(momentumEqSys_->notProjectedPart_)) &
-    stk::mesh::selectField(*dpdx);
-  stk::mesh::BucketVector const& p_node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_projected_nodes );
-  
-  // process loop
-  for ( stk::mesh::BucketVector::const_iterator ib = p_node_buckets.begin() ;
-        ib != p_node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-    double * uNp1 = stk::mesh::field_data(velocityNp1, b);
-    double * ut = stk::mesh::field_data(*uTmp, b);
-    double * dp = stk::mesh::field_data(*dpdx, b);
-    double * rho = stk::mesh::field_data(densityNp1, b);
-    double * udiagN = stk::mesh::field_data(*Udiag, b);
-    
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      
-      // Get scaling factor
-      const double fac = 1.0/(rho[k] * udiagN[k]);
-      
-      // projection step
-      const size_t offSet = k*nDim;
-      for ( int j = 0; j < nDim; ++j ) {
-        const double gdpx = dp[offSet+j] - ut[offSet+j];
-        uNp1[offSet+j] -= fac*gdpx;
-      }
-    }
+  {
+    using Traits = nalu_ngp::NGPMeshTraits<>;
+    using MeshIndex = Traits::MeshIndex;
+    const stk::mesh::Selector sel =
+      (!stk::mesh::selectUnion(momentumEqSys_->notProjectedPart_) &
+       stk::mesh::selectField(*continuityEqSys_->dpdx_));
+    nalu_ngp::run_entity_algorithm(
+      ngpMesh, stk::topology::NODE_RANK, sel,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        // Scaling factor
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        // Projection step
+        for (int d=0; d < nDim; ++d) {
+          velNp1.get(mi, d) -= fac * (dpdx.get(mi, d) - uTmp.get(mi, d));
+        }
+      });
   }
 }
 
