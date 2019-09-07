@@ -105,6 +105,10 @@
 // transfer
 #include <xfer/Transfer.h>
 
+#include "utils/StkHelpers.h"
+#include "ngp_utils/NgpTypes.h"
+#include "ngp_utils/NgpLoopUtils.h"
+
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_util/environment/WallTime.hpp>
@@ -2656,34 +2660,32 @@ Realm::compute_geometry()
 void
 Realm::compute_vrtm()
 {
-  // compute velocity relative to mesh; must be tied to velocity update...
-  if ( solutionOptions_->meshMotion_ || solutionOptions_->externalMeshDeformation_ ) {
-    const int nDim = metaData_->spatial_dimension();
+  if (!solutionOptions_->meshMotion_ &&
+      !solutionOptions_->externalMeshDeformation_) return;
 
-    VectorFieldType *velocity = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-    VectorFieldType *meshVelocity = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
-    VectorFieldType *velocityRTM = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm");
+  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using MeshIndex = Traits::MeshIndex;
 
-    stk::mesh::Selector s_all_nodes
-       = (metaData_->locally_owned_part() | metaData_->globally_shared_part());
+  const int nDim = metaData_->spatial_dimension();
+  const auto& ngpMesh = ngp_mesh();
+  const auto& fieldMgr = ngp_field_manager();
+  const auto vel = fieldMgr.get_field<double>(
+    get_field_ordinal(*metaData_, "velocity"));
+  const auto meshVel = fieldMgr.get_field<double>(
+    get_field_ordinal(*metaData_, "mesh_velocity"));
+  auto vrtm = fieldMgr.get_field<double>(
+    get_field_ordinal(*metaData_, "velocity_rtm"));
 
-    stk::mesh::BucketVector const& node_buckets = bulkData_->get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-    for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-	  ib != node_buckets.end() ; ++ib ) {
-      stk::mesh::Bucket & b = **ib ;
-      const stk::mesh::Bucket::size_type length   = b.size();
-      const double * uNp1 = stk::mesh::field_data(*velocity, b);
-      const double * vNp1 = stk::mesh::field_data(*meshVelocity, b);
-      double * vrtm = stk::mesh::field_data(*velocityRTM, b);
+  const stk::mesh::Selector sel = (
+    metaData_->locally_owned_part() | metaData_->globally_shared_part());
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      for (int d=0; d < nDim; ++d)
+        vrtm.get(mi, d) = vel.get(mi, d) - meshVel.get(mi, d);
+    });
 
-      for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-        const int offSet = k*nDim;
-        for ( int j=0; j < nDim; ++j ) {
-          vrtm[offSet+j] = uNp1[offSet+j] - vNp1[offSet+j];
-        }
-      }
-    }
-  }
+  vrtm.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
