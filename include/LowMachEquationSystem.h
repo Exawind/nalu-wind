@@ -298,7 +298,7 @@ public:
 
   ScalarFieldType *pTmp_;
 
-  AssembleNodalGradPAlgorithmDriver *assembleNodalGradPAlgDriver_;
+  ScalarNodalGradAlgDriver nodalGradAlgDriver_;
   ComputeMdotAlgorithmDriver *computeMdotAlgDriver_;
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 };
