@@ -17,6 +17,7 @@
 #include "BuildTemplates.h"
 #include "Enums.h"
 #include "nalu_make_unique.h"
+#include "NaluEnv.h"
 #include "element_promotion/ElementDescription.h"
 
 namespace sierra {
@@ -180,10 +181,10 @@ public:
 
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
-      algMap_.insert({
-          algName,
-          make_unique<EdgeAlg>(realm_, part, std::forward<Args>(args)...)});
-      std::cout << algName << std::endl;
+      algMap_[algName].reset(
+        new EdgeAlg(realm_, part, std::forward<Args>(args)...));
+      NaluEnv::self().naluOutputP0()
+        << "Created algorithm = " << algName << std::endl;
     }
     else {
       it->second->partVec_.push_back(part);
@@ -211,11 +212,11 @@ public:
 
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
-      std::unique_ptr<Algorithm> ptr(
+      algMap_[algName].reset(
         create_elem_algorithm<ElemAlg>(
           nDim_, topo, realm_, part, std::forward<Args>(args)...));
-      algMap_.insert({algName, std::move(ptr)});
-      std::cout << algName << std::endl;
+      NaluEnv::self().naluOutputP0()
+        << "Created algorithm = " << algName << std::endl;
     }
     else {
       it->second->partVec_.push_back(part);
@@ -243,12 +244,11 @@ public:
 
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
-      std::unique_ptr<Algorithm> ptr(
+      algMap_[algName].reset(
         create_face_algorithm<FaceAlg>(
           nDim_, topo, realm_, part, std::forward<Args>(args)...));
-      algMap_.insert({algName, std::move(ptr)});
-
-      std::cout << algName << std::endl;
+      NaluEnv::self().naluOutputP0()
+        << "Created algorithm = " << algName << std::endl;
     } else {
       it->second->partVec_.push_back(part);
     }
