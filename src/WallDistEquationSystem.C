@@ -44,6 +44,12 @@
 #include "node_kernels/NodeKernelUtils.h"
 #include "node_kernels/WallDistNodeKernel.h"
 
+// algorithms
+#include "ngp_algorithms/NodalGradEdgeAlg.h"
+#include "ngp_algorithms/NodalGradElemAlg.h"
+#include "ngp_algorithms/NodalGradBndryElemAlg.h"
+#include "ngp_algorithms/NgpAlgDriver.h"
+
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
 #include "overset/AssembleOversetWallDistAlgorithm.h"
 
@@ -62,8 +68,7 @@ namespace nalu {
 WallDistEquationSystem::WallDistEquationSystem(
   EquationSystems& eqSystems)
   : EquationSystem(eqSystems, "WallDistEQS", "ndtw"),
-    assembleNodalGradAlgDriver_(
-      new AssembleNodalGradAlgorithmDriver(realm_, "wall_distance_phi", "dwalldistdx")),
+    nodalGradAlgDriver_(realm_, "dwalldistdx"),
     managePNG_(realm_.get_consistent_mass_matrix_png("ndtw"))
 {
   if (managePNG_)
@@ -168,21 +173,12 @@ WallDistEquationSystem::register_interior_algorithm(
   auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
 
   // Set up dphi/dx calculation algorithms
-  auto it = assembleNodalGradAlgDriver_->algMap_.find(algType);
-  if (it == assembleNodalGradAlgDriver_->algMap_.end()) {
-    Algorithm* theAlg = nullptr;
-
-    if (edgeNodalGradient_ && realm_.realmUsesEdges_)
-      theAlg = new AssembleNodalGradEdgeAlgorithm(
-        realm_, part, &wPhiNp1, &dPhiDxNone);
-    else
-      theAlg = new AssembleNodalGradElemAlgorithm(
-        realm_, part, &wPhiNp1, &dPhiDxNone);
-
-    assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-  } else {
-    it->second->partVec_.push_back(part);
-  }
+  if (edgeNodalGradient_ && realm_.realmUsesEdges_)
+    nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
+      algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone);
+  else
+    nodalGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
+      algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
 
   // Solver algorithms
   if (realm_.realmUsesEdges_) {
@@ -238,16 +234,8 @@ WallDistEquationSystem::register_inflow_bc(
   auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
 
   // Set up dphi/dx calculation algorithms
-  auto it = assembleNodalGradAlgDriver_->algMap_.find(algType);
-  if (it == assembleNodalGradAlgDriver_->algMap_.end()) {
-    Algorithm* theAlg =
-      new AssembleNodalGradBoundaryAlgorithm(
-        realm_, part, &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
-
-    assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-  } else {
-    it->second->partVec_.push_back(part);
-  }
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
 }
 
 void
@@ -262,16 +250,8 @@ WallDistEquationSystem::register_open_bc(
   auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
 
   // Set up dphi/dx calculation algorithms
-  auto it = assembleNodalGradAlgDriver_->algMap_.find(algType);
-  if (it == assembleNodalGradAlgDriver_->algMap_.end()) {
-    Algorithm* theAlg =
-      new AssembleNodalGradBoundaryAlgorithm(
-        realm_, part, &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
-
-    assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-  } else {
-    it->second->partVec_.push_back(part);
-  }
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
 }
 
 void
@@ -286,16 +266,8 @@ WallDistEquationSystem::register_wall_bc(
   auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
 
   // Set up dphi/dx calculation algorithms
-  auto it = assembleNodalGradAlgDriver_->algMap_.find(algType);
-  if (it == assembleNodalGradAlgDriver_->algMap_.end()) {
-    Algorithm* theAlg =
-      new AssembleNodalGradBoundaryAlgorithm(
-        realm_, part, &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
-
-    assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-  } else {
-    it->second->partVec_.push_back(part);
-  }
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
 
   auto& meta = realm_.meta_data();
   ScalarFieldType& theBCField = meta.declare_field<ScalarFieldType>(
@@ -339,16 +311,8 @@ WallDistEquationSystem::register_symmetry_bc(
   auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
 
   // Set up dphi/dx calculation algorithms
-  auto it = assembleNodalGradAlgDriver_->algMap_.find(algType);
-  if (it == assembleNodalGradAlgDriver_->algMap_.end()) {
-    Algorithm* theAlg =
-      new AssembleNodalGradBoundaryAlgorithm(
-        realm_, part, &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
-
-    assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-  } else {
-    it->second->partVec_.push_back(part);
-  }
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
 }
 
 void
@@ -363,16 +327,8 @@ WallDistEquationSystem::register_non_conformal_bc(
     auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
     auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
 
-    auto it = assembleNodalGradAlgDriver_->algMap_.find(algType);
-    if (it == assembleNodalGradAlgDriver_->algMap_.end()) {
-      Algorithm* theAlg =
-        new AssembleNodalGradBoundaryAlgorithm(
-          realm_, part, &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
-
-      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-    } else {
-      it->second->partVec_.push_back(part);
-    }
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+      algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
   }
 
   // LHS contributions at the non-conformal interface
@@ -447,7 +403,7 @@ WallDistEquationSystem::solve_and_update()
     return;
 
   if (isInit_) {
-    assembleNodalGradAlgDriver_->execute();
+    nodalGradAlgDriver_.execute();
     isInit_ = false;
   }
 
@@ -461,7 +417,7 @@ WallDistEquationSystem::solve_and_update()
     assemble_and_solve(wallDistPhi_);
 
     // projected nodal gradient
-    assembleNodalGradAlgDriver_->execute();
+    nodalGradAlgDriver_.execute();
   }
 
   // calculate normal wall distance
