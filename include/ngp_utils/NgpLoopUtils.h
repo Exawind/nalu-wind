@@ -182,7 +182,11 @@ void run_entity_par_reduce(
           algorithm(meshIdx, threadVal);
         }, bktVal);
 
-      teamVal += bktVal;
+      Kokkos::single(
+        Kokkos::PerTeam(team),
+        [&]() {
+          teamVal += bktVal;
+        });
     }, reduceVal);
 }
 
