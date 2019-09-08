@@ -1157,8 +1157,7 @@ MomentumEquationSystem::register_interior_algorithm(
       nodalGradAlgDriver_.register_edge_algorithm<VectorNodalGradEdgeAlg>(
         algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone);
     else
-      nodalGradAlgDriver_.register_elem_algorithm<
-        VectorNodalGradElemAlg, AssembleNodalGradUElemAlgorithm>(
+      nodalGradAlgDriver_.register_legacy_algorithm<AssembleNodalGradUElemAlgorithm>(
         algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
         edgeNodalGradient_);
   }
@@ -2765,8 +2764,7 @@ ContinuityEquationSystem::register_interior_algorithm(
       nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
         algType, part, "continuity_nodal_grad", &pressureNone, &dpdxNone);
     else
-      nodalGradAlgDriver_.register_elem_algorithm<
-        ScalarNodalGradElemAlg, AssembleNodalGradElemAlgorithm>(
+      nodalGradAlgDriver_.register_legacy_algorithm<AssembleNodalGradElemAlgorithm>(
         algType, part, "continuity_nodal_grad",
         &pressureNone, &dpdxNone, edgeNodalGradient_);
   }
