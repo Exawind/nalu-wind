@@ -25,6 +25,57 @@ namespace nalu {
 
 class Realm;
 
+inline bool is_ho_element(const stk::topology topo)
+{
+  if (topo.is_super_topology()) return true;
+
+  bool isHO = true;
+  switch (topo.value()) {
+  case stk::topology::HEX_8:
+  case stk::topology::TET_4:
+  case stk::topology::PYRAMID_5:
+  case stk::topology::WEDGE_6:
+  case stk::topology::QUAD_4_2D:
+  case stk::topology::TRI_3_2D:
+    isHO = false;
+    break;
+
+  case stk::topology::HEX_27:
+  case stk::topology::QUAD_9_2D:
+    isHO = true;
+    break;
+
+  default:
+    throw std::logic_error("Invalid element topology provided");
+  }
+
+  return isHO;
+}
+
+inline bool is_ho_face(const stk::topology topo)
+{
+  if (topo.is_super_topology()) return true;
+
+  bool isHO = true;
+  switch (topo.value()) {
+  case stk::topology::QUAD_4:
+  case stk::topology::TRI_3:
+  case stk::topology::LINE_2:
+    isHO = false;
+    break;
+
+  case stk::topology::QUAD_9:
+  case stk::topology::LINE_3:
+    isHO = true;
+    break;
+
+  default:
+    throw std::logic_error("Invalid face topology provided");
+  }
+
+  return isHO;
+}
+
 template<template <typename> class T, int order, typename... Args>
 Algorithm* create_ho_elem_algorithm(
   const int dimension,
@@ -235,6 +286,24 @@ public:
     }
   }
 
+  template<
+    template <typename> class NGPAlg,
+    typename LegacyAlg,
+    class... Args>
+  void register_elem_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const std::string& algSuffix,
+    Args&&... args)
+  {
+    if (is_ho_element(part->topology()))
+      register_legacy_algorithm<LegacyAlg>(
+        algType, part, algSuffix, std::forward<Args>(args)...);
+    else
+      register_elem_algorithm<NGPAlg>(
+        algType, part, algSuffix, std::forward<Args>(args)...);
+  }
+
   /** Register an face algorithm
    *
    *  @param algType Type of algorithm being registered (e.g., INLET, WALL, * OPEN)
@@ -264,6 +333,24 @@ public:
     } else {
       it->second->partVec_.push_back(part);
     }
+  }
+
+  template<
+    template <typename> class NGPAlg,
+    typename LegacyAlg,
+    class... Args>
+  void register_face_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const std::string& algSuffix,
+    Args&&... args)
+  {
+    if (is_ho_face(part->topology()))
+      register_legacy_algorithm<LegacyAlg>(
+        algType, part, algSuffix, std::forward<Args>(args)...);
+    else
+      register_face_algorithm<NGPAlg>(
+        algType, part, algSuffix, std::forward<Args>(args)...);
   }
 
 protected:
