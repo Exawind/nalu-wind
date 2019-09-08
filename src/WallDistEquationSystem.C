@@ -49,6 +49,8 @@
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 #include "ngp_algorithms/NgpAlgDriver.h"
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpTypes.h"
 
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
 #include "overset/AssembleOversetWallDistAlgorithm.h"
@@ -427,30 +429,39 @@ WallDistEquationSystem::solve_and_update()
 void
 WallDistEquationSystem::compute_wall_distance()
 {
+  using Traits = nalu_ngp::NGPMeshTraits<>;
+  using MeshIndex = Traits::MeshIndex;
+
   auto& meta = realm_.meta_data();
   auto& bulk = realm_.bulk_data();
   const int nDim = meta.spatial_dimension();
 
-  stk::mesh::Selector sel = stk::mesh::selectField(*wallDistPhi_);
-  const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto wdistPhi = fieldMgr.get_field<double>(
+    wallDistPhi_->mesh_meta_data_ordinal());
+  const auto dphidx = fieldMgr.get_field<double>(
+    dphidx_->mesh_meta_data_ordinal());
+  auto wdist = fieldMgr.get_field<double>(
+    wallDistance_->mesh_meta_data_ordinal());
+  const stk::mesh::Selector sel = stk::mesh::selectField(*wallDistPhi_);
 
-  for (auto b: bkts) {
-    double* phi = stk::mesh::field_data(*wallDistPhi_, *b);
-    double* dpdx = stk::mesh::field_data(*dphidx_, *b);
-    double* wdist = stk::mesh::field_data(*wallDistance_, *b);
-
-    for (size_t k=0; k < b->size(); k++) {
-      const int offset = k*nDim;
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, sel, KOKKOS_LAMBDA(const MeshIndex& mi) {
       double dpdxsq = 0.0;
 
-      for (int j=0; j<nDim; j++) {
-        double tmp = dpdx[offset + j];
+      for (int d=0; d < nDim; ++d) {
+        double tmp = dphidx.get(mi, d);
         dpdxsq += tmp * tmp;
       }
 
-      wdist[k] = -std::sqrt(dpdxsq) + std::sqrt(dpdxsq + 2.0 * phi[k]);
-    }
-  }
+      wdist.get(mi, 0) = -stk::math::sqrt(dpdxsq) +
+                         stk::math::sqrt(dpdxsq + 2.0 * wdistPhi.get(mi, 0));
+    });
+
+  // TODO NGP switch to device field comms when STK NGP implements it
+  wdist.modify_on_device();
+  wdist.sync_to_host();
 
   // Communicate wall distance to everyone
   std::vector<const stk::mesh::FieldBase*> fVec{wallDistance_};
