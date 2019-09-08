@@ -74,6 +74,11 @@
 #include <node_kernels/TKESSTNodeKernel.h>
 #include <node_kernels/TurbKineticEnergyRodiNodeKernel.h>
 
+// ngp
+#include <ngp_utils/NgpLoopUtils.h>
+#include <ngp_utils/NgpTypes.h>
+#include <ngp_utils/NgpFieldBLAS.h>
+
 // nso
 #include <nso/ScalarNSOElemKernel.h>
 #include <nso/ScalarNSOKeElemSuppAlg.h>
@@ -1012,37 +1017,35 @@ TurbKineticEnergyEquationSystem::compute_wall_model_parameters()
 void
 TurbKineticEnergyEquationSystem::update_and_clip()
 {
+  using Traits = nalu_ngp::NGPMeshTraits<>;
   const double clipValue = 1.0e-16;
   size_t numClip = 0;
 
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
-  // define some common selectors
-  stk::mesh::Selector s_all_nodes
-    = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
-    &stk::mesh::selectField(*tke_);
+  stk::mesh::Selector sel =
+    (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
+    stk::mesh::selectField(*tke_);
 
-  stk::mesh::BucketVector const& node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto ngpKTmp = fieldMgr.get_field<double>(
+    kTmp_->mesh_meta_data_ordinal());
+  auto ngpTke = fieldMgr.get_field<double>(
+    tke_->mesh_meta_data_ordinal());
 
-    double *tke = stk::mesh::field_data(*tke_, b);
-    double *kTmp = stk::mesh::field_data(*kTmp_, b);
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      const double tkeNp1 = tke[k] + kTmp[k];
-      if ( tkeNp1 < 0.0 ) {
-        tke[k] = clipValue;
-        numClip++;
+  nalu_ngp::run_entity_par_reduce(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const Traits::MeshIndex& mi, size_t& nClip) {
+      const double tmp = ngpTke.get(mi, 0) + ngpKTmp.get(mi, 0);
+      if (tmp < 0.0) {
+        ngpTke.get(mi, 0) = clipValue;
+        nClip++;
+      } else {
+        ngpTke.get(mi, 0) = tmp;
       }
-      else {
-        tke[k] = tkeNp1;
-      }
-    }
-  }
+    }, numClip);
+  ngpTke.modify_on_device();
 
   // parallel assemble clipped value
   if (realm_.debug()) {
@@ -1060,10 +1063,18 @@ TurbKineticEnergyEquationSystem::update_and_clip()
 void
 TurbKineticEnergyEquationSystem::predict_state()
 {
-  // copy state n to state np1
-  ScalarFieldType &tkeN = tke_->field_of_state(stk::mesh::StateN);
-  ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
-  field_copy(realm_.meta_data(), realm_.bulk_data(), tkeN, tkeNp1, realm_.get_activate_aura());
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto& tkeN = fieldMgr.get_field<double>(
+    tke_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& tkeNp1 = fieldMgr.get_field<double>(
+    tke_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+    & stk::mesh::selectField(*tke_);
+  nalu_ngp::field_copy(ngpMesh, sel, tkeNp1, tkeN);
 }
 
 //--------------------------------------------------------------------------
