@@ -107,12 +107,12 @@ void basic_node_reduce(
   using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
   const double presSet = 4.0;
 
+  stk::mesh::field_fill(presSet, pressure);
   const auto& meta = bulk.mesh_meta_data();
   stk::mesh::Selector sel = meta.universal_part();
   ngp::Mesh ngpMesh(bulk);
   ngp::Field<double> ngpPressure(bulk, pressure);
 
-  stk::mesh::field_fill(presSet, pressure);
 
   double reduceVal = 0.0;
   sierra::nalu::nalu_ngp::run_entity_par_reduce(
@@ -157,22 +157,28 @@ void basic_node_reduce_minmax(
   ngp::Mesh ngpMesh(bulk);
   ngp::Field<double> ngpCoords(bulk, *coords);
 
-
-  using value_type = Kokkos::MinMax<double>::value_type;
-  value_type minmax;
-  Kokkos::MinMax<double> minmax_reducer(minmax);
+  using value_type = Kokkos::Max<double>::value_type;
+  value_type max;
+  Kokkos::Max<double> max_reducer(max);
   sierra::nalu::nalu_ngp::run_entity_par_reduce(
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, value_type& pSum) {
       const double xcoord = ngpCoords.get(mi, 0);
-      if (xcoord < pSum.min_val) pSum.min_val = xcoord;
-      if (xcoord > pSum.max_val) pSum.max_val = xcoord;
-    }, minmax_reducer);
+      if (xcoord > pSum) pSum = xcoord;
+    }, max_reducer);
 
-  {
-    EXPECT_NEAR(minmax.min_val, minGold, tol);
-    EXPECT_NEAR(minmax.max_val, maxGold, tol);
-  }
+  using value_type = Kokkos::Min<double>::value_type;
+  value_type min;
+  Kokkos::Min<double> min_reducer(min);
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, value_type& pSum) {
+      const double xcoord = ngpCoords.get(mi, 0);
+      if (xcoord < pSum) pSum = xcoord;
+    }, min_reducer);
+
+  EXPECT_NEAR(max, maxGold, tol);
+  EXPECT_NEAR(min, minGold, tol);
 }
 
 
