@@ -179,16 +179,28 @@ public:
     const std::string algName = unique_name(
       algType, "edge", algSuffix);
 
-    const auto it = algMap_.find(algName);
-    if (it == algMap_.end()) {
-      algMap_[algName].reset(
-        new EdgeAlg(realm_, part, std::forward<Args>(args)...));
-      NaluEnv::self().naluOutputP0()
-        << "Created algorithm = " << algName << std::endl;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
+    register_algorithm_impl<EdgeAlg>(part, algName, std::forward<Args>(args)...);
+  }
+
+  /** Register a legacy algorithm
+   *
+   *  @param algType Type of algorithm being registered (e.g., INLET, WALL, OPEN)
+   *  @param part A valid part that over which this algorithm is applied algorithm
+   *
+   */
+  template <typename Algorithm, class... Args>
+  void register_legacy_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const std::string& algSuffix,
+    Args&&... args)
+  {
+    const auto topo = part->topology();
+    const std::string entityName = "algorithm_" + topo.name();
+    const std::string algName = unique_name(
+      algType, entityName, algSuffix);
+
+    register_algorithm_impl<Algorithm>(part, algName, std::forward<Args>(args)...);
   }
 
   /** Register an element algorithm
@@ -255,6 +267,24 @@ public:
   }
 
 protected:
+  template <typename NaluAlg, class... Args>
+  void register_algorithm_impl(
+    stk::mesh::Part* part,
+    const std::string& algName,
+    Args&&... args)
+  {
+    const auto it = algMap_.find(algName);
+    if (it == algMap_.end()) {
+      algMap_[algName].reset(
+        new NaluAlg(realm_, part, std::forward<Args>(args)...));
+      NaluEnv::self().naluOutputP0()
+        << "Created algorithm = " << algName << std::endl;
+    }
+    else {
+      it->second->partVec_.push_back(part);
+    }
+  }
+
   //! Return a unique name for the algorithms being registered
   std::string unique_name(AlgorithmType algType,
                           std::string entityType,
