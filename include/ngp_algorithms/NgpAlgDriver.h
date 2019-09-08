@@ -25,55 +25,55 @@ namespace nalu {
 
 class Realm;
 
-inline bool is_ho_element(const stk::topology topo)
+inline bool is_ngp_element(const stk::topology topo)
 {
-  if (topo.is_super_topology()) return true;
+  if (topo.is_super_topology()) return false;
 
-  bool isHO = true;
+  bool isNGP = false;
   switch (topo.value()) {
   case stk::topology::HEX_8:
   case stk::topology::TET_4:
   case stk::topology::PYRAMID_5:
   case stk::topology::WEDGE_6:
   case stk::topology::QUAD_4_2D:
-  case stk::topology::TRI_3_2D:
-    isHO = false;
+    isNGP = true;
     break;
 
+  case stk::topology::TRI_3_2D:
   case stk::topology::HEX_27:
   case stk::topology::QUAD_9_2D:
-    isHO = true;
+    isNGP = false;
     break;
 
   default:
     throw std::logic_error("Invalid element topology provided");
   }
 
-  return isHO;
+  return isNGP;
 }
 
-inline bool is_ho_face(const stk::topology topo)
+inline bool is_ngp_face(const stk::topology topo)
 {
-  if (topo.is_super_topology()) return true;
+  if (topo.is_super_topology()) return false;
 
-  bool isHO = true;
+  bool isNGP = false;
   switch (topo.value()) {
   case stk::topology::QUAD_4:
-  case stk::topology::TRI_3:
-  case stk::topology::LINE_2:
-    isHO = false;
+    isNGP = true;
     break;
 
+  case stk::topology::TRI_3:
+  case stk::topology::LINE_2:
   case stk::topology::QUAD_9:
   case stk::topology::LINE_3:
-    isHO = true;
+    isNGP = false;
     break;
 
   default:
     throw std::logic_error("Invalid face topology provided");
   }
 
-  return isHO;
+  return isNGP;
 }
 
 template<template <typename> class T, int order, typename... Args>
@@ -246,8 +246,7 @@ public:
     const std::string& algSuffix,
     Args&&... args)
   {
-    const auto topo = part->topology();
-    const std::string entityName = "algorithm_" + topo.name();
+    const std::string entityName = "algorithm";
     const std::string algName = unique_name(
       algType, entityName, algSuffix);
 
@@ -296,7 +295,7 @@ public:
     const std::string& algSuffix,
     Args&&... args)
   {
-    if (is_ho_element(part->topology()))
+    if (!is_ngp_element(part->topology()))
       register_legacy_algorithm<LegacyAlg>(
         algType, part, algSuffix, std::forward<Args>(args)...);
     else
@@ -345,7 +344,7 @@ public:
     const std::string& algSuffix,
     Args&&... args)
   {
-    if (is_ho_face(part->topology()))
+    if (!is_ngp_face(part->topology()))
       register_legacy_algorithm<LegacyAlg>(
         algType, part, algSuffix, std::forward<Args>(args)...);
     else
