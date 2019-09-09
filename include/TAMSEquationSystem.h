@@ -30,7 +30,7 @@ class TAMSEquationSystem : public EquationSystem
 
 public:
   TAMSEquationSystem(EquationSystems& equationSystems);
-  virtual ~TAMSEquationSystem();
+  virtual ~TAMSEquationSystem() = default;
 
   virtual void register_nodal_fields(stk::mesh::Part* part);
 
@@ -64,10 +64,10 @@ public:
   ScalarFieldType* avgMdot_;
   VectorFieldType* gTmp_;
 
-  AlgorithmDriver* metricTensorAlgDriver_;
-  AlgorithmDriver* averagingAlgDriver_;
-  AlgorithmDriver* avgMdotAlgDriver_;
-  AlgorithmDriver* tviscAlgDriver_;
+  std::unique_ptr<AlgorithmDriver> metricTensorAlgDriver_;
+  std::unique_ptr<AlgorithmDriver> averagingAlgDriver_;
+  std::unique_ptr<AlgorithmDriver> avgMdotAlgDriver_;
+  std::unique_ptr<AlgorithmDriver> tviscAlgDriver_;
 
   const TurbulenceModel turbulenceModel_;
 

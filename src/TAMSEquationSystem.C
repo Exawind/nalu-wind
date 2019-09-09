@@ -70,10 +70,10 @@ TAMSEquationSystem::TAMSEquationSystem(EquationSystems& eqSystems)
     avgTime_(NULL),
     avgMdotScs_(NULL),
     avgMdot_(NULL),
-    metricTensorAlgDriver_(new AlgorithmDriver(realm_)),
-    averagingAlgDriver_(new AlgorithmDriver(realm_)),
-    avgMdotAlgDriver_(new AlgorithmDriver(realm_)),
-    tviscAlgDriver_(new AlgorithmDriver(realm_)),
+    metricTensorAlgDriver_(std::unique_ptr<AlgorithmDriver> (new AlgorithmDriver(realm_))),
+    averagingAlgDriver_(std::unique_ptr<AlgorithmDriver> (new AlgorithmDriver(realm_))),
+    avgMdotAlgDriver_(std::unique_ptr<AlgorithmDriver> (new AlgorithmDriver(realm_))),
+    tviscAlgDriver_(std::unique_ptr<AlgorithmDriver> (new AlgorithmDriver(realm_))),
     turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
     resetTAMSAverages_(realm_.solutionOptions_->resetTAMSAverages_)
 {
@@ -85,18 +85,6 @@ TAMSEquationSystem::TAMSEquationSystem(EquationSystems& eqSystems)
       "User has requested TAMSEqs, however, turbulence model has not been set "
       "to sst_tams, the only one supported by this equation system currently.");
   }
-}
-
-TAMSEquationSystem::~TAMSEquationSystem()
-{
-  if (NULL != metricTensorAlgDriver_)
-    delete metricTensorAlgDriver_;
-  if (NULL != averagingAlgDriver_)
-    delete averagingAlgDriver_;
-  if (NULL != avgMdotAlgDriver_)
-    delete avgMdotAlgDriver_;
-  if (NULL != tviscAlgDriver_)
-    delete tviscAlgDriver_;
 }
 
 void
@@ -193,10 +181,6 @@ TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
 
-  // metric tensor algorithm
-  if (NULL == metricTensorAlgDriver_)
-    metricTensorAlgDriver_ = new AlgorithmDriver(realm_);
-
   std::map<AlgorithmType, Algorithm*>::iterator itmt =
     metricTensorAlgDriver_->algMap_.find(algType);
 
@@ -207,10 +191,6 @@ TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   } else {
     itmt->second->partVec_.push_back(part);
   }
-
-  // averaging algorithm
-  if (NULL == averagingAlgDriver_)
-    averagingAlgDriver_ = new AlgorithmDriver(realm_);
 
   std::map<AlgorithmType, Algorithm*>::iterator itav =
     averagingAlgDriver_->algMap_.find(algType);
@@ -230,9 +210,6 @@ TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   }
 
   // avgMdot algorithm
-  if (NULL == avgMdotAlgDriver_)
-    avgMdotAlgDriver_ = new AlgorithmDriver(realm_);
-
   if (realm_.realmUsesEdges_) {
     std::map<AlgorithmType, Algorithm*>::iterator itmd =
       avgMdotAlgDriver_->algMap_.find(algType);
