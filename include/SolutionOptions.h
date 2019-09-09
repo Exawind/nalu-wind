@@ -90,7 +90,6 @@ public:
   bool get_skew_symmetric(const std::string&) const;
 
   std::vector<double> get_gravity_vector(const unsigned nDim) const;
-  std::vector<double> get_bodyForce_vector(const unsigned nDim) const;
  
   double get_turb_model_constant(
     TurbulenceModelConstant turbModelEnum) const;

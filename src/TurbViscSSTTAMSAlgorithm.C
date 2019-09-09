@@ -21,14 +21,6 @@
 namespace sierra {
 namespace nalu {
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// TurbViscSSTTAMSAlgorithm - compute tvisc for SST with hybrid TAMS model 
-//==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
 TurbViscSSTTAMSAlgorithm::TurbViscSSTTAMSAlgorithm(
   Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
@@ -60,9 +52,6 @@ TurbViscSSTTAMSAlgorithm::TurbViscSSTTAMSAlgorithm(
     stk::topology::NODE_RANK, "turbulent_viscosity");
 }
 
-//--------------------------------------------------------------------------
-//-------- execute ---------------------------------------------------------
-//--------------------------------------------------------------------------
 void
 TurbViscSSTTAMSAlgorithm::execute()
 {

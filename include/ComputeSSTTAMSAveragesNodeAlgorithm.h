@@ -20,7 +20,7 @@ class ComputeSSTTAMSAveragesNodeAlgorithm : public Algorithm
 {
 public:
   ComputeSSTTAMSAveragesNodeAlgorithm(Realm& realm, stk::mesh::Part* part);
-  virtual ~ComputeSSTTAMSAveragesNodeAlgorithm() {}
+  virtual ~ComputeSSTTAMSAveragesNodeAlgorithm() = default;
 
   virtual void execute();
 

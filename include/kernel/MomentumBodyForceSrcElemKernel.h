@@ -30,7 +30,7 @@ class MomentumBodyForceSrcElemKernel : public Kernel
 {
 public:
   MomentumBodyForceSrcElemKernel(
-    const stk::mesh::BulkData&, const SolutionOptions&, ElemDataRequests&);
+    const stk::mesh::BulkData&, const SolutionOptions&, const std::vector<double>&, ElemDataRequests&);
 
   virtual ~MomentumBodyForceSrcElemKernel();
 

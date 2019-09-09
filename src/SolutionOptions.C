@@ -749,14 +749,6 @@ SolutionOptions::get_gravity_vector(const unsigned nDim) const
     return gravity_;
 }
 
-std::vector<double>
-SolutionOptions::get_bodyForce_vector(const unsigned nDim) const
-{
-  if ( nDim != bodyForce_.size() )
-    throw std::runtime_error("SolutionOptions::get_bodyForce_vector():Error Expected size does not equaly nDim");
-  else
-    return bodyForce_;
-}
 //--------------------------------------------------------------------------
 //-------- get_turb_model_constant() ------------------------------------------
 //--------------------------------------------------------------------------

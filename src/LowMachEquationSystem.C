@@ -1358,13 +1358,15 @@ MomentumEquationSystem::register_interior_algorithm(
       ("lumped_EarthCoriolis",
        realm_.bulk_data(), *realm_.solutionOptions_, velocity_, dataPreReqs, true);
 
-    kb.build_topo_kernel_if_requested<MomentumBodyForceSrcElemKernel>
-      ("body_force",
-       realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs);
+    kb.build_topo_kernel_if_requested<MomentumBodyForceSrcElemKernel>(
+      "body_force", realm_.bulk_data(), *realm_.solutionOptions_,
+      realm_.solutionOptions_->srcTermParamMap_.find("momentum")->second,
+      dataPreReqs);
 
-    kb.build_topo_kernel_if_requested<MomentumBodyForceSrcElemKernel>
-      ("lumped_body_force",
-       realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs);
+    kb.build_topo_kernel_if_requested<MomentumBodyForceSrcElemKernel>(
+      "lumped_body_force", realm_.bulk_data(), *realm_.solutionOptions_,
+      realm_.solutionOptions_->srcTermParamMap_.find("momentum")->second,
+      dataPreReqs);
 
     kb.build_sgl_kernel_if_requested<MomentumAdvDiffHOElemKernel>
       ("experimental_ho_advection_diffusion",

@@ -27,7 +27,8 @@ namespace nalu {
 template <typename AlgTraits>
 MomentumBodyForceSrcElemKernel<AlgTraits>::MomentumBodyForceSrcElemKernel(
   const stk::mesh::BulkData& bulkData,
-  const SolutionOptions& solnOpts,
+  const SolutionOptions& /*solnOpts*/,
+  const std::vector<double>& params,
   ElemDataRequests& dataPreReqs)
   : Kernel(),
     ipNodeMap_(sierra::nalu::MasterElementRepo::get_volume_master_element(
@@ -37,10 +38,8 @@ MomentumBodyForceSrcElemKernel<AlgTraits>::MomentumBodyForceSrcElemKernel(
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   densityNp1_ = get_field_ordinal(metaData, "density");
 
-  const std::vector<double>& solnOptsBodyForce =
-    solnOpts.get_bodyForce_vector(AlgTraits::nDim_);
   for (int i = 0; i < AlgTraits::nDim_; i++)
-    bodyForce_(i) = solnOptsBodyForce[i];
+    bodyForce_(i) = params[i];
 
   MasterElement* meSCV =
     sierra::nalu::MasterElementRepo::get_volume_master_element(

@@ -187,7 +187,7 @@ ShearStressTransportEquationSystem::solve_and_update()
     // FIXME: Figure out a way to do this properly in TAMS Eqn System, so that 
     //        they are decoupled
     if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS) 
-        initialize_mdot();
+        initialize_average_mdot();
     
     // deal with DES option
     if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ )
@@ -571,10 +571,10 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
 }
 
 //--------------------------------------------------------------------------
-//-------- initialize_mdot -------------------------------------------------
+//-------- initialize_average_mdot -----------------------------------------
 //--------------------------------------------------------------------------
 void
-ShearStressTransportEquationSystem::initialize_mdot()
+ShearStressTransportEquationSystem::initialize_average_mdot()
 {
   // Don't do this if it's a restart and average_mdot has been defined...
   if (resetTAMSAverages_) {

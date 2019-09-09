@@ -181,8 +181,8 @@ realms:
             turbulent_ke: [turbulent_ke_time_derivative, TAMS_advection_diffusion, sst_tams]
             specific_dissipation_rate: [specific_dissipation_rate_time_derivative, TAMS_advection_diffusion, sst_tams]
 
-        - user_constants:
-            body_force: [1.0,0.0,0.0]
+        - source_term_parameters:
+            momentum: [1.0,0.0,0.0]
 
         - relaxation_factor:
             velocity: 1.0 

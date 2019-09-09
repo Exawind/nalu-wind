@@ -106,7 +106,7 @@ protected:
 
   static constexpr stk::mesh::EntityRank entityRank_{stk::topology::EDGE_RANK};
   static constexpr int nodesPerEntity_{2};
-  static constexpr int nDimMax_{3};
+  static constexpr int NDimMax_{3};
   const int rhsSize_;
 };
 

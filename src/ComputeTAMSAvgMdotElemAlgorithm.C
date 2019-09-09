@@ -26,14 +26,6 @@
 namespace sierra {
 namespace nalu {
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// ComputeTAMSAvgMdotElemAlgorithm - interior mdor for elem continuity
-//==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
 ComputeTAMSAvgMdotElemAlgorithm::ComputeTAMSAvgMdotElemAlgorithm(
   Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
@@ -61,17 +53,6 @@ ComputeTAMSAvgMdotElemAlgorithm::ComputeTAMSAvgMdotElemAlgorithm(
     stk::topology::ELEMENT_RANK, "average_mass_flow_rate_scs");
 }
 
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-ComputeTAMSAvgMdotElemAlgorithm::~ComputeTAMSAvgMdotElemAlgorithm()
-{
-  // does nothing
-}
-
-//--------------------------------------------------------------------------
-//-------- execute ---------------------------------------------------------
-//--------------------------------------------------------------------------
 void
 ComputeTAMSAvgMdotElemAlgorithm::execute()
 {

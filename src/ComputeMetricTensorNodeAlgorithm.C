@@ -28,14 +28,6 @@
 namespace sierra {
 namespace nalu {
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// ComputeMetricTensorNodeAlgorithm - Metric Tensor
-//==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
 ComputeMetricTensorNodeAlgorithm::ComputeMetricTensorNodeAlgorithm(
     Realm &realm, stk::mesh::Part *part)
     : Algorithm(realm, part) {
@@ -49,13 +41,6 @@ ComputeMetricTensorNodeAlgorithm::ComputeMetricTensorNodeAlgorithm(
                                                "dual_nodal_volume");
 }
 
-ComputeMetricTensorNodeAlgorithm::~ComputeMetricTensorNodeAlgorithm()
-{
-}
-
-//--------------------------------------------------------------------------
-//-------- execute ---------------------------------------------------------
-//--------------------------------------------------------------------------
 void ComputeMetricTensorNodeAlgorithm::execute() {
 
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
@@ -145,11 +130,8 @@ void ComputeMetricTensorNodeAlgorithm::execute() {
       meSCV->determinant(1, &p_coords[0], &ws_scv_volume[0], &scv_error);
       const int *ipNodeMap = meSCV->ipNodeMap();
 
-      // since we only want a single elemental value, average over all
-      // integration points
       for (int ip = 0; ip < numScvIp; ++ip) {
  
-        // nearest node to ip
         stk::mesh::Entity nearestNode = node_rels[ipNodeMap[ip]];
 
         const double *dualNodalVolume = stk::mesh::field_data(*dualNodalVolume_, nearestNode);

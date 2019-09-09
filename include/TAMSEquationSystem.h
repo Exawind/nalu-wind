@@ -41,42 +41,11 @@ public:
 
   void register_interior_algorithm(stk::mesh::Part* part);
 
-  void register_inflow_bc(
-    stk::mesh::Part* part,
-    const stk::topology& theTopo,
-    const InflowBoundaryConditionData& inflowBCData);
-
-  void register_open_bc(
-    stk::mesh::Part* part,
-    const stk::topology& theTopo,
-    const OpenBoundaryConditionData& openBCData);
-
-  void register_wall_bc(
-    stk::mesh::Part* part,
-    const stk::topology& theTopo,
-    const WallBoundaryConditionData& wallBCData);
-
-  virtual void register_symmetry_bc(
-    stk::mesh::Part* part,
-    const stk::topology& theTopo,
-    const SymmetryBoundaryConditionData& symmetryBCData);
-
-  virtual void register_non_conformal_bc(
-    stk::mesh::Part* part, const stk::topology& theTopo);
-
-  virtual void register_overset_bc();
-
-  void initialize();
-  void reinitialize_linear_system();
-
-  void solve_and_update();
   void initial_work();
   void post_converged_work();
-  void initialize_mdot();
   void compute_metric_tensor();
   void compute_averages();
   void compute_avgMdot();
-  void update_and_clip();
 
   const bool managePNG_;
 
@@ -102,7 +71,7 @@ public:
 
   const TurbulenceModel turbulenceModel_;
 
-  bool resetAverages_;
+  bool resetTAMSAverages_;
 };
 
 } // namespace nalu

@@ -55,14 +55,6 @@
 namespace sierra {
 namespace nalu {
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// TAMSEquationSystem - manages alpha pde system
-//==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
 TAMSEquationSystem::TAMSEquationSystem(EquationSystems& eqSystems)
   : EquationSystem(eqSystems, "TAMSEQS", "time_averaged_model_split"),
     managePNG_(realm_.get_consistent_mass_matrix_png("adaptivity_parameter")),
@@ -83,7 +75,7 @@ TAMSEquationSystem::TAMSEquationSystem(EquationSystems& eqSystems)
     avgMdotAlgDriver_(new AlgorithmDriver(realm_)),
     tviscAlgDriver_(new AlgorithmDriver(realm_)),
     turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
-    resetAverages_(realm_.solutionOptions_->resetTAMSAverages_)
+    resetTAMSAverages_(realm_.solutionOptions_->resetTAMSAverages_)
 {
   // push back EQ to manager
   realm_.push_equation_to_systems(this);
@@ -95,9 +87,6 @@ TAMSEquationSystem::TAMSEquationSystem(EquationSystems& eqSystems)
   }
 }
 
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
 TAMSEquationSystem::~TAMSEquationSystem()
 {
   if (NULL != metricTensorAlgDriver_)
@@ -110,9 +99,6 @@ TAMSEquationSystem::~TAMSEquationSystem()
     delete tviscAlgDriver_;
 }
 
-//--------------------------------------------------------------------------
-//-------- register_nodal_fields -------------------------------------------
-//--------------------------------------------------------------------------
 void
 TAMSEquationSystem::register_nodal_fields(stk::mesh::Part* part)
 {
@@ -169,9 +155,6 @@ TAMSEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   realm_.augment_restart_variable_list("avg_res_adequacy_parameter");
 }
 
-//--------------------------------------------------------------------------
-//-------- register_element_fields -----------------------------------------
-//--------------------------------------------------------------------------
 void
 TAMSEquationSystem::register_element_fields(
   stk::mesh::Part* part, const stk::topology& theTopo)
@@ -190,9 +173,6 @@ TAMSEquationSystem::register_element_fields(
   realm_.augment_restart_variable_list("average_mass_flow_rate_scs");
 }
 
-//--------------------------------------------------------------------------
-//-------- register_edge_fields -------------------------------------------
-//--------------------------------------------------------------------------
 void
 TAMSEquationSystem::register_edge_fields(stk::mesh::Part* part)
 {
@@ -206,9 +186,6 @@ TAMSEquationSystem::register_edge_fields(stk::mesh::Part* part)
   realm_.augment_restart_variable_list("average_mass_flow_rate");
 }
 
-//--------------------------------------------------------------------------
-//-------- register_interior_algorithm -------------------------------------
-//--------------------------------------------------------------------------
 void
 TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 {
@@ -299,103 +276,6 @@ TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   }
 }
 
-//--------------------------------------------------------------------------
-//-------- register_inflow_bc ----------------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::register_inflow_bc(
-  stk::mesh::Part* /*part*/,
-  const stk::topology& /*theTopo*/,
-  const InflowBoundaryConditionData& /*inflowBCData*/)
-{
-  // Nothing to do here...
-}
-
-//--------------------------------------------------------------------------
-//-------- register_open_bc ------------------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::register_open_bc(
-  stk::mesh::Part* /*part*/,
-  const stk::topology& /*theTopo*/,
-  const OpenBoundaryConditionData& /*openBCData*/)
-{
-  // Nothing to do here...
-}
-
-//--------------------------------------------------------------------------
-//-------- register_wall_bc ------------------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::register_wall_bc(
-  stk::mesh::Part* /*part*/,
-  const stk::topology& /*theTopo*/,
-  const WallBoundaryConditionData& /*wallBCData*/)
-{
-  // Nothing to do here...
-}
-
-//--------------------------------------------------------------------------
-//-------- register_symmetry_bc --------------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::register_symmetry_bc(
-  stk::mesh::Part* /*part*/,
-  const stk::topology& /*theTopo*/,
-  const SymmetryBoundaryConditionData& /*symmetryBCData*/)
-{
-  // Nothing to do here...
-}
-
-//--------------------------------------------------------------------------
-//-------- register_non_conformal_bc ---------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::register_non_conformal_bc(
-  stk::mesh::Part* /*part*/, const stk::topology& /*theTopo*/)
-{
-  // Nothing to do here...
-}
-
-//--------------------------------------------------------------------------
-//-------- register_overset_bc ---------------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::register_overset_bc()
-{
-  // Nothing to do here...
-}
-
-//--------------------------------------------------------------------------
-//-------- initialize ------------------------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::initialize()
-{
-  // Nothing to do here...
-}
-
-//--------------------------------------------------------------------------
-//-------- reinitialize_linear_system --------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::reinitialize_linear_system()
-{
-  // Nothing to do here...
-}
-
-//--------------------------------------------------------------------------
-//-------- solve_and_update ------------------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::solve_and_update()
-{
-  // Nothing to do here...
-}
-
-//--------------------------------------------------------------------------
-//-------- initial_work ----------------------------------------------------
-//--------------------------------------------------------------------------
 void
 TAMSEquationSystem::initial_work()
 {
@@ -405,7 +285,7 @@ TAMSEquationSystem::initial_work()
 
   // Initialize average_velocity, avg_dudx and avg_Prod
   // We don't want to do this on restart where TAMS fields are present
-  if (resetAverages_) {
+  if (resetTAMSAverages_) {
     const int nDim = meta_data.spatial_dimension();
 
     // Copy velocity to average velocity
@@ -444,7 +324,7 @@ TAMSEquationSystem::initial_work()
       for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {
         // Initialize average production to mean production
         const double* avgDudx = stk::mesh::field_data(*avgDudx_, b[k]);
-        double* tij = new double[nDim * nDim];
+        std::vector<double> tij(nDim * nDim, 0.0);
         for (int i = 0; i < nDim; ++i) {
           for (int j = 0; j < nDim; ++j) {
             const double avgSij =
@@ -453,7 +333,7 @@ TAMSEquationSystem::initial_work()
           }
         }
 
-        double* Pij = new double[nDim * nDim];
+        std::vector<double> Pij(nDim * nDim, 0.0);
         for (int i = 0; i < nDim; ++i) {
           for (int j = 0; j < nDim; ++j) {
             Pij[i * nDim + j] = 0.0;
@@ -470,9 +350,6 @@ TAMSEquationSystem::initial_work()
           instProd += Pij[i * nDim + i];
 
         avgProd[k] = instProd;
-
-        delete[] tij;
-        delete[] Pij;
       }
     }
   }
@@ -482,13 +359,10 @@ TAMSEquationSystem::initial_work()
   // FIXME: Moved this to SST Eqn Systems for now since mdot has not 
   //        been calculated during intial_work phase...
   //        Is that the best approach? Or would it be better to keep TAMS self-contained?
-  //initialize_mdot();
+  //initialize_average_mdot();
   //compute_avgMdot();
 }
 
-//--------------------------------------------------------------------------
-//-------- post_converged_work ---------------------------------------------
-//--------------------------------------------------------------------------
 void
 TAMSEquationSystem::post_converged_work()
 {
@@ -503,111 +377,22 @@ TAMSEquationSystem::post_converged_work()
   compute_avgMdot();
 }
 
-//--------------------------------------------------------------------------
-//-------- initial_work ----------------------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::initialize_mdot()
-{}
-/*{
-  // Don't do this if it's a restart and average_mdot has been defined...
-  if (resetAverages_) {
-
-    stk::mesh::MetaData& meta_data = realm_.meta_data();
-    if (realm_.realmUsesEdges_) {
-      ScalarFieldType* massFlowRate_ = meta_data.get_field<ScalarFieldType>(
-        stk::topology::EDGE_RANK, "mass_flow_rate");
-
-      stk::mesh::Selector s_all_nodes =
-        (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
-        stk::mesh::selectField(*avgMdot_);
-
-      stk::mesh::BucketVector const& edge_buckets =
-        realm_.get_buckets(stk::topology::EDGE_RANK, s_all_nodes);
-      for (stk::mesh::BucketVector::const_iterator ib = edge_buckets.begin();
-           ib != edge_buckets.end(); ++ib) {
-        stk::mesh::Bucket& b = **ib;
-        const stk::mesh::Bucket::size_type length = b.size();
-
-        const double* mdot = stk::mesh::field_data(*massFlowRate_, b);
-        double* avgMdot = stk::mesh::field_data(*avgMdot_, b);
-
-        for (stk::mesh::Bucket::size_type k = 0; k < length; ++k)
-          avgMdot[k] = mdot[k];
-      }
-    } else {
-      GenericFieldType* massFlowRateScs_ = meta_data.get_field<GenericFieldType>(
-        stk::topology::ELEMENT_RANK, "mass_flow_rate_scs");
-
-      // define some common selectors
-      stk::mesh::Selector s_all_elem =
-        (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
-        stk::mesh::selectField(*avgMdotScs_);
-
-      stk::mesh::BucketVector const& elem_buckets =
-        realm_.get_buckets(stk::topology::ELEMENT_RANK, s_all_elem);
-      for (stk::mesh::BucketVector::const_iterator ib = elem_buckets.begin();
-           ib != elem_buckets.end(); ++ib) {
-        stk::mesh::Bucket& b = **ib;
-        const stk::mesh::Bucket::size_type length = b.size();
-
-        // extract master element
-        MasterElement* meSCS =
-          sierra::nalu::MasterElementRepo::get_surface_master_element(
-            b.topology());
-
-        // extract master element specifics
-        const int numScsIp = meSCS->num_integration_points();
-
-        for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {
-          double* avgMdotScs = stk::mesh::field_data(*avgMdotScs_, b, k);
-          const double* mdotScs = stk::mesh::field_data(*massFlowRateScs_, b, k);
-
-          for (int ip = 0; ip < numScsIp; ip++)
-            avgMdotScs[ip] = mdotScs[ip];
-        }
-      }
-    }
-  }
-}*/
-
-//--------------------------------------------------------------------------
-//-------- compute_metric_tensor() -----------------------------------------
-//--------------------------------------------------------------------------
 void
 TAMSEquationSystem::compute_metric_tensor()
 {
-  if (NULL != metricTensorAlgDriver_)
-    metricTensorAlgDriver_->execute();
+  metricTensorAlgDriver_->execute();
 }
 
-//--------------------------------------------------------------------------
-//-------- compute_averages() ----------------------------------------------
-//--------------------------------------------------------------------------
 void
 TAMSEquationSystem::compute_averages()
 {
-  if (NULL != averagingAlgDriver_)
-    averagingAlgDriver_->execute();
+  averagingAlgDriver_->execute();
 }
 
-//--------------------------------------------------------------------------
-//-------- compute_avgMdot() -----------------------------------------------
-//--------------------------------------------------------------------------
 void
 TAMSEquationSystem::compute_avgMdot()
 {
-  if (NULL != avgMdotAlgDriver_)
-    avgMdotAlgDriver_->execute();
-}
-
-//--------------------------------------------------------------------------
-//-------- update_and_clip() -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-TAMSEquationSystem::update_and_clip()
-{
-  // nothing to do here...
+  avgMdotAlgDriver_->execute();
 }
 
 } // namespace nalu

@@ -23,7 +23,7 @@ class ComputeTAMSAvgMdotElemAlgorithm : public Algorithm
 {
 public:
   ComputeTAMSAvgMdotElemAlgorithm(Realm& realm, stk::mesh::Part* part);
-  ~ComputeTAMSAvgMdotElemAlgorithm();
+  virtual ~ComputeTAMSAvgMdotElemAlgorithm() = default;
 
   void execute();
 

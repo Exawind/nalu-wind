@@ -29,7 +29,7 @@ class ScratchViews;
 namespace nalu_ngp {
 
 //! maximum number of dimensions for arrays
-constexpr int nDimMax = 3;
+constexpr int NDimMax = 3;
 
 /** Lightweight data structure holding information of the entity in mesh loops
  *

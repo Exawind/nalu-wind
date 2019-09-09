@@ -53,7 +53,6 @@ void
 MomentumSSTTAMSForcingNodeKernel::setup(Realm& realm)
 {
   // Time information
-  // There's no reason for these to be SIMD datatypes... right?
   dt_ = realm.get_time_step();
   time_ = realm.get_current_time();
 
@@ -144,27 +143,9 @@ MomentumSSTTAMSForcingNodeKernel::execute(
   const NodeKernelTraits::DblType clipLengthZ =
     stk::math::min(ceilLengthZ, periodicForcingLengthZ);
 
-  // FIXME: Hack to do a round/floor/ceil/mod operation since it isnt in
-  // stk::math right now
-  NodeKernelTraits::DblType ratioX;
-  NodeKernelTraits::DblType ratioY;
-  NodeKernelTraits::DblType ratioZ;
-  for (int simdIndex = 0; simdIndex < stk::simd::ndoubles; ++simdIndex) {
-    double tmpD = stk::simd::get_data(clipLengthX, simdIndex);
-    double tmpN = stk::simd::get_data(periodicForcingLengthX, simdIndex);
-    double tmp = std::floor(tmpN / tmpD + 0.5);
-    stk::simd::set_data(ratioX, simdIndex, tmp);
-
-    tmpD = stk::simd::get_data(clipLengthY, simdIndex);
-    tmpN = stk::simd::get_data(periodicForcingLengthY, simdIndex);
-    tmp = std::floor(tmpN / tmpD + 0.5);
-    stk::simd::set_data(ratioY, simdIndex, tmp);
-
-    tmpD = stk::simd::get_data(clipLengthZ, simdIndex);
-    tmpN = stk::simd::get_data(periodicForcingLengthZ, simdIndex);
-    tmp = std::floor(tmpN / tmpD + 0.5);
-    stk::simd::set_data(ratioZ, simdIndex, tmp);
-  }
+  const NodeKernelTraits::DblType ratioX = std::floor(periodicForcingLengthX / clipLengthX + 0.5);
+  const NodeKernelTraits::DblType ratioY = std::floor(periodicForcingLengthY / clipLengthY + 0.5);
+  const NodeKernelTraits::DblType ratioZ = std::floor(periodicForcingLengthZ / clipLengthZ + 0.5);
 
   const NodeKernelTraits::DblType denomX = periodicForcingLengthX / ratioX;
   const NodeKernelTraits::DblType denomY = periodicForcingLengthY / ratioY;

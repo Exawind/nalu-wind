@@ -25,14 +25,6 @@
 namespace sierra {
 namespace nalu {
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// ComputeTAMSAvgMdotEdgeAlgorithm - compute mdot at edges ip
-//==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
 ComputeTAMSAvgMdotEdgeAlgorithm::ComputeTAMSAvgMdotEdgeAlgorithm(
   Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
@@ -73,9 +65,6 @@ ComputeTAMSAvgMdotEdgeAlgorithm::ComputeTAMSAvgMdotEdgeAlgorithm(
     stk::topology::EDGE_RANK, "average_mass_flow_rate");
 }
 
-//--------------------------------------------------------------------------
-//-------- execute ---------------------------------------------------------
-//--------------------------------------------------------------------------
 void
 ComputeTAMSAvgMdotEdgeAlgorithm::execute()
 {
@@ -199,14 +188,6 @@ ComputeTAMSAvgMdotEdgeAlgorithm::execute()
       avgMdot[k] = weightAvg * avgMdot[k] + weightInst * mdot[k];
     }
   }
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-ComputeTAMSAvgMdotEdgeAlgorithm::~ComputeTAMSAvgMdotEdgeAlgorithm()
-{
-  // does nothing
 }
 
 } // namespace nalu
