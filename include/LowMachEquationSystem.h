@@ -9,9 +9,11 @@
 #ifndef LowMachEquationSystem_h
 #define LowMachEquationSystem_h
 
-#include <EquationSystem.h>
-#include <FieldTypeDef.h>
-#include <NaluParsing.h>
+#include "EquationSystem.h"
+#include "FieldTypeDef.h"
+#include "NaluParsing.h"
+
+#include "ngp_algorithms/NodalGradAlgDriver.h"
 
 namespace stk{
 struct topology;
@@ -205,8 +207,8 @@ public:
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
   ScalarFieldType* Udiag_{nullptr};
-  
-  AssembleNodalGradUAlgorithmDriver *assembleNodalGradAlgDriver_;
+
+  VectorNodalGradAlgDriver nodalGradAlgDriver_;
   AlgorithmDriver *diffFluxCoeffAlgDriver_;
   AlgorithmDriver *tviscAlgDriver_;
   AlgorithmDriver *cflReyAlgDriver_;
@@ -296,7 +298,7 @@ public:
 
   ScalarFieldType *pTmp_;
 
-  AssembleNodalGradPAlgorithmDriver *assembleNodalGradPAlgDriver_;
+  ScalarNodalGradAlgDriver nodalGradAlgDriver_;
   ComputeMdotAlgorithmDriver *computeMdotAlgDriver_;
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 };

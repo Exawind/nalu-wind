@@ -10,6 +10,7 @@
 
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
+#include "ngp_algorithms/NodalGradAlgDriver.h"
 
 #include <memory>
 
@@ -85,7 +86,7 @@ private:
   ScalarFieldType* dualNodalVolume_{nullptr};
   VectorFieldType* edgeAreaVec_{nullptr};
 
-  std::unique_ptr<AssembleNodalGradAlgorithmDriver> assembleNodalGradAlgDriver_;
+  ScalarNodalGradAlgDriver nodalGradAlgDriver_;
 
   int pValue_{2};
 

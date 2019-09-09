@@ -25,6 +25,57 @@ namespace nalu {
 
 class Realm;
 
+inline bool is_ngp_element(const stk::topology topo)
+{
+  if (topo.is_super_topology()) return false;
+
+  bool isNGP = false;
+  switch (topo.value()) {
+  case stk::topology::HEX_8:
+  case stk::topology::TET_4:
+  case stk::topology::PYRAMID_5:
+  case stk::topology::WEDGE_6:
+  case stk::topology::QUAD_4_2D:
+    isNGP = true;
+    break;
+
+  case stk::topology::TRI_3_2D:
+  case stk::topology::HEX_27:
+  case stk::topology::QUAD_9_2D:
+    isNGP = false;
+    break;
+
+  default:
+    throw std::logic_error("Invalid element topology provided");
+  }
+
+  return isNGP;
+}
+
+inline bool is_ngp_face(const stk::topology topo)
+{
+  if (topo.is_super_topology()) return false;
+
+  bool isNGP = false;
+  switch (topo.value()) {
+  case stk::topology::QUAD_4:
+    isNGP = true;
+    break;
+
+  case stk::topology::TRI_3:
+  case stk::topology::LINE_2:
+  case stk::topology::QUAD_9:
+  case stk::topology::LINE_3:
+    isNGP = false;
+    break;
+
+  default:
+    throw std::logic_error("Invalid face topology provided");
+  }
+
+  return isNGP;
+}
+
 template<template <typename> class T, int order, typename... Args>
 Algorithm* create_ho_elem_algorithm(
   const int dimension,
@@ -179,16 +230,27 @@ public:
     const std::string algName = unique_name(
       algType, "edge", algSuffix);
 
-    const auto it = algMap_.find(algName);
-    if (it == algMap_.end()) {
-      algMap_[algName].reset(
-        new EdgeAlg(realm_, part, std::forward<Args>(args)...));
-      NaluEnv::self().naluOutputP0()
-        << "Created algorithm = " << algName << std::endl;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
+    register_algorithm_impl<EdgeAlg>(part, algName, std::forward<Args>(args)...);
+  }
+
+  /** Register a legacy algorithm
+   *
+   *  @param algType Type of algorithm being registered (e.g., INLET, WALL, OPEN)
+   *  @param part A valid part that over which this algorithm is applied algorithm
+   *
+   */
+  template <typename Algorithm, class... Args>
+  void register_legacy_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const std::string& algSuffix,
+    Args&&... args)
+  {
+    const std::string entityName = "algorithm";
+    const std::string algName = unique_name(
+      algType, entityName, algSuffix);
+
+    register_algorithm_impl<Algorithm>(part, algName, std::forward<Args>(args)...);
   }
 
   /** Register an element algorithm
@@ -223,6 +285,24 @@ public:
     }
   }
 
+  template<
+    template <typename> class NGPAlg,
+    typename LegacyAlg,
+    class... Args>
+  void register_elem_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const std::string& algSuffix,
+    Args&&... args)
+  {
+    if (!is_ngp_element(part->topology()))
+      register_legacy_algorithm<LegacyAlg>(
+        algType, part, algSuffix, std::forward<Args>(args)...);
+    else
+      register_elem_algorithm<NGPAlg>(
+        algType, part, algSuffix, std::forward<Args>(args)...);
+  }
+
   /** Register an face algorithm
    *
    *  @param algType Type of algorithm being registered (e.g., INLET, WALL, * OPEN)
@@ -254,7 +334,43 @@ public:
     }
   }
 
+  template<
+    template <typename> class NGPAlg,
+    typename LegacyAlg,
+    class... Args>
+  void register_face_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const std::string& algSuffix,
+    Args&&... args)
+  {
+    if (!is_ngp_face(part->topology()))
+      register_legacy_algorithm<LegacyAlg>(
+        algType, part, algSuffix, std::forward<Args>(args)...);
+    else
+      register_face_algorithm<NGPAlg>(
+        algType, part, algSuffix, std::forward<Args>(args)...);
+  }
+
 protected:
+  template <typename NaluAlg, class... Args>
+  void register_algorithm_impl(
+    stk::mesh::Part* part,
+    const std::string& algName,
+    Args&&... args)
+  {
+    const auto it = algMap_.find(algName);
+    if (it == algMap_.end()) {
+      algMap_[algName].reset(
+        new NaluAlg(realm_, part, std::forward<Args>(args)...));
+      NaluEnv::self().naluOutputP0()
+        << "Created algorithm = " << algName << std::endl;
+    }
+    else {
+      it->second->partVec_.push_back(part);
+    }
+  }
+
   //! Return a unique name for the algorithms being registered
   std::string unique_name(AlgorithmType algType,
                           std::string entityType,
