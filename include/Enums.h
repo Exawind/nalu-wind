@@ -206,9 +206,14 @@ enum TurbulenceModelConstant {
   TM_elog = 23,
   TM_yplus_crit = 24,
   TM_CMdeg = 25,
-  TM_forFac = 26,
-  TM_v2cMu = 27,
-  TM_END = 28
+  TM_forCl = 26,
+  TM_forCeta = 27,
+  TM_forCt = 28,
+  TM_forBlT = 29,
+  TM_forBlKol = 30,
+  TM_forFac = 31,
+  TM_v2cMu = 32,
+  TM_END = 33
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -238,6 +243,11 @@ static const std::string TurbulenceModelConstantNames[] = {
   "Elog",
   "yplus_crit",
   "CMdeg",
+  "forcingCl",
+  "forcingCeta",
+  "forcingCt",
+  "forcingBlT",
+  "forcingBlKol",
   "forcingFactor",
   "v2cMu",
   "END"};

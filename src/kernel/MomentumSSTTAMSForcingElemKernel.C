@@ -38,6 +38,11 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::MomentumSSTTAMSForcingElemKernel(
     turbViscosity_(turbViscosity->mesh_meta_data_ordinal()),
     betaStar_(solnOpts.get_turb_model_constant(TM_betaStar)),
     cMu_(solnOpts.get_turb_model_constant(TM_v2cMu)),
+    forceCl_(solnOpts.get_turb_model_constant(TM_forCl)),
+    Ceta_(solnOpts.get_turb_model_constant(TM_forCeta)),
+    Ct_(solnOpts.get_turb_model_constant(TM_forCt)),
+    blT_(solnOpts.get_turb_model_constant(TM_forBlT)),
+    blKol_(solnOpts.get_turb_model_constant(TM_forBlKol)),
     forceFactor_(solnOpts.get_turb_model_constant(TM_forFac))
 {
   pi_ = stk::math::acos(-1.0);
@@ -182,26 +187,19 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::execute(
     const DoubleType epsScv = betaStar_ * tkeScv * sdrScv;
 
     // First we calculate the a_i's
-    const double FORCING_CL = 4.0;
-    const double Ceta = 70.0;
-    const double Ct = 6.0;
-    const double BL_T = 1.0;
-    const double BL_KOL = 1.0;
-    const double FORCING_FACTOR = forceFactor_;
-
     const DoubleType periodicForcingLengthX = pi_;
     const DoubleType periodicForcingLengthY = 0.25;
     const DoubleType periodicForcingLengthZ = 3.0 / 8.0 * pi_;
 
     DoubleType length =
-      FORCING_CL * stk::math::pow(alphaScv * tkeScv, 1.5) / epsScv;
+      forceCl_ * stk::math::pow(alphaScv * tkeScv, 1.5) / epsScv;
     length = stk::math::max(length,
-      Ceta * (stk::math::pow(muScv/rhoScv, 0.75) / stk::math::pow(epsScv, 0.25)));
+      Ceta_ * (stk::math::pow(muScv/rhoScv, 0.75) / stk::math::pow(epsScv, 0.25)));
     length = stk::math::min(length, wallDistScv);
 
     DoubleType T_alpha = alphaScv * tkeScv / epsScv;
-    T_alpha = stk::math::max(T_alpha, Ct * stk::math::sqrt(muScv / rhoScv / epsScv));
-    T_alpha = BL_T * T_alpha;
+    T_alpha = stk::math::max(T_alpha, Ct_ * stk::math::sqrt(muScv / rhoScv / epsScv));
+    T_alpha = blT_ * T_alpha;
 
     const DoubleType ceilLengthX =
       stk::math::max(length, 2.0 * w_MijElem[0][0]);
@@ -263,7 +261,7 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::execute(
     // Now we calculate the scaling of the initial field
     const DoubleType v2Scv = mu_tScv * betaStar_ * sdrScv / (cMu_ * rhoScv);
     const DoubleType F_target =
-      FORCING_FACTOR * stk::math::sqrt(alphaScv * v2Scv) / T_alpha;
+      forceFactor_ * stk::math::sqrt(alphaScv * v2Scv) / T_alpha;
 
     const DoubleType prod_r_temp =
       (F_target * dt_) *
@@ -283,7 +281,7 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::execute(
     const DoubleType a_sign = stk::math::tanh(arg);
 
     const DoubleType a_kol =
-      stk::math::min(BL_KOL * stk::math::sqrt(muScv * epsScv / rhoScv) / tkeScv, 1.0);
+      stk::math::min(blKol_ * stk::math::sqrt(muScv * epsScv / rhoScv) / tkeScv, 1.0);
 
     const DoubleType Sa = stk::math::if_then_else(
       (a_sign < 0.0),
