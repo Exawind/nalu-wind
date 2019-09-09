@@ -77,19 +77,19 @@ void Edge2DSCS::determinant(
     }
   }
   for (int idim=0; idim<dim; ++idim)
-    c[idim] = ( p[idim][1] + p[idim][2] ) * half;
+    c[idim] = ( p[idim][0] + p[idim][1] ) * half;
 
-  DoubleType dx13 = coords(1,1) - c[1];
-  DoubleType dy13 = coords(1,2) - c[2];
+  DoubleType dx13 = coords(0,0) - c[0];
+  DoubleType dy13 = coords(0,1) - c[1];
 
-  area(1,1) = -dy13;
-  area(1,2) =  dx13;
+  area(0,0) = -dy13;
+  area(0,1) =  dx13;
 
-  dx13 = coords(2,1) - c[1];
-  dy13 = coords(2,2) - c[2];
+  dx13 = coords(1,0) - c[0];
+  dy13 = coords(1,1) - c[1];
 
-  area(2,1) =  dy13;
-  area(2,2) = -dx13;
+  area(1,0) =  dy13;
+  area(1,1) = -dx13;
 }
 
 void Edge2DSCS::determinant(
