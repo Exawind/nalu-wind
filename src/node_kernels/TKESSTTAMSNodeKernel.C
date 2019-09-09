@@ -26,7 +26,6 @@ TKESSTTAMSNodeKernel::TKESSTTAMSNodeKernel(
     tkeNp1ID_(get_field_ordinal(meta, "turbulent_ke", stk::mesh::StateNP1)),
     sdrNp1ID_(get_field_ordinal(
       meta, "specific_dissipation_rate", stk::mesh::StateNP1)),
-    alphaID_(get_field_ordinal(meta, "k_ratio")),
     prodID_(get_field_ordinal(meta, "average_production")),
     densityID_(get_field_ordinal(meta, "average_density")),
     nDim_(meta.spatial_dimension())
@@ -44,7 +43,6 @@ TKESSTTAMSNodeKernel::setup(Realm& realm)
   rho_ = fieldMgr.get_field<double>(densityID_);
   tke_ = fieldMgr.get_field<double>(tkeNp1ID_);
   sdr_ = fieldMgr.get_field<double>(sdrNp1ID_);
-  alpha_ = fieldMgr.get_field<double>(alphaID_);
   prod_ = fieldMgr.get_field<double>(prodID_);
 
   // Update turbulence model constants

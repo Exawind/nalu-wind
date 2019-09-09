@@ -46,7 +46,6 @@ private:
   ngp::Field<double> rho_;
   ngp::Field<double> tke_;
   ngp::Field<double> sdr_;
-  ngp::Field<double> alpha_;
   ngp::Field<double> prod_;
 
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
@@ -55,7 +54,6 @@ private:
   unsigned tviscID_{stk::mesh::InvalidOrdinal};
   unsigned tkeNp1ID_{stk::mesh::InvalidOrdinal};
   unsigned sdrNp1ID_{stk::mesh::InvalidOrdinal};
-  unsigned alphaID_{stk::mesh::InvalidOrdinal};
   unsigned prodID_{stk::mesh::InvalidOrdinal};
   unsigned densityID_{stk::mesh::InvalidOrdinal};
 
