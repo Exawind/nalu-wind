@@ -694,6 +694,11 @@ public:
     : LowMachKernelHex8Mesh(),
       viscosity_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "viscosity")),
       tke_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "turbulent_ke")),
+      bcTke_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "tke_bc")),
+      bcAssemTke_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "wall_model_tke_bc")),
+      assemWallArea_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "assembled_wall_area_wf")),
+      wallFricVel_(&meta_.declare_field<ScalarFieldType>(meta_.side_rank(), "wall_friction_velocity_bip")),
+      exposedAreaVec_(&meta_.declare_field<GenericFieldType>(meta_.side_rank(), "exposed_area_vector")),
       sdr_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "specific_dissipation_rate")),
       minDistance_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "minimum_distance_to_wall")),
       dudx_(&meta_.declare_field<GenericFieldType>( stk::topology::NODE_RANK, "dudx")),
@@ -705,10 +710,17 @@ public:
       dkdx_(&meta_.declare_field<VectorFieldType>( stk::topology::NODE_RANK, "dkdx")),
       dwdx_(&meta_.declare_field<VectorFieldType>( stk::topology::NODE_RANK, "dwdx")),
       dhdx_(&meta_.declare_field<VectorFieldType>( stk::topology::NODE_RANK, "dhdx")),
-      specificHeat_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "specific_heat"))
+      specificHeat_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "specific_heat")),
+      ustar_(kappa_ * uh_ / std::log(zh_ / z0_))
   {
+    using AlgTraits = sierra::nalu::AlgTraitsQuad4;
     stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*bcTke_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*bcAssemTke_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*assemWallArea_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*wallFricVel_, meta_.universal_part(), 4, nullptr);
+    stk::mesh::put_field_on_mesh(*exposedAreaVec_, meta_.universal_part(), spatialDim_*AlgTraits::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(*sdr_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*minDistance_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*dudx_, meta_.universal_part(), spatialDim_*spatialDim_, nullptr);
@@ -740,6 +752,11 @@ public:
     unit_test_kernel_utils::density_test_function(bulk_, *coordinates_, *density_);
     stk::mesh::field_fill(0.2, *viscosity_);
     unit_test_kernel_utils::tke_test_function(bulk_, *coordinates_, *tke_);
+    stk::mesh::field_fill(4.0, *assemWallArea_);
+    stk::mesh::field_fill(ustar_, *wallFricVel_);
+    unit_test_kernel_utils::calc_exposed_area_vec(
+      bulk_, sierra::nalu::AlgTraitsQuad4::topo_, *coordinates_,
+      *exposedAreaVec_);
     unit_test_kernel_utils::sdr_test_function(bulk_, *coordinates_, *sdr_);
     unit_test_kernel_utils::minimum_distance_to_wall_test_function(bulk_, *coordinates_, *minDistance_);
     unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
@@ -754,6 +771,11 @@ public:
 
   ScalarFieldType*    viscosity_{nullptr};
   ScalarFieldType*    tke_{nullptr};
+  ScalarFieldType*    bcTke_{nullptr};
+  ScalarFieldType*    bcAssemTke_{nullptr};
+  ScalarFieldType*    assemWallArea_{nullptr};
+  ScalarFieldType*    wallFricVel_{nullptr};
+  GenericFieldType*   exposedAreaVec_{nullptr};
   ScalarFieldType*    sdr_{nullptr};
   ScalarFieldType*    minDistance_{nullptr};
   GenericFieldType*   dudx_{nullptr};
@@ -766,6 +788,13 @@ public:
   VectorFieldType*    dwdx_{nullptr};
   VectorFieldType*    dhdx_{nullptr};
   ScalarFieldType*    specificHeat_{nullptr};
+  const double z0_{0.1};
+  const double zh_{0.25};
+  const double uh_{0.15};
+  const double kappa_{0.41};
+  const double gravity_{9.81};
+  const double Tref_{300.0};
+  const double ustar_;
 };
 
 /** Test Fixture for the hybrid turbulence Kernels

@@ -10,6 +10,7 @@ add_sources(GlobalSourceList
   WallFuncGeometryAlg.C
   ABLWallFrictionVelAlg.C
   TKEWallFuncAlg.C
+  TurbKineticEnergyWallAlg.C
 
   # Algorithm Drivers
   NgpAlgDriver.C

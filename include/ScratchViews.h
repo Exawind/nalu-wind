@@ -545,7 +545,7 @@ template<typename T, typename TEAMHANDLETYPE, typename SHMEM>
 void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new_me(
   const ElemDataRequestsGPU::DataEnumView& dataEnums,
   SharedMemView<double**, SHMEM>* coordsView,
-  MasterElement* /* meFC */,
+  MasterElement* meFC,
   MasterElement* meSCS,
   MasterElement* meSCV,
   MasterElement* meFEM,
@@ -560,7 +560,9 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
     switch(dataEnums(i))
     {
       case FC_AREAV:
-        ThrowRequireMsg(false, "ERROR, non-interleaving FC_AREAV is not supported.");
+        ThrowRequireMsg(meFC != nullptr, "ERROR, meFC needs to be non-null if FC_AREAV is requested.");
+        ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_AREAV requested.");
+        meFC->determinant(1, &((*coordsView)(0, 0)), &fc_areav(0, 0), &error);
         break;
       case SCS_AREAV:
         ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_AREAV is requested.");
@@ -678,7 +680,7 @@ template<typename T, typename TEAMHANDLETYPE, typename SHMEM>
 void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new_me(
   const ElemDataRequestsGPU::DataEnumView& dataEnums,
   SharedMemView<DoubleType**, SHMEM>* coordsView,
-  MasterElement* /* meFC */,
+  MasterElement* meFC,
   MasterElement* meSCS,
   MasterElement* meSCV,
   MasterElement*
@@ -696,8 +698,10 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
     switch(dataEnums(i))
     {
       case FC_AREAV:
-        NGP_ThrowRequireMsg(false, "FC_AREAV not implemented yet.");
-        break;
+         NGP_ThrowRequireMsg(meFC != nullptr, "ERROR, meFC needs to be non-null if SCS_AREAV is requested.");
+         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_AREAV requested.");
+         meFC->determinant(*coordsView, fc_areav);
+         break;
       case SCS_AREAV:
          NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_AREAV is requested.");
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_AREAV requested.");

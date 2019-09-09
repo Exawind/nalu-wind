@@ -98,7 +98,7 @@ void Edge32DSCS::determinant(
   SharedMemView<DoubleType**, DeviceShmem> &coords,
   SharedMemView<DoubleType**, DeviceShmem> &area) {
 
-  std::array<DoubleType,2> areaVector;
+  DoubleType areaVector[2];
   const DoubleType x0 = coords(0,0); const DoubleType y0 = coords(0,1);
   const DoubleType x1 = coords(1,0); const DoubleType y1 = coords(1,1);
   const DoubleType x2 = coords(2,0); const DoubleType y2 = coords(2,1);
