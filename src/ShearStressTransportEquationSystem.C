@@ -485,7 +485,7 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
    }
    stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
    if (realm_.hasPeriodic_) {
-     realm_.periodic_field_update(minDistanceToWall_, 1);
+     realm_.periodic_field_max(minDistanceToWall_, 1);
    }
 }
 
