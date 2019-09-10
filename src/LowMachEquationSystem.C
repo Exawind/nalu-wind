@@ -148,6 +148,8 @@
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
+#include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
+#include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 
@@ -708,11 +710,8 @@ LowMachEquationSystem::solve_and_update()
     isInit_ = false;
   }
 
-  // compute tvisc
-  momentumEqSys_->tviscAlgDriver_->execute();
-
-  // compute effective viscosity
-  momentumEqSys_->diffFluxCoeffAlgDriver_->execute();
+  // compute tvisc and effective viscosity
+  momentumEqSys_->compute_turbulence_parameters();
 
   // start the iteration loop
   for ( int k = 0; k < maxIterations_; ++k ) {
@@ -942,8 +941,6 @@ MomentumEquationSystem::MomentumEquationSystem(
     tvisc_(NULL),
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "dudx"),
-    diffFluxCoeffAlgDriver_(new AlgorithmDriver(realm_)),
-    tviscAlgDriver_(new AlgorithmDriver(realm_)),
     cflReyAlgDriver_(new AlgorithmDriver(realm_)),
     wallFunctionParamsAlgDriver_(NULL),
     projectedNodalGradEqs_(NULL),
@@ -974,8 +971,6 @@ MomentumEquationSystem::MomentumEquationSystem(
 //--------------------------------------------------------------------------
 MomentumEquationSystem::~MomentumEquationSystem()
 {
-  delete diffFluxCoeffAlgDriver_;
-  delete tviscAlgDriver_;
   delete cflReyAlgDriver_;
 
   if ( NULL != wallFunctionParamsAlgDriver_)
@@ -1006,8 +1001,7 @@ MomentumEquationSystem::initial_work()
   {
     const double timeA = NaluEnv::self().nalu_time();
     compute_wall_function_params();
-    tviscAlgDriver_->execute();
-    diffFluxCoeffAlgDriver_->execute();
+    compute_turbulence_parameters();
     cflReyAlgDriver_->execute();
 
     const double timeB = NaluEnv::self().nalu_time();
@@ -1471,42 +1465,39 @@ MomentumEquationSystem::register_interior_algorithm(
 
   // effective viscosity alg
   if ( realm_.is_turbulent() ) {
-    std::map<AlgorithmType, Algorithm *>::iterator itev =
-      diffFluxCoeffAlgDriver_->algMap_.find(algType);
-    if ( itev == diffFluxCoeffAlgDriver_->algMap_.end() ) {
-      EffectiveDiffFluxCoeffAlgorithm *theAlg
-        = new EffectiveDiffFluxCoeffAlgorithm(realm_, part, visc_, tvisc_, evisc_, 1.0, 1.0);
-      diffFluxCoeffAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      itev->second->partVec_.push_back(part);
+    if (!diffFluxCoeffAlg_) {
+      diffFluxCoeffAlg_.reset(
+        new EffDiffFluxCoeffAlg(
+          realm_, part, visc_, tvisc_, evisc_, 1.0, 1.0, realm_.is_turbulent()));
+    } else {
+      diffFluxCoeffAlg_->partVec_.push_back(part);
     }
 
     // deal with tvisc better? - possibly should be on EqSysManager?
-    std::map<AlgorithmType, Algorithm *>::iterator it_tv =
-      tviscAlgDriver_->algMap_.find(algType);
-    if ( it_tv == tviscAlgDriver_->algMap_.end() ) {
-      Algorithm * theAlg = NULL;
-      switch (realm_.solutionOptions_->turbulenceModel_ ) {
-        case KSGS:
-          theAlg = new TurbViscKsgsAlgorithm(realm_, part);
-          break;
-        case SMAGORINSKY:
-          theAlg = new TurbViscSmagorinskyAlgorithm(realm_, part);
-          break;
-        case WALE:
-          theAlg = new TurbViscWaleAlgorithm(realm_, part);
-          break;
-        case SST: case SST_DES:
-          theAlg = new TurbViscSSTAlgorithm(realm_, part);
-          break;
-        default:
-          throw std::runtime_error("non-supported turb model");
+    if (!tviscAlg_) {
+      switch (realm_.solutionOptions_->turbulenceModel_) {
+      case KSGS:
+        tviscAlg_.reset(new TurbViscKsgsAlg(realm_, part, tvisc_));
+        break;
+
+      case SMAGORINSKY:
+        tviscAlg_.reset(new TurbViscSmagorinskyAlgorithm(realm_, part));
+        break;
+
+      case WALE:
+        tviscAlg_.reset(new TurbViscWaleAlgorithm(realm_, part));
+        break;
+
+      case SST:
+      case SST_DES:
+        tviscAlg_.reset(new TurbViscSSTAlgorithm(realm_, part));
+        break;
+
+      default:
+        throw std::runtime_error("Unsupported turbulence model provided");
       }
-      tviscAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      it_tv->second->partVec_.push_back(part);
+    } else {
+      tviscAlg_->partVec_.push_back(part);
     }
   }
 
@@ -2620,6 +2611,14 @@ MomentumEquationSystem::assemble_and_solve(
       *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
   if (realm_.hasOverset_)
     realm_.overset_orphan_node_field_update(Udiag_, 1, 1);
+}
+
+void MomentumEquationSystem::compute_turbulence_parameters()
+{
+  if (realm_.is_turbulent()) {
+    tviscAlg_->execute();
+    diffFluxCoeffAlg_->execute();
+  }
 }
 
 //==========================================================================
