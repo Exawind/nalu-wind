@@ -70,10 +70,10 @@ TAMSEquationSystem::TAMSEquationSystem(EquationSystems& eqSystems)
     avgTime_(NULL),
     avgMdotScs_(NULL),
     avgMdot_(NULL),
-    metricTensorAlgDriver_(std::unique_ptr<AlgorithmDriver> (new AlgorithmDriver(realm_))),
-    averagingAlgDriver_(std::unique_ptr<AlgorithmDriver> (new AlgorithmDriver(realm_))),
-    avgMdotAlgDriver_(std::unique_ptr<AlgorithmDriver> (new AlgorithmDriver(realm_))),
-    tviscAlgDriver_(std::unique_ptr<AlgorithmDriver> (new AlgorithmDriver(realm_))),
+    metricTensorAlgDriver_(AlgorithmDriver(realm_)),
+    averagingAlgDriver_(AlgorithmDriver(realm_)),
+    avgMdotAlgDriver_(AlgorithmDriver(realm_)),
+    tviscAlgDriver_(AlgorithmDriver(realm_)),
     turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
     resetTAMSAverages_(realm_.solutionOptions_->resetTAMSAverages_)
 {
@@ -182,20 +182,20 @@ TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   const AlgorithmType algType = INTERIOR;
 
   std::map<AlgorithmType, Algorithm*>::iterator itmt =
-    metricTensorAlgDriver_->algMap_.find(algType);
+    metricTensorAlgDriver_.algMap_.find(algType);
 
-  if (itmt == metricTensorAlgDriver_->algMap_.end()) {
+  if (itmt == metricTensorAlgDriver_.algMap_.end()) {
     ComputeMetricTensorNodeAlgorithm* metricTensorAlg =
       new ComputeMetricTensorNodeAlgorithm(realm_, part);
-    metricTensorAlgDriver_->algMap_[algType] = metricTensorAlg;
+    metricTensorAlgDriver_.algMap_[algType] = metricTensorAlg;
   } else {
     itmt->second->partVec_.push_back(part);
   }
 
   std::map<AlgorithmType, Algorithm*>::iterator itav =
-    averagingAlgDriver_->algMap_.find(algType);
+    averagingAlgDriver_.algMap_.find(algType);
 
-  if (itav == averagingAlgDriver_->algMap_.end()) {
+  if (itav == averagingAlgDriver_.algMap_.end()) {
     Algorithm* theAlg = NULL;
     switch (turbulenceModel_) {
     case SST_TAMS:
@@ -204,7 +204,7 @@ TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
     default:
       throw std::runtime_error("TAMSEquationSystem: non-supported turb model");
     }
-    averagingAlgDriver_->algMap_[algType] = theAlg;
+    averagingAlgDriver_.algMap_[algType] = theAlg;
   } else {
     itav->second->partVec_.push_back(part);
   }
@@ -212,23 +212,23 @@ TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   // avgMdot algorithm
   if (realm_.realmUsesEdges_) {
     std::map<AlgorithmType, Algorithm*>::iterator itmd =
-      avgMdotAlgDriver_->algMap_.find(algType);
+      avgMdotAlgDriver_.algMap_.find(algType);
 
-    if (itmd == avgMdotAlgDriver_->algMap_.end()) {
+    if (itmd == avgMdotAlgDriver_.algMap_.end()) {
       ComputeTAMSAvgMdotEdgeAlgorithm* avgMdotEdgeAlg =
         new ComputeTAMSAvgMdotEdgeAlgorithm(realm_, part);
-      avgMdotAlgDriver_->algMap_[algType] = avgMdotEdgeAlg;
+      avgMdotAlgDriver_.algMap_[algType] = avgMdotEdgeAlg;
     } else {
       itmd->second->partVec_.push_back(part);
     }
   } else {
     std::map<AlgorithmType, Algorithm*>::iterator itmd =
-      avgMdotAlgDriver_->algMap_.find(algType);
+      avgMdotAlgDriver_.algMap_.find(algType);
 
-    if (itmd == avgMdotAlgDriver_->algMap_.end()) {
+    if (itmd == avgMdotAlgDriver_.algMap_.end()) {
       ComputeTAMSAvgMdotElemAlgorithm* avgMdotAlg =
         new ComputeTAMSAvgMdotElemAlgorithm(realm_, part);
-      avgMdotAlgDriver_->algMap_[algType] = avgMdotAlg;
+      avgMdotAlgDriver_.algMap_[algType] = avgMdotAlg;
     } else {
       itmd->second->partVec_.push_back(part);
     }
@@ -237,8 +237,8 @@ TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   // FIXME: tvisc needed for TAMS update, but is updated in LowMach...
   //        Perhaps there is a way to call tvisc from LowMach here?
   std::map<AlgorithmType, Algorithm*>::iterator it_tv =
-    tviscAlgDriver_->algMap_.find(algType);
-  if (it_tv == tviscAlgDriver_->algMap_.end()) {
+    tviscAlgDriver_.algMap_.find(algType);
+  if (it_tv == tviscAlgDriver_.algMap_.end()) {
     Algorithm* theAlg = NULL;
     switch (realm_.solutionOptions_->turbulenceModel_) {
       case SST_TAMS:
@@ -247,7 +247,7 @@ TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       default:
         throw std::runtime_error("non-supported turb model in TAMS Eq Sys");
     }
-    tviscAlgDriver_->algMap_[algType] = theAlg;
+    tviscAlgDriver_.algMap_[algType] = theAlg;
   } else {
     it_tv->second->partVec_.push_back(part);
   }
@@ -346,7 +346,7 @@ TAMSEquationSystem::post_converged_work()
   // Compute TAMS terms here, since we only want to do so once per timestep
 
   // Need to update tvisc for use in computing averages
-  tviscAlgDriver_->execute();
+  tviscAlgDriver_.execute();
 
   // TODO: Assess consistency of this order of operations...
   compute_averages();
@@ -357,19 +357,19 @@ TAMSEquationSystem::post_converged_work()
 void
 TAMSEquationSystem::compute_metric_tensor()
 {
-  metricTensorAlgDriver_->execute();
+  metricTensorAlgDriver_.execute();
 }
 
 void
 TAMSEquationSystem::compute_averages()
 {
-  averagingAlgDriver_->execute();
+  averagingAlgDriver_.execute();
 }
 
 void
 TAMSEquationSystem::compute_avgMdot()
 {
-  avgMdotAlgDriver_->execute();
+  avgMdotAlgDriver_.execute();
 }
 
 } // namespace nalu

@@ -64,10 +64,10 @@ public:
   ScalarFieldType* avgMdot_;
   VectorFieldType* gTmp_;
 
-  std::unique_ptr<AlgorithmDriver> metricTensorAlgDriver_;
-  std::unique_ptr<AlgorithmDriver> averagingAlgDriver_;
-  std::unique_ptr<AlgorithmDriver> avgMdotAlgDriver_;
-  std::unique_ptr<AlgorithmDriver> tviscAlgDriver_;
+  AlgorithmDriver metricTensorAlgDriver_;
+  AlgorithmDriver averagingAlgDriver_;
+  AlgorithmDriver avgMdotAlgDriver_;
+  AlgorithmDriver tviscAlgDriver_;
 
   const TurbulenceModel turbulenceModel_;
 
