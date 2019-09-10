@@ -234,6 +234,10 @@ class Realm {
     const unsigned &sizeOfTheField,
     const bool &bypassFieldCheck = true) const;
 
+  void periodic_field_max(
+    stk::mesh::FieldBase *theField,
+    const unsigned &sizeOfTheField) const;
+
   void periodic_delta_solution_update(
      stk::mesh::FieldBase *theField,
      const unsigned &sizeOfField) const;

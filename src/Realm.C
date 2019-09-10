@@ -3154,6 +3154,15 @@ Realm::periodic_field_update(
   periodicManager_->apply_constraints(theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
 }
 
+
+void
+Realm::periodic_field_max(
+  stk::mesh::FieldBase *theField,
+  const unsigned &sizeOfField) const
+{
+  periodicManager_->apply_max_field(theField, sizeOfField);
+}
+
 //--------------------------------------------------------------------------
 //-------- periodic_delta_solution_update -------------------------------------------
 //--------------------------------------------------------------------------
