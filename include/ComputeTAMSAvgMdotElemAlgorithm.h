@@ -28,9 +28,6 @@ public:
   void execute();
 
   // extract fields; nodal
-  VectorFieldType* velocityRTM_;
-  VectorFieldType* coordinates_;
-  ScalarFieldType* density_;
   ScalarFieldType* avgTime_;
   GenericFieldType* massFlowRate_;
   GenericFieldType* avgMassFlowRate_;

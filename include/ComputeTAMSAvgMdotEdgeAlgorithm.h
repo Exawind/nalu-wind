@@ -28,13 +28,7 @@ public:
   void execute();
 
   const bool meshMotion_;
-  VectorFieldType* velocityRTM_;
-  VectorFieldType* Gpdx_;
-  VectorFieldType* coordinates_;
-  ScalarFieldType* pressure_;
   ScalarFieldType* avgTime_;
-  ScalarFieldType* density_;
-  VectorFieldType* edgeAreaVec_;
   ScalarFieldType* massFlowRate_;
   ScalarFieldType* avgMassFlowRate_;
 };
