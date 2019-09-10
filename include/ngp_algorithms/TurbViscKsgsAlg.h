@@ -26,11 +26,7 @@ public:
   TurbViscKsgsAlg(
     Realm &realm,
     stk::mesh::Part* part,
-    ScalarFieldType* tke,
-    ScalarFieldType* density,
-    ScalarFieldType* tvisc,
-    ScalarFieldType* dualNodalVolume
-);
+    ScalarFieldType* tvisc);
 
   virtual ~TurbViscKsgsAlg() = default;
 
