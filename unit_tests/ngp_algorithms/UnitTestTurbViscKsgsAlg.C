@@ -15,14 +15,11 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_visc_ksgs_alg)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
-  LowMachKernelHex8Mesh::fill_mesh_and_init_fields();
+  KsgsKernelHex8Mesh::fill_mesh_and_init_fields(false, false, false);
 
-/*
-  stk::mesh::field_fill(0.0, *tke_);
-  stk::mesh::field_fill(1.0, *density_);
-  stk::mesh::field_fill(0.0, *tvisc_);
-  stk::mesh::field_fill(0.2, *dualNodalVolume_);
-*/
+  // Initialize turbulence parameters in solution options
+  solnOpts_.initialize_turbulence_constants();
+
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
