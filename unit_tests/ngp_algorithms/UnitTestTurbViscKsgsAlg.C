@@ -15,7 +15,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_visc_ksgs_alg)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
-  fill_mesh_and_init_fields();
+  LowMachKernelHex8Mesh::fill_mesh_and_init_fields();
 
 /*
   stk::mesh::field_fill(0.0, *tke_);
