@@ -73,11 +73,12 @@ public:
 
   int pValue() { return pValue_; }
 
+  void compute_wall_distance();
+
 private:
   WallDistEquationSystem() = delete;
   WallDistEquationSystem(const WallDistEquationSystem&) = delete;
 
-  void compute_wall_distance();
 
   VectorFieldType* coordinates_{nullptr};
   ScalarFieldType* wallDistPhi_{nullptr};
