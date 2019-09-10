@@ -41,9 +41,8 @@ ComputeSSTTAMSAveragesNodeAlgorithm::ComputeSSTTAMSAveragesNodeAlgorithm(
 
   // instantaneous quantities
   if (meshMotion_) {
-   throw std::runtime_error("SSTTAMSAverages: TAMS is not set up to handle mesh motion yet");  
-   //velocityRTM_ = meta_data.get_field<VectorFieldType>(
-   //  stk::topology::NODE_RANK, "velocity_rtm");
+   velocityRTM_ = meta_data.get_field<VectorFieldType>(
+     stk::topology::NODE_RANK, "velocity_rtm");
   } 
   else {
     velocityRTM_ = meta_data.get_field<VectorFieldType>(

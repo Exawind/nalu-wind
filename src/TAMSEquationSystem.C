@@ -267,7 +267,7 @@ TAMSEquationSystem::initial_work()
 
     // Copy velocity to average velocity
     VectorFieldType &avgU = avgVelocity_->field_of_state(stk::mesh::StateNP1);
-    const auto& U = *meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+    const auto& U = *meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, (realm_.does_mesh_move()) ? "velocity_rtm" : "velocity");
     field_copy(realm_.meta_data(), realm_.bulk_data(), U, avgU, realm_.get_activate_aura());
 
     // Copy dudx to average dudx
