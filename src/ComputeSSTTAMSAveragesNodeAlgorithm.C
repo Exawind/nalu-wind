@@ -208,7 +208,6 @@ ComputeSSTTAMSAveragesNodeAlgorithm::execute()
                                        avgDudx[j * nDim + i]);
           tij[i][j] = 2.0 * alpha[k] * tvisc[k] * avgSij;
         }
-        tij[i][i] -= 2.0 / 3.0 * alpha[k] * tke[k] * avgRho[k];
       }
 
       double Pij[nalu_ngp::nDimMax][nalu_ngp::nDimMax];
