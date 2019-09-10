@@ -2101,7 +2101,6 @@ Realm::create_mesh()
     edgesPart_ = &metaData_->declare_part("create_edges_part", stk::topology::EDGE_RANK);
   }
 
-  meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
   // set mesh creation
   const double end_time = NaluEnv::self().nalu_time();
   timerCreateMesh_ = (end_time - start_time);

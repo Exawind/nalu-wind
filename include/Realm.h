@@ -363,7 +363,9 @@ class Realm {
 
   inline NgpMeshInfo& mesh_info()
   {
-    if (!meshInfo_) {
+    if ((meshModCount_ != bulkData_->synchronized_count()) ||
+        (!meshInfo_)) {
+      meshModCount_ = bulkData_->synchronized_count();
       meshInfo_.reset(new NgpMeshInfo(*bulkData_));
     }
     return *meshInfo_;
@@ -669,6 +671,8 @@ class Realm {
 
 protected:
   std::unique_ptr<NgpMeshInfo> meshInfo_;
+
+  unsigned meshModCount_{0};
 
 };
 
