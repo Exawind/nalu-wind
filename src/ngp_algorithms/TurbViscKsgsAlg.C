@@ -19,16 +19,13 @@ namespace nalu{
 TurbViscKsgsAlg::TurbViscKsgsAlg(
   Realm &realm,
   stk::mesh::Part *part,
-  ScalarFieldType* tke,
-  ScalarFieldType* density,
-  ScalarFieldType* tvisc,
-  ScalarFieldType* dualNodalVolume
+  ScalarFieldType* tvisc
 ) : Algorithm(realm, part),
     tviscField_(tvisc),
-    tke_(tke->mesh_meta_data_ordinal()),
-    density_(density->mesh_meta_data_ordinal()),
+    tke_(get_field_ordinal(realm.meta_data(), "turbulent_ke")),
+    density_(get_field_ordinal(realm.meta_data(), "density")),
     tvisc_(tvisc->mesh_meta_data_ordinal()),
-    dualNodalVolume_(dualNodalVolume->mesh_meta_data_ordinal()),
+    dualNodalVolume_(get_field_ordinal(realm.meta_data(), "dual_nodal_volume")),
     cmuEps_(realm.get_turb_model_constant(TM_cmuEps))
 {}
 
