@@ -451,7 +451,6 @@ TAMSEquationSystem::initial_work()
               0.5 * (avgDudx[i * nDim + j] + avgDudx[j * nDim + i]);
             tij[i * nDim + j] = 2.0 * tvisc[k] * avgSij;
           }
-          tij[i * nDim + i] -= 2.0 / 3.0 * rho[k] * tke[k];
         }
 
         double* Pij = new double[nDim * nDim];
