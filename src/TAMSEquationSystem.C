@@ -22,7 +22,7 @@
 #include <SolutionOptions.h>
 #include <TAMSEquationSystem.h>
 #include <TimeIntegrator.h>
-#include <TurbViscSSTTAMSAlgorithm.h>
+#include <TurbViscSSTAlgorithm.h>
 
 #include <SolverAlgorithmDriver.h>
 
@@ -242,7 +242,7 @@ TAMSEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
     Algorithm* theAlg = NULL;
     switch (realm_.solutionOptions_->turbulenceModel_) {
       case SST_TAMS:
-        theAlg = new TurbViscSSTTAMSAlgorithm(realm_, part);
+        theAlg = new TurbViscSSTAlgorithm(realm_, part, true);
         break;
       default:
         throw std::runtime_error("non-supported turb model in TAMS Eq Sys");

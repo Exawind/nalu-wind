@@ -965,7 +965,7 @@ Here :math:`\langle \cdot \rangle` refers to a mean (time-averaged)
 quantity and :math:`T_{RANS}` is the timescale of the turbulence
 determined by the underlying RANS scalars (:math:`1 / (\beta^*\omega)`
 in SST).  Note that currently the time scale is stored in a nodal
-field and calculated in the *TurbViscSSTTAMSAlgorithm* algorithm.
+field.
 
 We can discretize the causal average equation explicitly to produce
 the implemented form:
