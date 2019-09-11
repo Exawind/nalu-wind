@@ -571,40 +571,47 @@ void TpetraLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVector & /* 
 void TpetraLinearSystem::copy_stk_to_tpetra(const stk::mesh::FieldBase * stkField,
                                             const Teuchos::RCP<LinSys::MultiVector> tpetraField)
 {
-  using Traits    = nalu_ngp::NGPMeshTraits<>;
-  using MeshIndex = typename Traits::MeshIndex;
-
-  const stk::mesh::MetaData & metaData = realm_.meta_data();
-
   ThrowAssert(!tpetraField.is_null());
   ThrowAssert(stkField);
-  const auto deviceVector = tpetraField->getLocalView<sierra::nalu::DeviceSpace>();
+  const int numVectors = tpetraField->getNumVectors();
 
-  const unsigned numDof = numDof_;
-  auto entityToLID = entityToLID_;
+  stk::mesh::BulkData & bulkData = realm_.bulk_data();
+  stk::mesh::MetaData & metaData = realm_.meta_data();
 
   const stk::mesh::Selector selector = stk::mesh::selectField(*stkField)
     & metaData.locally_owned_part()
     & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
     & !(realm_.get_inactive_selector());
 
-  NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(stkField->mesh_meta_data_ordinal());
-  ngpField.sync_to_device();
+  stk::mesh::BucketVector const& buckets = bulkData.get_buckets(stk::topology::NODE_RANK, selector);
 
-  ngp::Mesh ngpMesh = realm_.ngp_mesh();
+  for(const stk::mesh::Bucket* bptr : buckets) {
+    const stk::mesh::Bucket & b = *bptr;
 
-  nalu_ngp::run_entity_algorithm(ngpMesh, stk::topology::NODE_RANK, selector,
-  KOKKOS_LAMBDA(const MeshIndex& meshIdx)
-  {
-      stk::mesh::Entity node = (*meshIdx.bucket)[meshIdx.bucketOrd];
-      const LocalOrdinal localIdOffset = entityToLID[node.local_offset()];
+    const int fieldSize = field_bytes_per_entity(*stkField, b) / (sizeof(double));
 
-      for(unsigned d=0; d < numDof; ++d) {
-        deviceVector(localIdOffset,d) = ngpField.get(meshIdx, d);
+    ThrowRequire(numVectors == fieldSize);
+
+    const stk::mesh::Bucket::size_type length = b.size();
+
+    const double * stkFieldPtr = (double*)stk::mesh::field_data(*stkField, b);
+
+    for (stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k )
+    {
+      const stk::mesh::Entity node = b[k];
+
+      int status = getDofStatus(node);
+      if ((status & DS_SkippedDOF) || (status & DS_SharedNotOwnedDOF))
+        continue;
+
+      const stk::mesh::EntityId nodeId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
+      for(int d=0; d < fieldSize; ++d)
+      {
+        const size_t stkIndex = k*fieldSize + d;
+        tpetraField->replaceGlobalValue(nodeId, d, stkFieldPtr[stkIndex]);
       }
-  });
-
-  ngpField.modify_on_device();
+    }
+  }
 }
 
 void TpetraLinearSystem::compute_send_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
@@ -1847,6 +1854,7 @@ void TpetraLinearSystem::copy_tpetra_to_stk(
     & !(realm_.get_inactive_selector());
 
   NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(stkField->mesh_meta_data_ordinal());
+  NGPGlobalIdFieldType ngpNaluIdField = realm_.ngp_field_manager().get_field<stk::mesh::EntityId>(realm_.naluGlobalId_->mesh_meta_data_ordinal());
 
   ngp::Mesh ngpMesh = realm_.ngp_mesh();
 
@@ -1855,12 +1863,15 @@ void TpetraLinearSystem::copy_tpetra_to_stk(
   {
       stk::mesh::Entity node = (*meshIdx.bucket)[meshIdx.bucketOrd];
       const LocalOrdinal localIdOffset = entityToLID[node.local_offset()];
-
-      for(unsigned d=0; d < numDof; ++d) {
-        const LocalOrdinal localId = localIdOffset + d;
-        NGP_ThrowRequire(localId < maxOwnedRowId);
-
-        ngpField.get(meshIdx, d) = deviceVector(localId,0);
+      stk::mesh::EntityId naluId = ngpNaluIdField.get(meshIdx, 0);
+      stk::mesh::EntityId stkId = ngpMesh.identifier(node);
+      if (stkId == naluId) {
+        for(unsigned d=0; d < numDof; ++d) {
+          const LocalOrdinal localId = localIdOffset + d;
+          NGP_ThrowRequire(localId < maxOwnedRowId);
+  
+          ngpField.get(meshIdx, d) = deviceVector(localId,0);
+        }
       }
   });
 

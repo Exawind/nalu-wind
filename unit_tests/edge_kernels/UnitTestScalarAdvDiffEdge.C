@@ -94,6 +94,8 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
     }
   }
 
+  //copy_stk_to_tpetra is not converted to ngp::Field yet, but this test still
+  //works due to tpetra using UVM space.
   helperObjs.linsys->copy_stk_to_tpetra(viscosity_, helperObjs.linsys->getOwnedRhs());
   helperObjs.linsys->copy_tpetra_to_stk(helperObjs.linsys->getOwnedRhs(), mixFraction_);
 
