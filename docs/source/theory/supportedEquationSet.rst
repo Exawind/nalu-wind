@@ -806,7 +806,7 @@ Time Averaged Model Split (TAMS) Formulation
 ++++++++++++++++++++++++++++++++++++++++++++
 
 The TAMS approach is a recently developed hybrid technique by Haering, 
-Oliver and Moser :cite:`Haering:2018`.  In this approach a triple
+Oliver and Moser :cite:`HaeringAIAA`.  In this approach a triple
 decomposition is used, breaking the instantaneous velocity field into
 an average component :math:`<u_i>`, a resolved fluctuation :math:`u_i^>` 
 and an unresolved fluctuation :math:`u_i^<`.  The subgrid stress is
