@@ -26,7 +26,7 @@ namespace nalu {
 
 template <typename AlgTraits>
 MomentumBodyForceSrcElemKernel<AlgTraits>::MomentumBodyForceSrcElemKernel(
-  const stk::mesh::BulkData& bulkData,
+  const stk::mesh::BulkData& /* bulkData */,
   const SolutionOptions& /*solnOpts*/,
   const std::vector<double>& params,
   ElemDataRequests& dataPreReqs)
@@ -35,8 +35,6 @@ MomentumBodyForceSrcElemKernel<AlgTraits>::MomentumBodyForceSrcElemKernel(
                  AlgTraits::topo_)
                  ->ipNodeMap())
 {
-  const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
-  densityNp1_ = get_field_ordinal(metaData, "density");
 
   for (int i = 0; i < AlgTraits::nDim_; i++)
     bodyForce_(i) = params[i];
@@ -51,7 +49,6 @@ MomentumBodyForceSrcElemKernel<AlgTraits>::MomentumBodyForceSrcElemKernel(
   dataPreReqs.add_cvfem_volume_me(meSCV);
 
   // fields and data
-  dataPreReqs.add_gathered_nodal_field(densityNp1_, 1);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
 }
 
@@ -67,26 +64,17 @@ MomentumBodyForceSrcElemKernel<AlgTraits>::execute(
   SharedMemView<DoubleType*>& rhs,
   ScratchViews<DoubleType>& scratchViews)
 {
-  SharedMemView<DoubleType*>& v_densityNp1 =
-    scratchViews.get_scratch_view_1D(densityNp1_);
   SharedMemView<DoubleType*>& v_scv_volume =
     scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
 
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
     const int nearestNode = ipNodeMap_[ip];
-    DoubleType densityIp = 0.0;
-
-    for (int ic = 0; ic < AlgTraits::nodesPerElement_; ++ic) {
-      const DoubleType r = v_shape_function_(ip, ic);
-      densityIp += r * v_densityNp1(ic);
-    }
 
     // Compute RHS
     const DoubleType scV = v_scv_volume(ip);
     const int nnNdim = nearestNode * AlgTraits::nDim_;
-    const DoubleType fac = densityIp * scV;
     for (int j = 0; j < AlgTraits::nDim_; ++j) {
-      rhs(nnNdim + j) += fac * bodyForce_(j);
+      rhs(nnNdim + j) += scV * bodyForce_(j);
     }
 
     // No LHS contributions

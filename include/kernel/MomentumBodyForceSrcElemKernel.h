@@ -46,8 +46,6 @@ public:
 private:
   MomentumBodyForceSrcElemKernel() = delete;
 
-  unsigned densityNp1_{stk::mesh::InvalidOrdinal};
-
   AlignedViewType<DoubleType[AlgTraits::nDim_]> bodyForce_{"v_bodyForce"};
 
   const int* ipNodeMap_;
