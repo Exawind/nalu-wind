@@ -873,12 +873,8 @@ Realm::setup_adaptivity()
 void
 Realm::setup_nodal_fields()
 {
-#ifdef NALU_USES_HYPRE
-  hypreGlobalId_ = &(metaData_->declare_field<HypreIDFieldType>(
-                       stk::topology::NODE_RANK, "hypre_global_id"));
-#endif
-  tpetGlobalId_ = &(metaData_->declare_field<TpetIDFieldType>(
-                       stk::topology::NODE_RANK, "tpet_global_id"));
+  linSysGlobalId_ = &(metaData_->declare_field<linSysIDFieldType>(
+                       stk::topology::NODE_RANK, "contig_global_id"));
 
   // register global id and rank fields on all parts
   const stk::mesh::PartVector parts = metaData_->get_parts();
@@ -886,11 +882,8 @@ Realm::setup_nodal_fields()
     naluGlobalId_ = &(metaData_->declare_field<GlobalIdFieldType>(stk::topology::NODE_RANK, "nalu_global_id"));
     stk::mesh::put_field_on_mesh(*naluGlobalId_, *parts[ipart], nullptr);
 
-#ifdef NALU_USES_HYPRE
-    stk::mesh::put_field_on_mesh(*hypreGlobalId_, *parts[ipart], nullptr);
-#endif
-    stk::mesh::put_field_on_mesh(*tpetGlobalId_, *parts[ipart], nullptr);
-    stk::mesh::field_fill(std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
+    stk::mesh::put_field_on_mesh(*linSysGlobalId_, *parts[ipart], nullptr);
+    stk::mesh::field_fill(std::numeric_limits<LinSys::GlobalOrdinal>::max(), *linSysGlobalId_);
   }
 
 
@@ -3518,11 +3511,11 @@ Realm::set_hypre_global_id()
    * Therefore, this method first determines the total number of rows in each
    * paritition and then determines the starting and ending IDs for the Hypre
    * matrix and finally assigns the hypre ID for all the nodes on this partition
-   * in the hypreGlobalId_ field.
+   * in the linSysGlobalId_ field.
    */
 
   // Fill with an invalid value for future error checking
-  stk::mesh::field_fill(std::numeric_limits<HypreIntType>::max(), *hypreGlobalId_);
+  stk::mesh::field_fill(std::numeric_limits<linSysIntType>::max(), *linSysGlobalId_);
 
   const stk::mesh::Selector s_local = metaData_->locally_owned_part() & !get_inactive_selector();
   const auto& bkts = bulkData_->get_buckets(
@@ -3565,11 +3558,11 @@ Realm::set_hypre_global_id()
 
   // 3. Store Hypre global IDs for all the nodes so that this can be used to lookup
   // and populate Hypre data structures.
-  HypreIntType nidx = static_cast<HypreIntType>(hypreILower_);
+  linSysIntType nidx = static_cast<linSysIntType>(hypreILower_);
   for (auto nid: localIDs) {
     auto node = bulkData_->get_entity(
       stk::topology::NODE_RANK, nid);
-    HypreIntType* hids = stk::mesh::field_data(*hypreGlobalId_, node);
+    linSysIntType* hids = stk::mesh::field_data(*linSysGlobalId_, node);
     *hids = nidx++;
   }
 #endif

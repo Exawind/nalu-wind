@@ -129,7 +129,7 @@ HypreUVWLinearSystem::zeroSystem()
   }
 
   // Prepare for matrix assembly and set all entry flags to "unfilled"
-  for (HypreIntType i=0; i < numRows_; i++)
+  for (linSysIntType i=0; i < numRows_; i++)
     rowFilled_[i] = RS_UNFILLED;
 
   // Set flag to indicate whether rows must be skipped during normal sumInto
@@ -149,8 +149,8 @@ HypreUVWLinearSystem::sumInto(
   const SharedMemView<int*>&,
   const char*  /* trace_tag */)
 {
-  HypreIntType numRows = numEntities;
-  const HypreIntType bufSize = idBuffer_.size();
+  linSysIntType numRows = numEntities;
+  const linSysIntType bufSize = idBuffer_.size();
 
   ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
   ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
@@ -165,7 +165,7 @@ HypreUVWLinearSystem::sumInto(
 
   for (size_t in=0; in < numEntities; in++) {
     int ix = in * nDim_;
-    HypreIntType hid = idBuffer_[in];
+    linSysIntType hid = idBuffer_[in];
 
     if (checkSkippedRows_) {
       auto it = skippedRows_.find(hid);
@@ -201,8 +201,8 @@ HypreUVWLinearSystem::sumInto(
   const char*  /* trace_tag */)
 {
 #ifndef KOKKOS_ENABLE_CUDA
-  HypreIntType numRows = numEntities;
-  const HypreIntType bufSize = idBuffer_.size();
+  linSysIntType numRows = numEntities;
+  const linSysIntType bufSize = idBuffer_.size();
 
   ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
   ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
@@ -217,7 +217,7 @@ HypreUVWLinearSystem::sumInto(
 
   for (size_t in=0; in < numEntities; in++) {
     int ix = in * nDim_;
-    HypreIntType hid = idBuffer_[in];
+    linSysIntType hid = idBuffer_[in];
 
     if (checkSkippedRows_) {
       auto it = skippedRows_.find(hid);
@@ -253,8 +253,8 @@ HypreUVWLinearSystem::sumInto(
   const char*  /* trace_tag */)
 {
   const size_t n_obj = entities.size();
-  HypreIntType numRows = n_obj;
-  const HypreIntType bufSize = idBuffer_.size();
+  linSysIntType numRows = n_obj;
+  const linSysIntType bufSize = idBuffer_.size();
 
 #ifndef NDEBUG
   size_t vecSize = numRows * nDim_;
@@ -269,7 +269,7 @@ HypreUVWLinearSystem::sumInto(
 
   for (size_t in=0; in < n_obj; in++) {
     int ix = in * nDim_;
-    HypreIntType hid = get_entity_hypre_id(entities[in]);
+    linSysIntType hid = get_entity_hypre_id(entities[in]);
 
     if (checkSkippedRows_) {
       auto it = skippedRows_.find(hid);
@@ -314,7 +314,7 @@ HypreUVWLinearSystem::applyDirichletBCs(
   const auto& bkts = realm_.get_buckets(
     stk::topology::NODE_RANK, sel);
 
-  HypreIntType ncols = 1;
+  linSysIntType ncols = 1;
   double diag_value = 1.0;
   for (auto b: bkts) {
     const double* solution = (double*)stk::mesh::field_data(
@@ -324,7 +324,7 @@ HypreUVWLinearSystem::applyDirichletBCs(
 
     for (size_t in=0; in < b->size(); in++) {
       auto node = (*b)[in];
-      HypreIntType hid = *stk::mesh::field_data(*realm_.hypreGlobalId_, node);
+      linSysIntType hid = *stk::mesh::field_data(*realm_.linSysGlobalId_, node);
 
       HYPRE_IJMatrixSetValues(mat_, 1, &ncols, &hid, &hid, &diag_value);
       for (int d=0; d<nDim_; d++) {
@@ -450,7 +450,7 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
     double* field = (double*) stk::mesh::field_data(*stkField, *b);
     for (size_t in=0; in < b->size(); in++) {
       auto node = (*b)[in];
-      HypreIntType hid = get_entity_hypre_id(node);
+      linSysIntType hid = get_entity_hypre_id(node);
 
       for (int d=0; d < nDim_; d++) {
         int sid = in * nDim_ + d;

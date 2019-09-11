@@ -230,7 +230,7 @@ protected:
    *
    *  @return The HYPRE row ID
    */
-  HypreIntType get_entity_hypre_id(const stk::mesh::Entity&);
+  linSysIntType get_entity_hypre_id(const stk::mesh::Entity&);
 
   //! Helper method to transfer the solution from a HYPRE_IJVector instance to
   //! the STK field data instance.
@@ -275,23 +275,23 @@ protected:
   std::vector<RowStatus> rowStatus_;
 
   //! Track which rows are skipped
-  std::unordered_set<HypreIntType> skippedRows_;
+  std::unordered_set<linSysIntType> skippedRows_;
 
   //! Buffer for handling Global Row IDs for use in sumInto methods
-  std::vector<HypreIntType> idBuffer_;
+  std::vector<linSysIntType> idBuffer_;
 
   //! The lowest row owned by this MPI rank
-  HypreIntType iLower_;
+  linSysIntType iLower_;
   //! The highest row owned by this MPI rank
-  HypreIntType iUpper_;
+  linSysIntType iUpper_;
   //! The lowest column owned by this MPI rank; currently jLower_ == iLower_
-  HypreIntType jLower_;
+  linSysIntType jLower_;
   //! The highest column owned by this MPI rank; currently jUpper_ == iUpper_
-  HypreIntType jUpper_;
+  linSysIntType jUpper_;
   //! Total number of rows owned by this particular MPI rank
-  HypreIntType numRows_;
+  linSysIntType numRows_;
   //! Maximum Row ID in the Hypre linear system
-  HypreIntType maxRowID_;
+  linSysIntType maxRowID_;
 
   //! Flag indicating whether IJMatrixAssemble has been called on the system
   bool matrixAssembled_{false};

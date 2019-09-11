@@ -93,28 +93,28 @@ protected:
 
   mutable HYPRE_Solver precond_;
 
-  HypreIntType (*solverCreatePtr_)(MPI_Comm, HYPRE_Solver*);
-  HypreIntType (*solverDestroyPtr_)(HYPRE_Solver);
-  HypreIntType (*solverSetupPtr_)(
+  linSysIntType (*solverCreatePtr_)(MPI_Comm, HYPRE_Solver*);
+  linSysIntType (*solverDestroyPtr_)(HYPRE_Solver);
+  linSysIntType (*solverSetupPtr_)(
     HYPRE_Solver, HYPRE_ParCSRMatrix, HYPRE_ParVector, HYPRE_ParVector);
-  HypreIntType (*solverSolvePtr_)(
+  linSysIntType (*solverSolvePtr_)(
     HYPRE_Solver, HYPRE_ParCSRMatrix, HYPRE_ParVector, HYPRE_ParVector);
-  HypreIntType (*solverPrecondPtr_)(
+  linSysIntType (*solverPrecondPtr_)(
     HYPRE_Solver,
     HYPRE_PtrToParSolverFcn,
     HYPRE_PtrToParSolverFcn,
     HYPRE_Solver);
 
-  HypreIntType (*precondCreatePtr_)(MPI_Comm, HYPRE_Solver*);
-  HypreIntType (*precondDestroyPtr_)(HYPRE_Solver);
-  HypreIntType (*precondSetupPtr_)(
+  linSysIntType (*precondCreatePtr_)(MPI_Comm, HYPRE_Solver*);
+  linSysIntType (*precondDestroyPtr_)(HYPRE_Solver);
+  linSysIntType (*precondSetupPtr_)(
     HYPRE_Solver, HYPRE_ParCSRMatrix, HYPRE_ParVector, HYPRE_ParVector);
-  HypreIntType (*precondSolvePtr_)(
+  linSysIntType (*precondSolvePtr_)(
     HYPRE_Solver, HYPRE_ParCSRMatrix, HYPRE_ParVector, HYPRE_ParVector);
 
-  HypreIntType (*solverSetTolPtr_)(HYPRE_Solver, double);
-  HypreIntType (*solverNumItersPtr_)(HYPRE_Solver, HypreIntType*);
-  HypreIntType (*solverFinalResidualNormPtr_)(HYPRE_Solver, double*);
+  linSysIntType (*solverSetTolPtr_)(HYPRE_Solver, double);
+  linSysIntType (*solverNumItersPtr_)(HYPRE_Solver, linSysIntType*);
+  linSysIntType (*solverFinalResidualNormPtr_)(HYPRE_Solver, double*);
 
 
   //! Flag indicating whether a preconditioner is used. Certain solvers like

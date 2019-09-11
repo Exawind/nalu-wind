@@ -17,39 +17,39 @@ namespace {
 // <https://github.com/trilinos/xSDKTrilinos/blob/master/hypre/src/Ifpack2_Hypre.hpp>
 // for more details
 
-HypreIntType Hypre_BoomerAMGCreate(MPI_Comm, HYPRE_Solver* solver)
+linSysIntType Hypre_BoomerAMGCreate(MPI_Comm, HYPRE_Solver* solver)
 { return HYPRE_BoomerAMGCreate(solver); }
 
-HypreIntType Hypre_ParaSailsCreate(MPI_Comm comm, HYPRE_Solver* solver)
+linSysIntType Hypre_ParaSailsCreate(MPI_Comm comm, HYPRE_Solver* solver)
 { return HYPRE_ParaSailsCreate(comm, solver); }
 
-HypreIntType Hypre_EuclidCreate(MPI_Comm comm, HYPRE_Solver* solver)
+linSysIntType Hypre_EuclidCreate(MPI_Comm comm, HYPRE_Solver* solver)
 { return HYPRE_EuclidCreate(comm, solver); }
 
-HypreIntType Hypre_AMSCreate(MPI_Comm, HYPRE_Solver *solver)
+linSysIntType Hypre_AMSCreate(MPI_Comm, HYPRE_Solver *solver)
 { return HYPRE_AMSCreate(solver);}
 
-HypreIntType Hypre_ParCSRHybridCreate(MPI_Comm, HYPRE_Solver *solver)
+linSysIntType Hypre_ParCSRHybridCreate(MPI_Comm, HYPRE_Solver *solver)
 { return HYPRE_ParCSRHybridCreate(solver);}
 
-HypreIntType Hypre_ParCSRPCGCreate(MPI_Comm comm, HYPRE_Solver *solver)
+linSysIntType Hypre_ParCSRPCGCreate(MPI_Comm comm, HYPRE_Solver *solver)
 { return HYPRE_ParCSRPCGCreate(comm, solver);}
 
-HypreIntType Hypre_ParCSRGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
+linSysIntType Hypre_ParCSRGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
 { return HYPRE_ParCSRGMRESCreate(comm, solver);}
 
 #ifdef HYPRE_COGMRES
-HypreIntType Hypre_ParCSRCOGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
+linSysIntType Hypre_ParCSRCOGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
 { return HYPRE_ParCSRCOGMRESCreate(comm, solver);}
 #endif
 
-HypreIntType Hypre_ParCSRFlexGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
+linSysIntType Hypre_ParCSRFlexGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
 { return HYPRE_ParCSRFlexGMRESCreate(comm, solver);}
 
-HypreIntType Hypre_ParCSRLGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
+linSysIntType Hypre_ParCSRLGMRESCreate(MPI_Comm comm, HYPRE_Solver *solver)
 { return HYPRE_ParCSRLGMRESCreate(comm, solver);}
 
-HypreIntType Hypre_ParCSRBiCGSTABCreate(MPI_Comm comm, HYPRE_Solver *solver)
+linSysIntType Hypre_ParCSRBiCGSTABCreate(MPI_Comm comm, HYPRE_Solver *solver)
 { return HYPRE_ParCSRBiCGSTABCreate(comm, solver);}
 }
 
@@ -97,7 +97,7 @@ HypreDirectSolver::solve(
   // Extract linear num. iterations and linear residual. Unlike the TPetra
   // interface, Hypre returns the relative residual norm and not the final
   // absolute residual.
-  HypreIntType numIters;
+  linSysIntType numIters;
   solverNumItersPtr_(solver_, &numIters);
   solverFinalResidualNormPtr_(solver_, &finalResidualNorm);
   numIterations = numIters;

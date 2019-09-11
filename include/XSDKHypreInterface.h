@@ -98,14 +98,14 @@ enum Hypre_Chooser{
 
 //! This class is used to help with passing parameters in the SetParameter() function. Use this class to call Hypre's internal parameters.
 class FunctionParameter{
-  using HypreIntType = sierra::nalu::HypreIntType;
+  using linSysIntType = sierra::nalu::linSysIntType;
 
   public:
     //! Single int constructor.
     FunctionParameter(
       Hypre::Hypre_Chooser chooser,
-      HypreIntType (*funct_name)(HYPRE_Solver, HypreIntType),
-      HypreIntType param1)
+      linSysIntType (*funct_name)(HYPRE_Solver, linSysIntType),
+      linSysIntType param1)
       : chooser_(chooser),
         option_(0),
         int_func_(funct_name),
@@ -115,7 +115,7 @@ class FunctionParameter{
     //! Single double constructor.
     FunctionParameter(
       Hypre::Hypre_Chooser chooser,
-      HypreIntType (*funct_name)(HYPRE_Solver, double),
+      linSysIntType (*funct_name)(HYPRE_Solver, double),
       double param1)
       : chooser_(chooser),
         option_(1),
@@ -123,12 +123,12 @@ class FunctionParameter{
         double_param1_(param1)
     {}
 
-    //! Single double, single HypreIntType constructor.
+    //! Single double, single linSysIntType constructor.
     FunctionParameter(
       Hypre::Hypre_Chooser chooser,
-      HypreIntType (*funct_name)(HYPRE_Solver, double, HypreIntType),
+      linSysIntType (*funct_name)(HYPRE_Solver, double, linSysIntType),
       double param1,
-      HypreIntType param2)
+      linSysIntType param2)
       : chooser_(chooser),
         option_(2),
         double_int_func_(funct_name),
@@ -136,12 +136,12 @@ class FunctionParameter{
         double_param1_(param1)
     {}
 
-    //! Two HypreIntTypes constructor.
+    //! Two linSysIntTypes constructor.
     FunctionParameter(
       Hypre::Hypre_Chooser chooser,
-      HypreIntType (*funct_name)(HYPRE_Solver, HypreIntType, HypreIntType),
-      HypreIntType param1,
-      HypreIntType param2)
+      linSysIntType (*funct_name)(HYPRE_Solver, linSysIntType, linSysIntType),
+      linSysIntType param1,
+      linSysIntType param2)
       : chooser_(chooser),
         option_(3),
         int_int_func_(funct_name),
@@ -149,11 +149,11 @@ class FunctionParameter{
         int_param2_(param2)
     {}
 
-    //! HypreIntType pointer constructor.
+    //! linSysIntType pointer constructor.
     FunctionParameter(
       Hypre::Hypre_Chooser chooser,
-      HypreIntType (*funct_name)(HYPRE_Solver, HypreIntType*),
-      HypreIntType* param1)
+      linSysIntType (*funct_name)(HYPRE_Solver, linSysIntType*),
+      linSysIntType* param1)
       : chooser_(chooser),
         option_(4),
         int_star_func_(funct_name),
@@ -163,7 +163,7 @@ class FunctionParameter{
     //! Double pointer constructor.
     FunctionParameter(
       Hypre::Hypre_Chooser chooser,
-      HypreIntType (*funct_name)(HYPRE_Solver, double*),
+      linSysIntType (*funct_name)(HYPRE_Solver, double*),
       double* param1)
       : chooser_(chooser),
         option_(5),
@@ -174,7 +174,7 @@ class FunctionParameter{
     //! char pointer constructor
     FunctionParameter(
       Hypre::Hypre_Chooser chooser,
-      HypreIntType (*funct_name)(HYPRE_Solver, char*),
+      linSysIntType (*funct_name)(HYPRE_Solver, char*),
       char* param1)
       : chooser_(chooser),
         option_(6),
@@ -224,17 +224,17 @@ class FunctionParameter{
   private:
     Hypre::Hypre_Chooser chooser_;
     int option_;
-    HypreIntType (*int_func_)(HYPRE_Solver, HypreIntType);
-    HypreIntType (*double_func_)(HYPRE_Solver, double);
-    HypreIntType (*double_int_func_)(HYPRE_Solver, double, HypreIntType);
-    HypreIntType (*int_int_func_)(HYPRE_Solver, HypreIntType, HypreIntType);
-    HypreIntType (*int_star_func_)(HYPRE_Solver, HypreIntType*);
-    HypreIntType (*double_star_func_)(HYPRE_Solver, double*);
-    HypreIntType (*char_star_func_)(HYPRE_Solver, char*);
-    HypreIntType int_param1_;
-    HypreIntType int_param2_;
+    linSysIntType (*int_func_)(HYPRE_Solver, linSysIntType);
+    linSysIntType (*double_func_)(HYPRE_Solver, double);
+    linSysIntType (*double_int_func_)(HYPRE_Solver, double, linSysIntType);
+    linSysIntType (*int_int_func_)(HYPRE_Solver, linSysIntType, linSysIntType);
+    linSysIntType (*int_star_func_)(HYPRE_Solver, linSysIntType*);
+    linSysIntType (*double_star_func_)(HYPRE_Solver, double*);
+    linSysIntType (*char_star_func_)(HYPRE_Solver, char*);
+    linSysIntType int_param1_;
+    linSysIntType int_param2_;
     double double_param1_;
-    HypreIntType *int_star_param_;
+    linSysIntType *int_star_param_;
     double *double_star_param_;
     char* char_star_param_;
 };

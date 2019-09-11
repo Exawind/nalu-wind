@@ -57,7 +57,7 @@ HypreUVWSolver::solve(
   // Extract linear num. iterations and linear residual. Unlike the TPetra
   // interface, Hypre returns the relative residual norm and not the final
   // absolute residual.
-  HypreIntType numIters;
+  linSysIntType numIters;
   solverNumItersPtr_(solver_, &numIters);
   solverFinalResidualNormPtr_(solver_, &finalResidualNorm);
   numIterations = numIters;

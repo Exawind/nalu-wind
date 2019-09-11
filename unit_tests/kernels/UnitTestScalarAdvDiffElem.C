@@ -89,7 +89,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion_tpetra)
   unit_test_utils::TpetraHelperObjectsElem helperObjs(bulk_, stk::topology::HEX_8, numDof, partVec_[0]);
 
   helperObjs.realm.naluGlobalId_ = naluGlobalId_;
-  helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
+  helperObjs.realm.linSysGlobalId_ = linSysGlobalId_;
 
   helperObjs.realm.set_global_id();
 

@@ -255,8 +255,8 @@ public:
       naluGlobalId_(
         &meta_.declare_field<GlobalIdFieldType>(
           stk::topology::NODE_RANK, "nalu_global_id",1)),
-      tpetGlobalId_(
-        &meta_.declare_field<TpetIDFieldType>(
+      linSysGlobalId_(
+        &meta_.declare_field<linSysIDFieldType>(
           stk::topology::NODE_RANK, "tpet_global_id",1)),
       dnvField_(&meta_.declare_field<ScalarFieldType>(
                   stk::topology::NODE_RANK, "dual_nodal_volume",2)),
@@ -267,7 +267,7 @@ public:
           stk::topology::EDGE_RANK, "edge_area_vector"))
   {
     stk::mesh::put_field_on_mesh(*naluGlobalId_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(*tpetGlobalId_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*linSysGlobalId_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*dnvField_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*divMeshVelField_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
@@ -307,11 +307,11 @@ public:
 
   sierra::nalu::SolutionOptions solnOpts_;
   typedef long   GlobalOrdinal;
-  typedef stk::mesh::Field<GlobalOrdinal> TpetIDFieldType;
+  typedef stk::mesh::Field<GlobalOrdinal> linSysIDFieldType;
 
   const VectorFieldType* coordinates_{nullptr};
   GlobalIdFieldType* naluGlobalId_{nullptr};
-  TpetIDFieldType* tpetGlobalId_{nullptr};
+  linSysIDFieldType* linSysGlobalId_{nullptr};
   ScalarFieldType* dnvField_{nullptr};
   ScalarFieldType* divMeshVelField_{nullptr};
   VectorFieldType* edgeAreaVec_{nullptr};

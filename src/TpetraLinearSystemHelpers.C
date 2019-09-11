@@ -177,7 +177,7 @@ void add_lengths_to_comm(const stk::mesh::BulkData&  /* bulk */,
 }
 
 void add_lengths_to_comm_tpet(const stk::mesh::BulkData&  bulk /* bulk */,
-                              TpetIDFieldType * tpetGID_label,
+                              linSysIDFieldType * tpetGID_label,
                          stk::CommNeighbors& commNeighbors,
                          int entity_a_owner,
                          stk::mesh::EntityId entityId_a,

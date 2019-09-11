@@ -40,16 +40,9 @@ typedef stk::mesh::Field<double, stk::mesh::SimpleArrayTag>  GenericFieldType;
 typedef unsigned LocalId;
 typedef stk::mesh::Field<LocalId>  LocalIdFieldType;
 
+typedef LinSys::GlobalOrdinal linSysIntType;
 
-// Hypre Integer types
-#ifdef NALU_USES_HYPRE
-typedef HYPRE_Int HypreIntType;
-#else
-typedef int HypreIntType;
-#endif
-
-typedef stk::mesh::Field<LinSys::GlobalOrdinal> TpetIDFieldType;
-typedef stk::mesh::Field<HypreIntType> HypreIDFieldType;
+typedef stk::mesh::Field<LinSys::GlobalOrdinal> linSysIDFieldType;
 
 } // namespace nalu
 } // namespace Sierra
