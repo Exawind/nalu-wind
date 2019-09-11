@@ -22,6 +22,7 @@
 #include <NaluEnv.h>
 #include <utils/StkHelpers.h>
 #include <utils/CreateDeviceExpression.h>
+#include <ngp_utils/NgpLoopUtils.h>
 
 #include <KokkosInterface.h>
 
@@ -567,7 +568,7 @@ void TpetraLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVector & /* 
   }
 }
 
-void TpetraLinearSystem::copy_stk_to_tpetra(stk::mesh::FieldBase * stkField,
+void TpetraLinearSystem::copy_stk_to_tpetra(const stk::mesh::FieldBase * stkField,
                                             const Teuchos::RCP<LinSys::MultiVector> tpetraField)
 {
   ThrowAssert(!tpetraField.is_null());
@@ -1834,59 +1835,42 @@ void TpetraLinearSystem::copy_tpetra_to_stk(
   const Teuchos::RCP<LinSys::MultiVector> tpetraField,
   stk::mesh::FieldBase * stkField)
 {
-  stk::mesh::BulkData & bulkData = realm_.bulk_data();
-  stk::mesh::MetaData & metaData = realm_.meta_data();
+  using Traits    = nalu_ngp::NGPMeshTraits<>;
+  using MeshIndex = typename Traits::MeshIndex;
+
+  const stk::mesh::MetaData & metaData = realm_.meta_data();
 
   ThrowAssert(!tpetraField.is_null());
   ThrowAssert(stkField);
-  const LinSys::ConstOneDVector & tpetraVector = tpetraField->get1dView();
+  const auto deviceVector = tpetraField->getLocalView<sierra::nalu::DeviceSpace>();
 
-  const unsigned p_rank = bulkData.parallel_rank();
+  const int maxOwnedRowId = maxOwnedRowId_;
+  const unsigned numDof = numDof_;
+  auto entityToLID = entityToLID_;
 
   const stk::mesh::Selector selector = stk::mesh::selectField(*stkField)
     & metaData.locally_owned_part()
     & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
     & !(realm_.get_inactive_selector());
 
-  stk::mesh::BucketVector const& buckets =
-    realm_.get_buckets(stk::topology::NODE_RANK, selector);
+  NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(stkField->mesh_meta_data_ordinal());
 
-  for (size_t ib=0; ib < buckets.size(); ++ib) {
-    stk::mesh::Bucket & b = *buckets[ib];
+  ngp::Mesh ngpMesh = realm_.ngp_mesh();
 
-    const unsigned fieldSize = field_bytes_per_entity(*stkField, b) / sizeof(double);
-    ThrowRequire(fieldSize == numDof_);
-
-    const stk::mesh::Bucket::size_type length = b.size();
-    double * stkFieldPtr = (double*)stk::mesh::field_data(*stkField, *b.begin());
-    const stk::mesh::EntityId *naluGlobalId = stk::mesh::field_data(*realm_.naluGlobalId_, *b.begin());
-    for (stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      stk::mesh::Entity node = b[k];
-      const LocalOrdinal localIdOffset = entityToLID_[node.local_offset()];
-      for(unsigned d=0; d < fieldSize; ++d) {
+  nalu_ngp::run_entity_algorithm(ngpMesh, stk::topology::NODE_RANK, selector,
+  KOKKOS_LAMBDA(const MeshIndex& meshIdx)
+  {
+      stk::mesh::Entity node = (*meshIdx.bucket)[meshIdx.bucketOrd];
+      const LocalOrdinal localIdOffset = entityToLID[node.local_offset()];
+      for(unsigned d=0; d < numDof; ++d) {
         const LocalOrdinal localId = localIdOffset + d;
-        bool useOwned = true;
-        LocalOrdinal actualLocalId = localId;
-        if(localId >= maxOwnedRowId_) {
-          actualLocalId = localId - maxOwnedRowId_;
-          useOwned = false;
-        }
-
-        if (!useOwned) {
-          stk::mesh::EntityId naluId = naluGlobalId[k];
-          stk::mesh::EntityId stkId = bulkData.identifier(node);
-          std::cout << "P[" << p_rank << "] useOwned = " << useOwned << " localId = " << localId << " maxOwnedRowId_= " << maxOwnedRowId_ << " actualLocalId= " << actualLocalId
-                    << " naluGlobalId= " << naluGlobalId[k] << " stkId= " << stkId << " naluId= " << naluId << std::endl;
-        }
-        ThrowRequire(useOwned);
-
-        const size_t stkIndex = k*numDof_ + d;
-        if (useOwned){
-          stkFieldPtr[stkIndex] = tpetraVector[localId];
-        }
+        NGP_ThrowRequire(localId < maxOwnedRowId);
+  
+        ngpField.get(meshIdx, d) = deviceVector(localId,0);
       }
-    }
-  }
+  });
+
+  ngpField.modify_on_device();
 }
 
 int getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
