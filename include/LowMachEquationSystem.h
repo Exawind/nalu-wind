@@ -14,6 +14,7 @@
 #include "NaluParsing.h"
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
+#include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 
 namespace stk{
 struct topology;
@@ -33,9 +34,6 @@ class ComputeMdotAlgorithmDriver;
 class LinearSystem;
 class ProjectedNodalGradientEquationSystem;
 class SurfaceForceAndMomentAlgorithmDriver;
-
-// NGP Algorithms
-class EffDiffFluxCoeffAlg;
 
 /** Low-Mach formulation of the Navier-Stokes Equations
  *
