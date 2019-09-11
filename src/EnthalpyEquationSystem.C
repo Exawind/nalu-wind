@@ -173,7 +173,6 @@ EnthalpyEquationSystem::EnthalpyEquationSystem(
     divQ_(NULL),
     pOld_(NULL),
     nodalGradAlgDriver_(realm_, "dhdx"),
-    diffFluxCoeffAlgDriver_(new AlgorithmDriver(realm_)),
     assembleWallHeatTransferAlgDriver_(NULL),
     pmrCouplingActive_(false),
     lowSpeedCompressActive_(false),
@@ -227,8 +226,6 @@ EnthalpyEquationSystem::EnthalpyEquationSystem(
 //--------------------------------------------------------------------------
 EnthalpyEquationSystem::~EnthalpyEquationSystem()
 {
-  delete diffFluxCoeffAlgDriver_;
-
   if ( NULL != assembleWallHeatTransferAlgDriver_ )
     delete assembleWallHeatTransferAlgDriver_;
 
@@ -245,7 +242,6 @@ EnthalpyEquationSystem::~EnthalpyEquationSystem()
 
   for( iib=bcCopyStateAlg_.begin(); iib!=bcCopyStateAlg_.end(); ++iib )
     delete *iib;
-
 }
 
 
@@ -626,15 +622,12 @@ EnthalpyEquationSystem::register_interior_algorithm(
 
   // effective viscosity alg
   const double turbPr = realm_.get_turb_prandtl(enthalpy_->name());
-  std::map<AlgorithmType, Algorithm *>::iterator itev =
-    diffFluxCoeffAlgDriver_->algMap_.find(algType);
-  if ( itev == diffFluxCoeffAlgDriver_->algMap_.end() ) {
-    EnthalpyEffectiveDiffFluxCoeffAlgorithm *theAlg
-      = new EnthalpyEffectiveDiffFluxCoeffAlgorithm(realm_, part, thermalCond_, specHeat_, tvisc_, evisc_, turbPr);
-    diffFluxCoeffAlgDriver_->algMap_[algType] = theAlg;
+  if (!diffFluxCoeffAlg_) {
+    diffFluxCoeffAlg_.reset(
+      new EnthalpyEffDiffFluxCoeffAlg(realm_, part, thermalCond_, specHeat_, tvisc_, evisc_, turbPr, realm_.is_turbulent()));
   }
   else {
-    itev->second->partVec_.push_back(part);
+    diffFluxCoeffAlg_->partVec_.push_back(part);
   }
 
   // extract material prop evaluation for enthalpy and create alg to compute h
@@ -1181,7 +1174,7 @@ EnthalpyEquationSystem::solve_and_update()
   }
 
   // compute effective viscosity
-  diffFluxCoeffAlgDriver_->execute();
+  diffFluxCoeffAlg_->execute();
 
   for ( int k = 0; k < maxIterations_; ++k ) {
 

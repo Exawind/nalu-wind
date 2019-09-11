@@ -9,6 +9,8 @@
 #ifndef EnthalpyEquationSystem_h
 #define EnthalpyEquationSystem_h
 
+#include <memory>
+
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
@@ -128,7 +130,7 @@ public:
   ScalarFieldType *pOld_;
 
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
-  AlgorithmDriver *diffFluxCoeffAlgDriver_;
+  std::unique_ptr<EnthalpyEffDiffFluxCoeffAlg> diffFluxCoeffAlg_;
   AssembleWallHeatTransferAlgorithmDriver *assembleWallHeatTransferAlgDriver_;
   
   bool pmrCouplingActive_;
