@@ -65,6 +65,7 @@
 
 #include <kernel/ScalarMassHOElemKernel.h>
 #include <kernel/ScalarAdvDiffHOElemKernel.h>
+#include <kernel/ScalarFluxBCElemKernel.h>
 #include <kernel/EnthalpyTGradBCElemKernel.h>
 
 // bc kernels
@@ -81,6 +82,9 @@
 
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"
+#include "ngp_algorithms/NodalGradEdgeAlg.h"
+#include "ngp_algorithms/NodalGradElemAlg.h"
+#include "ngp_algorithms/NodalGradBndryElemAlg.h"
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -168,8 +172,7 @@ EnthalpyEquationSystem::EnthalpyEquationSystem(
     specHeat_(NULL),
     divQ_(NULL),
     pOld_(NULL),
-    assembleNodalGradAlgDriver_(new AssembleNodalGradAlgorithmDriver(realm_, "enthalpy", "dhdx")),
-    diffFluxCoeffAlgDriver_(new AlgorithmDriver(realm_)),
+    nodalGradAlgDriver_(realm_, "dhdx"),
     assembleWallHeatTransferAlgDriver_(NULL),
     pmrCouplingActive_(false),
     lowSpeedCompressActive_(false),
@@ -223,9 +226,6 @@ EnthalpyEquationSystem::EnthalpyEquationSystem(
 //--------------------------------------------------------------------------
 EnthalpyEquationSystem::~EnthalpyEquationSystem()
 {
-  delete assembleNodalGradAlgDriver_;
-  delete diffFluxCoeffAlgDriver_;
-
   if ( NULL != assembleWallHeatTransferAlgDriver_ )
     delete assembleWallHeatTransferAlgDriver_;
 
@@ -242,7 +242,6 @@ EnthalpyEquationSystem::~EnthalpyEquationSystem()
 
   for( iib=bcCopyStateAlg_.begin(); iib!=bcCopyStateAlg_.end(); ++iib )
     delete *iib;
-
 }
 
 
@@ -377,21 +376,13 @@ EnthalpyEquationSystem::register_interior_algorithm(
 
   // non-solver, dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    std::map<AlgorithmType, Algorithm *>::iterator it
-      = assembleNodalGradAlgDriver_->algMap_.find(algType);
-    if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-      Algorithm *theAlg = NULL;
-      if ( edgeNodalGradient_ && realm_.realmUsesEdges_ ) {
-        theAlg = new AssembleNodalGradEdgeAlgorithm(realm_, part, &enthalpyNp1, &dhdxNone);
-      }
-      else {
-        theAlg = new AssembleNodalGradElemAlgorithm(realm_, part, &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
-      }
-      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
+    if (edgeNodalGradient_ && realm_.realmUsesEdges_)
+      nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
+        algType, part, "enthalpy_nodal_grad", &enthalpyNp1, &dhdxNone);
+    else
+      nodalGradAlgDriver_.register_legacy_algorithm<AssembleNodalGradElemAlgorithm>(
+        algType, part, "enthalpy_nodal_grad", &enthalpyNp1, &dhdxNone,
+        edgeNodalGradient_);
   }
 
   // solver; interior contribution (advection + diffusion)
@@ -631,15 +622,12 @@ EnthalpyEquationSystem::register_interior_algorithm(
 
   // effective viscosity alg
   const double turbPr = realm_.get_turb_prandtl(enthalpy_->name());
-  std::map<AlgorithmType, Algorithm *>::iterator itev =
-    diffFluxCoeffAlgDriver_->algMap_.find(algType);
-  if ( itev == diffFluxCoeffAlgDriver_->algMap_.end() ) {
-    EnthalpyEffectiveDiffFluxCoeffAlgorithm *theAlg
-      = new EnthalpyEffectiveDiffFluxCoeffAlgorithm(realm_, part, thermalCond_, specHeat_, tvisc_, evisc_, turbPr);
-    diffFluxCoeffAlgDriver_->algMap_[algType] = theAlg;
+  if (!diffFluxCoeffAlg_) {
+    diffFluxCoeffAlg_.reset(
+      new EnthalpyEffDiffFluxCoeffAlg(realm_, part, thermalCond_, specHeat_, tvisc_, evisc_, turbPr, realm_.is_turbulent()));
   }
   else {
-    itev->second->partVec_.push_back(part);
+    diffFluxCoeffAlg_->partVec_.push_back(part);
   }
 
   // extract material prop evaluation for enthalpy and create alg to compute h
@@ -682,16 +670,9 @@ EnthalpyEquationSystem::register_inflow_bc(
 
   // non-solver; dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    std::map<AlgorithmType, Algorithm *>::iterator it
-      = assembleNodalGradAlgDriver_->algMap_.find(algType);
-    if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-      Algorithm *theAlg 
-        = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
-      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
+    nodalGradAlgDriver_.register_face_algorithm<
+      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+        algType, part, "tke_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 
   // Dirichlet bc
@@ -744,16 +725,9 @@ EnthalpyEquationSystem::register_open_bc(
 
   // non-solver; dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    std::map<AlgorithmType, Algorithm *>::iterator it
-      = assembleNodalGradAlgDriver_->algMap_.find(algType);
-    if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-      Algorithm *theAlg 
-        = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
-      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
+    nodalGradAlgDriver_.register_face_algorithm<
+      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+        algType, part, "tke_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 
   // solver open; lhs
@@ -910,32 +884,32 @@ EnthalpyEquationSystem::register_wall_bc(
                                  stk::topology::NODE_RANK);
     bcDataAlg_.push_back(auxAlg);
 
-    // solver; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =
-      solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssembleScalarFluxBCSolverAlgorithm *theAlg
-        = new AssembleScalarFluxBCSolverAlgorithm(realm_, part, this,
-                                                  theBcField, realm_.realmUsesEdges_);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
+    {
+      auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+      AssembleElemSolverAlgorithm* solverAlg = nullptr;
+      bool solverAlgWasBuilt = false;
+
+      std::tie(solverAlg, solverAlgWasBuilt) =
+        build_or_add_part_to_face_bc_solver_alg(
+          *this, *part, solverAlgMap, "enthalpy_heat_flux_bc");
+
+      ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+      auto& activeKernels = solverAlg->activeKernels_;
+
+      if (solverAlgWasBuilt) {
+        build_face_topo_kernel_automatic<ScalarFluxBCElemKernel>(
+          part->topology(), *this, activeKernels, "enthalpy_heat_flux",
+          realm_.bulk_data(), theBcField, realm_.get_coordinates_name(),
+          realm_.realmUsesEdges_, dataPreReqs);
+      }
     }
   }
 
   // non-solver; dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    std::map<AlgorithmType, Algorithm *>::iterator it
-      = assembleNodalGradAlgDriver_->algMap_.find(algType);
-    if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-      Algorithm *theAlg 
-        = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
-      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
+    nodalGradAlgDriver_.register_face_algorithm<
+      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+        algType, part, "tke_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 }
 
@@ -962,16 +936,9 @@ EnthalpyEquationSystem::register_symmetry_bc(
   
   // non-solver; dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    std::map<AlgorithmType, Algorithm *>::iterator it
-      = assembleNodalGradAlgDriver_->algMap_.find(algType);
-    if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-      Algorithm *theAlg 
-        = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
-      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
+    nodalGradAlgDriver_.register_face_algorithm<
+      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+        algType, part, "tke_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 }
 
@@ -1042,16 +1009,9 @@ EnthalpyEquationSystem::register_abltop_bc(
 
   // non-solver; dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    std::map<AlgorithmType, Algorithm *>::iterator it
-      = assembleNodalGradAlgDriver_->algMap_.find(algType);
-    if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-      Algorithm *theAlg 
-        = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
-      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
+    nodalGradAlgDriver_.register_face_algorithm<
+      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+        algType, part, "tke_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 }
 
@@ -1072,30 +1032,16 @@ EnthalpyEquationSystem::register_non_conformal_bc(
 
   // non-solver; contribution to dhdx; DG algorithm decides on locations for integration points
   if ( !managePNG_ ) {
-    if ( edgeNodalGradient_ ) {    
-      std::map<AlgorithmType, Algorithm *>::iterator it
-        = assembleNodalGradAlgDriver_->algMap_.find(algType);
-      if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-        Algorithm *theAlg 
-          = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &hNp1, &dhdxNone, edgeNodalGradient_);
-        assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-      }
-      else {
-        it->second->partVec_.push_back(part);
-      }
+    if ( edgeNodalGradient_ ) {
+      nodalGradAlgDriver_.register_face_algorithm<
+        ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+          algType, part, "tke_nodal_grad", &hNp1, &dhdxNone, edgeNodalGradient_);
     }
     else {
       // proceed with DG
-      std::map<AlgorithmType, Algorithm *>::iterator it
-        = assembleNodalGradAlgDriver_->algMap_.find(algType);
-      if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-        AssembleNodalGradNonConformalAlgorithm *theAlg 
-          = new AssembleNodalGradNonConformalAlgorithm(realm_, part, &hNp1, &dhdxNone);
-        assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-      }
-      else {
-        it->second->partVec_.push_back(part);
-      }
+      nodalGradAlgDriver_
+        .register_legacy_algorithm<AssembleNodalGradNonConformalAlgorithm>(
+          algType, part, "tke_nodal_grad", &hNp1, &dhdxNone);
     }
   }
 
@@ -1228,7 +1174,7 @@ EnthalpyEquationSystem::solve_and_update()
   }
 
   // compute effective viscosity
-  diffFluxCoeffAlgDriver_->execute();
+  diffFluxCoeffAlg_->execute();
 
   for ( int k = 0; k < maxIterations_; ++k ) {
 
@@ -1607,7 +1553,7 @@ EnthalpyEquationSystem::compute_projected_nodal_gradient()
 {
   if ( !managePNG_ ) {
     const double timeA = -NaluEnv::self().nalu_time();
-    assembleNodalGradAlgDriver_->execute();
+    nodalGradAlgDriver_.execute();
     timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
   }
   else {

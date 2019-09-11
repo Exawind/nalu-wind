@@ -29,11 +29,15 @@ EnthalpyEffDiffFluxCoeffAlg::EnthalpyEffDiffFluxCoeffAlg(
     specHeatField_(specHeat),
     thermalCond_(thermalCond->mesh_meta_data_ordinal()),
     specHeat_(specHeat->mesh_meta_data_ordinal()),
-    tvisc_(tvisc->mesh_meta_data_ordinal()),
     evisc_(evisc->mesh_meta_data_ordinal()),
     invSigmaTurb_(1.0 / sigmaTurb),
     isTurbulent_(isTurbulent)
-{}
+{
+  // Delay getting the ordinal as tvisc could be undefined for laminar flow
+  // cases
+  if (isTurbulent_)
+    tvisc_ = tvisc->mesh_meta_data_ordinal();
+}
 
 void
 EnthalpyEffDiffFluxCoeffAlg::execute()
@@ -51,11 +55,11 @@ EnthalpyEffDiffFluxCoeffAlg::execute()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   const auto thermalCond = fieldMgr.get_field<double>(thermalCond_);
   const auto specHeat = fieldMgr.get_field<double>(specHeat_);
-  const auto tvisc = fieldMgr.get_field<double>(tvisc_);
   auto evisc = fieldMgr.get_field<double>(evisc_);
   const DblType invSigmaTurb = invSigmaTurb_;
 
   if (isTurbulent_) {
+    const auto tvisc = fieldMgr.get_field<double>(tvisc_);
     nalu_ngp::run_entity_algorithm(
       ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {

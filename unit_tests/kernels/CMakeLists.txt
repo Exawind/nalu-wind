@@ -21,6 +21,7 @@ add_sources(GlobalUnitSourceList
    UnitTestScalarAdvDiffElem.C
    UnitTestScalarMassElem.C
    UnitTestScalarDiffElem.C
+   UnitTestScalarFluxBCElem.C
    UnitTestScalarUpwAdvDiffElem.C
    UnitTestScalarOpenElem.C
    UnitTestSteadyThermal3dContactSrcElem.C
