@@ -65,6 +65,7 @@
 
 #include <kernel/ScalarMassHOElemKernel.h>
 #include <kernel/ScalarAdvDiffHOElemKernel.h>
+#include <kernel/ScalarFluxBCElemKernel.h>
 #include <kernel/EnthalpyTGradBCElemKernel.h>
 
 // bc kernels
@@ -910,17 +911,24 @@ EnthalpyEquationSystem::register_wall_bc(
                                  stk::topology::NODE_RANK);
     bcDataAlg_.push_back(auxAlg);
 
-    // solver; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =
-      solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssembleScalarFluxBCSolverAlgorithm *theAlg
-        = new AssembleScalarFluxBCSolverAlgorithm(realm_, part, this,
-                                                  theBcField, realm_.realmUsesEdges_);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
+    {
+      auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+      AssembleElemSolverAlgorithm* solverAlg = nullptr;
+      bool solverAlgWasBuilt = false;
+
+      std::tie(solverAlg, solverAlgWasBuilt) =
+        build_or_add_part_to_face_bc_solver_alg(
+          *this, *part, solverAlgMap, "enthalpy_heat_flux_bc");
+
+      ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+      auto& activeKernels = solverAlg->activeKernels_;
+
+      if (solverAlgWasBuilt) {
+        build_face_topo_kernel_automatic<ScalarFluxBCElemKernel>(
+          part->topology(), *this, activeKernels, "enthalpy_heat_flux",
+          realm_.bulk_data(), theBcField, realm_.get_coordinates_name(),
+          realm_.realmUsesEdges_, dataPreReqs);
+      }
     }
   }
 
