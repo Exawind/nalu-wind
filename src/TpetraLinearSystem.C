@@ -1854,7 +1854,6 @@ void TpetraLinearSystem::copy_tpetra_to_stk(
     & !(realm_.get_inactive_selector());
 
   NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(stkField->mesh_meta_data_ordinal());
-  NGPGlobalIdFieldType ngpNaluIdField = realm_.ngp_field_manager().get_field<stk::mesh::EntityId>(realm_.naluGlobalId_->mesh_meta_data_ordinal());
 
   ngp::Mesh ngpMesh = realm_.ngp_mesh();
 
@@ -1863,15 +1862,11 @@ void TpetraLinearSystem::copy_tpetra_to_stk(
   {
       stk::mesh::Entity node = (*meshIdx.bucket)[meshIdx.bucketOrd];
       const LocalOrdinal localIdOffset = entityToLID[node.local_offset()];
-      stk::mesh::EntityId naluId = ngpNaluIdField.get(meshIdx, 0);
-      stk::mesh::EntityId stkId = ngpMesh.identifier(node);
-      if (stkId == naluId) {
-        for(unsigned d=0; d < numDof; ++d) {
-          const LocalOrdinal localId = localIdOffset + d;
-          NGP_ThrowRequire(localId < maxOwnedRowId);
+      for(unsigned d=0; d < numDof; ++d) {
+        const LocalOrdinal localId = localIdOffset + d;
+        NGP_ThrowRequire(localId < maxOwnedRowId);
   
-          ngpField.get(meshIdx, d) = deviceVector(localId,0);
-        }
+        ngpField.get(meshIdx, d) = deviceVector(localId,0);
       }
   });
 
