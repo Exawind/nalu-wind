@@ -13,6 +13,8 @@
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
 
+#include "ngp_algorithms/NodalGradAlgDriver.h"
+
 namespace stk{
 struct topology;
 }
@@ -92,8 +94,8 @@ public:
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
   
-  AssembleNodalGradAlgorithmDriver *assembleNodalGradAlgDriver_;
-  AlgorithmDriver *diffFluxCoeffAlgDriver_;
+  ScalarNodalGradAlgDriver nodalGradAlgDriver_;
+  std::unique_ptr<Algorithm> effDiffFluxCoeffAlg_;
   AlgorithmDriver *wallFunctionTurbKineticEnergyAlgDriver_;
   const TurbulenceModel turbulenceModel_;
 
