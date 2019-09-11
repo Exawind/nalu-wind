@@ -13,6 +13,9 @@
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
 
+#include "ngp_algorithms/NodalGradAlgDriver.h"
+#include "ngp_algorithms/EnthalpyEffDiffFluxCoeffAlg.h"
+
 namespace stk{
 struct topology;
 }
@@ -123,8 +126,8 @@ public:
   ScalarFieldType *specHeat_;
   ScalarFieldType *divQ_;
   ScalarFieldType *pOld_;
-  
-  AssembleNodalGradAlgorithmDriver *assembleNodalGradAlgDriver_;
+
+  ScalarNodalGradAlgDriver nodalGradAlgDriver_;
   AlgorithmDriver *diffFluxCoeffAlgDriver_;
   AssembleWallHeatTransferAlgorithmDriver *assembleWallHeatTransferAlgDriver_;
   
