@@ -67,14 +67,19 @@ public:
 
      elemDataNeeded().add_coordinates_field(
        *coordinates_, BcAlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
+
+     faceDataNeeded().add_coordinates_field(
+       *coordinates_, BcAlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
    }
 
    void init_me_data()
    {
-     meFC_ = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
+     meFC_  = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
      meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_);
      // Register them to ElemDataRequests
-    faceDataNeeded().add_cvfem_face_me(meFC_);
+    //faceDataNeeded().add_cvfem_surface_me(meSCS_);
+    faceDataNeeded().add_cvfem_face_me   (meFC_);
+    elemDataNeeded().add_cvfem_face_me   (meFC_);
     elemDataNeeded().add_cvfem_surface_me(meSCS_);
    }
 
@@ -94,10 +99,10 @@ public:
 #endif
    }
 
-  sierra::nalu::ElemDataRequests& faceDataNeeded()
-  {
-    return helperObjs_->assembleFaceElemSolverAlg->faceDataNeeded_;
-  }
+sierra::nalu::ElemDataRequests& faceDataNeeded()
+{
+  return helperObjs_->assembleFaceElemSolverAlg->faceDataNeeded_;
+}
 
   sierra::nalu::ElemDataRequests& elemDataNeeded()
   {

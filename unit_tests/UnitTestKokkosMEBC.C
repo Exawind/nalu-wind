@@ -22,6 +22,16 @@ namespace {
       }
     }
   }
+  void check_that_values_match(const sierra::nalu::SharedMemView<DoubleType**>& values,
+    const double* oldValues)
+  {
+    int counter = 0;
+    for(size_t i=0; i<values.extent(0); ++i) {
+      for(size_t j=0; j<values.extent(1); ++j) {
+        EXPECT_NEAR(stk::simd::get_data(values(i,j),0), oldValues[counter++], tol)<<"i:"<<i<<", j:"<<j;
+      }
+    }
+  }
 
   void copy_DoubleType0_to_double(const sierra::nalu::SharedMemView<DoubleType**>& view,
     std::vector<double>& vec)
@@ -57,8 +67,27 @@ void compare_old_face_grad_op(
   check_that_values_match(scs_fc_dndx, &grad_op[0]);
 }
 
+void compare_old_face_areav(
+  const sierra::nalu::SharedMemView<DoubleType**>& v_coords,
+  const sierra::nalu::SharedMemView<DoubleType**>& fc_areav,
+  sierra::nalu::MasterElement* meFC)
+{
+  int len = fc_areav.extent(0)*fc_areav.extent(1);
+  std::vector<double> coords;
+  copy_DoubleType0_to_double(v_coords, coords);
+  std::vector<double> areav(len, 0.0);
+  double error = 0;
+
+  meFC->determinant(1, coords.data(), areav.data(), &error);
+
+  EXPECT_NEAR(error, 0.0, tol);
+  check_that_values_match(fc_areav, &areav[0]);
+}
+
 template<typename BcAlgTraits>
-void test_MEBC_views(int faceOrdinal, const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& elem_requests)
+void test_MEBC_views(int faceOrdinal, 
+                     const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& elem_requests,
+                     const std::vector<sierra::nalu::ELEM_DATA_NEEDED>& face_requests)
 {
   unit_test_utils::KokkosMEBC<BcAlgTraits> driver(faceOrdinal, true, true);
   ASSERT_TRUE((BcAlgTraits::nDim_ == 3 && driver.bulk_.buckets(stk::topology::FACE_RANK).size() > 0) 
@@ -67,6 +96,10 @@ void test_MEBC_views(int faceOrdinal, const std::vector<sierra::nalu::ELEM_DATA_
   // Register ME data requests
   for(sierra::nalu::ELEM_DATA_NEEDED request : elem_requests) {
     driver.elemDataNeeded().add_master_element_call(
+      request, sierra::nalu::CURRENT_COORDINATES);
+  }
+  for(sierra::nalu::ELEM_DATA_NEEDED request : face_requests) {
+    driver.faceDataNeeded().add_master_element_call(
       request, sierra::nalu::CURRENT_COORDINATES);
   }
 
@@ -84,6 +117,11 @@ void test_MEBC_views(int faceOrdinal, const std::vector<sierra::nalu::ELEM_DATA_
         compare_old_face_grad_op(faceOrdinal, true, v_coords, meViews.dndx_shifted_fc_scs, driver.meSCS_);
       }
     }
+    for(sierra::nalu::ELEM_DATA_NEEDED request : face_requests) {
+      if (request == sierra::nalu::FC_AREAV) {
+        compare_old_face_areav(v_coords, meViews.fc_areav, driver.meFC_);
+      }
+    }
   });
 }
 
@@ -91,7 +129,8 @@ TEST(KokkosMEBC, test_quad42D_views)
 {
   for (int k = 0; k < 3; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsEdge2DQuad42D>(k, 
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP, sierra::nalu::FC_AREAV},
+      {sierra::nalu::FC_AREAV});
   }
 }
 
@@ -99,7 +138,7 @@ TEST(KokkosMEBC, test_quad92D_views)
 {
   for (int k = 0; k < 3; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsEdge32DQuad92D>(k,
-      {sierra::nalu::SCS_FACE_GRAD_OP});
+      {sierra::nalu::SCS_FACE_GRAD_OP},{});
   }
 }
 
@@ -107,7 +146,7 @@ TEST(KokkosMEBC, test_tri32D_views)
 {
   for (int k = 0; k < 3; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsEdge2DTri32D>(k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP},{});
   }
 }
 
@@ -115,7 +154,7 @@ TEST(KokkosMEBC, test_hex8_views)
 {
   for (int k = 0; k < 6; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsQuad4Hex8>(k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP},{});
   }
 }
 
@@ -123,7 +162,7 @@ TEST(KokkosMEBC, test_hex27_views)
 {
   for (int k = 0; k < 6; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsQuad9Hex27>(k,
-      {sierra::nalu::SCS_FACE_GRAD_OP});
+      {sierra::nalu::SCS_FACE_GRAD_OP},{});
   }
 }
 
@@ -131,7 +170,7 @@ TEST(KokkosMEBC, test_tet4_views)
 {
   for (int k = 0; k < 4; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsTri3Tet4>(k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP},{});
   }
 }
 
@@ -140,12 +179,12 @@ TEST(KokkosMEBC, test_wedge4_views)
 {
   for (int k = 0; k < 3; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsQuad4Wed6>(k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP},{});
   }
 
   for (int k = 3; k < 5; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsTri3Wed6>(k,
-      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+      {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP},{});
   }
 }
 
@@ -153,8 +192,8 @@ TEST(KokkosMEBC, test_pyr5_views)
 {
   for (int k = 0; k < 4; ++k) {
     test_MEBC_views<sierra::nalu::AlgTraitsTri3Pyr5>(k,
-      {sierra::nalu::SCS_FACE_GRAD_OP});
+      {sierra::nalu::SCS_FACE_GRAD_OP},{});
   }
   test_MEBC_views<sierra::nalu::AlgTraitsQuad4Pyr5>(4,
-    {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP});
+    {sierra::nalu::SCS_FACE_GRAD_OP, sierra::nalu::SCS_SHIFTED_FACE_GRAD_OP},{});
 }
