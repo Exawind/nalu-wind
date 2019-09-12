@@ -25,7 +25,7 @@ ScalarEdgeSolverAlg::ScalarEdgeSolverAlg(
   ScalarFieldType* scalarQ,
   VectorFieldType* dqdx,
   ScalarFieldType* diffFluxCoeff,
-  const bool useAvgMdot
+  const bool useAverages
 ) : AssembleEdgeSolverAlgorithm(realm, part, eqSystem),
     dofName_(scalarQ->name())
 {
@@ -33,17 +33,18 @@ ScalarEdgeSolverAlg::ScalarEdgeSolverAlg(
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
   const std::string vrtmName = realm.does_mesh_move()? "velocity_rtm" : "velocity";
-  velocityRTM_ = get_field_ordinal(meta, vrtmName);
 
   scalarQ_ = scalarQ->mesh_meta_data_ordinal();
   dqdx_ = dqdx->mesh_meta_data_ordinal();
   diffFluxCoeff_ = diffFluxCoeff->mesh_meta_data_ordinal();
   density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
-  if (useAvgMdot) {
+  if (useAverages) {
     massFlowRate_ = get_field_ordinal(meta, "average_mass_flow_rate", stk::topology::EDGE_RANK);
+    velocityRTM_ = get_field_ordinal(meta, "average_velocity");
   } else {
     massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
+    velocityRTM_ = get_field_ordinal(meta, vrtmName);
   }
 
   pecletFunction_ = eqSystem->ngp_create_peclet_function<double>(dofName_);

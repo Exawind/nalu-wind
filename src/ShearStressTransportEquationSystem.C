@@ -253,7 +253,7 @@ ShearStressTransportEquationSystem::initial_work()
   ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
 
   // define some common selectors
-  stk::mesh::Selector s_all_nodes
+  const stk::mesh::Selector s_all_nodes
     = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
     &stk::mesh::selectField(*sdr_);
 

@@ -260,10 +260,15 @@ TAMSEquationSystem::initial_work()
 
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
-  // Initialize average_velocity, avg_dudx and avg_Prod
+  // Initialize average_velocity, avg_dudx, avg_Prod
   // We don't want to do this on restart where TAMS fields are present
   if (resetTAMSAverages_) {
     const int nDim = meta_data.spatial_dimension();
+
+    // Copy density to average density
+    ScalarFieldType &avgDensity = avgDensity_->field_of_state(stk::mesh::StateNP1);
+    const auto& density = *meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "density");
+    field_copy(realm_.meta_data(), realm_.bulk_data(), density, avgDensity, realm_.get_activate_aura());
 
     // Copy velocity to average velocity
     VectorFieldType &avgU = avgVelocity_->field_of_state(stk::mesh::StateNP1);
@@ -271,18 +276,16 @@ TAMSEquationSystem::initial_work()
     field_copy(realm_.meta_data(), realm_.bulk_data(), U, avgU, realm_.get_activate_aura());
 
     // Copy dudx to average dudx
-    GenericFieldType &avgDudx = avgDudx_->field_of_state(stk::mesh::StateNP1);
     const auto& dudx = *meta_data.get_field<GenericFieldType>(stk::topology::NODE_RANK, "dudx");
-    field_copy(realm_.meta_data(), realm_.bulk_data(), dudx, avgDudx, realm_.get_activate_aura());
+    field_copy(realm_.meta_data(), realm_.bulk_data(), dudx, *avgDudx_, realm_.get_activate_aura());
 
-    ScalarFieldType* turbKinEne_ = meta_data.get_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "turbulent_ke");
+    // Need to update tvisc to use the average dudx
+    tviscAlgDriver_.execute();
     ScalarFieldType* tvisc_ = meta_data.get_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "turbulent_viscosity");
-    ScalarFieldType& tkeNp1 = turbKinEne_->field_of_state(stk::mesh::StateNP1);
 
     // define some common selectors
-    stk::mesh::Selector s_all_nodes =
+    const stk::mesh::Selector s_all_nodes =
       (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
       stk::mesh::selectField(*avgDudx_);
 
@@ -293,10 +296,8 @@ TAMSEquationSystem::initial_work()
       stk::mesh::Bucket& b = **ib;
       const stk::mesh::Bucket::size_type length = b.size();
 
-      double* tke = stk::mesh::field_data(tkeNp1, b);
       double* tvisc = stk::mesh::field_data(*tvisc_, b);
       double* avgProd = stk::mesh::field_data(*avgProduction_, b);
-      double* rho = stk::mesh::field_data(*avgDensity_, b);
 
       for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {
         // Initialize average production to mean production
@@ -331,8 +332,6 @@ TAMSEquationSystem::initial_work()
     }
   }
 
-  compute_averages();
-
   // FIXME: Moved this to SST Eqn Systems for now since mdot has not 
   //        been calculated during intial_work phase...
   //        Is that the best approach? Or would it be better to keep TAMS self-contained?
@@ -341,14 +340,18 @@ TAMSEquationSystem::initial_work()
 }
 
 void
-TAMSEquationSystem::post_converged_work()
+TAMSEquationSystem::pre_timestep_work()
 {
   // Compute TAMS terms here, since we only want to do so once per timestep
+
+  // Recompute metric tensor if the mesh is moving
+  if ( realm_.solutionOptions_->meshMotion_ ) {
+    compute_metric_tensor();
+  }
 
   // Need to update tvisc for use in computing averages
   tviscAlgDriver_.execute();
 
-  // TODO: Assess consistency of this order of operations...
   compute_averages();
 
   compute_avgMdot();

@@ -56,7 +56,6 @@ ComputeSSTTAMSAveragesNodeAlgorithm::ComputeSSTTAMSAveragesNodeAlgorithm(
     stk::topology::NODE_RANK, "resolution_adequacy_parameter");
 
   // average quantities
-  // FIXME: Need to configure averages to work with mesh motion
   turbKineticEnergy_ = meta_data.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "turbulent_ke");
   specDissipationRate_ = meta_data.get_field<ScalarFieldType>(
@@ -106,14 +105,11 @@ ComputeSSTTAMSAveragesNodeAlgorithm::execute()
   double* p_tau = &tau[0];
   double* p_Psgs = &Psgs[0];
 
-  // deal with state 
-  // FIXME: Do i need this? is StateNP1 the default? 
-  VectorFieldType& velocityNp1 = velocityRTM_->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType& densityNp1 = density_->field_of_state(stk::mesh::StateNP1);
-  //ScalarFieldType& tkeNp1 = turbKineticEnergy_->field_of_state(stk::mesh::StateNP1);
+  // At this point densityNp1 makes no sense.
+  ScalarFieldType& densityN = density_->field_of_state(stk::mesh::StateN);
 
   // fill in nodal values
-  stk::mesh::Selector s_all_nodes
+  const stk::mesh::Selector s_all_nodes
     = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
     &stk::mesh::selectField(*avgVelocity_);
 
@@ -125,7 +121,7 @@ ComputeSSTTAMSAveragesNodeAlgorithm::execute()
     const stk::mesh::Bucket::size_type length = b.size();
 
     // get instantaneous field data
-    const double* rho = stk::mesh::field_data(densityNp1, b);
+    const double* rho = stk::mesh::field_data(densityN, b);
 
     // get other field data
     const double* tvisc = stk::mesh::field_data(*tvisc_, b);
@@ -145,33 +141,10 @@ ComputeSSTTAMSAveragesNodeAlgorithm::execute()
 
     for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {
       // get velocity field data
-      const double* vel = stk::mesh::field_data(velocityNp1, b[k]);
+      const double* vel = stk::mesh::field_data(*velocityRTM_, b[k]);
       const double* dudx = stk::mesh::field_data(*dudx_, b[k]);
       double* avgVel = stk::mesh::field_data(*avgVelocity_, b[k]);
       double* avgDudx = stk::mesh::field_data(*avgDudx_, b[k]);
-
-      // store RANS time scale
-      avgTime[k] = 1.0 / (betaStar_ * sdr[k]);
-
-      // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)
-      const double weightAvg = std::max(1.0 - dt / avgTime[k], 0.0);
-      const double weightInst = std::min(dt / avgTime[k], 1.0);
-
-      for (int i = 0; i < nDim; ++i)
-        avgVel[i] = weightAvg * avgVel[i] + weightInst * vel[i];
-
-      double tkeRes = 0.0;
-      for (int i = 0; i < nDim; ++i) {
-        tkeRes += (vel[i] - avgVel[i]) * (vel[i] - avgVel[i]);
-        for (int j = 0; j < nDim; ++j) {
-          avgDudx[i * nDim + j] =
-            weightAvg * avgDudx[i * nDim + j] + weightInst * dudx[i * nDim + j];
-        }
-      }
-
-      // TODO: Do I need density weighted averaging when density varies?
-      avgRho[k] = weightAvg * avgRho[k] + weightInst * rho[k];
-      avgTkeRes[k] = weightAvg * avgTkeRes[k] + weightInst * 0.5 * tkeRes;
 
       // Calculate alpha
       if (tke[k] == 0.0)
@@ -186,6 +159,31 @@ ComputeSSTTAMSAveragesNodeAlgorithm::execute()
         const double a_kol = 0.01;
 
         alpha[k] = std::max(alpha[k], a_kol);
+      }
+
+      // store RANS time scale
+      avgTime[k] = 1.0 / (betaStar_ * sdr[k]);
+
+      // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)
+      const double weightAvg = std::max(1.0 - dt / avgTime[k], 0.0);
+      const double weightInst = std::min(dt / avgTime[k], 1.0);
+
+      // TODO: Do I need density weighted averaging when density varies?
+      avgRho[k] = weightAvg * avgRho[k] + weightInst * rho[k];
+
+      double tkeRes = 0.0;
+      for (int i = 0; i < nDim; ++i)
+        tkeRes += (vel[i] - avgVel[i]) * (vel[i] - avgVel[i]);
+      avgTkeRes[k] = weightAvg * avgTkeRes[k] + weightInst * 0.5 * tkeRes;
+
+      for (int i = 0; i < nDim; ++i)
+        avgVel[i] = weightAvg * avgVel[i] + weightInst * vel[i];
+
+      for (int i = 0; i < nDim; ++i) {
+        for (int j = 0; j < nDim; ++j) {
+          avgDudx[i * nDim + j] =
+            weightAvg * avgDudx[i * nDim + j] + weightInst * dudx[i * nDim + j];
+        }
       }
 
       // Production averaging
@@ -262,7 +260,7 @@ ComputeSSTTAMSAveragesNodeAlgorithm::execute()
         }
       }
 
-      // zeroing out tesnors
+      // zeroing out tensors
       for (int i = 0; i < nDim; ++i) {
         for (int j = 0; j < nDim; ++j) {
           p_tauSGRS[i * nDim + j] = 0.0;

@@ -42,7 +42,7 @@ public:
   void register_interior_algorithm(stk::mesh::Part* part);
 
   void initial_work();
-  void post_converged_work();
+  void pre_timestep_work();
   void compute_metric_tensor();
   void compute_averages();
   void compute_avgMdot();
