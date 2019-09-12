@@ -299,7 +299,7 @@ void TpetraLinearSystem::beginLinearSystemConstruction()
     }
   }
   std::sort(shared_not_owned_nodes.begin(), shared_not_owned_nodes.end(), CompareEntityById(bulkData, realm_.naluGlobalId_) );
-  iter = std::unique(shared_not_owned_nodes.begin(), shared_not_owned_nodes.end(), CompareEntityEqualById(bulkData, realm_.naluGlobalId_));
+  std::vector<stk::mesh::Entity>::iterator iter = std::unique(shared_not_owned_nodes.begin(), shared_not_owned_nodes.end(), CompareEntityEqualById(bulkData, realm_.naluGlobalId_));
   shared_not_owned_nodes.erase(iter, shared_not_owned_nodes.end());
 
   for (unsigned inode=0; inode < shared_not_owned_nodes.size(); ++inode) {
