@@ -708,8 +708,7 @@ PeriodicManager::parallel_communicate_field(
   const unsigned pSize = bulk_data.parallel_size();
   if ( pSize > 1 ) {
     std::vector< const stk::mesh::FieldBase *> fieldVec(1, theField);
-    stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
-    stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+    stk::mesh::communicate_field_data(bulk_data, fieldVec);
   }
 }
 
@@ -751,21 +750,23 @@ PeriodicManager::update_global_id_field()
 void
 PeriodicManager::apply_constraints(
   stk::mesh::FieldBase *theField,
-  const unsigned &sizeOfField,
-  const bool &bypassFieldCheck,
-  const bool &addSlaves,
-  const bool &setSlaves)
+  const unsigned sizeOfField,
+  const bool bypassFieldCheck,
+  const bool addSlaves,
+  const bool setSlaves)
 {
+  parallel_communicate_field(theField);
 
   // update periodically ghosted fields within add_ and set_
-  if ( addSlaves )
+  if ( addSlaves ) {
     add_slave_to_master(theField, sizeOfField, bypassFieldCheck);
+    parallel_communicate_field(theField);
+  }
   if ( setSlaves )
     set_slave_to_master(theField, sizeOfField, bypassFieldCheck);
 
   // parallel communicate shared and aura-ed entities
   parallel_communicate_field(theField);
-
 }
 
 
@@ -775,9 +776,8 @@ PeriodicManager::apply_constraints(
 void
 PeriodicManager::apply_max_field(
   stk::mesh::FieldBase *theField,
-  const unsigned &sizeOfField)
+  const unsigned sizeOfField)
 {
-
   periodic_parallel_communicate_field(theField);
 
   for ( size_t k = 0; k < masterSlaveCommunicator_.size(); ++k) {
@@ -807,12 +807,9 @@ PeriodicManager::apply_max_field(
 void
 PeriodicManager::add_slave_to_master(
   stk::mesh::FieldBase *theField,
-  const unsigned &sizeOfField,
-  const bool &bypassFieldCheck)
+  const unsigned sizeOfField,
+  const bool bypassFieldCheck)
 {
-  
-  periodic_parallel_communicate_field(theField);
-
   // iterate vector of masterEntity:slaveEntity pairs
   if ( bypassFieldCheck ) {
     // fields are expected to be defined on all master/slave nodes
@@ -848,9 +845,6 @@ PeriodicManager::add_slave_to_master(
       }
     }
   }
-
-  periodic_parallel_communicate_field(theField);
-
 }
 
 //--------------------------------------------------------------------------
@@ -859,12 +853,9 @@ PeriodicManager::add_slave_to_master(
 void
 PeriodicManager::set_slave_to_master(
   stk::mesh::FieldBase *theField,
-  const unsigned &sizeOfField,
-  const bool &bypassFieldCheck)
+  const unsigned sizeOfField,
+  const bool bypassFieldCheck)
 {
-
-  periodic_parallel_communicate_field(theField);
-
   // iterate vector of masterEntity:slaveEntity pairs
   if ( bypassFieldCheck ) {
     // fields are expected to be defined on all master/slave nodes
@@ -901,9 +892,6 @@ PeriodicManager::set_slave_to_master(
       }
     }
   }
-
-  periodic_parallel_communicate_field(theField);
-
 }
 
 } // namespace nalu
