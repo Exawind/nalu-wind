@@ -15,7 +15,7 @@
 #include <Kokkos_Core.hpp>
 
 #ifdef KOKKOS_ENABLE_CUDA
-#define NALU_ALIGNED alignas(sizeof(long double))
+#define NALU_ALIGNED alignas(sizeof(double))
 #else
 #define NALU_ALIGNED alignas(KOKKOS_MEMORY_ALIGNMENT)
 #endif
