@@ -7,6 +7,7 @@
 
 #include "gtest/gtest.h"
 #include "UnitTestUtils.h"
+#include "kernels/UnitTestKernelUtils.h"
 
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
@@ -470,6 +471,116 @@ void calc_mdot_elem_loop(
   }
 }
 
+void basic_face_elem_loop(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordField,
+  const GenericFieldType& exposedArea,
+  ScalarFieldType& wallArea,
+  ScalarFieldType& wallNormDist)
+{
+  using MeshIndex = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
+  using FaceTraits = sierra::nalu::AlgTraitsQuad4Hex8;
+  using FaceSimdData = sierra::nalu::nalu_ngp::FaceElemSimdData<ngp::Mesh>;
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+
+  sierra::nalu::ElemDataRequests faceData(meta);
+  sierra::nalu::ElemDataRequests elemData(meta);
+  auto meFC =
+    sierra::nalu::MasterElementRepo::get_surface_master_element<FaceTraits::FaceTraits>();
+  auto meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element<FaceTraits::ElemTraits>();
+
+  faceData.add_cvfem_face_me(meFC);
+  elemData.add_cvfem_surface_me(meSCS);
+  faceData.add_coordinates_field(
+    coordField, ndim, sierra::nalu::CURRENT_COORDINATES);
+  faceData.add_face_field(
+    exposedArea, FaceTraits::numScsIp_, FaceTraits::nDim_);
+  faceData.add_master_element_call(
+    sierra::nalu::FC_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
+  elemData.add_coordinates_field(
+    coordField, ndim, sierra::nalu::CURRENT_COORDINATES);
+
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  stk::mesh::Part* part = meta.get_part("surface_5");
+  stk::mesh::Selector sel(*part);
+
+  const unsigned coordsID = coordField.mesh_meta_data_ordinal();
+  const unsigned exposedAreaID = exposedArea.mesh_meta_data_ordinal();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto wArea = fieldMgr.get_field<double>(
+    wallArea.mesh_meta_data_ordinal());
+  auto wDist = fieldMgr.get_field<double>(
+    wallNormDist.mesh_meta_data_ordinal());
+
+  sierra::nalu::nalu_ngp::run_face_elem_algorithm(
+    meshInfo, faceData, elemData, sel,
+    KOKKOS_LAMBDA(FaceSimdData& fdata) {
+      const auto areaOps = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
+        ngpMesh, wArea, fdata);
+      const auto distOps = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
+        ngpMesh, wDist, fdata);
+
+      auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
+      auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaID);
+
+      const int* faceIpNodeMap = meFC->ipNodeMap();
+      for (int ip=0; ip < FaceTraits::numFaceIp_; ++ip) {
+        DoubleType aMag = 0.0;
+        for (int d=0; d < FaceTraits::nDim_; ++d)
+          aMag += v_area(ip, d) * v_area(ip, d);
+        aMag = stk::math::sqrt(aMag);
+
+        const int nodeR = meSCS->ipNodeMap(fdata.faceOrd)[ip];
+        const int nodeL = meSCS->opposingNodes(fdata.faceOrd, ip);
+
+        DoubleType ypBip = 0.0;
+        for (int d=0; d < FaceTraits::nDim_; ++d) {
+          const DoubleType nj = v_area(ip, d) / aMag;
+          const DoubleType ej = 0.25 * (v_coord(nodeR, d) - v_coord(nodeL, d));
+          ypBip += nj * ej * nj * ej;
+        }
+        ypBip = stk::math::sqrt(ypBip);
+
+        const int ni = faceIpNodeMap[ip];
+        distOps(ni, 0) += aMag * ypBip;
+        areaOps(ni, 0) += aMag;
+      }
+    });
+
+  sierra::nalu::nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      wDist.get(mi, 0) /= wArea.get(mi, 0);
+    });
+
+  wArea.modify_on_device();
+  wArea.sync_to_host();
+  wDist.modify_on_device();
+  wDist.sync_to_host();
+
+  {
+    double minArea = 1.0e20;
+    double maxArea = -1.0e20;
+    const double tol = 1.0e-15;
+    const double wdistExpected = 0.25;
+    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+    for (const auto* b: bkts) {
+      for (const auto node: *b) {
+        const double* warea = stk::mesh::field_data(wallArea, node);
+        const double* wdist = stk::mesh::field_data(wallNormDist, node);
+        if (warea[0] < minArea) minArea = warea[0];
+        if (warea[0] > maxArea) maxArea = warea[0];
+        EXPECT_NEAR(wdist[0], wdistExpected, tol);
+      }
+    }
+    EXPECT_NEAR(minArea, 0.25, tol);
+    EXPECT_NEAR(maxArea, 1.0, tol);
+  }
+}
+
 TEST_F(NgpLoopTest, NGP_basic_node_loop)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
@@ -517,4 +628,28 @@ TEST_F(NgpLoopTest, NGP_calc_mdot_elem_loop)
   fill_mesh_and_init_fields("generated:2x2x2");
 
   calc_mdot_elem_loop(bulk, *density, *velocity, *massFlowRate);
+}
+
+TEST_F(NgpLoopTest, NGP_basic_face_elem_loop)
+{
+  auto& exposedAreaVec = meta.declare_field<GenericFieldType>(
+    meta.side_rank(), "exposed_area_vector");
+  auto& wallArea = meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "wall_area");
+  auto& wallNormDist = meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "wall_normal_dist");
+
+  stk::mesh::put_field_on_mesh(
+    exposedAreaVec, meta.universal_part(),
+    meta.spatial_dimension() * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+  stk::mesh::put_field_on_mesh(
+    wallArea, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(
+    wallNormDist, meta.universal_part(), 1, nullptr);
+
+  fill_mesh_and_init_fields("generated:4x4x1|sideset:xXyYzZ");
+  unit_test_kernel_utils::calc_exposed_area_vec(
+    bulk, sierra::nalu::AlgTraitsQuad4::topo_, *coordField, exposedAreaVec);
+
+  basic_face_elem_loop(bulk, *coordField, exposedAreaVec, wallArea, wallNormDist);
 }
