@@ -886,7 +886,7 @@ LowMachEquationSystem::project_nodal_velocity()
     using Traits = nalu_ngp::NGPMeshTraits<>;
     using MeshIndex = Traits::MeshIndex;
     const stk::mesh::Selector sel =
-      (!stk::mesh::selectUnion(momentumEqSys_->notProjectedPart_) &
+      ((!stk::mesh::selectUnion(momentumEqSys_->notProjectedPart_)) &
        stk::mesh::selectField(*continuityEqSys_->dpdx_));
     nalu_ngp::run_entity_algorithm(
       ngpMesh, stk::topology::NODE_RANK, sel,
