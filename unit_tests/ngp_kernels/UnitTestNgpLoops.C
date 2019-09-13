@@ -632,6 +632,8 @@ TEST_F(NgpLoopTest, NGP_calc_mdot_elem_loop)
 
 TEST_F(NgpLoopTest, NGP_basic_face_elem_loop)
 {
+  if (bulk.parallel_size() > 1) return;
+
   auto& exposedAreaVec = meta.declare_field<GenericFieldType>(
     meta.side_rank(), "exposed_area_vector");
   auto& wallArea = meta.declare_field<ScalarFieldType>(
