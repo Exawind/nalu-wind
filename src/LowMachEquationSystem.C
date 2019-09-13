@@ -40,6 +40,7 @@
 #include <AssembleNodalGradUNonConformalAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
 #include <AuxFunctionAlgorithm.h>
+#include <ComputeGeometryAlgorithmDriver.h>
 #include <ComputeMdotAlgorithmDriver.h>
 #include <ComputeMdotInflowAlgorithm.h>
 #include <ComputeMdotEdgeAlgorithm.h>
@@ -145,11 +146,13 @@
 #include "node_kernels/ContinuityMassBDFNodeKernel.h"
 
 // ngp
+#include "ngp_algorithms/ABLWallFrictionVelAlg.h"
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
+#include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 
@@ -1914,15 +1917,35 @@ MomentumEquationSystem::register_wall_bc(
       const double z0 = rough.z0_;
       ReferenceTemperature Tref = userData.referenceTemperature_;
       const double referenceTemperature = Tref.referenceTemperature_;
-      std::map<AlgorithmType, Algorithm *>::iterator it_utau =
-        wallFunctionParamsAlgDriver_->algMap_.find(wfAlgType);
-      if ( it_utau == wallFunctionParamsAlgDriver_->algMap_.end() ) {
-        ComputeABLWallFrictionVelocityAlgorithm *theUtauAlg =
-          new ComputeABLWallFrictionVelocityAlgorithm(realm_, part, realm_.realmUsesEdges_, grav, z0, referenceTemperature);
-        wallFunctionParamsAlgDriver_->algMap_[wfAlgType] = theUtauAlg;
+
+      {
+        // TODO Fix implementation when refactoring Geometry calcs in Realm
+        auto& algMap = realm_.computeGeometryAlgDriver_->algMap_;
+        auto it = algMap.find(wfAlgType);
+        if (it == algMap.end()) {
+          algMap[wfAlgType] = create_face_elem_algorithm<WallFuncGeometryAlg>(
+            realm_.meta_data().spatial_dimension(),
+            part->topology(),
+            get_elem_topo(realm_, *part),
+            realm_, part);
+        } else {
+          it->second->partVec_.push_back(part);
+        }
       }
-      else {
-        it_utau->second->partVec_.push_back(part);
+      {
+        auto& algMap = wallFunctionParamsAlgDriver_->algMap_;
+        auto it = algMap.find(wfAlgType);
+        if (it == algMap.end()) {
+          algMap[wfAlgType] = create_face_algorithm<ABLWallFrictionVelAlg>(
+            realm_.meta_data().spatial_dimension(),
+            part->topology(),
+            realm_, part,
+            realm_.realmUsesEdges_,
+            grav, z0, referenceTemperature,
+            realm_.get_turb_model_constant(TM_kappa));
+        } else {
+          it->second->partVec_.push_back(part);
+        }
       }
 
       if (realm_.realmUsesEdges_) {

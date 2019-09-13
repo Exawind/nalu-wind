@@ -194,6 +194,32 @@ Algorithm* create_face_algorithm(
   }
 }
 
+template<template <typename> class T, typename... Args>
+Algorithm* create_face_elem_algorithm(
+  const int dimension,
+  const stk::topology faceTopo,
+  const stk::topology elemTopo,
+  Args&&... args)
+{
+  if (dimension == 2) {
+    throw std::runtime_error("NGP face_elem algorithm not implemented");
+  }
+
+  switch (faceTopo) {
+  case stk::topology::QUAD_4:
+    switch (elemTopo) {
+    case stk::topology::HEX_8:
+      return new T<AlgTraitsQuad4Hex8>(std::forward<Args>(args)...);
+
+    default:
+      throw std::runtime_error("NGP face_elem algorithm not implemented");
+    }
+
+  default:
+    throw std::runtime_error("NGP face_elem algorithm not implemented");
+  }
+}
+
 class NgpAlgDriver
 {
 public:
