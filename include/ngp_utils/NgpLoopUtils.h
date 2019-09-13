@@ -90,7 +90,7 @@ inline int ngp_calc_thread_shmem_size(
   const int faceMemSize =
     ngp_calc_thread_shmem_size<T>(ndim, faceDataReq, ElemReqType::FACE);
   const int elemMemSize =
-    ngp_calc_thread_shmem_size<T>(ndim, elemDataReq, ElemReqType::FACE_ELEM);
+    ngp_calc_thread_shmem_size<T>(ndim, elemDataReq, ElemReqType::ELEM);
 
   return (faceMemSize + elemMemSize);
 }
@@ -379,6 +379,126 @@ void run_elem_algorithm(
         algorithm(elemData);
       });
   });
+}
+
+template<
+  typename Mesh,
+  typename FieldManager,
+  typename DataReqType,
+  typename AlgFunctor>
+void run_face_elem_algorithm(
+  const MeshInfo<Mesh, FieldManager>& meshInfo,
+  const DataReqType& faceDataReqs,
+  const DataReqType& elemDataReqs,
+  const stk::mesh::Selector& sel,
+  const AlgFunctor algorithm)
+{
+  static constexpr stk::topology::rank_t elemRank = stk::topology::ELEMENT_RANK;
+  const stk::topology::rank_t sideRank = meshInfo.meta().side_rank();
+  using Traits         = NGPMeshTraits<Mesh>;
+  using TeamPolicy     = typename Traits::TeamPolicy;
+  using TeamHandleType = typename Traits::TeamHandleType;
+  using MeshIndex      = typename Traits::MeshIndex;
+
+  const auto& ndim = meshInfo.ndim();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  const auto& numFields = meshInfo.num_fields();
+
+  ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs, numFields);
+  ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs, numFields);
+
+  const int nodesPerElement = nodes_per_entity(elemDataNGP);
+  const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
+  NGP_ThrowRequire(nodesPerElement != 0);
+  NGP_ThrowRequire(nodesPerFace != 0);
+
+  const int bytes_per_team = 0;
+  const int bytes_per_thread =
+    impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
+      ndim, faceDataNGP, elemDataNGP);
+
+  const auto& buckets = ngpMesh.get_bucket_ids(sideRank, sel);
+  auto team_exec = impl::ngp_mesh_team_policy<TeamPolicy>(
+    buckets.size(), bytes_per_team, bytes_per_thread);
+
+  Kokkos::parallel_for(
+    team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
+      auto bktId = buckets.device_get(team.league_rank());
+      auto& bkt = ngpMesh.get_bucket(sideRank, bktId);
+
+      FaceElemSimdData<Mesh> faceElemData(
+        team, ndim, nodesPerFace, nodesPerElement, faceDataNGP, elemDataNGP);
+
+      const size_t bktLen = bkt.size();
+      const size_t simdBktLen = get_num_simd_groups(bktLen);
+
+      Kokkos::parallel_for(
+        Kokkos::TeamThreadRange(team, simdBktLen),
+        [&](const size_t& bktIndex) {
+          size_t nSimdFaces = get_length_of_next_simd_group(bktIndex, bktLen);
+          size_t nFacesProcessed = 0;
+
+          // Only group face/elem pairs in SIMD that have the same face ordinals
+          do {
+            int elemFaceOrd = -1;
+            int simdFaceIdx = 0;
+
+            while ((nFacesProcessed + simdFaceIdx) < nSimdFaces) {
+              const auto& bktOrd =
+                bktIndex * simdLen + nFacesProcessed + simdFaceIdx;
+              const auto& face = bkt[bktOrd];
+              const auto faceIdx = ngpMesh.fast_mesh_index(face);
+              int faceOrd =
+                ngpMesh.get_element_ordinals(sideRank, faceIdx)[0];
+
+              // If we have one or more faces processed, then does the current
+              // candidate face the same face ordinal as the ones we have
+              // processed so far
+              if ((elemFaceOrd >= 0) && (faceOrd != elemFaceOrd))
+                break;
+
+              const auto elems = ngpMesh.get_elements(sideRank, faceIdx);
+              MeshIndex meshIdx{&bkt, static_cast<unsigned>(bktOrd)};
+              const auto elem = elems[0];
+              const auto elemIdx = ngpMesh.fast_mesh_index(elem);
+              faceElemData.faceInfo[simdFaceIdx] = BcFaceElemInfo<Mesh>{
+                meshIdx, face, elem,
+                ngpMesh.get_nodes(sideRank, faceIdx),
+                ngpMesh.get_nodes(elemRank, elemIdx),
+                faceOrd};
+
+              fill_pre_req_data(
+                faceDataNGP, ngpMesh, sideRank, face,
+                *faceElemData.scrFaceView[simdFaceIdx]);
+              fill_pre_req_data(
+                elemDataNGP, ngpMesh, elemRank, elem,
+                *faceElemData.scrElemView[simdFaceIdx]);
+
+              elemFaceOrd = faceOrd;
+              ++simdFaceIdx;
+            }
+            faceElemData.faceOrd = elemFaceOrd;
+            faceElemData.numSimdElems = simdFaceIdx;
+            nFacesProcessed += simdFaceIdx;
+
+#ifndef KOKKOS_ENABLE_CUDA
+            copy_and_interleave(
+              faceElemData.scrFaceView, faceElemData.numSimdElems,
+              faceElemData.simdFaceView);
+            copy_and_interleave(
+              faceElemData.scrElemView, faceElemData.numSimdElems,
+              faceElemData.simdElemView);
+#endif
+            fill_master_element_views(
+              faceDataNGP, faceElemData.simdFaceView, elemFaceOrd);
+            fill_master_element_views(
+              elemDataNGP, faceElemData.simdElemView, elemFaceOrd);
+
+            algorithm(faceElemData);
+          } while (nFacesProcessed < nSimdFaces);
+        });
+    });
 }
 
 template<

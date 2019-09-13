@@ -59,6 +59,10 @@ struct ElemSimdData
 
   KOKKOS_FUNCTION ~ElemSimdData() = default;
 
+  KOKKOS_INLINE_FUNCTION
+  const EntityInfoType* info() const
+  { return elemInfo; }
+
   //! Gathered element data (always in SIMD datatype)
   ScratchViews<DoubleType, TeamHandleType, ShmemType> simdScrView;
 
@@ -76,6 +80,69 @@ struct ElemSimdData
   EntityInfoType elemInfo[simdLen];
 
   //! Number of SIMD elements in this batch
+  int numSimdElems;
+};
+
+template<typename Mesh>
+struct FaceElemSimdData
+{
+  using MeshTraits = NGPMeshTraits<Mesh>;
+  using TeamHandleType = typename MeshTraits::TeamHandleType;
+  using ShmemType = typename MeshTraits::ShmemType;
+  using EntityInfoType = BcFaceElemInfo<Mesh>;
+
+  KOKKOS_INLINE_FUNCTION
+  FaceElemSimdData(
+    const TeamHandleType& team,
+    unsigned ndim,
+    unsigned nodesPerFace,
+    unsigned nodesPerElem,
+    const ElemDataRequestsGPU& faceDataReqs,
+    const ElemDataRequestsGPU& elemDataReqs)
+    : simdFaceView(team, ndim, nodesPerFace, faceDataReqs),
+      simdElemView(team, ndim, nodesPerElem, elemDataReqs)
+  {
+#ifdef KOKKOS_ENABLE_CUDA
+    scrFaceView[0] = &simdFaceView;
+    scrElemView[0] = &simdElemView;
+#else
+    for (int si=0; si < simdLen; ++si) {
+      scrFaceView[si].reset(
+        new ScratchViews<double, TeamHandleType, ShmemType>(
+          team, ndim, nodesPerFace, faceDataReqs));
+      scrElemView[si].reset(
+        new ScratchViews<double, TeamHandleType, ShmemType>(
+          team, ndim, nodesPerElem, elemDataReqs));
+    }
+#endif
+  }
+
+  KOKKOS_FUNCTION ~FaceElemSimdData() = default;
+
+  KOKKOS_INLINE_FUNCTION
+  const EntityInfoType* info() const
+  { return faceInfo; }
+
+  ScratchViews<DoubleType, TeamHandleType, ShmemType> simdFaceView;
+  ScratchViews<DoubleType, TeamHandleType, ShmemType> simdElemView;
+
+  /** Non-SIMD gathered element data
+   *
+   *  When executing on GPUs we dont
+   */
+#ifdef KOKKOS_ENABLE_CUDA
+  ScratchViews<DoubleType, TeamHandleType, ShmemType>* scrFaceView[1];
+  ScratchViews<DoubleType, TeamHandleType, ShmemType>* scrElemView[1];
+#else
+  std::unique_ptr<ScratchViews<double, TeamHandleType, ShmemType>> scrFaceView[simdLen];
+  std::unique_ptr<ScratchViews<double, TeamHandleType, ShmemType>> scrElemView[simdLen];
+#endif
+
+  EntityInfoType faceInfo[simdLen];
+
+  int faceOrd;
+
+  //! Number of SIMD face/elem pairs in this batch
   int numSimdElems;
 };
 
