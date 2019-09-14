@@ -304,7 +304,7 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
     });
 }
 
-INSTANTIATE_KERNEL_FACE(ABLWallFrictionVelAlg);
+INSTANTIATE_KERNEL_FACE(ABLWallFrictionVelAlg)
 
 }  // nalu
 }  // sierra

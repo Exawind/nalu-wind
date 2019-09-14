@@ -150,21 +150,26 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
     wdist.sync_to_device();
     warea.modify_on_host();
     warea.sync_to_device();
+
+    const stk::mesh::Selector sel =
+      (realm_.meta_data().locally_owned_part() |
+       realm_.meta_data().globally_shared_part()) &
+      stk::mesh::selectUnion(partVec_);
+
+    sierra::nalu::nalu_ngp::run_entity_algorithm(
+      ngpMesh, stk::topology::NODE_RANK, sel,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        wdist.get(mi, 0) /= warea.get(mi, 0);
+      });
+
+    // Indicate that we have modified but don't sync it
+    wdist.modify_on_device();
+    warea.modify_on_device();
+    wdistBip.modify_on_device();
   }
-
-  sierra::nalu::nalu_ngp::run_entity_algorithm(
-    ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const MeshIndex& mi) {
-      wdist.get(mi, 0) /= warea.get(mi, 0);
-    });
-
-  // Indicate that we have modified but don't sync it
-  wdist.modify_on_device();
-  warea.modify_on_device();
-  wdistBip.modify_on_device();
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(WallFuncGeometryAlg);
+INSTANTIATE_KERNEL_FACE_ELEMENT(WallFuncGeometryAlg)
 
 }  // nalu
 }  // sierra
