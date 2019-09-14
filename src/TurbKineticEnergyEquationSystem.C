@@ -82,6 +82,7 @@
 #include <ngp_algorithms/NodalGradElemAlg.h>
 #include <ngp_algorithms/NodalGradBndryElemAlg.h>
 #include <ngp_algorithms/EffDiffFluxCoeffAlg.h>
+#include <ngp_algorithms/TKEWallFuncAlg.h>
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -140,7 +141,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
     tvisc_(NULL),
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "dkdx"),
-    wallFunctionTurbKineticEnergyAlgDriver_(NULL),
+    wallFuncAlgDriver_(realm_),
     turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
     projectedNodalGradEqs_(NULL),
     isInit_(true)
@@ -168,15 +169,6 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   if ( managePNG_ ) {
     manage_projected_nodal_gradient(eqSystems);
   }
-}
-
-//--------------------------------------------------------------------------
-//-------- destructor ------------------------------------------------------
-//--------------------------------------------------------------------------
-TurbKineticEnergyEquationSystem::~TurbKineticEnergyEquationSystem()
-{
-  if ( NULL!= wallFunctionTurbKineticEnergyAlgDriver_)
-    delete wallFunctionTurbKineticEnergyAlgDriver_;
 }
 
 //--------------------------------------------------------------------------
@@ -665,25 +657,12 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
 
   if ( wallFunctionApproach ) {
 
-    // create wallFunctionParamsAlgDriver
-    if ( NULL == wallFunctionTurbKineticEnergyAlgDriver_)
-      wallFunctionTurbKineticEnergyAlgDriver_ = new AlgorithmDriver(realm_);
-
     // need to register the assembles wall value for tke; can not share with tke_bc
     ScalarFieldType *theAssembledField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "wall_model_tke_bc"));
     stk::mesh::put_field_on_mesh(*theAssembledField, *part, nullptr);
 
-    // wall function value will prevail at bc intersections
-    std::map<AlgorithmType, Algorithm *>::iterator it_tke =
-        wallFunctionTurbKineticEnergyAlgDriver_->algMap_.find(algType);
-    if ( it_tke == wallFunctionTurbKineticEnergyAlgDriver_->algMap_.end() ) {
-      ComputeTurbKineticEnergyWallFunctionAlgorithm *theUtauAlg =
-          new ComputeTurbKineticEnergyWallFunctionAlgorithm(realm_, part);
-      wallFunctionTurbKineticEnergyAlgDriver_->algMap_[algType] = theUtauAlg;
-    }
-    else {
-      it_tke->second->partVec_.push_back(part);
-    }
+    wallFuncAlgDriver_.register_face_algorithm<TKEWallFuncAlg>(
+      algType, part, "tke_wall_func");
   }
   else if ( tkeSpecified ) {
 
@@ -952,8 +931,7 @@ TurbKineticEnergyEquationSystem::compute_effective_diff_flux_coeff()
 void
 TurbKineticEnergyEquationSystem::compute_wall_model_parameters()
 {
-  if ( NULL != wallFunctionTurbKineticEnergyAlgDriver_)
-    wallFunctionTurbKineticEnergyAlgDriver_->execute();
+  wallFuncAlgDriver_.execute();
 }
 
 //--------------------------------------------------------------------------
