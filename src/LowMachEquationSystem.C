@@ -147,6 +147,7 @@
 
 // ngp
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
+#include "ngp_algorithms/MdotEdgeAlg.h"
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
@@ -2761,11 +2762,8 @@ ContinuityEquationSystem::register_interior_algorithm(
     std::map<AlgorithmType, Algorithm *>::iterator itc =
       computeMdotAlgDriver_->algMap_.find(algType);
     if ( itc == computeMdotAlgDriver_->algMap_.end() ) {
-      ComputeMdotEdgeAlgorithm *theAlg
-        = new ComputeMdotEdgeAlgorithm(realm_, part);
-      computeMdotAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
+      computeMdotAlgDriver_->algMap_[algType] = new MdotEdgeAlg(realm_, part);
+    } else {
       itc->second->partVec_.push_back(part);
     }
 
