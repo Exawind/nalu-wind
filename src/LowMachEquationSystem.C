@@ -944,8 +944,8 @@ MomentumEquationSystem::MomentumEquationSystem(
     tvisc_(NULL),
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "dudx"),
+    wallFuncAlgDriver_(realm_),
     cflReyAlgDriver_(new AlgorithmDriver(realm_)),
-    wallFunctionParamsAlgDriver_(NULL),
     projectedNodalGradEqs_(NULL),
     firstPNGResidual_(0.0)
 {
@@ -975,9 +975,6 @@ MomentumEquationSystem::MomentumEquationSystem(
 MomentumEquationSystem::~MomentumEquationSystem()
 {
   delete cflReyAlgDriver_;
-
-  if ( NULL != wallFunctionParamsAlgDriver_)
-    delete wallFunctionParamsAlgDriver_;
 }
 
 
@@ -1882,10 +1879,6 @@ MomentumEquationSystem::register_wall_bc(
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_normal_distance_bip"));
     stk::mesh::put_field_on_mesh(*wallNormalDistanceBip, *part, numScsBip, nullptr);
 
-    // create wallFunctionParamsAlgDriver
-    if ( NULL == wallFunctionParamsAlgDriver_)
-      wallFunctionParamsAlgDriver_ = new AlgorithmDriver(realm_);
-
     if (ablWallFunctionApproach) {
 
       // register boundary data: heat_flux_bc
@@ -1932,21 +1925,11 @@ MomentumEquationSystem::register_wall_bc(
           it->second->partVec_.push_back(part);
         }
       }
-      {
-        auto& algMap = wallFunctionParamsAlgDriver_->algMap_;
-        auto it = algMap.find(wfAlgType);
-        if (it == algMap.end()) {
-          algMap[wfAlgType] = create_face_algorithm<ABLWallFrictionVelAlg>(
-            realm_.meta_data().spatial_dimension(),
-            part->topology(),
-            realm_, part,
-            realm_.realmUsesEdges_,
-            grav, z0, referenceTemperature,
-            realm_.get_turb_model_constant(TM_kappa));
-        } else {
-          it->second->partVec_.push_back(part);
-        }
-      }
+
+      wallFuncAlgDriver_.register_face_algorithm<ABLWallFrictionVelAlg>(
+        wfAlgType, part, "abl_wall_func", realm_.realmUsesEdges_,
+        grav, z0, referenceTemperature,
+        realm_.get_turb_model_constant(TM_kappa));
 
       if (realm_.realmUsesEdges_) {
         auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
@@ -1986,17 +1969,9 @@ MomentumEquationSystem::register_wall_bc(
 
       const AlgorithmType wfAlgType = WALL_FCN;
 
-      // create algorithm for utau, yp and assembled nodal wall area (_WallFunction)
-      std::map<AlgorithmType, Algorithm *>::iterator it_utau =
-        wallFunctionParamsAlgDriver_->algMap_.find(wfAlgType);
-      if ( it_utau == wallFunctionParamsAlgDriver_->algMap_.end() ) {
-        ComputeWallFrictionVelocityAlgorithm *theUtauAlg =
-          new ComputeWallFrictionVelocityAlgorithm(realm_, part, realm_.realmUsesEdges_);
-        wallFunctionParamsAlgDriver_->algMap_[wfAlgType] = theUtauAlg;
-      }
-      else {
-        it_utau->second->partVec_.push_back(part);
-      }
+      wallFuncAlgDriver_
+        .register_legacy_algorithm<ComputeWallFrictionVelocityAlgorithm>(
+          wfAlgType, part, "wall_func", realm_.realmUsesEdges_);
 
       // create lhs/rhs algorithm; generalized for edge (nearest node usage) and element
       if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {        
@@ -2382,9 +2357,7 @@ MomentumEquationSystem::predict_state()
 void
 MomentumEquationSystem::compute_wall_function_params()
 {
-  if (NULL != wallFunctionParamsAlgDriver_){
-    wallFunctionParamsAlgDriver_->execute();
-  }
+  wallFuncAlgDriver_.execute();
 }
 
 //--------------------------------------------------------------------------

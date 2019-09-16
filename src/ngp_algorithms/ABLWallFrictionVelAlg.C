@@ -136,7 +136,7 @@ ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
   faceData_.add_cvfem_face_me(meFC_);
 
   faceData_.add_coordinates_field(
-    realm.meta_data().coordinate_field()->mesh_meta_data_ordinal(),
+    get_field_ordinal(realm_.meta_data(), realm_.get_coordinates_name()),
     BcAlgTraits::nDim_, CURRENT_COORDINATES);
   faceData_.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
   faceData_.add_gathered_nodal_field(bcVelocity_, BcAlgTraits::nDim_);

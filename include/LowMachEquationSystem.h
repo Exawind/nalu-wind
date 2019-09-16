@@ -212,11 +212,11 @@ public:
   ScalarFieldType* Udiag_{nullptr};
 
   VectorNodalGradAlgDriver nodalGradAlgDriver_;
+  NgpAlgDriver wallFuncAlgDriver_;
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
   std::unique_ptr<Algorithm> tviscAlg_{nullptr};
 
   AlgorithmDriver *cflReyAlgDriver_;
-  AlgorithmDriver *wallFunctionParamsAlgDriver_;
 
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 
