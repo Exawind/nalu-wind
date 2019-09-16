@@ -42,7 +42,10 @@ enum AlgorithmType{
    */
   REF_PRESSURE = 15, 
  
-  TOP_ABL = 16
+  TOP_ABL = 16,
+  X_SYM_STRONG = 17,
+  Y_SYM_STRONG = 18,
+  Z_SYM_STRONG = 19
 };
 
 enum BoundaryConditionType{

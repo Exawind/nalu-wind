@@ -2046,7 +2046,7 @@ void
 MomentumEquationSystem::register_symmetry_bc(
   stk::mesh::Part *part,
   const stk::topology &partTopo,
-  const SymmetryBoundaryConditionData &  /* symmetryBCData */)
+  const SymmetryBoundaryConditionData & symmBCData)
 {
   // algorithm type
   const AlgorithmType algType = SYMMETRY;
@@ -2114,6 +2114,65 @@ MomentumEquationSystem::register_symmetry_bc(
           );
     }
   }
+
+  using SYMMTYPES = SymmetryUserData::SymmetryTypes;
+  const SYMMTYPES symmType = symmBCData.userData_.symmType_;
+  unsigned beginPos, endPos;
+  stk::mesh::MetaData &meta_data = realm_.meta_data();
+  const unsigned nDim = meta_data.spatial_dimension();
+  AlgorithmType pickTheType;
+  switch(symmType){
+   case SYMMTYPES::GENERAL_WEAK:
+     return;
+     break;
+   case SYMMTYPES::X_DIR_STRONG:
+     pickTheType = AlgorithmType::X_SYM_STRONG;
+     beginPos = 0;
+     break;
+   case SYMMTYPES::Y_DIR_STRONG:
+     pickTheType = AlgorithmType::Y_SYM_STRONG;
+     beginPos = 1;
+     break;
+   case SYMMTYPES::Z_DIR_STRONG:
+     pickTheType = AlgorithmType::Z_SYM_STRONG;
+     beginPos = 2;
+     break;
+  }
+
+  endPos = beginPos + 1;
+
+  // register boundary data; velocity_bc
+  const std::string bcFieldName = "strong_sym_velocity";
+  VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, bcFieldName));
+  stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
+  std::vector<double> userSpec(nDim, 0.0);
+  AuxFunction *theAuxFunc = NULL;
+  Algorithm* auxAlg = NULL;
+  theAuxFunc = new ConstantAuxFunction(0, nDim, userSpec);
+  auxAlg = new AuxFunctionAlgorithm(realm_, part,
+    theBcField, theAuxFunc,
+    stk::topology::NODE_RANK);
+  bcDataAlg_.push_back(auxAlg);
+  // copy velocity_bc to velocity np1
+  CopyFieldAlgorithm *theCopyAlg
+    = new CopyFieldAlgorithm(realm_, part,
+  	     theBcField, &velocityNp1,
+  		     0, nDim,
+  	     stk::topology::NODE_RANK);
+  bcDataMapAlg_.push_back(theCopyAlg);
+  const AlgorithmType symAlgType = pickTheType;
+
+  std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =
+    solverAlgDriver_->solverDirichAlgMap_.find(symAlgType);
+  if ( itd == solverAlgDriver_->solverDirichAlgMap_.end() ) {
+    DirichletBC *theAlg
+      = new DirichletBC(realm_, this, part, &velocityNp1, theBcField, beginPos, endPos);
+    solverAlgDriver_->solverDirichAlgMap_[symAlgType] = theAlg;
+  }
+  else {
+    itd->second->partVec_.push_back(part);
+  }
+
 }
 
 //--------------------------------------------------------------------------
