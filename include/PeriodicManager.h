@@ -60,15 +60,15 @@ class PeriodicManager {
   // holder for master += slave; slave = master
   void apply_constraints(
     stk::mesh::FieldBase *,
-    const unsigned sizeOfField,
-    const bool bypassFieldCheck,
-    const bool addSlaves = true,
-    const bool setSlaves = true);
+    const unsigned &sizeOfField,
+    const bool &bypassFieldCheck,
+    const bool &addSlaves = true,
+    const bool &setSlaves = true);
 
   // find the max
   void apply_max_field(
     stk::mesh::FieldBase *,
-    const unsigned sizeOfField);
+    const unsigned &sizeOfField);
 
   void manage_ghosting_object();
 
@@ -159,13 +159,13 @@ class PeriodicManager {
 
   void add_slave_to_master(
     stk::mesh::FieldBase *theField,
-    const unsigned sizeOfField,
-    const bool bypassFieldCheck);
+    const unsigned &sizeOfField,
+    const bool &bypassFieldCheck);
 
   void set_slave_to_master(
     stk::mesh::FieldBase *theField,
-    const unsigned sizeOfField,
-    const bool bypassFieldCheck);
+    const unsigned &sizeOfField,
+    const bool &bypassFieldCheck);
 
 };
 
