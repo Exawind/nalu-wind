@@ -2117,10 +2117,10 @@ MomentumEquationSystem::register_symmetry_bc(
 
   using SYMMTYPES = SymmetryUserData::SymmetryTypes;
   const SYMMTYPES symmType = symmBCData.userData_.symmType_;
-  unsigned beginPos, endPos;
+  unsigned beginPos{0}, endPos{1};
   stk::mesh::MetaData &meta_data = realm_.meta_data();
   const unsigned nDim = meta_data.spatial_dimension();
-  AlgorithmType pickTheType;
+  AlgorithmType pickTheType = algType;
   switch(symmType){
    case SYMMTYPES::GENERAL_WEAK:
      return;
