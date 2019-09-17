@@ -4,6 +4,7 @@ add_sources(GlobalUnitSourceList
    UnitTestBasicKokkos.C
    UnitTestCopyAndInterleave.C
    UnitTestCreateOnDevice.C
+   UnitTestCreateMemoryLeak.C
    UnitTestEigenDecomposition.C
    UnitTestElemDataRequests.C
    UnitTestElemSuppAlg.C
