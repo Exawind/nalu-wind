@@ -10,11 +10,12 @@
 #include <NaluEnv.h>
 #include <Realm.h>
 #include <utils/StkHelpers.h>
+#include <KokkosInterface.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
-#include <stk_mesh/base/FieldParallel.hpp>
+#include <stk_ngp/NgpFieldParallel.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/MetaData.hpp>
@@ -673,6 +674,15 @@ PeriodicManager::manage_ghosting_object()
      EntityPair theFirstPair = std::make_pair(rangeNode, domainNode);
      masterSlaveCommunicator_.push_back(theFirstPair);
   }
+
+  deviceMasterSlaves_ = KokkosEntityPairView("deviceMasterSlaves", masterSlaveCommunicator_.size());
+  hostMasterSlaves_ = Kokkos::create_mirror_view(deviceMasterSlaves_);
+  for(size_t i=0; i<masterSlaveCommunicator_.size(); ++i) {
+    const EntityPair& entityPair = masterSlaveCommunicator_[i];
+    hostMasterSlaves_(i) = KokkosEntityPair(entityPair);
+  }
+
+  Kokkos::deep_copy(deviceMasterSlaves_, hostMasterSlaves_);
 }
 
 //--------------------------------------------------------------------------
@@ -692,8 +702,34 @@ PeriodicManager::periodic_parallel_communicate_field(
   stk::mesh::FieldBase *theField)
 {
   if ( NULL != periodicGhosting_ ) {
-    std::vector< const stk::mesh::FieldBase *> fieldVec(1, theField);
-    stk::mesh::communicate_field_data(*periodicGhosting_, fieldVec);
+    const ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+    unsigned fieldOrd = theField->mesh_meta_data_ordinal();
+
+    if (theField->type_is<double>()) {
+      std::vector<NGPDoubleFieldType *> fieldVec(1, &fieldMgr.get_field<double>(fieldOrd));
+      ngp::communicate_field_data(*periodicGhosting_, fieldVec);
+    }
+    else if (theField->type_is<stk::mesh::EntityId>()) {
+      std::vector<NGPGlobalIdFieldType *> fieldVec(1, &fieldMgr.get_field<stk::mesh::EntityId>(fieldOrd));
+      ngp::communicate_field_data(*periodicGhosting_, fieldVec);
+    }
+    else if (theField->type_is<int>()) {
+      std::vector<NGPScalarIntFieldType *> fieldVec(1, &fieldMgr.get_field<int>(fieldOrd));
+      ngp::communicate_field_data(*periodicGhosting_, fieldVec);
+    }
+    else if (theField->type_is<LinSys::GlobalOrdinal>()) {
+      std::vector<ngp::Field<LinSys::GlobalOrdinal>*> fieldVec(1, &fieldMgr.get_field<LinSys::GlobalOrdinal>(fieldOrd));
+      ngp::communicate_field_data(*periodicGhosting_, fieldVec);
+    }
+#ifdef NALU_USES_HYPRE
+    else if (theField->type_is<HypreIntType>()) {
+      std::vector<ngp::Field<HypreIntType>*> fieldVec(1, &fieldMgr.get_field<HypreIntType>(fieldOrd));
+      ngp::communicate_field_data(*periodicGhosting_, fieldVec);
+    }
+#endif
+    else {
+      ThrowRequireMsg(false, "Error, unsupported field type in PeriodicManager::parallel_communicate_field.");
+    }
   }
 }
 
@@ -704,12 +740,42 @@ void
 PeriodicManager::parallel_communicate_field(
   stk::mesh::FieldBase *theField)
 {
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
+  const stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   const unsigned pSize = bulk_data.parallel_size();
   if ( pSize > 1 ) {
-    std::vector< const stk::mesh::FieldBase *> fieldVec(1, theField);
-    stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
-    stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+    const ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+    unsigned fieldOrd = theField->mesh_meta_data_ordinal();
+
+    if (theField->type_is<double>()) {
+      std::vector<NGPDoubleFieldType *> fieldVec(1, &fieldMgr.get_field<double>(fieldOrd));
+      ngp::copy_owned_to_shared( bulk_data, fieldVec);
+      ngp::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+    }
+    else if (theField->type_is<stk::mesh::EntityId>()) {
+      std::vector<NGPGlobalIdFieldType *> fieldVec(1, &fieldMgr.get_field<stk::mesh::EntityId>(fieldOrd));
+      ngp::copy_owned_to_shared( bulk_data, fieldVec);
+      ngp::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+    }
+    else if (theField->type_is<int>()) {
+      std::vector<NGPScalarIntFieldType *> fieldVec(1, &fieldMgr.get_field<int>(fieldOrd));
+      ngp::copy_owned_to_shared( bulk_data, fieldVec);
+      ngp::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+    }
+    else if (theField->type_is<LinSys::GlobalOrdinal>()) {
+      std::vector<ngp::Field<LinSys::GlobalOrdinal>*> fieldVec(1, &fieldMgr.get_field<LinSys::GlobalOrdinal>(fieldOrd));
+      ngp::copy_owned_to_shared( bulk_data, fieldVec);
+      ngp::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+    }
+#ifdef NALU_USES_HYPRE
+    else if (theField->type_is<HypreIntType>()) {
+      std::vector<ngp::Field<HypreIntType>*> fieldVec(1, &fieldMgr.get_field<HypreIntType>(fieldOrd));
+      ngp::copy_owned_to_shared( bulk_data, fieldVec);
+      ngp::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+    }
+#endif
+    else {
+      ThrowRequireMsg(false, "Error, field "<<theField->name()<<" with unsupported type ("<<theField->data_traits().type_info.name()<<") in PeriodicManager::parallel_communicate_field.");
+    }
   }
 }
 
@@ -810,47 +876,57 @@ PeriodicManager::add_slave_to_master(
   const unsigned &sizeOfField,
   const bool &bypassFieldCheck)
 {
-  
   periodic_parallel_communicate_field(theField);
+
+  ThrowRequireMsg(theField->type_is<double>(), "Error in PeriodicManager::add_slave_to_master, theField ("<<theField->name()<<") is required to be double.");
+
+  unsigned fieldSize = sizeOfField;
+  ngp::Mesh ngpMesh = realm_.ngp_mesh();
+  NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(theField->mesh_meta_data_ordinal());
+  KokkosEntityPairView deviceMasterSlaves = deviceMasterSlaves_;
 
   // iterate vector of masterEntity:slaveEntity pairs
   if ( bypassFieldCheck ) {
     // fields are expected to be defined on all master/slave nodes
-    for ( size_t k = 0; k < masterSlaveCommunicator_.size(); ++k) {
+    Kokkos::parallel_for("add_slave_to_master", masterSlaveCommunicator_.size(), KOKKOS_LAMBDA(const int i)
+    {
       // extract master node and slave node
-      EntityPair vecPair = masterSlaveCommunicator_[k];
-      const stk::mesh::Entity masterNode = vecPair.first;
-      const stk::mesh::Entity slaveNode = vecPair.second;
-      // pointer to data
-      double *masterField = (double *)stk::mesh::field_data(*theField, masterNode);
-      const double *slaveField = (double *)stk::mesh::field_data(*theField, slaveNode);
+      const KokkosEntityPair& entPair = deviceMasterSlaves(i);
+      const stk::mesh::Entity masterNode = entPair.first;
+      const stk::mesh::Entity slaveNode = entPair.second;
+
+      const stk::mesh::FastMeshIndex master = ngpMesh.fast_mesh_index(masterNode);
+      const stk::mesh::FastMeshIndex slave = ngpMesh.fast_mesh_index(slaveNode);
+
       // add in contribution
-      for ( unsigned j = 0; j < sizeOfField; ++j ) {
-        masterField[j] += slaveField[j];
+      for ( unsigned j = 0; j < fieldSize; ++j ) {
+        ngpField.get(master,j) += ngpField.get(slave,j);
       }
-    }
+    });
   }
   else {
     // more costly check to see if fields are defined on master/slave nodes    
-    for ( size_t k = 0; k < masterSlaveCommunicator_.size(); ++k) {      
+    Kokkos::parallel_for("add_slave_to_master", masterSlaveCommunicator_.size(), KOKKOS_LAMBDA(const int i)
+    {
       // extract master node and slave node
-      EntityPair vecPair = masterSlaveCommunicator_[k];
-      const stk::mesh::Entity masterNode = vecPair.first;
-      const stk::mesh::Entity slaveNode = vecPair.second;
-      // pointer to data
-      double *masterField = (double *)stk::mesh::field_data(*theField, masterNode);
-      if ( NULL != masterField ) {
-        const double *slaveField = (double *)stk::mesh::field_data(*theField, slaveNode);
+      const KokkosEntityPair& entPair = deviceMasterSlaves(i);
+      const stk::mesh::Entity masterNode = entPair.first;
+      const stk::mesh::Entity slaveNode = entPair.second;
+
+      const stk::mesh::FastMeshIndex master = ngpMesh.fast_mesh_index(masterNode);
+      const stk::mesh::FastMeshIndex slave = ngpMesh.fast_mesh_index(slaveNode);
+
+      if (ngpField.get_num_components_per_entity(master) == fieldSize) {
         // add in contribution
-        for ( unsigned j = 0; j < sizeOfField; ++j ) {
-          masterField[j] += slaveField[j];
+        for ( unsigned j = 0; j < fieldSize; ++j ) {
+          ngpField.get(master,j) += ngpField.get(slave,j);
         }
       }
-    }
+    });
   }
+  ngpField.modify_on_device();
 
   periodic_parallel_communicate_field(theField);
-
 }
 
 //--------------------------------------------------------------------------
@@ -862,48 +938,56 @@ PeriodicManager::set_slave_to_master(
   const unsigned &sizeOfField,
   const bool &bypassFieldCheck)
 {
-
   periodic_parallel_communicate_field(theField);
+
+  ThrowRequireMsg(theField->type_is<double>(), "Argh, theField ("<<theField->name()<<") is not double.");
+
+  unsigned fieldSize = sizeOfField;
+  ngp::Mesh ngpMesh = realm_.ngp_mesh();
+  NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(theField->mesh_meta_data_ordinal());
+  KokkosEntityPairView deviceMasterSlaves = deviceMasterSlaves_;
 
   // iterate vector of masterEntity:slaveEntity pairs
   if ( bypassFieldCheck ) {
     // fields are expected to be defined on all master/slave nodes
-    for ( size_t k = 0; k < masterSlaveCommunicator_.size(); ++k) {
+    Kokkos::parallel_for("set_slave_to_master", masterSlaveCommunicator_.size(), KOKKOS_LAMBDA(const int i)
+    {
       // extract master node and slave node
-      EntityPair vecPair = masterSlaveCommunicator_[k];
-      const stk::mesh::Entity masterNode = vecPair.first;
-      const stk::mesh::Entity slaveNode = vecPair.second;
-      // pointer to data
-      const double *masterField = (double *)stk::mesh::field_data(*theField, masterNode);
-      double *slaveField = (double *)stk::mesh::field_data(*theField, slaveNode);
-      // set master to slave
-      for ( unsigned j = 0; j < sizeOfField; ++j ) {
-        slaveField[j] = masterField[j];
+      const KokkosEntityPair& entPair = deviceMasterSlaves(i);
+      const stk::mesh::Entity masterNode = entPair.first;
+      const stk::mesh::Entity slaveNode = entPair.second;
+
+      const stk::mesh::FastMeshIndex master = ngpMesh.fast_mesh_index(masterNode);
+      const stk::mesh::FastMeshIndex slave = ngpMesh.fast_mesh_index(slaveNode);
+      for ( unsigned j = 0; j < fieldSize; ++j ) {
+        ngpField.get(slave,j) = ngpField.get(master,j);
       }
-    }
+    });
   }
   else {
     // more costly check to see if fields are defined on master/slave nodes    
-    for ( size_t k = 0; k < masterSlaveCommunicator_.size(); ++k) {
+    Kokkos::parallel_for("set_slave_to_master", masterSlaveCommunicator_.size(), KOKKOS_LAMBDA(const int i)
+    {
       // extract master node and slave node
-      EntityPair vecPair = masterSlaveCommunicator_[k];
-      const stk::mesh::Entity masterNode = vecPair.first;
-      const stk::mesh::Entity slaveNode = vecPair.second;
-      // pointer to data
-      const double *masterField = (double *)stk::mesh::field_data(*theField, masterNode);
-      
-      if ( NULL != masterField ) {
-        double *slaveField = (double *)stk::mesh::field_data(*theField, slaveNode);
-        // set master to slave
-        for ( unsigned j = 0; j < sizeOfField; ++j ) {
-          slaveField[j] = masterField[j];
+      const KokkosEntityPair& entPair = deviceMasterSlaves(i);
+      const stk::mesh::Entity masterNode = entPair.first;
+      const stk::mesh::Entity slaveNode = entPair.second;
+
+      const stk::mesh::FastMeshIndex master = ngpMesh.fast_mesh_index(masterNode);
+      const stk::mesh::FastMeshIndex slave = ngpMesh.fast_mesh_index(slaveNode);
+
+      if (ngpField.get_num_components_per_entity(master) == fieldSize) {
+        // add in contribution
+        for ( unsigned j = 0; j < fieldSize; ++j ) {
+          ngpField.get(slave,j) = ngpField.get(master,j);
         }
       }
-    }
+    });
   }
 
-  periodic_parallel_communicate_field(theField);
+  ngpField.modify_on_device();
 
+  periodic_parallel_communicate_field(theField);
 }
 
 } // namespace nalu

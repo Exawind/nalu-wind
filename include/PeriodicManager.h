@@ -131,8 +131,10 @@ class PeriodicManager {
  public:
   // the data structures to hold master/slave information
   typedef std::pair<stk::mesh::Entity, stk::mesh::Entity> EntityPair;
+  typedef Kokkos::pair<stk::mesh::Entity, stk::mesh::Entity> KokkosEntityPair;
   typedef std::pair<stk::mesh::Selector, stk::mesh::Selector> SelectorPair;
   typedef std::vector<std::pair<theEntityKey,theEntityKey> > SearchKeyVector;
+  typedef Kokkos::View<KokkosEntityPair*, Kokkos::LayoutRight, MemSpace> KokkosEntityPairView;
 
   std::vector<int> ghostCommProcs_;
 
@@ -153,6 +155,8 @@ class PeriodicManager {
 
   // vector of masterEntity:slaveEntity
   std::vector<EntityPair> masterSlaveCommunicator_;
+  KokkosEntityPairView deviceMasterSlaves_;
+  KokkosEntityPairView::HostMirror hostMasterSlaves_;
 
   // culmination of all searches
   SearchKeyVector searchKeyVector_;
