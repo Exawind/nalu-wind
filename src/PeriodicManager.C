@@ -702,6 +702,19 @@ PeriodicManager::periodic_parallel_communicate_field(
   stk::mesh::FieldBase *theField)
 {
   if ( NULL != periodicGhosting_ ) {
+    std::vector< const stk::mesh::FieldBase *> fieldVec(1, theField);
+    stk::mesh::communicate_field_data(*periodicGhosting_, fieldVec);
+  }
+}
+
+//--------------------------------------------------------------------------
+//-------- ngp_periodic_parallel_communicate_field -----------------------------
+//--------------------------------------------------------------------------
+void
+PeriodicManager::ngp_periodic_parallel_communicate_field(
+  stk::mesh::FieldBase *theField)
+{
+  if ( NULL != periodicGhosting_ ) {
     const ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
     unsigned fieldOrd = theField->mesh_meta_data_ordinal();
 
@@ -728,7 +741,7 @@ PeriodicManager::periodic_parallel_communicate_field(
     }
 #endif
     else {
-      ThrowRequireMsg(false, "Error, unsupported field type in PeriodicManager::parallel_communicate_field.");
+      ThrowRequireMsg(false, "Error, unsupported field type in PeriodicManager::periodic_parallel_communicate_field.");
     }
   }
 }
@@ -738,6 +751,22 @@ PeriodicManager::periodic_parallel_communicate_field(
 //--------------------------------------------------------------------------
 void
 PeriodicManager::parallel_communicate_field(
+  stk::mesh::FieldBase *theField)
+{
+  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
+  const unsigned pSize = bulk_data.parallel_size();
+  if ( pSize > 1 ) {
+    std::vector< const stk::mesh::FieldBase *> fieldVec(1, theField);
+    stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+    stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+  }
+}
+
+//--------------------------------------------------------------------------
+//-------- ngp_parallel_communicate_field --------------------------------------
+//--------------------------------------------------------------------------
+void
+PeriodicManager::ngp_parallel_communicate_field(
   stk::mesh::FieldBase *theField)
 {
   const stk::mesh::BulkData & bulk_data = realm_.bulk_data();
@@ -834,6 +863,29 @@ PeriodicManager::apply_constraints(
 
 }
 
+//--------------------------------------------------------------------------
+//-------- apply_constraints -----------------------------------------------
+//--------------------------------------------------------------------------
+void
+PeriodicManager::ngp_apply_constraints(
+  stk::mesh::FieldBase *theField,
+  const unsigned &sizeOfField,
+  const bool &bypassFieldCheck,
+  const bool &addSlaves,
+  const bool &setSlaves)
+{
+
+  // update periodically ghosted fields within add_ and set_
+  if ( addSlaves )
+    ngp_add_slave_to_master(theField, sizeOfField, bypassFieldCheck);
+  if ( setSlaves )
+    ngp_set_slave_to_master(theField, sizeOfField, bypassFieldCheck);
+
+  // parallel communicate shared and aura-ed entities
+  ngp_parallel_communicate_field(theField);
+
+}
+
 
 //--------------------------------------------------------------------------
 //-------- apply_max_field -------------------------------------------------
@@ -876,7 +928,59 @@ PeriodicManager::add_slave_to_master(
   const unsigned &sizeOfField,
   const bool &bypassFieldCheck)
 {
+
   periodic_parallel_communicate_field(theField);
+
+  // iterate vector of masterEntity:slaveEntity pairs
+  if ( bypassFieldCheck ) {
+    // fields are expected to be defined on all master/slave nodes
+    for ( size_t k = 0; k < masterSlaveCommunicator_.size(); ++k) {
+      // extract master node and slave node
+      EntityPair vecPair = masterSlaveCommunicator_[k];
+      const stk::mesh::Entity masterNode = vecPair.first;
+      const stk::mesh::Entity slaveNode = vecPair.second;
+      // pointer to data
+      double *masterField = (double *)stk::mesh::field_data(*theField, masterNode);
+      const double *slaveField = (double *)stk::mesh::field_data(*theField, slaveNode);
+      // add in contribution
+      for ( unsigned j = 0; j < sizeOfField; ++j ) {
+        masterField[j] += slaveField[j];
+      }
+    }
+  }
+  else {
+    // more costly check to see if fields are defined on master/slave nodes    
+    for ( size_t k = 0; k < masterSlaveCommunicator_.size(); ++k) {
+      // extract master node and slave node
+      EntityPair vecPair = masterSlaveCommunicator_[k];
+      const stk::mesh::Entity masterNode = vecPair.first;
+      const stk::mesh::Entity slaveNode = vecPair.second;
+      // pointer to data
+      double *masterField = (double *)stk::mesh::field_data(*theField, masterNode);
+      if ( NULL != masterField ) {
+        const double *slaveField = (double *)stk::mesh::field_data(*theField, slaveNode);
+        // add in contribution
+        for ( unsigned j = 0; j < sizeOfField; ++j ) {
+          masterField[j] += slaveField[j];
+        }
+      }
+    }
+  }
+
+  periodic_parallel_communicate_field(theField);
+
+}
+
+//--------------------------------------------------------------------------
+//-------- ngp_add_slave_to_master ---------------------------------------------
+//--------------------------------------------------------------------------
+void
+PeriodicManager::ngp_add_slave_to_master(
+  stk::mesh::FieldBase *theField,
+  const unsigned &sizeOfField,
+  const bool &bypassFieldCheck)
+{
+  ngp_periodic_parallel_communicate_field(theField);
 
   ThrowRequireMsg(theField->type_is<double>(), "Error in PeriodicManager::add_slave_to_master, theField ("<<theField->name()<<") is required to be double.");
 
@@ -926,7 +1030,7 @@ PeriodicManager::add_slave_to_master(
   }
   ngpField.modify_on_device();
 
-  periodic_parallel_communicate_field(theField);
+  ngp_periodic_parallel_communicate_field(theField);
 }
 
 //--------------------------------------------------------------------------
@@ -938,7 +1042,60 @@ PeriodicManager::set_slave_to_master(
   const unsigned &sizeOfField,
   const bool &bypassFieldCheck)
 {
+
   periodic_parallel_communicate_field(theField);
+
+  // iterate vector of masterEntity:slaveEntity pairs
+  if ( bypassFieldCheck ) {
+    // fields are expected to be defined on all master/slave nodes
+    for ( size_t k = 0; k < masterSlaveCommunicator_.size(); ++k) {
+      // extract master node and slave node
+      EntityPair vecPair = masterSlaveCommunicator_[k];
+      const stk::mesh::Entity masterNode = vecPair.first;
+      const stk::mesh::Entity slaveNode = vecPair.second;
+      // pointer to data
+      const double *masterField = (double *)stk::mesh::field_data(*theField, masterNode);
+      double *slaveField = (double *)stk::mesh::field_data(*theField, slaveNode);
+      // set master to slave
+      for ( unsigned j = 0; j < sizeOfField; ++j ) {
+        slaveField[j] = masterField[j];
+      }
+    }
+  }
+  else {
+    // more costly check to see if fields are defined on master/slave nodes    
+    for ( size_t k = 0; k < masterSlaveCommunicator_.size(); ++k) {
+      // extract master node and slave node
+      EntityPair vecPair = masterSlaveCommunicator_[k];
+      const stk::mesh::Entity masterNode = vecPair.first;
+      const stk::mesh::Entity slaveNode = vecPair.second;
+      // pointer to data
+      const double *masterField = (double *)stk::mesh::field_data(*theField, masterNode);
+
+      if ( NULL != masterField ) {
+        double *slaveField = (double *)stk::mesh::field_data(*theField, slaveNode);
+        // set master to slave
+        for ( unsigned j = 0; j < sizeOfField; ++j ) {
+          slaveField[j] = masterField[j];
+        }
+      }
+    }
+  }
+
+  periodic_parallel_communicate_field(theField);
+
+}
+
+//--------------------------------------------------------------------------
+//-------- ngp_set_slave_to_master ---------------------------------------------
+//--------------------------------------------------------------------------
+void
+PeriodicManager::ngp_set_slave_to_master(
+  stk::mesh::FieldBase *theField,
+  const unsigned &sizeOfField,
+  const bool &bypassFieldCheck)
+{
+  ngp_periodic_parallel_communicate_field(theField);
 
   ThrowRequireMsg(theField->type_is<double>(), "Argh, theField ("<<theField->name()<<") is not double.");
 
@@ -987,7 +1144,7 @@ PeriodicManager::set_slave_to_master(
 
   ngpField.modify_on_device();
 
-  periodic_parallel_communicate_field(theField);
+  ngp_periodic_parallel_communicate_field(theField);
 }
 
 } // namespace nalu

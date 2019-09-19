@@ -65,6 +65,13 @@ class PeriodicManager {
     const bool &addSlaves = true,
     const bool &setSlaves = true);
 
+  void ngp_apply_constraints(
+    stk::mesh::FieldBase *,
+    const unsigned &sizeOfField,
+    const bool &bypassFieldCheck,
+    const bool &addSlaves = true,
+    const bool &setSlaves = true);
+
   // find the max
   void apply_max_field(
     stk::mesh::FieldBase *,
@@ -109,9 +116,17 @@ class PeriodicManager {
   periodic_parallel_communicate_field(
     stk::mesh::FieldBase *theField);
 
+  void
+  ngp_periodic_parallel_communicate_field(
+    stk::mesh::FieldBase *theField);
+
   /* communicate shared nodes and aura nodes */
   void
   parallel_communicate_field(
+    stk::mesh::FieldBase *theField);
+
+  void
+  ngp_parallel_communicate_field(
     stk::mesh::FieldBase *theField);
 
   Realm &realm_;
@@ -167,6 +182,16 @@ class PeriodicManager {
     const bool &bypassFieldCheck);
 
   void set_slave_to_master(
+    stk::mesh::FieldBase *theField,
+    const unsigned &sizeOfField,
+    const bool &bypassFieldCheck);
+
+  void ngp_add_slave_to_master(
+    stk::mesh::FieldBase *theField,
+    const unsigned &sizeOfField,
+    const bool &bypassFieldCheck);
+
+  void ngp_set_slave_to_master(
     stk::mesh::FieldBase *theField,
     const unsigned &sizeOfField,
     const bool &bypassFieldCheck);
