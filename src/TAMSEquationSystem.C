@@ -70,6 +70,7 @@ TAMSEquationSystem::TAMSEquationSystem(EquationSystems& eqSystems)
     avgTime_(NULL),
     avgMdotScs_(NULL),
     avgMdot_(NULL),
+    isInit_(true),
     metricTensorAlgDriver_(AlgorithmDriver(realm_)),
     averagingAlgDriver_(AlgorithmDriver(realm_)),
     avgMdotAlgDriver_(AlgorithmDriver(realm_)),
@@ -345,8 +346,16 @@ TAMSEquationSystem::pre_timestep_work()
   // Compute TAMS terms here, since we only want to do so once per timestep
 
   // Recompute metric tensor if the mesh is moving
-  if ( realm_.solutionOptions_->meshMotion_ ) {
+  if (realm_.solutionOptions_->meshMotion_) {
     compute_metric_tensor();
+    realm_.compute_vrtm();
+
+    // Redo initial work to take account of mesh motion in Realm
+    // pre_timestep_work
+    if (isInit_) {
+      initial_work();
+      isInit_ = false;
+    }
   }
 
   // Need to update tvisc for use in computing averages

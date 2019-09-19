@@ -40,14 +40,8 @@ ComputeSSTTAMSAveragesNodeAlgorithm::ComputeSSTTAMSAveragesNodeAlgorithm(
   stk::mesh::MetaData& meta_data = realm_.meta_data();
 
   // instantaneous quantities
-  if (meshMotion_) {
-   velocityRTM_ = meta_data.get_field<VectorFieldType>(
-     stk::topology::NODE_RANK, "velocity_rtm");
-  } 
-  else {
-    velocityRTM_ = meta_data.get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "velocity");
-  }
+  velocityRTM_ = meta_data.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, (meshMotion_) ? "velocity_rtm" : "velocity");
   density_ = meta_data.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density");
   dudx_ = meta_data.get_field<GenericFieldType>(

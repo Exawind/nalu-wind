@@ -64,6 +64,7 @@ public:
   ScalarFieldType* avgMdot_;
   VectorFieldType* gTmp_;
 
+  bool isInit_;
   AlgorithmDriver metricTensorAlgDriver_;
   AlgorithmDriver averagingAlgDriver_;
   AlgorithmDriver avgMdotAlgDriver_;
