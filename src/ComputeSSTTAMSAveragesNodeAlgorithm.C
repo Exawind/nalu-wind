@@ -162,8 +162,10 @@ ComputeSSTTAMSAveragesNodeAlgorithm::execute()
       const double weightAvg = std::max(1.0 - dt / avgTime[k], 0.0);
       const double weightInst = std::min(dt / avgTime[k], 1.0);
 
-      // TODO: Do I need density weighted averaging when density varies?
-      avgRho[k] = weightAvg * avgRho[k] + weightInst * rho[k];
+      // FIXME: Density never varies. But having this here causes
+      // weirdness in moving mesh problems such a turbine or rotating
+      // cylinder.
+      //avgRho[k] = weightAvg * avgRho[k] + weightInst * rho[k];
 
       double tkeRes = 0.0;
       for (int i = 0; i < nDim; ++i)
