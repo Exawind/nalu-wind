@@ -45,6 +45,7 @@ void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
   const auto edgeAreaVec = fieldMgr.template get_field<double>(edgeAreaVec_);
   const auto dualVol = fieldMgr.template get_field<double>(dualNodalVol_);
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
+  const auto gradPhiOps = nalu_ngp::edge_nodal_field_updater(ngpMesh, gradPhi);
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_)
@@ -57,29 +58,26 @@ void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
   nalu_ngp::run_edge_algorithm(
     ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& einfo) {
-      const auto gradPhiOps = nalu_ngp::edge_nodal_field_updater(
-        ngpMesh, gradPhi, einfo);
       NALU_ALIGNED DblType av[NDimMax];
 
       for (int d=0; d < dim2; ++d)
         av[d] = edgeAreaVec.get(einfo.meshIdx, d);
 
-      const auto& nodes = einfo.entityNodes;
-      const auto nodeL = nodes[0];
-      const auto nodeR = nodes[1];
+      const auto nodeL = ngpMesh.fast_mesh_index(einfo.entityNodes[0]);
+      const auto nodeR = ngpMesh.fast_mesh_index(einfo.entityNodes[1]);
 
-      const DblType invVolL = 1.0 / dualVol.get(ngpMesh, nodeL, 0);
-      const DblType invVolR = 1.0 / dualVol.get(ngpMesh, nodeR, 0);
+      const DblType invVolL = 1.0 / dualVol.get(nodeL, 0);
+      const DblType invVolR = 1.0 / dualVol.get(nodeR, 0);
 
       int counter = 0;
       for (int i = 0; i < dim1; ++i) {
         const double phiIp = 0.5 * (
-          phi.get(ngpMesh, nodeL, i) + phi.get(ngpMesh, nodeR, i));
+          phi.get(nodeL, i) + phi.get(nodeR, i));
 
         for (int j=0; j < dim2; ++j) {
           const DblType ajPhiIp = av[j] * phiIp;
-          gradPhiOps(0, counter) += ajPhiIp * invVolL;
-          gradPhiOps(1, counter) -= ajPhiIp * invVolR;
+          gradPhiOps(einfo, 0, counter) += ajPhiIp * invVolL;
+          gradPhiOps(einfo, 1, counter) -= ajPhiIp * invVolR;
           counter++;
         }
       }

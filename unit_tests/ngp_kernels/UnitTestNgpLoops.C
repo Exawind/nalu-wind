@@ -324,6 +324,9 @@ void elem_loop_scratch_views(
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpVel = fieldMgr.get_field<double>(velID);
+  const auto ngpVelOp = sierra::nalu::nalu_ngp::simd_elem_nodal_field_updater(
+    ngpMesh, ngpVel);
+
 
   const int numNodes = 8;
   DoubleTypeView volCheck("scv_volume", numNodes);
@@ -334,9 +337,6 @@ void elem_loop_scratch_views(
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData & edata) {
-      const auto ngpVelOp = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, ngpVel, edata);
-
       Traits::DblType test = 0.0;
       auto& scrViews = edata.simdScrView;
       auto& v_pres = scrViews.get_scratch_view_1D(presID);
@@ -350,9 +350,9 @@ void elem_loop_scratch_views(
         volCheck.d_view(i) = stk::simd::get_data(scv_vol(i), 0);
 
         // Scatter SIMD value to nodes
-        ngpVelOp(i, 0) = xVel;
-        ngpVelOp(i, 1) = yVel;
-        ngpVelOp(i, 2) = zVel;
+        ngpVelOp(edata, i, 0) = xVel;
+        ngpVelOp(edata, i, 1) = yVel;
+        ngpVelOp(edata, i, 2) = zVel;
       }
     });
 
@@ -418,14 +418,13 @@ void calc_mdot_elem_loop(
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   ngp::Field<double> ngpMdot = fieldMgr.get_field<double>(mdotID);
+  // SIMD Element field operation handler
+  const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
+    ngpMesh, ngpMdot);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata) {
-      // SIMD Element field operation handler
-      const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
-        ngpMesh, ngpMdot, edata);
-
       NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
       auto& scrViews = edata.simdScrView;
       auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
@@ -448,7 +447,7 @@ void calc_mdot_elem_loop(
         for (int d=0; d < Hex8Traits::nDim_; ++d)
           tmdot += rhoU[d] * v_area(ip, d);
 
-        mdotOps(ip) = tmdot;
+        mdotOps(edata, ip) = tmdot;
       }
     });
 
@@ -514,14 +513,14 @@ void basic_face_elem_loop(
     wallArea.mesh_meta_data_ordinal());
   auto wDist = fieldMgr.get_field<double>(
     wallNormDist.mesh_meta_data_ordinal());
+  const auto areaOps = sierra::nalu::nalu_ngp::simd_face_elem_nodal_field_updater(
+    ngpMesh, wArea);
+  const auto distOps = sierra::nalu::nalu_ngp::simd_face_elem_nodal_field_updater(
+    ngpMesh, wDist);
 
   sierra::nalu::nalu_ngp::run_face_elem_algorithm(
     meshInfo, faceData, elemData, sel,
     KOKKOS_LAMBDA(FaceSimdData& fdata) {
-      const auto areaOps = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, wArea, fdata);
-      const auto distOps = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, wDist, fdata);
 
       auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
       auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaID);
@@ -545,8 +544,8 @@ void basic_face_elem_loop(
         ypBip = stk::math::sqrt(ypBip);
 
         const int ni = faceIpNodeMap[ip];
-        distOps(ni, 0) += aMag * ypBip;
-        areaOps(ni, 0) += aMag;
+        distOps(fdata, ni, 0) += aMag * ypBip;
+        areaOps(fdata, ni, 0) += aMag;
       }
     });
 

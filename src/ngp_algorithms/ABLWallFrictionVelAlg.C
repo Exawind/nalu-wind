@@ -185,12 +185,12 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
   const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
 
+  const auto utauOps = nalu_ngp::simd_elem_field_updater(
+    ngpMesh, ngpUtau);
+
   nalu_ngp::run_elem_algorithm(
     meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata) {
-      const auto utauOps = nalu_ngp::simd_elem_field_updater(
-        ngpMesh, ngpUtau, edata);
-
       // Unit normal vector
       NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
       NALU_ALIGNED DoubleType velIp[BcAlgTraits::nDim_];
@@ -266,7 +266,7 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
           (-Tref / (kappa * gravity * Tflux)));
         const DoubleType term = stk::math::log(zh / z0);
 
-        DoubleType utau_calc;
+        DoubleType utau_calc = eps;
         for (int si = 0; si < edata.numSimdElems; ++si) {
           const double Tflux1 = stk::simd::get_data(Tflux, si);
 
@@ -299,7 +299,7 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
 
           stk::simd::set_data(utau_calc, si, utau);
         }
-        utauOps(ip) = utau_calc;
+        utauOps(edata, ip) = utau_calc;
       }
     });
 }

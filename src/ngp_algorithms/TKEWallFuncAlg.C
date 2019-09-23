@@ -71,6 +71,8 @@ void TKEWallFuncAlg<BcAlgTraits>::execute()
 
   // Reset 'assembled' BC TKE nodal field
   ngpBcNodalTke.set_all(ngpMesh, 0.0);
+  const auto ngpTkeOps = nalu_ngp::simd_elem_nodal_field_updater(
+    ngpMesh, ngpBcNodalTke);
 
   const DoubleType sqrt_cmu = stk::math::sqrt(cMu_);
   const auto* meFC = meFC_;
@@ -81,8 +83,6 @@ void TKEWallFuncAlg<BcAlgTraits>::execute()
   nalu_ngp::run_elem_algorithm(
     meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata) {
-      const auto ngpTkeOps = nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, ngpBcNodalTke, edata);
 
       auto& scrViews = edata.simdScrView;
       const auto& v_areav = scrViews.get_scratch_view_2D(exposedAreaID);
@@ -97,7 +97,7 @@ void TKEWallFuncAlg<BcAlgTraits>::execute()
 
         const auto nodeID = meFC->ipNodeMap()[ip];
         const DoubleType tkeBip = v_utau(ip) * v_utau(ip) / sqrt_cmu;
-        ngpTkeOps(nodeID, 0) += tkeBip * aMag;
+        ngpTkeOps(edata, nodeID, 0) += tkeBip * aMag;
       }
     });
 
