@@ -7,6 +7,8 @@
 
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestKokkosUtils.h"
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldOps.h"
 
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
@@ -552,6 +554,48 @@ void dhdx_test_function(
   init_trigonometric_field(bulk, coordinates, dhdx);
 }
 
+void calc_mass_flow_rate(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& velocity,
+  const ScalarFieldType& density,
+  const VectorFieldType& edgeAreaVec,
+  ScalarFieldType& massFlowRate)
+{
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+  EXPECT_EQ(ndim, 3);
+
+  const ScalarFieldType& densityNp1 = density.field_of_state(stk::mesh::StateNP1);
+  const VectorFieldType& velocityNp1 = velocity.field_of_state(stk::mesh::StateNP1);
+
+  const stk::mesh::Selector selector =
+    meta.locally_owned_part() | meta.globally_shared_part();
+  const auto& buckets = bulk.get_buckets(stk::topology::EDGE_RANK, selector);
+
+  for (auto b: buckets) {
+    const auto bktlen = b->size();
+    const double* av = stk::mesh::field_data(edgeAreaVec, *b);
+    double* mdot = stk::mesh::field_data(massFlowRate, *b);
+
+    for (size_t ie = 0; ie < bktlen; ++ie) {
+      const auto* edge_nodes = b->begin_nodes(ie);
+      const auto nodeL = edge_nodes[0];
+      const auto nodeR = edge_nodes[1];
+
+      const double* velL = stk::mesh::field_data(velocityNp1, nodeL);
+      const double* velR = stk::mesh::field_data(velocityNp1, nodeR);
+
+      const double rhoL = *stk::mesh::field_data(densityNp1, nodeL);
+      const double rhoR = *stk::mesh::field_data(densityNp1, nodeR);
+
+      double tmdot = 0.0;
+      for (int d=0; d < ndim; ++d)
+        tmdot += 0.5 * (rhoL * velL[d] + rhoR * velR[d]) * av[ie * ndim + d];
+
+      mdot[ie] = tmdot;
+    }
+  }
+}
 
 void calc_mass_flow_rate_scs(
   stk::mesh::BulkData& bulk,
@@ -561,70 +605,76 @@ void calc_mass_flow_rate_scs(
   const VectorFieldType& velocity,
   const GenericFieldType& massFlowRate)
 {
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Hex8Traits = sierra::nalu::AlgTraitsHex8;
+  using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
+  const int npe = Hex8Traits::nodesPerElement_;
   EXPECT_EQ(ndim, 3);
+  EXPECT_EQ(topo.num_nodes(), npe);
 
-  const ScalarFieldType& densityNp1 = density.field_of_state(stk::mesh::StateNP1);
-  const VectorFieldType& velocityNp1 = velocity.field_of_state(stk::mesh::StateNP1);
-  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+  // Register necessary data for element gathers
+  sierra::nalu::ElemDataRequests dataReq(meta);
+  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element<Hex8Traits>();
+  dataReq.add_cvfem_surface_me(meSCS);
 
-  std::vector<double> v_shape_fcn(meSCS->num_integration_points() * meSCS->nodesPerElement_);
-  meSCS->shape_fcn(v_shape_fcn.data());
+  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_gathered_nodal_field(velocity, ndim);
+  dataReq.add_gathered_nodal_field(density, 1);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
 
-  const int numScsIp = meSCS->num_integration_points();
-  const int nodesPerElem = meSCS->nodesPerElement_;
-  std::vector<double> w_rho(nodesPerElem);
-  std::vector<double> w_vel(ndim * nodesPerElem);
-  std::vector<double> w_coords(ndim * nodesPerElem);
-  std::vector<double> w_scs_areav(numScsIp * ndim);
-
-  const stk::mesh::Selector selector =
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  const stk::mesh::Selector sel =
     meta.locally_owned_part() | meta.globally_shared_part();
-  const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  for (auto b: buckets) {
-    const auto bktlen = b->size();
+  const auto velID = velocity.mesh_meta_data_ordinal();
+  const auto rhoID = density.mesh_meta_data_ordinal();
+  const auto mdotID = massFlowRate.mesh_meta_data_ordinal();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto ngpMdot = fieldMgr.get_field<double>(mdotID);
 
-    for (size_t ie = 0; ie < bktlen; ++ie) {
-      double* mdot = stk::mesh::field_data(massFlowRate, *b, ie);
+  sierra::nalu::nalu_ngp::run_elem_algorithm(
+    meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdData& edata) {
+      const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
+        ngpMesh, ngpMdot, edata);
 
-      auto* elem_nodes = b->begin_nodes(ie);
-      const auto num_nodes = b->num_nodes(ie);
+      NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
 
-      for (size_t in = 0; in < num_nodes; ++in) {
-        const auto node = elem_nodes[in];
-        w_rho[in] = *stk::mesh::field_data(densityNp1, node);
-        const double* vel = stk::mesh::field_data(velocityNp1, node);
-        const double* coords = stk::mesh::field_data(coordinates, node);
+      auto& scrViews = edata.simdScrView;
+      auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
+      auto& v_vel = scrViews.get_scratch_view_2D(velID);
+      auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      auto& v_area = meViews.scs_areav;
+      auto& v_shape_fcn = meViews.scs_shape_fcn;
 
-        for (int d=0; d < ndim; ++d) {
-          w_vel[in * ndim + d] = vel[d];
-          w_coords[in * ndim + d] = coords[d];
-        }
-      }
+      for (int ip = 0; ip < Hex8Traits::numScsIp_; ++ip) {
+        for (int d=0; d < Hex8Traits::nDim_; ++d)
+          rhoU[d] = 0.0;
 
-      double scs_error = 0;
-      meSCS->determinant(1, w_coords.data(), w_scs_areav.data(), &scs_error);
-
-      for (int ip = 0; ip < numScsIp; ++ip) {
-        std::vector<double> rhoU(ndim, 0.0);
-
-        const int offset = ip * nodesPerElem;
-        for (int ic=0; ic < nodesPerElem; ++ic) {
-          const double r = v_shape_fcn[offset + ic];
-          for (int d = 0; d < ndim; d++)
-            rhoU[d] += r * w_rho[ic] * w_vel[ic * ndim + d];
+        for (int ic=0; ic < Hex8Traits::nodesPerElement_; ++ic) {
+          const auto r = v_shape_fcn(ip, ic);
+          for (int d=0; d < Hex8Traits::nDim_; ++d)
+            rhoU[d] += r * v_rho(ic) * v_vel(ic, d);
         }
 
-        double tmdot = 0.0;
-        for (int d = 0; d < ndim; d++)
-          tmdot += rhoU[d] * w_scs_areav[ip * ndim + d];
+        Traits::DblType tmdot = 0.0;
+        for (int d=0; d < Hex8Traits::nDim_; ++d)
+          tmdot += rhoU[d] * v_area(ip, d);
 
-        mdot[ip] = tmdot;
+        // Scatter to all elements in this SIMD group
+        mdotOps(ip) = tmdot;
       }
-    }
-  }
+    });
+
+  ngpMdot.modify_on_device();
+  ngpMdot.sync_to_host();
 }
 
 void calc_open_mass_flow_rate(
@@ -636,64 +686,146 @@ void calc_open_mass_flow_rate(
   const GenericFieldType& exposedAreaVec,
   const GenericFieldType& massFlowRate)
 {
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+  const int npe = Quad4Traits::nodesPerFace_;
+  EXPECT_EQ(ndim, 3);
+  EXPECT_EQ(topo.num_nodes(), npe);
+
+  // Register necessary element data gathers
+  sierra::nalu::ElemDataRequests dataReq(meta);
+  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element<Quad4Traits>();
+  dataReq.add_cvfem_surface_me(meFC);
+  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_gathered_nodal_field(velocity, ndim);
+  dataReq.add_gathered_nodal_field(density, 1);
+  dataReq.add_face_field(exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
+  dataReq.add_face_field(massFlowRate, Quad4Traits::numFaceIp_);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
+
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() | meta.globally_shared_part();
+
+  const auto velID = velocity.mesh_meta_data_ordinal();
+  const auto rhoID = density.mesh_meta_data_ordinal();
+  const auto mdotID = massFlowRate.mesh_meta_data_ordinal();
+  const auto areaID = exposedAreaVec.mesh_meta_data_ordinal();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto ngpMdot = fieldMgr.get_field<double>(mdotID);
+
+  sierra::nalu::nalu_ngp::run_elem_algorithm(
+    meshInfo, meta.side_rank(), dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
+      const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
+        ngpMesh, ngpMdot, edata);
+
+      NALU_ALIGNED Traits::DblType rhoU[Quad4Traits::nDim_];
+
+      auto& scrViews = edata.simdScrView;
+      const auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
+      const auto& v_vel = scrViews.get_scratch_view_2D(velID);
+      const auto& v_area = scrViews.get_scratch_view_2D(areaID);
+      const auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& shape_fcn = meViews.scs_shape_fcn;
+
+      for (int ip = 0; ip < Quad4Traits::numFaceIp_; ++ip) {
+        for (int d=0; d < Quad4Traits::nDim_; ++d)
+          rhoU[d] = 0.0;
+
+        for (int ic=0; ic < Quad4Traits::nodesPerFace_; ++ic) {
+          const Traits::DblType r = shape_fcn(ip, ic);
+          for (int d=0; d < Quad4Traits::nDim_; ++d)
+            rhoU[d] += r * v_rho(ic) * v_vel(ic, d);
+        }
+
+        Traits::DblType tmdot = 0.0;
+        for (int d=0; d < Quad4Traits::nDim_; ++d)
+          tmdot += rhoU[d] * v_area(ip, d);
+
+        mdotOps(ip) = tmdot;
+      }
+    });
+
+  ngpMdot.modify_on_device();
+  ngpMdot.sync_to_host();
+}
+
+void calc_edge_area_vec(
+  const stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const VectorFieldType& edgeAreaVec)
+{
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
   EXPECT_EQ(ndim, 3);
 
-  const ScalarFieldType& densityNp1 = density.field_of_state(stk::mesh::StateNP1);
-  const VectorFieldType& velocityNp1 = velocity.field_of_state(stk::mesh::StateNP1);
-  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
+  const auto npe = meSCS->nodesPerElement_;
+  const auto numScsIp = meSCS->num_integration_points();
+  const int* lrscv = meSCS->adjacentNodes();
+  const int* scsIpEdge = meSCS->scsIpEdgeOrd();
 
-  std::vector<double> v_shape_fcn(meFC->num_integration_points() * meFC->nodesPerElement_);
-  meFC->shape_fcn(v_shape_fcn.data());
+  // Scratch arrays
+  std::vector<double> w_coords(ndim * npe);
+  std::vector<double> w_scs_areav(ndim * numScsIp);
 
-  const int numScsIp = meFC->num_integration_points();
-  const int nodesPerElem = meFC->nodesPerElement_;
-  std::vector<double> w_rho(nodesPerElem);
-  std::vector<double> w_vel(ndim * nodesPerElem);
-  std::vector<double> w_coords(ndim * nodesPerElem);
+  // Reset edge area vector to zero
+  stk::mesh::field_fill(0.0, edgeAreaVec);
 
-  const stk::mesh::Selector selector =
-    meta.locally_owned_part() | meta.globally_shared_part();
-  const auto& buckets = bulk.get_buckets(meta.side_rank(), selector);
+  const stk::mesh::Selector sel = meta.locally_owned_part() | meta.globally_shared_part();
+  const auto& buckets = bulk.get_buckets(stk::topology::ELEMENT_RANK, sel);
 
   for (auto b: buckets) {
+    ThrowRequire(b->topology() == topo);
+
     const auto bktlen = b->size();
-
-    for (size_t ie = 0; ie < bktlen; ++ie) {
-      double* mdot = stk::mesh::field_data(massFlowRate, *b, ie);
-      const double* areaVec = stk::mesh::field_data(exposedAreaVec, *b, ie);
-
-      auto* elem_nodes = b->begin_nodes(ie);
+    for (size_t ie=0; ie < bktlen; ++ie) {
+      const auto* elem_nodes = b->begin_nodes(ie);
       const auto num_nodes = b->num_nodes(ie);
 
       for (size_t in = 0; in < num_nodes; ++in) {
         const auto node = elem_nodes[in];
-        w_rho[in] = *stk::mesh::field_data(densityNp1, node);
-        const double* vel = stk::mesh::field_data(velocityNp1, node);
         const double* coords = stk::mesh::field_data(coordinates, node);
-
         for (int d=0; d < ndim; ++d) {
-          w_vel[in * ndim + d] = vel[d];
           w_coords[in * ndim + d] = coords[d];
         }
       }
 
-      for (int ip = 0; ip < numScsIp; ++ip) {
-        std::vector<double> rhoU(ndim, 0.0);
+      double scs_error = 0.0;
+      meSCS->determinant(1, w_coords.data(), w_scs_areav.data(), &scs_error);
 
-        const int offset = ip * nodesPerElem;
-        for (int ic=0; ic < nodesPerElem; ++ic) {
-          const double r = v_shape_fcn[offset + ic];
-          for (int d = 0; d < ndim; d++)
-            rhoU[d] += r * w_rho[ic] * w_vel[ic * ndim + d];
+      const auto* elem_edges = b->begin_edges(ie);
+
+      for (int ip=0; ip < numScsIp; ++ip) {
+        const int iedge = scsIpEdge[ip];
+        const auto edge = elem_edges[iedge];
+
+        double* av = stk::mesh::field_data(edgeAreaVec, edge);
+        const auto* edge_nodes = bulk.begin_nodes(edge);
+        // Index of "left" node in the element relations
+        const int iLn = lrscv[2 * ip];
+
+        // STK identifier for the left node according to the element and edge
+        const auto lnElemId = bulk.identifier(elem_nodes[iLn]);
+        const auto lnEdgeId = bulk.identifier(edge_nodes[0]);
+
+        // If the left node on both edge and element are same, then they are
+        // oriented the same way, i.e., sign multiplier is just 1.0, otherwise
+        // reverse sign
+        const double sgn = (lnElemId == lnEdgeId)? 1.0 : -1.0;
+
+        // accumulate contribution from this subcontrol surface to edge area vector
+        for (int d=0; d < ndim; ++d) {
+          av[d] += w_scs_areav[ip * ndim + d] * sgn;
         }
-
-        double tmdot = 0.0;
-        for (int d = 0; d < ndim; d++)
-          tmdot += rhoU[d] * areaVec[ip * ndim + d];
-
-        mdot[ip] = tmdot;
       }
     }
   }
@@ -705,141 +837,54 @@ void calc_exposed_area_vec(
   const VectorFieldType& coordinates,
   GenericFieldType& exposedAreaVec)
 {
+  using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
+  const int npe = Quad4Traits::nodesPerFace_;
   EXPECT_EQ(ndim, 3);
+  EXPECT_EQ(topo.num_nodes(), npe);
 
-  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
-  const auto npe = meFC->nodesPerElement_;
-  const auto numScsIp = meFC->num_integration_points();
-  std::vector<double> w_coords(ndim * npe);
-  std::vector<double> w_scs_areav(ndim * numScsIp);
+  // Register necessary element data gathers
+  sierra::nalu::ElemDataRequests dataReq(meta);
+  auto meFC = sierra::nalu::MasterElementRepo::get_surface_master_element<Quad4Traits>();
+  dataReq.add_cvfem_surface_me(meFC);
+  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_face_field(exposedAreaVec, Quad4Traits::numFaceIp_, Quad4Traits::nDim_);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
 
-  const stk::mesh::Selector sel = meta.locally_owned_part() | meta.globally_shared_part();
-  const auto& buckets = bulk.get_buckets(meta.side_rank(), sel);
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() | meta.globally_shared_part();
 
-  for (auto b: buckets) {
-    ThrowRequire(b->topology() == topo);
+  const auto areaID = exposedAreaVec.mesh_meta_data_ordinal();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto areaVec = fieldMgr.get_field<double>(areaID);
 
-    const auto bktlen = b->size();
-    for (size_t ie = 0; ie < bktlen; ++ie) {
-      double* areaVec = stk::mesh::field_data(exposedAreaVec, *b, ie);
+  sierra::nalu::nalu_ngp::run_elem_algorithm(
+    meshInfo, meta.side_rank(), dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType & edata) {
+      const auto areaVecOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
+        ngpMesh, areaVec, edata);
+      auto& scrViews = edata.simdScrView;
+      const auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& v_area = meViews.scs_areav;
 
-      const auto* face_nodes = b->begin_nodes(ie);
-      const auto num_nodes = b->num_nodes(ie);
+      for (int ip = 0; ip < Quad4Traits::numFaceIp_; ++ip)
+        for (int d=0; d < Quad4Traits::nDim_; ++d)
+          areaVecOps(ip * Quad4Traits::nDim_ + d) = v_area(ip, d);
+    });
 
-      for (size_t in = 0; in < num_nodes; ++in) {
-        const auto node = face_nodes[in];
-        const double* coords = stk::mesh::field_data(coordinates, node);
-        for (int d=0; d < ndim; ++d) {
-          w_coords[in * ndim + d] = coords[d];
-        }
-      }
-
-      double scs_error = 0.0;
-      meFC->determinant(1, w_coords.data(), w_scs_areav.data(), &scs_error);
-
-      for (int ip = 0; ip < numScsIp; ++ip)
-        for (int d=0; d < ndim; ++d)
-          areaVec[ip * ndim + d] = w_scs_areav[ip * ndim + d];
-    }
-  }
+  areaVec.modify_on_device();
+  areaVec.sync_to_host();
 }
 
 #ifndef KOKKOS_ENABLE_CUDA
 
 #if 0
-void calc_mass_flow_rate_scs(
-  stk::mesh::BulkData& bulk,
-  const stk::topology& topo,
-  const VectorFieldType& coordinates,
-  const ScalarFieldType& density,
-  const VectorFieldType& velocity,
-  const GenericFieldType& massFlowRate)
-{
-  const auto& meta = bulk.mesh_meta_data();
-  const int ndim = meta.spatial_dimension();
-  EXPECT_EQ(ndim, 3);
-
-  sierra::nalu::ElemDataRequests dataNeeded(meta);
-
-  const ScalarFieldType& densityNp1 = density.field_of_state(stk::mesh::StateNP1);
-  const VectorFieldType& velocityNp1 = velocity.field_of_state(stk::mesh::StateNP1);
-  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(topo);
-
-  dataNeeded.add_cvfem_surface_me(meSCS);
-  dataNeeded.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
-  dataNeeded.add_gathered_nodal_field(densityNp1, 1);
-  dataNeeded.add_gathered_nodal_field(velocityNp1, ndim);
-  dataNeeded.add_master_element_call(sierra::nalu::SCS_AREAV,
-                                     sierra::nalu::CURRENT_COORDINATES);
-
-  const stk::mesh::Selector selector =
-    meta.locally_owned_part() | meta.globally_shared_part();
-  const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
-
-  ngp::Mesh ngpMesh(bulk);
-  ngp::FieldManager fieldMgr(bulk);
-  sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
-
-  const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(
-    dataNeededNGP, meta.spatial_dimension()) ;
-
-  auto team_exec = sierra::nalu::get_host_team_policy(
-    buckets.size(), bytes_per_team, bytes_per_thread);
-
-  Kokkos::parallel_for(team_exec, [&](const sierra::nalu::TeamHandleType& team) {
-      auto& b = *buckets[team.league_rank()];
-      const auto length = b.size();
-
-      EXPECT_EQ(b.topology(), topo);
-
-      sierra::nalu::ScratchViews<double> preReqData(
-        team, ndim, topo.num_nodes(), dataNeededNGP);
-
-      Kokkos::parallel_for(
-        Kokkos::TeamThreadRange(team, length), [&](const size_t& k) {
-          stk::mesh::Entity element = b[k];
-          sierra::nalu::fill_pre_req_data(
-            dataNeededNGP, ngpMesh, stk::topology::ELEMENT_RANK, element,
-            preReqData);
-          sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
-
-          std::vector<double> rhoU(ndim);
-          std::vector<double> v_shape_function(
-            meSCS->num_integration_points() * meSCS->nodesPerElement_);
-          meSCS->shape_fcn(v_shape_function.data());
-          double *mdot = stk::mesh::field_data(massFlowRate, element);
-          auto& v_densityNp1 = preReqData.get_scratch_view_1D(densityNp1);
-          auto& v_velocityNp1 = preReqData.get_scratch_view_2D(velocityNp1);
-          auto& v_scs_areav = preReqData.get_me_views(
-            sierra::nalu::CURRENT_COORDINATES).scs_areav;
-
-          for (int ip=0; ip < meSCS->num_integration_points(); ++ip) {
-            for (int j=0; j < ndim; ++j) {
-              rhoU[j] = 0.0;
-            }
-            const int offset = ip * meSCS->nodesPerElement_;
-
-            for (int ic=0; ic < meSCS->nodesPerElement_; ++ic) {
-              const double r = v_shape_function[offset+ic];
-              for (int j=0; j < ndim; ++j) {
-                rhoU[j] += r * v_densityNp1(ic) * v_velocityNp1(ic, j);
-              }
-            }
-
-            double tmdot = 0.0;
-            for (int j=0; j < ndim; j++) {
-              tmdot += rhoU[j] * v_scs_areav(ip, j);
-            }
-            mdot[ip] = tmdot;
-          }
-        });
-    });
-}
-#endif
-
 void calc_projected_nodal_gradient_interior(
   stk::mesh::BulkData& bulk,
   const stk::topology& topo,
@@ -847,6 +892,185 @@ void calc_projected_nodal_gradient_interior(
   const ScalarFieldType& dnv,
   const ScalarFieldType& scalarField,
   const VectorFieldType& gradField)
+{
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Hex8Traits = sierra::nalu::AlgTraitsHex8;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+  const int npe = Hex8Traits::nodesPerElement_;
+  EXPECT_EQ(ndim, 3);
+  EXPECT_EQ(topo.num_nodes(), npe);
+
+  sierra::nalu::ElemDataRequests dataReq(meta);
+
+  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element<Hex8Traits>();
+
+  dataReq.add_cvfem_surface_me(meSCS);
+  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_gathered_nodal_field(scalarField, 1);
+  dataReq.add_gathered_nodal_field(dnv, 1);
+  dataReq.add_gathered_nodal_field(gradField, ndim);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
+
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() | meta.globally_shared_part();
+
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  const auto gradFieldID = gradField.mesh_meta_data_ordinal();
+  const auto dnvID = dnv.mesh_meta_data_ordinal();
+  const auto scalarID = scalarField.mesh_meta_data_ordinal();
+  auto ngpGradField = fieldMgr.get_field<double>(gradFieldID);
+
+
+  sierra::nalu::nalu_ngp::run_elem_algorithm(
+    meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
+      const auto gradFieldOps = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
+        ngpMesh, ngpGradField, edata);
+      const int* lrscv = meSCS->adjacentNodes();
+      auto& scrView = edata.simdScrView;
+      const auto& v_dnv = scrView.get_scratch_view_1D(dnvID);
+      const auto& v_scalar = scrView.get_scratch_view_1D(scalarID);
+      const auto& meViews = scrView.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& v_areav = meViews.scs_areav;
+      const auto& v_shape_fcn = meViews.scs_shape_fcn;
+
+      for (int ip=0; ip < Hex8Traits::numScsIp_; ++ip) {
+        Traits::DblType qIp = 0.0;
+        for (int n=0; n < Hex8Traits::nodesPerElement_; ++n)
+          qIp += v_shape_fcn(ip, n) * v_scalar(n);
+
+        int il = lrscv[2 * ip];
+        int ir = lrscv[2 * ip + 1];
+
+        for (int d=0; d < Hex8Traits::nDim_; ++d) {
+          Traits::DblType fac = qIp * v_areav(ip, d);
+          Traits::DblType valL = fac / v_dnv(il);
+          Traits::DblType valR = fac / v_dnv(ir);
+
+          gradFieldOps(il, d) += valL;
+          gradFieldOps(ir, d) -= valR;
+        }
+      }
+    });
+}
+#endif
+
+
+template<typename PhiType, typename GradPhiType>
+void calc_projected_nodal_gradient_interior(
+  stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const ScalarFieldType& dnv,
+  const PhiType& phi,
+  const GradPhiType& gradPhi)
+{
+  static_assert(
+    ((std::is_same<PhiType, ScalarFieldType>::value &&
+      std::is_same<GradPhiType, VectorFieldType>::value) ||
+     (std::is_same<PhiType, VectorFieldType>::value &&
+      std::is_same<GradPhiType, GenericFieldType>::value)),
+    "Improper field types passed to nodal gradient calculator");
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Hex8Traits = sierra::nalu::AlgTraitsHex8;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+
+  constexpr int ncomp = std::is_same<
+    typename stk::mesh::FieldTraits<PhiType>::tag1, stk::mesh::Cartesian>::value
+    ? Hex8Traits::nDim_ : 1;
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+  const int npe = Hex8Traits::nodesPerElement_;
+  EXPECT_EQ(ndim, 3);
+  EXPECT_EQ(topo.num_nodes(), npe);
+
+  sierra::nalu::ElemDataRequests dataReq(meta);
+
+  auto meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element<Hex8Traits>();
+
+  dataReq.add_cvfem_surface_me(meSCS);
+  dataReq.add_coordinates_field(coordinates, ndim, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_gathered_nodal_field(phi, 1);
+  dataReq.add_gathered_nodal_field(dnv, 1);
+  dataReq.add_gathered_nodal_field(gradPhi, ndim);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_AREAV, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_master_element_call(
+    sierra::nalu::SCS_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
+
+  const stk::mesh::Selector sel =
+    meta.locally_owned_part() | meta.globally_shared_part();
+
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  const auto gradPhiID = gradPhi.mesh_meta_data_ordinal();
+  const auto dnvID = dnv.mesh_meta_data_ordinal();
+  const auto scalarID = phi.mesh_meta_data_ordinal();
+  auto ngpGradField = fieldMgr.get_field<double>(gradPhiID);
+
+
+  sierra::nalu::nalu_ngp::run_elem_algorithm(
+    meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
+      const auto gradPhiOps = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
+        ngpMesh, ngpGradField, edata);
+      const int* lrscv = meSCS->adjacentNodes();
+      auto& scrView = edata.simdScrView;
+      const auto& v_dnv = scrView.get_scratch_view_1D(dnvID);
+      const auto& v_scalar = scrView.get_scratch_view_1D(scalarID);
+      const auto& meViews = scrView.get_me_views(sierra::nalu::CURRENT_COORDINATES);
+      const auto& v_areav = meViews.scs_areav;
+      const auto& v_shape_fcn = meViews.scs_shape_fcn;
+
+      for (int di =0; di < ncomp; ++di) {
+        for (int ip=0; ip < Hex8Traits::numScsIp_; ++ip) {
+          Traits::DblType qIp = 0.0;
+          for (int n=0; n < Hex8Traits::nodesPerElement_; ++n)
+            qIp += v_shape_fcn(ip, n) * v_scalar(n);
+
+          int il = lrscv[2 * ip];
+          int ir = lrscv[2 * ip + 1];
+
+          for (int d=0; d < Hex8Traits::nDim_; ++d) {
+            Traits::DblType fac = qIp * v_areav(ip, d);
+            Traits::DblType valL = fac / v_dnv(il);
+            Traits::DblType valR = fac / v_dnv(ir);
+
+            gradPhiOps(il, di * Hex8Traits::nDim_ + d) += valL;
+            gradPhiOps(ir, di * Hex8Traits::nDim_ + d) -= valR;
+          }
+        }
+      }
+    });
+}
+
+template
+void calc_projected_nodal_gradient_interior<ScalarFieldType,VectorFieldType>(
+  stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const ScalarFieldType& dnv,
+  const ScalarFieldType& phi,
+  const VectorFieldType& gradPhi);
+
+template
+void calc_projected_nodal_gradient_interior<VectorFieldType,GenericFieldType>(
+  stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  const VectorFieldType& coordinates,
+  const ScalarFieldType& dnv,
+  const VectorFieldType& phi,
+  const GenericFieldType& gradPhi);
+
+#if 0
 {
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -871,7 +1095,7 @@ void calc_projected_nodal_gradient_interior(
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
 
   auto v_shape_function = Kokkos::View<double**>("shape_function", meSCS->num_integration_points(), meSCS->nodesPerElement_);
 
@@ -955,7 +1179,7 @@ void calc_projected_nodal_gradient_interior(
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
 
   auto v_shape_function = Kokkos::View<double**>("shape_function", meSCS->num_integration_points(), meSCS->nodesPerElement_);
 
@@ -1009,6 +1233,7 @@ void calc_projected_nodal_gradient_interior(
     });
   });
 }
+#endif
 
 void calc_projected_nodal_gradient_boundary(
   stk::mesh::BulkData& bulk,
@@ -1042,7 +1267,7 @@ void calc_projected_nodal_gradient_boundary(
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
 
   auto v_shape_function = Kokkos::View<double**>("shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
 
@@ -1120,7 +1345,7 @@ void calc_projected_nodal_gradient_boundary(
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
 
   auto v_shape_function = Kokkos::View<double**>("shape_function", meBC->num_integration_points(), meBC->nodesPerElement_);
 
@@ -1195,7 +1420,7 @@ void calc_dual_nodal_volume(
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
-  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension()) ;
+  const int bytes_per_thread = sierra::nalu::get_num_bytes_pre_req_data<double>(dataNeededNGP, meta.spatial_dimension(), sierra::nalu::ElemReqType::ELEM) ;
 
   auto v_shape_function = Kokkos::View<double**>("shape_function", meSCV->num_integration_points(), meSCV->nodesPerElement_);
 
@@ -1307,7 +1532,7 @@ void expect_all_near(
   }
 }
 
-void expect_all_near(
+void expect_all_near_2d(
   const Kokkos::View<double**>& calcValue,
   const double* exactValue,
   const double tol)

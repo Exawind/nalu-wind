@@ -21,6 +21,7 @@
 
 #include <gtest/gtest.h>
 
+typedef stk::mesh::Field<stk::mesh::EntityId> GlobalIdFieldType;
 typedef stk::mesh::Field<double> IdFieldType;
 typedef stk::mesh::Field<double> ScalarFieldType;
 typedef stk::mesh::Field<double,stk::mesh::Cartesian> VectorFieldType;

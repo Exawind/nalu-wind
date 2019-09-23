@@ -10,6 +10,7 @@
 
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
+#include "ngp_algorithms/NodalGradAlgDriver.h"
 
 #include <memory>
 
@@ -72,11 +73,12 @@ public:
 
   int pValue() { return pValue_; }
 
+  void compute_wall_distance();
+
 private:
   WallDistEquationSystem() = delete;
   WallDistEquationSystem(const WallDistEquationSystem&) = delete;
 
-  void compute_wall_distance();
 
   VectorFieldType* coordinates_{nullptr};
   ScalarFieldType* wallDistPhi_{nullptr};
@@ -85,7 +87,7 @@ private:
   ScalarFieldType* dualNodalVolume_{nullptr};
   VectorFieldType* edgeAreaVec_{nullptr};
 
-  std::unique_ptr<AssembleNodalGradAlgorithmDriver> assembleNodalGradAlgDriver_;
+  ScalarNodalGradAlgDriver nodalGradAlgDriver_;
 
   int pValue_{2};
 

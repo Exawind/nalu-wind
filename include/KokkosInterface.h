@@ -8,11 +8,17 @@
 #ifndef INCLUDE_KOKKOSINTERFACE_H_
 #define INCLUDE_KOKKOSINTERFACE_H_
 
+#include <cstddef>
+
 #include <stk_mesh/base/Entity.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core.hpp>
 
+#ifdef KOKKOS_ENABLE_CUDA
+#define NALU_ALIGNED alignas(sizeof(double))
+#else
 #define NALU_ALIGNED alignas(KOKKOS_MEMORY_ALIGNMENT)
+#endif
 
 #if defined(__INTEL_COMPILER)
 #define POINTER_RESTRICT restrict
@@ -32,12 +38,18 @@ namespace sierra {
 namespace nalu {
 
 #ifdef KOKKOS_ENABLE_CUDA
-   typedef Kokkos::CudaUVMSpace::memory_space    MemSpace;
+typedef Kokkos::CudaSpace    MemSpace;
+typedef Kokkos::CudaUVMSpace UVMSpace;
 #elif defined(KOKKOS_HAVE_OPENMP)
-   typedef Kokkos::OpenMP       MemSpace;
+typedef Kokkos::OpenMP       MemSpace;
+typedef Kokkos::OpenMP       UVMSpace;
 #else
-   typedef Kokkos::HostSpace    MemSpace;
+typedef Kokkos::HostSpace    MemSpace;
+typedef Kokkos::HostSpace    UVMSpace;
 #endif
+
+// Tpetra requires UVM on Cuda
+using LinSysMemSpace = UVMSpace;
 
 using HostSpace = Kokkos::DefaultHostExecutionSpace;
 using DeviceSpace = Kokkos::DefaultExecutionSpace;
@@ -129,12 +141,25 @@ void kokkos_parallel_reduce(SizeType n, Function loop_body, ReduceType& reduce, 
     Kokkos::parallel_reduce(debuggingName, Kokkos::RangePolicy<Kokkos::Serial>(0, n), loop_body, reduce);
 }
 
-template<typename T>
+template<typename T, typename MemorySpace=MemSpace>
 inline T* kokkos_malloc_on_device(const std::string& debuggingName) {
-  return static_cast<T*>(Kokkos::kokkos_malloc(debuggingName, sizeof(T)));
+  return static_cast<T*>(Kokkos::kokkos_malloc<MemorySpace>(debuggingName, sizeof(T)));
 }
-inline void kokkos_free_on_device(void * ptr) { Kokkos::kokkos_free(ptr); }
+
+template<typename MemorySpace=MemSpace>
+inline void kokkos_free_on_device(void* ptr)
+{ Kokkos::kokkos_free<MemorySpace>(ptr); }
+
+template<typename T>
+KOKKOS_FUNCTION
+void set_zero(T* values, unsigned length)
+{
+    for(unsigned i=0; i<length; ++i) {
+        values[i] = 0;
+    }
 }
-}
+
+} // nalu
+} // sierra
 
 #endif /* INCLUDE_KOKKOSINTERFACE_H_ */

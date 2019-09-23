@@ -6,6 +6,7 @@
 #include "UnitTestUtils.h"
 
 #include <TpetraLinearSystem.h>
+#include <TpetraLinearSystemHelpers.h>
 
 #ifndef KOKKOS_ENABLE_CUDA
 
@@ -33,7 +34,7 @@ TEST_F(DofStatusHex8Mesh, getDofStatus_shared)
 
   stk::mesh::Selector shared = bulk.mesh_meta_data().globally_shared_part();
   const stk::mesh::BucketVector& sharedBuckets = bulk.get_buckets(stk::topology::NODE_RANK, shared);
-  
+
   for(const stk::mesh::Bucket* bptr : sharedBuckets) {
       const stk::mesh::Bucket& bucket = *bptr;
       for(stk::mesh::Entity node : bucket) {
@@ -50,4 +51,3 @@ TEST_F(DofStatusHex8Mesh, getDofStatus_shared)
 }
 
 #endif
-

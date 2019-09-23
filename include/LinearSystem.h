@@ -39,6 +39,28 @@ class EquationSystem;
 class Realm;
 class LinearSolver;
 
+class CoeffApplier
+{
+public:
+  KOKKOS_FUNCTION
+  CoeffApplier() = default;
+
+  KOKKOS_FUNCTION
+  virtual ~CoeffApplier() {}
+
+  KOKKOS_FUNCTION
+  virtual void operator()(unsigned numEntities,
+                          const ngp::Mesh::ConnectedNodes& entities,
+                          const SharedMemView<int*,DeviceShmem> & localIds,
+                          const SharedMemView<int*,DeviceShmem> & sortPermutation,
+                          const SharedMemView<const double*,DeviceShmem> & rhs,
+                          const SharedMemView<const double**,DeviceShmem> & lhs,
+                          const char * trace_tag) = 0;
+
+  virtual void free_device_pointer() = 0;
+  virtual CoeffApplier* device_pointer() = 0;
+};
+
 class LinearSystem
 {
 public:
@@ -79,6 +101,48 @@ public:
   // Matrix Assembly
   virtual void zeroSystem()=0;
 
+#ifndef KOKKOS_ENABLE_CUDA
+  class DefaultHostOnlyCoeffApplier : public CoeffApplier
+  {
+  public:
+    KOKKOS_FUNCTION
+    DefaultHostOnlyCoeffApplier(LinearSystem& linSys)
+    : linSys_(linSys)
+    {}
+
+    KOKKOS_FUNCTION
+    ~DefaultHostOnlyCoeffApplier() {}
+
+    KOKKOS_FUNCTION
+    virtual void operator()(unsigned numEntities,
+                            const ngp::Mesh::ConnectedNodes& entities,
+                            const SharedMemView<int*,DeviceShmem> & localIds,
+                            const SharedMemView<int*,DeviceShmem> & sortPermutation,
+                            const SharedMemView<const double*,DeviceShmem> & rhs,
+                            const SharedMemView<const double**,DeviceShmem> & lhs,
+                            const char * trace_tag)
+    {
+      linSys_.sumInto(numEntities, entities, rhs, lhs, localIds, sortPermutation, trace_tag);
+    }
+
+    void free_device_pointer() {}
+
+    CoeffApplier* device_pointer() { return this; }
+
+  private:
+    LinearSystem& linSys_;
+  };
+#endif
+
+  virtual CoeffApplier* get_coeff_applier()
+  {
+#ifndef KOKKOS_ENABLE_CUDA
+    return new DefaultHostOnlyCoeffApplier(*this);
+#else
+    return nullptr;
+#endif
+  }
+
   virtual void sumInto(
       unsigned numEntities,
       const stk::mesh::Entity* entities,
@@ -93,10 +157,10 @@ public:
   virtual void sumInto(
     unsigned numEntities,
     const ngp::Mesh::ConnectedNodes& entities,
-    const SharedMemView<const double*> & rhs,
-    const SharedMemView<const double**> & lhs,
-    const SharedMemView<int*> & localIds,
-    const SharedMemView<int*> & sortPermutation,
+    const SharedMemView<const double*,DeviceShmem> & rhs,
+    const SharedMemView<const double**,DeviceShmem> & lhs,
+    const SharedMemView<int*,DeviceShmem> & localIds,
+    const SharedMemView<int*,DeviceShmem> & sortPermutation,
     const char * trace_tag) = 0;
 
   virtual void sumInto(
@@ -162,7 +226,6 @@ protected:
   Realm &realm_;
   EquationSystem *eqSys_;
   bool inConstruction_;
-  int writeCounter_;
 
   const unsigned numDof_;
   const std::string eqSysName_;

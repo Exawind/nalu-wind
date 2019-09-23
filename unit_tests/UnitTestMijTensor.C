@@ -26,6 +26,8 @@
 
 #include "UnitTestUtils.h"
 
+#ifndef KOKKOS_ENABLE_CUDA
+
 namespace {
 
 std::vector<double> calculate_mij_tensor(sierra::nalu::MasterElement &me,
@@ -354,3 +356,5 @@ TEST(MijTensorNGP, hex27_simd) {
     }
   }
 }
+
+#endif

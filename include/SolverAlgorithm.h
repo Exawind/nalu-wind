@@ -58,10 +58,10 @@ protected:
   void apply_coeff(
     unsigned numMeshobjs,
     const ngp::Mesh::ConnectedNodes& symMeshobjs,
-    const SharedMemView<int*> & scratchIds,
-    const SharedMemView<int*> & sortPermutation,
-    const SharedMemView<const double*> & rhs,
-    const SharedMemView<const double**> & lhs,
+    const SharedMemView<int*,DeviceShmem> & scratchIds,
+    const SharedMemView<int*,DeviceShmem> & sortPermutation,
+    const SharedMemView<const double*,DeviceShmem> & rhs,
+    const SharedMemView<const double**,DeviceShmem> & lhs,
     const char *trace_tag);
 
   EquationSystem *eqSystem_;

@@ -58,6 +58,9 @@ TestTurbulenceAlgorithm::declare_fields()
   dudx_ = (
     &meta.declare_field<GenericFieldType>(
       stk::topology::NODE_RANK, "dudx"));
+  openMassFlowRate_ = (
+    &meta.declare_field<GenericFieldType>(
+      meta.side_rank(), "open_mass_flow_rate"));
   tvisc_ = (
     &meta.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "turbulent_viscosity"));
@@ -90,12 +93,16 @@ TestTurbulenceAlgorithm::declare_fields()
      &meta.declare_field<ScalarFieldType>(
        stk::topology::NODE_RANK, "specific_heat"));
 
+  tkebc_ = &(meta.declare_field<ScalarFieldType>(
+       stk::topology::NODE_RANK, "open_tke_bc"));
+
   stk::mesh::put_field_on_mesh(*density_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*viscosity_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*tke_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*sdr_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*minDistance_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*dudx_, meta.universal_part(), spatialDim*spatialDim, nullptr);
+  stk::mesh::put_field_on_mesh(*openMassFlowRate_, meta.universal_part(), sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
   stk::mesh::put_field_on_mesh(*tvisc_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*maxLengthScale_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*fOneBlend_, meta.universal_part(), 1, nullptr);
@@ -105,6 +112,7 @@ TestTurbulenceAlgorithm::declare_fields()
   stk::mesh::put_field_on_mesh(*dwdx_, meta.universal_part(), spatialDim, nullptr);
   stk::mesh::put_field_on_mesh(*dhdx_, meta.universal_part(), spatialDim, nullptr);
   stk::mesh::put_field_on_mesh(*specificHeat_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*tkebc_, meta.universal_part(), 1, nullptr);
 }
 
 void
@@ -129,4 +137,5 @@ TestTurbulenceAlgorithm::fill_mesh_and_init_fields(const std::string mesh_spec)
   unit_test_kernel_utils::dwdx_test_function(bulk, *coordinates_, *dwdx_);
   unit_test_kernel_utils::dhdx_test_function(bulk, *coordinates_, *dhdx_);
   stk::mesh::field_fill(1000.0, *specificHeat_);
+  stk::mesh::field_fill(10.0, *openMassFlowRate_);
 }

@@ -33,9 +33,13 @@ CoriolisSrc::CoriolisSrc(const SolutionOptions &solnOpts)
   earthAngularVelocity_ = solnOpts.earthAngularVelocity_;
   latitude_ = solnOpts.latitude_ * pi_ / 180.0;
 
-  nDim_ = 3;
-  eastVector_ = solnOpts.eastVector_;
-  northVector_ = solnOpts.northVector_;
+  ThrowRequire(solnOpts.eastVector_.size() == nDim_);
+  ThrowRequire(solnOpts.northVector_.size() == nDim_);
+
+  for (int i=0; i < nDim_; ++i) {
+    eastVector_[i] = solnOpts.eastVector_[i];
+    northVector_[i] = solnOpts.northVector_[i];
+  }
 
   // normalize the east and north vectors
   double magE = std::sqrt(eastVector_[0]*eastVector_[0]+eastVector_[1]*eastVector_[1]+eastVector_[2]*eastVector_[2]);
@@ -46,8 +50,7 @@ CoriolisSrc::CoriolisSrc(const SolutionOptions &solnOpts)
   }
 
   // calculate the 'up' unit vector
-  upVector_.resize(nDim_);
-  cross3(eastVector_.data(), northVector_.data(), upVector_.data());
+  cross3(eastVector_, northVector_, upVector_);
 
   // some factors that do not change
   sinphi_ = std::sin(latitude_);

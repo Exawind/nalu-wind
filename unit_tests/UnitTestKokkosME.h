@@ -92,7 +92,11 @@ public:
   }
 
   template<typename LambdaFunction>
-  void execute(LambdaFunction func)
+  void execute(LambdaFunction
+#ifndef KOKKOS_ENABLE_CUDA
+                 func
+#endif
+     )
   {
     ThrowAssertMsg(partVec_.size()==1, "KokkosMEViews unit-test assumes partVec_.size==1");
 

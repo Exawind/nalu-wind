@@ -14,7 +14,7 @@
 #include <KokkosInterface.h>
 
 #include <Kokkos_DefaultNode.hpp>
-#include <Tpetra_Vector.hpp>
+#include <Tpetra_MultiVector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 
 #include <stk_mesh/base/Types.hpp>
@@ -43,16 +43,6 @@ typedef std::unordered_map<stk::mesh::EntityId, size_t>  MyLIDMapType;
 
 typedef std::pair<stk::mesh::Entity, stk::mesh::Entity> Connection;
 
-typedef typename LinSys::Vector::dual_view_type dual_view_type;
-typedef typename dual_view_type::t_host host_view_type;
-
-  enum DOFStatus {
-    DS_NotSet           = 0,
-    DS_SkippedDOF       = 1 << 1,
-    DS_OwnedDOF         = 1 << 2,
-    DS_SharedNotOwnedDOF = 1 << 3,
-    DS_GhostedDOF       = 1 << 4
-  };
 
 class TpetraLinearSystem : public LinearSystem
 {
@@ -79,6 +69,8 @@ public:
   void storeOwnersForShared();
   void finalizeLinearSystem();
 
+  sierra::nalu::CoeffApplier* get_coeff_applier();
+
   // Matrix Assembly
   void zeroSystem();
 
@@ -94,10 +86,10 @@ public:
   void sumInto(
     unsigned numEntities,
     const ngp::Mesh::ConnectedNodes& entities,
-    const SharedMemView<const double*> & rhs,
-    const SharedMemView<const double**> & lhs,
-    const SharedMemView<int*> & localIds,
-    const SharedMemView<int*> & sortPermutation,
+    const SharedMemView<const double*,DeviceShmem> & rhs,
+    const SharedMemView<const double**,DeviceShmem> & lhs,
+    const SharedMemView<int*,DeviceShmem> & localIds,
+    const SharedMemView<int*,DeviceShmem> & sortPermutation,
     const char * trace_tag);
 
   void sumInto(
@@ -144,11 +136,70 @@ public:
     return myLIDs[entityId];
   }
 
+  void copy_tpetra_to_stk(const Teuchos::RCP<LinSys::MultiVector> tpetraVector,
+                          stk::mesh::FieldBase * stkField);
+
+  // This method copies a stk::mesh::field to a tpetra multivector. Each dof/node is written
+  // into a different vector in the multivector.
+  void copy_stk_to_tpetra(const stk::mesh::FieldBase * stkField,
+                          const Teuchos::RCP<LinSys::MultiVector> tpetraVector);
+
 
   int getDofStatus(stk::mesh::Entity node);
 
+  int getRowLID(stk::mesh::Entity node) { return entityToLID_[node.local_offset()]; }
+  int getColLID(stk::mesh::Entity node) { return entityToColLID_[node.local_offset()]; }
+
   Teuchos::RCP<LinSys::Graph>  getOwnedGraph() { return ownedGraph_; }
   Teuchos::RCP<LinSys::Matrix> getOwnedMatrix() { return ownedMatrix_; }
+  Teuchos::RCP<LinSys::MultiVector> getOwnedRhs() { return ownedRhs_; }
+
+  class TpetraLinSysCoeffApplier : public CoeffApplier
+  {
+  public:
+    KOKKOS_FUNCTION
+    TpetraLinSysCoeffApplier(LinSys::LocalMatrix ownedLclMatrix,
+                             LinSys::LocalMatrix sharedNotOwnedLclMatrix,
+                             LinSys::LocalVector ownedLclRhs,
+                             LinSys::LocalVector sharedNotOwnedLclRhs,
+                             LinSys::EntityToLIDView entityLIDs,
+                             LinSys::EntityToLIDView entityColLIDs,
+                             int maxOwnedRowId, int maxSharedNotOwnedRowId, unsigned numDof)
+    : ownedLocalMatrix_(ownedLclMatrix),
+      sharedNotOwnedLocalMatrix_(sharedNotOwnedLclMatrix),
+      ownedLocalRhs_(ownedLclRhs),
+      sharedNotOwnedLocalRhs_(sharedNotOwnedLclRhs),
+      entityToLID_(entityLIDs),
+      entityToColLID_(entityColLIDs),
+      maxOwnedRowId_(maxOwnedRowId), maxSharedNotOwnedRowId_(maxSharedNotOwnedRowId), numDof_(numDof),
+      devicePointer_(nullptr)
+    {}
+
+    KOKKOS_FUNCTION
+    ~TpetraLinSysCoeffApplier() {}
+
+    KOKKOS_FUNCTION
+    virtual void operator()(unsigned numEntities,
+                            const ngp::Mesh::ConnectedNodes& entities,
+                            const SharedMemView<int*,DeviceShmem> & localIds,
+                            const SharedMemView<int*,DeviceShmem> & sortPermutation,
+                            const SharedMemView<const double*,DeviceShmem> & rhs,
+                            const SharedMemView<const double**,DeviceShmem> & lhs,
+                            const char * trace_tag);
+
+    void free_device_pointer();
+
+    sierra::nalu::CoeffApplier* device_pointer();
+
+  private:
+    LinSys::LocalMatrix ownedLocalMatrix_, sharedNotOwnedLocalMatrix_;
+    LinSys::LocalVector ownedLocalRhs_, sharedNotOwnedLocalRhs_;
+    LinSys::EntityToLIDView entityToLID_;
+    LinSys::EntityToLIDView entityToColLID_;
+    int maxOwnedRowId_, maxSharedNotOwnedRowId_;
+    unsigned numDof_;
+    TpetraLinSysCoeffApplier* devicePointer_;
+  };
 
 private:
   void buildConnectedNodeGraph(stk::mesh::EntityRank rank,
@@ -176,15 +227,6 @@ private:
 
   void fill_entity_to_row_LID_mapping();
   void fill_entity_to_col_LID_mapping();
-
-  void copy_tpetra_to_stk(
-    const Teuchos::RCP<LinSys::Vector> tpetraVector,
-    stk::mesh::FieldBase * stkField);
-
-  // This method copies a stk::mesh::field to a tpetra multivector. Each dof/node is written into a different
-  // vector in the multivector.
-  void copy_stk_to_tpetra(stk::mesh::FieldBase * stkField,
-    const Teuchos::RCP<LinSys::MultiVector> tpetraVector);
 
   int insert_connection(stk::mesh::Entity a, stk::mesh::Entity b);
   void addConnections(const stk::mesh::Entity* entities,const size_t&);
@@ -214,22 +256,22 @@ private:
   Teuchos::RCP<LinSys::Graph>  sharedNotOwnedGraph_;
 
   Teuchos::RCP<LinSys::Matrix> ownedMatrix_;
-  Teuchos::RCP<LinSys::Vector> ownedRhs_;
-  LinSys::Matrix::local_matrix_type ownedLocalMatrix_;
-  LinSys::Matrix::local_matrix_type sharedNotOwnedLocalMatrix_;
-  host_view_type ownedLocalRhs_;
-  host_view_type sharedNotOwnedLocalRhs_;
+  Teuchos::RCP<LinSys::MultiVector> ownedRhs_;
+  LinSys::LocalMatrix ownedLocalMatrix_;
+  LinSys::LocalMatrix sharedNotOwnedLocalMatrix_;
+  LinSys::LocalVector ownedLocalRhs_;
+  LinSys::LocalVector sharedNotOwnedLocalRhs_;
 
-  Teuchos::RCP<LinSys::Matrix> sharedNotOwnedMatrix_;
-  Teuchos::RCP<LinSys::Vector> sharedNotOwnedRhs_;
+  Teuchos::RCP<LinSys::Matrix>      sharedNotOwnedMatrix_;
+  Teuchos::RCP<LinSys::MultiVector> sharedNotOwnedRhs_;
 
-  Teuchos::RCP<LinSys::Vector> sln_;
-  Teuchos::RCP<LinSys::Vector> globalSln_;
-  Teuchos::RCP<LinSys::Export> exporter_;
+  Teuchos::RCP<LinSys::MultiVector> sln_;
+  Teuchos::RCP<LinSys::MultiVector> globalSln_;
+  Teuchos::RCP<LinSys::Export>      exporter_;
 
   MyLIDMapType myLIDs_;
-  std::vector<LocalOrdinal> entityToColLID_;
-  std::vector<LocalOrdinal> entityToLID_;
+  LinSys::EntityToLIDView entityToColLID_;
+  LinSys::EntityToLIDView entityToLID_;
   LocalOrdinal maxOwnedRowId_; // = num_owned_nodes * numDof_
   LocalOrdinal maxSharedNotOwnedRowId_; // = (num_owned_nodes + num_sharedNotOwned_nodes) * numDof_
 

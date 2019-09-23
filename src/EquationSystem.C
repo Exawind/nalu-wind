@@ -25,6 +25,9 @@
 // overset
 #include <overset/AssembleOversetSolverConstraintAlgorithm.h>
 
+// ngp
+#include "ngp_utils/NgpFieldBLAS.h"
+
 #include <stk_mesh/base/Field.hpp>
 
 // stk
@@ -517,22 +520,22 @@ EquationSystem::post_iter_work()
   }
 }
 
-PecletFunction<DoubleType>*
-EquationSystem::ngp_create_peclet_function(const std::string& dofName)
+void EquationSystem::solution_update(
+  const double delta_frac,
+  const stk::mesh::FieldBase& delta,
+  const double field_frac,
+  stk::mesh::FieldBase& field,
+  const unsigned numComponents,
+  const stk::topology::rank_t rank)
 {
-  PecletFunction<DoubleType>* pecletFunction = nullptr;
-  if ("classic" == realm_.get_tanh_functional_form(dofName)) {
-    const DoubleType hybridFactor = realm_.get_hybrid_factor(dofName);
-    const DoubleType A = 5.0;
-    pecletFunction = nalu_ngp::create<ClassicPecletFunction<DoubleType>>(A, hybridFactor);
-  } else {
-    const DoubleType c1 = realm_.get_tanh_trans(dofName);
-    const DoubleType c2 = realm_.get_tanh_width(dofName);
-    pecletFunction = nalu_ngp::create<TanhFunction<DoubleType>>(c1, c2);
-  }
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel = (
+    meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+    & stk::mesh::selectField(field);
 
-  ngpPecletFunctions_.push_back(pecletFunction);
-  return pecletFunction;
+  nalu_ngp::field_axpby(
+    meshInfo, sel, delta_frac, delta, field_frac, field, numComponents, rank);
 }
 
 } // namespace nalu

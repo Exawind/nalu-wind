@@ -57,6 +57,11 @@ AssembleNodeSolverAlgorithm::initialize_connectivity()
 void
 AssembleNodeSolverAlgorithm::execute()
 {
+  // Handle transition period, it is likely that most of the user-requested
+  // source terms were handled by the NGP version of nodal algorithm
+  const size_t supplementalAlgSize = supplementalAlg_.size();
+  if (supplementalAlgSize < 1) return;
+
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
   // space for LHS/RHS
@@ -73,7 +78,6 @@ AssembleNodeSolverAlgorithm::execute()
   double *p_rhs = &rhs[0];
 
   // supplemental algorithm size and setup
-  const size_t supplementalAlgSize = supplementalAlg_.size();
   for ( size_t i = 0; i < supplementalAlgSize; ++i )
     supplementalAlg_[i]->setup();
 

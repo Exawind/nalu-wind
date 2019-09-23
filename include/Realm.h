@@ -26,6 +26,8 @@
 
 #include <stk_ngp/NgpFieldManager.hpp>
 
+#include "ngp_utils/NgpMeshInfo.h"
+
 // standard c++
 #include <map>
 #include <string>
@@ -90,6 +92,7 @@ struct ElementDescription;
  */
 class Realm {
  public:
+  using NgpMeshInfo = nalu_ngp::MeshInfo<ngp::Mesh, ngp::FieldManager>;
 
   Realm(Realms&, const YAML::Node & node);
   virtual ~Realm();
@@ -231,6 +234,10 @@ class Realm {
     const unsigned &sizeOfTheField,
     const bool &bypassFieldCheck = true) const;
 
+  void periodic_field_max(
+    stk::mesh::FieldBase *theField,
+    const unsigned &sizeOfTheField) const;
+
   void periodic_delta_solution_update(
      stk::mesh::FieldBase *theField,
      const unsigned &sizeOfField) const;
@@ -354,20 +361,24 @@ class Realm {
   stk::mesh::MetaData & meta_data();
   const stk::mesh::MetaData & meta_data() const;
 
-  inline ngp::Mesh& ngp_mesh()
+  inline NgpMeshInfo& mesh_info()
   {
-    if (!ngpMesh_) {
-      ngpMesh_.reset(new ngp::Mesh(*bulkData_));
+    if ((meshModCount_ != bulkData_->synchronized_count()) ||
+        (!meshInfo_)) {
+      meshModCount_ = bulkData_->synchronized_count();
+      meshInfo_.reset(new NgpMeshInfo(*bulkData_));
     }
-    return *ngpMesh_;
+    return *meshInfo_;
   }
 
-  inline ngp::FieldManager& ngp_field_manager()
+  inline const ngp::Mesh& ngp_mesh()
   {
-    if (!ngpFieldMgr_) {
-      ngpFieldMgr_.reset(new ngp::FieldManager(*bulkData_));
-    }
-    return *ngpFieldMgr_;
+    return mesh_info().ngp_mesh();
+  }
+
+  inline const ngp::FieldManager& ngp_field_manager()
+  {
+    return mesh_info().ngp_field_manager();
   }
 
   // inactive part
@@ -652,6 +663,7 @@ class Realm {
    *  endIdx(MPI_rank) + 1.
    */
   HypreIDFieldType* hypreGlobalId_{nullptr};
+  TpetIDFieldType* tpetGlobalId_{nullptr};
 
   /** Flag indicating whether Hypre solver is being used for any of the equation
    * systems.
@@ -659,9 +671,9 @@ class Realm {
   bool hypreIsActive_{false};
 
 protected:
-  std::unique_ptr<ngp::Mesh> ngpMesh_;
+  std::unique_ptr<NgpMeshInfo> meshInfo_;
 
-  std::unique_ptr<ngp::FieldManager> ngpFieldMgr_;
+  unsigned meshModCount_{0};
 
 };
 

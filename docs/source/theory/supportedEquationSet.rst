@@ -693,7 +693,7 @@ modeling is supported through the activation of the SST equation set.
 
 It has been observed that standard 1998 :math:`k-\omega` models display
 a strong sensitivity to the free stream value of :math:`\omega` (see
-Mentor, :cite:`Mentor:2003`). To remedy, this, an
+Menter, :cite:`Mentor:2003`). To remedy, this, an
 alternative set of transport equations have been used that are based on
 smoothly blending the :math:`k-\omega` model near a wall with
 :math:`k-\epsilon` away from the wall. Because of the relationship
@@ -704,7 +704,7 @@ the transport equation for :math:`k` is unchanged. However, an
 additional cross-diffusion term is present in the :math:`\omega`
 equation. Blending is introduced by using smoothing which is a function
 of the distance from the wall, :math:`F(y)`. The transport equations for
-the Mentor 2003 model are then
+the Menter 2003 model are then
 
 .. math::
 
@@ -722,6 +722,8 @@ the Mentor 2003 model are then
    \frac{\partial k}{\partial x_j} \frac{\partial \omega}{\partial x_j} } \text{d}V \\
    + \int \left(\frac{\hat\gamma}{\nu_t} P_{k}^{\omega} -
    \hat \beta \bar{\rho} \omega^{2}\right) \text{d}V.
+
+where the value of :math:`\beta^*` is 0.09.
 
 The model coefficients, :math:`\hat\sigma_k`, :math:`\hat\sigma_{\omega}`, :math:`\hat\gamma` and :math:`\hat\beta`
 must also be blended, which is represented by

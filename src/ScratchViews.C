@@ -6,6 +6,7 @@
 /*------------------------------------------------------------------------*/
 
 #include <ScratchViews.h>
+#include <ngp_utils/NgpMEUtils.h>
 
 #include <NaluEnv.h>
 
@@ -60,6 +61,18 @@ void gather_elem_tensor_field(const NGPDoubleFieldType& field,
     for(int d2=0; d2<tensorDim2; ++d2) {
       shmemView(d1,d2) = field.get(elem, counter++);
     }
+  }
+}
+
+template<typename ViewType>
+KOKKOS_INLINE_FUNCTION
+void gather_elem_vector_field(const NGPDoubleFieldType& field,
+                              stk::mesh::FastMeshIndex elem,
+                              int len,
+                              ViewType& shmemView)
+{
+  for(int i=0; i<len; ++i) {
+    shmemView(i) = field.get(elem, i);
   }
 }
 
@@ -167,7 +180,8 @@ void gather_elem_node_field(const stk::mesh::FieldBase& field,
   }
 }
 
-int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim)
+int get_num_scalars_pre_req_data(
+  const ElemDataRequestsGPU& dataNeeded, int nDim, const ElemReqType reqType)
 {
   /* master elements are allowed to be null if they are not required */
   MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
@@ -175,183 +189,71 @@ int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim
   MasterElement *meSCV = dataNeeded.get_cvfem_volume_me();
   MasterElement *meFEM = dataNeeded.get_fem_volume_me();
 
-  const bool faceDataNeeded = meFC != nullptr
-    && meSCS == nullptr && meSCV == nullptr && meFEM == nullptr;
-  const bool elemDataNeeded = meFC == nullptr
-    && (meSCS != nullptr || meSCV != nullptr || meFEM != nullptr);
+  const bool hasSCS = (meSCS != nullptr);
+  // A MasterElement corresponding to ELEM_RANK has been registered
+  const bool hasElemME = (hasSCS || meSCV != nullptr || meFEM != nullptr);
+  // A MasterElement corresponding to side_rank() has been registered
+  const bool hasFaceME = (meFC != nullptr);
 
-  NGP_ThrowRequireMsg(faceDataNeeded != elemDataNeeded,
-    "An algorithm has been registered with conflicting face/element data requests");
+  switch (reqType) {
+  case ElemReqType::ELEM:
+    NGP_ThrowRequireMsg(
+      hasElemME,
+      "Requesting ELEM data, but no ELEM_RANK master element has been registered");
+    break;
 
-  const int nodesPerEntity = meSCS != nullptr ? meSCS->nodesPerElement_
-    : meSCV != nullptr ? meSCV->nodesPerElement_
-    : meFEM != nullptr ? meFEM->nodesPerElement_
-    : meFC  != nullptr ? meFC->nodesPerElement_
-    : 0;
+  case ElemReqType::FACE:
+    NGP_ThrowRequireMsg(
+      hasFaceME || hasSCS,
+      "Request SIDE_RANK data, but no SIDE_RANK master element has been registered");
+    break;
+
+  case ElemReqType::FACE_ELEM:
+    // In case of FACE_ELEM register meFC so that numFaceIp can be queried
+    NGP_ThrowRequireMsg(
+      (hasSCS && hasFaceME),
+      "Requesting FACE_ELEM data but does not have necessary MasterElements");
+    break;
+  }
+
+  // The previous check guarantees that we get the correct nodesPerEntity for
+  // all request types
+  const int nodesPerEntity = nodes_per_entity(dataNeeded);
 
   int numScalars = 0;
 
-  const ElemDataRequestsGPU::FieldInfoView& neededFields = dataNeeded.get_fields();
-  for(unsigned f=0; f<neededFields.size(); ++f) {
+  const ElemDataRequestsGPU::FieldInfoView::HostMirror& neededFields =
+    dataNeeded.get_host_fields();
+  for (unsigned f = 0; f < neededFields.size(); ++f) {
     const FieldInfoNGP& fieldInfo = neededFields(f);
     stk::mesh::EntityRank fieldEntityRank = fieldInfo.field.get_rank();
     unsigned scalarsPerEntity = fieldInfo.scalarsDim1;
-    unsigned entitiesPerElem = fieldEntityRank==stk::topology::NODE_RANK ? nodesPerEntity : 1;
+    unsigned entitiesPerElem =
+      fieldEntityRank == stk::topology::NODE_RANK ? nodesPerEntity : 1;
 
-    // Catch errors if user requests nodal field but has not registered any
-    // MasterElement we need to get nodesPerEntity
-    NGP_ThrowRequire(entitiesPerElem > 0);
     if (fieldInfo.scalarsDim2 > 1) {
       scalarsPerEntity *= fieldInfo.scalarsDim2;
     }
     numScalars += entitiesPerElem*scalarsPerEntity;
   }
 
-  const int numFaceIp = meFC != nullptr ? meFC->num_integration_points() : 0;
-  const int numScsIp = meSCS != nullptr ? meSCS->num_integration_points() : 0;
-  const int numScvIp = meSCV != nullptr ? meSCV->num_integration_points() : 0;
-  const int numFemIp = meFEM != nullptr ? meFEM->num_integration_points() : 0;
+  const int numFaceIp = num_integration_points(dataNeeded, METype::FACE);
+  const int numScsIp  = num_integration_points(dataNeeded, METype::SCS);
+  const int numScvIp  = num_integration_points(dataNeeded, METype::SCV);
+  const int numFemIp  = num_integration_points(dataNeeded, METype::FEM);
 
-  const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
-  for(unsigned i=0; i<coordsTypes.size(); ++i) {
+  const ElemDataRequestsGPU::CoordsTypesView::HostMirror& coordsTypes =
+    dataNeeded.get_host_coordinates_types();
+  for (unsigned i = 0; i < coordsTypes.size(); ++i) {
     auto cType = coordsTypes(i);
-    const ElemDataRequestsGPU::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
+    const ElemDataRequestsGPU::DataEnumView::HostMirror& dataEnums =
+      dataNeeded.get_host_data_enums(cType);
     int dndxLength = 0, dndxLengthFC = 0, gUpperLength = 0, gLowerLength = 0;
 
     // Updated logic for data sharing of deriv and det_j
     bool needDeriv = false; bool needDerivScv = false; bool needDerivFem = false; bool needDerivFC = false;
     bool needDetj = false; bool needDetjScv = false; bool needDetjFem = false; bool needDetjFC = false;
 
-    for(unsigned d=0; d<dataEnums.size(); ++d) {
-      ELEM_DATA_NEEDED data = dataEnums(d);
-      switch(data)
-      {
-        case FC_AREAV:
-          numScalars += nDim * numFaceIp;
-          break;
-        case FC_SHAPE_FCN:
-        case FC_SHIFTED_SHAPE_FCN:
-          numScalars += numFaceIp * nodesPerEntity;
-          break;
-        case SCS_AREAV:
-          numScalars += nDim * numScsIp;
-          break;
-        case SCS_FACE_GRAD_OP:
-        case SCS_SHIFTED_FACE_GRAD_OP:
-          dndxLengthFC = nodesPerEntity*numFaceIp*nDim;
-          needDerivFC = true;
-          needDetjFC = true;
-          numScalars += dndxLengthFC;
-          break;
-        case SCS_GRAD_OP:
-        case SCS_SHIFTED_GRAD_OP:
-          dndxLength = nodesPerEntity*numScsIp*nDim;
-          needDeriv = true;
-          needDetj = true;
-          numScalars += dndxLength;
-          break;
-        case SCS_SHAPE_FCN:
-        case SCS_SHIFTED_SHAPE_FCN:
-          numScalars += nodesPerEntity*numScsIp;
-          break;
-        case SCV_VOLUME:
-          numScalars += numScvIp;
-          break;
-        case SCV_GRAD_OP:
-          dndxLength = nodesPerEntity*numScvIp*nDim;
-          needDerivScv = true;
-          needDetjScv = true;
-          numScalars += dndxLength;
-          break;
-        case SCV_SHAPE_FCN:
-        case SCV_SHIFTED_SHAPE_FCN:
-          numScalars += nodesPerEntity*numScvIp;
-          break;
-        case SCS_GIJ:
-          gUpperLength = nDim*nDim*numScsIp;
-          gLowerLength = nDim*nDim*numScsIp;
-          needDeriv = true;
-          numScalars += (gUpperLength + gLowerLength );
-          break;
-        case FEM_GRAD_OP:
-        case FEM_SHIFTED_GRAD_OP:
-          dndxLength = nodesPerEntity*numFemIp*nDim;
-          needDerivFem = true;
-          needDetjFem = true;
-          numScalars += dndxLength;
-          break;
-        case FEM_SHAPE_FCN:
-        case FEM_SHIFTED_SHAPE_FCN:
-          numScalars += nodesPerEntity*numFemIp;
-          break;
-        default: break;
-      }
-    }
-
-    if (needDerivFC)
-      numScalars += nodesPerEntity*numFaceIp*nDim;
-
-    if (needDeriv)
-      numScalars += nodesPerEntity*numScsIp*nDim;
-
-    if (needDerivScv)
-      numScalars += nodesPerEntity*numScvIp*nDim;
-
-    if (needDerivFem)
-      numScalars += nodesPerEntity*numFemIp*nDim;
-
-    if (needDetjFC)
-      numScalars += numFaceIp;
-
-    if (needDetj)
-      numScalars += numScsIp;
-
-    if (needDetjScv)
-      numScalars += numScvIp;
-
-    if (needDetjFem)
-      numScalars += numFemIp;
-  }
-
-  // Add a 64 byte padding to the buffer size requested
-  return numScalars + 8;
-}
-
-int get_num_scalars_pre_req_data(const ElemDataRequestsGPU& dataNeeded, int nDim, const ScratchMeInfo &meInfo)
-{
-  const int nodesPerEntity = meInfo.nodalGatherSize_;
-  const int numFaceIp = meInfo.numFaceIp_;
-  const int numScsIp = meInfo.numScsIp_;
-  const int numScvIp = meInfo.numScvIp_;
-  const int numFemIp = meInfo.numFemIp_;
-  int numScalars = 0;
-
-  const ElemDataRequestsGPU::FieldInfoView& neededFields = dataNeeded.get_fields();
-  for(unsigned f=0; f<neededFields.size(); ++f) {
-    const FieldInfoNGP& fieldInfo = neededFields(f);
-    stk::mesh::EntityRank fieldEntityRank = get_entity_rank(fieldInfo);
-    unsigned scalarsPerEntity = fieldInfo.scalarsDim1;
-    unsigned entitiesPerElem = fieldEntityRank==stk::topology::NODE_RANK ? nodesPerEntity : 1;
-
-    // Catch errors if user requests nodal field but has not registered any
-    // MasterElement we need to get nodesPerEntity
-    NGP_ThrowRequire(entitiesPerElem > 0);
-    if (fieldInfo.scalarsDim2 > 1) {
-      scalarsPerEntity *= fieldInfo.scalarsDim2;
-    }
-    numScalars += entitiesPerElem*scalarsPerEntity;
-  }
-
-  const ElemDataRequestsGPU::CoordsTypesView& coordsTypes = dataNeeded.get_coordinates_types();
-  for(unsigned i=0; i<coordsTypes.size(); ++i) {
-    auto cType = coordsTypes(i);
-    int dndxLength = 0, dndxLengthFC = 0, gUpperLength = 0, gLowerLength = 0;
-
-    // Updated logic for data sharing of deriv and det_j
-    bool needDeriv = false; bool needDerivScv = false; bool needDerivFem = false; bool needDerivFC = false;
-    bool needDetj = false; bool needDetjScv = false; bool needDetjFem = false; bool needDetjFC = false;
-
-    const ElemDataRequestsGPU::DataEnumView& dataEnums = dataNeeded.get_data_enums(cType);
     for(unsigned d=0; d<dataEnums.size(); ++d) {
       ELEM_DATA_NEEDED data = dataEnums(d);
       switch(data)
@@ -475,10 +377,7 @@ void fill_pre_req_data(
       else {
         auto& shmemView = prereqData.get_scratch_view_1D(get_field_ordinal(fieldInfo));
         unsigned len = shmemView.extent(0);
-        double* fieldDataPtr = static_cast<double*>(&fieldInfo.field.get(entityIndex,0));
-        for(unsigned i=0; i<len; ++i) {
-          shmemView(i) = fieldDataPtr[i];
-        }
+        gather_elem_vector_field(fieldInfo.field, entityIndex, len, shmemView);
       }
     }
     else if (fieldEntityRank == stk::topology::NODE_RANK) {

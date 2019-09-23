@@ -11,8 +11,6 @@
 
 #include "kernel/MomentumMassElemKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
-
 namespace {
 namespace hex8_golds {
 namespace momentum_time_derivative {
@@ -143,8 +141,6 @@ static constexpr double rhs[24] = {
 } // hex8_golds
 } // anonymous namespace
 
-#endif
-
 TEST_F(MomentumKernelHex8Mesh, NGP_momentum_time_derivative)
 {
   fill_mesh_and_init_fields();
@@ -179,7 +175,6 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_time_derivative)
   // Populate LHS and RHS
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
@@ -187,7 +182,6 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_time_derivative)
   namespace gold_values = ::hex8_golds::momentum_time_derivative;
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
   unit_test_kernel_utils::expect_all_near<24>(helperObjs.linsys->lhs_, gold_values::lhs);
-#endif
 }
 
 TEST_F(MomentumKernelHex8Mesh, NGP_momentum_time_derivative_lumped)
@@ -224,7 +218,6 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_time_derivative_lumped)
   // Populate LHS and RHS
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   namespace gold_values = ::hex8_golds::momentum_time_derivative_lumped;
   // Exact LHS expected
   std::vector<double> lhsExact(576, 0.0);
@@ -235,6 +228,5 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_time_derivative_lumped)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, gold_values::rhs);
-  unit_test_kernel_utils::expect_all_near(helperObjs.linsys->lhs_, lhsExact.data());
-#endif
+  unit_test_kernel_utils::expect_all_near_2d(helperObjs.linsys->lhs_, lhsExact.data());
 }

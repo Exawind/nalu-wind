@@ -111,15 +111,18 @@ HigherOrderHexSCV::HigherOrderHexSCV(
   LagrangeBasis basis,
   TensorProductQuadratureRule quadrature)
   : MasterElement(),
-    nodes1D_(basis.order() + 1),
-    nodeMap(make_node_map_hex(basis.order(), true)),
-    basis_(std::move(basis)),
+    nodes1D_(basis.order() + 1)
+#ifndef KOKKOS_ENABLE_CUDA
+    , nodeMap(make_node_map_hex(basis.order(), true))
+#endif
+    , basis_(std::move(basis)),
     quadrature_(std::move(quadrature))
 {
   MasterElement::nDim_ = 3;
   MasterElement::nodesPerElement_ = nodes1D_ * nodes1D_ * nodes1D_;
   MasterElement::numIntPoints_ = nodesPerElement_ * (quadrature_.num_quad() * quadrature_.num_quad() * quadrature_.num_quad());
 
+#ifndef KOKKOS_ENABLE_CUDA
   ipNodeMap_ = Kokkos::View<int*>("ip_node_map", numIntPoints_);
   intgLoc_ = Kokkos::View<double**>("integration_point_location", numIntPoints_, 3);
   ipWeights_ = Kokkos::View<double*>("integration_point_weights", numIntPoints_);
@@ -145,6 +148,7 @@ HigherOrderHexSCV::HigherOrderHexSCV(
   }
   shapeFunctionVals_ = basis_.eval_basis_weights(intgLoc_);
   shapeDerivs_ = basis_.eval_deriv_weights(intgLoc_);
+#endif
 }
 
 void
@@ -248,6 +252,7 @@ void HigherOrderHexSCV::grad_op(
 }
 
 
+KOKKOS_FUNCTION
 int ip_per_face(const TensorProductQuadratureRule& quad, const LagrangeBasis& basis) {
   return quad.num_quad() * quad.num_quad() * (basis.order() + 1)*(basis.order() + 1);
 }
@@ -260,17 +265,22 @@ HigherOrderHexSCS::HigherOrderHexSCS(
   nodes1D_(basis.order() + 1),
   numQuad_(quadrature.num_quad()),
   ipsPerFace_(nodes1D_ * nodes1D_ * numQuad_ * numQuad_),
+#ifndef KOKKOS_ENABLE_CUDA
   nodeMap(make_node_map_hex(basis.order(), true)),
   faceNodeMap(make_face_node_map_hex(basis.order())),
   sideNodeOrdinals_(make_side_node_ordinal_map_hex(basis.order())),
+#endif
   basis_(std::move(basis)),
-  quadrature_(std::move(quadrature)),
-  expRefGradWeights_("reference_gradient_weights", 6*ip_per_face(quadrature, basis), basis.num_nodes())
+  quadrature_(std::move(quadrature))
+#ifndef KOKKOS_ENABLE_CUDA
+  , expRefGradWeights_("reference_gradient_weights", 6*ip_per_face(quadrature, basis), basis.num_nodes())
+#endif
 {
   MasterElement::nDim_ = 3;
   nodesPerElement_ = nodes1D_ * nodes1D_ * nodes1D_;
   numIntPoints_ = 3 * (nodes1D_ - 1) * ipsPerFace_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   // set up integration rule and relevant maps on scs
   set_interior_info();
 
@@ -280,6 +290,7 @@ HigherOrderHexSCS::HigherOrderHexSCS(
   shapeFunctionVals_ = basis_.eval_basis_weights(intgLoc_);
   shapeDerivs_ = basis_.eval_deriv_weights(intgLoc_);
   expFaceShapeDerivs_ = basis_.eval_deriv_weights(intgExpFace_);
+#endif
 }
 
 void
@@ -859,6 +870,7 @@ template <int p> void internal_face_grad_op(
   generic_grad_op<AlgTraitsHexGL<p>>(face_weights, coords, gradop);
 }
 
+#ifndef KOKKOS_ENABLE_CUDA
 void HigherOrderHexSCS::face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
@@ -872,7 +884,13 @@ void HigherOrderHexSCS::face_grad_op(
     default: return;
   }
 }
-
+#else
+void HigherOrderHexSCS::face_grad_op(
+  int ,
+  SharedMemView<DoubleType**, DeviceShmem>& ,
+  SharedMemView<DoubleType***, DeviceShmem>& )
+{}
+#endif
 
 }  // namespace nalu
 } // namespace sierra

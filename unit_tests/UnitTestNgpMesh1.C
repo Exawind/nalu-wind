@@ -12,7 +12,7 @@
 
 #include "stk_ngp/Ngp.hpp"
 
-void test_ngp_mesh_1(const stk::mesh::BulkData& bulk, ngp::Mesh& ngpMesh)
+void test_ngp_mesh_1(const stk::mesh::BulkData& bulk, const ngp::Mesh& ngpMesh)
 {
   stk::topology elemTopo = stk::topology::HEX_8;
 

@@ -96,15 +96,17 @@ SurfaceForceAndMomentAlgorithmDriver::parallel_assemble_fields()
 
   // extract the fields
   VectorFieldType *pressureForce = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "pressure_force");
+  VectorFieldType *viscousForce = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "viscous_force");
   ScalarFieldType *tauWall = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tau_wall");
   ScalarFieldType *yplus = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "yplus");
 
-  stk::mesh::parallel_sum(bulk_data, {pressureForce, tauWall, yplus});
+  stk::mesh::parallel_sum(bulk_data, {pressureForce, viscousForce, tauWall, yplus});
 
   // periodic assemble
   if ( realm_.hasPeriodic_) {
     const bool bypassFieldCheck = false; // fields are not defined at all slave/master node pairs
     realm_.periodic_field_update(pressureForce, nDim, bypassFieldCheck);
+    realm_.periodic_field_update(viscousForce, nDim, bypassFieldCheck);
     realm_.periodic_field_update(tauWall, 1, bypassFieldCheck);
     realm_.periodic_field_update(yplus, 1, bypassFieldCheck);
   }

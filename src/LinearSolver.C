@@ -70,7 +70,7 @@ TpetraLinearSolver::~TpetraLinearSolver()
 void
 TpetraLinearSolver::setSystemObjects(
       Teuchos::RCP<LinSys::Matrix> matrix,
-      Teuchos::RCP<LinSys::Vector> rhs)
+      Teuchos::RCP<LinSys::MultiVector> rhs)
 {
   ThrowRequire(!matrix.is_null());
   ThrowRequire(!rhs.is_null());
@@ -80,9 +80,9 @@ TpetraLinearSolver::setSystemObjects(
 }
 
 void TpetraLinearSolver::setupLinearSolver(
-  Teuchos::RCP<LinSys::Vector> sln,
+  Teuchos::RCP<LinSys::MultiVector> sln,
   Teuchos::RCP<LinSys::Matrix> matrix,
-  Teuchos::RCP<LinSys::Vector> rhs,
+  Teuchos::RCP<LinSys::MultiVector> rhs,
   Teuchos::RCP<LinSys::MultiVector> coords)
 {
 
@@ -97,10 +97,10 @@ void TpetraLinearSolver::setupLinearSolver(
   }
   else {
     Ifpack2::Factory factory;
-    preconditioner_ = factory.create (preconditionerType_, 
+    preconditioner_ = factory.create (preconditionerType_,
                                       Teuchos::rcp_const_cast<const LinSys::Matrix>(matrix_), 0);
     preconditioner_->setParameters(*paramsPrecond_);
-    
+
     // delay initialization for some preconditioners
     if ( "RILUK" != preconditionerType_ ) {
       preconditioner_->initialize();
@@ -152,9 +152,10 @@ void TpetraLinearSolver::setMueLu()
   solver_->setProblem(problem_);
 }
 
-int TpetraLinearSolver::residual_norm(int whichNorm, Teuchos::RCP<LinSys::Vector> sln, double& norm)
+int TpetraLinearSolver::residual_norm(int whichNorm, Teuchos::RCP<LinSys::MultiVector> sln, double& norm)
 {
-  LinSys::Vector resid(rhs_->getMap());
+  const size_t numVecs = sln->getNumVectors();
+  LinSys::MultiVector resid(rhs_->getMap(), numVecs);
   ThrowRequire(! (sln.is_null()  || rhs_.is_null() ) );
 
   if (matrix_->isFillActive() )
@@ -165,16 +166,29 @@ int TpetraLinearSolver::residual_norm(int whichNorm, Teuchos::RCP<LinSys::Vector
   }
   matrix_->apply(*sln, resid);
 
-  resid.update(-1.0, *rhs_, 1.0); 
+  resid.update(-1.0, *rhs_, 1.0);
 
-  if ( whichNorm == 0 )
-    norm = resid.normInf();
-  else if ( whichNorm == 1 )
-    norm = resid.norm1();
-  else if ( whichNorm == 2 )
-    norm = resid.norm2();
-  else
+  norm = 0.0;
+  Teuchos::Array<double> mv_norm(numVecs);
+  if ( whichNorm == 0 ) {
+    resid.normInf(mv_norm());
+    for(size_t vecIdx = 0; vecIdx < numVecs; ++vecIdx) {
+      norm = (norm < std::abs(mv_norm[vecIdx]) ? std::abs(mv_norm[vecIdx]) : norm);
+    }
+  } else if ( whichNorm == 1 ) {
+    resid.norm1(mv_norm);
+    for(size_t vecIdx = 0; vecIdx < numVecs; ++vecIdx) {
+      norm += std::abs(mv_norm[vecIdx]);
+    }
+  } else if ( whichNorm == 2 ) {
+    resid.norm2(mv_norm);
+    for(size_t vecIdx = 0; vecIdx < numVecs; ++vecIdx) {
+      norm += mv_norm[vecIdx]*mv_norm[vecIdx];
+    }
+    norm = std::sqrt(norm);
+  } else {
     return 1;
+  }
 
   return 0;
 }
@@ -182,7 +196,7 @@ int TpetraLinearSolver::residual_norm(int whichNorm, Teuchos::RCP<LinSys::Vector
 
 int
 TpetraLinearSolver::solve(
-  Teuchos::RCP<LinSys::Vector> sln,
+  Teuchos::RCP<LinSys::MultiVector> sln,
   int & iters,
   double & finalResidNrm,
   bool isFinalOuterIter)

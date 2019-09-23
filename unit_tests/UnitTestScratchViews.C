@@ -78,6 +78,7 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
 {
   stk::topology elemTopo = stk::topology::HEX_8;
   sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
+  const int nodesPerElement = sierra::nalu::AlgTraitsHex8::nodesPerElement_;
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<sierra::nalu::AlgTraitsHex8>();
   dataReq.add_cvfem_volume_me(meSCV);
 
@@ -89,12 +90,6 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   dataReq.add_master_element_call(sierra::nalu::SCV_VOLUME, sierra::nalu::CURRENT_COORDINATES);
 
   EXPECT_EQ(3u, dataReq.get_fields().size());
-
-  sierra::nalu::ScratchMeInfo meInfo;
-  meInfo.nodalGatherSize_ = elemTopo.num_nodes();
-  meInfo.nodesPerFace_ = 4;
-  meInfo.nodesPerElement_ = elemTopo.num_nodes();
-  meInfo.numScvIp_ = meSCV->num_integration_points();
 
   const stk::mesh::MetaData& meta = bulk.mesh_meta_data();
   ngp::FieldManager fieldMgr(bulk);
@@ -132,7 +127,7 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   {
     const ngp::Mesh::BucketType& b = ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
 
-    sierra::nalu::ScratchViews<double,TeamType,ShmemType> scrviews(team, ngpMesh.get_spatial_dimension(), meInfo, dataNGP);
+    sierra::nalu::ScratchViews<double,TeamType,ShmemType> scrviews(team, ngpMesh.get_spatial_dimension(), nodesPerElement, dataNGP);
 
     sierra::nalu::SharedMemView<double**,ShmemType> simdlhs =
         sierra::nalu::get_shmem_view_2D<double,TeamType,ShmemType>(team, rhsSize, rhsSize);
@@ -171,6 +166,19 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
 TEST_F(Hex8MeshWithNSOFields, NGPScratchViews)
 {
   fill_mesh_and_initialize_test_fields("generated:2x2x2");
+
+  const int nDim = 3;
+  const double velVec[nDim] = {1.0, 0.0, 0.0};
+
+  stk::mesh::EntityVector nodes;
+  stk::mesh::get_entities(bulk, stk::topology::NODE_RANK, nodes);
+
+  for(stk::mesh::Entity node : nodes) {
+    double* fieldData = static_cast<double*>(stk::mesh::field_data(*velocity, node));
+    for(int d=0; d<nDim; ++d) {
+      fieldData[d] = velVec[d];
+    }
+  }
 
   do_the_test(bulk, pressure, velocity);
 }

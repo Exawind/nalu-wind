@@ -905,6 +905,7 @@ ActuatorFAST::create_actuator_point_info_map()
                            iTurb, centroidCoords, searchRadius, epsilon,
                            FAST.getForceNodeType(iTurb, np), iNode)));
 
+#if 0
           // Print the value of epsilon to the screen
           NaluEnv::self().naluOutput()
             << "  The value of epsilon for actuator point "
@@ -914,6 +915,7 @@ ActuatorFAST::create_actuator_point_info_map()
             << epsilon.y_ << "[m] "
             << epsilon.z_ << "[m] "
             << " " << std::endl;
+#endif
 
           // Counter for the number of blade points
           np = np + 1;

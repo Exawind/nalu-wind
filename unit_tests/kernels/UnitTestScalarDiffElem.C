@@ -11,6 +11,7 @@
 
 #include "kernel/ScalarDiffElemKernel.h"
 
+#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
 namespace heatcond {
@@ -30,7 +31,6 @@ static constexpr double lhs[8][8] = {
 } // hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_ENABLE_CUDA
 
 /// Scalar diffusion kernel applied to heat conduction equation
 TEST_F(HeatCondKernelHex8Mesh, cvfem_diff)

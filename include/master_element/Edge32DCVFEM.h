@@ -36,6 +36,7 @@ public:
 
   using AlgTraits = AlgTraitsEdge3_2D;
 
+  KOKKOS_FUNCTION
   Edge32DSCS();
   KOKKOS_FUNCTION
   virtual ~Edge32DSCS() {}
@@ -44,6 +45,16 @@ public:
   using MasterElement::shifted_shape_fcn;
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
+
+  KOKKOS_FUNCTION virtual void determinant(
+    SharedMemView<DoubleType**, DeviceShmem> &coords,
+    SharedMemView<DoubleType**, DeviceShmem> &area);
+
+  KOKKOS_FUNCTION virtual void shape_fcn(
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+
+  KOKKOS_FUNCTION virtual void shifted_shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
 
   void determinant(
     const int nelem,

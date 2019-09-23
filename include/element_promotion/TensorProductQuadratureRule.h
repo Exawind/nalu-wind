@@ -23,6 +23,7 @@ public:
   TensorProductQuadratureRule(int polyOrder, QuadratureRuleType = QuadratureRuleType::MINIMUM_GAUSS);
   ~TensorProductQuadratureRule() = default;
 
+  KOKKOS_INLINE_FUNCTION
   int num_quad() const { return numQuad_; }
   double abscissa(int j) const { return abscissae_[j]; };
   double weights(int j) const { return weights_[j]; };

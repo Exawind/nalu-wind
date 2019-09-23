@@ -4,6 +4,7 @@
 
 #include "NaluParsing.h"
 #include "FieldTypeDef.h"
+#include "wind_energy/ABLSrcInterp.h"
 
 #include "stk_mesh/base/Selector.hpp"
 
@@ -12,6 +13,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <unordered_set>
+#include <memory>
 
 namespace sierra {
 namespace nalu {
@@ -74,6 +76,11 @@ public:
 
   ABLForcingAlgorithm(Realm&, const YAML::Node&);
 
+  //! Incomplete constructor for unit-testing
+  //!
+  //! TODO: Determine a better way
+  ABLForcingAlgorithm(Realm&);
+
   ~ABLForcingAlgorithm();
 
   //! Parse input file for user options and initialize
@@ -105,6 +112,26 @@ public:
   inline bool ablForcingOn()
   {
     return (momentumForcingOn() || temperatureForcingOn());
+  }
+
+  inline ABLScalarInterpolator& temperature_source_interpolator()
+  {
+    if (!TSrcInterp_) {
+      TSrcInterp_.reset(new ABLScalarInterpolator(tempHeights_, TSource_));
+    } else {
+      TSrcInterp_->update_view_on_device(TSource_);
+    }
+    return *TSrcInterp_;
+  }
+
+  inline ABLVectorInterpolator& velocity_source_interpolator()
+  {
+    if (!USrcInterp_) {
+      USrcInterp_.reset(new ABLVectorInterpolator(velHeights_, USource_));
+    } else {
+      USrcInterp_->update_view_on_device(USource_);
+    }
+    return *USrcInterp_;
   }
 
 private:
@@ -166,6 +193,9 @@ private:
   // The temperature array is shaped [num_Theights, num_Ttimes]
   Array2D<double> temp_;
 
+protected:
+  // Protected access to enable unit testing
+
   //! Planar average velocity calculated on the surface [num_UHeights, 3]
   Array2D<double> UmeanCalc_;
 
@@ -181,6 +211,13 @@ private:
   //! T source as a function of height [num_THeights]
   std::vector<double> TSource_;
 
+  //! U source interpolator for NGP
+  std::unique_ptr<ABLVectorInterpolator> USrcInterp_{nullptr};
+
+  //! Temperature source interpolator for NGP
+  std::unique_ptr<ABLScalarInterpolator> TSrcInterp_{nullptr};
+
+private:
   //! Write frequency for source term output
   int outputFreq_{10};
 

@@ -7,7 +7,6 @@
 #include "AssembleElemSolverAlgorithm.h"
 #include "ComputeABLWallFrictionVelocityAlgorithm.h"
 #include "AssembleMomentumElemABLWallFunctionSolverAlgorithm.h"
-#include "AssembleMomentumEdgeABLWallFunctionSolverAlgorithm.h"
 #include "ComputeGeometryBoundaryAlgorithm.h"
 #include "EquationSystem.h"
 #include "master_element/MasterElement.h"
@@ -55,16 +54,15 @@ struct HelperObjectsABLWallFrictionVelocity {
 };
 
 struct HelperObjectsABLWallFunction {
-  HelperObjectsABLWallFunction(stk::mesh::BulkData& bulk, int numDof, stk::mesh::Part* part, const double &z0, const double &Tref, const double &gravity)
+  HelperObjectsABLWallFunction(stk::mesh::BulkData& bulk, int numDof, stk::mesh::Part* part, const double &z0, const double &Tref, const double &gravity, stk::topology topo)
   : yamlNode(unit_test_utils::get_default_inputs()),
     realmDefaultNode(unit_test_utils::get_realm_default_node()),
     naluObj(new unit_test_utils::NaluTest(yamlNode)),
     realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
     eqSystems(realm),
     eqSystem(eqSystems),
-    linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem)),
+    linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem, topo)),
     elemABLWallFunctionSolverAlg(nullptr),
-    edgeABLWallFunctionSolverAlg(nullptr),
     computeGeomBoundAlg(nullptr),
     z0_(z0),
     Tref_(Tref),
@@ -74,14 +72,12 @@ struct HelperObjectsABLWallFunction {
     realm.bulkData_ = &bulk;
     eqSystem.linsys_ = linsys;
     elemABLWallFunctionSolverAlg = new AssembleMomentumElemABLWallFunctionSolverAlgorithm(realm, part, &eqSystem, false, gravity_, z0_, Tref_);
-    edgeABLWallFunctionSolverAlg = new AssembleMomentumEdgeABLWallFunctionSolverAlgorithm(realm, part, &eqSystem, gravity_, z0_, Tref_);
     computeGeomBoundAlg = new ComputeGeometryBoundaryAlgorithm(realm, part);
   }
 
   ~HelperObjectsABLWallFunction()
   {
     delete elemABLWallFunctionSolverAlg;
-    delete edgeABLWallFunctionSolverAlg;
     delete computeGeomBoundAlg;
     realm.metaData_ = nullptr;
     realm.bulkData_ = nullptr;
@@ -97,7 +93,6 @@ struct HelperObjectsABLWallFunction {
   sierra::nalu::EquationSystem eqSystem;
   unit_test_utils::TestLinearSystem* linsys;
   AssembleMomentumElemABLWallFunctionSolverAlgorithm* elemABLWallFunctionSolverAlg;
-  AssembleMomentumEdgeABLWallFunctionSolverAlgorithm* edgeABLWallFunctionSolverAlg;
   ComputeGeometryBoundaryAlgorithm* computeGeomBoundAlg;
   const double z0_;
   const double Tref_;
@@ -174,48 +169,17 @@ TEST_F(ABLWallFunctionHex8ElementWithBCFields, abl_wall_function_elem_alg_rhs) {
   const double up_specified = 0.15;
   const double yp_specified = 0.25;
   const double aMag = 0.25;
-  const double tolerance = 1.0e-6;
+  const double tolerance = 1.0e-12;
   const int numDof = 3;
 
   SetUp(rho_specified, utau_specified, up_specified, yp_specified);
   double rhs_gold = -rho_specified*utau_specified*utau_specified*aMag;
-  HelperObjectsABLWallFunction helperObjs(bulk, numDof, &meta.universal_part(), z0, Tref, gravity);
+  HelperObjectsABLWallFunction helperObjs(bulk, numDof, &meta.universal_part(), z0, Tref, gravity, stk::topology::HEX_8);
   helperObjs.computeGeomBoundAlg->execute();
 
   // Element alg test
   helperObjs.elemABLWallFunctionSolverAlg->initialize_connectivity();
   helperObjs.elemABLWallFunctionSolverAlg->execute();
-
-  unit_test_utils::TestLinearSystem *linsys = helperObjs.linsys;
-
-  EXPECT_NEAR(linsys->rhs_(0), rhs_gold, tolerance);
-}
-
-/* This test creates and calls the ABL wall function edge algorithm
-   for a single-element hex8 mesh and evaluates the resulting rhs vector
-   for one of the faces against a pre-calculated value.
-*/
-TEST_F(ABLWallFunctionHex8ElementWithBCFields, abl_wall_function_edge_alg_rhs) {
-  const double z0 = 0.1;
-  const double Tref = 300.0;
-  const double gravity = 9.81;
-  const double rho_specified = 1.0;
-  const double utau_specified = 0.067118435077841;
-  const double up_specified = 0.15;
-  const double yp_specified = 0.25;
-  const double aMag = 0.25;
-  const double tolerance = 1.0e-6;
-  const int numDof = 3;
-
-  SetUp(rho_specified, utau_specified, up_specified, yp_specified);
-  double rhs_gold = -rho_specified*utau_specified*utau_specified*aMag;
-  HelperObjectsABLWallFunction helperObjs(bulk, numDof, &meta.universal_part(), z0, Tref, gravity);
-  helperObjs.computeGeomBoundAlg->execute();
-
-  // Edge alg test
-  helperObjs.elemABLWallFunctionSolverAlg->initialize_connectivity();
-  helperObjs.realm.create_edges();
-  helperObjs.edgeABLWallFunctionSolverAlg->execute();
 
   unit_test_utils::TestLinearSystem *linsys = helperObjs.linsys;
 

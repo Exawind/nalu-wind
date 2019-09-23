@@ -85,6 +85,8 @@ bool check_view(const ViewType& v)
   return true;
 }
 
+#ifndef KOKKOS_ENABLE_CUDA
+
 void do_the_multidimviews_test()
 {
   int totalNumFields = 6;
@@ -168,3 +170,4 @@ TEST(CopyAndInterleave, multidimviews)
   do_the_multidimviews_test();
 }
 
+#endif

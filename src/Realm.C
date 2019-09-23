@@ -105,6 +105,10 @@
 // transfer
 #include <xfer/Transfer.h>
 
+#include "utils/StkHelpers.h"
+#include "ngp_utils/NgpTypes.h"
+#include "ngp_utils/NgpLoopUtils.h"
+
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_util/environment/WallTime.hpp>
@@ -266,8 +270,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 Realm::~Realm()
 {
-  ngpFieldMgr_.reset();
-  ngpMesh_.reset();
+  meshInfo_.reset();
 
   delete bulkData_;
   delete metaData_;
@@ -878,6 +881,9 @@ Realm::setup_nodal_fields()
   hypreGlobalId_ = &(metaData_->declare_field<HypreIDFieldType>(
                        stk::topology::NODE_RANK, "hypre_global_id"));
 #endif
+  tpetGlobalId_ = &(metaData_->declare_field<TpetIDFieldType>(
+                       stk::topology::NODE_RANK, "tpet_global_id"));
+
   // register global id and rank fields on all parts
   const stk::mesh::PartVector parts = metaData_->get_parts();
   for ( size_t ipart = 0; ipart < parts.size(); ++ipart ) {
@@ -887,6 +893,8 @@ Realm::setup_nodal_fields()
 #ifdef NALU_USES_HYPRE
     stk::mesh::put_field_on_mesh(*hypreGlobalId_, *parts[ipart], nullptr);
 #endif
+    stk::mesh::put_field_on_mesh(*tpetGlobalId_, *parts[ipart], nullptr);
+    stk::mesh::field_fill(std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
   }
 
 
@@ -1700,7 +1708,7 @@ Realm::makeSureNodesHaveValidTopology()
 {
   //To make sure nodes have valid topology, we have to make sure they are in a part that has NODE topology.
   //So first, let's obtain the node topology part:
-  stk::mesh::Part& nodePart = bulkData_->mesh_meta_data().get_cell_topology_root_part(stk::mesh::get_cell_topology(stk::topology::NODE));
+  const stk::mesh::Part& nodePart = bulkData_->mesh_meta_data().get_topology_root_part(stk::topology::NODE);
   stk::mesh::Selector nodesNotInNodePart = (!nodePart) & bulkData_->mesh_meta_data().locally_owned_part();
 
   //get all the nodes that are *NOT* in nodePart
@@ -1898,15 +1906,11 @@ Realm::pre_timestep_work()
       initialize_non_conformal();
 
     // and overset algorithm
-    if ( hasOverset_ ) {
+    if ( hasOverset_ )
       initialize_overset();
 
-      // Only need to reset HYPRE IDs when overset inactive rows change
-      set_hypre_global_id();
-    }
-
     // Reset the ngp::Mesh instance
-    ngpMesh_.reset(new ngp::Mesh(*bulkData_));
+    meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
 
     // now re-initialize linear system
     equationSystems_.reinitialize_linear_system();
@@ -2660,34 +2664,32 @@ Realm::compute_geometry()
 void
 Realm::compute_vrtm()
 {
-  // compute velocity relative to mesh; must be tied to velocity update...
-  if ( solutionOptions_->meshMotion_ || solutionOptions_->externalMeshDeformation_ ) {
-    const int nDim = metaData_->spatial_dimension();
+  if (!solutionOptions_->meshMotion_ &&
+      !solutionOptions_->externalMeshDeformation_) return;
 
-    VectorFieldType *velocity = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-    VectorFieldType *meshVelocity = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
-    VectorFieldType *velocityRTM = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm");
+  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using MeshIndex = Traits::MeshIndex;
 
-    stk::mesh::Selector s_all_nodes
-       = (metaData_->locally_owned_part() | metaData_->globally_shared_part());
+  const int nDim = metaData_->spatial_dimension();
+  const auto& ngpMesh = ngp_mesh();
+  const auto& fieldMgr = ngp_field_manager();
+  const auto vel = fieldMgr.get_field<double>(
+    get_field_ordinal(*metaData_, "velocity"));
+  const auto meshVel = fieldMgr.get_field<double>(
+    get_field_ordinal(*metaData_, "mesh_velocity"));
+  auto vrtm = fieldMgr.get_field<double>(
+    get_field_ordinal(*metaData_, "velocity_rtm"));
 
-    stk::mesh::BucketVector const& node_buckets = bulkData_->get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-    for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-	  ib != node_buckets.end() ; ++ib ) {
-      stk::mesh::Bucket & b = **ib ;
-      const stk::mesh::Bucket::size_type length   = b.size();
-      const double * uNp1 = stk::mesh::field_data(*velocity, b);
-      const double * vNp1 = stk::mesh::field_data(*meshVelocity, b);
-      double * vrtm = stk::mesh::field_data(*velocityRTM, b);
+  const stk::mesh::Selector sel = (
+    metaData_->locally_owned_part() | metaData_->globally_shared_part());
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      for (int d=0; d < nDim; ++d)
+        vrtm.get(mi, d) = vel.get(mi, d) - meshVel.get(mi, d);
+    });
 
-      for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-        const int offSet = k*nDim;
-        for ( int j=0; j < nDim; ++j ) {
-          vrtm[offSet+j] = uNp1[offSet+j] - vNp1[offSet+j];
-        }
-      }
-    }
-  }
+  vrtm.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -3115,6 +3117,10 @@ Realm::setup_overset_bc(
       NaluEnv::self().naluOutputP0()
         << "Realm::setup_overset_bc:: Selecting STK-based overset connectivity algorithm"
         << std::endl;
+      if (solutionOptions_->meshMotion_)
+        NaluEnv::self().naluOutputP0()
+          << "WARNING:: Using STK-based overset with mesh motion has not been tested "
+          << std::endl;
       oversetManager_ = new OversetManagerSTK(*this, oversetBCData.userData_);
       break;
 
@@ -3150,6 +3156,15 @@ Realm::periodic_field_update(
   const bool addSlaves = true;
   const bool setSlaves = true;
   periodicManager_->apply_constraints(theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
+}
+
+
+void
+Realm::periodic_field_max(
+  stk::mesh::FieldBase *theField,
+  const unsigned &sizeOfField) const
+{
+  periodicManager_->apply_max_field(theField, sizeOfField);
 }
 
 //--------------------------------------------------------------------------

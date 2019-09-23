@@ -7,6 +7,7 @@
 
 #include "master_element/MasterElement.h"
 #include "master_element/Quad43DCVFEM.h"
+#include "master_element/Hex8GeometryFunctions.h"
 
 #include "FORTRAN_Proto.h"
 
@@ -96,6 +97,52 @@ void
 Quad3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
 {
   quad4_shape_fcn(intgLocShift_, shpfc);
+}
+
+void
+Quad3DSCS::determinant(
+  SharedMemView<DoubleType**, DeviceShmem>& coords,
+  SharedMemView<DoubleType**, DeviceShmem>& areav)
+{
+  constexpr int npf  = 4;       // Nodes per face
+  constexpr int nscs = 4;       // Number of sub-control surfaces per face
+  // Coordinates of nodes for SCS
+  DoubleType coordv[9][3];
+
+  // Index map of nodes (in coordv) for the nodes
+  constexpr int quad_edge_facet_table[4][4] = {
+    {0, 4, 8, 7},
+    {4, 1, 5, 8},
+    {8, 5, 2, 6},
+    {7, 8, 6, 3}
+  };
+
+  for (int i=0; i < npf; ++i) {
+    coordv[i][0] = coords(i, 0);
+    coordv[i][1] = coords(i, 1);
+    coordv[i][2] = coords(i, 2);
+  }
+
+  for (int d=0; d < 3; ++d) {
+    coordv[4][d] = 0.5 * (coords(0, d) + coords(1, d)); // edge 1
+    coordv[5][d] = 0.5 * (coords(1, d) + coords(2, d)); // edge 2
+    coordv[6][d] = 0.5 * (coords(2, d) + coords(3, d)); // edge 3
+    coordv[7][d] = 0.5 * (coords(3, d) + coords(0, d)); // edge 4
+
+    // centroid
+    coordv[8][d] = 0.25 * (coords(0, d) + coords(1, d) + coords(2, d) + coords(3,d));
+  }
+
+  for (int ics=0; ics < nscs; ++ics) {
+    DoubleType scscoords[4][3];
+    for (int inode = 0; inode < npf; ++inode) {
+      const int itrianglenode = quad_edge_facet_table[ics][inode];
+      scscoords[inode][0] = coordv[itrianglenode][0];
+      scscoords[inode][1] = coordv[itrianglenode][1];
+      scscoords[inode][2] = coordv[itrianglenode][2];
+    }
+    quad_area_by_triangulation(ics, scscoords, areav);
+  }
 }
 
 //--------------------------------------------------------------------------
