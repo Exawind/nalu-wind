@@ -63,6 +63,8 @@ void NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
+  const auto gradPhiOps = nalu_ngp::simd_elem_nodal_field_updater(
+    ngpMesh, gradPhi);
 
   // Bring class members into local scope for device capture
   const bool useShifted = useShifted_;
@@ -77,8 +79,6 @@ void NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   nalu_ngp::run_elem_algorithm(
     meshInfo, meta.side_rank(), dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
-      const auto gradPhiOps = nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, gradPhi, edata);
       const int* ipNodeMap = meFC->ipNodeMap();
 
       auto& scrView = edata.simdScrView;
@@ -103,7 +103,7 @@ void NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
 
           for (int d=0; d < AlgTraits::nDim_; ++d) {
             DoubleType fac = qIp * v_areav(ip, d);
-            gradPhiOps(ni, di * AlgTraits::nDim_ + d) += fac * inv_vol;
+            gradPhiOps(edata, ni, di * AlgTraits::nDim_ + d) += fac * inv_vol;
           }
         }
       }

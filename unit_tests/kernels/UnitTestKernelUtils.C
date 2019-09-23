@@ -638,13 +638,12 @@ void calc_mass_flow_rate_scs(
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpMdot = fieldMgr.get_field<double>(mdotID);
+  const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
+    ngpMesh, ngpMdot);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata) {
-      const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
-        ngpMesh, ngpMdot, edata);
-
       NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
 
       auto& scrViews = edata.simdScrView;
@@ -669,7 +668,7 @@ void calc_mass_flow_rate_scs(
           tmdot += rhoU[d] * v_area(ip, d);
 
         // Scatter to all elements in this SIMD group
-        mdotOps(ip) = tmdot;
+        mdotOps(edata, ip) = tmdot;
       }
     });
 
@@ -719,13 +718,12 @@ void calc_open_mass_flow_rate(
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpMdot = fieldMgr.get_field<double>(mdotID);
+  const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
+    ngpMesh, ngpMdot);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, meta.side_rank(), dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
-      const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
-        ngpMesh, ngpMdot, edata);
-
       NALU_ALIGNED Traits::DblType rhoU[Quad4Traits::nDim_];
 
       auto& scrViews = edata.simdScrView;
@@ -749,7 +747,7 @@ void calc_open_mass_flow_rate(
         for (int d=0; d < Quad4Traits::nDim_; ++d)
           tmdot += rhoU[d] * v_area(ip, d);
 
-        mdotOps(ip) = tmdot;
+        mdotOps(edata, ip) = tmdot;
       }
     });
 
@@ -863,19 +861,19 @@ void calc_exposed_area_vec(
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto areaVec = fieldMgr.get_field<double>(areaID);
+  const auto areaVecOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
+    ngpMesh, areaVec);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, meta.side_rank(), dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
-      const auto areaVecOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
-        ngpMesh, areaVec, edata);
       auto& scrViews = edata.simdScrView;
       const auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
       const auto& v_area = meViews.scs_areav;
 
       for (int ip = 0; ip < Quad4Traits::numFaceIp_; ++ip)
         for (int d=0; d < Quad4Traits::nDim_; ++d)
-          areaVecOps(ip * Quad4Traits::nDim_ + d) = v_area(ip, d);
+          areaVecOps(edata, ip * Quad4Traits::nDim_ + d) = v_area(ip, d);
     });
 
   areaVec.modify_on_device();
@@ -926,13 +924,13 @@ void calc_projected_nodal_gradient_interior(
   const auto dnvID = dnv.mesh_meta_data_ordinal();
   const auto scalarID = scalarField.mesh_meta_data_ordinal();
   auto ngpGradField = fieldMgr.get_field<double>(gradFieldID);
+  const auto gradFieldOps = sierra::nalu::nalu_ngp::simd_elem_nodal_field_updater(
+    ngpMesh, ngpGradField);
 
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
-      const auto gradFieldOps = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, ngpGradField, edata);
       const int* lrscv = meSCS->adjacentNodes();
       auto& scrView = edata.simdScrView;
       const auto& v_dnv = scrView.get_scratch_view_1D(dnvID);
@@ -954,8 +952,8 @@ void calc_projected_nodal_gradient_interior(
           Traits::DblType valL = fac / v_dnv(il);
           Traits::DblType valR = fac / v_dnv(ir);
 
-          gradFieldOps(il, d) += valL;
-          gradFieldOps(ir, d) -= valR;
+          gradFieldOps(edata, il, d) += valL;
+          gradFieldOps(edata, ir, d) -= valR;
         }
       }
     });
@@ -1015,13 +1013,13 @@ void calc_projected_nodal_gradient_interior(
   const auto dnvID = dnv.mesh_meta_data_ordinal();
   const auto scalarID = phi.mesh_meta_data_ordinal();
   auto ngpGradField = fieldMgr.get_field<double>(gradPhiID);
+  const auto gradPhiOps = sierra::nalu::nalu_ngp::simd_elem_nodal_field_updater(
+    ngpMesh, ngpGradField);
 
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
-      const auto gradPhiOps = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, ngpGradField, edata);
       const int* lrscv = meSCS->adjacentNodes();
       auto& scrView = edata.simdScrView;
       const auto& v_dnv = scrView.get_scratch_view_1D(dnvID);
@@ -1044,8 +1042,8 @@ void calc_projected_nodal_gradient_interior(
             Traits::DblType valL = fac / v_dnv(il);
             Traits::DblType valR = fac / v_dnv(ir);
 
-            gradPhiOps(il, di * Hex8Traits::nDim_ + d) += valL;
-            gradPhiOps(ir, di * Hex8Traits::nDim_ + d) -= valR;
+            gradPhiOps(edata, il, di * Hex8Traits::nDim_ + d) += valL;
+            gradPhiOps(edata, ir, di * Hex8Traits::nDim_ + d) -= valR;
           }
         }
       }

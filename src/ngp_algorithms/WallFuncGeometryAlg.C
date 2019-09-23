@@ -68,6 +68,12 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
   auto wdistBip = fieldMgr.template get_field<double>(wallNormDistBip_);
   auto wdist = fieldMgr.template get_field<double>(wallNormDist_);
   auto warea = fieldMgr.template get_field<double>(wallArea_);
+  const auto areaOps = nalu_ngp::simd_face_elem_nodal_field_updater(
+    ngpMesh, warea);
+  const auto distOps = nalu_ngp::simd_face_elem_nodal_field_updater(
+    ngpMesh, wdist);
+  const auto dBipOps = nalu_ngp::simd_face_elem_field_updater(
+    ngpMesh, wdistBip);
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
@@ -85,13 +91,6 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
   nalu_ngp::run_face_elem_algorithm(
     meshInfo, faceData_, elemData_, sel,
     KOKKOS_LAMBDA(SimdDataType& fdata) {
-      const auto areaOps = nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, warea, fdata);
-      const auto distOps = nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, wdist, fdata);
-      const auto dBipOps = nalu_ngp::simd_elem_field_updater(
-        ngpMesh, wdistBip, fdata);
-
       auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
       auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaVecID);
 
@@ -114,12 +113,12 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
         ypBip = stk::math::sqrt(ypBip);
 
         // Update the wall distance boundary integration pt (Bip)
-        dBipOps(ip) = ypBip;
+        dBipOps(fdata, ip) = ypBip;
 
         // Accumulate to the nearest node
         const int ni = faceIpNodeMap[ip];
-        distOps(ni, 0) += aMag * ypBip;
-        areaOps(ni, 0) += aMag;
+        distOps(fdata, ni, 0) += aMag * ypBip;
+        areaOps(fdata, ni, 0) += aMag;
       }
     });
 
