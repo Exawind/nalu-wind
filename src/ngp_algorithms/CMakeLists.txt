@@ -4,6 +4,7 @@ add_sources(GlobalSourceList
   NodalGradElemAlg.C
   NodalGradBndryElemAlg.C
   EffDiffFluxCoeffAlg.C
+  EffSSTDiffFluxCoeffAlg.C
   EnthalpyEffDiffFluxCoeffAlg.C
   MdotEdgeAlg.C
   TurbViscKsgsAlg.C
