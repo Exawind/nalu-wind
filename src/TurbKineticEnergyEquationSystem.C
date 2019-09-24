@@ -82,6 +82,7 @@
 #include <ngp_algorithms/NodalGradElemAlg.h>
 #include <ngp_algorithms/NodalGradBndryElemAlg.h>
 #include <ngp_algorithms/EffDiffFluxCoeffAlg.h>
+#include <ngp_algorithms/EffSSTDiffFluxCoeffAlg.h>
 #include <ngp_algorithms/TKEWallFuncAlg.h>
 
 // nso
@@ -444,7 +445,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     case SST_DES: {
       const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
       const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);
-      effDiffFluxCoeffAlg_.reset(new EffectiveSSTDiffFluxCoeffAlgorithm(
+      effDiffFluxCoeffAlg_.reset(new EffSSTDiffFluxCoeffAlg(
         realm_, part, visc_, tvisc_, evisc_, sigmaKOne, sigmaKTwo));
       break;
     }
