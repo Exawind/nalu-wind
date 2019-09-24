@@ -88,7 +88,6 @@
 #include <SolverAlgorithmDriver.h>
 #include <TurbViscKsgsAlgorithm.h>
 #include <TurbViscSmagorinskyAlgorithm.h>
-#include <TurbViscSSTAlgorithm.h>
 #include <TurbViscWaleAlgorithm.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <FixPressureAtNodeAlgorithm.h>
@@ -152,6 +151,7 @@
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
+#include "ngp_algorithms/TurbViscSSTAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
@@ -1490,7 +1490,7 @@ MomentumEquationSystem::register_interior_algorithm(
 
       case SST:
       case SST_DES:
-        tviscAlg_.reset(new TurbViscSSTAlgorithm(realm_, part));
+        tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_));
         break;
 
       default:

@@ -11,7 +11,6 @@
 #include "UnitTestAlgorithmUtils.h"
 
 #include "ComputeSSTMaxLengthScaleElemAlgorithm.h"
-#include "TurbViscSSTAlgorithm.h"
 #include "EffectiveSSTDiffFluxCoeffAlgorithm.h"
 
 TEST_F(TestTurbulenceAlgorithm, computesstmaxlengthscaleelemalgorithm)
@@ -28,23 +27,6 @@ TEST_F(TestTurbulenceAlgorithm, computesstmaxlengthscaleelemalgorithm)
   const double tol = 1e-14;
   double norm = field_norm(*maxLengthScale_);
   const double gold_norm = 1.0;
-  EXPECT_NEAR(norm, gold_norm, tol);
-}
-
-TEST_F(TestTurbulenceAlgorithm, testturbviscsstalgorithm)
-{
-  sierra::nalu::Realm& realm = this->create_realm();
-
-  fill_mesh_and_init_fields();
-
-  // Execute
-  sierra::nalu::TurbViscSSTAlgorithm alg(realm, meshPart_);
-  alg.execute();
-
-  // Perform tests
-  const double tol = 1e-14;
-  double norm = field_norm(*tvisc_);
-  const double gold_norm = 0.41450173743648816;
   EXPECT_NEAR(norm, gold_norm, tol);
 }
 
