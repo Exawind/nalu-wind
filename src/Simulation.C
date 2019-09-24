@@ -44,13 +44,21 @@ Simulation::Simulation(const YAML::Node& root_node) :
     transfers_(NULL),
     linearSolvers_(NULL),
     serializedIOGroupSize_(0)
-{}
+{
+#ifdef KOKKOS_ENABLE_CUDA
+  cudaDeviceGetLimit (&default_stack_size, cudaLimitStackSize);
+  cudaDeviceSetLimit (cudaLimitStackSize, nalu_stack_size);
+#endif
+}
 
 Simulation::~Simulation() {
   delete realms_;
   delete transfers_;
   delete timeIntegrator_;
   delete linearSolvers_;
+#ifdef KOKKOS_ENABLE_CUDA
+  cudaDeviceSetLimit (cudaLimitStackSize, default_stack_size);
+#endif
 }
 
 // Timers

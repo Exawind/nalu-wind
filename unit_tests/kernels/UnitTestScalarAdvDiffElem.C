@@ -79,7 +79,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion_tpetra)
     return;
 
   fill_mesh_and_init_fields(true);
-
+  
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
   solnOpts_.meshDeformation_ = false;
@@ -89,6 +89,8 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion_tpetra)
   unit_test_utils::TpetraHelperObjectsElem helperObjs(bulk_, stk::topology::HEX_8, numDof, partVec_[0]);
 
   helperObjs.realm.naluGlobalId_ = naluGlobalId_;
+  helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
+
   helperObjs.realm.set_global_id();
 
   // Initialize the kernel
@@ -98,7 +100,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion_tpetra)
 
   // Register the kernel for execution
   helperObjs.assembleElemSolverAlg->activeKernels_.push_back(advKernel.get());
-
   // Populate LHS and RHS
   helperObjs.execute();
 

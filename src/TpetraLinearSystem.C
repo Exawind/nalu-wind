@@ -220,7 +220,6 @@ void TpetraLinearSystem::beginLinearSystemConstruction()
 
   // Also, we'll build up our own local id map. Note: first we number
   // the owned nodes then we number the sharedNotOwned nodes.
-  LocalOrdinal localId = 0;
 
   // make separate arrays that hold the owned and sharedNotOwned gids
   std::vector<stk::mesh::Entity> owned_nodes, shared_not_owned_nodes;
@@ -243,20 +242,52 @@ void TpetraLinearSystem::beginLinearSystemConstruction()
   }
 
   std::sort(owned_nodes.begin(), owned_nodes.end(), CompareEntityById(bulkData, realm_.naluGlobalId_) );
-  std::vector<stk::mesh::Entity>::iterator iter = std::unique(owned_nodes.begin(), owned_nodes.end(), CompareEntityEqualById(bulkData, realm_.naluGlobalId_));
-  owned_nodes.erase(iter, owned_nodes.end());
 
+  // use the Contiguous Map constructor. 
+
+   const Teuchos::RCP<LinSys::Comm> tpetraComm = Teuchos::rcp(new LinSys::Comm(bulkData.parallel()));
+  ownedRowsMap_ = Teuchos::rcp(new LinSys::Map(Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(),
+                                               maxOwnedRowId_, // must have *numDof_ 
+                                               1,
+                                               tpetraComm));
   myLIDs_.clear();
-  //KOKKOS: Loop noparallel push_back totalGids_ (std::vector)
+  myLIDs_.reserve(maxOwnedRowId_ +  numSharedNotOwnedNotLocallyOwned*numDof_);
+
+  LocalOrdinal localId = 0;
+  int gstart = 0;
+
+  GlobalOrdinal gomin   = ownedRowsMap_->getMinGlobalIndex();
+
   for(stk::mesh::Entity entity : owned_nodes) {
     const stk::mesh::EntityId entityId = *stk::mesh::field_data(*realm_.naluGlobalId_, entity);
     myLIDs_[entityId] = numDof_*localId++;
-    for(unsigned idof=0; idof < numDof_; ++ idof) {
-      const GlobalOrdinal gid = GID_(entityId, numDof_, idof);
-      ownedGids.push_back(gid);
-    }
+    auto *  thisgid = stk::mesh::field_data(*realm_.tpetGlobalId_, entity);
+    auto basegid = gomin + numDof_ * gstart;
+    (*thisgid) = basegid;
+    for(unsigned idof=0; idof < numDof_; ++ idof) ownedGids.push_back(basegid + idof);
+    gstart++;
   }
   ThrowRequire(localId == numOwnedNodes);
+  // communicate the newly stored GID's.
+
+  std::vector<const stk::mesh::FieldBase*> fVec{realm_.tpetGlobalId_};
+  stk::mesh::copy_owned_to_shared(bulkData, fVec);
+  stk::mesh::communicate_field_data(bulkData.aura_ghosting(), fVec);
+  if (realm_.oversetManager_ != nullptr &&
+      realm_.oversetManager_->oversetGhosting_ != nullptr)
+    stk::mesh::communicate_field_data(
+      *realm_.oversetManager_->oversetGhosting_, fVec);
+
+  if (realm_.nonConformalManager_ != nullptr &&
+      realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)
+    stk::mesh::communicate_field_data(  
+      *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
+  
+  if (realm_.periodicManager_ != nullptr &&
+      realm_.periodicManager_->periodicGhosting_ != nullptr) {
+    realm_.periodicManager_->parallel_communicate_field(realm_.tpetGlobalId_);
+    realm_.periodicManager_->periodic_parallel_communicate_field(realm_.tpetGlobalId_);
+  }
 
   // now sharedNotOwned:
   for(const stk::mesh::Bucket* bptr : buckets) {
@@ -268,24 +299,27 @@ void TpetraLinearSystem::beginLinearSystemConstruction()
     }
   }
   std::sort(shared_not_owned_nodes.begin(), shared_not_owned_nodes.end(), CompareEntityById(bulkData, realm_.naluGlobalId_) );
-  iter = std::unique(shared_not_owned_nodes.begin(), shared_not_owned_nodes.end(), CompareEntityEqualById(bulkData, realm_.naluGlobalId_));
+  std::vector<stk::mesh::Entity>::iterator iter = std::unique(shared_not_owned_nodes.begin(), shared_not_owned_nodes.end(), CompareEntityEqualById(bulkData, realm_.naluGlobalId_));
   shared_not_owned_nodes.erase(iter, shared_not_owned_nodes.end());
 
   for (unsigned inode=0; inode < shared_not_owned_nodes.size(); ++inode) {
     stk::mesh::Entity entity = shared_not_owned_nodes[inode];
     const stk::mesh::EntityId naluId = *stk::mesh::field_data(*realm_.naluGlobalId_, entity);
-    entity = get_entity_master(bulkData, entity, naluId);
+    auto masterentity = get_entity_master(bulkData, entity, naluId);
     myLIDs_[naluId] = numDof_*localId++;
-    int owner = bulkData.parallel_owner_rank(entity);
+    int owner = bulkData.parallel_owner_rank(masterentity);
+    auto basegid = *stk::mesh::field_data(*realm_.tpetGlobalId_, masterentity);
+
+    if(entity != masterentity) 
+      *stk::mesh::field_data(*realm_.tpetGlobalId_, entity) = basegid;
+    
     for(unsigned idof=0; idof < numDof_; ++ idof) {
-      const GlobalOrdinal gid = GID_(naluId, numDof_, idof);
+      GlobalOrdinal gid = basegid+idof;
       sharedNotOwnedGids.push_back(gid);
       sharedPids_.push_back(owner);
     }
   }
 
-  const Teuchos::RCP<LinSys::Comm> tpetraComm = Teuchos::rcp(new LinSys::Comm(bulkData.parallel()));
-  ownedRowsMap_ = Teuchos::rcp(new LinSys::Map(Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(), ownedGids, 1, tpetraComm));
   sharedNotOwnedRowsMap_ = Teuchos::rcp(new LinSys::Map(Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(), sharedNotOwnedGids, 1, tpetraComm));
 
   exporter_ = Teuchos::rcp(new LinSys::Export(sharedNotOwnedRowsMap_, ownedRowsMap_));
@@ -342,7 +376,6 @@ void TpetraLinearSystem::buildNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginLinearSystemConstruction();
   stk::mesh::MetaData & metaData = realm_.meta_data();
-//if (realm_.bulk_data().parallel_rank()==0) std::cerr<<"buildNodeGraph"<<std::endl;
 
   const stk::mesh::Selector s_owned = metaData.locally_owned_part()
     & stk::mesh::selectUnion(parts)
@@ -407,7 +440,6 @@ void TpetraLinearSystem::buildReducedElemToNodeGraph(const stk::mesh::PartVector
 {
   beginLinearSystemConstruction();
   stk::mesh::MetaData & metaData = realm_.meta_data();
-//if (realm_.bulk_data().parallel_rank()==0) std::cerr<<"buildReducedElemToNodeGraph"<<std::endl;
 
   const stk::mesh::Selector s_owned = metaData.locally_owned_part()
     & stk::mesh::selectUnion(parts)
@@ -482,7 +514,6 @@ void TpetraLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector 
 {
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
   beginLinearSystemConstruction();
-//if (realm_.bulk_data().parallel_rank()==0) std::cerr<<"buildNonConformalNodeGraph"<<std::endl;
 
   std::vector<stk::mesh::Entity> entities;
 
@@ -590,7 +621,7 @@ void TpetraLinearSystem::copy_stk_to_tpetra(const stk::mesh::FieldBase * stkFiel
 
     const int fieldSize = field_bytes_per_entity(*stkField, b) / (sizeof(double));
 
-    ThrowRequire(numVectors == fieldSize);
+    ThrowRequireMsg(numVectors == fieldSize, "TpetraLinearSystem::copy_stk_to_tpetra");
 
     const stk::mesh::Bucket::size_type length = b.size();
 
@@ -604,11 +635,13 @@ void TpetraLinearSystem::copy_stk_to_tpetra(const stk::mesh::FieldBase * stkFiel
       if ((status & DS_SkippedDOF) || (status & DS_SharedNotOwnedDOF))
         continue;
 
-      const stk::mesh::EntityId nodeId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
+      const stk::mesh::EntityId nodeTpetGID = *stk::mesh::field_data(*realm_.tpetGlobalId_, node);
+      ThrowRequireMsg(nodeTpetGID != 0 && nodeTpetGID != std::numeric_limits<LinSys::GlobalOrdinal>::max()
+                      , " in copy_stk_to_tpetra ");
       for(int d=0; d < fieldSize; ++d)
       {
         const size_t stkIndex = k*fieldSize + d;
-        tpetraField->replaceGlobalValue(nodeId, d, stkFieldPtr[stkIndex]);
+        tpetraField->replaceGlobalValue(nodeTpetGID, d, stkFieldPtr[stkIndex]);
       }
     }
   }
@@ -707,8 +740,9 @@ void TpetraLinearSystem::compute_graph_row_lengths(const std::vector<stk::mesh::
 
     const bool entity_a_shared = entity_a_status & DS_SharedNotOwnedDOF;
     if (entity_a_shared) {
-        add_lengths_to_comm(bulk, commNeighbors, entity_a_owner, entityId_a,
-                            numDof_, numColEntities, colEntityIds.data(), colOwners.data());
+      add_lengths_to_comm_tpet(bulk, realm_.tpetGlobalId_,commNeighbors, entity_a_owner, entityId_a,
+                               //                               numDof_, 
+                               numColEntities, colEntityIds.data(), colOwners.data());
     }
 
     for(size_t ii=0; ii<numColEntities; ++ii) {
@@ -724,7 +758,9 @@ void TpetraLinearSystem::compute_graph_row_lengths(const std::vector<stk::mesh::
 
         const bool entity_b_shared = entity_b_status & DS_SharedNotOwnedDOF;
         if (entity_b_shared) {
-            add_lengths_to_comm(bulk, commNeighbors, colOwners[ii], entityId_b, numDof_, 1, &entityId_a, &entity_a_owner);
+            add_lengths_to_comm_tpet(bulk, realm_.tpetGlobalId_, commNeighbors, colOwners[ii], entityId_b, 
+                                     // numDof_, 
+                                     1, &entityId_a, &entity_a_owner);
         }
     }
   }
@@ -749,11 +785,14 @@ void TpetraLinearSystem::insert_graph_connections(const std::vector<stk::mesh::E
 
     const stk::mesh::Entity entity_a = rowEntities[i];
     int dofStatus_a = getDofStatus(entity_a);
+    ThrowRequireMsg(entityToColLID_[entity_a.local_offset()] != -1 ,  "insert_graph_connections bad lid ");
     localDofs_a[0] = entityToColLID_[entity_a.local_offset()];
-
     for(size_t j=0; j<numColEntities; ++j) {
       const stk::mesh::Entity entity_b = entities_b[j];
       dofStatus[j] = getDofStatus(entity_b);
+
+      ThrowRequireMsg(entityToColLID_[entity_b.local_offset()] != -1 , "insert_graph_connections bad lid #2 ");
+
       localDofs_b[j] = entityToColLID_[entity_b.local_offset()];
     }
 
@@ -799,16 +838,36 @@ void TpetraLinearSystem::fill_entity_to_row_LID_mapping()
 
 void TpetraLinearSystem::fill_entity_to_col_LID_mapping()
 {
-    const stk::mesh::BulkData& bulk = realm_.bulk_data();
+  const stk::mesh::BulkData& bulk = realm_.bulk_data();
+  stk::mesh::Selector selector = bulk.mesh_meta_data().universal_part() & !(realm_.get_inactive_selector());
     entityToColLID_ = LinSys::EntityToLIDView("entityToLID",bulk.get_size_of_entity_index_space());
-    const stk::mesh::BucketVector& nodeBuckets = bulk.buckets(stk::topology::NODE_RANK);
+    const stk::mesh::BucketVector& nodeBuckets = realm_.get_buckets(stk::topology::NODE_RANK,selector);
     for(const stk::mesh::Bucket* bptr : nodeBuckets) {
         const stk::mesh::Bucket& b = *bptr;
         const stk::mesh::EntityId* nodeIds = stk::mesh::field_data(*realm_.naluGlobalId_, b);
         for(size_t i=0; i<b.size(); ++i) {
             stk::mesh::Entity node = b[i];
-            GlobalOrdinal gid = GID_(nodeIds[i], numDof_, 0);
-            entityToColLID_[node.local_offset()] = totalColsMap_->getLocalElement(gid);
+
+            GlobalOrdinal gid =-1;
+            // needed because of some shared and ghost nodes. 
+            if (nodeIds[i] != bulk.identifier(node)) {
+              stk::mesh::Entity master = get_entity_master(bulk, node, nodeIds[i]);
+              if (master != node) {
+                gid = * stk::mesh::field_data(*realm_.tpetGlobalId_, master);
+                entityToColLID_[node.local_offset()] = totalColsMap_->getLocalElement(gid);
+              }
+              else
+                gid =  * stk::mesh::field_data(*realm_.tpetGlobalId_, node);
+            }
+            else
+              gid =  * stk::mesh::field_data(*realm_.tpetGlobalId_, node);
+
+            if(gid == 0 || gid == -1 || gid == std::numeric_limits<LinSys::GlobalOrdinal>::max() ) {
+	      // unit_test1 does produce ghost nodes that have a master that don't have a valid tpetGlobalId_
+              entityToColLID_[node.local_offset()] = -1;
+            }
+            else
+              entityToColLID_[node.local_offset()] = totalColsMap_->getLocalElement(gid);
         }
     }
 }
@@ -827,8 +886,10 @@ void TpetraLinearSystem::storeOwnersForShared()
       if (status & DS_SharedNotOwnedDOF) {
         stk::mesh::EntityId naluId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
         stk::mesh::Entity master = get_entity_master(bulkData, node, naluId);
+        GlobalOrdinal gidbase = * stk::mesh::field_data(*realm_.tpetGlobalId_, master);
+        ThrowRequire(gidbase != 0);
         for(unsigned idof=0; idof < numDof_; ++ idof) {
-          GlobalOrdinal gid = GID_(naluId, numDof_, idof);
+          GlobalOrdinal gid = gidbase+idof;
           ownersAndGids_.insert(std::make_pair(bulkData.parallel_owner_rank(master), gid));
         }
       }
@@ -1133,6 +1194,7 @@ void TpetraLinearSystem::sumInto(unsigned numEntities,
   for(int i = 0; i < n_obj; i++) {
     const stk::mesh::Entity entity = entities[i];
     const LocalOrdinal localOffset = entityToColLID_[entity.local_offset()];
+    ThrowRequireMsg(localOffset != -1 , "sumInto bad lid #1 ");
     for(size_t d=0; d < numDof_; ++d) {
       size_t lid = i*numDof_ + d;
       localIds[lid] = localOffset + d;
@@ -1265,6 +1327,7 @@ void TpetraLinearSystem::sumInto(const std::vector<stk::mesh::Entity> & entities
   for(size_t i = 0; i < n_obj; i++) {
     const stk::mesh::Entity entity = entities[i];
     const LocalOrdinal localOffset = entityToColLID_[entity.local_offset()];
+    ThrowRequireMsg(localOffset != -1 , "sumInto bad lid #2 ");
     for(size_t d=0; d < numDof_; ++d) {
       size_t lid = i*numDof_ + d;
       scratchIds[lid] = localOffset + d;
@@ -1902,8 +1965,6 @@ int getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
       }
     }
   }
-
-  //std::cerr << "has_non_matching_boundary_face_alg= " << has_non_matching_boundary_face_alg << " hasPeriodic= " << hasPeriodic << std::endl;
 
   if (has_non_matching_boundary_face_alg && hasPeriodic) {
     std::ostringstream ostr;

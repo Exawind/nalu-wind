@@ -60,6 +60,8 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto gradPhi = fieldMgr.template get_field<double>(gradPhi_);
+  const auto gradPhiOps = nalu_ngp::simd_elem_nodal_field_updater(
+    ngpMesh, gradPhi);
 
   // Bring class members into local scope for device capture
   const bool useShifted = useShifted_;
@@ -74,8 +76,6 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
-      const auto gradPhiOps = nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, gradPhi, edata);
       const int* lrscv = meSCS->adjacentNodes();
 
       auto& scrView = edata.simdScrView;
@@ -103,8 +103,8 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
             DoubleType valL = fac / v_dnv(il);
             DoubleType valR = fac / v_dnv(ir);
 
-            gradPhiOps(il, di * AlgTraits::nDim_ + d) += valL;
-            gradPhiOps(ir, di * AlgTraits::nDim_ + d) -= valR;
+            gradPhiOps(edata, il, di * AlgTraits::nDim_ + d) += valL;
+            gradPhiOps(edata, ir, di * AlgTraits::nDim_ + d) -= valR;
           }
         }
       }

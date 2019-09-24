@@ -179,7 +179,6 @@ struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase {
   {
     linsys->buildElemToNodeGraph({&realm.metaData_->universal_part()});
     linsys->finalizeLinearSystem();
-
     assembleElemSolverAlg->execute();
     for (auto kern: assembleElemSolverAlg->activeKernels_)
       kern->free_on_device();
@@ -206,13 +205,11 @@ struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase {
   {
     linsys->buildElemToNodeGraph({&realm.metaData_->universal_part()});
     linsys->finalizeLinearSystem();
-
     assembleFaceElemSolverAlg->execute();
     for (auto kern: assembleFaceElemSolverAlg->activeKernels_)
-      kern->free_on_device();
+      kern->free_on_device();  
     assembleFaceElemSolverAlg->activeKernels_.clear();
   }
-
   sierra::nalu::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
 };
 

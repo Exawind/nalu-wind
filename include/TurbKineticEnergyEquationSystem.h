@@ -35,7 +35,8 @@ public:
 
   TurbKineticEnergyEquationSystem(
     EquationSystems& equationSystems);
-  virtual ~TurbKineticEnergyEquationSystem();
+
+  virtual ~TurbKineticEnergyEquationSystem() = default;
 
   virtual void register_nodal_fields(
     stk::mesh::Part *part);
@@ -95,8 +96,9 @@ public:
   ScalarFieldType *evisc_;
   
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
+  NgpAlgDriver wallFuncAlgDriver_;
+
   std::unique_ptr<Algorithm> effDiffFluxCoeffAlg_;
-  AlgorithmDriver *wallFunctionTurbKineticEnergyAlgDriver_;
   const TurbulenceModel turbulenceModel_;
 
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
