@@ -108,6 +108,7 @@
 #include "utils/StkHelpers.h"
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldBLAS.h"
 
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
@@ -3379,7 +3380,7 @@ Realm::swap_states()
   bulkData_->update_field_data_states();
 
 #ifdef KOKKOS_ENABLE_CUDA
-  // if (get_time_step_count() < 2) return;
+  if (get_time_step_count() < 2) return;
 
   const auto& fieldMgr = ngp_field_manager();
   for (const auto fld: metaData_->get_fields()) {
@@ -3401,7 +3402,14 @@ Realm::swap_states()
         fld->field_state(static_cast<stk::mesh::FieldState>(i-1))
         ->mesh_meta_data_ordinal());
 
-      toField.swap(fromField);
+      const stk::mesh::Selector sel = 
+        (metaData_->locally_owned_part() | metaData_->globally_shared_part())
+        & (stk::mesh::selectField(*fld));
+      const unsigned numComponents = (fld->name() == "velocity") ?
+        metaData_->spatial_dimension() : 1;
+      nalu_ngp::field_copy(
+          ngp_mesh(), sel, toField, fromField, numComponents);
+      //toField.swap(fromField);
     }
   }
 #endif
