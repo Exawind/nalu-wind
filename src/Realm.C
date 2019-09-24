@@ -3178,7 +3178,8 @@ Realm::periodic_delta_solution_update(
   const bool bypassFieldCheck = true;
   const bool addSlaves = false;
   const bool setSlaves = true;
-  periodicManager_->apply_constraints(theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
+  periodicManager_->ngp_apply_constraints(
+    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
 }
 
 //--------------------------------------------------------------------------
