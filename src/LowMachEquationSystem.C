@@ -2551,14 +2551,9 @@ MomentumEquationSystem::assemble_and_solve(
       projTimeScale = gamma1 / dt;
     }
 
-    const auto sel = meta.universal_part() & stk::mesh::selectField(*Udiag_);
-    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
-    for (auto b: bkts) {
-      double* field = (double*) stk::mesh::field_data(*Udiag_, *b);
-
-      for (size_t in=0; in < b->size(); in++)
-        field[in] = projTimeScale;
-    }
+    auto ngpUdiag = realm_.ngp_field_manager().get_field<double>(
+      Udiag_->mesh_meta_data_ordinal());
+    ngpUdiag.set_all(realm_.ngp_mesh(), projTimeScale);
   }
 
   // Perform actual solve
