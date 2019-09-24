@@ -3392,9 +3392,6 @@ Realm::swap_states()
     if ((numStates < 2) || (fieldID != fieldNp1ID)) continue;
 
     for (unsigned i=(numStates - 1); i > 0; --i) {
-      std::cerr << "Field: " << fld->name() << " copy to: "
-                << static_cast<stk::mesh::FieldState>(i) << " from: "
-                << static_cast<stk::mesh::FieldState>(i-1) << std::endl;
       auto toField = fieldMgr.get_field<double>(
         fld->field_state(static_cast<stk::mesh::FieldState>(i))
         ->mesh_meta_data_ordinal());
