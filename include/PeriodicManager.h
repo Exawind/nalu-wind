@@ -153,6 +153,16 @@ class PeriodicManager {
 
   std::vector<int> ghostCommProcs_;
 
+  void ngp_add_slave_to_master(
+    stk::mesh::FieldBase *theField,
+    const unsigned &sizeOfField,
+    const bool &bypassFieldCheck);
+
+  void ngp_set_slave_to_master(
+    stk::mesh::FieldBase *theField,
+    const unsigned &sizeOfField,
+    const bool &bypassFieldCheck);
+
  private:
 
   // vector of master:slave selector pairs
@@ -182,16 +192,6 @@ class PeriodicManager {
     const bool &bypassFieldCheck);
 
   void set_slave_to_master(
-    stk::mesh::FieldBase *theField,
-    const unsigned &sizeOfField,
-    const bool &bypassFieldCheck);
-
-  void ngp_add_slave_to_master(
-    stk::mesh::FieldBase *theField,
-    const unsigned &sizeOfField,
-    const bool &bypassFieldCheck);
-
-  void ngp_set_slave_to_master(
     stk::mesh::FieldBase *theField,
     const unsigned &sizeOfField,
     const bool &bypassFieldCheck);
