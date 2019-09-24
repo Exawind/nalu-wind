@@ -3377,6 +3377,34 @@ void
 Realm::swap_states()
 {
   bulkData_->update_field_data_states();
+
+#ifdef KOKKOS_ENABLE_CUDA
+  // if (get_time_step_count() < 2) return;
+
+  const auto& fieldMgr = ngp_field_manager();
+  for (const auto fld: metaData_->get_fields()) {
+    const unsigned numStates = fld->number_of_states();
+    const auto fieldID = fld->mesh_meta_data_ordinal();
+    const auto fieldNp1ID =
+      fld->field_state(stk::mesh::StateNP1)->mesh_meta_data_ordinal();
+
+    if ((numStates < 2) || (fieldID != fieldNp1ID)) continue;
+
+    for (unsigned i=(numStates - 1); i > 0; --i) {
+      std::cerr << "Field: " << fld->name() << " copy to: "
+                << static_cast<stk::mesh::FieldState>(i) << " from: "
+                << static_cast<stk::mesh::FieldState>(i-1) << std::endl;
+      auto toField = fieldMgr.get_field<double>(
+        fld->field_state(static_cast<stk::mesh::FieldState>(i))
+        ->mesh_meta_data_ordinal());
+      auto fromField = fieldMgr.get_field<double>(
+        fld->field_state(static_cast<stk::mesh::FieldState>(i-1))
+        ->mesh_meta_data_ordinal());
+
+      toField.swap(fromField);
+    }
+  }
+#endif
 }
 
 //--------------------------------------------------------------------------
