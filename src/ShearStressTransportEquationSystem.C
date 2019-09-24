@@ -23,6 +23,7 @@
 
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -37,6 +38,9 @@
 // basic c++
 #include <cmath>
 #include <vector>
+
+// ngp
+#include "ngp_utils/NgpFieldBLAS.h"
 
 namespace sierra{
 namespace nalu{
@@ -578,57 +582,70 @@ ShearStressTransportEquationSystem::initialize_average_mdot()
 {
   // Don't do this if it's a restart and average_mdot has been defined...
   if (resetTAMSAverages_) {
-    stk::mesh::MetaData & meta_data = realm_.meta_data();
+
+    const auto& meta = realm_.meta_data();
+    const auto& ngpMesh = realm_.ngp_mesh();
+    const auto& fieldMgr = realm_.ngp_field_manager();
+
     if (realm_.realmUsesEdges_) {
-      ScalarFieldType *massFlowRate_ = meta_data.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "mass_flow_rate");
-      ScalarFieldType *avgMdot_ = meta_data.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "average_mass_flow_rate");
+      auto& avgMdot = fieldMgr.get_field<double>(get_field_ordinal(
+        meta, "average_mass_flow_rate", stk::topology::EDGE_RANK));
+      const auto& massFlowRate = fieldMgr.get_field<double>(
+        get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK));
 
-      stk::mesh::Selector s_all_nodes = (meta_data.locally_owned_part()
-        | meta_data.globally_shared_part())
-        &stk::mesh::selectField(*avgMdot_);
+      const stk::mesh::Selector sel =
+        (meta.locally_owned_part() | meta.globally_shared_part()) &
+        stk::mesh::selectField(
+          *meta.get_field(stk::topology::EDGE_RANK, "average_mass_flow_rate"));
 
-      stk::mesh::BucketVector const& edge_buckets =
-        realm_.get_buckets( stk::topology::EDGE_RANK, s_all_nodes );
-      for ( stk::mesh::BucketVector::const_iterator ib = edge_buckets.begin();
-            ib != edge_buckets.end() ; ++ib ) {
-        stk::mesh::Bucket & b = **ib ;
-        const stk::mesh::Bucket::size_type length   = b.size();
+      nalu_ngp::field_copy(
+        ngpMesh, sel, avgMdot, massFlowRate, 1, stk::topology::EDGE_RANK);
+    } else {
 
-        const double * mdot = stk::mesh::field_data(*massFlowRate_, b);
-        double * avgMdot    = stk::mesh::field_data(*avgMdot_, b);
+      // // Ideally use this. But it doesn't work yet
+      // auto& avgMdot = fieldMgr.get_field<double>(get_field_ordinal(meta, "average_mass_flow_rate_scs", stk::topology::ELEM_RANK));
+      // const auto& massFlowRate =
+      //   fieldMgr.get_field<double>(get_field_ordinal(meta, "mass_flow_rate_scs", stk::topology::ELEM_RANK));
 
-        for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k )
-          avgMdot[k] = mdot[k];
-      }
-    }
-    else {
-      GenericFieldType *massFlowRateScs_ = meta_data.get_field<GenericFieldType>(stk::topology::ELEMENT_RANK, "mass_flow_rate_scs");
-      GenericFieldType *avgMdotScs_ = meta_data.get_field<GenericFieldType>(stk::topology::ELEMENT_RANK, "average_mass_flow_rate_scs");
+      // const stk::mesh::Selector sel =(meta.locally_owned_part()| meta.globally_shared_part()) & stk::mesh::selectField(*meta.get_field(stk::topology::ELEM_RANK, "average_mass_flow_rate_scs"));
+      
+      // nalu_ngp::field_copy(ngpMesh, sel, avgMdot, massFlowRate, avgMdot.max_components_per_entity(), stk::topology::ELEMENT_RANK);
+      
+      stk::mesh::MetaData& meta_data = realm_.meta_data();
+
+      GenericFieldType* massFlowRateScs_ =
+        meta_data.get_field<GenericFieldType>(
+          stk::topology::ELEMENT_RANK, "mass_flow_rate_scs");
+      GenericFieldType* avgMdotScs_ = meta_data.get_field<GenericFieldType>(
+        stk::topology::ELEMENT_RANK, "average_mass_flow_rate_scs");
 
       // define some common selectors
-      stk::mesh::Selector s_all_elem
-        = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
-        &stk::mesh::selectField(*avgMdotScs_);
+      stk::mesh::Selector s_all_elem =
+        (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
+        stk::mesh::selectField(*avgMdotScs_);
 
       stk::mesh::BucketVector const& elem_buckets =
-        realm_.get_buckets( stk::topology::ELEMENT_RANK, s_all_elem );
-      for ( stk::mesh::BucketVector::const_iterator ib = elem_buckets.begin();
-            ib != elem_buckets.end() ; ++ib ) {
-        stk::mesh::Bucket & b = **ib ;
+        realm_.get_buckets(stk::topology::ELEMENT_RANK, s_all_elem);
+      for (stk::mesh::BucketVector::const_iterator ib = elem_buckets.begin();
+           ib != elem_buckets.end(); ++ib) {
+        stk::mesh::Bucket& b = **ib;
         const stk::mesh::Bucket::size_type length = b.size();
 
         // extract master element
-        MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(b.topology());
+        MasterElement* meSCS =
+          sierra::nalu::MasterElementRepo::get_surface_master_element(
+            b.topology());
 
         // extract master element specifics
         const int numScsIp = meSCS->num_integration_points();
 
-        for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-           double *avgMdotScs = stk::mesh::field_data(*avgMdotScs_, b, k);
-           const double *mdotScs = stk::mesh::field_data(*massFlowRateScs_, b, k);
+        for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {
+          double* avgMdotScs = stk::mesh::field_data(*avgMdotScs_, b, k);
+          const double* mdotScs =
+            stk::mesh::field_data(*massFlowRateScs_, b, k);
 
-           for (int ip = 0; ip < numScsIp; ip++)
-             avgMdotScs[ip] = mdotScs[ip];
+          for (int ip = 0; ip < numScsIp; ip++)
+            avgMdotScs[ip] = mdotScs[ip];
         }
       }
     }

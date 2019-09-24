@@ -215,7 +215,7 @@ realms:
        - minimum_distance_to_wall
        - turbulent_viscosity
        - k_ratio
-       - average_time
+       - rans_time_scale
        - average_mass_flow_rate_scs
        - mass_flow_rate_scs
        - average_tke_resolved

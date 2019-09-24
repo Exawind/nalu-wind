@@ -845,7 +845,7 @@ public:
       avgProd_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "average_production")),
       avgTime_(&meta_.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "average_time")),
+        stk::topology::NODE_RANK, "rans_time_scale")),
       minDist_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "minimum_distance_to_wall")),
       Mij_(&meta_.declare_field<GenericFieldType>(

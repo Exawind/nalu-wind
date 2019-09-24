@@ -1,0 +1,71 @@
+/*------------------------------------------------------------------------*/
+/*  Copyright 2019 National Renewable Energy Laboratory.                  */
+/*  This software is released under the license detailed                  */
+/*  in the file, LICENSE, which is located in the top-level Nalu          */
+/*  directory structure                                                   */
+/*------------------------------------------------------------------------*/
+
+#include "ngp_algorithms/FieldUpdateAlgDriver.h"
+#include "Realm.h"
+
+#include "stk_mesh/base/Field.hpp"
+#include "stk_mesh/base/FieldParallel.hpp"
+#include "stk_mesh/base/FieldBLAS.hpp"
+#include "stk_mesh/base/MetaData.hpp"
+#include "utils/StkHelpers.h"
+
+namespace sierra {
+namespace nalu {
+
+FieldUpdateAlgDriver::FieldUpdateAlgDriver(
+  Realm& realm, const std::string& fieldName)
+  : NgpAlgDriver(realm), fieldName_(fieldName)
+{
+}
+
+void
+FieldUpdateAlgDriver::pre_work()
+{
+  const auto& meta = realm_.meta_data();
+  const auto& meshInfo = realm_.mesh_info();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto field = fieldMgr.get_field<double>(get_field_ordinal(meta, fieldName_));
+
+  field.set_all(ngpMesh, 0.0);
+}
+
+void
+FieldUpdateAlgDriver::post_work()
+{
+  // TODO: Revisit logic after STK updates to ngp parallel updates
+  const auto& meta = realm_.meta_data();
+  const auto& bulk = realm_.bulk_data();
+  const int nDim = meta.spatial_dimension();
+
+  auto* field = meta.get_field(stk::topology::NODE_RANK, fieldName_);
+  const auto& meshInfo = realm_.mesh_info();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto ngpField =
+    fieldMgr.get_field<double>(get_field_ordinal(meta, fieldName_));
+
+  ngpField.modify_on_device();
+  ngpField.sync_to_host();
+
+  stk::mesh::parallel_sum(bulk, {field});
+
+  if (realm_.hasPeriodic_) {
+    realm_.periodic_field_update(field, nDim * nDim);
+  }
+
+  if (realm_.hasOverset_) {
+    realm_.overset_orphan_node_field_update(field, nDim, nDim);
+  }
+
+  ngpField.modify_on_host();
+  ngpField.sync_to_device();
+}
+
+} // namespace nalu
+} // namespace sierra

@@ -48,23 +48,10 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>& gradop,
     SharedMemView<DoubleType***, DeviceShmem>& deriv);
 
-  void grad_op(
-    const int nelem,
-    const double *coords,
-    double *gradop,
-    double *deriv,
-    double *det_j,
-    double * error );
-
   KOKKOS_FUNCTION void shifted_grad_op(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& gradop,
     SharedMemView<DoubleType***, DeviceShmem>& deriv);
-
-  void wedge_derivative(
-    const int npts,
-    const double *intLoc,
-    double *deriv);
 
   KOKKOS_FUNCTION void Mij(
     SharedMemView<DoubleType**, DeviceShmem>& coords,

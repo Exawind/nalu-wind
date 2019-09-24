@@ -954,7 +954,7 @@ average quantities, the averaging functions are also called in the
 *initial_work* function.
 
 The main averaging algorithm is
-*ComputeSSTTAMSAveragesNodeAlgorithm*. The averaging function is
+*SSTTAMSAveragesAlg*. The averaging function is
 solving a simple causal average equation:
 
 .. math::

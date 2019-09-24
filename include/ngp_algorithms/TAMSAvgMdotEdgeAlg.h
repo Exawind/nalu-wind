@@ -5,35 +5,36 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#ifndef ComputeTAMSAvgMdotEdgeAlgorithm_h
-#define ComputeTAMSAvgMdotEdgeAlgorithm_h
+#ifndef TAMSAVGMDOTEDGEALG_H
+#define TAMSAVGMDOTEDGEALG_H
 
-#include <Algorithm.h>
-#include <FieldTypeDef.h>
+#include "Algorithm.h"
 
-// stk
-#include <stk_mesh/base/Part.hpp>
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {
 
 class Realm;
 
-class ComputeTAMSAvgMdotEdgeAlgorithm : public Algorithm
+class TAMSAvgMdotEdgeAlg : public Algorithm
 {
 public:
-  ComputeTAMSAvgMdotEdgeAlgorithm(Realm& realm, stk::mesh::Part* part);
-  virtual ~ComputeTAMSAvgMdotEdgeAlgorithm() = default;
+  using DblType = double;
 
-  void execute();
+  TAMSAvgMdotEdgeAlg(Realm&, stk::mesh::Part*);
 
-  const bool meshMotion_;
-  ScalarFieldType* avgTime_;
-  ScalarFieldType* massFlowRate_;
-  ScalarFieldType* avgMassFlowRate_;
+  virtual ~TAMSAvgMdotEdgeAlg() = default;
+
+  void execute() override;
+
+private:
+  unsigned avgTime_{stk::mesh::InvalidOrdinal};
+  unsigned massFlowRate_{stk::mesh::InvalidOrdinal};
+  unsigned avgMassFlowRate_{stk::mesh::InvalidOrdinal};
 };
 
 } // namespace nalu
 } // namespace sierra
 
-#endif
+#endif /* TAMSAVGMDOTEDGEALG_H */

@@ -11,6 +11,11 @@
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
+#include "ngp_algorithms/NgpAlgDriver.h"
+#include "ngp_algorithms/FieldUpdateAlgDriver.h"
+#include "ngp_algorithms/TAMSAvgMdotEdgeAlg.h"
+#include "ngp_algorithms/TAMSAvgMdotElemAlg.h"
+#include "ngp_algorithms/SSTTAMSAveragesAlg.h"
 
 namespace stk {
 struct topology;
@@ -29,6 +34,8 @@ class TAMSEquationSystem : public EquationSystem
 {
 
 public:
+  using DblType = double;
+
   TAMSEquationSystem(EquationSystems& equationSystems);
   virtual ~TAMSEquationSystem() = default;
 
@@ -46,6 +53,7 @@ public:
   void compute_metric_tensor();
   void compute_averages();
   void compute_avgMdot();
+  // void load(const YAML::Node & node);
 
   const bool managePNG_;
 
@@ -62,13 +70,12 @@ public:
   ScalarFieldType* avgTime_;
   GenericFieldType* avgMdotScs_;
   ScalarFieldType* avgMdot_;
-  VectorFieldType* gTmp_;
 
   bool isInit_;
-  AlgorithmDriver metricTensorAlgDriver_;
-  AlgorithmDriver averagingAlgDriver_;
-  AlgorithmDriver avgMdotAlgDriver_;
-  AlgorithmDriver tviscAlgDriver_;
+  FieldUpdateAlgDriver metricTensorAlgDriver_;
+  std::unique_ptr<SSTTAMSAveragesAlg> avgAlg_{nullptr};
+  std::unique_ptr<Algorithm> tviscAlg_{nullptr};
+  NgpAlgDriver avgMdotAlg_;
 
   const TurbulenceModel turbulenceModel_;
 

@@ -447,31 +447,6 @@ void PyrSCV::grad_op(
   generic_grad_op<AlgTraitsPyr5>(deriv, coords, gradop);
 }
 
-void PyrSCV::grad_op(
-  const int nelem,
-  const double *coords,
-  double *gradop,
-  double *deriv,
-  double *det_j,
-  double *error)
-{
-  int lerr = 0;
-
-  pyr_derivative(numIntPoints_, &intgLoc_[0], deriv);
-
-  const int npe  = nodesPerElement_;
-  const int nint = numIntPoints_;
-  SIERRA_FORTRAN(pyr_gradient_operator)
-    ( &nelem,
-      &npe,
-      &nint,
-      deriv,
-      coords, gradop, det_j, error, &lerr );
-
-  if ( lerr )
-    NaluEnv::self().naluOutput() << "sorry, negative PyrSCV volume.." << std::endl;
-}
-
 //--------------------------------------------------------------------------
 //-------- shifted_grad_op ---------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -498,57 +473,6 @@ void PyrSCV::determinant(
   SIERRA_FORTRAN(pyr_scv_det)
     ( &nelem, &npe, &nint, coords,
       volume, error, &lerr );
-}
-
-//--------------------------------------------------------------------------
-//-------- pyr_derivative --------------------------------------------------
-//--------------------------------------------------------------------------
-void PyrSCV::pyr_derivative(
-  const int npts,
-  const double *intgLoc,
-  double *deriv)
-{
-  // d3d(c,s,j) = deriv[c + 3*(s + 5*j)] = deriv[c+3s+15j]
-  const double eps = std::numeric_limits<double>::epsilon();
-  
-  for ( int j = 0; j < npts; ++j) {
-    const int k = j*3;
-    const int p = 15*j;
-    
-    const double r = intgLoc[k+0];
-    const double s = intgLoc[k+1];
-    const double t_tmp = intgLoc[k+2];
-    
-    const double one_minus_t = 1.0 - t_tmp;
-    const double t = (std::fabs(one_minus_t) > eps) ? t_tmp : 1.0 + std::copysign(eps, one_minus_t);
-    const double quarter_inv_tm1 = 0.25 / (1.0 - t);
-    const double t_term = 4.0 * r * s * quarter_inv_tm1 * quarter_inv_tm1;
-    
-    // node 0
-    deriv[0+3*0+p] = -(1.0 - s - t) * quarter_inv_tm1;
-    deriv[1+3*0+p] = -(1.0 - r - t) * quarter_inv_tm1;
-    deriv[2+3*0+p] = (+t_term - 0.25);
-    
-    // node 1
-    deriv[0+3*1+p] = +(1.0 - s - t) * quarter_inv_tm1;
-    deriv[1+3*1+p] = -(1.0 + r - t) * quarter_inv_tm1;
-    deriv[2+3*1+p] = (-t_term - 0.25);
-    
-    // node 2
-    deriv[0+3*2+p] = +(1.0 + s - t) * quarter_inv_tm1;
-    deriv[1+3*2+p] = +(1.0 + r - t) * quarter_inv_tm1;
-    deriv[2+3*2+p] = (+t_term - 0.25);
-    
-    // node 3
-    deriv[0+3*3+p] = -(1.0 + s - t) * quarter_inv_tm1;
-    deriv[1+3*3+p] = +(1.0 - r - t) * quarter_inv_tm1;
-    deriv[2+3*3+p] = (-t_term - 0.25);
-    
-    // node 4
-    deriv[0+3*4+p] = 0.0;
-    deriv[1+3*4+p] = 0.0;
-    deriv[2+3*4+p] = 1.0;
-  } 
 }
 
 KOKKOS_FUNCTION void
@@ -641,7 +565,7 @@ PyrSCV::shifted_pyr_shape_fcn(
 //--------------------------------------------------------------------------
 //-------- Mij -------------------------------------------------------------
 //--------------------------------------------------------------------------
-void PyrSCV::Mij(
+void PyrSCS::Mij(
   const double *coords,
   double *metric,
   double *deriv)
@@ -649,7 +573,7 @@ void PyrSCV::Mij(
   generic_Mij_3d<AlgTraitsPyr5>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
-void PyrSCV::Mij(
+void PyrSCS::Mij(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv)
@@ -1310,7 +1234,7 @@ void PyrSCS::gij(
 //--------------------------------------------------------------------------
 //-------- Mij -------------------------------------------------------------
 //--------------------------------------------------------------------------
-void PyrSCS::Mij(
+void PyrSCV::Mij(
   const double *coords,
   double *metric,
   double *deriv)
@@ -1318,7 +1242,7 @@ void PyrSCS::Mij(
   generic_Mij_3d<AlgTraitsPyr5>(numIntPoints_, deriv, coords, metric);
 }
 //-------------------------------------------------------------------------
-void PyrSCS::Mij(
+void PyrSCV::Mij(
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv)

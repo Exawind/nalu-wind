@@ -56,7 +56,7 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::MomentumSSTTAMSForcingElemKernel(
   Mij_ = get_field_ordinal(metaData, "metric_tensor");
 
   avgVelocity_ = get_field_ordinal(metaData, "average_velocity");
-  avgTime_ = get_field_ordinal(metaData, "average_time");
+  avgTime_ = get_field_ordinal(metaData, "rans_time_scale");
 
   avgResAdeq_ = get_field_ordinal(metaData, "avg_res_adequacy_parameter");
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());

@@ -102,7 +102,7 @@ TestTurbulenceAlgorithm::declare_fields()
   avgDudx_ = (&meta.declare_field<GenericFieldType>(
        stk::topology::NODE_RANK, "average_dudx"));
   avgTime_ = (&meta.declare_field<ScalarFieldType>(
-       stk::topology::NODE_RANK, "average_time"));
+       stk::topology::NODE_RANK, "rans_time_scale"));
   avgDensity_ = (&meta.declare_field<ScalarFieldType>(
        stk::topology::NODE_RANK, "average_density"));
 
