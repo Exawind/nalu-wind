@@ -108,6 +108,7 @@
 #include "utils/StkHelpers.h"
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldBLAS.h"
 
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
@@ -3178,7 +3179,8 @@ Realm::periodic_delta_solution_update(
   const bool bypassFieldCheck = true;
   const bool addSlaves = false;
   const bool setSlaves = true;
-  periodicManager_->apply_constraints(theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
+  periodicManager_->ngp_apply_constraints(
+    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
 }
 
 //--------------------------------------------------------------------------
@@ -3376,6 +3378,31 @@ void
 Realm::swap_states()
 {
   bulkData_->update_field_data_states();
+
+#ifdef KOKKOS_ENABLE_CUDA
+  if (get_time_step_count() < 2) return;
+
+  const auto& fieldMgr = ngp_field_manager();
+  for (const auto fld: metaData_->get_fields()) {
+    const unsigned numStates = fld->number_of_states();
+    const auto fieldID = fld->mesh_meta_data_ordinal();
+    const auto fieldNp1ID =
+      fld->field_state(stk::mesh::StateNP1)->mesh_meta_data_ordinal();
+
+    if ((numStates < 2) || (fieldID != fieldNp1ID)) continue;
+
+    for (unsigned i=(numStates - 1); i > 0; --i) {
+      auto& toField = fieldMgr.get_field<double>(
+        fld->field_state(static_cast<stk::mesh::FieldState>(i))
+        ->mesh_meta_data_ordinal());
+      auto& fromField = fieldMgr.get_field<double>(
+        fld->field_state(static_cast<stk::mesh::FieldState>(i-1))
+        ->mesh_meta_data_ordinal());
+
+      toField.swap(fromField);
+    }
+  }
+#endif
 }
 
 //--------------------------------------------------------------------------
