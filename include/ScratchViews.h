@@ -681,8 +681,15 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
   MasterElement* /* meFC */,
   MasterElement* meSCS,
   MasterElement* meSCV,
-  MasterElement* meFEM,
-  int faceOrdinal
+  MasterElement*
+#ifndef KOKKOS_ENABLE_CUDA
+      meFEM
+#endif
+  ,
+  int
+#ifndef KOKKOS_ENABLE_CUDA
+     faceOrdinal
+#endif
   )
 {
   for(unsigned i=0; i<dataEnums.size(); ++i) {
@@ -696,6 +703,7 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_AREAV requested.");
          meSCS->determinant(*coordsView, scs_areav);
          break;
+#ifndef KOKKOS_ENABLE_CUDA
       case SCS_FACE_GRAD_OP:
          NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_FACE_GRAD_OP is requested.");
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_FACE_GRAD_OP requested.");
@@ -706,6 +714,7 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_SHIFTED_FACE_GRAD_OP requested.");
          meSCS->shifted_face_grad_op(faceOrdinal, *coordsView, dndx_shifted_fc_scs);
        break;
+#endif
       case SCS_GRAD_OP:
          NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_GRAD_OP is requested.");
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_GRAD_OP requested.");
@@ -746,6 +755,7 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
         NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCV_SHIFTED_GRAD_OP requested.");
         meSCV->shifted_grad_op(*coordsView, dndx_scv_shifted, deriv_scv);
         break;
+#ifndef KOKKOS_ENABLE_CUDA
       case FEM_GRAD_OP:
          NGP_ThrowRequireMsg(meFEM != nullptr, "ERROR, meFEM needs to be non-null if FEM_GRAD_OP is requested.");
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but FEM_GRAD_OP requested.");
@@ -756,6 +766,7 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but FEM_GRAD_OP requested.");
          meFEM->shifted_grad_op_fem(*coordsView, dndx_fem, deriv_fem, det_j_fem);
          break;
+#endif
 
       default: break;
     }
