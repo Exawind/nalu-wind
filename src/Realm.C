@@ -3392,21 +3392,14 @@ Realm::swap_states()
     if ((numStates < 2) || (fieldID != fieldNp1ID)) continue;
 
     for (unsigned i=(numStates - 1); i > 0; --i) {
-      auto toField = fieldMgr.get_field<double>(
+      auto& toField = fieldMgr.get_field<double>(
         fld->field_state(static_cast<stk::mesh::FieldState>(i))
         ->mesh_meta_data_ordinal());
-      auto fromField = fieldMgr.get_field<double>(
+      auto& fromField = fieldMgr.get_field<double>(
         fld->field_state(static_cast<stk::mesh::FieldState>(i-1))
         ->mesh_meta_data_ordinal());
 
-      const stk::mesh::Selector sel = 
-        (metaData_->locally_owned_part() | metaData_->globally_shared_part())
-        & (stk::mesh::selectField(*fld));
-      const unsigned numComponents = (fld->name() == "velocity") ?
-        metaData_->spatial_dimension() : 1;
-      nalu_ngp::field_copy(
-          ngp_mesh(), sel, toField, fromField, numComponents);
-      //toField.swap(fromField);
+      toField.swap(fromField);
     }
   }
 #endif
