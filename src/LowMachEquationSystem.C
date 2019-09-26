@@ -1917,11 +1917,10 @@ MomentumEquationSystem::register_wall_bc(
         auto& algMap = realm_.computeGeometryAlgDriver_->algMap_;
         auto it = algMap.find(wfAlgType);
         if (it == algMap.end()) {
-          algMap[wfAlgType] = create_face_elem_algorithm<WallFuncGeometryAlg>(
-            realm_.meta_data().spatial_dimension(),
-            part->topology(),
-            get_elem_topo(realm_, *part),
-            realm_, part);
+          algMap[wfAlgType] = nalu_ngp::create_face_elem_algorithm<
+            Algorithm, WallFuncGeometryAlg>(
+            realm_.meta_data().spatial_dimension(), part->topology(),
+            get_elem_topo(realm_, *part), realm_, part);
         } else {
           it->second->partVec_.push_back(part);
         }
