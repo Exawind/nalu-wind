@@ -1159,6 +1159,13 @@ EnthalpyEquationSystem::register_initial_condition_fcn(
 void
 EnthalpyEquationSystem::solve_and_update()
 {
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  auto ngpTemp = fieldMgr.get_field<double>(
+      temperature_->mesh_meta_data_ordinal());
+  auto ngpEnth = fieldMgr.get_field<double>(
+      enthalpy_->mesh_meta_data_ordinal());
+  ngpTemp.sync_to_host();
+  ngpEnth.sync_to_host();
   // compute bc enthalpy
   for ( size_t k = 0; k < bcEnthalpyFromTemperatureAlg_.size(); ++k )
     bcEnthalpyFromTemperatureAlg_[k]->execute();
@@ -1166,6 +1173,10 @@ EnthalpyEquationSystem::solve_and_update()
   // copy enthalpy_bc to enthalpyNp1
   for ( size_t k = 0; k < bcCopyStateAlg_.size(); ++k )
     bcCopyStateAlg_[k]->execute();
+  ngpTemp.modify_on_host();
+  ngpEnth.modify_on_host();
+  ngpTemp.sync_to_device();
+  ngpEnth.sync_to_device();
 
   // compute dh/dx
   if ( isInit_ ) {
@@ -1206,6 +1217,13 @@ void
 EnthalpyEquationSystem::post_iter_work_dep()
 {
 
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  auto ngpTemp = fieldMgr.get_field<double>(
+      temperature_->mesh_meta_data_ordinal());
+  auto ngpEnth = fieldMgr.get_field<double>(
+      enthalpy_->mesh_meta_data_ordinal());
+  ngpTemp.sync_to_host();
+  ngpEnth.sync_to_host();
   // compute bc enthalpy based on converged species
   for ( size_t k = 0; k < bcEnthalpyFromTemperatureAlg_.size(); ++k )
     bcEnthalpyFromTemperatureAlg_[k]->execute();
@@ -1220,6 +1238,11 @@ EnthalpyEquationSystem::post_iter_work_dep()
   // post process h and Too
   if ( NULL != assembleWallHeatTransferAlgDriver_ )
     assembleWallHeatTransferAlgDriver_->execute();
+
+  ngpTemp.modify_on_host();
+  ngpEnth.modify_on_host();
+  ngpTemp.sync_to_device();
+  ngpEnth.sync_to_device();
 }
 
 //--------------------------------------------------------------------------
