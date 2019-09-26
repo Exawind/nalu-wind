@@ -6,5 +6,4 @@ add_sources(GlobalUnitSourceList
   UnitTestEnthalpyDiffFluxCoeffAlg.C 
   UnitTestMdotAlg.C
   UnitTestTurbViscKsgsAlg.C
-  UnitTestTurbViscSSTAlg.C
   )

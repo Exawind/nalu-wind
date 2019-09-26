@@ -617,14 +617,10 @@ public:
         stk::topology::NODE_RANK, "bc_turbulent_ke")),
       sdr_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "specific_dissipation_rate")),
-      visc_(&meta_.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "viscosity")),
       tvisc_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "turbulent_viscosity")),
       maxLengthScale_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "sst_max_length_scale")),
-      minDistance_(&meta_.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "minimum_distance_to_wall")),
       fOneBlend_(&meta_.declare_field<ScalarFieldType>(
                    stk::topology::NODE_RANK, "sst_f_one_blending")),
       dudx_(&meta_.declare_field<GenericFieldType>(
@@ -639,10 +635,8 @@ public:
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tkebc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*sdr_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(*visc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*maxLengthScale_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(*minDistance_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*fOneBlend_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *dudx_, meta_.universal_part(), spatialDim_ * spatialDim_, nullptr);
@@ -665,14 +659,12 @@ public:
     bool doPerturb = false, bool generateSidesets = false) override
   {
     LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
-    stk::mesh::field_fill(0.2, *visc_);
     stk::mesh::field_fill(0.3, *tvisc_);
     stk::mesh::field_fill(0.5, *maxLengthScale_);
     unit_test_kernel_utils::density_test_function(
       bulk_, *coordinates_, *density_);
     unit_test_kernel_utils::tke_test_function(bulk_, *coordinates_, *tke_);
     unit_test_kernel_utils::sdr_test_function(bulk_, *coordinates_, *sdr_);
-    unit_test_kernel_utils::minimum_distance_to_wall_test_function(bulk_, *coordinates_, *minDistance_);
     unit_test_kernel_utils::sst_f_one_blending_test_function(
       bulk_, *coordinates_, *fOneBlend_);
     unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
@@ -683,10 +675,8 @@ public:
   ScalarFieldType* tke_{nullptr};
   ScalarFieldType* tkebc_{nullptr};
   ScalarFieldType* sdr_{nullptr};
-  ScalarFieldType* visc_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* maxLengthScale_{nullptr};
-  ScalarFieldType* minDistance_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
   GenericFieldType* dudx_{nullptr};
   VectorFieldType* dkdx_{nullptr};

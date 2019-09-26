@@ -8,7 +8,6 @@ add_sources(GlobalSourceList
   EnthalpyEffDiffFluxCoeffAlg.C
   MdotEdgeAlg.C
   TurbViscKsgsAlg.C
-  TurbViscSSTAlg.C
   WallFuncGeometryAlg.C
   ABLWallFrictionVelAlg.C
   TKEWallFuncAlg.C
