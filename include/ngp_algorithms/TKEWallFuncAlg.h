@@ -30,12 +30,9 @@ public:
 private:
   ElemDataRequests faceData_;
 
-  unsigned tke_ {stk::mesh::InvalidOrdinal};
-  unsigned bctke_ {stk::mesh::InvalidOrdinal};
   unsigned bcNodalTke_ {stk::mesh::InvalidOrdinal};
   unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
   unsigned wallFricVel_ {stk::mesh::InvalidOrdinal};
-  unsigned wallArea_ {stk::mesh::InvalidOrdinal};
 
   DoubleType cMu_;
 

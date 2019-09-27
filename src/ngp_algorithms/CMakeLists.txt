@@ -15,4 +15,5 @@ add_sources(GlobalSourceList
   # Algorithm Drivers
   NgpAlgDriver.C
   NodalGradAlgDriver.C
+  TKEWallFuncAlgDriver.C
   )
