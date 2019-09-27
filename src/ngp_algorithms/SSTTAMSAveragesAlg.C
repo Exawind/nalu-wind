@@ -24,8 +24,7 @@ SSTTAMSAveragesAlg::SSTTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     CMdeg_(realm.get_turb_model_constant(TM_CMdeg)),
     meshMotion_(realm.does_mesh_move()),
     velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
-    density_(
-      get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateN)),
+    density_(get_field_ordinal(realm.meta_data(), "density")),
     dudx_(get_field_ordinal(realm.meta_data(), "dudx")),
     resAdeq_(
       get_field_ordinal(realm.meta_data(), "resolution_adequacy_parameter")),

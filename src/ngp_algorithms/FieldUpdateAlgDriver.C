@@ -32,6 +32,10 @@ FieldUpdateAlgDriver::pre_work()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto field = fieldMgr.get_field<double>(get_field_ordinal(meta, fieldName_));
 
+  auto* nonngpField = meta.get_field<GenericFieldType>(
+    stk::topology::NODE_RANK, fieldName_);
+  stk::mesh::field_fill(0.0, *nonngpField);
+
   field.set_all(ngpMesh, 0.0);
 }
 
