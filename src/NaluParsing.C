@@ -203,6 +203,9 @@ namespace sierra
       symmetryBC.theBcType_ = SYMMETRY_BC;
       const YAML::Node& symmetryUserData = node["symmetry_user_data"];
       symmetryBC.userData_ = symmetryUserData.as<SymmetryUserData>();
+      if(symmetryUserData["use_projections"]){
+        symmetryBC.userData_.useProjections_ = symmetryUserData["use_projections"].as<bool>();
+      }
       if(symmetryUserData["symmetry_type"]){
         const std::string symmType =
             symmetryUserData["symmetry_type"].as<std::string>();

@@ -2138,6 +2138,9 @@ MomentumEquationSystem::register_symmetry_bc(
   }
 
   endPos = beginPos + 1;
+  if(!symmBCData.userData_.useProjections_){
+    notProjectedPart_.push_back(part);
+  }
 
   // register boundary data; velocity_bc
   const std::string bcFieldName = "strong_sym_velocity";

@@ -312,9 +312,11 @@ struct SymmetryUserData : public UserData {
     Z_DIR_STRONG
   };
   SymmetryTypes symmType_;
+  bool useProjections_;
   SymmetryUserData()
     : UserData(),
-      symmType_(SymmetryTypes::GENERAL_WEAK)
+      symmType_(SymmetryTypes::GENERAL_WEAK),
+      useProjections_(false)
   {}
 };
 
