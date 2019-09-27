@@ -23,9 +23,9 @@ SSTTAMSAveragesAlg::SSTTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     betaStar_(realm.get_turb_model_constant(TM_betaStar)),
     CMdeg_(realm.get_turb_model_constant(TM_CMdeg)),
     meshMotion_(realm.does_mesh_move()),
-    velocityRTM_(get_field_ordinal(
-      realm.meta_data(), (meshMotion_) ? "velocity_rtm" : "velocity")),
-    density_(get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateN)),
+    velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
+    density_(
+      get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateN)),
     dudx_(get_field_ordinal(realm.meta_data(), "dudx")),
     resAdeq_(
       get_field_ordinal(realm.meta_data(), "resolution_adequacy_parameter")),
@@ -73,7 +73,7 @@ SSTTAMSAveragesAlg::execute()
   auto avgTime = fieldMgr.get_field<double>(avgTime_);
   auto resAdeq = fieldMgr.get_field<double>(resAdeq_);
   auto avgResAdeq = fieldMgr.get_field<double>(avgResAdeq_);
-  const auto vel = fieldMgr.get_field<double>(velocityRTM_);
+  const auto vel = fieldMgr.get_field<double>(velocity_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
   auto avgVel = fieldMgr.get_field<double>(avgVelocity_);
   auto avgDudx = fieldMgr.get_field<double>(avgDudx_);
@@ -151,10 +151,9 @@ SSTTAMSAveragesAlg::execute()
       DblType P_res = 0.0;
       for (int i = 0; i < nDim; ++i) {
         for (int j = 0; j < nDim; ++j) {
-          P_res +=
-            avgDudx.get(mi, i * nDim + j) *
-            (density.get(mi, 0) * (avgVel.get(mi, i) - vel.get(mi, i)) *
-             (avgVel.get(mi, j) - vel.get(mi, j)));
+          P_res += avgDudx.get(mi, i * nDim + j) *
+                   (density.get(mi, 0) * (avgVel.get(mi, i) - vel.get(mi, i)) *
+                    (avgVel.get(mi, j) - vel.get(mi, j)));
         }
       }
 

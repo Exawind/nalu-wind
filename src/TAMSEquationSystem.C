@@ -63,6 +63,7 @@ TAMSEquationSystem::TAMSEquationSystem(EquationSystems& eqSystems)
   : EquationSystem(eqSystems, "TAMSEQS", "time_averaged_model_split"),
     managePNG_(realm_.get_consistent_mass_matrix_png("adaptivity_parameter")),
     avgVelocity_(NULL),
+    avgVelocityRTM_(NULL),
     avgTkeResolved_(NULL),
     avgDudx_(NULL),
     metric_(NULL),
@@ -106,6 +107,11 @@ TAMSEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     stk::topology::NODE_RANK, "average_velocity"));
   stk::mesh::put_field_on_mesh(*avgVelocity_, *part, nDim, nullptr);
   realm_.augment_restart_variable_list("average_velocity");
+
+  avgVelocityRTM_ = &(meta.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "average_velocity_rtm"));
+  stk::mesh::put_field_on_mesh(*avgVelocityRTM_, *part, nDim, nullptr);
+  realm_.augment_restart_variable_list("average_velocity_rtm");
 
   avgProduction_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "average_production"));
@@ -242,9 +248,8 @@ TAMSEquationSystem::initial_work()
     auto& avgU = fieldMgr.get_field<double>(
       avgVelocity_->field_of_state(stk::mesh::StateNP1)
         .mesh_meta_data_ordinal());
-    const unsigned velocityRTMID = get_field_ordinal(
-      meta, (realm_.does_mesh_move()) ? "velocity_rtm" : "velocity");
-    const auto& U = fieldMgr.get_field<double>(velocityRTMID);
+    const unsigned velocityID = get_field_ordinal( meta, "velocity");
+    const auto& U = fieldMgr.get_field<double>(velocityID);
     nalu_ngp::field_copy(ngpMesh, sel, avgU, U, nDim);
 
     // Copy dudx to average dudx

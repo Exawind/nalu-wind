@@ -49,7 +49,7 @@ MomentumSSTTAMSForcingNodeKernel::MomentumSSTTAMSForcingNodeKernel(
   minDistID_ = get_field_ordinal(meta, "minimum_distance_to_wall");
 
   // average quantities
-  avgVelocityID_ = get_field_ordinal(meta, "average_velocity");
+  avgVelocityID_ = get_field_ordinal(meta, solnOpts.does_mesh_move() ? "average_velocity_rtm" : "average_velocity");
   avgResAdeqID_ = get_field_ordinal(meta, "avg_res_adequacy_parameter");
 }
 

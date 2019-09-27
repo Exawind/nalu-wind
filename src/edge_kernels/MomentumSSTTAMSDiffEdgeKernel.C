@@ -45,7 +45,7 @@ MomentumSSTTAMSDiffEdgeKernel::MomentumSSTTAMSDiffEdgeKernel(
   dudxID_ = get_field_ordinal(meta, "dudx");
 
   // average quantities
-  avgVelocityID_ = get_field_ordinal(meta, "average_velocity");
+  avgVelocityID_ = get_field_ordinal(meta, solnOpts.does_mesh_move() ? "average_velocity_rtm" : "average_velocity");
   avgDudxID_ = get_field_ordinal(meta, "average_dudx");
 
   const std::string dofName = "velocity";

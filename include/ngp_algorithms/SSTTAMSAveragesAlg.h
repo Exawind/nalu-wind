@@ -34,7 +34,7 @@ private:
   const DblType CMdeg_;
   const bool meshMotion_;
 
-  unsigned velocityRTM_{stk::mesh::InvalidOrdinal};
+  unsigned velocity_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};
   unsigned dudx_{stk::mesh::InvalidOrdinal};
   unsigned resAdeq_{stk::mesh::InvalidOrdinal};
