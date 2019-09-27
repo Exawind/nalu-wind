@@ -902,6 +902,38 @@ LowMachEquationSystem::project_nodal_velocity()
           velNp1.get(mi, d) -= fac * (dpdx.get(mi, d) - uTmp.get(mi, d));
         }
       });
+    const stk::mesh::Selector selX =
+      (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[0]));
+    nalu_ngp::run_entity_algorithm(
+      ngpMesh, stk::topology::NODE_RANK, selX,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        // Scaling factor
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        //  undo Projection step
+        velNp1.get(mi, 0) += fac * (dpdx.get(mi, 0) - uTmp.get(mi, 0));
+      });
+    const stk::mesh::Selector selY =
+      (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[1]));
+    nalu_ngp::run_entity_algorithm(
+      ngpMesh, stk::topology::NODE_RANK, selY,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        // Scaling factor
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        //  undo Projection step
+        velNp1.get(mi, 1) += fac * (dpdx.get(mi, 1) - uTmp.get(mi, 1));
+      });
+    if(nDim==3){
+      const stk::mesh::Selector selZ =
+         (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[2]));
+      nalu_ngp::run_entity_algorithm(
+           ngpMesh, stk::topology::NODE_RANK, selZ,
+           KOKKOS_LAMBDA(const MeshIndex& mi) {
+             // Scaling factor
+             const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+             //  undo Projection step
+             velNp1.get(mi, 2) += fac * (dpdx.get(mi, 2) - uTmp.get(mi, 2));
+           });
+    }
   }
 }
 
@@ -2139,7 +2171,7 @@ MomentumEquationSystem::register_symmetry_bc(
 
   endPos = beginPos + 1;
   if(!symmBCData.userData_.useProjections_){
-    notProjectedPart_.push_back(part);
+    notProjectedDir_[beginPos].push_back(part);
   }
 
   // register boundary data; velocity_bc
