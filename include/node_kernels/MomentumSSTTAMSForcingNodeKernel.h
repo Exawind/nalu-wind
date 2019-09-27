@@ -53,7 +53,6 @@ private:
   ngp::Field<double> Mij_;
   ngp::Field<double> minDist_;
   ngp::Field<double> avgVelocity_;
-  ngp::Field<double> avgDensity_;
   ngp::Field<double> avgTime_;
   ngp::Field<double> avgResAdeq_;
 
@@ -69,7 +68,6 @@ private:
   unsigned MijID_{stk::mesh::InvalidOrdinal};
   unsigned minDistID_{stk::mesh::InvalidOrdinal};
   unsigned avgVelocityID_{stk::mesh::InvalidOrdinal};
-  unsigned avgDensityID_{stk::mesh::InvalidOrdinal};
   unsigned avgResAdeqID_{stk::mesh::InvalidOrdinal};
 
   const double betaStar_;

@@ -41,7 +41,6 @@ private:
   unsigned turbKineticEnergy_{stk::mesh::InvalidOrdinal};
   unsigned specDissipationRate_{stk::mesh::InvalidOrdinal};
   unsigned avgVelocity_{stk::mesh::InvalidOrdinal};
-  unsigned avgDensity_{stk::mesh::InvalidOrdinal};
   unsigned avgDudx_{stk::mesh::InvalidOrdinal};
   unsigned avgTkeRes_{stk::mesh::InvalidOrdinal};
   unsigned avgProd_{stk::mesh::InvalidOrdinal};

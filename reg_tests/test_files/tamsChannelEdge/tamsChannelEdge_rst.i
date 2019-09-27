@@ -80,7 +80,6 @@ realms:
           turbulent_ke: 0.05
           specific_dissipation_rate: 3528.0
           average_velocity: [22.78,0.0,0.0]
-          average_density: 1.0
           average_tke_resolved: 0.0
           average_dudx: 0.0
           k_ratio: 1.0

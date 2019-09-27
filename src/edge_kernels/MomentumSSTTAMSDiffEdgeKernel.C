@@ -46,7 +46,6 @@ MomentumSSTTAMSDiffEdgeKernel::MomentumSSTTAMSDiffEdgeKernel(
 
   // average quantities
   avgVelocityID_ = get_field_ordinal(meta, "average_velocity");
-  avgDensityID_ = get_field_ordinal(meta, "average_density");
   avgDudxID_ = get_field_ordinal(meta, "average_dudx");
 
   const std::string dofName = "velocity";
@@ -68,7 +67,6 @@ MomentumSSTTAMSDiffEdgeKernel::setup(Realm& realm)
   nodalMij_ = fieldMgr.get_field<double>(MijID_);
   dudx_ = fieldMgr.get_field<double>(dudxID_);
   avgVelocity_ = fieldMgr.get_field<double>(avgVelocityID_);
-  avgDensity_ = fieldMgr.get_field<double>(avgDensityID_);
   avgDudx_ = fieldMgr.get_field<double>(avgDudxID_);
 }
 
@@ -89,9 +87,12 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
   }
 
   // Mij, eigenvectors and eigenvalues
-  EdgeKernelTraits::DblType Mij[EdgeKernelTraits::NDimMax][EdgeKernelTraits::NDimMax];
-  EdgeKernelTraits::DblType Q[EdgeKernelTraits::NDimMax][EdgeKernelTraits::NDimMax];
-  EdgeKernelTraits::DblType D[EdgeKernelTraits::NDimMax][EdgeKernelTraits::NDimMax];
+  EdgeKernelTraits::DblType Mij[EdgeKernelTraits::NDimMax]
+                               [EdgeKernelTraits::NDimMax];
+  EdgeKernelTraits::DblType Q[EdgeKernelTraits::NDimMax]
+                             [EdgeKernelTraits::NDimMax];
+  EdgeKernelTraits::DblType D[EdgeKernelTraits::NDimMax]
+                             [EdgeKernelTraits::NDimMax];
   for (int i = 0; i < ndim; i++)
     for (int j = 0; j < ndim; j++)
       Mij[i][j] = 0.5 * (nodalMij_.get(nodeL, i * ndim + j) +
@@ -101,7 +102,8 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
 
   // At this point we have Q, the eigenvectors and D the eigenvalues of Mij,
   // so to create M43, we use Q D^(4/3) Q^T
-  EdgeKernelTraits::DblType M43[EdgeKernelTraits::NDimMax][EdgeKernelTraits::NDimMax];
+  EdgeKernelTraits::DblType M43[EdgeKernelTraits::NDimMax]
+                               [EdgeKernelTraits::NDimMax];
   for (int i = 0; i < ndim; i++)
     for (int j = 0; j < ndim; j++)
       M43[i][j] = 0.0;
@@ -117,21 +119,26 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
   }
 
   // Compute CM43
-  EdgeKernelTraits::DblType CM43 = tams_utils::get_M43_constant<EdgeKernelTraits::DblType, EdgeKernelTraits::NDimMax>(D, CMdeg_);
+  EdgeKernelTraits::DblType CM43 = tams_utils::get_M43_constant<
+    EdgeKernelTraits::DblType, EdgeKernelTraits::NDimMax>(D, CMdeg_);
 
   const EdgeKernelTraits::DblType muIp =
     0.5 * (tvisc_.get(nodeL, 0) + tvisc_.get(nodeR, 0));
-  const EdgeKernelTraits::DblType avgRhoIp =
-    0.5 * (avgDensity_.get(nodeL, 0) + avgDensity_.get(nodeR, 0));
-  const EdgeKernelTraits::DblType tkeIp = 0.5 * (stk::math::max(tke_.get(nodeL, 0), 1.0e-12) + 
-                                                 stk::math::max(tke_.get(nodeR, 0), 1.0e-12));
-  const EdgeKernelTraits::DblType sdrIp = 0.5 * (stk::math::max(sdr_.get(nodeL, 0), 1.0e-12) + 
-                                                 stk::math::max(sdr_.get(nodeR, 0), 1.0e-12));
+  const EdgeKernelTraits::DblType rhoIp =
+    0.5 * (density_.get(nodeL, 0) + density_.get(nodeR, 0));
+  const EdgeKernelTraits::DblType tkeIp =
+    0.5 * (stk::math::max(tke_.get(nodeL, 0), 1.0e-12) +
+           stk::math::max(tke_.get(nodeR, 0), 1.0e-12));
+  const EdgeKernelTraits::DblType sdrIp =
+    0.5 * (stk::math::max(sdr_.get(nodeL, 0), 1.0e-12) +
+           stk::math::max(sdr_.get(nodeR, 0), 1.0e-12));
   const EdgeKernelTraits::DblType alphaIp =
     0.5 * (alpha_.get(nodeL, 0) + alpha_.get(nodeR, 0));
 
-  EdgeKernelTraits::DblType avgdUidxj[EdgeKernelTraits::NDimMax][EdgeKernelTraits::NDimMax];
-  EdgeKernelTraits::DblType fluctdUidxj[EdgeKernelTraits::NDimMax][EdgeKernelTraits::NDimMax];
+  EdgeKernelTraits::DblType avgdUidxj[EdgeKernelTraits::NDimMax]
+                                     [EdgeKernelTraits::NDimMax];
+  EdgeKernelTraits::DblType fluctdUidxj[EdgeKernelTraits::NDimMax]
+                                       [EdgeKernelTraits::NDimMax];
 
   EdgeKernelTraits::DblType axdx = 0.0;
   EdgeKernelTraits::DblType asq = 0.0;
@@ -189,7 +196,8 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
     avgDivU += avgdUidxj[i][i];
   }
 
-  const EdgeKernelTraits::DblType epsilon13Ip = stk::math::pow(betaStar_ * tkeIp * sdrIp, 1.0 / 3.0);
+  const EdgeKernelTraits::DblType epsilon13Ip =
+    stk::math::pow(betaStar_ * tkeIp * sdrIp, 1.0 / 3.0);
 
   for (int i = 0; i < ndim; ++i) {
     // Left and right row/col indices
@@ -214,10 +222,10 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
       EdgeKernelTraits::DblType rhsfacDiff_i = 0.0;
       EdgeKernelTraits::DblType lhsfacDiff_i = 0.0;
       for (int k = 0; k < ndim; ++k) {
-        lhsfacDiff_i += -avgRhoIp * CM43 * epsilon13Ip * M43[j][k] *
-                        av[k] * av[j] * inv_axdx;
-        rhsfacDiff_i += -avgRhoIp * CM43 * epsilon13Ip * M43[j][k] *
-                        fluctdUidxj[i][k] * av[j];
+        lhsfacDiff_i +=
+          -rhoIp * CM43 * epsilon13Ip * M43[j][k] * av[k] * av[j] * inv_axdx;
+        rhsfacDiff_i +=
+          -rhoIp * CM43 * epsilon13Ip * M43[j][k] * fluctdUidxj[i][k] * av[j];
       }
 
       // Accumulate lhs
@@ -234,10 +242,10 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
       EdgeKernelTraits::DblType rhsfacDiff_j = 0.0;
       EdgeKernelTraits::DblType lhsfacDiff_j = 0.0;
       for (int k = 0; k < ndim; ++k) {
-        lhsfacDiff_j += -avgRhoIp * CM43 * epsilon13Ip * M43[i][k] *
-                        av[k] * av[j] * inv_axdx;
-        rhsfacDiff_j += -avgRhoIp * CM43 * epsilon13Ip * M43[i][k] *
-                        fluctdUidxj[j][k] * av[j];
+        lhsfacDiff_j +=
+          -rhoIp * CM43 * epsilon13Ip * M43[i][k] * av[k] * av[j] * inv_axdx;
+        rhsfacDiff_j +=
+          -rhoIp * CM43 * epsilon13Ip * M43[i][k] * fluctdUidxj[j][k] * av[j];
       }
 
       // SGRS (average) term, scaled by alpha

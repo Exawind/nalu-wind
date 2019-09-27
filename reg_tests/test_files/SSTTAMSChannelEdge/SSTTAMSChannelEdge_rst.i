@@ -80,7 +80,6 @@ realms:
           turbulent_ke: 0.0005
           specific_dissipation_rate: 0.0005
           average_velocity: [22.78,0.0,0.0]
-          average_density: 1.0
           average_tke_resolved: 0.0
           average_dudx: 0.0
           k_ratio: 1.0
@@ -184,13 +183,13 @@ realms:
             momentum: [1.00, 0.0, 0.0]
 
     restart:
-      restart_data_base_name: SSTTAMSChannelEdge.rst-s001
+      restart_data_base_name: SSTTAMSChannelEdge-tams.rst
       restart_frequency: 10
-      restart_start: 5
+      restart_start: 0
       restart_time: 100
 
     output:
-      output_data_base_name: SSTTAMSChannelEdge.e-s001
+      output_data_base_name: SSTTAMSChannelEdge-tams.e
       output_frequency: 10
       output_node_set: no
       output_variables:

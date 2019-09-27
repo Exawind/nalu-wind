@@ -49,7 +49,6 @@ MomentumSSTTAMSDiffElemKernel<AlgTraits>::MomentumSSTTAMSDiffElemKernel(
   Mij_ = get_field_ordinal(metaData, "metric_tensor");
 
   avgVelocity_ = get_field_ordinal(metaData, "average_velocity");
-  avgDensity_ = get_field_ordinal(metaData, "average_density");
 
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
 
@@ -67,7 +66,6 @@ MomentumSSTTAMSDiffElemKernel<AlgTraits>::MomentumSSTTAMSDiffElemKernel(
   dataPreReqs.add_gathered_nodal_field(tkeNp1_, 1);
   dataPreReqs.add_gathered_nodal_field(sdrNp1_, 1);
   dataPreReqs.add_gathered_nodal_field(avgVelocity_, AlgTraits::nDim_);
-  dataPreReqs.add_gathered_nodal_field(avgDensity_, 1);
   dataPreReqs.add_gathered_nodal_field(alpha_, 1);
   dataPreReqs.add_gathered_nodal_field(
     Mij_, AlgTraits::nDim_, AlgTraits::nDim_);
@@ -95,7 +93,6 @@ MomentumSSTTAMSDiffElemKernel<AlgTraits>::execute(
   const auto& v_tkeNp1 = scratchViews.get_scratch_view_1D(tkeNp1_);
   const auto& v_sdrNp1 = scratchViews.get_scratch_view_1D(sdrNp1_);
   const auto& v_avgU = scratchViews.get_scratch_view_2D(avgVelocity_);
-  const auto& v_avgRho = scratchViews.get_scratch_view_1D(avgDensity_);
   const auto& v_alpha = scratchViews.get_scratch_view_1D(alpha_);
   const auto& v_Mij = scratchViews.get_scratch_view_3D(Mij_);
 
@@ -155,8 +152,7 @@ MomentumSSTTAMSDiffElemKernel<AlgTraits>::execute(
     const int irNdim = ir * AlgTraits::nDim_;
 
     DoubleType muScs = 0.0;
-    DoubleType fluctRhoScs = 0.0;
-    DoubleType avgRhoScs = 0.0;
+    DoubleType rhoScs = 0.0;
     DoubleType tkeScs = 0.0;
     DoubleType sdrScs = 0.0;
     DoubleType alphaScs = 0.0;
@@ -169,8 +165,7 @@ MomentumSSTTAMSDiffElemKernel<AlgTraits>::execute(
       const DoubleType r = v_shape_function(ip, ic);
 
       muScs += r * v_viscosity(ic);
-      fluctRhoScs += r * (v_rhoNp1(ic) - v_avgRho(ic));
-      avgRhoScs += r * v_avgRho(ic);
+      rhoScs += r * v_rhoNp1(ic);
       tkeScs += r * v_tkeNp1(ic);
       sdrScs += r * v_sdrNp1(ic);
       alphaScs += r * v_alpha(ic);
@@ -219,7 +214,7 @@ MomentumSSTTAMSDiffElemKernel<AlgTraits>::execute(
           // -mut^jk*dui/dxk*A_j; fixed i over j loop; see below..
           DoubleType lhsfacDiff_i = 0.0;
           for (int k = 0; k < AlgTraits::nDim_; ++k) {
-            lhsfacDiff_i += -avgRhoScs * CM43 * epsilon13Scs * M43[j][k] *
+            lhsfacDiff_i += -rhoScs * CM43 * epsilon13Scs * M43[j][k] *
                             v_dndx(ip, ic, k) * axj;
           }
 
@@ -234,7 +229,7 @@ MomentumSSTTAMSDiffElemKernel<AlgTraits>::execute(
           // -mut^ik*duj/dxk*A_j
           DoubleType lhsfacDiff_j = 0.0;
           for (int k = 0; k < AlgTraits::nDim_; ++k) {
-            lhsfacDiff_j += -avgRhoScs * CM43 * epsilon13Scs * M43[i][k] *
+            lhsfacDiff_j += -rhoScs * CM43 * epsilon13Scs * M43[i][k] *
                             v_dndx(ip, ic, k) * axj;
           }
 

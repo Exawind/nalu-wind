@@ -838,8 +838,6 @@ public:
         stk::topology::NODE_RANK, "k_ratio")),
       avgVelocity_(&meta_.declare_field<VectorFieldType>(
         stk::topology::NODE_RANK, "average_velocity")),
-      avgDensity_(&meta_.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "average_density")),
       avgResAdeq_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "avg_res_adequacy_parameter")),
       avgProd_(&meta_.declare_field<ScalarFieldType>(
@@ -867,7 +865,6 @@ public:
     stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*alpha_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*avgVelocity_, meta_.universal_part(), spatialDim_, nullptr);
-    stk::mesh::put_field_on_mesh(*avgDensity_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*avgResAdeq_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*avgProd_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*avgTime_, meta_.universal_part(), 1, nullptr);
@@ -894,7 +891,6 @@ public:
     stk::mesh::field_fill(0.3, *tvisc_);
     stk::mesh::field_fill(0.5, *avgVelocity_);
     stk::mesh::field_fill(1.0, *density_);
-    stk::mesh::field_fill(1.0, *avgDensity_);
     stk::mesh::field_fill(0.7, *avgResAdeq_);
     stk::mesh::field_fill(0.6, *avgProd_);
     stk::mesh::field_fill(1.0, *avgTime_);
@@ -916,7 +912,6 @@ public:
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* alpha_{nullptr};
   VectorFieldType* avgVelocity_{nullptr};
-  ScalarFieldType* avgDensity_{nullptr};
   ScalarFieldType* avgResAdeq_{nullptr};
   ScalarFieldType* avgProd_{nullptr};
   ScalarFieldType* avgTime_{nullptr};

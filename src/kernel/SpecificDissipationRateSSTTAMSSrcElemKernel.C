@@ -42,7 +42,7 @@ SpecificDissipationRateSSTTAMSSrcElemKernel<AlgTraits>::
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   tkeNp1_ = get_field_ordinal(metaData, "turbulent_ke");
   sdrNp1_ = get_field_ordinal(metaData, "specific_dissipation_rate");
-  densityNp1_ = get_field_ordinal(metaData, "average_density");
+  densityNp1_ = get_field_ordinal(metaData, "density");
   tvisc_ = get_field_ordinal(metaData, "turbulent_viscosity");
   alpha_ = get_field_ordinal(metaData, "k_ratio");
   prod_ = get_field_ordinal(metaData, "average_production");

@@ -62,7 +62,6 @@ private:
   unsigned Mij_{stk::mesh::InvalidOrdinal};
 
   unsigned avgVelocity_{stk::mesh::InvalidOrdinal};
-  unsigned avgDensity_{stk::mesh::InvalidOrdinal};
 
   unsigned viscosity_{stk::mesh::InvalidOrdinal};
 

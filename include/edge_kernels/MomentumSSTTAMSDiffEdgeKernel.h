@@ -53,7 +53,6 @@ private:
   ngp::Field<double> nodalMij_;
   ngp::Field<double> dudx_;
   ngp::Field<double> avgVelocity_;
-  ngp::Field<double> avgDensity_;
   ngp::Field<double> avgDudx_;
 
   unsigned edgeAreaVecID_{stk::mesh::InvalidOrdinal};
@@ -67,7 +66,6 @@ private:
   unsigned MijID_{stk::mesh::InvalidOrdinal};
   unsigned dudxID_{stk::mesh::InvalidOrdinal};
   unsigned avgVelocityID_{stk::mesh::InvalidOrdinal};
-  unsigned avgDensityID_{stk::mesh::InvalidOrdinal};
   unsigned avgDudxID_{stk::mesh::InvalidOrdinal};
 
   const double includeDivU_;

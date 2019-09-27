@@ -29,7 +29,7 @@ SDRSSTTAMSNodeKernel::SDRSSTTAMSNodeKernel(const stk::mesh::MetaData& meta, cons
     dkdxID_(get_field_ordinal(meta, "dkdx")),
     dwdxID_(get_field_ordinal(meta, "dwdx")),
     prodID_(get_field_ordinal(meta, "average_production")),
-    densityID_(get_field_ordinal(meta, "average_density")),
+    densityID_(get_field_ordinal(meta, "density")),
     nDim_(meta.spatial_dimension())
 {
 }

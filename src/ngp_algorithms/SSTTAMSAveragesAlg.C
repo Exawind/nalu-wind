@@ -25,7 +25,7 @@ SSTTAMSAveragesAlg::SSTTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     meshMotion_(realm.does_mesh_move()),
     velocityRTM_(get_field_ordinal(
       realm.meta_data(), (meshMotion_) ? "velocity_rtm" : "velocity")),
-    density_(get_field_ordinal(realm.meta_data(), "density")),
+    density_(get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateN)),
     dudx_(get_field_ordinal(realm.meta_data(), "dudx")),
     resAdeq_(
       get_field_ordinal(realm.meta_data(), "resolution_adequacy_parameter")),
@@ -33,7 +33,6 @@ SSTTAMSAveragesAlg::SSTTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     specDissipationRate_(
       get_field_ordinal(realm.meta_data(), "specific_dissipation_rate")),
     avgVelocity_(get_field_ordinal(realm.meta_data(), "average_velocity")),
-    avgDensity_(get_field_ordinal(realm.meta_data(), "average_density")),
     avgDudx_(get_field_ordinal(realm.meta_data(), "average_dudx")),
     avgTkeRes_(get_field_ordinal(realm.meta_data(), "average_tke_resolved")),
     avgProd_(get_field_ordinal(realm.meta_data(), "average_production")),
@@ -67,8 +66,8 @@ SSTTAMSAveragesAlg::execute()
   const auto tvisc = fieldMgr.get_field<double>(tvisc_);
   const auto tke = fieldMgr.get_field<double>(turbKineticEnergy_);
   const auto sdr = fieldMgr.get_field<double>(specDissipationRate_);
+  const auto density = fieldMgr.get_field<double>(density_);
   auto alpha = fieldMgr.get_field<double>(alpha_);
-  auto avgDensity = fieldMgr.get_field<double>(avgDensity_);
   auto avgProd = fieldMgr.get_field<double>(avgProd_);
   auto avgTkeRes = fieldMgr.get_field<double>(avgTkeRes_);
   auto avgTime = fieldMgr.get_field<double>(avgTime_);
@@ -107,11 +106,6 @@ SSTTAMSAveragesAlg::execute()
       // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)
       const DblType weightAvg = std::max(1.0 - dt / avgTime.get(mi, 0), 0.0);
       const DblType weightInst = std::min(dt / avgTime.get(mi, 0), 1.0);
-
-      // Density never varies. But having this here causes weirdness
-      // in moving mesh problems such as turbine or rotating cylinder.
-      // avgDensity.get(mi, 0) = weightAvg * avgDensity.get(mi, 0) + weightInst
-      // * rho.get(mi, 0);
 
       DblType tkeRes = 0.0;
       for (int i = 0; i < nDim; ++i)
@@ -159,7 +153,7 @@ SSTTAMSAveragesAlg::execute()
         for (int j = 0; j < nDim; ++j) {
           P_res +=
             avgDudx.get(mi, i * nDim + j) *
-            (avgDensity.get(mi, 0) * (avgVel.get(mi, i) - vel.get(mi, i)) *
+            (density.get(mi, 0) * (avgVel.get(mi, i) - vel.get(mi, i)) *
              (avgVel.get(mi, j) - vel.get(mi, j)));
         }
       }
@@ -243,7 +237,7 @@ SSTTAMSAveragesAlg::execute()
             // M43_jkdkui') where <eps> is the mean dissipation backed out from
             // the SST mean k and mean omega and dkuj' is the fluctuating
             // velocity gradients.
-            const DblType coeffSGET = avgDensity.get(mi, 0) * CM43 * epsilon13;
+            const DblType coeffSGET = density.get(mi, 0) * CM43 * epsilon13;
             const DblType fluctDudx_jl =
               dudx.get(mi, j * nDim + l) - avgDudx.get(mi, j * nDim + l);
             const DblType fluctDudx_il =
@@ -258,7 +252,7 @@ SSTTAMSAveragesAlg::execute()
       for (int i = 0; i < nDim; ++i)
         for (int j = 0; j < nDim; ++j)
           tau[i][j] = tauSGRS[i][j] + tauSGET[i][j] -
-                      ((i == j) ? 2.0 / 3.0 * avgDensity.get(mi, 0) *
+                      ((i == j) ? 2.0 / 3.0 * density.get(mi, 0) *
                                     alpha.get(mi, 0) * tke.get(mi, 0)
                                 : 0.0);
 
@@ -285,7 +279,7 @@ SSTTAMSAveragesAlg::execute()
       // Scale PM first
       const DblType v2 =
         1.0 / 0.22 *
-        (tvisc.get(mi, 0) / avgDensity.get(mi, 0) / avgTime.get(mi, 0));
+        (tvisc.get(mi, 0) / density.get(mi, 0) / avgTime.get(mi, 0));
       const DblType PMscale = std::pow(1.5 * alpha.get(mi, 0) * v2, -1.5);
 
       // Handle case where tke = 0, should only occur at a wall boundary

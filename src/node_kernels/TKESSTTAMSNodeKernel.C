@@ -27,7 +27,7 @@ TKESSTTAMSNodeKernel::TKESSTTAMSNodeKernel(
     sdrNp1ID_(get_field_ordinal(
       meta, "specific_dissipation_rate", stk::mesh::StateNP1)),
     prodID_(get_field_ordinal(meta, "average_production")),
-    densityID_(get_field_ordinal(meta, "average_density")),
+    densityID_(get_field_ordinal(meta, "density")),
     nDim_(meta.spatial_dimension())
 {
 }

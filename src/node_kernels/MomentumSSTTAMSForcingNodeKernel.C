@@ -50,7 +50,6 @@ MomentumSSTTAMSForcingNodeKernel::MomentumSSTTAMSForcingNodeKernel(
 
   // average quantities
   avgVelocityID_ = get_field_ordinal(meta, "average_velocity");
-  avgDensityID_ = get_field_ordinal(meta, "average_density");
   avgResAdeqID_ = get_field_ordinal(meta, "avg_res_adequacy_parameter");
 }
 
@@ -74,7 +73,6 @@ MomentumSSTTAMSForcingNodeKernel::setup(Realm& realm)
   Mij_ = fieldMgr.get_field<double>(MijID_);
   minDist_ = fieldMgr.get_field<double>(minDistID_);
   avgVelocity_ = fieldMgr.get_field<double>(avgVelocityID_);
-  avgDensity_ = fieldMgr.get_field<double>(avgDensityID_);
   avgResAdeq_ = fieldMgr.get_field<double>(avgResAdeqID_);
 }
 
@@ -98,7 +96,6 @@ MomentumSSTTAMSForcingNodeKernel::execute(
   const NodeKernelTraits::DblType sdr = sdr_.get(node, 0);
   const NodeKernelTraits::DblType alpha = alpha_.get(node, 0);
   const NodeKernelTraits::DblType wallDist = minDist_.get(node, 0);
-  const NodeKernelTraits::DblType avgRho = avgDensity_.get(node, 0);
   const NodeKernelTraits::DblType avgResAdeq = avgResAdeq_.get(node, 0);
 
   for (int d = 0; d < nDim_; d++) {

@@ -949,7 +949,19 @@ LowMachEquationSystem::project_nodal_velocity()
 void
 LowMachEquationSystem::predict_state()
 {
-  // Does Nothing
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+
+  const auto& rhoN = fieldMgr.get_field<double>(
+    density_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& rhoNp1 = fieldMgr.get_field<double>(
+    density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel_rho =
+    (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+    & stk::mesh::selectField(*density_);
+  nalu_ngp::field_copy(ngpMesh, sel_rho, rhoNp1, rhoN, 1);
 }
 
 //--------------------------------------------------------------------------

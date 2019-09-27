@@ -48,7 +48,7 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::MomentumSSTTAMSForcingElemKernel(
   pi_ = stk::math::acos(-1.0);
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   velocityNp1_ = get_field_ordinal(metaData, "velocity");
-  densityNp1_ = get_field_ordinal(metaData, "average_density");
+  densityNp1_ = get_field_ordinal(metaData, "density");
   tkeNp1_ = get_field_ordinal(metaData, "turbulent_ke");
 
   sdrNp1_ = get_field_ordinal(metaData, "specific_dissipation_rate");

@@ -63,7 +63,6 @@ TAMSEquationSystem::TAMSEquationSystem(EquationSystems& eqSystems)
   : EquationSystem(eqSystems, "TAMSEQS", "time_averaged_model_split"),
     managePNG_(realm_.get_consistent_mass_matrix_png("adaptivity_parameter")),
     avgVelocity_(NULL),
-    avgDensity_(NULL),
     avgTkeResolved_(NULL),
     avgDudx_(NULL),
     metric_(NULL),
@@ -107,11 +106,6 @@ TAMSEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     stk::topology::NODE_RANK, "average_velocity"));
   stk::mesh::put_field_on_mesh(*avgVelocity_, *part, nDim, nullptr);
   realm_.augment_restart_variable_list("average_velocity");
-
-  avgDensity_ = &(meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "average_density"));
-  stk::mesh::put_field_on_mesh(*avgDensity_, *part, nullptr);
-  realm_.augment_restart_variable_list("average_density");
 
   avgProduction_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "average_production"));
@@ -244,14 +238,6 @@ TAMSEquationSystem::initial_work()
       stk::mesh::selectField(*avgVelocity_);
     const int nDim = meta.spatial_dimension();
 
-    // Copy density to average density
-    auto& avgDensity = fieldMgr.get_field<double>(
-      avgDensity_->field_of_state(stk::mesh::StateNP1)
-        .mesh_meta_data_ordinal());
-    const auto& density =
-      fieldMgr.get_field<double>(get_field_ordinal(meta, "density"));
-    nalu_ngp::field_copy(ngpMesh, sel, avgDensity, density, 1);
-
     // Copy velocity to average velocity
     auto& avgU = fieldMgr.get_field<double>(
       avgVelocity_->field_of_state(stk::mesh::StateNP1)
@@ -268,7 +254,7 @@ TAMSEquationSystem::initial_work()
       fieldMgr.get_field<double>(get_field_ordinal(meta, "dudx"));
     nalu_ngp::field_copy(ngpMesh, sel, avgDudx, dudx, nDim * nDim);
 
-    // Need to update tvisc (avgDensity and avgDudx) didn't exist
+    // Need to update tvisc (avgDudx didn't exist)
     // before this to compute production
     tviscAlg_->execute();
     const auto tvisc = fieldMgr.get_field<double>(

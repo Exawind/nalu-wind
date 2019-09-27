@@ -80,7 +80,6 @@ realms:
           turbulent_ke: 0.05
           specific_dissipation_rate: 3528.0 
           average_velocity: [22.78,0.0,0.0]
-          average_density: 1.0
           average_tke_resolved: 0.0
           average_dudx: 0.0
           k_ratio: 1.0
@@ -190,7 +189,7 @@ realms:
 
     output:
       output_data_base_name: tamsChannelEdge.e
-      output_frequency: 10
+      output_frequency: 1
       output_node_set: no
       output_variables:
        - velocity

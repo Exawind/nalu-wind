@@ -58,7 +58,6 @@ public:
   const bool managePNG_;
 
   VectorFieldType* avgVelocity_;
-  ScalarFieldType* avgDensity_;
   ScalarFieldType* avgTkeResolved_;
   GenericFieldType* avgDudx_;
   GenericFieldType* metric_;
