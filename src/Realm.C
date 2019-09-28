@@ -2676,7 +2676,7 @@ Realm::compute_geometry()
 //-------- compute_vrtm ----------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::compute_vrtm()
+Realm::compute_vrtm(const std::string& velName)
 {
   if (!solutionOptions_->meshMotion_ &&
       !solutionOptions_->externalMeshDeformation_) return;
@@ -2688,15 +2688,11 @@ Realm::compute_vrtm()
   const auto& ngpMesh = ngp_mesh();
   const auto& fieldMgr = ngp_field_manager();
   const auto vel = fieldMgr.get_field<double>(
-    get_field_ordinal(*metaData_, "velocity"));
-  const auto avgvel = fieldMgr.get_field<double>(
-    get_field_ordinal(*metaData_, "average_velocity"));
+    get_field_ordinal(*metaData_, velName));
   const auto meshVel = fieldMgr.get_field<double>(
     get_field_ordinal(*metaData_, "mesh_velocity"));
   auto vrtm = fieldMgr.get_field<double>(
-    get_field_ordinal(*metaData_, "velocity_rtm"));
-  auto avgvrtm = fieldMgr.get_field<double>(
-    get_field_ordinal(*metaData_, "average_velocity_rtm"));
+    get_field_ordinal(*metaData_, velName + "_rtm"));
 
   const stk::mesh::Selector sel = (
     metaData_->locally_owned_part() | metaData_->globally_shared_part());
@@ -2704,10 +2700,8 @@ Realm::compute_vrtm()
     "compute_vrtm",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
-      for (int d=0; d < nDim; ++d){
+      for (int d=0; d < nDim; ++d)
         vrtm.get(mi, d) = vel.get(mi, d) - meshVel.get(mi, d);
-        avgvrtm.get(mi, d) = avgvel.get(mi, d) - meshVel.get(mi, d);
-      }
     });
 
   vrtm.modify_on_device();

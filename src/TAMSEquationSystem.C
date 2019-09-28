@@ -108,10 +108,14 @@ TAMSEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   stk::mesh::put_field_on_mesh(*avgVelocity_, *part, nDim, nullptr);
   realm_.augment_restart_variable_list("average_velocity");
 
-  avgVelocityRTM_ = &(meta.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "average_velocity_rtm"));
-  stk::mesh::put_field_on_mesh(*avgVelocityRTM_, *part, nDim, nullptr);
-  realm_.augment_restart_variable_list("average_velocity_rtm");
+  if (
+    realm_.solutionOptions_->meshMotion_ ||
+    realm_.solutionOptions_->externalMeshDeformation_) {
+    avgVelocityRTM_ = &(meta.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "average_velocity_rtm"));
+    stk::mesh::put_field_on_mesh(*avgVelocityRTM_, *part, nDim, nullptr);
+    realm_.augment_restart_variable_list("average_velocity_rtm");
+  }
 
   avgProduction_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "average_production"));
@@ -248,7 +252,7 @@ TAMSEquationSystem::initial_work()
     auto& avgU = fieldMgr.get_field<double>(
       avgVelocity_->field_of_state(stk::mesh::StateNP1)
         .mesh_meta_data_ordinal());
-    const unsigned velocityID = get_field_ordinal( meta, "velocity");
+    const unsigned velocityID = get_field_ordinal(meta, "velocity");
     const auto& U = fieldMgr.get_field<double>(velocityID);
     nalu_ngp::field_copy(ngpMesh, sel, avgU, U, nDim);
 
@@ -317,7 +321,9 @@ TAMSEquationSystem::pre_timestep_work()
   // Compute TAMS terms here, since we only want to do so once per timestep
 
   // Recompute metric tensor if the mesh is moving
-  if (realm_.solutionOptions_->meshMotion_) {
+  if (
+    realm_.solutionOptions_->meshMotion_ ||
+    realm_.solutionOptions_->externalMeshDeformation_) {
     compute_metric_tensor();
     realm_.compute_vrtm();
 
@@ -333,6 +339,11 @@ TAMSEquationSystem::pre_timestep_work()
   tviscAlg_->execute();
 
   compute_averages();
+  if (
+    realm_.solutionOptions_->meshMotion_ ||
+    realm_.solutionOptions_->externalMeshDeformation_) {
+    realm_.compute_vrtm("average_velocity");
+  }
 
   compute_avgMdot();
 }

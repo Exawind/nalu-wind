@@ -40,14 +40,8 @@ ScalarEdgeSolverAlg::ScalarEdgeSolverAlg(
   diffFluxCoeff_ = diffFluxCoeff->mesh_meta_data_ordinal();
   density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
-  if (useAverages) {
-    massFlowRate_ = get_field_ordinal(meta, "average_mass_flow_rate", stk::topology::EDGE_RANK);
-    velocityRTM_ = get_field_ordinal(meta, avgVrtmName);
-  } else {
-    massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
-    velocityRTM_ = get_field_ordinal(meta, vrtmName);
-  }
-
+  massFlowRate_ = get_field_ordinal(meta, (useAverages) ? "average_mass_flow_rate" : "mass_flow_rate", stk::topology::EDGE_RANK);
+  velocityRTM_ = get_field_ordinal(meta, (useAverages) ? avgVrtmName : vrtmName);
   pecletFunction_ = eqSystem->ngp_create_peclet_function<double>(dofName_);
 }
 

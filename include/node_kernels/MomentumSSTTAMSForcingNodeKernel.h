@@ -58,7 +58,7 @@ private:
 
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
-  unsigned velocityRTMID_{stk::mesh::InvalidOrdinal};
+  unsigned velocityID_{stk::mesh::InvalidOrdinal};
   unsigned viscosityID_{stk::mesh::InvalidOrdinal};
   unsigned turbViscID_{stk::mesh::InvalidOrdinal};
   unsigned densityNp1ID_{stk::mesh::InvalidOrdinal};

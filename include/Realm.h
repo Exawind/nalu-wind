@@ -180,7 +180,7 @@ class Realm {
   void initialize_post_processing_algorithms();
 
   void compute_geometry();
-  void compute_vrtm();
+  void compute_vrtm(const std::string& = "velocity");
   void compute_l2_scaling();
   void output_converged_results();
   void provide_output();
