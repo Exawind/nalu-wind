@@ -33,6 +33,7 @@ ScalarEdgeSolverAlg::ScalarEdgeSolverAlg(
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
   const std::string vrtmName = realm.does_mesh_move()? "velocity_rtm" : "velocity";
+  const std::string avgVrtmName = realm.does_mesh_move()? "average_velocity_rtm" : "average_velocity";
 
   scalarQ_ = scalarQ->mesh_meta_data_ordinal();
   dqdx_ = dqdx->mesh_meta_data_ordinal();
@@ -41,7 +42,7 @@ ScalarEdgeSolverAlg::ScalarEdgeSolverAlg(
   edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   if (useAverages) {
     massFlowRate_ = get_field_ordinal(meta, "average_mass_flow_rate", stk::topology::EDGE_RANK);
-    velocityRTM_ = get_field_ordinal(meta, "average_velocity");
+    velocityRTM_ = get_field_ordinal(meta, avgVrtmName);
   } else {
     massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
     velocityRTM_ = get_field_ordinal(meta, vrtmName);

@@ -32,9 +32,9 @@ MomentumSSTTAMSDiffEdgeKernel::MomentumSSTTAMSDiffEdgeKernel(
     get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
 
   coordinatesID_ = get_field_ordinal(meta, solnOpts.get_coordinates_name());
-  const std::string velField =
-    solnOpts.does_mesh_move() ? "velocity_rtm" : "velocity";
-  velocityRTMID_ = get_field_ordinal(meta, velField);
+  //const std::string velField =
+  //  solnOpts.does_mesh_move() ? "velocity_rtm" : "velocity";
+  velocityRTMID_ = get_field_ordinal(meta, "velocity");
   turbViscID_ = get_field_ordinal(meta, "turbulent_viscosity");
   densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   tkeNp1ID_ = get_field_ordinal(meta, "turbulent_ke", stk::mesh::StateNP1);
@@ -45,7 +45,7 @@ MomentumSSTTAMSDiffEdgeKernel::MomentumSSTTAMSDiffEdgeKernel(
   dudxID_ = get_field_ordinal(meta, "dudx");
 
   // average quantities
-  avgVelocityID_ = get_field_ordinal(meta, solnOpts.does_mesh_move() ? "average_velocity_rtm" : "average_velocity");
+  avgVelocityID_ = get_field_ordinal(meta, "average_velocity"); //solnOpts.does_mesh_move() ? "average_velocity_rtm" : "average_velocity");
   avgDudxID_ = get_field_ordinal(meta, "average_dudx");
 
   const std::string dofName = "velocity";

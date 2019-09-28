@@ -35,8 +35,8 @@ MomentumSSTTAMSForcingNodeKernel::MomentumSSTTAMSForcingNodeKernel(
   dualNodalVolumeID_ = get_field_ordinal(meta, "dual_nodal_volume");
 
   coordinatesID_ = get_field_ordinal(meta, solnOpts.get_coordinates_name());
-  const std::string velField =
-    solnOpts.does_mesh_move() ? "velocity_rtm" : "velocity";
+  const std::string velField = "velocity"; 
+    //solnOpts.does_mesh_move() ? "velocity_rtm" : "velocity";
   velocityRTMID_ = get_field_ordinal(meta, velField);
   viscosityID_ = get_field_ordinal(meta, "viscosity");
   turbViscID_ = get_field_ordinal(meta, "turbulent_viscosity");
@@ -49,7 +49,7 @@ MomentumSSTTAMSForcingNodeKernel::MomentumSSTTAMSForcingNodeKernel(
   minDistID_ = get_field_ordinal(meta, "minimum_distance_to_wall");
 
   // average quantities
-  avgVelocityID_ = get_field_ordinal(meta, solnOpts.does_mesh_move() ? "average_velocity_rtm" : "average_velocity");
+  avgVelocityID_ = get_field_ordinal(meta, "average_velocity"); //solnOpts.does_mesh_move() ? "average_velocity_rtm" : "average_velocity");
   avgResAdeqID_ = get_field_ordinal(meta, "avg_res_adequacy_parameter");
 }
 
