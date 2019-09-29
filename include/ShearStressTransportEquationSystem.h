@@ -16,6 +16,10 @@
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
 
+#include "ngp_algorithms/NgpAlgDriver.h"
+#include "ngp_algorithms/FieldUpdateAlgDriver.h"
+#include "ngp_algorithms/TAMSAvgMdotEdgeAlg.h"
+
 namespace stk{
 struct topology;
 namespace mesh {
@@ -61,6 +65,7 @@ public:
   void clip_min_distance_to_wall();
   void compute_f_one_blending();
   void update_and_clip();
+  void compute_avgMdot();
 
   TurbKineticEnergyEquationSystem *tkeEqSys_;
   SpecificDissipationRateEquationSystem *sdrEqSys_;
@@ -73,6 +78,7 @@ public:
 
   bool isInit_;
   AlgorithmDriver *sstMaxLengthScaleAlgDriver_;
+  NgpAlgDriver avgMdotAlg_;
 
   // saved of mesh parts that are for wall bcs
   std::vector<stk::mesh::Part *> wallBcPart_;

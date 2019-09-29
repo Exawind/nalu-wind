@@ -45,6 +45,11 @@
 
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"
+// ngp
+#include "ngp_algorithms/NgpAlgDriver.h"
+#include "ngp_algorithms/FieldUpdateAlgDriver.h"
+#include "ngp_utils/NgpTypes.h"
+#include "ngp_algorithms/TAMSAvgMdotEdgeAlg.h"
 
 namespace sierra{
 namespace nalu{
@@ -69,6 +74,7 @@ ShearStressTransportEquationSystem::ShearStressTransportEquationSystem(
     maxLengthScale_(NULL),
     isInit_(true),
     sstMaxLengthScaleAlgDriver_(NULL),
+    avgMdotAlg_(realm_),
     resetTAMSAverages_(realm_.solutionOptions_->resetTAMSAverages_)
 {
   // push back EQ to manager
@@ -145,6 +151,13 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
 
+  if ( SST_TAMS == realm_.solutionOptions_->turbulenceModel_ ) {
+    if (realm_.realmUsesEdges_) {
+      avgMdotAlg_.register_edge_algorithm<TAMSAvgMdotEdgeAlg>(
+        algType, part, "sst_avg_mdot_edge");
+    }
+  }
+
   if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) {
 
     if ( NULL == sstMaxLengthScaleAlgDriver_ )
@@ -209,6 +222,8 @@ ShearStressTransportEquationSystem::solve_and_update()
     if (SST_DES == realm_.solutionOptions_->turbulenceModel_)
       sstMaxLengthScaleAlgDriver_->execute();
   }
+
+  compute_avgMdot();
 
   // compute blending for SST model
   compute_f_one_blending();
@@ -738,6 +753,12 @@ ShearStressTransportEquationSystem::initialize_average_mdot()
       }
     }
   }
+}
+
+void
+ShearStressTransportEquationSystem::compute_avgMdot()
+{
+  avgMdotAlg_.execute();
 }
 
 } // namespace nalu
