@@ -14,6 +14,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 #include "EigenDecomposition.h"
 #include "utils/TAMSUtils.h"
+#include "NaluEnv.h"
 
 namespace sierra {
 namespace nalu {
@@ -31,13 +32,19 @@ SSTTAMSAveragesAlg::SSTTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     turbKineticEnergy_(get_field_ordinal(realm.meta_data(), "turbulent_ke")),
     specDissipationRate_(
       get_field_ordinal(realm.meta_data(), "specific_dissipation_rate")),
-    avgVelocity_(get_field_ordinal(realm.meta_data(), "average_velocity")),
-    avgDudx_(get_field_ordinal(realm.meta_data(), "average_dudx")),
-    avgTkeRes_(get_field_ordinal(realm.meta_data(), "average_tke_resolved")),
-    avgProd_(get_field_ordinal(realm.meta_data(), "average_production")),
+    avgVelocityNP1_(get_field_ordinal(realm.meta_data(), "average_velocity", stk::mesh::StateNP1)),
+    avgVelocityN_(get_field_ordinal(realm.meta_data(), "average_velocity", stk::mesh::StateN)),
+    avgDudxNP1_(get_field_ordinal(realm.meta_data(), "average_dudx", stk::mesh::StateNP1)),
+    avgDudxN_(get_field_ordinal(realm.meta_data(), "average_dudx", stk::mesh::StateN)),
+    avgTkeResNP1_(get_field_ordinal(realm.meta_data(), "average_tke_resolved", stk::mesh::StateNP1)),
+    avgTkeResN_(get_field_ordinal(realm.meta_data(), "average_tke_resolved", stk::mesh::StateN)),
+    avgProdNP1_(get_field_ordinal(realm.meta_data(), "average_production", stk::mesh::StateNP1)),
+    avgProdN_(get_field_ordinal(realm.meta_data(), "average_production", stk::mesh::StateN)),
     avgTime_(get_field_ordinal(realm.meta_data(), "rans_time_scale")),
-    avgResAdeq_(
-      get_field_ordinal(realm.meta_data(), "avg_res_adequacy_parameter")),
+    avgResAdeqNP1_(
+      get_field_ordinal(realm.meta_data(), "avg_res_adequacy_parameter", stk::mesh::StateNP1)),
+    avgResAdeqN_(
+      get_field_ordinal(realm.meta_data(), "avg_res_adequacy_parameter", stk::mesh::StateN)),
     tvisc_(get_field_ordinal(realm.meta_data(), "turbulent_viscosity")),
     alpha_(get_field_ordinal(realm.meta_data(), "k_ratio")),
     Mij_(get_field_ordinal(realm.meta_data(), "metric_tensor"))
@@ -47,6 +54,7 @@ SSTTAMSAveragesAlg::SSTTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
 void
 SSTTAMSAveragesAlg::execute()
 {
+  NaluEnv::self().naluOutputP0() << "Calculating TAMS Averages" << std::endl;
   using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
 
   const auto& meta = realm_.meta_data();
@@ -67,16 +75,21 @@ SSTTAMSAveragesAlg::execute()
   const auto sdr = fieldMgr.get_field<double>(specDissipationRate_);
   const auto density = fieldMgr.get_field<double>(density_);
   auto alpha = fieldMgr.get_field<double>(alpha_);
-  auto avgProd = fieldMgr.get_field<double>(avgProd_);
-  auto avgTkeRes = fieldMgr.get_field<double>(avgTkeRes_);
+  auto avgProdNP1 = fieldMgr.get_field<double>(avgProdNP1_);
+  auto avgTkeResNP1 = fieldMgr.get_field<double>(avgTkeResNP1_);
   auto avgTime = fieldMgr.get_field<double>(avgTime_);
   auto resAdeq = fieldMgr.get_field<double>(resAdeq_);
-  auto avgResAdeq = fieldMgr.get_field<double>(avgResAdeq_);
+  auto avgResAdeqNP1 = fieldMgr.get_field<double>(avgResAdeqNP1_);
   const auto vel = fieldMgr.get_field<double>(velocity_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
-  auto avgVel = fieldMgr.get_field<double>(avgVelocity_);
-  auto avgDudx = fieldMgr.get_field<double>(avgDudx_);
+  auto avgVelNP1 = fieldMgr.get_field<double>(avgVelocityNP1_);
+  auto avgDudxNP1 = fieldMgr.get_field<double>(avgDudxNP1_);
   const auto Mij = fieldMgr.get_field<double>(Mij_);
+  auto avgProdN = fieldMgr.get_field<double>(avgProdN_);
+  auto avgTkeResN = fieldMgr.get_field<double>(avgTkeResN_);
+  auto avgResAdeqN = fieldMgr.get_field<double>(avgResAdeqN_);
+  auto avgVelN = fieldMgr.get_field<double>(avgVelocityN_);
+  auto avgDudxN = fieldMgr.get_field<double>(avgDudxN_);
 
   const DblType betaStar = betaStar_;
   const DblType CMdeg = CMdeg_;
@@ -88,7 +101,7 @@ SSTTAMSAveragesAlg::execute()
       if (tke.get(mi, 0) == 0.0)
         alpha.get(mi, 0) = 1.0;
       else {
-        alpha.get(mi, 0) = 1.0 - avgTkeRes.get(mi, 0) / tke.get(mi, 0);
+        alpha.get(mi, 0) = 1.0 - avgTkeResNP1.get(mi, 0) / tke.get(mi, 0);
 
         // limiters
         alpha.get(mi, 0) = std::min(alpha.get(mi, 0), 1.0);
@@ -108,19 +121,19 @@ SSTTAMSAveragesAlg::execute()
 
       DblType tkeRes = 0.0;
       for (int i = 0; i < nDim; ++i)
-        tkeRes += (vel.get(mi, i) - avgVel.get(mi, i)) *
-                  (vel.get(mi, i) - avgVel.get(mi, i));
-      avgTkeRes.get(mi, 0) =
-        weightAvg * avgTkeRes.get(mi, 0) + weightInst * 0.5 * tkeRes;
+        tkeRes += (vel.get(mi, i) - avgVelNP1.get(mi, i)) *
+                  (vel.get(mi, i) - avgVelNP1.get(mi, i));
+      avgTkeResNP1.get(mi, 0) =
+        weightAvg * avgTkeResN.get(mi, 0) + weightInst * 0.5 * tkeRes;
 
       for (int i = 0; i < nDim; ++i)
-        avgVel.get(mi, i) =
-          weightAvg * avgVel.get(mi, i) + weightInst * vel.get(mi, i);
+        avgVelNP1.get(mi, i) =
+          weightAvg * avgVelN.get(mi, i) + weightInst * vel.get(mi, i);
 
       for (int i = 0; i < nDim; ++i) {
         for (int j = 0; j < nDim; ++j) {
-          avgDudx.get(mi, i * nDim + j) =
-            weightAvg * avgDudx.get(mi, i * nDim + j) +
+          avgDudxNP1.get(mi, i * nDim + j) =
+            weightAvg * avgDudxN.get(mi, i * nDim + j) +
             weightInst * dudx.get(mi, i * nDim + j);
         }
       }
@@ -129,8 +142,8 @@ SSTTAMSAveragesAlg::execute()
       DblType tij[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
       for (int i = 0; i < nDim; ++i) {
         for (int j = 0; j < nDim; ++j) {
-          const DblType avgSij = 0.5 * (avgDudx.get(mi, i * nDim + j) +
-                                        avgDudx.get(mi, j * nDim + i));
+          const DblType avgSij = 0.5 * (avgDudxNP1.get(mi, i * nDim + j) +
+                                        avgDudxNP1.get(mi, j * nDim + i));
           tij[i][j] = 2.0 * alpha.get(mi, 0) * tvisc.get(mi, 0) * avgSij;
         }
       }
@@ -140,8 +153,8 @@ SSTTAMSAveragesAlg::execute()
         for (int j = 0; j < nDim; ++j) {
           Pij[i][j] = 0.0;
           for (int m = 0; m < nDim; ++m) {
-            Pij[i][j] += avgDudx.get(mi, i * nDim + m) * tij[j][m] +
-                         avgDudx.get(mi, j * nDim + m) * tij[i][m];
+            Pij[i][j] += avgDudxNP1.get(mi, i * nDim + m) * tij[j][m] +
+                         avgDudxNP1.get(mi, j * nDim + m) * tij[i][m];
           }
           Pij[i][j] *= 0.5;
         }
@@ -150,9 +163,9 @@ SSTTAMSAveragesAlg::execute()
       DblType P_res = 0.0;
       for (int i = 0; i < nDim; ++i) {
         for (int j = 0; j < nDim; ++j) {
-          P_res += avgDudx.get(mi, i * nDim + j) *
-                   (density.get(mi, 0) * (avgVel.get(mi, i) - vel.get(mi, i)) *
-                    (avgVel.get(mi, j) - vel.get(mi, j)));
+          P_res += avgDudxNP1.get(mi, i * nDim + j) *
+                   (density.get(mi, 0) * (avgVelNP1.get(mi, i) - vel.get(mi, i)) *
+                    (avgVelNP1.get(mi, j) - vel.get(mi, j)));
         }
       }
 
@@ -163,8 +176,8 @@ SSTTAMSAveragesAlg::execute()
       instProd -= P_res;
 
       // TODO: Allow for a different averaging timescale for production
-      avgProd.get(mi, 0) =
-        weightAvg * avgProd.get(mi, 0) + weightInst * instProd;
+      avgProdNP1.get(mi, 0) = 
+        weightAvg * avgProdN.get(mi, 0) + weightInst * instProd;
 
       // get Mij field_data
       DblType p_Mij[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
@@ -227,7 +240,7 @@ SSTTAMSAveragesAlg::execute()
           // The 2 in the coeff cancels with the 1/2 in the strain rate tensor
           const DblType coeffSGRS = alpha.get(mi, 0) * tvisc.get(mi, 0);
           tauSGRS[i][j] =
-            avgDudx.get(mi, i * nDim + j) + avgDudx.get(mi, j * nDim + i);
+            avgDudxNP1.get(mi, i * nDim + j) + avgDudxNP1.get(mi, j * nDim + i);
           tauSGRS[i][j] *= coeffSGRS;
 
           for (int l = 0; l < nDim; ++l) {
@@ -237,9 +250,9 @@ SSTTAMSAveragesAlg::execute()
             // velocity gradients.
             const DblType coeffSGET = density.get(mi, 0) * CM43 * epsilon13;
             const DblType fluctDudx_jl =
-              dudx.get(mi, j * nDim + l) - avgDudx.get(mi, j * nDim + l);
+              dudx.get(mi, j * nDim + l) - avgDudxNP1.get(mi, j * nDim + l);
             const DblType fluctDudx_il =
-              dudx.get(mi, i * nDim + l) - avgDudx.get(mi, i * nDim + l);
+              dudx.get(mi, i * nDim + l) - avgDudxNP1.get(mi, i * nDim + l);
             tauSGET[i][j] +=
               coeffSGET * (M43[i][l] * fluctDudx_jl + M43[j][l] * fluctDudx_il);
           }
@@ -302,8 +315,8 @@ SSTTAMSAveragesAlg::execute()
         if (alpha.get(mi, 0) >= 1.0)
           resAdeq.get(mi, 0) = std::min(resAdeq.get(mi, 0), 1.0);
       }
-      avgResAdeq.get(mi, 0) =
-        weightAvg * avgResAdeq.get(mi, 0) + weightInst * resAdeq.get(mi, 0);
+      avgResAdeqNP1.get(mi, 0) =
+        weightAvg * avgResAdeqN.get(mi, 0) + weightInst * resAdeq.get(mi, 0);
     });
 }
 

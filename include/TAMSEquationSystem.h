@@ -49,11 +49,12 @@ public:
   void register_interior_algorithm(stk::mesh::Part* part);
 
   void initial_work();
-  void pre_timestep_work();
+  void pre_iter_work();
   void compute_metric_tensor();
   void compute_averages();
   void compute_avgMdot();
   // void load(const YAML::Node & node);
+  void predict_state();
 
   const bool managePNG_;
 

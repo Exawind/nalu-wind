@@ -31,10 +31,10 @@
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
-//#include <stk_mesh/base/FieldParallel.hpp>
-//#include <stk_mesh/base/GetBuckets.hpp>
-//#include <stk_mesh/base/GetEntities.hpp>
-//#include <stk_mesh/base/CoordinateSystems.hpp>
+#include <stk_mesh/base/FieldParallel.hpp>
+#include <stk_mesh/base/GetBuckets.hpp>
+#include <stk_mesh/base/GetEntities.hpp>
+#include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 
 // stk_io
@@ -98,13 +98,15 @@ TAMSEquationSystem::register_nodal_fields(stk::mesh::Part* part)
 
   const int nDim = meta.spatial_dimension();
 
+  const int numStates = realm_.number_of_states();
+
   // register dof; set it as a restart variable
   alpha_ =
     &(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "k_ratio"));
   stk::mesh::put_field_on_mesh(*alpha_, *part, nullptr);
 
   avgVelocity_ = &(meta.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "average_velocity"));
+    stk::topology::NODE_RANK, "average_velocity", numStates));
   stk::mesh::put_field_on_mesh(*avgVelocity_, *part, nDim, nullptr);
   realm_.augment_restart_variable_list("average_velocity");
 
@@ -118,17 +120,17 @@ TAMSEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   }
 
   avgProduction_ = &(meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "average_production"));
+    stk::topology::NODE_RANK, "average_production", numStates));
   stk::mesh::put_field_on_mesh(*avgProduction_, *part, nullptr);
   realm_.augment_restart_variable_list("average_production");
 
   avgDudx_ = &(meta.declare_field<GenericFieldType>(
-    stk::topology::NODE_RANK, "average_dudx"));
+    stk::topology::NODE_RANK, "average_dudx", numStates));
   stk::mesh::put_field_on_mesh(*avgDudx_, *part, nDim * nDim, nullptr);
   realm_.augment_restart_variable_list("average_dudx");
 
   avgTkeResolved_ = &(meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "average_tke_resolved"));
+    stk::topology::NODE_RANK, "average_tke_resolved", numStates));
   stk::mesh::put_field_on_mesh(*avgTkeResolved_, *part, nullptr);
   realm_.augment_restart_variable_list("average_tke_resolved");
 
@@ -145,7 +147,7 @@ TAMSEquationSystem::register_nodal_fields(stk::mesh::Part* part)
   stk::mesh::put_field_on_mesh(*resAdequacy_, *part, nullptr);
 
   avgResAdequacy_ = &(meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "avg_res_adequacy_parameter"));
+    stk::topology::NODE_RANK, "avg_res_adequacy_parameter", numStates));
   stk::mesh::put_field_on_mesh(*avgResAdequacy_, *part, nullptr);
   realm_.augment_restart_variable_list("avg_res_adequacy_parameter");
 }
@@ -258,7 +260,7 @@ TAMSEquationSystem::initial_work()
 
     // Copy dudx to average dudx
     auto avgDudx =
-      fieldMgr.get_field<double>(avgDudx_->mesh_meta_data_ordinal());
+      fieldMgr.get_field<double>(avgDudx_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
     const auto& dudx =
       fieldMgr.get_field<double>(get_field_ordinal(meta, "dudx"));
     nalu_ngp::field_copy(ngpMesh, sel, avgDudx, dudx, nDim * nDim);
@@ -271,7 +273,7 @@ TAMSEquationSystem::initial_work()
 
     // Compute average production
     auto avgProd =
-      fieldMgr.get_field<double>(avgProduction_->mesh_meta_data_ordinal());
+      fieldMgr.get_field<double>(avgProduction_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
     nalu_ngp::run_entity_algorithm(
       ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
@@ -316,7 +318,7 @@ TAMSEquationSystem::initial_work()
 }
 
 void
-TAMSEquationSystem::pre_timestep_work()
+TAMSEquationSystem::pre_iter_work()
 {
   // Compute TAMS terms here, since we only want to do so once per timestep
 
@@ -364,6 +366,70 @@ void
 TAMSEquationSystem::compute_avgMdot()
 {
   avgMdotAlg_.execute();
+}
+
+//--------------------------------------------------------------------------
+//-------- predict_state ---------------------------------------------------
+//--------------------------------------------------------------------------
+void
+TAMSEquationSystem::predict_state()
+{
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto& avgVelN = fieldMgr.get_field<double>(
+    avgVelocity_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& avgVelNp1 = fieldMgr.get_field<double>(
+    avgVelocity_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+    & stk::mesh::selectField(*avgVelocity_);
+  nalu_ngp::field_copy(ngpMesh, sel, avgVelNp1, avgVelN, meta.spatial_dimension());
+
+  const auto& avgProdN = fieldMgr.get_field<double>(
+     avgProduction_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& avgProdNp1 = fieldMgr.get_field<double>(
+     avgProduction_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  //const auto& meta = realm_.meta_data();
+  //const stk::mesh::Selector sel =
+  //  (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+  //  & stk::mesh::selectField(*avgProduction_);
+  nalu_ngp::field_copy(ngpMesh, sel, avgProdNp1, avgProdN, meta.spatial_dimension());
+
+  const auto& avgDudxN = fieldMgr.get_field<double>(
+    avgDudx_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& avgDudxNp1 = fieldMgr.get_field<double>(
+    avgDudx_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  //const auto& meta = realm_.meta_data();
+  //const stk::mesh::Selector sel =
+  //  (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+  //  & stk::mesh::selectField(*avgDudx_);
+  nalu_ngp::field_copy(ngpMesh, sel, avgDudxNp1, avgDudxN, meta.spatial_dimension());
+
+  const auto& avgTKEN = fieldMgr.get_field<double>(
+    avgTkeResolved_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& avgTKENp1 = fieldMgr.get_field<double>(
+    avgTkeResolved_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  //const auto& meta = realm_.meta_data();
+  //const stk::mesh::Selector sel =
+  //  (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+  //  & stk::mesh::selectField(*avgTkeResolved_);
+  nalu_ngp::field_copy(ngpMesh, sel, avgTKENp1, avgTKEN, meta.spatial_dimension());
+
+  const auto& avgRkN = fieldMgr.get_field<double>(
+    avgResAdequacy_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& avgRkNp1 = fieldMgr.get_field<double>(
+    avgResAdequacy_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  //const auto& meta = realm_.meta_data();
+  //const stk::mesh::Selector sel =
+  //  (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+  //  & stk::mesh::selectField(*avgResAdequacy_);
+  nalu_ngp::field_copy(ngpMesh, sel, avgRkNp1, avgRkN, meta.spatial_dimension());
 }
 
 } // namespace nalu

@@ -32,6 +32,10 @@
 
 #include <stk_mesh/base/MetaData.hpp>
 
+#include <stk_mesh/base/GetBuckets.hpp>
+#include <stk_mesh/base/GetEntities.hpp>
+#include <stk_mesh/base/Part.hpp>
+
 // stk_io
 #include <stk_io/IossBridge.hpp>
 
@@ -140,7 +144,7 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
 
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
-  
+
   if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) {
 
     if ( NULL == sstMaxLengthScaleAlgDriver_ )
@@ -587,19 +591,103 @@ ShearStressTransportEquationSystem::initialize_average_mdot()
     const auto& ngpMesh = realm_.ngp_mesh();
     const auto& fieldMgr = realm_.ngp_field_manager();
 
+    const int nDim = meta.spatial_dimension();
+
     if (realm_.realmUsesEdges_) {
-      auto& avgMdot = fieldMgr.get_field<double>(get_field_ordinal(
-        meta, "average_mass_flow_rate", stk::topology::EDGE_RANK));
-      const auto& massFlowRate = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK));
+      ScalarFieldType *avgMdot_ = meta.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "average_mass_flow_rate");
 
-      const stk::mesh::Selector sel =
-        (meta.locally_owned_part() | meta.globally_shared_part()) &
-        stk::mesh::selectField(
-          *meta.get_field(stk::topology::EDGE_RANK, "average_mass_flow_rate"));
+      VectorFieldType *coordinates_ = meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
 
-      nalu_ngp::field_copy(
-        ngpMesh, sel, avgMdot, massFlowRate, 1, stk::topology::EDGE_RANK);
+      VectorFieldType *avgVelocity_;
+      if ( realm_.has_mesh_motion() )
+        avgVelocity_ = meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "average_velocity_rtm");
+      else
+        avgVelocity_ = meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "average_velocity");
+    
+      ScalarFieldType *density_ = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+
+      VectorFieldType *edgeAreaVec_ = meta.get_field<VectorFieldType>(stk::topology::EDGE_RANK, "edge_area_vector");
+
+      // Interpolation option for rho*U
+      const double interpTogether = realm_.get_mdot_interp();
+      const double om_interpTogether = (1.0 - interpTogether);
+
+      // area vector; gather into
+      std::vector<double> areaVec(nDim);
+    
+      // pointers for fast access
+      double *p_areaVec = &areaVec[0];
+
+      // define some common selectors
+      stk::mesh::Selector s_all_nodes = (meta.locally_owned_part()
+        | meta.globally_shared_part())
+        &stk::mesh::selectField(*avgMdot_);
+   
+     stk::mesh::BucketVector const& edge_buckets =
+       realm_.get_buckets( stk::topology::EDGE_RANK, s_all_nodes );
+     for ( stk::mesh::BucketVector::const_iterator ib = edge_buckets.begin();
+           ib != edge_buckets.end() ; ++ib ) {
+       stk::mesh::Bucket & b = **ib ;
+       const stk::mesh::Bucket::size_type length   = b.size();
+   
+       // pointer to edge area vector and mdot
+             const double * av = stk::mesh::field_data(*edgeAreaVec_, b);
+             double * avgMdot     = stk::mesh::field_data(*avgMdot_, b);
+   
+       for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
+   
+         stk::mesh::Entity const * edge_node_rels = b.begin_nodes(k);
+   
+         // sanity check on number or nodes
+         ThrowAssert( b.num_nodes(k) == 2 );
+   
+         // pointer to edge area vector
+         for ( int j = 0; j < nDim; ++j )
+           p_areaVec[j] = av[k*nDim+j];
+
+         // left and right nodes
+         stk::mesh::Entity nodeL = edge_node_rels[0];
+         stk::mesh::Entity nodeR = edge_node_rels[1];
+   
+         // extract nodal fields
+         const double * coordL = stk::mesh::field_data(*coordinates_, nodeL );
+         const double * coordR = stk::mesh::field_data(*coordinates_, nodeR );
+   
+         const double * vrtmL = stk::mesh::field_data(*avgVelocity_, nodeL );
+         const double * vrtmR = stk::mesh::field_data(*avgVelocity_, nodeR );
+   
+         const double densityL = *stk::mesh::field_data(*density_, nodeL );
+         const double densityR = *stk::mesh::field_data(*density_, nodeR );
+   
+         // compute geometry
+         double axdx = 0.0;
+         double asq = 0.0;
+         for ( int j = 0; j < nDim; ++j ) {
+           const double axj = p_areaVec[j];
+           const double dxj = coordR[j] - coordL[j];
+           asq += axj*axj;
+           axdx += axj*dxj;
+         }
+   
+         const double inv_axdx = 1.0/axdx;
+         const double rhoIp = 0.5*(densityR + densityL);
+   
+         //  mdot
+         double tmdot = 0.0;
+         for ( int j = 0; j < nDim; ++j ) {
+           const double axj = p_areaVec[j];
+           const double dxj = coordR[j] - coordL[j];
+           const double kxj = axj - asq*inv_axdx*dxj; // NOC
+           const double rhoUjIp = 0.5*(densityR*vrtmR[j] + densityL*vrtmL[j]);
+           const double ujIp = 0.5*(vrtmR[j] + vrtmL[j]);
+           tmdot += (interpTogether*rhoUjIp + om_interpTogether*rhoIp*ujIp)*axj; 
+         }
+         // scatter to mdot
+         avgMdot[k] = tmdot;
+       }
+     }
+//      nalu_ngp::field_copy(
+//        ngpMesh, sel, avgMdot, massFlowRate, 1, stk::topology::EDGE_RANK);
     } else {
 
       // // Ideally use this. But it doesn't work yet
