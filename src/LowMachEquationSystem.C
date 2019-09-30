@@ -2173,6 +2173,17 @@ MomentumEquationSystem::register_symmetry_bc(
   if(!symmBCData.userData_.useProjections_){
     notProjectedDir_[beginPos].push_back(part);
   }
+  if(linsys_->linearSolver_->getConfig()->useSegregatedSolver()){
+    NaluEnv::self().naluOutputP0()
+      << "Warning: You are currently using a segregated solver with a strong symmetry boundary "
+      << "condition. This leads to an approximation of the momentum equation for the tangential "
+      << "velocity component(s) at the symmetry surface because it deletes LHS sensitivities."
+      << std::endl
+      << "Warning (cont): Testing shows the error to be negligible, but "
+      << "if strange behavior is encountered it is recommended that you "
+      << "switch to the monolithic solve (segregated_solver: no)."
+      << std::endl;
+  }
 
   // register boundary data; velocity_bc
   const std::string bcFieldName = "strong_sym_velocity";
