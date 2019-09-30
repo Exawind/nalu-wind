@@ -11,7 +11,7 @@
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
-#include <stk_unit_tests/stk_mesh_fixtures/QuadFixture.hpp>
+#include <stk_unit_test_utils/stk_mesh_fixtures/QuadFixture.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 
 #include <master_element/MasterElementHO.h>
