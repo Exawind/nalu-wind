@@ -166,6 +166,32 @@ public:
     }
   }
 
+  template <template <typename> class FaceElemAlg, class... Args>
+  void register_face_elem_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const stk::topology elemTopo,
+    const std::string& algSuffix,
+    Args&&... args)
+  {
+    const auto topo = part->topology();
+    const std::string entityName = "face_" + topo.name() + "_" + elemTopo.name();
+
+    const std::string algName =
+      unique_name(algType, entityName, algSuffix);
+
+    const auto it = algMap_.find(algName);
+    if (it == algMap_.end()) {
+      algMap_[algName].reset(
+        nalu_ngp::create_face_elem_algorithm<Algorithm, FaceElemAlg>(
+          nDim_, topo, elemTopo, realm_, part, std::forward<Args>(args)...));
+      NaluEnv::self().naluOutputP0()
+        << "Created algorithm = " << algName << std::endl;
+    } else {
+      it->second->partVec_.push_back(part);
+    }
+  }
+
   template<
     template <typename> class NGPAlg,
     typename LegacyAlg,

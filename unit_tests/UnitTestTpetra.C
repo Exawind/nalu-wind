@@ -216,6 +216,9 @@ sierra::nalu::Realm& setup_realm(unit_test_utils::NaluTest& naluObj, const std::
 {
   sierra::nalu::Realm& realm = naluObj.create_realm();
   realm.setup_nodal_fields();
+
+  auto& part = realm.meta_data().declare_part("block_1");
+  realm.register_nodal_fields(&part);
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
   realm.set_global_id();
   return realm;

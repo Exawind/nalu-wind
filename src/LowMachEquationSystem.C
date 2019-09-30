@@ -147,6 +147,7 @@
 
 // ngp
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
+#include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/MdotEdgeAlg.h"
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
@@ -1912,19 +1913,8 @@ MomentumEquationSystem::register_wall_bc(
       ReferenceTemperature Tref = userData.referenceTemperature_;
       const double referenceTemperature = Tref.referenceTemperature_;
 
-      {
-        // TODO Fix implementation when refactoring Geometry calcs in Realm
-        auto& algMap = realm_.computeGeometryAlgDriver_->algMap_;
-        auto it = algMap.find(wfAlgType);
-        if (it == algMap.end()) {
-          algMap[wfAlgType] = nalu_ngp::create_face_elem_algorithm<
-            Algorithm, WallFuncGeometryAlg>(
-            realm_.meta_data().spatial_dimension(), part->topology(),
-            get_elem_topo(realm_, *part), realm_, part);
-        } else {
-          it->second->partVec_.push_back(part);
-        }
-      }
+      realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
+        wfAlgType, part, get_elem_topo(realm_, *part), "geometry_wall_func");
 
       wallFuncAlgDriver_.register_face_algorithm<ABLWallFrictionVelAlg>(
         wfAlgType, part, "abl_wall_func", realm_.realmUsesEdges_,
