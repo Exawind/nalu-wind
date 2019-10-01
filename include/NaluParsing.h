@@ -305,8 +305,18 @@ struct OversetUserData : public UserData {
 };
 
 struct SymmetryUserData : public UserData {
+  enum class SymmetryTypes{
+    GENERAL_WEAK,
+    X_DIR_STRONG,
+    Y_DIR_STRONG,
+    Z_DIR_STRONG
+  };
+  SymmetryTypes symmType_;
+  bool useProjections_;
   SymmetryUserData()
-    : UserData()
+    : UserData(),
+      symmType_(SymmetryTypes::GENERAL_WEAK),
+      useProjections_(false)
   {}
 };
 
