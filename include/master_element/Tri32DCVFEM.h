@@ -86,7 +86,7 @@ public:
   void shifted_shape_fcn (
     double *shpfc) override;
 
-  void tri_shape_fcn(
+  KOKKOS_FUNCTION void tri_shape_fcn(
     const double *par_coord, 
     SharedMemView<DoubleType**, DeviceShmem> &shape_fcn);
 
@@ -242,7 +242,7 @@ public:
   void shifted_shape_fcn(
     double *shpfc) override;
   
-  void tri_shape_fcn(
+  KOKKOS_FUNCTION void tri_shape_fcn(
     const double *par_coord, 
     SharedMemView<DoubleType**, DeviceShmem> &shape_fcn);
 
