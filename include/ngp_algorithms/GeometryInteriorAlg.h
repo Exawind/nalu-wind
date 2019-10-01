@@ -19,6 +19,13 @@ namespace nalu {
 
 class Realm;
 
+/** Compute nodal/element volumes and edge area vectors
+ *
+ *  "edge_area_vector" is only computed if the user has requested edge-based
+ *  finite-volume in the input file.
+ *
+ *  \sa GeometryAlgDriver, GeometryBoundaryAlg
+ */
 template <typename AlgTraits>
 class GeometryInteriorAlg : public Algorithm
 {

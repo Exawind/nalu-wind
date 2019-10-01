@@ -68,6 +68,7 @@ void GeometryAlgDriver::post_work()
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
 
+  // TODO: Convert to NGP version of parallel and periodic updates
   auto* dualVol = meta.template get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume");
   std::vector<const stk::mesh::FieldBase*> fields{dualVol};

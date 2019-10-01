@@ -16,6 +16,26 @@ namespace nalu {
 
 class Realm;
 
+/** Compute geometry fields
+ *
+ *  This class coordinates the computation of the following fields:
+ *    - dual_nodal_volume
+ *    - element_volume
+ *    - edge_area_vector
+ *    - exposed_area_vector
+ *    - assembled_wall_area_wf
+ *    - assembled_wall_normal_distance
+ *
+ *  While the volume computation happens at every invocation of the execute()
+ *  method, the remaining fields are only computed if the user has requested
+ *  certain options in the input file. The design follows a driver/algorithm
+ *  pattern as the actual NGP computation of the fields for elements/edges/faces
+ *  etc. are done using algorithms that are templated on the element topologies.
+ *  See GeometryInteriorAlg and GeometryBoundaryAlg for more details of the
+ *  exact computations.
+ *
+ *  \sa GeometryInteriorAlg, GeometryBoundaryAlg
+ */
 class GeometryAlgDriver : public NgpAlgDriver
 {
 public:
@@ -47,6 +67,7 @@ public:
   }
 
 private:
+  //! Flag to track whether wall functions are active
   bool hasWallFunc_{false};
 };
 

@@ -19,6 +19,10 @@ namespace nalu {
 
 class Realm;
 
+/** Compute exposed area vectors for the boundaries
+ *
+ *  \sa GeometryAlgDriver, GeometryInteriorAlg
+ */
 template <typename AlgTraits>
 class GeometryBoundaryAlg : public Algorithm
 {

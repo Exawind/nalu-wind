@@ -23,11 +23,11 @@ namespace nalu {
 
 template <typename AlgTraits>
 GeometryBoundaryAlg<AlgTraits>::GeometryBoundaryAlg(
-  Realm& realm,
-  stk::mesh::Part* part
-) : Algorithm(realm, part),
+  Realm& realm, stk::mesh::Part* part)
+  : Algorithm(realm, part),
     dataNeeded_(realm_.meta_data()),
-    exposedAreaVec_(get_field_ordinal(realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
+    exposedAreaVec_(get_field_ordinal(
+      realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
     meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>())
 {
   dataNeeded_.add_cvfem_surface_me(meSCS_);
