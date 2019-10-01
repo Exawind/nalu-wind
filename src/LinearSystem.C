@@ -87,6 +87,10 @@ bool LinearSystem::debug()
   return false;
 }
 
+bool LinearSystem::useSegregatedSolver() const {
+  return linearSolver_ ? linearSolver_->getConfig()->useSegregatedSolver() : false;
+}
+
 // static method
 LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, EquationSystem *eqSys, LinearSolver *solver)
 {

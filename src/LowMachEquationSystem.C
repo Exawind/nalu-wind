@@ -2163,7 +2163,7 @@ MomentumEquationSystem::register_symmetry_bc(
   if(!symmBCData.userData_.useProjections_){
     notProjectedDir_[beginPos].push_back(part);
   }
-  if(linsys_->linearSolver_->getConfig()->useSegregatedSolver()){
+  if(linsys_->useSegregatedSolver()){
     NaluEnv::self().naluOutputP0()
       << "Warning: You are currently using a segregated solver with a strong symmetry boundary "
       << "condition. This leads to an approximation of the momentum equation for the tangential "
