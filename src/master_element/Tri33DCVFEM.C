@@ -52,6 +52,82 @@ Tri3DSCS::ipNodeMap(
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION 
+void Tri3DSCS::determinant(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType**, DeviceShmem>&areav) {
+
+  constexpr int    dim = nDim_;
+  constexpr int nnodes = nodesPerElement_;
+  constexpr int   nint = numIntPoints_;
+
+  DoubleType dx13, dx24, dy13, dy24, dz13, dz24;
+
+  DoubleType area[dim][nint];
+  DoubleType p[dim][nnodes], e[dim][nnodes], c[dim];
+
+  const DoubleType half = 0.5;   
+  const DoubleType one3rd = 1.0/3.0;
+
+  for (int n = 0; n<nnodes; ++n) {
+    for (int d = 0; d < dim; ++d) {
+      p[d][n] = coords(n,d);
+    }
+  }
+  for (int d=0; d < dim; ++d) {
+    e[d][0] = ( p[d][0] + p[d][1] ) * half;
+    e[d][1] = ( p[d][1] + p[d][2] ) * half;
+    e[d][2] = ( p[d][2] + p[d][0] ) * half;
+    c[d]    = ( p[d][0] + p[d][1] + p[d][2] ) * one3rd;
+  }
+ 
+  //... CALCULATE SUBCONTROL VOLUME FACE AREAS ...
+  //    ... subcontrol volume face 1
+ 
+  dx13 = c[0]    - p[0][0];
+  dx24 = e[0][2] - e[0][0];
+  dy13 = c[1]    - p[1][0];
+  dy24 = e[1][2] - e[1][0];
+  dz13 = c[2]    - p[2][0];
+  dz24 = e[2][2] - e[2][0];
+ 
+  area[0][0] = half * ( dz24 * dy13 - dz13 * dy24 );
+  area[1][0] = half * ( dx24 * dz13 - dx13 * dz24 );
+  area[2][0] = half * ( dy24 * dx13 - dy13 * dx24 );
+ 
+  // ... subcontrol volume face 2
+ 
+  dx13 = c[0]    - p[0][1];
+  dx24 = e[0][0] - e[0][1];
+  dy13 = c[1]    - p[1][1];
+  dy24 = e[1][0] - e[1][1];
+  dz13 = c[2]    - p[2][1];
+  dz24 = e[2][0] - e[2][1];
+ 
+  area[0][1] = half * ( dz24 * dy13 - dz13 * dy24 );
+  area[1][1] = half * ( dx24 * dz13 - dx13 * dz24 );
+  area[2][1] = half * ( dy24 * dx13 - dy13 * dx24 );
+ 
+  // ... subcontrol volume face 3
+ 
+  dx13 = c[0]    - p[0][2];
+  dx24 = e[0][1] - e[0][2];
+  dy13 = c[1]    - p[1][2];
+  dy24 = e[1][1] - e[1][2];
+  dz13 = c[2]    - p[2][2];
+  dz24 = e[2][1] - e[2][2];
+ 
+  area[0][2] = half * ( dz24 * dy13 - dz13 * dy24 );
+  area[1][2] = half * ( dx24 * dz13 - dx13 * dz24 );
+  area[2][2] = half * ( dy24 * dx13 - dy13 * dx24 );
+
+  for (int f = 0; f<nint; ++f) {
+    for (int d = 0; d < dim; ++d) {
+      areav(f,d) = area[d][f];
+    }
+  }
+}
+
 void Tri3DSCS::determinant(
   const int nelem,
   const double *coords,
@@ -73,6 +149,12 @@ void Tri3DSCS::determinant(
 //--------------------------------------------------------------------------
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION 
+void Tri3DSCS::shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc){
+  tri_shape_fcn(intgLoc_, shpfc);
+}
+
 void
 Tri3DSCS::shape_fcn(double *shpfc)
 {
@@ -87,6 +169,12 @@ void Tri3DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION 
+void Tri3DSCS::shifted_shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc){
+  tri_shape_fcn(intgLocShift_, shpfc);
+}
+
 void
 Tri3DSCS::shifted_shape_fcn(double *shpfc)
 {
@@ -101,6 +189,22 @@ void Tri3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc
 //--------------------------------------------------------------------------
 //-------- tri_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION
+void
+Tri3DSCS::tri_shape_fcn(
+  const double *isoParCoord,
+  SharedMemView<DoubleType**, DeviceShmem> &shape_fcn)
+{
+  for (int j = 0; j < numIntPoints_; ++j ) {
+    const int k = 2*j;
+    const double xi = isoParCoord[k];
+    const double eta = isoParCoord[k+1];
+    shape_fcn(j,0) = 1.0 - xi - eta;
+    shape_fcn(j,1) = xi;
+    shape_fcn(j,2) = eta;
+  }
+}
+
 void
 Tri3DSCS::tri_shape_fcn(
   const int     npts,

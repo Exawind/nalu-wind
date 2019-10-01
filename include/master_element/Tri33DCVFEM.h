@@ -53,17 +53,31 @@ public:
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
+  KOKKOS_FUNCTION virtual void determinant(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType**, DeviceShmem>&areav);
+
   void determinant(
     const int nelem,
     const double *coords,
     double *areav,
     double * error );
 
+  KOKKOS_FUNCTION virtual void shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+
   void shape_fcn(
      double *shpfc);
 
+  KOKKOS_FUNCTION virtual void shifted_shape_fcn(
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+
    void shifted_shape_fcn(
      double *shpfc);
+
+   void tri_shape_fcn(
+     const double *par_coord,
+     SharedMemView<DoubleType**, DeviceShmem> &shpfc);
 
    void tri_shape_fcn(
      const int npts,
