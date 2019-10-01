@@ -495,7 +495,7 @@ void basic_face_elem_loop(
   faceData.add_coordinates_field(
     coordField, ndim, sierra::nalu::CURRENT_COORDINATES);
   faceData.add_face_field(
-    exposedArea, FaceTraits::numScsIp_, FaceTraits::nDim_);
+    exposedArea, FaceTraits::numFaceIp_, FaceTraits::nDim_);
   faceData.add_master_element_call(
     sierra::nalu::FC_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
   elemData.add_coordinates_field(

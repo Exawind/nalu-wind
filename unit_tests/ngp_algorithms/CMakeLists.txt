@@ -2,8 +2,10 @@ add_sources(GlobalUnitSourceList
   UnitTestNgpAlgUtils.C
   UnitTestNodalGradAlg.C
   UnitTestDiffFluxCoeffAlg.C
+  UnitTestEffSSTDiffFluxCoeffAlg.C
   UnitTestEnthalpyDiffFluxCoeffAlg.C 
   UnitTestMdotAlg.C
   UnitTestTurbViscKsgsAlg.C
   UnitTestTurbViscSSTAlg.C
+  UnitTestGeometryAlg.C
   )

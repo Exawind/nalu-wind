@@ -79,6 +79,11 @@ Tri3DSCS::shape_fcn(double *shpfc)
   tri_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
 }
 
+void Tri3DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  tri_shape_fcn(intgLoc_, shpfc);
+}
+
 //--------------------------------------------------------------------------
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
@@ -86,6 +91,11 @@ void
 Tri3DSCS::shifted_shape_fcn(double *shpfc)
 {
   tri_shape_fcn(numIntPoints_, &intgLocShift_[0], shpfc);
+}
+
+void Tri3DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  tri_shape_fcn(intgLocShift_, shpfc);
 }
 
 //--------------------------------------------------------------------------
@@ -105,6 +115,21 @@ Tri3DSCS::tri_shape_fcn(
     shape_fcn[    threej] = 1.0 - xi - eta;
     shape_fcn[1 + threej] = xi;
     shape_fcn[2 + threej] = eta;
+  }
+}
+
+void
+Tri3DSCS::tri_shape_fcn(
+  const double* isoParCoods, SharedMemView<DoubleType**, DeviceShmem> & shpfc)
+{
+  for (int j=0; j<numIntPoints_; ++j)
+  {
+    const int k = 2*j;
+    const DoubleType xi = isoParCoods[k];
+    const DoubleType eta = isoParCoods[k+1];
+    shpfc(j, 0) = 1.0-xi-eta;
+    shpfc(j, 1) = xi;
+    shpfc(j, 2) = eta;
   }
 }
 

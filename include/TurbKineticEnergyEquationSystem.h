@@ -14,6 +14,7 @@
 #include <NaluParsing.h>
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
+#include "ngp_algorithms/TKEWallFuncAlgDriver.h"
 
 namespace stk{
 struct topology;
@@ -96,8 +97,7 @@ public:
   ScalarFieldType *evisc_;
   
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
-  NgpAlgDriver wallFuncAlgDriver_;
-
+  std::unique_ptr<TKEWallFuncAlgDriver> wallFuncAlgDriver_;
   std::unique_ptr<Algorithm> effDiffFluxCoeffAlg_;
   const TurbulenceModel turbulenceModel_;
 

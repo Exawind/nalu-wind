@@ -17,20 +17,23 @@ namespace nalu {
 
 enum AlgorithmType{
   INTERIOR  = 0,
-  INFLOW    = 1,
-  WALL      = 2,
-  WALL_FCN  = 3,
-  OPEN      = 4,
-  MASS      = 5,
-  SRC       = 6,
-  SYMMETRY  = 7,
-  WALL_HF   = 8,
-  WALL_CHT  = 9,
-  WALL_RAD  = 10,
-  NON_CONFORMAL = 11,
-  ELEM_SOURCE = 12,
-  OVERSET = 13,
-  WALL_ABL = 14,
+  BOUNDARY,
+  INFLOW    ,
+  WALL      ,
+  WALL_FCN  ,
+  OPEN      ,
+  MASS      ,
+  SRC       ,
+  SYMMETRY  ,
+  WALL_HF   ,
+  WALL_CHT  ,
+  WALL_RAD  ,
+  NON_CONFORMAL ,
+  ELEM_SOURCE ,
+  OVERSET ,
+  WALL_ABL ,
+
+  TOP_ABL,
 
   /** Set the reference pressure at a node.
    *
@@ -40,9 +43,11 @@ enum AlgorithmType{
    *
    * \sa FixPressureAtNodeAlgorithm
    */
-  REF_PRESSURE = 15, 
- 
-  TOP_ABL = 16
+
+  REF_PRESSURE,
+  X_SYM_STRONG,
+  Y_SYM_STRONG,
+  Z_SYM_STRONG
 };
 
 enum BoundaryConditionType{

@@ -5,14 +5,11 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#ifndef TKEWALLFUNCALG_H
-#define TKEWALLFUNCALG_H
+#ifndef TKEWALLFUNCALGDRIVER_H
+#define TKEWALLFUNCALGDRIVER_H
 
-#include "Algorithm.h"
-#include "ElemDataRequests.h"
-#include "SimdInterface.h"
-
-#include "stk_mesh/base/Types.hpp"
+#include "ngp_algorithms/NgpAlgDriver.h"
+#include "FieldTypeDef.h"
 
 namespace sierra {
 namespace nalu {
@@ -26,32 +23,30 @@ namespace nalu {
  *  "turbulent_ke" and "tke_bc" fields are updated for the wall boundaries where
  *  wall function is being used.
  *
- *  \sa TKEWallFuncAlgDriver
+ *  \sa TKEWallFuncAlg
  */
-template<typename BcAlgTraits>
-class TKEWallFuncAlg : public Algorithm
+class TKEWallFuncAlgDriver : public NgpAlgDriver
 {
 public:
-  TKEWallFuncAlg(Realm&, stk::mesh::Part*);
+  TKEWallFuncAlgDriver(Realm&);
 
-  virtual ~TKEWallFuncAlg() = default;
+  virtual ~TKEWallFuncAlgDriver() = default;
 
-  virtual void execute() override;
+  //! Reset fields before calling algorithms
+  virtual void pre_work() override;
+
+  //! Synchronize fields after algorithms have done their work
+  virtual void post_work() override;
 
 private:
-  ElemDataRequests faceData_;
-
+  unsigned tke_ {stk::mesh::InvalidOrdinal};
+  unsigned bctke_ {stk::mesh::InvalidOrdinal};
   unsigned bcNodalTke_ {stk::mesh::InvalidOrdinal};
-  unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
-  unsigned wallFricVel_ {stk::mesh::InvalidOrdinal};
-
-  DoubleType cMu_;
-
-  MasterElement* meFC_{nullptr};
+  unsigned wallArea_ {stk::mesh::InvalidOrdinal};
 };
 
 }  // nalu
 }  // sierra
 
 
-#endif /* TKEWALLFUNCALG_H */
+#endif /* TKEWALLFUNCALGDRIVER_H */

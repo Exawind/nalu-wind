@@ -203,6 +203,30 @@ namespace sierra
       symmetryBC.theBcType_ = SYMMETRY_BC;
       const YAML::Node& symmetryUserData = node["symmetry_user_data"];
       symmetryBC.userData_ = symmetryUserData.as<SymmetryUserData>();
+      if(symmetryUserData["use_projections"]){
+        symmetryBC.userData_.useProjections_ = symmetryUserData["use_projections"].as<bool>();
+      }
+      if(symmetryUserData["symmetry_type"]){
+        const std::string symmType =
+            symmetryUserData["symmetry_type"].as<std::string>();
+        if(symmType == "generalized_weak" || symmType == "default"){
+          // do nothing already set, but keep for parse checking
+        }
+        else if(symmType == "x_direction_strong"){
+          symmetryBC.userData_.symmType_ = SymmetryUserData::SymmetryTypes::X_DIR_STRONG;
+        }
+        else if(symmType == "y_direction_strong"){
+          symmetryBC.userData_.symmType_ = SymmetryUserData::SymmetryTypes::Y_DIR_STRONG;
+        }
+        else if(symmType == "z_direction_strong"){
+          symmetryBC.userData_.symmType_ = SymmetryUserData::SymmetryTypes::Z_DIR_STRONG;
+        }
+        else{
+          throw std::runtime_error(
+            "Unrecognized value for symmetry_type: " + symmType
+            );
+        }
+      }
     }
 
     void operator >>(const YAML::Node& node,

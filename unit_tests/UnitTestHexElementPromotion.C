@@ -12,7 +12,7 @@
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
-#include <stk_unit_tests/stk_mesh_fixtures/HexFixture.hpp>
+#include <stk_unit_test_utils/stk_mesh_fixtures/HexFixture.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 
 #include <master_element/HexPCVFEM.h>

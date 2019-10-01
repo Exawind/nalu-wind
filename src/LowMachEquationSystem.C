@@ -146,6 +146,8 @@
 
 // ngp
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
+#include "ngp_algorithms/GeometryAlgDriver.h"
+#include "ngp_algorithms/MdotEdgeAlg.h"
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
@@ -213,6 +215,7 @@
 #include <user_functions/OneTwoTenVelocityAuxFunction.h>
 
 #include <user_functions/PerturbedShearLayerAuxFunctions.h>
+#include <user_functions/GaussJetVelocityAuxFunction.h>
 
 // deprecated
 #include <ContinuityMassElemSuppAlgDep.h>
@@ -901,6 +904,38 @@ LowMachEquationSystem::project_nodal_velocity()
           velNp1.get(mi, d) -= fac * (dpdx.get(mi, d) - uTmp.get(mi, d));
         }
       });
+    const stk::mesh::Selector selX =
+      (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[0]));
+    nalu_ngp::run_entity_algorithm(
+      ngpMesh, stk::topology::NODE_RANK, selX,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        // Scaling factor
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        //  undo Projection step
+        velNp1.get(mi, 0) += fac * (dpdx.get(mi, 0) - uTmp.get(mi, 0));
+      });
+    const stk::mesh::Selector selY =
+      (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[1]));
+    nalu_ngp::run_entity_algorithm(
+      ngpMesh, stk::topology::NODE_RANK, selY,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        // Scaling factor
+        const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+        //  undo Projection step
+        velNp1.get(mi, 1) += fac * (dpdx.get(mi, 1) - uTmp.get(mi, 1));
+      });
+    if(nDim==3){
+      const stk::mesh::Selector selZ =
+         (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[2]));
+      nalu_ngp::run_entity_algorithm(
+           ngpMesh, stk::topology::NODE_RANK, selZ,
+           KOKKOS_LAMBDA(const MeshIndex& mi) {
+             // Scaling factor
+             const double fac = 1.0 / (rhoNp1.get(mi, 0) * Udiag.get(mi, 0));
+             //  undo Projection step
+             velNp1.get(mi, 2) += fac * (dpdx.get(mi, 2) - uTmp.get(mi, 2));
+           });
+    }
   }
 }
 
@@ -1579,6 +1614,9 @@ MomentumEquationSystem::register_inflow_bc(
     else if ( fcnName == "wind_energy_power_law") {
       theAuxFunc = new WindEnergyPowerLawAuxFunction(0,nDim,theParams);
     }
+    else if ( fcnName == "GaussJet") {
+      theAuxFunc = new GaussJetVelocityAuxFunction(0,nDim);
+    }
     else {
       throw std::runtime_error("MomentumEquationSystem::register_inflow_bc: limited functions supported");
     }
@@ -1911,20 +1949,8 @@ MomentumEquationSystem::register_wall_bc(
       ReferenceTemperature Tref = userData.referenceTemperature_;
       const double referenceTemperature = Tref.referenceTemperature_;
 
-      {
-        // TODO Fix implementation when refactoring Geometry calcs in Realm
-        auto& algMap = realm_.computeGeometryAlgDriver_->algMap_;
-        auto it = algMap.find(wfAlgType);
-        if (it == algMap.end()) {
-          algMap[wfAlgType] = create_face_elem_algorithm<WallFuncGeometryAlg>(
-            realm_.meta_data().spatial_dimension(),
-            part->topology(),
-            get_elem_topo(realm_, *part),
-            realm_, part);
-        } else {
-          it->second->partVec_.push_back(part);
-        }
-      }
+      realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
+        wfAlgType, part, get_elem_topo(realm_, *part), "geometry_wall_func");
 
       wallFuncAlgDriver_.register_face_algorithm<ABLWallFrictionVelAlg>(
         wfAlgType, part, "abl_wall_func", realm_.realmUsesEdges_,
@@ -2042,74 +2068,148 @@ void
 MomentumEquationSystem::register_symmetry_bc(
   stk::mesh::Part *part,
   const stk::topology &partTopo,
-  const SymmetryBoundaryConditionData &  /* symmetryBCData */)
+  const SymmetryBoundaryConditionData & symmBCData)
 {
   // algorithm type
   const AlgorithmType algType = SYMMETRY;
 
   VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
   GenericFieldType &dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
+  using SYMMTYPES = SymmetryUserData::SymmetryTypes;
+  const SYMMTYPES symmType = symmBCData.userData_.symmType_;
+  unsigned beginPos{0}, endPos{1};
+  stk::mesh::MetaData &meta_data = realm_.meta_data();
+  const unsigned nDim = meta_data.spatial_dimension();
+  AlgorithmType pickTheType = algType;
+  switch(symmType){
+   case SYMMTYPES::GENERAL_WEAK:
+     // non-solver; contribution to Gjui; allow for element-based shifted
+      if ( !managePNG_ ) {
+        nodalGradAlgDriver_.register_face_algorithm<
+          VectorNodalGradBndryElemAlg, AssembleNodalGradUBoundaryAlgorithm>(
+          algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
+          edgeNodalGradient_);
+      }
 
-  // non-solver; contribution to Gjui; allow for element-based shifted
-  if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      VectorNodalGradBndryElemAlg, AssembleNodalGradUBoundaryAlgorithm>(
-      algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
-      edgeNodalGradient_);
+      if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_
+          && !realm_.realmUsesEdges_) {
+        // solver algs; lhs
+        std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
+          = solverAlgDriver_->solverAlgMap_.find(algType);
+        if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
+          auto* theAlg =
+            new AssembleMomentumElemSymmetrySolverAlgorithm(realm_, part, this);
+          solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+        }
+        else {
+          itsi->second->partVec_.push_back(part);
+        }
+      }
+      else {
+        auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+
+        stk::topology elemTopo = get_elem_topo(realm_, *part);
+
+        AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
+        bool solverAlgWasBuilt = false;
+        const std::string algName = realm_.realmUsesEdges_ ? "symm_edge" : "symm_elem";
+
+        std::tie(faceElemSolverAlg, solverAlgWasBuilt)
+          = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, algName);
+
+        auto& activeKernels = faceElemSolverAlg->activeKernels_;
+
+        if (solverAlgWasBuilt) {
+
+          const stk::mesh::MetaData& metaData = realm_.meta_data();
+          const std::string viscName = realm_.is_turbulent()
+            ? "effective_viscosity_u" : "viscosity";
+
+          if (realm_.realmUsesEdges_)
+            build_face_elem_topo_kernel_automatic<MomentumSymmetryEdgeKernel>
+              (partTopo, elemTopo, *this, activeKernels, "momentum_symmetry_edge",
+               metaData, *realm_.solutionOptions_,
+               metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity"),
+               metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName),
+               faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_
+              );
+          else
+            build_face_elem_topo_kernel_automatic<MomentumSymmetryElemKernel>
+              (partTopo, elemTopo, *this, activeKernels, "momentum_symmetry_elem",
+               metaData, *realm_.solutionOptions_,
+               metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity"),
+               metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName),
+               faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_
+              );
+        }
+      }
+     return;
+     break;
+   case SYMMTYPES::X_DIR_STRONG:
+     pickTheType = AlgorithmType::X_SYM_STRONG;
+     beginPos = 0;
+     break;
+   case SYMMTYPES::Y_DIR_STRONG:
+     pickTheType = AlgorithmType::Y_SYM_STRONG;
+     beginPos = 1;
+     break;
+   case SYMMTYPES::Z_DIR_STRONG:
+     pickTheType = AlgorithmType::Z_SYM_STRONG;
+     beginPos = 2;
+     break;
   }
 
-  if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_
-      && !realm_.realmUsesEdges_) {
-    // solver algs; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
-      = solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      auto* theAlg =
-        new AssembleMomentumElemSymmetrySolverAlgorithm(realm_, part, this);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
-    }
+  endPos = beginPos + 1;
+  if(!symmBCData.userData_.useProjections_){
+    notProjectedDir_[beginPos].push_back(part);
+  }
+  if(linsys_->linearSolver_->getConfig()->useSegregatedSolver()){
+    NaluEnv::self().naluOutputP0()
+      << "Warning: You are currently using a segregated solver with a strong symmetry boundary "
+      << "condition. This leads to an approximation of the momentum equation for the tangential "
+      << "velocity component(s) at the symmetry surface because it deletes LHS sensitivities."
+      << std::endl
+      << "Warning (cont): Testing shows the error to be negligible, but "
+      << "if strange behavior is encountered it is recommended that you "
+      << "switch to the monolithic solve (segregated_solver: no)."
+      << std::endl;
+  }
+
+  // register boundary data; velocity_bc
+  const std::string bcFieldName = "strong_sym_velocity";
+  VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>
+    (stk::topology::NODE_RANK, bcFieldName));
+  stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
+
+  std::vector<double> userSpec(nDim, 0.0);
+  AuxFunction *theAuxFunc = NULL;
+  Algorithm* auxAlg = NULL;
+
+  theAuxFunc = new ConstantAuxFunction(0, nDim, userSpec);
+  auxAlg = new AuxFunctionAlgorithm(realm_, part,theBcField, theAuxFunc,
+    stk::topology::NODE_RANK);
+  bcDataAlg_.push_back(auxAlg);
+
+  // copy velocity_bc to velocity np1
+  CopyFieldAlgorithm *theCopyAlg
+    = new CopyFieldAlgorithm(realm_, part,theBcField, &velocityNp1,0, nDim,
+  	  stk::topology::NODE_RANK);
+
+  bcDataMapAlg_.push_back(theCopyAlg);
+  const AlgorithmType symAlgType = pickTheType;
+
+  std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =
+    solverAlgDriver_->solverDirichAlgMap_.find(symAlgType);
+
+  if ( itd == solverAlgDriver_->solverDirichAlgMap_.end() ) {
+    DirichletBC *theAlg
+      = new DirichletBC(realm_, this, part, &velocityNp1, theBcField, beginPos, endPos);
+    solverAlgDriver_->solverDirichAlgMap_[symAlgType] = theAlg;
   }
   else {
-    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-
-    stk::topology elemTopo = get_elem_topo(realm_, *part);
-
-    AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
-    bool solverAlgWasBuilt = false;
-    const std::string algName = realm_.realmUsesEdges_ ? "symm_edge" : "symm_elem";
-
-    std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
-      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, algName);
-
-    auto& activeKernels = faceElemSolverAlg->activeKernels_;
-
-    if (solverAlgWasBuilt) {
-
-      const stk::mesh::MetaData& metaData = realm_.meta_data();
-      const std::string viscName = realm_.is_turbulent()
-        ? "effective_viscosity_u" : "viscosity";
-
-      if (realm_.realmUsesEdges_)
-        build_face_elem_topo_kernel_automatic<MomentumSymmetryEdgeKernel>
-          (partTopo, elemTopo, *this, activeKernels, "momentum_symmetry_edge",
-           metaData, *realm_.solutionOptions_,
-           metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity"),
-           metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName),
-           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_
-          );
-      else
-        build_face_elem_topo_kernel_automatic<MomentumSymmetryElemKernel>
-          (partTopo, elemTopo, *this, activeKernels, "momentum_symmetry_elem",
-           metaData, *realm_.solutionOptions_,
-           metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity"),
-           metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName),
-           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_
-          );
-    }
+    itd->second->partVec_.push_back(part);
   }
+
 }
 
 //--------------------------------------------------------------------------
@@ -2550,14 +2650,9 @@ MomentumEquationSystem::assemble_and_solve(
       projTimeScale = gamma1 / dt;
     }
 
-    const auto sel = meta.universal_part() & stk::mesh::selectField(*Udiag_);
-    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
-    for (auto b: bkts) {
-      double* field = (double*) stk::mesh::field_data(*Udiag_, *b);
-
-      for (size_t in=0; in < b->size(); in++)
-        field[in] = projTimeScale;
-    }
+    auto ngpUdiag = realm_.ngp_field_manager().get_field<double>(
+      Udiag_->mesh_meta_data_ordinal());
+    ngpUdiag.set_all(realm_.ngp_mesh(), projTimeScale);
   }
 
   // Perform actual solve
@@ -2761,11 +2856,8 @@ ContinuityEquationSystem::register_interior_algorithm(
     std::map<AlgorithmType, Algorithm *>::iterator itc =
       computeMdotAlgDriver_->algMap_.find(algType);
     if ( itc == computeMdotAlgDriver_->algMap_.end() ) {
-      ComputeMdotEdgeAlgorithm *theAlg
-        = new ComputeMdotEdgeAlgorithm(realm_, part);
-      computeMdotAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
+      computeMdotAlgDriver_->algMap_[algType] = new MdotEdgeAlg(realm_, part);
+    } else {
       itc->second->partVec_.push_back(part);
     }
 
@@ -3026,6 +3118,9 @@ ContinuityEquationSystem::register_inflow_bc(
       }
       else if ( fcnName == "wind_energy_power_law") {
           theAuxFunc = new WindEnergyPowerLawAuxFunction(0,nDim,theParams);
+      }
+      else if ( fcnName == "GaussJet") {
+        theAuxFunc = new GaussJetVelocityAuxFunction(0,nDim);
       }
       else {
         throw std::runtime_error("ContEquationSystem::register_inflow_bc: limited functions supported");

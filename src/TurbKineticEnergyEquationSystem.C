@@ -82,6 +82,7 @@
 #include <ngp_algorithms/NodalGradElemAlg.h>
 #include <ngp_algorithms/NodalGradBndryElemAlg.h>
 #include <ngp_algorithms/EffDiffFluxCoeffAlg.h>
+#include <ngp_algorithms/EffSSTDiffFluxCoeffAlg.h>
 #include <ngp_algorithms/TKEWallFuncAlg.h>
 
 // nso
@@ -141,7 +142,6 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
     tvisc_(NULL),
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "dkdx"),
-    wallFuncAlgDriver_(realm_),
     turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
     projectedNodalGradEqs_(NULL),
     isInit_(true)
@@ -444,7 +444,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     case SST_DES: {
       const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
       const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);
-      effDiffFluxCoeffAlg_.reset(new EffectiveSSTDiffFluxCoeffAlgorithm(
+      effDiffFluxCoeffAlg_.reset(new EffSSTDiffFluxCoeffAlg(
         realm_, part, visc_, tvisc_, evisc_, sigmaKOne, sigmaKTwo));
       break;
     }
@@ -656,12 +656,14 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
   }
 
   if ( wallFunctionApproach ) {
-
     // need to register the assembles wall value for tke; can not share with tke_bc
     ScalarFieldType *theAssembledField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "wall_model_tke_bc"));
     stk::mesh::put_field_on_mesh(*theAssembledField, *part, nullptr);
 
-    wallFuncAlgDriver_.register_face_algorithm<TKEWallFuncAlg>(
+    if (!wallFuncAlgDriver_)
+      wallFuncAlgDriver_.reset(new TKEWallFuncAlgDriver(realm_));
+
+    wallFuncAlgDriver_->register_face_algorithm<TKEWallFuncAlg>(
       algType, part, "tke_wall_func");
   }
   else if ( tkeSpecified ) {
@@ -931,7 +933,8 @@ TurbKineticEnergyEquationSystem::compute_effective_diff_flux_coeff()
 void
 TurbKineticEnergyEquationSystem::compute_wall_model_parameters()
 {
-  wallFuncAlgDriver_.execute();
+  if (wallFuncAlgDriver_)
+    wallFuncAlgDriver_->execute();
 }
 
 //--------------------------------------------------------------------------
