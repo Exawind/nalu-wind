@@ -27,6 +27,7 @@
 #include <stk_ngp/NgpFieldManager.hpp>
 
 #include "ngp_utils/NgpMeshInfo.h"
+#include "ngp_algorithms/GeometryAlgDriver.h"
 
 // standard c++
 #include <map>
@@ -54,7 +55,6 @@ class Algorithm;
 class AlgorithmDriver;
 class AuxFunctionAlgorithm;
 class ComputeGeometryAlgorithmDriver;
-class GeometryAlgDriver;
 
 class NonConformalManager;
 class ErrorIndicatorAlgorithmDriver;
