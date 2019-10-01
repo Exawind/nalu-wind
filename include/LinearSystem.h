@@ -213,7 +213,7 @@ public:
   bool & reusePreconditioner() {return reusePreconditioner_;}
   double get_timer_precond();
   void zero_timer_precond();
-
+  bool useSegregatedSolver() const;
 protected:
   virtual void beginLinearSystemConstruction()=0;
   virtual void checkError(
