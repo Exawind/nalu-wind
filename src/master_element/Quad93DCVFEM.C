@@ -326,6 +326,54 @@ Quad93DSCS::ipNodeMap(
 //--------------------------------------------------------------------------
 //-------- determinant -----------------------------------------------------
 //--------------------------------------------------------------------------
+KOKKOS_FUNCTION void 
+Quad93DSCS::determinant(
+    SharedMemView<DoubleType**, DeviceShmem>&coords,
+    SharedMemView<DoubleType**, DeviceShmem>&areav) 
+{
+  std::array<DoubleType,3> areaVector;
+  DoubleType dx_ds1 = 0.0; DoubleType dy_ds1 = 0.0; DoubleType dz_ds1 = 0.0;
+  DoubleType dx_ds2 = 0.0; DoubleType dy_ds2 = 0.0; DoubleType dz_ds2 = 0.0;
+
+  for (int ip = 0; ip < numIntPoints_; ++ip) {
+    const int grad_offset = surfaceDimension_ * nodesPerElement_ * ip;
+
+    // return the normal area vector given shape derivatives dnds OR dndt
+    dx_ds1 = 0.0; dy_ds1 = 0.0; dz_ds1 = 0.0;
+    dx_ds2 = 0.0; dy_ds2 = 0.0; dz_ds2 = 0.0;
+
+    for (int node = 0; node < nodesPerElement_; ++node) {
+      const int surface_vector_offset = grad_offset + surfaceDimension_ * node;
+
+      const DoubleType xCoord = coords(node,0);
+      const DoubleType yCoord = coords(node,1);
+      const DoubleType zCoord = coords(node,2);
+
+      const DoubleType dn_ds1 = shapeDerivs_[surface_vector_offset+0];
+      const DoubleType dn_ds2 = shapeDerivs_[surface_vector_offset+1];
+
+      dx_ds1 += dn_ds1 * xCoord;
+      dx_ds2 += dn_ds2 * xCoord;
+
+      dy_ds1 += dn_ds1 * yCoord;
+      dy_ds2 += dn_ds2 * yCoord;
+
+      dz_ds1 += dn_ds1 * zCoord;
+      dz_ds2 += dn_ds2 * zCoord;
+    }
+
+    //cross product
+    areaVector[0] = dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2;
+    areaVector[1] = dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2;
+    areaVector[2] = dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2;
+
+    // apply quadrature weight and orientation (combined as weight)
+    for (int j = 0; j < nDim_; ++j) {
+      areav(ip,j) = ipWeight_[ip] * areaVector[j];
+    }
+  }
+}
+
 void
 Quad93DSCS::determinant(
   const int nelem,
