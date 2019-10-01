@@ -45,7 +45,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
       0.19411612710296283
     };
 
-    const double tol = 1.0e-16;
+    const double tol = 1.0e-15;
 
     stk::mesh::Selector sel = meta_.universal_part();
     const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
