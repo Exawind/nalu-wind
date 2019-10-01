@@ -83,10 +83,6 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
   auto* meSCS = meSCS_;
   auto* meFC = meFC_;
 
-  // // Zero out nodal fields
-  // wdist.set_all(ngpMesh, 0.0);
-  // warea.set_all(ngpMesh, 0.0);
-
   nalu_ngp::run_face_elem_algorithm(
     meshInfo, faceData_, elemData_, sel,
     KOKKOS_LAMBDA(SimdDataType& fdata) {
@@ -120,51 +116,6 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
         areaOps(fdata, ni, 0) += aMag;
       }
     });
-
-  // {
-  //   // TODO replace logic with STK NGP parallel sum, but still need to handle
-  //   // periodic the old way
-  //   wdist.modify_on_device();
-  //   wdist.sync_to_host();
-  //   warea.modify_on_device();
-  //   warea.sync_to_host();
-
-  //   // Synchronize fields for parallel runs
-  //   stk::mesh::FieldBase* wallAreaF = meta.get_field(
-  //     stk::topology::NODE_RANK, "assembled_wall_area_wf");
-  //   stk::mesh::FieldBase* wallDistF = meta.get_field(
-  //     stk::topology::NODE_RANK, "assembled_wall_normal_distance");
-  //   stk::mesh::parallel_sum(realm_.bulk_data(),
-  //                           {wallAreaF, wallDistF});
-
-  //   if (realm_.hasPeriodic_) {
-  //     const unsigned nComponents = 1;
-  //     const bool bypassFieldChk = false;
-  //     realm_.periodic_field_update(wallAreaF, nComponents, bypassFieldChk);
-  //     realm_.periodic_field_update(wallDistF, nComponents, bypassFieldChk);
-  //   }
-
-  //   wdist.modify_on_host();
-  //   wdist.sync_to_device();
-  //   warea.modify_on_host();
-  //   warea.sync_to_device();
-
-  //   const stk::mesh::Selector sel =
-  //     (realm_.meta_data().locally_owned_part() |
-  //      realm_.meta_data().globally_shared_part()) &
-  //     stk::mesh::selectUnion(partVec_);
-
-  //   sierra::nalu::nalu_ngp::run_entity_algorithm(
-  //     ngpMesh, stk::topology::NODE_RANK, sel,
-  //     KOKKOS_LAMBDA(const MeshIndex& mi) {
-  //       wdist.get(mi, 0) /= warea.get(mi, 0);
-  //     });
-
-  //   // Indicate that we have modified but don't sync it
-  //   wdist.modify_on_device();
-  //   warea.modify_on_device();
-  //   wdistBip.modify_on_device();
-  // }
 }
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(WallFuncGeometryAlg)
