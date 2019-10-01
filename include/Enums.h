@@ -43,7 +43,11 @@ enum AlgorithmType{
    *
    * \sa FixPressureAtNodeAlgorithm
    */
-  REF_PRESSURE
+
+  REF_PRESSURE,
+  X_SYM_STRONG,
+  Y_SYM_STRONG,
+  Z_SYM_STRONG
 };
 
 enum BoundaryConditionType{

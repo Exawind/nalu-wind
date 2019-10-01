@@ -22,6 +22,10 @@ int main(int argc, char **argv)
     Kokkos::initialize(argc, argv);
     int returnVal = 0;
 
+#ifdef KOKKOS_ENABLE_CUDA
+    const size_t nalu_stack_size=16384;
+    cudaDeviceSetLimit (cudaLimitStackSize, nalu_stack_size);
+#endif
     // Create a dummy nested scope to ensure destructors are called before
     // Kokkos::finalize_all. The instances owning threaded Kokkos loops must be
     // cleared out before Kokkos::finalize is called.
