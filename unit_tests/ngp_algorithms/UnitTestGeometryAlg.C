@@ -114,7 +114,7 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
 
   geomAlgDriver.execute();
 
-  // Edge area vector check
+  // Exposed area vector check
   {
     stk::mesh::Selector sel(*part);
     const auto& bkts = bulk_.get_buckets(stk::topology::FACE_RANK, sel);
@@ -162,7 +162,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
 
   geomAlgDriver.execute();
 
-  // Edge area vector check
+  // wall distance and area check
   {
     stk::mesh::Selector sel(*part);
     const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
