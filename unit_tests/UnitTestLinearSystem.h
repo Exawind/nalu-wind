@@ -83,6 +83,16 @@ public:
   {
   }
 
+KOKKOS_FUNCTION
+void resetRows(unsigned /*numNodes*/,
+               const stk::mesh::Entity* /*nodeList*/,
+               const unsigned /*beginPos*/,
+               const unsigned /*endPos*/,
+               const double /*diag_value*/,
+               const double /*rhs_residual*/)
+{
+}
+
   KOKKOS_FUNCTION
   void operator()(unsigned numEntities,
                   const ngp::Mesh::ConnectedNodes& entities,
@@ -258,6 +268,14 @@ public:
 
   virtual void resetRows(
     const std::vector<stk::mesh::Entity>&  /* nodeList */,
+    const unsigned  /* beginPos */,
+    const unsigned  /* endPos */,
+    const double,
+    const double) {}
+
+  virtual void resetRows(
+    unsigned /*numNodes*/,
+    const stk::mesh::Entity*  /* nodeList */,
     const unsigned  /* beginPos */,
     const unsigned  /* endPos */,
     const double,

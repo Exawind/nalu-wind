@@ -125,6 +125,14 @@ public:
     const double diag_value = 0.0,
     const double rhs_residual = 0.0);
 
+  virtual void resetRows(
+    unsigned numNodes,
+    const stk::mesh::Entity* nodeList,
+    const unsigned beginPos,
+    const unsigned endPos,
+    const double diag_value = 0.0,
+    const double rhs_residual = 0.0);
+
   // Solve
   int solve(stk::mesh::FieldBase * linearSolutionField);
   void loadComplete();
@@ -177,6 +185,14 @@ public:
 
     KOKKOS_FUNCTION
     ~TpetraLinSysCoeffApplier() {}
+
+    KOKKOS_FUNCTION
+    virtual void resetRows(unsigned numNodes,
+                           const stk::mesh::Entity* nodeList,
+                           const unsigned beginPos,
+                           const unsigned endPos,
+                           const double diag_value = 0.0,
+                           const double rhs_residual = 0.0);
 
     KOKKOS_FUNCTION
     virtual void operator()(unsigned numEntities,

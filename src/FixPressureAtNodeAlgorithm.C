@@ -56,35 +56,79 @@ FixPressureAtNodeAlgorithm::execute()
   if (doInit_)
     initialize();
 
-  // Reset LHS and RHS for this matrix
-  eqSystem_->linsys_->resetRows(refNodeList_, 0, 1);
-
   int numNodes = refNodeList_.size();
   ThrowAssertMsg(numNodes <= 1,
                  "Invalid number of nodes encountered in FixPressureAtNodeAlgorithm");
 
-  // Fix the pressure for this node only if this is proc is owner
-  if (numNodes > 0 && fixPressureNode_) {
-    std::vector<double> lhs(1);
-    std::vector<double> rhs(1);
-    std::vector<int> scratchIds(1);
-    std::vector<double> scratchVals(1);
-    stk::mesh::Entity node = refNodeList_[0];
-    const double pressureN = *stk::mesh::field_data(*pressure_, node);
-
-    lhs[0] = 1.0; // Set diagonal entry to 1.0
-    rhs[0] = info_.refPressure_ - pressureN;
-
-    apply_coeff(refNodeList_, scratchIds, scratchVals, rhs, lhs, __FILE__);
+  stk::mesh::Entity targetNode = targetNode_;
+  if (numNodes == 0 || !realm_.bulk_data().is_valid(targetNode)) {
+    return;
   }
+
+  // Reset LHS and RHS for this matrix
+  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
+#ifdef KOKKOS_ENABLE_CUDA
+  CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
+#endif
+ 
+  ngp::Mesh ngpMesh = realm_.ngp_mesh();
+  NGPDoubleFieldType ngpPressure = realm_.ngp_field_manager().get_field<double>(pressure_->mesh_meta_data_ordinal());
+  double refPressure = info_.refPressure_;
+  const bool fixPressureNode = fixPressureNode_;
+
+  const int bytes_per_team = 0;
+  const int rhsSize = 1;
+  const int bytes_per_thread = rhsSize*((rhsSize+1)*sizeof(double)+2*sizeof(int)) +
+                               sizeof(SharedMemView<double**,DeviceShmem>) +
+                               sizeof(SharedMemView<double*,DeviceShmem>) +
+                               2*sizeof(SharedMemView<int*,DeviceShmem>);
+
+  const int threads_per_team = 1;
+  auto team_exec = get_device_team_policy(1, bytes_per_team, bytes_per_thread, threads_per_team);
+
+  Kokkos::parallel_for(team_exec, KOKKOS_LAMBDA(const DeviceTeamHandleType& team)
+  {
+    SharedMemView<double**,DeviceShmem> lhs = get_shmem_view_2D<double,DeviceTeamHandleType,DeviceShmem>(team, rhsSize, rhsSize);
+    SharedMemView<double*,DeviceShmem> rhs = get_shmem_view_1D<double,DeviceTeamHandleType,DeviceShmem>(team, rhsSize);
+    SharedMemView<int*,DeviceShmem> scratchIds = get_shmem_view_1D<int,DeviceTeamHandleType,DeviceShmem>(team, rhsSize);
+    SharedMemView<int*,DeviceShmem> sortPerm = get_shmem_view_1D<int,DeviceTeamHandleType,DeviceShmem>(team, rhsSize);
+
+    Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [=](const size_t& )
+    {
+      stk::mesh::Entity deviceTargetNode = targetNode;
+      ngp::Mesh::ConnectedNodes refNodeList(&deviceTargetNode, 1);
+#ifdef KOKKOS_ENABLE_CUDA
+      deviceCoeffApplier->resetRows(1, &deviceTargetNode, 0, 1);
+#else
+      coeffApplier->resetRows(1, &deviceTargetNode, 0, 1);
+#endif
+  
+      // Fix the pressure for this node only if this is proc is owner
+      if (numNodes > 0 && fixPressureNode) {
+        sortPerm(0) = 0;
+        const double pressureN = ngpPressure.get(ngpMesh, deviceTargetNode, 0);
+  
+        lhs(0,0) = 1.0; // Set diagonal entry to 1.0
+        rhs(0) = refPressure - pressureN;
+  
+#ifdef KOKKOS_ENABLE_CUDA
+        (*deviceCoeffApplier)(refNodeList.size(), refNodeList, scratchIds, sortPerm, rhs, lhs, __FILE__);
+#else
+        (*coeffApplier)(refNodeList.size(), refNodeList, scratchIds, sortPerm, rhs, lhs, __FILE__);
+#endif
+      }
+    });
+  });
+
+#ifdef KOKKOS_ENABLE_CUDA
+  coeffApplier->free_device_pointer();
+  delete coeffApplier;
+#endif
 }
 
 void
 FixPressureAtNodeAlgorithm::initialize()
 {
-  // Reset data structures
-  refNodeList_.clear();
-
   if (info_.lookupType_ == FixPressureAtNodeInfo::SPATIAL_LOCATION) {
     // Determine the nearest node where pressure is referenced
     auto nodeID = determine_nearest_node();
@@ -175,22 +219,14 @@ FixPressureAtNodeAlgorithm::process_pressure_fix_node(
   auto& bulk = realm_.bulk_data();
 
   // Store the target node on the owning processor as well as the shared processors.
-  stk::mesh::Entity targetNode = bulk.get_entity(stk::topology::NODE_RANK, nodeID);
-  if (bulk.is_valid(targetNode) &&
-      (bulk.bucket(targetNode).owned() ||
-       bulk.bucket(targetNode).shared())) {
-    refNodeList_.push_back(targetNode);
+  targetNode_ = bulk.get_entity(stk::topology::NODE_RANK, nodeID);
+  if (bulk.is_valid(targetNode_) &&
+      (bulk.bucket(targetNode_).owned() ||
+       bulk.bucket(targetNode_).shared())) {
+    refNodeList_ = ngp::Mesh::ConnectedNodes(&targetNode_, 1);
 
     // Only apply pressure correction on the owning processor
-    fixPressureNode_ = bulk.bucket(targetNode).owned();
-
-#if 0
-    if (bulk.parallel_owner_rank(targetNode) == bulk.parallel_rank()) {
-      std::cerr
-        << "FixPressureAtNodeAlgorithm: Node ID = "
-        << nodeID << "; Proc ID = " << bulk.parallel_rank() << std::endl;
-    }
-#endif
+    fixPressureNode_ = bulk.bucket(targetNode_).owned();
   } else {
     fixPressureNode_ = false;
   }

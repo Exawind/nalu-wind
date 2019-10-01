@@ -10,6 +10,7 @@
 
 #include "SolverAlgorithm.h"
 #include "FieldTypeDef.h"
+#include <stk_ngp/NgpMesh.hpp>
 
 #include <stk_mesh/base/Entity.hpp>
 
@@ -97,7 +98,8 @@ public:
   ScalarFieldType* pressure_{nullptr};
 
   //! List of nodes where pressure is referenced/fixed. Should be a list of size = 1
-  std::vector<stk::mesh::Entity> refNodeList_;
+  ngp::Mesh::ConnectedNodes refNodeList_;
+  stk::mesh::Entity targetNode_;
 
   //! Track mesh motion for reinitialization
   const bool meshMotion_{false};

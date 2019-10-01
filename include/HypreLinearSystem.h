@@ -192,6 +192,17 @@ public:
     checkSkippedRows_ = false;
   }
 
+  virtual void resetRows(
+    unsigned /*numNodes*/,
+    const stk::mesh::Entity* /*nodeList*/,
+    const unsigned,
+    const unsigned,
+    const double,
+    const double)
+  {
+    checkSkippedRows_ = false;
+  }
+
   /** Solve the system Ax = b
    *
    *  The solution vector is returned in linearSolutionField
