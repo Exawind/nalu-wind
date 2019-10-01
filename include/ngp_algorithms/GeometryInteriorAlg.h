@@ -38,10 +38,11 @@ public:
 
   virtual void execute() override;
 
-private:
-  void compute_dual_nodal_volume();
+  void impl_compute_edge_area_vector();
+  void impl_compute_dual_nodal_volume();
 
-  void compute_edge_area_vector();
+private:
+
 
   ElemDataRequests dataNeeded_;
 

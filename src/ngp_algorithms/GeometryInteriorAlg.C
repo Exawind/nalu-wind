@@ -50,14 +50,14 @@ GeometryInteriorAlg<AlgTraits>::GeometryInteriorAlg(
 template <typename AlgTraits>
 void GeometryInteriorAlg<AlgTraits>::execute()
 {
-  compute_dual_nodal_volume();
+  impl_compute_dual_nodal_volume();
 
   if (realm_.realmUsesEdges_)
-    compute_edge_area_vector();
+    impl_compute_edge_area_vector();
 }
 
 template <typename AlgTraits>
-void GeometryInteriorAlg<AlgTraits>::compute_dual_nodal_volume()
+void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
 {
   using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
 
@@ -95,7 +95,7 @@ void GeometryInteriorAlg<AlgTraits>::compute_dual_nodal_volume()
 }
 
 template <typename AlgTraits>
-void GeometryInteriorAlg<AlgTraits>::compute_edge_area_vector()
+void GeometryInteriorAlg<AlgTraits>::impl_compute_edge_area_vector()
 {
   using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
 
