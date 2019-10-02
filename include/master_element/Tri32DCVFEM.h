@@ -63,10 +63,10 @@ public:
     SharedMemView<DoubleType***, DeviceShmem>& deriv) override;
 
   KOKKOS_FUNCTION virtual void shape_fcn(
-    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
   KOKKOS_FUNCTION virtual void shifted_shape_fcn(
-    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
   void Mij(
     const double *coords,
@@ -231,13 +231,13 @@ public:
   const int * scsIpEdgeOrd() override;
 
   KOKKOS_FUNCTION virtual void shape_fcn(
-    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
   void shape_fcn(
     double *shpfc) override;
 
   KOKKOS_FUNCTION virtual void shifted_shape_fcn(
-    SharedMemView<DoubleType**, DeviceShmem> &shpfc);
+    SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
 
   void shifted_shape_fcn(
     double *shpfc) override;
