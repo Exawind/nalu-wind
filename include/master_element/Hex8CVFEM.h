@@ -290,7 +290,7 @@ public:
 
   KOKKOS_FUNCTION virtual const int * adjacentNodes() final;
 
-  const int * scsIpEdgeOrd();
+  KOKKOS_FUNCTION virtual const int * scsIpEdgeOrd() final;
 
   void shape_fcn(
     double *shpfc);
