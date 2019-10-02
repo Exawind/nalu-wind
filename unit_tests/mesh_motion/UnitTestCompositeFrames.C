@@ -7,6 +7,7 @@
 #include "mesh_motion/MotionTranslation.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
+#include "TimeIntegrator.h"
 
 #include "UnitTestRealm.h"
 #include "UnitTestUtils.h"
@@ -148,6 +149,9 @@ TEST(meshMotion, meshMotionAlg_initialize)
   sierra::nalu::Realm& realm = naluObj.create_realm();
   realm.solutionOptions_->meshMotion_ = true;
 
+  sierra::nalu::TimeIntegrator timeIntegrator;
+  timeIntegrator.secondOrderTimeAccurate_ = false;
+  realm.timeIntegrator_ = &timeIntegrator;
   // register mesh motion fields and initialize coordinate fields
   realm.register_nodal_fields( &(realm.meta_data().universal_part()) );
   realm.init_current_coordinates();
@@ -210,6 +214,10 @@ TEST(meshMotion, meshMotionAlg_execute)
   unit_test_utils::NaluTest naluObj;
   sierra::nalu::Realm& realm = naluObj.create_realm();
   realm.solutionOptions_->meshMotion_ = true;
+
+  sierra::nalu::TimeIntegrator timeIntegrator;
+  timeIntegrator.secondOrderTimeAccurate_ = false;
+  realm.timeIntegrator_ = &timeIntegrator;
 
   // register mesh motion fields and initialize coordinate fields
   realm.register_nodal_fields( &(realm.meta_data().universal_part()) );
