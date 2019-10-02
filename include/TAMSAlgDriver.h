@@ -8,12 +8,14 @@
 #ifndef TAMSAlgDriver_h
 #define TAMSAlgDriver_h
 
-#include <FieldTypeDef.h>
+#include "FieldTypeDef.h"
+#include "Algorithm.h"
 #include "ngp_algorithms/NgpAlgDriver.h"
 #include "ngp_algorithms/FieldUpdateAlgDriver.h"
 #include "ngp_algorithms/TAMSAvgMdotEdgeAlg.h"
 #include "ngp_algorithms/TAMSAvgMdotElemAlg.h"
 #include "ngp_algorithms/SSTTAMSAveragesAlg.h"
+#include "ngp_algorithms/TurbViscSSTAlg.h"
 
 namespace stk {
 struct topology;
@@ -60,6 +62,7 @@ private:
   bool isInit_;
   FieldUpdateAlgDriver metricTensorAlgDriver_;
   std::unique_ptr<SSTTAMSAveragesAlg> avgAlg_;
+  std::unique_ptr<Algorithm> tviscAlg_;
   NgpAlgDriver avgMdotAlg_;
 
   const TurbulenceModel turbulenceModel_;
