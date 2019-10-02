@@ -70,15 +70,15 @@ TurbViscSSTAlg::execute()
           sijMag += rateOfStrain*rateOfStrain;
         }
       }
-      sijMag = std::sqrt(2.0*sijMag);
+      sijMag = stk::math::sqrt(2.0*sijMag);
 
       const DblType minDSq = minD.get(meshIdx, 0)*minD.get(meshIdx, 0);
-      const DblType trbDiss = std::sqrt(tke.get(meshIdx, 0))/betaStar/sdr.get(meshIdx, 0)/minD.get(meshIdx, 0);
+      const DblType trbDiss = stk::math::sqrt(tke.get(meshIdx, 0))/betaStar/sdr.get(meshIdx, 0)/minD.get(meshIdx, 0);
       const DblType lamDiss = 500.0*visc.get(meshIdx, 0)/density.get(meshIdx, 0)/sdr.get(meshIdx, 0)/minDSq;
-      const DblType fArgTwo = std::max(2.0*trbDiss, lamDiss);
-      const DblType fTwo = std::tanh(fArgTwo*fArgTwo);
+      const DblType fArgTwo = stk::math::max(2.0*trbDiss, lamDiss);
+      const DblType fTwo = stk::math::tanh(fArgTwo*fArgTwo);
 
-      tvisc.get(meshIdx, 0) = aOne*density.get(meshIdx, 0)*tke.get(meshIdx, 0)/std::max(aOne*sdr.get(meshIdx, 0), sijMag*fTwo);
+      tvisc.get(meshIdx, 0) = aOne*density.get(meshIdx, 0)*tke.get(meshIdx, 0)/stk::math::max(aOne*sdr.get(meshIdx, 0), sijMag*fTwo);
     });
 }
 
