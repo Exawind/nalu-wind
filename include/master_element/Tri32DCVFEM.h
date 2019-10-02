@@ -228,7 +228,7 @@ public:
 
   KOKKOS_FUNCTION const int * adjacentNodes() final;
 
-  const int * scsIpEdgeOrd() override;
+  KOKKOS_FUNCTION const int * scsIpEdgeOrd() final;
 
   KOKKOS_FUNCTION virtual void shape_fcn(
     SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;

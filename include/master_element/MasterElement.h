@@ -199,8 +199,9 @@ public:
     return nullptr;
   }
 
-  virtual const int * scsIpEdgeOrd() {
-    throw std::runtime_error("scsIpEdgeOrd not implemented");
+  KOKKOS_FUNCTION virtual const int * scsIpEdgeOrd() {
+    NGP_ThrowErrorMsg("MasterElement::scsIpEdgeOrd not implemented");
+    return nullptr;
   }
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int /* ordinal */ = 0) const {

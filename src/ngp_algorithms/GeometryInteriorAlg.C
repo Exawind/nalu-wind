@@ -69,6 +69,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
   auto elemVol = fieldMgr.template get_field<double>(elemVol_);
   const auto dnvOps = nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, dualVol);
   const auto elemVolOps = nalu_ngp::simd_elem_field_updater(ngpMesh, elemVol);
+  MasterElement *meSCV = meSCV_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_)
@@ -77,8 +78,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
   nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata){
-      const int* ipNodeMap = meSCV_->ipNodeMap();
-
+      const int* ipNodeMap = meSCV->ipNodeMap();
       auto& scrView = edata.simdScrView;
       const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
       const auto& v_scv_vol = meViews.scv_volume;
@@ -104,6 +104,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_edge_area_vector()
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto edgeAreaVec = fieldMgr.template get_field<double>(edgeAreaVec_);
+  MasterElement *meSCS = meSCS_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_)
@@ -112,8 +113,8 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_edge_area_vector()
   nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
-      const int* lrscv = meSCS_->adjacentNodes();
-      const int* scsIpEdgeMap = meSCS_->scsIpEdgeOrd();
+      const int* lrscv = meSCS->adjacentNodes();
+      const int* scsIpEdgeMap = meSCS->scsIpEdgeOrd();
 
       auto& scrView = edata.simdScrView;
       const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);

@@ -223,7 +223,7 @@ public:
 
   KOKKOS_FUNCTION virtual const int * adjacentNodes() final;
 
-  const int * scsIpEdgeOrd() override;
+  KOKKOS_FUNCTION virtual const int * scsIpEdgeOrd() final;
 
   KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node) override;
