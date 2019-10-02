@@ -2782,9 +2782,12 @@ Realm::register_nodal_fields(
   const int nDim = metaData_->spatial_dimension();
 
   // Declare volume/area_vector fields
+  const int numVolStates = does_mesh_move() ? number_of_states() : 1;
   auto& dualNodalVol = metaData_->declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume");
+    stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates);
   stk::mesh::put_field_on_mesh(dualNodalVol, *part, 1, nullptr);
+  if (numVolStates > 1)
+    augment_restart_variable_list("dual_nodal_volume");
   auto& elemVol = metaData_->declare_field<ScalarFieldType>(stk::topology::ELEM_RANK, "element_volume");
   stk::mesh::put_field_on_mesh(elemVol, *part, 1, nullptr);
 
