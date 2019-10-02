@@ -55,7 +55,8 @@ MetricTensorElemAlg<AlgTraits>::execute()
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
-  auto Mij = fieldMgr.get_field<double>(nodalMij_);
+  auto Mij = fieldMgr.template get_field<double>(nodalMij_);
+  const auto MijOps = nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, Mij);
 
   // Bring class members into local scope for device capture
   const auto dnvID = dualNodalVol_;
