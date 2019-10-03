@@ -37,6 +37,8 @@ public:
 
   void register_fields_and_algorithms(
     stk::mesh::Part* part, const stk::topology& theTopo);
+  void execute();
+  void initial_work();
   void compute_metric_tensor();
   void compute_averages();
   void compute_avgMdot();

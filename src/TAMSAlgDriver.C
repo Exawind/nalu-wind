@@ -9,6 +9,9 @@
 #include "master_element/MasterElementFactory.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
+#include "utils/StkHelpers.h"
+#include "ngp_utils/NgpTypes.h"
+#include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_algorithms/MetricTensorElemAlg.h"
 
 namespace sierra {
@@ -123,7 +126,7 @@ TAMSAlgDriver::register_fields_and_algorithms(
   }
 
   // Algorithms
-    const AlgorithmType algType = INTERIOR;
+  const AlgorithmType algType = INTERIOR;
 
   metricTensorAlgDriver_.register_elem_algorithm<MetricTensorElemAlg>(
     algType, part, "metric_tensor");
@@ -162,7 +165,104 @@ TAMSAlgDriver::register_fields_and_algorithms(
   } else {
     tviscAlg_->partVec_.push_back(part);
   }
+}
 
+void
+TAMSAlgDriver::initial_work()
+{
+  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+
+  compute_metric_tensor();
+
+  // Initialize average_velocity, avg_dudx, avg_Prod
+  // We don't want to do this on restart where TAMS fields are present
+  if (resetTAMSAverages_) {
+    const auto& meta = realm_.meta_data();
+    const auto& ngpMesh = realm_.ngp_mesh();
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    const stk::mesh::Selector sel =
+      (meta.locally_owned_part() | meta.globally_shared_part() |
+       meta.aura_part()) &
+      stk::mesh::selectField(*avgVelocity_);
+    const int nDim = meta.spatial_dimension();
+
+    // Copy velocity to average velocity
+    auto& avgU = fieldMgr.get_field<double>(
+      avgVelocity_->field_of_state(stk::mesh::StateNP1)
+        .mesh_meta_data_ordinal());
+    const unsigned velocityID = get_field_ordinal(meta, "velocity");
+    const auto& U = fieldMgr.get_field<double>(velocityID);
+    nalu_ngp::field_copy(ngpMesh, sel, avgU, U, nDim);
+
+    // Copy dudx to average dudx
+    auto avgDudx =
+      fieldMgr.get_field<double>(avgDudx_->mesh_meta_data_ordinal());
+    const auto& dudx =
+      fieldMgr.get_field<double>(get_field_ordinal(meta, "dudx"));
+    nalu_ngp::field_copy(ngpMesh, sel, avgDudx, dudx, nDim * nDim);
+
+    // Need to update tvisc (avgDudx didn't exist)
+    // before this to compute production
+    tviscAlg_->execute();
+    const auto tvisc = fieldMgr.get_field<double>(
+      get_field_ordinal(meta, "turbulent_viscosity"));
+
+    // Compute average production
+    auto avgProd =
+      fieldMgr.get_field<double>(avgProduction_->mesh_meta_data_ordinal());
+    nalu_ngp::run_entity_algorithm(
+      ngpMesh, stk::topology::NODE_RANK, sel,
+      KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
+        std::vector<DblType> tij(nDim * nDim, 0.0);
+        for (int i = 0; i < nDim; ++i) {
+          for (int j = 0; j < nDim; ++j) {
+            const DblType avgSij = 0.5 * (avgDudx.get(mi, i * nDim + j) +
+                                          avgDudx.get(mi, j * nDim + i));
+            tij[i * nDim + j] = 2.0 * tvisc.get(mi, 0) * avgSij;
+          }
+        }
+
+        std::vector<DblType> Pij(nDim * nDim, 0.0);
+        for (int i = 0; i < nDim; ++i) {
+          for (int j = 0; j < nDim; ++j) {
+            Pij[i * nDim + j] = 0.0;
+            for (int m = 0; m < nDim; ++m) {
+              Pij[i * nDim + j] +=
+                avgDudx.get(mi, i * nDim + m) * tij[j * nDim + m] +
+                avgDudx.get(mi, j * nDim + m) * tij[i * nDim + m];
+            }
+            Pij[i * nDim + j] *= 0.5;
+          }
+        }
+
+        DblType instProd = 0.0;
+        for (int i = 0; i < nDim; ++i)
+          instProd += Pij[i * nDim + i];
+
+        avgProd.get(mi, 0) = instProd;
+      });
+
+    avgProd.modify_on_device();
+  }
+
+  //FIXME initialize mdot here
+}
+
+void
+TAMSAlgDriver::execute()
+{
+  if (
+    realm_.solutionOptions_->meshMotion_ ||
+    realm_.solutionOptions_->externalMeshDeformation_) {
+    metricTensorAlgDriver_.execute();
+  }
+  avgAlg_->execute();
+  if (
+    realm_.solutionOptions_->meshMotion_ ||
+    realm_.solutionOptions_->externalMeshDeformation_) {
+    realm_.compute_vrtm("average_velocity");
+  }
+  avgMdotAlg_.execute();
 }
 
 } // namespace nalu
