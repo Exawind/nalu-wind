@@ -34,10 +34,8 @@ MomentumCoriolisSrcElemKernel<AlgTraits>::MomentumCoriolisSrcElemKernel(
   VectorFieldType* velocity,
   ElemDataRequests& dataPreReqs,
   bool lumped)
-  : Kernel(),
-    cor_(solnOpts),
-    velocityNp1_(velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal()),
-    ipNodeMap_(sierra::nalu::MasterElementRepo::get_volume_master_element(AlgTraits::topo_)->ipNodeMap())
+  : cor_(solnOpts),
+    velocityNp1_(velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal())
 {
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   ThrowRequireMsg(metaData.spatial_dimension() == 3u, "Coriolis source term only available in 3D");
@@ -54,8 +52,9 @@ MomentumCoriolisSrcElemKernel<AlgTraits>::MomentumCoriolisSrcElemKernel(
     get_scv_shape_fn_data<AlgTraits>([&](double* ptr){meSCV->shape_fcn(ptr);}, v_shape_function_);
   }
 
-  // add master elements
-  dataPreReqs.add_cvfem_volume_me(meSCV);
+  // add device master elements
+  meSCV_ = MasterElementRepo::get_volume_master_element<AlgTraits>();
+  dataPreReqs.add_cvfem_volume_me(meSCV_);
 
   // fields and data
   dataPreReqs.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
@@ -65,21 +64,19 @@ MomentumCoriolisSrcElemKernel<AlgTraits>::MomentumCoriolisSrcElemKernel(
 }
 
 template<class AlgTraits>
-MomentumCoriolisSrcElemKernel<AlgTraits>::~MomentumCoriolisSrcElemKernel() {}
-
-template<class AlgTraits>
 void
 MomentumCoriolisSrcElemKernel<AlgTraits>::execute(
-  SharedMemView<DoubleType **>& lhs,
-  SharedMemView<DoubleType *>& rhs,
-  ScratchViews<DoubleType>& scratchViews)
+  SharedMemView<DoubleType **, DeviceShmem>& lhs,
+  SharedMemView<DoubleType *, DeviceShmem>& rhs,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
-  SharedMemView<DoubleType**>& v_velocityNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
-  SharedMemView<DoubleType*>& v_densityNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
-  SharedMemView<DoubleType*>& v_scv_volume = scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
+  SharedMemView<DoubleType**,DeviceShmem>& v_velocityNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
+  SharedMemView<DoubleType*,DeviceShmem>& v_densityNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
+  SharedMemView<DoubleType*,DeviceShmem>& v_scv_volume = scratchViews.get_me_views(CURRENT_COORDINATES).scv_volume;
 
+  const int* ipNodeMap = meSCV_->ipNodeMap();
   for (int ip = 0; ip < AlgTraits::numScvIp_; ++ip) {
-    const int nnDim = ipNodeMap_[ip] * AlgTraits::nDim_;
+    const int nnDim = ipNodeMap[ip] * AlgTraits::nDim_;
     NALU_ALIGNED DoubleType uIp[3] = { 0.0, 0.0, 0.0 };
     DoubleType rhoIp = 0.0;
     for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {

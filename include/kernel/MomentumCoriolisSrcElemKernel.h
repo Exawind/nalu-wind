@@ -23,7 +23,7 @@ namespace sierra{
 namespace nalu{
 
 template<typename AlgTraits>
-class MomentumCoriolisSrcElemKernel: public Kernel
+class MomentumCoriolisSrcElemKernel: public NGPKernel<MomentumCoriolisSrcElemKernel<AlgTraits>>
 {
 public:
   MomentumCoriolisSrcElemKernel(
@@ -33,23 +33,24 @@ public:
     ElemDataRequests& dataPreReqs,
     bool lumped);
 
-  virtual ~MomentumCoriolisSrcElemKernel();
+  virtual ~MomentumCoriolisSrcElemKernel() = default;
 
   using Kernel::execute;
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType**>&,
-    SharedMemView<DoubleType*>&,
-    ScratchViews<DoubleType>&);
+    SharedMemView<DoubleType**, DeviceShmem>&,
+    SharedMemView<DoubleType*, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  MomentumCoriolisSrcElemKernel() = delete;
+  KOKKOS_FUNCTION MomentumCoriolisSrcElemKernel() = delete;
 
   CoriolisSrc cor_;
   unsigned velocityNp1_ {stk::mesh::InvalidOrdinal};
   unsigned densityNp1_ {stk::mesh::InvalidOrdinal};
   unsigned coordinates_ {stk::mesh::InvalidOrdinal};
 
-  const int* ipNodeMap_;
+  MasterElement *meSCV_{nullptr};
 
   // fixed scratch space
   AlignedViewType<DoubleType[AlgTraits::numScvIp_][AlgTraits::nodesPerElement_]> v_shape_function_{"v_shape_function"};
@@ -58,4 +59,4 @@ private:
 } // namespace nalu
 } // namespace Sierra
 
-#endif
+#endif /* MomentumCoriolisSrcElemKernel_h */
