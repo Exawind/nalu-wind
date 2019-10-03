@@ -54,7 +54,7 @@ public:
 
   KOKKOS_FUNCTION virtual void determinant(
     SharedMemView<DoubleType**, DeviceShmem>&coords ,
-    SharedMemView<DoubleType**, DeviceShmem>&areav);
+    SharedMemView<DoubleType**, DeviceShmem>&areav) override;
 
   void determinant(
     const int nelem,
