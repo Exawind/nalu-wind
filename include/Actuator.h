@@ -69,23 +69,63 @@ public:
       bestX_(bestX),
       bestElem_(bestElem)
   {
+      
   }
   virtual ~ActuatorPointInfo() {}
 
-  Point centroidCoords_; ///< The coordinates of the actuator point.
-  double searchRadius_; ///< Elements within this search radius will be affected
-  ///< by this actuator point.
-  double bestX_; ///< A number returned by stk::isInElement that determines
-  ///< whether an actuator point is inside (< 1) or outside an
-  ///< element (> 1). However, we choose the bestElem_ for this
-  ///< actuator point to be the one with the lowest bestX_.
-  stk::mesh::Entity
-  bestElem_; ///< The element within which the actuator point lies.
-  std::vector<double>
-  isoParCoords_; ///< The isoparametric coordinates of the bestElem_.
-  std::set<stk::mesh::Entity>
-  nodeVec_; ///< A list of nodes that are part of elements that lie within the
-  ///< searchRadius_ around the actuator point.
+  /*
+  * These are all the parameters used to compute the missing velocity
+  * along the blade from the optimal epsilon.
+  * This is all based on filtered lifting line theory
+  * From Martinez and Meneveau JFM 2019
+  */
+  
+  // The density at this actuator point
+  double rho;
+
+  // The lift distribution from iltered lifting line theory
+  // G = 1/2 c mag(V_rel) Cl Vrel cross vect
+  std::array<double, 3> G{0};
+
+  // The gradient of the function G
+  std::array<double, 3> dG{0};
+
+  // The induced velocity from the LES
+  std::array<double, 3> u_LES{0};
+
+  // The induced velocity from the optimal distribution
+  std::array<double, 3> u_opt{0};
+
+  // The difference between the induced velocities
+  std::array<double, 3> du{0};
+
+  // The relaxation factor
+  // The recommended value is f=0.1
+  const double f=0.1;
+
+  // The coordinates of the actuator point.
+  Point centroidCoords_; 
+
+  // Elements within this search radius will be affected
+  //   by this actuator point.
+  double searchRadius_; 
+
+  // A number returned by stk::isInElement that determines
+  // whether an actuator point is inside (< 1) or outside an
+  // element (> 1). However, we choose the bestElem_ for this
+  // actuator point to be the one with the lowest bestX_.
+  double bestX_; 
+
+  // The element within which the actuator point lies.
+  stk::mesh::Entity bestElem_; 
+
+  // The isoparametric coordinates of the bestElem_.
+  std::vector<double> isoParCoords_; 
+
+  // A list of nodes that are part of elements that lie within the
+  //   searchRadius_ around the actuator point.
+  std::set<stk::mesh::Entity> nodeVec_; 
+
 };
 
 class Actuator

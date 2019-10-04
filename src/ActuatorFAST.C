@@ -46,7 +46,10 @@ namespace nalu {
 // constructor
 ActuatorFASTInfo::ActuatorFASTInfo() : ActuatorInfo()
 {
-  // nothing to do
+  // Initialize the filtered lifting line correciton to false
+  // This is later read from the yaml input file and can be changed
+  martinez_correction_ = false;
+  
 }
 
 // destructor
@@ -62,12 +65,15 @@ ActuatorFASTPointInfo::ActuatorFASTPointInfo(
   double searchRadius,
   // The values of epsilon [m]
   Coordinates epsilon,
+  // The optimal epsilon [m]
+  Coordinates epsilon_opt,
   fast::ActuatorNodeType nType,
   int forceInd)
   : ActuatorPointInfo(
       centroidCoords, searchRadius, 1.0e16, stk::mesh::Entity()),
     globTurbId_(globTurbId),
     epsilon_(epsilon),
+    epsilon_opt_(epsilon_opt),
     nodeType_(nType),
     forcePntIndex_(forceInd)
 {
@@ -198,7 +204,10 @@ ActuatorFAST::load(const YAML::Node& y_node)
           const YAML::Node cur_turbine =
             y_actuator["Turbine" + std::to_string(iTurb)];
 
+          // Append a new object to the arrary
           actuatorInfo_.emplace_back(new ActuatorFASTInfo());
+
+          // Point to the last element of this array that was just appended
           auto actuatorFASTInfo =
             dynamic_cast<ActuatorFASTInfo*>(actuatorInfo_.back().get());
 
@@ -211,6 +220,12 @@ ActuatorFAST::load(const YAML::Node& y_node)
             actuatorFASTInfo->fileToDumpPoints_ = turbFileName;
           }
 
+          // The correction from filtered lifting line theory
+          const YAML::Node martinez_correction = 
+                  cur_turbine["martinez_correction"];
+          // Pass the correction value (true or false)
+          actuatorFASTInfo->martinez_correction_ = martinez_correction;
+
           // The value epsilon / chord [non-dimensional]
           // This is a vector containing the values for:
           //   - chord aligned (x),
@@ -222,7 +237,7 @@ ActuatorFAST::load(const YAML::Node& y_node)
           // If it is not given, set it to zero, such
           // that it is smaller than the standard epsilon and
           // will not be used
-          if ( epsilon_chord )
+          if ( epsilon_chord or martinez_correction)
           {
             // epsilon / chord
             actuatorFASTInfo->epsilon_chord_ = epsilon_chord.as<Coordinates>();
@@ -607,9 +622,24 @@ ActuatorFAST::execute()
       1, bestElem, bulkData, infoObject->isoParCoords_.data(), &ws_density_[0],
       &ws_pointGasDensity);
     int nNp = (int)np;
+    
+    
+    /////////////////////////
+    // Add the filtered lifting line theory correction here
+    // This adds an extra component of velocity in every direction
+    /////////////////////////
+    for (int i=0; i<nDim; i++) 
+      ws_pointGasVelocity.data()[i] += infoObject -> du.data()[i];
+    
+    // Set the CFD velocity at the actuator node
     FAST.setVelocityForceNode(
-      ws_pointGasVelocity, nNp, infoObject->globTurbId_);
+    ws_pointGasVelocity, nNp, infoObject->globTurbId_);
+
   }
+  
+  // Add the filtered lifting line correction
+  filtered_lifting_line();
+
 
   if (!FAST.isDryRun()) {
 
@@ -677,6 +707,315 @@ ActuatorFAST::execute()
 
   const std::vector<const stk::mesh::FieldBase*> sumFieldG(1, g);
   stk::mesh::parallel_sum_including_ghosts(bulkData, sumFieldG);
+}
+
+
+// Copmute the filtered lifting line theory correction
+void ActuatorFAST::filtered_lifting_line()
+{
+
+  // The number of dimensions (assumes 3D)
+  int nDim=3;
+
+  // The total number of turbines
+  const size_t numTurbines = fi.nTurbinesGlob;
+
+  // The index of actuator point
+  // This identifiex an actuator point in a vector containing all actuator
+  // points in the simulation
+  size_t np;
+
+
+  // Loop through all turbines
+  for (size_t iTurb=0; iTurb < numTurbines; iTurb++ )
+  {
+
+    // Only use if correction is active for this turbine
+    // Point to the last element of this array that was just appended
+    auto actuatorFASTInfo = dynamic_cast<ActuatorFASTInfo*>(
+      actuatorInfo_.at(iTurb).get());
+
+    // If the correciton is not active for this turbine, skip this turbine
+    if ( ! actuatorFASTInfo -> martinez_correction_) continue;
+
+    // Number of blades
+    const size_t numBlades = FAST.get_numBlades(iTurb);
+    // The total number of actuator points in all blades
+    const size_t totalActuatorNodes = FAST.get_numForcePtsBlade(iTurb);
+    // The total number of actuator points per blade
+    const size_t ptsPerBlade = totalActuatorNodes / numBlades;
+
+    ///////////////////////////////
+    // Step 1: Compute function G
+    ///////////////////////////////
+
+    // The force at the given actuator point
+    std::vector<double> force(nDim);
+    // The velocity at a given actuator point
+    std::vector<double> vel(nDim);
+
+    // Loop through all blade points
+    for (size_t nb=0; nb < numBlades; nb++)
+      {
+      // Loop through all blade points
+      for (size_t na=0; na < ptsPerBlade; na++)
+        {
+          // The actuator point index
+          np = indexMap_[iTurb][nb][na];
+
+          // actuator line info object of interest
+          auto infoObject =
+            dynamic_cast<ActuatorFASTPointInfo*>(
+              actuatorPointInfoMap_.at(np).get());
+        
+          // Get the force from FAST
+          FAST.getForce(force, np, infoObject->globTurbId_);
+          // Get the velocity from FAST
+          FAST.getVelNodeCoordinates(vel, np, infoObject->globTurbId_);
+        
+          // The velocity magnitude squared
+          double vmag2(0);
+          // Compute the dot product of the velocity (vmag^2)
+          for (int i = 0; i < nDim; i++) vmag2 += vel[i] * vel[i];
+
+          // The dot product of velocity and force
+          double fvel(0);
+          // Compute the dot product of the velocity (vmag^2)
+          for (int i = 0; i < nDim; i++) fvel += force[i] * vel[i];
+            
+          // Compute the function G
+          // This is the same as the lift vector along the blade span
+          for (int i = 0; i < nDim; i++)
+          {
+              infoObject -> G.data()[i] = force[i] - vel[i] * fvel / vmag2;
+
+              // Zero the induced velocity values
+              infoObject -> u_LES.data()[i] = 0;
+              infoObject -> u_opt.data()[i] = 0;
+          }
+        }
+
+      }
+
+    ///////////////////////////////
+    // Step 2: Compute gradient of G
+    ///////////////////////////////
+  // Compute the gradient of the function G for filtered liting line theory
+  //~ for (size_t iTurb=0; iTurb < numTurbines; iTurb++ )
+  //~ {
+    // Number of blades
+    //~ const size_t numBlades = FAST.get_numBlades(iTurb);
+    // The total number of actuator points in all blades
+    //~ const size_t totalActuatorNodes = FAST.get_numForcePtsBlade(iTurb);
+    // The total number of actuator points per blade
+    //~ const size_t ptsPerBlade = totalActuatorNodes / numBlades;
+
+    // Loop through all blades
+    for (size_t nb=0; nb < numBlades; nb++)
+      {
+
+      // The first actuator point
+      np = indexMap_[iTurb][nb][0];
+      auto infoObject_0 =
+          dynamic_cast<ActuatorFASTPointInfo*>(
+            actuatorPointInfoMap_.at(np).get());
+      // The last actuator point
+      np = indexMap_[iTurb][nb][ptsPerBlade-1];
+      auto infoObject_N =
+          dynamic_cast<ActuatorFASTPointInfo*>(
+            actuatorPointInfoMap_.at(np).get());
+
+      // The gradient of the first and last points
+      for (int i = 0; i < nDim; i++) {
+        infoObject_0 -> dG.data()[i] = infoObject_0 -> G.data()[i];
+        infoObject_N -> dG.data()[i] = infoObject_N -> G.data()[i];
+      }
+
+      // Loop through all blade points
+      for (size_t na=1; na < ptsPerBlade-1; na++)
+        {
+          // The actuator point index
+          np = indexMap_[iTurb][nb][na];
+          // Index before np - 1
+          size_t np_m1 = indexMap_[iTurb][nb][na-1];
+          // Index after np + 1
+          size_t np_p1 = indexMap_[iTurb][nb][na+1];
+
+          // actuator line info object of interest
+          // This is where dG is being computed
+          auto infoObject =
+              dynamic_cast<ActuatorFASTPointInfo*>(
+                actuatorPointInfoMap_.at(np).get());
+          auto infoObject_m1 =
+              dynamic_cast<ActuatorFASTPointInfo*>(
+                actuatorPointInfoMap_.at(np_m1).get());
+          auto infoObject_p1 =
+              dynamic_cast<ActuatorFASTPointInfo*>(
+                actuatorPointInfoMap_.at(np_p1).get());
+
+        // Compute the gradient using central differencing
+        for (int i = 0; i < nDim; i++) {
+          // Central differencing
+          infoObject -> dG.data()[i] = (infoObject_p1 -> G.data()[i] - 
+            infoObject_m1 -> G.data()[i]) / 2;
+          }
+        }
+      }
+  //~ }  
+  
+  
+    ///////////////////////////////
+    // Step 3: Compute the induced velocities
+    ///////////////////////////////
+  //~ for (size_t iTurb=0; iTurb < numTurbines; iTurb++ )
+  //~ {
+    // Number of blades
+    //~ const size_t numBlades = FAST.get_numBlades(iTurb);
+    // The total number of actuator points in all blades
+    //~ const size_t totalActuatorNodes = FAST.get_numForcePtsBlade(iTurb);
+    // The total number of actuator points per blade
+    //~ const size_t ptsPerBlade = totalActuatorNodes / numBlades;
+
+    // Loop through all blades
+    for (size_t nb=0; nb < numBlades; nb++)
+    {
+      // Loop through all blade points
+      for (int na=0; na < static_cast<int>(ptsPerBlade); na++)
+      {
+        // The actuator point index
+        np = indexMap_[iTurb][nb][na];
+        // The actuator point object
+        auto infoObject =
+            dynamic_cast<ActuatorFASTPointInfo*>(
+              actuatorPointInfoMap_.at(np).get());
+
+        // The coordinate of the actuator point
+        const Point& r1= infoObject -> centroidCoords_;
+
+        // Loop through all blade points
+        for (int na_2=0; na_2 < static_cast<int>(ptsPerBlade); na_2++)
+        {
+
+          // Do not compute if at the same actuator point
+          // In this case, the induction is zero
+          if (na == na_2) continue;
+
+          // The actuator point index
+          size_t np_2 = indexMap_[iTurb][nb][na_2];
+
+          // The actuator point object
+          auto infoObject2 =
+            dynamic_cast<ActuatorFASTPointInfo*>(
+              actuatorPointInfoMap_.at(np_2).get());
+
+          // The coordinate of the actuator point
+          const Point& r2 = infoObject2 -> centroidCoords_;
+
+          // Initialize the sqare of the difference to zero
+          double rdiff2(0);
+          // Compute the difference in radial location
+          for (int i = 0; i < nDim; i++) 
+          {
+              rdiff2 += (r2[i] - r1[i]) * (r2[i] - r1[i]);
+          }
+          // The square root of this gives the magnitude of the vector
+          double diff = std::sqrt(rdiff2);
+          // Change the sign depending on which side the actuator point is on
+          if (na_2 > na)
+            diff *= -1;
+
+          // Compute the LES and optimal induced velocities
+          for (int i = 0; i < nDim; i++) 
+          {
+              
+            // The value of epsilon
+            // Notice the correciton assumes uniform epsilon and takes the 
+            //   the first value
+            const double& eps_les = infoObject -> epsilon_.x_;
+            const double& eps_opt = infoObject -> epsilon_opt_.x_;
+
+            // This is the gradient of the function G (it is a 3d vector)
+            const std::array<double, 3>& dG = infoObject -> dG;
+
+            // The sign of the difference in radial location
+            //~ double sign = (na < na_2);
+
+            // Compute the LES induced velocity
+            infoObject -> u_LES.data()[i] += dG[i] * 
+              (1-std::exp(-rdiff2/std::pow(eps_les,2))) /
+              (diff);
+            infoObject -> u_opt.data()[i] += dG[i] * 
+              (1-std::exp(-rdiff2/std::pow(eps_opt,2))) /
+              (diff);
+
+          }          
+        }
+      }  
+    }
+  //~ }
+
+    ///////////////////////////////
+    // Step 4: Compute the diifference in induced velocities
+    ///////////////////////////////
+
+    // The relaxation factor used in filtered lifting line theory
+    double f = 0.1;
+
+  //~ for (size_t iTurb=0; iTurb < numTurbines; iTurb++ )
+  //~ {
+    // Number of blades
+    //~ const size_t numBlades = FAST.get_numBlades(iTurb);
+    // The total number of actuator points in all blades
+    //~ const size_t totalActuatorNodes = FAST.get_numForcePtsBlade(iTurb);
+    // The total number of actuator points per blade
+    //~ const size_t ptsPerBlade = totalActuatorNodes / numBlades;
+
+    // Loop through all blades
+    for (size_t nb=0; nb < numBlades; nb++)
+    {
+      // Loop through all blade points
+      for (size_t na=1; na < ptsPerBlade-1; na++)
+      {
+
+        // The actuator point index
+        np = indexMap_[iTurb][nb][na];
+        // The actuator point object
+        auto infoObject =
+            dynamic_cast<ActuatorFASTPointInfo*>(
+              actuatorPointInfoMap_.at(np).get());
+
+        // Loop through all directions
+        for (int i=0; i<nDim; i++) {
+          infoObject -> du.data()[i] = infoObject -> du.data()[i] * (1.-f) 
+            + f * (infoObject -> u_opt.data()[i] 
+              - infoObject -> u_LES.data()[i]);    
+        }
+      }
+
+    }
+  }  
+  
+  // This is the loop needed to loop through all point
+  //~ for (size_t iTurb=0; iTurb < numTurbines; iTurb++ )
+  //~ {
+    //~ // Number of blades
+    //~ const size_t numBlades = FAST.get_numBlades(iTurb);
+    //~ // The total number of actuator points in all blades
+    //~ const size_t totalActuatorNodes = FAST.get_numForcePtsBlade(iTurb);
+    //~ // The total number of actuator points per blade
+    //~ const size_t ptsPerBlade = totalActuatorNodes / numBlades;
+
+    //~ // Loop through all blades
+    //~ for (size_t nb=0; nb < numBlades; nb++)
+    //~ {
+      //~ // Loop through all blade points
+      //~ for (size_t na=1; na < ptsPerBlade-1; na++)
+      //~ {
+      //~ }
+
+    //~ }
+  //~ }
+
 }
 
 // Creates bounding boxes around the subdomain of each processor
@@ -807,6 +1146,8 @@ ActuatorFAST::create_actuator_point_info_map()
 
           // create the point info and push back to map
           Coordinates epsilon;
+          // This is the optimal epsilon
+          Coordinates epsilon_opt;
           
           // Go through all cases depending on what kind of actuator point it is
           switch (FAST.getForceNodeType(iTurb, np)) {
@@ -838,6 +1179,8 @@ ActuatorFAST::create_actuator_point_info_map()
             else {
               epsilon = actuatorInfo->epsilon_;
             }
+            
+            epsilon_opt = epsilon;
 
             break;
 
@@ -846,6 +1189,11 @@ ActuatorFAST::create_actuator_point_info_map()
           // The epsilon along each blade point
           case fast::BLADE:
 
+            // Define the optimal epsilon
+            epsilon_opt.x_ = actuatorInfo->epsilon_chord_.x_ * chord;
+            epsilon_opt.y_ = actuatorInfo->epsilon_chord_.y_ * chord;
+            epsilon_opt.z_ = actuatorInfo->epsilon_chord_.z_ * chord;
+
             // Use epsilon based on the maximum between
             //   epsilon
             //   optimal epsilon (epsilon/chord)
@@ -853,20 +1201,20 @@ ActuatorFAST::create_actuator_point_info_map()
             // x direction
             epsilon.x_ = std::max(
                            std::max(
-                             actuatorInfo->epsilon_chord_.x_ * chord,
+                               epsilon_opt.x_,
                                actuatorInfo->epsilon_min_.x_),
                                actuatorInfo->epsilon_.x_);
             // y direction
             epsilon.y_ = std::max(
                            std::max(
-                             actuatorInfo->epsilon_chord_.y_ * chord,
+                               epsilon_opt.y_,
                                actuatorInfo->epsilon_min_.y_),
                                actuatorInfo->epsilon_.y_);
 
             // z direction
             epsilon.z_ = std::max(
                            std::max(
-                             actuatorInfo->epsilon_chord_.z_ * chord,
+                               epsilon_opt.z_,
                                actuatorInfo->epsilon_min_.z_),
                                actuatorInfo->epsilon_.z_);
 
@@ -875,6 +1223,7 @@ ActuatorFAST::create_actuator_point_info_map()
           // The value of epsilon related to the grid resolution
           case fast::TOWER:
             epsilon = actuatorInfo->epsilon_tower_;
+            epsilon_opt = epsilon;
             break;
 
           // If no case, throw an error
@@ -900,9 +1249,15 @@ ActuatorFAST::create_actuator_point_info_map()
             Sphere(centroidCoords, searchRadius), theIdent);
           boundingSphereVec_.push_back(theSphere);
 
+          // Insert all the information related to this actuator point
+          // This is where the actuator point object is created
           actuatorPointInfoMap_.insert(std::make_pair(
                          np, make_unique<ActuatorFASTPointInfo>(
-                           iTurb, centroidCoords, searchRadius, epsilon,
+                           iTurb, 
+                           centroidCoords, 
+                           searchRadius, 
+                           epsilon,
+                           epsilon_opt,
                            FAST.getForceNodeType(iTurb, np), iNode)));
 
 #if 0
@@ -929,12 +1284,98 @@ ActuatorFAST::create_actuator_point_info_map()
     }
   }
   numFastPoints_ = actuatorPointInfoMap_.size();
+
+  // Compute the index map used to access actuator points as
+  //   (turbine number, blade number, actuator point number)
+  index_map();
+
   // execute this outside of loop so actuatorPoints that go into fast are
   // contiguous in the vectors (i.e. the first FAST.get_numForcePts() number of
   // points are the actuator lines, and whatever comes after them are the swept
   // points)
   create_point_info_map_class_specific();
 }
+
+// This function computes the index map such that actuator points can be
+//   accessed using indexing: 
+//   (turbine number, blade number, actuator point number)
+void ActuatorFAST::index_map()
+{
+  //////////////////////////////////////////////////////////////////////////////
+  // Loop and map the indices
+  // This creates a mapping which allows you to access the actuator point index
+  //   based on turbine number, blade number, and actuator point number
+  // Number of turbines
+  int nt = fi.nTurbinesGlob;
+  // Number of blades (choose the maximum from all turbines)
+  int nb=FAST.get_numBlades(0);
+  for (int i = 0; i < nt; i++) nb=std::max(nb, FAST.get_numBlades(i));
+  // Number of actuator points (choose the maximum from all turbines)
+  int na = fi.globTurbineData[0].numForcePtsBlade;
+  for (int i = 0; i < nt; i++) nb=std::max(na, 
+      fi.globTurbineData[i].numForcePtsBlade);
+
+  // This is a map that stores the actuator point number np
+  //   indexed using turbine number, blade number, actuator point number
+  // Resize the original array to have
+  //   (number of turbines, number of blades, number of actuator points)
+  indexMap_.resize(nt);
+  for (int i = 0; i<nt; ++i) {
+      indexMap_[i].resize(nb);
+    for (int j = 0; j<nb; ++j) {
+      indexMap_[i][j].resize(na);        
+    }
+  }
+
+
+  size_t it = -1;  // turbine number counter
+  size_t ib = -1;  // blade number counter
+  size_t actPtrCounter = -1;  // actuator point number counter
+
+  // Loop through all actuator points and populate the index map
+  for (size_t np=0; np < numFastPoints_; ++np) {
+
+    // actuator line info object of interest
+    auto infoObject =
+      dynamic_cast<ActuatorFASTPointInfo*>(actuatorPointInfoMap_.at(np).get());
+
+    // Only process blade actuator points
+    if (infoObject->nodeType_ != fast::BLADE) continue;
+
+    // This is the number of the specific turbine
+    const size_t iTurb = infoObject->globTurbId_;
+
+    // Identify if the turbine number has changed 
+    if (iTurb != it) {
+      it = iTurb;  // Initialize the turbine number
+      ib = 0;  // Initialize the first blad
+      actPtrCounter = 0;  // Initialize the first actuator point
+    }
+
+    // The total number of blades
+    const size_t numBlades = FAST.get_numBlades(iTurb);
+    // The total number of actuator points in all blades
+    const size_t totalActuatorNodes = FAST.get_numForcePtsBlade(iTurb);
+    // The total number of actuator points per blade
+    const size_t ptsPerBlade = totalActuatorNodes / numBlades;
+
+    // If the number of actuator points is greater than the number per blade
+    //   then increase the blade number index 
+    if (actPtrCounter > ptsPerBlade) {
+      ib++;
+      actPtrCounter = 0;
+      }
+    // Increment the actuator point counter
+    else { actPtrCounter++;}
+
+    // Store the actuator point into the counter index
+    indexMap_[it][ib][actPtrCounter] = np;
+
+  }
+
+}  
+////////////////////////////////////////////////////////////////////////////////
+
 
 //--------------------------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -1029,7 +1470,7 @@ ActuatorFAST::spread_actuator_force_to_node_vec(
     distance_projected[0] = distance_projected[0] - distance_projected[1];
     
     // project the force to this node with projection function
-    // To de-activate tje projection use distance.data() instead of 
+    // To de-activate the projection use distance.data() instead of 
     //   distance_projected.data()
     double gA = Gaussian_projection(nDim, distance_projected.data(), epsilon);
 

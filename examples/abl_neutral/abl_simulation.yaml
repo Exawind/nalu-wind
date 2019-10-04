@@ -143,7 +143,7 @@ realms:
   - abltop_boundary_condition: bc_upper
     target_name: upper
     abltop_user_data:
-      normal_temperature_gradient: 0.003
+      normal_temperature_gradient: -0.003
 
   - wall_boundary_condition: bc_lower
     target_name: lower

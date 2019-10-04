@@ -96,7 +96,7 @@ ActuatorLineFAST::execute_class_specific(
     // Declare the orientation matrix
     // The ordering of this matrix is: xx, xy, xz, yx, yy, yz, zx, zy, zz
     // The default value is a matrix which causes no rotation 
-    // This rotation takes into account the fact that the axex, x and y are
+    // This rotation takes into account the fact that the axes, x and y are
     // inverted after the rotation is done inside the 
     // spread_actuator_force_to_node_vec function.
     std::vector<double> orientation_tensor

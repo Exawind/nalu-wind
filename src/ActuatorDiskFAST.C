@@ -241,6 +241,7 @@ ActuatorDiskFAST::add_swept_points_to_map()
                                            make_unique<ActuatorFASTPointInfo>(
                                              iTurb, centroidCoords, searchRadius,
                                              actuatorInfo->epsilon_,
+                                             actuatorInfo->epsilon_,
                                              fast::BLADE, i)));
             pointRadiusMap_.insert(std::make_pair(np, i));
           }
