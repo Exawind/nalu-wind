@@ -381,14 +381,14 @@ BdyLayerStatistics::compute_velocity_stats()
       // Volume and density calculations
       const double rho = density.get(mi, 0);
       const double dVol  = dualVol.get(mi, 0);
-      d_sumVol(ih) += dVol;
-      d_rhoAvg(ih) += rho * dVol;
+      Kokkos::atomic_add(&d_sumVol(ih), (dVol));
+      Kokkos::atomic_add(&d_rhoAvg(ih), (rho * dVol));
 
       // Velocity computations
       int offset = ih * ndim;
       for (int d=0; d < ndim; ++d) {
-        d_velAvg(offset + d) += velocity.get(mi, d) * rho * dVol;
-        d_velBarAvg(offset + d) += velTimeAvg.get(mi, d) * rho * dVol;
+        Kokkos::atomic_add(&d_velAvg(offset + d), (velocity.get(mi, d) * rho * dVol));
+        Kokkos::atomic_add(&d_velBarAvg(offset + d), (velTimeAvg.get(mi, d) * rho * dVol));
       }
 
       // Stress computations
@@ -396,13 +396,15 @@ BdyLayerStatistics::compute_velocity_stats()
       int idx = 0;
       for (int i=0; i < ndim; ++i)
         for (int j=i; j < ndim; ++j) {
-          d_uiujAvg(offset + idx) += velocity.get(mi, i) * velocity.get(mi, j) * rho * dVol;
+          Kokkos::atomic_add(
+            &d_uiujAvg(offset + idx),
+            (velocity.get(mi, i) * velocity.get(mi, j) * rho * dVol));
           idx++;
         }
 
       for (int i=0; i < ndim * 2; ++i) {
-        d_sfsBarAvg(offset + i) += sfsField.get(mi, i) * dVol;
-        d_uiujBarAvg(offset + i) += resStress.get(mi, i) * dVol;
+        Kokkos::atomic_add(&d_sfsBarAvg(offset + i), (sfsField.get(mi, i) * dVol));
+        Kokkos::atomic_add(&d_uiujBarAvg(offset + i), (resStress.get(mi, i) * dVol));
       }
     });
 
@@ -517,16 +519,21 @@ BdyLayerStatistics::compute_temperature_stats()
       const double rho = density.get(mi, 0);
       const double dVol = dualVol.get(mi, 0);
 
-      d_thetaAvg(ih) += rho * theta.get(mi, 0) * dVol;
-      d_thetaBarAvg(ih) += thetaA.get(mi, 0) * dVol;
-      d_thetaVarAvg(ih) += rho * theta.get(mi, 0) * theta.get(mi, 0) * dVol;
-      d_thetaBarVarAvg(ih) += thetaVar.get(mi, 0) * dVol;
+      Kokkos::atomic_add(&d_thetaAvg(ih), (rho * theta.get(mi, 0) * dVol));
+      Kokkos::atomic_add(&d_thetaBarAvg(ih), (thetaA.get(mi, 0) * dVol));
+      Kokkos::atomic_add(
+        &d_thetaVarAvg(ih), (rho * theta.get(mi, 0) * theta.get(mi, 0) * dVol));
+      Kokkos::atomic_add(&d_thetaBarVarAvg(ih), (thetaVar.get(mi, 0) * dVol));
 
       const int offset = ih * ndim;
       for (int d=0; d < ndim; ++d) {
-        d_thetaSFSBarAvg(offset + d) += thetaSFS.get(mi, 0) * dVol;
-        d_thetaUjBarAvg(offset + d) += thetaUj.get(mi, 0) * dVol;
-        d_thetaUjAvg(offset + d) += rho * theta.get(mi, 0) * velocity.get(mi, 0) * dVol;
+        Kokkos::atomic_add(
+          &d_thetaSFSBarAvg(offset + d), (thetaSFS.get(mi, 0) * dVol));
+        Kokkos::atomic_add(
+          &d_thetaUjBarAvg(offset + d), (thetaUj.get(mi, 0) * dVol));
+        Kokkos::atomic_add(
+          &d_thetaUjAvg(offset + d),
+          (rho * theta.get(mi, 0) * velocity.get(mi, 0) * dVol));
       }
     });
 
