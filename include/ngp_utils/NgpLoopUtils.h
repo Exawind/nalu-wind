@@ -381,6 +381,108 @@ void run_elem_algorithm(
   });
 }
 
+/** Gather element data in ScratchViews and execute a reduction over elements
+ *
+ *  The reduce functor is called with an instance of ElemSimdData<Mesh> that contains
+ *  an EntityInfo describing the element connectivity data, and a ScratchViews
+ *  instance populated with all the data requested for a particular element
+ *  through ElemDataRequests.
+ *
+ *  In addition to gather of element data, this function also handles the
+ *  appropriate interleaving for SIMD data structures where appropriate.
+ *
+ *  @param meshInfo The MeshInfo object containing STK and NGP instances
+ *  @param rank ELEM or side_rank()
+ *  @param dataReqs Instance contaning element data to be added to ScratchViews
+ *  @param sel STK mesh selector to choose buckets for looping
+ *  @param algorithm The reduce functor to be executed on each element
+ *  @param reduceVal A Kokkos reducer type
+ */
+template<
+  typename Mesh,
+  typename FieldManager,
+  typename DataReqType,
+  typename AlgFunctor,
+  typename ReducerType>
+void run_elem_par_reduce(
+  const MeshInfo<Mesh, FieldManager>& meshInfo,
+  const stk::topology::rank_t rank,
+  const DataReqType& dataReqs,
+  const stk::mesh::Selector& sel,
+  const AlgFunctor algorithm,
+  ReducerType& reduceVal)
+{
+  using Traits         = NGPMeshTraits<Mesh>;
+  using TeamPolicy     = typename Traits::TeamPolicy;
+  using TeamHandleType = typename Traits::TeamHandleType;
+  using MeshIndex      = typename Traits::MeshIndex;
+  using ReducerValueType = typename ReducerType::value_type;
+
+  const auto& ndim = meshInfo.ndim();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+
+  ElemDataRequestsGPU dataReqNGP(fieldMgr, dataReqs, meshInfo.num_fields());
+
+  const int nodesPerElement = nodes_per_entity(dataReqNGP);
+  NGP_ThrowRequire(nodesPerElement != 0);
+
+  const auto reqType = (rank == stk::topology::ELEM_RANK)
+    ? ElemReqType::ELEM : ElemReqType::FACE;
+  const int bytes_per_team = 0;
+  const int bytes_per_thread =
+    impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
+      ndim, dataReqNGP, reqType);
+
+  const auto& buckets = ngpMesh.get_bucket_ids(rank, sel);
+  auto team_exec = impl::ngp_mesh_team_policy<TeamPolicy>(
+    buckets.size(), bytes_per_team, bytes_per_thread);
+
+  Kokkos::parallel_reduce(
+    team_exec,
+    KOKKOS_LAMBDA(const TeamHandleType& team, ReducerValueType& teamVal) {
+      auto bktId = buckets.device_get(team.league_rank());
+      auto& bkt = ngpMesh.get_bucket(rank, bktId);
+
+      ElemSimdData<Mesh> elemData(team, ndim, nodesPerElement, dataReqNGP);
+
+      const size_t bktLen = bkt.size();
+      const size_t simdBktLen = get_num_simd_groups(bktLen);
+
+      ReducerValueType bktVal;
+      Kokkos::parallel_reduce(
+        Kokkos::TeamThreadRange(team, simdBktLen),
+        [&](const size_t& bktIndex, ReducerValueType& threadVal) {
+          int nSimdElems = get_length_of_next_simd_group(bktIndex, bktLen);
+          elemData.numSimdElems = nSimdElems;
+
+          for (int is=0; is < nSimdElems; ++is) {
+            const unsigned bktOrd = bktIndex * simdLen + is;
+            MeshIndex meshIdx{&bkt, bktOrd};
+            const auto& elem = bkt[bktOrd];
+            elemData.elemInfo[is] =
+              EntityInfo<Mesh>{meshIdx, elem, ngpMesh.get_nodes(meshIdx)};
+
+            fill_pre_req_data(dataReqNGP, ngpMesh, rank, elem,
+                              *elemData.scrView[is]);
+          }
+
+#ifndef KOKKOS_ENABLE_CUDA
+          copy_and_interleave(elemData.scrView, nSimdElems, elemData.simdScrView);
+#endif
+
+          fill_master_element_views(dataReqNGP, elemData.simdScrView);
+          algorithm(elemData, threadVal);
+        }, ReducerType(bktVal));
+
+      Kokkos::single(
+        Kokkos::PerTeam(team),
+        [&]() {
+          reduceVal.join(teamVal, bktVal);
+        });
+    }, reduceVal);
+}
+
 template<
   typename Mesh,
   typename FieldManager,

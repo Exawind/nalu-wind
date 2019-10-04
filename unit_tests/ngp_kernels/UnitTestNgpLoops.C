@@ -11,6 +11,7 @@
 
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
+#include "ngp_utils/NgpReduceUtils.h"
 
 #include <cmath>
 
@@ -385,6 +386,7 @@ void elem_loop_scratch_views(
     }
   }
 }
+
 void calc_mdot_elem_loop(
   const stk::mesh::BulkData& bulk,
   ScalarFieldType& density,
@@ -580,6 +582,61 @@ void basic_face_elem_loop(
   }
 }
 
+void elem_loop_par_reduce(
+  const stk::mesh::BulkData& bulk,
+  ScalarFieldType& pressure)
+{
+  using Hex8Traits = sierra::nalu::AlgTraitsHex8;
+  using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  const double presSet = 4.0;
+
+  stk::mesh::field_fill(presSet, pressure);
+  const auto& meta = bulk.mesh_meta_data();
+  stk::mesh::Selector sel = meta.universal_part();
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+
+  sierra::nalu::ElemDataRequests dataReq(meta);
+  auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<Hex8Traits>();
+  dataReq.add_cvfem_volume_me(meSCV);
+
+  auto* coordsField = bulk.mesh_meta_data().coordinate_field();
+  dataReq.add_coordinates_field(*coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
+  dataReq.add_gathered_nodal_field(pressure, 1);
+
+  const unsigned presID = pressure.mesh_meta_data_ordinal();
+
+  DoubleType pressureSum = 0.0;
+  Kokkos::Sum<DoubleType> pressureReducer(pressureSum);
+
+  sierra::nalu::nalu_ngp::run_elem_par_reduce(
+    meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
+    KOKKOS_LAMBDA(ElemSimdData& edata, DoubleType& pSum) {
+      auto& scrViews = edata.simdScrView;
+      auto& v_pres = scrViews.get_scratch_view_1D(presID);
+
+      for (int i=0; i < Hex8Traits::nodesPerElement_; ++i)
+        pSum += v_pres(0);
+    }, pressureReducer);
+
+  {
+    const auto& elemBuckets = bulk.get_buckets(stk::topology::ELEM_RANK, sel);
+    size_t numTotalNodes = 0;
+    for (const auto* b: elemBuckets) {
+      for (const auto elem: *b) {
+        numTotalNodes += bulk.num_nodes(elem);
+      }
+    }
+
+    double pSumCalc = 0.0;
+    for (int i=0; i < sierra::nalu::simdLen; ++i)
+      pSumCalc += stk::simd::get_data(pressureSum, i);
+
+    const double goldSum = presSet * numTotalNodes;
+    const double tol = 1.0e-16;
+    EXPECT_NEAR(goldSum, pSumCalc, tol);
+  }
+}
+
 TEST_F(NgpLoopTest, NGP_basic_node_loop)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
@@ -620,6 +677,13 @@ TEST_F(NgpLoopTest, NGP_elem_loop_scratch_views)
   fill_mesh_and_init_fields("generated:2x2x2");
 
   elem_loop_scratch_views(bulk, *pressure, *velocity);
+}
+
+TEST_F(NgpLoopTest, NGP_elem_loop_par_reduce)
+{
+  fill_mesh_and_init_fields("generated:2x2x2");
+
+  elem_loop_par_reduce(bulk, *pressure);
 }
 
 TEST_F(NgpLoopTest, NGP_calc_mdot_elem_loop)
