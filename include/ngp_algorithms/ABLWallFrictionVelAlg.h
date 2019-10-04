@@ -12,11 +12,23 @@
 #include "ElemDataRequests.h"
 #include "SimdInterface.h"
 
+#include "ngp_algorithms/WallFricVelAlgDriver.h"
+
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {
 
+/** Compute the wall friction velocity at integration points for the wall
+ *  boundary of a given topology.
+ *
+ *  In addition to computing the friction velocity (utau) at the integration
+ *  points, it also computes a partial sum (utau * area) and (area) at the
+ *  integration points that is used to compute the area-weighted average utau
+ *  over the ABL wall by WallFricVelAlgDriver.
+ *
+ *  \sa WallFricVelAlgDriver, BdyLayerStatistics
+ */
 template <typename BcAlgTraits>
 class ABLWallFrictionVelAlg : public Algorithm
 {
@@ -26,6 +38,7 @@ public:
   ABLWallFrictionVelAlg(
     Realm&,
     stk::mesh::Part*,
+    WallFricVelAlgDriver&,
     const bool,
     const double,
     const double,
@@ -37,6 +50,8 @@ public:
   virtual void execute() override;
 
 private:
+  WallFricVelAlgDriver& algDriver_;
+
   ElemDataRequests faceData_;
 
   unsigned velocityNp1_     {stk::mesh::InvalidOrdinal};
