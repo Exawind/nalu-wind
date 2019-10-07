@@ -100,6 +100,12 @@ public:
   //!
   int abl_height_index(const double) const;
 
+  //! Process the velocity data and compute averages
+  void impl_compute_velocity_stats();
+
+  //! Process the temperature field and compute averages
+  void impl_compute_temperature_stats();
+
 private:
   BdyLayerStatistics() = delete;
   BdyLayerStatistics(const BdyLayerStatistics&) = delete;
@@ -109,12 +115,6 @@ private:
 
   //! Initialize necessary parameters in sierra::nalu::TurbulenceAveragingPostProcessing
   void setup_turbulence_averaging(const double);
-
-  //! Process the velocity data and compute averages
-  void compute_velocity_stats();
-
-  //! Process the temperature field and compute averages
-  void compute_temperature_stats();
 
   //! Output averaged velocity and stress profiles as a function of height
   void output_velocity_averages();

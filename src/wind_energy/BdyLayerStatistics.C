@@ -246,11 +246,11 @@ BdyLayerStatistics::execute()
 {
   if (doInit_) initialize();
 
-  compute_velocity_stats();
+  impl_compute_velocity_stats();
   output_velocity_averages();
 
   if (calcTemperatureStats_) {
-    compute_temperature_stats();
+    impl_compute_temperature_stats();
     output_temperature_averages();
   }
 
@@ -336,7 +336,7 @@ BdyLayerStatistics::interpolate_variable(
 }
 
 void
-BdyLayerStatistics::compute_velocity_stats()
+BdyLayerStatistics::impl_compute_velocity_stats()
 {
   using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
@@ -471,7 +471,7 @@ BdyLayerStatistics::compute_velocity_stats()
 }
 
 void
-BdyLayerStatistics::compute_temperature_stats()
+BdyLayerStatistics::impl_compute_temperature_stats()
 {
   using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
