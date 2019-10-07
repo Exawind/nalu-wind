@@ -29,7 +29,6 @@
 #include <ShearStressTransportEquationSystem.h>
 #include <MassFractionEquationSystem.h>
 #include <TurbKineticEnergyEquationSystem.h>
-#include <TAMSEquationSystem.h>
 #include <pmr/RadiativeTransportEquationSystem.h>
 #include <mesh_motion/MeshDisplacementEquationSystem.h>
 #include "WallDistEquationSystem.h"
@@ -180,11 +179,6 @@ void EquationSystems::load(const YAML::Node & y_node)
         else if (expect_map(y_system, "WallDistance", true)) {
           y_eqsys = expect_map(y_system, "WallDistance", true);
           eqSys = new WallDistEquationSystem(*this);
-        }
-        else if( expect_map(y_system, "TAMS", true) ) {
-          y_eqsys =  expect_map(y_system, "TAMS", true) ;
-          if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = time_averaged_model_split " << std::endl;
-          eqSys = new TAMSEquationSystem(*this);
         }
         else {
           if (!NaluEnv::self().parallel_rank()) {

@@ -945,10 +945,10 @@ Averaging functions
 ~~~~~~~~~~~~~~~~~~~
 
 The averaging algorithms are invoked as part of the
-*TAMSEquationSystem* and are called from the *post_converged_work*
+*TAMSAlgDriver* and are called from the *post_converged_work*
 function so that they are only executed at the conclusion of the time
 step, once the final :math:`\phi^{n+1}` flow quantities have been
-determined.  The *TAMSEquationSystem* is invoked last, so to ensure
+determined.  The *TAMSAlgDriver* is invoked last, so to ensure
 that this is also done initially, so that the initial step has correct
 average quantities, the averaging functions are also called in the
 *initial_work* function.

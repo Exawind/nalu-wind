@@ -47,8 +47,7 @@ TAMSAlgDriver::TAMSAlgDriver(Realm& realm)
 }
 
 void
-TAMSAlgDriver::register_fields_and_algorithms(
-  stk::mesh::Part* part, const stk::topology& theTopo)
+TAMSAlgDriver::register_nodal_fields(stk::mesh::Part* part)
 {
   stk::mesh::MetaData& meta = realm_.meta_data();
   const int nDim = meta.spatial_dimension();
@@ -103,29 +102,41 @@ TAMSAlgDriver::register_fields_and_algorithms(
     stk::topology::NODE_RANK, "avg_res_adequacy_parameter"));
   stk::mesh::put_field_on_mesh(*avgResAdequacy_, *part, nullptr);
   realm_.augment_restart_variable_list("avg_res_adequacy_parameter");
+}
 
-  // Mdot fields
-  if (realm_.realmUsesEdges_) {
-    NaluEnv::self().naluOutputP0()
-      << "Edge Mdot average added in TAMS " << std::endl;
-    avgMdot_ = &(meta.declare_field<ScalarFieldType>(
-      stk::topology::EDGE_RANK, "average_mass_flow_rate"));
-    stk::mesh::put_field_on_mesh(*avgMdot_, *part, nullptr);
-    realm_.augment_restart_variable_list("average_mass_flow_rate");
-  } else {
-    NaluEnv::self().naluOutputP0()
-      << "Elemental Mdot average added in TAMS " << std::endl;
-    MasterElement* meSCS =
-      sierra::nalu::MasterElementRepo::get_surface_master_element(theTopo);
-    const int numScsIp = meSCS->num_integration_points();
+void
+TAMSAlgDriver::register_element_fields(
+  stk::mesh::Part* part, const stk::topology& theTopo)
+{
+  stk::mesh::MetaData& meta = realm_.meta_data();
 
-    avgMdotScs_ = &(meta.declare_field<GenericFieldType>(
-      stk::topology::ELEMENT_RANK, "average_mass_flow_rate_scs"));
-    stk::mesh::put_field_on_mesh(*avgMdotScs_, *part, numScsIp, nullptr);
-    realm_.augment_restart_variable_list("average_mass_flow_rate_scs");
-  }
+  NaluEnv::self().naluOutputP0()
+    << "Elemental Mdot average added in TAMS " << std::endl;
+  MasterElement* meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element(theTopo);
+  const int numScsIp = meSCS->num_integration_points();
 
-  // Algorithms
+  avgMdotScs_ = &(meta.declare_field<GenericFieldType>(
+    stk::topology::ELEMENT_RANK, "average_mass_flow_rate_scs"));
+  stk::mesh::put_field_on_mesh(*avgMdotScs_, *part, numScsIp, nullptr);
+  realm_.augment_restart_variable_list("average_mass_flow_rate_scs");
+}
+
+void
+TAMSAlgDriver::register_edge_fields(stk::mesh::Part* part)
+{
+  stk::mesh::MetaData& meta = realm_.meta_data();
+  NaluEnv::self().naluOutputP0()
+    << "Edge Mdot average added in TAMS " << std::endl;
+  avgMdot_ = &(meta.declare_field<ScalarFieldType>(
+    stk::topology::EDGE_RANK, "average_mass_flow_rate"));
+  stk::mesh::put_field_on_mesh(*avgMdot_, *part, nullptr);
+  realm_.augment_restart_variable_list("average_mass_flow_rate");
+}
+
+void
+TAMSAlgDriver::register_interior_algorithm(stk::mesh::Part* part)
+{
   const AlgorithmType algType = INTERIOR;
 
   metricTensorAlgDriver_.register_elem_algorithm<MetricTensorElemAlg>(
@@ -137,7 +148,7 @@ TAMSAlgDriver::register_fields_and_algorithms(
       avgAlg_.reset(new SSTTAMSAveragesAlg(realm_, part));
       break;
     default:
-      throw std::runtime_error("TAMSEquationSystem: non-supported turb model");
+      throw std::runtime_error("TAMSAlgDriver: non-supported turb model");
     }
   } else {
     avgAlg_->partVec_.push_back(part);
@@ -151,30 +162,14 @@ TAMSAlgDriver::register_fields_and_algorithms(
     avgMdotAlg_.register_elem_algorithm<TAMSAvgMdotElemAlg>(
       algType, part, "tams_avg_mdot_elem");
   }
-
-  // FIXME: tvisc needed for TAMS update, but is updated in LowMach...
-  //        Perhaps there is a way to call tvisc from LowMach here?
-  if (!tviscAlg_) {
-    switch (realm_.solutionOptions_->turbulenceModel_) {
-    case SST_TAMS:
-      tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, true));
-      break;
-    default:
-      throw std::runtime_error("non-supported turb model in TAMS Eq Sys");
-    }
-  } else {
-    tviscAlg_->partVec_.push_back(part);
-  }
 }
 
 void
 TAMSAlgDriver::initial_work()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
-
   compute_metric_tensor();
 
-  // Initialize average_velocity, avg_dudx, avg_Prod
+  // Initialize average_velocity, avg_dudx
   // We don't want to do this on restart where TAMS fields are present
   if (resetTAMSAverages_) {
     const auto& meta = realm_.meta_data();
@@ -200,12 +195,31 @@ TAMSAlgDriver::initial_work()
     const auto& dudx =
       fieldMgr.get_field<double>(get_field_ordinal(meta, "dudx"));
     nalu_ngp::field_copy(ngpMesh, sel, avgDudx, dudx, nDim * nDim);
+  }
+}
 
-    // Need to update tvisc (avgDudx didn't exist)
-    // before this to compute production
-    tviscAlg_->execute();
+void
+TAMSAlgDriver::initial_production()
+{
+  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+
+  // Initialize average_production (after tvisc)
+  // We don't want to do this on restart where TAMS fields are present
+  if (resetTAMSAverages_) {
+
+    const auto& meta = realm_.meta_data();
+    const auto& ngpMesh = realm_.ngp_mesh();
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    const stk::mesh::Selector sel =
+      (meta.locally_owned_part() | meta.globally_shared_part() |
+       meta.aura_part()) &
+      stk::mesh::selectField(*avgVelocity_);
+    const int nDim = meta.spatial_dimension();
+
     const auto tvisc = fieldMgr.get_field<double>(
       get_field_ordinal(meta, "turbulent_viscosity"));
+    auto avgDudx =
+      fieldMgr.get_field<double>(avgDudx_->mesh_meta_data_ordinal());
 
     // Compute average production
     auto avgProd =
@@ -244,18 +258,92 @@ TAMSAlgDriver::initial_work()
 
     avgProd.modify_on_device();
   }
+}
 
-  //FIXME initialize mdot here
+void
+TAMSAlgDriver::initial_mdot()
+{
+  // Initialize mdot
+  if (resetTAMSAverages_) {
+
+    const auto& meta = realm_.meta_data();
+    const auto& ngpMesh = realm_.ngp_mesh();
+    const auto& fieldMgr = realm_.ngp_field_manager();
+
+    if (realm_.realmUsesEdges_) {
+      auto& avgMdot = fieldMgr.get_field<double>(get_field_ordinal(
+        meta, "average_mass_flow_rate", stk::topology::EDGE_RANK));
+      const auto& massFlowRate = fieldMgr.get_field<double>(
+        get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK));
+
+      const stk::mesh::Selector sel =
+        (meta.locally_owned_part() | meta.globally_shared_part()) &
+        stk::mesh::selectField(
+          *meta.get_field(stk::topology::EDGE_RANK, "average_mass_flow_rate"));
+
+      nalu_ngp::field_copy(
+        ngpMesh, sel, avgMdot, massFlowRate, 1, stk::topology::EDGE_RANK);
+    } else {
+
+      // // Ideally use this. But it doesn't work yet
+      // auto& avgMdot = fieldMgr.get_field<double>(get_field_ordinal(meta,
+      // "average_mass_flow_rate_scs", stk::topology::ELEM_RANK)); const auto&
+      // massFlowRate =
+      //   fieldMgr.get_field<double>(get_field_ordinal(meta,
+      //   "mass_flow_rate_scs", stk::topology::ELEM_RANK));
+
+      // const stk::mesh::Selector sel =(meta.locally_owned_part()|
+      // meta.globally_shared_part()) &
+      // stk::mesh::selectField(*meta.get_field(stk::topology::ELEM_RANK,
+      // "average_mass_flow_rate_scs"));
+
+      // nalu_ngp::field_copy(ngpMesh, sel, avgMdot, massFlowRate,
+      // avgMdot.max_components_per_entity(), stk::topology::ELEMENT_RANK);
+
+      stk::mesh::MetaData& meta_data = realm_.meta_data();
+
+      GenericFieldType* massFlowRateScs_ =
+        meta_data.get_field<GenericFieldType>(
+          stk::topology::ELEMENT_RANK, "mass_flow_rate_scs");
+      GenericFieldType* avgMdotScs_ = meta_data.get_field<GenericFieldType>(
+        stk::topology::ELEMENT_RANK, "average_mass_flow_rate_scs");
+
+      // define some common selectors
+      stk::mesh::Selector s_all_elem =
+        (meta_data.locally_owned_part() | meta_data.globally_shared_part()) &
+        stk::mesh::selectField(*avgMdotScs_);
+
+      stk::mesh::BucketVector const& elem_buckets =
+        realm_.get_buckets(stk::topology::ELEMENT_RANK, s_all_elem);
+      for (stk::mesh::BucketVector::const_iterator ib = elem_buckets.begin();
+           ib != elem_buckets.end(); ++ib) {
+        stk::mesh::Bucket& b = **ib;
+        const stk::mesh::Bucket::size_type length = b.size();
+
+        // extract master element
+        MasterElement* meSCS =
+          sierra::nalu::MasterElementRepo::get_surface_master_element(
+            b.topology());
+
+        // extract master element specifics
+        const int numScsIp = meSCS->num_integration_points();
+
+        for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {
+          double* avgMdotScs = stk::mesh::field_data(*avgMdotScs_, b, k);
+          const double* mdotScs =
+            stk::mesh::field_data(*massFlowRateScs_, b, k);
+
+          for (int ip = 0; ip < numScsIp; ip++)
+            avgMdotScs[ip] = mdotScs[ip];
+        }
+      }
+    }
+  }
 }
 
 void
 TAMSAlgDriver::execute()
 {
-  if (
-    realm_.solutionOptions_->meshMotion_ ||
-    realm_.solutionOptions_->externalMeshDeformation_) {
-    metricTensorAlgDriver_.execute();
-  }
   avgAlg_->execute();
   if (
     realm_.solutionOptions_->meshMotion_ ||
@@ -265,5 +353,10 @@ TAMSAlgDriver::execute()
   avgMdotAlg_.execute();
 }
 
+void
+TAMSAlgDriver::compute_metric_tensor()
+{
+  metricTensorAlgDriver_.execute();
+}
 } // namespace nalu
 } // namespace sierra

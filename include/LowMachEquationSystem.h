@@ -15,6 +15,7 @@
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
 #include "NaluParsing.h"
+#include "TAMSAlgDriver.h"
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 #include "ngp_algorithms/WallFricVelAlgDriver.h"
@@ -119,7 +120,8 @@ public:
     EquationSystems& equationSystems);
   virtual ~MomentumEquationSystem();
 
-  virtual void initial_work() override;
+  virtual void initial_work();
+  virtual void pre_timestep_work();
 
   virtual void register_nodal_fields(
     stk::mesh::Part *part) override;
@@ -199,6 +201,8 @@ public:
 
   void compute_turbulence_parameters();
 
+  void post_converged_work();
+
   const bool managePNG_;
 
   VectorFieldType *velocity_;
@@ -217,6 +221,7 @@ public:
   std::unique_ptr<Algorithm> tviscAlg_{nullptr};
 
   AlgorithmDriver *cflReyAlgDriver_;
+  std::unique_ptr<TAMSAlgDriver> TAMSAlgDriver_{nullptr};
 
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 

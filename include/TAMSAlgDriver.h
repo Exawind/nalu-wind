@@ -15,7 +15,6 @@
 #include "ngp_algorithms/TAMSAvgMdotEdgeAlg.h"
 #include "ngp_algorithms/TAMSAvgMdotElemAlg.h"
 #include "ngp_algorithms/SSTTAMSAveragesAlg.h"
-#include "ngp_algorithms/TurbViscSSTAlg.h"
 
 namespace stk {
 struct topology;
@@ -34,15 +33,16 @@ public:
 
   TAMSAlgDriver(Realm& realm);
   virtual ~TAMSAlgDriver() = default;
-
-  void register_fields_and_algorithms(
-    stk::mesh::Part* part, const stk::topology& theTopo);
+  virtual void register_nodal_fields(stk::mesh::Part* part);
+  virtual void
+  register_element_fields(stk::mesh::Part* part, const stk::topology& theTopo);
+  virtual void register_edge_fields(stk::mesh::Part* part);
+  void register_interior_algorithm(stk::mesh::Part* part);
   void execute();
   void initial_work();
+  void initial_production();
+  void initial_mdot();
   void compute_metric_tensor();
-  void compute_averages();
-  void compute_avgMdot();
-  void predict_state();
 
 private:
   Realm& realm_;
@@ -64,7 +64,6 @@ private:
   bool isInit_;
   FieldUpdateAlgDriver metricTensorAlgDriver_;
   std::unique_ptr<SSTTAMSAveragesAlg> avgAlg_;
-  std::unique_ptr<Algorithm> tviscAlg_;
   NgpAlgDriver avgMdotAlg_;
 
   const TurbulenceModel turbulenceModel_;

@@ -60,7 +60,6 @@ public:
 
   void initial_work();
   void post_adapt_work();
-  void initialize_average_mdot();
 
   void clip_min_distance_to_wall();
   void compute_f_one_blending();

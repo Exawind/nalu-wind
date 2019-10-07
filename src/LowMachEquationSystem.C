@@ -716,6 +716,10 @@ LowMachEquationSystem::solve_and_update()
 
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerMisc_ += (timeB-timeA);
+
+    if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
+      momentumEqSys_->TAMSAlgDriver_->initial_mdot();
+
     isInit_ = false;
   }
 
@@ -973,7 +977,9 @@ LowMachEquationSystem::post_converged_work()
   if (NULL != surfaceForceAndMomentAlgDriver_){
     surfaceForceAndMomentAlgDriver_->execute();
   }
-  
+
+  momentumEqSys_->post_converged_work();
+
   // output mass closure
   continuityEqSys_->computeMdotAlgDriver_->provide_output();
 }
@@ -1021,6 +1027,9 @@ MomentumEquationSystem::MomentumEquationSystem(
   if ( managePNG_ ) {
      manage_projected_nodal_gradient(eqSystems);
   }
+
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
+    TAMSAlgDriver_.reset(new TAMSAlgDriver(realm_));
 }
 
 //--------------------------------------------------------------------------
@@ -1052,6 +1061,9 @@ MomentumEquationSystem::initial_work()
 
   compute_projected_nodal_gradient();
 
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
+    TAMSAlgDriver_->initial_work();
+
   {
     const double timeA = NaluEnv::self().nalu_time();
     compute_wall_function_params();
@@ -1060,6 +1072,23 @@ MomentumEquationSystem::initial_work()
 
     const double timeB = NaluEnv::self().nalu_time();
     timerMisc_ += (timeB-timeA);
+  }
+
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
+    TAMSAlgDriver_->initial_production();
+}
+
+//--------------------------------------------------------------------------
+//-------- pre_timestep_work -----------------------------------------------
+//--------------------------------------------------------------------------
+void
+MomentumEquationSystem::pre_timestep_work()
+{
+  if (
+    (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS) &&
+    (realm_.solutionOptions_->meshMotion_ ||
+     realm_.solutionOptions_->externalMeshDeformation_)) {
+    TAMSAlgDriver_->compute_metric_tensor();
   }
 }
 
@@ -1098,6 +1127,9 @@ MomentumEquationSystem::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*tvisc_, *part, nullptr);
     evisc_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "effective_viscosity_u"));
     stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
+
+    if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
+      TAMSAlgDriver_->register_nodal_fields(part);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
@@ -1145,10 +1177,11 @@ MomentumEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 MomentumEquationSystem::register_element_fields(
-  stk::mesh::Part * /* part */,
-  const stk::topology & /* theTopo */)
+  stk::mesh::Part * part,
+  const stk::topology & theTopo)
 {
-  // nothing as of yet
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
+    TAMSAlgDriver_->register_element_fields(part, theTopo);
 }
 
 //--------------------------------------------------------------------------
@@ -1156,9 +1189,10 @@ MomentumEquationSystem::register_element_fields(
 //--------------------------------------------------------------------------
 void
 MomentumEquationSystem::register_edge_fields(
-  stk::mesh::Part * /* part */)
+  stk::mesh::Part * part)
 {
-  // nothing as of yet
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
+    TAMSAlgDriver_->register_edge_fields(part);
 }
 
 //--------------------------------------------------------------------------
@@ -1582,6 +1616,9 @@ MomentumEquationSystem::register_interior_algorithm(
     } else {
       tviscAlg_->partVec_.push_back(part);
     }
+
+    if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
+      TAMSAlgDriver_->register_interior_algorithm(part);
   }
 }
 
@@ -2767,6 +2804,12 @@ void MomentumEquationSystem::compute_turbulence_parameters()
     tviscAlg_->execute();
     diffFluxCoeffAlg_->execute();
   }
+}
+
+void MomentumEquationSystem::post_converged_work()
+{
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
+    TAMSAlgDriver_->execute();
 }
 
 //==========================================================================

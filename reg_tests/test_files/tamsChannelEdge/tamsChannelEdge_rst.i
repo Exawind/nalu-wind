@@ -66,11 +66,6 @@ realms:
             max_iterations: 1
             convergence_tolerance: 1e-8
 
-        - TAMS:
-            name: myTAMS
-            max_iterations: 1
-            convergence_tolerance: 1e-8
-
     initial_conditions:
       - constant: ic_1
         target_name: Unspecified-2-HEX
