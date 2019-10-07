@@ -19,7 +19,6 @@
 #include <InitialConditions.h>
 #include <MaterialPropertys.h>
 #include <EquationSystems.h>
-#include <ngp_algorithms/GeometryAlgDriver.h>
 #include <Teuchos_RCP.hpp>
 #include <overset/OversetManager.h>
 

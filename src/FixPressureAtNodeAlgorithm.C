@@ -88,25 +88,24 @@ FixPressureAtNodeAlgorithm::execute()
 
   Kokkos::parallel_for(team_exec, KOKKOS_LAMBDA(const DeviceTeamHandleType& team)
   {
-    SharedMemView<double**,DeviceShmem> lhs = get_shmem_view_2D<double,DeviceTeamHandleType,DeviceShmem>(team, rhsSize, rhsSize);
-    SharedMemView<double*,DeviceShmem> rhs = get_shmem_view_1D<double,DeviceTeamHandleType,DeviceShmem>(team, rhsSize);
-    SharedMemView<int*,DeviceShmem> scratchIds = get_shmem_view_1D<int,DeviceTeamHandleType,DeviceShmem>(team, rhsSize);
-    SharedMemView<int*,DeviceShmem> sortPerm = get_shmem_view_1D<int,DeviceTeamHandleType,DeviceShmem>(team, rhsSize);
+    auto lhs = get_shmem_view_2D<double,DeviceTeamHandleType,DeviceShmem>(team, rhsSize, rhsSize);
+    auto rhs = get_shmem_view_1D<double,DeviceTeamHandleType,DeviceShmem>(team, rhsSize);
+    auto scratchIds = get_shmem_view_1D<int,DeviceTeamHandleType,DeviceShmem>(team, rhsSize);
+    auto sortPerm = get_shmem_view_1D<int,DeviceTeamHandleType,DeviceShmem>(team, rhsSize);
 
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [=](const size_t& )
     {
-      stk::mesh::Entity deviceTargetNode = targetNode;
-      ngp::Mesh::ConnectedNodes refNodeList(&deviceTargetNode, 1);
+      ngp::Mesh::ConnectedNodes refNodeList(&targetNode, 1);
 #ifdef KOKKOS_ENABLE_CUDA
-      deviceCoeffApplier->resetRows(1, &deviceTargetNode, 0, 1);
+      deviceCoeffApplier->resetRows(1, &targetNode, 0, 1);
 #else
-      coeffApplier->resetRows(1, &deviceTargetNode, 0, 1);
+      coeffApplier->resetRows(1, &targetNode, 0, 1);
 #endif
   
       // Fix the pressure for this node only if this is proc is owner
       if (numNodes > 0 && fixPressureNode) {
         sortPerm(0) = 0;
-        const double pressureN = ngpPressure.get(ngpMesh, deviceTargetNode, 0);
+        const double pressureN = ngpPressure.get(ngpMesh, targetNode, 0);
   
         lhs(0,0) = 1.0; // Set diagonal entry to 1.0
         rhs(0) = refPressure - pressureN;
