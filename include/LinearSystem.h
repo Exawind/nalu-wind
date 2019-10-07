@@ -49,6 +49,14 @@ public:
   virtual ~CoeffApplier() {}
 
   KOKKOS_FUNCTION
+  virtual void resetRows(unsigned numNodes,
+                         const stk::mesh::Entity* nodeList,
+                         const unsigned beginPos,
+                         const unsigned endPos,
+                         const double diag_value = 0.0,
+                         const double rhs_residual = 0.0) = 0;
+
+  KOKKOS_FUNCTION
   virtual void operator()(unsigned numEntities,
                           const ngp::Mesh::ConnectedNodes& entities,
                           const SharedMemView<int*,DeviceShmem> & localIds,
@@ -97,6 +105,7 @@ public:
    *  sierra::nalu::FixPressureAtNodeAlgorithm for an example of this use case.
    */
   virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&) {}
+  virtual void buildDirichletNodeGraph(const ngp::Mesh::ConnectedNodes) {}
 
   // Matrix Assembly
   virtual void zeroSystem()=0;
@@ -112,6 +121,17 @@ public:
 
     KOKKOS_FUNCTION
     ~DefaultHostOnlyCoeffApplier() {}
+
+    KOKKOS_FUNCTION
+    virtual void resetRows(unsigned numNodes,
+                           const stk::mesh::Entity* nodeList,
+                           const unsigned beginPos,
+                           const unsigned endPos,
+                           const double diag_value = 0.0,
+                           const double rhs_residual = 0.0)
+    {
+      linSys_.resetRows(numNodes, nodeList, beginPos, endPos, diag_value, rhs_residual);
+    }
 
     KOKKOS_FUNCTION
     virtual void operator()(unsigned numEntities,
@@ -191,6 +211,14 @@ public:
    */
   virtual void resetRows(
     const std::vector<stk::mesh::Entity>& nodeList,
+    const unsigned beginPos,
+    const unsigned endPos,
+    const double diag_value = 0.0,
+    const double rhs_residual = 0.0) = 0;
+
+  virtual void resetRows(
+    unsigned numNodes,
+    const stk::mesh::Entity* nodeList,
     const unsigned beginPos,
     const unsigned endPos,
     const double diag_value = 0.0,

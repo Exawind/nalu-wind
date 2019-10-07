@@ -112,10 +112,10 @@ struct TpetraHelperObjectsBase {
 
       for(int j=0; j<constRowView.length; ++j) {
         EXPECT_EQ(cols[rowOffsets[i]+j], constRowView.colidx(j));
-        EXPECT_NEAR(vals[rowOffsets[i]+j], constRowView.value(j), 1.e-14);
+        EXPECT_NEAR(vals[rowOffsets[i]+j], constRowView.value(j), 1.e-14)<<"i: "<<i<<", j: "<<j;
       }
 
-      EXPECT_NEAR(rhs[i], localRhs(i,0), 1.e-14);
+      EXPECT_NEAR(rhs[i], localRhs(i,0), 1.e-14)<<"i: "<<i;
     }
   }
 
