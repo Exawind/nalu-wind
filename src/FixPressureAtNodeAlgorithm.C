@@ -121,8 +121,8 @@ FixPressureAtNodeAlgorithm::execute()
 
 #ifdef KOKKOS_ENABLE_CUDA
   coeffApplier->free_device_pointer();
-  delete coeffApplier;
 #endif
+  delete coeffApplier;
 }
 
 void
