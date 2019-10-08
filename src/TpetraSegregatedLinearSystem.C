@@ -1115,12 +1115,88 @@ void TpetraSegregatedLinearSystem::sumInto(unsigned numEntities,
   }
 }
 
+template <typename RowViewType>
+KOKKOS_FUNCTION
+void reset_row(
+  RowViewType row_view,
+  const int localRowId,
+  const double diag_value)
+{
+  const LocalOrdinal length = row_view.length;
+
+  for(LocalOrdinal i=0; i<length; ++i) {
+    if (row_view.colidx(i) == localRowId) {
+      row_view.value(i) = diag_value;
+    }
+    else {
+      row_view.value(i) = 0.0;
+    }
+  }
+}
+
+template<typename MatrixType,
+         typename RhsType,
+         typename EntityArrayType,
+         typename EntityLIDType>
+KOKKOS_FUNCTION
+void reset_rows(
+      MatrixType ownedLocalMatrix,
+      MatrixType sharedNotOwnedLocalMatrix,
+      RhsType ownedLocalRhs,
+      RhsType sharedNotOwnedLocalRhs,
+      unsigned numNodes,
+      const EntityArrayType& nodeList,
+      unsigned beginPos,
+      unsigned endPos,
+      double diag_value,
+      double rhs_residual,
+      const EntityLIDType& entityToLID,
+      int maxOwnedRowId,
+      int maxSharedNotOwnedRowId)
+{
+  for (unsigned nn=0; nn<numNodes; ++nn) {
+    stk::mesh::Entity node = nodeList[nn];
+    const LocalOrdinal localIdOffset = entityToLID[node.local_offset()];
+    const bool useOwned = (localIdOffset < maxOwnedRowId);
+    const LinSys::LocalMatrix& localMatrix = useOwned ?  ownedLocalMatrix : sharedNotOwnedLocalMatrix;
+    const LinSys::LocalVector& localRhs = useOwned ? ownedLocalRhs : sharedNotOwnedLocalRhs;
+
+    for (unsigned d=beginPos; d < endPos; ++d) {
+      const LocalOrdinal localId = localIdOffset + d;
+      const LocalOrdinal actualLocalId =
+        useOwned ? localId : (localId - maxOwnedRowId);
+
+      NGP_ThrowRequire(localId <= maxSharedNotOwnedRowId);
+
+      // Adjust the LHS; zero out all entries (including diagonal)
+      reset_row(localMatrix.row(actualLocalId), actualLocalId, diag_value);
+
+      // Replace RHS residual entry
+      localRhs(actualLocalId,0) = rhs_residual;
+    }
+  }
+}
+
 sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::get_coeff_applier()
 {
   return new TpetraLinSysCoeffApplier(ownedLocalMatrix_, sharedNotOwnedLocalMatrix_,
                                       ownedLocalRhs_, sharedNotOwnedLocalRhs_,
                                       entityToLID_, entityToColLID_,
                                       maxOwnedRowId_, maxSharedNotOwnedRowId_, numDof_);
+}
+
+KOKKOS_FUNCTION
+void TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::resetRows(unsigned numNodes,
+                           const stk::mesh::Entity* nodeList,
+                           const unsigned beginPos,
+                           const unsigned endPos,
+                           const double diag_value,
+                           const double rhs_residual)
+{
+  reset_rows(ownedLocalMatrix_, sharedNotOwnedLocalMatrix_,
+             ownedLocalRhs_, sharedNotOwnedLocalRhs_,
+             numNodes, nodeList, beginPos, endPos, diag_value, rhs_residual,
+             entityToLID_, maxOwnedRowId_, maxSharedNotOwnedRowId_);
 }
 
 KOKKOS_FUNCTION
@@ -1365,43 +1441,20 @@ void TpetraSegregatedLinearSystem::resetRows(const std::vector<stk::mesh::Entity
                                              const double diag_value,
                                              const double rhs_residual)
 {
-  Teuchos::ArrayView<const LocalOrdinal> indices;
-  Teuchos::ArrayView<const double> values;
-  std::vector<double> new_values;
-  const bool internalMatrixIsSorted = true;
+  resetRows(nodeList.size(), nodeList.data(), beginPos, endPos, diag_value, rhs_residual);
+}
 
-  for (auto node: nodeList) {
-    const auto naluId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
-    const LocalOrdinal localIdOffset = lookup_myLID(myLIDs_, naluId, "resetRows");
-
-    const LocalOrdinal localId = localIdOffset;
-    const bool useOwned = (localId < maxOwnedRowId_);
-    const LocalOrdinal actualLocalId = useOwned ? localId : (localId - maxOwnedRowId_);
-    Teuchos::RCP<LinSys::Matrix> matrix = useOwned ? ownedMatrix_ : sharedNotOwnedMatrix_;
-    const LinSys::LocalMatrix& local_matrix = matrix->getLocalMatrix();
-
-    if (localId > maxSharedNotOwnedRowId_) {
-      throw std::runtime_error("logic error: localId > maxSharedNotOwnedRowId");
-    }
-
-    const double dval = useOwned ? diag_value : 0.0;
-    // Adjust the LHS; zero out all entries (including diagonal)
-    matrix->getLocalRowView(actualLocalId, indices, values);
-    const size_t rowLength = values.size();
-    if (rowLength > 0) {
-      new_values.resize(rowLength);
-      for (size_t i=0; i < rowLength; i++) {
-        new_values[i] = (indices[i] == localId) ? dval : 0.0;
-      }
-      local_matrix.replaceValues(actualLocalId, &indices[0], rowLength, new_values.data(), internalMatrixIsSorted);
-    }
-
-    // Replace RHS residual entry = 0.0
-    Teuchos::RCP<LinSys::MultiVector> rhs = useOwned ? ownedRhs_ : sharedNotOwnedRhs_;
-    for (unsigned d = beginPos; d < endPos; ++d) {
-      rhs->replaceLocalValue(actualLocalId, d, rhs_residual);
-    }
-  }
+void TpetraSegregatedLinearSystem::resetRows(unsigned numNodes,
+                                             const stk::mesh::Entity* nodeList,
+                                             const unsigned beginPos,
+                                             const unsigned endPos,
+                                             const double diag_value,
+                                             const double rhs_residual)
+{
+  reset_rows(ownedLocalMatrix_, sharedNotOwnedLocalMatrix_,
+             ownedLocalRhs_, sharedNotOwnedLocalRhs_,
+             numNodes, nodeList, beginPos, endPos, diag_value, rhs_residual,
+             entityToLID_, maxOwnedRowId_, maxSharedNotOwnedRowId_);
 }
 
 void TpetraSegregatedLinearSystem::loadComplete()

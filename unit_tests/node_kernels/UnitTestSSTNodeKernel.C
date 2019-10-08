@@ -12,8 +12,8 @@
 #include "node_kernels/TKESSTNodeKernel.h"
 #include "node_kernels/TKESSTDESNodeKernel.h"
 #include "node_kernels/SDRSSTNodeKernel.h"
+#include "node_kernels/SDRSSTDESNodeKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
 namespace tke_sst {
@@ -73,10 +73,30 @@ static constexpr double lhs[8][8] = {
   {0, 0, 0, 0, 0, 0, 0, 0.0096611889086056, },
 };
 } // sdr_sst
+
+
+namespace sdr_sst_des {
+static constexpr double rhs[8] = {
+  -0.0414, -0.024334309444908,
+  -0.024334309444908, 0.014618955646714,
+  -0.024334309444908, -0.013421452431681,
+  -0.025196833148802, 0.0071981412261904,
+};
+
+static constexpr double lhs[8][8] = {
+  {0.0414, 0, 0, 0, 0, 0, 0, 0, },
+  {0, 0.024334309444908, 0, 0, 0, 0, 0, 0, },
+  {0, 0, 0.024334309444908, 0, 0, 0, 0, 0, },
+  {0, 0, 0, 0.014303348216439, 0, 0, 0, 0, },
+  {0, 0, 0, 0, 0.024334309444908, 0, 0, 0, },
+  {0, 0, 0, 0, 0, 0.013421452431681, 0, 0, },
+  {0, 0, 0, 0, 0, 0, 0.018984179689384, 0, },
+  {0, 0, 0, 0, 0, 0, 0, 0.0096611889086056, },
+};
+} // sdr_sst_des
+
 } // hex8_golds
 }
-
-#endif
 
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 {
@@ -98,18 +118,16 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
 
   namespace hex8_golds = hex8_golds::tke_sst;
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
 
 TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
@@ -132,18 +150,16 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
 
   namespace hex8_golds = hex8_golds::tke_sst_des;
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }
 
 TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
@@ -166,16 +182,47 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
 
   namespace hex8_golds = hex8_golds::sdr_sst;
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
+}
+
+TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
+{
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
+  fill_mesh_and_init_fields();
+
+  // Setup solution options
+  solnOpts_.meshMotion_ = false;
+  solnOpts_.meshDeformation_ = false;
+  solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.initialize_turbulence_constants();
+
+  unit_test_utils::NodeHelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTDESNodeKernel>(meta_);
+
+  helperObjs.execute();
+
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
+  EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
+
+  // only differs by a production limiting, which is never active in this case
+  namespace hex8_golds = hex8_golds::sdr_sst_des;
+  unit_test_kernel_utils::expect_all_near(
+    helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
+  unit_test_kernel_utils::expect_all_near<8>(
+    helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
 }

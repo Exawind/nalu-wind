@@ -27,12 +27,14 @@ add_sources(GlobalSourceList
    ScalarDiffElemKernel.C
    ScalarDiffHOElemKernel.C
    ScalarDiffFemKernel.C
+   ScalarFluxBCElemKernel.C
    ScalarFluxPenaltyElemKernel.C
    ScalarMassElemKernel.C
    ScalarMassHOElemKernel.C
    ScalarOpenAdvElemKernel.C
    ScalarUpwAdvDiffElemKernel.C
    SpecificDissipationRateSSTSrcElemKernel.C
+   SpecificDissipationRateSSTDESSrcElemKernel.C
    TurbKineticEnergyKsgsDesignOrderSrcElemKernel.C
    TurbKineticEnergyKsgsSrcElemKernel.C
    TurbKineticEnergySSTDESSrcElemKernel.C

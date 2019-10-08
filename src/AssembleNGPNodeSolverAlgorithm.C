@@ -89,9 +89,14 @@ AssembleNGPNodeSolverAlgorithm::execute()
   const auto& meta = realm_.meta_data();
   const auto& ngpMesh = realm_.ngp_mesh();
   const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
-  const int nodesPerEntity = 1;
   const int rhsSize = rhsSize_;
 
+#ifdef KOKKOS_ENABLE_CUDA
+  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
+  CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
+#endif
+
+  const int nodesPerEntity = 1;
   const int bytes_per_team = 0;
   const int bytes_per_thread = calc_shmem_bytes_per_thread(rhsSize);
 
@@ -130,9 +135,17 @@ AssembleNGPNodeSolverAlgorithm::execute()
           this->apply_coeff(
             nodesPerEntity, smdata.ngpNodes, smdata.scratchIds,
             smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
+#else
+          (*deviceCoeffApplier)(
+            nodesPerEntity, smdata.ngpNodes, smdata.scratchIds,
+            smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
 #endif
         });
     });
+#ifdef KOKKOS_ENABLE_CUDA
+    coeffApplier->free_device_pointer();
+    delete coeffApplier;
+#endif
 }
 
 }  // nalu

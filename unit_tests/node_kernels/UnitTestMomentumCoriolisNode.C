@@ -46,11 +46,10 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_coriolis)
   EXPECT_NEAR(cor.upVector_[1], 0.0, tol);
   EXPECT_NEAR(cor.upVector_[2], 1.0, tol);
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
 
   // Exact solution
   std::vector<double> rhsExact(24,0.0);
@@ -61,5 +60,4 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_coriolis)
     rhsExact[nnDim + 2] = 0.125 * (-cor.Jxz_  - cor.Jyz_);
   }
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, rhsExact.data());
-#endif
 }

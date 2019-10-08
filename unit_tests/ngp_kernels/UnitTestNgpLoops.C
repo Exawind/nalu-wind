@@ -7,6 +7,7 @@
 
 #include "gtest/gtest.h"
 #include "UnitTestUtils.h"
+#include "kernels/UnitTestKernelUtils.h"
 
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
@@ -99,6 +100,88 @@ void basic_node_loop(
     }
   }
 }
+
+void basic_node_reduce(
+  const stk::mesh::BulkData& bulk,
+  ScalarFieldType& pressure)
+{
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  const double presSet = 4.0;
+
+  stk::mesh::field_fill(presSet, pressure);
+  const auto& meta = bulk.mesh_meta_data();
+  stk::mesh::Selector sel = meta.universal_part();
+  ngp::Mesh ngpMesh(bulk);
+  ngp::Field<double> ngpPressure(bulk, pressure);
+
+
+  double reduceVal = 0.0;
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, double& pSum) {
+      pSum += ngpPressure.get(mi, 0);
+    }, reduceVal);
+
+  double reduceVal1 = 0.0;
+  Kokkos::Sum<double> sum_reducer(reduceVal1);
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, double& pSum) {
+      sum_reducer.join(pSum, ngpPressure.get(mi, 0));
+    }, sum_reducer);
+
+  {
+    double expectedSum = 0.0;
+    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+    const double tol = 1.0e-16;
+    for (const auto* b: bkts) {
+      for (const auto node: *b) {
+        const double* pres = stk::mesh::field_data(pressure, node);
+        expectedSum += pres[0];
+      }
+    }
+    EXPECT_NEAR(reduceVal, expectedSum, tol);
+    EXPECT_NEAR(reduceVal1, expectedSum, tol);
+  }
+}
+
+void basic_node_reduce_minmax(
+  const stk::mesh::BulkData& bulk,
+  const double minGold,
+  const double maxGold)
+{
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+
+  const auto& meta = bulk.mesh_meta_data();
+  const auto& coords =  meta.coordinate_field();
+  stk::mesh::Selector sel = meta.universal_part();
+  ngp::Mesh ngpMesh(bulk);
+  ngp::Field<double> ngpCoords(bulk, *coords);
+
+  using value_type = Kokkos::Max<double>::value_type;
+  value_type max;
+  Kokkos::Max<double> max_reducer(max);
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, value_type& pSum) {
+      const double xcoord = ngpCoords.get(mi, 0);
+      if (xcoord > pSum) pSum = xcoord;
+    }, max_reducer);
+
+  using value_type = Kokkos::Min<double>::value_type;
+  value_type min;
+  Kokkos::Min<double> min_reducer(min);
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, value_type& pSum) {
+      const double xcoord = ngpCoords.get(mi, 0);
+      if (xcoord < pSum) pSum = xcoord;
+    }, min_reducer);
+
+  EXPECT_NEAR(max, maxGold, tol);
+  EXPECT_NEAR(min, minGold, tol);
+}
+
 
 void basic_elem_loop(
   const stk::mesh::BulkData& bulk,
@@ -241,6 +324,9 @@ void elem_loop_scratch_views(
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpVel = fieldMgr.get_field<double>(velID);
+  const auto ngpVelOp = sierra::nalu::nalu_ngp::simd_elem_nodal_field_updater(
+    ngpMesh, ngpVel);
+
 
   const int numNodes = 8;
   DoubleTypeView volCheck("scv_volume", numNodes);
@@ -251,9 +337,6 @@ void elem_loop_scratch_views(
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData & edata) {
-      const auto ngpVelOp = sierra::nalu::nalu_ngp::simd_nodal_field_updater(
-        ngpMesh, ngpVel, edata);
-
       Traits::DblType test = 0.0;
       auto& scrViews = edata.simdScrView;
       auto& v_pres = scrViews.get_scratch_view_1D(presID);
@@ -267,9 +350,9 @@ void elem_loop_scratch_views(
         volCheck.d_view(i) = stk::simd::get_data(scv_vol(i), 0);
 
         // Scatter SIMD value to nodes
-        ngpVelOp(i, 0) = xVel;
-        ngpVelOp(i, 1) = yVel;
-        ngpVelOp(i, 2) = zVel;
+        ngpVelOp(edata, i, 0) = xVel;
+        ngpVelOp(edata, i, 1) = yVel;
+        ngpVelOp(edata, i, 2) = zVel;
       }
     });
 
@@ -335,14 +418,13 @@ void calc_mdot_elem_loop(
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   ngp::Field<double> ngpMdot = fieldMgr.get_field<double>(mdotID);
+  // SIMD Element field operation handler
+  const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
+    ngpMesh, ngpMdot);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata) {
-      // SIMD Element field operation handler
-      const auto mdotOps = sierra::nalu::nalu_ngp::simd_elem_field_updater(
-        ngpMesh, ngpMdot, edata);
-
       NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
       auto& scrViews = edata.simdScrView;
       auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
@@ -365,7 +447,7 @@ void calc_mdot_elem_loop(
         for (int d=0; d < Hex8Traits::nDim_; ++d)
           tmdot += rhoU[d] * v_area(ip, d);
 
-        mdotOps(ip) = tmdot;
+        mdotOps(edata, ip) = tmdot;
       }
     });
 
@@ -388,11 +470,135 @@ void calc_mdot_elem_loop(
   }
 }
 
+void basic_face_elem_loop(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordField,
+  const GenericFieldType& exposedArea,
+  ScalarFieldType& wallArea,
+  ScalarFieldType& wallNormDist)
+{
+  using MeshIndex = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
+  using FaceTraits = sierra::nalu::AlgTraitsQuad4Hex8;
+  using FaceSimdData = sierra::nalu::nalu_ngp::FaceElemSimdData<ngp::Mesh>;
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+
+  sierra::nalu::ElemDataRequests faceData(meta);
+  sierra::nalu::ElemDataRequests elemData(meta);
+  auto meFC =
+    sierra::nalu::MasterElementRepo::get_surface_master_element<FaceTraits::FaceTraits>();
+  auto meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element<FaceTraits::ElemTraits>();
+
+  faceData.add_cvfem_face_me(meFC);
+  elemData.add_cvfem_surface_me(meSCS);
+  faceData.add_coordinates_field(
+    coordField, ndim, sierra::nalu::CURRENT_COORDINATES);
+  faceData.add_face_field(
+    exposedArea, FaceTraits::numFaceIp_, FaceTraits::nDim_);
+  faceData.add_master_element_call(
+    sierra::nalu::FC_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
+  elemData.add_coordinates_field(
+    coordField, ndim, sierra::nalu::CURRENT_COORDINATES);
+
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  stk::mesh::Part* part = meta.get_part("surface_5");
+  stk::mesh::Selector sel(*part);
+
+  const unsigned coordsID = coordField.mesh_meta_data_ordinal();
+  const unsigned exposedAreaID = exposedArea.mesh_meta_data_ordinal();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto wArea = fieldMgr.get_field<double>(
+    wallArea.mesh_meta_data_ordinal());
+  auto wDist = fieldMgr.get_field<double>(
+    wallNormDist.mesh_meta_data_ordinal());
+  const auto areaOps = sierra::nalu::nalu_ngp::simd_face_elem_nodal_field_updater(
+    ngpMesh, wArea);
+  const auto distOps = sierra::nalu::nalu_ngp::simd_face_elem_nodal_field_updater(
+    ngpMesh, wDist);
+
+  sierra::nalu::nalu_ngp::run_face_elem_algorithm(
+    meshInfo, faceData, elemData, sel,
+    KOKKOS_LAMBDA(FaceSimdData& fdata) {
+
+      auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
+      auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaID);
+
+      const int* faceIpNodeMap = meFC->ipNodeMap();
+      for (int ip=0; ip < FaceTraits::numFaceIp_; ++ip) {
+        DoubleType aMag = 0.0;
+        for (int d=0; d < FaceTraits::nDim_; ++d)
+          aMag += v_area(ip, d) * v_area(ip, d);
+        aMag = stk::math::sqrt(aMag);
+
+        const int nodeR = meSCS->ipNodeMap(fdata.faceOrd)[ip];
+        const int nodeL = meSCS->opposingNodes(fdata.faceOrd, ip);
+
+        DoubleType ypBip = 0.0;
+        for (int d=0; d < FaceTraits::nDim_; ++d) {
+          const DoubleType nj = v_area(ip, d) / aMag;
+          const DoubleType ej = 0.25 * (v_coord(nodeR, d) - v_coord(nodeL, d));
+          ypBip += nj * ej * nj * ej;
+        }
+        ypBip = stk::math::sqrt(ypBip);
+
+        const int ni = faceIpNodeMap[ip];
+        distOps(fdata, ni, 0) += aMag * ypBip;
+        areaOps(fdata, ni, 0) += aMag;
+      }
+    });
+
+  sierra::nalu::nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      wDist.get(mi, 0) /= wArea.get(mi, 0);
+    });
+
+  wArea.modify_on_device();
+  wArea.sync_to_host();
+  wDist.modify_on_device();
+  wDist.sync_to_host();
+
+  {
+    double minArea = 1.0e20;
+    double maxArea = -1.0e20;
+    const double tol = 1.0e-15;
+    const double wdistExpected = 0.25;
+    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+    for (const auto* b: bkts) {
+      for (const auto node: *b) {
+        const double* warea = stk::mesh::field_data(wallArea, node);
+        const double* wdist = stk::mesh::field_data(wallNormDist, node);
+        if (warea[0] < minArea) minArea = warea[0];
+        if (warea[0] > maxArea) maxArea = warea[0];
+        EXPECT_NEAR(wdist[0], wdistExpected, tol);
+      }
+    }
+    EXPECT_NEAR(minArea, 0.25, tol);
+    EXPECT_NEAR(maxArea, 1.0, tol);
+  }
+}
+
 TEST_F(NgpLoopTest, NGP_basic_node_loop)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
 
   basic_node_loop(bulk, *pressure);
+}
+
+TEST_F(NgpLoopTest, NGP_basic_node_reduce)
+{
+  fill_mesh_and_init_fields("generated:16x16x16");
+
+  basic_node_reduce(bulk, *pressure);
+}
+
+TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmax)
+{
+  fill_mesh_and_init_fields("generated:16x16x16");
+
+  basic_node_reduce_minmax(bulk, 0.0, 16.0);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_elem_loop)
@@ -421,4 +627,30 @@ TEST_F(NgpLoopTest, NGP_calc_mdot_elem_loop)
   fill_mesh_and_init_fields("generated:2x2x2");
 
   calc_mdot_elem_loop(bulk, *density, *velocity, *massFlowRate);
+}
+
+TEST_F(NgpLoopTest, NGP_basic_face_elem_loop)
+{
+  if (bulk.parallel_size() > 1) return;
+
+  auto& exposedAreaVec = meta.declare_field<GenericFieldType>(
+    meta.side_rank(), "exposed_area_vector");
+  auto& wallArea = meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "wall_area");
+  auto& wallNormDist = meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "wall_normal_dist");
+
+  stk::mesh::put_field_on_mesh(
+    exposedAreaVec, meta.universal_part(),
+    meta.spatial_dimension() * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+  stk::mesh::put_field_on_mesh(
+    wallArea, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(
+    wallNormDist, meta.universal_part(), 1, nullptr);
+
+  fill_mesh_and_init_fields("generated:4x4x1|sideset:xXyYzZ");
+  unit_test_kernel_utils::calc_exposed_area_vec(
+    bulk, sierra::nalu::AlgTraitsQuad4::topo_, *coordField, exposedAreaVec);
+
+  basic_face_elem_loop(bulk, *coordField, exposedAreaVec, wallArea, wallNormDist);
 }

@@ -105,6 +105,14 @@
 // transfer
 #include <xfer/Transfer.h>
 
+#include "utils/StkHelpers.h"
+#include "ngp_utils/NgpTypes.h"
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldBLAS.h"
+#include "ngp_algorithms/GeometryAlgDriver.h"
+#include "ngp_algorithms/GeometryInteriorAlg.h"
+#include "ngp_algorithms/GeometryBoundaryAlg.h"
+
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_util/environment/WallTime.hpp>
@@ -337,6 +345,7 @@ void
 Realm::breadboard()
 {
   computeGeometryAlgDriver_ = new ComputeGeometryAlgorithmDriver(*this);
+  geometryAlgDriver_.reset(new GeometryAlgDriver(*this));
   equationSystems_.breadboard();
 }
 
@@ -877,6 +886,9 @@ Realm::setup_nodal_fields()
   hypreGlobalId_ = &(metaData_->declare_field<HypreIDFieldType>(
                        stk::topology::NODE_RANK, "hypre_global_id"));
 #endif
+  tpetGlobalId_ = &(metaData_->declare_field<TpetIDFieldType>(
+                       stk::topology::NODE_RANK, "tpet_global_id"));
+
   // register global id and rank fields on all parts
   const stk::mesh::PartVector parts = metaData_->get_parts();
   for ( size_t ipart = 0; ipart < parts.size(); ++ipart ) {
@@ -886,6 +898,8 @@ Realm::setup_nodal_fields()
 #ifdef NALU_USES_HYPRE
     stk::mesh::put_field_on_mesh(*hypreGlobalId_, *parts[ipart], nullptr);
 #endif
+    stk::mesh::put_field_on_mesh(*tpetGlobalId_, *parts[ipart], nullptr);
+    stk::mesh::field_fill(std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
   }
 
 
@@ -2097,7 +2111,6 @@ Realm::create_mesh()
     edgesPart_ = &metaData_->declare_part("create_edges_part", stk::topology::EDGE_RANK);
   }
 
-  meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
   // set mesh creation
   const double end_time = NaluEnv::self().nalu_time();
   timerCreateMesh_ = (end_time - start_time);
@@ -2611,7 +2624,7 @@ void
 Realm::compute_geometry()
 {
   // interior and boundary
-  computeGeometryAlgDriver_->execute();
+  geometryAlgDriver_->execute();
 
   // find total volume if the mesh moves at all
   if ( does_mesh_move() ) {
@@ -2656,34 +2669,32 @@ Realm::compute_geometry()
 void
 Realm::compute_vrtm()
 {
-  // compute velocity relative to mesh; must be tied to velocity update...
-  if ( solutionOptions_->meshMotion_ || solutionOptions_->externalMeshDeformation_ ) {
-    const int nDim = metaData_->spatial_dimension();
+  if (!solutionOptions_->meshMotion_ &&
+      !solutionOptions_->externalMeshDeformation_) return;
 
-    VectorFieldType *velocity = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-    VectorFieldType *meshVelocity = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity");
-    VectorFieldType *velocityRTM = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm");
+  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using MeshIndex = Traits::MeshIndex;
 
-    stk::mesh::Selector s_all_nodes
-       = (metaData_->locally_owned_part() | metaData_->globally_shared_part());
+  const int nDim = metaData_->spatial_dimension();
+  const auto& ngpMesh = ngp_mesh();
+  const auto& fieldMgr = ngp_field_manager();
+  const auto vel = fieldMgr.get_field<double>(
+    get_field_ordinal(*metaData_, "velocity"));
+  const auto meshVel = fieldMgr.get_field<double>(
+    get_field_ordinal(*metaData_, "mesh_velocity"));
+  auto vrtm = fieldMgr.get_field<double>(
+    get_field_ordinal(*metaData_, "velocity_rtm"));
 
-    stk::mesh::BucketVector const& node_buckets = bulkData_->get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-    for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-	  ib != node_buckets.end() ; ++ib ) {
-      stk::mesh::Bucket & b = **ib ;
-      const stk::mesh::Bucket::size_type length   = b.size();
-      const double * uNp1 = stk::mesh::field_data(*velocity, b);
-      const double * vNp1 = stk::mesh::field_data(*meshVelocity, b);
-      double * vrtm = stk::mesh::field_data(*velocityRTM, b);
+  const stk::mesh::Selector sel = (
+    metaData_->locally_owned_part() | metaData_->globally_shared_part());
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      for (int d=0; d < nDim; ++d)
+        vrtm.get(mi, d) = vel.get(mi, d) - meshVel.get(mi, d);
+    });
 
-      for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-        const int offSet = k*nDim;
-        for ( int j=0; j < nDim; ++j ) {
-          vrtm[offSet+j] = uNp1[offSet+j] - vNp1[offSet+j];
-        }
-      }
-    }
-  }
+  vrtm.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -2770,6 +2781,21 @@ Realm::register_nodal_fields(
   // register high level common fields
   const int nDim = metaData_->spatial_dimension();
 
+  // Declare volume/area_vector fields
+  const int numVolStates = does_mesh_move() ? number_of_states() : 1;
+  auto& dualNodalVol = metaData_->declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates);
+  stk::mesh::put_field_on_mesh(dualNodalVol, *part, 1, nullptr);
+  if (numVolStates > 1)
+    augment_restart_variable_list("dual_nodal_volume");
+  auto& elemVol = metaData_->declare_field<ScalarFieldType>(stk::topology::ELEM_RANK, "element_volume");
+  stk::mesh::put_field_on_mesh(elemVol, *part, 1, nullptr);
+
+  if (realmUsesEdges_) {
+    auto& edgeAreaVec = metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "edge_area_vector");
+    stk::mesh::put_field_on_mesh(edgeAreaVec, *part, metaData_->spatial_dimension(), nullptr);
+  }
+
   // mesh motion/deformation is high level
   if ( solutionOptions_->meshMotion_ || solutionOptions_->externalMeshDeformation_) {
     VectorFieldType *displacement = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement"));
@@ -2800,20 +2826,9 @@ void
 Realm::register_interior_algorithm(
   stk::mesh::Part *part)
 {
-  //====================================================
-  // Register interior algorithms
-  //====================================================
   const AlgorithmType algType = INTERIOR;
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = computeGeometryAlgDriver_->algMap_.find(algType);
-  if ( it == computeGeometryAlgDriver_->algMap_.end() ) {
-    ComputeGeometryInteriorAlgorithm *theAlg
-      = new ComputeGeometryInteriorAlgorithm(*this, part);
-    computeGeometryAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  geometryAlgDriver_->register_legacy_algorithm<ComputeGeometryInteriorAlgorithm>(
+    algType, part, "geometry");
 
   // Track parts that are registered to interior algorithms
   interiorPartVec_.push_back(part);
@@ -2845,21 +2860,10 @@ Realm::register_wall_bc(
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
-  //====================================================
-  // Register wall algorithms
-  //====================================================
   const AlgorithmType algType = WALL;
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = computeGeometryAlgDriver_->algMap_.find(algType);
-  if ( it == computeGeometryAlgDriver_->algMap_.end() ) {
-    ComputeGeometryBoundaryAlgorithm *theAlg
-      = new ComputeGeometryBoundaryAlgorithm(*this, part);
-    computeGeometryAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
-
+  geometryAlgDriver_
+    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
+      algType, part, "geometry");
 }
 
 //--------------------------------------------------------------------------
@@ -2888,20 +2892,10 @@ Realm::register_inflow_bc(
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
-  //====================================================
-  // Register wall algorithms
-  //====================================================
   const AlgorithmType algType = INFLOW;
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = computeGeometryAlgDriver_->algMap_.find(algType);
-  if ( it == computeGeometryAlgDriver_->algMap_.end() ) {
-    ComputeGeometryBoundaryAlgorithm *theAlg
-      = new ComputeGeometryBoundaryAlgorithm(*this, part);
-    computeGeometryAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  geometryAlgDriver_
+    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
+      algType, part, "geometry");
 }
 
 //--------------------------------------------------------------------------
@@ -2931,20 +2925,10 @@ Realm::register_open_bc(
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
 
-  //====================================================
-  // Register wall algorithms
-  //====================================================
   const AlgorithmType algType = OPEN;
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = computeGeometryAlgDriver_->algMap_.find(algType);
-  if ( it == computeGeometryAlgDriver_->algMap_.end() ) {
-    ComputeGeometryBoundaryAlgorithm *theAlg
-      = new ComputeGeometryBoundaryAlgorithm(*this, part);
-    computeGeometryAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  geometryAlgDriver_
+    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
+      algType, part, "geometry");
 }
 
 //--------------------------------------------------------------------------
@@ -2973,20 +2957,10 @@ Realm::register_symmetry_bc(
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
-  //====================================================
-  // Register symmetry algorithms
-  //====================================================
   const AlgorithmType algType = SYMMETRY;
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = computeGeometryAlgDriver_->algMap_.find(algType);
-  if ( it == computeGeometryAlgDriver_->algMap_.end() ) {
-    ComputeGeometryBoundaryAlgorithm *theAlg
-      = new ComputeGeometryBoundaryAlgorithm(*this, part);
-    computeGeometryAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  geometryAlgDriver_
+    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
+      algType, part, "geometry");
 }
 
 //--------------------------------------------------------------------------
@@ -3079,19 +3053,9 @@ Realm::register_non_conformal_bc(
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
    
-  //====================================================
-  // Register non-conformal algorithms
-  //====================================================
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = computeGeometryAlgDriver_->algMap_.find(algType);
-  if ( it == computeGeometryAlgDriver_->algMap_.end() ) {
-    ComputeGeometryBoundaryAlgorithm *theAlg
-      = new ComputeGeometryBoundaryAlgorithm(*this, part);
-    computeGeometryAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  geometryAlgDriver_
+    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
+      algType, part, "geometry");
 }
 
 //--------------------------------------------------------------------------
@@ -3152,6 +3116,15 @@ Realm::periodic_field_update(
   periodicManager_->apply_constraints(theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
 }
 
+
+void
+Realm::periodic_field_max(
+  stk::mesh::FieldBase *theField,
+  const unsigned &sizeOfField) const
+{
+  periodicManager_->apply_max_field(theField, sizeOfField);
+}
+
 //--------------------------------------------------------------------------
 //-------- periodic_delta_solution_update -------------------------------------------
 //--------------------------------------------------------------------------
@@ -3163,7 +3136,8 @@ Realm::periodic_delta_solution_update(
   const bool bypassFieldCheck = true;
   const bool addSlaves = false;
   const bool setSlaves = true;
-  periodicManager_->apply_constraints(theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
+  periodicManager_->ngp_apply_constraints(
+    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
 }
 
 //--------------------------------------------------------------------------
@@ -3361,6 +3335,31 @@ void
 Realm::swap_states()
 {
   bulkData_->update_field_data_states();
+
+#ifdef KOKKOS_ENABLE_CUDA
+  if (get_time_step_count() < 2) return;
+
+  const auto& fieldMgr = ngp_field_manager();
+  for (const auto fld: metaData_->get_fields()) {
+    const unsigned numStates = fld->number_of_states();
+    const auto fieldID = fld->mesh_meta_data_ordinal();
+    const auto fieldNp1ID =
+      fld->field_state(stk::mesh::StateNP1)->mesh_meta_data_ordinal();
+
+    if ((numStates < 2) || (fieldID != fieldNp1ID)) continue;
+
+    for (unsigned i=(numStates - 1); i > 0; --i) {
+      auto& toField = fieldMgr.get_field<double>(
+        fld->field_state(static_cast<stk::mesh::FieldState>(i))
+        ->mesh_meta_data_ordinal());
+      auto& fromField = fieldMgr.get_field<double>(
+        fld->field_state(static_cast<stk::mesh::FieldState>(i-1))
+        ->mesh_meta_data_ordinal());
+
+      toField.swap(fromField);
+    }
+  }
+#endif
 }
 
 //--------------------------------------------------------------------------

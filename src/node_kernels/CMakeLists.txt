@@ -16,5 +16,6 @@ add_sources(GlobalSourceList
   TKESSTNodeKernel.C
   TKESSTDESNodeKernel.C
   SDRSSTNodeKernel.C
+  SDRSSTDESNodeKernel.C
   WallDistNodeKernel.C
   )

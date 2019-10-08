@@ -15,7 +15,7 @@
 
 #include <vector>
 
-TEST_F(EnthalpyKernelHex8Mesh, NGP_abl_force)
+TEST_F(EnthalpyABLKernelHex8Mesh, NGP_abl_force)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
@@ -31,13 +31,11 @@ TEST_F(EnthalpyKernelHex8Mesh, NGP_abl_force)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
 
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, 37.5, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(helperObjs.linsys->lhs_, 0.0, 1.0e-12);
-#endif
 }

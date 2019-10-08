@@ -11,7 +11,6 @@
 
 #include "node_kernels/TKEKsgsNodeKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
 namespace tke_ksgs {
@@ -35,7 +34,6 @@ static constexpr double lhs[8][8] = {
 } // tke_ksgs
 } // hex8_golds
 }
-#endif
 
 TEST_F(KsgsKernelHex8Mesh, NGP_tke_ksgs_node)
 {
@@ -60,16 +58,14 @@ TEST_F(KsgsKernelHex8Mesh, NGP_tke_ksgs_node)
 
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_, 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
 
   namespace hex8_golds = hex8_golds::tke_ksgs;
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
     helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
-#endif
 }

@@ -255,18 +255,32 @@ public:
       naluGlobalId_(
         &meta_.declare_field<GlobalIdFieldType>(
           stk::topology::NODE_RANK, "nalu_global_id",1)),
+      tpetGlobalId_(
+        &meta_.declare_field<TpetIDFieldType>(
+          stk::topology::NODE_RANK, "tpet_global_id",1)),
       dnvField_(&meta_.declare_field<ScalarFieldType>(
                   stk::topology::NODE_RANK, "dual_nodal_volume",2)),
       divMeshVelField_(&meta_.declare_field<ScalarFieldType>(
                   stk::topology::NODE_RANK, "div_mesh_velocity")),
       edgeAreaVec_(
         &meta_.declare_field<VectorFieldType>(
-          stk::topology::EDGE_RANK, "edge_area_vector"))
+          stk::topology::EDGE_RANK, "edge_area_vector")),
+      elementVolume_(
+        &meta_.declare_field<ScalarFieldType>(
+          stk::topology::ELEM_RANK, "element_volume")),
+      exposedAreaVec_(
+        &meta_.declare_field<GenericFieldType>(
+          meta_.side_rank(), "exposed_area_vector"))
   {
     stk::mesh::put_field_on_mesh(*naluGlobalId_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tpetGlobalId_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*dnvField_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*divMeshVelField_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(*elementVolume_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *exposedAreaVec_, meta_.universal_part(),
+      spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
   }
 
   virtual ~TestKernelHex8Mesh() {}
@@ -293,6 +307,9 @@ public:
     stk::mesh::field_fill(1.25, *divMeshVelField_);
     unit_test_kernel_utils::calc_edge_area_vec(
       bulk_, sierra::nalu::AlgTraitsHex8::topo_, *coordinates_, *edgeAreaVec_);
+    unit_test_kernel_utils::calc_exposed_area_vec(
+      bulk_, sierra::nalu::AlgTraitsQuad4::topo_, *coordinates_,
+      *exposedAreaVec_);
   }
 
   stk::ParallelMachine comm_;
@@ -302,12 +319,17 @@ public:
   stk::mesh::PartVector partVec_;
 
   sierra::nalu::SolutionOptions solnOpts_;
+  typedef long   GlobalOrdinal;
+  typedef stk::mesh::Field<GlobalOrdinal> TpetIDFieldType;
 
   const VectorFieldType* coordinates_{nullptr};
   GlobalIdFieldType* naluGlobalId_{nullptr};
+  TpetIDFieldType* tpetGlobalId_{nullptr};
   ScalarFieldType* dnvField_{nullptr};
   ScalarFieldType* divMeshVelField_{nullptr};
   VectorFieldType* edgeAreaVec_{nullptr};
+  ScalarFieldType* elementVolume_{nullptr};
+  GenericFieldType* exposedAreaVec_{nullptr};
 };
 
 /** Test Fixture for Low-Mach Kernels
@@ -338,9 +360,6 @@ public:
       Udiag_(
         &meta_.declare_field<ScalarFieldType>(
           stk::topology::NODE_RANK, "momentum_diag", 2)),
-      exposedAreaVec_(
-        &meta_.declare_field<GenericFieldType>(
-          meta_.side_rank(), "exposed_area_vector")),
       velocityBC_(
         &meta_.declare_field<VectorFieldType>(
           stk::topology::NODE_RANK, "velocity_bc"))
@@ -350,9 +369,6 @@ public:
     stk::mesh::put_field_on_mesh(*density_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*pressure_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*Udiag_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(
-      *exposedAreaVec_, meta_.universal_part(),
-      spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(*velocityBC_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
@@ -368,9 +384,6 @@ public:
     unit_test_kernel_utils::dpdx_test_function(bulk_, *coordinates_, *dpdx_);
     stk::mesh::field_fill(1.0, *density_);
     stk::mesh::field_fill(1.0, *Udiag_);
-    unit_test_kernel_utils::calc_exposed_area_vec(
-      bulk_, sierra::nalu::AlgTraitsQuad4::topo_, *coordinates_,
-      *exposedAreaVec_);
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocityBC_);
   }
 
@@ -379,7 +392,6 @@ public:
   ScalarFieldType* density_{nullptr};
   ScalarFieldType* pressure_{nullptr};
   ScalarFieldType* Udiag_{nullptr};
-  GenericFieldType* exposedAreaVec_{nullptr};
   VectorFieldType* velocityBC_{nullptr};
 };
 
@@ -441,7 +453,7 @@ public:
     stk::mesh::put_field_on_mesh(
       *openMassFlowRate_, meta_.universal_part(),
       sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
-    stk::mesh::put_field_on_mesh(*openVelocityBC_, meta_.universal_part(), spatialDim_, nullptr);
+   stk::mesh::put_field_on_mesh(*openVelocityBC_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
   virtual ~MomentumKernelHex8Mesh() {}
@@ -558,9 +570,43 @@ public:
 class MomentumNodeHex8Mesh : public MomentumKernelHex8Mesh
 {};
 
-// Dummy class to provide namespace for tests
 class EnthalpyABLKernelHex8Mesh : public MomentumABLKernelHex8Mesh
-{};
+{
+public:
+  EnthalpyABLKernelHex8Mesh()
+    : MomentumABLKernelHex8Mesh(),
+      thermalCond_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "thermal_conductivity")),
+      evisc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "effective_viscosity")),
+      tvisc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "turbulent_viscosity")),
+      heatFluxBC_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "heat_flux_bc"))
+  {
+    stk::mesh::put_field_on_mesh(*thermalCond_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*evisc_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*heatFluxBC_, meta_.universal_part(), 1, nullptr);
+  }
+
+  virtual ~EnthalpyABLKernelHex8Mesh () {}
+
+  virtual void fill_mesh_and_init_fields(
+    bool doPerturb = false, bool generateSidesets = false) override
+  {
+    MomentumABLKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    stk::mesh::field_fill(0.0, *thermalCond_);
+    stk::mesh::field_fill(0.0, *evisc_);
+    stk::mesh::field_fill(0.3, *tvisc_);
+    stk::mesh::field_fill(100.0, *heatFluxBC_);
+  }
+
+  ScalarFieldType* thermalCond_{nullptr};
+  ScalarFieldType* evisc_{nullptr};
+  ScalarFieldType* tvisc_{nullptr};
+  ScalarFieldType* heatFluxBC_{nullptr};
+};
 
 /** Test Fixture for the SST Kernels
  *
@@ -572,12 +618,18 @@ public:
     : LowMachKernelHex8Mesh(),
       tke_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "turbulent_ke")),
+      tkebc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "bc_turbulent_ke")),
       sdr_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "specific_dissipation_rate")),
+      visc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "viscosity")),
       tvisc_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "turbulent_viscosity")),
       maxLengthScale_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "sst_max_length_scale")),
+      minDistance_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "minimum_distance_to_wall")),
       fOneBlend_(&meta_.declare_field<ScalarFieldType>(
                    stk::topology::NODE_RANK, "sst_f_one_blending")),
       dudx_(&meta_.declare_field<GenericFieldType>(
@@ -585,12 +637,17 @@ public:
       dkdx_(&meta_.declare_field<VectorFieldType>(
               stk::topology::NODE_RANK, "dkdx")),
       dwdx_(&meta_.declare_field<VectorFieldType>(
-              stk::topology::NODE_RANK, "dwdx"))
+              stk::topology::NODE_RANK, "dwdx")),
+      openMassFlowRate_(&meta_.declare_field<GenericFieldType>(
+        meta_.side_rank(), "open_mass_flow_rate"))
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*tkebc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*sdr_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*visc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*maxLengthScale_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*minDistance_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*fOneBlend_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(
       *dudx_, meta_.universal_part(), spatialDim_ * spatialDim_, nullptr);
@@ -598,6 +655,13 @@ public:
       *dkdx_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
       *dwdx_, meta_.universal_part(), spatialDim_, nullptr);
+    double initOpenMassFlowRate[sierra::nalu::AlgTraitsQuad4::numScsIp_];
+    for (int i = 0; i < sierra::nalu::AlgTraitsQuad4::numScsIp_; ++i) {
+      initOpenMassFlowRate[i] = 10.0; 
+    }
+    stk::mesh::put_field_on_mesh(
+      *openMassFlowRate_, meta_.universal_part(),
+      sierra::nalu::AlgTraitsQuad4::numScsIp_, initOpenMassFlowRate);
   }
 
   virtual ~SSTKernelHex8Mesh() {}
@@ -606,12 +670,14 @@ public:
     bool doPerturb = false, bool generateSidesets = false) override
   {
     LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    stk::mesh::field_fill(0.2, *visc_);
     stk::mesh::field_fill(0.3, *tvisc_);
     stk::mesh::field_fill(0.5, *maxLengthScale_);
     unit_test_kernel_utils::density_test_function(
       bulk_, *coordinates_, *density_);
     unit_test_kernel_utils::tke_test_function(bulk_, *coordinates_, *tke_);
     unit_test_kernel_utils::sdr_test_function(bulk_, *coordinates_, *sdr_);
+    unit_test_kernel_utils::minimum_distance_to_wall_test_function(bulk_, *coordinates_, *minDistance_);
     unit_test_kernel_utils::sst_f_one_blending_test_function(
       bulk_, *coordinates_, *fOneBlend_);
     unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
@@ -620,13 +686,17 @@ public:
   }
 
   ScalarFieldType* tke_{nullptr};
+  ScalarFieldType* tkebc_{nullptr};
   ScalarFieldType* sdr_{nullptr};
+  ScalarFieldType* visc_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* maxLengthScale_{nullptr};
+  ScalarFieldType* minDistance_{nullptr};
   ScalarFieldType* fOneBlend_{nullptr};
   GenericFieldType* dudx_{nullptr};
   VectorFieldType* dkdx_{nullptr};
   VectorFieldType* dwdx_{nullptr};
+  GenericFieldType* openMassFlowRate_{nullptr};
 };
 
 /** Test Fixture for the Turbulence Kernels
@@ -650,7 +720,13 @@ public:
       dkdx_(&meta_.declare_field<VectorFieldType>( stk::topology::NODE_RANK, "dkdx")),
       dwdx_(&meta_.declare_field<VectorFieldType>( stk::topology::NODE_RANK, "dwdx")),
       dhdx_(&meta_.declare_field<VectorFieldType>( stk::topology::NODE_RANK, "dhdx")),
-      specificHeat_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "specific_heat"))
+      specificHeat_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "specific_heat")),
+      wallNormDistBip_(&meta_.declare_field<GenericFieldType>(
+                         stk::topology::FACE_RANK, "wall_normal_distance_bip")),
+      wallArea_(&meta_.declare_field<ScalarFieldType>(
+                  stk::topology::NODE_RANK, "assembled_wall_area_wf")),
+      wallNormDist_(&meta_.declare_field<ScalarFieldType>(
+                      stk::topology::NODE_RANK, "assembled_wall_normal_distance"))
   {
     stk::mesh::put_field_on_mesh(*viscosity_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
@@ -666,6 +742,11 @@ public:
     stk::mesh::put_field_on_mesh(*dwdx_, meta_.universal_part(),  spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*dhdx_, meta_.universal_part(),  spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*specificHeat_, meta_.universal_part(),  1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *wallNormDistBip_, meta_.universal_part(),
+      sierra::nalu::AlgTraitsQuad4::numFaceIp_, nullptr);
+    stk::mesh::put_field_on_mesh(*wallArea_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*wallNormDist_, meta_.universal_part(),  1, nullptr);
   }
 
   virtual ~KsgsKernelHex8Mesh() = default;
@@ -711,6 +792,9 @@ public:
   VectorFieldType*    dwdx_{nullptr};
   VectorFieldType*    dhdx_{nullptr};
   ScalarFieldType*    specificHeat_{nullptr};
+  GenericFieldType*   wallNormDistBip_{nullptr};
+  ScalarFieldType*    wallArea_{nullptr};
+  ScalarFieldType*    wallNormDist_{nullptr};
 };
 
 /** Test Fixture for the hybrid turbulence Kernels
@@ -815,8 +899,6 @@ public:
                                                          "mass_flow_rate_scs")),
     dzdx_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dzdx")),
     dpdx_(&meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dpdx",2)),
-    exposedAreaVec_(&meta_.declare_field<GenericFieldType>(
-                      meta_.side_rank(), "exposed_area_vector")),
     openMassFlowRate_(&meta_.declare_field<GenericFieldType>(meta_.side_rank(),
                                                          "open_mass_flow_rate")),
     massFlowRateEdge_(&meta_.declare_field<ScalarFieldType>(
@@ -839,9 +921,6 @@ public:
     stk::mesh::put_field_on_mesh(*dzdx_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*dpdx_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
-      *exposedAreaVec_, meta_.universal_part(),
-      spatialDim_ * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
-    stk::mesh::put_field_on_mesh(
       *openMassFlowRate_, meta_.universal_part(),
       sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
     stk::mesh::put_field_on_mesh(
@@ -862,9 +941,6 @@ public:
                                                                          viscPrimary_, viscSecondary_);
     unit_test_kernel_utils::calc_mass_flow_rate_scs(
       bulk_, stk::topology::HEX_8, *coordinates_, *density_, *velocity_, *massFlowRate_);
-    unit_test_kernel_utils::calc_exposed_area_vec(
-      bulk_, sierra::nalu::AlgTraitsQuad4::topo_, *coordinates_,
-      *exposedAreaVec_);
     unit_test_kernel_utils::calc_open_mass_flow_rate(
       bulk_, stk::topology::QUAD_4, *coordinates_, *density_, *velocity_,
       *exposedAreaVec_, *openMassFlowRate_);
@@ -880,7 +956,6 @@ public:
   GenericFieldType* massFlowRate_{nullptr};
   VectorFieldType* dzdx_{nullptr};
   VectorFieldType* dpdx_{nullptr};
-  GenericFieldType* exposedAreaVec_{nullptr};
   GenericFieldType* openMassFlowRate_{nullptr};
   ScalarFieldType* massFlowRateEdge_{nullptr};
 
@@ -937,9 +1012,6 @@ public:
 };
 
 class WallDistKernelHex8Mesh : public TestKernelHex8Mesh
-{};
-
-class EnthalpyKernelHex8Mesh : public TestKernelHex8Mesh
 {};
 
 #endif /* UNITTESTKERNELUTILS_H */

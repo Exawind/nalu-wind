@@ -112,6 +112,7 @@ private:
    +0.50,  +0.50, 
    -0.50,  +0.50};
 
+  KOKKOS_FUNCTION
   void quad_shape_fcn(
     const double *par_coord, 
     SharedMemView<DoubleType**, DeviceShmem> &shape_fcn);
@@ -222,7 +223,7 @@ public:
 
   KOKKOS_FUNCTION virtual const int * adjacentNodes() final;
 
-  const int * scsIpEdgeOrd() override;
+  KOKKOS_FUNCTION virtual const int * scsIpEdgeOrd() final;
 
   KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node) override;
@@ -349,12 +350,14 @@ private :
 
   double intgExpFaceShift_[4][2][2];
 
+  KOKKOS_FUNCTION
   void face_grad_op(
     const int face_ordinal,
     const bool shifted,
     SharedMemView<DoubleType**, DeviceShmem>& coords,
     SharedMemView<DoubleType***, DeviceShmem>& gradop);
 
+  KOKKOS_FUNCTION
   void quad_shape_fcn(
     const double *par_coord, 
     SharedMemView<DoubleType**, DeviceShmem> &shape);

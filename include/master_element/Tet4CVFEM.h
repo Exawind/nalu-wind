@@ -70,6 +70,7 @@ public:
 
   void shifted_shape_fcn(double *shpfc) override;
   
+  KOKKOS_FUNCTION
   void tet_shape_fcn(
     const int npts,
     const double *par_coord, 
@@ -214,7 +215,7 @@ public:
 
   KOKKOS_FUNCTION virtual const int * adjacentNodes() final;
 
-  const int * scsIpEdgeOrd() override;
+  KOKKOS_FUNCTION virtual const int * scsIpEdgeOrd() final;
 
   KOKKOS_FUNCTION virtual void shape_fcn(
      SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;
@@ -226,6 +227,7 @@ public:
 
   void shifted_shape_fcn(double *shpfc) override;
 
+  KOKKOS_FUNCTION
   void tet_shape_fcn(
     const int npts,
     const double *par_coord,

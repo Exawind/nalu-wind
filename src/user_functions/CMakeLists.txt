@@ -8,6 +8,7 @@ add_sources(GlobalSourceList
    ConvectingTaylorVortexPressureAuxFunction.C
    ConvectingTaylorVortexVelocityAuxFunction.C
    FlowPastCylinderTempAuxFunction.C
+   GaussJetVelocityAuxFunction.C
    KovasznayPressureAuxFunction.C
    KovasznayVelocityAuxFunction.C
    LinearRampMeshDisplacementAuxFunction.C
@@ -51,6 +52,7 @@ add_sources(GlobalSourceList
    VariableDensityNonIsoTemperatureAuxFunction.C
    VariableDensityPressureAuxFunction.C
    VariableDensityVelocityAuxFunction.C
+   WindEnergyPowerLawAuxFunction.C
    WindEnergyTaylorVortexAuxFunction.C
    WindEnergyTaylorVortexPressureAuxFunction.C
 )

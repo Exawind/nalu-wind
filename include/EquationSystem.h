@@ -236,6 +236,17 @@ public:
     get_required(node, "convergence_tolerance", convergenceTolerance_);
   }
 
+  /** Update field with delta solution of linear solve
+   */
+  virtual void solution_update(
+    const double delta_frac,
+    const stk::mesh::FieldBase& delta,
+    const double field_frac,
+    stk::mesh::FieldBase& field,
+    const unsigned numComponents = 1,
+    const stk::topology::rank_t rank = stk::topology::NODE_RANK);
+
+
   Simulation *root();
   EquationSystems *parent();
 

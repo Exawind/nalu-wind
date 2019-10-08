@@ -36,12 +36,10 @@
 #include <NaluParsing.h>
 #include <Realm.h>
 #include <Realms.h>
-#include <ScalarGclNodeSuppAlg.h>
 #include <ScalarMassElemSuppAlgDep.h>
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <TimeIntegrator.h>
-#include <SpecificDissipationRateSSTNodeSourceSuppAlg.h>
 #include <SolverAlgorithmDriver.h>
 
 // template for supp algs
@@ -55,6 +53,8 @@
 #include <kernel/ScalarAdvDiffElemKernel.h>
 #include <kernel/ScalarUpwAdvDiffElemKernel.h>
 #include <kernel/SpecificDissipationRateSSTSrcElemKernel.h>
+#include <kernel/SpecificDissipationRateSSTDESSrcElemKernel.h>
+
 
 // edge kernels
 #include <edge_kernels/ScalarEdgeSolverAlg.h>
@@ -62,6 +62,12 @@
 // node kernels
 #include <node_kernels/NodeKernelUtils.h>
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
+#include <node_kernels/SDRSSTNodeKernel.h>
+#include <node_kernels/SDRSSTDESNodeKernel.h>
+#include <node_kernels/ScalarGclNodeKernel.h>
+
+// ngp
+#include "ngp_utils/NgpFieldBLAS.h"
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -287,8 +293,6 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       itsi->second->partVec_.push_back(part);
     }
 
-    // time term; src; both nodally lumped
-    const AlgorithmType algMass = SRC;
     // Check if the user has requested CMM or LMM algorithms; if so, do not
     // include Nodal Mass algorithms
     std::vector<std::string> checkAlgNames = {
@@ -302,47 +306,22 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
-        // TODO: Add SST source terms here
-      },
-      [&](AssembleNGPNodeSolverAlgorithm& /* nodeAlg */, std::string& /* srcName */) {
-        // No source terms available yet
-      });
+        if (SST_DES == realm_.solutionOptions_->turbulenceModel_){
+          nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
 
-    std::map<AlgorithmType, SolverAlgorithm*>::iterator itsm =
-      solverAlgDriver_->solverAlgMap_.find(algMass);
-    if (itsm == solverAlgDriver_->solverAlgMap_.end()) {
-      // create the solver alg
-      AssembleNodeSolverAlgorithm *theAlg
-        = new AssembleNodeSolverAlgorithm(realm_, part, this);
-      solverAlgDriver_->solverAlgMap_[algMass] = theAlg;
-
-      // now create the src alg for sdr source
-      SpecificDissipationRateSSTNodeSourceSuppAlg *theSrc
-        = new SpecificDissipationRateSSTNodeSourceSuppAlg(realm_);
-      theAlg->supplementalAlg_.push_back(theSrc);
-
-      // Add src term supp alg...; limited number supported
-      std::map<std::string, std::vector<std::string> >::iterator isrc
-        = realm_.solutionOptions_->srcTermsMap_.find("specific_dissipation_rate");
-      if (isrc != realm_.solutionOptions_->srcTermsMap_.end()) {
-        std::vector<std::string> mapNameVec = isrc->second;
-        for (size_t k = 0; k < mapNameVec.size(); ++k) {
-          std::string sourceName = mapNameVec[k];
-          SupplementalAlgorithm* suppAlg = NULL;
-          if (sourceName == "gcl") {
-            suppAlg = new ScalarGclNodeSuppAlg(sdr_, realm_);
-          }
-          else {
-            throw std::runtime_error("SpecificDissipationRateNodalSrcTerms::Error Source term is not supported: " + sourceName);
-          }
-          NaluEnv::self().naluOutputP0() << "SpecificDissipationRateNodalSrcTerms::added() " << sourceName << std::endl;
-          theAlg->supplementalAlg_.push_back(suppAlg);
         }
-      }
-    }
-    else {
-      itsm->second->partVec_.push_back(part);
-    }
+        else {
+          nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
+        }
+      },
+      [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
+        if (srcName == "gcl") {
+          nodeAlg.add_kernel<ScalarGclNodeKernel>(realm_.bulk_data(), sdr_);
+          NaluEnv::self().naluOutputP0() << " - " << srcName << std::endl;
+        }
+        else
+          throw std::runtime_error("SDREqSys: Invalid source term: " + srcName);
+      });
   }
   else {
     // Homogeneous kernel implementation
@@ -382,8 +361,16 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         (partTopo, *this, activeKernels, "sst",
          realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, false);
 
+      build_topo_kernel_if_requested<SpecificDissipationRateSSTDESSrcElemKernel>
+        (partTopo, *this, activeKernels, "sst_des",
+         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, false);
+
       build_topo_kernel_if_requested<SpecificDissipationRateSSTSrcElemKernel>
         (partTopo, *this, activeKernels, "lumped_sst",
+         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, true);
+
+      build_topo_kernel_if_requested<SpecificDissipationRateSSTDESSrcElemKernel>
+        (partTopo, *this, activeKernels, "lumped_sst_des",
          realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, true);
 
       build_topo_kernel_if_requested<ScalarNSOElemKernel>
@@ -880,10 +867,18 @@ SpecificDissipationRateEquationSystem::compute_wall_model_parameters()
 void
 SpecificDissipationRateEquationSystem::predict_state()
 {
-  // copy state n to state np1
-  ScalarFieldType &sdrN = sdr_->field_of_state(stk::mesh::StateN);
-  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
-  field_copy(realm_.meta_data(), realm_.bulk_data(), sdrN, sdrNp1, realm_.get_activate_aura());
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto& sdrN = fieldMgr.get_field<double>(
+    sdr_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& sdrNp1 = fieldMgr.get_field<double>(
+    sdr_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
+    & stk::mesh::selectField(*sdr_);
+  nalu_ngp::field_copy(ngpMesh, sel, sdrNp1, sdrN);
 }
 
 } // namespace nalu

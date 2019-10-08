@@ -9,9 +9,12 @@
 #ifndef LowMachEquationSystem_h
 #define LowMachEquationSystem_h
 
-#include <EquationSystem.h>
-#include <FieldTypeDef.h>
-#include <NaluParsing.h>
+#include "EquationSystem.h"
+#include "FieldTypeDef.h"
+#include "NaluParsing.h"
+
+#include "ngp_algorithms/NodalGradAlgDriver.h"
+#include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 
 namespace stk{
 struct topology;
@@ -193,6 +196,8 @@ public:
   virtual void assemble_and_solve(
     stk::mesh::FieldBase *deltaSolution);
 
+  void compute_turbulence_parameters();
+
   const bool managePNG_;
 
   VectorFieldType *velocity_;
@@ -205,12 +210,13 @@ public:
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
   ScalarFieldType* Udiag_{nullptr};
-  
-  AssembleNodalGradUAlgorithmDriver *assembleNodalGradAlgDriver_;
-  AlgorithmDriver *diffFluxCoeffAlgDriver_;
-  AlgorithmDriver *tviscAlgDriver_;
+
+  VectorNodalGradAlgDriver nodalGradAlgDriver_;
+  NgpAlgDriver wallFuncAlgDriver_;
+  std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
+  std::unique_ptr<Algorithm> tviscAlg_{nullptr};
+
   AlgorithmDriver *cflReyAlgDriver_;
-  AlgorithmDriver *wallFunctionParamsAlgDriver_;
 
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 
@@ -218,6 +224,7 @@ public:
 
   // saved of mesh parts that are not to be projected
   std::vector<stk::mesh::Part *> notProjectedPart_;
+  std::array<std::vector<stk::mesh::Part*>,3> notProjectedDir_;
 };
 
 class ContinuityEquationSystem : public EquationSystem {
@@ -296,7 +303,7 @@ public:
 
   ScalarFieldType *pTmp_;
 
-  AssembleNodalGradPAlgorithmDriver *assembleNodalGradPAlgDriver_;
+  ScalarNodalGradAlgDriver nodalGradAlgDriver_;
   ComputeMdotAlgorithmDriver *computeMdotAlgDriver_;
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 };

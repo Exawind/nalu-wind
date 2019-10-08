@@ -13,6 +13,9 @@
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
 
+#include "ngp_algorithms/NodalGradAlgDriver.h"
+#include "ngp_algorithms/TKEWallFuncAlgDriver.h"
+
 namespace stk{
 struct topology;
 }
@@ -33,7 +36,8 @@ public:
 
   TurbKineticEnergyEquationSystem(
     EquationSystems& equationSystems);
-  virtual ~TurbKineticEnergyEquationSystem();
+
+  virtual ~TurbKineticEnergyEquationSystem() = default;
 
   virtual void register_nodal_fields(
     stk::mesh::Part *part);
@@ -92,9 +96,9 @@ public:
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
   
-  AssembleNodalGradAlgorithmDriver *assembleNodalGradAlgDriver_;
-  AlgorithmDriver *diffFluxCoeffAlgDriver_;
-  AlgorithmDriver *wallFunctionTurbKineticEnergyAlgDriver_;
+  ScalarNodalGradAlgDriver nodalGradAlgDriver_;
+  std::unique_ptr<TKEWallFuncAlgDriver> wallFuncAlgDriver_;
+  std::unique_ptr<Algorithm> effDiffFluxCoeffAlg_;
   const TurbulenceModel turbulenceModel_;
 
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;

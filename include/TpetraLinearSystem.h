@@ -125,6 +125,14 @@ public:
     const double diag_value = 0.0,
     const double rhs_residual = 0.0);
 
+  virtual void resetRows(
+    unsigned numNodes,
+    const stk::mesh::Entity* nodeList,
+    const unsigned beginPos,
+    const unsigned endPos,
+    const double diag_value = 0.0,
+    const double rhs_residual = 0.0);
+
   // Solve
   int solve(stk::mesh::FieldBase * linearSolutionField);
   void loadComplete();
@@ -135,6 +143,14 @@ public:
   {
     return myLIDs[entityId];
   }
+
+  void copy_tpetra_to_stk(const Teuchos::RCP<LinSys::MultiVector> tpetraVector,
+                          stk::mesh::FieldBase * stkField);
+
+  // This method copies a stk::mesh::field to a tpetra multivector. Each dof/node is written
+  // into a different vector in the multivector.
+  void copy_stk_to_tpetra(const stk::mesh::FieldBase * stkField,
+                          const Teuchos::RCP<LinSys::MultiVector> tpetraVector);
 
 
   int getDofStatus(stk::mesh::Entity node);
@@ -169,6 +185,14 @@ public:
 
     KOKKOS_FUNCTION
     ~TpetraLinSysCoeffApplier() {}
+
+    KOKKOS_FUNCTION
+    virtual void resetRows(unsigned numNodes,
+                           const stk::mesh::Entity* nodeList,
+                           const unsigned beginPos,
+                           const unsigned endPos,
+                           const double diag_value = 0.0,
+                           const double rhs_residual = 0.0);
 
     KOKKOS_FUNCTION
     virtual void operator()(unsigned numEntities,
@@ -219,15 +243,6 @@ private:
 
   void fill_entity_to_row_LID_mapping();
   void fill_entity_to_col_LID_mapping();
-
-  void copy_tpetra_to_stk(
-    const Teuchos::RCP<LinSys::MultiVector> tpetraVector,
-    stk::mesh::FieldBase * stkField);
-
-  // This method copies a stk::mesh::field to a tpetra multivector. Each dof/node is written into a different
-  // vector in the multivector.
-  void copy_stk_to_tpetra(stk::mesh::FieldBase * stkField,
-    const Teuchos::RCP<LinSys::MultiVector> tpetraVector);
 
   int insert_connection(stk::mesh::Entity a, stk::mesh::Entity b);
   void addConnections(const stk::mesh::Entity* entities,const size_t&);

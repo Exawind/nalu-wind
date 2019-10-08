@@ -8,11 +8,17 @@
 #ifndef INCLUDE_KOKKOSINTERFACE_H_
 #define INCLUDE_KOKKOSINTERFACE_H_
 
+#include <cstddef>
+
 #include <stk_mesh/base/Entity.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core.hpp>
 
+#ifdef KOKKOS_ENABLE_CUDA
+#define NALU_ALIGNED alignas(sizeof(double))
+#else
 #define NALU_ALIGNED alignas(KOKKOS_MEMORY_ALIGNMENT)
+#endif
 
 #if defined(__INTEL_COMPILER)
 #define POINTER_RESTRICT restrict

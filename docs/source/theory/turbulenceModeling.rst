@@ -142,7 +142,7 @@ while :math:`S^d_{ij}` is,
 .. math::
    :label: wale-sdij
 
-   S^d_{ij} = \frac{1}{2} \left( g^2_{ij} + g^2_{ji}\right).
+   S^d_{ij} = \frac{1}{2} \left( g^2_{ij} + g^2_{ji}\right) - \frac{1}{3} \delta_{ij} g^2_{kk}.
 
 
 Finally, the velocity gradient squared ters are

@@ -27,6 +27,7 @@
 #include <stk_ngp/NgpFieldManager.hpp>
 
 #include "ngp_utils/NgpMeshInfo.h"
+#include "ngp_algorithms/GeometryAlgDriver.h"
 
 // standard c++
 #include <map>
@@ -234,6 +235,10 @@ class Realm {
     const unsigned &sizeOfTheField,
     const bool &bypassFieldCheck = true) const;
 
+  void periodic_field_max(
+    stk::mesh::FieldBase *theField,
+    const unsigned &sizeOfTheField) const;
+
   void periodic_delta_solution_update(
      stk::mesh::FieldBase *theField,
      const unsigned &sizeOfField) const;
@@ -359,7 +364,9 @@ class Realm {
 
   inline NgpMeshInfo& mesh_info()
   {
-    if (!meshInfo_) {
+    if ((meshModCount_ != bulkData_->synchronized_count()) ||
+        (!meshInfo_)) {
+      meshModCount_ = bulkData_->synchronized_count();
       meshInfo_.reset(new NgpMeshInfo(*bulkData_));
     }
     return *meshInfo_;
@@ -413,6 +420,7 @@ class Realm {
 
   // algorithm drivers managed by region
   ComputeGeometryAlgorithmDriver *computeGeometryAlgDriver_;
+  std::unique_ptr<GeometryAlgDriver> geometryAlgDriver_{nullptr};
   ErrorIndicatorAlgorithmDriver *errorIndicatorAlgDriver_;
 # if defined (NALU_USES_PERCEPT)  
   Adapter *adapter_;
@@ -657,6 +665,7 @@ class Realm {
    *  endIdx(MPI_rank) + 1.
    */
   HypreIDFieldType* hypreGlobalId_{nullptr};
+  TpetIDFieldType* tpetGlobalId_{nullptr};
 
   /** Flag indicating whether Hypre solver is being used for any of the equation
    * systems.
@@ -665,6 +674,8 @@ class Realm {
 
 protected:
   std::unique_ptr<NgpMeshInfo> meshInfo_;
+
+  unsigned meshModCount_{0};
 
 };
 

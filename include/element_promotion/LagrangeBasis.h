@@ -20,7 +20,9 @@ public:
   Lagrange1D(const double* nodeLocs, int order);
   Lagrange1D(Kokkos::View<double*> nodeLocs);
 
+  KOKKOS_FUNCTION
   ~Lagrange1D();
+
   double interpolation_weight(double x, unsigned nodeNumber) const;
   double derivative_weight(double x, unsigned nodeNumber) const;
 private:
@@ -33,7 +35,10 @@ class LagrangeBasis
 {
 public:
   LagrangeBasis(const std::vector<std::vector<int>>& indicesMap, const std::vector<double>& nodeLocs);
+
+  KOKKOS_FUNCTION
   ~LagrangeBasis();
+
   Kokkos::View<double**> eval_basis_weights(const double* intgLoc, int nInt) const;
   Kokkos::View<double**> eval_basis_weights(const Kokkos::View<double**>& intgLoc) const;
   Kokkos::View<double***> eval_deriv_weights(const double* intgLoc, int nInt) const;
@@ -43,7 +48,9 @@ public:
   const Kokkos::View<double*>& point_interpolation_weights(const double* isoParCoords);
   const Kokkos::View<double**>& point_derivative_weights(const double* isoParCoords);
 
+  KOKKOS_INLINE_FUNCTION
   unsigned order() const { return polyOrder_; }
+  KOKKOS_INLINE_FUNCTION
   unsigned num_nodes() const { return numNodes_; }
 
 private:

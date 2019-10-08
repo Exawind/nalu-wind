@@ -11,7 +11,6 @@
 
 #include "kernel/ContinuityInflowElemKernel.h"
 
-#ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
 
@@ -21,7 +20,6 @@ static constexpr double rhs[4] = {
 
 }
 } // anonymous namespace
-#endif
 
 TEST_F(ContinuityKernelHex8Mesh, inflow)
 {
@@ -59,7 +57,6 @@ TEST_F(ContinuityKernelHex8Mesh, inflow)
   // Populate LHS and RHS
   helperObjs.execute();
 
-#ifndef KOKKOS_ENABLE_CUDA
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 4u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 4u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 4u);
@@ -67,5 +64,4 @@ TEST_F(ContinuityKernelHex8Mesh, inflow)
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<4>(helperObjs.linsys->lhs_, 0.0);
-#endif
 }

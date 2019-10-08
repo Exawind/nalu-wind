@@ -35,6 +35,7 @@ namespace sierra{
 namespace nalu{
 
 //-------- tri_derivative -----------------------------------------------------
+KOKKOS_FUNCTION
 void tri_derivative (SharedMemView<DoubleType***, DeviceShmem>& deriv) {
   const int npts = deriv.extent(0); 
   for (int j=0; j<npts; ++j) {
@@ -48,6 +49,7 @@ void tri_derivative (SharedMemView<DoubleType***, DeviceShmem>& deriv) {
 }
 
 //-------- tri_gradient_operator -----------------------------------------------------
+KOKKOS_FUNCTION
 void tri_gradient_operator(
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
@@ -122,6 +124,11 @@ Tri32DSCV::ipNodeMap(
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
+Tri32DSCV::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) {
+  tri_shape_fcn(intgLoc_, shpfc);
+}
+
+void
 Tri32DSCV::shape_fcn(double *shpfc)
 {
   tri_shape_fcn(numIntPoints_, &intgLoc_[0], shpfc);
@@ -131,6 +138,12 @@ Tri32DSCV::shape_fcn(double *shpfc)
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
 void
+Tri32DSCV::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc)
+{
+  tri_shape_fcn(intgLocShift_, shpfc);
+}
+
+void
 Tri32DSCV::shifted_shape_fcn(double *shpfc)
 {
   tri_shape_fcn(numIntPoints_, intgLocShift_, shpfc);
@@ -138,6 +151,22 @@ Tri32DSCV::shifted_shape_fcn(double *shpfc)
 
 //--------------------------------------------------------------------------
 //-------- tri_shape_fcn ---------------------------------------------------
+//--------------------------------------------------------------------------
+void
+Tri32DSCV::tri_shape_fcn(
+  const double *isoParCoord,
+  SharedMemView<DoubleType**, DeviceShmem> &shape_fcn)
+{
+  for (int j = 0; j < numIntPoints_; ++j ) {
+    const int k = 2*j;
+    const double xi = isoParCoord[k];
+    const double eta = isoParCoord[k+1];
+    shape_fcn(j,0) = 1.0 - xi - eta;
+    shape_fcn(j,1) = xi;
+    shape_fcn(j,2) = eta;
+  }
+}
+
 //--------------------------------------------------------------------------
 void
 Tri32DSCV::tri_shape_fcn(
@@ -342,6 +371,7 @@ Tri32DSCS::Tri32DSCS()
   MasterElement::nodesPerElement_ = nodesPerElement_;
   MasterElement::numIntPoints_ = numIntPoints_;
 
+#ifndef KOKKOS_ENABLE_CUDA
   const std::array<std::array<double,2>,3> nodeLocations =
   {{
       {{0.0,0.0}}, {{1.0,0}}, {{0.0,1.0}}
@@ -355,6 +385,7 @@ Tri32DSCS::Tri32DSCS()
       intgExpFaceShift_[k][n][1] = nodeLocations[ordinals[n]][1];
     }
   }
+#endif
 }
 
 //--------------------------------------------------------------------------
@@ -755,6 +786,11 @@ Tri32DSCS::scsIpEdgeOrd()
 //-------- shape_fcn -------------------------------------------------------
 //--------------------------------------------------------------------------
 void
+Tri32DSCS::shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) {
+  tri_shape_fcn(intgLoc_, shpfc);
+}
+
+void
 Tri32DSCS::shape_fcn(double *shpfc)
 {
   tri_shape_fcn(numIntPoints_, intgLoc_, shpfc);
@@ -764,6 +800,11 @@ Tri32DSCS::shape_fcn(double *shpfc)
 //-------- shifted_shape_fcn -----------------------------------------------
 //--------------------------------------------------------------------------
 void
+Tri32DSCS::shifted_shape_fcn(SharedMemView<DoubleType**, DeviceShmem> &shpfc) {
+  tri_shape_fcn(intgLocShift_, shpfc);
+}
+
+void
 Tri32DSCS::shifted_shape_fcn(double *shpfc)
 {
   tri_shape_fcn(numIntPoints_, intgLocShift_, shpfc);
@@ -772,6 +813,21 @@ Tri32DSCS::shifted_shape_fcn(double *shpfc)
 //--------------------------------------------------------------------------
 //-------- tri_shape_fcn ---------------------------------------------------
 //--------------------------------------------------------------------------
+void
+Tri32DSCS::tri_shape_fcn(
+  const double *isoParCoord, 
+  SharedMemView<DoubleType**, DeviceShmem> &shape_fcn)
+{
+  for (int j = 0; j < numIntPoints_; ++j ) {
+    const int k = 2*j;
+    const double xi = isoParCoord[k];
+    const double eta = isoParCoord[k+1];
+    shape_fcn(j,0) = 1.0 - xi - eta;
+    shape_fcn(j,1) = xi;
+    shape_fcn(j,2) = eta;
+  }
+}
+
 void
 Tri32DSCS::tri_shape_fcn(
   const int   npts,

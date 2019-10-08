@@ -52,6 +52,10 @@ public:
 
   void shifted_shape_fcn(double *shpfc) final;
 
+  KOKKOS_FUNCTION virtual void determinant(
+    SharedMemView<DoubleType**, DeviceShmem>&coords ,
+    SharedMemView<DoubleType**, DeviceShmem>&areav) override;
+
   void determinant(
     const int nelem,
     const double *coords,

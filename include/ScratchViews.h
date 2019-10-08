@@ -408,7 +408,7 @@ int MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::create_master_element_views(
          break;
 
       case SCV_MIJ:
-         NGP_ThrowRequireMsg(numScsIp > 0, "ERROR, meSCV must be non-null if SCV_MIJ is requested.");
+         NGP_ThrowRequireMsg(numScvIp > 0, "ERROR, meSCV must be non-null if SCV_MIJ is requested.");
          metric = get_shmem_view_3D<T, TEAMHANDLETYPE, SHMEM>(team, numScvIp, nDim, nDim);
          numScalars += numScvIp * nDim * nDim;
          needDeriv = true;

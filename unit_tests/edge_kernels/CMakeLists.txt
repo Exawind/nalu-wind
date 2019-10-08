@@ -8,4 +8,5 @@ add_sources(GlobalUnitSourceList
   # Face/elem edge BC kernels
   UnitTestMomentumABLWallFuncEdge.C
   UnitTestMomentumSymmetryEdge.C
+  UnitTestScalarOpenEdge.C
   )

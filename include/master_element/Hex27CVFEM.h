@@ -145,13 +145,13 @@ protected:
     int s1Node, int s2Node,
     int s1Ip, int s2Ip) const;
 
-  KOKKOS_FUNCTION virtual void eval_shape_functions_at_ips();
-  KOKKOS_FUNCTION virtual void eval_shape_functions_at_shifted_ips();
+  virtual void eval_shape_functions_at_ips();
+  virtual void eval_shape_functions_at_shifted_ips();
 
-  KOKKOS_FUNCTION virtual void eval_shape_derivs_at_ips();
-  KOKKOS_FUNCTION virtual void eval_shape_derivs_at_shifted_ips();
+  virtual void eval_shape_derivs_at_ips();
+  virtual void eval_shape_derivs_at_shifted_ips();
 
-  KOKKOS_FUNCTION void eval_shape_derivs_at_face_ips();
+  void eval_shape_derivs_at_face_ips();
 
   void set_quadrature_rule();
   void GLLGLL_quadrature_weights();

@@ -57,12 +57,12 @@ struct BcFaceElemInfo
   typename Mesh::MeshIndex meshIdx;
 
   //! The face being handled
-  stk::mesh::Entity face;
+  stk::mesh::Entity entity;
 
   //! The element connected to the face
   stk::mesh::Entity elem;
 
-  typename Mesh::ConnectedNodes faceNodes;
+  typename Mesh::ConnectedNodes entityNodes;
 
   //! Nodes connected to the parent element (elem)
   typename Mesh::ConnectedNodes elemNodes;

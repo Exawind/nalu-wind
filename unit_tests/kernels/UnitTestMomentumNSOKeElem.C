@@ -11,6 +11,7 @@
 
 #include "nso/MomentumNSOKeElemKernel.h"
 
+#ifndef KOKKOS_ENABLE_CUDA
 namespace  {
 namespace hex8_golds {
 namespace nso_ke {
@@ -268,7 +269,6 @@ namespace nso_ke {
 } // hex8_golds
 } // anonymous namespace
 
-#ifndef KOKKOS_ENABLE_CUDA
 
 TEST_F(MomentumKernelHex8Mesh, nso_ke)
 {
