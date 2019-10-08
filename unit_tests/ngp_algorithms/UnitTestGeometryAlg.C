@@ -33,12 +33,19 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
   // Force computation of edge area vector
   helperObjs.realm.realmUsesEdges_ = true;
 
+  const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();
+  auto& ngpElemVol = fieldMgr.get_field<double>(
+      elementVolume_->mesh_meta_data_ordinal());
+
   sierra::nalu::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
 
   geomAlgDriver.register_elem_algorithm<sierra::nalu::GeometryInteriorAlg>(
     sierra::nalu::INTERIOR, partVec_[0], "geometry");
 
   geomAlgDriver.execute();
+
+  ngpElemVol.modify_on_device();
+  ngpElemVol.sync_to_host();
 
   const double tol = 1.0e-16;
   stk::mesh::Selector sel = meta_.universal_part();
@@ -106,6 +113,10 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
+  const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();
+  auto& ngpArea = fieldMgr.get_field<double>(
+      exposedAreaVec_->mesh_meta_data_ordinal());
+
   auto* part = meta_.get_part("surface_5");
   auto* surfPart = part->subsets()[0];
   sierra::nalu::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
@@ -113,6 +124,9 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
     sierra::nalu::WALL, surfPart, "geometry");
 
   geomAlgDriver.execute();
+
+  ngpArea.modify_on_device();
+  ngpArea.sync_to_host();
 
   // Exposed area vector check
   {
@@ -161,6 +175,12 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
     sierra::nalu::get_elem_topo(helperObjs.realm, *surfPart), "geometry");
 
   geomAlgDriver.execute();
+
+  const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();
+  auto& ngpWdist = fieldMgr.get_field<double>(
+      wallNormDist_->mesh_meta_data_ordinal());
+
+  ngpWdist.sync_to_host();
 
   // wall distance and area check
   {
