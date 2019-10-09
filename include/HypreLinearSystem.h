@@ -37,6 +37,8 @@ namespace nalu {
 class HypreLinearSystem : public LinearSystem
 {
 public:
+  // Quiet "partially overridden" compiler warnings.
+  using LinearSystem::buildDirichletNodeGraph;
   /**
    * @param[in] realm The realm instance that holds the EquationSystem being solved
    * @param[in] numDof The degrees of freedom for the equation system created (Default: 1)
