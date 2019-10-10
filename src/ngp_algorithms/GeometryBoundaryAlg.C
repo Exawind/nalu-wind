@@ -42,7 +42,7 @@ void GeometryBoundaryAlg<AlgTraits>::execute()
 {
   using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
 
-  auto meshInfo = realm_.mesh_info();
+  const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();

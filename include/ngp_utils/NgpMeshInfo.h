@@ -42,6 +42,10 @@ public:
 
   ~MeshInfo() = default;
 
+  MeshInfo() = delete;
+  MeshInfo(const MeshInfo&) = delete;
+  MeshInfo& operator=(const MeshInfo&) = delete;
+
   inline const stk::mesh::BulkData& bulk() const { return bulk_; }
 
   inline const stk::mesh::MetaData& meta() const { return meta_; }

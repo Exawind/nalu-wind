@@ -61,7 +61,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
 {
   using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
 
-  auto meshInfo = realm_.mesh_info();
+  const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
@@ -99,7 +99,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_edge_area_vector()
 {
   using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
 
-  auto meshInfo = realm_.mesh_info();
+  const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
