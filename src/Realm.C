@@ -191,7 +191,6 @@ namespace nalu{
     ioBroker_(NULL),
     resultsFileIndex_(99),
     restartFileIndex_(99),
-    computeGeometryAlgDriver_(0),
     errorIndicatorAlgDriver_(0),
 #if defined (NALU_USES_PERCEPT)
     adapter_(0),
@@ -280,8 +279,6 @@ Realm::~Realm()
   delete metaData_;
   delete ioBroker_;
 
-  delete computeGeometryAlgDriver_;
-
   if ( NULL != errorIndicatorAlgDriver_)
     delete errorIndicatorAlgDriver_;
 
@@ -344,7 +341,6 @@ Realm::~Realm()
 void
 Realm::breadboard()
 {
-  computeGeometryAlgDriver_ = new ComputeGeometryAlgorithmDriver(*this);
   geometryAlgDriver_.reset(new GeometryAlgDriver(*this));
   equationSystems_.breadboard();
 }
