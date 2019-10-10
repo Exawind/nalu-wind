@@ -56,7 +56,7 @@ create_algorithm(sierra::nalu::Realm& realm, stk::mesh::Part& part)
   EXPECT_TRUE(solverAlgResult.second);
   ThrowRequireMsg(solverAlgResult.first != nullptr,"Error, failed to obtain non-null solver-algorithm object.");
 
-  if (realm.computeGeometryAlgDriver_ == nullptr) {
+  if (realm.geometryAlgDriver_ == nullptr) {
     realm.breadboard();
   }
   realm.register_interior_algorithm(&part);

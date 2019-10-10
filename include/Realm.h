@@ -27,7 +27,6 @@
 #include <stk_ngp/NgpFieldManager.hpp>
 
 #include "ngp_utils/NgpMeshInfo.h"
-#include "ngp_algorithms/GeometryAlgDriver.h"
 
 // standard c++
 #include <map>
@@ -54,7 +53,7 @@ namespace nalu{
 class Algorithm;
 class AlgorithmDriver;
 class AuxFunctionAlgorithm;
-class ComputeGeometryAlgorithmDriver;
+class GeometryAlgDriver;
 
 class NonConformalManager;
 class ErrorIndicatorAlgorithmDriver;
@@ -419,8 +418,7 @@ class Realm {
   GlobalIdFieldType *naluGlobalId_;
 
   // algorithm drivers managed by region
-  ComputeGeometryAlgorithmDriver *computeGeometryAlgDriver_;
-  std::unique_ptr<GeometryAlgDriver> geometryAlgDriver_{nullptr};
+  std::unique_ptr<GeometryAlgDriver> geometryAlgDriver_;
   ErrorIndicatorAlgorithmDriver *errorIndicatorAlgDriver_;
 # if defined (NALU_USES_PERCEPT)  
   Adapter *adapter_;
