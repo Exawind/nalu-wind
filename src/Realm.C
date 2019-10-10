@@ -2823,8 +2823,9 @@ Realm::register_interior_algorithm(
   stk::mesh::Part *part)
 {
   const AlgorithmType algType = INTERIOR;
-  geometryAlgDriver_->register_legacy_algorithm<ComputeGeometryInteriorAlgorithm>(
-    algType, part, "geometry");
+  geometryAlgDriver_->register_elem_algorithm<
+    GeometryInteriorAlg, ComputeGeometryInteriorAlgorithm>(
+      algType, part, "geometry");
 
   // Track parts that are registered to interior algorithms
   interiorPartVec_.push_back(part);
@@ -2858,7 +2859,7 @@ Realm::register_wall_bc(
 
   const AlgorithmType algType = WALL;
   geometryAlgDriver_
-    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
+    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
       algType, part, "geometry");
 }
 
@@ -2890,7 +2891,7 @@ Realm::register_inflow_bc(
 
   const AlgorithmType algType = INFLOW;
   geometryAlgDriver_
-    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
+    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
       algType, part, "geometry");
 }
 
@@ -2923,7 +2924,7 @@ Realm::register_open_bc(
 
   const AlgorithmType algType = OPEN;
   geometryAlgDriver_
-    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
+    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
       algType, part, "geometry");
 }
 
@@ -2955,7 +2956,7 @@ Realm::register_symmetry_bc(
 
   const AlgorithmType algType = SYMMETRY;
   geometryAlgDriver_
-    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
+    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
       algType, part, "geometry");
 }
 
