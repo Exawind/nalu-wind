@@ -79,10 +79,10 @@ inline bool is_ngp_face(const stk::topology topo)
   bool isNGP = false;
   switch (topo.value()) {
   case stk::topology::QUAD_4:
+  case stk::topology::TRI_3:
     isNGP = true;
     break;
 
-  case stk::topology::TRI_3:
   case stk::topology::LINE_2:
   case stk::topology::QUAD_9:
   case stk::topology::LINE_3:
