@@ -27,6 +27,7 @@
 
 // Kokkos
 #include <Kokkos_Core.hpp>
+#include <Teuchos_TimeMonitor.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -238,6 +239,10 @@ int main( int argc, char ** argv )
                               false, naluEnv.parallel_comm());
 
   stk::diag::deleteRootTimer(sierra::nalu::Simulation::rootTimer());
+
+  // Write out Trilinos timers
+  Teuchos::TimeMonitor::summarize(
+    naluEnv.naluOutputP0(), false, true, false, Teuchos::Union);
   }
   Kokkos::finalize_all();
   // all done  

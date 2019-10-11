@@ -195,6 +195,12 @@ void Simulation::high_level_banner() {
   NaluEnv::self().naluOutputP0() << "-----------------------------------------------------------------" << std::endl;
   NaluEnv::self().naluOutputP0() << std::endl;
 
+  if (!std::is_same<DeviceSpace, Kokkos::Serial>::value) {
+    // Save output from the master proc in the log file
+    Kokkos::DefaultExecutionSpace::print_configuration(NaluEnv::self().naluOutputP0());
+    // But have everyone print out to standard error for debugging purposes
+    Kokkos::DefaultExecutionSpace::print_configuration(std::cerr);
+  }
 }
 } // namespace nalu
 } // namespace Sierra
