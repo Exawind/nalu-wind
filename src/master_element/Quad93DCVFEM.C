@@ -331,7 +331,7 @@ Quad93DSCS::determinant(
     SharedMemView<DoubleType**, DeviceShmem>&coords,
     SharedMemView<DoubleType**, DeviceShmem>&areav) 
 {
-  std::array<DoubleType,3> areaVector;
+  NALU_ALIGNED DoubleType areaVector[3];
   DoubleType dx_ds1 = 0.0; DoubleType dy_ds1 = 0.0; DoubleType dz_ds1 = 0.0;
   DoubleType dx_ds2 = 0.0; DoubleType dy_ds2 = 0.0; DoubleType dz_ds2 = 0.0;
 
