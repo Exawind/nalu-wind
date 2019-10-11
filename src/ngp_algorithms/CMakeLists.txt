@@ -20,4 +20,5 @@ add_sources(GlobalSourceList
   NodalGradAlgDriver.C
   TKEWallFuncAlgDriver.C
   GeometryAlgDriver.C
+  WallFricVelAlgDriver.C
   )

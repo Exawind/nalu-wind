@@ -95,6 +95,13 @@ public:
   // populate nodal field and output norms (if appropriate)
   void execute();
 
+  void compute_averages(
+    AveragingInfo* avInfo,
+    stk::mesh::Selector sel,
+    const double& oldTimeFilter,
+    const double& zeroCurrent,
+    const double& dt);
+
   // compute tke and stress for each type of operation
   void compute_tke(
     const bool isReynolds,

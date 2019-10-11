@@ -8,6 +8,7 @@
 #ifndef BDYLAYERSTATISTICS_H
 #define BDYLAYERSTATISTICS_H
 
+#include "KokkosInterface.h"
 #include "NaluParsing.h"
 #include "FieldTypeDef.h"
 
@@ -36,6 +37,9 @@ class BdyHeightAlgorithm;
 class BdyLayerStatistics
 {
 public:
+  using ArrayType = Kokkos::View<double*, Kokkos::LayoutRight, MemSpace>;
+  using HostArrayType = typename ArrayType::HostMirror;
+
   BdyLayerStatistics(
     Realm&,
     const YAML::Node&);
@@ -87,7 +91,7 @@ public:
   int abl_num_levels() const { return heights_.size(); }
 
   //! Return the reference to the heights vector
-  const std::vector<double>& abl_heights() const { return heights_; }
+  const HostArrayType& abl_heights() const { return heights_; }
 
   //! Return the index in height array
   //!
@@ -95,6 +99,12 @@ public:
   //!     \f$ heights[i] \leq ht \leq heights[i+1]\$
   //!
   int abl_height_index(const double) const;
+
+  //! Process the velocity data and compute averages
+  void impl_compute_velocity_stats();
+
+  //! Process the temperature field and compute averages
+  void impl_compute_temperature_stats();
 
 private:
   BdyLayerStatistics() = delete;
@@ -105,12 +115,6 @@ private:
 
   //! Initialize necessary parameters in sierra::nalu::TurbulenceAveragingPostProcessing
   void setup_turbulence_averaging(const double);
-
-  //! Process the velocity data and compute averages
-  void compute_velocity_stats();
-
-  //! Process the temperature field and compute averages
-  void compute_temperature_stats();
 
   //! Output averaged velocity and stress profiles as a function of height
   void output_velocity_averages();
@@ -127,7 +131,7 @@ private:
    */
   void interpolate_variable(
     int,
-    std::vector<double>&,
+    HostArrayType&,
     double,
     double*);
 
@@ -142,54 +146,104 @@ private:
   Realm& realm_;
 
   //! Spatially averaged instantaneous velocity at desired heights [nHeights, nDim]
-  std::vector<double> velAvg_;
+  ArrayType d_velAvg_;
 
   //! Spatially and temporally averaged velocity at desired heights [nHeights, nDim]
-  std::vector<double> velBarAvg_;
+  ArrayType d_velBarAvg_;
 
   //! Spatially averaged resolved stress [nHeights, nDim]
-  std::vector<double> uiujAvg_;
+  ArrayType d_uiujAvg_;
 
   //! Spatially averaged sfs stress [nHeights, nDim]
-  std::vector<double> sfsAvg_;
+  ArrayType d_sfsAvg_;
 
   //! Spatially and temporally averaged resolved stress field at desired heights [nHeights, nDim * 2]
-  std::vector<double> uiujBarAvg_;
+  ArrayType d_uiujBarAvg_;
 
   //! Spatially and temporally averaged SFS field at desired heights [nHeights, nDim * 2]
-  std::vector<double> sfsBarAvg_;
+  ArrayType d_sfsBarAvg_;
 
   //! Spatially averaged instantaneous temperature field [nHeights]
-  std::vector<double> thetaAvg_;
+  ArrayType d_thetaAvg_;
 
   //! Spatially and temporally averaged temperature field [nHeights]
-  std::vector<double> thetaBarAvg_;
+  ArrayType d_thetaBarAvg_;
 
   //! Spatially averaged instantaneous temperature SFS field
-  std::vector<double> thetaSFSAvg_;
+  ArrayType d_thetaSFSAvg_;
 
   //! Spatially averaged instantaneous temperature variance
-  std::vector<double> thetaUjAvg_;
+  ArrayType d_thetaUjAvg_;
 
   //! Spatially and temporally averaged Temperature SFS field
-  std::vector<double> thetaSFSBarAvg_;
+  ArrayType d_thetaSFSBarAvg_;
 
-  std::vector<double> thetaUjBarAvg_;
+  ArrayType d_thetaUjBarAvg_;
 
   //! Spatially averaged temperature variance [nHeights]
-  std::vector<double> thetaVarAvg_;
+  ArrayType d_thetaVarAvg_;
 
   //! Spatially and temporally averaged temperature variance [nHeights]
-  std::vector<double> thetaBarVarAvg_;
+  ArrayType d_thetaBarVarAvg_;
 
   //! Total nodal volume at each height level used for volumetric averaging
-  std::vector<double> sumVol_;
+  ArrayType d_sumVol_;
 
   //! Average density at each height level
-  std::vector<double> rhoAvg_;
+  ArrayType d_rhoAvg_;
 
   //! Height from the wall
-  std::vector<double> heights_;
+  ArrayType d_heights_;
+
+  //! Spatially averaged instantaneous velocity at desired heights [nHeights, nDim]
+  HostArrayType velAvg_;
+
+  //! Spatially and temporally averaged velocity at desired heights [nHeights, nDim]
+  HostArrayType velBarAvg_;
+
+  //! Spatially averaged resolved stress [nHeights, nDim]
+  HostArrayType uiujAvg_;
+
+  //! Spatially averaged sfs stress [nHeights, nDim]
+  HostArrayType sfsAvg_;
+
+  //! Spatially and temporally averaged resolved stress field at desired heights [nHeights, nDim * 2]
+  HostArrayType uiujBarAvg_;
+
+  //! Spatially and temporally averaged SFS field at desired heights [nHeights, nDim * 2]
+  HostArrayType sfsBarAvg_;
+
+  //! Spatially averaged instantaneous temperature field [nHeights]
+  HostArrayType thetaAvg_;
+
+  //! Spatially and temporally averaged temperature field [nHeights]
+  HostArrayType thetaBarAvg_;
+
+  //! Spatially averaged instantaneous temperature SFS field
+  HostArrayType thetaSFSAvg_;
+
+  //! Spatially averaged instantaneous temperature variance
+  HostArrayType thetaUjAvg_;
+
+  //! Spatially and temporally averaged Temperature SFS field
+  HostArrayType thetaSFSBarAvg_;
+
+  HostArrayType thetaUjBarAvg_;
+
+  //! Spatially averaged temperature variance [nHeights]
+  HostArrayType thetaVarAvg_;
+
+  //! Spatially and temporally averaged temperature variance [nHeights]
+  HostArrayType thetaBarVarAvg_;
+
+  //! Total nodal volume at each height level used for volumetric averaging
+  HostArrayType sumVol_;
+
+  //! Average density at each height level
+  HostArrayType rhoAvg_;
+
+  //! Height from the wall
+  HostArrayType heights_;
 
   //! Part names for post-processing
   std::vector<std::string> partNames_;

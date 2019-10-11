@@ -14,6 +14,7 @@
 #include "NaluParsing.h"
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
+#include "ngp_algorithms/WallFricVelAlgDriver.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 
 namespace stk{
@@ -212,7 +213,7 @@ public:
   ScalarFieldType* Udiag_{nullptr};
 
   VectorNodalGradAlgDriver nodalGradAlgDriver_;
-  NgpAlgDriver wallFuncAlgDriver_;
+  WallFricVelAlgDriver wallFuncAlgDriver_;
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
   std::unique_ptr<Algorithm> tviscAlg_{nullptr};
 

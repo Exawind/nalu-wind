@@ -1953,7 +1953,7 @@ MomentumEquationSystem::register_wall_bc(
         wfAlgType, part, get_elem_topo(realm_, *part), "geometry_wall_func");
 
       wallFuncAlgDriver_.register_face_algorithm<ABLWallFrictionVelAlg>(
-        wfAlgType, part, "abl_wall_func", realm_.realmUsesEdges_,
+        wfAlgType, part, "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
         grav, z0, referenceTemperature,
         realm_.get_turb_model_constant(TM_kappa));
 

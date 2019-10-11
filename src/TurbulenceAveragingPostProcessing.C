@@ -15,6 +15,12 @@
 #include <SolutionOptions.h>
 #include <nalu_make_unique.h>
 
+// NGP Algorithms
+#include "ElemDataRequests.h"
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldUtils.h"
+#include "ngp_utils/NgpReduceUtils.h"
+
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_util/parallel/ParallelReduce.hpp>
@@ -616,87 +622,14 @@ TurbulenceAveragingPostProcessing::execute()
     // extract the turb info and the name
     AveragingInfo *avInfo = averageInfoVec_[k];
 
-    // size
-    size_t reynoldsFieldPairSize = avInfo->reynoldsFieldVecPair_.size();
-    size_t favreFieldPairSize = avInfo->favreFieldVecPair_.size();
-    size_t resolvedFieldPairSize = avInfo->resolvedFieldVecPair_.size();
-
     // define some common selectors
     stk::mesh::Selector s_all_nodes
       = (metaData.locally_owned_part() | metaData.globally_shared_part())
       & stk::mesh::selectUnion(avInfo->partVec_) 
       & !(realm_.get_inactive_selector());
 
-    stk::mesh::BucketVector const& node_buckets =
-      realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-    for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
-          ib != node_buckets.end() ; ++ib ) {
-      stk::mesh::Bucket & b = **ib ;
-      const stk::mesh::Bucket::size_type length   = b.size();
-      
-      // Reynolds averaged density is the first entry (FieldBase == FB)
-      stk::mesh::FieldBase *densityFB = avInfo->reynoldsFieldVecPair_[0].first;
-      stk::mesh::FieldBase *densityRAFB = avInfo->reynoldsFieldVecPair_[0].second;
-      double *density = (double*)stk::mesh::field_data(*densityFB, b);
-      double *densityRA = (double*)stk::mesh::field_data(*densityRAFB, b);
-      
-      for ( stk::mesh::Bucket::size_type n = 0 ; n < length ; ++n ) {
+    compute_averages(avInfo, s_all_nodes, oldTimeFilter, zeroCurrent, dt);
 
-        // get node
-        stk::mesh::Entity node = b[n];
-      
-        // save off old density for below Favre procedure
-        const double oldRhoRA  = densityRA[n];
-        
-        // reynolds first since density is required in Favre
-        for ( size_t iav = 0; iav < reynoldsFieldPairSize; ++iav ) {
-          stk::mesh::FieldBase *primitiveFB = avInfo->reynoldsFieldVecPair_[iav].first;
-          stk::mesh::FieldBase *averageFB = avInfo->reynoldsFieldVecPair_[iav].second;
-          const double * primitive = (double*)stk::mesh::field_data(*primitiveFB, node);
-          double * average = (double*)stk::mesh::field_data(*averageFB, node);
-          // get size
-          const int fieldSize = avInfo->reynoldsFieldSizeVec_[iav];
-          for ( int j = 0; j < fieldSize; ++j ) {
-            const double averageField = (average[j]*oldTimeFilter*zeroCurrent + primitive[j]*dt)/currentTimeFilter_;
-            average[j] = averageField;
-          }
-        }
-
-        // save off density for below Favre procedure
-        const double rho = density[n];
-        const double rhoRA  = densityRA[n];
-
-        // Favre
-        for ( size_t iav = 0; iav < favreFieldPairSize; ++iav ) {
-          stk::mesh::FieldBase *primitiveFB = avInfo->favreFieldVecPair_[iav].first;
-          stk::mesh::FieldBase *averageFB = avInfo->favreFieldVecPair_[iav].second;
-          const double * primitive = (double*)stk::mesh::field_data(*primitiveFB, node);
-          double * average = (double*)stk::mesh::field_data(*averageFB,node);
-          // get size
-          const int fieldSize = avInfo->favreFieldSizeVec_[iav];
-          for ( int j = 0; j < fieldSize; ++j ) {
-            const double averageField = (average[j]*oldRhoRA*oldTimeFilter*zeroCurrent + primitive[j]*rho*dt)/currentTimeFilter_/rhoRA;
-            average[j] = averageField;
-          }
-        }
-
-        // resolved next 
-        for ( size_t iav = 0; iav < resolvedFieldPairSize; ++iav ) {
-            stk::mesh::FieldBase *primitiveFB = avInfo->resolvedFieldVecPair_[iav].first;
-            stk::mesh::FieldBase *averageFB = avInfo->resolvedFieldVecPair_[iav].second;
-            const double * primitive = (double*)stk::mesh::field_data(*primitiveFB, node);
-            double * average = (double*)stk::mesh::field_data(*averageFB, node);
-            // get size
-            const int fieldSize = avInfo->resolvedFieldSizeVec_[iav];
-            for ( int j = 0; j < fieldSize; ++j ) {
-                const double averageField = (average[j]*oldTimeFilter*zeroCurrent + rho*primitive[j]*dt)/currentTimeFilter_;
-                average[j] = averageField;
-            }
-        }
-        
-      }
-    }
-  
     // process special fields; internal avInfo flag defines the field
     if ( avInfo->computeTke_ ) {
       compute_tke(true, avInfo->name_, s_all_nodes);
@@ -757,6 +690,120 @@ TurbulenceAveragingPostProcessing::execute()
   }
 }
 
+void
+TurbulenceAveragingPostProcessing::compute_averages(
+  AveragingInfo* avInfo,
+  stk::mesh::Selector sel,
+  const double& oldTimeFilter,
+  const double& zeroCurrent,
+  const double& dt)
+{
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
+  using FieldPair = Kokkos::pair<FieldInfoNGP, FieldInfoNGP>;
+  using FieldInfoView = Kokkos::View<FieldPair*, Kokkos::LayoutRight, MemSpace>;
+
+  const int numRePairs = avInfo->reynoldsFieldVecPair_.size();
+  const int numFavrePairs = avInfo->favreFieldVecPair_.size();
+  const int numResolvedPairs = avInfo->resolvedFieldVecPair_.size();
+  const double currentTimeFilter = currentTimeFilter_;
+
+  FieldInfoView fieldPairs(
+    "turbAveragesFields", (numRePairs + numFavrePairs + numResolvedPairs));
+  auto hostFieldPairs = Kokkos::create_mirror_view(fieldPairs);
+
+  for (int i=0; i < numRePairs; i++) {
+    hostFieldPairs[i] = FieldPair(
+      FieldInfoNGP(avInfo->reynoldsFieldVecPair_[i].first,
+                   avInfo->reynoldsFieldSizeVec_[i]),
+      FieldInfoNGP(avInfo->reynoldsFieldVecPair_[i].second,
+                   avInfo->reynoldsFieldSizeVec_[i]));
+  }
+
+  int offset = numRePairs;
+  for (int i=0; i < numFavrePairs; i++) {
+    hostFieldPairs[offset + i] = FieldPair(
+      FieldInfoNGP(avInfo->favreFieldVecPair_[i].first,
+                   avInfo->favreFieldSizeVec_[i]),
+      FieldInfoNGP(avInfo->favreFieldVecPair_[i].second,
+                   avInfo->favreFieldSizeVec_[i]));
+  }
+
+  offset += numFavrePairs;
+  for (int i=0; i < numResolvedPairs; i++) {
+    hostFieldPairs[offset + i] = FieldPair(
+      FieldInfoNGP(avInfo->resolvedFieldVecPair_[i].first,
+                   avInfo->resolvedFieldSizeVec_[i]),
+      FieldInfoNGP(avInfo->resolvedFieldVecPair_[i].second,
+                   avInfo->resolvedFieldSizeVec_[i]));
+  }
+  Kokkos::deep_copy(fieldPairs, hostFieldPairs);
+
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto density = fieldMgr.get_field<double>(
+    avInfo->reynoldsFieldVecPair_[0].first->mesh_meta_data_ordinal());
+  const auto densityA = fieldMgr.get_field<double>(
+    avInfo->reynoldsFieldVecPair_[0].second->mesh_meta_data_ordinal());
+
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double oldRhoRA = densityA.get(mi, 0);
+      const double rho = density.get(mi, 0);
+
+      // Process reynolds averaging quantities first; used in Favre
+      for (int i=0; i < numRePairs; ++i) {
+        const auto prim = fieldPairs(i).first.field;
+        auto avg = fieldPairs(i).second.field;
+        const auto numComponents = fieldPairs(i).first.scalarsDim1;
+
+        for (unsigned j=0; j < numComponents; ++j) {
+          const double avgVal = (avg.get(mi, j) * oldTimeFilter * zeroCurrent +
+                                 prim.get(mi, j) * rho * dt) /
+                                currentTimeFilter;
+          avg.get(mi, j) = avgVal;
+        }
+        avg.modify_on_device();
+      }
+
+      // Favre averaged quantities
+      int offset = numRePairs;
+      const double rhoRA = densityA.get(mi, 0);
+      for (int i=0; i < numFavrePairs; ++i) {
+        const int idx = offset + i;
+        const auto prim = fieldPairs(idx).first.field;
+        auto avg = fieldPairs(idx).second.field;
+        const auto numComponents = fieldPairs(idx).first.scalarsDim1;
+
+        for (unsigned j =0; j < numComponents; ++j) {
+          const double avgVal = (
+            avg.get(mi, j) * oldRhoRA * oldTimeFilter * zeroCurrent
+            + prim.get(mi, j) * rho * dt) / (currentTimeFilter * rhoRA);
+          avg.get(mi, j) = avgVal;
+        }
+        avg.modify_on_device();
+      }
+
+      // Resolved quantities
+      offset += numFavrePairs;
+      for (int i=0; i < numResolvedPairs; ++i) {
+        const int idx = offset + i;
+        const auto prim = fieldPairs(idx).first.field;
+        auto avg = fieldPairs(idx).second.field;
+        const auto numComponents = fieldPairs(idx).first.scalarsDim1;
+
+        for (unsigned j=0; j < numComponents; ++j) {
+          const double avgVal = (
+            avg.get(mi, j) * oldTimeFilter * zeroCurrent
+            + rho * prim.get(mi, j) * dt) / currentTimeFilter;
+          avg.get(mi, j) = avgVal;
+        }
+        avg.modify_on_device();
+      }
+    });
+}
+
+
 //--------------------------------------------------------------------------
 //-------- compute_tke -----------------------------------------------------
 //--------------------------------------------------------------------------
@@ -766,9 +813,7 @@ TurbulenceAveragingPostProcessing::compute_tke(
   const std::string &averageBlockName,
   stk::mesh::Selector s_all_nodes)
 {
-  stk::mesh::MetaData & metaData = realm_.meta_data();
-
-  const int nDim = realm_.spatialDimension_;
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
   // check for precise set of names
   const std::string velocityName = isReynolds
@@ -778,32 +823,25 @@ TurbulenceAveragingPostProcessing::compute_tke(
       ? "resolved_turbulent_ke"
       : "resolved_favre_turbulent_ke";
 
-  // extract fields
-  stk::mesh::FieldBase *velocity = metaData.get_field(stk::topology::NODE_RANK, "velocity");
-  stk::mesh::FieldBase *velocityA = metaData.get_field(stk::topology::NODE_RANK, velocityName);
-  stk::mesh::FieldBase *resololvedTke = metaData.get_field(stk::topology::NODE_RANK, resolvedTkeName);
 
-  stk::mesh::BucketVector const& node_buckets_tke =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets_tke.begin();
-        ib != node_buckets_tke.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
+  const int ndim = realm_.meta_data().spatial_dimension();
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto velocity = nalu_ngp::get_ngp_field(meshInfo, "velocity");
+  const auto velocityA = nalu_ngp::get_ngp_field(meshInfo, velocityName);
+  auto resTKE = nalu_ngp::get_ngp_field(meshInfo, resolvedTkeName);
 
-    // fields
-    const double *uNp1 = (double*)stk::mesh::field_data(*velocity, b);
-    const double *uNp1A = (double*)stk::mesh::field_data(*velocityA, b);
-    double *tke = (double*)stk::mesh::field_data(*resololvedTke, b);
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
       double sum = 0.0;
-      for ( int j = 0; j < nDim; ++j ) {
-        const double uPrime = uNp1[k*nDim+j] - uNp1A[k*nDim+j];
-        sum += 0.5*uPrime*uPrime;
+      for (int d=0; d < ndim; ++d) {
+        const double uprime = velocity.get(mi, d) - velocityA.get(mi, d);
+        sum += 0.5 * uprime * uprime;
       }
-      tke[k] = sum;
-    }
-  }
+      resTKE.get(mi, 0) = sum;
+    });
+  resTKE.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -817,55 +855,46 @@ TurbulenceAveragingPostProcessing::compute_reynolds_stress(
   const double &dt,
   stk::mesh::Selector s_all_nodes)
 {
-  stk::mesh::MetaData & metaData = realm_.meta_data();
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
-  const int nDim = realm_.spatialDimension_;
-  const int stressSize = realm_.spatialDimension_ == 3 ? 6 : 3;
-
+  const int ndim = realm_.spatialDimension_;
   const std::string velocityAName = "velocity_ra_" + averageBlockName;
-  const std::string densityAName = "density_ra_" + averageBlockName;
   const std::string stressName = "reynolds_stress";
 
-  // extract fields
-  stk::mesh::FieldBase *velocity = metaData.get_field(stk::topology::NODE_RANK, "velocity");
-  stk::mesh::FieldBase *velocityA = metaData.get_field(stk::topology::NODE_RANK, velocityAName);
-  stk::mesh::FieldBase *stressA = metaData.get_field(stk::topology::NODE_RANK, stressName);
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto velocity = nalu_ngp::get_ngp_field(meshInfo, "velocity");
+  const auto velocityA = nalu_ngp::get_ngp_field(meshInfo, velocityAName);
+  auto stress = nalu_ngp::get_ngp_field(meshInfo, stressName);
 
-  stk::mesh::BucketVector const& node_buckets_stress =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets_stress.begin();
-        ib != node_buckets_stress.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
+  const double oldWeight = oldTimeFilter * zeroCurrent;
+  const double currentTimeFilter = currentTimeFilter_;
 
-    // fields
-    const double *uNp1 = (double*)stk::mesh::field_data(*velocity, b);
-    const double *uNp1A = (double*)stk::mesh::field_data(*velocityA, b);
-    double *stress = (double*)stk::mesh::field_data(*stressA, b);
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      int ic = 0;
 
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
+      for (int i =0; i < ndim; ++i) {
+        const double ui = velocity.get(mi, i);
+        const double uAi = velocityA.get(mi, i);
+        const double uAiOld = (currentTimeFilter * uAi - ui * dt) / oldTimeFilter;
 
-      // stress is symmetric, so only save off 6 or 3 components
-      int componentCount = 0;
-      for ( int i = 0; i < nDim; ++i ) {
-        const double ui = uNp1[k*nDim+i];
-        const double uiA = uNp1A[k*nDim+i];
-        double uiAOld = (currentTimeFilter_*uiA - ui*dt)/oldTimeFilter;
+        for (int j = i; j < ndim; ++j) {
+          const double uj = velocity.get(mi, j);
+          const double uAj = velocityA.get(mi, j);
+          const double uAjOld = (currentTimeFilter * uAj - uj * dt) / oldTimeFilter;
 
-        for ( int j = i; j < nDim; ++j ) {
-          const int component = componentCount;
-          const double uj = uNp1[k*nDim+j];
-          const double ujA = uNp1A[k*nDim+j];
-          double ujAOld = (currentTimeFilter_*ujA - uj*dt)/oldTimeFilter;
-          const double newStress 
-            = ((stress[k*stressSize+component]+uiAOld*ujAOld)*oldTimeFilter*zeroCurrent 
-               + ui*uj*dt)/currentTimeFilter_ - uiA*ujA;
-          stress[k*stressSize+component] = newStress;
-          componentCount++;
+          const double stressVal =
+            ((stress.get(mi, ic) + uAiOld * uAjOld) * oldWeight
+             + ui * uj * dt) / currentTimeFilter - uAi * uAj;
+
+          stress.get(mi, ic) = stressVal;
+          ic++;
         }
       }
-    }
-  }
+    });
+  stress.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -879,69 +908,61 @@ TurbulenceAveragingPostProcessing::compute_favre_stress(
   const double &dt,
   stk::mesh::Selector s_all_nodes)
 {
-  stk::mesh::MetaData & metaData = realm_.meta_data();
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
-  const int nDim = realm_.spatialDimension_;
-  const int stressSize = realm_.spatialDimension_ == 3 ? 6 : 3;
-
+  const int ndim = realm_.spatialDimension_;
   const std::string velocityAName = "velocity_fa_" + averageBlockName;
   const std::string densityAName = "density_ra_" + averageBlockName;
   const std::string stressName = "favre_stress";
 
-  // extract fields
-  stk::mesh::FieldBase *velocity = metaData.get_field(stk::topology::NODE_RANK, "velocity");
-  stk::mesh::FieldBase *density = metaData.get_field(stk::topology::NODE_RANK, "density");
-  stk::mesh::FieldBase *densityA = metaData.get_field(stk::topology::NODE_RANK, densityAName);
-  stk::mesh::FieldBase *velocityA = metaData.get_field(stk::topology::NODE_RANK, velocityAName);
-  stk::mesh::FieldBase *stressA = metaData.get_field(stk::topology::NODE_RANK, stressName);
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto density = nalu_ngp::get_ngp_field(meshInfo, "density");
+  const auto densityA = nalu_ngp::get_ngp_field(meshInfo, densityAName);
+  const auto velocity = nalu_ngp::get_ngp_field(meshInfo, "velocity");
+  const auto velocityA = nalu_ngp::get_ngp_field(meshInfo, velocityAName);
+  auto stress = nalu_ngp::get_ngp_field(meshInfo, stressName);
 
-  stk::mesh::BucketVector const& node_buckets_stress =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets_stress.begin();
-        ib != node_buckets_stress.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
+  const double currentTimeFilter = currentTimeFilter_;
 
-    // fields
-    const double *uNp1 = (double*)stk::mesh::field_data(*velocity, b);
-    const double *uNp1A = (double*)stk::mesh::field_data(*velocityA, b);
-    const double *rho = (double*)stk::mesh::field_data(*density, b);
-    const double *rhoA = (double*)stk::mesh::field_data(*densityA, b);
-    double *stress = (double*)stk::mesh::field_data(*stressA, b);
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      int ic = 0;
 
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
+      const double rho = density.get(mi, 0);
+      const double rhoA = densityA.get(mi, 0);
+      const double rhoAOld = (currentTimeFilter * rhoA - rho * dt) / oldTimeFilter;
 
-      // save off density
-      const double rhok = rho[k];
-      const double rhoAk = rhoA[k];
-      const double rhoAOld = (currentTimeFilter_*rhoAk - rhok*dt)/oldTimeFilter;
+      const double rAOldbyRA = rhoAOld / rhoA;
+      const double rbyRA = rho / rhoA;
 
-      // save off some ratios
-      const double rhoAOldByRhoA = rhoAOld/rhoAk;
-      const double rhoByRhoA = rhok/rhoAk;
+      for (int i =0; i < ndim; ++i) {
+        const double ui = velocity.get(mi, i);
+        const double uAi = velocityA.get(mi, i);
+        const double uAiOld =
+          (currentTimeFilter * rhoA * uAi - rho * ui * dt) /
+          (oldTimeFilter * rhoAOld);
 
-      // stress is symmetric, so only save off 6 or 3 components
-      int componentCount = 0;
-      for ( int i = 0; i < nDim; ++i ) {
-        const double ui = uNp1[k*nDim+i];
-        const double uiA = uNp1A[k*nDim+i];
-        double uiAOld = (currentTimeFilter_*rhoAk*uiA - rhok*ui*dt)/oldTimeFilter/rhoAOld;
+        for (int j = i; j < ndim; ++j) {
+          const double uj = velocity.get(mi, j);
+          const double uAj = velocityA.get(mi, j);
+          const double uAjOld =
+            (currentTimeFilter * rhoA * uAj - rho * uj * dt) /
+            (oldTimeFilter * rhoAOld);
 
-        for ( int j = i; j < nDim; ++j ) {
-          const int component = componentCount;
-          const double uj = uNp1[k*nDim+j];
-          const double ujA = uNp1A[k*nDim+j];
-          double ujAOld = (currentTimeFilter_*rhoAk*ujA - rhok*uj*dt)/oldTimeFilter/rhoAOld;
-          
-          const double newStress 
-            = ((stress[k*stressSize+component] + uiAOld*ujAOld)*rhoAOldByRhoA*oldTimeFilter*zeroCurrent 
-               + rhoByRhoA*ui*uj*dt)/currentTimeFilter_ - uiA*ujA;
-          stress[k*stressSize+component] = newStress;
-          componentCount++;
+          const double stressVal =
+            ((stress.get(mi, ic) + uAiOld * uAjOld) *
+             rAOldbyRA * oldTimeFilter * zeroCurrent +
+             rbyRA * ui * uj * dt) /
+            currentTimeFilter - uAi * uAj;
+
+          stress.get(mi, ic) = stressVal;
+          ic++;
         }
       }
-    }
-  }
+    });
+  stress.modify_on_device();
 }
 
 void TurbulenceAveragingPostProcessing::compute_temperature_resolved_flux(
@@ -951,41 +972,42 @@ void TurbulenceAveragingPostProcessing::compute_temperature_resolved_flux(
   const double& dt,
   stk::mesh::Selector s_all_nodes)
 {
-  auto& meta = realm_.meta_data();
-  const int nDim = realm_.spatialDimension_;
-  const int tempFluxSize = realm_.spatialDimension_;
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
-  const std::string tempFluxName = "temperature_resolved_flux";
-  const std::string tempVarName = "temperature_variance";
+  const int ndim = realm_.meta_data().spatial_dimension();
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto velocity = nalu_ngp::get_ngp_field(meshInfo, "velocity");
+  const auto density = nalu_ngp::get_ngp_field(meshInfo, "density");
+  const auto temperature = nalu_ngp::get_ngp_field(meshInfo, "temperature");
+  auto tempFlux = nalu_ngp::get_ngp_field(meshInfo, "temperature_resolved_flux");
+  auto tempVar = nalu_ngp::get_ngp_field(meshInfo, "temperature_variance");
 
-  auto* velocity = meta.get_field(stk::topology::NODE_RANK, "velocity");
-  auto* density = meta.get_field(stk::topology::NODE_RANK, "density");
-  auto* temperature = meta.get_field(stk::topology::NODE_RANK, "temperature");
-  // Averaged temperature stress
-  auto* tempFluxA = meta.get_field(stk::topology::NODE_RANK, tempFluxName);
-  // Averaged temperature variance
-  auto* tempVarA = meta.get_field(stk::topology::NODE_RANK, tempVarName);
+  const double currentTimeFilter = currentTimeFilter_;
 
-  const auto& bkts = realm_.get_buckets(stk::topology::NODE_RANK, s_all_nodes);
-  for (auto b: bkts) {
-    const auto length = b->size();
-    const double* rhoNp1 = (double*) stk::mesh::field_data(*density, *b);
-    const double* uNp1 = (double*) stk::mesh::field_data(*velocity, *b);
-    const double *tempNp1 = (double*)stk::mesh::field_data(*temperature, *b);
-    double *tempFlux = (double*)stk::mesh::field_data(*tempFluxA, *b);
-    double *tempVar = (double*)stk::mesh::field_data(*tempVarA, *b);
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double rho = density.get(mi, 0);
 
-    for (size_t k=0; k < length; ++k ) {
-      const double rho = rhoNp1[k];
-      for ( int i = 0; i < nDim; ++i ) {
-        const double ui = uNp1[k*nDim+i];
-        const double newTempFlux = (tempFlux[k*tempFluxSize+i]*oldTimeFilter*zeroCurrent + rho * ui * tempNp1[k]*dt)/currentTimeFilter_ ;
-        tempFlux[k*tempFluxSize+i] = newTempFlux;
+      for (int d=0; d < ndim; ++d) {
+        const double ui = velocity.get(mi, d);
+        const double temp = temperature.get(mi, d);
+        const double tflux = tempFlux.get(mi, d);
+        const double tvar = tempVar.get(mi, d);
 
-        tempVar[k] = (tempVar[k]*oldTimeFilter*zeroCurrent + rho * tempNp1[k] * tempNp1[k]*dt)/currentTimeFilter_ ;
+        tempFlux.get(mi, d) = (
+          tflux * oldTimeFilter * zeroCurrent +
+          rho * ui * temp * dt) / currentTimeFilter;
+
+        tempVar.get(mi, d) = (
+          tvar * oldTimeFilter * zeroCurrent +
+          rho * temp * temp * dt) / currentTimeFilter;
       }
-    }
-  }
+    });
+
+  tempFlux.modify_on_device();
+  tempVar.modify_on_device();
 }
 
 
@@ -1000,51 +1022,38 @@ TurbulenceAveragingPostProcessing::compute_resolved_stress(
   const double &dt,
   stk::mesh::Selector s_all_nodes)
 {
-  stk::mesh::MetaData & metaData = realm_.meta_data();
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
-  const int nDim = realm_.spatialDimension_;
-  const int stressSize = realm_.spatialDimension_ == 3 ? 6 : 3;
+  const int ndim = realm_.spatialDimension_;
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto density = nalu_ngp::get_ngp_field(meshInfo, "density");
+  const auto velocity = nalu_ngp::get_ngp_field(meshInfo, "velocity");
+  auto stress = nalu_ngp::get_ngp_field(meshInfo, "resolved_stress");
 
-  const std::string stressName = "resolved_stress";
+  const double currentTimeFilter = currentTimeFilter_;
 
-  // extract fields
-  stk::mesh::FieldBase *density = metaData.get_field(stk::topology::NODE_RANK, "density");
-  stk::mesh::FieldBase *velocity = metaData.get_field(stk::topology::NODE_RANK, "velocity");
-  stk::mesh::FieldBase *stressA = metaData.get_field(stk::topology::NODE_RANK, stressName);
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      int ic = 0;
 
-  stk::mesh::BucketVector const& node_buckets_stress =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets_stress.begin();
-        ib != node_buckets_stress.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
+      const double rho = density.get(mi, 0);
+      for (int i =0; i < ndim; ++i) {
+        const double ui = velocity.get(mi, i);
 
-    // fields
-    const double *uNp1 = (double*)stk::mesh::field_data(*velocity, b);
-    const double *rhoNp1 = (double*)stk::mesh::field_data(*density, b);
-    double *stress = (double*)stk::mesh::field_data(*stressA, b);
+        for (int j = i; j < ndim; ++j) {
+          const double uj = velocity.get(mi, j);
+          const double newStress = (
+            stress.get(mi, ic) * oldTimeFilter * zeroCurrent
+            + rho * ui * uj * dt) / currentTimeFilter;
 
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-      const double rho = rhoNp1[k];
-
-      // stress is symmetric, so only save off 6 or 3 components
-      int componentCount = 0;
-      for ( int i = 0; i < nDim; ++i ) {
-        const double ui = uNp1[k*nDim+i];
-
-        for ( int j = i; j < nDim; ++j ) {
-          const int component = componentCount;
-          const double uj = uNp1[k*nDim+j];
-          const double newStress
-            = (stress[k*stressSize+component]*oldTimeFilter*zeroCurrent
-               + rho*ui*uj*dt)/currentTimeFilter_ ;
-          stress[k*stressSize+component] = newStress;
-          componentCount++;
+          stress.get(mi, ic) = newStress;
+          ic++;
         }
       }
-    }
-  }
+    });
+  stress.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -1058,73 +1067,83 @@ TurbulenceAveragingPostProcessing::compute_sfs_stress(
   const double &dt,
   stk::mesh::Selector s_all_nodes)
 {
-  stk::mesh::MetaData & metaData = realm_.meta_data();
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
-  const int nDim = realm_.spatialDimension_;
-  const double invNdim = 1.0/nDim;
+  const int ndim = realm_.spatialDimension_;
+  const double twoDivDim = 2.0 / static_cast<double>(ndim);
+  const double twothird = 2.0 / 3.0;
 
-  const std::string SFSStressFieldName = "sfs_stress";
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto density = nalu_ngp::get_ngp_field(meshInfo, "density");
+  const auto dualVol = nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+  const auto turbVisc = nalu_ngp::get_ngp_field(meshInfo, "turbulent_viscosity");
+  const auto dudx = nalu_ngp::get_ngp_field(meshInfo, "dudx");
+  auto sfsStress = nalu_ngp::get_ngp_field(meshInfo, "sfs_stress");
 
-  bool computeSFSTKE = false;
-  // extract fields
-  stk::mesh::FieldBase *TurbViscosity_ = metaData.get_field(stk::topology::NODE_RANK, "turbulent_viscosity");
-  stk::mesh::FieldBase *TurbKe_ = metaData.get_field(stk::topology::NODE_RANK, "turbulent_ke");
-  stk::mesh::FieldBase *Density_ = metaData.get_field(stk::topology::NODE_RANK, "density");
-  if(TurbKe_ == NULL) computeSFSTKE = true ;
-  stk::mesh::FieldBase *DualNodalVolume_ = metaData.get_field(stk::topology::NODE_RANK, "dual_nodal_volume");
-  stk::mesh::FieldBase *DuDx_ = metaData.get_field(stk::topology::NODE_RANK, "dudx");
-  stk::mesh::FieldBase *SFSStress = metaData.get_field(stk::topology::NODE_RANK, SFSStressFieldName);
+  // Special treatment for turbulent KE
+  const auto* turbKEHost = realm_.meta_data().get_field(
+    stk::topology::NODE_RANK, "turbulent_ke");
+  const bool computeSFSTKE = (turbKEHost == nullptr);
 
-  stk::mesh::BucketVector const& node_buckets_sfsstress =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets_sfsstress.begin();
-        ib != node_buckets_sfsstress.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-
-    // fields
-    const double * turbNu_ = (double*)stk::mesh::field_data(*TurbViscosity_, b);
-    double * turbKe_;
-    if (!computeSFSTKE)
-        turbKe_ = (double*)stk::mesh::field_data(*TurbKe_, b);
-    const double * density_ = (double*)stk::mesh::field_data(*Density_, b);
-    const double * dualNodalVolume_ = (double*)stk::mesh::field_data(*DualNodalVolume_, b);
-    const double * dudx_ = (double*)stk::mesh::field_data(*DuDx_, b);
-    double *sfsstress_ = (double*)stk::mesh::field_data(*SFSStress,b);
-    const int offSet = 6;
-
-    // Store the xx, xy, xz, yy, yz, zz components of sfs_stress
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      double divU = 0.0;
-      for ( int j = 0; j < nDim; ++j)
-          divU += dudx_[k*offSet+(nDim*j+j)] ;
-      double sfstke = 0.0;
-      if(computeSFSTKE) {
-          // Use method of Yoshisawa (1986) - Statistical theory for compressible turbulent shear flows, with the application to subgrid modeling, 29, 2152.
-          double Ci = realm_.get_turb_model_constant(TM_ci);
-          double sijMagSq = 0.0;
-          for ( int i = 0; i < nDim; ++i ) {
-              for ( int j = 0; j < nDim; ++j ) {
-                  const double rateOfStrain = 0.5*(dudx_[k*offSet+nDim*i+j] + dudx_[k*offSet+nDim*j+i]);
-                  sijMagSq += rateOfStrain*rateOfStrain;
-              }
-          }
-          sfstke = Ci * std::pow(dualNodalVolume_[k], 2.0*invNdim) * (2.0*sijMagSq);
-      } else {
-          sfstke = turbKe_[k];
-      }
-      size_t componentCount = 0;
-      for ( int i = 0; i < nDim; ++i ) {
-          for ( int j = i; j < nDim; ++j ) {
-              const double divUTerm = ( i == j ) ? 2.0/3.0*divU : 0.0;
-              const double sfsTKEterm = ( i == j ) ? 2.0/3.0*density_[k]*sfstke : 0.0;
-              const double newStress = (sfsstress_[k*offSet + componentCount]*oldTimeFilter*zeroCurrent - dt*(turbNu_[k]*(dudx_[k*offSet+(nDim*i+j)] + dudx_[k*offSet+(nDim*j+i)] - divUTerm) - sfsTKEterm))/currentTimeFilter_ ;
-              sfsstress_[k*offSet + componentCount] = newStress;
-              componentCount++;
-          }
-      }
-    }
+  // If we have a turbulent_ke field, extract the NGP version for use in
+  // computations
+  ngp::Field<double> turbKE;
+  if (!computeSFSTKE) {
+    turbKE = nalu_ngp::get_ngp_field(meshInfo, "turbulent_ke");
   }
+
+  const double tm_ci = realm_.get_turb_model_constant(TM_ci);
+  const double currentTimeFilter = currentTimeFilter_;
+
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      double divU = 0.0;
+      for (int d =0; d < ndim; ++d)
+        divU += dudx.get(mi, ndim * d + d);
+
+      double sfsTKE = 0.0;
+      const double rho = density.get(mi, 0);
+      const double mut = turbVisc.get(mi, 0);
+
+      if (computeSFSTKE) {
+        //
+        // Turbulent KE field not available. Compute SFS TKE term using method
+        // of Yoshizawa (1986), "Statistical theory for compressible turbulent
+        // shear flows, with the application to subgrid modeling",
+        // https://doi.org/10.1063/1.865552
+        //
+        double sijmagsq = 0.0;
+        for (int i=0; i < ndim; ++i)
+          for (int j=0; j < ndim; ++j) {
+            const double rateOfStrain = 0.5 * (
+              dudx.get(mi, ndim * i + j) + dudx.get(mi, ndim * j + i));
+            sijmagsq += rateOfStrain * rateOfStrain;
+          }
+        sfsTKE = tm_ci * stk::math::pow(dualVol.get(mi, 0), twoDivDim) *
+                 (2.0 * sijmagsq);
+      } else {
+        sfsTKE = turbKE.get(mi, 0);
+      }
+
+      int ic = 0;
+      for (int i =0; i < ndim; ++i)
+        for (int j=i; j < ndim; ++j) {
+          const double divUTerm = (i == j) ? twothird * divU : 0.0;
+          const double sfsTKETerm = (i == j) ? twothird * rho * sfsTKE : 0.0;
+
+          const double newStress =
+            (sfsStress.get(mi, ic) * oldTimeFilter * zeroCurrent -
+             dt * (mut * (dudx.get(mi, ndim * i + j) +
+                          dudx.get(mi, ndim * j + i) - divUTerm) -
+                   sfsTKETerm)) /
+            currentTimeFilter;
+          sfsStress.get(mi, ic) = newStress;
+          ic++;
+        }
+    });
+  sfsStress.modify_on_device();
 }
 
 
@@ -1136,42 +1155,35 @@ TurbulenceAveragingPostProcessing::compute_temperature_sfs_flux(
   const double &dt,
   stk::mesh::Selector s_all_nodes)
 {
-  stk::mesh::MetaData & metaData = realm_.meta_data();
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
-  const int nDim = realm_.spatialDimension_;
-  const double turbPr_ = realm_.get_turb_prandtl("enthalpy"); //TODO: Fix getting enthalpy name
+  const int ndim = realm_.spatialDimension_;
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const double turbPr = realm_.get_turb_prandtl("enthalpy");
+  const double currentTimeFilter = currentTimeFilter_;
 
-  const std::string tempSFSFluxFieldName = "temperature_sfs_flux";
+  const auto turbVisc = nalu_ngp::get_ngp_field(meshInfo, "turbulent_viscosity");
+  const auto dhdx = nalu_ngp::get_ngp_field(meshInfo, "dhdx");
+  const auto specHeat = nalu_ngp::get_ngp_field(meshInfo, "specific_heat");
+  auto tempSfsFlux = nalu_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
 
-  // extract fields
-  stk::mesh::FieldBase *TurbViscosity_ = metaData.get_field(stk::topology::NODE_RANK, "turbulent_viscosity");
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double nut = turbVisc.get(mi, 0);
+      const double cp = specHeat.get(mi, 0);
 
-  stk::mesh::FieldBase *DhDx_ = metaData.get_field(stk::topology::NODE_RANK, "dhdx");
-  stk::mesh::FieldBase *SpecificHeat_ = metaData.get_field(stk::topology::NODE_RANK, "specific_heat");
-  stk::mesh::FieldBase *tempSFSFlux = metaData.get_field(stk::topology::NODE_RANK, tempSFSFluxFieldName);
-
-  stk::mesh::BucketVector const& node_buckets_sfsstress =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets_sfsstress.begin();
-        ib != node_buckets_sfsstress.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-
-    // fields
-    const double * turbNu_ = (double*)stk::mesh::field_data(*TurbViscosity_, b);
-
-    const double * dhdx_ = (double*)stk::mesh::field_data(*DhDx_, b);
-    const double * specificheat_ = (double*)stk::mesh::field_data(*SpecificHeat_, b);
-    double *tempsfsflux_ = (double*)stk::mesh::field_data(*tempSFSFlux,b);
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      for ( int i = 0; i < nDim; ++i ) {
-          const double newTempFlux = (tempsfsflux_[k*nDim+i]*oldTimeFilter*zeroCurrent - dt*turbNu_[k]/(turbPr_*specificheat_[k]) * dhdx_[k*nDim+i])/currentTimeFilter_;
-          tempsfsflux_[k*nDim+i] = newTempFlux;
+      for (int d=0; d < ndim; ++d) {
+        const double tempFlux = (
+          tempSfsFlux.get(mi, d) * oldTimeFilter * zeroCurrent -
+          dt * nut / (turbPr * cp) * dhdx.get(mi, d)) / currentTimeFilter;
+        tempSfsFlux.get(mi, d) = tempFlux;
       }
-    }
-  }
+    });
+  tempSfsFlux.modify_on_device();
 }
+
 //--------------------------------------------------------------------------
 //-------- compute_vortictiy -----------------------------------------------
 //--------------------------------------------------------------------------
@@ -1180,41 +1192,27 @@ TurbulenceAveragingPostProcessing::compute_vorticity(
   const std::string & /* averageBlockName */,
   stk::mesh::Selector s_all_nodes)
 {
-  stk::mesh::MetaData & metaData = realm_.meta_data();
-  
-  const int nDim = realm_.spatialDimension_;
-  const std::string VortFieldName = "vorticity";
-  
-  // extract fields
-  stk::mesh::FieldBase *dudx_ = metaData.get_field(stk::topology::NODE_RANK, "dudx");
-  stk::mesh::FieldBase *Vort = metaData.get_field(stk::topology::NODE_RANK, VortFieldName);
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
-  stk::mesh::BucketVector const& node_buckets_vort =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets_vort.begin();
-        ib != node_buckets_vort.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-    
-    // fields
-    const double * du = (double*)stk::mesh::field_data(*dudx_, b);
-    double *vorticity_ = (double*)stk::mesh::field_data(*Vort,b);
-    const int offSet = nDim*nDim;
-    
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      for ( int i = 0; i < nDim; ++i ) {
-    	const int vortswitch = nDim*i;
-    	for ( int j = 0; j < nDim; ++j ) {
-          // Vorticity is the difference in the off diagonals, calculate only those
-    	  if ( (i==0 && j==1) || (i==1 && j ==2) || (i==2 && j==0) ){
-            const double vort_ = du[k*offSet+(nDim*j+i)] - du[k*offSet+(vortswitch+j)] ;
-            // Store the x, y, z components of vorticity
-            vorticity_[k*nDim + (nDim-i-j)] = vort_;
-    	  }
-        }
+  const int ndim = realm_.spatialDimension_;
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
+
+  const auto dudx = nalu_ngp::get_ngp_field(meshInfo, "dudx");
+  auto vort = nalu_ngp::get_ngp_field(meshInfo, "vorticity");
+
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      for (int i=0; i < ndim; ++i) {
+        // (i, j) = (0, 1) or (1, 2) or (2, 0)
+        const int j = (i + 1) % ndim;
+
+        vort.get(mi, ndim - i - j) =
+          dudx.get(mi, ndim * j + i) - dudx.get(mi, ndim * i + j);
       }
-    }
-  }
+    });
+  vort.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -1225,51 +1223,45 @@ TurbulenceAveragingPostProcessing::compute_q_criterion(
   const std::string & /* averageBlockName */,
   stk::mesh::Selector s_all_nodes)
 {
-  stk::mesh::MetaData & metaData = realm_.meta_data();
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
-  const int nDim = realm_.spatialDimension_;
-  const std::string QcritName = "q_criterion";
+  const int ndim = realm_.spatialDimension_;
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
 
-  // extract fields
-  stk::mesh::FieldBase *dudx_ = metaData.get_field(stk::topology::NODE_RANK, "dudx");
-  stk::mesh::FieldBase *Qcrit = metaData.get_field(stk::topology::NODE_RANK, QcritName);
+  const auto dudx = nalu_ngp::get_ngp_field(meshInfo, "dudx");
+  auto qcrit = nalu_ngp::get_ngp_field(meshInfo, "q_criterion");
 
-  stk::mesh::BucketVector const& node_buckets_vort =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets_vort.begin();
-        ib != node_buckets_vort.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
+  nalu_ngp::run_entity_algorithm(
+    ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      double sij = 0.0;
+      double vort = 0.0;
 
-    // fields
-    double *Qcriterion_ = (double*)stk::mesh::field_data(*Qcrit,b);
+      for (int i=0; i < ndim; ++i)
+        for (int j=0; j < ndim; ++j) {
+          const double duidxj = dudx.get(mi, ndim * i + j);
+          const double dujdxi = dudx.get(mi, ndim * j + i);
 
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      const double *du = (double*)stk::mesh::field_data(*dudx_, b[k] );
-      double Sij = 0.0;
-      double Omegaij = 0.0;
-      double divsquared = 0.0;
-      for ( int i = 0; i < nDim; ++i){
-    	const int offSet = nDim*i;
-    	for( int j = 0; j < nDim; ++j){
-          // Compute the squares of strain rate tensor and vorticity tensor
-    	  const double rateOfStrain =  0.5*(du[offSet+j] + du[nDim*j +i]) ;
-    	  const double vorticityTensor =  0.5*(du[offSet+j] - du[nDim*j +i]) ;
-    	  Sij += rateOfStrain*rateOfStrain;
-    	  Omegaij += vorticityTensor*vorticityTensor;
-    	}
+          const double rateOfStrain = 0.5 * (duidxj + dujdxi);
+          const double vortTensor = 0.5 * (duidxj - dujdxi);
+          sij += rateOfStrain * rateOfStrain;
+          vort += vortTensor * vortTensor;
+        }
+
+      double divSqr = 0.0;
+      if (ndim == 2) {
+        const double div = dudx.get(mi, 0) + dudx.get(mi, 3);
+        divSqr = div * div;
+      } else {
+        const double div = dudx.get(mi, 0) + dudx.get(mi, 4) + dudx.get(mi, 8);
+        divSqr = div * div;
       }
-      if ( nDim == 2 ) {
-        const double divergence = du[0] + du[3];
-        divsquared = divergence*divergence;
-      }
-      else {
-        const double divergence = du[0] + du[4] + du[8];
-        divsquared = divergence*divergence;
-      }
-      Qcriterion_[k] = 0.5*(Omegaij - Sij) +  0.5*divsquared ;
-    }
-  }
+
+      qcrit.get(mi, 0) = 0.5 * (vort - sij + divSqr);
+    });
+
+  qcrit.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -1404,45 +1396,35 @@ TurbulenceAveragingPostProcessing::compute_mean_resolved_ke(
   const std::string & /* averageBlockName */,
   stk::mesh::Selector s_all_nodes)
 {
-  stk::mesh::MetaData & metaData = realm_.meta_data();
-  const int nDim = realm_.spatialDimension_;
+  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
-  // extract fields
-  stk::mesh::FieldBase *velocity = metaData.get_field(stk::topology::NODE_RANK, "velocity");
-  stk::mesh::FieldBase *dualNodalVolume = metaData.get_field(stk::topology::NODE_RANK, "dual_nodal_volume");
+  const int ndim = realm_.spatialDimension_;
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = realm_.ngp_mesh();
 
-  // initialize sum
-  double l_sum[2] = {};
+  const auto velocity = nalu_ngp::get_ngp_field(meshInfo, "velocity");
+  const auto dualVol = nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
 
-  stk::mesh::BucketVector const& node_buckets_vort =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets_vort.begin();
-        ib != node_buckets_vort.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
+  nalu_ngp::ArrayDbl2 l_sum;
+  Kokkos::Sum<nalu_ngp::ArrayDbl2> sum_reducer(l_sum);
+  nalu_ngp::run_entity_par_reduce(
+    ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
+    KOKKOS_LAMBDA(const MeshIndex& mi, nalu_ngp::ArrayDbl2 pSum) {
+      pSum.array_[0] += dualVol.get(mi, 0);
 
-    // fields
-    double *uNp1 = (double*)stk::mesh::field_data(*velocity,b);
-    double *dualV = (double*)stk::mesh::field_data(*dualNodalVolume,b);
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      l_sum[0] += dualV[k];
       double ke = 0.0;
-      for ( int i = 0; i < nDim; ++i){
-    	const int offSet = nDim*k;
-        ke += uNp1[offSet+i]*uNp1[offSet+i];
-      }
-      l_sum[1] += ke*dualV[k]*0.5;
-    }
-  }
+      for (int d=0; d < ndim; ++d)
+        ke += velocity.get(mi, d) * velocity.get(mi, d);
+      pSum.array_[1] += ke * dualVol.get(mi, 0) * 0.5;
+    }, sum_reducer);
 
-  double g_sum[2] = {};
-  stk::ParallelMachine comm = NaluEnv::self().parallel_comm();
-  stk::all_reduce_sum(comm, l_sum, g_sum, 2);
-  
-  NaluEnv::self().naluOutputP0() << "Integrated ke and volume at time: " 
-                                 << g_sum[1]/g_sum[0] << " " 
-                                 << g_sum[0] <<  " " 
+  double g_sum[2] = {0.0, 0.0};
+  auto comm = NaluEnv::self().parallel_comm();
+  stk::all_reduce_sum(comm, l_sum.array_, g_sum, 2);
+
+  NaluEnv::self().naluOutputP0() << "Integrated ke and volume at time: "
+                                 << g_sum[1]/g_sum[0] << " "
+                                 << g_sum[0] <<  " "
                                  << realm_.get_current_time() << std::endl;
 }
 
