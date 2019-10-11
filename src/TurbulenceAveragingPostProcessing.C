@@ -763,7 +763,6 @@ TurbulenceAveragingPostProcessing::compute_averages(
                                 currentTimeFilter;
           avg.get(mi, j) = avgVal;
         }
-        avg.modify_on_device();
       }
 
       // Favre averaged quantities
@@ -781,7 +780,6 @@ TurbulenceAveragingPostProcessing::compute_averages(
             + prim.get(mi, j) * rho * dt) / (currentTimeFilter * rhoRA);
           avg.get(mi, j) = avgVal;
         }
-        avg.modify_on_device();
       }
 
       // Resolved quantities
@@ -798,9 +796,17 @@ TurbulenceAveragingPostProcessing::compute_averages(
             + rho * prim.get(mi, j) * dt) / currentTimeFilter;
           avg.get(mi, j) = avgVal;
         }
-        avg.modify_on_device();
       }
     });
+
+  {
+    // Tag fields as modified on device
+    const auto numNGPFields = hostFieldPairs.extent(0);
+    for (unsigned i=0; i < numNGPFields; ++i) {
+      auto& field =  hostFieldPairs(i).second.field;
+      field.modify_on_device();
+    }
+  }
 }
 
 
