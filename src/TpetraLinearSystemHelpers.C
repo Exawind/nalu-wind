@@ -99,14 +99,15 @@ void fill_owned_and_shared_then_nonowned_ordered_by_proc(std::vector<LinSys::Glo
 
 stk::mesh::Entity get_entity_master(const stk::mesh::BulkData& bulk,
                                     stk::mesh::Entity entity,
-                                    stk::mesh::EntityId naluId)
+                                    stk::mesh::EntityId naluId,
+                                    bool throwIfMasterNotFound)
 {
   bool thisEntityIsMaster = (bulk.identifier(entity) == naluId);
   if (thisEntityIsMaster) {
     return entity;
   }
   stk::mesh::Entity master = bulk.get_entity(stk::topology::NODE_RANK, naluId);
-  if (!bulk.is_valid(master)) {
+  if (throwIfMasterNotFound && !bulk.is_valid(master)) {
     std::ostringstream os;
     const stk::mesh::Entity* elems = bulk.begin_elements(entity);
     unsigned numElems = bulk.num_elements(entity);

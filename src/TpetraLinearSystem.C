@@ -838,10 +838,11 @@ void TpetraLinearSystem::fill_entity_to_row_LID_mapping()
 
 void TpetraLinearSystem::fill_entity_to_col_LID_mapping()
 {
-  const stk::mesh::BulkData& bulk = realm_.bulk_data();
-  stk::mesh::Selector selector = bulk.mesh_meta_data().universal_part() & !(realm_.get_inactive_selector());
+    const stk::mesh::BulkData& bulk = realm_.bulk_data();
+    stk::mesh::Selector selector = bulk.mesh_meta_data().universal_part() & !(realm_.get_inactive_selector());
     entityToColLID_ = LinSys::EntityToLIDView("entityToLID",bulk.get_size_of_entity_index_space());
     const stk::mesh::BucketVector& nodeBuckets = realm_.get_buckets(stk::topology::NODE_RANK,selector);
+    const bool throwIfMasterNotFound = false;
     for(const stk::mesh::Bucket* bptr : nodeBuckets) {
         const stk::mesh::Bucket& b = *bptr;
         const stk::mesh::EntityId* nodeIds = stk::mesh::field_data(*realm_.naluGlobalId_, b);
@@ -851,13 +852,19 @@ void TpetraLinearSystem::fill_entity_to_col_LID_mapping()
             GlobalOrdinal gid =-1;
             // needed because of some shared and ghost nodes. 
             if (nodeIds[i] != bulk.identifier(node)) {
-              stk::mesh::Entity master = get_entity_master(bulk, node, nodeIds[i]);
-              if (master != node) {
+              stk::mesh::Entity master = get_entity_master(bulk, node, nodeIds[i],
+                                                           throwIfMasterNotFound);
+              if (bulk.is_valid(master) && master != node) {
                 gid = * stk::mesh::field_data(*realm_.tpetGlobalId_, master);
                 entityToColLID_[node.local_offset()] = totalColsMap_->getLocalElement(gid);
               }
-              else
+              else if (!bulk.is_valid(master)) {
+                gid = -1;
+                entityToColLID_[node.local_offset()] = gid;
+              }
+              else {
                 gid =  * stk::mesh::field_data(*realm_.tpetGlobalId_, node);
+              }
             }
             else
               gid =  * stk::mesh::field_data(*realm_.tpetGlobalId_, node);
