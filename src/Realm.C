@@ -21,7 +21,6 @@
 
 #include <AuxFunction.h>
 #include <AuxFunctionAlgorithm.h>
-#include <ComputeGeometryAlgorithmDriver.h>
 #include <ComputeGeometryBoundaryAlgorithm.h>
 #include <ComputeGeometryInteriorAlgorithm.h>
 #include <ConstantAuxFunction.h>

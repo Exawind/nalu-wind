@@ -23,9 +23,7 @@ struct topology;
 namespace sierra{
 namespace nalu{
 
-class AlgorithmDriver;
 class Realm;
-class AssembleNodalGradAlgorithmDriver;
 class LinearSystem;
 class EquationSystems;
 class ProjectedNodalGradientEquationSystem;

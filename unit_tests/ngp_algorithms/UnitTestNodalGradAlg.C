@@ -10,12 +10,6 @@
 #include "ngp_algorithms/UnitTestNgpAlgUtils.h"
 
 #include "AlgTraits.h"
-#include "AssembleNodalGradEdgeAlgorithm.h"
-#include "AssembleNodalGradUEdgeAlgorithm.h"
-#include "AssembleNodalGradElemAlgorithm.h"
-#include "AssembleNodalGradUElemAlgorithm.h"
-#include "AssembleNodalGradBoundaryAlgorithm.h"
-#include "AssembleNodalGradUBoundaryAlgorithm.h"
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"

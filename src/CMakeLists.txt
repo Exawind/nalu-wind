@@ -29,10 +29,8 @@ add_sources(GlobalSourceList
    AssembleNodalGradEdgeAlgorithm.C
    AssembleNodalGradElemAlgorithm.C
    AssembleNodalGradNonConformalAlgorithm.C
-   AssembleNodalGradPAlgorithmDriver.C
    AssembleNodalGradUAlgorithmDriver.C
    AssembleNodalGradUBoundaryAlgorithm.C
-   AssembleNodalGradUEdgeAlgorithm.C
    AssembleNodalGradUElemAlgorithm.C
    AssembleNodalGradUNonConformalAlgorithm.C
    AssembleNodeSolverAlgorithm.C
@@ -53,8 +51,6 @@ add_sources(GlobalSourceList
    AuxFunctionAlgorithm.C
    AveragingInfo.C
    BoundaryConditions.C
-   ComputeABLWallFrictionVelocityAlgorithm.C
-   ComputeGeometryAlgorithmDriver.C
    ComputeGeometryBoundaryAlgorithm.C
    ComputeGeometryInteriorAlgorithm.C
    ComputeHeatTransferEdgeWallAlgorithm.C
@@ -69,7 +65,6 @@ add_sources(GlobalSourceList
    ComputeMdotInflowAlgorithm.C
    ComputeMdotNonConformalAlgorithm.C
    ComputeSSTMaxLengthScaleElemAlgorithm.C
-   ComputeTurbKineticEnergyWallFunctionAlgorithm.C
    ComputeWallFrictionVelocityAlgorithm.C
    ComputeWallModelSDRWallAlgorithm.C
    ConstantAuxFunction.C
@@ -150,7 +145,6 @@ add_sources(GlobalSourceList
    TpetraSegregatedLinearSystem.C
    TurbKineticEnergyEquationSystem.C
    TurbKineticEnergyKsgsBuoyantElemSuppAlg.C
-   TurbViscKsgsAlgorithm.C
    TurbViscSmagorinskyAlgorithm.C
    TurbViscWaleAlgorithm.C
    TurbulenceAveragingPostProcessing.C
