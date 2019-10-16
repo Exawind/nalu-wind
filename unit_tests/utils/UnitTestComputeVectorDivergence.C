@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <limits>
 
-#include <ComputeGeometryAlgorithmDriver.h>
 #include "ComputeGeometryInteriorAlgorithm.h"
 #include "ComputeGeometryBoundaryAlgorithm.h"
 #include "Realm.h"
