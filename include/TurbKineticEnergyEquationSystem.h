@@ -23,7 +23,6 @@ struct topology;
 namespace sierra{
 namespace nalu{
 
-class AlgorithmDriver;
 class Realm;
 class LinearSystem;
 class EquationSystems;
