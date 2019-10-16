@@ -44,7 +44,6 @@
 #include <ComputeMdotElemOpenPenaltyAlgorithm.h>
 #include <ComputeMdotNonConformalAlgorithm.h>
 #include <ComputeWallFrictionVelocityAlgorithm.h>
-#include <ComputeABLWallFrictionVelocityAlgorithm.h>
 #include <ConstantAuxFunction.h>
 #include <ContinuityLowSpeedCompressibleNodeSuppAlg.h>
 #include <CopyFieldAlgorithm.h>

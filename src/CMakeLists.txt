@@ -51,7 +51,6 @@ add_sources(GlobalSourceList
    AuxFunctionAlgorithm.C
    AveragingInfo.C
    BoundaryConditions.C
-   ComputeABLWallFrictionVelocityAlgorithm.C
    ComputeGeometryBoundaryAlgorithm.C
    ComputeGeometryInteriorAlgorithm.C
    ComputeHeatTransferEdgeWallAlgorithm.C
@@ -66,7 +65,6 @@ add_sources(GlobalSourceList
    ComputeMdotInflowAlgorithm.C
    ComputeMdotNonConformalAlgorithm.C
    ComputeSSTMaxLengthScaleElemAlgorithm.C
-   ComputeTurbKineticEnergyWallFunctionAlgorithm.C
    ComputeWallFrictionVelocityAlgorithm.C
    ComputeWallModelSDRWallAlgorithm.C
    ConstantAuxFunction.C
