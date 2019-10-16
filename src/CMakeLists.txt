@@ -29,10 +29,8 @@ add_sources(GlobalSourceList
    AssembleNodalGradEdgeAlgorithm.C
    AssembleNodalGradElemAlgorithm.C
    AssembleNodalGradNonConformalAlgorithm.C
-   AssembleNodalGradPAlgorithmDriver.C
    AssembleNodalGradUAlgorithmDriver.C
    AssembleNodalGradUBoundaryAlgorithm.C
-   AssembleNodalGradUEdgeAlgorithm.C
    AssembleNodalGradUElemAlgorithm.C
    AssembleNodalGradUNonConformalAlgorithm.C
    AssembleNodeSolverAlgorithm.C

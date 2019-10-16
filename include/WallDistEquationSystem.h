@@ -18,7 +18,6 @@ namespace sierra {
 namespace nalu {
 
 class Realm;
-class AssembleNodalGradAlgorithmDriver;
 class EquationSystems;
 
 class WallDistEquationSystem : public EquationSystem

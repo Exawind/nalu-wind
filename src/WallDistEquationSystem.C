@@ -7,11 +7,6 @@
 
 #include "WallDistEquationSystem.h"
 
-#include "AssembleNodalGradAlgorithmDriver.h"
-#include "AssembleNodalGradEdgeAlgorithm.h"
-#include "AssembleNodalGradElemAlgorithm.h"
-#include "AssembleNodalGradBoundaryAlgorithm.h"
-#include "AssembleNodalGradNonConformalAlgorithm.h"
 #include "AssembleWallDistNonConformalAlgorithm.h"
 #include "AuxFunction.h"
 #include "AuxFunctionAlgorithm.h"

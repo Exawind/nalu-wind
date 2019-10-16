@@ -27,7 +27,6 @@ namespace nalu{
 
 class AlgorithmDriver;
 class Realm;
-class AssembleNodalGradAlgorithmDriver;
 class AssembleWallHeatTransferAlgorithmDriver;
 class LinearSystem;
 class EquationSystems;
