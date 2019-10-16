@@ -13,6 +13,8 @@
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
 
+#include "ngp_algorithms/NodalGradAlgDriver.h"
+
 namespace stk{
 struct topology;
 }
@@ -20,9 +22,7 @@ struct topology;
 namespace sierra{
 namespace nalu{
 
-class AlgorithmDriver;
 class Realm;
-class AssembleNodalGradAlgorithmDriver;
 class LinearSystem;
 class EquationSystems;
 
@@ -88,8 +88,8 @@ public:
   ScalarFieldType *assembledWallSdr_;
   ScalarFieldType *assembledWallArea_;
   
-  AssembleNodalGradAlgorithmDriver *assembleNodalGradAlgDriver_;
-  AlgorithmDriver *diffFluxCoeffAlgDriver_;
+  ScalarNodalGradAlgDriver nodalGradAlgDriver_;
+  std::unique_ptr<Algorithm> effDiffFluxAlg_;
   std::vector<Algorithm *> wallModelAlg_;
 
 };
