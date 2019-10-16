@@ -145,7 +145,6 @@ add_sources(GlobalSourceList
    TpetraSegregatedLinearSystem.C
    TurbKineticEnergyEquationSystem.C
    TurbKineticEnergyKsgsBuoyantElemSuppAlg.C
-   TurbViscKsgsAlgorithm.C
    TurbViscSmagorinskyAlgorithm.C
    TurbViscWaleAlgorithm.C
    TurbulenceAveragingPostProcessing.C

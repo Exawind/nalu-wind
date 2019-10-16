@@ -79,7 +79,6 @@
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <SolverAlgorithmDriver.h>
-#include <TurbViscKsgsAlgorithm.h>
 #include <TurbViscSmagorinskyAlgorithm.h>
 #include <TurbViscWaleAlgorithm.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
