@@ -207,7 +207,6 @@ public:
   ScalarFieldType *visc_;
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
-  ScalarFieldType* Udiag_{nullptr};
 
   VectorNodalGradAlgDriver nodalGradAlgDriver_;
   WallFricVelAlgDriver wallFuncAlgDriver_;

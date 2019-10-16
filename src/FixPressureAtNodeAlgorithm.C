@@ -67,9 +67,7 @@ FixPressureAtNodeAlgorithm::execute()
 
   // Reset LHS and RHS for this matrix
   CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
-#ifdef KOKKOS_ENABLE_CUDA
   CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
-#endif
  
   ngp::Mesh ngpMesh = realm_.ngp_mesh();
   NGPDoubleFieldType ngpPressure = realm_.ngp_field_manager().get_field<double>(pressure_->mesh_meta_data_ordinal());
@@ -96,11 +94,7 @@ FixPressureAtNodeAlgorithm::execute()
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [=](const size_t& )
     {
       ngp::Mesh::ConnectedNodes refNodeList(&targetNode, 1);
-#ifdef KOKKOS_ENABLE_CUDA
       deviceCoeffApplier->resetRows(1, &targetNode, 0, 1);
-#else
-      coeffApplier->resetRows(1, &targetNode, 0, 1);
-#endif
   
       // Fix the pressure for this node only if this is proc is owner
       if (numNodes > 0 && fixPressureNode) {
@@ -110,18 +104,12 @@ FixPressureAtNodeAlgorithm::execute()
         lhs(0,0) = 1.0; // Set diagonal entry to 1.0
         rhs(0) = refPressure - pressureN;
   
-#ifdef KOKKOS_ENABLE_CUDA
         (*deviceCoeffApplier)(refNodeList.size(), refNodeList, scratchIds, sortPerm, rhs, lhs, __FILE__);
-#else
-        (*coeffApplier)(refNodeList.size(), refNodeList, scratchIds, sortPerm, rhs, lhs, __FILE__);
-#endif
       }
     });
   });
 
-#ifdef KOKKOS_ENABLE_CUDA
   coeffApplier->free_device_pointer();
-#endif
   delete coeffApplier;
 }
 

@@ -90,13 +90,11 @@ AssembleFaceElemSolverAlgorithm::execute()
   auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);
   const size_t numKernels = activeKernels_.size();
 
-#ifdef KOKKOS_ENABLE_CUDA
   const unsigned nodesPerEntity = nodesPerElem_;
   const unsigned numDof = numDof_;
   CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
   CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
   double diagRelaxFactor = diagRelaxFactor_;
-#endif
 
   run_face_elem_algorithm(realm_.bulk_data(),
     KOKKOS_LAMBDA(sierra::nalu::SharedMemData_FaceElem<DeviceTeamHandleType,DeviceShmem> &smdata)
@@ -110,29 +108,28 @@ AssembleFaceElemSolverAlgorithm::execute()
         }
 
 #ifdef KOKKOS_ENABLE_CUDA
-          extract_vector_lane(smdata.simdrhs, 0, smdata.rhs);
-          extract_vector_lane(smdata.simdlhs, 0, smdata.lhs);
-          for (unsigned ir=0; ir < nodesPerEntity*numDof; ++ir)
-            smdata.lhs(ir, ir) /= diagRelaxFactor;
-          (*deviceCoeffApplier)(nodesPerEntity, smdata.ngpConnectedNodes[0],
-                      smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
+        extract_vector_lane(smdata.simdrhs, 0, smdata.rhs);
+        extract_vector_lane(smdata.simdlhs, 0, smdata.lhs);
+        for (unsigned ir=0; ir < nodesPerEntity*numDof; ++ir)
+          smdata.lhs(ir, ir) /= diagRelaxFactor;
+        (*deviceCoeffApplier)(nodesPerEntity, smdata.ngpConnectedNodes[0],
+                    smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
 #else
         for(int simdIndex=0; simdIndex<smdata.numSimdFaces; ++simdIndex) {
           extract_vector_lane(smdata.simdrhs, simdIndex, smdata.rhs);
           extract_vector_lane(smdata.simdlhs, simdIndex, smdata.lhs);
-          for (unsigned ir=0; ir < nodesPerElem_*numDof_; ++ir)
-            smdata.lhs(ir, ir) /= diagRelaxFactor_;
-          apply_coeff(nodesPerElem_, smdata.ngpConnectedNodes[simdIndex],
+          for (unsigned ir=0; ir < nodesPerElem_*numDof; ++ir)
+            smdata.lhs(ir, ir) /= diagRelaxFactor;
+          (*deviceCoeffApplier)(nodesPerEntity, smdata.ngpConnectedNodes[simdIndex],
                       smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         }
 #endif
     });
 
-#ifdef KOKKOS_ENABLE_CUDA
     coeffApplier->free_device_pointer();
     delete coeffApplier;
-#endif
 }
 
 } // namespace nalu
 } // namespace Sierra
+

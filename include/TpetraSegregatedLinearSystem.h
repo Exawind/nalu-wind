@@ -12,6 +12,7 @@
 #include <LinearSystem.h>
 
 #include <KokkosInterface.h>
+#include <FieldTypeDef.h>
 
 #include <Kokkos_DefaultNode.hpp>
 #include <Tpetra_MultiVector.hpp>
@@ -163,7 +164,9 @@ public:
                              LinSys::LocalVector sharedNotOwnedLclRhs,
                              LinSys::EntityToLIDView entityLIDs,
                              LinSys::EntityToLIDView entityColLIDs,
-                             int maxOwnedRowId, int maxSharedNotOwnedRowId, unsigned numDof)
+                             int maxOwnedRowId, int maxSharedNotOwnedRowId, unsigned numDof,
+                             bool extractDiagonal, NGPDoubleFieldType& diagField,
+                             const ngp::Mesh& ngpMesh)
     : ownedLocalMatrix_(ownedLclMatrix),
       sharedNotOwnedLocalMatrix_(sharedNotOwnedLclMatrix),
       ownedLocalRhs_(ownedLclRhs),
@@ -171,6 +174,8 @@ public:
       entityToLID_(entityLIDs),
       entityToColLID_(entityColLIDs),
       maxOwnedRowId_(maxOwnedRowId), maxSharedNotOwnedRowId_(maxSharedNotOwnedRowId), numDof_(numDof),
+      extractDiagonal_(extractDiagonal), diagField_(diagField),
+      ngpMesh_(ngpMesh),
       devicePointer_(nullptr)
     {}
 
@@ -205,6 +210,9 @@ public:
     LinSys::EntityToLIDView entityToColLID_;
     int maxOwnedRowId_, maxSharedNotOwnedRowId_;
     unsigned numDof_;
+    bool extractDiagonal_;
+    NGPDoubleFieldType diagField_;
+    ngp::Mesh ngpMesh_;
     TpetraLinSysCoeffApplier* devicePointer_;
   };
 

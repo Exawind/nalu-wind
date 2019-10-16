@@ -140,10 +140,7 @@ public:
                             const SharedMemView<int*,DeviceShmem> & sortPermutation,
                             const SharedMemView<const double*,DeviceShmem> & rhs,
                             const SharedMemView<const double**,DeviceShmem> & lhs,
-                            const char * trace_tag)
-    {
-      linSys_.sumInto(numEntities, entities, rhs, lhs, localIds, sortPermutation, trace_tag);
-    }
+                            const char * trace_tag);
 
     void free_device_pointer() {}
 
@@ -242,6 +239,9 @@ public:
   double get_timer_precond();
   void zero_timer_precond();
   bool useSegregatedSolver() const;
+
+  EquationSystem* equationSystem() { return eqSys_; }
+
 protected:
   virtual void beginLinearSystemConstruction()=0;
   virtual void checkError(
