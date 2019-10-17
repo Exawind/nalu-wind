@@ -1066,7 +1066,7 @@ Actuator
 
      actuator:
        type: ActLineFAST
-       search_method: boost_rtree
+       search_method: stk_kdtree
        search_target_part: Unspecified-2-HEX
 
        n_turbines_glob: 2
@@ -1108,7 +1108,7 @@ Actuator
 
 .. inpfile:: actuator.search_method
 
-   String specifying the type of search method used to identify the nodes within the search radius of the actuator points. Options are ``boost_rtree`` and ``stk_kdtree``. The default is ``stk_kdtree`` when the ``search_type`` is not specified.
+   String specifying the type of search method used to identify the nodes within the search radius of the actuator points. The recommended option is ``stk_kdtree``. The ``boost_rtree`` option is being deprecated by the STK search library.
 
 .. inpfile:: search_target_part
 
