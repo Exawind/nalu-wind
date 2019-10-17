@@ -13,7 +13,6 @@
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
-#include <AssembleNodalGradAlgorithmDriver.h>
 #include <AssembleNodalGradEdgeAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
 #include <AssembleNodalGradBoundaryAlgorithm.h>
@@ -24,7 +23,6 @@
 #include <ConstantAuxFunction.h>
 #include <CopyFieldAlgorithm.h>
 #include <DirichletBC.h>
-#include <EffectiveSSTDiffFluxCoeffAlgorithm.h>
 #include <EquationSystem.h>
 #include <EquationSystems.h>
 #include <Enums.h>
@@ -68,6 +66,10 @@
 
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"
+#include "ngp_algorithms/NodalGradEdgeAlg.h"
+#include "ngp_algorithms/NodalGradElemAlg.h"
+#include "ngp_algorithms/NodalGradBndryElemAlg.h"
+#include "ngp_algorithms/EffSSTDiffFluxCoeffAlg.h"
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -121,8 +123,7 @@ SpecificDissipationRateEquationSystem::SpecificDissipationRateEquationSystem(
     sdrWallBc_(NULL),
     assembledWallSdr_(NULL),
     assembledWallArea_(NULL),
-    assembleNodalGradAlgDriver_(new AssembleNodalGradAlgorithmDriver(realm_, "specific_dissipation_rate", "dwdx")),
-    diffFluxCoeffAlgDriver_(new AlgorithmDriver(realm_))
+    nodalGradAlgDriver_(realm_, "dwdx")
 {
   dofName_ = "specific_dissipation_rate";
 
@@ -148,8 +149,6 @@ SpecificDissipationRateEquationSystem::SpecificDissipationRateEquationSystem(
 //--------------------------------------------------------------------------
 SpecificDissipationRateEquationSystem::~SpecificDissipationRateEquationSystem()
 {
-  delete assembleNodalGradAlgDriver_;
-  delete diffFluxCoeffAlgDriver_;
   std::vector<Algorithm *>::iterator ii;
   for( ii=wallModelAlg_.begin(); ii!=wallModelAlg_.end(); ++ii )
     delete *ii;
@@ -217,22 +216,13 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
   ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dwdxNone = dwdx_->field_of_state(stk::mesh::StateNone);
 
-  // non-solver, dwdx; allow for element-based shifted
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = assembleNodalGradAlgDriver_->algMap_.find(algType);
-  if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-    Algorithm *theAlg = NULL;
-    if ( edgeNodalGradient_ && realm_.realmUsesEdges_ ) {
-      theAlg = new AssembleNodalGradEdgeAlgorithm(realm_, part, &sdrNp1, &dwdxNone);
-    }
-    else {
-      theAlg = new AssembleNodalGradElemAlgorithm(realm_, part, &sdrNp1, &dwdxNone, edgeNodalGradient_);
-    }
-    assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  if (edgeNodalGradient_ && realm_.realmUsesEdges_)
+    nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
+      algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone);
+  else
+    nodalGradAlgDriver_.register_legacy_algorithm<AssembleNodalGradElemAlgorithm>(
+      algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone,
+      edgeNodalGradient_);
 
   // solver; interior contribution (advection + diffusion)
   if (!realm_.solutionOptions_->useConsolidatedSolverAlg_) {
@@ -395,19 +385,14 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
   }
 
   // effective diffusive flux coefficient alg for SST
-  std::map<AlgorithmType, Algorithm *>::iterator itev =
-    diffFluxCoeffAlgDriver_->algMap_.find(algType);
-  if ( itev == diffFluxCoeffAlgDriver_->algMap_.end() ) {
+  if (!effDiffFluxAlg_) {
     const double sigmaWOne = realm_.get_turb_model_constant(TM_sigmaWOne);
     const double sigmaWTwo = realm_.get_turb_model_constant(TM_sigmaWTwo);
-    EffectiveSSTDiffFluxCoeffAlgorithm *effDiffAlg
-      = new EffectiveSSTDiffFluxCoeffAlgorithm(realm_, part, visc_, tvisc_, evisc_, sigmaWOne, sigmaWTwo);
-    diffFluxCoeffAlgDriver_->algMap_[algType] = effDiffAlg;
+    effDiffFluxAlg_.reset(new EffSSTDiffFluxCoeffAlg(
+      realm_, part, visc_, tvisc_, evisc_, sigmaWOne, sigmaWTwo));
+  } else {
+    effDiffFluxAlg_->partVec_.push_back(part);
   }
-  else {
-    itev->second->partVec_.push_back(part);
-  }
-
 }
 
 //--------------------------------------------------------------------------
@@ -466,16 +451,9 @@ SpecificDissipationRateEquationSystem::register_inflow_bc(
   bcDataMapAlg_.push_back(theCopyAlg);
 
   // non-solver; dwdx; allow for element-based shifted
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = assembleNodalGradAlgDriver_->algMap_.find(algType);
-  if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-    Algorithm *theAlg 
-      = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &sdrNp1, &dwdxNone, edgeNodalGradient_);
-    assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  nodalGradAlgDriver_.register_face_algorithm<
+    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+      algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 
   // Dirichlet bc
   std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =
@@ -530,16 +508,9 @@ SpecificDissipationRateEquationSystem::register_open_bc(
   bcDataAlg_.push_back(auxAlg);
 
   // non-solver; dwdx; allow for element-based shifted
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = assembleNodalGradAlgDriver_->algMap_.find(algType);
-  if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-    Algorithm *theAlg 
-      = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &sdrNp1, &dwdxNone, edgeNodalGradient_);
-    assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  nodalGradAlgDriver_.register_face_algorithm<
+    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+      algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 
   // solver open; lhs
   std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
@@ -617,16 +588,9 @@ SpecificDissipationRateEquationSystem::register_wall_bc(
   }
 
   // non-solver; dwdx; allow for element-based shifted
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = assembleNodalGradAlgDriver_->algMap_.find(algType);
-  if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-    Algorithm *theAlg 
-      = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &sdrNp1, &dwdxNone, edgeNodalGradient_);
-    assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  nodalGradAlgDriver_.register_face_algorithm<
+    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+      algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -647,17 +611,9 @@ SpecificDissipationRateEquationSystem::register_symmetry_bc(
   VectorFieldType &dwdxNone = dwdx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; dwdx; allow for element-based shifted
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = assembleNodalGradAlgDriver_->algMap_.find(algType);
-  if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-    Algorithm *theAlg 
-      = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &sdrNp1, &dwdxNone, edgeNodalGradient_);
-    assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
-
+  nodalGradAlgDriver_.register_face_algorithm<
+    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+      algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -676,30 +632,16 @@ SpecificDissipationRateEquationSystem::register_non_conformal_bc(
   VectorFieldType &dwdxNone = dwdx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; contribution to dwdx; DG algorithm decides on locations for integration points
-  if ( edgeNodalGradient_ ) {    
-    std::map<AlgorithmType, Algorithm *>::iterator it
-      = assembleNodalGradAlgDriver_->algMap_.find(algType);
-    if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-      Algorithm *theAlg 
-        = new AssembleNodalGradBoundaryAlgorithm(realm_, part, &sdrNp1, &dwdxNone, edgeNodalGradient_);
-      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
+  if ( edgeNodalGradient_ ) {
+    nodalGradAlgDriver_.register_face_algorithm<
+      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+        algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
   }
   else {
     // proceed with DG
-    std::map<AlgorithmType, Algorithm *>::iterator it
-      = assembleNodalGradAlgDriver_->algMap_.find(algType);
-    if ( it == assembleNodalGradAlgDriver_->algMap_.end() ) {
-      AssembleNodalGradNonConformalAlgorithm *theAlg 
-        = new AssembleNodalGradNonConformalAlgorithm(realm_, part, &sdrNp1, &dwdxNone);
-      assembleNodalGradAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
+    nodalGradAlgDriver_
+      .register_legacy_algorithm<AssembleNodalGradNonConformalAlgorithm>(
+        algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone);
   }
 
   // solver; lhs; same for edge and element-based scheme
@@ -778,7 +720,7 @@ void
 SpecificDissipationRateEquationSystem::assemble_nodal_gradient()
 {
   const double timeA = -NaluEnv::self().nalu_time();
-  assembleNodalGradAlgDriver_->execute();
+  nodalGradAlgDriver_.execute();
   timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
 }
 
@@ -789,7 +731,7 @@ void
 SpecificDissipationRateEquationSystem::compute_effective_diff_flux_coeff()
 {
   const double timeA = -NaluEnv::self().nalu_time();
-  diffFluxCoeffAlgDriver_->execute();
+  effDiffFluxAlg_->execute();
   timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
 }
 

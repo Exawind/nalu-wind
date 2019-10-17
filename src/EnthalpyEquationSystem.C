@@ -26,7 +26,6 @@
 #include <ConstantAuxFunction.h>
 #include <CopyFieldAlgorithm.h>
 #include <DirichletBC.h>
-#include <EnthalpyEffectiveDiffFluxCoeffAlgorithm.h>
 #include <EnthalpyPmrSrcNodeSuppAlg.h>
 #include <EnthalpyLowSpeedCompressibleNodeSuppAlg.h>
 #include <EnthalpyPressureWorkNodeSuppAlg.h>

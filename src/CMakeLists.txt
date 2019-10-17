@@ -76,10 +76,8 @@ add_sources(GlobalSourceList
    DgInfo.C
    DirichletBC.C
    EffectiveDiffFluxCoeffAlgorithm.C
-   EffectiveSSTDiffFluxCoeffAlgorithm.C
    ElemDataRequests.C
    ElemDataRequestsGPU.C
-   EnthalpyEffectiveDiffFluxCoeffAlgorithm.C
    EnthalpyEquationSystem.C
    EnthalpyLowSpeedCompressibleNodeSuppAlg.C
    EnthalpyPmrSrcNodeSuppAlg.C
