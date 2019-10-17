@@ -1180,8 +1180,8 @@ void reset_rows(
 sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::get_coeff_applier()
 {
   const bool extractDiagonal = equationSystem()->extractDiagonal_;
-  const unsigned diagFieldOrdinal = (extractDiagonal && equationSystem()->Udiag_!=nullptr) ?
-                    equationSystem()->Udiag_->mesh_meta_data_ordinal() : 0;
+  const unsigned diagFieldOrdinal = (extractDiagonal && equationSystem()->get_diagonal_field()!=nullptr) ?
+                    equationSystem()->get_diagonal_field()->mesh_meta_data_ordinal() : 0;
 
   NGPDoubleFieldType diagField;
   if (extractDiagonal) {
