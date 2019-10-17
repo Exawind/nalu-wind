@@ -86,7 +86,7 @@ NonConformalInfo::NonConformalInfo(
     currentPartVec_(currentPartVec),
     opposingPartVec_(opposingPartVec),
     expandBoxPercentage_(expandBoxPercentage),
-    searchMethod_(stk::search::BOOST_RTREE),
+    searchMethod_(stk::search::KDTREE),
     clipIsoParametricCoords_(clipIsoParametricCoords),
     searchTolerance_(searchTolerance),
     dynamicSearchTolAlg_(dynamicSearchTolAlg),
@@ -94,12 +94,15 @@ NonConformalInfo::NonConformalInfo(
     canReuse_(false)
 {
   // determine search method for this pair
-  if ( searchMethodName == "boost_rtree" )
+  if ( searchMethodName == "boost_rtree" ) {
     searchMethod_ = stk::search::BOOST_RTREE;
+    NaluEnv::self().naluOutputP0() << "Warning: search method 'boost_rtree' is being deprecated"
+           <<", please switch to 'stk_kdtree'" << std::endl;
+  }
   else if ( searchMethodName == "stk_kdtree" )
     searchMethod_ = stk::search::KDTREE;
   else
-    NaluEnv::self().naluOutputP0() << "NonConformalInfo::search method not declared; will use boost_rtree" << std::endl;
+    NaluEnv::self().naluOutputP0() << "NonConformalInfo::search method not declared; will use stk_kdtree" << std::endl;
 }
 
 //--------------------------------------------------------------------------

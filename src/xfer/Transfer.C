@@ -356,8 +356,11 @@ void Transfer::allocate_stk_transfer() {
 
   // extract search type
   stk::search::SearchMethod searchMethod = stk::search::KDTREE;
-  if ( searchMethodName_ == "boost_rtree" )
+  if ( searchMethodName_ == "boost_rtree" ) {
     searchMethod = stk::search::BOOST_RTREE;
+    NaluEnv::self().naluOutputP0() << "Warning: search method 'boost_rtree' is being deprecated"
+          <<", please switch to 'stk_kdtree'" << std::endl;
+  }
   else if ( searchMethodName_ == "stk_kdtree" )
     searchMethod = stk::search::KDTREE;
   else

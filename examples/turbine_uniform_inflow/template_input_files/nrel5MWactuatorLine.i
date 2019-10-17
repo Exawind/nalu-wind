@@ -118,7 +118,7 @@ realms:
 
     actuator:
       type: ActLineFAST
-      search_method: boost_rtree
+      search_method: stk_kdtree
       search_target_part: Unspecified-2-HEX
 
       n_turbines_glob: 1

@@ -266,7 +266,7 @@ realms:
 
   actuator:
     type: ActLineFAST
-    search_method: boost_rtree
+    search_method: stk_kdtree
     search_target_part: fluid_part
 
     n_turbines_glob: 2

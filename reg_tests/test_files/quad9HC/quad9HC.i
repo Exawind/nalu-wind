@@ -60,13 +60,13 @@ realms:
       target_name: [surface_1, surface_2]
       periodic_user_data:
         search_tolerance: 1.e-5
-        search_method: boost_rtree
+        search_method: stk_kdtree
 
     - periodic_boundary_condition: bc_top_bottom
       target_name: [surface_3, surface_4]
       periodic_user_data:
         search_tolerance: 1.e-5
-        search_method: boost_rtree
+        search_method: stk_kdtree
 
     solution_options:
       name: myOptions
