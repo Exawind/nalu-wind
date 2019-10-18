@@ -14,9 +14,6 @@
 #include "Realm.h"
 #include "utils/StkHelpers.h"
 
-#include "stk_mesh/base/FieldParallel.hpp"
-#include "stk_util/parallel/ParallelReduce.hpp"
-
 namespace sierra {
 namespace nalu {
 
