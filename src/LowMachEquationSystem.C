@@ -37,7 +37,6 @@
 #include <AuxFunctionAlgorithm.h>
 #include <ComputeMdotAlgorithmDriver.h>
 #include <ComputeMdotInflowAlgorithm.h>
-#include <ComputeMdotEdgeAlgorithm.h>
 #include <ComputeMdotElemAlgorithm.h>
 #include <ComputeMdotEdgeOpenAlgorithm.h>
 #include <ComputeMdotElemOpenAlgorithm.h>

@@ -56,7 +56,6 @@ add_sources(GlobalSourceList
    ComputeHeatTransferEdgeWallAlgorithm.C
    ComputeHeatTransferElemWallAlgorithm.C
    ComputeMdotAlgorithmDriver.C
-   ComputeMdotEdgeAlgorithm.C
    ComputeMdotEdgeOpenAlgorithm.C
    ComputeMdotElemAlgorithm.C
    ComputeMdotElemOpenAlgorithm.C
