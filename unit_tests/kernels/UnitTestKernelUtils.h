@@ -631,15 +631,21 @@ public:
       minDistance_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "minimum_distance_to_wall")),
       fOneBlend_(&meta_.declare_field<ScalarFieldType>(
-                   stk::topology::NODE_RANK, "sst_f_one_blending")),
+        stk::topology::NODE_RANK, "sst_f_one_blending")),
       dudx_(&meta_.declare_field<GenericFieldType>(
-              stk::topology::NODE_RANK, "dudx")),
+        stk::topology::NODE_RANK, "dudx")),
       dkdx_(&meta_.declare_field<VectorFieldType>(
-              stk::topology::NODE_RANK, "dkdx")),
+        stk::topology::NODE_RANK, "dkdx")),
       dwdx_(&meta_.declare_field<VectorFieldType>(
-              stk::topology::NODE_RANK, "dwdx")),
+        stk::topology::NODE_RANK, "dwdx")),
       openMassFlowRate_(&meta_.declare_field<GenericFieldType>(
-        meta_.side_rank(), "open_mass_flow_rate"))
+        meta_.side_rank(), "open_mass_flow_rate")),
+      sdrbc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "wall_model_sdr_bc")),
+      sdrWallArea_(&meta_.declare_field<ScalarFieldType>(
+                     stk::topology::NODE_RANK, "assembled_wall_area_sdr")),
+      wallFricVel_(&meta_.declare_field<GenericFieldType>(
+                     meta_.side_rank(), "wall_friction_velocity_bip"))
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tkebc_, meta_.universal_part(), 1, nullptr);
@@ -662,6 +668,10 @@ public:
     stk::mesh::put_field_on_mesh(
       *openMassFlowRate_, meta_.universal_part(),
       sierra::nalu::AlgTraitsQuad4::numScsIp_, initOpenMassFlowRate);
+
+    stk::mesh::put_field_on_mesh(*sdrbc_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*sdrWallArea_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*wallFricVel_, meta_.universal_part(), 4, nullptr);
   }
 
   virtual ~SSTKernelHex8Mesh() {}
@@ -697,6 +707,10 @@ public:
   VectorFieldType* dkdx_{nullptr};
   VectorFieldType* dwdx_{nullptr};
   GenericFieldType* openMassFlowRate_{nullptr};
+
+  ScalarFieldType* sdrbc_{nullptr};
+  ScalarFieldType* sdrWallArea_{nullptr};
+  GenericFieldType* wallFricVel_{nullptr};
 };
 
 /** Test Fixture for the Turbulence Kernels
