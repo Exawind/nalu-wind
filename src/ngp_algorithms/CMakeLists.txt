@@ -14,6 +14,8 @@ add_sources(GlobalSourceList
   TKEWallFuncAlg.C
   GeometryInteriorAlg.C
   GeometryBoundaryAlg.C
+  SDRLowReWallAlg.C
+  SDRWallFuncAlg.C
 
   # Algorithm Drivers
   NgpAlgDriver.C
@@ -21,4 +23,5 @@ add_sources(GlobalSourceList
   TKEWallFuncAlgDriver.C
   GeometryAlgDriver.C
   WallFricVelAlgDriver.C
+  SDRWallFuncAlgDriver.C
   )
