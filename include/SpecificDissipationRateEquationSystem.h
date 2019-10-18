@@ -90,7 +90,7 @@ public:
   
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
   std::unique_ptr<Algorithm> effDiffFluxAlg_;
-  std::vector<Algorithm *> wallModelAlg_;
+  std::unique_ptr<NgpAlgDriver> wallModelAlgDriver_;
 
 };
 

@@ -55,7 +55,6 @@ add_sources(GlobalSourceList
    ComputeGeometryInteriorAlgorithm.C
    ComputeHeatTransferEdgeWallAlgorithm.C
    ComputeHeatTransferElemWallAlgorithm.C
-   ComputeLowReynoldsSDRWallAlgorithm.C
    ComputeMdotAlgorithmDriver.C
    ComputeMdotEdgeAlgorithm.C
    ComputeMdotEdgeOpenAlgorithm.C
@@ -66,7 +65,6 @@ add_sources(GlobalSourceList
    ComputeMdotNonConformalAlgorithm.C
    ComputeSSTMaxLengthScaleElemAlgorithm.C
    ComputeWallFrictionVelocityAlgorithm.C
-   ComputeWallModelSDRWallAlgorithm.C
    ConstantAuxFunction.C
    ContinuityLowSpeedCompressibleNodeSuppAlg.C
    ContinuityMassElemSuppAlgDep.C

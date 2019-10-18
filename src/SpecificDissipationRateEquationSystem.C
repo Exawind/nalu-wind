@@ -18,8 +18,6 @@
 #include <AssembleNodalGradBoundaryAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AuxFunctionAlgorithm.h>
-#include <ComputeLowReynoldsSDRWallAlgorithm.h>
-#include <ComputeWallModelSDRWallAlgorithm.h>
 #include <ConstantAuxFunction.h>
 #include <CopyFieldAlgorithm.h>
 #include <DirichletBC.h>
@@ -70,6 +68,10 @@
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 #include "ngp_algorithms/EffSSTDiffFluxCoeffAlg.h"
+#include "ngp_algorithms/SDRWallFuncAlg.h"
+#include "ngp_algorithms/SDRLowReWallAlg.h"
+#include "ngp_algorithms/SDRWallFuncAlgDriver.h"
+#include "utils/StkHelpers.h"
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -147,12 +149,7 @@ SpecificDissipationRateEquationSystem::SpecificDissipationRateEquationSystem(
 //--------------------------------------------------------------------------
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
-SpecificDissipationRateEquationSystem::~SpecificDissipationRateEquationSystem()
-{
-  std::vector<Algorithm *>::iterator ii;
-  for( ii=wallModelAlg_.begin(); ii!=wallModelAlg_.end(); ++ii )
-    delete *ii;
-}
+SpecificDissipationRateEquationSystem::~SpecificDissipationRateEquationSystem() = default;
 
 //--------------------------------------------------------------------------
 //-------- register_nodal_fields -------------------------------------------
@@ -566,14 +563,14 @@ SpecificDissipationRateEquationSystem::register_wall_bc(
   bool wallFunctionApproach = userData.wallFunctionApproach_;
 
   // create proper algorithms to fill nodal omega and assembled wall area; utau managed by momentum
-  Algorithm *wallAlg = NULL;
-  if ( wallFunctionApproach ) {
-    wallAlg = new ComputeWallModelSDRWallAlgorithm(realm_, part, realm_.realmUsesEdges_);
-  }
-  else {
-    wallAlg = new ComputeLowReynoldsSDRWallAlgorithm(realm_, part, realm_.realmUsesEdges_);
-  }
-  wallModelAlg_.push_back(wallAlg);
+  if (!wallModelAlgDriver_)
+    wallModelAlgDriver_.reset(new SDRWallFuncAlgDriver(realm_));
+  if (wallFunctionApproach)
+    wallModelAlgDriver_->register_face_elem_algorithm<SDRWallFuncAlg>(
+      algType, part, get_elem_topo(realm_, *part), "sdr_wall_func");
+  else
+    wallModelAlgDriver_->register_face_elem_algorithm<SDRLowReWallAlg>(
+      algType, part, get_elem_topo(realm_, *part), "sdr_wall_func", realm_.realmUsesEdges_);
 
   // Dirichlet bc
   std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =
@@ -741,66 +738,8 @@ SpecificDissipationRateEquationSystem::compute_effective_diff_flux_coeff()
 void
 SpecificDissipationRateEquationSystem::compute_wall_model_parameters()
 {
-
-  // check if we need to process anything
-  if ( wallModelAlg_.size() == 0 )
-    return;
-
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-
-  // selector; all nodes that have a SST-specific nodal field registered
-  stk::mesh::Selector s_all_nodes
-     = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
-     &stk::mesh::selectField(*assembledWallArea_);
-  stk::mesh::BucketVector const& node_buckets
-    = realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-
-  // zero the fields
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-      ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length  = b.size();
-    double * assembledWallSdr = stk::mesh::field_data(*assembledWallSdr_, b);
-    double * assembledWallArea = stk::mesh::field_data(*assembledWallArea_, b);
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      assembledWallSdr[k] = 0.0;
-      assembledWallArea[k] = 0.0;
-    }
-  }
-
-  // process the algorithm(s)
-  for ( size_t k = 0; k < wallModelAlg_.size(); ++k ) {
-    wallModelAlg_[k]->execute();
-  }
-
-  stk::mesh::parallel_sum(bulk_data, {assembledWallSdr_, assembledWallArea_});
-
-  // periodic assemble
-  if ( realm_.hasPeriodic_) {
-    const unsigned fieldSize = 1;
-    const bool bypassFieldCheck = false; // fields are not defined at all slave/master node pairs
-    realm_.periodic_field_update(assembledWallSdr_, fieldSize, bypassFieldCheck);
-    realm_.periodic_field_update(assembledWallArea_, fieldSize, bypassFieldCheck);
-  }
-
-  // normalize and set assembled sdr to sdr bc
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-      ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length  = b.size();
-    double * sdr = stk::mesh::field_data(*sdr_, b);
-    double * sdrWallBc = stk::mesh::field_data(*sdrWallBc_, b);
-    double * assembledWallSdr = stk::mesh::field_data(*assembledWallSdr_, b);
-    double * assembledWallArea = stk::mesh::field_data(*assembledWallArea_, b);
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      const double sdrBnd = assembledWallSdr[k]/assembledWallArea[k];
-      sdrWallBc[k] = sdrBnd;
-      assembledWallSdr[k] = sdrBnd;
-      // make sure that the next matrix assembly uses the proper sdr value
-      sdr[k] = sdrBnd;
-    }
-  }
+  if (wallModelAlgDriver_)
+    wallModelAlgDriver_->execute();
 }
 
 //--------------------------------------------------------------------------
