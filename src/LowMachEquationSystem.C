@@ -12,7 +12,6 @@
 #include <AssembleCourantReynoldsElemAlgorithm.h>
 #include <AssembleContinuityElemSolverAlgorithm.h>
 #include <AssembleContinuityInflowSolverAlgorithm.h>
-#include <AssembleContinuityEdgeOpenSolverAlgorithm.h>
 #include <AssembleContinuityElemOpenSolverAlgorithm.h>
 #include <AssembleContinuityNonConformalSolverAlgorithm.h>
 #include <AssembleMomentumElemSolverAlgorithm.h>
@@ -119,6 +118,7 @@
 
 // edge kernels
 #include <edge_kernels/ContinuityEdgeSolverAlg.h>
+#include <edge_kernels/ContinuityOpenEdgeKernel.h>
 #include <edge_kernels/MomentumEdgeSolverAlg.h>
 #include <edge_kernels/MomentumABLWallFuncEdgeKernel.h>
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
@@ -3160,27 +3160,27 @@ ContinuityEquationSystem::register_inflow_bc(
   else {
     itmd->second->partVec_.push_back(part);
   }
-  
+
   // solver; lhs
-  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {      
+  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_
+       || realm_.realmUsesEdges_) {
 
     auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-    
+
     AssembleElemSolverAlgorithm* solverAlg = nullptr;
     bool solverAlgWasBuilt = false;
-    
-    std::tie(solverAlg, solverAlgWasBuilt) 
+
+    std::tie(solverAlg, solverAlgWasBuilt)
       = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "inflow");
-    
+
     ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
     auto& activeKernels = solverAlg->activeKernels_;
-    
+
     if (solverAlgWasBuilt) {
       build_face_topo_kernel_automatic<ContinuityInflowElemKernel>
         (partTopo, *this, activeKernels, "continuity_inflow",
          realm_.bulk_data(), *realm_.solutionOptions_, useShifted, dataPreReqs);
     }
-
   }
   else {
     std::map<AlgorithmType, SolverAlgorithm *>::iterator its =
@@ -3238,16 +3238,27 @@ ContinuityEquationSystem::register_open_bc(
       itm->second->partVec_.push_back(part);
     }
 
-    // solver; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =
-      solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssembleContinuityEdgeOpenSolverAlgorithm *theAlg
-      = new AssembleContinuityEdgeOpenSolverAlgorithm(realm_, part, this);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
+    {
+      auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+
+      stk::topology elemTopo = get_elem_topo(realm_, *part);
+
+      AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
+      bool solverAlgWasBuilt = false;
+      const std::string algName = "open_edge";
+
+      std::tie(faceElemSolverAlg, solverAlgWasBuilt) =
+        build_or_add_part_to_face_elem_solver_alg(
+          algType, *this, *part, elemTopo, solverAlgMap, algName);
+
+      auto& activeKernels = faceElemSolverAlg->activeKernels_;
+
+      if (solverAlgWasBuilt)
+        build_face_elem_topo_kernel_automatic<ContinuityOpenEdgeKernel>(
+          partTopo, elemTopo, *this, activeKernels, "continuity_open_edge",
+          realm_.meta_data(), realm_.solutionOptions_,
+          faceElemSolverAlg->faceDataNeeded_,
+          faceElemSolverAlg->elemDataNeeded_);
     }
   }
   else {
@@ -3490,21 +3501,22 @@ ContinuityEquationSystem::register_abltop_bc(
   else {
     itmd->second->partVec_.push_back(part);
   }
-  
+
   // solver; lhs
-  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {      
+  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ||
+       realm_.realmUsesEdges_) {
 
     auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-    
+
     AssembleElemSolverAlgorithm* solverAlg = nullptr;
     bool solverAlgWasBuilt = false;
-    
-    std::tie(solverAlg, solverAlgWasBuilt) 
+
+    std::tie(solverAlg, solverAlgWasBuilt)
       = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "inflow");
-    
+
     ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
     auto& activeKernels = solverAlg->activeKernels_;
-    
+
     if (solverAlgWasBuilt) {
       build_face_topo_kernel_automatic<ContinuityInflowElemKernel>
         (partTopo, *this, activeKernels, "continuity_inflow",
