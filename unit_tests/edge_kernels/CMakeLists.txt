@@ -6,6 +6,7 @@ add_sources(GlobalUnitSourceList
   UnitTestWallDistEdgeSolver.C
 
   # Face/elem edge BC kernels
+  UnitTestContinuityOpenEdge.C
   UnitTestMomentumABLWallFuncEdge.C
   UnitTestMomentumSymmetryEdge.C
   UnitTestScalarOpenEdge.C
