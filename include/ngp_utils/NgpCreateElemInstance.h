@@ -232,15 +232,11 @@ BaseType* create_face_algorithm(
  */
 template<typename BaseType, template <typename> class T, typename... Args>
 BaseType* create_face_elem_algorithm(
-  const int dimension,
+  const int,
   const stk::topology faceTopo,
   const stk::topology elemTopo,
   Args&&... args)
 {
-  if (dimension == 2) {
-    throw std::runtime_error("NGP face_elem algorithm not implemented");
-  }
-
   switch (faceTopo) {
   case stk::topology::QUAD_4:
     switch (elemTopo) {
@@ -269,8 +265,17 @@ BaseType* create_face_elem_algorithm(
                                + elemTopo.name() + " pair.");
     }
 
+  case stk::topology::LINE_2:
+    switch (elemTopo) {
+    case stk::topology::QUAD_4_2D:
+      return new T<AlgTraitsEdge2DQuad42D>(std::forward<Args>(args)...);
+    default:
+      throw std::runtime_error("NGP face_elem algorithm is not implemented for EDGE_2D and "
+                               + elemTopo.name() + " pair.");
+    }
+
   default:
-    throw std::runtime_error("NGP face_elem algorithm not implemented");
+    throw std::runtime_error("NGP face_elem algorithm not implemented " + faceTopo.name());
   }
 }
 

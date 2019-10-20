@@ -5,8 +5,7 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#include "ngp_algorithms/WallFuncGeometryAlg.h"
-
+#include "ngp_algorithms/SDRLowReWallAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElementFactory.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -17,23 +16,23 @@
 namespace sierra {
 namespace nalu {
 
-template<typename BcAlgTraits>
-WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
-  Realm& realm,
-  stk::mesh::Part* part)
+template <typename BcAlgTraits>
+SDRLowReWallAlg<BcAlgTraits>::SDRLowReWallAlg(
+  Realm& realm, stk::mesh::Part* part, const bool useShifted)
   : Algorithm(realm, part),
     faceData_(realm.meta_data()),
     elemData_(realm.meta_data()),
     coordinates_(
       get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
+    density_(get_field_ordinal(realm.meta_data(), "density")),
+    viscosity_(get_field_ordinal(realm.meta_data(), "viscosity")),
     exposedAreaVec_(get_field_ordinal(
       realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
-    wallNormDistBip_(get_field_ordinal(
-                   realm.meta_data(),
-                   "wall_normal_distance_bip",
-                   realm.meta_data().side_rank())),
-    wallArea_(get_field_ordinal(realm.meta_data(), "assembled_wall_area_wf")),
-    wallNormDist_(get_field_ordinal(realm.meta_data(), "assembled_wall_normal_distance")),
+    wallArea_(get_field_ordinal(realm.meta_data(), "assembled_wall_area_sdr")),
+    sdrbc_(get_field_ordinal(realm.meta_data(), "wall_model_sdr_bc")),
+    betaOne_(realm.get_turb_model_constant(TM_betaOne)),
+    wallFactor_(realm.get_turb_model_constant(TM_SDRWallFactor)),
+    useShifted_(useShifted),
     meFC_(MasterElementRepo::get_surface_master_element<
           typename BcAlgTraits::FaceTraits>()),
     meSCS_(MasterElementRepo::get_surface_master_element<
@@ -44,15 +43,20 @@ WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
 
   faceData_.add_coordinates_field(
     coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  faceData_.add_gathered_nodal_field(density_, 1);
+  faceData_.add_gathered_nodal_field(viscosity_, 1);
   faceData_.add_face_field(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
 
   elemData_.add_coordinates_field(
     coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+
+  auto shp_fcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
+  faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
 }
 
 template<typename BcAlgTraits>
-void WallFuncGeometryAlg<BcAlgTraits>::execute()
+void SDRLowReWallAlg<BcAlgTraits>::execute()
 {
   using SimdDataType = nalu_ngp::FaceElemSimdData<ngp::Mesh>;
 
@@ -61,30 +65,39 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
-  auto wdistBip = fieldMgr.template get_field<double>(wallNormDistBip_);
-  auto wdist = fieldMgr.template get_field<double>(wallNormDist_);
-  auto warea = fieldMgr.template get_field<double>(wallArea_);
+  auto& warea = fieldMgr.template get_field<double>(wallArea_);
+  auto& sdrbc = fieldMgr.template get_field<double>(sdrbc_);
   const auto areaOps = nalu_ngp::simd_face_elem_nodal_field_updater(
     ngpMesh, warea);
-  const auto distOps = nalu_ngp::simd_face_elem_nodal_field_updater(
-    ngpMesh, wdist);
-  const auto dBipOps = nalu_ngp::simd_face_elem_field_updater(
-    ngpMesh, wdistBip);
+  const auto sdrbcOps = nalu_ngp::simd_face_elem_nodal_field_updater(
+    ngpMesh, sdrbc);
+
+  // Bring class members into local scope for device capture
+  const auto coordsID = coordinates_;
+  const auto densityID = density_;
+  const auto viscosityID = viscosity_;
+  const auto exposedAreaVecID = exposedAreaVec_;
+  const auto useShifted = useShifted_;
+  const auto betaOne = betaOne_;
+  const auto wallFactor = wallFactor_;
+
+  auto* meFC = meFC_;
+  auto* meSCS = meSCS_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
-
-  // Bring class members into local scope for device capture
-  const unsigned coordsID = coordinates_;
-  const unsigned exposedAreaVecID = exposedAreaVec_;
-  auto* meSCS = meSCS_;
-  auto* meFC = meFC_;
 
   nalu_ngp::run_face_elem_algorithm(
     meshInfo, faceData_, elemData_, sel,
     KOKKOS_LAMBDA(SimdDataType& fdata) {
       auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
+      auto& v_density = fdata.simdFaceView.get_scratch_view_1D(densityID);
+      auto& v_viscosity = fdata.simdFaceView.get_scratch_view_1D(viscosityID);
       auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaVecID);
+
+      const auto& meViews = fdata.simdFaceView.get_me_views(CURRENT_COORDINATES);
+      const auto& v_shape_fcn = useShifted
+        ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
       const int* faceIpNodeMap = meFC->ipNodeMap();
       for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
@@ -104,18 +117,29 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
         }
         ypBip = stk::math::sqrt(ypBip);
 
-        // Update the wall distance boundary integration pt (Bip)
-        dBipOps(fdata, ip) = ypBip;
+        DoubleType rhoIp = 0.0;
+        DoubleType muIp = 0.0;
+        for (int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
+          const DoubleType r = v_shape_fcn(ip, ic);
+          rhoIp += r * v_density(ic);
+          muIp += r * v_viscosity(ic);
+        }
+        const DoubleType nuIp = muIp / rhoIp;
 
-        // Accumulate to the nearest node
+        const DoubleType lowReSdr = wallFactor * 6.0 * nuIp /
+          (betaOne * ypBip * ypBip);
+
         const int ni = faceIpNodeMap[ip];
-        distOps(fdata, ni, 0) += aMag * ypBip;
         areaOps(fdata, ni, 0) += aMag;
+        sdrbcOps(fdata, ni, 0) += lowReSdr * aMag;
       }
     });
+
+  warea.modify_on_device();
+  sdrbc.modify_on_device();
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(WallFuncGeometryAlg)
+INSTANTIATE_KERNEL_FACE_ELEMENT(SDRLowReWallAlg)
 
 }  // nalu
 }  // sierra

@@ -5,8 +5,7 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#include "ngp_algorithms/WallFuncGeometryAlg.h"
-
+#include "ngp_algorithms/SDRWallFuncAlg.h"
 #include "BuildTemplates.h"
 #include "master_element/MasterElementFactory.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -18,22 +17,23 @@ namespace sierra {
 namespace nalu {
 
 template<typename BcAlgTraits>
-WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
-  Realm& realm,
-  stk::mesh::Part* part)
-  : Algorithm(realm, part),
+SDRWallFuncAlg<BcAlgTraits>::SDRWallFuncAlg(
+  Realm& realm, stk::mesh::Part* part
+) : Algorithm(realm, part),
     faceData_(realm.meta_data()),
     elemData_(realm.meta_data()),
     coordinates_(
       get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
     exposedAreaVec_(get_field_ordinal(
-      realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
-    wallNormDistBip_(get_field_ordinal(
+                      realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
+    wallFricVel_(get_field_ordinal(
                    realm.meta_data(),
-                   "wall_normal_distance_bip",
+                   "wall_friction_velocity_bip",
                    realm.meta_data().side_rank())),
-    wallArea_(get_field_ordinal(realm.meta_data(), "assembled_wall_area_wf")),
-    wallNormDist_(get_field_ordinal(realm.meta_data(), "assembled_wall_normal_distance")),
+    wallArea_(get_field_ordinal(realm.meta_data(), "assembled_wall_area_sdr")),
+    sdrbc_(get_field_ordinal(realm.meta_data(), "wall_model_sdr_bc")),
+    sqrtBetaStar_(stk::math::sqrt(realm.get_turb_model_constant(TM_betaStar))),
+    kappa_(realm.get_turb_model_constant(TM_kappa)),
     meFC_(MasterElementRepo::get_surface_master_element<
           typename BcAlgTraits::FaceTraits>()),
     meSCS_(MasterElementRepo::get_surface_master_element<
@@ -46,13 +46,14 @@ WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
     coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
   faceData_.add_face_field(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  faceData_.add_face_field(wallFricVel_, BcAlgTraits::numFaceIp_);
 
   elemData_.add_coordinates_field(
     coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
 }
 
 template<typename BcAlgTraits>
-void WallFuncGeometryAlg<BcAlgTraits>::execute()
+void SDRWallFuncAlg<BcAlgTraits>::execute()
 {
   using SimdDataType = nalu_ngp::FaceElemSimdData<ngp::Mesh>;
 
@@ -61,30 +62,32 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
-  auto wdistBip = fieldMgr.template get_field<double>(wallNormDistBip_);
-  auto wdist = fieldMgr.template get_field<double>(wallNormDist_);
-  auto warea = fieldMgr.template get_field<double>(wallArea_);
+  auto& warea = fieldMgr.template get_field<double>(wallArea_);
+  auto& sdrbc = fieldMgr.template get_field<double>(sdrbc_);
   const auto areaOps = nalu_ngp::simd_face_elem_nodal_field_updater(
     ngpMesh, warea);
-  const auto distOps = nalu_ngp::simd_face_elem_nodal_field_updater(
-    ngpMesh, wdist);
-  const auto dBipOps = nalu_ngp::simd_face_elem_field_updater(
-    ngpMesh, wdistBip);
+  const auto sdrbcOps = nalu_ngp::simd_face_elem_nodal_field_updater(
+    ngpMesh, sdrbc);
+
+  // Bring class members into local scope for device capture
+  const auto coordsID = coordinates_;
+  const auto exposedAreaVecID = exposedAreaVec_;
+  const auto wallFricVelID = wallFricVel_;
+  const auto sqrtBetaStar = sqrtBetaStar_;
+  const auto kappa = kappa_;
+
+  auto* meFC = meFC_;
+  auto* meSCS = meSCS_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
-
-  // Bring class members into local scope for device capture
-  const unsigned coordsID = coordinates_;
-  const unsigned exposedAreaVecID = exposedAreaVec_;
-  auto* meSCS = meSCS_;
-  auto* meFC = meFC_;
 
   nalu_ngp::run_face_elem_algorithm(
     meshInfo, faceData_, elemData_, sel,
     KOKKOS_LAMBDA(SimdDataType& fdata) {
       auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
       auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaVecID);
+      auto& v_fricVel = fdata.simdFaceView.get_scratch_view_1D(wallFricVelID);
 
       const int* faceIpNodeMap = meFC->ipNodeMap();
       for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
@@ -104,18 +107,20 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
         }
         ypBip = stk::math::sqrt(ypBip);
 
-        // Update the wall distance boundary integration pt (Bip)
-        dBipOps(fdata, ip) = ypBip;
+        const DoubleType wallFuncSdr =  v_fricVel(ip) / (
+          sqrtBetaStar * kappa * ypBip);
 
-        // Accumulate to the nearest node
         const int ni = faceIpNodeMap[ip];
-        distOps(fdata, ni, 0) += aMag * ypBip;
         areaOps(fdata, ni, 0) += aMag;
+        sdrbcOps(fdata, ni, 0) += wallFuncSdr * aMag;
       }
     });
+
+  warea.modify_on_device();
+  sdrbc.modify_on_device();
 }
 
-INSTANTIATE_KERNEL_FACE_ELEMENT(WallFuncGeometryAlg)
+INSTANTIATE_KERNEL_FACE_ELEMENT(SDRWallFuncAlg)
 
 }  // nalu
 }  // sierra

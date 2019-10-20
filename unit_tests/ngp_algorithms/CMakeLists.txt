@@ -8,4 +8,5 @@ add_sources(GlobalUnitSourceList
   UnitTestTurbViscKsgsAlg.C
   UnitTestTurbViscSSTAlg.C
   UnitTestGeometryAlg.C
+  UnitTestSDRWallAlg.C
   )

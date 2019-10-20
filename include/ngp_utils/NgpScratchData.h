@@ -115,6 +115,9 @@ struct FaceElemSimdData
           team, ndim, nodesPerElem, elemDataReqs));
     }
 #endif
+
+    simdFaceView.fill_static_meviews(faceDataReqs);
+    simdElemView.fill_static_meviews(elemDataReqs);
   }
 
   KOKKOS_FUNCTION ~FaceElemSimdData() = default;
