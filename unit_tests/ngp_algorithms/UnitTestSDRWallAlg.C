@@ -53,7 +53,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_lowRE)
     // Wall distance and area check
     const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();
     auto& ngpSdrBC = fieldMgr.get_field<double>(
-      sdrbc_->mesh_meta_data_ordinal());
+      sdrWallbc_->mesh_meta_data_ordinal());
     auto& ngpWallArea = fieldMgr.get_field<double>(
       sdrWallArea_->mesh_meta_data_ordinal());
 
@@ -73,7 +73,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_lowRE)
 
     for (const auto* b: bkts)
       for (const auto& node: *b) {
-        const double* sdrVal = stk::mesh::field_data(*sdrbc_, node);
+        const double* sdrVal = stk::mesh::field_data(*sdrWallbc_, node);
         const double* areaVal = stk::mesh::field_data(*sdrWallArea_, node);
         EXPECT_NEAR(sdrVal[0], sdrGold, tol);
         EXPECT_NEAR(areaVal[0], wAreaGold, tol);
@@ -116,7 +116,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_func)
     // Wall distance and area check
     const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();
     auto& ngpSdrBC = fieldMgr.get_field<double>(
-      sdrbc_->mesh_meta_data_ordinal());
+      sdrWallbc_->mesh_meta_data_ordinal());
     auto& ngpWallArea = fieldMgr.get_field<double>(
       sdrWallArea_->mesh_meta_data_ordinal());
 
@@ -135,7 +135,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_func)
 
     for (const auto* b: bkts)
       for (const auto& node: *b) {
-        const double* sdrVal = stk::mesh::field_data(*sdrbc_, node);
+        const double* sdrVal = stk::mesh::field_data(*sdrWallbc_, node);
         const double* areaVal = stk::mesh::field_data(*sdrWallArea_, node);
         EXPECT_NEAR(sdrVal[0], sdrGold, tol);
         EXPECT_NEAR(areaVal[0], wAreaGold, tol);

@@ -622,6 +622,8 @@ public:
         stk::topology::NODE_RANK, "bc_turbulent_ke")),
       sdr_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "specific_dissipation_rate")),
+      sdrbc_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "sdr_bc")),
       visc_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "viscosity")),
       tvisc_(&meta_.declare_field<ScalarFieldType>(
@@ -640,16 +642,17 @@ public:
         stk::topology::NODE_RANK, "dwdx")),
       openMassFlowRate_(&meta_.declare_field<GenericFieldType>(
         meta_.side_rank(), "open_mass_flow_rate")),
-      sdrbc_(&meta_.declare_field<ScalarFieldType>(
+      sdrWallbc_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "wall_model_sdr_bc")),
       sdrWallArea_(&meta_.declare_field<ScalarFieldType>(
-                     stk::topology::NODE_RANK, "assembled_wall_area_sdr")),
+        stk::topology::NODE_RANK, "assembled_wall_area_sdr")),
       wallFricVel_(&meta_.declare_field<GenericFieldType>(
-                     meta_.side_rank(), "wall_friction_velocity_bip"))
+        meta_.side_rank(), "wall_friction_velocity_bip"))
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tkebc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*sdr_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*sdrbc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*visc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tvisc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*maxLengthScale_, meta_.universal_part(), 1, nullptr);
@@ -669,7 +672,7 @@ public:
       *openMassFlowRate_, meta_.universal_part(),
       sierra::nalu::AlgTraitsQuad4::numScsIp_, initOpenMassFlowRate);
 
-    stk::mesh::put_field_on_mesh(*sdrbc_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*sdrWallbc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*sdrWallArea_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*wallFricVel_, meta_.universal_part(), 4, nullptr);
   }
@@ -698,6 +701,7 @@ public:
   ScalarFieldType* tke_{nullptr};
   ScalarFieldType* tkebc_{nullptr};
   ScalarFieldType* sdr_{nullptr};
+  ScalarFieldType* sdrbc_{nullptr};
   ScalarFieldType* visc_{nullptr};
   ScalarFieldType* tvisc_{nullptr};
   ScalarFieldType* maxLengthScale_{nullptr};
@@ -708,7 +712,7 @@ public:
   VectorFieldType* dwdx_{nullptr};
   GenericFieldType* openMassFlowRate_{nullptr};
 
-  ScalarFieldType* sdrbc_{nullptr};
+  ScalarFieldType* sdrWallbc_{nullptr};
   ScalarFieldType* sdrWallArea_{nullptr};
   GenericFieldType* wallFricVel_{nullptr};
 };
