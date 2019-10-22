@@ -64,10 +64,8 @@ public:
     const auto entityRank = entityRank_;
     const auto rhsSize = rhsSize_;
 
-#ifdef KOKKOS_ENABLE_CUDA
     CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
     CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
-#endif
 
     const auto nodesPerEntity = nodesPerEntity_;
 
@@ -94,23 +92,14 @@ public:
 
             lambdaFunc(smdata, edgeIndex, nodeL, nodeR);
 
-#ifndef KOKKOS_ENABLE_CUDA
-            // TODO: scratchIds and sort permutations could be optimized away for edge based
-            this->apply_coeff(
-              nodesPerEntity, smdata.ngpElemNodes, smdata.scratchIds,
-              smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
-#else
             (*deviceCoeffApplier)(
               nodesPerEntity, smdata.ngpElemNodes, smdata.scratchIds,
               smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
-#endif
           });
       });
 
-#ifdef KOKKOS_ENABLE_CUDA
       coeffApplier->free_device_pointer();
       delete coeffApplier;
-#endif
   }
 
 protected:

@@ -855,7 +855,7 @@ LowMachEquationSystem::project_nodal_velocity()
   const auto dpdx = fieldMgr.get_field<double>(
     continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
   const auto Udiag = fieldMgr.get_field<double>(
-    momentumEqSys_->Udiag_->mesh_meta_data_ordinal());
+    momentumEqSys_->get_diagonal_field()->mesh_meta_data_ordinal());
   const auto velNp1 = fieldMgr.get_field<double>(
     momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
       .mesh_meta_data_ordinal());

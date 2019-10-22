@@ -353,6 +353,7 @@ public:
   std::string dofName_{"undefined"};
 
   bool extractDiagonal_{false};
+  virtual ScalarFieldType* get_diagonal_field() { return nullptr; }
 
   // owner equation system
   /*EquationSystem *ownerEqs_;*/

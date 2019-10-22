@@ -128,5 +128,22 @@ void LinearSystem::sync_field(const stk::mesh::FieldBase *field)
   stk::mesh::copy_owned_to_shared( bulkData, fields);
 }
 
+KOKKOS_FUNCTION
+void LinearSystem::DefaultHostOnlyCoeffApplier::operator()(
+                        unsigned numEntities,
+                        const ngp::Mesh::ConnectedNodes& entities,
+                        const SharedMemView<int*,DeviceShmem> & localIds,
+                        const SharedMemView<int*,DeviceShmem> & sortPermutation,
+                        const SharedMemView<const double*,DeviceShmem> & rhs,
+                        const SharedMemView<const double**,DeviceShmem> & lhs,
+                        const char * trace_tag)
+{
+  linSys_.sumInto(numEntities, entities, rhs, lhs, localIds, sortPermutation, trace_tag);
+
+  if (linSys_.equationSystem()->extractDiagonal_) {
+    linSys_.equationSystem()->save_diagonal_term(numEntities, entities, lhs);
+  }
+}
+
 } // namespace nalu
 } // namespace Sierra
