@@ -21,7 +21,7 @@ static constexpr double rhs[4] = {
 }
 } // anonymous namespace
 
-TEST_F(ContinuityKernelHex8Mesh, inflow)
+TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
 {
   const bool doPerturb = false;
   const bool generateSidesets = true;

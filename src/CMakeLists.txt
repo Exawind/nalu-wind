@@ -3,7 +3,6 @@ add_sources(GlobalSourceList
    Actuator.C
    Algorithm.C
    AlgorithmDriver.C
-   AssembleContinuityEdgeOpenSolverAlgorithm.C
    AssembleContinuityElemOpenSolverAlgorithm.C
    AssembleContinuityElemSolverAlgorithm.C
    AssembleContinuityInflowSolverAlgorithm.C
