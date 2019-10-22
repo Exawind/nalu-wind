@@ -128,6 +128,7 @@ void LinearSystem::sync_field(const stk::mesh::FieldBase *field)
   stk::mesh::copy_owned_to_shared( bulkData, fields);
 }
 
+#ifndef KOKKOS_ENABLE_CUDA
 KOKKOS_FUNCTION
 void LinearSystem::DefaultHostOnlyCoeffApplier::operator()(
                         unsigned numEntities,
@@ -144,6 +145,7 @@ void LinearSystem::DefaultHostOnlyCoeffApplier::operator()(
     linSys_.equationSystem()->save_diagonal_term(numEntities, entities, lhs);
   }
 }
+#endif
 
 } // namespace nalu
 } // namespace Sierra
