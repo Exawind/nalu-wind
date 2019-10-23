@@ -32,6 +32,8 @@
 #include <stk_topology/topology.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
 
+#include "stk_ngp/NgpFieldParallel.hpp"
+
 #include <Teuchos_VerboseObject.hpp>
 #include <Teuchos_FancyOStream.hpp>
 
@@ -123,9 +125,12 @@ LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, Equation
 
 void LinearSystem::sync_field(const stk::mesh::FieldBase *field)
 {
-  std::vector< const stk::mesh::FieldBase *> fields(1,field);
-  stk::mesh::BulkData& bulkData = realm_.bulk_data();
-  stk::mesh::copy_owned_to_shared( bulkData, fields);
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const std::vector<NGPDoubleFieldType*> ngpFields{
+    &fieldMgr.get_field<double>(field->mesh_meta_data_ordinal())
+  };
+
+  ngp::copy_owned_to_shared(realm_.bulk_data(), ngpFields);
 }
 
 #ifndef KOKKOS_ENABLE_CUDA
