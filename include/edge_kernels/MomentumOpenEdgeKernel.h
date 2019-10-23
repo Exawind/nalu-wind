@@ -39,8 +39,6 @@ public:
   KOKKOS_INLINE_FUNCTION
   virtual ~MomentumOpenEdgeKernel() = default;
 
-  virtual void setup(const TimeIntegrator&);
-
   using Kernel::execute;
 
   KOKKOS_FUNCTION
