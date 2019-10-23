@@ -51,9 +51,6 @@ public:
 
 private:
 
-  // TODO: This needs to go away
-  SolutionOptions* solnOpts_{nullptr};
-
   const unsigned coordinates_      {stk::mesh::InvalidOrdinal};
   const unsigned dudx_             {stk::mesh::InvalidOrdinal};
   const unsigned exposedAreaVec_   {stk::mesh::InvalidOrdinal};
@@ -63,6 +60,7 @@ private:
   const unsigned viscosity_        {stk::mesh::InvalidOrdinal};
 
   const double includeDivU_;
+  const double nfEntrain_;
 
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};

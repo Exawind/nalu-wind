@@ -30,7 +30,6 @@ MomentumOpenEdgeKernel<BcAlgTraits>::MomentumOpenEdgeKernel(
   ElemDataRequests& faceData,
   ElemDataRequests& elemData)
   : NGPKernel<MomentumOpenEdgeKernel<BcAlgTraits>>(),
-    solnOpts_(solnOpts),
     coordinates_(get_field_ordinal(meta, solnOpts->get_coordinates_name())),
     dudx_(get_field_ordinal(meta, "dudx")),
     exposedAreaVec_(get_field_ordinal(meta, "exposed_area_vector", meta.side_rank())),
@@ -39,6 +38,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::MomentumOpenEdgeKernel(
     velocityNp1_(get_field_ordinal(meta, "velocity", stk::mesh::StateNP1)),
     viscosity_(viscosity->mesh_meta_data_ordinal()),
     includeDivU_(solnOpts->includeDivU_),
+    nfEntrain_(solnOpts->nearestFaceEntrain_),
     meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
            typename BcAlgTraits::FaceTraits>()),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element<
@@ -70,8 +70,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
   int elemFaceOrdinal)
 {
   // nearest face entrainment
-  const double nfEntrain = solnOpts_->nearestFaceEntrain_;
-  const double om_nfEntrain = 1.0-nfEntrain;
+  const double om_nfEntrain = 1.0 - nfEntrain_;
 
   // Work arrays
   NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
@@ -214,7 +213,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
 
       rhs(rowR) -= stk::math::if_then_else((tmdot > 0.0),
         tmdot * v_uNp1(nodeR, i), // leaving the domain
-        (tmdot * (nfEntrain * uxnx + om_nfEntrain * uxnxip) * nx[i] + // constrain to be normal
+        (tmdot * (nfEntrain_ * uxnx + om_nfEntrain * uxnxip) * nx[i] + // constrain to be normal
             tmdot * (v_uBc(ip, i) - uspecxnx * nx[i]))); // user spec entrainment (tangential)
 
       // leaving the domain
@@ -228,7 +227,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
         lhs(rowR,colL) += stk::math::if_then_else((tmdot > 0.0),0.0,
           tmdot * om_nfEntrain * 0.5 * nx[i] * nx[j]);
         lhs(rowR,colR) += stk::math::if_then_else((tmdot > 0.0),0.0,
-          tmdot * (nfEntrain + om_nfEntrain * 0.5) * nx[i] * nx[j]);
+          tmdot * (nfEntrain_ + om_nfEntrain * 0.5) * nx[i] * nx[j]);
       }
     }
   }
