@@ -116,56 +116,56 @@ public:
     EquationSystems& equationSystems);
   virtual ~MomentumEquationSystem();
 
-  virtual void initial_work();
+  virtual void initial_work() override;
 
   virtual void register_nodal_fields(
-    stk::mesh::Part *part);
+    stk::mesh::Part *part) override;
 
   virtual void register_edge_fields(
-    stk::mesh::Part *part);
+    stk::mesh::Part *part) override;
 
   virtual void register_element_fields(
     stk::mesh::Part *part,
-    const stk::topology &theTopo);
+    const stk::topology &theTopo) override;
 
   virtual void register_interior_algorithm(
-    stk::mesh::Part *part);
+    stk::mesh::Part *part) override;
 
   virtual void register_inflow_bc(
     stk::mesh::Part *part,
     const stk::topology &theTopo,
-    const InflowBoundaryConditionData &inflowBCData);
+    const InflowBoundaryConditionData &inflowBCData) override;
 
   virtual void register_open_bc(
     stk::mesh::Part *part,
     const stk::topology &partTopo,
-    const OpenBoundaryConditionData &openBCData);
+    const OpenBoundaryConditionData &openBCData) override;
 
   virtual void register_wall_bc(
     stk::mesh::Part *part,
     const stk::topology &partTopo,
-    const WallBoundaryConditionData &wallBCData);
+    const WallBoundaryConditionData &wallBCData) override;
     
   virtual void register_symmetry_bc(
     stk::mesh::Part *part,
     const stk::topology &partTopo,
-    const SymmetryBoundaryConditionData &symmetryBCData);
+    const SymmetryBoundaryConditionData &symmetryBCData) override;
 
   virtual void register_abltop_bc(
     stk::mesh::Part *part,
     const stk::topology &partTopo,
-    const ABLTopBoundaryConditionData &ablTopBCData);
+    const ABLTopBoundaryConditionData &ablTopBCData) override;
 
   virtual void register_non_conformal_bc(
     stk::mesh::Part *part,
-    const stk::topology &theTopo);
+    const stk::topology &theTopo) override;
 
-  virtual void register_overset_bc();
+  virtual void register_overset_bc() override;
 
-  virtual void initialize();
-  virtual void reinitialize_linear_system();
+  virtual void initialize() override;
+  virtual void reinitialize_linear_system() override;
   
-  virtual void predict_state();
+  virtual void predict_state() override;
 
   void compute_wall_function_params();
 
@@ -177,22 +177,22 @@ public:
     const std::vector<stk::mesh::Entity>&,
     const std::vector<int>&,
     const std::vector<double>&
-  );
+  ) override;
 
   virtual void save_diagonal_term(
     unsigned,
     const stk::mesh::Entity*,
     const SharedMemView<const double**>&
-  );
+  ) override;
 
   virtual void save_diagonal_term(
     unsigned,
     const ngp::Mesh::ConnectedNodes&,
     const SharedMemView<const double**,DeviceShmem>&
-  );
+  ) override;
 
   virtual void assemble_and_solve(
-    stk::mesh::FieldBase *deltaSolution);
+    stk::mesh::FieldBase *deltaSolution) override;
 
   void compute_turbulence_parameters();
 
