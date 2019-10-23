@@ -168,15 +168,15 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
       const int rowL = nodeL * BcAlgTraits::nDim_ + i;
       const int rowR = nodeR * BcAlgTraits::nDim_ + i;
 
+      const DoubleType axi = v_areavec(ip, i);
+
       // subtract normal component of the flux
-      rhs(rowR) -= fx[i] - nx[i]*fxnx;
+      rhs(rowR) -= (fx[i] - nx[i]*fxnx);
 
       const DoubleType om_nxinxi = 1.0 - nx[i]*nx[i];
       DoubleType lhsFac = -visc * asq * inv_axdx * om_nxinxi;
       lhs(rowR, rowL) -= lhsFac;
       lhs(rowR, rowR) += lhsFac;
-
-      const DoubleType axi = v_areavec(ip, i);
 
       for (int j=0; j < BcAlgTraits::nDim_; ++j) {
         const int colL = nodeL * BcAlgTraits::nDim_ + j;
@@ -213,8 +213,8 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
 
       rhs(rowR) -= stk::math::if_then_else((tmdot > 0.0),
         tmdot * v_uNp1(nodeR, i), // leaving the domain
-        (tmdot * (nfEntrain_ * uxnx + om_nfEntrain * uxnxip) * nx[i] + // constrain to be normal
-            tmdot * (v_uBc(ip, i) - uspecxnx * nx[i]))); // user spec entrainment (tangential)
+        tmdot * ((nfEntrain_ * uxnx + om_nfEntrain * uxnxip) * nx[i] + // constrain to be normal
+                 (v_uBc(ip, i) - uspecxnx * nx[i]))); // user spec entrainment (tangential)
 
       // leaving the domain
       lhs(rowR, rowR) += stk::math::if_then_else((tmdot > 0.0),tmdot,0.0);
@@ -227,7 +227,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
         lhs(rowR,colL) += stk::math::if_then_else((tmdot > 0.0),0.0,
           tmdot * om_nfEntrain * 0.5 * nx[i] * nx[j]);
         lhs(rowR,colR) += stk::math::if_then_else((tmdot > 0.0),0.0,
-          tmdot * (nfEntrain_ + om_nfEntrain * 0.5) * nx[i] * nx[j]);
+          tmdot * (nfEntrain_ + om_nfEntrain*0.5) * nx[i] * nx[j]);
       }
     }
   }
