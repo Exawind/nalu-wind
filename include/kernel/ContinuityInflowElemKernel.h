@@ -46,6 +46,8 @@ public:
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
     SharedMemView<DoubleType **, DeviceShmem>&lhs,
     SharedMemView<DoubleType *, DeviceShmem>&rhs,
