@@ -45,6 +45,41 @@ struct NgpReduceArray
       array_[i] = rhs.array_[i];
   }
 
+  // See discussion in https://github.com/trilinos/Trilinos/issues/6125 for
+  // details on the overloads.
+
+  KOKKOS_INLINE_FUNCTION
+  NgpReduceArray& operator=(const NgpReduceArray& rhs)
+  {
+    for (int i=0; i < N; ++i)
+      array_[i] = rhs.array_[i];
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  NgpReduceArray& operator=(const volatile NgpReduceArray& rhs)
+  {
+    for (int i=0; i < N; ++i)
+      array_[i] = rhs.array_[i];
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  volatile NgpReduceArray& operator=(const NgpReduceArray& rhs) volatile
+  {
+    for (int i=0; i < N; ++i)
+      array_[i] = rhs.array_[i];
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  volatile NgpReduceArray& operator=(const volatile NgpReduceArray& rhs) volatile
+  {
+    for (int i=0; i < N; ++i)
+      array_[i] = rhs.array_[i];
+    return *this;
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator+=(const NgpReduceArray& rhs)
   {
@@ -53,7 +88,21 @@ struct NgpReduceArray
   }
 
   KOKKOS_INLINE_FUNCTION
+  void operator+=(const volatile NgpReduceArray& rhs) volatile
+  {
+    for (int i=0; i < N; ++i)
+      array_[i] += rhs.array_[i];
+  }
+
+  KOKKOS_INLINE_FUNCTION
   void operator*=(const NgpReduceArray& rhs)
+  {
+    for (int i=0; i < N; ++i)
+      array_[i] *= rhs.array_[i];
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator*=(const volatile NgpReduceArray& rhs) volatile
   {
     for (int i=0; i < N; ++i)
       array_[i] *= rhs.array_[i];
