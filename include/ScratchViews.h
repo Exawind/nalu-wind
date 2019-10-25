@@ -678,7 +678,7 @@ template<typename T, typename TEAMHANDLETYPE, typename SHMEM>
 void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new_me(
   const ElemDataRequestsGPU::DataEnumView& dataEnums,
   SharedMemView<DoubleType**, SHMEM>* coordsView,
-  MasterElement* meFC,
+  MasterElement*,
   MasterElement* meSCS,
   MasterElement* meSCV,
   MasterElement*
@@ -697,12 +697,6 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
     {
       case FC_AREAV:
         NGP_ThrowRequireMsg(false, "FC_AREAV not implemented yet.");
-        break;
-      case FC_SHAPE_FCN:
-        meFC->shape_fcn(fc_shape_fcn);
-        break;
-      case FC_SHIFTED_SHAPE_FCN:
-        meFC->shifted_shape_fcn(fc_shifted_shape_fcn);
         break;
       case SCS_AREAV:
          NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_AREAV is requested.");
