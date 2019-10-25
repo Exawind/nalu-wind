@@ -995,20 +995,20 @@ void TurbulenceAveragingPostProcessing::compute_temperature_resolved_flux(
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double rho = density.get(mi, 0);
+      const double temp = temperature.get(mi, 0);
+      const double tvar = tempVar.get(mi, 0);
+
+      tempVar.get(mi, 0) = (
+        tvar * oldTimeFilter * zeroCurrent +
+        rho * temp * temp * dt) / currentTimeFilter;
 
       for (int d=0; d < ndim; ++d) {
         const double ui = velocity.get(mi, d);
-        const double temp = temperature.get(mi, d);
         const double tflux = tempFlux.get(mi, d);
-        const double tvar = tempVar.get(mi, d);
 
         tempFlux.get(mi, d) = (
           tflux * oldTimeFilter * zeroCurrent +
           rho * ui * temp * dt) / currentTimeFilter;
-
-        tempVar.get(mi, d) = (
-          tvar * oldTimeFilter * zeroCurrent +
-          rho * temp * temp * dt) / currentTimeFilter;
       }
     });
 
