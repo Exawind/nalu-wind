@@ -67,6 +67,8 @@ public:
 
      elemDataNeeded().add_coordinates_field(
        *coordinates_, BcAlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
+     faceDataNeeded().add_coordinates_field(
+       *coordinates_, BcAlgTraits::nDim_, sierra::nalu::CURRENT_COORDINATES);
    }
 
    void init_me_data()
