@@ -73,6 +73,7 @@ void TKEWallFuncAlgDriver::post_work()
       stk::topology::NODE_RANK, "wall_model_tke_bc"));
 
   nalu_ngp::run_entity_algorithm(
+    "TKEWallFuncAlgDriver_normalize",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double warea = ngpWallArea.get(mi, 0);

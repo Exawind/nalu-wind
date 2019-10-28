@@ -374,6 +374,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
 
   const int ndim = nDim_;
   nalu_ngp::run_entity_algorithm(
+    "BLStats::velocity",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const int ih = heightIndex.get(mi, 0);
@@ -512,6 +513,7 @@ BdyLayerStatistics::impl_compute_temperature_stats()
 
   const int ndim = nDim_;
   nalu_ngp::run_entity_algorithm(
+    "BLStats::temperature",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const int ih = heightIndex.get(mi, 0);

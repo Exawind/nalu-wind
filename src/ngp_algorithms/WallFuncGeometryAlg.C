@@ -80,8 +80,12 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
   auto* meSCS = meSCS_;
   auto* meFC = meFC_;
 
+  const std::string algName = "WallFuncGeometryAlg_" +
+    std::to_string(BcAlgTraits::faceTopo_) + "_" +
+    std::to_string(BcAlgTraits::elemTopo_);
+
   nalu_ngp::run_face_elem_algorithm(
-    meshInfo, faceData_, elemData_, sel,
+    algName, meshInfo, faceData_, elemData_, sel,
     KOKKOS_LAMBDA(SimdDataType& fdata) {
       auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
       auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaVecID);

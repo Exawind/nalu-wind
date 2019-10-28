@@ -60,6 +60,7 @@ TurbViscSSTAlg::execute()
   const int nDim = meta.spatial_dimension();
 
   nalu_ngp::run_entity_algorithm(
+    "TurbViscSSTAlg",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       DblType sijMag = 0.0;

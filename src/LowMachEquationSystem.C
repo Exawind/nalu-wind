@@ -886,6 +886,7 @@ LowMachEquationSystem::project_nodal_velocity()
       ((!stk::mesh::selectUnion(momentumEqSys_->notProjectedPart_)) &
        stk::mesh::selectField(*continuityEqSys_->dpdx_));
     nalu_ngp::run_entity_algorithm(
+      "nodal_velocity_projection",
       ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         // Scaling factor
@@ -898,6 +899,7 @@ LowMachEquationSystem::project_nodal_velocity()
     const stk::mesh::Selector selX =
       (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[0]));
     nalu_ngp::run_entity_algorithm(
+      "nodal_velocity_projection_strongX",
       ngpMesh, stk::topology::NODE_RANK, selX,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         // Scaling factor
@@ -908,6 +910,7 @@ LowMachEquationSystem::project_nodal_velocity()
     const stk::mesh::Selector selY =
       (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[1]));
     nalu_ngp::run_entity_algorithm(
+      "nodal_velocity_project_strongY",
       ngpMesh, stk::topology::NODE_RANK, selY,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         // Scaling factor
@@ -919,6 +922,7 @@ LowMachEquationSystem::project_nodal_velocity()
       const stk::mesh::Selector selZ =
          (stk::mesh::selectUnion(momentumEqSys_->notProjectedDir_[2]));
       nalu_ngp::run_entity_algorithm(
+        "nodal_velocity_projection_strongZ",
            ngpMesh, stk::topology::NODE_RANK, selZ,
            KOKKOS_LAMBDA(const MeshIndex& mi) {
              // Scaling factor

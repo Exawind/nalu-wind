@@ -52,6 +52,7 @@ TurbViscKsgsAlg::execute()
   const DblType invNdim = 1.0 / meta.spatial_dimension();
 
   nalu_ngp::run_entity_algorithm(
+    "TurbViscKsgsAlg",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       const DblType filter = std::pow(dualNodalVolume.get(meshIdx, 0), invNdim);

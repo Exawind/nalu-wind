@@ -2683,6 +2683,7 @@ Realm::compute_vrtm()
   const stk::mesh::Selector sel = (
     metaData_->locally_owned_part() | metaData_->globally_shared_part());
   nalu_ngp::run_entity_algorithm(
+    "compute_vrtm",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       for (int d=0; d < nDim; ++d)

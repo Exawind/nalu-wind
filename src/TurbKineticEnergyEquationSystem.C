@@ -902,6 +902,7 @@ TurbKineticEnergyEquationSystem::initial_work()
     & stk::mesh::selectField(*tke_);
 
   nalu_ngp::run_entity_algorithm(
+    "clip_tke",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       if (ngpTke.get(mi, 0) < 0.0)
@@ -956,6 +957,7 @@ TurbKineticEnergyEquationSystem::update_and_clip()
     tke_->mesh_meta_data_ordinal());
 
   nalu_ngp::run_entity_par_reduce(
+    "tke_update_and_clip",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi, size_t& nClip) {
       const double tmp = ngpTke.get(mi, 0) + ngpKTmp.get(mi, 0);

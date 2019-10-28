@@ -132,6 +132,7 @@ void GeometryAlgDriver::post_work()
     auto warea = fieldMgr.template get_field<double>(wallArea);
 
     sierra::nalu::nalu_ngp::run_entity_algorithm(
+      "GeometryAlgDriver_wdist_normalize",
       ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         wdist.get(mi, 0) /= warea.get(mi, 0);

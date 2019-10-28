@@ -55,8 +55,9 @@ void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
   const int dim1 = dim1_;
   const int dim2 = dim2_;
 
+  const std::string algName = meta.get_fields()[gradPhi_]->name() + "_edge";
   nalu_ngp::run_edge_algorithm(
-    ngpMesh, sel,
+    algName, ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& einfo) {
       NALU_ALIGNED DblType av[NDimMax];
 
