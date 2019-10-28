@@ -516,6 +516,11 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_forBlKol] = 1.0;
   turbModelConstantMap_[TM_forFac] = 8.0;
   turbModelConstantMap_[TM_v2cMu] = 0.22;
+  turbModelConstantMap_[TM_sigmaMax] = 1.0;
+  turbModelConstantMap_[TM_ch1] = 3.0;
+  turbModelConstantMap_[TM_ch2] = 1.0;
+  turbModelConstantMap_[TM_ch3] = 0.5;
+  turbModelConstantMap_[TM_tau_des] = 100.0/15.0;
 }
 
 

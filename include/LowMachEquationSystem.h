@@ -204,6 +204,8 @@ public:
 
   void compute_turbulence_parameters();
 
+  void compute_alpha_upw();
+
   const bool managePNG_;
 
   VectorFieldType *velocity_;
@@ -237,6 +239,7 @@ public:
 
 private:
   ScalarFieldType* Udiag_;
+  ScalarFieldType* alpha_upw_;
 };
 
 class ContinuityEquationSystem : public EquationSystem {

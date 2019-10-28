@@ -146,6 +146,8 @@
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
 #include "stk_mesh/base/NgpFieldParallel.hpp"
+#include "ngp_utils/NgpTypes.h"
+
 
 // nso
 #include <nso/MomentumNSOElemKernel.h>
@@ -219,6 +221,7 @@
 #include <stk_util/util/SortAndUnique.hpp>
 
 // stk_mesh/base/fem
+#include "stk_mesh/base/Types.hpp"
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
@@ -500,10 +503,10 @@ LowMachEquationSystem::register_open_bc(
                                                  "open_mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*mdotBip, *part, numScsBip, nullptr);
 
-  auto& dynPress 
+  auto& dynPress
     = metaData.declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData.side_rank()),
                                                  "dynamic_pressure");
-  std::vector<double> ic(numScsBip, 0);                                              
+  std::vector<double> ic(numScsBip, 0);
   stk::mesh::put_field_on_mesh(dynPress, *part, numScsBip, ic.data());
 }
 
@@ -1110,6 +1113,11 @@ MomentumEquationSystem::register_nodal_fields(
                stk::topology::NODE_RANK, "momentum_diag"));
   stk::mesh::put_field_on_mesh(*Udiag_, *part, nullptr);
   realm_.augment_restart_variable_list("momentum_diag");
+
+  alpha_upw_ = &(meta_data.declare_field<ScalarFieldType>(
+                 stk::topology::NODE_RANK, "alpha_upw"));
+  stk::mesh::put_field_on_mesh(*alpha_upw_, *part, nullptr);
+  realm_.augment_restart_variable_list("alpha_upw");
 
   // make sure all states are properly populated (restart can handle this)
   if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
@@ -1780,7 +1788,7 @@ MomentumEquationSystem::register_open_bc(
           (partTopo, elemTopo, *this, activeKernels, "momentum_open",
            realm_.meta_data(), realm_.solutionOptions_,
            realm_.is_turbulent() ? evisc_ : visc_,
-           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_, 
+           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_,
            userData.entrainMethod_);
       }
       else {
@@ -2428,6 +2436,9 @@ MomentumEquationSystem::initialize()
     const double gamma1 = realm_.get_gamma1();
     stk::mesh::field_fill(gamma1/dt, *Udiag_);
     Udiag_->modify_on_host();
+
+    stk::mesh::field_fill(1.0, *alpha_upw_);
+
   }
 }
 
@@ -2753,7 +2764,98 @@ void MomentumEquationSystem::compute_turbulence_parameters()
   if (realm_.is_turbulent()) {
     tviscAlg_->execute();
     diffFluxCoeffAlg_->execute();
+    if (realm_.solutionOptions_->turbulenceModel_ == SST)
+        compute_alpha_upw();
   }
+}
+
+void
+MomentumEquationSystem::compute_alpha_upw()
+{
+    using DblType = double;
+    using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+
+    stk::mesh::MetaData & meta = realm_.meta_data();
+    const int nDim = meta.spatial_dimension();
+
+    const auto& meshInfo = realm_.mesh_info();
+    const auto ngpMesh = meshInfo.ngp_mesh();
+    const auto& fieldMgr = meshInfo.ngp_field_manager();
+
+    auto alpha_upw = fieldMgr.get_field<double>(
+        get_field_ordinal(meta, "alpha_upw"));
+    const auto fone = fieldMgr.get_field<double>(
+        get_field_ordinal(meta, "sst_f_one_blending"));
+    const auto dnv = fieldMgr.get_field<double>(
+        get_field_ordinal(meta,"dual_nodal_volume"));
+    const auto dudx = fieldMgr.get_field<double>(
+        get_field_ordinal(meta, "dudx"));
+    const auto rho = fieldMgr.get_field<double>(
+        get_field_ordinal(meta, "density"));
+    const auto visc = fieldMgr.get_field<double>(
+        get_field_ordinal(meta, "viscosity"));
+    const auto tvisc = fieldMgr.get_field<double>(
+        get_field_ordinal(meta, "turbulent_viscosity"));
+
+    const DblType cdes_ke = realm_.get_turb_model_constant(TM_cDESke);
+    const DblType cdes_kw = realm_.get_turb_model_constant(TM_cDESkw);
+    const DblType cmu = realm_.get_turb_model_constant(TM_cMu);
+    const DblType sigmaMax = realm_.get_turb_model_constant(TM_sigmaMax);
+    const DblType ch1 = realm_.get_turb_model_constant(TM_ch1);
+    const DblType ch2 = realm_.get_turb_model_constant(TM_ch2);
+    const DblType ch3 = realm_.get_turb_model_constant(TM_ch3);
+    const DblType tau_des = realm_.get_turb_model_constant(TM_tau_des);
+
+    stk::mesh::Selector sel = (
+        meta.locally_owned_part() | meta.globally_shared_part())
+        & stk::mesh::selectField(*tvisc_);
+
+    nalu_ngp::run_entity_algorithm(
+        "compute_alpha_upw",
+        ngpMesh, stk::topology::NODE_RANK, sel,
+        KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
+
+        DblType sijMag = 0.0;
+        DblType omegaMag = 0.0;
+        for (int i = 0; i < nDim; i++) {
+            const int offSet = nDim*i;
+            for (int j = 0; j < nDim; j++) {
+                const DblType rateOfStrain =
+                    0.5*(dudx.get(meshIdx, offSet+j)
+                         + dudx.get(meshIdx, nDim*j+i));
+                sijMag += rateOfStrain*rateOfStrain;
+                const DblType rateOfOmega =
+                    0.5*(dudx.get(meshIdx, offSet+j)
+                         - dudx.get(meshIdx, nDim*j+i));
+                omegaMag += rateOfOmega * rateOfOmega;
+            }
+        }
+        const DblType ssq_p_osq_o2 = (sijMag + omegaMag);
+        sijMag = stk::math::sqrt(2.0*sijMag);
+        omegaMag = stk::math::sqrt(2.0*omegaMag);
+
+        const DblType B =
+            ch3 * omegaMag * stk::math::max(sijMag, omegaMag)
+            / stk::math::max(ssq_p_osq_o2, 1e-20);
+        const DblType g = stk::math::tanh(B*B*B*B);
+        const DblType K = stk::math::max(ssq_p_osq_o2, 0.1 * tau_des);
+        const DblType l_turb =
+            (visc.get(meshIdx,0)+tvisc.get(meshIdx,0))
+            / rho.get(meshIdx,0)
+            * stk::math::sqrt(cmu * stk::math::sqrt(cmu) * K);
+        const DblType cdes =
+            cdes_ke + fone.get(meshIdx,0)
+            * (cdes_kw - cdes_ke);
+        const DblType A =
+            ch2 * stk::math::max(
+                cdes * dnv.get(meshIdx,0)/l_turb/g - 0.5,0.0);
+
+        alpha_upw.get(meshIdx,0) =
+            sigmaMax * stk::math::tanh(
+                stk::math::pow(A,ch1));
+    });
+
+
 }
 
 //==========================================================================
