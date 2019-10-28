@@ -211,12 +211,14 @@ public:
   KOKKOS_FUNCTION void face_grad_op(
     int face_ordinal,
     SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) final;
 
   KOKKOS_FUNCTION void shifted_face_grad_op(
     int face_ordinal,
     SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) final;
 
   KOKKOS_FUNCTION void shifted_grad_op(
     SharedMemView<DoubleType**, DeviceShmem>&coords,
@@ -497,11 +499,12 @@ private:
 
 private :
 
-  KOKKOS_FUNCTION void face_grad_op(
+  template<bool shifted>
+  KOKKOS_FUNCTION void face_grad_op_t(
     const int face_ordinal,
-    const bool shifted,
     SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop);
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 };
     
 //-------- hex8_derivative -------------------------------------------------

@@ -76,8 +76,10 @@ void NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
 
+  const std::string algName =
+    (meta.get_fields()[gradPhi_]->name() + "_bndry_" + std::to_string(AlgTraits::topo_));
   nalu_ngp::run_elem_algorithm(
-    meshInfo, meta.side_rank(), dataNeeded_, sel,
+    algName, meshInfo, meta.side_rank(), dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
       const int* ipNodeMap = meFC->ipNodeMap();
 

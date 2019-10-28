@@ -42,6 +42,7 @@ inline void field_axpby(
   using MeshIndex = typename Traits::MeshIndex;
 
   nalu_ngp::run_entity_algorithm(
+    "ngp_field_axpby",
     ngpMesh, rank, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       for (unsigned d=0; d < numComponents; ++d)
@@ -67,6 +68,7 @@ inline void field_copy(
   using MeshIndex = typename Traits::MeshIndex;
 
   nalu_ngp::run_entity_algorithm(
+    "ngp_field_copy",
     ngpMesh, rank, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       for (unsigned d=0; d < numComponents; ++d)

@@ -51,7 +51,9 @@ namespace nalu {
 
   template <typename AlgTraits, typename GradViewType, typename CoordViewType, typename OutputViewType>
   KOKKOS_FUNCTION
-  KOKKOS_FUNCTION void generic_grad_op(const GradViewType& referenceGradWeights, const CoordViewType& coords, OutputViewType& weights)
+  KOKKOS_FUNCTION void generic_grad_op(const GradViewType& referenceGradWeights, 
+                                       const CoordViewType& coords, 
+                                       OutputViewType& weights)
   {
     constexpr int dim = AlgTraits::nDim_;
 

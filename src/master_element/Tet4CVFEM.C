@@ -602,17 +602,10 @@ void TetSCS::face_grad_op(
 void TetSCS::face_grad_op(
   int /*face_ordinal*/,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  using traits = AlgTraitsTri3Tet4;
-
-  // one ip at a time
-  constexpr int derivSize = traits::numFaceIp_ *  traits::nodesPerElement_ * traits::nDim_;
-
-  DoubleType wderiv[derivSize];
-  SharedMemView<DoubleType***, DeviceShmem> deriv(wderiv,traits::numFaceIp_, traits::nodesPerElement_,  traits::nDim_);
   tet_deriv(deriv);
-
   generic_grad_op<AlgTraitsTet4>(deriv, coords, gradop);
 }
 
@@ -622,10 +615,11 @@ void TetSCS::face_grad_op(
 void TetSCS::shifted_face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   // no difference for regular face_grad_op
-  face_grad_op(face_ordinal, coords, gradop);
+  face_grad_op(face_ordinal, coords, gradop, deriv);
 }
 
 void TetSCS::shifted_face_grad_op(

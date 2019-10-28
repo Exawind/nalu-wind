@@ -103,6 +103,7 @@ inline int ngp_calc_thread_shmem_size(
  *  pointer to the NGP bucket and the index into the bucket array for this
  *  entity.
  *
+ *. @param algName User-defined name for the parallel for loop
  *  @param mesh A STK NGP mesh instance
  *  @param rank Rank for the loop (node, elem, face, etc.)
  *  @param sel  STK mesh selector to choose buckets for looping
@@ -110,6 +111,7 @@ inline int ngp_calc_thread_shmem_size(
  */
 template<typename Mesh, typename AlgFunctor>
 void run_entity_algorithm(
+  const std::string& algName,
   const Mesh& mesh,
   const stk::topology::rank_t rank,
   const stk::mesh::Selector& sel,
@@ -124,7 +126,8 @@ void run_entity_algorithm(
   auto team_exec = TeamPolicy(buckets.size(), Kokkos::AUTO);
 
   Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
+    algName, team_exec,
+    KOKKOS_LAMBDA(const TeamHandleType& team) {
       auto bktId = buckets.device_get(team.league_rank());
       auto& bkt = mesh.get_bucket(rank, bktId);
 
@@ -144,6 +147,7 @@ void run_entity_algorithm(
  *  pointer to the NGP bucket and the index into the bucket array for this
  *  entity, and accumulator for reduction.
  *
+ *. @param algName User-defined name for the parallel_reduce loop
  *  @param mesh A STK NGP mesh instance
  *  @param rank Rank for the loop (node, elem, face, etc.)
  *  @param sel  STK mesh selector to choose buckets for looping
@@ -152,6 +156,7 @@ void run_entity_algorithm(
  */
 template<typename Mesh, typename AlgFunctor, typename ReducerType>
 void run_entity_par_reduce(
+  const std::string& algName,
   const Mesh& mesh,
   const stk::topology::rank_t rank,
   const stk::mesh::Selector& sel,
@@ -168,7 +173,7 @@ void run_entity_par_reduce(
   auto team_exec = TeamPolicy(buckets.size(), Kokkos::AUTO);
 
   Kokkos::parallel_reduce(
-    team_exec,
+    algName, team_exec,
     KOKKOS_LAMBDA(const TeamHandleType& team, ReducerType& teamVal) {
       auto bktId = buckets.device_get(team.league_rank());
       auto& bkt = mesh.get_bucket(rank, bktId);
@@ -192,6 +197,7 @@ void run_entity_par_reduce(
 
 template<typename Mesh, typename AlgFunctor, typename ReducerType>
 void run_entity_par_reduce(
+  const std::string& algName,
   const Mesh& mesh,
   const stk::topology::rank_t rank,
   const stk::mesh::Selector& sel,
@@ -209,7 +215,7 @@ void run_entity_par_reduce(
   auto team_exec = TeamPolicy(buckets.size(), Kokkos::AUTO);
 
   Kokkos::parallel_reduce(
-    team_exec,
+    algName, team_exec,
     KOKKOS_LAMBDA(const TeamHandleType& team, value_type& teamVal) {
       auto bktId = buckets.device_get(team.league_rank());
       auto& bkt = mesh.get_bucket(rank, bktId);
@@ -237,12 +243,14 @@ void run_entity_par_reduce(
  *  pointer to the NGP bucket and the index into the bucket array for this
  *  entity.
  *
+ *. @param algName User-defined name for the edge parallel loop
  *  @param mesh A STK NGP mesh instance
  *  @param sel  STK mesh selector to choose buckets for looping
  *  @param algorithm A functor that will be executed for each entity
  */
 template<typename Mesh, typename AlgFunctor>
-void run_edge_algorithm(
+inline void run_edge_algorithm(
+  const std::string& algName,
   const Mesh& mesh,
   const stk::mesh::Selector& sel,
   const AlgFunctor algorithm)
@@ -252,7 +260,7 @@ void run_edge_algorithm(
   using MeshIndex = typename Traits::MeshIndex;
 
   run_entity_algorithm(
-    mesh, rank, sel,
+    algName, mesh, rank, sel,
     KOKKOS_LAMBDA(MeshIndex& meshIdx) {
       algorithm(
         EntityInfo<Mesh>{meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
@@ -269,12 +277,14 @@ void run_edge_algorithm(
  *  Note that a rank is still passed as an argument to allow looping over both
  *  element and side/face ranks with the same function.
  *
+ *. @param algName User-defined name for the elem parallel loop
  *  @param mesh A STK NGP mesh instance
  *  @param sel  STK mesh selector to choose buckets for looping
  *  @param algorithm A functor that will be executed for each entity
  */
 template<typename Mesh, typename AlgFunctor>
-void run_elem_algorithm(
+inline void run_elem_algorithm(
+  const std::string& algName,
   const Mesh& mesh,
   const stk::topology::rank_t rank,
   const stk::mesh::Selector& sel,
@@ -284,7 +294,7 @@ void run_elem_algorithm(
   using MeshIndex = typename Traits::MeshIndex;
 
   run_entity_algorithm(
-    mesh, rank, sel,
+    algName, mesh, rank, sel,
     KOKKOS_LAMBDA(MeshIndex& meshIdx) {
       algorithm(
         EntityInfo<Mesh>{meshIdx, (*meshIdx.bucket)[meshIdx.bucketOrd],
@@ -314,6 +324,7 @@ template<
   typename DataReqType,
   typename AlgFunctor>
 void run_elem_algorithm(
+  const std::string algName,
   const MeshInfo<Mesh, FieldManager>& meshInfo,
   const stk::topology::rank_t rank,
   const DataReqType& dataReqs,
@@ -345,7 +356,8 @@ void run_elem_algorithm(
   auto team_exec = impl::ngp_mesh_team_policy<TeamPolicy>(
     buckets.size(), bytes_per_team, bytes_per_thread);
 
-  Kokkos::parallel_for(team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
+  Kokkos::parallel_for(
+    algName, team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
     auto bktId = buckets.device_get(team.league_rank());
     auto& bkt = ngpMesh.get_bucket(rank, bktId);
 
@@ -405,6 +417,7 @@ template<
   typename AlgFunctor,
   typename ReducerType>
 void run_elem_par_reduce(
+  const std::string& algName,
   const MeshInfo<Mesh, FieldManager>& meshInfo,
   const stk::topology::rank_t rank,
   const DataReqType& dataReqs,
@@ -439,7 +452,7 @@ void run_elem_par_reduce(
     buckets.size(), bytes_per_team, bytes_per_thread);
 
   Kokkos::parallel_reduce(
-    team_exec,
+    algName, team_exec,
     KOKKOS_LAMBDA(const TeamHandleType& team, ReducerValueType& teamVal) {
       auto bktId = buckets.device_get(team.league_rank());
       auto& bkt = ngpMesh.get_bucket(rank, bktId);
@@ -489,6 +502,7 @@ template<
   typename DataReqType,
   typename AlgFunctor>
 void run_face_elem_algorithm(
+  const std::string& algName,
   const MeshInfo<Mesh, FieldManager>& meshInfo,
   const DataReqType& faceDataReqs,
   const DataReqType& elemDataReqs,
@@ -525,7 +539,7 @@ void run_face_elem_algorithm(
     buckets.size(), bytes_per_team, bytes_per_thread);
 
   Kokkos::parallel_for(
-    team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
+    algName, team_exec, KOKKOS_LAMBDA(const TeamHandleType& team) {
       auto bktId = buckets.device_get(team.league_rank());
       auto& bkt = ngpMesh.get_bucket(sideRank, bktId);
 

@@ -746,6 +746,7 @@ TurbulenceAveragingPostProcessing::compute_averages(
     avInfo->reynoldsFieldVecPair_[0].second->mesh_meta_data_ordinal());
 
   nalu_ngp::run_entity_algorithm(
+    "TurbPP::compute_averages",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double oldRhoRA = densityA.get(mi, 0);
@@ -838,6 +839,7 @@ TurbulenceAveragingPostProcessing::compute_tke(
   auto resTKE = nalu_ngp::get_ngp_field(meshInfo, resolvedTkeName);
 
   nalu_ngp::run_entity_algorithm(
+    "TurbPP::compute_tke",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       double sum = 0.0;
@@ -877,6 +879,7 @@ TurbulenceAveragingPostProcessing::compute_reynolds_stress(
   const double currentTimeFilter = currentTimeFilter_;
 
   nalu_ngp::run_entity_algorithm(
+    "TurbPP::compute_restress",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       int ic = 0;
@@ -932,6 +935,7 @@ TurbulenceAveragingPostProcessing::compute_favre_stress(
   const double currentTimeFilter = currentTimeFilter_;
 
   nalu_ngp::run_entity_algorithm(
+    "TurbPP::compute_favre_stress",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       int ic = 0;
@@ -992,6 +996,7 @@ void TurbulenceAveragingPostProcessing::compute_temperature_resolved_flux(
   const double currentTimeFilter = currentTimeFilter_;
 
   nalu_ngp::run_entity_algorithm(
+    "TurbPP::temp_res_flux",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double rho = density.get(mi, 0);
@@ -1040,6 +1045,7 @@ TurbulenceAveragingPostProcessing::compute_resolved_stress(
   const double currentTimeFilter = currentTimeFilter_;
 
   nalu_ngp::run_entity_algorithm(
+    "TurbPP::resolved_stress",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       int ic = 0;
@@ -1103,6 +1109,7 @@ TurbulenceAveragingPostProcessing::compute_sfs_stress(
   const double currentTimeFilter = currentTimeFilter_;
 
   nalu_ngp::run_entity_algorithm(
+    "TurbPP::sfs_stress",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       double divU = 0.0;
@@ -1175,6 +1182,7 @@ TurbulenceAveragingPostProcessing::compute_temperature_sfs_flux(
   auto tempSfsFlux = nalu_ngp::get_ngp_field(meshInfo, "temperature_sfs_flux");
 
   nalu_ngp::run_entity_algorithm(
+    "TurbPP::temp_sfs_flux",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double nut = turbVisc.get(mi, 0);
@@ -1208,6 +1216,7 @@ TurbulenceAveragingPostProcessing::compute_vorticity(
   auto vort = nalu_ngp::get_ngp_field(meshInfo, "vorticity");
 
   nalu_ngp::run_entity_algorithm(
+    "TurbPP::vorticity",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       for (int i=0; i < ndim; ++i) {
@@ -1239,6 +1248,7 @@ TurbulenceAveragingPostProcessing::compute_q_criterion(
   auto qcrit = nalu_ngp::get_ngp_field(meshInfo, "q_criterion");
 
   nalu_ngp::run_entity_algorithm(
+    "TurbPP::q_crit",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       double sij = 0.0;
@@ -1414,6 +1424,7 @@ TurbulenceAveragingPostProcessing::compute_mean_resolved_ke(
   nalu_ngp::ArrayDbl2 l_sum;
   Kokkos::Sum<nalu_ngp::ArrayDbl2> sum_reducer(l_sum);
   nalu_ngp::run_entity_par_reduce(
+    "TurbPP::mean_res_tke",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
     KOKKOS_LAMBDA(const MeshIndex& mi, nalu_ngp::ArrayDbl2 pSum) {
       pSum.array_[0] += dualVol.get(mi, 0);

@@ -874,7 +874,8 @@ template <int p> void internal_face_grad_op(
 void HigherOrderHexSCS::face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>&)
 {
   switch(nodes1D_ - 1) {
     case 2: return internal_face_grad_op<2>(face_ordinal, expRefGradWeights_, coords, gradop);
@@ -888,6 +889,7 @@ void HigherOrderHexSCS::face_grad_op(
 void HigherOrderHexSCS::face_grad_op(
   int ,
   SharedMemView<DoubleType**, DeviceShmem>& ,
+  SharedMemView<DoubleType***, DeviceShmem>&,
   SharedMemView<DoubleType***, DeviceShmem>& )
 {}
 #endif

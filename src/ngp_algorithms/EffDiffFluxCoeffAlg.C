@@ -59,6 +59,7 @@ EffDiffFluxCoeffAlg::execute()
 
   if (isTurbulent_) {
     nalu_ngp::run_entity_algorithm(
+      "EffDiffFluxCoeffAlg_turbulent",
       ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
         evisc.get(meshIdx, 0) = (
@@ -67,6 +68,7 @@ EffDiffFluxCoeffAlg::execute()
       });
   } else {
     nalu_ngp::run_entity_algorithm(
+      "EffDiffFluxCoeffAlg_laminar",
       ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
         evisc.get(meshIdx, 0) = visc.get(meshIdx, 0) * invSigmaLam;

@@ -273,7 +273,8 @@ public:
   KOKKOS_FUNCTION void face_grad_op(
     int face_ordinal,
     SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) final;
 
   void shifted_face_grad_op(
     const int nelem,
@@ -286,7 +287,8 @@ public:
   KOKKOS_FUNCTION void shifted_face_grad_op(
     int face_ordinal,
     SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) final;
 
   void general_face_grad_op(
     const int face_ordinal,

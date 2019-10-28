@@ -642,6 +642,7 @@ void calc_mass_flow_rate_scs(
     ngpMesh, ngpMdot);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
+    "unittest_calc_mdot_scs",
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata) {
       NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
@@ -722,6 +723,7 @@ void calc_open_mass_flow_rate(
     ngpMesh, ngpMdot);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
+    "unittest_calc_open_mdot",
     meshInfo, meta.side_rank(), dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
       NALU_ALIGNED Traits::DblType rhoU[Quad4Traits::nDim_];
@@ -865,6 +867,7 @@ void calc_exposed_area_vec(
     ngpMesh, areaVec);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
+    "unittest_calc_exposed_area_vec",
     meshInfo, meta.side_rank(), dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       auto& scrViews = edata.simdScrView;
@@ -1018,6 +1021,7 @@ void calc_projected_nodal_gradient_interior(
 
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
+    "unittest_calc_png_interior",
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
       const int* lrscv = meSCS->adjacentNodes();

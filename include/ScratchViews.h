@@ -699,12 +699,12 @@ void MasterElementViews<T, TEAMHANDLETYPE, SHMEM>::fill_master_element_views_new
       case SCS_FACE_GRAD_OP:
          NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_FACE_GRAD_OP is requested.");
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_FACE_GRAD_OP requested.");
-         meSCS->face_grad_op(faceOrdinal, *coordsView, dndx_fc_scs);
+         meSCS->face_grad_op(faceOrdinal, *coordsView, dndx_fc_scs, deriv_fc_scs);
        break;
       case SCS_SHIFTED_FACE_GRAD_OP:
          NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_SHIFTED_FACE_GRAD_OP is requested.");
          NGP_ThrowRequireMsg(coordsView != nullptr, "ERROR, coords null but SCS_SHIFTED_FACE_GRAD_OP requested.");
-         meSCS->shifted_face_grad_op(faceOrdinal, *coordsView, dndx_shifted_fc_scs);
+         meSCS->shifted_face_grad_op(faceOrdinal, *coordsView, dndx_shifted_fc_scs, deriv_fc_scs);
        break;
       case SCS_GRAD_OP:
          NGP_ThrowRequireMsg(meSCS != nullptr, "ERROR, meSCS needs to be non-null if SCS_GRAD_OP is requested.");

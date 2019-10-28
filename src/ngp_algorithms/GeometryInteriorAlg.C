@@ -75,8 +75,9 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
     & stk::mesh::selectUnion(partVec_)
     & !(realm_.get_inactive_selector());
 
+  const std::string algName = "compute_dnv_" + std::to_string(AlgTraits::topo_);
   nalu_ngp::run_elem_algorithm(
-    meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
+    algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata){
       const int* ipNodeMap = meSCV->ipNodeMap();
       auto& scrView = edata.simdScrView;
@@ -110,8 +111,9 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_edge_area_vector()
     & stk::mesh::selectUnion(partVec_)
     & !(realm_.get_inactive_selector());
 
+  const std::string algName = "compute_edge_areav_" + std::to_string(AlgTraits::topo_);
   nalu_ngp::run_elem_algorithm(
-    meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
+    algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
       const int* lrscv = meSCS->adjacentNodes();
       const int* scsIpEdgeMap = meSCS->scsIpEdgeOrd();

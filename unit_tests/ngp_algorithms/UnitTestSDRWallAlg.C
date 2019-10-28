@@ -107,7 +107,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_func)
     sierra::nalu::WALL, surfPart,
     sierra::nalu::get_elem_topo(helperObjs.realm, *surfPart),
     "sdr_lowre_wall");
-
+   
   algDriver.execute();
 
   {
