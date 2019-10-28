@@ -81,6 +81,7 @@ void basic_node_loop(
   ngp::Field<double> ngpPressure(bulk, pressure);
 
   sierra::nalu::nalu_ngp::run_entity_algorithm(
+    "unittest_basic_node_loop",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const typename Traits::MeshIndex& meshIdx) {
       ngpPressure.get(meshIdx, 0) = presSet;
@@ -118,6 +119,7 @@ void basic_node_reduce(
 
   double reduceVal = 0.0;
   sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    "unittest_basic_node_reduce1",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, double& pSum) {
       pSum += ngpPressure.get(mi, 0);
@@ -126,6 +128,7 @@ void basic_node_reduce(
   double reduceVal1 = 0.0;
   Kokkos::Sum<double> sum_reducer(reduceVal1);
   sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    "unittest_basic_node_reduce2",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, double& pSum) {
       sum_reducer.join(pSum, ngpPressure.get(mi, 0));
@@ -163,6 +166,7 @@ void basic_node_reduce_minmax(
   value_type max;
   Kokkos::Max<double> max_reducer(max);
   sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    "unittest_basic_node_reduce_max",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, value_type& pSum) {
       const double xcoord = ngpCoords.get(mi, 0);
@@ -173,6 +177,7 @@ void basic_node_reduce_minmax(
   value_type min;
   Kokkos::Min<double> min_reducer(min);
   sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    "unittest_basic_node_reduce_min",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, value_type& pSum) {
       const double xcoord = ngpCoords.get(mi, 0);
@@ -200,6 +205,7 @@ void basic_elem_loop(
   stk::mesh::Selector sel = meta.universal_part();
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
+    "unittest_basic_elem_loop",
     ngpMesh, stk::topology::ELEMENT_RANK, sel,
     KOKKOS_LAMBDA(const sierra::nalu::nalu_ngp::EntityInfo<ngp::Mesh>& einfo) {
       ngpMassFlowRate.get(einfo.meshIdx, 0) = flowRate;
@@ -254,6 +260,7 @@ void basic_edge_loop(
   stk::mesh::Selector sel = meta.universal_part();
 
   sierra::nalu::nalu_ngp::run_edge_algorithm(
+    "unittest_basic_edge_loop",
     ngpMesh, sel,
     KOKKOS_LAMBDA(const sierra::nalu::nalu_ngp::EntityInfo<ngp::Mesh>& einfo) {
       ngpMassFlowRate.get(einfo.meshIdx, 0) = flowRate;
@@ -336,6 +343,7 @@ void elem_loop_scratch_views(
   volCheck.template sync<typename DoubleTypeView::execution_space>();
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
+    "unittest_elem_loop_scratchviews",
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData & edata) {
       Traits::DblType test = 0.0;
@@ -425,6 +433,7 @@ void calc_mdot_elem_loop(
     ngpMesh, ngpMdot);
 
   sierra::nalu::nalu_ngp::run_elem_algorithm(
+    "unittest_calc_mdot_elem_loop",
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata) {
       NALU_ALIGNED Traits::DblType rhoU[Hex8Traits::nDim_];
@@ -521,6 +530,7 @@ void basic_face_elem_loop(
     ngpMesh, wDist);
 
   sierra::nalu::nalu_ngp::run_face_elem_algorithm(
+    "unittest_basic_face_elem_loop",
     meshInfo, faceData, elemData, sel,
     KOKKOS_LAMBDA(FaceSimdData& fdata) {
 
@@ -552,6 +562,7 @@ void basic_face_elem_loop(
     });
 
   sierra::nalu::nalu_ngp::run_entity_algorithm(
+    "unittest_basic_face_elem_nodal",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       wDist.get(mi, 0) /= wArea.get(mi, 0);
@@ -609,6 +620,7 @@ void elem_loop_par_reduce(
   Kokkos::Sum<DoubleType> pressureReducer(pressureSum);
 
   sierra::nalu::nalu_ngp::run_elem_par_reduce(
+    "unittest_elem_loop_par_reduce",
     meshInfo, stk::topology::ELEM_RANK, dataReq, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata, DoubleType& pSum) {
       auto& scrViews = edata.simdScrView;

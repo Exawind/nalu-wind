@@ -28,6 +28,7 @@ linear_scalar_field(
   const stk::mesh::Selector sel = bulk.mesh_meta_data().universal_part();
 
   sierra::nalu::nalu_ngp::run_entity_algorithm(
+    "unittest_linear_scalar_field",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const typename Traits::MeshIndex& meshIdx) {
       ngpField.get(meshIdx, 0) =
@@ -57,6 +58,7 @@ linear_scalar_field(
   const stk::mesh::Selector sel = bulk.mesh_meta_data().universal_part();
 
   sierra::nalu::nalu_ngp::run_entity_algorithm(
+    "unittest_linear_vector_field",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const typename Traits::MeshIndex& meshIdx) {
       ngpField.get(meshIdx, 0) = coords.get(meshIdx, 0) * xCoeff;

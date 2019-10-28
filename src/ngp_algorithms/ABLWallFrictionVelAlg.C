@@ -196,8 +196,9 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
   nalu_ngp::ArraySimdDouble2 utauSum(0.0);
   Kokkos::Sum<nalu_ngp::ArraySimdDouble2> utauReducer(utauSum);
 
+  const std::string algName = "ABLWallFrictionVelAlg_" + std::to_string(BcAlgTraits::topo_);
   nalu_ngp::run_elem_par_reduce(
-    meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
+    algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata, nalu_ngp::ArraySimdDouble2& uSum) {
       // Unit normal vector
       NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];

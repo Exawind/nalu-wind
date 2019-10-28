@@ -2008,7 +2008,9 @@ void TpetraLinearSystem::copy_tpetra_to_stk(
 
   ngp::Mesh ngpMesh = realm_.ngp_mesh();
 
-  nalu_ngp::run_entity_algorithm(ngpMesh, stk::topology::NODE_RANK, selector,
+  nalu_ngp::run_entity_algorithm(
+    "TpetraLinSys::copy_tpetra_to_stk",
+    ngpMesh, stk::topology::NODE_RANK, selector,
   KOKKOS_LAMBDA(const MeshIndex& meshIdx)
   {
       stk::mesh::Entity node = (*meshIdx.bucket)[meshIdx.bucketOrd];

@@ -80,6 +80,7 @@ void SDRWallFuncAlgDriver::post_work()
     stk::mesh::selectField(*bcsdrF);
 
   nalu_ngp::run_entity_algorithm(
+    "SDRWallFuncAlgDriver_normalize",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double warea = wallArea.get(mi, 0);

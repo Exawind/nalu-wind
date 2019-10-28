@@ -65,6 +65,7 @@ MdotEdgeAlg::execute()
     & !(realm_.get_inactive_selector());
 
   nalu_ngp::run_edge_algorithm(
+    "compute_mdot_edge_interior",
     ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& einfo) {
       NALU_ALIGNED DblType av[NDimMax];

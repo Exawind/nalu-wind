@@ -73,8 +73,10 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
     & stk::mesh::selectUnion(partVec_)
     & !(realm_.get_inactive_selector());
 
+  const std::string algName =
+    (meta.get_fields()[gradPhi_]->name() + "_elem_" + std::to_string(AlgTraits::topo_));
   nalu_ngp::run_elem_algorithm(
-    meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
+    algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
       const int* lrscv = meSCS->adjacentNodes();
 

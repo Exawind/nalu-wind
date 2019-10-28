@@ -57,6 +57,7 @@ EffSSTDiffFluxCoeffAlg::execute()
   const DblType sigmaTwo = sigmaTwo_;
 
   nalu_ngp::run_entity_algorithm(
+    "EffSSTDiffFluxCoeffAlg",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       const DblType blendedConstant = fOneBlend.get(meshIdx, 0)*sigmaOne + (1.0-fOneBlend.get(meshIdx, 0))*sigmaTwo;

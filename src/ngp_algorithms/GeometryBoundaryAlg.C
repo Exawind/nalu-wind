@@ -52,8 +52,9 @@ void GeometryBoundaryAlg<AlgTraits>::execute()
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
 
+  const std::string algName = "GeometryBoundaryAlg_" + std::to_string(AlgTraits::topo_);
   sierra::nalu::nalu_ngp::run_elem_algorithm(
-    meshInfo, meta.side_rank(), dataNeeded_, sel,
+    algName, meshInfo, meta.side_rank(), dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       auto& scrViews = edata.simdScrView;
       const auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);

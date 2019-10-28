@@ -61,6 +61,7 @@ EnthalpyEffDiffFluxCoeffAlg::execute()
   if (isTurbulent_) {
     const auto tvisc = fieldMgr.get_field<double>(tvisc_);
     nalu_ngp::run_entity_algorithm(
+      "EnthalpyEffDiffFluxCoeffAlg_turbulent",
       ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
         evisc.get(meshIdx, 0) = (
@@ -69,6 +70,7 @@ EnthalpyEffDiffFluxCoeffAlg::execute()
       });
   } else {
     nalu_ngp::run_entity_algorithm(
+      "EnthalpyEffDiffFluxCoeffAlg_laminar",
       ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
         evisc.get(meshIdx, 0) = (

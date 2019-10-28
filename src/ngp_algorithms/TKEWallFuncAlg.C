@@ -69,8 +69,9 @@ void TKEWallFuncAlg<BcAlgTraits>::execute()
   const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
 
+  const std::string algName = "TKEWallFuncAlg_" + std::to_string(BcAlgTraits::topo_);
   nalu_ngp::run_elem_algorithm(
-    meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
+    algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata) {
 
       auto& scrViews = edata.simdScrView;
