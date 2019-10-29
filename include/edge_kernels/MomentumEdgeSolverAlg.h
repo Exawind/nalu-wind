@@ -38,6 +38,7 @@ private:
   unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
   unsigned massFlowRate_ {stk::mesh::InvalidOrdinal};
   unsigned viscosity_ {stk::mesh::InvalidOrdinal};
+  unsigned alpha_upw_ {stk::mesh::InvalidOrdinal};
 
   PecletFunction<AssembleEdgeSolverAlgorithm::DblType>* pecletFunction_{nullptr};
 };
