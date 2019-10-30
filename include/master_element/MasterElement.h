@@ -75,14 +75,16 @@ public:
   KOKKOS_FUNCTION virtual void face_grad_op(
     int /* face_ordinal */,
     SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
-    SharedMemView<DoubleType***, DeviceShmem>& /* gradop */) {
+    SharedMemView<DoubleType***, DeviceShmem>& /* gradop */,
+    SharedMemView<DoubleType***, DeviceShmem>& /* deriv */) {
     NGP_ThrowErrorMsg("MasterElement::face_grad_op not implemented for element");
   }
 
   KOKKOS_FUNCTION virtual void shifted_face_grad_op(
     int /* face_ordinal */,
     SharedMemView<DoubleType**, DeviceShmem>& /* coords */,
-    SharedMemView<DoubleType***, DeviceShmem>& /* gradop */) {
+    SharedMemView<DoubleType***, DeviceShmem>& /* gradop */,
+    SharedMemView<DoubleType***, DeviceShmem>& /* deriv */) {
     NGP_ThrowErrorMsg("MasterElement::shifted_face_grad_op not implemented for element");
   }
 
