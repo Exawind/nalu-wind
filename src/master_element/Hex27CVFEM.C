@@ -1491,7 +1491,8 @@ void Hex27SCS::face_grad_op(
 void Hex27SCS::face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>&)
 {
   using traits = AlgTraitsQuad9Hex27;
   const int offset = traits::numFaceIp_ * face_ordinal;
