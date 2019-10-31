@@ -2435,11 +2435,10 @@ MomentumEquationSystem::initialize()
     const double dt = realm_.get_time_step();
     const double gamma1 = realm_.get_gamma1();
     stk::mesh::field_fill(gamma1/dt, *Udiag_);
+
     Udiag_->modify_on_host();
-
-    stk::mesh::field_fill(1.0, *alpha_upw_);
-
   }
+  stk::mesh::field_fill(1.0, *alpha_upw_);
 }
 
 //--------------------------------------------------------------------------
@@ -2764,7 +2763,7 @@ void MomentumEquationSystem::compute_turbulence_parameters()
   if (realm_.is_turbulent()) {
     tviscAlg_->execute();
     diffFluxCoeffAlg_->execute();
-    if (realm_.solutionOptions_->turbulenceModel_ == SST)
+    if (realm_.solutionOptions_->turbulenceModel_ == SST_DES)
         compute_alpha_upw();
   }
 }
