@@ -184,13 +184,19 @@ namespace sierra
           throw std::runtime_error(
             "TIOGA TPL support not enabled during compilation phase.");
 #endif
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
           break;
+#endif
 
         case OversetBoundaryConditionData::OVERSET_NONE:
         default:
           throw std::runtime_error(
             "Invalid overset connectivity setting in input file.");
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
           break;
+#endif
       }
     }
 

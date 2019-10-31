@@ -55,7 +55,10 @@ InitialCondition * InitialCondition::load(const YAML::Node & node)
   }
   else
     throw std::runtime_error("parser error InitialConditions::load; unsupported IC type");
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
   return 0;
+#endif
 }
 
   Simulation* InitialCondition::root() { return parent()->root(); }

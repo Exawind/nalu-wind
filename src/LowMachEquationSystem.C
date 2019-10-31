@@ -2139,7 +2139,10 @@ MomentumEquationSystem::register_symmetry_bc(
         }
       }
      return;
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
      break;
+#endif
    case SYMMTYPES::X_DIR_STRONG:
      pickTheType = AlgorithmType::X_SYM_STRONG;
      beginPos = 0;
