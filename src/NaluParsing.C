@@ -180,13 +180,14 @@ namespace sierra
         case OversetBoundaryConditionData::TPL_TIOGA:
 #ifdef NALU_USES_TIOGA
           oversetBC.userData_.oversetBlocks_ = oversetUserData;
+          break;
 #else
           throw std::runtime_error(
             "TIOGA TPL support not enabled during compilation phase.");
-#endif
 // Avoid nvcc unreachable statement warnings
 #ifndef __CUDACC__
           break;
+#endif
 #endif
 
         case OversetBoundaryConditionData::OVERSET_NONE:
