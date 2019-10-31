@@ -617,22 +617,33 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
       case ActuatorType::ActLineFAST : {
 #ifdef NALU_USES_OPENFAST
 	actuator_ =  new ActuatorLineFAST(*this, *foundActuator[0]);
+	break;
 #else
 	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
-#endif
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
 	break;
+#endif
+#endif
       }
       case ActuatorType::ActDiskFAST : {
 #ifdef NALU_USES_OPENFAST
 	actuator_ =  new ActuatorDiskFAST(*this, *foundActuator[0]);
+	break;
 #else
 	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
-#endif
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
 	break;
+#endif
+#endif
       }
       default : {
         throw std::runtime_error("look_ahead_and_create::error: unrecognized actuator type: " + ActuatorTypeName);
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
         break;
+#endif
       }
       }
     }
@@ -3089,12 +3100,18 @@ Realm::setup_overset_bc(
       // should not get here... we should have thrown error in input file processing stage
       throw std::runtime_error("TIOGA TPL support not enabled during compilation phase");
 #endif
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
       break;
+#endif
 
     case OversetBoundaryConditionData::OVERSET_NONE:
     default:
       throw std::runtime_error("Invalid setting for overset connectivity");
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
       break;
+#endif
     }
   }   
 }

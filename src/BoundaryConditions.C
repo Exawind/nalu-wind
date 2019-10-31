@@ -100,7 +100,10 @@ BoundaryCondition * BoundaryCondition::load(const YAML::Node & node)
   else {
     throw std::runtime_error("parser error BoundaryConditions::load: no such bc type");
   }
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
   return 0;
+#endif
 }
 
   Simulation* BoundaryCondition::root() { return parent()->root(); }

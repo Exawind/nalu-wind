@@ -99,11 +99,17 @@ LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, Equation
   switch(solver->getType()) {
   case PT_TPETRA:
     return new TpetraLinearSystem(realm, numDof, eqSys, solver);
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
     break;
+#endif
 
   case PT_TPETRA_SEGREGATED:
     return new TpetraSegregatedLinearSystem(realm, numDof, eqSys, solver);
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
     break;
+#endif
 
 #ifdef NALU_USES_HYPRE
   case PT_HYPRE:
@@ -120,7 +126,10 @@ LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, Equation
   default:
     throw std::logic_error("create lin sys");
   }
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
   return 0;
+#endif
 }
 
 void LinearSystem::sync_field(const stk::mesh::FieldBase *field)

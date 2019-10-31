@@ -2127,10 +2127,12 @@ int getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
   }
 
   // still got here? problem...
-  if (1)
-    throw std::logic_error("bad status2");
+  throw std::logic_error("bad status2");
 
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
   return DS_SkippedDOF;
+#endif
 }
 
 } // namespace nalu
