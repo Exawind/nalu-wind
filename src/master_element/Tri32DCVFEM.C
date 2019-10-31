@@ -571,7 +571,6 @@ void Tri32DSCS::face_grad_op(
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  using traits = AlgTraitsEdge2DTri32D;
   tri_derivative(deriv);
   generic_grad_op<AlgTraitsEdge2DTri32D>(deriv, coords, gradop);
 }
