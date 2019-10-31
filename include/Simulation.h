@@ -12,6 +12,8 @@
 #include <stk_util/diag/PrintTimer.hpp>
 #include <stk_util/diag/Timer.hpp>
 
+#include <KokkosInterface.h>
+
 namespace YAML {
 class Node;
 }
