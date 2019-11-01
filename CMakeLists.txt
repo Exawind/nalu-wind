@@ -187,12 +187,12 @@ message(STATUS "CMAKE_CXX_FLAGS_${BUILD_TYPE} = ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}
 message(STATUS "CMAKE_Fortran_FLAGS_${BUILD_TYPE} = ${CMAKE_Fortran_FLAGS_${BUILD_TYPE}}")
 
 if(ENABLE_HYPRE)
-  include(CheckSymbolExists)
+  include(CheckCXXSymbolExists)
   set(CMAKE_REQUIRED_INCLUDES "${HYPRE_INCLUDE_DIRS}")
   set(CMAKE_REQUIRED_LIBRARIES "${HYPRE_LIBRARIES}")
-  check_symbol_exists(
+  check_cxx_symbol_exists(
     HYPRE_BIGINT "${HYPRE_INCLUDE_DIRS}/HYPRE_config.h" NALU_HYPRE_BIGINT)
-  check_symbol_exists(
+  check_cxx_symbol_exists(
     hypre_KRYLOV_COGMRES_HEADER "${HYPRE_INCLUDE_DIRS}/krylov.h" NALU_HYPRE_COGMRES)
   if(NOT NALU_HYPRE_BIGINT)
     message(WARNING
