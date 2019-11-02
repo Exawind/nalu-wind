@@ -84,6 +84,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
       const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
       const auto& v_scv_vol = meViews.scv_volume;
 
+      elemVolOps(edata, 0) = 0.0;
       for (int ip=0; ip < AlgTraits::numScvIp_; ++ip) {
         const auto nn = ipNodeMap[ip];
         dnvOps(edata, nn, 0) += v_scv_vol(ip);
