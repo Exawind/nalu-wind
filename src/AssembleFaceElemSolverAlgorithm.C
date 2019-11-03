@@ -92,8 +92,7 @@ AssembleFaceElemSolverAlgorithm::execute()
 
   const unsigned nodesPerEntity = nodesPerElem_;
   const unsigned numDof = numDof_;
-  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
-  CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
+  CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
   double diagRelaxFactor = diagRelaxFactor_;
 
   run_face_elem_algorithm(realm_.bulk_data(),
@@ -125,9 +124,6 @@ AssembleFaceElemSolverAlgorithm::execute()
         }
 #endif
     });
-
-    coeffApplier->free_device_pointer();
-    delete coeffApplier;
 }
 
 } // namespace nalu

@@ -91,8 +91,7 @@ AssembleNGPNodeSolverAlgorithm::execute()
   const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
   const int rhsSize = rhsSize_;
 
-  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
-  CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
+  CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
 
   const int nodesPerEntity = 1;
   const int bytes_per_team = 0;
@@ -134,9 +133,6 @@ AssembleNGPNodeSolverAlgorithm::execute()
             smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         });
     });
-
-    coeffApplier->free_device_pointer();
-    delete coeffApplier;
 }
 
 }  // nalu

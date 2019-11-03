@@ -79,7 +79,14 @@ public:
     EquationSystem *eqSys,
     LinearSolver *linearSolver);
 
-  virtual ~LinearSystem() {}
+  virtual ~LinearSystem() {
+    if (hostCoeffApplier != nullptr) {
+      hostCoeffApplier->free_device_pointer();
+      deviceCoeffApplier = nullptr;
+      delete hostCoeffApplier;
+      hostCoeffApplier = nullptr;
+    }
+  }
 
   static LinearSystem *create(Realm& realm, const unsigned numDof, EquationSystem *eqSys, LinearSolver *linearSolver);
 
@@ -154,7 +161,10 @@ public:
   virtual CoeffApplier* get_coeff_applier()
   {
 #ifndef KOKKOS_ENABLE_CUDA
-    return new DefaultHostOnlyCoeffApplier(*this);
+    if (hostCoeffApplier == nullptr) {
+      hostCoeffApplier = new DefaultHostOnlyCoeffApplier(*this);
+    }
+    return hostCoeffApplier;
 #else
     return nullptr;
 #endif
@@ -265,6 +275,9 @@ protected:
   double scaledNonLinearResidual_;
   bool recomputePreconditioner_;
   bool reusePreconditioner_;
+
+  CoeffApplier* hostCoeffApplier = nullptr;
+  CoeffApplier* deviceCoeffApplier = nullptr;
 
 public:
   bool provideOutput_;

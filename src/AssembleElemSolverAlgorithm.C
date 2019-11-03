@@ -89,8 +89,7 @@ AssembleElemSolverAlgorithm::execute()
 
   auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);
 
-  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
-  CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
+  CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
 
   double diagRelaxFactor = diagRelaxFactor_;
   int rhsSize = rhsSize_;
@@ -124,9 +123,6 @@ AssembleElemSolverAlgorithm::execute()
                   smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
 #endif
     });
-
-  coeffApplier->free_device_pointer();
-  delete coeffApplier;
 }
 
 } // namespace nalu
