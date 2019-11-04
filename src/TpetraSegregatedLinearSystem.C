@@ -1179,7 +1179,7 @@ void reset_rows(
 
 sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::get_coeff_applier()
 {
-  if (hostCoeffApplier == nullptr) {
+  if (hostCoeffApplier.get() == nullptr) {
     const bool extractDiagonal = equationSystem()->extractDiagonal_;
     const unsigned diagFieldOrdinal = (extractDiagonal && equationSystem()->get_diagonal_field()!=nullptr) ?
                       equationSystem()->get_diagonal_field()->mesh_meta_data_ordinal() : 0;
@@ -1189,11 +1189,11 @@ sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::get_coeff_applier()
       diagField = realm_.ngp_field_manager().get_field<double>(diagFieldOrdinal);
     }
   
-    hostCoeffApplier = new TpetraLinSysCoeffApplier(ownedLocalMatrix_, sharedNotOwnedLocalMatrix_,
+    hostCoeffApplier.reset(new TpetraLinSysCoeffApplier(ownedLocalMatrix_, sharedNotOwnedLocalMatrix_,
                                         ownedLocalRhs_, sharedNotOwnedLocalRhs_,
                                         entityToLID_, entityToColLID_,
                                         maxOwnedRowId_, maxSharedNotOwnedRowId_, numDof_,
-                                        extractDiagonal, diagField, realm_.ngp_mesh());
+                                        extractDiagonal, diagField, realm_.ngp_mesh()));
     deviceCoeffApplier = hostCoeffApplier->device_pointer();
   }
 

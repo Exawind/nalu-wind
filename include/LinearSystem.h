@@ -80,11 +80,9 @@ public:
     LinearSolver *linearSolver);
 
   virtual ~LinearSystem() {
-    if (hostCoeffApplier != nullptr) {
+    if (hostCoeffApplier.get() != nullptr) {
       hostCoeffApplier->free_device_pointer();
       deviceCoeffApplier = nullptr;
-      delete hostCoeffApplier;
-      hostCoeffApplier = nullptr;
     }
   }
 
@@ -161,10 +159,10 @@ public:
   virtual CoeffApplier* get_coeff_applier()
   {
 #ifndef KOKKOS_ENABLE_CUDA
-    if (hostCoeffApplier == nullptr) {
-      hostCoeffApplier = new DefaultHostOnlyCoeffApplier(*this);
+    if (hostCoeffApplier.get() == nullptr) {
+      hostCoeffApplier.reset(new DefaultHostOnlyCoeffApplier(*this));
     }
-    return hostCoeffApplier;
+    return hostCoeffApplier.get();
 #else
     return nullptr;
 #endif
@@ -276,7 +274,7 @@ protected:
   bool recomputePreconditioner_;
   bool reusePreconditioner_;
 
-  CoeffApplier* hostCoeffApplier = nullptr;
+  std::unique_ptr<CoeffApplier> hostCoeffApplier;
   CoeffApplier* deviceCoeffApplier = nullptr;
 
 public:
