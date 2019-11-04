@@ -64,8 +64,7 @@ public:
     const auto entityRank = entityRank_;
     const auto rhsSize = rhsSize_;
 
-    CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
-    CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
+    CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
 
     const auto nodesPerEntity = nodesPerEntity_;
 
@@ -97,9 +96,6 @@ public:
               smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
           });
       });
-
-      coeffApplier->free_device_pointer();
-      delete coeffApplier;
   }
 
 protected:

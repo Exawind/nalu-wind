@@ -66,8 +66,7 @@ FixPressureAtNodeAlgorithm::execute()
   }
 
   // Reset LHS and RHS for this matrix
-  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
-  CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
+  CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
  
   ngp::Mesh ngpMesh = realm_.ngp_mesh();
   NGPDoubleFieldType ngpPressure = realm_.ngp_field_manager().get_field<double>(pressure_->mesh_meta_data_ordinal());
@@ -108,9 +107,6 @@ FixPressureAtNodeAlgorithm::execute()
       }
     });
   });
-
-  coeffApplier->free_device_pointer();
-  delete coeffApplier;
 }
 
 void
