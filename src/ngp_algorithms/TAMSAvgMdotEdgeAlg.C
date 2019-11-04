@@ -23,7 +23,6 @@ TAMSAvgMdotEdgeAlg::TAMSAvgMdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
       realm.does_mesh_move() ? "average_velocity_rtm" : "average_velocity")),
     densityNp1_(get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1)),
     edgeAreaVec_(get_field_ordinal(realm.meta_data(), "edge_area_vector", stk::topology::EDGE_RANK)),
-    avgTime_(get_field_ordinal(realm.meta_data(), "rans_time_scale")),
     avgMassFlowRate_(get_field_ordinal(
       realm.meta_data(), "average_mass_flow_rate", stk::topology::EDGE_RANK))
 {
@@ -32,8 +31,6 @@ TAMSAvgMdotEdgeAlg::TAMSAvgMdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
 void
 TAMSAvgMdotEdgeAlg::execute()
 {
-  NaluEnv::self().naluOutputP0() << "Calculating TAMS Avg Mdot" << std::endl;
-
   constexpr int NDimMax = 3;
   const auto& meta = realm_.meta_data();
   const int ndim = meta.spatial_dimension();
@@ -46,13 +43,11 @@ TAMSAvgMdotEdgeAlg::execute()
   const DblType interpTogether = realm_.get_mdot_interp();
   const DblType om_interpTogether = (1.0 - interpTogether);
 
-  // STK ngp::Field instances for capture by lambda
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
   const auto avgVelocity = fieldMgr.get_field<double>(avgVelocityRTM_);
   const auto density = fieldMgr.get_field<double>(densityNp1_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
 
-  const auto avgTime = fieldMgr.get_field<double>(avgTime_);
   auto avgMdot = fieldMgr.get_field<double>(avgMassFlowRate_);
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &

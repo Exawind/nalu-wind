@@ -29,11 +29,10 @@ public:
   void execute() override;
 
 private:
-  unsigned coordinates_ {stk::mesh::InvalidOrdinal};
-  unsigned avgVelocityRTM_ {stk::mesh::InvalidOrdinal};
-  unsigned densityNp1_ {stk::mesh::InvalidOrdinal};
-  unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
-  unsigned avgTime_{stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned avgVelocityRTM_{stk::mesh::InvalidOrdinal};
+  unsigned densityNp1_{stk::mesh::InvalidOrdinal};
+  unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
   unsigned avgMassFlowRate_{stk::mesh::InvalidOrdinal};
 };
 
