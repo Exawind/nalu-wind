@@ -41,7 +41,7 @@ else(NOT ${TEST_TOLERANCE} STREQUAL "")
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
       set(TOLERANCE 0.000000000000001)
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-      set(TOLERANCE 0.01)
+      set(TOLERANCE 0.05)
     else()
       set(TOLERANCE 0.0000001) # Linux default
     endif()
