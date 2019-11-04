@@ -201,8 +201,6 @@ public:
 
   void compute_turbulence_parameters();
 
-  void post_converged_work();
-
   const bool managePNG_;
 
   VectorFieldType *velocity_;

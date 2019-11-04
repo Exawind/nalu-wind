@@ -978,8 +978,6 @@ LowMachEquationSystem::post_converged_work()
     surfaceForceAndMomentAlgDriver_->execute();
   }
 
-  momentumEqSys_->post_converged_work();
-
   // output mass closure
   continuityEqSys_->computeMdotAlgDriver_->provide_output();
 }
@@ -1084,12 +1082,18 @@ MomentumEquationSystem::initial_work()
 void
 MomentumEquationSystem::pre_timestep_work()
 {
+  // call base class method due to override
+  EquationSystem::pre_timestep_work();
+  
   if (
     (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS) &&
     (realm_.solutionOptions_->meshMotion_ ||
      realm_.solutionOptions_->externalMeshDeformation_)) {
     TAMSAlgDriver_->compute_metric_tensor();
   }
+
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
+    TAMSAlgDriver_->execute();
 }
 
 //--------------------------------------------------------------------------
@@ -2804,12 +2808,6 @@ void MomentumEquationSystem::compute_turbulence_parameters()
     tviscAlg_->execute();
     diffFluxCoeffAlg_->execute();
   }
-}
-
-void MomentumEquationSystem::post_converged_work()
-{
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
-    TAMSAlgDriver_->execute();
 }
 
 //==========================================================================

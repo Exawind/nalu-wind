@@ -8,7 +8,6 @@
 #include "node_kernels/MomentumSSTTAMSForcingNodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
-
 #include "stk_mesh/base/MetaData.hpp"
 #include "utils/StkHelpers.h"
 #include <SimdInterface.h>
@@ -211,7 +210,6 @@ MomentumSSTTAMSForcingNodeKernel::execute(
   // TODO: Assess viability of first approach where we don't solve a poisson
   // problem and allow the field be divergent, which should get projected out
   // anyway. This means we only have a contribution to the RHS here
-
   rhs(0) += dualVolume * gX;
   rhs(1) += dualVolume * gY;
   rhs(2) += dualVolume * gZ;
