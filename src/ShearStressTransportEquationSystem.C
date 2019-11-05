@@ -32,10 +32,6 @@
 
 #include <stk_mesh/base/MetaData.hpp>
 
-#include <stk_mesh/base/GetBuckets.hpp>
-#include <stk_mesh/base/GetEntities.hpp>
-#include <stk_mesh/base/Part.hpp>
-
 // stk_io
 #include <stk_io/IossBridge.hpp>
 
@@ -144,7 +140,7 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
 
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
-
+  
   if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) {
 
     if ( NULL == sstMaxLengthScaleAlgDriver_ )

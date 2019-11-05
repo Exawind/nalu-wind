@@ -40,21 +40,15 @@ private:
   unsigned resAdeq_{stk::mesh::InvalidOrdinal};
   unsigned turbKineticEnergy_{stk::mesh::InvalidOrdinal};
   unsigned specDissipationRate_{stk::mesh::InvalidOrdinal};
-  unsigned avgVelocityNP1_{stk::mesh::InvalidOrdinal};
-  unsigned avgDudxNP1_{stk::mesh::InvalidOrdinal};
-  unsigned avgTkeResNP1_{stk::mesh::InvalidOrdinal};
-  unsigned avgProdNP1_{stk::mesh::InvalidOrdinal};
+  unsigned avgVelocity_{stk::mesh::InvalidOrdinal};
+  unsigned avgDudx_{stk::mesh::InvalidOrdinal};
+  unsigned avgTkeRes_{stk::mesh::InvalidOrdinal};
+  unsigned avgProd_{stk::mesh::InvalidOrdinal};
   unsigned avgTime_{stk::mesh::InvalidOrdinal};
-  unsigned avgResAdeqNP1_{stk::mesh::InvalidOrdinal};
+  unsigned avgResAdeq_{stk::mesh::InvalidOrdinal};
   unsigned tvisc_{stk::mesh::InvalidOrdinal};
   unsigned alpha_{stk::mesh::InvalidOrdinal};
   unsigned Mij_{stk::mesh::InvalidOrdinal};
-
-  unsigned avgVelocityN_{stk::mesh::InvalidOrdinal};
-  unsigned avgDudxN_{stk::mesh::InvalidOrdinal};
-  unsigned avgTkeResN_{stk::mesh::InvalidOrdinal};
-  unsigned avgProdN_{stk::mesh::InvalidOrdinal};
-  unsigned avgResAdeqN_{stk::mesh::InvalidOrdinal};
 };
 
 } // namespace nalu

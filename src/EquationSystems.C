@@ -763,21 +763,8 @@ EquationSystems::solve_and_update()
   // Perform necessary setup tasks before iterations
   pre_iter_work();
 
-  // Hack TAMS to go
-  //if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS) {
-  //  TAMSEquationSystem tamsEQS(*this);
-  //  tamsEQS.runAlgos();
-  //}
-
   for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii )
   {
-   if ((*ii)->name_ == "TAMSEQS")
-            (*ii)->pre_iter_work();
-  }
-
-  for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii )
-  {
-    if ((*ii)->name_ != "TAMSEQS")
     (*ii)->pre_iter_work();
     (*ii)->solve_and_update();
     (*ii)->post_iter_work();

@@ -256,16 +256,16 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
       const int colL = j;
       const int colR = j + ndim;
 
-      //smdata.lhs(rowL, colL) -= lhsfacDiff_j / relaxFacU_;
-      //smdata.lhs(rowL, colR) += lhsfacDiff_j;
-      //smdata.lhs(rowR, colL) += lhsfacDiff_j;
-      //smdata.lhs(rowR, colR) -= lhsfacDiff_j / relaxFacU_;
+      smdata.lhs(rowL, colL) -= lhsfacDiff_j / relaxFacU_;
+      smdata.lhs(rowL, colR) += lhsfacDiff_j;
+      smdata.lhs(rowR, colL) += lhsfacDiff_j;
+      smdata.lhs(rowR, colR) -= lhsfacDiff_j / relaxFacU_;
     }
 
-    //smdata.lhs(rowL, rowL) -= lhs_riC_i / relaxFacU_;
-    //smdata.lhs(rowL, rowR) += lhs_riC_i;
-    //smdata.lhs(rowR, rowL) += lhs_riC_i;
-    //smdata.lhs(rowR, rowR) -= lhs_riC_i / relaxFacU_;
+    smdata.lhs(rowL, rowL) -= lhs_riC_i / relaxFacU_;
+    smdata.lhs(rowL, rowR) += lhs_riC_i;
+    smdata.lhs(rowR, rowL) += lhs_riC_i;
+    smdata.lhs(rowR, rowR) -= lhs_riC_i / relaxFacU_;
   }
 }
 
