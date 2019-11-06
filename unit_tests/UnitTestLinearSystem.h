@@ -198,7 +198,7 @@ public:
 
   sierra::nalu::CoeffApplier* get_coeff_applier()
   {
-    if (hostCoeffApplier.get() == nullptr) {
+    if (!hostCoeffApplier) {
       hostCoeffApplier.reset(new TestCoeffApplier(lhs_, rhs_, numSumIntoCalls_, isEdge_, numDof_));
       deviceCoeffApplier = hostCoeffApplier->device_pointer();
     }
