@@ -198,7 +198,11 @@ public:
 
   sierra::nalu::CoeffApplier* get_coeff_applier()
   {
-    return new TestCoeffApplier(lhs_, rhs_, numSumIntoCalls_, isEdge_, numDof_);
+    if (!hostCoeffApplier) {
+      hostCoeffApplier.reset(new TestCoeffApplier(lhs_, rhs_, numSumIntoCalls_, isEdge_, numDof_));
+      deviceCoeffApplier = hostCoeffApplier->device_pointer();
+    }
+    return deviceCoeffApplier;
   }
 
   virtual void sumInto(

@@ -1179,7 +1179,7 @@ void reset_rows(
 
 sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::get_coeff_applier()
 {
-  if (hostCoeffApplier.get() == nullptr) {
+  if (!hostCoeffApplier) {
     const bool extractDiagonal = equationSystem()->extractDiagonal_;
     const unsigned diagFieldOrdinal = (extractDiagonal && equationSystem()->get_diagonal_field()!=nullptr) ?
                       equationSystem()->get_diagonal_field()->mesh_meta_data_ordinal() : 0;

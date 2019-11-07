@@ -80,7 +80,7 @@ public:
     LinearSolver *linearSolver);
 
   virtual ~LinearSystem() {
-    if (hostCoeffApplier.get() != nullptr) {
+    if (hostCoeffApplier) {
       hostCoeffApplier->free_device_pointer();
       deviceCoeffApplier = nullptr;
     }
@@ -159,7 +159,7 @@ public:
   virtual CoeffApplier* get_coeff_applier()
   {
 #ifndef KOKKOS_ENABLE_CUDA
-    if (hostCoeffApplier.get() == nullptr) {
+    if (!hostCoeffApplier) {
       hostCoeffApplier.reset(new DefaultHostOnlyCoeffApplier(*this));
     }
     return hostCoeffApplier.get();
