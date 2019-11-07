@@ -84,6 +84,18 @@ ShearStressTransportEquationSystem::~ShearStressTransportEquationSystem()
     delete sstMaxLengthScaleAlgDriver_;
 }
 
+void ShearStressTransportEquationSystem::load(const YAML::Node& node)
+{
+  EquationSystem::load(node);
+
+  if (realm_.query_for_overset()) {
+    tkeEqSys_->decoupledOverset_ = decoupledOverset_;
+    tkeEqSys_->numOversetIters_ = numOversetIters_;
+    sdrEqSys_->decoupledOverset_ = decoupledOverset_;
+    sdrEqSys_->numOversetIters_ = numOversetIters_;
+  }
+}
+
 //--------------------------------------------------------------------------
 //-------- initialize ------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -218,13 +230,18 @@ ShearStressTransportEquationSystem::solve_and_update()
     NaluEnv::self().naluOutputP0() << " " << k+1 << "/" << maxIterations_
                     << std::setw(15) << std::right << name_ << std::endl;
 
-    // tke and sdr assemble, load_complete and solve; Jacobi iteration
-    tkeEqSys_->assemble_and_solve(tkeEqSys_->kTmp_);
-    sdrEqSys_->assemble_and_solve(sdrEqSys_->wTmp_);
+    for (int oi=0; oi < numOversetIters_; ++oi) {
+      // tke and sdr assemble, load_complete and solve; Jacobi iteration
+      tkeEqSys_->assemble_and_solve(tkeEqSys_->kTmp_);
+      sdrEqSys_->assemble_and_solve(sdrEqSys_->wTmp_);
 
-    // update each
-    update_and_clip();
+      update_and_clip();
 
+      if (decoupledOverset_ && realm_.hasOverset_) {
+        realm_.overset_orphan_node_field_update(tkeEqSys_->tke_, 1, 1);
+        realm_.overset_orphan_node_field_update(sdrEqSys_->sdr_, 1, 1);
+      }
+    }
     // compute projected nodal gradients
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();

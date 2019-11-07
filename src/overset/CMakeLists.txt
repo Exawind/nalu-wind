@@ -1,4 +1,5 @@
 target_sources(nalu PRIVATE
+   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleOversetDecoupledAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleOversetPressureAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleOversetSolverConstraintAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleOversetWallDistAlgorithm.C
