@@ -119,6 +119,15 @@ AssembleFaceElemSolverAlgorithm::execute()
           extract_vector_lane(smdata.simdlhs, simdIndex, smdata.lhs);
           for (unsigned ir=0; ir < nodesPerElem_*numDof; ++ir)
             smdata.lhs(ir, ir) /= diagRelaxFactor;
+
+#ifndef KOKKOS_ENABLE_CUDA
+          // TODO: Replace this with NGP version
+          if (realm_.hasOverset_)
+            reset_overset_rows(
+              realm_.meta_data(), eqSystem_->linsys_->numDof(), nodesPerEntity,
+              smdata.ngpConnectedNodes[simdIndex], smdata.rhs, smdata.lhs);
+#endif
+
           (*deviceCoeffApplier)(nodesPerEntity, smdata.ngpConnectedNodes[simdIndex],
                       smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         }
