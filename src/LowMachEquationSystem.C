@@ -82,7 +82,10 @@
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <FixPressureAtNodeAlgorithm.h>
 #include <FixPressureAtNodeInfo.h>
+
+#ifdef NALU_USES_HYPRE
 #include <HypreLinearSystem.h>
+#endif
 
 // template for kernels
 #include <AlgTraits.h>
@@ -2157,10 +2160,14 @@ MomentumEquationSystem::register_symmetry_bc(
      beginPos = 2;
      break;
   }
+
+#ifdef NALU_USES_HYPRE
   if(dynamic_cast<HypreLinearSystem*>(linsys_) != nullptr){
     throw std::runtime_error(
       "Hypre is not supported for a momentum solver when using strong_symmetry bc's.");
   }
+#endif
+
   endPos = beginPos + 1;
   if(!symmBCData.userData_.useProjections_){
     notProjectedDir_[beginPos].push_back(part);
