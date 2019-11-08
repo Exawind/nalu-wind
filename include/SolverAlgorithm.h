@@ -64,6 +64,14 @@ protected:
     const SharedMemView<const double**,DeviceShmem> & lhs,
     const char *trace_tag);
 
+  void reset_overset_rows(
+    const stk::mesh::MetaData& meta,
+    const size_t nDim,
+    const size_t nEntities,
+    const ngp::Mesh::ConnectedEntities& entities,
+    sierra::nalu::SharedMemView<double*, sierra::nalu::DeviceShmem>& rhs,
+    sierra::nalu::SharedMemView<double**, sierra::nalu::DeviceShmem>& lhs);
+
   EquationSystem *eqSystem_;
 };
 
