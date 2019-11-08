@@ -1,6 +1,6 @@
 ############################ BASE ######################################
-cmake_minimum_required (VERSION 3.10.0)
-project(Nalu CXX C Fortran)
+cmake_minimum_required (VERSION 3.13.0)
+project(Nalu CXX Fortran)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -236,22 +236,6 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/NaluVersionInfo.h.in"
   "${CMAKE_BINARY_DIR}/include/NaluVersionInfo.h" @ONLY)
 #### END TAG VERSIONS
 
-# Add all source files from source subdirectories
-function(add_sources target_list)
-   foreach(_source IN ITEMS ${ARGN})
-       if (IS_ABSOLUTE "${_source}")
-           set(_source_abs "${_source}")
-       else()
-           get_filename_component(_source_abs "${_source}" ABSOLUTE)
-       endif()
-       set_property(GLOBAL APPEND PROPERTY "${target_list}" "${_source_abs}")
-   endforeach()
-endfunction(add_sources)
-add_subdirectory(src)
-add_subdirectory(unit_tests)
-get_property(NALU_SOURCES GLOBAL PROPERTY GlobalSourceList)
-get_property(NALU_UNIT_SOURCES GLOBAL PROPERTY GlobalUnitSourceList)
-
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_BINARY_DIR}/include)
 add_library(nalu ${NALU_SOURCES})
@@ -301,6 +285,9 @@ if(MPI_LINK_FLAGS)
   set_target_properties(${utest_ex_name} PROPERTIES
     LINK_FLAGS "${MPI_LINK_FLAGS}")
 endif(MPI_LINK_FLAGS)
+
+add_subdirectory(src)
+add_subdirectory(unit_tests)
 
 set(nalu_ex_catalyst_name "naluXCatalyst")
 if(ENABLE_PARAVIEW_CATALYST)

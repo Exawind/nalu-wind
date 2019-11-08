@@ -1,4 +1,4 @@
-add_sources(GlobalSourceList
+target_sources(nalu PRIVATE
    AssembleRadTransEdgeSolverAlgorithm.C
    AssembleRadTransEdgeUpwindSolverAlgorithm.C
    AssembleRadTransWallSolverAlgorithm.C
