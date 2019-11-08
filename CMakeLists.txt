@@ -27,10 +27,17 @@ set(CMAKE_CXX_STANDARD 11)       # Set nalu-wind C++11 standard
 set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions
 set(CMAKE_CXX_STANDARD_REQUIRED) # Force error if C++11 standard is not supported
 
+# Create targets
+set(nalu_ex_name "naluX")
+set(utest_ex_name "unittestX")
+add_library(nalu "")
+add_executable(${nalu_ex_name} nalu.C)
+add_executable(${utest_ex_name} unit_tests.C)
+
 find_package(MPI REQUIRED)
-include_directories(SYSTEM ${MPI_C_INCLUDE_PATH})
-include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
-include_directories(SYSTEM ${MPI_Fortran_INCLUDE_PATH})
+target_include_directories(nalu SYSTEM PUBLIC ${MPI_C_INCLUDE_PATH})
+target_include_directories(nalu SYSTEM PUBLIC ${MPI_CXX_INCLUDE_PATH})
+target_include_directories(nalu SYSTEM PUBLIC ${MPI_Fortran_INCLUDE_PATH})
 
 if(ENABLE_OPENMP)
   find_package(OpenMP)
@@ -43,8 +50,8 @@ find_package(Trilinos REQUIRED)
 if(Trilinos_FOUND)
   message(STATUS "Found Trilinos = ${Trilinos_DIR}")
 endif()
-include_directories(SYSTEM ${Trilinos_INCLUDE_DIRS})
-include_directories(SYSTEM ${Trilinos_TPL_INCLUDE_DIRS})
+target_include_directories(nalu SYSTEM PUBLIC ${Trilinos_INCLUDE_DIRS})
+target_include_directories(nalu SYSTEM PUBLIC ${Trilinos_TPL_INCLUDE_DIRS})
 
 # Build Nalu as shared libraries if that is how Trilinos was built
 if(Trilinos_BUILD_SHARED_LIBS)
@@ -59,13 +66,13 @@ set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
 find_package(YAML-CPP QUIET)
 if(YAML-CPP_FOUND)
   # YAML master branch is used
-  include_directories(SYSTEM ${YAML_CPP_INCLUDE_DIR})
+  target_include_directories(nalu SYSTEM PUBLIC ${YAML_CPP_INCLUDE_DIR})
 else()
   # YAML 0.5.3 is used
   find_library(YAML_CPP_LIBRARIES NAMES yaml-cpp PATHS ${YAML_DIR}/lib)
   find_path(YAML_CPP_INCLUDE_DIR yaml.h PATHS ${YAML_DIR}/include/yaml-cpp)
   if((DEFINED YAML_CPP_LIBRARIES) AND (DEFINED YAML_CPP_INCLUDE_DIR))
-    include_directories(SYSTEM ${YAML_CPP_INCLUDE_DIR}/..)
+    target_include_directories(nalu SYSTEM PUBLIC ${YAML_CPP_INCLUDE_DIR}/..)
     set(YAML-CPP_FOUND TRUE)
   endif()
 endif()
@@ -76,7 +83,7 @@ else()
 endif()
 
 if(ENABLE_CUDA)
-    add_definitions(-DUSE_STK_SIMD_NONE)
+    target_compile_definitions(nalu PUBLIC USE_STK_SIMD_NONE)
 endif()
 
 ############################ FFTW ######################################
@@ -86,8 +93,8 @@ if(ENABLE_FFTW)
   if(FFTW_FOUND)
     message(STATUS "Found FFTW = ${FFTW_DIR}")
   endif()
-  include_directories(${FFTW_INCLUDE_DIRS})
-  add_definitions("-DNALU_USES_FFTW")
+  target_include_directories(nalu SYSTEM PUBLIC ${FFTW_INCLUDE_DIRS})
+  target_compile_definitions(nalu PUBLIC NALU_USES_FFTW)
 endif(ENABLE_FFTW)
 
 ############################ HYPRE #####################################
@@ -97,8 +104,8 @@ if(ENABLE_HYPRE)
   if(HYPRE_FOUND)
     message(STATUS "Found HYPRE = ${HYPRE_DIR}")
   endif()
-  include_directories(SYSTEM ${HYPRE_INCLUDE_DIRS})
-  add_definitions("-DNALU_USES_HYPRE")
+  target_include_directories(nalu SYSTEM PUBLIC ${HYPRE_INCLUDE_DIRS})
+  target_compile_definitions(nalu PUBLIC NALU_USES_HYPRE)
 endif(ENABLE_HYPRE)
 
 ########################## OPENFAST ####################################
@@ -108,8 +115,8 @@ if(ENABLE_OPENFAST)
   if(OpenFAST_FOUND)
     message(STATUS "Found OpenFAST = ${OpenFAST_DIR}")
   endif()
-  include_directories(${OpenFAST_INCLUDE_DIRS})
-  add_definitions("-DNALU_USES_OPENFAST")
+  target_include_directories(nalu SYSTEM PUBLIC ${OpenFAST_INCLUDE_DIRS})
+  target_compile_definitions(nalu PUBLIC NALU_USES_OPENFAST)
 endif(ENABLE_OPENFAST)
 
 ############################ TIOGA #####################################
@@ -119,10 +126,10 @@ if(ENABLE_TIOGA)
   if(TIOGA_FOUND)
     message(STATUS "Found TIOGA = ${TIOGA_DIR}")
   endif()
-  include_directories(${TIOGA_INCLUDE_DIRS})
-  add_definitions("-DNALU_USES_TIOGA")
+  target_include_directories(nalu SYSTEM PUBLIC ${TIOGA_INCLUDE_DIRS})
+  target_compile_definitions(nalu PUBLIC NALU_USES_TIOGA)
   if(TIOGA_HAS_NODEGID)
-    add_definitions("-DTIOGA_HAS_NODEGID")
+    target_compile_definitions(nalu PUBLIC TIOGA_HAS_NODEGID)
   endif()
 endif()
 
@@ -199,7 +206,7 @@ if(ENABLE_HYPRE)
       "HYPRE does not enable 64-bit integer support; will fail on large problems!")
   endif()
   if (NALU_HYPRE_COGMRES)
-    add_definitions(-DHYPRE_COGMRES)
+    target_compile_definitions(nalu PUBLIC HYPRE_COGMRES)
   else()
     message(STATUS "Disabling HYPRE CO-GMRES interface")
   endif()
@@ -236,55 +243,44 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/NaluVersionInfo.h.in"
   "${CMAKE_BINARY_DIR}/include/NaluVersionInfo.h" @ONLY)
 #### END TAG VERSIONS
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_BINARY_DIR}/include)
-add_library(nalu ${NALU_SOURCES})
-target_link_libraries(nalu ${Trilinos_LIBRARIES})
-target_link_libraries(nalu ${YAML_CPP_LIBRARIES})
-target_link_libraries(nalu ${MPI_CXX_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_C_LIBRARIES})
+target_include_directories(nalu PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(nalu PUBLIC ${CMAKE_BINARY_DIR}/include)
+target_link_libraries(nalu PUBLIC ${Trilinos_LIBRARIES})
+target_link_libraries(nalu PUBLIC ${YAML_CPP_LIBRARIES})
+target_link_libraries(nalu PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_C_LIBRARIES})
 
 if(ENABLE_FFTW)
-  target_link_libraries(nalu ${FFTW_LIBRARIES})
+  target_link_libraries(nalu PUBLIC ${FFTW_LIBRARIES})
 endif()
 
 if(ENABLE_HYPRE)
-  target_link_libraries(nalu ${HYPRE_LIBRARIES})
+  target_link_libraries(nalu PUBLIC ${HYPRE_LIBRARIES})
 endif()
 
 if(ENABLE_OPENFAST)
-  target_link_libraries(nalu ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
+  target_link_libraries(nalu PUBLIC ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
 endif()
 
 if(ENABLE_TIOGA)
-  target_link_libraries(nalu ${TIOGA_LIBRARIES})
+  target_link_libraries(nalu PUBLIC ${TIOGA_LIBRARIES})
 endif()
 
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
-set(nalu_ex_name "naluX")
-add_executable(${nalu_ex_name} nalu.C)
-target_link_libraries(${nalu_ex_name} nalu)
+target_link_libraries(${nalu_ex_name} PRIVATE nalu)
 if(MPI_COMPILE_FLAGS)
   set_target_properties(${nalu_ex_name} PROPERTIES
     COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
 endif(MPI_COMPILE_FLAGS)
-if(MPI_LINK_FLAGS)
-  set_target_properties(${nalu_ex_name} PROPERTIES
-    LINK_FLAGS "${MPI_LINK_FLAGS}")
-endif(MPI_LINK_FLAGS)
+target_link_libraries(${nalu_ex_name} PRIVATE MPI::MPI_CXX MPI::MPI_Fortran)
 
-set(utest_ex_name "unittestX")
-add_executable(${utest_ex_name} unit_tests.C ${NALU_UNIT_SOURCES})
-target_link_libraries(${utest_ex_name} nalu)
-target_include_directories(${utest_ex_name} PUBLIC "${CMAKE_SOURCE_DIR}/unit_tests")
+target_link_libraries(${utest_ex_name} PRIVATE nalu)
+target_include_directories(${utest_ex_name} PRIVATE "${CMAKE_SOURCE_DIR}/unit_tests")
 if(MPI_COMPILE_FLAGS)
   set_target_properties(${utest_ex_name} PROPERTIES
     COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
 endif(MPI_COMPILE_FLAGS)
-if(MPI_LINK_FLAGS)
-  set_target_properties(${utest_ex_name} PROPERTIES
-    LINK_FLAGS "${MPI_LINK_FLAGS}")
-endif(MPI_LINK_FLAGS)
+target_link_libraries(${utest_ex_name} PRIVATE MPI::MPI_CXX MPI::MPI_Fortran)
 
 add_subdirectory(src)
 add_subdirectory(unit_tests)
