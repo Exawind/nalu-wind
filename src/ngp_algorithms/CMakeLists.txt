@@ -22,6 +22,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRWallFuncAlg.C
 
   # Algorithm Drivers
+  ${CMAKE_CURRENT_SOURCE_DIR}/FieldUpdateAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NgpAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/TKEWallFuncAlgDriver.C

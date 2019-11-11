@@ -81,7 +81,6 @@
 #include <SolutionOptions.h>
 #include <SolverAlgorithmDriver.h>
 #include <TurbViscSmagorinskyAlgorithm.h>
-#include <TurbViscSSTAlgorithm.h>
 #include <TurbViscWaleAlgorithm.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <FixPressureAtNodeAlgorithm.h>
@@ -1611,7 +1610,7 @@ MomentumEquationSystem::register_interior_algorithm(
         break;
 
       case SST_TAMS:
-        tviscAlg_.reset(new TurbViscSSTAlgorithm(realm_, part, tvisc_, true));
+        tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_, true));
         break;
 
       default:

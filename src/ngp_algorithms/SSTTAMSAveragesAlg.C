@@ -82,6 +82,7 @@ SSTTAMSAveragesAlg::execute()
   const DblType CMdeg = CMdeg_;
 
   nalu_ngp::run_entity_algorithm(
+    "SSTTAMSAveragesAlg_computeAverages",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
       // Calculate alpha

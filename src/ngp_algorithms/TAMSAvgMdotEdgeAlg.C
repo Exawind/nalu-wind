@@ -35,8 +35,6 @@ TAMSAvgMdotEdgeAlg::execute()
   const int ndim = meta.spatial_dimension();
 
   using EntityInfoType = nalu_ngp::EntityInfo<ngp::Mesh>;
-  const DblType dt = realm_.get_time_step();
-  const auto& meta = realm_.meta_data();
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
 
@@ -56,22 +54,34 @@ TAMSAvgMdotEdgeAlg::execute()
                                   !(realm_.get_inactive_selector());
 
   nalu_ngp::run_edge_algorithm(
-    ngpMesh, sel, KOKKOS_LAMBDA(const EntityInfoType& einfo) {
+    "compute_avgMdot_edge_interior",
+    ngpMesh, sel, 
+    KOKKOS_LAMBDA(const EntityInfoType& einfo) {
+      NALU_ALIGNED DblType av[NDimMax];
       const auto& nodes = einfo.entityNodes;
       const auto nodeL = ngpMesh.fast_mesh_index(nodes[0]);
       const auto nodeR = ngpMesh.fast_mesh_index(nodes[1]);
 
-      const DblType avgTimeL = avgTime.get(nodeL, 0);
-      const DblType avgTimeR = avgTime.get(nodeR, 0);
+      for (int d=0; d < ndim; ++d)
+        av[d] = edgeAreaVec.get(einfo.meshIdx, d);
 
-      const DblType avgTimeIp = 0.5 * (avgTimeR + avgTimeL);
+      const DblType densityL = density.get(nodeL, 0);
+      const DblType densityR = density.get(nodeR, 0);
 
-      const DblType weightAvg = std::max(1.0 - dt / avgTimeIp, 0.0);
-      const DblType weightInst = std::min(dt / avgTimeIp, 1.0);
+      const DblType rhoIp = 0.5 * (densityL + densityR);
 
-      avgMdot.get(einfo.meshIdx, 0) =
-        weightAvg * avgMdot.get(einfo.meshIdx, 0) +
-        weightInst * mdot.get(einfo.meshIdx, 0);
+      DblType tmdot = 0.0;
+      for (int d=0; d < ndim; ++d) {
+        const DblType rhoUjIp = 0.5 * (densityR * avgVelocity.get(nodeR, d) +
+                                       densityL * avgVelocity.get(nodeL, d));
+        const DblType ujIp =
+          0.5 * (avgVelocity.get(nodeR, d) + avgVelocity.get(nodeL, d));
+        tmdot += (interpTogether * rhoUjIp +
+                  om_interpTogether * rhoIp * ujIp) * av[d];
+      }
+
+      // Update edge field
+      avgMdot.get(einfo.meshIdx, 0) = tmdot;
     });
 
   // Flag that the field has been modified on device for future sync

@@ -10,29 +10,6 @@
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
-
-// stk_mesh/base/fem
-#include <stk_mesh/base/BulkData.hpp>
-#include <stk_mesh/base/Field.hpp>
-//#include <stk_mesh/base/FieldParallel.hpp>
-//#include <stk_mesh/base/GetBuckets.hpp>
-//#include <stk_mesh/base/GetEntities.hpp>
-//#include <stk_mesh/base/CoordinateSystems.hpp>
-#include <stk_mesh/base/MetaData.hpp>
-
-// stk_io
-#include <stk_io/IossBridge.hpp>
-
-// stk_topo
-#include <stk_topology/topology.hpp>
-
-// stk_util
-#include <stk_util/parallel/ParallelReduce.hpp>
-
-// ngp
-#include "ngp_algorithms/NgpAlgDriver.h"
-#include "ngp_algorithms/FieldUpdateAlgDriver.h"
-#include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_algorithms/MetricTensorElemAlg.h"
@@ -248,6 +225,7 @@ TAMSAlgDriver::initial_production()
     auto avgProd =
       fieldMgr.get_field<double>(avgProduction_->mesh_meta_data_ordinal());
     nalu_ngp::run_entity_algorithm(
+      "TAMSAlgDriver_avgProd",
       ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
         std::vector<DblType> tij(nDim * nDim, 0.0);

@@ -76,7 +76,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_turb_visc_ssttams_alg)
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
   sierra::nalu::TurbViscSSTAlg TurbViscSSTAlg(
-    helperObjs.realm, partVec_[0], true);
+    helperObjs.realm, partVec_[0], tvisc_, true);
 
   TurbViscSSTAlg.execute();
 

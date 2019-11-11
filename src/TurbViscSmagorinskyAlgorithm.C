@@ -36,8 +36,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 TurbViscSmagorinskyAlgorithm::TurbViscSmagorinskyAlgorithm(
   Realm &realm,
-  stk::mesh::Part *part,
-  const bool useAverages)
+  stk::mesh::Part *part)
   : Algorithm(realm, part),
     dudx_(NULL),
     density_(NULL),
