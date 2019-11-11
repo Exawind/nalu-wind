@@ -38,6 +38,8 @@ find_package(MPI REQUIRED)
 
 if(ENABLE_OPENMP)
   find_package(OpenMP)
+  target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>)
+  target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:Fortran>:${OpenMP_Fortran_FLAGS}>)
 endif()
 
 ########################## TRILINOS ####################################
@@ -68,6 +70,8 @@ target_include_directories(nalu SYSTEM PUBLIC ${YAML_CPP_INCLUDE_DIR})
 ############################ CUDA ######################################
 if(ENABLE_CUDA)
   target_compile_definitions(nalu PUBLIC USE_STK_SIMD_NONE)
+  target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${Trilinos_CXX_COMPILER_FLAGS}>)
+  target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:--expt-relaxed-constexpr>)
 endif()
 
 ############################ FFTW ######################################
@@ -78,6 +82,7 @@ if(ENABLE_FFTW)
     message(STATUS "Found FFTW = ${FFTW_DIR}")
   endif()
   target_include_directories(nalu SYSTEM PUBLIC ${FFTW_INCLUDE_DIRS})
+  target_link_libraries(nalu PUBLIC ${FFTW_LIBRARIES})
   target_compile_definitions(nalu PUBLIC NALU_USES_FFTW)
 endif(ENABLE_FFTW)
 
@@ -89,95 +94,9 @@ if(ENABLE_HYPRE)
     message(STATUS "Found HYPRE = ${HYPRE_DIR}")
   endif()
   target_include_directories(nalu SYSTEM PUBLIC ${HYPRE_INCLUDE_DIRS})
+  target_link_libraries(nalu PUBLIC ${HYPRE_LIBRARIES})
   target_compile_definitions(nalu PUBLIC NALU_USES_HYPRE)
-endif(ENABLE_HYPRE)
 
-########################## OPENFAST ####################################
-if(ENABLE_OPENFAST)
-  set(CMAKE_PREFIX_PATH ${OpenFAST_DIR} ${CMAKE_PREFIX_PATH})
-  find_package(OpenFAST REQUIRED)
-  if(OpenFAST_FOUND)
-    message(STATUS "Found OpenFAST = ${OpenFAST_DIR}")
-  endif()
-  target_include_directories(nalu SYSTEM PUBLIC ${OpenFAST_INCLUDE_DIRS})
-  target_compile_definitions(nalu PUBLIC NALU_USES_OPENFAST)
-endif(ENABLE_OPENFAST)
-
-############################ TIOGA #####################################
-if(ENABLE_TIOGA)
-  set(CMAKE_PREFIX_PATH ${TIOGA_DIR} ${CMAKE_PREFIX_PATH})
-  find_package(TIOGA REQUIRED)
-  if(TIOGA_FOUND)
-    message(STATUS "Found TIOGA = ${TIOGA_DIR}")
-  endif()
-  target_include_directories(nalu SYSTEM PUBLIC ${TIOGA_INCLUDE_DIRS})
-  target_compile_definitions(nalu PUBLIC NALU_USES_TIOGA)
-  if(TIOGA_HAS_NODEGID)
-    target_compile_definitions(nalu PUBLIC TIOGA_HAS_NODEGID)
-  endif()
-endif()
-
-########################### NALU #####################################
-# Add any extra flags based on compiler and/or OS
-message(STATUS "CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
-message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-  set(EXTRA_CXX_FLAGS "")
-  set(EXTRA_Fortran_FLAGS "")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  set(EXTRA_CXX_FLAGS "")
-  set(EXTRA_Fortran_FLAGS "")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(EXTRA_CXX_FLAGS "")
-  set(EXTRA_Fortran_FLAGS "")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-  set(EXTRA_CXX_FLAGS "-restrict")
-  set(EXTRA_Fortran_FLAGS "")
-endif()
-
-# Logic for showing and handling warnings
-if(ENABLE_ALL_WARNINGS)
-  # GCC, Clang, and Intel seem to accept these
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
-    if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-      # ifort doesn't like -Wall
-      set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wall")
-    else()
-      # Intel always reports some diagnostics we don't necessarily care about
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -diag-disable:11074,11076")
-    endif()
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7.0)
-      # Avoid notes about -faligned-new with GCC > 7
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new")
-    endif()
-endif()
-# Make warnings errors
-if(ENABLE_WERROR)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Werror")
-endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")
-if (ENABLE_CUDA)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Trilinos_CXX_COMPILER_FLAGS} --expt-relaxed-constexpr")
-endif()
-set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${EXTRA_Fortran_FLAGS}")
-
-if (OPENMP_FOUND)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
-endif()
-
-# Flags we have added
-message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
-message(STATUS "CMAKE_Fortran_FLAGS = ${CMAKE_Fortran_FLAGS}")
-
-# Build type flags in which CMake adds for us
-string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
-message(STATUS "CMAKE_CXX_FLAGS_${BUILD_TYPE} = ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}")
-message(STATUS "CMAKE_Fortran_FLAGS_${BUILD_TYPE} = ${CMAKE_Fortran_FLAGS_${BUILD_TYPE}}")
-
-if(ENABLE_HYPRE)
   include(CheckCXXSymbolExists)
   set(CMAKE_REQUIRED_INCLUDES "${HYPRE_INCLUDE_DIRS}")
   set(CMAKE_REQUIRED_LIBRARIES "${HYPRE_LIBRARIES}")
@@ -194,7 +113,64 @@ if(ENABLE_HYPRE)
   else()
     message(STATUS "Disabling HYPRE CO-GMRES interface")
   endif()
+endif(ENABLE_HYPRE)
+
+########################## OPENFAST ####################################
+if(ENABLE_OPENFAST)
+  set(CMAKE_PREFIX_PATH ${OpenFAST_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(OpenFAST REQUIRED)
+  if(OpenFAST_FOUND)
+    message(STATUS "Found OpenFAST = ${OpenFAST_DIR}")
+  endif()
+  target_include_directories(nalu SYSTEM PUBLIC ${OpenFAST_INCLUDE_DIRS})
+  target_link_libraries(nalu PUBLIC ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
+  target_compile_definitions(nalu PUBLIC NALU_USES_OPENFAST)
+endif(ENABLE_OPENFAST)
+
+############################ TIOGA #####################################
+if(ENABLE_TIOGA)
+  set(CMAKE_PREFIX_PATH ${TIOGA_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(TIOGA REQUIRED)
+  if(TIOGA_FOUND)
+    message(STATUS "Found TIOGA = ${TIOGA_DIR}")
+  endif()
+  target_include_directories(nalu SYSTEM PUBLIC ${TIOGA_INCLUDE_DIRS})
+  target_link_libraries(nalu PUBLIC ${TIOGA_LIBRARIES})
+  target_compile_definitions(nalu PUBLIC NALU_USES_TIOGA)
+  if(TIOGA_HAS_NODEGID)
+    target_compile_definitions(nalu PUBLIC TIOGA_HAS_NODEGID)
+  endif()
 endif()
+
+########################### NALU #####################################
+# Add any extra flags based on compiler and/or OS
+message(STATUS "CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
+message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
+
+# Add -restrict to Intel compiler
+target_compile_options(nalu PUBLIC $<$<CXX_COMPILER_ID:Intel>:-restrict>)
+
+# Logic for handling warnings
+if(ENABLE_ALL_WARNINGS)
+  # GCC, Clang, and Intel seem to accept these
+  list(APPEND NALU_CXX_FLAGS "-Wall" "-Wextra" "-pedantic")
+  if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    # ifort doesn't like -Wall
+    list(APPEND NALU_Fortran_FLAGS "-Wall")
+  else()
+    # Intel always reports some diagnostics we don't necessarily care about
+    list(APPEND NALU_CXX_FLAGS "-diag-disable:11074,11076")
+  endif()
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7.0)
+    # Avoid notes about -faligned-new with GCC > 7
+    list(APPEND NALU_CXX_FLAGS "-faligned-new")
+  endif()
+endif()
+
+# Add our flags according to language
+target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${NALU_CXX_FLAGS}>)
+target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:Fortran>:${NALU_Fortran_FLAGS}>)
+target_compile_options(nalu PUBLIC $<$<BOOL:${ENABLE_WERROR}>:-Werror>)
 
 ########################### TAG VERSIONS #####################################
 include(GetGitRevisionDescription)
@@ -230,31 +206,13 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/NaluVersionInfo.h.in"
 # Set target options for libnalu
 target_include_directories(nalu PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_include_directories(nalu PUBLIC ${CMAKE_BINARY_DIR}/include)
-target_include_directories(nalu SYSTEM PUBLIC MPI::MPI_CXX MPI::MPI_Fortran)
+target_include_directories(nalu SYSTEM PUBLIC ${MPI_CXX_INCLUDE_PATH} ${MPI_Fortran_INCLUDE_PATH})
 target_link_libraries(nalu PUBLIC ${Trilinos_LIBRARIES})
 target_link_libraries(nalu PUBLIC ${YAML_CPP_LIBRARIES})
 target_link_libraries(nalu PUBLIC MPI::MPI_CXX MPI::MPI_Fortran)
 if(MPI_COMPILE_FLAGS)
   set_target_properties(nalu PUBLIC PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
 endif(MPI_COMPILE_FLAGS)
-
-if(ENABLE_FFTW)
-  target_link_libraries(nalu PUBLIC ${FFTW_LIBRARIES})
-endif()
-
-if(ENABLE_HYPRE)
-  target_link_libraries(nalu PUBLIC ${HYPRE_LIBRARIES})
-endif()
-
-if(ENABLE_OPENFAST)
-  target_link_libraries(nalu PUBLIC ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
-endif()
-
-if(ENABLE_TIOGA)
-  target_link_libraries(nalu PUBLIC ${TIOGA_LIBRARIES})
-endif()
-
-message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
 # Most linking, etc, is set to PUBLIC for libnalu, so we merely link to libnalu for the exes
 target_link_libraries(${nalu_ex_name} PRIVATE nalu)
@@ -266,10 +224,7 @@ add_subdirectory(unit_tests)
 
 set(nalu_ex_catalyst_name "naluXCatalyst")
 if(ENABLE_PARAVIEW_CATALYST)
-   set(PARAVIEW_CATALYST_INSTALL_PATH
-       ""
-       CACHE
-       PATH
+   set(PARAVIEW_CATALYST_INSTALL_PATH "" CACHE PATH
        "Path to external installation of Trilinos Catalyst IOSS plugin.")
    configure_file(cmake/naluXCatalyst.in ${nalu_ex_catalyst_name} @ONLY)
 endif()
