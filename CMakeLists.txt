@@ -35,9 +35,6 @@ add_executable(${nalu_ex_name} nalu.C)
 add_executable(${utest_ex_name} unit_tests.C)
 
 find_package(MPI REQUIRED)
-target_include_directories(nalu SYSTEM PUBLIC ${MPI_C_INCLUDE_PATH})
-target_include_directories(nalu SYSTEM PUBLIC ${MPI_CXX_INCLUDE_PATH})
-target_include_directories(nalu SYSTEM PUBLIC ${MPI_Fortran_INCLUDE_PATH})
 
 if(ENABLE_OPENMP)
   find_package(OpenMP)
@@ -45,7 +42,6 @@ endif()
 
 ########################## TRILINOS ####################################
 set(CMAKE_PREFIX_PATH ${Trilinos_DIR} ${CMAKE_PREFIX_PATH})
-set(CMAKE_PREFIX_PATH ${Trilinos_PATH} ${CMAKE_PREFIX_PATH})
 find_package(Trilinos REQUIRED)
 if(Trilinos_FOUND)
   message(STATUS "Found Trilinos = ${Trilinos_DIR}")
@@ -63,27 +59,15 @@ endif(Trilinos_BUILD_SHARED_LIBS)
 
 ############################ YAML ######################################
 set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
-find_package(YAML-CPP QUIET)
-if(YAML-CPP_FOUND)
-  # YAML master branch is used
-  target_include_directories(nalu SYSTEM PUBLIC ${YAML_CPP_INCLUDE_DIR})
-else()
-  # YAML 0.5.3 is used
-  find_library(YAML_CPP_LIBRARIES NAMES yaml-cpp PATHS ${YAML_DIR}/lib)
-  find_path(YAML_CPP_INCLUDE_DIR yaml.h PATHS ${YAML_DIR}/include/yaml-cpp)
-  if((DEFINED YAML_CPP_LIBRARIES) AND (DEFINED YAML_CPP_INCLUDE_DIR))
-    target_include_directories(nalu SYSTEM PUBLIC ${YAML_CPP_INCLUDE_DIR}/..)
-    set(YAML-CPP_FOUND TRUE)
-  endif()
-endif()
+find_package(YAML-CPP 0.6.2 QUIET REQUIRED)
 if(YAML-CPP_FOUND)
   message(STATUS "Found YAML-CPP = ${YAML_DIR}")
-else()
-  message(FATAL_ERROR "YAML-CPP NOT FOUND")
 endif()
+target_include_directories(nalu SYSTEM PUBLIC ${YAML_CPP_INCLUDE_DIR})
 
+############################ CUDA ######################################
 if(ENABLE_CUDA)
-    target_compile_definitions(nalu PUBLIC USE_STK_SIMD_NONE)
+  target_compile_definitions(nalu PUBLIC USE_STK_SIMD_NONE)
 endif()
 
 ############################ FFTW ######################################
@@ -243,11 +227,16 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/NaluVersionInfo.h.in"
   "${CMAKE_BINARY_DIR}/include/NaluVersionInfo.h" @ONLY)
 #### END TAG VERSIONS
 
+# Set target options for libnalu
 target_include_directories(nalu PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_include_directories(nalu PUBLIC ${CMAKE_BINARY_DIR}/include)
+target_include_directories(nalu SYSTEM PUBLIC MPI::MPI_CXX MPI::MPI_Fortran)
 target_link_libraries(nalu PUBLIC ${Trilinos_LIBRARIES})
 target_link_libraries(nalu PUBLIC ${YAML_CPP_LIBRARIES})
-target_link_libraries(nalu PUBLIC ${MPI_CXX_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_C_LIBRARIES})
+target_link_libraries(nalu PUBLIC MPI::MPI_CXX MPI::MPI_Fortran)
+if(MPI_COMPILE_FLAGS)
+  set_target_properties(nalu PUBLIC PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+endif(MPI_COMPILE_FLAGS)
 
 if(ENABLE_FFTW)
   target_link_libraries(nalu PUBLIC ${FFTW_LIBRARIES})
@@ -267,20 +256,10 @@ endif()
 
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
+# Most linking, etc, is set to PUBLIC for libnalu, so we merely link to libnalu for the exes
 target_link_libraries(${nalu_ex_name} PRIVATE nalu)
-if(MPI_COMPILE_FLAGS)
-  set_target_properties(${nalu_ex_name} PROPERTIES
-    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
-endif(MPI_COMPILE_FLAGS)
-target_link_libraries(${nalu_ex_name} PRIVATE MPI::MPI_CXX MPI::MPI_Fortran)
-
 target_link_libraries(${utest_ex_name} PRIVATE nalu)
 target_include_directories(${utest_ex_name} PRIVATE "${CMAKE_SOURCE_DIR}/unit_tests")
-if(MPI_COMPILE_FLAGS)
-  set_target_properties(${utest_ex_name} PROPERTIES
-    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
-endif(MPI_COMPILE_FLAGS)
-target_link_libraries(${utest_ex_name} PRIVATE MPI::MPI_CXX MPI::MPI_Fortran)
 
 add_subdirectory(src)
 add_subdirectory(unit_tests)
