@@ -15,7 +15,7 @@ namespace {
 namespace hex8_golds {
 
 static constexpr double rhs[4] = {
-  0, 0, -0.20225424859374, -0.20225424859374,
+  0, 0.11888206453689, 0.11888206453689, 0
 };
 
 }
@@ -37,7 +37,7 @@ TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
   solnOpts_.mdotInterpRhoUTogether_ = true;
   solnOpts_.activateOpenMdotCorrection_ = true;
 
-  auto* part = meta_.get_part("surface_1");
+  auto* part = meta_.get_part("surface_2");
   unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::QUAD_4, 1, part);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
