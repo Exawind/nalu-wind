@@ -12,6 +12,8 @@
 #include <LinearSystem.h>
 #include <KokkosInterface.h>
 
+#include "ngp_utils/NgpFieldUtils.h"
+
 #include <stk_mesh/base/Entity.hpp>
 
 #include <vector>
@@ -81,18 +83,83 @@ void fix_overset_rows(
 namespace sierra{
 namespace nalu{
 
-class Realm;
-class EquationSystem;
+NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
+  : ngpMesh_(eqSystem->realm_.ngp_mesh()),
+    deviceSumInto_(eqSystem->linsys_->get_coeff_applier()),
+    nDim_(eqSystem->linsys_->numDof()),
+    hasOverset_(eqSystem->realm_.hasOverset_),
+    extractDiagonal_(eqSystem->extractDiagonal_)
+{
+  if (extractDiagonal_) {
+    diagField_ = nalu_ngp::get_ngp_field(
+      eqSystem->realm_.mesh_info(), eqSystem->get_diagonal_field()->name());
+  }
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// SolverAlgorithm - base class for algorithm with expectations of solver
-//                   contributions
-//==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
+  if (hasOverset_) {
+    iblankField_ = nalu_ngp::get_ngp_field<int>(eqSystem->realm_.mesh_info(), "iblank");
+  }
+}
+
+void NGPApplyCoeff::extract_diagonal(
+  const unsigned int nEntities,
+  const ngp::Mesh::ConnectedNodes& entities,
+  SharedMemView<double**, DeviceShmem>& lhs) const
+{
+  constexpr bool forceAtomic = std::is_same<
+    sierra::nalu::DeviceSpace, Kokkos::DefaultExecutionSpace>::value;
+
+  for (unsigned i=0u; i < nEntities; ++i) {
+    auto ix = i * nDim_;
+    if (forceAtomic)
+      Kokkos::atomic_add(&diagField_.get(ngpMesh_, entities[i], 0), lhs(ix, ix));
+    else
+      diagField_.get(ngpMesh_, entities[i], 0) += lhs(ix, ix);
+  }
+}
+
+void
+NGPApplyCoeff::reset_overset_rows(
+  const unsigned int nEntities,
+  const ngp::Mesh::ConnectedNodes& entities,
+  SharedMemView<double*, DeviceShmem>& rhs,
+  SharedMemView<double**, DeviceShmem>& lhs) const
+{
+  const unsigned numRows = nEntities * nDim_;
+
+  for (unsigned in=0u; in < nEntities; ++in) {
+    const int ibl = iblankField_.get(ngpMesh_, entities[in], 0);
+    const double mask = stk::math::max(0.0, static_cast<double>(ibl));
+    const unsigned ix = in * nDim_;
+
+    for (unsigned d=0; d < nDim_; ++d) {
+      const unsigned ir = ix + d;
+
+      rhs(ir) *= mask;
+      for (unsigned ic=0; ic < numRows; ++ic)
+        lhs(ir, ic) *= mask;
+    }
+  }
+}
+
+void NGPApplyCoeff::operator()(
+  unsigned numMeshobjs,
+  const ngp::Mesh::ConnectedNodes& symMeshobjs,
+  const SharedMemView<int*,DeviceShmem> & scratchIds,
+  const SharedMemView<int*,DeviceShmem> & sortPermutation,
+  SharedMemView<double*,DeviceShmem> & rhs,
+  SharedMemView<double**,DeviceShmem> & lhs,
+  const char *trace_tag) const
+{
+  if (hasOverset_)
+    reset_overset_rows(numMeshobjs, symMeshobjs, rhs, lhs);
+
+  (*deviceSumInto_)(
+    numMeshobjs, symMeshobjs, scratchIds, sortPermutation, rhs, lhs, trace_tag);
+
+  if (extractDiagonal_)
+    extract_diagonal(numMeshobjs, symMeshobjs, lhs);
+}
+
 SolverAlgorithm::SolverAlgorithm(
   Realm &realm,
   stk::mesh::Part *part,
@@ -163,33 +230,5 @@ SolverAlgorithm::apply_coeff(
     eqSystem_->save_diagonal_term(numMeshobjs, symMeshobjs, lhs);
 }
 
-void SolverAlgorithm::reset_overset_rows(
-  const stk::mesh::MetaData& meta,
-  const size_t nDim,
-  const size_t nEntities,
-  const ngp::Mesh::ConnectedEntities& entities,
-  sierra::nalu::SharedMemView<double*, sierra::nalu::DeviceShmem>& rhs,
-  sierra::nalu::SharedMemView<double**, sierra::nalu::DeviceShmem>& lhs)
-{
-  using ScalarIntFieldType = sierra::nalu::ScalarIntFieldType;
-  const size_t numRows = nEntities * nDim;
-
-  ScalarIntFieldType* iblank = meta.get_field<ScalarIntFieldType>(
-    stk::topology::NODE_RANK, "iblank");
-
-  for (size_t in=0; in < nEntities; in++) {
-    const int* ibl = stk::mesh::field_data(*iblank, entities[in]);
-    double mask = std::max(0.0, static_cast<double>(ibl[0]));
-    size_t ix = in * nDim;
-
-    for (size_t d=0; d < nDim; d++) {
-      size_t ir = ix + d;
-
-      rhs(ir) *= mask;
-      for (size_t c=0; c < numRows; c++)
-        lhs(ir, c) *= mask;
-    }
-  }
-}
 } // namespace nalu
 } // namespace Sierra

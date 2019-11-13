@@ -64,7 +64,7 @@ public:
     const auto entityRank = entityRank_;
     const auto rhsSize = rhsSize_;
 
-    CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
+    auto coeffApplier = coeff_applier();
 
     const auto nodesPerEntity = nodesPerEntity_;
 
@@ -91,15 +91,7 @@ public:
 
             lambdaFunc(smdata, edgeIndex, nodeL, nodeR);
 
-#ifndef KOKKOS_ENABLE_CUDA
-            // TODO: Replace this with NGP version
-            if (realm_.hasOverset_)
-              reset_overset_rows(
-                realm_.meta_data(), eqSystem_->linsys_->numDof(), nodesPerEntity,
-                smdata.ngpElemNodes, smdata.rhs, smdata.lhs);
-#endif
-
-            (*deviceCoeffApplier)(
+            coeffApplier(
               nodesPerEntity, smdata.ngpElemNodes, smdata.scratchIds,
               smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
           });

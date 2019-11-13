@@ -19,8 +19,53 @@
 namespace sierra{
 namespace nalu{
 
+class CoeffApplier;
 class EquationSystem;
 class Realm;
+
+struct NGPApplyCoeff
+{
+  NGPApplyCoeff(EquationSystem*);
+
+  KOKKOS_INLINE_FUNCTION
+  NGPApplyCoeff() = default;
+
+  KOKKOS_INLINE_FUNCTION
+  ~NGPApplyCoeff() = default;
+
+  KOKKOS_FUNCTION
+  void operator()(
+    unsigned numMeshobjs,
+    const ngp::Mesh::ConnectedNodes& symMeshobjs,
+    const SharedMemView<int*,DeviceShmem> & scratchIds,
+    const SharedMemView<int*,DeviceShmem> & sortPermutation,
+    SharedMemView<double*,DeviceShmem> & rhs,
+    SharedMemView<double**,DeviceShmem> & lhs,
+    const char *trace_tag) const;
+
+  KOKKOS_FUNCTION
+  void extract_diagonal(
+    const unsigned nEntities,
+    const ngp::Mesh::ConnectedNodes& entities,
+    SharedMemView<double**, DeviceShmem>& lhs) const;
+
+  KOKKOS_FUNCTION
+  void reset_overset_rows(
+    const unsigned nEntities,
+    const ngp::Mesh::ConnectedNodes& entities,
+    SharedMemView<double*, DeviceShmem>&  rhs,
+    SharedMemView<double**, DeviceShmem>& lhs) const;
+
+  const ngp::Mesh ngpMesh_;
+  mutable ngp::Field<double> diagField_;
+  ngp::Field<int> iblankField_;
+
+  CoeffApplier* deviceSumInto_;
+
+  const unsigned nDim_{3};
+  const bool hasOverset_{false};
+  const bool extractDiagonal_{false};
+};
 
 class SolverAlgorithm : public Algorithm
 {
@@ -36,6 +81,9 @@ public:
   virtual void initialize_connectivity() = 0;
 
 protected:
+
+  NGPApplyCoeff coeff_applier()
+  { return NGPApplyCoeff(eqSystem_); }
 
   // Need to find out whether this ever gets called inside a modification cycle.
   void apply_coeff(
@@ -63,14 +111,6 @@ protected:
     const SharedMemView<const double*,DeviceShmem> & rhs,
     const SharedMemView<const double**,DeviceShmem> & lhs,
     const char *trace_tag);
-
-  void reset_overset_rows(
-    const stk::mesh::MetaData& meta,
-    const size_t nDim,
-    const size_t nEntities,
-    const ngp::Mesh::ConnectedEntities& entities,
-    sierra::nalu::SharedMemView<double*, sierra::nalu::DeviceShmem>& rhs,
-    sierra::nalu::SharedMemView<double**, sierra::nalu::DeviceShmem>& lhs);
 
   EquationSystem *eqSystem_;
 };

@@ -88,8 +88,7 @@ AssembleElemSolverAlgorithm::execute()
     activeKernels_[i]->setup(*realm_.timeIntegrator_);
 
   auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);
-
-  CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
+  auto coeffApplier = coeff_applier();
 
   double diagRelaxFactor = diagRelaxFactor_;
   int rhsSize = rhsSize_;
@@ -105,23 +104,19 @@ AssembleElemSolverAlgorithm::execute()
         kernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
       }
 
-#ifndef KOKKOS_ENABLE_CUDA
-      for(int simdElemIndex=0; simdElemIndex<smdata.numSimdElems; ++simdElemIndex) {
+#ifdef KOKKOS_ENABLE_CUDA
+      const int simdElemIndex = 0;
+#else
+      for(int simdElemIndex=0; simdElemIndex<smdata.numSimdElems; ++simdElemIndex)
+#endif
+      {
         extract_vector_lane(smdata.simdrhs, simdElemIndex, smdata.rhs);
         extract_vector_lane(smdata.simdlhs, simdElemIndex, smdata.lhs);
         for (int ir=0; ir < rhsSize; ++ir)
           smdata.lhs(ir, ir) /= diagRelaxFactor;
-        (*deviceCoeffApplier)(nodesPerEntity, smdata.ngpElemNodes[simdElemIndex],
+        coeffApplier(nodesPerEntity, smdata.ngpElemNodes[simdElemIndex],
                     smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
       }
-#else
-      extract_vector_lane(smdata.simdrhs, 0, smdata.rhs);
-      extract_vector_lane(smdata.simdlhs, 0, smdata.lhs);
-      for (int ir=0; ir < rhsSize; ++ir)
-        smdata.lhs(ir, ir) /= diagRelaxFactor;
-      (*deviceCoeffApplier)(nodesPerEntity, smdata.ngpElemNodes[0],
-                  smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
-#endif
     });
 }
 

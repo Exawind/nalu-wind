@@ -89,10 +89,10 @@ AssembleFaceElemSolverAlgorithm::execute()
 
   auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);
   const size_t numKernels = activeKernels_.size();
+  auto coeffApplier = coeff_applier();
 
   const unsigned nodesPerEntity = nodesPerElem_;
   const unsigned numDof = numDof_;
-  CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
   double diagRelaxFactor = diagRelaxFactor_;
 
   run_face_elem_algorithm(realm_.bulk_data(),
@@ -103,35 +103,25 @@ AssembleFaceElemSolverAlgorithm::execute()
 
         for (size_t i=0; i<numKernels; ++i) {
           Kernel* kernel = ngpKernels(i);
-          kernel->execute( smdata.simdlhs, smdata.simdrhs, smdata.simdFaceViews, smdata.simdElemViews, smdata.elemFaceOrdinal );
+          kernel->execute(
+            smdata.simdlhs, smdata.simdrhs, smdata.simdFaceViews,
+            smdata.simdElemViews, smdata.elemFaceOrdinal);
         }
 
 #ifdef KOKKOS_ENABLE_CUDA
-        extract_vector_lane(smdata.simdrhs, 0, smdata.rhs);
-        extract_vector_lane(smdata.simdlhs, 0, smdata.lhs);
-        for (unsigned ir=0; ir < nodesPerEntity*numDof; ++ir)
-          smdata.lhs(ir, ir) /= diagRelaxFactor;
-        (*deviceCoeffApplier)(nodesPerEntity, smdata.ngpConnectedNodes[0],
-                    smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
+        const int simdIndex = 0;
 #else
-        for(int simdIndex=0; simdIndex<smdata.numSimdFaces; ++simdIndex) {
+        for(int simdIndex=0; simdIndex<smdata.numSimdFaces; ++simdIndex)
+#endif
+        {
           extract_vector_lane(smdata.simdrhs, simdIndex, smdata.rhs);
           extract_vector_lane(smdata.simdlhs, simdIndex, smdata.lhs);
-          for (unsigned ir=0; ir < nodesPerElem_*numDof; ++ir)
+          for (unsigned ir=0; ir < nodesPerEntity*numDof; ++ir)
             smdata.lhs(ir, ir) /= diagRelaxFactor;
 
-#ifndef KOKKOS_ENABLE_CUDA
-          // TODO: Replace this with NGP version
-          if (realm_.hasOverset_)
-            reset_overset_rows(
-              realm_.meta_data(), eqSystem_->linsys_->numDof(), nodesPerEntity,
-              smdata.ngpConnectedNodes[simdIndex], smdata.rhs, smdata.lhs);
-#endif
-
-          (*deviceCoeffApplier)(nodesPerEntity, smdata.ngpConnectedNodes[simdIndex],
+          coeffApplier(nodesPerEntity, smdata.ngpConnectedNodes[simdIndex],
                       smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         }
-#endif
     });
 }
 
