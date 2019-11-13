@@ -128,7 +128,7 @@ NGPApplyCoeff::reset_overset_rows(
 
   for (unsigned in=0u; in < nEntities; ++in) {
     const int ibl = iblankField_.get(ngpMesh_, entities[in], 0);
-    const double mask  = std::max(0.0, static_cast<double>(ibl));
+    const double mask = max(0.0, static_cast<double>(ibl));
     const unsigned ix = in * nDim_;
 
     for (unsigned d=0; d < nDim_; ++d) {
