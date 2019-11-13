@@ -230,33 +230,5 @@ SolverAlgorithm::apply_coeff(
     eqSystem_->save_diagonal_term(numMeshobjs, symMeshobjs, lhs);
 }
 
-void SolverAlgorithm::reset_overset_rows(
-  const stk::mesh::MetaData& meta,
-  const size_t nDim,
-  const size_t nEntities,
-  const ngp::Mesh::ConnectedEntities& entities,
-  sierra::nalu::SharedMemView<double*, sierra::nalu::DeviceShmem>& rhs,
-  sierra::nalu::SharedMemView<double**, sierra::nalu::DeviceShmem>& lhs)
-{
-  using ScalarIntFieldType = sierra::nalu::ScalarIntFieldType;
-  const size_t numRows = nEntities * nDim;
-
-  ScalarIntFieldType* iblank = meta.get_field<ScalarIntFieldType>(
-    stk::topology::NODE_RANK, "iblank");
-
-  for (size_t in=0; in < nEntities; in++) {
-    const int* ibl = stk::mesh::field_data(*iblank, entities[in]);
-    double mask = std::max(0.0, static_cast<double>(ibl[0]));
-    size_t ix = in * nDim;
-
-    for (size_t d=0; d < nDim; d++) {
-      size_t ir = ix + d;
-
-      rhs(ir) *= mask;
-      for (size_t c=0; c < numRows; c++)
-        lhs(ir, c) *= mask;
-    }
-  }
-}
 } // namespace nalu
 } // namespace Sierra
