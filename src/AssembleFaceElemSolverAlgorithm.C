@@ -116,7 +116,7 @@ AssembleFaceElemSolverAlgorithm::execute()
         {
           extract_vector_lane(smdata.simdrhs, simdIndex, smdata.rhs);
           extract_vector_lane(smdata.simdlhs, simdIndex, smdata.lhs);
-          for (unsigned ir=0; ir < nodesPerElem_*numDof; ++ir)
+          for (unsigned ir=0; ir < nodesPerEntity*numDof; ++ir)
             smdata.lhs(ir, ir) /= diagRelaxFactor;
 
           coeffApplier(nodesPerEntity, smdata.ngpConnectedNodes[simdIndex],
