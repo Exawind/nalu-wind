@@ -85,13 +85,12 @@ AssembleNGPNodeSolverAlgorithm::execute()
     kern->setup(realm_);
 
   auto ngpKernels = nalu_ngp::create_ngp_view<NodeKernel>(nodeKernels_);
+  auto coeffApplier = coeff_applier();
 
   const auto& meta = realm_.meta_data();
   const auto& ngpMesh = realm_.ngp_mesh();
   const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
   const int rhsSize = rhsSize_;
-
-  CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
 
   const int nodesPerEntity = 1;
   const int bytes_per_team = 0;
@@ -128,15 +127,7 @@ AssembleNGPNodeSolverAlgorithm::execute()
             kernel->execute(smdata.lhs, smdata.rhs, nodeIndex);
           }
 
-#ifndef KOKKOS_ENABLE_CUDA
-          // TODO: Replace this with NGP version
-          if (realm_.hasOverset_)
-            reset_overset_rows(
-              realm_.meta_data(), eqSystem_->linsys_->numDof(), nodesPerEntity,
-              smdata.ngpNodes, smdata.rhs, smdata.lhs);
-#endif
-
-          (*deviceCoeffApplier)(
+          coeffApplier(
             nodesPerEntity, smdata.ngpNodes, smdata.scratchIds,
             smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         });
