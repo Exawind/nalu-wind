@@ -1,4 +1,4 @@
-target_sources(${utest_ex_name} PRIVATE
+add_sources(GlobalUnitSourceList
    UnitTestAlgorithm.C
    UnitTestLESAlgorithms.C
    UnitTestSSTAlgorithms.C

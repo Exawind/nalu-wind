@@ -1,4 +1,4 @@
-target_sources(${utest_ex_name} PRIVATE
+add_sources(GlobalUnitSourceList
    UnitTest1ElemCoordCheck.C
    UnitTestABLWallFunction.C
    UnitTestBasicKokkos.C
@@ -47,7 +47,7 @@ target_sources(${utest_ex_name} PRIVATE
 )
 
 if(ENABLE_OPENFAST)
-   target_sources(${utest_ex_name} PRIVATE
+   add_sources(GlobalUnitSourceList
       UnitTestActuatorDiskFAST.C
    )
 endif()
