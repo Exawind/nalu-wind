@@ -1180,20 +1180,10 @@ void reset_rows(
 sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::get_coeff_applier()
 {
   if (!hostCoeffApplier) {
-    const bool extractDiagonal = equationSystem()->extractDiagonal_;
-    const unsigned diagFieldOrdinal = (extractDiagonal && equationSystem()->get_diagonal_field()!=nullptr) ?
-                      equationSystem()->get_diagonal_field()->mesh_meta_data_ordinal() : 0;
-  
-    NGPDoubleFieldType diagField;
-    if (extractDiagonal) {
-      diagField = realm_.ngp_field_manager().get_field<double>(diagFieldOrdinal);
-    }
-  
-    hostCoeffApplier.reset(new TpetraLinSysCoeffApplier(ownedLocalMatrix_, sharedNotOwnedLocalMatrix_,
-                                        ownedLocalRhs_, sharedNotOwnedLocalRhs_,
-                                        entityToLID_, entityToColLID_,
-                                        maxOwnedRowId_, maxSharedNotOwnedRowId_, numDof_,
-                                        extractDiagonal, diagField, realm_.ngp_mesh()));
+    hostCoeffApplier.reset(new TpetraLinSysCoeffApplier(
+      ownedLocalMatrix_, sharedNotOwnedLocalMatrix_, ownedLocalRhs_,
+      sharedNotOwnedLocalRhs_, entityToLID_, entityToColLID_, maxOwnedRowId_,
+      maxSharedNotOwnedRowId_, numDof_));
     deviceCoeffApplier = hostCoeffApplier->device_pointer();
   }
 
@@ -1231,20 +1221,6 @@ void TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::operator() (unsigne
                       entityToLID_, entityToColLID_,
                       maxOwnedRowId_, maxSharedNotOwnedRowId_,
                       numDof_);
-
-  if (extractDiagonal_) {
-    constexpr bool forceAtomic = !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
-    unsigned nDim = ngpMesh_.get_spatial_dimension();
-    for(unsigned i=0; i<numEntities; ++i) {
-      size_t idx = i*nDim;
-      if (forceAtomic) {
-        Kokkos::atomic_add(&diagField_.get(ngpMesh_, entities[i], 0), lhs(idx,idx));
-      }
-      else {
-        diagField_.get(ngpMesh_, entities[i], 0) += lhs(idx,idx);
-      }
-    }
-  }
 }
 
 void TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::free_device_pointer()
