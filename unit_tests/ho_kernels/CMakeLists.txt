@@ -1,4 +1,4 @@
-add_sources(GlobalUnitSourceList
+target_sources(${utest_ex_name} PRIVATE
    UnitTestDiffusionHO.C
    UnitTestDiffusionMetricHO.C
    UnitTestOperatorsHO.C

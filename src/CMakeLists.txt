@@ -1,4 +1,4 @@
-add_sources(GlobalSourceList
+target_sources(nalu PRIVATE
    ABLProfileFunction.C
    Actuator.C
    Algorithm.C
@@ -147,13 +147,13 @@ add_sources(GlobalSourceList
 )
 
 if(ENABLE_FFTW)
-   add_sources(GlobalSourceList
+   target_sources(nalu PRIVATE
       AssembleMomentumEdgeABLTopBC.C
    )
 endif()
 
 if(ENABLE_OPENFAST)
-   add_sources(GlobalSourceList
+   target_sources(nalu PRIVATE
       ActuatorFAST.C
       ActuatorLineFAST.C
       ActuatorDiskFAST.C
@@ -161,7 +161,7 @@ if(ENABLE_OPENFAST)
 endif()
 
 if(ENABLE_HYPRE)
-   add_sources(GlobalSourceList
+   target_sources(nalu PRIVATE
       HypreDirectSolver.C
       HypreUVWSolver.C
       HypreLinearSolverConfig.C
@@ -171,7 +171,7 @@ if(ENABLE_HYPRE)
 endif()
 
 if(ENABLE_PARAVIEW_CATALYST)
-   add_sources(GlobalSourceList
+   target_sources(nalu PRIVATE
       Adapter.C
    )
 endif()
