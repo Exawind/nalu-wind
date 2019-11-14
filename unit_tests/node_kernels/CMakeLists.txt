@@ -1,4 +1,4 @@
-add_sources(GlobalUnitSourceList
+target_sources(${utest_ex_name} PRIVATE
   UnitTestContinuityGclNodeKernel.C
   UnitTestContinuityMassBDFNodeKernel.C
   UnitTestEnthalpyABLForceNode.C

@@ -1,4 +1,4 @@
-add_sources(GlobalSourceList
+target_sources(nalu PRIVATE
    ContinuityAdvElemKernel.C
    ContinuityInflowElemKernel.C
    ContinuityMassElemKernel.C

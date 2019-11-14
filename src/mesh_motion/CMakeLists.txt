@@ -1,4 +1,4 @@
-add_sources(GlobalSourceList
+target_sources(nalu PRIVATE
    AssembleMeshDisplacementElemSolverAlgorithm.C
    AssemblePressureForceBCSolverAlgorithm.C
    MeshDisplacementEquationSystem.C

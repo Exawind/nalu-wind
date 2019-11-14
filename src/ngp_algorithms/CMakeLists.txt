@@ -1,4 +1,4 @@
-add_sources(GlobalSourceList
+target_sources(nalu PRIVATE
   # Algorithms
   NodalGradEdgeAlg.C
   NodalGradElemAlg.C
