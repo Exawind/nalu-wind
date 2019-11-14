@@ -303,7 +303,7 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (SST == realm_.solutionOptions_->turbulenceModel_){
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
         }
-        else if (SST_DES == realm_.solutionOptions_->turbulenceModel_){
+        else if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_) || (SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ){
           nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
         }
         else if (SST_TAMS == realm_.solutionOptions_->turbulenceModel_){

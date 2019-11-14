@@ -204,7 +204,7 @@ public:
 
   void compute_turbulence_parameters();
 
-  void compute_alpha_upw();
+  void compute_strelets_des_alpha_upw();
 
   const bool managePNG_;
 
@@ -240,6 +240,13 @@ public:
 private:
   ScalarFieldType* Udiag_;
   ScalarFieldType* alpha_upw_;
+  ScalarFieldType* des_lturb_;
+  ScalarFieldType* des_g_;
+  ScalarFieldType* des_B_;
+  ScalarFieldType* des_A_;
+  ScalarFieldType* des_K_;
+  ScalarFieldType* des_S_;
+  ScalarFieldType* des_Omega_;
 };
 
 class ContinuityEquationSystem : public EquationSystem {

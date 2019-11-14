@@ -73,6 +73,7 @@
 #include <node_kernels/ScalarGclNodeKernel.h>
 #include <node_kernels/TKEKsgsNodeKernel.h>
 #include <node_kernels/TKESSTDESNodeKernel.h>
+#include <node_kernels/TKESSTIDDESNodeKernel.h>
 #include <node_kernels/TKESSTNodeKernel.h>
 #include <node_kernels/TKERodiNodeKernel.h>
 
@@ -165,8 +166,8 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   realm_.push_equation_to_systems(this);
 
   // sanity check on turbulence model
-  if ( (turbulenceModel_ != SST) && (turbulenceModel_ != KSGS) && (turbulenceModel_ != SST_DES) && (turbulenceModel_ != SST_TAMS) ) {
-    throw std::runtime_error("User has requested TurbKinEnergyEqs, however, turbulence model is not KSGS, SST, SST_DES or SST_TAMS");
+  if ( (turbulenceModel_ != SST) && (turbulenceModel_ != KSGS) && (turbulenceModel_ != SST_DES) && (turbulenceModel_ != SST_TAMS) && (turbulenceModel_ != SST_IDDES) ) {
+    throw std::runtime_error("User has requested TurbKinEnergyEqs, however, turbulence model is not KSGS, SST, SST_DES, SST_IDDES or SST_TAMS");
   }
 
   // create projected nodal gradient equation system
@@ -337,6 +338,9 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         case SST_TAMS:
           nodeAlg.add_kernel<TKESSTTAMSNodeKernel>(realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
           break;
+        case SST_IDDES:
+            nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
+            break;
         default:
           std::runtime_error("TKEEqSys: Invalid turbulence model, only SST, "
                              "SST_DES, SST_TAMS and  Ksgs supported");
@@ -467,7 +471,8 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     }
     case SST:
     case SST_DES:
-    case SST_TAMS: {
+    case SST_TAMS:
+    case SST_IDDES: {
       const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
       const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);
       effDiffFluxCoeffAlg_.reset(new EffSSTDiffFluxCoeffAlg(

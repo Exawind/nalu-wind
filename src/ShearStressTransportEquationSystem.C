@@ -138,9 +138,9 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*minDistanceToWall_, *part, nullptr);
   fOneBlending_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_f_one_blending"));
   stk::mesh::put_field_on_mesh(*fOneBlending_, *part, nullptr);
-  
+
   // DES model
-  if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) {
+  if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ) {
     maxLengthScale_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_max_length_scale"));
     stk::mesh::put_field_on_mesh(*maxLengthScale_, *part, nullptr);
   }
@@ -160,6 +160,8 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
 
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
+
+  if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ) {
 
   if (SST_DES == realm_.solutionOptions_->turbulenceModel_) {
 
@@ -225,7 +227,7 @@ ShearStressTransportEquationSystem::solve_and_update()
     clip_min_distance_to_wall();
 
     // deal with DES option
-    if (SST_DES == realm_.solutionOptions_->turbulenceModel_)
+    if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) )
       sstMaxLengthScaleAlgDriver_->execute();
 
     isInit_ = false;
@@ -233,7 +235,7 @@ ShearStressTransportEquationSystem::solve_and_update()
     if (realm_.currentNonlinearIteration_ == 1)
       clip_min_distance_to_wall();
 
-    if (SST_DES == realm_.solutionOptions_->turbulenceModel_)
+    if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) )
       sstMaxLengthScaleAlgDriver_->execute();
   }
 
@@ -271,6 +273,49 @@ ShearStressTransportEquationSystem::solve_and_update()
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
   }
+
+}
+
+void clip_sst(
+  const stk::mesh::NgpMesh& ngpMesh,
+  const stk::mesh::Selector& sel,
+  const stk::mesh::NgpField<double>& density,
+  const stk::mesh::NgpField<double>& viscosity,
+  stk::mesh::NgpField<double>& tke,
+  stk::mesh::NgpField<double>& sdr)
+{
+  tke.sync_to_device();
+  sdr.sync_to_device();
+
+  const double clipValue = 1.0e-8;
+  nalu_ngp::run_entity_algorithm(
+    "SST::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<>::MeshIndex& mi) {
+      const double tkeNew = tke.get(mi, 0);
+      const double sdrNew = sdr.get(mi, 0);
+
+      if ((tkeNew >= 0.0) && (sdrNew >= 0.0)) {
+        tke.get(mi, 0) = tkeNew;
+        sdr.get(mi, 0) = sdrNew;
+      } else if ((tkeNew < 0.0) && (sdrNew < 0.0)) {
+        // both negative; set TKE to small value, tvisc to molecular visc and use
+        // Prandtl/Kolm for SDR
+        tke.get(mi, 0) = clipValue;
+        sdr.get(mi, 0) = density.get(mi, 0) * clipValue / viscosity.get(mi, 0);
+      } else if (tkeNew < 0.0) {
+        // only TKE is off; reset turbulent viscosity to molecular vis and
+        // compute new TKE based on SDR and tvisc
+        sdr.get(mi, 0) = sdrNew;
+        tke.get(mi, 0) = viscosity.get(mi, 0) * sdrNew / density.get(mi, 0);
+      } else {
+        // Only SDR is off; reset turbulent viscosity to molecular visc and
+        // compute new SDR based on others
+        tke.get(mi, 0) = tkeNew;
+        sdr.get(mi, 0) = density.get(mi, 0) * tkeNew / viscosity.get(mi, 0);
+      }
+    });
+  tke.modify_on_device();
+  sdr.modify_on_device();
 }
 
 /** Perform sanity checks on TKE/SDR fields
