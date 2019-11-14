@@ -1,6 +1,6 @@
 add_sources(GlobalSourceList
    ABLProfileFunction.C
-   Actuator.C
+   actuator/Actuator.C
    Algorithm.C
    AlgorithmDriver.C
    AssembleContinuityEdgeOpenSolverAlgorithm.C
@@ -166,9 +166,10 @@ endif()
 
 if(ENABLE_OPENFAST)
    add_sources(GlobalSourceList
-      ActuatorFAST.C
-      ActuatorLineFAST.C
-      ActuatorDiskFAST.C
+      actuator/UtilitiesActuator.C
+      actuator/ActuatorFAST.C
+      actuator/ActuatorLineFAST.C
+      actuator/ActuatorDiskFAST.C
    )
 endif()
 

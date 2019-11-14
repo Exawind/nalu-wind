@@ -81,23 +81,23 @@ public:
   */
   
   // The density at this actuator point
-  double rho;
+  //~ double rho;
 
   // The lift distribution from iltered lifting line theory
   // G = 1/2 c mag(V_rel) Cl Vrel cross vect
-  std::array<double, 3> G{0};
+  std::array<double, 3> G{{0,0,0}};
 
   // The gradient of the function G
-  std::array<double, 3> dG{0};
+  std::array<double, 3> dG{{0,0,0}};
 
   // The induced velocity from the LES
-  std::array<double, 3> u_LES{0};
+  std::array<double, 3> u_LES{{0,0,0}};
 
   // The induced velocity from the optimal distribution
-  std::array<double, 3> u_opt{0};
+  std::array<double, 3> u_opt{{0,0,0}};
 
   // The difference between the induced velocities
-  std::array<double, 3> du{0};
+  std::array<double, 3> du{{0,0,0}};
 
   // The relaxation factor
   // The recommended value is f=0.1

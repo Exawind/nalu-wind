@@ -73,10 +73,10 @@
 #include <wind_energy/BdyLayerStatistics.h>
 
 // actuator line
-#include <Actuator.h>
+#include <actuator/Actuator.h>
 #ifdef NALU_USES_OPENFAST
-#include <ActuatorLineFAST.h>
-#include <ActuatorDiskFAST.h>
+#include <actuator/ActuatorLineFAST.h>
+#include <actuator/ActuatorDiskFAST.h>
 #endif
 
 #include <wind_energy/ABLForcingAlgorithm.h>

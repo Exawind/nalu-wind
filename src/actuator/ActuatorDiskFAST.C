@@ -11,7 +11,7 @@
  *      Author: psakiev
  */
 
-#include "ActuatorDiskFAST.h"
+#include "actuator/ActuatorDiskFAST.h"
 #include <cmath>
 #include <algorithm>
 #include <functional>

@@ -49,6 +49,7 @@ add_sources(GlobalUnitSourceList
 if(ENABLE_OPENFAST)
    add_sources(GlobalUnitSourceList
       UnitTestActuatorDiskFAST.C
+      UnitTestActuatorFASTGaussian.C
    )
 endif()
 

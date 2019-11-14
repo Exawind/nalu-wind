@@ -5,7 +5,7 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#include <Actuator.h>
+#include <actuator/Actuator.h>
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
 #include <NaluEnv.h>
@@ -238,7 +238,7 @@ Actuator::complete_search()
       // extract the point object and push back the element to either the best
       // candidate or the standard vector of elements
       ActuatorPointInfo* actuatorPointInfo = iterPoint->second.get();
-
+      
       // extract topo and master element for this topo
       const stk::mesh::Bucket& theBucket = bulkData.bucket(elem);
       const stk::topology& elemTopo = theBucket.topology();

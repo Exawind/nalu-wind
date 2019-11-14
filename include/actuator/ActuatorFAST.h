@@ -210,6 +210,9 @@ public:
     // fill in the map that will hold point and ghosted elements
     void create_actuator_point_info_map();
 
+    // Update the actuator point info map
+    void update_actuator_point_info_map();
+
     virtual void create_point_info_map_class_specific() = 0;
 
     // populate nodal field and output norms (if appropriate)
@@ -240,12 +243,6 @@ public:
         const double& g,
         const double* pointForce,
         double* nodeForce);
-
-    // Gaussian projection function.
-    double Gaussian_projection(
-        const int &nDim,
-        double *dis,
-        const Coordinates &epsilon);
 
     // Spread the actuator force to a node vector
     void spread_actuator_force_to_node_vec(

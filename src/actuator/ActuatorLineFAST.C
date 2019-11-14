@@ -5,7 +5,7 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#include <ActuatorLineFAST.h>
+#include <actuator/ActuatorLineFAST.h>
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
 #include <NaluEnv.h>
@@ -67,6 +67,7 @@ ActuatorLineFAST::execute_class_specific(
   stk::mesh::FieldBase* actuator_source,
   const stk::mesh::FieldBase* dual_nodal_volume)
 {
+  //~ std::cerr << "execute before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
 
   std::vector<double> ws_pointForce(nDim);
   // loop over map and assemble source terms
@@ -80,6 +81,8 @@ ActuatorLineFAST::execute_class_specific(
       throw std::runtime_error("Object in ActuatorPointInfo is not the correct "
                                "type.  Should be ActuatorFASTPointInfo.");
     }
+
+  //~ std::cerr << "execute before ==============================" << np << " " << NaluEnv::self().parallel_rank() << std::endl;
 
     // Get the force from FAST
     FAST.getForce(ws_pointForce, np, infoObject->globTurbId_);
@@ -127,6 +130,10 @@ ActuatorLineFAST::execute_class_specific(
 
         break;
     }
+
+  //~ std::cerr << "execute after ==============================" << np << " " << NaluEnv::self().parallel_rank() << std::endl;
+
+//~ std::cerr << "spread before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
     
     // Call the function to spread the node      
     spread_actuator_force_to_node_vec(
@@ -137,8 +144,12 @@ ActuatorLineFAST::execute_class_specific(
       infoObject->epsilon_, hubPos, hubShftVec, thrust[iTurbGlob],
       torque[iTurbGlob]);
 
+//~ std::cerr << "spread after ==============================" << NaluEnv::self().parallel_rank() << std::endl;
+
     
   }
+  //~ std::cerr << "execute after ==============================" << NaluEnv::self().parallel_rank() << std::endl;
+
 }
 
 std::string
