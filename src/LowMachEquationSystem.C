@@ -2662,6 +2662,7 @@ MomentumEquationSystem::assemble_and_solve(
     auto ngpUdiag = realm_.ngp_field_manager().get_field<double>(
       Udiag_->mesh_meta_data_ordinal());
     ngpUdiag.set_all(realm_.ngp_mesh(), projTimeScale);
+    ngpUdiag.modify_on_device();
   }
 
   // Perform actual solve
