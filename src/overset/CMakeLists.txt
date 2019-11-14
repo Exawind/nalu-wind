@@ -1,4 +1,4 @@
-target_sources(nalu PRIVATE
+add_sources(GlobalSourceList
    AssembleOversetPressureAlgorithm.C
    AssembleOversetSolverConstraintAlgorithm.C
    AssembleOversetWallDistAlgorithm.C
@@ -10,7 +10,7 @@ target_sources(nalu PRIVATE
 )
 
 if(ENABLE_TIOGA)
-   target_sources(nalu PRIVATE
+   add_sources(GlobalSourceList
       OversetManagerTIOGA.C
       TiogaOptions.C
       TiogaBlock.C

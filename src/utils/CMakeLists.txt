@@ -1,4 +1,4 @@
-target_sources(nalu PRIVATE
+add_sources(GlobalSourceList
   ComputeVectorDivergence.C
   StkHelpers.C
   )
