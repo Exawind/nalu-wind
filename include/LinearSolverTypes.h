@@ -9,11 +9,12 @@
 #ifndef LinearSolverTypes_h
 #define LinearSolverTypes_h
 
-#include <KokkosInterface.h>
-#include <Tpetra_CrsGraph.hpp>
+#include <CrsGraphTypes.h>
+
 #include <Tpetra_CrsMatrix.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_MultiVector.hpp>
+
 
 // Forward declare templates
 namespace Teuchos {
@@ -60,20 +61,21 @@ class TpetraLinearSolver;
 
 struct LinSys {
 
-typedef long   GlobalOrdinal; // MUST be signed
-typedef int    LocalOrdinal;  // MUST be signed
+typedef GraphTypes::GlobalOrdinal   GlobalOrdinal; // MUST be signed
+typedef GraphTypes::LocalOrdinal    LocalOrdinal;  // MUST be signed
 typedef double Scalar;
 
-typedef Kokkos::DualView<size_t*, DeviceSpace>                             RowLengths;
-typedef RowLengths::t_dev                                                  DeviceRowLengths;
-typedef RowLengths::t_host                                                 HostRowLengths;
-typedef Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type                Node;
-typedef Tpetra::CrsGraph< LocalOrdinal, GlobalOrdinal, Node>               Graph;
-typedef typename Graph::local_graph_type                                   LocalGraph;
-typedef Teuchos::MpiComm<int>                                              Comm;
-typedef Tpetra::Export< LocalOrdinal, GlobalOrdinal, Node >                Export;
-typedef Tpetra::Import< LocalOrdinal, GlobalOrdinal, Node >                Import;
-typedef Tpetra::Map<LocalOrdinal,GlobalOrdinal,Node>                       Map;
+typedef GraphTypes::RowLengths                             RowLengths;
+typedef GraphTypes::DeviceRowLengths                       DeviceRowLengths;
+typedef GraphTypes::HostRowLengths                         HostRowLengths;
+typedef GraphTypes::Node                                   Node;
+typedef GraphTypes::Graph                                  Graph;
+typedef GraphTypes::LocalGraph                             LocalGraph;
+typedef GraphTypes::Comm                                   Comm;
+typedef GraphTypes::Export                                 Export;
+typedef GraphTypes::Import                                 Import;
+typedef GraphTypes::Map                                    Map;
+
 typedef Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>        MultiVector;
 typedef Teuchos::ArrayRCP<Scalar >                                         OneDVector;
 typedef Teuchos::ArrayRCP<const Scalar >                                   ConstOneDVector;
