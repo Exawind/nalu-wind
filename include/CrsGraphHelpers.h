@@ -6,8 +6,8 @@
 /*------------------------------------------------------------------------*/
 
 
-#ifndef TpetraLinearSystemHelpers_h
-#define TpetraLinearSystemHelpers_h
+#ifndef CrsGraphHelpers_h
+#define CrsGraphHelpers_h
 
 #include <stdio.h>
 
@@ -15,7 +15,7 @@
 #include <PeriodicManager.h>
 #include <NonConformalManager.h>
 #include <utils/StkHelpers.h>
-#include <LinearSolverTypes.h>
+#include <CrsGraphTypes.h>
 
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_topology/topology.hpp>

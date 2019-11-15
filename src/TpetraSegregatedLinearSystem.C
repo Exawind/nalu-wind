@@ -7,7 +7,7 @@
 
 
 #include <TpetraSegregatedLinearSystem.h>
-#include <TpetraLinearSystemHelpers.h>
+#include <CrsGraphHelpers.h>
 #include <NonConformalInfo.h>
 #include <NonConformalManager.h>
 #include <FieldTypeDef.h>

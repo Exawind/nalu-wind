@@ -6,7 +6,7 @@
 /*------------------------------------------------------------------------*/
 
 
-#include <TpetraLinearSystemHelpers.h>
+#include <CrsGraphHelpers.h>
 
 #include <Realm.h>
 #include <PeriodicManager.h>
