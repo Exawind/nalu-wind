@@ -1,7 +1,7 @@
 # Contributing to Nalu-Wind
 
 Thank you for considering contributing to Nalu-Wind project. Please follow these
-guidelines for contributing to Nalu-Wind project.
+guidelines for contributing to the Nalu-Wind project.
 
 ## Reporting bugs
 
@@ -25,7 +25,7 @@ new issue.
 - Provide the SHA ID of the git commit Nalu-Wind code that you are using, as
   well as the SHA ID of the Trilinos build
 
-- Provide as much details as possible about the operating system, compiler
+- Provide as much detail as possible about the operating system, compiler
   versions, and third-party libraries used to build Nalu-Wind
   
 - Include output of the CMake configuration step 
@@ -37,7 +37,7 @@ new issue.
 ## Contributing code and documentation changes
 
 Contributions can take the form of bug fixes, feature enhancements,
-documentation updates. All updates to the repository is managed via [pull
+documentation updates. All updates to the repository are managed via [pull
 requests](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests).
 One of the easiest ways to get started is by looking at [open
 issues](https://github.com/Exawind/nalu-wind/issues) and contributing fixes,
@@ -59,19 +59,19 @@ manual](https://nalu-wind.readthedocs.io/en/latest/source/developer/index.html).
   enhancement. Provide a concise description of your proposed changes. 
   
 - Provide references to open issues, if applicable, to provide the necessary
-  context to understand your pull request.
+  context to understand your pull request
   
 - Make sure that your pull-request merges cleanly with the `master` branch of
   Nalu-Wind. When working on a feature, always create your feature branch off of
-  the latest `master` commit.
+  the latest `master` commit
   
 - Ensure that the code compiles without warnings, the unit tests and regression
   tests all pass without errors, and the documentation builds properly with your
-  modifications.
+  modifications
   
 - New physics models and code enhancements should be accompanied with relevant
   updates to the documentation, supported by necessary verification and
-  validation, as well as unit tests and regression tests.
+  validation, as well as unit tests and regression tests
   
 Once a pull-request is submitted you will iterate with Nalu-Wind maintainers
 until your changes are in an acceptable state and can be merged in. You can push

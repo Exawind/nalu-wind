@@ -14,8 +14,8 @@ be fixed?
 ### Details to reproduce bug/build error
 
 1. SHA ID of the Nalu-Wind commit you are using 
-1. Configure command
-1. CMake configure output
-1. Output of make step
+1. Configure command [attach file]
+1. CMake configure output [attach file]
+1. Output of make step [attach file]
 1. Details of your simulation (input file, mesh description, etc.)
 1. Stack trace of the runtime error output 
