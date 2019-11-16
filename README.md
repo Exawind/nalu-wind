@@ -1,26 +1,97 @@
-Nalu-Wind, a generalized unstructured massively parallel low Mach flow code designed to support the Exawind ECP.
+# Nalu-Wind 
 
-The Department of Energy (DOE), by memo dated 05/13/2014, has granted Sandia permission to assert 
-its copyright in software entitled "Nalu v 1.0".
+[Website](https://www.exawind.org/) | [Documentation](https://nalu-wind.readthedocs.io) | [Nightly test dashboard](http://my.cdash.org/index.php?project=Nalu-Wind) 
 
-### Referencing Nalu-Wind
-When disseminating technical work that includes Nalu-Wind simulations, please reference the following citation:
+Nalu-Wind is a generalized, unstructured, massively-parallel, incompressible
+flow solver on wind turbine and wind farm simulations. The codebase is a
+wind-focused fork of [NaluCFD](https://github.com/NaluCFD/Nalu) developed and
+maintained by Sandia National Laboratories. Nalu-Wind is being actively
+developed and maintained by a dedicated, multi-institutional team from [National
+Renewable Energy Laboratory](https://nrel.gov), [Sandia National
+Laboratories](https://sandia.gov), [Univ. of Texas Austin](https://utexas.edu).
 
-	Domino, S. "Sierra Low Mach Module: Nalu Theory Manual 1.0", SAND2015-3107W, Sandia National Laboratories Unclassified Unlimited Release (UUR), 2015. https://github.com/NaluCFD/NaluDoc
-	
-This document can be found under the [Nalu-Wind Documentation](http://nalu-wind.readthedocs.io/en/latest/source/theory/index.html).
+Nalu-Wind is developed as an open-source code with the following objectives: an
+open, documented implementation of the state-of-the-art computational models for
+modeling wind farm flow physics at various fidelities that are backed by a
+comprehensive verification and validation (V&V) process, be capable of
+performing the highest-fidelity simulations of flowfields within wind farms, and
+being able to leverage the high-performance leadership class computating
+facilities available at DOE national laboratories. We hope that this community
+developed model will be used by research laboratories, academia, and industry to
+develop the next-generation of wind farm technologies.
 
-### Nalu-Wind Documentation
+We welcome the wind energy community to use Nalu-Wind in their research. When
+disseminating technical work that includes Nalu-Wind simulations please
+reference the following citation:
 
-The Nalu-Wind documentation website is located [here](http://nalu-wind.readthedocs.io/en/latest/).
+    Sprague, M. A., Ananthan, S., Vijayakumar, G., Robinson, M., "ExaWind: A multifidelity modeling and simulation environment for wind energy", NAWEA/WindTech 2019 Conference, Amherst, MA, 2019.
 
-### Building Nalu-Wind
+## Documentation
 
-Detailed build instructions for Nalu and the accompanied required TPLs, e.g., Trilinos, YAML, etc.,
-can be found in the [Nalu-Wind Documentation](http://nalu-wind.readthedocs.io/en/latest/).
+Documentation is available online at https://nalu-wind.readthedocs.io/ and is
+split into the following sections:
 
-### Nightly Testing Status
+- [User manual](https://nalu-wind.readthedocs.io/en/latest/source/user/index.html):
+  The user manual contains detailed instructions on building the code, along
+  with the required third-party libraries (TPLs) and usage.
+  
+- [Theory manual](https://nalu-wind.readthedocs.io/en/latest/source/theory/index.html):
+  This section provides a detailed overview of the supported equation sets, the
+  discretization and time-integration schemes, turbulence models available, etc.
+  
+- [Verification manual](https://nalu-wind.readthedocs.io/en/latest/source/verification/index.html):
+  This section documents the results from verification studies of the spatial
+  and temporal schemes available in Nalu-Wind.
+  
+All documentation is maintained alongside the source code within the git
+repository and automatically deployed to ReadTheDocs website upon new commits.
+  
+## Compilation and usage
 
-[![CDash Logo](https://github.com/NaluCFD/Nalu/wiki/images/cDashLogo.gif)](http://my.cdash.org/index.php?project=Nalu-Wind)
+Nalu-Wind is primarily built upon the packages provided by the [Trilinos
+project](https://trilinos.org), which in turn depends on several third-party
+libraries (MPI, HDF5, NetCDF, parallel NetCDF), and YAML-CPP. In addition, it
+has the following optional dependencies: hypre, TIOGA, and OpenFAST. Detailed
+build instructions are available in the [user
+manual](https://nalu-wind.readthedocs.io/en/latest/source/user/building.html).
+We recommend using [Spack](https://spack.io/) package manager to install
+Nalu-Wind on your system.
 
-Nightly testing results can be seen by clicking the CDash logo above. More details on testing can be found [here](http://nalu-wind.readthedocs.io/en/latest/source/developer/testing.html).
+### Testing and quality assurance
+
+Nalu-Wind comes with a comprehensive unit test and regression test suite that
+exercise almost all major components of the code. The `master` branch is
+compiled and run through a regression test suite different compilers
+([GCC](https://gcc.gnu.org/), [LLVM/Clang](https://clang.llvm.org/), and
+[Intel](https://software.intel.com/en-us/compilers)) on Linux and MacOS
+operating systems, against both the `master` and `develop` branches of
+[Trilinos](https://github.com/trilinos/Trilinos). The results of the nightly
+testing are publicly available on
+[CDash dashboard](http://my.cdash.org/index.php?project=Nalu-Wind).
+
+### Help and reporting bugs
+
+To report issues or bugs please [create a new
+issue](https://github.com/Exawind/nalu-wind/issues/new) on GitHub.
+
+## Contributing
+
+We welcome contributions from the community in form of bug fixes, feature
+enhancements, documentation updates, etc. All contributions are processed
+through pull-requests on GitHub. Please follow our [contributing
+guidelines](https://github.com/Exawind/nalu-wind/blob/master/CONTRIBUTING.md)
+when submitting pull-requests.
+  
+## License
+
+Nalu-Wind is licensed under [BSD 3-clause
+license](https://github.com/Exawind/nalu-wind/blob/master/LICENSE).
+
+## Acknowledgements 
+
+Nalu-Wind is currently being developed with funding from Department of Energy's
+(DOE) Office of Science [Exascale Computing Project
+(ECP)](https://www.exascaleproject.org/) and Energy Efficiency and Renewable
+Energy (EERE) Wind Energy Technology Office (WETO). Please see [authors
+file](https://github.com/Exawind/nalu-wind/blob/master/AUTHORS) for a 
+list of contributors to Nalu-Wind. 
