@@ -69,6 +69,8 @@ add_sources(GlobalSourceList
    ContinuityMassElemSuppAlgDep.C
    CopyFieldAlgorithm.C
    CoriolisSrc.C
+   CrsGraph.C
+   CrsGraphHelpers.C
    DataProbePostProcessing.C
    DgInfo.C
    DirichletBC.C
@@ -136,7 +138,6 @@ add_sources(GlobalSourceList
    SurfaceForceAndMomentWallFunctionAlgorithm.C
    TimeIntegrator.C
    TpetraLinearSystem.C
-   CrsGraphHelpers.C
    TpetraSegregatedLinearSystem.C
    TurbKineticEnergyEquationSystem.C
    TurbKineticEnergyKsgsBuoyantElemSuppAlg.C
