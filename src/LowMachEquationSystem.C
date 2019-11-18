@@ -2080,16 +2080,15 @@ MomentumEquationSystem::register_symmetry_bc(
   stk::mesh::MetaData &meta_data = realm_.meta_data();
   const unsigned nDim = meta_data.spatial_dimension();
   AlgorithmType pickTheType = algType;
+  // non-solver; contribution to Gjui; allow for element-based shifted
+  if ( !managePNG_ ) {
+    nodalGradAlgDriver_.register_face_algorithm<
+      VectorNodalGradBndryElemAlg, AssembleNodalGradUBoundaryAlgorithm>(
+        algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
+        edgeNodalGradient_);
+  }
   switch(symmType){
    case SYMMTYPES::GENERAL_WEAK:
-     // non-solver; contribution to Gjui; allow for element-based shifted
-      if ( !managePNG_ ) {
-        nodalGradAlgDriver_.register_face_algorithm<
-          VectorNodalGradBndryElemAlg, AssembleNodalGradUBoundaryAlgorithm>(
-          algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
-          edgeNodalGradient_);
-      }
-
       if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_
           && !realm_.realmUsesEdges_) {
         // solver algs; lhs
