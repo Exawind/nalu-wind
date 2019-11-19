@@ -74,16 +74,11 @@ namespace nalu{
 //==========================================================================
 // Class Definition
 //==========================================================================
-// TpetraLinearSystem - hook to Tpetra
-//==========================================================================
 CrsGraph::CrsGraph(
   Realm &realm,
   const unsigned numDof)
   : realm_(realm), numDof_(numDof)
-{
-  Teuchos::ParameterList junk;
-  node_ = Teuchos::rcp(new LinSys::Node(junk));
-}
+{}
 
 CrsGraph::~CrsGraph() {}
 
@@ -1018,6 +1013,21 @@ int getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
   return DS_SkippedDOF;
 #endif
 }
+
+Teuchos::RCP<GraphTypes::Map>    CrsGraph::getOwnedRowsMap()          const {return ownedRowsMap_;}
+Teuchos::RCP<GraphTypes::Graph>  CrsGraph::getOwnedGraph()            const {return ownedGraph_;}
+Teuchos::RCP<GraphTypes::Map>    CrsGraph::getSharedNotOwnedRowsMap() const {return sharedNotOwnedRowsMap_;}
+Teuchos::RCP<GraphTypes::Graph>  CrsGraph::getSharedNotOwnedGraph()   const {return sharedNotOwnedGraph_;}
+Teuchos::RCP<GraphTypes::Export> CrsGraph::getExporter()              const {return exporter_;}
+
+//  LinSys::EntityToLIDView entityToColLID_;
+//  LinSys::EntityToLIDView entityToLID_;
+
+const LinSys::EntityToLIDView & CrsGraph::get_entity_to_row_LID_mapping() const {return entityToLID_;}
+const LinSys::EntityToLIDView & CrsGraph::get_entity_to_col_LID_mapping() const {return entityToColLID_;}
+const MyLIDMapType            & CrsGraph::get_my_LIDs() const {return myLIDs_;}
+CrsGraph::LocalOrdinal          CrsGraph::getMaxOwnedRowID() const {return maxOwnedRowId_;}
+CrsGraph::LocalOrdinal          CrsGraph::getMaxSharedNotOwnedRowID() const {return maxSharedNotOwnedRowId_;}
 
 } // namespace nalu
 } // namespace Sierra

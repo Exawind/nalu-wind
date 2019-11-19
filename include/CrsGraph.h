@@ -61,25 +61,26 @@ public:
   void storeOwnersForShared();
   void finalizeGraph();
 
-  void copy_tpetra_to_stk(const Teuchos::RCP<LinSys::MultiVector> tpetraVector,
-                          stk::mesh::FieldBase * stkField);
-
-  // This method copies a stk::mesh::field to a tpetra multivector. Each dof/node is written
-  // into a different vector in the multivector.
-  void copy_stk_to_tpetra(const stk::mesh::FieldBase * stkField,
-                          const Teuchos::RCP<LinSys::MultiVector> tpetraVector);
-
-
   int getDofStatus(stk::mesh::Entity node);
 
   int getRowLID(stk::mesh::Entity node) { return entityToLID_[node.local_offset()]; }
   int getColLID(stk::mesh::Entity node) { return entityToColLID_[node.local_offset()]; }
 
-  Teuchos::RCP<LinSys::Graph>  getOwnedGraph() { return ownedGraph_; }
+  Teuchos::RCP<GraphTypes::Map>    getOwnedRowsMap() const;
+  Teuchos::RCP<GraphTypes::Graph>  getOwnedGraph() const;
+  Teuchos::RCP<GraphTypes::Map>    getSharedNotOwnedRowsMap() const;
+  Teuchos::RCP<GraphTypes::Graph>  getSharedNotOwnedGraph() const;
+  Teuchos::RCP<GraphTypes::Export> getExporter() const;
 
-private:
   void buildConnectedNodeGraph(stk::mesh::EntityRank rank,
                                const stk::mesh::PartVector& parts);
+
+  const LinSys::EntityToLIDView & get_entity_to_row_LID_mapping() const;
+  const LinSys::EntityToLIDView & get_entity_to_col_LID_mapping() const;
+  const MyLIDMapType &            get_my_LIDs() const;
+  LocalOrdinal                    getMaxOwnedRowID() const;
+  LocalOrdinal                    getMaxSharedNotOwnedRowID() const;
+private:
 
   void beginConstruction();
 
@@ -107,8 +108,6 @@ private:
   int insert_connection(stk::mesh::Entity a, stk::mesh::Entity b);
   void addConnections(const stk::mesh::Entity* entities,const size_t&);
   void expand_unordered_map(unsigned newCapacityNeeded);
-  void checkForNaN(bool useOwned);
-  bool checkForZeroRow(bool useOwned, bool doThrow, bool doPrint=false);
 
   std::vector<stk::mesh::Entity> ownedAndSharedNodes_;
   std::vector<std::vector<stk::mesh::Entity> > connections_;
@@ -131,8 +130,6 @@ private:
   Teuchos::RCP<LinSys::Graph>  ownedGraph_;
   Teuchos::RCP<LinSys::Graph>  sharedNotOwnedGraph_;
 
-  Teuchos::RCP<LinSys::MultiVector> sln_;
-  Teuchos::RCP<LinSys::MultiVector> globalSln_;
   Teuchos::RCP<LinSys::Export>      exporter_;
 
   MyLIDMapType myLIDs_;

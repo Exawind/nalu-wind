@@ -684,6 +684,7 @@ EquationSystems::initialize()
       realm_.provide_memory_summary();
     }
     double start_time_eq = NaluEnv::self().nalu_time();
+    std::cout << "EQUATION " << eqSys->name_ << std::endl; //JHU FIXME
     eqSys->initialize();
     double end_time_eq = NaluEnv::self().nalu_time();
     eqSys->timerInit_ += (end_time_eq - start_time_eq);
