@@ -1020,9 +1020,6 @@ Teuchos::RCP<GraphTypes::Map>    CrsGraph::getSharedNotOwnedRowsMap() const {ret
 Teuchos::RCP<GraphTypes::Graph>  CrsGraph::getSharedNotOwnedGraph()   const {return sharedNotOwnedGraph_;}
 Teuchos::RCP<GraphTypes::Export> CrsGraph::getExporter()              const {return exporter_;}
 
-//  LinSys::EntityToLIDView entityToColLID_;
-//  LinSys::EntityToLIDView entityToLID_;
-
 const LinSys::EntityToLIDView & CrsGraph::get_entity_to_row_LID_mapping() const {return entityToLID_;}
 const LinSys::EntityToLIDView & CrsGraph::get_entity_to_col_LID_mapping() const {return entityToColLID_;}
 const MyLIDMapType            & CrsGraph::get_my_LIDs() const {return myLIDs_;}
