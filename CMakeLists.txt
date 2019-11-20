@@ -230,7 +230,7 @@ target_link_libraries(nalu PUBLIC ${Trilinos_LIBRARIES})
 target_link_libraries(nalu PUBLIC ${YAML_CPP_LIBRARIES})
 target_link_libraries(nalu PUBLIC MPI::MPI_CXX MPI::MPI_Fortran)
 if(MPI_COMPILE_FLAGS)
-  set_target_properties(nalu PUBLIC PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+  set_target_properties(nalu PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
 endif(MPI_COMPILE_FLAGS)
 
 # Most linking, etc, is set to PUBLIC for libnalu, so we merely link to libnalu for the exes
