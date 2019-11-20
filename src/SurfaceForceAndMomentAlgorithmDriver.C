@@ -66,6 +66,7 @@ SurfaceForceAndMomentAlgorithmDriver::zero_fields()
   
   // extract the fields
   VectorFieldType *pressureForce = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "pressure_force");
+  VectorFieldType *viscousForce = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "viscous_force");
   ScalarFieldType *tauWall = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tau_wall");
   ScalarFieldType *yplus = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "yplus");
   // one of these might be null
@@ -74,6 +75,7 @@ SurfaceForceAndMomentAlgorithmDriver::zero_fields()
 
   // zero fields
   field_fill( meta_data, bulk_data, 0.0, *pressureForce, realm_.get_activate_aura());
+  field_fill( meta_data, bulk_data, 0.0, *viscousForce, realm_.get_activate_aura());
   field_fill( meta_data, bulk_data, 0.0, *tauWall, realm_.get_activate_aura());
   field_fill( meta_data, bulk_data, 0.0, *yplus, realm_.get_activate_aura());
   if ( NULL != assembledArea ) 
