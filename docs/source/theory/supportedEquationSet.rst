@@ -779,7 +779,7 @@ The final parameter is
 
 .. _eqn_sst_des:
 
-Direct Eddy Simulation (DES) Formulation
+Detached Eddy Simulation (DES) Formulation
 ++++++++++++++++++++++++++++++++++++++++
 
 The DES technique is also supported in the code base when the SST model
