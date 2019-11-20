@@ -162,11 +162,10 @@ public:
 
   int getDofStatus(stk::mesh::Entity node);
 
-  /*
-  //FIXME delete these, as they are unused
+  //for unit testing
   int getRowLID(stk::mesh::Entity node) { return entityToLID_[node.local_offset()]; }
+  //for unit testing
   int getColLID(stk::mesh::Entity node) { return entityToColLID_[node.local_offset()]; }
-  */
 
   Teuchos::RCP<LinSys::Graph>  getOwnedGraph();
   Teuchos::RCP<LinSys::Matrix> getOwnedMatrix();
