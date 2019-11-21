@@ -184,8 +184,8 @@ void Simulation::high_level_banner() {
     "                  for wind turbine and wind farm simulations                   "
     "==============================================================================="
     << std::endl << std::endl
-    << "   Nalu Version: " << version::NaluVersionTag << std::endl
-    << "   Nalu GIT Commit SHA: " << version::NaluGitCommitSHA 
+    << "   Nalu-Wind Version: " << version::NaluVersionTag << std::endl
+    << "   Nalu-Wind GIT Commit SHA: " << version::NaluGitCommitSHA
     << ((version::RepoIsDirty == "DIRTY") ? ("-" + version::RepoIsDirty) : "") << std::endl
     << "   Trilinos Version: " << version::TrilinosVersionTag << std::endl << std::endl
     << "   TPLs: Boost, HDF5, netCDF, STK, Trilinos, yaml-cpp and zlib   " << std::endl;
