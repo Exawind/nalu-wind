@@ -77,7 +77,7 @@ namespace nalu{
 CrsGraph::CrsGraph(
   Realm &realm,
   const unsigned numDof)
-  : realm_(realm), numDof_(numDof)
+  : realm_(realm), numDof_(numDof), inConstruction_(false)
 {}
 
 CrsGraph::~CrsGraph() {}
@@ -163,7 +163,7 @@ void CrsGraph::beginConstruction()
   LocalOrdinal numSharedNotOwnedNotLocallyOwned = 0; // these are nodes on other procs
   // First, get the number of owned and sharedNotOwned (or num_sharedNotOwned_nodes = num_nodes - num_owned_nodes)
   //KOKKOS: BucketLoop parallel "reduce" is accumulating 4 sums
-  kokkos_parallel_for("Nalu::CrsGraph::beginLinearSystemConstructionA", buckets.size(), [&] (const int& ib) {
+  kokkos_parallel_for("Nalu::CrsGraph::beginConstructionA", buckets.size(), [&] (const int& ib) {
     stk::mesh::Bucket & b = *buckets[ib];
     const stk::mesh::Bucket::size_type length = b.size();
     //KOKKOS: intra BucketLoop parallel reduce
