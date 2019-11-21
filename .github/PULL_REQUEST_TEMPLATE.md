@@ -6,9 +6,14 @@
 
 ## Description of the pull-request
 
-*Provide a description of your proposed changes. If there is a related issue, please specify.*
+*Provide a description of your proposed changes. If there is a related issue, please specify.**
 
 ## Checklist
+
+**NOTE** The checklist below is a suggestion and not mandatory. You don't have
+to _check all boxes_ to submit a pull request. However, please add a brief
+explanation in your pull request summary explaining the omission for the benefit
+of reviewers and developers.
 
 *All pull requests*
 - [ ] Builds successfully (*must test on at least one system/compiler combination*)
