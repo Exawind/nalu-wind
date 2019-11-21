@@ -21,6 +21,7 @@ BLTRe0tNodeKernel::BLTRe0tNodeKernel(
 ) : NGPNodeKernel<BLTRe0tNodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
+    velocityNp1ID_ = get_field_ordinal(meta, "velocity");
     densityID_(get_field_ordinal(meta, "density")),
     tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
     viscID_(get_field_ordinal(meta, "molecular_viscosity")),
@@ -45,6 +46,7 @@ BLTRe0tNodeKernel::setup(Realm& realm)
   gamint_          = fieldMgr.get_field<double>(gamintID_);
   re0t_            = fieldMgr.get_field<double>(re0tID_);
 
+  velocityNp1_     = fieldMgr.get_field<double>(velocityNp1ID_);
   density_         = fieldMgr.get_field<double>(densityID_);
   tvisc_           = fieldMgr.get_field<double>(tviscID_);
   visc_            = fieldMgr.get_field<double>(viscID_);
@@ -175,6 +177,7 @@ BLTRe0tNodeKernel::execute(
   const DblType dVol      = dualNodalVolume_.get(node, 0);
   const DblType fOneBlend = fOneBlend_.get(node, 0);
 
+  NALU_ALIGNED vel[NodeKernelTraits::NDimMax];
 //
 // needed for Re0t source term
 //
@@ -185,6 +188,11 @@ BLTRe0tNodeKernel::execute(
 // needed for Re0t source term
 //
 
+  for (int i=0; i < NodeKernelTraits::NDimMax; ++i) {
+    vel[i] = velocityNp1_.get(node, i);
+  }
+  
+  DblType velMag = stk::math::sqrt( vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2] ) + 1.e-14;
   DblType Reomega = density * sdr * minD * minD / visc;
   DblType Fwake = stk::math::exp(-1.0-10 * Reomega * Reomega);
   DblType delta = 350.0 * vortMag * minD * re0t * visc / (density * velMag * velMag);
@@ -194,6 +202,25 @@ BLTRe0tNodeKernel::execute(
   DblType f0t = stk::math::min(stk::math::max(fwake*exp(-farg*farg*farg*farg), 1.0 - crat*crat), 1.0);
 
   DblType tc  = 500.0 * visc / density / velMag / velMag;
+
+  DblType dudx = dudx_.get(node, nDim_*0 + 0);
+  DblType dudy = dudx_.get(node, nDim_*0 + 1);
+  DblType dudz = dudx_.get(node, nDim_*0 + 2);
+
+  DblType dvdx = dudx_.get(node, nDim_*1 + 0);
+  DblType dvdy = dudx_.get(node, nDim_*1 + 1);
+  DblType dvdz = dudx_.get(node, nDim_*1 + 2);
+
+  DblType dwdx = dudx_.get(node, nDim_*2 + 0);
+  DblType dwdy = dudx_.get(node, nDim_*2 + 1);
+  DblType dwdz = dudx_.get(node, nDim_*2 + 2);
+
+  DblType dvelx = vel[0]*dudx+vel[1]*dvdx+vel[2]*dwdx;
+  DblType dvely = vel[0]*dudy+vel[1]*dvdy+vel[2]*dwdy;
+  DblType dvelz = vel[0]*dudz+vel[1]*dvdz+vel[2]*dwdz;
+
+  DblType dvels = 1.d0/(velMag*velMag) * (vel[0]*dvelx+vel[1]*dvely+vel[2]*dvelz);
+
   DblType Re0tcor = Secant_Re0tcor( dvels, density, Tu, visc);
 
   DblType Pre0t = c0t * density * (1.0 - f0t) / tc;
