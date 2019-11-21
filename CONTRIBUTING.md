@@ -73,6 +73,11 @@ manual](https://nalu-wind.readthedocs.io/en/latest/source/developer/index.html).
   updates to the documentation, supported by necessary verification and
   validation, as well as unit tests and regression tests
   
+- Where appropriate please use [Clang
+  format](https://clang.llvm.org/docs/ClangFormat.html) to format your code to
+  match the rest of Nalu-Wind. Only do that for sections you edit/add. Don't run
+  `clang-format` on the entire file if it is not a new file created by you.
+  
 Once a pull-request is submitted you will iterate with Nalu-Wind maintainers
 until your changes are in an acceptable state and can be merged in. You can push
 addditional commits to the branch used to create the pull-request to reflect the
