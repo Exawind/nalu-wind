@@ -6,7 +6,7 @@ guidelines for contributing to the Nalu-Wind project.
 ## Reporting bugs
 
 This section guides you through the process of [submitting a bug
-report](https://github.com/exawind/nalu-wind/issues/new) for Nalu-Wind.
+report](https://github.com/exawind/nalu-wind/issues/new) for the Nalu-Wind project.
 Following these guidelines will help maintainers understand your issue,
 reproduce the behavior, and develop a fix in an expedient fashion. Before
 submitting your bug report, please perform a [cursory
