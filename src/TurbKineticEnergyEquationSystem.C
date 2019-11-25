@@ -74,6 +74,7 @@
 #include <node_kernels/TKEKsgsNodeKernel.h>
 #include <node_kernels/TKESSTDESNodeKernel.h>
 #include <node_kernels/TKESSTIDDESNodeKernel.h>
+#include <node_kernels/TKESSTIDDESABLNodeKernel.h>
 #include <node_kernels/TKESSTNodeKernel.h>
 #include <node_kernels/TKERodiNodeKernel.h>
 
@@ -87,6 +88,7 @@
 #include <ngp_algorithms/NodalGradBndryElemAlg.h>
 #include <ngp_algorithms/EffDiffFluxCoeffAlg.h>
 #include <ngp_algorithms/EffSSTDiffFluxCoeffAlg.h>
+#include <ngp_algorithms/EffSSTIDDESABLDiffFluxCoeffAlg.h>
 #include <ngp_algorithms/TKEWallFuncAlg.h>
 
 // nso
@@ -166,7 +168,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   realm_.push_equation_to_systems(this);
 
   // sanity check on turbulence model
-  if ( (turbulenceModel_ != SST) && (turbulenceModel_ != KSGS) && (turbulenceModel_ != SST_DES) && (turbulenceModel_ != SST_TAMS) && (turbulenceModel_ != SST_IDDES) ) {
+  if ( (turbulenceModel_ != SST) && (turbulenceModel_ != KSGS) && (turbulenceModel_ != SST_DES) && (turbulenceModel_ != SST_TAMS) && (turbulenceModel_ != SST_IDDES) && (turbulenceModel_ != SST_IDDES_ABL) ) {
     throw std::runtime_error("User has requested TurbKinEnergyEqs, however, turbulence model is not KSGS, SST, SST_DES, SST_IDDES or SST_TAMS");
   }
 
@@ -341,9 +343,12 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         case SST_IDDES:
             nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
             break;
+        case SST_IDDES_ABL:
+            nodeAlg.add_kernel<TKESSTIDDESABLNodeKernel>(realm_.meta_data());
+            break;
         default:
           std::runtime_error("TKEEqSys: Invalid turbulence model, only SST, "
-                             "SST_DES, SST_TAMS and  Ksgs supported");
+                             "SST_DES, SST_TAMS, SST_IDDES, SST_IDDES_ABL and  Ksgs supported");
           break;
         }          
       },
@@ -478,6 +483,14 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
       effDiffFluxCoeffAlg_.reset(new EffSSTDiffFluxCoeffAlg(
         realm_, part, visc_, tvisc_, evisc_, sigmaKOne, sigmaKTwo));
       break;
+    }
+    case SST_IDDES_ABL: {
+        const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
+        const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);
+        const double sigmaABL = realm_.get_turb_model_constant(TM_abl_sigma);
+        effDiffFluxCoeffAlg_.reset(new EffSSTIDDESABLDiffFluxCoeffAlg(
+                                       realm_, part, visc_, tvisc_, evisc_, sigmaKOne, sigmaKTwo, sigmaABL));
+        break;
     }
     default:
       throw std::runtime_error("Unsupported turbulence model in TurbKe: only "

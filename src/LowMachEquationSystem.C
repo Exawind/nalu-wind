@@ -140,6 +140,7 @@
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_algorithms/TurbViscSSTAlg.h"
+#include "ngp_algorithms/TurbViscSSTIDDESABLAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_algorithms/DynamicPressureOpenAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -1606,6 +1607,11 @@ MomentumEquationSystem::register_interior_algorithm(
 
         tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_));
         break;
+        
+      case SST_IDDES_ABL:
+          
+          tviscAlg_.reset(new TurbViscSSTIDDESABLAlg(realm_, part, tvisc_));
+          break;
 
       case SST_TAMS:
         tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_, true));

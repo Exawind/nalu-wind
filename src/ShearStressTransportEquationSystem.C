@@ -140,7 +140,8 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*fOneBlending_, *part, nullptr);
 
   // DES model
-  if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ) {
+  if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ )
+       || ( SST_IDDES_ABL == realm_.solutionOptions_->turbulenceModel_ )) {
     maxLengthScale_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_max_length_scale"));
     stk::mesh::put_field_on_mesh(*maxLengthScale_, *part, nullptr);
   }
@@ -160,8 +161,8 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
 
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
-
-  if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ) {
+  if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ )
+       || ( SST_IDDES_ABL == realm_.solutionOptions_->turbulenceModel_ ) ) {
 
   if (SST_DES == realm_.solutionOptions_->turbulenceModel_) {
 
@@ -227,7 +228,8 @@ ShearStressTransportEquationSystem::solve_and_update()
     clip_min_distance_to_wall();
 
     // deal with DES option
-    if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) )
+    if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ )
+         || ( SST_IDDES_ABL == realm_.solutionOptions_->turbulenceModel_ ) )
       sstMaxLengthScaleAlgDriver_->execute();
 
     isInit_ = false;
@@ -235,7 +237,8 @@ ShearStressTransportEquationSystem::solve_and_update()
     if (realm_.currentNonlinearIteration_ == 1)
       clip_min_distance_to_wall();
 
-    if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) )
+    if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ )
+         || ( SST_IDDES_ABL == realm_.solutionOptions_->turbulenceModel_ ) )
       sstMaxLengthScaleAlgDriver_->execute();
   }
 
