@@ -1,14 +1,14 @@
-add_sources(GlobalSourceList
+target_sources(nalu PRIVATE
   # Edge kernels
-  ContinuityEdgeSolverAlg.C
-  MomentumEdgeSolverAlg.C
-  ScalarEdgeSolverAlg.C
-  WallDistEdgeSolverAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityEdgeSolverAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumEdgeSolverAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/ScalarEdgeSolverAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/WallDistEdgeSolverAlg.C
 
   # Face/edge BC kernels
-  ContinuityOpenEdgeKernel.C
-  MomentumABLWallFuncEdgeKernel.C
-  MomentumOpenEdgeKernel.C
-  MomentumSymmetryEdgeKernel.C
-  ScalarEdgeOpenSolverAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityOpenEdgeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumABLWallFuncEdgeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumOpenEdgeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSymmetryEdgeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/ScalarEdgeOpenSolverAlg.C
   )
