@@ -191,6 +191,35 @@ void basic_node_reduce_minmax(
   EXPECT_NEAR(min, minGold, tol);
 }
 
+void basic_node_reduce_minmax_alt(
+  const stk::mesh::BulkData& bulk,
+  const double minGold,
+  const double maxGold)
+{
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+
+  const auto& meta = bulk.mesh_meta_data();
+  const auto& coords =  meta.coordinate_field();
+  stk::mesh::Selector sel = meta.universal_part();
+  ngp::Mesh ngpMesh(bulk);
+  ngp::Field<double> ngpCoords(bulk, *coords);
+
+  using value_type = Kokkos::MinMax<double>::value_type;
+  value_type minmax;
+  Kokkos::MinMax<double> minmax_reducer(minmax);
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    "unittest_node_reduce_minmax",
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, value_type& threadVal) {
+      const double xcoord = ngpCoords.get(mi, 0);
+      if (xcoord < threadVal.min_val) threadVal.min_val = xcoord;
+      if (xcoord > threadVal.max_val) threadVal.max_val = xcoord;
+    }, minmax_reducer);
+
+  EXPECT_NEAR(minmax.max_val, maxGold, tol);
+  EXPECT_NEAR(minmax.min_val, minGold, tol);
+}
+
 
 void basic_elem_loop(
   const stk::mesh::BulkData& bulk,
@@ -671,6 +700,7 @@ TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmax)
   fill_mesh_and_init_fields("generated:16x16x16");
 
   basic_node_reduce_minmax(bulk, 0.0, 16.0);
+  basic_node_reduce_minmax_alt(bulk, 0.0, 16.0);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_elem_loop)
