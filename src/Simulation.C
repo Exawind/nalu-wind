@@ -178,10 +178,10 @@ void Simulation::high_level_banner() {
 
   NaluEnv::self().naluOutputP0()
     <<
-    "==============================================================================="
-    "                                  Nalu-Wind                                    "
-    "       An incompressible, turbulent computational fluid dynamics solver        "
-    "                  for wind turbine and wind farm simulations                   "
+    "===============================================================================" << std::endl <<
+    "                                  Nalu-Wind                                    " << std::endl <<
+    "       An incompressible, turbulent computational fluid dynamics solver        " << std::endl <<
+    "                  for wind turbine and wind farm simulations                   " << std::endl <<
     "==============================================================================="
     << std::endl << std::endl
     << "   Nalu-Wind Version: " << version::NaluVersionTag << std::endl
@@ -200,13 +200,13 @@ void Simulation::high_level_banner() {
 
   NaluEnv::self().naluOutputP0()
     <<
-    "   Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC   "
-    "   (NTESS), National Renewable Energy Laboratory, University of Texas Austin,  "
-    "    Northwest Research Associates. Under the terms of Contract DE-NA0003525    "
-    "    with NTESS, the U.S. Government retains certain rights in this software.   "
-    "                                                                               "
-    "           This software is released under the BSD 3-clause license.           "
-    "   See LICENSE file at https://github.com/exawind/nalu-wind for more details.  "
+    "   Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC   " << std::endl <<
+    "   (NTESS), National Renewable Energy Laboratory, University of Texas Austin,  " << std::endl <<
+    "    Northwest Research Associates. Under the terms of Contract DE-NA0003525    " << std::endl <<
+    "    with NTESS, the U.S. Government retains certain rights in this software.   " << std::endl <<
+    "                                                                               " << std::endl <<
+    "           This software is released under the BSD 3-clause license.           " << std::endl <<
+    "   See LICENSE file at https://github.com/exawind/nalu-wind for more details.  " << std::endl <<
     "-------------------------------------------------------------------------------"
     << std::endl << std::endl;
 
