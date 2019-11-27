@@ -164,8 +164,10 @@ message(STATUS "CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
 message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
-# Add -restrict to Intel compiler
-target_compile_options(nalu PUBLIC $<$<CXX_COMPILER_ID:Intel>:-restrict>)
+# Add -restrict to Intel CXX compiler
+target_compile_options(nalu PUBLIC $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:Intel>>:-restrict>)
+# Or with CMake >= 3.15
+#target_compile_options(nalu PUBLIC $<$<COMPILE_LANG_AND_ID:CXX,Intel>:-restrict>)
 
 # Logic for handling warnings
 if(ENABLE_ALL_WARNINGS)
