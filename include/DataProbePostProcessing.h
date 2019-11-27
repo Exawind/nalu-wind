@@ -47,6 +47,12 @@ enum class DataProbeSampleType{
   APRXFREQUENCY
 };
 
+// Defines the different kinds of probe geometries
+enum class DataProbeGeomType{
+  LINEOFSITE,
+  PLANE
+};
+
 class DataProbeInfo {
 public:
   DataProbeInfo() { }
@@ -63,6 +69,18 @@ public:
   std::vector<Coordinates> tailCoordinates_;
   std::vector<std::vector<stk::mesh::Entity> > nodeVector_;
   std::vector<stk::mesh::Part *> part_;
+
+  bool isSamplePlane_;   //LCC
+  std::vector<DataProbeGeomType> geomType_;
+  std::vector<Coordinates> cornerCoordinates_;
+  std::vector<Coordinates> edge1Vector_;
+  std::vector<Coordinates> edge2Vector_;
+  std::vector<int>         edge1NumPoints_;
+  std::vector<int>         edge2NumPoints_;
+  std::vector<Coordinates> offsetDir_;
+  std::vector<std::vector<double>>  offsetSpacings_;
+
+
 };
 
 class DataProbeSpecInfo {
