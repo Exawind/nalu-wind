@@ -8,6 +8,7 @@
 
 #include <TpetraSegregatedLinearSystem.h>
 #include <CrsGraphHelpers.h>
+#include <CrsGraph.h>
 #include <NonConformalInfo.h>
 #include <NonConformalManager.h>
 #include <FieldTypeDef.h>
@@ -89,8 +90,9 @@ TpetraSegregatedLinearSystem::TpetraSegregatedLinearSystem(
   LinearSolver * linearSolver)
   : LinearSystem(realm, numDof, eqSys, linearSolver)
 {
-  Teuchos::ParameterList junk;
-  node_ = Teuchos::rcp(new LinSys::Node(junk));
+  std::cout << "numDof=" << numDof << std::endl;
+  std::cout << "numDof_=" << numDof_ << std::endl;
+  crsGraph_ = Teuchos::rcp(new CrsGraph(realm,1));
 }
 
 TpetraSegregatedLinearSystem::~TpetraSegregatedLinearSystem()
@@ -162,6 +164,8 @@ void TpetraSegregatedLinearSystem::beginLinearSystemConstruction()
 {
   if(inConstruction_) return;
   inConstruction_ = true;
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   ThrowRequire(ownedGraph_.is_null());
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
   stk::mesh::MetaData & metaData = realm_.meta_data();
@@ -289,8 +293,12 @@ void TpetraSegregatedLinearSystem::beginLinearSystemConstruction()
   ownedAndSharedNodes_.insert(ownedAndSharedNodes_.end(), shared_not_owned_nodes.begin(), shared_not_owned_nodes.end());
   connections_.resize(ownedAndSharedNodes_.size());
   for(std::vector<stk::mesh::Entity>& vec : connections_) { vec.reserve(8); }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
 int TpetraSegregatedLinearSystem::insert_connection(stk::mesh::Entity a, stk::mesh::Entity b)
 {
     const size_t idx = entityToLID_[a.local_offset()];
@@ -312,7 +320,11 @@ int TpetraSegregatedLinearSystem::insert_connection(stk::mesh::Entity a, stk::me
     }
     return 0;
 }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
 void TpetraSegregatedLinearSystem::addConnections(const stk::mesh::Entity* entities, const size_t& num_entities)
 {
   for(size_t a=0; a < num_entities; ++a) {
@@ -330,10 +342,15 @@ void TpetraSegregatedLinearSystem::addConnections(const stk::mesh::Entity* entit
     }
   }
 }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 void TpetraSegregatedLinearSystem::buildNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginLinearSystemConstruction();
+  crsGraph_->buildNodeGraph(parts);
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   stk::mesh::MetaData & metaData = realm_.meta_data();
 
   const stk::mesh::Selector s_owned = metaData.locally_owned_part()
@@ -351,11 +368,16 @@ void TpetraSegregatedLinearSystem::buildNodeGraph(const stk::mesh::PartVector & 
       addConnections(&node, 1);
     }
   }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
 void TpetraSegregatedLinearSystem::buildConnectedNodeGraph(stk::mesh::EntityRank rank,
                                                            const stk::mesh::PartVector& parts)
 {
+  crsGraph_->buildConnectedNodeGraph(rank, parts);
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   stk::mesh::MetaData & metaData = realm_.meta_data();
 
   const stk::mesh::Selector s_owned = metaData.locally_owned_part()
@@ -374,30 +396,35 @@ void TpetraSegregatedLinearSystem::buildConnectedNodeGraph(stk::mesh::EntityRank
       addConnections(nodes, numNodes);
     }
   }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
 void TpetraSegregatedLinearSystem::buildEdgeToNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginLinearSystemConstruction();
-  buildConnectedNodeGraph(stk::topology::EDGE_RANK, parts);
+  crsGraph_->buildConnectedNodeGraph(stk::topology::EDGE_RANK, parts);
 }
 
 void TpetraSegregatedLinearSystem::buildFaceToNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginLinearSystemConstruction();
   stk::mesh::MetaData & metaData = realm_.meta_data();
-  buildConnectedNodeGraph(metaData.side_rank(), parts);
+  crsGraph_->buildConnectedNodeGraph(metaData.side_rank(), parts);
 }
 
 void TpetraSegregatedLinearSystem::buildElemToNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginLinearSystemConstruction();
-  buildConnectedNodeGraph(stk::topology::ELEM_RANK, parts);
+  crsGraph_->buildConnectedNodeGraph(stk::topology::ELEM_RANK, parts);
 }
 
 void TpetraSegregatedLinearSystem::buildReducedElemToNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginLinearSystemConstruction();
+  crsGraph_->buildReducedElemToNodeGraph(parts);
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   stk::mesh::MetaData & metaData = realm_.meta_data();
 
   const stk::mesh::Selector s_owned = metaData.locally_owned_part()
@@ -433,11 +460,16 @@ void TpetraSegregatedLinearSystem::buildReducedElemToNodeGraph(const stk::mesh::
       }
     }
   }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
 void TpetraSegregatedLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginLinearSystemConstruction();
+  crsGraph_->buildFaceElemToNodeGraph(parts);
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
   stk::mesh::MetaData & metaData = realm_.meta_data();
 
@@ -467,13 +499,18 @@ void TpetraSegregatedLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::Par
       addConnections(elem_nodes, numNodes);
     }
   }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
-void TpetraSegregatedLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector & /* parts */)
+void TpetraSegregatedLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector &parts)
 {
+  beginLinearSystemConstruction();
+  crsGraph_->buildNonConformalNodeGraph(parts);
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
   beginLinearSystemConstruction();
-//if (realm_.bulk_data().parallel_rank()==0) std::cerr<<"buildNonConformalNodeGraph"<<std::endl;
 
   std::vector<stk::mesh::Entity> entities;
 
@@ -520,10 +557,16 @@ void TpetraSegregatedLinearSystem::buildNonConformalNodeGraph(const stk::mesh::P
       }
     }
   }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
-void TpetraSegregatedLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVector & /* parts */)
+void TpetraSegregatedLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVector &parts)
 {
+  beginLinearSystemConstruction();
+  crsGraph_->buildOversetNodeGraph(parts);
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   // extract the rank
   const int theRank = NaluEnv::self().parallel_rank();
 
@@ -557,6 +600,8 @@ void TpetraSegregatedLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVe
     }
     addConnections(entities.data(), entities.size());
   }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
 void TpetraSegregatedLinearSystem::copy_stk_to_tpetra(stk::mesh::FieldBase * stkField,
@@ -605,6 +650,8 @@ void TpetraSegregatedLinearSystem::copy_stk_to_tpetra(stk::mesh::FieldBase * stk
   }
 }
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
 void TpetraSegregatedLinearSystem::compute_send_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
                                                         const std::vector<std::vector<stk::mesh::Entity> >& connections,
                                                         const std::vector<int>& neighborProcs,
@@ -656,7 +703,11 @@ void TpetraSegregatedLinearSystem::compute_send_lengths(const std::vector<stk::m
     sbuf.reserve(sendLengths[i]);
   }
 }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
 void TpetraSegregatedLinearSystem::compute_graph_row_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
                                                              const std::vector<std::vector<stk::mesh::Entity> >& connections,
                                                              LinSys::RowLengths& sharedNotOwnedRowLengths,
@@ -722,7 +773,11 @@ void TpetraSegregatedLinearSystem::compute_graph_row_lengths(const std::vector<s
     }
   }
 }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
 void TpetraSegregatedLinearSystem::insert_graph_connections(const std::vector<stk::mesh::Entity>& rowEntities,
                                                             const std::vector<std::vector<stk::mesh::Entity> >& connections,
                                                             LocalGraphArrays& locallyOwnedGraph,
@@ -765,7 +820,11 @@ void TpetraSegregatedLinearSystem::insert_graph_connections(const std::vector<st
     }
   }
 }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
 void TpetraSegregatedLinearSystem::fill_entity_to_row_LID_mapping()
 {
   const stk::mesh::BulkData& bulk = realm_.bulk_data();
@@ -791,7 +850,11 @@ void TpetraSegregatedLinearSystem::fill_entity_to_row_LID_mapping()
     }
   }
 }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
 void TpetraSegregatedLinearSystem::fill_entity_to_col_LID_mapping()
 {
     const stk::mesh::BulkData& bulk = realm_.bulk_data();
@@ -807,7 +870,11 @@ void TpetraSegregatedLinearSystem::fill_entity_to_col_LID_mapping()
         }
     }
 }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
 void TpetraSegregatedLinearSystem::storeOwnersForShared()
 {
   const stk::mesh::BulkData & bulkData = realm_.bulk_data();
@@ -828,12 +895,23 @@ void TpetraSegregatedLinearSystem::storeOwnersForShared()
     }
   }
 }
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 void TpetraSegregatedLinearSystem::finalizeLinearSystem()
 {
   ThrowRequire(inConstruction_);
   inConstruction_ = false;
+  crsGraph_->finalizeGraph();
+  entityToColLID_ = crsGraph_->get_entity_to_col_LID_mapping();
+  entityToLID_ = crsGraph_->get_entity_to_row_LID_mapping();
+  exporter_ = crsGraph_->getExporter();
+  myLIDs_ = crsGraph_->get_my_LIDs();
+  maxOwnedRowId_ = crsGraph_->getMaxOwnedRowID();
+  maxSharedNotOwnedRowId_ = crsGraph_->getMaxSharedNotOwnedRowID();
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
   stk::mesh::MetaData & metaData = realm_.meta_data();
 
@@ -895,21 +973,24 @@ void TpetraSegregatedLinearSystem::finalizeLinearSystem()
 
   ownedGraph_->expertStaticFillComplete(ownedRowsMap_, ownedRowsMap_, importer, Teuchos::null, params);
   sharedNotOwnedGraph_->expertStaticFillComplete(ownedRowsMap_, ownedRowsMap_, Teuchos::null, Teuchos::null, params);
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  ownedMatrix_ = Teuchos::rcp(new LinSys::Matrix(ownedGraph_));
-  sharedNotOwnedMatrix_ = Teuchos::rcp(new LinSys::Matrix(sharedNotOwnedGraph_));
+  ownedMatrix_ = Teuchos::rcp(new LinSys::Matrix(crsGraph_->getOwnedGraph()));
+  sharedNotOwnedMatrix_ = Teuchos::rcp(new LinSys::Matrix(crsGraph_->getSharedNotOwnedGraph()));
 
   ownedLocalMatrix_ = ownedMatrix_->getLocalMatrix();
   sharedNotOwnedLocalMatrix_ = sharedNotOwnedMatrix_->getLocalMatrix();
 
-  ownedRhs_ = Teuchos::rcp(new LinSys::MultiVector(ownedRowsMap_, numDof_));
-  sharedNotOwnedRhs_ = Teuchos::rcp(new LinSys::MultiVector(sharedNotOwnedRowsMap_, numDof_));
+  ownedRhs_ = Teuchos::rcp(new LinSys::MultiVector(crsGraph_->getOwnedRowsMap(), numDof_));
+  sharedNotOwnedRhs_ = Teuchos::rcp(new LinSys::MultiVector(crsGraph_->getSharedNotOwnedRowsMap(), numDof_));
 
   ownedLocalRhs_ = ownedRhs_->getLocalView<sierra::nalu::DeviceSpace>();
   sharedNotOwnedLocalRhs_ = sharedNotOwnedRhs_->getLocalView<sierra::nalu::DeviceSpace>();
 
-  sln_ = Teuchos::rcp(new LinSys::MultiVector(ownedRowsMap_, numDof_));
+  sln_ = Teuchos::rcp(new LinSys::MultiVector(crsGraph_->getOwnedRowsMap(), numDof_));
 
+  stk::mesh::MetaData & metaData = realm_.meta_data();
   const int nDim = metaData.spatial_dimension();
 
   Teuchos::RCP<LinSys::MultiVector> coords
@@ -1892,6 +1973,10 @@ void TpetraSegregatedLinearSystem::copy_tpetra_to_stk(const Teuchos::RCP<LinSys:
     }
   }
 }
+
+  Teuchos::RCP<LinSys::Graph>  TpetraSegregatedLinearSystem::getOwnedGraph() { return crsGraph_->getOwnedGraph(); }
+  Teuchos::RCP<LinSys::Matrix> TpetraSegregatedLinearSystem::getOwnedMatrix() { return ownedMatrix_; }
+  Teuchos::RCP<LinSys::MultiVector> TpetraSegregatedLinearSystem::getOwnedRhs() { return ownedRhs_; }
 
 } // namespace nalu
 } // namespace Sierra

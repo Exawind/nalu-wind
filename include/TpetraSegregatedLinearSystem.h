@@ -39,6 +39,7 @@ class Realm;
 class EquationSystem;
 class LinearSolver;
 class LocalGraphArrays;
+class CrsGraph;
 
 typedef std::unordered_map<stk::mesh::EntityId, size_t>  MyLIDMapType;
 
@@ -147,12 +148,14 @@ public:
 
   int getDofStatus(stk::mesh::Entity node);
 
+  //for unit testing
   int getRowLID(stk::mesh::Entity node) { return entityToLID_[node.local_offset()]; }
+  //for unit testing
   int getColLID(stk::mesh::Entity node) { return entityToColLID_[node.local_offset()]; }
 
-  Teuchos::RCP<LinSys::Graph>  getOwnedGraph() { return ownedGraph_; }
-  Teuchos::RCP<LinSys::Matrix> getOwnedMatrix() { return ownedMatrix_; }
-  Teuchos::RCP<LinSys::MultiVector> getOwnedRhs() { return ownedRhs_; }
+  Teuchos::RCP<LinSys::Graph>  getOwnedGraph();
+  Teuchos::RCP<LinSys::Matrix> getOwnedMatrix();
+  Teuchos::RCP<LinSys::MultiVector> getOwnedRhs();
 
   class TpetraLinSysCoeffApplier : public CoeffApplier
   {
@@ -210,6 +213,10 @@ public:
   };
 
 private:
+
+  Teuchos::RCP<CrsGraph>   crsGraph_;
+
+  //calls through to CrsGraph::buildConnectedNodeGraph()
   void buildConnectedNodeGraph(stk::mesh::EntityRank rank,
                                const stk::mesh::PartVector& parts);
 
@@ -217,6 +224,8 @@ private:
 
   void checkError( const int /* err_code */, const char * /* msg */) {}
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   void compute_send_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
          const std::vector<std::vector<stk::mesh::Entity> >& connections,
                             const std::vector<int>& neighborProcs,
@@ -235,6 +244,8 @@ private:
 
   void fill_entity_to_row_LID_mapping();
   void fill_entity_to_col_LID_mapping();
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   void copy_tpetra_to_stk(
     const Teuchos::RCP<LinSys::MultiVector> tpetraVector,
@@ -245,19 +256,23 @@ private:
   void copy_stk_to_tpetra(stk::mesh::FieldBase * stkField,
     const Teuchos::RCP<LinSys::MultiVector> tpetraVector);
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   int insert_connection(stk::mesh::Entity a, stk::mesh::Entity b);
   void addConnections(const stk::mesh::Entity* entities,const size_t&);
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   void expand_unordered_map(unsigned newCapacityNeeded);
   void checkForNaN(bool useOwned);
   bool checkForZeroRow(bool useOwned, bool doThrow, bool doPrint=false);
 
+// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+#ifdef GRAPH_RELATED_TO_BE_REMOVED
   std::vector<stk::mesh::Entity> ownedAndSharedNodes_;
   std::vector<std::vector<stk::mesh::Entity> > connections_;
   std::vector<GlobalOrdinal> totalGids_;
   std::set<std::pair<int,GlobalOrdinal> > ownersAndGids_;
   std::vector<int> sharedPids_;
-
-  Teuchos::RCP<LinSys::Node>   node_;
 
   // all rows, otherwise known as col map
   Teuchos::RCP<LinSys::Map>    totalColsMap_;
@@ -271,6 +286,8 @@ private:
 
   Teuchos::RCP<LinSys::Graph>  ownedGraph_;
   Teuchos::RCP<LinSys::Graph>  sharedNotOwnedGraph_;
+#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   Teuchos::RCP<LinSys::Matrix> ownedMatrix_;
   Teuchos::RCP<LinSys::MultiVector> ownedRhs_;
