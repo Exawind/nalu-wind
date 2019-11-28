@@ -137,7 +137,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentWallFunctionAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TimeIntegrator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystemHelpers.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraSegregatedLinearSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergyEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergyKsgsBuoyantElemSuppAlg.C
