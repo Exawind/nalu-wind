@@ -224,29 +224,6 @@ private:
 
   void checkError( const int /* err_code */, const char * /* msg */) {}
 
-// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-#ifdef GRAPH_RELATED_TO_BE_REMOVED
-  void compute_send_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
-         const std::vector<std::vector<stk::mesh::Entity> >& connections,
-                            const std::vector<int>& neighborProcs,
-                            stk::CommNeighbors& commNeighbors);
-
-  void compute_graph_row_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
-         const std::vector<std::vector<stk::mesh::Entity> >& connections,
-                                 LinSys::RowLengths& sharedNotOwnedRowLengths,
-                                 LinSys::RowLengths& locallyOwnedRowLengths,
-                                 stk::CommNeighbors& commNeighbors);
-
-  void insert_graph_connections(const std::vector<stk::mesh::Entity>& rowEntities,
-         const std::vector<std::vector<stk::mesh::Entity> >& connections,
-                                LocalGraphArrays& locallyOwnedGraph,
-                                LocalGraphArrays& sharedNotOwnedGraph);
-
-  void fill_entity_to_row_LID_mapping();
-  void fill_entity_to_col_LID_mapping();
-#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
-// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
   void copy_tpetra_to_stk(
     const Teuchos::RCP<LinSys::MultiVector> tpetraVector,
     stk::mesh::FieldBase * stkField);
@@ -256,38 +233,9 @@ private:
   void copy_stk_to_tpetra(stk::mesh::FieldBase * stkField,
     const Teuchos::RCP<LinSys::MultiVector> tpetraVector);
 
-// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-#ifdef GRAPH_RELATED_TO_BE_REMOVED
-  int insert_connection(stk::mesh::Entity a, stk::mesh::Entity b);
-  void addConnections(const stk::mesh::Entity* entities,const size_t&);
-#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
-// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   void expand_unordered_map(unsigned newCapacityNeeded);
   void checkForNaN(bool useOwned);
   bool checkForZeroRow(bool useOwned, bool doThrow, bool doPrint=false);
-
-// VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-#ifdef GRAPH_RELATED_TO_BE_REMOVED
-  std::vector<stk::mesh::Entity> ownedAndSharedNodes_;
-  std::vector<std::vector<stk::mesh::Entity> > connections_;
-  std::vector<GlobalOrdinal> totalGids_;
-  std::set<std::pair<int,GlobalOrdinal> > ownersAndGids_;
-  std::vector<int> sharedPids_;
-
-  // all rows, otherwise known as col map
-  Teuchos::RCP<LinSys::Map>    totalColsMap_;
-  Teuchos::RCP<LinSys::Map>    optColsMap_;
-
-  // Map of rows my proc owns (locally owned)
-  Teuchos::RCP<LinSys::Map>    ownedRowsMap_;
-
-  // Only nodes that share with other procs that I don't own
-  Teuchos::RCP<LinSys::Map>    sharedNotOwnedRowsMap_;
-
-  Teuchos::RCP<LinSys::Graph>  ownedGraph_;
-  Teuchos::RCP<LinSys::Graph>  sharedNotOwnedGraph_;
-#endif //ifdef GRAPH_RELATED_TO_BE_REMOVED
-// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   Teuchos::RCP<LinSys::Matrix> ownedMatrix_;
   Teuchos::RCP<LinSys::MultiVector> ownedRhs_;
