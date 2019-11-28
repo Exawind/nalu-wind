@@ -257,7 +257,9 @@ void TpetraSegregatedLinearSystem::copy_stk_to_tpetra(stk::mesh::FieldBase * stk
       if ((status & DS_SkippedDOF) || (status & DS_SharedNotOwnedDOF))
         continue;
 
-      const stk::mesh::EntityId nodeId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
+      const stk::mesh::EntityId nodeId = *stk::mesh::field_data(*realm_.tpetGlobalId_, node);
+      ThrowRequireMsg(nodeId != 0 && nodeId != std::numeric_limits<LinSys::GlobalOrdinal>::max()
+                            , " in copy_stk_to_tpetra ");
       for(int dofIdx = 0; dofIdx < fieldSize; ++dofIdx)
       {
         const size_t stkIndex = k*fieldSize + dofIdx;
