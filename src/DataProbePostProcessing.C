@@ -42,6 +42,8 @@
 #include <iomanip>
 #include <algorithm>
 #include <sstream>
+#include <sys/stat.h>
+#include <limits.h>
 
 namespace sierra{
 namespace nalu{
@@ -273,9 +275,6 @@ DataProbePostProcessing::load(
           const int numProbes   = probeInfo->numProbes_ + y_plane.size();
           probeInfo->numProbes_ = numProbes;
 
-	  NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::load found "<<y_plane.size()<<" planes " << std::endl; //LCCDEBUG
-	  NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::load probeInfo->numProbes_ = "<<probeInfo->numProbes_<< std::endl; //LCCDEBUG
-
           // resize everything...
           probeInfo->partName_.resize(numProbes);
           probeInfo->processorId_.resize(numProbes);
@@ -312,7 +311,6 @@ DataProbePostProcessing::load(
             const YAML::Node nameNode = y_planenode["name"];
             if ( nameNode ) {
               probeInfo->partName_[ilos+offset] = nameNode.as<std::string>() ;
-	      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::load plane name = "<<probeInfo->partName_[ilos+offset]<< std::endl; //LCCDEBUG
             } else
               throw std::runtime_error("DataProbePostProcessing: lacking the name");
 
@@ -320,7 +318,6 @@ DataProbePostProcessing::load(
             const YAML::Node edge1NumPoints = y_planenode["edge1_numPoints"];
             if ( edge1NumPoints ) {
               probeInfo->edge1NumPoints_[ilos+offset] = edge1NumPoints.as<int>() ;
-	      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::load edge1 N = "<<probeInfo->edge1NumPoints_[ilos+offset]<< std::endl; //LCCDEBUG
             } else
               throw std::runtime_error("DataProbePostProcessing: lacking edge 1 number of points");
 
@@ -328,7 +325,6 @@ DataProbePostProcessing::load(
             const YAML::Node edge2NumPoints = y_planenode["edge2_numPoints"];
             if ( edge2NumPoints ) {
               probeInfo->edge2NumPoints_[ilos+offset] = edge2NumPoints.as<int>() ;
-	      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::load edge2 N = "<<probeInfo->edge2NumPoints_[ilos+offset]<< std::endl; //LCCDEBUG
             } else
               throw std::runtime_error("DataProbePostProcessing: lacking edge 2 number of points");
 
@@ -362,11 +358,6 @@ DataProbePostProcessing::load(
 	      probeInfo->offsetDir_[ilos+offset].y_ = 0.0;
 	      probeInfo->offsetDir_[ilos+offset].z_ = 0.0;
 	    }
-	    NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::load probeInfo->offsetDir_ = "
-					   <<probeInfo->offsetDir_[ilos+offset].x_<<" "
-					   <<probeInfo->offsetDir_[ilos+offset].y_<<" "
-					   <<probeInfo->offsetDir_[ilos+offset].z_<<" "
-					   <<std::endl; //LCCDEBUG
 	    
             // coordinates; offset_spacings
             const YAML::Node offsetSpacings = y_planenode["offset_spacings"];
@@ -388,7 +379,6 @@ DataProbePostProcessing::load(
        
 	if (probeInfo->numProbes_ < 1)
 	{
-          //throw std::runtime_error("DataProbePostProcessing: only supports line_of_site_specifications");
 	  throw std::runtime_error("DataProbePostProcessing: Need to have some specification included");
         }
 	
@@ -670,7 +660,6 @@ DataProbePostProcessing::initialize()
 	  std::vector<double> OSspacing(numPlanes);
 	  for ( int i=0; i<numPlanes; i++) OSspacing[i] = probeInfo->offsetSpacings_[j][i];
 
-	  NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::initialize() numPoints =  "<<numPoints<<std::endl; //LCCDEBUG
 	  // now populate the coordinates; can use a simple loop rather than buckets
 	  for ( size_t n = 0; n < nodeVec.size(); ++n ) {
 	    stk::mesh::Entity node = nodeVec[n];
@@ -682,12 +671,6 @@ DataProbePostProcessing::initialize()
 	    for ( int i = 0; i < nDim; ++i ) {
 	      coords[i] = corner[i] + indexi*dx[i] + indexj*dy[i] + OSspacing[planei]*OSdir[i];
 	    }
-	    /*
-	    NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::initialize() Adding plane/point "
-					   << planei << " "<< indexi<<" "<<indexj<<" : "
-					   << coords[0] << " " << coords[1] << " " << coords[2]
-					   << std::endl; //LCCDEBUG 
-	    */
 	  }
 	  
 	}
@@ -697,7 +680,6 @@ DataProbePostProcessing::initialize()
 
 
   create_inactive_selector();
-  NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::initialize() create_transfer " << std::endl; //LCCDEBUG
   create_transfer();
 
   if (useExo_) {
@@ -978,6 +960,27 @@ DataProbePostProcessing::provide_output_txt(
 	      const int N2 = probeInfo->edge2NumPoints_[inp];
 	      const int pointsPerPlane = N1*N2;
 	      const int numPlanes = probeInfo->offsetSpacings_[inp].size();
+
+	      // Get the path to the file name, and create any directories necessary
+	      // - Get the path
+	      size_t pathfound; 
+	      pathfound = fileName.find_last_of("/");
+	      const std::string path = fileName.substr(0, pathfound);
+	      // - Create the path, if necessary
+	      char tmp[PATH_MAX];
+	      char *p = NULL;
+	      size_t len;
+	      mode_t mode=0755;  // S_IRWXU
+	      snprintf(tmp, sizeof(tmp),"%s",path.c_str());
+	      len = strlen(tmp);
+	      if(tmp[len - 1] == '/')
+                tmp[len - 1] = 0;
+	      for(p = tmp + 1; *p; p++) if(*p == '/') {
+		  *p = 0;
+		  mkdir(tmp, mode);
+		  *p = '/';
+                }
+	      mkdir(tmp, mode);
 
 	      myfile.open(fileName.c_str(), std::ios_base::out); // std::ios_base::app
 	      myfile << "#Time: "<< std::setprecision(precisionvar_) << currentTime << std::endl;

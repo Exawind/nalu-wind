@@ -21,7 +21,6 @@
 
 #include <stk_io/StkMeshIoBroker.hpp>
 
-
 // stk forwards
 namespace stk {
   namespace mesh {
@@ -70,7 +69,8 @@ public:
   std::vector<std::vector<stk::mesh::Entity> > nodeVector_;
   std::vector<stk::mesh::Part *> part_;
 
-  bool isSamplePlane_;   //LCC
+  // variables for sample planes
+  bool isSamplePlane_;   
   std::vector<DataProbeGeomType> geomType_;
   std::vector<Coordinates> cornerCoordinates_;
   std::vector<Coordinates> edge1Vector_;
