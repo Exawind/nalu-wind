@@ -22,6 +22,7 @@ SSTTAMSAveragesAlg::SSTTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
     betaStar_(realm.get_turb_model_constant(TM_betaStar)),
     CMdeg_(realm.get_turb_model_constant(TM_CMdeg)),
+    v2cMu_(realm.get_turb_model_constant(TM_v2cMu)),
     meshMotion_(realm.does_mesh_move()),
     velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
     density_(get_field_ordinal(realm.meta_data(), "density")),
@@ -80,6 +81,7 @@ SSTTAMSAveragesAlg::execute()
 
   const DblType betaStar = betaStar_;
   const DblType CMdeg = CMdeg_;
+  const DblType v2cMu = v2cMu_;
 
   nalu_ngp::run_entity_algorithm(
     "SSTTAMSAveragesAlg_computeAverages",
@@ -94,10 +96,7 @@ SSTTAMSAveragesAlg::execute()
         // limiters
         alpha.get(mi, 0) = std::min(alpha.get(mi, 0), 1.0);
 
-        // FIXME: What to do with a_kol in SST?
-        const double a_kol = 0.01;
-
-        alpha.get(mi, 0) = std::max(alpha.get(mi, 0), a_kol);
+        alpha.get(mi, 0) = std::max(alpha.get(mi, 0), alpha_kol);
       }
 
       // store RANS time scale
@@ -277,7 +276,7 @@ SSTTAMSAveragesAlg::execute()
 
       // Scale PM first
       const DblType v2 =
-        1.0 / 0.22 *
+        1.0 / v2cMu *
         (tvisc.get(mi, 0) / density.get(mi, 0) / avgTime.get(mi, 0));
       const DblType PMscale = std::pow(1.5 * alpha.get(mi, 0) * v2, -1.5);
 
