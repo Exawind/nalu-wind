@@ -13,7 +13,6 @@ target_sources(${utest_ex_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumActuatorNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTAMSNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTKERodiNodeKernel.C
-  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTurbKineticEnergyRodiNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSSTNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKsgsNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestWallDistNode.C
