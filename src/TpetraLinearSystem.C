@@ -783,6 +783,13 @@ void TpetraLinearSystem::insert_graph_connections(const std::vector<stk::mesh::E
   for(size_t i=0; i<rowEntities.size(); ++i) {
     const std::vector<stk::mesh::Entity>& entities_b = connections[i];
     unsigned numColEntities = entities_b.size();
+
+    // Skip this set of entities if no connections were previously registered by
+    // build*Graph methods. This could occur if the node is a "sharedNotOwned"
+    // node that doesn't have an upward relation (e.g., edge) owned by this MPI
+    // rank. See https://github.com/NaluCFD/Nalu/pull/485 for more details
+    if (numColEntities < 1) continue;
+
     dofStatus.resize(numColEntities);
     localDofs_b.resize(numColEntities);
 
