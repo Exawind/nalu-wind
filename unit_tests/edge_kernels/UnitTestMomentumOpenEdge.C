@@ -83,4 +83,5 @@ TEST_F(MomentumKernelHex8Mesh, NGP_open_edge)
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<24>(
-    helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);}
+    helperObjs.linsys->lhs_, hex8_golds::lhs, 1.0e-12);
+}

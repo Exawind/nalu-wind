@@ -379,6 +379,24 @@ public:
 
   virtual ~LowMachKernelHex8Mesh() {}
 
+  void fill_mesh(const std::string& meshSpec = "generated:20x20x20")
+  {
+    const double one = 1.0;
+    const double two = 2.0;
+    const double oneVecTwelve[12] = {one, one, one, one, one, one, one, one, one, one, one, one};
+    unit_test_utils::fill_hex8_mesh(meshSpec, bulk_);
+    stk::mesh::create_edges(bulk_, meta_.universal_part());
+    partVec_ = {meta_.get_part("block_1")};
+
+    coordinates_ = static_cast<const VectorFieldType*>(meta_.coordinate_field());
+
+    EXPECT_TRUE(coordinates_ != nullptr);
+
+    stk::mesh::field_fill(two, *dnvField_);
+    stk::mesh::field_fill(one, *pressure_);
+    stk::mesh::field_fill_component(oneVecTwelve, *exposedAreaVec_);
+  }
+
   virtual void fill_mesh_and_init_fields(
     bool doPerturb = false, bool generateSidesets = false) override
   {

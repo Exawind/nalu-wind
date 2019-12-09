@@ -24,6 +24,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometryBoundaryAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRLowReWallAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRWallFuncAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradPOpenBoundaryAlg.C
 
   # Algorithm Drivers
   ${CMAKE_CURRENT_SOURCE_DIR}/FieldUpdateAlgDriver.C

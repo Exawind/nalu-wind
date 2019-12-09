@@ -20,6 +20,10 @@
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
 
+#include "stk_mesh/base/Field.hpp"
+#include "stk_mesh/base/FieldParallel.hpp"
+#include "stk_mesh/base/FieldBLAS.hpp"
+#include "stk_mesh/base/MetaData.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -50,6 +54,21 @@ GeometryInteriorAlg<AlgTraits>::GeometryInteriorAlg(
   }
 }
 
+template<typename AlgTraits>
+void GeometryInteriorAlg<AlgTraits>::pre_work()
+{
+  const auto& meta     = realm_.meta_data();
+  const auto& meshInfo = realm_.mesh_info();
+  const auto  ngpMesh  = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+
+  auto *dualVol = meta.template get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
+  auto ngpDualVol = fieldMgr.template get_field<double>(dualVol->mesh_meta_data_ordinal());
+
+  stk::mesh::field_fill(0.0, *dualVol);
+  ngpDualVol.set_all(ngpMesh, 0.0);
+}
+
 template <typename AlgTraits>
 void GeometryInteriorAlg<AlgTraits>::execute()
 {
@@ -69,6 +88,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto dualVol = fieldMgr.template get_field<double>(dualNodalVol_);
+  dualVol.set_all(ngpMesh, 0.0);
   auto elemVol = fieldMgr.template get_field<double>(elemVol_);
   const auto dnvOps = nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, dualVol);
   const auto elemVolOps = nalu_ngp::simd_elem_field_updater(ngpMesh, elemVol);

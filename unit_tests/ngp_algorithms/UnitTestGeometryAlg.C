@@ -45,6 +45,8 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
   geomAlgDriver.register_elem_algorithm<sierra::nalu::GeometryInteriorAlg>(
     sierra::nalu::INTERIOR, partVec_[0], "geometry");
 
+  // Test that multiple executes are not fatal.
+  geomAlgDriver.execute();
   geomAlgDriver.execute();
 
   ngpElemVol.modify_on_device();
@@ -126,6 +128,8 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
   geomAlgDriver.register_face_algorithm<sierra::nalu::GeometryBoundaryAlg>(
     sierra::nalu::WALL, surfPart, "geometry");
 
+  // Test that multiple executes are not fatal.
+  geomAlgDriver.execute();
   geomAlgDriver.execute();
 
   ngpArea.modify_on_device();
@@ -177,6 +181,8 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
     sierra::nalu::WALL, surfPart,
     sierra::nalu::get_elem_topo(helperObjs.realm, *surfPart), "geometry");
 
+  // Test that multiple executes are not fatal.
+  geomAlgDriver.execute();
   geomAlgDriver.execute();
 
   const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();

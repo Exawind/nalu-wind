@@ -1,0 +1,162 @@
+/*------------------------------------------------------------------------*/
+/*  Copyright 2014 Sandia Corporation.                                    */
+/*  This software is released under the license detailed                  */
+/*  in the file, LICENSE, which is located in the top-level Nalu          */
+/*  directory structure                                                   */
+/*------------------------------------------------------------------------*/
+
+#include "ngp_algorithms/NodalGradPOpenBoundaryAlg.h"
+#include "Algorithm.h"
+
+#include "BuildTemplates.h"
+#include "master_element/MasterElement.h"
+#include "master_element/MasterElementFactory.h"
+#include "ngp_algorithms/ViewHelper.h"
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldOps.h"
+#include "Realm.h"
+#include "ScratchViews.h"
+#include "SolutionOptions.h"
+#include "utils/StkHelpers.h"
+
+namespace sierra{
+namespace nalu{
+
+//==========================================================================
+// Class Definition
+//==========================================================================
+// NodalGradPOpenBoundary - adds in boundary contribution
+//                                      for elem/edge proj nodal gradient
+//==========================================================================
+//--------------------------------------------------------------------------
+//-------- constructor -----------------------------------------------------
+//--------------------------------------------------------------------------
+template <typename AlgTraits>
+NodalGradPOpenBoundary<AlgTraits>::NodalGradPOpenBoundary(
+  Realm &realm,
+  stk::mesh::Part *part,
+  const bool useShifted)
+  : Algorithm(realm, part),
+    useShifted_(useShifted),
+    zeroGrad_(realm_.solutionOptions_->explicitlyZeroOpenPressureGradient_),
+    massCorr_(realm_.solutionOptions_->activateOpenMdotCorrection_),
+    exposedAreaVec_ (get_field_ordinal(realm_.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
+    dualNodalVol_   (get_field_ordinal(realm_.meta_data(), "dual_nodal_volume")),
+    exposedPressureField_   (get_field_ordinal(realm_.meta_data(), (massCorr_ ? "pressure" : "pressure_bc"))),
+    pressureField_ (get_field_ordinal(realm_.meta_data(), "pressure")),
+    gradP_         (get_field_ordinal(realm_.meta_data(), "dpdx")),
+    coordinates_   (get_field_ordinal(realm_.meta_data(), realm.get_coordinates_name())),
+    meFC_  (MasterElementRepo::get_surface_master_element<typename AlgTraits::FaceTraits>()),
+    meSCS_ (MasterElementRepo::get_surface_master_element<typename AlgTraits::ElemTraits>()),
+    faceData_(realm.meta_data()),
+    elemData_(realm.meta_data())
+{
+  const int coordinates = get_field_ordinal(realm.meta_data(), realm.get_coordinates_name());
+  faceData_.add_coordinates_field(coordinates, AlgTraits::nDim_, CURRENT_COORDINATES);
+  elemData_.add_coordinates_field(coordinates, AlgTraits::nDim_, CURRENT_COORDINATES);
+  faceData_.add_cvfem_face_me   (meFC_);
+  elemData_.add_cvfem_surface_me(meSCS_);
+
+  faceData_.add_face_field(exposedAreaVec_, AlgTraits::numFaceIp_, AlgTraits::nDim_);
+  faceData_.add_gathered_nodal_field(dualNodalVol_,1);
+  faceData_.add_gathered_nodal_field(exposedPressureField_,1);
+  faceData_.add_gathered_nodal_field(pressureField_,1);
+  faceData_.add_gathered_nodal_field(gradP_,       AlgTraits::nodesPerFace_, AlgTraits::nDim_);
+  faceData_.add_coordinates_field   (coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+
+  const ELEM_DATA_NEEDED fc_shape_fcn  = useShifted_ ?  FC_SHIFTED_SHAPE_FCN :  FC_SHAPE_FCN;
+  const ELEM_DATA_NEEDED scs_shape_fcn = useShifted_ ? SCS_SHIFTED_SHAPE_FCN : SCS_SHAPE_FCN;
+  faceData_.add_master_element_call( fc_shape_fcn, CURRENT_COORDINATES);
+  elemData_.add_master_element_call(scs_shape_fcn, CURRENT_COORDINATES);
+}
+
+
+
+
+//--------------------------------------------------------------------------
+//-------- execute ---------------------------------------------------------
+//--------------------------------------------------------------------------
+template <typename AlgTraits>
+void
+NodalGradPOpenBoundary<AlgTraits>::execute()
+{
+  using SimdDataType = nalu_ngp::FaceElemSimdData<ngp::Mesh>;
+
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& meta_data = meshInfo.meta();
+
+  const bool useShifted = useShifted_;
+  const bool zeroGrad   = zeroGrad_;
+
+  const unsigned exposedAreaVec       = exposedAreaVec_;
+  const unsigned dualNodalVol         = dualNodalVol_;
+  const unsigned exposedPressureField = exposedPressureField_;
+  const unsigned pressureField        = pressureField_;
+  const unsigned coordsID             = coordinates_;
+
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  const auto   ngpMesh = meshInfo.ngp_mesh();
+  auto  gradP = fieldMgr.template get_field<double>(gradP_);
+  const auto gradPOps = nalu_ngp::simd_face_elem_nodal_field_updater(ngpMesh, gradP);
+
+  MasterElement* meFC  = meFC_;
+  MasterElement* meSCS = meSCS_;
+
+  stk::mesh::Selector s_locally_owned_union = meta_data.locally_owned_part() & stk::mesh::selectUnion(partVec_);
+
+  const std::string algName = "NodalGradPOpenBoundary_" +
+                              std::to_string(AlgTraits::faceTopo_) + "_" +
+                              std::to_string(AlgTraits::elemTopo_);
+
+  nalu_ngp::run_face_elem_algorithm(
+    algName, meshInfo, faceData_, elemData_, s_locally_owned_union,
+    KOKKOS_LAMBDA(SimdDataType& fdata) {
+
+      const int* ipNodeMap = meFC->ipNodeMap();
+
+      auto& faceView = fdata.simdFaceView;
+      const auto v_areav        = faceView.get_scratch_view_2D(exposedAreaVec);
+      const auto v_dnv          = faceView.get_scratch_view_1D(dualNodalVol);
+      const auto face_p_field   = faceView.get_scratch_view_1D(exposedPressureField);
+      const auto elem_p_field   = faceView.get_scratch_view_1D(pressureField);
+      const auto v_coord        = faceView.get_scratch_view_2D(coordsID);
+
+      const auto meFaceViews = fdata.simdFaceView.get_me_views(CURRENT_COORDINATES);
+      const auto meElemViews = fdata.simdElemView.get_me_views(CURRENT_COORDINATES);
+      const auto v_shape_fcn = useShifted ? meFaceViews.fc_shifted_shape_fcn :  meFaceViews.fc_shape_fcn;
+      const auto e_shape_fcn = useShifted ? meElemViews.scs_shifted_shape_fcn:  meElemViews.scs_shape_fcn;
+
+      const int faceOrdinal = fdata.faceOrd;
+
+      for (int ip = 0; ip < AlgTraits::numFaceIp_; ++ip) {
+        DoubleType pIp = 0.0;
+        if (zeroGrad) {
+          // evaluate pressure at opposing face.  If zeroGrad_ option is used, then
+          // we'll copy this value to the exposed face.  Otherwise, it's unused
+          const int oip = meSCS->opposingFace(faceOrdinal, ip);
+          for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
+            pIp += e_shape_fcn(oip,n) * elem_p_field(n);
+          }
+        } else {
+          for (int n = 0; n < AlgTraits::nodesPerFace_; ++n) {
+            pIp += v_shape_fcn(ip, n) * face_p_field(n);
+          }
+        }
+
+        const int node = ipNodeMap[ip];
+        const DoubleType vol = v_dnv(node);
+        const DoubleType press_div_vol = pIp / vol;
+
+        for ( int d = 0; d < AlgTraits::nDim_; ++d ) {
+          const DoubleType areav = v_areav(ip, d);
+          gradPOps(fdata, node, d) += areav * press_div_vol;
+        }
+      }
+    }
+  );
+}
+
+INSTANTIATE_KERNEL_FACE_ELEMENT(NodalGradPOpenBoundary)
+
+} // namespace nalu
+} // namespace Sierra
