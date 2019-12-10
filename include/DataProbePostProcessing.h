@@ -181,6 +181,7 @@ private:
 
   double previousTime_;
   bool useExo_{false};
+  bool useText_{false};
   std::string exoName_;
   size_t fileIndex_;
   size_t precisionvar_;

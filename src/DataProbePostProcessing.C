@@ -123,17 +123,41 @@ DataProbePostProcessing::load(
   if (y_dataProbe) {
     NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::load" << std::endl;
 
-    // extract the frequency of output
-    std::string outFormat = "text";
-    get_if_present(y_dataProbe, "output_format", outFormat, outFormat);
+    // Set the output format for probes
+    std::vector<std::string> formatList;
+    const YAML::Node y_formats = y_dataProbe["output_format"]; 
+    if (y_formats) {
+      if (y_formats.Type() == YAML::NodeType::Sequence) {  // Provided as as sequence
+	for (size_t ioutput = 0; ioutput < y_formats.size(); ++ioutput) {
+	  const YAML::Node y_format = y_formats[ioutput];
+	  std::string formatName    = y_format.as<std::string>() ;
+	  formatList.push_back(formatName);
+	}
+      } else  { // Not provided as a sequence, just one string
+	std::string formatName    = y_formats.as<std::string>() ;	
+	formatList.push_back(formatName);
+      }
+    } else { // output_format not given at all, add the default ("text")
+      std::string formatName("text");	
+      formatList.push_back(formatName);
+    }
+    // Go through and parse each format in formatList
+    for (size_t iformat=0; iformat<formatList.size(); iformat++) {
+      std::string formatName  = formatList[iformat];
+      if (case_insensitive_compare(formatName, "exodus")) {
+	useExo_ = true;
+      }
+      else if (case_insensitive_compare(formatName, "text")) {
+	useText_ = true;
+      } else {
+	throw std::runtime_error("output_format has unrecognized format");
+      }
+      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Adding "<<formatName<<" output format..." << std::endl;
+    }
 
-    if (case_insensitive_compare(outFormat, "exodus")) {
-      useExo_ = true;
-      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Using exodus format..." << std::endl;
-    }
-    else {
-      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Using text format..." << std::endl;
-    }
+
+    // extract the frequency of output
+
     get_if_present(y_dataProbe, "exodus_name", exoName_, exoName_);
 
     get_if_present(y_dataProbe, "output_frequency", outputFreq_, outputFreq_);
@@ -296,80 +320,80 @@ DataProbePostProcessing::load(
 
           // deal with processors... Distribute each probe over subsequent procs
           const int numProcs = NaluEnv::self().parallel_size();
-          const int divProcProbe = std::max(numProcs/numProbes, numProcs);
+          const int divProcProbe = std::max(numProcs/numProbes, numProcs);  // unnecessary, divProcProbe = numProcs
 
-          for (size_t ilos = 0; ilos < y_plane.size(); ilos++) {
-            const YAML::Node y_planenode = y_plane[ilos] ;
+          for (size_t iplane = 0; iplane < y_plane.size(); iplane++) {
+            const YAML::Node y_planenode = y_plane[iplane] ;
 
 	    // Set the geometry type
-            probeInfo->geomType_[ilos+offset] = DataProbeGeomType::PLANE;
+            probeInfo->geomType_[iplane+offset] = DataProbeGeomType::PLANE;
 
             // processor id; distribute los equally over the number of processors
-            probeInfo->processorId_[ilos+offset] = divProcProbe > 0 ? ilos % divProcProbe : 0;
+            probeInfo->processorId_[iplane+offset] = divProcProbe > 0 ? iplane % divProcProbe : 0;
 
             // name; which is the part name of choice
             const YAML::Node nameNode = y_planenode["name"];
             if ( nameNode ) {
-              probeInfo->partName_[ilos+offset] = nameNode.as<std::string>() ;
+              probeInfo->partName_[iplane+offset] = nameNode.as<std::string>() ;
             } else
               throw std::runtime_error("DataProbePostProcessing: lacking the name");
 
             // number of edge1 points
             const YAML::Node edge1NumPoints = y_planenode["edge1_numPoints"];
             if ( edge1NumPoints ) {
-              probeInfo->edge1NumPoints_[ilos+offset] = edge1NumPoints.as<int>() ;
+              probeInfo->edge1NumPoints_[iplane+offset] = edge1NumPoints.as<int>() ;
             } else
               throw std::runtime_error("DataProbePostProcessing: lacking edge 1 number of points");
 
             // number of edge2 points
             const YAML::Node edge2NumPoints = y_planenode["edge2_numPoints"];
             if ( edge2NumPoints ) {
-              probeInfo->edge2NumPoints_[ilos+offset] = edge2NumPoints.as<int>() ;
+              probeInfo->edge2NumPoints_[iplane+offset] = edge2NumPoints.as<int>() ;
             } else
               throw std::runtime_error("DataProbePostProcessing: lacking edge 2 number of points");
 
             // coordinates; corner
             const YAML::Node cornerCoord = y_planenode["corner_coordinates"];
             if ( cornerCoord )
-              probeInfo->cornerCoordinates_[ilos+offset] = cornerCoord.as<sierra::nalu::Coordinates>() ;
+              probeInfo->cornerCoordinates_[iplane+offset] = cornerCoord.as<sierra::nalu::Coordinates>() ;
             else
               throw std::runtime_error("DataProbePostProcessing: lacking corner coordinates");
 
             // coordinates; edge1
             const YAML::Node edge1Vector = y_planenode["edge1_vector"];
             if ( edge1Vector )
-              probeInfo->edge1Vector_[ilos+offset] = edge1Vector.as<sierra::nalu::Coordinates>() ;
+              probeInfo->edge1Vector_[iplane+offset] = edge1Vector.as<sierra::nalu::Coordinates>() ;
             else
               throw std::runtime_error("DataProbePostProcessing: lacking edge 1 vector");
 
             // coordinates; edge2
             const YAML::Node edge2Vector = y_planenode["edge2_vector"];
             if ( edge2Vector )
-              probeInfo->edge2Vector_[ilos+offset] = edge2Vector.as<sierra::nalu::Coordinates>() ;
+              probeInfo->edge2Vector_[iplane+offset] = edge2Vector.as<sierra::nalu::Coordinates>() ;
             else
               throw std::runtime_error("DataProbePostProcessing: lacking edge 2 vector");
 
             // coordinates; offsetDir
             const YAML::Node offsetDir = y_planenode["offset_vector"];
 	    if (offsetDir)
-              probeInfo->offsetDir_[ilos+offset] = offsetDir.as<sierra::nalu::Coordinates>() ;
+              probeInfo->offsetDir_[iplane+offset] = offsetDir.as<sierra::nalu::Coordinates>() ;
 	    else {
-	      probeInfo->offsetDir_[ilos+offset].x_ = 0.0;
-	      probeInfo->offsetDir_[ilos+offset].y_ = 0.0;
-	      probeInfo->offsetDir_[ilos+offset].z_ = 0.0;
+	      probeInfo->offsetDir_[iplane+offset].x_ = 0.0;
+	      probeInfo->offsetDir_[iplane+offset].y_ = 0.0;
+	      probeInfo->offsetDir_[iplane+offset].z_ = 0.0;
 	    }
 	    
             // coordinates; offset_spacings
             const YAML::Node offsetSpacings = y_planenode["offset_spacings"];
 	    if (offsetSpacings)
-	      probeInfo->offsetSpacings_[ilos+offset] = offsetSpacings.as<std::vector<double>>();
+	      probeInfo->offsetSpacings_[iplane+offset] = offsetSpacings.as<std::vector<double>>();
 	    else
-	      probeInfo->offsetSpacings_[ilos+offset].push_back(0.0);
+	      probeInfo->offsetSpacings_[iplane+offset].push_back(0.0);
 
 	    // Set the total number of points
-	    const int numPlanes = probeInfo->offsetSpacings_[ilos+offset].size();
-	    probeInfo->numPoints_[ilos+offset] =  probeInfo->edge1NumPoints_[ilos+offset]*
-	      probeInfo->edge2NumPoints_[ilos+offset]*numPlanes;
+	    const int numPlanes = probeInfo->offsetSpacings_[iplane+offset].size();
+	    probeInfo->numPoints_[iplane+offset] =  probeInfo->edge1NumPoints_[iplane+offset]*
+	      probeInfo->edge2NumPoints_[iplane+offset]*numPlanes;
 
 	  }
 
@@ -843,7 +867,7 @@ DataProbePostProcessing::execute()
     if (useExo_) {
       provide_output_exodus(currentTime);
     }
-    else {
+    if (useText_) {
       provide_output_txt(currentTime);
     }
   }
