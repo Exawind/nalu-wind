@@ -475,16 +475,13 @@ ActuatorFAST::initialize()
 void
 ActuatorFAST::update()
 {
-//~ std::cerr << "Update before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
+std::cerr << "Update before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
     
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
 
   // initialize need to ghost and elems to ghost
   needToGhostCount_ = 0;
   elemsToGhost_.clear();
-
-  // clear actuatorPointInfoMap_
-  //~ actuatorPointInfoMap_.clear();
 
   bulkData.modification_begin();
 
@@ -832,7 +829,10 @@ void ActuatorFAST::filtered_lifting_line()
 //~ std::cerr << "Force = "  << force[1] << std::endl;
 //~ std::cerr << "Vel = "  << vel[2] << std::endl;
 //~ std::cerr << "Force = "  << force[2] << std::endl;
-        
+
+//~ // Change the sign of the relative velocity
+//~ for (int i = 0; i < nDim; i++) vel[i] *= -1.;
+
           // The velocity magnitude squared
           double vmag2(0);
           // Compute the dot product of the velocity (vmag^2)
@@ -842,16 +842,93 @@ void ActuatorFAST::filtered_lifting_line()
           double fvel(0);
           // Compute the dot product of the velocity (vmag^2)
           for (int i = 0; i < nDim; i++) fvel += force[i] * vel[i];
-            
+
+          // Compute the dr
+          // This is the spanwise width
+          double dr(0);
+
+          // The coordinate location
+          std::vector<double> xyz{0., 0., 0.};
+          // The plus 1 coordinate
+          std::vector<double> xyz_p1{0., 0., 0.};
+          // The minus one coordinate
+          std::vector<double> xyz_m1{0., 0., 0.};
+
+          // Compute the radial difference between points
+          if (na == 0)
+          {
+            // Get the adjacent index
+            np = indexMap_[iTurb][nb][na];
+            // Get the coordinates for the current point
+            FAST.getForceNodeCoordinates(xyz, np, iTurb);
+
+            // Get the adjacent index
+            np = indexMap_[iTurb][nb][na + 1];
+            // Get the coordinates for the current point
+            FAST.getForceNodeCoordinates(xyz_p1, np, iTurb);
+
+            // Compute the magnitude of the difference
+            for (int i = 0; i < nDim; i++)
+                dr += std::pow(xyz_p1.data()[i]-xyz.data()[i], 2);
+
+            // Take the square root and divide by 2 (central difference)
+            dr = std::sqrt(dr) / 2.;
+          }
+
+          else if (na == ptsPerBlade - 1)
+          {
+            // Get the adjacent index
+            np = indexMap_[iTurb][nb][na];
+            // Get the coordinates for the current point
+            FAST.getForceNodeCoordinates(xyz, np, iTurb);
+
+            // Get the adjacent index
+            np = indexMap_[iTurb][nb][na - 1];
+            // Get the coordinates for the current point
+            FAST.getForceNodeCoordinates(xyz_m1, np, iTurb);
+
+            // Compute the magnitude of the difference
+            for (int i = 0; i < nDim; i++)
+                dr += std::pow(xyz.data()[i]-xyz_m1.data()[i], 2);
+
+            // Take the square root and divide by 2 (central difference)
+            dr = std::sqrt(dr) / 2.;
+          }
+
+          else
+          {
+            // Get the adjacent index
+            np = indexMap_[iTurb][nb][na-1];
+            // Get the coordinates for the adjacent points i-1 and i+1
+            FAST.getForceNodeCoordinates(xyz_m1, np, iTurb);
+  
+            // Get the adjacent index
+            np = indexMap_[iTurb][nb][na+1];
+            // Get the coordinates for the adjacent points i-1 and i+1
+            FAST.getForceNodeCoordinates(xyz_p1, np, iTurb);
+ 
+            // Compute the magnitude of the difference
+            for (int i = 0; i < nDim; i++)
+                dr += std::pow(xyz_p1.data()[i]-xyz_m1.data()[i], 2);
+
+            // Take the square root and divide by 2 (central difference)
+            dr = std::sqrt(dr) / 2.;
+          }
+              
+
           // Compute the function G
           // This is the same as the lift vector along the blade span
           for (int i = 0; i < nDim; i++)
           {
-              infoObject -> G.data()[i] = force[i] - vel[i] * fvel / vmag2;
+            // Compute the vector G
+            infoObject -> G.data()[i] = force[i] - vel[i] * fvel / vmag2;
 
-              // Zero the induced velocity values
-              infoObject -> u_LES.data()[i] = 0;
-              infoObject -> u_opt.data()[i] = 0;
+            // Convert G to force per unit width
+            infoObject -> G.data()[i] /= dr;
+
+            // Zero the induced velocity values
+            infoObject -> u_LES.data()[i] = 0;
+            infoObject -> u_opt.data()[i] = 0;
           }
         }
 
@@ -878,7 +955,7 @@ void ActuatorFAST::filtered_lifting_line()
 
       // The gradient of the first and last points
       for (int i = 0; i < nDim; i++) {
-        infoObject_0 -> dG.data()[i] = infoObject_0 -> G.data()[i];
+        infoObject_0 -> dG.data()[i] =  infoObject_0 -> G.data()[i];
         infoObject_N -> dG.data()[i] = -infoObject_N -> G.data()[i];
       }
 
@@ -953,7 +1030,7 @@ void ActuatorFAST::filtered_lifting_line()
           // The coordinate of the actuator point
           const Point& r2 = infoObject2 -> centroidCoords_;
 
-          // Initialize the sqare of the difference to zero
+          // Initialize the square of the difference to zero
           double rdiff2(0);
           // Compute the difference in radial location
           for (int i = 0; i < nDim; i++) 
@@ -963,7 +1040,7 @@ void ActuatorFAST::filtered_lifting_line()
           // The square root of this gives the magnitude of the vector
           double diff = std::sqrt(rdiff2);
           // Change the sign depending on which side the actuator point is on
-          if (na_2 > na)
+          if (na_2 < na)
             diff *= -1;
 
           // Get the relative velocity
@@ -975,35 +1052,40 @@ void ActuatorFAST::filtered_lifting_line()
           for (int i = 0; i < nDim; i++) vmag += vel[i] * vel[i];
           vmag = std::sqrt(vmag);
 
+          // This is the gradient of the function G (it is a 3d vector)
+          const std::array<double, 3>& dG = infoObject -> dG;
+
+          // The value of epsilon
+          // Notice the correciton assumes uniform epsilon and takes the 
+          //   the first value
+          const double& eps_les = infoObject -> epsilon_.x_;
+          const double& eps_opt = infoObject -> epsilon_opt_.x_;
+//~ std::cerr << "epsilon les = "  << eps_les << std::endl;
+//~ std::cerr << "epsilon opt = "  << eps_opt << std::endl;
+
           // Compute the LES and optimal induced velocities
           for (int i = 0; i < nDim; i++) 
           {
               
-            // The value of epsilon
-            // Notice the correciton assumes uniform epsilon and takes the 
-            //   the first value
-            const double& eps_les = infoObject -> epsilon_.x_;
-            const double& eps_opt = infoObject -> epsilon_opt_.x_;
-//~ std::cerr << "epsilon les = "  << eps_les << std::endl;
-//~ std::cerr << "epsilon opt = "  << eps_opt << std::endl;
-
-            // This is the gradient of the function G (it is a 3d vector)
-            const std::array<double, 3>& dG = infoObject -> dG;
-
             // Compute the LES induced velocity
-            infoObject -> u_LES.data()[i] -= 1/(vmag * 4 * pi) * dG.data()[i] * 
-              (1.-std::exp(-rdiff2/(eps_les * eps_les))) /
-              (diff);
-            infoObject -> u_opt.data()[i] -= 1/(vmag * 4 * pi) * dG.data()[i] * 
-              (1.-std::exp(-rdiff2/(eps_opt * eps_opt))) /
-              (diff);
-//~ std::cerr << "dG = "  << infoObject -> dG.data()[i] << std::endl;
+            infoObject -> u_LES.data()[i] -= 1./(vmag * 4. * pi) * dG.data()[i] * 
+              (1. - std::exp(-rdiff2/(eps_les * eps_les))) / diff;
+
+            // Compute the optimal induced velocity
+            infoObject -> u_opt.data()[i] -= 1./(vmag * 4. * pi) * dG.data()[i] * 
+              (1. - std::exp(-rdiff2/(eps_opt * eps_opt))) / diff;
+
 //~ std::cerr << "u les = "  << infoObject -> u_LES.data()[i] << std::endl;
 //~ std::cerr << "u opt = "  << infoObject -> u_opt.data()[i] << std::endl;
 
-          }          
+          }
         }
-      }  
+//~ std::cerr << "na = "  << na << std::endl;
+//~ std::cerr << "dG 1= "  << infoObject -> dG.data()[0] << std::endl;
+//~ std::cerr << "dG 2= "  << infoObject -> dG.data()[1] << std::endl;
+//~ std::cerr << "dG 3= "  << infoObject -> dG.data()[2] << std::endl;
+
+      }
     }
 
     ///////////////////////////////
@@ -1011,7 +1093,7 @@ void ActuatorFAST::filtered_lifting_line()
     ///////////////////////////////
 
     // The relaxation factor used in filtered lifting line theory
-    double f = 0.1;
+    double f = 0.01;
 
     // Loop through all blades
     for (size_t nb=0; nb < numBlades; nb++)
@@ -1031,16 +1113,14 @@ void ActuatorFAST::filtered_lifting_line()
         for (int i=0; i<nDim; i++) {
 
   //~ std::cerr << "du before = "  << infoObject -> du.data()[i] << std::endl;
-
           infoObject -> du.data()[i] = infoObject -> du.data()[i] * (1.-f) 
-            + f * (infoObject -> u_opt.data()[i] 
+            + f * (infoObject -> u_opt.data()[i]
               - infoObject -> u_LES.data()[i]);
 
   //~ std::cerr << "du after = "  << infoObject -> du.data()[i] << std::endl;
     
         }
       }
-
     }
   }  
   
@@ -1536,7 +1616,10 @@ if (FAST.get_procNo(iTurb) != NaluEnv::self().parallel_rank()) continue;
 //~ std::cerr << it << " " << ib <<  " " << actPtrCounter <<  " "  << np << std::endl;
     // Store the actuator point into the counter index
     indexMap_[it][ib][actPtrCounter] = np;
-//~ std::cerr << it << " " << ib <<  " " << actPtrCounter <<  " "  << np << std::endl;
+
+    // The disk computed from the actuator subroutine
+    //~ int n_ad = actPtrCounter + ib * ptsPerBlade + 1;
+//~ std::cerr << it << " " << ib <<  " " << actPtrCounter <<  " "  << np << " " << n_ad << std::endl;
 
   }
 //~ std::cerr << "Index mapping completed 1402 Processor ==============================" << NaluEnv::self().parallel_rank() << std::endl;

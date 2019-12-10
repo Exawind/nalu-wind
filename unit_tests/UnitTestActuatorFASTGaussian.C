@@ -54,7 +54,7 @@ TEST(ActuatorFAST, gaussianTest)
   //expected value, computed value, tolerance
   EXPECT_NEAR(1.0, r1, 1e-12);
 
-  // Check that both functions produce same result 
+  // Check that both functions produce same result
   //expected value, computed value, tolerance
   EXPECT_NEAR(r1, r2, 1e-12);
 
