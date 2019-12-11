@@ -85,6 +85,7 @@ SSTTAMSAveragesAlg::execute()
   const DblType betaStar = betaStar_;
   const DblType CMdeg = CMdeg_;
   const DblType v2cMu = v2cMu_;
+  const DblType alpha_kol_local = alpha_kol;
 
   nalu_ngp::run_entity_algorithm(
     "SSTTAMSAveragesAlg_computeAverages",
@@ -99,7 +100,7 @@ SSTTAMSAveragesAlg::execute()
         // limiters
         alpha.get(mi, 0) = std::min(alpha.get(mi, 0), 1.0);
 
-        alpha.get(mi, 0) = std::max(alpha.get(mi, 0), alpha_kol);
+        alpha.get(mi, 0) = std::max(alpha.get(mi, 0), alpha_kol_local);
       }
 
       // store RANS time scale
