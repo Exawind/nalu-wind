@@ -213,6 +213,24 @@ public:
         algType, part, algSuffix, std::forward<Args>(args)...);
   }
 
+  template<template <typename> class NgpAlg,
+           typename LegacyAlg,
+           class ... Args>
+  void register_face_elem_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const stk::topology elemTopo,
+    const std::string& algSuffix,
+    Args&& ... args)
+  {
+    if (!nalu_ngp::is_ngp_face(part->topology()))
+      register_legacy_algorithm<LegacyAlg>(
+        algType, part, algSuffix, std::forward<Args>(args) ...);
+    else
+      register_face_elem_algorithm<NgpAlg>(
+        algType, part, elemTopo, algSuffix, std::forward<Args>(args) ... );
+  }
+
 protected:
   template <typename NaluAlg, class... Args>
   void register_algorithm_impl(
