@@ -2676,7 +2676,7 @@ Realm::compute_geometry()
 //-------- compute_vrtm ----------------------------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::compute_vrtm()
+Realm::compute_vrtm(const std::string& velName)
 {
   if (!solutionOptions_->meshMotion_ &&
       !solutionOptions_->externalMeshDeformation_) return;
@@ -2688,11 +2688,11 @@ Realm::compute_vrtm()
   const auto& ngpMesh = ngp_mesh();
   const auto& fieldMgr = ngp_field_manager();
   const auto vel = fieldMgr.get_field<double>(
-    get_field_ordinal(*metaData_, "velocity"));
+    get_field_ordinal(*metaData_, velName));
   const auto meshVel = fieldMgr.get_field<double>(
     get_field_ordinal(*metaData_, "mesh_velocity"));
   auto vrtm = fieldMgr.get_field<double>(
-    get_field_ordinal(*metaData_, "velocity_rtm"));
+    get_field_ordinal(*metaData_, velName + "_rtm"));
 
   const stk::mesh::Selector sel = (
     metaData_->locally_owned_part() | metaData_->globally_shared_part());

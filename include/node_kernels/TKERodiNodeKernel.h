@@ -9,8 +9,8 @@
 
 
 
-#ifndef TURBKINETICENERGYRODINODEKERNEL_H          
-#define TURBKINETICENERGYRODINODEKERNEL_H          
+#ifndef TKERODINODEKERNEL_H          
+#define TKERODINODEKERNEL_H          
 
 #include "node_kernels/NodeKernel.h"
 #include "stk_ngp/Ngp.hpp"
@@ -27,16 +27,16 @@ namespace nalu{
 class Realm;
 class SolutionOptions;
 
-class TurbKineticEnergyRodiNodeKernel : public NGPNodeKernel<TurbKineticEnergyRodiNodeKernel>
+class TKERodiNodeKernel : public NGPNodeKernel<TKERodiNodeKernel>
 {
 public:
-  TurbKineticEnergyRodiNodeKernel(const stk::mesh::MetaData&, const SolutionOptions&);
+  TKERodiNodeKernel(const stk::mesh::MetaData&, const SolutionOptions&);
 
   KOKKOS_FUNCTION
-  TurbKineticEnergyRodiNodeKernel() = default;
+  TKERodiNodeKernel() = default;
   
   KOKKOS_FUNCTION
-  virtual ~TurbKineticEnergyRodiNodeKernel() = default;
+  virtual ~TKERodiNodeKernel() = default;
 
   virtual void setup(Realm &) override;
 

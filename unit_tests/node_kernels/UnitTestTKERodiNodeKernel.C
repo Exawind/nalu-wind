@@ -13,7 +13,7 @@
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
 
-#include "node_kernels/TurbKineticEnergyRodiNodeKernel.h"
+#include "node_kernels/TKERodiNodeKernel.h"
 
 TEST_F(KsgsKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
 {
@@ -45,7 +45,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_turb_kenetic_energy_Rodi)
   solnOpts_.turbPrMap_["enthalpy"] = 0.60;
   solnOpts_.thermalExpansionCoeff_ = 3.0e-3;
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TurbKineticEnergyRodiNodeKernel>
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKERodiNodeKernel>
    (bulk_.mesh_meta_data(), *solnOpts);
 
   helperObjs.execute();

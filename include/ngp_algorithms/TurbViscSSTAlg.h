@@ -29,7 +29,8 @@ public:
   TurbViscSSTAlg(
     Realm &realm,
     stk::mesh::Part* part,
-    ScalarFieldType* tvisc);
+    ScalarFieldType* tvisc,
+    const bool = false);
 
   virtual ~TurbViscSSTAlg() = default;
 

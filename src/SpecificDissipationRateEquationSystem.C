@@ -76,6 +76,10 @@
 #include "ngp_algorithms/SDRWallFuncAlgDriver.h"
 #include "utils/StkHelpers.h"
 
+// UT Austin Hybrid TAMS kernel
+#include <kernel/SpecificDissipationRateSSTTAMSSrcElemKernel.h>
+#include <node_kernels/SDRSSTTAMSNodeKernel.h>
+
 // nso
 #include <nso/ScalarNSOElemKernel.h>
 #include <nso/ScalarNSOKeElemSuppAlg.h>
@@ -232,7 +236,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
-        theAlg = new ScalarEdgeSolverAlg(realm_, part, this, sdr_, dwdx_, evisc_);
+        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS) ? true : false;
+        theAlg = new ScalarEdgeSolverAlg(realm_, part, this, sdr_, dwdx_, evisc_, useAvgMdot);
       }
       else {
         theAlg = new AssembleScalarElemSolverAlgorithm(realm_, part, this, sdr_, dwdx_, evisc_);
@@ -296,12 +301,14 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
-        if (SST_DES == realm_.solutionOptions_->turbulenceModel_){
-          nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
-
-        }
-        else {
+        if (SST == realm_.solutionOptions_->turbulenceModel_){
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
+        }
+        else if (SST_DES == realm_.solutionOptions_->turbulenceModel_){
+          nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
+        }
+        else if (SST_TAMS == realm_.solutionOptions_->turbulenceModel_){
+          nodeAlg.add_kernel<SDRSSTTAMSNodeKernel>(realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
         }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
@@ -343,9 +350,17 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         (partTopo, *this, activeKernels, "advection_diffusion",
          realm_.bulk_data(), *realm_.solutionOptions_, sdr_, evisc_, dataPreReqs);
 
+      build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
+        (partTopo, *this, activeKernels, "TAMS_advection_diffusion",
+         realm_.bulk_data(), *realm_.solutionOptions_, sdr_, evisc_, dataPreReqs, true);
+
       build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
         (partTopo, *this, activeKernels, "upw_advection_diffusion",
         realm_.bulk_data(), *realm_.solutionOptions_, this, sdr_, dwdx_, evisc_, dataPreReqs);
+
+      build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
+        (partTopo, *this, activeKernels, "TAMS_upw_advection_diffusion",
+         realm_.bulk_data(), *realm_.solutionOptions_, this, sdr_, dwdx_, evisc_, dataPreReqs, true);
 
       build_topo_kernel_if_requested<SpecificDissipationRateSSTSrcElemKernel>
         (partTopo, *this, activeKernels, "sst",
@@ -378,6 +393,15 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       build_topo_kernel_if_requested<ScalarNSOElemKernel>
         (partTopo, *this, activeKernels, "NSO_4TH_ALT",
          realm_.bulk_data(), *realm_.solutionOptions_, sdr_, dwdx_, evisc_, 1.0, 1.0, dataPreReqs);
+
+      // UT Austin Hybrid TAMS model implementations for SDR source terms
+      build_topo_kernel_if_requested<SpecificDissipationRateSSTTAMSSrcElemKernel>
+        (partTopo, *this, activeKernels, "sst_tams",
+         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, false);
+
+      build_topo_kernel_if_requested<SpecificDissipationRateSSTTAMSSrcElemKernel>
+        (partTopo, *this, activeKernels, "lumped_sst_tams",
+         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, true);
 
       report_invalid_supp_alg_names();
       report_built_supp_alg_names();

@@ -219,6 +219,7 @@ public:
   std::map<std::string, std::string> inputVarFromFileMap_;
 
   std::vector<double> gravity_;
+  std::vector<double> bodyForce_;
 
   // Coriolis source term
   std::vector<double> eastVector_;
@@ -235,6 +236,7 @@ public:
 
   bool newHO_;
 
+  bool resetTAMSAverages_;
 };
 
 } // namespace nalu

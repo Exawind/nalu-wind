@@ -87,8 +87,10 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
 
   helperObjs.realm.set_global_id();
 
+  bool useAvgMdot_ = false;
+ 
   helperObjs.create<sierra::nalu::ScalarEdgeSolverAlg>(
-    partVec_[0], mixFraction_, dzdx_, viscosity_);
+    partVec_[0], mixFraction_, dzdx_, viscosity_, useAvgMdot_);
 
   helperObjs.execute();
 
