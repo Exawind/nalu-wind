@@ -22,7 +22,7 @@ linear_solvers:
     max_iterations: 200
     kspace: 5
     muelu_xml_file_name: ../../xml/milestone.xml
-    output_level: 1
+    output_level: 0
 
 realms:
 
