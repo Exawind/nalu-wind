@@ -38,6 +38,7 @@
 #include <AssembleNodeSolverAlgorithm.h>
 #include <AuxFunctionAlgorithm.h>
 #include <ComputeMdotElemAlgorithm.h>
+#include <ComputeMdotInflowAlgorithm.h>
 #include <ComputeMdotElemOpenAlgorithm.h>
 #include <ComputeMdotElemOpenPenaltyAlgorithm.h>
 #include <ComputeMdotNonConformalAlgorithm.h>
@@ -3252,7 +3253,7 @@ ContinuityEquationSystem::register_inflow_bc(
   // check to see if we are using shifted as inflow is shared
   const bool useShifted = !elementContinuityEqs_ ? true : realm_.get_cvfem_shifted_mdot();
 
-  mdotAlgDriver_->register_face_algorithm<MdotInflowAlg>(
+  mdotAlgDriver_->register_face_algorithm<MdotInflowAlg, ComputeMdotInflowAlgorithm>(
     algType, part, "mdot_inflow", *mdotAlgDriver_, useShifted);
 
   // solver; lhs
@@ -3354,7 +3355,7 @@ ContinuityEquationSystem::register_open_bc(
       // non-solver elem alg; compute open mdot (transition to penalty approach)
       mdotAlgDriver_->register_open_mdot_algorithm<ComputeMdotElemOpenPenaltyAlgorithm>(
         algType, part, "mdot_open_elem",
-        realm_.solutionOptions_->activateOpenMdotCorrection_);
+        realm_.solutionOptions_->activateOpenMdotCorrection_, *mdotAlgDriver_);
       
       // solver for continuity open
       auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
@@ -3382,7 +3383,7 @@ ContinuityEquationSystem::register_open_bc(
       // non-solver elem alg; compute open mdot
       mdotAlgDriver_->register_open_mdot_algorithm<ComputeMdotElemOpenAlgorithm>(
         algType, part, "mdot_open_elem",
-        realm_.solutionOptions_->activateOpenMdotCorrection_);
+        realm_.solutionOptions_->activateOpenMdotCorrection_, *mdotAlgDriver_);
 
       // solver; lhs
       std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =

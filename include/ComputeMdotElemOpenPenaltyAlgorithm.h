@@ -22,6 +22,7 @@ namespace sierra{
 namespace nalu{
 
 class Realm;
+class MdotAlgDriver;
 
 class ComputeMdotElemOpenPenaltyAlgorithm : public Algorithm
 {
@@ -29,11 +30,13 @@ public:
 
   ComputeMdotElemOpenPenaltyAlgorithm(
     Realm &realm,
-    stk::mesh::Part *part);
+    stk::mesh::Part *part,
+    MdotAlgDriver& mdotDriver);
   ~ComputeMdotElemOpenPenaltyAlgorithm();
 
   void execute();
 
+  MdotAlgDriver& mdotDriver_;
   VectorFieldType *velocityRTM_;
   VectorFieldType *Gpdx_;
   VectorFieldType *coordinates_;

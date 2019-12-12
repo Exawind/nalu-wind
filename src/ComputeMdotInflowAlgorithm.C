@@ -16,6 +16,7 @@
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
+#include "ngp_algorithms/MdotAlgDriver.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -39,8 +40,10 @@ namespace nalu{
 ComputeMdotInflowAlgorithm::ComputeMdotInflowAlgorithm(
   Realm &realm,
   stk::mesh::Part *part,
+  MdotAlgDriver& mdotDriver,
   bool useShifted)
   : Algorithm(realm, part),
+    mdotDriver_(mdotDriver),
     useShifted_(useShifted),
     velocityBC_(NULL),
     densityBC_(NULL),
@@ -182,8 +185,8 @@ ComputeMdotInflowAlgorithm::execute()
       }
     }
   }
-  // scatter back to solution options
-  realm_.solutionOptions_->mdotAlgInflow_ += mdotInflow;
+
+  mdotDriver_.add_inflow_mdot(mdotInflow);
 }
 
 } // namespace nalu
