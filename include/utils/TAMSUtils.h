@@ -19,11 +19,11 @@ namespace nalu {
 namespace tams_utils {
 
 template <class T, int dim = 3>
+KOKKOS_FUNCTION
 T
 get_M43_constant(T D[dim][dim], const double CMdeg)
 {
-  if (dim != 3)
-    throw std::runtime_error("In get_M43_constant, requires 3D problem");
+  NGP_ThrowRequireMsg(dim == 3, "Compute of M43 constant requires 3D problem");
 
   // Coefficients for the polynomial
   double c[15] = {1.033749474513071,  -0.154122686264488, -0.007737595743644,

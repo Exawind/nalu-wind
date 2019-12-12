@@ -231,7 +231,7 @@ TAMSAlgDriver::initial_production()
       "TAMSAlgDriver_avgProd",
       ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
-        std::vector<DblType> tij(nDim * nDim, 0.0);
+        NALU_ALIGNED DblType tij[nalu_ngp::NDimMax * nalu_ngp::NDimMax];
         for (int i = 0; i < nDim; ++i) {
           for (int j = 0; j < nDim; ++j) {
             const DblType avgSij = 0.5 * (avgDudx.get(mi, i * nDim + j) +
@@ -240,7 +240,7 @@ TAMSAlgDriver::initial_production()
           }
         }
 
-        std::vector<DblType> Pij(nDim * nDim, 0.0);
+        NALU_ALIGNED DblType Pij[nalu_ngp::NDimMax * nalu_ngp::NDimMax];
         for (int i = 0; i < nDim; ++i) {
           for (int j = 0; j < nDim; ++j) {
             Pij[i * nDim + j] = 0.0;

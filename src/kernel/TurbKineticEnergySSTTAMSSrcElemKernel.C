@@ -58,8 +58,8 @@ TurbKineticEnergySSTTAMSSrcElemKernel<AlgTraits>::
   dataPreReqs.add_gathered_nodal_field(sdrNp1_, 1);
   dataPreReqs.add_gathered_nodal_field(densityNp1_, 1);
   dataPreReqs.add_gathered_nodal_field(tvisc_, 1);
-  dataPreReqs.add_gathered_nodal_field(prod_, 1);
   dataPreReqs.add_gathered_nodal_field(alpha_, 1);
+  dataPreReqs.add_gathered_nodal_field(prod_, 1);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);
   if (shiftedGradOp_)
     dataPreReqs.add_master_element_call(
@@ -130,7 +130,7 @@ TurbKineticEnergySSTTAMSSrcElemKernel<AlgTraits>::execute(
     const DoubleType tkeFac = betaStar_ * rho * sdr;
 
     // dissipation and production (limited)
-    DoubleType Dk = tkeFac * tke;
+    const DoubleType Dk = tkeFac * tke;
     Pk = stk::math::min(Pk, tkeProdLimitRatio_ * Dk);
 
     // assemble RHS and LHS

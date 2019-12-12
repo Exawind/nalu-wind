@@ -24,6 +24,8 @@ static constexpr double rhs[24] = {0, -0.0024747113019887, 0, 0, 0.0169869577605
 
 TEST_F(TAMSKernelHex8Mesh, NGP_TAMS_SST_forcing)
 {
+  if (bulk_.parallel_size() > 1) return;
+
   fill_mesh_and_init_fields();
 
   // Setup solution options for default advection kernel

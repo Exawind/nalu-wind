@@ -290,6 +290,7 @@ void reconstruct_matrix_from_decomposition(const T (&D)[3][3],
 //------------------ unsym_matrix_force_sym_3D -----------------------------
 //--------------------------------------------------------------------------
 template <class T>
+KOKKOS_FUNCTION
 void unsym_matrix_force_sym(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3]) {
 
   // force symmetry force 
