@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef TURBKINETICENERGYSSTTAMSSRCELEMKERNEL_H
 #define TURBKINETICENERGYSSTTAMSSRCELEMKERNEL_H
 
@@ -26,7 +25,8 @@ class MasterElement;
 class ElemDataRequests;
 
 template <typename AlgTraits>
-class TurbKineticEnergySSTTAMSSrcElemKernel : public Kernel
+class TurbKineticEnergySSTTAMSSrcElemKernel
+  : public NGPKernel<TurbKineticEnergySSTTAMSSrcElemKernel<AlgTraits>>
 {
 public:
   TurbKineticEnergySSTTAMSSrcElemKernel(
