@@ -98,17 +98,17 @@ SSTTAMSAveragesAlg::execute()
         alpha.get(mi, 0) = 1.0 - avgTkeRes.get(mi, 0) / tke.get(mi, 0);
 
         // limiters
-        alpha.get(mi, 0) = std::min(alpha.get(mi, 0), 1.0);
+        alpha.get(mi, 0) = stk::math::min(alpha.get(mi, 0), 1.0);
 
-        alpha.get(mi, 0) = std::max(alpha.get(mi, 0), alpha_kol_local);
+        alpha.get(mi, 0) = stk::math::max(alpha.get(mi, 0), alpha_kol_local);
       }
 
       // store RANS time scale
       avgTime.get(mi, 0) = 1.0 / (betaStar * sdr.get(mi, 0));
 
       // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)
-      const DblType weightAvg = std::max(1.0 - dt / avgTime.get(mi, 0), 0.0);
-      const DblType weightInst = std::min(dt / avgTime.get(mi, 0), 1.0);
+      const DblType weightAvg = stk::math::max(1.0 - dt / avgTime.get(mi, 0), 0.0);
+      const DblType weightInst = stk::math::min(dt / avgTime.get(mi, 0), 1.0);
 
       DblType tkeRes = 0.0;
       for (int i = 0; i < nDim; ++i)
@@ -282,7 +282,7 @@ SSTTAMSAveragesAlg::execute()
       const DblType v2 =
         1.0 / v2cMu *
         (tvisc.get(mi, 0) / density.get(mi, 0) / avgTime.get(mi, 0));
-      const DblType PMscale = std::pow(1.5 * alpha.get(mi, 0) * v2, -1.5);
+      const DblType PMscale = stk::math::pow(1.5 * alpha.get(mi, 0) * v2, -1.5);
 
       // Handle case where tke = 0, should only occur at a wall boundary
       if (tke.get(mi, 0) == 0.0)
@@ -295,16 +295,16 @@ SSTTAMSAveragesAlg::execute()
         // FIXME: PM is not symmetric
         EigenDecomposition::unsym_matrix_force_sym<DblType>(PM, Q, D);
 
-        const DblType maxPM = std::max(
-          std::abs(D[0][0]), std::max(std::abs(D[1][1]), std::abs(D[2][2])));
+        const DblType maxPM = stk::math::max(
+          stk::math::abs(D[0][0]), stk::math::max(stk::math::abs(D[1][1]), stk::math::abs(D[2][2])));
 
         // Update the instantaneous resAdeq field
         resAdeq.get(mi, 0) = maxPM;
 
-        resAdeq.get(mi, 0) = std::min(resAdeq.get(mi, 0), 30.0);
+        resAdeq.get(mi, 0) = stk::math::min(resAdeq.get(mi, 0), 30.0);
 
         if (alpha.get(mi, 0) >= 1.0)
-          resAdeq.get(mi, 0) = std::min(resAdeq.get(mi, 0), 1.0);
+          resAdeq.get(mi, 0) = stk::math::min(resAdeq.get(mi, 0), 1.0);
       }
       avgResAdeq.get(mi, 0) =
         weightAvg * avgResAdeq.get(mi, 0) + weightInst * resAdeq.get(mi, 0);

@@ -276,6 +276,8 @@ static constexpr double lhs[24][24] = {
 
 TEST_F(TAMSKernelHex8Mesh, NGP_tams_diff_elem)
 {
+  if (bulk_.parallel_size() > 1) return;
+
   fill_mesh_and_init_fields();
 
   // Setup solution options for default advection kernel

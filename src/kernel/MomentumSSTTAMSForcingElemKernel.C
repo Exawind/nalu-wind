@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernel/MomentumSSTTAMSForcingElemKernel.h"
 #include "AlgTraits.h"
 #include "EigenDecomposition.h"
@@ -15,6 +14,7 @@
 #include "master_element/MasterElementFactory.h"
 #include "SolutionOptions.h"
 #include "TimeIntegrator.h"
+#include "ngp_utils/NgpTypes.h"
 
 // template and scratch space
 #include "BuildTemplates.h"
@@ -117,7 +117,8 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::execute(
   const auto& v_coordinates = scratchViews.get_scratch_view_2D(coordinates_);
   const auto& v_uNp1 = scratchViews.get_scratch_view_2D(velocityNp1_);
   const auto& v_viscosity = scratchViews.get_scratch_view_1D(viscosity_);
-  const auto& v_turbViscosity = scratchViews.get_scratch_view_1D(turbViscosity_);
+  const auto& v_turbViscosity =
+    scratchViews.get_scratch_view_1D(turbViscosity_);
   const auto& v_rhoNp1 = scratchViews.get_scratch_view_1D(densityNp1_);
   const auto& v_tkeNp1 = scratchViews.get_scratch_view_1D(tkeNp1_);
   const auto& v_sdrNp1 = scratchViews.get_scratch_view_1D(sdrNp1_);
@@ -190,76 +191,62 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::execute(
     const DoubleType epsScv = betaStar_ * tkeScv * sdrScv;
 
     // First we calculate the a_i's
-    const DoubleType periodicForcingLengthX = pi_;
-    const DoubleType periodicForcingLengthY = 0.25;
-    const DoubleType periodicForcingLengthZ = 3.0 / 8.0 * pi_;
+    NALU_ALIGNED const DoubleType periodicForcingLength[3] = {pi_, 0.25,
+                                                              3.0 / 8.0 * pi_};
 
     DoubleType length =
       forceCl_ * stk::math::pow(alphaScv * tkeScv, 1.5) / epsScv;
-    length = stk::math::max(length,
-      Ceta_ * (stk::math::pow(muScv/rhoScv, 0.75) / stk::math::pow(epsScv, 0.25)));
+    length = stk::math::max(
+      length, Ceta_ * (stk::math::pow(muScv / rhoScv, 0.75) /
+                       stk::math::pow(epsScv, 0.25)));
     length = stk::math::min(length, wallDistScv);
 
     DoubleType T_alpha = alphaScv * tkeScv / epsScv;
-    T_alpha = stk::math::max(T_alpha, Ct_ * stk::math::sqrt(muScv / rhoScv / epsScv));
+    T_alpha =
+      stk::math::max(T_alpha, Ct_ * stk::math::sqrt(muScv / rhoScv / epsScv));
     T_alpha = blT_ * T_alpha;
 
-    const DoubleType ceilLengthX =
-      stk::math::max(length, 2.0 * w_MijElem[0][0]);
-    const DoubleType ceilLengthY =
-      stk::math::max(length, 2.0 * w_MijElem[1][1]);
-    const DoubleType ceilLengthZ =
-      stk::math::max(length, 2.0 * w_MijElem[2][2]);
+    NALU_ALIGNED DoubleType ceilLength[AlgTraits::nDim_];
+    for (int d = 0; d < AlgTraits::nDim_; d++)
+      ceilLength[d] = stk::math::max(length, 2.0 * w_MijElem[d][d]);
 
-    const DoubleType clipLengthX =
-      stk::math::min(ceilLengthX, periodicForcingLengthX);
-    const DoubleType clipLengthY =
-      stk::math::min(ceilLengthY, periodicForcingLengthY);
-    const DoubleType clipLengthZ =
-      stk::math::min(ceilLengthZ, periodicForcingLengthZ);
+    NALU_ALIGNED DoubleType clipLength[AlgTraits::nDim_];
+    for (int d = 0; d < AlgTraits::nDim_; d++)
+      clipLength[d] = stk::math::min(ceilLength[d], periodicForcingLength[d]);
 
     // FIXME: Hack to do a round/floor/ceil/mod operation since it isnt in
     // stk::math right now
-    DoubleType ratioX;
-    DoubleType ratioY;
-    DoubleType ratioZ;
+    NALU_ALIGNED DoubleType ratio[AlgTraits::nDim_];
     for (int simdIndex = 0; simdIndex < stk::simd::ndoubles; ++simdIndex) {
-      double tmpD = stk::simd::get_data(clipLengthX, simdIndex);
-      double tmpN = stk::simd::get_data(periodicForcingLengthX, simdIndex);
-      double tmp = std::floor(tmpN / tmpD + 0.5);
-      stk::simd::set_data(ratioX, simdIndex, tmp);
-
-      tmpD = stk::simd::get_data(clipLengthY, simdIndex);
-      tmpN = stk::simd::get_data(periodicForcingLengthY, simdIndex);
-      tmp = std::floor(tmpN / tmpD + 0.5);
-      stk::simd::set_data(ratioY, simdIndex, tmp);
-
-      tmpD = stk::simd::get_data(clipLengthZ, simdIndex);
-      tmpN = stk::simd::get_data(periodicForcingLengthZ, simdIndex);
-      tmp = std::floor(tmpN / tmpD + 0.5);
-      stk::simd::set_data(ratioZ, simdIndex, tmp);
+      for (int d = 0; d < AlgTraits::nDim_; d++) {
+        double tmpD = stk::simd::get_data(clipLength[d], simdIndex);
+        double tmpN = stk::simd::get_data(periodicForcingLength[d], simdIndex);
+        double tmp = std::floor(tmpN / tmpD + 0.5);
+        stk::simd::set_data(ratio[d], simdIndex, tmp);
+      }
     }
 
-    const DoubleType denomX = periodicForcingLengthX / ratioX;
-    const DoubleType denomY = periodicForcingLengthY / ratioY;
-    const DoubleType denomZ = periodicForcingLengthZ / ratioZ;
+    NALU_ALIGNED DoubleType denom[AlgTraits::nDim_];
+    for (int d = 0; d < AlgTraits::nDim_; d++)
+      denom[d] = periodicForcingLength[d] / ratio[d];
 
-    const DoubleType ax = pi_ / denomX;
-    const DoubleType ay = pi_ / denomY;
-    const DoubleType az = pi_ / denomZ;
+    NALU_ALIGNED DoubleType a[AlgTraits::nDim_];
+    for (int d = 0; d < AlgTraits::nDim_; d++)
+      a[d] = pi_ / denom[d];
 
     // Then we calculate the arguments for the Taylor-Green Vortex
-    const DoubleType xarg = ax * (w_coordScv[0] + w_avgUScv[0] * time_);
-    const DoubleType yarg = ay * (w_coordScv[1] + w_avgUScv[1] * time_);
-    const DoubleType zarg = az * (w_coordScv[2] + w_avgUScv[2] * time_);
+    NALU_ALIGNED DoubleType tgarg[nalu_ngp::NDimMax] = {0.0, 0.0, 0.0};
+    for (int d = 0; d < AlgTraits::nDim_; d++)
+      tgarg[d] = a[d] * (w_coordScv[d] + w_avgUScv[d] * time_);
 
     // Now we calculate the initial Taylor-Green field
-    DoubleType hX = 1.0 / 3.0 * stk::math::cos(xarg) * stk::math::sin(yarg) *
-                    stk::math::sin(zarg);
-    DoubleType hY =
-      -1.0 * stk::math::sin(xarg) * stk::math::cos(yarg) * stk::math::sin(zarg);
-    DoubleType hZ = 2.0 / 3.0 * stk::math::sin(xarg) * stk::math::sin(yarg) *
-                    stk::math::cos(zarg);
+    NALU_ALIGNED const DoubleType h[nalu_ngp::NDimMax] = {
+      1.0 / 3.0 * stk::math::cos(tgarg[0]) * stk::math::sin(tgarg[1]) *
+        stk::math::sin(tgarg[2]),
+      -1.0 * stk::math::sin(tgarg[0]) * stk::math::cos(tgarg[1]) *
+        stk::math::sin(tgarg[2]),
+      2.0 / 3.0 * stk::math::sin(tgarg[0]) * stk::math::sin(tgarg[1]) *
+        stk::math::cos(tgarg[2])};
 
     // Now we calculate the scaling of the initial field
     const DoubleType v2Scv = mu_tScv * betaStar_ * sdrScv / (cMu_ * rhoScv);
@@ -268,7 +255,7 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::execute(
 
     const DoubleType prod_r_temp =
       (F_target * dt_) *
-      (hX * w_fluctUScv[0] + hY * w_fluctUScv[1] + hZ * w_fluctUScv[2]);
+      (h[0] * w_fluctUScv[0] + h[1] * w_fluctUScv[1] + h[2] * w_fluctUScv[2]);
 
     const DoubleType prod_r_sgn =
       stk::math::if_then_else(prod_r_temp < 0.0, -1.0, 1.0);
@@ -283,8 +270,8 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::execute(
 
     const DoubleType a_sign = stk::math::tanh(arg);
 
-    const DoubleType a_kol =
-      stk::math::min(blKol_ * stk::math::sqrt(muScv * epsScv / rhoScv) / tkeScv, 1.0);
+    const DoubleType a_kol = stk::math::min(
+      blKol_ * stk::math::sqrt(muScv * epsScv / rhoScv) / tkeScv, 1.0);
 
     const DoubleType Sa = stk::math::if_then_else(
       (a_sign < 0.0),
@@ -298,9 +285,8 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::execute(
       ((avgResAdeqScv < 1.0) && (prod_r >= 0.0)), -1.0 * F_target * Sa, 0.0);
 
     // Now we determine the actual forcing field
-    DoubleType gX = C_F * hX;
-    DoubleType gY = C_F * hY;
-    DoubleType gZ = C_F * hZ;
+    NALU_ALIGNED const DoubleType g[nalu_ngp::NDimMax] = {
+      C_F * h[0], C_F * h[1], C_F * h[2]};
 
     // TODO: Assess viability of first approach where we don't solve a poisson
     // problem and allow the field be divergent, which should get projected out
@@ -308,9 +294,9 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::execute(
     const DoubleType scV = v_scv_volume(ip);
     const int nnNdim = nearestNode * AlgTraits::nDim_;
 
-    rhs(nnNdim + 0) += gX * scV;
-    rhs(nnNdim + 1) += gY * scV;
-    rhs(nnNdim + 2) += gZ * scV;
+    rhs(nnNdim + 0) += g[0] * scV;
+    rhs(nnNdim + 1) += g[1] * scV;
+    rhs(nnNdim + 2) += g[2] * scV;
   }
 }
 
