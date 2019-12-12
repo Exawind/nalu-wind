@@ -119,6 +119,19 @@ using ArrayInt2 = NgpReduceArray<int, 2>;
 using ArraySimdDouble2 = NgpReduceArray<DoubleType, 2>;
 using ArraySimdDouble3 = NgpReduceArray<DoubleType, 3>;
 
+/** Utility function for reduction accumulation
+ *
+ *  This function is necessary when looping over elements in bucket+SIMD loops
+ *  where we might not have enough elements (i.e., numSimdElems < simdLen), we
+ *  don't want to accumulate bad data.
+ */
+KOKKOS_INLINE_FUNCTION
+void simd_reduce_sum(double& out, const DoubleType& inp, int len)
+{
+  for (int i=0; i < len; ++i)
+    out += stk::simd::get_data(inp, i);
+}
+
 }  // nalu_ngp
 }  // nalu
 }  // sierra

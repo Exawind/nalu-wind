@@ -17,6 +17,7 @@
 #include "ngp_algorithms/MdotDensityAccumAlg.h"
 #include "ngp_algorithms/MdotOpenCorrectorAlg.h"
 #include "ngp_algorithms/MdotInflowAlg.h"
+#include "ngp_algorithms/MdotOpenEdgeAlg.h"
 
 TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_calc_edge)
 {
@@ -168,4 +169,36 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_inflow)
   mdotDriver.execute();
 
   EXPECT_NEAR(mdotDriver.mdot_inflow(), -1.0, 1.0e-15);
+}
+
+TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_open_edge)
+{
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+
+  const bool doPerturb = false;
+  const bool generateSidesets = true;
+  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+
+  stk::mesh::field_fill(1.0, *density_);
+  stk::mesh::field_fill(1.0, *velocity_);
+  stk::mesh::field_fill(0.0, *pressure_);
+  stk::mesh::field_fill(0.0, *dpdx_);
+
+  unit_test_utils::HelperObjects helperObjs(
+    bulk_, stk::topology::HEX_8, 1, partVec_[0]);
+  auto* part = meta_.get_part("surface_6");
+  auto* surfPart = part->subsets()[0];
+  const bool elementContinuityEqs = true;
+  const bool needCorrection = false;
+
+  helperObjs.realm.solutionOptions_->activateOpenMdotCorrection_ = true;
+  sierra::nalu::MdotAlgDriver mdotDriver(helperObjs.realm, elementContinuityEqs);
+  mdotDriver.register_open_mdot_algorithm<sierra::nalu::MdotOpenEdgeAlg>(
+    sierra::nalu::OPEN, surfPart, stk::topology::HEX_8, "mdot_open",
+    needCorrection, mdotDriver);
+
+  mdotDriver.execute();
+
+  EXPECT_NEAR(mdotDriver.mdot_open(), 1.0, 1.0e-15);
 }
