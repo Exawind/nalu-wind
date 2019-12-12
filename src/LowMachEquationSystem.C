@@ -37,10 +37,7 @@
 #include <AssembleNodalGradUNonConformalAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
 #include <AuxFunctionAlgorithm.h>
-#include <ComputeMdotAlgorithmDriver.h>
-#include <ComputeMdotInflowAlgorithm.h>
 #include <ComputeMdotElemAlgorithm.h>
-#include <ComputeMdotEdgeOpenAlgorithm.h>
 #include <ComputeMdotElemOpenAlgorithm.h>
 #include <ComputeMdotElemOpenPenaltyAlgorithm.h>
 #include <ComputeMdotNonConformalAlgorithm.h>
@@ -147,6 +144,10 @@
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/MdotEdgeAlg.h"
+#include "ngp_algorithms/MdotAlgDriver.h"
+#include "ngp_algorithms/MdotDensityAccumAlg.h"
+#include "ngp_algorithms/MdotInflowAlg.h"
+#include "ngp_algorithms/MdotOpenEdgeAlg.h"
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
@@ -711,7 +712,7 @@ LowMachEquationSystem::solve_and_update()
   if ( isInit_ ) {
     continuityEqSys_->compute_projected_nodal_gradient();
     timeA = NaluEnv::self().nalu_time();
-    continuityEqSys_->computeMdotAlgDriver_->execute();
+    continuityEqSys_->mdotAlgDriver_->execute();
 
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerMisc_ += (timeB-timeA);
@@ -749,7 +750,7 @@ LowMachEquationSystem::solve_and_update()
     // activate global correction scheme
     if ( realm_.solutionOptions_->activateOpenMdotCorrection_ ) {
       timeA = NaluEnv::self().nalu_time();
-      continuityEqSys_->computeMdotAlgDriver_->execute();
+      continuityEqSys_->mdotAlgDriver_->execute();
       timeB = NaluEnv::self().nalu_time();
       continuityEqSys_->timerMisc_ += (timeB-timeA);
     }
@@ -767,7 +768,7 @@ LowMachEquationSystem::solve_and_update()
 
     // compute mdot
     timeA = NaluEnv::self().nalu_time();
-    continuityEqSys_->computeMdotAlgDriver_->execute();
+    continuityEqSys_->mdotAlgDriver_->execute();
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerMisc_ += (timeB-timeA);
 
@@ -838,7 +839,7 @@ LowMachEquationSystem::post_adapt_work()
     }
     
     // compute mdot
-    continuityEqSys_->computeMdotAlgDriver_->execute();
+    continuityEqSys_->mdotAlgDriver_->execute();
     
     // project nodal velocity/gradU
     const bool processU = false;
@@ -978,7 +979,7 @@ LowMachEquationSystem::post_converged_work()
   }
 
   // output mass closure
-  continuityEqSys_->computeMdotAlgDriver_->provide_output();
+  continuityEqSys_->mdotAlgDriver_->provide_output();
 }
 
 //==========================================================================
@@ -2829,7 +2830,7 @@ ContinuityEquationSystem::ContinuityEquationSystem(
     coordinates_(NULL),
     pTmp_(NULL),
     nodalGradAlgDriver_(realm_, "dpdx"),
-    computeMdotAlgDriver_(new ComputeMdotAlgorithmDriver(realm_)),
+    mdotAlgDriver_(new MdotAlgDriver(realm_, elementContinuityEqs)),
     projectedNodalGradEqs_(NULL)
 {
   dofName_ = "pressure";
@@ -2864,9 +2865,7 @@ ContinuityEquationSystem::ContinuityEquationSystem(
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
 ContinuityEquationSystem::~ContinuityEquationSystem()
-{
-  delete computeMdotAlgDriver_;
-}
+{}
 
 //--------------------------------------------------------------------------
 //-------- register_nodal_fields -------------------------------------------
@@ -2934,6 +2933,9 @@ ContinuityEquationSystem::register_interior_algorithm(
   ScalarFieldType &pressureNone = pressure_->field_of_state(stk::mesh::StateNone);
   VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
 
+  bool lumpedMass = false;
+  bool hasMass = false;
+
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
     if (!elementContinuityEqs_ && edgeNodalGradient_)
@@ -2949,14 +2951,8 @@ ContinuityEquationSystem::register_interior_algorithm(
 
     // pure edge-based scheme
 
-    // mdot
-    std::map<AlgorithmType, Algorithm *>::iterator itc =
-      computeMdotAlgDriver_->algMap_.find(algType);
-    if ( itc == computeMdotAlgDriver_->algMap_.end() ) {
-      computeMdotAlgDriver_->algMap_[algType] = new MdotEdgeAlg(realm_, part);
-    } else {
-      itc->second->partVec_.push_back(part);
-    }
+    mdotAlgDriver_->register_edge_algorithm<MdotEdgeAlg>(
+      algType, part, "mdot_edge_interior");
 
     auto& solverAlgMap =  solverAlgDriver_->solverAlgMap_;
     const auto it = solverAlgMap.find(algType);
@@ -2970,17 +2966,8 @@ ContinuityEquationSystem::register_interior_algorithm(
 
     // pure element-based scheme
 
-    // mdot
-    std::map<AlgorithmType, Algorithm *>::iterator itc =
-      computeMdotAlgDriver_->algMap_.find(algType);
-    if ( itc == computeMdotAlgDriver_->algMap_.end() ) {
-      ComputeMdotElemAlgorithm *theAlg
-        = new ComputeMdotElemAlgorithm(realm_, part, realm_.realmUsesEdges_);
-      computeMdotAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      itc->second->partVec_.push_back(part);
-    }
+    mdotAlgDriver_->register_legacy_algorithm<ComputeMdotElemAlgorithm>(
+      algType, part, "mdot_elem_interior", realm_.realmUsesEdges_);
 
     // solver
     if (!realm_.solutionOptions_->useConsolidatedSolverAlg_) {
@@ -3068,6 +3055,8 @@ ContinuityEquationSystem::register_interior_algorithm(
       kb.report();
     }
 
+    lumpedMass = supp_alg_is_requested("lumped_density_time_derivative");
+    hasMass = lumpedMass || supp_alg_is_requested("density_time_derivative");
   }
 
   // time term using lumped mass
@@ -3094,6 +3083,8 @@ ContinuityEquationSystem::register_interior_algorithm(
           }
           else if (srcName == "density_time_derivative") {
             nodeAlg.add_kernel<ContinuityMassBDFNodeKernel>(realm_.bulk_data());
+            hasMass = true;
+            lumpedMass = true;
           } else {
             added = false;
             ++ngpSrcSkipped;
@@ -3142,6 +3133,12 @@ ContinuityEquationSystem::register_interior_algorithm(
     if ((ngpSrcSkipped + nonNgpSrcSkipped) != numUsrSrc)
       throw std::runtime_error("Error processing nodal source terms for Continuity");
   }
+
+  // Register density accumulation calculations if the user has requested
+  // density time derivative terms.
+  if (hasMass)
+    mdotAlgDriver_->register_elem_algorithm<MdotDensityAccumAlg>(
+      algType, part, "mdot_rho_accum", *mdotAlgDriver_, lumpedMass);
 }
 
 //--------------------------------------------------------------------------
@@ -3255,17 +3252,8 @@ ContinuityEquationSystem::register_inflow_bc(
   // check to see if we are using shifted as inflow is shared
   const bool useShifted = !elementContinuityEqs_ ? true : realm_.get_cvfem_shifted_mdot();
 
-  // non-solver inflow mdot - shared by both elem/edge
-  std::map<AlgorithmType, Algorithm *>::iterator itmd =
-    computeMdotAlgDriver_->algMap_.find(algType);
-  if ( itmd == computeMdotAlgDriver_->algMap_.end() ) {
-    ComputeMdotInflowAlgorithm *theAlg
-      = new ComputeMdotInflowAlgorithm(realm_, part, useShifted);
-    computeMdotAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    itmd->second->partVec_.push_back(part);
-  }
+  mdotAlgDriver_->register_face_algorithm<MdotInflowAlg>(
+    algType, part, "mdot_inflow", *mdotAlgDriver_, useShifted);
 
   // solver; lhs
   if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_
@@ -3333,16 +3321,9 @@ ContinuityEquationSystem::register_open_bc(
   // mdot at open and lhs
   if ( !elementContinuityEqs_ ) {
     // non-solver edge alg; compute open mdot
-    std::map<AlgorithmType, Algorithm *>::iterator itm =
-      computeMdotAlgDriver_->algMap_.find(algType);
-    if ( itm == computeMdotAlgDriver_->algMap_.end() ) {
-      ComputeMdotEdgeOpenAlgorithm *theAlg
-      = new ComputeMdotEdgeOpenAlgorithm(realm_, part);
-      computeMdotAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      itm->second->partVec_.push_back(part);
-    }
+    mdotAlgDriver_->register_open_mdot_algorithm<MdotOpenEdgeAlg>(
+      algType, part, get_elem_topo(realm_, *part), "mdot_open_edge",
+      realm_.solutionOptions_->activateOpenMdotCorrection_, *mdotAlgDriver_);
 
     {
       auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
@@ -3371,16 +3352,9 @@ ContinuityEquationSystem::register_open_bc(
     
     if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {      
       // non-solver elem alg; compute open mdot (transition to penalty approach)
-      std::map<AlgorithmType, Algorithm *>::iterator itm =
-        computeMdotAlgDriver_->algMap_.find(algType);
-      if ( itm == computeMdotAlgDriver_->algMap_.end() ) {
-        ComputeMdotElemOpenPenaltyAlgorithm *theAlg
-          = new ComputeMdotElemOpenPenaltyAlgorithm(realm_, part);
-        computeMdotAlgDriver_->algMap_[algType] = theAlg;
-      }
-      else {
-        itm->second->partVec_.push_back(part);
-      }
+      mdotAlgDriver_->register_open_mdot_algorithm<ComputeMdotElemOpenPenaltyAlgorithm>(
+        algType, part, "mdot_open_elem",
+        realm_.solutionOptions_->activateOpenMdotCorrection_);
       
       // solver for continuity open
       auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
@@ -3406,17 +3380,10 @@ ContinuityEquationSystem::register_open_bc(
     }
     else {
       // non-solver elem alg; compute open mdot
-      std::map<AlgorithmType, Algorithm *>::iterator itm =
-        computeMdotAlgDriver_->algMap_.find(algType);
-      if ( itm == computeMdotAlgDriver_->algMap_.end() ) {
-        ComputeMdotElemOpenAlgorithm *theAlg
-          = new ComputeMdotElemOpenAlgorithm(realm_, part);
-        computeMdotAlgDriver_->algMap_[algType] = theAlg;
-      }
-      else {
-        itm->second->partVec_.push_back(part);
-      }
-      
+      mdotAlgDriver_->register_open_mdot_algorithm<ComputeMdotElemOpenAlgorithm>(
+        algType, part, "mdot_open_elem",
+        realm_.solutionOptions_->activateOpenMdotCorrection_);
+
       // solver; lhs
       std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =
         solverAlgDriver_->solverAlgMap_.find(algType);
@@ -3597,16 +3564,8 @@ ContinuityEquationSystem::register_abltop_bc(
   const bool useShifted = !elementContinuityEqs_ ? true : realm_.get_cvfem_shifted_mdot();
 
   // non-solver inflow mdot - shared by both elem/edge
-  std::map<AlgorithmType, Algorithm *>::iterator itmd =
-    computeMdotAlgDriver_->algMap_.find(algType);
-  if ( itmd == computeMdotAlgDriver_->algMap_.end() ) {
-    ComputeMdotInflowAlgorithm *theAlg
-      = new ComputeMdotInflowAlgorithm(realm_, part, useShifted);
-    computeMdotAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    itmd->second->partVec_.push_back(part);
-  }
+  mdotAlgDriver_->register_face_algorithm<MdotInflowAlg>(
+    algType, part, "mdot_inflow", *mdotAlgDriver_, useShifted);
 
   // solver; lhs
   if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ||
@@ -3686,16 +3645,8 @@ ContinuityEquationSystem::register_non_conformal_bc(
   }
 
   // non-solver alg; compute nc mdot (same for edge and element-based)
-  std::map<AlgorithmType, Algorithm *>::iterator itm =
-    computeMdotAlgDriver_->algMap_.find(algType);
-  if ( itm == computeMdotAlgDriver_->algMap_.end() ) {
-    ComputeMdotNonConformalAlgorithm *theAlg
-      = new ComputeMdotNonConformalAlgorithm(realm_, part, pressure_, dpdx_);
-    computeMdotAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    itm->second->partVec_.push_back(part);
-  }
+  mdotAlgDriver_->register_legacy_algorithm<ComputeMdotNonConformalAlgorithm>(
+    algType, part, "mdot_non_conformal", pressure_, dpdx_);
 
   // solver; lhs; same for edge and element-based scheme
   std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =

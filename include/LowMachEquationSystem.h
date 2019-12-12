@@ -12,6 +12,8 @@
 #ifndef LowMachEquationSystem_h
 #define LowMachEquationSystem_h
 
+#include <memory>
+
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
 #include "NaluParsing.h"
@@ -32,10 +34,10 @@ class AlgorithmDriver;
 class Realm;
 class MomentumEquationSystem;
 class ContinuityEquationSystem;
-class ComputeMdotAlgorithmDriver;
 class LinearSystem;
 class ProjectedNodalGradientEquationSystem;
 class SurfaceForceAndMomentAlgorithmDriver;
+class MdotAlgDriver;
 
 /** Low-Mach formulation of the Navier-Stokes Equations
  *
@@ -312,7 +314,7 @@ public:
   ScalarFieldType *pTmp_;
 
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
-  ComputeMdotAlgorithmDriver *computeMdotAlgDriver_;
+  std::unique_ptr<MdotAlgDriver> mdotAlgDriver_;
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 };
 
