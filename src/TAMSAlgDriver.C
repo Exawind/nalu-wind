@@ -36,7 +36,6 @@ TAMSAlgDriver::TAMSAlgDriver(Realm& realm)
     avgTime_(NULL),
     avgMdotScs_(NULL),
     avgMdot_(NULL),
-    isInit_(true),
     metricTensorAlgDriver_(realm_, "metric_tensor"),
     avgMdotAlg_(realm_),
     turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
