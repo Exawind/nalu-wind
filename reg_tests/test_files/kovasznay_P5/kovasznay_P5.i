@@ -103,7 +103,6 @@ realms:
 
         - element_source_terms:
             momentum: momentum_time_derivative
-            continuity: density_time_derivative
 
         - consistent_mass_matrix_png:
             pressure: yes
