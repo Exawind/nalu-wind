@@ -253,9 +253,10 @@ MomentumSSTTAMSForcingElemKernel<AlgTraits>::execute(
     const DoubleType F_target =
       forceFactor_ * stk::math::sqrt(alphaScv * v2Scv) / T_alpha;
 
-    const DoubleType prod_r_temp =
-      (F_target * dt_) *
-      (h[0] * w_fluctUScv[0] + h[1] * w_fluctUScv[1] + h[2] * w_fluctUScv[2]);
+    DoubleType prod_r_temp = 0.0;
+    for (int d = 0; d < AlgTraits::nDim_; d++)
+      prod_r_temp += h[d] * w_fluctUScv[d];
+    prod_r_temp *= (F_target * dt_);
 
     const DoubleType prod_r_sgn =
       stk::math::if_then_else(prod_r_temp < 0.0, -1.0, 1.0);
