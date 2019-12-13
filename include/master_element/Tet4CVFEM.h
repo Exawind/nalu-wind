@@ -280,7 +280,7 @@ public:
 
   double parametric_distance(const double* x);
 
-  const int* side_node_ordinals(int sideOrdinal) const final;
+  KOKKOS_FUNCTION const int* side_node_ordinals(int sideOrdinal) const final;
 
   virtual const double* integration_locations() const final {
     return intgLoc_;

@@ -152,7 +152,7 @@ public:
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
-  const int * side_node_ordinals(int ordinal = 0) const final;
+  KOKKOS_FUNCTION const int * side_node_ordinals(int ordinal = 0) const final;
 
   KOKKOS_FUNCTION int opposingNodes(
     const int ordinal, const int node) final;
