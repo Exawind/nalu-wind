@@ -54,8 +54,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeGeometryInteriorAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeHeatTransferEdgeWallAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeHeatTransferElemWallAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotAlgorithmDriver.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotEdgeOpenAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemOpenAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemOpenPenaltyAlgorithm.C

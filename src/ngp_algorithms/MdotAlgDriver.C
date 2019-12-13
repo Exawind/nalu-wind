@@ -142,9 +142,6 @@ void MdotAlgDriver::post_work()
   }
 
   // TODO: Remove these from SolutionOptions. Here to assist during transition phase
-  realm_.solutionOptions_->mdotAlgOpen_ = mdotOpen_;
-  realm_.solutionOptions_->mdotAlgInflow_ = mdotInflow_;
-  realm_.solutionOptions_->mdotAlgOpenIpCount_ = mdotOpenIpCount_;
   realm_.solutionOptions_->mdotAlgOpenCorrection_ = mdotOpenCorrection_;
 }
 
