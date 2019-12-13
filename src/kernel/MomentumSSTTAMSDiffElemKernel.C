@@ -27,6 +27,7 @@
 #include <stk_mesh/base/Field.hpp>
 
 #include "utils/TAMSUtils.h"
+#include "ngp_utils/NgpTypes.h"
 
 namespace sierra {
 namespace nalu {
@@ -107,9 +108,9 @@ MomentumSSTTAMSDiffElemKernel<AlgTraits>::execute(
   const int* lrscv = meSCS_->adjacentNodes();
 
   // Mij, eigenvectors and eigenvalues
-  DoubleType Mij[AlgTraits::nDim_][AlgTraits::nDim_];
-  DoubleType Q[AlgTraits::nDim_][AlgTraits::nDim_];
-  DoubleType D[AlgTraits::nDim_][AlgTraits::nDim_];
+  DoubleType Mij[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
+  DoubleType Q[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
+  DoubleType D[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
   for (unsigned i = 0; i < AlgTraits::nDim_; i++)
     for (unsigned j = 0; j < AlgTraits::nDim_; j++)
       Mij[i][j] = 0.0;
@@ -125,7 +126,7 @@ MomentumSSTTAMSDiffElemKernel<AlgTraits>::execute(
 
   // At this point we have Q, the eigenvectors and D the eigenvalues of Mij,
   // so to create M43, we use Q D^(4/3) Q^T
-  DoubleType M43[AlgTraits::nDim_][AlgTraits::nDim_];
+  DoubleType M43[nalu_ngp::NDimMax][nalu_ngp::NDimMax];
   for (unsigned i = 0; i < AlgTraits::nDim_; i++)
     for (unsigned j = 0; j < AlgTraits::nDim_; j++)
       M43[i][j] = 0.0;
@@ -142,7 +143,7 @@ MomentumSSTTAMSDiffElemKernel<AlgTraits>::execute(
 
   // Compute CM43
   DoubleType CM43 =
-    tams_utils::get_M43_constant<DoubleType, AlgTraits::nDim_>(D, CMdeg_);
+    tams_utils::get_M43_constant<DoubleType, nalu_ngp::NDimMax>(D, CMdeg_);
 
   for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
 

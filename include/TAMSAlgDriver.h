@@ -64,7 +64,6 @@ private:
   GenericFieldType* avgMdotScs_;
   ScalarFieldType* avgMdot_;
 
-  bool isInit_;
   FieldUpdateAlgDriver metricTensorAlgDriver_;
   std::unique_ptr<SSTTAMSAveragesAlg> avgAlg_;
   NgpAlgDriver avgMdotAlg_;

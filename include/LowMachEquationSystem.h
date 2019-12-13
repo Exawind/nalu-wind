@@ -120,8 +120,8 @@ public:
     EquationSystems& equationSystems);
   virtual ~MomentumEquationSystem();
 
-  virtual void initial_work();
-  virtual void pre_timestep_work();
+  virtual void initial_work() override;
+  virtual void pre_timestep_work() override;
 
   virtual void register_nodal_fields(
     stk::mesh::Part *part) override;
