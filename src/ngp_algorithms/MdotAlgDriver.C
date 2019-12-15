@@ -134,18 +134,21 @@ void MdotAlgDriver::post_work()
 
     for (auto& kv: correctOpenMdotAlgs_)
       kv.second->execute();
+
+    double gPost = 0.0;
+    stk::all_reduce_sum(
+      NaluEnv::self().parallel_comm(), &mdotOpenPost_, &gPost, 1);
+    mdotOpenPost_ = gPost;
   }
 
   // TODO: Remove these from SolutionOptions. Here to assist during transition phase
-  realm_.solutionOptions_->mdotAlgOpen_ = mdotOpen_;
-  realm_.solutionOptions_->mdotAlgInflow_ = mdotInflow_;
-  realm_.solutionOptions_->mdotAlgOpenIpCount_ = mdotOpenIpCount_;
   realm_.solutionOptions_->mdotAlgOpenCorrection_ = mdotOpenCorrection_;
 }
 
 void MdotAlgDriver::provide_output()
 {
   const double totalMassClosure = (rhoAccum_ + mdotInflow_ + mdotOpen_);
+
   NaluEnv::self().naluOutputP0()
     << "Mass Balance Review:"
     << "\nDensity accumulation: " << std::setprecision(16) << rhoAccum_

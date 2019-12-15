@@ -22,6 +22,7 @@ namespace sierra{
 namespace nalu{
 
 class Realm;
+class MdotAlgDriver;
 
 class ComputeMdotInflowAlgorithm : public Algorithm
 {
@@ -30,11 +31,13 @@ public:
   ComputeMdotInflowAlgorithm(
     Realm &realm,
     stk::mesh::Part *part,
+    MdotAlgDriver& mdotDriver,
     bool useShifted);
   ~ComputeMdotInflowAlgorithm();
 
   void execute();
 
+  MdotAlgDriver& mdotDriver_;
   const bool useShifted_;
 
   VectorFieldType *velocityBC_;

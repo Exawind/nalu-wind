@@ -212,7 +212,7 @@ public:
   KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node) final;
 
-  const int * side_node_ordinals(int ordinal = 0) const final;
+  KOKKOS_FUNCTION const int * side_node_ordinals(int ordinal = 0) const final;
 
   virtual const double* integration_locations() const final {
     return intgLoc_.data();

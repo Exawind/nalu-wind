@@ -163,16 +163,9 @@ public:
   double latitude_;
   double raBoussinesqTimeScale_;
 
-  // mdot post processing
-  double mdotAlgAccumulation_;
-  double mdotAlgInflow_;
-  double mdotAlgOpen_;
- 
   // global mdot correction alg
   bool activateOpenMdotCorrection_;
   double mdotAlgOpenCorrection_;
-  size_t mdotAlgOpenIpCount_;
-  double mdotAlgOpenPost_;
   bool explicitlyZeroOpenPressureGradient_;
 
   // option for consistent mass png

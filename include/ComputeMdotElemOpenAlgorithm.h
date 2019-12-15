@@ -22,6 +22,7 @@ namespace sierra{
 namespace nalu{
 
 class Realm;
+class MdotAlgDriver;
 
 class ComputeMdotElemOpenAlgorithm : public Algorithm
 {
@@ -29,11 +30,13 @@ public:
 
   ComputeMdotElemOpenAlgorithm(
     Realm &realm,
-    stk::mesh::Part *part);
+    stk::mesh::Part *part,
+    MdotAlgDriver&);
   ~ComputeMdotElemOpenAlgorithm();
 
   void execute();
 
+  MdotAlgDriver& mdotDriver_;
   const bool meshMotion_;
 
   VectorFieldType *velocityRTM_;

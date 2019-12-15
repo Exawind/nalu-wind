@@ -329,7 +329,7 @@ public:
   KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node) override ;
 
-  const int* side_node_ordinals(int sideOrdinal) const final;
+  KOKKOS_FUNCTION const int* side_node_ordinals(int sideOrdinal) const final;
 
   virtual const double* integration_locations() const final {
     return intgLoc_;

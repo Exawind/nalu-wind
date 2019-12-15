@@ -85,6 +85,39 @@ public:
     }
   }
 
+  template<template <typename> class NgpAlg, class ... Args>
+  void register_open_mdot_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const stk::topology elemTopo,
+    const std::string& algSuffix,
+    const bool needCorrection,
+    Args&& ... args)
+  {
+    register_face_elem_algorithm<NgpAlg>(
+      algType, part, elemTopo, algSuffix, std::forward<Args>(args)...);
+
+    if (needCorrection) {
+      register_open_mdot_corrector_alg(algType, part, algSuffix);
+    }
+  }
+
+  template<typename LegacyAlg, class ... Args>
+  void register_open_mdot_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const std::string& algSuffix,
+    const bool needCorrection,
+    Args&& ... args)
+  {
+    register_legacy_algorithm<LegacyAlg>(
+      algType, part, algSuffix, std::forward<Args>(args)...);
+
+    if (needCorrection) {
+      register_open_mdot_corrector_alg(algType, part, algSuffix);
+    }
+  }
+
 private:
   std::map<std::string, std::unique_ptr<Algorithm>> correctOpenMdotAlgs_;
 
