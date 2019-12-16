@@ -824,8 +824,9 @@ void ActuatorFAST::filtered_lifting_line()
           FAST.getRelativeVelForceNode(vel, np, infoObject->globTurbId_);
 
 //~ std::cerr << "na = "  << na << std::endl;
-//~ vel[1] = 0;
-//~ force[1] = 0;
+// Zero the radial component of the velocity and force
+vel[1] = 0;
+force[1] = 0;
 //~ for (int i = 0; i < nDim; i++) 
 //~ {
 //~ std::cerr << "Vel " << i << " = "  << vel[i] << std::endl;
