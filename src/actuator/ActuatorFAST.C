@@ -823,12 +823,14 @@ void ActuatorFAST::filtered_lifting_line()
           // Get the velocity from FAST
           FAST.getRelativeVelForceNode(vel, np, infoObject->globTurbId_);
 
-//~ std::cerr << "Vel = "  << vel[0] << std::endl;
-//~ std::cerr << "Force = "  << force[0] << std::endl;
-//~ std::cerr << "Vel = "  << vel[1] << std::endl;
-//~ std::cerr << "Force = "  << force[1] << std::endl;
-//~ std::cerr << "Vel = "  << vel[2] << std::endl;
-//~ std::cerr << "Force = "  << force[2] << std::endl;
+//~ std::cerr << "na = "  << na << std::endl;
+//~ vel[1] = 0;
+//~ force[1] = 0;
+//~ for (int i = 0; i < nDim; i++) 
+//~ {
+//~ std::cerr << "Vel " << i << " = "  << vel[i] << std::endl;
+//~ std::cerr << "Force " << i << "  = "  << force[i] << std::endl;
+//~ }
 
 //~ // Change the sign of the relative velocity
 //~ for (int i = 0; i < nDim; i++) vel[i] *= -1.;
@@ -872,7 +874,8 @@ void ActuatorFAST::filtered_lifting_line()
                 dr += std::pow(xyz_p1.data()[i]-xyz.data()[i], 2);
 
             // Take the square root and divide by 2 (central difference)
-            dr = std::sqrt(dr) / 2.;
+            //~ dr = std::sqrt(dr) / 2.;
+            dr = std::sqrt(dr) ;
           }
 
           else if (na == ptsPerBlade - 1)
@@ -892,7 +895,8 @@ void ActuatorFAST::filtered_lifting_line()
                 dr += std::pow(xyz.data()[i]-xyz_m1.data()[i], 2);
 
             // Take the square root and divide by 2 (central difference)
-            dr = std::sqrt(dr) / 2.;
+            //~ dr = std::sqrt(dr) / 2.;
+            dr = std::sqrt(dr);
           }
 
           else
@@ -925,6 +929,12 @@ void ActuatorFAST::filtered_lifting_line()
 
             // Convert G to force per unit width
             infoObject -> G.data()[i] /= dr;
+
+//~ std::cerr << "na = "  << na << std::endl;
+//~ for (int i = 0; i < nDim; i++) 
+//~ {
+//~ std::cerr << "G " << i << "  = "  << infoObject -> G.data()[i] << std::endl;
+//~ }
 
             // Zero the induced velocity values
             infoObject -> u_LES.data()[i] = 0;
@@ -1040,8 +1050,9 @@ void ActuatorFAST::filtered_lifting_line()
           // The square root of this gives the magnitude of the vector
           double diff = std::sqrt(rdiff2);
           // Change the sign depending on which side the actuator point is on
-          if (na_2 < na)
-            diff *= -1;
+          //~ if (na_2 < na) diff *= -1;
+          if (na_2 > na) diff *= -1;
+//~ std::cerr << "diff = "  << diff << std::endl;
 
           // Get the relative velocity
           // Get the velocity from FAST
@@ -1051,6 +1062,7 @@ void ActuatorFAST::filtered_lifting_line()
           // Compute the dot product of the velocity (vmag^2)
           for (int i = 0; i < nDim; i++) vmag += vel[i] * vel[i];
           vmag = std::sqrt(vmag);
+//~ std::cerr << "Vmag = "  << vmag << std::endl;
 
           // This is the gradient of the function G (it is a 3d vector)
           const std::array<double, 3>& dG = infoObject -> dG;
@@ -1062,6 +1074,7 @@ void ActuatorFAST::filtered_lifting_line()
           const double& eps_opt = infoObject -> epsilon_opt_.x_;
 //~ std::cerr << "epsilon les = "  << eps_les << std::endl;
 //~ std::cerr << "epsilon opt = "  << eps_opt << std::endl;
+//~ std::cerr << "pi = "  << pi << std::endl;
 
           // Compute the LES and optimal induced velocities
           for (int i = 0; i < nDim; i++) 
@@ -1080,11 +1093,19 @@ void ActuatorFAST::filtered_lifting_line()
 
           }
         }
-//~ std::cerr << "na = "  << na << std::endl;
-//~ std::cerr << "dG 1= "  << infoObject -> dG.data()[0] << std::endl;
-//~ std::cerr << "dG 2= "  << infoObject -> dG.data()[1] << std::endl;
-//~ std::cerr << "dG 3= "  << infoObject -> dG.data()[2] << std::endl;
 
+//~ std::cerr << "u les 0= " << na << " " << infoObject -> u_LES.data()[0] << std::endl;
+//~ std::cerr << "u opt 0= " << na << " "   << infoObject -> u_opt.data()[0] << std::endl;
+//~ std::cerr << "u les 1= " << na << " "   << infoObject -> u_LES.data()[1] << std::endl;
+//~ std::cerr << "u opt 1= " << na << " "   << infoObject -> u_opt.data()[1] << std::endl;
+//~ std::cerr << "u les 2= " << na << " "   << infoObject -> u_LES.data()[2] << std::endl;
+//~ std::cerr << "u opt 2= " << na << " "   << infoObject -> u_opt.data()[2] << std::endl;
+
+//~ std::cerr << "na = "  << na << std::endl;
+//~ for (int i = 0; i < nDim; i++) 
+//~ {
+//~ std::cerr << "dG " << i << " = " << infoObject -> dG.data()[i] << std::endl;
+//~ }
       }
     }
 
