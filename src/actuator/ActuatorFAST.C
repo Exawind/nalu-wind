@@ -475,7 +475,7 @@ ActuatorFAST::initialize()
 void
 ActuatorFAST::update()
 {
-std::cerr << "Update before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
+//~ std::cerr << "Update before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
     
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
 
@@ -996,9 +996,10 @@ force[1] = 0;
         for (int i = 0; i < nDim; i++) {
           // Central differencing
           infoObject -> dG.data()[i] = (infoObject_p1 -> G.data()[i] - 
-            infoObject_m1 -> G.data()[i]) / 2;
+            infoObject_m1 -> G.data()[i]) / 2.;
+//~ std::cerr << "dG = " << na << " " << infoObject -> dG.data()[i] << std::endl;
           }
-        }
+        }        
       }
   
   
@@ -1051,8 +1052,8 @@ force[1] = 0;
           // The square root of this gives the magnitude of the vector
           double diff = std::sqrt(rdiff2);
           // Change the sign depending on which side the actuator point is on
-          //~ if (na_2 < na) diff *= -1;
-          if (na_2 > na) diff *= -1;
+          if (na_2 < na) diff *= -1;
+          //~ if (na_2 > na) diff *= -1;
 //~ std::cerr << "diff = "  << diff << std::endl;
 
           // Get the relative velocity
@@ -1066,7 +1067,9 @@ force[1] = 0;
 //~ std::cerr << "Vmag = "  << vmag << std::endl;
 
           // This is the gradient of the function G (it is a 3d vector)
-          const std::array<double, 3>& dG = infoObject -> dG;
+          const std::array<double, 3>& dG = infoObject2 -> dG;
+
+//~ for (int i = 0; i < nDim; i++) std::cerr << "dG = " << i << " " << na << " " << dG.data()[i] << std::endl;
 
           // The value of epsilon
           // Notice the correciton assumes uniform epsilon and takes the 
@@ -1444,9 +1447,9 @@ ActuatorFAST::create_actuator_point_info_map()
 
   // Compute the index map used to access actuator points as
   //   (turbine number, blade number, actuator point number)
-std::cerr << "Index mapping before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
+//~ std::cerr << "Index mapping before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
   index_map();
-std::cerr << "Index mapping after ==============================" << NaluEnv::self().parallel_rank() << std::endl;
+//~ std::cerr << "Index mapping after ==============================" << NaluEnv::self().parallel_rank() << std::endl;
   
 }
 
