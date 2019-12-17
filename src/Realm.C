@@ -143,6 +143,10 @@
 // stk_util
 #include <stk_util/parallel/ParallelReduce.hpp>
 
+// stk_balance
+#include <stk_balance/balance.hpp>
+#include <stk_balance/balanceUtils.hpp>
+
 // Ioss for propertManager (io)
 #include <Ioss_PropertyManager.h>
 
@@ -497,6 +501,13 @@ Realm::initialize()
   timerPopulateFieldData_ += time;
   NaluEnv::self().naluOutputP0() << "Realm::ioBroker_->populate_field_data() End" << std::endl;
 
+  // rebalance mesh using stk_balance
+  if (rebalanceMesh_) {
+    stk::balance::GraphCreationSettings rebalanceSettings;
+    rebalanceSettings.setDecompMethod(rebalanceMethod_);
+    stk::balance::balanceStkMesh(rebalanceSettings, *bulkData_);
+  }
+
   if (doPromotion_) {
     promote_mesh();
     create_promoted_output_mesh();
@@ -732,6 +743,12 @@ Realm::load(const YAML::Node & node)
   if ( "None" != autoDecompType_ ) {
     NaluEnv::self().naluOutputP0() 
       <<"Warning: When using automatic_decomposition_type, one must have a serial file" << std::endl;
+  }
+
+  get_if_present(node, "rebalance_mesh", rebalanceMesh_, rebalanceMesh_);
+  if (rebalanceMesh_) {
+    get_required(node, "stk_rebalance_method", rebalanceMethod_);
+    NaluEnv::self().naluOutputP0() << "Nalu will rebalance mesh using " << rebalanceMethod_ << std::endl;
   }
 
   // activate aura

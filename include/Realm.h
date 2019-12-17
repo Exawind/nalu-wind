@@ -521,6 +521,11 @@ class Realm {
   // automatic mesh decomposition; None, rib, rcb, multikl, etc.
   std::string autoDecompType_;
 
+  // STK rebalance options
+  bool rebalanceMesh_{false};
+  
+  std::string rebalanceMethod_;
+   
   // allow aura to be optional
   bool activateAura_;
 
