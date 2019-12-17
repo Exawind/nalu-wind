@@ -1424,6 +1424,16 @@ Data probes
 		  tip_coordinates: [0, 0.0, 0.0]
 		  tail_coordinates: [0.0, 0.0, 1.0]
 
+              plane_specifications:
+	        - name: sample_plane
+		  corner_coordinates:  [0.0, 0.0, 0.0]
+		  edge1_vector:    [1.0, 0, 0]
+		  edge2_vector:    [0, 2.0, 0]
+		  edge1_numPoints: 11
+		  edge2_numPoints: 21
+		  offset_vector:   [0, 0, 1]
+		  offset_spacings: [0, 2]
+
 	      output_variables:
 	        - field_name: velocity
 		  field_size: 3
@@ -1478,6 +1488,22 @@ Data probes
    tail_coordinates  List containing the coordinates for the end of the lineout
    ================= =============================================================
 
+.. inpfile:: data_probes.specifications.plane_specifications
+
+   A list specifications defining the sampling plane
+
+   ================== =============================================================
+   Parameter          Description
+   ================== =============================================================
+   name               File name (without extension) for the sampling plane
+   corner_coordinates List containing the coordinates for the corner of the plane
+   edge1_vector       List containing the vector defining the first edge of the plane (with origin at corner)
+   edge2_vector       List containing the vector defining the second edge of the plane (with origin at corner)
+   edge1_numPoints    Number of points along edge 1
+   edge2_numPoints    Number of points along edge 2
+   offset_vector      [Optional] List containing the vector defining the offset direction for additional planes
+   offset_spacings    [Optional] List containing how far each plane is to be offset in the offset_vector direction
+   ================== =============================================================
 
 .. inpfile:: data_probes.specifications.output_variables
 
