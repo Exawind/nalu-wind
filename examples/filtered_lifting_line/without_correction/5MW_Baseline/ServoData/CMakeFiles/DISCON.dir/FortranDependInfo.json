@@ -1,0 +1,27 @@
+{
+	"compiler-id" : "GNU",
+	"dir-cur-bld" : "/Users/lmartin1/Documents/naluCode/nalu-wind/build/reg_tests/test_files/nrel5MWactuatorLine/5MW_Baseline/ServoData",
+	"dir-cur-src" : "/Users/lmartin1/Documents/naluCode/nalu-wind/reg_tests/test_files/nrel5MWactuatorLine/5MW_Baseline/ServoData",
+	"dir-top-bld" : "/Users/lmartin1/Documents/naluCode/nalu-wind/build",
+	"dir-top-src" : "/Users/lmartin1/Documents/naluCode/nalu-wind",
+	"include-dirs" : 
+	[
+		"/Users/lmartin1/Documents/naluCode/openfast_ganesh/install/include",
+		"../include",
+		"include",
+		"/usr/local/Cellar/open-mpi/3.1.0/include",
+		"/usr/local/Cellar/open-mpi/3.1.0/lib",
+		"/Users/lmartin1/exawind/install/clang/trilinos/include",
+		"/Users/lmartin1/exawind/spack/opt/spack/darwin-sierra-broadwell/clang-9.0.0-apple/superlu-4.3-5pm5j2yis6wornbpudckbn4vfkymudon/include",
+		"/usr/include",
+		"/usr/local/include",
+		"/Users/lmartin1/exawind/spack/opt/spack/darwin-sierra-broadwell/clang-9.0.0-apple/netcdf-4.4.1.1-ff6z43w2bwayn6exokuyzffouwfvspuw/include",
+		"/Users/lmartin1/exawind/spack/opt/spack/darwin-sierra-broadwell/clang-9.0.0-apple/hdf5-1.10.1-aj3jfpkmcl5msmrinqj4s2aibg34kh5q/include",
+		"/Users/lmartin1/exawind/spack/opt/spack/darwin-sierra-broadwell/clang-9.0.0-apple/parallel-netcdf-1.8.0-lku4myf47jwf4m42whacmg5ovadyhnxm/include",
+		"/Users/lmartin1/exawind/spack/opt/spack/darwin-sierra-broadwell/clang-9.0.0-apple/yaml-cpp-0.6.2-gmwrry2xd32xa5eo2mkkk6m2abslbslu/lib/cmake/yaml-cpp/../../../include",
+		"/Users/lmartin1/exawind/spack/opt/spack/darwin-sierra-broadwell/clang-9.0.0-apple/hypre-develop-ogvml7f7zkxgvp3ybijkitybmsic4fx4/include"
+	],
+	"language" : "Fortran",
+	"linked-target-dirs" : [],
+	"module-dir" : "/Users/lmartin1/Documents/naluCode/nalu-wind/build/reg_tests/test_files/nrel5MWactuatorLine/5MW_Baseline/ServoData"
+}
