@@ -220,6 +220,35 @@ void basic_node_reduce_minmax_alt(
   EXPECT_NEAR(minmax.min_val, minGold, tol);
 }
 
+void
+basic_node_reduce_array(
+  const stk::mesh::BulkData& bulk, ScalarFieldType& pressure, int num_nodes)
+{
+  using MeshIndex = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
+  const double presSet = 4.0;
+
+  stk::mesh::field_fill(presSet, pressure);
+  const auto& meta = bulk.mesh_meta_data();
+  stk::mesh::Selector sel = meta.universal_part();
+  ngp::Mesh ngpMesh(bulk);
+  ngp::Field<double> ngpPressure(bulk, pressure);
+
+  using value_type = Kokkos::Sum<sierra::nalu::nalu_ngp::ArrayDbl2>::value_type;
+  value_type lsum;
+  Kokkos::Sum<sierra::nalu::nalu_ngp::ArrayDbl2> sum_reducer(lsum);
+
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    "basic_node_reduce_arrray", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi, value_type& pSum) {
+      pSum.array_[0] += ngpPressure.get(mi, 0);
+      pSum.array_[1] += 1.0;
+    }, sum_reducer);
+
+  const double expectedPressureSum = presSet * num_nodes;
+  const int computedNumNodes = static_cast<int>(lsum.array_[1]);
+  EXPECT_NEAR(lsum.array_[0], expectedPressureSum, 1.0e-15);
+  EXPECT_EQ(num_nodes, computedNumNodes);
+}
 
 void basic_elem_loop(
   const stk::mesh::BulkData& bulk,
@@ -768,6 +797,13 @@ TEST_F(NgpLoopTest, NGP_basic_node_reduce)
   fill_mesh_and_init_fields("generated:16x16x16");
 
   basic_node_reduce(bulk, *pressure);
+}
+
+TEST_F(NgpLoopTest, NGP_basic_node_reduce_array)
+{
+  fill_mesh_and_init_fields("generated:2x2x2");
+
+  basic_node_reduce_array(bulk, *pressure, 3*3*3);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmax)

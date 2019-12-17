@@ -1429,7 +1429,7 @@ TurbulenceAveragingPostProcessing::compute_mean_resolved_ke(
   nalu_ngp::run_entity_par_reduce(
     "TurbPP::mean_res_tke",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
-    KOKKOS_LAMBDA(const MeshIndex& mi, nalu_ngp::ArrayDbl2 pSum) {
+    KOKKOS_LAMBDA(const MeshIndex& mi, nalu_ngp::ArrayDbl2& pSum) {
       pSum.array_[0] += dualVol.get(mi, 0);
 
       double ke = 0.0;
