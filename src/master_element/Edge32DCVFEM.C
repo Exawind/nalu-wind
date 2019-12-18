@@ -11,10 +11,6 @@
 
 #include <master_element/Edge32DCVFEM.h>
 #include <master_element/MasterElementFunctions.h>
-
-#include <element_promotion/LagrangeBasis.h>
-#include <element_promotion/TensorProductQuadratureRule.h>
-#include <element_promotion/QuadratureRule.h>
 #include <AlgTraits.h>
 
 #include <NaluEnv.h>

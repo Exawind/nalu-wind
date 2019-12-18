@@ -49,8 +49,6 @@ struct AlgTraitsHex8 {
   static constexpr stk::topology::topology_t topo_ = stk::topology::HEX_8;
   using            masterElementScs_ = HexSCS;
   using            masterElementScv_ = HexSCV;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 struct AlgTraitsHex27 {
@@ -62,8 +60,6 @@ struct AlgTraitsHex27 {
   static constexpr stk::topology::topology_t topo_ = stk::topology::HEX_27;
   using            masterElementScs_ = Hex27SCS;
   using            masterElementScv_ = Hex27SCV;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 struct AlgTraitsTet4 {
@@ -75,8 +71,6 @@ struct AlgTraitsTet4 {
   static constexpr stk::topology::topology_t topo_ = stk::topology::TET_4;
   using            masterElementScs_ = TetSCS;
   using            masterElementScv_ = TetSCV;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 struct AlgTraitsPyr5 {
@@ -88,8 +82,6 @@ struct AlgTraitsPyr5 {
   static constexpr stk::topology::topology_t topo_ = stk::topology::PYRAMID_5;
   using            masterElementScs_ = PyrSCS;
   using            masterElementScv_ = PyrSCV;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 struct AlgTraitsWed6 {
@@ -101,8 +93,6 @@ struct AlgTraitsWed6 {
   static constexpr stk::topology::topology_t topo_ = stk::topology::WEDGE_6;
   using            masterElementScs_ = WedSCS;
   using            masterElementScv_ = WedSCV;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 struct AlgTraitsQuad4_2D {
@@ -114,8 +104,6 @@ struct AlgTraitsQuad4_2D {
   static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_4_2D;
   using            masterElementScs_ = Quad42DSCS;
   using            masterElementScv_ = Quad42DSCV;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 struct AlgTraitsQuad9_2D {
@@ -127,8 +115,6 @@ struct AlgTraitsQuad9_2D {
   static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_9_2D;
   using            masterElementScv_ = Quad92DSCV;
   using            masterElementScs_ = Quad92DSCS;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 struct AlgTraitsTri3_2D {
@@ -140,62 +126,6 @@ struct AlgTraitsTri3_2D {
   static constexpr stk::topology::topology_t topo_ = stk::topology::TRI_3_2D;
   using            masterElementScs_ = Tri32DSCS;
   using            masterElementScv_ = Tri32DSCV;
-
-  static constexpr bool isSuperTopo = false;
-};
-
-template <int p> constexpr int nGL() { return (p % 2 == 0) ? p / 2 + 1 : (p + 1) / 2; }
-
-template <int p>
-struct AlgTraitsQuadGL_2D {
-  static constexpr int nDim_ = 3;
-  static constexpr int nodesPerElement_ = (p+1) * (p+1);
-  static constexpr int numScsIp_ = 2 * p * (p + 1) * nGL<p>();
-  static constexpr int numScvIp_ = nodesPerElement_ * nGL<p>() * nGL<p>();
-  static constexpr int numGp_ = nodesPerElement_; // for FEM (not supported)
-
-  static constexpr stk::topology::topology_t topo_ = static_cast<stk::topology::topology_t>(
-    nodesPerElement_ + stk::topology::SUPERELEMENT_START
-  );
-  static constexpr stk::topology::topology_t baseTopo_ = stk::topology::QUAD_4_2D;
-
-  static constexpr bool isSuperTopo = true;
-};
-
-template <int p>
-struct AlgTraitsHexGL {
-  static constexpr int nDim_ = 3;
-  static constexpr int nodesPerElement_ = (p+1)*(p+1)*(p+1);
-  static constexpr int numScsIp_ = 3 * p * (p+1) * (p+1) * nGL<p>() * nGL<p>();
-  static constexpr int numScvIp_ = nodesPerElement_ * nGL<p>() * nGL<p>() * nGL<p>();
-  static constexpr int numGp_ = nodesPerElement_; // for FEM (not supported)
-
-  static constexpr stk::topology::topology_t topo_ = static_cast<stk::topology::topology_t>(
-    nodesPerElement_ + stk::topology::SUPERELEMENT_START
-  );
-  static constexpr stk::topology::topology_t baseTopo_ = stk::topology::HEX_8;
-
-  static constexpr bool isSuperTopo = true;
-};
-
-template <int p>
-struct AlgTraitsHex
-{
-  static constexpr int nDim_ = 3;
-  static constexpr int nodesPerElement_ = (p+1) * (p+1) * (p+1);
-  static constexpr int numScsIp_ = 3 * p * (p+1) * (p+1);
-  static constexpr int numScvIp_ = (p+1) * (p+1) * (p+1);
-  static constexpr int numGp_ = (p+1) * (p+1) * (p+1);
-  static constexpr stk::topology::topology_t topo_ =
-      static_cast<stk::topology::topology_t>(stk::topology::SUPERELEMENT_START + nodesPerElement_);
-
-  // some higher order information
-  static constexpr int polyOrder_ = p;
-  static constexpr int nodes1D_ = p + 1;
-  static constexpr int nscs_ = p;
-  static constexpr stk::topology::topology_t baseTopo_ = stk::topology::HEX_8;
-
-  static constexpr bool isSuperTopo = true;
 };
 
 struct AlgTraitsEdge_3D
@@ -205,8 +135,6 @@ struct AlgTraitsEdge_3D
   static constexpr int numScsIp_ = 1;
   static constexpr int numScvIp_ = 2;
   static constexpr stk::topology::topology_t topo_ = stk::topology::LINE_2;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 //-------------------------------------------------------------------------------------------
@@ -220,8 +148,6 @@ struct AlgTraitsQuad4
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_4;
   using            masterElementScs_ = Quad3DSCS;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 struct AlgTraitsQuad9
@@ -233,8 +159,6 @@ struct AlgTraitsQuad9
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::QUAD_9;
   using            masterElementScs_ = Quad93DSCS;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 struct AlgTraitsTri3
@@ -246,8 +170,6 @@ struct AlgTraitsTri3
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::TRI_3;
   using            masterElementScs_ = Tri3DSCS;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 struct AlgTraitsEdge_2D
@@ -259,8 +181,6 @@ struct AlgTraitsEdge_2D
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::LINE_2;
   using            masterElementScs_ = Edge2DSCS;
-
-  static constexpr bool isSuperTopo = false;
 };
 
 
@@ -273,40 +193,6 @@ struct AlgTraitsEdge3_2D
   static constexpr int numFaceIp_ = numScsIp_;
   static constexpr stk::topology::topology_t topo_ = stk::topology::LINE_3;
   using            masterElementScs_ = Edge32DSCS;
-
-  static constexpr bool isSuperTopo = false;
-};
-
-template <int p>
-struct AlgTraitsQuadGL
-{
-  static constexpr int nDim_ = 3;
-  static constexpr int nodesPerElement_ = (p+1)*(p+1);
-  static constexpr int nodesPerFace_ = nodesPerElement_;
-  static constexpr int numScsIp_ = nGL<p>()*nGL<p>()*nodesPerElement_;
-  static constexpr int numFaceIp_ = numScsIp_;
-  static constexpr stk::topology::topology_t topo_ = static_cast<stk::topology::topology_t>(
-    nodesPerElement_ + stk::topology::SUPERFACE_START
-  );
-  static constexpr stk::topology::topology_t baseTopo_ = stk::topology::QUAD_4;
-
-  static constexpr bool isSuperTopo = true;
-};
-
-template <int p>
-struct AlgTraitsEdgeGL
-{
-  static constexpr int nDim_ = 3;
-  static constexpr int nodesPerElement_ = (p+1);
-  static constexpr int nodesPerFace_ = nodesPerElement_;
-  static constexpr int numScsIp_ = nGL<p>()*nodesPerElement_;
-  static constexpr int numFaceIp_ = numScsIp_;
-  static constexpr stk::topology::topology_t topo_ = static_cast<stk::topology::topology_t>(
-    nodesPerElement_ + stk::topology::SUPEREDGE_START
-  );
-  static constexpr stk::topology::topology_t baseTopo_ = stk::topology::LINE_2;
-
-  static constexpr bool isSuperTopo = true;
 };
 
 //-------------------------------------------------------------------------------------------
@@ -345,9 +231,6 @@ using AlgTraitsQuad4Wed6 = AlgTraitsFaceElem<AlgTraitsQuad4, AlgTraitsWed6>;
 
 using AlgTraitsEdge32DQuad92D = AlgTraitsFaceElem<AlgTraitsEdge3_2D, AlgTraitsQuad9_2D>;
 using AlgTraitsQuad9Hex27 = AlgTraitsFaceElem<AlgTraitsQuad9, AlgTraitsHex27>;
-
-template <int p> using AlgTraitsEdgePQuadPGL = AlgTraitsFaceElem<AlgTraitsEdgeGL<p>, AlgTraitsQuadGL_2D<p>>;
-template <int p> using AlgTraitsQuadPHexPGL = AlgTraitsFaceElem<AlgTraitsQuadGL<p>, AlgTraitsHexGL<p>>;
 
 } // namespace nalu
 } // namespace Sierra

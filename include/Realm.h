@@ -87,7 +87,6 @@ class BdyLayerStatistics;
 class TensorProductQuadratureRule;
 class LagrangeBasis;
 class PromotedElementIO;
-struct ElementDescription;
 
 /** Representation of a computational domain and physics equations solved on
  * this domain.
@@ -615,7 +614,6 @@ class Realm {
   const YAML::Node & node_;
 
   // tools
-  std::unique_ptr<ElementDescription> desc_; // holds topo info
   std::unique_ptr<PromotedElementIO> promotionIO_; // mesh outputer
   std::vector<std::string> superTargetNames_;
 

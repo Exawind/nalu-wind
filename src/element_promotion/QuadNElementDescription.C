@@ -9,15 +9,6 @@
 
 
 #include <element_promotion/QuadNElementDescription.h>
-#include <element_promotion/LagrangeBasis.h>
-#include <element_promotion/QuadratureRule.h>
-#include <element_promotion/TensorProductQuadratureRule.h>
-#include <element_promotion/ElementDescription.h>
-#include <NaluEnv.h>
-#include <nalu_make_unique.h>
-
-#include <stk_util/util/ReportHandler.hpp>
-#include <stk_topology/topology.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -31,48 +22,35 @@
 namespace sierra {
 namespace nalu {
 
-QuadNElementDescription::QuadNElementDescription(std::vector<double> in_nodeLocs)
-: ElementDescription()
+int tensor_edge_index(int p, int i, int j, int edge_ordinal)
 {
-  nodeLocs1D = in_nodeLocs;
-  polyOrder = nodeLocs1D.size()-1;
-  nodes1D = nodeLocs1D.size();
-  nodesPerSide = nodes1D;
-  nodesPerElement = nodes1D*nodes1D;
-
-  baseTopo = stk::topology::QUAD_4_2D;
-  dimension = 2;
-  numEdges = 4;
-  numFaces = 0;
-  numBoundaries = numEdges;
-  nodesInBaseElement = baseTopo.num_nodes();
-  nodesPerSubElement = baseTopo.num_nodes();
-  baseEdgeConnectivity = { {0,1}, {1,2}, {2,3}, {3,0} };
-
-  //first 4 nodes are base nodes.  Rest have been added.
-  baseNodeOrdinals = {0,1,2,3};
-  promotedNodeOrdinals.resize(nodesPerElement-nodesInBaseElement);
-  std::iota(promotedNodeOrdinals.begin(), promotedNodeOrdinals.end(), 4);
-
-  newNodesPerEdge = polyOrder - 1;
-  newNodesPerVolume = (polyOrder - 1)*(polyOrder - 1);
-
-  set_edge_node_connectivities();
-  set_volume_node_connectivities();
-  set_tensor_product_node_mappings();
-  set_boundary_node_mappings();
-  set_side_node_ordinals();
-  set_isoparametric_coordinates();
-  set_subelement_connectivites();
+  // we need to rotate the indexing of the edges depending on their orientation
+  // when we move from indexing nodes from the edge to indexing nodes from the face
+  switch (edge_ordinal) {
+    case 0: return i + 1;
+    case 1: return p + (p+1)*(j+1);
+    case 2: return p - (i+1) + (p+1)*p;
+    case 3: return (p+1) *(p - (j+1))
+    default: return -1;
+  }
 }
+
+int stk_edge_index(int p, int i, int j, int edge_ordinal)
+{
+  // is the edge along the "x" or "y" reference coordinate
+  return (edge_ordinal == 0 || edge_ordinal == 2) ? i : j;
+}
+
+
+
 //--------------------------------------------------------------------------
 std::vector<int> QuadNElementDescription::edge_node_ordinals()
 {
   // base nodes -> edge nodes for node ordering
   int numNewNodes = newNodesPerEdge * numEdges;
-  std::vector<ordinal_type> edgeNodeOrdinals(numNewNodes);
+  std::vector<int> edgeNodeOrdinals(numNewNodes);
 
-  ordinal_type firstEdgeNodeNumber = nodesInBaseElement;
+  int firstEdgeNodeNumber = nodesInBaseElement;
   std::iota(edgeNodeOrdinals.begin(), edgeNodeOrdinals.end(), firstEdgeNodeNumber);
 
   return edgeNodeOrdinals;
@@ -80,12 +58,12 @@ std::vector<int> QuadNElementDescription::edge_node_ordinals()
 //--------------------------------------------------------------------------
 void QuadNElementDescription::set_edge_node_connectivities()
 {
-  std::array<ordinal_type,4> edgeOrdinals = {{0, 1, 2, 3}};
+  std::array<int,4> edgeOrdinals = {{0, 1, 2, 3}};
   auto edgeNodeOrdinals = edge_node_ordinals();
 
   int edgeOffset = 0;
   for (const auto edgeOrdinal : edgeOrdinals) {
-    std::vector<ordinal_type> newNodesOnEdge(polyOrder-1);
+    std::vector<int> newNodesOnEdge(polyOrder-1);
     for (int j = 0; j < polyOrder-1; ++j) {
       newNodesOnEdge.at(j) = edgeNodeOrdinals.at(edgeOffset + j);
     }
@@ -94,13 +72,13 @@ void QuadNElementDescription::set_edge_node_connectivities()
   }
 }
 //--------------------------------------------------------------------------
-std::vector<ordinal_type> QuadNElementDescription::volume_node_ordinals()
+std::vector<int> QuadNElementDescription::volume_node_ordinals()
 {
   // 2D volume
   int numNewNodes = (polyOrder-1) * (polyOrder-1);
-  std::vector<ordinal_type> volumeNodeOrdinals(numNewNodes);
+  std::vector<int> volumeNodeOrdinals(numNewNodes);
 
-  ordinal_type firstVolumeNodeNumber = edgeNodeConnectivities.size() * (polyOrder-1) + nodesInBaseElement;
+  int firstVolumeNodeNumber = edgeNodeConnectivities.size() * (polyOrder-1) + nodesInBaseElement;
   std::iota(volumeNodeOrdinals.begin(), volumeNodeOrdinals.end(), firstVolumeNodeNumber);
 
   return volumeNodeOrdinals;
@@ -112,23 +90,23 @@ void QuadNElementDescription::set_volume_node_connectivities()
   volumeNodeConnectivities.insert({0, volume_node_ordinals()});
 }
 //--------------------------------------------------------------------------
-std::pair<ordinal_type,ordinal_type>
+std::pair<int,int>
 QuadNElementDescription::get_edge_offsets(
-  ordinal_type i, ordinal_type j,
-  ordinal_type edge_ordinal)
+  int i, int j,
+  int edge_ordinal)
 {
   // index of the "left"-most node along an edge
-  ordinal_type il = 0;
-  ordinal_type jl = 0;
+  int il = 0;
+  int jl = 0;
 
   // index of the "right"-most node along an edge
-  ordinal_type ir = nodes1D - 1;
-  ordinal_type jr = nodes1D - 1;
+  int ir = nodes1D - 1;
+  int jr = nodes1D - 1;
 
   // output
-  ordinal_type ix = -1;
-  ordinal_type iy = -1;
-  ordinal_type stk_index = -1;
+  int ix = -1;
+  int iy = -1;
+  int stk_index = -1;
 
   // just hard-code
   switch (edge_ordinal) {
@@ -161,7 +139,7 @@ QuadNElementDescription::get_edge_offsets(
       break;
     }
   }
-  ordinal_type tensor_index = (ix + nodes1D * iy);;
+  int tensor_index = (ix + nodes1D * iy);;
   return {tensor_index, stk_index};
 }
 //--------------------------------------------------------------------------
@@ -170,6 +148,7 @@ void QuadNElementDescription::set_base_node_maps()
   nodeMap.resize(nodesPerElement);
   inverseNodeMap.resize(nodesPerElement);
 
+  auto& nmap = [&nodeMap](int i, int j) { return i + nodes1D * j; };
   nmap(0        , 0        ) = 0;
   nmap(polyOrder, 0        ) = 1;
   nmap(polyOrder, polyOrder) = 2;
@@ -182,7 +161,7 @@ void QuadNElementDescription::set_base_node_maps()
 }
 void QuadNElementDescription::set_boundary_node_mappings()
 {
-  std::vector<ordinal_type> bcNodeOrdinals(polyOrder-1);
+  std::vector<int> bcNodeOrdinals(polyOrder-1);
   std::iota(bcNodeOrdinals.begin(), bcNodeOrdinals.end(), 2);
 
   nodeMapBC.resize(nodes1D);
@@ -203,7 +182,7 @@ void QuadNElementDescription::set_tensor_product_node_mappings()
   set_base_node_maps();
 
   if (polyOrder > 1) {
-    std::array<ordinal_type,4> edgeOrdinals = {{0, 1, 2, 3}};
+    std::array<int,4> edgeOrdinals = {{0, 1, 2, 3}};
     for (auto edgeOrdinal : edgeOrdinals) {
       auto newNodeOrdinals = edgeNodeConnectivities.at(edgeOrdinal);
       for (int j = 0; j < newNodesPerEdge; ++j) {
@@ -222,13 +201,6 @@ void QuadNElementDescription::set_tensor_product_node_mappings()
     }
   }
 
-  //inverse map
-  inverseNodeMap.resize(nodes1D*nodes1D);
-  for (int i = 0; i < nodes1D; ++i) {
-    for (int j = 0; j < nodes1D; ++j) {
-      inverseNodeMap[node_map(i,j)] = {i, j};
-    }
-  }
 }
 //--------------------------------------------------------------------------
 void

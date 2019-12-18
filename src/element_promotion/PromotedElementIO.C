@@ -9,7 +9,6 @@
 
 #include <element_promotion/PromotedElementIO.h>
 
-#include <element_promotion/ElementDescription.h>
 #include <element_promotion/PromotedPartHelper.h>
 #include <nalu_make_unique.h>
 
@@ -65,13 +64,13 @@ namespace {
 }
 
 PromotedElementIO::PromotedElementIO(
-  const ElementDescription& elem,
+  int p,
   const stk::mesh::MetaData& metaData,
   stk::mesh::BulkData& bulkData,
   const stk::mesh::PartVector& baseParts,
   const std::string& fileName,
   const VectorFieldType& coordField
-) : elem_(elem),
+) : elem_(HexNElementDescription(p)),
     metaData_(metaData),
     bulkData_(bulkData),
     fileName_(fileName),
@@ -337,13 +336,12 @@ PromotedElementIO::write_element_connectivity(
       const auto length = b.size();
       for (size_t k = 0; k < length; ++k) {
         const auto* node_rels = b.begin_nodes(k);
-        const auto& subElems = elem_.subElementConnectivity;
-        const auto numberSubElements = subElems.size();
+        const auto numberSubElements = elem_.nodesInBaseElement;
 
-        for (unsigned subElementIndex = 0; subElementIndex < numberSubElements; ++subElementIndex) {
+        for (int subElementIndex = 0; subElementIndex < numberSubElements; ++subElementIndex) {
           globalSubElementIds.at(subElementCounter) = entityIds[subElementCounter];
 
-          const auto& localIndices = subElems.at(subElementIndex);
+          const auto& localIndices = elem_.sub_element_connectivity(subElementIndex);
           for (unsigned j = 0; j < nodesPerLinearElem; ++j) {
             connectivity[connIndex] = bulkData_.identifier(node_rels[localIndices[j]]);
             ++connIndex;

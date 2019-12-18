@@ -18,6 +18,7 @@
 #include <stk_util/util/ReportHandler.hpp>
 
 #include "AlgTraits.h"
+#include "master_element/Quad43DCVFEM.h"
 #include "utils/CreateDeviceExpression.h"
 
 namespace stk { struct topology; }
@@ -25,40 +26,19 @@ namespace stk { struct topology; }
 namespace sierra{
 namespace nalu{
   class MasterElement;
-
   struct MasterElementRepo
   {
   public:
     static MasterElement*
-    get_surface_master_element(
-      const stk::topology& theTopo,
-      int dimension = 0,
-      std::string quadType = "GaussLegendre");
+    get_surface_master_element(const stk::topology& theTopo);
 
     static MasterElement*
-    get_volume_master_element(
-      const stk::topology& theTopo,
-      int dimension = 0,
-      std::string quadType = "GaussLegendre");
+    get_volume_master_element(const stk::topology& theTopo);
 
-    template <
-      typename AlgTraits,
-      typename std::enable_if<!AlgTraits::isSuperTopo, AlgTraits>::type* = nullptr>
+    template <typename AlgTraitsr>
     static MasterElement* get_volume_master_element();
 
-    template <
-      typename AlgTraits,
-      typename std::enable_if<AlgTraits::isSuperTopo, AlgTraits>::type* = nullptr>
-    static MasterElement* get_volume_master_element();
-
-    template <
-      typename AlgTraits,
-      typename std::enable_if<!AlgTraits::isSuperTopo, AlgTraits>::type* = nullptr>
-    static MasterElement* get_surface_master_element();
-
-    template <
-      typename AlgTraits,
-      typename std::enable_if<AlgTraits::isSuperTopo, AlgTraits>::type* = nullptr>
+    template <typename AlgTraits>
     static MasterElement* get_surface_master_element();
 
     static void clear();
@@ -81,54 +61,27 @@ namespace nalu{
     std::map<stk::topology, MasterElement*>& meMap)
   {
     const stk::topology theTopo = AlgTraits::topo_;
-
+    //FIXME: ETI this
     ThrowRequire(!theTopo.is_super_topology());
     if (meMap.find(theTopo) == meMap.end()) {
-      meMap[theTopo] = sierra::nalu::create_device_expression<ME>();
+      meMap[theTopo] = static_cast<MasterElement*>(sierra::nalu::create_device_expression<ME>());
     }
     MasterElement* theElem = meMap.at(theTopo);
     return theElem;
   }
 
-  template <
-    typename AlgTraits,
-    typename std::enable_if<!AlgTraits::isSuperTopo, AlgTraits>::type*>
+  template <typename AlgTraits>
   MasterElement* MasterElementRepo::get_volume_master_element()
   {
     return get_master_element<AlgTraits, typename AlgTraits::masterElementScv_>(volumeMeMapDev());
   }
 
-  template <
-    typename AlgTraits,
-    typename std::enable_if<AlgTraits::isSuperTopo, AlgTraits>::type*>
-  MasterElement* MasterElementRepo::get_volume_master_element()
-  {
-#ifndef KOKKOS_ENABLE_CUDA
-    return get_volume_master_element(AlgTraits::topo_);
-#else
-    return nullptr;
-#endif
-  }
-
-  template <
-    typename AlgTraits,
-    typename std::enable_if<!AlgTraits::isSuperTopo, AlgTraits>::type*>
+  template <typename AlgTraits>
   MasterElement* MasterElementRepo::get_surface_master_element()
   {
     return get_master_element<AlgTraits, typename AlgTraits::masterElementScs_>(surfaceMeMapDev());
   }
 
-  template <
-    typename AlgTraits,
-    typename std::enable_if<AlgTraits::isSuperTopo, AlgTraits>::type*>
-  MasterElement* MasterElementRepo::get_surface_master_element()
-  {
-#ifndef KOKKOS_ENABLE_CUDA
-    return get_surface_master_element(AlgTraits::topo_);
-#else
-    return nullptr;
-#endif
-  }
 
 } // namespace nalu
 } // namespace sierra

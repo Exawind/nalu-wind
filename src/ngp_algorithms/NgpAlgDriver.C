@@ -19,8 +19,7 @@ namespace nalu {
 
 NgpAlgDriver::NgpAlgDriver(
   Realm& realm
-): realm_(realm),
-   nDim_(realm_.spatialDimension_)
+): realm_(realm)
 {}
 
 std::string

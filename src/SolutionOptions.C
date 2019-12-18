@@ -95,8 +95,6 @@ SolutionOptions::SolutionOptions()
     activateOpenMdotCorrection_(false),
     mdotAlgOpenCorrection_(0.0),
     explicitlyZeroOpenPressureGradient_(false),
-    useConsoldiatedPngSolverAlg_(false),
-    newHO_(false),
     resetTAMSAverages_(true)
 {
   // nothing to do
@@ -152,8 +150,6 @@ SolutionOptions::load(const YAML::Node & y_node)
     // check for consolidated face-elem bc alg
     get_if_present(y_solution_options, "use_consolidated_face_elem_bc_algorithm", useConsolidatedBcSolverAlg_, useConsolidatedBcSolverAlg_);
 
-    // use a consolidated alg for the consistent mass PNG
-    get_if_present(y_solution_options, "use_consolidated_png", useConsoldiatedPngSolverAlg_);
 
     // eigenvalue purturbation; over all dofs...
     get_if_present(y_solution_options, "eigenvalue_perturbation", eigenvaluePerturb_);
@@ -161,8 +157,6 @@ SolutionOptions::load(const YAML::Node & y_node)
     get_if_present(y_solution_options, "eigenvalue_perturbation_bias_towards", eigenvaluePerturbBiasTowards_);
     get_if_present(y_solution_options, "eigenvalue_perturbation_turbulent_ke", eigenvaluePerturbTurbKe_);
     
-    // quadrature type for high order
-    get_if_present(y_solution_options, "tensor_product_cvfem", newHO_);
 
     std::string projected_timescale_type = "default";
     get_if_present(y_solution_options, "projected_timescale_type",

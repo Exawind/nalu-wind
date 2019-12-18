@@ -11,7 +11,7 @@
 #include "gtest/gtest.h"
 #include "UnitTestUtils.h"
 #include "kernels/UnitTestKernelUtils.h"
-
+#include "master_element/MasterElement.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpReduceUtils.h"

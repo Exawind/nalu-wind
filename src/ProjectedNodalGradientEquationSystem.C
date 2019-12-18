@@ -29,7 +29,6 @@
 #include <SolverAlgorithmDriver.h>
 
 #include <kernel/KernelBuilder.h>
-#include <kernel/ProjectedNodalGradientHOElemKernel.h>
 
 // user functions
 #include <user_functions/SteadyThermalContactAuxFunction.h>
@@ -157,26 +156,17 @@ ProjectedNodalGradientEquationSystem::register_interior_algorithm(
   const AlgorithmType algType = INTERIOR;
 
   // solver
-  if (!realm_.solutionOptions_->useConsoldiatedPngSolverAlg_) {
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator its
-    = solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssemblePNGElemSolverAlgorithm *theAlg
-      = new AssemblePNGElemSolverAlgorithm(realm_, part, this, independentDofName_, dofName_);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      its->second->partVec_.push_back(part);
-    }
+  std::map<AlgorithmType, SolverAlgorithm *>::iterator its
+  = solverAlgDriver_->solverAlgMap_.find(algType);
+  if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
+    AssemblePNGElemSolverAlgorithm *theAlg
+    = new AssemblePNGElemSolverAlgorithm(realm_, part, this, independentDofName_, dofName_);
+    solverAlgDriver_->solverAlgMap_[algType] = theAlg;
   }
   else {
-    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_, true);
-
-    kb.build_sgl_kernel_automatic<ProjectedNodalGradientHOElemKernel>(
-      dofName_ + "_png",
-      realm_.bulk_data(), *realm_.solutionOptions_, independentDofName_, dofName_, kb.data_prereqs_HO()
-    );
+    its->second->partVec_.push_back(part);
   }
+
 }
 
 //--------------------------------------------------------------------------

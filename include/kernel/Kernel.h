@@ -20,7 +20,6 @@
 #include <stk_mesh/base/Entity.hpp>
 
 #include <array>
-#include "../ScratchViewsHO.h"
 
 #include <master_element/MasterElementFactory.h>
 
@@ -125,11 +124,6 @@ public:
     ScratchViews<DoubleType> & /* scratchViews */)
   {}
 
-  virtual void execute(
-    SharedMemView<DoubleType**> & /* lhs */,
-    SharedMemView<DoubleType*> & /* rhs */,
-    ScratchViewsHO<DoubleType> & /* scratchViews */)
-  {}
 
   /** Special execute for face-element kernels
    *

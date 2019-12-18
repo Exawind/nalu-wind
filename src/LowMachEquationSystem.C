@@ -105,16 +105,6 @@
 #include <kernel/MomentumMassElemKernel.h>
 #include <kernel/MomentumUpwAdvDiffElemKernel.h>
 
-#include <kernel/MomentumMassHOElemKernel.h>
-#include <kernel/MomentumAdvDiffHOElemKernel.h>
-#include <kernel/MomentumBuoyancySrcHOElemKernel.h>
-#include <kernel/PressurePoissonHOElemKernel.h>
-#include <kernel/ContinuityMassHOElemKernel.h>
-
-//mms kernels
-#include <user_functions/TGMMSHOElemKernel.h>
-
-
 // bc kernels
 #include <kernel/ContinuityInflowElemKernel.h>
 #include <kernel/ContinuityOpenElemKernel.h>
@@ -191,9 +181,6 @@
 #include <user_functions/VariableDensityContinuitySrcNodeSuppAlg.h>
 #include <user_functions/VariableDensityMomentumSrcElemSuppAlg.h>
 #include <user_functions/VariableDensityMomentumSrcNodeSuppAlg.h>
-
-#include <user_functions/VariableDensityMomentumMMSHOElemKernel.h>
-#include <user_functions/VariableDensityContinuityMMSHOElemKernel.h>
 
 #include <user_functions/VariableDensityNonIsoContinuitySrcNodeSuppAlg.h>
 #include <user_functions/VariableDensityNonIsoMomentumSrcNodeSuppAlg.h>
@@ -1324,9 +1311,8 @@ MomentumEquationSystem::register_interior_algorithm(
     if ( realm_.realmUsesEdges_ )
       throw std::runtime_error("MomentumElemSrcTerms::Error can not use element source terms for an edge-based scheme");
 
-    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_, realm_.using_tensor_product_kernels());
+    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_);
     auto& dataPreReqs = kb.data_prereqs();
-    auto& dataPreReqsHO = kb.data_prereqs_HO();
 
     kb.build_topo_kernel_if_requested<MomentumMassElemKernel>
       ("momentum_time_derivative",
@@ -1417,35 +1403,6 @@ MomentumEquationSystem::register_interior_algorithm(
       "lumped_body_force", realm_.bulk_data(), *realm_.solutionOptions_,
       realm_.solutionOptions_->srcTermParamMap_.find("momentum")->second,
       dataPreReqs);
-
-    kb.build_sgl_kernel_if_requested<MomentumAdvDiffHOElemKernel>
-      ("experimental_ho_advection_diffusion",
-       realm_.bulk_data(), *realm_.solutionOptions_, velocity_,
-       realm_.is_turbulent()? evisc_ : visc_,
-       dataPreReqsHO, false);
-
-    kb.build_sgl_kernel_if_requested<MomentumAdvDiffHOElemKernel>
-      ("experimental_ho_advection_diffusion_reduced_sens",
-       realm_.bulk_data(), *realm_.solutionOptions_, velocity_,
-       realm_.is_turbulent()? evisc_ : visc_,
-       dataPreReqsHO, true);
-
-    kb.build_sgl_kernel_if_requested<MomentumMassHOElemKernel>
-      ("experimental_ho_momentum_time_derivative",
-        realm_.bulk_data(), *realm_.solutionOptions_,  dataPreReqsHO);
-
-    kb.build_sgl_kernel_if_requested<TGMMSHOElemKernel>
-      ("experimental_ho_tgmms",
-        realm_.bulk_data(), *realm_.solutionOptions_,  dataPreReqsHO);
-
-    kb.build_sgl_kernel_if_requested<VariableDensityMomentumMMSHOElemKernel>
-      ("experimental_ho_vdmms",
-        realm_.bulk_data(), *realm_.solutionOptions_,  dataPreReqsHO);
-
-    kb.build_sgl_kernel_if_requested<MomentumBuoyancySrcHOElemKernel>
-      ("experimental_ho_buoyancy",
-        realm_.bulk_data(), *realm_.solutionOptions_,  dataPreReqsHO);
-
     // UT Austin Hybrid TAMS model implementation for subgrid quantities
     kb.build_topo_kernel_if_requested<MomentumSSTTAMSDiffElemKernel>
       ("sst_tams",
@@ -1462,8 +1419,7 @@ MomentumEquationSystem::register_interior_algorithm(
   // Check if the user has requested CMM or LMM algorithms; if so, do not
   // include Nodal Mass algorithms
   std::vector<std::string> checkAlgNames = {"momentum_time_derivative",
-                                            "lumped_momentum_time_derivative",
-                                            "experimental_ho_momentum_time_derivative"};
+                                            "lumped_momentum_time_derivative"};
   bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
   // solver; time contribution (lumped mass matrix)
   if ( !elementMassAlg || nodal_src_is_requested() ) {
@@ -3019,7 +2975,7 @@ ContinuityEquationSystem::register_interior_algorithm(
       if ( realm_.realmUsesEdges_ )
         throw std::runtime_error("ContinuityElemSrcTerms::Error can not use element source terms for an edge-based scheme");
 
-      KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_, realm_.using_tensor_product_kernels());
+      KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_);
 
       kb.build_topo_kernel_if_requested<ContinuityMassElemKernel>
       ("density_time_derivative",
@@ -3032,26 +2988,6 @@ ContinuityEquationSystem::register_interior_algorithm(
       kb.build_topo_kernel_if_requested<ContinuityAdvElemKernel>
       ("advection",
         realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs());
-
-      kb.build_sgl_kernel_if_requested<ContinuityMassHOElemKernel>
-      ("experimental_ho_density_time_derivative",
-        realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs_HO());
-
-      kb.build_sgl_kernel_if_requested<ContinuityMassHOElemKernel>
-      ("experimental_ho_density_time_derivative",
-        realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs_HO());
-
-      kb.build_sgl_kernel_if_requested<PressurePoissonHOElemKernel>
-      ("experimental_ho_advection",
-        realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs_HO(), false);
-
-      kb.build_sgl_kernel_if_requested<PressurePoissonHOElemKernel>
-      ("experimental_ho_advection_reduced_sens",
-        realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs_HO(), true);
-
-      kb.build_sgl_kernel_if_requested<VariableDensityContinuityMMSHOElemKernel>
-        ("experimental_ho_vdmms",
-          realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs_HO());
 
       kb.report();
     }

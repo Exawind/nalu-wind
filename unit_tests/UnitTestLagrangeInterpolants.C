@@ -3,7 +3,7 @@
 #include <random>
 #include <stdexcept>
 
-#include <element_promotion/LagrangeBasis.h>
+#include <master_element/LagrangeBasis.h>
 
 #include "UnitTestUtils.h"
 

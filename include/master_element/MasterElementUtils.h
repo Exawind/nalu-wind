@@ -22,7 +22,6 @@ namespace nalu{
 namespace MEconstants {
   static const double realmin = std::numeric_limits<double>::min();
 }
-
   class LagrangeBasis;
 
   bool isoparameteric_coordinates_for_point_2d(

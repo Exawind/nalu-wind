@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include <element_promotion/QuadratureRule.h>
+#include <master_element/QuadratureRule.h>
 
 #include <Teuchos_RCP.hpp>
 #include <Teuchos_LAPACK.hpp>
