@@ -33,8 +33,6 @@
 #include <stk_util/parallel/ParallelComm.hpp>
 #include <stk_util/util/ReportHandler.hpp>
 
-#include <boost/functional/hash/hash.hpp>
-
 #include <algorithm>
 #include <vector>
 #include <stdexcept>
@@ -104,7 +102,7 @@ promote_elements_hex(
 
   bulk.modification_end();
 
-  stk::mesh::PartVector promotedSideParts;// = create_boundary_elements(poly, bulk, partsToBePromoted);
+  stk::mesh::PartVector promotedSideParts = create_boundary_elements(poly, bulk, partsToBePromoted);
 
   set_coordinates_hex(nodeLocs1D, bulk, desc, promotedElemParts, coordField);
   return std::make_pair(promotedElemParts, promotedSideParts);
@@ -451,7 +449,7 @@ add_face_nodes_to_elem_connectivity(
   stk::mesh::EntityIdVector& allNodes)
 {
   const auto* face_rels = bulk.begin_faces(elem);
-  const auto* face_ords = bulk.begin_edge_ordinals(elem);
+  const auto* face_ords = bulk.begin_face_ordinals(elem);
   const auto* face_perm = bulk.begin_face_permutations(elem);
   int newNodesPerEdge = desc.newNodesPerEdge;
   for (unsigned face_index = 0; face_index < bulk.num_faces(elem); ++face_index) {
