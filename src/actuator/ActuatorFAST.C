@@ -51,9 +51,9 @@ namespace nalu {
 // constructor
 ActuatorFASTInfo::ActuatorFASTInfo() : ActuatorInfo()
 {
-  // Initialize the filtered lifting line correciton to false
+  // Initialize the filtered lifting line theory correciton to false
   // This is later read from the yaml input file and can be changed
-  martinez_correction_ = false;
+  fllt_correction_ = false;
   
 }
 
@@ -194,12 +194,10 @@ ActuatorFAST::load(const YAML::Node& y_node)
           }
 
           // The correction from filtered lifting line theory
-          //~ const YAML::Node martinez_correction = 
-                  //~ cur_turbine["martinez_correction"];
-          const bool martinez_correction = 
-                  cur_turbine["martinez_correction"].as<bool>();
+          const bool fllt_correction = 
+                  cur_turbine["fllt_correction"].as<bool>();
           // Pass the correction value (true or false)
-          actuatorFASTInfo->martinez_correction_ = martinez_correction;
+          actuatorFASTInfo->fllt_correction_ = fllt_correction;
 
           // The value epsilon / chord [non-dimensional]
           // This is a vector containing the values for:
@@ -212,7 +210,7 @@ ActuatorFAST::load(const YAML::Node& y_node)
           // If it is not given, set it to zero, such
           // that it is smaller than the standard epsilon and
           // will not be used
-          if ( epsilon_chord or martinez_correction)
+          if ( epsilon_chord or fllt_correction)
           {
             // epsilon / chord
             actuatorFASTInfo->epsilon_chord_ = epsilon_chord.as<Coordinates>();
@@ -455,9 +453,7 @@ ActuatorFAST::initialize()
   // complete filling in the set of elements connected to the centroid
   complete_search();
 
-//~ std::cerr << "Update before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
-  //~ update(); // Update location of actuator points, ghosting etc.
-//~ std::cerr << "Update after ==============================" << NaluEnv::self().parallel_rank() << std::endl;
+  update(); // Update location of actuator points, ghosting etc.
 
 }
 
@@ -475,8 +471,6 @@ ActuatorFAST::initialize()
 void
 ActuatorFAST::update()
 {
-//~ std::cerr << "Update before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
-    
   stk::mesh::BulkData& bulkData = realm_.bulk_data();
 
   // initialize need to ghost and elems to ghost
@@ -514,9 +508,6 @@ ActuatorFAST::update()
 
   // complete filling in the set of elements connected to the centroid
   complete_search();
-
-//~ std::cerr << "update act p i after ==== " << NaluEnv::self().parallel_rank()  << std::endl;
-//~ std::cerr << "Update after ==============================" << NaluEnv::self().parallel_rank() << std::endl;
 
 }
 
@@ -612,14 +603,6 @@ ActuatorFAST::execute()
     //==========================================================================
     stk::mesh::Entity bestElem = infoObject->bestElem_;
     int nodesPerElement = bulkData.num_nodes(bestElem);
-//~ std::cerr << "Execute after 1==============================" << np << " " << NaluEnv::self().parallel_rank() << std::endl;
-///////////////////////////////////////////////////////////////////////////////////////
-////////// ERROR HERE HERE HERE HERE HERE
-///////////////////////////////////////////////////////////////////////////////////////
-//~ std::cerr << "nDim=" << np << " " << nDim << " " << NaluEnv::self().parallel_rank() << std::endl;
-//~ std::cerr << "ws_coordinates_=" << np << " " << ws_coordinates_ << " " << NaluEnv::self().parallel_rank() << std::endl;
-//~ std::cerr << "bestElem=" << np << " " << bestElem << " " << NaluEnv::self().parallel_rank() << std::endl;
-//~ std::cerr << "bulkData=" << np << " " << bulkData << " " << NaluEnv::self().parallel_rank() << std::endl;
 
     // resize some work vectors
     resize_std_vector(nDim, ws_coordinates_, bestElem, bulkData);
@@ -662,24 +645,13 @@ ActuatorFAST::execute()
     // Add the filtered lifting line theory correction here
     // This adds an extra component of velocity in every direction
     /////////////////////////
-//~ std::cerr << "Before correction = "  << std::endl;
     for (int i=0; i<nDim; i++) {
-//~ std::cerr << i << " Before " << ws_pointGasVelocity.data()[i]  << std::endl;
       ws_pointGasVelocity.data()[i] += infoObject -> du.data()[i];
-//~ std::cerr << i << " du " << infoObject -> du.data()[i]  << std::endl;
-//~ std::cerr << i << " u les " << infoObject -> u_LES.data()[i]  << std::endl;
-//~ std::cerr << i <<" After " << ws_pointGasVelocity.data()[i]  << std::endl;
     }
 
-//~ std::cerr << infoObject -> du.data()[0]  << std::endl;
-//~ std::cerr << infoObject -> du.data()[1]  << std::endl;
-//~ std::cerr << infoObject -> du.data()[2]  << std::endl;
-//~ std::cerr << "After correction = "  << std::endl;
-    
     // Set the CFD velocity at the actuator node
     FAST.setVelocityForceNode(
     ws_pointGasVelocity, nNp, infoObject->globTurbId_);
-//~ std::cerr << "Execute after 2==============================" << np << " " << NaluEnv::self().parallel_rank() << std::endl;
 
   }
  
@@ -782,15 +754,14 @@ void ActuatorFAST::filtered_lifting_line()
       actuatorInfo_.at(iTurb).get());
 
     // If the correciton is not active for this turbine, skip this turbine
-    if ( ! actuatorFASTInfo -> martinez_correction_) continue;
+    if ( ! actuatorFASTInfo -> fllt_correction_) continue;
 
     // Do not consider this unless the turbine lies in the same processor
     if (FAST.get_procNo(iTurb) != NaluEnv::self().parallel_rank()) continue;
 
     // Number of blades
     const size_t numBlades = FAST.get_numBlades(iTurb);
-    // The total number of actuator points in all blades
-    //~ const size_t totalActuatorNodes = FAST.get_numForcePtsBlade(iTurb);
+
     // The total number of actuator points per blade
     const size_t ptsPerBlade = FAST.get_numForcePtsBlade(iTurb); //totalActuatorNodes / numBlades;
 
@@ -823,18 +794,14 @@ void ActuatorFAST::filtered_lifting_line()
           // Get the velocity from FAST
           FAST.getRelativeVelForceNode(vel, np, infoObject->globTurbId_);
 
-//~ std::cerr << "na = "  << na << std::endl;
-// Zero the radial component of the velocity and force
-vel[1] = 0;
-force[1] = 0;
+          // Zero the radial component of the velocity and force
+          vel[1] = 0;
+          force[1] = 0;
 //~ for (int i = 0; i < nDim; i++) 
 //~ {
 //~ std::cerr << "Vel " << i << " = "  << vel[i] << std::endl;
 //~ std::cerr << "Force " << i << "  = "  << force[i] << std::endl;
 //~ }
-
-//~ // Change the sign of the relative velocity
-//~ for (int i = 0; i < nDim; i++) vel[i] *= -1.;
 
           // The velocity magnitude squared
           double vmag2(0);
@@ -875,8 +842,7 @@ force[1] = 0;
                 dr += std::pow(xyz_p1.data()[i]-xyz.data()[i], 2);
 
             // Take the square root and divide by 2 (central difference)
-            //~ dr = std::sqrt(dr) / 2.;
-            dr = std::sqrt(dr) ;
+            dr = std::sqrt(dr) / 2.;
           }
 
           else if (na == ptsPerBlade - 1)
@@ -896,8 +862,7 @@ force[1] = 0;
                 dr += std::pow(xyz.data()[i]-xyz_m1.data()[i], 2);
 
             // Take the square root and divide by 2 (central difference)
-            //~ dr = std::sqrt(dr) / 2.;
-            dr = std::sqrt(dr);
+            dr = std::sqrt(dr) / 2.;
           }
 
           else
@@ -931,18 +896,11 @@ force[1] = 0;
             // Convert G to force per unit width
             infoObject -> G.data()[i] /= dr;
 
-//~ std::cerr << "na = "  << na << std::endl;
-//~ for (int i = 0; i < nDim; i++) 
-//~ {
-//~ std::cerr << "G " << i << "  = "  << infoObject -> G.data()[i] << std::endl;
-//~ }
-
             // Zero the induced velocity values
             infoObject -> u_LES.data()[i] = 0;
             infoObject -> u_opt.data()[i] = 0;
           }
         }
-
       }
 
     ///////////////////////////////
@@ -997,7 +955,6 @@ force[1] = 0;
           // Central differencing
           infoObject -> dG.data()[i] = (infoObject_p1 -> G.data()[i] - 
             infoObject_m1 -> G.data()[i]) / 2.;
-//~ std::cerr << "dG = " << na << " " << infoObject -> dG.data()[i] << std::endl;
           }
         }        
       }
@@ -1053,8 +1010,6 @@ force[1] = 0;
           double diff = std::sqrt(rdiff2);
           // Change the sign depending on which side the actuator point is on
           if (na_2 < na) diff *= -1;
-          //~ if (na_2 > na) diff *= -1;
-//~ std::cerr << "diff = "  << diff << std::endl;
 
           // Get the relative velocity
           // Get the velocity from FAST
@@ -1064,21 +1019,15 @@ force[1] = 0;
           // Compute the dot product of the velocity (vmag^2)
           for (int i = 0; i < nDim; i++) vmag += vel[i] * vel[i];
           vmag = std::sqrt(vmag);
-//~ std::cerr << "Vmag = "  << vmag << std::endl;
 
           // This is the gradient of the function G (it is a 3d vector)
           const std::array<double, 3>& dG = infoObject2 -> dG;
-
-//~ for (int i = 0; i < nDim; i++) std::cerr << "dG = " << i << " " << na << " " << dG.data()[i] << std::endl;
 
           // The value of epsilon
           // Notice the correciton assumes uniform epsilon and takes the 
           //   the first value
           const double& eps_les = infoObject -> epsilon_.x_;
           const double& eps_opt = infoObject -> epsilon_opt_.x_;
-//~ std::cerr << "epsilon les = "  << eps_les << std::endl;
-//~ std::cerr << "epsilon opt = "  << eps_opt << std::endl;
-//~ std::cerr << "pi = "  << pi << std::endl;
 
           // Compute the LES and optimal induced velocities
           for (int i = 0; i < nDim; i++) 
@@ -1092,24 +1041,8 @@ force[1] = 0;
             infoObject -> u_opt.data()[i] -= 1./(vmag * 4. * pi) * dG.data()[i] * 
               (1. - std::exp(-rdiff2/(eps_opt * eps_opt))) / diff;
 
-//~ std::cerr << "u les = "  << infoObject -> u_LES.data()[i] << std::endl;
-//~ std::cerr << "u opt = "  << infoObject -> u_opt.data()[i] << std::endl;
-
           }
         }
-
-//~ std::cerr << "u les 0= " << na << " " << infoObject -> u_LES.data()[0] << std::endl;
-//~ std::cerr << "u opt 0= " << na << " "   << infoObject -> u_opt.data()[0] << std::endl;
-//~ std::cerr << "u les 1= " << na << " "   << infoObject -> u_LES.data()[1] << std::endl;
-//~ std::cerr << "u opt 1= " << na << " "   << infoObject -> u_opt.data()[1] << std::endl;
-//~ std::cerr << "u les 2= " << na << " "   << infoObject -> u_LES.data()[2] << std::endl;
-//~ std::cerr << "u opt 2= " << na << " "   << infoObject -> u_opt.data()[2] << std::endl;
-
-//~ std::cerr << "na = "  << na << std::endl;
-//~ for (int i = 0; i < nDim; i++) 
-//~ {
-//~ std::cerr << "dG " << i << " = " << infoObject -> dG.data()[i] << std::endl;
-//~ }
       }
     }
 
@@ -1137,39 +1070,15 @@ force[1] = 0;
         // Loop through all directions
         for (int i=0; i<nDim; i++) {
 
-  //~ std::cerr << "du before = "  << infoObject -> du.data()[i] << std::endl;
+          // Compute the difference between the velocity from the 
+          //   les and the optimal
           infoObject -> du.data()[i] = infoObject -> du.data()[i] * (1.-f) 
             + f * (infoObject -> u_opt.data()[i]
-              - infoObject -> u_LES.data()[i]);
-
-  //~ std::cerr << "du after = "  << infoObject -> du.data()[i] << std::endl;
-    
+              - infoObject -> u_LES.data()[i]);    
         }
       }
     }
   }  
-  
-  // This is the loop needed to loop through all point
-  //~ for (size_t iTurb=0; iTurb < numTurbines; iTurb++ )
-  //~ {
-    //~ // Number of blades
-    //~ const size_t numBlades = FAST.get_numBlades(iTurb);
-    //~ // The total number of actuator points in all blades
-    //~ const size_t totalActuatorNodes = FAST.get_numForcePtsBlade(iTurb);
-    //~ // The total number of actuator points per blade
-    //~ const size_t ptsPerBlade = totalActuatorNodes / numBlades;
-
-    //~ // Loop through all blades
-    //~ for (size_t nb=0; nb < numBlades; nb++)
-    //~ {
-      //~ // Loop through all blade points
-      //~ for (size_t na=1; na < ptsPerBlade-1; na++)
-      //~ {
-      //~ }
-
-    //~ }
-  //~ }
-
 }
 
 // Creates bounding boxes around the subdomain of each processor

@@ -59,7 +59,7 @@ public:
     // Martinez-Tossas, L., & Meneveau, C. (2019)
     //   Filtered lifting line theory and application to the actuator line model
     //   Journal of Fluid Mechanics, 863, 269-292
-    bool martinez_correction_;
+    bool fllt_correction_;
 
     // Number of blades
     //~ int nb;

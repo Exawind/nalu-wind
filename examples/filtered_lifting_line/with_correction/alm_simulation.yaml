@@ -131,7 +131,7 @@ realms:
       n_every_checkpoint: 100
 
       Turbine0:
-        martinez_correction: true
+        fllt_correction: true
         num_force_pts_blade: 300
         num_force_pts_tower: 20
         nacelle_cd: 0.0
