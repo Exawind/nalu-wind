@@ -1394,6 +1394,7 @@ Data probes
         data_probes:
 
           output_frequency: 100
+	  output_format: text
 
 	  search_method: stk_octree
 	  search_tolerance: 1.0e-3
@@ -1449,6 +1450,17 @@ Data probes
 .. inpfile:: data_probes.output_frequency
 
    Integer specifying the frequency of output.
+
+.. inpfile:: data_probes.output_format
+
+   String specifying the output format for the data probes.  Currently
+   available options are ``text`` or ``exodus``.  If not specified, the
+   default is text.  Multiple output formats can be specified like the
+   following:
+   .. code-block:: yaml
+	  output_format:
+	  - text
+	  - exodus
 
 .. inpfile:: data_probes.search_method
 
