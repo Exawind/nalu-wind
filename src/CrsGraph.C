@@ -376,6 +376,7 @@ void CrsGraph::buildNodeGraph(const stk::mesh::PartVector & parts)
 void CrsGraph::buildConnectedNodeGraph(stk::mesh::EntityRank rank,
                                                  const stk::mesh::PartVector& parts)
 {
+  beginConstruction();
   stk::mesh::MetaData & metaData = realm_.meta_data();
 
   const stk::mesh::Selector s_owned = metaData.locally_owned_part()
