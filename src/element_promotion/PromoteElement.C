@@ -28,8 +28,6 @@
 #include <stk_mesh/base/HashEntityAndEntityKey.hpp>
 #include <stk_mesh/base/CreateEdges.hpp>
 #include <stk_mesh/base/CreateFaces.hpp>
-#include <stk_search/CoarseSearch.hpp>
-#include <stk_search/IdentProc.hpp>
 #include <stk_io/StkMeshIoBroker.hpp>
 #include <stk_topology/topology.hpp>
 #include <stk_util/parallel/ParallelReduce.hpp>
@@ -37,7 +35,6 @@
 #include <stk_util/parallel/ParallelComm.hpp>
 #include <stk_util/util/ReportHandler.hpp>
 
-#include <boost/functional/hash/hash.hpp>
 
 #include <algorithm>
 #include <vector>
