@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <MixtureFractionEquationSystem.h>
@@ -50,9 +53,6 @@
 #include <kernel/ScalarMassElemKernel.h>
 #include <kernel/ScalarAdvDiffElemKernel.h>
 #include <kernel/ScalarUpwAdvDiffElemKernel.h>
-
-#include <kernel/ScalarMassHOElemKernel.h>
-#include <kernel/ScalarAdvDiffHOElemKernel.h>
 
 // bc kernels
 #include <kernel/ScalarOpenAdvElemKernel.h>
@@ -398,9 +398,8 @@ MixtureFractionEquationSystem::register_interior_algorithm(
     if ( realm_.realmUsesEdges_ )
       throw std::runtime_error("MixtureFraction::Error can not use element source terms for an edge-based scheme");
     
-    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_, realm_.using_tensor_product_kernels());
+    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_);
     auto& dataPreReqs = kb.data_prereqs();
-    auto& dataPreReqsHO = kb.data_prereqs_HO();
 
     kb.build_topo_kernel_if_requested<ScalarMassElemKernel>
         ( "mixture_fraction_time_derivative",
@@ -441,14 +440,6 @@ MixtureFractionEquationSystem::register_interior_algorithm(
     kb.build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
         ("NSO_4TH_KE",
          realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, realm_.get_turb_schmidt(mixFrac_->name()), 1.0, dataPreReqs);
-
-    kb.build_sgl_kernel_if_requested<ScalarMassHOElemKernel>
-        ("experimental_ho_mass",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dataPreReqsHO);
-
-    kb.build_sgl_kernel_if_requested<ScalarAdvDiffHOElemKernel>
-        ("experimental_ho_advection_diffusion",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, evisc_, dataPreReqsHO);
 
     kb.report();
   }

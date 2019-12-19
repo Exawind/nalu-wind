@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <Simulation.h>
@@ -173,19 +176,19 @@ void Simulation::high_level_banner() {
   additionalTPLs.push_back("Percept");
 #endif
 
-  NaluEnv::self().naluOutputP0() << std::endl;
-  NaluEnv::self().naluOutputP0() << "=================================================================" << std::endl;
-  NaluEnv::self().naluOutputP0() << "                            Nalu:                                " << std::endl;
-  NaluEnv::self().naluOutputP0() << "      A low Mach number, turbulent reacting flow code with       " << std::endl;
-  NaluEnv::self().naluOutputP0() << "            coupling to PMR and object response (CHT)            " << std::endl;
-  NaluEnv::self().naluOutputP0() << "=================================================================" << std::endl;
-  NaluEnv::self().naluOutputP0() << std::endl;
   NaluEnv::self().naluOutputP0()
-    << "   Nalu Version: " << version::NaluVersionTag << std::endl
-    << "   Nalu GIT Commit SHA: " << version::NaluGitCommitSHA 
+    <<
+    "===============================================================================" << std::endl <<
+    "                                  Nalu-Wind                                    " << std::endl <<
+    "       An incompressible, turbulent computational fluid dynamics solver        " << std::endl <<
+    "                  for wind turbine and wind farm simulations                   " << std::endl <<
+    "==============================================================================="
+    << std::endl << std::endl
+    << "   Nalu-Wind Version: " << version::NaluVersionTag << std::endl
+    << "   Nalu-Wind GIT Commit SHA: " << version::NaluGitCommitSHA
     << ((version::RepoIsDirty == "DIRTY") ? ("-" + version::RepoIsDirty) : "") << std::endl
-    << "   Trilinos Version: " << version::TrilinosVersionTag << std::endl << std::endl;
-  NaluEnv::self().naluOutputP0() << "   TPLs: Boost, HDF5, netCDF, STK, Trilinos, YAML_cpp and zlib   " << std::endl;
+    << "   Trilinos Version: " << version::TrilinosVersionTag << std::endl << std::endl
+    << "   TPLs: Boost, HDF5, netCDF, STK, Trilinos, yaml-cpp and zlib   " << std::endl;
 
   if (additionalTPLs.size() > 0) {
     NaluEnv::self().naluOutputP0() << "   Optional TPLs enabled: ";
@@ -195,13 +198,17 @@ void Simulation::high_level_banner() {
     NaluEnv::self().naluOutputP0() << additionalTPLs[numTPLs -1] << std::endl;
   }
 
-  NaluEnv::self().naluOutputP0() << std::endl;
-  NaluEnv::self().naluOutputP0() << "              Copyright 2014 Sandia Corporation.                 " << std::endl;
-  NaluEnv::self().naluOutputP0() << "      This software is released under the license detailed       " << std::endl;
-  NaluEnv::self().naluOutputP0() << "   in the file, LICENSE, which is located in the top-level Nalu  " << std::endl;
-  NaluEnv::self().naluOutputP0() << "                     directory structure                         " << std::endl;
-  NaluEnv::self().naluOutputP0() << "-----------------------------------------------------------------" << std::endl;
-  NaluEnv::self().naluOutputP0() << std::endl;
+  NaluEnv::self().naluOutputP0()
+    <<
+    "   Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC   " << std::endl <<
+    "   (NTESS), National Renewable Energy Laboratory, University of Texas Austin,  " << std::endl <<
+    "    Northwest Research Associates. Under the terms of Contract DE-NA0003525    " << std::endl <<
+    "    with NTESS, the U.S. Government retains certain rights in this software.   " << std::endl <<
+    "                                                                               " << std::endl <<
+    "           This software is released under the BSD 3-clause license.           " << std::endl <<
+    "   See LICENSE file at https://github.com/exawind/nalu-wind for more details.  " << std::endl <<
+    "-------------------------------------------------------------------------------"
+    << std::endl << std::endl;
 
   if (!std::is_same<DeviceSpace, Kokkos::Serial>::value) {
     // Save output from the master proc in the log file

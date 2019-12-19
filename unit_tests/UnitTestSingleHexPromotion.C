@@ -13,11 +13,14 @@
 #include <stk_mesh/base/FieldBLAS.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
+#include <stk_mesh/base/SkinBoundary.hpp>
 
-#include <master_element/MasterElementHO.h>
+
+#include <master_element/QuadratureRule.h>
 #include <element_promotion/PromotedPartHelper.h>
 #include <element_promotion/PromoteElement.h>
 #include <element_promotion/PromotedElementIO.h>
+#include <element_promotion/HexNElementDescription.h>
 
 #include <nalu_make_unique.h>
 #include <NaluEnv.h>
@@ -27,9 +30,69 @@
 #include <tuple>
 #include <random>
 
-#include <element_promotion/ElementDescription.h>
 #include "UnitTestUtils.h"
 
+namespace {
+void fill_and_promote_hex_mesh(const std::string& meshSpec, stk::mesh::BulkData& bulk, int polyOrder)
+{
+    stk::io::StkMeshIoBroker io(bulk.parallel());
+    io.set_bulk_data(bulk);
+    io.add_mesh_database(meshSpec, stk::io::READ_MESH);
+    io.create_input_mesh();
+
+    stk::mesh::MetaData& meta = bulk.mesh_meta_data();
+    stk::mesh::Part* blockPart = meta.get_part("block_1");
+    stk::mesh::Part* surfPart = &meta.declare_part_with_topology("surface_1", stk::topology::QUAD_4);
+
+    auto elemDesc = sierra::nalu::HexNElementDescription(polyOrder);
+
+    const std::string superName = sierra::nalu::super_element_part_name("block_1");
+    stk::topology topo = stk::create_superelement_topology(static_cast<unsigned>(elemDesc.nodesPerElement));
+    meta.declare_part_with_topology(superName, topo);
+
+    stk::mesh::Part* superSuperPart =
+        &meta.declare_part(sierra::nalu::super_element_part_name("surface_1"), stk::topology::FACE_RANK);
+
+    const auto sidePartName = sierra::nalu::super_subset_part_name("surface_1");
+    auto sideTopo = stk::create_superface_topology(static_cast<unsigned>(elemDesc.nodesPerSide));
+    stk::mesh::Part* superSidePart = &meta.declare_part_with_topology(sidePartName, sideTopo);
+    meta.declare_part_subset(*superSuperPart, *superSidePart);
+
+    meta.declare_part("edge_part", stk::topology::EDGE_RANK);
+    meta.declare_part("face_part", stk::topology::FACE_RANK);
+
+    io.populate_bulk_data();
+    stk::mesh::create_exposed_block_boundary_sides(bulk, *blockPart, {surfPart});
+
+    VectorFieldType* coords = meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+    stk::mesh::PartVector baseParts = {blockPart, surfPart};
+    auto nodes = sierra::nalu::gauss_lobatto_legendre_rule(polyOrder+1).first;
+    sierra::nalu::promotion::create_tensor_product_hex_elements(nodes, bulk, *coords, baseParts);
+}
+
+
+void dump_promoted_mesh_file(stk::mesh::BulkData& bulk, int polyOrder)
+{
+    const auto& meta = bulk.mesh_meta_data();
+    const stk::mesh::PartVector& outParts = meta.get_mesh_parts();
+    std::string fileName = "out.e" ;
+
+    auto desc = sierra::nalu::HexNElementDescription(polyOrder);
+    VectorFieldType* coordField = meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+
+    sierra::nalu::PromotedElementIO io(
+      polyOrder,
+      meta,
+      bulk,
+      outParts,
+      fileName,
+      *coordField
+    );
+    io.write_database_data(0.0);
+}
+
+
+}
 TEST(SingleHexPromotion, coords_p2)
 {
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) {
@@ -57,7 +120,7 @@ TEST(SingleHexPromotion, coords_p2)
   stk::mesh::BulkData bulk(meta, MPI_COMM_WORLD, stk::mesh::BulkData::NO_AUTO_AURA);
 
   std::string singleElemMeshSpec = "generated:1x1x1";
-  unit_test_utils::fill_and_promote_hex_mesh(singleElemMeshSpec, bulk, polynomialOrder);
+  fill_and_promote_hex_mesh(singleElemMeshSpec, bulk, polynomialOrder);
   const stk::mesh::PartVector promotedElemParts = sierra::nalu::only_super_elem_parts(meta.get_parts());
   const stk::mesh::Selector promotedElemSelector = stk::mesh::selectUnion(promotedElemParts);
   const stk::mesh::BucketVector& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, promotedElemSelector);
@@ -80,6 +143,6 @@ TEST(SingleHexPromotion, coords_p2)
 
   bool doOutput = false;
   if (doOutput) {
-    unit_test_utils::dump_promoted_mesh_file(bulk, polynomialOrder);
+    dump_promoted_mesh_file(bulk, polynomialOrder);
   }
 }

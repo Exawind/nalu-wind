@@ -3,7 +3,7 @@
 #include <random>
 #include <stdexcept>
 
-#include <element_promotion/QuadratureRule.h>
+#include <master_element/QuadratureRule.h>
 
 #include "UnitTestUtils.h"
 

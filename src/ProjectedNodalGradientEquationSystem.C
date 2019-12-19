@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <ProjectedNodalGradientEquationSystem.h>
@@ -26,7 +29,6 @@
 #include <SolverAlgorithmDriver.h>
 
 #include <kernel/KernelBuilder.h>
-#include <kernel/ProjectedNodalGradientHOElemKernel.h>
 
 // user functions
 #include <user_functions/SteadyThermalContactAuxFunction.h>
@@ -154,26 +156,17 @@ ProjectedNodalGradientEquationSystem::register_interior_algorithm(
   const AlgorithmType algType = INTERIOR;
 
   // solver
-  if (!realm_.solutionOptions_->useConsoldiatedPngSolverAlg_) {
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator its
-    = solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssemblePNGElemSolverAlgorithm *theAlg
-      = new AssemblePNGElemSolverAlgorithm(realm_, part, this, independentDofName_, dofName_);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      its->second->partVec_.push_back(part);
-    }
+  std::map<AlgorithmType, SolverAlgorithm *>::iterator its
+  = solverAlgDriver_->solverAlgMap_.find(algType);
+  if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
+    AssemblePNGElemSolverAlgorithm *theAlg
+    = new AssemblePNGElemSolverAlgorithm(realm_, part, this, independentDofName_, dofName_);
+    solverAlgDriver_->solverAlgMap_[algType] = theAlg;
   }
   else {
-    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_, true);
-
-    kb.build_sgl_kernel_automatic<ProjectedNodalGradientHOElemKernel>(
-      dofName_ + "_png",
-      realm_.bulk_data(), *realm_.solutionOptions_, independentDofName_, dofName_, kb.data_prereqs_HO()
-    );
+    its->second->partVec_.push_back(part);
   }
+
 }
 
 //--------------------------------------------------------------------------

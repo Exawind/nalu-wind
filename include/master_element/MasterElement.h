@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef MasterElement_h
@@ -292,7 +295,10 @@ public:
   virtual const double* integration_locations()      const {throw std::runtime_error("integration_locations not implemented");}
   virtual const double* integration_location_shift() const {throw std::runtime_error("adjacentNodes not implimented");}
   virtual const double* integration_exp_face_shift() const {throw std::runtime_error("integration_exp_face_shift not implimented");}
-  virtual const int   * side_node_ordinals(int)      const {throw std::runtime_error("side_node_ordinals not implemented");}
+  KOKKOS_FUNCTION virtual const int   * side_node_ordinals(int)      const {
+    NGP_ThrowErrorMsg("side_node_ordinals not implemented");
+    return nullptr;
+  }
 
 
   int nDim_;

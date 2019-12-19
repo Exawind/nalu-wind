@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
 
@@ -124,14 +127,6 @@ INSTANTIATE_ALG(AlgTraitsQuad4);
 INSTANTIATE_ALG(AlgTraitsQuad9);
 INSTANTIATE_ALG(AlgTraitsEdge_2D);
 INSTANTIATE_ALG(AlgTraitsEdge3_2D);
-INSTANTIATE_ALG(AlgTraitsEdgeGL<2>);
-INSTANTIATE_ALG(AlgTraitsEdgeGL<3>);
-INSTANTIATE_ALG(AlgTraitsEdgeGL<4>);
-INSTANTIATE_ALG(AlgTraitsEdgeGL<USER_POLY_ORDER>);
-INSTANTIATE_ALG(AlgTraitsQuadGL<2>);
-INSTANTIATE_ALG(AlgTraitsQuadGL<3>);
-INSTANTIATE_ALG(AlgTraitsQuadGL<4>);
-INSTANTIATE_ALG(AlgTraitsQuadGL<USER_POLY_ORDER>);
 
 } // namespace nalu
 }  // sierra

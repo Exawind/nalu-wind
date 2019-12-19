@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2018 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "WallDistEquationSystem.h"
 
@@ -199,10 +202,8 @@ WallDistEquationSystem::register_interior_algorithm(
     if (solverAlgWasBuilt) {
       ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
       auto& activeKernels = solverAlg->activeKernels_;
-      const int dim = realm_.spatialDimension_;
-
       Kernel* compKernel = build_topo_kernel<WallDistElemKernel>(
-        dim, partTopo, realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs);
+        partTopo, realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs);
       activeKernels.push_back(compKernel);
     }
   }

@@ -1,14 +1,17 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "gtest/gtest.h"
 #include "UnitTestUtils.h"
 #include "kernels/UnitTestKernelUtils.h"
-
+#include "master_element/MasterElement.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpReduceUtils.h"
@@ -188,6 +191,64 @@ void basic_node_reduce_minmax(
   EXPECT_NEAR(min, minGold, tol);
 }
 
+void basic_node_reduce_minmax_alt(
+  const stk::mesh::BulkData& bulk,
+  const double minGold,
+  const double maxGold)
+{
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+
+  const auto& meta = bulk.mesh_meta_data();
+  const auto& coords =  meta.coordinate_field();
+  stk::mesh::Selector sel = meta.universal_part();
+  ngp::Mesh ngpMesh(bulk);
+  ngp::Field<double> ngpCoords(bulk, *coords);
+
+  using value_type = Kokkos::MinMax<double>::value_type;
+  value_type minmax;
+  Kokkos::MinMax<double> minmax_reducer(minmax);
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    "unittest_node_reduce_minmax",
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, value_type& threadVal) {
+      const double xcoord = ngpCoords.get(mi, 0);
+      if (xcoord < threadVal.min_val) threadVal.min_val = xcoord;
+      if (xcoord > threadVal.max_val) threadVal.max_val = xcoord;
+    }, minmax_reducer);
+
+  EXPECT_NEAR(minmax.max_val, maxGold, tol);
+  EXPECT_NEAR(minmax.min_val, minGold, tol);
+}
+
+void
+basic_node_reduce_array(
+  const stk::mesh::BulkData& bulk, ScalarFieldType& pressure, int num_nodes)
+{
+  using MeshIndex = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
+  const double presSet = 4.0;
+
+  stk::mesh::field_fill(presSet, pressure);
+  const auto& meta = bulk.mesh_meta_data();
+  stk::mesh::Selector sel = meta.universal_part();
+  ngp::Mesh ngpMesh(bulk);
+  ngp::Field<double> ngpPressure(bulk, pressure);
+
+  using value_type = Kokkos::Sum<sierra::nalu::nalu_ngp::ArrayDbl2>::value_type;
+  value_type lsum;
+  Kokkos::Sum<sierra::nalu::nalu_ngp::ArrayDbl2> sum_reducer(lsum);
+
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    "basic_node_reduce_arrray", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi, value_type& pSum) {
+      pSum.array_[0] += ngpPressure.get(mi, 0);
+      pSum.array_[1] += 1.0;
+    }, sum_reducer);
+
+  const double expectedPressureSum = presSet * num_nodes;
+  const int computedNumNodes = static_cast<int>(lsum.array_[1]);
+  EXPECT_NEAR(lsum.array_[0], expectedPressureSum, 1.0e-15);
+  EXPECT_EQ(num_nodes, computedNumNodes);
+}
 
 void basic_elem_loop(
   const stk::mesh::BulkData& bulk,
@@ -649,6 +710,81 @@ void elem_loop_par_reduce(
   }
 }
 
+
+void basic_face_elem_reduce(
+  const stk::mesh::BulkData& bulk,
+  const VectorFieldType& coordField,
+  const GenericFieldType& exposedArea)
+{
+  using FaceTraits = sierra::nalu::AlgTraitsQuad4Hex8;
+  using FaceSimdData = sierra::nalu::nalu_ngp::FaceElemSimdData<ngp::Mesh>;
+  const auto& meta = bulk.mesh_meta_data();
+  const int ndim = meta.spatial_dimension();
+
+  sierra::nalu::ElemDataRequests faceData(meta);
+  sierra::nalu::ElemDataRequests elemData(meta);
+  auto meFC =
+    sierra::nalu::MasterElementRepo::get_surface_master_element<FaceTraits::FaceTraits>();
+  auto meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element<FaceTraits::ElemTraits>();
+
+  faceData.add_cvfem_face_me(meFC);
+  elemData.add_cvfem_surface_me(meSCS);
+  faceData.add_coordinates_field(
+    coordField, ndim, sierra::nalu::CURRENT_COORDINATES);
+  faceData.add_face_field(
+    exposedArea, FaceTraits::numFaceIp_, FaceTraits::nDim_);
+  faceData.add_master_element_call(
+    sierra::nalu::FC_SHAPE_FCN, sierra::nalu::CURRENT_COORDINATES);
+  elemData.add_coordinates_field(
+    coordField, ndim, sierra::nalu::CURRENT_COORDINATES);
+
+  sierra::nalu::nalu_ngp::MeshInfo<> meshInfo(bulk);
+  stk::mesh::Part* part = meta.get_part("surface_5");
+  stk::mesh::Selector sel(*part);
+
+  const unsigned coordsID = coordField.mesh_meta_data_ordinal();
+  const unsigned exposedAreaID = exposedArea.mesh_meta_data_ordinal();
+
+  DoubleType totalWallDist = 0.0;
+  Kokkos::Sum<DoubleType> distReducer(totalWallDist);
+  sierra::nalu::nalu_ngp::run_face_elem_par_reduce(
+    "unittest_basic_face_elem_reduce",
+    meshInfo, faceData, elemData, sel,
+    KOKKOS_LAMBDA(FaceSimdData& fdata, DoubleType& pSum) {
+
+      auto& v_coord = fdata.simdElemView.get_scratch_view_2D(coordsID);
+      auto& v_area = fdata.simdFaceView.get_scratch_view_2D(exposedAreaID);
+
+      for (int ip=0; ip < FaceTraits::numFaceIp_; ++ip) {
+        DoubleType aMag = 0.0;
+        for (int d=0; d < FaceTraits::nDim_; ++d)
+          aMag += v_area(ip, d) * v_area(ip, d);
+        aMag = stk::math::sqrt(aMag);
+
+        const int nodeR = meSCS->ipNodeMap(fdata.faceOrd)[ip];
+        const int nodeL = meSCS->opposingNodes(fdata.faceOrd, ip);
+
+        DoubleType ypBip = 0.0;
+        for (int d=0; d < FaceTraits::nDim_; ++d) {
+          const DoubleType nj = v_area(ip, d) / aMag;
+          const DoubleType ej = 0.25 * (v_coord(nodeR, d) - v_coord(nodeL, d));
+          ypBip += nj * ej * nj * ej;
+        }
+        ypBip = stk::math::sqrt(ypBip);
+
+        pSum += ypBip;
+      }
+    }, distReducer);
+
+  double totWallDist = 0.0;
+  const double totalWallDistExpected = 16.0;
+  for (int i=0; i < sierra::nalu::simdLen; ++i)
+    totWallDist += stk::simd::get_data(totalWallDist, i);
+
+  EXPECT_NEAR(totWallDist, totalWallDistExpected, 1.0e-15);
+}
+
 TEST_F(NgpLoopTest, NGP_basic_node_loop)
 {
   fill_mesh_and_init_fields("generated:2x2x2");
@@ -663,11 +799,19 @@ TEST_F(NgpLoopTest, NGP_basic_node_reduce)
   basic_node_reduce(bulk, *pressure);
 }
 
+TEST_F(NgpLoopTest, NGP_basic_node_reduce_array)
+{
+  fill_mesh_and_init_fields("generated:2x2x2");
+
+  basic_node_reduce_array(bulk, *pressure, 3*3*3);
+}
+
 TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmax)
 {
   fill_mesh_and_init_fields("generated:16x16x16");
 
   basic_node_reduce_minmax(bulk, 0.0, 16.0);
+  basic_node_reduce_minmax_alt(bulk, 0.0, 16.0);
 }
 
 TEST_F(NgpLoopTest, NGP_basic_elem_loop)
@@ -729,4 +873,21 @@ TEST_F(NgpLoopTest, NGP_basic_face_elem_loop)
     bulk, sierra::nalu::AlgTraitsQuad4::topo_, *coordField, exposedAreaVec);
 
   basic_face_elem_loop(bulk, *coordField, exposedAreaVec, wallArea, wallNormDist);
+}
+
+TEST_F(NgpLoopTest, NGP_basic_face_elem_reduce)
+{
+  if (bulk.parallel_size() > 1) return;
+
+  auto& exposedAreaVec = meta.declare_field<GenericFieldType>(
+    meta.side_rank(), "exposed_area_vector");
+  stk::mesh::put_field_on_mesh(
+    exposedAreaVec, meta.universal_part(),
+    meta.spatial_dimension() * sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+
+  fill_mesh_and_init_fields("generated:4x4x1|sideset:xXyYzZ");
+  unit_test_kernel_utils::calc_exposed_area_vec(
+    bulk, sierra::nalu::AlgTraitsQuad4::topo_, *coordField, exposedAreaVec);
+
+  basic_face_elem_reduce(bulk, *coordField, exposedAreaVec);
 }

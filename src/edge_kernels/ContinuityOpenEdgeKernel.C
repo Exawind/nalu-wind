@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "edge_kernels/ContinuityOpenEdgeKernel.h"
 #include "master_element/MasterElement.h"
@@ -80,9 +83,6 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
   ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& elemScratchViews,
   int elemFaceOrdinal)
 {
-  // Mapping of face nodes into element indices
-  const int* ipNodeMap = meSCS_->ipNodeMap(elemFaceOrdinal);
-
   const auto& v_velocity = faceScratchViews.get_scratch_view_2D(velocityRTM_);
   const auto& v_density = faceScratchViews.get_scratch_view_1D(density_);
   const auto& v_udiag = faceScratchViews.get_scratch_view_1D(Udiag_);
@@ -95,7 +95,7 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
 
   for (int ip = 0; ip < BcAlgTraits::nodesPerFace_; ++ip) {
     // Mapping of the nodes to the connected element
-    const int nodeR = ipNodeMap[ip];                              // nearest node
+    const int nodeR = meSCS_->side_node_ordinals(elemFaceOrdinal)[ip]; // nearest node
     const int nodeL = meSCS_->opposingNodes(elemFaceOrdinal, ip); // opposing node
 
     const DoubleType projTimeScale = 1.0 / v_udiag(ip);

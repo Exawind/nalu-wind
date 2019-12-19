@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <SurfaceForceAndMomentAlgorithmDriver.h>
@@ -66,6 +69,7 @@ SurfaceForceAndMomentAlgorithmDriver::zero_fields()
   
   // extract the fields
   VectorFieldType *pressureForce = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "pressure_force");
+  VectorFieldType *viscousForce = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "viscous_force");
   ScalarFieldType *tauWall = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tau_wall");
   ScalarFieldType *yplus = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "yplus");
   // one of these might be null
@@ -74,6 +78,7 @@ SurfaceForceAndMomentAlgorithmDriver::zero_fields()
 
   // zero fields
   field_fill( meta_data, bulk_data, 0.0, *pressureForce, realm_.get_activate_aura());
+  field_fill( meta_data, bulk_data, 0.0, *viscousForce, realm_.get_activate_aura());
   field_fill( meta_data, bulk_data, 0.0, *tauWall, realm_.get_activate_aura());
   field_fill( meta_data, bulk_data, 0.0, *yplus, realm_.get_activate_aura());
   if ( NULL != assembledArea ) 

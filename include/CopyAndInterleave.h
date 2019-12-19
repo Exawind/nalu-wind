@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef CopyAndInterleave_h
@@ -39,6 +42,9 @@ void interleave(SimdViewType& dview, const double* sviews[], int simdElems)
         DoubleType& d = dptr[i];
         for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
             stk::simd::set_data(d, simdIndex, sviews[simdIndex][i]);
+        }
+        for(int simdIndex=simdElems; simdIndex<simdLen; ++simdIndex) {
+          stk::simd::set_data(d, simdIndex, 0.0);
         }
     }
 }

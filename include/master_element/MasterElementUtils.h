@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 #ifndef MasterElementUtils_h
 #define MasterElementUtils_h
 
@@ -19,7 +22,6 @@ namespace nalu{
 namespace MEconstants {
   static const double realmin = std::numeric_limits<double>::min();
 }
-
   class LagrangeBasis;
 
   bool isoparameteric_coordinates_for_point_2d(

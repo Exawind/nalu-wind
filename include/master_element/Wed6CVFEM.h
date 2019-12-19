@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #ifndef WED6CVFEM_H
 #define WED6CVFEM_H
@@ -280,7 +283,7 @@ public:
   double parametric_distance( const double X, const double Y);
   double parametric_distance( const std::array<double,3> &x);
 
-  const int* side_node_ordinals(int sideOrdinal) const final;
+  KOKKOS_FUNCTION const int* side_node_ordinals(int sideOrdinal) const final;
 
   virtual const double* integration_locations() const final {
     return intgLoc_;

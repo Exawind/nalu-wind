@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <TurbulenceAveragingPostProcessing.h>
@@ -1426,7 +1429,7 @@ TurbulenceAveragingPostProcessing::compute_mean_resolved_ke(
   nalu_ngp::run_entity_par_reduce(
     "TurbPP::mean_res_tke",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
-    KOKKOS_LAMBDA(const MeshIndex& mi, nalu_ngp::ArrayDbl2 pSum) {
+    KOKKOS_LAMBDA(const MeshIndex& mi, nalu_ngp::ArrayDbl2& pSum) {
       pSum.array_[0] += dualVol.get(mi, 0);
 
       double ke = 0.0;

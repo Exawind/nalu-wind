@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #ifndef NGPREDUCEUTILS_H
 #define NGPREDUCEUTILS_H
@@ -115,6 +118,19 @@ using ArrayInt2 = NgpReduceArray<int, 2>;
 
 using ArraySimdDouble2 = NgpReduceArray<DoubleType, 2>;
 using ArraySimdDouble3 = NgpReduceArray<DoubleType, 3>;
+
+/** Utility function for reduction accumulation
+ *
+ *  This function is necessary when looping over elements in bucket+SIMD loops
+ *  where we might not have enough elements (i.e., numSimdElems < simdLen), we
+ *  don't want to accumulate bad data.
+ */
+KOKKOS_INLINE_FUNCTION
+void simd_reduce_sum(double& out, const DoubleType& inp, int len)
+{
+  for (int i=0; i < len; ++i)
+    out += stk::simd::get_data(inp, i);
+}
 
 }  // nalu_ngp
 }  // nalu

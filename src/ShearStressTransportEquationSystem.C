@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <ShearStressTransportEquationSystem.h>
@@ -20,6 +23,7 @@
 
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
+#include "utils/StkHelpers.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -34,6 +38,9 @@
 // basic c++
 #include <cmath>
 #include <vector>
+
+// ngp
+#include "ngp_utils/NgpFieldBLAS.h"
 
 namespace sierra{
 namespace nalu{
@@ -57,7 +64,8 @@ ShearStressTransportEquationSystem::ShearStressTransportEquationSystem(
     fOneBlending_(NULL),
     maxLengthScale_(NULL),
     isInit_(true),
-    sstMaxLengthScaleAlgDriver_(NULL)
+    sstMaxLengthScaleAlgDriver_(NULL),
+    resetTAMSAverages_(realm_.solutionOptions_->resetTAMSAverages_)
 {
   // push back EQ to manager
   realm_.push_equation_to_systems(this);
@@ -179,7 +187,7 @@ ShearStressTransportEquationSystem::solve_and_update()
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
     clip_min_distance_to_wall();
-    
+
     // deal with DES option
     if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ )
       sstMaxLengthScaleAlgDriver_->execute();
@@ -244,7 +252,7 @@ ShearStressTransportEquationSystem::initial_work()
   ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
 
   // define some common selectors
-  stk::mesh::Selector s_all_nodes
+  const stk::mesh::Selector s_all_nodes
     = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
     &stk::mesh::selectField(*sdr_);
 
@@ -478,7 +486,7 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
 
          // assemble to nodal quantities
          double *minD = stk::mesh::field_data(*minDistanceToWall_, nodeR );
-
+         
          *minD = std::max(*minD, ypbip);
        }
      }

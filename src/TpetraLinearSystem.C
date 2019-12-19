@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <TpetraLinearSystem.h>
@@ -90,10 +93,7 @@ TpetraLinearSystem::TpetraLinearSystem(
   EquationSystem *eqSys,
   LinearSolver * linearSolver)
   : LinearSystem(realm, numDof, eqSys, linearSolver)
-{
-  Teuchos::ParameterList junk;
-  node_ = Teuchos::rcp(new LinSys::Node(junk));
-}
+{}
 
 TpetraLinearSystem::~TpetraLinearSystem()
 {

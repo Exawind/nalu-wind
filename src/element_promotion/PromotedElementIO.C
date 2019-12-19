@@ -1,12 +1,14 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level nalu      */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 #include <element_promotion/PromotedElementIO.h>
 
-#include <element_promotion/ElementDescription.h>
 #include <element_promotion/PromotedPartHelper.h>
 #include <nalu_make_unique.h>
 
@@ -62,13 +64,13 @@ namespace {
 }
 
 PromotedElementIO::PromotedElementIO(
-  const ElementDescription& elem,
+  int p,
   const stk::mesh::MetaData& metaData,
   stk::mesh::BulkData& bulkData,
   const stk::mesh::PartVector& baseParts,
   const std::string& fileName,
   const VectorFieldType& coordField
-) : elem_(elem),
+) : elem_(HexNElementDescription(p)),
     metaData_(metaData),
     bulkData_(bulkData),
     fileName_(fileName),
@@ -113,13 +115,11 @@ PromotedElementIO::PromotedElementIO(
   output_->begin_mode(Ioss::STATE_DEFINE_MODEL);
   write_node_block_definitions(superElemParts_);
   write_elem_block_definitions(superElemParts_);
-  write_sideset_definitions(baseParts);
   output_->end_mode(Ioss::STATE_DEFINE_MODEL);
 
   output_->begin_mode(Ioss::STATE_MODEL);
   write_coordinate_list(superElemParts_);
   write_element_connectivity(superElemParts_, subElemIds);
-  write_sideset_connectivity(baseParts);
   output_->end_mode(Ioss::STATE_MODEL);
 }
 //--------------------------------------------------------------------------
@@ -229,54 +229,6 @@ PromotedElementIO::write_node_block_definitions(
 }
 //--------------------------------------------------------------------------
 void
-PromotedElementIO::write_sideset_definitions(
-  const stk::mesh::PartVector& baseParts)
-{
-  for(const auto* ip : baseParts) {
-    const auto& part = *ip;
-
-    stk::mesh::PartVector subsets = part.subsets();
-    if (subsets.empty()) {
-      continue;
-    }
-
-    auto sideset = make_unique<Ioss::SideSet>(databaseIO, part.name());
-    ThrowRequireMsg(sideset != nullptr, "Sideset creation failed");
-
-    for (const auto* subpartPtr : subsets) {
-      const auto& subpart = *subpartPtr;
-
-      const auto subpartTopology = subpart.topology();
-      if (subpartTopology.rank() != metaData_.side_rank()) {
-        continue;
-      }
-
-      auto selector = metaData_.locally_owned_part() & subpart;
-      const auto& sideBuckets = bulkData_.get_buckets(
-        metaData_.side_rank(),
-        selector
-      );
-      const size_t numSubElemsInPart = num_sub_elements(nDim_, sideBuckets, elem_.polyOrder);
-
-      auto block = make_unique<Ioss::SideBlock>(
-        databaseIO,
-        subpart.name(),
-        subpartTopology.name(),
-        part.topology().name(),
-        numSubElemsInPart
-      );
-      ThrowRequireMsg(block != nullptr, "Sideblock creation failed");
-
-      auto result = sideBlockPointers_.insert({ subpartPtr, block.get() });
-      ThrowRequireMsg(result.second, "Attempted to add redundant subpart");
-
-      sideset->add(block.release());
-    }
-    output_->add(sideset.release());
-  }
-}
-//--------------------------------------------------------------------------
-void
 PromotedElementIO::write_coordinate_list(const stk::mesh::PartVector& superElemParts)
 {
   const auto& nodeBuckets =
@@ -334,13 +286,10 @@ PromotedElementIO::write_element_connectivity(
       const auto length = b.size();
       for (size_t k = 0; k < length; ++k) {
         const auto* node_rels = b.begin_nodes(k);
-        const auto& subElems = elem_.subElementConnectivity;
-        const auto numberSubElements = subElems.size();
-
-        for (unsigned subElementIndex = 0; subElementIndex < numberSubElements; ++subElementIndex) {
+        for (int subElementIndex = 0; subElementIndex < elem_.subElementsPerElement; ++subElementIndex) {
           globalSubElementIds.at(subElementCounter) = entityIds[subElementCounter];
 
-          const auto& localIndices = subElems.at(subElementIndex);
+          const auto& localIndices = elem_.sub_element_connectivity(subElementIndex);
           for (unsigned j = 0; j < nodesPerLinearElem; ++j) {
             connectivity[connIndex] = bulkData_.identifier(node_rels[localIndices[j]]);
             ++connIndex;
@@ -352,13 +301,6 @@ PromotedElementIO::write_element_connectivity(
     elementBlockPointers_.at(ip)->put_field_data("ids",  globalSubElementIds);
     elementBlockPointers_.at(ip)->put_field_data("connectivity", connectivity);
   }
-}
-
-void
-PromotedElementIO::write_sideset_connectivity(
-  const stk::mesh::PartVector&  /*baseParts*/)
-{
-  //FIXME(rcknaus): implement
 }
 //--------------------------------------------------------------------------
 void

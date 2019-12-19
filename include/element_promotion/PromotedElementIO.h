@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level nalu      */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 #ifndef PromotedElementIO_h
 #define PromotedElementIO_h
 
@@ -12,6 +15,8 @@
 #include <Ioss_Region.h>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/Types.hpp>
+
+#include <element_promotion/HexNElementDescription.h>
 
 #include <stddef.h>
 #include <iosfwd>
@@ -57,8 +62,7 @@ class PromotedElementIO
 
 public:
   // constructor/destructor
-  PromotedElementIO(
-    const ElementDescription& elem,
+  PromotedElementIO(int p,
     const stk::mesh::MetaData& metaData,
     stk::mesh::BulkData& bulkData,
     const stk::mesh::PartVector& baseParts,
@@ -79,14 +83,10 @@ private:
     const stk::mesh::PartVector& baseParts,
     const std::vector<stk::mesh::EntityId>& entityIds);
 
-  void write_sideset_connectivity(
-      const stk::mesh::PartVector& baseParts);
-
   size_t sub_element_global_id() const;
   void write_node_block_definitions(
       const stk::mesh::PartVector& superElemParts);
   void write_elem_block_definitions(const stk::mesh::PartVector& baseParts);
-  void write_sideset_definitions(const stk::mesh::PartVector& baseParts);
   void write_coordinate_list(const stk::mesh::PartVector& superElemParts);
 
   template<typename T> void
@@ -99,7 +99,7 @@ private:
   std::string storage_name(const stk::mesh::FieldBase& field) const;
 
   // meta, bulk and io
-  const ElementDescription& elem_;
+  const HexNElementDescription elem_;
   const stk::mesh::MetaData& metaData_;
   const stk::mesh::BulkData& bulkData_;
   const std::string& fileName_;

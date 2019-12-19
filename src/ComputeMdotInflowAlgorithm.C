@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 // nalu
@@ -13,6 +16,7 @@
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
+#include "ngp_algorithms/MdotAlgDriver.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -36,8 +40,10 @@ namespace nalu{
 ComputeMdotInflowAlgorithm::ComputeMdotInflowAlgorithm(
   Realm &realm,
   stk::mesh::Part *part,
+  MdotAlgDriver& mdotDriver,
   bool useShifted)
   : Algorithm(realm, part),
+    mdotDriver_(mdotDriver),
     useShifted_(useShifted),
     velocityBC_(NULL),
     densityBC_(NULL),
@@ -179,8 +185,8 @@ ComputeMdotInflowAlgorithm::execute()
       }
     }
   }
-  // scatter back to solution options
-  realm_.solutionOptions_->mdotAlgInflow_ += mdotInflow;
+
+  mdotDriver_.add_inflow_mdot(mdotInflow);
 }
 
 } // namespace nalu

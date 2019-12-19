@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef Realm_h
@@ -84,7 +87,6 @@ class BdyLayerStatistics;
 class TensorProductQuadratureRule;
 class LagrangeBasis;
 class PromotedElementIO;
-struct ElementDescription;
 
 /** Representation of a computational domain and physics equations solved on
  * this domain.
@@ -177,7 +179,7 @@ class Realm {
   void initialize_post_processing_algorithms();
 
   void compute_geometry();
-  void compute_vrtm();
+  void compute_vrtm(const std::string& = "velocity");
   void compute_l2_scaling();
   void output_converged_results();
   void provide_output();
@@ -612,7 +614,6 @@ class Realm {
   const YAML::Node & node_;
 
   // tools
-  std::unique_ptr<ElementDescription> desc_; // holds topo info
   std::unique_ptr<PromotedElementIO> promotionIO_; // mesh outputer
   std::vector<std::string> superTargetNames_;
 

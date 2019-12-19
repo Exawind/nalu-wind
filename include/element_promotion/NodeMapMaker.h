@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level NaluUnit      */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 #ifndef NodeMapMaker_h
 #define NodeMapMaker_h
 
@@ -18,17 +21,8 @@ namespace nalu
 
 Kokkos::View<int***> make_node_map_hex(int, bool  = false);
 Kokkos::View<int***> make_inverse_node_map_hex(int, bool = false);
-
 Kokkos::View<int**> make_node_map_quad(int);
-
-Kokkos::View<int***> make_face_node_map_hex(int);
-Kokkos::View<int**> make_face_node_map_quad(int);
-
 Kokkos::View<int**> make_side_node_ordinal_map_hex(int);
-Kokkos::View<int**> make_side_node_ordinal_map_quad(int);
-
-Kokkos::View<int*> make_node_map_edge(int);
-
 
 
 } // namespace nalu
