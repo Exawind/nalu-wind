@@ -46,10 +46,10 @@ struct TpetraHelperObjectsBase {
 
     using MatrixType = sierra::nalu::LinSys::LocalMatrix;
     const MatrixType& localMatrix = linsys->getOwnedMatrix()->getLocalMatrix();
-  
+
     using VectorType = sierra::nalu::LinSys::LocalVector;
     const VectorType& localRhs = linsys->getOwnedRhs()->getLocalView<sierra::nalu::DeviceSpace>();
-  
+
     int localProc = realm.bulkData_->parallel_rank();
 
     std::string suffix = std::string("_P")+std::to_string(localProc);
@@ -82,7 +82,7 @@ struct TpetraHelperObjectsBase {
       os<<(i<localMatrix.numRows()-1?", ":"");
     }
     os<<"};"<<std::endl;
-    
+
     os<<"\nstatic const std::vector<double> rhs"<<suffix<<" = {";
     for(int i=0; i<localMatrix.numRows(); ++i) {
       os<<localRhs(i,0)<<(i<localMatrix.numRows()-1 ? ", ":"");
@@ -99,14 +99,14 @@ struct TpetraHelperObjectsBase {
   {
     using MatrixType = sierra::nalu::LinSys::LocalMatrix;
     const MatrixType& localMatrix = linsys->getOwnedMatrix()->getLocalMatrix();
-  
+
     using VectorType = sierra::nalu::LinSys::LocalVector;
     const VectorType& localRhs = linsys->getOwnedRhs()->getLocalView<sierra::nalu::DeviceSpace>();
-  
+
     EXPECT_EQ(rowOffsets.size()-1, localMatrix.numRows());
     EXPECT_EQ(rhs.size(), localRhs.size());
     EXPECT_EQ(rhs.size(), localMatrix.numRows());
-  
+
     for(int i=0; i<localMatrix.numRows(); ++i) {
       KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);
 
@@ -124,31 +124,31 @@ struct TpetraHelperObjectsBase {
   {
     using MatrixType = sierra::nalu::LinSys::LocalMatrix;
     const MatrixType& localMatrix = linsys->getOwnedMatrix()->getLocalMatrix();
-  
+
     using VectorType = sierra::nalu::LinSys::LocalVector;
     const VectorType& localRhs = linsys->getOwnedRhs()->getLocalView<sierra::nalu::DeviceSpace>();
-  
+
     EXPECT_EQ(rhsSize, localMatrix.numRows());
     EXPECT_EQ(rhsSize, localRhs.size());
-  
+
     stk::mesh::Entity elem = realm.bulkData_->get_entity(stk::topology::ELEM_RANK, 1);
     const stk::mesh::Entity* elemNodes = realm.bulkData_->begin_nodes(elem);
     unsigned numElemNodes = realm.bulkData_->num_nodes(elem);
     EXPECT_EQ(rhsSize, numElemNodes*linsys->numDof());
-  
+
     for(unsigned i=0; i<numElemNodes; ++i) {
       int rowId = linsys->getRowLID(elemNodes[i]);
       for(unsigned d=0; d<linsys->numDof(); ++d) {
         KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(rowId+d);
         EXPECT_EQ(rhsSize, constRowView.length);
-  
+
         for(unsigned j=0; j<numElemNodes; ++j) {
           int colId = linsys->getColLID(elemNodes[j]);
           for(unsigned dd=0; dd<linsys->numDof(); ++dd) {
             EXPECT_NEAR(lhs[i][j], constRowView.value(colId+dd), 1.e-14);
           }
         }
-  
+
         EXPECT_NEAR(rhs[i], localRhs(rowId+d,0), 1.e-14);
       }
     }
@@ -207,7 +207,7 @@ struct TpetraHelperObjectsFaceElem : public TpetraHelperObjectsBase {
     linsys->finalizeLinearSystem();
     assembleFaceElemSolverAlg->execute();
     for (auto kern: assembleFaceElemSolverAlg->activeKernels_)
-      kern->free_on_device();  
+      kern->free_on_device();
     assembleFaceElemSolverAlg->activeKernels_.clear();
   }
   sierra::nalu::AssembleFaceElemSolverAlgorithm* assembleFaceElemSolverAlg;
@@ -253,4 +253,3 @@ struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase {
 }
 
 #endif
-
