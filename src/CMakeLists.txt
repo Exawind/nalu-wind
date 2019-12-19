@@ -56,7 +56,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemOpenAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemOpenPenaltyAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotInflowAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotNonConformalAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeSSTMaxLengthScaleElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeWallFrictionVelocityAlgorithm.C

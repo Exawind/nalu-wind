@@ -29,16 +29,13 @@
 #endif
 #include <AssembleMomentumNonConformalSolverAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
-#include <AssembleNodalGradBoundaryAlgorithm.h>
 #include <AssembleNodalGradPOpenBoundaryAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AssembleNodalGradUElemAlgorithm.h>
-#include <AssembleNodalGradUBoundaryAlgorithm.h>
 #include <AssembleNodalGradUNonConformalAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
 #include <AuxFunctionAlgorithm.h>
 #include <ComputeMdotElemAlgorithm.h>
-#include <ComputeMdotInflowAlgorithm.h>
 #include <ComputeMdotElemOpenAlgorithm.h>
 #include <ComputeMdotElemOpenPenaltyAlgorithm.h>
 #include <ComputeMdotNonConformalAlgorithm.h>
@@ -1696,8 +1693,7 @@ MomentumEquationSystem::register_inflow_bc(
   
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      VectorNodalGradBndryElemAlg, AssembleNodalGradUBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
         algType, part, "momentum_nodal_grad", theBcField, &dudxNone,
         edgeNodalGradient_);
   }
@@ -1761,8 +1757,7 @@ MomentumEquationSystem::register_open_bc(
 
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      VectorNodalGradBndryElemAlg, AssembleNodalGradUBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
       algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
       edgeNodalGradient_);
   }
@@ -1933,8 +1928,7 @@ MomentumEquationSystem::register_wall_bc(
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
     const AlgorithmType algTypePNG = anyWallFunctionActivated ? WALL_FCN : WALL;
-    nodalGradAlgDriver_.register_face_algorithm<
-      VectorNodalGradBndryElemAlg, AssembleNodalGradUBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
       algTypePNG, part, "momentum_nodal_grad", theBcField, &dudxNone,
       edgeNodalGradient_);
   }
@@ -2128,8 +2122,7 @@ MomentumEquationSystem::register_symmetry_bc(
   AlgorithmType pickTheType = algType;
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      VectorNodalGradBndryElemAlg, AssembleNodalGradUBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
         algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
         edgeNodalGradient_);
   }
@@ -2297,8 +2290,7 @@ MomentumEquationSystem::register_abltop_bc(
 
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      VectorNodalGradBndryElemAlg, AssembleNodalGradUBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
       algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
       edgeNodalGradient_);
   }
@@ -2390,8 +2382,7 @@ MomentumEquationSystem::register_non_conformal_bc(
   // non-solver; contribution to Gjui; DG algorithm decides on locations for integration points
   if ( !managePNG_ ) {
     if ( edgeNodalGradient_ ) {
-      nodalGradAlgDriver_.register_face_algorithm<
-        VectorNodalGradBndryElemAlg, AssembleNodalGradUBoundaryAlgorithm>(
+      nodalGradAlgDriver_.register_face_algorithm<VectorNodalGradBndryElemAlg>(
         algType, part, "momentum_nodal_grad", &velocityNp1, &dudxNone,
         edgeNodalGradient_);
     }
@@ -3181,7 +3172,7 @@ ContinuityEquationSystem::register_inflow_bc(
 
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "continuity_nodal_grad",
       &pressureNone, &dpdxNone, edgeNodalGradient_);
   }
@@ -3189,7 +3180,7 @@ ContinuityEquationSystem::register_inflow_bc(
   // check to see if we are using shifted as inflow is shared
   const bool useShifted = !elementContinuityEqs_ ? true : realm_.get_cvfem_shifted_mdot();
 
-  mdotAlgDriver_->register_face_algorithm<MdotInflowAlg, ComputeMdotInflowAlgorithm>(
+  mdotAlgDriver_->register_face_algorithm<MdotInflowAlg>(
     algType, part, "mdot_inflow", *mdotAlgDriver_, useShifted);
 
   // solver; lhs
@@ -3354,7 +3345,7 @@ ContinuityEquationSystem::register_wall_bc(
 
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "continuity_nodal_grad",
       &pressureNone, &dpdxNone, edgeNodalGradient_);
   }
@@ -3378,7 +3369,7 @@ ContinuityEquationSystem::register_symmetry_bc(
 
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "continuity_nodal_grad",
       &pressureNone, &dpdxNone, edgeNodalGradient_);
   }
@@ -3492,7 +3483,7 @@ ContinuityEquationSystem::register_abltop_bc(
 
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "continuity_nodal_grad",
       &pressureNone, &dpdxNone, edgeNodalGradient_);
   }
@@ -3569,7 +3560,7 @@ ContinuityEquationSystem::register_non_conformal_bc(
   // non-solver; contribution to Gjp; DG algorithm decides on locations for integration points
   if ( !managePNG_ ) {
     if ( edgeNodalGradient_ ) {    
-      nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+      nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
         algType, part, "continuity_nodal_grad",
         pressure_, dpdx_, edgeNodalGradient_);
     }

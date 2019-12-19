@@ -16,9 +16,7 @@
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
-#include <AssembleNodalGradEdgeAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
-#include <AssembleNodalGradBoundaryAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AuxFunctionAlgorithm.h>
 #include <ConstantAuxFunction.h>
@@ -475,8 +473,7 @@ SpecificDissipationRateEquationSystem::register_inflow_bc(
   bcDataMapAlg_.push_back(theCopyAlg);
 
   // non-solver; dwdx; allow for element-based shifted
-  nodalGradAlgDriver_.register_face_algorithm<
-    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 
   // Dirichlet bc
@@ -532,8 +529,7 @@ SpecificDissipationRateEquationSystem::register_open_bc(
   bcDataAlg_.push_back(auxAlg);
 
   // non-solver; dwdx; allow for element-based shifted
-  nodalGradAlgDriver_.register_face_algorithm<
-    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 
   // solver open; lhs
@@ -612,8 +608,7 @@ SpecificDissipationRateEquationSystem::register_wall_bc(
   }
 
   // non-solver; dwdx; allow for element-based shifted
-  nodalGradAlgDriver_.register_face_algorithm<
-    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 }
 
@@ -635,8 +630,7 @@ SpecificDissipationRateEquationSystem::register_symmetry_bc(
   VectorFieldType &dwdxNone = dwdx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; dwdx; allow for element-based shifted
-  nodalGradAlgDriver_.register_face_algorithm<
-    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 }
 
@@ -657,8 +651,7 @@ SpecificDissipationRateEquationSystem::register_non_conformal_bc(
 
   // non-solver; contribution to dwdx; DG algorithm decides on locations for integration points
   if ( edgeNodalGradient_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
         algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
   }
   else {

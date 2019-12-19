@@ -19,7 +19,6 @@
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
-#include <AssembleNodalGradBoundaryAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
 #include <AssembleWallHeatTransferAlgorithmDriver.h>
@@ -654,9 +653,8 @@ EnthalpyEquationSystem::register_inflow_bc(
 
   // non-solver; dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
-        algType, part, "tke_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+        algType, part, "enthalpy_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 
   // Dirichlet bc
@@ -709,9 +707,8 @@ EnthalpyEquationSystem::register_open_bc(
 
   // non-solver; dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
-        algType, part, "tke_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+        algType, part, "enthalpy_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 
   // solver open; lhs
@@ -891,9 +888,8 @@ EnthalpyEquationSystem::register_wall_bc(
 
   // non-solver; dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
-        algType, part, "tke_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+        algType, part, "enthalpy_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 }
 
@@ -920,9 +916,8 @@ EnthalpyEquationSystem::register_symmetry_bc(
   
   // non-solver; dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
-        algType, part, "tke_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+        algType, part, "enthalpy_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 }
 
@@ -993,9 +988,8 @@ EnthalpyEquationSystem::register_abltop_bc(
 
   // non-solver; dhdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
-        algType, part, "tke_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+        algType, part, "enthalpy_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 }
 
@@ -1017,15 +1011,14 @@ EnthalpyEquationSystem::register_non_conformal_bc(
   // non-solver; contribution to dhdx; DG algorithm decides on locations for integration points
   if ( !managePNG_ ) {
     if ( edgeNodalGradient_ ) {
-      nodalGradAlgDriver_.register_face_algorithm<
-        ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
-          algType, part, "tke_nodal_grad", &hNp1, &dhdxNone, edgeNodalGradient_);
+      nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+          algType, part, "enthalpy_nodal_grad", &hNp1, &dhdxNone, edgeNodalGradient_);
     }
     else {
       // proceed with DG
       nodalGradAlgDriver_
         .register_legacy_algorithm<AssembleNodalGradNonConformalAlgorithm>(
-          algType, part, "tke_nodal_grad", &hNp1, &dhdxNone);
+          algType, part, "enthalpy_nodal_grad", &hNp1, &dhdxNone);
     }
   }
 
