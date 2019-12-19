@@ -2,37 +2,28 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityAdvElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityInflowElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityMassElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityMassHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityOpenElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/EnthalpyTGradBCElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/KernelBuilderLog.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumActuatorSrcElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumAdvDiffElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumAdvDiffHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancyBoussinesqSrcElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancySrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancySrcHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumCoriolisSrcElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBodyForceSrcElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumMassElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumMassHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumOpenAdvDiffElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSymmetryElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSSTTAMSDiffElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSSTTAMSForcingElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumUpwAdvDiffElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumWallFunctionElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/PressurePoissonHOElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedNodalGradientHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarAdvDiffElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarAdvDiffHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarDiffElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarDiffHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarDiffFemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxBCElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxPenaltyElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarMassElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarMassHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarOpenAdvElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarUpwAdvDiffElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SpecificDissipationRateSSTSrcElemKernel.C

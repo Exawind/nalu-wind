@@ -202,10 +202,8 @@ WallDistEquationSystem::register_interior_algorithm(
     if (solverAlgWasBuilt) {
       ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
       auto& activeKernels = solverAlg->activeKernels_;
-      const int dim = realm_.spatialDimension_;
-
       Kernel* compKernel = build_topo_kernel<WallDistElemKernel>(
-        dim, partTopo, realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs);
+        partTopo, realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs);
       activeKernels.push_back(compKernel);
     }
   }

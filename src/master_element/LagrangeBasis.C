@@ -7,9 +7,8 @@
 // for more details.
 //
 
-#include <element_promotion/LagrangeBasis.h>
+#include <master_element/LagrangeBasis.h>
 #include <stk_util/util/ReportHandler.hpp>
-#include <element_promotion/QuadratureRule.h>
 
 #include <algorithm>
 #include <cmath>

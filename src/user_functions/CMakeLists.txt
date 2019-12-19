@@ -26,7 +26,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermal3dContactAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermal3dContactDtDxAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermal3dContactSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermalContactSrcHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermal3dContactSrcElemSuppAlgDep.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermalContact3DSrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermalContactAuxFunction.C
@@ -34,16 +33,12 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermalContactSrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TaylorGreenPressureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TaylorGreenVelocityAuxFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TGMMSHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TornadoAuxFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityContinuityMMSHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityContinuitySrcElemSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityContinuitySrcNodeSuppAlg.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityEnthalpyMMSHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityMixFracAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityMixFracSrcElemSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityMixFracSrcNodeSuppAlg.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityMomentumMMSHOElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityMomentumSrcElemSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityMomentumSrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/VariableDensityNonIsoContinuitySrcNodeSuppAlg.C

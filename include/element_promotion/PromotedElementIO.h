@@ -16,6 +16,8 @@
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/Types.hpp>
 
+#include <element_promotion/HexNElementDescription.h>
+
 #include <stddef.h>
 #include <iosfwd>
 #include <map>
@@ -60,8 +62,7 @@ class PromotedElementIO
 
 public:
   // constructor/destructor
-  PromotedElementIO(
-    const ElementDescription& elem,
+  PromotedElementIO(int p,
     const stk::mesh::MetaData& metaData,
     stk::mesh::BulkData& bulkData,
     const stk::mesh::PartVector& baseParts,
@@ -102,7 +103,7 @@ private:
   std::string storage_name(const stk::mesh::FieldBase& field) const;
 
   // meta, bulk and io
-  const ElementDescription& elem_;
+  const HexNElementDescription elem_;
   const stk::mesh::MetaData& metaData_;
   const stk::mesh::BulkData& bulkData_;
   const std::string& fileName_;

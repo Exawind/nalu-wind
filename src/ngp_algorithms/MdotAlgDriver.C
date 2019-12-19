@@ -181,8 +181,7 @@ void MdotAlgDriver::register_open_mdot_corrector_alg(
   const auto it = correctOpenMdotAlgs_.find(algName);
   if (it == correctOpenMdotAlgs_.end()) {
     correctOpenMdotAlgs_[algName].reset(
-      nalu_ngp::create_face_algorithm<Algorithm, MdotOpenCorrectorAlg>(
-        nDim_, topo, realm_, part, *this));
+      nalu_ngp::create_face_algorithm<Algorithm, MdotOpenCorrectorAlg>(topo, realm_, part, *this));
   } else {
     it->second->partVec_.push_back(part);
   }

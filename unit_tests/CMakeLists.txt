@@ -15,7 +15,6 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHexMasterElements.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHexMasterElementsNgp.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHexSCVDeterminant.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestHOMasterElements.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestIntegrationRule.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosME.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKokkosMEBC.C
@@ -29,7 +28,6 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNGPMasterElements.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNgpMesh1.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestPecletFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestQuadElementPromotion.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestRealm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScratchViews.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestShmemAlignment.C
