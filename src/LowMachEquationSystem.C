@@ -18,7 +18,6 @@
 #include <AssembleContinuityElemOpenSolverAlgorithm.h>
 #include <AssembleContinuityNonConformalSolverAlgorithm.h>
 #include <AssembleMomentumElemSolverAlgorithm.h>
-#include <AssembleMomentumEdgeOpenSolverAlgorithm.h>
 #include <AssembleMomentumElemOpenSolverAlgorithm.h>
 #include <AssembleMomentumElemSymmetrySolverAlgorithm.h>
 #include <AssembleMomentumEdgeWallFunctionSolverAlgorithm.h>
@@ -113,6 +112,7 @@
 #include <edge_kernels/ContinuityEdgeSolverAlg.h>
 #include <edge_kernels/ContinuityOpenEdgeKernel.h>
 #include <edge_kernels/MomentumEdgeSolverAlg.h>
+#include <edge_kernels/MomentumOpenEdgeKernel.h>
 #include <edge_kernels/MomentumABLWallFuncEdgeKernel.h>
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
 
@@ -1762,29 +1762,35 @@ MomentumEquationSystem::register_open_bc(
       edgeNodalGradient_);
   }
 
-  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {      
-    
+  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_  || realm_.realmUsesEdges_) {
     // solver for continuity open
     auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-    
     stk::topology elemTopo = get_elem_topo(realm_, *part);
-    
+
     AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
     bool solverAlgWasBuilt = false;
-    
-    std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
-      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "open");
-    
+
+    std::tie(faceElemSolverAlg, solverAlgWasBuilt) =
+      build_or_add_part_to_face_elem_solver_alg(
+        algType, *this, *part, elemTopo, solverAlgMap, "open");
+
     auto& activeKernels = faceElemSolverAlg->activeKernels_;
-    
+
     if (solverAlgWasBuilt) {
-      
-      build_face_elem_topo_kernel_automatic<MomentumOpenAdvDiffElemKernel>
-        (partTopo, elemTopo, *this, activeKernels, "momentum_open",
-         realm_.meta_data(), *realm_.solutionOptions_, this,
-         velocity_, dudx_, realm_.is_turbulent() ? evisc_ : visc_,
-         faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
-      
+
+      if (realm_.realmUsesEdges_)
+        build_face_elem_topo_kernel_automatic<MomentumOpenEdgeKernel>
+          (partTopo, elemTopo, *this, activeKernels, "momentum_open",
+           realm_.meta_data(), realm_.solutionOptions_,
+           realm_.is_turbulent() ? evisc_ : visc_,
+           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
+
+      else
+        build_face_elem_topo_kernel_automatic<MomentumOpenAdvDiffElemKernel>
+          (partTopo, elemTopo, *this, activeKernels, "momentum_open",
+           realm_.meta_data(), *realm_.solutionOptions_, this,
+           velocity_, dudx_, realm_.is_turbulent() ? evisc_ : visc_,
+           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
     }
   }
   else {
@@ -1792,13 +1798,8 @@ MomentumEquationSystem::register_open_bc(
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
       = solverAlgDriver_->solverAlgMap_.find(algType);
     if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      SolverAlgorithm *theAlg = NULL;
-      if ( realm_.realmUsesEdges_ ) {
-        theAlg = new AssembleMomentumEdgeOpenSolverAlgorithm(realm_, part, this);
-      }
-      else {
-        theAlg = new AssembleMomentumElemOpenSolverAlgorithm(realm_, part, this);
-      }
+      SolverAlgorithm* theAlg =
+        new AssembleMomentumElemOpenSolverAlgorithm(realm_, part, this);
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
     }
     else {
