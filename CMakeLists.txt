@@ -54,6 +54,14 @@ else(Trilinos_BUILD_SHARED_LIBS)
   set(Nalu_LIBRARY_TYPE STATIC)
 endif(Trilinos_BUILD_SHARED_LIBS)
 
+############################ BOOST #####################################
+find_library(BOOST_LIBRARIES NAMES boost_filesystem PATHS ${BOOST_DIR}/lib)
+if (${BOOST_LIBRARIES} MATCHES ".*-NOTFOUND")
+  message(FATAL_ERROR "BOOST LIBRARY libboost_filesystem NOT FOUND")
+else()
+  message(STATUS "Found boost library = ${BOOST_LIBRARIES}")
+endif()
+
 ############################ YAML ######################################
 set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
 find_package(YAML-CPP QUIET)
@@ -257,6 +265,7 @@ include_directories(${CMAKE_BINARY_DIR}/include)
 add_library(nalu ${NALU_SOURCES})
 target_link_libraries(nalu ${Trilinos_LIBRARIES})
 target_link_libraries(nalu ${YAML_CPP_LIBRARIES})
+target_link_libraries(nalu ${BOOST_LIBRARIES})
 target_link_libraries(nalu ${MPI_CXX_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_C_LIBRARIES})
 
 if(ENABLE_FFTW)

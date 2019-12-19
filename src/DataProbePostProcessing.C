@@ -42,8 +42,9 @@
 #include <iomanip>
 #include <algorithm>
 #include <sstream>
-#include <sys/stat.h>
-#include <limits.h>
+
+// boost
+#include <boost/filesystem.hpp>
 
 namespace sierra{
 namespace nalu{
@@ -907,6 +908,14 @@ DataProbePostProcessing::provide_output_txt(
         const std::string fileName = probeInfo->partName_[inp] + "_" + ss.str() + ".dat";
         std::ofstream myfile;
         if ( processorId == NaluEnv::self().parallel_rank()) {    
+
+	  // Get the path to the file name, and create any directories necessary
+	  size_t pathfound;
+	  pathfound = fileName.find_last_of("/");
+	  const std::string path = fileName.substr(0, pathfound);
+	  if (!boost::filesystem::exists(path)) {
+	    boost::filesystem::create_directories(path);
+	  }
           
           // one banner per file 
           const bool addBanner = std::ifstream(fileName.c_str()) ? false : true;
@@ -991,20 +1000,9 @@ DataProbePostProcessing::provide_output_txt(
 	      pathfound = fileName.find_last_of("/");
 	      const std::string path = fileName.substr(0, pathfound);
 	      // - Create the path, if necessary
-	      char tmp[PATH_MAX];
-	      char *p = NULL;
-	      size_t len;
-	      mode_t mode=0755;  // S_IRWXU
-	      snprintf(tmp, sizeof(tmp),"%s",path.c_str());
-	      len = strlen(tmp);
-	      if(tmp[len - 1] == '/')
-                tmp[len - 1] = 0;
-	      for(p = tmp + 1; *p; p++) if(*p == '/') {
-		  *p = 0;
-		  mkdir(tmp, mode);
-		  *p = '/';
-                }
-	      mkdir(tmp, mode);
+	      if (!boost::filesystem::exists(path)) {
+		boost::filesystem::create_directories(path);
+	      }
 
 	      myfile.open(fileName.c_str(), std::ios_base::out); // std::ios_base::app
 	      myfile << "#Time: "<< std::setprecision(precisionvar_) << currentTime << std::endl;
