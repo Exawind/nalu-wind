@@ -64,7 +64,8 @@ inline void field_copy(
   const stk::mesh::Selector& sel,
   FieldType& dest,
   const FieldType& src,
-  const unsigned numComponents = 1,
+  const unsigned start,
+  const unsigned end,
   const stk::topology::rank_t rank = stk::topology::NODE_RANK)
 {
   using Traits = NGPMeshTraits<Mesh>;
@@ -74,12 +75,24 @@ inline void field_copy(
     "ngp_field_copy",
     ngpMesh, rank, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
-      for (unsigned d=0; d < numComponents; ++d)
+      for (unsigned d=start; d < end; ++d)
         dest.get(mi, d) = src.get(mi, d);
     });
 
   // Indicate modification on device for future synchronization
   dest.modify_on_device();
+}
+
+template<typename Mesh, typename FieldType>
+inline void field_copy(
+  const Mesh& ngpMesh,
+  const stk::mesh::Selector& sel,
+  FieldType& dest,
+  const FieldType& src,
+  const unsigned numComponents = 1,
+  const stk::topology::rank_t rank = stk::topology::NODE_RANK)
+{
+  field_copy(ngpMesh, sel, dest, src, 0, numComponents, rank);
 }
 
 template<
