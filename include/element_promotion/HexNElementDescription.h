@@ -14,6 +14,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <array>
 
 namespace sierra {
 namespace nalu {
@@ -46,6 +47,7 @@ public:
   const int newNodesPerEdge;
   const int newNodesPerFace;
   const int newNodesPerVolume;
+  const int subElementsPerElement;
 private:
   void set_subelement_connectivity();
   std::vector<int> edge_node_ordinals();
