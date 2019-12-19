@@ -65,8 +65,6 @@ endif(Trilinos_BUILD_SHARED_LIBS)
 find_package(Boost REQUIRED COMPONENTS filesystem)
 if (DEFINED Boost_LIBRARIES)
   message(STATUS "Found boost library = ${Boost_LIBRARIES}")
-else()
-  message(FATAL_ERROR "BOOST LIBRARY NOT FOUND")
 endif()
 
 ############################ YAML ######################################
