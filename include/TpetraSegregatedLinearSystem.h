@@ -260,8 +260,6 @@ private:
   std::set<std::pair<int,GlobalOrdinal> > ownersAndGids_;
   std::vector<int> sharedPids_;
 
-  Teuchos::RCP<LinSys::Node>   node_;
-
   // all rows, otherwise known as col map
   Teuchos::RCP<LinSys::Map>    totalColsMap_;
   Teuchos::RCP<LinSys::Map>    optColsMap_;

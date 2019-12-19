@@ -91,10 +91,7 @@ TpetraSegregatedLinearSystem::TpetraSegregatedLinearSystem(
   EquationSystem *eqSys,
   LinearSolver * linearSolver)
   : LinearSystem(realm, numDof, eqSys, linearSolver)
-{
-  Teuchos::ParameterList junk;
-  node_ = Teuchos::rcp(new LinSys::Node(junk));
-}
+{}
 
 TpetraSegregatedLinearSystem::~TpetraSegregatedLinearSystem()
 {
