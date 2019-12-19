@@ -46,6 +46,9 @@
 #include <algorithm>
 #include <sstream>
 
+// boost
+#include <boost/filesystem.hpp>
+
 namespace sierra{
 namespace nalu{
 
@@ -124,17 +127,41 @@ DataProbePostProcessing::load(
   if (y_dataProbe) {
     NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::load" << std::endl;
 
-    // extract the frequency of output
-    std::string outFormat = "text";
-    get_if_present(y_dataProbe, "output_format", outFormat, outFormat);
+    // Set the output format for probes
+    std::vector<std::string> formatList;
+    const YAML::Node y_formats = y_dataProbe["output_format"]; 
+    if (y_formats) {
+      if (y_formats.Type() == YAML::NodeType::Sequence) {  // Provided as as sequence
+	for (size_t ioutput = 0; ioutput < y_formats.size(); ++ioutput) {
+	  const YAML::Node y_format = y_formats[ioutput];
+	  std::string formatName    = y_format.as<std::string>() ;
+	  formatList.push_back(formatName);
+	}
+      } else  { // Not provided as a sequence, just one string
+	std::string formatName    = y_formats.as<std::string>() ;	
+	formatList.push_back(formatName);
+      }
+    } else { // output_format not given at all, add the default ("text")
+      std::string formatName("text");	
+      formatList.push_back(formatName);
+    }
+    // Go through and parse each format in formatList
+    for (size_t iformat=0; iformat<formatList.size(); iformat++) {
+      std::string formatName  = formatList[iformat];
+      if (case_insensitive_compare(formatName, "exodus")) {
+	useExo_ = true;
+      }
+      else if (case_insensitive_compare(formatName, "text")) {
+	useText_ = true;
+      } else {
+	throw std::runtime_error("output_format has unrecognized format");
+      }
+      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Adding "<<formatName<<" output format..." << std::endl;
+    }
 
-    if (case_insensitive_compare(outFormat, "exodus")) {
-      useExo_ = true;
-      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Using exodus format..." << std::endl;
-    }
-    else {
-      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Using text format..." << std::endl;
-    }
+
+    // extract the frequency of output
+
     get_if_present(y_dataProbe, "exodus_name", exoName_, exoName_);
 
     get_if_present(y_dataProbe, "output_frequency", outputFreq_, outputFreq_);
@@ -190,14 +217,16 @@ DataProbePostProcessing::load(
         }
         
         // extract the type of probe, e.g., line of site, plane, etc
-        const YAML::Node y_loss = expect_sequence(y_spec, "line_of_site_specifications", false);
+        const YAML::Node y_loss = expect_sequence(y_spec, "line_of_site_specifications", true);
+        const YAML::Node y_plane= expect_sequence(y_spec, "plane_specifications", true);
+	probeInfo->numProbes_   = 0;
         if (y_loss) {
 
           // l-o-s is active..
           probeInfo->isLineOfSite_ = true;
           
           // extract and save number of probes
-          const int numProbes = y_loss.size();
+          const int numProbes = probeInfo->numProbes_ + y_loss.size();
           probeInfo->numProbes_ = numProbes;
 
           // resize everything...
@@ -209,6 +238,15 @@ DataProbePostProcessing::load(
           probeInfo->tailCoordinates_.resize(numProbes);
           probeInfo->nodeVector_.resize(numProbes);
           probeInfo->part_.resize(numProbes);
+	  // more resizing
+	  probeInfo->geomType_.resize(numProbes);
+	  probeInfo->cornerCoordinates_.resize(numProbes);
+	  probeInfo->edge1Vector_.resize(numProbes);
+	  probeInfo->edge2Vector_.resize(numProbes);
+	  probeInfo->edge1NumPoints_.resize(numProbes);
+	  probeInfo->edge2NumPoints_.resize(numProbes);
+	  probeInfo->offsetDir_.resize(numProbes);
+	  probeInfo->offsetSpacings_.resize(numProbes);
 
           // deal with processors... Distribute each probe over subsequent procs
           const int numProcs = NaluEnv::self().parallel_size();
@@ -216,6 +254,9 @@ DataProbePostProcessing::load(
 	  
           for (size_t ilos = 0; ilos < y_loss.size(); ilos++) {
             const YAML::Node y_los = y_loss[ilos] ;
+
+	    // Set the geometry type
+            probeInfo->geomType_[ilos] = DataProbeGeomType::LINEOFSITE;
 
             // processor id; distribute los equally over the number of processors
             probeInfo->processorId_[ilos] = divProcProbe > 0 ? ilos % divProcProbe : 0;
@@ -250,9 +291,125 @@ DataProbePostProcessing::load(
         
           }
         }
-        else {
-          throw std::runtime_error("DataProbePostProcessing: only supports line_of_site_specifications");
+	if (y_plane) {
+	  // Get the specifications for defining a sample plane
+
+          // plane is active..
+          probeInfo->isSamplePlane_ = true;
+          probeInfo->isLineOfSite_ = true;
+
+          // extract and save number of probes
+          const int offset    = probeInfo->numProbes_;
+          const int numProbes   = probeInfo->numProbes_ + y_plane.size();
+          probeInfo->numProbes_ = numProbes;
+
+          // resize everything...
+          probeInfo->partName_.resize(numProbes);
+          probeInfo->processorId_.resize(numProbes);
+          probeInfo->numPoints_.resize(numProbes);
+          probeInfo->generateNewIds_.resize(numProbes);
+          probeInfo->tipCoordinates_.resize(numProbes);
+          probeInfo->tailCoordinates_.resize(numProbes);
+          probeInfo->nodeVector_.resize(numProbes);
+          probeInfo->part_.resize(numProbes);
+	  // more resizing
+	  probeInfo->geomType_.resize(numProbes);
+	  probeInfo->cornerCoordinates_.resize(numProbes);
+	  probeInfo->edge1Vector_.resize(numProbes);
+	  probeInfo->edge2Vector_.resize(numProbes);
+	  probeInfo->edge1NumPoints_.resize(numProbes);
+	  probeInfo->edge2NumPoints_.resize(numProbes);
+	  probeInfo->offsetDir_.resize(numProbes);
+	  probeInfo->offsetSpacings_.resize(numProbes);
+
+          // deal with processors... Distribute each probe over subsequent procs
+          const int numProcs = NaluEnv::self().parallel_size();
+          const int divProcProbe = std::max(numProcs/numProbes, numProcs);  // unnecessary, divProcProbe = numProcs
+
+          for (size_t iplane = 0; iplane < y_plane.size(); iplane++) {
+            const YAML::Node y_planenode = y_plane[iplane] ;
+
+	    // Set the geometry type
+            probeInfo->geomType_[iplane+offset] = DataProbeGeomType::PLANE;
+
+            // processor id; distribute los equally over the number of processors
+            probeInfo->processorId_[iplane+offset] = divProcProbe > 0 ? iplane % divProcProbe : 0;
+
+            // name; which is the part name of choice
+            const YAML::Node nameNode = y_planenode["name"];
+            if ( nameNode ) {
+              probeInfo->partName_[iplane+offset] = nameNode.as<std::string>() ;
+            } else
+              throw std::runtime_error("DataProbePostProcessing: lacking the name");
+
+            // number of edge1 points
+            const YAML::Node edge1NumPoints = y_planenode["edge1_numPoints"];
+            if ( edge1NumPoints ) {
+              probeInfo->edge1NumPoints_[iplane+offset] = edge1NumPoints.as<int>() ;
+            } else
+              throw std::runtime_error("DataProbePostProcessing: lacking edge 1 number of points");
+
+            // number of edge2 points
+            const YAML::Node edge2NumPoints = y_planenode["edge2_numPoints"];
+            if ( edge2NumPoints ) {
+              probeInfo->edge2NumPoints_[iplane+offset] = edge2NumPoints.as<int>() ;
+            } else
+              throw std::runtime_error("DataProbePostProcessing: lacking edge 2 number of points");
+
+            // coordinates; corner
+            const YAML::Node cornerCoord = y_planenode["corner_coordinates"];
+            if ( cornerCoord )
+              probeInfo->cornerCoordinates_[iplane+offset] = cornerCoord.as<sierra::nalu::Coordinates>() ;
+            else
+              throw std::runtime_error("DataProbePostProcessing: lacking corner coordinates");
+
+            // coordinates; edge1
+            const YAML::Node edge1Vector = y_planenode["edge1_vector"];
+            if ( edge1Vector )
+              probeInfo->edge1Vector_[iplane+offset] = edge1Vector.as<sierra::nalu::Coordinates>() ;
+            else
+              throw std::runtime_error("DataProbePostProcessing: lacking edge 1 vector");
+
+            // coordinates; edge2
+            const YAML::Node edge2Vector = y_planenode["edge2_vector"];
+            if ( edge2Vector )
+              probeInfo->edge2Vector_[iplane+offset] = edge2Vector.as<sierra::nalu::Coordinates>() ;
+            else
+              throw std::runtime_error("DataProbePostProcessing: lacking edge 2 vector");
+
+            // coordinates; offsetDir
+            const YAML::Node offsetDir = y_planenode["offset_vector"];
+	    if (offsetDir)
+              probeInfo->offsetDir_[iplane+offset] = offsetDir.as<sierra::nalu::Coordinates>() ;
+	    else {
+	      probeInfo->offsetDir_[iplane+offset].x_ = 0.0;
+	      probeInfo->offsetDir_[iplane+offset].y_ = 0.0;
+	      probeInfo->offsetDir_[iplane+offset].z_ = 0.0;
+	    }
+	    
+            // coordinates; offset_spacings
+            const YAML::Node offsetSpacings = y_planenode["offset_spacings"];
+	    if (offsetSpacings)
+	      probeInfo->offsetSpacings_[iplane+offset] = offsetSpacings.as<std::vector<double>>();
+	    else
+	      probeInfo->offsetSpacings_[iplane+offset].push_back(0.0);
+
+	    // Set the total number of points
+	    const int numPlanes = probeInfo->offsetSpacings_[iplane+offset].size();
+	    probeInfo->numPoints_[iplane+offset] =  probeInfo->edge1NumPoints_[iplane+offset]*
+	      probeInfo->edge2NumPoints_[iplane+offset]*numPlanes;
+
+	  }
+
+	  //throw std::runtime_error("DataProbePostProcessing: done sample plane setup");
+
+	}
+       
+	if (probeInfo->numProbes_ < 1)
+	{
+	  throw std::runtime_error("DataProbePostProcessing: Need to have some specification included");
         }
+	
         
         // extract the output variables
         const YAML::Node y_outputs = expect_sequence(y_spec, "output_variables", false);
@@ -469,6 +626,8 @@ DataProbePostProcessing::initialize()
         // reference to the nodeVector
         std::vector<stk::mesh::Entity> &nodeVec = probeInfo->nodeVector_[j];
         
+	// create line-of-site geometry
+	if (probeInfo->geomType_[j] == DataProbeGeomType::LINEOFSITE) {
         // populate the coordinates
         double dx[3] = {};
         
@@ -495,6 +654,54 @@ DataProbePostProcessing::initialize()
           for ( int i = 0; i < nDim; ++i )
             coords[i] = tailC[i] + n*dx[i];
         }
+	// create sample plane geometry
+	} else 	if (probeInfo->geomType_[j] == DataProbeGeomType::PLANE) {
+	  double dx[3] = {};
+	  double dy[3] = {};
+	  std::vector<double> corner(nDim);
+	  std::vector<double> edge1(nDim);
+	  std::vector<double> edge2(nDim);
+	  std::vector<double> OSdir(nDim);
+	  corner[0] = probeInfo->cornerCoordinates_[j].x_;
+	  corner[1] = probeInfo->cornerCoordinates_[j].y_;
+	  edge1[0] = probeInfo->edge1Vector_[j].x_;
+	  edge1[1] = probeInfo->edge1Vector_[j].y_;
+	  edge2[0] = probeInfo->edge2Vector_[j].x_;
+	  edge2[1] = probeInfo->edge2Vector_[j].y_;
+	  OSdir[0] = probeInfo->offsetDir_[j].x_;
+	  OSdir[1] = probeInfo->offsetDir_[j].y_;
+	  if (nDim > 2) {
+	    corner[2] = probeInfo->cornerCoordinates_[j].z_;
+	    edge1[2] = probeInfo->edge1Vector_[j].z_;
+	    edge2[2] = probeInfo->edge2Vector_[j].z_;
+	    OSdir[2] = probeInfo->offsetDir_[j].z_;
+	  }
+	  const int N1 = probeInfo->edge1NumPoints_[j];
+	  const int N2 = probeInfo->edge2NumPoints_[j];
+	  for ( int p = 0; p < nDim; ++p ){
+	    dx[p] = edge1[p]/(double)(std::max(N1-1,1));
+	    dy[p] = edge2[p]/(double)(std::max(N2-1,1));
+	  }
+	  const int numPoints = probeInfo->numPoints_[j];
+	  const int pointsPerPlane = N1*N2;
+	  const int numPlanes = probeInfo->offsetSpacings_[j].size();
+	  std::vector<double> OSspacing(numPlanes);
+	  for ( int i=0; i<numPlanes; i++) OSspacing[i] = probeInfo->offsetSpacings_[j][i];
+
+	  // now populate the coordinates; can use a simple loop rather than buckets
+	  for ( size_t n = 0; n < nodeVec.size(); ++n ) {
+	    stk::mesh::Entity node = nodeVec[n];
+	    double * coords = stk::mesh::field_data(*coordinates, node );
+	    const int planei = n/pointsPerPlane;
+	    const int localn = n - planei*pointsPerPlane;
+	    const int indexj = localn/N1;
+	    const int indexi = localn - indexj*N1;
+	    for ( int i = 0; i < nDim; ++i ) {
+	      coords[i] = corner[i] + indexi*dx[i] + indexj*dy[i] + OSspacing[planei]*OSdir[i];
+	    }
+	  }
+	  
+	}
       }
     }
   }
@@ -664,7 +871,7 @@ DataProbePostProcessing::execute()
     if (useExo_) {
       provide_output_exodus(currentTime);
     }
-    else {
+    if (useText_) {
       provide_output_txt(currentTime);
     }
   }
@@ -695,6 +902,8 @@ DataProbePostProcessing::provide_output_txt(
           
       for ( int inp = 0; inp < probeInfo->numProbes_; ++inp ) {
 
+	if (probeInfo->geomType_[inp]==DataProbeGeomType::LINEOFSITE) {
+
         // open the file for this probe
         const int processorId = probeInfo->processorId_[inp];
         std::ostringstream ss;
@@ -702,6 +911,14 @@ DataProbePostProcessing::provide_output_txt(
         const std::string fileName = probeInfo->partName_[inp] + "_" + ss.str() + ".dat";
         std::ofstream myfile;
         if ( processorId == NaluEnv::self().parallel_rank()) {    
+
+	  // Get the path to the file name, and create any directories necessary
+	  size_t pathfound;
+	  pathfound = fileName.find_last_of("/");
+	  const std::string path = fileName.substr(0, pathfound);
+	  if (!boost::filesystem::exists(path)) {
+	    boost::filesystem::create_directories(path);
+	  }
           
           // one banner per file 
           const bool addBanner = std::ifstream(fileName.c_str()) ? false : true;
@@ -761,7 +978,91 @@ DataProbePostProcessing::provide_output_txt(
         }
         else {
           // nothing to do for this probe on this processor
-        } 
+        }
+	} else if (probeInfo->geomType_[inp]==DataProbeGeomType::PLANE) {
+	    // -- Output the plane in text file --
+
+	    // open the file for this probe
+	    const int timeStepCount = realm_.get_time_step_count();
+	    const int processorId = probeInfo->processorId_[inp];
+	    std::ostringstream ss;
+	    ss << std::setw(7)<<std::setfill('0')<<timeStepCount;
+	    ss <<"_"<<processorId;
+	    const std::string fileName = probeInfo->partName_[inp] + "_" + ss.str() + ".dat";
+	    std::ofstream myfile;
+	    if ( processorId == NaluEnv::self().parallel_rank()) {    
+
+	      const int N1 = probeInfo->edge1NumPoints_[inp];
+	      const int N2 = probeInfo->edge2NumPoints_[inp];
+	      const int pointsPerPlane = N1*N2;
+	      const int numPlanes = probeInfo->offsetSpacings_[inp].size();
+
+	      // Get the path to the file name, and create any directories necessary
+	      // - Get the path
+	      size_t pathfound; 
+	      pathfound = fileName.find_last_of("/");
+	      const std::string path = fileName.substr(0, pathfound);
+	      // - Create the path, if necessary
+	      if (!boost::filesystem::exists(path)) {
+		boost::filesystem::create_directories(path);
+	      }
+
+	      myfile.open(fileName.c_str(), std::ios_base::out); // std::ios_base::app
+	      myfile << "#Time: "<< std::setprecision(precisionvar_) << currentTime << std::endl;
+	      myfile << "#";//Time" << std::setw(w_);
+	      myfile << std::setw(w_-1) << std::right << "Plane_Number"
+		     << std::setw(w_) << std::right << "Index_j"
+		     << std::setw(w_) << std::right << "Index_i"; 
+	      for ( int jj = 0; jj < nDim; ++jj )
+		myfile << std::setw(w_-2) << std::right << "coordinates[" << jj << "]" ;          
+	      for ( size_t ifi = 0; ifi < probeSpec->fieldInfo_.size(); ++ifi ) {
+		const std::string fieldName = probeSpec->fieldInfo_[ifi].first;
+		const int fieldSize = probeSpec->fieldInfo_[ifi].second;
+		for ( int jj = 0; jj < fieldSize; ++jj ) {
+		  myfile << std::setw(w_-3) << std::right << fieldName << "[" << jj << "]" ;
+		} 
+	      }
+	      myfile << std::endl;	      
+
+	      // reference to the nodeVector
+	      std::vector<stk::mesh::Entity> &nodeVec = probeInfo->nodeVector_[inp];
+          
+	      // output in a single row
+	      for ( size_t inv = 0; inv < nodeVec.size(); ++inv ) {
+		stk::mesh::Entity node = nodeVec[inv];
+		double * theCoord = (double*)stk::mesh::field_data(*coordinates, node );
+		// always output time and coordinates
+		//myfile << std::left << std::setw(w_) << std::setprecision(precisionvar_) << currentTime << std::setw(w_);
+		// Output plane indices
+		const int planei = inv/pointsPerPlane;
+		const int localn = inv - planei*pointsPerPlane;
+		const int indexj = localn/N1;
+		const int indexi = localn - indexj*N1;
+		myfile <<std::right<< std::setw(w_) << planei << std::setw(w_) << indexj << std::setw(w_) << indexi << std::setw(w_);
+
+		// Output coordinates
+		for ( int jj = 0; jj < nDim; ++jj ) {
+		  myfile << std::setprecision(precisionvar_) << theCoord[jj] << std::setw(w_);
+		}
+		// now all of the other fields required
+		for ( size_t ifi = 0; ifi < probeSpec->fieldInfo_.size(); ++ifi ) {
+		  const std::string fieldName = probeSpec->fieldInfo_[ifi].first;
+		  const stk::mesh::FieldBase *theField = metaData.get_field(stk::topology::NODE_RANK, fieldName);
+		  double * theF = (double*)stk::mesh::field_data(*theField, node );
+               
+		  const int fieldSize = probeSpec->fieldInfo_[ifi].second;
+		  for ( int jj = 0; jj < fieldSize; ++jj ) {
+		    myfile << theF[jj] << std::setw(w_);
+		  }
+		}
+		// row complete
+		myfile << std::endl;
+	      }
+	      // done with file output
+	      myfile.close();
+
+	    }
+	}
       }
     }
   }

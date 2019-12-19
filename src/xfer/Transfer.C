@@ -99,9 +99,9 @@ Transfer::load(const YAML::Node & node)
   realmPairName_.second = realmPair[1].as<std::string>() ;
 
   // set bools for variety of mesh part declarations
-  const bool hasOld = node["mesh_part_pair"];
-  const bool hasNewFrom = node["from_target_name"];
-  const bool hasNewTo = node["to_target_name"];
+  const bool hasOld = node["mesh_part_pair"]?true:false;
+  const bool hasNewFrom = node["from_target_name"]?true:false;
+  const bool hasNewTo = node["to_target_name"]?true:false;
 
   // mesh part pairs
   if ( hasOld ) {
