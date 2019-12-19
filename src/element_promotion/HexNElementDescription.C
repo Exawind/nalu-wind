@@ -104,7 +104,8 @@ HexNElementDescription::HexNElementDescription(int p)
   nodesPerElement(nodes1D*nodes1D*nodes1D),
   newNodesPerEdge(polyOrder - 1),
   newNodesPerFace(newNodesPerEdge * newNodesPerEdge),
-  newNodesPerVolume(newNodesPerEdge * newNodesPerEdge * newNodesPerEdge)
+  newNodesPerVolume(newNodesPerEdge * newNodesPerEdge * newNodesPerEdge),
+  subElementsPerElement((nodes1D-1)*(nodes1D-1)*(nodes1D-1))
 {
   set_edge_node_connectivities();
   set_face_node_connectivities();
@@ -629,7 +630,7 @@ void HexNElementDescription::set_tensor_product_node_mappings()
 void
 HexNElementDescription::set_subelement_connectivites()
 {
-  subElementConnectivity.resize((nodes1D-1)*(nodes1D-1)*(nodes1D-1));
+  subElementConnectivity.resize(subElementsPerElement);
   for (int k = 0; k < nodes1D-1; ++k) {
     for (int j = 0; j < nodes1D-1; ++j) {
       for (int i = 0; i < nodes1D-1; ++i) {

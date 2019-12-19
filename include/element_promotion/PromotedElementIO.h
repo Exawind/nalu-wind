@@ -83,14 +83,10 @@ private:
     const stk::mesh::PartVector& baseParts,
     const std::vector<stk::mesh::EntityId>& entityIds);
 
-  void write_sideset_connectivity(
-      const stk::mesh::PartVector& baseParts);
-
   size_t sub_element_global_id() const;
   void write_node_block_definitions(
       const stk::mesh::PartVector& superElemParts);
   void write_elem_block_definitions(const stk::mesh::PartVector& baseParts);
-  void write_sideset_definitions(const stk::mesh::PartVector& baseParts);
   void write_coordinate_list(const stk::mesh::PartVector& superElemParts);
 
   template<typename T> void
