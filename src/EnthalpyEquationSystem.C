@@ -70,6 +70,7 @@
 
 // edge kernels
 #include <edge_kernels/ScalarEdgeSolverAlg.h>
+#include <edge_kernels/ScalarOpenEdgeKernel.h>
 
 // node kernels
 #include <node_kernels/NodeKernelUtils.h>
@@ -711,8 +712,23 @@ EnthalpyEquationSystem::register_open_bc(
         algType, part, "enthalpy_nodal_grad", &enthalpyNp1, &dhdxNone, edgeNodalGradient_);
   }
 
+  if (realm_.realmUsesEdges_) {
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    AssembleElemSolverAlgorithm* elemSolverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+
+    std::tie(elemSolverAlg, solverAlgWasBuilt)
+      = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "open");
+
+    auto& dataPreReqs = elemSolverAlg->dataNeededByKernels_;
+    auto& activeKernels = elemSolverAlg->activeKernels_;
+
+    build_face_topo_kernel_automatic<ScalarOpenEdgeKernel>(
+      partTopo, *this, activeKernels, "turbulent_ke_open",
+      realm_.meta_data(), *realm_.solutionOptions_, enthalpy_, enthalpyBc, dataPreReqs);
+  }
   // solver open; lhs
-  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {
+  else if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {
     
     auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
     
@@ -740,13 +756,7 @@ EnthalpyEquationSystem::register_open_bc(
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
       = solverAlgDriver_->solverAlgMap_.find(algType);
     if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      SolverAlgorithm *theAlg = NULL;
-      if ( realm_.realmUsesEdges_ ) {
-        theAlg = new AssembleScalarEdgeOpenSolverAlgorithm(realm_, part, this, enthalpy_, enthalpyBc, &dhdxNone, evisc_);
-      }
-      else {
-        theAlg = new AssembleScalarElemOpenSolverAlgorithm(realm_, part, this, enthalpy_, enthalpyBc, &dhdxNone, evisc_);
-      }
+      SolverAlgorithm *theAlg = new AssembleScalarElemOpenSolverAlgorithm(realm_, part, this, enthalpy_, enthalpyBc, &dhdxNone, evisc_);
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
     }
     else {
