@@ -682,7 +682,6 @@ DataProbePostProcessing::initialize()
 	    dx[p] = edge1[p]/(double)(std::max(N1-1,1));
 	    dy[p] = edge2[p]/(double)(std::max(N2-1,1));
 	  }
-	  const int numPoints = probeInfo->numPoints_[j];
 	  const int pointsPerPlane = N1*N2;
 	  const int numPlanes = probeInfo->offsetSpacings_[j].size();
 	  std::vector<double> OSspacing(numPlanes);
@@ -995,7 +994,6 @@ DataProbePostProcessing::provide_output_txt(
 	      const int N1 = probeInfo->edge1NumPoints_[inp];
 	      const int N2 = probeInfo->edge2NumPoints_[inp];
 	      const int pointsPerPlane = N1*N2;
-	      const int numPlanes = probeInfo->offsetSpacings_[inp].size();
 
 	      // Get the path to the file name, and create any directories necessary
 	      // - Get the path
