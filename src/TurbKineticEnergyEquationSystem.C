@@ -17,7 +17,6 @@
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
-#include <AssembleNodalGradBoundaryAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AuxFunctionAlgorithm.h>
 #include <ConstantAuxFunction.h>
@@ -537,8 +536,7 @@ TurbKineticEnergyEquationSystem::register_inflow_bc(
 
   // non-solver; dkdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "tke_nodal_grad", &tkeNp1, &dkdxNone, edgeNodalGradient_);
   }
 
@@ -596,8 +594,7 @@ TurbKineticEnergyEquationSystem::register_open_bc(
 
   // non-solver; dkdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
         algType, part, "tke_nodal_grad", &tkeNp1, &dkdxNone, edgeNodalGradient_);
   }
 
@@ -735,8 +732,7 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
 
   // non-solver; dkdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
         algType, part, "tke_nodal_grad", &tkeNp1, &dkdxNone, edgeNodalGradient_);
   }
 }
@@ -760,8 +756,7 @@ TurbKineticEnergyEquationSystem::register_symmetry_bc(
 
   // non-solver; dkdx; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
         algType, part, "tke_nodal_grad", &tkeNp1, &dkdxNone, edgeNodalGradient_);
   }
 }
@@ -784,8 +779,7 @@ TurbKineticEnergyEquationSystem::register_non_conformal_bc(
   // non-solver; contribution to dkdx; DG algorithm decides on locations for integration points
   if ( !managePNG_ ) {
     if ( edgeNodalGradient_ ) {    
-      nodalGradAlgDriver_.register_face_algorithm<
-        ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+      nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
           algType, part, "tke_nodal_grad", &tkeNp1, &dkdxNone, edgeNodalGradient_);
     }
     else {

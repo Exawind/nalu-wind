@@ -14,6 +14,7 @@
 
 #include <Realm.h>
 #include <FieldTypeDef.h>
+#include <ngp_utils/NgpFieldBLAS.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -33,9 +34,6 @@ namespace nalu{
 //                      parts; begin/end can be the size of the field as well
 //                      should it be operating on integration point data
 //==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
 CopyFieldAlgorithm::CopyFieldAlgorithm(
   Realm &realm,
   stk::mesh::Part *part,
@@ -50,35 +48,20 @@ CopyFieldAlgorithm::CopyFieldAlgorithm(
     beginPos_(beginPos),
     endPos_(endPos),
     entityRank_(entityRank)
-{
-  // does nothing
-}
+{}
 
-//--------------------------------------------------------------------------
-//-------- execute ---------------------------------------------------------
-//--------------------------------------------------------------------------
 void
 CopyFieldAlgorithm::execute()
 {
   stk::mesh::Selector selector = stk::mesh::selectUnion(partVec_);
-  stk::mesh::BucketVector const& buckets =
-    realm_.get_buckets( entityRank_, selector );
-
-  for ( stk::mesh::BucketVector::const_iterator ib = buckets.begin();
-        ib != buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-
-    double * fromFieldData = (double*)stk::mesh::field_data(*fromField_, b);
-    double * toFieldData = (double*)stk::mesh::field_data(*toField_, b);
-
-    for(stk::mesh::Bucket::size_type k=0; k < length; ++k) {
-      const int offSet = k*endPos_;
-      for(unsigned i=beginPos_; i < endPos_; ++i) {
-        toFieldData[offSet+i] = fromFieldData[offSet+i];
-      }
-    }
-  }
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  auto& toField = fieldMgr.get_field<double>(
+    toField_->mesh_meta_data_ordinal());
+  auto& fromField = fieldMgr.get_field<double>(
+    fromField_->mesh_meta_data_ordinal());
+  nalu_ngp::field_copy(
+    realm_.ngp_mesh(), selector, toField, fromField,
+    beginPos_, endPos_, entityRank_);
 }
 
 } // namespace nalu

@@ -49,13 +49,10 @@ inline bool is_ngp_element(const stk::topology topo)
   case stk::topology::PYRAMID_5:
   case stk::topology::WEDGE_6:
   case stk::topology::QUAD_4_2D:
-    isNGP = true;
-    break;
-
   case stk::topology::TRI_3_2D:
   case stk::topology::HEX_27:
   case stk::topology::QUAD_9_2D:
-    isNGP = false;
+    isNGP = true;
     break;
 
   default:
@@ -82,13 +79,10 @@ inline bool is_ngp_face(const stk::topology topo)
   switch (topo.value()) {
   case stk::topology::QUAD_4:
   case stk::topology::TRI_3:
-    isNGP = true;
-    break;
-
   case stk::topology::LINE_2:
   case stk::topology::QUAD_9:
   case stk::topology::LINE_3:
-    isNGP = false;
+    isNGP = true;
     break;
 
   default:
