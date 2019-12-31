@@ -13,5 +13,6 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumABLWallFuncEdgeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumOpenEdgeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSymmetryEdgeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/ScalarOpenEdgeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarEdgeOpenSolverAlg.C
   )
