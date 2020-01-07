@@ -1458,6 +1458,25 @@ void TpetraLinearSystem::sumInto(const std::vector<stk::mesh::Entity> & entities
   }
 }
 
+template<typename RowViewType>
+KOKKOS_FUNCTION
+void adjust_lhs_row(
+  RowViewType row_view,
+  const int localRowId,
+  const double diagonalValue)
+{
+
+  const LocalOrdinal rowLength = row_view.length;
+  for(LocalOrdinal i=0; i<rowLength; ++i) {
+    if (row_view.colidx(i) == localRowId) {
+      row_view.value(i) = diagonalValue;
+    }
+    else {
+      row_view.value(i) = 0.0;
+    }
+  }
+}
+
 void TpetraLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solutionField,
                                            stk::mesh::FieldBase * bcValuesField,
                                            const stk::mesh::PartVector & parts,
@@ -1474,64 +1493,46 @@ void TpetraLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solutionField,
     & stk::mesh::selectField(*solutionField)
     & !(realm_.get_inactive_selector());
 
-  stk::mesh::BucketVector const& buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, selector );
+  using Traits = nalu_ngp::NGPMeshTraits<>;
+  using MeshIndex = typename Traits::MeshIndex;
 
-  const bool internalMatrixIsSorted = true;
-  int nbc=0;
-  for(const stk::mesh::Bucket* bptr : buckets) {
-    const stk::mesh::Bucket & b = *bptr;
+  ngp::Mesh ngpMesh = realm_.ngp_mesh();
+  NGPDoubleFieldType ngpSolutionField = realm_.ngp_field_manager().get_field<double>(solutionField->mesh_meta_data_ordinal());
+  NGPDoubleFieldType ngpBCValuesField = realm_.ngp_field_manager().get_field<double>(bcValuesField->mesh_meta_data_ordinal());
 
-    const unsigned fieldSize = field_bytes_per_entity(*solutionField, b) / sizeof(double);
-    ThrowRequire(fieldSize == numDof_);
+  auto entityToLID = entityToLID_;
+  const int maxOwnedRowId = maxOwnedRowId_;
+  auto ownedLocalMatrix = ownedLocalMatrix_;
+  auto sharedNotOwnedLocalMatrix = sharedNotOwnedLocalMatrix_;
+  auto ownedLocalRhs = ownedLocalRhs_;
+  auto sharedNotOwnedLocalRhs = sharedNotOwnedLocalRhs_;
 
-    const stk::mesh::Bucket::size_type length   = b.size();
-    const double * solution = (double*)stk::mesh::field_data(*solutionField, *b.begin());
-    const double * bcValues = (double*)stk::mesh::field_data(*bcValuesField, *b.begin());
-
-    Teuchos::ArrayView<const LocalOrdinal> indices;
-    Teuchos::ArrayView<const double> values;
-    std::vector<double> new_values;
-
-    for (stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      const stk::mesh::Entity entity = b[k];
-      const stk::mesh::EntityId naluId = *stk::mesh::field_data(*realm_.naluGlobalId_, entity);
-      const LocalOrdinal localIdOffset = lookup_myLID(myLIDs_, naluId, "applyDirichletBCs");
+  nalu_ngp::run_entity_algorithm(
+    "TpetraLinSys::applyDirichletBCs", ngpMesh, stk::topology::NODE_RANK, selector,
+    KOKKOS_LAMBDA(const MeshIndex& meshIdx)
+    {
+      stk::mesh::Entity entity = (*meshIdx.bucket)[meshIdx.bucketOrd];
+      const LocalOrdinal localIdOffset = entityToLID[entity.local_offset()];
+      const bool useOwned = localIdOffset < maxOwnedRowId;
+      const LinSys::LocalMatrix& local_matrix = useOwned ? ownedLocalMatrix : sharedNotOwnedLocalMatrix;
+      const LinSys::LocalVector& localRhs = useOwned ? ownedLocalRhs : sharedNotOwnedLocalRhs;
+      const double diagonalValue = useOwned ? 1.0 : 0.0;
 
       for(unsigned d=beginPos; d < endPos; ++d) {
         const LocalOrdinal localId = localIdOffset + d;
-        const bool useOwned = localId < maxOwnedRowId_;
-        const LocalOrdinal actualLocalId = useOwned ? localId : localId - maxOwnedRowId_;
-        Teuchos::RCP<LinSys::Matrix> matrix = useOwned ? ownedMatrix_ : sharedNotOwnedMatrix_;
-        const LinSys::LocalMatrix& local_matrix = useOwned ? ownedLocalMatrix_ : sharedNotOwnedLocalMatrix_;
+        const LocalOrdinal actualLocalId = useOwned ? localId : localId - maxOwnedRowId;
 
-        if(localId > maxSharedNotOwnedRowId_) {
-          std::cerr << "localId > maxSharedNotOwnedRowId_:: localId= " << localId << " maxSharedNotOwnedRowId_= " << maxSharedNotOwnedRowId_ << " useOwned = " << (localId < maxOwnedRowId_ ) << std::endl;
-          throw std::runtime_error("logic error: localId > maxSharedNotOwnedRowId_");
-        }
+        NGP_ThrowRequire(localId <= maxSharedNotOwnedRowId_);
 
-        // Adjust the LHS
-
-        const double diagonal_value = useOwned ? 1.0 : 0.0;
-
-        matrix->getLocalRowView(actualLocalId, indices, values);
-        const size_t rowLength = values.size();
-        if (rowLength > 0) {
-          new_values.resize(rowLength);
-          for(size_t i=0; i < rowLength; ++i) {
-              new_values[i] = (indices[i] == localId) ? diagonal_value : 0;
-          }
-          local_matrix.replaceValues(actualLocalId, &indices[0], rowLength, new_values.data(), internalMatrixIsSorted);
-        }
+        adjust_lhs_row(local_matrix.row(actualLocalId), actualLocalId, diagonalValue);
 
         // Replace the RHS residual with (desired - actual)
-        Teuchos::RCP<LinSys::MultiVector> rhs = useOwned ? ownedRhs_: sharedNotOwnedRhs_;
-        const double bc_residual = useOwned ? (bcValues[k*fieldSize + d] - solution[k*fieldSize + d]) : 0.0;
-        rhs->replaceLocalValue(actualLocalId, 0, bc_residual);
-        ++nbc;
+        const double bc_residual = useOwned ? (ngpBCValuesField.get(meshIdx, d) - ngpSolutionField.get(meshIdx, d)) : 0.0;
+        localRhs(actualLocalId,0) = bc_residual;
       }
     }
-  }
+  );
+
   adbc_time += NaluEnv::self().nalu_time();
 }
 
