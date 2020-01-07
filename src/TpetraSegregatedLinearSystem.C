@@ -93,9 +93,9 @@ TpetraSegregatedLinearSystem::TpetraSegregatedLinearSystem(
   LinearSolver * linearSolver)
   : LinearSystem(realm, numDof, eqSys, linearSolver)
 {
-  std::cout << "numDof=" << numDof << std::endl;
-  std::cout << "numDof_=" << numDof_ << std::endl;
-  crsGraph_ = Teuchos::rcp(new CrsGraph(realm,1));
+  if (realm.scalarGraph_ == Teuchos::null)
+    realm.scalarGraph_ = Teuchos::rcp(new CrsGraph(realm,1));
+  crsGraph_ = realm.scalarGraph_;
 }
 
 TpetraSegregatedLinearSystem::~TpetraSegregatedLinearSystem()

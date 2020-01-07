@@ -95,7 +95,15 @@ TpetraLinearSystem::TpetraLinearSystem(
   LinearSolver * linearSolver)
   : LinearSystem(realm, numDof, eqSys, linearSolver)
 {
-  crsGraph_ = Teuchos::rcp(new CrsGraph(realm,numDof));
+  if (numDof == 1) {
+    if (realm.scalarGraph_ == Teuchos::null)
+      realm.scalarGraph_ = Teuchos::rcp(new CrsGraph(realm,numDof));
+    crsGraph_ = realm.scalarGraph_;
+  } else {
+    if (realm.systemGraph_ == Teuchos::null)
+      realm.systemGraph_ = Teuchos::rcp(new CrsGraph(realm,numDof));
+    crsGraph_ = realm.systemGraph_;
+  }
 }
 
 TpetraLinearSystem::~TpetraLinearSystem()
