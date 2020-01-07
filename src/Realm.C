@@ -475,10 +475,6 @@ Realm::initialize()
   timerPopulateMesh_ += time;
   NaluEnv::self().naluOutputP0() << "Realm::ioBroker_->populate_mesh() End" << std::endl;
 
-  if (doBalanceNodes_) {
-    balance_nodes();
-  }
-
   // If we want to create all internal edges, we want to do it before
   // field-data is allocated because that allows better performance in
   // the create-edges code.
@@ -506,6 +502,10 @@ Realm::initialize()
     stk::balance::GraphCreationSettings rebalanceSettings;
     rebalanceSettings.setDecompMethod(rebalanceMethod_);
     stk::balance::balanceStkMesh(rebalanceSettings, *bulkData_);
+  }
+
+  if (doBalanceNodes_) {
+    balance_nodes();
   }
 
   if (doPromotion_) {
