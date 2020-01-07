@@ -499,6 +499,11 @@ Realm::initialize()
 
   // rebalance mesh using stk_balance
   if (rebalanceMesh_) {
+#ifndef HAVE_ZOLTAN2_PARMETIS
+  if (rebalanceMethod_ == "parmetis")
+    throw std::runtime_error("Zoltan2 is not built with parmetis enabled, "
+                             "try a geometric balance method instead (rcb or rib)");
+#endif
     stk::balance::GraphCreationSettings rebalanceSettings;
     rebalanceSettings.setDecompMethod(rebalanceMethod_);
     stk::balance::balanceStkMesh(rebalanceSettings, *bulkData_);
