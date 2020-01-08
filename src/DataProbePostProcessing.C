@@ -912,11 +912,20 @@ DataProbePostProcessing::provide_output_txt(
         if ( processorId == NaluEnv::self().parallel_rank()) {    
 
 	  // Get the path to the file name, and create any directories necessary
-	  size_t pathfound;
-	  pathfound = fileName.find_last_of("/");
-	  const std::string path = fileName.substr(0, pathfound);
-	  if (!boost::filesystem::exists(path)) {
-	    boost::filesystem::create_directories(path);
+	  boost::filesystem::path pathdir{fileName};
+	  if (pathdir.has_parent_path()) { 
+	    if (!boost::filesystem::exists(pathdir.parent_path().string())) 
+	      {
+		try{ 
+		  boost::filesystem::create_directories(pathdir.parent_path().string());
+		} catch(const boost::filesystem::filesystem_error& e) {
+		  NaluEnv::self().naluOutputP0() 
+		    << "Error creating "<< pathdir.parent_path().string() <<std::endl;
+		  NaluEnv::self().naluOutputP0()  
+		    << e.code().message()<<std::endl;
+		  throw std::runtime_error(e.code().message());
+		}
+	      }
 	  }
           
           // one banner per file 
@@ -996,13 +1005,20 @@ DataProbePostProcessing::provide_output_txt(
 	      const int pointsPerPlane = N1*N2;
 
 	      // Get the path to the file name, and create any directories necessary
-	      // - Get the path
-	      size_t pathfound; 
-	      pathfound = fileName.find_last_of("/");
-	      const std::string path = fileName.substr(0, pathfound);
-	      // - Create the path, if necessary
-	      if (!boost::filesystem::exists(path)) {
-		boost::filesystem::create_directories(path);
+	      boost::filesystem::path pathdir{fileName};
+	      if (pathdir.has_parent_path()) { 
+		if (!boost::filesystem::exists(pathdir.parent_path().string())) 
+		  {
+		    try{ 
+		      boost::filesystem::create_directories(pathdir.parent_path().string());
+		    } catch(const boost::filesystem::filesystem_error& e) {
+		      NaluEnv::self().naluOutputP0() 
+			<< "Error creating "<< pathdir.parent_path().string() <<std::endl;
+		      NaluEnv::self().naluOutputP0()  
+			<< e.code().message()<<std::endl;
+		      throw std::runtime_error(e.code().message());
+		    }
+		  }
 	      }
 
 	      myfile.open(fileName.c_str(), std::ios_base::out); // std::ios_base::app
