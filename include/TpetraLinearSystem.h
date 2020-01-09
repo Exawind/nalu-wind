@@ -241,8 +241,6 @@ private:
   void checkForNaN(bool useOwned);
   bool checkForZeroRow(bool useOwned, bool doThrow, bool doPrint=false);
 
-  Teuchos::RCP<LinSys::Node>   node_; //TODO delete this
-
   Teuchos::RCP<LinSys::Matrix> ownedMatrix_;
   Teuchos::RCP<LinSys::MultiVector> ownedRhs_;
   LinSys::LocalMatrix ownedLocalMatrix_;

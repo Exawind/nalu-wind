@@ -22,7 +22,8 @@ namespace nalu{
 TurbViscSSTAlg::TurbViscSSTAlg(
   Realm &realm,
   stk::mesh::Part *part,
-  ScalarFieldType* tvisc
+  ScalarFieldType* tvisc,
+  const bool useAverages
 ) : Algorithm(realm, part),
     tviscField_(tvisc),
     density_(get_field_ordinal(realm.meta_data(), "density")),
@@ -30,7 +31,7 @@ TurbViscSSTAlg::TurbViscSSTAlg(
     tke_(get_field_ordinal(realm.meta_data(), "turbulent_ke")),
     sdr_(get_field_ordinal(realm.meta_data(), "specific_dissipation_rate")),
     minDistance_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
-    dudx_(get_field_ordinal(realm.meta_data(), "dudx")),
+    dudx_(get_field_ordinal(realm.meta_data(), (useAverages) ? "average_dudx" : "dudx")),
     tvisc_(tvisc->mesh_meta_data_ordinal()),
     aOne_(realm.get_turb_model_constant(TM_aOne)),
     betaStar_(realm.get_turb_model_constant(TM_betaStar))

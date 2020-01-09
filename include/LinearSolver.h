@@ -16,6 +16,7 @@
 #include <LinearSolverConfig.h>
 
 #include <Kokkos_DefaultNode.hpp>
+#include <Tpetra_Details_DefaultTypes.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 #include <Teuchos_GlobalMPISession.hpp>
@@ -25,11 +26,11 @@
 
 // Header files defining default types for template parameters.
 // These headers must be included after other MueLu/Xpetra headers.
-typedef double                                                        Scalar;
-typedef long                                                          GlobalOrdinal;
-typedef int                                                           LocalOrdinal;
-typedef Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type           Node;
-typedef Teuchos::ScalarTraits<Scalar> STS;
+using Scalar        = sierra::nalu::LinSys::Scalar;
+using GlobalOrdinal = sierra::nalu::LinSys::GlobalOrdinal;
+using LocalOrdinal  = sierra::nalu::LinSys::LocalOrdinal;
+using Node          = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
+using STS           = Teuchos::ScalarTraits<Scalar>;
 
 // MueLu main header: include most common header files in one line
 #include <MueLu.hpp>

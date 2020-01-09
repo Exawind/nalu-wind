@@ -301,7 +301,7 @@ public:
     double *det_j,
     double *error);
 
-  const int* side_node_ordinals(int sideOrdinal) const final;
+  KOKKOS_FUNCTION const int* side_node_ordinals(int sideOrdinal) const final;
 
   double parametric_distance(const std::array<double,3>& x);
 

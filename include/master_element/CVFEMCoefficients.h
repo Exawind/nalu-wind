@@ -10,8 +10,8 @@
 #ifndef HighOrderCoefficients_h
 #define HighOrderCoefficients_h
 
-#include <element_promotion/QuadratureRule.h>
-#include <element_promotion/LagrangeBasis.h>
+#include <master_element/QuadratureRule.h>
+#include <master_element/LagrangeBasis.h>
 #include <CVFEMTypeDefs.h>
 
 #include <stk_util/util/ReportHandler.hpp>

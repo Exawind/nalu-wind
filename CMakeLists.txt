@@ -1,7 +1,6 @@
 ############################ BASE ######################################
 cmake_minimum_required (VERSION 3.10.0 FATAL_ERROR)
 project(Nalu CXX Fortran)
-
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ########################## OPTIONS #####################################
@@ -34,34 +33,36 @@ add_library(nalu "")
 add_executable(${nalu_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/nalu.C)
 add_executable(${utest_ex_name} ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.C)
 
+########################## MPI ####################################
 find_package(MPI REQUIRED)
-
-if(ENABLE_OPENMP)
-  find_package(OpenMP)
-  separate_arguments(OpenMP_CXX_FLAGS)
-  separate_arguments(OpenMP_Fortran_FLAGS)
-  target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>)
-  target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:Fortran>:${OpenMP_Fortran_FLAGS}>)
-endif()
+target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>)
+target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_Fortran_FOUND}>:MPI::MPI_Fortran>)
 
 ########################## TRILINOS ####################################
+set(USER_Trilinos_DIR ${Trilinos_DIR})
 set(CMAKE_PREFIX_PATH ${Trilinos_DIR} ${CMAKE_PREFIX_PATH})
-find_package(Trilinos REQUIRED)
+find_package(Trilinos QUIET REQUIRED)
 if(Trilinos_FOUND)
-  message(STATUS "Found Trilinos = ${Trilinos_DIR}")
+  message(STATUS "Found Trilinos = ${USER_Trilinos_DIR}")
+  target_link_libraries(nalu PUBLIC ${Trilinos_LIBRARIES})
+  target_include_directories(nalu SYSTEM PUBLIC ${Trilinos_INCLUDE_DIRS})
+  target_include_directories(nalu SYSTEM PUBLIC ${Trilinos_TPL_INCLUDE_DIRS})
+  if(Trilinos_BUILD_SHARED_LIBS)
+    set(BUILD_SHARED_LIBS ON)
+  endif()
 endif()
-target_include_directories(nalu SYSTEM PUBLIC ${Trilinos_INCLUDE_DIRS})
-target_include_directories(nalu SYSTEM PUBLIC ${Trilinos_TPL_INCLUDE_DIRS})
 
-# Build Nalu as shared libraries if that is how Trilinos was built
-if(Trilinos_BUILD_SHARED_LIBS)
-  set(Nalu_LIBRARY_TYPE SHARED)
-  set(BUILD_SHARED_LIBS ON)
-else(Trilinos_BUILD_SHARED_LIBS)
-  set(Nalu_LIBRARY_TYPE STATIC)
-endif(Trilinos_BUILD_SHARED_LIBS)
+############################ BOOST #####################################
+set(USER_BOOST_DIR ${Boost_DIR})
+set(CMAKE_PREFIX_PATH ${Boost_DIR} ${CMAKE_PREFIX_PATH})
+find_package(Boost REQUIRED QUIET COMPONENTS filesystem)
+if(Boost_FOUND)
+  message(STATUS "Found Boost = ${USER_BOOST_DIR}")
+  target_link_libraries(nalu PUBLIC ${Boost_LIBRARIES})
+endif()
 
 ############################ YAML ######################################
+set(USER_YAML_DIR ${YAML_DIR})
 set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
 find_package(YAML-CPP QUIET)
 if(YAML-CPP_FOUND)
@@ -77,9 +78,17 @@ else()
   endif()
 endif()
 if(YAML-CPP_FOUND)
-  message(STATUS "Found YAML-CPP = ${YAML_DIR}")
+  message(STATUS "Found YAML-CPP = ${USER_YAML_DIR}")
+  target_link_libraries(nalu PUBLIC ${YAML_CPP_LIBRARIES})
 else()
   message(FATAL_ERROR "YAML-CPP NOT FOUND")
+endif()
+
+########################## OpenMP ####################################
+if(ENABLE_OPENMP)
+  find_package(OpenMP REQUIRED)
+  target_link_libraries(nalu PUBLIC $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>)
+  target_link_libraries(nalu PUBLIC $<$<BOOL:${OpenMP_Fortran_FOUND}>:OpenMP::OpenMP_Fortran>)
 endif()
 
 ############################ CUDA ######################################
@@ -92,74 +101,76 @@ endif()
 
 ############################ FFTW ######################################
 if(ENABLE_FFTW)
+  set(USER_FFTW_DIR ${FFTW_DIR})
   set(CMAKE_PREFIX_PATH ${FFTW_DIR} ${CMAKE_PREFIX_PATH})
   find_package(FFTW QUIET REQUIRED)
   if(FFTW_FOUND)
-    message(STATUS "Found FFTW = ${FFTW_DIR}")
+    message(STATUS "Found FFTW = ${USER_FFTW_DIR}")
+    target_link_libraries(nalu PUBLIC ${FFTW_LIBRARIES})
+    target_include_directories(nalu SYSTEM PUBLIC ${FFTW_INCLUDE_DIRS})
+    target_compile_definitions(nalu PUBLIC NALU_USES_FFTW)
   endif()
-  target_include_directories(nalu SYSTEM PUBLIC ${FFTW_INCLUDE_DIRS})
-  target_link_libraries(nalu PUBLIC ${FFTW_LIBRARIES})
-  target_compile_definitions(nalu PUBLIC NALU_USES_FFTW)
-endif(ENABLE_FFTW)
+endif()
 
 ############################ HYPRE #####################################
 if(ENABLE_HYPRE)
+  set(USER_HYPRE_DIR ${HYPRE_DIR})
   set(CMAKE_PREFIX_PATH ${HYPRE_DIR} ${CMAKE_PREFIX_PATH})
   find_package(HYPRE QUIET REQUIRED)
   if(HYPRE_FOUND)
-    message(STATUS "Found HYPRE = ${HYPRE_DIR}")
+    message(STATUS "Found HYPRE = ${USER_HYPRE_DIR}")
+    target_link_libraries(nalu PUBLIC ${HYPRE_LIBRARIES})
+    target_include_directories(nalu SYSTEM PUBLIC ${HYPRE_INCLUDE_DIRS})
+    target_compile_definitions(nalu PUBLIC NALU_USES_HYPRE)
+    include(CheckCXXSymbolExists)
+    set(CMAKE_REQUIRED_INCLUDES "${HYPRE_INCLUDE_DIRS}")
+    set(CMAKE_REQUIRED_LIBRARIES "${HYPRE_LIBRARIES}")
+    check_cxx_symbol_exists(
+      HYPRE_BIGINT "${HYPRE_INCLUDE_DIRS}/HYPRE_config.h" NALU_HYPRE_BIGINT)
+    check_cxx_symbol_exists(
+      hypre_KRYLOV_COGMRES_HEADER "${HYPRE_INCLUDE_DIRS}/krylov.h" NALU_HYPRE_COGMRES)
+    if(NOT NALU_HYPRE_BIGINT)
+      message(WARNING
+        "HYPRE does not enable 64-bit integer support; will fail on large problems!")
+    endif()
+    if (NALU_HYPRE_COGMRES)
+      target_compile_definitions(nalu PUBLIC HYPRE_COGMRES)
+    else()
+      message(STATUS "Disabling HYPRE CO-GMRES interface")
+    endif()
   endif()
-  target_include_directories(nalu SYSTEM PUBLIC ${HYPRE_INCLUDE_DIRS})
-  target_link_libraries(nalu PUBLIC ${HYPRE_LIBRARIES})
-  target_compile_definitions(nalu PUBLIC NALU_USES_HYPRE)
-
-  include(CheckCXXSymbolExists)
-  set(CMAKE_REQUIRED_INCLUDES "${HYPRE_INCLUDE_DIRS}")
-  set(CMAKE_REQUIRED_LIBRARIES "${HYPRE_LIBRARIES}")
-  check_cxx_symbol_exists(
-    HYPRE_BIGINT "${HYPRE_INCLUDE_DIRS}/HYPRE_config.h" NALU_HYPRE_BIGINT)
-  check_cxx_symbol_exists(
-    hypre_KRYLOV_COGMRES_HEADER "${HYPRE_INCLUDE_DIRS}/krylov.h" NALU_HYPRE_COGMRES)
-  if(NOT NALU_HYPRE_BIGINT)
-    message(WARNING
-      "HYPRE does not enable 64-bit integer support; will fail on large problems!")
-  endif()
-  if (NALU_HYPRE_COGMRES)
-    target_compile_definitions(nalu PUBLIC HYPRE_COGMRES)
-  else()
-    message(STATUS "Disabling HYPRE CO-GMRES interface")
-  endif()
-endif(ENABLE_HYPRE)
+endif()
 
 ########################## OPENFAST ####################################
 if(ENABLE_OPENFAST)
+  set(USER_OpenFAST_DIR ${OpenFAST_DIR})
   set(CMAKE_PREFIX_PATH ${OpenFAST_DIR} ${CMAKE_PREFIX_PATH})
-  find_package(OpenFAST REQUIRED)
+  find_package(OpenFAST QUIET REQUIRED)
   if(OpenFAST_FOUND)
-    message(STATUS "Found OpenFAST = ${OpenFAST_DIR}")
+    message(STATUS "Found OpenFAST = ${USER_OpenFAST_DIR}")
+    target_link_libraries(nalu PUBLIC ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
+    target_include_directories(nalu SYSTEM PUBLIC ${OpenFAST_INCLUDE_DIRS})
+    target_compile_definitions(nalu PUBLIC NALU_USES_OPENFAST)
   endif()
-  target_include_directories(nalu SYSTEM PUBLIC ${OpenFAST_INCLUDE_DIRS})
-  target_link_libraries(nalu PUBLIC ${OpenFAST_LIBRARIES} ${OpenFAST_CPP_LIBRARIES})
-  target_compile_definitions(nalu PUBLIC NALU_USES_OPENFAST)
-endif(ENABLE_OPENFAST)
+endif()
 
 ############################ TIOGA #####################################
 if(ENABLE_TIOGA)
+  set(USER_TIOGA_DIR ${TIOGA_DIR})
   set(CMAKE_PREFIX_PATH ${TIOGA_DIR} ${CMAKE_PREFIX_PATH})
-  find_package(TIOGA REQUIRED)
+  find_package(TIOGA QUIET REQUIRED)
   if(TIOGA_FOUND)
-    message(STATUS "Found TIOGA = ${TIOGA_DIR}")
-  endif()
-  target_include_directories(nalu SYSTEM PUBLIC ${TIOGA_INCLUDE_DIRS})
-  target_link_libraries(nalu PUBLIC ${TIOGA_LIBRARIES})
-  target_compile_definitions(nalu PUBLIC NALU_USES_TIOGA)
-  if(TIOGA_HAS_NODEGID)
-    target_compile_definitions(nalu PUBLIC TIOGA_HAS_NODEGID)
+    message(STATUS "Found TIOGA = ${USER_TIOGA_DIR}")
+    target_link_libraries(nalu PUBLIC ${TIOGA_LIBRARIES})
+    target_include_directories(nalu SYSTEM PUBLIC ${TIOGA_INCLUDE_DIRS})
+    target_compile_definitions(nalu PUBLIC NALU_USES_TIOGA)
+    if(TIOGA_HAS_NODEGID)
+      target_compile_definitions(nalu PUBLIC TIOGA_HAS_NODEGID)
+    endif()
   endif()
 endif()
 
 ########################### NALU #####################################
-# Add any extra flags based on compiler and/or OS
 message(STATUS "CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
 message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
@@ -186,7 +197,7 @@ if(ENABLE_ALL_WARNINGS)
   endif()
 endif()
 
-# Add our flags according to language
+# Add our extra flags according to language
 separate_arguments(NALU_CXX_FLAGS)
 separate_arguments(NALU_Fortran_FLAGS)
 target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${NALU_CXX_FLAGS}>)
@@ -224,16 +235,8 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/NaluVersionInfo.h.in"
   "${CMAKE_BINARY_DIR}/include/NaluVersionInfo.h" @ONLY)
 #### END TAG VERSIONS
 
-# Set target options for libnalu
 target_include_directories(nalu PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_include_directories(nalu PUBLIC ${CMAKE_BINARY_DIR}/include)
-target_include_directories(nalu SYSTEM PUBLIC ${MPI_CXX_INCLUDE_PATH} ${MPI_Fortran_INCLUDE_PATH})
-target_link_libraries(nalu PUBLIC ${Trilinos_LIBRARIES})
-target_link_libraries(nalu PUBLIC ${YAML_CPP_LIBRARIES})
-target_link_libraries(nalu PUBLIC MPI::MPI_CXX MPI::MPI_Fortran)
-if(MPI_COMPILE_FLAGS)
-  set_target_properties(nalu PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
-endif(MPI_COMPILE_FLAGS)
 
 # Most linking, etc, is set to PUBLIC for libnalu, so we merely link to libnalu for the exes
 target_link_libraries(${nalu_ex_name} PRIVATE nalu)

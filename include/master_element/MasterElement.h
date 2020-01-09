@@ -295,7 +295,10 @@ public:
   virtual const double* integration_locations()      const {throw std::runtime_error("integration_locations not implemented");}
   virtual const double* integration_location_shift() const {throw std::runtime_error("adjacentNodes not implimented");}
   virtual const double* integration_exp_face_shift() const {throw std::runtime_error("integration_exp_face_shift not implimented");}
-  virtual const int   * side_node_ordinals(int)      const {throw std::runtime_error("side_node_ordinals not implemented");}
+  KOKKOS_FUNCTION virtual const int   * side_node_ordinals(int)      const {
+    NGP_ThrowErrorMsg("side_node_ordinals not implemented");
+    return nullptr;
+  }
 
 
   int nDim_;

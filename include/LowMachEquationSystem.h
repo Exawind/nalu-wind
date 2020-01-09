@@ -12,9 +12,12 @@
 #ifndef LowMachEquationSystem_h
 #define LowMachEquationSystem_h
 
+#include <memory>
+
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
 #include "NaluParsing.h"
+#include "TAMSAlgDriver.h"
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 #include "ngp_algorithms/WallFricVelAlgDriver.h"
@@ -31,10 +34,10 @@ class AlgorithmDriver;
 class Realm;
 class MomentumEquationSystem;
 class ContinuityEquationSystem;
-class ComputeMdotAlgorithmDriver;
 class LinearSystem;
 class ProjectedNodalGradientEquationSystem;
 class SurfaceForceAndMomentAlgorithmDriver;
+class MdotAlgDriver;
 
 /** Low-Mach formulation of the Navier-Stokes Equations
  *
@@ -120,6 +123,7 @@ public:
   virtual ~MomentumEquationSystem();
 
   virtual void initial_work() override;
+  virtual void pre_timestep_work() override;
 
   virtual void register_nodal_fields(
     stk::mesh::Part *part) override;
@@ -217,6 +221,7 @@ public:
   std::unique_ptr<Algorithm> tviscAlg_{nullptr};
 
   AlgorithmDriver *cflReyAlgDriver_;
+  std::unique_ptr<TAMSAlgDriver> TAMSAlgDriver_{nullptr};
 
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 
@@ -309,7 +314,7 @@ public:
   ScalarFieldType *pTmp_;
 
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
-  ComputeMdotAlgorithmDriver *computeMdotAlgDriver_;
+  std::unique_ptr<MdotAlgDriver> mdotAlgDriver_;
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 };
 

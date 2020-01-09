@@ -28,6 +28,9 @@ class ScratchViews;
 
 namespace nalu_ngp {
 
+//! maximum number of dimensions for arrays
+constexpr int NDimMax = 3;
+
 /** Lightweight data structure holding information of the entity in mesh loops
  *
  *  The bucket loop wrappers provide this object to the lambda function for use

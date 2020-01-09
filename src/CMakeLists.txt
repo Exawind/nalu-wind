@@ -9,7 +9,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleCourantReynoldsElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleElemSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleElemSolverAlgorithmHO.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleFaceElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleEdgeSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleHeatCondIrradWallSolverAlgorithm.C
@@ -54,12 +53,9 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeGeometryInteriorAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeHeatTransferEdgeWallAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeHeatTransferElemWallAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotAlgorithmDriver.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotEdgeOpenAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemOpenAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemOpenPenaltyAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotInflowAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotNonConformalAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeSSTMaxLengthScaleElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeWallFrictionVelocityAlgorithm.C
@@ -135,6 +131,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentWallFunctionAlgorithm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/TAMSAlgDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TimeIntegrator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraSegregatedLinearSystem.C

@@ -163,20 +163,10 @@ public:
   double latitude_;
   double raBoussinesqTimeScale_;
 
-  // mdot post processing
-  double mdotAlgAccumulation_;
-  double mdotAlgInflow_;
-  double mdotAlgOpen_;
- 
   // global mdot correction alg
   bool activateOpenMdotCorrection_;
   double mdotAlgOpenCorrection_;
-  size_t mdotAlgOpenIpCount_;
-  double mdotAlgOpenPost_;
   bool explicitlyZeroOpenPressureGradient_;
-
-  // option for consistent mass png
-  bool useConsoldiatedPngSolverAlg_;
 
   // turbulence model coeffs
   std::map<TurbulenceModelConstant, double> turbModelConstantMap_;
@@ -219,6 +209,7 @@ public:
   std::map<std::string, std::string> inputVarFromFileMap_;
 
   std::vector<double> gravity_;
+  std::vector<double> bodyForce_;
 
   // Coriolis source term
   std::vector<double> eastVector_;
@@ -235,6 +226,7 @@ public:
 
   bool newHO_;
 
+  bool resetTAMSAverages_;
 };
 
 } // namespace nalu

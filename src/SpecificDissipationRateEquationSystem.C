@@ -16,9 +16,7 @@
 #include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
-#include <AssembleNodalGradEdgeAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
-#include <AssembleNodalGradBoundaryAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AuxFunctionAlgorithm.h>
 #include <ConstantAuxFunction.h>
@@ -57,6 +55,7 @@
 
 // edge kernels
 #include <edge_kernels/ScalarEdgeSolverAlg.h>
+#include <edge_kernels/ScalarOpenEdgeKernel.h>
 
 // node kernels
 #include <node_kernels/NodeKernelUtils.h>
@@ -75,6 +74,10 @@
 #include "ngp_algorithms/SDRLowReWallAlg.h"
 #include "ngp_algorithms/SDRWallFuncAlgDriver.h"
 #include "utils/StkHelpers.h"
+
+// UT Austin Hybrid TAMS kernel
+#include <kernel/SpecificDissipationRateSSTTAMSSrcElemKernel.h>
+#include <node_kernels/SDRSSTTAMSNodeKernel.h>
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -232,7 +235,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
-        theAlg = new ScalarEdgeSolverAlg(realm_, part, this, sdr_, dwdx_, evisc_);
+        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS) ? true : false;
+        theAlg = new ScalarEdgeSolverAlg(realm_, part, this, sdr_, dwdx_, evisc_, useAvgMdot);
       }
       else {
         theAlg = new AssembleScalarElemSolverAlgorithm(realm_, part, this, sdr_, dwdx_, evisc_);
@@ -296,12 +300,14 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
-        if (SST_DES == realm_.solutionOptions_->turbulenceModel_){
-          nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
-
-        }
-        else {
+        if (SST == realm_.solutionOptions_->turbulenceModel_){
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
+        }
+        else if (SST_DES == realm_.solutionOptions_->turbulenceModel_){
+          nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
+        }
+        else if (SST_TAMS == realm_.solutionOptions_->turbulenceModel_){
+          nodeAlg.add_kernel<SDRSSTTAMSNodeKernel>(realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
         }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
@@ -343,9 +349,17 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         (partTopo, *this, activeKernels, "advection_diffusion",
          realm_.bulk_data(), *realm_.solutionOptions_, sdr_, evisc_, dataPreReqs);
 
+      build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
+        (partTopo, *this, activeKernels, "TAMS_advection_diffusion",
+         realm_.bulk_data(), *realm_.solutionOptions_, sdr_, evisc_, dataPreReqs, true);
+
       build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
         (partTopo, *this, activeKernels, "upw_advection_diffusion",
         realm_.bulk_data(), *realm_.solutionOptions_, this, sdr_, dwdx_, evisc_, dataPreReqs);
+
+      build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
+        (partTopo, *this, activeKernels, "TAMS_upw_advection_diffusion",
+         realm_.bulk_data(), *realm_.solutionOptions_, this, sdr_, dwdx_, evisc_, dataPreReqs, true);
 
       build_topo_kernel_if_requested<SpecificDissipationRateSSTSrcElemKernel>
         (partTopo, *this, activeKernels, "sst",
@@ -378,6 +392,15 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       build_topo_kernel_if_requested<ScalarNSOElemKernel>
         (partTopo, *this, activeKernels, "NSO_4TH_ALT",
          realm_.bulk_data(), *realm_.solutionOptions_, sdr_, dwdx_, evisc_, 1.0, 1.0, dataPreReqs);
+
+      // UT Austin Hybrid TAMS model implementations for SDR source terms
+      build_topo_kernel_if_requested<SpecificDissipationRateSSTTAMSSrcElemKernel>
+        (partTopo, *this, activeKernels, "sst_tams",
+         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, false);
+
+      build_topo_kernel_if_requested<SpecificDissipationRateSSTTAMSSrcElemKernel>
+        (partTopo, *this, activeKernels, "lumped_sst_tams",
+         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, true);
 
       report_invalid_supp_alg_names();
       report_built_supp_alg_names();
@@ -451,8 +474,7 @@ SpecificDissipationRateEquationSystem::register_inflow_bc(
   bcDataMapAlg_.push_back(theCopyAlg);
 
   // non-solver; dwdx; allow for element-based shifted
-  nodalGradAlgDriver_.register_face_algorithm<
-    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 
   // Dirichlet bc
@@ -475,7 +497,7 @@ SpecificDissipationRateEquationSystem::register_inflow_bc(
 void
 SpecificDissipationRateEquationSystem::register_open_bc(
   stk::mesh::Part *part,
-  const stk::topology &/*theTopo*/,
+  const stk::topology & partTopo,
   const OpenBoundaryConditionData &openBCData)
 {
 
@@ -508,25 +530,41 @@ SpecificDissipationRateEquationSystem::register_open_bc(
   bcDataAlg_.push_back(auxAlg);
 
   // non-solver; dwdx; allow for element-based shifted
-  nodalGradAlgDriver_.register_face_algorithm<
-    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 
-  // solver open; lhs
-  std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
-    = solverAlgDriver_->solverAlgMap_.find(algType);
-  if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-    SolverAlgorithm *theAlg = NULL;
-    if ( realm_.realmUsesEdges_ ) {
-      theAlg = new AssembleScalarEdgeOpenSolverAlgorithm(realm_, part, this, sdr_, theBcField, &dwdxNone, evisc_);
-    }
-    else {
-      theAlg = new AssembleScalarElemOpenSolverAlgorithm(realm_, part, this, sdr_, theBcField, &dwdxNone, evisc_);
-    }
-    solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+  if (realm_.realmUsesEdges_) {
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    AssembleElemSolverAlgorithm* elemSolverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+
+    std::tie(elemSolverAlg, solverAlgWasBuilt)
+      = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "open");
+
+    auto& dataPreReqs = elemSolverAlg->dataNeededByKernels_;
+    auto& activeKernels = elemSolverAlg->activeKernels_;
+
+    build_face_topo_kernel_automatic<ScalarOpenEdgeKernel>(
+      partTopo, *this, activeKernels, "sdr_open",
+      realm_.meta_data(), *realm_.solutionOptions_, sdr_, theBcField, dataPreReqs);
   }
   else {
-    itsi->second->partVec_.push_back(part);
+    // solver open; lhs
+    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
+      = solverAlgDriver_->solverAlgMap_.find(algType);
+    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
+      SolverAlgorithm *theAlg = NULL;
+      if ( realm_.realmUsesEdges_ ) {
+        theAlg = new AssembleScalarEdgeOpenSolverAlgorithm(realm_, part, this, sdr_, theBcField, &dwdxNone, evisc_);
+      }
+      else {
+        theAlg = new AssembleScalarElemOpenSolverAlgorithm(realm_, part, this, sdr_, theBcField, &dwdxNone, evisc_);
+      }
+      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+    }
+    else {
+      itsi->second->partVec_.push_back(part);
+    }
   }
 
 }
@@ -588,8 +626,7 @@ SpecificDissipationRateEquationSystem::register_wall_bc(
   }
 
   // non-solver; dwdx; allow for element-based shifted
-  nodalGradAlgDriver_.register_face_algorithm<
-    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 }
 
@@ -611,8 +648,7 @@ SpecificDissipationRateEquationSystem::register_symmetry_bc(
   VectorFieldType &dwdxNone = dwdx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; dwdx; allow for element-based shifted
-  nodalGradAlgDriver_.register_face_algorithm<
-    ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
 }
 
@@ -633,8 +669,7 @@ SpecificDissipationRateEquationSystem::register_non_conformal_bc(
 
   // non-solver; contribution to dwdx; DG algorithm decides on locations for integration points
   if ( edgeNodalGradient_ ) {
-    nodalGradAlgDriver_.register_face_algorithm<
-      ScalarNodalGradBndryElemAlg, AssembleNodalGradBoundaryAlgorithm>(
+    nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
         algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone, edgeNodalGradient_);
   }
   else {

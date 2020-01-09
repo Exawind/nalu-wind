@@ -92,16 +92,10 @@ SolutionOptions::SolutionOptions()
     earthAngularVelocity_(7.2921159e-5),
     latitude_(0.0),
     raBoussinesqTimeScale_(-1.0),
-    mdotAlgAccumulation_(0.0),
-    mdotAlgInflow_(0.0),
-    mdotAlgOpen_(0.0),
     activateOpenMdotCorrection_(false),
     mdotAlgOpenCorrection_(0.0),
-    mdotAlgOpenIpCount_(0),
-    mdotAlgOpenPost_(0.0),
     explicitlyZeroOpenPressureGradient_(false),
-    useConsoldiatedPngSolverAlg_(false),
-    newHO_(false)
+    resetTAMSAverages_(true)
 {
   // nothing to do
 }
@@ -156,8 +150,6 @@ SolutionOptions::load(const YAML::Node & y_node)
     // check for consolidated face-elem bc alg
     get_if_present(y_solution_options, "use_consolidated_face_elem_bc_algorithm", useConsolidatedBcSolverAlg_, useConsolidatedBcSolverAlg_);
 
-    // use a consolidated alg for the consistent mass PNG
-    get_if_present(y_solution_options, "use_consolidated_png", useConsoldiatedPngSolverAlg_);
 
     // eigenvalue purturbation; over all dofs...
     get_if_present(y_solution_options, "eigenvalue_perturbation", eigenvaluePerturb_);
@@ -165,8 +157,6 @@ SolutionOptions::load(const YAML::Node & y_node)
     get_if_present(y_solution_options, "eigenvalue_perturbation_bias_towards", eigenvaluePerturbBiasTowards_);
     get_if_present(y_solution_options, "eigenvalue_perturbation_turbulent_ke", eigenvaluePerturbTurbKe_);
     
-    // quadrature type for high order
-    get_if_present(y_solution_options, "tensor_product_cvfem", newHO_);
 
     std::string projected_timescale_type = "default";
     get_if_present(y_solution_options, "projected_timescale_type",
@@ -177,6 +167,10 @@ SolutionOptions::load(const YAML::Node & y_node)
       tscaleType_ = TSCALE_UDIAGINV;
     else
       throw std::runtime_error("SolutionOptions: Invalid option provided for projected_timescale_type");
+
+    // reset running TAMS averages to instantaneous quantities during intialization
+    // you would want to do this when restarting from a RANS simulation 
+    get_if_present(y_solution_options, "reset_TAMS_averages_on_init", resetTAMSAverages_, resetTAMSAverages_);
 
     // extract turbulence model; would be nice if we could parse an enum..
     std::string specifiedTurbModel;
@@ -337,6 +331,13 @@ SolutionOptions::load(const YAML::Node & y_node)
             gravity_.resize(gravSize);
             for (int i = 0; i < gravSize; ++i ) {
               gravity_[i] = y_user_constants["gravity"][i].as<double>() ;
+            }
+          }
+          if (expect_sequence( y_user_constants, "body_force", optional) ) {
+            const int bodyForceSize = y_user_constants["body_force"].size();
+            bodyForce_.resize(bodyForceSize);
+            for (int i = 0; i < bodyForceSize; ++i ) {
+              bodyForce_[i] = y_user_constants["body_force"][i].as<double>() ;
             }
           }
           if (expect_sequence( y_user_constants, "east_vector", optional) ) {
@@ -618,7 +619,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_kappa] = 0.41;
   turbModelConstantMap_[TM_cDESke] = 0.61; 
   turbModelConstantMap_[TM_cDESkw] = 0.78;
-  turbModelConstantMap_[TM_tkeProdLimitRatio] = (turbulenceModel_ == SST || turbulenceModel_ == SST_DES) ? 10.0 : 500.0;
+  turbModelConstantMap_[TM_tkeProdLimitRatio] = (turbulenceModel_ == SST || turbulenceModel_ == SST_DES || turbulenceModel_ == SST_TAMS) ? 10.0 : 500.0;
   turbModelConstantMap_[TM_cmuEps] = 0.0856; 
   turbModelConstantMap_[TM_cEps] = 0.845;
   turbModelConstantMap_[TM_betaStar] = 0.09;
@@ -639,6 +640,14 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_ci] = 0.9;
   turbModelConstantMap_[TM_elog] = 9.8;
   turbModelConstantMap_[TM_yplus_crit] = 11.63;
+  turbModelConstantMap_[TM_CMdeg] = 0.13;
+  turbModelConstantMap_[TM_forCl] = 4.0;
+  turbModelConstantMap_[TM_forCeta] = 70.0;
+  turbModelConstantMap_[TM_forCt] = 6.0;
+  turbModelConstantMap_[TM_forBlT] = 1.0;
+  turbModelConstantMap_[TM_forBlKol] = 1.0;
+  turbModelConstantMap_[TM_forFac] = 8.0;
+  turbModelConstantMap_[TM_v2cMu] = 0.22;
 }
 
 

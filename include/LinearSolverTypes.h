@@ -13,7 +13,6 @@
 #define LinearSolverTypes_h
 
 #include <CrsGraphTypes.h>
-
 #include <Tpetra_CrsMatrix.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_MultiVector.hpp>
@@ -64,36 +63,35 @@ class TpetraLinearSolver;
 
 struct LinSys {
 
-typedef GraphTypes::GlobalOrdinal   GlobalOrdinal; // MUST be signed
-typedef GraphTypes::LocalOrdinal    LocalOrdinal;  // MUST be signed
-typedef double Scalar;
+  using Scalar        = Tpetra::Details::DefaultTypes::scalar_type;
+  using GlobalOrdinal =  GraphTypes::GlobalOrdinal;
+  using LocalOrdinal = GraphTypes::LocalOrdinal;
 
-typedef GraphTypes::RowLengths                             RowLengths;
-typedef GraphTypes::DeviceRowLengths                       DeviceRowLengths;
-typedef GraphTypes::HostRowLengths                         HostRowLengths;
-typedef GraphTypes::Node                                   Node;
-typedef GraphTypes::Graph                                  Graph;
-typedef GraphTypes::LocalGraph                             LocalGraph;
-typedef GraphTypes::Comm                                   Comm;
-typedef GraphTypes::Export                                 Export;
-typedef GraphTypes::Import                                 Import;
-typedef GraphTypes::Map                                    Map;
+  using RowLengths        = GraphTypes::RowLengths;
+  using DeviceRowLengths  = GraphTypes::DeviceRowLengths;
+  using HostRowLengths    = GraphTypes::HostRowLengths;
+  using Node              = GraphTypes::Node;
+  using Graph             = GraphTypes::Graph;
+  using LocalGraph        = GraphTypes::LocalGraph;
+  using Comm              = GraphTypes::Comm;
+  using Export            = GraphTypes::Export;
+  using Import            = GraphTypes::Import;
+  using Map               = GraphTypes::Map;
+  using MultiVector       = Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>;
+  using OneDVector        = Teuchos::ArrayRCP<Scalar >;
+  using ConstOneDVector   = Teuchos::ArrayRCP<const Scalar >;
+  using LocalVector       = MultiVector::dual_view_type::t_host;
+  using Matrix            = Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using LocalMatrix       = Matrix::local_matrix_type;
+  using Operator          = Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using MultiVectorTraits = Belos::MultiVecTraits<Scalar, MultiVector>;
+  using OperatorTraits    = Belos::OperatorTraits<Scalar,MultiVector, Operator>;
+  using LinearProblem     = Belos::LinearProblem<Scalar, MultiVector, Operator>;
+  using SolverManager     = Belos::SolverManager<Scalar, MultiVector, Operator>;
+  using SolverFactory     = Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>;
+  using Preconditioner    = Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 
-typedef Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>        MultiVector;
-typedef Teuchos::ArrayRCP<Scalar >                                         OneDVector;
-typedef Teuchos::ArrayRCP<const Scalar >                                   ConstOneDVector;
-typedef MultiVector::dual_view_type::t_host                                LocalVector;
-typedef Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>       Matrix;
-typedef Matrix::local_matrix_type                                          LocalMatrix;
-typedef Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>        Operator;
-typedef Belos::MultiVecTraits<Scalar, MultiVector>                         MultiVectorTraits;
-typedef Belos::OperatorTraits<Scalar,MultiVector, Operator>                OperatorTraits;
-typedef Belos::LinearProblem<Scalar, MultiVector, Operator>                LinearProblem;
-typedef Belos::SolverManager<Scalar, MultiVector, Operator>                SolverManager;
-typedef Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>          SolverFactory;
-typedef Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node> Preconditioner;
-
-using EntityToLIDView = Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,LinSysMemSpace>;
+  using EntityToLIDView = Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,LinSysMemSpace>;
 };
 
 

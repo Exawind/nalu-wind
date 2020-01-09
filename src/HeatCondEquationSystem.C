@@ -59,12 +59,6 @@
 // kernels
 #include <kernel/ScalarDiffElemKernel.h>
 #include <kernel/ScalarDiffFemKernel.h>
-#include <kernel/ScalarDiffHOElemKernel.h>
-#include <kernel/ScalarMassHOElemKernel.h>
-
-#include <element_promotion/ElementDescription.h>
-
-#include <user_functions/SteadyThermalContactSrcHOElemKernel.h>
 
 // bc kernels
 #include <kernel/ScalarFluxPenaltyElemKernel.h>
@@ -383,7 +377,7 @@ HeatCondEquationSystem::register_interior_algorithm(
     if ( realm_.realmUsesEdges_ )
       throw std::runtime_error("HeatCondElem::Error can not use supplemental design for an edge-based scheme");
 
-    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_, realm_.using_tensor_product_kernels());
+    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_);
 
     kb.build_topo_kernel_if_requested<SteadyThermal3dContactSrcElemKernel>("steady_3d_thermal",
       realm_.bulk_data(), *realm_.solutionOptions_, kb.data_prereqs()
@@ -395,14 +389,6 @@ HeatCondEquationSystem::register_interior_algorithm(
 
     kb.build_fem_kernel_if_requested<ScalarDiffFemKernel>("FEM_DIFF",
       realm_.bulk_data(), *realm_.solutionOptions_, temperature_, thermalCond_, kb.data_prereqs()
-    );
-
-    kb.build_sgl_kernel_if_requested<ScalarDiffHOElemKernel>("experimental_ho_cvfem_diffusion",
-      realm_.bulk_data(),  *realm_.solutionOptions_, temperature_, thermalCond_, kb.data_prereqs_HO()
-    );
-
-    kb.build_sgl_kernel_if_requested<SteadyThermalContactSrcHOElemKernel>("experimental_ho_cvfem_mms_source",
-      realm_.bulk_data(),  *realm_.solutionOptions_, kb.data_prereqs_HO()
     );
 
     kb.report();

@@ -7,6 +7,14 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/EffSSTDiffFluxCoeffAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/EnthalpyEffDiffFluxCoeffAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MdotEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotInflowAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotDensityAccumAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotOpenCorrectorAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotOpenEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/TAMSAvgMdotEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/TAMSAvgMdotElemAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/SSTTAMSAveragesAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MetricTensorElemAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscKsgsAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscSSTAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/WallFuncGeometryAlg.C
@@ -18,7 +26,9 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRWallFuncAlg.C
 
   # Algorithm Drivers
+  ${CMAKE_CURRENT_SOURCE_DIR}/FieldUpdateAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NgpAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/TKEWallFuncAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometryAlgDriver.C

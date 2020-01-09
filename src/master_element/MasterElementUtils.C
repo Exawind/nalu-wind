@@ -9,7 +9,7 @@
 
 #include <master_element/MasterElementUtils.h>
 
-#include <element_promotion/LagrangeBasis.h>
+#include <master_element/LagrangeBasis.h>
 #include <master_element/TensorOps.h>
 
 #include <NaluEnv.h>

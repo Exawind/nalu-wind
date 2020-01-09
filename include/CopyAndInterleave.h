@@ -43,6 +43,9 @@ void interleave(SimdViewType& dview, const double* sviews[], int simdElems)
         for(int simdIndex=0; simdIndex<simdElems; ++simdIndex) {
             stk::simd::set_data(d, simdIndex, sviews[simdIndex][i]);
         }
+        for(int simdIndex=simdElems; simdIndex<simdLen; ++simdIndex) {
+          stk::simd::set_data(d, simdIndex, 0.0);
+        }
     }
 }
 

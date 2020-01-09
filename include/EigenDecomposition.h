@@ -286,6 +286,26 @@ void reconstruct_matrix_from_decomposition(const T (&D)[3][3],
   matrix_matrix_multiply(B, QT, A);
 }
 
+//--------------------------------------------------------------------------
+//------------------ unsym_matrix_force_sym_3D -----------------------------
+//--------------------------------------------------------------------------
+template <class T>
+KOKKOS_FUNCTION
+void unsym_matrix_force_sym(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3]) {
+
+  // force symmetry force 
+  for (int i = 0; i < 3; i++) {
+    for (int j = i; j < 3; j++) {
+      A[i][j] = (A[i][j] + A[j][i])/2.0;
+      A[j][i] = A[i][j];
+    }
+  }
+
+  // then call symmetric diagonalize 
+  sym_diagonalize(A, Q, D);
+}
+
+
 } // namespace EigenDecomposition
 
 } // namespace nalu

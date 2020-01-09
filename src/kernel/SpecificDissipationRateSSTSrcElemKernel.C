@@ -156,7 +156,7 @@ SpecificDissipationRateSSTSrcElemKernel<AlgTraits>::execute(
     Pk *= tvisc;
 
     // dissipation and production (limited)
-    DoubleType Dk = betaStar_ * rho * sdr * tke;
+    const DoubleType Dk = betaStar_ * rho * sdr * tke;
     Pk = stk::math::min(Pk, tkeProdLimitRatio_ * Dk);
 
     // start the blending and constants

@@ -42,7 +42,7 @@ namespace advection_diffusion {
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion)
 {
   // FIXME: only test on one core
-  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) 
+  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
     return;
 
   fill_mesh_and_init_fields(true);
@@ -78,11 +78,11 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion)
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion_tpetra)
 {
   // FIXME: only test on one core
-  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) 
+  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
     return;
 
   fill_mesh_and_init_fields(true);
-  
+
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
   solnOpts_.meshDeformation_ = false;
@@ -109,4 +109,3 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion_tpetra)
   namespace gold_values = hex8_golds::advection_diffusion;
   helperObjs.check_against_dense_gold_values(8, gold_values::lhs, gold_values::rhs);
 }
-

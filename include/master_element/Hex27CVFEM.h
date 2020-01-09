@@ -443,7 +443,7 @@ public:
   KOKKOS_FUNCTION int opposingFace(
     const int ordinal, const int node);
 
-  const int* side_node_ordinals(int sideOrdinal) const final;
+  KOKKOS_FUNCTION const int* side_node_ordinals(int sideOrdinal) const final;
   using MasterElement::side_node_ordinals;
 
   const InterpWeightType& shape_function_values()

@@ -11,8 +11,8 @@
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
 
-#include <element_promotion/ElementDescription.h>
 #include <CVFEMTypeDefs.h>
+#include <master_element/QuadratureRule.h>
 #include <master_element/TensorProductCVFEMOperators.h>
 
 #include "UnitTestViewUtils.h"
@@ -91,7 +91,6 @@ struct TensorPoly {
 template <int p>
 void scs_interp_hex()
 {
-   auto elem = sierra::nalu::ElementDescription::create(3, p);
   auto ops = sierra::nalu::CVFEMOperators<p, double>();
 
   sierra::nalu::nodal_scalar_workview<p, double> l_nodalValues;
@@ -100,13 +99,16 @@ void scs_interp_hex()
   sierra::nalu::nodal_vector_workview<p, double> l_nodalVecValues;
   auto& nodalVecValues = l_nodalVecValues.view();
 
+  const auto nodeLocs1D = sierra::nalu::gauss_lobatto_legendre_rule(p+1).first;
+
+
   TensorPoly polys[3] = { TensorPoly(p), TensorPoly(p), TensorPoly(p) };
   for (int k = 0; k < p + 1; ++k) {
-    double locz = elem->nodeLocs1D[k];
+    double locz = nodeLocs1D[k];
     for (int j = 0; j < p + 1; ++j) {
-      double locy = elem->nodeLocs1D[j];
+      double locy = nodeLocs1D[j];
       for (int i = 0; i < p + 1; ++i) {
-        double locx = elem->nodeLocs1D[i];
+        double locx = nodeLocs1D[i];
         nodalValues(k, j, i) = polys[0](locx, locy, locz);
         nodalVecValues(k, j, i, 0) = polys[0](locx, locy, locz);
         nodalVecValues(k, j, i, 1) = polys[1](locx, locy, locz);
@@ -128,9 +130,9 @@ void scs_interp_hex()
   ops.scs_xhat_interp(nodalVecValues, operator_vector_interp);
 
   for (int k = 0; k < p +1; ++k) {
-    double locz = elem->nodeLocs1D[k];
+    double locz = nodeLocs1D[k];
     for (int j = 0; j < p + 1; ++j) {
-      double locy = elem->nodeLocs1D[j];
+      double locy = nodeLocs1D[j];
       for (int i = 0; i < p; ++i) {
         double locx = scsLocs[i];
         ASSERT_NEAR(operator_scalar_interp(k,j,i), polys[0](locx,locy,locz), my_tol)<< "x";
@@ -145,11 +147,11 @@ void scs_interp_hex()
   ops.scs_yhat_interp(nodalVecValues, operator_vector_interp);
 
   for (int k = 0; k < p +1; ++k) {
-    double locz = elem->nodeLocs1D[k];
+    double locz = nodeLocs1D[k];
     for (int j = 0; j < p; ++j) {
       double locy = scsLocs[j];
       for (int i = 0; i < p+1; ++i) {
-        double locx = elem->nodeLocs1D[i];
+        double locx = nodeLocs1D[i];
         ASSERT_NEAR(operator_scalar_interp(k,j,i), polys[0](locx,locy,locz),my_tol) << "y";
         for (int d = 0; d < 3; ++d) {
           ASSERT_NEAR(operator_vector_interp(k,j,i,d), polys[d](locx,locy,locz),my_tol) << "y, " << d;
@@ -164,9 +166,9 @@ void scs_interp_hex()
   for (int k = 0; k < p; ++k) {
     double locz = scsLocs[k];
     for (int j = 0; j < p + 1; ++j) {
-      double locy = elem->nodeLocs1D[j];
+      double locy = nodeLocs1D[j];
       for (int i = 0; i < p+1; ++i) {
-        double locx = elem->nodeLocs1D[i];
+        double locx = nodeLocs1D[i];
         ASSERT_NEAR(operator_scalar_interp(k,j,i), polys[0](locx,locy,locz),my_tol) << "z";
         for (int d = 0; d < 3; ++d) {
           ASSERT_NEAR(operator_vector_interp(k,j,i,d), polys[d](locx,locy,locz),my_tol) << "z, " << d;;
@@ -179,7 +181,6 @@ void scs_interp_hex()
 template <int p> void scs_grad_hex()
 {
   auto ops = sierra::nalu::CVFEMOperators<p, double>();
-  auto elem = sierra::nalu::ElementDescription::create(3, p);
 
   sierra::nalu::nodal_scalar_workview<p, double> l_nodalValues(0);
   auto& nodalValues = l_nodalValues.view();
@@ -187,16 +188,16 @@ template <int p> void scs_grad_hex()
   sierra::nalu::nodal_vector_workview<p, double> l_nodalVecValues(0);
   auto& nodalVecValues = l_nodalVecValues.view();
 
-  const auto nodeLocs1D = sierra::nalu::gauss_lobatto_legendre_rule(p).first;
+  const auto nodeLocs1D = sierra::nalu::gauss_lobatto_legendre_rule(p+1).first;
   const auto scsLocs = sierra::nalu::gauss_legendre_rule(p).first;
 
   TensorPoly polys[3] = { TensorPoly(p), TensorPoly(p), TensorPoly(p) };
   for (int k = 0; k < p + 1; ++k) {
-    double locz = elem->nodeLocs1D[k];
+    double locz = nodeLocs1D[k];
     for (int j = 0; j < p + 1; ++j) {
-      double locy = elem->nodeLocs1D[j];
+      double locy = nodeLocs1D[j];
       for (int i = 0; i < p + 1; ++i) {
-        double locx = elem->nodeLocs1D[i];
+        double locx = nodeLocs1D[i];
         nodalValues(k, j, i) = polys[0](locx, locy, locz);
         nodalVecValues(k, j, i, 0) = polys[0](locx, locy, locz);
         nodalVecValues(k, j, i, 1) = polys[1](locx, locy, locz);
@@ -215,9 +216,9 @@ template <int p> void scs_grad_hex()
   ops.scs_xhat_grad(nodalVecValues, op_gradv);
 
   for (int k = 0; k < p + 1; ++k) {
-    double locz = elem->nodeLocs1D[k];
+    double locz = nodeLocs1D[k];
     for (int j = 0; j < p + 1; ++j) {
-      double locy = elem->nodeLocs1D[j];
+      double locy = nodeLocs1D[j];
       for (int i = 0; i < p; ++i) {
         double locx = scsLocs[i];
         ASSERT_NEAR( op_grad(k,j,i,0), polys[0].grad_x(locx,locy,locz), my_tol) << "x(k,j,i) = (" << k << ", " << j << ", " << i << ")";
@@ -236,11 +237,11 @@ template <int p> void scs_grad_hex()
   ops.scs_yhat_grad(nodalValues, op_grad);
   ops.scs_yhat_grad(nodalVecValues, op_gradv);
   for (int k = 0; k < p + 1; ++k) {
-    double locz = elem->nodeLocs1D[k];
+    double locz = nodeLocs1D[k];
     for (int j = 0; j < p ; ++j) {
       double locy = scsLocs[j];
       for (int i = 0; i < p + 1; ++i) {
-        double locx = elem->nodeLocs1D[i];
+        double locx = nodeLocs1D[i];
         ASSERT_NEAR( op_grad(k,j,i,0), polys[0].grad_x(locx,locy,locz), my_tol) << "y(k,j,i) = (" << k << ", " << j << ", " << i << ")";
         ASSERT_NEAR( op_grad(k,j,i,1), polys[0].grad_y(locx,locy,locz), my_tol) << "y(k,j,i) = (" << k << ", " << j << ", " << i << ")";
         ASSERT_NEAR( op_grad(k,j,i,2), polys[0].grad_z(locx,locy,locz), my_tol)<< "y(k,j,i) = (" << k << ", " << j << ", " << i << ")";
@@ -259,9 +260,9 @@ template <int p> void scs_grad_hex()
   for (int k = 0; k < p; ++k) {
     double locz = scsLocs[k];
     for (int j = 0; j < p + 1; ++j) {
-      double locy = elem->nodeLocs1D[j];
+      double locy = nodeLocs1D[j];
       for (int i = 0; i < p + 1; ++i) {
-        double locx = elem->nodeLocs1D[i];;
+        double locx = nodeLocs1D[i];;
         ASSERT_NEAR( op_grad(k,j,i,0), polys[0].grad_x(locx,locy,locz), my_tol) << "z(k,j,i) = (" << k << ", " << j << ", " << i << ")";
         ASSERT_NEAR( op_grad(k,j,i,1), polys[0].grad_y(locx,locy,locz), my_tol) << "z(k,j,i) = (" << k << ", " << j << ", " << i << ")";
         ASSERT_NEAR( op_grad(k,j,i,2), polys[0].grad_z(locx,locy,locz), my_tol) << "z(k,j,i) = (" << k << ", " << j << ", " << i << ")";
@@ -283,20 +284,19 @@ template <int p> void scs_grad_hex()
 template <int p> void nodal_grad_hex()
 {
   auto ops = sierra::nalu::CVFEMOperators<p, double>();
-  auto elem = sierra::nalu::ElementDescription::create(3, p);
 
   sierra::nalu::nodal_scalar_workview<p, double> l_nodalValues(0);
   auto& nodalValues = l_nodalValues.view();
 
-  const auto nodeLocs1D = sierra::nalu::gauss_lobatto_legendre_rule(p).first;
+  const auto nodeLocs1D = sierra::nalu::gauss_lobatto_legendre_rule(p+1).first;
 
   TensorPoly poly(p);
   for (int k = 0; k < p + 1; ++k) {
-    double locz =elem->nodeLocs1D[k];
+    double locz =nodeLocs1D[k];
     for (int j = 0; j < p + 1; ++j) {
-      double locy = elem->nodeLocs1D[j];
+      double locy = nodeLocs1D[j];
       for (int i = 0; i < p + 1; ++i) {
-        double locx = elem->nodeLocs1D[i];
+        double locx =  nodeLocs1D[i];
         nodalValues(k,j,i) = poly(locx,locy,locz);
       }
     }
@@ -306,11 +306,11 @@ template <int p> void nodal_grad_hex()
   auto& op_nodal_grad =  l_op_nodal_grad.view();
   ops.nodal_grad(nodalValues, op_nodal_grad);
   for (int k = 0; k < p + 1; ++k) {
-    double locz = elem->nodeLocs1D[k];
+    double locz = nodeLocs1D[k];
     for (int j = 0; j < p + 1; ++j) {
-      double locy = elem->nodeLocs1D[j];
+      double locy = nodeLocs1D[j];
       for (int i = 0; i < p + 1; ++i) {
-        double locx = elem->nodeLocs1D[i];
+        double locx = nodeLocs1D[i];
         ASSERT_NEAR( op_nodal_grad(k,j,i,0), poly.grad_x(locx,locy,locz), my_tol) << "(k,j,i) = (" << k << ", " << j << ", " << i << ")";
         ASSERT_NEAR( op_nodal_grad(k,j,i,1), poly.grad_y(locx,locy,locz), my_tol) << "(k,j,i) = (" << k << ", " << j << ", " << i << ")";
         ASSERT_NEAR( op_nodal_grad(k,j,i,2), poly.grad_z(locx,locy,locz), my_tol) << "(k,j,i) = (" << k << ", " << j << ", " << i << ")";
@@ -324,24 +324,23 @@ template <int p> void scv_integration_hex()
 {
   auto ops = sierra::nalu::CVFEMOperators<p, double>();
 
-  auto elem = sierra::nalu::ElementDescription::create(3, p);
   sierra::nalu::nodal_scalar_workview<p, double> l_nodalValues(0);
   auto& nodalValues = l_nodalValues.view();
 
   sierra::nalu::nodal_vector_workview<p, double> l_nodalVecValues(0);
   auto& nodalVecValues = l_nodalVecValues.view();
 
-  const auto nodeLocs1D = sierra::nalu::gauss_lobatto_legendre_rule(p).first;
+  const auto nodeLocs1D = sierra::nalu::gauss_lobatto_legendre_rule(p+1).first;
   const auto scsLocs = sierra::nalu::gauss_legendre_rule(p).first;
 
   TensorPoly polys[3] = { TensorPoly(p), TensorPoly(p), TensorPoly(p) };
 
   for (int k = 0; k < p + 1; ++k) {
-    double locz = elem->nodeLocs1D[k];
+    double locz = nodeLocs1D[k];
     for (int j = 0; j < p + 1; ++j) {
-      double locy = elem->nodeLocs1D[j];
+      double locy = nodeLocs1D[j];
       for (int i = 0; i < p + 1; ++i) {
-        double locx = elem->nodeLocs1D[i];
+        double locx = nodeLocs1D[i];
         nodalValues(k, j, i) = polys[0](locx, locy, locz);
         nodalVecValues(k, j, i, 0) = polys[0](locx, locy, locz);
         nodalVecValues(k, j, i, 1) = polys[1](locx, locy, locz);
