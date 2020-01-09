@@ -174,7 +174,7 @@ BLTGammaNodeKernel::execute(
 
   rhs(0) += (Pgamma - Dgamma) * dVol;
 
-  DblType t1 = 0.5 * fonset * flength * caOne_ * density * sijMag * ( 3.0 * ceOne_ * gamint - 1.0) / stk::math::sqrt( gamint_arg );
+  DblType t1 = flength * caOne_ * density * sijMag * stk::math::sqrt( gamint * fonset ) * ceOne_;
   DblType t2 = caTwo_ * density * vortMag * fturb * ( 2.0*ceTwo_ * gamint - 1.0 );
 
   lhs(0, 0) += ( t1 + t2 ) * dVol;
