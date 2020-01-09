@@ -10,6 +10,7 @@
 #define CrsGraphTypes_h
 
 #include <KokkosInterface.h>
+#include <Tpetra_Details_DefaultTypes.hpp>
 #include <Tpetra_CrsGraph.hpp>
 
 // Forward declare templates
@@ -30,8 +31,8 @@ namespace nalu{
 
 namespace GraphTypes {
 
-typedef long   GlobalOrdinal; // MUST be signed
-typedef int    LocalOrdinal;  // MUST be signed
+using GlobalOrdinal = Tpetra::Details::DefaultTypes::global_ordinal_type;
+using LocalOrdinal = Tpetra::Details::DefaultTypes::local_ordinal_type;
 
 typedef Kokkos::DualView<size_t*, DeviceSpace>                             RowLengths;
 typedef RowLengths::t_dev                                                  DeviceRowLengths;
