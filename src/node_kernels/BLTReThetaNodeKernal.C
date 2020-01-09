@@ -86,7 +86,7 @@ BLTRe0tNodeKernel::Re_thetat( double Tu, double Fla)
     const double Tu,Fla;
     double Re0t;
 
-    if (Tu <= 1.3) {   
+    if (Tu <= 1.3) {  
        Re0t = ( 1173.51 - 589.428 * Tu + 0.2196 / Tu*/Tu) * Fla;
     }
     else {
@@ -225,7 +225,7 @@ BLTRe0tNodeKernel::execute(
 
   DblType Pre0t = c0t * density * (1.0 - f0t) / tc;
 
-  rhs(0)    += Pre0t * Re0tcor * dVol;
+  rhs(0)    += Pre0t * ( Re0tcor - re0t ) * dVol;
   lhs(0, 0) += Pre0t * dVol;
 }
 

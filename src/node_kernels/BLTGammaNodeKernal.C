@@ -166,13 +166,18 @@ BLTGammaNodeKernel::execute(
   fonset3 = stk::math::max(1.0 - 0.0640*rt*rt*rt, 0.0);
   fonset =  stk::math::max(fonset2 - fonset3,0.0);
   fturb =   stk::math::exp(-rt*rt*rt*rt/256.0);
+  DblType gamint_arg = stk::math::max( 1.0e-10, fonset * gamint);
 
 
-  DblType Pgamma = flength * caOne_ * density * sijMag * stk::math::sqrt( stk::math::max( fonset * gamint, 0.0 ) );
-  DblType Dgamma = -caTwo_ * density * vortMag * gamint * fturb;
+  DblType Pgamma = flength * caOne_ * density * sijMag * stk::math::sqrt( stk::math::max( fonset * gamint, 0.0 ) ) * ( 1.0 - ceOne_ * gamint );
+  DblType Dgamma = caTwo_ * density * vortMag * gamint * fturb * ( ceTwo_ * gamint - 1.0 );
 
   rhs(0) += (Pgamma - Dgamma) * dVol;
-  lhs(0, 0) += (ceOne_ * Pgamma + ceTwo_ * Dgamma) * dVol;
+
+  DblType t1 = 0.5 * fonset * flength * caOne_ * density * sijMag * ( 3.0 * ceOne_ * gamint - 1.0) / stk::math::sqrt( gamint_arg );
+  DblType t2 = caTwo_ * density * vortMag * fturb * ( 2.0*ceTwo_ * gamint - 1.0 );
+
+  lhs(0, 0) += ( t1 + t2 ) * dVol;
 }
 
 } // namespace nalu
