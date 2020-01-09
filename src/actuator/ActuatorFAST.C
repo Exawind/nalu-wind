@@ -194,8 +194,14 @@ ActuatorFAST::load(const YAML::Node& y_node)
           }
 
           // The correction from filtered lifting line theory
-          const bool fllt_correction = 
-                  cur_turbine["fllt_correction"].as<bool>();
+          //~ const bool fllt_correction = 
+                  //~ cur_turbine["fllt_correction"].as<bool>();
+          bool fllt_correction=false;
+          get_if_present(cur_turbine, "fllt_correction", fllt_correction);
+          if (fllt_correction) {
+            // Assign the variable as false
+            fllt_correction = true;
+          }
           // Pass the correction value (true or false)
           actuatorFASTInfo->fllt_correction_ = fllt_correction;
 
