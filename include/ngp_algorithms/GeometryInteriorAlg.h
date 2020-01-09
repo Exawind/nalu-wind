@@ -40,7 +40,6 @@ public:
   virtual ~GeometryInteriorAlg() = default;
 
   virtual void execute() override;
-  virtual void pre_work() override;
 
   void impl_compute_edge_area_vector();
   void impl_compute_dual_nodal_volume();

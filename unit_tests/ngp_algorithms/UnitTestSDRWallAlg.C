@@ -23,9 +23,10 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_lowRE)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
+  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
   solnOpts_.initialize_turbulence_constants();
 
@@ -89,9 +90,10 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_wall_func)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
+  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
   solnOpts_.initialize_turbulence_constants();
 

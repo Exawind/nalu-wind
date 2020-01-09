@@ -96,8 +96,11 @@ protected:
       unit_test_utils::fill_hex8_mesh(meshSpec, bulk);
     }
 
-    void fill_mesh_and_initialize_test_fields(const std::string& meshSpec = "generated:20x20x20")
+    void fill_mesh_and_initialize_test_fields(std::string meshSpec = "generated:20x20x20", 
+                                              const bool generateSidesets = false)
     {
+        if (generateSidesets) meshSpec += "|sideset:xXyYzZ";
+
         fill_mesh(meshSpec);
 
         partVec = {meta.get_part("block_1")};

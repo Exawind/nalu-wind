@@ -26,9 +26,10 @@ static constexpr double rhs[4] = {
 
 TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
 {
+  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;

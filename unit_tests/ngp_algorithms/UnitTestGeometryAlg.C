@@ -108,9 +108,10 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
+  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
   // zero out fields
   stk::mesh::field_fill(0.0, *exposedAreaVec_);
@@ -163,9 +164,10 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
+  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+  LowMachKernelHex8Mesh::fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
   // zero out fields
   stk::mesh::field_fill(0.0, *wallNormDist_);

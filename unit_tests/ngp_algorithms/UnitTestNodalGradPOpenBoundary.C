@@ -29,23 +29,28 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
-  fill_mesh();
+  const std::string meshSpec = "generated:20x20x20";
+  const bool doPerturb = false;
+  const bool generateSidesets = true;
+
+  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
   unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::HEX_8, 1, partVec_[0]);
-  stk::mesh::field_fill(0.0, *dpdx_);
 
-  {
-    bulk_.modification_begin();
-    stk::mesh::Part* block_1 = meta_.get_part("block_1");
-    stk::mesh::PartVector allSurfaces = { &meta_.declare_part("surface_1", meta_.side_rank()) };
-    stk::mesh::create_all_sides(bulk_, *block_1, allSurfaces, false);
-    bulk_.modification_end();
-  }
-  auto* surfPart = meta_.get_part("surface_1");
+  const double zero= 0.0;
+  const double one = 1.0;
+  const double two = 2.0;
+  const double oneVecTwelve[12] = {one, one, one, one, one, one, one, one, one, one, one, one};
+  stk::mesh::field_fill(zero, *dpdx_);
+  stk::mesh::field_fill(two, *dnvField_);
+  stk::mesh::field_fill(one, *pressure_);
+  stk::mesh::field_fill_component(oneVecTwelve, *exposedAreaVec_);
+
+  stk::mesh::Part* surface1 = meta_.get_part("surface_1");
   {
     sierra::nalu::GeometryAlgDriver geomAlgDriver(helperObjs.realm);
     geomAlgDriver.register_face_algorithm<sierra::nalu::GeometryBoundaryAlg>(
-      sierra::nalu::WALL, surfPart, "geometry");
+      sierra::nalu::WALL, surface1, "geometry");
     geomAlgDriver.execute();
   }
 
@@ -55,17 +60,17 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
     helperObjs.realm.solutionOptions_->activateOpenMdotCorrection_ = true;
     sierra::nalu::ScalarNodalGradAlgDriver algDriver(helperObjs.realm, "dpdx");
     algDriver.register_face_elem_algorithm<sierra::nalu::NodalGradPOpenBoundary>(
-      sierra::nalu::OPEN, surfPart, stk::topology::HEX_8, "nodal_grad_pressure_open_boundary", false);
+      sierra::nalu::OPEN, surface1, stk::topology::HEX_8, "nodal_grad_pressure_open_boundary", false);
     algDriver.execute();
   }
 
   {
-    const double dpdxref[6][3] = {{-0.25, 0.125,-0.25},
-                                  {-0.25, 0.125, 0.25},
-                                  {-0.25,-0.25,  0.125},
-                                  {-0.25, 0.25,  0.125},
-                                  {-0.5,  0.25,  0.25},
-                                  { 0.5,  0.5,   0.5}};
+    const double dpdxref[6][3] = {{-0.25, 0.0,  -0.25},
+                                  {-0.25, 0.0,   0.25},
+                                  {-0.25,-0.25,  0.0},
+                                  {-0.25, 0.25,  0.0},
+                                  {-0.5,  0.0,   0.0},
+                                  { 0.0,  0.0,   0.0}};
 
     const double tol = 1.0e-16;
 
@@ -100,6 +105,23 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
         if (-1 < j) {
           for (int i=0; i<3; ++i)
             EXPECT_NEAR(dpdxref[j][i], dpdx[i], tol);
+double diff = 0;
+for (int i=0; i<3; ++i) diff += abs(dpdxref[j][i]-dpdx[i]);
+std::cout
+<<" diff:"<<diff
+<<" cord:"
+<<" "<<cord[0]
+<<" "<<cord[1]
+<<" "<<cord[2]
+<<" dpdxref:"
+<<" "<<dpdxref[j][0]
+<<" "<<dpdxref[j][1]
+<<" "<<dpdxref[j][2]
+<<" dpdx:"
+<<" "<<dpdx[0]
+<<" "<<dpdx[1]
+<<" "<<cord[2]
+<<std::endl;
         }
       }
     }

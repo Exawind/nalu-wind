@@ -5,7 +5,7 @@
 //
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
-// 
+//
 
 
 #include "ngp_algorithms/WallFuncGeometryAlg.h"

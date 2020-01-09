@@ -290,13 +290,14 @@ public:
 
   virtual ~TestKernelHex8Mesh() {}
 
-  virtual void fill_mesh_and_init_fields(bool doPerturb = false, bool generateSidesets = false)
+  virtual void fill_mesh_and_init_fields(
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false)
   {
-    const std::string baseMeshSpec = 
-      "generated:1x1x" + std::to_string(bulk_.parallel_size());
-    const std::string meshSpec =
-      generateSidesets ? (baseMeshSpec + "|sideset:xXyYzZ") : baseMeshSpec;
-    unit_test_utils::fill_hex8_mesh(meshSpec, bulk_);
+    if (baseMeshSpec.empty()) baseMeshSpec = "generated:1x1x" + std::to_string(bulk_.parallel_size());
+    if (generateSidesets)  baseMeshSpec += "|sideset:xXyYzZ";
+    unit_test_utils::fill_hex8_mesh(baseMeshSpec, bulk_);
     if (doPerturb) {
       unit_test_utils::perturb_coord_hex_8(bulk_, 0.125);
     }
@@ -379,28 +380,12 @@ public:
 
   virtual ~LowMachKernelHex8Mesh() {}
 
-  void fill_mesh(const std::string& meshSpec = "generated:20x20x20")
-  {
-    const double one = 1.0;
-    const double two = 2.0;
-    const double oneVecTwelve[12] = {one, one, one, one, one, one, one, one, one, one, one, one};
-    unit_test_utils::fill_hex8_mesh(meshSpec, bulk_);
-    stk::mesh::create_edges(bulk_, meta_.universal_part());
-    partVec_ = {meta_.get_part("block_1")};
-
-    coordinates_ = static_cast<const VectorFieldType*>(meta_.coordinate_field());
-
-    EXPECT_TRUE(coordinates_ != nullptr);
-
-    stk::mesh::field_fill(two, *dnvField_);
-    stk::mesh::field_fill(one, *pressure_);
-    stk::mesh::field_fill_component(oneVecTwelve, *exposedAreaVec_);
-  }
-
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false) override
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
-    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    TestKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
 
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocity_);
     unit_test_kernel_utils::pressure_test_function(bulk_, *coordinates_, *pressure_);
@@ -433,9 +418,11 @@ public:
   virtual ~ContinuityKernelHex8Mesh() {}
 
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false) override
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
-    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
     stk::mesh::field_fill(0.0, *pressureBC_);
   }
 
@@ -482,9 +469,11 @@ public:
   virtual ~MomentumKernelHex8Mesh() {}
 
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false) override
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
-    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
     unit_test_kernel_utils::calc_mass_flow_rate_scs(
       bulk_, stk::topology::HEX_8, *coordinates_, *density_, *velocity_, *massFlowRate_);
     unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
@@ -519,9 +508,11 @@ public:
   virtual ~MomentumEdgeHex8Mesh() = default;
 
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false)
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
-    MomentumKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    MomentumKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
     unit_test_kernel_utils::calc_mass_flow_rate(
       bulk_, *velocity_, *density_, *edgeAreaVec_, *massFlowRateEdge_);
   }
@@ -560,11 +551,13 @@ public:
   virtual ~MomentumABLKernelHex8Mesh() = default;
 
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false)
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
     const double vel[3] = {uh_, 0.0, 0.0};
     const double bcVel[3] = {0.0, 0.0, 0.0};
-    MomentumKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    MomentumKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
     stk::mesh::field_fill_component(vel, *velocity_);
     stk::mesh::field_fill_component(bcVel, *wallVelocityBC_);
     stk::mesh::field_fill(0.0, *bcHeatFlux_);
@@ -616,9 +609,11 @@ public:
   virtual ~EnthalpyABLKernelHex8Mesh () {}
 
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false) override
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
-    MomentumABLKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    MomentumABLKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
     stk::mesh::field_fill(0.0, *thermalCond_);
     stk::mesh::field_fill(0.0, *evisc_);
     stk::mesh::field_fill(0.3, *tvisc_);
@@ -703,9 +698,11 @@ public:
   virtual ~SSTKernelHex8Mesh() {}
 
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false) override
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
-    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
     stk::mesh::field_fill(0.2, *visc_);
     stk::mesh::field_fill(0.3, *tvisc_);
     stk::mesh::field_fill(0.5, *maxLengthScale_);
@@ -797,7 +794,8 @@ public:
     bool doPerturb = false, bool generateSidesets = false, 
     const bool perturb_turbulent_viscosity_and_dual_nodal_volume = false) 
   {
-    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    const std::string baseMeshSpec;
+    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
     if (perturb_turbulent_viscosity_and_dual_nodal_volume) {
        unit_test_kernel_utils::turbulent_viscosity_test_function(bulk_, *coordinates_, *tvisc_);
       stk::mesh::field_fill(0.2, *dualNodalVolume_);
@@ -904,9 +902,11 @@ public:
   virtual ~TAMSKernelHex8Mesh() {}
     
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false)
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   { 
-    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
     stk::mesh::field_fill(1.e-4, *visc_);
     stk::mesh::field_fill(0.3, *tvisc_);
     stk::mesh::field_fill(0.5, *avgVelocity_);
@@ -968,9 +968,11 @@ public:
   virtual ~HybridTurbKernelHex8Mesh() {}
 
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false) override
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
-    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    LowMachKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
     stk::mesh::field_fill(0.0, *tke_);
     stk::mesh::field_fill(1.0, *alpha_);
     unit_test_kernel_utils::tensor_turbulent_viscosity_test_function(bulk_, *coordinates_, *mutij_);
@@ -1007,10 +1009,12 @@ public:
     stk::mesh::put_field_on_mesh(*thermalCond_, meta_.universal_part(), 1, nullptr);
   }
 
-  void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false) override
+  virtual void fill_mesh_and_init_fields(
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
-    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    TestKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
 
     unit_test_kernel_utils::temperature_test_function(bulk_, *coordinates_, *temperature_);
     stk::mesh::field_fill(1.0, *thermalCond_);
@@ -1076,9 +1080,11 @@ public:
   virtual ~MixtureFractionKernelHex8Mesh() {}
 
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false) override
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
-    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    TestKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
 
     unit_test_kernel_utils::mixture_fraction_test_function(bulk_, *coordinates_, *mixFraction_, amf_, znot_);
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocity_);
@@ -1140,9 +1146,11 @@ public:
   virtual ~ActuatorSourceKernelHex8Mesh() {}
 
   virtual void fill_mesh_and_init_fields(
-    bool doPerturb = false, bool generateSidesets = false) override
+    std::string baseMeshSpec = std::string(),
+    const bool doPerturb = false, 
+    const bool generateSidesets = false) override
   {
-    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    TestKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
 
     std::vector<double> act_source(spatialDim_,0.0);
     for(size_t j=0;j<spatialDim_;j++) act_source[j] = j+1;

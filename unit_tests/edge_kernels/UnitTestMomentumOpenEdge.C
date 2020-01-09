@@ -55,9 +55,10 @@ TEST_F(MomentumKernelHex8Mesh, NGP_open_edge)
 {
   if (bulk_.parallel_size() > 1) return;
 
+  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
