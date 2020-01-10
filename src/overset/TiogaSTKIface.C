@@ -148,7 +148,6 @@ void TiogaSTKIface::reset_data_structures()
   elemsToGhost_.clear();
   donorIDs_.clear();
   receptorIDs_.clear();
-  oversetManager_.orphanPointSurfaceVecBackground_.clear();
 }
 
 void TiogaSTKIface::update_ghosting()

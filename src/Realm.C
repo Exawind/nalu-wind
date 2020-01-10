@@ -62,7 +62,6 @@
 
 // overset
 #include <overset/OversetManager.h>
-#include <overset/OversetManagerSTK.h>
 
 #ifdef NALU_USES_TIOGA
 #include <overset/OversetManagerTIOGA.h>
@@ -3077,39 +3076,21 @@ Realm::setup_overset_bc(
   // create manager while providing overset data
   if ( NULL == oversetManager_ ) {
     switch (oversetBCData.oversetConnectivityType_) {
-    case OversetBoundaryConditionData::NALU_STK:
-      NaluEnv::self().naluOutputP0()
-        << "Realm::setup_overset_bc:: Selecting STK-based overset connectivity algorithm"
-        << std::endl;
-      if (solutionOptions_->meshMotion_)
-        NaluEnv::self().naluOutputP0()
-          << "WARNING:: Using STK-based overset with mesh motion has not been tested "
-          << std::endl;
-      oversetManager_ = new OversetManagerSTK(*this, oversetBCData.userData_);
-      break;
-
     case OversetBoundaryConditionData::TPL_TIOGA:
 #ifdef NALU_USES_TIOGA
       oversetManager_ = new OversetManagerTIOGA(*this, oversetBCData.userData_);
       NaluEnv::self().naluOutputP0()
         << "Realm::setup_overset_bc:: Selecting TIOGA TPL for overset connectivity"
         << std::endl;
+      break;
 #else
       // should not get here... we should have thrown error in input file processing stage
       throw std::runtime_error("TIOGA TPL support not enabled during compilation phase");
-#endif
-// Avoid nvcc unreachable statement warnings
-#ifndef __CUDACC__
-      break;
 #endif
 
     case OversetBoundaryConditionData::OVERSET_NONE:
     default:
       throw std::runtime_error("Invalid setting for overset connectivity");
-// Avoid nvcc unreachable statement warnings
-#ifndef __CUDACC__
-      break;
-#endif
     }
   }   
 }
