@@ -143,6 +143,10 @@
 // stk_util
 #include <stk_util/parallel/ParallelReduce.hpp>
 
+// stk_balance
+#include <stk_balance/balance.hpp>
+#include <stk_balance/balanceUtils.hpp>
+
 // Ioss for propertManager (io)
 #include <Ioss_PropertyManager.h>
 
@@ -471,10 +475,6 @@ Realm::initialize()
   timerPopulateMesh_ += time;
   NaluEnv::self().naluOutputP0() << "Realm::ioBroker_->populate_mesh() End" << std::endl;
 
-  if (doBalanceNodes_) {
-    balance_nodes();
-  }
-
   // If we want to create all internal edges, we want to do it before
   // field-data is allocated because that allows better performance in
   // the create-edges code.
@@ -496,6 +496,22 @@ Realm::initialize()
   time += NaluEnv::self().nalu_time();
   timerPopulateFieldData_ += time;
   NaluEnv::self().naluOutputP0() << "Realm::ioBroker_->populate_field_data() End" << std::endl;
+
+  // rebalance mesh using stk_balance
+  if (rebalanceMesh_) {
+#ifndef HAVE_ZOLTAN2_PARMETIS
+  if (rebalanceMethod_ == "parmetis")
+    throw std::runtime_error("Zoltan2 is not built with parmetis enabled, "
+                             "try a geometric balance method instead (rcb or rib)");
+#endif
+    stk::balance::GraphCreationSettings rebalanceSettings;
+    rebalanceSettings.setDecompMethod(rebalanceMethod_);
+    stk::balance::balanceStkMesh(rebalanceSettings, *bulkData_);
+  }
+
+  if (doBalanceNodes_) {
+    balance_nodes();
+  }
 
   if (doPromotion_) {
     promote_mesh();
@@ -727,6 +743,12 @@ Realm::load(const YAML::Node & node)
   if ( "None" != autoDecompType_ ) {
     NaluEnv::self().naluOutputP0() 
       <<"Warning: When using automatic_decomposition_type, one must have a serial file" << std::endl;
+  }
+
+  get_if_present(node, "rebalance_mesh", rebalanceMesh_, rebalanceMesh_);
+  if (rebalanceMesh_) {
+    get_required(node, "stk_rebalance_method", rebalanceMethod_);
+    NaluEnv::self().naluOutputP0() << "Nalu will rebalance mesh using " << rebalanceMethod_ << std::endl;
   }
 
   // activate aura
