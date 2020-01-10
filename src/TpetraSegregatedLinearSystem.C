@@ -1399,53 +1399,6 @@ void TpetraSegregatedLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solu
   adbc_time += NaluEnv::self().nalu_time();
 }
 
-void TpetraSegregatedLinearSystem::prepareConstraints(const unsigned beginPos,
-                                                      const unsigned endPos)
-{
-  Teuchos::ArrayView<const LocalOrdinal> indices;
-  Teuchos::ArrayView<const double> values;
-  std::vector<double> new_values;
-
-  const bool internalMatrixIsSorted = true;
-
-  //KOKKOS: Loop noparallel RCP Vector Matrix replaceValues
-  for( const OversetInfo* oversetInfo : realm_.oversetManager_->oversetInfoVec_) {
-
-    // extract orphan node and global id; process both owned and shared
-    stk::mesh::Entity orphanNode = oversetInfo->orphanNode_;
-    const stk::mesh::EntityId naluId = *stk::mesh::field_data(*realm_.naluGlobalId_, orphanNode);
-    const LocalOrdinal localIdOffset = lookup_myLID(myLIDs_, naluId, "prepareConstraints");
-
-    const LocalOrdinal localId = localIdOffset;
-    const bool useOwned = localId < maxOwnedRowId_;
-    const LocalOrdinal actualLocalId = useOwned ? localId : localId - maxOwnedRowId_;
-    Teuchos::RCP<LinSys::Matrix> matrix = useOwned ? ownedMatrix_ : sharedNotOwnedMatrix_;
-    const LinSys::LocalMatrix& local_matrix = matrix->getLocalMatrix();
-
-    if ( localId > maxSharedNotOwnedRowId_) {
-      throw std::runtime_error("logic error: localId > maxSharedNotOwnedRowId_");
-    }
-
-    // Adjust the LHS; full row is perfectly zero
-    matrix->getLocalRowView(actualLocalId, indices, values);
-    const size_t rowLength = values.size();
-    if (rowLength > 0) {
-      new_values.resize(rowLength);
-      for(size_t i=0; i < rowLength; ++i) {
-        new_values[i] = 0.0;
-      }
-      local_matrix.replaceValues(actualLocalId, &indices[0], rowLength, new_values.data(), internalMatrixIsSorted);
-    }
-
-    // Replace the RHS residual with zero
-    Teuchos::RCP<LinSys::MultiVector> rhs = useOwned ? ownedRhs_: sharedNotOwnedRhs_;
-    for(unsigned d = beginPos; d < endPos; ++d) {
-      const double bc_residual = 0.0;
-      rhs->replaceLocalValue(actualLocalId, d, bc_residual);
-    }
-  }
-}
-
 void TpetraSegregatedLinearSystem::resetRows(const std::vector<stk::mesh::Entity>& nodeList,
                                              const unsigned beginPos,
                                              const unsigned endPos,

@@ -167,19 +167,6 @@ public:
     const unsigned beginPos,
     const unsigned endPos);
 
-  /** Prepare assembly for overset fringe nodes
-   *
-   *  The overset fringe nodes are skipped over by the sumInto method during
-   *  normal assembly process. This method toggles the flag to instruct sumInto
-   *  that the constraint rows are being filled at this stage.
-   */
-  virtual void prepareConstraints(
-    const unsigned,
-    const unsigned)
-  {
-    checkSkippedRows_ = false;
-  }
-
   /** Prepare assembly for Dirichlet-type rows
    *
    *  Dirichlet rows are skipped over by the sumInto method when the interior
