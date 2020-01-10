@@ -403,6 +403,13 @@ Common options
    A boolean flag indicating whether memory diagnostics are activated during
    simulation. Default value is ``no``.
 
+.. inpfile:: rebalance_mesh
+
+   A boolean flag indicating whether to rebalance mesh using stk_balance. The 
+   default value is ``no``. If this parameter is activated, it requires that
+   ``stk_rebalance_method`` is also set to specify the decomposition method to be 
+   used for rebalance, e.g., RIB, RCB, etc. 
+
 .. inpfile:: balance_nodes
 
    A boolean flag indicating whether node balancing is performed during
