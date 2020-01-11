@@ -147,7 +147,6 @@ protected:
       pressure(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure")),
       udiag(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "momentum_diag")),
       dnvField(&meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume")) 
-
     {
       const double one = 1.0;
       const double two = 2.0;

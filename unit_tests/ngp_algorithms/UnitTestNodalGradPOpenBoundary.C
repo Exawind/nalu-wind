@@ -1,4 +1,4 @@
-// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
 // Northwest Research Associates. Under the terms of Contract DE-NA0003525
 // with NTESS, the U.S. Government retains certain rights in this software.
@@ -7,9 +7,6 @@
 // for more details.
 //
 
-#include "AlgTraits.h"
-
-#include "stk_mesh/base/CreateEdges.hpp"
 #include "kernels/UnitTestKernelUtils.h"
 
 #include "UnitTestHelperObjects.h"
@@ -17,12 +14,8 @@
 #include "ngp_algorithms/UnitTestNgpAlgUtils.h"
 #include "ngp_algorithms/NodalGradPOpenBoundaryAlg.h"
 #include "ngp_algorithms/GeometryBoundaryAlg.h"
-#include "ngp_algorithms/GeometryInteriorAlg.h"
-
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
-
-#include <stk_mesh/base/SkinBoundary.hpp>
 
 TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
 {

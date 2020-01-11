@@ -1,3 +1,9 @@
+/*------------------------------------------------------------------------*/
+/*  Copyright 2014 Sandia Corporation.                                    */
+/*  This software is released under the license detailed                  */
+/*  in the file, LICENSE, which is located in the top-level Nalu          */
+/*  directory structure                                                   */
+/*------------------------------------------------------------------------*/
 
 #include "memory"
 
@@ -5,17 +11,11 @@
 #include "UnitTestLinearSystem.h"
 #include "UnitTestUtils.h"
 
-#include "ABLProfileFunction.h"
-#include "AssembleElemSolverAlgorithm.h"
 #include "AssembleNodalGradPOpenBoundaryAlgorithm.h"
 #include "ComputeGeometryBoundaryAlgorithm.h"
-#include "EquationSystem.h"
 #include "SolutionOptions.h"
-#include "master_element/MasterElement.h"
 
 #include <stk_mesh/base/BulkData.hpp>
-#include <stk_mesh/base/FEMHelpers.hpp>
-#include <stk_mesh/base/SkinBoundary.hpp>
 #include <stk_topology/topology.hpp>
 
  
@@ -26,9 +26,9 @@ struct HelperObjectsNodalGradPOpenBoundary {
   HelperObjectsNodalGradPOpenBoundary(
     stk::mesh::BulkData& bulk, 
     stk::mesh::Part* part)
-  : yamlNode(unit_test_utils::get_default_inputs()),
+  : 
     realmDefaultNode(unit_test_utils::get_realm_default_node()),
-    naluObj(new unit_test_utils::NaluTest(yamlNode)),
+    naluObj(new unit_test_utils::NaluTest(unit_test_utils::get_default_inputs())),
     realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
     NodalGradPOpenBoundaryAlg(),
     computeGeomBoundAlg()
@@ -49,12 +49,11 @@ struct HelperObjectsNodalGradPOpenBoundary {
   HelperObjectsNodalGradPOpenBoundary() = delete;
   HelperObjectsNodalGradPOpenBoundary(const HelperObjectsNodalGradPOpenBoundary&) = delete;
 
-  const YAML::Node yamlNode;
   const YAML::Node realmDefaultNode;
   std::unique_ptr<unit_test_utils::NaluTest> naluObj;
   sierra::nalu::Realm& realm;
   std::unique_ptr<AssembleNodalGradPOpenBoundaryAlgorithm> NodalGradPOpenBoundaryAlg;
-  std::unique_ptr<ComputeGeometryBoundaryAlgorithm> computeGeomBoundAlg;
+  std::unique_ptr<ComputeGeometryBoundaryAlgorithm>        computeGeomBoundAlg;
 };
 
 #ifndef KOKKOS_ENABLE_CUDA

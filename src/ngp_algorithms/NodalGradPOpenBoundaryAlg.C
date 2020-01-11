@@ -1,5 +1,5 @@
 /*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
+/*  Copyright 2019 Sandia Corporation.                                    */
 /*  This software is released under the license detailed                  */
 /*  in the file, LICENSE, which is located in the top-level Nalu          */
 /*  directory structure                                                   */
@@ -26,7 +26,7 @@ namespace nalu{
 // Class Definition
 //==========================================================================
 // NodalGradPOpenBoundary - adds in boundary contribution
-//                                      for elem/edge proj nodal gradient
+//                          for elem/edge proj nodal gradient
 //==========================================================================
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
@@ -131,8 +131,7 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
       for (int ip = 0; ip < AlgTraits::numFaceIp_; ++ip) {
         DoubleType pIp = 0.0;
         if (zeroGrad) {
-          // evaluate pressure at opposing face.  If zeroGrad_ option is used, then
-          // we'll copy this value to the exposed face.  Otherwise, it's unused
+          // evaluate pressure at opposing face.  
           const int oip = meSCS->opposingFace(faceOrdinal, ip);
           for (int n = 0; n < AlgTraits::nodesPerElement_; ++n) {
             pIp += e_shape_fcn(oip,n) * elem_p_field(n);
