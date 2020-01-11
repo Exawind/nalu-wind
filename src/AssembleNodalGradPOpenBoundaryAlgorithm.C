@@ -169,7 +169,7 @@ AssembleNodalGradPOpenBoundaryAlgorithm::execute()
           pOpp += oppShapeFns[ic] * p_elemPressure[ic];
         }
 
-        double press_div_vol = (zeroGrad_ ? pOpp : pIp) / volNN;
+        const double press_div_vol = (zeroGrad_ ? pOpp : pIp) / volNN;
         for ( int j = 0; j < nDim; ++j ) {
           gradQNN[j] += press_div_vol * areav[j];
         }

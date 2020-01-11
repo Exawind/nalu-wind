@@ -18,9 +18,10 @@ TEST_F(EnthalpyABLKernelHex8Mesh, NGP_tgrad_bc)
 {
   if (bulk_.parallel_size() > 1) return;
 
+  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
   auto* part = meta_.get_part("surface_5");
   unit_test_utils::HelperObjects helperObjs(

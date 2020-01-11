@@ -280,7 +280,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_upw_advection_diffusion)
 {
   if (bulk_.parallel_size() > 1) return;
 
-  fill_mesh_and_init_fields(false);
+  const std::string meshSpec;
+  fill_mesh_and_init_fields(meshSpec, false);
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;

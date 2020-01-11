@@ -108,9 +108,10 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_open_correction)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
+  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
 
   stk::mesh::field_fill(0.0, *openMassFlowRate_);
@@ -149,9 +150,10 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_inflow)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
+  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
   stk::mesh::field_fill(1.0, *density_);
   stk::mesh::field_fill(1.0, *velocity_);
@@ -176,9 +178,10 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_open_edge)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
+  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
 
   stk::mesh::field_fill(1.0, *density_);
   stk::mesh::field_fill(1.0, *velocity_);
