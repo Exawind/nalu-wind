@@ -30,18 +30,16 @@ public:
 
   virtual void initialize_connectivity();
 
-  virtual void prepare_constraints();
-
-protected:
-  OversetConstraintBase() = delete;
-  OversetConstraintBase(const OversetConstraintBase&) = delete;
-
   /** Reset rows for the holes in the linear system
    *
    *  This method will call reset rows and then populate them with a 1 on the
    *  diagonal and 0 on the RHS entry for the row.
    */
-  void reset_hole_rows();
+  virtual void prepare_constraints();
+
+protected:
+  OversetConstraintBase() = delete;
+  OversetConstraintBase(const OversetConstraintBase&) = delete;
 
   stk::mesh::FieldBase* fieldQ_;
   ScalarFieldType* dualNodalVolume_{nullptr};

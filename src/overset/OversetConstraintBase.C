@@ -39,17 +39,6 @@ OversetConstraintBase::initialize_connectivity()
 void
 OversetConstraintBase::prepare_constraints()
 {
-  const int sysStart = 0;
-  const int sysEnd = eqSystem_->linsys_->numDof();
-
-  eqSystem_->linsys_->prepareConstraints(sysStart, sysEnd);
-
-  reset_hole_rows();
-}
-
-void
-OversetConstraintBase::reset_hole_rows()
-{
   const auto& holeRows = realm_.oversetManager_->holeNodes_;
   const int& numDof = eqSystem_->linsys_->numDof();
 

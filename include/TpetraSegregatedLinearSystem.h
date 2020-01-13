@@ -111,10 +111,6 @@ public:
     const unsigned beginPos,
     const unsigned endPos);
 
-  void prepareConstraints(
-    const unsigned beginPos,
-    const unsigned endPos);
-
   /** Reset LHS and RHS for the given set of nodes to 0
    *
    *  @param nodeList A list of STK node entities whose rows are zeroed out

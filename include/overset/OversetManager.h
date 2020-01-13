@@ -79,12 +79,6 @@ public:
 
   stk::mesh::Ghosting* oversetGhosting_{nullptr};
 
-  stk::mesh::Part* inActivePart_{nullptr};
-
-  stk::mesh::Part* backgroundSurfacePart_{nullptr};
-
-  stk::mesh::PartVector orphanPointSurfaceVecBackground_;
-
   std::vector<OversetInfo*> oversetInfoVec_;
 
   std::vector<stk::mesh::Entity> holeNodes_;
