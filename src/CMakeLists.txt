@@ -13,7 +13,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleEdgeSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleHeatCondIrradWallSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleHeatCondWallSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeOpenSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeWallFunctionSolverAlgoirthm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemABLWallFunctionSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemOpenSolverAlgorithm.C
@@ -49,8 +48,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AuxFunctionAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AveragingInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/BoundaryConditions.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeGeometryBoundaryAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeGeometryInteriorAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeHeatTransferEdgeWallAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeHeatTransferElemWallAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemAlgorithm.C
