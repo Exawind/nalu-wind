@@ -381,9 +381,8 @@ struct OpenBoundaryConditionData : public BoundaryCondition {
 
 struct OversetBoundaryConditionData : public BoundaryCondition {
   enum OversetAPI {
-    NALU_STK      = 0, ///< Native Nalu holecutting using STK search
-    TPL_TIOGA     = 1, ///< Overset connectivity using TIOGA
-    OVERSET_NONE  = 2  ///< Guard for error messages
+    TPL_TIOGA     = 0, ///< Overset connectivity using TIOGA
+    OVERSET_NONE  = 1  ///< Guard for error messages
   };
 
   OversetBoundaryConditionData(BoundaryConditions& bcs) : BoundaryCondition(bcs){};
