@@ -24,8 +24,6 @@
 
 #include <AuxFunction.h>
 #include <AuxFunctionAlgorithm.h>
-#include <ComputeGeometryBoundaryAlgorithm.h>
-#include <ComputeGeometryInteriorAlgorithm.h>
 #include <ConstantAuxFunction.h>
 #include <Enums.h>
 #include <EntityExposedFaceSorter.h>
@@ -2854,8 +2852,7 @@ Realm::register_interior_algorithm(
   stk::mesh::Part *part)
 {
   const AlgorithmType algType = INTERIOR;
-  geometryAlgDriver_->register_elem_algorithm<
-    GeometryInteriorAlg, ComputeGeometryInteriorAlgorithm>(
+  geometryAlgDriver_->register_elem_algorithm<GeometryInteriorAlg>(
       algType, part, "geometry");
 
   // Track parts that are registered to interior algorithms
@@ -2888,9 +2885,8 @@ Realm::register_wall_bc(
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
-  const AlgorithmType algType = WALL;
-  geometryAlgDriver_
-    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
+  const AlgorithmType algType = BOUNDARY;
+  geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
       algType, part, "geometry");
 }
 
@@ -2920,9 +2916,8 @@ Realm::register_inflow_bc(
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
-  const AlgorithmType algType = INFLOW;
-  geometryAlgDriver_
-    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
+  const AlgorithmType algType = BOUNDARY;
+  geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
       algType, part, "geometry");
 }
 
@@ -2953,9 +2948,8 @@ Realm::register_open_bc(
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
 
-  const AlgorithmType algType = OPEN;
-  geometryAlgDriver_
-    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
+  const AlgorithmType algType = BOUNDARY;
+  geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
       algType, part, "geometry");
 }
 
@@ -2985,9 +2979,8 @@ Realm::register_symmetry_bc(
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
-  const AlgorithmType algType = SYMMETRY;
-  geometryAlgDriver_
-    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
+  const AlgorithmType algType = BOUNDARY;
+  geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
       algType, part, "geometry");
 }
 
@@ -3068,22 +3061,19 @@ Realm::register_non_conformal_bc(
   // push back the part for book keeping and, later, skin mesh
   bcPartVec_.push_back(part);
 
-  const AlgorithmType algType = NON_CONFORMAL;
-
   const int nDim = metaData_->spatial_dimension();
-  
   // register fields
   MasterElement *meFC = MasterElementRepo::get_surface_master_element(theTopo);
   const int numScsIp = meFC->num_integration_points();
-  
+
   // exposed area vector
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
-   
-  geometryAlgDriver_
-    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
-      algType, part, "geometry");
+
+  const AlgorithmType algType = BOUNDARY;
+  geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
+    algType, part, "geometry");
 }
 
 //--------------------------------------------------------------------------

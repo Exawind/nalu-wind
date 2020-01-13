@@ -1,11 +1,12 @@
 #include <gtest/gtest.h>
 #include <limits>
 
-#include "ComputeGeometryInteriorAlgorithm.h"
-#include "ComputeGeometryBoundaryAlgorithm.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "utils/ComputeVectorDivergence.h"
+#include "ngp_algorithms/GeometryAlgDriver.h"
+#include "ngp_algorithms/GeometryBoundaryAlg.h"
+#include "ngp_algorithms/GeometryInteriorAlg.h"
 
 #include <stk_mesh/base/FieldParallel.hpp>
 
@@ -53,13 +54,12 @@ TEST(utils, compute_vector_divergence)
   const std::string meshSpec("generated:4x4x4");
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
 
-  // create dual volumes
-  sierra::nalu::ComputeGeometryInteriorAlgorithm geomAlg(realm, &(realm.meta_data().universal_part()));
-  geomAlg.execute();
-  stk::mesh::parallel_sum(realm.bulk_data(), {duaNdlVol});
-
-  sierra::nalu::ComputeGeometryBoundaryAlgorithm bndyGeomAlg(realm, realm.meta_data().get_part("surface_1"));
-  bndyGeomAlg.execute();
+  sierra::nalu::GeometryAlgDriver geomAlgDriver(realm);
+  geomAlgDriver.register_elem_algorithm<sierra::nalu::GeometryInteriorAlg>(
+    sierra::nalu::INTERIOR, realm.meta_data().get_part("block_1"), "geometry");
+  geomAlgDriver.register_face_algorithm<sierra::nalu::GeometryBoundaryAlg>(
+    sierra::nalu::BOUNDARY, realm.meta_data().get_part("surface_1"), "geometry");
+  geomAlgDriver.execute();
 
   // get coordinate field
   VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
