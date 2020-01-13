@@ -52,8 +52,9 @@ OversetManager::setup()
 stk::mesh::Selector
 OversetManager::get_inactive_selector()
 {
-  return (stk::mesh::Selector(*inActivePart_) &
-          !(stk::mesh::selectUnion(orphanPointSurfaceVecBackground_)));
+  // There is no inactive part by default, implementations of overset can
+  // override this behavior
+  return stk::mesh::Selector();
 }
 
 void

@@ -143,20 +143,14 @@ namespace sierra
       oversetBC.bcName_ = node["overset_boundary_condition"].as<std::string>();
       oversetBC.theBcType_ = OVERSET_BC;
       oversetBC.oversetConnectivityType_ =
-          OversetBoundaryConditionData::NALU_STK;
+          OversetBoundaryConditionData::TPL_TIOGA;
 
       // Determine the API to be used; we have already set the default
-      if (node["overset_connectivity_type"])
-      {
+      if (node["overset_connectivity_type"]) {
         std::string ogaName =
             node["overset_connectivity_type"].as<std::string>();
 
-        if (ogaName == "nalu_stk")
-        {
-          oversetBC.oversetConnectivityType_ =
-              OversetBoundaryConditionData::NALU_STK;
-        } else if (ogaName == "tioga")
-        {
+        if (ogaName == "tioga") {
 #ifdef NALU_USES_TIOGA
           oversetBC.oversetConnectivityType_ = OversetBoundaryConditionData::TPL_TIOGA;
 #else
@@ -164,10 +158,9 @@ namespace sierra
             "TIOGA overset connectivity requested in input file. "
               "However, the optional TPL was not included during compile time.");
 #endif
-        } else
-        {
+        } else {
           throw std::runtime_error(
-            "Nalu supports two overset connectivity packages: 'nalu_stk' and 'tioga'. "
+            "Nalu-Wind supports only one overset connectivity package: 'tioga'. "
                 "Value in input file: " + ogaName);
         }
       }
@@ -176,10 +169,6 @@ namespace sierra
 
       switch (oversetBC.oversetConnectivityType_)
       {
-        case OversetBoundaryConditionData::NALU_STK:
-          oversetBC.userData_ = oversetUserData.as<OversetUserData>();
-          break;
-
         case OversetBoundaryConditionData::TPL_TIOGA:
 #ifdef NALU_USES_TIOGA
           oversetBC.userData_.oversetBlocks_ = oversetUserData;
@@ -187,20 +176,12 @@ namespace sierra
 #else
           throw std::runtime_error(
             "TIOGA TPL support not enabled during compilation phase.");
-// Avoid nvcc unreachable statement warnings
-#ifndef __CUDACC__
-          break;
-#endif
 #endif
 
         case OversetBoundaryConditionData::OVERSET_NONE:
         default:
           throw std::runtime_error(
             "Invalid overset connectivity setting in input file.");
-// Avoid nvcc unreachable statement warnings
-#ifndef __CUDACC__
-          break;
-#endif
       }
     }
 

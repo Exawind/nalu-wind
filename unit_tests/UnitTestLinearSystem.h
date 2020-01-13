@@ -261,11 +261,6 @@ public:
     const unsigned  /* endPos */)
   {}
 
-  virtual void prepareConstraints(
-    const unsigned  /* beginPos */,
-    const unsigned  /* endPos */)
-  {}
-
   // Solve
   virtual int solve(stk::mesh::FieldBase *  /* linearSolutionField */) { return -1; }
   virtual void loadComplete() {}

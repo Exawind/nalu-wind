@@ -146,9 +146,6 @@ if(NOT ENABLE_CUDA)
   add_test_r(nonIsoElemOpenJetConsolidated 4)
   add_test_r(nonIsoNonUniformEdgeOpenJet 4)
   add_test_r(nonIsoNonUniformElemOpenJet 4)
-  add_test_r(overset 6)
-  add_test_r(oversetFluids 6)
-  add_test_r(oversetFluidsEdge 6)
   add_test_r_np(periodic3dElem 1)
   add_test_r_np(periodic3dElem 4)
   add_test_r_np(periodic3dElem 8)
@@ -205,7 +202,6 @@ if(NOT ENABLE_CUDA)
   #=============================================================================
   # Performance tests
   #=============================================================================
-  add_test_p(oversetHybrid 8)
   add_test_p(uqSlidingMeshDG 8)
   add_test_p(waleElemXflowMixFrac3.5m 8)
 
