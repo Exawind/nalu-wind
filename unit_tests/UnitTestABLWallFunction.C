@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "UnitTestRealm.h"
 #include "UnitTestLinearSystem.h"
@@ -7,9 +8,9 @@
 #include "ABLProfileFunction.h"
 #include "AssembleElemSolverAlgorithm.h"
 #include "AssembleMomentumElemABLWallFunctionSolverAlgorithm.h"
-#include "ComputeGeometryBoundaryAlgorithm.h"
 #include "EquationSystem.h"
 #include "master_element/MasterElement.h"
+#include "ngp_algorithms/GeometryBoundaryAlg.h"
 
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_topology/topology.hpp>
@@ -26,8 +27,6 @@ struct HelperObjectsABLWallFunction {
     eqSystems(realm),
     eqSystem(eqSystems),
     linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem, topo)),
-    elemABLWallFunctionSolverAlg(nullptr),
-    computeGeomBoundAlg(nullptr),
     z0_(z0),
     Tref_(Tref),
     gravity_(gravity)
@@ -35,29 +34,27 @@ struct HelperObjectsABLWallFunction {
     realm.metaData_ = &bulk.mesh_meta_data();
     realm.bulkData_ = &bulk;
     eqSystem.linsys_ = linsys;
-    elemABLWallFunctionSolverAlg = new AssembleMomentumElemABLWallFunctionSolverAlgorithm(realm, part, &eqSystem, false, gravity_, z0_, Tref_);
-    computeGeomBoundAlg = new ComputeGeometryBoundaryAlgorithm(realm, part);
+    elemABLWallFunctionSolverAlg.reset(
+      new AssembleMomentumElemABLWallFunctionSolverAlgorithm(
+        realm, part, &eqSystem, false, gravity_, z0_, Tref_));
+    geomBndryAlg.reset(new GeometryBoundaryAlg<AlgTraitsQuad4>(realm, part));
   }
 
   ~HelperObjectsABLWallFunction()
   {
-    delete elemABLWallFunctionSolverAlg;
-    delete computeGeomBoundAlg;
     realm.metaData_ = nullptr;
     realm.bulkData_ = nullptr;
-
-    delete naluObj;
   }
 
   YAML::Node yamlNode;
   YAML::Node realmDefaultNode;
-  unit_test_utils::NaluTest* naluObj;
+  std::unique_ptr<unit_test_utils::NaluTest> naluObj;
   sierra::nalu::Realm& realm;
   sierra::nalu::EquationSystems eqSystems;
   sierra::nalu::EquationSystem eqSystem;
   unit_test_utils::TestLinearSystem* linsys;
-  AssembleMomentumElemABLWallFunctionSolverAlgorithm* elemABLWallFunctionSolverAlg;
-  ComputeGeometryBoundaryAlgorithm* computeGeomBoundAlg;
+  std::unique_ptr<AssembleMomentumElemABLWallFunctionSolverAlgorithm> elemABLWallFunctionSolverAlg;
+  std::unique_ptr<GeometryBoundaryAlg<AlgTraitsQuad4>> geomBndryAlg;
   const double z0_;
   const double Tref_;
   const double gravity_;
@@ -84,7 +81,7 @@ TEST_F(ABLWallFunctionHex8ElementWithBCFields, abl_wall_function_elem_alg_rhs) {
   SetUp(rho_specified, utau_specified, up_specified, yp_specified);
   double rhs_gold = -rho_specified*utau_specified*utau_specified*aMag;
   HelperObjectsABLWallFunction helperObjs(bulk, numDof, &meta.universal_part(), z0, Tref, gravity, stk::topology::HEX_8);
-  helperObjs.computeGeomBoundAlg->execute();
+  helperObjs.geomBndryAlg->execute();
 
   // Element alg test
   helperObjs.elemABLWallFunctionSolverAlg->initialize_connectivity();
