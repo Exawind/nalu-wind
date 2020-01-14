@@ -1,11 +1,11 @@
 import os
 import math
 import os.path
-import subprocess 
+
 
 def exit_if_file_does_not_exist(fname):
     if not os.path.exists(fname):
-        print ('No file: ' + fname)
+        print 'No file: ' + fname
         exit(1)
 
 
@@ -25,11 +25,7 @@ def num_lines_output(fname):
 
 def tail(fname, n):
     exit_if_file_does_not_exist(fname)
-    p = subprocess.Popen("tail -n " + str(n) + " " + fname, 
-        shell=True, 
-        stdin=subprocess.PIPE, 
-        stdout=subprocess.PIPE, close_fds=True)
-    (stdin, stdout) = (p.stdin, p.stdout)
+    stdin, stdout = os.popen2("tail -n " + str(n) + " " + fname)
     stdin.close()
     lines = stdout.readlines()
     stdout.close()
@@ -52,11 +48,11 @@ def compute_and_check_ooas(basep_name, numResolutions, dim, min_ooas):
     linesToRead = num_lines_output(first_name)
     nodes0, norm0 = extract_norm(tail(first_name, linesToRead))
 
-    for j in range(numResolutions - 1):
+    for j in xrange(numResolutions - 1):
         name = basep_name + "_R" + str(j + 1) + ".dat"
         nodes1, norm1 = extract_norm(tail(name, linesToRead))
         order = {}
-        for varname, norm in norm1.items():
+        for varname, norm in norm1.iteritems():
             num_ratio = math.log(float(norm1[varname]) / float(norm0[varname]))
             order[varname] = num_ratio / math.log(2.0)
 
@@ -65,12 +61,11 @@ def compute_and_check_ooas(basep_name, numResolutions, dim, min_ooas):
 
         output_string = "R" + str(j + 1) + "-" + str(j)
 
-        for varname, ooa in order.items():
-            name = varname.decode('utf-8')
-            output_string += " " + name + ": " + str(ooa)
-            if ooa > min_ooas[name]:
-                print ('Bad convergence')
-                print (output_string)
+        for varname, ooa in order.iteritems():
+            output_string += " " + varname + ": " + str(ooa)
+            if ooa > min_ooas[varname]:
+                print 'Bad convergence'
+                print output_string
                 exit(1)
 
 
