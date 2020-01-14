@@ -45,8 +45,6 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_interior)
   geomAlgDriver.register_elem_algorithm<sierra::nalu::GeometryInteriorAlg>(
     sierra::nalu::INTERIOR, partVec_[0], "geometry");
 
-  // Test that multiple executes are not fatal.
-  geomAlgDriver.execute();
   geomAlgDriver.execute();
 
   ngpElemVol.modify_on_device();
@@ -108,10 +106,9 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
-  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   // zero out fields
   stk::mesh::field_fill(0.0, *exposedAreaVec_);
@@ -129,8 +126,6 @@ TEST_F(TestKernelHex8Mesh, NGP_geometry_bndry)
   geomAlgDriver.register_face_algorithm<sierra::nalu::GeometryBoundaryAlg>(
     sierra::nalu::WALL, surfPart, "geometry");
 
-  // Test that multiple executes are not fatal.
-  geomAlgDriver.execute();
   geomAlgDriver.execute();
 
   ngpArea.modify_on_device();
@@ -164,10 +159,9 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
-  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  LowMachKernelHex8Mesh::fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
+  LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   // zero out fields
   stk::mesh::field_fill(0.0, *wallNormDist_);
@@ -183,8 +177,6 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
     sierra::nalu::WALL, surfPart,
     sierra::nalu::get_elem_topo(helperObjs.realm, *surfPart), "geometry");
 
-  // Test that multiple executes are not fatal.
-  geomAlgDriver.execute();
   geomAlgDriver.execute();
 
   const auto& fieldMgr = helperObjs.realm.mesh_info().ngp_field_manager();

@@ -98,23 +98,6 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
         if (-1 < j) {
           for (int i=0; i<3; ++i)
             EXPECT_NEAR(dpdxref[j][i], dpdx[i], tol);
-double diff = 0;
-for (int i=0; i<3; ++i) diff += abs(dpdxref[j][i]-dpdx[i]);
-std::cout
-<<" diff:"<<diff
-<<" cord:"
-<<" "<<cord[0]
-<<" "<<cord[1]
-<<" "<<cord[2]
-<<" dpdxref:"
-<<" "<<dpdxref[j][0]
-<<" "<<dpdxref[j][1]
-<<" "<<dpdxref[j][2]
-<<" dpdx:"
-<<" "<<dpdx[0]
-<<" "<<dpdx[1]
-<<" "<<cord[2]
-<<std::endl;
         }
       }
     }

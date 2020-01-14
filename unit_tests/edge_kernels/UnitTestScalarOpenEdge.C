@@ -39,10 +39,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
 {
   if (bulk_.parallel_size() > 1) return;
 
-  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
@@ -78,10 +77,9 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_open_edge)
 {
   if (bulk_.parallel_size() > 1) return;
 
-  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   std::mt19937 rng;
   rng.seed(std::mt19937::default_seed);

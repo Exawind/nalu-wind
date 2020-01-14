@@ -20,10 +20,9 @@ TEST_F(MomentumABLKernelHex8Mesh, NGP_abl_wall_func)
 {
   if (bulk_.parallel_size() > 1) return;
 
-  const std::string meshSpec;
   const bool doPerturb = false;
   const bool generateSidesets = true;
-  fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
+  fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;

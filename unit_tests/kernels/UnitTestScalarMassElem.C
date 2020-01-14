@@ -62,8 +62,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_mass)
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) 
     return;
 
-  const std::string meshSpec;
-  fill_mesh_and_init_fields(meshSpec, true);
+  fill_mesh_and_init_fields(true);
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
@@ -108,8 +107,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_scalar_time_derivative_lumped)
   if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
     return;
 
-  const std::string meshSpec;
-  fill_mesh_and_init_fields(meshSpec, false);
+  fill_mesh_and_init_fields(false);
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;

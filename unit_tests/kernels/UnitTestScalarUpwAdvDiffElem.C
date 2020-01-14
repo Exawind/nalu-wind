@@ -42,8 +42,7 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_upw_advection_diffusion)
 {
   if (bulk_.parallel_size() > 1) return;
 
-  const std::string meshSpec;
-  fill_mesh_and_init_fields(meshSpec, false);
+  fill_mesh_and_init_fields(false);
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
