@@ -291,21 +291,11 @@ public:
   virtual ~TestKernelHex8Mesh() {}
 
   virtual void fill_mesh_and_init_fields(
-    const bool doPerturb = false, 
-    const bool generateSidesets = false)
+    const bool doPerturb = false, const bool generateSidesets = false)
   {
-    const std::string baseMeshSpec = "generated:1x1x" + std::to_string(bulk_.parallel_size());
-    fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
-  }
-
-  virtual void fill_mesh_and_init_fields(
-    std::string baseMeshSpec,
-    const bool doPerturb = false, 
-    const bool generateSidesets = false)
-  {
-    if (baseMeshSpec.empty()) baseMeshSpec = "generated:1x1x" + std::to_string(bulk_.parallel_size());
-    if (generateSidesets)  baseMeshSpec += "|sideset:xXyYzZ";
-    unit_test_utils::fill_hex8_mesh(baseMeshSpec, bulk_);
+    std::string meshSpec = "generated:1x1x" + std::to_string(bulk_.parallel_size());
+    if (generateSidesets)  meshSpec += "|sideset:xXyYzZ";
+    unit_test_utils::fill_hex8_mesh(meshSpec, bulk_);
     if (doPerturb) {
       unit_test_utils::perturb_coord_hex_8(bulk_, 0.125);
     }
@@ -389,19 +379,9 @@ public:
   virtual ~LowMachKernelHex8Mesh() {}
 
   virtual void fill_mesh_and_init_fields(
-    const bool doPerturb = false, 
-    const bool generateSidesets = false) override
+    const bool doPerturb = false, const bool generateSidesets = false) override
   {
-    const std::string baseMeshSpec = "generated:1x1x" + std::to_string(bulk_.parallel_size());
-    fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
-  }
-
-  virtual void fill_mesh_and_init_fields(
-    std::string baseMeshSpec,
-    const bool doPerturb = false, 
-    const bool generateSidesets = false) override
-  {
-    TestKernelHex8Mesh::fill_mesh_and_init_fields(baseMeshSpec, doPerturb, generateSidesets);
+    TestKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocity_);
     unit_test_kernel_utils::pressure_test_function(bulk_, *coordinates_, *pressure_);

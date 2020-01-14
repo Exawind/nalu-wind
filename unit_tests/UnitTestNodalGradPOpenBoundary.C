@@ -6,6 +6,7 @@
 /*------------------------------------------------------------------------*/
 
 #include "memory"
+#include "functional"
 
 #include "UnitTestRealm.h"
 #include "UnitTestLinearSystem.h"
@@ -25,7 +26,9 @@ namespace nalu{
 struct HelperObjectsNodalGradPOpenBoundary {
   HelperObjectsNodalGradPOpenBoundary(
     stk::mesh::BulkData& bulk, 
-    stk::mesh::Part* part)
+    stk::mesh::Part* part,
+    const bool zeroGrad,
+    const bool useShifted)
   : 
     realmDefaultNode(unit_test_utils::get_realm_default_node()),
     naluObj(new unit_test_utils::NaluTest(unit_test_utils::get_default_inputs())),
@@ -36,7 +39,8 @@ struct HelperObjectsNodalGradPOpenBoundary {
     realm.metaData_ = &bulk.mesh_meta_data();
     realm.bulkData_ = &bulk;
     realm.solutionOptions_->activateOpenMdotCorrection_ = true;
-    NodalGradPOpenBoundaryAlg.reset(new AssembleNodalGradPOpenBoundaryAlgorithm(realm, part, false));
+    realm.solutionOptions_->explicitlyZeroOpenPressureGradient_ = zeroGrad;
+    NodalGradPOpenBoundaryAlg.reset(new AssembleNodalGradPOpenBoundaryAlgorithm(realm, part, useShifted));
     computeGeomBoundAlg.reset(new ComputeGeometryBoundaryAlgorithm(realm, part));
   }
 
@@ -58,55 +62,36 @@ struct HelperObjectsNodalGradPOpenBoundary {
 
 #ifndef KOKKOS_ENABLE_CUDA
 TEST_F(Hex8MeshWithNSOFields, nodal_grad_popen_boundary) {
-  const std::string meshSpec = "generated:20x20x20";
+  const std::string meshSpec = "generated:1x1x1";
   fill_mesh_and_initialize_test_fields(meshSpec, true);
   stk::mesh::Part* surface1 = meta.get_part("surface_1");
   
-  const double dpdxref[6][3] = {{-0.25, 0.0,  -0.25},
-                                {-0.25, 0.0,   0.25},
-                                {-0.25,-0.25,  0.0},
-                                {-0.25, 0.25,  0.0},
-                                {-0.5,  0.0,   0.0},
-                                { 0.0,  0.0,   0.0}};
-
-  HelperObjectsNodalGradPOpenBoundary helperObjs(bulk, surface1);
-  helperObjs.computeGeomBoundAlg->execute();
-
-  stk::mesh::field_fill(0.0, *dpdx);
-  helperObjs.NodalGradPOpenBoundaryAlg->execute();
-
+  const double x = -0.125;
+  const double y =  0.25 ;
   const stk::mesh::Selector all_local = meta.universal_part() & meta.locally_owned_part();
   const stk::mesh::BucketVector& nodeBuckets = bulk.get_buckets(stk::topology::NODE_RANK, all_local);
-  for (const stk::mesh::Bucket* b : nodeBuckets)
-  {
-    for (stk::mesh::Entity node : *b)
+  std::function<void(bool,bool)> run_alg = [&](bool zeroGrad, bool useShifted) {
+    stk::mesh::field_fill(0.0, *dpdx);
+    HelperObjectsNodalGradPOpenBoundary helperObjs(bulk, surface1, zeroGrad, useShifted);
+    helperObjs.computeGeomBoundAlg->execute();
+    helperObjs.NodalGradPOpenBoundaryAlg->execute();
+    for (const stk::mesh::Bucket* b : nodeBuckets)
     {
-      const double* dpdxData = stk::mesh::field_data(*dpdx, node);
-      const double* cordData = stk::mesh::field_data(*coordField, node);
-      int j=-1;
-      if (cordData[0] == 0) {
-        if      (cordData[2] ==  0 && (cordData[1] == 0 || cordData[1] == 20)) j = -1;
-        else if (cordData[2] == 20 && (cordData[1] == 0 || cordData[1] == 20)) j = -1;
-        else if (cordData[2] ==  0) j = 0;
-        else if (cordData[2] == 20) j = 1;
-        else if (cordData[1] ==  0) j = 2;
-        else if (cordData[1] == 20) j = 3;
-        else                        j = 4;
-        if (stk::parallel_machine_size(comm)==2 && cordData[2] == 10) j = -1;
-      } else {
-        if (0<cordData[0]  && 0<cordData[1]  && 0<cordData[2] &&
-            cordData[0]<20 && cordData[1]<20 && cordData[2]<20)
-                                    j = 5;
-      }
-      if (-1 < j) {
+      for (stk::mesh::Entity node : *b)
+      {
+        const double* dp = stk::mesh::field_data(*dpdx, node);
+        const double*  C = stk::mesh::field_data(*coordField, node);
+        const double re[3] = {x+y*C[0], x+y*C[1], x+y*C[2]};
         for (int i=0; i<3; ++i) 
-          EXPECT_NEAR(dpdxref[j][i], dpdxData[i], tol);
+          EXPECT_NEAR(re[i], dp[i], tol);
       }
     }
-  }
+  };
+  run_alg(false, false);
+  run_alg(true, false);
+  run_alg(false, true);
+  run_alg(true, true);
 }
-
 #endif
-
 }
 }

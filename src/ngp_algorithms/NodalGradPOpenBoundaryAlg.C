@@ -115,14 +115,15 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
       const int* ipNodeMap = meFC->ipNodeMap();
 
       auto& faceView = fdata.simdFaceView;
+      auto& elemView = fdata.simdElemView;
       const auto v_areav        = faceView.get_scratch_view_2D(exposedAreaVec);
       const auto v_dnv          = faceView.get_scratch_view_1D(dualNodalVol);
       const auto face_p_field   = faceView.get_scratch_view_1D(exposedPressureField);
-      const auto elem_p_field   = faceView.get_scratch_view_1D(pressureField);
       const auto v_coord        = faceView.get_scratch_view_2D(coordsID);
+      const auto elem_p_field   = elemView.get_scratch_view_1D(pressureField);
 
       const auto meFaceViews = fdata.simdFaceView.get_me_views(CURRENT_COORDINATES);
-      const auto meElemViews = fdata.simdElemView.get_me_views(CURRENT_COORDINATES);
+      const auto meElemViews = elemView.get_me_views(CURRENT_COORDINATES);
       const auto v_shape_fcn = useShifted ? meFaceViews.fc_shifted_shape_fcn :  meFaceViews.fc_shape_fcn;
       const auto e_shape_fcn = useShifted ? meElemViews.scs_shifted_shape_fcn:  meElemViews.scs_shape_fcn;
 
