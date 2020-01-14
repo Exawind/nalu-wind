@@ -62,7 +62,8 @@ struct HelperObjectsNodalGradPOpenBoundary {
 
 #ifndef KOKKOS_ENABLE_CUDA
 TEST_F(Hex8MeshWithNSOFields, nodal_grad_popen_boundary) {
-  const std::string meshSpec = "generated:1x1x1";
+  const int np  = bulk.parallel_size();
+  const std::string meshSpec = "generated:1x1x" + std::to_string(np);
   fill_mesh_and_initialize_test_fields(meshSpec, true);
   stk::mesh::Part* surface1 = meta.get_part("surface_1");
   
@@ -81,7 +82,10 @@ TEST_F(Hex8MeshWithNSOFields, nodal_grad_popen_boundary) {
       {
         const double* dp = stk::mesh::field_data(*dpdx, node);
         const double*  C = stk::mesh::field_data(*coordField, node);
-        const double re[3] = {x+y*C[0], x+y*C[1], x+y*C[2]};
+        int I[3] = {0,0,0};
+        for (int i=0; i<3; ++i) if (C[i]) I[i] = 1; // mesh boundary
+        double re[3] = {x+y*I[0], x+y*I[1], x+y*I[2]};
+        if (0 < C[2] && C[2] < np) re[2] = 0;       // mesh interior
         for (int i=0; i<3; ++i) 
           EXPECT_NEAR(re[i], dp[i], tol);
       }
