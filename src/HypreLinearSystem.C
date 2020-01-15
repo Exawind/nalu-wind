@@ -113,29 +113,6 @@ HypreLinearSystem::beginLinearSystemConstruction()
   // row status to modify behavior of sumInto method.
   for (HypreIntType i=0; i < numRows_; i++)
     rowStatus_[i] = RT_NORMAL;
-
-  auto& bulk = realm_.bulk_data();
-  std::vector<const stk::mesh::FieldBase*> fVec{realm_.hypreGlobalId_};
-
-  stk::mesh::copy_owned_to_shared(bulk, fVec);
-  stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
-
-  if (realm_.oversetManager_ != nullptr &&
-      realm_.oversetManager_->oversetGhosting_ != nullptr)
-    stk::mesh::communicate_field_data(
-      *realm_.oversetManager_->oversetGhosting_, fVec);
-
-  if (realm_.nonConformalManager_ != nullptr &&
-      realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)
-    stk::mesh::communicate_field_data(
-      *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
-
-  if (realm_.periodicManager_ != nullptr &&
-      realm_.periodicManager_->periodicGhosting_ != nullptr) {
-    realm_.periodicManager_->parallel_communicate_field(realm_.hypreGlobalId_);
-    realm_.periodicManager_->periodic_parallel_communicate_field(
-      realm_.hypreGlobalId_);
-  }
 }
 
 void
@@ -192,18 +169,6 @@ HypreLinearSystem::buildOversetNodeGraph(
   const stk::mesh::PartVector&)
 {
   beginLinearSystemConstruction();
-
-  // Turn on the flag that indicates this linear system has rows that must be
-  // skipped during normal sumInto process
-  hasSkippedRows_ = true;
-
-  // Mark all the fringe nodes as skipped so that sumInto doesn't add into these
-  // rows during assembly process
-  for(auto* oinfo: realm_.oversetManager_->oversetInfoVec_) {
-    auto node = oinfo->orphanNode_;
-    HypreIntType hid = *stk::mesh::field_data(*realm_.hypreGlobalId_, node);
-    skippedRows_.insert(hid * numDof_);
-  }
 }
 
 void
