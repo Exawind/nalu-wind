@@ -1,9 +1,10 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
 
 #include "ngp_algorithms/NodalGradPOpenBoundaryAlg.h"
 #include "Algorithm.h"
@@ -51,9 +52,8 @@ NodalGradPOpenBoundary<AlgTraits>::NodalGradPOpenBoundary(
     faceData_(realm.meta_data()),
     elemData_(realm.meta_data())
 {
-  const int coordinates = get_field_ordinal(realm.meta_data(), realm.get_coordinates_name());
-  faceData_.add_coordinates_field(coordinates, AlgTraits::nDim_, CURRENT_COORDINATES);
-  elemData_.add_coordinates_field(coordinates, AlgTraits::nDim_, CURRENT_COORDINATES);
+  faceData_.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  elemData_.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
   faceData_.add_cvfem_face_me   (meFC_);
   elemData_.add_cvfem_surface_me(meSCS_);
   elemData_.add_gathered_nodal_field(pressureField_,1);
