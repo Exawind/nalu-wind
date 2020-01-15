@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -52,6 +55,7 @@ TurbViscKsgsAlg::execute()
   const DblType invNdim = 1.0 / meta.spatial_dimension();
 
   nalu_ngp::run_entity_algorithm(
+    "TurbViscKsgsAlg",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       const DblType filter = std::pow(dualNodalVolume.get(meshIdx, 0), invNdim);

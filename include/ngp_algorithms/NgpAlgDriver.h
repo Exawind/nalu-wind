@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #ifndef NGPALGDRIVER_H
 #define NGPALGDRIVER_H
@@ -18,7 +21,6 @@
 #include "Enums.h"
 #include "nalu_make_unique.h"
 #include "NaluEnv.h"
-#include "element_promotion/ElementDescription.h"
 #include "ngp_utils/NgpCreateElemInstance.h"
 
 namespace sierra {
@@ -107,8 +109,7 @@ public:
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
       algMap_[algName].reset(
-        nalu_ngp::create_elem_algorithm<Algorithm, ElemAlg>(
-          nDim_, topo, realm_, part, std::forward<Args>(args)...));
+        nalu_ngp::create_elem_algorithm<Algorithm, ElemAlg>(topo, realm_, part, std::forward<Args>(args)...));
       NaluEnv::self().naluOutputP0()
         << "Created algorithm = " << algName << std::endl;
     }
@@ -157,8 +158,7 @@ public:
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
       algMap_[algName].reset(
-        nalu_ngp::create_face_algorithm<Algorithm, FaceAlg>(
-          nDim_, topo, realm_, part, std::forward<Args>(args)...));
+        nalu_ngp::create_face_algorithm<Algorithm, FaceAlg>(topo, realm_, part, std::forward<Args>(args)...));
       NaluEnv::self().naluOutputP0()
         << "Created algorithm = " << algName << std::endl;
     } else {
@@ -183,8 +183,8 @@ public:
     const auto it = algMap_.find(algName);
     if (it == algMap_.end()) {
       algMap_[algName].reset(
-        nalu_ngp::create_face_elem_algorithm<Algorithm, FaceElemAlg>(
-          nDim_, topo, elemTopo, realm_, part, std::forward<Args>(args)...));
+        nalu_ngp::create_face_elem_algorithm<Algorithm, FaceElemAlg>(topo, elemTopo, realm_, part,
+          std::forward<Args>(args)...));
       NaluEnv::self().naluOutputP0()
         << "Created algorithm = " << algName << std::endl;
     } else {
@@ -208,6 +208,24 @@ public:
     else
       register_face_algorithm<NGPAlg>(
         algType, part, algSuffix, std::forward<Args>(args)...);
+  }
+
+  template<template <typename> class NgpAlg,
+           typename LegacyAlg,
+           class ... Args>
+  void register_face_elem_algorithm(
+    AlgorithmType algType,
+    stk::mesh::Part* part,
+    const stk::topology elemTopo,
+    const std::string& algSuffix,
+    Args&& ... args)
+  {
+    if (!nalu_ngp::is_ngp_face(part->topology()))
+      register_legacy_algorithm<LegacyAlg>(
+        algType, part, algSuffix, std::forward<Args>(args) ...);
+    else
+      register_face_elem_algorithm<NgpAlg>(
+        algType, part, elemTopo, algSuffix, std::forward<Args>(args) ... );
   }
 
 protected:
@@ -238,8 +256,6 @@ protected:
   std::map<std::string, std::unique_ptr<Algorithm>> algMap_;
 
   Realm& realm_;
-
-  const int nDim_;
 };
 
 

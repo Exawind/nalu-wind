@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <TpetraLinearSystemHelpers.h>
@@ -99,14 +102,15 @@ void fill_owned_and_shared_then_nonowned_ordered_by_proc(std::vector<LinSys::Glo
 
 stk::mesh::Entity get_entity_master(const stk::mesh::BulkData& bulk,
                                     stk::mesh::Entity entity,
-                                    stk::mesh::EntityId naluId)
+                                    stk::mesh::EntityId naluId,
+                                    bool throwIfMasterNotFound)
 {
   bool thisEntityIsMaster = (bulk.identifier(entity) == naluId);
   if (thisEntityIsMaster) {
     return entity;
   }
   stk::mesh::Entity master = bulk.get_entity(stk::topology::NODE_RANK, naluId);
-  if (!bulk.is_valid(master)) {
+  if (throwIfMasterNotFound && !bulk.is_valid(master)) {
     std::ostringstream os;
     const stk::mesh::Entity* elems = bulk.begin_elements(entity);
     unsigned numElems = bulk.num_elements(entity);

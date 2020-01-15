@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef LinearSystem_h
@@ -79,7 +82,12 @@ public:
     EquationSystem *eqSys,
     LinearSolver *linearSolver);
 
-  virtual ~LinearSystem() {}
+  virtual ~LinearSystem() {
+    if (hostCoeffApplier) {
+      hostCoeffApplier->free_device_pointer();
+      deviceCoeffApplier = nullptr;
+    }
+  }
 
   static LinearSystem *create(Realm& realm, const unsigned numDof, EquationSystem *eqSys, LinearSolver *linearSolver);
 
@@ -140,10 +148,7 @@ public:
                             const SharedMemView<int*,DeviceShmem> & sortPermutation,
                             const SharedMemView<const double*,DeviceShmem> & rhs,
                             const SharedMemView<const double**,DeviceShmem> & lhs,
-                            const char * trace_tag)
-    {
-      linSys_.sumInto(numEntities, entities, rhs, lhs, localIds, sortPermutation, trace_tag);
-    }
+                            const char * trace_tag);
 
     void free_device_pointer() {}
 
@@ -157,7 +162,10 @@ public:
   virtual CoeffApplier* get_coeff_applier()
   {
 #ifndef KOKKOS_ENABLE_CUDA
-    return new DefaultHostOnlyCoeffApplier(*this);
+    if (!hostCoeffApplier) {
+      hostCoeffApplier.reset(new DefaultHostOnlyCoeffApplier(*this));
+    }
+    return hostCoeffApplier.get();
 #else
     return nullptr;
 #endif
@@ -242,6 +250,9 @@ public:
   double get_timer_precond();
   void zero_timer_precond();
   bool useSegregatedSolver() const;
+
+  EquationSystem* equationSystem() { return eqSys_; }
+
 protected:
   virtual void beginLinearSystemConstruction()=0;
   virtual void checkError(
@@ -265,6 +276,9 @@ protected:
   double scaledNonLinearResidual_;
   bool recomputePreconditioner_;
   bool reusePreconditioner_;
+
+  std::unique_ptr<CoeffApplier> hostCoeffApplier;
+  CoeffApplier* deviceCoeffApplier = nullptr;
 
 public:
   bool provideOutput_;

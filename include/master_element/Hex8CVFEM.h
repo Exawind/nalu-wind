@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef Hex8CVFEM_h
@@ -211,12 +214,14 @@ public:
   KOKKOS_FUNCTION void face_grad_op(
     int face_ordinal,
     SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) final;
 
   KOKKOS_FUNCTION void shifted_face_grad_op(
     int face_ordinal,
     SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop) final;
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv) final;
 
   KOKKOS_FUNCTION void shifted_grad_op(
     SharedMemView<DoubleType**, DeviceShmem>&coords,
@@ -334,7 +339,7 @@ public:
     const double *side_pcoords,
     double *elem_pcoords);
 
-  const int* side_node_ordinals(int sideOrdinal) const final;
+  KOKKOS_FUNCTION const int* side_node_ordinals(int sideOrdinal) const final;
   using MasterElement::side_node_ordinals;
 
   double parametric_distance(const std::array<double,3> &x);
@@ -497,11 +502,12 @@ private:
 
 private :
 
-  KOKKOS_FUNCTION void face_grad_op(
+  template<bool shifted>
+  KOKKOS_FUNCTION void face_grad_op_t(
     const int face_ordinal,
-    const bool shifted,
     SharedMemView<DoubleType**, DeviceShmem>& coords,
-    SharedMemView<DoubleType***, DeviceShmem>& gradop);
+    SharedMemView<DoubleType***, DeviceShmem>& gradop,
+    SharedMemView<DoubleType***, DeviceShmem>& deriv);
 };
     
 //-------- hex8_derivative -------------------------------------------------

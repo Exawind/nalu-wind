@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
@@ -39,7 +42,7 @@ namespace advection_diffusion {
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion)
 {
   // FIXME: only test on one core
-  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) 
+  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
     return;
 
   fill_mesh_and_init_fields(true);
@@ -75,11 +78,11 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion)
 TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion_tpetra)
 {
   // FIXME: only test on one core
-  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1) 
+  if (stk::parallel_machine_size(MPI_COMM_WORLD) > 1)
     return;
 
   fill_mesh_and_init_fields(true);
-  
+
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
   solnOpts_.meshDeformation_ = false;
@@ -106,4 +109,3 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_advection_diffusion_tpetra)
   namespace gold_values = hex8_golds::advection_diffusion;
   helperObjs.check_against_dense_gold_values(8, gold_values::lhs, gold_values::rhs);
 }
-

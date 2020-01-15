@@ -8,6 +8,7 @@
 #include "AssembleElemSolverAlgorithm.h"
 #include "AssembleFaceElemSolverAlgorithm.h"
 #include "AssembleNGPNodeSolverAlgorithm.h"
+#include "edge_kernels/AssembleTAMSEdgeKernelAlg.h"
 #include "EquationSystem.h"
 #include "kernel/Kernel.h"
 
@@ -214,6 +215,38 @@ struct EdgeHelperObjects : public HelperObjectsBase
 
   unit_test_utils::TestEdgeLinearSystem* linsys{nullptr};
   sierra::nalu::AssembleEdgeSolverAlgorithm* edgeAlg{nullptr};
+};
+
+struct EdgeKernelHelperObjects : public HelperObjectsBase
+{
+  EdgeKernelHelperObjects(
+    stk::mesh::BulkData& bulk,
+    stk::topology topo,
+    int numDof,
+    stk::mesh::Part* part
+  ) : HelperObjectsBase(bulk),
+      linsys(new TestEdgeLinearSystem(realm, numDof, &eqSystem, topo))
+  {
+    eqSystem.linsys_ = linsys;
+    edgeAlg.reset(new sierra::nalu::AssembleTAMSEdgeKernelAlg(
+                    realm, part, &eqSystem));
+  }
+
+  virtual void execute() override
+  {
+    edgeAlg->execute();
+
+    Kokkos::deep_copy(linsys->hostlhs_, linsys->lhs_);
+    Kokkos::deep_copy(linsys->hostrhs_, linsys->rhs_);
+  }
+
+  void print_lhs_and_rhs() const
+  {
+    HelperObjectsBase::print_lhs_and_rhs(linsys);
+  }
+
+  unit_test_utils::TestEdgeLinearSystem* linsys{nullptr};
+  std::unique_ptr<sierra::nalu::AssembleTAMSEdgeKernelAlg> edgeAlg;
 };
 
 struct NodeHelperObjects : public HelperObjectsBase

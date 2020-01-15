@@ -1,20 +1,18 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <master_element/Tri32DCVFEM.h>
 #include <master_element/MasterElementFunctions.h>
-
-#include <master_element/MasterElementHO.h>
 #include <master_element/MasterElementUtils.h>
 
-#include <element_promotion/LagrangeBasis.h>
-#include <element_promotion/TensorProductQuadratureRule.h>
-#include <element_promotion/QuadratureRule.h>
 #include <AlgTraits.h>
 
 #include <NaluEnv.h>
@@ -568,13 +566,9 @@ void Tri32DSCS::shifted_grad_op(
 void Tri32DSCS::face_grad_op(
   int /*face_ordinal*/,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  using traits = AlgTraitsEdge2DTri32D;
-
-  constexpr int derivSize = traits::numFaceIp_ * traits::nodesPerElement_ * traits::nDim_;
-  DoubleType psi[derivSize];
-  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, traits::numFaceIp_, traits::nodesPerElement_, traits::nDim_);
   tri_derivative(deriv);
   generic_grad_op<AlgTraitsEdge2DTri32D>(deriv, coords, gradop);
 }
@@ -627,10 +621,11 @@ void Tri32DSCS::face_grad_op(
 void Tri32DSCS::shifted_face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   // same as regular face_grad_op
-  face_grad_op(face_ordinal, coords, gradop);
+  face_grad_op(face_ordinal, coords, gradop, deriv);
 }
 
 void Tri32DSCS::shifted_face_grad_op(

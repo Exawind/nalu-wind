@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef TpetraLinearSystemHelpers_h
@@ -55,7 +58,8 @@ void fill_owned_and_shared_then_nonowned_ordered_by_proc(std::vector<LinSys::Glo
 
 stk::mesh::Entity get_entity_master(const stk::mesh::BulkData& bulk,
                                     stk::mesh::Entity entity,
-                                    stk::mesh::EntityId naluId);
+                                    stk::mesh::EntityId naluId,
+                                    bool throwIfMasterNotFound = true);
 
 size_t get_neighbor_index(const std::vector<int>& neighborProcs, int proc);
 

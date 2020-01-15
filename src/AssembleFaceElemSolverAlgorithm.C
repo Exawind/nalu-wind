@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 // nalu
@@ -89,14 +92,11 @@ AssembleFaceElemSolverAlgorithm::execute()
 
   auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);
   const size_t numKernels = activeKernels_.size();
+  auto coeffApplier = coeff_applier();
 
-#ifdef KOKKOS_ENABLE_CUDA
   const unsigned nodesPerEntity = nodesPerElem_;
   const unsigned numDof = numDof_;
-  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
-  CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
   double diagRelaxFactor = diagRelaxFactor_;
-#endif
 
   run_face_elem_algorithm(realm_.bulk_data(),
     KOKKOS_LAMBDA(sierra::nalu::SharedMemData_FaceElem<DeviceTeamHandleType,DeviceShmem> &smdata)
@@ -106,33 +106,28 @@ AssembleFaceElemSolverAlgorithm::execute()
 
         for (size_t i=0; i<numKernels; ++i) {
           Kernel* kernel = ngpKernels(i);
-          kernel->execute( smdata.simdlhs, smdata.simdrhs, smdata.simdFaceViews, smdata.simdElemViews, smdata.elemFaceOrdinal );
+          kernel->execute(
+            smdata.simdlhs, smdata.simdrhs, smdata.simdFaceViews,
+            smdata.simdElemViews, smdata.elemFaceOrdinal);
         }
 
 #ifdef KOKKOS_ENABLE_CUDA
-          extract_vector_lane(smdata.simdrhs, 0, smdata.rhs);
-          extract_vector_lane(smdata.simdlhs, 0, smdata.lhs);
-          for (unsigned ir=0; ir < nodesPerEntity*numDof; ++ir)
-            smdata.lhs(ir, ir) /= diagRelaxFactor;
-          (*deviceCoeffApplier)(nodesPerEntity, smdata.ngpConnectedNodes[0],
-                      smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
+        const int simdIndex = 0;
 #else
-        for(int simdIndex=0; simdIndex<smdata.numSimdFaces; ++simdIndex) {
+        for(int simdIndex=0; simdIndex<smdata.numSimdFaces; ++simdIndex)
+#endif
+        {
           extract_vector_lane(smdata.simdrhs, simdIndex, smdata.rhs);
           extract_vector_lane(smdata.simdlhs, simdIndex, smdata.lhs);
-          for (unsigned ir=0; ir < nodesPerElem_*numDof_; ++ir)
-            smdata.lhs(ir, ir) /= diagRelaxFactor_;
-          apply_coeff(nodesPerElem_, smdata.ngpConnectedNodes[simdIndex],
+          for (unsigned ir=0; ir < nodesPerEntity*numDof; ++ir)
+            smdata.lhs(ir, ir) /= diagRelaxFactor;
+
+          coeffApplier(nodesPerEntity, smdata.ngpConnectedNodes[simdIndex],
                       smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
         }
-#endif
     });
-
-#ifdef KOKKOS_ENABLE_CUDA
-    coeffApplier->free_device_pointer();
-    delete coeffApplier;
-#endif
 }
 
 } // namespace nalu
 } // namespace Sierra
+

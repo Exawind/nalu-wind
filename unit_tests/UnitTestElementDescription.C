@@ -6,120 +6,10 @@
 #include <memory>
 #include <vector>
 
-#include "../include/element_promotion/ElementDescription.h"
+#include "element_promotion/HexNElementDescription.h"
 #include "UnitTestUtils.h"
 
 namespace {
-
-TEST(ElementDescriptionTestQuad, node_map_P1)
-{
-  std::vector<int> stkNodeMap =
-  {
-      0, 1, // bottom row of nodes
-      3, 2  // top row of nodes
-  };
-
-  auto elem = sierra::nalu::ElementDescription::create(2,1);
-  EXPECT_EQ(stkNodeMap.size(), elem->nodeMap.size());
-  for (unsigned j = 0; j < stkNodeMap.size(); ++j) {
-    EXPECT_EQ(stkNodeMap[j], elem->nodeMap[j]);
-  }
-}
-
-TEST(ElementDescriptionTestQuad, node_map_P2)
-{
-  std::vector<int> stkNodeMap =
-  {
-      0, 4, 1, // bottom row of nodes
-      7, 8, 5, // middle row of nodes
-      3, 6, 2  // top row of nodes
-  };
-
-  auto elem = sierra::nalu::ElementDescription::create(2,2);
-  EXPECT_EQ(stkNodeMap.size(), elem->nodeMap.size());
-  for (unsigned j = 0; j < stkNodeMap.size(); ++j) {
-    EXPECT_EQ(stkNodeMap[j], elem->nodeMap[j]);
-  }
-}
-
-TEST(ElementDescriptionTestQuad, node_map_P4)
-{
-  std::vector<int> stkNodeMap =
-  {
-      0, 4, 5, 6, 1,
-      15, 16, 17, 18, 7,
-      14,19,20,21,8,
-      13,22,23,24,9,
-      3,12,11,10,2
-  };
-
-  auto elem = sierra::nalu::ElementDescription::create(2,4);
-  EXPECT_EQ(stkNodeMap.size(), elem->nodeMap.size());
-  for (unsigned j = 0; j < stkNodeMap.size(); ++j) {
-    EXPECT_EQ(stkNodeMap[j], elem->nodeMap[j]);
-  }
-}
-
-TEST(ElementDescriptionTestQuad, face_node_map_P2)
-{
-  // same as native Quad9
-  const std::vector<std::vector<int>> faceNodeMap = {
-      {0, 4, 1}, //face 0, bottom face
-      {1, 5, 2}, //face 1, right face
-      {2, 6, 3}, //face 2, top face  -- reversed order
-      {3, 7, 0}  //face 3, left face -- reversed order
-  };
-
-  auto elem = sierra::nalu::ElementDescription::create(2,2);
-  EXPECT_EQ(4u, elem->faceNodeMap.size());
-  for (unsigned j = 0; j < 4; ++j) {
-    EXPECT_EQ(3u, elem->faceNodeMap[j].size());
-    for (unsigned i = 0; i < 3u; ++i) {
-      EXPECT_EQ(faceNodeMap[j][i], elem->faceNodeMap[j][i]);
-    }
-  }
-}
-
-
-TEST(ElementDescriptionTestQuad, side_ordinal_map_P2)
-{
-  std::vector<std::vector<int>> sideNodeMap =
-  {
-      {0, 1, 4},
-      {1, 2, 5},
-      {2, 3, 6},
-      {3, 0, 7}
-  };
-
-  auto elem = sierra::nalu::ElementDescription::create(2,2);
-  EXPECT_EQ(4u, elem->sideOrdinalMap.size());
-  for (unsigned j = 0; j < 4; ++j) {
-    EXPECT_EQ(3u, elem->sideOrdinalMap[j].size());
-    for (unsigned i = 0; i < 3u; ++i) {
-      EXPECT_EQ(sideNodeMap[j][i], elem->sideOrdinalMap[j][i]);
-    }
-  }
-}
-
-TEST(ElementDescriptionTestQuad, side_ordinal_map_P4)
-{
-  std::vector<std::vector<int>> sideNodeMap =
-  {
-      {0, 1, 4, 5, 6},
-      {1, 2, 7, 8, 9},
-      {2, 3, 10, 11, 12},
-      {3, 0, 13, 14, 15}
-  };
-
-  auto elem = sierra::nalu::ElementDescription::create(2,4);
-  EXPECT_EQ(4u, elem->sideOrdinalMap.size());
-  for (unsigned j = 0; j < 4; ++j) {
-    EXPECT_EQ(5u, elem->sideOrdinalMap[j].size());
-    for (unsigned i = 0; i < 5; ++i) {
-      EXPECT_EQ(sideNodeMap[j][i], elem->sideOrdinalMap[j][i]);
-    }
-  }
-}
 
 
 TEST(ElementDescriptionTestHex, node_map_P2)
@@ -139,10 +29,9 @@ TEST(ElementDescriptionTestHex, node_map_P2)
       7, 18, 6
   };
 
-  auto elem = sierra::nalu::ElementDescription::create(3, 2);
-  EXPECT_EQ(stkNodeMap.size(), elem->nodeMap.size());
+  auto elem = sierra::nalu::HexNElementDescription(2);
   for (unsigned j = 0; j < stkNodeMap.size(); ++j) {
-    EXPECT_EQ(stkNodeMap[j], elem->nodeMap[j]);
+    EXPECT_EQ(stkNodeMap[j], elem.node_map(j));
   }
 }
 
@@ -168,35 +57,9 @@ TEST(ElementDescriptionTestHex, node_map_P3)
       7, 29, 28, 6
   };
 
-  auto elem = sierra::nalu::ElementDescription::create(3, 3);
-  EXPECT_EQ(intendedNodeMap.size(), elem->nodeMap.size());
+  auto elem = sierra::nalu::HexNElementDescription(3);
   for (unsigned j = 0; j < intendedNodeMap.size(); ++j) {
-    EXPECT_EQ(intendedNodeMap[j], elem->nodeMap[j]);
-  }
-}
-
-TEST(ElementDescriptionTestHex, face_node_map_P2)
-{
-  // minus 1 compared to native Hex27 for face nodes,
-  // since we moved the center node from ordinal 20 to 26
-  const std::vector<std::vector<int>> faceNodeMap =
-  {
-      {0,  8,  1, 12, 24, 13,  4, 16,  5}, // face 0(2): front face (cclockwise)
-      {1,  9,  2, 13, 23, 14,  5, 17,  6}, // face 1(5): right face (cclockwise)
-      {3, 10,  2, 15, 25, 14,  7, 18,  6}, // face 2(3): back face  (clockwise)
-      {0, 11,  3, 12, 22, 15,  4, 19,  7}, // face 3(4): left face  (clockwise)
-      {0,  8,  1, 11, 20, 9,   3, 10,  2}, // face 4(0): bottom face (clockwise)
-      {4, 16,  5, 19, 21,  17, 7, 18,  6}  // face 5(1): top face (cclockwise)
-  };
-
-  auto elem = sierra::nalu::ElementDescription::create(3, 2);
-
-  EXPECT_EQ(6u, elem->faceNodeMap.size());
-  for (unsigned j = 0; j < 6; ++j) {
-    EXPECT_EQ(9u, elem->faceNodeMap[j].size());
-    for (unsigned i = 0; i < 9u; ++i) {
-      EXPECT_EQ(faceNodeMap[j][i], elem->faceNodeMap[j][i]);
-    }
+    EXPECT_EQ(intendedNodeMap[j], elem.node_map(j));
   }
 }
 
@@ -212,11 +75,9 @@ TEST(ElementDescriptionTestHex, side_ordinal_map_P2)
     {4, 5, 6, 7, 16, 17, 18, 19, 21}
   };
 
-  auto elem = sierra::nalu::ElementDescription::create(3, 2);
-
-  EXPECT_EQ(6u, elem->sideOrdinalMap.size());
-  for (int side_ordinal = 0; side_ordinal < elem->numBoundaries; ++side_ordinal) {
-    auto side_node_ordinals = elem->side_node_ordinals(side_ordinal);
+  auto elem = sierra::nalu::HexNElementDescription(2);
+  for (int side_ordinal = 0; side_ordinal < elem.numFaces; ++side_ordinal) {
+    auto side_node_ordinals = elem.side_node_ordinals(side_ordinal);
     auto expected_side_node_ordinals = sideNodeMap.at(side_ordinal);
     for (unsigned n = 0; n < expected_side_node_ordinals.size(); ++n) {
       EXPECT_EQ(side_node_ordinals[n], expected_side_node_ordinals.at(n));
@@ -236,10 +97,9 @@ TEST(ElementDescriptionTestHex, side_ordinal_map_P3)
       { 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31, 36, 37, 38, 39 }
   };
 
-  auto elem = sierra::nalu::ElementDescription::create(3, 3);
-  EXPECT_EQ(6u, elem->sideOrdinalMap.size());
-  for (int side_ordinal = 0; side_ordinal < elem->numBoundaries; ++side_ordinal) {
-    auto side_node_ordinals = elem->side_node_ordinals(side_ordinal);
+  auto elem = sierra::nalu::HexNElementDescription(3);
+  for (int side_ordinal = 0; side_ordinal < elem.numFaces; ++side_ordinal) {
+    auto side_node_ordinals = elem.side_node_ordinals(side_ordinal);
     auto expected_side_node_ordinals = sideNodeMap.at(side_ordinal);
     for (unsigned n = 0; n < expected_side_node_ordinals.size(); ++n) {
       EXPECT_EQ(side_node_ordinals[n], expected_side_node_ordinals.at(n));
@@ -247,16 +107,5 @@ TEST(ElementDescriptionTestHex, side_ordinal_map_P3)
   }
 }
 
-
-
-
-
 }
-//auto sideNodeOrdinals = elem->sideOrdinalMap;
-//for (int j = 0; j < 6; ++j) {
-//  std::cout << "Face: " << j << "| {";
-//  for (int k = 0; k < elem->nodesPerSide; ++k) {
-//    std::cout << sideNodeOrdinals.at(j).at(k) << ", ";
-//  }
-//  std:: cout << "}" << std::endl;
-//}
+

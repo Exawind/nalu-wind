@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <SolverAlgorithm.h>
@@ -11,6 +14,8 @@
 #include <EquationSystem.h>
 #include <LinearSystem.h>
 #include <KokkosInterface.h>
+
+#include "ngp_utils/NgpFieldUtils.h"
 
 #include <stk_mesh/base/Entity.hpp>
 
@@ -81,18 +86,83 @@ void fix_overset_rows(
 namespace sierra{
 namespace nalu{
 
-class Realm;
-class EquationSystem;
+NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
+  : ngpMesh_(eqSystem->realm_.ngp_mesh()),
+    deviceSumInto_(eqSystem->linsys_->get_coeff_applier()),
+    nDim_(eqSystem->linsys_->numDof()),
+    hasOverset_(eqSystem->realm_.hasOverset_),
+    extractDiagonal_(eqSystem->extractDiagonal_)
+{
+  if (extractDiagonal_) {
+    diagField_ = nalu_ngp::get_ngp_field(
+      eqSystem->realm_.mesh_info(), eqSystem->get_diagonal_field()->name());
+  }
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// SolverAlgorithm - base class for algorithm with expectations of solver
-//                   contributions
-//==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
+  if (hasOverset_) {
+    iblankField_ = nalu_ngp::get_ngp_field<int>(eqSystem->realm_.mesh_info(), "iblank");
+  }
+}
+
+void NGPApplyCoeff::extract_diagonal(
+  const unsigned int nEntities,
+  const ngp::Mesh::ConnectedNodes& entities,
+  SharedMemView<double**, DeviceShmem>& lhs) const
+{
+  constexpr bool forceAtomic = std::is_same<
+    sierra::nalu::DeviceSpace, Kokkos::DefaultExecutionSpace>::value;
+
+  for (unsigned i=0u; i < nEntities; ++i) {
+    auto ix = i * nDim_;
+    if (forceAtomic)
+      Kokkos::atomic_add(&diagField_.get(ngpMesh_, entities[i], 0), lhs(ix, ix));
+    else
+      diagField_.get(ngpMesh_, entities[i], 0) += lhs(ix, ix);
+  }
+}
+
+void
+NGPApplyCoeff::reset_overset_rows(
+  const unsigned int nEntities,
+  const ngp::Mesh::ConnectedNodes& entities,
+  SharedMemView<double*, DeviceShmem>& rhs,
+  SharedMemView<double**, DeviceShmem>& lhs) const
+{
+  const unsigned numRows = nEntities * nDim_;
+
+  for (unsigned in=0u; in < nEntities; ++in) {
+    const int ibl = iblankField_.get(ngpMesh_, entities[in], 0);
+    const double mask = stk::math::max(0.0, static_cast<double>(ibl));
+    const unsigned ix = in * nDim_;
+
+    for (unsigned d=0; d < nDim_; ++d) {
+      const unsigned ir = ix + d;
+
+      rhs(ir) *= mask;
+      for (unsigned ic=0; ic < numRows; ++ic)
+        lhs(ir, ic) *= mask;
+    }
+  }
+}
+
+void NGPApplyCoeff::operator()(
+  unsigned numMeshobjs,
+  const ngp::Mesh::ConnectedNodes& symMeshobjs,
+  const SharedMemView<int*,DeviceShmem> & scratchIds,
+  const SharedMemView<int*,DeviceShmem> & sortPermutation,
+  SharedMemView<double*,DeviceShmem> & rhs,
+  SharedMemView<double**,DeviceShmem> & lhs,
+  const char *trace_tag) const
+{
+  if (hasOverset_)
+    reset_overset_rows(numMeshobjs, symMeshobjs, rhs, lhs);
+
+  (*deviceSumInto_)(
+    numMeshobjs, symMeshobjs, scratchIds, sortPermutation, rhs, lhs, trace_tag);
+
+  if (extractDiagonal_)
+    extract_diagonal(numMeshobjs, symMeshobjs, lhs);
+}
+
 SolverAlgorithm::SolverAlgorithm(
   Realm &realm,
   stk::mesh::Part *part,

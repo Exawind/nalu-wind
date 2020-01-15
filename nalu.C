@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <mpi.h>
@@ -27,6 +30,7 @@
 
 // Kokkos
 #include <Kokkos_Core.hpp>
+#include <Teuchos_TimeMonitor.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -238,6 +242,10 @@ int main( int argc, char ** argv )
                               false, naluEnv.parallel_comm());
 
   stk::diag::deleteRootTimer(sierra::nalu::Simulation::rootTimer());
+
+  // Write out Trilinos timers
+  Teuchos::TimeMonitor::summarize(
+    naluEnv.naluOutputP0(), false, true, false, Teuchos::Union);
   }
   Kokkos::finalize_all();
   // all done  

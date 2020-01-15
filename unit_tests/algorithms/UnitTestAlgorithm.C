@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "UnitTestAlgorithm.h"
 #include "UnitTestUtils.h"
@@ -96,6 +99,11 @@ TestTurbulenceAlgorithm::declare_fields()
   tkebc_ = &(meta.declare_field<ScalarFieldType>(
        stk::topology::NODE_RANK, "open_tke_bc"));
 
+  avgDudx_ = (&meta.declare_field<GenericFieldType>(
+       stk::topology::NODE_RANK, "average_dudx"));
+  avgTime_ = (&meta.declare_field<ScalarFieldType>(
+       stk::topology::NODE_RANK, "rans_time_scale"));
+
   stk::mesh::put_field_on_mesh(*density_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*viscosity_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*tke_, meta.universal_part(), 1, nullptr);
@@ -113,6 +121,8 @@ TestTurbulenceAlgorithm::declare_fields()
   stk::mesh::put_field_on_mesh(*dhdx_, meta.universal_part(), spatialDim, nullptr);
   stk::mesh::put_field_on_mesh(*specificHeat_, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(*tkebc_, meta.universal_part(), 1, nullptr);
+  stk::mesh::put_field_on_mesh(*avgDudx_, meta.universal_part(), spatialDim * spatialDim, nullptr);
+  stk::mesh::put_field_on_mesh(*avgTime_, meta.universal_part(), 1, nullptr);
 }
 
 void
@@ -138,4 +148,6 @@ TestTurbulenceAlgorithm::fill_mesh_and_init_fields(const std::string mesh_spec)
   unit_test_kernel_utils::dhdx_test_function(bulk, *coordinates_, *dhdx_);
   stk::mesh::field_fill(1000.0, *specificHeat_);
   stk::mesh::field_fill(10.0, *openMassFlowRate_);
+  unit_test_kernel_utils::dudx_test_function(bulk, *coordinates_, *avgDudx_);
+  stk::mesh::field_fill(1.0, *avgTime_);
 }

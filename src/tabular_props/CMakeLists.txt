@@ -1,9 +1,9 @@
-add_sources(GlobalSourceList
-   BSpline.C
-   Converter.C
-   Functions.C
-   H5IO.C
-   HDF5FilePtr.C
-   HDF5Table.C
-   LU.C
+target_sources(nalu PRIVATE
+   ${CMAKE_CURRENT_SOURCE_DIR}/BSpline.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/Converter.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/Functions.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/H5IO.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/HDF5FilePtr.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/HDF5Table.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/LU.C
 )

@@ -1,11 +1,12 @@
-add_sources(GlobalUnitSourceList
-  UnitTestNgpAlgUtils.C
-  UnitTestNodalGradAlg.C
-  UnitTestDiffFluxCoeffAlg.C
-  UnitTestEffSSTDiffFluxCoeffAlg.C
-  UnitTestEnthalpyDiffFluxCoeffAlg.C 
-  UnitTestMdotAlg.C
-  UnitTestTurbViscKsgsAlg.C
-  UnitTestTurbViscSSTAlg.C
-  UnitTestGeometryAlg.C
+target_sources(${utest_ex_name} PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNgpAlgUtils.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNodalGradAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestDiffFluxCoeffAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestEffSSTDiffFluxCoeffAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestEnthalpyDiffFluxCoeffAlg.C 
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMdotAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTurbViscKsgsAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTurbViscSSTAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGeometryAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSDRWallAlg.C
   )

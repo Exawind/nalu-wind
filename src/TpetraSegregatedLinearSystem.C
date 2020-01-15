@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <TpetraSegregatedLinearSystem.h>
@@ -88,10 +91,7 @@ TpetraSegregatedLinearSystem::TpetraSegregatedLinearSystem(
   EquationSystem *eqSys,
   LinearSolver * linearSolver)
   : LinearSystem(realm, numDof, eqSys, linearSolver)
-{
-  Teuchos::ParameterList junk;
-  node_ = Teuchos::rcp(new LinSys::Node(junk));
-}
+{}
 
 TpetraSegregatedLinearSystem::~TpetraSegregatedLinearSystem()
 {
@@ -1179,10 +1179,15 @@ void reset_rows(
 
 sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::get_coeff_applier()
 {
-  return new TpetraLinSysCoeffApplier(ownedLocalMatrix_, sharedNotOwnedLocalMatrix_,
-                                      ownedLocalRhs_, sharedNotOwnedLocalRhs_,
-                                      entityToLID_, entityToColLID_,
-                                      maxOwnedRowId_, maxSharedNotOwnedRowId_, numDof_);
+  if (!hostCoeffApplier) {
+    hostCoeffApplier.reset(new TpetraLinSysCoeffApplier(
+      ownedLocalMatrix_, sharedNotOwnedLocalMatrix_, ownedLocalRhs_,
+      sharedNotOwnedLocalRhs_, entityToLID_, entityToColLID_, maxOwnedRowId_,
+      maxSharedNotOwnedRowId_, numDof_));
+    deviceCoeffApplier = hostCoeffApplier->device_pointer();
+  }
+
+  return deviceCoeffApplier;
 }
 
 KOKKOS_FUNCTION
@@ -1220,19 +1225,25 @@ void TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::operator() (unsigne
 
 void TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::free_device_pointer()
 {
+#ifdef KOKKOS_ENABLE_CUDA
   if (this != devicePointer_) {
     sierra::nalu::kokkos_free_on_device(devicePointer_);
     devicePointer_ = nullptr;
   }
+#endif
 }
 
 sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::device_pointer()
 {
+#ifdef KOKKOS_ENABLE_CUDA
   if (devicePointer_ != nullptr) {
     sierra::nalu::kokkos_free_on_device(devicePointer_);
     devicePointer_ = nullptr;
   }
   devicePointer_ = sierra::nalu::create_device_expression(*this);
+#else
+  devicePointer_ = this;
+#endif
   return devicePointer_;
 }
 

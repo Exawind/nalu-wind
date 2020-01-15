@@ -1,19 +1,26 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef LowMachEquationSystem_h
 #define LowMachEquationSystem_h
 
+#include <memory>
+
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
 #include "NaluParsing.h"
+#include "TAMSAlgDriver.h"
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
+#include "ngp_algorithms/WallFricVelAlgDriver.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 
 namespace stk{
@@ -25,15 +32,12 @@ namespace nalu{
 
 class AlgorithmDriver;
 class Realm;
-class AssembleNodalGradAlgorithmDriver;
-class AssembleNodalGradPAlgorithmDriver;
-class AssembleNodalGradUAlgorithmDriver;
 class MomentumEquationSystem;
 class ContinuityEquationSystem;
-class ComputeMdotAlgorithmDriver;
 class LinearSystem;
 class ProjectedNodalGradientEquationSystem;
 class SurfaceForceAndMomentAlgorithmDriver;
+class MdotAlgDriver;
 
 /** Low-Mach formulation of the Navier-Stokes Equations
  *
@@ -118,56 +122,57 @@ public:
     EquationSystems& equationSystems);
   virtual ~MomentumEquationSystem();
 
-  virtual void initial_work();
+  virtual void initial_work() override;
+  virtual void pre_timestep_work() override;
 
   virtual void register_nodal_fields(
-    stk::mesh::Part *part);
+    stk::mesh::Part *part) override;
 
   virtual void register_edge_fields(
-    stk::mesh::Part *part);
+    stk::mesh::Part *part) override;
 
   virtual void register_element_fields(
     stk::mesh::Part *part,
-    const stk::topology &theTopo);
+    const stk::topology &theTopo) override;
 
   virtual void register_interior_algorithm(
-    stk::mesh::Part *part);
+    stk::mesh::Part *part) override;
 
   virtual void register_inflow_bc(
     stk::mesh::Part *part,
     const stk::topology &theTopo,
-    const InflowBoundaryConditionData &inflowBCData);
+    const InflowBoundaryConditionData &inflowBCData) override;
 
   virtual void register_open_bc(
     stk::mesh::Part *part,
     const stk::topology &partTopo,
-    const OpenBoundaryConditionData &openBCData);
+    const OpenBoundaryConditionData &openBCData) override;
 
   virtual void register_wall_bc(
     stk::mesh::Part *part,
     const stk::topology &partTopo,
-    const WallBoundaryConditionData &wallBCData);
+    const WallBoundaryConditionData &wallBCData) override;
     
   virtual void register_symmetry_bc(
     stk::mesh::Part *part,
     const stk::topology &partTopo,
-    const SymmetryBoundaryConditionData &symmetryBCData);
+    const SymmetryBoundaryConditionData &symmetryBCData) override;
 
   virtual void register_abltop_bc(
     stk::mesh::Part *part,
     const stk::topology &partTopo,
-    const ABLTopBoundaryConditionData &ablTopBCData);
+    const ABLTopBoundaryConditionData &ablTopBCData) override;
 
   virtual void register_non_conformal_bc(
     stk::mesh::Part *part,
-    const stk::topology &theTopo);
+    const stk::topology &theTopo) override;
 
-  virtual void register_overset_bc();
+  virtual void register_overset_bc() override;
 
-  virtual void initialize();
-  virtual void reinitialize_linear_system();
+  virtual void initialize() override;
+  virtual void reinitialize_linear_system() override;
   
-  virtual void predict_state();
+  virtual void predict_state() override;
 
   void compute_wall_function_params();
 
@@ -179,22 +184,22 @@ public:
     const std::vector<stk::mesh::Entity>&,
     const std::vector<int>&,
     const std::vector<double>&
-  );
+  ) override;
 
   virtual void save_diagonal_term(
     unsigned,
     const stk::mesh::Entity*,
     const SharedMemView<const double**>&
-  );
+  ) override;
 
   virtual void save_diagonal_term(
     unsigned,
     const ngp::Mesh::ConnectedNodes&,
     const SharedMemView<const double**,DeviceShmem>&
-  );
+  ) override;
 
   virtual void assemble_and_solve(
-    stk::mesh::FieldBase *deltaSolution);
+    stk::mesh::FieldBase *deltaSolution) override;
 
   void compute_turbulence_parameters();
 
@@ -209,14 +214,14 @@ public:
   ScalarFieldType *visc_;
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
-  ScalarFieldType* Udiag_{nullptr};
 
   VectorNodalGradAlgDriver nodalGradAlgDriver_;
-  NgpAlgDriver wallFuncAlgDriver_;
+  WallFricVelAlgDriver wallFuncAlgDriver_;
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
   std::unique_ptr<Algorithm> tviscAlg_{nullptr};
 
   AlgorithmDriver *cflReyAlgDriver_;
+  std::unique_ptr<TAMSAlgDriver> TAMSAlgDriver_{nullptr};
 
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 
@@ -225,6 +230,11 @@ public:
   // saved of mesh parts that are not to be projected
   std::vector<stk::mesh::Part *> notProjectedPart_;
   std::array<std::vector<stk::mesh::Part*>,3> notProjectedDir_;
+
+  ScalarFieldType* get_diagonal_field() override { return Udiag_; }
+
+private:
+  ScalarFieldType* Udiag_;
 };
 
 class ContinuityEquationSystem : public EquationSystem {
@@ -304,7 +314,7 @@ public:
   ScalarFieldType *pTmp_;
 
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
-  ComputeMdotAlgorithmDriver *computeMdotAlgDriver_;
+  std::unique_ptr<MdotAlgDriver> mdotAlgDriver_;
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 };
 

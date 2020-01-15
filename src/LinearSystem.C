@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <LinearSystem.h>
@@ -31,6 +34,8 @@
 #include <stk_mesh/base/Part.hpp>
 #include <stk_topology/topology.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
+
+#include "stk_ngp/NgpFieldParallel.hpp"
 
 #include <Teuchos_VerboseObject.hpp>
 #include <Teuchos_FancyOStream.hpp>
@@ -97,11 +102,17 @@ LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, Equation
   switch(solver->getType()) {
   case PT_TPETRA:
     return new TpetraLinearSystem(realm, numDof, eqSys, solver);
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
     break;
+#endif
 
   case PT_TPETRA_SEGREGATED:
     return new TpetraSegregatedLinearSystem(realm, numDof, eqSys, solver);
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
     break;
+#endif
 
 #ifdef NALU_USES_HYPRE
   case PT_HYPRE:
@@ -118,15 +129,40 @@ LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, Equation
   default:
     throw std::logic_error("create lin sys");
   }
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
   return 0;
+#endif
 }
 
 void LinearSystem::sync_field(const stk::mesh::FieldBase *field)
 {
-  std::vector< const stk::mesh::FieldBase *> fields(1,field);
-  stk::mesh::BulkData& bulkData = realm_.bulk_data();
-  stk::mesh::copy_owned_to_shared( bulkData, fields);
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const std::vector<NGPDoubleFieldType*> ngpFields{
+    &fieldMgr.get_field<double>(field->mesh_meta_data_ordinal())
+  };
+
+  ngp::copy_owned_to_shared(realm_.bulk_data(), ngpFields);
 }
+
+#ifndef KOKKOS_ENABLE_CUDA
+KOKKOS_FUNCTION
+void LinearSystem::DefaultHostOnlyCoeffApplier::operator()(
+                        unsigned numEntities,
+                        const ngp::Mesh::ConnectedNodes& entities,
+                        const SharedMemView<int*,DeviceShmem> & localIds,
+                        const SharedMemView<int*,DeviceShmem> & sortPermutation,
+                        const SharedMemView<const double*,DeviceShmem> & rhs,
+                        const SharedMemView<const double**,DeviceShmem> & lhs,
+                        const char * trace_tag)
+{
+  linSys_.sumInto(numEntities, entities, rhs, lhs, localIds, sortPermutation, trace_tag);
+
+  if (linSys_.equationSystem()->extractDiagonal_) {
+    linSys_.equationSystem()->save_diagonal_term(numEntities, entities, lhs);
+  }
+}
+#endif
 
 } // namespace nalu
 } // namespace Sierra

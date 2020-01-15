@@ -1,18 +1,19 @@
-add_sources(GlobalUnitSourceList
-  UnitTestContinuityGclNodeKernel.C
-  UnitTestContinuityMassBDFNodeKernel.C
-  UnitTestEnthalpyABLForceNode.C
-  UnitTestMomentumABLForceNode.C
-  UnitTestMomentumBodyForceNode.C
-  UnitTestMomentumBoussinesqNode.C
-  UnitTestMomentumGclSrcNodeKernel.C
-  UnitTestMomentumMassBDFNodeKernel.C
-  UnitTestMomentumCoriolisNode.C
-  UnitTestScalarGclNodeKernel.C
-  UnitTestScalarMassBDFNodeKernel.C
-  UnitTestMomentumActuatorNodeKernel.C
-  UnitTestTurbKineticEnergyRodiNodeKernel.C
-  UnitTestSSTNodeKernel.C
-  UnitTestKsgsNodeKernel.C
-  UnitTestWallDistNode.C
+target_sources(${utest_ex_name} PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestContinuityGclNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestContinuityMassBDFNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestEnthalpyABLForceNode.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumABLForceNode.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumBodyForceNode.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumBoussinesqNode.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumGclSrcNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumMassBDFNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumCoriolisNode.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarGclNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarMassBDFNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumActuatorNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTAMSNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestTKERodiNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSSTNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestKsgsNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestWallDistNode.C
 )

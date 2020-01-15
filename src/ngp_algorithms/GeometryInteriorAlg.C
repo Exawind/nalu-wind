@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "ngp_algorithms/GeometryInteriorAlg.h"
 #include "BuildTemplates.h"
@@ -61,7 +64,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
 {
   using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
 
-  auto meshInfo = realm_.mesh_info();
+  const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
@@ -75,14 +78,16 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
     & stk::mesh::selectUnion(partVec_)
     & !(realm_.get_inactive_selector());
 
+  const std::string algName = "compute_dnv_" + std::to_string(AlgTraits::topo_);
   nalu_ngp::run_elem_algorithm(
-    meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
+    algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata){
       const int* ipNodeMap = meSCV->ipNodeMap();
       auto& scrView = edata.simdScrView;
       const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
       const auto& v_scv_vol = meViews.scv_volume;
 
+      elemVolOps(edata, 0) = 0.0;
       for (int ip=0; ip < AlgTraits::numScvIp_; ++ip) {
         const auto nn = ipNodeMap[ip];
         dnvOps(edata, nn, 0) += v_scv_vol(ip);
@@ -99,7 +104,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_edge_area_vector()
 {
   using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
 
-  auto meshInfo = realm_.mesh_info();
+  const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
@@ -110,8 +115,9 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_edge_area_vector()
     & stk::mesh::selectUnion(partVec_)
     & !(realm_.get_inactive_selector());
 
+  const std::string algName = "compute_edge_areav_" + std::to_string(AlgTraits::topo_);
   nalu_ngp::run_elem_algorithm(
-    meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
+    algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
       const int* lrscv = meSCS->adjacentNodes();
       const int* scsIpEdgeMap = meSCS->scsIpEdgeOrd();

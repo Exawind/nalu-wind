@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "master_element/Wed6CVFEM.h"
 #include "master_element/MasterElementFunctions.h"
@@ -676,17 +679,13 @@ WedSCS::face_grad_op(
 void WedSCS::face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   using tri_traits = AlgTraitsTri3Wed6;
   using quad_traits = AlgTraitsQuad4Wed6;
   constexpr int dim = 3;
-
-  constexpr int maxDerivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * dim;
-  NALU_ALIGNED DoubleType psi[maxDerivSize];
   const int numFaceIps = (face_ordinal < 3) ? quad_traits::numFaceIp_ : tri_traits::numFaceIp_;
-  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, numFaceIps, AlgTraitsWed6::nodesPerElement_, dim);
-
   const int offset = quad_traits::numFaceIp_ * face_ordinal;
   wed_deriv(numFaceIps, &intgExpFace_[dim * offset], deriv);
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);
@@ -697,17 +696,13 @@ void WedSCS::face_grad_op(
 void WedSCS::shifted_face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   using tri_traits = AlgTraitsTri3Wed6;
   using quad_traits = AlgTraitsQuad4Wed6;
   constexpr int dim = 3;
-
-  constexpr int maxDerivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * dim;
-  NALU_ALIGNED DoubleType psi[maxDerivSize];
   const int numFaceIps = (face_ordinal < 3) ? quad_traits::numFaceIp_ : tri_traits::numFaceIp_;
-  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, numFaceIps, AlgTraitsWed6::nodesPerElement_, dim);
-
   const int offset = sideOffset_[face_ordinal];
   wed_deriv(numFaceIps, &intgExpFaceShift_[dim * offset], deriv);
   generic_grad_op<AlgTraitsWed6>(deriv, coords, gradop);

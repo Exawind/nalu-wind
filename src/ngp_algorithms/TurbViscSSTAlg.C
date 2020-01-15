@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "ngp_algorithms/TurbViscSSTAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -19,7 +22,8 @@ namespace nalu{
 TurbViscSSTAlg::TurbViscSSTAlg(
   Realm &realm,
   stk::mesh::Part *part,
-  ScalarFieldType* tvisc
+  ScalarFieldType* tvisc,
+  const bool useAverages
 ) : Algorithm(realm, part),
     tviscField_(tvisc),
     density_(get_field_ordinal(realm.meta_data(), "density")),
@@ -27,7 +31,7 @@ TurbViscSSTAlg::TurbViscSSTAlg(
     tke_(get_field_ordinal(realm.meta_data(), "turbulent_ke")),
     sdr_(get_field_ordinal(realm.meta_data(), "specific_dissipation_rate")),
     minDistance_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
-    dudx_(get_field_ordinal(realm.meta_data(), "dudx")),
+    dudx_(get_field_ordinal(realm.meta_data(), (useAverages) ? "average_dudx" : "dudx")),
     tvisc_(tvisc->mesh_meta_data_ordinal()),
     aOne_(realm.get_turb_model_constant(TM_aOne)),
     betaStar_(realm.get_turb_model_constant(TM_betaStar))
@@ -60,6 +64,7 @@ TurbViscSSTAlg::execute()
   const int nDim = meta.spatial_dimension();
 
   nalu_ngp::run_entity_algorithm(
+    "TurbViscSSTAlg",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       DblType sijMag = 0.0;

@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef BuildTemplates_h
@@ -66,63 +69,31 @@ template class ClassName<AlgTraitsEdge32DQuad92D>;                \
 // 2,3,4 and one that can be set at compile time
 
 #ifndef USER_POLY_ORDER
-#define USER_POLY_ORDER 5
+#define USER_POLY_ORDER 1
 #endif
 
-#define INSTANTIATE_POLY_TEMPLATE(ClassName,BaseTraitsName)       \
-template class ClassName<BaseTraitsName<2>>;                      \
-template class ClassName<BaseTraitsName<3>>;                      \
-template class ClassName<BaseTraitsName<4>>;                      \
+#define INSTANTIATE_POLY_TEMPLATE(ClassName)                      \
+template class ClassName<2>;                                      \
+template class ClassName<3>;                                      \
+template class ClassName<4>;                                      \
 template class ClassName<BaseTraitsName<USER_POLY_ORDER>>;        \
 
-#define INSTANTIATE_KERNEL_3D_HO(ClassName)                       \
-INSTANTIATE_POLY_TEMPLATE(ClassName,AlgTraitsHexGL)               \
-
-#define INSTANTIATE_KERNEL_2D_HO(ClassName)                       \
-INSTANTIATE_POLY_TEMPLATE(ClassName,AlgTraitsQuadGL_2D)           \
-
-#define INSTANTIATE_KERNEL_FACE_2D_HO(ClassName)                  \
-INSTANTIATE_POLY_TEMPLATE(ClassName,AlgTraitsEdgeGL)              \
-
-#define INSTANTIATE_KERNEL_FACE_3D_HO(ClassName)                  \
-INSTANTIATE_POLY_TEMPLATE(ClassName,AlgTraitsQuadGL)              \
-
-#define INSTANTIATE_KERNEL_FACE_ELEMENT_3D_HO(ClassName)          \
-INSTANTIATE_POLY_TEMPLATE(ClassName,AlgTraitsQuadPHexPGL)         \
-
-#define INSTANTIATE_KERNEL_FACE_ELEMENT_2D_HO(ClassName)          \
-INSTANTIATE_POLY_TEMPLATE(ClassName,AlgTraitsEdgePQuadPGL)        \
-
-#define INSTANTIATE_KERNEL_3D_HOSGL(ClassName)                    \
-template class ClassName<AlgTraitsHex<2>>;                        \
-template class ClassName<AlgTraitsHex<3>>;                        \
-template class ClassName<AlgTraitsHex<4>>;                        \
-template class ClassName<AlgTraitsHex<USER_POLY_ORDER>>;          \
 
 // Instantiate the actual kernels
 
 #define INSTANTIATE_KERNEL(ClassName)                             \
   INSTANTIATE_KERNEL_3D(ClassName)                                \
   INSTANTIATE_KERNEL_2D(ClassName)                                \
-  INSTANTIATE_KERNEL_3D_HO(ClassName)                             \
-  INSTANTIATE_KERNEL_2D_HO(ClassName)                             \
+
 
 #define INSTANTIATE_KERNEL_FACE(ClassName)                        \
   INSTANTIATE_KERNEL_FACE_3D(ClassName)                           \
   INSTANTIATE_KERNEL_FACE_2D(ClassName)                           \
-  INSTANTIATE_KERNEL_FACE_3D_HO(ClassName)                        \
-  INSTANTIATE_KERNEL_FACE_2D_HO(ClassName)                        \
+
 
 #define INSTANTIATE_KERNEL_FACE_ELEMENT(ClassName)                \
   INSTANTIATE_KERNEL_FACE_ELEMENT_3D(ClassName)                   \
   INSTANTIATE_KERNEL_FACE_ELEMENT_2D(ClassName)                   \
-  INSTANTIATE_KERNEL_FACE_ELEMENT_3D_HO(ClassName)                \
-  INSTANTIATE_KERNEL_FACE_ELEMENT_2D_HO(ClassName)                \
-
-#define INSTANTIATE_KERNEL_HOSGL(ClassName)                       \
-  INSTANTIATE_KERNEL_3D_HOSGL(ClassName)                          \
-
-
 
 } // namespace nalu
 } // namespace Sierra

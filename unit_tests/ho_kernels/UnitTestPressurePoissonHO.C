@@ -19,7 +19,6 @@
 #include <random>
 #include <chrono>
 
-#include <element_promotion/ElementDescription.h>
 #include "UnitTestViewUtils.h"
 #include "UnitTestUtils.h"
 

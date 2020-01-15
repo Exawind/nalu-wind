@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef SpecificDissipationRateEquationSystem_h
@@ -13,6 +16,8 @@
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
 
+#include "ngp_algorithms/NodalGradAlgDriver.h"
+
 namespace stk{
 struct topology;
 }
@@ -20,9 +25,7 @@ struct topology;
 namespace sierra{
 namespace nalu{
 
-class AlgorithmDriver;
 class Realm;
-class AssembleNodalGradAlgorithmDriver;
 class LinearSystem;
 class EquationSystems;
 
@@ -88,9 +91,9 @@ public:
   ScalarFieldType *assembledWallSdr_;
   ScalarFieldType *assembledWallArea_;
   
-  AssembleNodalGradAlgorithmDriver *assembleNodalGradAlgDriver_;
-  AlgorithmDriver *diffFluxCoeffAlgDriver_;
-  std::vector<Algorithm *> wallModelAlg_;
+  ScalarNodalGradAlgDriver nodalGradAlgDriver_;
+  std::unique_ptr<Algorithm> effDiffFluxAlg_;
+  std::unique_ptr<NgpAlgDriver> wallModelAlgDriver_;
 
 };
 

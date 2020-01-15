@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
 
@@ -12,6 +15,7 @@
 #include "master_element/MasterElementFactory.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
+#include "ngp_utils/NgpReduceUtils.h"
 #include "ScratchViews.h"
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
@@ -102,12 +106,14 @@ template <typename BcAlgTraits>
 ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
   Realm& realm,
   stk::mesh::Part* part,
+  WallFricVelAlgDriver& algDriver,
   const bool useShifted,
   const double gravity,
   const double z0,
   const double Tref,
   const double kappa)
   : Algorithm(realm, part),
+    algDriver_(algDriver),
     faceData_(realm.meta_data()),
     velocityNp1_(
       get_field_ordinal(realm.meta_data(), "velocity", stk::mesh::StateNP1)),
@@ -188,9 +194,15 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
   const auto utauOps = nalu_ngp::simd_elem_field_updater(
     ngpMesh, ngpUtau);
 
-  nalu_ngp::run_elem_algorithm(
-    meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
-    KOKKOS_LAMBDA(ElemSimdData& edata) {
+  // Reducer to accumulate the area-weighted utau sum as well as total area for
+  // wall boundary of this specific topology.
+  nalu_ngp::ArraySimdDouble2 utauSum(0.0);
+  Kokkos::Sum<nalu_ngp::ArraySimdDouble2> utauReducer(utauSum);
+
+  const std::string algName = "ABLWallFrictionVelAlg_" + std::to_string(BcAlgTraits::topo_);
+  nalu_ngp::run_elem_par_reduce(
+    algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
+    KOKKOS_LAMBDA(ElemSimdData& edata, nalu_ngp::ArraySimdDouble2& uSum) {
       // Unit normal vector
       NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
       NALU_ALIGNED DoubleType velIp[BcAlgTraits::nDim_];
@@ -225,6 +237,7 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
 
         const DoubleType zh = v_wallnormdist(ip);
 
+        // Compute quantities at the boundary integration points
         DoubleType heatFluxIp = 0.0;
         DoubleType rhoIp = 0.0;
         DoubleType CpIp = 0.0;
@@ -300,8 +313,14 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
           stk::simd::set_data(utau_calc, si, utau);
         }
         utauOps(edata, ip) = utau_calc;
+
+        // Accumulate utau for statistics output
+        uSum.array_[0] += utau_calc * aMag;
+        uSum.array_[1] += aMag;
       }
-    });
+    }, utauReducer);
+
+  algDriver_.accumulate_utau_area_sum(utauSum.array_[0], utauSum.array_[1]);
 }
 
 INSTANTIATE_KERNEL_FACE(ABLWallFrictionVelAlg)

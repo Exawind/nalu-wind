@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef DataProbePostProcessing_h
@@ -20,7 +23,6 @@
 #include <stk_mesh/base/Selector.hpp>
 
 #include <stk_io/StkMeshIoBroker.hpp>
-
 
 // stk forwards
 namespace stk {
@@ -47,6 +49,12 @@ enum class DataProbeSampleType{
   APRXFREQUENCY
 };
 
+// Defines the different kinds of probe geometries
+enum class DataProbeGeomType{
+  LINEOFSITE,
+  PLANE
+};
+
 class DataProbeInfo {
 public:
   DataProbeInfo() { }
@@ -63,6 +71,19 @@ public:
   std::vector<Coordinates> tailCoordinates_;
   std::vector<std::vector<stk::mesh::Entity> > nodeVector_;
   std::vector<stk::mesh::Part *> part_;
+
+  // variables for sample planes
+  bool isSamplePlane_;   
+  std::vector<DataProbeGeomType> geomType_;
+  std::vector<Coordinates> cornerCoordinates_;
+  std::vector<Coordinates> edge1Vector_;
+  std::vector<Coordinates> edge2Vector_;
+  std::vector<int>         edge1NumPoints_;
+  std::vector<int>         edge2NumPoints_;
+  std::vector<Coordinates> offsetDir_;
+  std::vector<std::vector<double>>  offsetSpacings_;
+
+
 };
 
 class DataProbeSpecInfo {
@@ -163,6 +184,7 @@ private:
 
   double previousTime_;
   bool useExo_{false};
+  bool useText_{false};
   std::string exoName_;
   size_t fileIndex_;
   size_t precisionvar_;

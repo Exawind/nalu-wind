@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 // nalu
@@ -15,6 +18,7 @@
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
+#include "ngp_algorithms/MdotAlgDriver.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -37,8 +41,10 @@ namespace nalu{
 //--------------------------------------------------------------------------
 ComputeMdotElemOpenPenaltyAlgorithm::ComputeMdotElemOpenPenaltyAlgorithm(
   Realm &realm,
-  stk::mesh::Part *part)
+  stk::mesh::Part *part,
+  MdotAlgDriver& mdotDriver)
   : Algorithm(realm, part),
+    mdotDriver_(mdotDriver),
     velocityRTM_(NULL),
     Gpdx_(NULL),
     coordinates_(NULL),
@@ -329,9 +335,7 @@ ComputeMdotElemOpenPenaltyAlgorithm::execute()
       }
     }
   }
-  // scatter back to solution options; not thread safe
-  realm_.solutionOptions_->mdotAlgOpen_ += mdotOpen;
-  realm_.solutionOptions_->mdotAlgOpenIpCount_ += mdotOpenIpCount;
+  mdotDriver_.add_open_mdot(mdotOpen);
 }
 
 } // namespace nalu

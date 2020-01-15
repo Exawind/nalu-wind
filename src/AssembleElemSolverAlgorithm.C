@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 // nalu
@@ -88,15 +91,11 @@ AssembleElemSolverAlgorithm::execute()
     activeKernels_[i]->setup(*realm_.timeIntegrator_);
 
   auto ngpKernels = nalu_ngp::create_ngp_view<Kernel>(activeKernels_);
-
-#ifdef KOKKOS_ENABLE_CUDA
-  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
-  CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
+  auto coeffApplier = coeff_applier();
 
   double diagRelaxFactor = diagRelaxFactor_;
   int rhsSize = rhsSize_;
   unsigned nodesPerEntity = nodesPerEntity_;
-#endif
 
   run_algorithm(
     realm_.bulk_data(),
@@ -108,29 +107,20 @@ AssembleElemSolverAlgorithm::execute()
         kernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);
       }
 
-#ifndef KOKKOS_ENABLE_CUDA
-      for(int simdElemIndex=0; simdElemIndex<smdata.numSimdElems; ++simdElemIndex) {
+#ifdef KOKKOS_ENABLE_CUDA
+      const int simdElemIndex = 0;
+#else
+      for(int simdElemIndex=0; simdElemIndex<smdata.numSimdElems; ++simdElemIndex)
+#endif
+      {
         extract_vector_lane(smdata.simdrhs, simdElemIndex, smdata.rhs);
         extract_vector_lane(smdata.simdlhs, simdElemIndex, smdata.lhs);
-        for (int ir=0; ir < rhsSize_; ++ir)
-          smdata.lhs(ir, ir) /= diagRelaxFactor_;
-        apply_coeff(nodesPerEntity_, smdata.ngpElemNodes[simdElemIndex],
-                    smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
-      }
-#else
-      extract_vector_lane(smdata.simdrhs, 0, smdata.rhs);
-      extract_vector_lane(smdata.simdlhs, 0, smdata.lhs);
         for (int ir=0; ir < rhsSize; ++ir)
           smdata.lhs(ir, ir) /= diagRelaxFactor;
-        (*deviceCoeffApplier)(nodesPerEntity, smdata.ngpElemNodes[0],
+        coeffApplier(nodesPerEntity, smdata.ngpElemNodes[simdElemIndex],
                     smdata.scratchIds, smdata.sortPermutation, smdata.rhs, smdata.lhs, __FILE__);
-#endif
+      }
     });
-
-#ifdef KOKKOS_ENABLE_CUDA
-  coeffApplier->free_device_pointer();
-  delete coeffApplier;
-#endif
 }
 
 } // namespace nalu

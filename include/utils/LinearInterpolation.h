@@ -114,7 +114,10 @@ linear_interp(
     switch (oob) {
     case OutOfBounds::ERROR:
       throw std::runtime_error("Out of bounds error in interpolation");
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
       break;
+#endif
 
     case OutOfBounds::WARN:
       std::cout

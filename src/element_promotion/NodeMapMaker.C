@@ -1,11 +1,14 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 #include <element_promotion/NodeMapMaker.h>
-#include <element_promotion/ElementDescription.h>
+#include <element_promotion/HexNElementDescription.h>
 
 #include <stk_util/util/ReportHandler.hpp>
 
@@ -42,15 +45,15 @@ Kokkos::View<int***> exodus_hex27_node_map()
 
 Kokkos::View<int***> make_node_map_hex(int p, bool isPromoted)
 {
-  if (!isPromoted) return exodus_hex27_node_map();
+  if (!isPromoted && p == 2) return exodus_hex27_node_map();
 
   const int nodes1D = p + 1;
   Kokkos::View<int***> node_map("node_map", nodes1D, nodes1D, nodes1D);
-  auto desc = ElementDescription::create(3, p);
+  const auto desc = HexNElementDescription(p);
   for (int k = 0; k < nodes1D; ++k) {
     for (int j = 0; j < nodes1D; ++j) {
       for (int i = 0; i < nodes1D; ++i) {
-        node_map(k,j,i) = desc->node_map(i,j,k);
+        node_map(k,j,i) = desc.node_map(i,j,k);
       }
     }
   }
@@ -61,41 +64,13 @@ Kokkos::View<int**> make_node_map_quad(int p)
 {
   const int nodes1D = p + 1;
   Kokkos::View<int**> node_map("node_map", nodes1D, nodes1D);
-  auto desc = ElementDescription::create(2, p);
+  const auto desc = HexNElementDescription(p);
     for (int j = 0; j < nodes1D; ++j) {
       for (int i = 0; i < nodes1D; ++i) {
-        node_map(j,i) = desc->node_map(i,j);
+        node_map(j,i) = desc.bc_node_map(i,j);
       }
     }
   return node_map;
-}
-
-Kokkos::View<int***> make_face_node_map_hex(int p)
-{
-  const int nodes1D = p + 1;
-  Kokkos::View<int***> face_node_map("face_node_map", 6, nodes1D, nodes1D);
-  auto desc = ElementDescription::create(3, p);
-  for (int faceOrdinal = 0; faceOrdinal < 6; ++faceOrdinal) {
-    for (int j = 0; j < nodes1D; ++j) {
-      for (int i = 0; i < nodes1D; ++i) {
-        face_node_map(faceOrdinal, j, i) = desc->faceNodeMap[faceOrdinal][i + j * nodes1D];
-      }
-    }
-  }
-  return face_node_map;
-}
-
-Kokkos::View<int**> make_face_node_map_quad(int p)
-{
-  const int nodes1D = p + 1;
-  Kokkos::View<int**> face_node_map("face_node_map", 4, nodes1D);
-  auto desc = ElementDescription::create(2, p);
-  for (int faceOrdinal = 0; faceOrdinal < 4; ++faceOrdinal) {
-    for (int i = 0; i < nodes1D; ++i) {
-      face_node_map(faceOrdinal, i) = desc->faceNodeMap[faceOrdinal][i];
-    }
-  }
-  return face_node_map;
 }
 
 
@@ -103,37 +78,12 @@ Kokkos::View<int**> make_side_node_ordinal_map_hex(int p)
 {
   const int nodes1D = p + 1;
   Kokkos::View<int**> face_node_map("side_node_ordinal_map", 6, nodes1D * nodes1D);
-  auto desc = ElementDescription::create(3, p);
+  const auto desc = HexNElementDescription(p);
   for (int faceOrdinal = 0; faceOrdinal < 6; ++faceOrdinal) {
     for (int i = 0; i < nodes1D*nodes1D; ++i) {
-      face_node_map(faceOrdinal, i) = desc->sideOrdinalMap[faceOrdinal][i];
+      face_node_map(faceOrdinal, i) = desc.side_node_ordinals(faceOrdinal)[i];
   }}
   return face_node_map;
-}
-
-Kokkos::View<int**> make_side_node_ordinal_map_quad(int p)
-{
-  const int nodes1D = p + 1;
-  Kokkos::View<int**> face_node_map("side_node_ordinal_map", 4, nodes1D);
-  auto desc = ElementDescription::create(2, p);
-  for (int faceOrdinal = 0; faceOrdinal < 4; ++faceOrdinal) {
-    for (int i = 0; i < nodes1D; ++i) {
-      face_node_map(faceOrdinal, i) = desc->sideOrdinalMap[faceOrdinal][i];
-    }
-  }
-  return face_node_map;
-}
-
-Kokkos::View<int*> make_node_map_edge(int p)
-{
-  const int nodes1D = p +1;
-  Kokkos::View<int*> edge_node_map("edge_node_map", nodes1D);
-  edge_node_map(0) = 0;
-  edge_node_map(p) = 1;
-  for(int i = 1; i<p; i++){
-    edge_node_map(i) = i+1;
-  }
-  return edge_node_map;
 }
 
 

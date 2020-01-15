@@ -1,15 +1,19 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef LinearSolverTypes_h
 #define LinearSolverTypes_h
 
 #include <KokkosInterface.h>
+#include <Tpetra_Details_DefaultTypes.hpp>
 #include <Tpetra_CrsGraph.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 #include <Tpetra_Vector.hpp>
@@ -60,35 +64,35 @@ class TpetraLinearSolver;
 
 struct LinSys {
 
-typedef long   GlobalOrdinal; // MUST be signed
-typedef int    LocalOrdinal;  // MUST be signed
-typedef double Scalar;
+  using Scalar        = Tpetra::Details::DefaultTypes::scalar_type;
+  using GlobalOrdinal = Tpetra::Details::DefaultTypes::global_ordinal_type;
+  using LocalOrdinal  = Tpetra::Details::DefaultTypes::local_ordinal_type;
 
-typedef Kokkos::DualView<size_t*, DeviceSpace>                             RowLengths;
-typedef RowLengths::t_dev                                                  DeviceRowLengths;
-typedef RowLengths::t_host                                                 HostRowLengths;
-typedef Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type                Node;
-typedef Tpetra::CrsGraph< LocalOrdinal, GlobalOrdinal, Node>               Graph;
-typedef typename Graph::local_graph_type                                   LocalGraph;
-typedef Teuchos::MpiComm<int>                                              Comm;
-typedef Tpetra::Export< LocalOrdinal, GlobalOrdinal, Node >                Export;
-typedef Tpetra::Import< LocalOrdinal, GlobalOrdinal, Node >                Import;
-typedef Tpetra::Map<LocalOrdinal,GlobalOrdinal,Node>                       Map;
-typedef Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>        MultiVector;
-typedef Teuchos::ArrayRCP<Scalar >                                         OneDVector;
-typedef Teuchos::ArrayRCP<const Scalar >                                   ConstOneDVector;
-typedef MultiVector::dual_view_type::t_host                                LocalVector;
-typedef Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>       Matrix;
-typedef Matrix::local_matrix_type                                          LocalMatrix;
-typedef Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>        Operator;
-typedef Belos::MultiVecTraits<Scalar, MultiVector>                         MultiVectorTraits;
-typedef Belos::OperatorTraits<Scalar,MultiVector, Operator>                OperatorTraits;
-typedef Belos::LinearProblem<Scalar, MultiVector, Operator>                LinearProblem;
-typedef Belos::SolverManager<Scalar, MultiVector, Operator>                SolverManager;
-typedef Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>          SolverFactory;
-typedef Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node> Preconditioner;
+  using RowLengths        = Kokkos::DualView<size_t*, DeviceSpace>;
+  using DeviceRowLengths  = RowLengths::t_dev;
+  using HostRowLengths    = RowLengths::t_host;
+  using Node              = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
+  using Graph             = Tpetra::CrsGraph< LocalOrdinal, GlobalOrdinal, Node>;
+  using LocalGraph        = typename Graph::local_graph_type;
+  using Comm              = Teuchos::MpiComm<int>;
+  using Export            = Tpetra::Export< LocalOrdinal, GlobalOrdinal, Node >;
+  using Import            = Tpetra::Import< LocalOrdinal, GlobalOrdinal, Node >;
+  using Map               = Tpetra::Map<LocalOrdinal,GlobalOrdinal,Node>;
+  using MultiVector       = Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>;
+  using OneDVector        = Teuchos::ArrayRCP<Scalar >;
+  using ConstOneDVector   = Teuchos::ArrayRCP<const Scalar >;
+  using LocalVector       = MultiVector::dual_view_type::t_host;
+  using Matrix            = Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using LocalMatrix       = Matrix::local_matrix_type;
+  using Operator          = Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
+  using MultiVectorTraits = Belos::MultiVecTraits<Scalar, MultiVector>;
+  using OperatorTraits    = Belos::OperatorTraits<Scalar,MultiVector, Operator>;
+  using LinearProblem     = Belos::LinearProblem<Scalar, MultiVector, Operator>;
+  using SolverManager     = Belos::SolverManager<Scalar, MultiVector, Operator>;
+  using SolverFactory     = Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>;
+  using Preconditioner    = Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 
-using EntityToLIDView = Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,LinSysMemSpace>;
+  using EntityToLIDView = Kokkos::View<LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
 };
 
 

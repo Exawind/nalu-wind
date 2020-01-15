@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #ifndef HYPRELINEARSYSTEM_H
 #define HYPRELINEARSYSTEM_H
@@ -37,6 +40,8 @@ namespace nalu {
 class HypreLinearSystem : public LinearSystem
 {
 public:
+  // Quiet "partially overridden" compiler warnings.
+  using LinearSystem::buildDirichletNodeGraph;
   /**
    * @param[in] realm The realm instance that holds the EquationSystem being solved
    * @param[in] numDof The degrees of freedom for the equation system created (Default: 1)

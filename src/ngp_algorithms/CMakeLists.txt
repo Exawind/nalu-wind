@@ -1,23 +1,37 @@
-add_sources(GlobalSourceList
+target_sources(nalu PRIVATE
   # Algorithms
-  NodalGradEdgeAlg.C
-  NodalGradElemAlg.C
-  NodalGradBndryElemAlg.C
-  EffDiffFluxCoeffAlg.C
-  EffSSTDiffFluxCoeffAlg.C
-  EnthalpyEffDiffFluxCoeffAlg.C
-  MdotEdgeAlg.C
-  TurbViscKsgsAlg.C
-  TurbViscSSTAlg.C
-  WallFuncGeometryAlg.C
-  ABLWallFrictionVelAlg.C
-  TKEWallFuncAlg.C
-  GeometryInteriorAlg.C
-  GeometryBoundaryAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradElemAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradBndryElemAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/EffDiffFluxCoeffAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/EffSSTDiffFluxCoeffAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/EnthalpyEffDiffFluxCoeffAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotInflowAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotDensityAccumAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotOpenCorrectorAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotOpenEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/TAMSAvgMdotEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/TAMSAvgMdotElemAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/SSTTAMSAveragesAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MetricTensorElemAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscKsgsAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscSSTAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/WallFuncGeometryAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/ABLWallFrictionVelAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/TKEWallFuncAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/GeometryInteriorAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/GeometryBoundaryAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/SDRLowReWallAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/SDRWallFuncAlg.C
 
   # Algorithm Drivers
-  NgpAlgDriver.C
-  NodalGradAlgDriver.C
-  TKEWallFuncAlgDriver.C
-  GeometryAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/FieldUpdateAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/NgpAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MdotAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/TKEWallFuncAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/GeometryAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/WallFricVelAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/SDRWallFuncAlgDriver.C
   )

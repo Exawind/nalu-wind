@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <master_element/MasterElement.h>
@@ -12,11 +15,6 @@
 #include <master_element/Hex8GeometryFunctions.h>
 #include <master_element/MasterElementFunctions.h>
 
-#include <master_element/MasterElementUtils.h>
-
-#include <element_promotion/LagrangeBasis.h>
-#include <element_promotion/TensorProductQuadratureRule.h>
-#include <element_promotion/QuadratureRule.h>
 #include <AlgTraits.h>
 
 #include <NaluEnv.h>
@@ -892,17 +890,14 @@ void PyrSCS::face_grad_op(
 void PyrSCS::face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   using tri_traits = AlgTraitsTri3Wed6;
   using quad_traits = AlgTraitsQuad4Wed6;
   constexpr int dim = 3;
 
-  constexpr int maxDerivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * dim;
-  NALU_ALIGNED DoubleType psi[maxDerivSize];
-
   const int numFaceIps = (face_ordinal == 4) ? quad_traits::numFaceIp_ : tri_traits::numFaceIp_;
-  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, numFaceIps, AlgTraitsPyr5::nodesPerElement_, dim);
 
   const int offset = tri_traits::numFaceIp_ * face_ordinal;
   pyr_deriv(numFaceIps, &intgExpFace_[dim * offset], deriv);
@@ -915,17 +910,14 @@ void PyrSCS::face_grad_op(
 void PyrSCS::shifted_face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   using tri_traits = AlgTraitsTri3Wed6;
   using quad_traits = AlgTraitsQuad4Wed6;
   constexpr int dim = 3;
 
-  constexpr int maxDerivSize = quad_traits::numFaceIp_ *  quad_traits::nodesPerElement_ * dim;
-  NALU_ALIGNED DoubleType psi[maxDerivSize];
-
   const int numFaceIps = (face_ordinal == 4) ? quad_traits::numFaceIp_ : tri_traits::numFaceIp_;
-  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, numFaceIps, AlgTraitsPyr5::nodesPerElement_, dim);
 
   const int offset = tri_traits::numFaceIp_ * face_ordinal;
   shifted_pyr_deriv(numFaceIps, &intgExpFaceShift_[dim * offset], deriv);

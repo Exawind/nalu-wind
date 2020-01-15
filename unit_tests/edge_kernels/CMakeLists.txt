@@ -1,12 +1,15 @@
-add_sources(GlobalUnitSourceList
+target_sources(${utest_ex_name} PRIVATE
   # Edge interior kernels
-  UnitTestContinuityAdvEdge.C
-  UnitTestMomentumAdvDiffEdge.C
-  UnitTestScalarAdvDiffEdge.C
-  UnitTestWallDistEdgeSolver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestContinuityAdvEdge.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumAdvDiffEdge.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarAdvDiffEdge.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestWallDistEdgeSolver.C
 
   # Face/elem edge BC kernels
-  UnitTestMomentumABLWallFuncEdge.C
-  UnitTestMomentumSymmetryEdge.C
-  UnitTestScalarOpenEdge.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestContinuityOpenEdge.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumABLWallFuncEdge.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumOpenEdge.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumSymmetryEdge.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarOpenEdge.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumSSTTAMSDiffEdge.C
   )

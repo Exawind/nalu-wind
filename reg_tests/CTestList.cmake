@@ -135,7 +135,6 @@ if(NOT ENABLE_CUDA)
   add_test_r(inputFireEdgeUpwind 4)
   add_test_r(inputFireElem 4)
   add_test_r(karmanVortex 1)
-  add_test_r(kovasznay_P5 1)
   add_test_r(milestoneRun 4)
   add_test_r(milestoneRunConsolidated 4)
   add_test_r_cat(mixedTetPipe 8 7)
@@ -158,10 +157,13 @@ if(NOT ENABLE_CUDA)
   add_test_r_np(periodic3dEdge 8)
   add_test_r(quad9HC 2)
   add_test_r_cat(steadyTaylorVortex 4 6)
-  add_test_r(tensor_tg_mms 8)
+  add_test_r(SSTChannelEdge 4)
+  add_test_r_rst(tamsChannelEdge 4)
+  add_test_r_rst(SSTTAMSChannelEdge 4)
+  add_test_r_rst(tamsChannelElem 4)
+  add_test_r_rst(SSTTAMSOversetRotCylinder 4)
   add_test_r(variableDensNonIso 2)
   add_test_r(variableDensNonUniform 2)
-  add_test_r(variableDensNonUniform_P5 8)
 
   if (ENABLE_FFTW)
     add_test_r(ablHill3d_pp 4)
@@ -182,19 +184,17 @@ if(NOT ENABLE_CUDA)
 
   if(ENABLE_TIOGA)
     add_test_r(oversetSphereTIOGA 8)
+    add_test_r(oversetRotCylinder 4)
   endif(ENABLE_TIOGA)
 
   if (ENABLE_TIOGA AND ENABLE_HYPRE)
-    add_test_r(oversetRotCylinder 4)
+    add_test_r(oversetRotCylinderHypre 4)
   endif()
 
   #=============================================================================
   # Convergence tests
   #=============================================================================
   add_test_v2(BoussinesqNonIso 8)
-  add_test_v3(cvfemHexHC_P3 8)
-  add_test_v3(hoVortex_P2 8)
-  add_test_v3(steadyTaylorVortex_P4 8)
 
   #=============================================================================
   # Unit tests
@@ -210,6 +210,11 @@ if(NOT ENABLE_CUDA)
   add_test_p(waleElemXflowMixFrac3.5m 8)
 
 else(NOT ENABLE_CUDA)
+
+  #=============================================================================
+  # Regression tests
+  #=============================================================================
+  add_test_r(ablNeutralEdge 2)
 
   #=============================================================================
   # GPU unit tests

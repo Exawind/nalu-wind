@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef LinearSolver_h
@@ -13,6 +16,7 @@
 #include <LinearSolverConfig.h>
 
 #include <Kokkos_DefaultNode.hpp>
+#include <Tpetra_Details_DefaultTypes.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 #include <Teuchos_GlobalMPISession.hpp>
@@ -22,11 +26,11 @@
 
 // Header files defining default types for template parameters.
 // These headers must be included after other MueLu/Xpetra headers.
-typedef double                                                        Scalar;
-typedef long                                                          GlobalOrdinal;
-typedef int                                                           LocalOrdinal;
-typedef Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type           Node;
-typedef Teuchos::ScalarTraits<Scalar> STS;
+using Scalar        = sierra::nalu::LinSys::Scalar;
+using GlobalOrdinal = sierra::nalu::LinSys::GlobalOrdinal;
+using LocalOrdinal  = sierra::nalu::LinSys::LocalOrdinal;
+using Node          = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
+using STS           = Teuchos::ScalarTraits<Scalar>;
 
 // MueLu main header: include most common header files in one line
 #include <MueLu.hpp>
@@ -55,8 +59,8 @@ class Simulation;
 
 const LocalOrdinal INVALID = std::numeric_limits<LocalOrdinal>::max();
 
-typedef typename LinSys::LocalGraph::row_map_type::non_const_type RowPointers;
-typedef typename LinSys::LocalGraph::entries_type::non_const_type ColumnIndices;
+using RowPointers    = typename LinSys::LocalGraph::row_map_type::non_const_type;
+using ColumnIndices  = typename LinSys::LocalGraph::entries_type::non_const_type;
 
 /** LocalGraphArrays is a helper class for building the arrays describing
  * the local csr graph, rowPointers and colIndices. These arrays are passed

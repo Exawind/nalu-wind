@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include <master_element/Hex8CVFEM.h>
 #include <master_element/MasterElement.h>
@@ -398,19 +401,15 @@ void HexSCS::shifted_grad_op(
 //--------------------------------------------------------------------------
 //-------- face_grad_op ----------------------------------------------------
 //--------------------------------------------------------------------------
-void HexSCS::face_grad_op(
+template<bool shifted>
+void HexSCS::face_grad_op_t(
   const int face_ordinal,
-  const bool shifted,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   using traits = AlgTraitsQuad4Hex8;
   const double *exp_face = shifted ? &intgExpFaceShift_[0][0][0] : &intgExpFace_[0][0][0];
-
-  constexpr int derivSize = traits::numFaceIp_ * traits::nodesPerElement_ * traits::nDim_;
-  DoubleType psi[derivSize];
-  SharedMemView<DoubleType***, DeviceShmem> deriv(psi, traits::numFaceIp_, traits::nodesPerElement_, traits::nDim_);
-
   const int offset = traits::numFaceIp_ * traits::nDim_ * face_ordinal;
   hex8_derivative(traits::numFaceIp_, &exp_face[offset], deriv);
   generic_grad_op<AlgTraitsHex8>(deriv, coords, gradop);
@@ -419,10 +418,10 @@ void HexSCS::face_grad_op(
 void HexSCS::face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  constexpr bool shifted = false;
-  face_grad_op(face_ordinal, shifted, coords, gradop);
+  face_grad_op_t<false>(face_ordinal, coords, gradop, deriv);
 }
 
 void HexSCS::face_grad_op(
@@ -467,10 +466,10 @@ void HexSCS::face_grad_op(
 void HexSCS::shifted_face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
-  SharedMemView<DoubleType***, DeviceShmem>& gradop)
+  SharedMemView<DoubleType***, DeviceShmem>& gradop,
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
-  constexpr bool shifted = true;
-  face_grad_op(face_ordinal, shifted, coords, gradop);
+  face_grad_op_t<true>(face_ordinal, coords, gradop, deriv);
 }
 
 void HexSCS::shifted_face_grad_op(

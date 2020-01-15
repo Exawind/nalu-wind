@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <InitialConditions.h>
@@ -55,7 +58,10 @@ InitialCondition * InitialCondition::load(const YAML::Node & node)
   }
   else
     throw std::runtime_error("parser error InitialConditions::load; unsupported IC type");
+// Avoid nvcc unreachable statement warnings
+#ifndef __CUDACC__
   return 0;
+#endif
 }
 
   Simulation* InitialCondition::root() { return parent()->root(); }

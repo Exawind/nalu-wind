@@ -8,6 +8,8 @@
 #include "CopyAndInterleave.h"
 #include <Kokkos_DualView.hpp>
 
+#include "master_element/Quad43DCVFEM.h"
+
 #include "AssembleFaceElemSolverAlgorithm.h"
 #include "kernel/MomentumOpenAdvDiffElemKernel.h"
 #include "kernel/MomentumSymmetryElemKernel.h"

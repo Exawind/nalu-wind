@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corp.                                           */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef ContinuityInflowElemKernel_h
@@ -26,7 +29,7 @@ class TimeIntegrator;
 /** Add Int rho*uj*nj*dS
  */
 template<typename BcAlgTraits>
-class ContinuityInflowElemKernel: public Kernel
+class ContinuityInflowElemKernel: public NGPKernel<ContinuityInflowElemKernel<BcAlgTraits>>
 {
 public:
   ContinuityInflowElemKernel(
@@ -35,7 +38,8 @@ public:
     const bool &useShifted,
     ElemDataRequests &faceDataPreReqs);
 
-  virtual ~ContinuityInflowElemKernel();
+  KOKKOS_FUNCTION
+  virtual ~ContinuityInflowElemKernel() = default;
 
   /** Perform pre-timestep work for the computational kernel
    */
@@ -45,10 +49,12 @@ public:
    *  the linear solve
    */
   using Kernel::execute;
+
+  KOKKOS_FUNCTION
   virtual void execute(
-    SharedMemView<DoubleType **>&lhs,
-    SharedMemView<DoubleType *>&rhs,
-    ScratchViews<DoubleType>& scratchViews);
+    SharedMemView<DoubleType **, DeviceShmem>&lhs,
+    SharedMemView<DoubleType *, DeviceShmem>&rhs,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews);
 
 private:
   ContinuityInflowElemKernel() = delete;
@@ -62,12 +68,7 @@ private:
   const double interpTogether_;
   const double om_interpTogether_;
 
-  // Integration point to node mapping 
-  const int *ipNodeMap_{nullptr};
-
-  // scratch space
-  Kokkos::View<DoubleType[BcAlgTraits::numFaceIp_][BcAlgTraits::nodesPerFace_]> 
-    vf_shape_function_{"vf_shape_function"};
+  MasterElement* meFC_{nullptr};
 };
 
 }  // nalu

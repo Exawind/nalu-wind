@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef Simulation_h
@@ -11,6 +14,8 @@
 
 #include <stk_util/diag/PrintTimer.hpp>
 #include <stk_util/diag/Timer.hpp>
+
+#include <KokkosInterface.h>
 
 namespace YAML {
 class Node;
@@ -52,6 +57,11 @@ public:
 
   static bool debug_;
   int serializedIOGroupSize_;
+private:
+#ifdef KOKKOS_ENABLE_CUDA
+  size_t    default_stack_size;
+  const size_t nalu_stack_size=16384;
+#endif
 };
 
 } // namespace nalu

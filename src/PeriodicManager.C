@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #include <PeriodicManager.h>
@@ -88,10 +91,13 @@ PeriodicManager::add_periodic_pair(
   SelectorPair periodicSelectorPair(masterSelect, slaveSelect);
   periodicSelectorPairs_.push_back(periodicSelectorPair);
 
-  // determine search method for this pair; default is boost_rtree
+  // determine search method for this pair; default is stk_kdtree
   stk::search::SearchMethod searchMethod = stk::search::KDTREE;
-  if ( searchMethodName == "boost_rtree" )
+  if ( searchMethodName == "boost_rtree" ) {
     searchMethod = stk::search::BOOST_RTREE;
+    NaluEnv::self().naluOutputP0() << "Warning: search method 'boost_rtree' is being deprecated"
+        <<", please swithc to 'stk_kdtree'" << std::endl;
+  }
   else if ( searchMethodName == "stk_kdtree" )
     searchMethod = stk::search::KDTREE;
   else

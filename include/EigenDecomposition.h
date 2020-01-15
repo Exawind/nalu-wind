@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #ifndef EIGENDECOMPOSITION_H
 #define EIGENDECOMPOSITION_H
@@ -282,6 +285,26 @@ void reconstruct_matrix_from_decomposition(const T (&D)[3][3],
   // mat-vec, A = (Q*D)*QT = B*QT
   matrix_matrix_multiply(B, QT, A);
 }
+
+//--------------------------------------------------------------------------
+//------------------ unsym_matrix_force_sym_3D -----------------------------
+//--------------------------------------------------------------------------
+template <class T>
+KOKKOS_FUNCTION
+void unsym_matrix_force_sym(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3]) {
+
+  // force symmetry force 
+  for (int i = 0; i < 3; i++) {
+    for (int j = i; j < 3; j++) {
+      A[i][j] = (A[i][j] + A[j][i])/2.0;
+      A[j][i] = A[i][j];
+    }
+  }
+
+  // then call symmetric diagonalize 
+  sym_diagonalize(A, Q, D);
+}
+
 
 } // namespace EigenDecomposition
 

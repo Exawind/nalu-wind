@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "FixPressureAtNodeAlgorithm.h"
 #include "FixPressureAtNodeInfo.h"
@@ -66,10 +69,7 @@ FixPressureAtNodeAlgorithm::execute()
   }
 
   // Reset LHS and RHS for this matrix
-  CoeffApplier* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
-#ifdef KOKKOS_ENABLE_CUDA
-  CoeffApplier* deviceCoeffApplier = coeffApplier->device_pointer();
-#endif
+  CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
  
   ngp::Mesh ngpMesh = realm_.ngp_mesh();
   NGPDoubleFieldType ngpPressure = realm_.ngp_field_manager().get_field<double>(pressure_->mesh_meta_data_ordinal());
@@ -96,11 +96,7 @@ FixPressureAtNodeAlgorithm::execute()
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [=](const size_t& )
     {
       ngp::Mesh::ConnectedNodes refNodeList(&targetNode, 1);
-#ifdef KOKKOS_ENABLE_CUDA
       deviceCoeffApplier->resetRows(1, &targetNode, 0, 1);
-#else
-      coeffApplier->resetRows(1, &targetNode, 0, 1);
-#endif
   
       // Fix the pressure for this node only if this is proc is owner
       if (numNodes > 0 && fixPressureNode) {
@@ -110,19 +106,10 @@ FixPressureAtNodeAlgorithm::execute()
         lhs(0,0) = 1.0; // Set diagonal entry to 1.0
         rhs(0) = refPressure - pressureN;
   
-#ifdef KOKKOS_ENABLE_CUDA
         (*deviceCoeffApplier)(refNodeList.size(), refNodeList, scratchIds, sortPerm, rhs, lhs, __FILE__);
-#else
-        (*coeffApplier)(refNodeList.size(), refNodeList, scratchIds, sortPerm, rhs, lhs, __FILE__);
-#endif
       }
     });
   });
-
-#ifdef KOKKOS_ENABLE_CUDA
-  coeffApplier->free_device_pointer();
-#endif
-  delete coeffApplier;
 }
 
 void

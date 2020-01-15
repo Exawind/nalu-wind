@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "ngp_algorithms/NodalGradElemAlg.h"
 
@@ -55,7 +58,7 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
   using ViewHelperType = nalu_ngp::ViewHelper<ElemSimdDataType, PhiType>;
 
-  auto meshInfo = realm_.mesh_info();
+  const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
@@ -73,8 +76,10 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
     & stk::mesh::selectUnion(partVec_)
     & !(realm_.get_inactive_selector());
 
+  const std::string algName =
+    (meta.get_fields()[gradPhi_]->name() + "_elem_" + std::to_string(AlgTraits::topo_));
   nalu_ngp::run_elem_algorithm(
-    meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
+    algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType& edata) {
       const int* lrscv = meSCS->adjacentNodes();
 
@@ -125,14 +130,6 @@ INSTANTIATE_ALG(AlgTraitsWed6);
 INSTANTIATE_ALG(AlgTraitsTri3_2D);
 INSTANTIATE_ALG(AlgTraitsQuad4_2D);
 INSTANTIATE_ALG(AlgTraitsQuad9_2D);
-INSTANTIATE_ALG(AlgTraitsHexGL<2>);
-INSTANTIATE_ALG(AlgTraitsHexGL<3>);
-INSTANTIATE_ALG(AlgTraitsHexGL<4>);
-INSTANTIATE_ALG(AlgTraitsHexGL<USER_POLY_ORDER>);
-INSTANTIATE_ALG(AlgTraitsQuadGL_2D<2>);
-INSTANTIATE_ALG(AlgTraitsQuadGL_2D<3>);
-INSTANTIATE_ALG(AlgTraitsQuadGL_2D<4>);
-INSTANTIATE_ALG(AlgTraitsQuadGL_2D<USER_POLY_ORDER>);
 
 } // namespace nalu
 }  // sierra

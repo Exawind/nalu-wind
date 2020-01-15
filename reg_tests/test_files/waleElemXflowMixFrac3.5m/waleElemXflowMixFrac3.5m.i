@@ -106,7 +106,7 @@ realms:
       target_name: [leftWall, rightWall]
       periodic_user_data:
         search_tolerance: 1.e-5
-        search_method: boost_rtree
+        search_method: stk_kdtree
 
     - symmetry_boundary_condition: bc_top
       target_name: topWall

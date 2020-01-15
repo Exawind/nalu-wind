@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef Realm_h
@@ -27,7 +30,6 @@
 #include <stk_ngp/NgpFieldManager.hpp>
 
 #include "ngp_utils/NgpMeshInfo.h"
-#include "ngp_algorithms/GeometryAlgDriver.h"
 
 // standard c++
 #include <map>
@@ -54,7 +56,7 @@ namespace nalu{
 class Algorithm;
 class AlgorithmDriver;
 class AuxFunctionAlgorithm;
-class ComputeGeometryAlgorithmDriver;
+class GeometryAlgDriver;
 
 class NonConformalManager;
 class ErrorIndicatorAlgorithmDriver;
@@ -85,7 +87,6 @@ class BdyLayerStatistics;
 class TensorProductQuadratureRule;
 class LagrangeBasis;
 class PromotedElementIO;
-struct ElementDescription;
 
 /** Representation of a computational domain and physics equations solved on
  * this domain.
@@ -178,7 +179,7 @@ class Realm {
   void initialize_post_processing_algorithms();
 
   void compute_geometry();
-  void compute_vrtm();
+  void compute_vrtm(const std::string& = "velocity");
   void compute_l2_scaling();
   void output_converged_results();
   void provide_output();
@@ -419,8 +420,7 @@ class Realm {
   GlobalIdFieldType *naluGlobalId_;
 
   // algorithm drivers managed by region
-  ComputeGeometryAlgorithmDriver *computeGeometryAlgDriver_;
-  std::unique_ptr<GeometryAlgDriver> geometryAlgDriver_{nullptr};
+  std::unique_ptr<GeometryAlgDriver> geometryAlgDriver_;
   ErrorIndicatorAlgorithmDriver *errorIndicatorAlgDriver_;
 # if defined (NALU_USES_PERCEPT)  
   Adapter *adapter_;
@@ -614,7 +614,6 @@ class Realm {
   const YAML::Node & node_;
 
   // tools
-  std::unique_ptr<ElementDescription> desc_; // holds topo info
   std::unique_ptr<PromotedElementIO> promotionIO_; // mesh outputer
   std::vector<std::string> superTargetNames_;
 

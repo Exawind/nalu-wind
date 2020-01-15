@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include <actuator/Actuator.h>
 #include <FieldTypeDef.h>
@@ -69,8 +72,11 @@ Actuator::load(const YAML::Node& y_node)
       y_actuator, "search_method", searchMethodName, searchMethodName);
 
     // determine search method for this pair
-    if (searchMethodName == "boost_rtree")
+    if (searchMethodName == "boost_rtree") {
       searchMethod_ = stk::search::BOOST_RTREE;
+      NaluEnv::self().naluOutputP0() << "Warning: search method 'boost_rtree'"
+                 <<" is being deprecated, please switch to 'stk_kdtree'" << std::endl;
+    }
     else if (searchMethodName == "stk_kdtree")
       searchMethod_ = stk::search::KDTREE;
     else

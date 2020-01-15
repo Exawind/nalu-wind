@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestUtils.h"
@@ -15,13 +18,13 @@ namespace {
 namespace hex8_golds {
 
 static constexpr double rhs[4] = {
-  0, 0, -0.20225424859374, -0.20225424859374,
+  0, 0.11888206453689, 0.11888206453689, 0
 };
 
 }
 } // anonymous namespace
 
-TEST_F(ContinuityKernelHex8Mesh, inflow)
+TEST_F(ContinuityKernelHex8Mesh, NGP_inflow)
 {
   const bool doPerturb = false;
   const bool generateSidesets = true;
@@ -37,7 +40,7 @@ TEST_F(ContinuityKernelHex8Mesh, inflow)
   solnOpts_.mdotInterpRhoUTogether_ = true;
   solnOpts_.activateOpenMdotCorrection_ = true;
 
-  auto* part = meta_.get_part("surface_1");
+  auto* part = meta_.get_part("surface_2");
   unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::QUAD_4, 1, part);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
