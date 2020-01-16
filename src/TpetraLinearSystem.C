@@ -1525,7 +1525,7 @@ void TpetraLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solutionField,
         const LocalOrdinal localId = localIdOffset + d;
         const LocalOrdinal actualLocalId = useOwned ? localId : localId - maxOwnedRowId;
 
-        NGP_ThrowRequire(localId <= maxSharedNotOwnedRowId);
+        NGP_ThrowAssert(localId <= maxSharedNotOwnedRowId);
 
         adjust_lhs_row(local_matrix.row(actualLocalId), actualLocalId, diagonalValue);
 
