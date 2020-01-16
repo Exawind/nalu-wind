@@ -58,7 +58,7 @@ realms:
       max_iterations: 2
 
       solver_system_specification:
-        velocity: solve_scalar
+        velocity: solve_mom
         turbulent_ke: solve_scalar
         specific_dissipation_rate: solve_scalar
         pressure: solve_cont
