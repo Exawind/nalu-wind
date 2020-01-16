@@ -1465,7 +1465,6 @@ void adjust_lhs_row(
   const int localRowId,
   const double diagonalValue)
 {
-
   const LocalOrdinal rowLength = row_view.length;
   for(LocalOrdinal i=0; i<rowLength; ++i) {
     if (row_view.colidx(i) == localRowId) {
@@ -1500,8 +1499,12 @@ void TpetraLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solutionField,
   NGPDoubleFieldType ngpSolutionField = realm_.ngp_field_manager().get_field<double>(solutionField->mesh_meta_data_ordinal());
   NGPDoubleFieldType ngpBCValuesField = realm_.ngp_field_manager().get_field<double>(bcValuesField->mesh_meta_data_ordinal());
 
+  ngpSolutionField.sync_to_device();
+  ngpBCValuesField.sync_to_device();
+
   auto entityToLID = entityToLID_;
   const int maxOwnedRowId = maxOwnedRowId_;
+  const int maxSharedNotOwnedRowId = maxSharedNotOwnedRowId_;
   auto ownedLocalMatrix = ownedLocalMatrix_;
   auto sharedNotOwnedLocalMatrix = sharedNotOwnedLocalMatrix_;
   auto ownedLocalRhs = ownedLocalRhs_;
@@ -1522,7 +1525,7 @@ void TpetraLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solutionField,
         const LocalOrdinal localId = localIdOffset + d;
         const LocalOrdinal actualLocalId = useOwned ? localId : localId - maxOwnedRowId;
 
-        NGP_ThrowRequire(localId <= maxSharedNotOwnedRowId_);
+        NGP_ThrowRequire(localId <= maxSharedNotOwnedRowId);
 
         adjust_lhs_row(local_matrix.row(actualLocalId), actualLocalId, diagonalValue);
 

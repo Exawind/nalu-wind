@@ -240,10 +240,23 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_dirichlet)
 
   helperObjs.execute();
 
-  stk::mesh::FieldBase* solutionField = mixFraction_; // any scalar field should work for this unit-test...
-  stk::mesh::FieldBase* bcValuesField = density_;
+ // next, test the applyDirichletBCs method.
+ // any scalar nodal fields should work for this unit-test...
+  stk::mesh::FieldBase* solutionField = mixFraction_;
+  stk::mesh::FieldBase* bcValuesField = viscosity_;
+
+  auto ngpSolutionField = helperObjs.realm.ngp_field_manager().get_field<double>(solutionField->mesh_meta_data_ordinal());
+  auto ngpBCValuesField = helperObjs.realm.ngp_field_manager().get_field<double>(bcValuesField->mesh_meta_data_ordinal());
+
+  ngpSolutionField.sync_to_host();
+  ngpBCValuesField.sync_to_host();
+
   stk::mesh::field_fill(2.0, *solutionField);
   stk::mesh::field_fill(0.0, *bcValuesField);
+
+  ngpSolutionField.modify_on_host();
+  ngpBCValuesField.modify_on_host();
+
   stk::mesh::Entity node1 = bulk_.get_entity(stk::topology::NODE_RANK, 1);
   if (bulk_.is_valid(node1)) {
     double* node1value = static_cast<double*>(stk::mesh::field_data(*bcValuesField, node1));
