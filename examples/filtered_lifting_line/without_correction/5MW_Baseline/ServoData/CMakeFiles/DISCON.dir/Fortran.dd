@@ -1,2 +1,0 @@
-ninja_dyndep_version = 1.0
-build reg_tests/test_files/nrel5MWactuatorLine/5MW_Baseline/ServoData/CMakeFiles/DISCON.dir/DISCON.F90.o: dyndep
