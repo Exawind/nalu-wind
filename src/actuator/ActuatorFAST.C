@@ -46,8 +46,6 @@
 // The utilities used for actuator
 #include "actuator/UtilitiesActuator.h"
 
-const double pi = 3.14159265358979323846;
-
 namespace sierra {
 namespace nalu {
 
@@ -597,8 +595,6 @@ ActuatorFAST::execute()
   // loop over map and get velocity at points
   for (std::size_t np = 0; np < numFastPoints_; np++) {
 
-//~ std::cerr << "Execute before ==============================" << np << " " << NaluEnv::self().parallel_rank() << std::endl;
-
     // actuator line info object of interest
     auto infoObject =
       dynamic_cast<ActuatorFASTPointInfo*>(actuatorPointInfoMap_.at(np).get());
@@ -638,11 +634,6 @@ ActuatorFAST::execute()
     interpolate_field(
       nDim, bestElem, bulkData, infoObject->isoParCoords_.data(),
       &ws_velocity_[0], ws_pointGasVelocity.data());
-
-    // interpolate viscosity
-    //    interpolate_field(1, bestElem, bulkData,
-    //    &(infoObject->isoParCoords_[0]),
-    //                      &ws_viscosity_[0], &ws_pointGasViscosity);
 
     // interpolate density
     interpolate_field(
@@ -802,15 +793,6 @@ void ActuatorFAST::filtered_lifting_line()
           FAST.getForce(force, np, infoObject->globTurbId_);
           // Get the velocity from FAST
           FAST.getRelativeVelForceNode(vel, np, infoObject->globTurbId_);
-
-          // Zero the radial component of the velocity and force
-          //vel[1] = 0;
-          //force[1] = 0;
-//~ for (int i = 0; i < nDim; i++) 
-//~ {
-//~ std::cerr << "Vel " << i << " = "  << vel[i] << std::endl;
-//~ std::cerr << "Force " << i << "  = "  << force[i] << std::endl;
-//~ }
 
           // The velocity magnitude squared
           double vmag2(0);
@@ -1043,11 +1025,11 @@ void ActuatorFAST::filtered_lifting_line()
           {
               
             // Compute the LES induced velocity
-            infoObject -> u_LES.data()[i] -= 1./(vmag * 4. * pi) * dG.data()[i] * 
+            infoObject -> u_LES.data()[i] -= 1./(vmag * 4. * M_PI) * dG.data()[i] *
               (1. - std::exp(-rdiff2/(eps_les * eps_les))) / diff;
 
             // Compute the optimal induced velocity
-            infoObject -> u_opt.data()[i] -= 1./(vmag * 4. * pi) * dG.data()[i] * 
+            infoObject -> u_opt.data()[i] -= 1./(vmag * 4. * M_PI) * dG.data()[i] *
               (1. - std::exp(-rdiff2/(eps_opt * eps_opt))) / diff;
 
           }
@@ -1235,12 +1217,9 @@ ActuatorFAST::create_actuator_point_info_map()
               // Calculate epsilon for hub node based on cd and area here
               float nac_area = FAST.get_nacelleArea(iTurb);
 
-              // The constant pi
-              const float pi = acos(-1.0);
-
               // This model is used to set the momentum thickness
               // of the wake (Martinez-Tossas PhD Thesis 2017)
-              float tmpEps = std::sqrt(2.0 / pi * nac_cd * nac_area);
+              float tmpEps = std::sqrt(2.0 / M_PI * nac_cd * nac_area);
               epsilon.x_ = tmpEps;
               epsilon.y_ = tmpEps;
               epsilon.z_ = tmpEps;
@@ -1363,11 +1342,7 @@ ActuatorFAST::create_actuator_point_info_map()
   // points)
   create_point_info_map_class_specific();
 
-  // Compute the index map used to access actuator points as
-  //   (turbine number, blade number, actuator point number)
-//~ std::cerr << "Index mapping before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
   index_map();
-//~ std::cerr << "Index mapping after ==============================" << NaluEnv::self().parallel_rank() << std::endl;
   
 }
 
@@ -1377,7 +1352,6 @@ ActuatorFAST::create_actuator_point_info_map()
 void
 ActuatorFAST::update_actuator_point_info_map()
 {
-//~ std::cerr << "update_actuator_point_info_map before ==============================" << NaluEnv::self().parallel_rank() << std::endl;
 
   stk::mesh::MetaData& metaData = realm_.meta_data();
   const int nDim = metaData.spatial_dimension();
@@ -1448,8 +1422,6 @@ ActuatorFAST::update_actuator_point_info_map()
     }
   }
    create_point_info_map_class_specific(); 
-  //~ std::cerr << "update_actuator_point_info_map after ==============================" << NaluEnv::self().parallel_rank() << std::endl;
-
 }
 
 // This function computes the index map such that actuator points can be
@@ -1457,8 +1429,6 @@ ActuatorFAST::update_actuator_point_info_map()
 //   (turbine number, blade number, actuator point number)
 void ActuatorFAST::index_map()
 {
-
-  //~ std::cerr << "Begin index map" << NaluEnv::self().parallel_rank() << std::endl;
 
   //////////////////////////////////////////////////////////////////////////////
   // Loop and map the indices
@@ -1478,28 +1448,11 @@ void ActuatorFAST::index_map()
     na = std::max(na, fi.globTurbineData[i].numForcePtsBlade);
   }
 
-// BROKEN CODE
-  // Number of turbines
-  //~ int nt = fi.nTurbinesGlob;
-
-  //~ // Number of blades (choose the maximum from all turbines)
-  //~ int nb=FAST.get_numBlades(0);
-  //~ for (int i = 0; i < nt; i++) nb=std::max(nb, FAST.get_numBlades(i));
-
-  //~ // Number of actuator points (choose the maximum from all turbines)
-  //~ int na = fi.globTurbineData[0].numForcePtsBlade;
-  //~ for (int i = 0; i < nt; i++) na=std::max(na, 
-      //~ fi.globTurbineData[i].numForcePtsBlade);
-// BROKEN CODE
-
   // This is a map that stores the actuator point number np
   //   indexed using turbine number, blade number, actuator point number
   // Resize the original array to have
   //   (number of turbines, number of blades, number of actuator points)
   indexMap_.resize(nt);
-
-//~ std::cerr << "nt, nb, na" << NaluEnv::self().parallel_rank()<< " "  << nt << " " << nb<< " "  << na << std::endl;
-//~ return;
 
   for (int i = 0; i<nt; ++i) {
       indexMap_[i].resize(nb);
@@ -1556,16 +1509,10 @@ if (FAST.get_procNo(iTurb) != NaluEnv::self().parallel_rank()) continue;
 
     if (ib == numBlades) continue;
 
-//~ std::cerr << it << " " << ib <<  " " << actPtrCounter <<  " "  << np << std::endl;
     // Store the actuator point into the counter index
     indexMap_[it][ib][actPtrCounter] = np;
 
-    // The disk computed from the actuator subroutine
-    //~ int n_ad = actPtrCounter + ib * ptsPerBlade + 1;
-//~ std::cerr << it << " " << ib <<  " " << actPtrCounter <<  " "  << np << " " << n_ad << std::endl;
-
   }
-//~ std::cerr << "Index mapping completed 1402 Processor ==============================" << NaluEnv::self().parallel_rank() << std::endl;
 
 }  
 ////////////////////////////////////////////////////////////////////////////////
@@ -1622,8 +1569,6 @@ ActuatorFAST::spread_actuator_force_to_node_vec(
   std::set<stk::mesh::Entity>::iterator iNode;
   for (iNode = nodeVec.begin(); iNode != nodeVec.end(); ++iNode) {
 
-//~ std::cerr << "spread in before =======" << *iNode << " " << NaluEnv::self().parallel_rank() << std::endl;
-
     stk::mesh::Entity node = *iNode;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -1633,7 +1578,6 @@ ActuatorFAST::spread_actuator_force_to_node_vec(
 ////////////////////////////////////////////////////////////////////////////////////////////
     const double* node_coords =
       (double*)stk::mesh::field_data(coordinates, node);
-//~ std::cerr << "spread in after =======" << *iNode << " " << NaluEnv::self().parallel_rank() << std::endl;
 
     const double* dVol =
       (double*)stk::mesh::field_data(dual_nodal_volume, node);
@@ -1683,8 +1627,6 @@ ActuatorFAST::spread_actuator_force_to_node_vec(
     double* sourceTerm = (double*)stk::mesh::field_data(actuator_source, node);
     for (int j = 0; j < nDim; ++j)
       sourceTerm[j] += ws_nodeForce[j];
-
-//~ std::cerr << "spread in after =======" << *iNode << " " << NaluEnv::self().parallel_rank() << std::endl;
 
     add_thrust_torque_contrib(
       nDim, node_coords, *dVol, ws_nodeForce, hubPt, hubShftDir, thr, tor);

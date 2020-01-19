@@ -42,24 +42,7 @@ inline bool is_ngp_element(const stk::topology topo)
 {
   if (topo.is_super_topology()) return false;
 
-  bool isNGP = false;
-  switch (topo.value()) {
-  case stk::topology::HEX_8:
-  case stk::topology::TET_4:
-  case stk::topology::PYRAMID_5:
-  case stk::topology::WEDGE_6:
-  case stk::topology::QUAD_4_2D:
-  case stk::topology::TRI_3_2D:
-  case stk::topology::HEX_27:
-  case stk::topology::QUAD_9_2D:
-    isNGP = true;
-    break;
-
-  default:
-    throw std::logic_error("Invalid element topology provided");
-  }
-
-  return isNGP;
+  return true;
 }
 
 /** Has the sideset MasterElement for the topolgy fully transitioned to NGP?
@@ -75,21 +58,7 @@ inline bool is_ngp_face(const stk::topology topo)
 {
   if (topo.is_super_topology()) return false;
 
-  bool isNGP = false;
-  switch (topo.value()) {
-  case stk::topology::QUAD_4:
-  case stk::topology::TRI_3:
-  case stk::topology::LINE_2:
-  case stk::topology::QUAD_9:
-  case stk::topology::LINE_3:
-    isNGP = true;
-    break;
-
-  default:
-    throw std::logic_error("Invalid face topology provided");
-  }
-
-  return isNGP;
+  return true;
 }
 
 /** Create an interior element algorithm for the given topology
@@ -117,7 +86,8 @@ BaseType* create_elem_algorithm(
     case stk::topology::TRI_3_2D:
       return new T<AlgTraitsTri3_2D>(std::forward<Args>(args)...);
     default:
-      return nullptr;
+      throw std::runtime_error(
+        "NGP elem algorithm not implemented for " + topo.name());
   }
 }
 
@@ -140,7 +110,8 @@ BaseType* create_face_algorithm(
     case stk::topology::LINE_3:
       return new T<AlgTraitsEdge3_2D>(std::forward<Args>(args)...);
     default:
-      return nullptr;
+      throw std::runtime_error(
+        "NGP face algorithm not implemented for " + topo.name());
   }
 }
 

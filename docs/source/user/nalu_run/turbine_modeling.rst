@@ -153,7 +153,7 @@ Actuator Turbine Model
    `[chordwise, thickness, spanwise]`. If this option is
    specified, the code will choose a value of :math:`\epsilon` at every
    location that
-   is :math:`c * \epsilon/c`. To avoid numerical insabilities,
+   is :math:`c * \epsilon/c`. To avoid numerical instabilities,
    the code will choose the maximum value between :math:`c * \epsilon/c`
    and the value of ``actuator.epsilon_min`` specified.
 

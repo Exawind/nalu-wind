@@ -103,13 +103,18 @@ realms:
         mixture_fraction: 1.0
 
     - overset_boundary_condition: bc_left
+      overset_connectivity_type: tioga
       overset_user_data:
-        percent_overlap: 10.0 
-        background_block: block_1
-        overset_block: block_2
-        overset_surface: surface_4
-        background_cut_block: block_3
-        background_cut_surface: surface_101
+        tioga_options:
+          set_resolutions: no
+        mesh_group:
+          - overset_name: sphere
+            mesh_parts: [ block_2 ]
+            wall_parts: [ surface_5 ]
+            ovset_parts: [ surface_4 ]
+
+          - overset_name: background
+            mesh_parts: [ block_1 ]
 
     solution_options:
       name: myOptions
@@ -139,7 +144,9 @@ realms:
        - velocity
        - pressure
        - mixture_fraction
-       - intersected_element
+       - iblank
+       - iblank_cell
+
 
 Time_Integrators:
   - StandardTimeIntegrator:
@@ -147,7 +154,7 @@ Time_Integrators:
       start_time: 0
       termination_step_count: 10
       time_step: 0.0001
-      time_stepping_type: adaptive
+      time_stepping_type: fixed
       time_step_count: 0
       second_order_accuracy: yes
 

@@ -24,8 +24,6 @@
 
 #include <AuxFunction.h>
 #include <AuxFunctionAlgorithm.h>
-#include <ComputeGeometryBoundaryAlgorithm.h>
-#include <ComputeGeometryInteriorAlgorithm.h>
 #include <ConstantAuxFunction.h>
 #include <Enums.h>
 #include <EntityExposedFaceSorter.h>
@@ -62,7 +60,6 @@
 
 // overset
 #include <overset/OversetManager.h>
-#include <overset/OversetManagerSTK.h>
 
 #ifdef NALU_USES_TIOGA
 #include <overset/OversetManagerTIOGA.h>
@@ -142,6 +139,10 @@
 
 // stk_util
 #include <stk_util/parallel/ParallelReduce.hpp>
+
+// stk_balance
+#include <stk_balance/balance.hpp>
+#include <stk_balance/balanceUtils.hpp>
 
 // Ioss for propertManager (io)
 #include <Ioss_PropertyManager.h>
@@ -471,10 +472,6 @@ Realm::initialize()
   timerPopulateMesh_ += time;
   NaluEnv::self().naluOutputP0() << "Realm::ioBroker_->populate_mesh() End" << std::endl;
 
-  if (doBalanceNodes_) {
-    balance_nodes();
-  }
-
   // If we want to create all internal edges, we want to do it before
   // field-data is allocated because that allows better performance in
   // the create-edges code.
@@ -496,6 +493,22 @@ Realm::initialize()
   time += NaluEnv::self().nalu_time();
   timerPopulateFieldData_ += time;
   NaluEnv::self().naluOutputP0() << "Realm::ioBroker_->populate_field_data() End" << std::endl;
+
+  // rebalance mesh using stk_balance
+  if (rebalanceMesh_) {
+#ifndef HAVE_ZOLTAN2_PARMETIS
+  if (rebalanceMethod_ == "parmetis")
+    throw std::runtime_error("Zoltan2 is not built with parmetis enabled, "
+                             "try a geometric balance method instead (rcb or rib)");
+#endif
+    stk::balance::GraphCreationSettings rebalanceSettings;
+    rebalanceSettings.setDecompMethod(rebalanceMethod_);
+    stk::balance::balanceStkMesh(rebalanceSettings, *bulkData_);
+  }
+
+  if (doBalanceNodes_) {
+    balance_nodes();
+  }
 
   if (doPromotion_) {
     promote_mesh();
@@ -727,6 +740,12 @@ Realm::load(const YAML::Node & node)
   if ( "None" != autoDecompType_ ) {
     NaluEnv::self().naluOutputP0() 
       <<"Warning: When using automatic_decomposition_type, one must have a serial file" << std::endl;
+  }
+
+  get_if_present(node, "rebalance_mesh", rebalanceMesh_, rebalanceMesh_);
+  if (rebalanceMesh_) {
+    get_required(node, "stk_rebalance_method", rebalanceMethod_);
+    NaluEnv::self().naluOutputP0() << "Nalu will rebalance mesh using " << rebalanceMethod_ << std::endl;
   }
 
   // activate aura
@@ -2832,8 +2851,7 @@ Realm::register_interior_algorithm(
   stk::mesh::Part *part)
 {
   const AlgorithmType algType = INTERIOR;
-  geometryAlgDriver_->register_elem_algorithm<
-    GeometryInteriorAlg, ComputeGeometryInteriorAlgorithm>(
+  geometryAlgDriver_->register_elem_algorithm<GeometryInteriorAlg>(
       algType, part, "geometry");
 
   // Track parts that are registered to interior algorithms
@@ -2866,9 +2884,8 @@ Realm::register_wall_bc(
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
-  const AlgorithmType algType = WALL;
-  geometryAlgDriver_
-    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
+  const AlgorithmType algType = BOUNDARY;
+  geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
       algType, part, "geometry");
 }
 
@@ -2898,9 +2915,8 @@ Realm::register_inflow_bc(
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
-  const AlgorithmType algType = INFLOW;
-  geometryAlgDriver_
-    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
+  const AlgorithmType algType = BOUNDARY;
+  geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
       algType, part, "geometry");
 }
 
@@ -2931,9 +2947,8 @@ Realm::register_open_bc(
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
 
-  const AlgorithmType algType = OPEN;
-  geometryAlgDriver_
-    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
+  const AlgorithmType algType = BOUNDARY;
+  geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
       algType, part, "geometry");
 }
 
@@ -2963,9 +2978,8 @@ Realm::register_symmetry_bc(
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
 
-  const AlgorithmType algType = SYMMETRY;
-  geometryAlgDriver_
-    ->register_face_algorithm<GeometryBoundaryAlg, ComputeGeometryBoundaryAlgorithm>(
+  const AlgorithmType algType = BOUNDARY;
+  geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
       algType, part, "geometry");
 }
 
@@ -3046,22 +3060,19 @@ Realm::register_non_conformal_bc(
   // push back the part for book keeping and, later, skin mesh
   bcPartVec_.push_back(part);
 
-  const AlgorithmType algType = NON_CONFORMAL;
-
   const int nDim = metaData_->spatial_dimension();
-  
   // register fields
   MasterElement *meFC = MasterElementRepo::get_surface_master_element(theTopo);
   const int numScsIp = meFC->num_integration_points();
-  
+
   // exposed area vector
   GenericFieldType *exposedAreaVec_
     = &(metaData_->declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData_->side_rank()), "exposed_area_vector"));
   stk::mesh::put_field_on_mesh(*exposedAreaVec_, *part, nDim*numScsIp , nullptr);
-   
-  geometryAlgDriver_
-    ->register_legacy_algorithm<ComputeGeometryBoundaryAlgorithm>(
-      algType, part, "geometry");
+
+  const AlgorithmType algType = BOUNDARY;
+  geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
+    algType, part, "geometry");
 }
 
 //--------------------------------------------------------------------------
@@ -3077,39 +3088,21 @@ Realm::setup_overset_bc(
   // create manager while providing overset data
   if ( NULL == oversetManager_ ) {
     switch (oversetBCData.oversetConnectivityType_) {
-    case OversetBoundaryConditionData::NALU_STK:
-      NaluEnv::self().naluOutputP0()
-        << "Realm::setup_overset_bc:: Selecting STK-based overset connectivity algorithm"
-        << std::endl;
-      if (solutionOptions_->meshMotion_)
-        NaluEnv::self().naluOutputP0()
-          << "WARNING:: Using STK-based overset with mesh motion has not been tested "
-          << std::endl;
-      oversetManager_ = new OversetManagerSTK(*this, oversetBCData.userData_);
-      break;
-
     case OversetBoundaryConditionData::TPL_TIOGA:
 #ifdef NALU_USES_TIOGA
       oversetManager_ = new OversetManagerTIOGA(*this, oversetBCData.userData_);
       NaluEnv::self().naluOutputP0()
         << "Realm::setup_overset_bc:: Selecting TIOGA TPL for overset connectivity"
         << std::endl;
+      break;
 #else
       // should not get here... we should have thrown error in input file processing stage
       throw std::runtime_error("TIOGA TPL support not enabled during compilation phase");
-#endif
-// Avoid nvcc unreachable statement warnings
-#ifndef __CUDACC__
-      break;
 #endif
 
     case OversetBoundaryConditionData::OVERSET_NONE:
     default:
       throw std::runtime_error("Invalid setting for overset connectivity");
-// Avoid nvcc unreachable statement warnings
-#ifndef __CUDACC__
-      break;
-#endif
     }
   }   
 }

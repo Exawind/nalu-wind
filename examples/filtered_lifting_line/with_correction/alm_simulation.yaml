@@ -22,13 +22,13 @@ linear_solvers:
     max_iterations: 50
     kspace: 50
     output_level: 0
-    muelu_xml_file_name: ./milestone.xml
+    muelu_xml_file_name: ../../../reg_tests/xml/milestone.xml
     summarize_muelu_timer: no
 
 realms:
 
   - name: realm_1
-    mesh: ./mesh_alm_hdf5.exo
+    mesh: ../../../reg_tests/mesh/mesh_alm_hdf5.exo
     use_edges: no
     automatic_decomposition_type: rcb
 

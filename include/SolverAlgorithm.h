@@ -96,24 +96,6 @@ protected:
     std::vector<double> &rhs,
     std::vector<double> &lhs,
     const char *trace_tag=0);
-  
-  void apply_coeff(
-    unsigned numMeshobjs,
-    const stk::mesh::Entity* symMeshobjs,
-    const SharedMemView<int*> & scratchIds,
-    const SharedMemView<int*> & sortPermutation,
-    SharedMemView<double*> & rhs,
-    SharedMemView<double**> & lhs,
-    const char *trace_tag);
-
-  void apply_coeff(
-    unsigned numMeshobjs,
-    const ngp::Mesh::ConnectedNodes& symMeshobjs,
-    const SharedMemView<int*,DeviceShmem> & scratchIds,
-    const SharedMemView<int*,DeviceShmem> & sortPermutation,
-    const SharedMemView<const double*,DeviceShmem> & rhs,
-    const SharedMemView<const double**,DeviceShmem> & lhs,
-    const char *trace_tag);
 
   EquationSystem *eqSystem_;
 };

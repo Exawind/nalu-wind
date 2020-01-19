@@ -118,24 +118,6 @@ public:
     }
   }
 
-  template<
-    template <typename> class NGPAlg,
-    typename LegacyAlg,
-    class... Args>
-  void register_elem_algorithm(
-    AlgorithmType algType,
-    stk::mesh::Part* part,
-    const std::string& algSuffix,
-    Args&&... args)
-  {
-    if (!nalu_ngp::is_ngp_element(part->topology()))
-      register_legacy_algorithm<LegacyAlg>(
-        algType, part, algSuffix, std::forward<Args>(args)...);
-    else
-      register_elem_algorithm<NGPAlg>(
-        algType, part, algSuffix, std::forward<Args>(args)...);
-  }
-
   /** Register an face algorithm
    *
    *  @param algType Type of algorithm being registered (e.g., INLET, WALL, * OPEN)
@@ -190,42 +172,6 @@ public:
     } else {
       it->second->partVec_.push_back(part);
     }
-  }
-
-  template<
-    template <typename> class NGPAlg,
-    typename LegacyAlg,
-    class... Args>
-  void register_face_algorithm(
-    AlgorithmType algType,
-    stk::mesh::Part* part,
-    const std::string& algSuffix,
-    Args&&... args)
-  {
-    if (!nalu_ngp::is_ngp_face(part->topology()))
-      register_legacy_algorithm<LegacyAlg>(
-        algType, part, algSuffix, std::forward<Args>(args)...);
-    else
-      register_face_algorithm<NGPAlg>(
-        algType, part, algSuffix, std::forward<Args>(args)...);
-  }
-
-  template<template <typename> class NgpAlg,
-           typename LegacyAlg,
-           class ... Args>
-  void register_face_elem_algorithm(
-    AlgorithmType algType,
-    stk::mesh::Part* part,
-    const stk::topology elemTopo,
-    const std::string& algSuffix,
-    Args&& ... args)
-  {
-    if (!nalu_ngp::is_ngp_face(part->topology()))
-      register_legacy_algorithm<LegacyAlg>(
-        algType, part, algSuffix, std::forward<Args>(args) ...);
-    else
-      register_face_elem_algorithm<NgpAlg>(
-        algType, part, elemTopo, algSuffix, std::forward<Args>(args) ... );
   }
 
 protected:
