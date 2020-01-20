@@ -31,7 +31,6 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
   const double x = -0.125;
   const double y =  0.25 ;
 
-  //fill_mesh_and_init_fields(meshSpec, doPerturb, generateSidesets);
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   unit_test_utils::HelperObjects helperObjs(bulk_, stk::topology::HEX_8, 1, partVec_[0]);
@@ -45,8 +44,17 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
     geomAlgDriver.execute();
   }
 
+  const auto& fieldMgr = helperObjs.realm.ngp_field_manager();
+  auto ngpPres = fieldMgr.get_field<double>(pressure_->mesh_meta_data_ordinal());
+  auto ngpDnvF = fieldMgr.get_field<double>(dnvField_->mesh_meta_data_ordinal());
+
   stk::mesh::field_fill(1.0, *pressure_);
   stk::mesh::field_fill(2.0, *dnvField_);
+
+  ngpPres.modify_on_host();
+  ngpDnvF.modify_on_host();
+  ngpPres.sync_to_device();
+  ngpDnvF.sync_to_device();
 
   const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, meta_.universal_part());
 
