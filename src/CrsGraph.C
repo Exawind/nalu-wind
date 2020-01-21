@@ -77,7 +77,7 @@ namespace nalu{
 CrsGraph::CrsGraph(
   Realm &realm,
   const unsigned numDof)
-  : realm_(realm), numDof_(numDof), inConstruction_(false)
+  : realm_(realm), numDof_(numDof), inConstruction_(false), isFinalized_(false)
 {}
 
 CrsGraph::~CrsGraph() {}
