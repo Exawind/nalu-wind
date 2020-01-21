@@ -143,6 +143,7 @@ private:
   Realm &realm_;
   const unsigned numDof_;
   bool inConstruction_;
+  bool isFinalized_;
 
 }; //CrsGraph class
 

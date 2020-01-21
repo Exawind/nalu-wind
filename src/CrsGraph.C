@@ -838,8 +838,8 @@ void CrsGraph::storeOwnersForShared()
 
 void CrsGraph::finalizeGraph()
 {
-  ThrowRequire(inConstruction_);
-  //inConstruction_ = false; //otherwise, we cannot reuse graphs between different physics
+  if (isFinalized_) return;
+  isFinalized_ = true;
 
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
 
