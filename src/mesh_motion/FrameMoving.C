@@ -140,6 +140,10 @@ FrameMoving::post_compute_geometry()
     if (faceVelMag == NULL) {
       faceVelMag = meta_.get_field<GenericFieldType>(
         stk::topology::EDGE_RANK, "edge_face_velocity_mag");
+      if (!faceVelMag)
+        throw std::runtime_error("faceVelMag dne");
+      if (!meshDivVelocity)
+        throw std::runtime_error("meshDivVelocity dne");
       compute_edge_scalar_divergence(
         bulk_, partVec_, partVecBc_, faceVelMag, meshDivVelocity);
     } else {
