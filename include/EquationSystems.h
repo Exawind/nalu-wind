@@ -22,12 +22,14 @@
 namespace stk{
 namespace mesh{
 class Part;
+class FieldBase;
 }
 }
 
 #include <map>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace YAML {
   class Node;
@@ -44,6 +46,7 @@ class EquationSystem;
 class PostProcessingData;
 class Simulation;
 class AlgorithmDriver;
+class UpdateOversetFringeAlgorithmDriver;
 
 typedef std::vector<EquationSystem *> EquationSystemVector;
 
@@ -191,7 +194,10 @@ class EquationSystems
    *  \sa EquationSystems::solve_and_update()
    */
   void post_iter_work();
-  
+
+
+  void register_overset_field_update(stk::mesh::FieldBase*, int, int);
+
   Realm &realm_;
   std::string name_;
   int maxIterations_;
@@ -204,6 +210,8 @@ class EquationSystems
 
   /// A list of tasks to be performed after all EquationSystem::solve_and_update
   std::vector<AlgorithmDriver*> postIterAlgDriver_;
+
+  std::unique_ptr<UpdateOversetFringeAlgorithmDriver> oversetUpdater_;
 };
 
 } // namespace nalu

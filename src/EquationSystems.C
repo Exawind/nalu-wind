@@ -33,6 +33,8 @@
 #include <mesh_motion/MeshDisplacementEquationSystem.h>
 #include "WallDistEquationSystem.h"
 
+#include <overset/UpdateOversetFringeAlgorithmDriver.h>
+
 #include <vector>
 
 #include <stk_mesh/base/BulkData.hpp>
@@ -54,10 +56,9 @@ namespace nalu{
 //--------------------------------------------------------------------------
 EquationSystems::EquationSystems(
   Realm &realm)
-  : realm_(realm)
-{
-  // does nothing
-}
+  : realm_(realm),
+    oversetUpdater_(new UpdateOversetFringeAlgorithmDriver(realm))
+{}
 
 //--------------------------------------------------------------------------
 //-------- destructor ------------------------------------------------------
@@ -923,6 +924,9 @@ EquationSystems::evaluate_properties()
 void
 EquationSystems::pre_iter_work()
 {
+  if (realm_.hasOverset_)
+    oversetUpdater_->execute();
+
   for (auto alg: preIterAlgDriver_) {
     alg->execute();
   }
@@ -934,6 +938,12 @@ EquationSystems::post_iter_work()
   for (auto alg: postIterAlgDriver_) {
     alg->execute();
   }
+}
+
+void EquationSystems::register_overset_field_update(
+  stk::mesh::FieldBase* field, int nrows, int ncols)
+{
+  oversetUpdater_->register_overset_field_update(field, nrows, ncols);
 }
 
 } // namespace nalu

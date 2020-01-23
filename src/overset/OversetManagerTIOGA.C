@@ -77,6 +77,18 @@ OversetManagerTIOGA::initialize()
 #endif
 }
 
+void OversetManagerTIOGA::overset_update_fields(const std::vector<OversetFieldData>& fields)
+{
+  tiogaIface_.overset_update_fields(fields);
+}
+
+void OversetManagerTIOGA::overset_update_field(
+  stk::mesh::FieldBase *field, int nrows, int ncols)
+{
+  tiogaIface_.overset_update_field(field, nrows, ncols);
+}
+
+
 }  // nalu
 }  // sierra
 

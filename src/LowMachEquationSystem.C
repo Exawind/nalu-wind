@@ -2471,12 +2471,7 @@ MomentumEquationSystem::register_overset_bc()
   create_constraint_algorithm(velocity_);
 
   int nDim = realm_.meta_data().spatial_dimension();
-  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
-  // Perform fringe updates before all equation system solves
-  equationSystems_.preIterAlgDriver_.push_back(theAlg);
-
-  theAlg->fields_.push_back(
-    std::unique_ptr<OversetFieldData>(new OversetFieldData(velocity_,1,nDim)));
+  equationSystems_.register_overset_field_update(velocity_, 1, nDim);
 }
 
 //--------------------------------------------------------------------------
@@ -3677,12 +3672,7 @@ ContinuityEquationSystem::register_overset_bc()
   else
     create_constraint_algorithm(pressure_);
 
-  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
-  // Perform fringe updates before all equation system solves
-  equationSystems_.preIterAlgDriver_.push_back(theAlg);
-
-  theAlg->fields_.push_back(
-    std::unique_ptr<OversetFieldData>(new OversetFieldData(pressure_,1,1)));
+  equationSystems_.register_overset_field_update(pressure_, 1, 1);
 }
 
 //--------------------------------------------------------------------------

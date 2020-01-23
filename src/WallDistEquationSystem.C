@@ -349,12 +349,8 @@ WallDistEquationSystem::register_overset_bc()
   else
     create_constraint_algorithm(wallDistPhi_);
 
-  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
-  // Perform fringe updates before all equation system solves
-  equationSystems_.preIterAlgDriver_.push_back(theAlg);
-
-  theAlg->fields_.push_back(
-    std::unique_ptr<OversetFieldData>(new OversetFieldData(wallDistPhi_,1,1)));
+  // No pre-iteration update of field as it is going to be reset in
+  // solve_and_update
 }
 
 void

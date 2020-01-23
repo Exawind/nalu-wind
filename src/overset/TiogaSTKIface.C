@@ -418,6 +418,39 @@ TiogaSTKIface::populate_overset_info()
 #endif
 }
 
+void
+TiogaSTKIface::overset_update_fields(
+  const std::vector<sierra::nalu::OversetFieldData>& fields)
+{
+  constexpr int row_major = 0;
+  int nComp = 0;
+  for (auto& f: fields)
+    nComp += f.sizeRow_ * f.sizeCol_;
+
+  for (auto& tb: blocks_)
+    tb->register_solution(*tg_, fields, nComp);
+
+  tg_->dataUpdate(nComp, row_major);
+
+  for (auto& tb: blocks_)
+    tb->update_solution(fields);
+}
+
+void TiogaSTKIface::overset_update_field(
+  stk::mesh::FieldBase* field, int nrows, int ncols)
+{
+  constexpr int row_major = 0;
+  sierra::nalu::OversetFieldData fdata{field, nrows, ncols};
+
+  for (auto& tb: blocks_)
+    tb->register_solution(*tg_, fdata);
+
+  tg_->dataUpdate(nrows*ncols, row_major);
+
+  for (auto& tb: blocks_)
+    tb->update_solution(fdata);
+}
+
 } // tioga
 
 #endif // NALU_USES_TIOGA

@@ -3178,7 +3178,7 @@ Realm::overset_orphan_node_field_update(
   const unsigned sizeRow,
   const unsigned sizeCol)
 {
-  oversetManager_->overset_orphan_node_field_update(theField, sizeRow, sizeCol);
+  oversetManager_->overset_update_field(theField, sizeRow, sizeCol);
 }
 
 //--------------------------------------------------------------------------
