@@ -127,7 +127,7 @@ realms:
       simStart: init
       t_start: 0.0
       t_max:    20.0
-      dt_fast: 0.0625
+      dt_fast: 0.0125
       n_every_checkpoint: 100
 
       Turbine0:
