@@ -1920,12 +1920,10 @@ MomentumEquationSystem::register_wall_bc(
 			     0, nDim,
 			     stk::topology::NODE_RANK);
 
-  // wall function activity will only set dof velocity np1 wall value as an IC
-  if ( anyWallFunctionActivated )
-    realm_.initCondAlg_.push_back(theCopyAlg);
-  else
+  // Only set velocityNp1 at the wall boundary if we are not using any wall functions
+  if (!anyWallFunctionActivated)
     bcDataMapAlg_.push_back(theCopyAlg);
-    
+
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
     const AlgorithmType algTypePNG = anyWallFunctionActivated ? WALL_FCN : WALL;
