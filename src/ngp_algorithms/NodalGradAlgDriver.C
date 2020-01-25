@@ -9,14 +9,12 @@
 
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
-#include "ngp_utils/NgpFieldUtils.h"
 #include "Realm.h"
 
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_ngp/NgpFieldParallel.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -33,10 +31,19 @@ NodalGradAlgDriver<GradPhiType>::NodalGradAlgDriver(
 template<typename GradPhiType>
 void NodalGradAlgDriver<GradPhiType>::pre_work()
 {
+  const auto& meta = realm_.meta_data();
+
+  auto* gradPhi = meta.template get_field<GradPhiType>(
+    stk::topology::NODE_RANK, gradPhiName_);
+
+  stk::mesh::field_fill(0.0, *gradPhi);
+
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto ngpGradPhi =
+    fieldMgr.template get_field<double>(gradPhi->mesh_meta_data_ordinal());
 
-  auto& ngpGradPhi = nalu_ngp::get_ngp_field(meshInfo, gradPhiName_);
   ngpGradPhi.set_all(ngpMesh, 0.0);
 }
 
@@ -46,17 +53,19 @@ void NodalGradAlgDriver<GradPhiType>::post_work()
   // TODO: Revisit logic after STK updates to ngp parallel updates
   const auto& meta = realm_.meta_data();
   const auto& bulk = realm_.bulk_data();
-  const auto& meshInfo = realm_.mesh_info();
 
   auto* gradPhi = meta.template get_field<GradPhiType>(
     stk::topology::NODE_RANK, gradPhiName_);
-  auto& ngpGradPhi = nalu_ngp::get_ngp_field(meshInfo, gradPhiName_);
+  const auto& meshInfo = realm_.mesh_info();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto ngpGradPhi =
+    fieldMgr.template get_field<double>(gradPhi->mesh_meta_data_ordinal());
+
   ngpGradPhi.modify_on_device();
   ngpGradPhi.sync_to_host();
 
-  const std::vector<NGPDoubleFieldType*> fVec{&ngpGradPhi};
-  bool doFinalSyncToDevice = false;
-  ngp::parallel_sum(bulk, fVec, doFinalSyncToDevice);
+  stk::mesh::parallel_sum(bulk, {gradPhi});
 
   const int dim2 = meta.spatial_dimension();
   const int dim1 = std::is_same<VectorFieldType, GradPhiType>::value

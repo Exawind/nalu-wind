@@ -10,7 +10,6 @@
 
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_utils/NgpLoopUtils.h"
-#include "ngp_utils/NgpFieldUtils.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
 
@@ -18,7 +17,6 @@
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_ngp/NgpFieldParallel.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -30,21 +28,34 @@ GeometryAlgDriver::GeometryAlgDriver(
 
 void GeometryAlgDriver::pre_work()
 {
+  const auto& meta = realm_.meta_data();
+  auto* dualVol = meta.template get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
+
+  stk::mesh::field_fill(0.0, *dualVol);
+
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  auto ngpDualVol = fieldMgr.template get_field<double>(dualVol->mesh_meta_data_ordinal());
 
-  auto ngpDualVol = nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   ngpDualVol.set_all(ngpMesh, 0.0);
 
   if (realm_.realmUsesEdges_) {
-    auto ngpEdgeArea = nalu_ngp::get_ngp_field(
-      meshInfo, "edge_area_vector", stk::topology::EDGE_RANK);
+    auto* edgeAreaVec = meta.template get_field<VectorFieldType>(
+      stk::topology::EDGE_RANK, "edge_area_vector");
+    stk::mesh::field_fill(0.0, *edgeAreaVec);
+
+    auto ngpEdgeArea = fieldMgr.template get_field<double>(
+      edgeAreaVec->mesh_meta_data_ordinal());
     ngpEdgeArea.set_all(ngpMesh, 0.0);
   }
 
   if (hasWallFunc_) {
-    auto wdist = nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
-    auto warea = nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_area_wf");
+    const auto wallNormDist = get_field_ordinal(meta, "assembled_wall_normal_distance");
+    const auto wallArea = get_field_ordinal(meta, "assembled_wall_area_wf");
+    auto wdist = fieldMgr.template get_field<double>(wallNormDist);
+    auto warea = fieldMgr.template get_field<double>(wallArea);
 
     wdist.set_all(ngpMesh, 0.0);
     warea.set_all(ngpMesh, 0.0);
@@ -55,40 +66,41 @@ void GeometryAlgDriver::post_work()
 {
   using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
 
-  const auto& meshInfo = realm_.mesh_info();
+  const auto& meta = realm_.meta_data();
+  const auto& bulk = realm_.bulk_data();
   const auto& ngpMesh = realm_.ngp_mesh();
-  std::vector<NGPDoubleFieldType*> fields;
+  const auto& fieldMgr = realm_.ngp_field_manager();
 
-  auto ngpDualVol = nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
-  fields.push_back(&ngpDualVol);
+  // TODO: Convert to NGP version of parallel and periodic updates
+  auto* dualVol = meta.template get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
+  std::vector<const stk::mesh::FieldBase*> fields{dualVol};
 
   if (realm_.realmUsesEdges_) {
-    auto ngpEdgeArea = nalu_ngp::get_ngp_field(
-      meshInfo, "edge_area_vector", stk::topology::EDGE_RANK);
-    fields.push_back(&ngpEdgeArea);
+    auto* edgeAreaVec = meta.template get_field<VectorFieldType>(
+      stk::topology::EDGE_RANK, "edge_area_vector");
+    fields.push_back(edgeAreaVec);
   }
 
   if (hasWallFunc_) {
-    auto wallAreaF = nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_area_wf");
-    auto wallDistF = nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
-    fields.push_back(&wallAreaF);
-    fields.push_back(&wallDistF);
+    stk::mesh::FieldBase* wallAreaF = meta.get_field(
+      stk::topology::NODE_RANK, "assembled_wall_area_wf");
+    stk::mesh::FieldBase* wallDistF = meta.get_field(
+      stk::topology::NODE_RANK, "assembled_wall_normal_distance");
+    fields.push_back(wallAreaF);
+    fields.push_back(wallDistF);
   }
 
-  // Algorithms should have marked the fields as modified, but call this here to
-  // ensure the next step does a sync to host
   for (auto* fld: fields) {
-    fld->modify_on_device();
+    auto ngpFld = fieldMgr.get_field<double>(fld->mesh_meta_data_ordinal());
+    ngpFld.modify_on_device();
+    ngpFld.sync_to_host();
   }
 
-  bool doFinalSyncToDevice = false;
-  ngp::parallel_sum(realm_.bulk_data(), fields, doFinalSyncToDevice);
+  stk::mesh::parallel_sum(bulk, fields);
 
   if (realm_.hasPeriodic_) {
-    const auto& meta = realm_.meta_data();
     const unsigned nComponents = 1;
-    auto* dualVol = meta.template get_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "dual_nodal_volume");
     realm_.periodic_field_update(dualVol, nComponents);
 
     if (hasWallFunc_) {
@@ -103,12 +115,13 @@ void GeometryAlgDriver::post_work()
   }
 
   for (auto* fld: fields) {
-    fld->modify_on_host();
-    fld->sync_to_device();
+    auto ngpFld = fieldMgr.get_field<double>(fld->mesh_meta_data_ordinal());
+    ngpFld.modify_on_host();
+    ngpFld.sync_to_device();
   }
 
   if (hasWallFunc_) {
-    stk::mesh::FieldBase* wallDistF = realm_.meta_data().get_field(
+    stk::mesh::FieldBase* wallDistF = meta.get_field(
       stk::topology::NODE_RANK, "assembled_wall_normal_distance");
 
     const stk::mesh::Selector sel =
@@ -116,8 +129,10 @@ void GeometryAlgDriver::post_work()
        realm_.meta_data().globally_shared_part()) &
       stk::mesh::selectField(*wallDistF);
 
-    auto wdist = nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_normal_distance");
-    auto warea = nalu_ngp::get_ngp_field(meshInfo, "assembled_wall_area_wf");
+    const auto wallNormDist = get_field_ordinal(meta, "assembled_wall_normal_distance");
+    const auto wallArea = get_field_ordinal(meta, "assembled_wall_area_wf");
+    auto wdist = fieldMgr.template get_field<double>(wallNormDist);
+    auto warea = fieldMgr.template get_field<double>(wallArea);
 
     sierra::nalu::nalu_ngp::run_entity_algorithm(
       "GeometryAlgDriver_wdist_normalize",
