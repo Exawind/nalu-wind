@@ -28,7 +28,6 @@
 #endif
 #include <AssembleMomentumNonConformalSolverAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
-#include <AssembleNodalGradPOpenBoundaryAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AssembleNodalGradUElemAlgorithm.h>
 #include <AssembleNodalGradUNonConformalAlgorithm.h>
@@ -140,6 +139,7 @@
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
+#include "ngp_algorithms/NodalGradPOpenBoundaryAlg.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_algorithms/TurbViscSSTAlg.h"
@@ -3263,9 +3263,9 @@ ContinuityEquationSystem::register_open_bc(
 
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_legacy_algorithm<
-      AssembleNodalGradPOpenBoundaryAlgorithm>(
-      algType, part, "continuity_nodal_grad", edgeNodalGradient_);
+    nodalGradAlgDriver_.register_face_elem_algorithm<NodalGradPOpenBoundary>(
+      algType, part, get_elem_topo(realm_, *part), "continuity_nodal_grad",
+      edgeNodalGradient_);
   }
 
   // mdot at open and lhs
