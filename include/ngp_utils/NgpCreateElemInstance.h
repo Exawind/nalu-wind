@@ -156,10 +156,15 @@ BaseType* create_face_elem_algorithm(
     switch (elemTopo) {
     case stk::topology::QUAD_4_2D:
       return new T<AlgTraitsEdge2DQuad42D>(std::forward<Args>(args)...);
+    case stk::topology::TRI_3_2D:
+      return new T<AlgTraitsEdge2DTri32D>(std::forward<Args>(args)...);
     default:
       throw std::runtime_error("NGP face_elem algorithm is not implemented for EDGE_2D and "
                                + elemTopo.name() + " pair.");
     }
+
+  case stk::topology::QUAD_9:
+    return new T<AlgTraitsQuad9Hex27>(std::forward<Args>(args)...);
 
   default:
     throw std::runtime_error("NGP face_elem algorithm not implemented " + faceTopo.name());
