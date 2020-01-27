@@ -113,6 +113,29 @@ HypreLinearSystem::beginLinearSystemConstruction()
   // row status to modify behavior of sumInto method.
   for (HypreIntType i=0; i < numRows_; i++)
     rowStatus_[i] = RT_NORMAL;
+
+  auto& bulk = realm_.bulk_data();
+  std::vector<const stk::mesh::FieldBase*> fVec{realm_.hypreGlobalId_};
+
+  stk::mesh::copy_owned_to_shared(bulk, fVec);
+  stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
+
+  if (realm_.oversetManager_ != nullptr &&
+      realm_.oversetManager_->oversetGhosting_ != nullptr)
+    stk::mesh::communicate_field_data(
+      *realm_.oversetManager_->oversetGhosting_, fVec);
+
+  if (realm_.nonConformalManager_ != nullptr &&
+      realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)
+    stk::mesh::communicate_field_data(
+      *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
+
+  if (realm_.periodicManager_ != nullptr &&
+      realm_.periodicManager_->periodicGhosting_ != nullptr) {
+    realm_.periodicManager_->parallel_communicate_field(realm_.hypreGlobalId_);
+    realm_.periodicManager_->periodic_parallel_communicate_field(
+      realm_.hypreGlobalId_);
+  }
 }
 
 void
