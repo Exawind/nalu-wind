@@ -946,5 +946,21 @@ void EquationSystems::register_overset_field_update(
   oversetUpdater_->register_overset_field_update(field, nrows, ncols);
 }
 
+bool EquationSystems::is_decoupled() const
+{
+  // No overset, so there is no concept of decoupled
+  if (!realm_.hasOverset_)
+    return false;
+
+  // EquationSystems within a realm is defined as decoupled iff all equation
+  // systems are solved in decoupled fashion. Even if one of the equation system
+  // is solved in a fully coupled fashion, we return false.
+  bool hasDecoupled = true;
+  for (auto* eqsys: equationSystemVector_)
+    hasDecoupled = hasDecoupled && eqsys->is_decoupled();
+
+  return hasDecoupled;
+}
+
 } // namespace nalu
 } // namespace Sierra

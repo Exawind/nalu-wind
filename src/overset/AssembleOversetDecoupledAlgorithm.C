@@ -32,6 +32,11 @@ void AssembleOversetDecoupledAlgorithm::execute()
   // Reset LHS/RHS for the overset constraint rows
   prepare_constraints();
 
+  const auto& fringeNodes = realm_.oversetManager_->fringeNodes_;
+  const int numDof = eqSystem_->linsys_->numDof();
+  eqSystem_->linsys_->resetRows(fringeNodes, 0, numDof, 1.0, 0.0);
+
+#if 0
   const int rank = NaluEnv::self().parallel_rank();
   const int nDof = eqSystem_->linsys_->numDof();
   const auto& bulk = realm_.bulk_data();
@@ -60,6 +65,7 @@ void AssembleOversetDecoupledAlgorithm::execute()
     // Don't use apply_coeff here as it checks for overset logic
     eqSystem_->linsys_->sumInto(connected_nodes, scratchIds, scratchVals, rhs, lhs, __FILE__);
   }
+#endif
 }
 
 }  // nalu

@@ -64,7 +64,7 @@ public:
    *  update the "overset inactive part" for hole elements, create the {fringe
    *  node, donor element} mapping pair data structures for overset simulations.
    */
-  void execute();
+  void execute(const bool isDecoupled);
 
   virtual void overset_update_fields(
     const std::vector<sierra::nalu::OversetFieldData>&);

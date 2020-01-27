@@ -198,6 +198,8 @@ class EquationSystems
 
   void register_overset_field_update(stk::mesh::FieldBase*, int, int);
 
+  bool is_decoupled() const;
+
   Realm &realm_;
   std::string name_;
   int maxIterations_;

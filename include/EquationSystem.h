@@ -325,6 +325,9 @@ public:
     const SharedMemView<const double**,DeviceShmem>&
   ) {}
 
+  inline bool is_decoupled() const
+  { return decoupledOverset_; }
+
   std::vector<Algorithm *> bcDataAlg_;
   std::vector<Algorithm *> bcDataMapAlg_;
   std::vector<Algorithm *> copyStateAlg_;

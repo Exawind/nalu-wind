@@ -2521,7 +2521,7 @@ Realm::initialize_non_conformal()
 void
 Realm::initialize_overset()
 {
-  oversetManager_->initialize();
+  oversetManager_->initialize(equationSystems_.is_decoupled());
 }
 
 //--------------------------------------------------------------------------

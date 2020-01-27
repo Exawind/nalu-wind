@@ -307,6 +307,10 @@ void LowMachEquationSystem::load(const YAML::Node& node)
     momentumEqSys_->numOversetIters_ = momNumIters;
     continuityEqSys_->decoupledOverset_ = presDecoupled;
     continuityEqSys_->numOversetIters_ = presNumIters;
+
+    // LowMach is considered decoupled only if both momentum and continuity are
+    // decoupled.
+    decoupledOverset_ = momDecoupled && presDecoupled;
   }
 }
 

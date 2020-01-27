@@ -54,7 +54,7 @@ OversetManagerTIOGA::setup()
 }
 
 void
-OversetManagerTIOGA::initialize()
+OversetManagerTIOGA::initialize(const bool isDecoupled)
 {
   const double timeA = NaluEnv::self().nalu_time();
   if (isInit_) {
@@ -65,8 +65,9 @@ OversetManagerTIOGA::initialize()
   delete_info_vec();
   oversetInfoVec_.clear();
   holeNodes_.clear();
+  fringeNodes_.clear();
 
-  tiogaIface_.execute();
+  tiogaIface_.execute(isDecoupled);
 
   const double timeB = NaluEnv::self().nalu_time();
   realm_.timerNonconformal_ += (timeB - timeA);

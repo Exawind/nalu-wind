@@ -39,7 +39,7 @@ public:
 
   virtual void setup() override;
 
-  virtual void initialize() override;
+  virtual void initialize(const bool isDecoupled = false) override;
 
   virtual void overset_update_fields(const std::vector<OversetFieldData>&) override;
 

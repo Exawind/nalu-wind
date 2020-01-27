@@ -62,7 +62,7 @@ public:
    *
    * This method must be implemented by concrete OGA implementations.
    */
-  virtual void initialize() = 0;
+  virtual void initialize(const bool isDecoupled = false) = 0;
 
   virtual void overset_orphan_node_field_update(
     stk::mesh::FieldBase*,
@@ -89,6 +89,7 @@ public:
   std::vector<OversetInfo*> oversetInfoVec_;
 
   std::vector<stk::mesh::Entity> holeNodes_;
+  std::vector<stk::mesh::Entity> fringeNodes_;
 
   std::vector<int> ghostCommProcs_;
 
