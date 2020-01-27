@@ -195,15 +195,9 @@ ActuatorFAST::load(const YAML::Node& y_node)
           }
 
           // The correction from filtered lifting line theory
-          //~ const bool fllt_correction = 
-                  //~ cur_turbine["fllt_correction"].as<bool>();
           bool fllt_correction=false;
           get_if_present(cur_turbine, "fllt_correction", fllt_correction);
-          if (fllt_correction) {
-            // Assign the variable as false
-            fllt_correction = true;
-          }
-          // Pass the correction value (true or false)
+
           actuatorFASTInfo->fllt_correction_ = fllt_correction;
 
           // The value epsilon / chord [non-dimensional]
@@ -212,12 +206,21 @@ ActuatorFAST::load(const YAML::Node& y_node)
           //   - tangential to chord (y),
           //   - spanwise (z)
           const YAML::Node epsilon_chord = cur_turbine["epsilon_chord"];
+          const YAML::Node epsilon = cur_turbine["epsilon"];
+          if(epsilon && epsilon_chord){
+            throw std::runtime_error("epsilon and epsilon_chord have both been specified for Turbine "
+              + std::to_string(iTurb) + "\nYou must pick one or the other.");
+          }
+          if(epsilon && fllt_correction){
+            throw std::runtime_error("epsilon and fllt_correction have both been specified for Turbine "
+              +std::to_string(iTurb) + "\nepsilon_chord and epsilon_min should be used with fllt_correction.");
+          }
 
           // If epsilon/chord is given, store it,
           // If it is not given, set it to zero, such
           // that it is smaller than the standard epsilon and
           // will not be used
-          if ( epsilon_chord or fllt_correction)
+          if ( epsilon_chord )
           {
             // epsilon / chord
             actuatorFASTInfo->epsilon_chord_ = epsilon_chord.as<Coordinates>();
@@ -237,13 +240,6 @@ ActuatorFAST::load(const YAML::Node& y_node)
             actuatorFASTInfo->epsilon_min_.y_ = 0.;
             actuatorFASTInfo->epsilon_min_.z_ = 0.;
           }
-
-          // The value of epsilon [m]
-          // This is a vector containing the values for:
-          //   - chord aligned (x),
-          //   - tangential to chord (y),
-          //   - spanwise (z)
-          const YAML::Node epsilon = cur_turbine["epsilon"];
 
           // Check if epsilon is given and store it.
           if ( epsilon ) {
