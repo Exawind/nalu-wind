@@ -1510,6 +1510,9 @@ void TpetraLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solutionField,
   auto ownedLocalRhs = ownedLocalRhs_;
   auto sharedNotOwnedLocalRhs = sharedNotOwnedLocalRhs_;
 
+  // Suppress unused variable warning on non-debug builds
+  (void) maxSharedNotOwnedRowId;
+
   nalu_ngp::run_entity_algorithm(
     "TpetraLinSys::applyDirichletBCs", ngpMesh, stk::topology::NODE_RANK, selector,
     KOKKOS_LAMBDA(const MeshIndex& meshIdx)
