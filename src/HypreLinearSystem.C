@@ -192,6 +192,18 @@ HypreLinearSystem::buildOversetNodeGraph(
   const stk::mesh::PartVector&)
 {
   beginLinearSystemConstruction();
+
+  // Turn on the flag that indicates this linear system has rows that must be
+  // skipped during normal sumInto process
+  hasSkippedRows_ = true;
+
+  // Mark all the fringe nodes as skipped so that sumInto doesn't add into these
+  // rows during assembly process
+  for(auto* oinfo: realm_.oversetManager_->oversetInfoVec_) {
+    auto node = oinfo->orphanNode_;
+    HypreIntType hid = *stk::mesh::field_data(*realm_.hypreGlobalId_, node);
+    skippedRows_.insert(hid * numDof_);
+  }
 }
 
 void
