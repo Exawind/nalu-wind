@@ -1915,16 +1915,17 @@ MomentumEquationSystem::register_wall_bc(
     }
   }
   
-  // copy velocity_bc to velocity np1
-  CopyFieldAlgorithm *theCopyAlg
-    = new CopyFieldAlgorithm(realm_, part,
-			     theBcField, &velocityNp1,
-			     0, nDim,
-			     stk::topology::NODE_RANK);
-
   // Only set velocityNp1 at the wall boundary if we are not using any wall functions
-  if (!anyWallFunctionActivated)
+  if (!anyWallFunctionActivated) {
+    // copy velocity_bc to velocity np1
+    CopyFieldAlgorithm *theCopyAlg
+      = new CopyFieldAlgorithm(realm_, part,
+                               theBcField, &velocityNp1,
+                               0, nDim,
+                               stk::topology::NODE_RANK);
+
     bcDataMapAlg_.push_back(theCopyAlg);
+  }
 
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
