@@ -198,7 +198,7 @@ class EquationSystems
 
   void register_overset_field_update(stk::mesh::FieldBase*, int, int);
 
-  bool is_decoupled() const;
+  bool all_systems_decoupled() const;
 
   Realm &realm_;
   std::string name_;
@@ -214,6 +214,22 @@ class EquationSystems
   std::vector<AlgorithmDriver*> postIterAlgDriver_;
 
   std::unique_ptr<UpdateOversetFringeAlgorithmDriver> oversetUpdater_;
+
+  /** Default number of overset coupling iterations
+   *
+   *  This parameter controls the global settings for _decoupled overset_
+   *  simulations. User can override this for individual equations by specifying
+   *  the values for the specific equation system.
+   */
+  int numOversetItersDefault_{1};
+
+  /** Global flag indicating whether decoupled overset is used for all equation
+   * systems in this Realm.
+   *
+   *  User can override this for individual equation systems by using the
+   *  appropriate input options.
+   */
+  bool decoupledOversetGlobalFlag_{false};
 };
 
 } // namespace nalu
