@@ -392,7 +392,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
       int offset = ih * ndim;
       for (int d=0; d < ndim; ++d) {
         Kokkos::atomic_add(&d_velAvg(offset + d), (velocity.get(mi, d) * rho * dVol));
-        Kokkos::atomic_add(&d_velBarAvg(offset + d), (velTimeAvg.get(mi, d) * rho * dVol));
+        Kokkos::atomic_add(&d_velBarAvg(offset + d), (velTimeAvg.get(mi, d) * dVol));
       }
 
       // Stress computations
@@ -533,12 +533,12 @@ BdyLayerStatistics::impl_compute_temperature_stats()
       const int offset = ih * ndim;
       for (int d=0; d < ndim; ++d) {
         Kokkos::atomic_add(
-          &d_thetaSFSBarAvg(offset + d), (thetaSFS.get(mi, 0) * dVol));
+          &d_thetaSFSBarAvg(offset + d), (thetaSFS.get(mi, d) * dVol));
         Kokkos::atomic_add(
-          &d_thetaUjBarAvg(offset + d), (thetaUj.get(mi, 0) * dVol));
+          &d_thetaUjBarAvg(offset + d), (thetaUj.get(mi, d) * dVol));
         Kokkos::atomic_add(
           &d_thetaUjAvg(offset + d),
-          (rho * theta.get(mi, 0) * velocity.get(mi, 0) * dVol));
+          (rho * theta.get(mi, 0) * velocity.get(mi, d) * dVol));
       }
     });
 
