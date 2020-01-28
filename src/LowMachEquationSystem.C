@@ -28,7 +28,6 @@
 #endif
 #include <AssembleMomentumNonConformalSolverAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
-#include <AssembleNodalGradPOpenBoundaryAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AssembleNodalGradUElemAlgorithm.h>
 #include <AssembleNodalGradUNonConformalAlgorithm.h>
@@ -60,6 +59,7 @@
 #include <NaluParsing.h>
 #include <NonConformalManager.h>
 #include <NonConformalInfo.h>
+#include <PeriodicManager.h>
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <PostProcessingData.h>
 #include <PstabErrorIndicatorEdgeAlgorithm.h>
@@ -139,12 +139,14 @@
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
+#include "ngp_algorithms/NodalGradPOpenBoundaryAlg.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_algorithms/TurbViscSSTAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
+#include "stk_ngp/NgpFieldParallel.hpp"
 
 // nso
 #include <nso/MomentumNSOElemKernel.h>
@@ -1920,12 +1922,10 @@ MomentumEquationSystem::register_wall_bc(
 			     0, nDim,
 			     stk::topology::NODE_RANK);
 
-  // wall function activity will only set dof velocity np1 wall value as an IC
-  if ( anyWallFunctionActivated )
-    realm_.initCondAlg_.push_back(theCopyAlg);
-  else
+  // Only set velocityNp1 at the wall boundary if we are not using any wall functions
+  if (!anyWallFunctionActivated)
     bcDataMapAlg_.push_back(theCopyAlg);
-    
+
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
     const AlgorithmType algTypePNG = anyWallFunctionActivated ? WALL_FCN : WALL;
@@ -2687,6 +2687,8 @@ MomentumEquationSystem::assemble_and_solve(
   auto& bulk = realm_.bulk_data();
 
   extractDiagonal_ = (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV);
+  auto ngpUdiag = realm_.ngp_field_manager().get_field<double>(
+    Udiag_->mesh_meta_data_ordinal());
   // Reset timescale field before momentum solve
   {
     double projTimeScale = 0.0;
@@ -2696,8 +2698,6 @@ MomentumEquationSystem::assemble_and_solve(
       projTimeScale = gamma1 / dt;
     }
 
-    auto ngpUdiag = realm_.ngp_field_manager().get_field<double>(
-      Udiag_->mesh_meta_data_ordinal());
     ngpUdiag.set_all(realm_.ngp_mesh(), projTimeScale);
     ngpUdiag.modify_on_device();
   }
@@ -2710,7 +2710,6 @@ MomentumEquationSystem::assemble_and_solve(
     stk::topology::NODE_RANK, "dual_nodal_volume");
   ScalarFieldType* density = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density");
-  std::vector<const stk::mesh::FieldBase*> fVec{Udiag_};
 
   if (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV) {
     const std::string dofName = "velocity";
@@ -2719,13 +2718,19 @@ MomentumEquationSystem::assemble_and_solve(
     const double projTimeScale = gamma1 / dt;
     const double alphaU = realm_.solutionOptions_->get_relaxation_factor(dofName);
 
-    stk::mesh::parallel_sum(bulk, fVec);
+    // Bring to host and perform remaining operations on host before pushing
+    // back to device
+    const std::vector<NGPDoubleFieldType*> fVec{&ngpUdiag};
+    bool doFinalSyncBackToDevice = false;
+    ngp::parallel_sum(realm_.bulk_data(), fVec, doFinalSyncBackToDevice);
+
     const auto sel = stk::mesh::selectField(*Udiag_)
       & meta.locally_owned_part()
       & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
       & !(realm_.get_inactive_selector());
     const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
 
+    // Perform update on host to save on future parallel syncs
     for (auto b: bkts) {
       double* field = (double*) stk::mesh::field_data(*Udiag_, *b);
       double* rho = (double*) stk::mesh::field_data(*density, *b);
@@ -2738,17 +2743,33 @@ MomentumEquationSystem::assemble_and_solve(
     }
   }
 
-  // Communicate to shared and ghosted nodes
+  // Communicate to shared and ghosted nodes (all synchronization on host)
+  std::vector<const stk::mesh::FieldBase*> fVec{Udiag_};
   stk::mesh::copy_owned_to_shared(bulk, fVec);
   stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
-  if (realm_.hasPeriodic_)
-    realm_.periodic_delta_solution_update(Udiag_, 1);
+  if (realm_.hasPeriodic_) {
+    const bool bypassFieldCheck = true;
+    const bool addMirrorNodes = false;
+    const bool setMirrorNodes = true;
+    realm_.periodicManager_->apply_constraints(
+      Udiag_, 1, bypassFieldCheck, addMirrorNodes, setMirrorNodes);
+  }
   if (realm_.nonConformalManager_ != nullptr &&
       realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)
     stk::mesh::communicate_field_data(
       *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
-  if (realm_.hasOverset_)
+  if (realm_.hasOverset_) {
+#ifndef KOKKOS_ENABLE_CUDA
     realm_.overset_orphan_node_field_update(Udiag_, 1, 1);
+#else
+    // TODO: Fix overset for GPUs
+    throw std::runtime_error("Cannot perform overset synchronization on GPUs");
+#endif
+  }
+
+  // Push back to device
+  ngpUdiag.modify_on_host();
+  ngpUdiag.sync_to_device();
 }
 
 void MomentumEquationSystem::compute_turbulence_parameters()
@@ -3242,9 +3263,9 @@ ContinuityEquationSystem::register_open_bc(
 
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_legacy_algorithm<
-      AssembleNodalGradPOpenBoundaryAlgorithm>(
-      algType, part, "continuity_nodal_grad", edgeNodalGradient_);
+    nodalGradAlgDriver_.register_face_elem_algorithm<NodalGradPOpenBoundary>(
+      algType, part, get_elem_topo(realm_, *part), "continuity_nodal_grad",
+      edgeNodalGradient_);
   }
 
   // mdot at open and lhs

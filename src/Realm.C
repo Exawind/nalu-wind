@@ -3571,6 +3571,29 @@ Realm::set_hypre_global_id()
     HypreIntType* hids = stk::mesh::field_data(*hypreGlobalId_, node);
     *hids = nidx++;
   }
+
+  auto& bulk = bulk_data();
+  std::vector<const stk::mesh::FieldBase*> fVec{hypreGlobalId_};
+
+  stk::mesh::copy_owned_to_shared(bulk, fVec);
+  stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
+
+  if (oversetManager_ != nullptr &&
+      oversetManager_->oversetGhosting_ != nullptr)
+    stk::mesh::communicate_field_data(
+      *oversetManager_->oversetGhosting_, fVec);
+
+  if (nonConformalManager_ != nullptr &&
+      nonConformalManager_->nonConformalGhosting_ != nullptr)
+    stk::mesh::communicate_field_data(
+      *nonConformalManager_->nonConformalGhosting_, fVec);
+
+  if (periodicManager_ != nullptr &&
+      periodicManager_->periodicGhosting_ != nullptr) {
+    periodicManager_->parallel_communicate_field(hypreGlobalId_);
+    periodicManager_->periodic_parallel_communicate_field(
+      hypreGlobalId_);
+  }
 #endif
 }
 
