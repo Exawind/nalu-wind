@@ -22,13 +22,13 @@ linear_solvers:
     max_iterations: 50
     kspace: 50
     output_level: 0
-    muelu_xml_file_name: ../../../reg_tests/xml/milestone.xml
+    muelu_xml_file_name: ../../xml/milestone.xml
     summarize_muelu_timer: no
 
 realms:
 
   - name: realm_1
-    mesh: ../../../reg_tests/mesh/mesh_alm_hdf5.exo
+    mesh: ../../mesh/nrel5MWactuatorLine.g
     use_edges: no
     automatic_decomposition_type: rcb
 
@@ -118,7 +118,7 @@ realms:
 
     actuator:
       type: ActLineFAST
-      search_method: boost_rtree
+      search_method: stk_kdtree
       search_target_part: Unspecified-2-HEX
 
       n_turbines_glob: 1
@@ -126,29 +126,29 @@ realms:
       debug:    True
       simStart: init
       t_start: 0.0
-      t_max:    20.0
-      dt_fast: 0.0125
+      t_max:    0.625
+      dt_fast: 0.00625
       n_every_checkpoint: 100
 
       Turbine0:
-        fllt_correction: true
-        num_force_pts_blade: 300
+        fllt_correction: True
+        num_force_pts_blade: 100
         num_force_pts_tower: 20
-        nacelle_cd: 0.0
+        nacelle_cd: 1.0
         nacelle_area: 8.0
         air_density: 1.225
-        epsilon_min: [ 10.0, 10.0, 10.0 ]
+        epsilon_min: [ 5.0, 5.0, 5.0 ]
         epsilon_chord: [ 0.25, 0.25, 0.25 ]
-        turbine_base_pos: [ 0.0, 0.0, -90.0 ]
+        turbine_base_pos: [ 0.0, 0.0, 0.0 ]
         turbine_hub_pos: [ 0.0, 0.0, 90.0 ]
         restart_filename: "blah"
-        fast_input_filename: "../common_files/nrel5mw.fst"
+        fast_input_filename: "../nrel5MWactuatorLine/nrel5mw.fst"
         turb_id:  1
         turbine_name: machine_one
 
     output:
       output_data_base_name: actuatorLine.e
-      output_frequency: 10
+      output_frequency: 1
       output_node_set: no
       output_variables:
        - velocity
@@ -166,7 +166,7 @@ Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
-      termination_step_count: 320
+      termination_step_count: 10
       time_step: 0.0625
       time_stepping_type: fixed
       time_step_count: 0
