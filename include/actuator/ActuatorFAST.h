@@ -38,39 +38,31 @@ class ActuatorFASTInfo : public ActuatorInfo
 public:
     ActuatorFASTInfo();
     virtual ~ActuatorFASTInfo();
-    // The Gaussian spreading width (chordwise, spanwise, thickness) [m]
+    ///< The Gaussian spreading width (chordwise, spanwise, thickness) [m]
     Coordinates epsilon_; 
 
-    // epsilon / chord in (chord direction, tangential to chord, and spanwise)
-    //   [m]
+    ///< epsilon / chord in (chord direction, tangential to chord, and spanwise)
+    ///   [m]
     Coordinates epsilon_chord_;
-
-    // The optimal epsilon (epsilon / chord * chord) [m]
-    //~ Coordinates epsilon_opt_;
 
     // The value of epsilon used for the tower [m]
     Coordinates epsilon_tower_;
 
-    // The minimum epsilon allowed in the simulation [m]
-    // in the (chordwise, spanwise, thickness) directions
+    ///< The minimum epsilon allowed in the simulation [m]
+    /// in the (chordwise, spanwise, thickness) directions
     Coordinates epsilon_min_;
 
     // The file to write the all the points
     std::string fileToDumpPoints_;
     
-    // Flag to activate the filtered lifting line correction
-    // Martinez-Tossas, L., & Meneveau, C. (2019)
-    //   Filtered lifting line theory and application to the actuator line model
-    //   Journal of Fluid Mechanics, 863, 269-292
+    ///< Flag to activate the filtered lifting line correction
+    /*!
+    Martinez-Tossas, L., & Meneveau, C. (2019)
+    Filtered lifting line theory and application to the actuator line model
+    Journal of Fluid Mechanics, 863, 269-292
+    */
     bool fllt_correction_;
 
-    // Number of blades
-    //~ int nb;
-    
-    // Number of actuator points
-    //~ int na;
-    
-    //
 
 };
 
@@ -95,12 +87,11 @@ public:
 
     size_t globTurbId_; ///< Global turbine number.
 
-    // The Gaussian spreading width in (chordwise, spanwise, thickness) 
-    //  directions for this actuator point. 
+    ///< The Gaussian spreading width in (chordwise, spanwise, thickness)
+    ///  directions for this actuator point.
     Coordinates epsilon_; 
-
-    // The optimal epsilon for this actuator point [m]
-    Coordinates epsilon_opt_; 
+    ///< The optimal epsilon for this actuator point [m]
+    Coordinates epsilon_opt_;
 
     ///< HUB, BLADE, or TOWER - Defined by an enum.
     fast::ActuatorNodeType nodeType_;

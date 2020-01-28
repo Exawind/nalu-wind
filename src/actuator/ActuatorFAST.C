@@ -69,9 +69,7 @@ ActuatorFASTPointInfo::ActuatorFASTPointInfo(
   size_t globTurbId,
   Point centroidCoords,
   double searchRadius,
-  // The values of epsilon [m]
   Coordinates epsilon,
-  // The optimal epsilon [m]
   Coordinates epsilon_opt,
   fast::ActuatorNodeType nType,
   int forceInd)
@@ -178,10 +176,8 @@ ActuatorFAST::load(const YAML::Node& y_node)
           const YAML::Node cur_turbine =
             y_actuator["Turbine" + std::to_string(iTurb)];
 
-          // Append a new object to the arrary
           actuatorInfo_.emplace_back(new ActuatorFASTInfo());
 
-          // Point to the last element of this array that was just appended
           auto actuatorFASTInfo =
             dynamic_cast<ActuatorFASTInfo*>(actuatorInfo_.back().get());
 
@@ -196,7 +192,7 @@ ActuatorFAST::load(const YAML::Node& y_node)
 
           // The correction from filtered lifting line theory
           bool fllt_correction=false;
-          get_if_present(cur_turbine, "fllt_correction", fllt_correction);
+          get_if_present_no_default(cur_turbine, "fllt_correction", fllt_correction);
 
           actuatorFASTInfo->fllt_correction_ = fllt_correction;
 
@@ -1420,9 +1416,9 @@ ActuatorFAST::update_actuator_point_info_map()
    create_point_info_map_class_specific(); 
 }
 
-// This function computes the index map such that actuator points can be
-//   accessed using indexing: 
-//   (turbine number, blade number, actuator point number)
+/// This function computes the index map such that actuator points can be
+///   accessed using indexing:
+///   (turbine number, blade number, actuator point number)
 void ActuatorFAST::index_map()
 {
 
