@@ -50,13 +50,8 @@ namespace sierra {
 namespace nalu {
 
 // constructor
-ActuatorFASTInfo::ActuatorFASTInfo() : ActuatorInfo()
-{
-  // Initialize the filtered lifting line theory correciton to false
-  // This is later read from the yaml input file and can be changed
-  fllt_correction_ = false;
-  
-}
+ActuatorFASTInfo::ActuatorFASTInfo() : ActuatorInfo(), fllt_correction_(false)
+{}
 
 // destructor
 ActuatorFASTInfo::~ActuatorFASTInfo()
@@ -191,10 +186,7 @@ ActuatorFAST::load(const YAML::Node& y_node)
           }
 
           // The correction from filtered lifting line theory
-          bool fllt_correction=false;
-          get_if_present_no_default(cur_turbine, "fllt_correction", fllt_correction);
-
-          actuatorFASTInfo->fllt_correction_ = fllt_correction;
+          get_if_present_no_default(cur_turbine, "fllt_correction", actuatorFASTInfo->fllt_correction_);
 
           // The value epsilon / chord [non-dimensional]
           // This is a vector containing the values for:
