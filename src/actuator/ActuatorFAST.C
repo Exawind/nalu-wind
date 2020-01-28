@@ -199,7 +199,7 @@ ActuatorFAST::load(const YAML::Node& y_node)
             throw std::runtime_error("epsilon and epsilon_chord have both been specified for Turbine "
               + std::to_string(iTurb) + "\nYou must pick one or the other.");
           }
-          if(epsilon && fllt_correction){
+          if(epsilon && actuatorFASTInfo->fllt_correction_){
             throw std::runtime_error("epsilon and fllt_correction have both been specified for Turbine "
               +std::to_string(iTurb) + "\nepsilon_chord and epsilon_min should be used with fllt_correction.");
           }
