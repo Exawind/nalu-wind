@@ -38,21 +38,32 @@ class ActuatorFASTInfo : public ActuatorInfo
 public:
     ActuatorFASTInfo();
     virtual ~ActuatorFASTInfo();
-    // The Gaussian spreading width (chordwise, spanwise, thickness)
+    ///< The Gaussian spreading width (chordwise, spanwise, thickness) [m]
     Coordinates epsilon_; 
 
-    // epsilon / chord in (chord direction, tangential to chord, and spanwise)
+    ///< epsilon / chord in (chord direction, tangential to chord, and spanwise)
+    ///   [m]
     Coordinates epsilon_chord_;
 
     // The value of epsilon used for the tower [m]
     Coordinates epsilon_tower_;
 
-    // The minimum epsilon allowed in the simulation [m]
-    // in the (chordwise, spanwise, thickness) directions
+    ///< The minimum epsilon allowed in the simulation [m]
+    /// in the (chordwise, spanwise, thickness) directions
     Coordinates epsilon_min_;
 
     // The file to write the all the points
     std::string fileToDumpPoints_;
+    
+    ///< Flag to activate the filtered lifting line correction
+    /*!
+    Martinez-Tossas, L., & Meneveau, C. (2019)
+    Filtered lifting line theory and application to the actuator line model
+    Journal of Fluid Mechanics, 863, 269-292
+    */
+    bool fllt_correction_;
+
+
 };
 
 /** Class that holds all of the search action for each actuator point
@@ -68,18 +79,27 @@ public:
         Point centroidCoords,
         double searchRadius,
         Coordinates epsilon,
+        Coordinates epsilon_opt,
         fast::ActuatorNodeType nType,
         int forceInd);
+
     virtual ~ActuatorFASTPointInfo();
+
     size_t globTurbId_; ///< Global turbine number.
-    Coordinates
-    epsilon_; ///< The Gaussian spreading width in (chordwise, spanwise,
-    ///< thickness) directions for this actuator point.
-    fast::ActuatorNodeType
-    nodeType_;        ///< HUB, BLADE, or TOWER - Defined by an enum.
-    int forcePntIndex_; ///< The index this point resides in the total number of
-    ///< force points for the tower i.e. i \in
-    ///< [0,numForcePnts-1]
+
+    ///< The Gaussian spreading width in (chordwise, spanwise, thickness)
+    ///  directions for this actuator point.
+    Coordinates epsilon_; 
+    ///< The optimal epsilon for this actuator point [m]
+    Coordinates epsilon_opt_;
+
+    ///< HUB, BLADE, or TOWER - Defined by an enum.
+    fast::ActuatorNodeType nodeType_;
+
+    // The index this point resides in the total number of
+    //   force points for the tower i.e. i \in
+    //   [0,numForcePnts-1]
+    int forcePntIndex_; 
 };
 
 /** The ActuatorFAST class couples Nalu with the third party library OpenFAST
@@ -184,10 +204,21 @@ public:
     // fill in the map that will hold point and ghosted elements
     void create_actuator_point_info_map();
 
+    // Update the actuator point info map
+    void update_actuator_point_info_map();
+
     virtual void create_point_info_map_class_specific() = 0;
 
     // populate nodal field and output norms (if appropriate)
     void execute() override;
+
+    // Create the indexing used toaccess actuator points as 
+    //   (turbine number, blade number, actuator point number)
+    void index_map();
+    
+    // This is the filtered lifting line correction
+    // Martinez-Tossas and Meneveau. JFM 2019
+    void filtered_lifting_line();
 
     virtual void execute_class_specific(
         const int nDim,
@@ -206,12 +237,6 @@ public:
         const double& g,
         const double* pointForce,
         double* nodeForce);
-
-    // Gaussian projection function.
-    double Gaussian_projection(
-        const int &nDim,
-        double *dis,
-        const Coordinates &epsilon);
 
     // Spread the actuator force to a node vector
     void spread_actuator_force_to_node_vec(
@@ -266,6 +291,12 @@ public:
 
     std::vector<std::vector<double>> thrust;
     std::vector<std::vector<double>> torque;
+
+    // Store the actuator point index
+    // This vector is
+    std::vector<std::vector<std::vector<int>>> indexMap_;
+
+
 };
 
 } // namespace nalu

@@ -14,7 +14,7 @@
  *      Author: psakiev
  */
 
-#include "ActuatorDiskFAST.h"
+#include "actuator/ActuatorDiskFAST.h"
 #include <cmath>
 #include <algorithm>
 #include <functional>
@@ -243,6 +243,7 @@ ActuatorDiskFAST::add_swept_points_to_map()
                                            np,
                                            make_unique<ActuatorFASTPointInfo>(
                                              iTurb, centroidCoords, searchRadius,
+                                             actuatorInfo->epsilon_,
                                              actuatorInfo->epsilon_,
                                              fast::BLADE, i)));
             pointRadiusMap_.insert(std::make_pair(np, i));

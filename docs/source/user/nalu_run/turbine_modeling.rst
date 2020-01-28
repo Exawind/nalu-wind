@@ -114,15 +114,15 @@ Actuator Turbine Model
 
 .. inpfile:: actuator.turbine_base_pos
 
-   The position of the turbine base for actuator-line simulations
+   The position of the turbine base for actuator-line/disk simulations
 
 .. inpfile:: actuator.num_force_pts_blade
 
-   The number of actuator points along each blade for actuator-line simulations
+   The number of actuator points along each blade for actuator-line/disk simulations
 
 .. inpfile:: actuator.num_force_pts_tower
 
-   The number of actuator points along the tower for actuator-line simulations.
+   The number of actuator points along the tower for actuator-line/disk simulations.
 
 .. inpfile:: actuator.nacelle_cd
 
@@ -141,7 +141,36 @@ Actuator Turbine Model
 
 .. inpfile:: actuator.epsilon
 
-   The spreading width :math:`\epsilon` in the Gaussian spreading function in the `[chordwise, spanwise, chord normal]` coordinate system to spread the forces from the actuator point to the nodes. Nalu currently only supports an isotropic Gaussian spreading function and uses only the value in the first component along the `chordwise` direction.
+   The spreading width :math:`\epsilon` in the Gaussian spreading function in
+   the `[chordwise, thickness, spanwise]` coordinate system to spread the
+   forces from the actuator point to the nodes.
+   In the case of the actuator disk, only the first value in the chordwise
+   direction is used for the uniform isotropic Gaussian.
+
+.. inpfile:: actuator.epsilon_chord
+
+   This is the ratio :math:`\epsilon/c` in every direction
+   `[chordwise, thickness, spanwise]`. If this option is
+   specified, the code will choose a value of :math:`\epsilon` at every
+   location that
+   is :math:`c * \epsilon/c`. To avoid numerical instabilities,
+   the code will choose the maximum value between :math:`c * \epsilon/c`
+   and the value of ``actuator.epsilon_min`` specified.
+
+.. inpfile:: actuator.epsilon_min
+
+   This is the minimum value of :math:`\epsilon` in the Gaussian spreading
+   function in the `[chordwise, thickness, spanwise]` coordinate system
+   to spread the forces from the actuator point to the nodes.
+   This option is required if the option ``actuator.epsilon_chord``
+   is specified.
+
+.. inpfile:: actuator.epsilon_tower
+
+   The spreading width :math:`\epsilon` in the Gaussian spreading function in
+   the inertial `[x, y, z]` reference frame.
+   If this value is not speficied, then ``actuator.epsilon`` or
+   ``actuator.epsilon_min`` will be used.
 
 .. inpfile:: actuator.restart_filename
 
@@ -157,4 +186,11 @@ Actuator Turbine Model
    
 .. inpfile:: actuator.num_swept_pts
 
-   This is an optional parameter specifically for actuator disks.  This parameter determines the number of points that are placed azimuthally between the actuator lines and spread the forcing over the disk's area.  When ``num_swept_pts`` is included the number of azimuthal points between the lines is forced to this value at all radial locations.  If ``num_swept_pts`` is omitted then the azimuthal sampling is computed automatically with different sampling at each radial location such that the average distance between points matches the radial spacing.   
+   This is an optional parameter specifically for actuator disks.  
+   This parameter determines the number of points that are placed azimuthally 
+   between the actuator lines and spread the forcing over the disk's area.  
+   When ``num_swept_pts`` is included the number of azimuthal points between the 
+   lines is forced to this value at all radial locations.  If ``num_swept_pts`` 
+   is omitted then the azimuthal sampling is computed automatically with 
+   different sampling at each radial location such that the average distance 
+   between points matches the radial spacing.   
