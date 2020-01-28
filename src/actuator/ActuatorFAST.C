@@ -50,13 +50,8 @@ namespace sierra {
 namespace nalu {
 
 // constructor
-ActuatorFASTInfo::ActuatorFASTInfo() : ActuatorInfo()
-{
-  // Initialize the filtered lifting line theory correciton to false
-  // This is later read from the yaml input file and can be changed
-  fllt_correction_ = false;
-  
-}
+ActuatorFASTInfo::ActuatorFASTInfo() : ActuatorInfo(), fllt_correction_(false)
+{}
 
 // destructor
 ActuatorFASTInfo::~ActuatorFASTInfo()
@@ -69,9 +64,7 @@ ActuatorFASTPointInfo::ActuatorFASTPointInfo(
   size_t globTurbId,
   Point centroidCoords,
   double searchRadius,
-  // The values of epsilon [m]
   Coordinates epsilon,
-  // The optimal epsilon [m]
   Coordinates epsilon_opt,
   fast::ActuatorNodeType nType,
   int forceInd)
@@ -178,10 +171,8 @@ ActuatorFAST::load(const YAML::Node& y_node)
           const YAML::Node cur_turbine =
             y_actuator["Turbine" + std::to_string(iTurb)];
 
-          // Append a new object to the arrary
           actuatorInfo_.emplace_back(new ActuatorFASTInfo());
 
-          // Point to the last element of this array that was just appended
           auto actuatorFASTInfo =
             dynamic_cast<ActuatorFASTInfo*>(actuatorInfo_.back().get());
 
@@ -195,10 +186,7 @@ ActuatorFAST::load(const YAML::Node& y_node)
           }
 
           // The correction from filtered lifting line theory
-          bool fllt_correction=false;
-          get_if_present(cur_turbine, "fllt_correction", fllt_correction);
-
-          actuatorFASTInfo->fllt_correction_ = fllt_correction;
+          get_if_present_no_default(cur_turbine, "fllt_correction", actuatorFASTInfo->fllt_correction_);
 
           // The value epsilon / chord [non-dimensional]
           // This is a vector containing the values for:
@@ -211,7 +199,7 @@ ActuatorFAST::load(const YAML::Node& y_node)
             throw std::runtime_error("epsilon and epsilon_chord have both been specified for Turbine "
               + std::to_string(iTurb) + "\nYou must pick one or the other.");
           }
-          if(epsilon && fllt_correction){
+          if(epsilon && actuatorFASTInfo->fllt_correction_){
             throw std::runtime_error("epsilon and fllt_correction have both been specified for Turbine "
               +std::to_string(iTurb) + "\nepsilon_chord and epsilon_min should be used with fllt_correction.");
           }
@@ -1420,9 +1408,9 @@ ActuatorFAST::update_actuator_point_info_map()
    create_point_info_map_class_specific(); 
 }
 
-// This function computes the index map such that actuator points can be
-//   accessed using indexing: 
-//   (turbine number, blade number, actuator point number)
+/// This function computes the index map such that actuator points can be
+///   accessed using indexing:
+///   (turbine number, blade number, actuator point number)
 void ActuatorFAST::index_map()
 {
 

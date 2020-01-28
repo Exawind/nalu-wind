@@ -63,9 +63,10 @@ void GeometryBoundaryAlg<AlgTraits>::execute()
       const auto& meViews = scrViews.get_me_views(sierra::nalu::CURRENT_COORDINATES);
       const auto& v_area = meViews.scs_areav;
 
-      for (int ip = 0; ip < AlgTraits::numFaceIp_; ++ip)
+      for (int ip = 0; ip < AlgTraits::numFaceIp_; ++ip) {
         for (int d=0; d < AlgTraits::nDim_; ++d)
           areaVecOps(edata, ip * AlgTraits::nDim_ + d) = v_area(ip, d);
+      }
     });
 
   exposedAreaVec.modify_on_device();

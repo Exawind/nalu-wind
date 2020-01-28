@@ -18,10 +18,10 @@ namespace sierra{
 namespace nalu {
 namespace actuator_utils {
 
-// This is the variable pi
 const double pi = M_PI;
-
-// A Gaussian projection function
+///
+/// A Gaussian projection function
+///
 double Gaussian_projection(
   const int &nDim,  // The dimension of the Gaussian (2 or 3)
   double *dis,      // The distance from the center of the Gaussian
@@ -45,8 +45,9 @@ double Gaussian_projection(
 
   return g;
 }
-
-// A Gaussian projection function
+///
+/// A Gaussian projection function
+///
 double Gaussian_projection(
   const int &nDim, 
   double *dis,

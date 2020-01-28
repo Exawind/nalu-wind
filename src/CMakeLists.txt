@@ -22,7 +22,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradBoundaryAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradPOpenBoundaryAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradEdgeAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradNonConformalAlgorithm.C
