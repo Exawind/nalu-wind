@@ -806,13 +806,19 @@ LowMachEquationSystem::solve_and_update()
       // Take care of the possibility that we have multiple overset correctors
       // and we need to do a pressure update that is the sum of all the deltaP
       // that were accumulated over the multiple correctors.
-      solution_update(
-        (1.0 - relaxFP), continuityEqSys_->pressure_->field_of_state(stk::mesh::StateN),
-        relaxFP, continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1));
+      if (continuityEqSys_->decoupledOverset_ && realm_.hasOverset_) {
+        solution_update(
+          (1.0 - relaxFP), continuityEqSys_->pressure_->field_of_state(stk::mesh::StateN),
+          relaxFP, continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1));
 
-      if (continuityEqSys_->decoupledOverset_ && realm_.hasOverset_)
         realm_.overset_orphan_node_field_update(
           &continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1), 1, 1);
+      } else {
+        solution_update(
+          (relaxFP - 1.0), *continuityEqSys_->pTmp_,
+          1.0, *continuityEqSys_->pressure_);
+      }
+
       continuityEqSys_->compute_projected_nodal_gradient();
       timeB = NaluEnv::self().nalu_time();
       continuityEqSys_->timerAssemble_ += (timeB-timeA);
