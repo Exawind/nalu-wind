@@ -23,7 +23,6 @@
 #include <MaterialPropertys.h>
 #include <EquationSystems.h>
 #include <Teuchos_RCP.hpp>
-#include <overset/OversetManager.h>
 
 #include <stk_util/util/ParameterList.hpp>
 
@@ -65,6 +64,7 @@ class Adapter;
 #endif
 class EquationSystems;
 class OutputInfo;
+class OversetManager;
 class PostProcessingInfo;
 class PeriodicManager;
 class Realms;

@@ -123,14 +123,14 @@ void NGPApplyCoeff::operator()(
   SharedMemView<double**,DeviceShmem> & lhs,
   const char *trace_tag) const
 {
+  if (extractDiagonal_)
+    extract_diagonal(numMeshobjs, symMeshobjs, lhs);
+
   if (hasOverset_)
     reset_overset_rows(numMeshobjs, symMeshobjs, rhs, lhs);
 
   (*deviceSumInto_)(
     numMeshobjs, symMeshobjs, scratchIds, sortPermutation, rhs, lhs, trace_tag);
-
-  if (extractDiagonal_)
-    extract_diagonal(numMeshobjs, symMeshobjs, lhs);
 }
 
 SolverAlgorithm::SolverAlgorithm(

@@ -115,7 +115,6 @@ WallDistEquationSystem::register_nodal_fields(
   wallDistPhi_ = &(meta.declare_field<ScalarFieldType>(
                      stk::topology::NODE_RANK, "wall_distance_phi"));
   stk::mesh::put_field_on_mesh(*wallDistPhi_, *part, nullptr);
-  realm_.augment_restart_variable_list("wall_distance_phi");
 
   dphidx_ = &(meta.declare_field<VectorFieldType>(
                 stk::topology::NODE_RANK, "dwalldistdx"));
@@ -345,14 +344,13 @@ WallDistEquationSystem::register_non_conformal_bc(
 void
 WallDistEquationSystem::register_overset_bc()
 {
-  create_constraint_algorithm(wallDistPhi_);
+  if (decoupledOverset_)
+    EquationSystem::create_constraint_algorithm(wallDistPhi_);
+  else
+    create_constraint_algorithm(wallDistPhi_);
 
-  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
-  // Perform fringe updates before all equation system solves
-  equationSystems_.preIterAlgDriver_.push_back(theAlg);
-
-  theAlg->fields_.push_back(
-    std::unique_ptr<OversetFieldData>(new OversetFieldData(wallDistPhi_,1,1)));
+  // No pre-iteration update of field as it is going to be reset in
+  // solve_and_update
 }
 
 void
@@ -401,22 +399,29 @@ WallDistEquationSystem::solve_and_update()
     return;
 
   if (isInit_) {
-    nodalGradAlgDriver_.execute();
     isInit_ = false;
+  } else {
+    auto wdistPhi = realm_.ngp_field_manager().get_field<double>(
+      wallDistPhi_->mesh_meta_data_ordinal());
+    wdistPhi.set_all(realm_.ngp_mesh(), 0.0);
   }
 
-  for (int k=0; k< maxIterations_; k++) {
-    NaluEnv::self().naluOutputP0()
-      << " " << k+1 << "/" << maxIterations_
-      << std::setw(15) << std::right << userSuppliedName_ << std::endl;
+  NaluEnv::self().naluOutputP0()
+    << " 1/1" << std::setw(15) << std::right << userSuppliedName_ << std::endl;
 
-    pValue_ = 2 * (k + 1);
-
+  // Since this is purely geometric, we need at least two coupling iterations to
+  // inform meshes about the field when using decoupled overset
+  const int numOversetIters =
+    decoupledOverset_ ? std::max(numOversetIters_, 2) : numOversetIters_;
+  for (int k=0; k< numOversetIters; k++) {
     assemble_and_solve(wallDistPhi_);
 
-    // projected nodal gradient
-    nodalGradAlgDriver_.execute();
+    if (decoupledOverset_)
+      realm_.overset_orphan_node_field_update(wallDistPhi_, 1, 1);
   }
+
+  // projected nodal gradient
+  nodalGradAlgDriver_.execute();
 
   // calculate normal wall distance
   compute_wall_distance();

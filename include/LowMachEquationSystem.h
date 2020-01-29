@@ -54,7 +54,9 @@ public:
     EquationSystems& equationSystems,
     const bool elementContinuityEqs);
   virtual ~LowMachEquationSystem();
-  
+
+  virtual void load(const YAML::Node&);
+
   virtual void initialize();
 
   virtual void register_nodal_fields(

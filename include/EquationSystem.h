@@ -232,12 +232,7 @@ public:
   template<typename T = DoubleType>
   PecletFunction<T>* ngp_create_peclet_function(const std::string& dofName);
 
-  virtual void load(const YAML::Node & node)
-  {
-    get_required(node, "name", userSuppliedName_);
-    get_required(node, "max_iterations", maxIterations_);
-    get_required(node, "convergence_tolerance", convergenceTolerance_);
-  }
+  virtual void load(const YAML::Node & node);
 
   /** Update field with delta solution of linear solve
    */
@@ -330,6 +325,9 @@ public:
     const SharedMemView<const double**,DeviceShmem>&
   ) {}
 
+  inline bool is_decoupled() const
+  { return decoupledOverset_; }
+
   std::vector<Algorithm *> bcDataAlg_;
   std::vector<Algorithm *> bcDataMapAlg_;
   std::vector<Algorithm *> copyStateAlg_;
@@ -355,7 +353,12 @@ public:
 
   std::string dofName_{"undefined"};
 
+  int numOversetIters_{1};
+  bool decoupledOverset_{false};
+
   bool extractDiagonal_{false};
+
+
   virtual ScalarFieldType* get_diagonal_field() { return nullptr; }
 
   // owner equation system

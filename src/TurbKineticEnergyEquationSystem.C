@@ -822,12 +822,7 @@ TurbKineticEnergyEquationSystem::register_overset_bc()
 {
   create_constraint_algorithm(tke_);
 
-  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
-  // Perform fringe updates before all equation system solves
-  equationSystems_.preIterAlgDriver_.push_back(theAlg);
-
-  theAlg->fields_.push_back(
-    std::unique_ptr<OversetFieldData>(new OversetFieldData(tke_,1,1)));
+  equationSystems_.register_overset_field_update(tke_, 1, 1);
 }
 
 //--------------------------------------------------------------------------
@@ -899,14 +894,19 @@ TurbKineticEnergyEquationSystem::solve_and_update()
     NaluEnv::self().naluOutputP0() << " " << k+1 << "/" << maxIterations_
                     << std::setw(15) << std::right << userSuppliedName_ << std::endl;
 
-    // tke assemble, load_complete and solve
-    assemble_and_solve(kTmp_);
+    for (int oi=0; oi < numOversetIters_; ++oi) {
+      // tke assemble, load_complete and solve
+      assemble_and_solve(kTmp_);
 
-    // update
-    double timeA = NaluEnv::self().nalu_time();
-    update_and_clip();
-    double timeB = NaluEnv::self().nalu_time();
-    timerAssemble_ += (timeB-timeA);
+      // update
+      double timeA = NaluEnv::self().nalu_time();
+      update_and_clip();
+
+      if (decoupledOverset_ && realm_.hasOverset_)
+        realm_.overset_orphan_node_field_update(tke_, 1, 1);
+      double timeB = NaluEnv::self().nalu_time();
+      timerAssemble_ += (timeB-timeA);
+    }
 
     // projected nodal gradient
     compute_projected_nodal_gradient();

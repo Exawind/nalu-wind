@@ -8,6 +8,7 @@
 #include <stk_mesh/base/CoordinateSystems.hpp>
 
 #include "overset/TiogaOptions.h"
+#include "overset/OversetFieldData.h"
 #include "yaml-cpp/yaml.h"
 
 #include <vector>
@@ -94,7 +95,7 @@ public:
 
   /** Update iblanks after connectivity updates
    */
-  void update_iblanks(std::vector<stk::mesh::Entity>&);
+  void update_iblanks(std::vector<stk::mesh::Entity>&, std::vector<stk::mesh::Entity>&);
 
   /** Update element iblanks after connectivity updates
    */
@@ -109,6 +110,18 @@ public:
    *  @param egvec List of {donorElement, receptorMPIRank} pairs to be populated
    */
   void get_donor_info(TIOGA::tioga&, stk::mesh::EntityProcVec&);
+
+  void register_solution(
+    TIOGA::tioga&,
+    const std::vector<sierra::nalu::OversetFieldData>&,
+    const int);
+
+  void register_solution(TIOGA::tioga&, const sierra::nalu::OversetFieldData&);
+
+  void update_solution(
+    const std::vector<sierra::nalu::OversetFieldData>&);
+
+  void update_solution(const sierra::nalu::OversetFieldData&);
 
   // Accessors
 
@@ -267,6 +280,9 @@ private:
 
   //! User-specified cell resolution
   std::vector<double> cell_res_;
+
+  //! Field data
+  std::vector<double> field_data_;
 
   //! Name of coordinates Field
   std::string coords_name_;

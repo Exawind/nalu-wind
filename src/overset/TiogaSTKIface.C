@@ -100,7 +100,7 @@ void TiogaSTKIface::initialize()
     << "TIOGA: Initialized " << blocks_.size() << " overset blocks" << std::endl;
 }
 
-void TiogaSTKIface::execute()
+void TiogaSTKIface::execute(const bool isDecoupled)
 {
   reset_data_structures();
 
@@ -118,7 +118,7 @@ void TiogaSTKIface::execute()
 
   for (auto& tb: blocks_) {
     // Update IBLANK information at nodes and elements
-    tb->update_iblanks(oversetManager_.holeNodes_);
+    tb->update_iblanks(oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
     tb->update_iblank_cell();
 
     // For each block determine donor elements that needs to be ghosted to other
@@ -132,15 +132,17 @@ void TiogaSTKIface::execute()
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
   stk::mesh::copy_owned_to_shared(bulk_, pvec);
 
-  get_receptor_info();
+  if (!isDecoupled) {
+    get_receptor_info();
 
-  // Collect all elements to be ghosted and update ghosting so that the elements
-  // are available when generating {fringeNode, donorElement} pairs in the next
-  // step.
-  update_ghosting();
+    // Collect all elements to be ghosted and update ghosting so that the elements
+    // are available when generating {fringeNode, donorElement} pairs in the next
+    // step.
+    update_ghosting();
 
-  // Update overset fringe connectivity information for Constraint based algorithm
-  populate_overset_info();
+    // Update overset fringe connectivity information for Constraint based algorithm
+    populate_overset_info();
+  }
 }
 
 void TiogaSTKIface::reset_data_structures()
@@ -416,6 +418,39 @@ TiogaSTKIface::populate_overset_info()
     << "TIOGA: Num. receptor nodes = " << numFringeGlobal
     << std::endl;
 #endif
+}
+
+void
+TiogaSTKIface::overset_update_fields(
+  const std::vector<sierra::nalu::OversetFieldData>& fields)
+{
+  constexpr int row_major = 0;
+  int nComp = 0;
+  for (auto& f: fields)
+    nComp += f.sizeRow_ * f.sizeCol_;
+
+  for (auto& tb: blocks_)
+    tb->register_solution(*tg_, fields, nComp);
+
+  tg_->dataUpdate(nComp, row_major);
+
+  for (auto& tb: blocks_)
+    tb->update_solution(fields);
+}
+
+void TiogaSTKIface::overset_update_field(
+  stk::mesh::FieldBase* field, int nrows, int ncols)
+{
+  constexpr int row_major = 0;
+  sierra::nalu::OversetFieldData fdata{field, nrows, ncols};
+
+  for (auto& tb: blocks_)
+    tb->register_solution(*tg_, fdata);
+
+  tg_->dataUpdate(nrows*ncols, row_major);
+
+  for (auto& tb: blocks_)
+    tb->update_solution(fdata);
 }
 
 } // tioga

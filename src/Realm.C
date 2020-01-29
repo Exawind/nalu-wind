@@ -2521,7 +2521,7 @@ Realm::initialize_non_conformal()
 void
 Realm::initialize_overset()
 {
-  oversetManager_->initialize();
+  oversetManager_->initialize(equationSystems_.all_systems_decoupled());
 }
 
 //--------------------------------------------------------------------------
@@ -3178,7 +3178,7 @@ Realm::overset_orphan_node_field_update(
   const unsigned sizeRow,
   const unsigned sizeCol)
 {
-  oversetManager_->overset_orphan_node_field_update(theField, sizeRow, sizeCol);
+  oversetManager_->overset_update_field(theField, sizeRow, sizeCol);
 }
 
 //--------------------------------------------------------------------------
@@ -3811,7 +3811,7 @@ Realm::dump_simulation_time()
                      << " \tmin: " << g_minPeriodicSearchTime << " \tmax: " << g_maxPeriodicSearchTime << std::endl;
   }
 
-  // nonconformal
+  // nonconformal or overset
   if ( has_non_matching_boundary_face_alg() ) {
     double g_totalNonconformal = 0.0, g_minNonconformal= 0.0, g_maxNonconformal = 0.0;
     stk::all_reduce_min(NaluEnv::self().parallel_comm(), &timerNonconformal_, &g_minNonconformal, 1);

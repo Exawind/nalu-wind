@@ -9,6 +9,7 @@
 
 
 #include "overset/OversetConstraintBase.h"
+#include "overset/OversetManager.h"
 
 #include "EquationSystem.h"
 #include "LinearSystem.h"

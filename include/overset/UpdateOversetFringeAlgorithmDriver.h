@@ -12,7 +12,7 @@
 #define UPDATEOVERSETFRINGEALGORITHMDRIVER_H
 
 #include "AlgorithmDriver.h"
-
+#include "overset/OversetFieldData.h"
 
 #include <memory>
 #include <vector>
@@ -28,19 +28,6 @@ namespace nalu {
 
 class Realm;
 
-struct OversetFieldData
-{
-  OversetFieldData(stk::mesh::FieldBase* field, int sizeRow=1, int sizeCol=1)
-    : field_(field),
-      sizeRow_(sizeRow),
-      sizeCol_(sizeCol)
-  {}
-
-  stk::mesh::FieldBase* field_;
-  int sizeRow_;
-  int sizeCol_;
-};
-
 class UpdateOversetFringeAlgorithmDriver : public AlgorithmDriver
 {
 public:
@@ -48,9 +35,11 @@ public:
 
   virtual ~UpdateOversetFringeAlgorithmDriver();
 
-  virtual void pre_work();
+  virtual void execute() override;
 
-  std::vector<std::unique_ptr<OversetFieldData>> fields_;
+  void register_overset_field_update(stk::mesh::FieldBase*, int, int);
+
+  std::vector<OversetFieldData> fields_;
 };
 
 }  // nalu

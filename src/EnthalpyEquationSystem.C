@@ -1053,12 +1053,7 @@ EnthalpyEquationSystem::register_overset_bc()
 {
   create_constraint_algorithm(enthalpy_);
 
-  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
-  // Perform fringe updates before all equation system solves
-  equationSystems_.preIterAlgDriver_.push_back(theAlg);
-
-  theAlg->fields_.push_back(
-    std::unique_ptr<OversetFieldData>(new OversetFieldData(enthalpy_,1,1)));
+  equationSystems_.register_overset_field_update(enthalpy_, 1, 1);
 }
 
 //--------------------------------------------------------------------------
@@ -1179,16 +1174,21 @@ EnthalpyEquationSystem::solve_and_update()
     NaluEnv::self().naluOutputP0() << " " << k+1 << "/" << maxIterations_
                     << std::setw(15) << std::right << userSuppliedName_ << std::endl;
 
-    // enthalpy assemble, load_complete and solve
-    assemble_and_solve(hTmp_);
+    for (int oi=0; oi < numOversetIters_; ++oi) {
+      // enthalpy assemble, load_complete and solve
+      assemble_and_solve(hTmp_);
 
-    // update
-    double timeA = NaluEnv::self().nalu_time();
-    solution_update(
-      1.0, *hTmp_,
-      1.0, enthalpy_->field_of_state(stk::mesh::StateNP1));
-    double timeB = NaluEnv::self().nalu_time();
-    timerAssemble_ += (timeB-timeA);
+      // update
+      double timeA = NaluEnv::self().nalu_time();
+      solution_update(
+        1.0, *hTmp_,
+        1.0, enthalpy_->field_of_state(stk::mesh::StateNP1));
+
+      if (decoupledOverset_ && realm_.hasOverset_)
+        realm_.overset_orphan_node_field_update(enthalpy_, 1, 1);
+      double timeB = NaluEnv::self().nalu_time();
+      timerAssemble_ += (timeB-timeA);
+    }
 
     // projected nodal gradient
     compute_projected_nodal_gradient();

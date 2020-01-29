@@ -54,7 +54,7 @@ OversetManagerTIOGA::setup()
 }
 
 void
-OversetManagerTIOGA::initialize()
+OversetManagerTIOGA::initialize(const bool isDecoupled)
 {
   const double timeA = NaluEnv::self().nalu_time();
   if (isInit_) {
@@ -65,8 +65,9 @@ OversetManagerTIOGA::initialize()
   delete_info_vec();
   oversetInfoVec_.clear();
   holeNodes_.clear();
+  fringeNodes_.clear();
 
-  tiogaIface_.execute();
+  tiogaIface_.execute(isDecoupled);
 
   const double timeB = NaluEnv::self().nalu_time();
   realm_.timerNonconformal_ += (timeB - timeA);
@@ -76,6 +77,18 @@ OversetManagerTIOGA::initialize()
       << "TIOGA connectivity updated: " << (timeB - timeA) << std::endl;
 #endif
 }
+
+void OversetManagerTIOGA::overset_update_fields(const std::vector<OversetFieldData>& fields)
+{
+  tiogaIface_.overset_update_fields(fields);
+}
+
+void OversetManagerTIOGA::overset_update_field(
+  stk::mesh::FieldBase *field, int nrows, int ncols)
+{
+  tiogaIface_.overset_update_field(field, nrows, ncols);
+}
+
 
 }  // nalu
 }  // sierra
