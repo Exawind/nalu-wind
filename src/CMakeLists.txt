@@ -1,6 +1,8 @@
 target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ABLProfileFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/actuator/Actuator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/actuator/ActuatorBulk.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/actuator/ActuatorParsing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityElemOpenSolverAlgorithm.C
