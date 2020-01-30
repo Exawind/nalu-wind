@@ -4,6 +4,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/EnthalpyABLForceNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumABLForceNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBodyForceNodeKernel.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBodyForceBoxNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBoussinesqNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumGclNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumMassBDFNodeKernel.C
