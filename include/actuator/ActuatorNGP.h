@@ -18,6 +18,10 @@ namespace nalu{
 // Kokkos compatible functors that can be implemented based on
 // BulkData Type
 
+/*
+ * The goal of this
+ */
+
 template<typename BulkData>
 struct ActuatorPreIteration{
   BulkData& bulk_;
@@ -69,11 +73,6 @@ public:
 
 private:
   BulkData actBulk_;
-  ActuatorPreIteration<BulkData> preIteration_;
-  ActuatorComputePointLocation<BulkData> computePointLocation_;
-  ActuatorInterpolateFieldValues<BulkData> interpolateFieldValues_;
-  ActuatorSpreadForces<BulkData> spreadForces_;
-  ActuatorPostIteration<BulkData> postIteration_;
 
 };
 
