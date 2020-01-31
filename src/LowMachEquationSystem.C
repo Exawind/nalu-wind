@@ -2779,9 +2779,9 @@ MomentumEquationSystem::assemble_and_solve(
 
     // Bring to host and perform remaining operations on host before pushing
     // back to device
-    const std::vector<NGPDoubleFieldType*> fVec{&ngpUdiag};
+    const std::vector<NGPDoubleFieldType*> fVecNgp{&ngpUdiag};
     bool doFinalSyncBackToDevice = false;
-    ngp::parallel_sum(realm_.bulk_data(), fVec, doFinalSyncBackToDevice);
+    ngp::parallel_sum(realm_.bulk_data(), fVecNgp, doFinalSyncBackToDevice);
 
     const auto sel = stk::mesh::selectField(*Udiag_)
       & meta.locally_owned_part()
@@ -2800,35 +2800,36 @@ MomentumEquationSystem::assemble_and_solve(
         field[in] = (field[in] - projTimeScale) * alphaU + projTimeScale;
       }
     }
-  }
 
-  // Communicate to shared and ghosted nodes (all synchronization on host)
-  std::vector<const stk::mesh::FieldBase*> fVec{Udiag_};
-  stk::mesh::copy_owned_to_shared(bulk, fVec);
-  stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
-  if (realm_.hasPeriodic_) {
-    const bool bypassFieldCheck = true;
-    const bool addMirrorNodes = false;
-    const bool setMirrorNodes = true;
-    realm_.periodicManager_->apply_constraints(
-      Udiag_, 1, bypassFieldCheck, addMirrorNodes, setMirrorNodes);
-  }
-  if (realm_.nonConformalManager_ != nullptr &&
-      realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)
-    stk::mesh::communicate_field_data(
-      *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
-  if (realm_.hasOverset_) {
+    // Communicate to shared and ghosted nodes (all synchronization on host)
+    std::vector<const stk::mesh::FieldBase*> fVec{Udiag_};
+    stk::mesh::copy_owned_to_shared(bulk, fVec);
+    stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
+    if (realm_.hasPeriodic_) {
+      const bool bypassFieldCheck = true;
+      const bool addMirrorNodes = false;
+      const bool setMirrorNodes = true;
+      realm_.periodicManager_->apply_constraints(
+        Udiag_, 1, bypassFieldCheck, addMirrorNodes, setMirrorNodes);
+    }
+    if (realm_.nonConformalManager_ != nullptr &&
+        realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)
+      stk::mesh::communicate_field_data(
+        *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
+    if (realm_.hasOverset_) {
 #ifndef KOKKOS_ENABLE_CUDA
-    realm_.overset_orphan_node_field_update(Udiag_, 1, 1);
+      realm_.overset_orphan_node_field_update(Udiag_, 1, 1);
 #else
-    // TODO: Fix overset for GPUs
-    throw std::runtime_error("Cannot perform overset synchronization on GPUs");
+      // TODO: Fix overset for GPUs
+      throw std::runtime_error(
+        "Cannot perform overset synchronization on GPUs");
 #endif
-  }
+    }
 
-  // Push back to device
-  ngpUdiag.modify_on_host();
-  ngpUdiag.sync_to_device();
+    // Push back to device
+    ngpUdiag.modify_on_host();
+    ngpUdiag.sync_to_device();
+  }
 }
 
 void MomentumEquationSystem::compute_turbulence_parameters()
