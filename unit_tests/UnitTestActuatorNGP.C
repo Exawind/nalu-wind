@@ -43,6 +43,12 @@ void ActuatorSpreadForces<ActuatorBulk>::operator()(const int& index) const{
   bulk_.actuatorForce_.d_view(index, 2) = index*9.3;
 }
 
+using ActPreIter = ActuatorPreIteration<ActuatorBulk>;
+using ActCompPnt = ActuatorComputePointLocation<ActuatorBulk>;
+using ActInterp  = ActuatorInterpolateFieldValues<ActuatorBulk>;
+using ActSpread  = ActuatorSpreadForces<ActuatorBulk>;
+
+
 template<>
 void Actuator<ActuatorMeta, ActuatorBulk>::execute()
   {
@@ -51,15 +57,15 @@ void Actuator<ActuatorMeta, ActuatorBulk>::execute()
     using range_policy_host = Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>;
     using range_policy_device = Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>;
 
-    Kokkos::parallel_for("actPreIter",      range_policy_host(0,nP), preIteration_);
+    Kokkos::parallel_for("actPreIter",      range_policy_host(0,nP), ActPreIter(actBulk_));
     actBulk_.epsilon_.modified_host();
-    Kokkos::parallel_for("actCompPointLoc", range_policy_host(0,nP), computePointLocation_);
+    Kokkos::parallel_for("actCompPointLoc", range_policy_host(0,nP), ActCompPnt(actBulk_));
     actBulk_.pointCentroid_.modified_host();
     actBulk_.epsilon_.sync_device();
     actBulk_.pointCentroid_.sync_device();
-    Kokkos::parallel_for("actInterpVals",   range_policy_device(0,nP), interpolateFieldValues_);
+    Kokkos::parallel_for("actInterpVals",   range_policy_device(0,nP), ActInterp(actBulk_));
     actBulk_.velocity_.modified_device();
-    Kokkos::parallel_for("actSpreadForce",  range_policy_device(0,nP), spreadForces_);
+    Kokkos::parallel_for("actSpreadForce",  range_policy_device(0,nP), ActSpread(actBulk_));
     actBulk_.actuatorForce_.modified_device();
     actBulk_.velocity_.sync_host();
     actBulk_.actuatorForce_.sync_host();
@@ -67,17 +73,12 @@ void Actuator<ActuatorMeta, ActuatorBulk>::execute()
 
 template<>
 Actuator<ActuatorMeta, ActuatorBulk>::Actuator(ActuatorMeta meta):
-  actBulk_(meta),
-  preIteration_(actBulk_),
-  computePointLocation_(actBulk_),
-  interpolateFieldValues_(actBulk_),
-  spreadForces_(actBulk_),
-  postIteration_(actBulk_)
+  actBulk_(meta)
   {}
 
 using TestActuator = Actuator<ActuatorMeta, ActuatorBulk>;
 namespace{
-TEST(ActuatorNGP, testExecutionOneTurbine){
+TEST(ActuatorNGP, testExecutionOnHostOnly){
   ActuatorMeta meta(1);
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
