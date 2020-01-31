@@ -24,16 +24,14 @@ namespace{
   }
 }
 
-ActuatorMeta::ActuatorMeta(int numTurbines, stk::search::SearchMethod searchMethod):
+ActuatorMeta::ActuatorMeta(int numTurbines):
     numberOfActuators_(numTurbines),
-    searchMethod_(searchMethod),
     numPointsTotal_("numPointsTotal", numberOfActuators_)
 {}
 
 void ActuatorMeta::add_turbine(int turbineIndex, const ActuatorInfoNGP& info)
 {
-  numPointsTotal_(turbineIndex) = info.numPoints_;
-
+  numPointsTotal_.h_view(turbineIndex) = info.numPoints_;
 }
 
 ActuatorBulk::ActuatorBulk(ActuatorMeta meta):

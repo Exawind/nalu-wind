@@ -18,7 +18,7 @@ namespace nalu{
 class ActuatorMeta;
 
 namespace actuator{
-/*! \breif Parse parameters to construct meta data for actuator's
+/*! \brief Parse parameters to construct meta data for actuator's
  *  Parse parameters and construct meta data for actuators.
  *  Intent is to divorce object creation/memory allocation from parsing
  *  to facilitate device compatibility.
@@ -27,6 +27,7 @@ namespace actuator{
  */
 ActuatorMeta actuator_parse(const YAML::Node& node);
 #ifdef NALU_USES_OPENFAST
+//TODO define meta data structure
 void actuator_line_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta);
 void actuator_disk_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta);
 #endif
