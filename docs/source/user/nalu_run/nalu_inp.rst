@@ -325,16 +325,17 @@ sections that could be present depending on the specific simulation type and
 post-processing options requested by the user. A brief description of these
 optional sections are provided below:
 
-================================ ===========================================================================
-Realm subsection                  Purpose
-================================ ===========================================================================
-:inpfile:`turbulence_averaging`   Generate statistics for the flow field
-:inpfile:`post_processing`        Extract integrated data from the simulation
-:inpfile:`solution_norm`          Compare the solution error to a reference solution
-:inpfile:`data_probes`            Extract data using probes
-:inpfile:`actuator`               Model turbine blades/tower using actuator lines
-:inpfile:`abl_forcing`            Momentum source term to drive ABL flows to a desired velocity profile
-================================ ===========================================================================
+==================================== ===========================================================================
+Realm subsection                      Purpose
+==================================== ===========================================================================
+:inpfile:`turbulence_averaging`       Generate statistics for the flow field
+:inpfile:`post_processing`            Extract integrated data from the simulation
+:inpfile:`solution_norm`              Compare the solution error to a reference solution
+:inpfile:`data_probes`                Extract data using probes
+:inpfile:`actuator`                   Model turbine blades/tower using actuator lines
+:inpfile:`abl_forcing`                Momentum source term to drive ABL flows to a desired velocity profile
+:inpfile:`boundary_layer_statistics`  Compute boundary layer statistics
+==================================== ===========================================================================
 
 
 Common options
@@ -1436,7 +1437,7 @@ Post-processing
 .. inpfile:: post_processing
 
    ``post_processing`` subsection defines the different
-   post-processign options. A sample section is shown below
+   post-processing options. A sample section is shown below
 
    .. code-block:: yaml
 
@@ -1498,6 +1499,100 @@ Post-processing
 .. _nalu_inp_transfers:
 
 .. include:: ./abl_forcing.rst
+
+Boundary Layer Statistics
+`````````````````````````
+
+.. inpfile:: boundary_layer_statistics
+
+   The ``boundary_layer_statistics`` subsection defines the statistics
+   to be gathered from the ABL precursor calculation.  This section
+   computes the spatial averages of velocity and (optionally)
+   temperature at all height levels available in the ABL mesh.
+
+   The outputs are a series of text files (``abl_*_stats.dat``)
+   containing the averaged profiles and a netcdf file (e.g.,
+   ``abl_statistics.nc``) containing the time history of the averaged
+   quantities.
+
+   A sample section is shown below:
+
+   .. code-block:: yaml
+
+	boundary_layer_statistics:
+	  target_name: [fluid_part]
+	  stats_output_file: abl_statistics.nc
+	  compute_temperature_statistics: yes
+	  output_frequency: 5000
+	  time_hist_output_frequency: 1        
+	  height_multiplier: 1.0e6             
+	  
+   The various parameters to ``boundary_layer_statistics`` are
+   described below:
+
+.. inpfile:: boundary_layer_statistics.target_name
+
+   A list of element blocks (*parts*) where the ABL statistics are to
+   be computed.
+
+.. inpfile:: boundary_layer_statistics.time_filter_interval
+
+   The length of time, in seconds, over which to average the
+   statistics given in the ``abl_*_stats.dat`` files.
+   [*Optional*, default value: ``3600.0``]
+
+.. inpfile:: boundary_layer_statistics.compute_temperature_statistics
+
+   A ``yes`` or ``no`` value which indicates whether to include the
+   averaged temperature statistics.
+   [*Optional*, default value: ``yes``]
+
+.. inpfile:: boundary_layer_statistics.output_frequency
+
+   The frequency to output statistics in the ``abl_*_stats.dat`` text
+   files.  
+   [*Optional*, default value: ``10``]
+
+.. inpfile:: boundary_layer_statistics.time_hist_output_frequency
+
+   The frequency, in iterations, of the time history statistics
+   included in the netcdf statistics file.
+   [*Optional*, default value: ``10``]
+
+.. inpfile:: boundary_layer_statistics.stats_output_file
+
+   The name of the netcdf statistics file which includes the time
+   history and averages.
+   [*Optional*, default value: ``abl_statistics.nc``]
+
+.. inpfile:: boundary_layer_statistics.process_utau_statistics
+
+   A ``yes`` or ``no`` value to indicate whether the utau statistics
+   are to be included in the computations.
+   [*Optional*, default value: ``yes``]
+
+.. inpfile:: boundary_layer_statistics.wall_normal_direction
+
+   Spatial index to indicate the wall normal direction in the domain.
+   The directions are given by x=``1``, y=``2``, z=``3``.  
+   [*Optional*, default value: ``3``]
+
+.. inpfile:: boundary_layer_statistics.minimum_height
+
+   Minimum height to account for negative values in the wall normal
+   direction.
+   [*Optional*, default value: ``0.0``]
+
+.. inpfile:: boundary_layer_statistics.height_multiplier
+
+   For the purposes of determining the unique heights for the ABL
+   statistics, wall normal distances are multiplied by
+   ``height_multiplier`` then converted into integers for binning.
+   Larger values of ``height_multiplier`` allow a higher precision to
+   be used in determining the unique heights and better behavior in
+   some meshes.
+   [*Optional*, default value: ``1.0e6``]
+
 
 Transfers
 ---------
