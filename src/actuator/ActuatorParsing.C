@@ -27,7 +27,7 @@ ActuatorMeta actuator_parse(const YAML::Node& y_node){
       switch ( ActuatorTypeMap[ActuatorTypeName] ) {
         case ActuatorType::ActLineFAST : {
 #ifdef NALU_USES_OPENFAST
-          actuator_line_FAST_parse(y_actuator, actMeta);
+          //actuator_line_FAST_parse(y_actuator, actMeta);
           break;
 #else
           throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
@@ -39,7 +39,7 @@ ActuatorMeta actuator_parse(const YAML::Node& y_node){
         }
         case ActuatorType::ActDiskFAST : {
 #ifdef NALU_USES_OPENFAST
-          actuator_disk_FAST_parse(y_actuator, actMeta);
+          //actuator_disk_FAST_parse(y_actuator, actMeta);
           break;
 #else
           throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
@@ -70,13 +70,13 @@ ActuatorMeta actuator_parse(const YAML::Node& y_node){
 }
 
 #ifdef NALU_USES_OPENFAST
-void actuator_line_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta){
-
-}
-
-void actuator_disk_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta){
-
-}
+//void actuator_line_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta){
+//
+//}
+//
+//void actuator_disk_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta){
+//
+//}
 #endif
 
 } //namespace actuator

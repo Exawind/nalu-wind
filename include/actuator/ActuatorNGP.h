@@ -10,6 +10,8 @@
 #ifndef ACTUATOR_NGP_H_
 #define ACTUATOR_NGP_H_
 
+#include<Kokkos_Core.hpp>
+
 namespace sierra{
 namespace nalu{
 
@@ -20,6 +22,7 @@ template<typename BulkData>
 struct ActuatorPreIteration{
   BulkData& bulk_;
   ActuatorPreIteration(BulkData& bulk):bulk_(bulk){}
+  KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
 };
 
@@ -27,6 +30,7 @@ template<typename BulkData>
 struct ActuatorComputePointLocation{
   BulkData& bulk_;
   ActuatorComputePointLocation(BulkData& bulk):bulk_(bulk){}
+  KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
 };
 
@@ -34,6 +38,7 @@ template<typename BulkData>
 struct ActuatorInterpolateFieldValues{
   BulkData& bulk_;
   ActuatorInterpolateFieldValues(BulkData& bulk):bulk_(bulk){}
+  KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
 };
 
@@ -41,6 +46,7 @@ template<typename BulkData>
 struct ActuatorSpreadForces{
   BulkData& bulk_;
   ActuatorSpreadForces(BulkData& bulk):bulk_(bulk){}
+  KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
 };
 
@@ -48,6 +54,7 @@ template<typename BulkData>
 struct ActuatorPostIteration{
   BulkData& bulk_;
   ActuatorPostIteration(BulkData& bulk):bulk_(bulk){}
+  KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
 };
 

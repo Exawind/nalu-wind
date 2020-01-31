@@ -39,7 +39,7 @@ ActuatorBulk::ActuatorBulk(ActuatorMeta meta):
     totalNumPoints_(extract_point_total(actuatorMeta_)),
     pointCentroid_("actPointCentroid", totalNumPoints_,3),
     velocity_("actVelocity", totalNumPoints_,3),
-    actuatorForce_("actForce", totalNumPoints_),
+    actuatorForce_("actForce", totalNumPoints_,3),
     epsilon_("actEpsilon", totalNumPoints_,3)
 {
 }
