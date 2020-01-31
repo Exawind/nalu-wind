@@ -62,7 +62,7 @@ TEST(ActuatorBulk, constructor){
   dummyInfo.numPoints_=36;
   fieldMeta.add_turbine(0, dummyInfo);
   ActuatorBulk bulkData(fieldMeta);
-  EXPECT_EQ(36, bulkData.total_num_points());
+  EXPECT_EQ(36, bulkData.totalNumPoints_);
 }
 
 }

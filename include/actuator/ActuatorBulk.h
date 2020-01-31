@@ -11,12 +11,12 @@
 #define ACTUATORFIELDBULK_H_
 
 #include <Kokkos_Core.hpp>
-#include <stk_search/SearchMethod.hpp>
+#include <Kokkos_DualView.hpp>
 
 namespace sierra{
 namespace nalu{
 
-class ActuatorInfo;
+class ActuatorInfoNGP;
 
 #ifdef ACTUATOR_ON_DEVICE
 using ActuatorExecSpace = Kokkos::CudaSpace;
@@ -29,7 +29,7 @@ using ActuatorMemLayout = Kokkos::LayoutLeft;
 
 using ActScalarInt = Kokkos::DualView<int*,    ActuatorMemLayout, ActuatorExecSpace>;
 using ActScalarDbl = Kokkos::DualView<double*, ActuatorMemLayout, ActuatorExecSpace>;
-using ActVectorDbl = Kokkos::DualView<double*, ActuatorMemLayout, ActuatorExecSpace>;
+using ActVectorDbl = Kokkos::DualView<double**, ActuatorMemLayout, ActuatorExecSpace>;
 
 
 //TODO(psakiev) Allocate bulk fields based on parameters
@@ -42,13 +42,12 @@ using ActVectorDbl = Kokkos::DualView<double*, ActuatorMemLayout, ActuatorExecSp
 
 class ActuatorMeta{
 public:
-  ActuatorMeta(int numTurbines, stk::search::SearchMethod searchMethod=stk::search::KDTREE);
-  void add_turbine(int turbineIndex, const ActuatorInfo& info);
+  ActuatorMeta(int numTurbines);
+  void add_turbine(int turbineIndex, const ActuatorInfoNGP& info);
   inline int num_actuators() const {return numberOfActuators_;}
-  inline int total_num_points(int i) const {return numPointsTotal_(i);}
+  inline int total_num_points(int i) const {return numPointsTotal_.h_view(i);}
 private:
   const int numberOfActuators_;
-  stk::search::SearchMethod searchMethod_;
   ActScalarInt numPointsTotal_;
 };
 
@@ -56,8 +55,6 @@ private:
 class ActuatorBulk{
 public:
   ActuatorBulk(ActuatorMeta meta);
-  inline int total_num_points(){ return totalNumPoints_;}
-private:
   const ActuatorMeta actuatorMeta_;
   const int totalNumPoints_;
   ActVectorDbl pointCentroid_;

@@ -10,7 +10,6 @@
 #ifndef ACTUATOR_NGP_H_
 #define ACTUATOR_NGP_H_
 
-#include <Kokkos_Core.hpp>
 namespace sierra{
 namespace nalu{
 
@@ -21,35 +20,35 @@ template<typename BulkData>
 struct ActuatorPreIteration{
   BulkData& bulk_;
   ActuatorPreIteration(BulkData& bulk):bulk_(bulk){}
-  void operator()(const std::size_t index);
+  void operator()(const int& index) const;
 };
 
 template<typename BulkData>
 struct ActuatorComputePointLocation{
   BulkData& bulk_;
   ActuatorComputePointLocation(BulkData& bulk):bulk_(bulk){}
-  void operator()(const std::size_t index);
+  void operator()(const int& index) const;
 };
 
 template<typename BulkData>
 struct ActuatorInterpolateFieldValues{
   BulkData& bulk_;
   ActuatorInterpolateFieldValues(BulkData& bulk):bulk_(bulk){}
-  void operator()(const std::size_t index);
+  void operator()(const int& index) const;
 };
 
 template<typename BulkData>
 struct ActuatorSpreadForces{
   BulkData& bulk_;
   ActuatorSpreadForces(BulkData& bulk):bulk_(bulk){}
-  void operator()(const std::size_t index);
+  void operator()(const int& index) const;
 };
 
 template<typename BulkData>
 struct ActuatorPostIteration{
   BulkData& bulk_;
   ActuatorPostIteration(BulkData& bulk):bulk_(bulk){}
-  void operator()(const std::size_t index);
+  void operator()(const int& index) const;
 };
 
 
@@ -58,16 +57,9 @@ class Actuator
 {
 public:
   Actuator(MetaData actMeta);
-  void execute()
-  {
-    //TODO(psakiev) set execution space i.e. range policy
-    const std::size_t nP = actBulk_.total_num_points();
-    Kokkos::parallel_for(nP, preIteration_);
-    Kokkos::parallel_for(nP, computePointLocation_);
-    Kokkos::parallel_for(nP, interpolateFieldValues_);
-    Kokkos::parallel_for(nP, spreadForces_);
-    Kokkos::parallel_for(nP, postIteration_);
-  }
+  const BulkData& actuator_bulk(){return actBulk_;}
+  void execute();
+
 private:
   BulkData actBulk_;
   ActuatorPreIteration<BulkData> preIteration_;
