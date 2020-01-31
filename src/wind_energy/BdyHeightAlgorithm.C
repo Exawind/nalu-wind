@@ -66,7 +66,7 @@ RectilinearMeshHeightAlg::calc_height_levels(
       const double* crd = stk::mesh::field_data(*coords, node);
       const double ht = crd[iz] - hMin_;
 
-      const int htInt = static_cast<int>(std::round(ht * heightMultiplier_));
+      const uint64_t htInt = static_cast<uint64_t>(std::round(ht * heightMultiplier_));
       hLevels.insert(htInt);
     }
   }
