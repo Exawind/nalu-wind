@@ -19,17 +19,17 @@ namespace nalu{
 class ActuatorInfoNGP;
 
 #ifdef ACTUATOR_ON_DEVICE
-using ActuatorExecSpace = Kokkos::CudaSpace;
+using ActuatorMemSpace = Kokkos::CudaSpace;
 using ActuatorMemLayout = Kokkos::LayoutRight;
 #else
-using ActuatorExecSpace = Kokkos::HostSpace;
+using ActuatorMemSpace = Kokkos::HostSpace;
 using ActuatorMemLayout = Kokkos::LayoutLeft;
 #endif
 
 
-using ActScalarInt = Kokkos::DualView<int*,    ActuatorMemLayout, ActuatorExecSpace>;
-using ActScalarDbl = Kokkos::DualView<double*, ActuatorMemLayout, ActuatorExecSpace>;
-using ActVectorDbl = Kokkos::DualView<double**, ActuatorMemLayout, ActuatorExecSpace>;
+using ActScalarInt = Kokkos::DualView<int*,    ActuatorMemLayout, ActuatorMemSpace>;
+using ActScalarDbl = Kokkos::DualView<double*, ActuatorMemLayout, ActuatorMemSpace>;
+using ActVectorDbl = Kokkos::DualView<double**, ActuatorMemLayout, ActuatorMemSpace>;
 
 
 //TODO(psakiev) Allocate bulk fields based on parameters

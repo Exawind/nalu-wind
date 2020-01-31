@@ -28,8 +28,8 @@ namespace actuator{
 ActuatorMeta actuator_parse(const YAML::Node& node);
 #ifdef NALU_USES_OPENFAST
 //TODO define meta data structure
-void actuator_line_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta);
-void actuator_disk_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta);
+//void actuator_line_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta);
+//void actuator_disk_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta);
 #endif
 }
 }

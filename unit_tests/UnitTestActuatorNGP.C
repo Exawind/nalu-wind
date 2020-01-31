@@ -24,28 +24,23 @@ void ActuatorPreIteration<ActuatorBulk>::operator()(const int& index) const{
 
 template<>
 void ActuatorComputePointLocation<ActuatorBulk>::operator()(const int& index) const{
-  /*bulk_.pointCentroid_(index,0) = index;
-  bulk_.pointCentroid_(index,1) = index*0.5;
-  bulk_.pointCentroid_(index,2) = index*0.25;*/
+  bulk_.pointCentroid_.h_view(index,0) = index;
+  bulk_.pointCentroid_.h_view(index,1) = index*0.5;
+  bulk_.pointCentroid_.h_view(index,2) = index*0.25;
 }
 
 template<>
 void ActuatorInterpolateFieldValues<ActuatorBulk>::operator()(const int& index) const{
-  /*bulk_.velocity_(index, 0) = index*2.5;
-  bulk_.velocity_(index, 1) = index*5.0;
-  bulk_.velocity_(index, 2) = index*7.5;*/
+  bulk_.velocity_.d_view(index, 0) = index*2.5;
+  bulk_.velocity_.d_view(index, 1) = index*5.0;
+  bulk_.velocity_.d_view(index, 2) = index*7.5;
 }
 
 template<>
 void ActuatorSpreadForces<ActuatorBulk>::operator()(const int& index) const{
-  /*bulk_.actuatorForce_(index, 0) = index*3.1;
-  bulk_.actuatorForce_(index, 1) = index*6.2;
-  bulk_.actuatorForce_(index, 2) = index*9.3;*/
-}
-
-template<>
-void ActuatorPostIteration<ActuatorBulk>::operator()(const int& index) const{
-  // do nothing for now
+  bulk_.actuatorForce_.d_view(index, 0) = index*3.1;
+  bulk_.actuatorForce_.d_view(index, 1) = index*6.2;
+  bulk_.actuatorForce_.d_view(index, 2) = index*9.3;
 }
 
 template<>
@@ -53,11 +48,21 @@ void Actuator<ActuatorMeta, ActuatorBulk>::execute()
   {
     //TODO(psakiev) set execution space i.e. range policy
     const int nP = actBulk_.totalNumPoints_;
-    Kokkos::parallel_for(nP, preIteration_);
-    Kokkos::parallel_for(nP, computePointLocation_);
-    Kokkos::parallel_for(nP, interpolateFieldValues_);
-    Kokkos::parallel_for(nP, spreadForces_);
-    Kokkos::parallel_for(nP, postIteration_);
+    using range_policy_host = Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>;
+    using range_policy_device = Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>;
+
+    Kokkos::parallel_for("actPreIter",      range_policy_host(0,nP), preIteration_);
+    actBulk_.epsilon_.modified_host();
+    Kokkos::parallel_for("actCompPointLoc", range_policy_host(0,nP), computePointLocation_);
+    actBulk_.pointCentroid_.modified_host();
+    actBulk_.epsilon_.sync_device();
+    actBulk_.pointCentroid_.sync_device();
+    Kokkos::parallel_for("actInterpVals",   range_policy_device(0,nP), interpolateFieldValues_);
+    actBulk_.velocity_.modified_device();
+    Kokkos::parallel_for("actSpreadForce",  range_policy_device(0,nP), spreadForces_);
+    actBulk_.actuatorForce_.modified_device();
+    actBulk_.velocity_.sync_host();
+    actBulk_.actuatorForce_.sync_host();
   }
 
 template<>
@@ -84,6 +89,18 @@ TEST(ActuatorNGP, testExecutionOneTurbine){
   EXPECT_DOUBLE_EQ(3.0, bulk.epsilon_.h_view(1,0));
   EXPECT_DOUBLE_EQ(6.0, bulk.epsilon_.h_view(1,1));
   EXPECT_DOUBLE_EQ(9.0, bulk.epsilon_.h_view(1,2));
+
+  EXPECT_DOUBLE_EQ(1.0, bulk.pointCentroid_.h_view(1,0));
+  EXPECT_DOUBLE_EQ(0.5, bulk.pointCentroid_.h_view(1,1));
+  EXPECT_DOUBLE_EQ(0.25, bulk.pointCentroid_.h_view(1,2));
+
+  EXPECT_DOUBLE_EQ(2.5, bulk.velocity_.h_view(1,0));
+  EXPECT_DOUBLE_EQ(5.0, bulk.velocity_.h_view(1,1));
+  EXPECT_DOUBLE_EQ(7.5, bulk.velocity_.h_view(1,2));
+
+  EXPECT_DOUBLE_EQ(3.1, bulk.actuatorForce_.h_view(1,0));
+  EXPECT_DOUBLE_EQ(6.2, bulk.actuatorForce_.h_view(1,1));
+  EXPECT_DOUBLE_EQ(9.3, bulk.actuatorForce_.h_view(1,2));
 }
 
 }
