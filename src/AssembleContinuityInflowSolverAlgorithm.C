@@ -64,7 +64,8 @@ AssembleContinuityInflowSolverAlgorithm::AssembleContinuityInflowSolverAlgorithm
 void
 AssembleContinuityInflowSolverAlgorithm::initialize_connectivity()
 {
-  eqSystem_->linsys_->buildFaceToNodeGraph(partVec_);
+  eqSystem_->linsys_->buildFaceElemToNodeGraph(partVec_);
+  eqSystem_->linsys_->buildElemToNodeGraph(partVec_);
 }
 
 //--------------------------------------------------------------------------

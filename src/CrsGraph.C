@@ -78,7 +78,7 @@ CrsGraph::CrsGraph(
   Realm &realm,
   const unsigned numDof)
   : realm_(realm), numDof_(numDof), inConstruction_(false), isFinalized_(false)
-{}
+{ }
 
 CrsGraph::~CrsGraph() {}
 
@@ -838,7 +838,8 @@ void CrsGraph::storeOwnersForShared()
 
 void CrsGraph::finalizeGraph()
 {
-  if (isFinalized_) return;
+  if (isFinalized_) return; //To avoid calling on a graph with a different # of DOFs.  See RK's comment in PR#473.
+                            // TODO JHU: 2020-01-28 comment this out to let ablNeutralEdge pass
   isFinalized_ = true;
 
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
@@ -925,7 +926,6 @@ int getDofStatus_impl(stk::mesh::Entity node, const Realm& realm)
 
     stk::mesh::Selector perSel = stk::mesh::selectUnion(realm.allPeriodicInteractingParts_);
     stk::mesh::Selector nonConfSel = stk::mesh::selectUnion(realm.allNonConformalInteractingParts_);
-    //std::cout << "nonConfSel= " << nonConfSel << std::endl;
 
     for (auto part : b.supersets()) {
       if (perSel(*part)) {
