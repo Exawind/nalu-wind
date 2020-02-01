@@ -22,6 +22,8 @@
 #include <SolutionOptions.h>
 #include <AlgorithmDriver.h>
 #include <LinearSystem.h>
+#include <CrsGraphHelpers.h>
+#include <CrsGraph.h>
 
 // all concrete EquationSystem's
 #include <EnthalpyEquationSystem.h>
@@ -49,10 +51,15 @@ namespace nalu{
 namespace {
 
 template<typename LambdaFunc>
-void initialize_connectivity(std::vector<EquationSystem*>& eqSysVec, LambdaFunc func)
+void initialize_connectivity(
+  Realm& realm,
+  std::vector<EquationSystem*>& eqSysVec,
+  LambdaFunc func)
 {
   std::map<int, std::vector<EquationSystem*>> eqSysMap;
-  // Group equation systems based on numDof
+  // Group equation systems based on numDof. Note that this is safe for
+  // reinitialization also as the `linsys_` instance is still valid and does not
+  // get reset until the call to `EquationSystem::reinitialize_linear_system`
   for (auto* eqsys: eqSysVec) {
     // Skip wrapper type equation systems that don't have a LinearSystem instance
     if (eqsys->linsys_ == nullptr) continue;
@@ -60,11 +67,30 @@ void initialize_connectivity(std::vector<EquationSystem*>& eqSysVec, LambdaFunc 
     eqSysMap[ndof].push_back(eqsys);
   }
 
+  if (eqSysMap.size() > 2)
+    throw std::runtime_error("EquationSystems with more than 2 numDof() "
+                             "specifications is not supported.");
+
+  // Create the common CrsGraph
+  if (realm.scalarGraph_ == Teuchos::null)
+    realm.scalarGraph_ = Teuchos::rcp(new CrsGraph(realm, 1));
+  if (realm.systemGraph_ == Teuchos::null)
+    realm.systemGraph_ = Teuchos::rcp(new CrsGraph(realm, realm.spatialDimension_));
+
   // For each group with the same numDof, process connectivities for all
-  // equation systems and then finalize the common CrsGraphs after the equation
-  // systems have had a chance to add connectivies.
+  // equation systems and then finalize the common CrsGraphs after the
+  // equation systems have had a chance to add connectivies.
   for (auto it: eqSysMap) {
-    for (auto* eqsys: it.second) {
+    // Pre-populate the interior and BC connectivities
+    if (it.first == 1) {
+      realm.scalarGraph_->buildElemToNodeGraph(realm.interiorPartVec_);
+      realm.scalarGraph_->buildFaceElemToNodeGraph(realm.bcPartVec_);
+    } else {
+      realm.systemGraph_->buildElemToNodeGraph(realm.interiorPartVec_);
+      realm.systemGraph_->buildFaceElemToNodeGraph(realm.bcPartVec_);
+    }
+
+    for (auto* eqsys : it.second) {
       double start_time_eq = NaluEnv::self().nalu_time();
       func(eqsys);
       double end_time_eq = NaluEnv::self().nalu_time();
@@ -79,8 +105,6 @@ void initialize_connectivity(std::vector<EquationSystem*>& eqSysVec, LambdaFunc 
     }
   }
 }
-
-
 }
 
 //==========================================================================
@@ -721,6 +745,7 @@ EquationSystems::initialize()
   NaluEnv::self().naluOutputP0() << "EquationSystems::initialize(): Begin " << std::endl;
   double start_time = NaluEnv::self().nalu_time();
   initialize_connectivity(
+    realm_,
     equationSystemVector_,
     [](EquationSystem* eqsys) {
       eqsys->initialize();
@@ -740,6 +765,7 @@ EquationSystems::reinitialize_linear_system()
   realm_.scalarGraph_ = Teuchos::null;
   realm_.systemGraph_ = Teuchos::null;
   initialize_connectivity(
+    realm_,
     equationSystemVector_,
     [](EquationSystem* eqsys) {
       eqsys->reinitialize_linear_system();

@@ -188,34 +188,34 @@ void TpetraLinearSystem::buildConnectedNodeGraph(stk::mesh::EntityRank rank,
   crsGraph_->buildConnectedNodeGraph(rank, parts);
 }
 
-void TpetraLinearSystem::buildEdgeToNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraLinearSystem::buildEdgeToNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildEdgeToNodeGraph(parts);
+  // crsGraph_->buildEdgeToNodeGraph(parts);
 }
 
-void TpetraLinearSystem::buildFaceToNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraLinearSystem::buildFaceToNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildFaceToNodeGraph(parts);
+  // crsGraph_->buildFaceToNodeGraph(parts);
 }
 
-void TpetraLinearSystem::buildElemToNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraLinearSystem::buildElemToNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildElemToNodeGraph(parts);
+  // crsGraph_->buildElemToNodeGraph(parts);
 }
 
-void TpetraLinearSystem::buildReducedElemToNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraLinearSystem::buildReducedElemToNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildReducedElemToNodeGraph(parts);
+  // crsGraph_->buildReducedElemToNodeGraph(parts);
 }
 
-void TpetraLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildFaceElemToNodeGraph(parts);
+  // crsGraph_->buildFaceElemToNodeGraph(parts);
 }
 
 void TpetraLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector &parts)
