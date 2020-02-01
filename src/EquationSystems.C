@@ -96,6 +96,7 @@ void initialize_connectivity(
       eqsys->timerInit_ += (end_time_eq - start_time_eq);
     }
 
+    // FIXME: Lost timers because of common graph construction
     if (it.first == 1)
       init_connectivity_helper(realm, realm.scalarGraph_);
     else

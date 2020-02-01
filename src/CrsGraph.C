@@ -48,6 +48,7 @@
 #include <Teuchos_ArrayRCP.hpp>
 #include <Teuchos_DefaultMpiComm.hpp>
 #include <Teuchos_OrdinalTraits.hpp>
+#include <Teuchos_TimeMonitor.hpp>
 #include <Tpetra_CrsGraph.hpp>
 #include <Tpetra_Export.hpp>
 #include <Tpetra_Map.hpp>
@@ -141,6 +142,9 @@ int CrsGraph::getDofStatus(stk::mesh::Entity node)
 void CrsGraph::beginConstruction()
 {
   if(inConstruction_) return;
+
+  const Teuchos::TimeMonitor timeMon(
+    *Teuchos::TimeMonitor::getNewCounter("CrsGraph::beginConstruction"));
   inConstruction_ = true;
   ThrowRequire(ownedGraph_.is_null());
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
@@ -354,6 +358,8 @@ void CrsGraph::addConnections(const stk::mesh::Entity* entities, const size_t& n
 void CrsGraph::buildNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginConstruction();
+  const Teuchos::TimeMonitor timeMon(
+    *Teuchos::TimeMonitor::getNewCounter("CrsGraph::buildNodeGraph"));
   stk::mesh::MetaData & metaData = realm_.meta_data();
 
   const stk::mesh::Selector s_owned = metaData.locally_owned_part()
@@ -400,12 +406,16 @@ void CrsGraph::buildConnectedNodeGraph(stk::mesh::EntityRank rank,
 void CrsGraph::buildEdgeToNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginConstruction();
+  const Teuchos::TimeMonitor timeMon(
+    *Teuchos::TimeMonitor::getNewCounter("CrsGraph::buildEdgeToNodeGraph"));
   buildConnectedNodeGraph(stk::topology::EDGE_RANK, parts);
 }
 
 void CrsGraph::buildFaceToNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginConstruction();
+  const Teuchos::TimeMonitor timeMon(
+    *Teuchos::TimeMonitor::getNewCounter("CrsGraph::buildFaceToNodeGraph"));
   stk::mesh::MetaData & metaData = realm_.meta_data();
   buildConnectedNodeGraph(metaData.side_rank(), parts);
 }
@@ -413,12 +423,16 @@ void CrsGraph::buildFaceToNodeGraph(const stk::mesh::PartVector & parts)
 void CrsGraph::buildElemToNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginConstruction();
+  const Teuchos::TimeMonitor timeMon(
+    *Teuchos::TimeMonitor::getNewCounter("CrsGraph::buildElemToNodeGraph"));
   buildConnectedNodeGraph(stk::topology::ELEM_RANK, parts);
 }
 
 void CrsGraph::buildReducedElemToNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginConstruction();
+  const Teuchos::TimeMonitor timeMon(
+    *Teuchos::TimeMonitor::getNewCounter("CrsGraph::buildReducedElemToNodeGraph"));
   stk::mesh::MetaData & metaData = realm_.meta_data();
 
   const stk::mesh::Selector s_owned = metaData.locally_owned_part()
@@ -459,6 +473,8 @@ void CrsGraph::buildReducedElemToNodeGraph(const stk::mesh::PartVector & parts)
 void CrsGraph::buildFaceElemToNodeGraph(const stk::mesh::PartVector & parts)
 {
   beginConstruction();
+  const Teuchos::TimeMonitor timeMon(
+    *Teuchos::TimeMonitor::getNewCounter("CrsGraph::buildFaceElemToNodeGraph"));
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
   stk::mesh::MetaData & metaData = realm_.meta_data();
 
@@ -494,6 +510,8 @@ void CrsGraph::buildNonConformalNodeGraph(const stk::mesh::PartVector & /* parts
 {
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
   beginConstruction();
+  const Teuchos::TimeMonitor timeMon(
+    *Teuchos::TimeMonitor::getNewCounter("CrsGraph::buildNonConformalNodeGraph"));
 
   std::vector<stk::mesh::Entity> entities;
 
@@ -549,6 +567,8 @@ void CrsGraph::buildOversetNodeGraph(const stk::mesh::PartVector & /* parts */)
 
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
   beginConstruction();
+  const Teuchos::TimeMonitor timeMon(
+    *Teuchos::TimeMonitor::getNewCounter("CrsGraph::buildOversetNodeGraph"));
 
   std::vector<stk::mesh::Entity> entities;
 
@@ -841,6 +861,8 @@ void CrsGraph::finalizeGraph()
   if (isFinalized_) return;
   isFinalized_ = true;
 
+  const Teuchos::TimeMonitor timeMon(
+    *Teuchos::TimeMonitor::getNewCounter("CrsGraph::finalizeGraph"));
   stk::mesh::BulkData & bulkData = realm_.bulk_data();
 
   sort_connections(connections_);
