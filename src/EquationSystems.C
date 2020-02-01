@@ -50,6 +50,20 @@ namespace nalu{
 
 namespace {
 
+inline void init_connectivity_helper(Realm& realm, Teuchos::RCP<CrsGraph>& graph)
+{
+  // This graph is not active, return early
+  if (graph == Teuchos::null) return;
+
+  graph->buildElemToNodeGraph(realm.interiorPartVec_);
+  graph->buildFaceElemToNodeGraph(realm.bcPartVec_);
+
+  if (realm.hasNonConformal_)
+    graph->buildNonConformalNodeGraph(stk::mesh::PartVector());
+  if (realm.hasOverset_)
+    graph->buildOversetNodeGraph(stk::mesh::PartVector());
+}
+
 template<typename LambdaFunc>
 void initialize_connectivity(
   Realm& realm,
@@ -71,31 +85,21 @@ void initialize_connectivity(
     throw std::runtime_error("EquationSystems with more than 2 numDof() "
                              "specifications is not supported.");
 
-  // Create the common CrsGraph
-  if (realm.scalarGraph_ == Teuchos::null)
-    realm.scalarGraph_ = Teuchos::rcp(new CrsGraph(realm, 1));
-  if (realm.systemGraph_ == Teuchos::null)
-    realm.systemGraph_ = Teuchos::rcp(new CrsGraph(realm, realm.spatialDimension_));
-
   // For each group with the same numDof, process connectivities for all
   // equation systems and then finalize the common CrsGraphs after the
   // equation systems have had a chance to add connectivies.
   for (auto it: eqSysMap) {
-    // Pre-populate the interior and BC connectivities
-    if (it.first == 1) {
-      realm.scalarGraph_->buildElemToNodeGraph(realm.interiorPartVec_);
-      realm.scalarGraph_->buildFaceElemToNodeGraph(realm.bcPartVec_);
-    } else {
-      realm.systemGraph_->buildElemToNodeGraph(realm.interiorPartVec_);
-      realm.systemGraph_->buildFaceElemToNodeGraph(realm.bcPartVec_);
-    }
-
     for (auto* eqsys : it.second) {
       double start_time_eq = NaluEnv::self().nalu_time();
       func(eqsys);
       double end_time_eq = NaluEnv::self().nalu_time();
       eqsys->timerInit_ += (end_time_eq - start_time_eq);
     }
+
+    if (it.first == 1)
+      init_connectivity_helper(realm, realm.scalarGraph_);
+    else
+      init_connectivity_helper(realm, realm.systemGraph_);
 
     for (auto* eqsys: it.second) {
       double start_time_eq = NaluEnv::self().nalu_time();

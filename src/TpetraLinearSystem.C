@@ -218,16 +218,16 @@ void TpetraLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::PartVector & 
   // crsGraph_->buildFaceElemToNodeGraph(parts);
 }
 
-void TpetraLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector &parts)
+void TpetraLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector &)
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildNonConformalNodeGraph(parts);
+  // crsGraph_->buildNonConformalNodeGraph(parts);
 }
 
-void TpetraLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVector &parts)
+void TpetraLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVector &)
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildOversetNodeGraph(parts);
+  // crsGraph_->buildOversetNodeGraph(parts);
 }
 
 void TpetraLinearSystem::copy_stk_to_tpetra(const stk::mesh::FieldBase * stkField,
