@@ -169,10 +169,10 @@ void TpetraSegregatedLinearSystem::beginLinearSystemConstruction()
   inConstruction_ = true;
 }
 
-void TpetraSegregatedLinearSystem::buildNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraSegregatedLinearSystem::buildNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildNodeGraph(parts);
+  // crsGraph_->buildNodeGraph(parts);
 }
 
 void TpetraSegregatedLinearSystem::buildConnectedNodeGraph(stk::mesh::EntityRank rank,
@@ -181,47 +181,47 @@ void TpetraSegregatedLinearSystem::buildConnectedNodeGraph(stk::mesh::EntityRank
   crsGraph_->buildConnectedNodeGraph(rank, parts);
 }
 
-void TpetraSegregatedLinearSystem::buildEdgeToNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraSegregatedLinearSystem::buildEdgeToNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildConnectedNodeGraph(stk::topology::EDGE_RANK, parts);
+  // crsGraph_->buildConnectedNodeGraph(stk::topology::EDGE_RANK, parts);
 }
 
-void TpetraSegregatedLinearSystem::buildFaceToNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraSegregatedLinearSystem::buildFaceToNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  stk::mesh::MetaData & metaData = realm_.meta_data();
-  crsGraph_->buildConnectedNodeGraph(metaData.side_rank(), parts);
+  // stk::mesh::MetaData & metaData = realm_.meta_data();
+  // crsGraph_->buildConnectedNodeGraph(metaData.side_rank(), parts);
 }
 
-void TpetraSegregatedLinearSystem::buildElemToNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraSegregatedLinearSystem::buildElemToNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildConnectedNodeGraph(stk::topology::ELEM_RANK, parts);
+  // crsGraph_->buildConnectedNodeGraph(stk::topology::ELEM_RANK, parts);
 }
 
-void TpetraSegregatedLinearSystem::buildReducedElemToNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraSegregatedLinearSystem::buildReducedElemToNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildReducedElemToNodeGraph(parts);
+  // crsGraph_->buildReducedElemToNodeGraph(parts);
 }
 
-void TpetraSegregatedLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraSegregatedLinearSystem::buildFaceElemToNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildFaceElemToNodeGraph(parts);
+  // crsGraph_->buildFaceElemToNodeGraph(parts);
 }
 
-void TpetraSegregatedLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector &parts)
+void TpetraSegregatedLinearSystem::buildNonConformalNodeGraph(const stk::mesh::PartVector &)
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildNonConformalNodeGraph(parts);
+  // crsGraph_->buildNonConformalNodeGraph(parts);
 }
 
-void TpetraSegregatedLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVector &parts)
+void TpetraSegregatedLinearSystem::buildOversetNodeGraph(const stk::mesh::PartVector &)
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildOversetNodeGraph(parts);
+  // crsGraph_->buildOversetNodeGraph(parts);
 }
 
 void TpetraSegregatedLinearSystem::copy_stk_to_tpetra(stk::mesh::FieldBase * stkField,
