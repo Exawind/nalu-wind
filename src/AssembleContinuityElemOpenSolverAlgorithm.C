@@ -80,7 +80,6 @@ void
 AssembleContinuityElemOpenSolverAlgorithm::initialize_connectivity()
 {
   eqSystem_->linsys_->buildFaceElemToNodeGraph(partVec_);
-  eqSystem_->linsys_->buildElemToNodeGraph(partVec_);
 }
 
 //--------------------------------------------------------------------------

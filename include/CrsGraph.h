@@ -63,8 +63,6 @@ public:
 
   int getDofStatus(stk::mesh::Entity node);
 
-  unsigned int getNumDof() {return numDof_;}
-
   int getRowLID(stk::mesh::Entity node) { return entityToLID_[node.local_offset()]; }
   int getColLID(stk::mesh::Entity node) { return entityToColLID_[node.local_offset()]; }
 

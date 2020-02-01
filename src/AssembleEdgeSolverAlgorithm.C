@@ -29,8 +29,6 @@ void
 AssembleEdgeSolverAlgorithm::initialize_connectivity()
 {
   eqSystem_->linsys_->buildEdgeToNodeGraph(partVec_);
-  //eqSystem_->linsys_->buildFaceElemToNodeGraph(partVec_); //JHU adding these two causes additional reg test failures
-  //eqSystem_->linsys_->buildElemToNodeGraph(partVec_);
 }
 
 }  // nalu

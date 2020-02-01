@@ -74,8 +74,10 @@ AssembleElemSolverAlgorithm::AssembleElemSolverAlgorithm(
 void
 AssembleElemSolverAlgorithm::initialize_connectivity()
 {
-  eqSystem_->linsys_->buildFaceElemToNodeGraph(partVec_);
-  eqSystem_->linsys_->buildElemToNodeGraph(partVec_);
+  if (entityRank_ == stk::topology::ELEM_RANK)
+    eqSystem_->linsys_->buildElemToNodeGraph(partVec_);
+  else if (entityRank_ == realm_.meta_data().side_rank())
+    eqSystem_->linsys_->buildFaceToNodeGraph(partVec_);
 }
 
 //--------------------------------------------------------------------------

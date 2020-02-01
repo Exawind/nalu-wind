@@ -76,7 +76,6 @@ AssembleContinuityElemSolverAlgorithm::AssembleContinuityElemSolverAlgorithm(
 void
 AssembleContinuityElemSolverAlgorithm::initialize_connectivity()
 {
-  eqSystem_->linsys_->buildFaceElemToNodeGraph(partVec_);
   eqSystem_->linsys_->buildElemToNodeGraph(partVec_);
 }
 
