@@ -623,7 +623,7 @@ void
 MassFractionEquationSystem::initialize()
 {
   solverAlgDriver_->initialize_connectivity();
-  linsys_->finalizeLinearSystem();
+  //linsys_->finalizeLinearSystem();
 }
 
 //--------------------------------------------------------------------------

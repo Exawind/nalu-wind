@@ -21,6 +21,7 @@
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <AlgorithmDriver.h>
+#include <LinearSystem.h>
 
 // all concrete EquationSystem's
 #include <EnthalpyEquationSystem.h>
@@ -44,6 +45,43 @@
 
 namespace sierra{
 namespace nalu{
+
+namespace {
+
+template<typename LambdaFunc>
+void initialize_connectivity(std::vector<EquationSystem*>& eqSysVec, LambdaFunc func)
+{
+  std::map<int, std::vector<EquationSystem*>> eqSysMap;
+  // Group equation systems based on numDof
+  for (auto* eqsys: eqSysVec) {
+    // Skip wrapper type equation systems that don't have a LinearSystem instance
+    if (eqsys->linsys_ == nullptr) continue;
+    const int ndof = eqsys->linsys_->numDof();
+    eqSysMap[ndof].push_back(eqsys);
+  }
+
+  // For each group with the same numDof, process connectivities for all
+  // equation systems and then finalize the common CrsGraphs after the equation
+  // systems have had a chance to add connectivies.
+  for (auto it: eqSysMap) {
+    for (auto* eqsys: it.second) {
+      double start_time_eq = NaluEnv::self().nalu_time();
+      func(eqsys);
+      double end_time_eq = NaluEnv::self().nalu_time();
+      eqsys->timerInit_ += (end_time_eq - start_time_eq);
+    }
+
+    for (auto* eqsys: it.second) {
+      double start_time_eq = NaluEnv::self().nalu_time();
+      eqsys->linsys_->finalizeLinearSystem();
+      double end_time_eq = NaluEnv::self().nalu_time();
+      eqsys->timerInit_ += (end_time_eq - start_time_eq);
+    }
+  }
+}
+
+
+}
 
 //==========================================================================
 // Class Definition
@@ -682,17 +720,11 @@ EquationSystems::initialize()
 {
   NaluEnv::self().naluOutputP0() << "EquationSystems::initialize(): Begin " << std::endl;
   double start_time = NaluEnv::self().nalu_time();
-  for( EquationSystem* eqSys : equationSystemVector_ ) {
-    if ( realm_.get_activate_memory_diagnostic() ) {
-      NaluEnv::self().naluOutputP0() << "NaluMemory::EquationSystems::initialize(): " << eqSys->name_ << std::endl;
-      realm_.provide_memory_summary();
-    }
-    double start_time_eq = NaluEnv::self().nalu_time();
-    std::cout << "EQUATION " << eqSys->name_ << std::endl; //JHU FIXME
-    eqSys->initialize();
-    double end_time_eq = NaluEnv::self().nalu_time();
-    eqSys->timerInit_ += (end_time_eq - start_time_eq);
-  }
+  initialize_connectivity(
+    equationSystemVector_,
+    [](EquationSystem* eqsys) {
+      eqsys->initialize();
+    });
   double end_time = NaluEnv::self().nalu_time();
   realm_.timerInitializeEqs_ += (end_time-start_time);
   NaluEnv::self().naluOutputP0() << "EquationSystems::initialize(): End " << std::endl;
@@ -707,12 +739,11 @@ EquationSystems::reinitialize_linear_system()
   double start_time = NaluEnv::self().nalu_time();
   realm_.scalarGraph_ = Teuchos::null;
   realm_.systemGraph_ = Teuchos::null;
-  for( EquationSystem* eqSys : equationSystemVector_ ) {
-    double start_time_eq = NaluEnv::self().nalu_time();
-    eqSys->reinitialize_linear_system();
-    double end_time_eq = NaluEnv::self().nalu_time();
-    eqSys->timerInit_ += (end_time_eq - start_time_eq);
-  }
+  initialize_connectivity(
+    equationSystemVector_,
+    [](EquationSystem* eqsys) {
+      eqsys->reinitialize_linear_system();
+    });
   double end_time = NaluEnv::self().nalu_time();
   realm_.timerInitializeEqs_ += (end_time-start_time);
 }

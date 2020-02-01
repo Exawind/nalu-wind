@@ -359,7 +359,7 @@ void
 WallDistEquationSystem::initialize()
 {
   solverAlgDriver_->initialize_connectivity();
-  linsys_->finalizeLinearSystem();
+  //linsys_->finalizeLinearSystem();
 
   // Reset init flag if this is a restarted simulation. The wall distance field
   // is available from the restart file, so we only want to recompute it at
@@ -387,7 +387,7 @@ WallDistEquationSystem::reinitialize_linear_system()
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   solverAlgDriver_->initialize_connectivity();
-  linsys_->finalizeLinearSystem();
+  //linsys_->finalizeLinearSystem();
 }
 
 void
