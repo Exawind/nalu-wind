@@ -176,10 +176,10 @@ void TpetraLinearSystem::beginLinearSystemConstruction()
   return;
 }
 
-void TpetraLinearSystem::buildNodeGraph(const stk::mesh::PartVector & parts)
+void TpetraLinearSystem::buildNodeGraph(const stk::mesh::PartVector & )
 {
   beginLinearSystemConstruction();
-  crsGraph_->buildNodeGraph(parts);
+  // crsGraph_->buildNodeGraph(parts);
 }
 
 void TpetraLinearSystem::buildConnectedNodeGraph(stk::mesh::EntityRank rank,

@@ -55,6 +55,7 @@ inline void init_connectivity_helper(Realm& realm, Teuchos::RCP<CrsGraph>& graph
   // This graph is not active, return early
   if (graph == Teuchos::null) return;
 
+  graph->buildNodeGraph(realm.interiorPartVec_);
   graph->buildElemToNodeGraph(realm.interiorPartVec_);
   graph->buildFaceElemToNodeGraph(realm.bcPartVec_);
 
