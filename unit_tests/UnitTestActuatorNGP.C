@@ -14,9 +14,9 @@
 
 namespace sierra{
 namespace nalu{
-
+struct PreIter{};
 template<>
-void ActuatorPreIteration<ActuatorBulk>::operator()(const int& index) const{
+void ActuatorFunctor<ActuatorBulk, PreIter, Kokkos::DefaultHostExecutionSpace>::operator()(const int& index) const{
   bulk_.epsilon_.h_view(index,0) = index*3.0;
   bulk_.epsilon_.h_view(index,1) = index*6.0;
   bulk_.epsilon_.h_view(index,2) = index*9.0;
@@ -43,7 +43,7 @@ void ActuatorSpreadForces<ActuatorBulk>::operator()(const int& index) const{
   bulk_.actuatorForce_.d_view(index, 2) = index*9.3;
 }
 
-using ActPreIter = ActuatorPreIteration<ActuatorBulk>;
+using ActPreIter = ActuatorFunctor<ActuatorBulk, PreIter, Kokkos::DefaultHostExecutionSpace>;
 using ActCompPnt = ActuatorComputePointLocation<ActuatorBulk>;
 using ActInterp  = ActuatorInterpolateFieldValues<ActuatorBulk>;
 using ActSpread  = ActuatorSpreadForces<ActuatorBulk>;
@@ -57,7 +57,7 @@ void Actuator<ActuatorMeta, ActuatorBulk>::execute()
     using range_policy_host = Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>;
     using range_policy_device = Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>;
 
-    Kokkos::parallel_for("actPreIter",      range_policy_host(0,nP), ActPreIter(actBulk_));
+    Kokkos::parallel_for("actPreIter", nP, ActPreIter(actBulk_));
     actBulk_.epsilon_.modified_host();
     Kokkos::parallel_for("actCompPointLoc", range_policy_host(0,nP), ActCompPnt(actBulk_));
     actBulk_.pointCentroid_.modified_host();

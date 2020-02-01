@@ -11,6 +11,7 @@
 #define ACTUATOR_NGP_H_
 
 #include<Kokkos_Core.hpp>
+#include<Kokkos_DualView.hpp>
 
 namespace sierra{
 namespace nalu{
@@ -22,10 +23,18 @@ namespace nalu{
  * The goal of this
  */
 
-template<typename BulkData>
-struct ActuatorPreIteration{
+template<typename BulkData, typename TAG, typename ExecutionSpace>
+struct ActuatorFunctor{
+  // Kokkos magic
+  // set execution space by template parameter (overrides default)
+  using execution_space = ExecutionSpace;
+  // define templated execution space's matching memory space
+  using memory_space = typename std::conditional<
+      std::is_same<ExecutionSpace, Kokkos::DefaultExecutionSpace>::value,
+      Kokkos::DualView<double*>::memory_space, Kokkos::DualView<double*>::host_mirror_space>::type;
+
   BulkData& bulk_;
-  ActuatorPreIteration(BulkData& bulk):bulk_(bulk){}
+  ActuatorFunctor(BulkData& bulk):bulk_(bulk){}
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
 };
