@@ -10,8 +10,6 @@
 #ifndef ACTUATOR_NGP_H_
 #define ACTUATOR_NGP_H_
 
-#include<Kokkos_Core.hpp>
-#include<Kokkos_DualView.hpp>
 #include<actuator/ActuatorTypes.h>
 
 namespace sierra{
@@ -39,7 +37,7 @@ struct ActuatorFunctor{
   // define templated execution space's matching memory space
   using memory_space = typename std::conditional<
       std::is_same<ExecutionSpace, Kokkos::DefaultExecutionSpace>::value,
-      Kokkos::DualView<double*>::memory_space, Kokkos::DualView<double*>::host_mirror_space>::type;
+      Kokkos::DualView<double*>::memory_space, Kokkos::HostSpace>::type;
 
   using ActVectorDbl =
       const Kokkos::View<ActVectorDblDv::scalar_array_type,
@@ -48,38 +46,6 @@ struct ActuatorFunctor{
 
   BulkData& bulk_;
   ActuatorFunctor(BulkData& bulk);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int& index) const;
-};
-
-template<typename BulkData>
-struct ActuatorComputePointLocation{
-  BulkData& bulk_;
-  ActuatorComputePointLocation(BulkData& bulk):bulk_(bulk){}
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int& index) const;
-};
-
-template<typename BulkData>
-struct ActuatorInterpolateFieldValues{
-  BulkData& bulk_;
-  ActuatorInterpolateFieldValues(BulkData& bulk):bulk_(bulk){}
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int& index) const;
-};
-
-template<typename BulkData>
-struct ActuatorSpreadForces{
-  BulkData& bulk_;
-  ActuatorSpreadForces(BulkData& bulk):bulk_(bulk){}
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int& index) const;
-};
-
-template<typename BulkData>
-struct ActuatorPostIteration{
-  BulkData& bulk_;
-  ActuatorPostIteration(BulkData& bulk):bulk_(bulk){}
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
 };

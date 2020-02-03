@@ -7,9 +7,8 @@
 // for more details.
 
 #include<gtest/gtest.h>
-#include<Kokkos_Core.hpp>
 #include<actuator/ActuatorInfo.h>
-#include <actuator/ActuatorBulk.h>
+#include<actuator/ActuatorBulk.h>
 
 // to allocate need turbine info
 // compute offsets need num procs

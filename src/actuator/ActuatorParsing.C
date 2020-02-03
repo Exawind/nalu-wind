@@ -8,8 +8,7 @@
 //
 
 #include <actuator/ActuatorParsing.h>
-
-#include "../../include/actuator/ActuatorBulk.h"
+#include <actuator/ActuatorBulk.h>
 
 namespace sierra {
 namespace nalu {

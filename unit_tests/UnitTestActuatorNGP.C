@@ -15,47 +15,69 @@
 namespace sierra{
 namespace nalu{
 struct PreIter{};
-using ActPreIter = ActuatorFunctor<ActuatorBulk, PreIter, Kokkos::DefaultHostExecutionSpace>;
-using ActCompPnt = ActuatorComputePointLocation<ActuatorBulk>;
-using ActInterp  = ActuatorInterpolateFieldValues<ActuatorBulk>;
-using ActSpread  = ActuatorSpreadForces<ActuatorBulk>;
+struct ComputePointLocation{};
+struct InterpolateValues{};
+struct SpreadForces{};
+
+using ActPreIter = ActuatorFunctor<ActuatorBulk, PreIter             , Kokkos::DefaultHostExecutionSpace>;
+using ActCompPnt = ActuatorFunctor<ActuatorBulk, ComputePointLocation, Kokkos::DefaultHostExecutionSpace>;
+using ActInterp  = ActuatorFunctor<ActuatorBulk, InterpolateValues   , Kokkos::DefaultHostExecutionSpace>;
+using ActSpread  = ActuatorFunctor<ActuatorBulk, SpreadForces        , Kokkos::DefaultHostExecutionSpace>;
+
+template<>
+ActPreIter::ActuatorFunctor(ActuatorBulk& bulk):bulk_(bulk){
+  bulk_.epsilon_.sync<memory_space>();
+  bulk_.epsilon_.modify<memory_space>();
+}
+
 template<>
 void ActPreIter::operator()(const int& index) const{
   ActVectorDbl epsilon = bulk_.epsilon_.template view<memory_space>();
   epsilon(index,0) = index*3.0;
   epsilon(index,1) = index*6.0;
   epsilon(index,2) = index*9.0;
-  //bulk_.epsilon_.h_view(index,0) = index*3.0;
-  //bulk_.epsilon_.h_view(index,1) = index*6.0;
-  //bulk_.epsilon_.h_view(index,2) = index*9.0;
 }
 
 template<>
-ActPreIter::ActuatorFunctor(ActuatorBulk& bulk):bulk_(bulk){
-  //epsilon = bulk_.epsilon_.template view<memory_space>();
-  bulk_.epsilon_.sync<memory_space>();
-  bulk_.epsilon_.modify<memory_space>();
+ActCompPnt::ActuatorFunctor(ActuatorBulk& bulk):bulk_(bulk){
+  bulk_.pointCentroid_.sync<memory_space>();
+  bulk_.pointCentroid_.modify<memory_space>();
 }
 
 template<>
 void ActCompPnt::operator()(const int& index) const{
-  bulk_.pointCentroid_.h_view(index,0) = index;
-  bulk_.pointCentroid_.h_view(index,1) = index*0.5;
-  bulk_.pointCentroid_.h_view(index,2) = index*0.25;
+  auto points = bulk_.pointCentroid_.template view<memory_space>();
+  points(index,0) = index;
+  points(index,1) = index*0.5;
+  points(index,2) = index*0.25;
+}
+
+template<>
+ActInterp::ActuatorFunctor(ActuatorBulk& bulk):bulk_(bulk){
+  bulk_.velocity_.sync<memory_space>();
+  bulk_.velocity_.modify<memory_space>();
 }
 
 template<>
 void ActInterp::operator()(const int& index) const{
-  bulk_.velocity_.d_view(index, 0) = index*2.5;
-  bulk_.velocity_.d_view(index, 1) = index*5.0;
-  bulk_.velocity_.d_view(index, 2) = index*7.5;
+  auto velocity = bulk_.velocity_.template view<memory_space>();
+  velocity(index, 0) = index*2.5;
+  velocity(index, 1) = index*5.0;
+  velocity(index, 2) = index*7.5;
+}
+
+template<>
+ActSpread::ActuatorFunctor(ActuatorBulk& bulk):bulk_(bulk){
+  bulk_.actuatorForce_.sync<memory_space>();
+  bulk_.actuatorForce_.modify<memory_space>();
 }
 
 template<>
 void ActSpread::operator()(const int& index) const{
-  bulk_.actuatorForce_.d_view(index, 0) = index*3.1;
-  bulk_.actuatorForce_.d_view(index, 1) = index*6.2;
-  bulk_.actuatorForce_.d_view(index, 2) = index*9.3;
+  auto force = bulk_.actuatorForce_.template view<memory_space>();
+  force(index, 0) = index*3.1;
+  force(index, 1) = index*6.2;
+  force(index, 2) = index*9.3;
 }
 
 
@@ -63,23 +85,12 @@ void ActSpread::operator()(const int& index) const{
 template<>
 void Actuator<ActuatorMeta, ActuatorBulk>::execute()
   {
-    //TODO(psakiev) set execution space i.e. range policy
     const int nP = actBulk_.totalNumPoints_;
-    using range_policy_host = Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>;
-    using range_policy_device = Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>;
 
-    Kokkos::parallel_for("actPreIter", nP, ActPreIter(actBulk_));
-    actBulk_.epsilon_.modified_host();
-    Kokkos::parallel_for("actCompPointLoc", range_policy_host(0,nP), ActCompPnt(actBulk_));
-    actBulk_.pointCentroid_.modified_host();
-    actBulk_.epsilon_.sync_device();
-    actBulk_.pointCentroid_.sync_device();
-    Kokkos::parallel_for("actInterpVals",   range_policy_device(0,nP), ActInterp(actBulk_));
-    actBulk_.velocity_.modified_device();
-    Kokkos::parallel_for("actSpreadForce",  range_policy_device(0,nP), ActSpread(actBulk_));
-    actBulk_.actuatorForce_.modified_device();
-    actBulk_.velocity_.sync_host();
-    actBulk_.actuatorForce_.sync_host();
+    Kokkos::parallel_for("actPreIter",      nP, ActPreIter(actBulk_));
+    Kokkos::parallel_for("actCompPointLoc", nP, ActCompPnt(actBulk_));
+    Kokkos::parallel_for("actInterpVals",   nP, ActInterp (actBulk_));
+    Kokkos::parallel_for("actSpreadForce",  nP, ActSpread (actBulk_));
   }
 
 template<>
