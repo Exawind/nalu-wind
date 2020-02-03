@@ -15,7 +15,12 @@
 namespace sierra{
 namespace nalu{
 
-/// Data structure to stash turbine info during parsing
+/*! \brief Data structure to stash turbine info during parsing
+ * Data structure to stash turbine info during parsing. This
+ * object is intended to be specialized via inheritance for
+ * specific actuator types. This is intended to be a limited
+ * life span object.
+ */
 struct ActuatorInfoNGP
 {
   int processorId_{0};
