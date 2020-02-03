@@ -10,25 +10,26 @@
 #ifndef INCLUDE_ACTUATOR_ACTUATORTYPES_H_
 #define INCLUDE_ACTUATOR_ACTUATORTYPES_H_
 
+#include <Kokkos_Core.hpp>
+#include <Kokkos_DualView.hpp>
+
 namespace sierra{
 namespace nalu{
 
-#include <Kokkos_Core.hpp>
-#include <Kokkos_DualView.hpp>
 
 #ifdef ACTUATOR_ON_DEVICE
 using ActuatorMemSpace = Kokkos::CudaSpace;
 using ActuatorMemLayout = Kokkos::LayoutRight;
-//using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;
+using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;
 #else
 using ActuatorMemSpace = Kokkos::HostSpace;
 using ActuatorMemLayout = Kokkos::LayoutLeft;
-//using ActuatorExecutionSpace = Kokkos::DefaultHostExecutionSpace;
+using ActuatorExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 #endif
 
 
-using ActScalarIntDv = Kokkos::DualView<int*,    ActuatorMemLayout, ActuatorMemSpace>;
-using ActScalarDblDv = Kokkos::DualView<double*, ActuatorMemLayout, ActuatorMemSpace>;
+using ActScalarIntDv = Kokkos::DualView<int*,     ActuatorMemLayout, ActuatorMemSpace>;
+using ActScalarDblDv = Kokkos::DualView<double*,  ActuatorMemLayout, ActuatorMemSpace>;
 using ActVectorDblDv = Kokkos::DualView<double**, ActuatorMemLayout, ActuatorMemSpace>;
 
 } //namespace nalu
