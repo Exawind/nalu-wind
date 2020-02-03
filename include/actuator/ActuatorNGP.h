@@ -12,6 +12,7 @@
 
 #include<Kokkos_Core.hpp>
 #include<Kokkos_DualView.hpp>
+#include<actuator/ActuatorTypes.h>
 
 namespace sierra{
 namespace nalu{
@@ -33,8 +34,13 @@ struct ActuatorFunctor{
       std::is_same<ExecutionSpace, Kokkos::DefaultExecutionSpace>::value,
       Kokkos::DualView<double*>::memory_space, Kokkos::DualView<double*>::host_mirror_space>::type;
 
+  using ActVectorDbl =
+      Kokkos::DualView<ActVectorDblDv::scalar_array_type,
+      ActVectorDblDv::array_layout,
+      memory_space>;
+
   BulkData& bulk_;
-  ActuatorFunctor(BulkData& bulk):bulk_(bulk){}
+  ActuatorFunctor(BulkData& bulk);//:bulk_(bulk){}
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
 };
