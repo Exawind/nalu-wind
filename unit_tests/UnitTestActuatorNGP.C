@@ -21,7 +21,7 @@ using ActInterp  = ActuatorInterpolateFieldValues<ActuatorBulk>;
 using ActSpread  = ActuatorSpreadForces<ActuatorBulk>;
 template<>
 void ActPreIter::operator()(const int& index) const{
-  auto epsilon = bulk_.epsilon_.template view<memory_space>();
+  ActVectorDbl epsilon = bulk_.epsilon_.template view<memory_space>();
   epsilon(index,0) = index*3.0;
   epsilon(index,1) = index*6.0;
   epsilon(index,2) = index*9.0;

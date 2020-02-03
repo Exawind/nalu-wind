@@ -17,11 +17,18 @@
 namespace sierra{
 namespace nalu{
 
-// Kokkos compatible functors that can be implemented based on
-// BulkData Type
 
-/*
- * The goal of this
+/*! \struct AcutatorFunctor
+ *  \brief Generalized functor for performing actuator work
+ *
+ * The goal of this functor is to generalize the interface
+ * for doing work on host/device
+ *
+ * \tparam BulkData The type of bulk data that this functor will execute on
+ *  (i.e. Actuator line w/h FAST vs a generalized instance)
+ *
+ * \tparam TAG A TAG to distinguish instances of operations
+ *  (i.e. preIter vs findPoints)
  */
 
 template<typename BulkData, typename TAG, typename ExecutionSpace>
@@ -35,12 +42,12 @@ struct ActuatorFunctor{
       Kokkos::DualView<double*>::memory_space, Kokkos::DualView<double*>::host_mirror_space>::type;
 
   using ActVectorDbl =
-      Kokkos::DualView<ActVectorDblDv::scalar_array_type,
+      const Kokkos::View<ActVectorDblDv::scalar_array_type,
       ActVectorDblDv::array_layout,
       memory_space>;
 
   BulkData& bulk_;
-  ActuatorFunctor(BulkData& bulk);//:bulk_(bulk){}
+  ActuatorFunctor(BulkData& bulk);
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
 };
@@ -77,17 +84,33 @@ struct ActuatorPostIteration{
   void operator()(const int& index) const;
 };
 
-
+/*!
+ * \class Actuator
+ * \brief Template class for implementing Actuator execution
+ *
+ * This class allows one to create an actuator execution model
+ * that can be varied based on the Meta and Bulk data types supplied.
+ * Data extents and parameters should be passed via meta data and
+ * memory allocation should occur during the constructor of this class.
+ *
+ * Specific details of the implementation are done via the execute() method.
+ *
+ * \tparam MetaData Container holding data params and extents
+ *
+ * \tparam BulkData Container holding actual fields and additional objects i.e. FAST
+ */
 template<typename MetaData, typename BulkData>
 class Actuator
 {
 public:
   Actuator(MetaData actMeta);
+  // TODO(psakiev) restrict access for this except for unit testing
   const BulkData& actuator_bulk(){return actBulk_;}
+  /// Where the work is done. This function should be defined for each particular instance
   void execute();
 
 private:
-  BulkData actBulk_;
+  BulkData actBulk_; //< Contains data and a copy of the meta data that was used in construction
 
 };
 
