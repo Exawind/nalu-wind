@@ -15,38 +15,49 @@
 namespace sierra{
 namespace nalu{
 struct PreIter{};
+using ActPreIter = ActuatorFunctor<ActuatorBulk, PreIter, Kokkos::DefaultHostExecutionSpace>;
+using ActCompPnt = ActuatorComputePointLocation<ActuatorBulk>;
+using ActInterp  = ActuatorInterpolateFieldValues<ActuatorBulk>;
+using ActSpread  = ActuatorSpreadForces<ActuatorBulk>;
 template<>
-void ActuatorFunctor<ActuatorBulk, PreIter, Kokkos::DefaultHostExecutionSpace>::operator()(const int& index) const{
-  bulk_.epsilon_.h_view(index,0) = index*3.0;
-  bulk_.epsilon_.h_view(index,1) = index*6.0;
-  bulk_.epsilon_.h_view(index,2) = index*9.0;
+void ActPreIter::operator()(const int& index) const{
+  auto epsilon = bulk_.epsilon_.template view<memory_space>();
+  epsilon(index,0) = index*3.0;
+  epsilon(index,1) = index*6.0;
+  epsilon(index,2) = index*9.0;
+  //bulk_.epsilon_.h_view(index,0) = index*3.0;
+  //bulk_.epsilon_.h_view(index,1) = index*6.0;
+  //bulk_.epsilon_.h_view(index,2) = index*9.0;
 }
 
 template<>
-void ActuatorComputePointLocation<ActuatorBulk>::operator()(const int& index) const{
+ActPreIter::ActuatorFunctor(ActuatorBulk& bulk):bulk_(bulk){
+  //epsilon = bulk_.epsilon_.template view<memory_space>();
+  bulk_.epsilon_.sync<memory_space>();
+  bulk_.epsilon_.modify<memory_space>();
+}
+
+template<>
+void ActCompPnt::operator()(const int& index) const{
   bulk_.pointCentroid_.h_view(index,0) = index;
   bulk_.pointCentroid_.h_view(index,1) = index*0.5;
   bulk_.pointCentroid_.h_view(index,2) = index*0.25;
 }
 
 template<>
-void ActuatorInterpolateFieldValues<ActuatorBulk>::operator()(const int& index) const{
+void ActInterp::operator()(const int& index) const{
   bulk_.velocity_.d_view(index, 0) = index*2.5;
   bulk_.velocity_.d_view(index, 1) = index*5.0;
   bulk_.velocity_.d_view(index, 2) = index*7.5;
 }
 
 template<>
-void ActuatorSpreadForces<ActuatorBulk>::operator()(const int& index) const{
+void ActSpread::operator()(const int& index) const{
   bulk_.actuatorForce_.d_view(index, 0) = index*3.1;
   bulk_.actuatorForce_.d_view(index, 1) = index*6.2;
   bulk_.actuatorForce_.d_view(index, 2) = index*9.3;
 }
 
-using ActPreIter = ActuatorFunctor<ActuatorBulk, PreIter, Kokkos::DefaultHostExecutionSpace>;
-using ActCompPnt = ActuatorComputePointLocation<ActuatorBulk>;
-using ActInterp  = ActuatorInterpolateFieldValues<ActuatorBulk>;
-using ActSpread  = ActuatorSpreadForces<ActuatorBulk>;
 
 
 template<>
