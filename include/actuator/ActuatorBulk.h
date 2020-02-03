@@ -48,7 +48,7 @@ private:
  * intended through inheritance.
  */
 struct ActuatorBulk{
-  ActuatorBulk(ActuatorMeta meta);
+  ActuatorBulk(ActuatorMeta actMeta);
   const ActuatorMeta actuatorMeta_;
   const int totalNumPoints_;
   ActVectorDblDv pointCentroid_;

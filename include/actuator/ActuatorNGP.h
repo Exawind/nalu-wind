@@ -39,7 +39,7 @@ struct ActuatorFunctor{
       std::is_same<ExecutionSpace, Kokkos::DefaultExecutionSpace>::value,
       Kokkos::DualView<double*>::memory_space, Kokkos::HostSpace>::type;
 
-  BulkData& bulk_;
+  BulkData& actBulk_;
   ActuatorFunctor(BulkData& bulk);
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
@@ -50,7 +50,7 @@ struct ActuatorFunctor{
  * \brief Template class for implementing Actuator execution
  *
  * This class allows one to create an actuator execution model
- * that can be varied based on the Meta and Bulk data types supplied.
+ * that can be varied based on the ActuatorMeta and ActuatorBulk data types supplied.
  * Data extents and parameters should be passed via meta data and
  * memory allocation should occur during the constructor of this class.
  *
@@ -60,18 +60,18 @@ struct ActuatorFunctor{
  *
  * \tparam BulkData Container holding actual fields and additional objects i.e. FAST
  */
-template<typename MetaData, typename BulkData>
+template<typename ActMetaData, typename ActBulkData>
 class Actuator
 {
 public:
-  Actuator(MetaData actMeta):actBulk_(actMeta){}
+  Actuator(ActMetaData actMeta):actBulk_(actMeta){}
   // TODO(psakiev) restrict access for this except for unit testing
-  const BulkData& actuator_bulk(){return actBulk_;}
+  const ActBulkData& actuator_bulk(){return actBulk_;}
   /// Where the work is done. This function should be defined for each particular instance
   void execute();
 
 private:
-  BulkData actBulk_; //< Contains data and a copy of the meta data that was used in construction
+  ActBulkData actBulk_; //< Contains data and a copy of the meta data that was used in construction
 
 };
 

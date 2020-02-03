@@ -15,42 +15,42 @@ namespace nalu{
 
 namespace{
 TEST(ActuatorNGP, testExecuteOnHostOnly){
-  ActuatorMeta meta(1);
+  ActuatorMeta actMeta(1);
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
-  meta.add_turbine(infoTurb0);
-  TestActuatorHostOnly actuator(meta);
+  actMeta.add_turbine(infoTurb0);
+  TestActuatorHostOnly actuator(actMeta);
   ASSERT_NO_THROW(actuator.execute());
-  const ActuatorBulk& bulk = actuator.actuator_bulk();
-  EXPECT_DOUBLE_EQ(3.0, bulk.epsilon_.h_view(1,0));
-  EXPECT_DOUBLE_EQ(6.0, bulk.epsilon_.h_view(1,1));
-  EXPECT_DOUBLE_EQ(9.0, bulk.epsilon_.h_view(1,2));
+  const ActuatorBulk& actBulk = actuator.actuator_bulk();
+  EXPECT_DOUBLE_EQ(3.0, actBulk.epsilon_.h_view(1,0));
+  EXPECT_DOUBLE_EQ(6.0, actBulk.epsilon_.h_view(1,1));
+  EXPECT_DOUBLE_EQ(9.0, actBulk.epsilon_.h_view(1,2));
 
-  EXPECT_DOUBLE_EQ(1.0, bulk.pointCentroid_.h_view(1,0));
-  EXPECT_DOUBLE_EQ(0.5, bulk.pointCentroid_.h_view(1,1));
-  EXPECT_DOUBLE_EQ(0.25, bulk.pointCentroid_.h_view(1,2));
+  EXPECT_DOUBLE_EQ(1.0, actBulk.pointCentroid_.h_view(1,0));
+  EXPECT_DOUBLE_EQ(0.5, actBulk.pointCentroid_.h_view(1,1));
+  EXPECT_DOUBLE_EQ(0.25, actBulk.pointCentroid_.h_view(1,2));
 
-  EXPECT_DOUBLE_EQ(2.5, bulk.velocity_.h_view(1,0));
-  EXPECT_DOUBLE_EQ(5.0, bulk.velocity_.h_view(1,1));
-  EXPECT_DOUBLE_EQ(7.5, bulk.velocity_.h_view(1,2));
+  EXPECT_DOUBLE_EQ(2.5, actBulk.velocity_.h_view(1,0));
+  EXPECT_DOUBLE_EQ(5.0, actBulk.velocity_.h_view(1,1));
+  EXPECT_DOUBLE_EQ(7.5, actBulk.velocity_.h_view(1,2));
 
-  EXPECT_DOUBLE_EQ(3.1, bulk.actuatorForce_.h_view(1,0));
-  EXPECT_DOUBLE_EQ(6.2, bulk.actuatorForce_.h_view(1,1));
-  EXPECT_DOUBLE_EQ(9.3, bulk.actuatorForce_.h_view(1,2));
+  EXPECT_DOUBLE_EQ(3.1, actBulk.actuatorForce_.h_view(1,0));
+  EXPECT_DOUBLE_EQ(6.2, actBulk.actuatorForce_.h_view(1,1));
+  EXPECT_DOUBLE_EQ(9.3, actBulk.actuatorForce_.h_view(1,2));
 }
 
 TEST(ActuatorNGP, testExecuteOnHostAndDevice){
-  ActuatorMeta meta(1);
+  ActuatorMeta actMeta(1);
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
-  meta.add_turbine(infoTurb0);
-  TestActuatorHostDev actuator(meta);
+  actMeta.add_turbine(infoTurb0);
+  TestActuatorHostDev actuator(actMeta);
   ASSERT_NO_THROW(actuator.execute());
-  const ActuatorBulkMod& bulk = actuator.actuator_bulk();
-  const double expectVal = bulk.velocity_.h_view(1,1)*bulk.pointCentroid_.h_view(1,0);
-  EXPECT_DOUBLE_EQ(expectVal, bulk.scalar_.h_view(1));
+  const ActuatorBulkMod& actBulk = actuator.actuator_bulk();
+  const double expectVal = actBulk.velocity_.h_view(1,1)*actBulk.pointCentroid_.h_view(1,0);
+  EXPECT_DOUBLE_EQ(expectVal, actBulk.scalar_.h_view(1));
 }
 
 }
