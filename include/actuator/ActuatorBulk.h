@@ -19,7 +19,9 @@ class ActuatorInfoNGP;
 
 /*! \brief Meta data for working with actuator fields
  * This is an example of meta data that will be used to construct an actuator object
- * and the resulting bulk data. This object lives on host.
+ * and the resulting bulk data. This object lives on host but views can be
+ * accessed on host or device. Specialization is for different models is intended
+ * via inheritance.
  *
  * The meta data should be copyable.
  */
@@ -39,6 +41,11 @@ private:
 
 /*! \brief Where field data is stored and accessed for actuators
  * This object lives on host but the views can be on host, device or both
+ * for now they are dual views but these can be specialized as implementation
+ * desires.
+ *
+ * The object as a whole will be created and live on host, and specialization is
+ * intended through inheritance.
  */
 struct ActuatorBulk{
   ActuatorBulk(ActuatorMeta meta);

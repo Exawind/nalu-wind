@@ -32,7 +32,7 @@ template<>
 ActPreIter::ActuatorFunctor(ActuatorBulk& bulk):bulk_(bulk){
   //TODO(psakiev) it should probably be a feature of the bulk data
   // to recognize modification so users don't need to track this
-  bulk_.epsilon_.sync<memory_space>();
+  bulk_.epsilon_.sync  <memory_space>();
   bulk_.epsilon_.modify<memory_space>();
 }
 
@@ -46,7 +46,7 @@ void ActPreIter::operator()(const int& index) const{
 
 template<>
 ActCompPnt::ActuatorFunctor(ActuatorBulk& bulk):bulk_(bulk){
-  bulk_.pointCentroid_.sync<memory_space>();
+  bulk_.pointCentroid_.sync  <memory_space>();
   bulk_.pointCentroid_.modify<memory_space>();
 }
 
@@ -60,7 +60,7 @@ void ActCompPnt::operator()(const int& index) const{
 
 template<>
 ActInterp::ActuatorFunctor(ActuatorBulk& bulk):bulk_(bulk){
-  bulk_.velocity_.sync<memory_space>();
+  bulk_.velocity_.sync  <memory_space>();
   bulk_.velocity_.modify<memory_space>();
 }
 
@@ -74,7 +74,7 @@ void ActInterp::operator()(const int& index) const{
 
 template<>
 ActSpread::ActuatorFunctor(ActuatorBulk& bulk):bulk_(bulk){
-  bulk_.actuatorForce_.sync<memory_space>();
+  bulk_.actuatorForce_.sync  <memory_space>();
   bulk_.actuatorForce_.modify<memory_space>();
 }
 
@@ -99,10 +99,8 @@ void TestActuatorHostOnly::execute()
   Kokkos::parallel_for("actSpreadForce",  nP, ActSpread (actBulk_));
 }
 
-
-/*
- * Create a different bulk data that will execute on device and host
- */
+//Create a different bulk data that will allow execution on device and host
+//for functors
 struct ActuatorBulkMod : public ActuatorBulk{
   ActuatorBulkMod(ActuatorMeta meta):
     ActuatorBulk(meta),
@@ -110,19 +108,19 @@ struct ActuatorBulkMod : public ActuatorBulk{
   ActScalarDblDv scalar_;
 };
 
-//host or device example
+//host or device functor example
 using ActPostIter= ActuatorFunctor<ActuatorBulkMod, PostIter, ActuatorExecutionSpace>;
 
 template<>
 ActPostIter::ActuatorFunctor(ActuatorBulkMod& bulk):bulk_(bulk){
-  bulk_.scalar_.sync<memory_space>();
+  bulk_.scalar_.sync  <memory_space>();
   bulk_.scalar_.modify<memory_space>();
 }
 
 template<>
 void ActPostIter::operator()(const int& index) const{
   auto scalar = bulk_.scalar_.template view<memory_space>();
-  auto vel = bulk_.velocity_.template view<memory_space>();
+  auto vel = bulk_.velocity_.template  view<memory_space>();
   auto point = bulk_.pointCentroid_.template view<memory_space>();
   scalar(index) = point(index, 0) * vel(index, 1);
 }
