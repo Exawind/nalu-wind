@@ -19,7 +19,8 @@ class ActuatorInfoNGP;
 
 /*! \brief Meta data for working with actuator fields
  * This is an example of meta data that will be used to construct an actuator object
- * and the resulting bulk data.
+ * and the resulting bulk data. This object lives on host.
+ *
  * The meta data should be copyable.
  */
 
@@ -28,16 +29,18 @@ public:
   ActuatorMeta(int numTurbines);
   void add_turbine(int turbineIndex, const ActuatorInfoNGP& info);
   inline int num_actuators() const {return numberOfActuators_;}
-  //TODO(psakiev) fix this h_view call
-  inline int total_num_points(int i) const {return numPointsTotal_.h_view(i);}
+  inline int num_points_total() const {return numPointsTotal_;}
+  inline int num_points_turbine(int i) const {return numPointsTurbine_.h_view(i);}
 private:
   const int numberOfActuators_;
-  ActScalarIntDv numPointsTotal_;
+  int numPointsTotal_;
+  ActScalarIntDv numPointsTurbine_;
 };
 
-/// Where field data is stored and accessed for actuators
-class ActuatorBulk{
-public:
+/*! \brief Where field data is stored and accessed for actuators
+ * This object lives on host but the views can be on host, device or both
+ */
+struct ActuatorBulk{
   ActuatorBulk(ActuatorMeta meta);
   const ActuatorMeta actuatorMeta_;
   const int totalNumPoints_;
