@@ -19,9 +19,9 @@ ActuatorMeta::ActuatorMeta(int numTurbines):
     numPointsTurbine_("numPointsTurbine", numberOfActuators_)
 {}
 
-void ActuatorMeta::add_turbine(int turbineIndex, const ActuatorInfoNGP& info)
+void ActuatorMeta::add_turbine(const ActuatorInfoNGP& info)
 {
-  numPointsTurbine_.h_view(turbineIndex) = info.numPoints_;
+  numPointsTurbine_.h_view(info.turbineId_) = info.numPoints_;
   numPointsTotal_+=info.numPoints_;
 }
 

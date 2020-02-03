@@ -29,7 +29,7 @@ class ActuatorInfoNGP;
 class ActuatorMeta{
 public:
   ActuatorMeta(int numTurbines);
-  void add_turbine(int turbineIndex, const ActuatorInfoNGP& info);
+  void add_turbine(const ActuatorInfoNGP& info);
   inline int num_actuators() const {return numberOfActuators_;}
   inline int num_points_total() const {return numPointsTotal_;}
   inline int num_points_turbine(int i) const {return numPointsTurbine_.h_view(i);}

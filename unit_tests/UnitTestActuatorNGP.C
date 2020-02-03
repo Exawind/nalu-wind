@@ -19,7 +19,7 @@ TEST(ActuatorNGP, testExecuteOnHostOnly){
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
-  meta.add_turbine(0, infoTurb0);
+  meta.add_turbine(infoTurb0);
   TestActuatorHostOnly actuator(meta);
   ASSERT_NO_THROW(actuator.execute());
   const ActuatorBulk& bulk = actuator.actuator_bulk();
@@ -45,7 +45,7 @@ TEST(ActuatorNGP, testExecuteOnHostAndDevice){
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
-  meta.add_turbine(0, infoTurb0);
+  meta.add_turbine(infoTurb0);
   TestActuatorHostDev actuator(meta);
   ASSERT_NO_THROW(actuator.execute());
   const ActuatorBulkMod& bulk = actuator.actuator_bulk();
