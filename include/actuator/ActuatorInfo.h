@@ -24,6 +24,7 @@ namespace nalu{
 struct ActuatorInfoNGP
 {
   int processorId_{0};
+  int turbineId_{0};
   int numPoints_{0};
   Coordinates epsilon_;
   std::string turbineName_;

@@ -32,7 +32,7 @@ TEST(ActuatorMeta, addTurbine){
   ActuatorMeta fieldMeta(numTurbines);
   ActuatorInfoNGP dummyInfo;
   dummyInfo.numPoints_=1024;
-  fieldMeta.add_turbine(0, dummyInfo);
+  fieldMeta.add_turbine(dummyInfo);
   EXPECT_EQ(1024, fieldMeta.num_points_turbine(0));
 }
 
@@ -41,10 +41,12 @@ TEST(ActuatorMeta, copyCtor){
   ActuatorMeta fieldMeta(numTurbines);
   ActuatorInfoNGP actInfo1;
   actInfo1.numPoints_= 30;
+  actInfo1.turbineId_=0;
   ActuatorInfoNGP actInfo2;
   actInfo2.numPoints_= 24;
-  fieldMeta.add_turbine(0, actInfo1);
-  fieldMeta.add_turbine(1, actInfo2);
+  actInfo2.turbineId_=1;
+  fieldMeta.add_turbine(actInfo1);
+  fieldMeta.add_turbine(actInfo2);
   EXPECT_EQ(30, fieldMeta.num_points_turbine(0));
   EXPECT_EQ(24, fieldMeta.num_points_turbine(1));
 
@@ -59,7 +61,8 @@ TEST(ActuatorBulk, constructor){
   ActuatorMeta fieldMeta(numTurbines);
   ActuatorInfoNGP dummyInfo;
   dummyInfo.numPoints_=36;
-  fieldMeta.add_turbine(0, dummyInfo);
+  dummyInfo.turbineId_=0;
+  fieldMeta.add_turbine(dummyInfo);
   ActuatorBulk bulkData(fieldMeta);
   EXPECT_EQ(36, bulkData.totalNumPoints_);
 }
