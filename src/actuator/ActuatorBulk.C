@@ -7,36 +7,27 @@
 // for more details.
 //
 
-#include <actuator/ActuatorInfo.h>
 #include <actuator/ActuatorBulk.h>
+#include <actuator/ActuatorInfo.h>
 
 namespace sierra{
 namespace nalu{
 
-namespace{
-  int extract_point_total(const ActuatorMeta& meta){
-    int total = 0;
-    int numActuators = meta.num_actuators();
-    for(int i=0; i< numActuators; ++i){
-      total+=meta.total_num_points(i);
-    }
-    return total;
-  }
-}
-
 ActuatorMeta::ActuatorMeta(int numTurbines):
     numberOfActuators_(numTurbines),
-    numPointsTotal_("numPointsTotal", numberOfActuators_)
+    numPointsTotal_(0),
+    numPointsTurbine_("numPointsTurbine", numberOfActuators_)
 {}
 
 void ActuatorMeta::add_turbine(int turbineIndex, const ActuatorInfoNGP& info)
 {
-  numPointsTotal_.h_view(turbineIndex) = info.numPoints_;
+  numPointsTurbine_.h_view(turbineIndex) = info.numPoints_;
+  numPointsTotal_+=info.numPoints_;
 }
 
 ActuatorBulk::ActuatorBulk(ActuatorMeta meta):
     actuatorMeta_(meta),
-    totalNumPoints_(extract_point_total(actuatorMeta_)),
+    totalNumPoints_(actuatorMeta_.num_points_total()),
     pointCentroid_("actPointCentroid", totalNumPoints_,3),
     velocity_("actVelocity", totalNumPoints_,3),
     actuatorForce_("actForce", totalNumPoints_,3),

@@ -39,11 +39,6 @@ struct ActuatorFunctor{
       std::is_same<ExecutionSpace, Kokkos::DefaultExecutionSpace>::value,
       Kokkos::DualView<double*>::memory_space, Kokkos::HostSpace>::type;
 
-  using ActVectorDbl =
-      const Kokkos::View<ActVectorDblDv::scalar_array_type,
-      ActVectorDblDv::array_layout,
-      memory_space>;
-
   BulkData& bulk_;
   ActuatorFunctor(BulkData& bulk);
   KOKKOS_INLINE_FUNCTION
@@ -69,7 +64,7 @@ template<typename MetaData, typename BulkData>
 class Actuator
 {
 public:
-  Actuator(MetaData actMeta);
+  Actuator(MetaData actMeta):actBulk_(actMeta){}
   // TODO(psakiev) restrict access for this except for unit testing
   const BulkData& actuator_bulk(){return actBulk_;}
   /// Where the work is done. This function should be defined for each particular instance
