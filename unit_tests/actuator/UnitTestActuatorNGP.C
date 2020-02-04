@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#include<gtest/gtest.h>
-#include<UnitTestActuatorNGP.h>
+#include <actuator/UnitTestActuatorNGP.h>
+#include <gtest/gtest.h>
 
 namespace sierra{
 namespace nalu{

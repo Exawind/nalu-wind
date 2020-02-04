@@ -1,0 +1,123 @@
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
+#include <actuator/ActuatorSearch.h>
+#include <stk_search/CoarseSearch.hpp>
+#include <FieldTypeDef.h>
+#include <NaluEnv.h>
+
+namespace sierra{
+namespace nalu{
+
+VecBoundSphere CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl radius){
+
+  const int nPoints = points.extent(0);
+  VecBoundSphere boundSphereVec;
+
+  for(int i =0 ; i< nPoints; i++){
+      stk::search::IdentProc<uint64_t, int> theIdent((std::size_t)i, NaluEnv::self().parallel_rank());
+
+      Point thePoint (points(i,0), points(i,1), points(i,2));
+
+      boundingSphere aSphere(Sphere(thePoint, radius(i)), theIdent);
+      boundSphereVec.push_back(aSphere);
+  }
+
+  return boundSphereVec;
+}
+
+// refactor later
+VecBoundElemBox CreateElementBoxes(stk::mesh::MetaData& stkMeta, stk::mesh::BulkData& stkBulk, std::vector<std::string> partNameList){
+  VecBoundElemBox boundElemBoxVec;
+  const int nDim = stkMeta.spatial_dimension();
+
+  // fields
+  VectorFieldType* coordinates = stkMeta.get_field<VectorFieldType>(
+                                   stk::topology::NODE_RANK, "coordinates");
+
+  // point data structures
+  Point minCorner, maxCorner;
+
+  // extract part
+  stk::mesh::PartVector searchParts;
+  for (size_t k = 0; k < partNameList.size(); ++k) {
+    stk::mesh::Part* thePart = stkMeta.get_part(partNameList[k]);
+    if (NULL != thePart)
+      searchParts.push_back(thePart);
+    else
+      throw std::runtime_error(
+          "ActuatorSearch::CreateElemenBoxes: Part is null" + partNameList[k]);
+  }
+
+  // selector and bucket loop
+  stk::mesh::Selector s_locally_owned =
+    stkMeta.locally_owned_part() & stk::mesh::selectUnion(searchParts);
+
+  stk::mesh::BucketVector const& elem_buckets =
+    stkBulk.get_buckets(stk::topology::ELEMENT_RANK, s_locally_owned);
+
+  for (stk::mesh::BucketVector::const_iterator ib = elem_buckets.begin();
+       ib != elem_buckets.end(); ++ib) {
+
+    stk::mesh::Bucket& b = **ib;
+
+    const stk::mesh::Bucket::size_type length = b.size();
+
+    for (stk::mesh::Bucket::size_type k = 0; k < length; ++k) {
+
+      // get element
+      stk::mesh::Entity elem = b[k];
+
+      // initialize max and min
+      for (int j = 0; j < nDim; ++j) {
+        minCorner[j] = +1.0e16;
+        maxCorner[j] = -1.0e16;
+      }
+
+      // extract elem_node_relations
+      stk::mesh::Entity const* elem_node_rels = stkBulk.begin_nodes(elem);
+      const int num_nodes = stkBulk.num_nodes(elem);
+
+      for (int ni = 0; ni < num_nodes; ++ni) {
+        stk::mesh::Entity node = elem_node_rels[ni];
+
+        // pointers to real data
+        const double* coords = stk::mesh::field_data(*coordinates, node);
+
+        // check max/min
+        for (int j = 0; j < nDim; ++j) {
+          minCorner[j] = std::min(minCorner[j], coords[j]);
+          maxCorner[j] = std::max(maxCorner[j], coords[j]);
+        }
+      }
+
+      // setup ident
+      stk::search::IdentProc<uint64_t, int> theIdent(
+        stkBulk.identifier(elem), NaluEnv::self().parallel_rank());
+
+      // create the bounding point box and push back
+      boundingElementBox theBox(Box(minCorner, maxCorner), theIdent);
+      boundElemBoxVec.push_back(theBox);
+    }
+  }
+  return boundElemBoxVec;
+}
+
+VecSearchKeyPair ExecuteCoarseSearch(
+  VecBoundSphere spheres,
+  VecBoundElemBox elems,
+  stk::search::SearchMethod searchMethod)
+{
+  VecSearchKeyPair searchKeyPair;
+  stk::search::coarse_search(spheres, elems, searchMethod, NaluEnv::self().parallel_comm(), searchKeyPair);
+  return searchKeyPair;
+}
+
+} //namespace nalu
+} //namespace sierra
