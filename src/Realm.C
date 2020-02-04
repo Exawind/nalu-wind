@@ -12,7 +12,6 @@
 #include <Realm.h>
 #include <Simulation.h>
 #include <NaluEnv.h>
-#include <InterfaceBalancer.h>
 
 // percept
 #if defined (NALU_USES_PERCEPT)
@@ -496,14 +495,7 @@ Realm::initialize()
 
   // rebalance mesh using stk_balance
   if (rebalanceMesh_) {
-#ifndef HAVE_ZOLTAN2_PARMETIS
-  if (rebalanceMethod_ == "parmetis")
-    throw std::runtime_error("Zoltan2 is not built with parmetis enabled, "
-                             "try a geometric balance method instead (rcb or rib)");
-#endif
-    stk::balance::GraphCreationSettings rebalanceSettings;
-    rebalanceSettings.setDecompMethod(rebalanceMethod_);
-    stk::balance::balanceStkMesh(rebalanceSettings, *bulkData_);
+    rebalance_mesh();
   }
 
   if (doBalanceNodes_) {
@@ -4791,12 +4783,30 @@ Realm::get_tanh_blending(
 }
 
 //--------------------------------------------------------------------------
+//-------- rebalance_mesh() ------------------------------------------------
+//--------------------------------------------------------------------------
+void Realm::rebalance_mesh()
+{
+#ifndef HAVE_ZOLTAN2_PARMETIS
+  if (rebalanceMethod_ == "parmetis")
+    throw std::runtime_error("Zoltan2 is not built with parmetis enabled, "
+                             "try a geometric balance method instead (rcb or rib)");
+#endif
+  stk::balance::GraphCreationSettings rebalanceSettings;
+  rebalanceSettings.setDecompMethod(rebalanceMethod_);
+  stk::balance::balanceStkMesh(rebalanceSettings, *bulkData_);
+}
+
+//--------------------------------------------------------------------------
 //-------- balance_nodes() -------------------------------------------------
 //--------------------------------------------------------------------------
 void Realm::balance_nodes()
 {
-  InterfaceBalancer balancer(meta_data(), bulk_data());
-  balancer.balance_node_entities(balanceNodeOptions_.target, balanceNodeOptions_.numIters);
+  stk::balance::GraphCreationSettings nodeBalanceSettings;
+  nodeBalanceSettings.setUseNodeBalancer(true);
+  nodeBalanceSettings.setNodeBalancerTargetLoadBalance(balanceNodeOptions_.target);
+  nodeBalanceSettings.setNodeBalancerMaxIterations(balanceNodeOptions_.numIters);
+  stk::balance::balanceStkMeshNodes(nodeBalanceSettings, *bulkData_);
 }
 
 //--------------------------------------------------------------------------

@@ -142,6 +142,8 @@ class Realm {
 
   void initialize_global_variables();
 
+  void rebalance_mesh();
+
   void balance_nodes();
 
   void create_output_mesh();
