@@ -676,10 +676,13 @@ class Realm {
    */
   bool hypreIsActive_{false};
 
+  std::vector<std::string> handle_all_element_part_alias(const std::vector<std::string>& names) const;
+
 protected:
   std::unique_ptr<NgpMeshInfo> meshInfo_;
 
   unsigned meshModCount_{0};
+  const std::string allElementPartAlias{"all_blocks"};
 
 };
 
