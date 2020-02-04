@@ -1,6 +1,7 @@
 target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTest1ElemCoordCheck.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestABLWallFunction.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorParsing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorBulk.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorNGP.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestBasicKokkos.C

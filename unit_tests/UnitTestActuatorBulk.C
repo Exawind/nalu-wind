@@ -22,7 +22,7 @@ namespace{
 TEST(ActuatorMeta, constructor){
  const int numTurbines = 2;
  ActuatorMeta fieldMeta(numTurbines);
- EXPECT_EQ(numTurbines, fieldMeta.num_actuators());
+ EXPECT_EQ(numTurbines, fieldMeta.numberOfActuators_);
  EXPECT_EQ(0, fieldMeta.num_points_turbine(0));
  EXPECT_EQ(0, fieldMeta.num_points_turbine(1));
 }
