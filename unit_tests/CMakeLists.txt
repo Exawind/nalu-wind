@@ -1,9 +1,6 @@
 target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTest1ElemCoordCheck.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestABLWallFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorParsing.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorBulk.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorNGP.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestBasicKokkos.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestCopyAndInterleave.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestCreateOnDevice.C
@@ -47,13 +44,8 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestUtils.C
 )
 
-if(ENABLE_OPENFAST)
-   target_sources(${utest_ex_name} PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorDiskFAST.C
-      ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorFASTGaussian.C
-   )
-endif()
 
+add_subdirectory(actuator)
 add_subdirectory(algorithms)
 add_subdirectory(kernels)
 add_subdirectory(edge_kernels)
