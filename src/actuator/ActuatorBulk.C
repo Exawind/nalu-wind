@@ -16,6 +16,7 @@ namespace nalu{
 ActuatorMeta::ActuatorMeta(int numTurbines):
     numberOfActuators_(numTurbines),
     numPointsTotal_(0),
+    searchMethod_(stk::search::KDTREE),
     numPointsTurbine_("numPointsTurbine", numberOfActuators_)
 {}
 
@@ -27,7 +28,7 @@ void ActuatorMeta::add_turbine(const ActuatorInfoNGP& info)
 
 ActuatorBulk::ActuatorBulk(ActuatorMeta meta):
     actuatorMeta_(meta),
-    totalNumPoints_(actuatorMeta_.num_points_total()),
+    totalNumPoints_(actuatorMeta_.numPointsTotal_),
     pointCentroid_("actPointCentroid", totalNumPoints_,3),
     velocity_("actVelocity", totalNumPoints_,3),
     actuatorForce_("actForce", totalNumPoints_,3),

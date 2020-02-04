@@ -11,13 +11,13 @@
 #define ACTUATOR_PARSING_H_
 
 #include <NaluParsing.h>
+#include <actuator/ActuatorBulk.h>
 
 namespace sierra{
 namespace nalu{
 
 class ActuatorMeta;
 
-namespace actuator{
 /*! \brief Parse parameters to construct meta data for actuator's
  *  Parse parameters and construct meta data for actuators.
  *  Intent is to divorce object creation/memory allocation from parsing
@@ -25,11 +25,10 @@ namespace actuator{
  *
  *  This also has the added benefit of increasing unittest-ability.
  */
-ActuatorMeta actuator_parse(const YAML::Node& node);
+ActuatorMeta actuator_parse(const YAML::Node& y_node);
 //TODO(psakiev) define meta data structure
 void actuator_line_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta);
 void actuator_disk_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta);
-}
 }
 }
 

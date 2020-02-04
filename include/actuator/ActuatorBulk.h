@@ -11,6 +11,8 @@
 #define ACTUATORFIELDBULK_H_
 
 #include <actuator/ActuatorTypes.h>
+#include <stk_search/SearchMethod.hpp>
+#include <vector>
 
 namespace sierra{
 namespace nalu{
@@ -20,22 +22,21 @@ class ActuatorInfoNGP;
 /*! \brief Meta data for working with actuator fields
  * This is an example of meta data that will be used to construct an actuator object
  * and the resulting bulk data. This object lives on host but views can be
- * accessed on host or device. Specialization is for different models is intended
+ * accessed on host or device. Specialization for different models is intended
  * via inheritance.
  *
  * The meta data should be copyable.
  */
 
-class ActuatorMeta{
-public:
+struct ActuatorMeta{
   ActuatorMeta(int numTurbines);
   void add_turbine(const ActuatorInfoNGP& info);
-  inline int num_actuators() const {return numberOfActuators_;}
-  inline int num_points_total() const {return numPointsTotal_;}
+  //TODO(psakiev) do we want/need private members and accessor functions?
   inline int num_points_turbine(int i) const {return numPointsTurbine_.h_view(i);}
-private:
   const int numberOfActuators_;
   int numPointsTotal_;
+  std::vector<std::string> searchTargetNames_;
+  stk::search::SearchMethod searchMethod_;
   ActScalarIntDv numPointsTurbine_;
 };
 
