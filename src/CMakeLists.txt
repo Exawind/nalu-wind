@@ -80,7 +80,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/HeatCondMassBackwardEulerNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InitialConditions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InputOutputRealm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/InterfaceBalancer.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LimiterErrorIndicatorElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSolver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSolverConfig.C
