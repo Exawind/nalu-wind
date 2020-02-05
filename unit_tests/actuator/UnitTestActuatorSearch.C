@@ -10,6 +10,7 @@
 #include <UnitTestUtils.h>
 #include <actuator/ActuatorSearch.h>
 #include <stk_io/StkMeshIoBroker.hpp>
+#include <NaluEnv.h>
 
 namespace sierra{
 namespace nalu{
@@ -38,7 +39,7 @@ protected:
         }
         radii(i) = (double)i;
     });
-    const std::string meshSpec = "generated:2x2x2";
+    const std::string meshSpec = "generated:2x2x" + std::to_string(NaluEnv::self().parallel_size());
     ioBroker.add_mesh_database(meshSpec, stk::io::READ_MESH);
     ioBroker.create_input_mesh();
     ioBroker.populate_bulk_data();
@@ -71,7 +72,7 @@ TEST_F(ActuatorSearchTest, createElementBoxes){
   EXPECT_TRUE(coordField != nullptr);
   try{
     auto elemVec = CreateElementBoxes(stkMeta, stkBulk, partNames);
-    EXPECT_EQ(8, elemVec.size());
+    EXPECT_EQ(4, elemVec.size());
   }
   catch(std::exception const & err){
     FAIL() << err.what();
@@ -87,6 +88,7 @@ TEST_F(ActuatorSearchTest, executeCoarseSearch){
 
   try{
     auto results = ExecuteCoarseSearch(spheres, elemBoxes, stk::search::KDTREE);
+    // TODO(psakiev) check this
   }
   catch(std::exception const & err){
     FAIL() << err.what();
