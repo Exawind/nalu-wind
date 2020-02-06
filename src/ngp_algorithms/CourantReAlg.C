@@ -31,6 +31,7 @@ struct CflRe
 {
   double max_cfl, max_re;
 
+  KOKKOS_INLINE_FUNCTION
   CflRe()
   {
     max_cfl = -1.0e6;
