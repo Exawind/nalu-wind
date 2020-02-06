@@ -5,8 +5,8 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#ifndef TKESSTNODEKERNEL_H
-#define TKESSTNODEKERNEL_H
+#ifndef TKESSTBLTNODEKERNEL_H
+#define TKESSTBLTNODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
@@ -66,4 +66,4 @@ private:
 }  // sierra
 
 
-#endif /* TKESSTNODEKERNEL_H */
+#endif /* TKESSTBLTNODEKERNEL_H */

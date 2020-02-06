@@ -35,7 +35,7 @@ TKESSTBLTNodeKernel::setup(Realm& realm)
 
   tke_             = fieldMgr.get_field<double>(tkeID_);
   sdr_             = fieldMgr.get_field<double>(sdrID_);
-  gamint_          = fieldMgr.get_field<double>(gamintID_);
+  // gamint_          = fieldMgr.get_field<double>(gamintID_);
   density_         = fieldMgr.get_field<double>(densityID_);
   tvisc_           = fieldMgr.get_field<double>(tviscID_);
   dudx_            = fieldMgr.get_field<double>(dudxID_);
