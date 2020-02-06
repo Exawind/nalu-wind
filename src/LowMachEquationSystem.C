@@ -12,7 +12,6 @@
 #include <LowMachEquationSystem.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
-#include <AssembleCourantReynoldsElemAlgorithm.h>
 #include <AssembleContinuityElemSolverAlgorithm.h>
 #include <AssembleContinuityInflowSolverAlgorithm.h>
 #include <AssembleContinuityElemOpenSolverAlgorithm.h>
