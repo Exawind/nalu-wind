@@ -39,6 +39,7 @@ using ActFixRangePolicy = Kokkos::RangePolicy<ActuatorFixedExecutionSpace>;
 using ActFixScalarInt = Kokkos::View<int*,     ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixScalarDbl = Kokkos::View<double*,  ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixVectorDbl = Kokkos::View<double*[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+using ActFixElemIds   = Kokkos::View<uint64_t*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 } //namespace nalu
 } //namespace sierra
 
