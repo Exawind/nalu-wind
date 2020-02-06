@@ -122,18 +122,51 @@ TEST_F(ActuatorSearchTest, executeCoarseSearch){
     for(auto&& ii : results){
       const uint64_t thePt = ii.first.id();
       const uint64_t theElem = ii.second.id();
-      const unsigned pt_proc = ii.first.proc();
       EXPECT_EQ(thePt+1, theElem)
           << "rank: "<< myRank
           <<" point: "<< thePt
           <<" elem: "<< theElem
-          <<" point_prc: "<< pt_proc
           ;
     }
   }
   catch(std::exception const & err){
     FAIL() << err.what();
   }
+}
+
+TEST_F(ActuatorSearchTest, executeFineSearch){
+  stk::mesh::MetaData& stkMeta = ioBroker.meta_data();
+  stk::mesh::BulkData& stkBulk = ioBroker.bulk_data();
+  // increase radius to hit multiple elems in coarse search
+  ActFixScalarDbl radii2("radii2", nPoints);
+  for(unsigned i=0; i<radii2.extent(0);i++){
+    radii2(i) = 2.0;
+  }
+  auto spheres = CreateBoundingSpheres(points, radii2);
+  auto elemBoxes = CreateElementBoxes(stkMeta, stkBulk, partNames);
+  auto coarseResults = ExecuteCoarseSearch(spheres, elemBoxes, stk::search::KDTREE);
+  ActFixElemIds matchElemIds("matchElemIds", nPoints);
+  // this case should match coarse search
+  try{
+    auto isLocal = ExecuteFineSearch(stkMeta, stkBulk, coarseResults, points, matchElemIds);
+    int numLocal = 0;
+    for(unsigned i=0; i<points.extent(0); i++){
+      if(isLocal(i)){
+        numLocal++;
+        EXPECT_EQ(i, matchElemIds(i)-1)
+          << "rank: "<< myRank
+          <<" point: "<< i
+          <<" elem: "<< matchElemIds(i)
+        ;
+      }
+    }
+    EXPECT_EQ(slabSize, numLocal)
+          << "rank: "<< myRank;
+  }
+  catch(std::exception const & err){
+    FAIL() << err.what();
+  }
+
 }
 
 }
