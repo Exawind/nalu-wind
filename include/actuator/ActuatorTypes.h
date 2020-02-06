@@ -19,15 +19,15 @@ namespace nalu{
 
 #ifdef ACTUATOR_ON_DEVICE
 using ActuatorMemSpace = Kokkos::CudaSpace;
-using ActuatorMemLayout = Kokkos::LayoutRight;
+using ActuatorMemLayout = Kokkos::LayoutLeft;
 using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;
 #else
 using ActuatorMemSpace = Kokkos::HostSpace;
-using ActuatorMemLayout = Kokkos::LayoutLeft;
+using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 #endif
 using ActuatorFixedMemSpace = Kokkos::HostSpace;
-using ActuatorFixedMemLayout = Kokkos::LayoutLeft;
+using ActuatorFixedMemLayout = Kokkos::LayoutRight; // column major
 using ActuatorFixedExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 
 
@@ -40,6 +40,7 @@ using ActFixScalarInt = Kokkos::View<int*,     ActuatorFixedMemLayout, ActuatorF
 using ActFixScalarDbl = Kokkos::View<double*,  ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixVectorDbl = Kokkos::View<double*[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixElemIds   = Kokkos::View<uint64_t*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+using ActFixScalarBool   = Kokkos::View<bool*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 } //namespace nalu
 } //namespace sierra
 

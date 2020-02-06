@@ -46,8 +46,8 @@ VecBoundElemBox CreateElementBoxes(stk::mesh::MetaData& stkMeta,
 // potential overload if coarse search changes
 // return element where id exists
 VecSearchKeyPair ExecuteCoarseSearch(VecBoundSphere&, VecBoundElemBox&, stk::search::SearchMethod searchMethod);
-void ExecuteFineSearch(stk::mesh::MetaData& stkMeta,
-  stk::mesh::BulkData& stkBulk, VecSearchKeyPair& coarseResults, ActFixElemIds matchElemIds);
+ActFixScalarBool ExecuteFineSearch(stk::mesh::MetaData& stkMeta,
+  stk::mesh::BulkData& stkBulk, VecSearchKeyPair& coarseResults, ActFixVectorDbl points, ActFixElemIds matchElemIds);
 
 //TODO(psakiev) Wrapper function to call with ActuatorBulk
 

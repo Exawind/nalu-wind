@@ -11,6 +11,8 @@
 #include <stk_search/CoarseSearch.hpp>
 #include <FieldTypeDef.h>
 #include <NaluEnv.h>
+#include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
 
 namespace sierra{
 namespace nalu{
@@ -123,84 +125,82 @@ VecSearchKeyPair ExecuteCoarseSearch(
   return searchKeyPair;
 }
 
-void ExecuteFineSearch(
+namespace{
+void
+gather_field_for_interp(
+  const int& sizeOfField,
+  double* fieldToFill,
+  const stk::mesh::FieldBase& stkField,
+  stk::mesh::Entity const* elem_node_rels,
+  const int& nodesPerElement)
+{
+  for (int ni = 0; ni < nodesPerElement; ++ni) {
+    stk::mesh::Entity node = elem_node_rels[ni];
+    const double* theField = (double*)stk::mesh::field_data(stkField, node);
+    for (int j = 0; j < sizeOfField; ++j) {
+      const int offSet = j * nodesPerElement + ni;
+      fieldToFill[offSet] = theField[j];
+    }
+  }
+}
+}
+
+ActFixScalarBool ExecuteFineSearch(
   stk::mesh::MetaData& stkMeta,
   stk::mesh::BulkData& stkBulk,
   VecSearchKeyPair& coarseResults,
+  ActFixVectorDbl points,
   ActFixElemIds matchElemIds
   )
 {
-  /*const int nDim = stkMeta.spatial_dimension();
+  const int nDim = stkMeta.spatial_dimension();
 
   // extract fields
   VectorFieldType* coordinates = stkMeta.get_field<VectorFieldType>(
-                                   stk::topology::NODE_RANK, realm_.get_coordinates_name());
+                                   stk::topology::NODE_RANK, "coordinates");
+  ActFixScalarBool isLocalPoint("isLocalPoint", points.extent(0));
+  for(unsigned i = 0; i<isLocalPoint.extent(0); i++){
+    isLocalPoint(i) = false;
+  }
 
   // now proceed with the standard search
-  std::vector<
-  std::pair<boundingSphere::second_type, boundingElementBox::second_type>>::
-      const_iterator ii;
-  for (ii = coarseResults.begin(); ii != coarseResults.end(); ++ii) {
+  for (auto&& coarsePair : coarseResults) {
 
-    const uint64_t thePt = ii->first.id();
-    const uint64_t theBox = ii->second.id();
-    const unsigned theRank = NaluEnv::self().parallel_rank();
-    const unsigned pt_proc = ii->first.proc();
+    const uint64_t thePt = coarsePair.first.id();
+    const uint64_t theBox = coarsePair.second.id();
 
-    // check if I own the point...
-    if (theRank == pt_proc) {
+    // all elements should be local bc of the coarse search
+    stk::mesh::Entity elem =
+      stkBulk.get_entity(stk::topology::ELEMENT_RANK, theBox);
+    if (!(stkBulk.is_valid(elem)))
+      throw std::runtime_error("ExecuteFineSearch:: no valid entry for element");
 
-      // yes, I own the point...
+    // extract topo and master element for this topo
+    const stk::mesh::Bucket& theBucket = stkBulk.bucket(elem);
+    const stk::topology& elemTopo = theBucket.topology();
+    MasterElement* meSCS =
+      sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
+    const int nodesPerElement = meSCS->nodesPerElement_;
 
-      // proceed as required; all elements should have already been ghosted via
-      // the coarse search
-      stk::mesh::Entity elem =
-        stkBulk.get_entity(stk::topology::ELEMENT_RANK, theBox);
-      if (!(stkBulk.is_valid(elem)))
-        throw std::runtime_error("no valid entry for element");
+    // gather elemental coords
+    std::vector<double> elementCoords(nDim * nodesPerElement);
+    gather_field_for_interp(
+      nDim, &elementCoords[0], *coordinates, stkBulk.begin_nodes(elem),
+      nodesPerElement);
 
-      // find the point data structure
-      std::map<size_t, std::unique_ptr<ActuatorPointInfo>>::iterator iterPoint;
-      iterPoint = actuatorPointInfoMap_.find(thePt);
-      if (iterPoint == actuatorPointInfoMap_.end())
-        throw std::runtime_error("no valid entry for actuatorPointInfoMap_");
+    // find isoparametric points
+    std::vector<double> isoParCoords(nDim);
+    const double nearestDistance = meSCS->isInElement(
+                                     &elementCoords[0], &(points(thePt,0)),
+                                     &(isoParCoords[0]));
 
-      // extract the point object and push back the element to either the best
-      // candidate or the standard vector of elements
-      ActuatorPointInfo* actuatorPointInfo = iterPoint->second.get();
-
-      // extract topo and master element for this topo
-      const stk::mesh::Bucket& theBucket = stkBulk.bucket(elem);
-      const stk::topology& elemTopo = theBucket.topology();
-      MasterElement* meSCS =
-        sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
-      const int nodesPerElement = meSCS->nodesPerElement_;
-
-      // gather elemental coords
-      std::vector<double> elementCoords(nDim * nodesPerElement);
-      gather_field_for_interp(
-        nDim, &elementCoords[0], *coordinates, stkBulk.begin_nodes(elem),
-        nodesPerElement);
-
-      // find isoparametric points
-      std::vector<double> isoParCoords(nDim);
-      const double nearestDistance = meSCS->isInElement(
-                                       &elementCoords[0], &(actuatorPointInfo->centroidCoords_[0]),
-                                       &(isoParCoords[0]));
-
-      // save off best element and its isoparametric coordinates for this point
-      if (nearestDistance < actuatorPointInfo->bestX_) {
-        actuatorPointInfo->bestX_ = nearestDistance;
-        actuatorPointInfo->isoParCoords_ = isoParCoords;
-        actuatorPointInfo->bestElem_ = elem;
-      }
-      // extract elem_node_relations
-      stk::mesh::Entity const* elem_node_rels = stkBulk.begin_nodes(elem);
-      const unsigned num_nodes = stkBulk.num_nodes(elem);
-      for (unsigned inode = 0; inode < num_nodes; inode++) {
-        stk::mesh::Entity node = elem_node_rels[inode];
-        actuatorPointInfo->nodeVec_.insert(node);
-      }*/
+    // if it is actually in the element save it
+    if (std::abs(nearestDistance)<=1.0) {
+      matchElemIds(thePt) = theBox;
+      isLocalPoint(thePt) = true;
+    }
+  }
+  return isLocalPoint;
 }
 
 } //namespace nalu
