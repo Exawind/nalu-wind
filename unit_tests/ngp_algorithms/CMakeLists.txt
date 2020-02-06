@@ -1,5 +1,6 @@
 target_sources(${utest_ex_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNgpAlgUtils.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestCFLReAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNodalGradAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestDiffFluxCoeffAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestEffSSTDiffFluxCoeffAlg.C

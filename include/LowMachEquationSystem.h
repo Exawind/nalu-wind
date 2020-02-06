@@ -22,6 +22,7 @@
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 #include "ngp_algorithms/WallFricVelAlgDriver.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
+#include "ngp_algorithms/CourantReAlgDriver.h"
 
 namespace stk{
 struct topology;
@@ -222,7 +223,7 @@ public:
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
   std::unique_ptr<Algorithm> tviscAlg_{nullptr};
 
-  AlgorithmDriver *cflReyAlgDriver_;
+  CourantReAlgDriver cflReAlgDriver_;
   std::unique_ptr<TAMSAlgDriver> TAMSAlgDriver_{nullptr};
 
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
