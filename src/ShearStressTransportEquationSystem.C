@@ -561,12 +561,73 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
    }
 }
 
-//--------------------------------------------------------------------------
-//-------- compute_f_one_blending ------------------------------------------
-//--------------------------------------------------------------------------
+/** Compute f1 field with parameters appropriate for 2003 SST implementation
+ */
 void
 ShearStressTransportEquationSystem::compute_f_one_blending()
 {
+#if 1
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& meta = meshInfo.meta();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+
+  const int ndim = meta.spatial_dimension();
+  const double betaStar = realm_.get_turb_model_constant(TM_betaStar);
+  const double sigmaWTwo = realm_.get_turb_model_constant(TM_sigmaWTwo);
+  const double CDkwClip = 1.0e-10; // 2003 SST
+
+  const auto& tkeNp1 = fieldMgr.get_field<double>(
+    tke_->mesh_meta_data_ordinal());
+  const auto& sdrNp1 = fieldMgr.get_field<double>(
+    sdr_->mesh_meta_data_ordinal());
+  const auto& density = nalu_ngp::get_ngp_field(meshInfo, "density");
+  const auto& viscosity = nalu_ngp::get_ngp_field(meshInfo, "viscosity");
+  const auto& dkdx = fieldMgr.get_field<double>(
+    tkeEqSys_->dkdx_->mesh_meta_data_ordinal());
+  const auto& dwdx = fieldMgr.get_field<double>(
+    sdrEqSys_->dwdx_->mesh_meta_data_ordinal());
+  const auto& ndtw = fieldMgr.get_field<double>(
+    minDistanceToWall_->mesh_meta_data_ordinal());
+  auto& fOneBlend = fieldMgr.get_field<double>(
+    fOneBlending_->mesh_meta_data_ordinal());
+
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part())
+    & (stk::mesh::selectField(*fOneBlending_));
+
+  nalu_ngp::run_entity_algorithm(
+    "SST::compute_fone_blending", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double tke = tkeNp1.get(mi, 0);
+      const double sdr = sdrNp1.get(mi, 0);
+      const double rho = density.get(mi, 0);
+      const double mu = viscosity.get(mi, 0);
+      const double minD = ndtw.get(mi, 0);
+
+      // cross diffusion
+      double crossdiff = 0.0;
+      for (int d=0; d < ndim; ++d)
+        crossdiff += dkdx.get(mi, d) * dwdx.get(mi, d);
+
+      const double minDistSq = minD * minD;
+      const double turbDiss = stk::math::sqrt(tke) / betaStar / sdr / minD;
+      const double lamDiss = 500.0 * mu / rho / sdr / minDistSq;
+      const double CDkw = stk::math::max(
+        2.0 * rho * sigmaWTwo * crossdiff / sdr, CDkwClip);
+
+      const double fArgOne = stk::math::min(
+        stk::math::max(turbDiss, lamDiss),
+        4.0 * rho * sigmaWTwo * tke / CDkw / minDistSq);
+
+      fOneBlend.get(mi, 0) = stk::math::tanh(fArgOne * fArgOne * fArgOne * fArgOne);
+    });
+
+  fOneBlend.modify_on_device();
+
+#else
   // compute fone with parameters appropriate for 2003 SST implementation
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 
@@ -631,6 +692,7 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
 
     }
   }
+#endif
 }
 
 } // namespace nalu
