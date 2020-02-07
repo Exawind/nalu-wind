@@ -21,6 +21,13 @@
 #include <TurbKineticEnergyEquationSystem.h>
 #include <Realm.h>
 
+// ngp
+#include "ngp_algorithms/GeometryAlgDriver.h"
+#include "ngp_algorithms/WallFuncGeometryAlg.h"
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldUtils.h"
+#include "ngp_utils/NgpFieldBLAS.h"
+
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
 #include "utils/StkHelpers.h"
@@ -179,11 +186,27 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
 void
 ShearStressTransportEquationSystem::register_wall_bc(
   stk::mesh::Part *part,
-  const stk::topology &/*theTopo*/,
+  const stk::topology &partTopo,
   const WallBoundaryConditionData &/*wallBCData*/)
 {
   // push mesh part
   wallBcPart_.push_back(part);
+
+  auto& meta = realm_.meta_data();
+  auto& assembledWallArea = meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "assembled_wall_area_wf");
+  stk::mesh::put_field_on_mesh(assembledWallArea, *part, nullptr);
+  auto& assembledWallNormDist = meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "assembled_wall_normal_distance");
+  stk::mesh::put_field_on_mesh(assembledWallNormDist, *part, nullptr);
+  auto& wallNormDistBip = meta.declare_field<ScalarFieldType>(
+    meta.side_rank(), "wall_normal_distance_bip");
+  auto* meFC = MasterElementRepo::get_surface_master_element(partTopo);
+  const int numScsBip = meFC->num_integration_points();
+  stk::mesh::put_field_on_mesh(wallNormDistBip, *part, numScsBip, nullptr);
+
+  realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
+    sierra::nalu::WALL, part, get_elem_topo(realm_, *part), "sst_geometry_wall");
 }
 
 //--------------------------------------------------------------------------
@@ -411,10 +434,33 @@ ShearStressTransportEquationSystem::update_and_clip()
 void
 ShearStressTransportEquationSystem::clip_min_distance_to_wall()
 {
-  // if this is a restart, then min distance has already been clipped
-  if (realm_.restarted_simulation())
+  if (realm_.restarted_simulation() && !realm_.has_mesh_motion())
     return;
 
+#if 1
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& meta = meshInfo.meta();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+
+  auto& ndtw = fieldMgr.get_field<double>(
+    minDistanceToWall_->mesh_meta_data_ordinal());
+  const auto& wallNormDist = nalu_ngp::get_ngp_field(
+    meshInfo, "assembled_wall_normal_distance");
+
+  const stk::mesh::Selector sel = (meta.locally_owned_part() | meta.globally_shared_part())
+    & stk::mesh::selectUnion(wallBcPart_);
+
+  nalu_ngp::run_entity_algorithm(
+    "SST::clip_ndtw", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double minD = ndtw.get(mi, 0);
+
+      ndtw.get(mi, 0) = stk::math::max(minD, wallNormDist.get(mi, 0));
+    });
+
+#else
   // okay, no restart: proceed with clipping of minimum wall distance
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -508,6 +554,7 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
        }
      }
    }
+#endif
    stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
    if (realm_.hasPeriodic_) {
      realm_.periodic_field_max(minDistanceToWall_, 1);
