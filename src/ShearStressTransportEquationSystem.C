@@ -272,65 +272,59 @@ ShearStressTransportEquationSystem::solve_and_update()
 
 }
 
-//--------------------------------------------------------------------------
-//-------- initial_work ----------------------------------------------------
-//--------------------------------------------------------------------------
+/** Perform sanity checks on TKE/SDR fields
+ */
 void
 ShearStressTransportEquationSystem::initial_work()
 {
-  // do not lett he user specify a negative field
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& meta = meshInfo.meta();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+
+  auto& tkeNp1 = fieldMgr.get_field<double>(
+    tke_->mesh_meta_data_ordinal());
+  auto& sdrNp1 = fieldMgr.get_field<double>(
+    sdr_->mesh_meta_data_ordinal());
+  const auto& density = nalu_ngp::get_ngp_field(meshInfo, "density");
+  const auto& viscosity = nalu_ngp::get_ngp_field(meshInfo, "viscosity");
+
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part())
+    & stk::mesh::selectField(*sdr_);
+
   const double clipValue = 1.0e-8;
+  nalu_ngp::run_entity_algorithm(
+    "SST::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double tkeNew = tkeNp1.get(mi, 0);
+      const double sdrNew = sdrNp1.get(mi, 0);
 
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-
-  // required fields
-  ScalarFieldType *density = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  ScalarFieldType *viscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
-
-  // required fields with state
-  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
-
-  // define some common selectors
-  const stk::mesh::Selector s_all_nodes
-    = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
-    &stk::mesh::selectField(*sdr_);
-
-  stk::mesh::BucketVector const& node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-
-    const double *visc = stk::mesh::field_data(*viscosity, b);
-    const double *rho = stk::mesh::field_data(*density, b);
-    double *tke = stk::mesh::field_data(tkeNp1, b);
-    double *sdr = stk::mesh::field_data(sdrNp1, b);
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-      const double tkeNew = tke[k];
-      const double sdrNew = sdr[k];
-      
-      if ( (tkeNew >= 0.0) && (sdrNew > 0.0) ) {
-        // nothing
+      if ((tkeNew >= 0.0) && (sdrNew >= 0.0)) {
+        tkeNp1.get(mi, 0) = tkeNew;
+        sdrNp1.get(mi, 0) = sdrNew;
+      } else if ((tkeNew < 0.0) && (sdrNew < 0.0)) {
+        // both negative; set TKE to small value, tvisc to molecular visc and use
+        // Prandtl/Kolm for SDR
+        tkeNp1.get(mi, 0) = clipValue;
+        sdrNp1.get(mi, 0) = density.get(mi, 0) * clipValue / viscosity.get(mi, 0);
+      } else if (tkeNew < 0.0) {
+        // only TKE is off; reset turbulent viscosity to molecular vis and
+        // compute new TKE based on SDR and tvisc
+        sdrNp1.get(mi, 0) = sdrNew;
+        tkeNp1.get(mi, 0) = viscosity.get(mi, 0) * sdrNew / density.get(mi, 0);
+      } else {
+        // Only SDR is off; reset turbulent viscosity to molecular visc and
+        // compute new SDR based on others
+        tkeNp1.get(mi, 0) = tkeNew;
+        sdrNp1.get(mi, 0) = density.get(mi, 0) * tkeNew / viscosity.get(mi, 0);
       }
-      else if ( (tkeNew < 0.0) && (sdrNew < 0.0) ) {
-        // both negative;
-        tke[k] = clipValue;
-        sdr[k] = rho[k]*clipValue/visc[k];
-      }
-      else if ( tkeNew < 0.0 ) {
-        tke[k] = visc[k]*sdrNew/rho[k];
-        sdr[k] = sdrNew;
-      }
-      else {
-        sdr[k] = rho[k]*tkeNew/visc[k];
-        tke[k] = tkeNew;
-      }
-    }
-  }
+    });
+
+  tkeNp1.modify_on_device();
+  sdrNp1.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -352,80 +346,71 @@ ShearStressTransportEquationSystem::post_adapt_work()
 
 }
 
-//--------------------------------------------------------------------------
-//-------- update_and_clip() -----------------------------------------------
-//--------------------------------------------------------------------------
+/** Update solution but ensure that TKE and SDR are greater than zero
+ */
 void
 ShearStressTransportEquationSystem::update_and_clip()
 {
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& meta = meshInfo.meta();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+
+  auto& tkeNp1 = fieldMgr.get_field<double>(
+    tke_->mesh_meta_data_ordinal());
+  auto& sdrNp1 = fieldMgr.get_field<double>(
+    sdr_->mesh_meta_data_ordinal());
+  const auto& kTmp = fieldMgr.get_field<double>(
+    tkeEqSys_->kTmp_->mesh_meta_data_ordinal());
+  const auto& wTmp = fieldMgr.get_field<double>(
+    sdrEqSys_->wTmp_->mesh_meta_data_ordinal());
+  const auto& density = nalu_ngp::get_ngp_field(meshInfo, "density");
+  const auto& viscosity = nalu_ngp::get_ngp_field(meshInfo, "viscosity");
+  auto& turbVisc = nalu_ngp::get_ngp_field(meshInfo, "turbulent_viscosity");
+
+  auto* turbViscosity = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "turbulent_viscosity");
+
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part())
+    & stk::mesh::selectField(*turbViscosity);
+
   const double clipValue = 1.0e-8;
+  nalu_ngp::run_entity_algorithm(
+    "SST::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double tkeNew = tkeNp1.get(mi, 0) + kTmp.get(mi, 0);
+      const double sdrNew = sdrNp1.get(mi, 0) + wTmp.get(mi, 0);
 
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-
-  // required fields
-  ScalarFieldType *density = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  ScalarFieldType *viscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
-  ScalarFieldType *turbViscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity");
-
-  // required fields with state
-  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
-
-  // define some common selectors
-  stk::mesh::Selector s_all_nodes
-    = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
-    &stk::mesh::selectField(*turbViscosity);
-
-  stk::mesh::BucketVector const& node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-
-    const double *visc = stk::mesh::field_data(*viscosity, b);
-    const double *rho = stk::mesh::field_data(*density, b);
-    const double *kTmp = stk::mesh::field_data(*tkeEqSys_->kTmp_, b);
-    const double *wTmp = stk::mesh::field_data(*sdrEqSys_->wTmp_, b);
-    double *tke = stk::mesh::field_data(tkeNp1, b);
-    double *sdr = stk::mesh::field_data(sdrNp1, b);
-    double *tvisc = stk::mesh::field_data(*turbViscosity, b);
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-      const double tkeNew = tke[k] + kTmp[k];
-      const double sdrNew = sdr[k] + wTmp[k];
-      
-      if ( (tkeNew >= 0.0) && (sdrNew > 0.0) ) {
-        // if all is well
-        tke[k] = tkeNew;
-        sdr[k] = sdrNew;
+      if ((tkeNew >= 0.0) && (sdrNew >= 0.0)) {
+        tkeNp1.get(mi, 0) = tkeNew;
+        sdrNp1.get(mi, 0) = sdrNew;
+      } else if ((tkeNew < 0.0) && (sdrNew < 0.0)) {
+        // both negative; set TKE to small value, tvisc to molecular visc and use
+        // Prandtl/Kolm for SDR
+        tkeNp1.get(mi, 0) = clipValue;
+        turbVisc.get(mi, 0) = viscosity.get(mi, 0);
+        sdrNp1.get(mi, 0) = density.get(mi, 0) * clipValue / viscosity.get(mi, 0);
+      } else if (tkeNew < 0.0) {
+        // only TKE is off; reset turbulent viscosity to molecular vis and
+        // compute new TKE based on SDR and tvisc
+        turbVisc.get(mi, 0) = viscosity.get(mi, 0);
+        sdrNp1.get(mi, 0) = sdrNew;
+        tkeNp1.get(mi, 0) = viscosity.get(mi, 0) * sdrNew / density.get(mi, 0);
+      } else {
+        // Only SDR is off; reset turbulent viscosity to molecular visc and
+        // compute new SDR based on others
+        turbVisc.get(mi, 0) = viscosity.get(mi, 0);
+        tkeNp1.get(mi, 0) = tkeNew;
+        sdrNp1.get(mi, 0) = density.get(mi, 0) * tkeNew / viscosity.get(mi, 0);
       }
-      else if ( (tkeNew < 0.0) && (sdrNew < 0.0) ) {
-        // both negative; set k to small, tvisc to molecular visc and use Prandtl/Kolm for sdr
-        tke[k] = clipValue;
-        tvisc[k] = visc[k];
-        sdr[k] = rho[k]*clipValue/visc[k];
-      }
-      else if ( tkeNew < 0.0 ) {
-        // only tke is off; reset tvisc to molecular visc and compute new tke appropriately
-        tvisc[k] = visc[k];
-        tke[k] = visc[k]*sdrNew/rho[k];
-        sdr[k] = sdrNew;
-      }
-      else {
-        // only sdr if off; reset tvisc to molecular visc and compute new sdr appropriately
-        tvisc[k] = visc[k];
-        sdr[k] = rho[k]*tkeNew/visc[k];
-        tke[k] = tkeNew;
-      }
-    }
-  }
+    });
 
-  // parallel assemble clipped value
-  if (realm_.debug()) {
-    NaluEnv::self().naluOutputP0() << "Add SST clipping diagnostic" << std::endl;
-  }
+  tkeNp1.modify_on_device();
+  sdrNp1.modify_on_device();
+  turbVisc.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
