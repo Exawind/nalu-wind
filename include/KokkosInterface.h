@@ -153,12 +153,14 @@ template<typename MemorySpace=MemSpace>
 inline void kokkos_free_on_device(void* ptr)
 { Kokkos::kokkos_free<MemorySpace>(ptr); }
 
-template<typename T>
+template<typename ViewType, typename T>
 KOKKOS_FUNCTION
-void set_zero(T* values, unsigned length)
+void set_vals(ViewType& view, const T& val)
 {
+    unsigned length = view.size();
+    auto* viewData = view.data();
     for(unsigned i=0; i<length; ++i) {
-        values[i] = 0;
+        viewData[i] = val;
     }
 }
 
