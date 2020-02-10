@@ -101,8 +101,8 @@ AssembleFaceElemSolverAlgorithm::execute()
   run_face_elem_algorithm(realm_.bulk_data(),
     KOKKOS_LAMBDA(sierra::nalu::SharedMemData_FaceElem<DeviceTeamHandleType,DeviceShmem> &smdata)
     {
-        set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
-        set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());
+        set_vals(smdata.simdrhs, DoubleType(0.0));
+        set_vals(smdata.simdlhs, DoubleType(0.0));
 
         for (size_t i=0; i<numKernels; ++i) {
           Kernel* kernel = ngpKernels(i);
