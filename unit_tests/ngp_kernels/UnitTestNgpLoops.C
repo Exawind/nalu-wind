@@ -846,7 +846,15 @@ TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmax)
 
   basic_node_reduce_minmax(bulk, 0.0, 16.0);
   basic_node_reduce_minmax_alt(bulk, 0.0, 16.0);
-  basic_node_reduce_minmaxsum(bulk, 0.0, 16.0, 4913.0);
+
+  stk::mesh::Selector sel = bulk.mesh_meta_data().universal_part();
+  const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+  size_t numNodes = 0;
+  for (auto* b: bkts) {
+    numNodes += b->size();
+  }
+
+  basic_node_reduce_minmaxsum(bulk, 0.0, 16.0, static_cast<double>(numNodes));
 }
 
 TEST_F(NgpLoopTest, NGP_basic_elem_loop)
