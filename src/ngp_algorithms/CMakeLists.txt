@@ -1,5 +1,6 @@
 target_sources(nalu PRIVATE
   # Algorithms
+  ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradEdgeAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradElemAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradBndryElemAlg.C
@@ -27,6 +28,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradPOpenBoundaryAlg.C
 
   # Algorithm Drivers
+  ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/FieldUpdateAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NgpAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MdotAlgDriver.C

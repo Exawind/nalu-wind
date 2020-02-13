@@ -2648,42 +2648,6 @@ Realm::compute_geometry()
 {
   // interior and boundary
   geometryAlgDriver_->execute();
-
-  // find total volume if the mesh moves at all
-  if ( does_mesh_move() ) {
-    double totalVolume = 0.0;
-    double maxVolume = -1.0e16;
-    double minVolume = 1.0e16;
-
-    ScalarFieldType *dualVolume = metaData_->get_field<ScalarFieldType>(stk::topology::NODE_RANK, "dual_nodal_volume");
-
-    stk::mesh::Selector s_local_nodes
-      = metaData_->locally_owned_part() &stk::mesh::selectField(*dualVolume);
-
-    stk::mesh::BucketVector const& node_buckets = bulkData_->get_buckets( stk::topology::NODE_RANK, s_local_nodes );
-    for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-	  ib != node_buckets.end() ; ++ib ) {
-      stk::mesh::Bucket & b = **ib ;
-      const stk::mesh::Bucket::size_type length   = b.size();
-      const double * dv = stk::mesh::field_data(*dualVolume, b);
-      for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-        const double theVol = dv[k];
-        totalVolume += theVol;
-        maxVolume = std::max(theVol, maxVolume);
-        minVolume = std::min(theVol, minVolume);
-      }
-    }
-
-    // get min, max and sum over processes
-    double g_totalVolume = 0.0, g_minVolume = 0.0, g_maxVolume = 0.0;
-    stk::all_reduce_min(NaluEnv::self().parallel_comm(), &minVolume, &g_minVolume, 1);
-    stk::all_reduce_max(NaluEnv::self().parallel_comm(), &maxVolume, &g_maxVolume, 1);
-    stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &totalVolume, &g_totalVolume, 1);
-
-    NaluEnv::self().naluOutputP0() << " Volume  " << g_totalVolume
-		    << " min: " << g_minVolume
-		    << " max: " << g_maxVolume << std::endl;
-  }
 }
 
 //--------------------------------------------------------------------------
