@@ -6,6 +6,23 @@
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
 
+#ifndef UTILITIESACTUATOR_H_
+#define UTILITIESACTUATOR_H_
+
+#include <master_element/MasterElement.h>
+#include <master_element/MasterElementFactory.h>
+
+
+// stk_mesh/base/fem
+#include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/Entity.hpp>
+#include <stk_mesh/base/Field.hpp>
+#include <stk_mesh/base/FieldParallel.hpp>
+#include <stk_mesh/base/GetBuckets.hpp>
+#include <stk_mesh/base/Selector.hpp>
+#include <stk_mesh/base/MetaData.hpp>
+#include <stk_mesh/base/Part.hpp>
+
 namespace sierra {
 namespace nalu {
 
@@ -25,6 +42,35 @@ double Gaussian_projection(
   double *dis,
   double *epsilon);
 
+void resize_std_vector(
+  const int& sizeOfField,
+  std::vector<double>& theVector,
+  stk::mesh::Entity elem,
+  const stk::mesh::BulkData& bulkData);
+
+void gather_field(
+  const int& sizeOfField,
+  double* fieldToFill,
+  const stk::mesh::FieldBase& stkField,
+  stk::mesh::Entity const* elem_node_rels,
+  const int& nodesPerElement);
+
+void gather_field_for_interp(
+  const int& sizeOfField,
+  double* fieldToFill,
+  const stk::mesh::FieldBase& stkField,
+  stk::mesh::Entity const* elem_node_rels,
+  const int& nodesPerElement);
+
+void interpolate_field(
+  const int& sizeOfField,
+  stk::mesh::Entity elem,
+  const stk::mesh::BulkData& bulkData,
+  const double* isoParCoords,
+  const double* fieldAtNodes,
+  double* pointField);
 }  // namespace actuator_utils
 }  // namespace actuator_utils
 }  // namespace actuator_utils
+
+#endif

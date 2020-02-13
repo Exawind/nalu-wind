@@ -33,7 +33,7 @@ using ActuatorFixedExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 
 using ActScalarIntDv = Kokkos::DualView<int*,     ActuatorMemLayout, ActuatorMemSpace>;
 using ActScalarDblDv = Kokkos::DualView<double*,  ActuatorMemLayout, ActuatorMemSpace>;
-using ActVectorDblDv = Kokkos::DualView<double**, ActuatorMemLayout, ActuatorMemSpace>;
+using ActVectorDblDv = Kokkos::DualView<double*[3], ActuatorMemLayout, ActuatorMemSpace>;
 
 using ActFixRangePolicy = Kokkos::RangePolicy<ActuatorFixedExecutionSpace>;
 using ActFixScalarInt = Kokkos::View<int*,     ActuatorFixedMemLayout, ActuatorFixedMemSpace>;

@@ -47,8 +47,10 @@ ActuatorMeta actuator_parse(const YAML::Node& y_node)
   if (y_actuator)
   {
     int nTurbines = 0;
+    std::string actuatorTypeName;
     get_required(y_actuator, "n_turbines_glob", nTurbines);
-    ActuatorMeta actMeta(nTurbines);
+    get_required(y_actuator, "type", actuatorTypeName);
+    ActuatorMeta actMeta(nTurbines, ActuatorTypeMap[actuatorTypeName]);
     // search specifications
     std::string searchMethodName = "na";
     get_if_present(y_actuator, "search_method", searchMethodName,
