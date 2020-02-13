@@ -11,21 +11,19 @@
 #define ACTUATORSEARCH_H_
 
 #include <actuator/ActuatorTypes.h>
-#include <actuator/ActuatorBulk.h>
 #include <stk_mesh/base/BulkData.hpp>
 #include <Kokkos_Core.hpp>
-#include <stk_mesh/base/Entity.hpp>
-#include <stk_mesh/base/Ghosting.hpp>
 #include <stk_search/BoundingBox.hpp>
 #include <stk_search/IdentProc.hpp>
+#include <stk_search/SearchMethod.hpp>
 
 // common type defs
-typedef stk::search::IdentProc<uint64_t, int> theKey;
-typedef stk::search::Point<double> Point;
-typedef stk::search::Sphere<double> Sphere;
-typedef stk::search::Box<double> Box;
-typedef std::pair<Sphere, theKey> boundingSphere;
-typedef std::pair<Box, theKey> boundingElementBox;
+using theKey = stk::search::IdentProc<uint64_t, int>;
+using Point = stk::search::Point<double>;
+using Sphere = stk::search::Sphere<double>;
+using Box = stk::search::Box<double>;
+using boundingSphere = std::pair<Sphere, theKey>;
+using boundingElementBox = std::pair<Box, theKey>;
 using VecBoundSphere = std::vector<boundingSphere>;
 using VecBoundElemBox = std::vector<boundingElementBox>;
 using SearchKeyPair = std::pair<theKey, theKey>;
@@ -34,24 +32,25 @@ using VecSearchKeyPair = std::vector<SearchKeyPair>;
 namespace sierra{
 namespace nalu{
 
-// This should be callable inside a functor?
-// Make a kokkos function
+// should we pass these return variables by reference and make void functions? thoughts?
 VecBoundSphere CreateBoundingSpheres( ActFixVectorDbl points, ActFixScalarDbl searchRadius);
 
-// Can this use NGP mesh with host only execution?
-VecBoundElemBox CreateElementBoxes(stk::mesh::MetaData& stkMeta,
+VecBoundElemBox CreateElementBoxes(
   stk::mesh::BulkData& stkBulk,
   std::vector<std::string> partNameList);
 
-// potential overload if coarse search changes
-// return element where id exists
-VecSearchKeyPair ExecuteCoarseSearch(VecBoundSphere&, VecBoundElemBox&, stk::search::SearchMethod searchMethod);
-ActFixScalarBool ExecuteFineSearch(stk::mesh::MetaData& stkMeta,
-  stk::mesh::BulkData& stkBulk, VecSearchKeyPair& coarseResults, ActFixVectorDbl points, ActFixElemIds matchElemIds);
+// potential overload if coarse search backend changes
+VecSearchKeyPair ExecuteCoarseSearch(
+  VecBoundSphere& spheres,
+  VecBoundElemBox& elemBoxes,
+  stk::search::SearchMethod searchMethod);
 
-//TODO(psakiev) Wrapper function to call with ActuatorBulk
-
-
+ActFixScalarBool ExecuteFineSearch(
+  stk::mesh::BulkData& stkBulk,
+  VecSearchKeyPair& coarseResults,
+  ActFixVectorDbl points,
+  ActFixElemIds matchElemIds,
+  ActFixVectorDbl localCoords);
 
 } //namespace nalu
 } //namespace sierra

@@ -11,7 +11,8 @@
 #define ACTUATORFIELDBULK_H_
 
 #include <actuator/ActuatorTypes.h>
-#include <stk_search/SearchMethod.hpp>
+#include <actuator/ActuatorSearch.h>
+#include <Enums.h>
 #include <vector>
 
 namespace sierra{
@@ -29,21 +30,21 @@ class ActuatorInfoNGP;
  */
 
 struct ActuatorMeta{
-  ActuatorMeta(int numTurbines);
+  ActuatorMeta(int numTurbines, ActuatorType actType = ActuatorType::ActLinePointDrag);
   void add_turbine(const ActuatorInfoNGP& info);
   //TODO(psakiev) do we want/need private members and accessor functions?
   inline int num_points_turbine(int i) const {return numPointsTurbine_.h_view(i);}
   const int numberOfActuators_;
+  const ActuatorType actuatorType_;
   int numPointsTotal_;
   std::vector<std::string> searchTargetNames_;
   stk::search::SearchMethod searchMethod_;
   ActScalarIntDv numPointsTurbine_;
+  stk::mesh::BulkData* stkBulk_;
 };
 
 /*! \brief Where field data is stored and accessed for actuators
  * This object lives on host but the views can be on host, device or both
- * for now they are dual views but these can be specialized as implementation
- * desires.
  *
  * The object as a whole will be created and live on host, and specialization is
  * intended through inheritance.
@@ -52,11 +53,22 @@ struct ActuatorBulk{
   ActuatorBulk(ActuatorMeta actMeta);
   const ActuatorMeta actuatorMeta_;
   const int totalNumPoints_;
+  // HOST AND DEVICE DATA (DualViews)
   ActVectorDblDv pointCentroid_;
   ActVectorDblDv velocity_;
   ActVectorDblDv actuatorForce_;
   ActVectorDblDv epsilon_;
+  ActScalarDblDv searchRadius_;
+  // HOST ONLY DATA
+  ActFixVectorDbl localCoords_;
+  ActFixScalarBool pointIsLocal_;
+  ActFixElemIds elemContainingPoint_;
+  // STL data types
+  VecSearchKeyPair coarseSearchResults_; // reuse for spreading forces
 };
+
+void SearchForActuatorPoints(ActuatorBulk& actBulk);
+
 
 }
 }

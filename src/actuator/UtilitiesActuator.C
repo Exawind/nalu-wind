@@ -8,7 +8,8 @@
 
 #include <cmath>
 
-#include "actuator/UtilitiesActuator.h"
+#include "actuator/UtilitiesActuator.h"// master elements
+
 
 // This is to access sierra::nalu::Coordinates
 #include "NaluParsing.h"
@@ -69,6 +70,79 @@ double Gaussian_projection(
            );
 
   return g;
+}
+
+void resize_std_vector(
+  const int& sizeOfField,
+  std::vector<double>& theVector,
+  stk::mesh::Entity elem,
+  const stk::mesh::BulkData& bulkData)
+{
+  const stk::topology& elemTopo = bulkData.bucket(elem).topology();
+  MasterElement* meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
+  const int nodesPerElement = meSCS->nodesPerElement_;
+  theVector.resize(nodesPerElement * sizeOfField);
+}
+
+//--------------------------------------------------------------------------
+//-------- gather_field ----------------------------------------------------
+//--------------------------------------------------------------------------
+void gather_field(
+  const int& sizeOfField,
+  double* fieldToFill,
+  const stk::mesh::FieldBase& stkField,
+  stk::mesh::Entity const* elem_node_rels,
+  const int& nodesPerElement)
+{
+  for (int ni = 0; ni < nodesPerElement; ++ni) {
+    stk::mesh::Entity node = elem_node_rels[ni];
+    const double* theField = (double*)stk::mesh::field_data(stkField, node);
+    for (int j = 0; j < sizeOfField; ++j) {
+      const int offSet = ni * sizeOfField + j;
+      fieldToFill[offSet] = theField[j];
+    }
+  }
+}
+
+//--------------------------------------------------------------------------
+//-------- gather_field_for_interp -----------------------------------------
+//--------------------------------------------------------------------------
+void gather_field_for_interp(
+  const int& sizeOfField,
+  double* fieldToFill,
+  const stk::mesh::FieldBase& stkField,
+  stk::mesh::Entity const* elem_node_rels,
+  const int& nodesPerElement)
+{
+  for (int ni = 0; ni < nodesPerElement; ++ni) {
+    stk::mesh::Entity node = elem_node_rels[ni];
+    const double* theField = (double*)stk::mesh::field_data(stkField, node);
+    for (int j = 0; j < sizeOfField; ++j) {
+      const int offSet = j * nodesPerElement + ni;
+      fieldToFill[offSet] = theField[j];
+    }
+  }
+}
+
+//--------------------------------------------------------------------------
+//-------- interpolate_field -----------------------------------------------
+//--------------------------------------------------------------------------
+void interpolate_field(
+  const int& sizeOfField,
+  stk::mesh::Entity elem,
+  const stk::mesh::BulkData& bulkData,
+  const double* isoParCoords,
+  const double* fieldAtNodes,
+  double* pointField)
+{
+  // extract master element from the bucket in which the element resides
+  const stk::topology& elemTopo = bulkData.bucket(elem).topology();
+  MasterElement* meSCS =
+    sierra::nalu::MasterElementRepo::get_surface_master_element(elemTopo);
+
+  // interpolate velocity to this best point
+  meSCS->interpolatePoint(sizeOfField, isoParCoords, fieldAtNodes, pointField);
 }
 
 }

@@ -83,13 +83,12 @@ TEST_F(ActuatorSearchTest, createBoundingSpheres){
 }
 
 TEST_F(ActuatorSearchTest, createElementBoxes){
-  stk::mesh::MetaData& stkMeta = ioBroker.meta_data();
   stk::mesh::BulkData& stkBulk = ioBroker.bulk_data();
   typedef stk::mesh::Field<double,stk::mesh::Cartesian> CoordFieldType;
   CoordFieldType* coordField = stkBulk.mesh_meta_data().get_field<CoordFieldType>(stk::topology::NODE_RANK, "coordinates");
   EXPECT_TRUE(coordField != nullptr);
   try{
-    auto elemVec = CreateElementBoxes(stkMeta, stkBulk, partNames);
+    auto elemVec = CreateElementBoxes(stkBulk, partNames);
     // ioBroker uses slab decomposition in z
     EXPECT_EQ(slabSize, elemVec.size());
     //confirm element center matches corresponding point's location
@@ -109,10 +108,9 @@ TEST_F(ActuatorSearchTest, createElementBoxes){
 }
 
 TEST_F(ActuatorSearchTest, executeCoarseSearch){
-  stk::mesh::MetaData& stkMeta = ioBroker.meta_data();
   stk::mesh::BulkData& stkBulk = ioBroker.bulk_data();
   auto spheres = CreateBoundingSpheres(points, radii);
-  auto elemBoxes = CreateElementBoxes(stkMeta, stkBulk, partNames);
+  auto elemBoxes = CreateElementBoxes(stkBulk, partNames);
 
   try{
     auto results = ExecuteCoarseSearch(spheres, elemBoxes, stk::search::KDTREE);
@@ -135,20 +133,20 @@ TEST_F(ActuatorSearchTest, executeCoarseSearch){
 }
 
 TEST_F(ActuatorSearchTest, executeFineSearch){
-  stk::mesh::MetaData& stkMeta = ioBroker.meta_data();
   stk::mesh::BulkData& stkBulk = ioBroker.bulk_data();
   // increase radius to hit multiple elems in coarse search
   ActFixScalarDbl radii2("radii2", nPoints);
+  ActFixVectorDbl localCoords("localCoords", nPoints);
   for(unsigned i=0; i<radii2.extent(0);i++){
     radii2(i) = 2.0;
   }
   auto spheres = CreateBoundingSpheres(points, radii2);
-  auto elemBoxes = CreateElementBoxes(stkMeta, stkBulk, partNames);
+  auto elemBoxes = CreateElementBoxes(stkBulk, partNames);
   auto coarseResults = ExecuteCoarseSearch(spheres, elemBoxes, stk::search::KDTREE);
   ActFixElemIds matchElemIds("matchElemIds", nPoints);
   // this case should match coarse search
   try{
-    auto isLocal = ExecuteFineSearch(stkMeta, stkBulk, coarseResults, points, matchElemIds);
+    auto isLocal = ExecuteFineSearch(stkBulk, coarseResults, points, matchElemIds, localCoords);
     int numLocal = 0;
     for(unsigned i=0; i<points.extent(0); i++){
       if(isLocal(i)){

@@ -11,8 +11,7 @@
 #include <stk_search/CoarseSearch.hpp>
 #include <FieldTypeDef.h>
 #include <NaluEnv.h>
-#include <master_element/MasterElement.h>
-#include <master_element/MasterElementFactory.h>
+#include <actuator/UtilitiesActuator.h>
 
 namespace sierra{
 namespace nalu{
@@ -24,7 +23,7 @@ VecBoundSphere CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl rad
   // Will need to recreate every timestep with actuator line
   VecBoundSphere boundSphereVec;
 
-  for(int i =0 ; i< nPoints; i++){
+  for(int i=0; i< nPoints; i++){
     // ID is zero bc we are only doing a local search (COMM_SELF)
     stk::search::IdentProc<uint64_t, int> theIdent((std::size_t)i, 0);
 
@@ -38,9 +37,13 @@ VecBoundSphere CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl rad
 }
 
 // refactor later
-VecBoundElemBox CreateElementBoxes(stk::mesh::MetaData& stkMeta, stk::mesh::BulkData& stkBulk, std::vector<std::string> partNameList){
+VecBoundElemBox CreateElementBoxes(
+  stk::mesh::BulkData& stkBulk,
+  std::vector<std::string> partNameList)
+{
   VecBoundElemBox boundElemBoxVec;
-  const int nDim = stkMeta.spatial_dimension();
+  const int nDim = 3;
+  stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
 
   // fields
   VectorFieldType* coordinates = stkMeta.get_field<VectorFieldType>(
@@ -125,37 +128,18 @@ VecSearchKeyPair ExecuteCoarseSearch(
   return searchKeyPair;
 }
 
-namespace{
-void
-gather_field_for_interp(
-  const int& sizeOfField,
-  double* fieldToFill,
-  const stk::mesh::FieldBase& stkField,
-  stk::mesh::Entity const* elem_node_rels,
-  const int& nodesPerElement)
-{
-  for (int ni = 0; ni < nodesPerElement; ++ni) {
-    stk::mesh::Entity node = elem_node_rels[ni];
-    const double* theField = (double*)stk::mesh::field_data(stkField, node);
-    for (int j = 0; j < sizeOfField; ++j) {
-      const int offSet = j * nodesPerElement + ni;
-      fieldToFill[offSet] = theField[j];
-    }
-  }
-}
-}
-
 ActFixScalarBool ExecuteFineSearch(
-  stk::mesh::MetaData& stkMeta,
   stk::mesh::BulkData& stkBulk,
   VecSearchKeyPair& coarseResults,
   ActFixVectorDbl points,
-  ActFixElemIds matchElemIds
+  ActFixElemIds matchElemIds,
+  ActFixVectorDbl localCoords
   )
 {
-  const int nDim = stkMeta.spatial_dimension();
+  const int nDim = 3;
 
   // extract fields
+  stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
   VectorFieldType* coordinates = stkMeta.get_field<VectorFieldType>(
                                    stk::topology::NODE_RANK, "coordinates");
   ActFixScalarBool isLocalPoint("isLocalPoint", points.extent(0));
@@ -184,7 +168,7 @@ ActFixScalarBool ExecuteFineSearch(
 
     // gather elemental coords
     std::vector<double> elementCoords(nDim * nodesPerElement);
-    gather_field_for_interp(
+    actuator_utils::gather_field_for_interp(
       nDim, &elementCoords[0], *coordinates, stkBulk.begin_nodes(elem),
       nodesPerElement);
 
@@ -198,10 +182,15 @@ ActFixScalarBool ExecuteFineSearch(
     if (std::abs(nearestDistance)<=1.0) {
       matchElemIds(thePt) = theBox;
       isLocalPoint(thePt) = true;
+      localCoords(thePt,0) = isoParCoords[0];
+      localCoords(thePt,1) = isoParCoords[1];
+      localCoords(thePt,2) = isoParCoords[2];
     }
   }
   return isLocalPoint;
 }
+
+
 
 } //namespace nalu
 } //namespace sierra
