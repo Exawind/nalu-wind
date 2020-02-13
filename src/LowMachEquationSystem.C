@@ -12,7 +12,6 @@
 #include <LowMachEquationSystem.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
-#include <AssembleCourantReynoldsElemAlgorithm.h>
 #include <AssembleContinuityElemSolverAlgorithm.h>
 #include <AssembleContinuityInflowSolverAlgorithm.h>
 #include <AssembleContinuityElemOpenSolverAlgorithm.h>
@@ -130,6 +129,7 @@
 
 // ngp
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
+#include "ngp_algorithms/CourantReAlg.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/MdotEdgeAlg.h"
 #include "ngp_algorithms/MdotAlgDriver.h"
@@ -849,7 +849,7 @@ LowMachEquationSystem::solve_and_update()
   }
 
   // process CFL/Reynolds
-  momentumEqSys_->cflReyAlgDriver_->execute();
+  momentumEqSys_->cflReAlgDriver_.execute();
  }
 
 //--------------------------------------------------------------------------
@@ -1053,7 +1053,7 @@ MomentumEquationSystem::MomentumEquationSystem(
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "dudx"),
     wallFuncAlgDriver_(realm_),
-    cflReyAlgDriver_(new AlgorithmDriver(realm_)),
+    cflReAlgDriver_(realm_),
     projectedNodalGradEqs_(NULL),
     firstPNGResidual_(0.0)
 {
@@ -1084,9 +1084,7 @@ MomentumEquationSystem::MomentumEquationSystem(
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
 MomentumEquationSystem::~MomentumEquationSystem()
-{
-  delete cflReyAlgDriver_;
-}
+{}
 
 
 
@@ -1116,7 +1114,7 @@ MomentumEquationSystem::initial_work()
     const double timeA = NaluEnv::self().nalu_time();
     compute_wall_function_params();
     compute_turbulence_parameters();
-    cflReyAlgDriver_->execute();
+    cflReAlgDriver_.execute();
 
     const double timeB = NaluEnv::self().nalu_time();
     timerMisc_ += (timeB-timeA);
@@ -1261,16 +1259,8 @@ MomentumEquationSystem::register_interior_algorithm(
   const AlgorithmType algMass = SRC;
 
   // non-solver CFL alg
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = cflReyAlgDriver_->algMap_.find(algType);
-  if ( it == cflReyAlgDriver_->algMap_.end() ) {
-    AssembleCourantReynoldsElemAlgorithm*theAlg
-      = new AssembleCourantReynoldsElemAlgorithm(realm_, part);
-    cflReyAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  cflReAlgDriver_.register_elem_algorithm<CourantReAlg>(
+    algType, part, "courant_reynolds", cflReAlgDriver_);
 
   VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
   GenericFieldType &dudxNone = dudx_->field_of_state(stk::mesh::StateNone);

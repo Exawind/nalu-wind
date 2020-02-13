@@ -53,6 +53,9 @@ GeometryInteriorAlg<AlgTraits>::GeometryInteriorAlg(
 template <typename AlgTraits>
 void GeometryInteriorAlg<AlgTraits>::execute()
 {
+  if (realm_.checkJacobians_)
+    impl_negative_jacobian_check();
+
   impl_compute_dual_nodal_volume();
 
   if (realm_.realmUsesEdges_)
@@ -97,6 +100,44 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
 
   dualVol.modify_on_device();
   elemVol.modify_on_device();
+}
+
+template<typename AlgTraits>
+void GeometryInteriorAlg<AlgTraits>::impl_negative_jacobian_check()
+{
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& meta = meshInfo.meta();
+  const auto ngpMesh = meshInfo.ngp_mesh();
+
+  const stk::mesh::Selector sel = meta.locally_owned_part()
+    & stk::mesh::selectUnion(partVec_)
+    & !(realm_.get_inactive_selector());
+
+  size_t numNegVol = 0;
+  Kokkos::Sum<size_t> reducer(numNegVol);
+  const std::string algName = "negative_volume_check_" + std::to_string(AlgTraits::topo_);
+  nalu_ngp::run_elem_par_reduce(
+    algName, meshInfo, stk::topology::ELEM_RANK, dataNeeded_, sel,
+    KOKKOS_LAMBDA(ElemSimdDataType& edata, size_t& threadVal){
+      auto& scrView = edata.simdScrView;
+      const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
+      const auto& v_scv_vol = meViews.scv_volume;
+
+      for (int ip=0; ip < AlgTraits::numScvIp_; ++ip) {
+        for (int i=0; i < edata.numSimdElems; ++i) {
+          if (v_scv_vol(ip)[i] < 0.0)
+            ++threadVal;
+        }
+      }
+    }, reducer);
+
+  if (numNegVol > 0) {
+    throw std::runtime_error(
+      "GeometryInteriorAlg encountered " + std::to_string(numNegVol) +
+      " negative sub-control volumes for topology " + std::to_string(AlgTraits::topo_));
+  }
 }
 
 template <typename AlgTraits>

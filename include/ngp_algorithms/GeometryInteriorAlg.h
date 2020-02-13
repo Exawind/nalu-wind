@@ -43,6 +43,7 @@ public:
 
   void impl_compute_edge_area_vector();
   void impl_compute_dual_nodal_volume();
+  void impl_negative_jacobian_check();
 
 private:
 
