@@ -3,6 +3,8 @@
 
 #include "MotionBase.h"
 
+namespace YAML { class Node; }
+
 namespace sierra{
 namespace nalu{
 

@@ -12,7 +12,7 @@
 #ifndef DataProbePostProcessing_h
 #define DataProbePostProcessing_h
 
-#include <NaluParsing.h>
+#include "NaluParsedTypes.h"
 
 #include <string>
 #include <vector>
@@ -23,6 +23,8 @@
 #include <stk_mesh/base/Selector.hpp>
 
 #include <stk_io/StkMeshIoBroker.hpp>
+
+namespace YAML { class Node; }
 
 // stk forwards
 namespace stk {

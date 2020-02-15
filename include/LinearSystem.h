@@ -15,11 +15,6 @@
 #include <LinearSolverTypes.h>
 #include <KokkosInterface.h>
 
-#include <Teuchos_RCP.hpp>
-
-#include <Teuchos_GlobalMPISession.hpp>
-#include <Teuchos_oblackholestream.hpp>
-
 #include <stk_ngp/Ngp.hpp>
 
 #include <vector>

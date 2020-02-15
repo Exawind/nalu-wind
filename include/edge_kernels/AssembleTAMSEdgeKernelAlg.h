@@ -11,13 +11,7 @@
 #ifndef ASSEMBLETAMSEDGEKERNEL_H
 #define ASSEMBLETAMSEDGEKERNEL_H
 
-#include "AssembleEdgeSolverAlgorithm.h"
-#include "MomentumSSTTAMSDiffEdgeKernel.h"
 #include "AssembleEdgeKernelAlg.h"
-#include "nalu_make_unique.h"
-
-#include <vector>
-#include <memory>
 
 namespace sierra {
 namespace nalu {

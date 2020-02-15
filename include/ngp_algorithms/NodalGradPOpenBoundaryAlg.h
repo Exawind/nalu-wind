@@ -11,7 +11,6 @@
 #define NODALGRADPOPENBOUNDARYALG_H
 
 #include<Algorithm.h>
-#include<FieldTypeDef.h>
 #include<ElemDataRequests.h>
 
 #include "stk_mesh/base/Types.hpp"

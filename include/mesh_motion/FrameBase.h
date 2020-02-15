@@ -9,6 +9,8 @@
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 
+namespace YAML { class Node; }
+
 namespace sierra{
 namespace nalu{
 

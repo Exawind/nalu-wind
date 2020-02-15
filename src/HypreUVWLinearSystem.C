@@ -10,6 +10,7 @@
 
 #include "HypreUVWLinearSystem.h"
 #include "HypreUVWSolver.h"
+#include "NaluEnv.h"
 #include "Realm.h"
 #include "EquationSystem.h"
 

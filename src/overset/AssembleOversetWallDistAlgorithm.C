@@ -13,6 +13,7 @@
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
 #include "LinearSystem.h"
+#include "NaluEnv.h"
 #include "Realm.h"
 #include "SolverAlgorithm.h"
 #include "TimeIntegrator.h"

@@ -12,9 +12,10 @@
 #define BDYHEIGHTALGORITHM_H
 
 #include "FieldTypeDef.h"
-#include "NaluParsing.h"
 
 #include <vector>
+
+namespace YAML { class Node; }
 
 namespace sierra {
 namespace nalu {

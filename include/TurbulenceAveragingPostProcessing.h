@@ -12,7 +12,7 @@
 #ifndef TurbulenceAveragingPostProcessing_h
 #define TurbulenceAveragingPostProcessing_h
 
-#include <NaluParsing.h>
+#include <NaluParsedTypes.h>
 #include <MovingAveragePostProcessor.h>
 
 #include <string>
