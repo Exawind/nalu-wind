@@ -21,6 +21,7 @@
 #include <NaluParsing.h>
 
 #include <limits>
+#include <iomanip>
 
 namespace sierra{
 namespace nalu{

@@ -12,6 +12,7 @@
 #include "wind_energy/BdyHeightAlgorithm.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
+#include "NaluParsing.h"
 #include "Realm.h"
 #include "TurbulenceAveragingPostProcessing.h"
 #include "AveragingInfo.h"

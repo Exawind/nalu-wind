@@ -12,6 +12,7 @@
 #include "pmr/RadiativeTransportEquationSystem.h"
 #include "AlgTraits.h"
 #include "Enums.h"
+#include "NaluEnv.h"
 #include "SolutionOptions.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"

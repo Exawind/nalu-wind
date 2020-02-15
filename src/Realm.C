@@ -117,6 +117,7 @@
 #include <stk_util/environment/WallTime.hpp>
 #include <stk_util/environment/perf_util.hpp>
 #include <stk_util/environment/FileUtils.hpp>
+#include <stk_util/util/ParameterList.hpp>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -245,7 +246,7 @@ namespace nalu{
     periodicManager_(NULL),
     hasPeriodic_(false),
     hasFluids_(false),
-    globalParameters_(),
+    globalParameters_(new stk::util::ParameterList()),
     exposedBoundaryPart_(0),
     edgesPart_(0),
     checkForMissingBcs_(false),
@@ -1709,12 +1710,12 @@ Realm::initialize_global_variables()
   // other variables created on the fly during Eqs registration
   const bool needInOutput = false;
   const bool needInRestart = true;
-  globalParameters_.set_param("timeStepNm1", 1.0, needInOutput, needInRestart);
-  globalParameters_.set_param("timeStepCount", 1, needInOutput, needInRestart);
+  globalParameters_->set_param("timeStepNm1", 1.0, needInOutput, needInRestart);
+  globalParameters_->set_param("timeStepCount", 1, needInOutput, needInRestart);
 
   // consider pushing this parameter to some higher level design
   if ( NULL != turbulenceAveragingPostProcessing_ )
-    globalParameters_.set_param("currentTimeFilter", 0.0, needInOutput, needInRestart);
+    globalParameters_->set_param("currentTimeFilter", 0.0, needInOutput, needInRestart);
 }
 
 //--------------------------------------------------------------------------
@@ -2270,8 +2271,8 @@ Realm::create_restart_mesh()
     }
 
     // now global params
-    stk::util::ParameterMapType::const_iterator i = globalParameters_.begin();
-    stk::util::ParameterMapType::const_iterator iend = globalParameters_.end();
+    stk::util::ParameterMapType::const_iterator i = globalParameters_->begin();
+    stk::util::ParameterMapType::const_iterator iend = globalParameters_->end();
     for (; i != iend; ++i) {
       std::string parameterName = (*i).first;
       stk::util::Parameter parameter = (*i).second;
@@ -3269,15 +3270,15 @@ Realm::provide_restart_output()
 
       // push global variables for time step
       const double timeStepNm1 = timeIntegrator_->get_time_step();
-      globalParameters_.set_value("timeStepNm1", timeStepNm1);
-      globalParameters_.set_value("timeStepCount", timeStepCount);
+      globalParameters_->set_value("timeStepNm1", timeStepNm1);
+      globalParameters_->set_value("timeStepCount", timeStepCount);
 
       if ( NULL != turbulenceAveragingPostProcessing_ ) {
-        globalParameters_.set_value("currentTimeFilter", turbulenceAveragingPostProcessing_->currentTimeFilter_ );
+        globalParameters_->set_value("currentTimeFilter", turbulenceAveragingPostProcessing_->currentTimeFilter_ );
       }
 
-      stk::util::ParameterMapType::const_iterator i = globalParameters_.begin();
-      stk::util::ParameterMapType::const_iterator iend = globalParameters_.end();
+      stk::util::ParameterMapType::const_iterator i = globalParameters_->begin();
+      stk::util::ParameterMapType::const_iterator iend = globalParameters_->end();
       for (; i != iend; ++i)
       {
         std::string parameterName = (*i).first;

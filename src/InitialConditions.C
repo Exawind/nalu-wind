@@ -70,5 +70,24 @@ InitialCondition * InitialCondition::load(const YAML::Node & node)
   Simulation* InitialConditions::root() { return parent()->root(); }
   Realm *InitialConditions::parent() { return &realm_; }
 
+InitialConditions* InitialConditions::load(const YAML::Node& node)
+{
+  InitialCondition tmp_initial_condition(*this);
+
+  if(node["initial_conditions"]) {
+    const YAML::Node initial_conditions = node["initial_conditions"];
+    for ( size_t j_initial_condition = 0; j_initial_condition < initial_conditions.size(); ++j_initial_condition ) {
+      const YAML::Node initial_condition_node = initial_conditions[j_initial_condition];
+      InitialCondition* ic = tmp_initial_condition.load(initial_condition_node);
+      initialConditionVector_.push_back(ic);
+    }
+  }
+  else {
+    throw std::runtime_error("parser error InitialConditions::load");
+  }
+
+  return this;
+}
+
 } // namespace nalu
 } // namespace Sierra

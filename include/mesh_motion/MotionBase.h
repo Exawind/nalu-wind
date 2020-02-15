@@ -1,13 +1,23 @@
 #ifndef MOTIONBASE_H
 #define MOTIONBASE_H
 
-#include <FieldTypeDef.h>
-
-#include "yaml-cpp/yaml.h"
-
 #include <algorithm>
 #include <cassert>
 #include <cfloat>
+#include <vector>
+#include <array>
+
+namespace YAML { class Node; }
+
+namespace stk {
+namespace mesh {
+class MetaData;
+class BulkData;
+class Part;
+
+typedef std::vector<Part*> PartVector;
+}
+}
 
 namespace sierra{
 namespace nalu{

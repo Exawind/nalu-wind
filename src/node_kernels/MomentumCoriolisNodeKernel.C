@@ -9,6 +9,7 @@
 
 
 #include "node_kernels/MomentumCoriolisNodeKernel.h"
+#include "Realm.h"
 #include "utils/StkHelpers.h"
 
 namespace sierra {

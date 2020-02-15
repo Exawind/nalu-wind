@@ -14,6 +14,7 @@
 #include "EquationSystem.h"
 #include "LinearSolver.h"
 #include "PeriodicManager.h"
+#include "NaluEnv.h"
 #include "NonConformalManager.h"
 #include "overset/OversetManager.h"
 #include "overset/OversetInfo.h"

@@ -15,16 +15,14 @@
 #include <Enums.h>
 #include <FieldTypeDef.h>
 
-// yaml for parsing..
-#include <yaml-cpp/yaml.h>
-
 #include <BoundaryConditions.h>
 #include <InitialConditions.h>
 #include <MaterialPropertys.h>
 #include <EquationSystems.h>
-#include <Teuchos_RCP.hpp>
 
-#include <stk_util/util/ParameterList.hpp>
+#if defined(NALU_USES_PERCEPT)
+#include <Teuchos_RCP.hpp>
+#endif
 
 #include <stk_ngp/NgpFieldManager.hpp>
 
@@ -34,7 +32,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <stdint.h>
+#include <memory>
 
 namespace stk {
 namespace mesh {
@@ -42,6 +40,10 @@ class Part;
 }
 namespace io {
   class StkMeshIoBroker;
+}
+
+namespace util {
+class ParameterList;
 }
 }
 
@@ -424,11 +426,11 @@ class Realm {
   ErrorIndicatorAlgorithmDriver *errorIndicatorAlgDriver_;
 # if defined (NALU_USES_PERCEPT)  
   Adapter *adapter_;
+  Teuchos::RCP<stk::mesh::Selector> activePartForIO_;
 #endif
   unsigned numInitialElements_;
   // for element, side, edge, node rank (node not used)
   stk::mesh::Selector adapterSelector_[4];
-  Teuchos::RCP<stk::mesh::Selector> activePartForIO_;
 
   TimeIntegrator *timeIntegrator_;
 
@@ -493,7 +495,7 @@ class Realm {
   bool hasFluids_;
 
   // global parameter list
-  stk::util::ParameterList globalParameters_;
+  std::unique_ptr<stk::util::ParameterList> globalParameters_;
 
   // part for all exposed surfaces in the mesh
   stk::mesh::Part *exposedBoundaryPart_;

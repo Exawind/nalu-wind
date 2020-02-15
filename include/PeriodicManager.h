@@ -17,6 +17,7 @@
 //==============================================================================
 
 #include <FieldTypeDef.h>
+#include <KokkosInterface.h>
 
 // stk
 #include <stk_mesh/base/Part.hpp>

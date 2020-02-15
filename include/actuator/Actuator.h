@@ -11,7 +11,7 @@
 #ifndef Actuator_h
 #define Actuator_h
 
-#include <NaluParsing.h>
+#include <NaluParsedTypes.h>
 #include <FieldTypeDef.h>
 
 // stk_mesh/base/fem

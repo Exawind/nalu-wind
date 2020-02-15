@@ -13,7 +13,7 @@
 #define EquationSystem_h
 
 #include "KokkosInterface.h"
-#include "NaluParsing.h"
+#include "NaluParsedTypes.h"
 #include "Realm.h"
 #include "PecletFunction.h"
 #include "NGPInstance.h"
@@ -190,10 +190,7 @@ public:
   virtual void register_abltop_bc(
     stk::mesh::Part *part,
     const stk::topology &theTopo,
-    const ABLTopBoundaryConditionData &abltopBCData) {
-      SymmetryBoundaryConditionData simData(abltopBCData.boundaryConditions_);
-      register_symmetry_bc( part, theTopo, simData );
-    }
+    const ABLTopBoundaryConditionData &abltopBCData);
 
   virtual void register_periodic_bc(
     stk::mesh::Part * /* partMaster */,

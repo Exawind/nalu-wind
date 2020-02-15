@@ -12,7 +12,6 @@
 #ifndef SolutionOptions_h
 #define SolutionOptions_h
 
-#include <NaluParsing.h>
 #include <Enums.h>
 
 // standard c++
@@ -20,6 +19,9 @@
 #include <map>
 #include <utility>
 #include <memory>
+#include <vector>
+
+namespace YAML { class Node; }
 
 namespace sierra{
 namespace nalu{

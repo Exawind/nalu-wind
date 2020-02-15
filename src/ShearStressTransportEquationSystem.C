@@ -38,6 +38,7 @@
 // basic c++
 #include <cmath>
 #include <vector>
+#include <iomanip>
 
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"

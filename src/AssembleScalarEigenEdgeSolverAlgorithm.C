@@ -15,6 +15,7 @@
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
 #include <LinearSystem.h>
+#include <NaluEnv.h>
 #include <PecletFunction.h>
 #include <Realm.h>
 #include <SolutionOptions.h>

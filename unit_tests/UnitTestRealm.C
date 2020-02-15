@@ -12,6 +12,7 @@
 #include "UnitTestRealm.h"
 #include "UnitTestUtils.h"
 
+#include "NaluEnv.h"
 #include "LinearSolvers.h"
 #include "Realms.h"
 #include "Realm.h"

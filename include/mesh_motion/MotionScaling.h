@@ -3,6 +3,12 @@
 
 #include "MotionBase.h"
 
+namespace stk {
+namespace mesh {
+class MetaData;
+}
+}
+
 namespace sierra{
 namespace nalu{
 
