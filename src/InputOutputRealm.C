@@ -10,6 +10,7 @@
 
 
 #include <InputOutputRealm.h>
+#include <NaluParsing.h>
 #include <Realm.h>
 #include <SolutionOptions.h>
 

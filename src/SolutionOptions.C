@@ -12,6 +12,7 @@
 #include <SolutionOptions.h>
 #include <Enums.h>
 #include <NaluEnv.h>
+#include <NaluParsing.h>
 #include <FixPressureAtNodeInfo.h>
 
 // basic c++

@@ -15,6 +15,8 @@
  */
 
 #include "actuator/ActuatorDiskFAST.h"
+#include "NaluEnv.h"
+#include "NaluParsing.h"
 #include <cmath>
 #include <algorithm>
 #include <functional>

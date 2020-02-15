@@ -7,6 +7,8 @@
 // for more details.
 //
 
+#include <iomanip>
+
 #include "ngp_algorithms/MdotAlgDriver.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"

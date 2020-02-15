@@ -13,10 +13,7 @@
 #define EquationSystems_h
 
 #include <Enums.h>
-
-// yaml for parsing..
-#include <yaml-cpp/yaml.h>
-#include<NaluParsing.h>
+#include "NaluParsedTypes.h"
 
 // stk
 namespace stk{
@@ -43,7 +40,6 @@ namespace nalu{
 
 class Realm;
 class EquationSystem;
-class PostProcessingData;
 class Simulation;
 class AlgorithmDriver;
 class UpdateOversetFringeAlgorithmDriver;

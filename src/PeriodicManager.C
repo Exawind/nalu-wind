@@ -10,6 +10,7 @@
 
 
 #include <PeriodicManager.h>
+#include <LinearSolverTypes.h>
 #include <NaluEnv.h>
 #include <Realm.h>
 #include <utils/StkHelpers.h>

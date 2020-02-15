@@ -23,6 +23,7 @@
 #include "LinearSolver.h"
 #include "LinearSolvers.h"
 #include "LinearSystem.h"
+#include "NaluParsing.h"
 #include "NonConformalManager.h"
 #include "Realm.h"
 #include "Realms.h"

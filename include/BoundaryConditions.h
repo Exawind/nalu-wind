@@ -14,9 +14,6 @@
 
 #include <Enums.h>
 
-// yaml for parsing..
-#include <yaml-cpp/yaml.h>
-
 #include <map>
 #include <string>
 #include <vector>
@@ -66,25 +63,8 @@ class BoundaryCondition {
    }
  }
 
- BoundaryConditions* load(const YAML::Node & node) 
- {
-   BoundaryCondition tmp_boundary_condition(*this);
-   
-   if(node["boundary_conditions"]) {
-     const YAML::Node boundary_conditions = node["boundary_conditions"];
-     for ( size_t iboundary_condition = 0; iboundary_condition < boundary_conditions.size(); ++iboundary_condition ) {
-       const YAML::Node boundary_condition_node = boundary_conditions[iboundary_condition];
-       BoundaryCondition* bc = tmp_boundary_condition.load(boundary_condition_node);
-       boundaryConditionVector_.push_back(bc);
-     }
-   }
-   else {
-     throw std::runtime_error("parser error BoundaryConditions::load");
-   }
+   BoundaryConditions* load(const YAML::Node & node);
 
-   return this;
- }
- 
  void breadboard()
  {
    for ( size_t iboundary_condition = 0; iboundary_condition < boundaryConditionVector_.size(); ++iboundary_condition ) {

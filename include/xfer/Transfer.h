@@ -12,9 +12,6 @@
 #ifndef Transfer_h
 #define Transfer_h
 
-// yaml for parsing..
-#include <yaml-cpp/yaml.h>
-
 #include <string>
 #include <vector>
 #include <utility>
@@ -22,6 +19,8 @@
 
 // stk_transfer related
 #include <stk_transfer/TransferBase.hpp>
+
+namespace YAML { class Node; }
 
 // stk
 namespace stk {

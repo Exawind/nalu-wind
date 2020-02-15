@@ -1,5 +1,6 @@
 
 #include "mesh_motion/FrameInertial.h"
+#include "FieldTypeDef.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/FieldBLAS.hpp>

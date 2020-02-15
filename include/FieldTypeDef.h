@@ -16,7 +16,7 @@
 #include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_ngp/Ngp.hpp>
 
-#include "LinearSolverTypes.h" // for GlobalOrdinal
+#include <Tpetra_Details_DefaultTypes.hpp>
 
 #ifdef NALU_USES_HYPRE
 #include "HYPRE_utilities.h"
@@ -51,7 +51,7 @@ typedef HYPRE_Int HypreIntType;
 typedef int HypreIntType;
 #endif
 
-typedef stk::mesh::Field<LinSys::GlobalOrdinal> TpetIDFieldType;
+typedef stk::mesh::Field<Tpetra::Details::DefaultTypes::global_ordinal_type> TpetIDFieldType;
 typedef stk::mesh::Field<HypreIntType> HypreIDFieldType;
 
 } // namespace nalu

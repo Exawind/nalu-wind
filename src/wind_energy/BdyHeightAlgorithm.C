@@ -9,6 +9,7 @@
 
 
 #include "wind_energy/BdyHeightAlgorithm.h"
+#include "NaluParsing.h"
 #include "Realm.h"
 #include "utils/LinearInterpolation.h"
 
