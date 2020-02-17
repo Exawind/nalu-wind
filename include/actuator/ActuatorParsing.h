@@ -25,7 +25,7 @@ class ActuatorMeta;
  *
  *  This also has the added benefit of increasing unittest-ability.
  */
-ActuatorMeta actuator_parse(const YAML::Node& y_node);
+ActuatorMeta actuator_parse(const YAML::Node& y_node, stk::mesh::BulkData& stkBulk);
 //TODO(psakiev) define meta data structure
 void actuator_line_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta);
 void actuator_disk_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta);

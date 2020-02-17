@@ -20,16 +20,20 @@ namespace nalu{
 namespace{
 
 TEST(ActuatorMeta, constructor){
- const int numTurbines = 2;
- ActuatorMeta fieldMeta(numTurbines);
- EXPECT_EQ(numTurbines, fieldMeta.numberOfActuators_);
- EXPECT_EQ(0, fieldMeta.num_points_turbine(0));
- EXPECT_EQ(0, fieldMeta.num_points_turbine(1));
+  stk::mesh::MetaData stkMeta(3);
+  stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
+  const int numTurbines = 2;
+  ActuatorMeta fieldMeta(numTurbines, stkBulk);
+  EXPECT_EQ(numTurbines, fieldMeta.numberOfActuators_);
+  EXPECT_EQ(0, fieldMeta.num_points_turbine(0));
+  EXPECT_EQ(0, fieldMeta.num_points_turbine(1));
 }
 
 TEST(ActuatorMeta, addTurbine){
+  stk::mesh::MetaData stkMeta(3);
+  stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
   const int numTurbines = 1;
-  ActuatorMeta fieldMeta(numTurbines);
+  ActuatorMeta fieldMeta(numTurbines, stkBulk);
   ActuatorInfoNGP dummyInfo;
   dummyInfo.numPoints_=1024;
   fieldMeta.add_turbine(dummyInfo);
@@ -37,8 +41,10 @@ TEST(ActuatorMeta, addTurbine){
 }
 
 TEST(ActuatorMeta, copyCtor){
+  stk::mesh::MetaData stkMeta(3);
+  stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
   const int numTurbines = 2;
-  ActuatorMeta fieldMeta(numTurbines);
+  ActuatorMeta fieldMeta(numTurbines, stkBulk);
   ActuatorInfoNGP actInfo1;
   actInfo1.numPoints_= 30;
   actInfo1.turbineId_=0;
@@ -57,8 +63,10 @@ TEST(ActuatorMeta, copyCtor){
 }
 
 TEST(ActuatorBulk, constructor){
+  stk::mesh::MetaData stkMeta(3);
+  stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
   const int numTurbines = 1;
-  ActuatorMeta fieldMeta(numTurbines);
+  ActuatorMeta fieldMeta(numTurbines, stkBulk);
   ActuatorInfoNGP dummyInfo;
   dummyInfo.numPoints_=36;
   dummyInfo.turbineId_=0;

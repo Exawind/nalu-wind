@@ -13,13 +13,13 @@
 namespace sierra{
 namespace nalu{
 
-ActuatorMeta::ActuatorMeta(int numTurbines, ActuatorType actuatorType):
+ActuatorMeta::ActuatorMeta(int numTurbines, stk::mesh::BulkData& stkBulk, ActuatorType actuatorType):
     numberOfActuators_(numTurbines),
     actuatorType_(actuatorType),
     numPointsTotal_(0),
     searchMethod_(stk::search::KDTREE),
     numPointsTurbine_("numPointsTurbine", numberOfActuators_),
-    stkBulk_(nullptr)
+    stkBulk_(stkBulk)
 {}
 
 void ActuatorMeta::add_turbine(const ActuatorInfoNGP& info)
@@ -42,23 +42,19 @@ ActuatorBulk::ActuatorBulk(ActuatorMeta meta):
 {
 }
 
-void SearchForActuatorPoints(ActuatorBulk& actBulk){
-  auto points = actBulk.pointCentroid_.template view<Kokkos::HostSpace>();
-  auto radius = actBulk.searchRadius_.template view<Kokkos::HostSpace>();
+void ActuatorBulk::StkSearchForActuatorPoints(){
+  auto points = pointCentroid_.template view<Kokkos::HostSpace>();
+  auto radius = searchRadius_.template view<Kokkos::HostSpace>();
 
   auto boundSpheres = CreateBoundingSpheres(points, radius);
-  if(actBulk.actuatorMeta_.stkBulk_==nullptr){
-    throw std::runtime_error("Stk search called on actuator meta data without stk::mesh::bulk data");
-  }
-  stk::mesh::BulkData& stkBulk = *(actBulk.actuatorMeta_.stkBulk_);
-  auto elemBoxes = CreateElementBoxes(stkBulk, actBulk.actuatorMeta_.searchTargetNames_);
-  actBulk.coarseSearchResults_ = ExecuteCoarseSearch(boundSpheres, elemBoxes, actBulk.actuatorMeta_.searchMethod_);
-  actBulk.pointIsLocal_ = ExecuteFineSearch(
-    stkBulk,
-    actBulk.coarseSearchResults_,
+  auto elemBoxes = CreateElementBoxes(actuatorMeta_.stkBulk_, actuatorMeta_.searchTargetNames_);
+  coarseSearchResults_ = ExecuteCoarseSearch(boundSpheres, elemBoxes, actuatorMeta_.searchMethod_);
+  pointIsLocal_ = ExecuteFineSearch(
+    actuatorMeta_.stkBulk_,
+    coarseSearchResults_,
     points,
-    actBulk.elemContainingPoint_,
-    actBulk.localCoords_);
+    elemContainingPoint_,
+    localCoords_);
 }
 
 }

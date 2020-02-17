@@ -18,7 +18,9 @@ namespace nalu{
 
 namespace{
 TEST(ActuatorNGP, testExecuteOnHostOnly){
-  ActuatorMeta actMeta(1);
+  stk::mesh::MetaData stkMeta(3);
+  stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
+  ActuatorMeta actMeta(1, stkBulk);
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
@@ -44,7 +46,9 @@ TEST(ActuatorNGP, testExecuteOnHostOnly){
 }
 
 TEST(ActuatorNGP, testExecuteOnHostAndDevice){
-  ActuatorMeta actMeta(1);
+  stk::mesh::MetaData stkMeta(3);
+  stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
+  ActuatorMeta actMeta(1, stkBulk);
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
@@ -113,13 +117,12 @@ TEST_F(ActuatorNGPOnMesh, testSearchAndInterpolate){
       "  search_target_part: [block_1]\n"
       ;
   YAML::Node y_actuator = YAML::Load(inputFileSurrogate_);
-  ActuatorMeta actMeta = actuator_parse(y_actuator);
+  ActuatorMeta actMeta = actuator_parse(y_actuator, stkBulk_);
 
   // more parse stuff to be implemented
   ActuatorInfoNGP actInfo;
   actInfo.numPoints_= 3;
   actMeta.add_turbine(actInfo);
-  actMeta.stkBulk_ = &stkBulk_;
 
   // construct object and allocate memory
   TestActuatorSearchInterp actuator(actMeta);

@@ -12,6 +12,8 @@
 
 #include <actuator/ActuatorTypes.h>
 #include <actuator/ActuatorSearch.h>
+#include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/MetaData.hpp>
 #include <Enums.h>
 #include <vector>
 
@@ -30,7 +32,9 @@ class ActuatorInfoNGP;
  */
 
 struct ActuatorMeta{
-  ActuatorMeta(int numTurbines, ActuatorType actType = ActuatorType::ActLinePointDrag);
+  ActuatorMeta(int numTurbines,
+    stk::mesh::BulkData& stkBulk,
+    ActuatorType actType = ActuatorType::ActLinePointDrag);
   void add_turbine(const ActuatorInfoNGP& info);
   //TODO(psakiev) do we want/need private members and accessor functions?
   inline int num_points_turbine(int i) const {return numPointsTurbine_.h_view(i);}
@@ -40,7 +44,7 @@ struct ActuatorMeta{
   std::vector<std::string> searchTargetNames_;
   stk::search::SearchMethod searchMethod_;
   ActScalarIntDv numPointsTurbine_;
-  stk::mesh::BulkData* stkBulk_;
+  stk::mesh::BulkData& stkBulk_;
 };
 
 /*! \brief Where field data is stored and accessed for actuators
@@ -51,6 +55,7 @@ struct ActuatorMeta{
  */
 struct ActuatorBulk{
   ActuatorBulk(ActuatorMeta actMeta);
+  void StkSearchForActuatorPoints();
   const ActuatorMeta actuatorMeta_;
   const int totalNumPoints_;
   // HOST AND DEVICE DATA (DualViews)
@@ -67,7 +72,6 @@ struct ActuatorBulk{
   VecSearchKeyPair coarseSearchResults_; // reuse for spreading forces
 };
 
-void SearchForActuatorPoints(ActuatorBulk& actBulk);
 
 
 }
