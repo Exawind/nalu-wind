@@ -435,6 +435,8 @@ ActuatorFAST::initialize()
   // create the ActuatorLineFASTPointInfo
   create_actuator_point_info_map();
 
+  create_point_info_map_class_specific();
+
   // coarse search
   determine_elems_to_ghost();
 
@@ -443,8 +445,6 @@ ActuatorFAST::initialize()
 
   // complete filling in the set of elements connected to the centroid
   complete_search();
-
-  update(); // Update location of actuator points, ghosting etc.
 
 }
 
@@ -1405,7 +1405,6 @@ ActuatorFAST::update_actuator_point_info_map()
       }
     }
   }
-   create_point_info_map_class_specific(); 
 }
 
 /// This function computes the index map such that actuator points can be
