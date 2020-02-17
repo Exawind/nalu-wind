@@ -19,6 +19,8 @@ namespace{
 ///Check the minimum parse terms are not violated and
 ///that defaults haven't changed
 TEST(ActuatorParse, bareMinimumParse){
+  stk::mesh::MetaData stkMeta(3);
+  stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
   std::string testFile =
       "actuator:\n"
       "  type: ActLineFAST\n"
@@ -27,13 +29,13 @@ TEST(ActuatorParse, bareMinimumParse){
       ;
   YAML::Node y_actuator = YAML::Load(testFile);
   try{
-    ActuatorMeta actMeta = actuator_parse(y_actuator);
+    ActuatorMeta actMeta = actuator_parse(y_actuator, stkBulk);
   }
   catch (std::exception const & err){
     FAIL() << err.what();
   }
 
-  ActuatorMeta actMeta = actuator_parse(y_actuator);
+  ActuatorMeta actMeta = actuator_parse(y_actuator, stkBulk);
   EXPECT_EQ(stk::search::KDTREE, actMeta.searchMethod_);
   EXPECT_EQ(2, actMeta.searchTargetNames_.size());
 }

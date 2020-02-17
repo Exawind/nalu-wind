@@ -175,7 +175,7 @@ ActFixScalarBool ExecuteFineSearch(
     // find isoparametric points
     std::vector<double> isoParCoords(nDim);
     const double nearestDistance = meSCS->isInElement(
-                                     &elementCoords[0], &(points(thePt,0)),
+                                     &elementCoords[0], &(points(thePt,0)), //TODO(psakiev) fix for gpu layout
                                      &(isoParCoords[0]));
 
     // if it is actually in the element save it
