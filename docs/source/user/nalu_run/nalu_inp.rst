@@ -560,7 +560,8 @@ Initial conditions
 .. inpfile:: initial_conditions.target_name
 
    A list of element blocks (*parts*) where this initial condition must be
-   applied.
+   applied.  Using the alias ``all_blocks`` is equivalent to listing all
+   element blocks in the mesh.
 
 Boundary Conditions
 ```````````````````
@@ -742,7 +743,8 @@ Material Properties
 
    A list of element blocks (*parts*) where the material properties are applied.
    This list should ideally include all the parts that are referenced by
-   :inpfile:`initial_conditions.target_name`.
+   :inpfile:`initial_conditions.target_name`. Using the alias ``all_blocks`` is 
+   equivalent to listing all element blocks in the mesh.
 
 .. inpfile:: material_properties.constant_specification
 

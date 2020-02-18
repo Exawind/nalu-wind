@@ -87,6 +87,7 @@ MaterialPropertys::load(const YAML::Node & node)
         targetNames_[i] = targets[i].as<std::string>() ;
       }
     }
+    targetNames_ = realm_.handle_all_element_part_alias(targetNames_);
     
     // has a table?
     if ( y_material_propertys["table_file_name"] ) {

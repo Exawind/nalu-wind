@@ -1176,7 +1176,7 @@ Realm::setup_initial_conditions()
   for (size_t j_ic = 0; j_ic < initialConditions_.size(); ++j_ic) {
     InitialCondition& initCond = *initialConditions_[j_ic];
 
-    const std::vector<std::string> targetNames = initCond.targetNames_;
+    const std::vector<std::string> targetNames = handle_all_element_part_alias(initCond.targetNames_);
 
     for (size_t itarget=0; itarget < targetNames.size(); ++itarget) {
       const std::string targetName = physics_part_name(targetNames[itarget]);
@@ -4511,6 +4511,7 @@ Realm::physics_part_name(std::string name) const
 std::vector<std::string>
 Realm::physics_part_names(std::vector<std::string> names) const
 {
+  names = handle_all_element_part_alias(names);
   if (doPromotion_) {
     std::transform(names.begin(), names.end(), names.begin(), [&](const std::string& name) {
       return super_element_part_name(name);
@@ -4806,6 +4807,27 @@ bool
 {
   // for now, adaptivity only; load-balance in the future?
   return solutionOptions_->activateAdaptivity_;
+}
+
+std::vector<std::string>
+Realm::handle_all_element_part_alias(const std::vector<std::string>& names) const
+{
+  if (names.size() == 1u && names.front() == allElementPartAlias) {
+    std::vector<std::string> new_names;
+    for (const auto* part : meta_data().get_mesh_parts()) {
+      ThrowRequire(part);
+      if (part->topology().rank() == stk::topology::ELEMENT_RANK) {
+        new_names.push_back(part->name());
+      }
+    }
+    return new_names;
+  }
+
+  if (std::find(names.begin(), names.end(), allElementPartAlias) != names.end()) {
+    NaluEnv::self().naluOutputP0() << "Part alias " << allElementPartAlias
+        << " present with other parts; " << allElementPartAlias << " must be a valid mesh part" << std::endl;
+  }
+  return names;
 }
 
 
