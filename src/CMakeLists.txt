@@ -137,6 +137,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbulenceAveragingPostProcessing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleWallDistNonConformalAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/WallDistEquationSystem.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/GammaEquationSystem.C
 )
 
 if(ENABLE_FFTW)

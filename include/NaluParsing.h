@@ -66,6 +66,14 @@ struct SpecDissRate {
   {}
 };
 
+struct GammaInf {
+  double gamma_;
+  GammaInf()
+    : gamma_(1.0)
+  {}
+};
+
+
 struct Temperature {
   double temperature_;
   Temperature()
@@ -233,15 +241,17 @@ struct InflowUserData : public UserData {
   SpecDissRate sdr_;
   MixtureFraction mixFrac_;
   MassFraction massFraction_;
+  GammaInf gamma_;
  
   bool uSpec_;
   bool tkeSpec_;
   bool sdrSpec_;
   bool mixFracSpec_;
   bool massFractionSpec_;
+  bool gammaSpec_;
   InflowUserData()
     : UserData(),
-    uSpec_(false), tkeSpec_(false), sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false)
+      uSpec_(false), tkeSpec_(false), sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false), gammaSpec_(false)
   {}
 };
 
@@ -554,6 +564,10 @@ template<> struct convert<sierra::nalu::TurbKinEnergy> {
 
 template<> struct convert<sierra::nalu::SpecDissRate> {
   static bool decode(const Node& node, sierra::nalu::SpecDissRate& rhs) ;
+};
+
+template<> struct convert<sierra::nalu::GammaInf> {
+  static bool decode(const Node& node, sierra::nalu::GammaInf& rhs) ;
 };
 
 template<> struct convert<sierra::nalu::Temperature> {

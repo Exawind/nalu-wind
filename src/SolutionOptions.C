@@ -648,6 +648,10 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_forBlKol] = 1.0;
   turbModelConstantMap_[TM_forFac] = 8.0;
   turbModelConstantMap_[TM_v2cMu] = 0.22;
+  turbModelConstantMap_[TM_caOne] = 2.0;
+  turbModelConstantMap_[TM_caTwo] = 0.06;
+  turbModelConstantMap_[TM_ceOne] = 1.0;
+  turbModelConstantMap_[TM_ceTwo] = 50.0;
 }
 
 

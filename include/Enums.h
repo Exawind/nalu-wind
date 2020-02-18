@@ -83,6 +83,7 @@ enum EquationType {
   EQ_PNG_U = 15,
   EQ_PNG_TKE = 16, // FIXME... Last PNG managed like this..
   EQ_WALL_DISTANCE = 17,
+  EQ_GAMMA_TRANS = 18,
   EquationSystemType_END
 };
 
@@ -213,7 +214,11 @@ enum TurbulenceModelConstant {
   TM_forBlKol = 30,
   TM_forFac = 31,
   TM_v2cMu = 32,
-  TM_END = 33
+  TM_END = 33,
+  TM_caOne = 34,
+  TM_caTwo = 35,
+  TM_ceOne = 36,
+  TM_ceTwo = 37,
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
