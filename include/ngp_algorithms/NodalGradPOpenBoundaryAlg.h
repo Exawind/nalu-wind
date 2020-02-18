@@ -19,16 +19,15 @@
 namespace sierra{
 namespace nalu{
 
-template<typename AlgTraits>
-class NodalGradPOpenBoundary : public Algorithm
+class NodalGradPOpenBoundaryT : public Algorithm
 {
 public:
-  NodalGradPOpenBoundary(
+  NodalGradPOpenBoundaryT(
     Realm &,
     stk::mesh::Part *,
     const bool useShifted);
 
-  virtual ~NodalGradPOpenBoundary() = default;
+  virtual ~NodalGradPOpenBoundaryT() = default;
 
   virtual void execute() override;
 
@@ -49,6 +48,8 @@ public:
   ElemDataRequests faceData_;
   ElemDataRequests elemData_;
 };
+
+template<typename AlgTraits> using NodalGradPOpenBoundary = NodalGradPOpenBoundaryT;
 
 } // namespace nalu
 } // namespace Sierra
