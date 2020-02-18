@@ -35,12 +35,12 @@ realms:
 
     initial_conditions:
       - user_function: ic_1
-        target_name: [block_1, block_2, block_3, block_4, block_5, block_6, block_7, block_8, block_9, block_10, block_11, block_12, block_13, block_14, block_15, block_16, block_17, block_18, block_19]
+        target_name: all_blocks
         user_function_name:
          temperature: steady_3d_thermal
 
     material_properties:
-      target_name: [block_1, block_2, block_3, block_4, block_5, block_6, block_7, block_8, block_9, block_10, block_11, block_12, block_13, block_14, block_15, block_16, block_17, block_18, block_19]
+      target_name: all_blocks
       specifications:
         - name: density
           type: constant
