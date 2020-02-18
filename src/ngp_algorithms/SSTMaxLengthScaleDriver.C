@@ -48,21 +48,20 @@ void SSTMaxLengthScaleDriver::post_work()
   const auto& meshInfo = realm_.mesh_info();
   auto& ngpMaxLengthScale = nalu_ngp::get_ngp_field(meshInfo, "sst_max_length_scale");
 
-  std::vector<NGPDoubleFieldType*> fields(1, &ngpMaxLengthScale);
+  const auto& meta = realm_.meta_data();
+  auto* maxLengthScale = meta.template get_field<ScalarFieldType>(
+     stk::topology::NODE_RANK, "sst_max_length_scale");
 
   // Algorithms should have marked the fields as modified, but call this here to
   // ensure the next step does a sync to host
   ngpMaxLengthScale.modify_on_device();
+  ngpMaxLengthScale.sync_to_host();
 
-  bool doFinalSyncToDevice = false;
-  ngp::parallel_sum(realm_.bulk_data(), fields, doFinalSyncToDevice);
+  stk::mesh::parallel_max(realm_.bulk_data(), {maxLengthScale});
 
   if (realm_.hasPeriodic_) {
-    const auto& meta = realm_.meta_data();
-    auto* maxLengthScale = meta.template get_field<ScalarFieldType>(
-       stk::topology::NODE_RANK, "sst_max_length_scale");
     const unsigned nComponents = 1;
-    realm_.periodic_field_update(maxLengthScale, nComponents);
+    realm_.periodic_field_max(maxLengthScale, nComponents);
   }
   ngpMaxLengthScale.modify_on_host();
   ngpMaxLengthScale.sync_to_device();
