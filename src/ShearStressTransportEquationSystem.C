@@ -419,10 +419,6 @@ ShearStressTransportEquationSystem::update_and_clip()
 void
 ShearStressTransportEquationSystem::clip_min_distance_to_wall()
 {
-  if (realm_.restarted_simulation() && !realm_.has_mesh_motion())
-    return;
-
-#if 1
   using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = meshInfo.ngp_mesh();
@@ -445,101 +441,6 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
       ndtw.get(mi, 0) = stk::math::max(minD, wallNormDist.get(mi, 0));
     });
 
-#else
-  // okay, no restart: proceed with clipping of minimum wall distance
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-
-  const int nDim = meta_data.spatial_dimension();
-
-  // extract fields required
-  GenericFieldType *exposedAreaVec = meta_data.get_field<GenericFieldType>(meta_data.side_rank(), "exposed_area_vector");
-  VectorFieldType *coordinates = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
-
-  // define vector of parent topos; should always be UNITY in size
-  std::vector<stk::topology> parentTopo;
-
-  // selector
-  stk::mesh::Selector s_locally_owned_union = meta_data.locally_owned_part()
-      &stk::mesh::selectUnion(wallBcPart_);
-
-   stk::mesh::BucketVector const& face_buckets =
-     realm_.get_buckets( meta_data.side_rank(), s_locally_owned_union );
-   for ( stk::mesh::BucketVector::const_iterator ib = face_buckets.begin();
-         ib != face_buckets.end() ; ++ib ) {
-     stk::mesh::Bucket & b = **ib ;
-
-     // extract connected element topology
-     b.parent_topology(stk::topology::ELEMENT_RANK, parentTopo);
-     ThrowAssert ( parentTopo.size() == 1 );
-     stk::topology theElemTopo = parentTopo[0];
-
-     // extract master element
-     MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(theElemTopo);
-
-     const stk::mesh::Bucket::size_type length   = b.size();
-
-     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-       // get face
-       stk::mesh::Entity face = b[k];
-       int num_face_nodes = bulk_data.num_nodes(face);
-
-       // pointer to face data
-       const double * areaVec = stk::mesh::field_data(*exposedAreaVec, face);
-
-       // extract the connected element to this exposed face; should be single in size!
-       const stk::mesh::Entity* face_elem_rels = bulk_data.begin_elements(face);
-       ThrowAssert( bulk_data.num_elements(face) == 1 );
-
-       // get element; its face ordinal number and populate face_node_ordinals
-       stk::mesh::Entity element = face_elem_rels[0];
-       const int face_ordinal = bulk_data.begin_element_ordinals(face)[0];
-       const int *face_node_ordinals = meSCS->side_node_ordinals(face_ordinal);
-
-       // get the relations off of element
-       stk::mesh::Entity const * elem_node_rels = bulk_data.begin_nodes(element);
-
-       // loop over face nodes
-       for ( int ip = 0; ip < num_face_nodes; ++ip ) {
-
-         const int offSetAveraVec = ip*nDim;
-
-         const int opposingNode = meSCS->opposingNodes(face_ordinal,ip);
-         const int nearestNode = face_node_ordinals[ip];
-
-         // left and right nodes; right is on the face; left is the opposing node
-         stk::mesh::Entity nodeL = elem_node_rels[opposingNode];
-         stk::mesh::Entity nodeR = elem_node_rels[nearestNode];
-
-         // extract nodal fields
-         const double * coordL = stk::mesh::field_data(*coordinates, nodeL );
-         const double * coordR = stk::mesh::field_data(*coordinates, nodeR );
-
-         double aMag = 0.0;
-         for ( int j = 0; j < nDim; ++j ) {
-           const double axj = areaVec[offSetAveraVec+j];
-           aMag += axj*axj;
-         }
-         aMag = std::sqrt(aMag);
-
-         // form unit normal and determine yp (approximated by 1/4 distance along edge)
-         double ypbip = 0.0;
-         for ( int j = 0; j < nDim; ++j ) {
-           const double nj = areaVec[offSetAveraVec+j]/aMag;
-           const double ej = 0.25*(coordR[j] - coordL[j]);
-           ypbip += nj*ej*nj*ej;
-         }
-         ypbip = std::sqrt(ypbip);
-
-         // assemble to nodal quantities
-         double *minD = stk::mesh::field_data(*minDistanceToWall_, nodeR );
-         
-         *minD = std::max(*minD, ypbip);
-       }
-     }
-   }
-#endif
    stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
    if (realm_.hasPeriodic_) {
      realm_.periodic_field_max(minDistanceToWall_, 1);
@@ -551,7 +452,6 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
 void
 ShearStressTransportEquationSystem::compute_f_one_blending()
 {
-#if 1
   using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
 
   const auto& meshInfo = realm_.mesh_info();
@@ -611,73 +511,6 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
     });
 
   fOneBlend.modify_on_device();
-
-#else
-  // compute fone with parameters appropriate for 2003 SST implementation
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-
-  const int nDim = meta_data.spatial_dimension();
-
-  // model parameters
-  const double betaStar = realm_.get_turb_model_constant(TM_betaStar);
-  const double sigmaWTwo = realm_.get_turb_model_constant(TM_sigmaWTwo);
-  const double CDkwClip = 1.0e-10; // 2003 SST
-
-  // required fields with state; min_distance is fine
-  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
-
-  // fields not saved off
-  ScalarFieldType *density = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  ScalarFieldType *viscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
-  VectorFieldType *dkdx = tkeEqSys_->dkdx_;
-  VectorFieldType *dwdx = sdrEqSys_->dwdx_;
-
-  //select all nodes (locally and shared)
-  stk::mesh::Selector s_all_nodes
-    = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
-    &stk::mesh::selectField(*fOneBlending_);
-
-  stk::mesh::BucketVector const& node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-
-    // fields; supplemental and non-const fOne and ftwo
-    const double * sdr = stk::mesh::field_data(sdrNp1, b);
-    const double * tke = stk::mesh::field_data(tkeNp1, b);
-    const double * minD = stk::mesh::field_data(*minDistanceToWall_, b);
-    const double * rho = stk::mesh::field_data(*density, b);
-    const double * mu = stk::mesh::field_data(*viscosity, b);
-    const double * dk = stk::mesh::field_data(*dkdx, b);
-    const double * dw = stk::mesh::field_data(*dwdx, b);
-    double * fOne = stk::mesh::field_data(*fOneBlending_, b);
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-      // compute cross diff
-      double crossDiff = 0.0;
-      for ( int j = 0; j < nDim; ++j ) {
-        crossDiff += dk[k*nDim+j]*dw[k*nDim+j];
-      }
-
-      // some temps
-      const double minDSq = minD[k]*minD[k];
-      const double trbDiss = std::sqrt(tke[k])/betaStar/sdr[k]/minD[k];
-      const double lamDiss = 500.0*mu[k]/rho[k]/sdr[k]/minDSq;
-      const double CDkw = std::max(2.0*rho[k]*sigmaWTwo*crossDiff/sdr[k], CDkwClip);
-
-      // arguments
-      const double fArgOne = std::min(std::max(trbDiss, lamDiss), 4.0*rho[k]*sigmaWTwo*tke[k]/CDkw/minDSq);
-
-      // real deal
-      fOne[k] = std::tanh(fArgOne*fArgOne*fArgOne*fArgOne);
-
-    }
-  }
-#endif
 }
 
 } // namespace nalu
