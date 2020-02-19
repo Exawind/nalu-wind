@@ -2732,6 +2732,7 @@ void
 MomentumEquationSystem::assemble_and_solve(
   stk::mesh::FieldBase* deltaSolution)
 {
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
   auto& meta = realm_.meta_data();
   auto& bulk = realm_.bulk_data();
 
@@ -2767,29 +2768,29 @@ MomentumEquationSystem::assemble_and_solve(
     const double projTimeScale = gamma1 / dt;
     const double alphaU = realm_.solutionOptions_->get_relaxation_factor(dofName);
 
-    // Bring to host and perform remaining operations on host before pushing
-    // back to device
+    // Sum up contributions on the nodes shared amongst processors
     const std::vector<NGPDoubleFieldType*> fVecNgp{&ngpUdiag};
-    bool doFinalSyncBackToDevice = false;
+    bool doFinalSyncBackToDevice = true;
     ngp::parallel_sum(realm_.bulk_data(), fVecNgp, doFinalSyncBackToDevice);
 
     const auto sel = stk::mesh::selectField(*Udiag_)
       & meta.locally_owned_part()
       & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
       & !(realm_.get_inactive_selector());
-    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& ngpMesh = realm_.ngp_mesh();
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    const auto& ngpRho = fieldMgr.get_field<double>(density->mesh_meta_data_ordinal());
+    const auto& ngpdVol = fieldMgr.get_field<double>(dualVol->mesh_meta_data_ordinal());
 
-    // Perform update on host to save on future parallel syncs
-    for (auto b: bkts) {
-      double* field = (double*) stk::mesh::field_data(*Udiag_, *b);
-      double* rho = (double*) stk::mesh::field_data(*density, *b);
-      double* dVol = (double*) stk::mesh::field_data(*dualVol, *b);
-
-      for (size_t in=0; in < b->size(); in++) {
-        field[in] /= (rho[in] * dVol[in]);
-        field[in] = (field[in] - projTimeScale) * alphaU + projTimeScale;
-      }
-    }
+    // Remove momentum relaxation factor from diagonal term
+    nalu_ngp::run_entity_algorithm(
+      "LowMach::udiag_post_processing", ngpMesh, stk::topology::NODE_RANK, sel,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        double udiagTmp = ngpUdiag.get(mi, 0) / (ngpRho.get(mi, 0) * ngpdVol.get(mi, 0));
+        ngpUdiag.get(mi, 0) = (udiagTmp - projTimeScale) * alphaU + projTimeScale;
+      });
+    ngpUdiag.modify_on_device();
+    ngpUdiag.sync_to_host();
 
     // Communicate to shared and ghosted nodes (all synchronization on host)
     std::vector<const stk::mesh::FieldBase*> fVec{Udiag_};
