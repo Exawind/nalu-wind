@@ -21,6 +21,13 @@
 #include <TurbKineticEnergyEquationSystem.h>
 #include <Realm.h>
 
+// ngp
+#include "ngp_algorithms/GeometryAlgDriver.h"
+#include "ngp_algorithms/WallFuncGeometryAlg.h"
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldUtils.h"
+#include "ngp_utils/NgpFieldBLAS.h"
+
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
 #include "utils/StkHelpers.h"
@@ -179,11 +186,27 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
 void
 ShearStressTransportEquationSystem::register_wall_bc(
   stk::mesh::Part *part,
-  const stk::topology &/*theTopo*/,
+  const stk::topology &partTopo,
   const WallBoundaryConditionData &/*wallBCData*/)
 {
   // push mesh part
   wallBcPart_.push_back(part);
+
+  auto& meta = realm_.meta_data();
+  auto& assembledWallArea = meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "assembled_wall_area_wf");
+  stk::mesh::put_field_on_mesh(assembledWallArea, *part, nullptr);
+  auto& assembledWallNormDist = meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "assembled_wall_normal_distance");
+  stk::mesh::put_field_on_mesh(assembledWallNormDist, *part, nullptr);
+  auto& wallNormDistBip = meta.declare_field<ScalarFieldType>(
+    meta.side_rank(), "wall_normal_distance_bip");
+  auto* meFC = MasterElementRepo::get_surface_master_element(partTopo);
+  const int numScsBip = meFC->num_integration_points();
+  stk::mesh::put_field_on_mesh(wallNormDistBip, *part, numScsBip, nullptr);
+
+  realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
+    sierra::nalu::WALL, part, get_elem_topo(realm_, *part), "sst_geometry_wall");
 }
 
 //--------------------------------------------------------------------------
@@ -249,65 +272,59 @@ ShearStressTransportEquationSystem::solve_and_update()
 
 }
 
-//--------------------------------------------------------------------------
-//-------- initial_work ----------------------------------------------------
-//--------------------------------------------------------------------------
+/** Perform sanity checks on TKE/SDR fields
+ */
 void
 ShearStressTransportEquationSystem::initial_work()
 {
-  // do not lett he user specify a negative field
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& meta = meshInfo.meta();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+
+  auto& tkeNp1 = fieldMgr.get_field<double>(
+    tke_->mesh_meta_data_ordinal());
+  auto& sdrNp1 = fieldMgr.get_field<double>(
+    sdr_->mesh_meta_data_ordinal());
+  const auto& density = nalu_ngp::get_ngp_field(meshInfo, "density");
+  const auto& viscosity = nalu_ngp::get_ngp_field(meshInfo, "viscosity");
+
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part())
+    & stk::mesh::selectField(*sdr_);
+
   const double clipValue = 1.0e-8;
+  nalu_ngp::run_entity_algorithm(
+    "SST::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double tkeNew = tkeNp1.get(mi, 0);
+      const double sdrNew = sdrNp1.get(mi, 0);
 
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-
-  // required fields
-  ScalarFieldType *density = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  ScalarFieldType *viscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
-
-  // required fields with state
-  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
-
-  // define some common selectors
-  const stk::mesh::Selector s_all_nodes
-    = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
-    &stk::mesh::selectField(*sdr_);
-
-  stk::mesh::BucketVector const& node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-
-    const double *visc = stk::mesh::field_data(*viscosity, b);
-    const double *rho = stk::mesh::field_data(*density, b);
-    double *tke = stk::mesh::field_data(tkeNp1, b);
-    double *sdr = stk::mesh::field_data(sdrNp1, b);
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-      const double tkeNew = tke[k];
-      const double sdrNew = sdr[k];
-      
-      if ( (tkeNew >= 0.0) && (sdrNew > 0.0) ) {
-        // nothing
+      if ((tkeNew >= 0.0) && (sdrNew >= 0.0)) {
+        tkeNp1.get(mi, 0) = tkeNew;
+        sdrNp1.get(mi, 0) = sdrNew;
+      } else if ((tkeNew < 0.0) && (sdrNew < 0.0)) {
+        // both negative; set TKE to small value, tvisc to molecular visc and use
+        // Prandtl/Kolm for SDR
+        tkeNp1.get(mi, 0) = clipValue;
+        sdrNp1.get(mi, 0) = density.get(mi, 0) * clipValue / viscosity.get(mi, 0);
+      } else if (tkeNew < 0.0) {
+        // only TKE is off; reset turbulent viscosity to molecular vis and
+        // compute new TKE based on SDR and tvisc
+        sdrNp1.get(mi, 0) = sdrNew;
+        tkeNp1.get(mi, 0) = viscosity.get(mi, 0) * sdrNew / density.get(mi, 0);
+      } else {
+        // Only SDR is off; reset turbulent viscosity to molecular visc and
+        // compute new SDR based on others
+        tkeNp1.get(mi, 0) = tkeNew;
+        sdrNp1.get(mi, 0) = density.get(mi, 0) * tkeNew / viscosity.get(mi, 0);
       }
-      else if ( (tkeNew < 0.0) && (sdrNew < 0.0) ) {
-        // both negative;
-        tke[k] = clipValue;
-        sdr[k] = rho[k]*clipValue/visc[k];
-      }
-      else if ( tkeNew < 0.0 ) {
-        tke[k] = visc[k]*sdrNew/rho[k];
-        sdr[k] = sdrNew;
-      }
-      else {
-        sdr[k] = rho[k]*tkeNew/visc[k];
-        tke[k] = tkeNew;
-      }
-    }
-  }
+    });
+
+  tkeNp1.modify_on_device();
+  sdrNp1.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -329,80 +346,71 @@ ShearStressTransportEquationSystem::post_adapt_work()
 
 }
 
-//--------------------------------------------------------------------------
-//-------- update_and_clip() -----------------------------------------------
-//--------------------------------------------------------------------------
+/** Update solution but ensure that TKE and SDR are greater than zero
+ */
 void
 ShearStressTransportEquationSystem::update_and_clip()
 {
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& meta = meshInfo.meta();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+
+  auto& tkeNp1 = fieldMgr.get_field<double>(
+    tke_->mesh_meta_data_ordinal());
+  auto& sdrNp1 = fieldMgr.get_field<double>(
+    sdr_->mesh_meta_data_ordinal());
+  const auto& kTmp = fieldMgr.get_field<double>(
+    tkeEqSys_->kTmp_->mesh_meta_data_ordinal());
+  const auto& wTmp = fieldMgr.get_field<double>(
+    sdrEqSys_->wTmp_->mesh_meta_data_ordinal());
+  const auto& density = nalu_ngp::get_ngp_field(meshInfo, "density");
+  const auto& viscosity = nalu_ngp::get_ngp_field(meshInfo, "viscosity");
+  auto& turbVisc = nalu_ngp::get_ngp_field(meshInfo, "turbulent_viscosity");
+
+  auto* turbViscosity = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "turbulent_viscosity");
+
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part())
+    & stk::mesh::selectField(*turbViscosity);
+
   const double clipValue = 1.0e-8;
+  nalu_ngp::run_entity_algorithm(
+    "SST::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double tkeNew = tkeNp1.get(mi, 0) + kTmp.get(mi, 0);
+      const double sdrNew = sdrNp1.get(mi, 0) + wTmp.get(mi, 0);
 
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
-
-  // required fields
-  ScalarFieldType *density = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  ScalarFieldType *viscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
-  ScalarFieldType *turbViscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity");
-
-  // required fields with state
-  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
-
-  // define some common selectors
-  stk::mesh::Selector s_all_nodes
-    = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
-    &stk::mesh::selectField(*turbViscosity);
-
-  stk::mesh::BucketVector const& node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-
-    const double *visc = stk::mesh::field_data(*viscosity, b);
-    const double *rho = stk::mesh::field_data(*density, b);
-    const double *kTmp = stk::mesh::field_data(*tkeEqSys_->kTmp_, b);
-    const double *wTmp = stk::mesh::field_data(*sdrEqSys_->wTmp_, b);
-    double *tke = stk::mesh::field_data(tkeNp1, b);
-    double *sdr = stk::mesh::field_data(sdrNp1, b);
-    double *tvisc = stk::mesh::field_data(*turbViscosity, b);
-
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-      const double tkeNew = tke[k] + kTmp[k];
-      const double sdrNew = sdr[k] + wTmp[k];
-      
-      if ( (tkeNew >= 0.0) && (sdrNew > 0.0) ) {
-        // if all is well
-        tke[k] = tkeNew;
-        sdr[k] = sdrNew;
+      if ((tkeNew >= 0.0) && (sdrNew >= 0.0)) {
+        tkeNp1.get(mi, 0) = tkeNew;
+        sdrNp1.get(mi, 0) = sdrNew;
+      } else if ((tkeNew < 0.0) && (sdrNew < 0.0)) {
+        // both negative; set TKE to small value, tvisc to molecular visc and use
+        // Prandtl/Kolm for SDR
+        tkeNp1.get(mi, 0) = clipValue;
+        turbVisc.get(mi, 0) = viscosity.get(mi, 0);
+        sdrNp1.get(mi, 0) = density.get(mi, 0) * clipValue / viscosity.get(mi, 0);
+      } else if (tkeNew < 0.0) {
+        // only TKE is off; reset turbulent viscosity to molecular vis and
+        // compute new TKE based on SDR and tvisc
+        turbVisc.get(mi, 0) = viscosity.get(mi, 0);
+        sdrNp1.get(mi, 0) = sdrNew;
+        tkeNp1.get(mi, 0) = viscosity.get(mi, 0) * sdrNew / density.get(mi, 0);
+      } else {
+        // Only SDR is off; reset turbulent viscosity to molecular visc and
+        // compute new SDR based on others
+        turbVisc.get(mi, 0) = viscosity.get(mi, 0);
+        tkeNp1.get(mi, 0) = tkeNew;
+        sdrNp1.get(mi, 0) = density.get(mi, 0) * tkeNew / viscosity.get(mi, 0);
       }
-      else if ( (tkeNew < 0.0) && (sdrNew < 0.0) ) {
-        // both negative; set k to small, tvisc to molecular visc and use Prandtl/Kolm for sdr
-        tke[k] = clipValue;
-        tvisc[k] = visc[k];
-        sdr[k] = rho[k]*clipValue/visc[k];
-      }
-      else if ( tkeNew < 0.0 ) {
-        // only tke is off; reset tvisc to molecular visc and compute new tke appropriately
-        tvisc[k] = visc[k];
-        tke[k] = visc[k]*sdrNew/rho[k];
-        sdr[k] = sdrNew;
-      }
-      else {
-        // only sdr if off; reset tvisc to molecular visc and compute new sdr appropriately
-        tvisc[k] = visc[k];
-        sdr[k] = rho[k]*tkeNew/visc[k];
-        tke[k] = tkeNew;
-      }
-    }
-  }
+    });
 
-  // parallel assemble clipped value
-  if (realm_.debug()) {
-    NaluEnv::self().naluOutputP0() << "Add SST clipping diagnostic" << std::endl;
-  }
+  tkeNp1.modify_on_device();
+  sdrNp1.modify_on_device();
+  turbVisc.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -411,179 +419,98 @@ ShearStressTransportEquationSystem::update_and_clip()
 void
 ShearStressTransportEquationSystem::clip_min_distance_to_wall()
 {
-  // if this is a restart, then min distance has already been clipped
-  if (realm_.restarted_simulation())
-    return;
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& meta = meshInfo.meta();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
 
-  // okay, no restart: proceed with clipping of minimum wall distance
-  stk::mesh::BulkData & bulk_data = realm_.bulk_data();
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
+  auto& ndtw = fieldMgr.get_field<double>(
+    minDistanceToWall_->mesh_meta_data_ordinal());
+  const auto& wallNormDist = nalu_ngp::get_ngp_field(
+    meshInfo, "assembled_wall_normal_distance");
 
-  const int nDim = meta_data.spatial_dimension();
+  const stk::mesh::Selector sel = (meta.locally_owned_part() | meta.globally_shared_part())
+    & stk::mesh::selectUnion(wallBcPart_);
 
-  // extract fields required
-  GenericFieldType *exposedAreaVec = meta_data.get_field<GenericFieldType>(meta_data.side_rank(), "exposed_area_vector");
-  VectorFieldType *coordinates = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
+  nalu_ngp::run_entity_algorithm(
+    "SST::clip_ndtw", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double minD = ndtw.get(mi, 0);
 
-  // define vector of parent topos; should always be UNITY in size
-  std::vector<stk::topology> parentTopo;
+      ndtw.get(mi, 0) = stk::math::max(minD, wallNormDist.get(mi, 0));
+    });
 
-  // selector
-  stk::mesh::Selector s_locally_owned_union = meta_data.locally_owned_part()
-      &stk::mesh::selectUnion(wallBcPart_);
-
-   stk::mesh::BucketVector const& face_buckets =
-     realm_.get_buckets( meta_data.side_rank(), s_locally_owned_union );
-   for ( stk::mesh::BucketVector::const_iterator ib = face_buckets.begin();
-         ib != face_buckets.end() ; ++ib ) {
-     stk::mesh::Bucket & b = **ib ;
-
-     // extract connected element topology
-     b.parent_topology(stk::topology::ELEMENT_RANK, parentTopo);
-     ThrowAssert ( parentTopo.size() == 1 );
-     stk::topology theElemTopo = parentTopo[0];
-
-     // extract master element
-     MasterElement *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(theElemTopo);
-
-     const stk::mesh::Bucket::size_type length   = b.size();
-
-     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-
-       // get face
-       stk::mesh::Entity face = b[k];
-       int num_face_nodes = bulk_data.num_nodes(face);
-
-       // pointer to face data
-       const double * areaVec = stk::mesh::field_data(*exposedAreaVec, face);
-
-       // extract the connected element to this exposed face; should be single in size!
-       const stk::mesh::Entity* face_elem_rels = bulk_data.begin_elements(face);
-       ThrowAssert( bulk_data.num_elements(face) == 1 );
-
-       // get element; its face ordinal number and populate face_node_ordinals
-       stk::mesh::Entity element = face_elem_rels[0];
-       const int face_ordinal = bulk_data.begin_element_ordinals(face)[0];
-       const int *face_node_ordinals = meSCS->side_node_ordinals(face_ordinal);
-
-       // get the relations off of element
-       stk::mesh::Entity const * elem_node_rels = bulk_data.begin_nodes(element);
-
-       // loop over face nodes
-       for ( int ip = 0; ip < num_face_nodes; ++ip ) {
-
-         const int offSetAveraVec = ip*nDim;
-
-         const int opposingNode = meSCS->opposingNodes(face_ordinal,ip);
-         const int nearestNode = face_node_ordinals[ip];
-
-         // left and right nodes; right is on the face; left is the opposing node
-         stk::mesh::Entity nodeL = elem_node_rels[opposingNode];
-         stk::mesh::Entity nodeR = elem_node_rels[nearestNode];
-
-         // extract nodal fields
-         const double * coordL = stk::mesh::field_data(*coordinates, nodeL );
-         const double * coordR = stk::mesh::field_data(*coordinates, nodeR );
-
-         double aMag = 0.0;
-         for ( int j = 0; j < nDim; ++j ) {
-           const double axj = areaVec[offSetAveraVec+j];
-           aMag += axj*axj;
-         }
-         aMag = std::sqrt(aMag);
-
-         // form unit normal and determine yp (approximated by 1/4 distance along edge)
-         double ypbip = 0.0;
-         for ( int j = 0; j < nDim; ++j ) {
-           const double nj = areaVec[offSetAveraVec+j]/aMag;
-           const double ej = 0.25*(coordR[j] - coordL[j]);
-           ypbip += nj*ej*nj*ej;
-         }
-         ypbip = std::sqrt(ypbip);
-
-         // assemble to nodal quantities
-         double *minD = stk::mesh::field_data(*minDistanceToWall_, nodeR );
-         
-         *minD = std::max(*minD, ypbip);
-       }
-     }
-   }
    stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
    if (realm_.hasPeriodic_) {
      realm_.periodic_field_max(minDistanceToWall_, 1);
    }
 }
 
-//--------------------------------------------------------------------------
-//-------- compute_f_one_blending ------------------------------------------
-//--------------------------------------------------------------------------
+/** Compute f1 field with parameters appropriate for 2003 SST implementation
+ */
 void
 ShearStressTransportEquationSystem::compute_f_one_blending()
 {
-  // compute fone with parameters appropriate for 2003 SST implementation
-  stk::mesh::MetaData & meta_data = realm_.meta_data();
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
 
-  const int nDim = meta_data.spatial_dimension();
+  const auto& meshInfo = realm_.mesh_info();
+  const auto& meta = meshInfo.meta();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
 
-  // model parameters
+  const int ndim = meta.spatial_dimension();
   const double betaStar = realm_.get_turb_model_constant(TM_betaStar);
   const double sigmaWTwo = realm_.get_turb_model_constant(TM_sigmaWTwo);
   const double CDkwClip = 1.0e-10; // 2003 SST
 
-  // required fields with state; min_distance is fine
-  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
+  const auto& tkeNp1 = fieldMgr.get_field<double>(
+    tke_->mesh_meta_data_ordinal());
+  const auto& sdrNp1 = fieldMgr.get_field<double>(
+    sdr_->mesh_meta_data_ordinal());
+  const auto& density = nalu_ngp::get_ngp_field(meshInfo, "density");
+  const auto& viscosity = nalu_ngp::get_ngp_field(meshInfo, "viscosity");
+  const auto& dkdx = fieldMgr.get_field<double>(
+    tkeEqSys_->dkdx_->mesh_meta_data_ordinal());
+  const auto& dwdx = fieldMgr.get_field<double>(
+    sdrEqSys_->dwdx_->mesh_meta_data_ordinal());
+  const auto& ndtw = fieldMgr.get_field<double>(
+    minDistanceToWall_->mesh_meta_data_ordinal());
+  auto& fOneBlend = fieldMgr.get_field<double>(
+    fOneBlending_->mesh_meta_data_ordinal());
 
-  // fields not saved off
-  ScalarFieldType *density = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
-  ScalarFieldType *viscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
-  VectorFieldType *dkdx = tkeEqSys_->dkdx_;
-  VectorFieldType *dwdx = sdrEqSys_->dwdx_;
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part())
+    & (stk::mesh::selectField(*fOneBlending_));
 
-  //select all nodes (locally and shared)
-  stk::mesh::Selector s_all_nodes
-    = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
-    &stk::mesh::selectField(*fOneBlending_);
+  nalu_ngp::run_entity_algorithm(
+    "SST::compute_fone_blending", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      const double tke = tkeNp1.get(mi, 0);
+      const double sdr = sdrNp1.get(mi, 0);
+      const double rho = density.get(mi, 0);
+      const double mu = viscosity.get(mi, 0);
+      const double minD = ndtw.get(mi, 0);
 
-  stk::mesh::BucketVector const& node_buckets =
-    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
-  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
-        ib != node_buckets.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
+      // cross diffusion
+      double crossdiff = 0.0;
+      for (int d=0; d < ndim; ++d)
+        crossdiff += dkdx.get(mi, d) * dwdx.get(mi, d);
 
-    // fields; supplemental and non-const fOne and ftwo
-    const double * sdr = stk::mesh::field_data(sdrNp1, b);
-    const double * tke = stk::mesh::field_data(tkeNp1, b);
-    const double * minD = stk::mesh::field_data(*minDistanceToWall_, b);
-    const double * rho = stk::mesh::field_data(*density, b);
-    const double * mu = stk::mesh::field_data(*viscosity, b);
-    const double * dk = stk::mesh::field_data(*dkdx, b);
-    const double * dw = stk::mesh::field_data(*dwdx, b);
-    double * fOne = stk::mesh::field_data(*fOneBlending_, b);
+      const double minDistSq = minD * minD;
+      const double turbDiss = stk::math::sqrt(tke) / betaStar / sdr / minD;
+      const double lamDiss = 500.0 * mu / rho / sdr / minDistSq;
+      const double CDkw = stk::math::max(
+        2.0 * rho * sigmaWTwo * crossdiff / sdr, CDkwClip);
 
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
+      const double fArgOne = stk::math::min(
+        stk::math::max(turbDiss, lamDiss),
+        4.0 * rho * sigmaWTwo * tke / CDkw / minDistSq);
 
-      // compute cross diff
-      double crossDiff = 0.0;
-      for ( int j = 0; j < nDim; ++j ) {
-        crossDiff += dk[k*nDim+j]*dw[k*nDim+j];
-      }
+      fOneBlend.get(mi, 0) = stk::math::tanh(fArgOne * fArgOne * fArgOne * fArgOne);
+    });
 
-      // some temps
-      const double minDSq = minD[k]*minD[k];
-      const double trbDiss = std::sqrt(tke[k])/betaStar/sdr[k]/minD[k];
-      const double lamDiss = 500.0*mu[k]/rho[k]/sdr[k]/minDSq;
-      const double CDkw = std::max(2.0*rho[k]*sigmaWTwo*crossDiff/sdr[k], CDkwClip);
-
-      // arguments
-      const double fArgOne = std::min(std::max(trbDiss, lamDiss), 4.0*rho[k]*sigmaWTwo*tke[k]/CDkw/minDSq);
-
-      // real deal
-      fOne[k] = std::tanh(fArgOne*fArgOne*fArgOne*fArgOne);
-
-    }
-  }
+  fOneBlend.modify_on_device();
 }
 
 } // namespace nalu
