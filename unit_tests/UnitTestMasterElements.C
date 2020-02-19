@@ -615,14 +615,11 @@ protected:
     TEST_F(x, pyr##_##y) { y(stk::topology::PYRAMID_5); }    \
     TEST_F(x, hex8##_##y)   { y(stk::topology::HEX_8); }
 
-// Patch tests: pyramids fail
+// Patch tests
 TEST_F_ALL_TOPOS(MasterElement, scs_interpolation)
 TEST_F_ALL_TOPOS(MasterElement, scs_derivative)
 TEST_F_ALL_TOPOS(MasterElement, scv_interpolation)
 TEST_F_ALL_TOPOS(MasterElement, volume_integration)
-
-// Pyramid fails since the reference element
-// since the constant Jacobian assumption is violated
 TEST_F_ALL_TOPOS(MasterElement, is_in_element)
 
 // Pyramid works. Doesn't work for higher-order elements sicne they have more ips than nodes
