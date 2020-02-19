@@ -32,7 +32,11 @@ struct ActuatorMetaFAST : public ActuatorMeta{
 };
 
 struct ActuatorBulkFAST : public ActuatorBulk
-{};
+{
+  ActuatorBulkFAST(const ActuatorMetaFAST& actMeta, stk::mesh::BulkData& stkBulk);
+  fast::OpenFAST openFast_;
+};
+
 
 }
 }

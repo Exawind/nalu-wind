@@ -23,7 +23,7 @@ namespace nalu{
  *
  *  This also has the added benefit of increasing unittest-ability.
  */
-ActuatorMeta actuator_parse(const YAML::Node& y_node, stk::mesh::BulkData& stkBulk);
+ActuatorMeta actuator_parse(const YAML::Node& y_node);
 
 }
 }

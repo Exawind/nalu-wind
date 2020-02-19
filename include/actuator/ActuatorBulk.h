@@ -33,7 +33,6 @@ class ActuatorInfoNGP;
 
 struct ActuatorMeta{
   ActuatorMeta(int numTurbines,
-    stk::mesh::BulkData& stkBulk,
     ActuatorType actType = ActuatorType::ActLinePointDrag);
   void add_turbine(const ActuatorInfoNGP& info);
   //TODO(psakiev) do we want/need private members and accessor functions?
@@ -44,7 +43,6 @@ struct ActuatorMeta{
   std::vector<std::string> searchTargetNames_;
   stk::search::SearchMethod searchMethod_;
   ActScalarIntDv numPointsTurbine_;
-  stk::mesh::BulkData& stkBulk_;
 };
 
 /*! \brief Where field data is stored and accessed for actuators
@@ -54,9 +52,8 @@ struct ActuatorMeta{
  * intended through inheritance.
  */
 struct ActuatorBulk{
-  ActuatorBulk(ActuatorMeta actMeta);
-  void StkSearchForActuatorPoints();
-  const ActuatorMeta actuatorMeta_;
+  ActuatorBulk(const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);
+  void StkSearchForActuatorPoints(const ActuatorMeta& actMeta);
   const int totalNumPoints_;
   // HOST AND DEVICE DATA (DualViews)
   ActVectorDblDv pointCentroid_;
@@ -65,6 +62,7 @@ struct ActuatorBulk{
   ActVectorDblDv epsilon_;
   ActScalarDblDv searchRadius_;
   // HOST ONLY DATA
+  stk::mesh::BulkData& stkBulk_;
   ActFixVectorDbl localCoords_;
   ActFixScalarBool pointIsLocal_;
   ActFixElemIds elemContainingPoint_;
