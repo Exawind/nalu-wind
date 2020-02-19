@@ -15,20 +15,6 @@
 namespace sierra {
 namespace nalu {
 
-void actuator_line_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta){
-#ifndef NALU_USES_OPENFAST
-  throw std::runtime_error("Compile with OpenFAST to use ActLineFAST");
-#endif
-
-}
-
-void actuator_disk_FAST_parse(const YAML::Node& y_node, ActuatorMeta& actMeta){
-#ifndef NALU_USES_OPENFAST
-  throw std::runtime_error("Compile with OpenFAST to use ActDiskFAST");
-#endif
-
-}
-
 /*! \brief Parse parameters to construct meta data for actuators
  *  Parse parameters and construct meta data for actuators.
  *  Intent is to divorce object creation/memory allocation from parsing
