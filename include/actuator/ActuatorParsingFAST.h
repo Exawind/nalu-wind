@@ -7,25 +7,19 @@
 // for more details.
 //
 
-#ifndef ACTUATOR_PARSING_H_
-#define ACTUATOR_PARSING_H_
+#ifndef ACTUATORPARSINGFAST_H_
+#define ACTUATORPARSINGFAST_H_
 
-#include <NaluParsing.h>
 #include <actuator/ActuatorBulk.h>
+#include <actuator/ActuatorBulkFAST.h>
+#include <NaluParsing.h>
 
 namespace sierra{
 namespace nalu{
 
-/*! \brief Parse parameters to construct meta data for actuator's
- *  Parse parameters and construct meta data for actuators.
- *  Intent is to divorce object creation/memory allocation from parsing
- *  to facilitate device compatibility.
- *
- *  This also has the added benefit of increasing unittest-ability.
- */
-ActuatorMeta actuator_parse(const YAML::Node& y_node, stk::mesh::BulkData& stkBulk);
+ActuatorMetaFAST actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta);
 
 }
 }
 
-#endif
+#endif /* ACTUATORPARSINGFAST_H_ */
