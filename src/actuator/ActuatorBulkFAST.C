@@ -22,5 +22,11 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta):
   epsilonTower_("epsilonTowerMeta", numberOfActuators_)
 {}
 
+
+ActuatorBulkFAST::ActuatorBulkFAST(const ActuatorMetaFAST& actMeta, stk::mesh::BulkData& stkBulk):
+  ActuatorBulk(actMeta, stkBulk)
+{
+  openFast_.setInputs(actMeta.fastInputs_);
+}
 }
 }

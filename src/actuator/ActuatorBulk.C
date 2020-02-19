@@ -13,13 +13,12 @@
 namespace sierra{
 namespace nalu{
 
-ActuatorMeta::ActuatorMeta(int numTurbines, stk::mesh::BulkData& stkBulk, ActuatorType actuatorType):
+ActuatorMeta::ActuatorMeta(int numTurbines, ActuatorType actuatorType):
     numberOfActuators_(numTurbines),
     actuatorType_(actuatorType),
     numPointsTotal_(0),
     searchMethod_(stk::search::KDTREE),
-    numPointsTurbine_("numPointsTurbine", numberOfActuators_),
-    stkBulk_(stkBulk)
+    numPointsTurbine_("numPointsTurbine", numberOfActuators_)
 {}
 
 void ActuatorMeta::add_turbine(const ActuatorInfoNGP& info)
@@ -28,29 +27,29 @@ void ActuatorMeta::add_turbine(const ActuatorInfoNGP& info)
   numPointsTotal_+=info.numPoints_;
 }
 
-ActuatorBulk::ActuatorBulk(ActuatorMeta meta):
-    actuatorMeta_(meta),
-    totalNumPoints_(actuatorMeta_.numPointsTotal_),
+ActuatorBulk::ActuatorBulk(const ActuatorMeta& meta, stk::mesh::BulkData& stkBulk):
+    totalNumPoints_(meta.numPointsTotal_),
     pointCentroid_("actPointCentroid", totalNumPoints_),
     velocity_("actVelocity", totalNumPoints_),
     actuatorForce_("actForce", totalNumPoints_),
     epsilon_("actEpsilon", totalNumPoints_),
     searchRadius_("searchRadius", totalNumPoints_),
+    stkBulk_(stkBulk),
     localCoords_("localCoords", totalNumPoints_),
     pointIsLocal_("pointIsLocal", totalNumPoints_),
     elemContainingPoint_("elemContainPoint", totalNumPoints_)
 {
 }
 
-void ActuatorBulk::StkSearchForActuatorPoints(){
+void ActuatorBulk::StkSearchForActuatorPoints(const ActuatorMeta& actMeta){
   auto points = pointCentroid_.template view<Kokkos::HostSpace>();
   auto radius = searchRadius_.template view<Kokkos::HostSpace>();
 
   auto boundSpheres = CreateBoundingSpheres(points, radius);
-  auto elemBoxes = CreateElementBoxes(actuatorMeta_.stkBulk_, actuatorMeta_.searchTargetNames_);
-  coarseSearchResults_ = ExecuteCoarseSearch(boundSpheres, elemBoxes, actuatorMeta_.searchMethod_);
+  auto elemBoxes = CreateElementBoxes(stkBulk_, actMeta.searchTargetNames_);
+  coarseSearchResults_ = ExecuteCoarseSearch(boundSpheres, elemBoxes, actMeta.searchMethod_);
   pointIsLocal_ = ExecuteFineSearch(
-    actuatorMeta_.stkBulk_,
+    stkBulk_,
     coarseSearchResults_,
     points,
     elemContainingPoint_,

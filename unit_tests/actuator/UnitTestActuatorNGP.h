@@ -105,8 +105,8 @@ void TestActuatorHostOnly::execute()
 //Create a different bulk data that will allow execution on device and host
 //for functors
 struct ActuatorBulkMod : public ActuatorBulk{
-  ActuatorBulkMod(ActuatorMeta meta):
-    ActuatorBulk(meta),
+  ActuatorBulkMod(ActuatorMeta meta, stk::mesh::BulkData& stkBulk):
+    ActuatorBulk(meta, stkBulk),
     scalar_("scalar", totalNumPoints_){}
   ActScalarDblDv scalar_;
 };
@@ -148,7 +148,7 @@ struct ComputeForce{};
 struct Interpolate{};
 
 struct ActuatorBulkSearchAndInterp : public ActuatorBulk{
-  ActuatorBulkSearchAndInterp(ActuatorMeta actMeta): ActuatorBulk(actMeta){}
+  ActuatorBulkSearchAndInterp(ActuatorMeta actMeta, stk::mesh::BulkData& stkBulk): ActuatorBulk(actMeta, stkBulk){}
 };
 
 using SetupActPoints = ActuatorFunctor<ActuatorBulkSearchAndInterp,SetPoints, ActuatorExecutionSpace>;
@@ -199,7 +199,7 @@ void InterpolateActVel::operator()(const int& index) const {
   auto vel = actBulk_.velocity_.template view<memory_space>();
   auto localCoord = actBulk_.localCoords_;
   if(actBulk_.pointIsLocal_(index)){
-    stk::mesh::BulkData& stkBulk = actBulk_.actuatorMeta_.stkBulk_;
+    const stk::mesh::BulkData& stkBulk = actBulk_.stkBulk_;
     stk::mesh::Entity elem = stkBulk.get_entity(stk::topology::ELEMENT_RANK,actBulk_.elemContainingPoint_(index));
     const int nodesPerElem = stkBulk.num_nodes(elem);
     std::vector<double> ws_coordinates(3*nodesPerElem), ws_velocity(3*nodesPerElem);
@@ -219,7 +219,7 @@ void TestActuatorSearchInterp::execute()
 {
   const int nP = actBulk_.totalNumPoints_;
   Kokkos::parallel_for("setPointLocations", nP, SetupActPoints(actBulk_));
-  actBulk_.StkSearchForActuatorPoints();
+  actBulk_.StkSearchForActuatorPoints(actMeta_);
   Kokkos::fence();
   Kokkos::parallel_for("interpVel", nP, InterpolateActVel(actBulk_));
   double* reducePointer = &(actBulk_.velocity_.h_view(0,0));

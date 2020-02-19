@@ -52,12 +52,7 @@ void test_wo_lines(const std::vector<std::string>& testFile, const ActuatorMeta&
 
 class ActuatorParsingFASTTest : public ::testing::Test{
 public:
-  ActuatorParsingFASTTest():stkMeta(3), stkBulk(stkMeta, MPI_COMM_WORLD){}
-
-
   std::vector<std::string> inputFileLines_;
-  stk::mesh::MetaData stkMeta;
-  stk::mesh::BulkData stkBulk;
 
 private:
   void SetUp(){
@@ -82,7 +77,7 @@ private:
 };
 
 TEST_F(ActuatorParsingFASTTest, minimumRequired){
-  ActuatorMeta actMeta(1, stkBulk, ActuatorTypeMap["ActLineFAST"]);
+  ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFAST"]);
   try{
     auto y_node = create_yaml_node(inputFileLines_);
     auto actMetaFAST = actuator_FAST_parse(y_node, actMeta);
@@ -94,7 +89,7 @@ TEST_F(ActuatorParsingFASTTest, minimumRequired){
 }
 
 TEST_F(ActuatorParsingFASTTest, minimumRequiredFLLC){
-  ActuatorMeta actMeta(1, stkBulk, ActuatorTypeMap["ActLineFAST"]);
+  ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFAST"]);
   inputFileLines_[8] = "    epsilon_chord: [1.0, 1.0, 1.0]\n";
   inputFileLines_.push_back("    epsilon_min: [10.0, 0.0, 0.0]\n");
   try{

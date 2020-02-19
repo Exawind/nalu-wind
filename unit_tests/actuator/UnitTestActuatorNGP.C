@@ -20,12 +20,12 @@ namespace{
 TEST(ActuatorNGP, testExecuteOnHostOnly){
   stk::mesh::MetaData stkMeta(3);
   stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
-  ActuatorMeta actMeta(1, stkBulk);
+  ActuatorMeta actMeta(1);
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
   actMeta.add_turbine(infoTurb0);
-  TestActuatorHostOnly actuator(actMeta);
+  TestActuatorHostOnly actuator(actMeta, stkBulk);
   ASSERT_NO_THROW(actuator.execute());
   const ActuatorBulk& actBulk = actuator.actuator_bulk();
   EXPECT_DOUBLE_EQ(3.0, actBulk.epsilon_.h_view(1,0));
@@ -48,12 +48,12 @@ TEST(ActuatorNGP, testExecuteOnHostOnly){
 TEST(ActuatorNGP, testExecuteOnHostAndDevice){
   stk::mesh::MetaData stkMeta(3);
   stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
-  ActuatorMeta actMeta(1, stkBulk);
+  ActuatorMeta actMeta(1);
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
   actMeta.add_turbine(infoTurb0);
-  TestActuatorHostDev actuator(actMeta);
+  TestActuatorHostDev actuator(actMeta, stkBulk);
   ASSERT_NO_THROW(actuator.execute());
   const ActuatorBulkMod& actBulk = actuator.actuator_bulk();
   const double expectVal = actBulk.velocity_.h_view(1,1)*actBulk.pointCentroid_.h_view(1,0);
@@ -117,7 +117,7 @@ TEST_F(ActuatorNGPOnMesh, testSearchAndInterpolate){
       "  search_target_part: [block_1]\n"
       ;
   YAML::Node y_actuator = YAML::Load(inputFileSurrogate_);
-  ActuatorMeta actMeta = actuator_parse(y_actuator, stkBulk_);
+  ActuatorMeta actMeta = actuator_parse(y_actuator);
 
   // more parse stuff to be implemented
   ActuatorInfoNGP actInfo;
@@ -125,14 +125,14 @@ TEST_F(ActuatorNGPOnMesh, testSearchAndInterpolate){
   actMeta.add_turbine(actInfo);
 
   // construct object and allocate memory
-  TestActuatorSearchInterp actuator(actMeta);
+  TestActuatorSearchInterp actuator(actMeta, stkBulk_);
 
   // what gets called in the time loop
   actuator.execute();
 
   // check results
   auto actBulk = actuator.actuator_bulk();
-  const int nTotal = actBulk.actuatorMeta_.numPointsTotal_;
+  const int nTotal = actBulk.totalNumPoints_;
   auto points = actBulk.pointCentroid_.template view<Kokkos::HostSpace>();
   auto vel = actBulk.velocity_.template view<Kokkos::HostSpace>();
   auto force = actBulk.actuatorForce_.template view<Kokkos::HostSpace>();

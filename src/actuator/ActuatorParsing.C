@@ -27,7 +27,7 @@ namespace nalu {
  *  another parse function that takes one YAML::Node and one ActuatorMeta object
  *  as inputs and returns a more specialized ActuatorMeta object.
  */
-ActuatorMeta actuator_parse(const YAML::Node& y_node, stk::mesh::BulkData& stkBulk)
+ActuatorMeta actuator_parse(const YAML::Node& y_node)
 {
   const YAML::Node y_actuator = y_node["actuator"];
   if (y_actuator)
@@ -36,7 +36,7 @@ ActuatorMeta actuator_parse(const YAML::Node& y_node, stk::mesh::BulkData& stkBu
     std::string actuatorTypeName;
     get_required(y_actuator, "n_turbines_glob", nTurbines);
     get_required(y_actuator, "type", actuatorTypeName);
-    ActuatorMeta actMeta(nTurbines, stkBulk, ActuatorTypeMap[actuatorTypeName]);
+    ActuatorMeta actMeta(nTurbines, ActuatorTypeMap[actuatorTypeName]);
     // search specifications
     std::string searchMethodName = "na";
     get_if_present(y_actuator, "search_method", searchMethodName,
@@ -73,7 +73,7 @@ ActuatorMeta actuator_parse(const YAML::Node& y_node, stk::mesh::BulkData& stkBu
     return actMeta;
   } else
   {
-    return ActuatorMeta(0, stkBulk);
+    return ActuatorMeta(0);
   }
 }
 

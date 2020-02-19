@@ -10,7 +10,8 @@
 #ifndef ACTUATOR_NGP_H_
 #define ACTUATOR_NGP_H_
 
-#include<actuator/ActuatorTypes.h>
+#include <actuator/ActuatorTypes.h>
+#include <stk_mesh/base/BulkData.hpp>
 
 namespace sierra{
 namespace nalu{
@@ -64,14 +65,16 @@ template<typename ActMetaData, typename ActBulkData>
 class Actuator
 {
 public:
-  Actuator(ActMetaData actMeta):actBulk_(actMeta){}
+  Actuator(const ActMetaData& actMeta, stk::mesh::BulkData& stkBulk):
+    actMeta_(actMeta), actBulk_(actMeta_, stkBulk){}
   // TODO(psakiev) restrict access for this except for unit testing
   const ActBulkData& actuator_bulk(){return actBulk_;}
   /// Where the work is done. This function should be defined for each particular instance
   void execute();
 
 private:
-  ActBulkData actBulk_; //< Contains data and a copy of the meta data that was used in construction
+  const ActMetaData actMeta_; //< Contains meta data used to construct
+  ActBulkData actBulk_; //< Contains data
 
 };
 
