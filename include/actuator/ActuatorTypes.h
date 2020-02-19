@@ -41,6 +41,13 @@ using ActFixScalarDbl = Kokkos::View<double*,  ActuatorFixedMemLayout, ActuatorF
 using ActFixVectorDbl = Kokkos::View<double*[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixElemIds   = Kokkos::View<uint64_t*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixScalarBool   = Kokkos::View<bool*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+
+#define TOUCH_DUAL_VIEW(view, memory_space) {\
+  view.sync<memory_space>();\
+  view.modify<memory_space>();\
+}
+#define GET_LOCAL_VIEW(myview, memory_space) (myview.template view<memory_space>())
+
 } //namespace nalu
 } //namespace sierra
 

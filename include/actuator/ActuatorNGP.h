@@ -66,7 +66,10 @@ class Actuator
 {
 public:
   Actuator(const ActMetaData& actMeta, stk::mesh::BulkData& stkBulk):
-    actMeta_(actMeta), actBulk_(actMeta_, stkBulk){}
+    actMeta_(actMeta),
+    actBulk_(actMeta_, stkBulk),
+    numActPoints_(actBulk_.totalNumPoints_)
+{}
   // TODO(psakiev) restrict access for this except for unit testing
   const ActBulkData& actuator_bulk(){return actBulk_;}
   /// Where the work is done. This function should be defined for each particular instance
@@ -75,6 +78,7 @@ public:
 private:
   const ActMetaData actMeta_; //< Contains meta data used to construct
   ActBulkData actBulk_; //< Contains data
+  const int numActPoints_; //< Total number of actuator points
 
 };
 

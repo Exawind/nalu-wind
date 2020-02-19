@@ -24,7 +24,8 @@ struct ActuatorMetaFAST : public ActuatorMeta{
   std::vector<std::string> turbineNames_;
   std::vector<std::string> turbineOutputFileNames_;
   bool filterLiftLineCorrection_;
-  // TODO(psakiev) not certain these need to be dual views
+
+  // TODO(psakiev) not certain all these need to be dual views
   ActVectorDblDv epsilon_;
   ActVectorDblDv epsilonChord_;
   ActVectorDblDv epsilonTower_;
@@ -34,6 +35,9 @@ struct ActuatorMetaFAST : public ActuatorMeta{
 struct ActuatorBulkFAST : public ActuatorBulk
 {
   ActuatorBulkFAST(const ActuatorMetaFAST& actMeta, stk::mesh::BulkData& stkBulk);
+  ~ActuatorBulkFAST();
+  ActScalarIntDv turbIdOffset_;
+  ActVectorDblDv epsilonOpt_;
   fast::OpenFAST openFast_;
 };
 

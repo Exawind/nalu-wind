@@ -35,8 +35,7 @@ template<>
 ActPreIter::ActuatorFunctor(ActuatorBulk& bulk):actBulk_(bulk){
   //TODO(psakiev) it should probably be a feature of the bulk data
   // to recognize modification so users don't need to track this
-  actBulk_.epsilon_.sync  <memory_space>();
-  actBulk_.epsilon_.modify<memory_space>();
+  TOUCH_DUAL_VIEW(actBulk_.epsilon_, memory_space);
 }
 
 template<>
@@ -49,8 +48,7 @@ void ActPreIter::operator()(const int& index) const{
 
 template<>
 ActCompPnt::ActuatorFunctor(ActuatorBulk& bulk):actBulk_(bulk){
-  actBulk_.pointCentroid_.sync  <memory_space>();
-  actBulk_.pointCentroid_.modify<memory_space>();
+  TOUCH_DUAL_VIEW(actBulk_.pointCentroid_, memory_space);
 }
 
 template<>
@@ -63,8 +61,7 @@ void ActCompPnt::operator()(const int& index) const{
 
 template<>
 ActInterp::ActuatorFunctor(ActuatorBulk& bulk):actBulk_(bulk){
-  actBulk_.velocity_.sync  <memory_space>();
-  actBulk_.velocity_.modify<memory_space>();
+  TOUCH_DUAL_VIEW(actBulk_.velocity_, memory_space);
 }
 
 template<>
@@ -77,8 +74,7 @@ void ActInterp::operator()(const int& index) const{
 
 template<>
 ActSpread::ActuatorFunctor(ActuatorBulk& bulk):actBulk_(bulk){
-  actBulk_.actuatorForce_.sync  <memory_space>();
-  actBulk_.actuatorForce_.modify<memory_space>();
+  TOUCH_DUAL_VIEW(actBulk_.actuatorForce_, memory_space);
 }
 
 template<>
@@ -94,12 +90,10 @@ using TestActuatorHostOnly = Actuator<ActuatorMeta, ActuatorBulk>;
 template<>
 void TestActuatorHostOnly::execute()
 {
-  const int nP = actBulk_.totalNumPoints_;
-
-  Kokkos::parallel_for("actPreIter",      nP, ActPreIter(actBulk_));
-  Kokkos::parallel_for("actCompPointLoc", nP, ActCompPnt(actBulk_));
-  Kokkos::parallel_for("actInterpVals",   nP, ActInterp (actBulk_));
-  Kokkos::parallel_for("actSpreadForce",  nP, ActSpread (actBulk_));
+  Kokkos::parallel_for("actPreIter",      numActPoints_, ActPreIter(actBulk_));
+  Kokkos::parallel_for("actCompPointLoc", numActPoints_, ActCompPnt(actBulk_));
+  Kokkos::parallel_for("actInterpVals",   numActPoints_, ActInterp (actBulk_));
+  Kokkos::parallel_for("actSpreadForce",  numActPoints_, ActSpread (actBulk_));
 }
 
 //Create a different bulk data that will allow execution on device and host
@@ -116,8 +110,7 @@ using ActPostIter= ActuatorFunctor<ActuatorBulkMod, PostIter, ActuatorExecutionS
 
 template<>
 ActPostIter::ActuatorFunctor(ActuatorBulkMod& bulk):actBulk_(bulk){
-  actBulk_.scalar_.sync  <memory_space>();
-  actBulk_.scalar_.modify<memory_space>();
+  TOUCH_DUAL_VIEW(actBulk_.scalar_, memory_space);
 }
 
 template<>
@@ -132,12 +125,11 @@ using TestActuatorHostDev = Actuator<ActuatorMeta, ActuatorBulkMod>;
 template<>
 void TestActuatorHostDev::execute()
 {
-  const int nP = actBulk_.totalNumPoints_;
-  Kokkos::parallel_for("actPreIter",      nP, ActPreIter (actBulk_));
-  Kokkos::parallel_for("actCompPointLoc", nP, ActCompPnt (actBulk_));
-  Kokkos::parallel_for("actInterpVals",   nP, ActInterp  (actBulk_));
-  Kokkos::parallel_for("actSpreadForce",  nP, ActSpread  (actBulk_));
-  Kokkos::parallel_for("actPostIter",     nP, ActPostIter(actBulk_));
+  Kokkos::parallel_for("actPreIter",      numActPoints_, ActPreIter (actBulk_));
+  Kokkos::parallel_for("actCompPointLoc", numActPoints_, ActCompPnt (actBulk_));
+  Kokkos::parallel_for("actInterpVals",   numActPoints_, ActInterp  (actBulk_));
+  Kokkos::parallel_for("actSpreadForce",  numActPoints_, ActSpread  (actBulk_));
+  Kokkos::parallel_for("actPostIter",     numActPoints_, ActPostIter(actBulk_));
   actBulk_.scalar_.sync_device();
 
 }
@@ -154,10 +146,8 @@ struct ActuatorBulkSearchAndInterp : public ActuatorBulk{
 using SetupActPoints = ActuatorFunctor<ActuatorBulkSearchAndInterp,SetPoints, ActuatorExecutionSpace>;
 template<>
 SetupActPoints::ActuatorFunctor(ActuatorBulkSearchAndInterp& actBulk):actBulk_(actBulk){
-  actBulk_.pointCentroid_.sync  <memory_space>();
-  actBulk_.searchRadius_.sync   <memory_space>();
-  actBulk_.pointCentroid_.modify<memory_space>();
-  actBulk_.searchRadius_.modify <memory_space>();
+  TOUCH_DUAL_VIEW(actBulk_.pointCentroid_, memory_space);
+  TOUCH_DUAL_VIEW(actBulk_.searchRadius_, memory_space);
 }
 
 template<>
@@ -173,8 +163,7 @@ void SetupActPoints::operator()(const int& index) const{
 using ComputeActuatorForce = ActuatorFunctor<ActuatorBulkSearchAndInterp, ComputeForce, ActuatorExecutionSpace>;
 template<>
 ComputeActuatorForce::ActuatorFunctor(ActuatorBulkSearchAndInterp& actBulk): actBulk_(actBulk){
-  actBulk_.actuatorForce_.sync  <memory_space>();
-  actBulk_.actuatorForce_.modify<memory_space>();
+  TOUCH_DUAL_VIEW(actBulk_.actuatorForce_, memory_space);
 }
 
 template<>
@@ -189,8 +178,7 @@ void ComputeActuatorForce::operator()(const int& index) const{
 using InterpolateActVel = ActuatorFunctor<ActuatorBulkSearchAndInterp,Interpolate, Kokkos::DefaultHostExecutionSpace>;
 template<>
 InterpolateActVel::ActuatorFunctor(ActuatorBulkSearchAndInterp& actBulk): actBulk_(actBulk){
-  actBulk_.velocity_.sync<memory_space>();
-  actBulk_.velocity_.modify<memory_space>();
+  TOUCH_DUAL_VIEW(actBulk_.velocity_, memory_space);
 }
 
 template<>
@@ -217,15 +205,14 @@ template<>
 // show how to interweave functions and ActuatorFunctors
 void TestActuatorSearchInterp::execute()
 {
-  const int nP = actBulk_.totalNumPoints_;
-  Kokkos::parallel_for("setPointLocations", nP, SetupActPoints(actBulk_));
-  actBulk_.StkSearchForActuatorPoints(actMeta_);
+  Kokkos::parallel_for("setPointLocations", numActPoints_, SetupActPoints(actBulk_));
+  actBulk_.stk_search_act_pnts(actMeta_);
   Kokkos::fence();
-  Kokkos::parallel_for("interpVel", nP, InterpolateActVel(actBulk_));
+  Kokkos::parallel_for("interpVel", numActPoints_, InterpolateActVel(actBulk_));
   double* reducePointer = &(actBulk_.velocity_.h_view(0,0));
-  MPI_Allreduce(reducePointer, reducePointer, nP*3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(reducePointer, reducePointer, numActPoints_*3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   Kokkos::fence();
-  Kokkos::parallel_for("computeActuatorForce", nP, ComputeActuatorForce(actBulk_));
+  Kokkos::parallel_for("computeActuatorForce", numActPoints_, ComputeActuatorForce(actBulk_));
 
 }
 
