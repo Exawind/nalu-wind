@@ -41,7 +41,7 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& meta, stk::mesh::BulkData& stkBul
 {
 }
 
-void ActuatorBulk::StkSearchForActuatorPoints(const ActuatorMeta& actMeta){
+void ActuatorBulk::stk_search_act_pnts(const ActuatorMeta& actMeta){
   auto points = pointCentroid_.template view<Kokkos::HostSpace>();
   auto radius = searchRadius_.template view<Kokkos::HostSpace>();
 

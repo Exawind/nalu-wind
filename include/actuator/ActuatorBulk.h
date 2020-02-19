@@ -53,7 +53,7 @@ struct ActuatorMeta{
  */
 struct ActuatorBulk{
   ActuatorBulk(const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);
-  void StkSearchForActuatorPoints(const ActuatorMeta& actMeta);
+  void stk_search_act_pnts(const ActuatorMeta& actMeta);
   const int totalNumPoints_;
   // HOST AND DEVICE DATA (DualViews)
   ActVectorDblDv pointCentroid_;
@@ -69,8 +69,6 @@ struct ActuatorBulk{
   // STL data types
   VecSearchKeyPair coarseSearchResults_; // reuse for spreading forces
 };
-
-
 
 }
 }
