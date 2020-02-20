@@ -44,8 +44,8 @@ void SSTMaxLengthScaleAlg<AlgTraits>::execute()
   const auto& meta = meshInfo.meta();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
-  const auto coordinates = fieldMgr.get_field<double>(coordinates_);
-  auto maxLengthScale = fieldMgr.get_field<double>(maxLengthScale_);
+  const auto coordinates = fieldMgr.template get_field<double>(coordinates_);
+  auto maxLengthScale = fieldMgr.template get_field<double>(maxLengthScale_);
   MasterElement *meSCS = meSCS_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
