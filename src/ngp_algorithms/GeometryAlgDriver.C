@@ -61,8 +61,12 @@ void compute_volume_stats(const MeshInfo& meshInfo)
   double lVolStats[3] = {volStats.min_val, volStats.max_val,
                          volStats.total_sum};
   double gVolStats[3] = { 0.0, 0.0, 0.0 };
+  stk::all_reduce_min(
+    meshInfo.bulk().parallel(), &lVolStats[0], &gVolStats[0], 1);
+  stk::all_reduce_max(
+    meshInfo.bulk().parallel(), &lVolStats[1], &gVolStats[1], 1);
   stk::all_reduce_sum(
-    meshInfo.bulk().parallel(), lVolStats, gVolStats, 3);
+    meshInfo.bulk().parallel(), &lVolStats[2], &gVolStats[2], 1);
 
   NaluEnv::self().naluOutputP0()
     << " DualNodalVolume min: " << gVolStats[0]
