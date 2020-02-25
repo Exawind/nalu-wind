@@ -18,6 +18,7 @@
 #include <FieldTypeDef.h>
 
 #include <Kokkos_DefaultNode.hpp>
+#include <Kokkos_UnorderedMap.hpp>
 #include <Tpetra_MultiVector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 
