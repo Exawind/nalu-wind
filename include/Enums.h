@@ -1,9 +1,12 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2014 Sandia Corporation.                                    */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 
 
 #ifndef Enums_h
@@ -17,20 +20,23 @@ namespace nalu {
 
 enum AlgorithmType{
   INTERIOR  = 0,
-  INFLOW    = 1,
-  WALL      = 2,
-  WALL_FCN  = 3,
-  OPEN      = 4,
-  MASS      = 5,
-  SRC       = 6,
-  SYMMETRY  = 7,
-  WALL_HF   = 8,
-  WALL_CHT  = 9,
-  WALL_RAD  = 10,
-  NON_CONFORMAL = 11,
-  ELEM_SOURCE = 12,
-  OVERSET = 13,
-  WALL_ABL = 14,
+  BOUNDARY,
+  INFLOW    ,
+  WALL      ,
+  WALL_FCN  ,
+  OPEN      ,
+  MASS      ,
+  SRC       ,
+  SYMMETRY  ,
+  WALL_HF   ,
+  WALL_CHT  ,
+  WALL_RAD  ,
+  NON_CONFORMAL ,
+  ELEM_SOURCE ,
+  OVERSET ,
+  WALL_ABL ,
+
+  TOP_ABL,
 
   /** Set the reference pressure at a node.
    *
@@ -40,9 +46,11 @@ enum AlgorithmType{
    *
    * \sa FixPressureAtNodeAlgorithm
    */
-  REF_PRESSURE = 15, 
- 
-  TOP_ABL = 16
+
+  REF_PRESSURE,
+  X_SYM_STRONG,
+  Y_SYM_STRONG,
+  Z_SYM_STRONG
 };
 
 enum BoundaryConditionType{
@@ -67,13 +75,15 @@ enum EquationType {
   EQ_MESH_DISPLACEMENT = 7,
   EQ_SPEC_DISS_RATE = 8,
   EQ_MASS_FRACTION = 9,
-  EQ_PNG   = 10,
-  EQ_PNG_P = 11,
-  EQ_PNG_Z = 12,
-  EQ_PNG_H = 13,
-  EQ_PNG_U = 14,
-  EQ_PNG_TKE = 15, // FIXME... Last PNG managed like this..
-  EQ_WALL_DISTANCE = 16,
+  EQ_TAMS = 10,
+  EQ_PNG   = 11,
+  EQ_PNG_P = 12,
+  EQ_PNG_Z = 13,
+  EQ_PNG_H = 14,
+  EQ_PNG_U = 15,
+  EQ_PNG_TKE = 16, // FIXME... Last PNG managed like this..
+  EQ_WALL_DISTANCE = 17,
+  EQ_GAMMA_TRANS = 18,
   EquationSystemType_END
 };
 
@@ -88,6 +98,7 @@ static const std::string EquationTypeMap[] = {
   "MeshVelocity",
   "Specific_Dissipation_Rate",
   "Mass_Fraction",
+  "TAMS",
   "PNG",
   "PNG_P",
   "PNG_Z",
@@ -155,6 +166,7 @@ enum TurbulenceModel {
   WALE = 3,
   SST = 4,
   SST_DES = 5,
+  SST_TAMS = 6,
   TurbulenceModel_END
 };  
 
@@ -165,7 +177,8 @@ static const std::string TurbulenceModelNames[] = {
   "smagorinsky",
   "wale",
   "sst",
-  "sst_des"};
+  "sst_des",
+  "sst_tams"};
 
 enum TurbulenceModelConstant {
   TM_cMu = 0,
@@ -193,7 +206,20 @@ enum TurbulenceModelConstant {
   TM_ci = 22,
   TM_elog = 23,
   TM_yplus_crit = 24,
-  TM_END = 25
+  TM_CMdeg = 25,
+  TM_forCl = 26,
+  TM_forCeta = 27,
+  TM_forCt = 28,
+  TM_forBlT = 29,
+  TM_forBlKol = 30,
+  TM_forFac = 31,
+  TM_v2cMu = 32,
+  TM_END = 33,
+  TM_caOne = 34,
+  TM_caTwo = 35,
+  TM_ceOne = 36,
+  TM_ceTwo = 37,
+  TM_c0t = 38,
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -222,6 +248,14 @@ static const std::string TurbulenceModelConstantNames[] = {
   "ci",
   "Elog",
   "yplus_crit",
+  "CMdeg",
+  "forcingCl",
+  "forcingCeta",
+  "forcingCt",
+  "forcingBlT",
+  "forcingBlKol",
+  "forcingFactor",
+  "v2cMu",
   "END"};
 
 enum ActuatorType {
