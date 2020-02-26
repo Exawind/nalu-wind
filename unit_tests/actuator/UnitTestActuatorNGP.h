@@ -63,7 +63,7 @@ template <>
 void
 ActPreIter::operator()(const int& index) const
 {
-  auto epsilon = actBulk_.epsilon_.template view<memory_space>();
+  auto epsilon = get_local_view(actBulk_.epsilon_);
   epsilon(index, 0) = index * 3.0;
   epsilon(index, 1) = index * 6.0;
   epsilon(index, 2) = index * 9.0;
