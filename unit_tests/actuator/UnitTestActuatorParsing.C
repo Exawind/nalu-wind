@@ -11,25 +11,23 @@
 #include <yaml-cpp/yaml.h>
 #include <actuator/ActuatorParsing.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-namespace{
+namespace {
 
-///Check the minimum parse terms are not violated and
-///that defaults haven't changed
-TEST(ActuatorParse, bareMinimumParse){
-  std::string testFile =
-      "actuator:\n"
-      "  type: ActLineFAST\n"
-      "  n_turbines_glob: 1\n"
-      "  search_target_part: [part1, part2]"
-      ;
+/// Check the minimum parse terms are not violated and
+/// that defaults haven't changed
+TEST(ActuatorParse, bareMinimumParse)
+{
+  std::string testFile = "actuator:\n"
+                         "  type: ActLineFAST\n"
+                         "  n_turbines_glob: 1\n"
+                         "  search_target_part: [part1, part2]";
   YAML::Node y_actuator = YAML::Load(testFile);
-  try{
+  try {
     ActuatorMeta actMeta = actuator_parse(y_actuator);
-  }
-  catch (std::exception const & err){
+  } catch (std::exception const& err) {
     FAIL() << err.what();
   }
 
@@ -38,7 +36,7 @@ TEST(ActuatorParse, bareMinimumParse){
   EXPECT_EQ(2, actMeta.searchTargetNames_.size());
 }
 
-}
+} // namespace
 
-} //namespace nalu
-} //namespace sierra
+} // namespace nalu
+} // namespace sierra

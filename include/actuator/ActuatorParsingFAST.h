@@ -10,16 +10,20 @@
 #ifndef ACTUATORPARSINGFAST_H_
 #define ACTUATORPARSINGFAST_H_
 
-#include <actuator/ActuatorBulk.h>
-#include <actuator/ActuatorBulkFAST.h>
-#include <NaluParsing.h>
-
-namespace sierra{
-namespace nalu{
-
-ActuatorMetaFAST actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta);
-
+namespace YAML {
+class Node;
 }
-}
+
+namespace sierra {
+namespace nalu {
+
+struct ActuatorMeta;
+struct ActuatorMetaFAST;
+
+ActuatorMetaFAST
+actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta);
+
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ACTUATORPARSINGFAST_H_ */

@@ -10,20 +10,20 @@
 #include <actuator/ActuatorFunctorsFAST.h>
 #include <NaluEnv.h>
 
-namespace sierra
-{
-namespace nalu
-{
+namespace sierra {
+namespace nalu {
 
-template<>
-ActFastUpdatePoints::ActuatorFunctor(ActuatorBulkFAST& actBulk):
-  actBulk_(actBulk)
+template <>
+ActFastUpdatePoints::ActuatorFunctor(ActuatorBulkFAST& actBulk)
+  : actBulk_(actBulk)
 {
   TOUCH_DUAL_VIEW(actBulk_.pointCentroid_, memory_space);
 }
 
-template<>
-void ActFastUpdatePoints::operator()(const int& index) const{
+template <>
+void
+ActFastUpdatePoints::operator()(const int& index) const
+{
   fast::OpenFAST& FAST = actBulk_.openFast_;
   auto points = GET_LOCAL_VIEW(actBulk_.pointCentroid_, memory_space);
   auto offsets = GET_LOCAL_VIEW(actBulk_.turbIdOffset_, memory_space);
@@ -31,24 +31,23 @@ void ActFastUpdatePoints::operator()(const int& index) const{
   // if local fast owns point
   int turbId = 0;
   const int nTurbs = offsets.extent_int(0);
-  for(int i=0; i<nTurbs; i++){
-    if(offsets(i)>index){
-      turbId = i-1;
+  for (int i = 0; i < nTurbs; i++) {
+    if (offsets(i) > index) {
+      turbId = i - 1;
       break;
     }
   }
 
   int owningRank = FAST.get_procNo(turbId);
 
-  if(owningRank == NaluEnv::self().parallel_rank()){
+  if (owningRank == NaluEnv::self().parallel_rank()) {
     // compute location
-    std::vector<double> tempCoords(3,0.0);
+    std::vector<double> tempCoords(3, 0.0);
     FAST.getForceNodeCoordinates(tempCoords, owningRank, turbId);
-    for(int i=0; i<3; i++){
-      points(index,i) = tempCoords[i];
+    for (int i = 0; i < 3; i++) {
+      points(index, i) = tempCoords[i];
     }
-  }
-  else{
+  } else {
     return;
   }
 }

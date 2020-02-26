@@ -10,10 +10,10 @@
 #ifndef UNITTESTACTUATORINFO_H_
 #define UNITTESTACTUATORINFO_H_
 
-#include<NaluParsing.h>
+#include <NaluParsing.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 /*! \brief Data structure to stash turbine info during parsing
  * Data structure to stash turbine info during parsing. This
@@ -28,10 +28,9 @@ struct ActuatorInfoNGP
   int numPoints_{0};
   Coordinates epsilon_;
   std::string turbineName_;
-
 };
 
-}
-}
+} // namespace nalu
+} // namespace sierra
 
 #endif

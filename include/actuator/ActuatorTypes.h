@@ -13,9 +13,8 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>
 
-namespace sierra{
-namespace nalu{
-
+namespace sierra {
+namespace nalu {
 
 #ifdef ACTUATOR_ON_DEVICE
 using ActuatorMemSpace = Kokkos::CudaSpace;
@@ -30,25 +29,34 @@ using ActuatorFixedMemSpace = Kokkos::HostSpace;
 using ActuatorFixedMemLayout = Kokkos::LayoutRight; // column major
 using ActuatorFixedExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 
-
-using ActScalarIntDv = Kokkos::DualView<int*,     ActuatorMemLayout, ActuatorMemSpace>;
-using ActScalarDblDv = Kokkos::DualView<double*,  ActuatorMemLayout, ActuatorMemSpace>;
-using ActVectorDblDv = Kokkos::DualView<double*[3], ActuatorMemLayout, ActuatorMemSpace>;
+using ActScalarIntDv =
+  Kokkos::DualView<int*, ActuatorMemLayout, ActuatorMemSpace>;
+using ActScalarDblDv =
+  Kokkos::DualView<double*, ActuatorMemLayout, ActuatorMemSpace>;
+using ActVectorDblDv =
+  Kokkos::DualView<double* [3], ActuatorMemLayout, ActuatorMemSpace>;
 
 using ActFixRangePolicy = Kokkos::RangePolicy<ActuatorFixedExecutionSpace>;
-using ActFixScalarInt = Kokkos::View<int*,     ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
-using ActFixScalarDbl = Kokkos::View<double*,  ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
-using ActFixVectorDbl = Kokkos::View<double*[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
-using ActFixElemIds   = Kokkos::View<uint64_t*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
-using ActFixScalarBool   = Kokkos::View<bool*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+using ActFixScalarInt =
+  Kokkos::View<int*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+using ActFixScalarDbl =
+  Kokkos::View<double*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+using ActFixVectorDbl =
+  Kokkos::View<double* [3], ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+using ActFixElemIds =
+  Kokkos::View<uint64_t*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+using ActFixScalarBool =
+  Kokkos::View<bool*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 
-#define TOUCH_DUAL_VIEW(view, memory_space) {\
-  view.sync<memory_space>();\
-  view.modify<memory_space>();\
-}
-#define GET_LOCAL_VIEW(myview, memory_space) (myview.template view<memory_space>())
+#define TOUCH_DUAL_VIEW(view, memory_space)                                    \
+  {                                                                            \
+    view.sync<memory_space>();                                                 \
+    view.modify<memory_space>();                                               \
+  };
+#define GET_LOCAL_VIEW(myview, memory_space)                                   \
+  (myview.template view<memory_space>())
 
-} //namespace nalu
-} //namespace sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif // INCLUDE_ACTUATOR_ACTUATORTYPES_H_

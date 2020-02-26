@@ -13,10 +13,11 @@
 #include <actuator/ActuatorBulk.h>
 #include "OpenFAST.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-struct ActuatorMetaFAST : public ActuatorMeta{
+struct ActuatorMetaFAST : public ActuatorMeta
+{
   ActuatorMetaFAST(const ActuatorMeta& actMeta);
 
   // HOST ONLY
@@ -29,20 +30,19 @@ struct ActuatorMetaFAST : public ActuatorMeta{
   ActVectorDblDv epsilon_;
   ActVectorDblDv epsilonChord_;
   ActVectorDblDv epsilonTower_;
-
 };
 
 struct ActuatorBulkFAST : public ActuatorBulk
 {
-  ActuatorBulkFAST(const ActuatorMetaFAST& actMeta, stk::mesh::BulkData& stkBulk);
+  ActuatorBulkFAST(
+    const ActuatorMetaFAST& actMeta, stk::mesh::BulkData& stkBulk);
   ~ActuatorBulkFAST();
   ActScalarIntDv turbIdOffset_;
   ActVectorDblDv epsilonOpt_;
   fast::OpenFAST openFast_;
 };
 
-
-}
-}
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ACTUATORBULKFAST_H_ */
