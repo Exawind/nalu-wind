@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include "/Users/psakiev/soft/nalu-wind/include/actuator/ActuatorFunctorsFAST.h"
+#include <actuator/ActuatorFunctorsFAST.h>
 
 namespace sierra {
 namespace nalu {

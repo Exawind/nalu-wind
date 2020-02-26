@@ -26,7 +26,7 @@ using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 #endif
 using ActuatorFixedMemSpace = Kokkos::HostSpace;
-using ActuatorFixedMemLayout = Kokkos::LayoutRight; // column major
+using ActuatorFixedMemLayout = Kokkos::LayoutRight;
 using ActuatorFixedExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 
 using ActScalarIntDv =

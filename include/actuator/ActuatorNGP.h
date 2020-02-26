@@ -46,8 +46,16 @@ struct ActuatorFunctor
 
   BulkData& actBulk_;
   ActuatorFunctor(BulkData& bulk);
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
+
+  template<typename T>
+  KOKKOS_INLINE_FUNCTION
+  auto get_local_view(T dualView)->decltype (dualView.template view<memory_space>()) const {
+    return dualView.template view<memory_space>();
+  }
+
 };
 
 /*!
