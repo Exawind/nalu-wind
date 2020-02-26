@@ -13,32 +13,35 @@
 #include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulkFAST.h>
 
-namespace sierra
-{
-namespace nalu
-{
+namespace sierra {
+namespace nalu {
 
-namespace actfast
-{
+namespace actfast {
 // tags
-struct ComputeLocations{};
-}
+struct ComputeLocations
+{
+};
+} // namespace actfast
 
 // typedefs
 using ActuatorNgpFAST = Actuator<ActuatorMetaFAST, ActuatorBulkFAST>;
 
 using ActFastUpdatePoints = ActuatorFunctor<
-    ActuatorBulkFAST, actfast::ComputeLocations, Kokkos::DefaultHostExecutionSpace>;
+  ActuatorBulkFAST,
+  actfast::ComputeLocations,
+  Kokkos::DefaultHostExecutionSpace>;
 
 // declarations
-template<>
+template <>
 ActFastUpdatePoints::ActuatorFunctor(ActuatorBulkFAST& actBulk);
 
-template<>
-void ActuatorNgpFAST::execute(){
+template <>
+void
+ActuatorNgpFAST::execute()
+{
   // compute point locations
-  Kokkos::parallel_for("updatePointLocationsActuatorNgpFAST",
-    numActPoints_,
+  Kokkos::parallel_for(
+    "updatePointLocationsActuatorNgpFAST", numActPoints_,
     ActFastUpdatePoints(actBulk_));
   // find points
   actBulk_.stk_search_act_pnts(actMeta_);
@@ -47,8 +50,6 @@ void ActuatorNgpFAST::execute(){
   // spread forces to nodes
   // compute thrust
 }
-
-
 
 } /* namespace nalu */
 } /* namespace sierra */

@@ -9,17 +9,20 @@
 #include <gtest/gtest.h>
 #include <actuator/ActuatorBulk.h>
 #include <actuator/ActuatorInfo.h>
+#include <stk_mesh/base/MetaData.hpp>
+#include <stk_mesh/base/BulkData.hpp>
 
 // to allocate need turbine info
 // compute offsets need num procs
 // add fields/fixed fields
 // allocate
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-namespace{
+namespace {
 
-TEST(ActuatorMeta, constructor){
+TEST(ActuatorMeta, constructor)
+{
   const int numTurbines = 2;
   ActuatorMeta fieldMeta(numTurbines);
   EXPECT_EQ(numTurbines, fieldMeta.numberOfActuators_);
@@ -27,24 +30,26 @@ TEST(ActuatorMeta, constructor){
   EXPECT_EQ(0, fieldMeta.num_points_turbine(1));
 }
 
-TEST(ActuatorMeta, addTurbine){
+TEST(ActuatorMeta, addTurbine)
+{
   const int numTurbines = 1;
   ActuatorMeta fieldMeta(numTurbines);
   ActuatorInfoNGP dummyInfo;
-  dummyInfo.numPoints_=1024;
+  dummyInfo.numPoints_ = 1024;
   fieldMeta.add_turbine(dummyInfo);
   EXPECT_EQ(1024, fieldMeta.num_points_turbine(0));
 }
 
-TEST(ActuatorMeta, copyCtor){
+TEST(ActuatorMeta, copyCtor)
+{
   const int numTurbines = 2;
   ActuatorMeta fieldMeta(numTurbines);
   ActuatorInfoNGP actInfo1;
-  actInfo1.numPoints_= 30;
-  actInfo1.turbineId_=0;
+  actInfo1.numPoints_ = 30;
+  actInfo1.turbineId_ = 0;
   ActuatorInfoNGP actInfo2;
-  actInfo2.numPoints_= 24;
-  actInfo2.turbineId_=1;
+  actInfo2.numPoints_ = 24;
+  actInfo2.turbineId_ = 1;
   fieldMeta.add_turbine(actInfo1);
   fieldMeta.add_turbine(actInfo2);
   EXPECT_EQ(30, fieldMeta.num_points_turbine(0));
@@ -53,22 +58,22 @@ TEST(ActuatorMeta, copyCtor){
   ActuatorMeta fieldMeta2(fieldMeta);
   EXPECT_EQ(30, fieldMeta2.num_points_turbine(0));
   EXPECT_EQ(24, fieldMeta2.num_points_turbine(1));
-
 }
 
-TEST(ActuatorBulk, constructor){
+TEST(ActuatorBulk, constructor)
+{
   stk::mesh::MetaData stkMeta(3);
   stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
   const int numTurbines = 1;
   ActuatorMeta fieldMeta(numTurbines);
   ActuatorInfoNGP dummyInfo;
-  dummyInfo.numPoints_=36;
-  dummyInfo.turbineId_=0;
+  dummyInfo.numPoints_ = 36;
+  dummyInfo.turbineId_ = 0;
   fieldMeta.add_turbine(dummyInfo);
   ActuatorBulk actBulkData(fieldMeta, stkBulk);
   EXPECT_EQ(36, actBulkData.totalNumPoints_);
 }
 
-}
-}
-}
+} // namespace
+} // namespace nalu
+} // namespace sierra

@@ -13,21 +13,23 @@
 #include <NaluEnv.h>
 #include <actuator/UtilitiesActuator.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-VecBoundSphere CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl radius){
+VecBoundSphere
+CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl radius)
+{
 
   const int nPoints = points.extent(0);
   // TODO(psakiev) can this be pre-allocated and modify entry values?
   // Will need to recreate every timestep with actuator line
   VecBoundSphere boundSphereVec;
 
-  for(int i=0; i< nPoints; i++){
+  for (int i = 0; i < nPoints; i++) {
     // ID is zero bc we are only doing a local search (COMM_SELF)
     stk::search::IdentProc<uint64_t, int> theIdent((std::size_t)i, 0);
 
-    Point thePoint (points(i,0), points(i,1), points(i,2));
+    Point thePoint(points(i, 0), points(i, 1), points(i, 2));
 
     boundingSphere aSphere(Sphere(thePoint, radius(i)), theIdent);
     boundSphereVec.push_back(aSphere);
@@ -37,17 +39,17 @@ VecBoundSphere CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl rad
 }
 
 // refactor later
-VecBoundElemBox CreateElementBoxes(
-  stk::mesh::BulkData& stkBulk,
-  std::vector<std::string> partNameList)
+VecBoundElemBox
+CreateElementBoxes(
+  stk::mesh::BulkData& stkBulk, std::vector<std::string> partNameList)
 {
   VecBoundElemBox boundElemBoxVec;
   const int nDim = 3;
   stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
 
   // fields
-  VectorFieldType* coordinates = stkMeta.get_field<VectorFieldType>(
-                                   stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* coordinates =
+    stkMeta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
 
   // point data structures
   Point minCorner, maxCorner;
@@ -60,7 +62,7 @@ VecBoundElemBox CreateElementBoxes(
       searchParts.push_back(thePart);
     else
       throw std::runtime_error(
-          "ActuatorSearch::CreateElemenBoxes: Part is null" + partNameList[k]);
+        "ActuatorSearch::CreateElemenBoxes: Part is null" + partNameList[k]);
   }
 
   // selector and bucket loop
@@ -118,32 +120,34 @@ VecBoundElemBox CreateElementBoxes(
   return boundElemBoxVec;
 }
 
-VecSearchKeyPair ExecuteCoarseSearch(
+VecSearchKeyPair
+ExecuteCoarseSearch(
   VecBoundSphere& spheres,
   VecBoundElemBox& elems,
   stk::search::SearchMethod searchMethod)
 {
   VecSearchKeyPair searchKeyPair;
-  stk::search::coarse_search(spheres, elems, searchMethod, MPI_COMM_SELF, searchKeyPair);
+  stk::search::coarse_search(
+    spheres, elems, searchMethod, MPI_COMM_SELF, searchKeyPair);
   return searchKeyPair;
 }
 
-ActFixScalarBool ExecuteFineSearch(
+ActFixScalarBool
+ExecuteFineSearch(
   stk::mesh::BulkData& stkBulk,
   VecSearchKeyPair& coarseResults,
   ActFixVectorDbl points,
   ActFixElemIds matchElemIds,
-  ActFixVectorDbl localCoords
-  )
+  ActFixVectorDbl localCoords)
 {
   const int nDim = 3;
 
   // extract fields
   stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
-  VectorFieldType* coordinates = stkMeta.get_field<VectorFieldType>(
-                                   stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType* coordinates =
+    stkMeta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   ActFixScalarBool isLocalPoint("isLocalPoint", points.extent(0));
-  for(unsigned i = 0; i<isLocalPoint.extent(0); i++){
+  for (unsigned i = 0; i < isLocalPoint.extent(0); i++) {
     isLocalPoint(i) = false;
   }
 
@@ -157,7 +161,8 @@ ActFixScalarBool ExecuteFineSearch(
     stk::mesh::Entity elem =
       stkBulk.get_entity(stk::topology::ELEMENT_RANK, theBox);
     if (!(stkBulk.is_valid(elem)))
-      throw std::runtime_error("ExecuteFineSearch:: no valid entry for element");
+      throw std::runtime_error(
+        "ExecuteFineSearch:: no valid entry for element");
 
     // extract topo and master element for this topo
     const stk::mesh::Bucket& theBucket = stkBulk.bucket(elem);
@@ -175,22 +180,21 @@ ActFixScalarBool ExecuteFineSearch(
     // find isoparametric points
     std::vector<double> isoParCoords(nDim);
     const double nearestDistance = meSCS->isInElement(
-                                     &elementCoords[0], &(points(thePt,0)), //TODO(psakiev) fix for gpu layout
-                                     &(isoParCoords[0]));
+      &elementCoords[0],
+      &(points(thePt, 0)), // TODO(psakiev) fix for gpu layout
+      &(isoParCoords[0]));
 
     // if it is actually in the element save it
-    if (std::abs(nearestDistance)<=1.0) {
+    if (std::abs(nearestDistance) <= 1.0) {
       matchElemIds(thePt) = theBox;
       isLocalPoint(thePt) = true;
-      localCoords(thePt,0) = isoParCoords[0];
-      localCoords(thePt,1) = isoParCoords[1];
-      localCoords(thePt,2) = isoParCoords[2];
+      localCoords(thePt, 0) = isoParCoords[0];
+      localCoords(thePt, 1) = isoParCoords[1];
+      localCoords(thePt, 2) = isoParCoords[2];
     }
   }
   return isLocalPoint;
 }
 
-
-
-} //namespace nalu
-} //namespace sierra
+} // namespace nalu
+} // namespace sierra

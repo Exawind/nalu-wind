@@ -10,11 +10,13 @@
 #ifndef ACTUATOR_PARSING_H_
 #define ACTUATOR_PARSING_H_
 
-#include <NaluParsing.h>
 #include <actuator/ActuatorBulk.h>
+namespace YAML {
+class Node;
+}
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 /*! \brief Parse parameters to construct meta data for actuator's
  *  Parse parameters and construct meta data for actuators.
@@ -25,7 +27,7 @@ namespace nalu{
  */
 ActuatorMeta actuator_parse(const YAML::Node& y_node);
 
-}
-}
+} // namespace nalu
+} // namespace sierra
 
 #endif

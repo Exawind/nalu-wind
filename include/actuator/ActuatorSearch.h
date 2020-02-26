@@ -29,15 +29,16 @@ using VecBoundElemBox = std::vector<boundingElementBox>;
 using SearchKeyPair = std::pair<theKey, theKey>;
 using VecSearchKeyPair = std::vector<SearchKeyPair>;
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-// should we pass these return variables by reference and make void functions? thoughts?
-VecBoundSphere CreateBoundingSpheres( ActFixVectorDbl points, ActFixScalarDbl searchRadius);
+// should we pass these return variables by reference and make void functions?
+// thoughts?
+VecBoundSphere
+CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl searchRadius);
 
 VecBoundElemBox CreateElementBoxes(
-  stk::mesh::BulkData& stkBulk,
-  std::vector<std::string> partNameList);
+  stk::mesh::BulkData& stkBulk, std::vector<std::string> partNameList);
 
 // potential overload if coarse search backend changes
 VecSearchKeyPair ExecuteCoarseSearch(
@@ -52,7 +53,7 @@ ActFixScalarBool ExecuteFineSearch(
   ActFixElemIds matchElemIds,
   ActFixVectorDbl localCoords);
 
-} //namespace nalu
-} //namespace sierra
+} // namespace nalu
+} // namespace sierra
 
 #endif // ACTUATORSEARCH_H_

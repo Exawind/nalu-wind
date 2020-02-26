@@ -13,9 +13,8 @@
 #include <actuator/ActuatorTypes.h>
 #include <stk_mesh/base/BulkData.hpp>
 
-namespace sierra{
-namespace nalu{
-
+namespace sierra {
+namespace nalu {
 
 /*! \struct AcutatorFunctor
  *  \brief Generalized functor for performing actuator work
@@ -27,18 +26,23 @@ namespace nalu{
  *  (i.e. Actuator line w/h FAST vs a generalized instance)
  *
  * \tparam TAG A TAG to distinguish instances of operations
- *  (i.e. preIter vs findPoints)
+ *  (i.e. preIter vs findPoints) a tag is selected so the
+ *  functors don't have to be predefined and/or constructed
+ *  in the Actuator class.  Rather, their constructor can be
+ *  called in the Kokkos::parallel_for
  */
 
-template<typename BulkData, typename TAG, typename ExecutionSpace>
-struct ActuatorFunctor{
+template <typename BulkData, typename TAG, typename ExecutionSpace>
+struct ActuatorFunctor
+{
   // Kokkos magic
   // set execution space by template parameter (overrides default)
   using execution_space = ExecutionSpace;
   // define templated execution space's matching memory space
   using memory_space = typename std::conditional<
-      std::is_same<ExecutionSpace, Kokkos::DefaultExecutionSpace>::value,
-      Kokkos::DualView<double*>::memory_space, Kokkos::HostSpace>::type;
+    std::is_same<ExecutionSpace, Kokkos::DefaultExecutionSpace>::value,
+    Kokkos::DualView<double*>::memory_space,
+    Kokkos::HostSpace>::type;
 
   BulkData& actBulk_;
   ActuatorFunctor(BulkData& bulk);
@@ -51,37 +55,39 @@ struct ActuatorFunctor{
  * \brief Template class for implementing Actuator execution
  *
  * This class allows one to create an actuator execution model
- * that can be varied based on the ActuatorMeta and ActuatorBulk data types supplied.
- * Data extents and parameters should be passed via meta data and
+ * that can be varied based on the ActuatorMeta and ActuatorBulk data types
+ * supplied. Data extents and parameters should be passed via meta data and
  * memory allocation should occur during the constructor of this class.
  *
  * Specific details of the implementation are done via the execute() method.
  *
  * \tparam MetaData Container holding data params and extents
  *
- * \tparam BulkData Container holding actual fields and additional objects i.e. FAST
+ * \tparam BulkData Container holding actual fields and additional objects i.e.
+ * FAST
  */
-template<typename ActMetaData, typename ActBulkData>
+template <typename ActMetaData, typename ActBulkData>
 class Actuator
 {
 public:
-  Actuator(const ActMetaData& actMeta, stk::mesh::BulkData& stkBulk):
-    actMeta_(actMeta),
-    actBulk_(actMeta_, stkBulk),
-    numActPoints_(actBulk_.totalNumPoints_)
-{}
+  Actuator(const ActMetaData& actMeta, stk::mesh::BulkData& stkBulk)
+    : actMeta_(actMeta),
+      actBulk_(actMeta_, stkBulk),
+      numActPoints_(actBulk_.totalNumPoints_)
+  {
+  }
   // TODO(psakiev) restrict access for this except for unit testing
-  const ActBulkData& actuator_bulk(){return actBulk_;}
-  /// Where the work is done. This function should be defined for each particular instance
+  const ActBulkData& actuator_bulk() { return actBulk_; }
+  /// Where the work is done. This function should be defined for each
+  /// particular instance
   void execute();
 
 private:
   const ActMetaData actMeta_; //< Contains meta data used to construct
-  ActBulkData actBulk_; //< Contains data
-  const int numActPoints_; //< Total number of actuator points
-
+  ActBulkData actBulk_;       //< Contains data
+  const int numActPoints_;    //< Total number of actuator points
 };
 
-}
-}
+} // namespace nalu
+} // namespace sierra
 #endif
