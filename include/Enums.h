@@ -219,6 +219,7 @@ enum TurbulenceModelConstant {
   TM_caTwo = 35,
   TM_ceOne = 36,
   TM_ceTwo = 37,
+  TM_c0t = 38,
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
