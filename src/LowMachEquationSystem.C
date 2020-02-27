@@ -12,7 +12,6 @@
 #include <LowMachEquationSystem.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
-#include <AssembleCourantReynoldsElemAlgorithm.h>
 #include <AssembleContinuityElemSolverAlgorithm.h>
 #include <AssembleContinuityInflowSolverAlgorithm.h>
 #include <AssembleContinuityElemOpenSolverAlgorithm.h>
@@ -130,6 +129,7 @@
 
 // ngp
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
+#include "ngp_algorithms/CourantReAlg.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/MdotEdgeAlg.h"
 #include "ngp_algorithms/MdotAlgDriver.h"
@@ -849,7 +849,7 @@ LowMachEquationSystem::solve_and_update()
   }
 
   // process CFL/Reynolds
-  momentumEqSys_->cflReyAlgDriver_->execute();
+  momentumEqSys_->cflReAlgDriver_.execute();
  }
 
 //--------------------------------------------------------------------------
@@ -1053,7 +1053,7 @@ MomentumEquationSystem::MomentumEquationSystem(
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "dudx"),
     wallFuncAlgDriver_(realm_),
-    cflReyAlgDriver_(new AlgorithmDriver(realm_)),
+    cflReAlgDriver_(realm_),
     projectedNodalGradEqs_(NULL),
     firstPNGResidual_(0.0)
 {
@@ -1084,9 +1084,7 @@ MomentumEquationSystem::MomentumEquationSystem(
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
 MomentumEquationSystem::~MomentumEquationSystem()
-{
-  delete cflReyAlgDriver_;
-}
+{}
 
 
 
@@ -1116,7 +1114,7 @@ MomentumEquationSystem::initial_work()
     const double timeA = NaluEnv::self().nalu_time();
     compute_wall_function_params();
     compute_turbulence_parameters();
-    cflReyAlgDriver_->execute();
+    cflReAlgDriver_.execute();
 
     const double timeB = NaluEnv::self().nalu_time();
     timerMisc_ += (timeB-timeA);
@@ -1261,16 +1259,8 @@ MomentumEquationSystem::register_interior_algorithm(
   const AlgorithmType algMass = SRC;
 
   // non-solver CFL alg
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = cflReyAlgDriver_->algMap_.find(algType);
-  if ( it == cflReyAlgDriver_->algMap_.end() ) {
-    AssembleCourantReynoldsElemAlgorithm*theAlg
-      = new AssembleCourantReynoldsElemAlgorithm(realm_, part);
-    cflReyAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  cflReAlgDriver_.register_elem_algorithm<CourantReAlg>(
+    algType, part, "courant_reynolds", cflReAlgDriver_);
 
   VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
   GenericFieldType &dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
@@ -2742,6 +2732,7 @@ void
 MomentumEquationSystem::assemble_and_solve(
   stk::mesh::FieldBase* deltaSolution)
 {
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
   auto& meta = realm_.meta_data();
   auto& bulk = realm_.bulk_data();
 
@@ -2777,29 +2768,29 @@ MomentumEquationSystem::assemble_and_solve(
     const double projTimeScale = gamma1 / dt;
     const double alphaU = realm_.solutionOptions_->get_relaxation_factor(dofName);
 
-    // Bring to host and perform remaining operations on host before pushing
-    // back to device
+    // Sum up contributions on the nodes shared amongst processors
     const std::vector<NGPDoubleFieldType*> fVecNgp{&ngpUdiag};
-    bool doFinalSyncBackToDevice = false;
+    bool doFinalSyncBackToDevice = true;
     ngp::parallel_sum(realm_.bulk_data(), fVecNgp, doFinalSyncBackToDevice);
 
     const auto sel = stk::mesh::selectField(*Udiag_)
       & meta.locally_owned_part()
       & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
       & !(realm_.get_inactive_selector());
-    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& ngpMesh = realm_.ngp_mesh();
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    const auto& ngpRho = fieldMgr.get_field<double>(density->mesh_meta_data_ordinal());
+    const auto& ngpdVol = fieldMgr.get_field<double>(dualVol->mesh_meta_data_ordinal());
 
-    // Perform update on host to save on future parallel syncs
-    for (auto b: bkts) {
-      double* field = (double*) stk::mesh::field_data(*Udiag_, *b);
-      double* rho = (double*) stk::mesh::field_data(*density, *b);
-      double* dVol = (double*) stk::mesh::field_data(*dualVol, *b);
-
-      for (size_t in=0; in < b->size(); in++) {
-        field[in] /= (rho[in] * dVol[in]);
-        field[in] = (field[in] - projTimeScale) * alphaU + projTimeScale;
-      }
-    }
+    // Remove momentum relaxation factor from diagonal term
+    nalu_ngp::run_entity_algorithm(
+      "LowMach::udiag_post_processing", ngpMesh, stk::topology::NODE_RANK, sel,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        double udiagTmp = ngpUdiag.get(mi, 0) / (ngpRho.get(mi, 0) * ngpdVol.get(mi, 0));
+        ngpUdiag.get(mi, 0) = (udiagTmp - projTimeScale) * alphaU + projTimeScale;
+      });
+    ngpUdiag.modify_on_device();
+    ngpUdiag.sync_to_host();
 
     // Communicate to shared and ghosted nodes (all synchronization on host)
     std::vector<const stk::mesh::FieldBase*> fVec{Udiag_};

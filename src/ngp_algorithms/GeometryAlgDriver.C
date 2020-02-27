@@ -11,6 +11,7 @@
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
+#include "ngp_utils/NgpReducers.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
 
@@ -22,6 +23,59 @@
 
 namespace sierra {
 namespace nalu {
+
+namespace {
+
+template<typename MeshInfo>
+void compute_volume_stats(const MeshInfo& meshInfo)
+{
+  using Traits = nalu_ngp::NGPMeshTraits<typename MeshInfo::NgpMeshType>;
+
+  const auto& meta = meshInfo.meta();
+  auto* dualVol = meta.template get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  const auto& ngpDualVol =
+    fieldMgr.template get_field<double>(dualVol->mesh_meta_data_ordinal());
+
+  const stk::mesh::Selector sel = stk::mesh::selectField(*dualVol)
+    & meta.locally_owned_part();
+
+  nalu_ngp::MinMaxSumScalar<double> volStats;
+  nalu_ngp::MinMaxSum<double> volReducer(volStats);
+
+  nalu_ngp::run_entity_par_reduce(
+    "GeometryAlgDriver::compute_volume_stats", ngpMesh,
+    stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(
+      const typename Traits::MeshIndex& mi,
+      nalu_ngp::MinMaxSumScalar<double>& threadVal){
+      const double dVol = ngpDualVol.get(mi, 0);
+
+      if (dVol < threadVal.min_val) threadVal.min_val = dVol;
+      if (dVol > threadVal.max_val) threadVal.max_val = dVol;
+      threadVal.total_sum += dVol;
+    }, volReducer);
+
+  double lVolStats[3] = {volStats.min_val, volStats.max_val,
+                         volStats.total_sum};
+  double gVolStats[3] = { 0.0, 0.0, 0.0 };
+  stk::all_reduce_min(
+    meshInfo.bulk().parallel(), &lVolStats[0], &gVolStats[0], 1);
+  stk::all_reduce_max(
+    meshInfo.bulk().parallel(), &lVolStats[1], &gVolStats[1], 1);
+  stk::all_reduce_sum(
+    meshInfo.bulk().parallel(), &lVolStats[2], &gVolStats[2], 1);
+
+  NaluEnv::self().naluOutputP0()
+    << " DualNodalVolume min: " << gVolStats[0]
+    << " max: " << gVolStats[1]
+    << " total: " << gVolStats[2]
+    << std::endl;
+}
+
+} // namespace
 
 GeometryAlgDriver::GeometryAlgDriver(
   Realm& realm
@@ -142,6 +196,9 @@ void GeometryAlgDriver::post_work()
     wdist.modify_on_device();
     warea.modify_on_device();
   }
+
+  // Compute volume statistics and print out
+  compute_volume_stats(realm_.mesh_info());
 }
 
 }  // nalu

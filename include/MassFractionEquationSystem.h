@@ -14,7 +14,7 @@
 
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
-#include <NaluParsing.h>
+#include <NaluParsedTypes.h>
 
 // c++
 #include <set>

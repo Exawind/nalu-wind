@@ -38,6 +38,7 @@
 #include <LinearSystem.h>
 #include <master_element/MasterElement.h>
 #include <NaluEnv.h>
+#include <NaluParsing.h>
 #include <Realm.h>
 #include <Realms.h>
 #include <HeatCondMassBackwardEulerNodeSuppAlg.h>

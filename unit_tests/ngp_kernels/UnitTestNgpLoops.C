@@ -15,6 +15,7 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpReduceUtils.h"
+#include "ngp_utils/NgpReducers.h"
 
 #include <cmath>
 
@@ -218,6 +219,39 @@ void basic_node_reduce_minmax_alt(
 
   EXPECT_NEAR(minmax.max_val, maxGold, tol);
   EXPECT_NEAR(minmax.min_val, minGold, tol);
+}
+
+void basic_node_reduce_minmaxsum(
+  const stk::mesh::BulkData& bulk,
+  const double minGold,
+  const double maxGold,
+  const double sumGold)
+{
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using MinMaxSum = sierra::nalu::nalu_ngp::MinMaxSum<double>;
+  using value_type = typename MinMaxSum::value_type;
+
+  const auto& meta = bulk.mesh_meta_data();
+  const auto& coords =  meta.coordinate_field();
+  stk::mesh::Selector sel = meta.universal_part();
+  ngp::Mesh ngpMesh(bulk);
+  ngp::Field<double> ngpCoords(bulk, *coords);
+
+  value_type minmaxsum;
+  MinMaxSum reducer(minmaxsum);
+  sierra::nalu::nalu_ngp::run_entity_par_reduce(
+    "unittest_node_reduce_minmaxsum",
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const typename Traits::MeshIndex& mi, value_type& threadVal) {
+      const double xcoord = ngpCoords.get(mi, 0);
+      if (xcoord < threadVal.min_val) threadVal.min_val = xcoord;
+      if (xcoord > threadVal.max_val) threadVal.max_val = xcoord;
+      threadVal.total_sum += 1.0;
+    }, reducer);
+
+  EXPECT_NEAR(minmaxsum.max_val, maxGold, tol);
+  EXPECT_NEAR(minmaxsum.min_val, minGold, tol);
+  EXPECT_NEAR(minmaxsum.total_sum, sumGold, tol);
 }
 
 void
@@ -812,6 +846,15 @@ TEST_F(NgpLoopTest, NGP_basic_node_reduce_minmax)
 
   basic_node_reduce_minmax(bulk, 0.0, 16.0);
   basic_node_reduce_minmax_alt(bulk, 0.0, 16.0);
+
+  stk::mesh::Selector sel = bulk.mesh_meta_data().universal_part();
+  const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+  size_t numNodes = 0;
+  for (auto* b: bkts) {
+    numNodes += b->size();
+  }
+
+  basic_node_reduce_minmaxsum(bulk, 0.0, 16.0, static_cast<double>(numNodes));
 }
 
 TEST_F(NgpLoopTest, NGP_basic_elem_loop)

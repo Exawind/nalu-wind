@@ -17,7 +17,7 @@ template <>
 ActFastUpdatePoints::ActuatorFunctor(ActuatorBulkFAST& actBulk)
   : actBulk_(actBulk)
 {
-  TOUCH_DUAL_VIEW(actBulk_.pointCentroid_, memory_space);
+  touch_dual_view(actBulk_.pointCentroid_);
 }
 
 template <>
@@ -25,8 +25,8 @@ void
 ActFastUpdatePoints::operator()(const int& index) const
 {
   fast::OpenFAST& FAST = actBulk_.openFast_;
-  auto points = GET_LOCAL_VIEW(actBulk_.pointCentroid_, memory_space);
-  auto offsets = GET_LOCAL_VIEW(actBulk_.turbIdOffset_, memory_space);
+  auto points = get_local_view(actBulk_.pointCentroid_);
+  auto offsets = get_local_view(actBulk_.turbIdOffset_);
 
   // if local fast owns point
   int turbId = 0;

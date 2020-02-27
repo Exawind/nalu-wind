@@ -6,7 +6,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityInflowSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityNonConformalSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleCourantReynoldsElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleFaceElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleEdgeSolverAlgorithm.C
@@ -80,7 +79,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/HeatCondMassBackwardEulerNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InitialConditions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InputOutputRealm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/InterfaceBalancer.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LimiterErrorIndicatorElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSolver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSolverConfig.C

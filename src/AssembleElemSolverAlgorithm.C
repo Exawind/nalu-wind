@@ -100,8 +100,8 @@ AssembleElemSolverAlgorithm::execute()
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(SharedMemData<DeviceTeamHandleType, DeviceShmem> & smdata) {
-      set_zero(smdata.simdrhs.data(), smdata.simdrhs.size());
-      set_zero(smdata.simdlhs.data(), smdata.simdlhs.size());
+      set_vals(smdata.simdrhs, 0.0);
+      set_vals(smdata.simdlhs, 0.0);
       for (size_t i=0; i < numKernels; i++) {
         Kernel* kernel = ngpKernels(i);
         kernel->execute(smdata.simdlhs, smdata.simdrhs, smdata.simdPrereqData);

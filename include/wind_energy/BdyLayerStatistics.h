@@ -12,12 +12,13 @@
 #define BDYLAYERSTATISTICS_H
 
 #include "KokkosInterface.h"
-#include "NaluParsing.h"
 #include "FieldTypeDef.h"
 
 #include "stk_mesh/base/Part.hpp"
 
 #include <memory>
+
+namespace YAML { class Node; }
 
 namespace sierra {
 namespace nalu {

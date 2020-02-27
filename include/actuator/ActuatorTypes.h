@@ -26,7 +26,7 @@ using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 #endif
 using ActuatorFixedMemSpace = Kokkos::HostSpace;
-using ActuatorFixedMemLayout = Kokkos::LayoutRight; // column major
+using ActuatorFixedMemLayout = Kokkos::LayoutRight;
 using ActuatorFixedExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 
 using ActScalarIntDv =
@@ -53,8 +53,6 @@ using ActFixScalarBool =
     view.sync<memory_space>();                                                 \
     view.modify<memory_space>();                                               \
   };
-#define GET_LOCAL_VIEW(myview, memory_space)                                   \
-  (myview.template view<memory_space>())
 
 } // namespace nalu
 } // namespace sierra

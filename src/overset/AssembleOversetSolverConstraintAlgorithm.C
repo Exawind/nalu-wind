@@ -14,6 +14,7 @@
 #include <EquationSystem.h>
 
 #include <LinearSystem.h>
+#include <NaluEnv.h>
 #include <Realm.h>
 #include <TimeIntegrator.h>
 

@@ -560,5 +560,15 @@ void EquationSystem::solution_update(
     meshInfo, sel, delta_frac, delta, field_frac, field, numComponents, rank);
 }
 
+
+void EquationSystem::register_abltop_bc(
+  stk::mesh::Part *part,
+  const stk::topology &theTopo,
+  const ABLTopBoundaryConditionData &abltopBCData)
+{
+  SymmetryBoundaryConditionData simData(abltopBCData.boundaryConditions_);
+  register_symmetry_bc( part, theTopo, simData );
+}
+
 } // namespace nalu
 } // namespace Sierra

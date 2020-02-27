@@ -9,6 +9,7 @@
 
 
 #include "node_kernels/WallDistNodeKernel.h"
+#include "Realm.h"
 #include "utils/StkHelpers.h"
 
 namespace sierra {

@@ -134,12 +134,12 @@ void do_the_multidimviews_test()
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](const size_t&  /* index */)
     {
       for(int i=0; i<sierra::nalu::simdLen; ++i) {
-        Kokkos::deep_copy(multiDimViews[i]->get_scratch_view_1D(0), i+1);
-        Kokkos::deep_copy(multiDimViews[i]->get_scratch_view_1D(1), i+1);
-        Kokkos::deep_copy(multiDimViews[i]->get_scratch_view_2D(2), i+1);
-        Kokkos::deep_copy(multiDimViews[i]->get_scratch_view_2D(3), i+1);
-        Kokkos::deep_copy(multiDimViews[i]->get_scratch_view_3D(4), i+1);
-        Kokkos::deep_copy(multiDimViews[i]->get_scratch_view_3D(5), i+1);
+        sierra::nalu::set_vals(multiDimViews[i]->get_scratch_view_1D(0), i+1);
+        sierra::nalu::set_vals(multiDimViews[i]->get_scratch_view_1D(1), i+1);
+        sierra::nalu::set_vals(multiDimViews[i]->get_scratch_view_2D(2), i+1);
+        sierra::nalu::set_vals(multiDimViews[i]->get_scratch_view_2D(3), i+1);
+        sierra::nalu::set_vals(multiDimViews[i]->get_scratch_view_3D(4), i+1);
+        sierra::nalu::set_vals(multiDimViews[i]->get_scratch_view_3D(5), i+1);
       }
   
       const sierra::nalu::MultiDimViews<double>* multiDimViewPtrs[sierra::nalu::simdLen] = {nullptr};
@@ -165,9 +165,5 @@ void do_the_multidimviews_test()
   }
 }
 
-TEST(CopyAndInterleave, multidimviews)
-{
-  do_the_multidimviews_test();
-}
-
 #endif
+

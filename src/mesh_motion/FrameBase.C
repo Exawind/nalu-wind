@@ -6,7 +6,8 @@
 #include "mesh_motion/MotionScaling.h"
 #include "mesh_motion/MotionTranslation.h"
 
-#include <NaluParsing.h>
+#include "NaluParsing.h"
+#include "FieldTypeDef.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/FieldBLAS.hpp>

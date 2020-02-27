@@ -1,5 +1,6 @@
 target_sources(nalu PRIVATE
   # Algorithms
+  ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradEdgeAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradElemAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradBndryElemAlg.C
@@ -25,8 +26,10 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRLowReWallAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRWallFuncAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradPOpenBoundaryAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/SSTMaxLengthScaleAlg.C
 
   # Algorithm Drivers
+  ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/FieldUpdateAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NgpAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MdotAlgDriver.C
@@ -35,4 +38,5 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometryAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/WallFricVelAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRWallFuncAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/SSTMaxLengthScaleDriver.C
   )

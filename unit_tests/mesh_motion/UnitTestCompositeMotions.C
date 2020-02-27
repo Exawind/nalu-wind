@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <limits>
 
+#include "yaml-cpp/yaml.h"
+
 #include "mesh_motion/MotionRotation.h"
 #include "mesh_motion/MotionTranslation.h"
 
