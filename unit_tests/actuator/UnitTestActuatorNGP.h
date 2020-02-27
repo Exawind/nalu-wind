@@ -56,7 +56,7 @@ ActPreIter::ActuatorFunctor(ActuatorBulk& bulk) : actBulk_(bulk)
 {
   // TODO(psakiev) it should probably be a feature of the bulk data
   // to recognize modification so users don't need to track this
-  TOUCH_DUAL_VIEW(actBulk_.epsilon_, memory_space)
+  touch_dual_view(actBulk_.epsilon_);
 }
 
 template <>
@@ -72,14 +72,14 @@ ActPreIter::operator()(const int& index) const
 template <>
 ActCompPnt::ActuatorFunctor(ActuatorBulk& bulk) : actBulk_(bulk)
 {
-  TOUCH_DUAL_VIEW(actBulk_.pointCentroid_, memory_space)
+  touch_dual_view(actBulk_.pointCentroid_);
 }
 
 template <>
 void
 ActCompPnt::operator()(const int& index) const
 {
-  auto points = actBulk_.pointCentroid_.template view<memory_space>();
+  auto points = get_local_view(actBulk_.pointCentroid_);
   points(index, 0) = index;
   points(index, 1) = index * 0.5;
   points(index, 2) = index * 0.25;
@@ -88,14 +88,14 @@ ActCompPnt::operator()(const int& index) const
 template <>
 ActInterp::ActuatorFunctor(ActuatorBulk& bulk) : actBulk_(bulk)
 {
-  TOUCH_DUAL_VIEW(actBulk_.velocity_, memory_space)
+  touch_dual_view(actBulk_.velocity_);
 }
 
 template <>
 void
 ActInterp::operator()(const int& index) const
 {
-  auto velocity = actBulk_.velocity_.template view<memory_space>();
+  auto velocity = get_local_view(actBulk_.velocity_);
   velocity(index, 0) = index * 2.5;
   velocity(index, 1) = index * 5.0;
   velocity(index, 2) = index * 7.5;
@@ -104,14 +104,14 @@ ActInterp::operator()(const int& index) const
 template <>
 ActSpread::ActuatorFunctor(ActuatorBulk& bulk) : actBulk_(bulk)
 {
-  TOUCH_DUAL_VIEW(actBulk_.actuatorForce_, memory_space)
+  touch_dual_view(actBulk_.actuatorForce_);
 }
 
 template <>
 void
 ActSpread::operator()(const int& index) const
 {
-  auto force = actBulk_.actuatorForce_.template view<memory_space>();
+  auto force = get_local_view(actBulk_.actuatorForce_);
   force(index, 0) = index * 3.1;
   force(index, 1) = index * 6.2;
   force(index, 2) = index * 9.3;
@@ -146,16 +146,16 @@ using ActPostIter =
 template <>
 ActPostIter::ActuatorFunctor(ActuatorBulkMod& bulk) : actBulk_(bulk)
 {
-  TOUCH_DUAL_VIEW(actBulk_.scalar_, memory_space)
+  touch_dual_view(actBulk_.scalar_);
 }
 
 template <>
 void
 ActPostIter::operator()(const int& index) const
 {
-  auto scalar = actBulk_.scalar_.template view<memory_space>();
-  auto vel = actBulk_.velocity_.template view<memory_space>();
-  auto point = actBulk_.pointCentroid_.template view<memory_space>();
+  auto scalar = get_local_view(actBulk_.scalar_);
+  auto vel =    get_local_view(actBulk_.velocity_);
+  auto point =  get_local_view(actBulk_.pointCentroid_);
   scalar(index) = point(index, 0) * vel(index, 1);
 }
 
@@ -200,16 +200,16 @@ template <>
 SetupActPoints::ActuatorFunctor(ActuatorBulkSearchAndInterp& actBulk)
   : actBulk_(actBulk)
 {
-  TOUCH_DUAL_VIEW(actBulk_.pointCentroid_, memory_space)
-  TOUCH_DUAL_VIEW(actBulk_.searchRadius_, memory_space)
+  touch_dual_view(actBulk_.pointCentroid_);
+  touch_dual_view(actBulk_.searchRadius_);
 }
 
 template <>
 void
 SetupActPoints::operator()(const int& index) const
 {
-  auto point = actBulk_.pointCentroid_.template view<memory_space>();
-  auto radius = actBulk_.searchRadius_.template view<memory_space>();
+  auto point = get_local_view(actBulk_.pointCentroid_);
+  auto radius = get_local_view(actBulk_.searchRadius_);
   point(index, 0) = 1.0 + 1.5 * index;
   point(index, 1) = 2.5;
   point(index, 2) = 2.5;
@@ -224,15 +224,15 @@ template <>
 ComputeActuatorForce::ActuatorFunctor(ActuatorBulkSearchAndInterp& actBulk)
   : actBulk_(actBulk)
 {
-  TOUCH_DUAL_VIEW(actBulk_.actuatorForce_, memory_space)
+  touch_dual_view(actBulk_.actuatorForce_);
 }
 
 template <>
 void
 ComputeActuatorForce::operator()(const int& index) const
 {
-  auto force = actBulk_.actuatorForce_.template view<memory_space>();
-  auto velocity = actBulk_.velocity_.template view<memory_space>();
+  auto force = get_local_view(actBulk_.actuatorForce_);
+  auto velocity = get_local_view(actBulk_.velocity_);
   for (int j = 0; j < 3; j++) {
     force(index, j) = 1.2 * velocity(index, j);
   }
@@ -246,7 +246,7 @@ template <>
 InterpolateActVel::ActuatorFunctor(ActuatorBulkSearchAndInterp& actBulk)
   : actBulk_(actBulk)
 {
-  TOUCH_DUAL_VIEW(actBulk_.velocity_, memory_space)
+  touch_dual_view(actBulk_.velocity_);
 }
 
 template <>
@@ -254,7 +254,7 @@ void
 InterpolateActVel::operator()(const int& index) const
 {
   // create shorter alias could use h_view since restricted operation to host
-  auto vel = actBulk_.velocity_.template view<memory_space>();
+  auto vel = get_local_view(actBulk_.velocity_);
   auto localCoord = actBulk_.localCoords_;
   if (actBulk_.pointIsLocal_(index)) {
     const stk::mesh::BulkData& stkBulk = actBulk_.stkBulk_;

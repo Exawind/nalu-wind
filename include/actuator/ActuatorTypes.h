@@ -53,8 +53,6 @@ using ActFixScalarBool =
     view.sync<memory_space>();                                                 \
     view.modify<memory_space>();                                               \
   };
-#define GET_LOCAL_VIEW(myview, memory_space)                                   \
-  (myview.template view<memory_space>())
 
 } // namespace nalu
 } // namespace sierra

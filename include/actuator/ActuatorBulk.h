@@ -25,7 +25,7 @@ class MetaData;
 namespace sierra {
 namespace nalu {
 
-class ActuatorInfoNGP;
+struct ActuatorInfoNGP;
 
 /*! \brief Meta data for working with actuator fields
  * This is an example of meta data that will be used to construct an actuator
