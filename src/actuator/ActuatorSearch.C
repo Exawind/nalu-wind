@@ -120,42 +120,64 @@ CreateElementBoxes(
   return boundElemBoxVec;
 }
 
-VecSearchKeyPair
+void
 ExecuteCoarseSearch(
   VecBoundSphere& spheres,
   VecBoundElemBox& elems,
+  ActScalarU64Dv coarsePointIds,
+  ActScalarU64Dv coarseElemIds,
   stk::search::SearchMethod searchMethod)
 {
   VecSearchKeyPair searchKeyPair;
   stk::search::coarse_search(
     spheres, elems, searchMethod, MPI_COMM_SELF, searchKeyPair);
-  return searchKeyPair;
+
+  const std::size_t numLocalMatches = searchKeyPair.size();
+
+  coarsePointIds.resize(numLocalMatches);
+  coarseElemIds.resize(numLocalMatches);
+
+  coarsePointIds.modify_host();
+  coarseElemIds.modify_host();
+
+  for(std::size_t i=0; i< numLocalMatches; i++){
+    coarsePointIds.h_view(i) = searchKeyPair[i].first.id();
+    coarseElemIds.h_view(i) = searchKeyPair[i].second.id();
+  }
 }
 
-ActFixScalarBool
-ExecuteFineSearch(
+void ExecuteFineSearch(
   stk::mesh::BulkData& stkBulk,
-  VecSearchKeyPair& coarseResults,
+  ActScalarU64Dv coarsePointIds,
+  ActScalarU64Dv coarseElemIds,
   ActFixVectorDbl points,
   ActFixElemIds matchElemIds,
-  ActFixVectorDbl localCoords)
+  ActFixVectorDbl localCoords,
+  ActFixScalarBool isLocalPoint
+  )
 {
   const int nDim = 3;
+
+  ThrowAssert(isLocalPoint.extent(0)==points.extent(0));
+  ThrowAssert(coarsePointIds.extent(0)==coarseElemIds.extent(0));
 
   // extract fields
   stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
   VectorFieldType* coordinates =
     stkMeta.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  ActFixScalarBool isLocalPoint("isLocalPoint", points.extent(0));
+
   for (unsigned i = 0; i < isLocalPoint.extent(0); i++) {
     isLocalPoint(i) = false;
   }
 
   // now proceed with the standard search
-  for (auto&& coarsePair : coarseResults) {
+  for (unsigned i = 0; i<coarseElemIds.extent(0); i++){
 
-    const uint64_t thePt = coarsePair.first.id();
-    const uint64_t theBox = coarsePair.second.id();
+    const uint64_t thePt = coarsePointIds.h_view(i);
+    const uint64_t theBox = coarseElemIds.h_view(i);
+
+    auto pointCoords = Kokkos::subview(points,thePt,Kokkos::ALL);
+    auto localPntCrds= Kokkos::subview(localCoords,thePt,Kokkos::ALL);
 
     // all elements should be local bc of the coarse search
     stk::mesh::Entity elem =
@@ -181,19 +203,18 @@ ExecuteFineSearch(
     std::vector<double> isoParCoords(nDim);
     const double nearestDistance = meSCS->isInElement(
       &elementCoords[0],
-      &(points(thePt, 0)), // TODO(psakiev) fix for gpu layout
+      pointCoords.data(),
       &(isoParCoords[0]));
 
     // if it is actually in the element save it
     if (std::abs(nearestDistance) <= 1.0) {
       matchElemIds(thePt) = theBox;
       isLocalPoint(thePt) = true;
-      localCoords(thePt, 0) = isoParCoords[0];
-      localCoords(thePt, 1) = isoParCoords[1];
-      localCoords(thePt, 2) = isoParCoords[2];
+      localPntCrds(0) = isoParCoords[0];
+      localPntCrds(1) = isoParCoords[1];
+      localPntCrds(2) = isoParCoords[2];
     }
   }
-  return isLocalPoint;
 }
 
 } // namespace nalu

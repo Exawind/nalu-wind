@@ -46,18 +46,21 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
     turbNode, "nacelle_area", fi.globTurbineData[iTurb].nacelle_area);
   get_if_present(
     turbNode, "air_density", fi.globTurbineData[iTurb].air_density);
-  // TODO(psakiev) add unit test to make sure this doesn't change with the
-  // openfast API
+
+  int numBlades=3;
+  get_if_present_no_default(turbNode, "num_blades", numBlades);
+  ThrowErrorMsgIf(numBlades!=3,"ERROR::ActuatorParsingFAST::Currently only 3 bladed turbines are supported.");
+
   actMetaFAST.numPointsTurbine_.h_view(iTurb) =
     1 // hub
     + fi.globTurbineData[iTurb].numForcePtsTwr +
     fi.globTurbineData[iTurb].numForcePtsBlade *
-      3; // TODO(psakiev) double check blade num specification
+      numBlades;
 }
 } // namespace
 
 ActuatorMetaFAST
-actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
+actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta, double naluTimeStep)
 {
   ActuatorMetaFAST actMetaFAST(actMeta);
   fast::fastInputs& fi = actMetaFAST.fastInputs_;
@@ -88,6 +91,18 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     }
     get_required(y_actuator, "n_every_checkpoint", fi.nEveryCheckPoint);
     get_required(y_actuator, "dt_fast", fi.dtFAST);
+
+    actMetaFAST.timeStepRatio_ = naluTimeStep / fi.dtFAST;
+    if (std::abs(naluTimeStep - actMetaFAST.timeStepRatio_ * fi.dtFAST) < 0.001) { // TODO: Fix
+      // arbitrary number
+      // 0.001
+      NaluEnv::self().naluOutputP0()
+          << "Time step ratio  dtNalu/dtFAST: " << actMetaFAST.timeStepRatio_ << std::endl;
+    } else {
+      throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
+                               "an integral multiple of FAST time step");
+    }
+
     get_required(y_actuator, "t_max", fi.tMax);
 
     if (y_actuator["super_controller"]) {

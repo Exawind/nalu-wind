@@ -8,10 +8,29 @@
 //
 
 #include <actuator/ActuatorFunctorsFAST.h>
+#include <actuator/UtilitiesActuator.h>
 #include <NaluEnv.h>
 
 namespace sierra {
 namespace nalu {
+
+
+template<>
+ActFastZero::ActuatorFunctor(ActuatorBulkFAST& actBulk) : actBulk_(actBulk){
+  touch_dual_view(actBulk_.velocity_);
+  touch_dual_view(actBulk_.actuatorForce_);
+}
+
+template<>
+void
+ActFastZero::operator()(const int& index) const{
+  auto vel = get_local_view(actBulk_.velocity_);
+  auto force = get_local_view(actBulk_.actuatorForce_);
+  for(int i =0; i<3; i++){
+    vel(index, i)=0.0;
+    force(index, i)=0.0;
+  }
+}
 
 template <>
 ActFastUpdatePoints::ActuatorFunctor(ActuatorBulkFAST& actBulk)
@@ -28,29 +47,55 @@ ActFastUpdatePoints::operator()(const int& index) const
   auto points = get_local_view(actBulk_.pointCentroid_);
   auto offsets = get_local_view(actBulk_.turbIdOffset_);
 
-  // if local fast owns point
-  int turbId = 0;
-  const int nTurbs = offsets.extent_int(0);
-  for (int i = 0; i < nTurbs; i++) {
-    if (offsets(i) > index) {
-      turbId = i - 1;
-      break;
-    }
-  }
-
-  int owningRank = FAST.get_procNo(turbId);
-
-  if (owningRank == NaluEnv::self().parallel_rank()) {
-    // compute location
-    std::vector<double> tempCoords(3, 0.0);
-    FAST.getForceNodeCoordinates(tempCoords, owningRank, turbId);
-    for (int i = 0; i < 3; i++) {
-      points(index, i) = tempCoords[i];
-    }
-  } else {
-    return;
+  ThrowAssert(actBulk_.localTurbineId_>=0);
+  // compute location
+  std::vector<double> tempCoords(3, 0.0);
+  auto rank = actBulk_.localTurbineId_;
+  FAST.getForceNodeCoordinates(tempCoords, rank, rank);
+  for (int i = 0; i < 3; i++) {
+    points(index, i) = tempCoords[i];
   }
 }
+
+template<>
+ActFastAssignVel::ActuatorFunctor(ActuatorBulkFAST& actBulk):actBulk_(actBulk){}
+
+template<>
+void ActFastAssignVel::operator ()(const int& index) const{
+  auto vel = get_local_view(actBulk_.velocity_);
+  auto offset = get_local_view(actBulk_.turbIdOffset_);
+
+  const int localId = index - offset(actBulk_.localTurbineId_);
+
+  std::vector<double> pointVel {vel(index,0), vel(index,1), vel(index,2)};
+
+  actBulk_.openFast_.setVelocityForceNode(pointVel, localId, actBulk_.localTurbineId_);
+}
+
+template<>
+ActFastComputeForce::ActuatorFunctor(ActuatorBulkFAST& actBulk):actBulk_(actBulk){
+  touch_dual_view(actBulk_.actuatorForce_);
+}
+
+template<>
+void ActFastComputeForce::operator()(const int& index) const{
+  auto force = get_local_view(actBulk_.actuatorForce_);
+  auto offset = get_local_view(actBulk_.turbIdOffset_);
+
+  std::vector<double> pointForce(3);
+
+  const int localId = index - offset(actBulk_.localTurbineId_);
+
+  actBulk_.openFast_.getForce(pointForce, localId, actBulk_.localTurbineId_);
+
+  for(int i = 0; i<3; i++){
+    force(index,i) = pointForce[i];
+  }
+
+}
+
+
+
 
 } /* namespace nalu */
 } /* namespace sierra */

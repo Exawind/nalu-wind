@@ -25,21 +25,31 @@ struct ActuatorMetaFAST : public ActuatorMeta
   std::vector<std::string> turbineNames_;
   std::vector<std::string> turbineOutputFileNames_;
   bool filterLiftLineCorrection_;
+  int timeStepRatio_;
 
   // TODO(psakiev) not certain all these need to be dual views
   ActVectorDblDv epsilon_;
   ActVectorDblDv epsilonChord_;
   ActVectorDblDv epsilonTower_;
+
 };
 
 struct ActuatorBulkFAST : public ActuatorBulk
 {
   ActuatorBulkFAST(
     const ActuatorMetaFAST& actMeta, stk::mesh::BulkData& stkBulk);
+
+  Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy(const ActuatorMeta& actMeta);
+
+  void step_fast();
+
   ~ActuatorBulkFAST();
+
   ActScalarIntDv turbIdOffset_;
   ActVectorDblDv epsilonOpt_;
   fast::OpenFAST openFast_;
+  const int localTurbineId_;
+  const int tStepRatio_;
 };
 
 } // namespace nalu

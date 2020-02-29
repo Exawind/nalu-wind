@@ -15,6 +15,7 @@
 #include <actuator/ActuatorInfo.h>
 #include <actuator/ActuatorSearch.h>
 #include <actuator/UtilitiesActuator.h>
+#include <actuator/ActuatorFunctors.h>
 #include <UnitTestUtils.h>
 
 namespace sierra {
@@ -54,7 +55,7 @@ using ActSpread = ActuatorFunctor<
 template <>
 ActPreIter::ActuatorFunctor(ActuatorBulk& bulk) : actBulk_(bulk)
 {
-  // TODO(psakiev) it should probably be a feature of the bulk data
+  // TODO it should probably be a feature of the bulk data
   // to recognize modification so users don't need to track this
   touch_dual_view(actBulk_.epsilon_);
 }
@@ -238,47 +239,6 @@ ComputeActuatorForce::operator()(const int& index) const
   }
 }
 
-using InterpolateActVel = ActuatorFunctor<
-  ActuatorBulkSearchAndInterp,
-  Interpolate,
-  Kokkos::DefaultHostExecutionSpace>;
-template <>
-InterpolateActVel::ActuatorFunctor(ActuatorBulkSearchAndInterp& actBulk)
-  : actBulk_(actBulk)
-{
-  touch_dual_view(actBulk_.velocity_);
-}
-
-template <>
-void
-InterpolateActVel::operator()(const int& index) const
-{
-  // create shorter alias could use h_view since restricted operation to host
-  auto vel = get_local_view(actBulk_.velocity_);
-  auto localCoord = actBulk_.localCoords_;
-  if (actBulk_.pointIsLocal_(index)) {
-    const stk::mesh::BulkData& stkBulk = actBulk_.stkBulk_;
-    stk::mesh::Entity elem = stkBulk.get_entity(
-      stk::topology::ELEMENT_RANK, actBulk_.elemContainingPoint_(index));
-    const int nodesPerElem = stkBulk.num_nodes(elem);
-    std::vector<double> ws_coordinates(3 * nodesPerElem),
-      ws_velocity(3 * nodesPerElem);
-    VectorFieldType* coordinates =
-      stkBulk.mesh_meta_data().get_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "coordinates");
-    VectorFieldType* velocity =
-      stkBulk.mesh_meta_data().get_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "velocity");
-    actuator_utils::gather_field(
-      3, &ws_coordinates[0], *coordinates, stkBulk.begin_nodes(elem),
-      nodesPerElem);
-    actuator_utils::gather_field_for_interp(
-      3, &ws_velocity[0], *velocity, stkBulk.begin_nodes(elem), nodesPerElem);
-    actuator_utils::interpolate_field(
-      3, elem, stkBulk, &(localCoord(index, 0)), &ws_velocity[0],
-      &(vel(index, 0)));
-  }
-}
 
 using TestActuatorSearchInterp =
   Actuator<ActuatorMeta, ActuatorBulkSearchAndInterp>;
@@ -292,11 +252,8 @@ TestActuatorSearchInterp::execute()
   actBulk_.stk_search_act_pnts(actMeta_);
   Kokkos::fence();
   Kokkos::parallel_for("interpVel", numActPoints_, InterpolateActVel(actBulk_));
-  double* reducePointer = &(actBulk_.velocity_.h_view(0, 0));
-  MPI_Allreduce(
-    reducePointer, reducePointer, numActPoints_ * 3, MPI_DOUBLE, MPI_SUM,
-    MPI_COMM_WORLD);
-  Kokkos::fence();
+  auto vel = actBulk_.velocity_.template view<Kokkos::HostSpace>();
+  actBulk_.reduce_view_on_host(vel);
   Kokkos::parallel_for(
     "computeActuatorForce", numActPoints_, ComputeActuatorForce(actBulk_));
 }

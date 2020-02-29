@@ -42,7 +42,7 @@ test_wo_lines(
     try {
       auto y_node = create_yaml_node(localCopy);
       try {
-        EXPECT_THROW(actuator_FAST_parse(y_node, actMeta), std::runtime_error)
+        EXPECT_THROW(actuator_FAST_parse(y_node, actMeta, 1.0), std::runtime_error)
           << " when missing: " << testFile[i];
       } catch (
         std::exception const& err) { // yaml or some other error sliped through
@@ -91,7 +91,7 @@ TEST_F(ActuatorParsingFASTTest, minimumRequired)
   ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFAST"]);
   try {
     auto y_node = create_yaml_node(inputFileLines_);
-    auto actMetaFAST = actuator_FAST_parse(y_node, actMeta);
+    auto actMetaFAST = actuator_FAST_parse(y_node, actMeta, 1.0);
   } catch (std::exception const& err) {
     FAIL() << err.what();
   }
@@ -105,7 +105,7 @@ TEST_F(ActuatorParsingFASTTest, minimumRequiredFLLC)
   inputFileLines_.push_back("    epsilon_min: [10.0, 0.0, 0.0]\n");
   try {
     auto y_node = create_yaml_node(inputFileLines_);
-    auto actMetaFAST = actuator_FAST_parse(y_node, actMeta);
+    auto actMetaFAST = actuator_FAST_parse(y_node, actMeta, 1.0);
     SUCCEED();
   } catch (std::exception const& err) {
     FAIL() << err.what();

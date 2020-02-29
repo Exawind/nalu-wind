@@ -18,8 +18,6 @@
 #define ActuatorDiskFAST_h
 
 #include "ActuatorFAST.h"
-// TODO(psakiev):: Decide which is better, varying spreading, or varying
-// sampling radially
 
 namespace sierra {
 namespace nalu {
