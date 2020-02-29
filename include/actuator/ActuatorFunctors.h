@@ -28,16 +28,21 @@ using InterpolateActVel = ActuatorFunctor<
   actgeneral::InterpolateVelocities,
   ActuatorFixedExecutionSpace>;
 
-// TODO this is a candidate for device execution but the
-// coarseSearch results need to be cached into a
-// device friendly format
-using SpreadActForce = ActuatorFunctor<ActuatorBulk, actgeneral::SpreadForce, ActuatorFixedExecutionSpace>;
+using SpreadActForce = ActuatorFunctor<ActuatorBulk, actgeneral::SpreadForce, ActuatorExecutionSpace>;
 
+//functor should loop over local actuator points
 template<>
 InterpolateActVel::ActuatorFunctor(ActuatorBulk& actBulk);
 
 template<>
+void InterpolateActVel::operator()(const int& index) const;
+
+// functor should loop over coarse search results
+template<>
 SpreadActForce::ActuatorFunctor(ActuatorBulk& actBulk);
+
+template<>
+void SpreadActForce::operator()(const int& index) const;
 
 } /* namespace nalu */
 } /* namespace sierra */

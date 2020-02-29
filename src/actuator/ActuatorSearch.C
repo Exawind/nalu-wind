@@ -176,6 +176,9 @@ void ExecuteFineSearch(
     const uint64_t thePt = coarsePointIds.h_view(i);
     const uint64_t theBox = coarseElemIds.h_view(i);
 
+    auto pointCoords = Kokkos::subview(points,thePt,Kokkos::ALL);
+    auto localPntCrds= Kokkos::subview(localCoords,thePt,Kokkos::ALL);
+
     // all elements should be local bc of the coarse search
     stk::mesh::Entity elem =
       stkBulk.get_entity(stk::topology::ELEMENT_RANK, theBox);
@@ -200,16 +203,16 @@ void ExecuteFineSearch(
     std::vector<double> isoParCoords(nDim);
     const double nearestDistance = meSCS->isInElement(
       &elementCoords[0],
-      &(points(thePt, 0)), // TODO(psakiev) fix for gpu layout
+      pointCoords.data(),
       &(isoParCoords[0]));
 
     // if it is actually in the element save it
     if (std::abs(nearestDistance) <= 1.0) {
       matchElemIds(thePt) = theBox;
       isLocalPoint(thePt) = true;
-      localCoords(thePt, 0) = isoParCoords[0];
-      localCoords(thePt, 1) = isoParCoords[1];
-      localCoords(thePt, 2) = isoParCoords[2];
+      localPntCrds(0) = isoParCoords[0];
+      localPntCrds(1) = isoParCoords[1];
+      localPntCrds(2) = isoParCoords[2];
     }
   }
 }

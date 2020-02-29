@@ -23,7 +23,6 @@ struct ZeroArrays{};
 struct ComputeLocations{};
 struct AssignVelocities{};
 struct ComputeForces{};
-struct SpreadForces{};
 struct ComputeThrust{};
 }
 
@@ -33,23 +32,32 @@ using ActFastZero = ActuatorFunctor<ActuatorBulkFAST, actfast::ZeroArrays, Actua
 using ActFastUpdatePoints = ActuatorFunctor<ActuatorBulkFAST, actfast::ComputeLocations, Kokkos::DefaultHostExecutionSpace>;
 using ActFastAssignVel = ActuatorFunctor<ActuatorBulkFAST, actfast::AssignVelocities, Kokkos::DefaultHostExecutionSpace>;
 using ActFastComputeForce = ActuatorFunctor<ActuatorBulkFAST,actfast::ComputeForces, Kokkos::DefaultHostExecutionSpace>;
-using ActFastSpreadForce = ActuatorFunctor<ActuatorBulkFAST, actfast::SpreadForces, ActuatorExecutionSpace>;
 
 // declarations
 template<>
 ActFastZero::ActuatorFunctor(ActuatorBulkFAST& actBulk);
 
+template<>
+void ActFastZero::operator()(const int& index) const;
+
 template <>
 ActFastUpdatePoints::ActuatorFunctor(ActuatorBulkFAST& actBulk);
+
+template<>
+void ActFastUpdatePoints::operator()(const int& index) const;
 
 template<>
 ActFastAssignVel::ActuatorFunctor(ActuatorBulkFAST& actBulk);
 
 template<>
+void ActFastAssignVel::operator()(const int& index) const;
+
+template<>
 ActFastComputeForce::ActuatorFunctor(ActuatorBulkFAST& actBulk);
 
 template<>
-ActFastSpreadForce::ActuatorFunctor(ActuatorBulkFAST& actBulk);
+void ActFastComputeForce::operator()(const int& index) const;
+
 
 template <>
 void
@@ -77,8 +85,8 @@ ActuatorNgpFAST::execute()
   Kokkos::parallel_for("computeForcesActuatorNgpFAST", fast_range_policy, ActFastComputeForce(actBulk_));
 
   actBulk_.reduce_view_on_host(forceReduce);
-  // TODO(psakiev) spread forces to nodes
-  Kokkos::parallel_for("spreadForcesActuatorNgpFAST", numActPoints_, ActFastSpreadForce(actBulk_));
+
+  Kokkos::parallel_for("spreadForcesActuatorNgpFAST", numActPoints_, SpreadActForce(actBulk_));
   // TODO(psakiev) compute thrust
 }
 
