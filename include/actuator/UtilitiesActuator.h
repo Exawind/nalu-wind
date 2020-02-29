@@ -32,13 +32,13 @@ namespace actuator_utils {
 
 // A Gaussian projection function
 double Gaussian_projection(
-  const int &nDim,
+  int nDim,
   double *dis,
   const Coordinates &epsilon);
 
 // A Gaussian projection function
 double Gaussian_projection(
-  const int &nDim,
+  int nDim,
   double *dis,
   double *epsilon);
 
@@ -69,6 +69,13 @@ void interpolate_field(
   const double* isoParCoords,
   const double* fieldAtNodes,
   double* pointField);
+
+void
+compute_distance(
+  int nDim,
+  const double *elemCentroid,
+  const double *pointCentroid,
+  double *distance);
 }  // namespace actuator_utils
 }  // namespace actuator_utils
 }  // namespace actuator_utils

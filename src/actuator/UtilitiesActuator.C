@@ -24,7 +24,7 @@ const double pi = M_PI;
 /// A Gaussian projection function
 ///
 double Gaussian_projection(
-  const int &nDim,  // The dimension of the Gaussian (2 or 3)
+  int nDim,  // The dimension of the Gaussian (2 or 3)
   double *dis,      // The distance from the center of the Gaussian
   const Coordinates &epsilon  // The width of the Gaussian
   )
@@ -50,7 +50,7 @@ double Gaussian_projection(
 /// A Gaussian projection function
 ///
 double Gaussian_projection(
-  const int &nDim, 
+  int nDim,
   double *dis,
   double *epsilon)
 {
@@ -143,6 +143,18 @@ void interpolate_field(
 
   // interpolate velocity to this best point
   meSCS->interpolatePoint(sizeOfField, isoParCoords, fieldAtNodes, pointField);
+}
+
+void
+compute_distance(
+  int nDim,
+  const double *elemCentroid,
+  const double *pointCentroid,
+  double *distance)
+{
+  for ( int j = 0; j < nDim; ++j )
+    distance[j] = elemCentroid[j] - pointCentroid[j];
+  //~ return distance;
 }
 
 }
