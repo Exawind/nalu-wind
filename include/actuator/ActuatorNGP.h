@@ -65,6 +65,7 @@ struct ActuatorFunctor
 
 };
 
+
 /*!
  * \class Actuator
  * \brief Template class for implementing Actuator execution

@@ -7,23 +7,12 @@
 // for more details.
 //
 
-#ifndef ACTUATORPARSINGFAST_H_
-#define ACTUATORPARSINGFAST_H_
+#include "/Users/psakiev/soft/nalu-wind/include/actuator/ActuatorFunctors.h"
 
-namespace YAML {
-class Node;
-}
+namespace sierra
+{
+namespace nalu
+{
 
-namespace sierra {
-namespace nalu {
-
-struct ActuatorMeta;
-struct ActuatorMetaFAST;
-
-ActuatorMetaFAST
-actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta, double naluTimeStep);
-
-} // namespace nalu
-} // namespace sierra
-
-#endif /* ACTUATORPARSINGFAST_H_ */
+} /* namespace nalu */
+} /* namespace sierra */

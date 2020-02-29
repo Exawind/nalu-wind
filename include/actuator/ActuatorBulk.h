@@ -12,6 +12,7 @@
 
 #include <actuator/ActuatorTypes.h>
 #include <actuator/ActuatorSearch.h>
+#include <NaluEnv.h>
 #include <Enums.h>
 #include <vector>
 
@@ -41,11 +42,6 @@ struct ActuatorMeta
   ActuatorMeta(
     int numTurbines, ActuatorType actType = ActuatorType::ActLinePointDrag);
   void add_turbine(const ActuatorInfoNGP& info);
-  // TODO(psakiev) do we want/need private members and accessor functions?
-  inline int num_points_turbine(int i) const
-  {
-    return numPointsTurbine_.h_view(i);
-  }
   const int numberOfActuators_;
   const ActuatorType actuatorType_;
   int numPointsTotal_;
@@ -63,19 +59,36 @@ struct ActuatorMeta
 struct ActuatorBulk
 {
   ActuatorBulk(const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);
+
   void stk_search_act_pnts(const ActuatorMeta& actMeta);
+
+  template<typename T>
+  inline
+  void reduce_view_on_host(T view){
+    MPI_Allreduce(
+      view.data(),
+      view.data(),
+      view.size(),
+      MPI_DOUBLE, // TODO can we get this from the view?
+      MPI_SUM,
+      NaluEnv::self().parallel_comm());
+  }
+
   const int totalNumPoints_;
+
   // HOST AND DEVICE DATA (DualViews)
   ActVectorDblDv pointCentroid_;
   ActVectorDblDv velocity_;
   ActVectorDblDv actuatorForce_;
   ActVectorDblDv epsilon_;
   ActScalarDblDv searchRadius_;
+
   // HOST ONLY DATA
   stk::mesh::BulkData& stkBulk_;
   ActFixVectorDbl localCoords_;
   ActFixScalarBool pointIsLocal_;
   ActFixElemIds elemContainingPoint_;
+
   // STL data types
   VecSearchKeyPair coarseSearchResults_; // reuse for spreading forces
 };
