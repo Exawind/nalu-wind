@@ -3,6 +3,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorBulk.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorParsing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorSearch.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorFunctors.C
    )
 
 if(ENABLE_OPENFAST)

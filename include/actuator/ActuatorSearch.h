@@ -40,7 +40,6 @@ CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl searchRadius);
 VecBoundElemBox CreateElementBoxes(
   stk::mesh::BulkData& stkBulk, std::vector<std::string> partNameList);
 
-// potential overload if coarse search backend changes
 VecSearchKeyPair ExecuteCoarseSearch(
   VecBoundSphere& spheres,
   VecBoundElemBox& elemBoxes,

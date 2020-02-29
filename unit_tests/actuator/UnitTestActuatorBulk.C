@@ -26,8 +26,8 @@ TEST(ActuatorMeta, constructor)
   const int numTurbines = 2;
   ActuatorMeta fieldMeta(numTurbines);
   EXPECT_EQ(numTurbines, fieldMeta.numberOfActuators_);
-  EXPECT_EQ(0, fieldMeta.num_points_turbine(0));
-  EXPECT_EQ(0, fieldMeta.num_points_turbine(1));
+  EXPECT_EQ(0, fieldMeta.numPointsTurbine_.h_view(0));
+  EXPECT_EQ(0, fieldMeta.numPointsTurbine_.h_view(1));
 }
 
 TEST(ActuatorMeta, addTurbine)
@@ -37,7 +37,7 @@ TEST(ActuatorMeta, addTurbine)
   ActuatorInfoNGP dummyInfo;
   dummyInfo.numPoints_ = 1024;
   fieldMeta.add_turbine(dummyInfo);
-  EXPECT_EQ(1024, fieldMeta.num_points_turbine(0));
+  EXPECT_EQ(1024, fieldMeta.numPointsTurbine_.h_view(0));
 }
 
 TEST(ActuatorMeta, copyCtor)
@@ -52,12 +52,12 @@ TEST(ActuatorMeta, copyCtor)
   actInfo2.turbineId_ = 1;
   fieldMeta.add_turbine(actInfo1);
   fieldMeta.add_turbine(actInfo2);
-  EXPECT_EQ(30, fieldMeta.num_points_turbine(0));
-  EXPECT_EQ(24, fieldMeta.num_points_turbine(1));
+  EXPECT_EQ(30, fieldMeta.numPointsTurbine_.h_view(0));
+  EXPECT_EQ(24, fieldMeta.numPointsTurbine_.h_view(1));
 
   ActuatorMeta fieldMeta2(fieldMeta);
-  EXPECT_EQ(30, fieldMeta2.num_points_turbine(0));
-  EXPECT_EQ(24, fieldMeta2.num_points_turbine(1));
+  EXPECT_EQ(30, fieldMeta.numPointsTurbine_.h_view(0));
+  EXPECT_EQ(24, fieldMeta.numPointsTurbine_.h_view(1));
 }
 
 TEST(ActuatorBulk, constructor)

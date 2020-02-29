@@ -12,43 +12,74 @@
 
 #include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulkFAST.h>
+#include <actuator/ActuatorFunctors.h>
 
 namespace sierra {
 namespace nalu {
 
 namespace actfast {
 // tags
-struct ComputeLocations
-{
-};
-} // namespace actfast
+struct ZeroArrays{};
+struct ComputeLocations{};
+struct AssignVelocities{};
+struct ComputeForces{};
+struct SpreadForces{};
+struct ComputeThrust{};
+}
 
 // typedefs
 using ActuatorNgpFAST = Actuator<ActuatorMetaFAST, ActuatorBulkFAST>;
-
-using ActFastUpdatePoints = ActuatorFunctor<
-  ActuatorBulkFAST,
-  actfast::ComputeLocations,
-  Kokkos::DefaultHostExecutionSpace>;
+using ActFastZero = ActuatorFunctor<ActuatorBulkFAST, actfast::ZeroArrays, ActuatorExecutionSpace>;
+using ActFastUpdatePoints = ActuatorFunctor<ActuatorBulkFAST, actfast::ComputeLocations, Kokkos::DefaultHostExecutionSpace>;
+using ActFastAssignVel = ActuatorFunctor<ActuatorBulkFAST, actfast::AssignVelocities, Kokkos::DefaultHostExecutionSpace>;
+using ActFastComputeForce = ActuatorFunctor<ActuatorBulkFAST,actfast::ComputeForces, Kokkos::DefaultHostExecutionSpace>;
+using ActFastSpreadForce = ActuatorFunctor<ActuatorBulkFAST, actfast::SpreadForces, ActuatorExecutionSpace>;
 
 // declarations
+template<>
+ActFastZero::ActuatorFunctor(ActuatorBulkFAST& actBulk);
+
 template <>
 ActFastUpdatePoints::ActuatorFunctor(ActuatorBulkFAST& actBulk);
+
+template<>
+ActFastAssignVel::ActuatorFunctor(ActuatorBulkFAST& actBulk);
+
+template<>
+ActFastComputeForce::ActuatorFunctor(ActuatorBulkFAST& actBulk);
+
+template<>
+ActFastSpreadForce::ActuatorFunctor(ActuatorBulkFAST& actBulk);
 
 template <>
 void
 ActuatorNgpFAST::execute()
 {
-  // compute point locations
-  Kokkos::parallel_for(
-    "updatePointLocationsActuatorNgpFAST", numActPoints_,
-    ActFastUpdatePoints(actBulk_));
-  // find points
+  auto velReduce   = actBulk_.velocity_.template      view<ActuatorFixedMemSpace>();
+  auto forceReduce = actBulk_.actuatorForce_.template view<ActuatorFixedMemSpace>();
+
+  Kokkos::parallel_for("zeroQuantitiesActuatorNgpFAST", numActPoints_, ActFastZero(actBulk_));
+
+  // set range policy to only operating over points owned by local fast turbine
+  auto fast_range_policy = actBulk_.local_range_policy(actMeta_);
+  Kokkos::parallel_for("updatePointLocationsActuatorNgpFAST", fast_range_policy, ActFastUpdatePoints(actBulk_));
+
   actBulk_.stk_search_act_pnts(actMeta_);
-  // interpolate velocities
-  // compute forces in FAST
-  // spread forces to nodes
-  // compute thrust
+
+  Kokkos::parallel_for("interpolateVelocitiesActuatorNgpFAST", numActPoints_, InterpolateActVel(actBulk_));
+
+  actBulk_.reduce_view_on_host(velReduce);
+
+  Kokkos::parallel_for("assignFastVelActuatorNgpFAST", fast_range_policy, ActFastAssignVel(actBulk_));
+
+  actBulk_.step_fast();
+
+  Kokkos::parallel_for("computeForcesActuatorNgpFAST", fast_range_policy, ActFastComputeForce(actBulk_));
+
+  actBulk_.reduce_view_on_host(forceReduce);
+  // TODO(psakiev) spread forces to nodes
+  Kokkos::parallel_for("spreadForcesActuatorNgpFAST", numActPoints_, ActFastSpreadForce(actBulk_));
+  // TODO(psakiev) compute thrust
 }
 
 } /* namespace nalu */
