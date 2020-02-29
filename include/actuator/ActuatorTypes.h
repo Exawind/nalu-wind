@@ -31,6 +31,8 @@ using ActuatorFixedExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 
 using ActScalarIntDv =
   Kokkos::DualView<int*, ActuatorMemLayout, ActuatorMemSpace>;
+using ActScalarU64Dv =
+  Kokkos::DualView<uint64_t*, ActuatorMemLayout, ActuatorMemSpace>;
 using ActScalarDblDv =
   Kokkos::DualView<double*, ActuatorMemLayout, ActuatorMemSpace>;
 using ActVectorDblDv =
