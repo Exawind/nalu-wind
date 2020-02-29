@@ -39,6 +39,8 @@ ActuatorBulk::ActuatorBulk(
     actuatorForce_("actForce", totalNumPoints_),
     epsilon_("actEpsilon", totalNumPoints_),
     searchRadius_("searchRadius", totalNumPoints_),
+    coarseSearchPointIds_("coarseSearchPointIds",0),
+    coarseSearchElemIds_("coarseSearchElemIds",0),
     stkBulk_(stkBulk),
     localCoords_("localCoords", totalNumPoints_),
     pointIsLocal_("pointIsLocal", totalNumPoints_),
@@ -54,10 +56,22 @@ ActuatorBulk::stk_search_act_pnts(const ActuatorMeta& actMeta)
 
   auto boundSpheres = CreateBoundingSpheres(points, radius);
   auto elemBoxes = CreateElementBoxes(stkBulk_, actMeta.searchTargetNames_);
-  coarseSearchResults_ =
-    ExecuteCoarseSearch(boundSpheres, elemBoxes, actMeta.searchMethod_);
-  pointIsLocal_ = ExecuteFineSearch(
-    stkBulk_, coarseSearchResults_, points, elemContainingPoint_, localCoords_);
+
+  ExecuteCoarseSearch(
+    boundSpheres,
+    elemBoxes,
+    coarseSearchPointIds_,
+    coarseSearchElemIds_,
+    actMeta.searchMethod_);
+
+  ExecuteFineSearch(
+    stkBulk_,
+    coarseSearchPointIds_,
+    coarseSearchElemIds_,
+    points,
+    elemContainingPoint_,
+    localCoords_,
+    pointIsLocal_);
 }
 
 } // namespace nalu

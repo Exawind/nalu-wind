@@ -82,15 +82,14 @@ struct ActuatorBulk
   ActVectorDblDv actuatorForce_;
   ActVectorDblDv epsilon_;
   ActScalarDblDv searchRadius_;
+  ActScalarU64Dv coarseSearchPointIds_;
+  ActScalarU64Dv coarseSearchElemIds_;
 
   // HOST ONLY DATA
   stk::mesh::BulkData& stkBulk_;
   ActFixVectorDbl localCoords_;
   ActFixScalarBool pointIsLocal_;
   ActFixElemIds elemContainingPoint_;
-
-  // STL data types
-  VecSearchKeyPair coarseSearchResults_; // reuse for spreading forces
 };
 
 } // namespace nalu
