@@ -18,6 +18,7 @@ namespace {
 
 /// Check the minimum parse terms are not violated and
 /// that defaults haven't changed
+//TODO(psakiev) add robust testing like FAST parsing function
 TEST(ActuatorParse, bareMinimumParse)
 {
   std::string testFile = "actuator:\n"

@@ -86,7 +86,7 @@ ActuatorNgpFAST::execute()
 
   actBulk_.reduce_view_on_host(forceReduce);
 
-  Kokkos::parallel_for("spreadForcesActuatorNgpFAST", numActPoints_, SpreadActForce(actBulk_));
+  Kokkos::parallel_for("spreadForcesActuatorNgpFAST", actBulk_.coarseSearchElemIds_.extent(0), SpreadActForce(actBulk_));
   // TODO(psakiev) compute thrust
 }
 

@@ -239,7 +239,7 @@ ComputeActuatorForce::operator()(const int& index) const
   }
 }
 
-
+//TODO(psakiev) move these tests to UnitTestActuatorFunctors.h/C
 using TestActuatorSearchInterp =
   Actuator<ActuatorMeta, ActuatorBulkSearchAndInterp>;
 template <>
