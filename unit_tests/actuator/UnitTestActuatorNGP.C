@@ -63,6 +63,9 @@ TEST(ActuatorNGP, testExecuteOnHostAndDevice)
   EXPECT_DOUBLE_EQ(expectVal, actBulk.scalar_.h_view(1));
 }
 
+//TODO(psakiev) test for actuator functors moved
+//TODO(psakiev) test for actuator functors fast created
+//TODO(psakiev) create way to run fast in unit tests
 //-----------------------------------------------------------------
 class ActuatorNGPOnMesh : public ::testing::Test
 {
