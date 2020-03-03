@@ -124,8 +124,8 @@ void
 ExecuteCoarseSearch(
   VecBoundSphere& spheres,
   VecBoundElemBox& elems,
-  ActScalarU64Dv coarsePointIds,
-  ActScalarU64Dv coarseElemIds,
+  ActScalarU64Dv& coarsePointIds,
+  ActScalarU64Dv& coarseElemIds,
   stk::search::SearchMethod searchMethod)
 {
   VecSearchKeyPair searchKeyPair;
