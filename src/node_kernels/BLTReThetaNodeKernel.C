@@ -22,7 +22,7 @@ BLTReThetaNodeKernel::BLTReThetaNodeKernel(
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
     densityID_(get_field_ordinal(meta, "density")),
-    viscID_(get_field_ordinal(meta, "molecular_viscosity")),
+    viscID_(get_field_ordinal(meta, "viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
     dkdxID_(get_field_ordinal(meta, "dkdx")),
     dwdxID_(get_field_ordinal(meta, "dwdx")),

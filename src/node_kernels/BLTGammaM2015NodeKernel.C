@@ -22,7 +22,7 @@ BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
     densityID_(get_field_ordinal(meta, "density")),
-    viscID_(get_field_ordinal(meta, "molecular_viscosity")),
+    viscID_(get_field_ordinal(meta, "viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
     minDID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),

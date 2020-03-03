@@ -17,6 +17,7 @@
 #include <master_element/MasterElementFactory.h>
 #include <NaluEnv.h>
 #include <SpecificDissipationRateEquationSystem.h>
+#include <GammaEquationSystem.h>
 #include <SolutionOptions.h>
 #include <TurbKineticEnergyEquationSystem.h>
 #include <Realm.h>
@@ -58,8 +59,10 @@ ShearStressTransportEquationSystem::ShearStressTransportEquationSystem(
   : EquationSystem(eqSystems, "ShearStressTransportWrap"),
     tkeEqSys_(NULL),
     sdrEqSys_(NULL),
+    gammaEqSys_(NULL),
     tke_(NULL),
     sdr_(NULL),
+    gamma_(NULL),
     minDistanceToWall_(NULL),
     fOneBlending_(NULL),
     maxLengthScale_(NULL),
@@ -73,6 +76,7 @@ ShearStressTransportEquationSystem::ShearStressTransportEquationSystem(
   // create momentum and pressure
   tkeEqSys_= new TurbKineticEnergyEquationSystem(eqSystems);
   sdrEqSys_ = new SpecificDissipationRateEquationSystem(eqSystems);
+  gammaEqSys_ = new GammaEquationSystem(eqSystems);
 }
 
 //--------------------------------------------------------------------------
@@ -93,6 +97,8 @@ void ShearStressTransportEquationSystem::load(const YAML::Node& node)
     tkeEqSys_->numOversetIters_ = numOversetIters_;
     sdrEqSys_->decoupledOverset_ = decoupledOverset_;
     sdrEqSys_->numOversetIters_ = numOversetIters_;
+    gammaEqSys_->decoupledOverset_ = decoupledOverset_;
+    gammaEqSys_->numOversetIters_ = numOversetIters_;
   }
 }
 
@@ -105,6 +111,7 @@ ShearStressTransportEquationSystem::initialize()
   // let equation systems that are owned some information
   tkeEqSys_->convergenceTolerance_ = convergenceTolerance_;
   sdrEqSys_->convergenceTolerance_ = convergenceTolerance_;
+  gammaEqSys_->convergenceTolerance_ = convergenceTolerance_;
 }
 
 //--------------------------------------------------------------------------
@@ -123,6 +130,8 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*tke_, *part, nullptr);
   sdr_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "specific_dissipation_rate", numStates));
   stk::mesh::put_field_on_mesh(*sdr_, *part, nullptr);
+  gamma_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "gamma_transition", numStates));
+  stk::mesh::put_field_on_mesh(*gamma_, *part, nullptr);
 
   // SST parameters that everyone needs
   minDistanceToWall_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "minimum_distance_to_wall"));
@@ -198,6 +207,7 @@ ShearStressTransportEquationSystem::solve_and_update()
     // compute projected nodal gradients
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
+    gammaEqSys_->assemble_nodal_gradient();
     clip_min_distance_to_wall();
 
     // deal with DES option
@@ -219,10 +229,12 @@ ShearStressTransportEquationSystem::solve_and_update()
   // SST effective viscosity for k and omega
   tkeEqSys_->compute_effective_diff_flux_coeff();
   sdrEqSys_->compute_effective_diff_flux_coeff();
+  gammaEqSys_->comp_eff_diff_coeff();
 
   // wall values
   tkeEqSys_->compute_wall_model_parameters();
   sdrEqSys_->compute_wall_model_parameters();
+//  gammaEqSys_->compute_wall_model_parameters();
 
   // start the iteration loop
   for ( int k = 0; k < maxIterations_; ++k ) {
@@ -234,17 +246,20 @@ ShearStressTransportEquationSystem::solve_and_update()
       // tke and sdr assemble, load_complete and solve; Jacobi iteration
       tkeEqSys_->assemble_and_solve(tkeEqSys_->kTmp_);
       sdrEqSys_->assemble_and_solve(sdrEqSys_->wTmp_);
+      gammaEqSys_->assemble_and_solve(gammaEqSys_->gamTmp_);
 
       update_and_clip();
 
       if (decoupledOverset_ && realm_.hasOverset_) {
         realm_.overset_orphan_node_field_update(tkeEqSys_->tke_, 1, 1);
         realm_.overset_orphan_node_field_update(sdrEqSys_->sdr_, 1, 1);
+        realm_.overset_orphan_node_field_update(gammaEqSys_->gamma_, 1, 1);
       }
     }
     // compute projected nodal gradients
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
+    gammaEqSys_->assemble_nodal_gradient();
   }
 
 }
@@ -265,8 +280,9 @@ ShearStressTransportEquationSystem::initial_work()
   ScalarFieldType *viscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
 
   // required fields with state
-  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
   ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
 
   // define some common selectors
   const stk::mesh::Selector s_all_nodes
@@ -284,11 +300,13 @@ ShearStressTransportEquationSystem::initial_work()
     const double *rho = stk::mesh::field_data(*density, b);
     double *tke = stk::mesh::field_data(tkeNp1, b);
     double *sdr = stk::mesh::field_data(sdrNp1, b);
+    double *gamma = stk::mesh::field_data(gammaNp1, b);
 
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
 
       const double tkeNew = tke[k];
       const double sdrNew = sdr[k];
+      const double gammaNew = gamma[k];
       
       if ( (tkeNew >= 0.0) && (sdrNew > 0.0) ) {
         // nothing
@@ -306,6 +324,15 @@ ShearStressTransportEquationSystem::initial_work()
         sdr[k] = rho[k]*tkeNew/visc[k];
         tke[k] = tkeNew;
       }
+
+      if (gammaNew < 0.0) {
+        gamma[k] = 0.0;
+      }
+  
+      if (gammaNew > 1.0) {
+        gamma[k] = 1.0;
+      }
+
     }
   }
 }
@@ -325,6 +352,7 @@ ShearStressTransportEquationSystem::post_adapt_work()
     // wall values
     tkeEqSys_->compute_wall_model_parameters();
     sdrEqSys_->compute_wall_model_parameters();
+//    gammaEqSys_->compute_wall_model_parameters();
   }
 
 }
@@ -345,8 +373,9 @@ ShearStressTransportEquationSystem::update_and_clip()
   ScalarFieldType *turbViscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity");
 
   // required fields with state
-  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
   ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
+  ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
 
   // define some common selectors
   stk::mesh::Selector s_all_nodes
@@ -364,14 +393,17 @@ ShearStressTransportEquationSystem::update_and_clip()
     const double *rho = stk::mesh::field_data(*density, b);
     const double *kTmp = stk::mesh::field_data(*tkeEqSys_->kTmp_, b);
     const double *wTmp = stk::mesh::field_data(*sdrEqSys_->wTmp_, b);
+    const double *gamTmp = stk::mesh::field_data(*gammaEqSys_->gamTmp_, b);
     double *tke = stk::mesh::field_data(tkeNp1, b);
     double *sdr = stk::mesh::field_data(sdrNp1, b);
+    double *gamma = stk::mesh::field_data(gammaNp1, b);
     double *tvisc = stk::mesh::field_data(*turbViscosity, b);
 
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
 
       const double tkeNew = tke[k] + kTmp[k];
       const double sdrNew = sdr[k] + wTmp[k];
+      const double gammaNew = gamma[k] + gamTmp[k];
       
       if ( (tkeNew >= 0.0) && (sdrNew > 0.0) ) {
         // if all is well
@@ -396,6 +428,17 @@ ShearStressTransportEquationSystem::update_and_clip()
         sdr[k] = rho[k]*tkeNew/visc[k];
         tke[k] = tkeNew;
       }
+
+      if (gammaNew >= 0.0 && gammaNew <= 1.0) {
+        // if all is well
+        gamma[k] = gammaNew;
+      }
+      else {
+        if (gammaNew < 0.0) gamma[k] = 0.0;
+        if (gammaNew > 1.0) gamma[k] = 1.0;
+      }
+
+
     }
   }
 

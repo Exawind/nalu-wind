@@ -30,6 +30,7 @@ class EquationSystems;
 class AlgorithmDriver;
 class TurbKineticEnergyEquationSystem;
 class SpecificDissipationRateEquationSystem;
+class GammaEquationSystem;
 
 class ShearStressTransportEquationSystem : public EquationSystem {
 
@@ -65,9 +66,11 @@ public:
 
   TurbKineticEnergyEquationSystem *tkeEqSys_;
   SpecificDissipationRateEquationSystem *sdrEqSys_;
+  GammaEquationSystem *gammaEqSys_;
 
   ScalarFieldType *tke_;
   ScalarFieldType *sdr_;
+  ScalarFieldType *gamma_;
   ScalarFieldType *minDistanceToWall_;
   ScalarFieldType *fOneBlending_;
   ScalarFieldType *maxLengthScale_;
