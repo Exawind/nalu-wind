@@ -16,7 +16,6 @@
 #include <actuator/ActuatorSearch.h>
 #include <actuator/UtilitiesActuator.h>
 #include <actuator/ActuatorFunctors.h>
-#include <UnitTestUtils.h>
 
 namespace sierra {
 namespace nalu {
@@ -173,90 +172,7 @@ TestActuatorHostDev::execute()
   actBulk_.scalar_.sync_device();
 }
 
-//-----------------------------------------------------------------
-struct SetPoints
-{
-};
-struct ComputeForce
-{
-};
-struct Interpolate
-{
-};
 
-struct ActuatorBulkSearchAndInterp : public ActuatorBulk
-{
-  ActuatorBulkSearchAndInterp(
-    ActuatorMeta actMeta, stk::mesh::BulkData& stkBulk)
-    : ActuatorBulk(actMeta, stkBulk)
-  {
-  }
-};
-
-using SetupActPoints = ActuatorFunctor<
-  ActuatorBulkSearchAndInterp,
-  SetPoints,
-  ActuatorExecutionSpace>;
-template <>
-SetupActPoints::ActuatorFunctor(ActuatorBulkSearchAndInterp& actBulk)
-  : actBulk_(actBulk)
-{
-  touch_dual_view(actBulk_.pointCentroid_);
-  touch_dual_view(actBulk_.searchRadius_);
-}
-
-template <>
-void
-SetupActPoints::operator()(const int& index) const
-{
-  auto point = get_local_view(actBulk_.pointCentroid_);
-  auto radius = get_local_view(actBulk_.searchRadius_);
-  point(index, 0) = 1.0 + 1.5 * index;
-  point(index, 1) = 2.5;
-  point(index, 2) = 2.5;
-  radius(index) = 2.0;
-}
-
-using ComputeActuatorForce = ActuatorFunctor<
-  ActuatorBulkSearchAndInterp,
-  ComputeForce,
-  ActuatorExecutionSpace>;
-template <>
-ComputeActuatorForce::ActuatorFunctor(ActuatorBulkSearchAndInterp& actBulk)
-  : actBulk_(actBulk)
-{
-  touch_dual_view(actBulk_.actuatorForce_);
-}
-
-template <>
-void
-ComputeActuatorForce::operator()(const int& index) const
-{
-  auto force = get_local_view(actBulk_.actuatorForce_);
-  auto velocity = get_local_view(actBulk_.velocity_);
-  for (int j = 0; j < 3; j++) {
-    force(index, j) = 1.2 * velocity(index, j);
-  }
-}
-
-//TODO(psakiev) move these tests to UnitTestActuatorFunctors.h/C
-using TestActuatorSearchInterp =
-  Actuator<ActuatorMeta, ActuatorBulkSearchAndInterp>;
-template <>
-// show how to interweave functions and ActuatorFunctors
-void
-TestActuatorSearchInterp::execute()
-{
-  Kokkos::parallel_for(
-    "setPointLocations", numActPoints_, SetupActPoints(actBulk_));
-  actBulk_.stk_search_act_pnts(actMeta_);
-  Kokkos::fence();
-  Kokkos::parallel_for("interpVel", numActPoints_, InterpolateActVel(actBulk_));
-  auto vel = actBulk_.velocity_.template view<Kokkos::HostSpace>();
-  actBulk_.reduce_view_on_host(vel);
-  Kokkos::parallel_for(
-    "computeActuatorForce", numActPoints_, ComputeActuatorForce(actBulk_));
-}
 
 } // namespace nalu
 } // namespace sierra

@@ -69,24 +69,25 @@ ActuatorNgpFAST::execute()
   Kokkos::parallel_for("zeroQuantitiesActuatorNgpFAST", numActPoints_, ActFastZero(actBulk_));
 
   // set range policy to only operating over points owned by local fast turbine
-  auto fast_range_policy = actBulk_.local_range_policy(actMeta_);
-  Kokkos::parallel_for("updatePointLocationsActuatorNgpFAST", fast_range_policy, ActFastUpdatePoints(actBulk_));
+  auto fastRangePolicy = actBulk_.local_range_policy(actMeta_);
+  Kokkos::parallel_for("updatePointLocationsActuatorNgpFAST", fastRangePolicy, ActFastUpdatePoints(actBulk_));
 
   actBulk_.stk_search_act_pnts(actMeta_);
+  const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
   Kokkos::parallel_for("interpolateVelocitiesActuatorNgpFAST", numActPoints_, InterpolateActVel(actBulk_));
 
   actBulk_.reduce_view_on_host(velReduce);
 
-  Kokkos::parallel_for("assignFastVelActuatorNgpFAST", fast_range_policy, ActFastAssignVel(actBulk_));
+  Kokkos::parallel_for("assignFastVelActuatorNgpFAST", fastRangePolicy, ActFastAssignVel(actBulk_));
 
   actBulk_.step_fast();
 
-  Kokkos::parallel_for("computeForcesActuatorNgpFAST", fast_range_policy, ActFastComputeForce(actBulk_));
+  Kokkos::parallel_for("computeForcesActuatorNgpFAST", fastRangePolicy, ActFastComputeForce(actBulk_));
 
   actBulk_.reduce_view_on_host(forceReduce);
 
-  Kokkos::parallel_for("spreadForcesActuatorNgpFAST", actBulk_.coarseSearchElemIds_.extent(0), SpreadActForce(actBulk_));
+  Kokkos::parallel_for("spreadForcesActuatorNgpFAST", localSizeCoarseSearch, SpreadActForce(actBulk_));
   // TODO(psakiev) compute thrust
 }
 

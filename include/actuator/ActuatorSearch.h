@@ -41,8 +41,8 @@ VecBoundElemBox CreateElementBoxes(
 void ExecuteCoarseSearch(
   VecBoundSphere& spheres,
   VecBoundElemBox& elemBoxes,
-  ActScalarU64Dv coarsePointIds,
-  ActScalarU64Dv coarseElemIds,
+  ActScalarU64Dv& coarsePointIds,
+  ActScalarU64Dv& coarseElemIds,
   stk::search::SearchMethod searchMethod);
 
 void ExecuteFineSearch(

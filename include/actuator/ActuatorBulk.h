@@ -65,13 +65,19 @@ struct ActuatorBulk
   template<typename T>
   inline
   void reduce_view_on_host(T view){
+    ThrowAssert(view.size()>0);
+    ThrowAssert(view.data());
+    //stk::all_reduce_sum(NaluEnv::self().parallel_comm(),
+    //  view.data(),
+    //  view.data(),
+    //  view.size());
     MPI_Allreduce(
       view.data(),
       view.data(),
       view.size(),
       MPI_DOUBLE, // TODO can we get this from the view?
       MPI_SUM,
-      NaluEnv::self().parallel_comm());
+      MPI_COMM_WORLD);
   }
 
   const int totalNumPoints_;

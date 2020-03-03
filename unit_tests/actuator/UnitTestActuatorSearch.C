@@ -132,10 +132,10 @@ TEST_F(ActuatorSearchTest, executeCoarseSearch)
   try {
     ExecuteCoarseSearch(spheres, elemBoxes, coarsePointIds, coarseElemIds, stk::search::KDTREE);
     // Each search should find one slab of element/point pairs
-    EXPECT_EQ(slabSize, coarsePointIds.extent_int(0))
-      << "Coarse Search result size: " << coarsePointIds.extent_int(0)
+    EXPECT_EQ(slabSize, coarsePointIds.view_host().extent_int(0))
+      << "Coarse Search result size: " << coarsePointIds.view_host().extent_int(0)
       << " on rank: " << myRank;
-    for (unsigned i =0; i< coarsePointIds.extent(i); i++) {
+    for (unsigned i =0; i< coarsePointIds.extent(0); i++) {
       const uint64_t thePt = coarsePointIds.h_view(i);
       const uint64_t theElem = coarseElemIds.h_view(i);
       EXPECT_EQ(thePt + 1, theElem)
