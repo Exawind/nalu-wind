@@ -5,8 +5,8 @@
 /*  directory structure                                                   */
 /*------------------------------------------------------------------------*/
 
-#ifndef TKESSTBLTNODEKERNEL_H
-#define TKESSTBLTNODEKERNEL_H
+#ifndef TKESSTBLTM2015NODEKERNEL_H
+#define TKESSTBLTM2015NODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
@@ -19,16 +19,16 @@ namespace nalu {
 
 class Realm;
 
-class TKESSTBLTNodeKernel : public NGPNodeKernel<TKESSTBLTNodeKernel>
+class TKESSTBLTM2015NodeKernel : public NGPNodeKernel<TKESSTBLTM2015NodeKernel>
 {
 public:
-  TKESSTBLTNodeKernel(const stk::mesh::MetaData&);
+  TKESSTBLTM2015NodeKernel(const stk::mesh::MetaData&);
 
   KOKKOS_FORCEINLINE_FUNCTION
-  TKESSTBLTNodeKernel() = default;
+  TKESSTBLTM2015NodeKernel() = default;
 
   KOKKOS_FUNCTION
-  virtual ~TKESSTBLTNodeKernel() = default;
+  virtual ~TKESSTBLTM2015NodeKernel() = default;
 
   virtual void setup(Realm&) override;
 
@@ -53,7 +53,7 @@ private:
   unsigned sdrID_             {stk::mesh::InvalidOrdinal};
 //  unsigned gamintID_             {stk::mesh::InvalidOrdinal};
   unsigned densityID_         {stk::mesh::InvalidOrdinal};
-  unsigned viscID_           {stk::mesh::InvalidOrdinal};
+  unsigned viscID_            {stk::mesh::InvalidOrdinal};
   unsigned tviscID_           {stk::mesh::InvalidOrdinal};
   unsigned dudxID_            {stk::mesh::InvalidOrdinal};
   unsigned minDID_            {stk::mesh::InvalidOrdinal};
@@ -70,4 +70,4 @@ private:
 }  // sierra
 
 
-#endif /* TKESSTBLTNODEKERNEL_H */
+#endif /* TKESSTBLTM2015NODEKERNEL_H */

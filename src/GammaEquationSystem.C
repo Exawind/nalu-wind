@@ -47,7 +47,7 @@
 
 // node kernels
 #include <node_kernels/NodeKernelUtils.h>
-#include <node_kernels/BLTGammaNodeKernel.h>
+#include <node_kernels/BLTGammaM2015NodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
 
@@ -216,7 +216,7 @@ void GammaEquationSystem::register_interior_algorithm(stk::mesh::Part *part)
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), gamma_);
 
-        nodeAlg.add_kernel<BLTGammaNodeKernel>(realm_.meta_data());
+        nodeAlg.add_kernel<BLTGammaM2015NodeKernel>(realm_.meta_data());
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
         if (srcName == "gcl") {

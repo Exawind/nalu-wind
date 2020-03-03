@@ -26,7 +26,7 @@ BLTReThetaNodeKernel::BLTReThetaNodeKernel(
     dudxID_(get_field_ordinal(meta, "dudx")),
     dkdxID_(get_field_ordinal(meta, "dkdx")),
     dwdxID_(get_field_ordinal(meta, "dwdx")),
-    minDID_(get_field_ordinal(meta, "min_wall_distance")),
+    minDID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     gamintID_(get_field_ordinal(meta, "gamma_transition")),
     re0tID_(get_field_ordinal(meta, "Retheta_Eq_transition")),

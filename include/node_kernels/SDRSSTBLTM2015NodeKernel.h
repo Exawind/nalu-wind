@@ -1,12 +1,15 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
 
-#ifndef TKESSTBLTNODEKERNEL_H
-#define TKESSTBLTNODEKERNEL_H
+
+#ifndef SDRSSTNODEKERNEL_H
+#define SDRSSTNODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
@@ -19,16 +22,16 @@ namespace nalu {
 
 class Realm;
 
-class TKESSTBLTNodeKernel : public NGPNodeKernel<TKESSTBLTNodeKernel>
+class SDRSSTBLTM2015NodeKernel : public NGPNodeKernel<SDRSSTBLTM2015NodeKernel>
 {
 public:
-  TKESSTBLTNodeKernel(const stk::mesh::MetaData&);
+  SDRSSTBLTM2015NodeKernel(const stk::mesh::MetaData&);
 
   KOKKOS_FORCEINLINE_FUNCTION
-  TKESSTBLTNodeKernel() = default;
+  SDRSSTBLTM2015NodeKernel() = default;
 
   KOKKOS_FUNCTION
-  virtual ~TKESSTBLTNodeKernel() = default;
+  virtual ~SDRSSTBLTM2015NodeKernel() = default;
 
   virtual void setup(Realm&) override;
 
@@ -41,26 +44,35 @@ public:
 private:
   ngp::Field<double> tke_;
   ngp::Field<double> sdr_;
-//  ngp::Field<double> gamint_;
   ngp::Field<double> density_;
   ngp::Field<double> visc_;
   ngp::Field<double> tvisc_;
   ngp::Field<double> dudx_;
+  ngp::Field<double> dkdx_;
+  ngp::Field<double> dwdx_;
   ngp::Field<double> minD_;
   ngp::Field<double> dualNodalVolume_;
+  ngp::Field<double> fOneBlend_;
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
   unsigned sdrID_             {stk::mesh::InvalidOrdinal};
-//  unsigned gamintID_             {stk::mesh::InvalidOrdinal};
   unsigned densityID_         {stk::mesh::InvalidOrdinal};
-  unsigned viscID_           {stk::mesh::InvalidOrdinal};
+  unsigned viscID_            {stk::mesh::InvalidOrdinal};
   unsigned tviscID_           {stk::mesh::InvalidOrdinal};
   unsigned dudxID_            {stk::mesh::InvalidOrdinal};
+  unsigned dkdxID_            {stk::mesh::InvalidOrdinal};
+  unsigned dwdxID_            {stk::mesh::InvalidOrdinal};
   unsigned minDID_            {stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned fOneBlendID_       {stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
+  NodeKernelTraits::DblType sigmaWTwo_;
+  NodeKernelTraits::DblType betaOne_;
+  NodeKernelTraits::DblType betaTwo_;
+  NodeKernelTraits::DblType gammaOne_;
+  NodeKernelTraits::DblType gammaTwo_;
   NodeKernelTraits::DblType relaxFac_;
 
   const int nDim_;
@@ -70,4 +82,4 @@ private:
 }  // sierra
 
 
-#endif /* TKESSTBLTNODEKERNEL_H */
+#endif /* SDRSSTNODEKERNEL_H */

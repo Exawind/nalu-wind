@@ -74,7 +74,7 @@
 #include <node_kernels/TKESSTDESNodeKernel.h>
 #include <node_kernels/TKESSTNodeKernel.h>
 #include <node_kernels/TKERodiNodeKernel.h>
-#include <node_kernels/TKESSTBLTNodeKernel.h>
+#include <node_kernels/TKESSTBLTM2015NodeKernel.h>
 // ngp
 #include <ngp_utils/NgpLoopUtils.h>
 #include <ngp_utils/NgpTypes.h>
@@ -326,8 +326,8 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<TKEKsgsNodeKernel>(realm_.meta_data());
           break;
         case SST:
-          // nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
-          nodeAlg.add_kernel<TKESSTBLTNodeKernel>(realm_.meta_data());
+          //nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
+          nodeAlg.add_kernel<TKESSTBLTM2015NodeKernel>(realm_.meta_data());
           break;
         case SST_DES:
           nodeAlg.add_kernel<TKESSTDESNodeKernel>(realm_.meta_data());

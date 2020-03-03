@@ -84,6 +84,7 @@ enum EquationType {
   EQ_PNG_TKE = 16, // FIXME... Last PNG managed like this..
   EQ_WALL_DISTANCE = 17,
   EQ_GAMMA_TRANS = 18,
+  EQ_RET_TRANSITION = 19,
   EquationSystemType_END
 };
 
