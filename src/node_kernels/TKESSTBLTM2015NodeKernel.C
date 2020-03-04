@@ -21,6 +21,7 @@ TKESSTBLTM2015NodeKernel::TKESSTBLTM2015NodeKernel(
 ) : NGPNodeKernel<TKESSTBLTM2015NodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
+    gamintID_(get_field_ordinal(meta, "gamma_transition")),
     densityID_(get_field_ordinal(meta, "density")),
     viscID_(get_field_ordinal(meta, "viscosity")),
     tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
@@ -37,7 +38,7 @@ TKESSTBLTM2015NodeKernel::setup(Realm& realm)
 
   tke_             = fieldMgr.get_field<double>(tkeID_);
   sdr_             = fieldMgr.get_field<double>(sdrID_);
-//  gamint_          = fieldMgr.get_field<double>(gamintID_);
+  gamint_          = fieldMgr.get_field<double>(gamintID_);
   density_         = fieldMgr.get_field<double>(densityID_);
   visc_            = fieldMgr.get_field<double>(viscID_);
   tvisc_           = fieldMgr.get_field<double>(tviscID_);
@@ -65,7 +66,7 @@ void TKESSTBLTM2015NodeKernel::execute(
 
   const DblType tke = tke_.get(node, 0);
   const DblType sdr = sdr_.get(node, 0);
-//  const DblType gamint    = gamint_.get(node, 0);
+  const DblType gamint    = gamint_.get(node, 0);
   const DblType density = density_.get(node, 0);
   const DblType visc      = visc_.get(node, 0);
   const DblType tvisc = tvisc_.get(node, 0);
@@ -82,10 +83,10 @@ void TKESSTBLTM2015NodeKernel::execute(
   DblType Pklim = 0.0;
 
   for (int i=0; i < nDim_; ++i) {
-//    const int offset = nDim_ * i;
+    const int offset = nDim_ * i;
     for (int j=0; j < nDim_; ++j) {
-//      const auto dudxij = dudx_.get(node, offset+j);
-//      Pk += dudxij * (dudxij + dudx_.get(node, j*nDim_ + i));
+      const auto dudxij = dudx_.get(node, offset+j);
+      Pk += dudxij * (dudxij + dudx_.get(node, j*nDim_ + i));
 
      const double duidxj = dudx_.get(node, nDim_ * i + j);
      const double dujdxi = dudx_.get(node, nDim_ * j + i);
@@ -103,10 +104,14 @@ void TKESSTBLTM2015NodeKernel::execute(
 // &&&&&&&&&&& hardwire gamint = 1 as first debug step  &&&&&&&&&&&&&&&
    const DblType gamint_debug = 1.0;
 // &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-  Pk = tvisc * sijMag * vortMag;
-  Pk *= gamint_debug;
+//  Pk = tvisc * sijMag * vortMag; // Pk based on Kato-Launder formulation. Recommended in Menter (2015) to avoid excessive levels of TKE in stagnation regions
+  Pk *= tvisc*gamint_debug; // based on standard SST model
 
   Pklim = 5.0 * Ck_BLT * stk::math::max(gamint_debug - 0.20, 0.0) * (1.0 - gamint_debug) * Fonlim * stk::math::max(3.0 * CSEP * visc - tvisc, 0.0) * sijMag * vortMag;
+
+  if (stk::math::abs(Pklim) > 1.0e-10) {
+    std::cout << "Pklim is non-zero: " << Pklim << std::endl;
+  }
 
   DblType Dk = betaStar_ * density * sdr * tke * stk::math::max(gamint_debug,0.1);
 

@@ -41,7 +41,7 @@ public:
 private:
   ngp::Field<double> tke_;
   ngp::Field<double> sdr_;
-//  ngp::Field<double> gamint_;
+  ngp::Field<double> gamint_;
   ngp::Field<double> density_;
   ngp::Field<double> visc_;
   ngp::Field<double> tvisc_;
@@ -51,7 +51,7 @@ private:
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
   unsigned sdrID_             {stk::mesh::InvalidOrdinal};
-//  unsigned gamintID_             {stk::mesh::InvalidOrdinal};
+  unsigned gamintID_             {stk::mesh::InvalidOrdinal};
   unsigned densityID_         {stk::mesh::InvalidOrdinal};
   unsigned viscID_            {stk::mesh::InvalidOrdinal};
   unsigned tviscID_           {stk::mesh::InvalidOrdinal};
