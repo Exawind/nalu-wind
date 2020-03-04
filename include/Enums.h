@@ -256,13 +256,15 @@ enum ActuatorType {
   ActLinePointDrag = 0,
   ActLineFAST = 1,
   ActDiskFAST = 2,
+  ActLineFASTNGP = 3,
   ActuatorType_END
 };
 
  static std::map<std::string, ActuatorType> ActuatorTypeMap = {
      {"ActLinePointDrag",ActuatorType::ActLinePointDrag},
      {"ActLineFAST",ActuatorType::ActLineFAST},
-     {"ActDiskFAST",ActuatorType::ActDiskFAST}
+     {"ActDiskFAST",ActuatorType::ActDiskFAST},
+     {"ActLineFASTNGP",ActuatorType::ActLineFASTNGP}
  };
 
 } // namespace nalu

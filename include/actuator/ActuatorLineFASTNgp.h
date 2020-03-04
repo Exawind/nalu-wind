@@ -18,7 +18,7 @@ namespace sierra
 {
 namespace nalu
 {
-using ActuatorNgpFAST = Actuator<ActuatorMetaFAST, ActuatorBulkFAST>;
+using ActuatorNgpFAST = ActuatorNGP<ActuatorMetaFAST, ActuatorBulkFAST>;
 
 template <>
 void

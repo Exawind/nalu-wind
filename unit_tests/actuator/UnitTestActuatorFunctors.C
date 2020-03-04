@@ -19,9 +19,6 @@ namespace sierra
 namespace nalu
 {
 
-//TODO(psakiev) test for actuator functors fast created
-//TODO(psakiev) create way to run fast in unit tests
-
 //-----------------------------------------------------------------
 struct SetPoints{};
 struct ComputeForce{};
@@ -80,7 +77,7 @@ struct FunctorTestInterp : public ActuatorBulk{
 };
 
 using ActuatorTestInterpVelFunctors =
-  sierra::nalu::Actuator<ActuatorMeta, FunctorTestInterp>;
+  sierra::nalu::ActuatorNGP<ActuatorMeta, FunctorTestInterp>;
 
 template <>
 void
@@ -130,7 +127,7 @@ void InitSpreadTestFields(ActuatorBulk& actBulk){
 }
 
 using ActuatorTestSpreadForceFunctor =
-    Actuator<ActuatorMeta, FunctorTestSpread>;
+    ActuatorNGP<ActuatorMeta, FunctorTestSpread>;
 
 template<>
 void

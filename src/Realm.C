@@ -72,9 +72,14 @@
 
 // actuator line
 #include <actuator/Actuator.h>
+#include <actuator/ActuatorParsing.h>
+#include <actuator/ActuatorBulk.h>
 #ifdef NALU_USES_OPENFAST
 #include <actuator/ActuatorLineFAST.h>
 #include <actuator/ActuatorDiskFAST.h>
+#include <actuator/ActuatorParsingFAST.h>
+#include <actuator/ActuatorBulkFAST.h>
+#include <actuator/ActuatorLineFASTNgp.h>
 #endif
 
 #include <wind_energy/ABLForcingAlgorithm.h>
@@ -621,9 +626,19 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     if ( foundActuator.size() != 1 )
       throw std::runtime_error("look_ahead_and_create::error: Too many actuator line blocks");
 
-    if ( (*foundActuator[0])["actuator"]["type"] ) {
-      const std::string ActuatorTypeName = (*foundActuator[0])["actuator"]["type"].as<std::string>() ;
-      switch ( ActuatorTypeMap[ActuatorTypeName] ) {
+    auto actMeta = actuator_parse(*foundActuator[0]);
+
+    const std::string ActuatorTypeName = (*foundActuator[0])["actuator"]["type"].as<std::string>() ;
+    switch ( ActuatorTypeMap[ActuatorTypeName] ) {
+        case ActuatorType::ActLineFASTNGP : {
+#ifdef NALU_USES_OPENFAST
+          auto actMetaFAST = actuator_FAST_parse(*foundActuator[0],actMeta, timeIntegrator_->timeStepFromFile_);
+          actuatorNGP_ = make_unique<ActuatorNGP<ActuatorMetaFAST, ActuatorBulkFAST>>(actMetaFAST, *bulkData_);
+          break;
+#else
+	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
+#endif
+        }
       case ActuatorType::ActLineFAST : {
 #ifdef NALU_USES_OPENFAST
 	actuator_ =  new ActuatorLineFAST(*this, *foundActuator[0]);
@@ -656,11 +671,6 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
 #endif
       }
       }
-    }
-    else {
-      throw std::runtime_error("look_ahead_and_create::error: No 'type' specified in actuator");
-    }
-
     
   }
 
@@ -2011,6 +2021,11 @@ Realm::advance_time_step()
   // check for actuator line; assemble the source terms for this time step
   if ( NULL != actuator_ ) {
     actuator_->execute();
+  }
+
+  // check for actuator line; assemble the source terms for this time step
+  if ( NULL != actuatorNGP_ ) {
+    actuatorNGP_->execute();
   }
 
   // Check for ABL forcing; estimate source terms for this time step

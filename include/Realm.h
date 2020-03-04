@@ -83,6 +83,10 @@ class SolutionNormPostProcessing;
 class TurbulenceAveragingPostProcessing;
 class DataProbePostProcessing;
 class Actuator;
+class ActuatorMetaFAST;
+class ActuatorBulkFAST;
+template<typename ActMeta, typename ActBulk>
+class ActuatorNGP;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
@@ -455,6 +459,7 @@ class Realm {
   TurbulenceAveragingPostProcessing *turbulenceAveragingPostProcessing_;
   DataProbePostProcessing *dataProbePostProcessing_;
   Actuator *actuator_;
+  std::unique_ptr<ActuatorNGP<ActuatorMetaFAST, ActuatorBulkFAST>> actuatorNGP_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;

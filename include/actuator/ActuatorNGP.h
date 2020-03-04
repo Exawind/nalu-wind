@@ -83,10 +83,10 @@ struct ActuatorFunctor
  * FAST
  */
 template <typename ActMetaData, typename ActBulkData>
-class Actuator
+class ActuatorNGP
 {
 public:
-  Actuator(const ActMetaData& actMeta, stk::mesh::BulkData& stkBulk)
+  ActuatorNGP(const ActMetaData& actMeta, stk::mesh::BulkData& stkBulk)
     : actMeta_(actMeta),
       actBulk_(actMeta_, stkBulk),
       numActPoints_(actBulk_.totalNumPoints_)
