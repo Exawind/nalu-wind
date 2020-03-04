@@ -117,7 +117,7 @@ ActSpread::operator()(const int& index) const
   force(index, 2) = index * 9.3;
 }
 
-using TestActuatorHostOnly = Actuator<ActuatorMeta, ActuatorBulk>;
+using TestActuatorHostOnly = ActuatorNGP<ActuatorMeta, ActuatorBulk>;
 template <>
 void
 TestActuatorHostOnly::execute()
@@ -159,7 +159,7 @@ ActPostIter::operator()(const int& index) const
   scalar(index) = point(index, 0) * vel(index, 1);
 }
 
-using TestActuatorHostDev = Actuator<ActuatorMeta, ActuatorBulkMod>;
+using TestActuatorHostDev = ActuatorNGP<ActuatorMeta, ActuatorBulkMod>;
 template <>
 void
 TestActuatorHostDev::execute()

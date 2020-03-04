@@ -87,7 +87,7 @@ protected:
     fastParseParams_.push_back("  n_every_checkpoint: 1\n");
     fastParseParams_.push_back("  dt_fast: 0.001\n");
     fastParseParams_.push_back("  t_max: 1000.0\n");
-    fastParseParams_.push_back("  dry_run: yes\n");
+    fastParseParams_.push_back("  dry_run: no\n");
     fastParseParams_.push_back("  Turbine0:\n");
     fastParseParams_.push_back("    turbine_name: turbinator\n");
     fastParseParams_.push_back("    epsilon: [1.0, 0, 0]\n");
@@ -101,7 +101,7 @@ protected:
   }
 };
 
-TEST_F(ActuatorFunctorFASTTests, createActuatorBulkDryRun){
+TEST_F(ActuatorFunctorFASTTests, DISABLED_createActuatorBulk){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
 
@@ -114,7 +114,7 @@ TEST_F(ActuatorFunctorFASTTests, createActuatorBulkDryRun){
 }
 
 //TODO(psakiev) run ActFastZero
-TEST_F(ActuatorFunctorFASTTests, runActFastZero){
+TEST_F(ActuatorFunctorFASTTests, DISABLED_runActFastZero){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
 
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
