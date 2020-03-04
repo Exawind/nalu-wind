@@ -13,6 +13,7 @@
 #include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulkFAST.h>
 #include <actuator/ActuatorFunctors.h>
+#include <NaluEnv.h>
 
 namespace sierra {
 namespace nalu {
@@ -27,7 +28,6 @@ struct ComputeThrust{};
 }
 
 // typedefs
-using ActuatorNgpFAST = Actuator<ActuatorMetaFAST, ActuatorBulkFAST>;
 using ActFastZero = ActuatorFunctor<ActuatorBulkFAST, actfast::ZeroArrays, ActuatorExecutionSpace>;
 using ActFastUpdatePoints = ActuatorFunctor<ActuatorBulkFAST, actfast::ComputeLocations, Kokkos::DefaultHostExecutionSpace>;
 using ActFastAssignVel = ActuatorFunctor<ActuatorBulkFAST, actfast::AssignVelocities, Kokkos::DefaultHostExecutionSpace>;
@@ -57,39 +57,6 @@ ActFastComputeForce::ActuatorFunctor(ActuatorBulkFAST& actBulk);
 
 template<>
 void ActFastComputeForce::operator()(const int& index) const;
-
-
-template <>
-void
-ActuatorNgpFAST::execute()
-{
-  auto velReduce   = actBulk_.velocity_.template      view<ActuatorFixedMemSpace>();
-  auto forceReduce = actBulk_.actuatorForce_.template view<ActuatorFixedMemSpace>();
-
-  Kokkos::parallel_for("zeroQuantitiesActuatorNgpFAST", numActPoints_, ActFastZero(actBulk_));
-
-  // set range policy to only operating over points owned by local fast turbine
-  auto fastRangePolicy = actBulk_.local_range_policy(actMeta_);
-  Kokkos::parallel_for("updatePointLocationsActuatorNgpFAST", fastRangePolicy, ActFastUpdatePoints(actBulk_));
-
-  actBulk_.stk_search_act_pnts(actMeta_);
-  const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
-
-  Kokkos::parallel_for("interpolateVelocitiesActuatorNgpFAST", numActPoints_, InterpolateActVel(actBulk_));
-
-  actBulk_.reduce_view_on_host(velReduce);
-
-  Kokkos::parallel_for("assignFastVelActuatorNgpFAST", fastRangePolicy, ActFastAssignVel(actBulk_));
-
-  actBulk_.step_fast();
-
-  Kokkos::parallel_for("computeForcesActuatorNgpFAST", fastRangePolicy, ActFastComputeForce(actBulk_));
-
-  actBulk_.reduce_view_on_host(forceReduce);
-
-  Kokkos::parallel_for("spreadForcesActuatorNgpFAST", localSizeCoarseSearch, SpreadActForce(actBulk_));
-  // TODO(psakiev) compute thrust
-}
 
 } /* namespace nalu */
 } /* namespace sierra */

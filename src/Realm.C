@@ -614,6 +614,7 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
   }
 
   // look for Actuator
+  //TODO(psakiev) construct new actuator types here and run
   std::vector<const YAML::Node*> foundActuator;
   NaluParsingHelper::find_nodes_given_key("actuator", node, foundActuator);
   if ( foundActuator.size() > 0 ) {

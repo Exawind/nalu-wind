@@ -21,7 +21,7 @@ CreateBoundingSpheres(ActFixVectorDbl points, ActFixScalarDbl radius)
 {
 
   const int nPoints = points.extent(0);
-  // TODO(psakiev) can this be pre-allocated and modify entry values?
+  // TODO can this be pre-allocated and modify entry values?
   // Will need to recreate every timestep with actuator line
   VecBoundSphere boundSphereVec;
 

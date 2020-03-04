@@ -32,49 +32,48 @@ ActuatorMeta
 actuator_parse(const YAML::Node& y_node)
 {
   const YAML::Node y_actuator = y_node["actuator"];
-  if (y_actuator) {
-    int nTurbines = 0;
-    std::string actuatorTypeName;
-    get_required(y_actuator, "n_turbines_glob", nTurbines);
-    get_required(y_actuator, "type", actuatorTypeName);
-    ActuatorMeta actMeta(nTurbines, ActuatorTypeMap[actuatorTypeName]);
-    // search specifications
-    std::string searchMethodName = "na";
-    get_if_present(
-      y_actuator, "search_method", searchMethodName, searchMethodName);
-    // determine search method for this pair
-    if (searchMethodName == "boost_rtree") {
-      actMeta.searchMethod_ = stk::search::BOOST_RTREE;
-      NaluEnv::self().naluOutputP0()
-        << "Warning: search method 'boost_rtree'"
-        << " is being deprecated, please switch to 'stk_kdtree'" << std::endl;
-    } else if (searchMethodName == "stk_kdtree")
-      actMeta.searchMethod_ = stk::search::KDTREE;
-    else
-      NaluEnv::self().naluOutputP0()
-        << "Actuator::search method not declared; will use stk_kdtree"
-        << std::endl;
-    // extract the set of from target names; each spec is homogeneous in this
-    // respect
-    const YAML::Node searchTargets = y_actuator["search_target_part"];
-    if (searchTargets) {
-      if (searchTargets.Type() == YAML::NodeType::Scalar) {
-        actMeta.searchTargetNames_.resize(1);
-        actMeta.searchTargetNames_[0] = searchTargets.as<std::string>();
-      } else {
-        actMeta.searchTargetNames_.resize(searchTargets.size());
-        for (size_t i = 0; i < searchTargets.size(); ++i) {
-          actMeta.searchTargetNames_[i] = searchTargets[i].as<std::string>();
-        }
-      }
+  ThrowErrorMsgIf(
+    !y_actuator, "actuator argument is "
+                 "missing from yaml node passed to actuator_parse");
+  int nTurbines = 0;
+  std::string actuatorTypeName;
+  get_required(y_actuator, "n_turbines_glob", nTurbines);
+  get_required(y_actuator, "type", actuatorTypeName);
+  ActuatorMeta actMeta(nTurbines, ActuatorTypeMap[actuatorTypeName]);
+  // search specifications
+  std::string searchMethodName = "na";
+  get_if_present(
+    y_actuator, "search_method", searchMethodName, searchMethodName);
+  // determine search method for this pair
+  if (searchMethodName == "boost_rtree") {
+    actMeta.searchMethod_ = stk::search::BOOST_RTREE;
+    NaluEnv::self().naluOutputP0()
+      << "Warning: search method 'boost_rtree'"
+      << " is being deprecated, please switch to 'stk_kdtree'" << std::endl;
+  } else if (searchMethodName == "stk_kdtree")
+    actMeta.searchMethod_ = stk::search::KDTREE;
+  else
+    NaluEnv::self().naluOutputP0()
+      << "Actuator::search method not declared; will use stk_kdtree"
+      << std::endl;
+  // extract the set of from target names; each spec is homogeneous in this
+  // respect
+  const YAML::Node searchTargets = y_actuator["search_target_part"];
+  if (searchTargets) {
+    if (searchTargets.Type() == YAML::NodeType::Scalar) {
+      actMeta.searchTargetNames_.resize(1);
+      actMeta.searchTargetNames_[0] = searchTargets.as<std::string>();
     } else {
-      throw std::runtime_error(
-        "Actuator:: search_target_part is not declared.");
+      actMeta.searchTargetNames_.resize(searchTargets.size());
+      for (size_t i = 0; i < searchTargets.size(); ++i) {
+        actMeta.searchTargetNames_[i] = searchTargets[i].as<std::string>();
+      }
     }
-    return actMeta;
   } else {
-    return ActuatorMeta(0);
+    throw std::runtime_error(
+      "Actuator:: search_target_part is not declared.");
   }
+  return actMeta;
 }
 
 } // namespace nalu

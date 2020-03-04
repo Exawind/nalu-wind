@@ -32,8 +32,9 @@ ActuatorMeta::add_turbine(const ActuatorInfoNGP& info)
 }
 
 ActuatorBulk::ActuatorBulk(
-  const ActuatorMeta& meta, stk::mesh::BulkData& stkBulk)
-  : totalNumPoints_(meta.numPointsTotal_),
+  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk)
+  : totalNumPoints_(actMeta.numPointsTotal_),
+    turbIdOffset_("offsetsForTurbine", actMeta.numberOfActuators_),
     pointCentroid_("actPointCentroid", totalNumPoints_),
     velocity_("actVelocity", totalNumPoints_),
     actuatorForce_("actForce", totalNumPoints_),
@@ -46,6 +47,15 @@ ActuatorBulk::ActuatorBulk(
     pointIsLocal_("pointIsLocal", totalNumPoints_),
     elemContainingPoint_("elemContainPoint", totalNumPoints_)
 {
+  turbIdOffset_.modify_host();
+
+  const int numTurbs = actMeta.numberOfActuators_;
+
+  for (int i = 1; i < numTurbs; ++i) {
+    turbIdOffset_.h_view(i) =
+      turbIdOffset_.h_view(i - 1) + actMeta.numPointsTurbine_.h_view(i - 1);
+  }
+
 }
 
 void

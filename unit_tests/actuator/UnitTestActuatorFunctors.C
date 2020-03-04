@@ -10,7 +10,6 @@
 #include <actuator/ActuatorFunctors.h>
 #include <actuator/ActuatorParsing.h>
 #include <actuator/ActuatorInfo.h>
-#include <stk_util/parallel/ParallelReduce.hpp>
 #include <UnitTestUtils.h>
 #include <yaml-cpp/yaml.h>
 #include <gtest/gtest.h>
@@ -94,14 +93,9 @@ ActuatorTestInterpVelFunctors::execute()
   actBulk_.stk_search_act_pnts(actMeta_);
 
   Kokkos::parallel_for("interpVel", numActPoints_, InterpolateActVel(actBulk_));
-  Kokkos::fence();
 
   auto vel = actBulk_.velocity_.template view<Kokkos::HostSpace>();
-  //double* reducePointer = &(actBulk_.velocity_.h_view(0,0));
-  //MPI_Allreduce(reducePointer, reducePointer, numActPoints_*3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  //stk::all_reduce_sum(NaluEnv::self().parallel_comm(),
-  //  &vel(0,0), &vel(0,0), 9);
-  actBulk_.reduce_view_on_host(vel);
+  actBulk_.reduce_view_on_host(vel, NaluEnv::self().parallel_comm());
 
   Kokkos::parallel_for(
     "computeActuatorForce", numActPoints_, ComputeActuatorForce(actBulk_));
@@ -113,6 +107,28 @@ struct FunctorTestSpread : public ActuatorBulk{
     ActuatorBulk(actMeta, stkBulk){}
 };
 
+void InitSpreadTestFields(ActuatorBulk& actBulk){
+  actBulk.epsilon_.modify_host();
+  actBulk.searchRadius_.modify_host();
+  actBulk.pointCentroid_.modify_host();
+  actBulk.actuatorForce_.modify_host();
+
+  auto epsilon = actBulk.epsilon_.view_host();
+  auto radius = actBulk.searchRadius_.view_host();
+  auto point = actBulk.pointCentroid_.view_host();
+  auto force = actBulk.actuatorForce_.view_host();
+
+  for(int i=0; i<epsilon.extent_int(0); ++i){
+    for(int j=0; j<3; ++j){
+      epsilon(i,j)=2.0;
+      // assign at node to maximize overlap
+      point(i,j) = 1.0 + i;
+      force(i,j) = 1.0;
+    }
+    radius(i) = 2.0;
+  }
+}
+
 using ActuatorTestSpreadForceFunctor =
     Actuator<ActuatorMeta, FunctorTestSpread>;
 
@@ -121,26 +137,10 @@ void
 ActuatorTestSpreadForceFunctor::execute()
 {
 
-  Kokkos::parallel_for(
-    "setPointLocations", numActPoints_, SetupActPoints(actBulk_));
+  InitSpreadTestFields(actBulk_);
 
   actBulk_.stk_search_act_pnts(actMeta_);
   const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
-
-  Kokkos::parallel_for("interpVel", numActPoints_, InterpolateActVel(actBulk_));
-
-  auto vel = actBulk_.velocity_.view_host();
-  //stk::all_reduce_sum(NaluEnv::self().parallel_comm(),
-  //  &vel(0,0), &vel(0,0), vel.size());
-  actBulk_.reduce_view_on_host(vel);
-
-  Kokkos::parallel_for(
-    "computeActuatorForce", numActPoints_, ComputeActuatorForce(actBulk_));
-
-  auto force = actBulk_.actuatorForce_.view_host();
-  //stk::all_reduce_sum(NaluEnv::self().parallel_comm(),
-  //  force.data(), force.data(), force.size());
-  actBulk_.reduce_view_on_host(force);
 
   Kokkos::parallel_for(
     "spreadForce", localSizeCoarseSearch, SpreadActForce(actBulk_));
@@ -247,30 +247,36 @@ TEST_F(ActuatorFunctorTests, testSpreadForces){
 
   ActuatorInfoNGP actInfo;
   actInfo.numPoints_ = 1;
-  actInfo.epsilon_.x_=1.0;
-  actInfo.epsilon_.y_=1.0;
-  actInfo.epsilon_.z_=1.0;
+  actInfo.epsilon_.x_=2.0;
+  actInfo.epsilon_.y_=2.0;
+  actInfo.epsilon_.z_=2.0;
   actMeta.add_turbine(actInfo);
 
   ActuatorTestSpreadForceFunctor actuator(actMeta, stkBulk_);
 
   actuator.execute();
+
   auto actBulk = actuator.actuator_bulk();
   auto coarseElems = actBulk.coarseSearchElemIds_.view_host();
   const int numCoarse = coarseElems.extent_int(0);
 
   //make sure local search results get non-zero source term
+  std::vector<stk::mesh::Entity> nodesMatch;
+
   for(int i=0; i<numCoarse; ++i){
     const stk::mesh::Entity elem = stkBulk_.get_entity(stk::topology::ELEMENT_RANK, coarseElems(i));
     stk::mesh::Entity const* elem_node_rels = stkBulk_.begin_nodes(elem);
     const unsigned numNodes = stkBulk_.num_nodes(elem);
     for (unsigned j =0; j<numNodes; ++j){
       stk::mesh::Entity node = elem_node_rels[j];
+      nodesMatch.push_back(node);
       double* actSource = (double*) stk::mesh::field_data(*actuatorForce_,node);
       for(int k=0; k<3; ++k){
-        EXPECT_DOUBLE_EQ(actSource[k],0.0);
-        // set value for checking no extra source terms on mesh
-        actSource[k]=-1.0;
+        EXPECT_TRUE(actSource[k]>0.0)
+            <<"Value is: " << actSource[k] <<std::endl
+            <<"Elem is: "<<coarseElems(i)<<std::endl
+            <<"Node is: "<<j<<std::endl
+            <<"Index is: "<<k;
       }
     }
   }
@@ -282,9 +288,11 @@ TEST_F(ActuatorFunctorTests, testSpreadForces){
     stkBulk_.get_buckets(stk::topology::NODE_RANK, selector);
   for (const stk::mesh::Bucket* bptr : buckets) {
     for (stk::mesh::Entity node : *bptr) {
-      const double* aF = stk::mesh::field_data(*actuatorForce_, node);
-      for (int i = 0; i < 3; i++) {
-        EXPECT_DOUBLE_EQ(aF[i],0.0);
+      if(std::find(nodesMatch.begin(), nodesMatch.end(),node)==nodesMatch.end()){
+        const double* aF = stk::mesh::field_data(*actuatorForce_, node);
+        for (int i = 0; i < 3; i++) {
+          EXPECT_DOUBLE_EQ(aF[i],0.0);
+        }
       }
     }
   }
