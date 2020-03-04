@@ -12,7 +12,6 @@
 
 #include <actuator/ActuatorTypes.h>
 #include <actuator/ActuatorSearch.h>
-#include <NaluEnv.h>
 #include <Enums.h>
 #include <vector>
 
@@ -64,25 +63,22 @@ struct ActuatorBulk
 
   template<typename T>
   inline
-  void reduce_view_on_host(T view){
+  void reduce_view_on_host(T view, MPI_Comm comm){
     ThrowAssert(view.size()>0);
     ThrowAssert(view.data());
-    //stk::all_reduce_sum(NaluEnv::self().parallel_comm(),
-    //  view.data(),
-    //  view.data(),
-    //  view.size());
     MPI_Allreduce(
-      view.data(),
+      MPI_IN_PLACE,
       view.data(),
       view.size(),
       MPI_DOUBLE, // TODO can we get this from the view?
       MPI_SUM,
-      MPI_COMM_WORLD);
+      comm);
   }
 
   const int totalNumPoints_;
 
   // HOST AND DEVICE DATA (DualViews)
+  ActScalarIntDv turbIdOffset_;
   ActVectorDblDv pointCentroid_;
   ActVectorDblDv velocity_;
   ActVectorDblDv actuatorForce_;

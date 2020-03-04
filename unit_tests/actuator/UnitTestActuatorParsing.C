@@ -16,25 +16,79 @@ namespace nalu {
 
 namespace {
 
+YAML::Node
+create_yaml_node(const std::vector<std::string>& testFile)
+{
+  std::string temp;
+  for (auto&& line : testFile) {
+    temp += line;
+  }
+  return YAML::Load(temp);
+}
+
+// Ensure errors are clear nalu-wind errors and not yaml mysteries
+void
+test_wo_lines(
+  const std::vector<std::string>& testFile)
+{
+  // capture std::cout print statements
+  std::stringstream buffer;
+  std::streambuf* sbuf = std::cout.rdbuf();
+  std::cout.rdbuf(buffer.rdbuf());
+
+  for (unsigned i = 0; i < testFile.size(); i++) {
+    std::vector<std::string> localCopy(testFile);
+    localCopy[i] = "";
+    try {
+      auto y_node = create_yaml_node(localCopy);
+      try {
+        EXPECT_THROW(actuator_parse(y_node), std::runtime_error)
+          << " when missing: " << testFile[i];
+      } catch (
+        std::exception const& err) { // yaml or some other error sliped through
+        EXPECT_TRUE(false) << "Missing line: " << testFile[i]
+                           << "Leads to exception: " << err.what();
+      }
+    } catch (
+      std::exception const& err) { // yaml-error throws during node creation
+      // Do nothing for now, but should create a wrapper to catch these errors
+      // and make them more helpful EXPECT_TRUE(false) << "Missing line: "<<
+      // testFile[i]<<"Leads to exception: "<< err.what();
+    }
+  }
+  std::cout.rdbuf(sbuf);
+}
+
+class ActuatorParsingTest : public ::testing::Test
+{
+public:
+  std::vector<std::string> inputFileLines_;
+
+private:
+  void SetUp()
+  {
+    inputFileLines_.push_back("actuator:\n");
+    inputFileLines_.push_back("  type: ActLineFAST\n");
+    inputFileLines_.push_back("  n_turbines_glob: 1\n");
+    inputFileLines_.push_back("  search_target_part: [part1, part2]");
+
+  }
+};
+
 /// Check the minimum parse terms are not violated and
 /// that defaults haven't changed
-//TODO(psakiev) add robust testing like FAST parsing function
-TEST(ActuatorParse, bareMinimumParse)
+TEST_F(ActuatorParsingTest, bareMinimumParse)
 {
-  std::string testFile = "actuator:\n"
-                         "  type: ActLineFAST\n"
-                         "  n_turbines_glob: 1\n"
-                         "  search_target_part: [part1, part2]";
-  YAML::Node y_actuator = YAML::Load(testFile);
   try {
+    auto y_actuator = create_yaml_node(inputFileLines_);
     ActuatorMeta actMeta = actuator_parse(y_actuator);
+    EXPECT_EQ(stk::search::KDTREE, actMeta.searchMethod_);
+    EXPECT_EQ(2, actMeta.searchTargetNames_.size());
   } catch (std::exception const& err) {
     FAIL() << err.what();
   }
+  test_wo_lines(inputFileLines_);
 
-  ActuatorMeta actMeta = actuator_parse(y_actuator);
-  EXPECT_EQ(stk::search::KDTREE, actMeta.searchMethod_);
-  EXPECT_EQ(2, actMeta.searchTargetNames_.size());
 }
 
 } // namespace

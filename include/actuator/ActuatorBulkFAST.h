@@ -11,7 +11,7 @@
 #define ACTUATORBULKFAST_H_
 
 #include <actuator/ActuatorBulk.h>
-#include "OpenFAST.h"
+#include "OpenFAST.H"
 
 namespace sierra {
 namespace nalu {
@@ -45,7 +45,6 @@ struct ActuatorBulkFAST : public ActuatorBulk
 
   ~ActuatorBulkFAST();
 
-  ActScalarIntDv turbIdOffset_;
   ActVectorDblDv epsilonOpt_;
   fast::OpenFAST openFast_;
   const int localTurbineId_;

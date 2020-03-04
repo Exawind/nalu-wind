@@ -28,33 +28,23 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
 ActuatorBulkFAST::ActuatorBulkFAST(
   const ActuatorMetaFAST& actMeta, stk::mesh::BulkData& stkBulk)
   : ActuatorBulk(actMeta, stkBulk),
-    turbIdOffset_("offsetsForTurbine", actMeta.numberOfActuators_),
     epsilonOpt_("epsilonOptimal", actMeta.numberOfActuators_),
     localTurbineId_(NaluEnv::self().parallel_rank()>actMeta.numberOfActuators_?-1:NaluEnv::self().parallel_rank()),
     tStepRatio_(actMeta.timeStepRatio_)
 {
   openFast_.setInputs(actMeta.fastInputs_);
 
-  TOUCH_DUAL_VIEW(turbIdOffset_, ActuatorFixedMemSpace)
-
-  const int numTurbs = actMeta.numberOfActuators_;
-
-  for (int i = 1; i < numTurbs; i++) {
-    turbIdOffset_.h_view(i) =
-      turbIdOffset_.h_view(i - 1) + actMeta.numPointsTurbine_.h_view(i - 1);
-  }
-
   const int nProcs = NaluEnv::self().parallel_size();
   const int nTurb = actMeta.numberOfActuators_;
   const int intDivision = nTurb / nProcs;
   const int remainder = actMeta.numberOfActuators_ % nProcs;
 
-  if(remainder){
+  if(remainder && intDivision){
     ThrowErrorMsg("OpenFAST can't accept more turbines than ranks.");
   }
 
   // assign turbines to processors uniformly
-  for (int i = 0; i < intDivision; i++) {
+  for (int i = 0; i < remainder; i++) {
     openFast_.setTurbineProcNo(i, i);
   }
 
@@ -71,10 +61,11 @@ ActuatorBulkFAST::ActuatorBulkFAST(
   // Blade 2 nodes
   // Blade 3 nodes
   // Tower nodes
-  TOUCH_DUAL_VIEW(epsilon_, ActuatorFixedMemSpace)
-  TOUCH_DUAL_VIEW(epsilonOpt_, ActuatorFixedMemSpace)
-  TOUCH_DUAL_VIEW(searchRadius_, ActuatorFixedMemSpace)
-  for (int iTurb = 0; iTurb < numTurbs; iTurb++) {
+  epsilon_.modify_host();
+  epsilonOpt_.modify_host();
+  searchRadius_.modify_host();
+
+  for (int iTurb = 0; iTurb < nTurb; iTurb++) {
     if (openFast_.get_procNo(iTurb) == NaluEnv::self().parallel_rank()) {
       const int numForcePts = openFast_.get_numForcePts(iTurb);
       const int offset = turbIdOffset_.h_view(iTurb);
