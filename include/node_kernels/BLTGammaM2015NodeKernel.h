@@ -48,6 +48,7 @@ private:
   ngp::Field<double> dudx_;
   ngp::Field<double> minD_;
   ngp::Field<double> dualNodalVolume_;
+  ngp::Field<double> coordinates_;
   ngp::Field<double> gamint_;
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
@@ -57,12 +58,15 @@ private:
   unsigned dudxID_            {stk::mesh::InvalidOrdinal};
   unsigned minDID_            {stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinatesID_     {stk::mesh::InvalidOrdinal};
   unsigned gamintID_       {stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType caOne_;
   NodeKernelTraits::DblType caTwo_;
   NodeKernelTraits::DblType ceOne_;
   NodeKernelTraits::DblType ceTwo_;
+
+  int timeStepCount;
 
   const int nDim_;
 };

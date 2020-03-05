@@ -26,6 +26,7 @@ BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
     dudxID_(get_field_ordinal(meta, "dudx")),
     minDID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
+    coordinatesID_(get_field_ordinal(meta, "coordinates")),
     gamintID_(get_field_ordinal(meta, "gamma_transition")),
     nDim_(meta.spatial_dimension())
 {}
@@ -42,6 +43,7 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   dudx_            = fieldMgr.get_field<double>(dudxID_);
   minD_            = fieldMgr.get_field<double>(minDID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
+  coordinates_     = fieldMgr.get_field<double>(coordinatesID_);
   gamint_          = fieldMgr.get_field<double>(gamintID_);
 
 
@@ -51,6 +53,7 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   caTwo_ = realm.get_turb_model_constant(TM_caTwo);
   ceOne_ = realm.get_turb_model_constant(TM_ceOne);
   ceTwo_ = realm.get_turb_model_constant(TM_ceTwo);
+  timeStepCount = realm.get_time_step_count();
 }
 
 
@@ -87,6 +90,9 @@ BLTGammaM2015NodeKernel::execute(
 {
   using DblType = NodeKernelTraits::DblType;
 
+  NALU_ALIGNED NodeKernelTraits::DblType
+    coords[NodeKernelTraits::NDimMax]; // coordinates
+
   const DblType tke       = tke_.get(node, 0);
   const DblType sdr       = sdr_.get(node, 0);
   const DblType gamint    = gamint_.get(node, 0);
@@ -99,7 +105,7 @@ BLTGammaM2015NodeKernel::execute(
   int wallnorm_dir = 2;
 
   DblType Re0c = 0.0;
-  DblType flength = 0.0;
+  DblType flength = 100.0;
   DblType Rev = 0.0;
   DblType rt = 0.0;
   DblType dvnn = 0.0;
@@ -119,6 +125,10 @@ BLTGammaM2015NodeKernel::execute(
   DblType Ctu2=1000.;
   DblType Ctu3=1.0;
 
+  for (int d = 0; d < nDim_; d++) {
+    coords[d] = coordinates_.get(node, d);
+  }
+
   for (int i=0; i < nDim_; ++i) {
     for (int j=0; j < nDim_; ++j) {
           const double duidxj = dudx_.get(node, nDim_ * i + j);
@@ -131,6 +141,8 @@ BLTGammaM2015NodeKernel::execute(
     }
   }
 
+  sijMag = stk::math::sqrt(sijMag);
+  vortMag = stk::math::sqrt(vortMag);
 
   // dvnn = wall normal derivative of wall normal velocity (for now, hardwire to NASA TM case: z = wall norm direction)
   dvnn = dudx_.get(node, nDim_ * wallnorm_dir + wallnorm_dir);
@@ -146,15 +158,34 @@ BLTGammaM2015NodeKernel::execute(
   fonset = stk::math::max(fonset2 - fonset3, 0.0);
   fturb = stk::math::exp(-rt * rt * rt * rt / 16.0);
 
-  DblType Pgamma = flength * density * sijMag * gamint * fonset * (1.0 - gamint );
+  DblType Pgamma = flength * density * sijMag * gamint * ( 1.0 - gamint ) * fonset;
   DblType Dgamma = caTwo_ * density * vortMag * gamint * fturb * ( ceTwo_ * gamint - 1.0 );
 
-  rhs(0) += (Pgamma - Dgamma) * dVol;
 
   DblType PgammaDeriv = -flength * density * sijMag * fonset * (1.0 - 2.0 * gamint );
   DblType DgammaDeriv = caTwo_ * density * vortMag * fturb * ( 2.0*ceTwo_ * gamint - 1.0 );
 
+  //const double dx   = stk::math::abs(coords[0] - 0.80);
+  //const double dy   = stk::math::abs(coords[1] + 0.50);
+
+  //const double dxle   = stk::math::abs(coords[0] - 0.80);
+  //const double dzle   = stk::math::abs(coords[2] - 0.00);
+  //const double dist = stk::math::sqrt(dxle*dxle + dzle*dzle) ;
+
+    //Pgamma = 0.0;
+    //Dgamma = 0.0;
+    //PgammaDeriv = 0.0;
+    //DgammaDeriv = 0.0;
+
+    //if (dx < 0.01 && dy < 0.1) {
+    //if (dy < 0.1) {
+    //  std::printf("%i12 %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E\n", timeStepCount, coords[0], coords[1], coords[2], gamint, tke, sdr, minD, dvnn, TuL, lamda0L, Re0c, Rev, fonset1, fonset2, fonset3, fonset, fturb, 
+    //    sijMag, vortMag, Pgamma, Dgamma, Pgamma-Dgamma);
+    //}
+
+  rhs(0) += (Pgamma - Dgamma) * dVol;
   lhs(0, 0) -= ( PgammaDeriv - DgammaDeriv ) * dVol;
+
 }
 
 } // namespace nalu

@@ -8,8 +8,8 @@
 //
 
 
-#ifndef SDRSSTNODEKERNEL_H
-#define SDRSSTNODEKERNEL_H
+#ifndef SDRSSTBLTM2015NODEKERNEL_H
+#define SDRSSTBLTM2015NODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
@@ -53,6 +53,8 @@ private:
   ngp::Field<double> minD_;
   ngp::Field<double> dualNodalVolume_;
   ngp::Field<double> fOneBlend_;
+  ngp::Field<double> coordinates_;
+  ngp::Field<double> velocityNp1_;
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
   unsigned sdrID_             {stk::mesh::InvalidOrdinal};
@@ -65,6 +67,8 @@ private:
   unsigned minDID_            {stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
   unsigned fOneBlendID_       {stk::mesh::InvalidOrdinal};
+  unsigned coordinatesID_     {stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1ID_     {stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
@@ -74,6 +78,7 @@ private:
   NodeKernelTraits::DblType gammaOne_;
   NodeKernelTraits::DblType gammaTwo_;
   NodeKernelTraits::DblType relaxFac_;
+  NodeKernelTraits::DblType c0t_;
 
   const int nDim_;
 };

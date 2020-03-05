@@ -33,6 +33,8 @@ SDRSSTBLTM2015NodeKernel::SDRSSTBLTM2015NodeKernel(
     minDID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
+    coordinatesID_(get_field_ordinal(meta, "coordinates")),
+    velocityNp1ID_(get_field_ordinal(meta, "velocity")),
     nDim_(meta.spatial_dimension())
 {}
 
@@ -52,6 +54,8 @@ SDRSSTBLTM2015NodeKernel::setup(Realm& realm)
   minD_            = fieldMgr.get_field<double>(minDID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   fOneBlend_       = fieldMgr.get_field<double>(fOneBlendID_);
+  coordinates_     = fieldMgr.get_field<double>(coordinatesID_);
+  velocityNp1_     = fieldMgr.get_field<double>(velocityNp1ID_);
 
   const std::string dofName = "specific_dissipation_rate";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
@@ -64,6 +68,7 @@ SDRSSTBLTM2015NodeKernel::setup(Realm& realm)
   betaTwo_ = realm.get_turb_model_constant(TM_betaTwo);
   gammaOne_ = realm.get_turb_model_constant(TM_gammaOne);
   gammaTwo_ = realm.get_turb_model_constant(TM_gammaTwo);
+  c0t_               = realm.get_turb_model_constant(TM_c0t);
 }
 
 void
@@ -73,6 +78,9 @@ SDRSSTBLTM2015NodeKernel::execute(
   const stk::mesh::FastMeshIndex& node)
 {
   using DblType = NodeKernelTraits::DblType;
+
+  NALU_ALIGNED NodeKernelTraits::DblType coords[NodeKernelTraits::NDimMax]; // coordinates
+  NALU_ALIGNED NodeKernelTraits::DblType vel[NodeKernelTraits::NDimMax];
 
   const DblType tke       = tke_.get(node, 0);
   const DblType sdr       = sdr_.get(node, 0);
@@ -85,6 +93,16 @@ SDRSSTBLTM2015NodeKernel::execute(
 
   DblType Pk = 0.0;
   DblType crossDiff = 0.0;
+  DblType sdrFreestream = 0.0;
+  DblType sdrForcing = 0.0;
+  DblType tc = 0.0;
+  DblType velMag2 = 0.0;
+
+  for (int d = 0; d < nDim_; d++) {
+    coords[d] = coordinates_.get(node, d);
+    vel[d] = velocityNp1_.get(node, d);
+  }
+
   for (int i=0; i < nDim_; ++i) {
     crossDiff += dkdx_.get(node, i) * dwdx_.get(node, i);
     const int offset = nDim_ * i;
@@ -93,6 +111,9 @@ SDRSSTBLTM2015NodeKernel::execute(
       Pk += dudxij * (dudxij + dudx_.get(node, j*nDim_ + i));
     }
   }
+
+  velMag2 = vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2] + 1.e-14;
+
   Pk *= tvisc;
 
   const DblType Dk = betaStar_ * density * sdr * tke;
@@ -100,10 +121,19 @@ SDRSSTBLTM2015NodeKernel::execute(
   // Clip production term
   Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
 
+  if (coords[0] < -0.04) {
+    sdrFreestream  = 377.39537778;
+    tc = 500.0 * visc / density / velMag2;
+    sdrForcing = c0t_ * density * (sdrFreestream - sdr) / tc;
+  }
+  else {
+    sdrForcing = 0.0;
+  }
+
   // Blend constants for SDR
   const DblType ry = density * minD * stk::math::sqrt(tke)/visc;
   const DblType arg = ry / 120.0;
-  const DblType f3 = stk::math::exp(arg*arg*arg*arg*arg*arg*arg*arg);
+  const DblType f3 = stk::math::exp(-arg*arg*arg*arg*arg*arg*arg*arg);
   const DblType fOneBlendBLT = stk::math::max( fOneBlend, f3);
 
   const DblType omf1 = (1.0 - fOneBlendBLT);
@@ -116,7 +146,7 @@ SDRSSTBLTM2015NodeKernel::execute(
   const DblType Dw = beta * density * sdr * sdr;
   const DblType Sw = sigmaD * density * crossDiff / sdr;
 
-  rhs(0) += (Pw - Dw + Sw) * dVol;
+  rhs(0) += (Pw - Dw + Sw + sdrForcing) * dVol;
   lhs(0, 0) += (2.0 * beta * density * sdr + stk::math::max(Sw / sdr, 0.0)) *
                dVol;
 }

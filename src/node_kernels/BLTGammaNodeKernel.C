@@ -145,6 +145,9 @@ BLTGammaNodeKernel::execute(
     }
   }
 
+  sijMag = stk::math::sqrt(sijMag);
+  vortMag = stk::math::sqrt(vortMag);
+
   flen = Comp_f_length(re0t);
   Re0c = Comp_Re_0c(re0t);
   Romega = density * minD * minD * sdr / 500.0 / visc;

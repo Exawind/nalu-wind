@@ -61,6 +61,7 @@
 #include <node_kernels/NodeKernelUtils.h>
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
 #include <node_kernels/SDRSSTNodeKernel.h>
+#include <node_kernels/SDRSSTBLTM2015NodeKernel.h>
 #include <node_kernels/SDRSSTDESNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
 
@@ -301,7 +302,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
         if (SST == realm_.solutionOptions_->turbulenceModel_){
-          nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
+          //nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data()); // standard fully turbulent blending
+          nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data()); // modify F1 blending function for BLT model
         }
         else if (SST_DES == realm_.solutionOptions_->turbulenceModel_){
           nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());

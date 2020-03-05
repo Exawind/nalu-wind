@@ -48,19 +48,25 @@ private:
   ngp::Field<double> dudx_;
   ngp::Field<double> minD_;
   ngp::Field<double> dualNodalVolume_;
+  ngp::Field<double> coordinates_;
+  ngp::Field<double> velocityNp1_;
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
   unsigned sdrID_             {stk::mesh::InvalidOrdinal};
-  unsigned gamintID_             {stk::mesh::InvalidOrdinal};
+  unsigned gamintID_          {stk::mesh::InvalidOrdinal};
   unsigned densityID_         {stk::mesh::InvalidOrdinal};
   unsigned viscID_            {stk::mesh::InvalidOrdinal};
   unsigned tviscID_           {stk::mesh::InvalidOrdinal};
   unsigned dudxID_            {stk::mesh::InvalidOrdinal};
   unsigned minDID_            {stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned coordinatesID_     {stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1ID_     {stk::mesh::InvalidOrdinal};
+  double dt_;
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
+  NodeKernelTraits::DblType c0t_;
   NodeKernelTraits::DblType relaxFac_;
 
   const int nDim_;
