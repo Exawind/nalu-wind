@@ -92,7 +92,7 @@ protected:
     fastParseParams_.push_back("    turbine_name: turbinator\n");
     fastParseParams_.push_back("    epsilon: [1.0, 0, 0]\n");
     fastParseParams_.push_back("    turb_id: 0\n");
-    fastParseParams_.push_back("    fast_input_filename: UnitFast.inp\n");
+    fastParseParams_.push_back("    fast_input_filename: reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst\n");
     fastParseParams_.push_back("    restart_filename: restart.dat\n");
     fastParseParams_.push_back("    num_force_pts_blade: 10\n");
     fastParseParams_.push_back("    num_force_pts_tower: 10\n");
@@ -101,13 +101,13 @@ protected:
   }
 };
 
-TEST_F(ActuatorFunctorFASTTests, DISABLED_createActuatorBulk){
+TEST_F(ActuatorFunctorFASTTests, createActuatorBulk){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
 
   try{
     ActuatorBulkFAST actBulk(actMetaFast, stkBulk_);
-    SUCCEED();
+    EXPECT_FALSE(actBulk.openFast_.isDebug());
   } catch ( std::exception const& err){
     FAIL()<<err.what();
   }
