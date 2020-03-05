@@ -50,9 +50,6 @@
 #include <PostProcessingData.h>
 #include <Realm.h>
 #include <Realms.h>
-#include <SurfaceForceAndMomentAlgorithmDriver.h>
-#include <SurfaceForceAndMomentAlgorithm.h>
-#include <SurfaceForceAndMomentWallFunctionAlgorithm.h>
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <SolverAlgorithmDriver.h>
@@ -222,7 +219,6 @@ LowMachEquationSystem::LowMachEquationSystem(
     viscosity_(NULL),
     dualNodalVolume_(NULL),
     edgeAreaVec_(NULL),
-    surfaceForceAndMomentAlgDriver_(NULL),
     xyBCType_(2,0),
     isInit_(true)
 {
@@ -244,10 +240,7 @@ LowMachEquationSystem::LowMachEquationSystem(
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
 LowMachEquationSystem::~LowMachEquationSystem()
-{
-  if ( NULL != surfaceForceAndMomentAlgDriver_ )
-    delete surfaceForceAndMomentAlgDriver_;
-}
+{}
 
 void LowMachEquationSystem::load(const YAML::Node& node)
 {
@@ -505,7 +498,7 @@ LowMachEquationSystem::register_surface_pp_algorithm(
     if (RANSAblBcApproach) {
       std::cout << "surface_force_and_moment not implemented with RANS_abl_bc." << std::endl;
     }
-    
+
     ScalarFieldType *assembledArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_area_force_moment"));
     stk::mesh::put_field_on_mesh(*assembledArea, stk::mesh::selectUnion(partVector), nullptr);
 	    if ( NULL == surfaceForceAndMomentAlgDriver_ )
@@ -646,7 +639,7 @@ void
 LowMachEquationSystem::pre_iter_work()
 {
   momentumEqSys_->pre_iter_work();
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) 
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
       momentumEqSys_->AMSAlgDriver_->execute();
   continuityEqSys_->pre_iter_work();
 }
@@ -921,10 +914,6 @@ LowMachEquationSystem::predict_state()
 void
 LowMachEquationSystem::post_converged_work()
 {
-  if (NULL != surfaceForceAndMomentAlgDriver_){
-    surfaceForceAndMomentAlgDriver_->execute();
-  }
-
   // output mass closure
   continuityEqSys_->mdotAlgDriver_->provide_output();
 
@@ -942,7 +931,7 @@ LowMachEquationSystem::post_converged_work()
 void
 LowMachEquationSystem::post_iter_work()
 {
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) 
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
     momentumEqSys_->AMSAlgDriver_->post_iter_work();
 }
 
@@ -1818,11 +1807,11 @@ MomentumEquationSystem::register_wall_bc(
 
     stk::topology::rank_t sideRank = static_cast<stk::topology::rank_t>(meta_data.side_rank());
 
-    GenericFieldType *wallFrictionVelocityBip 
+    GenericFieldType *wallFrictionVelocityBip
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_friction_velocity_bip"));
     stk::mesh::put_field_on_mesh(*wallFrictionVelocityBip, *part, numScsBip, nullptr);
 
-    GenericFieldType *wallNormalDistanceBip 
+    GenericFieldType *wallNormalDistanceBip
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_normal_distance_bip"));
     stk::mesh::put_field_on_mesh(*wallNormalDistanceBip, *part, numScsBip, nullptr);
 
@@ -1840,7 +1829,7 @@ MomentumEquationSystem::register_wall_bc(
       GenericFieldType *wallShearStressBip
         =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_shear_stress_bip"));
       stk::mesh::put_field_on_mesh(*wallShearStressBip, *part, nDim*numScsBip, nullptr);
-    
+
       // register the standard time-space-invariant wall heat flux (not used by the ABL wall model).
       NormalHeatFlux heatFlux = userData.q_;
       std::vector<double> userSpec(1);
@@ -1862,7 +1851,7 @@ MomentumEquationSystem::register_wall_bc(
         // register the algorithm that computes geometry that the wall model uses.
         realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
           wfAlgType, part, get_elem_topo(realm_, *part), "geometry_wall_func");
-        
+
         // register the algorithm that calculates the momentum and heat flux on the wall.
         wallFuncAlgDriver_.register_face_elem_algorithm<ABLWallFluxesAlg>(
           wfAlgType, part, get_elem_topo(realm_, *part), "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,

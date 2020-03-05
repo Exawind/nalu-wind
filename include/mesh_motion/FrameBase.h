@@ -23,7 +23,7 @@ public:
 
   virtual ~FrameBase();
 
-  void setup();
+  virtual void setup();
 
   void compute_centroid_on_parts(
     mm::ThreeDVecType& centroid);

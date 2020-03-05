@@ -80,8 +80,11 @@ class MeshTransformationAlg;
 class SolutionNormPostProcessing;
 class SideWriterContainer;
 class TurbulenceAveragingPostProcessing;
+class SurfaceFMPostProcessing;
 class DataProbePostProcessing;
 struct ActuatorModel;
+class Actuator;
+class OpenfastFSI;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
@@ -99,7 +102,7 @@ class Realm {
 
   Realm(Realms&, const YAML::Node & node);
   virtual ~Realm();
-  
+
   typedef size_t SizeType;
 
   virtual void load(const YAML::Node & node);
@@ -132,7 +135,7 @@ class Realm {
   void enforce_bc_on_exposed_faces();
   void setup_initial_conditions();
   void setup_property();
-  void extract_universal_constant( 
+  void extract_universal_constant(
     const std::string name, double &value, const bool useDefault);
   void augment_property_map(
     PropertyIdentifier propID,
@@ -152,7 +155,7 @@ class Realm {
 
   void augment_output_variable_list(
       const std::string fieldName);
-  
+
   void augment_restart_variable_list(
       std::string restartFieldName);
 
@@ -276,9 +279,9 @@ class Realm {
   virtual void pre_timestep_work_epilog();
   virtual void output_banner();
   virtual void advance_time_step();
- 
+
   virtual void initial_work();
-  
+
   void set_global_id();
 
   /** Initialize the HYPRE global row IDs
@@ -286,7 +289,7 @@ class Realm {
    *  \sa Realm::hypreGlobalId_
    */
   void set_hypre_global_id();
- 
+
   /// check job for fitting in memory
   void check_job(bool get_node_count);
 
@@ -335,7 +338,7 @@ class Realm {
   double get_mdot_interp();
   bool get_cvfem_shifted_mdot();
   bool get_cvfem_reduced_sens_poisson();
-  
+
   bool has_nc_gauss_labatto_quadrature();
   bool get_nc_alg_upwind_advection();
   bool get_nc_alg_include_pstab();
@@ -436,7 +439,7 @@ class Realm {
   BoundaryConditions boundaryConditions_;
   InitialConditions initialConditions_;
   MaterialPropertys materialPropertys_;
-  
+
   EquationSystems equationSystems_;
 
   double maxCourant_;
@@ -447,11 +450,13 @@ class Realm {
 
   SolutionOptions *solutionOptions_;
   OutputInfo *outputInfo_;
-  PostProcessingInfo *postProcessingInfo_;
   SolutionNormPostProcessing *solutionNormPostProcessing_;
   TurbulenceAveragingPostProcessing *turbulenceAveragingPostProcessing_;
   DataProbePostProcessing* dataProbePostProcessing_;
   std::unique_ptr<ActuatorModel> actuatorModel_;
+  std::unique_ptr<SurfaceFMPostProcessing> surfaceFMPostProcessing_;
+  Actuator *actuator_;
+  OpenfastFSI *openfast_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
@@ -509,7 +514,7 @@ class Realm {
 
   // check if there are negative Jacobians
   bool checkJacobians_;
-  
+
   // types of physics
   bool isothermalFlow_;
   bool uniformFlow_;
@@ -522,9 +527,9 @@ class Realm {
 
   // STK rebalance options
   bool rebalanceMesh_{false};
-  
+
   std::string rebalanceMethod_;
-   
+
   // allow aura to be optional
   bool activateAura_;
 
@@ -579,11 +584,12 @@ class Realm {
   std::vector<Transfer *> ioTransferVec_;
   std::vector<Transfer *> externalDataTransferVec_;
   void augment_transfer_vector(Transfer *transfer, const std::string transferObjective, Realm *toRealm);
+  void process_init_multi_physics_transfer();
   void process_multi_physics_transfer();
   void process_initialization_transfer();
   void process_io_transfer();
   void process_external_data_transfer();
-  
+
   // process end of time step converged work
   void post_converged_work();
 
@@ -599,6 +605,7 @@ class Realm {
   bool get_is_terminate_based_on_time();
   double get_total_sim_time();
   int get_max_time_step_count();
+  int get_restart_frequency();
 
   // restart
   bool restarted_simulation();
@@ -613,7 +620,7 @@ class Realm {
   // element promotion options
   bool doPromotion_; // conto
   unsigned promotionOrder_;
-  
+
   // id for the input mesh
   size_t inputMeshIdx_;
 

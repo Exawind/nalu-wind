@@ -372,6 +372,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
           ws_t_force[i] = ws_p_force[i] + ws_v_force[i];
           pressureForce[i] += ws_p_force[i];
           viscousForce[i] += ws_v_force[i];
+          tauWall[i] += ws_v_force[i];
           uParallel += uDiff*uDiff;
         }
 
@@ -383,10 +384,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
           l_force_moment[j+3] += ws_v_force[j];
           l_force_moment[j+6] += ws_moment[j];
         }
-
-        // assemble tauWall; area weighting is hiding in lambda/assembledArea
-        *tauWall += lambda*std::sqrt(uParallel)/assembledArea;
-
+        
         // deal with yplus
         *yplus += yplusBip*aMag/assembledArea;
 

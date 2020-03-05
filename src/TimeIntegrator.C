@@ -49,7 +49,7 @@ TimeIntegrator::TimeIntegrator(Simulation* sim)
     nonlinearIterations_(1),
     overset_(new ExtOverset(*this))
 {
-  // does nothing  
+  // does nothing
 }
 
 //--------------------------------------------------------------------------
@@ -60,7 +60,7 @@ TimeIntegrator::~TimeIntegrator()
   // does nothing
 }
 
-void TimeIntegrator::load(const YAML::Node & node) 
+void TimeIntegrator::load(const YAML::Node & node)
 {
   // FIXME - singleton... need TimeIntegrators class...
   const YAML::Node time_integrators = node["Time_Integrators"];
@@ -71,13 +71,13 @@ void TimeIntegrator::load(const YAML::Node & node)
       //const YAML::Node *otherTimeIntegrator_node = time_int_node.FindValue("OtherTimeIntegrator");
       if (standardTimeIntegrator_node) {
         name_ = standardTimeIntegrator_node["name"].as<std::string>() ;
-	      
+
         // is termination based on cumulative time or cumulative step count
         if ( standardTimeIntegrator_node["termination_time"] ) {
           totalSimTime_ = standardTimeIntegrator_node["termination_time"].as<double>() ;
           terminateBasedOnTime_ = true;
         }
-	      
+
         // check for max time step count; will prevail
         if ( standardTimeIntegrator_node["termination_step_count"] ) {
           maxTimeStepCount_ = standardTimeIntegrator_node["termination_step_count"].as<int>() ;
@@ -85,7 +85,7 @@ void TimeIntegrator::load(const YAML::Node & node)
             NaluEnv::self().naluOutputP0() << "Both max time step and termination time provided, max step will prevail" << std::endl;
           terminateBasedOnTime_ = false;
         }
-	      
+
         get_if_present(standardTimeIntegrator_node, "time_step", timeStepFromFile_, timeStepFromFile_);
         get_if_present(standardTimeIntegrator_node, "start_time", currentTime_, currentTime_);
         get_if_present(standardTimeIntegrator_node, "time_step_count", timeStepCount_, timeStepCount_);
@@ -108,12 +108,12 @@ void TimeIntegrator::load(const YAML::Node & node)
           NaluEnv::self().naluOutputP0() << " totalSimTime =     " << totalSimTime_ << std::endl;
         else
           NaluEnv::self().naluOutputP0() << " maxTimeStepCount = " << maxTimeStepCount_ << std::endl;
-        
-        if ( adaptiveTimeStep_ )  
+
+        if ( adaptiveTimeStep_ )
           NaluEnv::self().naluOutputP0() << " adaptive time step is active (realm owns specifics) " << std::endl;
         else
           NaluEnv::self().naluOutputP0() << " fixed time step is active  " << " with time step: " << timeStepN_ << std::endl;
-        
+
         const YAML::Node realms_node = standardTimeIntegrator_node["realms"] ;
 	int iRealm = 0;
         for (size_t irealm=0; irealm < realms_node.size(); ++irealm) {
@@ -225,7 +225,7 @@ void TimeIntegrator::prepare_for_time_integration()
 
   // provide for initial transfer
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-    (*ii)->process_multi_physics_transfer();
+    (*ii)->process_init_multi_physics_transfer();
   }
 
   if (!overset_->multi_solver_mode()) {
@@ -322,7 +322,7 @@ TimeIntegrator::integrate_realm()
   //=====================================
   // time integration
   //=====================================
-  
+
   while ( simulation_proceeds() ) {
     const double startTime = NaluEnv::self().nalu_time();
 
@@ -339,6 +339,7 @@ TimeIntegrator::integrate_realm()
       if (overset_->is_external_overset())
         overset_->exchange_solution();
       for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+        (*ii)->pre_timestep_work();
         (*ii)->advance_time_step();
         (*ii)->process_multi_physics_transfer();
       }
@@ -354,18 +355,18 @@ TimeIntegrator::integrate_realm()
       << " Post: " << (endPostProc - endSolve)
       << " Total: " << (endPostProc - startTime) << std::endl;
   }
-  
+
   // inform the user that the simulation is complete
   NaluEnv::self().naluOutputP0() << "*******************************************************" << std::endl;
-  NaluEnv::self().naluOutputP0() << "Simulation Shall Complete: time/timestep: " 
+  NaluEnv::self().naluOutputP0() << "Simulation Shall Complete: time/timestep: "
                                  << currentTime_ << "/" << timeStepCount_ << std::endl;
   NaluEnv::self().naluOutputP0() << "*******************************************************" << std::endl;
-  
+
   // dump time
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
     (*ii)->dump_simulation_time();
   }
-  
+
 }
 
 void TimeIntegrator::post_realm_advance()
@@ -402,7 +403,7 @@ TimeIntegrator::provide_mean_norm()
   double sumNorm = 0.0;
   double realmIncrement = 0.0;
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-    if ( (*ii)->type_ == "multi_physics" ) { 
+    if ( (*ii)->type_ == "multi_physics" ) {
       // only increment for a "real" realm
       sumNorm += (*ii)->provide_mean_norm();
       realmIncrement += 1.0;
@@ -463,7 +464,7 @@ TimeIntegrator::compute_gamma()
   gamma1_ = 1.0;
   gamma2_ = -1.0;
   gamma3_ = 0.0;
-  
+
   if ( timeStepCount_ > 1 ) {
     const double tau = timeStepN_/timeStepNm1_;
     gamma1_ = (1.0+2.0*tau)/(1.0+tau);
@@ -513,16 +514,16 @@ TimeIntegrator::get_is_fixed_time_step()
   return ! adaptiveTimeStep_ ;
 }
 
-bool 
+bool
 TimeIntegrator::get_is_terminate_based_on_time()
 {
   return terminateBasedOnTime_;
 }
 
-double 
+double
 TimeIntegrator::get_total_sim_time()
 {
-  if ( terminateBasedOnTime_) 
+  if ( terminateBasedOnTime_)
     return totalSimTime_;
   else
     return -1.0;
@@ -531,7 +532,7 @@ TimeIntegrator::get_total_sim_time()
 int
 TimeIntegrator::get_max_time_step_count()
 {
-  if ( ! terminateBasedOnTime_) 
+  if ( ! terminateBasedOnTime_)
     return maxTimeStepCount_;
   else
     return -1;

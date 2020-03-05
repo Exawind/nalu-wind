@@ -2,6 +2,7 @@
 #define MESHMOTIONALG_H
 
 #include "FrameMoving.h"
+#include "OpenfastFSI.h"
 
 namespace sierra{
 namespace nalu{
@@ -11,7 +12,8 @@ class MeshMotionAlg
 public:
   MeshMotionAlg(
     stk::mesh::BulkData& bulk,
-    const YAML::Node&);
+    const YAML::Node&,
+    OpenfastFSI* openfast = nullptr);
 
   ~MeshMotionAlg()
   {
@@ -31,7 +33,8 @@ private:
 
   void load(
     stk::mesh::BulkData&,
-    const YAML::Node&);
+    const YAML::Node&,
+    OpenfastFSI* openfast = nullptr);
 
   /** Moving frame vector
    *

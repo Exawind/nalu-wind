@@ -212,6 +212,10 @@ OutputInfo::load(
   }
 }
 
+int
+OutputInfo::get_restart_frequency() {
+  return restartFreq_;
+}
 // compression options
 int
 OutputInfo::get_output_compression() {
