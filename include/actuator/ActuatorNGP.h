@@ -65,7 +65,23 @@ struct ActuatorFunctor
 
 };
 
+//TODO(psakiev) can we just move this to be a functor as well?
+//Store bulk and meta, in realm and then construct/call functor in place of execute?
+template <typename ACTMETA, typename ACTBULK>
+struct ActExecuteFunctor{
+   ActExecuteFunctor(const ACTMETA& actMeta, ACTBULK& actBulk)
+    : actMeta_(actMeta),
+      actBulk_(actBulk),
+      numActPoints_(actBulk_.totalNumPoints_)
+  {
+  }
+  void operator()();
 
+private:
+  const ACTMETA& actMeta_; //< Contains meta data used to construct
+  ACTBULK& actBulk_;       //< Contains data
+  const int numActPoints_;    //< Total number of actuator points
+};
 /*!
  * \class Actuator
  * \brief Template class for implementing Actuator execution

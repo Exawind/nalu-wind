@@ -38,13 +38,11 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
     fi.globTurbineData[iTurb].numForcePtsBlade);
   get_required(
     turbNode, "num_force_pts_tower", fi.globTurbineData[iTurb].numForcePtsTwr);
-  fi.globTurbineData[iTurb].nacelle_cd = 0.0;
-  fi.globTurbineData[iTurb].nacelle_area = 0.0;
-  fi.globTurbineData[iTurb].air_density = 0.0;
-  get_if_present(turbNode, "nacelle_cd", fi.globTurbineData[iTurb].nacelle_cd);
-  get_if_present(
+
+  get_if_present_no_default(turbNode, "nacelle_cd", fi.globTurbineData[iTurb].nacelle_cd);
+  get_if_present_no_default(
     turbNode, "nacelle_area", fi.globTurbineData[iTurb].nacelle_area);
-  get_if_present(
+  get_if_present_no_default(
     turbNode, "air_density", fi.globTurbineData[iTurb].air_density);
 
   int numBlades=3;
@@ -56,6 +54,7 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
     + fi.globTurbineData[iTurb].numForcePtsTwr +
     fi.globTurbineData[iTurb].numForcePtsBlade *
       numBlades;
+  actMetaFAST.numPointsTotal_+=actMetaFAST.numPointsTurbine_.h_view(iTurb);
 }
 } // namespace
 
