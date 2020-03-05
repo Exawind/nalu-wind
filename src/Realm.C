@@ -632,7 +632,7 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     switch ( ActuatorTypeMap[ActuatorTypeName] ) {
         case ActuatorType::ActLineFASTNGP : {
 #ifdef NALU_USES_OPENFAST
-          auto actMetaFAST = actuator_FAST_parse(*foundActuator[0],actMeta, timeIntegrator_->timeStepFromFile_);
+          auto actMetaFAST = actuator_FAST_parse(*foundActuator[0],actMeta, 0.0625);
           actuatorNGP_ = make_unique<ActuatorNGP<ActuatorMetaFAST, ActuatorBulkFAST>>(actMetaFAST, *bulkData_);
           break;
 #else

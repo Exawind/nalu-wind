@@ -83,8 +83,8 @@ class SolutionNormPostProcessing;
 class TurbulenceAveragingPostProcessing;
 class DataProbePostProcessing;
 class Actuator;
-class ActuatorMetaFAST;
-class ActuatorBulkFAST;
+struct ActuatorMetaFAST;
+struct ActuatorBulkFAST;
 template<typename ActMeta, typename ActBulk>
 class ActuatorNGP;
 class ABLForcingAlgorithm;
