@@ -16,7 +16,6 @@
 #include <NaluEnv.h>
 #include <NaluParsing.h>
 #include <Realm.h>
-#include <PostProcessingData.h>
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <AlgorithmDriver.h>
@@ -601,43 +600,6 @@ EquationSystems::register_overset_bc(const OversetBoundaryConditionData&)
   EquationSystemVector::iterator ii;
   for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii )
     (*ii)->register_overset_bc(/*nothing required as of yet*/);
-}
-
-//--------------------------------------------------------------------------
-//-------- register_surface_pp_algorithm ----------------------
-//--------------------------------------------------------------------------
-void
-EquationSystems::register_surface_pp_algorithm(
-  const PostProcessingData &theData)
-{
-  stk::mesh::MetaData &meta_data = realm_.meta_data();
-
-  stk::mesh::PartVector partVector;
-  std::vector<std::string> targetNames = theData.targetNames_;
-  for ( size_t in = 0; in < targetNames.size(); ++in) {
-    stk::mesh::Part *targetPart = meta_data.get_part(targetNames[in]);
-    if ( NULL == targetPart ) {
-      NaluEnv::self().naluOutputP0() << "SurfacePP: can not find part with name: " << targetNames[in];
-    }
-    else {
-      // found the part
-      const std::vector<stk::mesh::Part*> & mesh_parts = targetPart->subsets();
-      for( std::vector<stk::mesh::Part*>::const_iterator i = mesh_parts.begin();
-          i != mesh_parts.end(); ++i )
-      {
-        stk::mesh::Part * const part = *i ;
-        if ( !(meta_data.side_rank() == part->primary_entity_rank()) ) {
-          NaluEnv::self().naluOutputP0() << "SurfacePP: part is not a face: " << targetNames[in];
-        }
-        partVector.push_back(part);
-      }
-    }
-  }
-
-  // call through to equation systems
-  EquationSystemVector::iterator ii;
-  for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii )
-    (*ii)->register_surface_pp_algorithm(theData, partVector);
 }
 
 //--------------------------------------------------------------------------

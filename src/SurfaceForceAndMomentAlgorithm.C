@@ -97,18 +97,6 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
   if ( parameters_.size() > nDim )
     throw std::runtime_error("SurfaceForce: parameter length wrong; expect nDim");
 
-  // deal with file name and banner
-  if ( NaluEnv::self().parallel_rank() == 0 ) {
-    std::ofstream myfile;
-    myfile.open(outputFileName_.c_str());
-    myfile << std::setw(w_) 
-           << "Time" << std::setw(w_) 
-           << "Fpx"  << std::setw(w_) << "Fpy" << std::setw(w_)  << "Fpz" << std::setw(w_) 
-           << "Fvx"  << std::setw(w_) << "Fvy" << std::setw(w_)  << "Fvz" << std::setw(w_) 
-           << "Mtx"  << std::setw(w_) << "Mty" << std::setw(w_)  << "Mtz" << std::setw(w_) 
-           << "Y+min" << std::setw(w_) << "Y+max"<< std::endl;
-    myfile.close();
-  }
  }
 
 //--------------------------------------------------------------------------
@@ -208,7 +196,7 @@ SurfaceForceAndMomentAlgorithm::execute()
     ws_density.resize(nodesPerFace);
     ws_viscosity.resize(nodesPerFace);
     ws_face_shape_function.resize(numScsBip*nodesPerFace);
-    
+
     // pointers
     double *p_pressure = &ws_pressure[0];
     double *p_density = &ws_density[0];
@@ -320,9 +308,10 @@ SurfaceForceAndMomentAlgorithm::execute()
           // accumulate viscous force and set tau for component i
           ws_v_force[i] += dflux;
           viscousForce[i] += ws_v_force[i];
+          tauWall[i] += dflux;
           ws_tau[i] = tauijNj;
         }
-        
+
         // compute total force and tangential tau
         const double areaFac = aMag/assembledArea;
         double tauTangential = 0.0;
@@ -401,9 +390,9 @@ SurfaceForceAndMomentAlgorithm::execute()
     if ( NaluEnv::self().parallel_rank() == 0 ) {
       std::ofstream myfile;
       myfile.open(outputFileName_.c_str(), std::ios_base::app);
-      myfile << std::setprecision(6) 
-             << std::setw(w_) 
-             << currentTime << std::setw(w_) 
+      myfile << std::setprecision(6)
+             << std::setw(w_)
+             << currentTime << std::setw(w_)
              << g_force_moment[0] << std::setw(w_) << g_force_moment[1] << std::setw(w_) << g_force_moment[2] << std::setw(w_)
              << g_force_moment[3] << std::setw(w_) << g_force_moment[4] << std::setw(w_) << g_force_moment[5] <<  std::setw(w_)
              << g_force_moment[6] << std::setw(w_) << g_force_moment[7] << std::setw(w_) << g_force_moment[8] <<  std::setw(w_)
@@ -484,17 +473,6 @@ SurfaceForceAndMomentAlgorithm::pre_work()
   }
 }
 
-//--------------------------------------------------------------------------
-//-------- cross_product ----------------------------------------------------
-//--------------------------------------------------------------------------
-void
-SurfaceForceAndMomentAlgorithm::cross_product(
-  double *force, double *cross, double *rad)
-{
-  cross[0] =   rad[1]*force[2] - rad[2]*force[1];
-  cross[1] = -(rad[0]*force[2] - rad[2]*force[0]);
-  cross[2] =   rad[0]*force[1] - rad[1]*force[0];
-}
 
 } // namespace nalu
 } // namespace Sierra

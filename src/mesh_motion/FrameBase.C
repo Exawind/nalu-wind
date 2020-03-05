@@ -46,8 +46,9 @@ FrameBase::load(const YAML::Node& node)
   // check if centroid needs to be computed
   get_if_present(node, "compute_centroid", computeCentroid_, computeCentroid_);
 
-  // extract the motions in the current group
-  const auto& motions = node["motion"];
+  if (node["motion"]) {
+      // extract the motions in the current group
+      const auto& motions = node["motion"];
 
   const int num_motions = motions.size();
   motionKernels_.resize(num_motions);
@@ -76,12 +77,14 @@ FrameBase::load(const YAML::Node& node)
     else
       throw std::runtime_error("FrameBase: Invalid mesh motion type: " + type);
 
-  } // end for loop - i index
+      } // end for loop - i index
+  }
 }
 
 void
 FrameBase::populate_part_vec(const YAML::Node& node)
 {
+
   if (!node["mesh_parts"]) {
     throw std::runtime_error("FrameBase: No mesh parts found.");
   }

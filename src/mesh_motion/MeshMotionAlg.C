@@ -1,6 +1,8 @@
 #include "mesh_motion/MeshMotionAlg.h"
 
 #include "mesh_motion/FrameMoving.h"
+#include "mesh_motion/FrameOpenFAST.h"
+
 #include "NaluParsing.h"
 
 #include <cassert>
@@ -11,16 +13,18 @@ namespace nalu{
 
 MeshMotionAlg::MeshMotionAlg(
   stk::mesh::BulkData& bulk,
-  const YAML::Node& node)
+  const YAML::Node& node,
+  OpenfastFSI* openfast)
 {
-  load(bulk, node);
+  load(bulk, node, openfast);
 
   set_deformation_flag();
 }
 
 void MeshMotionAlg::load(
   stk::mesh::BulkData& bulk,
-  const YAML::Node& node)
+  const YAML::Node& node,
+  OpenfastFSI* openfast)
 {
   // get motion information for entire mesh
   const int num_groups = node.size();
@@ -33,6 +37,22 @@ void MeshMotionAlg::load(
 
     movingFrameVec_[i].reset(new FrameMoving(bulk, ginfo));
   }
+
+  if (openfast != NULL) {
+      int nTurbinesGlob = openfast->get_nTurbinesGlob();
+      frameVec_.resize(num_groups + nTurbinesGlob);
+
+      int n_moving_turb = 0;
+      for (auto iTurb=0; iTurb < nTurbinesGlob; iTurb++) {
+          fsiTurbine *fsiTurbineData = openfast->get_fsiTurbineData(iTurb);
+          YAML::Node node; //Empty node
+          if (fsiTurbineData != NULL) { //Could be a turbine handled through actuator line or something
+              movingFrameVec_[num_groups+n_moving_turb].reset(new FrameOpenFAST(bulk, node, fsiTurbineData));
+              n_moving_turb += 1;
+          }
+      }
+  }
+
 }
 
 void MeshMotionAlg::set_deformation_flag()

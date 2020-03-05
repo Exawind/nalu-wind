@@ -46,6 +46,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/EquationSystems.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FieldFunctions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FixPressureAtNodeAlgorithm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/FSIturbine.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InitialConditions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InputOutputRealm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSolver.C
@@ -64,10 +65,10 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/NaluParsing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/NonConformalInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/NonConformalManager.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/OpenfastFSI.C
    ${CMAKE_CURRENT_SOURCE_DIR}/OutputInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PecletFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PeriodicManager.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/PostProcessingInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedNodalGradientEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Realm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Realms.C

@@ -29,8 +29,6 @@
 #include <NonConformalManager.h>
 #include <NonConformalInfo.h>
 #include <OutputInfo.h>
-#include <PostProcessingInfo.h>
-#include <PostProcessingData.h>
 #include <PecletFunction.h>
 #include <PeriodicManager.h>
 #include <Realms.h>
@@ -58,11 +56,15 @@
 // post processing
 #include <SolutionNormPostProcessing.h>
 #include <TurbulenceAveragingPostProcessing.h>
+#include <SurfaceFMPostProcessing.h>
 #include <DataProbePostProcessing.h>
 #include <wind_energy/BdyLayerStatistics.h>
 
 // actuator line
 #include <actuator/ActuatorModel.h>
+
+// OpenFAST coupling
+#include <OpenfastFSI.h>
 
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <wind_energy/SyntheticLidar.h>
@@ -202,10 +204,11 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     currentNonlinearIteration_(1),
     solutionOptions_(new SolutionOptions()),
     outputInfo_(new OutputInfo()),
-    postProcessingInfo_(new PostProcessingInfo()),
     solutionNormPostProcessing_(NULL),
     turbulenceAveragingPostProcessing_(NULL),
     dataProbePostProcessing_(NULL),
+    actuator_(NULL),
+    openfast_(NULL),
     ablForcingAlg_(NULL),
     nodeCount_(0),
     estimateMemoryOnly_(false),
@@ -254,7 +257,7 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     inputMeshIdx_(std::numeric_limits<size_t>::max()),
     node_(node)
 {
-  // deal with specialty options that live off of the realm; 
+  // deal with specialty options that live off of the realm;
   // choose to do this now rather than waiting for the load stage
   look_ahead_and_creation(node);
 }
@@ -284,7 +287,6 @@ Realm::~Realm()
 
   delete solutionOptions_;
   delete outputInfo_;
-  delete postProcessingInfo_;
 
   // post processing-like objects
   if ( NULL != solutionNormPostProcessing_ )
@@ -295,6 +297,12 @@ Realm::~Realm()
 
   if ( NULL != dataProbePostProcessing_ )
     delete dataProbePostProcessing_;
+
+  if ( NULL != actuator_ )
+    delete actuator_;
+
+  if ( NULL != openfast_ )
+      delete openfast_;
 
   // delete non-conformal related things
   if ( NULL != nonConformalManager_ )
@@ -340,33 +348,33 @@ Realm::get_activate_memory_diagnostic()
 //-------- provide_memory_summary ------------------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::provide_memory_summary() 
+Realm::provide_memory_summary()
 {
   size_t now, hwm;
   stk::get_memory_usage(now, hwm);
   // min, max, sum
   size_t global_now[3] = {now,now,now};
   size_t global_hwm[3] = {hwm,hwm,hwm};
-  
+
   stk::all_reduce(NaluEnv::self().parallel_comm(), stk::ReduceSum<1>( &global_now[2] ) );
   stk::all_reduce(NaluEnv::self().parallel_comm(), stk::ReduceMin<1>( &global_now[0] ) );
   stk::all_reduce(NaluEnv::self().parallel_comm(), stk::ReduceMax<1>( &global_now[1] ) );
-  
+
   stk::all_reduce(NaluEnv::self().parallel_comm(), stk::ReduceSum<1>( &global_hwm[2] ) );
   stk::all_reduce(NaluEnv::self().parallel_comm(), stk::ReduceMin<1>( &global_hwm[0] ) );
   stk::all_reduce(NaluEnv::self().parallel_comm(), stk::ReduceMax<1>( &global_hwm[1] ) );
-  
+
   NaluEnv::self().naluOutputP0() << "Memory Overview: " << std::endl;
   NaluEnv::self().naluOutputP0() << "nalu memory: total (over all cores) current/high-water mark= "
                                  << std::setw(15) << convert_bytes(global_now[2])
                                  << std::setw(15) << convert_bytes(global_hwm[2])
                                  << std::endl;
-  
+
   NaluEnv::self().naluOutputP0() << "nalu memory:   min (over all cores) current/high-water mark= "
                                  << std::setw(15) << convert_bytes(global_now[0])
                                  << std::setw(15) << convert_bytes(global_hwm[0])
                                  << std::endl;
-  
+
   NaluEnv::self().naluOutputP0() << "nalu memory:   max (over all cores) current/high-water mark= "
                                   << std::setw(15) << convert_bytes(global_now[1])
                                   << std::setw(15) << convert_bytes(global_hwm[1])
@@ -376,7 +384,7 @@ Realm::provide_memory_summary()
 //--------------------------------------------------------------------------
 //-------- convert_bytes ---------------------------------------------------
 //--------------------------------------------------------------------------
-std::string 
+std::string
 Realm::convert_bytes(double bytes)
 {
   const double K = 1024;
@@ -406,6 +414,11 @@ void Realm::initialize_prolog()
   if (doPromotion_) {
     setup_element_promotion();
   }
+
+  // setup OpenFAST FSI stuff
+  if(openfast_ != NULL)
+      openfast_->setup();
+
   // field registration
   setup_nodal_fields();
   setup_edge_fields();
@@ -510,8 +523,11 @@ void Realm::initialize_prolog()
   if ( solutionOptions_->meshTransformation_ )
     meshTransformationAlg_->initialize( get_current_time() );
 
+  if (openfast_ != NULL)
+      openfast_->initialize(get_time_step_from_file(), get_restart_frequency(), get_current_time());
+
   if ( solutionOptions_->meshMotion_ )
-    meshMotionAlg_->initialize( get_current_time() );
+      meshMotionAlg_->initialize( get_current_time() );
 
   compute_geometry();
 
@@ -605,7 +621,7 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
       ablForcingAlg_ = new ABLForcingAlgorithm(*this, ablNode);
   }
 }
-  
+
 //--------------------------------------------------------------------------
 //-------- load ------------------------------------------------------------
 //--------------------------------------------------------------------------
@@ -680,7 +696,7 @@ Realm::load(const YAML::Node & node)
   // automatic decomposition
   get_if_present(node, "automatic_decomposition_type", autoDecompType_, autoDecompType_);
   if ( "None" != autoDecompType_ ) {
-    NaluEnv::self().naluOutputP0() 
+    NaluEnv::self().naluOutputP0()
       <<"Warning: When using automatic_decomposition_type, one must have a serial file" << std::endl;
   }
 
@@ -701,7 +717,7 @@ Realm::load(const YAML::Node & node)
   get_if_present(node, "activate_memory_diagnostic", activateMemoryDiagnostic_, activateMemoryDiagnostic_);
   if ( activateMemoryDiagnostic_ )
     NaluEnv::self().naluOutputP0() << "Nalu will activate detailed memory pulse" << std::endl;
-  
+
   // allow for inconsistent restart (fields are missing)
   get_if_present(node, "support_inconsistent_multi_state_restart", supportInconsistentRestart_, supportInconsistentRestart_);
 
@@ -755,8 +771,27 @@ Realm::load(const YAML::Node & node)
   create_mesh();
   spatialDimension_ = metaData_->spatial_dimension();
 
-  // post processing
-  postProcessingInfo_->load(node);
+  // surface force moment post processing
+  const YAML::Node y_sfm_pp =
+      expect_sequence(node, "surface_force_moment", true);
+  if (y_sfm_pp) {
+      surfaceFMPostProcessing_ =
+          make_unique<SurfaceFMPostProcessing>(*this);
+      surfaceFMPostProcessing_->load(y_sfm_pp);
+  }
+
+  // look for OpenFAST FSI stuff
+  if (node["openfast_fsi"]) {
+      if (surfaceFMPostProcessing_ == NULL)
+          surfaceFMPostProcessing_ =
+              make_unique<SurfaceFMPostProcessing>(*this);
+
+      const YAML::Node openfastNode = node["openfast_fsi"];
+      openfast_ = new OpenfastFSI(meta_data(), bulk_data(),
+                                  openfastNode, surfaceFMPostProcessing_.get());
+      if (openfast_->get_meshmotion())
+          solutionOptions_->meshMotion_ = true;
+  }
 
   // boundary, init, material and equation systems "load"
   if ( type_ == "multi_physics" ) {
@@ -800,10 +835,12 @@ Realm::load(const YAML::Node & node)
     else {
       // mesh motion is active
       solutionOptions_->meshMotion_ = true;
+  }
 
-      // instantiate mesh motion class once the mesh has been created
-      meshMotionAlg_.reset(new MeshMotionAlg( *bulkData_, meshMotionNode));
-    }
+  if (solutionOptions_->meshMotion_)
+  {
+    // instantiate mesh motion class once the mesh has been created
+    meshMotionAlg_.reset(new MeshMotionAlg( *bulkData_, meshMotionNode, openfast_));
   }
 
   // set number of nodes, check job run size
@@ -925,53 +962,16 @@ Realm::setup_interior_algorithms()
 void
 Realm::setup_post_processing_algorithms()
 {
-  // get a pointer to the post processing data vector
-  std::vector<PostProcessingData* > &ppDataVec = postProcessingInfo_->ppDataVec_;
 
-  // iterate and set-up
-  std::vector<PostProcessingData *>::const_iterator ii;
-  for( ii=ppDataVec.begin(); ii!=ppDataVec.end(); ++ii ) {
-
-    PostProcessingData &theData = *(*ii);
-    // type
-    std::string theType = theData.type_;
-    NaluEnv::self().naluOutputP0() << "the post processing type is " << theType << std::endl;
-
-    // output name
-    std::string theFile = theData.outputFileName_;
-    NaluEnv::self().naluOutputP0() << "the post processing file name: " << theFile << std::endl;
-
-    // physics
-    std::string thePhysics = theData.physics_;
-    NaluEnv::self().naluOutputP0() << "the post processing physics name: " << thePhysics << std::endl;
-
-    // target
-    // map target names to physics parts
-    theData.targetNames_ = physics_part_names(theData.targetNames_);
-
-    const std::vector<std::string>& targetNames = theData.targetNames_;
-    for ( size_t in = 0; in < targetNames.size(); ++in)
-      NaluEnv::self().naluOutputP0() << "Target name(s): " << targetNames[in] << std::endl;
-
-    // params
-    std::vector<double> parameters = theData.parameters_;
-    for ( size_t in = 0; in < parameters.size(); ++in)
-      NaluEnv::self().naluOutputP0() << "Parameters used are: " << parameters[in] << std::endl;
-
-    // call through to the Eqsys
-    if ( theType == "surface" ) {
-      equationSystems_.register_surface_pp_algorithm(theData);
-    }
-    else {
-      throw std::runtime_error("Post Processing Error: only  surface-based is supported");
-    }
-  }
+  // check for surface force moment post processing
+  if (NULL != surfaceFMPostProcessing_ )
+      surfaceFMPostProcessing_->setup();
 
   // check for turbulence averaging fields
   if (NULL == turbulenceAveragingPostProcessing_ &&
      solutionOptions_->has_set_boussinesq_time_scale() ) {
 
-     turbulenceAveragingPostProcessing_ =  new TurbulenceAveragingPostProcessing(*this, {});
+     turbulenceAveragingPostProcessing_ = new TurbulenceAveragingPostProcessing(*this, {});
   }
 
   if ( NULL != turbulenceAveragingPostProcessing_ )
@@ -1080,19 +1080,19 @@ Realm::enforce_bc_on_exposed_faces()
       for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
         // extract the face
         stk::mesh::Entity face = b[k];
-        
+
         // report the offending face id
         NaluEnv::self().naluOutput() << "Face Id: " << bulkData_->identifier(face) << " is not properly covered" << std::endl;
-      
+
         // extract face nodes
-        const stk::mesh::Entity* face_node_rels = bulkData_->begin_nodes(face); 
+        const stk::mesh::Entity* face_node_rels = bulkData_->begin_nodes(face);
         const unsigned numberOfNodes = bulkData_->num_nodes(face);
         NaluEnv::self().naluOutput() << " Number of nodes connected to this face is: " << numberOfNodes << std::endl;
         for ( unsigned n = 0; n < numberOfNodes; ++n ) {
           stk::mesh::Entity node = face_node_rels[n];
           NaluEnv::self().naluOutput() << " attached node Id: " << bulkData_->identifier(node) << std::endl;
         }
-      
+
         // extract the element relations to report to the user and the number of elements connected
         const stk::mesh::Entity* face_elem_rels = bulkData_->begin_elements(face);
         const unsigned numberOfElems = bulkData_->num_elements(face);
@@ -1149,7 +1149,7 @@ Realm::setup_initial_conditions()
             std::vector<double>  genSpec = genIC.data_[ifield];
             stk::mesh::FieldBase *field = stk::mesh::get_field_by_name(genIC.fieldNames_[ifield], *metaData_);
             ThrowAssert(field);
-      
+
             stk::mesh::FieldBase *fieldWithState = ( field->number_of_states() > 1 )
               ? field->field_state(stk::mesh::StateNP1)
               : field->field_state(stk::mesh::StateNone);
@@ -1257,7 +1257,7 @@ Realm::setup_property()
               TemperaturePropAlgorithm *auxAlg
                 = new TemperaturePropAlgorithm( *this, targetPart, thePropField, theCpPropEval);
               propertyAlg_.push_back(auxAlg);
-              
+
             }
             else {
               // single constant value
@@ -1338,7 +1338,7 @@ Realm::setup_property()
             case VISCOSITY_ID:
             {
               PropertyEvaluator *viscPropEval = NULL;
-              
+
               if ( isothermalFlow_ ) {
 
                 // all props will use Tref
@@ -1437,11 +1437,11 @@ Realm::setup_property()
         case IDEAL_GAS_T_MAT: case IDEAL_GAS_T_P_MAT:
         {
           if ( DENSITY_ID == thePropId ) {
-        
+
             // everyone will require R
             double universalR = 8314.4621;
             extract_universal_constant("universal_gas_constant", universalR, true);
-            
+
             // create the property evaluator
             PropertyEvaluator *rhoPropEval = NULL;
             if ( uniformFlow_ ) {
@@ -1501,7 +1501,7 @@ Realm::setup_property()
         case IDEAL_GAS_YK_MAT:
         {
           if ( DENSITY_ID == thePropId ) {
-        
+
             // pRef, tRef and R
             double pRef = 101325.0;
             double tRef = 300.0;
@@ -1546,11 +1546,11 @@ Realm::setup_property()
         }
         break;
 
-      case GENERIC: 
-        { 
+      case GENERIC:
+        {
           // default property evaluator
           PropertyEvaluator *propEval = NULL;
-          
+
           // extract the property evaluator name
           std::string propEvalName = matData->genericPropertyEvaluatorName_;
 
@@ -1563,7 +1563,7 @@ Realm::setup_property()
           else if ( propEvalName == "water_specific_heat_T" ) {
             propEval = new WaterSpecHeatTPropertyEvaluator(*metaData_);
             // create the enthalpy prop evaluator and store
-            WaterEnthalpyTPropertyEvaluator *theEnthPropEval 
+            WaterEnthalpyTPropertyEvaluator *theEnthPropEval
               = new WaterEnthalpyTPropertyEvaluator(*metaData_);
             materialPropertys_.propertyEvalMap_[ENTHALPY_ID] = theEnthPropEval;
           }
@@ -1573,7 +1573,7 @@ Realm::setup_property()
           else {
             throw std::runtime_error("Realm::setup_property: unknown GENERIC type: " + propEvalName);
           }
-          
+
           // for now, all of the above are TempPropAlgs; push it back
           TemperaturePropAlgorithm *auxAlg
             = new TemperaturePropAlgorithm( *this, targetPart, thePropField, propEval);
@@ -1598,7 +1598,7 @@ Realm::setup_property()
 //-------- extract_universal_constant --------------------------------------
 //--------------------------------------------------------------------------
 void
-Realm::extract_universal_constant( 
+Realm::extract_universal_constant(
   const std::string name, double &value, const bool useDefault)
 {
   std::map<std::string, double >::iterator it
@@ -1648,7 +1648,7 @@ Realm::augment_property_map(
 //--------------------------------------------------------------------------
 //-------- makeSureNodesHaveValidTopology ----------------------------------
 //--------------------------------------------------------------------------
-void 
+void
 Realm::makeSureNodesHaveValidTopology()
 {
   //To make sure nodes have valid topology, we have to make sure they are in a part that has NODE topology.
@@ -1667,6 +1667,12 @@ Realm::makeSureNodesHaveValidTopology()
 
 void Realm::pre_timestep_work_prolog()
 {
+
+  if (openfast_ != NULL) {
+      openfast_->predict_struct_states();
+      openfast_->get_displacements( get_current_time() );
+  }
+
   // check for mesh motion
   if ( solutionOptions_->meshMotion_ ) {
 
@@ -1675,6 +1681,10 @@ void Realm::pre_timestep_work_prolog()
     compute_geometry();
 
     meshMotionAlg_->post_compute_geometry();
+
+    if (openfast_ != NULL) {
+        openfast_->compute_div_mesh_velocity();
+    }
 
     // and non-conformal algorithm
     if ( hasNonConformal_ )
@@ -1851,7 +1861,7 @@ Realm::create_mesh()
 
   NaluEnv::self().naluOutputP0() << "Realm::create_mesh(): Begin" << std::endl;
   stk::ParallelMachine pm = NaluEnv::self().parallel_comm();
-  
+
   // news for mesh constructs
   metaData_ = new stk::mesh::MetaData();
   bulkData_ = new stk::mesh::BulkData(*metaData_, pm, activateAura_ ? stk::mesh::BulkData::AUTO_AURA : stk::mesh::BulkData::NO_AUTO_AURA);
@@ -1860,11 +1870,11 @@ Realm::create_mesh()
   ioBroker_->set_bulk_data(*bulkData_);
 
   // allow for automatic decomposition
-  if (autoDecompType_ != "None") 
+  if (autoDecompType_ != "None")
     ioBroker_->property_add(Ioss::Property("DECOMPOSITION_METHOD", autoDecompType_));
-  
+
   // Initialize meta data (from exodus file); can possibly be a restart file..
-  inputMeshIdx_ = ioBroker_->add_mesh_database( 
+  inputMeshIdx_ = ioBroker_->add_mesh_database(
    inputDBName_, restarted_simulation() ? stk::io::READ_RESTART : stk::io::READ_MESH );
   ioBroker_->create_input_mesh();
 
@@ -1915,7 +1925,7 @@ Realm::create_output_mesh()
         outputInfo_->outputPropertyManager_->add(Ioss::Property("CATALYST_SCRIPT", outputInfo_->paraviewScriptName_.c_str()));
 
       outputInfo_->outputPropertyManager_->add(Ioss::Property("CATALYST_CREATE_SIDE_SETS", 1));
-      
+
       resultsFileIndex_ = ioBroker_->create_output_mesh( oname, stk::io::WRITE_RESULTS, *outputInfo_->outputPropertyManager_, "catalyst" );
 #else
       throw std::runtime_error("Nalu-Wind not built with Catalyst support");
@@ -1966,9 +1976,9 @@ Realm::create_restart_mesh()
 
     if (outputInfo_->restartFreq_ == 0)
       return;
-    
+
     restartFileIndex_ = ioBroker_->create_output_mesh(outputInfo_->restartDBName_, stk::io::WRITE_RESTART, *outputInfo_->restartPropertyManager_);
-    
+
     // loop over restart variable field names supplied by Eqs
     for ( std::set<std::string>::iterator itorSet = outputInfo_->restartFieldNameSet_.begin();
         itorSet != outputInfo_->restartFieldNameSet_.end(); ++itorSet ) {
@@ -2020,12 +2030,12 @@ Realm::input_variables_from_mesh()
     // check for periodic cycling of data based on start time and periodic time; scale time set to unity
     if ( solutionOptions_->inputVariablesPeriodicTime_ > 0.0 ) {
       ioBroker_->get_mesh_database(inputMeshIdx_)
-        .set_periodic_time(solutionOptions_->inputVariablesPeriodicTime_, 
-                           solutionOptions_->inputVariablesRestorationTime_, 
+        .set_periodic_time(solutionOptions_->inputVariablesPeriodicTime_,
+                           solutionOptions_->inputVariablesRestorationTime_,
                            stk::io::InputFile::CYCLIC)
         .set_scale_time(1.0);
     }
-    
+
     std::map<std::string, std::string>::const_iterator iter;
     for ( iter = solutionOptions_->inputVarFromFileMap_.begin();
           iter != solutionOptions_->inputVarFromFileMap_.end(); ++iter) {
@@ -2302,14 +2312,14 @@ Realm::does_mesh_move() const
 bool
 Realm::has_non_matching_boundary_face_alg() const
 {
-  return hasNonConformal_ | hasOverset_; 
+  return hasNonConformal_ | hasOverset_;
 }
 
 //--------------------------------------------------------------------------
 //-------- query_for_overset -----------------------------------------------
 //--------------------------------------------------------------------------
-bool 
-Realm::query_for_overset() 
+bool
+Realm::query_for_overset()
 {
   for (size_t ibc = 0; ibc < boundaryConditions_.size(); ++ibc) {
     BoundaryCondition& bc = *boundaryConditions_[ibc];
@@ -2725,16 +2735,16 @@ Realm::setup_non_conformal_bc(
   const NonConformalBoundaryConditionData &nonConformalBCData)
 {
   hasNonConformal_ = true;
-  
+
   // create manager
   if ( NULL == nonConformalManager_ ) {
-    nonConformalManager_ = new NonConformalManager(*this, solutionOptions_->ncAlgDetailedOutput_, 
+    nonConformalManager_ = new NonConformalManager(*this, solutionOptions_->ncAlgDetailedOutput_,
                                                    solutionOptions_->ncAlgCoincidentNodesErrorCheck_);
   }
-   
-  // create nonconformal info for this surface, extract user data 
+
+  // create nonconformal info for this surface, extract user data
   NonConformalUserData userData = nonConformalBCData.userData_;
-  
+
   NonConformalInfo *nonConformalInfo
     = new NonConformalInfo(*this,
                            currentPartVec,
@@ -2745,7 +2755,7 @@ Realm::setup_non_conformal_bc(
                            userData.searchTolerance_,
                            userData.dynamicSearchTolAlg_,
                            nonConformalBCData.targetName_);
-  
+
   nonConformalManager_->nonConformalInfoVec_.push_back(nonConformalInfo);
 
   for (auto part : currentPartVec)
@@ -2964,7 +2974,7 @@ Realm::provide_output()
       }
     }
 
-    const bool isOutput 
+    const bool isOutput
       = (timeStepCount >=outputInfo_->outputStart_ && modStep % outputInfo_->outputFreq_ == 0) || forcedOutput;
 
     if ( isOutput ) {
@@ -3043,12 +3053,12 @@ Realm::provide_restart_output()
       }
     }
 
-    const bool isRestartOutputStep 
+    const bool isRestartOutputStep
       = (timeStepCount >= outputInfo_->restartStart_ && modStep % outputInfo_->restartFreq_ == 0) || forcedOutput;
-    
+
     if ( isRestartOutputStep ) {
       NaluEnv::self().naluOutputP0() << "Realm shall provide restart files at: currentTime/timeStepCount: "
-                                     << currentTime << "/" <<  timeStepCount << " (" << name_ << ")" << std::endl;      
+                                     << currentTime << "/" <<  timeStepCount << " (" << name_ << ")" << std::endl;
       // handle fields
       ioBroker_->begin_output_step(restartFileIndex_, currentTime);
       ioBroker_->write_defined_output_fields(restartFileIndex_);
@@ -3268,7 +3278,7 @@ Realm::set_global_id()
     const stk::mesh::Bucket & b = **ib;
     const stk::mesh::Bucket::size_type length = b.size();
     stk::mesh::EntityId *naluGlobalIds = stk::mesh::field_data(*naluGlobalId_, b);
-    
+
     for ( stk::mesh::Bucket::size_type k = 0; k < length; ++k ) {
       naluGlobalIds[k] = bulkData_->identifier(b[k]);
     }
@@ -3523,7 +3533,7 @@ Realm::dump_simulation_time()
 
   // common
   const unsigned ntimers = 6;
-  double total_time[ntimers] = {timerCreateMesh_, timerOutputFields_, timerInitializeEqs_, 
+  double total_time[ntimers] = {timerCreateMesh_, timerOutputFields_, timerInitializeEqs_,
                                 timerPropertyEval_, timerPopulateMesh_, timerPopulateFieldData_ };
   double g_min_time[ntimers] = {}, g_max_time[ntimers] = {}, g_total_time[ntimers] = {};
 
@@ -3617,8 +3627,8 @@ Realm::dump_simulation_time()
     stk::all_reduce_min(NaluEnv::self().parallel_comm(), &timerSkinMesh_, &g_minSkin, 1);
     stk::all_reduce_max(NaluEnv::self().parallel_comm(), &timerSkinMesh_, &g_maxSkin, 1);
     stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &timerSkinMesh_, &g_totalSkin, 1);
-    
-    NaluEnv::self().naluOutputP0() << "Timing for skin_mesh :    " << std::endl;    
+
+    NaluEnv::self().naluOutputP0() << "Timing for skin_mesh :    " << std::endl;
     NaluEnv::self().naluOutputP0() << "        skin_mesh --  " << " \tavg: " << g_totalSkin/double(nprocs)
                                    << " \tmin: " << g_minSkin << " \tmax: " << g_maxSkin << std::endl;
   }
@@ -3652,7 +3662,7 @@ Realm::dump_simulation_time()
     stk::all_reduce_min(NaluEnv::self().parallel_comm(), &timerSortExposedFace_, &g_minSort, 1);
     stk::all_reduce_max(NaluEnv::self().parallel_comm(), &timerSortExposedFace_, &g_maxSort, 1);
     stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &timerSortExposedFace_, &g_totalSort, 1);
-    
+
     NaluEnv::self().naluOutputP0() << "Timing for sort_mesh: " << std::endl;
     NaluEnv::self().naluOutputP0() << "       sort_mesh  -- " << " \tavg: " << g_totalSort/double(nprocs)
                                    << " \tmin: " << g_minSort<< " \tmax: " << g_maxSort<< std::endl;
@@ -4071,7 +4081,7 @@ Realm::augment_transfer_vector(Transfer *transfer, const std::string transferObj
 {
   if ( transferObjective == "multi_physics" ) {
     multiPhysicsTransferVec_.push_back(transfer);
-    hasMultiPhysicsTransfer_ = true; 
+    hasMultiPhysicsTransfer_ = true;
   }
   else if ( transferObjective == "initialization" ) {
     initializationTransferVec_.push_back(transfer);
@@ -4085,9 +4095,33 @@ Realm::augment_transfer_vector(Transfer *transfer, const std::string transferObj
     toRealm->externalDataTransferVec_.push_back(transfer);
     toRealm->hasExternalDataTransfer_ = true;
   }
-  else { 
+  else {
     throw std::runtime_error("Real::augment_transfer_vector: Error, none supported transfer objective: " + transferObjective);
   }
+}
+
+//--------------------------------------------------------------------------
+//-------- process_init_multi_physics_transfer -----------------------------
+//--------------------------------------------------------------------------
+void
+Realm::process_init_multi_physics_transfer()
+{
+    double timeXfer = -NaluEnv::self().nalu_time();
+
+    // check for actuator line
+    if ( NULL != actuator_ ) {
+        actuator_->sample_vel();
+        actuator_->init_predict_struct_states();
+    }
+
+    if ( !hasMultiPhysicsTransfer_ )
+        return;
+
+    std::vector<Transfer *>::iterator ii;
+    for( ii=multiPhysicsTransferVec_.begin(); ii!=multiPhysicsTransferVec_.end(); ++ii )
+        (*ii)->execute();
+    timeXfer += NaluEnv::self().nalu_time();
+    timerTransferExecute_ += timeXfer;
 }
 
 //--------------------------------------------------------------------------
@@ -4096,10 +4130,21 @@ Realm::augment_transfer_vector(Transfer *transfer, const std::string transferObj
 void
 Realm::process_multi_physics_transfer()
 {
-  if ( !hasMultiPhysicsTransfer_ )
-    return;
 
   double timeXfer = -NaluEnv::self().nalu_time();
+
+  if (openfast_ != NULL)
+      openfast_->predict_struct_timestep(get_current_time());
+
+  // check for actuator line
+  if ( NULL != actuator_ ) {
+      actuator_->sample_vel();
+      actuator_->predict_struct_time_step();
+  }
+
+  if ( !hasMultiPhysicsTransfer_ )
+      return;
+
   std::vector<Transfer *>::iterator ii;
   for( ii=multiPhysicsTransferVec_.begin(); ii!=multiPhysicsTransferVec_.end(); ++ii )
     (*ii)->execute();
@@ -4174,10 +4219,20 @@ Realm::post_converged_work()
 {
   equationSystems_.post_converged_work();
 
+  if ( NULL != actuator_ ) {
+      actuator_->advance_struct_time_step();
+  }
+
+  if (openfast_ != NULL)
+      openfast_->advance_struct_timestep(get_current_time());
+
   // FIXME: Consider a unified collection of post processing work
   if ( NULL != solutionNormPostProcessing_ )
     solutionNormPostProcessing_->execute();
-  
+
+  if ( NULL != surfaceFMPostProcessing_ )
+      surfaceFMPostProcessing_->execute();
+
   if ( NULL != turbulenceAveragingPostProcessing_ )
     turbulenceAveragingPostProcessing_->execute();
 
@@ -4359,22 +4414,22 @@ Realm::get_time_step()
   return timeIntegrator_->get_time_step();
 }
 
-double 
+double
 Realm::get_time_step_from_file() {
   return timeIntegrator_->get_time_step_from_file();
 }
 
-bool 
+bool
 Realm::get_is_fixed_time_step() {
   return timeIntegrator_->get_is_fixed_time_step();
 }
 
-bool 
+bool
 Realm::get_is_terminate_based_on_time() {
   return timeIntegrator_->get_is_terminate_based_on_time();
 }
 
-double 
+double
 Realm::get_total_sim_time() {
   return timeIntegrator_->get_total_sim_time();
 }
@@ -4384,6 +4439,10 @@ Realm::get_max_time_step_count() {
   return timeIntegrator_->get_max_time_step_count();
 }
 
+int
+Realm::get_restart_frequency() {
+  return outputInfo_->get_restart_frequency() ;
+}
 //--------------------------------------------------------------------------
 //-------- get_gamma1() ----------------------------------------------------
 //--------------------------------------------------------------------------
@@ -4541,7 +4600,7 @@ Realm::get_inactive_selector()
   // provide inactive Overset part that excludes background surface
   //
   // Treat this selector differently because certain entities from interior
-  // blocks could have been inactivated by the overset algorithm. 
+  // blocks could have been inactivated by the overset algorithm.
   stk::mesh::Selector nothing;
   stk::mesh::Selector inactiveOverSetSelector = (hasOverset_) ?
       oversetManager_->get_inactive_selector() : nothing;

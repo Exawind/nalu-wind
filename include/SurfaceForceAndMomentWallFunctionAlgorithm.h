@@ -38,8 +38,6 @@ public:
 
   void execute();
 
-  void pre_work();
-
   void cross_product(
     double *force, double *cross, double *rad);
 
