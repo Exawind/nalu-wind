@@ -85,40 +85,68 @@ protected:
     fastParseParams_.push_back("  t_start: 0\n");
     fastParseParams_.push_back("  simStart: init\n");
     fastParseParams_.push_back("  n_every_checkpoint: 1\n");
-    fastParseParams_.push_back("  dt_fast: 0.001\n");
-    fastParseParams_.push_back("  t_max: 1000.0\n");
+    fastParseParams_.push_back("  dt_fast: 0.00625\n");
+    fastParseParams_.push_back("  t_max: 0.0625\n");
     fastParseParams_.push_back("  dry_run: no\n");
+    fastParseParams_.push_back("  debug: yes\n");
     fastParseParams_.push_back("  Turbine0:\n");
     fastParseParams_.push_back("    turbine_name: turbinator\n");
     fastParseParams_.push_back("    epsilon: [1.0, 0, 0]\n");
     fastParseParams_.push_back("    turb_id: 0\n");
     fastParseParams_.push_back("    fast_input_filename: reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst\n");
-    fastParseParams_.push_back("    restart_filename: restart.dat\n");
+    fastParseParams_.push_back("    restart_filename: blah\n");
     fastParseParams_.push_back("    num_force_pts_blade: 10\n");
     fastParseParams_.push_back("    num_force_pts_tower: 10\n");
     fastParseParams_.push_back("    turbine_base_pos: [0,0,0]\n");
     fastParseParams_.push_back("    turbine_hub_pos:  [0,0,60.0]\n");
+    fastParseParams_.push_back("    air_density:  1.0\n");
+    fastParseParams_.push_back("    nacelle_area:  1.0\n");
+    fastParseParams_.push_back("    nacelle_cd:  1.0\n");
   }
+
 };
 
-TEST_F(ActuatorFunctorFASTTests, createActuatorBulk){
+
+TEST_F(ActuatorFunctorFASTTests, initializeActuatorBulk){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
 
+  const fast::fastInputs& fi = actMetaFast.fastInputs_;
+  ASSERT_EQ(fi.comm , NaluEnv::self().parallel_comm());
+  ASSERT_EQ(fi.globTurbineData.size(),1);
+  ASSERT_EQ(fi.debug , true);
+  ASSERT_EQ(fi.dryRun , false);
+  ASSERT_EQ(fi.nTurbinesGlob , 1);
+  ASSERT_EQ(fi.tStart , 0.0);
+  ASSERT_EQ(fi.simStart , fast::init);
+  ASSERT_EQ(fi.nEveryCheckPoint , 1);
+  ASSERT_EQ(fi.dtFAST , 0.00625);
+  ASSERT_EQ(fi.tMax , 0.0625);
+
+  ASSERT_EQ(fi.globTurbineData[0].FASTInputFileName , "reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst");
+  ASSERT_EQ(fi.globTurbineData[0].FASTRestartFileName ,"blah");
+  ASSERT_EQ(fi.globTurbineData[0].TurbID,0);
+  ASSERT_EQ(fi.globTurbineData[0].numForcePtsBlade , 10);
+  ASSERT_EQ(fi.globTurbineData[0].numForcePtsTwr,10);
+  ASSERT_EQ(fi.globTurbineData[0].air_density,1.0);
+  ASSERT_EQ(fi.globTurbineData[0].nacelle_area,1.0);
+  ASSERT_EQ(fi.globTurbineData[0].nacelle_cd,1.0);
+
   try{
     ActuatorBulkFAST actBulk(actMetaFast, stkBulk_);
-    EXPECT_FALSE(actBulk.openFast_.isDebug());
+    EXPECT_TRUE(actBulk.openFast_.isDebug());
   } catch ( std::exception const& err){
     FAIL()<<err.what();
   }
 }
 
-//TODO(psakiev) run ActFastZero
-TEST_F(ActuatorFunctorFASTTests, DISABLED_runActFastZero){
+TEST_F(ActuatorFunctorFASTTests, runActFastZero){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
 
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
   ActuatorBulkFAST actBulk(actMetaFast, stkBulk_);
+
+  ASSERT_EQ(actBulk.totalNumPoints_, 41);
 
   auto velHost = actBulk.velocity_.view_host();
   auto frcHost = actBulk.actuatorForce_.view_host();
@@ -126,14 +154,12 @@ TEST_F(ActuatorFunctorFASTTests, DISABLED_runActFastZero){
   actBulk.actuatorForce_.modify_device();
   actBulk.velocity_.modify_device();
 
-  Kokkos::parallel_for("initActBulkFASTValues",
-    actBulk.totalNumPoints_,
-    KOKKOS_LAMBDA(int i){
+  for(int i=0; i<actBulk.totalNumPoints_; ++i){
     for(int j=0; j<3; ++j){
-      actBulk.actuatorForce_.d_view(i,j) = 1.0;
-      actBulk.velocity_.d_view(i,j) = 1.0;
+      actBulk.actuatorForce_.h_view(i,j) = 1.0;
+      actBulk.velocity_.h_view(i,j) = 1.0;
     }
-  });
+  }
 
   actBulk.actuatorForce_.sync_device();
   actBulk.velocity_.sync_device();
@@ -153,9 +179,35 @@ TEST_F(ActuatorFunctorFASTTests, DISABLED_runActFastZero){
       EXPECT_DOUBLE_EQ(0.0, frcHost(i,j));
     }
   }
-
 }
+
 //TODO(psakiev) run updatePoints
+TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
+  const YAML::Node y_node = create_yaml_node(fastParseParams_);
+
+  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
+  ActuatorBulkFAST actBulk(actMetaFast, stkBulk_);
+
+  ASSERT_EQ(actBulk.totalNumPoints_, 41);
+
+  auto points = actBulk.pointCentroid_.view_host();
+  auto localRangePolicy = actBulk.local_range_policy(actMeta_);
+  Kokkos::parallel_for("testActFastZero", actBulk.totalNumPoints_,ActFastZero(actBulk));
+
+  for(int i = 0; i<points.extent_int(0); ++i){
+    for(int j=0; j<3; ++j){
+      EXPECT_DOUBLE_EQ(0.0, points(i,j));
+    }
+  }
+
+  Kokkos::parallel_for("testUpdatePoints", localRangePolicy, ActFastUpdatePoints(actBulk));
+  actBulk.reduce_view_on_host(points, NaluEnv::self().parallel_comm());
+
+  // hub
+  EXPECT_DOUBLE_EQ(0.0, points(0,0));
+  EXPECT_DOUBLE_EQ(0.0, points(0,1));
+  EXPECT_DOUBLE_EQ(60.0, points(0,2));
+}
 //TODO(psakiev) run assign vel
 //TODO(psakiev) run compute forces
 

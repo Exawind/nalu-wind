@@ -19,6 +19,7 @@ template<>
 ActFastZero::ActuatorFunctor(ActuatorBulkFAST& actBulk) : actBulk_(actBulk){
   touch_dual_view(actBulk_.velocity_);
   touch_dual_view(actBulk_.actuatorForce_);
+  touch_dual_view(actBulk_.pointCentroid_);
 }
 
 template<>
@@ -26,9 +27,11 @@ void
 ActFastZero::operator()(const int& index) const{
   auto vel = get_local_view(actBulk_.velocity_);
   auto force = get_local_view(actBulk_.actuatorForce_);
+  auto point = get_local_view(actBulk_.pointCentroid_);
   for(int i =0; i<3; i++){
     vel(index, i)=0.0;
     force(index, i)=0.0;
+    point(index, i)=0.0;
   }
 }
 
@@ -48,10 +51,11 @@ ActFastUpdatePoints::operator()(const int& index) const
   auto offsets = get_local_view(actBulk_.turbIdOffset_);
 
   ThrowAssert(actBulk_.localTurbineId_>=0);
+  const int myId = index - offsets(actBulk_.localTurbineId_);
   // compute location
   std::vector<double> tempCoords(3, 0.0);
   auto rank = actBulk_.localTurbineId_;
-  FAST.getForceNodeCoordinates(tempCoords, rank, rank);
+  FAST.getForceNodeCoordinates(tempCoords, myId, rank);
   for (int i = 0; i < 3; i++) {
     points(index, i) = tempCoords[i];
   }

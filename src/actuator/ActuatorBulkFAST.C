@@ -28,7 +28,7 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
 ActuatorBulkFAST::ActuatorBulkFAST(
   const ActuatorMetaFAST& actMeta, stk::mesh::BulkData& stkBulk)
   : ActuatorBulk(actMeta, stkBulk),
-    epsilonOpt_("epsilonOptimal", actMeta.numberOfActuators_),
+    epsilonOpt_("epsilonOptimal", totalNumPoints_),
     localTurbineId_(NaluEnv::self().parallel_rank()>=actMeta.numberOfActuators_?-1:NaluEnv::self().parallel_rank()),
     tStepRatio_(actMeta.timeStepRatio_)
 {
@@ -70,18 +70,18 @@ ActuatorBulkFAST::ActuatorBulkFAST(
 
   for (int iTurb = 0; iTurb < nTurb; iTurb++) {
     if (openFast_.get_procNo(iTurb) == NaluEnv::self().parallel_rank()) {
+      ThrowAssert(totalNumPoints_>=openFast_.get_numForcePts(iTurb));
       if (!openFast_.isDryRun()) {
         const int numForcePts = openFast_.get_numForcePts(iTurb);
         const int offset = turbIdOffset_.h_view(iTurb);
-        const double* epsilonChord = &(actMeta.epsilonChord_.h_view(iTurb, 0));
-        const double* epsilonRef = &(actMeta.epsilon_.h_view(iTurb, 0));
-        const double* epsilonTower = &(actMeta.epsilonTower_.h_view(iTurb, 0));
+        auto epsilonChord = Kokkos::subview(actMeta.epsilonChord_.view_host(),iTurb, Kokkos::ALL);
+        auto epsilonRef = Kokkos::subview(actMeta.epsilon_.view_host(), iTurb, Kokkos::ALL);
+        auto epsilonTower = Kokkos::subview(actMeta.epsilonTower_.view_host(), iTurb, Kokkos::ALL);
 
         for (int np = 0; np < numForcePts; np++) {
 
-          double chord = openFast_.getChord(np, iTurb);
-          double* epsilonLocal = &(epsilon_.h_view(np + offset, 0));
-          double* epsilonOpt = &(epsilonOpt_.h_view(np + offset, 0));
+          auto epsilonLocal = Kokkos::subview(epsilon_.view_host(), np+offset, Kokkos::ALL);
+          auto epsilonOpt = Kokkos::subview(epsilonOpt_.view_host(),np+offset, Kokkos::ALL);
 
           switch (openFast_.getForceNodeType(iTurb, np)) {
           case fast::HUB: {
@@ -94,33 +94,34 @@ ActuatorBulkFAST::ActuatorBulkFAST(
               // of the wake (Martinez-Tossas PhD Thesis 2017)
               float tmpEps = std::sqrt(2.0 / M_PI * nac_cd * nac_area);
               for (int i = 0; i < 3; i++) {
-                epsilonLocal[i] = tmpEps;
+                epsilonLocal(i) = tmpEps;
               }
             }
             // If no nacelle force just specify the standard value
             // (it will not be used)
             else {
               for (int i = 0; i < 3; i++) {
-                epsilonLocal[i] = epsilonRef[i];
+                epsilonLocal(i) = epsilonRef(i);
               }
             }
             for (int i = 0; i < 3; i++) {
-              epsilonOpt[i] = epsilonLocal[i];
+              epsilonOpt(i) = epsilonLocal(i);
             }
             break;
           }
           case fast::BLADE: {
+            double chord = openFast_.getChord(np, iTurb);
             for (int i = 0; i < 3; i++) {
               // Define the optimal epsilon
-              epsilonOpt[i] = epsilonChord[i] * chord;
-              epsilonLocal[i] = std::max(epsilonOpt[i], epsilonRef[i]);
+              epsilonOpt(i) = epsilonChord(i) * chord;
+              epsilonLocal(i) = std::max(epsilonOpt(i), epsilonRef(i));
             }
             break;
           }
           case fast::TOWER: {
             for (int i = 0; i < 3; i++) {
-              epsilonLocal[i] = epsilonTower[i];
-              epsilonOpt[i] = epsilonLocal[i];
+              epsilonLocal(i) = epsilonTower(i);
+              epsilonOpt(i) = epsilonLocal(i);
             }
             break;
           }
@@ -133,7 +134,7 @@ ActuatorBulkFAST::ActuatorBulkFAST(
           //   the maximum of epsilon.x/y/z/.
           searchRadius_.h_view(iTurb) =
               std::max(
-                epsilonLocal[0], std::max(epsilonLocal[1], epsilonLocal[2])) *
+                epsilonLocal(0), std::max(epsilonLocal(1), epsilonLocal(2))) *
                 sqrt(log(1.0 / 0.001));
         }
       }

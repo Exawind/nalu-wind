@@ -64,14 +64,20 @@ TEST(ActuatorBulk, constructor)
 {
   stk::mesh::MetaData stkMeta(3);
   stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
-  const int numTurbines = 1;
+  const int numTurbines = 2;
   ActuatorMeta fieldMeta(numTurbines);
   ActuatorInfoNGP dummyInfo;
   dummyInfo.numPoints_ = 36;
   dummyInfo.turbineId_ = 0;
+  ActuatorInfoNGP dummyInfo2;
+  dummyInfo2.numPoints_ = 40;
+  dummyInfo2.turbineId_ = 1;
   fieldMeta.add_turbine(dummyInfo);
+  fieldMeta.add_turbine(dummyInfo2);
   ActuatorBulk actBulkData(fieldMeta, stkBulk);
-  EXPECT_EQ(36, actBulkData.totalNumPoints_);
+  EXPECT_EQ(76, actBulkData.totalNumPoints_);
+  EXPECT_EQ(0, actBulkData.turbIdOffset_.h_view(0));
+  EXPECT_EQ(36, actBulkData.turbIdOffset_.h_view(1));
 }
 
 } // namespace
