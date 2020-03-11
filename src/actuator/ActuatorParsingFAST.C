@@ -31,8 +31,10 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
 
   get_required(
     turbNode, "turbine_base_pos", fi.globTurbineData[iTurb].TurbineBasePos);
-  get_required(
-    turbNode, "turbine_hub_pos", fi.globTurbineData[iTurb].TurbineHubPos);
+  if(turbNode["turbine_hub_pos"]){
+    NaluEnv::self().naluOutputP0() << "WARNING::turbine_hub_pos is not used. "<<
+        "The hub location is computed in OpenFAST and is controlled by the ElastoDyn input file.";
+  }
   get_required(
     turbNode, "num_force_pts_blade",
     fi.globTurbineData[iTurb].numForcePtsBlade);
@@ -47,7 +49,7 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
 
   int numBlades=3;
   get_if_present_no_default(turbNode, "num_blades", numBlades);
-  ThrowErrorMsgIf(numBlades!=3,"ERROR::ActuatorParsingFAST::Currently only 3 bladed turbines are supported.");
+  ThrowErrorMsgIf(numBlades!=3 && numBlades!=2,"ERROR::ActuatorParsingFAST::Currently only 2 and 3 bladed turbines are supported.");
 
   actMetaFAST.numPointsTurbine_.h_view(iTurb) =
     1 // hub

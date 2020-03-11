@@ -82,7 +82,6 @@ private:
     inputFileLines_.push_back("    num_force_pts_blade: 10\n");
     inputFileLines_.push_back("    num_force_pts_tower: 10\n");
     inputFileLines_.push_back("    turbine_base_pos: [0,0,0]\n");
-    inputFileLines_.push_back("    turbine_hub_pos:  [0,0,60.0]\n");
   }
 };
 

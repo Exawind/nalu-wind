@@ -98,7 +98,6 @@ protected:
     fastParseParams_.push_back("    num_force_pts_blade: 10\n");
     fastParseParams_.push_back("    num_force_pts_tower: 10\n");
     fastParseParams_.push_back("    turbine_base_pos: [0,0,0]\n");
-    fastParseParams_.push_back("    turbine_hub_pos:  [0,0,60.0]\n");
     fastParseParams_.push_back("    air_density:  1.0\n");
     fastParseParams_.push_back("    nacelle_area:  1.0\n");
     fastParseParams_.push_back("    nacelle_cd:  1.0\n");
@@ -181,12 +180,14 @@ TEST_F(ActuatorFunctorFASTTests, runActFastZero){
   }
 }
 
-//TODO(psakiev) run updatePoints
 TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
 
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
   ActuatorBulkFAST actBulk(actMetaFast, stkBulk_);
+
+  fast::OpenFAST& fast = actBulk.openFast_;
+  const int turbineID = actBulk.localTurbineId_;
 
   ASSERT_EQ(actBulk.totalNumPoints_, 41);
 
@@ -203,13 +204,86 @@ TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
   Kokkos::parallel_for("testUpdatePoints", localRangePolicy, ActFastUpdatePoints(actBulk));
   actBulk.reduce_view_on_host(points, NaluEnv::self().parallel_comm());
 
-  // hub
-  EXPECT_DOUBLE_EQ(0.0, points(0,0));
-  EXPECT_DOUBLE_EQ(0.0, points(0,1));
-  EXPECT_DOUBLE_EQ(60.0, points(0,2));
+  if(turbineID == fast.get_procNo(actBulk.localTurbineId_)){
+    EXPECT_EQ(fast::HUB, fast.getForceNodeType(turbineID,0));
+    std::vector<double> hubPos(3);
+    fast.getHubPos(hubPos, turbineID);
+    EXPECT_DOUBLE_EQ(hubPos[0], points(0,0));
+    EXPECT_DOUBLE_EQ(hubPos[1], points(0,1));
+    EXPECT_DOUBLE_EQ(hubPos[2], points(0,2));
+
+    int i =1;
+    for(; i<=fast.get_numForcePtsBlade(turbineID)*3; ++i){
+      EXPECT_EQ(fast::BLADE, fast.getForceNodeType(turbineID, i)) << "Index is: "<<i;
+    }
+    for(; i<fast.get_numForcePts(turbineID); ++i){
+      EXPECT_EQ(fast::TOWER, fast.getForceNodeType(turbineID, i)) << "Index is: "<<i;
+    }
+  }
 }
-//TODO(psakiev) run assign vel
-//TODO(psakiev) run compute forces
+
+
+TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
+  const YAML::Node y_node = create_yaml_node(fastParseParams_);
+
+  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
+  ActuatorBulkFAST actBulk(actMetaFast, stkBulk_);
+
+  fast::OpenFAST& fast = actBulk.openFast_;
+  const int turbineID = actBulk.localTurbineId_;
+
+  ASSERT_EQ(actBulk.totalNumPoints_, 41);
+
+  auto vel = actBulk.velocity_.view_host();
+  auto force = actBulk.actuatorForce_.view_host();
+
+  auto localRangePolicy = actBulk.local_range_policy(actMeta_);
+  Kokkos::parallel_for("testActFastZero", actBulk.totalNumPoints_,ActFastZero(actBulk));
+
+  for(int i = 0; i<vel.extent_int(0); ++i){
+    for(int j=0; j<3; ++j){
+      EXPECT_DOUBLE_EQ(0.0, vel(i,j));
+    }
+  }
+
+  actBulk.velocity_.modify_host();
+  actBulk.actuatorForce_.modify_host();
+
+  Kokkos::parallel_for("initUniformVelocity",localRangePolicy,[&](int i){
+   actBulk.velocity_.h_view(i,0) = 1.0;
+  });
+  actBulk.reduce_view_on_host(vel, NaluEnv::self().parallel_comm());
+
+  Kokkos::parallel_for("testAssignVel", localRangePolicy, ActFastAssignVel(actBulk));
+  Kokkos::parallel_for("testComputeForces", localRangePolicy, ActFastComputeForce(actBulk));
+
+  actBulk.reduce_view_on_host(force, NaluEnv::self().parallel_comm());
+
+  ActFixVectorDbl fastForces("forcesComputedFromFAST", actBulk.totalNumPoints_);
+
+  if(fast.get_procNo(turbineID)==turbineID){
+    std::vector<double> tempForce(3);
+    const int offset = actBulk.turbIdOffset_.h_view(turbineID);
+
+    for(int i=offset; i<fast.get_numForcePts(turbineID)+offset; ++i){
+      fast.getForce(tempForce, i-offset, turbineID);
+
+      for(int j=0; j<3; ++j){
+        fastForces(i,j)=tempForce[j];
+      }
+    }
+  }
+
+  actBulk.reduce_view_on_host(fastForces, NaluEnv::self().parallel_comm());
+
+  Kokkos::parallel_for("checkAnswers",
+    Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(0,actBulk.totalNumPoints_),
+    KOKKOS_LAMBDA(int i){
+    for(int j=0; j<3; ++j){
+      EXPECT_DOUBLE_EQ(fastForces(i,j), force(i,j));
+    }
+  });
+}
 
 }
 
