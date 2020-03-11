@@ -46,6 +46,9 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ~ActuatorBulkFAST();
 
   ActVectorDblDv epsilonOpt_;
+  // TODO(psakiev) this kill lambdas that are pass by value (KOKKOS_LAMBDA)
+  // may need to rethink functor/bulk design.  Perhaps have an internal object
+  // in bulk for gpu data and pass that into the actuatorFunctors.
   fast::OpenFAST openFast_;
   const int localTurbineId_;
   const int tStepRatio_;
