@@ -11,7 +11,7 @@
 
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFactory.h>
-
+#include <NaluEnv.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -29,6 +29,20 @@ namespace nalu {
 struct Coordinates;
 
 namespace actuator_utils {
+
+template<typename T>
+inline
+void reduce_view_on_host(T view){
+  ThrowAssert(view.size()>0);
+  ThrowAssert(view.data());
+  MPI_Allreduce(
+    MPI_IN_PLACE,
+    view.data(),
+    view.size(),
+    MPI_DOUBLE, // TODO can we get this from the view?
+    MPI_SUM,
+    NaluEnv::self().parallel_comm());
+}
 
 // A Gaussian projection function
 double Gaussian_projection(

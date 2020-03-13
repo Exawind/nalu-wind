@@ -17,14 +17,12 @@ namespace nalu {
 namespace {
 TEST(ActuatorNGP, testExecuteOnHostOnly)
 {
-  stk::mesh::MetaData stkMeta(3);
-  stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
   ActuatorMeta actMeta(1);
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
   actMeta.add_turbine(infoTurb0);
-  TestActuatorHostOnly actuator(actMeta, stkBulk);
+  TestActuatorHostOnly actuator(actMeta);
   ASSERT_NO_THROW(actuator.execute());
   const ActuatorBulk& actBulk = actuator.actuator_bulk();
   EXPECT_DOUBLE_EQ(3.0, actBulk.epsilon_.h_view(1, 0));
@@ -46,14 +44,12 @@ TEST(ActuatorNGP, testExecuteOnHostOnly)
 
 TEST(ActuatorNGP, testExecuteOnHostAndDevice)
 {
-  stk::mesh::MetaData stkMeta(3);
-  stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
   ActuatorMeta actMeta(1);
   ActuatorInfoNGP infoTurb0;
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
   actMeta.add_turbine(infoTurb0);
-  TestActuatorHostDev actuator(actMeta, stkBulk);
+  TestActuatorHostDev actuator(actMeta);
   ASSERT_NO_THROW(actuator.execute());
   const ActuatorBulkMod& actBulk = actuator.actuator_bulk();
   const double expectVal =

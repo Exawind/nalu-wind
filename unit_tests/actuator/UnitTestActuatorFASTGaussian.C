@@ -8,18 +8,14 @@
 
 #include <gtest/gtest.h>
 #include "actuator/UtilitiesActuator.h"
+#include <actuator/ActuatorTypes.h>
 #include <cmath>
 #include "NaluParsing.h"
 
 namespace {
 
-TEST(ActuatorFAST, gaussianTest)
+TEST(ActuatorFAST, unityGaussianTest)
   {
-
-  //  
-  // This test computes a Gaussian value of unity
-  //  
-
   sierra::nalu::Coordinates epsilon;
 
   epsilon.x_ = std::pow(M_PI, -1.0/2.0);

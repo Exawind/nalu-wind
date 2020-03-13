@@ -10,7 +10,7 @@
 #include <actuator/ActuatorParsingFAST.h>
 #include <actuator/ActuatorFunctorsFAST.h>
 #include <actuator/ActuatorBulkFAST.h>
-#include <UnitTestUtils.h>
+#include <actuator/UtilitiesActuator.h>
 #include <yaml-cpp/yaml.h>
 #include <gtest/gtest.h>
 
@@ -34,53 +34,17 @@ class ActuatorFunctorFASTTests : public ::testing::Test
 {
 protected:
   std::string inputFileSurrogate_;
-  stk::mesh::MetaData stkMeta_;
-  stk::mesh::BulkData stkBulk_;
   const double tol_;
-  const VectorFieldType* coordinates_{nullptr};
-  VectorFieldType* velocity_{nullptr};
-  VectorFieldType* actuatorForce_{nullptr};
   std::vector<std::string> fastParseParams_;
   ActuatorMeta actMeta_;
 
   ActuatorFunctorFASTTests()
-    : stkMeta_(3),
-      stkBulk_(stkMeta_, MPI_COMM_WORLD),
-      tol_(1e-8),
-      coordinates_(nullptr),
-      velocity_(&stkMeta_.declare_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "velocity")),
-      actuatorForce_(&stkMeta_.declare_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "actuator_source")),
+    : tol_(1e-8),
       actMeta_(1)
-  {
-    stk::mesh::put_field_on_mesh(
-      *velocity_, stkMeta_.universal_part(), 3, nullptr);
-    stk::mesh::put_field_on_mesh(
-      *actuatorForce_, stkMeta_.universal_part(), 3, nullptr);
-  }
+  {}
 
   void SetUp()
   {
-    const std::string meshSpec = "generated:5x5x5";
-    unit_test_utils::fill_hex8_mesh(meshSpec, stkBulk_);
-    coordinates_ =
-      static_cast<const VectorFieldType*>(stkMeta_.coordinate_field());
-    const stk::mesh::Selector selector =
-      stkMeta_.locally_owned_part() | stkMeta_.globally_shared_part();
-    const auto& buckets =
-      stkBulk_.get_buckets(stk::topology::NODE_RANK, selector);
-    for (const stk::mesh::Bucket* bptr : buckets) {
-      for (stk::mesh::Entity node : *bptr) {
-        const double* coords = stk::mesh::field_data(*coordinates_, node);
-        double* vel = stk::mesh::field_data(*velocity_, node);
-        double* aF = stk::mesh::field_data(*actuatorForce_, node);
-        for (int i = 0; i < 3; i++) {
-          vel[i] = coords[i];
-          aF[i] = 0.0;
-        }
-      }
-    }
     fastParseParams_.push_back("actuator:\n");
     fastParseParams_.push_back("  t_start: 0\n");
     fastParseParams_.push_back("  simStart: init\n");
@@ -91,7 +55,7 @@ protected:
     fastParseParams_.push_back("  debug: yes\n");
     fastParseParams_.push_back("  Turbine0:\n");
     fastParseParams_.push_back("    turbine_name: turbinator\n");
-    fastParseParams_.push_back("    epsilon: [1.0, 0, 0]\n");
+    fastParseParams_.push_back("    epsilon: [5.0, 5.0, 5.00]\n");
     fastParseParams_.push_back("    turb_id: 0\n");
     fastParseParams_.push_back("    fast_input_filename: reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst\n");
     fastParseParams_.push_back("    restart_filename: blah\n");
@@ -132,7 +96,7 @@ TEST_F(ActuatorFunctorFASTTests, initializeActuatorBulk){
   ASSERT_EQ(fi.globTurbineData[0].nacelle_cd,1.0);
 
   try{
-    ActuatorBulkFAST actBulk(actMetaFast, stkBulk_);
+    ActuatorBulkFAST actBulk(actMetaFast);
     EXPECT_TRUE(actBulk.openFast_.isDebug());
   } catch ( std::exception const& err){
     FAIL()<<err.what();
@@ -143,7 +107,7 @@ TEST_F(ActuatorFunctorFASTTests, runActFastZero){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
 
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
-  ActuatorBulkFAST actBulk(actMetaFast, stkBulk_);
+  ActuatorBulkFAST actBulk(actMetaFast);
 
   ASSERT_EQ(actBulk.totalNumPoints_, 41);
 
@@ -184,7 +148,7 @@ TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
 
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
-  ActuatorBulkFAST actBulk(actMetaFast, stkBulk_);
+  ActuatorBulkFAST actBulk(actMetaFast);
 
   fast::OpenFAST& fast = actBulk.openFast_;
   const int turbineID = actBulk.localTurbineId_;
@@ -202,7 +166,7 @@ TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
   }
 
   Kokkos::parallel_for("testUpdatePoints", localRangePolicy, ActFastUpdatePoints(actBulk));
-  actBulk.reduce_view_on_host(points, NaluEnv::self().parallel_comm());
+  actuator_utils::reduce_view_on_host(points);
 
   if(turbineID == fast.get_procNo(actBulk.localTurbineId_)){
     EXPECT_EQ(fast::HUB, fast.getForceNodeType(turbineID,0));
@@ -227,7 +191,7 @@ TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
 
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
-  ActuatorBulkFAST actBulk(actMetaFast, stkBulk_);
+  ActuatorBulkFAST actBulk(actMetaFast);
 
   fast::OpenFAST& fast = actBulk.openFast_;
   const int turbineID = actBulk.localTurbineId_;
@@ -252,12 +216,12 @@ TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
   Kokkos::parallel_for("initUniformVelocity",localRangePolicy,[&](int i){
    actBulk.velocity_.h_view(i,0) = 1.0;
   });
-  actBulk.reduce_view_on_host(vel, NaluEnv::self().parallel_comm());
+  actuator_utils::reduce_view_on_host(vel);
 
   Kokkos::parallel_for("testAssignVel", localRangePolicy, ActFastAssignVel(actBulk));
   Kokkos::parallel_for("testComputeForces", localRangePolicy, ActFastComputeForce(actBulk));
 
-  actBulk.reduce_view_on_host(force, NaluEnv::self().parallel_comm());
+  actuator_utils::reduce_view_on_host(force);
 
   ActFixVectorDbl fastForces("forcesComputedFromFAST", actBulk.totalNumPoints_);
 
@@ -274,7 +238,7 @@ TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
     }
   }
 
-  actBulk.reduce_view_on_host(fastForces, NaluEnv::self().parallel_comm());
+  actuator_utils::reduce_view_on_host(fastForces);
 
   Kokkos::parallel_for("checkAnswers",
     Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(0,actBulk.totalNumPoints_),

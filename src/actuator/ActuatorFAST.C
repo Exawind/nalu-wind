@@ -658,6 +658,16 @@ ActuatorFAST::execute()
       FAST.step();
   }
 
+  int procID = NaluEnv::self().parallel_rank();
+  if(procID == FAST.get_procNo(0)){
+  std::vector<double> forceOut(3);
+  for(int pp = 0; pp<FAST.get_numForcePts(0); ++pp){
+    FAST.getForce(forceOut, pp, 0);
+    NaluEnv::self().naluOutput() << "Point: " <<pp <<
+      " Force: " << forceOut[0] << " " <<forceOut[1] << " " << forceOut[2] <<std::endl;
+  }
+  }
+
   // reset the thrust and torque from each turbine to zero
   const size_t nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (size_t iTurb = 0; iTurb < nTurbinesGlob; iTurb++) {
@@ -1602,7 +1612,7 @@ ActuatorFAST::spread_actuator_force_to_node_vec(
     // project the force to this node with projection function
     // To de-activate the projection use distance.data() instead of 
     //   distance_projected.data()
-    double gA = actuator_utils::Gaussian_projection(nDim, distance_projected.data(), epsilon);
+    double gA = actuator_utils::Gaussian_projection(nDim, distance.data(), epsilon);
 
     compute_node_force_given_weight(
       nDim, gA, &actuator_force[0], &ws_nodeForce[0]);

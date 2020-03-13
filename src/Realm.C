@@ -632,8 +632,8 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     switch ( ActuatorTypeMap[ActuatorTypeName] ) {
         case ActuatorType::ActLineFASTNGP : {
 #ifdef NALU_USES_OPENFAST
-          auto actMetaFAST = actuator_FAST_parse(*foundActuator[0],actMeta, 0.0625);
-          actuatorNGP_ = make_unique<ActuatorNGP<ActuatorMetaFAST, ActuatorBulkFAST>>(actMetaFAST, *bulkData_);
+          // TODO(psakiev) move time step to bulk construction
+          actuatorMeta_ = make_unique<ActuatorMetaFAST>(actuator_FAST_parse(*foundActuator[0],actMeta, 0.0625));
           break;
 #else
 	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
@@ -1040,6 +1040,11 @@ Realm::setup_post_processing_algorithms()
   // check for actuator line
   if ( NULL != actuator_ )
     actuator_->setup();
+
+  if (NULL != actuatorMeta_)
+  {
+    actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get());
+  }
 
   // check for norm nodal fields
   if ( NULL != solutionNormPostProcessing_ )
@@ -2024,8 +2029,10 @@ Realm::advance_time_step()
   }
 
   // check for actuator line; assemble the source terms for this time step
-  if ( NULL != actuatorNGP_ ) {
-    actuatorNGP_->execute();
+  if ( NULL != actuatorBulk_ ) {
+    ActuatorLineFastNGP(*actuatorMeta_.get(),
+      *actuatorBulk_.get(),
+      bulk_data())();
   }
 
   // Check for ABL forcing; estimate source terms for this time step

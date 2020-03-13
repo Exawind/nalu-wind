@@ -13,44 +13,72 @@
 #include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulkFAST.h>
 #include <actuator/ActuatorFunctorsFAST.h>
+#include <actuator/UtilitiesActuator.h>
 
 namespace sierra
 {
 namespace nalu
 {
-using ActuatorNgpFAST = ActuatorNGP<ActuatorMetaFAST, ActuatorBulkFAST>;
 
-template <>
-void
-ActuatorNgpFAST::execute()
-{
-  auto velReduce   = actBulk_.velocity_.template      view<ActuatorFixedMemSpace>();
-  auto forceReduce = actBulk_.actuatorForce_.template view<ActuatorFixedMemSpace>();
+struct ActuatorLineFastNGP{
 
-  Kokkos::parallel_for("zeroQuantitiesActuatorNgpFAST", numActPoints_, ActFastZero(actBulk_));
+  ActuatorLineFastNGP(const ActuatorMetaFAST& actMeta,
+    ActuatorBulkFAST& actBulk,
+    stk::mesh::BulkData& stkBulk):
+    actMeta_(actMeta),
+    actBulk_(actBulk),
+    stkBulk_(stkBulk),
+    numActPoints_( actBulk_.totalNumPoints_)
+  {}
 
-  // set range policy to only operating over points owned by local fast turbine
-  auto fastRangePolicy = actBulk_.local_range_policy(actMeta_);
-  Kokkos::parallel_for("updatePointLocationsActuatorNgpFAST", fastRangePolicy, ActFastUpdatePoints(actBulk_));
+  inline void operator()()
+  {
+    auto velReduce   = actBulk_.velocity_.view_host();
+    auto forceReduce = actBulk_.actuatorForce_.view_host();
+    auto pointReduce = actBulk_.pointCentroid_.view_host();
 
-  actBulk_.stk_search_act_pnts(actMeta_);
-  const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
-  Kokkos::parallel_for("interpolateVelocitiesActuatorNgpFAST", numActPoints_, InterpolateActVel(actBulk_));
+    actBulk_.zero_source_terms(stkBulk_);
 
-  actBulk_.reduce_view_on_host(velReduce, NaluEnv::self().parallel_comm());
+    Kokkos::parallel_for("zeroQuantitiesActuatorNgpFAST", numActPoints_, ActFastZero(actBulk_));
 
-  Kokkos::parallel_for("assignFastVelActuatorNgpFAST", fastRangePolicy, ActFastAssignVel(actBulk_));
+    // set range policy to only operating over points owned by local fast turbine
+    auto fastRangePolicy = actBulk_.local_range_policy(actMeta_);
+    Kokkos::parallel_for("updatePointLocationsActuatorNgpFAST", fastRangePolicy, ActFastUpdatePoints(actBulk_));
 
-  actBulk_.step_fast();
+    actuator_utils::reduce_view_on_host(pointReduce);
 
-  Kokkos::parallel_for("computeForcesActuatorNgpFAST", fastRangePolicy, ActFastComputeForce(actBulk_));
+    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+    const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
-  actBulk_.reduce_view_on_host(forceReduce, NaluEnv::self().parallel_comm());
+    Kokkos::parallel_for("interpolateVelocitiesActuatorNgpFAST", numActPoints_, InterpActuatorVel(actBulk_, stkBulk_));
 
-  Kokkos::parallel_for("spreadForcesActuatorNgpFAST", localSizeCoarseSearch, SpreadActForce(actBulk_));
-  // TODO(psakiev) compute thrust
-}
+    actuator_utils::reduce_view_on_host(velReduce);
+
+    Kokkos::parallel_for("assignFastVelActuatorNgpFAST", fastRangePolicy, ActFastAssignVel(actBulk_));
+
+    actBulk_.interpolate_velocities_to_fast();
+
+    actBulk_.step_fast();
+
+    // TODO(psakiev) are the forces too pre/post parallel sum
+    // TODO(psakiev) are the distances too small?
+
+    Kokkos::parallel_for("computeForcesActuatorNgpFAST", fastRangePolicy, ActFastComputeForce(actBulk_));
+
+    actuator_utils::reduce_view_on_host(forceReduce);
+
+    Kokkos::parallel_for("spreadForcesActuatorNgpFAST", localSizeCoarseSearch, SpreadActuatorForce(actBulk_, stkBulk_));
+
+    // TODO(psakiev) compute thrust
+    actBulk_.parallel_sum_source_term(stkBulk_);
+  }
+
+  const ActuatorMetaFAST& actMeta_;
+  ActuatorBulkFAST& actBulk_;
+  stk::mesh::BulkData& stkBulk_;
+  const int numActPoints_;
+};
 
 } /* namespace nalu */
 } /* namespace sierra */

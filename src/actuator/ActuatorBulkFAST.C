@@ -8,6 +8,7 @@
 //
 
 #include <actuator/ActuatorBulkFAST.h>
+#include <actuator/UtilitiesActuator.h>
 #include <NaluEnv.h>
 
 namespace sierra {
@@ -26,8 +27,8 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
 }
 
 ActuatorBulkFAST::ActuatorBulkFAST(
-  const ActuatorMetaFAST& actMeta, stk::mesh::BulkData& stkBulk)
-  : ActuatorBulk(actMeta, stkBulk),
+  const ActuatorMetaFAST& actMeta)
+  : ActuatorBulk(actMeta),
     epsilonOpt_("epsilonOptimal", totalNumPoints_),
     localTurbineId_(NaluEnv::self().parallel_rank()>=actMeta.numberOfActuators_?-1:NaluEnv::self().parallel_rank()),
     tStepRatio_(actMeta.timeStepRatio_)
@@ -130,9 +131,13 @@ ActuatorBulkFAST::ActuatorBulkFAST(
             break;
           }
 
+          for(int i=0; i<3; ++i){
+            ThrowAssertMsg(epsilonLocal(i)>0.0,"Epsilon zero for point: "+std::to_string(np)+" index "+std::to_string(i));
+          }
+
           // The radius of the searching. This is given in terms of
           //   the maximum of epsilon.x/y/z/.
-          searchRadius_.h_view(iTurb) =
+          searchRadius_.h_view(np+offset) =
               std::max(
                 epsilonLocal(0), std::max(epsilonLocal(1), epsilonLocal(2))) *
                 sqrt(log(1.0 / 0.001));
@@ -144,6 +149,12 @@ ActuatorBulkFAST::ActuatorBulkFAST(
       }
     }
   }
+  actuator_utils::reduce_view_on_host(epsilon_.view_host());
+  actuator_utils::reduce_view_on_host(epsilonOpt_.view_host());
+  actuator_utils::reduce_view_on_host(searchRadius_.view_host());
+  epsilon_.sync_host();
+  epsilonOpt_.sync_host();
+  searchRadius_.sync_host();
 }
 
 ActuatorBulkFAST::~ActuatorBulkFAST() { openFast_.end(); }
@@ -161,6 +172,11 @@ ActuatorBulkFAST::local_range_policy(const ActuatorMeta& actMeta){
   }
 }
 
+void ActuatorBulkFAST::interpolate_velocities_to_fast(){
+   if (!openFast_.isDryRun()) {
+
+   }
+}
 
 void ActuatorBulkFAST::step_fast(){
   if (!openFast_.isDryRun()) {

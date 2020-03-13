@@ -132,8 +132,8 @@ TestActuatorHostOnly::execute()
 // for functors
 struct ActuatorBulkMod : public ActuatorBulk
 {
-  ActuatorBulkMod(ActuatorMeta meta, stk::mesh::BulkData& stkBulk)
-    : ActuatorBulk(meta, stkBulk), scalar_("scalar", totalNumPoints_)
+  ActuatorBulkMod(ActuatorMeta meta)
+    : ActuatorBulk(meta), scalar_("scalar", totalNumPoints_)
   {
   }
   ActScalarDblDv scalar_;

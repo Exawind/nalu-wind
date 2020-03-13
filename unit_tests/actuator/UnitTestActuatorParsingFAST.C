@@ -75,7 +75,7 @@ private:
     inputFileLines_.push_back("  t_max: 1000.0\n");
     inputFileLines_.push_back("  Turbine0:\n");
     inputFileLines_.push_back("    turbine_name: turbinator\n");
-    inputFileLines_.push_back("    epsilon: [1.0, 0, 0]\n");
+    inputFileLines_.push_back("    epsilon: [1.0, 0.5, 2.0]\n");
     inputFileLines_.push_back("    turb_id: 0\n");
     inputFileLines_.push_back("    fast_input_filename: UnitFast.inp\n");
     inputFileLines_.push_back("    restart_filename: restart.dat\n");
@@ -91,6 +91,12 @@ TEST_F(ActuatorParsingFASTTest, minimumRequired)
   try {
     auto y_node = create_yaml_node(inputFileLines_);
     auto actMetaFAST = actuator_FAST_parse(y_node, actMeta, 1.0);
+    EXPECT_DOUBLE_EQ(1.0, actMetaFAST.epsilonTower_.h_view(0,0));
+    EXPECT_DOUBLE_EQ(0.5, actMetaFAST.epsilonTower_.h_view(0,1));
+    EXPECT_DOUBLE_EQ(2.0, actMetaFAST.epsilonTower_.h_view(0,2));
+    EXPECT_DOUBLE_EQ(1.0, actMetaFAST.epsilon_.h_view(0,0));
+    EXPECT_DOUBLE_EQ(0.5, actMetaFAST.epsilon_.h_view(0,1));
+    EXPECT_DOUBLE_EQ(2.0, actMetaFAST.epsilon_.h_view(0,2));
   } catch (std::exception const& err) {
     FAIL() << err.what();
   }

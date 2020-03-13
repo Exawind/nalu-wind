@@ -138,6 +138,7 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta, doubl
         //   - chord aligned (x),
         //   - tangential to chord (y),
         //   - spanwise (z)
+        // TODO(psakiev) check for zero epsilons
         const YAML::Node epsilon_chord = cur_turbine["epsilon_chord"];
         const YAML::Node epsilon = cur_turbine["epsilon"];
         if (epsilon && epsilon_chord) {
