@@ -25,6 +25,7 @@ namespace nalu
 {
 
 struct InterpActuatorVel{
+  using execution_space = ActuatorFixedExecutionSpace;
 
   InterpActuatorVel(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk);
 
@@ -35,6 +36,8 @@ struct InterpActuatorVel{
 };
 
 struct SpreadActuatorForce{
+  using execution_space = ActuatorFixedExecutionSpace;
+
   SpreadActuatorForce(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk);
 
   void operator()(int index) const;

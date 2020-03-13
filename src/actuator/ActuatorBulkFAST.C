@@ -19,7 +19,6 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
     turbineNames_(numberOfActuators_),
     turbineOutputFileNames_(numberOfActuators_),
     filterLiftLineCorrection_(false),
-    timeStepRatio_(1.0),
     epsilon_("epsilonMeta", numberOfActuators_),
     epsilonChord_("epsilonChordMeta", numberOfActuators_),
     epsilonTower_("epsilonTowerMeta", numberOfActuators_)
@@ -27,13 +26,24 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
 }
 
 ActuatorBulkFAST::ActuatorBulkFAST(
-  const ActuatorMetaFAST& actMeta)
+  const ActuatorMetaFAST& actMeta,
+  double naluTimeStep)
   : ActuatorBulk(actMeta),
     epsilonOpt_("epsilonOptimal", totalNumPoints_),
     localTurbineId_(NaluEnv::self().parallel_rank()>=actMeta.numberOfActuators_?-1:NaluEnv::self().parallel_rank()),
-    tStepRatio_(actMeta.timeStepRatio_)
+    tStepRatio_(naluTimeStep/actMeta.fastInputs_.dtFAST)
 {
   openFast_.setInputs(actMeta.fastInputs_);
+
+  if (std::abs(naluTimeStep - tStepRatio_ * actMeta.fastInputs_.dtFAST) < 0.001) { // TODO: Fix
+     // arbitrary number
+     // 0.001
+     NaluEnv::self().naluOutputP0()
+         << "Time step ratio  dtNalu/dtFAST: " << tStepRatio_ << std::endl;
+   } else {
+     throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
+                              "an integral multiple of FAST time step");
+   }
 
   const int nProcs = NaluEnv::self().parallel_size();
   const int nTurb = actMeta.numberOfActuators_;
@@ -174,23 +184,27 @@ ActuatorBulkFAST::local_range_policy(const ActuatorMeta& actMeta){
 
 void ActuatorBulkFAST::interpolate_velocities_to_fast(){
    if (!openFast_.isDryRun()) {
-
-   }
-}
-
-void ActuatorBulkFAST::step_fast(){
-  if (!openFast_.isDryRun()) {
-
     openFast_.interpolateVel_ForceToVelNodes();
 
     if (openFast_.isTimeZero()) {
       openFast_.solution0();
     }
+   }
+}
 
+void ActuatorBulkFAST::step_fast(){
+  if (!openFast_.isDryRun()) {
     for (int j = 0; j < tStepRatio_; j++){
       openFast_.step();
     }
   }
+}
+
+bool ActuatorBulkFAST::fast_is_time_zero(){
+  int localFastZero = (int)openFast_.isTimeZero();
+  int globalFastZero = 0;
+  MPI_Allreduce(&localFastZero, &globalFastZero, 1, MPI_INT, MPI_SUM, NaluEnv::self().parallel_comm());
+  return globalFastZero>0;
 }
 
 } // namespace nalu

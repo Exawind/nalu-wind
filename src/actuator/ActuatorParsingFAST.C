@@ -61,12 +61,14 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
 } // namespace
 
 ActuatorMetaFAST
-actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta, double naluTimeStep)
+actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 {
   ActuatorMetaFAST actMetaFAST(actMeta);
   fast::fastInputs& fi = actMetaFAST.fastInputs_;
   fi.comm = NaluEnv::self().parallel_comm();
   fi.nTurbinesGlob = actMetaFAST.numberOfActuators_;
+
+
 
   const YAML::Node y_actuator = y_node["actuator"];
   ThrowErrorMsgIf(
@@ -92,17 +94,6 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta, doubl
     }
     get_required(y_actuator, "n_every_checkpoint", fi.nEveryCheckPoint);
     get_required(y_actuator, "dt_fast", fi.dtFAST);
-
-    actMetaFAST.timeStepRatio_ = naluTimeStep / fi.dtFAST;
-    if (std::abs(naluTimeStep - actMetaFAST.timeStepRatio_ * fi.dtFAST) < 0.001) { // TODO: Fix
-      // arbitrary number
-      // 0.001
-      NaluEnv::self().naluOutputP0()
-          << "Time step ratio  dtNalu/dtFAST: " << actMetaFAST.timeStepRatio_ << std::endl;
-    } else {
-      throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
-                               "an integral multiple of FAST time step");
-    }
 
     get_required(y_actuator, "t_max", fi.tMax);
 
@@ -138,7 +129,6 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta, doubl
         //   - chord aligned (x),
         //   - tangential to chord (y),
         //   - spanwise (z)
-        // TODO(psakiev) check for zero epsilons
         const YAML::Node epsilon_chord = cur_turbine["epsilon_chord"];
         const YAML::Node epsilon = cur_turbine["epsilon"];
         if (epsilon && epsilon_chord) {
@@ -164,6 +154,11 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta, doubl
           // epsilon / chord
           epsilonTemp = epsilon_chord.as<std::vector<double>>();
           for (int j = 0; j < 3; j++) {
+            if(epsilonTemp[0]<=0.0){
+              throw std::runtime_error(
+                "ERROR:: zero value for epsilon_chord detected. "
+                "All epsilon components must be greater than zero");
+            }
             actMetaFAST.epsilonChord_.h_view(iTurb, j) = epsilonTemp[j];
           }
 
@@ -171,6 +166,11 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta, doubl
           //   specifying epsilon/chord
           get_required(cur_turbine, "epsilon_min", epsilonTemp);
           for (int j = 0; j < 3; j++) {
+            if(epsilonTemp[0]<=0.0){
+              throw std::runtime_error(
+                "ERROR:: zero value for epsilon_min detected. "
+                "All epsilon components must be greater than zero");
+            }
             actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
           }
         }
@@ -178,6 +178,11 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta, doubl
         else if (epsilon) {
           epsilonTemp = epsilon.as<std::vector<double>>();
           for (int j = 0; j < 3; j++) {
+            if(epsilonTemp[0]<=0.0){
+              throw std::runtime_error(
+                "ERROR:: zero value for epsilon detected. "
+                "All epsilon components must be greater than zero");
+            }
             actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
           }
         } else {

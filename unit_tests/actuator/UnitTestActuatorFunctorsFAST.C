@@ -72,7 +72,7 @@ protected:
 
 TEST_F(ActuatorFunctorFASTTests, initializeActuatorBulk){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
-  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
+  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
 
   const fast::fastInputs& fi = actMetaFast.fastInputs_;
   ASSERT_EQ(fi.comm , NaluEnv::self().parallel_comm());
@@ -96,7 +96,7 @@ TEST_F(ActuatorFunctorFASTTests, initializeActuatorBulk){
   ASSERT_EQ(fi.globTurbineData[0].nacelle_cd,1.0);
 
   try{
-    ActuatorBulkFAST actBulk(actMetaFast);
+    ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
     EXPECT_TRUE(actBulk.openFast_.isDebug());
   } catch ( std::exception const& err){
     FAIL()<<err.what();
@@ -106,8 +106,8 @@ TEST_F(ActuatorFunctorFASTTests, initializeActuatorBulk){
 TEST_F(ActuatorFunctorFASTTests, runActFastZero){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
 
-  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
-  ActuatorBulkFAST actBulk(actMetaFast);
+  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
+  ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
 
   ASSERT_EQ(actBulk.totalNumPoints_, 41);
 
@@ -147,8 +147,8 @@ TEST_F(ActuatorFunctorFASTTests, runActFastZero){
 TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
 
-  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
-  ActuatorBulkFAST actBulk(actMetaFast);
+  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
+  ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
 
   fast::OpenFAST& fast = actBulk.openFast_;
   const int turbineID = actBulk.localTurbineId_;
@@ -190,8 +190,8 @@ TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
 TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
   const YAML::Node y_node = create_yaml_node(fastParseParams_);
 
-  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_, 1.0);
-  ActuatorBulkFAST actBulk(actMetaFast);
+  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
+  ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
 
   fast::OpenFAST& fast = actBulk.openFast_;
   const int turbineID = actBulk.localTurbineId_;

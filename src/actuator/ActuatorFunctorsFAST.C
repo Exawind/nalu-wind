@@ -95,9 +95,6 @@ void ActFastComputeForce::operator()(const int& index) const{
   for(int i = 0; i<3; i++){
     force(index,i) = pointForce[i];
   }
-  NaluEnv::self().naluOutput() << "Point: " <<localId <<
-      " Force: " << pointForce[0] << " " <<pointForce[1] << " " << pointForce[2] <<std::endl;
-
 }
 
 } /* namespace nalu */

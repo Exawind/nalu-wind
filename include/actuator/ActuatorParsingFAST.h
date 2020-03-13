@@ -21,7 +21,7 @@ struct ActuatorMeta;
 struct ActuatorMetaFAST;
 
 ActuatorMetaFAST
-actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta, double naluTimeStep);
+actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta);
 
 } // namespace nalu
 } // namespace sierra
