@@ -619,7 +619,6 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
   }
 
   // look for Actuator
-  //TODO(psakiev) construct new actuator types here and run
   std::vector<const YAML::Node*> foundActuator;
   NaluParsingHelper::find_nodes_given_key("actuator", node, foundActuator);
   if ( foundActuator.size() > 0 ) {
@@ -632,8 +631,7 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     switch ( ActuatorTypeMap[ActuatorTypeName] ) {
         case ActuatorType::ActLineFASTNGP : {
 #ifdef NALU_USES_OPENFAST
-          // TODO(psakiev) move time step to bulk construction
-          actuatorMeta_ = make_unique<ActuatorMetaFAST>(actuator_FAST_parse(*foundActuator[0],actMeta, 0.0625));
+          actuatorMeta_ = make_unique<ActuatorMetaFAST>(actuator_FAST_parse(node, actMeta));
           break;
 #else
 	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
@@ -1043,7 +1041,8 @@ Realm::setup_post_processing_algorithms()
 
   if (NULL != actuatorMeta_)
   {
-    actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get());
+    actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
+       get_time_step_from_file());
   }
 
   // check for norm nodal fields

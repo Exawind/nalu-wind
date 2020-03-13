@@ -658,16 +658,6 @@ ActuatorFAST::execute()
       FAST.step();
   }
 
-  int procID = NaluEnv::self().parallel_rank();
-  if(procID == FAST.get_procNo(0)){
-  std::vector<double> forceOut(3);
-  for(int pp = 0; pp<FAST.get_numForcePts(0); ++pp){
-    FAST.getForce(forceOut, pp, 0);
-    NaluEnv::self().naluOutput() << "Point: " <<pp <<
-      " Force: " << forceOut[0] << " " <<forceOut[1] << " " << forceOut[2] <<std::endl;
-  }
-  }
-
   // reset the thrust and torque from each turbine to zero
   const size_t nTurbinesGlob = FAST.get_nTurbinesGlob();
   for (size_t iTurb = 0; iTurb < nTurbinesGlob; iTurb++) {

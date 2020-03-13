@@ -177,6 +177,7 @@ protected:
   const VectorFieldType* coordinates_{nullptr};
   VectorFieldType* velocity_{nullptr};
   VectorFieldType* actuatorForce_{nullptr};
+  ScalarFieldType* dualNodalVolume_{nullptr};
 
   ActuatorFunctorTests()
     : stkMeta_(3),
@@ -186,12 +187,18 @@ protected:
       velocity_(&stkMeta_.declare_field<VectorFieldType>(
         stk::topology::NODE_RANK, "velocity")),
       actuatorForce_(&stkMeta_.declare_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "actuator_source"))
+        stk::topology::NODE_RANK, "actuator_source")),
+      dualNodalVolume_(&stkMeta_.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "dual_nodal_volume"))
+
   {
     stk::mesh::put_field_on_mesh(
       *velocity_, stkMeta_.universal_part(), 3, nullptr);
     stk::mesh::put_field_on_mesh(
       *actuatorForce_, stkMeta_.universal_part(), 3, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dualNodalVolume_, stkMeta_.universal_part(), 1, nullptr);
+    stk::mesh::field_fill(1.0, *dualNodalVolume_);
   }
 
   void SetUp()

@@ -108,7 +108,6 @@ public:
       numActPoints_(actBulk_.totalNumPoints_)
   {
   }
-  // TODO(psakiev) restrict access for this except for unit testing
   const ActBulkData& actuator_bulk() { return actBulk_; }
   /// Where the work is done. This function should be defined for each
   /// particular instance
