@@ -43,8 +43,14 @@ struct ActuatorBulkFAST : public ActuatorBulk
   void interpolate_velocities_to_fast();
   void step_fast();
   bool fast_is_time_zero();
+  void output_torque_info();
 
   ~ActuatorBulkFAST();
+
+  ActFixVectorDbl turbineThrust_;
+  ActFixVectorDbl turbineTorque_;
+  ActFixVectorDbl hubLocations_;
+  ActFixVectorDbl hubOrientation_;
 
   ActVectorDblDv epsilonOpt_;
   // TODO(psakiev) this kill lambdas that are pass by value (KOKKOS_LAMBDA)

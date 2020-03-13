@@ -142,8 +142,6 @@ void SpreadActuatorForce::operator ()(int index) const{
     for(int j=0; j<3; j++){
       sourceTerm[j] += projectedForce(j)*scvElem(iNode)/dual_vol;
     }
-
-  // TODO(psakiev) thrust contribution
   }
 
 }
