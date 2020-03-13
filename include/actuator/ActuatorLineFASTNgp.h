@@ -24,65 +24,12 @@ struct ActuatorLineFastNGP{
 
   ActuatorLineFastNGP(const ActuatorMetaFAST& actMeta,
     ActuatorBulkFAST& actBulk,
-    stk::mesh::BulkData& stkBulk):
-    actMeta_(actMeta),
-    actBulk_(actBulk),
-    stkBulk_(stkBulk),
-    numActPoints_( actBulk_.totalNumPoints_)
-  {}
+    stk::mesh::BulkData& stkBulk);
 
-  inline void operator()()
-  {
-    auto forceReduce = actBulk_.actuatorForce_.view_host();
+  void operator()();
 
-    actBulk_.zero_source_terms(stkBulk_);
+  void update();
 
-    if(actBulk_.fast_is_time_zero()){
-      update();
-    }
-    actBulk_.interpolate_velocities_to_fast();
-
-    update();
-
-    actBulk_.step_fast();
-
-    // set range policy to only operating over points owned by local fast turbine
-    auto fastRangePolicy = actBulk_.local_range_policy(actMeta_);
-
-    Kokkos::parallel_for("computeForcesActuatorNgpFAST", fastRangePolicy, ActFastComputeForce(actBulk_));
-
-    actuator_utils::reduce_view_on_host(forceReduce);
-
-    const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
-
-    Kokkos::parallel_for("spreadForcesActuatorNgpFAST", localSizeCoarseSearch, SpreadActuatorForce(actBulk_, stkBulk_));
-
-    // TODO(psakiev) compute thrust
-    actBulk_.parallel_sum_source_term(stkBulk_);
-  }
-
-  void update(){
-    auto velReduce   = actBulk_.velocity_.view_host();
-    auto pointReduce = actBulk_.pointCentroid_.view_host();
-
-    Kokkos::parallel_for("zeroQuantitiesActuatorNgpFAST", numActPoints_, ActFastZero(actBulk_));
-
-    Kokkos::parallel_for("zeroQuantitiesActuatorNgpFAST", numActPoints_, ActFastZero(actBulk_));
-
-    // set range policy to only operating over points owned by local fast turbine
-    auto fastRangePolicy = actBulk_.local_range_policy(actMeta_);
-
-    Kokkos::parallel_for("updatePointLocationsActuatorNgpFAST", fastRangePolicy, ActFastUpdatePoints(actBulk_));
-    actuator_utils::reduce_view_on_host(pointReduce);
-
-    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
-
-    Kokkos::parallel_for("interpolateVelocitiesActuatorNgpFAST", numActPoints_, InterpActuatorVel(actBulk_, stkBulk_));
-
-    actuator_utils::reduce_view_on_host(velReduce);
-
-    Kokkos::parallel_for("assignFastVelActuatorNgpFAST", fastRangePolicy, ActFastAssignVel(actBulk_));
-  }
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkFAST& actBulk_;
   stk::mesh::BulkData& stkBulk_;

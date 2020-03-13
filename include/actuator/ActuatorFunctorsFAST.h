@@ -24,7 +24,6 @@ struct ZeroArrays{};
 struct ComputeLocations{};
 struct AssignVelocities{};
 struct ComputeForces{};
-struct ComputeThrust{};
 }
 
 // typedefs
@@ -57,6 +56,27 @@ ActFastComputeForce::ActuatorFunctor(ActuatorBulkFAST& actBulk);
 
 template<>
 void ActFastComputeForce::operator()(const int& index) const;
+
+struct ActFastSetUpThrustCalc{
+  using execution_space = ActuatorFixedExecutionSpace;
+
+  ActFastSetUpThrustCalc(ActuatorBulkFAST& actBulk);
+
+  void operator()(int index) const;
+
+  ActuatorBulkFAST& actBulk_;
+};
+
+struct ActFastComputeThrust{
+  using execution_space = ActuatorFixedExecutionSpace;
+
+  ActFastComputeThrust(ActuatorBulkFAST& actBulk, stk::mesh::BulkData& stkBulk);
+
+  void operator()(int index) const;
+
+  ActuatorBulkFAST& actBulk_;
+  stk::mesh::BulkData& stkBulk_;
+};
 
 } /* namespace nalu */
 } /* namespace sierra */

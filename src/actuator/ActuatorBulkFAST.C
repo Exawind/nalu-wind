@@ -29,6 +29,10 @@ ActuatorBulkFAST::ActuatorBulkFAST(
   const ActuatorMetaFAST& actMeta,
   double naluTimeStep)
   : ActuatorBulk(actMeta),
+    turbineThrust_("turbineThrust", actMeta.numberOfActuators_),
+    turbineTorque_("turbineTorque", actMeta.numberOfActuators_),
+    hubLocations_("hubLocations", actMeta.numberOfActuators_),
+    hubOrientation_("hubOrientations", actMeta.numberOfActuators_),
     epsilonOpt_("epsilonOptimal", totalNumPoints_),
     localTurbineId_(NaluEnv::self().parallel_rank()>=actMeta.numberOfActuators_?-1:NaluEnv::self().parallel_rank()),
     tStepRatio_(naluTimeStep/actMeta.fastInputs_.dtFAST)
@@ -205,6 +209,40 @@ bool ActuatorBulkFAST::fast_is_time_zero(){
   int globalFastZero = 0;
   MPI_Allreduce(&localFastZero, &globalFastZero, 1, MPI_INT, MPI_SUM, NaluEnv::self().parallel_comm());
   return globalFastZero>0;
+}
+
+void ActuatorBulkFAST::output_torque_info(){
+  for (size_t iTurb = 0; iTurb < turbineThrust_.extent(0); iTurb++) {
+
+  auto thrust = Kokkos::subview(turbineThrust_, iTurb, Kokkos::ALL);
+  auto torque = Kokkos::subview(turbineTorque_, iTurb, Kokkos::ALL);
+
+    NaluEnv::self().naluOutput()
+        << "  Thrust[" << iTurb << "] = " << thrust(0) << " "
+        << thrust(1) << " " << thrust(2) << " " << std::endl;
+    NaluEnv::self().naluOutput()
+        << "  Torque[" << iTurb << "] = " << torque(0) << " "
+        << torque(1) << " " << torque(2) << " " << std::endl;
+
+    int processorId = openFast_.get_procNo(iTurb);
+    if (NaluEnv::self().parallel_rank() == processorId) {
+      std::vector<double> tmpThrust(3);
+      std::vector<double> tmpTorque(3);
+
+      openFast_.computeTorqueThrust(iTurb, tmpTorque, tmpThrust);
+
+      NaluEnv::self().naluOutput()
+          << "  Thrust ratio actual/correct = ["
+          << thrust(0) / tmpThrust[0] << " "
+          << thrust(1) / tmpThrust[1] << " "
+          << thrust(2) / tmpThrust[2] << "] " << std::endl;
+      NaluEnv::self().naluOutput()
+          << "  Torque ratio actual/correct = ["
+          << torque(0) / tmpTorque[0] << " "
+          << torque(1) / tmpTorque[1] << " "
+          << torque(2) / tmpTorque[2] << "] " << std::endl;
+    }
+  }
 }
 
 } // namespace nalu
