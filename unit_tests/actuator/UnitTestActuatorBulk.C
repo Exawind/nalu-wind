@@ -9,8 +9,6 @@
 #include <gtest/gtest.h>
 #include <actuator/ActuatorBulk.h>
 #include <actuator/ActuatorInfo.h>
-#include <stk_mesh/base/MetaData.hpp>
-#include <stk_mesh/base/BulkData.hpp>
 
 // to allocate need turbine info
 // compute offsets need num procs
@@ -62,8 +60,6 @@ TEST(ActuatorMeta, copyCtor)
 
 TEST(ActuatorBulk, constructor)
 {
-  stk::mesh::MetaData stkMeta(3);
-  stk::mesh::BulkData stkBulk(stkMeta, MPI_COMM_WORLD);
   const int numTurbines = 2;
   ActuatorMeta fieldMeta(numTurbines);
   ActuatorInfoNGP dummyInfo;
@@ -74,7 +70,7 @@ TEST(ActuatorBulk, constructor)
   dummyInfo2.turbineId_ = 1;
   fieldMeta.add_turbine(dummyInfo);
   fieldMeta.add_turbine(dummyInfo2);
-  ActuatorBulk actBulkData(fieldMeta, stkBulk);
+  ActuatorBulk actBulkData(fieldMeta);
   EXPECT_EQ(76, actBulkData.totalNumPoints_);
   EXPECT_EQ(0, actBulkData.turbIdOffset_.h_view(0));
   EXPECT_EQ(36, actBulkData.turbIdOffset_.h_view(1));

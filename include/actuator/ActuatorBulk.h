@@ -18,7 +18,6 @@
 namespace stk {
 namespace mesh {
 class BulkData;
-class MetaData;
 } // namespace mesh
 } // namespace stk
 
@@ -57,23 +56,11 @@ struct ActuatorMeta
  */
 struct ActuatorBulk
 {
-  ActuatorBulk(const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);
+  ActuatorBulk(const ActuatorMeta& actMeta);
 
-  void stk_search_act_pnts(const ActuatorMeta& actMeta);
-
-  template<typename T>
-  inline
-  void reduce_view_on_host(T view, MPI_Comm comm){
-    ThrowAssert(view.size()>0);
-    ThrowAssert(view.data());
-    MPI_Allreduce(
-      MPI_IN_PLACE,
-      view.data(),
-      view.size(),
-      MPI_DOUBLE, // TODO can we get this from the view?
-      MPI_SUM,
-      comm);
-  }
+  void stk_search_act_pnts(const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);
+  void zero_source_terms(stk::mesh::BulkData& stkBulk);
+  void parallel_sum_source_term(stk::mesh::BulkData& stkBulk);
 
   const int totalNumPoints_;
 
@@ -88,7 +75,6 @@ struct ActuatorBulk
   ActScalarU64Dv coarseSearchElemIds_;
 
   // HOST ONLY DATA
-  stk::mesh::BulkData& stkBulk_;
   ActFixVectorDbl localCoords_;
   ActFixScalarBool pointIsLocal_;
   ActFixElemIds elemContainingPoint_;

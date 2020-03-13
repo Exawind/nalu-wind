@@ -102,9 +102,9 @@ template <typename ActMetaData, typename ActBulkData>
 class ActuatorNGP
 {
 public:
-  ActuatorNGP(const ActMetaData& actMeta, stk::mesh::BulkData& stkBulk)
+  ActuatorNGP(const ActMetaData& actMeta)
     : actMeta_(actMeta),
-      actBulk_(actMeta_, stkBulk),
+      actBulk_(actMeta_),
       numActPoints_(actBulk_.totalNumPoints_)
   {
   }

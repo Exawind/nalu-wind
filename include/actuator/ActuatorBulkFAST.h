@@ -37,10 +37,11 @@ struct ActuatorMetaFAST : public ActuatorMeta
 struct ActuatorBulkFAST : public ActuatorBulk
 {
   ActuatorBulkFAST(
-    const ActuatorMetaFAST& actMeta, stk::mesh::BulkData& stkBulk);
+    const ActuatorMetaFAST& actMeta);
 
   Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy(const ActuatorMeta& actMeta);
 
+  void interpolate_velocities_to_fast();
   void step_fast();
 
   ~ActuatorBulkFAST();

@@ -9,72 +9,73 @@
 
 #include <actuator/ActuatorFunctors.h>
 #include <actuator/UtilitiesActuator.h>
-#include <FieldTypeDef.h>
 #include <stk_mesh/base/BulkData.hpp>
+#include <FieldTypeDef.h>
 
 namespace sierra
 {
 namespace nalu
 {
 
-template <>
-InterpolateActVel::ActuatorFunctor(ActuatorBulk& actBulk)
-  : actBulk_(actBulk)
+InterpActuatorVel::InterpActuatorVel(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk):
+    actBulk_(actBulk),
+    stkBulk_(stkBulk)
 {
-  touch_dual_view(actBulk_.velocity_);
+  actBulk_.velocity_.sync_host();
+  actBulk_.velocity_.modify_host();
 }
 
-template <>
 void
-InterpolateActVel::operator()(const int& index) const
+InterpActuatorVel::operator()(int index) const
 {
-  auto vel = get_local_view(actBulk_.velocity_);
+  auto vel = actBulk_.velocity_.view_host();
   auto localCoord = actBulk_.localCoords_;
 
   if (actBulk_.pointIsLocal_(index)) {
-    const stk::mesh::BulkData& stkBulk = actBulk_.stkBulk_;
 
-    stk::mesh::Entity elem = stkBulk.get_entity(
+    stk::mesh::Entity elem = stkBulk_.get_entity(
       stk::topology::ELEMENT_RANK, actBulk_.elemContainingPoint_(index));
 
-    const int nodesPerElem = stkBulk.num_nodes(elem);
+    const int nodesPerElem = stkBulk_.num_nodes(elem);
 
     std::vector<double> ws_coordinates(3 * nodesPerElem),
       ws_velocity(3 * nodesPerElem);
 
     VectorFieldType* coordinates =
-      stkBulk.mesh_meta_data().get_field<VectorFieldType>(
+      stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
         stk::topology::NODE_RANK, "coordinates");
 
     VectorFieldType* velocity =
-      stkBulk.mesh_meta_data().get_field<VectorFieldType>(
+      stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
         stk::topology::NODE_RANK, "velocity");
 
     actuator_utils::gather_field(
-      3, &ws_coordinates[0], *coordinates, stkBulk.begin_nodes(elem),
+      3, &ws_coordinates[0], *coordinates, stkBulk_.begin_nodes(elem),
       nodesPerElem);
 
     actuator_utils::gather_field_for_interp(
-      3, &ws_velocity[0], *velocity, stkBulk.begin_nodes(elem), nodesPerElem);
+      3, &ws_velocity[0], *velocity, stkBulk_.begin_nodes(elem), nodesPerElem);
 
     actuator_utils::interpolate_field(
-      3, elem, stkBulk, &(localCoord(index, 0)), &ws_velocity[0],
+      3, elem, stkBulk_, &(localCoord(index, 0)), &ws_velocity[0],
       &(vel(index, 0)));
+    ThrowAssert(vel(index,0)>0.0);
   }
 }
 
-template<>
-SpreadActForce::ActuatorFunctor(ActuatorBulk& actBulk) : actBulk_(actBulk){
-  touch_dual_view(actBulk_.actuatorForce_);
-  actBulk_.coarseSearchElemIds_.template  sync<memory_space>();
-  actBulk_.coarseSearchPointIds_.template sync<memory_space>();
+SpreadActuatorForce::SpreadActuatorForce(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk):
+    actBulk_(actBulk),
+    stkBulk_(stkBulk)
+{
+  actBulk_.actuatorForce_.sync_host();
+  actBulk_.actuatorForce_.modify_host();
+  actBulk_.coarseSearchElemIds_.sync_host();
+  actBulk_.coarseSearchPointIds_.sync_host();
 }
 
-template<>
-void SpreadActForce::operator ()(const int& index) const{
+void SpreadActuatorForce::operator ()(int index) const{
 
-  const stk::mesh::BulkData& stkBulk = actBulk_.stkBulk_;
-  const stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
+  const stk::mesh::MetaData& stkMeta = stkBulk_.mesh_meta_data();
 
   VectorFieldType* coordinates = stkMeta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
@@ -82,25 +83,33 @@ void SpreadActForce::operator ()(const int& index) const{
   VectorFieldType* actuatorSource = stkMeta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "actuator_source");
 
-  auto pointId = get_local_view(actBulk_.coarseSearchPointIds_)(index);
-  auto elemId = get_local_view(actBulk_.coarseSearchElemIds_)(index);
+  auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
+  auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
 
   auto pointCoords = Kokkos::subview(
-    get_local_view(actBulk_.pointCentroid_), pointId, Kokkos::ALL);
+    actBulk_.pointCentroid_.view_host(), pointId, Kokkos::ALL);
 
   auto pointForce = Kokkos::subview(
-    get_local_view(actBulk_.actuatorForce_), pointId, Kokkos::ALL);
+    actBulk_.actuatorForce_.view_host(), pointId, Kokkos::ALL);
 
   auto epsilon = Kokkos::subview(
-    get_local_view(actBulk_.epsilon_), pointId, Kokkos::ALL);
+    actBulk_.epsilon_.view_host(), pointId, Kokkos::ALL);
+
+  const double epsProduct = epsilon(0)*epsilon(1)*epsilon(2);
+  if(epsProduct==0.0 || !std::isfinite(epsProduct)){
+    NaluEnv::self().naluOutputP0() << "ERROR:: epsilon "<<
+        epsilon(0)<<" "<<
+        epsilon(1)<<" "<<
+        epsilon(2)<<std::endl;
+  }
 
   Kokkos::View<double[3], ActuatorMemLayout, ActuatorMemSpace> distance("distance");
   Kokkos::View<double[3], ActuatorMemLayout, ActuatorMemSpace> projectedForce("projectedForce");
 
   //TODO ngpmesh
-  const stk::mesh::Entity elem = stkBulk.get_entity(stk::topology::ELEMENT_RANK, elemId);
-  stk::mesh::Entity const* elem_nod_rels = stkBulk.begin_nodes(elem);
-  const unsigned numNodes = stkBulk.num_nodes(elem);
+  const stk::mesh::Entity elem = stkBulk_.get_entity(stk::topology::ELEMENT_RANK, elemId);
+  stk::mesh::Entity const* elem_nod_rels = stkBulk_.begin_nodes(elem);
+  const unsigned numNodes = stkBulk_.num_nodes(elem);
 
   for(unsigned iNode=0; iNode<numNodes; iNode++){
     stk::mesh::Entity node = elem_nod_rels[iNode];
@@ -109,7 +118,9 @@ void SpreadActForce::operator ()(const int& index) const{
 
     actuator_utils::compute_distance(3, nodeCoords, pointCoords.data(), distance.data());
 
-    const double gauss = actuator_utils::Gaussian_projection(3,distance.data(), epsilon.data());
+    const double gauss = actuator_utils::Gaussian_projection(3, distance.data(), epsilon.data());
+    // const double disMag = std::sqrt(distance(0)*distance(0)+distance(1)*distance(1)+distance(2)*distance(2));
+    // const double gauss = (1.0/std::pow(epsilon(0),2.0)*M_PI)*std::exp(-std::pow(disMag/epsilon(0),2.0));
 
     for(int j =0; j<3; j++){
       projectedForce(j) = gauss*pointForce(j);

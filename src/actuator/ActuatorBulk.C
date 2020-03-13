@@ -11,6 +11,9 @@
 #include <actuator/ActuatorInfo.h>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/FieldBLAS.hpp>
+#include <stk_mesh/base/FieldParallel.hpp>
+#include <FieldTypeDef.h>
 
 namespace sierra {
 namespace nalu {
@@ -32,7 +35,7 @@ ActuatorMeta::add_turbine(const ActuatorInfoNGP& info)
 }
 
 ActuatorBulk::ActuatorBulk(
-  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk)
+  const ActuatorMeta& actMeta)
   : totalNumPoints_(actMeta.numPointsTotal_),
     turbIdOffset_("offsetsForTurbine", actMeta.numberOfActuators_),
     pointCentroid_("actPointCentroid", totalNumPoints_),
@@ -42,7 +45,6 @@ ActuatorBulk::ActuatorBulk(
     searchRadius_("searchRadius", totalNumPoints_),
     coarseSearchPointIds_("coarseSearchPointIds",0),
     coarseSearchElemIds_("coarseSearchElemIds",0),
-    stkBulk_(stkBulk),
     localCoords_("localCoords", totalNumPoints_),
     pointIsLocal_("pointIsLocal", totalNumPoints_),
     elemContainingPoint_("elemContainPoint", totalNumPoints_)
@@ -59,13 +61,13 @@ ActuatorBulk::ActuatorBulk(
 }
 
 void
-ActuatorBulk::stk_search_act_pnts(const ActuatorMeta& actMeta)
+ActuatorBulk::stk_search_act_pnts(const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk)
 {
-  auto points = pointCentroid_.template view<Kokkos::HostSpace>();
-  auto radius = searchRadius_.template view<Kokkos::HostSpace>();
+  auto points = pointCentroid_.template view<ActuatorFixedMemSpace>();
+  auto radius = searchRadius_.template view<ActuatorFixedMemSpace>();
 
   auto boundSpheres = CreateBoundingSpheres(points, radius);
-  auto elemBoxes = CreateElementBoxes(stkBulk_, actMeta.searchTargetNames_);
+  auto elemBoxes = CreateElementBoxes(stkBulk, actMeta.searchTargetNames_);
 
   ExecuteCoarseSearch(
     boundSpheres,
@@ -75,13 +77,38 @@ ActuatorBulk::stk_search_act_pnts(const ActuatorMeta& actMeta)
     actMeta.searchMethod_);
 
   ExecuteFineSearch(
-    stkBulk_,
+    stkBulk,
     coarseSearchPointIds_,
     coarseSearchElemIds_,
     points,
     elemContainingPoint_,
     localCoords_,
     pointIsLocal_);
+}
+
+void ActuatorBulk::zero_source_terms(stk::mesh::BulkData& stkBulk){
+
+  const stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
+
+  VectorFieldType* actuatorSource = stkMeta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "actuator_source");
+  ScalarFieldType* actuatorSourceLhs = stkMeta.get_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "actuator_source_lhs");
+
+  const double zero[3] = {0.0, 0.0, 0.0};
+
+  stk::mesh::field_fill_component(zero, *actuatorSource);
+  stk::mesh::field_fill(0.0, *actuatorSourceLhs);
+
+}
+
+void ActuatorBulk::parallel_sum_source_term(stk::mesh::BulkData& stkBulk){
+
+  const stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
+  VectorFieldType* actuatorSource = stkMeta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "actuator_source");
+
+    stk::mesh::parallel_sum(stkBulk, {actuatorSource});
 }
 
 } // namespace nalu

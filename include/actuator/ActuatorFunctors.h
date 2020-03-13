@@ -13,36 +13,35 @@
 #include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulk.h>
 
+namespace stk{
+namespace mesh{
+  class BulkData;
+}
+}
+
 namespace sierra
 {
 namespace nalu
 {
 
-namespace actgeneral{
-struct InterpolateVelocities{};
-struct SpreadForce{};
-}
+struct InterpActuatorVel{
 
-using InterpolateActVel = ActuatorFunctor<
-  ActuatorBulk,
-  actgeneral::InterpolateVelocities,
-  ActuatorFixedExecutionSpace>;
+  InterpActuatorVel(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk);
 
-using SpreadActForce = ActuatorFunctor<ActuatorBulk, actgeneral::SpreadForce, ActuatorExecutionSpace>;
+  void operator()(int index) const;
 
-//functor should loop over local actuator points
-template<>
-InterpolateActVel::ActuatorFunctor(ActuatorBulk& actBulk);
+  ActuatorBulk& actBulk_;
+  stk::mesh::BulkData& stkBulk_;
+};
 
-template<>
-void InterpolateActVel::operator()(const int& index) const;
+struct SpreadActuatorForce{
+  SpreadActuatorForce(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk);
 
-// functor should loop over coarse search results
-template<>
-SpreadActForce::ActuatorFunctor(ActuatorBulk& actBulk);
+  void operator()(int index) const;
 
-template<>
-void SpreadActForce::operator()(const int& index) const;
+  ActuatorBulk& actBulk_;
+  stk::mesh::BulkData& stkBulk_;
+};
 
 } /* namespace nalu */
 } /* namespace sierra */

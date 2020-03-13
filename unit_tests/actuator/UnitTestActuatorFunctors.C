@@ -10,6 +10,7 @@
 #include <actuator/ActuatorFunctors.h>
 #include <actuator/ActuatorParsing.h>
 #include <actuator/ActuatorInfo.h>
+#include <actuator/UtilitiesActuator.h>
 #include <UnitTestUtils.h>
 #include <yaml-cpp/yaml.h>
 #include <gtest/gtest.h>
@@ -18,6 +19,7 @@ namespace sierra
 {
 namespace nalu
 {
+using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 
 //-----------------------------------------------------------------
 struct SetPoints{};
@@ -71,37 +73,45 @@ ComputeActuatorForce::operator()(const int& index) const
   }
 }
 
-struct FunctorTestInterp : public ActuatorBulk{
-  FunctorTestInterp(const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk):
-    ActuatorBulk(actMeta, stkBulk){}
+
+struct ActuatorTestInterpVelFunctors{
+  ActuatorTestInterpVelFunctors(const ActuatorMeta& actMeta,
+    ActuatorBulk& actBulk,
+    stk::mesh::BulkData& stkBulk):
+      actMeta_(actMeta),
+      actBulk_(actBulk),
+      stkBulk_(stkBulk),
+      numActPoints_(actBulk_.totalNumPoints_)
+  {}
+
+  void operator()()
+  {
+
+    Kokkos::parallel_for(
+      "setPointLocations", numActPoints_, SetupActPoints(actBulk_));
+
+    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+
+    Kokkos::parallel_for("interpVel", numActPoints_, InterpActuatorVel(actBulk_, stkBulk_));
+
+    auto vel = actBulk_.velocity_.view_host();
+    actuator_utils::reduce_view_on_host(vel);
+
+    Kokkos::parallel_for(
+      "computeActuatorForce", numActPoints_,
+      ComputeActuatorForce(actBulk_));
+  }
+
+  const ActuatorMeta& actMeta_;
+  ActuatorBulk& actBulk_;
+  stk::mesh::BulkData& stkBulk_;
+  const int numActPoints_;
 };
-
-using ActuatorTestInterpVelFunctors =
-  sierra::nalu::ActuatorNGP<ActuatorMeta, FunctorTestInterp>;
-
-template <>
-void
-ActuatorTestInterpVelFunctors::execute()
-{
-
-  Kokkos::parallel_for(
-    "setPointLocations", numActPoints_, SetupActPoints(actBulk_));
-
-  actBulk_.stk_search_act_pnts(actMeta_);
-
-  Kokkos::parallel_for("interpVel", numActPoints_, InterpolateActVel(actBulk_));
-
-  auto vel = actBulk_.velocity_.template view<Kokkos::HostSpace>();
-  actBulk_.reduce_view_on_host(vel, NaluEnv::self().parallel_comm());
-
-  Kokkos::parallel_for(
-    "computeActuatorForce", numActPoints_, ComputeActuatorForce(actBulk_));
-}
 
 
 struct FunctorTestSpread : public ActuatorBulk{
-  FunctorTestSpread(const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk):
-    ActuatorBulk(actMeta, stkBulk){}
+  FunctorTestSpread(const ActuatorMeta& actMeta):
+    ActuatorBulk(actMeta){}
 };
 
 void InitSpreadTestFields(ActuatorBulk& actBulk){
@@ -126,22 +136,34 @@ void InitSpreadTestFields(ActuatorBulk& actBulk){
   }
 }
 
-using ActuatorTestSpreadForceFunctor =
-    ActuatorNGP<ActuatorMeta, FunctorTestSpread>;
+struct ActuatorTestSpreadForceFunctor{
+  ActuatorTestSpreadForceFunctor(const ActuatorMeta& actMeta,
+    ActuatorBulk& actBulk,
+    stk::mesh::BulkData& stkBulk):
+      actMeta_(actMeta),
+      actBulk_(actBulk),
+      stkBulk_(stkBulk),
+      numActPoints_(actBulk_.totalNumPoints_)
+  {}
 
-template<>
-void
-ActuatorTestSpreadForceFunctor::execute()
-{
+  void operator()()
+  {
 
-  InitSpreadTestFields(actBulk_);
+    InitSpreadTestFields(actBulk_);
 
-  actBulk_.stk_search_act_pnts(actMeta_);
-  const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
+    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+    const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
-  Kokkos::parallel_for(
-    "spreadForce", localSizeCoarseSearch, SpreadActForce(actBulk_));
-}
+    Kokkos::parallel_for(
+      "spreadForce", localSizeCoarseSearch,
+      SpreadActuatorForce(actBulk_, stkBulk_));
+  }
+
+  const ActuatorMeta& actMeta_;
+  ActuatorBulk& actBulk_;
+  stk::mesh::BulkData& stkBulk_;
+  const int numActPoints_;
+};
 
 namespace {
 //-----------------------------------------------------------------
@@ -212,13 +234,12 @@ TEST_F(ActuatorFunctorTests, testSearchAndInterpolate)
   actMeta.add_turbine(actInfo);
 
   // construct object and allocate memory
-  ActuatorTestInterpVelFunctors actuator(actMeta, stkBulk_);
+  ActuatorBulk actBulk(actMeta);
 
   // what gets called in the time loop
-  actuator.execute();
+  ActuatorTestInterpVelFunctors(actMeta, actBulk, stkBulk_)();
 
   // check results
-  auto actBulk = actuator.actuator_bulk();
   const int nTotal = actBulk.totalNumPoints_;
   auto points = actBulk.pointCentroid_.template view<Kokkos::HostSpace>();
   auto vel = actBulk.velocity_.template view<Kokkos::HostSpace>();
@@ -249,11 +270,9 @@ TEST_F(ActuatorFunctorTests, testSpreadForces){
   actInfo.epsilon_.z_=2.0;
   actMeta.add_turbine(actInfo);
 
-  ActuatorTestSpreadForceFunctor actuator(actMeta, stkBulk_);
+  ActuatorBulk actBulk(actMeta);
+  ActuatorTestSpreadForceFunctor(actMeta, actBulk, stkBulk_)();
 
-  actuator.execute();
-
-  auto actBulk = actuator.actuator_bulk();
   auto coarseElems = actBulk.coarseSearchElemIds_.view_host();
   const int numCoarse = coarseElems.extent_int(0);
 

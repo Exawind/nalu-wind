@@ -152,9 +152,9 @@ compute_distance(
   const double *pointCentroid,
   double *distance)
 {
-  for ( int j = 0; j < nDim; ++j )
+  for ( int j = 0; j < nDim; ++j ){
     distance[j] = elemCentroid[j] - pointCentroid[j];
-  //~ return distance;
+  }
 }
 
 }
