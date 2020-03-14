@@ -214,18 +214,18 @@ bool ActuatorBulkFAST::fast_is_time_zero(){
 void ActuatorBulkFAST::output_torque_info(){
   for (size_t iTurb = 0; iTurb < turbineThrust_.extent(0); iTurb++) {
 
-  auto thrust = Kokkos::subview(turbineThrust_, iTurb, Kokkos::ALL);
-  auto torque = Kokkos::subview(turbineTorque_, iTurb, Kokkos::ALL);
-
-    NaluEnv::self().naluOutput()
-        << "  Thrust[" << iTurb << "] = " << thrust(0) << " "
-        << thrust(1) << " " << thrust(2) << " " << std::endl;
-    NaluEnv::self().naluOutput()
-        << "  Torque[" << iTurb << "] = " << torque(0) << " "
-        << torque(1) << " " << torque(2) << " " << std::endl;
-
     int processorId = openFast_.get_procNo(iTurb);
+
     if (NaluEnv::self().parallel_rank() == processorId) {
+      auto thrust = Kokkos::subview(turbineThrust_, iTurb, Kokkos::ALL);
+      auto torque = Kokkos::subview(turbineTorque_, iTurb, Kokkos::ALL);
+      NaluEnv::self().naluOutput() << std::endl
+          << "  Thrust[" << iTurb << "] = " << thrust(0) << " "
+          << thrust(1) << " " << thrust(2) << " " << std::endl;
+      NaluEnv::self().naluOutput()
+          << "  Torque[" << iTurb << "] = " << torque(0) << " "
+          << torque(1) << " " << torque(2) << " " << std::endl;
+
       std::vector<double> tmpThrust(3);
       std::vector<double> tmpTorque(3);
 
