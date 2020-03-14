@@ -26,7 +26,7 @@ struct ActuatorMetaFAST : public ActuatorMeta
   std::vector<std::string> turbineOutputFileNames_;
   bool filterLiftLineCorrection_;
 
-  // TODO(psakiev) not certain all these need to be dual views
+  // TODO(SAKIEVICH) not certain all these need to be dual views
   ActVectorDblDv epsilon_;
   ActVectorDblDv epsilonChord_;
   ActVectorDblDv epsilonTower_;
@@ -53,7 +53,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActFixVectorDbl hubOrientation_;
 
   ActVectorDblDv epsilonOpt_;
-  // TODO(psakiev) this kill lambdas that are pass by value (KOKKOS_LAMBDA)
+  // TODO(SAKIEVICH) this kill lambdas that are pass by value (KOKKOS_LAMBDA)
   // may need to rethink functor/bulk design.  Perhaps have an internal object
   // in bulk for gpu data and pass that into the actuatorFunctors.
   fast::OpenFAST openFast_;

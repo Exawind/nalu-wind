@@ -44,12 +44,14 @@ void ActuatorLineFastNGP::operator()()
 
     const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
+    //TODO(psakiev) apply re-orientation and distance projection
+    // maybe compute distance at time of coarse search and cache to save a loop
     Kokkos::parallel_for("spreadForcesActuatorNgpFAST", localSizeCoarseSearch, SpreadActuatorForce(actBulk_, stkBulk_));
 
     actBulk_.parallel_sum_source_term(stkBulk_);
 
     if(actBulk_.openFast_.isDebug()){
-      Kokkos::parallel_for("getHubPositions", actMeta_.numberOfActuators_, ActFastSetUpThrustCalc(actBulk_));
+      Kokkos::parallel_for("setUpTorqueCalc", actMeta_.numberOfActuators_, ActFastSetUpThrustCalc(actBulk_));
 
       actuator_utils::reduce_view_on_host(actBulk_.hubLocations_);
       actuator_utils::reduce_view_on_host(actBulk_.hubOrientation_);

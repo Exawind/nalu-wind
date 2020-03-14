@@ -107,6 +107,13 @@ ActFastSetUpThrustCalc::ActFastSetUpThrustCalc(ActuatorBulkFAST& actBulk):
 void ActFastSetUpThrustCalc::operator ()(int index) const{
   auto hubLoc = Kokkos::subview(actBulk_.hubLocations_, index, Kokkos::ALL);
   auto hubOri = Kokkos::subview(actBulk_.hubOrientation_, index, Kokkos::ALL);
+  auto thrust = Kokkos::subview(actBulk_.turbineThrust_, index, Kokkos::ALL);
+  auto torque = Kokkos::subview(actBulk_.turbineTorque_, index, Kokkos::ALL);
+
+  for(int i=0; i<3; i++){
+    thrust(i)=0.0;
+    torque(i)=0.0;
+  }
 
   if(actBulk_.localTurbineId_ == index){
 
@@ -142,14 +149,15 @@ void ActFastComputeThrust::operator()(int index) const{
   VectorFieldType* actuatorSource = stkMeta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "actuator_source");
 
- // ScalarFieldType* dualNodalVolume = stkMeta.get_field<ScalarFieldType>(
- //                                      stk::topology::NODE_RANK, "dual_nodal_volume");
+ ScalarFieldType* dualNodalVolume = stkMeta.get_field<ScalarFieldType>(
+                                      stk::topology::NODE_RANK, "dual_nodal_volume");
 
   auto offsets = actBulk_.turbIdOffset_.view_host();
   auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
   auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
 
   //determine turbine
+  // TODO(psakiev) shouldn't thrust and torque contribs only come from blades?
   int turbId = 0;
   const int nPointId = static_cast<int>(pointId);
   for(;turbId<offsets.extent_int(0); turbId++){
@@ -165,6 +173,7 @@ void ActFastComputeThrust::operator()(int index) const{
 
   Kokkos::View<double[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace> r("radius");
   Kokkos::View<double[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace> rPerpShaft("radiusShift");
+  Kokkos::View<double[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace> forceTerm("forceTerm");
 
   //loop over elem's nodes and contribute source terms
   const stk::mesh::Entity elem = stkBulk_.get_entity(stk::topology::ELEMENT_RANK, elemId);
@@ -191,12 +200,15 @@ void ActFastComputeThrust::operator()(int index) const{
     stk::mesh::Entity node = elem_nod_rels[iNode];
     const double* nodeCoords =
         (double*) stk::mesh::field_data(*coordinates, node);
-    // const double dual_vol = *(double*)stk::mesh::field_data(*dualNodalVolume, node);
+    const double dual_vol = *(double*)stk::mesh::field_data(*dualNodalVolume, node);
     double* sourceTerm = (double*) stk::mesh::field_data(*actuatorSource, node);
 
     for(int i=0; i<3; i++){
+      // TODO(psakiev) I thought this should just be scvElem(iNode) since we are
+      // integrating but that is ~20x too high
+      forceTerm(i) = sourceTerm[i]*scvElem(iNode)/dual_vol;
       r(i) = nodeCoords[i] - hubLoc(i);
-      thrust(i) += sourceTerm[i]*scvElem(iNode);
+      thrust(i) += forceTerm(i);
     }
 
     double rDotHubOri=0;
@@ -208,10 +220,9 @@ void ActFastComputeThrust::operator()(int index) const{
       rPerpShaft(i) = r(i) - rDotHubOri*hubOri(i);
     }
 
-    // TODO(psakiev) check math using sourceTerm vs nodal Quantity need to scale by scv
-    torque(0) += (rPerpShaft(1)*sourceTerm[2] - rPerpShaft(2)*sourceTerm[1])*scvElem(iNode);
-    torque(1) += (rPerpShaft(2)*sourceTerm[0] - rPerpShaft(0)*sourceTerm[2])*scvElem(iNode);
-    torque(2) += (rPerpShaft(0)*sourceTerm[1] - rPerpShaft(1)*sourceTerm[0])*scvElem(iNode);
+    torque(0) += (rPerpShaft(1)*forceTerm(2) - rPerpShaft(2)*forceTerm(1));
+    torque(1) += (rPerpShaft(2)*forceTerm(0) - rPerpShaft(0)*forceTerm(2));
+    torque(2) += (rPerpShaft(0)*forceTerm(1) - rPerpShaft(1)*forceTerm(0));
   }
 
 }
