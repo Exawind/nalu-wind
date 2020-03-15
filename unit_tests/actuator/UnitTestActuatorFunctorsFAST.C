@@ -11,7 +11,7 @@
 #include <actuator/ActuatorFunctorsFAST.h>
 #include <actuator/ActuatorBulkFAST.h>
 #include <actuator/UtilitiesActuator.h>
-#include <yaml-cpp/yaml.h>
+#include "UnitTestActuatorUtil.h"
 #include <gtest/gtest.h>
 
 namespace sierra {
@@ -19,15 +19,6 @@ namespace nalu {
 
 namespace{
 
-YAML::Node
-create_yaml_node(const std::vector<std::string>& testFile)
-{
-  std::string temp;
-  for (auto&& line : testFile) {
-    temp += line;
-  }
-  return YAML::Load(temp);
-}
 
 //-----------------------------------------------------------------
 class ActuatorFunctorFASTTests : public ::testing::Test
@@ -35,7 +26,7 @@ class ActuatorFunctorFASTTests : public ::testing::Test
 protected:
   std::string inputFileSurrogate_;
   const double tol_;
-  std::vector<std::string> fastParseParams_;
+  std::vector<std::string> fastParseParams_{actuator_unit::nrel5MWinputs};
   ActuatorMeta actMeta_;
 
   ActuatorFunctorFASTTests()
@@ -43,35 +34,12 @@ protected:
       actMeta_(1)
   {}
 
-  void SetUp()
-  {
-    fastParseParams_.push_back("actuator:\n");
-    fastParseParams_.push_back("  t_start: 0\n");
-    fastParseParams_.push_back("  simStart: init\n");
-    fastParseParams_.push_back("  n_every_checkpoint: 1\n");
-    fastParseParams_.push_back("  dt_fast: 0.00625\n");
-    fastParseParams_.push_back("  t_max: 0.0625\n");
-    fastParseParams_.push_back("  dry_run: no\n");
-    fastParseParams_.push_back("  debug: yes\n");
-    fastParseParams_.push_back("  Turbine0:\n");
-    fastParseParams_.push_back("    turbine_name: turbinator\n");
-    fastParseParams_.push_back("    epsilon: [5.0, 5.0, 5.00]\n");
-    fastParseParams_.push_back("    turb_id: 0\n");
-    fastParseParams_.push_back("    fast_input_filename: reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst\n");
-    fastParseParams_.push_back("    restart_filename: blah\n");
-    fastParseParams_.push_back("    num_force_pts_blade: 10\n");
-    fastParseParams_.push_back("    num_force_pts_tower: 10\n");
-    fastParseParams_.push_back("    turbine_base_pos: [0,0,0]\n");
-    fastParseParams_.push_back("    air_density:  1.0\n");
-    fastParseParams_.push_back("    nacelle_area:  1.0\n");
-    fastParseParams_.push_back("    nacelle_cd:  1.0\n");
-  }
 
 };
 
 
 TEST_F(ActuatorFunctorFASTTests, initializeActuatorBulk){
-  const YAML::Node y_node = create_yaml_node(fastParseParams_);
+  const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
 
   const fast::fastInputs& fi = actMetaFast.fastInputs_;
@@ -104,7 +72,7 @@ TEST_F(ActuatorFunctorFASTTests, initializeActuatorBulk){
 }
 
 TEST_F(ActuatorFunctorFASTTests, runActFastZero){
-  const YAML::Node y_node = create_yaml_node(fastParseParams_);
+  const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
 
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
   ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
@@ -145,7 +113,7 @@ TEST_F(ActuatorFunctorFASTTests, runActFastZero){
 }
 
 TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
-  const YAML::Node y_node = create_yaml_node(fastParseParams_);
+  const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
 
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
   ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
@@ -188,7 +156,7 @@ TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
 
 
 TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
-  const YAML::Node y_node = create_yaml_node(fastParseParams_);
+  const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
 
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
   ActuatorBulkFAST actBulk(actMetaFast, 0.0625);

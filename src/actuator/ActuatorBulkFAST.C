@@ -37,6 +37,17 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     localTurbineId_(NaluEnv::self().parallel_rank()>=actMeta.numberOfActuators_?-1:NaluEnv::self().parallel_rank()),
     tStepRatio_(naluTimeStep/actMeta.fastInputs_.dtFAST)
 {
+
+
+
+  init_openfast(actMeta, naluTimeStep);
+  init_epsilon(actMeta);
+
+}
+
+ActuatorBulkFAST::~ActuatorBulkFAST() { openFast_.end(); }
+
+void ActuatorBulkFAST::init_openfast(const ActuatorMetaFAST& actMeta, double naluTimeStep){
   openFast_.setInputs(actMeta.fastInputs_);
 
   if (std::abs(naluTimeStep - tStepRatio_ * actMeta.fastInputs_.dtFAST) < 0.001) { // TODO: Fix
@@ -47,7 +58,7 @@ ActuatorBulkFAST::ActuatorBulkFAST(
    } else {
      throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
                               "an integral multiple of FAST time step");
-   }
+  }
 
   const int nProcs = NaluEnv::self().parallel_size();
   const int nTurb = actMeta.numberOfActuators_;
@@ -71,8 +82,10 @@ ActuatorBulkFAST::ActuatorBulkFAST(
 
   openFast_.init();
 
+}
 
-  // set epsilon and radius
+void ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta){
+   // set epsilon and radius
   // The node ordering (from FAST) is
   // Node 0 - Hub node
   // Blade 1 nodes
@@ -82,6 +95,7 @@ ActuatorBulkFAST::ActuatorBulkFAST(
   epsilon_.modify_host();
   epsilonOpt_.modify_host();
   searchRadius_.modify_host();
+  const int nTurb = openFast_.get_nTurbinesGlob();
 
   for (int iTurb = 0; iTurb < nTurb; iTurb++) {
     if (openFast_.get_procNo(iTurb) == NaluEnv::self().parallel_rank()) {
@@ -170,8 +184,6 @@ ActuatorBulkFAST::ActuatorBulkFAST(
   epsilonOpt_.sync_host();
   searchRadius_.sync_host();
 }
-
-ActuatorBulkFAST::~ActuatorBulkFAST() { openFast_.end(); }
 
 Kokkos::RangePolicy<ActuatorFixedExecutionSpace>
 ActuatorBulkFAST::local_range_policy(const ActuatorMeta& actMeta){

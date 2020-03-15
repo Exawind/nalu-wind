@@ -16,5 +16,6 @@ if(ENABLE_OPENFAST)
       ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorParsingFAST.C
       ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorFunctorsFAST.C
       ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorLineFASTNgp.C
+      ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorBulkDiskFAST.C
    )
 endif()

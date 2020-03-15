@@ -44,8 +44,10 @@ struct ActuatorBulkFAST : public ActuatorBulk
   void step_fast();
   bool fast_is_time_zero();
   void output_torque_info();
+  void init_openfast(const ActuatorMetaFAST& actMeta, double naluTimeStep);
+  void init_epsilon(const ActuatorMetaFAST& actMeta);
 
-  ~ActuatorBulkFAST();
+  virtual ~ActuatorBulkFAST();
 
   ActFixVectorDbl turbineThrust_;
   ActFixVectorDbl turbineTorque_;

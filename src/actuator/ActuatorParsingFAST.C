@@ -47,6 +47,8 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
   get_if_present_no_default(
     turbNode, "air_density", fi.globTurbineData[iTurb].air_density);
 
+
+
   int numBlades=3;
   get_if_present_no_default(turbNode, "num_blades", numBlades);
   ThrowErrorMsgIf(numBlades!=3 && numBlades!=2,"ERROR::ActuatorParsingFAST::Currently only 2 and 3 bladed turbines are supported.");
