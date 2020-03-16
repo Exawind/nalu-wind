@@ -48,20 +48,21 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
     turbNode, "air_density", fi.globTurbineData[iTurb].air_density);
 
   // TODO(psakiev) replace condition with a method
-  if(actMetaFAST.actuatorType_==3){
+  if(actMetaFAST.actuatorType_==2){
     get_if_present_no_default(turbNode, "num_swept_pts", actMetaFAST.nPointsSwept_(iTurb));
     actMetaFAST.useUniformAziSampling_(iTurb) = actMetaFAST.nPointsSwept_(iTurb) != 0;
   }
 
-  int numBlades=3;
-  get_if_present_no_default(turbNode, "num_blades", numBlades);
-  ThrowErrorMsgIf(numBlades!=3 && numBlades!=2,"ERROR::ActuatorParsingFAST::Currently only 2 and 3 bladed turbines are supported.");
+  int* numBlades = &(actMetaFAST.nBlades_(iTurb));
+  *numBlades=3;
+  get_if_present_no_default(turbNode, "num_blades", *numBlades);
+  ThrowErrorMsgIf(*numBlades!=3 && *numBlades!=2,"ERROR::ActuatorParsingFAST::Currently only 2 and 3 bladed turbines are supported.");
 
   actMetaFAST.numPointsTurbine_.h_view(iTurb) =
     1 // hub
     + fi.globTurbineData[iTurb].numForcePtsTwr +
     fi.globTurbineData[iTurb].numForcePtsBlade *
-      numBlades;
+      (*numBlades);
   actMetaFAST.numPointsTotal_+=actMetaFAST.numPointsTurbine_.h_view(iTurb);
 }
 } // namespace

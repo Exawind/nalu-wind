@@ -81,8 +81,7 @@ struct ActuatorTestInterpVelFunctors{
       actMeta_(actMeta),
       actBulk_(actBulk),
       stkBulk_(stkBulk),
-      numActPoints_(actBulk_.totalNumPoints_)
-  {}
+      numActPoints_(actMeta_.numPointsTotal_){}
 
   void operator()()
   {
@@ -143,8 +142,7 @@ struct ActuatorTestSpreadForceFunctor{
       actMeta_(actMeta),
       actBulk_(actBulk),
       stkBulk_(stkBulk),
-      numActPoints_(actBulk_.totalNumPoints_)
-  {}
+      numActPoints_(actMeta_.numPointsTotal_){}
 
   void operator()()
   {
@@ -247,7 +245,7 @@ TEST_F(ActuatorFunctorTests, testSearchAndInterpolate)
   ActuatorTestInterpVelFunctors(actMeta, actBulk, stkBulk_)();
 
   // check results
-  const int nTotal = actBulk.totalNumPoints_;
+  const int nTotal = actMeta.numPointsTotal_;
   auto points = actBulk.pointCentroid_.template view<Kokkos::HostSpace>();
   auto vel = actBulk.velocity_.template view<Kokkos::HostSpace>();
   auto force = actBulk.actuatorForce_.template view<Kokkos::HostSpace>();

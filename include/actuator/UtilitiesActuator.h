@@ -23,6 +23,9 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Part.hpp>
 #include <stk_search/Point.hpp>
+#ifdef NALU_USES_OPENFAST
+#include <OpenFAST.H>
+#endif
 
 namespace sierra {
 namespace nalu {
@@ -32,6 +35,11 @@ using Point = stk::search::Point<double>;
 
 namespace actuator_utils {
 
+#ifdef NALU_USES_OPENFAST
+
+Point get_fast_point(fast::OpenFAST& fast, int turbId, fast::ActuatorNodeType type, int pointId=0, int bladeId=0);
+
+#endif
 
 /** Implementation of a periodic Bezier curve (Sanchez-Reyes, 2009) to connect
  * points at a specific radius The advantage of this method is it maps distorted

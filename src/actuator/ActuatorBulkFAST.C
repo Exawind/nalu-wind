@@ -22,8 +22,9 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
     epsilon_("epsilonMeta", numberOfActuators_),
     epsilonChord_("epsilonChordMeta", numberOfActuators_),
     epsilonTower_("epsilonTowerMeta", numberOfActuators_),
-    useUniformAziSampling_("diskUseUniSample",actuatorType_==3?numberOfActuators_:0),
-    nPointsSwept_("diskNumSwept",actuatorType_==3?numberOfActuators_:0)
+    useUniformAziSampling_("diskUseUniSample",actuatorType_==3?numberOfActuators_:0), //TODO(psakiev) use function to determine this
+    nPointsSwept_("diskNumSwept",actuatorType_==2?numberOfActuators_:0),
+    nBlades_("numTurbBlades", numberOfActuators_)
 {
 }
 
@@ -35,16 +36,12 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     turbineTorque_("turbineTorque", actMeta.numberOfActuators_),
     hubLocations_("hubLocations", actMeta.numberOfActuators_),
     hubOrientation_("hubOrientations", actMeta.numberOfActuators_),
-    epsilonOpt_("epsilonOptimal", totalNumPoints_),
-    localTurbineId_(NaluEnv::self().parallel_rank()>=actMeta.numberOfActuators_?-1:NaluEnv::self().parallel_rank()),
+    epsilonOpt_("epsilonOptimal", actMeta.numPointsTotal_),
+    localTurbineId_(NaluEnv::self().parallel_rank()>=actMeta.numberOfActuators_?-1:NaluEnv::self().parallel_rank()), //assign 1 turbine per rank for now
     tStepRatio_(naluTimeStep/actMeta.fastInputs_.dtFAST)
 {
-
-
-
   init_openfast(actMeta, naluTimeStep);
   init_epsilon(actMeta);
-
 }
 
 ActuatorBulkFAST::~ActuatorBulkFAST() { openFast_.end(); }
@@ -68,9 +65,7 @@ void ActuatorBulkFAST::init_openfast(const ActuatorMetaFAST& actMeta, double nal
   const int remainder = actMeta.numberOfActuators_ % nProcs;
   const int nOffset = intDivision*nProcs;
 
-  if(remainder && intDivision){
-    ThrowErrorMsg("OpenFAST can't accept more turbines than ranks.");
-  }
+  ThrowErrorMsgIf(remainder && intDivision, "nalu-wind can't process more turbines than ranks.");
 
   // assign turbines to processors uniformly
   for (int i=0; i < intDivision; i++){
@@ -83,6 +78,15 @@ void ActuatorBulkFAST::init_openfast(const ActuatorMetaFAST& actMeta, double nal
   }
 
   openFast_.init();
+
+  for(int i=0; i<nTurb; ++i){
+    if(localTurbineId_ == openFast_.get_procNo(i)){
+      ThrowErrorMsgIf(actMeta.nBlades_(i)!=openFast_.get_numBlades(i),
+        "Mismatch in number of blades between OpenFAST and input deck."
+        " InputDeck: "+std::to_string(actMeta.nBlades_(i))+
+        " OpenFAST: "+std::to_string(openFast_.get_numBlades(i)));
+    }
+  }
 
 }
 
@@ -101,7 +105,7 @@ void ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta){
 
   for (int iTurb = 0; iTurb < nTurb; iTurb++) {
     if (openFast_.get_procNo(iTurb) == NaluEnv::self().parallel_rank()) {
-      ThrowAssert(totalNumPoints_>=openFast_.get_numForcePts(iTurb));
+      ThrowAssert(actMeta.numPointsTotal_>=openFast_.get_numForcePts(iTurb));
       if (!openFast_.isDryRun()) {
         const int numForcePts = openFast_.get_numForcePts(iTurb);
         const int offset = turbIdOffset_.h_view(iTurb);

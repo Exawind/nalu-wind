@@ -36,20 +36,23 @@ ActuatorMeta::add_turbine(const ActuatorInfoNGP& info)
 
 ActuatorBulk::ActuatorBulk(
   const ActuatorMeta& actMeta)
-  : totalNumPoints_(actMeta.numPointsTotal_),
-    turbIdOffset_("offsetsForTurbine", actMeta.numberOfActuators_),
-    pointCentroid_("actPointCentroid", totalNumPoints_),
-    velocity_("actVelocity", totalNumPoints_),
-    actuatorForce_("actForce", totalNumPoints_),
-    epsilon_("actEpsilon", totalNumPoints_),
-    searchRadius_("searchRadius", totalNumPoints_),
+  : turbIdOffset_("offsetsForTurbine", actMeta.numberOfActuators_),
+    pointCentroid_("actPointCentroid", actMeta.numPointsTotal_),
+    velocity_("actVelocity", actMeta.numPointsTotal_),
+    actuatorForce_("actForce", actMeta.numPointsTotal_),
+    epsilon_("actEpsilon", actMeta.numPointsTotal_),
+    searchRadius_("searchRadius", actMeta.numPointsTotal_),
     coarseSearchPointIds_("coarseSearchPointIds",0),
     coarseSearchElemIds_("coarseSearchElemIds",0),
-    localCoords_("localCoords", totalNumPoints_),
-    pointIsLocal_("pointIsLocal", totalNumPoints_),
-    elemContainingPoint_("elemContainPoint", totalNumPoints_)
+    localCoords_("localCoords", actMeta.numPointsTotal_),
+    pointIsLocal_("pointIsLocal", actMeta.numPointsTotal_),
+    elemContainingPoint_("elemContainPoint", actMeta.numPointsTotal_)
 {
-  turbIdOffset_.modify_host();
+  compute_offsets(actMeta);
+}
+
+void ActuatorBulk::compute_offsets(const ActuatorMeta& actMeta){
+   turbIdOffset_.modify_host();
 
   const int numTurbs = actMeta.numberOfActuators_;
 
@@ -57,7 +60,6 @@ ActuatorBulk::ActuatorBulk(
     turbIdOffset_.h_view(i) =
       turbIdOffset_.h_view(i - 1) + actMeta.numPointsTurbine_.h_view(i - 1);
   }
-
 }
 
 void
