@@ -61,8 +61,7 @@ struct ActuatorBulk
   void stk_search_act_pnts(const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);
   void zero_source_terms(stk::mesh::BulkData& stkBulk);
   void parallel_sum_source_term(stk::mesh::BulkData& stkBulk);
-
-  const int totalNumPoints_;
+  void compute_offsets(const ActuatorMeta& actMeta);
 
   // HOST AND DEVICE DATA (DualViews)
   ActScalarIntDv turbIdOffset_;

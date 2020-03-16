@@ -72,7 +72,7 @@ struct ActExecuteFunctor{
    ActExecuteFunctor(const ACTMETA& actMeta, ACTBULK& actBulk)
     : actMeta_(actMeta),
       actBulk_(actBulk),
-      numActPoints_(actBulk_.totalNumPoints_)
+      numActPoints_(actMeta_.numPointsTotal_)
   {
   }
   void operator()();
@@ -105,7 +105,7 @@ public:
   ActuatorNGP(const ActMetaData& actMeta)
     : actMeta_(actMeta),
       actBulk_(actMeta_),
-      numActPoints_(actBulk_.totalNumPoints_)
+      numActPoints_(actMeta_.numPointsTotal_)
   {
   }
   const ActBulkData& actuator_bulk() { return actBulk_; }

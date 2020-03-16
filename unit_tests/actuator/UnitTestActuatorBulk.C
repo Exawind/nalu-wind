@@ -71,7 +71,7 @@ TEST(ActuatorBulk, constructor)
   fieldMeta.add_turbine(dummyInfo);
   fieldMeta.add_turbine(dummyInfo2);
   ActuatorBulk actBulkData(fieldMeta);
-  EXPECT_EQ(76, actBulkData.totalNumPoints_);
+  EXPECT_EQ(76, actBulkData.actuatorForce_.extent_int(0));
   EXPECT_EQ(0, actBulkData.turbIdOffset_.h_view(0));
   EXPECT_EQ(36, actBulkData.turbIdOffset_.h_view(1));
 }

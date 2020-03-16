@@ -133,7 +133,7 @@ TestActuatorHostOnly::execute()
 struct ActuatorBulkMod : public ActuatorBulk
 {
   ActuatorBulkMod(ActuatorMeta meta)
-    : ActuatorBulk(meta), scalar_("scalar", totalNumPoints_)
+    : ActuatorBulk(meta), scalar_("scalar", meta.numPointsTotal_)
   {
   }
   ActScalarDblDv scalar_;

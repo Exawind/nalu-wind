@@ -77,7 +77,7 @@ TEST_F(ActuatorFunctorFASTTests, runActFastZero){
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
   ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
 
-  ASSERT_EQ(actBulk.totalNumPoints_, 41);
+  ASSERT_EQ(actMetaFast.numPointsTotal_, 41);
 
   auto velHost = actBulk.velocity_.view_host();
   auto frcHost = actBulk.actuatorForce_.view_host();
@@ -85,7 +85,7 @@ TEST_F(ActuatorFunctorFASTTests, runActFastZero){
   actBulk.actuatorForce_.modify_device();
   actBulk.velocity_.modify_device();
 
-  for(int i=0; i<actBulk.totalNumPoints_; ++i){
+  for(int i=0; i<actMetaFast.numPointsTotal_;++i){
     for(int j=0; j<3; ++j){
       actBulk.actuatorForce_.h_view(i,j) = 1.0;
       actBulk.velocity_.h_view(i,j) = 1.0;
@@ -102,7 +102,7 @@ TEST_F(ActuatorFunctorFASTTests, runActFastZero){
     }
   }
 
-  Kokkos::parallel_for("testActFastZero", actBulk.totalNumPoints_,ActFastZero(actBulk));
+  Kokkos::parallel_for("testActFastZero", actMetaFast.numPointsTotal_,ActFastZero(actBulk));
 
   for(int i = 0; i<velHost.extent_int(0); ++i){
     for(int j=0; j<3; ++j){
@@ -121,11 +121,11 @@ TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
   fast::OpenFAST& fast = actBulk.openFast_;
   const int turbineID = actBulk.localTurbineId_;
 
-  ASSERT_EQ(actBulk.totalNumPoints_, 41);
+  ASSERT_EQ(actMetaFast.numPointsTotal_, 41);
 
   auto points = actBulk.pointCentroid_.view_host();
   auto localRangePolicy = actBulk.local_range_policy(actMeta_);
-  Kokkos::parallel_for("testActFastZero", actBulk.totalNumPoints_,ActFastZero(actBulk));
+  Kokkos::parallel_for("testActFastZero", actMetaFast.numPointsTotal_,ActFastZero(actBulk));
 
   for(int i = 0; i<points.extent_int(0); ++i){
     for(int j=0; j<3; ++j){
@@ -164,13 +164,13 @@ TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
   fast::OpenFAST& fast = actBulk.openFast_;
   const int turbineID = actBulk.localTurbineId_;
 
-  ASSERT_EQ(actBulk.totalNumPoints_, 41);
+  ASSERT_EQ(actMetaFast.numPointsTotal_, 41);
 
   auto vel = actBulk.velocity_.view_host();
   auto force = actBulk.actuatorForce_.view_host();
 
   auto localRangePolicy = actBulk.local_range_policy(actMeta_);
-  Kokkos::parallel_for("testActFastZero", actBulk.totalNumPoints_,ActFastZero(actBulk));
+  Kokkos::parallel_for("testActFastZero", actMetaFast.numPointsTotal_,ActFastZero(actBulk));
 
   for(int i = 0; i<vel.extent_int(0); ++i){
     for(int j=0; j<3; ++j){
@@ -191,7 +191,7 @@ TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
 
   actuator_utils::reduce_view_on_host(force);
 
-  ActFixVectorDbl fastForces("forcesComputedFromFAST", actBulk.totalNumPoints_);
+  ActFixVectorDbl fastForces("forcesComputedFromFAST", actMetaFast.numPointsTotal_);
 
   if(fast.get_procNo(turbineID)==turbineID){
     std::vector<double> tempForce(3);
@@ -209,7 +209,7 @@ TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
   actuator_utils::reduce_view_on_host(fastForces);
 
   Kokkos::parallel_for("checkAnswers",
-    Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(0,actBulk.totalNumPoints_),
+    Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(0,actMetaFast.numPointsTotal_),
     KOKKOS_LAMBDA(int i){
     for(int j=0; j<3; ++j){
       EXPECT_DOUBLE_EQ(fastForces(i,j), force(i,j));

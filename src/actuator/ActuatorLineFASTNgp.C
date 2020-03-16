@@ -17,7 +17,7 @@ ActuatorLineFastNGP::ActuatorLineFastNGP(const ActuatorMetaFAST& actMeta,
     actMeta_(actMeta),
     actBulk_(actBulk),
     stkBulk_(stkBulk),
-    numActPoints_( actBulk_.totalNumPoints_)
+    numActPoints_( actMeta_.numPointsTotal_)
   {}
 
 void ActuatorLineFastNGP::operator()()

@@ -19,12 +19,35 @@ namespace nalu
 
 namespace{
 
-TEST(ActuatorBulkDiskFAST, construction){
-  ActuatorMeta actMeta(1);
-  auto y_node = actuator_unit::create_yaml_node(actuator_unit::nrel5MWinputs);
-  auto actMetaFast = actuator_FAST_parse(y_node, actMeta);
-  ActuatorBulkDiskFAST actBulk(actMetaFast, 0.0625);
+class ActuatorBulkDiskFastTest : public ::testing::Test{
+protected:
+
+  ActuatorBulkDiskFastTest():
+    actMeta_(1, ActuatorType::ActDiskFAST)
+  {}
+
+  std::vector<std::string> inputs_{actuator_unit::nrel5MWinputs};
+  ActuatorMeta actMeta_;
+};
+
+TEST_F(ActuatorBulkDiskFastTest, construction){
+  auto y_node = actuator_unit::create_yaml_node(inputs_);
+  auto myMeta = actuator_FAST_parse(y_node, actMeta_);
+  ActuatorBulkDiskFAST actBulk(myMeta, 0.0625);
   EXPECT_EQ(30, actBulk.epsilon_.extent_int(0));
+}
+
+TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountFixed){
+  inputs_.push_back("    num_swept_pts: 2\n");
+  auto y_node = actuator_unit::create_yaml_node(inputs_);
+  auto myMeta = actuator_FAST_parse(y_node, actMeta_);
+  ASSERT_EQ(1, myMeta.nPointsSwept_.extent(0));
+  ASSERT_EQ(2, myMeta.nPointsSwept_(0));
+  ASSERT_TRUE(myMeta.useUniformAziSampling_(0));
+  ActuatorBulkDiskFAST actBulk(myMeta, 0.0625);
+  actBulk.compute_swept_point_count(myMeta);
+  EXPECT_EQ(101, myMeta.numPointsTotal_);
+  EXPECT_EQ(101, myMeta.numPointsTurbine_.h_view(0));
 }
 
 }

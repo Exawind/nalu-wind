@@ -21,6 +21,33 @@ namespace actuator_utils {
 
 const double pi = M_PI;
 
+#ifdef NALU_USES_OPENFAST
+
+Point get_fast_point(fast::OpenFAST& fast, int turbId, fast::ActuatorNodeType type, int pointId, int bladeId){
+  std::vector<double> coords (3);
+  switch(type){
+    case fast::HUB: {
+      fast.getForceNodeCoordinates(coords, 0, turbId);
+      break;
+    }
+    case fast::TOWER:{
+      const int offset = fast.get_numForcePts(turbId)-fast.get_numForcePtsTwr(turbId);
+      fast.getForceNodeCoordinates(coords, pointId+offset, turbId);
+      break;
+    }
+    case fast::BLADE:{
+      const int nPBlade = fast.get_numForcePtsBlade(turbId);
+      fast.getForceNodeCoordinates(coords, 1+bladeId*nPBlade+pointId, turbId);
+      break;
+    }
+    default:{
+      break;
+    }
+  }
+  return {coords[0], coords[1], coords[2]};
+}
+#endif
+
 //--------------------------------------------------------------------------------------
 //  Swept Point Locator
 //--------------------------------------------------------------------------------------
