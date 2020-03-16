@@ -20,6 +20,124 @@ namespace nalu {
 namespace actuator_utils {
 
 const double pi = M_PI;
+
+//--------------------------------------------------------------------------------------
+//  Swept Point Locator
+//--------------------------------------------------------------------------------------
+SweptPointLocator::SweptPointLocator()
+  : bladePoints_(3), controlPoints_(3), controlPointsCurrent_{false}
+{
+}
+
+void
+SweptPointLocator::update_point_location(int i, Point p)
+{
+  bladePoints_[i] = p;
+  controlPointsCurrent_ = false;
+}
+
+// Set control points of the Bezier curve so that the blade points
+// are on the resulting parametric curve.  This is ensured when the control
+// points are 1) on the vector created by the blade point and centroid of blade
+// points, 2) and are the blade points are the mid-points of lines connecting
+// the control points. See figure 5 in the reference paper for clarification.
+void
+SweptPointLocator::generate_control_points()
+{
+  for (int d = 0; d < 3; d++) {
+    controlPoints_[2][d] =
+      bladePoints_[0][d] + bladePoints_[1][d] - bladePoints_[2][d];
+    controlPoints_[1][d] = 2.0 * bladePoints_[1][d] - controlPoints_[2][d];
+    controlPoints_[0][d] = 2.0 * bladePoints_[0][d] - controlPoints_[2][d];
+  }
+  controlPointsCurrent_ = true;
+}
+
+int
+SweptPointLocator::binomial_coefficient(int N, int R)
+{
+  int coefficient{1};
+  int upperLim = std::max(N - R, R);
+  int lowerLim = std::min(N - R, R);
+  for (int n = N; n > upperLim; n--) {
+    coefficient *= n;
+  }
+  for (int r = lowerLim; r > 0; r--) {
+    coefficient /= r;
+  }
+  return coefficient;
+}
+
+double
+SweptPointLocator::periodic_basis(double t)
+{
+  int binom = binomial_coefficient(order_, order_ / 2);
+  double denominator = static_cast<double>((order_ + 1) * binom);
+  double eta = std::pow(2.0, order_) / denominator;
+  return eta * std::pow(std::cos(0.5 * t), order_);
+}
+
+Point
+SweptPointLocator::operator()(double t)
+{
+  Point output = {0, 0, 0};
+
+  if (!controlPointsCurrent_) {
+    generate_control_points();
+  }
+
+  for (int i = 0; i <= order_; i++) {
+    const double offset = i * delta_;
+    const double basis = periodic_basis(t - offset);
+    for (int k = 0; k < 3; k++) {
+      output[k] += controlPoints_[i][k] * basis;
+    }
+  }
+
+  return output;
+}
+
+std::vector<Point>
+SweptPointLocator::get_control_points()
+{
+  generate_control_points();
+  return controlPoints_;
+}
+
+Point
+SweptPointLocator::get_centriod()
+{
+  Point centroid = {0.0, 0.0, 0.0};
+
+  for (int i = 0; i < 3; i++) {
+    centroid[0] += bladePoints_[i][0];
+    centroid[1] += bladePoints_[i][1];
+    centroid[2] += bladePoints_[i][2];
+  }
+
+  centroid[0] /= 3.0;
+  centroid[1] /= 3.0;
+  centroid[2] /= 3.0;
+
+  return centroid;
+}
+
+double
+SweptPointLocator::get_radius(int pntNum)
+{
+  if (!controlPointsCurrent_) {
+    generate_control_points();
+  }
+  double distance{0.0};
+  Point centroid = get_centriod();
+
+  for (int i = 0; i < 3; i++) {
+    distance += std::pow(bladePoints_[pntNum][i] - centroid[i], 2.0);
+  }
+
+  return std::sqrt(distance);
+}
+
 ///
 /// A Gaussian projection function
 ///

@@ -21,7 +21,9 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
     filterLiftLineCorrection_(false),
     epsilon_("epsilonMeta", numberOfActuators_),
     epsilonChord_("epsilonChordMeta", numberOfActuators_),
-    epsilonTower_("epsilonTowerMeta", numberOfActuators_)
+    epsilonTower_("epsilonTowerMeta", numberOfActuators_),
+    useUniformAziSampling_("diskUseUniSample",actuatorType_==3?numberOfActuators_:0),
+    nPointsSwept_("diskNumSwept",actuatorType_==3?numberOfActuators_:0)
 {
 }
 
