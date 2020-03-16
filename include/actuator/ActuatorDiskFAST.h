@@ -91,34 +91,6 @@ protected:
   bool useUniformAziSampling_{false};
 };
 
-/** Implementation of a periodic Bezier curve (Sanchez-Reyes, 2009) to connect
- * points at a specific radius The advantage of this method is it maps distorted
- * points to an elipsoide with fewer samples than pure B-Splines or Bezier
- * curves. Fewer points are needed to create a perfect circle in the case of
- * equispaced points (min =3) It is a parametric curve over the interval [0,
- * 2pi]
- */
-class SweptPointLocator
-{
-public:
-  SweptPointLocator();
-  ~SweptPointLocator() = default;
-  Point operator()(double t);
-  void update_point_location(int i, Point p);
-  static int binomial_coefficient(int n, int v);
-  std::vector<Point> get_control_points();
-  double get_radius(int pntNum);
-  Point get_centriod();
-
-private:
-  const int order_ = 2; // fix order at 2 for 3 point sampling
-  const double delta_ = 2.0 * std::acos(-1.0) / (order_ + 1);
-  double periodic_basis(double t);
-  void generate_control_points();
-  std::vector<Point> bladePoints_;
-  std::vector<Point> controlPoints_;
-  bool controlPointsCurrent_;
-};
 
 } // namespace nalu
 } // namespace sierra

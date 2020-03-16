@@ -47,7 +47,11 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
   get_if_present_no_default(
     turbNode, "air_density", fi.globTurbineData[iTurb].air_density);
 
-
+  // TODO(psakiev) replace condition with a method
+  if(actMetaFAST.actuatorType_==3){
+    get_if_present_no_default(turbNode, "num_swept_pts", actMetaFAST.nPointsSwept_(iTurb));
+    actMetaFAST.useUniformAziSampling_(iTurb) = actMetaFAST.nPointsSwept_(iTurb) != 0;
+  }
 
   int numBlades=3;
   get_if_present_no_default(turbNode, "num_blades", numBlades);

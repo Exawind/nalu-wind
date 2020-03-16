@@ -22,7 +22,7 @@ class ActuatorBulkDiskFAST: public ActuatorBulkFAST
 {
 public:
   ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double naluTimeStep);
-  void compute_swept_point_count();
+  void compute_swept_point_count(ActuatorMetaFAST& actMeta);
   void resize_arrays();
 
 };

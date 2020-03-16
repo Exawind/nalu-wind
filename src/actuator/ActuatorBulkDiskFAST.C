@@ -8,6 +8,7 @@
 //
 
 #include <actuator/ActuatorBulkDiskFAST.h>
+#include <actuator/UtilitiesActuator.h>
 
 namespace sierra
 {
@@ -21,8 +22,20 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double nal
 
 }
 
-void ActuatorBulkDiskFAST::compute_swept_point_count(){
-
+void ActuatorBulkDiskFAST::compute_swept_point_count(ActuatorMetaFAST& actMeta){
+  ActFixScalarInt nAddedPoints("nAddedPoints",openFast_.get_nTurbinesGlob());
+  for(int iTurb=0; iTurb<openFast_.get_nTurbinesGlob(); ++iTurb){
+    if(localTurbineId_==openFast_.get_procNo(iTurb)){
+      if(actMeta.useUniformAziSampling_(iTurb)){
+        nAddedPoints(iTurb) = actMeta.nPointsSwept_(iTurb);
+      }
+      else{
+        // compute radii and dr
+        // divide radius by dr and sum
+      }
+    }
+  }
+  actuator_utils::reduce_view_on_host(nAddedPoints);
 }
 
 void ActuatorBulkDiskFAST::resize_arrays()

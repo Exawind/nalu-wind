@@ -7,15 +7,9 @@
 // for more details.
 //
 
-/*
- * UnitTestActuatorDiskFAST.C
- *
- *  Created on: Jan 11, 2019
- *      Author: psakiev
- */
 
 #include <gtest/gtest.h>
-#include <actuator/ActuatorDiskFAST.h>
+#include <actuator/UtilitiesActuator.h>
 #include <algorithm>
 #include <functional>
 #include <random>
@@ -64,7 +58,7 @@ F_RotateAboutAxis(
 
 }
 
-TEST(ActuatorFAST, PointsOnACircle)
+TEST(ActuatorSweptPointLocator, PointsOnACircle)
 {
   const double PI = std::acos(-1.0);
   const std::vector<double> origin(3, 0.0);
@@ -112,7 +106,7 @@ TEST(ActuatorFAST, PointsOnACircle)
     Point A{p1[0], p1[1], p1[2]}, B{p2[0], p2[1], p2[2]},
       C{p3[0], p3[1], p3[2]};
 
-    SweptPointLocator locator;
+    actuator_utils::SweptPointLocator locator;
     locator.update_point_location(0, A);
     locator.update_point_location(1, B);
     locator.update_point_location(2, C);
