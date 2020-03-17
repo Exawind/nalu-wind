@@ -18,16 +18,9 @@ namespace nalu
 
 ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double naluTimeStep):
   ActuatorBulkFAST(actMeta, naluTimeStep),
-  numSweptCount_("numSweptCount", 0),
-  numSweptOffset_("numSweptOffset",actMeta.numberOfActuators_)
+  numSweptCount_("numSweptCount", actMeta.numberOfActuators_, actMeta.maxNumPntsPerBlade_),
+  numSweptOffset_("numSweptOffset",actMeta.numberOfActuators_,actMeta.maxNumPntsPerBlade_)
 {
-  int nOffset =0;
-  for(int iTurb=0; iTurb<actMeta.numberOfActuators_; iTurb++){
-    numSweptOffset_(iTurb)=nOffset;
-    nOffset+=actMeta.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
-  }
-
-  Kokkos::resize(numSweptCount_, nOffset);
 
   compute_swept_point_count(actMeta);
   resize_arrays(actMeta);
@@ -45,6 +38,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double nal
   compute_offsets(actMeta);
   init_epsilon(actMeta);
   Kokkos::parallel_for("InitActLinePoints", local_range_policy(actMeta), ActFastUpdatePoints(*this));
+  actuator_utils::reduce_view_on_host(pointCentroid_.view_host());
   initialize_swept_points(actMeta);
 }
 
@@ -56,14 +50,15 @@ void ActuatorBulkDiskFAST::compute_swept_point_count(ActuatorMetaFAST& actMeta){
   actMeta.numPointsTurbine_.modify_host();
 
   for(int iTurb=0; iTurb<openFast_.get_nTurbinesGlob(); ++iTurb){
-    numSweptOffset_(iTurb)+=turbIdOffset_.h_view(iTurb);
     if(NaluEnv::self().parallel_rank()==openFast_.get_procNo(iTurb)){
       const int nBlades = openFast_.get_numBlades(iTurb);
+      const int nbfp = openFast_.get_numForcePtsBlade(iTurb);
 
       if(actMeta.useUniformAziSampling_(iTurb)){
-        nAddedPoints(iTurb) = actMeta.nPointsSwept_(iTurb)*nBlades*openFast_.get_numForcePtsBlade(iTurb);
-        for(int i=0; i<nAddedPoints.extent_int(0); ++i){
-          numSweptCount_(i+numSweptOffset_(iTurb)) = actMeta.nPointsSwept_(iTurb);
+        nAddedPoints(iTurb) = actMeta.nPointsSwept_(iTurb)*nBlades*nbfp;
+        for(int i=0; i<nbfp; ++i){
+          numSweptCount_(iTurb, i) = actMeta.nPointsSwept_(iTurb);
+          numSweptOffset_(iTurb,i) = actMeta.nPointsSwept_(iTurb)*i*nBlades;
         }
       }
       else{
@@ -85,8 +80,10 @@ void ActuatorBulkDiskFAST::compute_swept_point_count(ActuatorMetaFAST& actMeta){
           }
           const double radius = locator.get_radius(0);
           // even radial spacing minus the blades
-          numSweptCount_(i+numSweptOffset_(iTurb))= std::max((int)(2.0*M_PI*radius/dR/nBlades)-1,0);
-          nAddedPoints(iTurb)+=numSweptCount_(i+numSweptOffset_(iTurb))*nBlades;
+          numSweptCount_(iTurb,i) = std::max((int)(2.0*M_PI*radius/dR/nBlades)-1,0);
+          // WARNING:: Not thread safe
+          numSweptOffset_(iTurb,i) = i==0 ? 0 : numSweptCount_(iTurb, i-1)*nBlades+numSweptOffset_(iTurb,i-1);
+          nAddedPoints(iTurb) += numSweptCount_(iTurb, i)*nBlades;
         }
       }
     }
@@ -96,6 +93,8 @@ void ActuatorBulkDiskFAST::compute_swept_point_count(ActuatorMetaFAST& actMeta){
   }
 
   actuator_utils::reduce_view_on_host(nAddedPoints);
+  actuator_utils::reduce_view_on_host(numSweptCount_);
+  actuator_utils::reduce_view_on_host(numSweptOffset_);
 
   for(int i=0; i<nAddedPoints.extent_int(0); ++i){
     actMeta.numPointsTurbine_.h_view(i)+=nAddedPoints(i);
@@ -128,44 +127,49 @@ void ActuatorBulkDiskFAST::initialize_swept_points(const ActuatorMetaFAST& actMe
   searchRadius_.modify_host();
 
   for(int iTurb=0; iTurb<actMeta.numberOfActuators_; iTurb++){
+
     const int nForcePtsBlade = actMeta.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
     const int turbOffset = turbIdOffset_.h_view(iTurb);
-    const int sweptOffset = numSweptOffset_(iTurb);
-    const int nBlades = 3; //TODO(psakiev) catch this error in parsing, disk will only work with 3 blades to define circle
+    const int turbTotal = actMeta.numPointsTurbine_.h_view(iTurb);
+    const int nForcePtsFast =1 + actMeta.get_fast_index(
+      fast::TOWER, iTurb, actMeta.fastInputs_.globTurbineData[iTurb].numForcePtsTwr-1);
+
+    auto sweptOffset  = Kokkos::subview(numSweptOffset_, iTurb, Kokkos::ALL);
+    auto sweptCount   = Kokkos::subview(numSweptCount_,  iTurb, Kokkos::ALL);
+    auto points       = Kokkos::subview(pointCentroid_.view_host(), std::make_pair(turbOffset,turbTotal),Kokkos::ALL);
+    auto epsilon      = Kokkos::subview(epsilon_.view_host(),       std::make_pair(turbOffset,turbTotal),Kokkos::ALL);
+    auto searchRadius = Kokkos::subview(searchRadius_.view_host(),  std::make_pair(turbOffset,turbTotal));
 
     for(int iB = 0; iB<nForcePtsBlade; iB++){
-      for(int bN=0; bN<nBlades; bN++){
+      for(int bN=0; bN<3; bN++){
         const int indexB =
-            actuator_utils::get_fast_point_index(actMeta.fastInputs_, iTurb, nBlades,fast::BLADE, iB, bN);
+            actMeta.get_fast_index(fast::BLADE, iTurb, iB, bN);
 
-        auto pnt = Kokkos::subview(pointCentroid_.view_host(), indexB, Kokkos::ALL);
+        auto pnt = Kokkos::subview(points, indexB, Kokkos::ALL);
         pointLocator.update_point_location(bN,Point{pnt(0), pnt(1), pnt(2)});
       }
 
-      const double dTheta= 2.0*M_PI/(nBlades*(numSweptCount_(iB+sweptOffset)+1));
+      const double dTheta= 2.0*M_PI/(3*(sweptCount(iB)+1));
       double theta = M_PI/3.0;
+      // assume identical blades
+      const int indexB = actMeta.get_fast_index(fast::BLADE, iTurb, iB, 0);
 
-      for(int bN=0; bN<nBlades; bN++){
+      for(int bN = 0; bN<3; bN++){
+        const int localOffset = nForcePtsFast + sweptOffset(iB);
 
-        const int indexB = turbOffset +
-            actuator_utils::get_fast_point_index(actMeta.fastInputs_, iTurb, nBlades,fast::BLADE, iB, bN);
-
-        for(int j=0; j<numSweptCount_(iB+sweptOffset); j++){
-          theta+=dTheta;
-          Point pointCoords = pointLocator(theta);
-
-          //TODO(psakiev) clean up, use subviews etc
-          const int sweepIndex = turbOffset+sweptOffset+bN*nBlades+j;
-          std::cerr << "SWEEP INDEX: " << sweepIndex << " INDEXB: " << indexB <<std::endl;
-          searchRadius_.h_view(sweepIndex) = searchRadius_.h_view(indexB);
-          for(int k=0; k<3; k++){
-            pointCentroid_.h_view(sweepIndex,k)=pointCoords[k];
-            epsilon_.h_view(sweepIndex,k)=epsilon_.h_view(indexB,k);
-            epsilonOpt_.h_view(sweepIndex,k)=epsilonOpt_.h_view(indexB,k);
+        for(int sN = 0; sN<sweptCount(iB); sN++){
+          theta += dTheta;
+          Point coords = pointLocator(theta);
+          const int localIndex = localOffset + sN + sweptCount(iB)*bN;
+          for(int i=0; i<3; i++){
+            points  (localIndex,i) = coords[i];
+            epsilon (localIndex,i) = epsilon(indexB, i);
           }
-          theta+=dTheta;
+          searchRadius(localIndex) = searchRadius(indexB);
         }
+        theta+=dTheta; // skip blade
       }
+
     }
   }
 }

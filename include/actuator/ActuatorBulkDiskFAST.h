@@ -23,8 +23,8 @@ struct ActuatorBulkDiskFAST: public ActuatorBulkFAST
 public:
   ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double naluTimeStep);
 
-  ActFixScalarInt numSweptCount_; //TODO(psakiev) this is confusing maybe wrapper class
-  ActFixScalarInt numSweptOffset_;
+  ActFixArrayInt numSweptCount_; //TODO(psakiev) this is confusing maybe wrapper class
+  ActFixArrayInt numSweptOffset_;
   //TODO(psakiev) average forces and fill in values
   void spread_forces_over_disk();
 
