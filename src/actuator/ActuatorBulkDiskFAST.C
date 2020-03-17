@@ -56,7 +56,7 @@ void ActuatorBulkDiskFAST::compute_swept_point_count(ActuatorMetaFAST& actMeta){
   actMeta.numPointsTurbine_.modify_host();
 
   for(int iTurb=0; iTurb<openFast_.get_nTurbinesGlob(); ++iTurb){
-    numSweptOffset_(iTurb)+=turbIdOffset_.h_view(iTurb)
+    numSweptOffset_(iTurb)+=turbIdOffset_.h_view(iTurb);
     if(NaluEnv::self().parallel_rank()==openFast_.get_procNo(iTurb)){
       const int nBlades = openFast_.get_numBlades(iTurb);
 
