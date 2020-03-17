@@ -22,13 +22,16 @@ struct ActuatorBulkDiskFAST: public ActuatorBulkFAST
 {
 public:
   ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double naluTimeStep);
-  void compute_swept_point_count(ActuatorMetaFAST& actMeta);
-  void resize_arrays(const ActuatorMetaFAST& actMeta);
-  void initialize_swept_points(const ActuatorMetaFAST& actMeta);
 
   ActFixScalarInt numSweptCount_; //TODO(psakiev) this is confusing maybe wrapper class
   ActFixScalarInt numSweptOffset_;
-  //TODO(psakiev) average forces and populate sweep
+  //TODO(psakiev) average forces and fill in values
+  void spread_forces_over_disk();
+
+private:
+  void compute_swept_point_count(ActuatorMetaFAST& actMeta);
+  void resize_arrays(const ActuatorMetaFAST& actMeta);
+  void initialize_swept_points(const ActuatorMetaFAST& actMeta);
 
 };
 
