@@ -39,6 +39,8 @@ namespace actuator_utils {
 
 Point get_fast_point(fast::OpenFAST& fast, int turbId, fast::ActuatorNodeType type, int pointId=0, int bladeId=0);
 
+int get_fast_point_index(const fast::fastInputs& fi, int turbId, int nBlades, fast::ActuatorNodeType type, int pointId=0, int bladeId=0);
+
 #endif
 
 /** Implementation of a periodic Bezier curve (Sanchez-Reyes, 2009) to connect
@@ -75,11 +77,28 @@ inline
 void reduce_view_on_host(T view){
   ThrowAssert(view.size()>0);
   ThrowAssert(view.data());
+  MPI_Datatype mpi_type;
+  if(std::is_same<typename T::value_type,double>::value){
+    mpi_type=MPI_DOUBLE;
+  }
+  else if(std::is_same<typename T::value_type,int>::value){
+    mpi_type=MPI_INT;
+  }
+  else if(std::is_same<typename T::value_type,bool>::value){
+    mpi_type=MPI_C_BOOL;
+  }
+  else if(std::is_same<typename T::value_type,uint64_t>::value){
+    mpi_type=MPI_LONG;
+  }
+  else{
+    ThrowErrorMsg("unsupported type to reduce view on host");
+  }
+
   MPI_Allreduce(
     MPI_IN_PLACE,
     view.data(),
     view.size(),
-    MPI_DOUBLE, // TODO can we get this from the view?
+    mpi_type,
     MPI_SUM,
     NaluEnv::self().parallel_comm());
 }
