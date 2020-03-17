@@ -11,8 +11,11 @@
 #include "ngp_algorithms/MdotEdgeAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
+#include "stk_mesh/base/NgpMesh.hpp"
+#include "stk_mesh/base/NgpField.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -38,7 +41,7 @@ MdotEdgeAlg::MdotEdgeAlg(
 void
 MdotEdgeAlg::execute()
 {
-  using EntityInfoType = nalu_ngp::EntityInfo<ngp::Mesh>;
+  using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
   constexpr int NDimMax = 3;
   const auto& meta = realm_.meta_data();
   const int ndim = meta.spatial_dimension();
@@ -51,7 +54,7 @@ MdotEdgeAlg::execute()
   const DblType interpTogether = realm_.get_mdot_interp();
   const DblType om_interpTogether = (1.0 - interpTogether);
 
-  // STK ngp::Field instances for capture by lambda
+  // STK stk::mesh::NgpField instances for capture by lambda
   const auto ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);

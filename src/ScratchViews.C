@@ -10,6 +10,8 @@
 
 #include <ScratchViews.h>
 #include <ngp_utils/NgpMEUtils.h>
+#include <stk_mesh/base/NgpMesh.hpp>
+#include <stk_mesh/base/Types.hpp>
 
 #include <NaluEnv.h>
 
@@ -19,8 +21,8 @@ namespace nalu {
 template<typename ViewType>
 KOKKOS_INLINE_FUNCTION
 void gather_elem_node_field(const NGPDoubleFieldType& field,
-                            const ngp::Mesh& ngpMesh,
-                            const ngp::Mesh::ConnectedNodes& elemNodes,
+                            const stk::mesh::NgpMesh& ngpMesh,
+                            const stk::mesh::NgpMesh::ConnectedNodes& elemNodes,
                             ViewType& shmemView)
 {
   for(unsigned i=0; i<elemNodes.size(); ++i) {
@@ -31,11 +33,11 @@ void gather_elem_node_field(const NGPDoubleFieldType& field,
 template<typename ViewType>
 KOKKOS_INLINE_FUNCTION
 void gather_elem_node_tensor_field(const NGPDoubleFieldType& field,
-                            const ngp::Mesh& ngpMesh,
+                            const stk::mesh::NgpMesh& ngpMesh,
                             int numNodes,
                             int tensorDim1,
                             int tensorDim2,
-                            const ngp::Mesh::ConnectedNodes& elemNodes,
+                            const stk::mesh::NgpMesh::ConnectedNodes& elemNodes,
                             ViewType& shmemView)
 {
   NGP_ThrowRequireMsg(
@@ -82,8 +84,8 @@ void gather_elem_vector_field(const NGPDoubleFieldType& field,
 template<typename ViewType>
 KOKKOS_INLINE_FUNCTION
 void gather_elem_node_field_3D(const NGPDoubleFieldType& field,
-                               const ngp::Mesh& ngpMesh,
-                               const ngp::Mesh::ConnectedNodes& elemNodes,
+                               const stk::mesh::NgpMesh& ngpMesh,
+                               const stk::mesh::NgpMesh::ConnectedNodes& elemNodes,
                                ViewType& shmemView)
 {
   for(unsigned i=0; i<elemNodes.size(); ++i) {
@@ -96,9 +98,9 @@ void gather_elem_node_field_3D(const NGPDoubleFieldType& field,
 template<typename ViewType>
 KOKKOS_INLINE_FUNCTION
 void gather_elem_node_field(const NGPDoubleFieldType& field,
-                            const ngp::Mesh& ngpMesh,
+                            const stk::mesh::NgpMesh& ngpMesh,
                             int scalarsPerNode,
-                            const ngp::Mesh::ConnectedNodes& elemNodes,
+                            const stk::mesh::NgpMesh::ConnectedNodes& elemNodes,
                             ViewType& shmemView)
 {
   for(unsigned i=0; i<elemNodes.size(); ++i) {
@@ -111,7 +113,7 @@ void gather_elem_node_field(const NGPDoubleFieldType& field,
 inline
 void gather_elem_node_field(const stk::mesh::FieldBase& field,
                             int numNodes,
-                            const ngp::Mesh::ConnectedNodes& elemNodes,
+                            const stk::mesh::NgpMesh::ConnectedNodes& elemNodes,
                             SharedMemView<double*>& shmemView)
 {
   for(int i=0; i<numNodes; ++i) {
@@ -124,7 +126,7 @@ void gather_elem_node_tensor_field(const stk::mesh::FieldBase& field,
                             int numNodes,
                             int tensorDim1,
                             int tensorDim2,
-                            const ngp::Mesh::ConnectedNodes& elemNodes,
+                            const stk::mesh::NgpMesh::ConnectedNodes& elemNodes,
                             SharedMemView<double***>& shmemView)
 {
   for(int i=0; i<numNodes; ++i) {
@@ -157,7 +159,7 @@ void gather_elem_tensor_field(const stk::mesh::FieldBase& field,
 inline
 void gather_elem_node_field_3D(const stk::mesh::FieldBase& field,
                                int numNodes,
-                               const ngp::Mesh::ConnectedNodes& elemNodes,
+                               const stk::mesh::NgpMesh::ConnectedNodes& elemNodes,
                                SharedMemView<double**>& shmemView)
 {
   for(int i=0; i<numNodes; ++i) {
@@ -172,7 +174,7 @@ inline
 void gather_elem_node_field(const stk::mesh::FieldBase& field,
                             int numNodes,
                             int scalarsPerNode,
-                            const ngp::Mesh::ConnectedNodes& elemNodes,
+                            const stk::mesh::NgpMesh::ConnectedNodes& elemNodes,
                             SharedMemView<double**>& shmemView)
 {
   for(int i=0; i<numNodes; ++i) {
@@ -356,7 +358,7 @@ template<typename T>
 KOKKOS_FUNCTION
 void fill_pre_req_data(
   const ElemDataRequestsGPU& dataNeeded,
-  const ngp::Mesh& ngpMesh,
+  const stk::mesh::NgpMesh& ngpMesh,
   stk::mesh::EntityRank entityRank,
   stk::mesh::Entity entity,
   ScratchViews<T,DeviceTeamHandleType,DeviceShmem>& prereqData)
@@ -413,7 +415,7 @@ void fill_pre_req_data(
 template
 void fill_pre_req_data(
   const ElemDataRequestsGPU& dataNeeded,
-  const ngp::Mesh& ngpMesh,
+  const stk::mesh::NgpMesh& ngpMesh,
   stk::mesh::EntityRank entityRank,
   stk::mesh::Entity entity,
   ScratchViews<double, DeviceTeamHandleType,DeviceShmem>& prereqData);
@@ -421,7 +423,7 @@ void fill_pre_req_data(
 template
 void fill_pre_req_data(
   const ElemDataRequestsGPU& dataNeeded,
-  const ngp::Mesh& ngpMesh,
+  const stk::mesh::NgpMesh& ngpMesh,
   stk::mesh::EntityRank entityRank,
   stk::mesh::Entity entity,
   ScratchViews<DoubleType, DeviceTeamHandleType,DeviceShmem>& prereqData);

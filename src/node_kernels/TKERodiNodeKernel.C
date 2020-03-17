@@ -18,6 +18,7 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include "utils/StkHelpers.h"
 #include <stk_mesh/base/Field.hpp>
+#include <stk_mesh/base/Types.hpp>
 
 namespace sierra{
 namespace nalu{

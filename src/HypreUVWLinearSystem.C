@@ -18,6 +18,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
+#include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_util/parallel/ParallelReduce.hpp"
 
 #include "HYPRE_IJ_mv.h"
@@ -146,7 +147,7 @@ HypreUVWLinearSystem::zeroSystem()
 void
 HypreUVWLinearSystem::sumInto(
   unsigned numEntities,
-  const ngp::Mesh::ConnectedNodes& entities,
+  const stk::mesh::NgpMesh::ConnectedNodes& entities,
   const SharedMemView<const double*, DeviceShmem>& rhs,
   const SharedMemView<const double**, DeviceShmem>& lhs,
   const SharedMemView<int*, DeviceShmem>&,

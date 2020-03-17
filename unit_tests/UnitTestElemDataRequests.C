@@ -19,7 +19,7 @@ void do_the_test_gpu(const sierra::nalu::ElemDataRequests& dataReq,
                      stk::mesh::BulkData& bulk)
 {
   unsigned totalNumFields_guess = 10;
-  ngp::FieldManager fieldMgr(bulk);
+  sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
   sierra::nalu::ElemDataRequestsGPU ngpDataReq(fieldMgr, dataReq, totalNumFields_guess);
 
   unsigned numCorrectTests = 0;

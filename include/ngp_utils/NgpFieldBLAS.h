@@ -14,6 +14,7 @@
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -21,7 +22,7 @@ namespace nalu_ngp {
 
 /** Operation: `y = alpha * x + beta * y`
  *
- *  @param ngpMesh Instance of ngp::Mesh
+ *  @param ngpMesh Instance of stk::mesh::NgpMesh
  *  @param sel Selector where the operation is applied
  */
 template<

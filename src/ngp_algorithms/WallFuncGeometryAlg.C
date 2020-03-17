@@ -14,8 +14,10 @@
 #include "master_element/MasterElementFactory.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -57,7 +59,7 @@ WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
 template<typename BcAlgTraits>
 void WallFuncGeometryAlg<BcAlgTraits>::execute()
 {
-  using SimdDataType = nalu_ngp::FaceElemSimdData<ngp::Mesh>;
+  using SimdDataType = nalu_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = realm_.meta_data();
 

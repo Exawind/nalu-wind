@@ -10,6 +10,10 @@
 
 #include "ngp_algorithms/UnitTestNgpAlgUtils.h"
 #include "ngp_utils/NgpLoopUtils.h"
+#include "stk_mesh/base/NgpMesh.hpp"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/FieldBase.hpp"
+#include "stk_mesh/base/Field.hpp"
 
 namespace unit_test_alg_utils
 {
@@ -23,25 +27,19 @@ linear_scalar_field(
   const double yCoeff,
   const double zCoeff)
 {
-  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
-  ngp::Mesh ngpMesh(bulk);
-  ngp::Field<double> coords(bulk, coordinates);
-  ngp::Field<double> ngpField(bulk, field);
-
   const stk::mesh::Selector sel = bulk.mesh_meta_data().universal_part();
 
-  sierra::nalu::nalu_ngp::run_entity_algorithm(
-    "unittest_linear_scalar_field",
-    ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const typename Traits::MeshIndex& meshIdx) {
-      ngpField.get(meshIdx, 0) =
-        coords.get(meshIdx, 0) * xCoeff +
-        coords.get(meshIdx, 1) * yCoeff +
-        coords.get(meshIdx, 2) * zCoeff;
-    });
+  stk::mesh::EntityVector nodes;
+  bulk.get_entities(stk::topology::NODE_RANK, sel, nodes);
+  for (stk::mesh::Entity & node : nodes) {
+    double * fieldData  = stk::mesh::field_data(field, node);
+    double * coordsData = stk::mesh::field_data(coordinates, node);
+    fieldData[0] = coordsData[0] * xCoeff +
+                   coordsData[1] * yCoeff +
+                   coordsData[2] * zCoeff;
+  }
 
-  ngpField.modify_on_device();
-  ngpField.sync_to_host();
+  field.modify_on_host();
 }
 
 void
@@ -53,24 +51,19 @@ linear_scalar_field(
   const double yCoeff,
   const double zCoeff)
 {
-  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
-  ngp::Mesh ngpMesh(bulk);
-  ngp::Field<double> coords(bulk, coordinates);
-  ngp::Field<double> ngpField(bulk, field);
-
   const stk::mesh::Selector sel = bulk.mesh_meta_data().universal_part();
 
-  sierra::nalu::nalu_ngp::run_entity_algorithm(
-    "unittest_linear_vector_field",
-    ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const typename Traits::MeshIndex& meshIdx) {
-      ngpField.get(meshIdx, 0) = coords.get(meshIdx, 0) * xCoeff;
-      ngpField.get(meshIdx, 1) = coords.get(meshIdx, 1) * yCoeff;
-      ngpField.get(meshIdx, 2) = coords.get(meshIdx, 2) * zCoeff;
-    });
+  stk::mesh::EntityVector nodes;
+  bulk.get_entities(stk::topology::NODE_RANK, sel, nodes);
+  for (stk::mesh::Entity & node : nodes) {
+    double * fieldData  = stk::mesh::field_data(field, node);
+    double * coordsData = stk::mesh::field_data(coordinates, node);
+    fieldData[0] = coordsData[0] * xCoeff;
+    fieldData[1] = coordsData[1] * yCoeff;
+    fieldData[2] = coordsData[2] * zCoeff;
+  }
 
-  ngpField.modify_on_device();
-  ngpField.sync_to_host();
+  field.modify_on_host();
 }
 
 } // namespace

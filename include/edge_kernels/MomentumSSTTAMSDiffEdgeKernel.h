@@ -14,7 +14,9 @@
 #include "edge_kernels/EdgeKernel.h"
 
 #include "stk_mesh/base/BulkData.hpp"
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -44,19 +46,19 @@ public:
     const stk::mesh::FastMeshIndex&) override;
 
 private:
-  ngp::Field<double> edgeAreaVec_;
+  stk::mesh::NgpField<double> edgeAreaVec_;
 
-  ngp::Field<double> coordinates_;
-  ngp::Field<double> velocity_;
-  ngp::Field<double> tvisc_;
-  ngp::Field<double> density_;
-  ngp::Field<double> tke_;
-  ngp::Field<double> sdr_;
-  ngp::Field<double> alpha_;
-  ngp::Field<double> nodalMij_;
-  ngp::Field<double> dudx_;
-  ngp::Field<double> avgVelocity_;
-  ngp::Field<double> avgDudx_;
+  stk::mesh::NgpField<double> coordinates_;
+  stk::mesh::NgpField<double> velocity_;
+  stk::mesh::NgpField<double> tvisc_;
+  stk::mesh::NgpField<double> density_;
+  stk::mesh::NgpField<double> tke_;
+  stk::mesh::NgpField<double> sdr_;
+  stk::mesh::NgpField<double> alpha_;
+  stk::mesh::NgpField<double> nodalMij_;
+  stk::mesh::NgpField<double> dudx_;
+  stk::mesh::NgpField<double> avgVelocity_;
+  stk::mesh::NgpField<double> avgDudx_;
 
   unsigned edgeAreaVecID_{stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_{stk::mesh::InvalidOrdinal};

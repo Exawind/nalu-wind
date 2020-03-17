@@ -14,6 +14,7 @@
 #include "EigenDecomposition.h"
 
 #include "stk_mesh/base/MetaData.hpp"
+#include "stk_mesh/base/Types.hpp"
 #include "utils/StkHelpers.h"
 #include "utils/TAMSUtils.h"
 #include <SimdInterface.h>

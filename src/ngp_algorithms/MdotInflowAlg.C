@@ -18,6 +18,7 @@
 #include "ScratchViews.h"
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -59,7 +60,7 @@ MdotInflowAlg<BcAlgTraits>::MdotInflowAlg(
 template<typename BcAlgTraits>
 void MdotInflowAlg<BcAlgTraits>::execute()
 {
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();

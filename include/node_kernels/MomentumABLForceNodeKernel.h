@@ -15,7 +15,9 @@
 #include "wind_energy/ABLSrcInterp.h"
 
 #include "stk_mesh/base/BulkData.hpp"
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -44,8 +46,8 @@ public:
     const stk::mesh::FastMeshIndex&) override;
 
 private:
-  ngp::Field<double> coordinates_;
-  ngp::Field<double> dualNodalVolume_;
+  stk::mesh::NgpField<double> coordinates_;
+  stk::mesh::NgpField<double> dualNodalVolume_;
 
   ABLVectorInterpolator ablSrc_;
 

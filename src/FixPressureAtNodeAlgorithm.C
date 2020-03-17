@@ -20,6 +20,7 @@
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Part.hpp>
+#include "stk_mesh/base/NgpMesh.hpp"
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 #include <limits>
@@ -71,7 +72,7 @@ FixPressureAtNodeAlgorithm::execute()
   // Reset LHS and RHS for this matrix
   CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
  
-  ngp::Mesh ngpMesh = realm_.ngp_mesh();
+  stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
   NGPDoubleFieldType ngpPressure = realm_.ngp_field_manager().get_field<double>(pressure_->mesh_meta_data_ordinal());
   double refPressure = info_.refPressure_;
   const bool fixPressureNode = fixPressureNode_;
@@ -95,7 +96,7 @@ FixPressureAtNodeAlgorithm::execute()
 
     Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [=](const size_t& )
     {
-      ngp::Mesh::ConnectedNodes refNodeList(&targetNode, 1);
+      stk::mesh::NgpMesh::ConnectedNodes refNodeList(&targetNode, 1);
       deviceCoeffApplier->resetRows(1, &targetNode, 0, 1);
   
       // Fix the pressure for this node only if this is proc is owner
@@ -209,7 +210,7 @@ FixPressureAtNodeAlgorithm::process_pressure_fix_node(
   if (bulk.is_valid(targetNode_) &&
       (bulk.bucket(targetNode_).owned() ||
        bulk.bucket(targetNode_).shared())) {
-    refNodeList_ = ngp::Mesh::ConnectedNodes(&targetNode_, 1);
+    refNodeList_ = stk::mesh::NgpMesh::ConnectedNodes(&targetNode_, 1);
 
     // Only apply pressure correction on the owning processor
     fixPressureNode_ = bulk.bucket(targetNode_).owned();

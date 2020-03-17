@@ -15,6 +15,7 @@
 #include "SimdInterface.h"
 
 #include "stk_mesh/base/MetaData.hpp"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {

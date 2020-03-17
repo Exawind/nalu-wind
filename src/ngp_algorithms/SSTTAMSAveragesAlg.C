@@ -11,10 +11,12 @@
 #include "ngp_algorithms/SSTTAMSAveragesAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
 
 #include "stk_mesh/base/MetaData.hpp"
+#include "stk_mesh/base/NgpMesh.hpp"
 #include "EigenDecomposition.h"
 #include "utils/TAMSUtils.h"
 
@@ -51,7 +53,7 @@ SSTTAMSAveragesAlg::SSTTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
 void
 SSTTAMSAveragesAlg::execute()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   const auto& meta = realm_.meta_data();
   const DblType dt = realm_.get_time_step();

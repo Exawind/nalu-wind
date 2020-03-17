@@ -15,10 +15,12 @@
 #include "ngp_algorithms/ViewHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "ScratchViews.h"
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 
 namespace sierra {
@@ -43,7 +45,7 @@ GeometryBoundaryAlg<AlgTraits>::GeometryBoundaryAlg(
 template<typename AlgTraits>
 void GeometryBoundaryAlg<AlgTraits>::execute()
 {
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();

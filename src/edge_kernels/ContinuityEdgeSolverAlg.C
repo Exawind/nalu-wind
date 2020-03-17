@@ -10,6 +10,8 @@
 
 #include "edge_kernels/ContinuityEdgeSolverAlg.h"
 #include "utils/StkHelpers.h"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -51,7 +53,7 @@ ContinuityEdgeSolverAlg::execute()
   const DblType interpTogether = realm_.get_mdot_interp();
   const DblType om_interpTogether = (1.0 - interpTogether);
 
-  // STK ngp::Field instances for capture by lambda
+  // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
   const auto velocity = fieldMgr.get_field<double>(velocityRTM_);

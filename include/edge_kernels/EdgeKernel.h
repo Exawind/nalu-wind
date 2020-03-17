@@ -22,8 +22,9 @@
 #include "ScratchViews.h"
 #include "SharedMemData.h"
 
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/Entity.hpp"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {

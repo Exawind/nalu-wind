@@ -15,7 +15,8 @@
 #include <LinearSolverTypes.h>
 #include <KokkosInterface.h>
 
-#include <stk_ngp/Ngp.hpp>
+#include <stk_mesh/base/Ngp.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
 
 #include <vector>
 #include <string>
@@ -56,7 +57,7 @@ public:
 
   KOKKOS_FUNCTION
   virtual void operator()(unsigned numEntities,
-                          const ngp::Mesh::ConnectedNodes& entities,
+                          const stk::mesh::NgpMesh::ConnectedNodes& entities,
                           const SharedMemView<int*,DeviceShmem> & localIds,
                           const SharedMemView<int*,DeviceShmem> & sortPermutation,
                           const SharedMemView<const double*,DeviceShmem> & rhs,
@@ -108,7 +109,7 @@ public:
    *  sierra::nalu::FixPressureAtNodeAlgorithm for an example of this use case.
    */
   virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&) {}
-  virtual void buildDirichletNodeGraph(const ngp::Mesh::ConnectedNodes) {}
+  virtual void buildDirichletNodeGraph(const stk::mesh::NgpMesh::ConnectedNodes) {}
 
   // Matrix Assembly
   virtual void zeroSystem()=0;
@@ -138,7 +139,7 @@ public:
 
     KOKKOS_FUNCTION
     virtual void operator()(unsigned numEntities,
-                            const ngp::Mesh::ConnectedNodes& entities,
+                            const stk::mesh::NgpMesh::ConnectedNodes& entities,
                             const SharedMemView<int*,DeviceShmem> & localIds,
                             const SharedMemView<int*,DeviceShmem> & sortPermutation,
                             const SharedMemView<const double*,DeviceShmem> & rhs,
@@ -168,7 +169,7 @@ public:
 
   virtual void sumInto(
     unsigned numEntities,
-    const ngp::Mesh::ConnectedNodes& entities,
+    const stk::mesh::NgpMesh::ConnectedNodes& entities,
     const SharedMemView<const double*,DeviceShmem> & rhs,
     const SharedMemView<const double**,DeviceShmem> & lhs,
     const SharedMemView<int*,DeviceShmem> & localIds,

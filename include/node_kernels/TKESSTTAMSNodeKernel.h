@@ -14,7 +14,9 @@
 #include "node_kernels/NodeKernel.h"
 
 #include "stk_mesh/base/BulkData.hpp"
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -41,15 +43,15 @@ public:
     const stk::mesh::FastMeshIndex&) override;
 
 private:
-  ngp::Field<double> dualNodalVolume_;
+  stk::mesh::NgpField<double> dualNodalVolume_;
 
-  ngp::Field<double> coordinates_;
-  ngp::Field<double> viscosity_;
-  ngp::Field<double> tvisc_;
-  ngp::Field<double> rho_;
-  ngp::Field<double> tke_;
-  ngp::Field<double> sdr_;
-  ngp::Field<double> prod_;
+  stk::mesh::NgpField<double> coordinates_;
+  stk::mesh::NgpField<double> viscosity_;
+  stk::mesh::NgpField<double> tvisc_;
+  stk::mesh::NgpField<double> rho_;
+  stk::mesh::NgpField<double> tke_;
+  stk::mesh::NgpField<double> sdr_;
+  stk::mesh::NgpField<double> prod_;
 
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_{stk::mesh::InvalidOrdinal};

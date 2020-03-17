@@ -19,6 +19,8 @@
 #include <SimdInterface.h>
 #include <SharedMemData.h>
 #include <CopyAndInterleave.h>
+#include <stk_mesh/base/NgpMesh.hpp>
+#include <ngp_utils/NgpFieldManager.h>
 #include <ngp_utils/NgpMEUtils.h>
 
 namespace stk {
@@ -56,8 +58,8 @@ public:
       int rhsSize = nodesPerElem_ * numDof_, lhsSize = rhsSize * rhsSize,
           scratchIdsSize = rhsSize;
 
-      const ngp::Mesh& ngpMesh = realm_.ngp_mesh();
-      const ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+      const stk::mesh::NgpMesh& ngpMesh = realm_.ngp_mesh();
+      const nalu_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
       ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataNeeded_, totalNumFields);
       ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataNeeded_, totalNumFields);
 
@@ -71,7 +73,7 @@ public:
         bulk.mesh_meta_data().locally_owned_part() &
         stk::mesh::selectUnion(partVec_);
       stk::mesh::EntityRank sideRank = bulk.mesh_meta_data().side_rank();
-      const auto& buckets = ngp::get_bucket_ids(bulk, sideRank, s_locally_owned_union);
+      const auto& buckets = stk::mesh::get_bucket_ids(bulk, sideRank, s_locally_owned_union);
 
       auto team_exec = sierra::nalu::get_device_team_policy(
         buckets.size(), bytes_per_team, bytes_per_thread);

@@ -12,6 +12,7 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
 #include "ngp_utils/NgpReducers.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
 
@@ -19,7 +20,8 @@
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_ngp/NgpFieldParallel.hpp"
+#include "stk_mesh/base/NgpFieldParallel.hpp"
+#include <stk_mesh/base/NgpMesh.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -120,7 +122,7 @@ void GeometryAlgDriver::pre_work()
 
 void GeometryAlgDriver::post_work()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
+  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
@@ -149,7 +151,7 @@ void GeometryAlgDriver::post_work()
   }
 
   bool doFinalSyncToDevice = false;
-  ngp::parallel_sum(realm_.bulk_data(), fields, doFinalSyncToDevice);
+  stk::mesh::parallel_sum(realm_.bulk_data(), fields, doFinalSyncToDevice);
 
   if (realm_.hasPeriodic_) {
     const auto& meta = realm_.meta_data();

@@ -14,7 +14,7 @@ namespace sierra {
 namespace nalu {
 
 ElemDataRequestsGPU::ElemDataRequestsGPU(
-  const ngp::FieldManager& fieldMgr,
+  const nalu_ngp::FieldManager& fieldMgr,
   const ElemDataRequests& dataReq, unsigned totalFields)
   : dataEnums(),
     hostDataEnums(),
@@ -67,7 +67,7 @@ ElemDataRequestsGPU::fill_host_data_enums(
 }
 
 void ElemDataRequestsGPU::fill_host_fields(
-  const ElemDataRequests& dataReq, const ngp::FieldManager& fieldMgr)
+  const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr)
 {
   fields = FieldInfoView("Fields", dataReq.get_fields().size());
   hostFields = Kokkos::create_mirror_view(fields);
@@ -80,7 +80,7 @@ void ElemDataRequestsGPU::fill_host_fields(
 }
 
 void ElemDataRequestsGPU::fill_host_coords_fields(
-  const ElemDataRequests& dataReq, const ngp::FieldManager& fieldMgr)
+  const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr)
 {
   coordsFields_ = FieldView("CoordsFields", dataReq.get_coordinates_map().size());
   coordsFieldsTypes_ = CoordsTypesView("CoordsFieldsTypes", dataReq.get_coordinates_map().size());

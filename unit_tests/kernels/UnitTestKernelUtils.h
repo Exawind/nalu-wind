@@ -547,12 +547,32 @@ public:
     const double bcVel[3] = {0.0, 0.0, 0.0};
     MomentumKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
     stk::mesh::field_fill_component(vel, *velocity_);
+    velocity_->modify_on_host();
+    velocity_->sync_to_device();
+
     stk::mesh::field_fill_component(bcVel, *wallVelocityBC_);
+    wallVelocityBC_->modify_on_host();
+    wallVelocityBC_->sync_to_device();
+
     stk::mesh::field_fill(0.0, *bcHeatFlux_);
+    bcHeatFlux_->modify_on_host();
+    bcHeatFlux_->sync_to_device();
+
     stk::mesh::field_fill(1000.0, *specificHeat_);
+    specificHeat_->modify_on_host();
+    specificHeat_->sync_to_device();
+
     stk::mesh::field_fill(ustar_, *wallFricVel_);
+    wallFricVel_->modify_on_host();
+    wallFricVel_->sync_to_device();
+
     stk::mesh::field_fill(zh_, *wallNormDist_);
+    wallNormDist_->modify_on_host();
+    wallNormDist_->sync_to_device();
+
     stk::mesh::field_fill(-0.003, *tGradBC_);
+    tGradBC_->modify_on_host();
+    tGradBC_->sync_to_device();
   }
 
   VectorFieldType* wallVelocityBC_{nullptr};

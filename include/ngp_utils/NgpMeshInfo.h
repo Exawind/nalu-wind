@@ -15,8 +15,9 @@
  *  \brief NGP mesh information objects
  */
 
-#include "stk_ngp/Ngp.hpp"
-#include "stk_ngp/NgpFieldManager.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpMesh.hpp"
+#include "ngp_utils/NgpFieldManager.h"
 
 namespace sierra {
 namespace nalu {
@@ -25,10 +26,10 @@ namespace nalu_ngp {
 /** STK mesh object holder
  *
  *  This lightweight class carries information regarding the STK meshes both the
- *  non-NGP versions (MetaData/BulkData) as well as the `ngp::Mesh` and
- *  `ngp::FieldManager` instances.
+ *  non-NGP versions (MetaData/BulkData) as well as the `stk::mesh::NgpMesh` and
+ *  `nalu_ngp::FieldManager` instances.
  */
-template <typename Mesh = ngp::Mesh, typename FieldManager = ngp::FieldManager>
+template <typename Mesh = stk::mesh::NgpMesh, typename FieldManager = nalu_ngp::FieldManager>
 class MeshInfo
 {
 public:

@@ -15,6 +15,7 @@
 #include "Realm.h"
 
 #include "node_kernels/NodeKernel.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -45,7 +46,7 @@ struct SharedMemData_Node {
   }
 
   stk::mesh::Entity nodeID[1];
-  ngp::Mesh::ConnectedNodes ngpNodes;
+  stk::mesh::NgpMesh::ConnectedNodes ngpNodes;
   SharedMemView<double*,SHMEM> rhs;
   SharedMemView<double**,SHMEM> lhs;
 
@@ -103,7 +104,7 @@ AssembleNGPNodeSolverAlgorithm::execute()
     & stk::mesh::selectUnion(partVec_)
     & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
     & !(realm_.get_inactive_selector());
-  const auto& buckets = ngp::get_bucket_ids(realm_.bulk_data(), entityRank, sel);
+  const auto& buckets = stk::mesh::get_bucket_ids(realm_.bulk_data(), entityRank, sel);
 
   auto team_exec = get_device_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
 

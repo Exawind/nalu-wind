@@ -17,7 +17,7 @@
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"
-#include "stk_ngp/NgpFieldParallel.hpp"
+#include "stk_mesh/base/NgpFieldParallel.hpp"
 
 namespace sierra {
 namespace nalu {

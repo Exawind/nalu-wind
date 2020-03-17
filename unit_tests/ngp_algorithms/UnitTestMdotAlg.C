@@ -37,10 +37,24 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_calc_edge)
   helperObjs.realm.interiorPartVec_.push_back(partVec_[0]);
 
   stk::mesh::field_fill(1.0, *density_);
+  density_->modify_on_host();
+  density_->sync_to_device();
+
   stk::mesh::field_fill(10.0, *velocity_);
+  velocity_->modify_on_host();
+  velocity_->sync_to_device();
+
   stk::mesh::field_fill(0.0, *pressure_);
+  pressure_->modify_on_host();
+  pressure_->sync_to_device();
+
   stk::mesh::field_fill(0.0, *dpdx_);
+  dpdx_->modify_on_host();
+  dpdx_->sync_to_device();
+
   stk::mesh::field_fill(0.0, *massFlowRateEdge_);
+  massFlowRateEdge_->modify_on_host();
+  massFlowRateEdge_->sync_to_device();
 
   sierra::nalu::MdotEdgeAlg mdotAlg(helperObjs.realm, partVec_[0]);
   mdotAlg.execute();
@@ -81,7 +95,12 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_rho_accum)
   timeIntegrator.gamma3_ = 0.0;
 
   stk::mesh::field_fill(2.0, *density_);
+  density_->modify_on_host();
+  density_->sync_to_device();
+
   stk::mesh::field_fill(1.0, density_->field_of_state(stk::mesh::StateN));
+  density_->field_of_state(stk::mesh::StateN).modify_on_host();
+  density_->field_of_state(stk::mesh::StateN).sync_to_device();
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
@@ -154,7 +173,12 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_inflow)
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   stk::mesh::field_fill(1.0, *density_);
+  density_->modify_on_host();
+  density_->sync_to_device();
+
   stk::mesh::field_fill(1.0, *velocity_);
+  velocity_->modify_on_host();
+  velocity_->sync_to_device();
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
@@ -181,9 +205,21 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_mdot_open_edge)
   fill_mesh_and_init_fields(doPerturb, generateSidesets);
 
   stk::mesh::field_fill(1.0, *density_);
+  density_->modify_on_host();
+  density_->sync_to_device();
+
   stk::mesh::field_fill(1.0, *velocity_);
+  velocity_->modify_on_host();
+  velocity_->sync_to_device();
+
   stk::mesh::field_fill(0.0, *pressure_);
+  pressure_->modify_on_host();
+  pressure_->sync_to_device();
+
   stk::mesh::field_fill(0.0, *dpdx_);
+  dpdx_->modify_on_host();
+  dpdx_->sync_to_device();
+
 
   unit_test_utils::HelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);

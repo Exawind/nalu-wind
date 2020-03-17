@@ -15,7 +15,9 @@
 #include "CoriolisSrc.h"
 
 #include "stk_mesh/base/BulkData.hpp"
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -46,9 +48,9 @@ public:
 private:
   const CoriolisSrc cor_;
 
-  ngp::Field<double> dualNodalVolume_;
-  ngp::Field<double> densityNp1_;
-  ngp::Field<double> velocityNp1_;
+  stk::mesh::NgpField<double> dualNodalVolume_;
+  stk::mesh::NgpField<double> densityNp1_;
+  stk::mesh::NgpField<double> velocityNp1_;
 
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
   unsigned densityNp1ID_ {stk::mesh::InvalidOrdinal};

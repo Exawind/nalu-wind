@@ -16,8 +16,8 @@
 #include <Kokkos_Core.hpp>
 #include <ElemDataRequests.h>
 #include <FieldTypeDef.h>
-#include <stk_ngp/Ngp.hpp>
-#include <stk_ngp/NgpFieldManager.hpp>
+#include <stk_mesh/base/Ngp.hpp>
+#include <ngp_utils/NgpFieldManager.h>
 
 namespace sierra{
 namespace nalu{
@@ -100,7 +100,7 @@ public:
   typedef Kokkos::View<FieldInfoType*, Kokkos::LayoutRight, MemSpace> FieldInfoView;
 
   ElemDataRequestsGPU(
-    const ngp::FieldManager& fieldMgr,
+    const nalu_ngp::FieldManager& fieldMgr,
     const ElemDataRequests& dataReq, unsigned totalFields);
 
   ~ElemDataRequestsGPU() {}
@@ -166,10 +166,10 @@ private:
   void fill_host_data_enums(const ElemDataRequests& dataReq, COORDS_TYPES ctype);
 
   void fill_host_fields(
-    const ElemDataRequests& dataReq, const ngp::FieldManager& fieldMgr);
+    const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr);
 
   void fill_host_coords_fields(
-    const ElemDataRequests& dataReq, const ngp::FieldManager& fieldMgr);
+    const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr);
 
   DataEnumView dataEnums[MAX_COORDS_TYPES];
   DataEnumView::HostMirror hostDataEnums[MAX_COORDS_TYPES];

@@ -79,6 +79,7 @@
 #include <ngp_utils/NgpLoopUtils.h>
 #include <ngp_utils/NgpTypes.h>
 #include <ngp_utils/NgpFieldBLAS.h>
+#include <ngp_utils/NgpFieldManager.h>
 #include <ngp_algorithms/NodalGradEdgeAlg.h>
 #include <ngp_algorithms/NodalGradElemAlg.h>
 #include <ngp_algorithms/NodalGradBndryElemAlg.h>
@@ -108,6 +109,7 @@
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/MetaData.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
 
 // stk_io
 #include <stk_io/IossBridge.hpp>
@@ -920,7 +922,7 @@ TurbKineticEnergyEquationSystem::solve_and_update()
 void
 TurbKineticEnergyEquationSystem::initial_work()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using MeshIndex = typename Traits::MeshIndex;
 
   // do not let the user specify a negative field

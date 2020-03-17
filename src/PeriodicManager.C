@@ -15,15 +15,19 @@
 #include <Realm.h>
 #include <utils/StkHelpers.h>
 #include <KokkosInterface.h>
+#include <ngp_utils/NgpFieldManager.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
-#include <stk_ngp/NgpFieldParallel.hpp>
+#include <stk_mesh/base/NgpFieldParallel.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Part.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
+#include <stk_mesh/base/NgpField.hpp>
+#include <stk_mesh/base/Types.hpp>
 
 // stk_util
 #include <stk_util/parallel/ParallelReduce.hpp>
@@ -722,29 +726,29 @@ PeriodicManager::ngp_periodic_parallel_communicate_field(
   stk::mesh::FieldBase *theField)
 {
   if ( NULL != periodicGhosting_ ) {
-    const ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+    const nalu_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
     unsigned fieldOrd = theField->mesh_meta_data_ordinal();
 
     if (theField->type_is<double>()) {
       std::vector<NGPDoubleFieldType *> fieldVec(1, &fieldMgr.get_field<double>(fieldOrd));
-      ngp::communicate_field_data(*periodicGhosting_, fieldVec);
+      stk::mesh::communicate_field_data(*periodicGhosting_, fieldVec);
     }
     else if (theField->type_is<stk::mesh::EntityId>()) {
       std::vector<NGPGlobalIdFieldType *> fieldVec(1, &fieldMgr.get_field<stk::mesh::EntityId>(fieldOrd));
-      ngp::communicate_field_data(*periodicGhosting_, fieldVec);
+      stk::mesh::communicate_field_data(*periodicGhosting_, fieldVec);
     }
     else if (theField->type_is<int>()) {
       std::vector<NGPScalarIntFieldType *> fieldVec(1, &fieldMgr.get_field<int>(fieldOrd));
-      ngp::communicate_field_data(*periodicGhosting_, fieldVec);
+      stk::mesh::communicate_field_data(*periodicGhosting_, fieldVec);
     }
     else if (theField->type_is<LinSys::GlobalOrdinal>()) {
-      std::vector<ngp::Field<LinSys::GlobalOrdinal>*> fieldVec(1, &fieldMgr.get_field<LinSys::GlobalOrdinal>(fieldOrd));
-      ngp::communicate_field_data(*periodicGhosting_, fieldVec);
+      std::vector<stk::mesh::NgpField<LinSys::GlobalOrdinal>*> fieldVec(1, &fieldMgr.get_field<LinSys::GlobalOrdinal>(fieldOrd));
+      stk::mesh::communicate_field_data(*periodicGhosting_, fieldVec);
     }
 #ifdef NALU_USES_HYPRE
     else if (theField->type_is<HypreIntType>()) {
-      std::vector<ngp::Field<HypreIntType>*> fieldVec(1, &fieldMgr.get_field<HypreIntType>(fieldOrd));
-      ngp::communicate_field_data(*periodicGhosting_, fieldVec);
+      std::vector<stk::mesh::NgpField<HypreIntType>*> fieldVec(1, &fieldMgr.get_field<HypreIntType>(fieldOrd));
+      stk::mesh::communicate_field_data(*periodicGhosting_, fieldVec);
     }
 #endif
     else {
@@ -779,34 +783,34 @@ PeriodicManager::ngp_parallel_communicate_field(
   const stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   const unsigned pSize = bulk_data.parallel_size();
   if ( pSize > 1 ) {
-    const ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
+    const nalu_ngp::FieldManager& fieldMgr = realm_.ngp_field_manager();
     unsigned fieldOrd = theField->mesh_meta_data_ordinal();
 
     if (theField->type_is<double>()) {
       std::vector<NGPDoubleFieldType *> fieldVec(1, &fieldMgr.get_field<double>(fieldOrd));
-      ngp::copy_owned_to_shared( bulk_data, fieldVec);
-      ngp::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+      stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
     else if (theField->type_is<stk::mesh::EntityId>()) {
       std::vector<NGPGlobalIdFieldType *> fieldVec(1, &fieldMgr.get_field<stk::mesh::EntityId>(fieldOrd));
-      ngp::copy_owned_to_shared( bulk_data, fieldVec);
-      ngp::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+      stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
     else if (theField->type_is<int>()) {
       std::vector<NGPScalarIntFieldType *> fieldVec(1, &fieldMgr.get_field<int>(fieldOrd));
-      ngp::copy_owned_to_shared( bulk_data, fieldVec);
-      ngp::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+      stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
     else if (theField->type_is<LinSys::GlobalOrdinal>()) {
-      std::vector<ngp::Field<LinSys::GlobalOrdinal>*> fieldVec(1, &fieldMgr.get_field<LinSys::GlobalOrdinal>(fieldOrd));
-      ngp::copy_owned_to_shared( bulk_data, fieldVec);
-      ngp::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+      std::vector<stk::mesh::NgpField<LinSys::GlobalOrdinal>*> fieldVec(1, &fieldMgr.get_field<LinSys::GlobalOrdinal>(fieldOrd));
+      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+      stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
 #ifdef NALU_USES_HYPRE
     else if (theField->type_is<HypreIntType>()) {
-      std::vector<ngp::Field<HypreIntType>*> fieldVec(1, &fieldMgr.get_field<HypreIntType>(fieldOrd));
-      ngp::copy_owned_to_shared( bulk_data, fieldVec);
-      ngp::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
+      std::vector<stk::mesh::NgpField<HypreIntType>*> fieldVec(1, &fieldMgr.get_field<HypreIntType>(fieldOrd));
+      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+      stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
 #endif
     else {
@@ -992,7 +996,7 @@ PeriodicManager::ngp_add_slave_to_master(
   ThrowRequireMsg(theField->type_is<double>(), "Error in PeriodicManager::add_slave_to_master, theField ("<<theField->name()<<") is required to be double.");
 
   unsigned fieldSize = sizeOfField;
-  ngp::Mesh ngpMesh = realm_.ngp_mesh();
+  stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
   NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(theField->mesh_meta_data_ordinal());
   KokkosEntityPairView deviceMasterSlaves = deviceMasterSlaves_;
 
@@ -1107,7 +1111,7 @@ PeriodicManager::ngp_set_slave_to_master(
   ThrowRequireMsg(theField->type_is<double>(), "Argh, theField ("<<theField->name()<<") is not double.");
 
   unsigned fieldSize = sizeOfField;
-  ngp::Mesh ngpMesh = realm_.ngp_mesh();
+  stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
   NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(theField->mesh_meta_data_ordinal());
   KokkosEntityPairView deviceMasterSlaves = deviceMasterSlaves_;
 

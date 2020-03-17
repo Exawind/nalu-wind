@@ -13,7 +13,9 @@
 #define TKERODINODEKERNEL_H          
 
 #include "node_kernels/NodeKernel.h"
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/Types.hpp"
 
 namespace stk{
 namespace mesh{
@@ -48,10 +50,10 @@ public:
 
 private:
 
-  ngp::Field<double> dhdx_;
-  ngp::Field<double> specificHeat_;
-  ngp::Field<double> tvisc_;
-  ngp::Field<double> dualNodalVolume_;
+  stk::mesh::NgpField<double> dhdx_;
+  stk::mesh::NgpField<double> specificHeat_;
+  stk::mesh::NgpField<double> tvisc_;
+  stk::mesh::NgpField<double> dualNodalVolume_;
 
   const unsigned dhdxID_           {stk::mesh::InvalidOrdinal};
   const unsigned specificHeatID_   {stk::mesh::InvalidOrdinal};

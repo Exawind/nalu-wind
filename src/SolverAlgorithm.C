@@ -18,6 +18,7 @@
 #include "ngp_utils/NgpFieldUtils.h"
 
 #include <stk_mesh/base/Entity.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
 
 #include <vector>
 
@@ -75,7 +76,7 @@ NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
 
 void NGPApplyCoeff::extract_diagonal(
   const unsigned int nEntities,
-  const ngp::Mesh::ConnectedNodes& entities,
+  const stk::mesh::NgpMesh::ConnectedNodes& entities,
   SharedMemView<double**, DeviceShmem>& lhs) const
 {
   constexpr bool forceAtomic = std::is_same<
@@ -93,7 +94,7 @@ void NGPApplyCoeff::extract_diagonal(
 void
 NGPApplyCoeff::reset_overset_rows(
   const unsigned int nEntities,
-  const ngp::Mesh::ConnectedNodes& entities,
+  const stk::mesh::NgpMesh::ConnectedNodes& entities,
   SharedMemView<double*, DeviceShmem>& rhs,
   SharedMemView<double**, DeviceShmem>& lhs) const
 {
@@ -116,7 +117,7 @@ NGPApplyCoeff::reset_overset_rows(
 
 void NGPApplyCoeff::operator()(
   unsigned numMeshobjs,
-  const ngp::Mesh::ConnectedNodes& symMeshobjs,
+  const stk::mesh::NgpMesh::ConnectedNodes& symMeshobjs,
   const SharedMemView<int*,DeviceShmem> & scratchIds,
   const SharedMemView<int*,DeviceShmem> & sortPermutation,
   SharedMemView<double*,DeviceShmem> & rhs,

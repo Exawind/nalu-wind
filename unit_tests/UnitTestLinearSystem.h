@@ -14,6 +14,7 @@
 #include "LinearSystem.h"
 #include "EquationSystem.h"
 #include "utils/CreateDeviceExpression.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 namespace unit_test_utils {
 
@@ -37,7 +38,7 @@ template<typename LHSView, typename RHSView>
 KOKKOS_FUNCTION
 void edgeSumInto(
     unsigned numEntities,
-    const ngp::Mesh::ConnectedNodes&  entities,
+    const stk::mesh::NgpMesh::ConnectedNodes&  entities,
     const sierra::nalu::SharedMemView<const double*,sierra::nalu::DeviceShmem> & rhs,
     const sierra::nalu::SharedMemView<const double**,sierra::nalu::DeviceShmem> & lhs,
     unsigned numDof,
@@ -98,7 +99,7 @@ void resetRows(unsigned /*numNodes*/,
 
   KOKKOS_FUNCTION
   void operator()(unsigned numEntities,
-                  const ngp::Mesh::ConnectedNodes& entities,
+                  const stk::mesh::NgpMesh::ConnectedNodes& entities,
                   const sierra::nalu::SharedMemView<int*, sierra::nalu::DeviceShmem> & /*localIds*/,
                   const sierra::nalu::SharedMemView<int*, sierra::nalu::DeviceShmem> & /*sortPermutation*/,
                   const sierra::nalu::SharedMemView<const double*, sierra::nalu::DeviceShmem> & rhs,
@@ -210,7 +211,7 @@ public:
 
   virtual void sumInto(
     unsigned  numEntities,
-    const ngp::Mesh::ConnectedNodes&  entities,
+    const stk::mesh::NgpMesh::ConnectedNodes&  entities,
     const sierra::nalu::SharedMemView<const double*,sierra::nalu::DeviceShmem> & rhs,
     const sierra::nalu::SharedMemView<const double**,sierra::nalu::DeviceShmem> & lhs,
     const sierra::nalu::SharedMemView<int*,sierra::nalu::DeviceShmem> &  /* localIds */,
@@ -314,7 +315,7 @@ public:
   using TestLinearSystem::sumInto;
   virtual void sumInto(
     unsigned numEntities,
-    const ngp::Mesh::ConnectedNodes&  entities,
+    const stk::mesh::NgpMesh::ConnectedNodes&  entities,
     const sierra::nalu::SharedMemView<const double*,sierra::nalu::DeviceShmem> & rhs,
     const sierra::nalu::SharedMemView<const double**,sierra::nalu::DeviceShmem> & lhs,
     const sierra::nalu::SharedMemView<int*,sierra::nalu::DeviceShmem> &  /* localIds */,

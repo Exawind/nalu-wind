@@ -22,7 +22,7 @@
 #include "ngp_utils/NgpScratchData.h"
 #include "SimdInterface.h"
 
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
 
 #include <type_traits>
 

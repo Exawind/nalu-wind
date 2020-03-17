@@ -11,6 +11,7 @@
 #include "node_kernels/WallDistNodeKernel.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {

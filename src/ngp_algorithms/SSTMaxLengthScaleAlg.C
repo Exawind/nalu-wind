@@ -15,10 +15,12 @@
 #include "ngp_algorithms/ViewHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "ScratchViews.h"
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 
 namespace sierra {
@@ -38,7 +40,7 @@ SSTMaxLengthScaleAlg<AlgTraits>::SSTMaxLengthScaleAlg(
 template <typename AlgTraits>
 void SSTMaxLengthScaleAlg<AlgTraits>::execute()
 {
-  using ElemInfoType = nalu_ngp::EntityInfo<ngp::Mesh>;
+  using ElemInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();

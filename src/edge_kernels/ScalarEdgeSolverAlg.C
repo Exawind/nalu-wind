@@ -14,6 +14,8 @@
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
 #include "edge_kernels/EdgeKernelUtils.h"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -60,7 +62,7 @@ ScalarEdgeSolverAlg::execute()
   const DblType om_alpha = 1.0 - alpha;
   const DblType om_alphaUpw = 1.0 - alphaUpw;
 
-  // STK ngp::Field instances for capture by lambda
+  // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
   const auto vrtm = fieldMgr.get_field<double>(velocityRTM_);

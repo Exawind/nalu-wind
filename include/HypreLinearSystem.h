@@ -15,6 +15,7 @@
 #include "XSDKHypreInterface.h"
 
 #include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 #include "HYPRE_IJ_mv.h"
 #include "HYPRE_parcsr_ls.h"
@@ -110,7 +111,7 @@ public:
    */
   virtual void sumInto(
     unsigned numEntities,
-    const ngp::Mesh::ConnectedNodes& entities,
+    const stk::mesh::NgpMesh::ConnectedNodes& entities,
     const SharedMemView<const double*, DeviceShmem> & rhs,
     const SharedMemView<const double**, DeviceShmem> & lhs,
     const SharedMemView<int*, DeviceShmem> & localIds,

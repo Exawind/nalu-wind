@@ -15,7 +15,8 @@
 
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
-#include <stk_ngp/NgpFieldManager.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
+#include <ngp_utils/NgpFieldManager.h>
 
 #include <cmath>
 
@@ -608,9 +609,9 @@ void calc_mass_flow_rate_scs(
   const VectorFieldType& velocity,
   const GenericFieldType& massFlowRate)
 {
-  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Hex8Traits = sierra::nalu::AlgTraitsHex8;
-  using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -689,9 +690,9 @@ void calc_open_mass_flow_rate(
   const GenericFieldType& exposedAreaVec,
   const GenericFieldType& massFlowRate)
 {
-  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -841,7 +842,7 @@ void calc_exposed_area_vec(
   GenericFieldType& exposedAreaVec)
 {
   using Quad4Traits = sierra::nalu::AlgTraitsQuad4;
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
@@ -897,9 +898,9 @@ void calc_projected_nodal_gradient_interior(
   const ScalarFieldType& scalarField,
   const VectorFieldType& gradField)
 {
-  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Hex8Traits = sierra::nalu::AlgTraitsHex8;
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
   const int npe = Hex8Traits::nodesPerElement_;
@@ -982,9 +983,9 @@ void calc_projected_nodal_gradient_interior(
      (std::is_same<PhiType, VectorFieldType>::value &&
       std::is_same<GradPhiType, GenericFieldType>::value)),
     "Improper field types passed to nodal gradient calculator");
-  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Traits = sierra::nalu::nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using Hex8Traits = sierra::nalu::AlgTraitsHex8;
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   constexpr int ncomp = std::is_same<
     typename stk::mesh::FieldTraits<PhiType>::tag1, stk::mesh::Cartesian>::value
@@ -1095,8 +1096,8 @@ void calc_projected_nodal_gradient_interior<VectorFieldType,GenericFieldType>(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  ngp::Mesh ngpMesh(bulk);
-  ngp::FieldManager fieldMgr(bulk);
+  stk::mesh::NgpMesh ngpMesh(bulk);
+  sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
@@ -1127,7 +1128,7 @@ void calc_projected_nodal_gradient_interior<VectorFieldType,GenericFieldType>(
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
       auto v_scalar = preReqData.get_scratch_view_1D(scalarField);
       auto v_scs_areav = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
-      const ngp::Mesh::ConnectedNodes node_rels = preReqData.elemNodes;
+      const stk::mesh::NgpMesh::ConnectedNodes node_rels = preReqData.elemNodes;
       const int* lrscv = meSCS->adjacentNodes();
 
       for (int ip = 0; ip < meSCS->num_integration_points(); ++ip) {
@@ -1179,8 +1180,8 @@ void calc_projected_nodal_gradient_interior(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  ngp::Mesh ngpMesh(bulk);
-  ngp::FieldManager fieldMgr(bulk);
+  stk::mesh::NgpMesh ngpMesh(bulk);
+  sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
@@ -1211,7 +1212,7 @@ void calc_projected_nodal_gradient_interior(
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
       auto v_vector = preReqData.get_scratch_view_2D(vectorField);
       auto v_scs_areav = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
-      const ngp::Mesh::ConnectedNodes node_rels = preReqData.elemNodes;
+      const stk::mesh::NgpMesh::ConnectedNodes node_rels = preReqData.elemNodes;
       const int* lrscv = meSCS->adjacentNodes();
 
       for (int di = 0; di < ndim; ++di) {
@@ -1267,8 +1268,8 @@ void calc_projected_nodal_gradient_boundary(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(meta.side_rank(), selector);
 
-  ngp::Mesh ngpMesh(bulk);
-  ngp::FieldManager fieldMgr(bulk);
+  stk::mesh::NgpMesh ngpMesh(bulk);
+  sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
@@ -1297,7 +1298,7 @@ void calc_projected_nodal_gradient_boundary(
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
       auto v_scalar = preReqData.get_scratch_view_1D(scalarField);
       auto v_scs_areav = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
-      const ngp::Mesh::ConnectedNodes node_rels = preReqData.elemNodes;
+      const stk::mesh::NgpMesh::ConnectedNodes node_rels = preReqData.elemNodes;
       const int* ipNodeMap = meBC->ipNodeMap();
 
       for (int ip = 0; ip < meBC->num_integration_points(); ++ip) {
@@ -1345,8 +1346,8 @@ void calc_projected_nodal_gradient_boundary(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(meta.side_rank(), selector);
 
-  ngp::Mesh ngpMesh(bulk);
-  ngp::FieldManager fieldMgr(bulk);
+  stk::mesh::NgpMesh ngpMesh(bulk);
+  sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
@@ -1376,7 +1377,7 @@ void calc_projected_nodal_gradient_boundary(
       auto v_dnv = preReqData.get_scratch_view_1D(dnv);
       auto v_vector = preReqData.get_scratch_view_2D(vectorField);
       auto v_scs_areav = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
-      const ngp::Mesh::ConnectedNodes node_rels = preReqData.elemNodes;
+      const stk::mesh::NgpMesh::ConnectedNodes node_rels = preReqData.elemNodes;
       const int* ipNodeMap = meBC->ipNodeMap();
 
       for (int di = 0; di < ndim; ++di) {
@@ -1420,8 +1421,8 @@ void calc_dual_nodal_volume(
   const stk::mesh::Selector selector = meta.locally_owned_part() | meta.globally_shared_part();
   const auto& buckets = bulk.get_buckets(stk::topology::ELEM_RANK, selector);
 
-  ngp::Mesh ngpMesh(bulk);
-  ngp::FieldManager fieldMgr(bulk);
+  stk::mesh::NgpMesh ngpMesh(bulk);
+  sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulk);
   sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeeded, meta.get_fields().size());
 
   const int bytes_per_team = 0;
@@ -1449,7 +1450,7 @@ void calc_dual_nodal_volume(
       sierra::nalu::fill_master_element_views(dataNeededNGP, preReqData);
 
       auto v_scv_vol = preReqData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scv_volume;
-      const ngp::Mesh::ConnectedNodes node_rels = preReqData.elemNodes;
+      const stk::mesh::NgpMesh::ConnectedNodes node_rels = preReqData.elemNodes;
       const int* ipNodeMap = meSCV->ipNodeMap();
 
       for (int ip = 0; ip < meSCV->num_integration_points(); ++ip) {
