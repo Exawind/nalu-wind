@@ -31,6 +31,17 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double nal
 
   compute_swept_point_count(actMeta);
   resize_arrays(actMeta);
+  Kokkos::parallel_for("ZeroArrays",
+    Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0,actMeta.numPointsTotal_),
+    KOKKOS_LAMBDA(int index)
+    {
+    for(int j=0; j<3; j++){
+      pointCentroid_.h_view(index, j)=0;
+      epsilon_.h_view(index, j)=0;
+      epsilonOpt_.h_view(index,j)=0;
+    }
+    searchRadius_.h_view(index)=0;
+  });
   compute_offsets(actMeta);
   init_epsilon(actMeta);
   Kokkos::parallel_for("InitActLinePoints", local_range_policy(actMeta), ActFastUpdatePoints(*this));
@@ -105,6 +116,8 @@ void ActuatorBulkDiskFAST::resize_arrays(const ActuatorMetaFAST& actMeta)
   Kokkos::resize(elemContainingPoint_, newSize);
 }
 
+// TODO can we remove all fast stuff from this for device compatibility?
+// TODO(psakiev) figure out parallel sync
 void ActuatorBulkDiskFAST::initialize_swept_points(const ActuatorMetaFAST& actMeta){
   actuator_utils::SweptPointLocator pointLocator;
 
@@ -117,7 +130,7 @@ void ActuatorBulkDiskFAST::initialize_swept_points(const ActuatorMetaFAST& actMe
     const int nForcePtsBlade = actMeta.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
     const int turbOffset = turbIdOffset_.h_view(iTurb);
     const int sweptOffset = numSweptOffset_(iTurb);
-    const int nBlades = 3; //TODO(psakiev) catch this error, disk will only work with 3 blades to define circle
+    const int nBlades = 3; //TODO(psakiev) catch this error in parsing, disk will only work with 3 blades to define circle
 
     for(int iB = 0; iB<nForcePtsBlade; iB++){
       for(int bN=0; bN<nBlades; bN++){
@@ -130,13 +143,19 @@ void ActuatorBulkDiskFAST::initialize_swept_points(const ActuatorMetaFAST& actMe
 
       const double dTheta= 2.0*M_PI/(nBlades*(numSweptCount_(iB+sweptOffset)+1));
       double theta = M_PI/3.0;
+
       for(int bN=0; bN<nBlades; bN++){
-        const int indexB =
+
+        const int indexB = turbOffset +
             actuator_utils::get_fast_point_index(actMeta.fastInputs_, iTurb, nBlades,fast::BLADE, iB, bN);
+
         for(int j=0; j<numSweptCount_(iB+sweptOffset); j++){
           theta+=dTheta;
           Point pointCoords = pointLocator(theta);
+
+          //TODO(psakiev) clean up, use subviews etc
           const int sweepIndex = turbOffset+sweptOffset+bN*nBlades+j;
+          std::cerr << "SWEEP INDEX: " << sweepIndex << " INDEXB: " << indexB <<std::endl;
           searchRadius_.h_view(sweepIndex) = searchRadius_.h_view(indexB);
           for(int k=0; k<3; k++){
             pointCentroid_.h_view(sweepIndex,k)=pointCoords[k];

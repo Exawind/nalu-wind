@@ -54,7 +54,7 @@ int get_fast_point_index(const fast::fastInputs& fi, int turbId, int nBlades, fa
       break;
     }
     case fast::TOWER:{
-      const int offset = fi.globTurbineData[turbId].numForcePtsBlade*nBlades-fi.globTurbineData[turbId].numForcePtsTwr;
+      const int offset = fi.globTurbineData[turbId].numForcePtsBlade*nBlades+1;
       return pointId+offset;
       break;
     }
