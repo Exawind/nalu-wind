@@ -1602,7 +1602,7 @@ ActuatorFAST::spread_actuator_force_to_node_vec(
     // project the force to this node with projection function
     // To de-activate the projection use distance.data() instead of 
     //   distance_projected.data()
-    double gA = actuator_utils::Gaussian_projection(nDim, distance_projected.data(), epsilon);
+    double gA = actuator_utils::Gaussian_projection(nDim, distance.data(), epsilon);
 
     compute_node_force_given_weight(
       nDim, gA, &actuator_force[0], &ws_nodeForce[0]);

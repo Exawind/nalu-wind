@@ -83,12 +83,18 @@ TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountVaried){
   EXPECT_EQ(296, myMeta.numPointsTurbine_.h_view(0));
 }
 
-TEST_F(ActuatorBulkDiskFastTest, sweptPointsPopulatedUniform){
+TEST_F(ActuatorBulkDiskFastTest, DISABLED_sweptPointsPopulatedUniform){
   inputs_.push_back("    num_swept_pts: 2\n");
   auto y_node = actuator_unit::create_yaml_node(inputs_);
   auto myMeta = actuator_FAST_parse(y_node, *actMeta_);
   ASSERT_TRUE(myMeta.useUniformAziSampling_(0));
   ActuatorBulkDiskFAST actBulk(myMeta, 0.0625);
+
+  if(NaluEnv::self().parallel_rank()==0){
+    const int nPntsBlade = actBulk.openFast_.get_numForcePtsBlade(0);
+    ASSERT_EQ(nPntsBlade, actBulk.numSweptCount_.extent_int(0));
+    ASSERT_EQ(1, actBulk.numSweptOffset_.extent_int(0));
+  }
 
   const int start = actuator_utils::get_fast_point_index(myMeta.fastInputs_, 0, 3, fast::TOWER, 9);
   auto points = actBulk.pointCentroid_.view_host();
