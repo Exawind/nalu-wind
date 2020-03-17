@@ -19,6 +19,7 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
     turbineNames_(numberOfActuators_),
     turbineOutputFileNames_(numberOfActuators_),
     filterLiftLineCorrection_(false),
+    maxNumPntsPerBlade_(0),
     epsilon_("epsilonMeta", numberOfActuators_),
     epsilonChord_("epsilonChordMeta", numberOfActuators_),
     epsilonTower_("epsilonTowerMeta", numberOfActuators_),
@@ -26,6 +27,10 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
     nPointsSwept_("diskNumSwept",actuatorType_==2?numberOfActuators_:0),
     nBlades_("numTurbBlades", numberOfActuators_)
 {
+}
+
+int ActuatorMetaFAST::get_fast_index(fast::ActuatorNodeType type, int turbId, int index, int bladeNum) const{
+  return actuator_utils::get_fast_point_index(fastInputs_, turbId, nBlades_(turbId), type, index, bladeNum);
 }
 
 ActuatorBulkFAST::ActuatorBulkFAST(

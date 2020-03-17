@@ -49,6 +49,8 @@ using ActFixElemIds =
   Kokkos::View<uint64_t*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 using ActFixScalarBool =
   Kokkos::View<bool*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
+using ActFixArrayInt =
+  Kokkos::View<int**, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 
 #define TOUCH_DUAL_VIEW(view, memory_space)                                    \
   {                                                                            \

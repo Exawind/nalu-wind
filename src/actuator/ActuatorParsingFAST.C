@@ -38,6 +38,9 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
   get_required(
     turbNode, "num_force_pts_blade",
     fi.globTurbineData[iTurb].numForcePtsBlade);
+
+  actMetaFAST.maxNumPntsPerBlade_ = std::max(actMetaFAST.maxNumPntsPerBlade_, fi.globTurbineData[iTurb].numForcePtsBlade);
+
   get_required(
     turbNode, "num_force_pts_tower", fi.globTurbineData[iTurb].numForcePtsTwr);
 
@@ -47,16 +50,17 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
   get_if_present_no_default(
     turbNode, "air_density", fi.globTurbineData[iTurb].air_density);
 
-  // TODO(psakiev) replace condition with a method
-  if(actMetaFAST.actuatorType_==2){
-    get_if_present_no_default(turbNode, "num_swept_pts", actMetaFAST.nPointsSwept_(iTurb));
-    actMetaFAST.useUniformAziSampling_(iTurb) = actMetaFAST.nPointsSwept_(iTurb) != 0;
-  }
-
   int* numBlades = &(actMetaFAST.nBlades_(iTurb));
   *numBlades=3;
   get_if_present_no_default(turbNode, "num_blades", *numBlades);
   ThrowErrorMsgIf(*numBlades!=3 && *numBlades!=2,"ERROR::ActuatorParsingFAST::Currently only 2 and 3 bladed turbines are supported.");
+
+  // TODO(psakiev) replace condition with a method
+  if(actMetaFAST.actuatorType_==2){
+    get_if_present_no_default(turbNode, "num_swept_pts", actMetaFAST.nPointsSwept_(iTurb));
+    actMetaFAST.useUniformAziSampling_(iTurb) = actMetaFAST.nPointsSwept_(iTurb) != 0;
+    ThrowErrorMsgIf(*numBlades!=3,"The ActuatorDisk model requires a base 3 bladed turbine, but a 2 bladed turbine was supplied.");
+  }
 
   actMetaFAST.numPointsTurbine_.h_view(iTurb) =
     1 // hub

@@ -25,8 +25,10 @@ struct ActuatorMetaFAST : public ActuatorMeta
   std::vector<std::string> turbineNames_;
   std::vector<std::string> turbineOutputFileNames_;
   bool filterLiftLineCorrection_;
+  int get_fast_index(fast::ActuatorNodeType type, int turbId, int index=0, int bladeNum=0) const;
 
   // TODO(SAKIEVICH) not certain all these need to be dual views
+  int maxNumPntsPerBlade_;
   ActVectorDblDv epsilon_;
   ActVectorDblDv epsilonChord_;
   ActVectorDblDv epsilonTower_;
