@@ -46,6 +46,30 @@ Point get_fast_point(fast::OpenFAST& fast, int turbId, fast::ActuatorNodeType ty
   }
   return {coords[0], coords[1], coords[2]};
 }
+
+int get_fast_point_index(const fast::fastInputs& fi, int turbId, int nBlades, fast::ActuatorNodeType type, int pointId, int bladeId){
+    switch(type){
+    case fast::HUB: {
+      return 0;
+      break;
+    }
+    case fast::TOWER:{
+      const int offset = fi.globTurbineData[turbId].numForcePtsBlade*nBlades-fi.globTurbineData[turbId].numForcePtsTwr;
+      return pointId+offset;
+      break;
+    }
+    case fast::BLADE:{
+      const int nPBlade = fi.globTurbineData[turbId].numForcePtsBlade;
+      return  1+bladeId*nPBlade+pointId;
+      break;
+    }
+    default:{
+      ThrowErrorMsg("Invalid fast type");
+      return -1;
+      break;
+    }
+  }
+}
 #endif
 
 //--------------------------------------------------------------------------------------
