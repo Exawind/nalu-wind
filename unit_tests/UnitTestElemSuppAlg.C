@@ -9,6 +9,7 @@
 #include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
 
 #include <master_element/MasterElementFactory.h>
 #include <stk_util/parallel/Parallel.hpp>
@@ -16,6 +17,7 @@
 
 #include <ElemDataRequests.h>
 #include <ScratchViews.h>
+#include <ngp_utils/NgpFieldManager.h>
 
 #include "UnitTestKokkosUtils.h"
 
@@ -40,7 +42,7 @@ void element_discrete_laplacian_kernel_3d(
       elemData.get_me_views(sierra::nalu::CURRENT_COORDINATES).scs_areav;
     sierra::nalu::SharedMemView<double***>& dndx =
       elemData.get_me_views(sierra::nalu::CURRENT_COORDINATES).dndx;
-    ngp::Mesh::ConnectedNodes elemNodes = elemData.elemNodes;
+    stk::mesh::NgpMesh::ConnectedNodes elemNodes = elemData.elemNodes;
 
     for (int ip = 0; ip < numScsIp; ++ip ) {
 
@@ -128,8 +130,8 @@ public:
   
       const stk::mesh::BucketVector& elemBuckets = bulkData_.get_buckets(stk::topology::ELEM_RANK, meta.locally_owned_part());
   
-      ngp::Mesh ngpMesh(bulkData_);
-      ngp::FieldManager fieldMgr(bulkData_);
+      stk::mesh::NgpMesh ngpMesh(bulkData_);
+      sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulkData_);
 
       sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeededByKernels_, meta.get_fields().size());
       const int bytes_per_team = 0;

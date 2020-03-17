@@ -3,6 +3,8 @@
 #include "stk_util/environment/WallTime.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/GetEntities.hpp"
+#include "stk_mesh/base/NgpMesh.hpp"
+#include "stk_mesh/base/NgpField.hpp"
 
 #include "UnitTestUtils.h"
 #include "UnitTestRealm.h"
@@ -10,9 +12,10 @@
 #include "SimdInterface.h"
 #include "ElemDataRequests.h"
 
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/Types.hpp"
 
-void test_ngp_mesh_1(const stk::mesh::BulkData& bulk, const ngp::Mesh& ngpMesh)
+void test_ngp_mesh_1(const stk::mesh::BulkData& bulk, const stk::mesh::NgpMesh& ngpMesh)
 {
   stk::topology elemTopo = stk::topology::HEX_8;
 
@@ -36,7 +39,7 @@ void test_ngp_mesh_1(const stk::mesh::BulkData& bulk, const ngp::Mesh& ngpMesh)
 
   Kokkos::parallel_for(team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team)
   {
-    const ngp::Mesh::BucketType& b = ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
+    const stk::mesh::NgpMesh::BucketType& b = ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
     ++ngpResults(0);
 
     const size_t bucketLen   = b.size();
@@ -81,9 +84,9 @@ void test_ngp_mesh_field_values(const stk::mesh::BulkData& bulk,
   stk::mesh::Selector all_local = meta.universal_part() & meta.locally_owned_part();
   const stk::mesh::BucketVector& elemBuckets = bulk.get_buckets(stk::topology::ELEM_RANK, all_local);
 
-  ngp::Mesh ngpMesh(bulk);
-  ngp::Field<double> ngpVelocity(bulk, *velocity);
-  ngp::Field<double> ngpMassFlowRate(bulk, *massFlowRate);
+  stk::mesh::NgpMesh ngpMesh(bulk);
+  stk::mesh::NgpField<double> ngpVelocity(bulk, *velocity);
+  stk::mesh::NgpField<double> ngpMassFlowRate(bulk, *massFlowRate);
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = 0;
@@ -96,7 +99,7 @@ void test_ngp_mesh_field_values(const stk::mesh::BulkData& bulk,
 
   Kokkos::parallel_for(team_exec, KOKKOS_LAMBDA(const sierra::nalu::DeviceTeamHandleType& team)
   {
-    const ngp::Mesh::BucketType& b = ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
+    const stk::mesh::NgpMesh::BucketType& b = ngpMesh.get_bucket(stk::topology::ELEM_RANK, team.league_rank());
 
     const size_t bucketLen   = b.size();
     const size_t simdBucketLen = sierra::nalu::get_num_simd_groups(bucketLen);
@@ -110,7 +113,7 @@ void test_ngp_mesh_field_values(const stk::mesh::BulkData& bulk,
         stk::mesh::FastMeshIndex elemIndex = ngpMesh.fast_mesh_index(element);
         ngpMassFlowRate.get(elemIndex, 0) = flowRate;
 
-        ngp::Mesh::ConnectedNodes nodes = ngpMesh.get_nodes(stk::topology::ELEM_RANK, elemIndex);
+        stk::mesh::NgpMesh::ConnectedNodes nodes = ngpMesh.get_nodes(stk::topology::ELEM_RANK, elemIndex);
         for (unsigned n = 0; n < nodes.size(); ++n)
         {
           ngpVelocity.get(ngpMesh, nodes[n], 0) = xVel;

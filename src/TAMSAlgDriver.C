@@ -15,7 +15,9 @@
 #include "utils/StkHelpers.h"
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpFieldBLAS.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "ngp_algorithms/MetricTensorElemAlg.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -203,7 +205,7 @@ TAMSAlgDriver::initial_work()
 void
 TAMSAlgDriver::initial_production()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   // Initialize average_production (after tvisc)
   // We don't want to do this on restart where TAMS fields are present

@@ -23,7 +23,12 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_coriolis)
 
   // simplify ICs
   stk::mesh::field_fill(1.0, *velocity_);
+  velocity_->modify_on_host();
+  velocity_->sync_to_device();
+
   stk::mesh::field_fill(1.0, *density_);
+  density_->modify_on_host();
+  density_->sync_to_device();
 
   // Setup solution options for default kernel
   solnOpts_.meshMotion_ = false;
@@ -63,4 +68,5 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_coriolis)
     rhsExact[nnDim + 2] = 0.125 * (-cor.Jxz_  - cor.Jyz_);
   }
   unit_test_kernel_utils::expect_all_near(helperObjs.linsys->rhs_, rhsExact.data());
+
 }

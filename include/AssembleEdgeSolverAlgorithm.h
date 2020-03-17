@@ -60,7 +60,7 @@ public:
                               stk::mesh::selectUnion(partVec_) &
                               !(realm_.get_inactive_selector());
 
-    const auto& buckets = ngp::get_bucket_ids(bulk, entityRank_, sel);
+    const auto& buckets = stk::mesh::get_bucket_ids(bulk, entityRank_, sel);
     auto team_exec = get_device_team_policy(buckets.size(), bytes_per_team, bytes_per_thread);
 
     // Create local copies of class data for device capture

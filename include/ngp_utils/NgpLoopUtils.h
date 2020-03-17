@@ -22,7 +22,7 @@
 #include "ScratchViews.h"
 
 #include "stk_mesh/base/Selector.hpp"
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
 
 namespace sierra {
 namespace nalu {

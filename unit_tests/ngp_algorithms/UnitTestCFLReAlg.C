@@ -40,8 +40,16 @@ TEST_F(MomentumKernelHex8Mesh, NGP_courant_reynolds)
   const double cfl = velVal * dt;
 
   stk::mesh::field_fill(velVal, *velocity_);
+  velocity_->modify_on_host();
+  velocity_->sync_to_device();
+
   stk::mesh::field_fill(rhoVal, *density_);
+  density_->modify_on_host();
+  density_->sync_to_device();
+
   stk::mesh::field_fill(viscVal, *viscosity_);
+  viscosity_->modify_on_host();
+  viscosity_->sync_to_device();
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.timeStepN_ = dt;

@@ -12,6 +12,7 @@
 #include "wind_energy/BdyHeightAlgorithm.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldUtils.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "NaluParsing.h"
 #include "Realm.h"
 #include "TurbulenceAveragingPostProcessing.h"
@@ -23,6 +24,7 @@
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_util/parallel/ParallelReduce.hpp"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 #include "netcdf.h"
 
@@ -342,7 +344,7 @@ BdyLayerStatistics::interpolate_variable(
 void
 BdyLayerStatistics::impl_compute_velocity_stats()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
+  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto density = nalu_ngp::get_ngp_field(meshInfo, "density");
@@ -480,7 +482,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
 void
 BdyLayerStatistics::impl_compute_temperature_stats()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
+  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
 

@@ -19,7 +19,8 @@
 #include "NGPInstance.h"
 #include "SimdInterface.h"
 
-#include <stk_ngp/Ngp.hpp>
+#include <stk_mesh/base/Ngp.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
 
 namespace stk{
 struct topology;
@@ -318,7 +319,7 @@ public:
 
   virtual void save_diagonal_term(
     unsigned,
-    const ngp::Mesh::ConnectedNodes&,
+    const stk::mesh::NgpMesh::ConnectedNodes&,
     const SharedMemView<const double**,DeviceShmem>&
   ) {}
 

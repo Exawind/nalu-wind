@@ -98,6 +98,7 @@
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/GeometryInteriorAlg.h"
 #include "ngp_algorithms/GeometryBoundaryAlg.h"
@@ -121,6 +122,7 @@
 #include <stk_mesh/base/CreateEdges.hpp>
 #include <stk_mesh/base/SkinBoundary.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
 
 // stk_io
 #include <stk_io/StkMeshIoBroker.hpp>
@@ -1692,7 +1694,7 @@ Realm::pre_timestep_work()
     if ( hasOverset_ )
       initialize_overset();
 
-    // Reset the ngp::Mesh instance
+    // Reset the stk::mesh::NgpMesh instance
     meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
 
     // now re-initialize linear system
@@ -2370,7 +2372,7 @@ Realm::compute_vrtm(const std::string& velName)
   if (!solutionOptions_->meshMotion_ &&
       !solutionOptions_->externalMeshDeformation_) return;
 
-  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   using MeshIndex = Traits::MeshIndex;
 
   const int nDim = metaData_->spatial_dimension();

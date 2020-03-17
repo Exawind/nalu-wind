@@ -15,10 +15,12 @@
 #include "ngp_algorithms/ViewHelper.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "ScratchViews.h"
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 
 namespace sierra {
@@ -65,7 +67,7 @@ void GeometryInteriorAlg<AlgTraits>::execute()
 template <typename AlgTraits>
 void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
 {
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -105,7 +107,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
 template<typename AlgTraits>
 void GeometryInteriorAlg<AlgTraits>::impl_negative_jacobian_check()
 {
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -143,7 +145,7 @@ void GeometryInteriorAlg<AlgTraits>::impl_negative_jacobian_check()
 template <typename AlgTraits>
 void GeometryInteriorAlg<AlgTraits>::impl_compute_edge_area_vector()
 {
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();

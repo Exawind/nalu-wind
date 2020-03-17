@@ -26,6 +26,7 @@
 #include <utils/StkHelpers.h>
 #include <utils/CreateDeviceExpression.h>
 #include <ngp_utils/NgpLoopUtils.h>
+#include <ngp_utils/NgpFieldManager.h>
 
 #include <KokkosInterface.h>
 
@@ -47,6 +48,7 @@
 #include <stk_mesh/base/Part.hpp>
 #include <stk_topology/topology.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
 
 // For Tpetra support
 #include <Kokkos_Serial.hpp>
@@ -1273,7 +1275,7 @@ KOKKOS_FUNCTION
 void
 TpetraLinearSystem::TpetraLinSysCoeffApplier::operator()(
   unsigned numEntities,
-  const ngp::Mesh::ConnectedNodes& entities,
+  const stk::mesh::NgpMesh::ConnectedNodes& entities,
   const SharedMemView<int*, DeviceShmem>& localIds,
   const SharedMemView<int*, DeviceShmem>& sortPermutation,
   const SharedMemView<const double*, DeviceShmem>& rhs,
@@ -1316,7 +1318,7 @@ sierra::nalu::CoeffApplier* TpetraLinearSystem::TpetraLinSysCoeffApplier::device
 }
 
 void TpetraLinearSystem::sumInto(unsigned numEntities,
-                                 const ngp::Mesh::ConnectedNodes& entities,
+                                 const stk::mesh::NgpMesh::ConnectedNodes& entities,
                                  const SharedMemView<const double*,DeviceShmem> & rhs,
                                  const SharedMemView<const double**,DeviceShmem> & lhs,
                                  const SharedMemView<int*,DeviceShmem> & localIds,
@@ -1429,7 +1431,7 @@ void TpetraLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solutionField,
   using Traits = nalu_ngp::NGPMeshTraits<>;
   using MeshIndex = typename Traits::MeshIndex;
 
-  ngp::Mesh ngpMesh = realm_.ngp_mesh();
+  stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
   NGPDoubleFieldType ngpSolutionField = realm_.ngp_field_manager().get_field<double>(solutionField->mesh_meta_data_ordinal());
   NGPDoubleFieldType ngpBCValuesField = realm_.ngp_field_manager().get_field<double>(bcValuesField->mesh_meta_data_ordinal());
 
@@ -1882,7 +1884,7 @@ void TpetraLinearSystem::copy_tpetra_to_stk(
 
   NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(stkField->mesh_meta_data_ordinal());
 
-  ngp::Mesh ngpMesh = realm_.ngp_mesh();
+  stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
 
   nalu_ngp::run_entity_algorithm(
     "TpetraLinSys::copy_tpetra_to_stk",

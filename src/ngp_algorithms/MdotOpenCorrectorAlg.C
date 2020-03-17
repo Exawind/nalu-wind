@@ -12,8 +12,10 @@
 #include "ngp_algorithms/MdotAlgDriver.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -32,7 +34,7 @@ MdotOpenCorrectorAlg<BcAlgTraits>::MdotOpenCorrectorAlg(
 template<typename BcAlgTraits>
 void MdotOpenCorrectorAlg<BcAlgTraits>::execute()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
+  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
 
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();

@@ -142,7 +142,7 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
-#include "stk_ngp/NgpFieldParallel.hpp"
+#include "stk_mesh/base/NgpFieldParallel.hpp"
 
 // nso
 #include <nso/MomentumNSOElemKernel.h>
@@ -226,6 +226,7 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 #include <stk_mesh/base/Comm.hpp>
+#include "stk_mesh/base/NgpMesh.hpp"
 
 // stk_topo
 #include <stk_topology/topology.hpp>
@@ -2605,7 +2606,7 @@ MomentumEquationSystem::save_diagonal_term(
 void
 MomentumEquationSystem::save_diagonal_term(
   unsigned nEntities,
-  const ngp::Mesh::ConnectedNodes& entities,
+  const stk::mesh::NgpMesh::ConnectedNodes& entities,
   const SharedMemView<const double**,DeviceShmem>& lhs)
 {
   auto& bulk = realm_.bulk_data();
@@ -2627,7 +2628,7 @@ MomentumEquationSystem::save_diagonal_term(
 void
 MomentumEquationSystem::save_diagonal_term(
   unsigned,
-  const ngp::Mesh::ConnectedNodes&,
+  const stk::mesh::NgpMesh::ConnectedNodes&,
   const SharedMemView<const double**,DeviceShmem>&)
 {}
 #endif
@@ -2675,7 +2676,7 @@ MomentumEquationSystem::assemble_and_solve(
     // Sum up contributions on the nodes shared amongst processors
     const std::vector<NGPDoubleFieldType*> fVecNgp{&ngpUdiag};
     bool doFinalSyncBackToDevice = true;
-    ngp::parallel_sum(realm_.bulk_data(), fVecNgp, doFinalSyncBackToDevice);
+    stk::mesh::parallel_sum(realm_.bulk_data(), fVecNgp, doFinalSyncBackToDevice);
 
     const auto sel = stk::mesh::selectField(*Udiag_)
       & meta.locally_owned_part()

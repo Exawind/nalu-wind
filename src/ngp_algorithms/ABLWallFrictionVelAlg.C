@@ -16,6 +16,7 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpReduceUtils.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "ScratchViews.h"
 #include "SolutionOptions.h"
@@ -23,6 +24,7 @@
 #include "wind_energy/MoninObukhov.h"
 
 #include "stk_mesh/base/Field.hpp"
+#include <stk_mesh/base/NgpMesh.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -162,7 +164,7 @@ template<typename BcAlgTraits>
 void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
 {
   namespace mo = abl_monin_obukhov;
-  using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();

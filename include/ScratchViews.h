@@ -16,6 +16,7 @@
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
 
 #include <ElemDataRequestsGPU.h>
 #include <master_element/MasterElement.h>
@@ -254,7 +255,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   int total_bytes() const { return num_bytes_required; }
 
-  ngp::Mesh::ConnectedNodes elemNodes;
+  stk::mesh::NgpMesh::ConnectedNodes elemNodes;
 
   KOKKOS_INLINE_FUNCTION
         MultiDimViews<T,TEAMHANDLETYPE,SHMEM>& get_field_views()       { return fieldViews; }
@@ -841,7 +842,7 @@ int get_num_scalars_pre_req_data(
 template<typename T>
 KOKKOS_FUNCTION
 void fill_pre_req_data(const ElemDataRequestsGPU& dataNeeded,
-                       const ngp::Mesh& ngpMesh,
+                       const stk::mesh::NgpMesh& ngpMesh,
                        stk::mesh::EntityRank entityRank,
                        stk::mesh::Entity elem,
                        ScratchViews<T,DeviceTeamHandleType,DeviceShmem>& prereqData);

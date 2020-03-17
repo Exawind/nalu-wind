@@ -85,7 +85,11 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_edge_vec)
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
+  velocity_->sync_to_device();
+
   stk::mesh::field_fill(0.0, *dudx_);
+  dudx_->modify_on_host();
+  dudx_->sync_to_device();
 
   // Reference values from original AssembleNodalGradEdge
   // sierra::nalu::AssembleNodalGradUEdgeAlgorithm edgeAlg(
@@ -237,7 +241,11 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_vec)
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
+  velocity_->sync_to_device();
+
   stk::mesh::field_fill(0.0, *dudx_);
+  dudx_->modify_on_host();
+  dudx_->sync_to_device();
 
   // Reference values from original AssembleNodalGradEdge
   // sierra::nalu::AssembleNodalGradUElemAlgorithm elemAlg(
@@ -288,7 +296,11 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_elem_shifted_vec)
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
   unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
+  velocity_->sync_to_device();
+
   stk::mesh::field_fill(0.0, *dudx_);
+  dudx_->modify_on_host();
+  dudx_->sync_to_device();
 
   // Reference values from original AssembleNodalGradEdge
   // sierra::nalu::AssembleNodalGradUEdgeAlgorithm edgeAlg(
@@ -442,7 +454,11 @@ TEST_F(MomentumKernelHex8Mesh, NGP_nodal_grad_bndry_elem_vec)
     bulk_, stk::topology::QUAD_4, 1, part);
   unit_test_alg_utils::linear_scalar_field(bulk_, *coordinates_, *velocity_,
                                            xCoeff, yCoeff, zCoeff);
+  velocity_->sync_to_device();
+
   stk::mesh::field_fill(0.0, *dudx_);
+  dudx_->modify_on_host();
+  dudx_->sync_to_device();
 
   // Reference values from original
   // sierra::nalu::AssembleNodalGradUBoundaryAlgorithm elemAlg(

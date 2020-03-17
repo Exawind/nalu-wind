@@ -15,7 +15,9 @@
 #include "FieldTypeDef.h"
 
 #include "stk_mesh/base/BulkData.hpp"
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra{
 namespace nalu{
@@ -44,10 +46,10 @@ public:
     const stk::mesh::FastMeshIndex&) override;
 
 private:
-  ngp::Field<double> densityNm1_;
-  ngp::Field<double> densityN_;
-  ngp::Field<double> densityNp1_;
-  ngp::Field<double> dualNodalVolume_;
+  stk::mesh::NgpField<double> densityNm1_;
+  stk::mesh::NgpField<double> densityN_;
+  stk::mesh::NgpField<double> densityNp1_;
+  stk::mesh::NgpField<double> dualNodalVolume_;
 
   unsigned densityNm1ID_ {stk::mesh::InvalidOrdinal};
   unsigned densityNID_ {stk::mesh::InvalidOrdinal};

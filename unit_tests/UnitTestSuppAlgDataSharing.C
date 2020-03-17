@@ -7,8 +7,8 @@
 #include <stk_mesh/base/CoordinateSystems.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
-#include <stk_ngp/NgpMesh.hpp>
-#include <stk_ngp/NgpFieldManager.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
+#include <ngp_utils/NgpFieldManager.h>
 
 #include <stk_util/parallel/Parallel.hpp>
 #include <Kokkos_Core.hpp>
@@ -121,8 +121,8 @@ public:
       //a topology would be available.
       dataNeededByKernels_.add_cvfem_surface_me(sierra::nalu::MasterElementRepo::get_surface_master_element(stk::topology::HEX_8));
 
-      ngp::Mesh ngpMesh(bulkData_);
-      ngp::FieldManager fieldMgr(bulkData_);
+      stk::mesh::NgpMesh ngpMesh(bulkData_);
+      sierra::nalu::nalu_ngp::FieldManager fieldMgr(bulkData_);
 
       sierra::nalu::ElemDataRequestsGPU dataNeededNGP(fieldMgr, dataNeededByKernels_, meta.get_fields().size());
       const int bytes_per_team = 0;

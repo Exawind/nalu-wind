@@ -10,6 +10,7 @@
 
 #include "edge_kernels/AssembleEdgeKernelAlg.h"
 #include "edge_kernels/EdgeKernel.h"
+#include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
 namespace nalu {

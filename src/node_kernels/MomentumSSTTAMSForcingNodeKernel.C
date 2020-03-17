@@ -12,6 +12,7 @@
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "stk_mesh/base/MetaData.hpp"
+#include "stk_mesh/base/Types.hpp"
 #include "utils/StkHelpers.h"
 #include <SimdInterface.h>
 

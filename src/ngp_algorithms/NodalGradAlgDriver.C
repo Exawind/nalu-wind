@@ -16,7 +16,7 @@
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_ngp/NgpFieldParallel.hpp"
+#include "stk_mesh/base/NgpFieldParallel.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -65,7 +65,7 @@ void NodalGradAlgDriver<GradPhiType>::post_work()
 
   const std::vector<NGPDoubleFieldType*> fVec{&ngpGradPhi};
   bool doFinalSyncToDevice = false;
-  ngp::parallel_sum(bulk, fVec, doFinalSyncToDevice);
+  stk::mesh::parallel_sum(bulk, fVec, doFinalSyncToDevice);
 
   const int dim2 = meta.spatial_dimension();
   const int dim1 = std::is_same<VectorFieldType, GradPhiType>::value

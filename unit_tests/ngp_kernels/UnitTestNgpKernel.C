@@ -16,7 +16,7 @@
 
 #include "AlgTraits.h"
 
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
 
 #include <memory>
 

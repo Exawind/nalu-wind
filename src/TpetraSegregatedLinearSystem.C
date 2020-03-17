@@ -46,6 +46,7 @@
 #include <stk_mesh/base/Part.hpp>
 #include <stk_topology/topology.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
+#include <stk_mesh/base/NgpMesh.hpp>
 
 // For Tpetra support
 #include <Kokkos_Serial.hpp>
@@ -1143,7 +1144,7 @@ void TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::resetRows(unsigned 
 
 KOKKOS_FUNCTION
 void TpetraSegregatedLinearSystem::TpetraLinSysCoeffApplier::operator() (unsigned numEntities,
-                                                                         const ngp::Mesh::ConnectedNodes& entities,
+                                                                         const stk::mesh::NgpMesh::ConnectedNodes& entities,
                                                                          const SharedMemView<int*,DeviceShmem> & localIds,
                                                                          const SharedMemView<int*,DeviceShmem> & sortPermutation,
                                                                          const SharedMemView<const double*,DeviceShmem> & rhs,
@@ -1185,7 +1186,7 @@ sierra::nalu::CoeffApplier* TpetraSegregatedLinearSystem::TpetraLinSysCoeffAppli
 }
 
 void TpetraSegregatedLinearSystem::sumInto(unsigned numEntities,
-                                           const ngp::Mesh::ConnectedNodes& entities,
+                                           const stk::mesh::NgpMesh::ConnectedNodes& entities,
                                            const SharedMemView<const double*,DeviceShmem> & rhs,
                                            const SharedMemView<const double**,DeviceShmem> & lhs,
                                            const SharedMemView<int*,DeviceShmem> & localIds,

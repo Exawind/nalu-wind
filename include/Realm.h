@@ -24,9 +24,10 @@
 #include <Teuchos_RCP.hpp>
 #endif
 
-#include <stk_ngp/NgpFieldManager.hpp>
-
+#include <ngp_utils/NgpFieldManager.h>
 #include "ngp_utils/NgpMeshInfo.h"
+
+#include "stk_mesh/base/NgpMesh.hpp"
 
 // standard c++
 #include <map>
@@ -93,7 +94,7 @@ class PromotedElementIO;
  */
 class Realm {
  public:
-  using NgpMeshInfo = nalu_ngp::MeshInfo<ngp::Mesh, ngp::FieldManager>;
+  using NgpMeshInfo = nalu_ngp::MeshInfo<stk::mesh::NgpMesh, nalu_ngp::FieldManager>;
 
   Realm(Realms&, const YAML::Node & node);
   virtual ~Realm();
@@ -371,12 +372,12 @@ class Realm {
     return *meshInfo_;
   }
 
-  inline const ngp::Mesh& ngp_mesh()
+  inline const stk::mesh::NgpMesh& ngp_mesh()
   {
     return mesh_info().ngp_mesh();
   }
 
-  inline const ngp::FieldManager& ngp_field_manager()
+  inline const nalu_ngp::FieldManager& ngp_field_manager()
   {
     return mesh_info().ngp_field_manager();
   }

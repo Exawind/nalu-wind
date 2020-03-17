@@ -10,6 +10,7 @@
 
 #include "ngp_algorithms/TKEWallFuncAlgDriver.h"
 #include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
 
@@ -17,6 +18,7 @@
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_mesh/base/FieldBLAS.hpp"
 #include "stk_mesh/base/MetaData.hpp"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -45,7 +47,7 @@ void TKEWallFuncAlgDriver::pre_work()
 
 void TKEWallFuncAlgDriver::post_work()
 {
-  using MeshIndex = nalu_ngp::NGPMeshTraits<ngp::Mesh>::MeshIndex;
+  using MeshIndex = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex;
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
   auto ngpBcNodalTke = fieldMgr.get_field<double>(bcNodalTke_);

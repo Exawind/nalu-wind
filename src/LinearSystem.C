@@ -32,10 +32,11 @@
 #include <stk_mesh/base/Selector.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/Part.hpp>
+#include "stk_mesh/base/NgpMesh.hpp"
 #include <stk_topology/topology.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
 
-#include "stk_ngp/NgpFieldParallel.hpp"
+#include "stk_mesh/base/NgpFieldParallel.hpp"
 
 #include <Teuchos_VerboseObject.hpp>
 #include <Teuchos_FancyOStream.hpp>
@@ -142,14 +143,14 @@ void LinearSystem::sync_field(const stk::mesh::FieldBase *field)
     &fieldMgr.get_field<double>(field->mesh_meta_data_ordinal())
   };
 
-  ngp::copy_owned_to_shared(realm_.bulk_data(), ngpFields);
+  stk::mesh::copy_owned_to_shared(realm_.bulk_data(), ngpFields);
 }
 
 #ifndef KOKKOS_ENABLE_CUDA
 KOKKOS_FUNCTION
 void LinearSystem::DefaultHostOnlyCoeffApplier::operator()(
                         unsigned numEntities,
-                        const ngp::Mesh::ConnectedNodes& entities,
+                        const stk::mesh::NgpMesh::ConnectedNodes& entities,
                         const SharedMemView<int*,DeviceShmem> & localIds,
                         const SharedMemView<int*,DeviceShmem> & sortPermutation,
                         const SharedMemView<const double*,DeviceShmem> & rhs,

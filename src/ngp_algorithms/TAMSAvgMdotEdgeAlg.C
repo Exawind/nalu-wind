@@ -11,8 +11,10 @@
 #include "ngp_algorithms/TAMSAvgMdotEdgeAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
+#include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -37,7 +39,7 @@ TAMSAvgMdotEdgeAlg::execute()
   const auto& meta = realm_.meta_data();
   const int ndim = meta.spatial_dimension();
 
-  using EntityInfoType = nalu_ngp::EntityInfo<ngp::Mesh>;
+  using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
 

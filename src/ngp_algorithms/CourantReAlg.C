@@ -19,10 +19,12 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpReduceUtils.h"
+#include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "ScratchViews.h"
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
+#include <stk_mesh/base/NgpMesh.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -64,7 +66,7 @@ CourantReAlg<AlgTraits>::CourantReAlg(
 template<typename AlgTraits>
 void CourantReAlg<AlgTraits>::execute()
 {
-  using ElemSimdDataType = nalu_ngp::ElemSimdData<ngp::Mesh>;
+  using ElemSimdDataType = nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = meshInfo.ngp_mesh();
