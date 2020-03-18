@@ -12,28 +12,37 @@ Simulations:
 
 linear_solvers:
 
-  - name: solve_scalar
-    type: tpetra
-    method: gmres
-    preconditioner: sgs
-    tolerance: 1e-10
-    max_iterations: 20
-    kspace: 75
-    output_level: 0
-    write_matrix_files: yes
-  
-  - name: solve_cont
+  - name: solve_mom
     type: hypre
     method: hypre_gmres
     preconditioner: boomerAMG
-    tolerance: 1e-10
-    max_iterations: 200
-    kspace: 75
+    tolerance: 1e-12
+    max_iterations: 100
+    kspace: 40
+    output_level: 0
+    bamg_max_levels: 1
+    bamg_relax_type: 8
+    bamg_num_sweeps: 2
+    bamg_relax_order: 0
+    segregated_solver: yes
+    ensure_reproducible: no
+    use_native_cuda_sort: no
+    write_matrix_files: no
+
+  - name: solve_scalar
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-12
+    max_iterations: 100
+    kspace: 40
     output_level: 0
     bamg_coarsen_type: 8
     bamg_interp_type: 6
     bamg_cycle_type: 1
-    write_matrix_files: yes
+    ensure_reproducible: no
+    use_native_cuda_sort: no
+    write_matrix_files: no
 
 realms:
 
@@ -45,17 +54,17 @@ realms:
     time_step_control:
      target_courant: 1000.0
      time_step_change_factor: 1.05
-   
+
     equation_systems:
       name: theEqSys
-      max_iterations: 1
+      max_iterations: 2
 
       solver_system_specification:
-        velocity: solve_scalar
+        velocity: solve_mom
         turbulent_ke: solve_scalar
         specific_dissipation_rate: solve_scalar
-        pressure: solve_cont
-        ndtw: solve_cont
+        pressure: solve_scalar
+        ndtw: solve_scalar
 
       systems:
 
@@ -70,7 +79,7 @@ realms:
             convergence_tolerance: 1e-8
 
         - ShearStressTransport:
-            name: mySST 
+            name: mySST
             max_iterations: 1
             convergence_tolerance: 1e-8
 
@@ -136,11 +145,11 @@ realms:
     solution_options:
       name: myOptions
       turbulence_model: sst
-      projected_timescale_type: momentum_diag_inv #### Use 1/diagA formulation
+      #projected_timescale_type: momentum_diag_inv #### Use 1/diagA formulation
 
       options:
         - hybrid_factor:
-            velocity: 1.0 
+            velocity: 1.0
             turbulent_ke: 1.0
             specific_dissipation_rate: 1.0
 
@@ -165,29 +174,29 @@ realms:
 
         - projected_nodal_gradient:
             velocity: element
-            pressure: element 
+            pressure: element
             turbulent_ke: element
             specific_dissipation_rate: element
-    
-        - relaxation_factor:
-            velocity: 0.7
-            pressure: 0.3
-            turbulent_ke: 0.7
-            specific_dissipation_rate: 0.7
-            
+
+        #- relaxation_factor:
+        #    velocity: 0.7
+        #    pressure: 0.3
+        #    turbulent_ke: 0.7
+        #    specific_dissipation_rate: 0.7
+
     post_processing:
-    
+
     - type: surface
       physics: surface_force_and_moment
       output_file_name: results/forces.dat
-      frequency: 1 
+      frequency: 1
       parameters: [0,0]
       target_name: Airfoil
 
     output:
       output_data_base_name: results/du91w2.e
       output_frequency: 5
-      output_node_set: no 
+      output_node_set: no
       output_variables:
        - velocity
        - pressure
@@ -201,10 +210,10 @@ Time_Integrators:
       name: ti_1
       start_time: 0
       time_step: 6.666666666666667e-2
-      termination_step_count: 1
+      termination_step_count: 5
       time_stepping_type: fixed
       time_step_count: 0
       second_order_accuracy: yes
 
-      realms: 
+      realms:
         - realm_1
