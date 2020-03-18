@@ -197,11 +197,11 @@ void ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta){
 }
 
 Kokkos::RangePolicy<ActuatorFixedExecutionSpace>
-ActuatorBulkFAST::local_range_policy(const ActuatorMeta& actMeta){
+ActuatorBulkFAST::local_range_policy(){
   auto rank = NaluEnv::self().parallel_rank();
-  if(rank<turbIdOffset_.extent_int(0)){
+  if(rank == openFast_.get_procNo(rank)){
     const int offset = turbIdOffset_.h_view(rank);
-    const int size = actMeta.numPointsTurbine_.h_view(rank);
+    const int size = openFast_.get_numForcePts(rank);
     return Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(offset,offset+size);
   }
   else{

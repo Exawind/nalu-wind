@@ -43,7 +43,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActuatorBulkFAST(
     const ActuatorMetaFAST& actMeta, double naluTimeStep);
 
-  Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy(const ActuatorMeta& actMeta);
+  Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy();
 
   void interpolate_velocities_to_fast();
   void step_fast();

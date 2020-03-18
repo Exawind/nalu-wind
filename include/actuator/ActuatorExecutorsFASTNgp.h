@@ -7,11 +7,12 @@
 // for more details.
 //
 
-#ifndef ACTUATORLINEFASTNGP_H_
-#define ACTUATORLINEFASTNGP_H_
+#ifndef ACTUATOREXECUTORSFASTNGP_H_
+#define ACTUATOREXECUTORSFASTNGP_H_
 
 #include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulkFAST.h>
+#include <actuator/ActuatorBulkDiskFAST.h>
 #include <actuator/ActuatorFunctorsFAST.h>
 #include <actuator/UtilitiesActuator.h>
 
@@ -32,6 +33,19 @@ struct ActuatorLineFastNGP{
 
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkFAST& actBulk_;
+  stk::mesh::BulkData& stkBulk_;
+  const int numActPoints_;
+};
+
+struct ActuatorDiskFastNGP{
+  ActuatorDiskFastNGP(const ActuatorMetaFAST& actMeta,
+    ActuatorBulkDiskFAST& actBulk,
+    stk::mesh::BulkData& stkBulk);
+
+  void operator()();
+
+  const ActuatorMetaFAST& actMeta_;
+  ActuatorBulkDiskFAST& actBulk_;
   stk::mesh::BulkData& stkBulk_;
   const int numActPoints_;
 };

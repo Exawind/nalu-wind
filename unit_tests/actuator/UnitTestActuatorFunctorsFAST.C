@@ -124,7 +124,7 @@ TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
   ASSERT_EQ(actMetaFast.numPointsTotal_, 41);
 
   auto points = actBulk.pointCentroid_.view_host();
-  auto localRangePolicy = actBulk.local_range_policy(actMeta_);
+  auto localRangePolicy = actBulk.local_range_policy();
   Kokkos::parallel_for("testActFastZero", actMetaFast.numPointsTotal_,ActFastZero(actBulk));
 
   for(int i = 0; i<points.extent_int(0); ++i){
@@ -169,7 +169,7 @@ TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
   auto vel = actBulk.velocity_.view_host();
   auto force = actBulk.actuatorForce_.view_host();
 
-  auto localRangePolicy = actBulk.local_range_policy(actMeta_);
+  auto localRangePolicy = actBulk.local_range_policy();
   Kokkos::parallel_for("testActFastZero", actMetaFast.numPointsTotal_,ActFastZero(actBulk));
 
   for(int i = 0; i<vel.extent_int(0); ++i){

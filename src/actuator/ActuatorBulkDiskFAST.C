@@ -37,7 +37,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double nal
   });
   compute_offsets(actMeta);
   init_epsilon(actMeta);
-  Kokkos::parallel_for("InitActLinePoints", local_range_policy(actMeta), ActFastUpdatePoints(*this));
+  Kokkos::parallel_for("InitActLinePoints", local_range_policy(), ActFastUpdatePoints(*this));
   actuator_utils::reduce_view_on_host(pointCentroid_.view_host());
   initialize_swept_points(actMeta);
 }
@@ -109,6 +109,7 @@ void ActuatorBulkDiskFAST::resize_arrays(const ActuatorMetaFAST& actMeta)
   pointCentroid_.resize(newSize);
   actuatorForce_.resize(newSize);
   epsilon_.resize(newSize);
+  velocity_.resize(newSize); //TODO(psakiev) we don't need velocity to resize, but resize to match search/apply plumbing
   epsilonOpt_.resize(newSize);
   searchRadius_.resize(newSize);
   Kokkos::resize(localCoords_, newSize);
@@ -117,7 +118,6 @@ void ActuatorBulkDiskFAST::resize_arrays(const ActuatorMetaFAST& actMeta)
 }
 
 // TODO can we remove all fast stuff from this for device compatibility?
-// TODO(psakiev) figure out parallel sync
 void ActuatorBulkDiskFAST::initialize_swept_points(const ActuatorMetaFAST& actMeta){
   actuator_utils::SweptPointLocator pointLocator;
 
@@ -141,6 +141,8 @@ void ActuatorBulkDiskFAST::initialize_swept_points(const ActuatorMetaFAST& actMe
     auto searchRadius = Kokkos::subview(searchRadius_.view_host(),  std::make_pair(turbOffset,turbTotal));
 
     for(int iB = 0; iB<nForcePtsBlade; iB++){
+      const int localOffset = nForcePtsFast + sweptOffset(iB);
+
       for(int bN=0; bN<3; bN++){
         const int indexB =
             actMeta.get_fast_index(fast::BLADE, iTurb, iB, bN);
@@ -149,27 +151,78 @@ void ActuatorBulkDiskFAST::initialize_swept_points(const ActuatorMetaFAST& actMe
         pointLocator.update_point_location(bN,Point{pnt(0), pnt(1), pnt(2)});
       }
 
+      // periodic function has blades points at pi/3, pi, and 5*pi/3
+      // this is due to the way the control points are defined
       const double dTheta= 2.0*M_PI/(3*(sweptCount(iB)+1));
       double theta = M_PI/3.0;
       // assume identical blades
       const int indexB = actMeta.get_fast_index(fast::BLADE, iTurb, iB, 0);
 
-      for(int bN = 0; bN<3; bN++){
-        const int localOffset = nForcePtsFast + sweptOffset(iB);
-
-        for(int sN = 0; sN<sweptCount(iB); sN++){
+      for(int nB = 0; nB<3; nB++){
+        for(int nS = 0; nS<sweptCount(iB); nS++){
           theta += dTheta;
           Point coords = pointLocator(theta);
-          const int localIndex = localOffset + sN + sweptCount(iB)*bN;
+          const int localIndex = localOffset + nS + sweptCount(iB)*nB;
           for(int i=0; i<3; i++){
             points  (localIndex,i) = coords[i];
             epsilon (localIndex,i) = epsilon(indexB, i);
           }
           searchRadius(localIndex) = searchRadius(indexB);
         }
-        theta+=dTheta; // skip blade
+        theta += dTheta; // skip blade
       }
 
+    }
+  }
+}
+
+void ActuatorBulkDiskFAST::spread_forces_over_disk(const ActuatorMetaFAST& actMeta){
+  actuatorForce_.sync_host();
+  actuatorForce_.modify_host();
+
+  for(int iTurb=0; iTurb<actMeta.numberOfActuators_; iTurb++){
+    const int nForcePtsBlade = actMeta.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
+    const int turbOffset = turbIdOffset_.h_view(iTurb);
+    const int turbTotal = actMeta.numPointsTurbine_.h_view(iTurb);
+    const int nForcePtsFast =1 + actMeta.get_fast_index(
+      fast::TOWER, iTurb, actMeta.fastInputs_.globTurbineData[iTurb].numForcePtsTwr-1);
+
+    auto sweptOffset  = Kokkos::subview(numSweptOffset_, iTurb, Kokkos::ALL);
+    auto sweptCount   = Kokkos::subview(numSweptCount_,  iTurb, Kokkos::ALL);
+    auto points       = Kokkos::subview(pointCentroid_.view_host(), std::make_pair(turbOffset,turbTotal), Kokkos::ALL);
+    auto forces       = Kokkos::subview(actuatorForce_.view_host(), std::make_pair(turbOffset,turbTotal), Kokkos::ALL);
+
+    for(int iB = 0; iB<nForcePtsBlade; iB++){
+      std::array<double,3> forceTemp = {{0.0,0.0,0.0}};
+      const int avgCount = (sweptCount(iB) + 1) * 3;
+      const int localOffset = nForcePtsFast + sweptOffset(iB);
+
+      for(int nB = 0; nB<3; nB++){
+        for(int i=0; i<3; i++){
+          forceTemp[i] += forces(actMeta.get_fast_index(fast::BLADE, iTurb, iB, nB), i);
+        }
+      }
+
+      for(int i = 0; i<3; i++){
+       forceTemp[i]/=avgCount;
+      }
+
+      // replace blade forces with distributed force
+      for(int nB = 0; nB<3; nB++){
+        for(int i=0; i<3; i++){
+          forces(actMeta.get_fast_index(fast::BLADE, iTurb, iB, nB), i) = forceTemp[i];
+        }
+      }
+
+      // fill swept points with distributed force
+      for(int nS = 0; nS<sweptCount(iB); nS++){
+        for(int nB = 0; nB<3; nB++){
+          const int localIndex = localOffset + nS + sweptCount(iB)*nB;
+          for(int i=0; i<3; i++){
+            forces(localIndex, i) = forceTemp[i];
+          }
+        }
+      }
     }
   }
 }
