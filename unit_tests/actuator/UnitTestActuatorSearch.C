@@ -22,7 +22,7 @@ namespace {
 
 class ActuatorSearchTest : public ::testing::Test
 {
-protected:
+public:
   ActuatorSearchTest()
     : nProcs(NaluEnv::self().parallel_size()),
       myRank(NaluEnv::self().parallel_rank()),

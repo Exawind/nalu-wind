@@ -631,7 +631,7 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     switch ( ActuatorTypeMap[ActuatorTypeName] ) {
         case ActuatorType::ActLineFASTNGP : {
 #ifdef NALU_USES_OPENFAST
-          actuatorMeta_ = make_unique<ActuatorMetaFAST>(actuator_FAST_parse(node, actMeta));
+          actuatorMeta_ = std::make_shared<ActuatorMetaFAST>(actuator_FAST_parse(node, actMeta));
           break;
 #else
 	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
@@ -1041,7 +1041,7 @@ Realm::setup_post_processing_algorithms()
 
   if (NULL != actuatorMeta_)
   {
-    actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
+    actuatorBulk_ = std::make_shared<ActuatorBulkFAST>(*actuatorMeta_.get(),
        get_time_step_from_file());
   }
 
@@ -2028,12 +2028,13 @@ Realm::advance_time_step()
   }
 
   // check for actuator line; assemble the source terms for this time step
+#ifdef NALU_USES_OPENFAST
   if ( NULL != actuatorBulk_ ) {
     ActuatorLineFastNGP(*actuatorMeta_.get(),
       *actuatorBulk_.get(),
       bulk_data())();
   }
-
+#endif
   // Check for ABL forcing; estimate source terms for this time step
   if ( NULL != ablForcingAlg_) {
     ablForcingAlg_->execute();

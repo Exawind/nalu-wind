@@ -459,8 +459,8 @@ class Realm {
   TurbulenceAveragingPostProcessing *turbulenceAveragingPostProcessing_;
   DataProbePostProcessing *dataProbePostProcessing_;
   Actuator *actuator_;
-  std::unique_ptr<ActuatorMetaFAST> actuatorMeta_;
-  std::unique_ptr<ActuatorBulkFAST> actuatorBulk_;
+  std::shared_ptr<ActuatorMetaFAST> actuatorMeta_;
+  std::shared_ptr<ActuatorBulkFAST> actuatorBulk_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;

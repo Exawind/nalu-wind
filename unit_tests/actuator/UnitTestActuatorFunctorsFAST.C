@@ -210,7 +210,7 @@ TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces){
 
   Kokkos::parallel_for("checkAnswers",
     Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(0,actMetaFast.numPointsTotal_),
-    KOKKOS_LAMBDA(int i){
+    [&](int i){
     for(int j=0; j<3; ++j){
       EXPECT_DOUBLE_EQ(fastForces(i,j), force(i,j));
     }
