@@ -70,7 +70,7 @@
 #include <actuator/ActuatorDiskFAST.h>
 #include <actuator/ActuatorParsingFAST.h>
 #include <actuator/ActuatorBulkFAST.h>
-#include <actuator/ActuatorLineFASTNgp.h>
+#include <actuator/ActuatorExecutorsFASTNgp.h>
 #endif
 
 #include <wind_energy/ABLForcingAlgorithm.h>

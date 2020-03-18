@@ -26,7 +26,7 @@ public:
   ActFixArrayInt numSweptCount_; //TODO(psakiev) this is confusing maybe wrapper class
   ActFixArrayInt numSweptOffset_;
   //TODO(psakiev) average forces and fill in values
-  void spread_forces_over_disk();
+  void spread_forces_over_disk(const ActuatorMetaFAST& actMeta);
 
 private:
   void compute_swept_point_count(ActuatorMetaFAST& actMeta);
