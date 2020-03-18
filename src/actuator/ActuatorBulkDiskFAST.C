@@ -26,7 +26,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double nal
   resize_arrays(actMeta);
   Kokkos::parallel_for("ZeroArrays",
     Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0,actMeta.numPointsTotal_),
-    KOKKOS_LAMBDA(int index)
+    [&](int index)
     {
     for(int j=0; j<3; j++){
       pointCentroid_.h_view(index, j)=0;
