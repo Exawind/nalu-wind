@@ -56,7 +56,7 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
   ThrowErrorMsgIf(*numBlades!=3 && *numBlades!=2,"ERROR::ActuatorParsingFAST::Currently only 2 and 3 bladed turbines are supported.");
 
   // TODO(psakiev) replace condition with a method
-  if(actMetaFAST.actuatorType_==2){
+  if(actMetaFAST.is_disk()){
     get_if_present_no_default(turbNode, "num_swept_pts", actMetaFAST.nPointsSwept_(iTurb));
     actMetaFAST.useUniformAziSampling_(iTurb) = actMetaFAST.nPointsSwept_(iTurb) != 0;
     ThrowErrorMsgIf(*numBlades!=3,"The ActuatorDisk model requires a base 3 bladed turbine, but a 2 bladed turbine was supplied.");
@@ -86,7 +86,7 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     !y_actuator, "actuator argument is "
                  "missing from yaml node passed to actuator_FAST_parse");
   if (fi.nTurbinesGlob > 0) {
-    get_if_present(y_actuator, "dry_run", fi.dryRun, false);
+    fi.dryRun=false;
     get_if_present(y_actuator, "debug", fi.debug, false);
     get_required(y_actuator, "t_start", fi.tStart);
     std::string simStartType = "na";

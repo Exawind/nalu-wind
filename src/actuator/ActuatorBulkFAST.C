@@ -23,14 +23,18 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
     epsilon_("epsilonMeta", numberOfActuators_),
     epsilonChord_("epsilonChordMeta", numberOfActuators_),
     epsilonTower_("epsilonTowerMeta", numberOfActuators_),
-    useUniformAziSampling_("diskUseUniSample",actuatorType_==3?numberOfActuators_:0), //TODO(psakiev) use function to determine this
-    nPointsSwept_("diskNumSwept",actuatorType_==2?numberOfActuators_:0),
+    useUniformAziSampling_("diskUseUniSample",is_disk()?numberOfActuators_:0),
+    nPointsSwept_("diskNumSwept",is_disk()?numberOfActuators_:0),
     nBlades_("numTurbBlades", numberOfActuators_)
 {
 }
 
 int ActuatorMetaFAST::get_fast_index(fast::ActuatorNodeType type, int turbId, int index, int bladeNum) const{
   return actuator_utils::get_fast_point_index(fastInputs_, turbId, nBlades_(turbId), type, index, bladeNum);
+}
+
+bool ActuatorMetaFAST::is_disk(){
+  return actuatorType_==ActuatorType::ActDiskFASTNGP;
 }
 
 ActuatorBulkFAST::ActuatorBulkFAST(

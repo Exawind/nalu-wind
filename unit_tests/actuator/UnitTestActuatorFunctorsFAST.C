@@ -136,6 +136,14 @@ TEST_F(ActuatorFunctorFASTTests, runUpdatePoints){
   Kokkos::parallel_for("testUpdatePoints", localRangePolicy, ActFastUpdatePoints(actBulk));
   actuator_utils::reduce_view_on_host(points);
 
+  // test for empty points
+  for(int i=0; i< actMetaFast.numPointsTotal_; ++i){
+    if(i!=actMetaFast.get_fast_index(fast::TOWER, 0, 0)){
+      EXPECT_TRUE(points(i,0)!=0 || points(i,1)!=0 || points(i,2)!=0) <<
+        "Index failure: "  << i << " on rank: " << NaluEnv::self().parallel_rank();
+    }
+  }
+
   if(turbineID == fast.get_procNo(actBulk.localTurbineId_)){
     EXPECT_EQ(fast::HUB, fast.getForceNodeType(turbineID,0));
     std::vector<double> hubPos(3);

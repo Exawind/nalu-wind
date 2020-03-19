@@ -27,6 +27,7 @@ public:
   ActFixArrayInt numSweptOffset_;
   //TODO(psakiev) average forces and fill in values
   void spread_forces_over_disk(const ActuatorMetaFAST& actMeta);
+  bool searchExecuted_;
 
 private:
   void compute_swept_point_count(ActuatorMetaFAST& actMeta);
