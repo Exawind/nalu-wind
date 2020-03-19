@@ -14,6 +14,19 @@
 
 namespace unit_test_utils {
 
+inline
+bool find_col(int col,
+               const std::vector<int>& cols,
+               int begin, int end)
+{
+  for(int i=begin; i<end; ++i) {
+    if (cols[i] == col) {
+      return true;
+    }
+  }
+  return false;
+}
+
 struct TpetraHelperObjectsBase {
   TpetraHelperObjectsBase(stk::mesh::BulkData& bulk, int numDof)
   : yamlNode(unit_test_utils::get_default_inputs()),
@@ -116,6 +129,11 @@ struct TpetraHelperObjectsBase {
           if (constRowView.colidx(j) == goldCol) {
             foundGoldCol = true;
             EXPECT_NEAR(vals[offset], constRowView.value(j), 1.e-14)<<"i: "<<i<<", j: "<<j;
+          }
+          else if (!find_col(constRowView.colidx(j),
+                             cols, rowOffsets[i], rowOffsets[i+1]))
+          {
+            EXPECT_NEAR(0.0, constRowView.value(j), 1.e-14);
           }
         }
         EXPECT_TRUE(foundGoldCol);
