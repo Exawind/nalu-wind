@@ -69,7 +69,7 @@
 #include <actuator/ActuatorLineFAST.h>
 #include <actuator/ActuatorDiskFAST.h>
 #include <actuator/ActuatorParsingFAST.h>
-#include <actuator/ActuatorBulkFAST.h>
+#include <actuator/ActuatorBulkDiskFAST.h>
 #include <actuator/ActuatorExecutorsFASTNgp.h>
 #endif
 
@@ -604,6 +604,7 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
 
     const std::string ActuatorTypeName = (*foundActuator[0])["actuator"]["type"].as<std::string>() ;
     switch ( ActuatorTypeMap[ActuatorTypeName] ) {
+        case ActuatorType::ActDiskFASTNGP:
         case ActuatorType::ActLineFASTNGP : {
 #ifdef NALU_USES_OPENFAST
           actuatorMeta_ = std::make_shared<ActuatorMetaFAST>(actuator_FAST_parse(node, actMeta));
@@ -969,8 +970,22 @@ Realm::setup_post_processing_algorithms()
 
   if (NULL != actuatorMeta_)
   {
-    actuatorBulk_ = std::make_shared<ActuatorBulkFAST>(*actuatorMeta_.get(),
-       get_time_step_from_file());
+    switch(actuatorMeta_->actuatorType_){
+      case(ActuatorType::ActLineFASTNGP):{
+        actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
+          get_time_step_from_file());
+       break;
+      }
+      case(ActuatorType::ActDiskFASTNGP):{
+        actuatorBulk_ = make_unique<ActuatorBulkDiskFAST>(*actuatorMeta_.get(),
+          get_time_step_from_file());
+        //actuatorBulk_->stk_search_act_pnts(*actuatorMeta_.get(), bulk_data());
+        break;
+      }
+      default:{
+        ThrowErrorMsg("Unsupported actuator type");
+      }
+    }
   }
 
   // check for norm nodal fields
@@ -1792,9 +1807,16 @@ Realm::advance_time_step()
   // check for actuator line; assemble the source terms for this time step
 #ifdef NALU_USES_OPENFAST
   if ( NULL != actuatorBulk_ ) {
-    ActuatorLineFastNGP(*actuatorMeta_.get(),
-      *actuatorBulk_.get(),
-      bulk_data())();
+    if(actuatorMeta_->actuatorType_==ActuatorType::ActLineFASTNGP){
+      ActuatorLineFastNGP(*actuatorMeta_.get(),
+        *actuatorBulk_.get(),
+        bulk_data())();
+    }
+    else{
+      ActuatorDiskFastNGP(*actuatorMeta_.get(),
+        *dynamic_cast<ActuatorBulkDiskFAST*>(actuatorBulk_.get()),
+        bulk_data())();
+    }
   }
 #endif
   // Check for ABL forcing; estimate source terms for this time step

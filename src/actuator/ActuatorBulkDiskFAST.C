@@ -19,7 +19,8 @@ namespace nalu
 ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double naluTimeStep):
   ActuatorBulkFAST(actMeta, naluTimeStep),
   numSweptCount_("numSweptCount", actMeta.numberOfActuators_, actMeta.maxNumPntsPerBlade_),
-  numSweptOffset_("numSweptOffset",actMeta.numberOfActuators_,actMeta.maxNumPntsPerBlade_)
+  numSweptOffset_("numSweptOffset",actMeta.numberOfActuators_,actMeta.maxNumPntsPerBlade_),
+  searchExecuted_(false)
 {
 
   compute_swept_point_count(actMeta);

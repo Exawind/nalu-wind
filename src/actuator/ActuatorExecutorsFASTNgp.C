@@ -106,6 +106,9 @@ void ActuatorDiskFastNGP::operator ()(){
     }
   });
 
+  if(!actBulk_.searchExecuted_){
+    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+  }
   actBulk_.zero_source_terms(stkBulk_);
 
   Kokkos::parallel_for("interpolateVelocitiesActuatorNgpFAST", numActPoints_, InterpActuatorVel(actBulk_, stkBulk_));
