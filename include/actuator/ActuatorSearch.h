@@ -52,7 +52,8 @@ void ExecuteFineSearch(
   ActFixVectorDbl points,
   ActFixElemIds matchElemIds,
   ActFixVectorDbl localCoords,
-  ActFixScalarBool isLocalPoint);
+  ActFixScalarBool isLocalPoint,
+  ActFixScalarInt localParallelRedundancy);
 
 } // namespace nalu
 } // namespace sierra

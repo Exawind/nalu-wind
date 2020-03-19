@@ -61,6 +61,11 @@ void ActuatorLineFastNGP::operator()()
       actuator_utils::reduce_view_on_host(actBulk_.turbineTorque_);
       actBulk_.output_torque_info();
     }
+    for(int i=0; i<actMeta_.numPointsTotal_; i++){
+      NaluEnv::self().naluOutputP0() << "force at point: "<< i <<" "<<forceReduce(i,0)<<" "<<forceReduce(i,1)<<" "<<forceReduce(i,2)<<std::endl;
+    }
+
+
   }
 
 void ActuatorLineFastNGP::update(){
@@ -133,8 +138,6 @@ void ActuatorDiskFastNGP::operator ()(){
 
   const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
-  //TODO(psakiev) apply re-orientation and distance projection
-  // maybe compute distance at time of coarse search and cache to save a loop
   Kokkos::parallel_for("spreadForcesActuatorNgpFAST", localSizeCoarseSearch, SpreadActuatorForce(actBulk_, stkBulk_));
 
   actBulk_.parallel_sum_source_term(stkBulk_);

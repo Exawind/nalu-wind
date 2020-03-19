@@ -153,7 +153,8 @@ void ExecuteFineSearch(
   ActFixVectorDbl points,
   ActFixElemIds matchElemIds,
   ActFixVectorDbl localCoords,
-  ActFixScalarBool isLocalPoint
+  ActFixScalarBool isLocalPoint,
+  ActFixScalarInt localParallelRedundancy
   )
 {
   const int nDim = 3;
@@ -168,6 +169,7 @@ void ExecuteFineSearch(
 
   for (unsigned i = 0; i < isLocalPoint.extent(0); i++) {
     isLocalPoint(i) = false;
+    localParallelRedundancy(i)=0.0;
   }
 
   // now proceed with the standard search
@@ -210,6 +212,7 @@ void ExecuteFineSearch(
     if (std::abs(nearestDistance) <= 1.0) {
       matchElemIds(thePt) = theBox;
       isLocalPoint(thePt) = true;
+      localParallelRedundancy(thePt) = 1.0;
       localPntCrds(0) = isoParCoords[0];
       localPntCrds(1) = isoParCoords[1];
       localPntCrds(2) = isoParCoords[2];

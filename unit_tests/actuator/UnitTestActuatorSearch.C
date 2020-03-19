@@ -34,6 +34,7 @@ public:
       points("points", nPoints),
       radii("radii", nPoints),
       isLocal("isLocal", nPoints),
+      localParallelRedundancy("localParallelRedundancy", nPoints),
       nx("nx"),
       slabSize(4)
   {
@@ -72,6 +73,7 @@ public:
   ActFixVectorDbl points;
   ActFixScalarDbl radii;
   ActFixScalarBool isLocal;
+  ActFixScalarInt localParallelRedundancy;
   Kokkos::View<int[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace> nx;
   const unsigned slabSize;
 };
@@ -162,7 +164,7 @@ TEST_F(ActuatorSearchTest, executeFineSearch)
   // this case should match coarse search
   try {
     ExecuteFineSearch(
-      stkBulk, coarsePointIds, coarseElemIds, points, matchElemIds, localCoords, isLocal);
+      stkBulk, coarsePointIds, coarseElemIds, points, matchElemIds, localCoords, isLocal, localParallelRedundancy);
     int numLocal = 0;
     for (unsigned i = 0; i < points.extent(0); i++) {
       if (isLocal(i)) {
