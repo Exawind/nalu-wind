@@ -109,10 +109,16 @@ struct TpetraHelperObjectsBase {
 
     for(int i=0; i<localMatrix.numRows(); ++i) {
       KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);
-
-      for(int j=0; j<constRowView.length; ++j) {
-        EXPECT_EQ(cols[rowOffsets[i]+j], constRowView.colidx(j));
-        EXPECT_NEAR(vals[rowOffsets[i]+j], constRowView.value(j), 1.e-14)<<"i: "<<i<<", j: "<<j;
+      for(int offset=rowOffsets[i]; offset<rowOffsets[i+1]; ++offset) {
+        int goldCol = cols[offset];
+        bool foundGoldCol = false;
+        for(int j=0; j<constRowView.length; ++j) {
+          if (constRowView.colidx(j) == goldCol) {
+            foundGoldCol = true;
+            EXPECT_NEAR(vals[offset], constRowView.value(j), 1.e-14)<<"i: "<<i<<", j: "<<j;
+          }
+        }
+        EXPECT_TRUE(foundGoldCol);
       }
 
       EXPECT_NEAR(rhs[i], localRhs(i,0), 1.e-14)<<"i: "<<i;
