@@ -59,6 +59,9 @@ InterpActuatorVel::operator()(int index) const
     actuator_utils::interpolate_field(
       3, elem, stkBulk_, &(localCoord(index, 0)), &ws_velocity[0],
       &(vel(index, 0)));
+    for(int i=0; i<3; i++){
+      vel(index,i)/=actBulk_.localParallelRedundancy_(index);
+    }
     ThrowAssert(vel(index,0)>0.0);
   }
 }
@@ -121,8 +124,6 @@ void SpreadActuatorForce::operator ()(int index) const{
 
   double scvError =0.0;
   meSCV->determinant(1, elemCoords.data(), scvElem.data(), &scvError);
-
-
 
   for(unsigned iNode=0; iNode<numNodes; iNode++){
     stk::mesh::Entity node = elem_nod_rels[iNode];

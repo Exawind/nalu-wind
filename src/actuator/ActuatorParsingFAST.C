@@ -55,7 +55,6 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
   get_if_present_no_default(turbNode, "num_blades", *numBlades);
   ThrowErrorMsgIf(*numBlades!=3 && *numBlades!=2,"ERROR::ActuatorParsingFAST::Currently only 2 and 3 bladed turbines are supported.");
 
-  // TODO(psakiev) replace condition with a method
   if(actMetaFAST.is_disk()){
     get_if_present_no_default(turbNode, "num_swept_pts", actMetaFAST.nPointsSwept_(iTurb));
     actMetaFAST.useUniformAziSampling_(iTurb) = actMetaFAST.nPointsSwept_(iTurb) != 0;

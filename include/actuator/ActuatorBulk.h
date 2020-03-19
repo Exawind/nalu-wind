@@ -76,6 +76,7 @@ struct ActuatorBulk
   // HOST ONLY DATA
   ActFixVectorDbl localCoords_;
   ActFixScalarBool pointIsLocal_;
+  ActFixScalarInt localParallelRedundancy_;
   ActFixElemIds elemContainingPoint_;
 };
 

@@ -18,6 +18,8 @@ namespace sierra {
 namespace nalu {
 
 
+//TODO(psakiev) move temporay allocaitons out of functors
+
 template<>
 ActFastZero::ActuatorFunctor(ActuatorBulkFAST& actBulk) : actBulk_(actBulk){
   touch_dual_view(actBulk_.velocity_);

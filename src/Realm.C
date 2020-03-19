@@ -1051,7 +1051,6 @@ Realm::setup_post_processing_algorithms()
       case(ActuatorType::ActDiskFASTNGP):{
         actuatorBulk_ = make_unique<ActuatorBulkDiskFAST>(*actuatorMeta_.get(),
           get_time_step_from_file());
-        //actuatorBulk_->stk_search_act_pnts(*actuatorMeta_.get(), bulk_data());
         break;
       }
       default:{

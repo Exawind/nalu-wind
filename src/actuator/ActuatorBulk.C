@@ -9,6 +9,7 @@
 
 #include <actuator/ActuatorBulk.h>
 #include <actuator/ActuatorInfo.h>
+#include <actuator/UtilitiesActuator.h>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/FieldBLAS.hpp>
@@ -46,6 +47,7 @@ ActuatorBulk::ActuatorBulk(
     coarseSearchElemIds_("coarseSearchElemIds",0),
     localCoords_("localCoords", actMeta.numPointsTotal_),
     pointIsLocal_("pointIsLocal", actMeta.numPointsTotal_),
+    localParallelRedundancy_("localParallelReundancy", actMeta.numPointsTotal_),
     elemContainingPoint_("elemContainPoint", actMeta.numPointsTotal_)
 {
   compute_offsets(actMeta);
@@ -85,7 +87,10 @@ ActuatorBulk::stk_search_act_pnts(const ActuatorMeta& actMeta, stk::mesh::BulkDa
     points,
     elemContainingPoint_,
     localCoords_,
-    pointIsLocal_);
+    pointIsLocal_,
+    localParallelRedundancy_);
+
+  actuator_utils::reduce_view_on_host(localParallelRedundancy_);
 }
 
 void ActuatorBulk::zero_source_terms(stk::mesh::BulkData& stkBulk){
