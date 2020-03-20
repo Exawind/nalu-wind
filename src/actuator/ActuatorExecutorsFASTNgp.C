@@ -61,11 +61,6 @@ void ActuatorLineFastNGP::operator()()
       actuator_utils::reduce_view_on_host(actBulk_.turbineTorque_);
       actBulk_.output_torque_info();
     }
-    for(int i=0; i<actMeta_.numPointsTotal_; i++){
-      NaluEnv::self().naluOutputP0() << "force at point: "<< i <<" "<<forceReduce(i,0)<<" "<<forceReduce(i,1)<<" "<<forceReduce(i,2)<<std::endl;
-    }
-
-
   }
 
 void ActuatorLineFastNGP::update(){
