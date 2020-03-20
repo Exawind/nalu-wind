@@ -115,6 +115,7 @@ void ActuatorBulkDiskFAST::resize_arrays(const ActuatorMetaFAST& actMeta)
   searchRadius_.resize(newSize);
   Kokkos::resize(localCoords_, newSize);
   Kokkos::resize(pointIsLocal_, newSize);
+  Kokkos::resize(localParallelRedundancy_, newSize);
   Kokkos::resize(elemContainingPoint_, newSize);
 }
 

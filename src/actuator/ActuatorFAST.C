@@ -435,8 +435,6 @@ ActuatorFAST::initialize()
   // create the ActuatorLineFASTPointInfo
   create_actuator_point_info_map();
 
-  create_point_info_map_class_specific();
-
   // coarse search
   determine_elems_to_ghost();
 
