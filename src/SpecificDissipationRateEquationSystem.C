@@ -448,6 +448,13 @@ SpecificDissipationRateEquationSystem::register_inflow_bc(
   std::vector<double> userSpec(1);
   userSpec[0] = sdr.specDissRate_;
 
+  std::printf("Open file for writing sdrFS\n");
+  FILE * fp;
+  fp = std::fopen ("sdrFreestream.dat", "w");
+  std::fprintf(fp,"%lf\n", userSpec[0]);
+  std::fclose(fp);
+  std::printf("SDR EqnSys Inlet omega value = %.12E\n", userSpec[0]);
+
   // new it
   ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
 

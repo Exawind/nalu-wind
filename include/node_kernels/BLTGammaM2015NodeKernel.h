@@ -49,6 +49,7 @@ private:
   ngp::Field<double> minD_;
   ngp::Field<double> dualNodalVolume_;
   ngp::Field<double> coordinates_;
+  ngp::Field<double> velocityNp1_;
   ngp::Field<double> gamint_;
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
@@ -59,6 +60,7 @@ private:
   unsigned minDID_            {stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_     {stk::mesh::InvalidOrdinal};
+  unsigned velocityNp1ID_     {stk::mesh::InvalidOrdinal};
   unsigned gamintID_       {stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType caOne_;

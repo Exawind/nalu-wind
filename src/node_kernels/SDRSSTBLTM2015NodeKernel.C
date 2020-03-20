@@ -60,6 +60,12 @@ SDRSSTBLTM2015NodeKernel::setup(Realm& realm)
   const std::string dofName = "specific_dissipation_rate";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
 
+  FILE * fp;
+  fp = std::fopen ("sdrFreestream.dat", "r");
+  std::fscanf(fp,"%lf\n",&sdrFreestream);
+//  std::printf("Node Kernel Inlet SDR value = %.12E\n", sdrFreestream);
+  std::fclose(fp);
+
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
@@ -93,7 +99,6 @@ SDRSSTBLTM2015NodeKernel::execute(
 
   DblType Pk = 0.0;
   DblType crossDiff = 0.0;
-  DblType sdrFreestream = 0.0;
   DblType sdrForcing = 0.0;
   DblType tc = 0.0;
   DblType velMag2 = 0.0;
@@ -122,33 +127,31 @@ SDRSSTBLTM2015NodeKernel::execute(
   Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
 
   if (coords[0] < -0.04) {
-    sdrFreestream  = 377.39537778;
     tc = 500.0 * visc / density / velMag2;
     sdrForcing = c0t_ * density * (sdrFreestream - sdr) / tc;
+    rhs(0) += sdrForcing * dVol;
+    lhs(0, 0) += c0t_ * density * dVol/ tc;
   }
   else {
-    sdrForcing = 0.0;
+    // Blend constants for SDR
+    const DblType ry = density * minD * stk::math::sqrt(tke)/visc;
+    const DblType arg = ry / 120.0;
+    const DblType f3 = stk::math::exp(-arg*arg*arg*arg*arg*arg*arg*arg);
+    const DblType fOneBlendBLT = stk::math::max( fOneBlend, f3);
+
+    const DblType omf1 = (1.0 - fOneBlendBLT);
+    const DblType beta = fOneBlendBLT * betaOne_ + omf1 * betaTwo_;
+    const DblType gamma = fOneBlendBLT * gammaOne_ + omf1 * gammaTwo_;
+    const DblType sigmaD = 2.0 * omf1 * sigmaWTwo_;
+
+    // Production term with appropriate clipping of tvisc
+    const DblType Pw = gamma * density * Pk / stk::math::max(tvisc, 1.0e-16);
+    const DblType Dw = beta * density * sdr * sdr;
+    const DblType Sw = sigmaD * density * crossDiff / sdr;
+
+    rhs(0) += (Pw - Dw + Sw + sdrForcing) * dVol;
+    lhs(0, 0) += (2.0 * beta * density * sdr + stk::math::max(Sw / sdr, 0.0)) * dVol;
   }
-
-  // Blend constants for SDR
-  const DblType ry = density * minD * stk::math::sqrt(tke)/visc;
-  const DblType arg = ry / 120.0;
-  const DblType f3 = stk::math::exp(-arg*arg*arg*arg*arg*arg*arg*arg);
-  const DblType fOneBlendBLT = stk::math::max( fOneBlend, f3);
-
-  const DblType omf1 = (1.0 - fOneBlendBLT);
-  const DblType beta = fOneBlendBLT * betaOne_ + omf1 * betaTwo_;
-  const DblType gamma = fOneBlendBLT * gammaOne_ + omf1 * gammaTwo_;
-  const DblType sigmaD = 2.0 * omf1 * sigmaWTwo_;
-
-  // Production term with appropriate clipping of tvisc
-  const DblType Pw = gamma * density * Pk / stk::math::max(tvisc, 1.0e-16);
-  const DblType Dw = beta * density * sdr * sdr;
-  const DblType Sw = sigmaD * density * crossDiff / sdr;
-
-  rhs(0) += (Pw - Dw + Sw + sdrForcing) * dVol;
-  lhs(0, 0) += (2.0 * beta * density * sdr + stk::math::max(Sw / sdr, 0.0)) *
-               dVol;
 }
 
 } // namespace nalu

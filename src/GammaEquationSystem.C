@@ -313,6 +313,86 @@ void GammaEquationSystem::register_inflow_bc(
 
 }
 
+#if 0
+//--------------------------------------------------------------------------
+//-------- register_open_bc ------------------------------------------------
+//--------------------------------------------------------------------------
+void GammaEquationSystem::register_open_bc(
+  stk::mesh::Part *part,
+  const stk::topology & partTopo,
+  const OpenBoundaryConditionData &openBCData)
+{
+
+  // algorithm type
+  const AlgorithmType algType = OPEN;
+
+  ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dGamdxNone = dGamdx_->field_of_state(stk::mesh::StateNone);
+
+  stk::mesh::MetaData &meta_data = realm_.meta_data();
+
+  // register boundary data; gamma_bc
+  ScalarFieldType *theBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "open_gamma_bc"));
+  stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
+
+  // extract the value for user specified tke and save off the AuxFunction
+  OpenUserData userData = openBCData.userData_;
+  Gamma gamma = userData.gamma_;
+  std::vector<double> userSpec(1);
+  userSpec[0] = gamma.gamma_;
+
+  // new it
+  ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
+
+  // bc data alg
+  AuxFunctionAlgorithm *auxAlg
+    = new AuxFunctionAlgorithm(realm_, part,
+                               theBcField, theAuxFunc,
+                               stk::topology::NODE_RANK);
+  bcDataAlg_.push_back(auxAlg);
+
+  // non-solver; dGamdx; allow for element-based shifted
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+      algType, part, "gamma_nodal_grad", &gammaNp1, &dGamdxNone, edgeNodalGradient_);
+
+  if (realm_.realmUsesEdges_) {
+    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+    AssembleElemSolverAlgorithm* elemSolverAlg = nullptr;
+    bool solverAlgWasBuilt = false;
+
+    std::tie(elemSolverAlg, solverAlgWasBuilt)
+      = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "open");
+
+    auto& dataPreReqs = elemSolverAlg->dataNeededByKernels_;
+    auto& activeKernels = elemSolverAlg->activeKernels_;
+
+    build_face_topo_kernel_automatic<ScalarOpenEdgeKernel>(
+      partTopo, *this, activeKernels, "gamma_open",
+      realm_.meta_data(), *realm_.solutionOptions_, gamma_, theBcField, dataPreReqs);
+  }
+  else {
+    // solver open; lhs
+    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
+      = solverAlgDriver_->solverAlgMap_.find(algType);
+    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
+      SolverAlgorithm *theAlg = NULL;
+      if ( realm_.realmUsesEdges_ ) {
+        theAlg = new AssembleScalarEdgeOpenSolverAlgorithm(realm_, part, this, gamma_, theBcField, &dGamdxNone, evisc_);
+      }
+      else {
+        theAlg = new AssembleScalarElemOpenSolverAlgorithm(realm_, part, this, gamma_, theBcField, &dGamdxNone, evisc_);
+      }
+      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
+    }
+    else {
+      itsi->second->partVec_.push_back(part);
+    }
+  }
+
+}
+#endif
+
+#if 1
 void GammaEquationSystem::register_open_bc(
   stk::mesh::Part *part,
   const stk::topology & partTopo,
@@ -326,11 +406,15 @@ void GammaEquationSystem::register_open_bc(
   ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dGamdxNone = dGamdx_->field_of_state(stk::mesh::StateNone);
 
-  // non-solver; dwdx; allow for element-based shifted
+  // non-solver; dGamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dGamdxNone, edgeNodalGradient_);
 
+      NaluEnv::self().naluOutputP0()
+      << "*********** register_open_bc **************************" << std::endl;
 }
+
+#endif 
 
 void GammaEquationSystem::register_wall_bc(
     stk::mesh::Part *part,
@@ -342,7 +426,7 @@ void GammaEquationSystem::register_wall_bc(
   ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dGamdxNone = dGamdx_->field_of_state(stk::mesh::StateNone);
 
-  // non-solver; dwdx; allow for element-based shifted
+  // non-solver; dGamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dGamdxNone, edgeNodalGradient_);
 
@@ -359,7 +443,7 @@ GammaEquationSystem::register_symmetry_bc(stk::mesh::Part *part,
   ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dGamdxNone = dGamdx_->field_of_state(stk::mesh::StateNone);
 
-  // non-solver; dwdx; allow for element-based shifted
+  // non-solver; dGamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dGamdxNone, edgeNodalGradient_);
 }
