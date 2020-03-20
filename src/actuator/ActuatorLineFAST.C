@@ -103,7 +103,7 @@ ActuatorLineFAST::execute_class_specific(
     // inverted after the rotation is done inside the 
     // spread_actuator_force_to_node_vec function.
     std::vector<double> orientation_tensor
-        {0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+        {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
 
     switch (infoObject->nodeType_) {
 
