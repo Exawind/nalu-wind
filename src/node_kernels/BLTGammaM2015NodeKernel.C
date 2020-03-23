@@ -29,6 +29,9 @@ BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
     coordinatesID_(get_field_ordinal(meta, "coordinates")),
     velocityNp1ID_(get_field_ordinal(meta, "velocity")),
     gamintID_(get_field_ordinal(meta, "gamma_transition")),
+    gammaprodID_(get_field_ordinal(meta, "gamma_production")),
+    gammasinkID_(get_field_ordinal(meta, "gamma_sink")),
+    gammarethID_(get_field_ordinal(meta, "gamma_reth")),
     nDim_(meta.spatial_dimension())
 {}
 
@@ -47,6 +50,9 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   coordinates_     = fieldMgr.get_field<double>(coordinatesID_);
   velocityNp1_     = fieldMgr.get_field<double>(velocityNp1ID_);
   gamint_          = fieldMgr.get_field<double>(gamintID_);
+  gammaprod_      = fieldMgr.get_field<double>(gammaprodID_);
+  gammasink_      = fieldMgr.get_field<double>(gammasinkID_);
+  gammareth_      = fieldMgr.get_field<double>(gammarethID_);
 
 
 
@@ -98,6 +104,11 @@ BLTGammaM2015NodeKernel::execute(
   const DblType tke       = tke_.get(node, 0);
   const DblType sdr       = sdr_.get(node, 0);
   const DblType gamint    = gamint_.get(node, 0);
+
+//  DblType gammaprod = gammaprod_.get(node, 0);
+//  DblType gammasink = gammasink_.get(node, 0);
+//  DblType gammareth = gammareth_.get(node, 0);
+
   const DblType density   = density_.get(node, 0);
   const DblType visc      = visc_.get(node, 0);
   const DblType minD      = minD_.get(node, 0);
@@ -126,7 +137,6 @@ BLTGammaM2015NodeKernel::execute(
   DblType Ctu1=100.;
   DblType Ctu2=1000.;
   DblType Ctu3=1.0;
-  DblType fact_outflow = 1.0;
 
   for (int d = 0; d < nDim_; d++) {
     coords[d] = coordinates_.get(node, d);
@@ -148,9 +158,6 @@ BLTGammaM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(sijMag);
   vortMag = stk::math::sqrt(vortMag);
 
-//   if (coords[0] > 1.925) {
-//     fact_outflow = 0.0;
-//   }
   // dvnn = wall normal derivative of wall normal velocity (for now, hardwire to NASA TM case: z = wall norm direction)
   dvnn = dudx_.get(node, nDim_ * wallnorm_dir + wallnorm_dir);
   //!!!!!!!!!!!!!! Just for debug, turn off pressure gradient
@@ -175,7 +182,10 @@ BLTGammaM2015NodeKernel::execute(
   DblType PgammaDeriv = -flength * density * sijMag * fonset * (1.0 - 2.0 * gamint );
   DblType DgammaDeriv = caTwo_ * density * vortMag * fturb * ( 2.0*ceTwo_ * gamint - 1.0 );
 
-  //const double dx   = stk::math::abs(coords[0] - 0.80);
+//  gammaprod_ = Pgamma;
+//  gammasink_ = Dgamma;
+//  gammareth_ = Re0c;
+//  const double dx   = stk::math::abs(coords[0] - 0.80);
   const double dy   = stk::math::abs(coords[1] + 0.50);
 
   //const double dxle   = stk::math::abs(coords[0] - 0.80);
@@ -187,15 +197,14 @@ BLTGammaM2015NodeKernel::execute(
     //PgammaDeriv = 0.0;
     //DgammaDeriv = 0.0;
 
-    //if (dx < 0.01 && dy < 0.1) {
-//    if (dy < 0.1) {
-//      std::printf("%.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E\n", 
-//        coords[0], coords[1], coords[2], vel[0], vel[2], gamint, tke, sdr, minD, dvnn, TuL, lamda0L, Re0c, Rev, fonset1, fonset2, fonset3, fonset, fturb, 
-//        rt, sijMag, vortMag, Pgamma, Dgamma, Pgamma-Dgamma);
-//    }
+    if (dy < 0.1 && timeStepCount == 50) {
+      std::printf("%i %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E %.8E\n", 
+        timeStepCount, coords[0], coords[1], coords[2], vel[0], vel[2], gamint, tke, sdr, minD, dvnn, TuL, lamda0L, Re0c, Rev, fonset1, fonset2, fonset3, fonset, fturb, 
+        rt, sijMag, vortMag, Pgamma, Dgamma, Pgamma-Dgamma);
+    }
 
-  rhs(0) += fact_outflow * (Pgamma - Dgamma) * dVol;
-  lhs(0, 0) -= fact_outflow * ( PgammaDeriv - DgammaDeriv ) * dVol;
+  rhs(0) += (Pgamma - Dgamma) * dVol;
+  lhs(0, 0) -= (PgammaDeriv - DgammaDeriv) * dVol;
 
 }
 

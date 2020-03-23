@@ -51,6 +51,9 @@ private:
   ngp::Field<double> coordinates_;
   ngp::Field<double> velocityNp1_;
   ngp::Field<double> gamint_;
+  ngp::Field<double> gammaprod_;
+  ngp::Field<double> gammasink_;
+  ngp::Field<double> gammareth_;
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
   unsigned sdrID_             {stk::mesh::InvalidOrdinal};
@@ -62,6 +65,9 @@ private:
   unsigned coordinatesID_     {stk::mesh::InvalidOrdinal};
   unsigned velocityNp1ID_     {stk::mesh::InvalidOrdinal};
   unsigned gamintID_       {stk::mesh::InvalidOrdinal};
+  unsigned gammaprodID_       {stk::mesh::InvalidOrdinal};
+  unsigned gammasinkID_       {stk::mesh::InvalidOrdinal};
+  unsigned gammarethID_       {stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType caOne_;
   NodeKernelTraits::DblType caTwo_;

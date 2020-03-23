@@ -63,6 +63,9 @@ public:
   const bool managePNG_;
 
   ScalarFieldType *gamma_;
+  ScalarFieldType *gammaprod_;
+  ScalarFieldType *gammasink_;
+  ScalarFieldType *gammareth_;
   VectorFieldType *dGamdx_;
   ScalarFieldType *gamTmp_;
   ScalarFieldType *visc_;

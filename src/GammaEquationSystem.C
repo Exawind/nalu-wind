@@ -101,6 +101,9 @@ GammaEquationSystem::GammaEquationSystem(
     : EquationSystem(eqSystems, "GammaEQS","gamma_transition"),
       managePNG_(realm_.get_consistent_mass_matrix_png("gamma_transition")),
       gamma_(NULL),
+      gammaprod_(NULL),
+      gammasink_(NULL),
+      gammareth_(NULL),
       dGamdx_(NULL),
       gamTmp_(NULL),
       visc_(NULL),
@@ -153,6 +156,15 @@ void GammaEquationSystem::register_nodal_fields(stk::mesh::Part *part)
 
   evisc_ = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "effective_viscosity_gamma"));
   stk::mesh::put_field_on_mesh(*evisc_, *part, nullptr);
+
+  gammaprod_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "gamma_production"));
+  stk::mesh::put_field_on_mesh(*gammaprod_, *part, nullptr);
+
+  gammasink_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "gamma_sink"));
+  stk::mesh::put_field_on_mesh(*gammasink_, *part, nullptr);
+
+  gammareth_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "gamma_reth"));
+  stk::mesh::put_field_on_mesh(*gammareth_, *part, nullptr);
 
   // make sure all states are properly populated (restart can handle this)
   if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
