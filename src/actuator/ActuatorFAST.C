@@ -1590,12 +1590,6 @@ ActuatorFAST::spread_actuator_force_to_node_vec(
         distance_projected[j] += distance[k] * orientation_tensor[j + k * nDim];
       }
     }
-    // Switch components 0 and 1 to be consistent with OpenFAST
-    // The new distances are given in:
-    //   chord (0), thickness (1), and spanwise (2) directions
-    distance_projected[0] = distance_projected[0] + distance_projected[1];
-    distance_projected[1] = distance_projected[0] - distance_projected[1];
-    distance_projected[0] = distance_projected[0] - distance_projected[1];
     
     // project the force to this node with projection function
     // To de-activate the projection use distance.data() instead of 

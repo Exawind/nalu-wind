@@ -119,6 +119,13 @@ ActuatorLineFAST::execute_class_specific(
         //   that is thicknes, chord, spanwise
         FAST.getForceNodeOrientation(orientation_tensor, np, 
           infoObject->globTurbId_);
+        // change fast orientation from thick, chord, span to chord, thick, span
+        double rowSwapTemp;
+        for(int i=0; i<3; i++){
+          rowSwapTemp = orientation_tensor[i];
+          orientation_tensor[i]=orientation_tensor[i+3];
+          orientation_tensor[i+3]=rowSwapTemp;
+        }
     
         break;
 
