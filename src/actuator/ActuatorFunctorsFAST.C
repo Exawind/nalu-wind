@@ -20,23 +20,23 @@ namespace nalu {
 
 //TODO(psakiev) move temporay allocaitons out of functors
 
-template<>
-ActFastZero::ActuatorFunctor(ActuatorBulkFAST& actBulk) : actBulk_(actBulk){
-  touch_dual_view(actBulk_.velocity_);
-  touch_dual_view(actBulk_.actuatorForce_);
-  touch_dual_view(actBulk_.pointCentroid_);
+ActFastZero::ActFastZero(ActuatorBulkFAST& actBulk)
+{
+  vel_   = helper_.get_local_view(actBulk.velocity_     );
+  force_ = helper_.get_local_view(actBulk.actuatorForce_);
+  point_ = helper_.get_local_view(actBulk.pointCentroid_);
+
+  helper_.touch_dual_view(actBulk.velocity_     );
+  helper_.touch_dual_view(actBulk.actuatorForce_);
+  helper_.touch_dual_view(actBulk.pointCentroid_);
 }
 
-template<>
 void
-ActFastZero::operator()(const int& index) const{
-  auto vel = get_local_view(actBulk_.velocity_);
-  auto force = get_local_view(actBulk_.actuatorForce_);
-  auto point = get_local_view(actBulk_.pointCentroid_);
+ActFastZero::operator()(int index) const{
   for(int i =0; i<3; i++){
-    vel(index, i)=0.0;
-    force(index, i)=0.0;
-    point(index, i)=0.0;
+    vel_(index, i)=0.0;
+    force_(index, i)=0.0;
+    point_(index, i)=0.0;
   }
 }
 
@@ -141,6 +141,7 @@ ActFastComputeThrust::ActFastComputeThrust(ActuatorBulkFAST& actBulk, stk::mesh:
     actBulk_(actBulk),stkBulk_(stkBulk)
 {}
 
+//TODO(psakiev) fuse this with spread force to reduce loops over search
 void ActFastComputeThrust::operator()(int index) const{
 
   const stk::mesh::MetaData& stkMeta = stkBulk_.mesh_meta_data();

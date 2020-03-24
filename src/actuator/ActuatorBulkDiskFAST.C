@@ -23,6 +23,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double nal
   searchExecuted_(false)
 {
 
+  ThrowAssert(actMeta.actuatorType_==ActuatorType::ActDiskFASTNGP);
   compute_swept_point_count(actMeta);
   resize_arrays(actMeta);
   Kokkos::parallel_for("ZeroArrays",
@@ -110,7 +111,8 @@ void ActuatorBulkDiskFAST::resize_arrays(const ActuatorMetaFAST& actMeta)
   pointCentroid_.resize(newSize);
   actuatorForce_.resize(newSize);
   epsilon_.resize(newSize);
-  velocity_.resize(newSize); //TODO(psakiev) we don't need velocity to resize, but resize to match search/apply plumbing
+  //TODO(psakiev) we don't need velocity to resize, but resize to match search/apply plumbing
+  velocity_.resize(newSize);
   epsilonOpt_.resize(newSize);
   searchRadius_.resize(newSize);
   Kokkos::resize(localCoords_, newSize);
