@@ -25,7 +25,7 @@ class ActuatorBulkDiskFastTest : public ::testing::Test{
 protected:
 
   void SetUp(){
-    actMeta_ = make_unique<ActuatorMeta>(1, ActuatorType::ActDiskFAST);
+    actMeta_ = make_unique<ActuatorMeta>(1, ActuatorType::ActDiskFASTNGP);
   }
 
   std::vector<std::string> inputs_{actuator_unit::nrel5MWinputs};

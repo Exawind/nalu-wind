@@ -12,6 +12,7 @@
 
 #include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulk.h>
+#include <FieldTypeDef.h>
 
 namespace stk{
 namespace mesh{
@@ -33,6 +34,8 @@ struct InterpActuatorVel{
 
   ActuatorBulk& actBulk_;
   stk::mesh::BulkData& stkBulk_;
+  VectorFieldType* coordinates_;
+  VectorFieldType* velocity_;
 };
 
 struct SpreadActuatorForce{
@@ -44,6 +47,9 @@ struct SpreadActuatorForce{
 
   ActuatorBulk& actBulk_;
   stk::mesh::BulkData& stkBulk_;
+  VectorFieldType* coordinates_;
+  VectorFieldType* actuatorSource_;
+  ScalarFieldType* dualNodalVolume_;
 };
 
 } /* namespace nalu */

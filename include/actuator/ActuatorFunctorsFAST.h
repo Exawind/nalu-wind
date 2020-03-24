@@ -20,24 +20,30 @@ namespace nalu {
 
 namespace actfast {
 // tags
-struct ZeroArrays{};
 struct ComputeLocations{};
 struct AssignVelocities{};
 struct ComputeForces{};
 }
 
 // typedefs
-using ActFastZero = ActuatorFunctor<ActuatorBulkFAST, actfast::ZeroArrays, ActuatorExecutionSpace>;
 using ActFastUpdatePoints = ActuatorFunctor<ActuatorBulkFAST, actfast::ComputeLocations, Kokkos::DefaultHostExecutionSpace>;
 using ActFastAssignVel = ActuatorFunctor<ActuatorBulkFAST, actfast::AssignVelocities, Kokkos::DefaultHostExecutionSpace>;
 using ActFastComputeForce = ActuatorFunctor<ActuatorBulkFAST,actfast::ComputeForces, Kokkos::DefaultHostExecutionSpace>;
 
 // declarations
-template<>
-ActFastZero::ActuatorFunctor(ActuatorBulkFAST& actBulk);
+struct
+ActFastZero{
+  using execution_space=ActuatorExecutionSpace;
 
-template<>
-void ActFastZero::operator()(const int& index) const;
+  ActFastZero(ActuatorBulkFAST& actBulk);
+  void operator()(int index) const;
+
+  ActDualViewHelper<ActuatorMemSpace> helper_;
+  ActVectorDbl vel_;
+  ActVectorDbl force_;
+  ActVectorDbl point_;
+
+};
 
 template <>
 ActFastUpdatePoints::ActuatorFunctor(ActuatorBulkFAST& actBulk);
