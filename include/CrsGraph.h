@@ -13,7 +13,7 @@
 #include <FieldTypeDef.h>
 
 #include <Kokkos_DefaultNode.hpp>
-
+#include <Kokkos_UnorderedMap.hpp>
 #include <stk_mesh/base/Types.hpp>
 #include <stk_mesh/base/Entity.hpp>
 #include <stk_mesh/base/FieldBase.hpp>
