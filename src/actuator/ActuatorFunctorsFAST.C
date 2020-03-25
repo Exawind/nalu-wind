@@ -55,12 +55,9 @@ ActFastUpdatePoints::operator()(int index) const
 
   ThrowAssert(turbId_>=0);
   const int pointId = index - offsets_(turbId_);
+  auto point = Kokkos::subview(points_, index, Kokkos::ALL);
 
-  double tempCoords[3];
-  fast_.getForceNodeCoordinates(&tempCoords[0], pointId, turbId_);
-  for (int i = 0; i < 3; i++) {
-    points_(index, i) = tempCoords[i];
-  }
+  fast_.getForceNodeCoordinates(point.data(), pointId, turbId_);
 }
 
 ActFastAssignVel::ActFastAssignVel(ActuatorBulkFAST& actBulk):
@@ -73,10 +70,9 @@ ActFastAssignVel::ActFastAssignVel(ActuatorBulkFAST& actBulk):
 void ActFastAssignVel::operator ()(int index) const{
 
   const int pointId = index - offset_(turbId_);
+  auto vel = Kokkos::subview(velocity_, index, Kokkos::ALL);
 
-  double pointVel[3] {velocity_(index,0), velocity_(index,1), velocity_(index,2)};
-
-  fast_.setVelocityForceNode(&pointVel[0], pointId, turbId_);
+  fast_.setVelocityForceNode(vel.data(), pointId, turbId_);
 }
 
 ActFastComputeForce::ActFastComputeForce(ActuatorBulkFAST& actBulk):
@@ -90,15 +86,11 @@ ActFastComputeForce::ActFastComputeForce(ActuatorBulkFAST& actBulk):
 
 void ActFastComputeForce::operator()(int index) const{
 
-  double pointForce[3];
+  auto pointForce = Kokkos::subview(force_, index, Kokkos::ALL);
 
   const int localId = index - offset_(turbId_);
 
-  fast_.getForce(&pointForce[0], localId, turbId_);
-
-  for(int i = 0; i<3; i++){
-    force_(index,i) = pointForce[i];
-  }
+  fast_.getForce(pointForce.data(), localId, turbId_);
 }
 
 ActFastSetUpThrustCalc::ActFastSetUpThrustCalc(ActuatorBulkFAST& actBulk):
@@ -120,13 +112,8 @@ void ActFastSetUpThrustCalc::operator ()(int index) const{
 
     double hubPos[3], hubShftDir[3];
 
-    actBulk_.openFast_.getHubPos(&hubPos[0], index);
-    actBulk_.openFast_.getHubShftDir(&hubShftDir[0], index);
-
-    for(int j=0; j<3; j++){
-      hubLoc(j) = hubPos[j];
-      hubOri(j) = hubShftDir[j];
-    }
+    actBulk_.openFast_.getHubPos(hubLoc.data(), index);
+    actBulk_.openFast_.getHubShftDir(hubOri.data(), index);
   }
   else{
     for(int j=0; j<3; j++){
