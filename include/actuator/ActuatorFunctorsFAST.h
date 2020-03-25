@@ -84,16 +84,16 @@ struct ActFastSetUpThrustCalc{
   ActuatorBulkFAST& actBulk_;
 };
 
-struct ActFastComputeThrust{
-  using execution_space = ActuatorFixedExecutionSpace;
+struct ActFastComputeThrustInnerLoop{
 
-  ActFastComputeThrust(ActuatorBulkFAST& actBulk, stk::mesh::BulkData& stkBulk);
-
-  void operator()(int index) const;
+  ActFastComputeThrustInnerLoop(ActuatorBulkFAST& actBulk):actBulk_(actBulk){}
+  void operator()(const uint64_t pointId, const double* nodeCoords, double* sourceTerm, const double dualNodalVolume, const double scvIp) const;
+  void preloop(){}
 
   ActuatorBulkFAST& actBulk_;
-  stk::mesh::BulkData& stkBulk_;
 };
+
+using ActFastComputeThrust = GenericLoopOverCoarseSearchResults<ActuatorBulkFAST, ActFastComputeThrustInnerLoop>;
 
 } /* namespace nalu */
 } /* namespace sierra */

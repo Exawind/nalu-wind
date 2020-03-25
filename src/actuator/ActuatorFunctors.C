@@ -62,26 +62,14 @@ InterpActuatorVel::operator()(int index) const
   }
 }
 
-SpreadActuatorForce::SpreadActuatorForce(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk):
-    actBulk_(actBulk),
-    stkBulk_(stkBulk),
-    coordinates_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "coordinates")),
-    actuatorSource_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "actuator_source")),
-    dualNodalVolume_(stkBulk_.mesh_meta_data().get_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "dual_nodal_volume"))
+void SpreadForceInnerLoop::preloop()
 {
-  actBulk_.actuatorForce_.sync_host();
-  actBulk_.actuatorForce_.modify_host();
+  helper_.touch_dual_view(actBulk_.actuatorForce_);
   actBulk_.coarseSearchElemIds_.sync_host();
   actBulk_.coarseSearchPointIds_.sync_host();
 }
 
-void SpreadActuatorForce::operator ()(int index) const{
-
-  auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
-  auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
+void SpreadForceInnerLoop::operator ()(const uint64_t pointId, const double* nodeCoords, double* sourceTerm, const double dual_vol, const double scvIp) const{
 
   auto pointCoords = Kokkos::subview(
     actBulk_.pointCentroid_.view_host(), pointId, Kokkos::ALL);
@@ -92,51 +80,20 @@ void SpreadActuatorForce::operator ()(int index) const{
   auto epsilon = Kokkos::subview(
     actBulk_.epsilon_.view_host(), pointId, Kokkos::ALL);
 
-  const stk::mesh::Entity elem = stkBulk_.get_entity(stk::topology::ELEMENT_RANK, elemId);
-  const stk::topology& elemTopo = stkBulk_.bucket(elem).topology();
-  MasterElement* meSCV = MasterElementRepo::get_volume_master_element(elemTopo);
-
-  const unsigned numNodes = stkBulk_.num_nodes(elem);
-
-  // just allocate for largest expected size (hex27)
-  double scvElem[216];
-  double elemCoords[81];
   double distance[3];
   double projectedForce[3];
 
-  stk::mesh::Entity const* elem_nod_rels = stkBulk_.begin_nodes(elem);
+  actuator_utils::compute_distance(3, nodeCoords, pointCoords.data(), &distance[0]);
 
-  for(unsigned i = 0; i<numNodes; i++){
-    const double* coords = (double*) stk::mesh::field_data(*coordinates_, elem_nod_rels[i]);
-    for(int j=0; j<3; j++){
-      elemCoords[j+i*3] = coords[j];
-    }
+  const double gauss = actuator_utils::Gaussian_projection(3, &distance[0], epsilon.data());
+
+  for(int j =0; j<3; j++){
+    projectedForce[j] = gauss*pointForce(j);
   }
 
-  double scvError =0.0;
-  meSCV->determinant(1, &elemCoords[0], &scvElem[0], &scvError);
-
-  for(unsigned iNode=0; iNode<numNodes; iNode++){
-    stk::mesh::Entity node = elem_nod_rels[iNode];
-    const double* nodeCoords =
-        (double*) stk::mesh::field_data(*coordinates_, node);
-    const double dual_vol = *(double*)stk::mesh::field_data(*dualNodalVolume_, node);
-
-    // TODO(psakiev) cache distance in search so we can modify it for projected distance in an openfast loop
-    actuator_utils::compute_distance(3, nodeCoords, &pointCoords[0], &distance[0]);
-
-    const double gauss = actuator_utils::Gaussian_projection(3, &distance[0], epsilon.data());
-
-    for(int j =0; j<3; j++){
-      projectedForce[j] = gauss*pointForce(j);
-    }
-
-    double* sourceTerm = (double*) stk::mesh::field_data(*actuatorSource_, node);
-    for(int j=0; j<3; j++){
-      sourceTerm[j] += projectedForce[j]*scvElem[iNode]/dual_vol;
-    }
+  for(int j=0; j<3; j++){
+    sourceTerm[j] += projectedForce[j]*scvIp/dual_vol;
   }
-
 }
 
 } /* namespace nalu */
