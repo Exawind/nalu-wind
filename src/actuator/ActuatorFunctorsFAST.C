@@ -123,7 +123,7 @@ void ActFastComputeThrustInnerLoop::operator()(const uint64_t pointId, const dou
   auto offsets = actBulk_.turbIdOffset_.view_host();
 
   //determine turbine
-  // TODO(psakiev) shouldn't thrust and torque contribs only come from blades?
+  //shouldn't thrust and torque contribs only come from blades? probably not worth worrying about since this is just a debug calculation
   int turbId = 0;
   const int nPointId = static_cast<int>(pointId);
   for(;turbId<offsets.extent_int(0); turbId++){
@@ -140,9 +140,7 @@ void ActFastComputeThrustInnerLoop::operator()(const uint64_t pointId, const dou
   double r[3], rPerpShaft[3], forceTerm[3];
 
   for(int i=0; i<3; i++){
-    // TODO(psakiev) I thought this should just be scvElem(iNode) since we are
-    // integrating but that is ~20x too high
-    forceTerm[i] = sourceTerm[i]*scvIp/dual_vol;
+    forceTerm[i] = sourceTerm[i]*scvIp;
     r[i] = nodeCoords[i] - hubLoc(i);
     thrust(i) += forceTerm[i];
   }
