@@ -40,65 +40,64 @@ ActFastZero::operator()(int index) const{
   }
 }
 
-template <>
-ActFastUpdatePoints::ActuatorFunctor(ActuatorBulkFAST& actBulk)
-  : actBulk_(actBulk)
+ActFastUpdatePoints::ActFastUpdatePoints(ActuatorBulkFAST& actBulk):
+    points_(helper_.get_local_view(actBulk.pointCentroid_)),
+    offsets_(helper_.get_local_view(actBulk.turbIdOffset_)),
+    turbId_(actBulk.localTurbineId_),
+    fast_(actBulk.openFast_)
 {
-  touch_dual_view(actBulk_.pointCentroid_);
+  helper_.touch_dual_view(actBulk.pointCentroid_);
 }
 
-template <>
 void
-ActFastUpdatePoints::operator()(const int& index) const
+ActFastUpdatePoints::operator()(int index) const
 {
-  fast::OpenFAST& FAST = actBulk_.openFast_;
-  auto points = get_local_view(actBulk_.pointCentroid_);
-  auto offsets = get_local_view(actBulk_.turbIdOffset_);
 
-  ThrowAssert(actBulk_.localTurbineId_>=0);
-  const int myId = index - offsets(actBulk_.localTurbineId_);
-  // compute location
-  std::vector<double> tempCoords(3, 0.0);
-  auto rank = actBulk_.localTurbineId_;
-  FAST.getForceNodeCoordinates(tempCoords, myId, rank);
+  ThrowAssert(turbId_>=0);
+  const int pointId = index - offsets_(turbId_);
+
+  double tempCoords[3];
+  fast_.getForceNodeCoordinates(&tempCoords[0], pointId, turbId_);
   for (int i = 0; i < 3; i++) {
-    points(index, i) = tempCoords[i];
+    points_(index, i) = tempCoords[i];
   }
 }
 
-template<>
-ActFastAssignVel::ActuatorFunctor(ActuatorBulkFAST& actBulk):actBulk_(actBulk){}
+ActFastAssignVel::ActFastAssignVel(ActuatorBulkFAST& actBulk):
+  velocity_(helper_.get_local_view(actBulk.velocity_)),
+  offset_(helper_.get_local_view(actBulk.turbIdOffset_)),
+  turbId_(actBulk.localTurbineId_),
+  fast_(actBulk.openFast_)
+{}
 
-template<>
-void ActFastAssignVel::operator ()(const int& index) const{
-  auto vel = get_local_view(actBulk_.velocity_);
-  auto offset = get_local_view(actBulk_.turbIdOffset_);
+void ActFastAssignVel::operator ()(int index) const{
 
-  const int localId = index - offset(actBulk_.localTurbineId_);
+  const int pointId = index - offset_(turbId_);
 
-  std::vector<double> pointVel {vel(index,0), vel(index,1), vel(index,2)};
+  double pointVel[3] {velocity_(index,0), velocity_(index,1), velocity_(index,2)};
 
-  actBulk_.openFast_.setVelocityForceNode(pointVel, localId, actBulk_.localTurbineId_);
+  fast_.setVelocityForceNode(&pointVel[0], pointId, turbId_);
 }
 
-template<>
-ActFastComputeForce::ActuatorFunctor(ActuatorBulkFAST& actBulk):actBulk_(actBulk){
-  touch_dual_view(actBulk_.actuatorForce_);
+ActFastComputeForce::ActFastComputeForce(ActuatorBulkFAST& actBulk):
+  force_(helper_.get_local_view(actBulk.actuatorForce_)),
+  offset_(helper_.get_local_view(actBulk.turbIdOffset_)),
+  turbId_(actBulk.localTurbineId_),
+  fast_(actBulk.openFast_)
+{
+  helper_.touch_dual_view(actBulk.actuatorForce_);
 }
 
-template<>
-void ActFastComputeForce::operator()(const int& index) const{
-  auto force = get_local_view(actBulk_.actuatorForce_);
-  auto offset = get_local_view(actBulk_.turbIdOffset_);
+void ActFastComputeForce::operator()(int index) const{
 
-  std::vector<double> pointForce(3);
+  double pointForce[3];
 
-  const int localId = index - offset(actBulk_.localTurbineId_);
+  const int localId = index - offset_(turbId_);
 
-  actBulk_.openFast_.getForce(pointForce, localId, actBulk_.localTurbineId_);
+  fast_.getForce(&pointForce[0], localId, turbId_);
 
   for(int i = 0; i<3; i++){
-    force(index,i) = pointForce[i];
+    force_(index,i) = pointForce[i];
   }
 }
 
@@ -119,10 +118,10 @@ void ActFastSetUpThrustCalc::operator ()(int index) const{
 
   if(actBulk_.localTurbineId_ == index){
 
-    std::vector<double> hubPos(3), hubShftDir(3);
+    double hubPos[3], hubShftDir[3];
 
-    actBulk_.openFast_.getHubPos(hubPos, index);
-    actBulk_.openFast_.getHubShftDir(hubShftDir, index);
+    actBulk_.openFast_.getHubPos(&hubPos[0], index);
+    actBulk_.openFast_.getHubShftDir(&hubShftDir[0], index);
 
     for(int j=0; j<3; j++){
       hubLoc(j) = hubPos[j];
