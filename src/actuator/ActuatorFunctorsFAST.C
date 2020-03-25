@@ -18,8 +18,6 @@ namespace sierra {
 namespace nalu {
 
 
-//TODO(psakiev) move temporay allocaitons out of functors
-
 ActFastZero::ActFastZero(ActuatorBulkFAST& actBulk)
 {
   vel_   = helper_.get_local_view(actBulk.velocity_     );
@@ -87,7 +85,6 @@ ActFastComputeForce::ActFastComputeForce(ActuatorBulkFAST& actBulk):
 void ActFastComputeForce::operator()(int index) const{
 
   auto pointForce = Kokkos::subview(force_, index, Kokkos::ALL);
-
   const int localId = index - offset_(turbId_);
 
   fast_.getForce(pointForce.data(), localId, turbId_);
@@ -109,9 +106,6 @@ void ActFastSetUpThrustCalc::operator ()(int index) const{
   }
 
   if(actBulk_.localTurbineId_ == index){
-
-    double hubPos[3], hubShftDir[3];
-
     actBulk_.openFast_.getHubPos(hubLoc.data(), index);
     actBulk_.openFast_.getHubShftDir(hubOri.data(), index);
   }
@@ -123,27 +117,10 @@ void ActFastSetUpThrustCalc::operator ()(int index) const{
   }
 }
 
-ActFastComputeThrust::ActFastComputeThrust(ActuatorBulkFAST& actBulk, stk::mesh::BulkData& stkBulk):
-    actBulk_(actBulk),stkBulk_(stkBulk)
-{}
-
-//TODO(psakiev) fuse this with spread force to reduce loops over search
-void ActFastComputeThrust::operator()(int index) const{
-
-  const stk::mesh::MetaData& stkMeta = stkBulk_.mesh_meta_data();
-
-  VectorFieldType* coordinates = stkMeta.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
-
-  VectorFieldType* actuatorSource = stkMeta.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "actuator_source");
-
- ScalarFieldType* dualNodalVolume = stkMeta.get_field<ScalarFieldType>(
-                                      stk::topology::NODE_RANK, "dual_nodal_volume");
+void ActFastComputeThrustInnerLoop::operator()(const uint64_t pointId, const double* nodeCoords, double* sourceTerm, const double dual_vol, const double scvIp) const
+{
 
   auto offsets = actBulk_.turbIdOffset_.view_host();
-  auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
-  auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
 
   //determine turbine
   // TODO(psakiev) shouldn't thrust and torque contribs only come from blades?
@@ -160,59 +137,28 @@ void ActFastComputeThrust::operator()(int index) const{
   auto thrust = Kokkos::subview(actBulk_.turbineThrust_, turbId, Kokkos::ALL);
   auto torque = Kokkos::subview(actBulk_.turbineTorque_, turbId, Kokkos::ALL);
 
-  Kokkos::View<double[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace> r("radius");
-  Kokkos::View<double[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace> rPerpShaft("radiusShift");
-  Kokkos::View<double[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace> forceTerm("forceTerm");
+  double r[3], rPerpShaft[3], forceTerm[3];
 
-  //loop over elem's nodes and contribute source terms
-  const stk::mesh::Entity elem = stkBulk_.get_entity(stk::topology::ELEMENT_RANK, elemId);
-  const stk::topology& elemTopo = stkBulk_.bucket(elem).topology();
-  MasterElement* meSCV = MasterElementRepo::get_volume_master_element(elemTopo);
-
-  const int numScvIp = meSCV->num_integration_points();
-  const unsigned numNodes = stkBulk_.num_nodes(elem);
-  Kokkos::View<double*, ActuatorFixedMemLayout, ActuatorFixedMemSpace> scvElem("scvElem", numScvIp);
-  Kokkos::View<double*[3], ActuatorFixedMemLayout, ActuatorFixedMemSpace> elemCoords("elemCoords", numNodes);
-  stk::mesh::Entity const* elem_nod_rels = stkBulk_.begin_nodes(elem);
-
-  for(unsigned i = 0; i<numNodes; i++){
-    const double* coords = (double*) stk::mesh::field_data(*coordinates, elem_nod_rels[i]);
-    for(int j=0; j<3; j++){
-      elemCoords(i,j) = coords[j];
-    }
+  for(int i=0; i<3; i++){
+    // TODO(psakiev) I thought this should just be scvElem(iNode) since we are
+    // integrating but that is ~20x too high
+    forceTerm[i] = sourceTerm[i]*scvIp/dual_vol;
+    r[i] = nodeCoords[i] - hubLoc(i);
+    thrust(i) += forceTerm[i];
   }
 
-  double scvError =0.0;
-  meSCV->determinant(1, elemCoords.data(), scvElem.data(), &scvError);
-
-  for(unsigned iNode=0; iNode<numNodes; iNode++){
-    stk::mesh::Entity node = elem_nod_rels[iNode];
-    const double* nodeCoords =
-        (double*) stk::mesh::field_data(*coordinates, node);
-    const double dual_vol = *(double*)stk::mesh::field_data(*dualNodalVolume, node);
-    double* sourceTerm = (double*) stk::mesh::field_data(*actuatorSource, node);
-
-    for(int i=0; i<3; i++){
-      // TODO(psakiev) I thought this should just be scvElem(iNode) since we are
-      // integrating but that is ~20x too high
-      forceTerm(i) = sourceTerm[i]*scvElem(iNode)/dual_vol;
-      r(i) = nodeCoords[i] - hubLoc(i);
-      thrust(i) += forceTerm(i);
-    }
-
-    double rDotHubOri=0;
-    for(int i=0; i<3; i++){
-      rDotHubOri += r(i)*hubOri(i);
-    }
-
-    for(int i=0; i<3; i++){
-      rPerpShaft(i) = r(i) - rDotHubOri*hubOri(i);
-    }
-
-    torque(0) += (rPerpShaft(1)*forceTerm(2) - rPerpShaft(2)*forceTerm(1));
-    torque(1) += (rPerpShaft(2)*forceTerm(0) - rPerpShaft(0)*forceTerm(2));
-    torque(2) += (rPerpShaft(0)*forceTerm(1) - rPerpShaft(1)*forceTerm(0));
+  double rDotHubOri=0;
+  for(int i=0; i<3; i++){
+    rDotHubOri += r[i]*hubOri(i);
   }
+
+  for(int i=0; i<3; i++){
+    rPerpShaft[i] = r[i] - rDotHubOri*hubOri(i);
+  }
+
+  torque(0) += (rPerpShaft[1]*forceTerm[2] - rPerpShaft[2]*forceTerm[1]);
+  torque(1) += (rPerpShaft[2]*forceTerm[0] - rPerpShaft[0]*forceTerm[2]);
+  torque(2) += (rPerpShaft[0]*forceTerm[1] - rPerpShaft[1]*forceTerm[0]);
 
 }
 

@@ -10,6 +10,7 @@
 #ifndef ACTUATORFUNCTORS_H_
 #define ACTUATORFUNCTORS_H_
 
+#include <actuator/ActuatorGenericSearchFunctor.h>
 #include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulk.h>
 #include <FieldTypeDef.h>
@@ -38,19 +39,19 @@ struct InterpActuatorVel{
   VectorFieldType* velocity_;
 };
 
-struct SpreadActuatorForce{
-  using execution_space = ActuatorFixedExecutionSpace;
 
-  SpreadActuatorForce(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk);
 
-  void operator()(int index) const;
+struct SpreadForceInnerLoop{
+  SpreadForceInnerLoop(ActuatorBulk& actBulk):actBulk_(actBulk){}
+
+  void operator()(const uint64_t pointId, const double* nodeCoords, double* sourceTerm, const double dualNodalVolume, const double scvIp) const;
+  void preloop();
 
   ActuatorBulk& actBulk_;
-  stk::mesh::BulkData& stkBulk_;
-  VectorFieldType* coordinates_;
-  VectorFieldType* actuatorSource_;
-  ScalarFieldType* dualNodalVolume_;
+  ActDualViewHelper<ActuatorFixedMemSpace> helper_;
 };
+
+using SpreadActuatorForce = GenericLoopOverCoarseSearchResults<ActuatorBulk, SpreadForceInnerLoop>;
 
 } /* namespace nalu */
 } /* namespace sierra */
