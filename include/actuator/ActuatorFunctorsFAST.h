@@ -18,19 +18,6 @@
 namespace sierra {
 namespace nalu {
 
-namespace actfast {
-// tags
-struct ComputeLocations{};
-struct AssignVelocities{};
-struct ComputeForces{};
-}
-
-// typedefs
-using ActFastUpdatePoints = ActuatorFunctor<ActuatorBulkFAST, actfast::ComputeLocations, Kokkos::DefaultHostExecutionSpace>;
-using ActFastAssignVel = ActuatorFunctor<ActuatorBulkFAST, actfast::AssignVelocities, Kokkos::DefaultHostExecutionSpace>;
-using ActFastComputeForce = ActuatorFunctor<ActuatorBulkFAST,actfast::ComputeForces, Kokkos::DefaultHostExecutionSpace>;
-
-// declarations
 struct
 ActFastZero{
   using execution_space=ActuatorExecutionSpace;
@@ -45,23 +32,47 @@ ActFastZero{
 
 };
 
-template <>
-ActFastUpdatePoints::ActuatorFunctor(ActuatorBulkFAST& actBulk);
+struct
+ActFastUpdatePoints{
+  using execution_space=ActuatorFixedExecutionSpace;
 
-template<>
-void ActFastUpdatePoints::operator()(const int& index) const;
+  ActFastUpdatePoints(ActuatorBulkFAST& actBulk);
+  void operator()(int index) const;
 
-template<>
-ActFastAssignVel::ActuatorFunctor(ActuatorBulkFAST& actBulk);
+  ActDualViewHelper<ActuatorFixedMemSpace> helper_;
+  ActFixVectorDbl points_;
+  ActFixScalarInt offsets_;
+  const int turbId_;
+  fast::OpenFAST& fast_;
+};
 
-template<>
-void ActFastAssignVel::operator()(const int& index) const;
+struct
+ActFastAssignVel{
+  using execution_space=ActuatorFixedExecutionSpace;
 
-template<>
-ActFastComputeForce::ActuatorFunctor(ActuatorBulkFAST& actBulk);
+  ActFastAssignVel(ActuatorBulkFAST& actBulk);
+  void operator()(int index) const;
 
-template<>
-void ActFastComputeForce::operator()(const int& index) const;
+  ActDualViewHelper<ActuatorFixedMemSpace> helper_;
+  ActFixVectorDbl velocity_;
+  ActFixScalarInt offset_;
+  const int turbId_;
+  fast::OpenFAST& fast_;
+};
+
+struct
+ActFastComputeForce{
+  using execution_space=ActuatorFixedExecutionSpace;
+
+  ActFastComputeForce(ActuatorBulkFAST& actBulk);
+  void operator()(int index) const;
+
+  ActDualViewHelper<ActuatorFixedMemSpace> helper_;
+  ActFixVectorDbl force_;
+  ActFixScalarInt offset_;
+  const int turbId_;
+  fast::OpenFAST& fast_;
+};
 
 struct ActFastSetUpThrustCalc{
   using execution_space = ActuatorFixedExecutionSpace;

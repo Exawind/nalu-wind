@@ -23,7 +23,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double nal
   searchExecuted_(false)
 {
 
-  ThrowAssert(actMeta.actuatorType_==ActuatorType::ActDiskFASTNGP);
+  ThrowErrorIf(!actMeta.is_disk());
   compute_swept_point_count(actMeta);
   resize_arrays(actMeta);
   Kokkos::parallel_for("ZeroArrays",
