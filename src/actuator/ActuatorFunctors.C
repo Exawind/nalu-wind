@@ -64,9 +64,7 @@ InterpActuatorVel::operator()(int index) const
 
 void SpreadForceInnerLoop::preloop()
 {
-  helper_.touch_dual_view(actBulk_.actuatorForce_);
-  actBulk_.coarseSearchElemIds_.sync_host();
-  actBulk_.coarseSearchPointIds_.sync_host();
+  actBulk_.actuatorForce_.sync_host();
 }
 
 void SpreadForceInnerLoop::operator ()(const uint64_t pointId, const double* nodeCoords, double* sourceTerm, const double dual_vol, const double scvIp) const{

@@ -48,7 +48,6 @@ struct SpreadForceInnerLoop{
   void preloop();
 
   ActuatorBulk& actBulk_;
-  ActDualViewHelper<ActuatorFixedMemSpace> helper_;
 };
 
 using SpreadActuatorForce = GenericLoopOverCoarseSearchResults<ActuatorBulk, SpreadForceInnerLoop>;

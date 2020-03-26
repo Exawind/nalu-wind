@@ -22,7 +22,12 @@ namespace actuator_utils {
 const double pi = M_PI;
 
 #ifdef NALU_USES_OPENFAST
-
+// The node ordering (from FAST) is
+// Node 0 - Hub node
+// Blade 1 nodes
+// Blade 2 nodes
+// Blade 3 nodes
+// Tower nodes
 Point get_fast_point(fast::OpenFAST& fast, int turbId, fast::ActuatorNodeType type, int pointId, int bladeId){
   std::vector<double> coords (3);
   switch(type){

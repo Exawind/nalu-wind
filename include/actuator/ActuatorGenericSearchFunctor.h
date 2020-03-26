@@ -41,6 +41,8 @@ struct GenericLoopOverCoarseSearchResults{
       stk::topology::NODE_RANK, "dual_nodal_volume")),
     innerLoopFunctor_(actBulk)
   {
+    actBulk_.coarseSearchElemIds_.sync_host();
+    actBulk_.coarseSearchPointIds_.sync_host();
     innerLoopFunctor_.preloop();
   }
 
@@ -56,6 +58,8 @@ struct GenericLoopOverCoarseSearchResults{
       stk::topology::NODE_RANK, "dual_nodal_volume")),
     innerLoopFunctor_(innerLoopFunctor)
   {
+    actBulk_.coarseSearchElemIds_.sync_host();
+    actBulk_.coarseSearchPointIds_.sync_host();
     innerLoopFunctor_.preloop();
   }
 

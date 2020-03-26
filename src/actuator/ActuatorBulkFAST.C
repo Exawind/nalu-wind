@@ -101,12 +101,7 @@ void ActuatorBulkFAST::init_openfast(const ActuatorMetaFAST& actMeta, double nal
 
 void ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta){
    // set epsilon and radius
-  // The node ordering (from FAST) is
-  // Node 0 - Hub node
-  // Blade 1 nodes
-  // Blade 2 nodes
-  // Blade 3 nodes
-  // Tower nodes
+
   epsilon_.modify_host();
   epsilonOpt_.modify_host();
   searchRadius_.modify_host();
