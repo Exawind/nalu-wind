@@ -122,8 +122,10 @@ void ActFastComputeThrustInnerLoop::operator()(const uint64_t pointId, const dou
 
   auto offsets = actBulk_.turbIdOffset_.view_host();
 
+  //shouldn't thrust and torque contribs only come from blades?
+  //probably not worth worrying about since this is just a debug calculation
+
   //determine turbine
-  //shouldn't thrust and torque contribs only come from blades? probably not worth worrying about since this is just a debug calculation
   int turbId = 0;
   const int nPointId = static_cast<int>(pointId);
   for(;turbId<offsets.extent_int(0); turbId++){

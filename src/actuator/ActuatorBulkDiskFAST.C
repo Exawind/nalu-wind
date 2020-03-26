@@ -111,7 +111,7 @@ void ActuatorBulkDiskFAST::resize_arrays(const ActuatorMetaFAST& actMeta)
   pointCentroid_.resize(newSize);
   actuatorForce_.resize(newSize);
   epsilon_.resize(newSize);
-  //TODO(psakiev) we don't need velocity to resize, but resize to match search/apply plumbing
+  //we don't need velocity to resize, but resize to match search/apply plumbing
   velocity_.resize(newSize);
   epsilonOpt_.resize(newSize);
   searchRadius_.resize(newSize);
@@ -121,7 +121,6 @@ void ActuatorBulkDiskFAST::resize_arrays(const ActuatorMetaFAST& actMeta)
   Kokkos::resize(elemContainingPoint_, newSize);
 }
 
-// TODO can we remove all fast stuff from this for device compatibility?
 void ActuatorBulkDiskFAST::initialize_swept_points(const ActuatorMetaFAST& actMeta){
   actuator_utils::SweptPointLocator pointLocator;
 
