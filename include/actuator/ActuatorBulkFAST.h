@@ -26,7 +26,11 @@ struct ActuatorMetaFAST : public ActuatorMeta
   std::vector<std::string> turbineOutputFileNames_;
   bool filterLiftLineCorrection_;
   bool is_disk();
-  int get_fast_index(fast::ActuatorNodeType type, int turbId, int index=0, int bladeNum=0) const;
+  int get_fast_index(
+    fast::ActuatorNodeType type,
+    int turbId,
+    int index = 0,
+    int bladeNum = 0) const;
 
   // TODO(SAKIEVICH) not certain all these need to be dual views
   int maxNumPntsPerBlade_;
@@ -36,13 +40,11 @@ struct ActuatorMetaFAST : public ActuatorMeta
   ActFixScalarBool useUniformAziSampling_;
   ActFixScalarInt nPointsSwept_;
   ActFixScalarInt nBlades_;
-
 };
 
 struct ActuatorBulkFAST : public ActuatorBulk
 {
-  ActuatorBulkFAST(
-    const ActuatorMetaFAST& actMeta, double naluTimeStep);
+  ActuatorBulkFAST(const ActuatorMetaFAST& actMeta, double naluTimeStep);
 
   Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy();
 

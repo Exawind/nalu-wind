@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include <gtest/gtest.h>
 #include <actuator/UtilitiesActuator.h>
 #include <algorithm>
@@ -56,7 +55,7 @@ F_RotateAboutAxis(
   return pPrime;
 }
 
-}
+} // namespace
 
 TEST(ActuatorSweptPointLocator, PointsOnACircle)
 {

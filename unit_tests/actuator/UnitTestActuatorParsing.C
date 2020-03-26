@@ -28,8 +28,7 @@ create_yaml_node(const std::vector<std::string>& testFile)
 
 // Ensure errors are clear nalu-wind errors and not yaml mysteries
 void
-test_wo_lines(
-  const std::vector<std::string>& testFile)
+test_wo_lines(const std::vector<std::string>& testFile)
 {
   // capture std::cout print statements
   std::stringstream buffer;
@@ -71,7 +70,6 @@ private:
     inputFileLines_.push_back("  type: ActLineFAST\n");
     inputFileLines_.push_back("  n_turbines_glob: 1\n");
     inputFileLines_.push_back("  search_target_part: [part1, part2]");
-
   }
 };
 
@@ -88,7 +86,6 @@ TEST_F(ActuatorParsingTest, bareMinimumParse)
     FAIL() << err.what();
   }
   test_wo_lines(inputFileLines_);
-
 }
 
 } // namespace

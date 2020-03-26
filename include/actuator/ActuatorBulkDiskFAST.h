@@ -7,18 +7,15 @@
 // for more details.
 //
 
-
 #ifndef INCLUDE_ACTUATOR_ACTUATORBULKDISKFAST_H_
 #define INCLUDE_ACTUATOR_ACTUATORBULKDISKFAST_H_
 
 #include <actuator/ActuatorBulkFAST.h>
 
-namespace sierra
-{
-namespace nalu
-{
+namespace sierra {
+namespace nalu {
 
-struct ActuatorBulkDiskFAST: public ActuatorBulkFAST
+struct ActuatorBulkDiskFAST : public ActuatorBulkFAST
 {
 public:
   ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double naluTimeStep);
@@ -32,7 +29,6 @@ private:
   void compute_swept_point_count(ActuatorMetaFAST& actMeta);
   void resize_arrays(const ActuatorMetaFAST& actMeta);
   void initialize_swept_points(const ActuatorMetaFAST& actMeta);
-
 };
 
 } /* namespace nalu */

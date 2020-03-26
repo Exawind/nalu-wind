@@ -154,8 +154,8 @@ void
 ActPostIter::operator()(const int& index) const
 {
   auto scalar = get_local_view(actBulk_.scalar_);
-  auto vel =    get_local_view(actBulk_.velocity_);
-  auto point =  get_local_view(actBulk_.pointCentroid_);
+  auto vel = get_local_view(actBulk_.velocity_);
+  auto point = get_local_view(actBulk_.pointCentroid_);
   scalar(index) = point(index, 0) * vel(index, 1);
 }
 
@@ -171,8 +171,6 @@ TestActuatorHostDev::execute()
   Kokkos::parallel_for("actPostIter", numActPoints_, ActPostIter(actBulk_));
   actBulk_.scalar_.sync_device();
 }
-
-
 
 } // namespace nalu
 } // namespace sierra

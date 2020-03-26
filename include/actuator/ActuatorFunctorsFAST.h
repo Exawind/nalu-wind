@@ -18,9 +18,9 @@
 namespace sierra {
 namespace nalu {
 
-struct
-ActFastZero{
-  using execution_space=ActuatorExecutionSpace;
+struct ActFastZero
+{
+  using execution_space = ActuatorExecutionSpace;
 
   ActFastZero(ActuatorBulkFAST& actBulk);
   void operator()(int index) const;
@@ -29,12 +29,11 @@ ActFastZero{
   ActVectorDbl vel_;
   ActVectorDbl force_;
   ActVectorDbl point_;
-
 };
 
-struct
-ActFastUpdatePoints{
-  using execution_space=ActuatorFixedExecutionSpace;
+struct ActFastUpdatePoints
+{
+  using execution_space = ActuatorFixedExecutionSpace;
 
   ActFastUpdatePoints(ActuatorBulkFAST& actBulk);
   void operator()(int index) const;
@@ -46,9 +45,9 @@ ActFastUpdatePoints{
   fast::OpenFAST& fast_;
 };
 
-struct
-ActFastAssignVel{
-  using execution_space=ActuatorFixedExecutionSpace;
+struct ActFastAssignVel
+{
+  using execution_space = ActuatorFixedExecutionSpace;
 
   ActFastAssignVel(ActuatorBulkFAST& actBulk);
   void operator()(int index) const;
@@ -60,9 +59,9 @@ ActFastAssignVel{
   fast::OpenFAST& fast_;
 };
 
-struct
-ActFastComputeForce{
-  using execution_space=ActuatorFixedExecutionSpace;
+struct ActFastComputeForce
+{
+  using execution_space = ActuatorFixedExecutionSpace;
 
   ActFastComputeForce(ActuatorBulkFAST& actBulk);
   void operator()(int index) const;
@@ -74,7 +73,8 @@ ActFastComputeForce{
   fast::OpenFAST& fast_;
 };
 
-struct ActFastSetUpThrustCalc{
+struct ActFastSetUpThrustCalc
+{
   using execution_space = ActuatorFixedExecutionSpace;
 
   ActFastSetUpThrustCalc(ActuatorBulkFAST& actBulk);
@@ -84,16 +84,26 @@ struct ActFastSetUpThrustCalc{
   ActuatorBulkFAST& actBulk_;
 };
 
-struct ActFastComputeThrustInnerLoop{
+struct ActFastComputeThrustInnerLoop
+{
 
-  ActFastComputeThrustInnerLoop(ActuatorBulkFAST& actBulk):actBulk_(actBulk){}
-  void operator()(const uint64_t pointId, const double* nodeCoords, double* sourceTerm, const double dualNodalVolume, const double scvIp) const;
-  void preloop(){}
+  ActFastComputeThrustInnerLoop(ActuatorBulkFAST& actBulk) : actBulk_(actBulk)
+  {
+  }
+  void operator()(
+    const uint64_t pointId,
+    const double* nodeCoords,
+    double* sourceTerm,
+    const double dualNodalVolume,
+    const double scvIp) const;
+  void preloop() {}
 
   ActuatorBulkFAST& actBulk_;
 };
 
-using ActFastComputeThrust = GenericLoopOverCoarseSearchResults<ActuatorBulkFAST, ActFastComputeThrustInnerLoop>;
+using ActFastComputeThrust = GenericLoopOverCoarseSearchResults<
+  ActuatorBulkFAST,
+  ActFastComputeThrustInnerLoop>;
 
 } /* namespace nalu */
 } /* namespace sierra */

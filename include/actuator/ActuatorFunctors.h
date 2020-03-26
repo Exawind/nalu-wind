@@ -15,18 +15,17 @@
 #include <actuator/ActuatorBulk.h>
 #include <FieldTypeDef.h>
 
-namespace stk{
-namespace mesh{
-  class BulkData;
+namespace stk {
+namespace mesh {
+class BulkData;
 }
-}
+} // namespace stk
 
-namespace sierra
-{
-namespace nalu
-{
+namespace sierra {
+namespace nalu {
 
-struct InterpActuatorVel{
+struct InterpActuatorVel
+{
   using execution_space = ActuatorFixedExecutionSpace;
 
   InterpActuatorVel(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk);
@@ -39,18 +38,23 @@ struct InterpActuatorVel{
   VectorFieldType* velocity_;
 };
 
+struct SpreadForceInnerLoop
+{
+  SpreadForceInnerLoop(ActuatorBulk& actBulk) : actBulk_(actBulk) {}
 
-
-struct SpreadForceInnerLoop{
-  SpreadForceInnerLoop(ActuatorBulk& actBulk):actBulk_(actBulk){}
-
-  void operator()(const uint64_t pointId, const double* nodeCoords, double* sourceTerm, const double dualNodalVolume, const double scvIp) const;
+  void operator()(
+    const uint64_t pointId,
+    const double* nodeCoords,
+    double* sourceTerm,
+    const double dualNodalVolume,
+    const double scvIp) const;
   void preloop();
 
   ActuatorBulk& actBulk_;
 };
 
-using SpreadActuatorForce = GenericLoopOverCoarseSearchResults<ActuatorBulk, SpreadForceInnerLoop>;
+using SpreadActuatorForce =
+  GenericLoopOverCoarseSearchResults<ActuatorBulk, SpreadForceInnerLoop>;
 
 } /* namespace nalu */
 } /* namespace sierra */
