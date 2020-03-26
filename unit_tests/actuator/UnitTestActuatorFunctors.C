@@ -15,25 +15,25 @@
 #include <yaml-cpp/yaml.h>
 #include <gtest/gtest.h>
 
-namespace sierra
-{
-namespace nalu
-{
+namespace sierra {
+namespace nalu {
 using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 
 //-----------------------------------------------------------------
-struct SetPoints{};
-struct ComputeForce{};
-struct Interpolate{};
+struct SetPoints
+{
+};
+struct ComputeForce
+{
+};
+struct Interpolate
+{
+};
 
-
-using SetupActPoints = ActuatorFunctor<
-  ActuatorBulk,
-  SetPoints,
-  ActuatorExecutionSpace>;
+using SetupActPoints =
+  ActuatorFunctor<ActuatorBulk, SetPoints, ActuatorExecutionSpace>;
 template <>
-SetupActPoints::ActuatorFunctor(ActuatorBulk& actBulk)
-  : actBulk_(actBulk)
+SetupActPoints::ActuatorFunctor(ActuatorBulk& actBulk) : actBulk_(actBulk)
 {
   touch_dual_view(actBulk_.pointCentroid_);
   touch_dual_view(actBulk_.searchRadius_);
@@ -51,13 +51,10 @@ SetupActPoints::operator()(const int& index) const
   radius(index) = 2.0;
 }
 
-using ComputeActuatorForce = ActuatorFunctor<
-  ActuatorBulk,
-  ComputeForce,
-  ActuatorExecutionSpace>;
+using ComputeActuatorForce =
+  ActuatorFunctor<ActuatorBulk, ComputeForce, ActuatorExecutionSpace>;
 template <>
-ComputeActuatorForce::ActuatorFunctor(ActuatorBulk& actBulk)
-  : actBulk_(actBulk)
+ComputeActuatorForce::ActuatorFunctor(ActuatorBulk& actBulk) : actBulk_(actBulk)
 {
   touch_dual_view(actBulk_.actuatorForce_);
 }
@@ -73,15 +70,18 @@ ComputeActuatorForce::operator()(const int& index) const
   }
 }
 
-
-struct ActuatorTestInterpVelFunctors{
-  ActuatorTestInterpVelFunctors(const ActuatorMeta& actMeta,
+struct ActuatorTestInterpVelFunctors
+{
+  ActuatorTestInterpVelFunctors(
+    const ActuatorMeta& actMeta,
     ActuatorBulk& actBulk,
-    stk::mesh::BulkData& stkBulk):
-      actMeta_(actMeta),
+    stk::mesh::BulkData& stkBulk)
+    : actMeta_(actMeta),
       actBulk_(actBulk),
       stkBulk_(stkBulk),
-      numActPoints_(actMeta_.numPointsTotal_){}
+      numActPoints_(actMeta_.numPointsTotal_)
+  {
+  }
 
   void operator()()
   {
@@ -91,14 +91,14 @@ struct ActuatorTestInterpVelFunctors{
 
     actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
 
-    Kokkos::parallel_for("interpVel", numActPoints_, InterpActuatorVel(actBulk_, stkBulk_));
+    Kokkos::parallel_for(
+      "interpVel", numActPoints_, InterpActuatorVel(actBulk_, stkBulk_));
 
     auto vel = actBulk_.velocity_.view_host();
     actuator_utils::reduce_view_on_host(vel);
 
     Kokkos::parallel_for(
-      "computeActuatorForce", numActPoints_,
-      ComputeActuatorForce(actBulk_));
+      "computeActuatorForce", numActPoints_, ComputeActuatorForce(actBulk_));
   }
 
   const ActuatorMeta& actMeta_;
@@ -107,13 +107,14 @@ struct ActuatorTestInterpVelFunctors{
   const int numActPoints_;
 };
 
-
-struct FunctorTestSpread : public ActuatorBulk{
-  FunctorTestSpread(const ActuatorMeta& actMeta):
-    ActuatorBulk(actMeta){}
+struct FunctorTestSpread : public ActuatorBulk
+{
+  FunctorTestSpread(const ActuatorMeta& actMeta) : ActuatorBulk(actMeta) {}
 };
 
-void InitSpreadTestFields(ActuatorBulk& actBulk){
+void
+InitSpreadTestFields(ActuatorBulk& actBulk)
+{
   actBulk.epsilon_.modify_host();
   actBulk.searchRadius_.modify_host();
   actBulk.pointCentroid_.modify_host();
@@ -124,25 +125,29 @@ void InitSpreadTestFields(ActuatorBulk& actBulk){
   auto point = actBulk.pointCentroid_.view_host();
   auto force = actBulk.actuatorForce_.view_host();
 
-  for(int i=0; i<epsilon.extent_int(0); ++i){
-    for(int j=0; j<3; ++j){
-      epsilon(i,j)=2.0;
+  for (int i = 0; i < epsilon.extent_int(0); ++i) {
+    for (int j = 0; j < 3; ++j) {
+      epsilon(i, j) = 2.0;
       // assign at node to maximize overlap
-      point(i,j) = 1.0 + i;
-      force(i,j) = 1.0;
+      point(i, j) = 1.0 + i;
+      force(i, j) = 1.0;
     }
     radius(i) = 2.0;
   }
 }
 
-struct ActuatorTestSpreadForceFunctor{
-  ActuatorTestSpreadForceFunctor(const ActuatorMeta& actMeta,
+struct ActuatorTestSpreadForceFunctor
+{
+  ActuatorTestSpreadForceFunctor(
+    const ActuatorMeta& actMeta,
     ActuatorBulk& actBulk,
-    stk::mesh::BulkData& stkBulk):
-      actMeta_(actMeta),
+    stk::mesh::BulkData& stkBulk)
+    : actMeta_(actMeta),
       actBulk_(actBulk),
       stkBulk_(stkBulk),
-      numActPoints_(actMeta_.numPointsTotal_){}
+      numActPoints_(actMeta_.numPointsTotal_)
+  {
+  }
 
   void operator()()
   {
@@ -150,7 +155,8 @@ struct ActuatorTestSpreadForceFunctor{
     InitSpreadTestFields(actBulk_);
 
     actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
-    const int localSizeCoarseSearch = actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
+    const int localSizeCoarseSearch =
+      actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
 
     Kokkos::parallel_for(
       "spreadForce", localSizeCoarseSearch,
@@ -259,7 +265,8 @@ TEST_F(ActuatorFunctorTests, testSearchAndInterpolate)
   }
 }
 
-TEST_F(ActuatorFunctorTests, testSpreadForces){
+TEST_F(ActuatorFunctorTests, testSpreadForces)
+{
   inputFileSurrogate_ = "actuator:\n"
                         "  type: ActLinePointDrag\n"
                         "  n_turbines_glob: 1\n"
@@ -270,9 +277,9 @@ TEST_F(ActuatorFunctorTests, testSpreadForces){
 
   ActuatorInfoNGP actInfo;
   actInfo.numPoints_ = 1;
-  actInfo.epsilon_.x_=2.0;
-  actInfo.epsilon_.y_=2.0;
-  actInfo.epsilon_.z_=2.0;
+  actInfo.epsilon_.x_ = 2.0;
+  actInfo.epsilon_.y_ = 2.0;
+  actInfo.epsilon_.z_ = 2.0;
   actMeta.add_turbine(actInfo);
 
   ActuatorBulk actBulk(actMeta);
@@ -281,45 +288,48 @@ TEST_F(ActuatorFunctorTests, testSpreadForces){
   auto coarseElems = actBulk.coarseSearchElemIds_.view_host();
   const int numCoarse = coarseElems.extent_int(0);
 
-  //make sure local search results get non-zero source term
+  // make sure local search results get non-zero source term
   std::vector<stk::mesh::Entity> nodesMatch;
 
-  for(int i=0; i<numCoarse; ++i){
-    const stk::mesh::Entity elem = stkBulk_.get_entity(stk::topology::ELEMENT_RANK, coarseElems(i));
+  for (int i = 0; i < numCoarse; ++i) {
+    const stk::mesh::Entity elem =
+      stkBulk_.get_entity(stk::topology::ELEMENT_RANK, coarseElems(i));
     stk::mesh::Entity const* elem_node_rels = stkBulk_.begin_nodes(elem);
     const unsigned numNodes = stkBulk_.num_nodes(elem);
-    for (unsigned j =0; j<numNodes; ++j){
+    for (unsigned j = 0; j < numNodes; ++j) {
       stk::mesh::Entity node = elem_node_rels[j];
       nodesMatch.push_back(node);
-      double* actSource = (double*) stk::mesh::field_data(*actuatorForce_,node);
-      for(int k=0; k<3; ++k){
-        EXPECT_TRUE(actSource[k]>0.0)
-            <<"Value is: " << actSource[k] <<std::endl
-            <<"Elem is: "<<coarseElems(i)<<std::endl
-            <<"Node is: "<<j<<std::endl
-            <<"Index is: "<<k;
+      double* actSource = (double*)stk::mesh::field_data(*actuatorForce_, node);
+      for (int k = 0; k < 3; ++k) {
+        EXPECT_TRUE(actSource[k] > 0.0)
+          << "Value is: " << actSource[k] << std::endl
+          << "Elem is: " << coarseElems(i) << std::endl
+          << "Node is: " << j << std::endl
+          << "Index is: " << k;
       }
     }
   }
 
-  //make sure all nodes are now zero
+  // make sure all nodes are now zero
   const stk::mesh::Selector selector =
     stkMeta_.locally_owned_part() | stkMeta_.globally_shared_part();
   const auto& buckets =
     stkBulk_.get_buckets(stk::topology::NODE_RANK, selector);
   for (const stk::mesh::Bucket* bptr : buckets) {
     for (stk::mesh::Entity node : *bptr) {
-      if(std::find(nodesMatch.begin(), nodesMatch.end(),node)==nodesMatch.end()){
+      if (
+        std::find(nodesMatch.begin(), nodesMatch.end(), node) ==
+        nodesMatch.end()) {
         const double* aF = stk::mesh::field_data(*actuatorForce_, node);
         for (int i = 0; i < 3; i++) {
-          EXPECT_DOUBLE_EQ(aF[i],0.0);
+          EXPECT_DOUBLE_EQ(aF[i], 0.0);
         }
       }
     }
   }
 }
 
-}
+} // namespace
 
 } /* namespace nalu */
 } /* namespace sierra */

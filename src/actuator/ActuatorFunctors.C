@@ -12,16 +12,15 @@
 #include <stk_mesh/base/BulkData.hpp>
 #include <FieldTypeDef.h>
 
-namespace sierra
-{
-namespace nalu
-{
+namespace sierra {
+namespace nalu {
 
-InterpActuatorVel::InterpActuatorVel(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk):
-    actBulk_(actBulk),
+InterpActuatorVel::InterpActuatorVel(
+  ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
+  : actBulk_(actBulk),
     stkBulk_(stkBulk),
     coordinates_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "coordinates")),
+      stk::topology::NODE_RANK, "coordinates")),
     velocity_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
       stk::topology::NODE_RANK, "velocity"))
 {
@@ -43,8 +42,7 @@ InterpActuatorVel::operator()(int index) const
     const int nodesPerElem = stkBulk_.num_nodes(elem);
 
     // just allocate for largest expected size (hex27)
-    double ws_coordinates[81],
-      ws_velocity[81];
+    double ws_coordinates[81], ws_velocity[81];
 
     actuator_utils::gather_field(
       3, &ws_coordinates[0], *coordinates_, stkBulk_.begin_nodes(elem),
@@ -56,41 +54,51 @@ InterpActuatorVel::operator()(int index) const
     actuator_utils::interpolate_field(
       3, elem, stkBulk_, &(localCoord(index, 0)), &ws_velocity[0],
       &(vel(index, 0)));
-    for(int i=0; i<3; i++){
-      vel(index,i)/=actBulk_.localParallelRedundancy_(index);
+    for (int i = 0; i < 3; i++) {
+      vel(index, i) /= actBulk_.localParallelRedundancy_(index);
     }
   }
 }
 
-void SpreadForceInnerLoop::preloop()
+void
+SpreadForceInnerLoop::preloop()
 {
   actBulk_.actuatorForce_.sync_host();
 }
 
-void SpreadForceInnerLoop::operator ()(const uint64_t pointId, const double* nodeCoords, double* sourceTerm, const double dual_vol, const double scvIp) const{
+void
+SpreadForceInnerLoop::operator()(
+  const uint64_t pointId,
+  const double* nodeCoords,
+  double* sourceTerm,
+  const double dual_vol,
+  const double scvIp) const
+{
 
-  auto pointCoords = Kokkos::subview(
-    actBulk_.pointCentroid_.view_host(), pointId, Kokkos::ALL);
+  auto pointCoords =
+    Kokkos::subview(actBulk_.pointCentroid_.view_host(), pointId, Kokkos::ALL);
 
-  auto pointForce = Kokkos::subview(
-    actBulk_.actuatorForce_.view_host(), pointId, Kokkos::ALL);
+  auto pointForce =
+    Kokkos::subview(actBulk_.actuatorForce_.view_host(), pointId, Kokkos::ALL);
 
-  auto epsilon = Kokkos::subview(
-    actBulk_.epsilon_.view_host(), pointId, Kokkos::ALL);
+  auto epsilon =
+    Kokkos::subview(actBulk_.epsilon_.view_host(), pointId, Kokkos::ALL);
 
   double distance[3];
   double projectedForce[3];
 
-  actuator_utils::compute_distance(3, nodeCoords, pointCoords.data(), &distance[0]);
+  actuator_utils::compute_distance(
+    3, nodeCoords, pointCoords.data(), &distance[0]);
 
-  const double gauss = actuator_utils::Gaussian_projection(3, &distance[0], epsilon.data());
+  const double gauss =
+    actuator_utils::Gaussian_projection(3, &distance[0], epsilon.data());
 
-  for(int j =0; j<3; j++){
-    projectedForce[j] = gauss*pointForce(j);
+  for (int j = 0; j < 3; j++) {
+    projectedForce[j] = gauss * pointForce(j);
   }
 
-  for(int j=0; j<3; j++){
-    sourceTerm[j] += projectedForce[j]*scvIp/dual_vol;
+  for (int j = 0; j < 3; j++) {
+    sourceTerm[j] += projectedForce[j] * scvIp / dual_vol;
   }
 }
 

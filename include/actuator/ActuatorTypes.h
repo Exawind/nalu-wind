@@ -29,7 +29,6 @@ using ActuatorFixedMemSpace = Kokkos::HostSpace;
 using ActuatorFixedMemLayout = Kokkos::LayoutRight;
 using ActuatorFixedExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 
-
 // DUAL VIEWS
 using ActScalarIntDv =
   Kokkos::DualView<int*, ActuatorMemLayout, ActuatorMemSpace>;
@@ -40,17 +39,15 @@ using ActScalarDblDv =
 using ActVectorDblDv =
   Kokkos::DualView<double* [3], ActuatorMemLayout, ActuatorMemSpace>;
 
-//VIEWS
-using ActScalarInt =
-  Kokkos::View<int*, ActuatorMemLayout, ActuatorMemSpace>;
+// VIEWS
+using ActScalarInt = Kokkos::View<int*, ActuatorMemLayout, ActuatorMemSpace>;
 using ActScalarU64 =
   Kokkos::View<uint64_t*, ActuatorMemLayout, ActuatorMemSpace>;
-using ActScalarDbl =
-  Kokkos::View<double*, ActuatorMemLayout, ActuatorMemSpace>;
+using ActScalarDbl = Kokkos::View<double*, ActuatorMemLayout, ActuatorMemSpace>;
 using ActVectorDbl =
   Kokkos::View<double* [3], ActuatorMemLayout, ActuatorMemSpace>;
 
-//VIEWS FIXED TO HOST
+// VIEWS FIXED TO HOST
 using ActFixRangePolicy = Kokkos::RangePolicy<ActuatorFixedExecutionSpace>;
 using ActFixScalarInt =
   Kokkos::View<int*, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
@@ -65,18 +62,19 @@ using ActFixScalarBool =
 using ActFixArrayInt =
   Kokkos::View<int**, ActuatorFixedMemLayout, ActuatorFixedMemSpace>;
 
-
-template<typename memory_space>
-struct ActDualViewHelper{
-  template<typename T>
-  KOKKOS_INLINE_FUNCTION
-  auto get_local_view(T dualView) const->decltype (dualView.template view<memory_space>()) {
+template <typename memory_space>
+struct ActDualViewHelper
+{
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto get_local_view(T dualView) const
+    -> decltype(dualView.template view<memory_space>())
+  {
     return dualView.template view<memory_space>();
   }
 
-  template<typename T>
-  KOKKOS_INLINE_FUNCTION
-  void touch_dual_view(T dualView){
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION void touch_dual_view(T dualView)
+  {
     dualView.template sync<memory_space>();
     dualView.template modify<memory_space>();
   }

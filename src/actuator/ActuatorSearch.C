@@ -140,13 +140,14 @@ ExecuteCoarseSearch(
   coarsePointIds.modify_host();
   coarseElemIds.modify_host();
 
-  for(std::size_t i=0; i< numLocalMatches; i++){
+  for (std::size_t i = 0; i < numLocalMatches; i++) {
     coarsePointIds.h_view(i) = searchKeyPair[i].first.id();
     coarseElemIds.h_view(i) = searchKeyPair[i].second.id();
   }
 }
 
-void ExecuteFineSearch(
+void
+ExecuteFineSearch(
   stk::mesh::BulkData& stkBulk,
   ActScalarU64Dv coarsePointIds,
   ActScalarU64Dv coarseElemIds,
@@ -154,13 +155,12 @@ void ExecuteFineSearch(
   ActFixElemIds matchElemIds,
   ActFixVectorDbl localCoords,
   ActFixScalarBool isLocalPoint,
-  ActFixScalarInt localParallelRedundancy
-  )
+  ActFixScalarInt localParallelRedundancy)
 {
   const int nDim = 3;
 
-  ThrowAssert(isLocalPoint.extent(0)==points.extent(0));
-  ThrowAssert(coarsePointIds.extent(0)==coarseElemIds.extent(0));
+  ThrowAssert(isLocalPoint.extent(0) == points.extent(0));
+  ThrowAssert(coarsePointIds.extent(0) == coarseElemIds.extent(0));
 
   // extract fields
   stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
@@ -169,17 +169,17 @@ void ExecuteFineSearch(
 
   for (unsigned i = 0; i < isLocalPoint.extent(0); i++) {
     isLocalPoint(i) = false;
-    localParallelRedundancy(i)=0.0;
+    localParallelRedundancy(i) = 0.0;
   }
 
   // now proceed with the standard search
-  for (unsigned i = 0; i<coarseElemIds.extent(0); i++){
+  for (unsigned i = 0; i < coarseElemIds.extent(0); i++) {
 
     const uint64_t thePt = coarsePointIds.h_view(i);
     const uint64_t theBox = coarseElemIds.h_view(i);
 
-    auto pointCoords = Kokkos::subview(points,thePt,Kokkos::ALL);
-    auto localPntCrds= Kokkos::subview(localCoords,thePt,Kokkos::ALL);
+    auto pointCoords = Kokkos::subview(points, thePt, Kokkos::ALL);
+    auto localPntCrds = Kokkos::subview(localCoords, thePt, Kokkos::ALL);
 
     // all elements should be local bc of the coarse search
     stk::mesh::Entity elem =
@@ -204,9 +204,7 @@ void ExecuteFineSearch(
     // find isoparametric points
     std::vector<double> isoParCoords(nDim);
     const double nearestDistance = meSCS->isInElement(
-      &elementCoords[0],
-      pointCoords.data(),
-      &(isoParCoords[0]));
+      &elementCoords[0], pointCoords.data(), &(isoParCoords[0]));
 
     // if it is actually in the element save it
     if (std::abs(nearestDistance) <= 1.0) {

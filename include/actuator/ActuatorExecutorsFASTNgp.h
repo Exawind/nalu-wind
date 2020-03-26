@@ -16,14 +16,14 @@
 #include <actuator/ActuatorFunctorsFAST.h>
 #include <actuator/UtilitiesActuator.h>
 
-namespace sierra
-{
-namespace nalu
+namespace sierra {
+namespace nalu {
+
+struct ActuatorLineFastNGP
 {
 
-struct ActuatorLineFastNGP{
-
-  ActuatorLineFastNGP(const ActuatorMetaFAST& actMeta,
+  ActuatorLineFastNGP(
+    const ActuatorMetaFAST& actMeta,
     ActuatorBulkFAST& actBulk,
     stk::mesh::BulkData& stkBulk);
 
@@ -37,8 +37,10 @@ struct ActuatorLineFastNGP{
   const int numActPoints_;
 };
 
-struct ActuatorDiskFastNGP{
-  ActuatorDiskFastNGP(const ActuatorMetaFAST& actMeta,
+struct ActuatorDiskFastNGP
+{
+  ActuatorDiskFastNGP(
+    const ActuatorMetaFAST& actMeta,
     ActuatorBulkDiskFAST& actBulk,
     stk::mesh::BulkData& stkBulk);
 

@@ -50,26 +50,28 @@ struct ActuatorFunctor
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& index) const;
 
-  template<typename T>
-  KOKKOS_INLINE_FUNCTION
-  auto get_local_view(T dualView) const->decltype (dualView.template view<memory_space>()) {
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto get_local_view(T dualView) const
+    -> decltype(dualView.template view<memory_space>())
+  {
     return dualView.template view<memory_space>();
   }
 
-  template<typename T>
-  KOKKOS_INLINE_FUNCTION
-  void touch_dual_view(T dualView){
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION void touch_dual_view(T dualView)
+  {
     dualView.template sync<memory_space>();
     dualView.template modify<memory_space>();
   }
-
 };
 
-//TODO(SAKIEVICH) can we just move this to be a functor as well?
-//Store bulk and meta, in realm and then construct/call functor in place of execute?
+// TODO(SAKIEVICH) can we just move this to be a functor as well?
+// Store bulk and meta, in realm and then construct/call functor in place of
+// execute?
 template <typename ACTMETA, typename ACTBULK>
-struct ActExecuteFunctor{
-   ActExecuteFunctor(const ACTMETA& actMeta, ACTBULK& actBulk)
+struct ActExecuteFunctor
+{
+  ActExecuteFunctor(const ACTMETA& actMeta, ACTBULK& actBulk)
     : actMeta_(actMeta),
       actBulk_(actBulk),
       numActPoints_(actMeta_.numPointsTotal_)
@@ -80,7 +82,7 @@ struct ActExecuteFunctor{
 private:
   const ACTMETA& actMeta_; //< Contains meta data used to construct
   ACTBULK& actBulk_;       //< Contains data
-  const int numActPoints_;    //< Total number of actuator points
+  const int numActPoints_; //< Total number of actuator points
 };
 /*!
  * \class Actuator

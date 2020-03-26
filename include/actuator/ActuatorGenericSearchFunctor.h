@@ -22,24 +22,26 @@
 #include <stk_mesh/base/BulkData.hpp>
 #include <FieldTypeDef.h>
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
-template<typename ActuatorBulk, typename functor>
-struct GenericLoopOverCoarseSearchResults{
+template <typename ActuatorBulk, typename functor>
+struct GenericLoopOverCoarseSearchResults
+{
   using execution_space = ActuatorFixedExecutionSpace;
 
   // ctor if functor only requires actBulk for constructor
-  GenericLoopOverCoarseSearchResults(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk):
-    actBulk_(actBulk),
-    stkBulk_(stkBulk),
-    coordinates_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "coordinates")),
-    actuatorSource_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "actuator_source")),
-    dualNodalVolume_(stkBulk_.mesh_meta_data().get_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "dual_nodal_volume")),
-    innerLoopFunctor_(actBulk)
+  GenericLoopOverCoarseSearchResults(
+    ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
+    : actBulk_(actBulk),
+      stkBulk_(stkBulk),
+      coordinates_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "coordinates")),
+      actuatorSource_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "actuator_source")),
+      dualNodalVolume_(stkBulk_.mesh_meta_data().get_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "dual_nodal_volume")),
+      innerLoopFunctor_(actBulk)
   {
     actBulk_.coarseSearchElemIds_.sync_host();
     actBulk_.coarseSearchPointIds_.sync_host();
@@ -47,29 +49,35 @@ struct GenericLoopOverCoarseSearchResults{
   }
 
   // ctor for functor constructor taking multiple args
-  GenericLoopOverCoarseSearchResults(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk, functor innerLoopFunctor):
-    actBulk_(actBulk),
-    stkBulk_(stkBulk),
-    coordinates_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "coordinates")),
-    actuatorSource_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "actuator_source")),
-    dualNodalVolume_(stkBulk_.mesh_meta_data().get_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "dual_nodal_volume")),
-    innerLoopFunctor_(innerLoopFunctor)
+  GenericLoopOverCoarseSearchResults(
+    ActuatorBulk& actBulk,
+    stk::mesh::BulkData& stkBulk,
+    functor innerLoopFunctor)
+    : actBulk_(actBulk),
+      stkBulk_(stkBulk),
+      coordinates_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "coordinates")),
+      actuatorSource_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "actuator_source")),
+      dualNodalVolume_(stkBulk_.mesh_meta_data().get_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "dual_nodal_volume")),
+      innerLoopFunctor_(innerLoopFunctor)
   {
     actBulk_.coarseSearchElemIds_.sync_host();
     actBulk_.coarseSearchPointIds_.sync_host();
     innerLoopFunctor_.preloop();
   }
 
-  void operator()(int index) const{
+  void operator()(int index) const
+  {
     auto pointId = actBulk_.coarseSearchPointIds_.h_view(index);
     auto elemId = actBulk_.coarseSearchElemIds_.h_view(index);
 
-    const stk::mesh::Entity elem = stkBulk_.get_entity(stk::topology::ELEMENT_RANK, elemId);
+    const stk::mesh::Entity elem =
+      stkBulk_.get_entity(stk::topology::ELEMENT_RANK, elemId);
     const stk::topology& elemTopo = stkBulk_.bucket(elem).topology();
-    MasterElement* meSCV = MasterElementRepo::get_volume_master_element(elemTopo);
+    MasterElement* meSCV =
+      MasterElementRepo::get_volume_master_element(elemTopo);
 
     const unsigned numNodes = stkBulk_.num_nodes(elem);
     const int numIp = meSCV->num_integration_points();
@@ -80,29 +88,31 @@ struct GenericLoopOverCoarseSearchResults{
 
     stk::mesh::Entity const* elem_nod_rels = stkBulk_.begin_nodes(elem);
 
-    for(unsigned i = 0; i<numNodes; i++){
-      const double* coords = (double*) stk::mesh::field_data(*coordinates_, elem_nod_rels[i]);
-      for(int j=0; j<3; j++){
-        elemCoords[j+i*3] = coords[j];
+    for (unsigned i = 0; i < numNodes; i++) {
+      const double* coords =
+        (double*)stk::mesh::field_data(*coordinates_, elem_nod_rels[i]);
+      for (int j = 0; j < 3; j++) {
+        elemCoords[j + i * 3] = coords[j];
       }
     }
 
-    double scvError =0.0;
+    double scvError = 0.0;
     meSCV->determinant(1, &elemCoords[0], &scvIp[0], &scvError);
 
     const auto* ipNodeMap = meSCV->ipNodeMap();
 
-    for(int nIp=0; nIp<numIp; nIp++){
-      const int nodeIndex  = ipNodeMap[nIp];
+    for (int nIp = 0; nIp < numIp; nIp++) {
+      const int nodeIndex = ipNodeMap[nIp];
       stk::mesh::Entity node = elem_nod_rels[nodeIndex];
       const double* nodeCoords =
-          (double*) stk::mesh::field_data(*coordinates_, node);
-      const double dual_vol = *(double*)stk::mesh::field_data(*dualNodalVolume_, node);
-      double* sourceTerm = (double*)stk::mesh::field_data(*actuatorSource_, node);
+        (double*)stk::mesh::field_data(*coordinates_, node);
+      const double dual_vol =
+        *(double*)stk::mesh::field_data(*dualNodalVolume_, node);
+      double* sourceTerm =
+        (double*)stk::mesh::field_data(*actuatorSource_, node);
 
       innerLoopFunctor_(pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
     }
-
   }
 
   ActuatorBulk& actBulk_;
@@ -113,7 +123,7 @@ struct GenericLoopOverCoarseSearchResults{
   functor innerLoopFunctor_;
 };
 
-}
-}
+} // namespace nalu
+} // namespace sierra
 
 #endif /* ACTUATORGENERICSEARCHFUNCTOR_H_ */

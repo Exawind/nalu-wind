@@ -70,8 +70,7 @@ actuator_parse(const YAML::Node& y_node)
       }
     }
   } else {
-    throw std::runtime_error(
-      "Actuator:: search_target_part is not declared.");
+    throw std::runtime_error("Actuator:: search_target_part is not declared.");
   }
   return actMeta;
 }

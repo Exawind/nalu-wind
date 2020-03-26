@@ -35,16 +35,15 @@ ActuatorMeta::add_turbine(const ActuatorInfoNGP& info)
   numPointsTotal_ += info.numPoints_;
 }
 
-ActuatorBulk::ActuatorBulk(
-  const ActuatorMeta& actMeta)
+ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
   : turbIdOffset_("offsetsForTurbine", actMeta.numberOfActuators_),
     pointCentroid_("actPointCentroid", actMeta.numPointsTotal_),
     velocity_("actVelocity", actMeta.numPointsTotal_),
     actuatorForce_("actForce", actMeta.numPointsTotal_),
     epsilon_("actEpsilon", actMeta.numPointsTotal_),
     searchRadius_("searchRadius", actMeta.numPointsTotal_),
-    coarseSearchPointIds_("coarseSearchPointIds",0),
-    coarseSearchElemIds_("coarseSearchElemIds",0),
+    coarseSearchPointIds_("coarseSearchPointIds", 0),
+    coarseSearchElemIds_("coarseSearchElemIds", 0),
     localCoords_("localCoords", actMeta.numPointsTotal_),
     pointIsLocal_("pointIsLocal", actMeta.numPointsTotal_),
     localParallelRedundancy_("localParallelReundancy", actMeta.numPointsTotal_),
@@ -53,8 +52,10 @@ ActuatorBulk::ActuatorBulk(
   compute_offsets(actMeta);
 }
 
-void ActuatorBulk::compute_offsets(const ActuatorMeta& actMeta){
-   turbIdOffset_.modify_host();
+void
+ActuatorBulk::compute_offsets(const ActuatorMeta& actMeta)
+{
+  turbIdOffset_.modify_host();
 
   const int numTurbs = actMeta.numberOfActuators_;
 
@@ -65,7 +66,8 @@ void ActuatorBulk::compute_offsets(const ActuatorMeta& actMeta){
 }
 
 void
-ActuatorBulk::stk_search_act_pnts(const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk)
+ActuatorBulk::stk_search_act_pnts(
+  const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk)
 {
   auto points = pointCentroid_.template view<ActuatorFixedMemSpace>();
   auto radius = searchRadius_.template view<ActuatorFixedMemSpace>();
@@ -74,48 +76,43 @@ ActuatorBulk::stk_search_act_pnts(const ActuatorMeta& actMeta, stk::mesh::BulkDa
   auto elemBoxes = CreateElementBoxes(stkBulk, actMeta.searchTargetNames_);
 
   ExecuteCoarseSearch(
-    boundSpheres,
-    elemBoxes,
-    coarseSearchPointIds_,
-    coarseSearchElemIds_,
+    boundSpheres, elemBoxes, coarseSearchPointIds_, coarseSearchElemIds_,
     actMeta.searchMethod_);
 
   ExecuteFineSearch(
-    stkBulk,
-    coarseSearchPointIds_,
-    coarseSearchElemIds_,
-    points,
-    elemContainingPoint_,
-    localCoords_,
-    pointIsLocal_,
+    stkBulk, coarseSearchPointIds_, coarseSearchElemIds_, points,
+    elemContainingPoint_, localCoords_, pointIsLocal_,
     localParallelRedundancy_);
 
   actuator_utils::reduce_view_on_host(localParallelRedundancy_);
 }
 
-void ActuatorBulk::zero_source_terms(stk::mesh::BulkData& stkBulk){
+void
+ActuatorBulk::zero_source_terms(stk::mesh::BulkData& stkBulk)
+{
 
   const stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
 
   VectorFieldType* actuatorSource = stkMeta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "actuator_source");
   ScalarFieldType* actuatorSourceLhs = stkMeta.get_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "actuator_source_lhs");
+    stk::topology::NODE_RANK, "actuator_source_lhs");
 
   const double zero[3] = {0.0, 0.0, 0.0};
 
   stk::mesh::field_fill_component(zero, *actuatorSource);
   stk::mesh::field_fill(0.0, *actuatorSourceLhs);
-
 }
 
-void ActuatorBulk::parallel_sum_source_term(stk::mesh::BulkData& stkBulk){
+void
+ActuatorBulk::parallel_sum_source_term(stk::mesh::BulkData& stkBulk)
+{
 
   const stk::mesh::MetaData& stkMeta = stkBulk.mesh_meta_data();
   VectorFieldType* actuatorSource = stkMeta.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "actuator_source");
 
-    stk::mesh::parallel_sum(stkBulk, {actuatorSource});
+  stk::mesh::parallel_sum(stkBulk, {actuatorSource});
 }
 
 } // namespace nalu

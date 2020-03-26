@@ -8,14 +8,12 @@
 
 #include <cmath>
 
-#include "actuator/UtilitiesActuator.h"// master elements
-
+#include "actuator/UtilitiesActuator.h" // master elements
 
 // This is to access sierra::nalu::Coordinates
 #include "NaluParsing.h"
 
-
-namespace sierra{
+namespace sierra {
 namespace nalu {
 namespace actuator_utils {
 
@@ -28,51 +26,69 @@ const double pi = M_PI;
 // Blade 2 nodes
 // Blade 3 nodes
 // Tower nodes
-Point get_fast_point(fast::OpenFAST& fast, int turbId, fast::ActuatorNodeType type, int pointId, int bladeId){
-  std::vector<double> coords (3);
-  switch(type){
-    case fast::HUB: {
-      fast.getForceNodeCoordinates(coords, 0, turbId);
-      break;
-    }
-    case fast::TOWER:{
-      const int offset = fast.get_numForcePts(turbId)-fast.get_numForcePtsTwr(turbId);
-      fast.getForceNodeCoordinates(coords, pointId+offset, turbId);
-      break;
-    }
-    case fast::BLADE:{
-      const int nPBlade = fast.get_numForcePtsBlade(turbId);
-      fast.getForceNodeCoordinates(coords, 1+bladeId*nPBlade+pointId, turbId);
-      break;
-    }
-    default:{
-      break;
-    }
+Point
+get_fast_point(
+  fast::OpenFAST& fast,
+  int turbId,
+  fast::ActuatorNodeType type,
+  int pointId,
+  int bladeId)
+{
+  std::vector<double> coords(3);
+  switch (type) {
+  case fast::HUB: {
+    fast.getForceNodeCoordinates(coords, 0, turbId);
+    break;
+  }
+  case fast::TOWER: {
+    const int offset =
+      fast.get_numForcePts(turbId) - fast.get_numForcePtsTwr(turbId);
+    fast.getForceNodeCoordinates(coords, pointId + offset, turbId);
+    break;
+  }
+  case fast::BLADE: {
+    const int nPBlade = fast.get_numForcePtsBlade(turbId);
+    fast.getForceNodeCoordinates(
+      coords, 1 + bladeId * nPBlade + pointId, turbId);
+    break;
+  }
+  default: {
+    break;
+  }
   }
   return {coords[0], coords[1], coords[2]};
 }
 
-int get_fast_point_index(const fast::fastInputs& fi, int turbId, int nBlades, fast::ActuatorNodeType type, int pointId, int bladeId){
-    switch(type){
-    case fast::HUB: {
-      return 0;
-      break;
-    }
-    case fast::TOWER:{
-      const int offset = fi.globTurbineData[turbId].numForcePtsBlade*nBlades+1;
-      return pointId+offset;
-      break;
-    }
-    case fast::BLADE:{
-      const int nPBlade = fi.globTurbineData[turbId].numForcePtsBlade;
-      return  1+bladeId*nPBlade+pointId;
-      break;
-    }
-    default:{
-      ThrowErrorMsg("Invalid fast type");
-      return -1;
-      break;
-    }
+int
+get_fast_point_index(
+  const fast::fastInputs& fi,
+  int turbId,
+  int nBlades,
+  fast::ActuatorNodeType type,
+  int pointId,
+  int bladeId)
+{
+  switch (type) {
+  case fast::HUB: {
+    return 0;
+    break;
+  }
+  case fast::TOWER: {
+    const int offset =
+      fi.globTurbineData[turbId].numForcePtsBlade * nBlades + 1;
+    return pointId + offset;
+    break;
+  }
+  case fast::BLADE: {
+    const int nPBlade = fi.globTurbineData[turbId].numForcePtsBlade;
+    return 1 + bladeId * nPBlade + pointId;
+    break;
+  }
+  default: {
+    ThrowErrorMsg("Invalid fast type");
+    return -1;
+    break;
+  }
   }
 }
 #endif
@@ -197,56 +213,50 @@ SweptPointLocator::get_radius(int pntNum)
 ///
 /// A Gaussian projection function
 ///
-double Gaussian_projection(
-  int nDim,  // The dimension of the Gaussian (2 or 3)
-  double *dis,      // The distance from the center of the Gaussian
-  const Coordinates &epsilon  // The width of the Gaussian
-  )
+double
+Gaussian_projection(
+  int nDim,                  // The dimension of the Gaussian (2 or 3)
+  double* dis,               // The distance from the center of the Gaussian
+  const Coordinates& epsilon // The width of the Gaussian
+)
 {
   // Compute the force projection weight at this location using a
   // Gaussian function.
   double g;
-  if ( nDim == 2 )
+  if (nDim == 2)
     g = (1.0 / (epsilon.x_ * epsilon.y_ * pi)) *
-        exp(-pow((dis[0]/epsilon.x_),2.0)
-            -pow((dis[1]/epsilon.y_),2.0)
-           );
+        exp(-pow((dis[0] / epsilon.x_), 2.0) - pow((dis[1] / epsilon.y_), 2.0));
   else
-    g = (1.0 / (epsilon.x_ * epsilon.y_ * epsilon.z_ * std::pow(pi,1.5))) *
-        exp(-pow((dis[0]/epsilon.x_),2.0)
-            -pow((dis[1]/epsilon.y_),2.0)
-            -pow((dis[2]/epsilon.z_),2.0)
-           );
+    g = (1.0 / (epsilon.x_ * epsilon.y_ * epsilon.z_ * std::pow(pi, 1.5))) *
+        exp(
+          -pow((dis[0] / epsilon.x_), 2.0) - pow((dis[1] / epsilon.y_), 2.0) -
+          pow((dis[2] / epsilon.z_), 2.0));
 
   return g;
 }
 ///
 /// A Gaussian projection function
 ///
-double Gaussian_projection(
-  int nDim,
-  double *dis,
-  double *epsilon)
+double
+Gaussian_projection(int nDim, double* dis, double* epsilon)
 {
   // Compute the force projection weight at this location using a
   // Gaussian function.
   double g;
-  if ( nDim == 2 )
+  if (nDim == 2)
     g = (1.0 / (epsilon[0] * epsilon[1] * pi)) *
-        exp(-pow((dis[0]/epsilon[0]),2.0)
-            -pow((dis[1]/epsilon[1]),2.0)
-           );
+        exp(-pow((dis[0] / epsilon[0]), 2.0) - pow((dis[1] / epsilon[1]), 2.0));
   else
-    g = (1.0 / (epsilon[0] * epsilon[1] * epsilon[2] * std::pow(pi,1.5))) *
-        exp(-pow((dis[0]/epsilon[0]),2.0)
-            -pow((dis[1]/epsilon[1]),2.0)
-            -pow((dis[2]/epsilon[2]),2.0)
-           );
+    g = (1.0 / (epsilon[0] * epsilon[1] * epsilon[2] * std::pow(pi, 1.5))) *
+        exp(
+          -pow((dis[0] / epsilon[0]), 2.0) - pow((dis[1] / epsilon[1]), 2.0) -
+          pow((dis[2] / epsilon[2]), 2.0));
 
   return g;
 }
 
-void resize_std_vector(
+void
+resize_std_vector(
   const int& sizeOfField,
   std::vector<double>& theVector,
   stk::mesh::Entity elem,
@@ -262,7 +272,8 @@ void resize_std_vector(
 //--------------------------------------------------------------------------
 //-------- gather_field ----------------------------------------------------
 //--------------------------------------------------------------------------
-void gather_field(
+void
+gather_field(
   const int& sizeOfField,
   double* fieldToFill,
   const stk::mesh::FieldBase& stkField,
@@ -282,7 +293,8 @@ void gather_field(
 //--------------------------------------------------------------------------
 //-------- gather_field_for_interp -----------------------------------------
 //--------------------------------------------------------------------------
-void gather_field_for_interp(
+void
+gather_field_for_interp(
   const int& sizeOfField,
   double* fieldToFill,
   const stk::mesh::FieldBase& stkField,
@@ -302,7 +314,8 @@ void gather_field_for_interp(
 //--------------------------------------------------------------------------
 //-------- interpolate_field -----------------------------------------------
 //--------------------------------------------------------------------------
-void interpolate_field(
+void
+interpolate_field(
   const int& sizeOfField,
   stk::mesh::Entity elem,
   const stk::mesh::BulkData& bulkData,
@@ -322,15 +335,15 @@ void interpolate_field(
 void
 compute_distance(
   int nDim,
-  const double *elemCentroid,
-  const double *pointCentroid,
-  double *distance)
+  const double* elemCentroid,
+  const double* pointCentroid,
+  double* distance)
 {
-  for ( int j = 0; j < nDim; ++j ){
+  for (int j = 0; j < nDim; ++j) {
     distance[j] = elemCentroid[j] - pointCentroid[j];
   }
 }
 
-}
-}
-}
+} // namespace actuator_utils
+} // namespace nalu
+} // namespace sierra

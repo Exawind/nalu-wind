@@ -37,9 +37,20 @@ namespace actuator_utils {
 
 #ifdef NALU_USES_OPENFAST
 
-Point get_fast_point(fast::OpenFAST& fast, int turbId, fast::ActuatorNodeType type, int pointId=0, int bladeId=0);
+Point get_fast_point(
+  fast::OpenFAST& fast,
+  int turbId,
+  fast::ActuatorNodeType type,
+  int pointId = 0,
+  int bladeId = 0);
 
-int get_fast_point_index(const fast::fastInputs& fi, int turbId, int nBlades, fast::ActuatorNodeType type, int pointId=0, int bladeId=0);
+int get_fast_point_index(
+  const fast::fastInputs& fi,
+  int turbId,
+  int nBlades,
+  fast::ActuatorNodeType type,
+  int pointId = 0,
+  int bladeId = 0);
 
 #endif
 
@@ -72,48 +83,35 @@ private:
   bool controlPointsCurrent_;
 };
 
-template<typename T>
-inline
-void reduce_view_on_host(T view){
-  ThrowAssert(view.size()>0);
+template <typename T>
+inline void
+reduce_view_on_host(T view)
+{
+  ThrowAssert(view.size() > 0);
   ThrowAssert(view.data());
   MPI_Datatype mpi_type;
-  if(std::is_same<typename T::value_type,double>::value){
-    mpi_type=MPI_DOUBLE;
-  }
-  else if(std::is_same<typename T::value_type,int>::value){
-    mpi_type=MPI_INT;
-  }
-  else if(std::is_same<typename T::value_type,bool>::value){
-    mpi_type=MPI_C_BOOL;
-  }
-  else if(std::is_same<typename T::value_type,uint64_t>::value){
-    mpi_type=MPI_LONG;
-  }
-  else{
+  if (std::is_same<typename T::value_type, double>::value) {
+    mpi_type = MPI_DOUBLE;
+  } else if (std::is_same<typename T::value_type, int>::value) {
+    mpi_type = MPI_INT;
+  } else if (std::is_same<typename T::value_type, bool>::value) {
+    mpi_type = MPI_C_BOOL;
+  } else if (std::is_same<typename T::value_type, uint64_t>::value) {
+    mpi_type = MPI_LONG;
+  } else {
     ThrowErrorMsg("unsupported type to reduce view on host");
   }
 
   MPI_Allreduce(
-    MPI_IN_PLACE,
-    view.data(),
-    view.size(),
-    mpi_type,
-    MPI_SUM,
+    MPI_IN_PLACE, view.data(), view.size(), mpi_type, MPI_SUM,
     NaluEnv::self().parallel_comm());
 }
 
 // A Gaussian projection function
-double Gaussian_projection(
-  int nDim,
-  double *dis,
-  const Coordinates &epsilon);
+double Gaussian_projection(int nDim, double* dis, const Coordinates& epsilon);
 
 // A Gaussian projection function
-double Gaussian_projection(
-  int nDim,
-  double *dis,
-  double *epsilon);
+double Gaussian_projection(int nDim, double* dis, double* epsilon);
 
 void resize_std_vector(
   const int& sizeOfField,
@@ -143,14 +141,13 @@ void interpolate_field(
   const double* fieldAtNodes,
   double* pointField);
 
-void
-compute_distance(
+void compute_distance(
   int nDim,
-  const double *elemCentroid,
-  const double *pointCentroid,
-  double *distance);
-}  // namespace actuator_utils
-}  // namespace actuator_utils
-}  // namespace actuator_utils
+  const double* elemCentroid,
+  const double* pointCentroid,
+  double* distance);
+} // namespace actuator_utils
+} // namespace nalu
+} // namespace sierra
 
 #endif

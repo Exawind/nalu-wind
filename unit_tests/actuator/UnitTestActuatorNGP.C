@@ -57,8 +57,6 @@ TEST(ActuatorNGP, testExecuteOnHostAndDevice)
   EXPECT_DOUBLE_EQ(expectVal, actBulk.scalar_.h_view(1));
 }
 
-
-
 } // namespace
 
 } // namespace nalu
