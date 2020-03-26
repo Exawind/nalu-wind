@@ -27,7 +27,7 @@ linear_solvers:
   kspace: 75
   output_level: 0
   recompute_preconditioner: no
-  muelu_xml_file_name: ./milestone.xml
+  muelu_xml_file_name: ../../reg_tests/xml/milestone.xml
 
 
 # Specify the differnt physics realms.  Here, we just have one for the fluid.
@@ -143,7 +143,7 @@ realms:
   - abltop_boundary_condition: bc_upper
     target_name: upper
     abltop_user_data:
-      normal_temperature_gradient: 0.003
+      normal_temperature_gradient: -0.003
 
   - wall_boundary_condition: bc_lower
     target_name: lower

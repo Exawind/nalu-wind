@@ -15,7 +15,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <ActuatorDiskFAST.h>
+#include <actuator/ActuatorDiskFAST.h>
 #include <algorithm>
 #include <functional>
 #include <random>
@@ -23,6 +23,8 @@
 
 namespace sierra {
 namespace nalu {
+
+namespace {
 
 template <class T>
 double
@@ -60,8 +62,9 @@ F_RotateAboutAxis(
   return pPrime;
 }
 
+}
 
-TEST(ActuatorDiskFAST, PointsOnACircle)
+TEST(ActuatorFAST, PointsOnACircle)
 {
   const double PI = std::acos(-1.0);
   const std::vector<double> origin(3, 0.0);

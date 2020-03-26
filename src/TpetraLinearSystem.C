@@ -497,72 +497,6 @@ void sum_into(
   }
 }
 
-void TpetraLinearSystem::sumInto(unsigned numEntities,
-                                 const stk::mesh::Entity* entities,
-                                 const SharedMemView<const double*> & rhs,
-                                 const SharedMemView<const double**> & lhs,
-                                 const SharedMemView<int*> & localIds,
-                                 const SharedMemView<int*> & sortPermutation,
-                                 const char *  /* trace_tag */)
-{
-  constexpr bool forceAtomic = !std::is_same<sierra::nalu::DeviceSpace, Kokkos::Serial>::value;
-
-  ThrowAssertMsg(lhs.span_is_contiguous(), "LHS assumed contiguous");
-  ThrowAssertMsg(rhs.span_is_contiguous(), "RHS assumed contiguous");
-  ThrowAssertMsg(localIds.span_is_contiguous(), "localIds assumed contiguous");
-  ThrowAssertMsg(sortPermutation.span_is_contiguous(), "sortPermutation assumed contiguous");
-
-  const int n_obj = numEntities;
-  const int numRows = n_obj * numDof_;
-
-  for(int i = 0; i < n_obj; i++) {
-    const stk::mesh::Entity entity = entities[i];
-    const LocalOrdinal localOffset = entityToColLID_[entity.local_offset()];
-    ThrowRequireMsg(localOffset != -1 , "sumInto bad lid #1 ");
-    for(size_t d=0; d < numDof_; ++d) {
-      size_t lid = i*numDof_ + d;
-      localIds[lid] = localOffset + d;
-    }
-  }
-
-  for (int i = 0; i < numRows; ++i) {
-    sortPermutation[i] = i;
-  }
-  Tpetra::Details::shellSortKeysAndValues(localIds.data(), sortPermutation.data(), numRows);
-
-  for (int r = 0; r < numRows; ++r) {
-    int i = sortPermutation[r]/numDof_;
-    LocalOrdinal rowLid = entityToLID_[entities[i].local_offset()];
-    rowLid += sortPermutation[r]%numDof_;
-    const LocalOrdinal cur_perm_index = sortPermutation[r];
-    const double* const cur_lhs = &lhs(cur_perm_index, 0);
-    const double cur_rhs = rhs[cur_perm_index];
-    ThrowAssertMsg(std::isfinite(cur_rhs), "Inf or NAN rhs");
-
-    if(rowLid < maxOwnedRowId_) {
-      sum_into_row(ownedLocalMatrix_.row(rowLid), n_obj, numDof_, localIds.data(), sortPermutation.data(), cur_lhs);
-      if (forceAtomic) {
-        Kokkos::atomic_add(&ownedLocalRhs_(rowLid,0), cur_rhs);
-      }
-      else {
-        ownedLocalRhs_(rowLid,0) += cur_rhs;
-      }
-    }
-    else if (rowLid < maxSharedNotOwnedRowId_) {
-      LocalOrdinal actualLocalId = rowLid - maxOwnedRowId_;
-      sum_into_row(sharedNotOwnedLocalMatrix_.row(actualLocalId), n_obj, numDof_,
-        localIds.data(), sortPermutation.data(), cur_lhs);
-
-      if (forceAtomic) {
-        Kokkos::atomic_add(&sharedNotOwnedLocalRhs_(actualLocalId,0), cur_rhs);
-      }
-      else {
-        sharedNotOwnedLocalRhs_(actualLocalId,0) += cur_rhs;
-      }
-    }
-  }
-}
-
 template <typename RowViewType>
 KOKKOS_FUNCTION
 void reset_row(
@@ -826,6 +760,9 @@ void TpetraLinearSystem::applyDirichletBCs(stk::mesh::FieldBase * solutionField,
   auto sharedNotOwnedLocalMatrix = sharedNotOwnedLocalMatrix_;
   auto ownedLocalRhs = ownedLocalRhs_;
   auto sharedNotOwnedLocalRhs = sharedNotOwnedLocalRhs_;
+
+  // Suppress unused variable warning on non-debug builds
+  (void) maxSharedNotOwnedRowId;
 
   nalu_ngp::run_entity_algorithm(
     "TpetraLinSys::applyDirichletBCs", ngpMesh, stk::topology::NODE_RANK, selector,

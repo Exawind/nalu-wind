@@ -12,7 +12,7 @@
 #ifndef SolutionNormPostProcessing_h
 #define SolutionNormPostProcessing_h
 
-#include <NaluParsing.h>
+#include <NaluParsedTypes.h>
 
 #include <string>
 #include <vector>

@@ -13,12 +13,10 @@
 #define TimeIntegrator_h
 
 #include <Enums.h>
-// yaml for parsing..
-#include <yaml-cpp/yaml.h>
-
 #include <vector>
 #include <string>
 
+namespace YAML { class Node; }
 
 namespace sierra{
 namespace nalu{

@@ -12,10 +12,10 @@
 #ifndef OutputInfo_h
 #define OutputInfo_h
 
-#include <NaluParsing.h>
-
 #include <string>
 #include <set>
+
+namespace YAML { class Node; }
 
 namespace Ioss{
   class PropertyManager;

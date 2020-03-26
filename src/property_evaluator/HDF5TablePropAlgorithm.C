@@ -4,6 +4,7 @@
 
 #include <Algorithm.h>
 #include <FieldTypeDef.h>
+#include <NaluEnv.h>
 #include <Realm.h>
 
 #include <stk_mesh/base/BulkData.hpp>

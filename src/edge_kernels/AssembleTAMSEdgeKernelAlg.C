@@ -10,6 +10,7 @@
 
 #include "edge_kernels/AssembleTAMSEdgeKernelAlg.h"
 #include "edge_kernels/EdgeKernel.h"
+#include "edge_kernels/MomentumSSTTAMSDiffEdgeKernel.h"
 
 namespace sierra {
 namespace nalu {

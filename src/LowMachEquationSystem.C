@@ -12,7 +12,6 @@
 #include <LowMachEquationSystem.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
-#include <AssembleCourantReynoldsElemAlgorithm.h>
 #include <AssembleContinuityElemSolverAlgorithm.h>
 #include <AssembleContinuityInflowSolverAlgorithm.h>
 #include <AssembleContinuityElemOpenSolverAlgorithm.h>
@@ -28,7 +27,6 @@
 #endif
 #include <AssembleMomentumNonConformalSolverAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
-#include <AssembleNodalGradPOpenBoundaryAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AssembleNodalGradUElemAlgorithm.h>
 #include <AssembleNodalGradUNonConformalAlgorithm.h>
@@ -60,6 +58,7 @@
 #include <NaluParsing.h>
 #include <NonConformalManager.h>
 #include <NonConformalInfo.h>
+#include <PeriodicManager.h>
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <PostProcessingData.h>
 #include <PstabErrorIndicatorEdgeAlgorithm.h>
@@ -130,6 +129,7 @@
 
 // ngp
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
+#include "ngp_algorithms/CourantReAlg.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/MdotEdgeAlg.h"
 #include "ngp_algorithms/MdotAlgDriver.h"
@@ -139,12 +139,15 @@
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
+#include "ngp_algorithms/NodalGradPOpenBoundaryAlg.h"
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_algorithms/TurbViscSSTAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
+#include "ngp_utils/NgpFieldUtils.h"
+#include "stk_ngp/NgpFieldParallel.hpp"
 
 // nso
 #include <nso/MomentumNSOElemKernel.h>
@@ -283,6 +286,32 @@ LowMachEquationSystem::~LowMachEquationSystem()
 {
   if ( NULL != surfaceForceAndMomentAlgDriver_ )
     delete surfaceForceAndMomentAlgDriver_;
+}
+
+void LowMachEquationSystem::load(const YAML::Node& node)
+{
+  EquationSystem::load(node);
+
+  if (realm_.query_for_overset()) {
+    bool momDecoupled = decoupledOverset_;
+    bool presDecoupled = decoupledOverset_;
+    int momNumIters = numOversetIters_;
+    int presNumIters = numOversetIters_;
+
+    get_if_present_no_default(node, "momentum_decoupled_overset", momDecoupled);
+    get_if_present_no_default(node, "continuity_decoupled_overset", presDecoupled);
+    get_if_present_no_default(node, "momentum_num_overset_correctors", momNumIters);
+    get_if_present_no_default(node, "continuity_num_overset_correctors", presNumIters);
+
+    momentumEqSys_->decoupledOverset_ = momDecoupled;
+    momentumEqSys_->numOversetIters_ = momNumIters;
+    continuityEqSys_->decoupledOverset_ = presDecoupled;
+    continuityEqSys_->numOversetIters_ = presNumIters;
+
+    // LowMach is considered decoupled only if both momentum and continuity are
+    // decoupled.
+    decoupledOverset_ = momDecoupled && presDecoupled;
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -717,17 +746,22 @@ LowMachEquationSystem::solve_and_update()
     NaluEnv::self().naluOutputP0() << " " << k+1 << "/" << maxIterations_
                     << std::setw(15) << std::right << userSuppliedName_ << std::endl;
 
-    // momentum assemble, load_complete and solve
-    momentumEqSys_->assemble_and_solve(momentumEqSys_->uTmp_);
+    for (int oi=0; oi < momentumEqSys_->numOversetIters_; ++oi) {
+      momentumEqSys_->assemble_and_solve(momentumEqSys_->uTmp_);
 
-    // update all of velocity
-    timeA = NaluEnv::self().nalu_time();
-    solution_update(
-      1.0, *momentumEqSys_->uTmp_,
-      1.0, momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1),
-      realm_.meta_data().spatial_dimension());
-    timeB = NaluEnv::self().nalu_time();
-    momentumEqSys_->timerAssemble_ += (timeB-timeA);
+      timeA = NaluEnv::self().nalu_time();
+      solution_update(
+        1.0, *momentumEqSys_->uTmp_,
+        1.0, momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1),
+        realm_.meta_data().spatial_dimension());
+
+      if (momentumEqSys_->decoupledOverset_ && realm_.hasOverset_)
+        realm_.overset_orphan_node_field_update(
+          &momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1),
+          1, realm_.meta_data().spatial_dimension());
+      timeB = NaluEnv::self().nalu_time();
+      momentumEqSys_->timerAssemble_ += (timeB-timeA);
+    }
 
     // compute velocity relative to mesh with new velocity
     realm_.compute_vrtm();
@@ -740,16 +774,20 @@ LowMachEquationSystem::solve_and_update()
       continuityEqSys_->timerMisc_ += (timeB-timeA);
     }
 
-    // continuity assemble, load_complete and solve
-    continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
+    for (int oi=0; oi < continuityEqSys_->numOversetIters_; ++oi) {
+      continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
 
-    // update pressure
-    timeA = NaluEnv::self().nalu_time();
-    solution_update(
-      1.0, *continuityEqSys_->pTmp_,
-      1.0, *continuityEqSys_->pressure_);
-    timeB = NaluEnv::self().nalu_time();
-    continuityEqSys_->timerAssemble_ += (timeB-timeA);
+      timeA = NaluEnv::self().nalu_time();
+      solution_update(
+        1.0, *continuityEqSys_->pTmp_,
+        1.0, *continuityEqSys_->pressure_);
+
+      if (continuityEqSys_->decoupledOverset_ && realm_.hasOverset_)
+        realm_.overset_orphan_node_field_update(
+          &continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1), 1, 1);
+      timeB = NaluEnv::self().nalu_time();
+      continuityEqSys_->timerAssemble_ += (timeB-timeA);
+    }
 
     // compute mdot
     timeA = NaluEnv::self().nalu_time();
@@ -765,13 +803,34 @@ LowMachEquationSystem::solve_and_update()
     const double relaxFP = realm_.solutionOptions_->get_relaxation_factor(dofName);
     if (std::fabs(1.0 - relaxFP) > 1.0e-3) {
       timeA = NaluEnv::self().nalu_time();
-      solution_update(
-        (relaxFP - 1.0), *continuityEqSys_->pTmp_,
-        1.0, *continuityEqSys_->pressure_);
+      // Take care of the possibility that we have multiple overset correctors
+      // and we need to do a pressure update that is the sum of all the deltaP
+      // that were accumulated over the multiple correctors.
+      if (continuityEqSys_->decoupledOverset_ && realm_.hasOverset_) {
+        solution_update(
+          (1.0 - relaxFP), continuityEqSys_->pressure_->field_of_state(stk::mesh::StateN),
+          relaxFP, continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1));
+
+        realm_.overset_orphan_node_field_update(
+          &continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1), 1, 1);
+      } else {
+        solution_update(
+          (relaxFP - 1.0), *continuityEqSys_->pTmp_,
+          1.0, *continuityEqSys_->pressure_);
+      }
+
       continuityEqSys_->compute_projected_nodal_gradient();
       timeB = NaluEnv::self().nalu_time();
       continuityEqSys_->timerAssemble_ += (timeB-timeA);
     }
+    // Pressure isn't actually a state, we do this to support multiple overset
+    // correctors when the relaxation factor is not 1.0. So copy the current
+    // pressure into `StateN` so that we can perform solution update correction
+    // with the correct relaxation factor
+    nalu_ngp::field_copy(
+      realm_.mesh_info(),
+      continuityEqSys_->pressure_->field_of_state(stk::mesh::StateN),
+      continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1));
 
     // compute velocity relative to mesh with new velocity
     realm_.compute_vrtm();
@@ -790,7 +849,7 @@ LowMachEquationSystem::solve_and_update()
   }
 
   // process CFL/Reynolds
-  momentumEqSys_->cflReyAlgDriver_->execute();
+  momentumEqSys_->cflReAlgDriver_.execute();
  }
 
 //--------------------------------------------------------------------------
@@ -938,6 +997,7 @@ LowMachEquationSystem::project_nodal_velocity()
 void
 LowMachEquationSystem::predict_state()
 {
+  const auto& meshInfo = realm_.mesh_info();
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
 
@@ -945,12 +1005,17 @@ LowMachEquationSystem::predict_state()
     density_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
   auto& rhoNp1 = fieldMgr.get_field<double>(
     density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+  const auto& presN = nalu_ngp::get_ngp_field(
+    meshInfo, "pressure", stk::mesh::StateN);
+  auto& presNp1 = nalu_ngp::get_ngp_field(
+    meshInfo, "pressure", stk::mesh::StateNP1);
 
   const auto& meta = realm_.meta_data();
-  const stk::mesh::Selector sel_rho =
+  const stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
     & stk::mesh::selectField(*density_);
-  nalu_ngp::field_copy(ngpMesh, sel_rho, rhoNp1, rhoN, 1);
+  nalu_ngp::field_copy(ngpMesh, sel, rhoNp1, rhoN, 1);
+  nalu_ngp::field_copy(ngpMesh, sel, presNp1, presN, 1);
 }
 
 //--------------------------------------------------------------------------
@@ -988,7 +1053,7 @@ MomentumEquationSystem::MomentumEquationSystem(
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "dudx"),
     wallFuncAlgDriver_(realm_),
-    cflReyAlgDriver_(new AlgorithmDriver(realm_)),
+    cflReAlgDriver_(realm_),
     projectedNodalGradEqs_(NULL),
     firstPNGResidual_(0.0)
 {
@@ -1019,9 +1084,7 @@ MomentumEquationSystem::MomentumEquationSystem(
 //-------- destructor ------------------------------------------------------
 //--------------------------------------------------------------------------
 MomentumEquationSystem::~MomentumEquationSystem()
-{
-  delete cflReyAlgDriver_;
-}
+{}
 
 
 
@@ -1051,7 +1114,7 @@ MomentumEquationSystem::initial_work()
     const double timeA = NaluEnv::self().nalu_time();
     compute_wall_function_params();
     compute_turbulence_parameters();
-    cflReyAlgDriver_->execute();
+    cflReAlgDriver_.execute();
 
     const double timeB = NaluEnv::self().nalu_time();
     timerMisc_ += (timeB-timeA);
@@ -1196,16 +1259,8 @@ MomentumEquationSystem::register_interior_algorithm(
   const AlgorithmType algMass = SRC;
 
   // non-solver CFL alg
-  std::map<AlgorithmType, Algorithm *>::iterator it
-    = cflReyAlgDriver_->algMap_.find(algType);
-  if ( it == cflReyAlgDriver_->algMap_.end() ) {
-    AssembleCourantReynoldsElemAlgorithm*theAlg
-      = new AssembleCourantReynoldsElemAlgorithm(realm_, part);
-    cflReyAlgDriver_->algMap_[algType] = theAlg;
-  }
-  else {
-    it->second->partVec_.push_back(part);
-  }
+  cflReAlgDriver_.register_elem_algorithm<CourantReAlg>(
+    algType, part, "courant_reynolds", cflReAlgDriver_);
 
   VectorFieldType &velocityNp1 = velocity_->field_of_state(stk::mesh::StateNP1);
   GenericFieldType &dudxNone = dudx_->field_of_state(stk::mesh::StateNone);
@@ -1913,19 +1968,18 @@ MomentumEquationSystem::register_wall_bc(
     }
   }
   
-  // copy velocity_bc to velocity np1
-  CopyFieldAlgorithm *theCopyAlg
-    = new CopyFieldAlgorithm(realm_, part,
-			     theBcField, &velocityNp1,
-			     0, nDim,
-			     stk::topology::NODE_RANK);
+  // Only set velocityNp1 at the wall boundary if we are not using any wall functions
+  if (!anyWallFunctionActivated) {
+    // copy velocity_bc to velocity np1
+    CopyFieldAlgorithm *theCopyAlg
+      = new CopyFieldAlgorithm(realm_, part,
+                               theBcField, &velocityNp1,
+                               0, nDim,
+                               stk::topology::NODE_RANK);
 
-  // wall function activity will only set dof velocity np1 wall value as an IC
-  if ( anyWallFunctionActivated )
-    realm_.initCondAlg_.push_back(theCopyAlg);
-  else
     bcDataMapAlg_.push_back(theCopyAlg);
-    
+  }
+
   // non-solver; contribution to Gjui; allow for element-based shifted
   if ( !managePNG_ ) {
     const AlgorithmType algTypePNG = anyWallFunctionActivated ? WALL_FCN : WALL;
@@ -2417,12 +2471,7 @@ MomentumEquationSystem::register_overset_bc()
   create_constraint_algorithm(velocity_);
 
   int nDim = realm_.meta_data().spatial_dimension();
-  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
-  // Perform fringe updates before all equation system solves
-  equationSystems_.preIterAlgDriver_.push_back(theAlg);
-
-  theAlg->fields_.push_back(
-    std::unique_ptr<OversetFieldData>(new OversetFieldData(velocity_,1,nDim)));
+  equationSystems_.register_overset_field_update(velocity_, 1, nDim);
 }
 
 //--------------------------------------------------------------------------
@@ -2683,10 +2732,13 @@ void
 MomentumEquationSystem::assemble_and_solve(
   stk::mesh::FieldBase* deltaSolution)
 {
+  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
   auto& meta = realm_.meta_data();
   auto& bulk = realm_.bulk_data();
 
   extractDiagonal_ = (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV);
+  auto ngpUdiag = realm_.ngp_field_manager().get_field<double>(
+    Udiag_->mesh_meta_data_ordinal());
   // Reset timescale field before momentum solve
   {
     double projTimeScale = 0.0;
@@ -2696,8 +2748,6 @@ MomentumEquationSystem::assemble_and_solve(
       projTimeScale = gamma1 / dt;
     }
 
-    auto ngpUdiag = realm_.ngp_field_manager().get_field<double>(
-      Udiag_->mesh_meta_data_ordinal());
     ngpUdiag.set_all(realm_.ngp_mesh(), projTimeScale);
     ngpUdiag.modify_on_device();
   }
@@ -2710,7 +2760,6 @@ MomentumEquationSystem::assemble_and_solve(
     stk::topology::NODE_RANK, "dual_nodal_volume");
   ScalarFieldType* density = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "density");
-  std::vector<const stk::mesh::FieldBase*> fVec{Udiag_};
 
   if (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV) {
     const std::string dofName = "velocity";
@@ -2719,36 +2768,59 @@ MomentumEquationSystem::assemble_and_solve(
     const double projTimeScale = gamma1 / dt;
     const double alphaU = realm_.solutionOptions_->get_relaxation_factor(dofName);
 
-    stk::mesh::parallel_sum(bulk, fVec);
+    // Sum up contributions on the nodes shared amongst processors
+    const std::vector<NGPDoubleFieldType*> fVecNgp{&ngpUdiag};
+    bool doFinalSyncBackToDevice = true;
+    ngp::parallel_sum(realm_.bulk_data(), fVecNgp, doFinalSyncBackToDevice);
+
     const auto sel = stk::mesh::selectField(*Udiag_)
       & meta.locally_owned_part()
       & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
       & !(realm_.get_inactive_selector());
-    const auto& bkts = bulk.get_buckets(stk::topology::NODE_RANK, sel);
+    const auto& ngpMesh = realm_.ngp_mesh();
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    const auto& ngpRho = fieldMgr.get_field<double>(density->mesh_meta_data_ordinal());
+    const auto& ngpdVol = fieldMgr.get_field<double>(dualVol->mesh_meta_data_ordinal());
 
-    for (auto b: bkts) {
-      double* field = (double*) stk::mesh::field_data(*Udiag_, *b);
-      double* rho = (double*) stk::mesh::field_data(*density, *b);
-      double* dVol = (double*) stk::mesh::field_data(*dualVol, *b);
+    // Remove momentum relaxation factor from diagonal term
+    nalu_ngp::run_entity_algorithm(
+      "LowMach::udiag_post_processing", ngpMesh, stk::topology::NODE_RANK, sel,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        double udiagTmp = ngpUdiag.get(mi, 0) / (ngpRho.get(mi, 0) * ngpdVol.get(mi, 0));
+        ngpUdiag.get(mi, 0) = (udiagTmp - projTimeScale) * alphaU + projTimeScale;
+      });
+    ngpUdiag.modify_on_device();
+    ngpUdiag.sync_to_host();
 
-      for (size_t in=0; in < b->size(); in++) {
-        field[in] /= (rho[in] * dVol[in]);
-        field[in] = (field[in] - projTimeScale) * alphaU + projTimeScale;
-      }
+    // Communicate to shared and ghosted nodes (all synchronization on host)
+    std::vector<const stk::mesh::FieldBase*> fVec{Udiag_};
+    stk::mesh::copy_owned_to_shared(bulk, fVec);
+    stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
+    if (realm_.hasPeriodic_) {
+      const bool bypassFieldCheck = true;
+      const bool addMirrorNodes = false;
+      const bool setMirrorNodes = true;
+      realm_.periodicManager_->apply_constraints(
+        Udiag_, 1, bypassFieldCheck, addMirrorNodes, setMirrorNodes);
     }
-  }
+    if (realm_.nonConformalManager_ != nullptr &&
+        realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)
+      stk::mesh::communicate_field_data(
+        *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
+    if (realm_.hasOverset_) {
+#ifndef KOKKOS_ENABLE_CUDA
+      realm_.overset_orphan_node_field_update(Udiag_, 1, 1);
+#else
+      // TODO: Fix overset for GPUs
+      throw std::runtime_error(
+        "Cannot perform overset synchronization on GPUs");
+#endif
+    }
 
-  // Communicate to shared and ghosted nodes
-  stk::mesh::copy_owned_to_shared(bulk, fVec);
-  stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
-  if (realm_.hasPeriodic_)
-    realm_.periodic_delta_solution_update(Udiag_, 1);
-  if (realm_.nonConformalManager_ != nullptr &&
-      realm_.nonConformalManager_->nonConformalGhosting_ != nullptr)
-    stk::mesh::communicate_field_data(
-      *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
-  if (realm_.hasOverset_)
-    realm_.overset_orphan_node_field_update(Udiag_, 1, 1);
+    // Push back to device
+    ngpUdiag.modify_on_host();
+    ngpUdiag.sync_to_device();
+  }
 }
 
 void MomentumEquationSystem::compute_turbulence_parameters()
@@ -2829,7 +2901,9 @@ ContinuityEquationSystem::register_nodal_fields(
   const int nDim = meta_data.spatial_dimension();
 
   // register dof; set it as a restart variable
-  pressure_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "pressure"));
+  const int numStates = 2;
+  pressure_ = &(meta_data.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "pressure", numStates));
   stk::mesh::put_field_on_mesh(*pressure_, *part, nullptr);
   realm_.augment_restart_variable_list("pressure");
 
@@ -2879,7 +2953,7 @@ ContinuityEquationSystem::register_interior_algorithm(
   // non-solver, dpdx
   const AlgorithmType algType = INTERIOR;
 
-  ScalarFieldType &pressureNone = pressure_->field_of_state(stk::mesh::StateNone);
+  ScalarFieldType &pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
 
   bool lumpedMass = false;
@@ -2889,11 +2963,11 @@ ContinuityEquationSystem::register_interior_algorithm(
   if ( !managePNG_ ) {
     if (!elementContinuityEqs_ && edgeNodalGradient_)
       nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
-        algType, part, "continuity_nodal_grad", &pressureNone, &dpdxNone);
+        algType, part, "continuity_nodal_grad", &pressureNp1, &dpdxNone);
     else
       nodalGradAlgDriver_.register_legacy_algorithm<AssembleNodalGradElemAlgorithm>(
         algType, part, "continuity_nodal_grad",
-        &pressureNone, &dpdxNone, edgeNodalGradient_);
+        &pressureNp1, &dpdxNone, edgeNodalGradient_);
   }
 
   if ( !elementContinuityEqs_ ) {
@@ -3083,7 +3157,7 @@ ContinuityEquationSystem::register_inflow_bc(
   // algorithm type
   const AlgorithmType algType = INFLOW;
 
-  ScalarFieldType &pressureNone = pressure_->field_of_state(stk::mesh::StateNone);
+  ScalarFieldType &pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
 
   stk::mesh::MetaData &meta_data = realm_.meta_data();
@@ -3175,7 +3249,7 @@ ContinuityEquationSystem::register_inflow_bc(
   if ( !managePNG_ ) {
     nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "continuity_nodal_grad",
-      &pressureNone, &dpdxNone, edgeNodalGradient_);
+      &pressureNp1, &dpdxNone, edgeNodalGradient_);
   }
 
   // check to see if we are using shifted as inflow is shared
@@ -3242,9 +3316,9 @@ ContinuityEquationSystem::register_open_bc(
 
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
-    nodalGradAlgDriver_.register_legacy_algorithm<
-      AssembleNodalGradPOpenBoundaryAlgorithm>(
-      algType, part, "continuity_nodal_grad", edgeNodalGradient_);
+    nodalGradAlgDriver_.register_face_elem_algorithm<NodalGradPOpenBoundary>(
+      algType, part, get_elem_topo(realm_, *part), "continuity_nodal_grad",
+      edgeNodalGradient_);
   }
 
   // mdot at open and lhs
@@ -3341,14 +3415,14 @@ ContinuityEquationSystem::register_wall_bc(
   // algorithm type
   const AlgorithmType algType = WALL;
 
-  ScalarFieldType &pressureNone = pressure_->field_of_state(stk::mesh::StateNone);
+  ScalarFieldType &pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
     nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "continuity_nodal_grad",
-      &pressureNone, &dpdxNone, edgeNodalGradient_);
+      &pressureNp1, &dpdxNone, edgeNodalGradient_);
   }
 }
 
@@ -3365,14 +3439,14 @@ ContinuityEquationSystem::register_symmetry_bc(
   // algorithm type
   const AlgorithmType algType = SYMMETRY;
 
-  ScalarFieldType &pressureNone = pressure_->field_of_state(stk::mesh::StateNone);
+  ScalarFieldType &pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; contribution to Gjp; allow for element-based shifted
   if ( !managePNG_ ) {
     nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "continuity_nodal_grad",
-      &pressureNone, &dpdxNone, edgeNodalGradient_);
+      &pressureNp1, &dpdxNone, edgeNodalGradient_);
   }
 }
 
@@ -3400,7 +3474,7 @@ ContinuityEquationSystem::register_abltop_bc(
   if ( !realm_.realmUsesEdges_ )
     throw std::runtime_error("ABLTopBoundaryCondition::Error you must use the edge-based scheme");
 
-  ScalarFieldType &pressureNone = pressure_->field_of_state(stk::mesh::StateNone);
+  ScalarFieldType &pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
 
 /*
@@ -3486,7 +3560,7 @@ ContinuityEquationSystem::register_abltop_bc(
   if ( !managePNG_ ) {
     nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "continuity_nodal_grad",
-      &pressureNone, &dpdxNone, edgeNodalGradient_);
+      &pressureNp1, &dpdxNone, edgeNodalGradient_);
   }
 
   // check to see if we are using shifted as inflow is shared
@@ -3595,14 +3669,12 @@ ContinuityEquationSystem::register_non_conformal_bc(
 void
 ContinuityEquationSystem::register_overset_bc()
 {
-  create_constraint_algorithm(pressure_);
+  if (decoupledOverset_)
+    EquationSystem::create_constraint_algorithm(pressure_);
+  else
+    create_constraint_algorithm(pressure_);
 
-  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
-  // Perform fringe updates before all equation system solves
-  equationSystems_.preIterAlgDriver_.push_back(theAlg);
-
-  theAlg->fields_.push_back(
-    std::unique_ptr<OversetFieldData>(new OversetFieldData(pressure_,1,1)));
+  equationSystems_.register_overset_field_update(pressure_, 1, 1);
 }
 
 //--------------------------------------------------------------------------

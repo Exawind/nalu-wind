@@ -31,7 +31,6 @@ class TestKernel
     sierra::nalu::SharedMemView<double*,ShmemType> & /* rhs */,
     sierra::nalu::ScratchViews<sierra::nalu::DoubleType,TeamType,ShmemType> & /* scratchViews */) const
   {
-    printf("TestKernel::execute!!\n");
   }
 
   KOKKOS_FUNCTION
@@ -40,7 +39,6 @@ class TestKernel
     sierra::nalu::SharedMemView<double*,ShmemType> & /* rhs */,
     sierra::nalu::ScratchViews<double,TeamType,ShmemType> & /* scratchViews */) const
   {
-    printf("TestKernel::execute!!\n");
   }
 
   void execute(

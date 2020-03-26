@@ -8,7 +8,7 @@
 //
 
 
-#include <ActuatorLineFAST.h>
+#include <actuator/ActuatorLineFAST.h>
 #include <FieldTypeDef.h>
 #include <NaluParsing.h>
 #include <NaluEnv.h>
@@ -99,7 +99,7 @@ ActuatorLineFAST::execute_class_specific(
     // Declare the orientation matrix
     // The ordering of this matrix is: xx, xy, xz, yx, yy, yz, zx, zy, zz
     // The default value is a matrix which causes no rotation 
-    // This rotation takes into account the fact that the axex, x and y are
+    // This rotation takes into account the fact that the axes, x and y are
     // inverted after the rotation is done inside the 
     // spread_actuator_force_to_node_vec function.
     std::vector<double> orientation_tensor
@@ -130,7 +130,7 @@ ActuatorLineFAST::execute_class_specific(
 
         break;
     }
-    
+
     // Call the function to spread the node      
     spread_actuator_force_to_node_vec(
       nDim, nodeVec, ws_pointForce, 
@@ -139,7 +139,6 @@ ActuatorLineFAST::execute_class_specific(
       *coordinates, *actuator_source, *dual_nodal_volume,
       infoObject->epsilon_, hubPos, hubShftVec, thrust[iTurbGlob],
       torque[iTurbGlob]);
-
     
   }
 }

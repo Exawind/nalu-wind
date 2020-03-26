@@ -133,30 +133,41 @@ namespace nalu{
     Ainv[ZZ] = inv_detj*(A[XX] * A[YY] - A[YX] * A[XY]);
   }
 
+  enum class SolveStatus {
+    FAILED = 0, SUCCEEDED = 1
+  };
+
+
   template <typename ScalarType>
-  KOKKOS_FORCEINLINE_FUNCTION void solve22(
+  KOKKOS_FORCEINLINE_FUNCTION SolveStatus solve22(
     const ScalarType* POINTER_RESTRICT A,
     const ScalarType* POINTER_RESTRICT b,
     ScalarType*  POINTER_RESTRICT x)
   {
-    ThrowAssert(stk::simd::are_any(determinant22(A) > tiny_positive_value()));
+    if (!stk::simd::are_any(stk::math::abs(determinant22(A)) > tiny_positive_value())) {
+      return SolveStatus::FAILED;
+    }
+
     enum { XX = 0, XY = 1, YX = 2, YY = 3 };
     enum { X_RANK1 = 0, Y_RANK1 = 1};
 
     const ScalarType inv_detA = 1.0 / determinant22(A);
     x[X_RANK1] =  (A[YY] * b[X_RANK1] - A[XY] * b[Y_RANK1]) * inv_detA;
     x[Y_RANK1] = -(A[YX] * b[X_RANK1] - A[XX] * b[Y_RANK1]) * inv_detA;
+
+    return SolveStatus::SUCCEEDED;
   }
 
   // computes b = A^-1 x;
   template <typename ScalarType>
-  KOKKOS_FORCEINLINE_FUNCTION void solve33(
+  KOKKOS_FORCEINLINE_FUNCTION SolveStatus solve33(
     const ScalarType* POINTER_RESTRICT A,
     const ScalarType* POINTER_RESTRICT b,
     ScalarType*  POINTER_RESTRICT x)
   {
-    ThrowAssert(stk::simd::are_any(determinant33(A) > tiny_positive_value()));
-
+    if (!stk::simd::are_any(stk::math::abs(determinant33(A)) > tiny_positive_value())) {
+      return SolveStatus::FAILED;
+    }
 
     enum { XX = 0, XY = 1, XZ = 2, YX = 3, YY = 4, YZ = 5, ZX = 6, ZY = 7, ZZ = 8 };
     enum { X_RANK1 = 0, Y_RANK1 = 1, Z_RANK1 = 2 };
@@ -173,6 +184,9 @@ namespace nalu{
     x[Z_RANK1] = ((A[YX] * A[ZY] - A[YY] * A[ZX]) * b[X_RANK1] + (A[XY] * A[ZX] - A[XX] * A[ZY]) * b[Y_RANK1] +
                   (A[XX] * A[YY] - A[XY] * A[YX]) * b[Z_RANK1]) *
                  inv_detA;
+
+
+    return SolveStatus::SUCCEEDED;
   }
 
   template <typename ScalarType>

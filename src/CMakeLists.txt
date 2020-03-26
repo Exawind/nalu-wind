@@ -1,13 +1,12 @@
 target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ABLProfileFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/Actuator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/actuator/Actuator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityElemOpenSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityInflowSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityNonConformalSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleCourantReynoldsElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleFaceElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleEdgeSolverAlgorithm.C
@@ -22,7 +21,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradBoundaryAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradPOpenBoundaryAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradEdgeAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradNonConformalAlgorithm.C
@@ -84,7 +82,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/HeatCondMassBackwardEulerNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InitialConditions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InputOutputRealm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/InterfaceBalancer.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LimiterErrorIndicatorElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSolver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSolverConfig.C
@@ -149,9 +146,10 @@ endif()
 
 if(ENABLE_OPENFAST)
    target_sources(nalu PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorFAST.C
-      ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorLineFAST.C
-      ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorDiskFAST.C
+      ${CMAKE_CURRENT_SOURCE_DIR}/actuator/UtilitiesActuator.C
+      ${CMAKE_CURRENT_SOURCE_DIR}/actuator/ActuatorFAST.C
+      ${CMAKE_CURRENT_SOURCE_DIR}/actuator/ActuatorLineFAST.C
+      ${CMAKE_CURRENT_SOURCE_DIR}/actuator/ActuatorDiskFAST.C
    )
 endif()
 

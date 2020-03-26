@@ -153,12 +153,12 @@ TEST(TestEigen, testeigendecomp3d_simd)
 
   // Initialize matrices
   for (unsigned j = 0; j < stk::simd::ndoubles; ++j) {
-    A3d_fixed_simd[0][0]._data[j] = A3d_fixed[0][0]*(j + 1);
-    A3d_fixed_simd[0][1]._data[j] = A3d_fixed[0][1]*(j + 1);
-    A3d_fixed_simd[0][2]._data[j] = A3d_fixed[0][2]*(j + 1);
-    A3d_fixed_simd[1][1]._data[j] = A3d_fixed[1][1]*(j + 1);
-    A3d_fixed_simd[1][2]._data[j] = A3d_fixed[1][2]*(j + 1);
-    A3d_fixed_simd[2][2]._data[j] = A3d_fixed[2][2]*(j + 1);
+    A3d_fixed_simd[0][0][j] = A3d_fixed[0][0]*(j + 1);
+    A3d_fixed_simd[0][1][j] = A3d_fixed[0][1]*(j + 1);
+    A3d_fixed_simd[0][2][j] = A3d_fixed[0][2]*(j + 1);
+    A3d_fixed_simd[1][1][j] = A3d_fixed[1][1]*(j + 1);
+    A3d_fixed_simd[1][2][j] = A3d_fixed[1][2]*(j + 1);
+    A3d_fixed_simd[2][2][j] = A3d_fixed[2][2]*(j + 1);
   }
   A3d_fixed_simd[1][0] = A3d_fixed_simd[0][1];
   A3d_fixed_simd[2][0] = A3d_fixed_simd[0][2];
@@ -185,9 +185,9 @@ TEST(TestEigen, testeigendecomp2d_simd)
 
   // Initialize matrices
   for (unsigned j = 0; j < stk::simd::ndoubles; ++j) {
-    A2d_fixed_simd[0][0]._data[j] = A2d_fixed[0][0]*(j + 1);
-    A2d_fixed_simd[0][1]._data[j] = A2d_fixed[0][1]*(j + 1);
-    A2d_fixed_simd[1][1]._data[j] = A2d_fixed[1][1]*(j + 1);
+    A2d_fixed_simd[0][0][j] = A2d_fixed[0][0]*(j + 1);
+    A2d_fixed_simd[0][1][j] = A2d_fixed[0][1]*(j + 1);
+    A2d_fixed_simd[1][1][j] = A2d_fixed[1][1]*(j + 1);
   }
   A2d_fixed_simd[1][0] = A2d_fixed_simd[0][1];
 
@@ -214,21 +214,21 @@ TEST(TestEigen, testeigendecompandreconstruct3d_simd)
   // Initialize matrices
   for (unsigned j = 0; j < stk::simd::ndoubles; ++j) {
     if (j % 2 == 0) {
-      A3d_rand_simd[0][0]._data[j] = a11*(j + 1);
-      A3d_rand_simd[0][1]._data[j] = a12*(j + 1);
-      A3d_rand_simd[0][2]._data[j] = a13*(j + 1);
-      A3d_rand_simd[1][1]._data[j] = a22*(j + 1);
-      A3d_rand_simd[1][2]._data[j] = a23*(j + 1);
-      A3d_rand_simd[2][2]._data[j] = a33*(j + 1);
+      A3d_rand_simd[0][0][j] = a11*(j + 1);
+      A3d_rand_simd[0][1][j] = a12*(j + 1);
+      A3d_rand_simd[0][2][j] = a13*(j + 1);
+      A3d_rand_simd[1][1][j] = a22*(j + 1);
+      A3d_rand_simd[1][2][j] = a23*(j + 1);
+      A3d_rand_simd[2][2][j] = a33*(j + 1);
     }
     // Test if some of the simd entries are already diagonal
     else {
-      A3d_rand_simd[0][0]._data[j] = b11*(j + 1);
-      A3d_rand_simd[0][1]._data[j] = 0.0;
-      A3d_rand_simd[0][2]._data[j] = 0.0;
-      A3d_rand_simd[1][1]._data[j] = b22*(j + 1);
-      A3d_rand_simd[1][2]._data[j] = 0.0;
-      A3d_rand_simd[2][2]._data[j] = b33*(j + 1);
+      A3d_rand_simd[0][0][j] = b11*(j + 1);
+      A3d_rand_simd[0][1][j] = 0.0;
+      A3d_rand_simd[0][2][j] = 0.0;
+      A3d_rand_simd[1][1][j] = b22*(j + 1);
+      A3d_rand_simd[1][2][j] = 0.0;
+      A3d_rand_simd[2][2][j] = b33*(j + 1);
     }
   }
   A3d_rand_simd[1][0] = A3d_rand_simd[0][1];
@@ -258,15 +258,15 @@ TEST(TestEigen, testeigendecompandreconstruct2d_simd)
   // Initialize matrices
   for (unsigned j = 0; j < stk::simd::ndoubles; ++j) {
     if (j % 2 == 0) {
-      A2d_rand_simd[0][0]._data[j] = a11*(j + 1);
-      A2d_rand_simd[0][1]._data[j] = a12*(j + 1);
-      A2d_rand_simd[1][1]._data[j] = a22*(j + 1);
+      A2d_rand_simd[0][0][j] = a11*(j + 1);
+      A2d_rand_simd[0][1][j] = a12*(j + 1);
+      A2d_rand_simd[1][1][j] = a22*(j + 1);
     }
     // Test if some of the simd entries are already diagonal
     else {
-      A2d_rand_simd[0][0]._data[j] = b11*(j + 1);
-      A2d_rand_simd[0][1]._data[j] = 0.0;
-      A2d_rand_simd[1][1]._data[j] = b22*(j + 1);
+      A2d_rand_simd[0][0][j] = b11*(j + 1);
+      A2d_rand_simd[0][1][j] = 0.0;
+      A2d_rand_simd[1][1][j] = b22*(j + 1);
     }
   }
   A2d_rand_simd[1][0] = A2d_rand_simd[0][1];

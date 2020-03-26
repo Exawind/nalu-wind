@@ -2,7 +2,6 @@
 #ifndef ABLFORCINGALGORITHM_H
 #define ABLFORCINGALGORITHM_H
 
-#include "NaluParsing.h"
 #include "FieldTypeDef.h"
 #include "wind_energy/ABLSrcInterp.h"
 
@@ -14,6 +13,8 @@
 #include <sstream>
 #include <unordered_set>
 #include <memory>
+
+namespace YAML { class Node; }
 
 namespace sierra {
 namespace nalu {

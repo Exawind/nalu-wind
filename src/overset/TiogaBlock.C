@@ -207,7 +207,9 @@ TiogaBlock::update_connectivity()
 }
 
 void
-TiogaBlock::update_iblanks(std::vector<stk::mesh::Entity>& holeNodes)
+TiogaBlock::update_iblanks(
+  std::vector<stk::mesh::Entity>& holeNodes,
+  std::vector<stk::mesh::Entity>& fringeNodes)
 {
   ScalarIntFieldType* ibf =
     meta_.get_field<ScalarIntFieldType>(stk::topology::NODE_RANK, "iblank");
@@ -224,6 +226,8 @@ TiogaBlock::update_iblanks(std::vector<stk::mesh::Entity>& holeNodes)
 
       if (ib[in] == 0) {
         holeNodes.push_back((*b)[in]);
+      } else if (ib[in] == -1) {
+        fringeNodes.push_back((*b)[in]);
       }
     }
   }
@@ -578,6 +582,114 @@ void TiogaBlock::print_summary()
     << "\tBounding box: \n\t\t["
     << gboxMin[0] << ", " << gboxMin[1] << ", " << gboxMin[2] << "]\n\t\t[" 
     << gboxMax[0] << ", " << gboxMax[1] << ", " << gboxMax[2] << "]\n" << std::endl;
+}
+
+void TiogaBlock::register_solution(
+  TIOGA::tioga& tg,
+  const std::vector<sierra::nalu::OversetFieldData>& fields,
+  const int ncomp)
+{
+  if (num_nodes_ < 1) return;
+
+  size_t num_field_entries = num_nodes_ * ncomp;
+  if (field_data_.size() < num_field_entries)
+    field_data_.resize(num_field_entries);
+
+  const stk::mesh::Selector sel = get_node_selector(blkParts_);
+  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+
+  size_t idx = 0;
+  for (auto* b: bkts) {
+    for (size_t in=0; in < b->size(); ++in) {
+      auto node = (*b)[in];
+
+      for (auto& finfo: fields) {
+        auto* fld = finfo.field_;
+        const size_t fsize = finfo.sizeRow_ * finfo.sizeCol_;
+
+        double* fdata = static_cast<double*>(stk::mesh::field_data(*fld, node));
+        for (size_t ic=0; ic < fsize; ++ic)
+          field_data_[idx++] = fdata[ic];
+      }
+    }
+  }
+
+  tg.registerSolution(meshtag_, field_data_.data());
+}
+
+void TiogaBlock::register_solution(
+  TIOGA::tioga& tg,
+  const sierra::nalu::OversetFieldData& field)
+{
+  if (num_nodes_ < 1) return;
+
+  const size_t fsize = field.sizeRow_ * field.sizeCol_;
+  const size_t num_field_entries = num_nodes_ * fsize;
+  if (field_data_.size() < num_field_entries)
+    field_data_.resize(num_field_entries);
+
+  const stk::mesh::Selector sel = get_node_selector(blkParts_);
+  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+  const auto* fld = field.field_;
+
+  size_t idx = 0;
+  for (auto* b: bkts) {
+    double* fdata = static_cast<double*>(stk::mesh::field_data(*fld, *b));
+
+    for (size_t in=0; in < b->size(); ++in) {
+      for (size_t ic=0; ic < fsize; ++ic) {
+        field_data_[idx++] = fdata[in * fsize + ic];
+      }
+    }
+  }
+
+  tg.registerSolution(meshtag_, field_data_.data());
+}
+
+void TiogaBlock::update_solution(
+  const std::vector<sierra::nalu::OversetFieldData>& fields)
+{
+  if (num_nodes_ < 1) return;
+
+  const stk::mesh::Selector sel = get_node_selector(blkParts_);
+  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+
+  size_t idx = 0;
+  for (auto* b: bkts) {
+    for (size_t in=0; in < b->size(); ++in) {
+      auto node = (*b)[in];
+
+      for (auto& finfo: fields) {
+        auto* fld = finfo.field_;
+        const size_t fsize = finfo.sizeRow_ * finfo.sizeCol_;
+
+        double* fdata = static_cast<double*>(stk::mesh::field_data(*fld, node));
+        for (size_t ic=0; ic < fsize; ++ic)
+          fdata[ic] = field_data_[idx++];
+      }
+    }
+  }
+}
+
+void TiogaBlock::update_solution(const sierra::nalu::OversetFieldData& field)
+{
+  if (num_nodes_ < 1) return;
+
+  const stk::mesh::Selector sel = get_node_selector(blkParts_);
+  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+  const auto* fld = field.field_;
+  const size_t fsize = field.sizeRow_ * field.sizeCol_;
+
+  size_t idx = 0;
+  for (auto* b: bkts) {
+    double* fdata = static_cast<double*>(stk::mesh::field_data(*fld, *b));
+
+    for (size_t in=0; in < b->size(); ++in) {
+      for (size_t ic=0; ic < fsize; ++ic) {
+        fdata[in * fsize + ic] = field_data_[idx++];
+      }
+    }
+  }
 }
 
 } // namespace tioga

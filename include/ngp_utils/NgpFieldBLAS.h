@@ -13,6 +13,7 @@
 
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpFieldUtils.h"
 
 namespace sierra {
 namespace nalu {
@@ -93,6 +94,23 @@ inline void field_copy(
   const stk::topology::rank_t rank = stk::topology::NODE_RANK)
 {
   field_copy(ngpMesh, sel, dest, src, 0, numComponents, rank);
+}
+
+template<typename MeshInfoType>
+inline void field_copy(
+  const MeshInfoType& meshInfo,
+  stk::mesh::FieldBase& dest,
+  const stk::mesh::FieldBase& src,
+  const unsigned numComponents = 1,
+  const stk::topology::rank_t rank = stk::topology::NODE_RANK)
+{
+  const stk::mesh::Selector sel = stk::mesh::selectField(dest);
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
+  const auto& srcField = fieldMgr.template get_field<double>(
+    src.mesh_meta_data_ordinal());
+  auto& destField = fieldMgr.template get_field<double>(
+    dest.mesh_meta_data_ordinal());
+  field_copy(meshInfo.ngp_mesh(), sel, destField, srcField, 0, numComponents, rank);
 }
 
 template<

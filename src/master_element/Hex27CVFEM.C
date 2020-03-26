@@ -87,7 +87,7 @@ double HexahedralP2Element::isInElement(
 
   constexpr int dim = 3;
   std::array<double, dim> guess = { { 0.0, 0.0, 0.0 } };
-  std::array<double, dim> delta;
+  std::array<double, dim> delta = { { 0.0, 0.0, 0.0 } };
   int iter = 0;
 
   do {

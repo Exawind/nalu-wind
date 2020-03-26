@@ -26,12 +26,23 @@ UpdateOversetFringeAlgorithmDriver::~UpdateOversetFringeAlgorithmDriver()
 {}
 
 void
-UpdateOversetFringeAlgorithmDriver::pre_work()
+UpdateOversetFringeAlgorithmDriver::register_overset_field_update(
+  stk::mesh::FieldBase* field, int nrows, int ncols)
 {
-  for (auto& f: fields_) {
-    realm_.oversetManager_->overset_orphan_node_field_update(
-      f->field_, f->sizeRow_, f->sizeCol_);
+  fields_.emplace_back(field, nrows, ncols);
+}
+
+void UpdateOversetFringeAlgorithmDriver::execute()
+{
+  auto* oversetManager = realm_.oversetManager_;
+  if (oversetManager->oversetGhosting_ != nullptr) {
+    std::vector<const stk::mesh::FieldBase*> fVec(fields_.size());
+    for (size_t i=0; i < fields_.size(); ++i)
+      fVec[i] = fields_[i].field_;
+    stk::mesh::communicate_field_data(
+      *oversetManager->oversetGhosting_, fVec);
   }
+  oversetManager->overset_update_fields(fields_);
 }
 
 }  // nalu

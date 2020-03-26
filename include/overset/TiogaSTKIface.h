@@ -9,6 +9,7 @@
 #include <stk_mesh/base/CoordinateSystems.hpp>
 
 #include "overset/TiogaOptions.h"
+#include "overset/OversetFieldData.h"
 #include "yaml-cpp/yaml.h"
 
 #include <vector>
@@ -63,7 +64,13 @@ public:
    *  update the "overset inactive part" for hole elements, create the {fringe
    *  node, donor element} mapping pair data structures for overset simulations.
    */
-  void execute();
+  void execute(const bool isDecoupled);
+
+  virtual void overset_update_fields(
+    const std::vector<sierra::nalu::OversetFieldData>&);
+
+  virtual void overset_update_field(
+    stk::mesh::FieldBase* field, int nrows = 1, int ncols = 1);
 
 private:
   TiogaSTKIface() = delete;

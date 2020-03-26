@@ -12,9 +12,10 @@
 #define BDYHEIGHTALGORITHM_H
 
 #include "FieldTypeDef.h"
-#include "NaluParsing.h"
 
 #include <vector>
+
+namespace YAML { class Node; }
 
 namespace sierra {
 namespace nalu {
@@ -62,7 +63,7 @@ protected:
   void load(const YAML::Node&);
 
   //! Multiplier to convert doubles to int for unique heights mapping
-  double heightMultiplier_{1.0e3};
+  double heightMultiplier_{1.0e6};
 
   //! Mimum height to account for negative values in the wall normal direction
   double hMin_{0.0};

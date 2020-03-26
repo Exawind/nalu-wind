@@ -37,6 +37,8 @@
 #include <mesh_motion/MeshDisplacementEquationSystem.h>
 #include "WallDistEquationSystem.h"
 
+#include <overset/UpdateOversetFringeAlgorithmDriver.h>
+
 #include <vector>
 
 #include <stk_mesh/base/BulkData.hpp>
@@ -123,10 +125,9 @@ void initialize_connectivity(
 //--------------------------------------------------------------------------
 EquationSystems::EquationSystems(
   Realm &realm)
-  : realm_(realm)
-{
-  // does nothing
-}
+  : realm_(realm),
+    oversetUpdater_(new UpdateOversetFringeAlgorithmDriver(realm))
+{}
 
 //--------------------------------------------------------------------------
 //-------- destructor ------------------------------------------------------
@@ -154,7 +155,18 @@ void EquationSystems::load(const YAML::Node & y_node)
   {
     get_required(y_equation_system, "name", name_);
     get_required(y_equation_system, "max_iterations", maxIterations_);
-    
+
+    // Get global settings for decoupled overset, individual equation systems
+    // will override this when they process their own yaml nodes
+    if (realm_.query_for_overset()) {
+      get_if_present(
+        y_equation_system, "decoupled_overset_solve", decoupledOversetGlobalFlag_,
+        decoupledOversetGlobalFlag_);
+      get_if_present(
+        y_equation_system, "num_overset_correctors", numOversetItersDefault_,
+        numOversetItersDefault_);
+    }
+
     const YAML::Node y_solver
       = expect_map(y_equation_system, "solver_system_specification");
     solverSpecMap_ = y_solver.as<std::map<std::string, std::string> >();
@@ -256,7 +268,14 @@ void EquationSystems::load(const YAML::Node & y_node)
           }
           throw std::runtime_error("parser error EquationSystem::load: unknown equation system type");
         }
-        
+
+
+        // Pass the global settings for the overset decoupled solves to equation
+        // systems and let user override for individual equation systems in the
+        // input file
+        eqSys->decoupledOverset_ = decoupledOversetGlobalFlag_;
+        eqSys->numOversetIters_ = numOversetItersDefault_;
+
         // load; particular equation system push back to vector is controled by the constructor
         eqSys->load(y_eqsys);
       }
@@ -759,6 +778,16 @@ EquationSystems::initialize()
   double end_time = NaluEnv::self().nalu_time();
   realm_.timerInitializeEqs_ += (end_time-start_time);
   NaluEnv::self().naluOutputP0() << "EquationSystems::initialize(): End " << std::endl;
+
+  if (realm_.hasOverset_) {
+    NaluEnv::self().naluOutputP0()
+      << "EquationSystems: overset solution strategy" << std::endl;
+    for (auto* eqsys: equationSystemVector_) {
+      NaluEnv::self().naluOutputP0()
+        << " - " << eqsys->eqnTypeName_ << ": "
+        << (eqsys->decoupledOverset_ ? "decoupled" : "coupled") << std::endl;
+    }
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -990,6 +1019,9 @@ EquationSystems::evaluate_properties()
 void
 EquationSystems::pre_iter_work()
 {
+  if (realm_.hasOverset_)
+    oversetUpdater_->execute();
+
   for (auto alg: preIterAlgDriver_) {
     alg->execute();
   }
@@ -1001,6 +1033,28 @@ EquationSystems::post_iter_work()
   for (auto alg: postIterAlgDriver_) {
     alg->execute();
   }
+}
+
+void EquationSystems::register_overset_field_update(
+  stk::mesh::FieldBase* field, int nrows, int ncols)
+{
+  oversetUpdater_->register_overset_field_update(field, nrows, ncols);
+}
+
+bool EquationSystems::all_systems_decoupled() const
+{
+  // No overset, so there is no concept of decoupled
+  if (!realm_.hasOverset_)
+    return false;
+
+  // EquationSystems within a realm is defined as decoupled iff all equation
+  // systems are solved in decoupled fashion. Even if one of the equation system
+  // is solved in a fully coupled fashion, we return false.
+  bool hasDecoupled = true;
+  for (auto* eqsys: equationSystemVector_)
+    hasDecoupled = hasDecoupled && eqsys->is_decoupled();
+
+  return hasDecoupled;
 }
 
 } // namespace nalu

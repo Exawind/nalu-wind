@@ -763,7 +763,7 @@ TurbulenceAveragingPostProcessing::compute_averages(
 
         for (unsigned j=0; j < numComponents; ++j) {
           const double avgVal = (avg.get(mi, j) * oldTimeFilter * zeroCurrent +
-                                 prim.get(mi, j) * rho * dt) /
+                                 prim.get(mi, j) * dt) /
                                 currentTimeFilter;
           avg.get(mi, j) = avgVal;
         }

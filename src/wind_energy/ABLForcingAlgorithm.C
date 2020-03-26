@@ -1,5 +1,6 @@
 
 #include "wind_energy/ABLForcingAlgorithm.h"
+#include "NaluParsing.h"
 #include "Realm.h"
 #include "xfer/Transfer.h"
 #include "xfer/Transfers.h"

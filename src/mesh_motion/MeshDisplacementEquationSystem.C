@@ -444,12 +444,7 @@ MeshDisplacementEquationSystem::register_overset_bc()
   create_constraint_algorithm(meshVelocity_);
 
   int nDim = realm_.meta_data().spatial_dimension();
-  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
-  // Perform fringe updates before all equation system solves
-  equationSystems_.preIterAlgDriver_.push_back(theAlg);
-
-  theAlg->fields_.push_back(
-    std::unique_ptr<OversetFieldData>(new OversetFieldData(meshVelocity_,1,nDim)));
+  equationSystems_.register_overset_field_update(meshVelocity_, 1, nDim);
 }
 
 //--------------------------------------------------------------------------

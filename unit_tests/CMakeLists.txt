@@ -47,6 +47,7 @@ target_sources(${utest_ex_name} PRIVATE
 if(ENABLE_OPENFAST)
    target_sources(${utest_ex_name} PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorDiskFAST.C
+      ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorFASTGaussian.C
    )
 endif()
 

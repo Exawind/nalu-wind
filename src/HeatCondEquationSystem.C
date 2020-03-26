@@ -38,6 +38,7 @@
 #include <LinearSystem.h>
 #include <master_element/MasterElement.h>
 #include <NaluEnv.h>
+#include <NaluParsing.h>
 #include <Realm.h>
 #include <Realms.h>
 #include <HeatCondMassBackwardEulerNodeSuppAlg.h>
@@ -894,12 +895,7 @@ HeatCondEquationSystem::register_overset_bc()
 {
   create_constraint_algorithm(temperature_);
 
-  UpdateOversetFringeAlgorithmDriver* theAlg = new UpdateOversetFringeAlgorithmDriver(realm_);
-  // Perform fringe updates before all equation system solves
-  equationSystems_.preIterAlgDriver_.push_back(theAlg);
-
-  theAlg->fields_.push_back(
-    std::unique_ptr<OversetFieldData>(new OversetFieldData(temperature_,1,1)));
+  equationSystems_.register_overset_field_update(temperature_, 1, 1);
 }
 
 //--------------------------------------------------------------------------

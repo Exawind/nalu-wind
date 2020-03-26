@@ -13,6 +13,7 @@
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFactory.h>
 #include <master_element/Quad42DCVFEM.h>
+#include <master_element/Pyr5CVFEM.h>
 #include <master_element/TensorOps.h>
 
 #include <memory>
@@ -21,6 +22,20 @@
 #include "UnitTestUtils.h"
 
 namespace {
+
+
+TEST(pyramid, is_in_element)
+{
+  std::array<double,15> coords = {
+      4.2, 4.2, 4.2, 4.2, 3.5,
+      5.6, 7.0, 7.0, 5.6, 6.3,
+      2.8, 2.8, 1.4, 1.4, 2.1
+  };
+  std::array<double,3> point = {3.5, 6.5, 1.5};
+  std::array<double,3> mePt;
+  auto dist = sierra::nalu::PyrSCS().isInElement(coords.data(), point.data(), mePt.data());
+  ASSERT_TRUE(std::isfinite(dist));
+}
 
 using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 //-------------------------------------------------------------------------
@@ -582,15 +597,6 @@ protected:
     sierra::nalu::MasterElement* meSV;
 };
 
-#define TEST_F_ALL_TOPOS_NO_PYR(x, y) \
-    TEST_F(x, tri##_##y)   { y(stk::topology::TRI_3_2D); }   \
-    TEST_F(x, quad4##_##y)  { y(stk::topology::QUAD_4_2D); } \
-    TEST_F(x, quad9##_##y)  { y(stk::topology::QUAD_9_2D); } \
-    TEST_F(x, tet##_##y)   { y(stk::topology::TET_4); }      \
-    TEST_F(x, wedge##_##y) { y(stk::topology::WEDGE_6); }    \
-    TEST_F(x, hex8##_##y)   { y(stk::topology::HEX_8); }     \
-    TEST_F(x, hex27##_##y)  { y(stk::topology::HEX_27); }
-
 #define TEST_F_ALL_TOPOS(x, y) \
     TEST_F(x, tri##_##y)   { y(stk::topology::TRI_3_2D); }   \
     TEST_F(x, quad4##_##y)  { y(stk::topology::QUAD_4_2D); } \
@@ -609,15 +615,12 @@ protected:
     TEST_F(x, pyr##_##y) { y(stk::topology::PYRAMID_5); }    \
     TEST_F(x, hex8##_##y)   { y(stk::topology::HEX_8); }
 
-// Patch tests: pyramids fail
-TEST_F_ALL_TOPOS_NO_PYR(MasterElement, scs_interpolation)
-TEST_F_ALL_TOPOS_NO_PYR(MasterElement, scs_derivative)
-TEST_F_ALL_TOPOS_NO_PYR(MasterElement, scv_interpolation)
-TEST_F_ALL_TOPOS_NO_PYR(MasterElement, volume_integration)
-
-// Pyramid fails since the reference element
-// since the constant Jacobian assumption is violated
-TEST_F_ALL_TOPOS_NO_PYR(MasterElement, is_in_element)
+// Patch tests
+TEST_F_ALL_TOPOS(MasterElement, scs_interpolation)
+TEST_F_ALL_TOPOS(MasterElement, scs_derivative)
+TEST_F_ALL_TOPOS(MasterElement, scv_interpolation)
+TEST_F_ALL_TOPOS(MasterElement, volume_integration)
+TEST_F_ALL_TOPOS(MasterElement, is_in_element)
 
 // Pyramid works. Doesn't work for higher-order elements sicne they have more ips than nodes
 TEST_F_ALL_P1_TOPOS(MasterElement, scv_shifted_ips_are_nodal)

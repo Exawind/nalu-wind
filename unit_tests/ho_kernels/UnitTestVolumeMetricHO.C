@@ -68,12 +68,12 @@ template <int p> void check_scv_volumes()
   using clock_type = std::chrono::steady_clock;
   auto start_clock = clock_type::now();
   for (int j = 0; j < nRuns; ++j) {
-    Kokkos::deep_copy(l_detj.view(),0);
+    sierra::nalu::set_vals(l_detj.view(),0);
     high_order_metrics::compute_volume_metric_linear(ops, coords, l_detj.view());
   }
   auto end_metric = clock_type::now();
   for (int j = 0; j < nRuns; ++j) {
-    Kokkos::deep_copy(l_computedScvVolume.view(),0);
+    sierra::nalu::set_vals(l_computedScvVolume.view(),0);
     ops.volume(l_detj.view(), l_computedScvVolume.view());
   }
   auto end_volume = clock_type::now();

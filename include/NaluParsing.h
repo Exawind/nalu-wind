@@ -16,6 +16,7 @@
 #include <Enums.h>
 #include <InitialConditions.h>
 #include <MaterialPropertys.h>
+#include <NaluParsedTypes.h>
 #include <NaluParsingHelper.h>
 #include <NaluEnv.h>
 
@@ -29,111 +30,6 @@
 
 namespace sierra {
 namespace nalu {
-
-// our data types
-struct Velocity {
-  double ux_, uy_, uz_;
-  Velocity()
-    : ux_(0.0), uy_(0.0), uz_(0.0)
-  {}
-};
-
-struct Coordinates {
-  double x_, y_, z_;
-  Coordinates()
-    : x_(0.0), y_(0.0), z_(0.0)
-  {}
-};
-
-struct Pressure {
-  double pressure_;
-  Pressure()
-    : pressure_(0.0)
-  {}
-};
-
-struct TurbKinEnergy {
-  double turbKinEnergy_;
-  TurbKinEnergy()
-    : turbKinEnergy_(0.0)
-  {}
-};
-
-struct SpecDissRate {
-  double specDissRate_;
-  SpecDissRate()
-    : specDissRate_(0.0)
-  {}
-};
-
-struct Temperature {
-  double temperature_;
-  Temperature()
-    : temperature_(0.0)
-  {}
-};
-
-struct MixtureFraction {
-  double mixFrac_;
-  MixtureFraction()
-    : mixFrac_(0.0)
-  {}
-};
-
-struct MassFraction {
-  std::vector<double> massFraction_;
-  MassFraction()
-  {}
-};
-
-struct Emissivity {
-  double emissivity_;
-  Emissivity()
-    : emissivity_(1.0)
-  {}
-};
-
-struct Irradiation {
-  double irradiation_;
-  Irradiation()
-    : irradiation_(1.0)
-  {}
-};
-
-struct Transmissivity {
-  double transmissivity_;
-  Transmissivity()
-    : transmissivity_(0.0)
-  {}
-};
-
-struct EnvironmentalT {
-  double environmentalT_;
-  EnvironmentalT()
-    : environmentalT_(298.0)
-  {}
-};
-
-struct ReferenceTemperature {
-  double referenceTemperature_;
-  ReferenceTemperature()
-    : referenceTemperature_(298.0)
-  {}
-};
-
-struct HeatTransferCoefficient {
-  double heatTransferCoefficient_;
-  HeatTransferCoefficient()
-    : heatTransferCoefficient_(0.0)
-  {}
-};
-
-struct RobinCouplingParameter {
-  double robinCouplingParameter_;
-  RobinCouplingParameter()
-    : robinCouplingParameter_(0.0)
-  {}
-};
 
 // base class
 struct UserData 
@@ -151,32 +47,6 @@ struct UserData
 UserData() : tempSpec_(false), externalData_(false) {}
 };
 
-struct NormalHeatFlux {
-  double qn_;
-  NormalHeatFlux()
-    : qn_(0.0)
-  {}
-};
-
-struct NormalTemperatureGradient {
-  double tempGradN_;
-  NormalTemperatureGradient()
-    : tempGradN_(0.0)
-  {}
-};
-
-struct RoughnessHeight {
-  double z0_;
-  RoughnessHeight()
-    :  z0_(0.1)
-  {}
-};
-
-struct MasterSlave {
-  std::string master_;
-  std::string slave_;
-  MasterSlave() {}
-};
 
 // packaged
 struct WallUserData : public UserData {

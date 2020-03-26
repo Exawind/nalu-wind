@@ -14,7 +14,7 @@
 
 #include <EquationSystem.h>
 #include <FieldTypeDef.h>
-#include <NaluParsing.h>
+#include <NaluParsedTypes.h>
 
 namespace stk{
 struct topology;
@@ -38,7 +38,9 @@ public:
   ShearStressTransportEquationSystem(
     EquationSystems& equationSystems);
   virtual ~ShearStressTransportEquationSystem();
-  
+
+  virtual void load(const YAML::Node&);
+
   virtual void initialize();
 
   virtual void register_nodal_fields(

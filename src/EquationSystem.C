@@ -27,6 +27,7 @@
 
 // overset
 #include <overset/AssembleOversetSolverConstraintAlgorithm.h>
+#include "overset/AssembleOversetDecoupledAlgorithm.h"
 
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"
@@ -110,6 +111,19 @@ EquationSystem::~EquationSystem()
 
   for (auto* pecFunc: ngpPecletFunctions_)
     nalu_ngp::destroy(pecFunc);
+}
+
+void
+EquationSystem::load(const YAML::Node& node)
+{
+  get_required(node, "name", userSuppliedName_);
+  get_required(node, "max_iterations", maxIterations_);
+  get_required(node, "convergence_tolerance", convergenceTolerance_);
+
+  if (realm_.query_for_overset()) {
+    get_if_present_no_default(node, "decoupled_overset_solve", decoupledOverset_);
+    get_if_present_no_default(node, "num_overset_correctors", numOversetIters_);
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -417,12 +431,17 @@ EquationSystem::create_constraint_algorithm(
     solverAlgDriver_->solverConstraintAlgMap_.find(algType);
   if ( itc == solverAlgDriver_->solverConstraintAlgMap_.end() ) {
     // FIXME: should we declare an empty part to push into below Alg?
-    AssembleOversetSolverConstraintAlgorithm *theAlg
-      = new AssembleOversetSolverConstraintAlgorithm(realm_, NULL, this, theField);
+    SolverAlgorithm *theAlg;
+
+    if (decoupledOverset_)
+      theAlg = new AssembleOversetDecoupledAlgorithm(realm_, nullptr, this, theField);
+    else
+      theAlg = new AssembleOversetSolverConstraintAlgorithm(realm_, nullptr, this, theField);
     solverAlgDriver_->solverConstraintAlgMap_[algType] = theAlg;
   }
   else {
-    throw std::runtime_error("EquationSystem::register_overset_bc: overset must be single in size!!");
+    throw std::runtime_error(
+      "EquationSystem::register_overset_bc: overset must be single in size!!");
   }
 }
 
@@ -539,6 +558,16 @@ void EquationSystem::solution_update(
 
   nalu_ngp::field_axpby(
     meshInfo, sel, delta_frac, delta, field_frac, field, numComponents, rank);
+}
+
+
+void EquationSystem::register_abltop_bc(
+  stk::mesh::Part *part,
+  const stk::topology &theTopo,
+  const ABLTopBoundaryConditionData &abltopBCData)
+{
+  SymmetryBoundaryConditionData simData(abltopBCData.boundaryConditions_);
+  register_symmetry_bc( part, theTopo, simData );
 }
 
 } // namespace nalu
