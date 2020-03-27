@@ -129,7 +129,7 @@ ActFastComputeThrustInnerLoop::operator()(
   const uint64_t pointId,
   const double* nodeCoords,
   double* sourceTerm,
-  const double dual_vol,
+  const double,
   const double scvIp) const
 {
 
