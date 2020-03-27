@@ -82,8 +82,6 @@ class DataProbePostProcessing;
 class Actuator;
 struct ActuatorMetaFAST;
 struct ActuatorBulkFAST;
-template<typename ActMeta, typename ActBulk>
-class ActuatorNGP;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
