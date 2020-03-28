@@ -143,6 +143,10 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
           cur_turbine, "fllt_correction",
           actMetaFAST.filterLiftLineCorrection_);
 
+        ThrowErrorMsgIf(
+          actMetaFAST.filterLiftLineCorrection_,
+          "Filtered lifting line correction has not been implemented in the NGP"
+          " actuator models yet.  Please use ActLineFAST instead.");
         // The value epsilon / chord [non-dimensional]
         // This is a vector containing the values for:
         //   - chord aligned (x),
@@ -164,16 +168,39 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
             "fllt_correction.");
         }
 
-        // If epsilon/chord is given, store it,
-        // If it is not given, set it to zero, such
-        // that it is smaller than the standard epsilon and
-        // will not be used
         std::vector<double> epsilonTemp(3);
-        if (epsilon_chord) {
-          // epsilon / chord
-          epsilonTemp = epsilon_chord.as<std::vector<double>>();
+        if (
+          actMeta.actuatorType_ == ActuatorType::ActLineFASTNGP ||
+          actMeta.actuatorType_ == ActuatorType::ActDiskFASTNGP) {
+          // only require epsilon
+          if (epsilon.Type() == YAML::NodeType::Scalar) {
+            double isotropicEpsilon;
+            get_required(cur_turbine, "epsilon", isotropicEpsilon);
+            actMetaFAST.isotropicGaussian_ = true;
+            for (int j = 0; j < 3; j++) {
+              actMetaFAST.epsilon_.h_view(iTurb, j) = isotropicEpsilon;
+            }
+          } else {
+            get_required(cur_turbine, "epsilon", epsilonTemp);
+            for (int j = 0; j < 3; j++) {
+              actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
+            }
+            if (
+              epsilonTemp[0] == epsilonTemp[1] &&
+              epsilonTemp[1] == epsilonTemp[2]) {
+              actMetaFAST.isotropicGaussian_ = true;
+            } else if (actMeta.actuatorType_ == ActuatorType::ActDiskFASTNGP) {
+              throw std::runtime_error("ActDiskFASTNGP does not currently "
+                                       "support anisotropic epsilons.");
+            }
+          }
+          // single value epsilon
+          // multi value epsilon
+        } else if (actMeta.actuatorType_ == ActuatorType::AdvActLineFASTNGP) {
+          // require epsilon chord and epsilon min
+          get_required(cur_turbine, "epsilon_chord", epsilonTemp);
           for (int j = 0; j < 3; j++) {
-            if (epsilonTemp[0] <= 0.0) {
+            if (epsilonTemp[j] <= 0.0) {
               throw std::runtime_error(
                 "ERROR:: zero value for epsilon_chord detected. "
                 "All epsilon components must be greater than zero");
@@ -185,27 +212,16 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
           //   specifying epsilon/chord
           get_required(cur_turbine, "epsilon_min", epsilonTemp);
           for (int j = 0; j < 3; j++) {
-            if (epsilonTemp[0] <= 0.0) {
-              throw std::runtime_error(
-                "ERROR:: zero value for epsilon_min detected. "
-                "All epsilon components must be greater than zero");
-            }
             actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
           }
         }
-        // Set all unused epsilon values to zero
-        else if (epsilon) {
-          epsilonTemp = epsilon.as<std::vector<double>>();
-          for (int j = 0; j < 3; j++) {
-            if (epsilonTemp[0] <= 0.0) {
-              throw std::runtime_error(
-                "ERROR:: zero value for epsilon detected. "
-                "All epsilon components must be greater than zero");
-            }
-            actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
+        // check epsilon values
+        for (int j = 0; j < 3; j++) {
+          if (actMetaFAST.epsilon_.h_view(iTurb, j) <= 0.0) {
+            throw std::runtime_error(
+              "ERROR:: zero value for epsilon detected. "
+              "All epsilon components must be greater than zero");
           }
-        } else {
-          throw std::runtime_error("ActuatorFAST: lacking epsilon vector");
         }
 
         // An epsilon value used for the tower

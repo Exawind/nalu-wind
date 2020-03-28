@@ -174,5 +174,108 @@ ActFastComputeThrustInnerLoop::operator()(
   torque(2) += (rPerpShaft[0] * forceTerm[1] - rPerpShaft[1] * forceTerm[0]);
 }
 
+ActFastZeroOrientation::ActFastZeroOrientation(ActuatorBulkFAST& actBulk)
+  : orientation_(helper_.get_local_view(actBulk.orientationTensor_)),
+    fast_(actBulk.openFast_)
+{
+  helper_.touch_dual_view(actBulk.orientationTensor_);
+}
+
+void
+ActFastZeroOrientation::operator()(int index) const
+{
+  for (int i = 0; i < 9; i++) {
+    orientation_(index, i) = 0.0;
+  }
+}
+
+ActFastStashOrientationVectors::ActFastStashOrientationVectors(
+  ActuatorBulkFAST& actBulk)
+  : orientation_(helper_.get_local_view(actBulk.orientationTensor_)),
+    offset_(helper_.get_local_view(actBulk.turbIdOffset_)),
+    turbId_(actBulk.localTurbineId_),
+    fast_(actBulk.openFast_)
+{
+  helper_.touch_dual_view(actBulk.orientationTensor_);
+  actBulk.turbIdOffset_.sync_host();
+}
+
+void
+ActFastStashOrientationVectors::operator()(int index) const
+{
+  const int pointId = index - offset_(turbId_);
+  auto localOrientation = Kokkos::subview(orientation_, index, Kokkos::ALL);
+  if (fast_.getForceNodeType(turbId_, pointId) == fast::BLADE) {
+    fast_.getForceNodeOrientation(localOrientation.data(), pointId, turbId_);
+
+    // swap columns of matrix since openfast stores data
+    // as (thick, chord, span) and we want (chord, thick, span)
+    double colSwapTemp;
+    for (int i = 0; i < 9;) {
+      colSwapTemp = localOrientation(i);
+      localOrientation(i) = localOrientation(i + 1);
+      localOrientation(i + 1) = colSwapTemp;
+    }
+  } else {
+    // identity matrix
+    // (all other terms should have already been set to zero)
+    localOrientation(0) = 1.0;
+    localOrientation(4) = 1.0;
+    localOrientation(8) = 1.0;
+  }
+}
+
+void
+ActFastSpreadForceWhProjInnerLoop::preloop()
+{
+  actBulk_.actuatorForce_.sync_host();
+}
+
+void
+ActFastSpreadForceWhProjInnerLoop::operator()(
+  const uint64_t pointId,
+  const double* nodeCoords,
+  double* sourceTerm,
+  const double dual_vol,
+  const double scvIp) const
+{
+
+  auto pointCoords =
+    Kokkos::subview(actBulk_.pointCentroid_.view_host(), pointId, Kokkos::ALL);
+
+  auto pointForce =
+    Kokkos::subview(actBulk_.actuatorForce_.view_host(), pointId, Kokkos::ALL);
+
+  auto epsilon =
+    Kokkos::subview(actBulk_.epsilon_.view_host(), pointId, Kokkos::ALL);
+
+  auto orientation = Kokkos::subview(
+    actBulk_.orientationTensor_.view_host(), pointId, Kokkos::ALL);
+
+  double distance[3], projectedDistance[3];
+  double projectedForce[3];
+
+  actuator_utils::compute_distance(
+    3, nodeCoords, pointCoords.data(), &distance[0]);
+
+  // transform distance from Cartesian to blade coordinate system
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      projectedDistance[i] += distance[j] * orientation(i + j * 3);
+    }
+  }
+
+  const double gauss = actuator_utils::Gaussian_projection(
+    3, &projectedDistance[0], epsilon.data());
+
+  for (int j = 0; j < 3; j++) {
+    projectedForce[j] = gauss * pointForce(j);
+  }
+
+  for (int j = 0; j < 3; j++) {
+    sourceTerm[j] += projectedForce[j] * scvIp / dual_vol;
+  }
+}
+
 } /* namespace nalu */
 } /* namespace sierra */

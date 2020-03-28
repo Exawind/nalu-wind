@@ -10,6 +10,7 @@ if(ENABLE_OPENFAST)
       ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorFASTUtilities.C
       ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorFASTGaussian.C
       ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorParsingFAST.C
+   	  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorBulkFAST.C
    	  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorFunctorsFAST.C
    	  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorBulkDiskFAST.C
    )

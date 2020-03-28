@@ -59,7 +59,7 @@ test_wo_lines(
   std::cout.rdbuf(sbuf);
 }
 
-class ActuatorParsingFASTTest : public ::testing::Test
+class ActuatorParsingFastTests : public ::testing::Test
 {
 public:
   std::vector<std::string> inputFileLines_;
@@ -85,9 +85,9 @@ private:
   }
 };
 
-TEST_F(ActuatorParsingFASTTest, minimumRequired)
+TEST_F(ActuatorParsingFastTests, minimumRequired)
 {
-  ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFAST"]);
+  ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFASTNGP"]);
   try {
     auto y_node = create_yaml_node(inputFileLines_);
     auto actMetaFAST = actuator_FAST_parse(y_node, actMeta);
@@ -103,11 +103,11 @@ TEST_F(ActuatorParsingFASTTest, minimumRequired)
   test_wo_lines(inputFileLines_, actMeta);
 }
 
-TEST_F(ActuatorParsingFASTTest, minimumRequiredFLLC)
+TEST_F(ActuatorParsingFastTests, minimumRequiredAAL)
 {
-  ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFAST"]);
+  ActuatorMeta actMeta(1, ActuatorTypeMap["AdvActLineFASTNGP"]);
   inputFileLines_[8] = "    epsilon_chord: [1.0, 1.0, 1.0]\n";
-  inputFileLines_.push_back("    epsilon_min: [10.0, 0.0, 0.0]\n");
+  inputFileLines_.push_back("    epsilon_min: [0.1, 0.1, 0.1]\n");
   try {
     auto y_node = create_yaml_node(inputFileLines_);
     auto actMetaFAST = actuator_FAST_parse(y_node, actMeta);
@@ -116,6 +116,37 @@ TEST_F(ActuatorParsingFASTTest, minimumRequiredFLLC)
     FAIL() << err.what();
   }
   test_wo_lines(inputFileLines_, actMeta);
+}
+
+TEST_F(ActuatorParsingFastTests, oneValueEpsilonParses)
+{
+  ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFASTNGP"]);
+  inputFileLines_[8] = "    epsilon: 1.0\n";
+  try {
+    auto y_node = create_yaml_node(inputFileLines_);
+    auto actMetaFAST = actuator_FAST_parse(y_node, actMeta);
+    SUCCEED();
+  } catch (std::exception const& err) {
+    FAIL() << err.what();
+  }
+  test_wo_lines(inputFileLines_, actMeta);
+}
+
+TEST_F(ActuatorParsingFastTests, epsilonTower)
+{
+  ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFASTNGP"]);
+  inputFileLines_.push_back("    epsilon_tower: [5.0, 5.0, 5.0]\n");
+  try {
+    auto y_node = create_yaml_node(inputFileLines_);
+    auto actMetaFAST = actuator_FAST_parse(y_node, actMeta);
+    for (int i = 0; i < 3; i++)
+      EXPECT_DOUBLE_EQ(5.0, actMetaFAST.epsilonTower_.h_view(0, i));
+    EXPECT_DOUBLE_EQ(1.0, actMetaFAST.epsilon_.h_view(0, 0));
+    EXPECT_DOUBLE_EQ(0.5, actMetaFAST.epsilon_.h_view(0, 1));
+    EXPECT_DOUBLE_EQ(2.0, actMetaFAST.epsilon_.h_view(0, 2));
+  } catch (std::exception const& err) {
+    FAIL() << err.what();
+  }
 }
 
 } // namespace

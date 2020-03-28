@@ -20,54 +20,21 @@ namespace nalu {
 namespace {
 
 //-----------------------------------------------------------------
-class ActuatorFunctorFASTTests : public ::testing::Test
+class ActuatorFunctorFastTests : public ::testing::Test
 {
 protected:
   std::string inputFileSurrogate_;
   const double tol_;
   std::vector<std::string> fastParseParams_{actuator_unit::nrel5MWinputs};
-  ActuatorMeta actMeta_;
+  const ActuatorMeta actMeta_;
 
-  ActuatorFunctorFASTTests() : tol_(1e-8), actMeta_(1) {}
+  ActuatorFunctorFastTests()
+    : tol_(1e-8), actMeta_(1, ActuatorType::ActLineFASTNGP)
+  {
+  }
 };
 
-TEST_F(ActuatorFunctorFASTTests, initializeActuatorBulk)
-{
-  const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
-  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
-
-  const fast::fastInputs& fi = actMetaFast.fastInputs_;
-  ASSERT_EQ(fi.comm, NaluEnv::self().parallel_comm());
-  ASSERT_EQ(fi.globTurbineData.size(), 1);
-  ASSERT_EQ(fi.debug, true);
-  ASSERT_EQ(fi.dryRun, false);
-  ASSERT_EQ(fi.nTurbinesGlob, 1);
-  ASSERT_EQ(fi.tStart, 0.0);
-  ASSERT_EQ(fi.simStart, fast::init);
-  ASSERT_EQ(fi.nEveryCheckPoint, 1);
-  ASSERT_EQ(fi.dtFAST, 0.00625);
-  ASSERT_EQ(fi.tMax, 0.0625);
-
-  ASSERT_EQ(
-    fi.globTurbineData[0].FASTInputFileName,
-    "reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst");
-  ASSERT_EQ(fi.globTurbineData[0].FASTRestartFileName, "blah");
-  ASSERT_EQ(fi.globTurbineData[0].TurbID, 0);
-  ASSERT_EQ(fi.globTurbineData[0].numForcePtsBlade, 10);
-  ASSERT_EQ(fi.globTurbineData[0].numForcePtsTwr, 10);
-  ASSERT_EQ(fi.globTurbineData[0].air_density, 1.0);
-  ASSERT_EQ(fi.globTurbineData[0].nacelle_area, 1.0);
-  ASSERT_EQ(fi.globTurbineData[0].nacelle_cd, 1.0);
-
-  try {
-    ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
-    EXPECT_TRUE(actBulk.openFast_.isDebug());
-  } catch (std::exception const& err) {
-    FAIL() << err.what();
-  }
-}
-
-TEST_F(ActuatorFunctorFASTTests, runActFastZero)
+TEST_F(ActuatorFunctorFastTests, runActFastZero)
 {
   const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
 
@@ -110,7 +77,7 @@ TEST_F(ActuatorFunctorFASTTests, runActFastZero)
   }
 }
 
-TEST_F(ActuatorFunctorFASTTests, runUpdatePoints)
+TEST_F(ActuatorFunctorFastTests, runUpdatePoints)
 {
   const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
 
@@ -166,7 +133,7 @@ TEST_F(ActuatorFunctorFASTTests, runUpdatePoints)
   }
 }
 
-TEST_F(ActuatorFunctorFASTTests, runAssignVelAndComputeForces)
+TEST_F(ActuatorFunctorFastTests, runAssignVelAndComputeForces)
 {
   const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
 

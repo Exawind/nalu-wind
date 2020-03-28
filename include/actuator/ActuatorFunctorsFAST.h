@@ -29,6 +29,7 @@ struct ActFastZero
   ActVectorDbl vel_;
   ActVectorDbl force_;
   ActVectorDbl point_;
+  ActTensorDbl tensor_;
 };
 
 struct ActFastUpdatePoints
@@ -84,6 +85,34 @@ struct ActFastSetUpThrustCalc
   ActuatorBulkFAST& actBulk_;
 };
 
+struct ActFastZeroOrientation
+{
+  using execution_space = ActuatorExecutionSpace;
+
+  ActFastZeroOrientation(ActuatorBulkFAST& actBulk);
+
+  void operator()(int index) const;
+
+  ActDualViewHelper<ActuatorFixedMemSpace> helper_;
+  ActTensorDbl orientation_;
+  fast::OpenFAST& fast_;
+};
+
+struct ActFastStashOrientationVectors
+{
+  using execution_space = ActuatorFixedExecutionSpace;
+
+  ActFastStashOrientationVectors(ActuatorBulkFAST& actBulk);
+
+  void operator()(int index) const;
+
+  ActDualViewHelper<ActuatorFixedMemSpace> helper_;
+  ActFixTensorDbl orientation_;
+  ActFixScalarInt offset_;
+  const int turbId_;
+  fast::OpenFAST& fast_;
+};
+
 struct ActFastComputeThrustInnerLoop
 {
 
@@ -101,9 +130,31 @@ struct ActFastComputeThrustInnerLoop
   ActuatorBulkFAST& actBulk_;
 };
 
+struct ActFastSpreadForceWhProjInnerLoop
+{
+  ActFastSpreadForceWhProjInnerLoop(ActuatorBulkFAST& actBulk)
+    : actBulk_(actBulk)
+  {
+  }
+
+  void operator()(
+    const uint64_t pointId,
+    const double* nodeCoords,
+    double* sourceTerm,
+    const double dualNodalVolume,
+    const double scvIp) const;
+  void preloop();
+
+  ActuatorBulkFAST& actBulk_;
+};
+
 using ActFastComputeThrust = GenericLoopOverCoarseSearchResults<
   ActuatorBulkFAST,
   ActFastComputeThrustInnerLoop>;
+
+using ActFastSpreadForceWhProjection = GenericLoopOverCoarseSearchResults<
+  ActuatorBulkFAST,
+  ActFastSpreadForceWhProjInnerLoop>;
 
 } /* namespace nalu */
 } /* namespace sierra */

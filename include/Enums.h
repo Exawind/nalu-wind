@@ -256,18 +256,19 @@ enum ActuatorType {
   ActLinePointDrag = 0,
   ActLineFAST = 1,
   ActLineFASTNGP = 2,
-  ActDiskFAST = 3,
-  ActDiskFASTNGP = 4,
+  AdvActLineFASTNGP = 3,
+  ActDiskFAST = 4,
+  ActDiskFASTNGP = 5,
   ActuatorType_END
 };
 
 static std::map<std::string, ActuatorType> ActuatorTypeMap = {
-  {"ActLinePointDrag",ActuatorType::ActLinePointDrag},
-  {"ActLineFAST",ActuatorType::ActLineFAST},
-  {"ActDiskFAST",ActuatorType::ActDiskFAST},
-  {"ActLineFASTNGP",ActuatorType::ActLineFASTNGP},
-  {"ActDiskFASTNGP",ActuatorType::ActDiskFASTNGP}
-};
+  {"ActLinePointDrag", ActuatorType::ActLinePointDrag},
+  {"ActLineFAST", ActuatorType::ActLineFAST},
+  {"ActDiskFAST", ActuatorType::ActDiskFAST},
+  {"ActLineFASTNGP", ActuatorType::ActLineFASTNGP},
+  {"AdvActLineFASTNGP", ActuatorType::AdvActLineFASTNGP},
+  {"ActDiskFASTNGP", ActuatorType::ActDiskFASTNGP}};
 
 } // namespace nalu
 } // namespace Sierra

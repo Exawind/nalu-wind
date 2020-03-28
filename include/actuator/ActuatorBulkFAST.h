@@ -25,6 +25,7 @@ struct ActuatorMetaFAST : public ActuatorMeta
   std::vector<std::string> turbineNames_;
   std::vector<std::string> turbineOutputFileNames_;
   bool filterLiftLineCorrection_;
+  bool isotropicGaussian_;
   bool is_disk();
   int get_fast_index(
     fast::ActuatorNodeType type,
@@ -63,6 +64,8 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActFixVectorDbl hubOrientation_;
 
   ActVectorDblDv epsilonOpt_;
+  ActTensorDblDv orientationTensor_;
+
   // TODO(SAKIEVICH) this kill lambdas that are pass by value (KOKKOS_LAMBDA)
   // may need to rethink functor/bulk design.  Perhaps have an internal object
   // in bulk for gpu data and pass that into the actuatorFunctors.

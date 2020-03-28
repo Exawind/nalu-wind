@@ -66,7 +66,6 @@ SpreadForceInnerLoop::preloop()
   actBulk_.actuatorForce_.sync_host();
 }
 
-//TODO(psakiev) change this to single epsilon and add overload for three epsilons that uses orientation tensor
 void
 SpreadForceInnerLoop::operator()(
   const uint64_t pointId,

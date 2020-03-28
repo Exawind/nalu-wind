@@ -19,6 +19,7 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
     turbineNames_(numberOfActuators_),
     turbineOutputFileNames_(numberOfActuators_),
     filterLiftLineCorrection_(false),
+    isotropicGaussian_(false),
     maxNumPntsPerBlade_(0),
     epsilon_("epsilonMeta", numberOfActuators_),
     epsilonChord_("epsilonChordMeta", numberOfActuators_),
@@ -52,6 +53,9 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     hubLocations_("hubLocations", actMeta.numberOfActuators_),
     hubOrientation_("hubOrientations", actMeta.numberOfActuators_),
     epsilonOpt_("epsilonOptimal", actMeta.numPointsTotal_),
+    orientationTensor_(
+      "orientationTensor",
+      actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
     localTurbineId_(
       NaluEnv::self().parallel_rank() >= actMeta.numberOfActuators_
         ? -1
@@ -129,89 +133,86 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
   for (int iTurb = 0; iTurb < nTurb; iTurb++) {
     if (openFast_.get_procNo(iTurb) == NaluEnv::self().parallel_rank()) {
       ThrowAssert(actMeta.numPointsTotal_ >= openFast_.get_numForcePts(iTurb));
-      if (!openFast_.isDryRun()) {
-        const int numForcePts = openFast_.get_numForcePts(iTurb);
-        const int offset = turbIdOffset_.h_view(iTurb);
-        auto epsilonChord = Kokkos::subview(
-          actMeta.epsilonChord_.view_host(), iTurb, Kokkos::ALL);
-        auto epsilonRef =
-          Kokkos::subview(actMeta.epsilon_.view_host(), iTurb, Kokkos::ALL);
-        auto epsilonTower = Kokkos::subview(
-          actMeta.epsilonTower_.view_host(), iTurb, Kokkos::ALL);
+      const int numForcePts = openFast_.get_numForcePts(iTurb);
+      const int offset = turbIdOffset_.h_view(iTurb);
+      auto epsilonChord =
+        Kokkos::subview(actMeta.epsilonChord_.view_host(), iTurb, Kokkos::ALL);
+      auto epsilonRef =
+        Kokkos::subview(actMeta.epsilon_.view_host(), iTurb, Kokkos::ALL);
+      auto epsilonTower =
+        Kokkos::subview(actMeta.epsilonTower_.view_host(), iTurb, Kokkos::ALL);
 
-        for (int np = 0; np < numForcePts; np++) {
+      for (int np = 0; np < numForcePts; np++) {
 
-          auto epsilonLocal =
-            Kokkos::subview(epsilon_.view_host(), np + offset, Kokkos::ALL);
-          auto epsilonOpt =
-            Kokkos::subview(epsilonOpt_.view_host(), np + offset, Kokkos::ALL);
+        auto epsilonLocal =
+          Kokkos::subview(epsilon_.view_host(), np + offset, Kokkos::ALL);
+        auto epsilonOpt =
+          Kokkos::subview(epsilonOpt_.view_host(), np + offset, Kokkos::ALL);
 
-          switch (openFast_.getForceNodeType(iTurb, np)) {
-          case fast::HUB: {
-            float nac_cd = openFast_.get_nacelleCd(iTurb);
-            // Compute epsilon only if drag coefficient is greater than zero
-            if (nac_cd > 0) {
-              float nac_area = openFast_.get_nacelleArea(iTurb);
+        switch (openFast_.getForceNodeType(iTurb, np)) {
+        case fast::HUB: {
+          float nac_cd = openFast_.get_nacelleCd(iTurb);
+          // Compute epsilon only if drag coefficient is greater than zero
+          if (nac_cd > 0) {
+            float nac_area = openFast_.get_nacelleArea(iTurb);
 
-              // This model is used to set the momentum thickness
-              // of the wake (Martinez-Tossas PhD Thesis 2017)
-              float tmpEps = std::sqrt(2.0 / M_PI * nac_cd * nac_area);
-              for (int i = 0; i < 3; i++) {
-                epsilonLocal(i) = tmpEps;
-              }
-            }
-            // If no nacelle force just specify the standard value
-            // (it will not be used)
-            else {
-              for (int i = 0; i < 3; i++) {
-                epsilonLocal(i) = epsilonRef(i);
-              }
-            }
+            // This model is used to set the momentum thickness
+            // of the wake (Martinez-Tossas PhD Thesis 2017)
+            float tmpEps = std::sqrt(2.0 / M_PI * nac_cd * nac_area);
             for (int i = 0; i < 3; i++) {
-              epsilonOpt(i) = epsilonLocal(i);
+              epsilonLocal(i) = tmpEps;
             }
-            break;
           }
-          case fast::BLADE: {
-            double chord = openFast_.getChord(np, iTurb);
+          // If no nacelle force just specify the standard value
+          // (it will not be used)
+          else {
             for (int i = 0; i < 3; i++) {
-              // Define the optimal epsilon
-              epsilonOpt(i) = epsilonChord(i) * chord;
-              epsilonLocal(i) = std::max(epsilonOpt(i), epsilonRef(i));
+              epsilonLocal(i) = epsilonRef(i);
             }
-            break;
           }
-          case fast::TOWER: {
-            for (int i = 0; i < 3; i++) {
-              epsilonLocal(i) = epsilonTower(i);
-              epsilonOpt(i) = epsilonLocal(i);
-            }
-            break;
+          for (int i = 0; i < 3; i++) {
+            epsilonOpt(i) = epsilonLocal(i);
           }
-          default:
-            throw std::runtime_error("Actuator line model node type not valid");
-            break;
-          }
-
-          for (int i = 0; i < 3; ++i) {
-            ThrowAssertMsg(
-              epsilonLocal(i) > 0.0,
-              "Epsilon zero for point: " + std::to_string(np) + " index " +
-                std::to_string(i));
-          }
-
-          // The radius of the searching. This is given in terms of
-          //   the maximum of epsilon.x/y/z/.
-          searchRadius_.h_view(np + offset) =
-            std::max(
-              epsilonLocal(0), std::max(epsilonLocal(1), epsilonLocal(2))) *
-            sqrt(log(1.0 / 0.001));
+          break;
         }
-      } else {
-        NaluEnv::self().naluOutput()
-          << "Proc " << NaluEnv::self().parallel_rank() << " glob iTurb "
-          << iTurb << std::endl;
+        case fast::BLADE: {
+          double chord = openFast_.getChord(np, iTurb);
+          for (int i = 0; i < 3; i++) {
+            // Define the optimal epsilon
+            epsilonOpt(i) = epsilonChord(i) * chord;
+            epsilonLocal(i) = std::max(epsilonOpt(i), epsilonRef(i));
+          }
+          break;
+        }
+        case fast::TOWER: {
+          for (int i = 0; i < 3; i++) {
+            epsilonLocal(i) = epsilonTower(i);
+            epsilonOpt(i) = epsilonLocal(i);
+          }
+          break;
+        }
+        default:
+          throw std::runtime_error("Actuator line model node type not valid");
+          break;
+        }
+
+        for (int i = 0; i < 3; ++i) {
+          ThrowAssertMsg(
+            epsilonLocal(i) > 0.0,
+            "Epsilon zero for point: " + std::to_string(np) + " index " +
+              std::to_string(i));
+        }
+
+        // The radius of the searching. This is given in terms of
+        //   the maximum of epsilon.x/y/z/.
+        searchRadius_.h_view(np + offset) =
+          std::max(
+            epsilonLocal(0), std::max(epsilonLocal(1), epsilonLocal(2))) *
+          sqrt(log(1.0 / 0.001));
       }
+    } else {
+      NaluEnv::self().naluOutput() << "Proc " << NaluEnv::self().parallel_rank()
+                                   << " glob iTurb " << iTurb << std::endl;
     }
   }
   actuator_utils::reduce_view_on_host(epsilon_.view_host());
