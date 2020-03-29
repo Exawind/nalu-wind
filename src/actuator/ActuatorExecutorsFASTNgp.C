@@ -95,6 +95,7 @@ ActuatorLineFastNGP::update()
   auto velReduce = actBulk_.velocity_.view_host();
   auto pointReduce = actBulk_.pointCentroid_.view_host();
 
+  // TODO(psakiev) Kokkos deep copy
   Kokkos::parallel_for(
     "zeroQuantitiesActuatorNgpFAST", numActPoints_, ActFastZero(actBulk_));
 
@@ -136,6 +137,7 @@ ActuatorDiskFastNGP::operator()()
   auto velReduce = actBulk_.velocity_.view_host();
   auto pointReduce = actBulk_.pointCentroid_.view_host();
 
+  //TODO(psakiev) Kokkos deep copy
   Kokkos::parallel_for(
     "zeroFieldsDiskNgp", numActPoints_, KOKKOS_LAMBDA(int index) {
       for (int i = 0; i < 3; ++i) {

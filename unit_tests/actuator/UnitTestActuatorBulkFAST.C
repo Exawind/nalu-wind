@@ -51,7 +51,7 @@ TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
   const fast::fastInputs& fi = actMetaFast.fastInputs_;
   ASSERT_EQ(fi.comm, NaluEnv::self().parallel_comm());
   ASSERT_EQ(fi.globTurbineData.size(), 1);
-  ASSERT_EQ(fi.debug, true);
+  ASSERT_EQ(fi.debug, false);
   ASSERT_EQ(fi.dryRun, false);
   ASSERT_EQ(fi.nTurbinesGlob, 1);
   ASSERT_EQ(fi.tStart, 0.0);
@@ -73,7 +73,7 @@ TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
 
   try {
     ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
-    EXPECT_TRUE(actBulk.openFast_.isDebug());
+    EXPECT_FALSE(actBulk.openFast_.isDebug());
   } catch (std::exception const& err) {
     FAIL() << err.what();
   }
@@ -82,11 +82,32 @@ TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
 TEST_F(ActuatorBulkFastTests, epsilonTowerAndAnisotropicEpsilon)
 {
 
+  auto epsLoc = std::find_if(fastParseParams_.begin(), fastParseParams_.end(),
+    [](std::string val){return val.find("epsilon:")!=std::string::npos;});
+
+  *epsLoc  = "    epsilon: [1.0, 0.5, 2.0]\n";
+  fastParseParams_.push_back("    epsilon_tower: [5.0, 5.0, 5.0]\n");
+
   const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
   try {
     ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
-    EXPECT_TRUE(actBulk.openFast_.isDebug());
+    auto epsilon = actBulk.epsilon_.view_host();
+
+    // check blades
+    for(int i=1; i<31; i++){
+      EXPECT_DOUBLE_EQ(1.0, epsilon(i,0));
+      EXPECT_DOUBLE_EQ(0.5, epsilon(i,1));
+      EXPECT_DOUBLE_EQ(2.0, epsilon(i,2));
+    }
+
+    // check tower
+    for(int i=31; i<41; i++){
+      for(int j=1; j<3; j++){
+        EXPECT_DOUBLE_EQ(5.0, epsilon(i,j));
+      }
+    }
+
   } catch (std::exception const& err) {
     FAIL() << err.what();
   }

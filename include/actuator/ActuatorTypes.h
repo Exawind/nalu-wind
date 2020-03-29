@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef INCLUDE_ACTUATOR_ACTUATORTYPES_H_
-#define INCLUDE_ACTUATOR_ACTUATORTYPES_H_
+#ifndef ACTUATORTYPES_H_
+#define ACTUATORTYPES_H_
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>

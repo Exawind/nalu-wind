@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef UNITTESTACTUATORINFO_H_
-#define UNITTESTACTUATORINFO_H_
+#ifndef ACTUATORINFO_H_
+#define ACTUATORINFO_H_
 
 #include <NaluParsing.h>
 

@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef ACTUATORFIELDBULK_H_
-#define ACTUATORFIELDBULK_H_
+#ifndef ACTUATORBULK_H_
+#define ACTUATORBULK_H_
 
 #include <actuator/ActuatorTypes.h>
 #include <actuator/ActuatorSearch.h>

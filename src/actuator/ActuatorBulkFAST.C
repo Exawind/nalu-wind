@@ -106,7 +106,17 @@ ActuatorBulkFAST::init_openfast(
     openFast_.setTurbineProcNo(i + nOffset, i);
   }
 
-  openFast_.init();
+  if(actMeta.fastInputs_.debug){
+    openFast_.init();
+  }
+  else{
+    // capture output if not debug
+    std::stringstream buffer;
+    std::streambuf* sHoldCout = std::cout.rdbuf();
+    std::cout.rdbuf(buffer.rdbuf());
+    openFast_.init();
+    std::cout.rdbuf(sHoldCout);
+  }
 
   for (int i = 0; i < nTurb; ++i) {
     if (localTurbineId_ == openFast_.get_procNo(i)) {
@@ -240,11 +250,19 @@ ActuatorBulkFAST::local_range_policy()
 void
 ActuatorBulkFAST::interpolate_velocities_to_fast()
 {
-  if (!openFast_.isDryRun()) {
-    openFast_.interpolateVel_ForceToVelNodes();
+  openFast_.interpolateVel_ForceToVelNodes();
 
-    if (openFast_.isTimeZero()) {
+  if (openFast_.isTimeZero()) {
+    if(openFast_.isDebug()){
       openFast_.solution0();
+    }
+    else{
+      // capture output if not debug
+      std::stringstream buffer;
+      std::streambuf* sHoldCout = std::cout.rdbuf();
+      std::cout.rdbuf(buffer.rdbuf());
+      openFast_.solution0();
+      std::cout.rdbuf(sHoldCout);
     }
   }
 }
@@ -252,10 +270,8 @@ ActuatorBulkFAST::interpolate_velocities_to_fast()
 void
 ActuatorBulkFAST::step_fast()
 {
-  if (!openFast_.isDryRun()) {
-    for (int j = 0; j < tStepRatio_; j++) {
-      openFast_.step();
-    }
+  for (int j = 0; j < tStepRatio_; j++) {
+    openFast_.step();
   }
 }
 
