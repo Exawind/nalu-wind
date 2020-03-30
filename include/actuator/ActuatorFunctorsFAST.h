@@ -10,7 +10,7 @@
 #ifndef ACTUATORFUNCTORSFAST_H_
 #define ACTUATORFUNCTORSFAST_H_
 
-#include <actuator/ActuatorNGP.h>
+#include <actuator/ActuatorTypes.h>
 #include <actuator/ActuatorBulkFAST.h>
 #include <actuator/ActuatorFunctors.h>
 #include <NaluEnv.h>
@@ -83,19 +83,6 @@ struct ActFastSetUpThrustCalc
   void operator()(int index) const;
 
   ActuatorBulkFAST& actBulk_;
-};
-
-struct ActFastZeroOrientation
-{
-  using execution_space = ActuatorExecutionSpace;
-
-  ActFastZeroOrientation(ActuatorBulkFAST& actBulk);
-
-  void operator()(int index) const;
-
-  ActDualViewHelper<ActuatorFixedMemSpace> helper_;
-  ActTensorDbl orientation_;
-  fast::OpenFAST& fast_;
 };
 
 struct ActFastStashOrientationVectors

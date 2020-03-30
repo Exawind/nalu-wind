@@ -93,6 +93,7 @@ TEST_F(ActuatorBulkFastTests, epsilonTowerAndAnisotropicEpsilon)
   try {
     ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
     auto epsilon = actBulk.epsilon_.view_host();
+    auto orient = actBulk.orientationTensor_.view_host();
 
     // check blades
     for(int i=1; i<31; i++){
@@ -107,6 +108,9 @@ TEST_F(ActuatorBulkFastTests, epsilonTowerAndAnisotropicEpsilon)
         EXPECT_DOUBLE_EQ(5.0, epsilon(i,j));
       }
     }
+
+    EXPECT_FALSE(actMetaFast.isotropicGaussian_);
+    EXPECT_EQ(actMetaFast.numPointsTotal_, orient.extent_int(0));
 
   } catch (std::exception const& err) {
     FAIL() << err.what();

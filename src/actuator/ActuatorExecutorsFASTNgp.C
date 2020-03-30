@@ -55,16 +55,19 @@ ActuatorLineFastNGP::operator()()
       "spreadForcesActuatorNgpFAST", localSizeCoarseSearch,
       SpreadActuatorForce(actBulk_, stkBulk_));
   } else {
-    Kokkos::parallel_for(
-      "zeroOrientationVectors", numActPoints_,
-      ActFastZeroOrientation(actBulk_));
+    const int rank = NaluEnv::self().parallel_rank();
+    NaluEnv::self().naluOutput()<<"Zero Orientation Vector RANK: "<<rank<<std::endl;
+    Kokkos::deep_copy(actBulk_.orientationTensor_.view_host(),0.0);
+    NaluEnv::self().naluOutput()<<"Gather Orientation Vector RANK: "<<rank<<std::endl;
     Kokkos::parallel_for(
       "gatherBladeOrientations", fastRangePolicy,
       ActFastStashOrientationVectors(actBulk_));
 
+    NaluEnv::self().naluOutput()<<"Reduce Orientation Vector RANK: "<<rank<<std::endl;
     actuator_utils::reduce_view_on_host(
       actBulk_.orientationTensor_.view_host());
 
+    NaluEnv::self().naluOutput()<<"Spread Forces RANK: "<<rank<<std::endl;
     Kokkos::parallel_for(
       "spreadForceUsingProjDistance", localSizeCoarseSearch,
       ActFastSpreadForceWhProjection(actBulk_, stkBulk_));
