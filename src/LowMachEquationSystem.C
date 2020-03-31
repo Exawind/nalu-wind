@@ -2480,6 +2480,11 @@ MomentumEquationSystem::register_overset_bc()
 void
 MomentumEquationSystem::initialize()
 {
+  for (auto it = equationSystems_.equationSystemVector_.begin(); it != equationSystems_.equationSystemVector_.end(); ++it) {
+    //std::cout << "MomentumEquationSystem::initialize() : equationSystem name = " <<  (*it)->name_ << "," << (*it)->convergenceTolerance_ << std::endl;
+    if ((*it)->name_ == "LowMachEOSWrap")
+      convergenceTolerance_ = (*it)->convergenceTolerance_;
+  }
   solverAlgDriver_->initialize_connectivity();
   // linsys_->finalizeLinearSystem();
 
@@ -3683,6 +3688,11 @@ ContinuityEquationSystem::register_overset_bc()
 void
 ContinuityEquationSystem::initialize()
 {
+  for (auto it = equationSystems_.equationSystemVector_.begin(); it != equationSystems_.equationSystemVector_.end(); ++it) {
+    //std::cout << "MomentumEquationSystem::initialize() : equationSystem name = " <<  (*it)->name_ << "," << (*it)->convergenceTolerance_ << std::endl;
+    if ((*it)->name_ == "LowMachEOSWrap")
+      convergenceTolerance_ = (*it)->convergenceTolerance_;
+  }
   if (realm_.solutionOptions_->needPressureReference_) {
     const AlgorithmType algType = REF_PRESSURE;
     // Process parts if necessary
