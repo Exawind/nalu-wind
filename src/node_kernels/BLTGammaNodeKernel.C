@@ -145,8 +145,8 @@ BLTGammaNodeKernel::execute(
     }
   }
 
-  sijMag = stk::math::sqrt(sijMag);
-  vortMag = stk::math::sqrt(vortMag);
+  sijMag = stk::math::sqrt(2.0*sijMag);
+  vortMag = stk::math::sqrt(2.0*vortMag);
 
   flen = Comp_f_length(re0t);
   Re0c = Comp_Re_0c(re0t);

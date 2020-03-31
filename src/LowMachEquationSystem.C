@@ -194,6 +194,7 @@
 #include <user_functions/SinProfileChannelFlowVelocityAuxFunction.h>
 
 #include <user_functions/BoundaryLayerPerturbationAuxFunction.h>
+#include <user_functions/BoundaryLayerAuxFunction.h>
 
 #include <user_functions/WindEnergyPowerLawAuxFunction.h>
 
@@ -612,10 +613,14 @@ LowMachEquationSystem::register_initial_condition_fcn(
   stk::mesh::MetaData & meta_data = realm_.meta_data();
   const int nDim = meta_data.spatial_dimension();
 
+    std::cout << "LowMachEquationSystem::register_initial_condition_fcn" << std::endl;
+
   // iterate map and check for name
   const std::string dofName = "velocity";
   std::map<std::string, std::string>::const_iterator iterName
     = theNames.find(dofName);
+
+
   if (iterName != theNames.end()) {
     std::string fcnName = (*iterName).second;
     
@@ -625,6 +630,8 @@ LowMachEquationSystem::register_initial_condition_fcn(
     // create a few Aux things
     AuxFunction *theAuxFunc = NULL;
     AuxFunctionAlgorithm *auxAlg = NULL;
+
+    std::cout << "Initial Conditions: fcnName = " << fcnName << std::endl;
 
     if ( fcnName == "wind_energy_taylor_vortex") {
       
@@ -638,6 +645,20 @@ LowMachEquationSystem::register_initial_condition_fcn(
       }
       else {
         throw std::runtime_error("Wind_energy_taylor_vortex missing parameters");
+      }
+    }
+    else if ( fcnName == "boundary_layer") {
+
+      std::cout << "Initial Conditions for boundary_layer" << std::endl;
+
+      std::map<std::string, std::vector<double> >::const_iterator iterParams
+        = theParams.find(dofName);
+      if (iterParams != theParams.end()) {
+        std::vector<double> fcnParams = (*iterParams).second;
+        theAuxFunc = new BoundaryLayerAuxFunction(0,nDim,fcnParams);
+      }
+      else {
+        throw std::runtime_error("Boundary_layer missing parameters");
       }
     }
     else if ( fcnName == "boundary_layer_perturbation") {
@@ -1686,6 +1707,13 @@ MomentumEquationSystem::register_inflow_bc(
     if ( nDim > 2)
       userSpec[2] = ux.uz_;
     
+  std::printf("Open file for writing uinfFS\n");
+  FILE * fp;
+  fp = std::fopen ("uinfFreestream.dat", "w");
+  std::fprintf(fp,"%lf\n", userSpec[0]);
+  std::fclose(fp);
+  std::printf("LowMach EqnSys Inlet uinf value = %.12E\n", userSpec[0]);
+
     // new it
     theAuxFunc = new ConstantAuxFunction(0, nDim, userSpec);
     

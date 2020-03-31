@@ -75,6 +75,8 @@ public:
   ScalarFieldType *fOneBlending_;
   ScalarFieldType *maxLengthScale_;
 
+  double uinfFreestream;
+
   bool isInit_;
   AlgorithmDriver *sstMaxLengthScaleAlgDriver_;
 

@@ -73,6 +73,12 @@ struct GammaInf {
   {}
 };
 
+struct GammaOpen {
+  double gamma_;
+  GammaOpen()
+    : gamma_(1.0)
+  {}
+};
 
 struct Temperature {
   double temperature_;
@@ -262,6 +268,7 @@ struct OpenUserData : public UserData {
   SpecDissRate sdr_;
   MixtureFraction mixFrac_;
   MassFraction massFraction_;
+  GammaOpen gamma_;
  
   bool uSpec_;
   bool pSpec_;
@@ -269,10 +276,11 @@ struct OpenUserData : public UserData {
   bool sdrSpec_;
   bool mixFracSpec_;
   bool massFractionSpec_;
+  bool gammaSpec_;
 
   OpenUserData()
     : UserData(),
-      uSpec_(false), pSpec_(false), tkeSpec_(false), sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false)
+      uSpec_(false), pSpec_(false), tkeSpec_(false), sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false), gammaSpec_(false)
   {}
 };
 

@@ -62,7 +62,9 @@ private:
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_     {stk::mesh::InvalidOrdinal};
   unsigned velocityNp1ID_     {stk::mesh::InvalidOrdinal};
+
   double dt_;
+  double tkeFreestream;
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;

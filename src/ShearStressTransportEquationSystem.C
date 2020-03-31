@@ -112,6 +112,13 @@ ShearStressTransportEquationSystem::initialize()
   tkeEqSys_->convergenceTolerance_ = convergenceTolerance_;
   sdrEqSys_->convergenceTolerance_ = convergenceTolerance_;
   gammaEqSys_->convergenceTolerance_ = convergenceTolerance_;
+
+  FILE * fp;
+  fp = std::fopen ("uinfFreestream.dat", "r");
+  std::fscanf(fp,"%lf\n",&uinfFreestream);
+  std::printf("Node Kernel Inlet uinf value = %.12E\n", uinfFreestream);
+  std::fclose(fp);
+//
 }
 
 //--------------------------------------------------------------------------
@@ -306,7 +313,7 @@ ShearStressTransportEquationSystem::initial_work()
 
       const double tkeNew = tke[k];
       const double sdrNew = sdr[k];
-      const double gammaNew = gamma[k];
+//      const double gammaNew = gamma[k];
       
       if ( (tkeNew >= 0.0) && (sdrNew > 0.0) ) {
         // nothing
@@ -325,13 +332,13 @@ ShearStressTransportEquationSystem::initial_work()
         tke[k] = tkeNew;
       }
 
-      if (gammaNew < 0.0) {
-        gamma[k] = 0.0;
-      }
+//      if (gammaNew < 0.0) {
+//        gamma[k] = 0.0;
+//      }
   
-      if (gammaNew > 1.0) {
-        gamma[k] = 1.0;
-      }
+//      if (gammaNew > 1.0) {
+//        gamma[k] = 1.0;
+//      }
 
     }
   }
@@ -372,6 +379,9 @@ ShearStressTransportEquationSystem::update_and_clip()
   ScalarFieldType *viscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
   ScalarFieldType *turbViscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity");
 
+  VectorFieldType *coordsNp1 = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  VectorFieldType *velNp1 = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+
   // required fields with state
   ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
   ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
@@ -398,6 +408,9 @@ ShearStressTransportEquationSystem::update_and_clip()
     double *sdr = stk::mesh::field_data(sdrNp1, b);
     double *gamma = stk::mesh::field_data(gammaNp1, b);
     double *tvisc = stk::mesh::field_data(*turbViscosity, b);
+
+    double *coords = stk::mesh::field_data(*coordsNp1, b);
+    double *vel = stk::mesh::field_data(*velNp1, b);
 
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
 
@@ -429,15 +442,16 @@ ShearStressTransportEquationSystem::update_and_clip()
         tke[k] = tkeNew;
       }
 
-      if (gammaNew >= 0.0 && gammaNew <= 1.0) {
+//      if (gammaNew >= 0.0 && gammaNew <= 1.0) {
         // if all is well
+      if (coords[0] <= 1.999) {
         gamma[k] = gammaNew;
-      }
-      else {
         if (gammaNew < 0.0) gamma[k] = 0.0;
         if (gammaNew > 1.0) gamma[k] = 1.0;
       }
-
+      else {
+        gamma[k] = 0.98*vel[3*k]/uinfFreestream + 0.02;
+      } 
 
     }
   }
@@ -580,6 +594,7 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
   // fields not saved off
   ScalarFieldType *density = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   ScalarFieldType *viscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
+
   VectorFieldType *dkdx = tkeEqSys_->dkdx_;
   VectorFieldType *dwdx = sdrEqSys_->dwdx_;
 
@@ -621,9 +636,13 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
 
       // arguments
       const double fArgOne = std::min(std::max(trbDiss, lamDiss), 4.0*rho[k]*sigmaWTwo*tke[k]/CDkw/minDSq);
+      // modifications for transition model
+    const double ry = rho[k] * minD[k] * std::sqrt(tke[k])/mu[k];
+    const double arg = ry / 120.0;
+    const double f3 = std::exp(-arg*arg*arg*arg*arg*arg*arg*arg);
 
       // real deal
-      fOne[k] = std::tanh(fArgOne*fArgOne*fArgOne*fArgOne);
+      fOne[k] = std::max( std::tanh(fArgOne*fArgOne*fArgOne*fArgOne), f3 );
 
     }
   }
