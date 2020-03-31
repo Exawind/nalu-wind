@@ -20,9 +20,7 @@
 #include <MaterialPropertys.h>
 #include <EquationSystems.h>
 
-#if defined(NALU_USES_PERCEPT)
 #include <Teuchos_RCP.hpp>
-#endif
 
 #include <stk_ngp/NgpFieldManager.hpp>
 

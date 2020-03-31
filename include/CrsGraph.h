@@ -24,6 +24,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "LinearSolverTypes.h"
+
 namespace stk {
 class CommNeighbors;
 }
