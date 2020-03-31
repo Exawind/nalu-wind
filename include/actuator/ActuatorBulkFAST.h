@@ -55,6 +55,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
   void output_torque_info();
   void init_openfast(const ActuatorMetaFAST& actMeta, double naluTimeStep);
   void init_epsilon(const ActuatorMetaFAST& actMeta);
+  virtual void zero_open_fast_views();
 
   virtual ~ActuatorBulkFAST();
 
@@ -72,7 +73,20 @@ struct ActuatorBulkFAST : public ActuatorBulk
   fast::OpenFAST openFast_;
   const int localTurbineId_;
   const int tStepRatio_;
+  ActDualViewHelper<ActuatorMemSpace> dvHelper_;
 };
+
+// helper functions to
+// squash calls to std::cout from TPL's aka OpenFAST
+inline
+void squash_fast_output(std::function<void()>func)
+{
+  std::stringstream buffer;
+  std::streambuf* sHoldCout = std::cout.rdbuf();
+  std::cout.rdbuf(buffer.rdbuf());
+  func();
+  std::cout.rdbuf(sHoldCout);
+}
 
 } // namespace nalu
 } // namespace sierra

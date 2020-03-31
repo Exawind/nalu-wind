@@ -18,20 +18,6 @@
 namespace sierra {
 namespace nalu {
 
-struct ActFastZero
-{
-  using execution_space = ActuatorExecutionSpace;
-
-  ActFastZero(ActuatorBulkFAST& actBulk);
-  void operator()(int index) const;
-
-  ActDualViewHelper<ActuatorMemSpace> helper_;
-  ActVectorDbl vel_;
-  ActVectorDbl force_;
-  ActVectorDbl point_;
-  ActTensorDbl tensor_;
-};
-
 struct ActFastUpdatePoints
 {
   using execution_space = ActuatorFixedExecutionSpace;

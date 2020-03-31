@@ -17,27 +17,6 @@
 namespace sierra {
 namespace nalu {
 
-ActFastZero::ActFastZero(ActuatorBulkFAST& actBulk)
-{
-  vel_ = helper_.get_local_view(actBulk.velocity_);
-  force_ = helper_.get_local_view(actBulk.actuatorForce_);
-  point_ = helper_.get_local_view(actBulk.pointCentroid_);
-
-  helper_.touch_dual_view(actBulk.velocity_);
-  helper_.touch_dual_view(actBulk.actuatorForce_);
-  helper_.touch_dual_view(actBulk.pointCentroid_);
-}
-
-void
-ActFastZero::operator()(int index) const
-{
-  for (int i = 0; i < 3; i++) {
-    vel_(index, i) = 0.0;
-    force_(index, i) = 0.0;
-    point_(index, i) = 0.0;
-  }
-}
-
 ActFastUpdatePoints::ActFastUpdatePoints(ActuatorBulkFAST& actBulk)
   : points_(helper_.get_local_view(actBulk.pointCentroid_)),
     offsets_(helper_.get_local_view(actBulk.turbIdOffset_)),

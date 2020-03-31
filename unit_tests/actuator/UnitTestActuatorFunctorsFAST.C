@@ -66,8 +66,7 @@ TEST_F(ActuatorFunctorFastTests, runActFastZero)
     }
   }
 
-  Kokkos::parallel_for(
-    "testActFastZero", actMetaFast.numPointsTotal_, ActFastZero(actBulk));
+  actBulk.zero_open_fast_views();
 
   for (int i = 0; i < velHost.extent_int(0); ++i) {
     for (int j = 0; j < 3; ++j) {
@@ -91,8 +90,7 @@ TEST_F(ActuatorFunctorFastTests, runUpdatePoints)
 
   auto points = actBulk.pointCentroid_.view_host();
   auto localRangePolicy = actBulk.local_range_policy();
-  Kokkos::parallel_for(
-    "testActFastZero", actMetaFast.numPointsTotal_, ActFastZero(actBulk));
+  actBulk.zero_open_fast_views();
 
   for (int i = 0; i < points.extent_int(0); ++i) {
     for (int j = 0; j < 3; ++j) {
@@ -149,8 +147,7 @@ TEST_F(ActuatorFunctorFastTests, runAssignVelAndComputeForces)
   auto force = actBulk.actuatorForce_.view_host();
 
   auto localRangePolicy = actBulk.local_range_policy();
-  Kokkos::parallel_for(
-    "testActFastZero", actMetaFast.numPointsTotal_, ActFastZero(actBulk));
+  actBulk.zero_open_fast_views();
 
   for (int i = 0; i < vel.extent_int(0); ++i) {
     for (int j = 0; j < 3; ++j) {

@@ -35,6 +35,7 @@ struct ActuatorLineFastNGP
   ActuatorBulkFAST& actBulk_;
   stk::mesh::BulkData& stkBulk_;
   const int numActPoints_;
+  ActDualViewHelper<ActuatorMemSpace> dualViewHelper_;
 };
 
 struct ActuatorDiskFastNGP
@@ -50,6 +51,7 @@ struct ActuatorDiskFastNGP
   ActuatorBulkDiskFAST& actBulk_;
   stk::mesh::BulkData& stkBulk_;
   const int numActPoints_;
+  ActDualViewHelper<ActuatorMemSpace> dualViewHelper_;
 };
 
 } /* namespace nalu */

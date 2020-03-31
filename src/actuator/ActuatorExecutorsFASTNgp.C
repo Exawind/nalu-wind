@@ -56,18 +56,14 @@ ActuatorLineFastNGP::operator()()
       SpreadActuatorForce(actBulk_, stkBulk_));
   } else {
     const int rank = NaluEnv::self().parallel_rank();
-    NaluEnv::self().naluOutput()<<"Zero Orientation Vector RANK: "<<rank<<std::endl;
     Kokkos::deep_copy(actBulk_.orientationTensor_.view_host(),0.0);
-    NaluEnv::self().naluOutput()<<"Gather Orientation Vector RANK: "<<rank<<std::endl;
     Kokkos::parallel_for(
       "gatherBladeOrientations", fastRangePolicy,
       ActFastStashOrientationVectors(actBulk_));
 
-    NaluEnv::self().naluOutput()<<"Reduce Orientation Vector RANK: "<<rank<<std::endl;
     actuator_utils::reduce_view_on_host(
       actBulk_.orientationTensor_.view_host());
 
-    NaluEnv::self().naluOutput()<<"Spread Forces RANK: "<<rank<<std::endl;
     Kokkos::parallel_for(
       "spreadForceUsingProjDistance", localSizeCoarseSearch,
       ActFastSpreadForceWhProjection(actBulk_, stkBulk_));
@@ -98,9 +94,7 @@ ActuatorLineFastNGP::update()
   auto velReduce = actBulk_.velocity_.view_host();
   auto pointReduce = actBulk_.pointCentroid_.view_host();
 
-  // TODO(psakiev) Kokkos deep copy
-  Kokkos::parallel_for(
-    "zeroQuantitiesActuatorNgpFAST", numActPoints_, ActFastZero(actBulk_));
+  actBulk_.zero_open_fast_views();
 
   // set range policy to only operating over points owned by local fast turbine
   auto fastRangePolicy = actBulk_.local_range_policy();
@@ -140,19 +134,12 @@ ActuatorDiskFastNGP::operator()()
   auto velReduce = actBulk_.velocity_.view_host();
   auto pointReduce = actBulk_.pointCentroid_.view_host();
 
-  //TODO(psakiev) Kokkos deep copy
-  Kokkos::parallel_for(
-    "zeroFieldsDiskNgp", numActPoints_, KOKKOS_LAMBDA(int index) {
-      for (int i = 0; i < 3; ++i) {
-        actBulk_.actuatorForce_.d_view(index, i) = 0.0;
-        actBulk_.velocity_.d_view(index, i) = 0.0;
-      }
-    });
-
   if (!actBulk_.searchExecuted_) {
     actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
   }
+
   actBulk_.zero_source_terms(stkBulk_);
+  actBulk_.zero_open_fast_views();
 
   Kokkos::parallel_for(
     "interpolateVelocitiesActuatorNgpFAST", numActPoints_,

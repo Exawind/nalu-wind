@@ -83,6 +83,8 @@ struct GenericLoopOverCoarseSearchResults
     const int numIp = meSCV->num_integration_points();
 
     // just allocate for largest expected size (hex27)
+    ThrowAssert(numIp<=216);
+    ThrowAssert(numNodes<=27);
     double scvIp[216];
     double elemCoords[81];
 
@@ -111,6 +113,8 @@ struct GenericLoopOverCoarseSearchResults
       double* sourceTerm =
         (double*)stk::mesh::field_data(*actuatorSource_, node);
 
+      // anything else that is required should be stashed on the functor
+      // during functor construction i.e. ActuatorBulk, flags, ActuatorMeta, etc.
       innerLoopFunctor_(pointId, nodeCoords, sourceTerm, dual_vol, scvIp[nIp]);
     }
   }

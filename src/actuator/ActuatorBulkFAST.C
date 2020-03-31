@@ -110,12 +110,7 @@ ActuatorBulkFAST::init_openfast(
     openFast_.init();
   }
   else{
-    // capture output if not debug
-    std::stringstream buffer;
-    std::streambuf* sHoldCout = std::cout.rdbuf();
-    std::cout.rdbuf(buffer.rdbuf());
-    openFast_.init();
-    std::cout.rdbuf(sHoldCout);
+    squash_fast_output(std::bind(&fast::OpenFAST::init, &openFast_));
   }
 
   for (int i = 0; i < nTurb; ++i) {
@@ -215,10 +210,13 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
 
         // The radius of the searching. This is given in terms of
         //   the maximum of epsilon.x/y/z/.
+        //
+        // This is the length where the value of the Gaussian becomes
+        // 0.1 % (1.0 / .001 = 1000) of the value at the center of the Gaussian
         searchRadius_.h_view(np + offset) =
           std::max(
             epsilonLocal(0), std::max(epsilonLocal(1), epsilonLocal(2))) *
-          sqrt(log(1.0 / 0.001));
+          sqrt(log(1.e3));
       }
     } else {
       NaluEnv::self().naluOutput() << "Proc " << NaluEnv::self().parallel_rank()
@@ -257,12 +255,7 @@ ActuatorBulkFAST::interpolate_velocities_to_fast()
       openFast_.solution0();
     }
     else{
-      // capture output if not debug
-      std::stringstream buffer;
-      std::streambuf* sHoldCout = std::cout.rdbuf();
-      std::cout.rdbuf(buffer.rdbuf());
-      openFast_.solution0();
-      std::cout.rdbuf(sHoldCout);
+      squash_fast_output(std::bind(&fast::OpenFAST::solution0, &openFast_));
     }
   }
 }
@@ -270,8 +263,15 @@ ActuatorBulkFAST::interpolate_velocities_to_fast()
 void
 ActuatorBulkFAST::step_fast()
 {
-  for (int j = 0; j < tStepRatio_; j++) {
-    openFast_.step();
+  if(openFast_.isDebug()){
+    for (int j = 0; j < tStepRatio_; j++) {
+      openFast_.step();
+    }
+  }
+  else{
+    for (int j = 0; j < tStepRatio_; j++) {
+      squash_fast_output(std::bind(&fast::OpenFAST::step, &openFast_));
+    }
   }
 }
 
@@ -319,6 +319,17 @@ ActuatorBulkFAST::output_torque_info()
         << "] " << std::endl;
     }
   }
+}
+
+void
+ActuatorBulkFAST::zero_open_fast_views()
+{
+  dvHelper_.touch_dual_view(actuatorForce_);
+  dvHelper_.touch_dual_view(pointCentroid_);
+  dvHelper_.touch_dual_view(velocity_);
+  Kokkos::deep_copy(dvHelper_.get_local_view(actuatorForce_),0.0);
+  Kokkos::deep_copy(dvHelper_.get_local_view(pointCentroid_),0.0);
+  Kokkos::deep_copy(dvHelper_.get_local_view(velocity_),0.0);
 }
 
 } // namespace nalu

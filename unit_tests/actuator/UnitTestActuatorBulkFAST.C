@@ -79,6 +79,49 @@ TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
   }
 }
 
+
+TEST_F(ActuatorBulkFastTests, zeroFastViews)
+{
+  const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
+
+  auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
+  ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
+
+  ASSERT_EQ(actMetaFast.numPointsTotal_, 41);
+
+  auto velHost = actBulk.velocity_.view_host();
+  auto frcHost = actBulk.actuatorForce_.view_host();
+
+  actBulk.actuatorForce_.modify_device();
+  actBulk.velocity_.modify_device();
+
+  for (int i = 0; i < actMetaFast.numPointsTotal_; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      actBulk.actuatorForce_.h_view(i, j) = 1.0;
+      actBulk.velocity_.h_view(i, j) = 1.0;
+    }
+  }
+
+  actBulk.actuatorForce_.sync_device();
+  actBulk.velocity_.sync_device();
+
+  for (int i = 0; i < velHost.extent_int(0); ++i) {
+    for (int j = 0; j < 3; ++j) {
+      EXPECT_DOUBLE_EQ(1.0, velHost(i, j));
+      EXPECT_DOUBLE_EQ(1.0, frcHost(i, j));
+    }
+  }
+
+  actBulk.zero_open_fast_views();
+
+  for (int i = 0; i < velHost.extent_int(0); ++i) {
+    for (int j = 0; j < 3; ++j) {
+      EXPECT_DOUBLE_EQ(0.0, velHost(i, j));
+      EXPECT_DOUBLE_EQ(0.0, frcHost(i, j));
+    }
+  }
+}
+
 TEST_F(ActuatorBulkFastTests, epsilonTowerAndAnisotropicEpsilon)
 {
 

@@ -262,5 +262,14 @@ ActuatorBulkDiskFAST::spread_forces_over_disk(const ActuatorMetaFAST& actMeta)
   }
 }
 
+void
+ActuatorBulkDiskFAST::zero_open_fast_views()
+{
+  dvHelper_.touch_dual_view(actuatorForce_);
+  dvHelper_.touch_dual_view(velocity_);
+  Kokkos::deep_copy(dvHelper_.get_local_view(actuatorForce_),0.0);
+  Kokkos::deep_copy(dvHelper_.get_local_view(velocity_),0.0);
+}
+
 } /* namespace nalu */
 } /* namespace sierra */
