@@ -134,14 +134,14 @@ SDRSSTBLTM2015NodeKernel::execute(
   }
   else {
     // Blend constants for SDR
-    const DblType ry = density * minD * stk::math::sqrt(tke)/visc;
-    const DblType arg = ry / 120.0;
-    const DblType f3 = stk::math::exp(-arg*arg*arg*arg*arg*arg*arg*arg);
-    const DblType fOneBlendBLT = stk::math::max( fOneBlend, f3);
+    //const DblType ry = density * minD * stk::math::sqrt(tke)/visc;
+    //const DblType arg = ry / 120.0;
+    //const DblType f3 = stk::math::exp(-arg*arg*arg*arg*arg*arg*arg*arg);
+    //const DblType fOneBlendBLT = stk::math::max( fOneBlend, f3);
 
-    const DblType omf1 = (1.0 - fOneBlendBLT);
-    const DblType beta = fOneBlendBLT * betaOne_ + omf1 * betaTwo_;
-    const DblType gamma = fOneBlendBLT * gammaOne_ + omf1 * gammaTwo_;
+    const DblType omf1 = (1.0 - fOneBlend);
+    const DblType beta = fOneBlend * betaOne_ + omf1 * betaTwo_;
+    const DblType gamma = fOneBlend * gammaOne_ + omf1 * gammaTwo_;
     const DblType sigmaD = 2.0 * omf1 * sigmaWTwo_;
 
     // Production term with appropriate clipping of tvisc

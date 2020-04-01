@@ -44,6 +44,7 @@
 
 // edge kernels
 #include <edge_kernels/ScalarEdgeSolverAlg.h>
+#include <edge_kernels/ScalarOpenEdgeKernel.h>
 
 // node kernels
 #include <node_kernels/NodeKernelUtils.h>
@@ -349,10 +350,10 @@ void GammaEquationSystem::register_open_bc(
 
   // extract the value for user specified tke and save off the AuxFunction
   OpenUserData userData = openBCData.userData_;
-  Gamma gamma = userData.gamma_;
+  GammaOpen gamma = userData.gamma_;
   std::vector<double> userSpec(1);
   userSpec[0] = gamma.gamma_;
-
+  std::printf("Gamma register_open_bc: userSpec = %lf\n", userSpec[0]);
   // new it
   ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
 
@@ -368,6 +369,7 @@ void GammaEquationSystem::register_open_bc(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dGamdxNone, edgeNodalGradient_);
 
   if (realm_.realmUsesEdges_) {
+    std::printf("Gamma register_open_bc: realm_.realmUsesEdges_\n");
     auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
     AssembleElemSolverAlgorithm* elemSolverAlg = nullptr;
     bool solverAlgWasBuilt = false;
@@ -384,9 +386,11 @@ void GammaEquationSystem::register_open_bc(
   }
   else {
     // solver open; lhs
+    std::printf("register_open_bc: solver_open\n");
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
       = solverAlgDriver_->solverAlgMap_.find(algType);
     if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
+      std::printf("register_open_bc: hit 1\n");
       SolverAlgorithm *theAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
         theAlg = new AssembleScalarEdgeOpenSolverAlgorithm(realm_, part, this, gamma_, theBcField, &dGamdxNone, evisc_);
@@ -397,6 +401,7 @@ void GammaEquationSystem::register_open_bc(
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
     }
     else {
+      std::printf("register_open_bc: hit 2\n");
       itsi->second->partVec_.push_back(part);
     }
   }

@@ -211,8 +211,8 @@ BLTReThetaNodeKernel::execute(
     }
   }
 
-  sijMag = stk::math::sqrt(sijMag);
-  vortMag = stk::math::sqrt(vortMag);
+  sijMag = stk::math::sqrt(2.0*sijMag);
+  vortMag = stk::math::sqrt(2.0*vortMag);
 
   velMag = stk::math::sqrt( vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2] ) + 1.e-14;
   Reomega = density * sdr * minD * minD / visc;
