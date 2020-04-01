@@ -2481,12 +2481,10 @@ void
 MomentumEquationSystem::initialize()
 {
   for (auto it = equationSystems_.equationSystemVector_.begin(); it != equationSystems_.equationSystemVector_.end(); ++it) {
-    //std::cout << "MomentumEquationSystem::initialize() : equationSystem name = " <<  (*it)->name_ << "," << (*it)->convergenceTolerance_ << std::endl;
     if ((*it)->name_ == "LowMachEOSWrap")
       convergenceTolerance_ = (*it)->convergenceTolerance_;
   }
   solverAlgDriver_->initialize_connectivity();
-  // linsys_->finalizeLinearSystem();
 
   // Set flag to extract diagonal if the user activates it in input file
   extractDiagonal_ = (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV);
@@ -2527,7 +2525,6 @@ MomentumEquationSystem::reinitialize_linear_system()
 
   // initialize new solver
   solverAlgDriver_->initialize_connectivity();
-  //linsys_->finalizeLinearSystem();
 }
 
 
@@ -3689,7 +3686,6 @@ void
 ContinuityEquationSystem::initialize()
 {
   for (auto it = equationSystems_.equationSystemVector_.begin(); it != equationSystems_.equationSystemVector_.end(); ++it) {
-    //std::cout << "MomentumEquationSystem::initialize() : equationSystem name = " <<  (*it)->name_ << "," << (*it)->convergenceTolerance_ << std::endl;
     if ((*it)->name_ == "LowMachEOSWrap")
       convergenceTolerance_ = (*it)->convergenceTolerance_;
   }
@@ -3716,7 +3712,6 @@ ContinuityEquationSystem::initialize()
   }
 
   solverAlgDriver_->initialize_connectivity();
-  //linsys_->finalizeLinearSystem();
 }
 
 //--------------------------------------------------------------------------
@@ -3746,7 +3741,6 @@ ContinuityEquationSystem::reinitialize_linear_system()
 
   // initialize
   solverAlgDriver_->initialize_connectivity();
-  //linsys_->finalizeLinearSystem();
 }
 
 //--------------------------------------------------------------------------
