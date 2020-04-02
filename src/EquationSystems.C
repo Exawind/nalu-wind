@@ -78,8 +78,12 @@ void initialize_connectivity(
   // reinitialization also as the `linsys_` instance is still valid and does not
   // get reset until the call to `EquationSystem::reinitialize_linear_system`
   for (auto* eqsys: eqSysVec) {
-    // Skip wrapper type equation systems that don't have a LinearSystem instance
-    if (eqsys->linsys_ == nullptr) continue;
+    // For "wrapper" equation systems, execute their default initialize() method to allow 
+    // convergence tolerance to be passed to their children
+    if (eqsys->linsys_ == nullptr) {
+      eqsys->initialize();
+      continue;
+    }
     const int ndof = eqsys->linsys_->numDof();
     eqSysMap[ndof].push_back(eqsys);
   }
