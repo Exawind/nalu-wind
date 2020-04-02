@@ -454,7 +454,6 @@ void
 MeshDisplacementEquationSystem::initialize()
 {
   solverAlgDriver_->initialize_connectivity();
-  linsys_->finalizeLinearSystem();
 }
 
 //--------------------------------------------------------------------------

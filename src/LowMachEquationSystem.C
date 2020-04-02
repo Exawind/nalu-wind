@@ -2481,7 +2481,6 @@ void
 MomentumEquationSystem::initialize()
 {
   solverAlgDriver_->initialize_connectivity();
-  linsys_->finalizeLinearSystem();
 
   // Set flag to extract diagonal if the user activates it in input file
   extractDiagonal_ = (realm_.solutionOptions_->tscaleType_ == TSCALE_UDIAGINV);
@@ -2522,7 +2521,6 @@ MomentumEquationSystem::reinitialize_linear_system()
 
   // initialize new solver
   solverAlgDriver_->initialize_connectivity();
-  linsys_->finalizeLinearSystem();
 }
 
 
@@ -3706,7 +3704,6 @@ ContinuityEquationSystem::initialize()
   }
 
   solverAlgDriver_->initialize_connectivity();
-  linsys_->finalizeLinearSystem();
 }
 
 //--------------------------------------------------------------------------
@@ -3736,7 +3733,6 @@ ContinuityEquationSystem::reinitialize_linear_system()
 
   // initialize
   solverAlgDriver_->initialize_connectivity();
-  linsys_->finalizeLinearSystem();
 }
 
 //--------------------------------------------------------------------------

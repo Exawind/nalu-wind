@@ -22,7 +22,7 @@ linear_solvers:
     max_iterations: 50
     kspace: 50
     output_level: 0
-    muelu_xml_file_name: ../../xml/matches_ml_default.xml
+    muelu_xml_file_name: ../../xml/matches_ml_default_2.xml
 
 transfers:
 

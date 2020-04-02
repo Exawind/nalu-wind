@@ -59,6 +59,8 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityMassElemSuppAlgDep.C
    ${CMAKE_CURRENT_SOURCE_DIR}/CopyFieldAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/CoriolisSrc.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/CrsGraph.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/CrsGraphHelpers.C
    ${CMAKE_CURRENT_SOURCE_DIR}/DataProbePostProcessing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/DgInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/DirichletBC.C
@@ -126,7 +128,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/TAMSAlgDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TimeIntegrator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystemHelpers.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraSegregatedLinearSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergyEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergyKsgsBuoyantElemSuppAlg.C

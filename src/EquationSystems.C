@@ -8,6 +8,7 @@
 //
 
 
+#include <Teuchos_RCP.hpp>
 
 #include <AlgorithmDriver.h>
 #include <AuxFunctionAlgorithm.h>
@@ -20,6 +21,9 @@
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <AlgorithmDriver.h>
+#include <LinearSystem.h>
+#include <CrsGraphHelpers.h>
+#include <CrsGraph.h>
 
 // all concrete EquationSystem's
 #include <EnthalpyEquationSystem.h>
@@ -45,6 +49,75 @@
 
 namespace sierra{
 namespace nalu{
+
+namespace {
+
+inline void init_connectivity_helper(Realm& realm, Teuchos::RCP<CrsGraph>& graph)
+{
+  // This graph is not active, return early
+  if (graph == Teuchos::null) return;
+
+  graph->buildNodeGraph(realm.interiorPartVec_);
+  graph->buildElemToNodeGraph(realm.interiorPartVec_);
+  graph->buildFaceElemToNodeGraph(realm.bcPartVec_);
+
+  if (realm.hasNonConformal_)
+    graph->buildNonConformalNodeGraph(stk::mesh::PartVector());
+  if (realm.hasOverset_)
+    graph->buildOversetNodeGraph(stk::mesh::PartVector());
+}
+
+template<typename LambdaFunc>
+void initialize_connectivity(
+  Realm& realm,
+  std::vector<EquationSystem*>& eqSysVec,
+  LambdaFunc func)
+{
+  std::map<int, std::vector<EquationSystem*>> eqSysMap;
+  // Group equation systems based on numDof. Note that this is safe for
+  // reinitialization also as the `linsys_` instance is still valid and does not
+  // get reset until the call to `EquationSystem::reinitialize_linear_system`
+  for (auto* eqsys: eqSysVec) {
+    // For "wrapper" equation systems, execute their default initialize() method to allow 
+    // convergence tolerance to be passed to their children
+    if (eqsys->linsys_ == nullptr) {
+      eqsys->initialize();
+      continue;
+    }
+    const int ndof = eqsys->linsys_->numDof();
+    eqSysMap[ndof].push_back(eqsys);
+  }
+
+  if (eqSysMap.size() > 2)
+    throw std::runtime_error("EquationSystems with more than 2 numDof() "
+                             "specifications is not supported.");
+
+  // For each group with the same numDof, process connectivities for all
+  // equation systems and then finalize the common CrsGraphs after the
+  // equation systems have had a chance to add connectivies.
+  for (auto it: eqSysMap) {
+    for (auto* eqsys : it.second) {
+      double start_time_eq = NaluEnv::self().nalu_time();
+      func(eqsys);
+      double end_time_eq = NaluEnv::self().nalu_time();
+      eqsys->timerInit_ += (end_time_eq - start_time_eq);
+    }
+
+    // FIXME: Lost timers because of common graph construction
+    if (it.first == 1)
+      init_connectivity_helper(realm, realm.scalarGraph_);
+    else
+      init_connectivity_helper(realm, realm.systemGraph_);
+
+    for (auto* eqsys: it.second) {
+      double start_time_eq = NaluEnv::self().nalu_time();
+      eqsys->linsys_->finalizeLinearSystem();
+      double end_time_eq = NaluEnv::self().nalu_time();
+      eqsys->timerInit_ += (end_time_eq - start_time_eq);
+    }
+  }
+}
+}
 
 //==========================================================================
 // Class Definition
@@ -108,33 +181,33 @@ void EquationSystems::load(const YAML::Node & y_node)
       {
         const YAML::Node y_system = y_systems[isystem] ;
         EquationSystem *eqSys = 0;
-	YAML::Node y_eqsys ;
+        YAML::Node y_eqsys ;
         if ( expect_map(y_system, "LowMachEOM", true) ) {
-	  y_eqsys =  expect_map(y_system, "LowMachEOM", true);
+          y_eqsys =  expect_map(y_system, "LowMachEOM", true);
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = LowMachEOM " << std::endl;
           bool elemCont = (realm_.realmUsesEdges_) ? false : true;
           get_if_present_no_default(y_eqsys, "element_continuity_eqs", elemCont);
           eqSys = new LowMachEquationSystem(*this, elemCont);
         }
         else if( expect_map(y_system, "ShearStressTransport", true) ) {
-	  y_eqsys =  expect_map(y_system, "ShearStressTransport", true);
+          y_eqsys =  expect_map(y_system, "ShearStressTransport", true);
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = tke/sdr " << std::endl;
           eqSys = new ShearStressTransportEquationSystem(*this);
         }
         else if( expect_map(y_system, "TurbKineticEnergy", true) ) {
-	  y_eqsys =  expect_map(y_system, "TurbKineticEnergy", true) ;
+          y_eqsys =  expect_map(y_system, "TurbKineticEnergy", true) ;
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = tke " << std::endl;
           eqSys = new TurbKineticEnergyEquationSystem(*this);
         }
         else if( expect_map(y_system, "MassFraction", true) ) {
-	  y_eqsys =  expect_map(y_system, "MassFraction", true);
+          y_eqsys =  expect_map(y_system, "MassFraction", true);
           int numSpecies = 1.0;
           get_if_present_no_default(y_eqsys, "number_of_species", numSpecies);
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = Yk " << std::endl;
           eqSys = new MassFractionEquationSystem(*this, numSpecies);
         }
         else if( expect_map(y_system, "MixtureFraction", true) ) {
-	  y_eqsys =  expect_map(y_system, "MixtureFraction", true) ;
+          y_eqsys =  expect_map(y_system, "MixtureFraction", true) ;
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = mixFrac " << std::endl;
           bool ouputClipDiag = false;
           get_if_present_no_default(y_eqsys, "output_clipping_diagnostic", ouputClipDiag);
@@ -143,7 +216,7 @@ void EquationSystems::load(const YAML::Node & y_node)
           eqSys = new MixtureFractionEquationSystem(*this, ouputClipDiag, deltaZClip);
         }
         else if( expect_map(y_system, "Enthalpy", true) ) {
-	  y_eqsys =  expect_map(y_system, "Enthalpy", true);
+          y_eqsys =  expect_map(y_system, "Enthalpy", true);
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = enthalpy " << std::endl;
           double minT = 250.0;
           double maxT = 3000.0;
@@ -154,12 +227,12 @@ void EquationSystems::load(const YAML::Node & y_node)
           eqSys = new EnthalpyEquationSystem(*this, minT, maxT, ouputClipDiag);
         }
         else if( expect_map(y_system, "HeatConduction", true) ) {
-	  y_eqsys =  expect_map(y_system, "HeatConduction", true);
+          y_eqsys =  expect_map(y_system, "HeatConduction", true);
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = HeatConduction " << std::endl;
           eqSys = new HeatCondEquationSystem(*this);
         }
         else if( expect_map(y_system, "RadiativeTransport", true) ) {
-	  y_eqsys =  expect_map(y_system, "RadiativeTransport", true);
+          y_eqsys =  expect_map(y_system, "RadiativeTransport", true);
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = RadiativeTransport " << std::endl;
           int quadratureOrder = 2;
           get_if_present_no_default(y_eqsys, "quadrature_order", quadratureOrder);
@@ -180,7 +253,7 @@ void EquationSystems::load(const YAML::Node & y_node)
             quadratureOrder, activateScattering, activatePmrUpwind, deactivatePmrSucv, externalCoupling);
         }
         else if( expect_map(y_system, "MeshDisplacement", true) ) {
-	  y_eqsys =  expect_map(y_system, "MeshDisplacement", true) ;
+          y_eqsys =  expect_map(y_system, "MeshDisplacement", true) ;
           bool activateMass = false;
           bool deformWrtModelCoords = false;
           get_if_present_no_default(y_eqsys, "activate_mass", activateMass);
@@ -700,16 +773,12 @@ EquationSystems::initialize()
 {
   NaluEnv::self().naluOutputP0() << "EquationSystems::initialize(): Begin " << std::endl;
   double start_time = NaluEnv::self().nalu_time();
-  for( EquationSystem* eqSys : equationSystemVector_ ) {
-    if ( realm_.get_activate_memory_diagnostic() ) {
-      NaluEnv::self().naluOutputP0() << "NaluMemory::EquationSystems::initialize(): " << eqSys->name_ << std::endl;
-      realm_.provide_memory_summary();
-    }
-    double start_time_eq = NaluEnv::self().nalu_time();
-    eqSys->initialize();
-    double end_time_eq = NaluEnv::self().nalu_time();
-    eqSys->timerInit_ += (end_time_eq - start_time_eq);
-  }
+  initialize_connectivity(
+    realm_,
+    equationSystemVector_,
+    [](EquationSystem* eqsys) {
+      eqsys->initialize();
+    });
   double end_time = NaluEnv::self().nalu_time();
   realm_.timerInitializeEqs_ += (end_time-start_time);
   NaluEnv::self().naluOutputP0() << "EquationSystems::initialize(): End " << std::endl;
@@ -732,12 +801,14 @@ void
 EquationSystems::reinitialize_linear_system()
 {
   double start_time = NaluEnv::self().nalu_time();
-  for( EquationSystem* eqSys : equationSystemVector_ ) {
-    double start_time_eq = NaluEnv::self().nalu_time();
-    eqSys->reinitialize_linear_system();
-    double end_time_eq = NaluEnv::self().nalu_time();
-    eqSys->timerInit_ += (end_time_eq - start_time_eq);
-  }
+  realm_.scalarGraph_ = Teuchos::null;
+  realm_.systemGraph_ = Teuchos::null;
+  initialize_connectivity(
+    realm_,
+    equationSystemVector_,
+    [](EquationSystem* eqsys) {
+      eqsys->reinitialize_linear_system();
+    });
   double end_time = NaluEnv::self().nalu_time();
   realm_.timerInitializeEqs_ += (end_time-start_time);
 }

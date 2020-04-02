@@ -5,6 +5,8 @@
 
 #include "AssembleElemSolverAlgorithm.h"
 #include "AssembleFaceElemSolverAlgorithm.h"
+#include "CrsGraphHelpers.h"
+#include "CrsGraph.h"
 #include "TpetraLinearSystem.h"
 #include "EquationSystem.h"
 #include "kernel/Kernel.h"
@@ -35,10 +37,19 @@ struct TpetraHelperObjectsBase {
     realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
     eqSystems(realm),
     eqSystem(eqSystems),
-    linsys(new sierra::nalu::TpetraLinearSystem(realm, numDof, &eqSystem, nullptr))
+    crsgraph(Teuchos::rcp(new sierra::nalu::CrsGraph(realm, numDof)))
   {
     realm.metaData_ = &bulk.mesh_meta_data();
     realm.bulkData_ = &bulk;
+    realm.bulkData_ = &bulk;
+    if (numDof == 1)
+      //realm.scalarGraph_ = Teuchos::rcpFromRef(*crsgraph);
+      realm.scalarGraph_ = crsgraph;
+    else
+      //realm.systemGraph_ = Teuchos::rcpFromRef(*crsgraph);
+      realm.systemGraph_ = crsgraph;
+
+    linsys = new sierra::nalu::TpetraLinearSystem(realm, numDof, &eqSystem, nullptr);
     eqSystem.linsys_ = linsys;
   }
 
@@ -184,7 +195,9 @@ struct TpetraHelperObjectsBase {
   sierra::nalu::Realm& realm;
   sierra::nalu::EquationSystems eqSystems;
   sierra::nalu::EquationSystem eqSystem;
+  Teuchos::RCP<sierra::nalu::CrsGraph> crsgraph;
   sierra::nalu::TpetraLinearSystem* linsys;
+  //sierra::nalu::CrsGraph* crsgraph;
 };
 
 struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase {
@@ -201,7 +214,10 @@ struct TpetraHelperObjectsElem : public TpetraHelperObjectsBase {
 
   virtual void execute()
   {
-    linsys->buildElemToNodeGraph({&realm.metaData_->universal_part()});
+    crsgraph->buildNodeGraph(realm.interiorPartVec_);
+    crsgraph->buildElemToNodeGraph({&realm.metaData_->universal_part()});
+    crsgraph->buildFaceElemToNodeGraph(realm.bcPartVec_);
+    linsys->buildElemToNodeGraph({&realm.metaData_->universal_part()}); //just to call beginLinearSystemConstruction()
     linsys->finalizeLinearSystem();
     assembleElemSolverAlg->execute();
     for (auto kern: assembleElemSolverAlg->activeKernels_)
@@ -259,7 +275,10 @@ struct TpetraHelperObjectsEdge : public TpetraHelperObjectsBase {
   virtual void execute() override
   {
     ThrowRequire(edgeAlg != nullptr);
-    linsys->buildEdgeToNodeGraph({&realm.metaData_->universal_part()});
+    crsgraph->buildNodeGraph(realm.interiorPartVec_);
+    crsgraph->buildElemToNodeGraph({&realm.metaData_->universal_part()});
+    crsgraph->buildFaceElemToNodeGraph(realm.bcPartVec_);
+    linsys->buildEdgeToNodeGraph({&realm.metaData_->universal_part()}); //just to call beginLinearSystemConstruction()
     linsys->finalizeLinearSystem();
 
     edgeAlg->execute();

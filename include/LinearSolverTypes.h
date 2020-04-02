@@ -12,12 +12,11 @@
 #ifndef LinearSolverTypes_h
 #define LinearSolverTypes_h
 
-#include <KokkosInterface.h>
-#include <Tpetra_Details_DefaultTypes.hpp>
-#include <Tpetra_CrsGraph.hpp>
+#include <CrsGraphTypes.h>
 #include <Tpetra_CrsMatrix.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_MultiVector.hpp>
+
 
 // Forward declare templates
 namespace Teuchos {
@@ -65,19 +64,19 @@ class TpetraLinearSolver;
 struct LinSys {
 
   using Scalar        = Tpetra::Details::DefaultTypes::scalar_type;
-  using GlobalOrdinal = Tpetra::Details::DefaultTypes::global_ordinal_type;
-  using LocalOrdinal  = Tpetra::Details::DefaultTypes::local_ordinal_type;
+  using GlobalOrdinal =  GraphTypes::GlobalOrdinal;
+  using LocalOrdinal = GraphTypes::LocalOrdinal;
 
-  using RowLengths        = Kokkos::DualView<size_t*, DeviceSpace>;
-  using DeviceRowLengths  = RowLengths::t_dev;
-  using HostRowLengths    = RowLengths::t_host;
-  using Node              = Tpetra::Map<LocalOrdinal, GlobalOrdinal>::node_type;
-  using Graph             = Tpetra::CrsGraph< LocalOrdinal, GlobalOrdinal, Node>;
-  using LocalGraph        = typename Graph::local_graph_type;
-  using Comm              = Teuchos::MpiComm<int>;
-  using Export            = Tpetra::Export< LocalOrdinal, GlobalOrdinal, Node >;
-  using Import            = Tpetra::Import< LocalOrdinal, GlobalOrdinal, Node >;
-  using Map               = Tpetra::Map<LocalOrdinal,GlobalOrdinal,Node>;
+  using RowLengths        = GraphTypes::RowLengths;
+  using DeviceRowLengths  = GraphTypes::DeviceRowLengths;
+  using HostRowLengths    = GraphTypes::HostRowLengths;
+  using Node              = GraphTypes::Node;
+  using Graph             = GraphTypes::Graph;
+  using LocalGraph        = GraphTypes::LocalGraph;
+  using Comm              = GraphTypes::Comm;
+  using Export            = GraphTypes::Export;
+  using Import            = GraphTypes::Import;
+  using Map               = GraphTypes::Map;
   using MultiVector       = Tpetra::MultiVector<Scalar,LocalOrdinal,GlobalOrdinal,Node>;
   using OneDVector        = Teuchos::ArrayRCP<Scalar >;
   using ConstOneDVector   = Teuchos::ArrayRCP<const Scalar >;
@@ -92,7 +91,7 @@ struct LinSys {
   using SolverFactory     = Belos::TpetraSolverFactory<Scalar, MultiVector, Operator>;
   using Preconditioner    = Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 
-  using EntityToLIDView = Kokkos::View<LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
+  using EntityToLIDView = Kokkos::View<LocalOrdinal*,Kokkos::LayoutRight,LinSysMemSpace>;
 };
 
 

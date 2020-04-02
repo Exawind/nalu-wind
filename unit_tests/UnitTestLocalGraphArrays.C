@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <KokkosInterface.h>
+#include <CrsGraphHelpers.h>
 #include <LinearSolver.h>
 
 #include <limits>
