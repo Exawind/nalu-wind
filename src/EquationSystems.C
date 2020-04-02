@@ -743,24 +743,6 @@ EquationSystems::reinitialize_linear_system()
 }
 
 //--------------------------------------------------------------------------
-//-------- post_adapt_work() -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-EquationSystems::post_adapt_work()
-{
-  double time = -NaluEnv::self().nalu_time();
-  for( EquationSystem* eqSys : equationSystemVector_ )
-    eqSys->post_adapt_work();
-  
-  // everyone needs props to be done..
-  realm_.evaluate_properties();
-
-  // load all time to adapt
-  time += NaluEnv::self().nalu_time();
-  realm_.timerAdapt_ += time;
-}
-
-//--------------------------------------------------------------------------
 //-------- populate_derived_qauntities() -----------------------------------
 //--------------------------------------------------------------------------
 void

@@ -143,11 +143,6 @@ NonConformalInfo::initialize()
   boundingFaceElementBoxVec_.clear();
   searchKeyPair_.clear();
 
-  // delete info only if adaptivity is active
-  if ( realm_.mesh_changed() ) {
-    delete_dgInfo();
-  }
-  
   // construct if the size is zero; reset always
   if ( dgInfoVec_.size() == 0 )
     construct_dgInfo();

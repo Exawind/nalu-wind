@@ -129,7 +129,6 @@ class EquationSystems
 
   void initialize();
   void reinitialize_linear_system();
-  void post_adapt_work();
   void populate_derived_quantities();
   void initial_work();
 

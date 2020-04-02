@@ -45,7 +45,6 @@
 #include <Enums.h>
 #include <EquationSystem.h>
 #include <EquationSystems.h>
-#include <ErrorIndicatorAlgorithmDriver.h>
 #include <FieldFunctions.h>
 #include <LinearSolver.h>
 #include <LinearSolvers.h>
@@ -61,10 +60,6 @@
 #include <PeriodicManager.h>
 #include <ProjectedNodalGradientEquationSystem.h>
 #include <PostProcessingData.h>
-#include <PstabErrorIndicatorEdgeAlgorithm.h>
-#include <PstabErrorIndicatorElemAlgorithm.h>
-#include <LimiterErrorIndicatorElemAlgorithm.h>
-#include <SimpleErrorIndicatorElemAlgorithm.h>
 #include <Realm.h>
 #include <Realms.h>
 #include <SurfaceForceAndMomentAlgorithmDriver.h>
@@ -398,14 +393,6 @@ LowMachEquationSystem::register_element_fields(
     GenericFieldType *massFlowRate = &(meta_data.declare_field<GenericFieldType>(stk::topology::ELEMENT_RANK, "mass_flow_rate_scs"));
     stk::mesh::put_field_on_mesh(*massFlowRate, *part, numScsIp , nullptr);
   }
-
-  // deal with fluids error indicator; elemental field of size unity
-  if ( realm_.solutionOptions_->activateAdaptivity_) {
-    const int numIp = 1;
-    GenericFieldType *pstabEI= &(meta_data.declare_field<GenericFieldType>(stk::topology::ELEMENT_RANK, "error_indicator"));
-    stk::mesh::put_field_on_mesh(*pstabEI, *part, numIp, nullptr);
-  }
-
   // register the intersected elemental field
   if ( realm_.query_for_overset() ) {
     const int sizeOfElemField = 1;
@@ -438,42 +425,6 @@ LowMachEquationSystem::register_edge_fields(
     stk::mesh::put_field_on_mesh(*edgeAreaVec_, *part, nDim, nullptr);
   }
 
-}
-
-//--------------------------------------------------------------------------
-//-------- register_interior_algorithm -------------------------------------
-//--------------------------------------------------------------------------
-void
-LowMachEquationSystem::register_interior_algorithm(
-  stk::mesh::Part *part)
-{
-  // types of algorithms
-  const AlgorithmType algType = INTERIOR;
-  if ( realm_.solutionOptions_->activateAdaptivity_) {
-
-    // non-solver alg
-    std::map<AlgorithmType, Algorithm *>::iterator it
-      = realm_.errorIndicatorAlgDriver_->algMap_.find(algType);
-    if ( it == realm_.errorIndicatorAlgDriver_->algMap_.end() ) {
-      Algorithm *theAlg = NULL;
-      if ( realm_.solutionOptions_->errorIndicatorType_ & EIT_PSTAB ) {
-        if ( realm_.realmUsesEdges_)
-          theAlg = new PstabErrorIndicatorEdgeAlgorithm(realm_, part, continuityEqSys_->pressure_, continuityEqSys_->dpdx_);
-        else
-          theAlg = new PstabErrorIndicatorElemAlgorithm(realm_, part, continuityEqSys_->pressure_, continuityEqSys_->dpdx_);
-      }
-      else if ( realm_.solutionOptions_->errorIndicatorType_ & EIT_LIMITER ) {
-        theAlg = new LimiterErrorIndicatorElemAlgorithm(realm_, part);
-      }
-      else if ( realm_.solutionOptions_->errorIndicatorType_ & EIT_SIMPLE_BASE ) {
-        theAlg = new SimpleErrorIndicatorElemAlgorithm(realm_, part);
-      }
-      realm_.errorIndicatorAlgDriver_->algMap_[algType] = theAlg;
-    }
-    else {
-      it->second->partVec_.push_back(part);
-    }
-  }
 }
 
 //--------------------------------------------------------------------------
@@ -851,53 +802,6 @@ LowMachEquationSystem::solve_and_update()
   // process CFL/Reynolds
   momentumEqSys_->cflReAlgDriver_.execute();
  }
-
-//--------------------------------------------------------------------------
-//-------- post_adapt_work -------------------------------------------------
-//--------------------------------------------------------------------------
-void
-LowMachEquationSystem::post_adapt_work()
-{
-
-  // at the very least, we need to populate ip values at edge/element
-  if ( realm_.process_adaptivity() ) {
-    
-    NaluEnv::self().naluOutputP0() << "--LowMachEquationSystem::post_adapt_work()" << std::endl;
-
-    // compute new nodal pressure gradient
-    continuityEqSys_->compute_projected_nodal_gradient();
-    
-    // continuity assemble, load_complete and solve
-    const bool solveCont = false;
-    if ( solveCont ) {
-
-      // compute new nodal pressure gradient
-      continuityEqSys_->compute_projected_nodal_gradient();
-      
-      continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
-      
-      // update pressure
-      solution_update(
-        1.0, *continuityEqSys_->pTmp_,
-        1.0, *continuityEqSys_->pressure_);
-    }
-    
-    // compute mdot
-    continuityEqSys_->mdotAlgDriver_->execute();
-    
-    // project nodal velocity/gradU
-    const bool processU = false;
-    if ( processU ) {
-      project_nodal_velocity();
-      momentumEqSys_->nodalGradAlgDriver_.execute();
-    }
-    
-    // compute wall function parameters (bip values)
-    momentumEqSys_->compute_wall_function_params();
-    
-  }
-
-}
 
 //--------------------------------------------------------------------------
 //-------- project_nodal_velocity ------------------------------------------
