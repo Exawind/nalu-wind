@@ -70,9 +70,6 @@ public:
     stk::mesh::Part *part,
     const stk::topology &theTopo);
 
-  virtual void register_interior_algorithm(
-    stk::mesh::Part *part);
-
   virtual void register_open_bc(
     stk::mesh::Part *part,
     const stk::topology &partTopo,
@@ -89,7 +86,6 @@ public:
 
   virtual void pre_iter_work();
   virtual void solve_and_update();
-  virtual void post_adapt_work();
 
   virtual void predict_state();
 
