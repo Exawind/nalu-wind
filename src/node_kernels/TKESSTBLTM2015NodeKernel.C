@@ -57,7 +57,6 @@ TKESSTBLTM2015NodeKernel::setup(Realm& realm)
   FILE * fp;
   fp = std::fopen ("tkeFreestream.dat", "r");
   std::fscanf(fp,"%lf\n",&tkeFreestream);
-//  std::printf("Node Kernel Inlet K value = %.12E\n", tkeFreestream);
   std::fclose(fp);
 
   // Update turbulence model constants
@@ -98,7 +97,6 @@ void TKESSTBLTM2015NodeKernel::execute(
   DblType Pk = 0.0;
   DblType Pklim = 0.0;
   DblType tkeForcing = 0.0;
-  DblType tkeZero = 1.0;
   DblType tc = 0.0;
 
   for (int d = 0; d < nDim_; d++) {
@@ -140,26 +138,11 @@ void TKESSTBLTM2015NodeKernel::execute(
     Pk = gamint * tvisc * sijMag * vortMag; // Pk based on Kato-Launder formulation. Recommended in Menter (2015) to avoid excessive levels of TKE in stagnation regions
     Pklim = 5.0 * Ck_BLT * stk::math::max(gamint - 0.20, 0.0) * (1.0 - gamint) * Fonlim * stk::math::max(3.0 * CSEP * visc - tvisc, 0.0) * sijMag * vortMag;
     DblType Dk = betaStar_ * density * sdr * tke * stk::math::max(gamint, 0.1);
-  // Clip production term
-  //  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk); // ???????
+
     rhs(0) += (Pk + Pklim - Dk) * dVol;
     lhs(0, 0) += betaStar_ * density * sdr * stk::math::max(gamint, 0.1) * dVol;
   }
 
-//  if (stk::math::abs(Pklim) > 1.0e-10) {
-//    t1 = stk::math::max(gamint_debug - 0.20, 0.0);
-//    t2 = (1.0 - gamint_debug);
-//    t3 = Fonlim;
-//    t4 = stk::math::max(3.0 * CSEP * visc - tvisc, 0.0);
-//
-//    std::cout << "Pklim is non-zero: " << Pklim << " minD = " << minD << " t1 = " << t1 << " t2 = " << t2 << " t3 = " << t3 << " t4 = " << t4 << " sijMag = " << sijMag << " vortMag = " << vortMag << std::endl;
-//  }
-//  DblType Dk = betaStar_ * density * sdr * tke * stk::math::max(gamint_debug,0.1);
-
-  // Clip production term//  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk); // ???????
-  //
-//  rhs(0) += (tkeZero * (Pk + Pklim - Dk) + tkeForcing) * dVol;
-//  lhs(0, 0) += tkeZero * betaStar_ * density * sdr * stk::math::max(gamint_debug,0.1) * dVol;
 }
 
 }  // nalu

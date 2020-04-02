@@ -63,7 +63,6 @@ SDRSSTBLTM2015NodeKernel::setup(Realm& realm)
   FILE * fp;
   fp = std::fopen ("sdrFreestream.dat", "r");
   std::fscanf(fp,"%lf\n",&sdrFreestream);
-//  std::printf("Node Kernel Inlet SDR value = %.12E\n", sdrFreestream);
   std::fclose(fp);
 
   // Update turbulence model constants
@@ -93,7 +92,7 @@ SDRSSTBLTM2015NodeKernel::execute(
   const DblType density   = density_.get(node, 0);
   const DblType visc      = visc_.get(node, 0);
   const DblType tvisc     = tvisc_.get(node, 0);
-  const DblType minD      = minD_.get(node, 0);
+//  const DblType minD      = minD_.get(node, 0);
   const DblType dVol      = dualNodalVolume_.get(node, 0);
   const DblType fOneBlend = fOneBlend_.get(node, 0);
 

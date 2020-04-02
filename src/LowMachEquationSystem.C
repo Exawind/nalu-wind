@@ -194,7 +194,6 @@
 #include <user_functions/SinProfileChannelFlowVelocityAuxFunction.h>
 
 #include <user_functions/BoundaryLayerPerturbationAuxFunction.h>
-#include <user_functions/BoundaryLayerAuxFunction.h>
 
 #include <user_functions/WindEnergyPowerLawAuxFunction.h>
 
@@ -645,20 +644,6 @@ LowMachEquationSystem::register_initial_condition_fcn(
       }
       else {
         throw std::runtime_error("Wind_energy_taylor_vortex missing parameters");
-      }
-    }
-    else if ( fcnName == "boundary_layer") {
-
-      std::cout << "Initial Conditions for boundary_layer" << std::endl;
-
-      std::map<std::string, std::vector<double> >::const_iterator iterParams
-        = theParams.find(dofName);
-      if (iterParams != theParams.end()) {
-        std::vector<double> fcnParams = (*iterParams).second;
-        theAuxFunc = new BoundaryLayerAuxFunction(0,nDim,fcnParams);
-      }
-      else {
-        throw std::runtime_error("Boundary_layer missing parameters");
       }
     }
     else if ( fcnName == "boundary_layer_perturbation") {
