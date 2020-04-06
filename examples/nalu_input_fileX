@@ -809,16 +809,7 @@ class mapping_object_class():
                     # The coordinate of the second point
                     'tail_coordinates': p2,
                   }
-                ]
-                for line in lines]
-
-          output_variables:
-            - field_name: velocity
-              field_size: 3
-        
-            - field_name: pressure
-              field_size: 1
-        ]
+                ]}]
 
     def set_sampling_planes(self):
         '''
