@@ -67,9 +67,6 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActVectorDblDv epsilonOpt_;
   ActTensorDblDv orientationTensor_;
 
-  // TODO(SAKIEVICH) this kill lambdas that are pass by value (KOKKOS_LAMBDA)
-  // may need to rethink functor/bulk design.  Perhaps have an internal object
-  // in bulk for gpu data and pass that into the actuatorFunctors.
   fast::OpenFAST openFast_;
   const int localTurbineId_;
   const int tStepRatio_;
@@ -77,7 +74,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
 };
 
 // helper functions to
-// squash calls to std::cout from TPL's aka OpenFAST
+// squash calls to std::cout from OpenFAST
 inline
 void squash_fast_output(std::function<void()>func)
 {

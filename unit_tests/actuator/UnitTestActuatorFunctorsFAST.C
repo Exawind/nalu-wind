@@ -163,10 +163,11 @@ TEST_F(ActuatorFunctorFastTests, runAssignVelAndComputeForces)
 
 TEST_F(ActuatorFunctorFastTests, spreadForceWhProjIdentity)
 {
-  auto epsLoc = std::find_if(fastParseParams_.begin(), fastParseParams_.end(),
-    [](std::string val){return val.find("epsilon:")!=std::string::npos;});
+  auto epsLoc = std::find_if(
+    fastParseParams_.begin(), fastParseParams_.end(),
+    [](std::string val) { return val.find("epsilon:") != std::string::npos; });
 
-  *epsLoc  = "    epsilon: [1.0, 0.5, 2.0]\n";
+  *epsLoc = "    epsilon: [1.0, 0.5, 2.0]\n";
   fastParseParams_.push_back("    epsilon_tower: 5.0\n");
   const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
 
@@ -208,34 +209,36 @@ TEST_F(ActuatorFunctorFastTests, spreadForceWhProjIdentity)
     "gatherBladeOrientations", fastRangePolicy,
     ActFastStashOrientationVectors(actBulk));
 
-  actuator_utils::reduce_view_on_host(
-    actBulk.orientationTensor_.view_host());
+  actuator_utils::reduce_view_on_host(actBulk.orientationTensor_.view_host());
 
   // compute source term contributions at the hub location
   // from the tower actuator points
-  auto hubLocation = Kokkos::subview(actBulk.pointCentroid_.view_host(),0,Kokkos::ALL);
-  const int nPntsTower = actMetaFast.fastInputs_.globTurbineData[0].numForcePtsTwr;
+  auto hubLocation =
+    Kokkos::subview(actBulk.pointCentroid_.view_host(), 0, Kokkos::ALL);
+  const int nPntsTower =
+    actMetaFast.fastInputs_.globTurbineData[0].numForcePtsTwr;
 
   ActFastSpreadForceWhProjInnerLoop projInner(actBulk);
   SpreadForceInnerLoop isoInner(actBulk);
 
-  for(int i=0; i<nPntsTower; i++){
-    double sourceTermNoProj[3] = {0,0,0};
-    double sourceTermWhProj[3] = {0,0,0};
-    const uint64_t id = static_cast<uint64_t>
-      (actMetaFast.get_fast_index(fast::TOWER, 0, i));
+  for (int i = 0; i < nPntsTower; i++) {
+    double sourceTermNoProj[3] = {0, 0, 0};
+    double sourceTermWhProj[3] = {0, 0, 0};
+    const uint64_t id =
+      static_cast<uint64_t>(actMetaFast.get_fast_index(fast::TOWER, 0, i));
 
-    auto epsilon = Kokkos::subview(actBulk.epsilon_.view_host(), id, Kokkos::ALL);
+    auto epsilon =
+      Kokkos::subview(actBulk.epsilon_.view_host(), id, Kokkos::ALL);
 
-    for(int j=0; j<3; j++){
-      ASSERT_DOUBLE_EQ(5.0, epsilon(j))<< "point index: "<<id<<" j: "<<j;
+    for (int j = 0; j < 3; j++) {
+      ASSERT_DOUBLE_EQ(5.0, epsilon(j)) << "point index: " << id << " j: " << j;
     }
 
     // note offset is zero so can just use id
     projInner(id, hubLocation.data(), &sourceTermWhProj[0], 1.0, 1.0);
     isoInner(id, hubLocation.data(), &sourceTermNoProj[0], 1.0, 1.0);
 
-    for(int j=0; j<3; j++){
+    for (int j = 0; j < 3; j++) {
       EXPECT_NEAR(sourceTermNoProj[j], sourceTermWhProj[j], 1e-8);
     }
   }
