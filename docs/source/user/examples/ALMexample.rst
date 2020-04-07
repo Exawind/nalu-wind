@@ -44,11 +44,7 @@ Step by step instructions to run the case
 
     ./abl_mesh -i alm_preprocess.yaml
 
-6. Generate the initial condition::
-
-    ./nalu_preprocess -i alm_preprocess.yaml
-
-7. Run the nalu executable::
+6. Run the nalu executable::
 
     mpirun -np 24 naluX -i alm_simulation.yaml
 
