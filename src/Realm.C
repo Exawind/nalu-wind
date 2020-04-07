@@ -1800,12 +1800,16 @@ Realm::advance_time_step()
 
   // check for actuator line; assemble the source terms for this time step
   if ( NULL != actuator_ ) {
+    const double start_time = NaluEnv::self().nalu_time();
     actuator_->execute();
+    const double end_time = NaluEnv::self().nalu_time();
+    timerActuator_ += end_time - start_time;
   }
 
   // check for actuator line; assemble the source terms for this time step
 #ifdef NALU_USES_OPENFAST
   if ( NULL != actuatorBulk_ ) {
+    const double start_time = NaluEnv::self().nalu_time();
     if(actuatorMeta_->actuatorType_==ActuatorType::ActLineFASTNGP){
       ActuatorLineFastNGP(*actuatorMeta_.get(),
         *actuatorBulk_.get(),
@@ -1816,6 +1820,8 @@ Realm::advance_time_step()
         *dynamic_cast<ActuatorBulkDiskFAST*>(actuatorBulk_.get()),
         bulk_data())();
     }
+    const double end_time = NaluEnv::self().nalu_time();
+    timerActuator_ += end_time - start_time;
   }
 #endif
   // Check for ABL forcing; estimate source terms for this time step
@@ -3565,6 +3571,17 @@ Realm::dump_simulation_time()
     NaluEnv::self().naluOutputP0() << "Timing for promote_mesh :    " << std::endl;
     NaluEnv::self().naluOutputP0() << "        promote_mesh --  " << " \tavg: " << g_totalPromote/double(nprocs)
                                          << " \tmin: " << g_minPromote << " \tmax: " << g_maxPromote << std::endl;
+  }
+
+  if (timerActuator_ > 0) {
+    double g_totalActuator = 0.0, g_minActuator= 0.0, g_maxActuator = 0.0;
+    stk::all_reduce_min(NaluEnv::self().parallel_comm(), &timerActuator_, &g_minActuator, 1);
+    stk::all_reduce_max(NaluEnv::self().parallel_comm(), &timerActuator_, &g_maxActuator, 1);
+    stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &timerActuator_, &g_totalActuator, 1);
+
+    NaluEnv::self().naluOutputP0() << "Timing for actuator :    " << std::endl;
+    NaluEnv::self().naluOutputP0() << "        actuator::execute --  " << " \tavg: " << g_totalActuator/double(nprocs)
+                                         << " \tmin: " << g_minActuator << " \tmax: " << g_maxActuator<< std::endl;
   }
 
   // consolidated sort
