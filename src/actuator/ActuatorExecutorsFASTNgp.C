@@ -55,7 +55,6 @@ ActuatorLineFastNGP::operator()()
       "spreadForcesActuatorNgpFAST", localSizeCoarseSearch,
       SpreadActuatorForce(actBulk_, stkBulk_));
   } else {
-    const int rank = NaluEnv::self().parallel_rank();
     Kokkos::deep_copy(actBulk_.orientationTensor_.view_host(),0.0);
     Kokkos::parallel_for(
       "gatherBladeOrientations", fastRangePolicy,
