@@ -169,7 +169,7 @@ ActFastStashOrientationVectors::operator()(int index) const
 {
   const int pointId = index - offset_(turbId_);
   auto localOrientation = Kokkos::subview(orientation_, index, Kokkos::ALL);
-  //if (fast_.getForceNodeType(turbId_, pointId) == fast::BLADE) {
+  // orientations can be obtained for tower and blades
   if(pointId>0){
     fast_.getForceNodeOrientation(localOrientation.data(), pointId, turbId_);
 
@@ -185,8 +185,8 @@ ActFastStashOrientationVectors::operator()(int index) const
     // identity matrix
     // (all other terms should have already been set to zero)
     localOrientation(0) = 1.0;
-    localOrientation(3) = 1.0;
-    localOrientation(6) = 1.0;
+    localOrientation(4) = 1.0;
+    localOrientation(8) = 1.0;
   }
 
 }
