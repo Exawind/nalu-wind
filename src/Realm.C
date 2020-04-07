@@ -1664,6 +1664,8 @@ Realm::makeSureNodesHaveValidTopology()
   std::vector<stk::mesh::Entity> nodes_vector;
   stk::mesh::get_selected_entities(nodesNotInNodePart, bulkData_->buckets(stk::topology::NODE_RANK), nodes_vector);
   // now we require all nodes are in proper node part
+  if (nodes_vector.size())
+    std::cout << "nodes_vector= " << nodes_vector.size() << std::endl;
   ThrowRequire(0 == nodes_vector.size());
 }
 

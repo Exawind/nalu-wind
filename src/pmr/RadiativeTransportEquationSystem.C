@@ -742,6 +742,7 @@ void
 RadiativeTransportEquationSystem::initialize()
 {
   solverAlgDriver_->initialize_connectivity();
+  linsys_->finalizeLinearSystem();
 }
 
 void

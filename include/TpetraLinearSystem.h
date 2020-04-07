@@ -43,7 +43,6 @@ class Realm;
 class EquationSystem;
 class LinearSolver;
 class LocalGraphArrays;
-class CrsGraph;
 
 typedef std::unordered_map<stk::mesh::EntityId, size_t>  MyLIDMapType;
 
@@ -63,8 +62,7 @@ public:
     LinearSolver * linearSolver);
   ~TpetraLinearSystem();
 
-  // Graph/Matrix Construction
-  // These all call through to the CrsGraph methods of the same name
+   // Graph/Matrix Construction
   void buildNodeGraph(const stk::mesh::PartVector & parts); // for nodal assembly (e.g., lumped mass and source)
   void buildFaceToNodeGraph(const stk::mesh::PartVector & parts); // face->node assembly
   void buildEdgeToNodeGraph(const stk::mesh::PartVector & parts); // edge->node assembly
@@ -73,6 +71,7 @@ public:
   void buildFaceElemToNodeGraph(const stk::mesh::PartVector & parts); // elem:face->node assembly
   void buildNonConformalNodeGraph(const stk::mesh::PartVector & parts); // nonConformal->node assembly
   void buildOversetNodeGraph(const stk::mesh::PartVector & parts); // overset->elem_node assembly
+  void storeOwnersForShared();
   void finalizeLinearSystem();
 
   sierra::nalu::CoeffApplier* get_coeff_applier();
@@ -148,14 +147,12 @@ public:
 
   int getDofStatus(stk::mesh::Entity node);
 
-  //for unit testing
   int getRowLID(stk::mesh::Entity node) { return entityToLID_[node.local_offset()]; }
-  //for unit testing
   int getColLID(stk::mesh::Entity node) { return entityToColLID_[node.local_offset()]; }
 
-  Teuchos::RCP<LinSys::Graph>  getOwnedGraph();
-  Teuchos::RCP<LinSys::Matrix> getOwnedMatrix();
-  Teuchos::RCP<LinSys::MultiVector> getOwnedRhs();
+  Teuchos::RCP<LinSys::Graph>  getOwnedGraph() { return ownedGraph_; }
+  Teuchos::RCP<LinSys::Matrix> getOwnedMatrix() { return ownedMatrix_; }
+  Teuchos::RCP<LinSys::MultiVector> getOwnedRhs() { return ownedRhs_; }
 
   class TpetraLinSysCoeffApplier : public CoeffApplier
   {
@@ -213,10 +210,6 @@ public:
   };
 
 private:
-
-  Teuchos::RCP<CrsGraph>   crsGraph_;
-
-  //calls through to CrsGraph::buildConnectedNodeGraph()
   void buildConnectedNodeGraph(stk::mesh::EntityRank rank,
                                const stk::mesh::PartVector& parts);
 
@@ -224,10 +217,49 @@ private:
 
   void checkError( const int /* err_code */, const char * /* msg */) {}
 
-  void expand_unordered_map(unsigned newCapacityNeeded);
+  void compute_send_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
+         const std::vector<std::vector<stk::mesh::Entity> >& connections,
+                            const std::vector<int>& neighborProcs,
+                            stk::CommNeighbors& commNeighbors);
 
+  void compute_graph_row_lengths(const std::vector<stk::mesh::Entity>& rowEntities,
+         const std::vector<std::vector<stk::mesh::Entity> >& connections,
+                                 LinSys::RowLengths& sharedNotOwnedRowLengths,
+                                 LinSys::RowLengths& locallyOwnedRowLengths,
+                                 stk::CommNeighbors& commNeighbors);
+
+  void insert_graph_connections(const std::vector<stk::mesh::Entity>& rowEntities,
+         const std::vector<std::vector<stk::mesh::Entity> >& connections,
+                                LocalGraphArrays& locallyOwnedGraph,
+                                LocalGraphArrays& sharedNotOwnedGraph);
+
+  void fill_entity_to_row_LID_mapping();
+  void fill_entity_to_col_LID_mapping();
+
+  int insert_connection(stk::mesh::Entity a, stk::mesh::Entity b);
+  void addConnections(const stk::mesh::Entity* entities,const size_t&);
+  void expand_unordered_map(unsigned newCapacityNeeded);
   void checkForNaN(bool useOwned);
   bool checkForZeroRow(bool useOwned, bool doThrow, bool doPrint=false);
+
+  std::vector<stk::mesh::Entity> ownedAndSharedNodes_;
+  std::vector<std::vector<stk::mesh::Entity> > connections_;
+  std::vector<GlobalOrdinal> totalGids_;
+  std::set<std::pair<int,GlobalOrdinal> > ownersAndGids_;
+  std::vector<int> sharedPids_;
+
+  // all rows, otherwise known as col map
+  Teuchos::RCP<LinSys::Map>    totalColsMap_;
+  Teuchos::RCP<LinSys::Map>    optColsMap_;
+
+  // Map of rows my proc owns (locally owned)
+  Teuchos::RCP<LinSys::Map>    ownedRowsMap_;
+
+  // Only nodes that share with other procs that I don't own
+  Teuchos::RCP<LinSys::Map>    sharedNotOwnedRowsMap_;
+
+  Teuchos::RCP<LinSys::Graph>  ownedGraph_;
+  Teuchos::RCP<LinSys::Graph>  sharedNotOwnedGraph_;
 
   Teuchos::RCP<LinSys::Matrix> ownedMatrix_;
   Teuchos::RCP<LinSys::MultiVector> ownedRhs_;
@@ -251,6 +283,25 @@ private:
 
   std::vector<int> sortPermutation_;
 };
+
+template<typename T1, typename T2>
+void copy_kokkos_unordered_map(const Kokkos::UnorderedMap<T1,T2>& src,
+                               Kokkos::UnorderedMap<T1,T2>& dest)
+{
+  if (src.capacity() > dest.capacity()) {
+    dest = Kokkos::UnorderedMap<T1,T2>(src.capacity());
+  }
+
+  unsigned capacity = src.capacity();
+  unsigned fail_count = 0;
+  for(unsigned i=0; i<capacity; ++i) {
+    if (src.valid_at(i)) {
+      auto insert_result = dest.insert(src.key_at(i));
+      fail_count += insert_result.failed() ? 1 : 0;
+    }
+  }
+  ThrowRequire(fail_count == 0);
+}
 
 int getDofStatus_impl(stk::mesh::Entity node, const Realm& realm);
 

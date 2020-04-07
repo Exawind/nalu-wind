@@ -24,8 +24,6 @@
 #include "EquationSystem.h"
 #include "SolutionOptions.h"
 #include "TimeIntegrator.h"
-#include "CrsGraphHelpers.h"
-#include "CrsGraph.h"
 #include "TpetraLinearSystem.h"
 #include "SimdInterface.h"
 
@@ -49,21 +47,6 @@ get_TpetraLinearSystem(unit_test_utils::NaluTest& naluObj)
 
   return tpetraLinsys;
 }
-
-/*
-Teuchos::RCP<sierra::nalu::CrsGraph>
-get_TpetraCrsGraph(unit_test_utils::NaluTest& naluObj)
-{
-  EXPECT_NE(nullptr, naluObj.sim_.realms_);
-  EXPECT_FALSE(naluObj.sim_.realms_->realmVector_.empty());
-  sierra::nalu::Realm& realm = *naluObj.sim_.realms_->realmVector_[0];
-  Teuchos::RCP<sierra::nalu::CrsGraph> crsgraph = realm.scalarGraph_;
-
-  ThrowRequireMsg(crsgraph != nullptr, "Expected CrsGraph to be non-null");
-
-  return crsgraph;
-}
-*/
 
 sierra::nalu::AssembleElemSolverAlgorithm*
 create_algorithm(sierra::nalu::Realm& realm, stk::mesh::Part& part)
@@ -271,12 +254,7 @@ TEST(Tpetra, basic)
   sierra::nalu::TpetraLinearSystem* tpetraLinsys = get_TpetraLinearSystem(naluObj);
   sierra::nalu::AssembleElemSolverAlgorithm* solverAlg = get_AssembleElemSolverAlgorithm(naluObj);
 
-  sierra::nalu::Realm& realm = *naluObj.sim_.realms_->realmVector_[0];
-  Teuchos::RCP<sierra::nalu::CrsGraph> graph = realm.scalarGraph_;
-  graph->buildNodeGraph(realm.interiorPartVec_);
-  graph->buildElemToNodeGraph(realm.interiorPartVec_);
-  graph->buildFaceElemToNodeGraph(realm.bcPartVec_);
-  tpetraLinsys->buildElemToNodeGraph(solverAlg->partVec_); //just to call beginLinearSystemConstruction()
+  tpetraLinsys->buildElemToNodeGraph(solverAlg->partVec_);
   tpetraLinsys->finalizeLinearSystem();
 
   verify_graph_for_2_hex8_mesh(numProcs, localProc, tpetraLinsys);
