@@ -9,7 +9,7 @@
 
 
 
-#include <CrsGraphHelpers.h>
+#include <TpetraLinearSystemHelpers.h>
 
 #include <Realm.h>
 #include <PeriodicManager.h>

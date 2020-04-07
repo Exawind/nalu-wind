@@ -20,7 +20,9 @@
 #include <MaterialPropertys.h>
 #include <EquationSystems.h>
 
+#if defined(NALU_USES_PERCEPT)
 #include <Teuchos_RCP.hpp>
+#endif
 
 #include <stk_ngp/NgpFieldManager.hpp>
 
@@ -84,8 +86,6 @@ class BdyLayerStatistics;
 class TensorProductQuadratureRule;
 class LagrangeBasis;
 class PromotedElementIO;
-
-class CrsGraph;
 
 /** Representation of a computational domain and physics equations solved on
  * this domain.
@@ -429,11 +429,6 @@ class Realm {
   MaterialPropertys materialPropertys_;
   
   EquationSystems equationSystems_;
-
-  //single-DOF graph
-  Teuchos::RCP<CrsGraph> scalarGraph_;
-  //multiple-DOF graph
-  Teuchos::RCP<CrsGraph> systemGraph_;
 
   double maxCourant_;
   double maxReynolds_;

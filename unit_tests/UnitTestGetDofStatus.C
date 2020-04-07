@@ -6,7 +6,7 @@
 #include "UnitTestUtils.h"
 
 #include <TpetraLinearSystem.h>
-#include <CrsGraphHelpers.h>
+#include <TpetraLinearSystemHelpers.h>
 
 #ifndef KOKKOS_ENABLE_CUDA
 

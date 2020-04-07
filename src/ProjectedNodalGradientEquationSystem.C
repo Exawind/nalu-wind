@@ -318,7 +318,7 @@ void
 ProjectedNodalGradientEquationSystem::initialize()
 {
   solverAlgDriver_->initialize_connectivity();
-  //linsys_->finalizeLinearSystem();
+  linsys_->finalizeLinearSystem();
 }
 
 //--------------------------------------------------------------------------
@@ -349,7 +349,7 @@ ProjectedNodalGradientEquationSystem::reinitialize_linear_system()
 
   // initialize
   solverAlgDriver_->initialize_connectivity();
-  //linsys_->finalizeLinearSystem();
+  linsys_->finalizeLinearSystem();
 }
 
 //--------------------------------------------------------------------------
