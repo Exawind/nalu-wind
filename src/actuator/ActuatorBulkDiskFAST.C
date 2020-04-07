@@ -13,6 +13,9 @@
 
 namespace sierra {
 namespace nalu {
+//TODO(psakiev) convert disk points to geometric series
+//TODO(psakiev) debug anisotropic epsilon with isotropic tower epsilon
+//TODO(psakiev) allow for anisotropic disk
 
 ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
   ActuatorMetaFAST& actMeta, double naluTimeStep)

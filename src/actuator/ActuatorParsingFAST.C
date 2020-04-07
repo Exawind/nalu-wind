@@ -21,6 +21,122 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
 {
   fast::fastInputs& fi = actMetaFAST.fastInputs_;
   // Read turbine data for a given turbine using the YAML node
+   get_required(
+     turbNode, "turbine_name", actMetaFAST.turbineNames_[iTurb]);
+
+   std::string turbFileName;
+   get_if_present(
+     turbNode, "file_to_dump_turb_pts",
+     actMetaFAST.turbineOutputFileNames_[iTurb]);
+
+   get_if_present_no_default(
+     turbNode, "fllt_correction",
+     actMetaFAST.filterLiftLineCorrection_);
+
+   ThrowErrorMsgIf(
+     actMetaFAST.filterLiftLineCorrection_,
+     "Filtered lifting line correction has not been implemented in the NGP"
+     " actuator models yet.  Please use ActLineFAST instead.");
+   // The value epsilon / chord [non-dimensional]
+   // This is a vector containing the values for:
+   //   - chord aligned (x),
+   //   - tangential to chord (y),
+   //   - spanwise (z)
+   const YAML::Node epsilon_chord = turbNode["epsilon_chord"];
+   const YAML::Node epsilon = turbNode["epsilon"];
+   if (epsilon && epsilon_chord) {
+     throw std::runtime_error(
+       "epsilon and epsilon_chord have both been specified for Turbine " +
+       std::to_string(iTurb) + "\nYou must pick one or the other.");
+   }
+   if (epsilon && actMetaFAST.filterLiftLineCorrection_) {
+     throw std::runtime_error(
+       "epsilon and fllt_correction have both been specified for "
+       "Turbine " +
+       std::to_string(iTurb) +
+       "\nepsilon_chord and epsilon_min should be used with "
+       "fllt_correction.");
+   }
+
+   std::vector<double> epsilonTemp(3);
+   if (
+     actMetaFAST.actuatorType_ == ActuatorType::ActLineFASTNGP ||
+     actMetaFAST.actuatorType_ == ActuatorType::ActDiskFASTNGP) {
+     // only require epsilon
+     if (epsilon.Type() == YAML::NodeType::Scalar) {
+       double isotropicEpsilon;
+       get_required(turbNode, "epsilon", isotropicEpsilon);
+       actMetaFAST.isotropicGaussian_ = true;
+       for (int j = 0; j < 3; j++) {
+         actMetaFAST.epsilon_.h_view(iTurb, j) = isotropicEpsilon;
+       }
+     }
+     else {
+       get_required(turbNode, "epsilon", epsilonTemp);
+       for (int j = 0; j < 3; j++) {
+         actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
+       }
+       if (
+         epsilonTemp[0] == epsilonTemp[1] &&
+         epsilonTemp[1] == epsilonTemp[2]) {
+         actMetaFAST.isotropicGaussian_ = true;
+       }
+       else if (actMetaFAST.is_disk()) {
+         throw std::runtime_error("ActDiskFASTNGP does not currently "
+                                  "support anisotropic epsilons.");
+       }
+     }
+   } else if (actMetaFAST.actuatorType_ == ActuatorType::AdvActLineFASTNGP) {
+     // require epsilon chord and epsilon min
+     get_required(turbNode, "epsilon_chord", epsilonTemp);
+     for (int j = 0; j < 3; j++) {
+       if (epsilonTemp[j] <= 0.0) {
+         throw std::runtime_error(
+           "ERROR:: zero value for epsilon_chord detected. "
+           "All epsilon components must be greater than zero");
+       }
+       actMetaFAST.epsilonChord_.h_view(iTurb, j) = epsilonTemp[j];
+     }
+
+     // Minimum epsilon allowed in simulation. This is required when
+     //   specifying epsilon/chord
+     get_required(turbNode, "epsilon_min", epsilonTemp);
+     for (int j = 0; j < 3; j++) {
+       actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
+     }
+   }
+   // check epsilon values
+   for (int j = 0; j < 3; j++) {
+     if (actMetaFAST.epsilon_.h_view(iTurb, j) <= 0.0) {
+       throw std::runtime_error(
+         "ERROR:: zero value for epsilon detected. "
+         "All epsilon components must be greater than zero");
+     }
+   }
+
+   // An epsilon value used for the tower
+   const YAML::Node epsilon_tower = turbNode["epsilon_tower"];
+   // If epsilon tower is given store it.
+   // If not, use the standard epsilon value
+   if (epsilon_tower) {
+     if(epsilon_tower.Type()==YAML::NodeType::Scalar){
+       double epsilonTower = epsilon_tower.as<double>();
+       for(int j =0; j<3; j++){
+         actMetaFAST.epsilonTower_.h_view(iTurb, j) = epsilonTower;
+       }
+     }
+     else{
+       epsilonTemp = epsilon_tower.as<std::vector<double>>();
+       for (int j = 0; j < 3; j++) {
+         actMetaFAST.epsilonTower_.h_view(iTurb, j) = epsilonTemp[j];
+       }
+     }
+   } else {
+     for (int j = 0; j < 3; j++) {
+       actMetaFAST.epsilonTower_.h_view(iTurb, j) =
+         actMetaFAST.epsilon_.h_view(iTurb, j);
+     }
+   }
   get_required(turbNode, "turb_id", fi.globTurbineData[iTurb].TurbID);
   get_required(
     turbNode, "fast_input_filename",
@@ -130,115 +246,6 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 
         const YAML::Node cur_turbine =
           y_actuator["Turbine" + std::to_string(iTurb)];
-
-        get_required(
-          cur_turbine, "turbine_name", actMetaFAST.turbineNames_[iTurb]);
-
-        std::string turbFileName;
-        get_if_present(
-          cur_turbine, "file_to_dump_turb_pts",
-          actMetaFAST.turbineOutputFileNames_[iTurb]);
-
-        get_if_present_no_default(
-          cur_turbine, "fllt_correction",
-          actMetaFAST.filterLiftLineCorrection_);
-
-        ThrowErrorMsgIf(
-          actMetaFAST.filterLiftLineCorrection_,
-          "Filtered lifting line correction has not been implemented in the NGP"
-          " actuator models yet.  Please use ActLineFAST instead.");
-        // The value epsilon / chord [non-dimensional]
-        // This is a vector containing the values for:
-        //   - chord aligned (x),
-        //   - tangential to chord (y),
-        //   - spanwise (z)
-        const YAML::Node epsilon_chord = cur_turbine["epsilon_chord"];
-        const YAML::Node epsilon = cur_turbine["epsilon"];
-        if (epsilon && epsilon_chord) {
-          throw std::runtime_error(
-            "epsilon and epsilon_chord have both been specified for Turbine " +
-            std::to_string(iTurb) + "\nYou must pick one or the other.");
-        }
-        if (epsilon && actMetaFAST.filterLiftLineCorrection_) {
-          throw std::runtime_error(
-            "epsilon and fllt_correction have both been specified for "
-            "Turbine " +
-            std::to_string(iTurb) +
-            "\nepsilon_chord and epsilon_min should be used with "
-            "fllt_correction.");
-        }
-
-        std::vector<double> epsilonTemp(3);
-        if (
-          actMeta.actuatorType_ == ActuatorType::ActLineFASTNGP ||
-          actMeta.actuatorType_ == ActuatorType::ActDiskFASTNGP) {
-          // only require epsilon
-          if (epsilon.Type() == YAML::NodeType::Scalar) {
-            double isotropicEpsilon;
-            get_required(cur_turbine, "epsilon", isotropicEpsilon);
-            actMetaFAST.isotropicGaussian_ = true;
-            for (int j = 0; j < 3; j++) {
-              actMetaFAST.epsilon_.h_view(iTurb, j) = isotropicEpsilon;
-            }
-          } else {
-            get_required(cur_turbine, "epsilon", epsilonTemp);
-            for (int j = 0; j < 3; j++) {
-              actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
-            }
-            if (
-              epsilonTemp[0] == epsilonTemp[1] &&
-              epsilonTemp[1] == epsilonTemp[2]) {
-              actMetaFAST.isotropicGaussian_ = true;
-            } else if (actMeta.actuatorType_ == ActuatorType::ActDiskFASTNGP) {
-              throw std::runtime_error("ActDiskFASTNGP does not currently "
-                                       "support anisotropic epsilons.");
-            }
-          }
-          // single value epsilon
-          // multi value epsilon
-        } else if (actMeta.actuatorType_ == ActuatorType::AdvActLineFASTNGP) {
-          // require epsilon chord and epsilon min
-          get_required(cur_turbine, "epsilon_chord", epsilonTemp);
-          for (int j = 0; j < 3; j++) {
-            if (epsilonTemp[j] <= 0.0) {
-              throw std::runtime_error(
-                "ERROR:: zero value for epsilon_chord detected. "
-                "All epsilon components must be greater than zero");
-            }
-            actMetaFAST.epsilonChord_.h_view(iTurb, j) = epsilonTemp[j];
-          }
-
-          // Minimum epsilon allowed in simulation. This is required when
-          //   specifying epsilon/chord
-          get_required(cur_turbine, "epsilon_min", epsilonTemp);
-          for (int j = 0; j < 3; j++) {
-            actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
-          }
-        }
-        // check epsilon values
-        for (int j = 0; j < 3; j++) {
-          if (actMetaFAST.epsilon_.h_view(iTurb, j) <= 0.0) {
-            throw std::runtime_error(
-              "ERROR:: zero value for epsilon detected. "
-              "All epsilon components must be greater than zero");
-          }
-        }
-
-        // An epsilon value used for the tower
-        const YAML::Node epsilon_tower = cur_turbine["epsilon_tower"];
-        // If epsilon tower is given store it.
-        // If not, use the standard epsilon value
-        if (epsilon_tower) {
-          epsilonTemp = epsilon_tower.as<std::vector<double>>();
-          for (int j = 0; j < 3; j++) {
-            actMetaFAST.epsilonTower_.h_view(iTurb, j) = epsilonTemp[j];
-          }
-        } else {
-          for (int j = 0; j < 3; j++) {
-            actMetaFAST.epsilonTower_.h_view(iTurb, j) =
-              actMetaFAST.epsilon_.h_view(iTurb, j);
-          }
-        }
 
         readTurbineData(iTurb, actMetaFAST, cur_turbine);
       } else {

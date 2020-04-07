@@ -128,12 +128,15 @@ ActuatorBulkFAST::init_openfast(
 void
 ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
 {
-  // set epsilon and radius
+  // set epsilon and search radius
 
   epsilon_.modify_host();
   epsilonOpt_.modify_host();
   searchRadius_.modify_host();
   const int nTurb = openFast_.get_nTurbinesGlob();
+
+  NaluEnv::self().naluOutputP0() << "Total Number of Actuator Points is: "
+      << actMeta.numPointsTotal_<<std::endl;
 
   for (int iTurb = 0; iTurb < nTurb; iTurb++) {
     if (openFast_.get_procNo(iTurb) == NaluEnv::self().parallel_rank()) {
@@ -216,7 +219,7 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
         searchRadius_.h_view(np + offset) =
           std::max(
             epsilonLocal(0), std::max(epsilonLocal(1), epsilonLocal(2))) *
-          sqrt(log(1.e3));
+            2.6282608848784661; //sqrt(log(1000))
       }
     } else {
       NaluEnv::self().naluOutput() << "Proc " << NaluEnv::self().parallel_rank()
