@@ -66,7 +66,7 @@ class EquationSystems
   void load(const YAML::Node & node);
   
   std::string get_solver_block_name(
-    const std::string eqName);
+    const std::string eqName) const;
 
   void breadboard();
 

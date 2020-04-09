@@ -102,6 +102,7 @@ if(NOT ENABLE_CUDA)
   add_test_r(airfoilRANSEdgeTrilinos 2)
   add_test_r(airfoilRANSElemTrilinos 2)
   add_test_r(concentricRad 4)
+  add_test_r(conduction_p4 4)
   add_test_r(cvfemHC 8)
   add_test_r(dgMMS 6)
   add_test_r(dgNonConformal 4)
@@ -215,6 +216,7 @@ else(NOT ENABLE_CUDA)
   # Regression tests
   #=============================================================================
   add_test_r(ablNeutralEdge 2)
+  add_test_r(conduction_p4 2)
 
   #=============================================================================
   # GPU unit tests

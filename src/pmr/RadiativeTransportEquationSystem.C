@@ -940,7 +940,7 @@ RadiativeTransportEquationSystem::solve_and_update()
 //-------- system_is_converged ---------------------------------------------
 //--------------------------------------------------------------------------
 bool
-RadiativeTransportEquationSystem::system_is_converged()
+RadiativeTransportEquationSystem::system_is_converged() const
 {
   bool isConverged = true;
   if ( NULL != linsys_ ) {
@@ -955,7 +955,7 @@ RadiativeTransportEquationSystem::system_is_converged()
 //-------- provide_scaled_norm ---------------------------------------------
 //--------------------------------------------------------------------------
 double
-RadiativeTransportEquationSystem::provide_scaled_norm()
+RadiativeTransportEquationSystem::provide_scaled_norm() const
 {
   return nonLinearResidualSum_/firstNonLinearResidualSum_;
 }
@@ -964,7 +964,7 @@ RadiativeTransportEquationSystem::provide_scaled_norm()
 //-------- provide_norm ---------------------------------------------
 //--------------------------------------------------------------------------
 double
-RadiativeTransportEquationSystem::provide_norm()
+RadiativeTransportEquationSystem::provide_norm() const
 {
   return nonLinearResidualSum_;
 }

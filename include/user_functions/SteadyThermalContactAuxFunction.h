@@ -13,10 +13,24 @@
 
 #include <AuxFunction.h>
 
+#include "stk_ngp/Ngp.hpp"
+
 #include <vector>
+
+namespace YAML { class Node; }
 
 namespace sierra{
 namespace nalu{
+
+struct SteadyThermalContactData
+{
+  const double wave_number{1.0};
+  const double amplitude{0.25};
+  const ngp::ConstField<double> coordinate_field;
+  mutable ngp::Field<double> temperature_field;
+};
+
+void execute(SteadyThermalContactData& data, ngp::Mesh::MeshIndex mi);
 
 class SteadyThermalContactAuxFunction : public AuxFunction
 {

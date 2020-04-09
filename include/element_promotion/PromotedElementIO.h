@@ -73,6 +73,7 @@ public:
   virtual ~PromotedElementIO() = default;
 
   void add_fields(const std::vector<stk::mesh::FieldBase*>& fields);
+  std::map<const std::string, const stk::mesh::FieldBase*> get_output_fields() { return fields_; }
   bool has_field(const std::string field_name) { return (fields_.find(field_name) != fields_.end()); }
   void write_database_data(double currentTime);
 

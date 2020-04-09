@@ -14,6 +14,7 @@
 
 #include <Enums.h>
 
+#include <Teuchos_ParameterList.hpp>
 #include <map>
 #include <string>
 
@@ -58,6 +59,8 @@ public:
 
   Simulation *root();
   Simulation *parent();
+
+  Teuchos::ParameterList get_solver_configuration(std::string);
 
   typedef std::map<EquationType, LinearSolver *> SolverMap;
   typedef std::map<std::string, TpetraLinearSolverConfig *> SolverTpetraConfigMap;

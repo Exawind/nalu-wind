@@ -54,6 +54,7 @@ TpetraLinearSolverConfig::load(const YAML::Node & node)
   tol = tolerance_;
 
   //Teuchos::RCP<Teuchos::ParameterList> params = Teuchos::params();
+  params_->set("Solver Name", method_);
   params_->set("Convergence Tolerance", tol);
   params_->set("Maximum Iterations", max_iterations);
   if (output_level > 0)

@@ -1,0 +1,24 @@
+target_sources(${utest_ex_name} PRIVATE
+   ${CMAKE_CURRENT_SOURCE_DIR}/StkConductionFixture.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkToTpetraMap.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionDiagonal.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionFields.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionGatheredFieldManager.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionInterior.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionJacobiPreconditioner.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionOperator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionUpdate.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionSolutionUpdate.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestElementOperations.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearDiffusionMetric.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearExposedAreas.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearVolume.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLocalArray.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMatrixFreeSolver.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarDirichletBC.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarFluxBC.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkSimdConnectivityMap.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkSimdNodeConnectivityMap.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkSimdFaceConnectivityMap.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkSimdGatheredElementData.C
+)

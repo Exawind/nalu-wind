@@ -40,7 +40,6 @@ public:
     const stk::mesh::BulkData& bulk
   ) : bulk_(bulk),
       meta_(bulk.mesh_meta_data()),
-      ngpMesh_(bulk),
       ngpFieldMgr_(bulk)
   {}
 
@@ -54,7 +53,7 @@ public:
 
   inline const stk::mesh::MetaData& meta() const { return meta_; }
 
-  inline const Mesh& ngp_mesh() const { return ngpMesh_; }
+  inline const Mesh& ngp_mesh() const { return bulk_.get_updated_ngp_mesh(); }
 
   inline const FieldManager& ngp_field_manager() const { return ngpFieldMgr_; }
 
@@ -68,9 +67,6 @@ private:
 
   //! Reference to the mesh meta data
   const stk::mesh::MetaData& meta_;
-
-  //! NGP mesh instance
-  const Mesh ngpMesh_;
 
   //! NGP field manager instance
   const FieldManager ngpFieldMgr_;

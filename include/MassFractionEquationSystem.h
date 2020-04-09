@@ -89,9 +89,9 @@ public:
   void solve_and_update();
   void compute_nth_mass_fraction();
 
-  bool system_is_converged();
-  double provide_scaled_norm();
-  double provide_norm();
+  bool system_is_converged() const;
+  double provide_scaled_norm() const;
+  double provide_norm() const;
 
   const bool managePNG_;
 

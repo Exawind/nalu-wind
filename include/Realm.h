@@ -622,6 +622,13 @@ class Realm {
   std::string physics_part_name(std::string) const;
   std::vector<std::string> physics_part_names(std::vector<std::string>) const;
 
+  // high order
+  int polynomial_order() const;
+  bool matrix_free() const;
+  bool matrixFree_{false};
+
+  Teuchos::ParameterList solver_parameters(std::string) const;
+
   stk::mesh::PartVector allPeriodicInteractingParts_;
   stk::mesh::PartVector allNonConformalInteractingParts_;
 

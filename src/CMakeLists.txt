@@ -87,6 +87,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/MassFractionEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MaterialProperty.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MaterialPropertys.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeHeatCondEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MixtureFractionEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBoussinesqRASrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancySrcElemSuppAlgDep.C
@@ -157,6 +158,7 @@ if(ENABLE_HYPRE)
 endif()
 
 add_subdirectory(element_promotion)
+add_subdirectory(matrix_free)
 add_subdirectory(kernel)
 add_subdirectory(edge_kernels)
 add_subdirectory(node_kernels)

@@ -8,9 +8,12 @@
 //
 
 
-
 #include <user_functions/SteadyThermalContactAuxFunction.h>
 #include <algorithm>
+#include <stk_mesh/base/MetaData.hpp>
+#include "utils/StkHelpers.h"
+
+#include <yaml-cpp/yaml.h>
 
 // basic c++
 #include <cmath>
@@ -19,6 +22,14 @@
 
 namespace sierra{
 namespace nalu{
+
+void execute(const SteadyThermalContactData& data, ngp::Mesh::MeshIndex mi)
+{
+  const double x = data.coordinate_field.get(mi, 0);
+  const double y = data.coordinate_field.get(mi, 1);
+  data.temperature_field.get(mi, 0) = data.amplitude *
+      (std::cos(2 * M_PI * data.wave_number * x) + std::cos(2 * M_PI * data.wave_number * y));
+}
 
 SteadyThermalContactAuxFunction::SteadyThermalContactAuxFunction() :
   AuxFunction(0,1),

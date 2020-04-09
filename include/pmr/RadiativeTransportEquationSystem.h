@@ -73,9 +73,9 @@ public:
   void compute_bc_intensity();
   void compute_radiation_source();
 
-  bool system_is_converged();
-  double provide_scaled_norm();
-  double provide_norm();
+  bool system_is_converged() const;
+  double provide_scaled_norm() const;
+  double provide_norm() const;
 
   void zero_out_fields();
   void zero_irradiation();
