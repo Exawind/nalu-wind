@@ -2303,6 +2303,20 @@ Realm::initialize_post_processing_algorithms()
   if ( NULL != ablForcingAlg_) {
     ablForcingAlg_->initialize();
   }
+
+  if (NULL != actuatorMeta_)
+  {
+    switch(actuatorMeta_->actuatorType_){
+      case(ActuatorType::ActLineFASTNGP):
+      case(ActuatorType::ActDiskFASTNGP):
+        // perform search for actline and actdisk
+        actuatorBulk_->stk_search_act_pnts(*actuatorMeta_.get(), bulk_data());
+        break;
+      default:{
+        ThrowErrorMsg("Unsupported actuator type");
+      }
+    }
+  }
 }
 
 //--------------------------------------------------------------------------

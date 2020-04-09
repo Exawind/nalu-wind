@@ -38,6 +38,14 @@ struct InterpActuatorVel
   VectorFieldType* velocity_;
 };
 
+inline
+void RunInterpActuatorVel(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
+{
+  Kokkos::deep_copy(actBulk.velocity_.view_device(), 0.0);
+  Kokkos::parallel_for("InterpActVel", actBulk.velocity_.extent(0), InterpActuatorVel(actBulk, stkBulk));
+  actuator_utils::reduce_view_on_host(actBulk.velocity_.view_host());
+}
+
 struct SpreadForceInnerLoop
 {
   SpreadForceInnerLoop(ActuatorBulk& actBulk) : actBulk_(actBulk) {}

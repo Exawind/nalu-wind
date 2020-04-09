@@ -29,8 +29,6 @@ struct ActuatorLineFastNGP
 
   void operator()();
 
-  void update();
-
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkFAST& actBulk_;
   stk::mesh::BulkData& stkBulk_;

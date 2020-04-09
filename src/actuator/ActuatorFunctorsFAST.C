@@ -43,6 +43,7 @@ ActFastAssignVel::ActFastAssignVel(ActuatorBulkFAST& actBulk)
     turbId_(actBulk.localTurbineId_),
     fast_(actBulk.openFast_)
 {
+  actBulk.velocity_.sync_host();
 }
 
 void
@@ -82,10 +83,10 @@ ActFastSetUpThrustCalc::ActFastSetUpThrustCalc(ActuatorBulkFAST& actBulk)
 void
 ActFastSetUpThrustCalc::operator()(int index) const
 {
-  auto hubLoc = Kokkos::subview(actBulk_.hubLocations_, index, Kokkos::ALL);
+  auto hubLoc = Kokkos::subview(actBulk_.hubLocations_,   index, Kokkos::ALL);
   auto hubOri = Kokkos::subview(actBulk_.hubOrientation_, index, Kokkos::ALL);
-  auto thrust = Kokkos::subview(actBulk_.turbineThrust_, index, Kokkos::ALL);
-  auto torque = Kokkos::subview(actBulk_.turbineTorque_, index, Kokkos::ALL);
+  auto thrust = Kokkos::subview(actBulk_.turbineThrust_,  index, Kokkos::ALL);
+  auto torque = Kokkos::subview(actBulk_.turbineTorque_,  index, Kokkos::ALL);
 
   for (int i = 0; i < 3; i++) {
     thrust(i) = 0.0;

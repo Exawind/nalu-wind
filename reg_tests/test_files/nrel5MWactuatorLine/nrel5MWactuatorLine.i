@@ -122,8 +122,7 @@ realms:
       search_target_part: Unspecified-2-HEX
 
       n_turbines_glob: 1
-      dry_run:  False
-      debug:    True
+      debug:    False
       simStart: init
       t_start: 0.0
       t_max:    0.625
@@ -138,7 +137,6 @@ realms:
         air_density: 1.225
         epsilon: [ 5.0, 5.0, 5.0 ]
         turbine_base_pos: [ 0.0, 0.0, 0.0 ]
-        turbine_hub_pos: [ 0.0, 0.0, 90.0 ]
         restart_filename: "blah"
         fast_input_filename: "nrel5mw.fst"
         turb_id:  1

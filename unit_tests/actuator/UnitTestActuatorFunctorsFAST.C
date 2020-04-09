@@ -48,18 +48,8 @@ TEST_F(ActuatorFunctorFastTests, runUpdatePoints)
   ASSERT_EQ(actMetaFast.numPointsTotal_, 41);
 
   auto points = actBulk.pointCentroid_.view_host();
-  auto localRangePolicy = actBulk.local_range_policy();
-  actBulk.zero_open_fast_views();
 
-  for (int i = 0; i < points.extent_int(0); ++i) {
-    for (int j = 0; j < 3; ++j) {
-      EXPECT_DOUBLE_EQ(0.0, points(i, j));
-    }
-  }
-
-  Kokkos::parallel_for(
-    "testUpdatePoints", localRangePolicy, ActFastUpdatePoints(actBulk));
-  actuator_utils::reduce_view_on_host(points);
+  RunActFastUpdatePoints(actBulk);
 
   // test for empty points
   for (int i = 0; i < actMetaFast.numPointsTotal_; ++i) {
@@ -106,7 +96,6 @@ TEST_F(ActuatorFunctorFastTests, runAssignVelAndComputeForces)
   auto force = actBulk.actuatorForce_.view_host();
 
   auto localRangePolicy = actBulk.local_range_policy();
-  actBulk.zero_open_fast_views();
 
   for (int i = 0; i < vel.extent_int(0); ++i) {
     for (int j = 0; j < 3; ++j) {
@@ -117,20 +106,16 @@ TEST_F(ActuatorFunctorFastTests, runAssignVelAndComputeForces)
   actBulk.velocity_.modify_host();
   actBulk.actuatorForce_.modify_host();
 
-  Kokkos::parallel_for("initUniformVelocity", localRangePolicy, [&](int i) {
-    actBulk.velocity_.h_view(i, 0) = 1.0;
-  });
-  actuator_utils::reduce_view_on_host(vel);
+  Kokkos::deep_copy(actBulk.velocity_.view_host(), 1.0);
+
 
   Kokkos::parallel_for(
     "testAssignVel", localRangePolicy, ActFastAssignVel(actBulk));
 
   actBulk.interpolate_velocities_to_fast();
   actBulk.step_fast();
-  Kokkos::parallel_for(
-    "testComputeForces", localRangePolicy, ActFastComputeForce(actBulk));
 
-  actuator_utils::reduce_view_on_host(force);
+  RunActFastComputeForce(actBulk);
 
   ActFixVectorDbl fastForces(
     "forcesComputedFromFAST", actMetaFast.numPointsTotal_);
@@ -183,16 +168,10 @@ TEST_F(ActuatorFunctorFastTests, spreadForceWhProjIdentity)
   auto force = actBulk.actuatorForce_.view_host();
   auto points = actBulk.pointCentroid_.view_host();
 
-  actBulk.zero_open_fast_views();
 
-  Kokkos::parallel_for("initUniformVelocity", fastRangePolicy, [&](int i) {
-    actBulk.velocity_.h_view(i, 0) = 8.0;
-  });
-  actuator_utils::reduce_view_on_host(vel);
+  Kokkos::deep_copy(vel, 8.0);
 
-  Kokkos::parallel_for(
-    "testUpdatePoints", fastRangePolicy, ActFastUpdatePoints(actBulk));
-  actuator_utils::reduce_view_on_host(points);
+  RunActFastUpdatePoints(actBulk);
 
   Kokkos::parallel_for(
     "testAssignVel", fastRangePolicy, ActFastAssignVel(actBulk));
@@ -200,16 +179,8 @@ TEST_F(ActuatorFunctorFastTests, spreadForceWhProjIdentity)
   actBulk.interpolate_velocities_to_fast();
   actBulk.step_fast();
 
-  Kokkos::parallel_for(
-    "testComputeForces", fastRangePolicy, ActFastComputeForce(actBulk));
-
-  actuator_utils::reduce_view_on_host(force);
-
-  Kokkos::parallel_for(
-    "gatherBladeOrientations", fastRangePolicy,
-    ActFastStashOrientationVectors(actBulk));
-
-  actuator_utils::reduce_view_on_host(actBulk.orientationTensor_.view_host());
+  RunActFastComputeForce(actBulk);
+  RunActFastStashOrientVecs(actBulk);
 
   // compute source term contributions at the hub location
   // from the tower actuator points

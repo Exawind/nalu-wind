@@ -24,8 +24,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
     numSweptOffset_(
       "numSweptOffset",
       actMeta.numberOfActuators_,
-      actMeta.maxNumPntsPerBlade_),
-    searchExecuted_(false)
+      actMeta.maxNumPntsPerBlade_)
 {
 
   ThrowErrorIf(!actMeta.is_disk());
@@ -45,9 +44,7 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
     });
   compute_offsets(actMeta);
   init_epsilon(actMeta);
-  Kokkos::parallel_for(
-    "InitActLinePoints", local_range_policy(), ActFastUpdatePoints(*this));
-  actuator_utils::reduce_view_on_host(pointCentroid_.view_host());
+  RunActFastUpdatePoints(*this);
   initialize_swept_points(actMeta);
 }
 
@@ -262,15 +259,6 @@ ActuatorBulkDiskFAST::spread_forces_over_disk(const ActuatorMetaFAST& actMeta)
       }
     }
   }
-}
-
-void
-ActuatorBulkDiskFAST::zero_open_fast_views()
-{
-  dvHelper_.touch_dual_view(actuatorForce_);
-  dvHelper_.touch_dual_view(velocity_);
-  Kokkos::deep_copy(dvHelper_.get_local_view(actuatorForce_),0.0);
-  Kokkos::deep_copy(dvHelper_.get_local_view(velocity_),0.0);
 }
 
 } /* namespace nalu */

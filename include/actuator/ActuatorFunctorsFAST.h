@@ -32,6 +32,14 @@ struct ActFastUpdatePoints
   fast::OpenFAST& fast_;
 };
 
+inline
+void RunActFastUpdatePoints(ActuatorBulkFAST& actBulk)
+{
+  Kokkos::deep_copy(actBulk.pointCentroid_.view_device(),0.0);
+  Kokkos::parallel_for("ActFastUpdatePoints", actBulk.local_range_policy(), ActFastUpdatePoints(actBulk));
+  actuator_utils::reduce_view_on_host(actBulk.pointCentroid_.view_host());
+}
+
 struct ActFastAssignVel
 {
   using execution_space = ActuatorFixedExecutionSpace;
@@ -60,6 +68,14 @@ struct ActFastComputeForce
   fast::OpenFAST& fast_;
 };
 
+inline
+void RunActFastComputeForce(ActuatorBulkFAST& actBulk)
+{
+  Kokkos::deep_copy(actBulk.actuatorForce_.view_device(),0.0);
+  Kokkos::parallel_for("ActFastComputeForce", actBulk.local_range_policy(), ActFastComputeForce(actBulk));
+  actuator_utils::reduce_view_on_host(actBulk.actuatorForce_.view_host());
+}
+
 struct ActFastSetUpThrustCalc
 {
   using execution_space = ActuatorFixedExecutionSpace;
@@ -85,6 +101,14 @@ struct ActFastStashOrientationVectors
   const int turbId_;
   fast::OpenFAST& fast_;
 };
+
+inline
+void RunActFastStashOrientVecs(ActuatorBulkFAST& actBulk)
+{
+  Kokkos::deep_copy(actBulk.orientationTensor_.view_device(),0.0);
+  Kokkos::parallel_for("ActFastStashOrientations", actBulk.local_range_policy(), ActFastStashOrientationVectors(actBulk));
+  actuator_utils::reduce_view_on_host(actBulk.orientationTensor_.view_host());
+}
 
 struct ActFastComputeThrustInnerLoop
 {

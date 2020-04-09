@@ -52,10 +52,9 @@ struct ActuatorBulkFAST : public ActuatorBulk
   void interpolate_velocities_to_fast();
   void step_fast();
   bool fast_is_time_zero();
-  void output_torque_info();
+  void output_torque_info(stk::mesh::BulkData& stkBulk);
   void init_openfast(const ActuatorMetaFAST& actMeta, double naluTimeStep);
   void init_epsilon(const ActuatorMetaFAST& actMeta);
-  virtual void zero_open_fast_views();
 
   virtual ~ActuatorBulkFAST();
 

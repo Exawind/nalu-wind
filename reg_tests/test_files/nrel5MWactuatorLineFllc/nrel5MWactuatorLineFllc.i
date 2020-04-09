@@ -123,7 +123,7 @@ realms:
 
       n_turbines_glob: 1
       dry_run:  False
-      debug:    True
+      debug:    False
       simStart: init
       t_start: 0.0
       t_max:    0.625

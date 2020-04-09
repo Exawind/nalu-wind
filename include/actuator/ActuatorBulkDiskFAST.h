@@ -23,8 +23,6 @@ public:
   ActFixArrayInt numSweptCount_;
   ActFixArrayInt numSweptOffset_;
   void spread_forces_over_disk(const ActuatorMetaFAST& actMeta);
-  void zero_open_fast_views() override;
-  bool searchExecuted_;
 
 private:
   void compute_swept_point_count(ActuatorMetaFAST& actMeta);
