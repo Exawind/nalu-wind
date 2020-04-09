@@ -84,6 +84,8 @@ ActuatorDiskFastNGP::ActuatorDiskFastNGP(
 void
 ActuatorDiskFastNGP::operator()()
 {
+  actBulk_.zero_source_terms(stkBulk_);
+
   RunInterpActuatorVel(actBulk_, stkBulk_);
 
   auto fastRangePolicy = actBulk_.local_range_policy();

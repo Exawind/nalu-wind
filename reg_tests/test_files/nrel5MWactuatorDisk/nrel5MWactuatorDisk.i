@@ -130,7 +130,7 @@ realms:
       n_every_checkpoint: 100
 
       Turbine0:
-        num_force_pts_blade: 15
+        num_force_pts_blade: 8
         num_force_pts_tower: 20
         nacelle_cd: 1.0
         nacelle_area: 8.0
