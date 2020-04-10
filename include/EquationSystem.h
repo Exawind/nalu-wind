@@ -163,10 +163,10 @@ public:
   virtual void reinitialize_linear_system() {}
   virtual void post_adapt_work() {}
   virtual void dump_eq_time();
-  virtual double provide_scaled_norm();
-  virtual double provide_norm();
-  virtual double provide_norm_increment();
-  virtual bool system_is_converged();
+  virtual double provide_scaled_norm() const;
+  virtual double provide_norm() const;
+  virtual double provide_norm_increment() const;
+  virtual bool system_is_converged() const;
   
   virtual void register_wall_bc(
     stk::mesh::Part * /* part */,

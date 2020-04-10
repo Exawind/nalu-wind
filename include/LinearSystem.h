@@ -220,14 +220,14 @@ public:
   virtual void writeToFile(const char * filename, bool useOwned=true)=0;
   virtual void writeSolutionToFile(const char * filename, bool useOwned=true)=0;
   virtual unsigned numDof() const { return numDof_; }
-  const int & linearSolveIterations() {return linearSolveIterations_; }
-  const double & linearResidual() {return linearResidual_; }
-  const double & nonLinearResidual() {return nonLinearResidual_; }
-  const double & scaledNonLinearResidual() {return scaledNonLinearResidual_; }
+  const int & linearSolveIterations() const {return linearSolveIterations_; }
+  const double & linearResidual() const {return linearResidual_; }
+  const double & nonLinearResidual() const {return nonLinearResidual_; }
+  const double & scaledNonLinearResidual() const {return scaledNonLinearResidual_; }
   void setNonLinearResidual(const double nlr) { nonLinearResidual_ = nlr;}
-  const std::string name() { return eqSysName_; }
-  bool & recomputePreconditioner() {return recomputePreconditioner_;}
-  bool & reusePreconditioner() {return reusePreconditioner_;}
+  std::string name() const { return eqSysName_; }
+  bool recomputePreconditioner() const {return recomputePreconditioner_;}
+  bool reusePreconditioner() const {return reusePreconditioner_;}
   double get_timer_precond();
   void zero_timer_precond();
   bool useSegregatedSolver() const;

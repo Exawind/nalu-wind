@@ -18,6 +18,7 @@
 #include <Tpetra_CrsMatrix.hpp>
 #include <Tpetra_Vector.hpp>
 #include <Tpetra_MultiVector.hpp>
+#include <Tpetra_Operator.hpp>
 
 // Forward declare templates
 namespace Teuchos {

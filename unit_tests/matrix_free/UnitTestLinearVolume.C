@@ -1,0 +1,80 @@
+#include "matrix_free/LinearVolume.h"
+#include "gtest/gtest.h"
+
+#include "matrix_free/LobattoQuadratureRule.h"
+#include "matrix_free/TensorOperations.h"
+#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/LocalArray.h"
+
+#include <Kokkos_Array.hpp>
+#include <Kokkos_Macros.hpp>
+#include <Kokkos_Parallel.hpp>
+#include <Kokkos_View.hpp>
+#include <stk_simd/Simd.hpp>
+
+namespace sierra {
+namespace nalu {
+namespace matrix_free {
+
+namespace {
+
+template <int poly>
+void
+single_affine_hex_p(bool cube)
+{
+  LocalArray<double[3][3]> transform = {{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
+  if (!cube) {
+    transform = {{{2, 1, 1.3333}, {0, 2, -1}, {1, 0, 2}}};
+  }
+  const auto det = determinant<double>(transform);
+
+  constexpr auto nodes = GLL<poly>::nodes;
+  const int num_elems_1D = 32 / poly;
+  const int num_elems_3D = num_elems_1D * num_elems_1D * num_elems_1D;
+  vector_view<poly> coords("coordinates", num_elems_3D);
+  scalar_view<poly> alpha("alpha", num_elems_3D);
+
+  Kokkos::parallel_for(
+    num_elems_3D, KOKKOS_LAMBDA(int index) {
+      for (int k = 0; k < poly + 1; ++k) {
+        for (int j = 0; j < poly + 1; ++j) {
+          for (int i = 0; i < poly + 1; ++i) {
+            alpha(index, k, j, i) = 1.0;
+            const Kokkos::Array<ftype, 3> old_coords = {
+              {nodes[i], nodes[j], nodes[k]}};
+            Kokkos::Array<ftype, 3> new_coords;
+            transform_vector(transform, old_coords, new_coords);
+            for (int d = 0; d < 3; ++d) {
+              coords(index, k, j, i, d) = new_coords[d] + 2;
+            }
+          }
+        }
+      }
+    });
+  exec_space().fence();
+
+  const auto volumes_d = geom::volume_metric<poly>(alpha, coords);
+  exec_space().fence();
+
+  auto volumes_h = Kokkos::create_mirror_view(volumes_d);
+  Kokkos::deep_copy(volumes_h, volumes_d);
+
+  for (int index = 0; index < num_elems_3D; ++index) {
+    for (int k = 0; k < poly + 1; ++k) {
+      for (int j = 0; j < poly + 1; ++j) {
+        for (int i = 0; i < poly + 1; ++i) {
+          ASSERT_DOUBLE_EQ(
+            stk::simd::get_data(volumes_h(index, k, j, i), 0), det)
+            << "index: " << 0;
+        }
+      }
+    }
+  }
+}
+} // namespace
+TEST(linear_volume, single_cube_hex8) { single_affine_hex_p<1>(true); }
+TEST(linear_volume, single_cube_hex27) { single_affine_hex_p<2>(false); }
+
+} // namespace matrix_free
+} // namespace nalu
+} // namespace sierra

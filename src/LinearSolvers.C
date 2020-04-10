@@ -15,6 +15,7 @@
 #include <NaluEnv.h>
 #include <NaluParsing.h>
 #include <Simulation.h>
+#include <Teuchos_ParameterList.hpp>
 
 #ifdef NALU_USES_HYPRE
 #include "HypreDirectSolver.h"
@@ -76,6 +77,15 @@ LinearSolvers::load(const YAML::Node & node)
       }
     }
   }
+}
+  
+Teuchos::ParameterList LinearSolvers::get_solver_configuration(std::string solverBlockName)
+{
+  auto it = solverTpetraConfig_.find(solverBlockName);
+  if (it == solverTpetraConfig_.end()) {
+    throw std::runtime_error("solver name block not found; error in solver creation; check: " + solverBlockName);
+  }
+  return *it->second->params();
 }
 
 LinearSolver *

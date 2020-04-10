@@ -807,7 +807,7 @@ MassFractionEquationSystem::compute_nth_mass_fraction()
 //-------- system_is_converged ---------------------------------------------
 //--------------------------------------------------------------------------
 bool
-MassFractionEquationSystem::system_is_converged()
+MassFractionEquationSystem::system_is_converged() const
 {
   bool isConverged = true;
   if ( NULL != linsys_ ) {
@@ -820,7 +820,7 @@ MassFractionEquationSystem::system_is_converged()
 //-------- provide_scaled_norm ---------------------------------------------
 //--------------------------------------------------------------------------
 double
-MassFractionEquationSystem::provide_scaled_norm()
+MassFractionEquationSystem::provide_scaled_norm() const
 {
   return nonLinearResidualSum_/firstNonLinearResidualSum_;
 }
@@ -829,7 +829,7 @@ MassFractionEquationSystem::provide_scaled_norm()
 //-------- provide_norm ---------------------------------------------
 //--------------------------------------------------------------------------
 double
-MassFractionEquationSystem::provide_norm()
+MassFractionEquationSystem::provide_norm() const
 {
   return nonLinearResidualSum_;
 }

@@ -24,6 +24,7 @@
 // all concrete EquationSystem's
 #include <EnthalpyEquationSystem.h>
 #include <HeatCondEquationSystem.h>
+#include <MatrixFreeHeatCondEquationSystem.h>
 #include <LowMachEquationSystem.h>
 #include <MixtureFractionEquationSystem.h>
 #include <ShearStressTransportEquationSystem.h>
@@ -156,7 +157,12 @@ void EquationSystems::load(const YAML::Node & y_node)
         else if( expect_map(y_system, "HeatConduction", true) ) {
 	  y_eqsys =  expect_map(y_system, "HeatConduction", true);
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = HeatConduction " << std::endl;
-          eqSys = new HeatCondEquationSystem(*this);
+          if (realm_.matrix_free()) {
+            eqSys = new MatrixFreeHeatCondEquationSystem(*this);
+          }
+          else {
+            eqSys = new HeatCondEquationSystem(*this);
+          }
         }
         else if( expect_map(y_system, "RadiativeTransport", true) ) {
 	  y_eqsys =  expect_map(y_system, "RadiativeTransport", true);
@@ -220,7 +226,7 @@ void EquationSystems::load(const YAML::Node & y_node)
 //--------------------------------------------------------------------------
 std::string
 EquationSystems::get_solver_block_name(
-  const std::string eqName ) {
+  const std::string eqName ) const {
   std::string solverName = "n_a";
   std::map<std::string, std::string>::const_iterator iter
     = solverSpecMap_.find(eqName);
