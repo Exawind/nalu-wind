@@ -223,7 +223,7 @@ ActuatorDiskFAST::add_swept_points_to_map()
         double radius = locator.get_radius(0);
 
         if (!useUniformAziSampling_) {
-          mySwept[i] = (int)(2.0 * M_PI * radius / numBlades / dR)-1;
+          mySwept[i] = std::max((int)(2.0 * M_PI * radius / numBlades / dR)-1, 0);
         }
 
         // periodic function has blades points at pi/3, pi, and 5*pi/3
