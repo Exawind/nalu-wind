@@ -59,7 +59,7 @@ Actuator Turbine Model
 
 .. inpfile:: actuator.search_method
 
-   String specifying the type of search method used to identify the nodes within the search radius of the actuator points. The recommended option is ``stk_kdtree``. The ``boost_rtree`` option is being deprecated by the STK search library.
+   String specifying the type of search method used to identify the nodes within the search radius of the actuator points. The only valid option is ``stk_kdtree``. The ``boost_rtree`` option has been deprecated by the STK search library.
 
 .. inpfile:: search_target_part
 
