@@ -9,3 +9,5 @@
 tags
 *.save
 .nfs*
+*.code-workspace
+.vscode/

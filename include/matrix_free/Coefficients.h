@@ -1,3 +1,12 @@
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 #ifndef CVFEM_COEFFICIENTS_H
 #define CVFEM_COEFFICIENTS_H
 
@@ -39,7 +48,7 @@ struct Coeffs<1>
   static constexpr linear_nodal_matrix_type Nlin = {{{1, 0}, {0, 1}}};
   static constexpr linear_scs_matrix_type Ntlin = {{{0.5}, {0.5}}};
 
-  static constexpr LocalArray<double[2]> Wl = {1, 1};
+  static constexpr LocalArray<double[2]> Wl = {{1, 1}};
 };
 
 #if USE_SYMMETRIC
@@ -80,9 +89,9 @@ struct Coeffs<2>
     {{0.8333333333333333333333, 0.1666666666666666666667},
      {0.1666666666666666666667, 0.8333333333333333333333}}};
 
-  static constexpr LocalArray<double[3]> Wl = {0.3333333333333333333333,
-                                               1.333333333333333333333,
-                                               0.3333333333333333333333};
+  static constexpr LocalArray<double[3]> Wl = {{0.3333333333333333333333,
+                                                1.333333333333333333333,
+                                                0.3333333333333333333333}};
 };
 #else
 template <>
@@ -122,8 +131,9 @@ struct Coeffs<2>
     {{+0.7886751345948129, +0.21132486540518708},
      {+0.21132486540518708, +0.7886751345948129}}};
 
-  static constexpr LocalArray<double[3]> Wl = {
-    0.422649730810374235491, 1.154700538379251529018, 0.422649730810374235491};
+  static constexpr LocalArray<double[3]> Wl = {{0.422649730810374235491,
+                                                1.154700538379251529018,
+                                                0.422649730810374235491}};
 };
 #endif
 template <>
@@ -183,8 +193,8 @@ struct Coeffs<3>
       0.8872983346207417021390}}};
 
   static constexpr LocalArray<double[4]> Wl = {
-    0.225403330758516622964, 0.774596669241483377036, 0.774596669241483377036,
-    0.225403330758516622964};
+    {0.225403330758516622964, 0.774596669241483377036, 0.774596669241483377036,
+     0.225403330758516622964}};
 };
 
 template <>
@@ -261,8 +271,8 @@ struct Coeffs<4>
       0.6699905217924281286557, 0.9305681557970262307578}}};
 
   static constexpr LocalArray<double[5]> Wl = {
-    0.13886368840594742478, 0.52115526800919631042, 0.679962087169712529605,
-    0.52115526800919631042, 0.13886368840594742478};
+    {0.13886368840594742478, 0.52115526800919631042, 0.679962087169712529605,
+     0.52115526800919631042, 0.13886368840594742478}};
 };
 
 } // namespace matrix_free
