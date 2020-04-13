@@ -422,9 +422,9 @@ SolutionOptions::load(const YAML::Node & y_node)
         if (fix_pressure["search_method"]) {
           std::string searchMethodName = fix_pressure["search_method"].as<std::string>();
           if (searchMethodName == "boost_rtree") {
-            fixPressureInfo_->searchMethod_ = stk::search::BOOST_RTREE;
-            NaluEnv::self().naluOutputP0() << "Warning: search method 'boost_rtree' is being"
-              <<" deprecated. Please switch to 'stk_kdtree'." << std::endl;
+            fixPressureInfo_->searchMethod_ = stk::search::KDTREE;
+            NaluEnv::self().naluOutputP0() << "Warning: search method 'boost_rtree' has been"
+              <<" deprecated. Switching to 'stk_kdtree'." << std::endl;
           }
           else if (searchMethodName == "stk_kdtree")
             fixPressureInfo_->searchMethod_ = stk::search::KDTREE;

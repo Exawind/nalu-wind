@@ -99,9 +99,9 @@ PeriodicManager::add_periodic_pair(
   // determine search method for this pair; default is stk_kdtree
   stk::search::SearchMethod searchMethod = stk::search::KDTREE;
   if ( searchMethodName == "boost_rtree" ) {
-    searchMethod = stk::search::BOOST_RTREE;
-    NaluEnv::self().naluOutputP0() << "Warning: search method 'boost_rtree' is being deprecated"
-        <<", please swithc to 'stk_kdtree'" << std::endl;
+    searchMethod = stk::search::KDTREE;
+    NaluEnv::self().naluOutputP0() << "Warning: search method 'boost_rtree' has been deprecated"
+        <<", Switching to 'stk_kdtree'" << std::endl;
   }
   else if ( searchMethodName == "stk_kdtree" )
     searchMethod = stk::search::KDTREE;
