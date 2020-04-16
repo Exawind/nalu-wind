@@ -82,6 +82,15 @@ TpetraLinearSolverConfig::load(const YAML::Node & node)
     paramsPrecond_->set("relaxation: type","MT Symmetric Gauss-Seidel");
     paramsPrecond_->set("relaxation: sweeps",1);
   }
+  else if (precond_ == "sgs2") {
+    preconditionerType_ = "RELAXATION";
+    paramsPrecond_->set("relaxation: type","Two-stage Symmetric Gauss-Seidel");
+    paramsPrecond_->set("relaxation: sweeps",1);
+
+    int inner_iterations;
+    get_if_present(node, "inner_iterations", inner_iterations, 1);
+    paramsPrecond_->set ("relaxation: inner sweeps", inner_iterations);
+  }
   else if (precond_ == "jacobi" || precond_ == "default") {
     preconditionerType_ = "RELAXATION";
     paramsPrecond_->set("relaxation: type","Jacobi");
