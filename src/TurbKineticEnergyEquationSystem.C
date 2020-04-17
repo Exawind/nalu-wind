@@ -242,7 +242,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
       nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
         algType, part, "tke_nodal_grad", &tkeNp1, &dkdxNone);
     else
-      nodalGradAlgDriver_.register_legacy_algorithm<AssembleNodalGradElemAlgorithm>(
+      nodalGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
         algType, part, "tke_nodal_grad", &tkeNp1, &dkdxNone,
         edgeNodalGradient_);
   }

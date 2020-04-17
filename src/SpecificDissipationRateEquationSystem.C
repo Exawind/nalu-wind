@@ -223,7 +223,7 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
     nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
       algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone);
   else
-    nodalGradAlgDriver_.register_legacy_algorithm<AssembleNodalGradElemAlgorithm>(
+    nodalGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
       algType, part, "sdr_nodal_grad", &sdrNp1, &dwdxNone,
       edgeNodalGradient_);
 

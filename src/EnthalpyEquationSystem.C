@@ -377,7 +377,7 @@ EnthalpyEquationSystem::register_interior_algorithm(
       nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
         algType, part, "enthalpy_nodal_grad", &enthalpyNp1, &dhdxNone);
     else
-      nodalGradAlgDriver_.register_legacy_algorithm<AssembleNodalGradElemAlgorithm>(
+      nodalGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
         algType, part, "enthalpy_nodal_grad", &enthalpyNp1, &dhdxNone,
         edgeNodalGradient_);
   }
