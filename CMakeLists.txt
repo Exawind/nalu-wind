@@ -38,6 +38,14 @@ find_package(MPI REQUIRED)
 target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>)
 target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_Fortran_FOUND}>:MPI::MPI_Fortran>)
 
+if(ENABLE_CUDA)
+  find_package(CUDA REQUIRED)
+  target_link_libraries(nalu PUBLIC
+    ${CUDA_cusparse_LIBRARY}
+    ${CUDA_LIBRARIES}
+    ${CUDA_CUBLAS_LIBRARIES})
+endif()
+
 ########################## TRILINOS ####################################
 set(CMAKE_PREFIX_PATH ${Trilinos_DIR} ${CMAKE_PREFIX_PATH})
 find_package(Trilinos QUIET REQUIRED)
