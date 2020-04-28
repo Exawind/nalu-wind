@@ -882,22 +882,23 @@ DataProbePostProcessing::execute()
   }
 
   if ( isOutput ) {
-    const double t1 = NaluEnv::self().nalu_time();  //LCCTIME
+    const double t1 = NaluEnv::self().nalu_time();  
     // execute and provide results...
     transfers_->execute();
-    const double t2 = NaluEnv::self().nalu_time();  //LCCTIME
+    const double t2 = NaluEnv::self().nalu_time();  
     if (useExo_) {
       provide_output_exodus(currentTime);
     }
     if (useText_) {
       provide_output_txt(currentTime);
     }
-    const double t3 = NaluEnv::self().nalu_time();  //LCCTIME
-    NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::execute " 
-				   << " transfer_time: "<<t2-t1
-				   << " output_time: "<<t3-t2      
-				   << " total_time: "<<t3-t1
-				   << std::endl;
+    const double t3 = NaluEnv::self().nalu_time();  
+    // Uncomment below to provide timing statistics
+    // NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::execute " 
+    // 				   << " transfer_time: "<<t2-t1
+    // 				   << " output_time: "<<t3-t2      
+    // 				   << " total_time: "<<t3-t1
+    // 				   << std::endl;
   
   }
 }
@@ -1025,7 +1026,6 @@ DataProbePostProcessing::provide_output_txt(
 	    ss << std::setw(7)<<std::setfill('0')<<timeStepCount;
 	    ss <<"_"<<processorId;
 	          std::string fileName = probeInfo->partName_[inp] + "_" + ss.str() + ".dat";
-	    //std::ofstream myfile;
 	    if ( processorId == NaluEnv::self().parallel_rank()) {    
 
 	      const int N1 = probeInfo->edge1NumPoints_[inp];
@@ -1111,11 +1111,8 @@ DataProbePostProcessing::provide_output_txt(
 		}
 	      }
 
-	      //myfile.open(fileName.c_str(), std::ios_base::out); // std::ios_base::app
 	      std::ofstream file(fileName.c_str(), std::ios_base::out);
 	      outbuf.push(file);
-	      //std::ostream myfile(&outbuf);
-	      //std::ostringstream myfile;
 	      std::string filestring;
 	      std::string coordfilestring("");
 	      char buffer[1000];
@@ -1123,17 +1120,11 @@ DataProbePostProcessing::provide_output_txt(
 
 	      if (!printcoords) coordfilestring="CoordinateFile: "+coordFileName;
 	      
-	      //myfile << "#Time: "<< std::setprecision(precisionvar_) << currentTime << std::endl;
-	      //myfile << "# ";
 	      sprintf(buffer, "#Time: %18.12e %s\n#",currentTime, coordfilestring.c_str());
 	      filestring.append(buffer);
 	      if (printcoords)  {
-		// myfile << std::setw(w_-1) << std::right << "Plane_Number"
-		//        << std::setw(w_) << std::right << "Index_j"
-		//        << std::setw(w_) << std::right << "Index_i"; 
 		filestring += "Plane_Number Index_j Index_i";
 		for ( int jj = 0; jj < nDim; ++jj ) {
-		  //myfile << std::setw(w_-2) << std::right << "coordinates[" << jj << "]" ;         
 		  sprintf(buffer, " coordinates[%i]", jj);
 		  filestring.append(buffer);
 		}
@@ -1144,13 +1135,11 @@ DataProbePostProcessing::provide_output_txt(
 		if ((probeInfo->onlyOutputField_[inp] == "") || (probeInfo->onlyOutputField_[inp] == fieldName)) {
 		  const int fieldSize = probeSpec->fieldInfo_[ifi].second;
 		  for ( int jj = 0; jj < fieldSize; ++jj ) {
-		    //myfile << std::setw(w_-3) << std::right << fieldName << "[" << jj << "]" ;
 		    sprintf(buffer, " %s[%i]", fieldName.c_str(), jj);
 		    filestring.append(buffer);
 		  } 
 		}
 	      }
-	      //myfile << '\n'; //std::endl;	      
 	      filestring += '\n';
 
 
@@ -1179,44 +1168,32 @@ DataProbePostProcessing::provide_output_txt(
 		  const int localn = inv - planei*pointsPerPlane;
 		  const int indexj = localn/N1;
 		  const int indexi = localn - indexj*N1;
-		  //myfile <<std::right<< std::setw(w_) << planei << std::setw(w_) << indexj << std::setw(w_) << indexi << std::setw(w_);
+
 		  sprintf(buffer, "%18i %18i %18i",planei, indexj, indexi);
 		  filestring.append(buffer);
 		  
 		  // Output coordinates
 		  for ( int jj = 0; jj < nDim; ++jj ) {
-		    //myfile << std::setprecision(precisionvar_) << theCoord[jj] << std::setw(w_);
 		    sprintf(buffer, " %12.5e",theCoord[jj]);
 		    filestring.append(buffer);
 		  }
-		} else {
-		  //myfile <<std::right<<std::setw(w_)<< std::setprecision(precisionvar_);
-		}
+		} 
 		// now all of the other fields required
 		for ( size_t ifi = 0; ifi < probeSpec->fieldInfo_.size(); ++ifi ) {
-		  //const std::string fieldName = probeSpec->fieldInfo_[ifi].first;
-		  //const stk::mesh::FieldBase *theField = metaData.get_field(stk::topology::NODE_RANK, fieldName);
-		  //double * theF = (double*)stk::mesh::field_data(*theField, node );
-		  //const int fieldSize = probeSpec->fieldInfo_[ifi].second;
 
 		  if ((probeInfo->onlyOutputField_[inp] == "") || (probeInfo->onlyOutputField_[inp] == allFieldNames[ifi])) {
 		    double * theF = (double*)stk::mesh::field_data(*(allFields[ifi]), node );
-		    //std::vector<double> theF(fieldSize[ifi], 0.0);
 		    for ( int jj = 0; jj < fieldSize[ifi]; ++jj ) {
-		      //myfile << theF[jj] << std::setw(w_);
 		      sprintf(buffer, " %12.6e",theF[jj]);
 		      filestring.append(buffer);
 		    }
 		  }
 		}
 		// row complete
-		//myfile << '\n'; //std::endl;
 		filestring += '\n';
 	      }
 	      // done with file output
-	      //myfile.close();
 	      std::ostream fileout(&outbuf);
-	      //fileout<<myfile.str();
 	      fileout<<filestring;
 	      boost::iostreams::close(outbuf); // Don't forget this!
 	      file.close();
