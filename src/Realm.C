@@ -63,9 +63,14 @@
 
 // actuator line
 #include <actuator/Actuator.h>
+#include <actuator/ActuatorParsing.h>
+#include <actuator/ActuatorBulk.h>
 #ifdef NALU_USES_OPENFAST
 #include <actuator/ActuatorLineFAST.h>
 #include <actuator/ActuatorDiskFAST.h>
+#include <actuator/ActuatorParsingFAST.h>
+#include <actuator/ActuatorBulkDiskFAST.h>
+#include <actuator/ActuatorExecutorsFASTNgp.h>
 #endif
 
 #include <wind_energy/ABLForcingAlgorithm.h>
@@ -600,9 +605,19 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     if ( foundActuator.size() != 1 )
       throw std::runtime_error("look_ahead_and_create::error: Too many actuator line blocks");
 
-    if ( (*foundActuator[0])["actuator"]["type"] ) {
-      const std::string ActuatorTypeName = (*foundActuator[0])["actuator"]["type"].as<std::string>() ;
-      switch ( ActuatorTypeMap[ActuatorTypeName] ) {
+    auto actMeta = actuator_parse(*foundActuator[0]);
+
+    const std::string ActuatorTypeName = (*foundActuator[0])["actuator"]["type"].as<std::string>() ;
+    switch ( ActuatorTypeMap[ActuatorTypeName] ) {
+        case ActuatorType::ActDiskFASTNGP:
+        case ActuatorType::ActLineFASTNGP : {
+#ifdef NALU_USES_OPENFAST
+          actuatorMeta_ = std::make_shared<ActuatorMetaFAST>(actuator_FAST_parse(node, actMeta));
+          break;
+#else
+	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
+#endif
+        }
       case ActuatorType::ActLineFAST : {
 #ifdef NALU_USES_OPENFAST
 	actuator_ =  new ActuatorLineFAST(*this, *foundActuator[0]);
@@ -635,11 +650,6 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
 #endif
       }
       }
-    }
-    else {
-      throw std::runtime_error("look_ahead_and_create::error: No 'type' specified in actuator");
-    }
-
     
   }
 
@@ -970,6 +980,25 @@ Realm::setup_post_processing_algorithms()
   // check for actuator line
   if ( NULL != actuator_ )
     actuator_->setup();
+
+  if (NULL != actuatorMeta_)
+  {
+    switch(actuatorMeta_->actuatorType_){
+      case(ActuatorType::ActLineFASTNGP):{
+        actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
+          get_time_step_from_file());
+       break;
+      }
+      case(ActuatorType::ActDiskFASTNGP):{
+        actuatorBulk_ = make_unique<ActuatorBulkDiskFAST>(*actuatorMeta_.get(),
+          get_time_step_from_file());
+        break;
+      }
+      default:{
+        ThrowErrorMsg("Unsupported actuator type");
+      }
+    }
+  }
 
   // check for norm nodal fields
   if ( NULL != solutionNormPostProcessing_ )
@@ -1784,9 +1813,30 @@ Realm::advance_time_step()
 
   // check for actuator line; assemble the source terms for this time step
   if ( NULL != actuator_ ) {
+    const double start_time = NaluEnv::self().nalu_time();
     actuator_->execute();
+    const double end_time = NaluEnv::self().nalu_time();
+    timerActuator_ += end_time - start_time;
   }
 
+  // check for actuator line; assemble the source terms for this time step
+#ifdef NALU_USES_OPENFAST
+  if ( NULL != actuatorBulk_ ) {
+    const double start_time = NaluEnv::self().nalu_time();
+    if(actuatorMeta_->actuatorType_==ActuatorType::ActLineFASTNGP){
+      ActuatorLineFastNGP(*actuatorMeta_.get(),
+        *actuatorBulk_.get(),
+        bulk_data())();
+    }
+    else{
+      ActuatorDiskFastNGP(*actuatorMeta_.get(),
+        *dynamic_cast<ActuatorBulkDiskFAST*>(actuatorBulk_.get()),
+        bulk_data())();
+    }
+    const double end_time = NaluEnv::self().nalu_time();
+    timerActuator_ += end_time - start_time;
+  }
+#endif
   // Check for ABL forcing; estimate source terms for this time step
   if ( NULL != ablForcingAlg_) {
     ablForcingAlg_->execute();
@@ -2265,6 +2315,20 @@ Realm::initialize_post_processing_algorithms()
 
   if ( NULL != ablForcingAlg_) {
     ablForcingAlg_->initialize();
+  }
+
+  if (NULL != actuatorMeta_)
+  {
+    switch(actuatorMeta_->actuatorType_){
+      case(ActuatorType::ActLineFASTNGP):
+      case(ActuatorType::ActDiskFASTNGP):
+        // perform search for actline and actdisk
+        actuatorBulk_->stk_search_act_pnts(*actuatorMeta_.get(), bulk_data());
+        break;
+      default:{
+        ThrowErrorMsg("Unsupported actuator type");
+      }
+    }
   }
 }
 
@@ -3559,6 +3623,17 @@ Realm::dump_simulation_time()
     NaluEnv::self().naluOutputP0() << "Timing for promote_mesh :    " << std::endl;
     NaluEnv::self().naluOutputP0() << "        promote_mesh --  " << " \tavg: " << g_totalPromote/double(nprocs)
                                          << " \tmin: " << g_minPromote << " \tmax: " << g_maxPromote << std::endl;
+  }
+
+  if (timerActuator_ > 0) {
+    double g_totalActuator = 0.0, g_minActuator= 0.0, g_maxActuator = 0.0;
+    stk::all_reduce_min(NaluEnv::self().parallel_comm(), &timerActuator_, &g_minActuator, 1);
+    stk::all_reduce_max(NaluEnv::self().parallel_comm(), &timerActuator_, &g_maxActuator, 1);
+    stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &timerActuator_, &g_totalActuator, 1);
+
+    NaluEnv::self().naluOutputP0() << "Timing for actuator :    " << std::endl;
+    NaluEnv::self().naluOutputP0() << "        actuator::execute --  " << " \tavg: " << g_totalActuator/double(nprocs)
+                                         << " \tmin: " << g_minActuator << " \tmax: " << g_maxActuator<< std::endl;
   }
 
   // consolidated sort

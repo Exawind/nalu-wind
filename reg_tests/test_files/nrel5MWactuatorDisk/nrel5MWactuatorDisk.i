@@ -117,13 +117,12 @@ realms:
             continuity: [advection]
 
     actuator:
-      type: ActDiskFAST
+      type: ActDiskFASTNGP
       search_method: stk_kdtree
       search_target_part: Unspecified-2-HEX
 
       n_turbines_glob: 1
-      dry_run:  False
-      debug:    True
+      debug:    False
       simStart: init
       t_start: 0.0
       t_max:    0.625
@@ -131,14 +130,13 @@ realms:
       n_every_checkpoint: 100
 
       Turbine0:
-        num_force_pts_blade: 25
+        num_force_pts_blade: 8
         num_force_pts_tower: 20
         nacelle_cd: 1.0
         nacelle_area: 8.0
         air_density: 1.225
-        epsilon: [ 5.0, 5.0, 5.0 ]
+        epsilon: 5.0
         turbine_base_pos: [ 0.0, 0.0, 0.0 ]
-        turbine_hub_pos: [ 0.0, 0.0, 90.0 ]
         restart_filename: "blah"
         fast_input_filename: "../nrel5MWactuatorLine/nrel5mw.fst"
         turb_id:  1

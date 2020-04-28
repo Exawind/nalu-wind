@@ -179,8 +179,10 @@ if(NOT ENABLE_CUDA)
 
   if(ENABLE_OPENFAST)
      add_test_r(nrel5MWactuatorLine 4)
+     add_test_r(nrel5MWactuatorLineAnisoGauss 4)
      add_test_r(nrel5MWactuatorLineFllc 4)
      add_test_r(nrel5MWactuatorDisk 4)
+     add_test_r(nrel5MWadvActLine 4)
      add_subdirectory(test_files/nrel5MWactuatorLine)
   endif(ENABLE_OPENFAST)
 

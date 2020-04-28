@@ -131,14 +131,14 @@ realms:
       n_every_checkpoint: 100
 
       Turbine0:
-        fllt_correction: True
-        num_force_pts_blade: 100
+        num_force_pts_blade: 50
         num_force_pts_tower: 20
         nacelle_cd: 1.0
         nacelle_area: 8.0
         air_density: 1.225
-        epsilon_min: [ 5.0, 5.0, 5.0 ]
-        epsilon_chord: [ 0.25, 0.25, 0.25 ]
+        epsilon_min: [ 1.0, 1.0, 1.0 ]
+        epsilon_chord: [ 1.0, 1.0, 1.0 ]
+        epsilon_tower: [5.0, 5.0, 5.0]
         turbine_base_pos: [ 0.0, 0.0, 0.0 ]
         turbine_hub_pos: [ 0.0, 0.0, 90.0 ]
         restart_filename: "blah"

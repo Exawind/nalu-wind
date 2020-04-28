@@ -1115,13 +1115,13 @@ MomentumEquationSystem::register_nodal_fields(
   }
 
   // speciality source
-  if ( NULL != realm_.actuator_ ) {
-    VectorFieldType *actuatorSource 
+  if ( NULL != realm_.actuator_ || NULL != realm_.actuatorMeta_) {
+    VectorFieldType *actuatorSource
       =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source"));
     VectorFieldType *actuatorSourceLHS
       =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source_lhs"));
     ScalarFieldType *g
-      =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "g"));
+      =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "g")); //TODO(SAKIEVICH) give this a better name
     stk::mesh::put_field_on_mesh(*actuatorSource, *part, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*g, *part, nullptr);

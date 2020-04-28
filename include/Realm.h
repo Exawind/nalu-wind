@@ -81,6 +81,8 @@ class SolutionNormPostProcessing;
 class TurbulenceAveragingPostProcessing;
 class DataProbePostProcessing;
 class Actuator;
+struct ActuatorMetaFAST;
+struct ActuatorBulkFAST;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
@@ -444,6 +446,8 @@ class Realm {
   TurbulenceAveragingPostProcessing *turbulenceAveragingPostProcessing_;
   DataProbePostProcessing *dataProbePostProcessing_;
   Actuator *actuator_;
+  std::shared_ptr<ActuatorMetaFAST> actuatorMeta_;
+  std::shared_ptr<ActuatorBulkFAST> actuatorBulk_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
@@ -455,6 +459,7 @@ class Realm {
   SizeType nodeCount_;
   bool estimateMemoryOnly_;
   double availableMemoryPerCoreGB_;
+  double timerActuator_{0};
   double timerCreateMesh_;
   double timerPopulateMesh_;
   double timerPopulateFieldData_;
