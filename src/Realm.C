@@ -983,6 +983,7 @@ Realm::setup_post_processing_algorithms()
 
   if (NULL != actuatorMeta_)
   {
+#ifdef NALU_USES_OPENFAST
     switch(actuatorMeta_->actuatorType_){
       case(ActuatorType::ActLineFASTNGP):{
         actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
@@ -998,6 +999,9 @@ Realm::setup_post_processing_algorithms()
         ThrowErrorMsg("Unsupported actuator type");
       }
     }
+#else
+    ThrowErrorMsg("Actuator methods require OpenFAST");
+#endif
   }
 
   // check for norm nodal fields
@@ -2319,6 +2323,7 @@ Realm::initialize_post_processing_algorithms()
 
   if (NULL != actuatorMeta_)
   {
+#ifdef NALU_USES_OPENFAST
     switch(actuatorMeta_->actuatorType_){
       case(ActuatorType::ActLineFASTNGP):
       case(ActuatorType::ActDiskFASTNGP):
@@ -2329,6 +2334,9 @@ Realm::initialize_post_processing_algorithms()
         ThrowErrorMsg("Unsupported actuator type");
       }
     }
+#else
+    ThrowErrorMsg("Actuator requires OpenFAST");
+#endif
   }
 }
 
