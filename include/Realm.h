@@ -83,6 +83,8 @@ class DataProbePostProcessing;
 class Actuator;
 struct ActuatorMetaFAST;
 struct ActuatorBulkFAST;
+struct ActuatorMetaSimple;
+struct ActuatorBulkSimple;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
@@ -448,6 +450,8 @@ class Realm {
   Actuator *actuator_;
   std::shared_ptr<ActuatorMetaFAST> actuatorMeta_;
   std::shared_ptr<ActuatorBulkFAST> actuatorBulk_;
+  std::shared_ptr<ActuatorMetaSimple> actuatorMetaSimple_;
+  std::shared_ptr<ActuatorBulkSimple> actuatorBulkSimple_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;

@@ -37,8 +37,14 @@ actuator_parse(const YAML::Node& y_node)
                  "missing from yaml node passed to actuator_parse");
   int nTurbines = 0;
   std::string actuatorTypeName;
-  get_required(y_actuator, "n_turbines_glob", nTurbines);
   get_required(y_actuator, "type", actuatorTypeName);
+  if ((ActuatorTypeMap[actuatorTypeName]==ActuatorType::ActLineSimpleNGP)||
+      (ActuatorTypeMap[actuatorTypeName]==ActuatorType::ActLineSimple))
+    {
+      get_required(y_actuator, "n_simpleblades", nTurbines);
+    } else {
+    get_required(y_actuator, "n_turbines_glob", nTurbines);
+  }
   ActuatorMeta actMeta(nTurbines, ActuatorTypeMap[actuatorTypeName]);
   // search specifications
   std::string searchMethodName = "na";

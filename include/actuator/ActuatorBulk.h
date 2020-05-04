@@ -68,6 +68,7 @@ struct ActuatorBulk
   ActScalarIntDv turbIdOffset_;
   ActVectorDblDv pointCentroid_;
   ActVectorDblDv velocity_;
+  ActScalarDblDv density_;
   ActVectorDblDv actuatorForce_;
   ActVectorDblDv epsilon_;
   ActScalarDblDv searchRadius_;
