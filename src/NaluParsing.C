@@ -892,16 +892,29 @@ namespace YAML
           sierra::nalu::RobinCouplingParameter>();
       wallData.robinParameterSpec_ = true;
     }
+    // To use the engineering wall model.
     if (node["use_wall_function"])
     {
       wallData.wallFunctionApproach_ = node["use_wall_function"].as<bool>();
     }
+    // If the wall is treated as an atmospheric boundary layer surface stress model.
+    if (node["abl_wall_function"])
+    {
+      // - set the wall function and ABL wall function flags to true.
+      wallData.wallFunctionApproach_ = true;
+      wallData.ablWallFunctionApproach_ = true;
+        
+      // - get the overall ABL wall function YAML node.
+      auto& ablWallFunctionNode = node["abl_wall_function"];
+    }
+/*
     if (node["use_abl_wall_function"])
     {
       wallData.wallFunctionApproach_ = node["use_abl_wall_function"].as<bool>();
       wallData.ablWallFunctionApproach_ =
           node["use_abl_wall_function"].as<bool>();
     }
+*/
     if (node["pressure"])
     {
       wallData.pressure_ = node["pressure"].as<sierra::nalu::Pressure>();
