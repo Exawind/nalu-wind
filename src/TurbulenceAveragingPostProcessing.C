@@ -346,6 +346,8 @@ TurbulenceAveragingPostProcessing::setup()
               throw std::runtime_error("TurbulenceAveragingPostProcessing:setup() Cannot compute SFS stress in less than 3 dimensions: ");
           const std::string stressName = "sfs_stress";
           register_field(stressName, stressSize, metaData, targetPart);
+          const std::string SFSstressNameInst = "sfs_stress_inst";
+          register_field(SFSstressNameInst, stressSize, metaData, targetPart);
       }
 
       if ( avInfo->computeTemperatureSFS_ ) {
@@ -668,7 +670,7 @@ TurbulenceAveragingPostProcessing::execute()
     
     // avoid computing stresses when when oldTimeFilter is not zero
     // this will occur only on a first time step of a new simulation
-    if (oldTimeFilter > 0.0 ) {
+    if (oldTimeFilter > 0.0 ) { 
       if ( avInfo->computeFavreStress_ ) {
         compute_favre_stress(avInfo->name_, oldTimeFilter, zeroCurrent, dt, s_all_nodes);
       }
@@ -676,23 +678,22 @@ TurbulenceAveragingPostProcessing::execute()
       if ( avInfo->computeReynoldsStress_ ) {
         compute_reynolds_stress(avInfo->name_, oldTimeFilter, zeroCurrent, dt, s_all_nodes);
       }
-
-      if ( avInfo->computeResolvedStress_ ) {
-        compute_resolved_stress(avInfo->name_, oldTimeFilter, zeroCurrent, dt, s_all_nodes);
-      }
-
-      if ( avInfo->computeSFSStress_ ) {
-        compute_sfs_stress(avInfo->name_, oldTimeFilter, zeroCurrent, dt, s_all_nodes);
-      }
-
-      if ( avInfo->computeTemperatureResolved_ )
-        compute_temperature_resolved_flux(
-          avInfo->name_, oldTimeFilter, zeroCurrent, dt, s_all_nodes);
-
-      if ( avInfo->computeTemperatureSFS_ )
-        compute_temperature_sfs_flux(
-          avInfo->name_, oldTimeFilter, zeroCurrent, dt, s_all_nodes);
+    } 
+    if ( avInfo->computeResolvedStress_ ) {
+      compute_resolved_stress(avInfo->name_, oldTimeFilter, zeroCurrent, dt, s_all_nodes);
     }
+
+    if ( avInfo->computeSFSStress_ ) {
+      compute_sfs_stress(avInfo->name_, oldTimeFilter, zeroCurrent, dt, s_all_nodes);
+    }
+
+    if ( avInfo->computeTemperatureResolved_ )
+      compute_temperature_resolved_flux(
+          avInfo->name_, oldTimeFilter, zeroCurrent, dt, s_all_nodes);
+
+    if ( avInfo->computeTemperatureSFS_ )
+      compute_temperature_sfs_flux(
+          avInfo->name_, oldTimeFilter, zeroCurrent, dt, s_all_nodes);
   }
 }
 
@@ -1098,6 +1099,7 @@ TurbulenceAveragingPostProcessing::compute_sfs_stress(
   const auto turbVisc = nalu_ngp::get_ngp_field(meshInfo, "turbulent_viscosity");
   const auto dudx = nalu_ngp::get_ngp_field(meshInfo, "dudx");
   auto sfsStress = nalu_ngp::get_ngp_field(meshInfo, "sfs_stress");
+  auto sfsStressInst = nalu_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
 
   // Special treatment for turbulent KE
   const auto* turbKEHost = realm_.meta_data().get_field(
@@ -1152,6 +1154,11 @@ TurbulenceAveragingPostProcessing::compute_sfs_stress(
           const double divUTerm = (i == j) ? twothird * divU : 0.0;
           const double sfsTKETerm = (i == j) ? twothird * rho * sfsTKE : 0.0;
 
+          const double instStress =
+	    - (mut * (dudx.get(mi, ndim * i + j) +
+		      dudx.get(mi, ndim * j + i) - divUTerm) -
+	       sfsTKETerm);
+          sfsStressInst.get(mi, ic) = instStress;
           const double newStress =
             (sfsStress.get(mi, ic) * oldTimeFilter * zeroCurrent -
              dt * (mut * (dudx.get(mi, ndim * i + j) +
@@ -1163,6 +1170,7 @@ TurbulenceAveragingPostProcessing::compute_sfs_stress(
         }
     });
   sfsStress.modify_on_device();
+  sfsStressInst.modify_on_device();
 }
 
 

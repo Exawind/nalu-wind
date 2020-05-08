@@ -208,6 +208,7 @@ BdyLayerStatistics::initialize()
   d_uiujAvg_    = ArrayType("d_uiujAvg_", nHeights * nDim_ * 2);
   d_uiujBarAvg_ = ArrayType("d_uiujBarAvg_", nHeights * nDim_ * 2);
   d_sfsBarAvg_  = ArrayType("d_sfsBarAvg_", nHeights * nDim_ * 2);
+  d_sfsAvg_     = ArrayType("d_sfsAvg_", nHeights * nDim_ * 2);
 
   heights_    = Kokkos::create_mirror_view(d_heights_);
   sumVol_     = Kokkos::create_mirror_view(d_sumVol_);
@@ -217,6 +218,7 @@ BdyLayerStatistics::initialize()
   uiujAvg_    = Kokkos::create_mirror_view(d_uiujAvg_);
   uiujBarAvg_ = Kokkos::create_mirror_view(d_uiujBarAvg_);
   sfsBarAvg_  = Kokkos::create_mirror_view(d_sfsBarAvg_);
+  sfsAvg_     = Kokkos::create_mirror_view(d_sfsAvg_);
 
   if (calcTemperatureStats_) {
     d_thetaAvg_       = ArrayType("thetaAvg_", nHeights);
@@ -352,6 +354,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   const auto velTimeAvg = nalu_ngp::get_ngp_field(meshInfo, "velocity_resa_abl");
   const auto resStress = nalu_ngp::get_ngp_field(meshInfo, "resolved_stress");
   const auto sfsField = nalu_ngp::get_ngp_field(meshInfo, "sfs_stress");
+  const auto sfsFieldInst = nalu_ngp::get_ngp_field(meshInfo, "sfs_stress_inst");
   const auto dualVol = nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
   const auto heightIndex = realm_.ngp_field_manager().get_field<int>(
     heightIndex_->mesh_meta_data_ordinal());
@@ -364,6 +367,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   Kokkos::deep_copy(d_velAvg_, 0.0);
   Kokkos::deep_copy(d_velBarAvg_, 0.0);
   Kokkos::deep_copy(d_sfsBarAvg_, 0.0);
+  Kokkos::deep_copy(d_sfsAvg_, 0.0);
   Kokkos::deep_copy(d_uiujAvg_, 0.0);
   Kokkos::deep_copy(d_uiujBarAvg_, 0.0);
   Kokkos::deep_copy(d_sumVol_, 0.0);
@@ -377,6 +381,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   auto d_uiujBarAvg = d_uiujBarAvg_;
   auto d_sumVol     = d_sumVol_;
   auto d_rhoAvg     = d_rhoAvg_;
+  auto d_sfsAvg     = d_sfsAvg_;
 
   const int ndim = nDim_;
   nalu_ngp::run_entity_algorithm(
@@ -412,6 +417,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
         }
 
       for (int i=0; i < ndim * 2; ++i) {
+        Kokkos::atomic_add(&d_sfsAvg(offset + i), (sfsFieldInst.get(mi, i)*rho* dVol));
         Kokkos::atomic_add(&d_sfsBarAvg(offset + i), (sfsField.get(mi, i) * dVol));
         Kokkos::atomic_add(&d_uiujBarAvg(offset + i), (resStress.get(mi, i) * dVol));
       }
@@ -420,6 +426,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   Kokkos::deep_copy(velAvg_,     d_velAvg_);
   Kokkos::deep_copy(velBarAvg_,  d_velBarAvg_);
   Kokkos::deep_copy(sfsBarAvg_,  d_sfsBarAvg_);
+  Kokkos::deep_copy(sfsAvg_,     d_sfsAvg_);
   Kokkos::deep_copy(uiujAvg_,    d_uiujAvg_);
   Kokkos::deep_copy(uiujBarAvg_, d_uiujBarAvg_);
   Kokkos::deep_copy(sumVol_,     d_sumVol_);
@@ -433,6 +440,8 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   MPI_Allreduce(MPI_IN_PLACE, velBarAvg_.data(), nHeights * nDim_,
                 MPI_DOUBLE, MPI_SUM, bulk.parallel());
   MPI_Allreduce(MPI_IN_PLACE, sfsBarAvg_.data(), nHeights * nDim_ * 2,
+                MPI_DOUBLE, MPI_SUM, bulk.parallel());
+  MPI_Allreduce(MPI_IN_PLACE, sfsAvg_.data(), nHeights * nDim_ * 2,
                 MPI_DOUBLE, MPI_SUM, bulk.parallel());
   MPI_Allreduce(MPI_IN_PLACE, uiujBarAvg_.data(), nHeights * nDim_ * 2,
                 MPI_DOUBLE, MPI_SUM, bulk.parallel());
@@ -455,6 +464,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
     offset *= 2;
     for (int i=0; i < nDim_ * 2; i++) {
       sfsBarAvg_(offset + i) /= rhoAvg_(ih);
+      sfsAvg_(offset + i)    /= rhoAvg_(ih);
       uiujBarAvg_(offset + i) /= rhoAvg_(ih);
       uiujAvg_(offset + i) /= rhoAvg_(ih);
     }
@@ -810,6 +820,9 @@ BdyLayerStatistics::write_time_hist_file()
   ierr = nc_put_vara_double(
     ncid, ncVarIDs_["sfs_stress_tavg"], start3.data(), count3.data(),
     sfsBarAvg_.data());
+  ierr = nc_put_vara_double(
+    ncid, ncVarIDs_["sfs_stress"], start3.data(), count3.data(),
+    sfsAvg_.data());
   ierr = nc_put_vara_double(
     ncid, ncVarIDs_["resolved_stress_tavg"], start3.data(), count3.data(),
     uiujBarAvg_.data());
