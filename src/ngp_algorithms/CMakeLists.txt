@@ -20,6 +20,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscSSTAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/WallFuncGeometryAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ABLWallFrictionVelAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/ABLWallFluxesAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/TKEWallFuncAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometryInteriorAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometryBoundaryAlg.C
