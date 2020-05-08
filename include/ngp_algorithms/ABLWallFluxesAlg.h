@@ -36,6 +36,9 @@ template <typename BcAlgTraits>
 class ABLWallFluxesAlg : public Algorithm
 {
 public:
+  template <typename T>
+  using ListArray = std::vector<std::vector<T>>;
+    
   using DblType = double;
 
   //! Constructor
@@ -52,6 +55,8 @@ public:
   //! Destructor
   virtual ~ABLWallFluxesAlg() = default;
 
+  void load(const YAML::Node&);
+    
   //! Execute the algorithm.
   virtual void execute() override;
 

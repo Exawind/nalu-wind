@@ -164,8 +164,8 @@ void ABLWallFrictionVelAlg::load(const YAML::Node& node)
   // Read in the table of surface heat flux or surface temperature versus time.
   std::cout << "Loading Surface Heating Table..." << std::endl;
          
-  ListArray<double> tableData;
-  get_required<ListArray<double>>(node,"surface_heating_table",tableData);
+  ListArray<DblType> tableData;
+  get_required<ListArray<DblType>>(node,"surface_heating_table",tableData);
         
   std::cout << tableData[0][0] << " " << tableData[0][1] << " " << tableData[0][2] << " " << tableData[0][3] << std::endl;
   std::cout << tableData[1][0] << " " << tableData[1][1] << " " << tableData[1][2] << " " << tableData[1][3] << std::endl;
