@@ -18,15 +18,14 @@ nalu_abl_mesh:
 
   mesh_dimensions: [500, 500, 100]
 
-  xmin_boundary_name: west
+  xmin_boundary_name: inflow
 
-  xmax_boundary_name: east
+  xmax_boundary_name: outflow
 
-  ymin_boundary_name: south
+  ymin_boundary_name: left
 
-  ymax_boundary_name: north
+  ymax_boundary_name: right
 
-  zmin_boundary_name: lower
+  zmin_boundary_name: bottom
 
-  zmax_boundary_name: upper
-
+  zmax_boundary_name: top
