@@ -8,7 +8,7 @@
 //
 
 
-#include "ngp_algorithms/ABLWallFrictionVelAlg.h"
+#include "ngp_algorithms/ABLWallFluxesAlg.h"
 
 #include "BuildTemplates.h"
 #include "master_element/MasterElement.h"
@@ -106,14 +106,16 @@ double calc_utau(
 }
 
 template <typename BcAlgTraits>
-ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
+ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
   Realm& realm,
   stk::mesh::Part* part,
   WallFricVelAlgDriver& algDriver,
   const bool useShifted,
   const double gravity,
   const double z0,
-  const double Tref)
+  const double Tref,
+  const double kappa,
+  const YAML::Node& node)
   : Algorithm(realm, part),
     algDriver_(algDriver),
     faceData_(realm.meta_data()),
@@ -157,19 +159,22 @@ ABLWallFrictionVelAlg<BcAlgTraits>::ABLWallFrictionVelAlg(
 
   auto shp_fcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
   faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
+
+  load(node);
 }
 
-void ABLWallFrictionVelAlg::load(const YAML::Node& node)
+template<typename BcAlgTraits>
+void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
 {
   // Read in the table of surface heat flux or surface temperature versus time.
   std::cout << "Loading Surface Heating Table..." << std::endl;
-         
+ 
   ListArray<DblType> tableData;
   get_required<ListArray<DblType>>(node,"surface_heating_table",tableData);
-        
-  std::cout << tableData[0][0] << " " << tableData[0][1] << " " << tableData[0][2] << " " << tableData[0][3] << std::endl;
-  std::cout << tableData[1][0] << " " << tableData[1][1] << " " << tableData[1][2] << " " << tableData[1][3] << std::endl;
-         
+ 
+  std::cout << tableData[0][0] << " " << tableData[0][1] << " " << tableData[0][2] << " " << tableData[0][3] << std::endl;  
+  std::cout << tableData[1][0] << " " << tableData[1][1] << " " << tableData[1][2] << " " << tableData[1][3] << std::endl;  
+ 
   // Split the table out into vectors for each input quantity.
   auto nTimes = tableData.size();
   std::cout << "nTimes = " << nTimes << std::endl;
@@ -179,16 +184,16 @@ void ABLWallFrictionVelAlg::load(const YAML::Node& node)
   tableSurfaceTemperatures_.resize(nTimes);
   tableWeights_.resize(nTimes);
 
-  for (std::vector<double>::size_type i = 0; i < nTimes; i++) {
-    tableTimes_[i] = tableData[i][0];
-    tableFluxes_[i] = tableData[i][1];
-    tableSurfaceTemperatures_[i] = tableData[i][2];
-    tableWeights_[i] = tableData[i][3];
+  for (std::vector<DblType>::size_type i = 0; i < nTimes; i++) {
+    tableTimes_[i] = tableData[i][0]; 
+    tableFluxes_[i] = tableData[i][1]; 
+    tableSurfaceTemperatures_[i] = tableData[i][2]; 
+    tableWeights_[i] = tableData[i][3]; 
   }
 }
-    
+
 template<typename BcAlgTraits>
-void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
+void ABLWallFluxesAlg<BcAlgTraits>::execute()
 {
   namespace mo = abl_monin_obukhov;
   using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
@@ -229,7 +234,7 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
   nalu_ngp::ArraySimdDouble2 utauSum(0.0);
   Kokkos::Sum<nalu_ngp::ArraySimdDouble2> utauReducer(utauSum);
 
-  const std::string algName = "ABLWallFrictionVelAlg_" + std::to_string(BcAlgTraits::topo_);
+  const std::string algName = "ABLWallFluxesAlg_" + std::to_string(BcAlgTraits::topo_);
   nalu_ngp::run_elem_par_reduce(
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
     KOKKOS_LAMBDA(ElemSimdData& edata, nalu_ngp::ArraySimdDouble2& uSum) {
@@ -353,7 +358,7 @@ void ABLWallFrictionVelAlg<BcAlgTraits>::execute()
   algDriver_.accumulate_utau_area_sum(utauSum.array_[0], utauSum.array_[1]);
 }
 
-INSTANTIATE_KERNEL_FACE(ABLWallFrictionVelAlg)
+INSTANTIATE_KERNEL_FACE(ABLWallFluxesAlg)
 
 }  // nalu
 }  // sierra

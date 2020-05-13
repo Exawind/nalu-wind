@@ -19,6 +19,8 @@
 
 #include "stk_mesh/base/Types.hpp"
 
+#include "NaluParsing.h"
+
 namespace sierra {
 namespace nalu {
 
@@ -38,26 +40,25 @@ class ABLWallFluxesAlg : public Algorithm
 public:
   template <typename T>
   using ListArray = std::vector<std::vector<T>>;
-    
+
   using DblType = double;
 
-  //! Constructor
   ABLWallFluxesAlg(
     Realm&,
-    const YAML::Node&,
     stk::mesh::Part*,
     WallFricVelAlgDriver&,
     const bool,
     const double,
     const double,
-    const double);
+    const double,
+    const double,
+    const YAML::Node&);
 
-  //! Destructor
   virtual ~ABLWallFluxesAlg() = default;
 
+  //! Read the input file to get information about the ABL boundary condition.
   void load(const YAML::Node&);
-    
-  //! Execute the algorithm.
+
   virtual void execute() override;
 
 private:
@@ -93,11 +94,13 @@ private:
   bool useShifted_{false};
 
   MasterElement* meFC_{nullptr};
-    
-  std::vector<double> tableTimes_;
-  std::vector<double> tableFluxes_;
-  std::vector<double> tableSurfaceTemperatures_;
-  std::vector<double> tableWeights_;
+
+  // Break the flux/surface temperature vs. time input table into vectors
+  // of each quantity and store in the following vectors.
+  std::vector<DblType> tableTimes_;
+  std::vector<DblType> tableFluxes_;
+  std::vector<DblType> tableSurfaceTemperatures_;
+  std::vector<DblType> tableWeights_;
 };
 
 }  // nalu

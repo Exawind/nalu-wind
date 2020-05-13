@@ -124,6 +124,7 @@
 
 // ngp
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
+#include "ngp_algorithms/ABLWallFluxesAlg.h"
 #include "ngp_algorithms/CourantReAlg.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/MdotEdgeAlg.h"
@@ -1783,6 +1784,7 @@ MomentumEquationSystem::register_wall_bc(
   const bool wallFunctionApproach = userData.wallFunctionApproach_;
   const bool ablWallFunctionApproach = userData.ablWallFunctionApproach_;
   const bool anyWallFunctionActivated = wallFunctionApproach || ablWallFunctionApproach;
+  auto& ablWallFunctionNode = userData.ablWallFunctionNode_;
 
   // push mesh part
   if ( !anyWallFunctionActivated )
@@ -1951,10 +1953,17 @@ MomentumEquationSystem::register_wall_bc(
       realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
         wfAlgType, part, get_elem_topo(realm_, *part), "geometry_wall_func");
 
+/*
       wallFuncAlgDriver_.register_face_algorithm<ABLWallFrictionVelAlg>(
         wfAlgType, part, "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
         grav, z0, referenceTemperature,
         realm_.get_turb_model_constant(TM_kappa));
+*/
+
+      wallFuncAlgDriver_.register_face_algorithm<ABLWallFluxesAlg>(
+        wfAlgType, part, "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
+        grav, z0, referenceTemperature,
+        realm_.get_turb_model_constant(TM_kappa),ablWallFunctionNode);
 
       if (realm_.realmUsesEdges_) {
         auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;

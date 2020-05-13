@@ -905,7 +905,7 @@ namespace YAML
       wallData.ablWallFunctionApproach_ = true;
         
       // - get the overall ABL wall function YAML node.
-      auto& ablWallFunctionNode = node["abl_wall_function"];
+      wallData.ablWallFunctionNode_ = node["abl_wall_function"];
     }
 /*
     if (node["use_abl_wall_function"])
