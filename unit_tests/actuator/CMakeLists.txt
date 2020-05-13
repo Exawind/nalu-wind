@@ -14,4 +14,9 @@ if(ENABLE_OPENFAST)
    	  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorFunctorsFAST.C
    	  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorBulkDiskFAST.C
    )
+   # create symlink to nrelmw.fst 
+   execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+     ${CMAKE_BINARY_DIR}/reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst
+     ${CMAKE_BINARY_DIR}/nrel5mw.fst
+   )
 endif()
