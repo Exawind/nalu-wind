@@ -61,8 +61,7 @@ TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
   ASSERT_EQ(fi.tMax, 0.0625);
 
   ASSERT_EQ(
-    fi.globTurbineData[0].FASTInputFileName,
-    "reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst");
+    fi.globTurbineData[0].FASTInputFileName, "nrel5mw.fst");
   ASSERT_EQ(fi.globTurbineData[0].FASTRestartFileName, "blah");
   ASSERT_EQ(fi.globTurbineData[0].TurbID, 0);
   ASSERT_EQ(fi.globTurbineData[0].numForcePtsBlade, 10);
