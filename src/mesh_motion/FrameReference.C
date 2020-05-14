@@ -1,5 +1,6 @@
 
-#include "mesh_motion/FrameInertial.h"
+#include "../../include/mesh_motion/FrameReference.h"
+
 #include "FieldTypeDef.h"
 
 // stk_mesh/base/fem
@@ -10,7 +11,7 @@
 namespace sierra{
 namespace nalu{
 
-void FrameInertial::update_coordinates_velocity(const double time)
+void FrameReference::update_coordinates_velocity(const double time)
 {
   compute_transformation(time);
 
@@ -22,8 +23,6 @@ void FrameInertial::update_coordinates_velocity(const double time)
 
   VectorFieldType* modelCoords = meta_.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* currCoords = meta_.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "current_coordinates");
   VectorFieldType* displacement = meta_.get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_displacement");
   VectorFieldType* meshVelocity = meta_.get_field<VectorFieldType>(
@@ -41,8 +40,7 @@ void FrameInertial::update_coordinates_velocity(const double time)
     for (size_t in=0; in < b->size(); in++) {
 
       auto node = (*b)[in]; // mesh node and NOT YAML node
-      double* oldxyz = stk::mesh::field_data(*modelCoords, node);
-      double* xyz = stk::mesh::field_data(*currCoords, node);
+      double* xyz = stk::mesh::field_data(*modelCoords, node);
       double* dx = stk::mesh::field_data(*displacement, node);
 
       // temporary model coords for a generic 2D and 3D implementation
@@ -50,15 +48,15 @@ void FrameInertial::update_coordinates_velocity(const double time)
 
       // copy over model coordinates
       for ( int i = 0; i < nDim; ++i )
-        mX[i] = oldxyz[i];
+        mX[i] = xyz[i];
 
       // perform matrix multiplication between transformation matrix
       // and old coordinates to obtain current coordinates
       for (int d = 0; d < nDim; d++) {
-        xyz[d] = inertialFrame_[d][0]*mX[0]
-                +inertialFrame_[d][1]*mX[1]
-                +inertialFrame_[d][2]*mX[2]
-                +inertialFrame_[d][3];
+        xyz[d] = referenceFrame_[d][0]*mX[0]
+                +referenceFrame_[d][1]*mX[1]
+                +referenceFrame_[d][2]*mX[2]
+                +referenceFrame_[d][3];
 
         dx[d] = xyz[d] - mX[d];
       } // end for loop - d index
@@ -67,9 +65,9 @@ void FrameInertial::update_coordinates_velocity(const double time)
   } // end for loop - bkts
 }
 
-void FrameInertial::compute_transformation(const double time)
+void FrameReference::compute_transformation(const double time)
 {
-  inertialFrame_ = refFrame_;
+  referenceFrame_ = refFrame_;
 
   for (auto& mm: meshMotionVec_)
   {
@@ -77,7 +75,7 @@ void FrameInertial::compute_transformation(const double time)
     mm->build_transformation(time);
 
     // composite addition of motions in current group
-    inertialFrame_ = mm->add_motion(mm->get_trans_mat(),inertialFrame_);
+    referenceFrame_ = mm->add_motion(mm->get_trans_mat(),referenceFrame_);
   }
 }
 

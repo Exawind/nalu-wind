@@ -1,5 +1,5 @@
-#ifndef FRAMENONINERTIAL_H
-#define FRAMENONINERTIAL_H
+#ifndef FRAMEMOVING_H
+#define FRAMEMOVING_H
 
 #include "FrameBase.h"
 
@@ -11,17 +11,17 @@
 namespace sierra{
 namespace nalu{
 
-class FrameNonInertial : public FrameBase
+class FrameMoving : public FrameBase
 {
 public:
-  FrameNonInertial(
+  FrameMoving(
     stk::mesh::BulkData& bulk,
     const YAML::Node& node
 ) : FrameBase(bulk,node,false)
   {
   }
 
-  virtual ~FrameNonInertial()
+  virtual ~FrameMoving()
   {
   }
 
@@ -30,8 +30,8 @@ public:
   void post_compute_geometry();
 
 private:
-  FrameNonInertial() = delete;
-  FrameNonInertial(const FrameNonInertial&) = delete;
+  FrameMoving() = delete;
+  FrameMoving(const FrameMoving&) = delete;
 
   /** Compute transformation matrix
    *
@@ -45,4 +45,4 @@ private:
 } // nalu
 } // sierra
 
-#endif /* FRAMENONINERTIAL_H */
+#endif /* FRAMEMOVING_H */

@@ -18,10 +18,10 @@ namespace nalu{
 FrameBase::FrameBase(
   stk::mesh::BulkData& bulk,
   const YAML::Node& node,
-  bool isInertial
+  bool isReference
 ) : bulk_(bulk),
     meta_(bulk.mesh_meta_data()),
-    isInertial_(isInertial)
+    isReference_(isReference)
 {
   load(node);
 }
@@ -67,8 +67,8 @@ void FrameBase::load(const YAML::Node& node)
 
 void FrameBase::populate_part_vec(const YAML::Node& node)
 {
-  // if nor parts specified and frame is inertial, return
-  if (!node["mesh_parts"] && isInertial_)
+  // if no parts specified and frame is reference, return
+  if (!node["mesh_parts"] && isReference_)
     return;
 
   // declare temporary part name vectors

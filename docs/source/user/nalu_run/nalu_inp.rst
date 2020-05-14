@@ -406,10 +406,10 @@ Common options
 
 .. inpfile:: rebalance_mesh
 
-   A boolean flag indicating whether to rebalance mesh using stk_balance. The 
+   A boolean flag indicating whether to rebalance mesh using stk_balance. The
    default value is ``no``. If this parameter is activated, it requires that
-   ``stk_rebalance_method`` is also set to specify the decomposition method to be 
-   used for rebalance, e.g., RIB, RCB, etc. 
+   ``stk_rebalance_method`` is also set to specify the decomposition method to be
+   used for rebalance, e.g., RIB, RCB, etc.
 
 .. inpfile:: balance_nodes
 
@@ -743,7 +743,7 @@ Material Properties
 
    A list of element blocks (*parts*) where the material properties are applied.
    This list should ideally include all the parts that are referenced by
-   :inpfile:`initial_conditions.target_name`. Using the alias ``all_blocks`` is 
+   :inpfile:`initial_conditions.target_name`. Using the alias ``all_blocks`` is
    equivalent to listing all element blocks in the mesh.
 
 .. inpfile:: material_properties.constant_specification
@@ -869,9 +869,9 @@ Mesh Motion
 
 .. inpfile:: mesh_motion
 
-   This subsection of the of the realm describes the rigid body motion undergone 
-   by the entire mesh. The mesh motion description follows the concept of 
-   reference frames in multi-body representation of physical domains, with entry 
+   This subsection of the of the realm describes the rigid body motion undergone
+   by the entire mesh. The mesh motion description follows the concept of
+   reference frames in multi-body representation of physical domains, with entry
    under :inpfile:`mesh_motion` describing a motion frame as shown below.
 
    Example:
@@ -881,33 +881,33 @@ Mesh Motion
       mesh_motion:
        - name: scale_background
         mesh_parts: [ Unspecified-3-HEX ]
-        frame: inertial
+        frame: reference
         motion:
          - type: scaling
            factor: [1.2, 1.0, 1.2]
            origin: [5.0, 0.05, 0.0]
 
-         - name: scale_near_body
-           frame: inertial
-           motion:
-            - type: scaling
-              factor: [1.2, 1.0, 1.2]
-              origin: [0.0, 0.05, 0.0]
+       - name: scale_near_body
+         frame: reference
+         motion:
+          - type: scaling
+            factor: [1.2, 1.0, 1.2]
+            origin: [0.0, 0.05, 0.0]
 
-         - name: trans_rot_near_body
-           mesh_parts: [ Unspecified-2-HEX ]
-           frame: non_inertial
-           reference: scale_near_body
-           motion:
-            - type: rotation
-              omega: 12.0
-              axis: [0.0, 1.0, 0.0]
-              origin: [0.0, 0.05, 0.0]
+       - name: trans_rot_near_body
+         mesh_parts: [ Unspecified-2-HEX ]
+         frame: moving
+         reference: scale_near_body
+         motion:
+          - type: rotation
+            omega: 12.0
+            axis: [0.0, 1.0, 0.0]
+            origin: [0.0, 0.05, 0.0]
 
-            - type: translation
-              start_time: 100.0
-              end_time: 200.0
-              velocity: [0.05, 0.0, 0.0]
+          - type: translation
+            start_time: 100.0
+            end_time: 200.0
+            velocity: [0.05, 0.0, 0.0]
 
 .. inpfile:: mesh_motion.name
 
@@ -919,8 +919,8 @@ Mesh Motion
 
 .. inpfile:: mesh_motion.frame
 
-   Type of motion frame. Frames described as ``inertial`` are one time motions
-   executed at the start of the simulation. Frames described as ``non_nertial``
+   Type of motion frame. Frames described as ``reference`` are one time motions
+   executed at the start of the simulation. Frames described as ``moving``
    are executed throughout the simulation unless specified using ``start_time`` and
    ``end_time``.
 
@@ -1554,9 +1554,9 @@ Boundary Layer Statistics
 	  stats_output_file: abl_statistics.nc
 	  compute_temperature_statistics: yes
 	  output_frequency: 5000
-	  time_hist_output_frequency: 1        
-	  height_multiplier: 1.0e6             
-	  
+	  time_hist_output_frequency: 1
+	  height_multiplier: 1.0e6
+
    The various parameters to ``boundary_layer_statistics`` are
    described below:
 
@@ -1580,7 +1580,7 @@ Boundary Layer Statistics
 .. inpfile:: boundary_layer_statistics.output_frequency
 
    The frequency to output statistics in the ``abl_*_stats.dat`` text
-   files.  
+   files.
    [*Optional*, default value: ``10``]
 
 .. inpfile:: boundary_layer_statistics.time_hist_output_frequency
@@ -1604,7 +1604,7 @@ Boundary Layer Statistics
 .. inpfile:: boundary_layer_statistics.wall_normal_direction
 
    Spatial index to indicate the wall normal direction in the domain.
-   The directions are given by x=``1``, y=``2``, z=``3``.  
+   The directions are given by x=``1``, y=``2``, z=``3``.
    [*Optional*, default value: ``3``]
 
 .. inpfile:: boundary_layer_statistics.minimum_height

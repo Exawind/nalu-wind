@@ -1,5 +1,5 @@
 
-#include "mesh_motion/FrameNonInertial.h"
+#include "mesh_motion/FrameMoving.h"
 #include "FieldTypeDef.h"
 
 // stk_mesh/base/fem
@@ -10,7 +10,7 @@
 namespace sierra{
 namespace nalu{
 
-void FrameNonInertial::update_coordinates_velocity(const double time)
+void FrameMoving::update_coordinates_velocity(const double time)
 {
   assert (partVec_.size() > 0);
 
@@ -82,11 +82,11 @@ void FrameNonInertial::update_coordinates_velocity(const double time)
   } // end for loop - bkts
 }
 
-MotionBase::TransMatType FrameNonInertial::compute_transformation(
+MotionBase::TransMatType FrameMoving::compute_transformation(
   const double time,
   const double* xyz)
 {
-  // all non-inertial frame motions are based off of the reference frame
+  // all frame motions are based off of the reference frame
   MotionBase::TransMatType comp_trans_mat = refFrame_;
 
   for (auto& mm: meshMotionVec_)
@@ -101,7 +101,7 @@ MotionBase::TransMatType FrameNonInertial::compute_transformation(
   return comp_trans_mat;
 }
 
-void FrameNonInertial::post_compute_geometry()
+void FrameMoving::post_compute_geometry()
 {
   // flag denoting if mesh velocity divergence already computed
   bool computedMeshVelDiv = false;

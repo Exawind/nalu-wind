@@ -30,9 +30,9 @@ public:
 
   virtual void update_coordinates_velocity(const double) = 0;
 
-  virtual const MotionBase::TransMatType& get_inertial_frame() const
+  virtual const MotionBase::TransMatType& get_reference_frame() const
   {
-    throw std::runtime_error("FrameNonInertial: Invalid access of inertial frame");
+    throw std::runtime_error("FrameMoving: Invalid access of reference frame");
   }
 
   void set_ref_frame( MotionBase::TransMatType& frame )
@@ -46,9 +46,9 @@ public:
       meshMotionVec_[i]->set_computed_centroid(centroid);
   }
 
-  bool is_inertial() const
+  bool is_reference() const
   {
-    return isInertial_;
+    return isReference_;
   }
 
   virtual void post_compute_geometry()
@@ -87,7 +87,7 @@ protected:
    */
   MotionBase::TransMatType refFrame_ = MotionBase::identityMat_;
 
-  const bool isInertial_;
+  const bool isReference_;
 
   bool computeCentroid_ = false;
 

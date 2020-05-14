@@ -4,8 +4,8 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/MeshDisplacementEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MeshDisplacementMassBackwardEulerNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FrameBase.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/FrameInertial.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/FrameNonInertial.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/FrameMoving.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/FrameReference.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MeshDisplacementEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MeshDisplacementMassBackwardEulerNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MeshMotionAlg.C

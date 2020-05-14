@@ -23,6 +23,8 @@ public:
 
   void post_compute_geometry();
 
+  bool onlyInitialDisplacement_ = true;
+
 private:
   MeshMotionAlg() = delete;
   MeshMotionAlg(const MeshMotionAlg&) = delete;

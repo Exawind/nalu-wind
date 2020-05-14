@@ -1,5 +1,5 @@
-#ifndef FRAMEINERTIAL_H
-#define FRAMEINERTIAL_H
+#ifndef FRAMEREFERENCE_H
+#define FRAMEREFERENCE_H
 
 #include "FrameBase.h"
 
@@ -11,42 +11,42 @@
 namespace sierra{
 namespace nalu{
 
-class FrameInertial : public FrameBase
+class FrameReference : public FrameBase
 {
 public:
-  FrameInertial(
+  FrameReference(
     stk::mesh::BulkData& bulk,
     const YAML::Node& node
 ) : FrameBase(bulk,node,true)
   {
   }
 
-  virtual ~FrameInertial()
+  virtual ~FrameReference()
   {
   }
 
   void update_coordinates_velocity(const double time);
 
-  const MotionBase::TransMatType& get_inertial_frame() const
+  const MotionBase::TransMatType& get_reference_frame() const
   {
-    return inertialFrame_;
+    return referenceFrame_;
   }
 
 private:
-    FrameInertial() = delete;
-    FrameInertial(const FrameInertial&) = delete;
+    FrameReference() = delete;
+    FrameReference(const FrameReference&) = delete;
 
     void compute_transformation(const double);
 
     /** Inertial frame
      *
-     * A 4x4 matrix that defines the composite inertial frame
+     * A 4x4 matrix that defines the composite reference frame
      * It is initialized to an identity matrix
      */
-    MotionBase::TransMatType inertialFrame_ = MotionBase::identityMat_;
+    MotionBase::TransMatType referenceFrame_ = MotionBase::identityMat_;
 };
 
 } // nalu
 } // sierra
 
-#endif /* FRAMEINERTIAL_H */
+#endif /* FRAMEREFERENCE_H */

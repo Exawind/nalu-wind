@@ -114,11 +114,11 @@ realms:
     mesh_motion:
     - name: mmOne
       mesh_parts: [block_1]
-      frame: non_inertial
+      frame: moving
       motion:
        - type: rotation
          omega: 1.0
-             
+
     solution_options:
       name: myOptions
 

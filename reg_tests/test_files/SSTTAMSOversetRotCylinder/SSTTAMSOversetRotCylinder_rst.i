@@ -76,7 +76,7 @@ realms:
           average_tke_resolved: 0.0
           average_dudx: 0.0
           k_ratio: 1.0
-          avg_res_adequacy_parameter: 1.0 
+          avg_res_adequacy_parameter: 1.0
 
     material_properties:
       target_name:
@@ -159,7 +159,7 @@ realms:
 
     mesh_motion:
       - name: interior
-        frame: non_inertial
+        frame: moving
         mesh_parts: [ Unspecified-2-HEX ]
         motion:
          - type: rotation

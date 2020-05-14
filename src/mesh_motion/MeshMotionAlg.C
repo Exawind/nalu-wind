@@ -1,13 +1,13 @@
 
 #include "mesh_motion/MeshMotionAlg.h"
 
-#include "mesh_motion/FrameInertial.h"
-#include "mesh_motion/FrameNonInertial.h"
-
 #include "NaluParsing.h"
 
 #include <cassert>
 #include <iostream>
+
+#include "../../include/mesh_motion/FrameMoving.h"
+#include "../../include/mesh_motion/FrameReference.h"
 
 namespace sierra{
 namespace nalu{
@@ -43,10 +43,12 @@ void MeshMotionAlg::load(
     std::string frame;
     get_required(ginfo, "frame", frame);
 
-    if( frame == "inertial" )
-      frameVec_[i].reset(new FrameInertial(bulk, ginfo));
-    else if( frame == "non_inertial" )
-      frameVec_[i].reset(new FrameNonInertial(bulk, ginfo));
+    if( frame == "reference" )
+      frameVec_[i].reset(new FrameReference(bulk, ginfo));
+    else if( frame == "moving" ) {
+      frameVec_[i].reset(new FrameMoving(bulk, ginfo));
+      onlyInitialDisplacement_ = false;
+    }
     else
       throw std::runtime_error("MeshMotion: Invalid frame type: " + frame);
 
@@ -77,7 +79,7 @@ void MeshMotionAlg::initialize( const double time )
     // set reference frame if they exist
     if( refFrameMap_.find(i) != refFrameMap_.end() )
     {
-      MotionBase::TransMatType ref_frame = refFrameMap_[i]->get_inertial_frame();
+      MotionBase::TransMatType ref_frame = refFrameMap_[i]->get_reference_frame();
       frameVec_[i]->set_ref_frame(ref_frame);
     }
 
@@ -109,7 +111,7 @@ void MeshMotionAlg::execute(const double time)
 {
   for (size_t i=0; i < frameVec_.size(); i++) {
 
-    if( !frameVec_[i]->is_inertial() )
+    if( !frameVec_[i]->is_reference() )
       frameVec_[i]->update_coordinates_velocity(time);
   }
 

@@ -527,8 +527,15 @@ Realm::initialize()
   if ( hasPeriodic_ )
     periodicManager_->build_constraints();
 
-  if ( solutionOptions_->meshMotion_ )
+  if ( solutionOptions_->meshMotion_ ) {
     meshMotionAlg_->initialize( get_current_time() );
+
+    // if only initial displacement is specified,
+    // turn off mesh motion flag to prevent re-initialization
+    // of linear solver, overset, etc.
+    if(meshMotionAlg_->onlyInitialDisplacement_)
+      solutionOptions_->meshMotion_ = false;
+  }
 
   compute_geometry();
 
