@@ -63,6 +63,7 @@
 #include <kernel/ScalarUpwAdvDiffElemKernel.h>
 
 #include <kernel/ScalarFluxBCElemKernel.h>
+#include <kernel/ScalarFaceFluxBCElemKernel.h>
 #include <kernel/EnthalpyTGradBCElemKernel.h>
 
 // bc kernels
@@ -784,20 +785,22 @@ EnthalpyEquationSystem::register_wall_bc(
   VectorFieldType &dhdxNone = dhdx_->field_of_state(stk::mesh::StateNone);
 
   stk::mesh::MetaData &meta_data = realm_.meta_data();
+  stk::topology::rank_t sideRank = static_cast<stk::topology::rank_t>(meta_data.side_rank());
 
   // extract user data
   WallUserData userData = wallBCData.userData_;
   std::string temperatureName = "temperature";
+  const bool wallFunctionApproach = userData.wallFunctionApproach_;
+  const bool ablWallFunctionApproach = userData.ablWallFunctionApproach_;
 
   // check to see if this bc is a CHT type
   const bool isInterface = userData.isInterface_;
 
-  // check for wall function; warn user that this is not yet supported
-  const bool wallFunctionApproach = userData.wallFunctionApproach_;
-  if (wallFunctionApproach)
-    NaluEnv::self().naluOutputP0() << "Sorry, wall function not yet supported for energy; will use Dirichlet" << std::endl;
+  // check for engineering wall function; warn user that this is not yet supported
+  if (wallFunctionApproach && !ablWallFunctionApproach)
+    NaluEnv::self().naluOutputP0() << "Sorry, engineering wall function not yet supported for temperature/enthalpy; will use Dirichlet" << std::endl;
 
-  // check that is was specified (okay if it is not)
+  // If boundary temperature is specified, do the following:
   if ( bc_data_specified(userData, temperatureName) ) {
 
     // bc data work (copy, enthalpy evaluation, etc.)
@@ -856,7 +859,10 @@ EnthalpyEquationSystem::register_wall_bc(
     }
 
   }
-  else if ( userData.heatFluxSpec_ ) {
+
+  // If standard single-value time-invariant  boundary heat flux is specified, do the following (but ignore this heat flux 
+  // if ABL wall function BC is used because it has its own):
+  else if ( userData.heatFluxSpec_ && !ablWallFunctionApproach) {
 
     ScalarFieldType *theBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "heat_flux_bc"));
     stk::mesh::put_field_on_mesh(*theBcField, *part, nullptr);
@@ -894,6 +900,34 @@ EnthalpyEquationSystem::register_wall_bc(
           realm_.realmUsesEdges_, dataPreReqs);
       }
     }
+  }
+
+  // If this is the ABL wall function, then use the boundary heat flux calculated by the wall function given surface
+  // temperature or use specified heat flux time table:
+  else if ( ablWallFunctionApproach ){
+
+    GenericFieldType *theBcField = meta_data.get_field<GenericFieldType>(sideRank, "wall_heat_flux_bip");
+
+    {
+      auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+      AssembleElemSolverAlgorithm* solverAlg = nullptr;
+      bool solverAlgWasBuilt = false;
+
+      std::tie(solverAlg, solverAlgWasBuilt) =
+        build_or_add_part_to_face_bc_solver_alg(
+          *this, *part, solverAlgMap, "enthalpy_heat_flux_bc");
+
+      ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+      auto& activeKernels = solverAlg->activeKernels_;
+
+      if (solverAlgWasBuilt) {
+        build_face_topo_kernel_automatic<ScalarFaceFluxBCElemKernel>(
+          part->topology(), *this, activeKernels, "enthalpy_heat_flux",
+          realm_.bulk_data(), theBcField, realm_.get_coordinates_name(),
+          realm_.realmUsesEdges_, dataPreReqs);
+      }
+    }
+
   }
 
   // non-solver; dhdx; allow for element-based shifted

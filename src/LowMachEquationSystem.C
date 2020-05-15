@@ -1919,8 +1919,12 @@ MomentumEquationSystem::register_wall_bc(
     stk::mesh::put_field_on_mesh(*wallNormalDistanceBip, *part, numScsBip, nullptr);
 
     if (ablWallFunctionApproach) {
+      
+      // register boundary data: wall_heat_flux_bip.  This is the ABL integration-point-based heat flux field.
+      GenericFieldType *wallHeatFluxBip = &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_heat_flux_bip"));
+      stk::mesh::put_field_on_mesh(*wallHeatFluxBip, *part, numScsBip, nullptr);
 
-      // register boundary data: heat_flux_bc
+      // register boundary data: heat_flux_bc.  This is the standard node-based heat flux field.
       ScalarFieldType *theHeatFluxBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "heat_flux_bc"));
       stk::mesh::put_field_on_mesh(*theHeatFluxBcField, *part, nullptr);
 
