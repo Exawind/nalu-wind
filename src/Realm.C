@@ -3606,7 +3606,7 @@ Realm::dump_simulation_time()
   }
 
   // nonconformal or overset
-  if ( has_non_matching_boundary_face_alg() ) {
+  if ( hasNonConformal_ ) {
     double g_totalNonconformal = 0.0, g_minNonconformal= 0.0, g_maxNonconformal = 0.0;
     stk::all_reduce_min(NaluEnv::self().parallel_comm(), &timerNonconformal_, &g_minNonconformal, 1);
     stk::all_reduce_max(NaluEnv::self().parallel_comm(), &timerNonconformal_, &g_maxNonconformal, 1);
@@ -3615,6 +3615,20 @@ Realm::dump_simulation_time()
     NaluEnv::self().naluOutputP0() << "Timing for Nonconformal: " << std::endl;
     NaluEnv::self().naluOutputP0() << "  nonconformal bc --  " << " \tavg: " << g_totalNonconformal/double(nprocs)
                                    << " \tmin: " << g_minNonconformal << " \tmax: " << g_maxNonconformal << std::endl;
+  }
+
+  if (hasOverset_) {
+    double connTime[2] = {oversetManager_->timerConnectivity_, oversetManager_->timerFieldUpdate_};
+    double totTime[2], minTime[2], maxTime[2];
+    stk::all_reduce_sum(NaluEnv::self().parallel_comm(), connTime, totTime, 2);
+    stk::all_reduce_min(NaluEnv::self().parallel_comm(), connTime, minTime, 2);
+    stk::all_reduce_max(NaluEnv::self().parallel_comm(), connTime, maxTime, 2);
+    NaluEnv::self().naluOutputP0()
+      << "Timing for Overset:" << std::endl
+      << "     connectivity --  \tavg: " << totTime[0] / double(nprocs)
+      << " \tmin: " << minTime[0] << " \tmax: " << maxTime[0] << std::endl
+      << "     field update --  \tavg: " << totTime[1] / double(nprocs)
+      << " \tmin: " << minTime[1] << " \tmax: " << maxTime[1] << std::endl;
   }
 
   // transfer

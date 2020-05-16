@@ -99,6 +99,12 @@ public:
 
   std::vector<int> ghostCommProcs_;
 
+  //! Timer for overset connectivity
+  double timerConnectivity_{0.0};
+
+  //! Timer for overset field interpolations
+  double timerFieldUpdate_{0.0};
+
 private:
   OversetManager() = delete;
   OversetManager(const OversetManager&) = delete;
