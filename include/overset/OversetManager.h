@@ -11,6 +11,7 @@
 #ifndef OVERSETMANAGER_H
 #define OVERSETMANAGER_H
 
+#include "KokkosInterface.h"
 #include "overset/OversetFieldData.h"
 
 #include <stk_mesh/base/Selector.hpp>
@@ -45,6 +46,8 @@ class OversetInfo;
 class OversetManager
 {
 public:
+  using EntityList = Kokkos::View<stk::mesh::Entity*, Kokkos::LayoutRight, MemSpace>;
+
   OversetManager(Realm& realm);
 
   virtual ~OversetManager();
@@ -90,6 +93,9 @@ public:
 
   std::vector<stk::mesh::Entity> holeNodes_;
   std::vector<stk::mesh::Entity> fringeNodes_;
+
+  EntityList ngpHoleNodes_;
+  EntityList ngpFringeNodes_;
 
   std::vector<int> ghostCommProcs_;
 

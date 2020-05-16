@@ -103,6 +103,12 @@ private:
    */
   void populate_overset_info();
 
+  //! Synchronize fields before performing overset connectivity
+  void pre_connectivity_sync();
+
+  //! Synchronize modified fields after performing overset connectivity
+  void post_connectivity_sync();
+
   //! Reference to Nalu OversetManager object
   sierra::nalu::OversetManagerTIOGA& oversetManager_;
 
