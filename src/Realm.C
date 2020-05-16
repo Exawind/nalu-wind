@@ -104,6 +104,7 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldManager.h"
+#include "ngp_utils/NgpFieldUtils.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/GeometryInteriorAlg.h"
 
@@ -2954,7 +2955,29 @@ Realm::overset_orphan_node_field_update(
   const unsigned sizeRow,
   const unsigned sizeCol)
 {
+#ifdef KOKKOS_ENABLE_CUDA
+  throw std::runtime_error("Non-NGP version of overset algorithm called in NGP build");
+#else
   oversetManager_->overset_update_field(theField, sizeRow, sizeCol);
+#endif
+}
+
+void
+Realm::overset_field_update(
+  stk::mesh::FieldBase* field,
+  const unsigned nRows,
+  const unsigned nCols,
+  const bool doFinalSyncToDevice)
+{
+  const auto& fieldMgr = ngp_field_manager();
+  auto& ngpField =
+    fieldMgr.get_field<double>(field->mesh_meta_data_ordinal());
+  ngpField.sync_to_host();
+  oversetManager_->overset_update_field(field, nRows, nCols);
+  ngpField.modify_on_host();
+
+  if (doFinalSyncToDevice)
+    ngpField.sync_to_device();
 }
 
 //--------------------------------------------------------------------------
