@@ -1183,11 +1183,11 @@ EnthalpyEquationSystem::solve_and_update()
       solution_update(
         1.0, *hTmp_,
         1.0, enthalpy_->field_of_state(stk::mesh::StateNP1));
+      double timeB = NaluEnv::self().nalu_time();
+      timerAssemble_ += (timeB-timeA);
 
       if (decoupledOverset_ && realm_.hasOverset_)
         realm_.overset_field_update(enthalpy_, 1, 1);
-      double timeB = NaluEnv::self().nalu_time();
-      timerAssemble_ += (timeB-timeA);
     }
 
     // projected nodal gradient
