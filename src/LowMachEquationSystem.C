@@ -708,7 +708,7 @@ LowMachEquationSystem::solve_and_update()
         realm_.meta_data().spatial_dimension());
 
       if (momentumEqSys_->decoupledOverset_ && realm_.hasOverset_)
-        realm_.overset_orphan_node_field_update(
+        realm_.overset_field_update(
           &momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1),
           1, realm_.meta_data().spatial_dimension());
       timeB = NaluEnv::self().nalu_time();
@@ -735,7 +735,7 @@ LowMachEquationSystem::solve_and_update()
         1.0, *continuityEqSys_->pressure_);
 
       if (continuityEqSys_->decoupledOverset_ && realm_.hasOverset_)
-        realm_.overset_orphan_node_field_update(
+        realm_.overset_field_update(
           &continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1), 1, 1);
       timeB = NaluEnv::self().nalu_time();
       continuityEqSys_->timerAssemble_ += (timeB-timeA);
@@ -763,7 +763,7 @@ LowMachEquationSystem::solve_and_update()
           (1.0 - relaxFP), continuityEqSys_->pressure_->field_of_state(stk::mesh::StateN),
           relaxFP, continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1));
 
-        realm_.overset_orphan_node_field_update(
+        realm_.overset_field_update(
           &continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1), 1, 1);
       } else {
         solution_update(
@@ -2713,13 +2713,8 @@ MomentumEquationSystem::assemble_and_solve(
       stk::mesh::communicate_field_data(
         *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
     if (realm_.hasOverset_) {
-#ifndef KOKKOS_ENABLE_CUDA
-      realm_.overset_orphan_node_field_update(Udiag_, 1, 1);
-#else
-      // TODO: Fix overset for GPUs
-      throw std::runtime_error(
-        "Cannot perform overset synchronization on GPUs");
-#endif
+      const bool doFinalSyncToDevice = false;
+      realm_.overset_field_update(Udiag_, 1, 1, doFinalSyncToDevice);
     }
 
     // Push back to device

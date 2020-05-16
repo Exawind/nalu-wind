@@ -67,7 +67,8 @@ FieldUpdateAlgDriver::post_work()
   }
 
   if (realm_.hasOverset_) {
-    realm_.overset_orphan_node_field_update(field, nDim, nDim);
+    const bool doFinalSyncToDevice = false;
+    realm_.overset_field_update(field, nDim, nDim, doFinalSyncToDevice);
   }
 
   ngpField.modify_on_host();

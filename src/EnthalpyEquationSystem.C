@@ -1185,7 +1185,7 @@ EnthalpyEquationSystem::solve_and_update()
         1.0, enthalpy_->field_of_state(stk::mesh::StateNP1));
 
       if (decoupledOverset_ && realm_.hasOverset_)
-        realm_.overset_orphan_node_field_update(enthalpy_, 1, 1);
+        realm_.overset_field_update(enthalpy_, 1, 1);
       double timeB = NaluEnv::self().nalu_time();
       timerAssemble_ += (timeB-timeA);
     }

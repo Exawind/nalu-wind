@@ -76,7 +76,7 @@ void NodalGradAlgDriver<GradPhiType>::post_work()
   }
 
   if (realm_.hasOverset_) {
-    realm_.overset_orphan_node_field_update(gradPhi, dim1, dim2);
+    realm_.overset_field_update(gradPhi, dim1, dim2, doFinalSyncToDevice);
   }
 
   ngpGradPhi.modify_on_host();

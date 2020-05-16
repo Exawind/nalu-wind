@@ -905,7 +905,7 @@ TurbKineticEnergyEquationSystem::solve_and_update()
       update_and_clip();
 
       if (decoupledOverset_ && realm_.hasOverset_)
-        realm_.overset_orphan_node_field_update(tke_, 1, 1);
+        realm_.overset_field_update(tke_, 1, 1);
       double timeB = NaluEnv::self().nalu_time();
       timerAssemble_ += (timeB-timeA);
     }
