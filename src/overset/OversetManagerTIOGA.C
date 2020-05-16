@@ -80,19 +80,13 @@ OversetManagerTIOGA::initialize(const bool isDecoupled)
 
 void OversetManagerTIOGA::overset_update_fields(const std::vector<OversetFieldData>& fields)
 {
-  const double timeA = NaluEnv::self().nalu_time();
   tiogaIface_.overset_update_fields(fields);
-  const double timeB = NaluEnv::self().nalu_time();
-  timerFieldUpdate_ += (timeB - timeA);
 }
 
 void OversetManagerTIOGA::overset_update_field(
   stk::mesh::FieldBase *field, int nrows, int ncols)
 {
-  const double timeA = NaluEnv::self().nalu_time();
   tiogaIface_.overset_update_field(field, nrows, ncols);
-  const double timeB = NaluEnv::self().nalu_time();
-  timerFieldUpdate_ += (timeB - timeA);
 }
 
 

@@ -2969,6 +2969,9 @@ Realm::overset_field_update(
   const unsigned nCols,
   const bool doFinalSyncToDevice)
 {
+  if (!hasOverset_) return;
+
+  const double timeA = NaluEnv::self().nalu_time();
   const auto& fieldMgr = ngp_field_manager();
   auto& ngpField =
     fieldMgr.get_field<double>(field->mesh_meta_data_ordinal());
@@ -2978,6 +2981,9 @@ Realm::overset_field_update(
 
   if (doFinalSyncToDevice)
     ngpField.sync_to_device();
+
+  const double timeB = NaluEnv::self().nalu_time();
+  oversetManager_->timerFieldUpdate_ += (timeB - timeA);
 }
 
 //--------------------------------------------------------------------------

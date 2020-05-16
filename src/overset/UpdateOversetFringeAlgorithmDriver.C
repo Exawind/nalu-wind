@@ -10,6 +10,7 @@
 
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
 #include "Realm.h"
+#include "NaluEnv.h"
 #include "overset/OversetManager.h"
 #include "ngp_utils/NgpFieldUtils.h"
 
@@ -35,6 +36,7 @@ UpdateOversetFringeAlgorithmDriver::register_overset_field_update(
 
 void UpdateOversetFringeAlgorithmDriver::execute()
 {
+  const double timeA = NaluEnv::self().nalu_time();
   auto* oversetManager = realm_.oversetManager_;
   if (oversetManager->oversetGhosting_ != nullptr) {
 #ifndef KOKKOS_ENABLE_CUDA
@@ -59,6 +61,9 @@ void UpdateOversetFringeAlgorithmDriver::execute()
     ngpField.modify_on_host();
     ngpField.sync_to_device();
   }
+
+  const double timeB = NaluEnv::self().nalu_time();
+  oversetManager->timerFieldUpdate_ += (timeB - timeA);
 }
 
 }  // nalu
