@@ -40,11 +40,14 @@ OversetConstraintBase::initialize_connectivity()
 void
 OversetConstraintBase::prepare_constraints()
 {
-  const auto& holeRows = realm_.oversetManager_->holeNodes_;
   const int& numDof = eqSystem_->linsys_->numDof();
+  const auto& holeRows = realm_.oversetManager_->ngpHoleNodes_;
 
-  // Reset existing entries and zero out the entire row
-  eqSystem_->linsys_->resetRows(holeRows, 0, numDof, 1.0, 0.0);
+  auto* coeffApplier = eqSystem_->linsys_->get_coeff_applier();
+  Kokkos::parallel_for(
+    holeRows.size(), KOKKOS_LAMBDA(const size_t& i) {
+      coeffApplier->resetRows(1, &holeRows(i), 0, numDof, 1.0, 0.0);
+    });
 }
 
 }  // nalu
