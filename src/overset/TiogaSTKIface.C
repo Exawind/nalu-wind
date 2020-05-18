@@ -437,8 +437,10 @@ TiogaSTKIface::overset_update_fields(
 {
   constexpr int row_major = 0;
   int nComp = 0;
-  for (auto& f: fields)
+  for (auto& f: fields) {
+    f.field_->sync_to_host();
     nComp += f.sizeRow_ * f.sizeCol_;
+  }
 
   for (auto& tb: blocks_)
     tb->register_solution(*tg_, fields, nComp);
@@ -447,13 +449,21 @@ TiogaSTKIface::overset_update_fields(
 
   for (auto& tb: blocks_)
     tb->update_solution(fields);
+
+  for (auto& finfo: fields) {
+    auto* fld = finfo.field_;
+    fld->modify_on_host();
+    fld->sync_to_device();
+  }
 }
 
 void TiogaSTKIface::overset_update_field(
-  stk::mesh::FieldBase* field, int nrows, int ncols)
+  stk::mesh::FieldBase* field, const int nrows, const int ncols, const bool doFinalSyncToDevice)
 {
   constexpr int row_major = 0;
   sierra::nalu::OversetFieldData fdata{field, nrows, ncols};
+
+  field->sync_to_host();
 
   for (auto& tb: blocks_)
     tb->register_solution(*tg_, fdata);
@@ -462,6 +472,10 @@ void TiogaSTKIface::overset_update_field(
 
   for (auto& tb: blocks_)
     tb->update_solution(fdata);
+
+  field->modify_on_device();
+  if (doFinalSyncToDevice)
+    field->sync_to_device();
 }
 
 void TiogaSTKIface::pre_connectivity_sync()

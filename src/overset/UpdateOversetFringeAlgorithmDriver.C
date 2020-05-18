@@ -50,18 +50,7 @@ void UpdateOversetFringeAlgorithmDriver::execute()
 #endif
   }
 
-  const auto& fieldMgr = realm_.mesh_info().ngp_field_manager();
-  for (auto& finfo: fields_) {
-    auto& ngpField = fieldMgr.get_field<double>(finfo.field_->mesh_meta_data_ordinal());
-    ngpField.sync_to_host();
-  }
   oversetManager->overset_update_fields(fields_);
-  for (auto& finfo: fields_) {
-    auto& ngpField = fieldMgr.get_field<double>(finfo.field_->mesh_meta_data_ordinal());
-    ngpField.modify_on_host();
-    ngpField.sync_to_device();
-  }
-
   const double timeB = NaluEnv::self().nalu_time();
   oversetManager->timerFieldUpdate_ += (timeB - timeA);
 }

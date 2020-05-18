@@ -70,7 +70,8 @@ public:
     const std::vector<sierra::nalu::OversetFieldData>&);
 
   virtual void overset_update_field(
-    stk::mesh::FieldBase* field, int nrows = 1, int ncols = 1);
+    stk::mesh::FieldBase* field, const int nrows = 1, const int ncols = 1,
+    const bool doFinalSyncToDevice = true);
 
 private:
   TiogaSTKIface() = delete;

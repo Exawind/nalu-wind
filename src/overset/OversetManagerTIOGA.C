@@ -84,9 +84,10 @@ void OversetManagerTIOGA::overset_update_fields(const std::vector<OversetFieldDa
 }
 
 void OversetManagerTIOGA::overset_update_field(
-  stk::mesh::FieldBase *field, int nrows, int ncols)
+  stk::mesh::FieldBase *field, const int nrows, const int ncols,
+  const bool doFinalSyncToDevice)
 {
-  tiogaIface_.overset_update_field(field, nrows, ncols);
+  tiogaIface_.overset_update_field(field, nrows, ncols, doFinalSyncToDevice);
 }
 
 

@@ -79,7 +79,8 @@ public:
   virtual void overset_update_fields(const std::vector<OversetFieldData>&) = 0;
 
   virtual void overset_update_field(
-    stk::mesh::FieldBase* field, int nrows = 1, int ncols = 1) = 0;
+    stk::mesh::FieldBase* field, const int nrows = 1, const int ncols = 1,
+    const bool doFinalSyncToDevice = true) = 0;
 
   Realm& realm_;
 
