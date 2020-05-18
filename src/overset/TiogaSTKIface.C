@@ -475,7 +475,7 @@ void TiogaSTKIface::overset_update_field(
   for (auto& tb: blocks_)
     tb->update_solution(fdata);
 
-  field->modify_on_device();
+  field->modify_on_host();
   if (doFinalSyncToDevice)
     field->sync_to_device();
 }

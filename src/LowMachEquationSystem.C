@@ -738,7 +738,7 @@ LowMachEquationSystem::solve_and_update()
 
       if (continuityEqSys_->decoupledOverset_ && realm_.hasOverset_)
         realm_.overset_field_update(
-          &continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1), 1, 1);
+          continuityEqSys_->pressure_, 1, 1);
     }
 
     // compute mdot
@@ -821,7 +821,7 @@ LowMachEquationSystem::project_nodal_velocity()
     continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
   const auto Udiag = fieldMgr.get_field<double>(
     momentumEqSys_->get_diagonal_field()->mesh_meta_data_ordinal());
-  const auto velNp1 = fieldMgr.get_field<double>(
+  auto velNp1 = fieldMgr.get_field<double>(
     momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
       .mesh_meta_data_ordinal());
   const auto rhoNp1 = fieldMgr.get_field<double>(
@@ -897,6 +897,8 @@ LowMachEquationSystem::project_nodal_velocity()
            });
     }
   }
+
+  velNp1.modify_on_device();
 }
 
 void
