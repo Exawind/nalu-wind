@@ -903,11 +903,11 @@ TurbKineticEnergyEquationSystem::solve_and_update()
       // update
       double timeA = NaluEnv::self().nalu_time();
       update_and_clip();
-
-      if (decoupledOverset_ && realm_.hasOverset_)
-        realm_.overset_orphan_node_field_update(tke_, 1, 1);
       double timeB = NaluEnv::self().nalu_time();
       timerAssemble_ += (timeB-timeA);
+
+      if (decoupledOverset_ && realm_.hasOverset_)
+        realm_.overset_field_update(tke_, 1, 1);
     }
 
     // projected nodal gradient

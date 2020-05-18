@@ -257,6 +257,12 @@ class Realm {
     const unsigned sizeRow,
     const unsigned sizeCol);
 
+  void overset_field_update(
+    stk::mesh::FieldBase* field,
+    const unsigned nRows,
+    const unsigned nCols,
+    const bool doFinalSyncToDevice = true);
+
   virtual void populate_initial_condition();
   virtual void populate_boundary_data();
   virtual void boundary_data_to_state_data();

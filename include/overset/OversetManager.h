@@ -11,6 +11,7 @@
 #ifndef OVERSETMANAGER_H
 #define OVERSETMANAGER_H
 
+#include "KokkosInterface.h"
 #include "overset/OversetFieldData.h"
 
 #include <stk_mesh/base/Selector.hpp>
@@ -45,6 +46,8 @@ class OversetInfo;
 class OversetManager
 {
 public:
+  using EntityList = Kokkos::View<stk::mesh::Entity*, Kokkos::LayoutRight, MemSpace>;
+
   OversetManager(Realm& realm);
 
   virtual ~OversetManager();
@@ -76,7 +79,8 @@ public:
   virtual void overset_update_fields(const std::vector<OversetFieldData>&) = 0;
 
   virtual void overset_update_field(
-    stk::mesh::FieldBase* field, int nrows = 1, int ncols = 1) = 0;
+    stk::mesh::FieldBase* field, const int nrows = 1, const int ncols = 1,
+    const bool doFinalSyncToDevice = true) = 0;
 
   Realm& realm_;
 
@@ -91,7 +95,16 @@ public:
   std::vector<stk::mesh::Entity> holeNodes_;
   std::vector<stk::mesh::Entity> fringeNodes_;
 
+  EntityList ngpHoleNodes_;
+  EntityList ngpFringeNodes_;
+
   std::vector<int> ghostCommProcs_;
+
+  //! Timer for overset connectivity
+  double timerConnectivity_{0.0};
+
+  //! Timer for overset field interpolations
+  double timerFieldUpdate_{0.0};
 
 private:
   OversetManager() = delete;

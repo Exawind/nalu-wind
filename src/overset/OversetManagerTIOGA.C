@@ -70,7 +70,7 @@ OversetManagerTIOGA::initialize(const bool isDecoupled)
   tiogaIface_.execute(isDecoupled);
 
   const double timeB = NaluEnv::self().nalu_time();
-  realm_.timerNonconformal_ += (timeB - timeA);
+  timerConnectivity_ += (timeB - timeA);
 
 #if 0
   NaluEnv::self().naluOutputP0() 
@@ -84,9 +84,10 @@ void OversetManagerTIOGA::overset_update_fields(const std::vector<OversetFieldDa
 }
 
 void OversetManagerTIOGA::overset_update_field(
-  stk::mesh::FieldBase *field, int nrows, int ncols)
+  stk::mesh::FieldBase *field, const int nrows, const int ncols,
+  const bool doFinalSyncToDevice)
 {
-  tiogaIface_.overset_update_field(field, nrows, ncols);
+  tiogaIface_.overset_update_field(field, nrows, ncols, doFinalSyncToDevice);
 }
 
 

@@ -724,6 +724,8 @@ EquationSystems::initialize()
     NaluEnv::self().naluOutputP0()
       << "EquationSystems: overset solution strategy" << std::endl;
     for (auto* eqsys: equationSystemVector_) {
+      // Skip wrapper equations LowMach, SST etc.
+      if (eqsys->linsys_ == nullptr) continue;
       NaluEnv::self().naluOutputP0()
         << " - " << eqsys->eqnTypeName_ << ": "
         << (eqsys->decoupledOverset_ ? "decoupled" : "coupled") << std::endl;

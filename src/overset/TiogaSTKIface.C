@@ -15,7 +15,8 @@
 
 #include "overset/OversetManagerTIOGA.h"
 #include "overset/OversetInfo.h"
-#include <utils/StkHelpers.h>
+#include "utils/StkHelpers.h"
+#include "ngp_utils/NgpFieldUtils.h"
 
 #include "NaluEnv.h"
 #include "Realm.h"
@@ -104,6 +105,9 @@ void TiogaSTKIface::execute(const bool isDecoupled)
 {
   reset_data_structures();
 
+  // Synchronize fields to host during transition period
+  pre_connectivity_sync();
+
   // Update the coordinates for TIOGA and register updates to the TIOGA mesh block.
   for (auto& tb: blocks_) {
     tb->update_coords();
@@ -132,6 +136,8 @@ void TiogaSTKIface::execute(const bool isDecoupled)
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
   stk::mesh::copy_owned_to_shared(bulk_, pvec);
 
+  post_connectivity_sync();
+
   if (!isDecoupled) {
     get_receptor_info();
 
@@ -143,6 +149,11 @@ void TiogaSTKIface::execute(const bool isDecoupled)
     // Update overset fringe connectivity information for Constraint based algorithm
     populate_overset_info();
   }
+#ifdef KOKKOS_ENABLE_CUDA
+  else {
+    throw std::runtime_error("Non-decoupled overset connectivity not available in NGP build");
+  }
+#endif
 }
 
 void TiogaSTKIface::reset_data_structures()
@@ -426,8 +437,10 @@ TiogaSTKIface::overset_update_fields(
 {
   constexpr int row_major = 0;
   int nComp = 0;
-  for (auto& f: fields)
+  for (auto& f: fields) {
+    f.field_->sync_to_host();
     nComp += f.sizeRow_ * f.sizeCol_;
+  }
 
   for (auto& tb: blocks_)
     tb->register_solution(*tg_, fields, nComp);
@@ -436,13 +449,21 @@ TiogaSTKIface::overset_update_fields(
 
   for (auto& tb: blocks_)
     tb->update_solution(fields);
+
+  for (auto& finfo: fields) {
+    auto* fld = finfo.field_;
+    fld->modify_on_host();
+    fld->sync_to_device();
+  }
 }
 
 void TiogaSTKIface::overset_update_field(
-  stk::mesh::FieldBase* field, int nrows, int ncols)
+  stk::mesh::FieldBase* field, const int nrows, const int ncols, const bool doFinalSyncToDevice)
 {
   constexpr int row_major = 0;
   sierra::nalu::OversetFieldData fdata{field, nrows, ncols};
+
+  field->sync_to_host();
 
   for (auto& tb: blocks_)
     tb->register_solution(*tg_, fdata);
@@ -451,6 +472,62 @@ void TiogaSTKIface::overset_update_field(
 
   for (auto& tb: blocks_)
     tb->update_solution(fdata);
+
+  field->modify_on_device();
+  if (doFinalSyncToDevice)
+    field->sync_to_device();
+}
+
+void TiogaSTKIface::pre_connectivity_sync()
+{
+  auto& meshInfo = oversetManager_.realm_.mesh_info();
+  auto& ngpCoords = sierra::nalu::nalu_ngp::get_ngp_field(meshInfo, coordsName_);
+  auto& ngpDualVol = sierra::nalu::nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
+  auto& ngpElemVol = sierra::nalu::nalu_ngp::get_ngp_field(
+    meshInfo, "element_volume", stk::topology::ELEM_RANK);
+
+  ngpCoords.sync_to_host();
+  ngpDualVol.sync_to_host();
+  ngpElemVol.sync_to_host();
+}
+
+void TiogaSTKIface::post_connectivity_sync()
+{
+  // Push iblank fields to device
+  auto& meshInfo = oversetManager_.realm_.mesh_info();
+  auto& ngpIblank = sierra::nalu::nalu_ngp::get_ngp_field<int>(
+    meshInfo, "iblank");
+  auto& ngpIblankCell = sierra::nalu::nalu_ngp::get_ngp_field<int>(
+    meshInfo, "iblank_cell", stk::topology::ELEM_RANK);
+
+  ngpIblank.modify_on_host();
+  ngpIblank.sync_to_device();
+  ngpIblankCell.modify_on_host();
+  ngpIblankCell.sync_to_device();
+
+  // Create device version of the fringe/hole lists for reset rows
+
+  const auto& fringes = oversetManager_.fringeNodes_;
+  const auto& holes = oversetManager_.holeNodes_;
+  auto& ngpFringes = oversetManager_.ngpFringeNodes_;
+  auto& ngpHoles = oversetManager_.ngpHoleNodes_;
+
+  ngpFringes = sierra::nalu::OversetManager::EntityList(
+    "ngp_fringe_list", fringes.size());
+  ngpHoles = sierra::nalu::OversetManager::EntityList(
+    "ngp_hole_list", holes.size());
+
+  auto h_fringes = Kokkos::create_mirror_view(ngpFringes);
+  auto h_holes = Kokkos::create_mirror_view(ngpHoles);
+
+  for (size_t i=0; i < fringes.size(); ++i) {
+    h_fringes[i] = fringes[i];
+  }
+  for (size_t i=0; i < holes.size(); ++i) {
+    h_holes[i] = holes[i];
+  }
+  Kokkos::deep_copy(ngpFringes, h_fringes);
+  Kokkos::deep_copy(ngpHoles, h_holes);
 }
 
 } // tioga
