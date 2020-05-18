@@ -3030,6 +3030,11 @@ Realm::provide_output()
 
       // not set up for globals
       if (!doPromotion_) {
+        // Sync fields to host on NGP builds before output
+        for (auto* fld: metaData_->get_fields()) {
+          fld->sync_to_host();
+        }
+
         ioBroker_->process_output_request(resultsFileIndex_, currentTime);
       }
       else {
