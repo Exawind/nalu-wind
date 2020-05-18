@@ -150,7 +150,7 @@ realms:
 
     output:
       output_data_base_name: out/cyl.e
-      output_frequency: 1
+      output_frequency: 100
       output_node_set: no
       output_variables:
        - velocity
