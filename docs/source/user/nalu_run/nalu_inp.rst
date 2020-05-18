@@ -1240,19 +1240,20 @@ Data probes
    .. code-block:: yaml
 
         data_probes:
-
           output_frequency: 100
-	  output_format: text
+          output_format: text
+          search_method: stk_octree
+          search_tolerance: 1.0e-3
+          search_expansion_factor: 2.0
 
-	  search_method: stk_octree
-	  search_tolerance: 1.0e-3
-	  search_expansion_factor: 2.0
+          gzip_level: 0            
+          write_coords: true       
 
-	  specifications:
+          specifications:
             - name: probe_bottomwall
-	      from_target_part: bottomwall
+              from_target_part: bottomwall
 
-	      line_of_site_specifications:
+              line_of_site_specifications:
 	        - name: probe_bottomwall
 	          number_of_points: 100
 		  tip_coordinates: [-6.39, 0.0, 0.0]
@@ -1263,7 +1264,7 @@ Data probes
 		  field_size: 1
 		- field_name: pressure
 
-	  specifications:
+          specifications:
             - name: probe_profile
 	      from_target_part: interior
 
@@ -1282,6 +1283,7 @@ Data probes
 		  edge2_numPoints: 21
 		  offset_vector:   [0, 0, 1]
 		  offset_spacings: [0, 2]
+		  only_output_field: velocity  
 
 	      output_variables:
 	        - field_name: velocity
@@ -1305,10 +1307,12 @@ Data probes
    available options are ``text`` or ``exodus``.  If not specified, the
    default is text.  Multiple output formats can be specified like the
    following:
+
    .. code-block:: yaml
-	  output_format:
-	  - text
-	  - exodus
+
+          output_format:
+          - text
+          - exodus
 
 .. inpfile:: data_probes.search_method
 
@@ -1322,6 +1326,29 @@ Data probes
 .. inpfile:: data_probes.search_expansion_factor
 
    Number specifying the factor to use when expanding the node search.
+
+.. inpfile:: data_probes.gzip_level
+
+   Optional input, applies to sample planes only.  Integer specifying
+   amount of compression to apply to sample plane output.  The default
+   ``gzip_level=0``, means no compression.  To apply compression, use
+   ``gzip_level`` from 1 to 9, with 9 indicating maximum compression
+   (and slowest speed).  Generally ``gzip_level=1`` or
+   ``gzip_level=2`` is sufficient.
+
+.. inpfile:: data_probes.write_coords
+
+   Optional input, applies to sample planes only.  Boolean specifying
+   whether the sample plane x,y,z coordinates and indices are to be
+   included with every sample plane output.  The default is
+   ``write_coords=true``.  For ``write_coords=false``, a separate
+   coordinate file will be written at the beginning of the output
+   sequence if it does not already exist.
+
+.. inpfile:: data_probes.time_performance
+	     
+   Optional input, applies to sample planes only.  Boolean specifying
+   whether to display timing information when writing sample planes.
 
 .. inpfile:: data_probes.specifications
 
@@ -1363,6 +1390,7 @@ Data probes
    edge2_numPoints    Number of points along edge 2
    offset_vector      [Optional] List containing the vector defining the offset direction for additional planes
    offset_spacings    [Optional] List containing how far each plane is to be offset in the offset_vector direction
+   only_output_field  [Optional] Only include the output of this variable in the sample plane output.
    ================== =============================================================
 
 .. inpfile:: data_probes.specifications.output_variables

@@ -45,9 +45,13 @@
 #include <iomanip>
 #include <algorithm>
 #include <sstream>
+#include <iostream>
 
 // boost
 #include <boost/filesystem.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 
 namespace sierra{
 namespace nalu{
@@ -95,6 +99,8 @@ DataProbePostProcessing::DataProbePostProcessing(
     probeType_(DataProbeSampleType::STEPCOUNT),
     previousTime_(0.0),
     exoName_("data_probes.exo"),
+    gzLevel_(0), 
+    writeCoords_(true),
     precisionvar_(8)
 {
   // load the data
@@ -158,7 +164,12 @@ DataProbePostProcessing::load(
       }
       NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Adding "<<formatName<<" output format..." << std::endl;
     }
+    // Enable performance timings of output
+    get_if_present(y_dataProbe, "time_performance", enablePerfTiming_, enablePerfTiming_);
 
+    // Optional speed-up parameters
+    get_if_present(y_dataProbe, "write_coords", writeCoords_, writeCoords_);
+    get_if_present(y_dataProbe, "gzip_level",   gzLevel_,     gzLevel_);
 
     // extract the frequency of output
 
@@ -247,6 +258,7 @@ DataProbePostProcessing::load(
 	  probeInfo->edge2NumPoints_.resize(numProbes);
 	  probeInfo->offsetDir_.resize(numProbes);
 	  probeInfo->offsetSpacings_.resize(numProbes);
+	  probeInfo->onlyOutputField_.resize(numProbes);
 
           // deal with processors... Distribute each probe over subsequent procs
           const int numProcs = NaluEnv::self().parallel_size();
@@ -321,6 +333,7 @@ DataProbePostProcessing::load(
 	  probeInfo->edge2NumPoints_.resize(numProbes);
 	  probeInfo->offsetDir_.resize(numProbes);
 	  probeInfo->offsetSpacings_.resize(numProbes);
+	  probeInfo->onlyOutputField_.resize(numProbes);
 
           // deal with processors... Distribute each probe over subsequent procs
           const int numProcs = NaluEnv::self().parallel_size();
@@ -393,6 +406,13 @@ DataProbePostProcessing::load(
 	      probeInfo->offsetSpacings_[iplane+offset] = offsetSpacings.as<std::vector<double>>();
 	    else
 	      probeInfo->offsetSpacings_[iplane+offset].push_back(0.0);
+
+	    // string: onlyOutputField
+	    const YAML::Node onlyOutputField = y_planenode["only_output_field"];
+	    if (onlyOutputField)
+	      probeInfo->onlyOutputField_[iplane+offset] = onlyOutputField.as<std::string>() + "_probe";
+	    else
+	      probeInfo->onlyOutputField_[iplane+offset] = "";
 
 	    // Set the total number of points
 	    const int numPlanes = probeInfo->offsetSpacings_[iplane+offset].size();
@@ -865,14 +885,24 @@ DataProbePostProcessing::execute()
   }
 
   if ( isOutput ) {
+    const double t1 = enablePerfTiming_? NaluEnv::self().nalu_time() : 0.0;  
     // execute and provide results...
     transfers_->execute();
+    const double t2 = enablePerfTiming_? NaluEnv::self().nalu_time() : 0.0; 
     if (useExo_) {
       provide_output_exodus(currentTime);
     }
     if (useText_) {
       provide_output_txt(currentTime);
     }
+    const double t3 = enablePerfTiming_? NaluEnv::self().nalu_time() : 0.0; 
+    if (enablePerfTiming_) 
+      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::execute " 
+				     << " transfer_time: "<<t2-t1
+				     << " output_time: "<<t3-t2      
+				     << " total_time: "<<t3-t1
+				     << std::endl;
+    
   }
 }
 
@@ -992,17 +1022,26 @@ DataProbePostProcessing::provide_output_txt(
 
 	    // open the file for this probe
 	    const int timeStepCount = realm_.get_time_step_count();
-	    const int processorId = probeInfo->processorId_[inp];
+	    const int processorId   = probeInfo->processorId_[inp];
+	    const int  gzlevel      = gzLevel_;
+	    const bool printcoords  = writeCoords_; //false;
 	    std::ostringstream ss;
 	    ss << std::setw(7)<<std::setfill('0')<<timeStepCount;
 	    ss <<"_"<<processorId;
-	    const std::string fileName = probeInfo->partName_[inp] + "_" + ss.str() + ".dat";
-	    std::ofstream myfile;
+	          std::string fileName = probeInfo->partName_[inp] + "_" + ss.str() + ".dat";
 	    if ( processorId == NaluEnv::self().parallel_rank()) {    
 
 	      const int N1 = probeInfo->edge1NumPoints_[inp];
 	      const int N2 = probeInfo->edge2NumPoints_[inp];
 	      const int pointsPerPlane = N1*N2;
+
+	      // Use gzip compression when writing
+	      boost::iostreams::filtering_streambuf<boost::iostreams::output> outbuf;
+	      if ((0<gzlevel)&&(gzlevel<10)) {
+		fileName = fileName+".gz";
+		outbuf.push(boost::iostreams::gzip_compressor(
+		boost::iostreams::gzip_params(gzlevel, boost::iostreams::zlib::deflated, 15, 9, boost::iostreams::zlib::huffman_only)));
+	      }
 
 	      // Get the path to the file name, and create any directories necessary
 	      boost::filesystem::path pathdir{fileName};
@@ -1021,22 +1060,101 @@ DataProbePostProcessing::provide_output_txt(
 		  }
 	      }
 
-	      myfile.open(fileName.c_str(), std::ios_base::out); // std::ios_base::app
-	      myfile << "#Time: "<< std::setprecision(precisionvar_) << currentTime << std::endl;
-	      myfile << "#";//Time" << std::setw(w_);
-	      myfile << std::setw(w_-1) << std::right << "Plane_Number"
-		     << std::setw(w_) << std::right << "Index_j"
-		     << std::setw(w_) << std::right << "Index_i"; 
-	      for ( int jj = 0; jj < nDim; ++jj )
-		myfile << std::setw(w_-2) << std::right << "coordinates[" << jj << "]" ;          
+	      // ** Check to see if we need to add a coordinate file
+	      std::string coordFileName = 
+		probeInfo->partName_[inp] + "_coordXYZ.dat";
+	      if (!printcoords) {
+		if ((0<gzlevel)&&(gzlevel<10)) coordFileName += ".gz";
+		const bool addCoordFile
+		  = std::ifstream(coordFileName.c_str()) ? false : true;
+		if (addCoordFile) { 
+		  // -- Add the coordinate file
+		  boost::iostreams::filtering_streambuf<boost::iostreams::output> outstream;
+		  if ((0<gzlevel)&&(gzlevel<10)) {
+		    outstream.push(boost::iostreams::gzip_compressor(
+		     boost::iostreams::gzip_params(gzlevel)));
+		  }
+		  std::ofstream coordfile(coordFileName.c_str(), std::ios_base::out);
+		  outstream.push(coordfile);
+		  std::ostream myfile(&outstream);
+		  // -- output the header
+		  myfile << "#Time: "<< std::setprecision(precisionvar_) << currentTime << std::endl;
+		  myfile << "# ";		  
+		  myfile << std::setw(w_-1) << std::right << "Plane_Number"
+			 << std::setw(w_)   << std::right << "Index_j"
+			 << std::setw(w_)   << std::right << "Index_i"; 
+		  for ( int jj = 0; jj < nDim; ++jj ) {
+		    myfile << std::setw(w_-2) << std::right << "coordinates[" << jj << "]" ;         
+		  }
+		  myfile << '\n';  
+		  // -- Done with header
+		  // reference to the nodeVector
+		  std::vector<stk::mesh::Entity> &nodeVec = probeInfo->nodeVector_[inp];
+		  // -- output indices and coordinates in a single row
+		  for ( size_t inv = 0; inv < nodeVec.size(); ++inv ) {
+		    stk::mesh::Entity node = nodeVec[inv];
+		    double * theCoord = (double*)stk::mesh::field_data(*coordinates, node );
+		    // Output plane indices
+		    const int planei = inv/pointsPerPlane;
+		    const int localn = inv - planei*pointsPerPlane;
+		    const int indexj = localn/N1;
+		    const int indexi = localn - indexj*N1;
+		    myfile <<std::right<< std::setw(w_) << planei << std::setw(w_) << indexj << std::setw(w_) << indexi << std::setw(w_);
+		    // Output coordinates
+		    for ( int jj = 0; jj < nDim; ++jj ) {
+		      myfile << std::setprecision(precisionvar_) << theCoord[jj] << std::setw(w_);
+		    }
+		    myfile << '\n';  
+		  }
+
+		  boost::iostreams::close(outstream); 
+		  coordfile.close();
+		  // -- Done with the coordinate file
+		}
+	      }
+
+	      std::ofstream file(fileName.c_str(), std::ios_base::out);
+	      outbuf.push(file);
+	      std::string filestring;
+	      std::string coordfilestring("");
+	      char buffer[1000];
+	      filestring.reserve(5000000);
+
+	      if (!printcoords) coordfilestring="CoordinateFile: "+coordFileName;
+	      
+	      sprintf(buffer, "#Time: %18.12e %s\n#",currentTime, coordfilestring.c_str());
+	      filestring.append(buffer);
+	      if (printcoords)  {
+		filestring += "Plane_Number Index_j Index_i";
+		for ( int jj = 0; jj < nDim; ++jj ) {
+		  sprintf(buffer, " coordinates[%i]", jj);
+		  filestring.append(buffer);
+		}
+		
+	      }
 	      for ( size_t ifi = 0; ifi < probeSpec->fieldInfo_.size(); ++ifi ) {
 		const std::string fieldName = probeSpec->fieldInfo_[ifi].first;
-		const int fieldSize = probeSpec->fieldInfo_[ifi].second;
-		for ( int jj = 0; jj < fieldSize; ++jj ) {
-		  myfile << std::setw(w_-3) << std::right << fieldName << "[" << jj << "]" ;
-		} 
+		if ((probeInfo->onlyOutputField_[inp] == "") || (probeInfo->onlyOutputField_[inp] == fieldName)) {
+		  const int fieldSize = probeSpec->fieldInfo_[ifi].second;
+		  for ( int jj = 0; jj < fieldSize; ++jj ) {
+		    sprintf(buffer, " %s[%i]", fieldName.c_str(), jj);
+		    filestring.append(buffer);
+		  } 
+		}
 	      }
-	      myfile << std::endl;	      
+	      filestring += '\n';
+
+
+	      // Get some pointers to all of the data files
+	      std::vector<stk::mesh::FieldBase *> allFields(probeSpec->fieldInfo_.size());
+	      std::vector<size_t>      fieldSize;
+	      std::vector<std::string> allFieldNames;
+	      for ( size_t ifi=0; ifi < probeSpec->fieldInfo_.size(); ++ifi ) {
+		const std::string fieldName = probeSpec->fieldInfo_[ifi].first;
+		allFieldNames.push_back(fieldName);
+		(allFields[ifi]) = metaData.get_field(stk::topology::NODE_RANK, fieldName);
+		fieldSize.push_back(probeSpec->fieldInfo_[ifi].second);
+	      }
 
 	      // reference to the nodeVector
 	      std::vector<stk::mesh::Entity> &nodeVec = probeInfo->nodeVector_[inp];
@@ -1044,38 +1162,46 @@ DataProbePostProcessing::provide_output_txt(
 	      // output in a single row
 	      for ( size_t inv = 0; inv < nodeVec.size(); ++inv ) {
 		stk::mesh::Entity node = nodeVec[inv];
-		double * theCoord = (double*)stk::mesh::field_data(*coordinates, node );
-		// always output time and coordinates
-		//myfile << std::left << std::setw(w_) << std::setprecision(precisionvar_) << currentTime << std::setw(w_);
-		// Output plane indices
-		const int planei = inv/pointsPerPlane;
-		const int localn = inv - planei*pointsPerPlane;
-		const int indexj = localn/N1;
-		const int indexi = localn - indexj*N1;
-		myfile <<std::right<< std::setw(w_) << planei << std::setw(w_) << indexj << std::setw(w_) << indexi << std::setw(w_);
+		// only output coordinates if required
+		if (printcoords)  {
+		  double * theCoord = (double*)stk::mesh::field_data(*coordinates, node );
+		  // Output plane indices
+		  const int planei = inv/pointsPerPlane;
+		  const int localn = inv - planei*pointsPerPlane;
+		  const int indexj = localn/N1;
+		  const int indexi = localn - indexj*N1;
 
-		// Output coordinates
-		for ( int jj = 0; jj < nDim; ++jj ) {
-		  myfile << std::setprecision(precisionvar_) << theCoord[jj] << std::setw(w_);
-		}
+		  sprintf(buffer, "%18i %18i %18i",planei, indexj, indexi);
+		  filestring.append(buffer);
+		  
+		  // Output coordinates
+		  for ( int jj = 0; jj < nDim; ++jj ) {
+		    sprintf(buffer, " %12.5e",theCoord[jj]);
+		    filestring.append(buffer);
+		  }
+		} 
 		// now all of the other fields required
 		for ( size_t ifi = 0; ifi < probeSpec->fieldInfo_.size(); ++ifi ) {
-		  const std::string fieldName = probeSpec->fieldInfo_[ifi].first;
-		  const stk::mesh::FieldBase *theField = metaData.get_field(stk::topology::NODE_RANK, fieldName);
-		  double * theF = (double*)stk::mesh::field_data(*theField, node );
-               
-		  const int fieldSize = probeSpec->fieldInfo_[ifi].second;
-		  for ( int jj = 0; jj < fieldSize; ++jj ) {
-		    myfile << theF[jj] << std::setw(w_);
+
+		  if ((probeInfo->onlyOutputField_[inp] == "") || (probeInfo->onlyOutputField_[inp] == allFieldNames[ifi])) {
+		    double * theF = (double*)stk::mesh::field_data(*(allFields[ifi]), node );
+		    for ( int jj = 0; jj < fieldSize[ifi]; ++jj ) {
+		      sprintf(buffer, " %12.6e",theF[jj]);
+		      filestring.append(buffer);
+		    }
 		  }
 		}
 		// row complete
-		myfile << std::endl;
+		filestring += '\n';
 	      }
 	      // done with file output
-	      myfile.close();
+	      std::ostream fileout(&outbuf);
+	      fileout<<filestring;
+	      boost::iostreams::close(outbuf); // Don't forget this!
+	      file.close();
 
-	    }
+	    } // END if ( processorId == NaluEnv::self().parallel_rank())
+
 	}
       }
     }
