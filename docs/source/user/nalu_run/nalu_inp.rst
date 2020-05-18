@@ -1345,6 +1345,11 @@ Data probes
    coordinate file will be written at the beginning of the output
    sequence if it does not already exist.
 
+.. inpfile:: data_probes.time_performance
+	     
+   Optional input, applies to sample planes only.  Boolean specifying
+   whether to display timing information when writing sample planes.
+
 .. inpfile:: data_probes.specifications
 
    A list of data probe properties with the following parameters

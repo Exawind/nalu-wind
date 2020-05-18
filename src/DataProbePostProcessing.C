@@ -164,7 +164,10 @@ DataProbePostProcessing::load(
       }
       NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::Adding "<<formatName<<" output format..." << std::endl;
     }
+    // Enable performance timings of output
+    get_if_present(y_dataProbe, "time_performance", enablePerfTiming_, enablePerfTiming_);
 
+    // Optional speed-up parameters
     get_if_present(y_dataProbe, "write_coords", writeCoords_, writeCoords_);
     get_if_present(y_dataProbe, "gzip_level",   gzLevel_,     gzLevel_);
 
@@ -404,8 +407,8 @@ DataProbePostProcessing::load(
 	    else
 	      probeInfo->offsetSpacings_[iplane+offset].push_back(0.0);
 
-            // string: onlyOutputField
-            const YAML::Node onlyOutputField = y_planenode["only_output_field"];
+	    // string: onlyOutputField
+	    const YAML::Node onlyOutputField = y_planenode["only_output_field"];
 	    if (onlyOutputField)
 	      probeInfo->onlyOutputField_[iplane+offset] = onlyOutputField.as<std::string>() + "_probe";
 	    else
@@ -882,24 +885,24 @@ DataProbePostProcessing::execute()
   }
 
   if ( isOutput ) {
-    const double t1 = NaluEnv::self().nalu_time();  
+    const double t1 = enablePerfTiming_? NaluEnv::self().nalu_time() : 0.0;  
     // execute and provide results...
     transfers_->execute();
-    const double t2 = NaluEnv::self().nalu_time();  
+    const double t2 = enablePerfTiming_? NaluEnv::self().nalu_time() : 0.0; 
     if (useExo_) {
       provide_output_exodus(currentTime);
     }
     if (useText_) {
       provide_output_txt(currentTime);
     }
-    const double t3 = NaluEnv::self().nalu_time();  
-    // Uncomment below to provide timing statistics
-    // NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::execute " 
-    // 				   << " transfer_time: "<<t2-t1
-    // 				   << " output_time: "<<t3-t2      
-    // 				   << " total_time: "<<t3-t1
-    // 				   << std::endl;
-  
+    const double t3 = enablePerfTiming_? NaluEnv::self().nalu_time() : 0.0; 
+    if (enablePerfTiming_) 
+      NaluEnv::self().naluOutputP0() << "DataProbePostProcessing::execute " 
+				     << " transfer_time: "<<t2-t1
+				     << " output_time: "<<t3-t2      
+				     << " total_time: "<<t3-t1
+				     << std::endl;
+    
   }
 }
 
@@ -1037,7 +1040,6 @@ DataProbePostProcessing::provide_output_txt(
 	      if ((0<gzlevel)&&(gzlevel<10)) {
 		fileName = fileName+".gz";
 		outbuf.push(boost::iostreams::gzip_compressor(
-		//boost::iostreams::gzip_params(gzlevel)));
 		boost::iostreams::gzip_params(gzlevel, boost::iostreams::zlib::deflated, 15, 9, boost::iostreams::zlib::huffman_only)));
 	      }
 
