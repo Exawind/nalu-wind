@@ -2945,22 +2945,24 @@ Realm::get_slave_part_vector()
     return emptyPartVector_;
 }
 
-
-//--------------------------------------------------------------------------
-//-------- overset_field_update -------------------------------------------
-//--------------------------------------------------------------------------
+#ifdef KOKKOS_ENABLE_CUDA
+void
+Realm::overset_orphan_node_field_update(
+  stk::mesh::FieldBase, const unsigned, const unsigned)
+{
+  throw std::runtime_error(
+    "Non-NGP version of overset algorithm called in NGP build");
+}
+#else
 void
 Realm::overset_orphan_node_field_update(
   stk::mesh::FieldBase *theField,
   const unsigned sizeRow,
   const unsigned sizeCol)
 {
-#ifdef KOKKOS_ENABLE_CUDA
-  throw std::runtime_error("Non-NGP version of overset algorithm called in NGP build");
-#else
   oversetManager_->overset_update_field(theField, sizeRow, sizeCol);
-#endif
 }
+#endif
 
 void
 Realm::overset_field_update(
