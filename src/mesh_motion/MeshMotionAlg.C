@@ -15,6 +15,7 @@ namespace nalu{
 MeshMotionAlg::MeshMotionAlg(
   stk::mesh::BulkData& bulk,
   const YAML::Node& node)
+  : bulk_(bulk)
 {
   load(bulk, node);
 }
@@ -84,6 +85,23 @@ void MeshMotionAlg::initialize( const double time )
     frameVec_[i]->update_coordinates_velocity(time);
   }
 
+  // TODO: NGP Transition
+  // Manually synchronize fields to device
+  {
+    const auto& meta = bulk_.mesh_meta_data();
+    std::vector<std::string> fnames{
+      "current_coordinates",
+      "mesh_displacement",
+      "mesh_velocity",
+    };
+
+    for (const auto& ff: fnames) {
+      auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
+      fld->modify_on_host();
+      fld->sync_to_device();
+    }
+  }
+
   isInit_ = true;
 }
 
@@ -94,12 +112,40 @@ void MeshMotionAlg::execute(const double time)
     if( !frameVec_[i]->is_inertial() )
       frameVec_[i]->update_coordinates_velocity(time);
   }
+
+  // TODO: NGP Transition
+  // Manually synchronize fields to device
+  {
+    const auto& meta = bulk_.mesh_meta_data();
+    std::vector<std::string> fnames{
+      "current_coordinates",
+      "mesh_displacement",
+      "mesh_velocity",
+    };
+
+    for (const auto& ff: fnames) {
+      auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
+      fld->modify_on_host();
+      fld->sync_to_device();
+    }
+  }
 }
 
 void MeshMotionAlg::post_compute_geometry()
 {
   for (size_t i=0; i < frameVec_.size(); i++)
     frameVec_[i]->post_compute_geometry();
+
+  // TODO: NGP Transition
+  // Manually synchronize fields to device
+  {
+    auto* divMeshVel = bulk_.mesh_meta_data().get_field(
+        stk::topology::NODE_RANK, "div_mesh_velocity");
+    if (divMeshVel != nullptr) {
+      divMeshVel->modify_on_host();
+      divMeshVel->sync_to_device();
+    }
+  }
 }
 
 } // nalu
