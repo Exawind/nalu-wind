@@ -195,6 +195,7 @@ if(NOT ENABLE_CUDA)
     add_test_r(oversetSphereTIOGA 8)
     add_test_r(oversetRotCylinder 4)
     add_test_r(oversetCylNGPTrilinos 2)
+    add_test_r(oversetRotCylNGPTrilinos 2)
   endif(ENABLE_TIOGA)
 
   if (ENABLE_TIOGA AND ENABLE_HYPRE)
@@ -228,6 +229,7 @@ else(NOT ENABLE_CUDA)
 
   if (ENABLE_TIOGA)
     add_test_r(oversetCylNGPTrilinos 2)
+    add_test_r(oversetRotCylNGPTrilinos 2)
   endif()
 
   #=============================================================================

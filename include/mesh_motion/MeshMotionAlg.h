@@ -33,6 +33,8 @@ private:
 
   void compute_set_centroid();
 
+  const stk::mesh::BulkData& bulk_;
+
   /** Motion frame vector
    *
    *  Vector of type of frame of corresponding motion
