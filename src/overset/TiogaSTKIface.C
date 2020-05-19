@@ -103,6 +103,13 @@ void TiogaSTKIface::initialize()
 
 void TiogaSTKIface::execute(const bool isDecoupled)
 {
+#ifdef KOKKOS_ENABLE_CUDA
+  // Bail out early if this is a GPU build and is using non-decoupled solve
+  if (!isDecoupled) {
+    throw std::runtime_error("Non-decoupled overset connectivity not available in NGP build");
+  }
+#endif
+
   reset_data_structures();
 
   // Synchronize fields to host during transition period
@@ -149,11 +156,6 @@ void TiogaSTKIface::execute(const bool isDecoupled)
     // Update overset fringe connectivity information for Constraint based algorithm
     populate_overset_info();
   }
-#ifdef KOKKOS_ENABLE_CUDA
-  else {
-    throw std::runtime_error("Non-decoupled overset connectivity not available in NGP build");
-  }
-#endif
 }
 
 void TiogaSTKIface::reset_data_structures()
@@ -473,7 +475,7 @@ void TiogaSTKIface::overset_update_field(
   for (auto& tb: blocks_)
     tb->update_solution(fdata);
 
-  field->modify_on_device();
+  field->modify_on_host();
   if (doFinalSyncToDevice)
     field->sync_to_device();
 }
