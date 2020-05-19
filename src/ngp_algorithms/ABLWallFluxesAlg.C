@@ -111,10 +111,6 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
   stk::mesh::Part* part,
   WallFricVelAlgDriver& algDriver,
   const bool useShifted,
-  const double gravity,
-  const double z0,
-  const double Tref,
-  const double kappa,
   const YAML::Node& node)
   : Algorithm(realm, part),
     algDriver_(algDriver),
@@ -124,6 +120,10 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
     bcVelocity_(get_field_ordinal(realm.meta_data(), "wall_velocity_bc")),
     density_(get_field_ordinal(realm.meta_data(), "density")),
     bcHeatFlux_(get_field_ordinal(realm.meta_data(), "heat_flux_bc")),
+    wallHeatFlux_(get_field_ordinal(
+      realm.meta_data(),
+      "wall_heat_flux_bip",
+      realm.meta_data().side_rank())),
     specificHeat_(get_field_ordinal(realm.meta_data(), "specific_heat")),
     exposedAreaVec_(get_field_ordinal(
       realm.meta_data(), "exposed_area_vector", realm.meta_data().side_rank())),
@@ -135,10 +135,6 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
       realm.meta_data(),
       "wall_normal_distance_bip",
       realm.meta_data().side_rank())),
-    gravity_(gravity),
-    z0_(z0),
-    Tref_(Tref),
-    kappa_(kappa),
     useShifted_(useShifted),
     meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
           BcAlgTraits>())
@@ -167,29 +163,63 @@ template<typename BcAlgTraits>
 void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
 {
   // Read in the table of surface heat flux or surface temperature versus time.
-  std::cout << "Loading Surface Heating Table..." << std::endl;
- 
-  ListArray<DblType> tableData;
-  get_required<ListArray<DblType>>(node,"surface_heating_table",tableData);
- 
-  std::cout << tableData[0][0] << " " << tableData[0][1] << " " << tableData[0][2] << " " << tableData[0][3] << std::endl;  
-  std::cout << tableData[1][0] << " " << tableData[1][1] << " " << tableData[1][2] << " " << tableData[1][3] << std::endl;  
+  ListArray<DblType> tableData{{tableTimes_[0],tableFluxes_[0],tableSurfaceTemperatures_[0],tableWeights_[0]},
+                               {tableTimes_[1],tableFluxes_[1],tableSurfaceTemperatures_[1],tableWeights_[1]}};
+  get_if_present<ListArray<DblType>>(node,"surface_heating_table",tableData,tableData);
  
   // Split the table out into vectors for each input quantity.
   auto nTimes = tableData.size();
-  std::cout << "nTimes = " << nTimes << std::endl;
-
   tableTimes_.resize(nTimes);
   tableFluxes_.resize(nTimes);
   tableSurfaceTemperatures_.resize(nTimes);
   tableWeights_.resize(nTimes);
-
   for (std::vector<DblType>::size_type i = 0; i < nTimes; i++) {
     tableTimes_[i] = tableData[i][0]; 
     tableFluxes_[i] = tableData[i][1]; 
     tableSurfaceTemperatures_[i] = tableData[i][2]; 
-    tableWeights_[i] = tableData[i][3]; 
+    tableWeights_[i] = tableData[i][3];
   }
+  std::cout << "nTimes = " << nTimes << std::endl;
+  std::cout << "Time (s)     Surface Flux (K-m/s)     Surface Temperature (K)     Blending Factor" << std::endl;
+  for (std::vector<DblType>::size_type i = 0; i < nTimes; i++) {
+    std::cout << tableTimes_[i] << " " << tableFluxes_[i] << " " << tableSurfaceTemperatures_[i] << " " << tableWeights_[i] << std::endl;
+  }
+  
+
+  // Read in the surface roughness.
+  get_if_present<DblType>(node,"roughness_height",z0_,z0_);
+  std::cout << "Surface Roughness: " << z0_ << " m" << std::endl;
+
+  // Get the gravity information.
+  std::vector<double> gravity_vector;
+  const int ndim = realm_.spatialDimension_;
+  gravity_vector.resize(ndim);
+  gravity_vector = realm_.solutionOptions_->gravity_;
+  get_if_present(node,"gravity_vector_component",gravityVectorComponent_,gravityVectorComponent_);
+  gravity_ = std::abs(gravity_vector[gravityVectorComponent_ - 1]);
+  std::cout << "Gravity Vector: " << gravity_vector[0] << " " << gravity_vector[1] << " " << gravity_vector[2] << " m/s^2" << std::endl;
+  std::cout << "Gravity: " << gravity_ << " m/s^2" << std::endl;
+
+  // Read in the reference temperature.
+  get_if_present<DblType>(node,"reference_temperature",Tref_,Tref_);
+  std::cout << "Reference Temperature: " << Tref_ << " K" << std::endl;
+
+  // Read in the averaging type.
+  get_if_present(node, "monin_obukhov_averaging_type", averagingType_, averagingType_);
+  std::cout << "Averaging Type: " << averagingType_ << std::endl;
+
+  // Read in M-O scaling law parameters.
+  get_if_present(node,"kappa",kappa_,kappa_);
+  get_if_present(node,"beta_m",beta_m_,beta_m_);
+  get_if_present(node,"beta_h",beta_h_,beta_h_);
+  get_if_present(node,"gamma_m",gamma_m_,gamma_m_);
+  get_if_present(node,"gamma_h",gamma_h_,gamma_h_);
+  std::cout << "kappa: " << kappa_ << std::endl;
+  std::cout << "beta_m: " << beta_m_ << std::endl;
+  std::cout << "beta_h: " << beta_h_ << std::endl;
+  std::cout << "gamma_m: " << gamma_m_ << std::endl;
+  std::cout << "gamma_h: " << gamma_h_ << std::endl;
+
 }
 
 template<typename BcAlgTraits>

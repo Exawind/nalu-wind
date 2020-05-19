@@ -1966,8 +1966,7 @@ MomentumEquationSystem::register_wall_bc(
 
       wallFuncAlgDriver_.register_face_algorithm<ABLWallFluxesAlg>(
         wfAlgType, part, "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
-        grav, z0, referenceTemperature,
-        realm_.get_turb_model_constant(TM_kappa),ablWallFunctionNode);
+        ablWallFunctionNode);
 
       if (realm_.realmUsesEdges_) {
         auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;

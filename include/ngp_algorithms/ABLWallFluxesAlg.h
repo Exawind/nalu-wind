@@ -48,10 +48,6 @@ public:
     stk::mesh::Part*,
     WallFricVelAlgDriver&,
     const bool,
-    const double,
-    const double,
-    const double,
-    const double,
     const YAML::Node&);
 
   virtual ~ABLWallFluxesAlg() = default;
@@ -70,37 +66,49 @@ private:
   unsigned bcVelocity_      {stk::mesh::InvalidOrdinal};
   unsigned density_         {stk::mesh::InvalidOrdinal};
   unsigned bcHeatFlux_      {stk::mesh::InvalidOrdinal};
+  unsigned wallHeatFlux_    {stk::mesh::InvalidOrdinal};
   unsigned specificHeat_    {stk::mesh::InvalidOrdinal};
   unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
   unsigned wallFricVel_     {stk::mesh::InvalidOrdinal};
   unsigned wallNormDist_    {stk::mesh::InvalidOrdinal};
 
+  // Break the flux/surface temperature vs. time input table into vectors
+  // of each quantity and store in the following vectors.
+  std::vector<DblType> tableTimes_{0.0,999999.9};
+  std::vector<DblType> tableFluxes_{0.0,0.0};
+  std::vector<DblType> tableSurfaceTemperatures_{Tref_,Tref_};
+  std::vector<DblType> tableWeights_{0.0,0.0};
+
   //! Acceleration due to gravity (m/s^2)
-  const DoubleType gravity_;
+  int gravityVectorComponent_{3};
+  DblType gravity_{9.7};
 
   //! Roughness height (m)
-  const DoubleType z0_;
+  DblType z0_{0.001};
 
   //! Reference temperature (K)
-  const DoubleType Tref_;
+  DblType Tref_{301.0};
 
-  //! von Karman constant
-  const DoubleType kappa_{0.41};
-  const DoubleType beta_m_{5.0};
-  const DoubleType beta_h_{5.0};
-  const DoubleType gamma_m_{16.0};
-  const DoubleType gamma_h_{16.0};
+  //! The type of averaging to apply to the Monin-Obukhov scaling law.
+  //! Current options are:
+  //!   - none - Apply no averaging--treat all quantities locally.
+  //!   - planar - Apply planar averaging at the nodes adjacent to the wall nodes.
+  //! Future options that should be tried are:
+  //!   - time - Apply local time-averaging within some backward-in-time windows.
+  //!   - Lagrangian - Apply Lagrangian averaging backward along a streamline.
+  std::string averagingType_{"none"};
+
+  //! Monin-Obukhov scaling law constants.
+  //! These should really be variable given stability, but they are just fixed for now.
+  DblType kappa_{0.41};
+  DblType beta_m_{5.0};
+  DblType beta_h_{5.0};
+  DblType gamma_m_{16.0};
+  DblType gamma_h_{16.0};
 
   bool useShifted_{false};
 
   MasterElement* meFC_{nullptr};
-
-  // Break the flux/surface temperature vs. time input table into vectors
-  // of each quantity and store in the following vectors.
-  std::vector<DblType> tableTimes_;
-  std::vector<DblType> tableFluxes_;
-  std::vector<DblType> tableSurfaceTemperatures_;
-  std::vector<DblType> tableWeights_;
 };
 
 }  // nalu

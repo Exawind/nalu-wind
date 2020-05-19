@@ -860,7 +860,7 @@ EnthalpyEquationSystem::register_wall_bc(
 
   }
 
-  // If standard single-value time-invariant  boundary heat flux is specified, do the following (but ignore this heat flux 
+  // If standard single-value time-invariant boundary heat flux is specified, do the following (but ignore this heat flux 
   // if ABL wall function BC is used because it has its own):
   else if ( userData.heatFluxSpec_ && !ablWallFunctionApproach) {
 
@@ -927,7 +927,6 @@ EnthalpyEquationSystem::register_wall_bc(
           realm_.realmUsesEdges_, dataPreReqs);
       }
     }
-
   }
 
   // non-solver; dhdx; allow for element-based shifted
