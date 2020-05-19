@@ -98,9 +98,9 @@ DataProbePostProcessing::DataProbePostProcessing(
     searchExpansionFactor_(1.5),
     probeType_(DataProbeSampleType::STEPCOUNT),
     previousTime_(0.0),
-    exoName_("data_probes.exo"),
-    gzLevel_(0), 
     writeCoords_(true),
+    gzLevel_(0), 
+    exoName_("data_probes.exo"),
     precisionvar_(8)
 {
   // load the data
@@ -1185,7 +1185,7 @@ DataProbePostProcessing::provide_output_txt(
 
 		  if ((probeInfo->onlyOutputField_[inp] == "") || (probeInfo->onlyOutputField_[inp] == allFieldNames[ifi])) {
 		    double * theF = (double*)stk::mesh::field_data(*(allFields[ifi]), node );
-		    for ( int jj = 0; jj < fieldSize[ifi]; ++jj ) {
+		    for ( size_t jj = 0; jj < fieldSize[ifi]; ++jj ) {
 		      sprintf(buffer, " %12.6e",theF[jj]);
 		      filestring.append(buffer);
 		    }
