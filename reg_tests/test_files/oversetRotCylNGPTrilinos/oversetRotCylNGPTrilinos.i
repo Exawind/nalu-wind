@@ -23,13 +23,13 @@ linear_solvers:
     tolerance: 1e-10
     max_iterations: 200
     kspace: 50
-    muelu_xml_file_name: milestone.xml
+    muelu_xml_file_name: ../../xml/milestone.xml
     output_level: 0
 
 realms:
 
   - name: realm_1
-    mesh: oversetCylinder.g
+    mesh: ../../mesh/oversetCylinder.g
     use_edges: yes
     automatic_decomposition_type: rcb
 
