@@ -17,8 +17,7 @@ namespace nalu{
 
 FrameBase::FrameBase(
   stk::mesh::BulkData& bulk,
-  const YAML::Node& node,
-  bool isReference
+  const YAML::Node& node
 ) : bulk_(bulk),
     meta_(bulk.mesh_meta_data())
 {

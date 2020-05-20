@@ -17,7 +17,7 @@ public:
   FrameMoving(
     stk::mesh::BulkData& bulk,
     const YAML::Node& node
-) : FrameBase(bulk,node,false)
+) : FrameBase(bulk,node)
   {
   }
 

@@ -17,7 +17,7 @@ public:
   FrameReference(
     stk::mesh::BulkData& bulk,
     const YAML::Node& node
-) : FrameBase(bulk,node,true)
+) : FrameBase(bulk,node)
   {
   }
 

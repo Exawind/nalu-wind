@@ -19,8 +19,7 @@ class FrameBase
 public:
   FrameBase(
     stk::mesh::BulkData&,
-    const YAML::Node&,
-    bool);
+    const YAML::Node&);
 
   virtual ~FrameBase()
   {
