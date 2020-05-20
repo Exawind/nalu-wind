@@ -73,7 +73,6 @@ realms:
     mesh_motion:
       - name: mmOne
         mesh_parts: [block_1, block_2, block_3, block_4, block_5, block_6, block_7, block_8]
-        frame: moving
         motion:
          - type: rotation
            omega: 5.0
@@ -81,7 +80,6 @@ realms:
 
       - name: mmTwo
         mesh_parts: [block_9, block_10, block_11, block_12, block_13, block_14, block_15, block_16, block_17, block_18, block_19]
-        frame: moving
         motion:
          - type: rotation
            omega: 0.0

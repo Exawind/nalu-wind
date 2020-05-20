@@ -28,27 +28,10 @@ public:
 
   void setup();
 
-  virtual void update_coordinates_velocity(const double) = 0;
-
-  virtual const MotionBase::TransMatType& get_reference_frame() const
-  {
-    throw std::runtime_error("FrameMoving: Invalid access of reference frame");
-  }
-
-  void set_ref_frame( MotionBase::TransMatType& frame )
-  {
-    refFrame_ = frame;
-  }
-
   void set_computed_centroid( std::vector<double>& centroid )
   {
     for (size_t i=0; i < meshMotionVec_.size(); i++)
       meshMotionVec_[i]->set_computed_centroid(centroid);
-  }
-
-  bool is_reference() const
-  {
-    return isReference_;
   }
 
   virtual void post_compute_geometry()
@@ -56,15 +39,23 @@ public:
   }
 
 protected:
+  /** Compute transformation matrix
+   *
+   * @return 4x4 matrix representing composite addition of motions
+   */
+  MotionBase::TransMatType compute_transformation(
+    const double,
+    const double*);
+
   //! Reference to the STK Mesh BulkData object
   stk::mesh::BulkData& bulk_;
 
   //! Reference to the STK Mesh MetaData object
   stk::mesh::MetaData& meta_;
 
-  /** Motion vector
+  /** Motion/Transformation vector
    *
-   *  A vector of size number of motion groups
+   *  A vector of size number of motion/transformation groups
    */
   std::vector<std::unique_ptr<MotionBase>> meshMotionVec_;
 
@@ -79,15 +70,6 @@ protected:
    *  A vector of size number of parts required for divergence computation
    */
   stk::mesh::PartVector partVecBc_;
-
-  /** Reference frame
-   *
-   * A 4x4 matrix that defines the reference frame for subsequent motions
-   * It is initialized to an identity matrix
-   */
-  MotionBase::TransMatType refFrame_ = MotionBase::identityMat_;
-
-  const bool isReference_;
 
   bool computeCentroid_ = false;
 

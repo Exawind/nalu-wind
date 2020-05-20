@@ -82,25 +82,6 @@ void FrameMoving::update_coordinates_velocity(const double time)
   } // end for loop - bkts
 }
 
-MotionBase::TransMatType FrameMoving::compute_transformation(
-  const double time,
-  const double* xyz)
-{
-  // all frame motions are based off of the reference frame
-  MotionBase::TransMatType comp_trans_mat = refFrame_;
-
-  for (auto& mm: meshMotionVec_)
-  {
-    // build and get transformation matrix
-    mm->build_transformation(time,xyz);
-
-    // composite addition of motions in current group
-    comp_trans_mat = mm->add_motion(mm->get_trans_mat(),comp_trans_mat);
-  }
-
-  return comp_trans_mat;
-}
-
 void FrameMoving::post_compute_geometry()
 {
   // flag denoting if mesh velocity divergence already computed

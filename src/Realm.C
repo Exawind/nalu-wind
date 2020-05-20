@@ -45,6 +45,7 @@
 
 // mesh motion
 #include <mesh_motion/MeshMotionAlg.h>
+#include <mesh_motion/MeshTransformationAlg.h>
 
 #include <nalu_make_unique.h>
 
@@ -527,15 +528,11 @@ Realm::initialize()
   if ( hasPeriodic_ )
     periodicManager_->build_constraints();
 
-  if ( solutionOptions_->meshMotion_ ) {
-    meshMotionAlg_->initialize( get_current_time() );
+  if ( solutionOptions_->meshTransformation_ )
+    meshTransformationAlg_->initialize( get_current_time() );
 
-    // if only initial displacement is specified,
-    // turn off mesh motion flag to prevent re-initialization
-    // of linear solver, overset, etc.
-    if(meshMotionAlg_->onlyInitialDisplacement_)
-      solutionOptions_->meshMotion_ = false;
-  }
+  if ( solutionOptions_->meshMotion_ )
+    meshMotionAlg_->initialize( get_current_time() );
 
   compute_geometry();
 
@@ -828,6 +825,17 @@ Realm::load(const YAML::Node & node)
     NaluEnv::self().naluOutputP0() << "EqSys/options Review:      " << std::endl;
     NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
     equationSystems_.load(node);
+  }
+
+  // second set of options: mesh transformation... this means that the Realm will expect to provide mesh transformation
+  const YAML::Node meshTransformationNode = expect_sequence(node, "mesh_transformation", true);
+  if (meshTransformationNode)
+  {
+    // mesh motion is active
+    solutionOptions_->meshTransformation_ = true;
+
+    // instantiate mesh transformation class once the mesh has been created
+    meshTransformationAlg_.reset(new MeshTransformationAlg( *bulkData_, meshTransformationNode));
   }
 
   // second set of options: mesh motion... this means that the Realm will expect to provide mesh motion

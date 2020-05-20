@@ -164,14 +164,12 @@ realms:
 
       - name: mmBackground
         mesh_parts: [block_1]
-        frame: moving
         motion:
          - type: rotation
            omega: 0.0
 
       - name: mmFront_ss5
         mesh_parts: [block_2]
-        frame: moving
         compute_centroid: yes
         motion:
          - type: rotation
@@ -180,7 +178,6 @@ realms:
 
       - name: mmTop_ss7
         mesh_parts: [block_3]
-        frame: moving
         compute_centroid: yes
         motion:
          - type: rotation
@@ -189,7 +186,6 @@ realms:
 
       - name: mmBot_ss6
         mesh_parts: [block_4]
-        frame: moving
         compute_centroid: yes
         motion:
          - type: rotation

@@ -76,6 +76,7 @@ class PropertyEvaluator;
 class HDF5FilePtr;
 class Transfer;
 class MeshMotionAlg;
+class MeshTransformationAlg;
 
 class SolutionNormPostProcessing;
 class TurbulenceAveragingPostProcessing;
@@ -457,6 +458,7 @@ class Realm {
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
+  std::unique_ptr<MeshTransformationAlg> meshTransformationAlg_;
 
   std::vector<Algorithm *> propertyAlg_;
   std::map<PropertyIdentifier, ScalarFieldType *> propertyMap_;

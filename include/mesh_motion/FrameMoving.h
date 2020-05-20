@@ -32,14 +32,6 @@ public:
 private:
   FrameMoving() = delete;
   FrameMoving(const FrameMoving&) = delete;
-
-  /** Compute transformation matrix
-   *
-   * @return 4x4 matrix representing composite addition of motions
-   */
-  MotionBase::TransMatType compute_transformation(
-    const double,
-    const double*);
 };
 
 } // nalu

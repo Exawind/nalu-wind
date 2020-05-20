@@ -2,6 +2,7 @@
 #include <limits>
 
 #include "mesh_motion/MeshMotionAlg.h"
+#include "mesh_motion/MeshTransformationAlg.h"
 #include "mesh_motion/MotionRotation.h"
 #include "mesh_motion/MotionScaling.h"
 #include "mesh_motion/MotionTranslation.h"
@@ -17,18 +18,16 @@
 namespace {
   // create a yaml node describing mesh motion
   const std::string mInfo =
-    "mesh_motion:                       \n"
-    "                                   \n"
+    "mesh_transformation:               \n"
     "  - name: scale                    \n"
-    "    frame: reference               \n"
+    "    mesh_parts: [ block_1 ]        \n"
     "    motion:                        \n"
     "     - type: scaling               \n"
     "       factor: [1.2,  1.0, 1.2]    \n"
     "                                   \n"
+    "mesh_motion:                       \n"
     "  - name: trans_rot                \n"
     "    mesh_parts: [ block_1 ]        \n"
-    "    frame: moving                  \n"
-    "    reference: scale               \n"
     "    motion:                        \n"
     "     - type: rotation              \n"
     "       omega: 3.0                  \n"
@@ -41,14 +40,15 @@ namespace {
     ;
 
   // define YAML nodes at different levels
-  const YAML::Node meshMotionNode = YAML::Load(mInfo);
-  const YAML::Node frames         = meshMotionNode["mesh_motion"];
+  const YAML::Node yamlNode = YAML::Load(mInfo);
+  const YAML::Node mesh_transformation = yamlNode["mesh_transformation"];
+  const YAML::Node mesh_motion = yamlNode["mesh_motion"];
 
-  const YAML::Node frame_first = frames[0];
+  const YAML::Node frame_first = mesh_transformation[0];
   const YAML::Node scale       = frame_first["motion"];
   const YAML::Node scaleNode   = scale[0];
 
-  const YAML::Node frame_second = frames[1];
+  const YAML::Node frame_second = mesh_motion[0];
   const YAML::Node rot_trans    = frame_second["motion"];
   const YAML::Node rotNode      = rot_trans[0];
   const YAML::Node transNode    = rot_trans[1];
@@ -142,53 +142,83 @@ namespace {
   }
 }
 
-TEST(meshMotion, meshMotionAlg_initialize)
+TEST(meshMotion, initialize)
 {
   // create realm
   unit_test_utils::NaluTest naluObj;
   sierra::nalu::Realm& realm = naluObj.create_realm();
+  realm.solutionOptions_->meshTransformation_ = true;
   realm.solutionOptions_->meshMotion_ = true;
 
   sierra::nalu::TimeIntegrator timeIntegrator;
   timeIntegrator.secondOrderTimeAccurate_ = false;
   realm.timeIntegrator_ = &timeIntegrator;
+
   // register mesh motion fields and initialize coordinate fields
   realm.register_nodal_fields( &(realm.meta_data().universal_part()) );
   realm.init_current_coordinates();
+
+  // create field to copy coordinates
+  // NOTE: This is done to allow computation of gold values later on
+  // because mesh_transformation changes the field - coordinates
+  int nDim = realm.meta_data().spatial_dimension();
+  VectorFieldType *modelCoordsCopy = &(realm.meta_data().declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "coordinates_copy"));
+  stk::mesh::put_field_on_mesh(*modelCoordsCopy, realm.meta_data().universal_part(), nDim, nullptr);
 
   // create mesh
   const std::string meshSpec("generated:2x2x2");
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
 
-  // create mesh motion algorithm class
-  std::unique_ptr<sierra::nalu::MeshMotionAlg> meshMotionAlg;
-  meshMotionAlg.reset(
-    new sierra::nalu::MeshMotionAlg( realm.bulk_data(), meshMotionNode["mesh_motion"] ));
-
-  // get relevant fields
+  // copy coordinatees to copy coordinates
   VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_velocity");
 
   // get the parts in the current motion frame
   stk::mesh::Selector sel = stk::mesh::Selector(realm.meta_data().universal_part())
     & (realm.meta_data().locally_owned_part() | realm.meta_data().globally_shared_part());
   const auto& bkts = realm.bulk_data().get_buckets(stk::topology::NODE_RANK, sel);
 
-  /////////////////////////////////////////////////////////////
+  for (auto b: bkts) {
+    for (size_t in=0; in < b->size(); in++) {
+
+      auto node = (*b)[in]; // mesh node and NOT YAML node
+      double* mxyz = stk::mesh::field_data( *modelCoords, node);
+      double* cxyz = stk::mesh::field_data( *modelCoordsCopy, node);
+
+      for ( int d = 0; d < nDim; ++d ) {
+        cxyz[d] = mxyz[d];
+      }
+    } // end for loop - in index
+  } // end for loop - bkts
+
+  // create mesh transformation algorithm class
+  std::unique_ptr<sierra::nalu::MeshTransformationAlg> meshTransformationAlg;
+  meshTransformationAlg.reset(
+    new sierra::nalu::MeshTransformationAlg( realm.bulk_data(), mesh_transformation ));
+
+  // create mesh motion algorithm class
+  std::unique_ptr<sierra::nalu::MeshMotionAlg> meshMotionAlg;
+  meshMotionAlg.reset(
+    new sierra::nalu::MeshMotionAlg( realm.bulk_data(), mesh_motion ));
+
+  // get fields to be tested
+  VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "current_coordinates");
+  VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_velocity");
+
   // initialize and execute mesh motion algorithm
   const double currTime = 0.0;
+  meshTransformationAlg->initialize(currTime);
   meshMotionAlg->initialize(currTime);
 
   for (auto b: bkts) {
     for (size_t in=0; in < b->size(); in++) {
 
       auto node = (*b)[in]; // mesh node and NOT YAML node
-      double* oxyz = stk::mesh::field_data( *modelCoords, node);
-      double*  xyz = stk::mesh::field_data(  *currCoords, node);
+      double* oxyz = stk::mesh::field_data(*modelCoordsCopy, node);
+      double*  xyz = stk::mesh::field_data(*currCoords, node);
       double*  vel = stk::mesh::field_data(*meshVelocity, node);
 
       sierra::nalu::MotionBase::TransMatType transMat =
@@ -208,11 +238,12 @@ TEST(meshMotion, meshMotionAlg_initialize)
   } // end for loop - bkts
 }
 
-TEST(meshMotion, meshMotionAlg_execute)
+TEST(meshMotion, execute)
 {
   // create realm
   unit_test_utils::NaluTest naluObj;
   sierra::nalu::Realm& realm = naluObj.create_realm();
+  realm.solutionOptions_->meshTransformation_ = true;
   realm.solutionOptions_->meshMotion_ = true;
 
   sierra::nalu::TimeIntegrator timeIntegrator;
@@ -223,32 +254,59 @@ TEST(meshMotion, meshMotionAlg_execute)
   realm.register_nodal_fields( &(realm.meta_data().universal_part()) );
   realm.init_current_coordinates();
 
+  // create field to copy coordinates
+  // NOTE: This is done to allow computation of gold values later on
+  // because mesh_transformation changes the field - coordinates
+  int nDim = realm.meta_data().spatial_dimension();
+  VectorFieldType *modelCoordsCopy = &(realm.meta_data().declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "coordinates_copy"));
+  stk::mesh::put_field_on_mesh(*modelCoordsCopy, realm.meta_data().universal_part(), nDim, nullptr);
+
   // create mesh
   const std::string meshSpec("generated:2x2x2");
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
 
-  // create mesh motion algorithm class
-  const YAML::Node meshMotionNode = YAML::Load(mInfo);
-  std::unique_ptr<sierra::nalu::MeshMotionAlg> meshMotionAlg;
-  meshMotionAlg.reset(
-    new sierra::nalu::MeshMotionAlg( realm.bulk_data(), meshMotionNode["mesh_motion"] ));
-
-  // get relevant fields
+  // copy coordinatees to copy coordinates
   VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_velocity");
 
   // get the parts in the current motion frame
   stk::mesh::Selector sel = stk::mesh::Selector(realm.meta_data().universal_part())
     & (realm.meta_data().locally_owned_part() | realm.meta_data().globally_shared_part());
   const auto& bkts = realm.bulk_data().get_buckets(stk::topology::NODE_RANK, sel);
 
-  /////////////////////////////////////////////////////////////
-  // execute mesh motion algorithm
+  for (auto b: bkts) {
+    for (size_t in=0; in < b->size(); in++) {
+
+      auto node = (*b)[in]; // mesh node and NOT YAML node
+      double* mxyz = stk::mesh::field_data( *modelCoords, node);
+      double* cxyz = stk::mesh::field_data( *modelCoordsCopy, node);
+
+      for ( int d = 0; d < nDim; ++d ) {
+        cxyz[d] = mxyz[d];
+      }
+    } // end for loop - in index
+  } // end for loop - bkts
+
+  // create mesh transformation algorithm class
+  std::unique_ptr<sierra::nalu::MeshTransformationAlg> meshTransformationAlg;
+  meshTransformationAlg.reset(
+    new sierra::nalu::MeshTransformationAlg( realm.bulk_data(), mesh_transformation ));
+
+  // create mesh motion algorithm class
+  std::unique_ptr<sierra::nalu::MeshMotionAlg> meshMotionAlg;
+  meshMotionAlg.reset(
+    new sierra::nalu::MeshMotionAlg( realm.bulk_data(), mesh_motion ));
+
+  // get fields to be tested
+  VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "current_coordinates");
+  VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_velocity");
+
+  // initialize and execute mesh motion algorithm
   double currTime = 0.0;
+  meshTransformationAlg->initialize(currTime);
   meshMotionAlg->initialize(currTime);
 
   // execute mesh motion algorithm
@@ -259,8 +317,8 @@ TEST(meshMotion, meshMotionAlg_execute)
     for (size_t in=0; in < b->size(); in++) {
 
       auto node = (*b)[in]; // mesh node and NOT YAML node
-      double* oxyz = stk::mesh::field_data( *modelCoords, node);
-      double*  xyz = stk::mesh::field_data(  *currCoords, node);
+      double* oxyz = stk::mesh::field_data(*modelCoordsCopy, node);
+      double*  xyz = stk::mesh::field_data(*currCoords, node);
       double*  vel = stk::mesh::field_data(*meshVelocity, node);
 
       sierra::nalu::MotionBase::TransMatType transMat =

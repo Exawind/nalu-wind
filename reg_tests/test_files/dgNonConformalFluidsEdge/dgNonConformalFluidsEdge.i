@@ -112,14 +112,12 @@ realms:
     mesh_motion:
     - name: mmOne
       mesh_parts: [block_1]
-      frame: moving
       motion:
        - type: rotation
          omega: 1.0
 
     - name: mmTwo
       mesh_parts: [block_2]
-      frame: moving
       motion:
        - type: rotation
          omega: 0.0

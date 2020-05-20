@@ -114,7 +114,6 @@ realms:
     mesh_motion:
     - name: mmOne
       mesh_parts: [block_1]
-      frame: moving
       motion:
        - type: rotation
          omega: 1.0
