@@ -249,8 +249,11 @@ void
 EnthalpyEquationSystem::initial_work()
 {
   // compute all enthalpy values given IC
+  temperature_->sync_to_host();
   for ( size_t k = 0; k < enthalpyFromTemperatureAlg_.size(); ++k )
     enthalpyFromTemperatureAlg_[k]->execute();
+  enthalpy_->modify_on_host();
+  enthalpy_->sync_to_device();
 
   // call base class method (will process copyStateAlg)
   EquationSystem::initial_work();
@@ -1152,13 +1155,19 @@ EnthalpyEquationSystem::solve_and_update()
   for ( size_t k = 0; k < bcEnthalpyFromTemperatureAlg_.size(); ++k )
     bcEnthalpyFromTemperatureAlg_[k]->execute();
 
+  {
+    // Enthalpy BC field might not exist depending on boundary conditions
+    auto* enthalpyBC = realm_.meta_data().get_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "enthalpy_bc");
+    if (enthalpyBC != nullptr) {
+      enthalpyBC->modify_on_host();
+      enthalpyBC->sync_to_device();
+    }
+  }
+
   // copy enthalpy_bc to enthalpyNp1
   for ( size_t k = 0; k < bcCopyStateAlg_.size(); ++k )
     bcCopyStateAlg_[k]->execute();
-  ngpTemp.modify_on_host();
-  ngpEnth.modify_on_host();
-  ngpTemp.sync_to_device();
-  ngpEnth.sync_to_device();
 
   // compute dh/dx
   if ( isInit_ ) {
@@ -1215,10 +1224,22 @@ EnthalpyEquationSystem::post_iter_work_dep()
   for ( size_t k = 0; k < bcEnthalpyFromTemperatureAlg_.size(); ++k )
     bcEnthalpyFromTemperatureAlg_[k]->execute();
 
+  {
+    // enthalpy BC field might not exist depending on boundary conditions
+    auto* enthalpyBC = realm_.meta_data().get_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "enthalpy_bc");
+    if (enthalpyBC != nullptr) {
+      enthalpyBC->modify_on_host();
+      enthalpyBC->sync_to_device();
+    }
+  }
+
   // copy enthalpy_bc to enthalpyNp1
   for ( size_t k = 0; k < bcCopyStateAlg_.size(); ++k )
     bcCopyStateAlg_[k]->execute();
 
+  ngpEnth.sync_to_host();
+  ngpTemp.sync_to_host();
   // extract temperature now
   extract_temperature();
 

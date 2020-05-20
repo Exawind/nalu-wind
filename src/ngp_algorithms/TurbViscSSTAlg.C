@@ -87,6 +87,7 @@ TurbViscSSTAlg::execute()
 
       tvisc.get(meshIdx, 0) = aOne*density.get(meshIdx, 0)*tke.get(meshIdx, 0)/stk::math::max(aOne*sdr.get(meshIdx, 0), sijMag*fTwo);
     });
+  tvisc.modify_on_device();
 }
 
 } // namespace nalu

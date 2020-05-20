@@ -100,6 +100,7 @@ if(NOT ENABLE_CUDA)
   # Regression tests
   #=============================================================================
   add_test_r_cat(ablNeutralEdge 8 2)
+  add_test_r(ablNeutralNGPTrilinos 2)
   add_test_r(ablNeutralEdgeSegregated 8)
   add_test_r(ablStableElem 4)
   add_test_r_rst(ablUnstableEdge 4)
@@ -224,7 +225,7 @@ else(NOT ENABLE_CUDA)
   #=============================================================================
   # Regression tests
   #=============================================================================
-  add_test_r(ablNeutralEdge 2)
+  add_test_r(ablNeutralNGPTrilinos 2)
   add_test_r(conduction_p4 2)
 
   if (ENABLE_TIOGA)

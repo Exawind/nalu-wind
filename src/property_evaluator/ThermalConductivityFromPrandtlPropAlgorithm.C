@@ -74,6 +74,8 @@ ThermalConductivityFromPrandtlPropAlgorithm::execute()
       thermalCond[k] = specHeat[k]*viscosity[k]/Pr_;
     }
   }
+  thermalCond_->modify_on_host();
+  thermalCond_->sync_to_device();
 }
 
 } // namespace nalu
