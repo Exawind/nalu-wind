@@ -793,6 +793,7 @@ SpecificDissipationRateEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
     & stk::mesh::selectField(*sdr_);
   nalu_ngp::field_copy(ngpMesh, sel, sdrNp1, sdrN);
+  sdrNp1.modify_on_device();
 }
 
 } // namespace nalu

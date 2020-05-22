@@ -1033,6 +1033,7 @@ TurbKineticEnergyEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
     & stk::mesh::selectField(*tke_);
   nalu_ngp::field_copy(ngpMesh, sel, tkeNp1, tkeN);
+  tkeNp1.modify_on_device();
 }
 
 //--------------------------------------------------------------------------

@@ -478,6 +478,8 @@ WallDistEquationSystem::compute_wall_distance()
       *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
   if (realm_.hasOverset_)
     realm_.overset_field_update(wallDistance_, 1, 1);
+  wdist.modify_on_host();
+  wdist.sync_to_device();
 }
 
 void
