@@ -81,10 +81,20 @@ SurfaceForceAndMomentAlgorithmDriver::zero_fields()
   field_fill( meta_data, bulk_data, 0.0, *viscousForce, realm_.get_activate_aura());
   field_fill( meta_data, bulk_data, 0.0, *tauWall, realm_.get_activate_aura());
   field_fill( meta_data, bulk_data, 0.0, *yplus, realm_.get_activate_aura());
-  if ( NULL != assembledArea ) 
+
+  pressureForce->modify_on_host();
+  viscousForce->modify_on_host();
+  tauWall->modify_on_host();
+  yplus->modify_on_host();
+
+  if ( NULL != assembledArea ) {
     field_fill( meta_data, bulk_data, 0.0, *assembledArea, realm_.get_activate_aura());
-  if ( NULL != assembledAreaWF ) 
+    assembledArea->modify_on_host();
+  }
+  if ( NULL != assembledAreaWF ) {
     field_fill( meta_data, bulk_data, 0.0, *assembledAreaWF, realm_.get_activate_aura());
+    assembledAreaWF->modify_on_host();
+  }
 
 }
 
