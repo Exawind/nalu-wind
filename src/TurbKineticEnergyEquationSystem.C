@@ -940,7 +940,7 @@ TurbKineticEnergyEquationSystem::initial_work()
     "clip_tke",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
-      if (ngpTke.get(mi, 0) < clipValue)
+      if (ngpTke.get(mi, 0) < 0.0)
         ngpTke.get(mi, 0) = clipValue;
     });
 
@@ -996,7 +996,7 @@ TurbKineticEnergyEquationSystem::update_and_clip()
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& mi, size_t& nClip) {
       const double tmp = ngpTke.get(mi, 0) + ngpKTmp.get(mi, 0);
-      if (tmp < clipValue) {
+      if (tmp < 0.0) {
         ngpTke.get(mi, 0) = clipValue;
         nClip++;
       } else {
