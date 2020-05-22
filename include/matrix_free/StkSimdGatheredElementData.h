@@ -20,7 +20,6 @@
 #include "stk_mesh/base/CoordinateSystems.hpp"
 #include "stk_mesh/base/Types.hpp"
 #include "stk_mesh/base/Ngp.hpp"
-#include "stk_ngp/NgpFieldManager.hpp"
 
 namespace stk {
 namespace mesh {
