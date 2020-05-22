@@ -24,7 +24,7 @@
 #include "matrix_free/KokkosFramework.h"
 #include "matrix_free/LocalArray.h"
 
-#include "stk_ngp/NgpProfilingBlock.hpp"
+#include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 #include <limits>
 

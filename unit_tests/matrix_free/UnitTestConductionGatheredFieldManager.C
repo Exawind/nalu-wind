@@ -16,7 +16,7 @@
 #include "Kokkos_Parallel_Reduce.hpp"
 
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_ngp/NgpFieldParallel.hpp"
+#include "stk_mesh/base/NgpFieldParallel.hpp"
 #include "stk_mesh/base/FieldState.hpp"
 #include "stk_math/StkMath.hpp"
 #include "stk_mesh/base/NgpForEachEntity.hpp"

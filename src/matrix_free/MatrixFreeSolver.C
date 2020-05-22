@@ -27,7 +27,7 @@
 #include "Tpetra_Operator.hpp"
 #include "Tpetra_Details_residual.hpp"
 
-#include "stk_ngp/NgpProfilingBlock.hpp"
+#include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 namespace sierra {
 namespace nalu {
