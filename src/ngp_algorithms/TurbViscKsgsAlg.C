@@ -32,10 +32,7 @@ TurbViscKsgsAlg::TurbViscKsgsAlg(
     tvisc_(tvisc->mesh_meta_data_ordinal()),
     dualNodalVolume_(get_field_ordinal(realm.meta_data(), "dual_nodal_volume")),
     cmuEps_(realm.get_turb_model_constant(TM_cmuEps))
-{
-  if (realm.meta_data().spatial_dimension() != 3u)
-    throw std::runtime_error("KSGS Turbulence model only available for 3D");
-}
+{}
 
 void
 TurbViscKsgsAlg::execute()
@@ -56,13 +53,15 @@ TurbViscKsgsAlg::execute()
   const auto dualNodalVolume = fieldMgr.get_field<double>(dualNodalVolume_);
   auto tvisc = fieldMgr.get_field<double>(tvisc_);
 
+  const DblType invDim = 1.0 / static_cast<double>(meta.spatial_dimension());
   const DblType cmuEps = cmuEps_;
 
   nalu_ngp::run_entity_algorithm(
     "TurbViscKsgsAlg",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
-      const DblType filter = stk::math::cbrt(dualNodalVolume.get(meshIdx, 0));
+      const DblType filter = stk::math::pow(dualNodalVolume.get(meshIdx, 0), 
+          invDim);
       tvisc.get(meshIdx, 0) = cmuEps*density.get(meshIdx, 0)*std::sqrt(tke.get(meshIdx, 0))*filter;
     });
   tvisc.modify_on_device();
