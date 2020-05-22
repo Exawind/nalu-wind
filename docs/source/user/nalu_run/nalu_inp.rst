@@ -898,7 +898,8 @@ Mesh Transformation
 
 .. inpfile:: mesh_transformation.mesh_parts
 
-   Mesh parts associated with respective motion group.
+   Mesh parts associated with respective motion group. The user may use ``all_blocks``
+   to apply the transformation to the entire mesh.
 
 .. inpfile:: mesh_transformation.motion
 
@@ -936,7 +937,8 @@ Mesh Motion
 
 .. inpfile:: mesh_motion.mesh_parts
 
-   Mesh parts associated with respective motion group.
+   Mesh parts associated with respective motion group. The user may use ``all_blocks``
+   to apply the motion to the entire mesh.
 
 .. inpfile:: mesh_motion.motion
 

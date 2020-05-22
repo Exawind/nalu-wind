@@ -65,7 +65,6 @@ void FrameBase::load(const YAML::Node& node)
 
 void FrameBase::populate_part_vec(const YAML::Node& node)
 {
-  // if no parts specified and frame is reference, return
   if (!node["mesh_parts"]) {
     throw std::runtime_error(
       "FrameBase: No mesh parts found.");
@@ -77,13 +76,21 @@ void FrameBase::populate_part_vec(const YAML::Node& node)
 
   // populate volume parts
   const auto& fparts = node["mesh_parts"];
-
   if (fparts.Type() == YAML::NodeType::Scalar)
     partNamesVec.push_back(fparts.as<std::string>());
   else
     partNamesVec = fparts.as<std::vector<std::string>>();
 
-  assert (partNamesVec.size() > 0);
+  // get all mesh parts if all blocks were requested
+  if (std::find(partNamesVec.begin(), partNamesVec.end(), "all_blocks") != partNamesVec.end()) {
+    partNamesVec.clear();
+    for (const auto* part : meta_.get_mesh_parts()) {
+      ThrowRequire(part);
+      if (part->topology().rank() == stk::topology::ELEMENT_RANK) {
+        partNamesVec.push_back(part->name());
+      }
+    }
+  }
 
   // store all parts associated with current motion frame
   int numParts = partNamesVec.size();

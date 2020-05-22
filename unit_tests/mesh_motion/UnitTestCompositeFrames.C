@@ -20,7 +20,7 @@ namespace {
   const std::string mInfo =
     "mesh_transformation:               \n"
     "  - name: scale                    \n"
-    "    mesh_parts: [ block_1 ]        \n"
+    "    mesh_parts: [ all_blocks ]     \n"
     "    motion:                        \n"
     "     - type: scaling               \n"
     "       factor: [1.2,  1.0, 1.2]    \n"
