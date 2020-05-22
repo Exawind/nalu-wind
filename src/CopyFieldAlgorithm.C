@@ -62,6 +62,7 @@ CopyFieldAlgorithm::execute()
   nalu_ngp::field_copy(
     realm_.ngp_mesh(), selector, toField, fromField,
     beginPos_, endPos_, entityRank_);
+  toField.modify_on_device();
 }
 
 } // namespace nalu

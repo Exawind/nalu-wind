@@ -923,6 +923,8 @@ LowMachEquationSystem::predict_state()
     & stk::mesh::selectField(*density_);
   nalu_ngp::field_copy(ngpMesh, sel, rhoNp1, rhoN, 1);
   nalu_ngp::field_copy(ngpMesh, sel, presNp1, presN, 1);
+  rhoNp1.modify_on_device();
+  presNp1.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -2451,6 +2453,7 @@ MomentumEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
     & stk::mesh::selectField(*velocity_);
   nalu_ngp::field_copy(ngpMesh, sel, velNp1, velN, meta.spatial_dimension());
+  velNp1.modify_on_device();
 }
 
 //--------------------------------------------------------------------------

@@ -158,6 +158,7 @@ void MdotOpenEdgeAlg<BcAlgTraits>::execute()
     }, mdotOpenReducer);
 
   mdotDriver_.add_open_mdot(mdotOpen);
+  openMdot.modify_on_device();
 }
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(MdotOpenEdgeAlg)
