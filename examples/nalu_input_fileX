@@ -163,6 +163,9 @@ class mapping_object_class():
         print('#  Begin mapping  #')
         print('###################')
 
+        # Change the xml input file location to the current dir
+        self.set_xml()
+
         # Go through all the keys in the dictionary and mapp them
         for keys in self.mapping_dictionary:
 
@@ -206,6 +209,15 @@ class mapping_object_class():
         print(self.preprocess_file)
         print(self.new_nalu_input_file)
 
+
+    def set_xml(self):
+        '''
+        Set the milestone.xml file
+        '''
+        for i in range(len(self.yaml_input['linear_solvers'])):
+            if 'muelu_xml_file_name' in self.yaml_input['linear_solvers'][i]:
+                self.yaml_input['linear_solvers'][i]['muelu_xml_file_name'] = \
+                  './milestone.xml'
 
     def set_mesh(self):
         '''
