@@ -314,6 +314,7 @@ Realm subsection                 Purpose
 :inpfile:`boundary_conditions`   Boundary condition for the different fields
 :inpfile:`material_properties`   Material properties (e.g., fluid density, viscosity etc.)
 :inpfile:`solution_options`      Discretization and numerical stability
+:inpfile:`mesh_transformation`   Mesh transformation
 :inpfile:`mesh_motion`           Mesh motion
 :inpfile:`output`                Solution output options (file, frequency, etc.)
 :inpfile:`restart`               Optional: Restart options (restart time, checkpoint frequency etc.)
@@ -406,10 +407,10 @@ Common options
 
 .. inpfile:: rebalance_mesh
 
-   A boolean flag indicating whether to rebalance mesh using stk_balance. The 
+   A boolean flag indicating whether to rebalance mesh using stk_balance. The
    default value is ``no``. If this parameter is activated, it requires that
-   ``stk_rebalance_method`` is also set to specify the decomposition method to be 
-   used for rebalance, e.g., RIB, RCB, etc. 
+   ``stk_rebalance_method`` is also set to specify the decomposition method to be
+   used for rebalance, e.g., RIB, RCB, etc.
 
 .. inpfile:: balance_nodes
 
@@ -743,7 +744,7 @@ Material Properties
 
    A list of element blocks (*parts*) where the material properties are applied.
    This list should ideally include all the parts that are referenced by
-   :inpfile:`initial_conditions.target_name`. Using the alias ``all_blocks`` is 
+   :inpfile:`initial_conditions.target_name`. Using the alias ``all_blocks`` is
    equivalent to listing all element blocks in the mesh.
 
 .. inpfile:: material_properties.constant_specification
@@ -864,73 +865,84 @@ Material Properties
                primary_value: 1.967e-4
                secondary_value: 1.85e-4
 
+Mesh Transformation
+```````````````````
+.. inpfile:: mesh_transformation
+
+   This subsection of the realm describes a one time stationary motion undergone
+   by the entire mesh with entries under :inpfile:`mesh_transformation` describing
+   the motions applied to different parts in a.
+
+   Example:
+
+   .. code-block:: yaml
+
+      mesh_transformation:
+      - name: scale_background
+       mesh_parts: [ Unspecified-3-HEX ]
+       motion:
+        - type: scaling
+          factor: [1.2, 1.0, 1.2]
+          origin: [5.0, 0.05, 0.0]
+
+      - name: scale_near_body
+        mesh_parts: [ Unspecified-2-HEX ]
+        motion:
+         - type: scaling
+           factor: [1.2, 1.0, 1.2]
+           origin: [0.0, 0.05, 0.0]
+
+.. inpfile:: mesh_transformation.name
+
+   Name of motion group.
+
+.. inpfile:: mesh_transformation.mesh_parts
+
+   Mesh parts associated with respective motion group. The user may use ``all_blocks``
+   to apply the transformation to the entire mesh.
+
+.. inpfile:: mesh_transformation.motion
+
+   Type of motion. Every group is free to undergo one or multiple motions simultaneously.
+
 Mesh Motion
 ```````````
 
 .. inpfile:: mesh_motion
 
-   This subsection of the of the realm describes the rigid body motion undergone 
-   by the entire mesh. The mesh motion description follows the concept of 
-   reference frames in multi-body representation of physical domains, with entry 
-   under :inpfile:`mesh_motion` describing a motion frame as shown below.
+   This subsection of the of the realm describes the time-dependent rigid body motion undergone
+   by the entire mesh for as described by entries under :inpfile:`mesh_motion`.
 
    Example:
 
    .. code-block:: yaml
 
       mesh_motion:
-       - name: scale_background
-        mesh_parts: [ Unspecified-3-HEX ]
-        frame: inertial
-        motion:
-         - type: scaling
-           factor: [1.2, 1.0, 1.2]
-           origin: [5.0, 0.05, 0.0]
+       - name: trans_rot_near_body
+         mesh_parts: [ Unspecified-2-HEX ]
+         motion:
+          - type: rotation
+            omega: 12.0
+            axis: [0.0, 1.0, 0.0]
+            origin: [0.0, 0.05, 0.0]
 
-         - name: scale_near_body
-           frame: inertial
-           motion:
-            - type: scaling
-              factor: [1.2, 1.0, 1.2]
-              origin: [0.0, 0.05, 0.0]
-
-         - name: trans_rot_near_body
-           mesh_parts: [ Unspecified-2-HEX ]
-           frame: non_inertial
-           reference: scale_near_body
-           motion:
-            - type: rotation
-              omega: 12.0
-              axis: [0.0, 1.0, 0.0]
-              origin: [0.0, 0.05, 0.0]
-
-            - type: translation
-              start_time: 100.0
-              end_time: 200.0
-              velocity: [0.05, 0.0, 0.0]
+          - type: translation
+            start_time: 100.0
+            end_time: 200.0
+            velocity: [0.05, 0.0, 0.0]
 
 .. inpfile:: mesh_motion.name
 
-   Name of motion frame.
+   Name of motion group.
 
 .. inpfile:: mesh_motion.mesh_parts
 
-   Mesh parts associated with respective motion frame.
-
-.. inpfile:: mesh_motion.frame
-
-   Type of motion frame. Frames described as ``inertial`` are one time motions
-   executed at the start of the simulation. Frames described as ``non_nertial``
-   are executed throughout the simulation unless specified using ``start_time`` and
-   ``end_time``.
-
-.. inpfile:: mesh_motion.frame
-
-   Name of the reference frame off of which the current motion frame is described.
+   Mesh parts associated with respective motion group. The user may use ``all_blocks``
+   to apply the motion to the entire mesh.
 
 .. inpfile:: mesh_motion.motion
 
-   Type of motion the current frame undergoes. Every frame is free to undergo one
+   Type of motion the current group undergoes. Every frame is free to undergo one
    or multiple motions simultaneously.
 
 Output Options
@@ -1246,8 +1258,8 @@ Data probes
           search_tolerance: 1.0e-3
           search_expansion_factor: 2.0
 
-          gzip_level: 0            
-          write_coords: true       
+          gzip_level: 0
+          write_coords: true
 
           specifications:
             - name: probe_bottomwall
@@ -1283,7 +1295,7 @@ Data probes
 		  edge2_numPoints: 21
 		  offset_vector:   [0, 0, 1]
 		  offset_spacings: [0, 2]
-		  only_output_field: velocity  
+		  only_output_field: velocity
 
 	      output_variables:
 	        - field_name: velocity
@@ -1346,7 +1358,7 @@ Data probes
    sequence if it does not already exist.
 
 .. inpfile:: data_probes.time_performance
-	     
+
    Optional input, applies to sample planes only.  Boolean specifying
    whether to display timing information when writing sample planes.
 
@@ -1554,9 +1566,9 @@ Boundary Layer Statistics
 	  stats_output_file: abl_statistics.nc
 	  compute_temperature_statistics: yes
 	  output_frequency: 5000
-	  time_hist_output_frequency: 1        
-	  height_multiplier: 1.0e6             
-	  
+	  time_hist_output_frequency: 1
+	  height_multiplier: 1.0e6
+
    The various parameters to ``boundary_layer_statistics`` are
    described below:
 
@@ -1580,7 +1592,7 @@ Boundary Layer Statistics
 .. inpfile:: boundary_layer_statistics.output_frequency
 
    The frequency to output statistics in the ``abl_*_stats.dat`` text
-   files.  
+   files.
    [*Optional*, default value: ``10``]
 
 .. inpfile:: boundary_layer_statistics.time_hist_output_frequency
@@ -1604,7 +1616,7 @@ Boundary Layer Statistics
 .. inpfile:: boundary_layer_statistics.wall_normal_direction
 
    Spatial index to indicate the wall normal direction in the domain.
-   The directions are given by x=``1``, y=``2``, z=``3``.  
+   The directions are given by x=``1``, y=``2``, z=``3``.
    [*Optional*, default value: ``3``]
 
 .. inpfile:: boundary_layer_statistics.minimum_height
