@@ -92,14 +92,14 @@ DataProbePostProcessing::DataProbePostProcessing(
   const YAML::Node &node)
   : realm_(realm),
     outputFreq_(10),
+    writeCoords_(true),
+    gzLevel_(0), 
     w_(26),
     searchMethodName_("none"),
     searchTolerance_(1.0e-4),
     searchExpansionFactor_(1.5),
     probeType_(DataProbeSampleType::STEPCOUNT),
     previousTime_(0.0),
-    writeCoords_(true),
-    gzLevel_(0), 
     exoName_("data_probes.exo"),
     precisionvar_(8)
 {
