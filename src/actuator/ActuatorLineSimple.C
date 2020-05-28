@@ -98,15 +98,6 @@ ActuatorLineSimple::execute_class_specific(
 
     Coordinates windSpeed = infoObject->windSpeed_;
     double      rho       = infoObject->gasDensity_;
-    // NaluEnv::self().naluOutputP0()
-    //   << "Blade: " <<bladeId<<" Node: "<<iNode<<" "
-    //   << infoObject->centroidCoords_[0] << " "
-    //   << infoObject->centroidCoords_[1] << " "
-    //   << infoObject->centroidCoords_[2] << " | "
-    //   << windSpeed.x_ << " "
-    //   << windSpeed.y_ << " "
-    //   << windSpeed.z_ << " "
-    //   << std::endl;  // LCCOUT
 
     // Calculate alpha
     double      twist          = bladeInfo->twist_table_[iNode];
@@ -258,7 +249,7 @@ ActuatorLineSimple::calculate_cl_cd(
   utils::linear_interp(aoatable, cltable, alpha, cl);
   utils::linear_interp(aoatable, cdtable, alpha, cd);
 
-  // Do another other processing needed on cl/cd
+  // Do any other processing needed on cl/cd
   // [..nothing at this time..]
 }
 

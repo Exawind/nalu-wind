@@ -35,19 +35,19 @@ ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
 ActuatorBulkSimple::ActuatorBulkSimple(
   const ActuatorMetaSimple& actMeta, double naluTimeStep)
   : ActuatorBulk(actMeta),
+    density_("actDensity", actMeta.numPointsTotal_), 
     turbineThrust_("turbineThrust", actMeta.numberOfActuators_),
     epsilonOpt_("epsilonOptimal", actMeta.numPointsTotal_),
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
     num_force_pts_blade_("numForcePtsBladeBulk", actMeta.numberOfActuators_),
+    assignedProc_("assignedProcBulk", actMeta.numberOfActuators_),
     num_blades_(actMeta.numberOfActuators_),
     debug_output_(actMeta.debug_output_),
-    assignedProc_("assignedProcBulk", actMeta.numberOfActuators_),
     localTurbineId_(
       NaluEnv::self().parallel_rank() >= actMeta.numberOfActuators_
-        ? -1
-      : NaluEnv::self().parallel_rank()) // assign 1 turbine per rank for now Used to be ? -1
+        ? -1 : NaluEnv::self().parallel_rank())
 {
   // Allocate blades to turbines
   const int nProcs = NaluEnv::self().parallel_size();
@@ -255,10 +255,10 @@ ActuatorBulkSimple::zero_open_fast_views()
   Kokkos::deep_copy(dvHelper_.get_local_view(velocity_),0.0);
   Kokkos::deep_copy(dvHelper_.get_local_view(density_),0.0);
  
-  // Uncomment this functor if you want to update the point positions
-  // -----------
-  //dvHelper_.touch_dual_view(pointCentroid_);
-  //Kokkos::deep_copy(dvHelper_.get_local_view(pointCentroid_),0.0);
+#ifdef ENABLE_ACTSIMPLE_PTMOTION
+  dvHelper_.touch_dual_view(pointCentroid_);
+  Kokkos::deep_copy(dvHelper_.get_local_view(pointCentroid_),0.0);
+#endif
     
 }
 

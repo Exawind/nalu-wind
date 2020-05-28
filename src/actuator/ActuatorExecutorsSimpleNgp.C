@@ -18,7 +18,8 @@ ActuatorLineSimpleNGP::ActuatorLineSimpleNGP(
   : actMeta_(actMeta),
     actBulk_(actBulk),
     stkBulk_(stkBulk),
-    numActPoints_(actMeta_.numPointsTotal_)
+    numActPoints_(actMeta_.numPointsTotal_),
+    useSpreadActuatorForce_(actMeta_.useSpreadActuatorForce)
 {
 }
 
@@ -46,14 +47,16 @@ ActuatorLineSimpleNGP::operator()()
 
   // === Always use SpreadActuatorForce() ===
   // -- for both isotropic and anisotropic Guassians ---
-  Kokkos::parallel_for(
-    "spreadForcesActuatorNgpSimple", localSizeCoarseSearch,
-    SpreadActuatorForce(actBulk_, stkBulk_));
-  // -- Uncomment below to use ActSimpleSpreadForceWhProjection
-  // Kokkos::parallel_for(
-  //   "spreadForceUsingProjDistance", localSizeCoarseSearch,
-  //   ActSimpleSpreadForceWhProjection(actBulk_, stkBulk_));
-  // ====
+  if (useSpreadActuatorForce_) {
+    Kokkos::parallel_for(
+      "spreadForcesActuatorNgpSimple", localSizeCoarseSearch,
+      SpreadActuatorForce(actBulk_, stkBulk_));
+  } else {
+    // --  use ActSimpleSpreadForceWhProjection
+    Kokkos::parallel_for(
+      "spreadForceUsingProjDistance", localSizeCoarseSearch,
+      ActSimpleSpreadForceWhProjection(actBulk_, stkBulk_));
+  }
 
   actBulk_.parallel_sum_source_term(stkBulk_);
 
@@ -70,22 +73,23 @@ ActuatorLineSimpleNGP::update()
   // set range policy to only operating over points owned by local fast turbine
   auto fastRangePolicy = actBulk_.local_range_policy();
 
-  // Uncomment this section if you want to update the point positions
-  // ====
+#ifdef ENABLE_ACTSIMPLE_PTMOTION
   // -- Get p1 and p2 for blade geometry --
-  // double p1[3]; 
-  // double p2[3]; 
-  // for (int j=0; j<3; j++) { 
-  //   p1[j] = actMeta_.p1_.h_view(actBulk_.localTurbineId_,j);
-  //   p2[j] = actMeta_.p2_.h_view(actBulk_.localTurbineId_,j);
-  // }
-  // int Npts=actMeta_.num_force_pts_blade_.h_view(actBulk_.localTurbineId_);
+  // (for blade motion, points p1 and p2 can change with time)
+  double p1[3]; 
+  double p2[3]; 
+  for (int j=0; j<3; j++) { 
+    p1[j] = actMeta_.p1_.h_view(actBulk_.localTurbineId_,j);
+    p2[j] = actMeta_.p2_.h_view(actBulk_.localTurbineId_,j);
+  }
+  int Npts=actMeta_.num_force_pts_blade_.h_view(actBulk_.localTurbineId_);
   // -- functor to update points -- 
-  // Kokkos::parallel_for(
-  //   "updatePointLocationsActuatorNgpSimple", fastRangePolicy,
-  //   ActSimpleUpdatePoints(actBulk_, Npts));
-  // actuator_utils::reduce_view_on_host(pointReduce);
-  // =====
+  Kokkos::parallel_for(
+    "updatePointLocationsActuatorNgpSimple", fastRangePolicy,
+    ActSimpleUpdatePoints(actBulk_, Npts, p1, p2));
+  actuator_utils::reduce_view_on_host(pointReduce);
+#endif
+
   actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
 
   Kokkos::parallel_for(

@@ -17,6 +17,17 @@ namespace nalu {
 
 namespace {
 
+  /** Resizes a vector to size N
+   *
+   * - If vec is of size 1, resizes a vector to size N (assuming all
+   *   constant values). 
+   * - If vec is of size N, do nothing.
+   *
+   * Similar to std::vector::resize(), except this returns helpful
+   * error message if vec is not size 1 or N.  Useful when validating
+   * user input.
+   *  
+   */
 std::vector<double> 
 extend_double_vector(std::vector<double> vec, const int N)
 {
@@ -53,10 +64,16 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   else
     actMetaSimple.debug_output_ = false;
 
+  // Load the spread force option option
+  const YAML::Node useSpreadActF = y_actuator["useSpreadActuatorForce"];
+  if (useSpreadActF) 
+    actMetaSimple.useSpreadActuatorForce = useSpreadActF.as<bool>();
+  else
+    actMetaSimple.useSpreadActuatorForce = true;
+
   size_t n_simpleblades_;
   get_required(y_actuator, "n_simpleblades", n_simpleblades_);
   actMetaSimple.n_simpleblades_ =  n_simpleblades_;
-  //NaluEnv::self().naluOutputP0() << "N blade: " << actMetaSimple.n_simpleblades_<< std::endl; //LCCOUT
 
   // Declare some vectors to store blade information
   std::vector<std::vector<double>> input_chord_table;

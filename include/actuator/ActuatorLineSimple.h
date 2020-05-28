@@ -17,7 +17,6 @@
 #ifndef ActuatorLineSimple_h
 #define ActuatorLineSimple_h
 
-#include <stk_util/parallel/ParallelVectorConcat.hpp>
 #include "ActuatorSimple.h"
 
 namespace sierra {

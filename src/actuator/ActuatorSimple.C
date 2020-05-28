@@ -72,11 +72,11 @@ ActuatorSimplePointInfo::ActuatorSimplePointInfo(
   : ActuatorPointInfo(
       centroidCoords, searchRadius, 1.0e16, stk::mesh::Entity()),
     globTurbId_(globTurbId),
-    bladeId_(bladeId),
     epsilon_(epsilon),
     epsilon_opt_(epsilon_opt),
     nodeType_(nType),
-    forcePntIndex_(forceInd)
+    forcePntIndex_(forceInd),
+    bladeId_(bladeId)
 {
   // nothing to do
 }
@@ -1059,11 +1059,6 @@ ActuatorSimple::spread_actuator_force_to_node_vec(
 
     stk::mesh::Entity node = *iNode;
 
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
-///////////                Error is HERE
-////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////
     const double* node_coords =
       (double*)stk::mesh::field_data(coordinates, node);
 

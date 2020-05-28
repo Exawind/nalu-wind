@@ -23,11 +23,11 @@ namespace nalu {
   {
     using execution_space = ActuatorFixedExecutionSpace;
 
-    InterpActuatorDensity(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk);
+    InterpActuatorDensity(ActuatorBulkSimple& actBulk, stk::mesh::BulkData& stkBulk);
 
     void operator()(int index) const;
 
-    ActuatorBulk& actBulk_;
+    ActuatorBulkSimple& actBulk_;
     stk::mesh::BulkData& stkBulk_;
     VectorFieldType* coordinates_;
     ScalarFieldType* density_;
@@ -47,12 +47,13 @@ namespace nalu {
       double &alpha);
   }
 
+#ifdef ENABLE_ACTSIMPLE_PTMOTION
 struct ActSimpleUpdatePoints
 {
   using execution_space = ActuatorFixedExecutionSpace;
 
   ActSimpleUpdatePoints(ActuatorBulkSimple& actBulk, 
-			int numpoints);
+                        int numpoints, double p1[], double p2[]);
   void operator()(int index) const;
 
   ActDualViewHelper<ActuatorFixedMemSpace> helper_;
@@ -60,7 +61,10 @@ struct ActSimpleUpdatePoints
   ActFixScalarInt offsets_;
   const int turbId_;
   const int numpoints_;
+  double p1_[3];  // Start position of blade
+  double p2_[3];  // End position of blade
 };
+#endif
 
 struct ActSimpleAssignVel
 {
@@ -111,17 +115,6 @@ struct ActSimpleComputeForce
 
   const int debug_output_;
 
-};
-
-struct ActSimpleSetUpThrustCalc
-{
-  using execution_space = ActuatorFixedExecutionSpace;
-
-  ActSimpleSetUpThrustCalc(ActuatorBulkSimple& actBulk);
-
-  void operator()(int index) const;
-
-  ActuatorBulkSimple& actBulk_;
 };
 
 struct ActSimpleComputeThrustInnerLoop

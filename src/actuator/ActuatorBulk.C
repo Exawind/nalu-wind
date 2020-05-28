@@ -39,7 +39,6 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
   : turbIdOffset_("offsetsForTurbine", actMeta.numberOfActuators_),
     pointCentroid_("actPointCentroid", actMeta.numPointsTotal_),
     velocity_("actVelocity", actMeta.numPointsTotal_),
-    density_("actDensity", actMeta.numPointsTotal_),
     actuatorForce_("actForce", actMeta.numPointsTotal_),
     epsilon_("actEpsilon", actMeta.numPointsTotal_),
     searchRadius_("searchRadius", actMeta.numPointsTotal_),

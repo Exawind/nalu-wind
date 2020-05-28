@@ -1852,7 +1852,6 @@ Realm::advance_time_step()
       ActuatorLineSimpleNGP(*actuatorMetaSimple_.get(),
         *actuatorBulkSimple_.get(),
         bulk_data())();
-      //throw std::runtime_error("ActuatorLineSimpleNGP: start");  // LCCSTOP
     }
     const double end_time = NaluEnv::self().nalu_time();
     timerActuator_ += end_time - start_time;

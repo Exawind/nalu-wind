@@ -20,7 +20,7 @@ namespace sierra {
 namespace nalu {
 
 InterpActuatorDensity::InterpActuatorDensity(
-  ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
+  ActuatorBulkSimple& actBulk, stk::mesh::BulkData& stkBulk)
   : actBulk_(actBulk),
     stkBulk_(stkBulk),
     coordinates_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
@@ -48,6 +48,9 @@ InterpActuatorDensity::operator()(int index) const
     // just allocate for largest expected size (hex27)
     double ws_coordinates[81], ws_density[81];
 
+    // Check to make sure the size is sufficient
+    ThrowAssert(81 >= 3*nodesPerElem);
+
     actuator_utils::gather_field(
       3, &ws_coordinates[0], *coordinates_, stkBulk_.begin_nodes(elem),
       nodesPerElem);
@@ -62,13 +65,19 @@ InterpActuatorDensity::operator()(int index) const
   }
 }
 
+#ifdef ENABLE_ACTSIMPLE_PTMOTION
 ActSimpleUpdatePoints::ActSimpleUpdatePoints(ActuatorBulkSimple& actBulk, 
-					     int numpts)
+                                             int numpts, 
+                                             double p1[], double p2[])
   : points_(helper_.get_local_view(actBulk.pointCentroid_)),
     offsets_(helper_.get_local_view(actBulk.turbIdOffset_)),
     turbId_(actBulk.localTurbineId_),
     numpoints_(numpts)
 {
+  for (int i=0; i<3; i++) {
+    p1_[i] = p1[i];
+    p2_[i] = p2[i];  
+  }
   helper_.touch_dual_view(actBulk.pointCentroid_);
 }
 
@@ -80,27 +89,24 @@ ActSimpleUpdatePoints::operator()(int index) const
   const int pointId = index - offsets_(turbId_);
   auto point = Kokkos::subview(points_, index, Kokkos::ALL);
 
-  // Uncomment this section if you need to update point locations
-  // ------
-  // std::vector<double> dx(3, 0.0);
-  // double denom = (double)numpoints_;
-  // for (int i=0; i<3; i++) {
-  //   dx[i] = (p2_[i] - p1_[i])/denom; 
-  // }
-  // for (int i=0; i<3; i++) {
-  //   point(i) = p1_[i] + 0.5*dx[i] + dx[i]*(float)pointId;
-  // }
-  // ------
-
+  double dx[3];
+  double denom = (double)numpoints_;
+  for (int i=0; i<3; i++) {
+    dx[i] = (p2_[i] - p1_[i])/denom; 
+  }
+  for (int i=0; i<3; i++) {
+    point(i) = p1_[i] + 0.5*dx[i] + dx[i]*(float)pointId;
+  }
 }
+#endif
 
 ActSimpleAssignVel::ActSimpleAssignVel(ActuatorBulkSimple& actBulk)
   : velocity_(helper_.get_local_view(actBulk.velocity_)),
     density_(helper_.get_local_view(actBulk.density_)),
     points_(helper_.get_local_view(actBulk.pointCentroid_)),
     offset_(helper_.get_local_view(actBulk.turbIdOffset_)),
-    turbId_(actBulk.localTurbineId_),
-    debug_output_(actBulk.debug_output_)
+    debug_output_(actBulk.debug_output_),
+    turbId_(actBulk.localTurbineId_)
 {
 }
 
@@ -128,9 +134,9 @@ ActSimpleAssignVel::operator()(int index) const
 
 ActSimpleComputeForce::ActSimpleComputeForce(ActuatorBulkSimple& actBulk,
 					     const ActuatorMetaSimple& actMeta)
-  : force_(helper_.get_local_view(actBulk.actuatorForce_)),
-    velocity_(helper_.get_local_view(actBulk.velocity_)),
+  : velocity_(helper_.get_local_view(actBulk.velocity_)),
     density_(helper_.get_local_view(actBulk.density_)),
+    force_(helper_.get_local_view(actBulk.actuatorForce_)),
     offset_(helper_.get_local_view(actBulk.turbIdOffset_)),
     turbId_(actBulk.localTurbineId_),
     Npolartable(actMeta.polartable_size_.h_view(turbId_)),
@@ -287,21 +293,6 @@ AirfoilTheory2D::calculate_alpha(
   double alphaNoTwist = atan2(WSnormal, WStan)*180.0/M_PI;
 
   alpha = alphaNoTwist + twist;  
-}
-
-ActSimpleSetUpThrustCalc::ActSimpleSetUpThrustCalc(ActuatorBulkSimple& actBulk)
-  : actBulk_(actBulk)
-{
-}
-
-void
-ActSimpleSetUpThrustCalc::operator()(int index) const
-{
-  auto thrust = Kokkos::subview(actBulk_.turbineThrust_, index, Kokkos::ALL);
-
-  for (int i = 0; i < 3; i++) {
-    thrust(i) = 0.0;
-  }
 }
 
 void

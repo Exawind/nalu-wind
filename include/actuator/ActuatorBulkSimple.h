@@ -23,13 +23,13 @@ struct ActuatorMetaSimple : public ActuatorMeta
   bool filterLiftLineCorrection_;
   bool isotropicGaussian_;
 
-  // TODO(SAKIEVICH) not certain all these need to be dual views
   //int maxNumPntsPerBlade_;
   ActVectorDblDv epsilon_;
   ActVectorDblDv epsilonChord_;
 
   // Stuff for the simple blade
   bool            debug_output_;
+  bool            useSpreadActuatorForce;
   std::size_t     n_simpleblades_;
   ActScalarIntDv  num_force_pts_blade_;
   ActVectorDblDv  p1_;  // Start of blade
@@ -66,6 +66,8 @@ struct ActuatorBulkSimple : public ActuatorBulk
 
   virtual ~ActuatorBulkSimple();
 
+  ActScalarDblDv density_;
+
   ActFixVectorDbl turbineThrust_;
 
   ActVectorDblDv epsilonOpt_;
@@ -77,9 +79,6 @@ struct ActuatorBulkSimple : public ActuatorBulk
   const int       num_blades_;
   const bool      debug_output_;
 
-  // TODO(SAKIEVICH) this kill lambdas that are pass by value (KOKKOS_LAMBDA)
-  // may need to rethink functor/bulk design.  Perhaps have an internal object
-  // in bulk for gpu data and pass that into the actuatorFunctors.
   const int localTurbineId_;
   ActDualViewHelper<ActuatorMemSpace> dvHelper_;
 };

@@ -12,7 +12,6 @@
 
 #include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulkSimple.h>
-//#include <actuator/ActuatorBulkDiskSimple.h>
 #include <actuator/ActuatorFunctorsSimple.h>
 #include <actuator/UtilitiesActuator.h>
 
@@ -35,25 +34,10 @@ struct ActuatorLineSimpleNGP
   ActuatorBulkSimple& actBulk_;
   stk::mesh::BulkData& stkBulk_;
   const int numActPoints_;
+  const bool useSpreadActuatorForce_;
   ActDualViewHelper<ActuatorMemSpace> dualViewHelper_;
 };
-/*
-struct ActuatorDiskFastNGP
-{
-  ActuatorDiskFastNGP(
-    const ActuatorMetaFAST& actMeta,
-    ActuatorBulkDiskFAST& actBulk,
-    stk::mesh::BulkData& stkBulk);
 
-  void operator()();
-
-  const ActuatorMetaFAST& actMeta_;
-  ActuatorBulkDiskFAST& actBulk_;
-  stk::mesh::BulkData& stkBulk_;
-  const int numActPoints_;
-  ActDualViewHelper<ActuatorMemSpace> dualViewHelper_;
-};
-*/
 } /* namespace nalu */
 } /* namespace sierra */
 

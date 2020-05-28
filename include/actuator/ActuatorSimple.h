@@ -7,10 +7,8 @@
 // for more details.
 //
 
-// LCC: UPDATE THIS DOC
 /** @file ActuatorSimple.h
- *  @brief A class to couple Nalu with OpenFAST for actuator simulations of wind
- * turbines
+ *  @brief A class to handle fixed wing/simple 2D aerodynamic blade simulations
  *
  */
 
@@ -19,10 +17,6 @@
 
 #include <stk_util/parallel/ParallelVectorConcat.hpp>
 #include "Actuator.h"
-
-#ifndef RUNFASTSTUFF
-#define RUNFASTSTUFF false
-#endif
 
 namespace sierra {
 namespace nalu {
