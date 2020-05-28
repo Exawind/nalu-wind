@@ -11,13 +11,11 @@
 #ifdef NALU_USES_TIOGA
 
 #include "overset/OversetManagerTIOGA.h"
-
 #include "overset/OversetInfo.h"
-
-#include <NaluEnv.h>
-#include <NaluParsing.h>
-#include <Realm.h>
-#include <master_element/MasterElement.h>
+#include "overset/OversetFieldData.h"
+#include "NaluEnv.h"
+#include "NaluParsing.h"
+#include "Realm.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -37,7 +35,8 @@ OversetManagerTIOGA::OversetManagerTIOGA(
   const OversetUserData& oversetUserData)
   : OversetManager(realm),
     oversetUserData_(oversetUserData),
-    tiogaIface_(*this, oversetUserData.oversetBlocks_)
+    tiogaIface_(*this, oversetUserData.oversetBlocks_,
+                realm.get_coordinates_name())
 {
   ThrowRequireMsg(
     metaData_->spatial_dimension() == 3u,

@@ -19,13 +19,13 @@
 #include "ngp_utils/NgpFieldUtils.h"
 
 #include "NaluEnv.h"
-#include "Realm.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
 #include "stk_util/parallel/ParallelReduce.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
 #include "stk_mesh/base/SkinBoundary.hpp"
 
+#include "yaml-cpp/yaml.h"
 
 #include <iostream>
 #include <cmath>
@@ -38,12 +38,13 @@ namespace tioga_nalu {
 
 TiogaSTKIface::TiogaSTKIface(
   sierra::nalu::OversetManagerTIOGA& oversetManager,
-  const YAML::Node& node
+  const YAML::Node& node,
+  const std::string& coordsName
 ) : oversetManager_(oversetManager),
     meta_(*oversetManager.metaData_),
     bulk_(*oversetManager.bulkData_),
     tg_(new TIOGA::tioga()),
-    coordsName_(oversetManager_.realm_.get_coordinates_name())
+    coordsName_(coordsName)
 {
   load(node);
 }
@@ -340,7 +341,6 @@ TiogaSTKIface::get_receptor_info()
 void
 TiogaSTKIface::populate_overset_info()
 {
-  auto& realm = oversetManager_.realm_;
   auto& osetInfo = oversetManager_.oversetInfoVec_;
   int nDim = meta_.spatial_dimension();
   std::vector<double> elemCoords;
@@ -350,7 +350,7 @@ TiogaSTKIface::populate_overset_info()
   ThrowAssert(osetInfo.size() == 0);
 
   VectorFieldType *coords = meta_.get_field<VectorFieldType>
-    (stk::topology::NODE_RANK, realm.get_coordinates_name());
+    (stk::topology::NODE_RANK, coordsName_);
 
   size_t numReceptors = receptorIDs_.size();
   for (size_t i=0; i < numReceptors; i++) {
@@ -482,33 +482,33 @@ void TiogaSTKIface::overset_update_field(
 
 void TiogaSTKIface::pre_connectivity_sync()
 {
-  auto& meshInfo = oversetManager_.realm_.mesh_info();
-  auto& ngpCoords = sierra::nalu::nalu_ngp::get_ngp_field(meshInfo, coordsName_);
-  auto& ngpDualVol = sierra::nalu::nalu_ngp::get_ngp_field(meshInfo, "dual_nodal_volume");
-  auto& ngpElemVol = sierra::nalu::nalu_ngp::get_ngp_field(
-    meshInfo, "element_volume", stk::topology::ELEM_RANK);
+  auto* coords = meta_.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, coordsName_);
+  auto* dualVol = meta_.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
+  auto* elemVol = meta_.get_field<ScalarFieldType>(
+    stk::topology::ELEMENT_RANK, "element_volume");
 
-  ngpCoords.sync_to_host();
-  ngpDualVol.sync_to_host();
-  ngpElemVol.sync_to_host();
+  coords->sync_to_host();
+  dualVol->sync_to_host();
+  elemVol->sync_to_host();
 }
 
 void TiogaSTKIface::post_connectivity_sync()
 {
   // Push iblank fields to device
-  auto& meshInfo = oversetManager_.realm_.mesh_info();
-  auto& ngpIblank = sierra::nalu::nalu_ngp::get_ngp_field<int>(
-    meshInfo, "iblank");
-  auto& ngpIblankCell = sierra::nalu::nalu_ngp::get_ngp_field<int>(
-    meshInfo, "iblank_cell", stk::topology::ELEM_RANK);
-
-  ngpIblank.modify_on_host();
-  ngpIblank.sync_to_device();
-  ngpIblankCell.modify_on_host();
-  ngpIblankCell.sync_to_device();
+  {
+    auto* ibnode = meta_.get_field<ScalarIntFieldType>(
+      stk::topology::NODE_RANK, "iblank");
+    auto* ibcell = meta_.get_field<ScalarIntFieldType>(
+      stk::topology::ELEM_RANK, "iblank_cell");
+    ibnode->modify_on_host();
+    ibnode->sync_to_device();
+    ibcell->modify_on_host();
+    ibcell->sync_to_device();
+  }
 
   // Create device version of the fringe/hole lists for reset rows
-
   const auto& fringes = oversetManager_.fringeNodes_;
   const auto& holes = oversetManager_.holeNodes_;
   auto& ngpFringes = oversetManager_.ngpFringeNodes_;

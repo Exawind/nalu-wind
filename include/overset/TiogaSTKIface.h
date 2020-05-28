@@ -10,11 +10,14 @@
 
 #include "overset/TiogaOptions.h"
 #include "overset/OversetFieldData.h"
-#include "yaml-cpp/yaml.h"
 
 #include <vector>
 #include <memory>
 #include <array>
+
+namespace YAML {
+class Node;
+}
 
 namespace TIOGA {
 class tioga;
@@ -44,7 +47,8 @@ public:
    *  @param node YAML node containing overset inputs
    */
   TiogaSTKIface(sierra::nalu::OversetManagerTIOGA&,
-                const YAML::Node&);
+                const YAML::Node&,
+                const std::string&);
 
   ~TiogaSTKIface();
 
