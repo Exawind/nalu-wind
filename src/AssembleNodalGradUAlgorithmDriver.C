@@ -110,7 +110,7 @@ AssembleNodalGradUAlgorithmDriver::post_work()
   if ( realm_.hasOverset_ ) {
     // this is a tensor
     const unsigned nDim = meta_data.spatial_dimension();
-    realm_.overset_orphan_node_field_update(dudx, nDim, nDim);
+    realm_.overset_field_update(dudx, nDim, nDim);
   }
 }
 
