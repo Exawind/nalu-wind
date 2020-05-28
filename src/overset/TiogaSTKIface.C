@@ -12,6 +12,7 @@
 
 #include "overset/TiogaSTKIface.h"
 #include "overset/TiogaBlock.h"
+#include "overset/TiogaRef.h"
 
 #include "overset/OversetManagerTIOGA.h"
 #include "overset/OversetInfo.h"
@@ -43,7 +44,7 @@ TiogaSTKIface::TiogaSTKIface(
 ) : oversetManager_(oversetManager),
     meta_(*oversetManager.metaData_),
     bulk_(*oversetManager.bulkData_),
-    tg_(new TIOGA::tioga()),
+    tg_(&TiogaRef::self().get()),
     coordsName_(coordsName)
 {
   load(node);

@@ -130,7 +130,7 @@ private:
   std::vector<std::unique_ptr<TiogaBlock>> blocks_;
 
   //! Reference to the TIOGA API interface
-  std::unique_ptr<TIOGA::tioga> tg_;
+  TIOGA::tioga* tg_;
 
   //! Work array used to hold donor elements that require ghosting to receptor
   //! MPI ranks

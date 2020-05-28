@@ -15,5 +15,6 @@ if(ENABLE_TIOGA)
       ${CMAKE_CURRENT_SOURCE_DIR}/TiogaOptions.C
       ${CMAKE_CURRENT_SOURCE_DIR}/TiogaBlock.C
       ${CMAKE_CURRENT_SOURCE_DIR}/TiogaSTKIface.C
+      ${CMAKE_CURRENT_SOURCE_DIR}/TiogaRef.C
    )
 endif()
