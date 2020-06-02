@@ -22,9 +22,11 @@
 #include "SolutionOptions.h"
 #include "utils/StkHelpers.h"
 #include "wind_energy/MoninObukhov.h"
+#include "wind_energy/BdyLayerStatistics.h"
+#include "utils/LinearInterpolation.h"
 
 #include "stk_mesh/base/Field.hpp"
-#include <stk_mesh/base/NgpMesh.hpp>
+#include "stk_mesh/base/NgpMesh.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -103,6 +105,96 @@ double calc_utau(
   return utau;
 }
 
+
+//--------------------------------------------------------------------------
+//-------- compute_fluxes_given_surface_temperature ------------------------
+//--------------------------------------------------------------------------
+template <typename PsiFunc>
+KOKKOS_FUNCTION
+std::vector<double> compute_fluxes_given_surface_temperature
+(
+    const double tol, 
+    const double up, 
+    const double Tp, 
+    const double Tsurface, 
+    const double rho, 
+    const double Cp, 
+    const double zp, 
+    PsiFunc Psi_m_func,
+    PsiFunc Psi_h_func,
+    const double Psi_m_factor,
+    const double Psi_h_factor    
+)
+{
+  // This is algorithm 2 outlined by Basu et al.
+
+  // Set Psi_h and Psi_m initially to zero.
+  double Psi_h = 0.0;
+  double Psi_m = 0.0;
+
+  // Enter the iterative solver loop and iterate until convergence
+  double frictionVelocity = 0.0;
+  double temperatureFlux = 0.0;
+  double frictionVelocityOld = 1.0E10;
+  double temperatureFluxOld = 1.0E10;
+  double L = 1.0E10;
+  double frictionVelocityDelta = std::abs(frictionVelocity - frictionVelocityOld);
+  double temperatureFluxDelta = std::abs(temperatureFlux - temperatureFluxOld);
+  int iterMax = 1000;
+  int iter = 0;
+  while (((frictionVelocityDelta > tol ) || (temperatureFluxDelta > tol)) && (iter < iterMax))
+  {
+    // Update the old values.
+    frictionVelocityOld = frictionVelocity;
+    temperatureFluxOld = temperatureFlux;
+
+    // Compute friction velocity using Monin-Obukhov similarity.
+    frictionVelocity = (kappa_ * up) / (std::log(zp / z0_) - Psi_m);
+
+    // Compute heat flux using Monin-Obukhov similarity.
+    double deltaT = Tp - Tsurface;
+    temperatureFlux = -(deltaT * frictionVelocity * kappa_) / (std::log(zp / z0_) - Psi_m);
+
+    // Compute Obukhov length.
+    if (temperatureFlux == 0.0)
+    {
+      L = 1.0E10;
+    }
+    else
+    {
+      L = -(Tref_ * std::pow(frictionVelocity,3))/(kappa_ * gravity_ * temperatureFlux);
+    }
+
+    // Recompute Psi_H and Psi_M.
+    Psi_h = Psi_h_func(zp/L, Psi_H_fac);
+    Psi_m = Psi_m_func(zp/L, Psi_M_fac);
+
+    // Compute changes in solution.
+    frictionVelocityDelta = std::abs(frictionVelocity - frictionVelocityOld);
+    temperatureFluxDelta = std::abs(temperatureFlux - temperatureFluxOld);
+
+    // Add to the iteration count.
+    iter++;
+  
+  /*  
+    std::cout << "     - iteration: " << iter << std::endl;
+    std::cout << "     - friction velocity = " << frictionVelocity << " " << frictionVelocityDelta << std::endl;
+    std::cout << "     - temperature flux = " << temperatureFlux << " " << temperatureFluxDelta << std::endl;
+    std::cout << "     - L = " << L << std::endl;
+    std::cout << "     - Psi_M = " << Psi_M << std::endl;
+    std::cout << "     - Psi_H = " << Psi_H << std::endl;
+  */
+  }
+  
+  std::vector<double> fluxes = {frictionVelocity,temperatureFlux};
+  //utau = frictionVelocity;
+  //qsurf = rho * Cp * temperatureFlux;
+
+  return fluxes;
+}
+
+
+
 }
 
 template <typename BcAlgTraits>
@@ -118,6 +210,8 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
     velocityNp1_(
       get_field_ordinal(realm.meta_data(), "velocity", stk::mesh::StateNP1)),
     bcVelocity_(get_field_ordinal(realm.meta_data(), "wall_velocity_bc")),
+    temperatureNp1_(
+      get_field_ordinal(realm.meta_data(), "temperature", stk::mesh::StateNP1)),
     density_(get_field_ordinal(realm.meta_data(), "density")),
     bcHeatFlux_(get_field_ordinal(realm.meta_data(), "heat_flux_bc")),
     wallHeatFlux_(get_field_ordinal(
@@ -137,15 +231,19 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
       realm.meta_data().side_rank())),
     useShifted_(useShifted),
     meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-          BcAlgTraits>())
+          BcAlgTraits>()),
+    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element<
+           BcAlgTraits>())
 {
   faceData_.add_cvfem_face_me(meFC_);
+  faceData_.add_cvfem_surface_me(meSCS_);
 
   faceData_.add_coordinates_field(
     get_field_ordinal(realm_.meta_data(), realm_.get_coordinates_name()),
     BcAlgTraits::nDim_, CURRENT_COORDINATES);
   faceData_.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
   faceData_.add_gathered_nodal_field(bcVelocity_, BcAlgTraits::nDim_);
+  faceData_.add_gathered_nodal_field(temperatureNp1_, 1);
   faceData_.add_gathered_nodal_field(density_, 1);
   faceData_.add_gathered_nodal_field(bcHeatFlux_, 1);
   faceData_.add_gathered_nodal_field(specificHeat_, 1);
@@ -156,18 +254,18 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
   auto shp_fcn = useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN;
   faceData_.add_master_element_call(shp_fcn, CURRENT_COORDINATES);
 
+  // Load the user data from the input file.
   load(node);
 }
 
 template<typename BcAlgTraits>
 void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
 {
-  // Read in the table of surface heat flux or surface temperature versus time.
+  // Read in the table of surface heat flux or surface temperature versus time and split out
+  // into vectors for each input quantity.
   ListArray<DblType> tableData{{tableTimes_[0],tableFluxes_[0],tableSurfaceTemperatures_[0],tableWeights_[0]},
                                {tableTimes_[1],tableFluxes_[1],tableSurfaceTemperatures_[1],tableWeights_[1]}};
   get_if_present<ListArray<DblType>>(node,"surface_heating_table",tableData,tableData);
- 
-  // Split the table out into vectors for each input quantity.
   auto nTimes = tableData.size();
   tableTimes_.resize(nTimes);
   tableFluxes_.resize(nTimes);
@@ -185,7 +283,6 @@ void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
     std::cout << tableTimes_[i] << " " << tableFluxes_[i] << " " << tableSurfaceTemperatures_[i] << " " << tableWeights_[i] << std::endl;
   }
   
-
   // Read in the surface roughness.
   get_if_present<DblType>(node,"roughness_height",z0_,z0_);
   std::cout << "Surface Roughness: " << z0_ << " m" << std::endl;
@@ -207,6 +304,15 @@ void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
   // Read in the averaging type.
   get_if_present(node, "monin_obukhov_averaging_type", averagingType_, averagingType_);
   std::cout << "Averaging Type: " << averagingType_ << std::endl;
+
+  // If planar averaging is used, check to make sure ABL boundary layer statistics are enabled.
+  if (averagingType_ == "planar")
+  {
+     if (realm_.bdyLayerStats_ == nullptr)
+     {
+        throw std::runtime_error("ABL lower boundary condition with planar averaging requires ABL statistics (enable 'boundary_layer_statistics' in input file).");
+     }
+  }
 
   // Read in M-O scaling law parameters.
   get_if_present(node,"kappa",kappa_,kappa_);
@@ -232,9 +338,25 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpUtau = fieldMgr.template get_field<double>(wallFricVel_);
 
+  auto* meSCS meSCS_;
+
+  // Get the current time and interpolate flux/surface temperature in time.
+  const double currTime = realm_.get_current_time();
+  DblType currFlux;
+  DblType currSurfaceTemperature;
+  DblType currWeight;
+  utils::linear_interp(tableTimes_, tableFluxes_, currTime, currFlux);
+  utils::linear_interp(tableTimes_, tableSurfaceTemperatures_, currTime, currSurfaceTemperature);
+  utils::linear_interp(tableTimes_, tableWeights_, currTime, currWeight);
+
+  std::cout << "Flux = " << currFlux << std::endl;
+  std::cout << "Surface Temperature = " << currSurfaceTemperature << std::endl;
+  std::cout << "Weight = " << currWeight << std::endl;
+
   // Bring class members into local scope for device capture
   const unsigned velID = velocityNp1_;
   const unsigned bcVelID = bcVelocity_;
+  const unsigned tempID = temperatureNp1_;
   const unsigned rhoID = density_;
   const unsigned bcHeatFluxID = bcHeatFlux_;
   const unsigned specHeatID = specificHeat_;
@@ -270,12 +392,15 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
     KOKKOS_LAMBDA(ElemSimdData& edata, nalu_ngp::ArraySimdDouble2& uSum) {
       // Unit normal vector
       NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
+
+      // Velocities
       NALU_ALIGNED DoubleType velIp[BcAlgTraits::nDim_];
       NALU_ALIGNED DoubleType bcVelIp[BcAlgTraits::nDim_];
 
       auto& scrViews = edata.simdScrView;
       const auto& v_vel = scrViews.get_scratch_view_2D(velID);
       const auto& v_bcvel = scrViews.get_scratch_view_2D(bcVelID);
+      const auto& v_temp = scrViews.get_scratch_view_1D(tempID);
       const auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
       const auto& v_bcHeatFlux = scrViews.get_scratch_view_1D(bcHeatFluxID);
       const auto& v_specHeat = scrViews.get_scratch_view_1D(specHeatID);
@@ -286,7 +411,13 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
       const auto& v_shape_fcn = useShifted
         ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
+      // The velocity and temperature at the nodes one layer away from
+      // the wal will be use, so get access to those nodes.
+      const int* lrscv = meSCS->adjacentNode();
+
       for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
+        const int nodeL = lrscv[2*ip];
+
         DoubleType aMag = 0.0;
         for (int d=0; d < BcAlgTraits::nDim_; ++d) {
           aMag += v_areavec(ip, d) * v_areavec(ip, d);
@@ -306,11 +437,13 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
         DoubleType heatFluxIp = 0.0;
         DoubleType rhoIp = 0.0;
         DoubleType CpIp = 0.0;
+        DoubleType tempIp = 0.0;
         for (int ic =0; ic < BcAlgTraits::nodesPerElement_; ++ic) {
           const DoubleType r = v_shape_fcn(ip, ic);
           heatFluxIp += r * v_bcHeatFlux(ic);
           rhoIp += r * v_rho(ic);
           CpIp += r * v_specHeat(ic);
+          tempIp += r*v_temp(ic);
 
           for (int d=0; d < BcAlgTraits::nDim_; ++d) {
             velIp[d] += r * v_vel(ic, d);

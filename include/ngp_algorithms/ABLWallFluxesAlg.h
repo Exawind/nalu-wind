@@ -21,6 +21,7 @@
 
 #include "NaluParsing.h"
 
+
 namespace sierra {
 namespace nalu {
 
@@ -64,6 +65,7 @@ private:
 
   unsigned velocityNp1_     {stk::mesh::InvalidOrdinal};
   unsigned bcVelocity_      {stk::mesh::InvalidOrdinal};
+  unsigned temperatureNp1_  {stk::mesh::InvalidOrdinal};
   unsigned density_         {stk::mesh::InvalidOrdinal};
   unsigned bcHeatFlux_      {stk::mesh::InvalidOrdinal};
   unsigned wallHeatFlux_    {stk::mesh::InvalidOrdinal};
@@ -96,7 +98,7 @@ private:
   //! Future options that should be tried are:
   //!   - time - Apply local time-averaging within some backward-in-time windows.
   //!   - Lagrangian - Apply Lagrangian averaging backward along a streamline.
-  std::string averagingType_{"none"};
+  std::string averagingType_{"planar"};
 
   //! Monin-Obukhov scaling law constants.
   //! These should really be variable given stability, but they are just fixed for now.
@@ -109,6 +111,7 @@ private:
   bool useShifted_{false};
 
   MasterElement* meFC_{nullptr};
+  MasterElement* meSCS_{nullptr};
 };
 
 }  // nalu
