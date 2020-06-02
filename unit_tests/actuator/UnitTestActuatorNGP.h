@@ -19,9 +19,7 @@
 
 namespace sierra {
 namespace nalu {
-struct PreIter
-{
-};
+
 struct ComputePointLocation
 {
 };
@@ -35,9 +33,21 @@ struct PostIter
 {
 };
 
+inline
+void ActPreIter(ActuatorBulk& actBulk){
+  ActDualViewHelper<ActuatorFixedMemSpace>  helper_;
+  helper_.touch_dual_view(actBulk.epsilon_);
+  auto epsilon = helper_.get_local_view(actBulk.epsilon_);
+  Kokkos::parallel_for("ActPreIter", Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(0,epsilon.extent_int(0)), [epsilon](int index)
+  {
+    epsilon(index, 0) = index * 3.0;
+    epsilon(index, 1) = index * 6.0;
+    epsilon(index, 2) = index * 9.0;
+  });
+}
+
 // host only examples
-using ActPreIter =
-  ActuatorFunctor<ActuatorBulk, PreIter, Kokkos::DefaultHostExecutionSpace>;
+;
 using ActCompPnt = ActuatorFunctor<
   ActuatorBulk,
   ComputePointLocation,
@@ -52,34 +62,16 @@ using ActSpread = ActuatorFunctor<
   Kokkos::DefaultHostExecutionSpace>;
 
 template <>
-ActPreIter::ActuatorFunctor(ActuatorBulk& bulk) : actBulk_(bulk)
-{
-  // TODO it should probably be a feature of the bulk data
-  // to recognize modification so users don't need to track this
-  touch_dual_view(actBulk_.epsilon_);
-}
-
-template <>
-void
-ActPreIter::operator()(const int& index) const
-{
-  auto epsilon = get_local_view(actBulk_.epsilon_);
-  epsilon(index, 0) = index * 3.0;
-  epsilon(index, 1) = index * 6.0;
-  epsilon(index, 2) = index * 9.0;
-}
-
-template <>
 ActCompPnt::ActuatorFunctor(ActuatorBulk& bulk) : actBulk_(bulk)
 {
-  touch_dual_view(actBulk_.pointCentroid_);
+  helper_.touch_dual_view(actBulk_.pointCentroid_);
 }
 
 template <>
 void
 ActCompPnt::operator()(const int& index) const
 {
-  auto points = get_local_view(actBulk_.pointCentroid_);
+  auto points = helper_.get_local_view(actBulk_.pointCentroid_);
   points(index, 0) = index;
   points(index, 1) = index * 0.5;
   points(index, 2) = index * 0.25;
@@ -88,14 +80,14 @@ ActCompPnt::operator()(const int& index) const
 template <>
 ActInterp::ActuatorFunctor(ActuatorBulk& bulk) : actBulk_(bulk)
 {
-  touch_dual_view(actBulk_.velocity_);
+  helper_.touch_dual_view(actBulk_.velocity_);
 }
 
 template <>
 void
 ActInterp::operator()(const int& index) const
 {
-  auto velocity = get_local_view(actBulk_.velocity_);
+  auto velocity = helper_.get_local_view(actBulk_.velocity_);
   velocity(index, 0) = index * 2.5;
   velocity(index, 1) = index * 5.0;
   velocity(index, 2) = index * 7.5;
@@ -104,14 +96,14 @@ ActInterp::operator()(const int& index) const
 template <>
 ActSpread::ActuatorFunctor(ActuatorBulk& bulk) : actBulk_(bulk)
 {
-  touch_dual_view(actBulk_.actuatorForce_);
+  helper_.touch_dual_view(actBulk_.actuatorForce_);
 }
 
 template <>
 void
 ActSpread::operator()(const int& index) const
 {
-  auto force = get_local_view(actBulk_.actuatorForce_);
+  auto force = helper_.get_local_view(actBulk_.actuatorForce_);
   force(index, 0) = index * 3.1;
   force(index, 1) = index * 6.2;
   force(index, 2) = index * 9.3;
@@ -122,10 +114,11 @@ template <>
 void
 TestActuatorHostOnly::execute()
 {
-  Kokkos::parallel_for("actPreIter", numActPoints_, ActPreIter(actBulk_));
+  ActPreIter(actBulk_);
+  //Kokkos::parallel_for("actPreIter",      numActPoints_, ActPreIter(actBulk_));
   Kokkos::parallel_for("actCompPointLoc", numActPoints_, ActCompPnt(actBulk_));
-  Kokkos::parallel_for("actInterpVals", numActPoints_, ActInterp(actBulk_));
-  Kokkos::parallel_for("actSpreadForce", numActPoints_, ActSpread(actBulk_));
+  Kokkos::parallel_for("actInterpVals",   numActPoints_, ActInterp (actBulk_));
+  Kokkos::parallel_for("actSpreadForce",  numActPoints_, ActSpread (actBulk_));
 }
 
 // Create a different bulk data that will allow execution on device and host
@@ -146,16 +139,16 @@ using ActPostIter =
 template <>
 ActPostIter::ActuatorFunctor(ActuatorBulkMod& bulk) : actBulk_(bulk)
 {
-  touch_dual_view(actBulk_.scalar_);
+  helper_.touch_dual_view(actBulk_.scalar_);
 }
 
 template <>
 void
 ActPostIter::operator()(const int& index) const
 {
-  auto scalar = get_local_view(actBulk_.scalar_);
-  auto vel = get_local_view(actBulk_.velocity_);
-  auto point = get_local_view(actBulk_.pointCentroid_);
+  auto scalar = helper_.get_local_view(actBulk_.scalar_);
+  auto vel = helper_.get_local_view(actBulk_.velocity_);
+  auto point = helper_.get_local_view(actBulk_.pointCentroid_);
   scalar(index) = point(index, 0) * vel(index, 1);
 }
 
@@ -164,11 +157,12 @@ template <>
 void
 TestActuatorHostDev::execute()
 {
-  Kokkos::parallel_for("actPreIter", numActPoints_, ActPreIter(actBulk_));
-  Kokkos::parallel_for("actCompPointLoc", numActPoints_, ActCompPnt(actBulk_));
-  Kokkos::parallel_for("actInterpVals", numActPoints_, ActInterp(actBulk_));
-  Kokkos::parallel_for("actSpreadForce", numActPoints_, ActSpread(actBulk_));
-  Kokkos::parallel_for("actPostIter", numActPoints_, ActPostIter(actBulk_));
+  ActPreIter(actBulk_);
+  //Kokkos::parallel_for("actPreIter",      numActPoints_, ActPreIter (actBulk_));
+  Kokkos::parallel_for("actCompPointLoc", numActPoints_, ActCompPnt (actBulk_));
+  Kokkos::parallel_for("actInterpVals",   numActPoints_, ActInterp  (actBulk_));
+  Kokkos::parallel_for("actSpreadForce",  numActPoints_, ActSpread  (actBulk_));
+  Kokkos::parallel_for("actPostIter",     numActPoints_, ActPostIter(actBulk_));
   actBulk_.scalar_.sync_device();
 }
 

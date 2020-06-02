@@ -20,55 +20,57 @@ namespace nalu {
 using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 
 //-----------------------------------------------------------------
-struct SetPoints
-{
-};
-struct ComputeForce
-{
-};
-struct Interpolate
-{
-};
 
-using SetupActPoints =
-  ActuatorFunctor<ActuatorBulk, SetPoints, ActuatorExecutionSpace>;
-template <>
-SetupActPoints::ActuatorFunctor(ActuatorBulk& actBulk) : actBulk_(actBulk)
+struct SetupActPoints
 {
-  touch_dual_view(actBulk_.pointCentroid_);
-  touch_dual_view(actBulk_.searchRadius_);
-}
+  using execution_space = ActuatorExecutionSpace;
 
-template <>
-void
-SetupActPoints::operator()(const int& index) const
-{
-  auto point = get_local_view(actBulk_.pointCentroid_);
-  auto radius = get_local_view(actBulk_.searchRadius_);
-  point(index, 0) = 1.0 + 1.5 * index;
-  point(index, 1) = 2.5;
-  point(index, 2) = 2.5;
-  radius(index) = 2.0;
-}
-
-using ComputeActuatorForce =
-  ActuatorFunctor<ActuatorBulk, ComputeForce, ActuatorExecutionSpace>;
-template <>
-ComputeActuatorForce::ActuatorFunctor(ActuatorBulk& actBulk) : actBulk_(actBulk)
-{
-  touch_dual_view(actBulk_.actuatorForce_);
-}
-
-template <>
-void
-ComputeActuatorForce::operator()(const int& index) const
-{
-  auto force = get_local_view(actBulk_.actuatorForce_);
-  auto velocity = get_local_view(actBulk_.velocity_);
-  for (int j = 0; j < 3; j++) {
-    force(index, j) = 1.2 * velocity(index, j);
+  SetupActPoints(ActuatorBulk& actBulk):
+    point_(helper_.get_local_view(actBulk.pointCentroid_)),
+    radius_(helper_.get_local_view(actBulk.searchRadius_))
+  {
+    helper_.touch_dual_view(actBulk.pointCentroid_);
+    helper_.touch_dual_view(actBulk.searchRadius_);
   }
-}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int index) const
+  {
+    point_(index, 0) = 1.0 + 1.5 * index;
+    point_(index, 1) = 2.5;
+    point_(index, 2) = 2.5;
+    radius_(index) = 2.0;
+  }
+
+  ActDualViewHelper<ActuatorMemSpace> helper_;
+  ActVectorDbl point_;
+  ActScalarDbl radius_;
+};
+
+struct ComputeActuatorForce
+{
+
+  using execution_space = ActuatorExecutionSpace;
+
+  ComputeActuatorForce(ActuatorBulk& actBulk):
+    force_(helper_.get_local_view(actBulk.actuatorForce_)),
+    velocity_(helper_.get_local_view(actBulk.velocity_))
+  {
+    helper_.touch_dual_view(actBulk.actuatorForce_);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int index) const
+  {
+    for (int j = 0; j < 3; j++) {
+      force_(index, j) = 1.2 * velocity_(index, j);
+    }
+  }
+
+  ActDualViewHelper<ActuatorMemSpace> helper_;
+  ActVectorDbl force_;
+  ActVectorDbl velocity_;
+};
 
 struct ActuatorTestInterpVelFunctors
 {
