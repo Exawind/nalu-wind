@@ -16,15 +16,14 @@
 namespace sierra {
 namespace nalu {
 
-#ifdef ACTUATOR_ON_DEVICE
+#ifdef KOKKOS_ENABLE_CUDA
 using ActuatorMemSpace = Kokkos::CudaSpace;
-using ActuatorMemLayout = Kokkos::LayoutLeft;
 using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;
 #else
 using ActuatorMemSpace = Kokkos::HostSpace;
-using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 #endif
+using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorFixedMemSpace = Kokkos::HostSpace;
 using ActuatorFixedMemLayout = Kokkos::LayoutRight;
 using ActuatorFixedExecutionSpace = Kokkos::DefaultHostExecutionSpace;
@@ -72,14 +71,14 @@ template <typename memory_space>
 struct ActDualViewHelper
 {
   template <typename T>
-  KOKKOS_INLINE_FUNCTION auto get_local_view(T dualView) const
+  inline auto get_local_view(T dualView) const
     -> decltype(dualView.template view<memory_space>())
   {
     return dualView.template view<memory_space>();
   }
 
   template <typename T>
-  KOKKOS_INLINE_FUNCTION void touch_dual_view(T dualView)
+  inline void touch_dual_view(T dualView)
   {
     dualView.template sync<memory_space>();
     dualView.template modify<memory_space>();

@@ -20,92 +20,64 @@ namespace nalu {
 using VectorFieldType = stk::mesh::Field<double, stk::mesh::Cartesian>;
 
 //-----------------------------------------------------------------
-struct SetPoints
-{
-};
-struct ComputeForce
-{
-};
-struct Interpolate
-{
-};
 
-using SetupActPoints =
-  ActuatorFunctor<ActuatorBulk, SetPoints, ActuatorExecutionSpace>;
-template <>
-SetupActPoints::ActuatorFunctor(ActuatorBulk& actBulk) : actBulk_(actBulk)
+void SetupActPoints(ActuatorBulk& actBulk)
 {
-  touch_dual_view(actBulk_.pointCentroid_);
-  touch_dual_view(actBulk_.searchRadius_);
+  ActDualViewHelper<ActuatorMemSpace> helper;
+  ActVectorDbl point = actBulk.pointCentroid_.view_device();
+  ActScalarDbl radius = actBulk.searchRadius_.view_device();
+
+  helper.touch_dual_view(actBulk.pointCentroid_);
+  helper.touch_dual_view(actBulk.searchRadius_);
+  
+  Kokkos::parallel_for("SetupActPoints",Kokkos::RangePolicy<ActuatorExecutionSpace>(0,point.extent_int(0)),KOKKOS_LAMBDA(int index)
+  {
+    point(index, 0) = 1.0 + 1.5 * index;
+    point(index, 1) = 2.5;
+    point(index, 2) = 2.5;
+    radius(index) = 2.0;
+  });
+
+  actBulk.searchRadius_.sync_host();
+  actBulk.pointCentroid_.sync_host();
 }
 
-template <>
-void
-SetupActPoints::operator()(const int& index) const
+void ComputeActuatorForce(ActuatorBulk& actBulk)
 {
-  auto point = get_local_view(actBulk_.pointCentroid_);
-  auto radius = get_local_view(actBulk_.searchRadius_);
-  point(index, 0) = 1.0 + 1.5 * index;
-  point(index, 1) = 2.5;
-  point(index, 2) = 2.5;
-  radius(index) = 2.0;
+  ActDualViewHelper<ActuatorMemSpace> helper;
+  ActVectorDbl force = actBulk.actuatorForce_.view_device();
+  ActVectorDbl velocity = actBulk.velocity_.view_device();
+
+  helper.touch_dual_view(actBulk.actuatorForce_);
+  helper.touch_dual_view(actBulk.velocity_);
+
+  Kokkos::parallel_for("CompActForce", Kokkos::RangePolicy<ActuatorExecutionSpace>(0,force.extent_int(0)),KOKKOS_LAMBDA(int index)
+  {
+    for (int j = 0; j < 3; j++) {
+      force(index, j) = 1.2 * velocity(index, j);
+    }
+  });
+  actBulk.actuatorForce_.sync_host();
+  actBulk.velocity_.sync_host();
 }
 
-using ComputeActuatorForce =
-  ActuatorFunctor<ActuatorBulk, ComputeForce, ActuatorExecutionSpace>;
-template <>
-ComputeActuatorForce::ActuatorFunctor(ActuatorBulk& actBulk) : actBulk_(actBulk)
-{
-  touch_dual_view(actBulk_.actuatorForce_);
-}
-
-template <>
-void
-ComputeActuatorForce::operator()(const int& index) const
-{
-  auto force = get_local_view(actBulk_.actuatorForce_);
-  auto velocity = get_local_view(actBulk_.velocity_);
-  for (int j = 0; j < 3; j++) {
-    force(index, j) = 1.2 * velocity(index, j);
-  }
-}
-
-struct ActuatorTestInterpVelFunctors
-{
-  ActuatorTestInterpVelFunctors(
+void  ActuatorTestInterpVelFunctors(
     const ActuatorMeta& actMeta,
     ActuatorBulk& actBulk,
     stk::mesh::BulkData& stkBulk)
-    : actMeta_(actMeta),
-      actBulk_(actBulk),
-      stkBulk_(stkBulk),
-      numActPoints_(actMeta_.numPointsTotal_)
-  {
-  }
+{
+    SetupActPoints(actBulk);
 
-  void operator()()
-  {
+    actBulk.stk_search_act_pnts(actMeta, stkBulk);
 
     Kokkos::parallel_for(
-      "setPointLocations", numActPoints_, SetupActPoints(actBulk_));
+      "interpVel", actMeta.numPointsTotal_, InterpActuatorVel(actBulk, stkBulk));
 
-    actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
-
-    Kokkos::parallel_for(
-      "interpVel", numActPoints_, InterpActuatorVel(actBulk_, stkBulk_));
-
-    auto vel = actBulk_.velocity_.view_host();
+    auto vel = actBulk.velocity_.view_host();
     actuator_utils::reduce_view_on_host(vel);
 
-    Kokkos::parallel_for(
-      "computeActuatorForce", numActPoints_, ComputeActuatorForce(actBulk_));
-  }
-
-  const ActuatorMeta& actMeta_;
-  ActuatorBulk& actBulk_;
-  stk::mesh::BulkData& stkBulk_;
-  const int numActPoints_;
-};
+    ComputeActuatorForce(actBulk);
+}
 
 struct FunctorTestSpread : public ActuatorBulk
 {
@@ -248,7 +220,7 @@ TEST_F(ActuatorFunctorTests, testSearchAndInterpolate)
   ActuatorBulk actBulk(actMeta);
 
   // what gets called in the time loop
-  ActuatorTestInterpVelFunctors(actMeta, actBulk, stkBulk_)();
+  ActuatorTestInterpVelFunctors(actMeta, actBulk, stkBulk_);
 
   // check results
   const int nTotal = actMeta.numPointsTotal_;
