@@ -10,7 +10,6 @@
 #ifndef ACTUATOREXECUTORSFASTNGP_H_
 #define ACTUATOREXECUTORSFASTNGP_H_
 
-#include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulkFAST.h>
 #include <actuator/ActuatorBulkDiskFAST.h>
 #include <actuator/ActuatorFunctorsFAST.h>
