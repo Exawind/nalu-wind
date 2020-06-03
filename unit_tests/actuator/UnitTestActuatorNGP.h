@@ -10,7 +10,6 @@
 #ifndef UNITTESTACTUATORNGP_H_
 #define UNITTESTACTUATORNGP_H_
 
-#include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulk.h>
 #include <actuator/ActuatorInfo.h>
 #include <actuator/ActuatorSearch.h>
@@ -19,19 +18,6 @@
 
 namespace sierra {
 namespace nalu {
-
-struct ComputePointLocation
-{
-};
-struct InterpolateValues
-{
-};
-struct SpreadForces
-{
-};
-struct PostIter
-{
-};
 
 // host only examples
 inline void
@@ -106,15 +92,13 @@ ActSpread(ActuatorBulk& actBulk)
     });
 }
 
-using TestActuatorHostOnly = ActuatorNGP<ActuatorMeta, ActuatorBulk>;
-template <>
 void
-TestActuatorHostOnly::execute()
+TestActuatorHostOnly(ActuatorBulk& actBulk)
 {
-  ActPreIter(actBulk_);
-  ActCompPnt(actBulk_);
-  ActInterp(actBulk_);
-  ActSpread(actBulk_);
+  ActPreIter(actBulk);
+  ActCompPnt(actBulk);
+  ActInterp(actBulk);
+  ActSpread(actBulk);
 }
 
 // Create a different bulk data that will allow execution on device and host
@@ -138,7 +122,10 @@ struct ActuatorBulkMod : public ActuatorBulk
   actBulk.velocity_.sync_device();;
   actBulk.pointCentroid_.sync_device();
 
-  auto scalar = actBulk.scalar_.view_device();
+  // can get device view from the helper object 
+  auto scalar = helper.get_local_view(actBulk.scalar_);
+
+  // or just use kokkos API
   auto vel = actBulk.velocity_.view_device();
   auto point = actBulk.pointCentroid_.view_device();
 
@@ -149,19 +136,18 @@ struct ActuatorBulkMod : public ActuatorBulk
     KOKKOS_LAMBDA(int index) {
       scalar(index) = point(index, 0) * vel(index, 1);
     });
+
+  actBulk.scalar_.sync_host();
 }
 
-using TestActuatorHostDev = ActuatorNGP<ActuatorMeta, ActuatorBulkMod>;
-template <>
 void
-TestActuatorHostDev::execute()
+TestActuatorHostDev(ActuatorBulkMod& actBulk)
 {
-  ActPreIter(actBulk_);
-  ActCompPnt(actBulk_);
-  ActInterp(actBulk_);
-  ActSpread(actBulk_);
-  ActPostIter(actBulk_);
-  actBulk_.scalar_.sync_host();
+  ActPreIter(actBulk);
+  ActCompPnt(actBulk);
+  ActInterp(actBulk);
+  ActSpread(actBulk);
+  ActPostIter(actBulk);
 }
 
 } // namespace nalu

@@ -22,9 +22,8 @@ TEST(ActuatorNGP, testExecuteOnHostOnly)
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
   actMeta.add_turbine(infoTurb0);
-  TestActuatorHostOnly actuator(actMeta);
-  ASSERT_NO_THROW(actuator.execute());
-  const ActuatorBulk& actBulk = actuator.actuator_bulk();
+  ActuatorBulk actBulk(actMeta);
+  ASSERT_NO_THROW(TestActuatorHostOnly(actBulk));
   EXPECT_DOUBLE_EQ(3.0, actBulk.epsilon_.h_view(1, 0));
   EXPECT_DOUBLE_EQ(6.0, actBulk.epsilon_.h_view(1, 1));
   EXPECT_DOUBLE_EQ(9.0, actBulk.epsilon_.h_view(1, 2));
@@ -49,9 +48,8 @@ TEST(ActuatorNGP, testExecuteOnHostAndDevice)
   infoTurb0.turbineName_ = "Turbine0";
   infoTurb0.numPoints_ = 20;
   actMeta.add_turbine(infoTurb0);
-  TestActuatorHostDev actuator(actMeta);
-  ASSERT_NO_THROW(actuator.execute());
-  const ActuatorBulkMod& actBulk = actuator.actuator_bulk();
+  ActuatorBulkMod actBulk(actMeta);
+  ASSERT_NO_THROW(TestActuatorHostDev(actBulk));
   const double expectVal =
     actBulk.velocity_.h_view(1, 1) * actBulk.pointCentroid_.h_view(1, 0);
   EXPECT_DOUBLE_EQ(expectVal, actBulk.scalar_.h_view(1));

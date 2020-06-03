@@ -11,7 +11,6 @@
 #define ACTUATORFUNCTORS_H_
 
 #include <actuator/ActuatorGenericSearchFunctor.h>
-#include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulk.h>
 #include <FieldTypeDef.h>
 
