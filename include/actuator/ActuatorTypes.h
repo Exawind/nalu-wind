@@ -16,15 +16,14 @@
 namespace sierra {
 namespace nalu {
 
-#ifdef __CUDACC__
+#ifdef KOKKOS_ENABLE_CUDA
 using ActuatorMemSpace = Kokkos::CudaSpace;
-using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;
 #else
 using ActuatorMemSpace = Kokkos::HostSpace;
-using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 #endif
+using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorFixedMemSpace = Kokkos::HostSpace;
 using ActuatorFixedMemLayout = Kokkos::LayoutRight;
 using ActuatorFixedExecutionSpace = Kokkos::DefaultHostExecutionSpace;
