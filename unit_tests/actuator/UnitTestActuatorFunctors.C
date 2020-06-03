@@ -25,9 +25,9 @@ struct SetupActPoints
 {
   using execution_space = ActuatorExecutionSpace;
 
-  SetupActPoints(ActuatorBulk& actBulk):
-    point_(helper_.get_local_view(actBulk.pointCentroid_)),
-    radius_(helper_.get_local_view(actBulk.searchRadius_))
+  SetupActPoints(ActuatorBulk& actBulk)
+    : point_(helper_.get_local_view(actBulk.pointCentroid_)),
+      radius_(helper_.get_local_view(actBulk.searchRadius_))
   {
     helper_.touch_dual_view(actBulk.pointCentroid_);
     helper_.touch_dual_view(actBulk.searchRadius_);
@@ -52,9 +52,9 @@ struct ComputeActuatorForce
 
   using execution_space = ActuatorExecutionSpace;
 
-  ComputeActuatorForce(ActuatorBulk& actBulk):
-    force_(helper_.get_local_view(actBulk.actuatorForce_)),
-    velocity_(helper_.get_local_view(actBulk.velocity_))
+  ComputeActuatorForce(ActuatorBulk& actBulk)
+    : force_(helper_.get_local_view(actBulk.actuatorForce_)),
+      velocity_(helper_.get_local_view(actBulk.velocity_))
   {
     helper_.touch_dual_view(actBulk.actuatorForce_);
   }

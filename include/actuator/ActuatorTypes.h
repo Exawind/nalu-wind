@@ -16,9 +16,9 @@
 namespace sierra {
 namespace nalu {
 
-#ifdef ACTUATOR_ON_DEVICE
+#ifdef __CUDACC__
 using ActuatorMemSpace = Kokkos::CudaSpace;
-using ActuatorMemLayout = Kokkos::LayoutLeft;
+using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;
 #else
 using ActuatorMemSpace = Kokkos::HostSpace;
