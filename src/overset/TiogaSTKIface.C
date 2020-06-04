@@ -44,7 +44,7 @@ TiogaSTKIface::TiogaSTKIface(
 ) : oversetManager_(oversetManager),
     meta_(*oversetManager.metaData_),
     bulk_(*oversetManager.bulkData_),
-    tg_(&TiogaRef::self().get()),
+    tg_(TiogaRef::self().get()),
     coordsName_(coordsName)
 {
   load(node);
@@ -88,11 +88,11 @@ void TiogaSTKIface::setup(stk::mesh::PartVector& bcPartVec)
 
 void TiogaSTKIface::initialize()
 {
-  tg_->setCommunicator(bulk_.parallel(),
+  tg_.setCommunicator(bulk_.parallel(),
                        bulk_.parallel_rank(),
                        bulk_.parallel_size());
 
-  tiogaOpts_.set_options(*tg_);
+  tiogaOpts_.set_options(tg_);
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
     << "TIOGA: Initializing overset mesh blocks: " << std::endl;
@@ -121,13 +121,13 @@ void TiogaSTKIface::execute(const bool isDecoupled)
   for (auto& tb: blocks_) {
     tb->update_coords();
     tb->update_element_volumes();
-    tb->register_block(*tg_);
+    tb->register_block(tg_);
   }
 
   // Determine overset connectivity
-  tg_->profile();
-  tg_->performConnectivity();
-  if (tiogaOpts_.reduce_fringes()) tg_->reduce_fringes();
+  tg_.profile();
+  tg_.performConnectivity();
+  if (tiogaOpts_.reduce_fringes()) tg_.reduce_fringes();
 
   for (auto& tb: blocks_) {
     // Update IBLANK information at nodes and elements
@@ -136,7 +136,7 @@ void TiogaSTKIface::execute(const bool isDecoupled)
 
     // For each block determine donor elements that needs to be ghosted to other
     // MPI ranks
-    tb->get_donor_info(*tg_, elemsToGhost_);
+    tb->get_donor_info(tg_, elemsToGhost_);
   }
 
   // Synchronize IBLANK data for shared nodes
@@ -230,7 +230,7 @@ TiogaSTKIface::get_receptor_info()
   // Ask TIOGA for the fringe points and their corresponding donor element
   // information
   std::vector<int> receptors;
-  tg_->getReceptorInfo(receptors);
+  tg_.getReceptorInfo(receptors);
 
   // Process TIOGA receptors array and fill in the oversetInfoVec used for
   // subsequent Nalu computations.
@@ -446,9 +446,9 @@ TiogaSTKIface::overset_update_fields(
   }
 
   for (auto& tb: blocks_)
-    tb->register_solution(*tg_, fields, nComp);
+    tb->register_solution(tg_, fields, nComp);
 
-  tg_->dataUpdate(nComp, row_major);
+  tg_.dataUpdate(nComp, row_major);
 
   for (auto& tb: blocks_)
     tb->update_solution(fields);
@@ -469,9 +469,9 @@ void TiogaSTKIface::overset_update_field(
   field->sync_to_host();
 
   for (auto& tb: blocks_)
-    tb->register_solution(*tg_, fdata);
+    tb->register_solution(tg_, fdata);
 
-  tg_->dataUpdate(nrows*ncols, row_major);
+  tg_.dataUpdate(nrows*ncols, row_major);
 
   for (auto& tb: blocks_)
     tb->update_solution(fdata);
