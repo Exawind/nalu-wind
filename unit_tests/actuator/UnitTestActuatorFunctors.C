@@ -30,7 +30,8 @@ void SetupActPoints(ActuatorBulk& actBulk)
   helper.touch_dual_view(actBulk.pointCentroid_);
   helper.touch_dual_view(actBulk.searchRadius_);
   
-  Kokkos::parallel_for("SetupActPoints",Kokkos::RangePolicy<ActuatorExecutionSpace>(0,point.extent_int(0)),KOKKOS_LAMBDA(int index)
+  Kokkos::parallel_for("SetupActPoints",Kokkos::RangePolicy<ActuatorExecutionSpace>
+    (0,point.extent_int(0)),KOKKOS_LAMBDA(int index)
   {
     point(index, 0) = 1.0 + 1.5 * index;
     point(index, 1) = 2.5;
@@ -51,7 +52,8 @@ void ComputeActuatorForce(ActuatorBulk& actBulk)
   helper.touch_dual_view(actBulk.actuatorForce_);
   helper.touch_dual_view(actBulk.velocity_);
 
-  Kokkos::parallel_for("CompActForce", Kokkos::RangePolicy<ActuatorExecutionSpace>(0,force.extent_int(0)),KOKKOS_LAMBDA(int index)
+  Kokkos::parallel_for("CompActForce", Kokkos::RangePolicy<ActuatorExecutionSpace>
+    (0,force.extent_int(0)),KOKKOS_LAMBDA(int index)
   {
     for (int j = 0; j < 3; j++) {
       force(index, j) = 1.2 * velocity(index, j);
@@ -201,7 +203,7 @@ protected:
   }
 };
 
-TEST_F(ActuatorFunctorTests, testSearchAndInterpolate)
+TEST_F(ActuatorFunctorTests, NGP_testSearchAndInterpolate)
 {
   inputFileSurrogate_ = "actuator:\n"
                         "  type: ActLinePointDrag\n"
@@ -237,7 +239,7 @@ TEST_F(ActuatorFunctorTests, testSearchAndInterpolate)
   }
 }
 
-TEST_F(ActuatorFunctorTests, testSpreadForces)
+TEST_F(ActuatorFunctorTests, NGP_testSpreadForces)
 {
   inputFileSurrogate_ = "actuator:\n"
                         "  type: ActLinePointDrag\n"

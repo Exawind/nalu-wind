@@ -15,7 +15,7 @@ namespace sierra {
 namespace nalu {
 
 namespace {
-TEST(ActuatorNGP, testExecuteOnHostOnly)
+TEST(ActuatorNGP, NGP_testExecuteOnHostOnly)
 {
   ActuatorMeta actMeta(1);
   ActuatorInfoNGP infoTurb0;
@@ -41,7 +41,7 @@ TEST(ActuatorNGP, testExecuteOnHostOnly)
   EXPECT_DOUBLE_EQ(9.3, actBulk.actuatorForce_.h_view(1, 2));
 }
 
-TEST(ActuatorNGP, testExecuteOnHostAndDevice)
+TEST(ActuatorNGP, NGP_testExecuteOnHostAndDevice)
 {
   ActuatorMeta actMeta(1);
   ActuatorInfoNGP infoTurb0;
