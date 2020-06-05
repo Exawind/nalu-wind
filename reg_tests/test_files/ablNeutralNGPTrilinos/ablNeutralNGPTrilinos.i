@@ -98,7 +98,7 @@ realms:
           pressure: 0.0
           velocity: [7.250462296293199, 3.380946093925596, 0.0]
           temperature: 300.0
-          turbulent_ke: 0.0
+          turbulent_ke: 1.0e-8
 
       - user_function: ic_2
         target_name: [fluid_part]
