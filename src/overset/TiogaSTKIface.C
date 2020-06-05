@@ -112,6 +112,18 @@ void TiogaSTKIface::execute(const bool isDecoupled)
   }
 #endif
 
+  register_mesh();
+
+  // Determine overset connectivity
+  tg_.profile();
+  tg_.performConnectivity();
+  if (tiogaOpts_.reduce_fringes()) tg_.reduce_fringes();
+
+  post_connectivity_work(isDecoupled);
+}
+
+void TiogaSTKIface::register_mesh()
+{
   reset_data_structures();
 
   // Synchronize fields to host during transition period
@@ -123,12 +135,10 @@ void TiogaSTKIface::execute(const bool isDecoupled)
     tb->update_element_volumes();
     tb->register_block(tg_);
   }
+}
 
-  // Determine overset connectivity
-  tg_.profile();
-  tg_.performConnectivity();
-  if (tiogaOpts_.reduce_fringes()) tg_.reduce_fringes();
-
+void TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
+{
   for (auto& tb: blocks_) {
     // Update IBLANK information at nodes and elements
     tb->update_iblanks(oversetManager_.holeNodes_, oversetManager_.fringeNodes_);
@@ -141,7 +151,7 @@ void TiogaSTKIface::execute(const bool isDecoupled)
 
   // Synchronize IBLANK data for shared nodes
   ScalarIntFieldType* ibf = meta_.get_field<ScalarIntFieldType>(
-          stk::topology::NODE_RANK, "iblank");
+    stk::topology::NODE_RANK, "iblank");
   std::vector<const stk::mesh::FieldBase*> pvec{ibf};
   stk::mesh::copy_owned_to_shared(bulk_, pvec);
 

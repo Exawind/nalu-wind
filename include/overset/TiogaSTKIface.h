@@ -70,6 +70,10 @@ public:
    */
   void execute(const bool isDecoupled);
 
+  void register_mesh();
+
+  void post_connectivity_work(const bool isDecoupled = true);
+
   virtual void overset_update_fields(
     const std::vector<sierra::nalu::OversetFieldData>&);
 
