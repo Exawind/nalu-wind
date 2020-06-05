@@ -162,6 +162,7 @@ void TiogaSTKIface::execute(const bool isDecoupled)
 
 void TiogaSTKIface::reset_data_structures()
 {
+  oversetManager_.reset_data_structures();
   elemsToGhost_.clear();
   donorIDs_.clear();
   receptorIDs_.clear();

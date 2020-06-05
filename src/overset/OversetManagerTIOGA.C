@@ -52,19 +52,25 @@ OversetManagerTIOGA::setup()
   tiogaIface_.setup(realm_.bcPartVec_);
 }
 
-void
-OversetManagerTIOGA::initialize(const bool isDecoupled)
+void OversetManagerTIOGA::initialize()
 {
   const double timeA = NaluEnv::self().nalu_time();
   if (isInit_) {
     tiogaIface_.initialize();
     isInit_ = false;
   }
+  const double timeB = NaluEnv::self().nalu_time();
+  timerConnectivity_ += (timeB - timeA);
+}
 
-  delete_info_vec();
-  oversetInfoVec_.clear();
-  holeNodes_.clear();
-  fringeNodes_.clear();
+void
+OversetManagerTIOGA::execute(const bool isDecoupled)
+{
+  const double timeA = NaluEnv::self().nalu_time();
+  if (isInit_) {
+    tiogaIface_.initialize();
+    isInit_ = false;
+  }
 
   tiogaIface_.execute(isDecoupled);
 

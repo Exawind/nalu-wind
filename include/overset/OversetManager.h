@@ -61,11 +61,13 @@ public:
    */
   virtual void setup();
 
-  /** Setup all data structures and perform connectivity
-   *
-   * This method must be implemented by concrete OGA implementations.
+  /** Setup all the initial data structures (one time setup)
    */
-  virtual void initialize(const bool isDecoupled = false) = 0;
+  virtual void initialize() = 0;
+
+  /** Perform overset connectivity
+   */
+  virtual void execute(const bool isDecoupled) = 0;
 
   virtual void overset_orphan_node_field_update(
     stk::mesh::FieldBase*,
@@ -81,6 +83,8 @@ public:
   virtual void overset_update_field(
     stk::mesh::FieldBase* field, const int nrows = 1, const int ncols = 1,
     const bool doFinalSyncToDevice = true) = 0;
+
+  virtual void reset_data_structures();
 
   Realm& realm_;
 
