@@ -546,8 +546,10 @@ Realm::initialize()
   if ( hasNonConformal_ )
     initialize_non_conformal();
 
-  if ( hasOverset_ )
+  if ( hasOverset_ ) {
+    oversetManager_->initialize();
     initialize_overset();
+  }
 
   initialize_post_processing_algorithms();
 
@@ -2348,7 +2350,8 @@ Realm::initialize_non_conformal()
 void
 Realm::initialize_overset()
 {
-  oversetManager_->initialize(equationSystems_.all_systems_decoupled());
+  if (!isExternalOverset_)
+    oversetManager_->execute(equationSystems_.all_systems_decoupled());
 }
 
 //--------------------------------------------------------------------------

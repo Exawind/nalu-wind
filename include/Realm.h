@@ -485,6 +485,7 @@ class Realm {
   OversetManager *oversetManager_;
   bool hasNonConformal_;
   bool hasOverset_;
+  bool isExternalOverset_{false};
 
   // three type of transfer operations
   bool hasMultiPhysicsTransfer_;
