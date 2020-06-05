@@ -78,7 +78,7 @@ public:
   const unsigned slabSize;
 };
 
-TEST_F(ActuatorSearchTest, createBoundingSpheres)
+TEST_F(ActuatorSearchTest, NGP_createBoundingSpheres)
 {
   auto spheres = CreateBoundingSpheres(points, radii);
   for (int i = 0; i < nPoints; i++) {
@@ -96,7 +96,7 @@ TEST_F(ActuatorSearchTest, createBoundingSpheres)
   }
 }
 
-TEST_F(ActuatorSearchTest, createElementBoxes)
+TEST_F(ActuatorSearchTest, NGP_createElementBoxes)
 {
   stk::mesh::BulkData& stkBulk = ioBroker.bulk_data();
   typedef stk::mesh::Field<double, stk::mesh::Cartesian> CoordFieldType;
@@ -125,7 +125,7 @@ TEST_F(ActuatorSearchTest, createElementBoxes)
   }
 }
 
-TEST_F(ActuatorSearchTest, executeCoarseSearch)
+TEST_F(ActuatorSearchTest, NGP_executeCoarseSearch)
 {
   stk::mesh::BulkData& stkBulk = ioBroker.bulk_data();
   auto spheres = CreateBoundingSpheres(points, radii);
@@ -149,7 +149,7 @@ TEST_F(ActuatorSearchTest, executeCoarseSearch)
   }
 }
 
-TEST_F(ActuatorSearchTest, executeFineSearch)
+TEST_F(ActuatorSearchTest, NGP_executeFineSearch)
 {
   stk::mesh::BulkData& stkBulk = ioBroker.bulk_data();
   // increase radius to hit multiple elems in coarse search

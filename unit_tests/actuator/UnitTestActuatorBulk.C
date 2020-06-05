@@ -19,7 +19,7 @@ namespace nalu {
 
 namespace {
 
-TEST(ActuatorMeta, constructor)
+TEST(ActuatorMeta, NGP_constructor)
 {
   const int numTurbines = 2;
   ActuatorMeta fieldMeta(numTurbines);
@@ -38,7 +38,7 @@ TEST(ActuatorMeta, addTurbine)
   EXPECT_EQ(1024, fieldMeta.numPointsTurbine_.h_view(0));
 }
 
-TEST(ActuatorMeta, copyCtor)
+TEST(ActuatorMeta, NGP_copyCtor)
 {
   const int numTurbines = 2;
   ActuatorMeta fieldMeta(numTurbines);
@@ -58,7 +58,7 @@ TEST(ActuatorMeta, copyCtor)
   EXPECT_EQ(24, fieldMeta.numPointsTurbine_.h_view(1));
 }
 
-TEST(ActuatorBulk, constructor)
+TEST(ActuatorBulk, NGP_constructor)
 {
   const int numTurbines = 2;
   ActuatorMeta fieldMeta(numTurbines);
