@@ -82,7 +82,7 @@ copy_state(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& active_,
   stk::mesh::NgpField<double> dst,
-  stk::mesh::NgpConstField<double> src)
+  stk::mesh::NgpField<double> src)
 {
   stk::mesh::ProfilingBlock pf("BDF2TimeStepper<p>::copy_state");
   stk::mesh::for_each_entity_run(

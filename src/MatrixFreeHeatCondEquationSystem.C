@@ -184,8 +184,8 @@ field_hadamard(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& selector,
   stk::mesh::NgpField<double>& xy,
-  const stk::mesh::NgpConstField<double>& x,
-  const stk::mesh::NgpConstField<double>& y)
+  const stk::mesh::NgpField<double>& x,
+  const stk::mesh::NgpField<double>& y)
 {
   stk::mesh::for_each_entity_run(
     mesh, stk::topology::NODE_RANK, selector,
