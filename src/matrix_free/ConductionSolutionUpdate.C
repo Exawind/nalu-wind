@@ -59,7 +59,7 @@ template <int p>
 ConductionSolutionUpdate<p>::ConductionSolutionUpdate(
   Teuchos::ParameterList params,
   const stk::mesh::NgpMesh& mesh_in,
-  stk::mesh::NgpConstField<typename Tpetra::Map<>::global_ordinal_type> gid,
+  stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gid,
   stk::mesh::Selector active_in,
   stk::mesh::Selector dirichlet_in,
   stk::mesh::Selector flux_in,

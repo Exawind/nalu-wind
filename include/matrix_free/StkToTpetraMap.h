@@ -41,7 +41,7 @@ public:
   StkToTpetraMaps(
     const stk::mesh::NgpMesh& mesh,
     const stk::mesh::Selector& active,
-    stk::mesh::NgpConstField<gid_t> gid,
+    stk::mesh::NgpField<gid_t> gid,
     stk::mesh::Selector replicas = {});
 
   const Tpetra::Map<> owned;
@@ -66,12 +66,12 @@ Tpetra::Map<> make_owned_row_map(
 Tpetra::Map<> shared_row_map(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& active_linsys,
-  stk::mesh::NgpConstField<typename Tpetra::Map<>::global_ordinal_type> gids);
+  stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids);
 
 Tpetra::Map<> make_owned_and_shared_row_map(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& active_linsys,
-  stk::mesh::NgpConstField<typename Tpetra::Map<>::global_ordinal_type> gids);
+  stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids);
 
 } // namespace matrix_free
 } // namespace nalu

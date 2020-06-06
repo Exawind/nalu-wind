@@ -25,7 +25,7 @@ Kokkos::View<const typename Tpetra::Map<>::local_ordinal_type*>
 make_stk_lid_to_tpetra_lid_map(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& active_in_mesh,
-  stk::mesh::NgpConstField<typename Tpetra::Map<>::global_ordinal_type> gids,
+  stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids,
   const Tpetra::Map<>::local_map_type& local_oas_map);
 
 Kokkos::View<const stk::mesh::FastMeshIndex*> make_tpetra_lid_to_stk_lid(

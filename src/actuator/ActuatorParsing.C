@@ -46,10 +46,10 @@ actuator_parse(const YAML::Node& y_node)
     y_actuator, "search_method", searchMethodName, searchMethodName);
   // determine search method for this pair
   if (searchMethodName == "boost_rtree") {
-    actMeta.searchMethod_ = stk::search::BOOST_RTREE;
+    actMeta.searchMethod_ = stk::search::KDTREE;
     NaluEnv::self().naluOutputP0()
       << "Warning: search method 'boost_rtree'"
-      << " is being deprecated, please switch to 'stk_kdtree'" << std::endl;
+      << " is being deprecated, switching to 'stk_kdtree'" << std::endl;
   } else if (searchMethodName == "stk_kdtree")
     actMeta.searchMethod_ = stk::search::KDTREE;
   else
