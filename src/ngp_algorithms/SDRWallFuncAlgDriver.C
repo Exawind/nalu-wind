@@ -97,6 +97,7 @@ void SDRWallFuncAlgDriver::post_work()
 
   wallArea.modify_on_device();
   bcsdr.modify_on_device();
+  sdrWallBC.modify_on_device();
   sdr.modify_on_device();
 }
 

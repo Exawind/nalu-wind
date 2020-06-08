@@ -20,7 +20,6 @@
 #include "stk_mesh/base/FieldBase.hpp"
 #include "stk_mesh/base/FieldState.hpp"
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_ngp/NgpFieldManager.hpp"
 #include "stk_topology/topology.hpp"
 
 #include <stdexcept>

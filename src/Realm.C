@@ -45,6 +45,7 @@
 
 // mesh motion
 #include <mesh_motion/MeshMotionAlg.h>
+#include <mesh_motion/MeshTransformationAlg.h>
 
 #include <nalu_make_unique.h>
 
@@ -63,9 +64,14 @@
 
 // actuator line
 #include <actuator/Actuator.h>
+#include <actuator/ActuatorParsing.h>
+#include <actuator/ActuatorBulk.h>
 #ifdef NALU_USES_OPENFAST
 #include <actuator/ActuatorLineFAST.h>
 #include <actuator/ActuatorDiskFAST.h>
+#include <actuator/ActuatorParsingFAST.h>
+#include <actuator/ActuatorBulkDiskFAST.h>
+#include <actuator/ActuatorExecutorsFASTNgp.h>
 #endif
 
 #include <wind_energy/ABLForcingAlgorithm.h>
@@ -99,6 +105,7 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldManager.h"
+#include "ngp_utils/NgpFieldUtils.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/GeometryInteriorAlg.h"
 
@@ -521,6 +528,9 @@ Realm::initialize()
   if ( hasPeriodic_ )
     periodicManager_->build_constraints();
 
+  if ( solutionOptions_->meshTransformation_ )
+    meshTransformationAlg_->initialize( get_current_time() );
+
   if ( solutionOptions_->meshMotion_ )
     meshMotionAlg_->initialize( get_current_time() );
 
@@ -600,9 +610,19 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     if ( foundActuator.size() != 1 )
       throw std::runtime_error("look_ahead_and_create::error: Too many actuator line blocks");
 
-    if ( (*foundActuator[0])["actuator"]["type"] ) {
-      const std::string ActuatorTypeName = (*foundActuator[0])["actuator"]["type"].as<std::string>() ;
-      switch ( ActuatorTypeMap[ActuatorTypeName] ) {
+    auto actMeta = actuator_parse(*foundActuator[0]);
+
+    const std::string ActuatorTypeName = (*foundActuator[0])["actuator"]["type"].as<std::string>() ;
+    switch ( ActuatorTypeMap[ActuatorTypeName] ) {
+        case ActuatorType::ActDiskFASTNGP:
+        case ActuatorType::ActLineFASTNGP : {
+#ifdef NALU_USES_OPENFAST
+          actuatorMeta_ = std::make_shared<ActuatorMetaFAST>(actuator_FAST_parse(node, actMeta));
+          break;
+#else
+	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + ActuatorTypeName + ", but was not enabled at compile time");
+#endif
+        }
       case ActuatorType::ActLineFAST : {
 #ifdef NALU_USES_OPENFAST
 	actuator_ =  new ActuatorLineFAST(*this, *foundActuator[0]);
@@ -635,11 +655,6 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
 #endif
       }
       }
-    }
-    else {
-      throw std::runtime_error("look_ahead_and_create::error: No 'type' specified in actuator");
-    }
-
     
   }
 
@@ -812,6 +827,17 @@ Realm::load(const YAML::Node & node)
     equationSystems_.load(node);
   }
 
+  // second set of options: mesh transformation... this means that the Realm will expect to provide mesh transformation
+  const YAML::Node meshTransformationNode = expect_sequence(node, "mesh_transformation", true);
+  if (meshTransformationNode)
+  {
+    // mesh motion is active
+    solutionOptions_->meshTransformation_ = true;
+
+    // instantiate mesh transformation class once the mesh has been created
+    meshTransformationAlg_.reset(new MeshTransformationAlg( *bulkData_, meshTransformationNode));
+  }
+
   // second set of options: mesh motion... this means that the Realm will expect to provide mesh motion
   const YAML::Node meshMotionNode = expect_sequence(node, "mesh_motion", true);
   if (meshMotionNode)
@@ -970,6 +996,29 @@ Realm::setup_post_processing_algorithms()
   // check for actuator line
   if ( NULL != actuator_ )
     actuator_->setup();
+
+  if (NULL != actuatorMeta_)
+  {
+#ifdef NALU_USES_OPENFAST
+    switch(actuatorMeta_->actuatorType_){
+      case(ActuatorType::ActLineFASTNGP):{
+        actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
+          get_time_step_from_file());
+       break;
+      }
+      case(ActuatorType::ActDiskFASTNGP):{
+        actuatorBulk_ = make_unique<ActuatorBulkDiskFAST>(*actuatorMeta_.get(),
+          get_time_step_from_file());
+        break;
+      }
+      default:{
+        ThrowErrorMsg("Unsupported actuator type");
+      }
+    }
+#else
+    ThrowErrorMsg("Actuator methods require OpenFAST");
+#endif
+  }
 
   // check for norm nodal fields
   if ( NULL != solutionNormPostProcessing_ )
@@ -1784,9 +1833,30 @@ Realm::advance_time_step()
 
   // check for actuator line; assemble the source terms for this time step
   if ( NULL != actuator_ ) {
+    const double start_time = NaluEnv::self().nalu_time();
     actuator_->execute();
+    const double end_time = NaluEnv::self().nalu_time();
+    timerActuator_ += end_time - start_time;
   }
 
+  // check for actuator line; assemble the source terms for this time step
+#ifdef NALU_USES_OPENFAST
+  if ( NULL != actuatorBulk_ ) {
+    const double start_time = NaluEnv::self().nalu_time();
+    if(actuatorMeta_->actuatorType_==ActuatorType::ActLineFASTNGP){
+      ActuatorLineFastNGP(*actuatorMeta_.get(),
+        *actuatorBulk_.get(),
+        bulk_data())();
+    }
+    else{
+      ActuatorDiskFastNGP(*actuatorMeta_.get(),
+        *dynamic_cast<ActuatorBulkDiskFAST*>(actuatorBulk_.get()),
+        bulk_data())();
+    }
+    const double end_time = NaluEnv::self().nalu_time();
+    timerActuator_ += end_time - start_time;
+  }
+#endif
   // Check for ABL forcing; estimate source terms for this time step
   if ( NULL != ablForcingAlg_) {
     ablForcingAlg_->execute();
@@ -2265,6 +2335,24 @@ Realm::initialize_post_processing_algorithms()
 
   if ( NULL != ablForcingAlg_) {
     ablForcingAlg_->initialize();
+  }
+
+  if (NULL != actuatorMeta_)
+  {
+#ifdef NALU_USES_OPENFAST
+    switch(actuatorMeta_->actuatorType_){
+      case(ActuatorType::ActLineFASTNGP):
+      case(ActuatorType::ActDiskFASTNGP):
+        // perform search for actline and actdisk
+        actuatorBulk_->stk_search_act_pnts(*actuatorMeta_.get(), bulk_data());
+        break;
+      default:{
+        ThrowErrorMsg("Unsupported actuator type");
+      }
+    }
+#else
+    ThrowErrorMsg("Actuator requires OpenFAST");
+#endif
   }
 }
 
@@ -2872,10 +2960,15 @@ Realm::get_slave_part_vector()
     return emptyPartVector_;
 }
 
-
-//--------------------------------------------------------------------------
-//-------- overset_field_update -------------------------------------------
-//--------------------------------------------------------------------------
+#ifdef KOKKOS_ENABLE_CUDA
+void
+Realm::overset_orphan_node_field_update(
+  stk::mesh::FieldBase*, const unsigned, const unsigned)
+{
+  throw std::runtime_error(
+    "Non-NGP version of overset algorithm called in NGP build");
+}
+#else
 void
 Realm::overset_orphan_node_field_update(
   stk::mesh::FieldBase *theField,
@@ -2883,6 +2976,23 @@ Realm::overset_orphan_node_field_update(
   const unsigned sizeCol)
 {
   oversetManager_->overset_update_field(theField, sizeRow, sizeCol);
+}
+#endif
+
+void
+Realm::overset_field_update(
+  stk::mesh::FieldBase* field,
+  const unsigned nRows,
+  const unsigned nCols,
+  const bool doFinalSyncToDevice)
+{
+  if (!hasOverset_) return;
+
+  const double timeA = NaluEnv::self().nalu_time();
+  oversetManager_->overset_update_field(
+    field, nRows, nCols, doFinalSyncToDevice);
+  const double timeB = NaluEnv::self().nalu_time();
+  oversetManager_->timerFieldUpdate_ += (timeB - timeA);
 }
 
 //--------------------------------------------------------------------------
@@ -2937,6 +3047,11 @@ Realm::provide_output()
 
       // not set up for globals
       if (!doPromotion_) {
+        // Sync fields to host on NGP builds before output
+        for (auto* fld: metaData_->get_fields()) {
+          fld->sync_to_host();
+        }
+
         ioBroker_->process_output_request(resultsFileIndex_, currentTime);
       }
       else {
@@ -3511,7 +3626,7 @@ Realm::dump_simulation_time()
   }
 
   // nonconformal or overset
-  if ( has_non_matching_boundary_face_alg() ) {
+  if ( hasNonConformal_ ) {
     double g_totalNonconformal = 0.0, g_minNonconformal= 0.0, g_maxNonconformal = 0.0;
     stk::all_reduce_min(NaluEnv::self().parallel_comm(), &timerNonconformal_, &g_minNonconformal, 1);
     stk::all_reduce_max(NaluEnv::self().parallel_comm(), &timerNonconformal_, &g_maxNonconformal, 1);
@@ -3520,6 +3635,20 @@ Realm::dump_simulation_time()
     NaluEnv::self().naluOutputP0() << "Timing for Nonconformal: " << std::endl;
     NaluEnv::self().naluOutputP0() << "  nonconformal bc --  " << " \tavg: " << g_totalNonconformal/double(nprocs)
                                    << " \tmin: " << g_minNonconformal << " \tmax: " << g_maxNonconformal << std::endl;
+  }
+
+  if (hasOverset_) {
+    double connTime[2] = {oversetManager_->timerConnectivity_, oversetManager_->timerFieldUpdate_};
+    double totTime[2], minTime[2], maxTime[2];
+    stk::all_reduce_sum(NaluEnv::self().parallel_comm(), connTime, totTime, 2);
+    stk::all_reduce_min(NaluEnv::self().parallel_comm(), connTime, minTime, 2);
+    stk::all_reduce_max(NaluEnv::self().parallel_comm(), connTime, maxTime, 2);
+    NaluEnv::self().naluOutputP0()
+      << "Timing for Overset:" << std::endl
+      << "     connectivity --  \tavg: " << totTime[0] / double(nprocs)
+      << " \tmin: " << minTime[0] << " \tmax: " << maxTime[0] << std::endl
+      << "     field update --  \tavg: " << totTime[1] / double(nprocs)
+      << " \tmin: " << minTime[1] << " \tmax: " << maxTime[1] << std::endl;
   }
 
   // transfer
@@ -3559,6 +3688,17 @@ Realm::dump_simulation_time()
     NaluEnv::self().naluOutputP0() << "Timing for promote_mesh :    " << std::endl;
     NaluEnv::self().naluOutputP0() << "        promote_mesh --  " << " \tavg: " << g_totalPromote/double(nprocs)
                                          << " \tmin: " << g_minPromote << " \tmax: " << g_maxPromote << std::endl;
+  }
+
+  if (timerActuator_ > 0) {
+    double g_totalActuator = 0.0, g_minActuator= 0.0, g_maxActuator = 0.0;
+    stk::all_reduce_min(NaluEnv::self().parallel_comm(), &timerActuator_, &g_minActuator, 1);
+    stk::all_reduce_max(NaluEnv::self().parallel_comm(), &timerActuator_, &g_maxActuator, 1);
+    stk::all_reduce_sum(NaluEnv::self().parallel_comm(), &timerActuator_, &g_totalActuator, 1);
+
+    NaluEnv::self().naluOutputP0() << "Timing for actuator :    " << std::endl;
+    NaluEnv::self().naluOutputP0() << "        actuator::execute --  " << " \tavg: " << g_totalActuator/double(nprocs)
+                                         << " \tmin: " << g_minActuator << " \tmax: " << g_maxActuator<< std::endl;
   }
 
   // consolidated sort

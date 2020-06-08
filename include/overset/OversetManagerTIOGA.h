@@ -44,7 +44,8 @@ public:
   virtual void overset_update_fields(const std::vector<OversetFieldData>&) override;
 
   virtual void overset_update_field(
-    stk::mesh::FieldBase* field, int nrows = 1, int ncols = 1) override;
+    stk::mesh::FieldBase* field, const int nrows = 1, const int ncols = 1,
+    const bool doFinalSyncToDevice = true) override;
 
   /// Instance holding all the data from input files
   const OversetUserData& oversetUserData_;

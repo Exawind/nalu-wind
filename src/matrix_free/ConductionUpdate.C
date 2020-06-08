@@ -15,7 +15,7 @@
 #include "stk_mesh/base/FieldState.hpp"
 #include "stk_mesh/base/Types.hpp"
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_ngp/NgpProfilingBlock.hpp"
+#include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 #include "Teuchos_ParameterList.hpp"
 
@@ -82,7 +82,7 @@ copy_state(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& active_,
   stk::mesh::NgpField<double> dst,
-  stk::mesh::NgpConstField<double> src)
+  stk::mesh::NgpField<double> src)
 {
   stk::mesh::ProfilingBlock pf("BDF2TimeStepper<p>::copy_state");
   stk::mesh::for_each_entity_run(

@@ -25,7 +25,7 @@ namespace matrix_free {
 StkToTpetraMaps::StkToTpetraMaps(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& active,
-  stk::mesh::NgpConstField<typename Tpetra::Map<>::global_ordinal_type> tgid,
+  stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> tgid,
   stk::mesh::Selector replicas)
   : owned(make_owned_row_map(mesh, active - replicas)),
     owned_and_shared(
@@ -150,7 +150,7 @@ Tpetra::Map<>
 make_owned_and_shared_row_map(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& active_linsys,
-  stk::mesh::NgpConstField<typename Tpetra::Map<>::global_ordinal_type> gids)
+  stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids)
 {
   const auto& bulk = mesh.get_bulk_on_host();
   const auto& meta = bulk.mesh_meta_data();

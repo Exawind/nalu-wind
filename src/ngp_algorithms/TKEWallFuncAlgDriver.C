@@ -68,6 +68,9 @@ void TKEWallFuncAlgDriver::post_work()
     realm_.periodic_field_update(bcNodalTkeField, nComp, bypassFieldCheck);
   }
 
+  ngpBcNodalTke.modify_on_host();
+  ngpBcNodalTke.sync_to_device();
+
   // Normalize the computed BC TKE at integration points with assembled wall
   // area and assign it to TKE and TKE BC fields on this sideset for use in the
   // next solve.

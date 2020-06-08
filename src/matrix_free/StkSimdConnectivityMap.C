@@ -19,7 +19,7 @@
 #include "stk_mesh/base/Entity.hpp"
 #include "stk_mesh/base/Selector.hpp"
 #include "stk_mesh/base/Types.hpp"
-#include "stk_ngp/NgpMesh.hpp"
+#include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_topology/topology.hpp"
 #include "stk_util/util/StkNgpVector.hpp"
 

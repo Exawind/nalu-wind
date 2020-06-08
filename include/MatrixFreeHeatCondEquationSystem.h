@@ -15,7 +15,7 @@
 
 #include "Kokkos_Array.hpp"
 
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/CoordinateSystems.hpp"
 
 #include "Realm.h"

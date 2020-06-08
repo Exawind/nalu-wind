@@ -17,11 +17,9 @@ namespace nalu{
 
 FrameBase::FrameBase(
   stk::mesh::BulkData& bulk,
-  const YAML::Node& node,
-  bool isInertial
+  const YAML::Node& node
 ) : bulk_(bulk),
-    meta_(bulk.mesh_meta_data()),
-    isInertial_(isInertial)
+    meta_(bulk.mesh_meta_data())
 {
   load(node);
 }
@@ -67,9 +65,10 @@ void FrameBase::load(const YAML::Node& node)
 
 void FrameBase::populate_part_vec(const YAML::Node& node)
 {
-  // if nor parts specified and frame is inertial, return
-  if (!node["mesh_parts"] && isInertial_)
-    return;
+  if (!node["mesh_parts"]) {
+    throw std::runtime_error(
+      "FrameBase: No mesh parts found.");
+  }
 
   // declare temporary part name vectors
   std::vector<std::string> partNamesVec;
@@ -77,13 +76,21 @@ void FrameBase::populate_part_vec(const YAML::Node& node)
 
   // populate volume parts
   const auto& fparts = node["mesh_parts"];
-
   if (fparts.Type() == YAML::NodeType::Scalar)
     partNamesVec.push_back(fparts.as<std::string>());
   else
     partNamesVec = fparts.as<std::vector<std::string>>();
 
-  assert (partNamesVec.size() > 0);
+  // get all mesh parts if all blocks were requested
+  if (std::find(partNamesVec.begin(), partNamesVec.end(), "all_blocks") != partNamesVec.end()) {
+    partNamesVec.clear();
+    for (const auto* part : meta_.get_mesh_parts()) {
+      ThrowRequire(part);
+      if (part->topology().rank() == stk::topology::ELEMENT_RANK) {
+        partNamesVec.push_back(part->name());
+      }
+    }
+  }
 
   // store all parts associated with current motion frame
   int numParts = partNamesVec.size();
@@ -177,6 +184,25 @@ void FrameBase::compute_centroid_on_parts(
   // ensure the centroid is size number of dimensions
   for ( int j = 0; j < nDim; ++j )
     centroid[j] = 0.5*(g_maxCoord[j] + g_minCoord[j]);
+}
+
+MotionBase::TransMatType FrameBase::compute_transformation(
+  const double time,
+  const double* xyz)
+{
+  // all frame motions are based off of the reference frame
+  MotionBase::TransMatType comp_trans_mat = MotionBase::identityMat_;
+
+  for (auto& mm: meshMotionVec_)
+  {
+    // build and get transformation matrix
+    mm->build_transformation(time,xyz);
+
+    // composite addition of motions in current group
+    comp_trans_mat = mm->add_motion(mm->get_trans_mat(),comp_trans_mat);
+  }
+
+  return comp_trans_mat;
 }
 
 } // nalu

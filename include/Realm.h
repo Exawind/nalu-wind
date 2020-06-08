@@ -76,11 +76,14 @@ class PropertyEvaluator;
 class HDF5FilePtr;
 class Transfer;
 class MeshMotionAlg;
+class MeshTransformationAlg;
 
 class SolutionNormPostProcessing;
 class TurbulenceAveragingPostProcessing;
 class DataProbePostProcessing;
 class Actuator;
+struct ActuatorMetaFAST;
+struct ActuatorBulkFAST;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
@@ -254,6 +257,12 @@ class Realm {
     stk::mesh::FieldBase *theField,
     const unsigned sizeRow,
     const unsigned sizeCol);
+
+  void overset_field_update(
+    stk::mesh::FieldBase* field,
+    const unsigned nRows,
+    const unsigned nCols,
+    const bool doFinalSyncToDevice = true);
 
   virtual void populate_initial_condition();
   virtual void populate_boundary_data();
@@ -444,9 +453,12 @@ class Realm {
   TurbulenceAveragingPostProcessing *turbulenceAveragingPostProcessing_;
   DataProbePostProcessing *dataProbePostProcessing_;
   Actuator *actuator_;
+  std::shared_ptr<ActuatorMetaFAST> actuatorMeta_;
+  std::shared_ptr<ActuatorBulkFAST> actuatorBulk_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
   std::unique_ptr<MeshMotionAlg> meshMotionAlg_;
+  std::unique_ptr<MeshTransformationAlg> meshTransformationAlg_;
 
   std::vector<Algorithm *> propertyAlg_;
   std::map<PropertyIdentifier, ScalarFieldType *> propertyMap_;
@@ -455,6 +467,7 @@ class Realm {
   SizeType nodeCount_;
   bool estimateMemoryOnly_;
   double availableMemoryPerCoreGB_;
+  double timerActuator_{0};
   double timerCreateMesh_;
   double timerPopulateMesh_;
   double timerPopulateFieldData_;

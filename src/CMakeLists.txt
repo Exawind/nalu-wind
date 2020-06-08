@@ -1,6 +1,5 @@
 target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ABLProfileFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/actuator/Actuator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityElemOpenSolverAlgorithm.C
@@ -138,15 +137,6 @@ if(ENABLE_FFTW)
    )
 endif()
 
-if(ENABLE_OPENFAST)
-   target_sources(nalu PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/actuator/UtilitiesActuator.C
-      ${CMAKE_CURRENT_SOURCE_DIR}/actuator/ActuatorFAST.C
-      ${CMAKE_CURRENT_SOURCE_DIR}/actuator/ActuatorLineFAST.C
-      ${CMAKE_CURRENT_SOURCE_DIR}/actuator/ActuatorDiskFAST.C
-   )
-endif()
-
 if(ENABLE_HYPRE)
    target_sources(nalu PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/HypreDirectSolver.C
@@ -157,6 +147,7 @@ if(ENABLE_HYPRE)
    )
 endif()
 
+add_subdirectory(actuator)
 add_subdirectory(element_promotion)
 add_subdirectory(matrix_free)
 add_subdirectory(kernel)

@@ -124,8 +124,9 @@ public:
   bool mdotInterpRhoUTogether_;
   bool isTurbulent_;
   TurbulenceModel turbulenceModel_;
-  bool meshMotion_;
   bool meshDeformation_;
+  bool meshMotion_;
+  bool meshTransformation_;
   bool externalMeshDeformation_;
   bool ncAlgGaussLabatto_;
   bool ncAlgUpwindAdvection_;

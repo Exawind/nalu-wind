@@ -53,16 +53,18 @@ TurbViscKsgsAlg::execute()
   const auto dualNodalVolume = fieldMgr.get_field<double>(dualNodalVolume_);
   auto tvisc = fieldMgr.get_field<double>(tvisc_);
 
+  const DblType invDim = 1.0 / static_cast<double>(meta.spatial_dimension());
   const DblType cmuEps = cmuEps_;
-  const DblType invNdim = 1.0 / meta.spatial_dimension();
 
   nalu_ngp::run_entity_algorithm(
     "TurbViscKsgsAlg",
     ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
-      const DblType filter = std::pow(dualNodalVolume.get(meshIdx, 0), invNdim);
+      const DblType filter = stk::math::pow(dualNodalVolume.get(meshIdx, 0), 
+          invDim);
       tvisc.get(meshIdx, 0) = cmuEps*density.get(meshIdx, 0)*std::sqrt(tke.get(meshIdx, 0))*filter;
     });
+  tvisc.modify_on_device();
 }
 
 } // namespace nalu

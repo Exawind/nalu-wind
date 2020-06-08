@@ -706,13 +706,13 @@ LowMachEquationSystem::solve_and_update()
         1.0, *momentumEqSys_->uTmp_,
         1.0, momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1),
         realm_.meta_data().spatial_dimension());
-
-      if (momentumEqSys_->decoupledOverset_ && realm_.hasOverset_)
-        realm_.overset_orphan_node_field_update(
-          &momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1),
-          1, realm_.meta_data().spatial_dimension());
       timeB = NaluEnv::self().nalu_time();
       momentumEqSys_->timerAssemble_ += (timeB-timeA);
+
+      if (momentumEqSys_->decoupledOverset_ && realm_.hasOverset_)
+        realm_.overset_field_update(
+          &momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1),
+          1, realm_.meta_data().spatial_dimension());
     }
 
     // compute velocity relative to mesh with new velocity
@@ -733,12 +733,12 @@ LowMachEquationSystem::solve_and_update()
       solution_update(
         1.0, *continuityEqSys_->pTmp_,
         1.0, *continuityEqSys_->pressure_);
-
-      if (continuityEqSys_->decoupledOverset_ && realm_.hasOverset_)
-        realm_.overset_orphan_node_field_update(
-          &continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1), 1, 1);
       timeB = NaluEnv::self().nalu_time();
       continuityEqSys_->timerAssemble_ += (timeB-timeA);
+
+      if (continuityEqSys_->decoupledOverset_ && realm_.hasOverset_)
+        realm_.overset_field_update(
+          continuityEqSys_->pressure_, 1, 1);
     }
 
     // compute mdot
@@ -753,8 +753,8 @@ LowMachEquationSystem::solve_and_update()
     // update pressure
     const std::string dofName="pressure";
     const double relaxFP = realm_.solutionOptions_->get_relaxation_factor(dofName);
+    timeA = NaluEnv::self().nalu_time();
     if (std::fabs(1.0 - relaxFP) > 1.0e-3) {
-      timeA = NaluEnv::self().nalu_time();
       // Take care of the possibility that we have multiple overset correctors
       // and we need to do a pressure update that is the sum of all the deltaP
       // that were accumulated over the multiple correctors.
@@ -763,7 +763,7 @@ LowMachEquationSystem::solve_and_update()
           (1.0 - relaxFP), continuityEqSys_->pressure_->field_of_state(stk::mesh::StateN),
           relaxFP, continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1));
 
-        realm_.overset_orphan_node_field_update(
+        realm_.overset_field_update(
           &continuityEqSys_->pressure_->field_of_state(stk::mesh::StateNP1), 1, 1);
       } else {
         solution_update(
@@ -821,7 +821,7 @@ LowMachEquationSystem::project_nodal_velocity()
     continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
   const auto Udiag = fieldMgr.get_field<double>(
     momentumEqSys_->get_diagonal_field()->mesh_meta_data_ordinal());
-  const auto velNp1 = fieldMgr.get_field<double>(
+  auto velNp1 = fieldMgr.get_field<double>(
     momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
       .mesh_meta_data_ordinal());
   const auto rhoNp1 = fieldMgr.get_field<double>(
@@ -897,6 +897,8 @@ LowMachEquationSystem::project_nodal_velocity()
            });
     }
   }
+
+  velNp1.modify_on_device();
 }
 
 void
@@ -921,6 +923,8 @@ LowMachEquationSystem::predict_state()
     & stk::mesh::selectField(*density_);
   nalu_ngp::field_copy(ngpMesh, sel, rhoNp1, rhoN, 1);
   nalu_ngp::field_copy(ngpMesh, sel, presNp1, presN, 1);
+  rhoNp1.modify_on_device();
+  presNp1.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -1115,13 +1119,13 @@ MomentumEquationSystem::register_nodal_fields(
   }
 
   // speciality source
-  if ( NULL != realm_.actuator_ ) {
-    VectorFieldType *actuatorSource 
+  if ( NULL != realm_.actuator_ || NULL != realm_.actuatorMeta_) {
+    VectorFieldType *actuatorSource
       =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source"));
     VectorFieldType *actuatorSourceLHS
       =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source_lhs"));
     ScalarFieldType *g
-      =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "g"));
+      =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "g")); //TODO(SAKIEVICH) give this a better name
     stk::mesh::put_field_on_mesh(*actuatorSource, *part, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*g, *part, nullptr);
@@ -2449,6 +2453,7 @@ MomentumEquationSystem::predict_state()
     (meta.locally_owned_part() | meta.globally_shared_part() | meta.aura_part())
     & stk::mesh::selectField(*velocity_);
   nalu_ngp::field_copy(ngpMesh, sel, velNp1, velN, meta.spatial_dimension());
+  velNp1.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
@@ -2713,13 +2718,8 @@ MomentumEquationSystem::assemble_and_solve(
       stk::mesh::communicate_field_data(
         *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
     if (realm_.hasOverset_) {
-#ifndef KOKKOS_ENABLE_CUDA
-      realm_.overset_orphan_node_field_update(Udiag_, 1, 1);
-#else
-      // TODO: Fix overset for GPUs
-      throw std::runtime_error(
-        "Cannot perform overset synchronization on GPUs");
-#endif
+      const bool doFinalSyncToDevice = false;
+      realm_.overset_field_update(Udiag_, 1, 1, doFinalSyncToDevice);
     }
 
     // Push back to device

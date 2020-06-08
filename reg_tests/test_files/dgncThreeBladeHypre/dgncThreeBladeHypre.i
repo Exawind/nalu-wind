@@ -161,7 +161,6 @@ realms:
 
       - name: mmFront_ss5
         mesh_parts: [block_2]
-        frame: non_inertial
         compute_centroid: yes
         motion:
          - type: rotation
@@ -170,7 +169,6 @@ realms:
 
       - name: mmTop_ss7
         mesh_parts: [block_3]
-        frame: non_inertial
         compute_centroid: yes
         motion:
          - type: rotation
@@ -179,7 +177,6 @@ realms:
 
       - name: mmBot_ss6
         mesh_parts: [block_4]
-        frame: non_inertial
         compute_centroid: yes
         motion:
          - type: rotation

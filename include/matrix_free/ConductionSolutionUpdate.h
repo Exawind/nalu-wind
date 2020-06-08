@@ -46,7 +46,7 @@ public:
   ConductionSolutionUpdate(
     Teuchos::ParameterList,
     const stk::mesh::NgpMesh& mesh,
-    stk::mesh::NgpConstField<typename Tpetra::Map<>::global_ordinal_type> gids,
+    stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids,
     stk::mesh::Selector active_mesh,
     stk::mesh::Selector dirichlet = {},
     stk::mesh::Selector flux = {},

@@ -61,7 +61,7 @@ endif()
 
 ############################ BOOST #####################################
 set(CMAKE_PREFIX_PATH ${Boost_DIR} ${CMAKE_PREFIX_PATH})
-find_package(Boost REQUIRED QUIET COMPONENTS filesystem)
+find_package(Boost REQUIRED QUIET COMPONENTS filesystem iostreams)
 if(Boost_FOUND)
   message(STATUS "Found Boost = ${Boost_LIBRARY_DIRS}")
   target_link_libraries(nalu PUBLIC ${Boost_LIBRARIES})
