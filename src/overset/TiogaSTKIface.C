@@ -471,6 +471,32 @@ TiogaSTKIface::overset_update_fields(
   }
 }
 
+int TiogaSTKIface::register_solution(const std::vector<sierra::nalu::OversetFieldData>& fields)
+{
+  int nComp = 0;
+  for (auto& f: fields) {
+    f.field_->sync_to_host();
+    nComp += f.sizeRow_ * f.sizeCol_;
+  }
+
+  for (auto& tb: blocks_)
+    tb->register_solution(tg_, fields, nComp);
+
+  return nComp;
+}
+
+void TiogaSTKIface::update_solution(const std::vector<sierra::nalu::OversetFieldData>& fields)
+{
+  for (auto& tb: blocks_)
+    tb->update_solution(fields);
+
+  for (auto& finfo: fields) {
+    auto* fld = finfo.field_;
+    fld->modify_on_host();
+    fld->sync_to_device();
+  }
+}
+
 void TiogaSTKIface::overset_update_field(
   stk::mesh::FieldBase* field, const int nrows, const int ncols, const bool doFinalSyncToDevice)
 {

@@ -74,6 +74,10 @@ public:
 
   void post_connectivity_work(const bool isDecoupled = true);
 
+  int register_solution(const std::vector<sierra::nalu::OversetFieldData>&);
+
+  void update_solution(const std::vector<sierra::nalu::OversetFieldData>&);
+
   virtual void overset_update_fields(
     const std::vector<sierra::nalu::OversetFieldData>&);
 
