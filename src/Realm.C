@@ -2520,8 +2520,11 @@ Realm::compute_vrtm(const std::string& velName)
   auto vrtm = fieldMgr.get_field<double>(
     get_field_ordinal(*metaData_, velName + "_rtm"));
 
+  auto* vrtm_field = metaData_->get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, velName + "_rtm");
   const stk::mesh::Selector sel = (
-    metaData_->locally_owned_part() | metaData_->globally_shared_part());
+    metaData_->locally_owned_part() | metaData_->globally_shared_part()) &
+    stk::mesh::selectField(*vrtm_field);
   nalu_ngp::run_entity_algorithm(
     "compute_vrtm",
     ngpMesh, stk::topology::NODE_RANK, sel,
@@ -2547,7 +2550,8 @@ Realm::init_current_coordinates()
   VectorFieldType *displacement = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement");
 
   stk::mesh::Selector s_all_nodes
-    = (metaData_->locally_owned_part() | metaData_->globally_shared_part());
+    = (metaData_->locally_owned_part() | metaData_->globally_shared_part()) &
+    stk::mesh::selectField(*currentCoords);
 
   stk::mesh::BucketVector const& node_buckets = bulkData_->get_buckets( stk::topology::NODE_RANK, s_all_nodes );
   for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
