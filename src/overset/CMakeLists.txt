@@ -7,6 +7,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/OversetInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/OversetManager.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UpdateOversetFringeAlgorithmDriver.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ExtOverset.C
 )
 
 if(ENABLE_TIOGA)

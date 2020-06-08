@@ -15,6 +15,7 @@
 #include <Enums.h>
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace YAML { class Node; }
 
@@ -23,12 +24,13 @@ namespace nalu{
 
 class Realm;
 class Simulation;
+class ExtOverset;
 
 class TimeIntegrator
 {
 public:
 
-  TimeIntegrator() {}
+  TimeIntegrator();
   TimeIntegrator(Simulation* sim);
   ~TimeIntegrator();
 
@@ -79,7 +81,8 @@ public:
   double get_total_sim_time();
   int get_max_time_step_count();
   void compute_gamma();
- 
+
+  std::unique_ptr<ExtOverset> overset_;
 };
 
 } // namespace nalu

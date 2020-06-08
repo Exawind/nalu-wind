@@ -546,10 +546,10 @@ Realm::initialize()
   if ( hasNonConformal_ )
     initialize_non_conformal();
 
-  if ( hasOverset_ ) {
-    oversetManager_->initialize();
-    initialize_overset();
-  }
+  // if ( hasOverset_ ) {
+  //   oversetManager_->initialize();
+  //   initialize_overset();
+  // }
 
   initialize_post_processing_algorithms();
 
@@ -2350,7 +2350,7 @@ Realm::initialize_non_conformal()
 void
 Realm::initialize_overset()
 {
-  if (!isExternalOverset_)
+  if (hasOverset_ && !isExternalOverset_)
     oversetManager_->execute(equationSystems_.all_systems_decoupled());
 }
 
@@ -3003,7 +3003,7 @@ Realm::overset_field_update(
   const unsigned nCols,
   const bool doFinalSyncToDevice)
 {
-  if (!hasOverset_) return;
+  if (!hasOverset_ || isExternalOverset_) return;
 
   const double timeA = NaluEnv::self().nalu_time();
   oversetManager_->overset_update_field(
