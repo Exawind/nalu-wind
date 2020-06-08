@@ -1,0 +1,24 @@
+begin catalyst
+
+  begin camera TestCamera 
+    look at relative distance = 1.25
+  end camera
+
+  begin clip TestClip
+    plane normal = 1 0 0
+  end clip
+
+  begin representation TestRepresentation
+    show edges = true
+    color by scalar = pressure
+  end representation
+
+  begin imageset TestImageSet
+    operation = TestClip
+    camera = TestCamera
+    representation = TestRepresentation
+    image basedirectory = "catalyst_test_image_output"
+    image basename = "CatalystTestImage"
+  end imageset
+
+end
