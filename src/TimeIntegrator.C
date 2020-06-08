@@ -182,8 +182,8 @@ void TimeIntegrator::breadboard()
 
 void TimeIntegrator::initialize()
 {
-  // overset_->initialize();
-  // overset_->update_connectivity();
+  overset_->initialize();
+  overset_->update_connectivity();
 }
 
 Simulation *TimeIntegrator::root() { return parent()->root(); }
@@ -318,15 +318,18 @@ TimeIntegrator::integrate_realm()
       (*ii)->populate_external_variables_from_input(currentTime_);
     }
     
-    // pre-step work; mesh motion, search, etc
-    // for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-    //   (*ii)->pre_timestep_work();
-    // }
-    for (auto realm: realmVec_) {
-      pre_timestep_prolog(*realm);
-      // realm->initialize_overset();
-      overset_->update_connectivity();
-      pre_timestep_epilog(*realm);
+    {
+      bool updateOverset = false;
+      for (auto realm: realmVec_) {
+        pre_timestep_prolog(*realm);
+        updateOverset = updateOverset || realm->does_mesh_move();
+      }
+
+      if (updateOverset) overset_->update_connectivity();
+
+      for (auto realm: realmVec_) {
+        pre_timestep_epilog(*realm);
+      }
     }
 
     // populate boundary data
@@ -350,6 +353,7 @@ TimeIntegrator::integrate_realm()
       NaluEnv::self().naluOutputP0()
         << "   Realm Nonlinear Iteration: " << k+1 << "/" << nonlinearIterations_ << std::endl
         << std::endl;
+      overset_->exchange_solution();
       for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
         (*ii)->advance_time_step();
         (*ii)->process_multi_physics_transfer();

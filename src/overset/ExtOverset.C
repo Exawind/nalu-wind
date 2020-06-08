@@ -10,8 +10,9 @@
 #include "overset/ExtOverset.h"
 #include "overset/TiogaRef.h"
 #include "overset/OversetManagerTIOGA.h"
+#include "overset/UpdateOversetFringeAlgorithmDriver.h"
 #include "NaluEnv.h"
-#include "Realm.h""
+#include "Realm.h"
 
 #include "tioga.h"
 
@@ -73,6 +74,8 @@ void ExtOverset::initialize()
 
 #ifdef NALU_USES_TIOGA
   for (auto* realm: time_.realmVec_) {
+    if (!realm->hasOverset_) continue;
+
     auto* mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_);
     tgIfaceVec_.push_back(&mgr->tiogaIface_);
 
@@ -97,6 +100,34 @@ void ExtOverset::update_connectivity()
 
   for (auto* tgiface: tgIfaceVec_) {
     tgiface->post_connectivity_work(isDecoupled_);
+  }
+#endif
+}
+
+void ExtOverset::exchange_solution()
+{
+  if (!hasOverset_) return;
+
+#ifdef NALU_USES_TIOGA
+  const int row_major = 0;
+  auto& tg = tioga_nalu::TiogaRef::self().get();
+
+  int ncomp = 0;
+  for (auto* realm: time_.realmVec_) {
+    if (!realm->hasOverset_) continue;
+
+    auto& mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
+    ncomp = mgr.register_solution(realm->equationSystems_.oversetUpdater_->fields_);
+    std::cerr << realm->name() << " " << ncomp << std::endl;
+  }
+
+  tg.dataUpdate(ncomp, row_major);
+
+  for (auto* realm: time_.realmVec_) {
+    if (!realm->hasOverset_) continue;
+
+    auto& mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
+    mgr.update_solution(realm->equationSystems_.oversetUpdater_->fields_);
   }
 #endif
 }
