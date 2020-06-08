@@ -20,6 +20,7 @@
 #include "ngp_utils/NgpFieldUtils.h"
 
 #include "NaluEnv.h"
+#include "Realm.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
 #include "stk_util/parallel/ParallelReduce.hpp"
@@ -64,9 +65,13 @@ TiogaSTKIface::load(const YAML::Node& node)
   int num_meshes = oset_groups.size();
   blocks_.resize(num_meshes);
 
+  int offset = 0;
+  if (node["mesh_tag_offset"]) {
+    offset = node["mesh_tag_offset"].as<int>();
+  }
   for (int i = 0; i < num_meshes; i++) {
     blocks_[i].reset(new TiogaBlock(
-      meta_, bulk_, tiogaOpts_, oset_groups[i], coordsName_, i + 1));
+      meta_, bulk_, tiogaOpts_, oset_groups[i], coordsName_, offset + i + 1));
   }
 
   sierra::nalu::NaluEnv::self().naluOutputP0()
