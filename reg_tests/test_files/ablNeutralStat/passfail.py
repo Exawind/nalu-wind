@@ -41,7 +41,7 @@ class ABLStatsFileClass():
 
     def get_latesttime(self, field='velocity', index=0, scalar=False, zeroD=False):
         '''
-        Provide field time average
+        Get the latest time instance of field
         field - the field to time-average
         index - the component index (for example: velocity has 3 components)
         '''
