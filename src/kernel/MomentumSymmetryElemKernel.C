@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "kernel/MomentumSymmetryElemKernel.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
@@ -26,150 +25,162 @@
 namespace sierra {
 namespace nalu {
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 MomentumSymmetryElemKernel<BcAlgTraits>::MomentumSymmetryElemKernel(
-  const stk::mesh::MetaData &metaData,
-  const SolutionOptions &solnOpts,
-  VectorFieldType *velocity,
-  ScalarFieldType *viscosity,
-  ElemDataRequests &faceDataPreReqs,
-  ElemDataRequests &elemDataPreReqs)
+  const stk::mesh::MetaData& metaData,
+  const SolutionOptions& solnOpts,
+  VectorFieldType* velocity,
+  ScalarFieldType* viscosity,
+  ElemDataRequests& faceDataPreReqs,
+  ElemDataRequests& elemDataPreReqs)
   : Kernel(),
     viscosity_(viscosity->mesh_meta_data_ordinal()),
+    velocityNp1_(
+      velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal()),
+    coordinates_(get_field_ordinal(metaData, solnOpts.get_coordinates_name())),
+    exposedAreaVec_(
+      get_field_ordinal(metaData, "exposed_area_vector", metaData.side_rank())),
     includeDivU_(solnOpts.includeDivU_),
-    shiftedGradOp_(solnOpts.get_shifted_grad_op(velocity->name())),
-    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_))
+    meSCS_(
+      MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_))
 {
-  velocityNp1_ = velocity->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
-  coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
-  exposedAreaVec_ = get_field_ordinal(metaData, "exposed_area_vector", metaData.side_rank());
-
-  // extract master elements
-  MasterElement* meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
-  
-  // add master elements
+  auto* meFC =
+    MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
   faceDataPreReqs.add_cvfem_face_me(meFC);
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);
-
-  // fields and data; face and then element
   faceDataPreReqs.add_gathered_nodal_field(viscosity_, 1);
-  faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
-  elemDataPreReqs.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  faceDataPreReqs.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
+  faceDataPreReqs.add_face_field(
+    exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  elemDataPreReqs.add_coordinates_field(
+    coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
   elemDataPreReqs.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
 
-  if ( shiftedGradOp_ )
-    elemDataPreReqs.add_master_element_call(SCS_SHIFTED_FACE_GRAD_OP, CURRENT_COORDINATES);
-  else
-    elemDataPreReqs.add_master_element_call(SCS_FACE_GRAD_OP, CURRENT_COORDINATES);
-
-  // never shift properties
-  get_face_shape_fn_data<BcAlgTraits>([&](double* ptr){meFC->shape_fcn(ptr);}, vf_shape_function_);
+  if (solnOpts.get_shifted_grad_op(velocity->name())) {
+    elemDataPreReqs.add_master_element_call(
+      SCS_SHIFTED_FACE_GRAD_OP, CURRENT_COORDINATES);
+  } else {
+    elemDataPreReqs.add_master_element_call(
+      SCS_FACE_GRAD_OP, CURRENT_COORDINATES);
+  }
+  get_face_shape_fn_data<BcAlgTraits>(
+    [&](double* ptr) { meFC->shape_fcn(ptr); }, vf_shape_function_);
 }
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 MomentumSymmetryElemKernel<BcAlgTraits>::~MomentumSymmetryElemKernel()
-{}
+{
+}
 
+template <int n, typename ScalarU, typename ScalarV>
+KOKKOS_FORCEINLINE_FUNCTION DoubleType
+ddot(const ScalarU* u, const ScalarV* v)
+{
+  DoubleType result = 0;
+  for (int d = 0; d < n; ++d) {
+    result += u[d] * v[d];
+  }
+  return result;
+}
 
-template<typename BcAlgTraits>
+template <typename BcAlgTraits>
 void
 MomentumSymmetryElemKernel<BcAlgTraits>::execute(
-  SharedMemView<DoubleType**> &lhs,
-  SharedMemView<DoubleType *> &rhs,
-  ScratchViews<DoubleType> &faceScratchViews,
-  ScratchViews<DoubleType> &elemScratchViews,
+  SharedMemView<DoubleType**>& lhs,
+  SharedMemView<DoubleType*>& rhs,
+  ScratchViews<DoubleType>& faceScratchViews,
+  ScratchViews<DoubleType>& elemScratchViews,
   int elemFaceOrdinal)
 {
-  DoubleType w_nx[BcAlgTraits::nDim_];
+  constexpr int dim = BcAlgTraits::nDim_;
+  const int* face_node_ordinals = meSCS_->side_node_ordinals(elemFaceOrdinal);
 
-  // face
-  SharedMemView<DoubleType*>& vf_viscosity = faceScratchViews.get_scratch_view_1D(viscosity_);
-  SharedMemView<DoubleType**>& vf_exposedAreaVec = faceScratchViews.get_scratch_view_2D(exposedAreaVec_);
- 
-  // element
-  SharedMemView<DoubleType**>& v_uNp1 = elemScratchViews.get_scratch_view_2D(velocityNp1_);
-  SharedMemView<DoubleType***>& v_dndx = shiftedGradOp_
-    ? elemScratchViews.get_me_views(CURRENT_COORDINATES).dndx_shifted_fc_scs
-    : elemScratchViews.get_me_views(CURRENT_COORDINATES).dndx_fc_scs;
+  auto& face_mu = faceScratchViews.get_scratch_view_1D(viscosity_);
+  auto& face_velocity = faceScratchViews.get_scratch_view_2D(velocityNp1_);
+  auto& face_areav = faceScratchViews.get_scratch_view_2D(exposedAreaVec_);
+  auto& dndx = elemScratchViews.get_me_views(CURRENT_COORDINATES).dndx_fc_scs;
+  auto& elem_velocity = elemScratchViews.get_scratch_view_2D(velocityNp1_);
 
-  for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
-    
-    const int nearestNode = meSCS_->ipNodeMap(elemFaceOrdinal)[ip]; // "Right"
-    
-    // form unit normal
-    DoubleType asq = 0.0;
-    for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
-      const DoubleType axj = vf_exposedAreaVec(ip,j);
-      asq += axj*axj;
+  for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
+    const int nn = meSCS_->ipNodeMap(elemFaceOrdinal)[ip];
+
+    NALU_ALIGNED Kokkos::Array<DoubleType, 3> uIp = {{0, 0, 0}};
+    DoubleType viscIp = 0.;
+    for (int n = 0; n < BcAlgTraits::nodesPerFace_; ++n) {
+      const auto r = vf_shape_function_(ip, n);
+      viscIp += r * face_mu(n);
+      for (int d = 0; d < dim; ++d) {
+        uIp[d] += r * face_velocity(n, d);
+      }
     }
-    const DoubleType amag = stk::math::sqrt(asq);
-    for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) {
-      w_nx[i] = vf_exposedAreaVec(ip,i)/amag;
+    const auto* areavIp = &face_areav(ip, 0);
+    DoubleType areaWeightedInverseLengthScale = 0;
+    for (int n = 0; n < BcAlgTraits::nodesPerFace_; ++n) {
+      areaWeightedInverseLengthScale +=
+        ddot<dim>(&dndx(ip, face_node_ordinals[n], 0), areavIp);
     }
-    
-    DoubleType viscBip = 0.0;
-    for ( int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic ) {
-      const DoubleType r = vf_shape_function_(ip,ic);
-      viscBip += r*vf_viscosity(ic);
-    }
-    
-    for ( int ic = 0; ic < BcAlgTraits::nodesPerElement_; ++ic ) {
-            
-      const int icNdim = ic*BcAlgTraits::nDim_;
 
-      for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
-        
-        const DoubleType axj = vf_exposedAreaVec(ip,j);
-        const DoubleType dndxj = v_dndx(ip,ic,j);
-        const DoubleType uxj = v_uNp1(ic,j);
-        
-        const DoubleType divUstress = 2.0/3.0*viscBip*dndxj*uxj*axj*includeDivU_;
-        
-        for ( int i = 0; i < BcAlgTraits::nDim_; ++i ) {
+    const auto inv_amag = 1.0 / stk::math::sqrt(ddot<dim>(areavIp, areavIp));
+    const auto un = ddot<dim>(uIp.data(), areavIp) * inv_amag;
 
-          const int indexR = nearestNode*BcAlgTraits::nDim_ +i;
-
-          const DoubleType dndxi = v_dndx(ip,ic,i);
-          const DoubleType uxi = v_uNp1(ic,i);
-          const DoubleType nxi = w_nx[i];
-          const DoubleType nxinxi = nxi*nxi;
-          
-          // -mu*dui/dxj*Aj*ni*ni; sneak in divU (explicit)
-          DoubleType lhsfac = -viscBip*dndxj*axj*nxinxi;
-          lhs(indexR,icNdim+i) += lhsfac;
-          rhs(indexR) -= lhsfac*uxi + divUstress*nxinxi;
-          
-          // -mu*duj/dxi*Aj*ni*ni
-          lhsfac = -viscBip*dndxi*axj*nxinxi;
-          lhs(indexR,icNdim+j) += lhsfac;
-          rhs(indexR) -= lhsfac*uxj;
-          
-          // now we need the +nx*ny*Fy + nx*nz*Fz part
-          for ( int l = 0; l < BcAlgTraits::nDim_; ++l ) {
-            
-            if ( i != l ) {
-              const DoubleType nxinxl = nxi*w_nx[l];
-              const DoubleType uxl = v_uNp1(ic,l);
-              const DoubleType dndxl = v_dndx(ip,ic,l);
-              
-              // -ni*nl*mu*dul/dxj*Aj; sneak in divU (explicit)
-              lhsfac = -viscBip*dndxj*axj*nxinxl;
-              lhs(indexR,icNdim+l) += lhsfac;
-              rhs(indexR) -= lhsfac*uxl + divUstress*nxinxl;
-              
-              // -ni*nl*mu*duj/dxl*Aj
-              lhsfac = -viscBip*dndxl*axj*nxinxl;
-              lhs(indexR,icNdim+j) += lhsfac;
-              rhs(indexR) -= lhsfac*uxj;
-            }
-          }
+    const auto penaltyFac =
+      -viscous_penalty * viscIp * areaWeightedInverseLengthScale;
+    for (int dj = 0; dj < dim; ++dj) {
+      const int indexR = nn * dim + dj;
+      for (int di = 0; di < dim; ++di) {
+        for (int n = 0; n < BcAlgTraits::nodesPerFace_; ++n) {
+          lhs(indexR, face_node_ordinals[n] * dim + di) +=
+            -vf_shape_function_(ip, n) * penaltyFac * areavIp[dj] *
+            areavIp[di] * inv_amag * inv_amag;
         }
       }
+      rhs(indexR) -= -penaltyFac * un * areavIp[dj] * inv_amag;
+    }
+
+
+    NALU_ALIGNED Kokkos::Array<Kokkos::Array<DoubleType, 3>, 3> viscStressIp = {
+      {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}};
+    for (int n = 0; n < BcAlgTraits::nodesPerElement_; ++n) {
+      for (int dj = 0; dj < dim; ++dj) {
+        for (int di = 0; di < dim; ++di) {
+          viscStressIp[dj][di] += viscIp * (dndx(ip, n, dj) * elem_velocity(n, di) +
+              dndx(ip, n, di) * elem_velocity(n, dj));
+        }
+      }
+    }
+
+    DoubleType divuIp = 0.;
+    for (int n = 0; n < BcAlgTraits::nodesPerElement_; ++n) {
+      for (int dj = 0; dj < dim; ++dj) {
+        divuIp += dndx(ip, n, dj) * elem_velocity(n, dj);
+      }
+    }
+    for (int dj = 0; dj < dim; ++dj) {
+      viscStressIp[dj][dj] -= 2.0/dim * viscIp * divuIp * includeDivU_;
+    }
+
+    DoubleType faceNormalViscFlux = 0;
+    for (int d = 0; d < dim; ++d) {
+      faceNormalViscFlux -=
+        ddot<dim>(&viscStressIp[d][0], areavIp) * areavIp[d] * inv_amag;
+    }
+
+    for (int dj = 0; dj < dim; ++dj) {
+      for (int n = 0; n < BcAlgTraits::nodesPerElement_; ++n) {
+        const auto fac = -2 * viscIp *
+                         (ddot<dim>(&dndx(ip, n, 0), areavIp) * areavIp[dj] *
+                            inv_amag * inv_amag -
+                          dndx(ip, n, dj) * includeDivU_ / dim);
+        for (int di = 0; di < dim; ++di) {
+          lhs(nn * dim + dj, n * dim + di) += fac * areavIp[di];
+        }
+      }
+      rhs(nn * dim + dj) -= faceNormalViscFlux * areavIp[dj] * inv_amag;
     }
   }
 }
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumSymmetryElemKernel)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
