@@ -10,10 +10,10 @@
 #ifndef MATRIX_FREE_SOLVER_H
 #define MATRIX_FREE_SOLVER_H
 
+#include "BelosTpetraAdapter.hpp"
 #include "BelosLinearProblem.hpp"
 #include "Tpetra_MultiVector.hpp"
 #include "Tpetra_Operator.hpp"
-#include "matrix_free/ConductionOperator.h"
 
 namespace Teuchos {
 class ParameterList;
@@ -33,7 +33,6 @@ class MatrixFreeSolver
 public:
   using base_op_type = Tpetra::Operator<>;
   using mv_type = Tpetra::MultiVector<>;
-  using map_type = Tpetra::Map<>;
   using problem_type =
     Belos::LinearProblem<typename mv_type::scalar_type, mv_type, base_op_type>;
 
