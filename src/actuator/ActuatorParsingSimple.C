@@ -29,7 +29,7 @@ namespace {
    *  
    */
 std::vector<double> 
-extend_double_vector(std::vector<double> vec, const int N)
+extend_double_vector(std::vector<double> vec, const unsigned N)
 {
   if ((vec.size() != 1) && (vec.size() != N))
     throw std::runtime_error("Vector is not of size 1 or "+std::to_string(N));
@@ -85,7 +85,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
  
   if (actMetaSimple.n_simpleblades_ > 0) {
     actMetaSimple.numPointsTotal_ = 0;
-    for (int iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
+    for (unsigned iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
 
       const YAML::Node cur_blade =
 	y_actuator["Blade" + std::to_string(iBlade)];
@@ -234,7 +234,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
       for (int i=0; i<3; i++) 
 	dx[i] = (p2Temp[i] - p1Temp[i])/(double)num_force_pts_blade;
       double dx_norm = sqrt(dx[0]*dx[0] + dx[1]*dx[1] + dx[2]*dx[2]);
-      for (int i=0; i<num_force_pts_blade; i++)
+      for (unsigned i=0; i<num_force_pts_blade; i++)
 	elemareatemp[i] = dx_norm*chord_table_extended[i];
       input_elem_area.push_back(elemareatemp);
 
@@ -285,7 +285,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   actMetaSimple.twist_tableDv_ = twistview;
   actMetaSimple.elem_areaDv_   = elem_area_view;
   // Copy the information over
-  for (int iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
+  for (unsigned iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
     for (int j=0; j <actMetaSimple.numPointsTurbine_.h_view(iBlade); j++) {
       actMetaSimple.chord_tableDv_.h_view(iBlade, j) = input_chord_table[iBlade][j]; 
       actMetaSimple.twist_tableDv_.h_view(iBlade, j) = input_twist_table[iBlade][j]; 
@@ -301,7 +301,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   actMetaSimple.cl_polartableDv_  = clview;
   actMetaSimple.cd_polartableDv_  = cdview;
   // Copy the information over
-  for (int iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
+  for (unsigned iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
     for (int j=0; j < actMetaSimple.polartable_size_.h_view(iBlade); j++) {
       actMetaSimple.aoa_polartableDv_.h_view(iBlade, j) = input_aoa_polartable[iBlade][j]; 
       actMetaSimple.cl_polartableDv_.h_view(iBlade, j)  = input_cl_polartable[iBlade][j]; 
