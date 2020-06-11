@@ -817,6 +817,118 @@ slight degradation in order-of-accuracy is noted for the thexahedral topology.
 
    :math:`L_o` norms for the full set of hybrid Laplace MMS study.
 
+Fixed Wing Verification Problem
+-------------------------------
+
+**Introduction** A basic verification of the actuator line theory can
+be done by considering a fixed, 2D wing in a uniform flow. Such a test
+can be done independently of the openFAST library and can be easily
+verified by a simple algebraic calculation.
+
+.. _fw_bladeschematic:
+
+.. figure:: figures/fw_bladeschematic.png
+   :width: 200px
+   :align: center
+
+   Schematic of the fixed wing airfoil problem.
+
+
+   An example of the fixed wing specification in the Nalu-Wind input
+   file is shown below. The actuator type can be
+   :code-block:`ActLineSimpleNGP` for the NGP version and
+   :code-block:`ActLineSimple` for the non-NGP version (soon to be
+   deprecated).
+
+.. code-block:: yaml
+
+   actuator:
+     type: ActLineSimple  
+     search_method: stk_kdtree
+     search_target_part: Unspecified-2-HEX
+
+     n_simpleblades: 1
+     debug_output: false
+     n_turbines_glob: 0
+     Blade0:
+       num_force_pts_blade: 20
+       epsilon: [3.0, 3.0, 3.0]
+       p1: [-25, -4, 0]
+       p2: [-25,  4, 0]
+       p1_zero_alpha_dir: [1, 0, 0]
+       chord_table: [1.0]
+       twist_table: [0.0]
+       aoa_table: [-180, 0, 180]
+       cl_table:  [-19.739208802178716, 0, 19.739208802178716]
+       cd_table:  [0]
+
+
+The fixed wing is defined between points :math:`\mathbf{p_1}` and
+:math:`\mathbf{p_2}` given the chord length and blade twist defined in
+:code-block:`chord_table` and :code-block:`twist_table`.  The
+direction :math:`\mathbf{p1}_{0\alpha}` corresponding to the zero
+degree angle of attack is given in :code-block:`p1_zero_alpha_dir`.
+The lift coefficients :math:`C_L` and drag coefficients :math:`C_D`
+are tabulated in the :code-block:`cl_table` and :code-block:`cd_table`
+parameters, respectively, as functions of the angle of attack
+:math:`\alpha` in :code-block:`aoa_table`.
+
+The lift :math:`L` and drag :math:`D` on the fixed wing can be
+calculated by infinite 2D airfoil theory using the formulas:
+
+.. math::
+   :label: fixed_wing_lift
+
+   L=\frac{1}{2}{\rho}{U^2}{C_L}(\alpha)S
+
+.. math::
+   :label: fixed_wing_drag
+
+   D=\frac{1}{2}{\rho}{U^2}{C_D}(\alpha)S
+
+In equations :eq:`fixed_wing_lift` and :eq:`fixed_wing_drag`, the area
+of the airfoil is given by :math:`S`, the density is given by
+:math:`\rho`, and the wind speed is given by :math:`U`.
+
+For the verification problem, a simple 2D, extruded blade is used with
+span :math:`l=\textrm{8m}` and chord :math:`c=\textrm{1m}`, giving an
+area :math:`S=8\textrm{m}^2`.  An isotropic force spreading value of
+:math:`\varepsilon=3` is used, along with 20 blade stations.  The wind
+conditions are given by :math:`\rho=1.0\textrm{ kg/m}^3` and
+:math:`U=2\textrm{ m/s}`.
+
+The aerodynamic properties of the fixed wing are given by the linear
+lift coefficient 
+
+.. math::
+   :label: linear_cl
+
+   {C_L}=2\pi\alpha
+
+and zero drag
+
+.. math::
+   :label: linear_cl
+
+   {C_D}=0.
+
+A comparison of total lift force calculated Nalu-Wind against the 2D
+airfoil theory is shown in Figure :numref:`_fw_bladeresults`.  As
+expected, the total lift force varies linearly with the angle of
+attack, and the agreement between theory and Nalu-Wind is good.
+Differences between the two methods were seen to be less than 0.1%
+over the range :math:`0\le \alpha \le 5` degrees.
+
+.. _fw_bladeresults:
+
+.. figure:: figures/fw_bladeresults.png
+   :width: 400px
+   :align: center
+
+   Comparison of the total lift force from Nalu-Wind and from 2D
+   airfoil theory.
+
+
 Actuator line simulations coupled to OpenFAST
 ---------------------------------------------
 

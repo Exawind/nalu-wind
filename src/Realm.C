@@ -66,6 +66,10 @@
 #include <actuator/Actuator.h>
 #include <actuator/ActuatorParsing.h>
 #include <actuator/ActuatorBulk.h>
+#include <actuator/ActuatorLineSimple.h>
+#include <actuator/ActuatorBulkSimple.h>
+#include <actuator/ActuatorParsingSimple.h>
+#include <actuator/ActuatorExecutorsSimpleNgp.h>
 #ifdef NALU_USES_OPENFAST
 #include <actuator/ActuatorLineFAST.h>
 #include <actuator/ActuatorDiskFAST.h>
@@ -647,6 +651,15 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
 #endif
 #endif
       }
+      case ActuatorType::ActLineSimple : {
+	actuator_ =  new ActuatorLineSimple(*this, *foundActuator[0]);
+	break;
+      }
+      case ActuatorType::ActLineSimpleNGP:{
+	actuatorMetaSimple_ = std::make_shared<ActuatorMetaSimple>(actuator_Simple_parse(node, actMeta));
+	//actuatorMeta_ = std::make_shared<ActuatorMetaFAST>(actuator_Simple_parse(node, actMeta));
+	break;
+      }
       default : {
         throw std::runtime_error("look_ahead_and_create::error: unrecognized actuator type: " + ActuatorTypeName);
 // Avoid nvcc unreachable statement warnings
@@ -1019,6 +1032,15 @@ Realm::setup_post_processing_algorithms()
     ThrowErrorMsg("Actuator methods require OpenFAST");
 #endif
   }
+
+  // For simple fixed wing problem    
+  if (NULL != actuatorMetaSimple_)
+  {
+    NaluEnv::self().naluOutputP0() << "Initializing actuatorBulkSimple_"<< std::endl; // LCCOUT                                            
+    actuatorBulkSimple_ = make_unique<ActuatorBulkSimple>(*actuatorMetaSimple_.get(),
+                          get_time_step_from_file());
+  }
+
 
   // check for norm nodal fields
   if ( NULL != solutionNormPostProcessing_ )
@@ -1835,6 +1857,18 @@ Realm::advance_time_step()
   if ( NULL != actuator_ ) {
     const double start_time = NaluEnv::self().nalu_time();
     actuator_->execute();
+    const double end_time = NaluEnv::self().nalu_time();
+    timerActuator_ += end_time - start_time;
+  }
+
+  // check for simple actuator line; assemble the source terms for this step
+  if ( NULL != actuatorBulkSimple_ ) {
+    const double start_time = NaluEnv::self().nalu_time();
+    if(actuatorMetaSimple_->actuatorType_==ActuatorType::ActLineSimpleNGP){
+      ActuatorLineSimpleNGP(*actuatorMetaSimple_.get(),
+        *actuatorBulkSimple_.get(),
+        bulk_data())();
+    }
     const double end_time = NaluEnv::self().nalu_time();
     timerActuator_ += end_time - start_time;
   }

@@ -39,6 +39,8 @@ using ActVectorDblDv =
   Kokkos::DualView<double* [3], ActuatorMemLayout, ActuatorMemSpace>;
 using ActTensorDblDv =
   Kokkos::DualView<double* [9], ActuatorMemLayout, ActuatorMemSpace>;
+using Act2DArrayDblDv =
+  Kokkos::DualView<double**, ActuatorMemLayout, ActuatorMemSpace>;
 
 // VIEWS
 using ActScalarInt = Kokkos::View<int*, ActuatorMemLayout, ActuatorMemSpace>;
@@ -49,6 +51,8 @@ using ActVectorDbl =
   Kokkos::View<double* [3], ActuatorMemLayout, ActuatorMemSpace>;
 using ActTensorDbl =
   Kokkos::View<double* [9], ActuatorMemLayout, ActuatorMemSpace>;
+using Act2DArrayDbl =
+  Kokkos::View<double**, ActuatorMemLayout, ActuatorMemSpace>;
 
 // VIEWS FIXED TO HOST
 using ActFixRangePolicy = Kokkos::RangePolicy<ActuatorFixedExecutionSpace>;
