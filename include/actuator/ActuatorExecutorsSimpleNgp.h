@@ -10,7 +10,6 @@
 #ifndef ACTUATOREXECUTORSSIMPLENGP_H_
 #define ACTUATOREXECUTORSSIMPLENGP_H_
 
-#include <actuator/ActuatorNGP.h>
 #include <actuator/ActuatorBulkSimple.h>
 #include <actuator/ActuatorFunctorsSimple.h>
 #include <actuator/UtilitiesActuator.h>
