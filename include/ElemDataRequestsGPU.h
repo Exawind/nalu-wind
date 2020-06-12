@@ -103,7 +103,7 @@ public:
     const nalu_ngp::FieldManager& fieldMgr,
     const ElemDataRequests& dataReq, unsigned totalFields);
 
-  ~ElemDataRequestsGPU() {}
+  KOKKOS_FUNCTION ~ElemDataRequestsGPU() {}
 
   void add_cvfem_face_me(MasterElement *meFC)
   { meFC_ = meFC; }
