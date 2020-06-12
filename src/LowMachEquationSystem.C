@@ -1949,8 +1949,8 @@ MomentumEquationSystem::register_wall_bc(
         realm_.get_turb_model_constant(TM_kappa));
 */
       // register the algorithm that calculates the momentum and heat flux on the wall.
-      wallFuncAlgDriver_.register_face_algorithm<ABLWallFluxesAlg>(
-        wfAlgType, part, "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
+      wallFuncAlgDriver_.register_face_elem_algorithm<ABLWallFluxesAlg>(
+        wfAlgType, part, get_elem_topo(realm_, *part), "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
         ablWallFunctionNode);
 
       // create algorithm for utau, yp and assembled nodal wall area (_WallFunction)

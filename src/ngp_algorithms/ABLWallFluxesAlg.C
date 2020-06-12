@@ -24,6 +24,7 @@
 #include "wind_energy/MoninObukhov.h"
 #include "wind_energy/BdyLayerStatistics.h"
 #include "utils/LinearInterpolation.h"
+#include "wind_energy/BdyLayerStatistics.h"
 
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
@@ -117,11 +118,13 @@ std::vector<double> compute_fluxes_given_surface_temperature
     const double up, 
     const double Tp, 
     const double Tsurface, 
-    const double rho, 
-    const double Cp, 
     const double zp, 
     PsiFunc Psi_m_func,
     PsiFunc Psi_h_func,
+    const double kappa,
+    const double z0,
+    const double g,
+    const double Tref,
     const double Psi_m_factor,
     const double Psi_h_factor    
 )
@@ -149,11 +152,11 @@ std::vector<double> compute_fluxes_given_surface_temperature
     temperatureFluxOld = temperatureFlux;
 
     // Compute friction velocity using Monin-Obukhov similarity.
-    frictionVelocity = (kappa_ * up) / (std::log(zp / z0_) - Psi_m);
+    frictionVelocity = (kappa * up) / (std::log(zp / z0) - Psi_m);
 
     // Compute heat flux using Monin-Obukhov similarity.
     double deltaT = Tp - Tsurface;
-    temperatureFlux = -(deltaT * frictionVelocity * kappa_) / (std::log(zp / z0_) - Psi_m);
+    temperatureFlux = -(deltaT * frictionVelocity * kappa) / (std::log(zp / z0) - Psi_m);
 
     // Compute Obukhov length.
     if (temperatureFlux == 0.0)
@@ -162,12 +165,12 @@ std::vector<double> compute_fluxes_given_surface_temperature
     }
     else
     {
-      L = -(Tref_ * std::pow(frictionVelocity,3))/(kappa_ * gravity_ * temperatureFlux);
+      L = -(Tref * std::pow(frictionVelocity,3))/(kappa * g * temperatureFlux);
     }
 
     // Recompute Psi_H and Psi_M.
-    Psi_h = Psi_h_func(zp/L, Psi_H_fac);
-    Psi_m = Psi_m_func(zp/L, Psi_M_fac);
+    Psi_h = Psi_h_func(zp/L, Psi_h_factor);
+    Psi_m = Psi_m_func(zp/L, Psi_m_factor);
 
     // Compute changes in solution.
     frictionVelocityDelta = std::abs(frictionVelocity - frictionVelocityOld);
@@ -207,6 +210,9 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
   : Algorithm(realm, part),
     algDriver_(algDriver),
     faceData_(realm.meta_data()),
+    elemData_(realm.meta_data()),
+    coordinates_(
+      get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
     velocityNp1_(
       get_field_ordinal(realm.meta_data(), "velocity", stk::mesh::StateNP1)),
     bcVelocity_(get_field_ordinal(realm.meta_data(), "wall_velocity_bc")),
@@ -230,20 +236,19 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
       "wall_normal_distance_bip",
       realm.meta_data().side_rank())),
     useShifted_(useShifted),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-          BcAlgTraits>()),
-    meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-           BcAlgTraits>())
+    meFC_(MasterElementRepo::get_surface_master_element<
+          typename BcAlgTraits::FaceTraits>()),
+    meSCS_(MasterElementRepo::get_surface_master_element<
+           typename BcAlgTraits::ElemTraits>())
 {
   faceData_.add_cvfem_face_me(meFC_);
-  faceData_.add_cvfem_surface_me(meSCS_);
+  elemData_.add_cvfem_surface_me(meSCS_);
 
   faceData_.add_coordinates_field(
-    get_field_ordinal(realm_.meta_data(), realm_.get_coordinates_name()),
-    BcAlgTraits::nDim_, CURRENT_COORDINATES);
-  faceData_.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
+    coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  elemData_.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
   faceData_.add_gathered_nodal_field(bcVelocity_, BcAlgTraits::nDim_);
-  faceData_.add_gathered_nodal_field(temperatureNp1_, 1);
+  elemData_.add_gathered_nodal_field(temperatureNp1_, 1);
   faceData_.add_gathered_nodal_field(density_, 1);
   faceData_.add_gathered_nodal_field(bcHeatFlux_, 1);
   faceData_.add_gathered_nodal_field(specificHeat_, 1);
@@ -332,13 +337,11 @@ template<typename BcAlgTraits>
 void ABLWallFluxesAlg<BcAlgTraits>::execute()
 {
   namespace mo = abl_monin_obukhov;
-  using ElemSimdData = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using FaceElemSimdData = sierra::nalu::nalu_ngp::FaceElemSimdData<stk::mesh::NgpMesh>;
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpUtau = fieldMgr.template get_field<double>(wallFricVel_);
-
-  auto* meSCS meSCS_;
 
   // Get the current time and interpolate flux/surface temperature in time.
   const double currTime = realm_.get_current_time();
@@ -348,7 +351,6 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   utils::linear_interp(tableTimes_, tableFluxes_, currTime, currFlux);
   utils::linear_interp(tableTimes_, tableSurfaceTemperatures_, currTime, currSurfaceTemperature);
   utils::linear_interp(tableTimes_, tableWeights_, currTime, currWeight);
-
   std::cout << "Flux = " << currFlux << std::endl;
   std::cout << "Surface Temperature = " << currSurfaceTemperature << std::endl;
   std::cout << "Weight = " << currWeight << std::endl;
@@ -363,14 +365,41 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   const unsigned areaVecID = exposedAreaVec_;
   const unsigned wDistID = wallNormDist_;
 
+  auto* meSCS = meSCS_;
+  auto* meFC = meFC_;
+
   const DoubleType gravity = gravity_;
   const DoubleType z0 = z0_;
   const DoubleType Tref = Tref_;
   const DoubleType kappa = kappa_;
   const DoubleType beta_m = beta_m_;
+  const DoubleType beta_h = beta_h_;
   const DoubleType gamma_m = gamma_m_;
+  const DoubleType gamma_h = gamma_h_;
 
   const bool useShifted = useShifted_;
+
+  DblType hPlanar;
+  DoubleType hPlanarSIMD;
+  std::vector<DblType> velPlanar(2,0.0);
+  DblType tempPlanar;
+  if (averagingType_ == "planar")
+  {
+    BdyLayerStatistics::HostArrayType h = realm_.bdyLayerStats_->abl_heights();
+    realm_.bdyLayerStats_->velocity(h[1], velPlanar.data());  
+    realm_.bdyLayerStats_->temperature(h[1], &tempPlanar);  
+    hPlanar = h[1];
+    hPlanarSIMD = h[1];
+    std::cout << "h = " << h[0] << " " << h[1] << std::endl;
+    std::cout << "hPlanar = " << hPlanar << std::endl;
+    std::cout << "hPlanarSIMD = " << hPlanarSIMD << std::endl;
+    std::cout << "velPlanar = " << velPlanar[0] << " " << velPlanar[1] << " " << velPlanar[2] << std::endl;
+    std::cout << "tempPlanar = " << tempPlanar << std::endl;
+  }
+
+  NALU_ALIGNED DoubleType vv[BcAlgTraits::nDim_];
+  vv = velPlanar;
+  
 
   const double eps = 1.0e-8;
   const DoubleType Lmax = 1.0e8;
@@ -378,7 +407,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
 
-  const auto utauOps = nalu_ngp::simd_elem_field_updater(
+  const auto utauOps = nalu_ngp::simd_face_elem_field_updater(
     ngpMesh, ngpUtau);
 
   // Reducer to accumulate the area-weighted utau sum as well as total area for
@@ -386,37 +415,49 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   nalu_ngp::ArraySimdDouble2 utauSum(0.0);
   Kokkos::Sum<nalu_ngp::ArraySimdDouble2> utauReducer(utauSum);
 
-  const std::string algName = "ABLWallFluxesAlg_" + std::to_string(BcAlgTraits::topo_);
-  nalu_ngp::run_elem_par_reduce(
-    algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
-    KOKKOS_LAMBDA(ElemSimdData& edata, nalu_ngp::ArraySimdDouble2& uSum) {
+  const std::string algName = "ABLWallFluxesAlg_" +
+    std::to_string(BcAlgTraits::faceTopo_) + "_" +
+    std::to_string(BcAlgTraits::elemTopo_);
+
+
+
+  nalu_ngp::run_face_elem_par_reduce(
+    algName, meshInfo, faceData_, elemData_, sel,
+    KOKKOS_LAMBDA(FaceElemSimdData& feData, nalu_ngp::ArraySimdDouble2& uSum) {
+
       // Unit normal vector
       NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
 
       // Velocities
       NALU_ALIGNED DoubleType velIp[BcAlgTraits::nDim_];
+      NALU_ALIGNED DoubleType velOppNode[BcAlgTraits::nDim_];
       NALU_ALIGNED DoubleType bcVelIp[BcAlgTraits::nDim_];
+      NALU_ALIGNED DoubleType velPlanar[BcAlgTraits::nDim_];
 
-      auto& scrViews = edata.simdScrView;
-      const auto& v_vel = scrViews.get_scratch_view_2D(velID);
-      const auto& v_bcvel = scrViews.get_scratch_view_2D(bcVelID);
-      const auto& v_temp = scrViews.get_scratch_view_1D(tempID);
-      const auto& v_rho = scrViews.get_scratch_view_1D(rhoID);
-      const auto& v_bcHeatFlux = scrViews.get_scratch_view_1D(bcHeatFluxID);
-      const auto& v_specHeat = scrViews.get_scratch_view_1D(specHeatID);
-      const auto& v_areavec = scrViews.get_scratch_view_2D(areaVecID);
-      const auto& v_wallnormdist = scrViews.get_scratch_view_1D(wDistID);
+      auto& scrViewsFace = feData.simdFaceView;
+      auto& scrViewsElem = feData.simdElemView;
+      const auto& v_vel = scrViewsElem.get_scratch_view_2D(velID);
+      const auto& v_bcvel = scrViewsFace.get_scratch_view_2D(bcVelID);
+      const auto& v_temp = scrViewsElem.get_scratch_view_1D(tempID);
+      const auto& v_rho = scrViewsFace.get_scratch_view_1D(rhoID);
+      const auto& v_bcHeatFlux = scrViewsFace.get_scratch_view_1D(bcHeatFluxID);
+      const auto& v_specHeat = scrViewsFace.get_scratch_view_1D(specHeatID);
+      const auto& v_areavec = scrViewsFace.get_scratch_view_2D(areaVecID);
+      const auto& v_wallnormdist = scrViewsFace.get_scratch_view_1D(wDistID);
 
-      const auto meViews = scrViews.get_me_views(CURRENT_COORDINATES);
+      const auto meViews = scrViewsFace.get_me_views(CURRENT_COORDINATES);
       const auto& v_shape_fcn = useShifted
         ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
-      // The velocity and temperature at the nodes one layer away from
-      // the wal will be use, so get access to those nodes.
-      const int* lrscv = meSCS->adjacentNode();
+    //std::vector<DblType> velPlanar(BcAlgTraits::nDim_,0.0);
+    //DblType tempPlanar;
+    //std::vector<DoubleType> velPlanar(BcAlgTraits::nDim_,0.0);
 
+      const int* faceIpNodeMap = meFC->ipNodeMap();
       for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
-        const int nodeL = lrscv[2*ip];
+
+        const int nodeR = meSCS->ipNodeMap(feData.faceOrd)[ip];
+        const int nodeL = meSCS->opposingNodes(feData.faceOrd, ip);
 
         DoubleType aMag = 0.0;
         for (int d=0; d < BcAlgTraits::nDim_; ++d) {
@@ -428,17 +469,22 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
         for (int d=0; d < BcAlgTraits::nDim_; ++d) {
           nx[d] = v_areavec(ip, d) / aMag;
           velIp[d] = 0.0;
+          velOppNode[d] = 0.0;
           bcVelIp[d] = 0.0;
         }
 
         const DoubleType zh = v_wallnormdist(ip);
+
 
         // Compute quantities at the boundary integration points
         DoubleType heatFluxIp = 0.0;
         DoubleType rhoIp = 0.0;
         DoubleType CpIp = 0.0;
         DoubleType tempIp = 0.0;
-        for (int ic =0; ic < BcAlgTraits::nodesPerElement_; ++ic) {
+        DoubleType tempOppNode = 0.0;
+        DoubleType tempPlanar = 0.0;
+
+        for (int ic =0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
           const DoubleType r = v_shape_fcn(ip, ic);
           heatFluxIp += r * v_bcHeatFlux(ic);
           rhoIp += r * v_rho(ic);
@@ -451,9 +497,18 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
           }
         }
 
+        for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
+            velOppNode[d] = v_vel(nodeL,d);
+        }
+        tempOppNode = v_temp(nodeL);
+        std::cout << "velIp = (" << velIp[0] << " " << velIp[1] << " " << velIp[2] << "), tempIp = " << tempIp << std::endl;
+        std::cout << "velOppNode = (" << velOppNode[0] << " " << velOppNode[1] << " " << velOppNode[2] << "), tempOppNode = " << tempOppNode << std::endl;
+
         DoubleType uTangential = 0.0;
+        DoubleType uOppNodeTangential = 0.0;
         for (int i=0; i < BcAlgTraits::nDim_; ++i) {
           DoubleType uiTan = 0.0;
+          DoubleType uiOppNodeTan = 0.0;
           DoubleType uiBcTan = 0.0;
 
           for (int j=0; j < BcAlgTraits::nDim_; ++j) {
@@ -461,15 +516,19 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
             if (i == j) {
               const DoubleType om_ninj = 1.0 - ninj;
               uiTan += om_ninj * velIp[j];
+              uiOppNodeTan += om_ninj * velOppNode[j];
               uiBcTan += om_ninj * bcVelIp[j];
             } else {
               uiTan -= ninj * velIp[j];
+              uiOppNodeTan -= ninj * velOppNode[j];
               uiBcTan -= ninj * bcVelIp[j];
             }
           }
           uTangential += (uiTan - uiBcTan) * (uiTan - uiBcTan);
+          uOppNodeTangential += (uiOppNodeTan - uiBcTan) * (uiOppNodeTan - uiBcTan);
         }
         uTangential = stk::math::sqrt(uTangential);
+        uOppNodeTangential = stk::math::sqrt(uOppNodeTangential);
 
         const DoubleType Tflux = heatFluxIp / (rhoIp * CpIp);
         const DoubleType Lfac = stk::math::if_then_else(
@@ -478,9 +537,46 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
         const DoubleType term = stk::math::log(zh / z0);
 
         DoubleType utau_calc = eps;
-        for (int si = 0; si < edata.numSimdElems; ++si) {
-          const double Tflux1 = stk::simd::get_data(Tflux, si);
+        std::cout << "numSimdElems = " << feData.numSimdElems << std::endl;
+        for (int si = 0; si < feData.numSimdElems; ++si) {
 
+        // Get planar averaged velocity.
+      //if ((averagingType_ == "planar"))
+      //{
+      //  DblType velPlanar
+      //  realm_.bdyLayerStats_->velocity(zh, velPlanar.data());
+      //  realm_.bdyLayerStats_->temperature(zh, &tempPlanar);
+     //  std::cout << zPlanar << " " << velPlanar[0] << " " << velPlanar[1] << " " << velPlanar[2] << " " << tempPlanar << std::endl;
+      //}
+        
+/*
+          std::vector<DblType> mean_fluxes_given_surf_temp(2,0.0);
+          DblType tol = 1.0E-6;
+          mean_fluxes_given_surf_temp = compute_fluxes_given_surface_temperature
+          (
+            tol,
+            stk::simd::get_data(uOppNodeTangential, si),
+            tempPlanar,
+            currSurfaceTemperature,
+            stk::simd::get_data(zh, si),
+            mo::psim_unstable<double>,
+            mo::psih_unstable<double>,
+            stk::simd::get_data(kappa, si),
+            stk::simd::get_data(z0, si),
+            stk::simd::get_data(gravity, si),
+            stk::simd::get_data(Tref, si),
+            stk::simd::get_data(beta_m, si),
+            stk::simd::get_data(beta_h, si)
+          );
+          std::cout << "utau = " << mean_fluxes_given_surf_temp[0] << " qWall = " << mean_fluxes_given_surf_temp[1] << std::endl;
+*/
+
+
+
+
+
+
+          const double Tflux1 = stk::simd::get_data(Tflux, si);
           double utau;
           if (Tflux1 < -eps) {
             utau = calc_utau(
@@ -510,7 +606,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
 
           stk::simd::set_data(utau_calc, si, utau);
         }
-        utauOps(edata, ip) = utau_calc;
+        utauOps(feData, ip) = utau_calc;
 
         // Accumulate utau for statistics output
         uSum.array_[0] += utau_calc * aMag;
@@ -521,7 +617,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   algDriver_.accumulate_utau_area_sum(utauSum.array_[0], utauSum.array_[1]);
 }
 
-INSTANTIATE_KERNEL_FACE(ABLWallFluxesAlg)
+INSTANTIATE_KERNEL_FACE_ELEMENT(ABLWallFluxesAlg)
 
 }  // nalu
 }  // sierra

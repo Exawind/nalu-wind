@@ -62,7 +62,9 @@ private:
   WallFricVelAlgDriver& algDriver_;
 
   ElemDataRequests faceData_;
+  ElemDataRequests elemData_;
 
+  unsigned coordinates_     {stk::mesh::InvalidOrdinal};
   unsigned velocityNp1_     {stk::mesh::InvalidOrdinal};
   unsigned bcVelocity_      {stk::mesh::InvalidOrdinal};
   unsigned temperatureNp1_  {stk::mesh::InvalidOrdinal};
