@@ -118,7 +118,6 @@ void ExtOverset::exchange_solution()
 
     auto& mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
     ncomp = mgr.register_solution(realm->equationSystems_.oversetUpdater_->fields_);
-    std::cerr << realm->name() << " " << ncomp << std::endl;
   }
 
   tg.dataUpdate(ncomp, row_major);
