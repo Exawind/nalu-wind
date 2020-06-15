@@ -164,35 +164,35 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 				  p1zeroAOATemp[1]*p1zeroAOATemp[1] + 
 				  p1zeroAOATemp[2]*p1zeroAOATemp[2]);
       for (int j = 0; j < 3; j++) {
-	actMetaSimple.p1zeroalphadir_.h_view(iBlade, j) = 
+	actMetaSimple.p1ZeroAlphaDir_.h_view(iBlade, j) = 
 	  p1zeroAOATemp[j]/p1zeroAOAnorm;
       }
-      p1zeroAOA.x_ = actMetaSimple.p1zeroalphadir_.h_view(iBlade, 0);
-      p1zeroAOA.y_ = actMetaSimple.p1zeroalphadir_.h_view(iBlade, 1);
-      p1zeroAOA.z_ = actMetaSimple.p1zeroalphadir_.h_view(iBlade, 2);
+      p1zeroAOA.x_ = actMetaSimple.p1ZeroAlphaDir_.h_view(iBlade, 0);
+      p1zeroAOA.y_ = actMetaSimple.p1ZeroAlphaDir_.h_view(iBlade, 1);
+      p1zeroAOA.z_ = actMetaSimple.p1ZeroAlphaDir_.h_view(iBlade, 2);
 
       // Calculate some stuff
       // Span direction
-      Coordinates spandir;
-      spandir.x_ = p2Temp[0] - p1Temp[0];
-      spandir.y_ = p2Temp[1] - p1Temp[1];
-      spandir.z_ = p2Temp[2] - p1Temp[2];
-      double spandirnorm = sqrt(spandir.x_*spandir.x_ + spandir.y_*spandir.y_ +
-			 spandir.z_*spandir.z_);
-      spandir.x_ = spandir.x_/spandirnorm;
-      spandir.y_ = spandir.y_/spandirnorm;
-      spandir.z_ = spandir.z_/spandirnorm;
-      actMetaSimple.spandir_.h_view(iBlade, 0) = spandir.x_;
-      actMetaSimple.spandir_.h_view(iBlade, 1) = spandir.y_;
-      actMetaSimple.spandir_.h_view(iBlade, 2) = spandir.z_;
+      Coordinates spanDir;
+      spanDir.x_ = p2Temp[0] - p1Temp[0];
+      spanDir.y_ = p2Temp[1] - p1Temp[1];
+      spanDir.z_ = p2Temp[2] - p1Temp[2];
+      double spandirnorm = sqrt(spanDir.x_*spanDir.x_ + spanDir.y_*spanDir.y_ +
+			 spanDir.z_*spanDir.z_);
+      spanDir.x_ = spanDir.x_/spandirnorm;
+      spanDir.y_ = spanDir.y_/spandirnorm;
+      spanDir.z_ = spanDir.z_/spandirnorm;
+      actMetaSimple.spanDir_.h_view(iBlade, 0) = spanDir.x_;
+      actMetaSimple.spanDir_.h_view(iBlade, 1) = spanDir.y_;
+      actMetaSimple.spanDir_.h_view(iBlade, 2) = spanDir.z_;
       // Chord normal direction
-      Coordinates chordnormaldir;
-      chordnormaldir.x_ = p1zeroAOA.y_*spandir.z_ - p1zeroAOA.z_*spandir.y_;
-      chordnormaldir.y_ = p1zeroAOA.z_*spandir.x_ - p1zeroAOA.x_*spandir.z_;
-      chordnormaldir.z_ = p1zeroAOA.x_*spandir.y_ - p1zeroAOA.y_*spandir.x_;
-      actMetaSimple.chordnormaldir_.h_view(iBlade, 0) = chordnormaldir.x_;
-      actMetaSimple.chordnormaldir_.h_view(iBlade, 1) = chordnormaldir.y_;
-      actMetaSimple.chordnormaldir_.h_view(iBlade, 2) = chordnormaldir.z_;
+      Coordinates chodrNormalDir;
+      chodrNormalDir.x_ = p1zeroAOA.y_*spanDir.z_ - p1zeroAOA.z_*spanDir.y_;
+      chodrNormalDir.y_ = p1zeroAOA.z_*spanDir.x_ - p1zeroAOA.x_*spanDir.z_;
+      chodrNormalDir.z_ = p1zeroAOA.x_*spanDir.y_ - p1zeroAOA.y_*spanDir.x_;
+      actMetaSimple.chordNormalDir_.h_view(iBlade, 0) = chodrNormalDir.x_;
+      actMetaSimple.chordNormalDir_.h_view(iBlade, 1) = chodrNormalDir.y_;
+      actMetaSimple.chordNormalDir_.h_view(iBlade, 2) = chodrNormalDir.z_;
 
       // output directions
       if (actMetaSimple.debug_output_) {
@@ -201,11 +201,11 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 	  <<p1zeroAOA.x_<<" "<<p1zeroAOA.y_<<" "<<p1zeroAOA.z_<< std::endl;
 	NaluEnv::self().naluOutputP0()  // LCCOUT
 	  << "Blade: " << iBlade << " Span dir: "
-	  <<spandir.x_<<" "<<spandir.y_<<" "<<spandir.z_<< std::endl; 
+	  <<spanDir.x_<<" "<<spanDir.y_<<" "<<spanDir.z_<< std::endl; 
 	NaluEnv::self().naluOutputP0() // LCCOUT
 	  << "Blade: " << iBlade 
 	  << " chord norm dir: "<<std::setprecision(5)
-	  <<chordnormaldir.x_<<" "<<chordnormaldir.y_<<" "<<chordnormaldir.z_<< std::endl; 
+	  <<chodrNormalDir.x_<<" "<<chodrNormalDir.y_<<" "<<chodrNormalDir.z_<< std::endl; 
       }
 		
       // Chord definitions
@@ -248,10 +248,10 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 	throw std::runtime_error("ActuatorSimpleNGP: missing aoa_table");
       input_aoa_polartable.push_back(aoatemp);
       size_t polartableN = aoatemp.size();
-      actMetaSimple.polartable_size_.h_view(iBlade) = polartableN;
+      actMetaSimple.polarTableSize_.h_view(iBlade) = polartableN;
       // get the maximum size
-      if (polartableN > actMetaSimple.max_polartable_size_) {
-	actMetaSimple.max_polartable_size_ = polartableN;
+      if (polartableN > actMetaSimple.maxPolarTableSize_) {
+	actMetaSimple.maxPolarTableSize_ = polartableN;
       }
 
       // --- cl ---
@@ -282,30 +282,30 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   Act2DArrayDblDv twistview("twist_table_view", n_simpleblades_, actMetaSimple.max_num_force_pts_blade_);
   Act2DArrayDblDv elem_area_view("elem_area_view", n_simpleblades_, actMetaSimple.max_num_force_pts_blade_);
   actMetaSimple.chord_tableDv_ = chordview;
-  actMetaSimple.twist_tableDv_ = twistview;
-  actMetaSimple.elem_areaDv_   = elem_area_view;
+  actMetaSimple.twistTableDv_ = twistview;
+  actMetaSimple.elemAreaDv_   = elem_area_view;
   // Copy the information over
   for (unsigned iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
     for (int j=0; j <actMetaSimple.numPointsTurbine_.h_view(iBlade); j++) {
       actMetaSimple.chord_tableDv_.h_view(iBlade, j) = input_chord_table[iBlade][j]; 
-      actMetaSimple.twist_tableDv_.h_view(iBlade, j) = input_twist_table[iBlade][j]; 
-      actMetaSimple.elem_areaDv_.h_view(iBlade, j)   = input_elem_area[iBlade][j]; 
+      actMetaSimple.twistTableDv_.h_view(iBlade, j) = input_twist_table[iBlade][j]; 
+      actMetaSimple.elemAreaDv_.h_view(iBlade, j)   = input_elem_area[iBlade][j]; 
     }
   }
 
   // resize the polar table views
-  Act2DArrayDblDv aoaview("aoa_polartable_view", n_simpleblades_, actMetaSimple.max_polartable_size_);
-  Act2DArrayDblDv clview("cl_polartable_view",   n_simpleblades_, actMetaSimple.max_polartable_size_);
-  Act2DArrayDblDv cdview("cd_polartable_view",   n_simpleblades_, actMetaSimple.max_polartable_size_);
-  actMetaSimple.aoa_polartableDv_ = aoaview;
-  actMetaSimple.cl_polartableDv_  = clview;
-  actMetaSimple.cd_polartableDv_  = cdview;
+  Act2DArrayDblDv aoaview("aoa_polartable_view", n_simpleblades_, actMetaSimple.maxPolarTableSize_);
+  Act2DArrayDblDv clview("cl_polartable_view",   n_simpleblades_, actMetaSimple.maxPolarTableSize_);
+  Act2DArrayDblDv cdview("cd_polartable_view",   n_simpleblades_, actMetaSimple.maxPolarTableSize_);
+  actMetaSimple.aoaPolarTableDv_ = aoaview;
+  actMetaSimple.clPolarTableDv_  = clview;
+  actMetaSimple.cdPolarTableDv_  = cdview;
   // Copy the information over
   for (unsigned iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
-    for (int j=0; j < actMetaSimple.polartable_size_.h_view(iBlade); j++) {
-      actMetaSimple.aoa_polartableDv_.h_view(iBlade, j) = input_aoa_polartable[iBlade][j]; 
-      actMetaSimple.cl_polartableDv_.h_view(iBlade, j)  = input_cl_polartable[iBlade][j]; 
-      actMetaSimple.cd_polartableDv_.h_view(iBlade, j)  = input_cd_polartable[iBlade][j]; 
+    for (int j=0; j < actMetaSimple.polarTableSize_.h_view(iBlade); j++) {
+      actMetaSimple.aoaPolarTableDv_.h_view(iBlade, j) = input_aoa_polartable[iBlade][j]; 
+      actMetaSimple.clPolarTableDv_.h_view(iBlade, j)  = input_cl_polartable[iBlade][j]; 
+      actMetaSimple.cdPolarTableDv_.h_view(iBlade, j)  = input_cd_polartable[iBlade][j]; 
     }
   }
   if (actMetaSimple.debug_output_) {

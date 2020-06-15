@@ -241,26 +241,26 @@ ActuatorSimple::load(const YAML::Node& y_node)
 	    p1zeroAOA.x_ = p1zeroAOA.x_/norm;
 	    p1zeroAOA.y_ = p1zeroAOA.y_/norm;
 	    p1zeroAOA.z_ = p1zeroAOA.z_/norm;
-	    actuatorSimpleInfo->p1zeroalphadir_ = p1zeroAOA;
+	    actuatorSimpleInfo->p1ZeroAlphaDir_ = p1zeroAOA;
 	  } else
 	    throw std::runtime_error("ActuatorSimple: missing p1_zero_alpha_dir");	    
 	  // Compute span and chord normal direction
-	  Coordinates spandir;
-	  spandir.x_ = actuatorSimpleInfo->p2_.x_ - actuatorSimpleInfo->p1_.x_;
-	  spandir.y_ = actuatorSimpleInfo->p2_.y_ - actuatorSimpleInfo->p1_.y_;
-	  spandir.z_ = actuatorSimpleInfo->p2_.z_ - actuatorSimpleInfo->p1_.z_;
-	  double norm = sqrt(spandir.x_*spandir.x_ + spandir.y_*spandir.y_ +
-			     spandir.z_*spandir.z_);
-	  spandir.x_ = spandir.x_/norm;
-	  spandir.y_ = spandir.y_/norm;
-	  spandir.z_ = spandir.z_/norm;
-	  actuatorSimpleInfo->spandir_ = spandir;
+	  Coordinates spanDir;
+	  spanDir.x_ = actuatorSimpleInfo->p2_.x_ - actuatorSimpleInfo->p1_.x_;
+	  spanDir.y_ = actuatorSimpleInfo->p2_.y_ - actuatorSimpleInfo->p1_.y_;
+	  spanDir.z_ = actuatorSimpleInfo->p2_.z_ - actuatorSimpleInfo->p1_.z_;
+	  double norm = sqrt(spanDir.x_*spanDir.x_ + spanDir.y_*spanDir.y_ +
+			     spanDir.z_*spanDir.z_);
+	  spanDir.x_ = spanDir.x_/norm;
+	  spanDir.y_ = spanDir.y_/norm;
+	  spanDir.z_ = spanDir.z_/norm;
+	  actuatorSimpleInfo->spanDir_ = spanDir;
 
-	  Coordinates chordnormaldir;
-	  chordnormaldir.x_ = p1zeroAOA.y_*spandir.z_ - p1zeroAOA.z_*spandir.y_;
-	  chordnormaldir.y_ = p1zeroAOA.z_*spandir.x_ - p1zeroAOA.x_*spandir.z_;
-	  chordnormaldir.z_ = p1zeroAOA.x_*spandir.y_ - p1zeroAOA.y_*spandir.x_;
-	  actuatorSimpleInfo->chordnormaldir_ = chordnormaldir;
+	  Coordinates chodrNormalDir;
+	  chodrNormalDir.x_ = p1zeroAOA.y_*spanDir.z_ - p1zeroAOA.z_*spanDir.y_;
+	  chodrNormalDir.y_ = p1zeroAOA.z_*spanDir.x_ - p1zeroAOA.x_*spanDir.z_;
+	  chodrNormalDir.z_ = p1zeroAOA.x_*spanDir.y_ - p1zeroAOA.y_*spanDir.x_;
+	  actuatorSimpleInfo->chordNormalDir_ = chodrNormalDir;
 
 	  // output directions
 	  if (debug_output_) {
@@ -269,11 +269,11 @@ ActuatorSimple::load(const YAML::Node& y_node)
 	      <<p1zeroAOA.x_<<" "<<p1zeroAOA.y_<<" "<<p1zeroAOA.z_<< std::endl;
 	    NaluEnv::self().naluOutputP0()  // LCCOUT
 	      << "Blade: " << iBlade << " Span dir: "
-	      <<spandir.x_<<" "<<spandir.y_<<" "<<spandir.z_<< std::endl; 
+	      <<spanDir.x_<<" "<<spanDir.y_<<" "<<spanDir.z_<< std::endl; 
 	    NaluEnv::self().naluOutputP0() // LCCOUT
 	      << "Blade: " << iBlade 
 	      << " chord norm dir: "<<std::setprecision(5)
-	      <<chordnormaldir.x_<<" "<<chordnormaldir.y_<<" "<<chordnormaldir.z_<< std::endl; 
+	      <<chodrNormalDir.x_<<" "<<chodrNormalDir.y_<<" "<<chodrNormalDir.z_<< std::endl; 
 	  }
 
 	  // Chord definitions
@@ -650,15 +650,15 @@ ActuatorSimple::execute()
   for (size_t iBlade =0; iBlade < n_simpleblades_; iBlade++) {
     auto bladeInfo =
       dynamic_cast<ActuatorSimpleInfo*>(actuatorInfo_.at(iBlade).get());
-    const size_t Npts = bladeInfo->num_force_pts_blade_;
+    const size_t nPts = bladeInfo->num_force_pts_blade_;
     if (NaluEnv::self().parallel_rank() == bladeInfo->runOnProc_) 
       {
 	NaluEnv::self().naluOutput()
 	  << " AVG Blade "<<iBlade<<" Alpha: "<<std::setprecision(8)
-	  << BladeAvgAlpha[iBlade]/(float)Npts << " WS: "
-	  << BladeAvgWS2D[iBlade][0]/(float)Npts << " "
-	  << BladeAvgWS2D[iBlade][1]/(float)Npts << " "
-	  << BladeAvgWS2D[iBlade][2]/(float)Npts << " "
+	  << BladeAvgAlpha[iBlade]/(float)nPts << " WS: "
+	  << BladeAvgWS2D[iBlade][0]/(float)nPts << " "
+	  << BladeAvgWS2D[iBlade][1]/(float)nPts << " "
+	  << BladeAvgWS2D[iBlade][2]/(float)nPts << " "
 	  << std::endl;
       }
   }
@@ -933,10 +933,10 @@ void
 ActuatorSimple::get_blade_coordinates(
   const int& nDim, std::vector<double> &coord, 
   const Coordinates &p1,  const Coordinates &p2, 
-  const int &Npts, const int &iNode)
+  const int &nPts, const int &iNode)
 {
   std::vector<double> dx(nDim, 0.0);
-  double denom = (double)Npts; //Npts - 1.0;
+  double denom = (double)nPts; //nPts - 1.0;
   dx[0] = (p2.x_ - p1.x_)/denom; 
   dx[1] = (p2.y_ - p1.y_)/denom; 
   if (nDim>2) dx[2] = (p2.z_ - p1.z_)/denom; 
@@ -976,13 +976,13 @@ ActuatorSimple::get_blade_area_elems(
    std::vector<double> chord_table, 
    const Coordinates &p1,  
    const Coordinates &p2,
-   const int &Npts)
+   const int &nPts)
 {
   // stk::mesh::MetaData& metaData = realm_.meta_data();
   // const int nDim = metaData.spatial_dimension();
   const int nDim = 3;
-  std::vector<double> areas(Npts, 0.0);
-  double denom = (double)Npts; //Npts - 1.0;
+  std::vector<double> areas(nPts, 0.0);
+  double denom = (double)nPts; //nPts - 1.0;
   std::vector<double> dx(nDim, 0.0);
 
   dx[0] = (p2.x_ - p1.x_)/denom; 

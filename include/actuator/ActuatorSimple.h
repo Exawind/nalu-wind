@@ -67,9 +67,9 @@ public:
     std::vector<double> chord_table_;
     std::vector<double> twist_table_;
     std::vector<double> elem_area_;
-    Coordinates p1zeroalphadir_;         // Directon of zero alpha at p1
-    Coordinates chordnormaldir_;         // Direction normal to chord
-    Coordinates spandir_;                // Direction in the span
+    Coordinates p1ZeroAlphaDir_;         // Directon of zero alpha at p1
+    Coordinates chordNormalDir_;         // Direction normal to chord
+    Coordinates spanDir_;                // Direction in the span
     // For the polars
     std::vector<double> aoa_polartable_;
     std::vector<double> cl_polartable_;
@@ -183,7 +183,7 @@ public:
 	 std::vector<double> &coord, 
 	 const Coordinates &p1,  
 	 const Coordinates &p2, 
-	 const int &Npts, const int &iNode);
+	 const int &nPts, const int &iNode);
 
     // Make sure vec is of length N
     std::vector<double> extend_double_vector(
@@ -199,7 +199,7 @@ public:
         std::vector<double> chord_table, 
 	const Coordinates &p1,  
 	const Coordinates &p2,
-	const int &Npts);
+	const int &nPts);
 
     // centroid of the element
     void compute_elem_centroid(

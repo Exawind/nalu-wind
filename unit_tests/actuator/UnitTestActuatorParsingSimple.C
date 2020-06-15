@@ -102,26 +102,26 @@ TEST_F(ActuatorParsingSimpleTests, minimumRequired)
     EXPECT_DOUBLE_EQ(-25.0, actMetaSimple.p2_.h_view(0, 0));
     EXPECT_DOUBLE_EQ(+4.0,  actMetaSimple.p2_.h_view(0, 1));
     EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.p2_.h_view(0, 2));
-    // Check p1zeroalphadir_
-    EXPECT_DOUBLE_EQ(1.0,   actMetaSimple.p1zeroalphadir_.h_view(0, 0));
-    EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.p1zeroalphadir_.h_view(0, 1));
-    EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.p1zeroalphadir_.h_view(0, 2));
+    // Check p1ZeroAlphaDir_
+    EXPECT_DOUBLE_EQ(1.0,   actMetaSimple.p1ZeroAlphaDir_.h_view(0, 0));
+    EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.p1ZeroAlphaDir_.h_view(0, 1));
+    EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.p1ZeroAlphaDir_.h_view(0, 2));
 
     // Check the chord/twist tables (DV)
     for (int i=0; i<actMetaSimple.num_force_pts_blade_.h_view(0); i++) {
       EXPECT_DOUBLE_EQ(1.0,   actMetaSimple.chord_tableDv_.h_view(0, i));
-      EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.twist_tableDv_.h_view(0, i));
+      EXPECT_DOUBLE_EQ(0.0,   actMetaSimple.twistTableDv_.h_view(0, i));
     }
     // Check the polar tables
     for (int i=0; i<3; i++) {
-      EXPECT_DOUBLE_EQ(0.0, actMetaSimple.cd_polartableDv_.h_view(0,i));
+      EXPECT_DOUBLE_EQ(0.0, actMetaSimple.cdPolarTableDv_.h_view(0,i));
     }
-    EXPECT_DOUBLE_EQ(-10.0, actMetaSimple.cl_polartableDv_.h_view(0,0));
-    EXPECT_DOUBLE_EQ(  0.0, actMetaSimple.cl_polartableDv_.h_view(0,1));
-    EXPECT_DOUBLE_EQ( 10.0, actMetaSimple.cl_polartableDv_.h_view(0,2));
-    EXPECT_DOUBLE_EQ(-180.0, actMetaSimple.aoa_polartableDv_.h_view(0,0));
-    EXPECT_DOUBLE_EQ(   0.0, actMetaSimple.aoa_polartableDv_.h_view(0,1));
-    EXPECT_DOUBLE_EQ( 180.0, actMetaSimple.aoa_polartableDv_.h_view(0,2));
+    EXPECT_DOUBLE_EQ(-10.0, actMetaSimple.clPolarTableDv_.h_view(0,0));
+    EXPECT_DOUBLE_EQ(  0.0, actMetaSimple.clPolarTableDv_.h_view(0,1));
+    EXPECT_DOUBLE_EQ( 10.0, actMetaSimple.clPolarTableDv_.h_view(0,2));
+    EXPECT_DOUBLE_EQ(-180.0, actMetaSimple.aoaPolarTableDv_.h_view(0,0));
+    EXPECT_DOUBLE_EQ(   0.0, actMetaSimple.aoaPolarTableDv_.h_view(0,1));
+    EXPECT_DOUBLE_EQ( 180.0, actMetaSimple.aoaPolarTableDv_.h_view(0,2));
 
 
   }catch (std::exception const& err) {

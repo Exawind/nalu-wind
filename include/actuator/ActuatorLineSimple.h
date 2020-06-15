@@ -45,8 +45,8 @@ public:
   void calculate_alpha(
     Coordinates ws, 
     Coordinates zeroalphadir, 
-    Coordinates spandir,
-    Coordinates chordnormaldir, 
+    Coordinates spanDir,
+    Coordinates chodrNormalDir, 
     double twist,
     double &alpha,
     Coordinates &ws2D);
