@@ -55,7 +55,7 @@ struct ActuatorMetaSimple : public ActuatorMeta
 
 struct ActuatorBulkSimple : public ActuatorBulk
 {
-  ActuatorBulkSimple(const ActuatorMetaSimple& actMeta, double naluTimeStep);
+  ActuatorBulkSimple(const ActuatorMetaSimple& actMeta);
 
   Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy();
 

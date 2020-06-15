@@ -101,11 +101,11 @@ struct ActSimpleComputeForce
     
   // Dual view polar tables and blade definitions
   ActScalarIntDv   polartable_size_;
-  const int        Npolartable;
+  const unsigned   Npolartable;
   ActScalarDblDv   aoa_polartableDv_;
   ActScalarDblDv   cl_polartableDv_;
   ActScalarDblDv   cd_polartableDv_;
-  const int        Npts;
+  const unsigned   Npts;
   ActScalarDblDv   twist_tableDv_;
   ActScalarDblDv   elem_areaDv_;
 

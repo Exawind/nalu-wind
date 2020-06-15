@@ -33,7 +33,7 @@ ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
 }
 
 ActuatorBulkSimple::ActuatorBulkSimple(
-  const ActuatorMetaSimple& actMeta, double naluTimeStep)
+  const ActuatorMetaSimple& actMeta)
   : ActuatorBulk(actMeta),
     density_("actDensity", actMeta.numPointsTotal_), 
     turbineThrust_("turbineThrust", actMeta.numberOfActuators_),

@@ -200,7 +200,7 @@ ActSimpleComputeForce::operator()(int index) const
   std::vector<double> aoatable;
   std::vector<double> cltable;
   std::vector<double> cdtable;
-  for (int i=0; i<Npolartable; i++) {
+  for (unsigned i=0; i<Npolartable; i++) {
     aoatable.push_back(aoa_polartableDv_.h_view(i));
     cltable.push_back(cl_polartableDv_.h_view(i));
     cdtable.push_back(cd_polartableDv_.h_view(i));
@@ -297,10 +297,10 @@ AirfoilTheory2D::calculate_alpha(
 
 void
 ActSimpleComputeThrustInnerLoop::operator()(
-  const uint64_t pointId,
-  const double* nodeCoords,
+  const uint64_t ,
+  const double* ,
   double* sourceTerm,
-  const double dual_vol,
+  const double ,
   const double scvIp) const
 {
 
@@ -310,7 +310,7 @@ ActSimpleComputeThrustInnerLoop::operator()(
     int turbId = NaluEnv::self().parallel_rank();
     auto thrust = Kokkos::subview(actBulk_.turbineThrust_, turbId, Kokkos::ALL);
 
-  double r[3], rPerpShaft[3], forceTerm[3];
+  double forceTerm[3];
 
   for (int i = 0; i < 3; i++) {
     forceTerm[i] = sourceTerm[i]*scvIp;

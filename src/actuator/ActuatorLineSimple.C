@@ -79,7 +79,6 @@ ActuatorLineSimple::execute_class_specific(
     // actuator line info object of interest
     auto infoObject =
       dynamic_cast<ActuatorSimplePointInfo*>(iterPoint.second.get());
-    int np = static_cast<int>(iterPoint.first);
     if (infoObject == NULL) {
       throw std::runtime_error("Object in ActuatorPointInfo is not the correct "
                                "type.  Should be ActuatorSimplePointInfo.");

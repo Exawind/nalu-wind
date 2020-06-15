@@ -132,7 +132,7 @@ ActuatorSimple::load(const YAML::Node& y_node)
     
     get_required(y_actuator, "n_simpleblades", n_simpleblades_);
     if (n_simpleblades_ > 0) {
-      for (int iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
+      for (unsigned iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
 	NaluEnv::self().naluOutputP0() << "Reading blade: " << iBlade<< std::endl; //LCCOUT
 	const YAML::Node cur_blade =
 	  y_actuator["Blade" + std::to_string(iBlade)];
@@ -587,7 +587,6 @@ ActuatorSimple::execute()
     interpolate_field(
       1, bestElem, bulkData, infoObject->isoParCoords_.data(), &ws_density_[0],
       &ws_pointGasDensity);
-    int nNp = (int)np;
     
     /////////////////////////
     // Add the filtered lifting line theory correction here
@@ -919,12 +918,6 @@ ActuatorSimple::create_actuator_point_info_map()
 void
 ActuatorSimple::update_actuator_point_info_map()
 {
-
-  stk::mesh::MetaData& metaData = realm_.meta_data();
-  const int nDim = metaData.spatial_dimension();
-
-  size_t np = 0;
-
 }
 
 /// This function computes the index map such that actuator points can be
@@ -932,7 +925,6 @@ ActuatorSimple::update_actuator_point_info_map()
 ///   (turbine number, blade number, actuator point number)
 void ActuatorSimple::index_map()
 {
-
 }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -965,7 +957,7 @@ ActuatorSimple::get_blade_chord(
 }
 
 std::vector<double> 
-ActuatorSimple::extend_double_vector(std::vector<double> vec, const int N)
+ActuatorSimple::extend_double_vector(std::vector<double> vec, const unsigned N)
 {
   if ((vec.size() != 1) && (vec.size() != N))
     throw std::runtime_error("Vector is not of size 1 or "+std::to_string(N));
@@ -998,7 +990,7 @@ ActuatorSimple::get_blade_area_elems(
   if (nDim>2) dx[2] = (p2.z_ - p1.z_)/denom; 
   // Assumes equal area spacing
   double dx_norm = sqrt(dx[0]*dx[0] + dx[1]*dx[1] + dx[2]*dx[2]);
-  for (int i=0; i<chord_table.size(); i++) {
+  for (unsigned i=0; i<chord_table.size(); i++) {
     areas[i] = dx_norm*chord_table[i];
   }
   
