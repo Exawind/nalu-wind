@@ -23,17 +23,17 @@ ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
     num_force_pts_blade_("numForcePtsBladeMeta", numberOfActuators_),
     p1_("p1Meta", numberOfActuators_),
     p2_("p2Meta", numberOfActuators_),
-    p1zeroalphadir_("p1zeroalphadirMeta", numberOfActuators_),
-    chordnormaldir_("chordnormaldirMeta", numberOfActuators_),
-    spandir_("spandirMeta", numberOfActuators_),
+    p1ZeroAlphaDir_("p1zeroalphadirMeta", numberOfActuators_),
+    chordNormalDir_("chordnormaldirMeta", numberOfActuators_),
+    spanDir_("spandirMeta", numberOfActuators_),
     max_num_force_pts_blade_(0),
-    max_polartable_size_(0),
-    polartable_size_("polartablesizeMeta", numberOfActuators_)
+    maxPolarTableSize_(0),
+    polarTableSize_("polartablesizeMeta", numberOfActuators_)
 {
 }
 
 ActuatorBulkSimple::ActuatorBulkSimple(
-  const ActuatorMetaSimple& actMeta, double naluTimeStep)
+  const ActuatorMetaSimple& actMeta)
   : ActuatorBulk(actMeta),
     density_("actDensity", actMeta.numPointsTotal_), 
     turbineThrust_("turbineThrust", actMeta.numberOfActuators_),

@@ -40,8 +40,8 @@ namespace nalu {
     void calculate_alpha(
       double ws[],                 
       const double zeroalphadir[], 
-      const double spandir[],      
-      const double chordnormaldir[], 
+      const double spanDir[],      
+      const double chodrNormalDir[], 
       double twist, 
       double ws2Da[],   
       double &alpha);
@@ -100,18 +100,18 @@ struct ActSimpleComputeForce
   const int turbId_;
     
   // Dual view polar tables and blade definitions
-  ActScalarIntDv   polartable_size_;
-  const int        Npolartable;
-  ActScalarDblDv   aoa_polartableDv_;
-  ActScalarDblDv   cl_polartableDv_;
-  ActScalarDblDv   cd_polartableDv_;
-  const int        Npts;
-  ActScalarDblDv   twist_tableDv_;
-  ActScalarDblDv   elem_areaDv_;
+  ActScalarIntDv   polarTableSize_;
+  const unsigned   nPolarTable;
+  ActScalarDblDv   aoaPolarTableDv_;
+  ActScalarDblDv   clPolarTableDv_;
+  ActScalarDblDv   cdPolarTableDv_;
+  const unsigned   nPts;
+  ActScalarDblDv   twistTableDv_;
+  ActScalarDblDv   elemAreaDv_;
 
-  double p1zeroalphadir[3];         // Directon of zero alpha at p1
-  double chordnormaldir[3];         // Direction normal to chord
-  double spandir[3];                // Direction in the span
+  double p1ZeroAlphaDir[3];         // Directon of zero alpha at p1
+  double chodrNormalDir[3];         // Direction normal to chord
+  double spanDir[3];                // Direction in the span
 
   const int debug_output_;
 

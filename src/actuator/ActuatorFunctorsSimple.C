@@ -139,35 +139,35 @@ ActSimpleComputeForce::ActSimpleComputeForce(ActuatorBulkSimple& actBulk,
     force_(helper_.get_local_view(actBulk.actuatorForce_)),
     offset_(helper_.get_local_view(actBulk.turbIdOffset_)),
     turbId_(actBulk.localTurbineId_),
-    Npolartable(actMeta.polartable_size_.h_view(turbId_)),
-    aoa_polartableDv_("aoa_polartable_Dv", actMeta.polartable_size_.h_view(turbId_)),
-    cl_polartableDv_("cl_polartable_Dv", actMeta.polartable_size_.h_view(turbId_)),
-    cd_polartableDv_("cd_polartable_Dv", actMeta.polartable_size_.h_view(turbId_)),
-    Npts(actMeta.num_force_pts_blade_.h_view(turbId_)),
-    twist_tableDv_("twist_table_Dv", actMeta.num_force_pts_blade_.h_view(turbId_)),
-    elem_areaDv_("elem_area_Dv", actMeta.num_force_pts_blade_.h_view(turbId_)),
+    nPolarTable(actMeta.polarTableSize_.h_view(turbId_)),
+    aoaPolarTableDv_("aoa_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
+    clPolarTableDv_("cl_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
+    cdPolarTableDv_("cd_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
+    nPts(actMeta.num_force_pts_blade_.h_view(turbId_)),
+    twistTableDv_("twist_table_Dv", actMeta.num_force_pts_blade_.h_view(turbId_)),
+    elemAreaDv_("elem_area_Dv", actMeta.num_force_pts_blade_.h_view(turbId_)),
     debug_output_(actBulk.debug_output_)
 {
 
   helper_.touch_dual_view(actBulk.actuatorForce_);
   if (NaluEnv::self().parallel_rank() == turbId_) {
     // Set up the polar table arrays
-    for (size_t i=0; i<Npolartable; i++) {
-      aoa_polartableDv_.h_view(i) = actMeta.aoa_polartableDv_.h_view(turbId_,i);
-      cl_polartableDv_.h_view(i)  = actMeta.cl_polartableDv_.h_view(turbId_, i);
-      cd_polartableDv_.h_view(i)  = actMeta.cd_polartableDv_.h_view(turbId_, i);
+    for (size_t i=0; i<nPolarTable; i++) {
+      aoaPolarTableDv_.h_view(i) = actMeta.aoaPolarTableDv_.h_view(turbId_,i);
+      clPolarTableDv_.h_view(i)  = actMeta.clPolarTableDv_.h_view(turbId_, i);
+      cdPolarTableDv_.h_view(i)  = actMeta.cdPolarTableDv_.h_view(turbId_, i);
     }
     // Copy over the twist/area tables
-    for (size_t i=0; i<Npts; i++) {
-      twist_tableDv_.h_view(i) = actMeta.twist_tableDv_.h_view(turbId_, i);
-      elem_areaDv_.h_view(i)   = actMeta.elem_areaDv_.h_view(turbId_, i);
+    for (size_t i=0; i<nPts; i++) {
+      twistTableDv_.h_view(i) = actMeta.twistTableDv_.h_view(turbId_, i);
+      elemAreaDv_.h_view(i)   = actMeta.elemAreaDv_.h_view(turbId_, i);
     }
     
     // extract the directions
     for (int i=0; i<3; i++) {
-      p1zeroalphadir[i] = actMeta.p1zeroalphadir_.h_view(turbId_, i);
-      chordnormaldir[i] = actMeta.chordnormaldir_.h_view(turbId_, i);
-      spandir[i]        = actMeta.spandir_.h_view(turbId_, i);
+      p1ZeroAlphaDir[i] = actMeta.p1ZeroAlphaDir_.h_view(turbId_, i);
+      chodrNormalDir[i] = actMeta.chordNormalDir_.h_view(turbId_, i);
+      spanDir[i]        = actMeta.spanDir_.h_view(turbId_, i);
     }
 
   }
@@ -185,25 +185,25 @@ ActSimpleComputeForce::operator()(int index) const
 
   if (NaluEnv::self().parallel_rank() == turbId_) {
 
-  double twist = twist_tableDv_.h_view(localId); 
+  double twist = twistTableDv_.h_view(localId); 
 
   double ws[3] = {vel(0), vel(1), vel(2)} ; // Total wind speed
  
   // Calculate the angle of attack (AOA)
   double alpha;
   double ws2D[3];
-  AirfoilTheory2D::calculate_alpha(ws, p1zeroalphadir, 
-				   spandir, chordnormaldir, twist, 
+  AirfoilTheory2D::calculate_alpha(ws, p1ZeroAlphaDir, 
+				   spanDir, chodrNormalDir, twist, 
 				   ws2D, alpha);
 
   // set up the polar tables
   std::vector<double> aoatable;
   std::vector<double> cltable;
   std::vector<double> cdtable;
-  for (int i=0; i<Npolartable; i++) {
-    aoatable.push_back(aoa_polartableDv_.h_view(i));
-    cltable.push_back(cl_polartableDv_.h_view(i));
-    cdtable.push_back(cd_polartableDv_.h_view(i));
+  for (unsigned i=0; i<nPolarTable; i++) {
+    aoatable.push_back(aoaPolarTableDv_.h_view(i));
+    cltable.push_back(clPolarTableDv_.h_view(i));
+    cdtable.push_back(cdPolarTableDv_.h_view(i));
   }
 
   // Calculate Cl and Cd
@@ -219,7 +219,7 @@ ActSimpleComputeForce::operator()(int index) const
   
   // Calculate lift and drag forces
   double rho  = *density.data();
-  double area = elem_areaDv_.h_view(localId); 
+  double area = elemAreaDv_.h_view(localId); 
   double Q    = 0.5*rho*ws2Dnorm*ws2Dnorm;
   double lift = cl*Q*area;
   double drag = cd*Q*area;
@@ -237,9 +237,9 @@ ActSimpleComputeForce::operator()(int index) const
   }
   double liftdir[3];      // Direction of lift force
   if (ws2Dnorm > 0.0) {
-    liftdir[0] = ws2Ddir[1]*spandir[2] - ws2Ddir[2]*spandir[1]; 
-    liftdir[1] = ws2Ddir[2]*spandir[0] - ws2Ddir[0]*spandir[2]; 
-    liftdir[2] = ws2Ddir[0]*spandir[1] - ws2Ddir[1]*spandir[0]; 
+    liftdir[0] = ws2Ddir[1]*spanDir[2] - ws2Ddir[2]*spanDir[1]; 
+    liftdir[1] = ws2Ddir[2]*spanDir[0] - ws2Ddir[0]*spanDir[2]; 
+    liftdir[2] = ws2Ddir[0]*spanDir[1] - ws2Ddir[1]*spanDir[0]; 
   } else {
     liftdir[0] = 0.0; 
     liftdir[1] = 0.0; 
@@ -267,28 +267,28 @@ void
 AirfoilTheory2D::calculate_alpha(
     double ws[],                 
     const double zeroalphadir[], 
-    const double spandir[],      
-    const double chordnormaldir[],
+    const double spanDir[],      
+    const double chodrNormalDir[],
     double twist, 
     double ws2D[],   
     double &alpha) 
 {
-  // Project WS onto 2D plane defined by zeroalpahdir and chordnormaldir
-  double WSspan = ws[0]*spandir[0] + ws[1]*spandir[1] + ws[2]*spandir[2];
-  ws2D[0] = ws[0] - WSspan*spandir[0];
-  ws2D[1] = ws[1] - WSspan*spandir[1];
-  ws2D[2] = ws[2] - WSspan*spandir[2];
+  // Project WS onto 2D plane defined by zeroalpahdir and chodrNormalDir
+  double WSspan = ws[0]*spanDir[0] + ws[1]*spanDir[1] + ws[2]*spanDir[2];
+  ws2D[0] = ws[0] - WSspan*spanDir[0];
+  ws2D[1] = ws[1] - WSspan*spanDir[1];
+  ws2D[2] = ws[2] - WSspan*spanDir[2];
 
-  // Project WS2D onto zeroalphadir and chordnormaldir
+  // Project WS2D onto zeroalphadir and chodrNormalDir
   double WStan = 
     ws2D[0]*zeroalphadir[0] + 
     ws2D[1]*zeroalphadir[1] +  
     ws2D[2]*zeroalphadir[2] ;
   
   double WSnormal = 
-    ws2D[0]*chordnormaldir[0] + 
-    ws2D[1]*chordnormaldir[1] + 
-    ws2D[2]*chordnormaldir[2] ;
+    ws2D[0]*chodrNormalDir[0] + 
+    ws2D[1]*chodrNormalDir[1] + 
+    ws2D[2]*chodrNormalDir[2] ;
   
   double alphaNoTwist = atan2(WSnormal, WStan)*180.0/M_PI;
 
@@ -297,10 +297,10 @@ AirfoilTheory2D::calculate_alpha(
 
 void
 ActSimpleComputeThrustInnerLoop::operator()(
-  const uint64_t pointId,
-  const double* nodeCoords,
+  const uint64_t ,
+  const double* ,
   double* sourceTerm,
-  const double dual_vol,
+  const double ,
   const double scvIp) const
 {
 
@@ -310,7 +310,7 @@ ActSimpleComputeThrustInnerLoop::operator()(
     int turbId = NaluEnv::self().parallel_rank();
     auto thrust = Kokkos::subview(actBulk_.turbineThrust_, turbId, Kokkos::ALL);
 
-  double r[3], rPerpShaft[3], forceTerm[3];
+  double forceTerm[3];
 
   for (int i = 0; i < 3; i++) {
     forceTerm[i] = sourceTerm[i]*scvIp;

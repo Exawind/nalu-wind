@@ -67,15 +67,15 @@ public:
     std::vector<double> chord_table_;
     std::vector<double> twist_table_;
     std::vector<double> elem_area_;
-    Coordinates p1zeroalphadir_;         // Directon of zero alpha at p1
-    Coordinates chordnormaldir_;         // Direction normal to chord
-    Coordinates spandir_;                // Direction in the span
+    Coordinates p1ZeroAlphaDir_;         // Directon of zero alpha at p1
+    Coordinates chordNormalDir_;         // Direction normal to chord
+    Coordinates spanDir_;                // Direction in the span
     // For the polars
     std::vector<double> aoa_polartable_;
     std::vector<double> cl_polartable_;
     std::vector<double> cd_polartable_;
     bool isSimpleBlade_;
-    size_t runOnProc_;
+    int runOnProc_;
     size_t bladeId_;
 };
 
@@ -120,76 +120,6 @@ public:
     double gasDensity_;
     Coordinates windSpeed_;
 };
-
-
-// LCC: UPDATE THIS DOC
-/** The ActuatorFAST class couples Nalu with the third party library OpenFAST
- for actuator simulations of wind turbines
- *
- * OpenFAST (https://nwtc.nrel.gov/FAST) available from
- https://github.com/OpenFAST/openfast is
- * a aero-hydro-servo-elastic tool to model wind turbine developed by the
- * National Renewable Energy Laboratory (NREL). The ActuatorFAST class will help
- Nalu
- * effectively act as an inflow module to OpenFAST by supplying the velocity
- field information.
- * The effect of the turbine on the flow field is modeled using the actuator
- approach.
- * The force exerted by the wind turbine on the flow field is lumpled into a set
- of body forces
- * at a discrete set of actuator points. This class spreads the the body force
- at each actuator
- * point using a Gaussian function.
-
- * 1) During the load phase - the turbine data from the yaml file is read and
- stored in an
- *    object of the ``fast::fastInputs`` class
-
- * 2) During the initialize phase - The processor containing the hub of each
- turbine is found
- *    through a search and assigned to be the one controlling OpenFAST for that
- turbine. All
- *    processors controlling > 0 turbines initialize OpenFAST, populate the map
- of ``ActuatorPointInfo``
- *    and initialize element searches for all the actuator points associated
- with the turbines. For every actuator point,
- *    the elements within a specified search radius are found and stored in the
- corresponding object of the
- *    ``ActuatorPointInfo`` class.
- *
- * 3) Elements are ghosted to the owning point rank. We tried the opposite
- approach of
- *    ghosting the actuator points to the processor owning the elements. The
- second approach
- *    was found to perform poorly compared to the first method.
- *
- * 4) A time lagged simple FSI model is used to interface Nalu with the turbine
- model:
- *    + The velocity at time step at time step 'n' is sampled at the actuator
- points and sent
- *       to OpenFAST
- *    + OpenFAST advances the turbines upto the next Nalu time step 'n+1'
- *    + The body forces at the actuator points are converted to the source terms
- of the momentum
- *      equation to advance Nalu to the next time step 'n+1'.
- *
- * 5) During the execute phase called every time step, we sample the velocity at
- each actuator
- *    point and pass it to OpenFAST. All the OpenFAST turbine models are
- advanced upto Nalu's
- *    next time step to get the body forces at the actuator points. We then
- iterate over the
- *    ``ActuatorPointInfoMap`` to assemble source terms. For each node
- \f$n\f$within the
- *    search radius of an actuator point \f$k\f$, the
- ``spread_actuator_force_to_node_vec``
- *    function calculates the effective lumped body force by multiplying the
- actuator force
- *    with the Gaussian projection at the node as \f$F_i^n = g(\vec{r}_i^n) \,
- F_i^k\f$.
- *
- *
-*/
 
 class ActuatorSimple : public Actuator
 {
@@ -253,11 +183,11 @@ public:
 	 std::vector<double> &coord, 
 	 const Coordinates &p1,  
 	 const Coordinates &p2, 
-	 const int &Npts, const int &iNode);
+	 const int &nPts, const int &iNode);
 
     // Make sure vec is of length N
     std::vector<double> extend_double_vector(
-	std::vector<double> vec, const int N);
+	std::vector<double> vec, const unsigned N);
 
     // The the coordinates of individual points on the blade
     double get_blade_chord(
@@ -269,7 +199,7 @@ public:
         std::vector<double> chord_table, 
 	const Coordinates &p1,  
 	const Coordinates &p2,
-	const int &Npts);
+	const int &nPts);
 
     // centroid of the element
     void compute_elem_centroid(

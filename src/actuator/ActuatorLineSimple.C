@@ -79,7 +79,6 @@ ActuatorLineSimple::execute_class_specific(
     // actuator line info object of interest
     auto infoObject =
       dynamic_cast<ActuatorSimplePointInfo*>(iterPoint.second.get());
-    int np = static_cast<int>(iterPoint.first);
     if (infoObject == NULL) {
       throw std::runtime_error("Object in ActuatorPointInfo is not the correct "
                                "type.  Should be ActuatorSimplePointInfo.");
@@ -102,13 +101,13 @@ ActuatorLineSimple::execute_class_specific(
     // Calculate alpha
     double      twist          = bladeInfo->twist_table_[iNode];
     double      area           = bladeInfo->elem_area_[iNode];
-    Coordinates zeroalphadir   = bladeInfo->p1zeroalphadir_;
-    Coordinates chordnormaldir = bladeInfo->chordnormaldir_;
-    Coordinates spandir        = bladeInfo->spandir_;
+    Coordinates zeroalphadir   = bladeInfo->p1ZeroAlphaDir_;
+    Coordinates chodrNormalDir = bladeInfo->chordNormalDir_;
+    Coordinates spanDir        = bladeInfo->spanDir_;
     double      alpha          = 0.0;
 
     Coordinates ws2D;
-    calculate_alpha(windSpeed, zeroalphadir, spandir, chordnormaldir,
+    calculate_alpha(windSpeed, zeroalphadir, spanDir, chodrNormalDir,
 		    twist, alpha, ws2D);
 
     // -- Calculate ws_pointForce --
@@ -151,9 +150,9 @@ ActuatorLineSimple::execute_class_specific(
 
     Coordinates liftdir;  // Direction of lift force
     if (ws2Dnorm > 0.0) {
-      liftdir.x_ = ws2Ddir.y_*spandir.z_ - ws2Ddir.z_*spandir.y_; 
-      liftdir.y_ = ws2Ddir.z_*spandir.x_ - ws2Ddir.x_*spandir.z_; 
-      liftdir.z_ = ws2Ddir.x_*spandir.y_ - ws2Ddir.y_*spandir.x_; 
+      liftdir.x_ = ws2Ddir.y_*spanDir.z_ - ws2Ddir.z_*spanDir.y_; 
+      liftdir.y_ = ws2Ddir.z_*spanDir.x_ - ws2Ddir.x_*spanDir.z_; 
+      liftdir.z_ = ws2Ddir.x_*spanDir.y_ - ws2Ddir.y_*spanDir.x_; 
     } else {
       liftdir.x_ = 0.0; 
       liftdir.y_ = 0.0; 
@@ -208,28 +207,28 @@ void
 ActuatorLineSimple::calculate_alpha(
     Coordinates ws, 
     Coordinates zeroalphadir, 
-    Coordinates spandir,
-    Coordinates chordnormaldir, 
+    Coordinates spanDir,
+    Coordinates chodrNormalDir, 
     double twist,
     double &alpha,
     Coordinates &ws2D)
 {
-  // Project WS onto 2D plane defined by zeroalpahdir and chordnormaldir
-  double WSspan = ws.x_*spandir.x_ + ws.y_*spandir.y_ + ws.z_*spandir.z_;
-  ws2D.x_ = ws.x_ - WSspan*spandir.x_;
-  ws2D.y_ = ws.y_ - WSspan*spandir.y_;
-  ws2D.z_ = ws.z_ - WSspan*spandir.z_;
+  // Project WS onto 2D plane defined by zeroalpahdir and chodrNormalDir
+  double WSspan = ws.x_*spanDir.x_ + ws.y_*spanDir.y_ + ws.z_*spanDir.z_;
+  ws2D.x_ = ws.x_ - WSspan*spanDir.x_;
+  ws2D.y_ = ws.y_ - WSspan*spanDir.y_;
+  ws2D.z_ = ws.z_ - WSspan*spanDir.z_;
 
-  // Project WS2D onto zeroalphadir and chordnormaldir
+  // Project WS2D onto zeroalphadir and chodrNormalDir
   double WStan = 
     ws2D.x_*zeroalphadir.x_ + 
     ws2D.y_*zeroalphadir.y_ +  
     ws2D.z_*zeroalphadir.z_ ;
   
   double WSnormal = 
-    ws2D.x_*chordnormaldir.x_ + 
-    ws2D.y_*chordnormaldir.y_ + 
-    ws2D.z_*chordnormaldir.z_ ;
+    ws2D.x_*chodrNormalDir.x_ + 
+    ws2D.y_*chodrNormalDir.y_ + 
+    ws2D.z_*chodrNormalDir.z_ ;
   
 
   double alphaNoTwist = atan2(WSnormal, WStan)*180.0/M_PI;

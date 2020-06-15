@@ -34,28 +34,28 @@ struct ActuatorMetaSimple : public ActuatorMeta
   ActScalarIntDv  num_force_pts_blade_;
   ActVectorDblDv  p1_;  // Start of blade
   ActVectorDblDv  p2_;  // End of blade
-  ActVectorDblDv  p1zeroalphadir_;         // Directon of zero alpha at p1
-  ActVectorDblDv  chordnormaldir_;         // Direction normal to chord
-  ActVectorDblDv  spandir_;                // Direction in the span
+  ActVectorDblDv  p1ZeroAlphaDir_;         // Directon of zero alpha at p1
+  ActVectorDblDv  chordNormalDir_;         // Direction normal to chord
+  ActVectorDblDv  spanDir_;                // Direction in the span
     
   // Kokkos quantities
   // for the blade definitions
   std::size_t      max_num_force_pts_blade_;
   Act2DArrayDblDv  chord_tableDv_;
-  Act2DArrayDblDv  twist_tableDv_;
-  Act2DArrayDblDv  elem_areaDv_;
+  Act2DArrayDblDv  twistTableDv_;
+  Act2DArrayDblDv  elemAreaDv_;
   // for the polars
-  std::size_t      max_polartable_size_;
-  ActScalarIntDv   polartable_size_;
-  Act2DArrayDblDv  aoa_polartableDv_;
-  Act2DArrayDblDv  cl_polartableDv_;
-  Act2DArrayDblDv  cd_polartableDv_;
+  std::size_t      maxPolarTableSize_;
+  ActScalarIntDv   polarTableSize_;
+  Act2DArrayDblDv  aoaPolarTableDv_;
+  Act2DArrayDblDv  clPolarTableDv_;
+  Act2DArrayDblDv  cdPolarTableDv_;
 
 };
 
 struct ActuatorBulkSimple : public ActuatorBulk
 {
-  ActuatorBulkSimple(const ActuatorMetaSimple& actMeta, double naluTimeStep);
+  ActuatorBulkSimple(const ActuatorMetaSimple& actMeta);
 
   Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy();
 

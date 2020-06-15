@@ -1037,8 +1037,7 @@ Realm::setup_post_processing_algorithms()
   if (NULL != actuatorMetaSimple_)
   {
     NaluEnv::self().naluOutputP0() << "Initializing actuatorBulkSimple_"<< std::endl; // LCCOUT                                            
-    actuatorBulkSimple_ = make_unique<ActuatorBulkSimple>(*actuatorMetaSimple_.get(),
-                          get_time_step_from_file());
+    actuatorBulkSimple_ = make_unique<ActuatorBulkSimple>(*actuatorMetaSimple_.get());
   }
 
 

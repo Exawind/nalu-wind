@@ -82,11 +82,11 @@ ActuatorLineSimpleNGP::update()
     p1[j] = actMeta_.p1_.h_view(actBulk_.localTurbineId_,j);
     p2[j] = actMeta_.p2_.h_view(actBulk_.localTurbineId_,j);
   }
-  int Npts=actMeta_.num_force_pts_blade_.h_view(actBulk_.localTurbineId_);
+  int nPts=actMeta_.num_force_pts_blade_.h_view(actBulk_.localTurbineId_);
   // -- functor to update points -- 
   Kokkos::parallel_for(
     "updatePointLocationsActuatorNgpSimple", fastRangePolicy,
-    ActSimpleUpdatePoints(actBulk_, Npts, p1, p2));
+    ActSimpleUpdatePoints(actBulk_, nPts, p1, p2));
   actuator_utils::reduce_view_on_host(pointReduce);
 #endif
 
