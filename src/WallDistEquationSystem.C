@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "WallDistEquationSystem.h"
 
 #include "AssembleWallDistNonConformalAlgorithm.h"
@@ -66,29 +65,70 @@
 namespace sierra {
 namespace nalu {
 
+void
+ComputeDistanceToSurface::register_fields()
+{
+  for (auto* part : interior_) {
+    eqsys.register_nodal_fields(part);
+  }
+}
+
+void
+ComputeDistanceToSurface::create_algorithms()
+{
+  for (auto* part : interior_) {
+    eqsys.register_interior_algorithm(part);
+  }
+
+  for (auto* part : bc_) {
+    if (part->name() == surface_name_) {
+      for (auto* subpart : part->subsets()) {
+        eqsys.register_disting_surface(subpart);
+      }
+    } else {
+      for (auto* subpart : part->subsets()) {
+        eqsys.register_nodal_grad_algorithm_on_part(subpart);
+      }
+    }
+  }
+}
+
+const ScalarFieldType&
+ComputeDistanceToSurface::compute()
+{
+  eqsys.initialize();
+  eqsys.initial_work();
+  return *meta_.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK,
+    WallDistEquationSystem::min_wall_distance_name(surface_name_));
+}
+
 WallDistEquationSystem::WallDistEquationSystem(
-  EquationSystems& eqSystems)
-  : EquationSystem(eqSystems, "WallDistEQS", "ndtw"),
-    nodalGradAlgDriver_(realm_, "dwalldistdx"),
-    managePNG_(realm_.get_consistent_mass_matrix_png("ndtw"))
+  EquationSystems& eqSystems, std::string wallname)
+  : EquationSystem(eqSystems, "WallDistEQS" + wallname, "ndtw"),
+    nodalGradAlgDriver_(realm_, dphidx_name(wallname)),
+    managePNG_(realm_.get_consistent_mass_matrix_png("ndtw")),
+    wallName_(wallname)
 {
   if (managePNG_)
-    throw std::runtime_error("Consistent mass matrix PNG is not available for WallDistEquationSystem");
+    throw std::runtime_error(
+      "Consistent mass matrix PNG is not available for WallDistEquationSystem");
 
   auto solverName = eqSystems.get_solver_block_name("ndtw");
-  LinearSolver* solver = realm_.root()->linearSolvers_->create_solver(
-    solverName, EQ_WALL_DISTANCE);
+  LinearSolver* solver =
+    realm_.root()->linearSolvers_->create_solver(solverName, EQ_WALL_DISTANCE);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   NaluEnv::self().naluOutputP0()
     << "Edge projected nodal gradient for minimum distance to wall: "
     << edgeNodalGradient_ << std::endl;
 
-  realm_.push_equation_to_systems(this);
+  if (wallname == "") {
+    realm_.push_equation_to_systems(this);
+  }
 }
 
-WallDistEquationSystem::~WallDistEquationSystem()
-{}
+WallDistEquationSystem::~WallDistEquationSystem() {}
 
 void
 WallDistEquationSystem::load(const YAML::Node& node)
@@ -96,64 +136,63 @@ WallDistEquationSystem::load(const YAML::Node& node)
   EquationSystem::load(node);
 
   get_if_present(node, "update_frequency", updateFreq_, updateFreq_);
-  get_if_present(node, "force_init_on_restart", forceInitOnRestart_, forceInitOnRestart_);
+  get_if_present(
+    node, "force_init_on_restart", forceInitOnRestart_, forceInitOnRestart_);
 }
 
 void
-WallDistEquationSystem::initial_work(){
+WallDistEquationSystem::initial_work()
+{
   EquationSystem::initial_work();
 
   solve_and_update();
 }
 
 void
-WallDistEquationSystem::register_nodal_fields(
-  stk::mesh::Part* part)
+WallDistEquationSystem::register_nodal_fields(stk::mesh::Part* part)
 {
   auto& meta = realm_.meta_data();
   const int nDim = meta.spatial_dimension();
 
   wallDistPhi_ = &(meta.declare_field<ScalarFieldType>(
-                     stk::topology::NODE_RANK, "wall_distance_phi"));
+    stk::topology::NODE_RANK, wall_distance_phi_name(wallName_)));
   stk::mesh::put_field_on_mesh(*wallDistPhi_, *part, nullptr);
 
   dphidx_ = &(meta.declare_field<VectorFieldType>(
-                stk::topology::NODE_RANK, "dwalldistdx"));
+    stk::topology::NODE_RANK, dphidx_name(wallName_)));
   stk::mesh::put_field_on_mesh(*dphidx_, *part, nDim, nullptr);
 
   wallDistance_ = &(meta.declare_field<ScalarFieldType>(
-                  stk::topology::NODE_RANK, "minimum_distance_to_wall"));
+    stk::topology::NODE_RANK, min_wall_distance_name(wallName_)));
   stk::mesh::put_field_on_mesh(*wallDistance_, *part, nullptr);
 
   coordinates_ = &(meta.declare_field<VectorFieldType>(
-                     stk::topology::NODE_RANK, realm_.get_coordinates_name()));
+    stk::topology::NODE_RANK, realm_.get_coordinates_name()));
   stk::mesh::put_field_on_mesh(*coordinates_, *part, nDim, nullptr);
 
-  const int numVolStates = realm_.does_mesh_move() ? realm_.number_of_states() : 1;
+  const int numVolStates =
+    realm_.does_mesh_move() ? realm_.number_of_states() : 1;
   dualNodalVolume_ = &(meta.declare_field<ScalarFieldType>(
-                         stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
+    stk::topology::NODE_RANK, "dual_nodal_volume", numVolStates));
   stk::mesh::put_field_on_mesh(*dualNodalVolume_, *part, nullptr);
 }
 
 void
-WallDistEquationSystem::register_edge_fields(
-  stk::mesh::Part* part)
+WallDistEquationSystem::register_edge_fields(stk::mesh::Part* part)
 {
   auto& meta = realm_.meta_data();
 
   if (realm_.realmUsesEdges_) {
     const int nDim = meta.spatial_dimension();
     edgeAreaVec_ = &(meta.declare_field<VectorFieldType>(
-                       stk::topology::EDGE_RANK, "edge_area_vector"));
+      stk::topology::EDGE_RANK, "edge_area_vector"));
     stk::mesh::put_field_on_mesh(*edgeAreaVec_, *part, nDim, nullptr);
   }
 }
 
 void
 WallDistEquationSystem::register_element_fields(
-  stk::mesh::Part* part,
-  const stk::topology&
-)
+  stk::mesh::Part* part, const stk::topology&)
 {
   if (realm_.query_for_overset()) {
     auto& meta = realm_.meta_data();
@@ -164,8 +203,7 @@ WallDistEquationSystem::register_element_fields(
 }
 
 void
-WallDistEquationSystem::register_interior_algorithm(
-  stk::mesh::Part *part)
+WallDistEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
 {
   const AlgorithmType algType = INTERIOR;
 
@@ -185,7 +223,7 @@ WallDistEquationSystem::register_interior_algorithm(
     auto it = solverAlgDriver_->solverAlgMap_.find(algType);
     if (it == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = nullptr;
-        theAlg = new WallDistEdgeSolverAlg(realm_, part, this);
+      theAlg = new WallDistEdgeSolverAlg(realm_, part, this);
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
     } else {
       it->second->partVec_.push_back(part);
@@ -196,8 +234,8 @@ WallDistEquationSystem::register_interior_algorithm(
     AssembleElemSolverAlgorithm* solverAlg = nullptr;
     bool solverAlgWasBuilt = false;
 
-    std::tie(solverAlg, solverAlgWasBuilt) = build_or_add_part_to_solver_alg
-      (*this, *part, solverAlgMap);
+    std::tie(solverAlg, solverAlgWasBuilt) =
+      build_or_add_part_to_solver_alg(*this, *part, solverAlgMap);
 
     if (solverAlgWasBuilt) {
       ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
@@ -221,44 +259,41 @@ WallDistEquationSystem::register_interior_algorithm(
 }
 
 void
+WallDistEquationSystem::register_nodal_grad_algorithm_on_part(
+  stk::mesh::Part* part)
+{
+  auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
+  auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
+
+  // Set up dphi/dx calculation algorithms
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    BOUNDARY, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
+}
+
+void
 WallDistEquationSystem::register_inflow_bc(
   stk::mesh::Part* part,
   const stk::topology&,
   const InflowBoundaryConditionData&)
 {
-  const AlgorithmType algType = INFLOW;
-
-  auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
-  auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
-
-  // Set up dphi/dx calculation algorithms
-  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
+  register_nodal_grad_algorithm_on_part(part);
 }
 
 void
 WallDistEquationSystem::register_open_bc(
-  stk::mesh::Part* part,
-  const stk::topology&,
-  const OpenBoundaryConditionData&)
+  stk::mesh::Part* part, const stk::topology&, const OpenBoundaryConditionData&)
 {
-  const AlgorithmType algType = OPEN;
-
-  auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
-  auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
-
-  // Set up dphi/dx calculation algorithms
-  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
+  register_nodal_grad_algorithm_on_part(part);
 }
 
 void
-WallDistEquationSystem::register_wall_bc(
-  stk::mesh::Part* part,
-  const stk::topology&,
-  const WallBoundaryConditionData& wallBCData)
+WallDistEquationSystem::register_disting_surface(
+  stk::mesh::Part* part, bool ablwallfunc)
 {
   const AlgorithmType algType = WALL;
+
+  ThrowRequire(wallDistPhi_);
+  ThrowRequire(dphidx_);
 
   auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
   auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
@@ -269,27 +304,23 @@ WallDistEquationSystem::register_wall_bc(
 
   auto& meta = realm_.meta_data();
   ScalarFieldType& theBCField = meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "wall_distance_phi_bc");
+    stk::topology::NODE_RANK, wall_distance_phi_bc_name(wallName_));
   stk::mesh::put_field_on_mesh(theBCField, *part, nullptr);
   std::vector<double> userSpec(1, 0.0);
   AuxFunction* theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
-  AuxFunctionAlgorithm* auxAlg =
-    new AuxFunctionAlgorithm(realm_, part, &theBCField, theAuxFunc,
-                             stk::topology::NODE_RANK);
+  AuxFunctionAlgorithm* auxAlg = new AuxFunctionAlgorithm(
+    realm_, part, &theBCField, theAuxFunc, stk::topology::NODE_RANK);
   bcDataAlg_.push_back(auxAlg);
 
   // For terrain BC, the wall distance calculations must not compute the
   // distance normal to this wall, but must compute distance from the nearest
   // turbine, so we will disable Dirichlet for the terrain walls.
-  WallUserData userData = wallBCData.userData_;
-  const bool ablWallFunctionActivated = userData.ablWallFunctionApproach_;
-
   // Apply Dirichlet BC on non-ABL wall boundaries
-  if (!ablWallFunctionActivated) {
+  if (!ablwallfunc) {
     auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
     if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
-      DirichletBC* theAlg
-        = new DirichletBC(realm_, this, part, &wPhiNp1, &theBCField, 0, 1);
+      DirichletBC* theAlg =
+        new DirichletBC(realm_, this, part, &wPhiNp1, &theBCField, 0, 1);
       solverAlgDriver_->solverDirichAlgMap_[algType] = theAlg;
     } else {
       it->second->partVec_.push_back(part);
@@ -298,25 +329,29 @@ WallDistEquationSystem::register_wall_bc(
 }
 
 void
+WallDistEquationSystem::register_wall_bc(
+  stk::mesh::Part* part,
+  const stk::topology&,
+  const WallBoundaryConditionData& wallBCData)
+{
+
+  WallUserData userData = wallBCData.userData_;
+  const bool ablWallFunctionActivated = userData.ablWallFunctionApproach_;
+  register_disting_surface(part, ablWallFunctionActivated);
+}
+
+void
 WallDistEquationSystem::register_symmetry_bc(
   stk::mesh::Part* part,
   const stk::topology&,
   const SymmetryBoundaryConditionData&)
 {
-  const AlgorithmType algType = SYMMETRY;
-
-  auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
-  auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
-
-  // Set up dphi/dx calculation algorithms
-  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
+  register_nodal_grad_algorithm_on_part(part);
 }
 
 void
 WallDistEquationSystem::register_non_conformal_bc(
-  stk::mesh::Part* part,
-  const stk::topology&)
+  stk::mesh::Part* part, const stk::topology&)
 {
   const auto algType = NON_CONFORMAL;
 
@@ -332,11 +367,11 @@ WallDistEquationSystem::register_non_conformal_bc(
   // LHS contributions at the non-conformal interface
   {
     auto it = solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( it == solverAlgDriver_->solverAlgMap_.end()) {
-      auto* theAlg = new AssembleWallDistNonConformalAlgorithm(realm_, part, this);
+    if (it == solverAlgDriver_->solverAlgMap_.end()) {
+      auto* theAlg =
+        new AssembleWallDistNonConformalAlgorithm(realm_, part, this);
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
+    } else {
       it->second->partVec_.push_back(part);
     }
   }
@@ -380,9 +415,10 @@ WallDistEquationSystem::reinitialize_linear_system()
   if (it != realm_.root()->linearSolvers_->solvers_.end())
     delete it->second;
 
-  auto solverName = realm_.equationSystems_.get_solver_block_name("ndtw");
-  LinearSolver* solver = realm_.root()->linearSolvers_->create_solver(
-    solverName, eqID);
+  auto solverName =
+    realm_.equationSystems_.get_solver_block_name("ndtw");
+  LinearSolver* solver =
+    realm_.root()->linearSolvers_->create_solver(solverName, eqID);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   solverAlgDriver_->initialize_connectivity();
@@ -392,11 +428,12 @@ WallDistEquationSystem::reinitialize_linear_system()
 void
 WallDistEquationSystem::solve_and_update()
 {
-  // Only execute this equation system if the mesh is changing or upon initialization
-  if (!isInit_ &&
-      !(realm_.has_mesh_motion() &&
-        ((realm_.get_time_step_count() % updateFreq_) == 0) &&
-        (realm_.currentNonlinearIteration_ == 1)))
+  // Only execute this equation system if the mesh is changing or upon
+  // initialization
+  if (
+    !isInit_ && !(realm_.has_mesh_motion() &&
+                  ((realm_.get_time_step_count() % updateFreq_) == 0) &&
+                  (realm_.currentNonlinearIteration_ == 1)))
     return;
 
   if (isInit_) {
@@ -414,7 +451,7 @@ WallDistEquationSystem::solve_and_update()
   // inform meshes about the field when using decoupled overset
   const int numOversetIters =
     decoupledOverset_ ? std::max(numOversetIters_, 2) : numOversetIters_;
-  for (int k=0; k< numOversetIters; k++) {
+  for (int k = 0; k < numOversetIters; k++) {
     assemble_and_solve(wallDistPhi_);
 
     if (decoupledOverset_)
@@ -440,20 +477,20 @@ WallDistEquationSystem::compute_wall_distance()
 
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
-  const auto wdistPhi = fieldMgr.get_field<double>(
-    wallDistPhi_->mesh_meta_data_ordinal());
-  const auto dphidx = fieldMgr.get_field<double>(
-    dphidx_->mesh_meta_data_ordinal());
-  auto wdist = fieldMgr.get_field<double>(
-    wallDistance_->mesh_meta_data_ordinal());
+  const auto wdistPhi =
+    fieldMgr.get_field<double>(wallDistPhi_->mesh_meta_data_ordinal());
+  const auto dphidx =
+    fieldMgr.get_field<double>(dphidx_->mesh_meta_data_ordinal());
+  auto wdist =
+    fieldMgr.get_field<double>(wallDistance_->mesh_meta_data_ordinal());
   const stk::mesh::Selector sel = stk::mesh::selectField(*wallDistPhi_);
 
   nalu_ngp::run_entity_algorithm(
-    "compute_wall_dist",
-    ngpMesh, stk::topology::NODE_RANK, sel, KOKKOS_LAMBDA(const MeshIndex& mi) {
+    "compute_wall_dist", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
       double dpdxsq = 0.0;
 
-      for (int d=0; d < nDim; ++d) {
+      for (int d = 0; d < nDim; ++d) {
         double tmp = dphidx.get(mi, d);
         dpdxsq += tmp * tmp;
       }
@@ -472,8 +509,9 @@ WallDistEquationSystem::compute_wall_distance()
   stk::mesh::communicate_field_data(bulk.aura_ghosting(), fVec);
   if (realm_.hasPeriodic_)
     realm_.periodic_delta_solution_update(wallDistance_, 1);
-  if (realm_.hasNonConformal_ &&
-      (realm_.nonConformalManager_->nonConformalGhosting_ != nullptr))
+  if (
+    realm_.hasNonConformal_ &&
+    (realm_.nonConformalManager_->nonConformalGhosting_ != nullptr))
     stk::mesh::communicate_field_data(
       *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
   if (realm_.hasOverset_)
@@ -490,8 +528,8 @@ WallDistEquationSystem::create_constraint_algorithm(
 
   auto it = solverAlgDriver_->solverConstraintAlgMap_.find(algType);
   if (it == solverAlgDriver_->solverConstraintAlgMap_.end()) {
-    AssembleOversetWallDistAlgorithm* theAlg
-      = new AssembleOversetWallDistAlgorithm(realm_, nullptr, this, theField);
+    AssembleOversetWallDistAlgorithm* theAlg =
+      new AssembleOversetWallDistAlgorithm(realm_, nullptr, this, theField);
     solverAlgDriver_->solverConstraintAlgMap_[algType] = theAlg;
   } else {
     throw std::runtime_error("WallDistEquationSystem::register_overset_bc: "
@@ -499,5 +537,5 @@ WallDistEquationSystem::create_constraint_algorithm(
   }
 }
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

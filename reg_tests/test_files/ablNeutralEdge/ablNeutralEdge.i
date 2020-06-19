@@ -53,6 +53,7 @@ realms:
         pressure: solve_cont
         enthalpy: solve_scalar
         turbulent_ke: solve_scalar
+        ndtw: solve_cont
 
       # This defines the equation systems, maximum number of inner iterations,
       # and scaled nonlinear residual tolerance.
@@ -169,6 +170,12 @@ realms:
         search_target_part: [fluid_part]
         search_method: stk_kdtree
 
+      rayleigh_damping:
+        - surface: upper
+          cmax: 0.1 # Hz
+          width: 50 # meters
+          uref: [7.250462296293199, 3.380946093925596, 0]
+
       options:
 
         # Model constants for the 1-eq k SGS model.
@@ -199,6 +206,7 @@ realms:
               - buoyancy_boussinesq
               - EarthCoriolis
               - abl_forcing
+              - rayleigh_damping_upper
             turbulent_ke:
               - rodi
 
@@ -248,6 +256,7 @@ realms:
        - enthalpy
        - temperature
        - turbulent_ke
+       - minimum_distance_to_upper
 
     # Compute spatial averages of velocity and temperature at all height levels
     # available on the ABL mesh. This is used for post-processing as well as

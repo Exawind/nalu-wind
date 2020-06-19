@@ -116,6 +116,8 @@
 
 #include "ngp_algorithms/GeometryBoundaryAlg.h"
 
+#include "WallDistEquationSystem.h"
+
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_util/environment/WallTime.hpp>
@@ -436,6 +438,9 @@ Realm::initialize()
   setup_edge_fields();
   setup_element_fields();
 
+  // create objects for computing distance to surface
+  register_surface_distance_fields();
+
   // property maps and evaluation algorithms
   setup_property();
 
@@ -453,6 +458,9 @@ Realm::initialize()
 
   // set global variables that have not yet been set
   initialize_global_variables();
+
+  // create objects for computing distance to surface
+  setup_surface_distance_calculations();
 
   // Populate_mesh fills in the entities (nodes/elements/etc) and
   // connectivities, but no field-data. Field-data is not allocated yet.
@@ -558,6 +566,9 @@ Realm::initialize()
   set_hypre_global_id();
 
   equationSystems_.initialize();
+
+  // create objects for computing distance to surface
+  perform_surface_distance_calculations();
 
   // check job run size after mesh creation, linear system initialization
   check_job(false);
@@ -4731,6 +4742,46 @@ int Realm::polynomial_order() const
 bool Realm::matrix_free() const
 {
   return matrixFree_;
+}
+
+void Realm::register_surface_distance_fields()
+{
+  stk::mesh::PartVector nonPeriodicParts;
+  for (size_t ibc = 0; ibc < boundaryConditions_.size(); ++ibc) {
+    BoundaryCondition& bc = *boundaryConditions_[ibc];
+    if (bc.theBcType_ != PERIODIC_BC) {
+      nonPeriodicParts.push_back(meta_data().get_part(physics_part_name(bc.targetName_)));
+    }
+  }
+
+  stk::mesh::PartVector interiorParts;
+  for (auto name : get_physics_target_names()) {
+    interiorParts.push_back(meta_data().get_part(name));
+  }
+
+  auto rdParams = solutionOptions_->get_rayleigh_damping_params();
+  for (const auto& nameParamsPair : rdParams) {
+    auto surf = nameParamsPair.first;
+    ThrowRequireMsg(meta_data().get_part(surf), "No part " + surf + "for damping");
+    auto dist = std::make_shared<ComputeDistanceToSurface>(*this,
+       surf, interiorParts, nonPeriodicParts);
+    surfDists_.push_back(dist);
+    surfDists_.back()->register_fields();
+  }
+}
+
+void Realm::setup_surface_distance_calculations()
+{
+  for (auto dist : surfDists_) {
+    dist->create_algorithms();
+  }
+}
+
+void Realm::perform_surface_distance_calculations()
+{
+  for (auto dist : surfDists_) {
+    dist->compute();
+  }
 }
 
 Teuchos::ParameterList Realm::solver_parameters(std::string name) const

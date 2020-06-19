@@ -14,6 +14,7 @@
 
 #include <Enums.h>
 
+#include <Kokkos_Core.hpp>
 // standard c++
 #include <string>
 #include <map>
@@ -45,6 +46,13 @@ enum ProjTScaleType {
   TSCALE_DEFAULT = 0,  //!< Original Nalu implementation
   TSCALE_UDIAGINV = 1, //!< 1/diag(A_p) implementation
   NUM_TSCALE_TYPES
+};
+
+struct RayleighDampingParameters
+{
+   double cmax{1};
+   double width{1};
+   Kokkos::Array<double, 3> uref{{1,0,0}};
 };
 
 class SolutionOptions
@@ -99,6 +107,22 @@ public:
   bool get_noc_usage(const std::string &dofName) const;
 
   bool has_set_boussinesq_time_scale();
+
+  RayleighDampingParameters get_rayleigh_damping_params(std::string name) const
+  {
+    return rdParams_.at(name);
+  }
+
+  std::map<std::string, RayleighDampingParameters> get_rayleigh_damping_params() const
+  {
+    return rdParams_;
+  }
+
+  bool has_rayleigh_damping_params() const
+  {
+    return !rdParams_.empty();
+  }
+
 
   double hybridDefault_;
   double alphaDefault_;
@@ -215,6 +239,8 @@ public:
   bool newHO_;
 
   bool resetTAMSAverages_;
+
+  std::map<std::string, RayleighDampingParameters> rdParams_;
 };
 
 } // namespace nalu

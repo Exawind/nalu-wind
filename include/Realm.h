@@ -89,9 +89,11 @@ struct ActuatorBulkSimple;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
 
-class TensorProductQuadratureRule;
-class LagrangeBasis;
 class PromotedElementIO;
+
+class ComputeDistanceToSurface;
+
+
 
 /** Representation of a computational domain and physics equations solved on
  * this domain.
@@ -135,6 +137,11 @@ class Realm {
   void enforce_bc_on_exposed_faces();
   void setup_initial_conditions();
   void setup_property();
+
+  void register_surface_distance_fields();
+  void setup_surface_distance_calculations();
+  void perform_surface_distance_calculations();
+
   void extract_universal_constant( 
     const std::string name, double &value, const bool useDefault);
   void augment_property_map(
@@ -648,6 +655,8 @@ class Realm {
 
   stk::mesh::PartVector allPeriodicInteractingParts_;
   stk::mesh::PartVector allNonConformalInteractingParts_;
+
+  std::vector<std::shared_ptr<ComputeDistanceToSurface>> surfDists_;
 
   bool isFinalOuterIter_{false};
 

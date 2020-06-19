@@ -121,6 +121,7 @@
 #include "node_kernels/MomentumGclSrcNodeKernel.h"
 #include "node_kernels/ContinuityGclNodeKernel.h"
 #include "node_kernels/ContinuityMassBDFNodeKernel.h"
+#include "node_kernels/MomentumRayleighDampingNodeKernel.h"
 
 // ngp
 #include "ngp_algorithms/ABLWallFrictionVelAlg.h"
@@ -227,6 +228,7 @@
 #include <stk_mesh/base/SkinMesh.hpp>
 #include <stk_mesh/base/Comm.hpp>
 #include "stk_mesh/base/NgpMesh.hpp"
+
 
 // stk_topo
 #include <stk_topology/topology.hpp>
@@ -1130,7 +1132,6 @@ MomentumEquationSystem::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*g, *part, nullptr);
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -1430,6 +1431,12 @@ MomentumEquationSystem::register_interior_algorithm(
         else if ((srcName == "coriolis") || (srcName == "EarthCoriolis")) {
           nodeAlg.add_kernel<MomentumCoriolisNodeKernel>(
             realm_.bulk_data(), *realm_.solutionOptions_);
+        }
+        else if (srcName.find("rayleigh_damping") != std::string::npos) {
+          auto surf = srcName.substr(srcName.find_last_of("_")+1, srcName.length());
+          auto params = realm_.solutionOptions_->get_rayleigh_damping_params(surf);
+          nodeAlg.add_kernel<MomentumRayleighDampingNodeKernel>(
+            realm_.meta_data(), params, surf);
         }
         else if (srcName == "gcl") {
           nodeAlg.add_kernel<MomentumGclSrcNodeKernel>(realm_.bulk_data());
