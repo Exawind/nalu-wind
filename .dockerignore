@@ -1,0 +1,6 @@
+.git
+examples
+reg_tests
+**/build*
+build
+wind-utils
