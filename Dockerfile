@@ -26,3 +26,4 @@ RUN (\
     )
 
 ENV PATH /opt/exawind/bin:${PATH}
+WORKDIR /run
