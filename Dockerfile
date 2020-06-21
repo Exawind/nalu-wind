@@ -14,5 +14,5 @@ RUN (\
     && cd build \
     && make -j${NUM_PROCS} \
     && export LD_LIBRARY_PATH=/opt/exawind:/usr/local/lib:${LD_LIBRARY_PATH} \
-    && ./unittestX --gtest_filter=-Actuator*.*
+    && ./unittestX --gtest_filter=-Actuator*.* \
     )
