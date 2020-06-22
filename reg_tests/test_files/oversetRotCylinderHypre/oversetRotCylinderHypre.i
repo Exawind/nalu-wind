@@ -135,7 +135,6 @@ realms:
 
     mesh_motion:
       - name: interior
-        frame: non_inertial
         mesh_parts: [ Unspecified-2-HEX ]
         motion:
          - type: rotation

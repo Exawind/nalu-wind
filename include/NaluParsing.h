@@ -314,13 +314,35 @@ struct UserFunctionInitialConditionData : public InitialCondition {
   std::map<std::string, std::vector<double> > functionParams_;
 };
 
+inline bool string_represents_positive_integer(std::string v) {
+  return !v.empty () && v.find_first_not_of("0123456789") == std::string::npos;
+} 
+
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value, T>::type get_yaml_value(const YAML::Node& v) {
+  // yaml will parse inputs with leading zeros as octals if
+  // the number is an octal, e.g. max_itertions: 0010 is
+  // equivalent to max_iterations: 8.
+  // this works around that to have 0010 equivalent to 10
+  if (string_represents_positive_integer(v.template as<std::string>())) {
+    return std::stoi(v.template as<std::string>());
+  }
+  else {
+    return v.template as<T>();
+  }
+}
+
+template <typename T>
+typename std::enable_if<!std::is_integral<T>::value, T>::type get_yaml_value(const YAML::Node& v) {
+  return v.template as<T>();
+}
+
 /// Set @param result if the @param key is present in the @param node, else set it to the given default value
 template<typename T>
 void get_if_present(const YAML::Node & node, const std::string& key, T& result, const T& default_if_not_present = T())
 {
   if (node[key]) {
-    const YAML::Node value = node[key];
-    result = value.as<T>();
+    result = get_yaml_value<T>(node[key]);
   }
   else {
     result = default_if_not_present;
@@ -332,8 +354,7 @@ template<typename T>
 void get_if_present_no_default(const YAML::Node & node, const std::string& key, T& result)
 {
   if (node[key]) {
-    const YAML::Node value = node[key];
-    result = value.as<T>();
+    result = get_yaml_value<T>(node[key]);
   }
 }
 
@@ -342,8 +363,7 @@ template<typename T>
 void get_required(const YAML::Node & node, const std::string& key, T& result)
 {
   if (node[key]) {
-    const YAML::Node value = node[key];
-    result = value.as<T>();
+    result = get_yaml_value<T>(node[key]);
   }
   else    {
     if (!NaluEnv::self().parallel_rank()) {

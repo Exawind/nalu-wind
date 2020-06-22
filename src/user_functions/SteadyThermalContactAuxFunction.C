@@ -23,7 +23,7 @@
 namespace sierra{
 namespace nalu{
 
-void execute(const SteadyThermalContactData& data, ngp::Mesh::MeshIndex mi)
+void execute(const SteadyThermalContactData& data, const stk::mesh::FastMeshIndex& mi)
 {
   const double x = data.coordinate_field.get(mi, 0);
   const double y = data.coordinate_field.get(mi, 1);

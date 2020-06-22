@@ -418,7 +418,7 @@ WallDistEquationSystem::solve_and_update()
     assemble_and_solve(wallDistPhi_);
 
     if (decoupledOverset_)
-      realm_.overset_orphan_node_field_update(wallDistPhi_, 1, 1);
+      realm_.overset_field_update(wallDistPhi_, 1, 1);
   }
 
   // projected nodal gradient
@@ -477,7 +477,9 @@ WallDistEquationSystem::compute_wall_distance()
     stk::mesh::communicate_field_data(
       *realm_.nonConformalManager_->nonConformalGhosting_, fVec);
   if (realm_.hasOverset_)
-    realm_.overset_orphan_node_field_update(wallDistance_, 1, 1);
+    realm_.overset_field_update(wallDistance_, 1, 1);
+  wdist.modify_on_host();
+  wdist.sync_to_device();
 }
 
 void

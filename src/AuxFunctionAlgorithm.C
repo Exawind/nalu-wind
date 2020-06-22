@@ -58,6 +58,7 @@ AuxFunctionAlgorithm::execute()
 
   auxFunction_->setup(time);
 
+  field_->sync_to_host();
   stk::mesh::Selector selector = stk::mesh::selectUnion(partVec_) &
     stk::mesh::selectField(*field_);
 
@@ -78,6 +79,9 @@ AuxFunctionAlgorithm::execute()
 
     auxFunction_->evaluate(coords, time, nDim, length, fieldData, fieldSize);
   }
+
+  field_->modify_on_host();
+  field_->sync_to_device();
 }
 
 } // namespace nalu

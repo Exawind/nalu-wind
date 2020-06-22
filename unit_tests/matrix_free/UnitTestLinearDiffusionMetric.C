@@ -33,7 +33,6 @@ diffusion_single_cube_hex_p()
   const int num_elems_1D = 32 / p;
   const int num_elems_3D = num_elems_1D * num_elems_1D * num_elems_1D;
 
-  constexpr auto nodes = GLL<p>::nodes;
   vector_view<p> coords("coordinates", num_elems_3D);
   scalar_view<p> alpha("alpha", num_elems_3D);
   Kokkos::parallel_for(
@@ -41,6 +40,7 @@ diffusion_single_cube_hex_p()
       for (int k = 0; k < p + 1; ++k) {
         for (int j = 0; j < p + 1; ++j) {
           for (int i = 0; i < p + 1; ++i) {
+            constexpr auto nodes = GLL<p>::nodes;
             alpha(index, k, j, i) = 1.0;
             coords(index, k, j, i, 0) = nodes[i];
             coords(index, k, j, i, 1) = nodes[j];

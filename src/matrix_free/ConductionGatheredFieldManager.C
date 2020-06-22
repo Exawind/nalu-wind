@@ -21,7 +21,7 @@
 #include "matrix_free/KokkosFramework.h"
 #include "stk_mesh/base/MetaData.hpp"
 
-#include "stk_ngp/NgpProfilingBlock.hpp"
+#include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 namespace sierra {
 namespace nalu {

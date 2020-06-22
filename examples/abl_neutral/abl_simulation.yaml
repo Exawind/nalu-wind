@@ -27,7 +27,7 @@ linear_solvers:
   kspace: 75
   output_level: 0
   recompute_preconditioner: no
-  muelu_xml_file_name: ../../reg_tests/xml/milestone.xml
+  muelu_xml_file_name: ./milestone.xml
 
 
 # Specify the differnt physics realms.  Here, we just have one for the fluid.

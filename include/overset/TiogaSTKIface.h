@@ -70,7 +70,8 @@ public:
     const std::vector<sierra::nalu::OversetFieldData>&);
 
   virtual void overset_update_field(
-    stk::mesh::FieldBase* field, int nrows = 1, int ncols = 1);
+    stk::mesh::FieldBase* field, const int nrows = 1, const int ncols = 1,
+    const bool doFinalSyncToDevice = true);
 
 private:
   TiogaSTKIface() = delete;
@@ -102,6 +103,12 @@ private:
    *  vector for later use by algorithms.
    */
   void populate_overset_info();
+
+  //! Synchronize fields before performing overset connectivity
+  void pre_connectivity_sync();
+
+  //! Synchronize modified fields after performing overset connectivity
+  void post_connectivity_sync();
 
   //! Reference to Nalu OversetManager object
   sierra::nalu::OversetManagerTIOGA& oversetManager_;

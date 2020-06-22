@@ -75,7 +75,7 @@ private:
 
 /// Check the minimum parse terms are not violated and
 /// that defaults haven't changed
-TEST_F(ActuatorParsingTest, bareMinimumParse)
+TEST_F(ActuatorParsingTest, NGP_bareMinimumParse)
 {
   try {
     auto y_actuator = create_yaml_node(inputFileLines_);

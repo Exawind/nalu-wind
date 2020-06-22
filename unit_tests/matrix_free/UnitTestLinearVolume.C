@@ -37,7 +37,6 @@ single_affine_hex_p(bool cube)
   }
   const auto det = determinant<double>(transform);
 
-  constexpr auto nodes = GLL<poly>::nodes;
   const int num_elems_1D = 32 / poly;
   const int num_elems_3D = num_elems_1D * num_elems_1D * num_elems_1D;
   vector_view<poly> coords("coordinates", num_elems_3D);
@@ -45,6 +44,7 @@ single_affine_hex_p(bool cube)
 
   Kokkos::parallel_for(
     num_elems_3D, KOKKOS_LAMBDA(int index) {
+      constexpr auto nodes = GLL<poly>::nodes;
       for (int k = 0; k < poly + 1; ++k) {
         for (int j = 0; j < poly + 1; ++j) {
           for (int i = 0; i < poly + 1; ++i) {

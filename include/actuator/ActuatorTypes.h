@@ -16,15 +16,14 @@
 namespace sierra {
 namespace nalu {
 
-#ifdef ACTUATOR_ON_DEVICE
+#ifdef KOKKOS_ENABLE_CUDA
 using ActuatorMemSpace = Kokkos::CudaSpace;
-using ActuatorMemLayout = Kokkos::LayoutLeft;
 using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;
 #else
 using ActuatorMemSpace = Kokkos::HostSpace;
-using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorExecutionSpace = Kokkos::DefaultHostExecutionSpace;
 #endif
+using ActuatorMemLayout = Kokkos::LayoutRight;
 using ActuatorFixedMemSpace = Kokkos::HostSpace;
 using ActuatorFixedMemLayout = Kokkos::LayoutRight;
 using ActuatorFixedExecutionSpace = Kokkos::DefaultHostExecutionSpace;
@@ -40,6 +39,8 @@ using ActVectorDblDv =
   Kokkos::DualView<double* [3], ActuatorMemLayout, ActuatorMemSpace>;
 using ActTensorDblDv =
   Kokkos::DualView<double* [9], ActuatorMemLayout, ActuatorMemSpace>;
+using Act2DArrayDblDv =
+  Kokkos::DualView<double**, ActuatorMemLayout, ActuatorMemSpace>;
 
 // VIEWS
 using ActScalarInt = Kokkos::View<int*, ActuatorMemLayout, ActuatorMemSpace>;
@@ -50,6 +51,8 @@ using ActVectorDbl =
   Kokkos::View<double* [3], ActuatorMemLayout, ActuatorMemSpace>;
 using ActTensorDbl =
   Kokkos::View<double* [9], ActuatorMemLayout, ActuatorMemSpace>;
+using Act2DArrayDbl =
+  Kokkos::View<double**, ActuatorMemLayout, ActuatorMemSpace>;
 
 // VIEWS FIXED TO HOST
 using ActFixRangePolicy = Kokkos::RangePolicy<ActuatorFixedExecutionSpace>;
@@ -72,14 +75,14 @@ template <typename memory_space>
 struct ActDualViewHelper
 {
   template <typename T>
-  KOKKOS_INLINE_FUNCTION auto get_local_view(T dualView) const
+  inline auto get_local_view(T dualView) const
     -> decltype(dualView.template view<memory_space>())
   {
     return dualView.template view<memory_space>();
   }
 
   template <typename T>
-  KOKKOS_INLINE_FUNCTION void touch_dual_view(T dualView)
+  inline void touch_dual_view(T dualView)
   {
     dualView.template sync<memory_space>();
     dualView.template modify<memory_space>();

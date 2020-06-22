@@ -30,8 +30,7 @@ static std::vector<std::string> nrel5MWinputs = {
   "    turbine_name: turbinator\n",
   "    epsilon: [5.0, 5.0, 5.00]\n",
   "    turb_id: 0\n",
-  "    fast_input_filename: "
-  "reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst\n",
+  "    fast_input_filename: nrel5mw.fst\n",
   "    restart_filename: blah\n",
   "    num_force_pts_blade: 10\n",
   "    num_force_pts_tower: 10\n",

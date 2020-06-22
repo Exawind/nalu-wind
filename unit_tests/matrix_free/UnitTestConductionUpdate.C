@@ -15,8 +15,7 @@
 #include <memory>
 #include <stk_mesh/base/Selector.hpp>
 #include <stk_mesh/base/Ngp.hpp>
-#include <stk_ngp/NgpFieldManager.hpp>
-#include <stk_ngp/NgpForEachEntity.hpp>
+#include <stk_mesh/base/NgpForEachEntity.hpp>
 #include <stk_topology/topology.hpp>
 #include <streambuf>
 
@@ -50,12 +49,12 @@ void
 field_add(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& active,
-  const stk::mesh::NgpConstField<double>& x,
+  const stk::mesh::NgpField<double>& x,
   stk::mesh::NgpField<double>& y)
 {
-  ngp::for_each_entity_run(
+  stk::mesh::for_each_entity_run(
     mesh, stk::topology::NODE_RANK, active,
-    KOKKOS_LAMBDA(stk::mesh::NgpMesh::MeshIndex mi) {
+    KOKKOS_LAMBDA(const stk::mesh::FastMeshIndex& mi) {
       y.get(mi, 0) += x.get(mi, 0);
     });
   y.modify_on_device();

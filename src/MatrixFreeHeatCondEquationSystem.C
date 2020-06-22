@@ -184,8 +184,8 @@ field_hadamard(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& selector,
   stk::mesh::NgpField<double>& xy,
-  const stk::mesh::NgpConstField<double>& x,
-  const stk::mesh::NgpConstField<double>& y)
+  const stk::mesh::NgpField<double>& x,
+  const stk::mesh::NgpField<double>& y)
 {
   stk::mesh::for_each_entity_run(
     mesh, stk::topology::NODE_RANK, selector,
@@ -202,10 +202,12 @@ MatrixFreeHeatCondEquationSystem::predict_state()
 {
   stk::mesh::ProfilingBlock("MatrixFreeHeatCondEquationSystem::predict_state");
 
-  const auto& current_state =
+  auto& current_state =
     get_node_field(meta_, names::temperature, stk::mesh::StateN);
   auto& predicted_state =
     get_node_field(meta_, names::temperature, stk::mesh::StateNP1);
+  current_state.sync_to_device();
+  predicted_state.sync_to_device();
   stk::mesh::for_each_entity_run(
     realm_.ngp_mesh(), stk::topology::NODE_RANK, interior_selector_,
     KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) {

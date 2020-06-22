@@ -13,7 +13,7 @@
 
 #include <AuxFunction.h>
 
-#include "stk_ngp/Ngp.hpp"
+#include "stk_mesh/base/NgpField.hpp"
 
 #include <vector>
 
@@ -26,11 +26,11 @@ struct SteadyThermalContactData
 {
   const double wave_number{1.0};
   const double amplitude{0.25};
-  const ngp::ConstField<double> coordinate_field;
-  mutable ngp::Field<double> temperature_field;
+  const stk::mesh::NgpField<double> coordinate_field;
+  mutable stk::mesh::NgpField<double> temperature_field;
 };
 
-void execute(SteadyThermalContactData& data, ngp::Mesh::MeshIndex mi);
+void execute(SteadyThermalContactData& data, const stk::mesh::FastMeshIndex& mi);
 
 class SteadyThermalContactAuxFunction : public AuxFunction
 {

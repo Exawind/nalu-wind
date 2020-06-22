@@ -4,6 +4,12 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorParsing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorSearch.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorFunctors.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorSimple.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorLineSimple.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorBulkSimple.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorFunctorsSimple.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorParsingSimple.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ActuatorExecutorsSimpleNgp.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UtilitiesActuator.C
    )
 

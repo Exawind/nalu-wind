@@ -262,8 +262,8 @@ ShearStressTransportEquationSystem::solve_and_update()
       update_and_clip();
 
       if (decoupledOverset_ && realm_.hasOverset_) {
-        realm_.overset_orphan_node_field_update(tkeEqSys_->tke_, 1, 1);
-        realm_.overset_orphan_node_field_update(sdrEqSys_->sdr_, 1, 1);
+        realm_.overset_field_update(tkeEqSys_->tke_, 1, 1);
+        realm_.overset_field_update(sdrEqSys_->sdr_, 1, 1);
       }
     }
     // compute projected nodal gradients
@@ -423,6 +423,7 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
 
       ndtw.get(mi, 0) = stk::math::max(minD, wallNormDist.get(mi, 0));
     });
+   ndtw.modify_on_device();
 
    stk::mesh::parallel_max(realm_.bulk_data(), {minDistanceToWall_});
    if (realm_.hasPeriodic_) {

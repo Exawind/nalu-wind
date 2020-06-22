@@ -37,8 +37,14 @@ actuator_parse(const YAML::Node& y_node)
                  "missing from yaml node passed to actuator_parse");
   int nTurbines = 0;
   std::string actuatorTypeName;
-  get_required(y_actuator, "n_turbines_glob", nTurbines);
   get_required(y_actuator, "type", actuatorTypeName);
+  if ((ActuatorTypeMap[actuatorTypeName]==ActuatorType::ActLineSimpleNGP)||
+      (ActuatorTypeMap[actuatorTypeName]==ActuatorType::ActLineSimple))
+    {
+      get_required(y_actuator, "n_simpleblades", nTurbines);
+    } else {
+    get_required(y_actuator, "n_turbines_glob", nTurbines);
+  }
   ActuatorMeta actMeta(nTurbines, ActuatorTypeMap[actuatorTypeName]);
   // search specifications
   std::string searchMethodName = "na";
@@ -46,10 +52,10 @@ actuator_parse(const YAML::Node& y_node)
     y_actuator, "search_method", searchMethodName, searchMethodName);
   // determine search method for this pair
   if (searchMethodName == "boost_rtree") {
-    actMeta.searchMethod_ = stk::search::BOOST_RTREE;
+    actMeta.searchMethod_ = stk::search::KDTREE;
     NaluEnv::self().naluOutputP0()
       << "Warning: search method 'boost_rtree'"
-      << " is being deprecated, please switch to 'stk_kdtree'" << std::endl;
+      << " is being deprecated, switching to 'stk_kdtree'" << std::endl;
   } else if (searchMethodName == "stk_kdtree")
     actMeta.searchMethod_ = stk::search::KDTREE;
   else
