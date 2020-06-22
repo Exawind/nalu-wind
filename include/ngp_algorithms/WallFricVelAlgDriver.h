@@ -64,12 +64,6 @@ private:
    */
   DoubleType utauAreaSum_[2];
 
-  // Break the flux/surface temperature vs. time input table into vectors
-  // of each quantity and store in the following vectors.
-  std::vector<double> tableTimes_;
-  std::vector<double> tableFluxes_;
-  std::vector<double> tableSurfaceTemperatures_;
-  std::vector<double> tableWeights_;
 };
 
 }  // nalu

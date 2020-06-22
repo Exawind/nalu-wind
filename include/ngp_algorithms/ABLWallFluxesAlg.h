@@ -71,6 +71,7 @@ private:
   unsigned density_         {stk::mesh::InvalidOrdinal};
   unsigned bcHeatFlux_      {stk::mesh::InvalidOrdinal};
   unsigned wallHeatFlux_    {stk::mesh::InvalidOrdinal};
+  unsigned wallShearStress_ {stk::mesh::InvalidOrdinal};
   unsigned specificHeat_    {stk::mesh::InvalidOrdinal};
   unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
   unsigned wallFricVel_     {stk::mesh::InvalidOrdinal};
@@ -101,6 +102,15 @@ private:
   //!   - time - Apply local time-averaging within some backward-in-time windows.
   //!   - Lagrangian - Apply Lagrangian averaging backward along a streamline.
   std::string averagingType_{"planar"};
+
+  //! The model for applying fluctuations to the lower shear stress and heat flux.
+  //! Current options are:
+  //!   - none - Apply no fluctuations--use the base fluxes.
+  //!   - Schumann - Use the model of Schumann.
+  //!   - Moeng - Use the model of Moeng.
+  //! Future option that should be tried are:
+  //!   - Brasseur - Brasseur's modification to Moeng.
+  std::string fluctuationModel_{"Schumann"};
 
   //! Monin-Obukhov scaling law constants.
   //! These should really be variable given stability, but they are just fixed for now.

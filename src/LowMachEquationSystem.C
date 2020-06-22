@@ -107,7 +107,7 @@
 #include <edge_kernels/ContinuityOpenEdgeKernel.h>
 #include <edge_kernels/MomentumEdgeSolverAlg.h>
 #include <edge_kernels/MomentumOpenEdgeKernel.h>
-#include <edge_kernels/MomentumABLWallFuncEdgeKernel.h>
+#include <edge_kernels/MomentumABLWallShearStressEdgeKernel.h>
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
 
 // node kernels
@@ -1913,9 +1913,14 @@ MomentumEquationSystem::register_wall_bc(
     const int numScsBip = meFC->num_integration_points();
 
     stk::topology::rank_t sideRank = static_cast<stk::topology::rank_t>(meta_data.side_rank());
+
     GenericFieldType *wallFrictionVelocityBip 
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_friction_velocity_bip"));
     stk::mesh::put_field_on_mesh(*wallFrictionVelocityBip, *part, numScsBip, nullptr);
+
+    GenericFieldType *wallShearStressBip
+      =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_shear_stress_bip"));
+    stk::mesh::put_field_on_mesh(*wallShearStressBip, *part, nDim*numScsBip, nullptr);
 
     GenericFieldType *wallNormalDistanceBip 
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_normal_distance_bip"));
@@ -1977,10 +1982,9 @@ MomentumEquationSystem::register_wall_bc(
         auto& activeKernels = solverAlg->activeKernels_;
 
         if (solverAlgWasBuilt) {
-          build_face_topo_kernel_automatic<MomentumABLWallFuncEdgeKernel>
+          build_face_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>
             (partTopo, *this, activeKernels, "momentum_abl_wall",
-             realm_.meta_data(), grav, z0, referenceTemperature,
-             realm_.get_turb_model_constant(TM_kappa), dataPreReqs);
+             realm_.meta_data(), dataPreReqs);
         }
       }
 

@@ -34,85 +34,102 @@ namespace nalu {
 
 namespace {
 
+
+//--------------------------------------------------------------------------
+//-------- compute_fluxes_given_surface_heat_flux -------------------------
+//--------------------------------------------------------------------------
+//
+// This is algorithm 1 outlined by Basu et al.
+//
 template <typename PsiFunc>
 KOKKOS_FUNCTION
-double calc_utau(
-  const double uh,
-  const double zh,
-  const double term1,
-  const double Tflux,
-  const double Lfac,
-  const double kappa,
-  PsiFunc psi_func,
-  const double psi_fac)
+void compute_fluxes_given_surface_heat_flux
+(
+    const double tol,
+    const double up,
+    const double Tp,
+    double& Tsurface,
+    const double zp,
+    PsiFunc Psi_m_func,
+    PsiFunc Psi_h_func,
+    const double kappa,
+    const double z0,
+    const double g,
+    const double Tref,
+    const double Psi_m_factor,
+    const double Psi_h_factor,
+    double& frictionVelocity,
+    const double temperatureFlux
+)
 {
-  const double eps = 1.0e-8;
-  const double convTol = 1.0e-7;
-  const double perturb = 1.0e-3;
-  const int maxIters = 40;
+  // This is algorithm 1 outlined by Basu et al.
 
-  // Return utau as epsilon if the velocity at surface is zero
-  if (stk::math::abs(uh) < eps)
-    return eps;
+  // Set Psi_h and Psi_m initially to zero.
+  double Psi_h = 0.0;
+  double Psi_m = 0.0;
 
-  double utau0, utau1;
-  // Proceed with normal computations
-  utau0 = kappa * uh / term1;
-  if (Tflux > 0.0) utau0 *= 3.0;
+  // Enter the iterative solver loop and iterate until convergence
+  frictionVelocity = 0.0;
+  double frictionVelocityOld = 1.0E10;
+  double L = 1.0E10;
+  double frictionVelocityDelta = std::abs(frictionVelocity - frictionVelocityOld);
+  int iterMax = 1000;
+  int iter = 0;
+  while ((frictionVelocityDelta > tol ) && (iter < iterMax))
+  {
+    // Update the old values.
+    frictionVelocityOld = frictionVelocity;
 
-  utau1 = (1.0 + perturb) * utau0;
+    // Compute friction velocity using Monin-Obukhov similarity.
+    frictionVelocity = (kappa * up) / (std::log(zp / z0) - Psi_m);
 
-  bool converged = false;
-  double utau = utau0;
-  for (int k=0; k < maxIters; ++k) {
-    double L0 = utau0 * utau0 * utau0 * Lfac;
-    double L1 = utau1 * utau1 * utau1 * Lfac;
-
-    double sgnq = (Tflux > 0.0) ? 1.0 : -1.0;
-    L0 = - sgnq * stk::math::max(1.0e-10, stk::math::abs(L0));
-    L1 = - sgnq * stk::math::max(1.1e-10, stk::math::abs(L1));
-
-    const double znorm0 = zh / L0;
-    const double znorm1 = zh / L1;
-
-    const double denom0 = term1 - psi_func(znorm0, psi_fac);
-    const double denom1 = term1 - psi_func(znorm1, psi_fac);
-
-    const double f0 = utau0 - uh * kappa / denom0;
-    const double f1 = utau1 - uh * kappa / denom1;
-
-    double dutau = utau1 - utau0;
-    dutau = (dutau > 0.0)
-      ? (stk::math::max(1.0e-15, dutau))
-      : (stk::math::min(-1.0e-15, dutau));
-
-    double fprime = (f1 - f0) / dutau;
-    fprime = (fprime > 0.0)
-      ? (stk::math::max(1.0e-15, fprime))
-      : (stk::math::min(-1.0e-15, fprime));
-
-    const double utau_tmp = utau1;
-    utau1 = utau0 - f0 / fprime;
-    utau0 = utau_tmp;
-
-    if (stk::math::abs(f1) < convTol) {
-      converged = true;
-      utau = stk::math::max(0.0, utau1);
-      break;
+/*
+    // Compute Obukhov length.
+    if (temperatureFlux == 0.0)
+    {
+      L = 1.0E10;
     }
-  }
+    else
+    {
+      L = -(Tref_ * std::pow(frictionVelocity,3))/(kappa_ * gravity_ * temperatureFlux);
+    }
+*/
 
-  if (!converged) printf("Issue with utau");
-  return utau;
+    // Recompute Psi_h and Psi_m.
+    Psi_h = Psi_h_func(zp/L, Psi_h_factor);
+    Psi_m = Psi_m_func(zp/L, Psi_m_factor);
+
+    // Compute changes in solution.
+    frictionVelocityDelta = std::abs(frictionVelocity - frictionVelocityOld);
+
+    // Compute the surface temperature.
+    Tsurface = Tp + (temperatureFlux * ((std::log(zp / z0) - Psi_h) / (std::max(frictionVelocity,0.001) * kappa)));
+
+    // Add to the iteration count.
+    iter++;
+
+  /*
+    std::cout << "     - iteration: " << iter << std::endl;
+    std::cout << "     - friction velocity = " << frictionVelocity << " " << frictionVelocityDelta << std::endl;
+    std::cout << "     - temperature flux = " << temperatureFlux << std::endl;
+    std::cout << "     - surface temperature = " << Tsurface << std::endl;
+    std::cout << "     - L = " << L << std::endl;
+    std::cout << "     - Psi_M = " << Psi_M << std::endl;
+  */
+  }
 }
+
 
 
 //--------------------------------------------------------------------------
 //-------- compute_fluxes_given_surface_temperature ------------------------
 //--------------------------------------------------------------------------
+//
+// This is algorithm 2 outlined by Basu et al.
+//
 template <typename PsiFunc>
 KOKKOS_FUNCTION
-std::vector<double> compute_fluxes_given_surface_temperature
+void compute_fluxes_given_surface_temperature
 (
     const double tol, 
     const double up, 
@@ -126,18 +143,18 @@ std::vector<double> compute_fluxes_given_surface_temperature
     const double g,
     const double Tref,
     const double Psi_m_factor,
-    const double Psi_h_factor    
+    const double Psi_h_factor,
+    double& frictionVelocity,
+    double& temperatureFlux
 )
 {
-  // This is algorithm 2 outlined by Basu et al.
-
   // Set Psi_h and Psi_m initially to zero.
   double Psi_h = 0.0;
   double Psi_m = 0.0;
 
   // Enter the iterative solver loop and iterate until convergence
-  double frictionVelocity = 0.0;
-  double temperatureFlux = 0.0;
+  frictionVelocity = 0.0;
+  temperatureFlux = 0.0;
   double frictionVelocityOld = 1.0E10;
   double temperatureFluxOld = 1.0E10;
   double L = 1.0E10;
@@ -158,6 +175,7 @@ std::vector<double> compute_fluxes_given_surface_temperature
     double deltaT = Tp - Tsurface;
     temperatureFlux = -(deltaT * frictionVelocity * kappa) / (std::log(zp / z0) - Psi_m);
 
+/*
     // Compute Obukhov length.
     if (temperatureFlux == 0.0)
     {
@@ -167,8 +185,9 @@ std::vector<double> compute_fluxes_given_surface_temperature
     {
       L = -(Tref * std::pow(frictionVelocity,3))/(kappa * g * temperatureFlux);
     }
+*/
 
-    // Recompute Psi_H and Psi_M.
+    // Recompute Psi_h and Psi_m.
     Psi_h = Psi_h_func(zp/L, Psi_h_factor);
     Psi_m = Psi_m_func(zp/L, Psi_m_factor);
 
@@ -188,12 +207,6 @@ std::vector<double> compute_fluxes_given_surface_temperature
     std::cout << "     - Psi_H = " << Psi_H << std::endl;
   */
   }
-  
-  std::vector<double> fluxes = {frictionVelocity,temperatureFlux};
-  //utau = frictionVelocity;
-  //qsurf = rho * Cp * temperatureFlux;
-
-  return fluxes;
 }
 
 
@@ -230,6 +243,10 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
     wallFricVel_(get_field_ordinal(
       realm.meta_data(),
       "wall_friction_velocity_bip",
+      realm.meta_data().side_rank())),
+    wallShearStress_(get_field_ordinal(
+      realm.meta_data(),
+      "wall_shear_stress_bip",
       realm.meta_data().side_rank())),
     wallNormDist_(get_field_ordinal(
       realm.meta_data(),
@@ -282,15 +299,15 @@ void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
     tableSurfaceTemperatures_[i] = tableData[i][2]; 
     tableWeights_[i] = tableData[i][3];
   }
-  std::cout << "nTimes = " << nTimes << std::endl;
-  std::cout << "Time (s)     Surface Flux (K-m/s)     Surface Temperature (K)     Blending Factor" << std::endl;
-  for (std::vector<DblType>::size_type i = 0; i < nTimes; i++) {
-    std::cout << tableTimes_[i] << " " << tableFluxes_[i] << " " << tableSurfaceTemperatures_[i] << " " << tableWeights_[i] << std::endl;
-  }
+//std::cout << "nTimes = " << nTimes << std::endl;
+//std::cout << "Time (s)     Surface Flux (K-m/s)     Surface Temperature (K)     Blending Factor" << std::endl;
+//for (std::vector<DblType>::size_type i = 0; i < nTimes; i++) {
+//  std::cout << tableTimes_[i] << " " << tableFluxes_[i] << " " << tableSurfaceTemperatures_[i] << " " << tableWeights_[i] << std::endl;
+//}
   
   // Read in the surface roughness.
   get_if_present<DblType>(node,"roughness_height",z0_,z0_);
-  std::cout << "Surface Roughness: " << z0_ << " m" << std::endl;
+//std::cout << "Surface Roughness: " << z0_ << " m" << std::endl;
 
   // Get the gravity information.
   std::vector<double> gravity_vector;
@@ -299,16 +316,16 @@ void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
   gravity_vector = realm_.solutionOptions_->gravity_;
   get_if_present(node,"gravity_vector_component",gravityVectorComponent_,gravityVectorComponent_);
   gravity_ = std::abs(gravity_vector[gravityVectorComponent_ - 1]);
-  std::cout << "Gravity Vector: " << gravity_vector[0] << " " << gravity_vector[1] << " " << gravity_vector[2] << " m/s^2" << std::endl;
-  std::cout << "Gravity: " << gravity_ << " m/s^2" << std::endl;
+//std::cout << "Gravity Vector: " << gravity_vector[0] << " " << gravity_vector[1] << " " << gravity_vector[2] << " m/s^2" << std::endl;
+//std::cout << "Gravity: " << gravity_ << " m/s^2" << std::endl;
 
   // Read in the reference temperature.
   get_if_present<DblType>(node,"reference_temperature",Tref_,Tref_);
-  std::cout << "Reference Temperature: " << Tref_ << " K" << std::endl;
+//std::cout << "Reference Temperature: " << Tref_ << " K" << std::endl;
 
   // Read in the averaging type.
   get_if_present(node, "monin_obukhov_averaging_type", averagingType_, averagingType_);
-  std::cout << "Averaging Type: " << averagingType_ << std::endl;
+//std::cout << "Averaging Type: " << averagingType_ << std::endl;
 
   // If planar averaging is used, check to make sure ABL boundary layer statistics are enabled.
   if (averagingType_ == "planar")
@@ -319,17 +336,21 @@ void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
      }
   }
 
+  // Read in the fluctuation type.
+  get_if_present(node, "fluctuation_model", fluctuationModel_, fluctuationModel_);
+//std::cout << "Fluctuation Model: " << fluctuationModel_ << std::endl;
+
   // Read in M-O scaling law parameters.
   get_if_present(node,"kappa",kappa_,kappa_);
   get_if_present(node,"beta_m",beta_m_,beta_m_);
   get_if_present(node,"beta_h",beta_h_,beta_h_);
   get_if_present(node,"gamma_m",gamma_m_,gamma_m_);
   get_if_present(node,"gamma_h",gamma_h_,gamma_h_);
-  std::cout << "kappa: " << kappa_ << std::endl;
-  std::cout << "beta_m: " << beta_m_ << std::endl;
-  std::cout << "beta_h: " << beta_h_ << std::endl;
-  std::cout << "gamma_m: " << gamma_m_ << std::endl;
-  std::cout << "gamma_h: " << gamma_h_ << std::endl;
+//std::cout << "kappa: " << kappa_ << std::endl;
+//std::cout << "beta_m: " << beta_m_ << std::endl;
+//std::cout << "beta_h: " << beta_h_ << std::endl;
+//std::cout << "gamma_m: " << gamma_m_ << std::endl;
+//std::cout << "gamma_h: " << gamma_h_ << std::endl;
 
 }
 
@@ -342,6 +363,8 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   auto ngpUtau = fieldMgr.template get_field<double>(wallFricVel_);
+  auto ngpqSurf = fieldMgr.template get_field<double>(wallHeatFlux_);
+  auto ngptauSurf = fieldMgr.template get_field<double>(wallShearStress_);
 
   // Get the current time and interpolate flux/surface temperature in time.
   const double currTime = realm_.get_current_time();
@@ -351,9 +374,9 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   utils::linear_interp(tableTimes_, tableFluxes_, currTime, currFlux);
   utils::linear_interp(tableTimes_, tableSurfaceTemperatures_, currTime, currSurfaceTemperature);
   utils::linear_interp(tableTimes_, tableWeights_, currTime, currWeight);
-  std::cout << "Flux = " << currFlux << std::endl;
-  std::cout << "Surface Temperature = " << currSurfaceTemperature << std::endl;
-  std::cout << "Weight = " << currWeight << std::endl;
+//std::cout << "Flux = " << currFlux << std::endl;
+//std::cout << "Surface Temperature = " << currSurfaceTemperature << std::endl;
+//std::cout << "Weight = " << currWeight << std::endl;
 
   // Bring class members into local scope for device capture
   const unsigned velID = velocityNp1_;
@@ -379,27 +402,37 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
 
   const bool useShifted = useShifted_;
 
-  DblType hPlanar;
-  DoubleType hPlanarSIMD;
-  std::vector<DblType> velPlanar(2,0.0);
-  DblType tempPlanar;
+  DblType avgFactor = 0.0;
+  DblType hAverage;
+  DblType tempAverage;
+  NALU_ALIGNED DblType velAverage[BcAlgTraits::nDim_];
+  DblType velMagAverage;
   if (averagingType_ == "planar")
   {
+    avgFactor = 1.0;
     BdyLayerStatistics::HostArrayType h = realm_.bdyLayerStats_->abl_heights();
-    realm_.bdyLayerStats_->velocity(h[1], velPlanar.data());  
-    realm_.bdyLayerStats_->temperature(h[1], &tempPlanar);  
-    hPlanar = h[1];
-    hPlanarSIMD = h[1];
-    std::cout << "h = " << h[0] << " " << h[1] << std::endl;
-    std::cout << "hPlanar = " << hPlanar << std::endl;
-    std::cout << "hPlanarSIMD = " << hPlanarSIMD << std::endl;
-    std::cout << "velPlanar = " << velPlanar[0] << " " << velPlanar[1] << " " << velPlanar[2] << std::endl;
-    std::cout << "tempPlanar = " << tempPlanar << std::endl;
+    realm_.bdyLayerStats_->velocity(h[1], velAverage);  
+    realm_.bdyLayerStats_->velocity_magnitude(h[1], &velMagAverage);
+    realm_.bdyLayerStats_->temperature(h[1], &tempAverage);  
+    hAverage = h[1];
+  //std::cout << "h = " << h[0] << " " << h[1] << std::endl;
+  //std::cout << "hAverage = " << hAverage << std::endl;
+  //std::cout << "velAverage = " << velAverage[0] << " " << velAverage[1] << " " << velAverage[2] << std::endl;
+  //std::cout << "velMagAverage = " << velMagAverage << std::endl;
+  //std::cout << "tempAverage = " << tempAverage << std::endl;
   }
 
-  NALU_ALIGNED DoubleType vv[BcAlgTraits::nDim_];
-  vv = velPlanar;
-  
+  DblType fluctuationFactor = 0.0;
+  if (fluctuationModel_ != "none")
+  {
+    fluctuationFactor = 1.0;
+  }
+
+  DblType MoengFactor = 0.0;
+  if (fluctuationModel_ == "Moeng")
+  {
+    MoengFactor = 1.0;
+  }
 
   const double eps = 1.0e-8;
   const DoubleType Lmax = 1.0e8;
@@ -407,8 +440,9 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
 
-  const auto utauOps = nalu_ngp::simd_face_elem_field_updater(
-    ngpMesh, ngpUtau);
+  const auto utauOps = nalu_ngp::simd_face_elem_field_updater(ngpMesh, ngpUtau);
+  const auto qSurfOps = nalu_ngp::simd_face_elem_field_updater(ngpMesh, ngpqSurf);
+  const auto tauSurfOps = nalu_ngp::simd_face_elem_field_updater(ngpMesh, ngptauSurf);
 
   // Reducer to accumulate the area-weighted utau sum as well as total area for
   // wall boundary of this specific topology.
@@ -432,7 +466,11 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
       NALU_ALIGNED DoubleType velIp[BcAlgTraits::nDim_];
       NALU_ALIGNED DoubleType velOppNode[BcAlgTraits::nDim_];
       NALU_ALIGNED DoubleType bcVelIp[BcAlgTraits::nDim_];
-      NALU_ALIGNED DoubleType velPlanar[BcAlgTraits::nDim_];
+      
+      // Surface stress
+      NALU_ALIGNED DoubleType tauSurf_calc[BcAlgTraits::nDim_];
+      DoubleType utau_calc;
+      DoubleType qSurf_calc;
 
       auto& scrViewsFace = feData.simdFaceView;
       auto& scrViewsElem = feData.simdElemView;
@@ -449,10 +487,6 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
       const auto& v_shape_fcn = useShifted
         ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
-    //std::vector<DblType> velPlanar(BcAlgTraits::nDim_,0.0);
-    //DblType tempPlanar;
-    //std::vector<DoubleType> velPlanar(BcAlgTraits::nDim_,0.0);
-
       const int* faceIpNodeMap = meFC->ipNodeMap();
       for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
 
@@ -465,13 +499,16 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
         }
         aMag = stk::math::sqrt(aMag);
 
-        // unit normal and reset velocities
+        // unit normal and reset velocities and stress.
         for (int d=0; d < BcAlgTraits::nDim_; ++d) {
           nx[d] = v_areavec(ip, d) / aMag;
           velIp[d] = 0.0;
           velOppNode[d] = 0.0;
           bcVelIp[d] = 0.0;
+          tauSurf_calc[d] = 0.0;
         }
+        utau_calc = eps;
+        qSurf_calc = 0.0;
 
         const DoubleType zh = v_wallnormdist(ip);
 
@@ -482,7 +519,6 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
         DoubleType CpIp = 0.0;
         DoubleType tempIp = 0.0;
         DoubleType tempOppNode = 0.0;
-        DoubleType tempPlanar = 0.0;
 
         for (int ic =0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
           const DoubleType r = v_shape_fcn(ip, ic);
@@ -501,34 +537,71 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
             velOppNode[d] = v_vel(nodeL,d);
         }
         tempOppNode = v_temp(nodeL);
-        std::cout << "velIp = (" << velIp[0] << " " << velIp[1] << " " << velIp[2] << "), tempIp = " << tempIp << std::endl;
-        std::cout << "velOppNode = (" << velOppNode[0] << " " << velOppNode[1] << " " << velOppNode[2] << "), tempOppNode = " << tempOppNode << std::endl;
+      //std::cout << "velIp = (" << velIp[0] << " " << velIp[1] << " " << velIp[2] << "), tempIp = " << tempIp << std::endl;
+      //std::cout << "velOppNode = (" << velOppNode[0] << " " << velOppNode[1] << " " << velOppNode[2] << "), tempOppNode = " << tempOppNode << std::endl;
 
-        DoubleType uTangential = 0.0;
+        DoubleType uIpTangential = 0.0;
         DoubleType uOppNodeTangential = 0.0;
+        DoubleType uAverageTangential = 0.0;
+
+        NALU_ALIGNED DoubleType uiIpTan [BcAlgTraits::nDim_];
+        NALU_ALIGNED DoubleType uiOppNodeTan [BcAlgTraits::nDim_];
+        NALU_ALIGNED DoubleType uiAverageTan [BcAlgTraits::nDim_];
+        NALU_ALIGNED DoubleType uiBcTan [BcAlgTraits::nDim_];
         for (int i=0; i < BcAlgTraits::nDim_; ++i) {
-          DoubleType uiTan = 0.0;
-          DoubleType uiOppNodeTan = 0.0;
-          DoubleType uiBcTan = 0.0;
+          uiIpTan[i] = 0.0;
+          uiOppNodeTan[i] = 0.0;
+          uiAverageTan[i] = 0.0;
+          uiBcTan[i] = 0.0;
 
           for (int j=0; j < BcAlgTraits::nDim_; ++j) {
             DoubleType ninj = nx[i] * nx[j];
             if (i == j) {
               const DoubleType om_ninj = 1.0 - ninj;
-              uiTan += om_ninj * velIp[j];
-              uiOppNodeTan += om_ninj * velOppNode[j];
-              uiBcTan += om_ninj * bcVelIp[j];
+              uiIpTan[i] += om_ninj * velIp[j];
+              uiOppNodeTan[i] += om_ninj * velOppNode[j];
+              uiAverageTan[i] += om_ninj * velAverage[j];
+              uiBcTan[i] += om_ninj * bcVelIp[j];
             } else {
-              uiTan -= ninj * velIp[j];
-              uiOppNodeTan -= ninj * velOppNode[j];
-              uiBcTan -= ninj * bcVelIp[j];
+              uiIpTan[i] -= ninj * velIp[j];
+              uiOppNodeTan[i] -= ninj * velOppNode[j];
+              uiAverageTan[i] -= ninj * velAverage[j];
+              uiBcTan[i] -= ninj * bcVelIp[j];
             }
           }
-          uTangential += (uiTan - uiBcTan) * (uiTan - uiBcTan);
-          uOppNodeTangential += (uiOppNodeTan - uiBcTan) * (uiOppNodeTan - uiBcTan);
+          uIpTangential += (uiIpTan[i] - uiBcTan[i]) * (uiIpTan[i] - uiBcTan[i]);
+          uOppNodeTangential += (uiOppNodeTan[i] - uiBcTan[i]) * (uiOppNodeTan[i] - uiBcTan[i]);
+          uAverageTangential += (uiAverageTan[i] - uiBcTan[i]) * (uiAverageTan[i] - uiBcTan[i]);
         }
-        uTangential = stk::math::sqrt(uTangential);
+
+        uIpTangential = stk::math::sqrt(uIpTangential);
         uOppNodeTangential = stk::math::sqrt(uOppNodeTangential);
+        uAverageTangential = stk::math::sqrt(uAverageTangential);
+
+        DoubleType SAvg = velMagAverage;
+        DoubleType S = uOppNodeTangential;
+        for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
+          // Get variables in Moeng-like notation.
+          DoubleType uiTan = uiOppNodeTan[i];
+          DoubleType uiTanAvg = uiAverageTan[i];
+
+          // Get the directionality.
+          tauSurf_calc[i] = (1.0 - avgFactor)*(uiTan / stk::math::max(S,eps)) + (avgFactor)*(uiTanAvg / stk::math::max(SAvg,eps));
+
+          // then, get the fluctuation.
+          tauSurf_calc[i] *= (1.0 - avgFactor)*1.0 + (avgFactor*fluctuationFactor)*((((1.0-MoengFactor)*SAvg + MoengFactor*S)*uiTanAvg + SAvg*(uiTan - uiTanAvg) ) / stk::math::max((SAvg * uiTanAvg),eps));
+        }
+
+        DoubleType thetai = tempOppNode;
+        DoubleType thetaiAvg = tempAverage;
+      //DoubleType sgnDenom = ((thetaiAvg - Tref) > 0.0) ? 1.0 : -1.0;
+      //qSurf_calc = (1.0 - avgFactor)*1.0 + (avgFactor*fluctuationFactor)*((((1.0-MoengFactor)*SAvg + MoengFactor*S)*(thetaiAvg-Tref) + SAvg*(thetai - thetaiAvg) ) / sgnDenom*stk::math::max((SAvg * stk::math::abs((thetaiAvg - Tref))),eps));
+        qSurf_calc = (1.0 - avgFactor)*1.0 + (avgFactor*fluctuationFactor)*((((1.0-MoengFactor)*SAvg + MoengFactor*S)*(thetaiAvg-Tref) + SAvg*(thetai - thetaiAvg) ) / stk::math::max((SAvg * (thetaiAvg - Tref)),eps));
+      //std::cout << "qSurf_calc = " << qSurf_calc << std::endl;
+        
+        DoubleType u_MO = (1.0 - avgFactor)*uOppNodeTangential + (avgFactor)*velMagAverage;
+        DoubleType temp_MO = (1.0 - avgFactor)*(tempOppNode) + (avgFactor)*(tempAverage);
+        DoubleType q_MO = currFlux;
 
         const DoubleType Tflux = heatFluxIp / (rhoIp * CpIp);
         const DoubleType Lfac = stk::math::if_then_else(
@@ -536,77 +609,153 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
           (-Tref / (kappa * gravity * Tflux)));
         const DoubleType term = stk::math::log(zh / z0);
 
-        DoubleType utau_calc = eps;
-        std::cout << "numSimdElems = " << feData.numSimdElems << std::endl;
+
         for (int si = 0; si < feData.numSimdElems; ++si) {
-
-        // Get planar averaged velocity.
-      //if ((averagingType_ == "planar"))
-      //{
-      //  DblType velPlanar
-      //  realm_.bdyLayerStats_->velocity(zh, velPlanar.data());
-      //  realm_.bdyLayerStats_->temperature(zh, &tempPlanar);
-     //  std::cout << zPlanar << " " << velPlanar[0] << " " << velPlanar[1] << " " << velPlanar[2] << " " << tempPlanar << std::endl;
-      //}
-        
-/*
-          std::vector<DblType> mean_fluxes_given_surf_temp(2,0.0);
+          
           DblType tol = 1.0E-6;
-          mean_fluxes_given_surf_temp = compute_fluxes_given_surface_temperature
-          (
-            tol,
-            stk::simd::get_data(uOppNodeTangential, si),
-            tempPlanar,
-            currSurfaceTemperature,
-            stk::simd::get_data(zh, si),
-            mo::psim_unstable<double>,
-            mo::psih_unstable<double>,
-            stk::simd::get_data(kappa, si),
-            stk::simd::get_data(z0, si),
-            stk::simd::get_data(gravity, si),
-            stk::simd::get_data(Tref, si),
-            stk::simd::get_data(beta_m, si),
-            stk::simd::get_data(beta_h, si)
-          );
-          std::cout << "utau = " << mean_fluxes_given_surf_temp[0] << " qWall = " << mean_fluxes_given_surf_temp[1] << std::endl;
-*/
+          DblType utau = 0.0;
+          NALU_ALIGNED DblType tauSurf[3];
+          DblType qSurf = 0.0;
+          DblType Tsurf = 0.0;
 
-
-
-
-
-
-          const double Tflux1 = stk::simd::get_data(Tflux, si);
-          double utau;
-          if (Tflux1 < -eps) {
-            utau = calc_utau(
-              stk::simd::get_data(uTangential, si),
+          // Compute fluxes with algorithm 1.
+          DblType utau_alg1 = 0.0;
+          DblType Tsurf_alg1 = 0.0;
+          if (stk::simd::get_data(q_MO, si) < -eps)
+          {
+            compute_fluxes_given_surface_heat_flux
+            (
+              tol,
+              stk::simd::get_data(u_MO, si),
+              stk::simd::get_data(temp_MO, si),
+              Tsurf_alg1,
               stk::simd::get_data(zh, si),
-              stk::simd::get_data(term, si),
-              stk::simd::get_data(Tflux, si),
-              stk::simd::get_data(Lfac, si),
-              stk::simd::get_data(kappa, si),
               mo::psim_stable<double>,
-              stk::simd::get_data(beta_m, si));
-          } else if (Tflux1 > eps) {
-            utau = calc_utau(
-              stk::simd::get_data(uTangential, si),
-              stk::simd::get_data(zh, si),
-              stk::simd::get_data(term, si),
-              stk::simd::get_data(Tflux, si),
-              stk::simd::get_data(Lfac, si),
+              mo::psih_stable<double>,
               stk::simd::get_data(kappa, si),
+              stk::simd::get_data(z0, si),
+              stk::simd::get_data(gravity, si),
+              stk::simd::get_data(Tref, si),
+              stk::simd::get_data(beta_m, si),
+              stk::simd::get_data(beta_h, si),
+              utau_alg1,
+              currFlux
+            );
+          }
+          else if (stk::simd::get_data(q_MO, si) > eps)
+          {
+            compute_fluxes_given_surface_heat_flux
+            (
+              tol,
+              stk::simd::get_data(u_MO, si),
+              stk::simd::get_data(temp_MO, si),
+              Tsurf_alg1,
+              stk::simd::get_data(zh, si),
               mo::psim_unstable<double>,
-              stk::simd::get_data(gamma_m, si));
-          } else {
-            utau = stk::simd::get_data(kappa, si) *
-                   stk::simd::get_data(uTangential, si) /
-                   stk::simd::get_data(term, si);
+              mo::psih_unstable<double>,
+              stk::simd::get_data(kappa, si),
+              stk::simd::get_data(z0, si),
+              stk::simd::get_data(gravity, si),
+              stk::simd::get_data(Tref, si),
+              stk::simd::get_data(gamma_m, si),
+              stk::simd::get_data(gamma_h, si),
+              utau_alg1,
+              currFlux
+            );
+          }
+          else
+          {
+            utau_alg1 = stk::simd::get_data(kappa, si) *
+                        stk::simd::get_data(u_MO, si) /
+                        stk::simd::get_data(term, si);
+            Tsurf_alg1 = stk::simd::get_data(temp_MO, si);
           }
 
+
+          // Compute fluxes with algorithm 2.
+          DblType utau_alg2 = 0.0;
+          DblType qSurf_alg2 = 0.0;
+          if (stk::simd::get_data(temp_MO, si) - currSurfaceTemperature > eps)
+          {
+            compute_fluxes_given_surface_temperature
+            (
+              tol,
+              stk::simd::get_data(u_MO, si),
+              stk::simd::get_data(temp_MO, si),
+              currSurfaceTemperature,
+              stk::simd::get_data(zh, si),
+              mo::psim_stable<double>,
+              mo::psih_stable<double>,
+              stk::simd::get_data(kappa, si),
+              stk::simd::get_data(z0, si),
+              stk::simd::get_data(gravity, si),
+              stk::simd::get_data(Tref, si),
+              stk::simd::get_data(beta_m, si),
+              stk::simd::get_data(beta_h, si),
+              utau_alg2,
+              qSurf_alg2
+            );
+          }
+          else if (stk::simd::get_data(temp_MO, si) < -eps)
+          {
+            compute_fluxes_given_surface_temperature
+            (
+              tol,
+              stk::simd::get_data(u_MO, si),
+              stk::simd::get_data(temp_MO, si),
+              currSurfaceTemperature,
+              stk::simd::get_data(zh, si),
+              mo::psim_unstable<double>,
+              mo::psih_unstable<double>,
+              stk::simd::get_data(kappa, si),
+              stk::simd::get_data(z0, si),
+              stk::simd::get_data(gravity, si),
+              stk::simd::get_data(Tref, si),
+              stk::simd::get_data(gamma_m, si),
+              stk::simd::get_data(gamma_h, si),
+              utau_alg2,
+              qSurf_alg2
+            );
+          }
+          else
+          {
+            utau_alg2 = stk::simd::get_data(kappa, si) *
+                        stk::simd::get_data(u_MO, si) /
+                        stk::simd::get_data(term, si);
+            qSurf_alg2 = 0.0;
+          }
+
+          // Combine the fluxes computed with the two different algorithms based on the user-selected weighting.
+          utau =   (1.0 - (currWeight - 1.0)) * utau_alg1  + (currWeight - 1.0) * utau_alg2;
+          qSurf = ((1.0 - (currWeight - 1.0)) * currFlux   + (currWeight - 1.0) * qSurf_alg2) * stk::simd::get_data(rhoIp, si) * stk::simd::get_data(CpIp, si);
+          Tsurf =  (1.0 - (currWeight - 1.0)) * Tsurf_alg1 + (currWeight - 1.0) * currSurfaceTemperature;
+
+        //std::cout << "utau = " << utau << " temp flux = " << qSurf/(stk::simd::get_data(rhoIp, si) * stk::simd::get_data(CpIp, si))  << " qSurf = " << qSurf << " Tsurf = " << Tsurf << " currFlux = " << currFlux << std::endl;
+
+
+          // Compute the fluctuating flux fields.
+          for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
+             tauSurf[d] = -stk::simd::get_data(rhoIp, si) * utau * utau * stk::simd::get_data(tauSurf_calc[d], si);
+          }
+          qSurf *= stk::simd::get_data(qSurf_calc, si);
+        //std::cout << "tauSurf[0] = " << tauSurf[0] << " tauSurf[1] = " << tauSurf[1] << " tauSurf[2] = " << tauSurf[2] << " qSurf = " << qSurf << std::endl;
+
+
+
+
+          // Collect the data back up to put on the fields.
           stk::simd::set_data(utau_calc, si, utau);
+          stk::simd::set_data(qSurf_calc, si, qSurf);
+          for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+            stk::simd::set_data(tauSurf_calc[d], si, tauSurf[d]);
+          }
+
         }
         utauOps(feData, ip) = utau_calc;
+        qSurfOps(feData, ip) = qSurf_calc;
+        for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
+          tauSurfOps(feData, ip*BcAlgTraits::nDim_ + d) = tauSurf_calc[d];
+        }
 
         // Accumulate utau for statistics output
         uSum.array_[0] += utau_calc * aMag;
