@@ -148,12 +148,21 @@ realms:
     - wall_boundary_condition: bc_lower
       target_name: lower
       wall_user_data:
-        velocity: [0,0,0]
-        use_abl_wall_function: yes
-        heat_flux: 0.0
-        reference_temperature: 300.0
-        roughness_height: 0.1
-        gravity_vector_component: 3
+        velocity: [0.0,0.0,0.0]
+        abl_wall_function:
+          surface_heating_table:
+            - [     0.0, 0.00, 300.0, 1.0]
+            - [999999.9, 0.00, 300.0, 1.0]
+          reference_temperature: 300.0
+          roughness_height: 0.1
+          kappa: 0.4
+          beta_m: 5.0
+          beta_h: 5.0
+          gamma_m: 16.0
+          gamma_h: 16.0
+          gravity_vector_component: 3
+          monin_obukhov_averaging_type: planar
+          fluctuation_model: Moeng
 
     solution_options:
       name: myOptions
