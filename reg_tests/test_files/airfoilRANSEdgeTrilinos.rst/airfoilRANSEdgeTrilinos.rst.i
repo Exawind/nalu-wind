@@ -211,7 +211,7 @@ Time_Integrators:
       name: ti_1
       start_time: 0
       time_step: 6.666666666666667e-2
-      termination_step_count: 5
+      termination_step_count: 10
       time_stepping_type: fixed
       time_step_count: 0
       second_order_accuracy: yes
