@@ -17,6 +17,7 @@
 #include <ElemDataRequests.h>
 #include <FieldTypeDef.h>
 #include <stk_mesh/base/Ngp.hpp>
+#include <stk_mesh/base/GetNgpField.hpp>
 #include <ngp_utils/NgpFieldManager.h>
 
 namespace sierra{
@@ -24,11 +25,15 @@ namespace nalu{
 
 struct FieldInfoNGP {
   FieldInfoNGP(const stk::mesh::FieldBase* fld, unsigned scalars)
-  : field(fld->get_mesh(), *fld), scalarsDim1(scalars), scalarsDim2(0)
-  {}  
+  : field(stk::mesh::get_updated_ngp_field<double>(*fld)), scalarsDim1(scalars), scalarsDim2(0)
+  {
+    field.sync_to_device();
+  }  
   FieldInfoNGP(const stk::mesh::FieldBase* fld, unsigned tensorDim1, unsigned tensorDim2)
-  : field(fld->get_mesh(), *fld), scalarsDim1(tensorDim1), scalarsDim2(tensorDim2)
-  {}
+  : field(stk::mesh::get_updated_ngp_field<double>(*fld)), scalarsDim1(tensorDim1), scalarsDim2(tensorDim2)
+  {
+    field.sync_to_device();
+  }
   FieldInfoNGP(NGPDoubleFieldType& fld, unsigned scalars)
     : field(fld), scalarsDim1(scalars), scalarsDim2(0)
   {}

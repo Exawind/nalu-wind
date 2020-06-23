@@ -49,7 +49,8 @@ public:
   stk::mesh::NgpField<T> & get_field(unsigned fieldOrdinal) const {
     ThrowAssertMsg(m_meta.get_fields().size() > fieldOrdinal, "Invalid field ordinal.");
     stk::mesh::FieldBase* stkField = m_meta.get_fields()[fieldOrdinal];
-    return stk::mesh::get_updated_ngp_field<T>(*stkField);
+    stk::mesh::NgpField<T>& tmp = stk::mesh::get_updated_ngp_field<T>(*stkField);
+    return tmp;
   }
 
 private: 
