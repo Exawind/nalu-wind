@@ -19,6 +19,7 @@
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/GetNgpField.hpp"
 
 TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
 {
@@ -67,7 +68,7 @@ TEST_F(LowMachKernelHex8Mesh, NGP_nodal_grad_popen)
       sierra::nalu::OPEN, surface1, stk::topology::HEX_8, "nodal_grad_pressure_open_boundary", useShifted);
     algDriver.execute();
 
-    stk::mesh::NgpField<double> ngpdpdx(bulk_, *dpdx_);
+    stk::mesh::NgpField<double>& ngpdpdx = stk::mesh::get_updated_ngp_field<double>(*dpdx_);
     ngpdpdx.modify_on_device();
     ngpdpdx.sync_to_host();
     

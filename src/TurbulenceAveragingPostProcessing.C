@@ -724,6 +724,8 @@ TurbulenceAveragingPostProcessing::compute_averages(
                    avInfo->reynoldsFieldSizeVec_[i]),
       FieldInfoNGP(avInfo->reynoldsFieldVecPair_[i].second,
                    avInfo->reynoldsFieldSizeVec_[i]));
+    avInfo->reynoldsFieldVecPair_[i].first->sync_to_device();
+    avInfo->reynoldsFieldVecPair_[i].second->sync_to_device();
   }
 
   int offset = numRePairs;
@@ -733,6 +735,8 @@ TurbulenceAveragingPostProcessing::compute_averages(
                    avInfo->favreFieldSizeVec_[i]),
       FieldInfoNGP(avInfo->favreFieldVecPair_[i].second,
                    avInfo->favreFieldSizeVec_[i]));
+    avInfo->favreFieldVecPair_[i].first->sync_to_device();
+    avInfo->favreFieldVecPair_[i].second->sync_to_device();
   }
 
   offset += numFavrePairs;
@@ -742,6 +746,8 @@ TurbulenceAveragingPostProcessing::compute_averages(
                    avInfo->resolvedFieldSizeVec_[i]),
       FieldInfoNGP(avInfo->resolvedFieldVecPair_[i].second,
                    avInfo->resolvedFieldSizeVec_[i]));
+    avInfo->resolvedFieldVecPair_[i].first->sync_to_device();
+    avInfo->resolvedFieldVecPair_[i].second->sync_to_device();
   }
   Kokkos::deep_copy(fieldPairs, hostFieldPairs);
 

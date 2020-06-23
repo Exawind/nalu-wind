@@ -14,6 +14,7 @@
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
 #include <stk_mesh/base/NgpField.hpp>
+#include <stk_mesh/base/GetNgpField.hpp>
 #include <stk_mesh/base/Types.hpp>
 
 #include <master_element/MasterElement.h>
@@ -160,7 +161,7 @@ void check_interpolation(
 
   const auto* const coordField = bulk.mesh_meta_data().coordinate_field();
   EXPECT_TRUE(coordField != nullptr);
-  stk::mesh::NgpField<double> ngpCoordField(bulk, *coordField);
+  stk::mesh::NgpField<double>& ngpCoordField = stk::mesh::get_updated_ngp_field<double>(*coordField);
 
   Kokkos::View<DoubleType*,sierra::nalu::MemSpace> ngpResults("ngpResults", num_int_pt);
   Kokkos::View<DoubleType*,sierra::nalu::MemSpace>::HostMirror hostResults = Kokkos::create_mirror_view(ngpResults);
@@ -258,7 +259,7 @@ void check_derivatives(
 
   const auto* const coordField = bulk.mesh_meta_data().coordinate_field();
   EXPECT_TRUE(coordField != nullptr);
-  stk::mesh::NgpField<double> ngpCoordField(bulk, *coordField);
+  stk::mesh::NgpField<double>& ngpCoordField = stk::mesh::get_updated_ngp_field<double>(*coordField);
 
   Kokkos::View<DoubleType**,sierra::nalu::MemSpace> ngpResults("ngpResults", num_int_pt, dim);
   Kokkos::View<DoubleType**,sierra::nalu::MemSpace>::HostMirror hostResults = Kokkos::create_mirror_view(ngpResults);

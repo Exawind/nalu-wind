@@ -40,6 +40,7 @@
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/GetNgpField.hpp"
 #include "stk_topology/topology.hpp"
 
 namespace sierra {
@@ -125,8 +126,8 @@ protected:
       }
     }
     mesh = stk::mesh::NgpMesh(bulk);
-    q_field_ngp = stk::mesh::NgpField<double>(bulk, q_field);
-    coord_field_ngp = stk::mesh::NgpField<double>(bulk, coordField);
+    q_field_ngp = stk::mesh::get_updated_ngp_field<double>(q_field);
+    coord_field_ngp = stk::mesh::get_updated_ngp_field<double>(coordField);
   }
   stk::mesh::MetaData meta;
   stk::mesh::BulkData bulk;

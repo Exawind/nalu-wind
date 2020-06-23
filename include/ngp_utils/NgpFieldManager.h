@@ -49,7 +49,17 @@ public:
   stk::mesh::NgpField<T> & get_field(unsigned fieldOrdinal) const {
     ThrowAssertMsg(m_meta.get_fields().size() > fieldOrdinal, "Invalid field ordinal.");
     stk::mesh::FieldBase* stkField = m_meta.get_fields()[fieldOrdinal];
-    return stk::mesh::get_updated_ngp_field<T>(*stkField);
+    stk::mesh::NgpField<T>& tmp = stk::mesh::get_updated_ngp_field<T>(*stkField);
+if(stkField->name()=="temperature_STKFS_NM1"){
+std::cout<<"";
+}
+if(stkField->name()=="volumetric_heat_capacity"){
+std::cout<<"";
+}
+if(stkField->name()=="coordinates"){
+std::cout<<"";
+}
+    return tmp;
   }
 
 private: 
