@@ -248,6 +248,7 @@ target_include_directories(${utest_ex_name} PRIVATE "${CMAKE_SOURCE_DIR}/unit_te
 
 add_subdirectory(src)
 add_subdirectory(unit_tests)
+add_subdirectory(include)
 
 set(nalu_ex_catalyst_name "naluXCatalyst")
 if(ENABLE_PARAVIEW_CATALYST)
