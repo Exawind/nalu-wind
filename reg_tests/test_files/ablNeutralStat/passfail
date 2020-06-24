@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Check to make sure nccmp is there
+path_to_executable=$(which nccmp)
+
+# Path to script
+scriptdir=`dirname "$0"`
+
+# Path to the gold file
+goldfile=$scriptdir/abl_statistics.nc.gold
+
+if [ -x "$path_to_executable" ];  then
+    echo "Found nccmp: $path_to_executable"
+else
+    echo "ERROR: Cannot find nccmp in path"
+    echo "Execute from $scriptdir"
+    exit 1;
+fi
+
+# initialize the passflag 
+passflag=0          # Initially set to "PASS"
+
+STDTOL=5.0E-12 #1.0E-11      # Standard tolerance on the standard variables
+
+# Variables to test
+stdtestvars="velocity 
+velocity_tavg
+sfs_stress
+resolved_stress
+sfs_stress_tavg
+resolved_stress_tavg
+temperature
+temperature_tavg
+temperature_sfs_flux_tavg
+temperature_resolved_flux
+temperature_resolved_flux_tavg
+utau
+"
+
+# Test each of the standard variables one by one
+for var in $stdtestvars; do
+    echo "TESTING $var"
+    nccmp -d -l -f -v $var -t $STDTOL abl_statistics.nc $goldfile
+    result=$?
+    if [ "$result" -ne 0 ]; then
+	echo "FAIL: $var"
+	passflag=1
+    fi
+done
+
+# Now do the temperature variance variables
+TEMPTOL=1.0E-9
+tempvars="
+temperature_variance
+temperature_variance_tavg
+"
+
+# Test each of the temperature variance variables one by one
+for var in $tempvars; do
+    echo "TESTING $var"
+    nccmp -d -l -f -v $var -t $TEMPTOL abl_statistics.nc $goldfile
+    result=$?
+    if [ "$result" -ne 0 ]; then
+	echo "FAIL: $var"
+	passflag=1
+    fi
+done
+
+# Return the final result
+exit $passflag
