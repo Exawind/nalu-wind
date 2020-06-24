@@ -117,7 +117,7 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
         }
       }
     //rhs(rowR) -= lambda * (uiTan - uiBcTan);
-      rhs(rowR) -= tauWall[i]*amag;
+      rhs(rowR) += tauWall[i]*amag;
     //std::cout << tauWall[i] << std::endl;
     }
   }
