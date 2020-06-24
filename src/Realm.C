@@ -546,10 +546,10 @@ Realm::initialize()
   if ( hasNonConformal_ )
     initialize_non_conformal();
 
-  // if ( hasOverset_ ) {
-  //   oversetManager_->initialize();
-  //   initialize_overset();
-  // }
+  if ( hasOverset_ && !isExternalOverset_ ) {
+    oversetManager_->initialize();
+    initialize_overset();
+  }
 
   initialize_post_processing_algorithms();
 
@@ -1774,8 +1774,8 @@ Realm::pre_timestep_work()
       initialize_non_conformal();
 
     // and overset algorithm
-    // if ( hasOverset_ )
-    //   initialize_overset();
+    if ( hasOverset_ )
+      initialize_overset();
 
     // Reset the stk::mesh::NgpMesh instance
     meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
