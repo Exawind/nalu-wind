@@ -1,6 +1,6 @@
 ############################ BASE ######################################
 cmake_minimum_required (VERSION 3.10.0 FATAL_ERROR)
-project(Nalu CXX Fortran)
+project(Nalu-Wind CXX Fortran)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ########################## OPTIONS #####################################
@@ -201,9 +201,9 @@ endif()
 # Add our extra flags according to language
 separate_arguments(NALU_CXX_FLAGS)
 separate_arguments(NALU_Fortran_FLAGS)
-target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${NALU_CXX_FLAGS}>)
-target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:Fortran>:${NALU_Fortran_FLAGS}>)
-target_compile_options(nalu PUBLIC $<$<BOOL:${ENABLE_WERROR}>:-Werror>)
+target_compile_options(nalu PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${NALU_CXX_FLAGS}>)
+target_compile_options(nalu PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:${NALU_Fortran_FLAGS}>)
+target_compile_options(nalu PRIVATE $<$<BOOL:${ENABLE_WERROR}>:-Werror>)
 
 ########################### TAG VERSIONS #####################################
 include(GetGitRevisionDescription)
@@ -236,8 +236,10 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/NaluVersionInfo.h.in"
   "${CMAKE_BINARY_DIR}/include/NaluVersionInfo.h" @ONLY)
 #### END TAG VERSIONS
 
-target_include_directories(nalu PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_include_directories(nalu PUBLIC ${CMAKE_BINARY_DIR}/include)
+target_include_directories(nalu PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
 
 # Most linking, etc, is set to PUBLIC for libnalu, so we merely link to libnalu for the exes
 target_link_libraries(${nalu_ex_name} PRIVATE nalu)
@@ -255,15 +257,18 @@ if(ENABLE_PARAVIEW_CATALYST)
 endif()
 
 install(TARGETS ${utest_ex_name} ${nalu_ex_name} nalu
+        EXPORT "${PROJECT_NAME}Targets"
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include)
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include DESTINATION include)
 if(ENABLE_PARAVIEW_CATALYST)
   install(PROGRAMS ${CMAKE_BINARY_DIR}/naluXCatalyst DESTINATION bin)
 endif()
 
 include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
 if(ENABLE_DOCUMENTATION)
    add_subdirectory(docs)
@@ -294,3 +299,19 @@ endif()
 
 # Note if you are interested in using Xcode for development,
 # refer to instructions in https://github.com/Exawind/nalu-wind/pull/22
+
+export(
+  TARGETS nalu
+  NAMESPACE ${PROJECT_NAME}::
+  FILE ${PROJECT_NAME}Targets.cmake)
+install(
+  EXPORT ${PROJECT_NAME}Targets
+  NAMESPACE ${PROJECT_NAME}::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+configure_package_config_file(
+  cmake/${PROJECT_NAME}Config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
