@@ -255,11 +255,6 @@ class Realm {
 
   const stk::mesh::PartVector &get_slave_part_vector();
 
-  void overset_orphan_node_field_update(
-    stk::mesh::FieldBase *theField,
-    const unsigned sizeRow,
-    const unsigned sizeCol);
-
   void overset_field_update(
     stk::mesh::FieldBase* field,
     const unsigned nRows,
@@ -490,6 +485,7 @@ class Realm {
   OversetManager *oversetManager_;
   bool hasNonConformal_;
   bool hasOverset_;
+  bool isExternalOverset_{false};
 
   // three type of transfer operations
   bool hasMultiPhysicsTransfer_;

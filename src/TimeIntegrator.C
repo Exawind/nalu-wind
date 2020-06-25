@@ -19,6 +19,8 @@
 #include <SolutionOptions.h>
 #include <NaluEnv.h>
 #include <NaluParsing.h>
+#include <mesh_motion/MeshMotionAlg.h>
+#include "overset/ExtOverset.h"
 
 #include <limits>
 #include <iomanip>
@@ -26,14 +28,50 @@
 namespace sierra{
 namespace nalu{
 
-//==========================================================================
-// Class Definition
-//==========================================================================
-// TimeIntegrator - base class for algorithm
-//==========================================================================
-//--------------------------------------------------------------------------
-//-------- constructor -----------------------------------------------------
-//--------------------------------------------------------------------------
+namespace {
+void pre_timestep_prolog(Realm& realm)
+{
+  if (!realm.solutionOptions_->meshMotion_)
+    return;
+
+  realm.meshMotionAlg_->execute(realm.get_current_time());
+
+  realm.compute_geometry();
+
+  realm.meshMotionAlg_->post_compute_geometry();
+
+  // and non-conformal algorithm
+  if (realm.hasNonConformal_)
+    realm.initialize_non_conformal();
+}
+
+void pre_timestep_epilog(Realm& realm) {
+  if (realm.solutionOptions_->meshMotion_) {
+    // now re-initialize linear system
+    realm.equationSystems_.reinitialize_linear_system();
+  }
+  // deal with non-topology changes, however, moving mesh
+  if ( realm.has_mesh_deformation() ) {
+    // extract target parts for this physics
+    if ( realm.solutionOptions_->externalMeshDeformation_ ) {
+      std::vector<std::string> targetNames = realm.get_physics_target_names();
+      for ( size_t itarget = 0; itarget < targetNames.size(); ++itarget ) {
+        stk::mesh::Part *targetPart = realm.metaData_->get_part(targetNames[itarget]);
+        realm.set_current_coordinates(targetPart);
+      }
+    }
+    realm.compute_geometry();
+  }
+
+  // ask the equation system to do some work
+  realm.equationSystems_.pre_timestep_work();
+}
+
+} // namespace
+
+TimeIntegrator::TimeIntegrator()
+{}
+
 TimeIntegrator::TimeIntegrator(Simulation* sim)
   : sim_(sim),
     totalSimTime_(1.0),
@@ -49,7 +87,8 @@ TimeIntegrator::TimeIntegrator(Simulation* sim)
     secondOrderTimeAccurate_(false),
     adaptiveTimeStep_(false),
     terminateBasedOnTime_(false),
-    nonlinearIterations_(1)
+    nonlinearIterations_(1),
+    overset_(new ExtOverset(*this))
 {
   // does nothing  
 }
@@ -137,11 +176,14 @@ void TimeIntegrator::breadboard()
     realm->timeIntegrator_ = this;
     realmVec_.push_back(realm);
   }
+
+  overset_->breadboard();
 }
 
 void TimeIntegrator::initialize()
 {
-  // nothing to do now for the integrator
+  overset_->initialize();
+  overset_->update_connectivity();
 }
 
 Simulation *TimeIntegrator::root() { return parent()->root(); }
@@ -156,7 +198,7 @@ TimeIntegrator::integrate_realm()
   //=====================================
   // start-up procedure
   //=====================================
-  
+
   // initial conditions
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
     (*ii)->populate_initial_condition();
@@ -276,9 +318,18 @@ TimeIntegrator::integrate_realm()
       (*ii)->populate_external_variables_from_input(currentTime_);
     }
     
-    // pre-step work; mesh motion, search, etc
-    for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-      (*ii)->pre_timestep_work();
+    {
+      bool updateOverset = false;
+      for (auto realm: realmVec_) {
+        pre_timestep_prolog(*realm);
+        updateOverset = updateOverset || realm->does_mesh_move();
+      }
+
+      if (updateOverset) overset_->update_connectivity();
+
+      for (auto realm: realmVec_) {
+        pre_timestep_epilog(*realm);
+      }
     }
 
     // populate boundary data
@@ -302,6 +353,7 @@ TimeIntegrator::integrate_realm()
       NaluEnv::self().naluOutputP0()
         << "   Realm Nonlinear Iteration: " << k+1 << "/" << nonlinearIterations_ << std::endl
         << std::endl;
+      overset_->exchange_solution();
       for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
         (*ii)->advance_time_step();
         (*ii)->process_multi_physics_transfer();
