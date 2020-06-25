@@ -45,6 +45,12 @@ public:
   void integrate_realm();
   void provide_mean_norm();
   bool simulation_proceeds();
+
+  void prepare_for_time_integration();
+  void pre_realm_advance_stage1();
+  void pre_realm_advance_stage2();
+  void post_realm_advance();
+
   Simulation* sim_{nullptr};
 
   double totalSimTime_;

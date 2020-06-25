@@ -148,9 +148,7 @@ void TimeIntegrator::initialize()
 Simulation *TimeIntegrator::root() { return parent()->root(); }
 Simulation *TimeIntegrator::parent() { return sim_; }
 
-//--------------------------------------------------------------------------
-void
-TimeIntegrator::integrate_realm()
+void TimeIntegrator::prepare_for_time_integration()
 {
   std::vector<Realm *>::iterator ii;
 
@@ -162,11 +160,11 @@ TimeIntegrator::integrate_realm()
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
     (*ii)->populate_initial_condition();
   }
-  
+
   // populate boundary data
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
     (*ii)->populate_boundary_data();
-  }  
+  }
 
   // copy boundary data to solution state
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
@@ -201,7 +199,7 @@ TimeIntegrator::integrate_realm()
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
     (*ii)->process_external_data_transfer();
   }
-  
+
   // nm1 dt from possible restart always prevails; input file overrides for fixed time stepping
   if ( adaptiveTimeStep_ ) {
     timeStepN_ = timeStepNm1_;
@@ -219,7 +217,7 @@ TimeIntegrator::integrate_realm()
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
     (*ii)->evaluate_properties();
   }
-  
+
   // perform any initial work
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
     (*ii)->initial_work();
@@ -234,6 +232,82 @@ TimeIntegrator::integrate_realm()
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
     (*ii)->output_converged_results();
   }
+}
+
+void TimeIntegrator::pre_realm_advance_stage1()
+{
+  std::vector<Realm *>::iterator ii;
+
+  // negotiate time step
+  if ( adaptiveTimeStep_ ) {
+    double theStep = 1.0e8;
+    for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+      theStep = std::min(theStep, (*ii)->compute_adaptive_time_step());
+    }
+    timeStepN_ = theStep;
+  }
+
+  currentTime_ += timeStepN_;
+  timeStepCount_ += 1;
+
+  // compute gamma's
+  if ( secondOrderTimeAccurate_ )
+    compute_gamma();
+
+  NaluEnv::self().naluOutputP0()
+    << "*******************************************************" << std::endl
+    << "Time Step Count: " << timeStepCount_
+    << " Current Time: " << currentTime_ << std::endl
+    << " dtN: " << timeStepN_
+    << " dtNm1: " << timeStepNm1_
+    << " gammas: " << gamma1_ << " " << gamma2_ << " " << gamma3_ << std::endl;
+
+  // state management
+  for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+    (*ii)->swap_states();
+    (*ii)->predict_state();
+  }
+
+  // read any fields from input file that will serve as external fields
+  for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+    (*ii)->populate_external_variables_from_input(currentTime_);
+  }
+
+  for (auto realm: realmVec_) {
+    realm->pre_timestep_work_prolog();
+  }
+}
+
+void TimeIntegrator::pre_realm_advance_stage2()
+{
+  std::vector<Realm *>::iterator ii;
+
+  for (auto realm: realmVec_) {
+    realm->pre_timestep_work_epilog();
+  }
+
+  // populate boundary data
+  for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+    (*ii)->populate_boundary_data();
+  }
+
+  // output banner
+  for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+    (*ii)->output_banner();
+  }
+
+  // for this time, extract all of the proper data
+  for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+    (*ii)->process_external_data_transfer();
+  }
+}
+
+void
+TimeIntegrator::integrate_realm()
+{
+  std::vector<Realm *>::iterator ii;
+
+  prepare_for_time_integration();
 
   //=====================================
   // time integration
@@ -242,67 +316,9 @@ TimeIntegrator::integrate_realm()
   while ( simulation_proceeds() ) {
     const double startTime = NaluEnv::self().nalu_time();
 
-    // negotiate time step
-    if ( adaptiveTimeStep_ ) {
-      double theStep = 1.0e8;
-      for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-        theStep = std::min(theStep, (*ii)->compute_adaptive_time_step());
-      }
-      timeStepN_ = theStep;
-    }
-
-    currentTime_ += timeStepN_;
-    timeStepCount_ += 1;
-
-    // compute gamma's
-    if ( secondOrderTimeAccurate_ )
-      compute_gamma();
-    
-    NaluEnv::self().naluOutputP0()
-      << "*******************************************************" << std::endl
-      << "Time Step Count: " << timeStepCount_
-      << " Current Time: " << currentTime_ << std::endl
-      << " dtN: " << timeStepN_     
-      << " dtNm1: " << timeStepNm1_
-      << " gammas: " << gamma1_ << " " << gamma2_ << " " << gamma3_ << std::endl;
-    
-    // state management
-    for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-      (*ii)->swap_states();
-      (*ii)->predict_state();
-    }
-
-    // read any fields from input file that will serve as external fields
-    for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-      (*ii)->populate_external_variables_from_input(currentTime_);
-    }
-    
-    {
-      for (auto realm: realmVec_) {
-        realm->pre_timestep_work_prolog();
-      }
-
-      overset_->update_connectivity();
-
-      for (auto realm: realmVec_) {
-        realm->pre_timestep_work_epilog();
-      }
-    }
-
-    // populate boundary data
-    for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-      (*ii)->populate_boundary_data();
-    }
-  
-    // output banner
-    for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-      (*ii)->output_banner();
-    }
-
-    // for this time, extract all of the proper data
-    for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-      (*ii)->process_external_data_transfer();
-    }
+    pre_realm_advance_stage1();
+    overset_->update_connectivity();
+    pre_realm_advance_stage2();
 
     const double endPreProc = NaluEnv::self().nalu_time();
     // nonlinear iteration loop; Picard-style
@@ -319,26 +335,7 @@ TimeIntegrator::integrate_realm()
     }
 
     const double endSolve = NaluEnv::self().nalu_time();
-    // process any post converged work
-    for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-      (*ii)->post_converged_work();
-    }
-    
-    // populate data from io transfer
-    for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-      (*ii)->process_io_transfer();
-    }
-
-    // provide output/restart after nonlinear iteration
-    for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-      (*ii)->output_converged_results();
-    }
-
-    // output mean norm
-    provide_mean_norm();
-  
-    timeStepNm1_ = timeStepN_;
-
+    post_realm_advance();
     const double endPostProc = NaluEnv::self().nalu_time();
     NaluEnv::self().naluOutputP0()
       << "WallClockTime: " << timeStepCount_
@@ -359,6 +356,31 @@ TimeIntegrator::integrate_realm()
     (*ii)->dump_simulation_time();
   }
   
+}
+
+void TimeIntegrator::post_realm_advance()
+{
+  std::vector<Realm *>::iterator ii;
+
+  // process any post converged work
+  for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+    (*ii)->post_converged_work();
+  }
+
+  // populate data from io transfer
+  for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+    (*ii)->process_io_transfer();
+  }
+
+  // provide output/restart after nonlinear iteration
+  for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+    (*ii)->output_converged_results();
+  }
+
+  // output mean norm
+  provide_mean_norm();
+
+  timeStepNm1_ = timeStepN_;
 }
 
 //--------------------------------------------------------------------------
