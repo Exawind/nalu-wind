@@ -112,7 +112,9 @@ class Realm {
   virtual void breadboard();
 
   virtual void initialize();
- 
+  virtual void initialize_prolog();
+  virtual void initialize_epilog();
+
   Simulation *root() const;
   Simulation *root();
   Realms *parent() const;

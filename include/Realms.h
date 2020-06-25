@@ -40,6 +40,8 @@ public:
   void load(const YAML::Node & node) ;
   void breadboard();
   void initialize();
+  void initialize_prolog();
+  void initialize_epilog();
   Simulation *root();
   Simulation *parent();
   size_t size() {return realmVector_.size();}

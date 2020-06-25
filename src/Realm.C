@@ -420,9 +420,147 @@ Realm::convert_bytes(double bytes)
   return out.str();
 }
 
-//--------------------------------------------------------------------------
-//-------- initialize -----------------------------------------------
-//--------------------------------------------------------------------------
+void Realm::initialize_prolog()
+{
+  NaluEnv::self().naluOutputP0() << "Realm::initialize() Begin " << std::endl;
+
+  if (doPromotion_) {
+    setup_element_promotion();
+  }
+  // field registration
+  setup_nodal_fields();
+  setup_edge_fields();
+  setup_element_fields();
+
+  // property maps and evaluation algorithms
+  setup_property();
+
+  // interior algorithm creation
+  setup_interior_algorithms();
+
+  // create boundary conditions
+  setup_bc();
+
+  // post processing algorithm creation
+  setup_post_processing_algorithms();
+
+  // create initial conditions
+  setup_initial_conditions();
+
+  // set global variables that have not yet been set
+  initialize_global_variables();
+
+  // Populate_mesh fills in the entities (nodes/elements/etc) and
+  // connectivities, but no field-data. Field-data is not allocated yet.
+  NaluEnv::self().naluOutputP0() << "Realm::ioBroker_->populate_mesh() Begin" << std::endl;
+  double time = -NaluEnv::self().nalu_time();
+  ioBroker_->populate_mesh();
+  time += NaluEnv::self().nalu_time();
+  timerPopulateMesh_ += time;
+  NaluEnv::self().naluOutputP0() << "Realm::ioBroker_->populate_mesh() End" << std::endl;
+
+  // If we want to create all internal edges, we want to do it before
+  // field-data is allocated because that allows better performance in
+  // the create-edges code.
+  if (realmUsesEdges_ )
+    create_edges();
+
+  // create the nodes for possible data probe
+
+  // output entity counts including max/min
+  if ( provideEntityCount_ )
+    provide_entity_count();
+
+  // Now the mesh is fully populated, so we're ready to populate
+  // field-data including coordinates, and attributes and/or distribution factors
+  // if those exist on the input mesh file.
+  NaluEnv::self().naluOutputP0() << "Realm::ioBroker_->populate_field_data() Begin" << std::endl;
+  time = -NaluEnv::self().nalu_time();
+  ioBroker_->populate_field_data();
+  time += NaluEnv::self().nalu_time();
+  timerPopulateFieldData_ += time;
+  NaluEnv::self().naluOutputP0() << "Realm::ioBroker_->populate_field_data() End" << std::endl;
+
+  // rebalance mesh using stk_balance
+  if (rebalanceMesh_) {
+    rebalance_mesh();
+  }
+
+  if (doBalanceNodes_) {
+    balance_nodes();
+  }
+
+  if (doPromotion_) {
+    promote_mesh();
+    create_promoted_output_mesh();
+  }
+
+  // manage NaluGlobalId for linear system
+  set_global_id();
+
+  // check that all bcs are covering exposed surfaces
+  if ( checkForMissingBcs_ )
+    enforce_bc_on_exposed_faces();
+
+  // output and restart files
+  create_output_mesh();
+  create_restart_mesh();
+
+  // sort exposed faces only when using consolidated bc NGP approach
+  if ( solutionOptions_->useConsolidatedBcSolverAlg_ ) {
+    const double timeSort = NaluEnv::self().nalu_time();
+    bulkData_->sort_entities(EntityExposedFaceSorter());
+    timerSortExposedFace_ += (NaluEnv::self().nalu_time() - timeSort);
+  }
+
+  // variables that may come from the initial mesh
+  input_variables_from_mesh();
+
+  populate_boundary_data();
+
+  ScalarIntFieldType* iblank = metaData_->get_field<ScalarIntFieldType>(
+    stk::topology::NODE_RANK, "iblank");
+  stk::mesh::field_fill(1, *iblank);
+
+  if ( has_mesh_deformation() || solutionOptions_->meshMotion_ )
+    init_current_coordinates();
+
+  if ( hasPeriodic_ )
+    periodicManager_->build_constraints();
+
+  if ( solutionOptions_->meshTransformation_ )
+    meshTransformationAlg_->initialize( get_current_time() );
+
+  if ( solutionOptions_->meshMotion_ )
+    meshMotionAlg_->initialize( get_current_time() );
+
+  compute_geometry();
+
+  if ( solutionOptions_->meshMotion_ )
+    meshMotionAlg_->post_compute_geometry();
+
+  if ( hasNonConformal_ )
+    initialize_non_conformal();
+}
+
+void Realm::initialize_epilog()
+{
+  initialize_post_processing_algorithms();
+
+  compute_l2_scaling();
+
+  // Now that the inactive selectors have been processed; we are ready to setup
+  // HYPRE IDs
+  set_hypre_global_id();
+
+  equationSystems_.initialize();
+
+  // check job run size after mesh creation, linear system initialization
+  check_job(false);
+
+  NaluEnv::self().naluOutputP0() << "Realm::initialize() End " << std::endl;
+}
+
 void
 Realm::initialize()
 {
