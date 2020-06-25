@@ -39,7 +39,6 @@ public:
 
   void load(const YAML::Node & node) ;
   void breadboard();
-  void initialize();
   void initialize_prolog();
   void initialize_epilog();
   Simulation *root();

@@ -71,14 +71,6 @@ Realms::breadboard()
   }
 }
 
-void 
-Realms::initialize()
-{
-  for ( size_t irealm = 0; irealm < realmVector_.size(); ++irealm ) {
-    realmVector_[irealm]->initialize();
-  }
-}
-
 void Realms::initialize_prolog()
 {
   for (auto* realm: realmVector_)
