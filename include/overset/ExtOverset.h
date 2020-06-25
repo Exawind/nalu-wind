@@ -44,8 +44,7 @@ public:
   void set_multi_solver_mode(const bool flag)
   { multiSolverMode_ = flag; }
 
-  bool is_external_overset() const
-  { return hasOverset_ && isExtOverset_; }
+  bool is_external_overset() const { return isExtOverset_; }
 
 private:
   TimeIntegrator& time_;
