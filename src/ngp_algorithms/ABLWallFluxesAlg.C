@@ -83,7 +83,6 @@ void compute_fluxes_given_surface_heat_flux
     // Compute friction velocity using Monin-Obukhov similarity.
     frictionVelocity = (kappa * up) / (std::log(zp / z0) - Psi_m);
 
-/*
     // Compute Obukhov length.
     if (temperatureFlux == 0.0)
     {
@@ -91,9 +90,8 @@ void compute_fluxes_given_surface_heat_flux
     }
     else
     {
-      L = -(Tref_ * std::pow(frictionVelocity,3))/(kappa_ * gravity_ * temperatureFlux);
+      L = -(Tref * std::pow(frictionVelocity,3))/(kappa * g * temperatureFlux);
     }
-*/
 
     // Recompute Psi_h and Psi_m.
     Psi_h = Psi_h_func(zp/L, Psi_h_factor);
@@ -175,7 +173,7 @@ void compute_fluxes_given_surface_temperature
     double deltaT = Tp - Tsurface;
     temperatureFlux = -(deltaT * frictionVelocity * kappa) / (std::log(zp / z0) - Psi_m);
 
-/*
+
     // Compute Obukhov length.
     if (temperatureFlux == 0.0)
     {
@@ -185,7 +183,7 @@ void compute_fluxes_given_surface_temperature
     {
       L = -(Tref * std::pow(frictionVelocity,3))/(kappa * g * temperatureFlux);
     }
-*/
+
 
     // Recompute Psi_h and Psi_m.
     Psi_h = Psi_h_func(zp/L, Psi_h_factor);
@@ -299,15 +297,15 @@ void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
     tableSurfaceTemperatures_[i] = tableData[i][2]; 
     tableWeights_[i] = tableData[i][3];
   }
-//std::cout << "nTimes = " << nTimes << std::endl;
-//std::cout << "Time (s)     Surface Flux (K-m/s)     Surface Temperature (K)     Blending Factor" << std::endl;
-//for (std::vector<DblType>::size_type i = 0; i < nTimes; i++) {
-//  std::cout << tableTimes_[i] << " " << tableFluxes_[i] << " " << tableSurfaceTemperatures_[i] << " " << tableWeights_[i] << std::endl;
-//}
+  std::cout << "nTimes = " << nTimes << std::endl;
+  std::cout << "Time (s)     Surface Flux (K-m/s)     Surface Temperature (K)     Blending Factor" << std::endl;
+  for (std::vector<DblType>::size_type i = 0; i < nTimes; i++) {
+    std::cout << tableTimes_[i] << " " << tableFluxes_[i] << " " << tableSurfaceTemperatures_[i] << " " << tableWeights_[i] << std::endl;
+  }
   
   // Read in the surface roughness.
   get_if_present<DblType>(node,"roughness_height",z0_,z0_);
-//std::cout << "Surface Roughness: " << z0_ << " m" << std::endl;
+  std::cout << "Surface Roughness: " << z0_ << " m" << std::endl;
 
   // Get the gravity information.
   std::vector<double> gravity_vector;
@@ -316,16 +314,16 @@ void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
   gravity_vector = realm_.solutionOptions_->gravity_;
   get_if_present(node,"gravity_vector_component",gravityVectorComponent_,gravityVectorComponent_);
   gravity_ = std::abs(gravity_vector[gravityVectorComponent_ - 1]);
-//std::cout << "Gravity Vector: " << gravity_vector[0] << " " << gravity_vector[1] << " " << gravity_vector[2] << " m/s^2" << std::endl;
-//std::cout << "Gravity: " << gravity_ << " m/s^2" << std::endl;
+  std::cout << "Gravity Vector: " << gravity_vector[0] << " " << gravity_vector[1] << " " << gravity_vector[2] << " m/s^2" << std::endl;
+  std::cout << "Gravity: " << gravity_ << " m/s^2" << std::endl;
 
   // Read in the reference temperature.
   get_if_present<DblType>(node,"reference_temperature",Tref_,Tref_);
-//std::cout << "Reference Temperature: " << Tref_ << " K" << std::endl;
+  std::cout << "Reference Temperature: " << Tref_ << " K" << std::endl;
 
   // Read in the averaging type.
   get_if_present(node, "monin_obukhov_averaging_type", averagingType_, averagingType_);
-//std::cout << "Averaging Type: " << averagingType_ << std::endl;
+  std::cout << "Averaging Type: " << averagingType_ << std::endl;
 
   // If planar averaging is used, check to make sure ABL boundary layer statistics are enabled.
   if (averagingType_ == "planar")
@@ -338,7 +336,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
 
   // Read in the fluctuation type.
   get_if_present(node, "fluctuation_model", fluctuationModel_, fluctuationModel_);
-//std::cout << "Fluctuation Model: " << fluctuationModel_ << std::endl;
+  std::cout << "Fluctuation Model: " << fluctuationModel_ << std::endl;
 
   // Read in M-O scaling law parameters.
   get_if_present(node,"kappa",kappa_,kappa_);
@@ -346,11 +344,11 @@ void ABLWallFluxesAlg<BcAlgTraits>::load(const YAML::Node& node)
   get_if_present(node,"beta_h",beta_h_,beta_h_);
   get_if_present(node,"gamma_m",gamma_m_,gamma_m_);
   get_if_present(node,"gamma_h",gamma_h_,gamma_h_);
-//std::cout << "kappa: " << kappa_ << std::endl;
-//std::cout << "beta_m: " << beta_m_ << std::endl;
-//std::cout << "beta_h: " << beta_h_ << std::endl;
-//std::cout << "gamma_m: " << gamma_m_ << std::endl;
-//std::cout << "gamma_h: " << gamma_h_ << std::endl;
+  std::cout << "kappa: " << kappa_ << std::endl;
+  std::cout << "beta_m: " << beta_m_ << std::endl;
+  std::cout << "beta_h: " << beta_h_ << std::endl;
+  std::cout << "gamma_m: " << gamma_m_ << std::endl;
+  std::cout << "gamma_h: " << gamma_h_ << std::endl;
 
 }
 
@@ -374,9 +372,9 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   utils::linear_interp(tableTimes_, tableFluxes_, currTime, currFlux);
   utils::linear_interp(tableTimes_, tableSurfaceTemperatures_, currTime, currSurfaceTemperature);
   utils::linear_interp(tableTimes_, tableWeights_, currTime, currWeight);
-//std::cout << "Flux = " << currFlux << std::endl;
-//std::cout << "Surface Temperature = " << currSurfaceTemperature << std::endl;
-//std::cout << "Weight = " << currWeight << std::endl;
+  std::cout << "Flux = " << currFlux << std::endl;
+  std::cout << "Surface Temperature = " << currSurfaceTemperature << std::endl;
+  std::cout << "Weight = " << currWeight << std::endl;
 
   // Bring class members into local scope for device capture
   const unsigned velID = velocityNp1_;
@@ -415,11 +413,11 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
     realm_.bdyLayerStats_->velocity_magnitude(h[1], &velMagAverage);
     realm_.bdyLayerStats_->temperature(h[1], &tempAverage);  
     hAverage = h[1];
-  //std::cout << "h = " << h[0] << " " << h[1] << std::endl;
-  //std::cout << "hAverage = " << hAverage << std::endl;
-  //std::cout << "velAverage = " << velAverage[0] << " " << velAverage[1] << " " << velAverage[2] << std::endl;
-  //std::cout << "velMagAverage = " << velMagAverage << std::endl;
-  //std::cout << "tempAverage = " << tempAverage << std::endl;
+    std::cout << "h = " << h[0] << " " << h[1] << std::endl;
+    std::cout << "hAverage = " << hAverage << std::endl;
+    std::cout << "velAverage = " << velAverage[0] << " " << velAverage[1] << " " << velAverage[2] << std::endl;
+    std::cout << "velMagAverage = " << velMagAverage << std::endl;
+    std::cout << "tempAverage = " << tempAverage << std::endl;
   }
 
   DblType fluctuationFactor = 0.0;
@@ -537,8 +535,8 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
             velOppNode[d] = v_vel(nodeL,d);
         }
         tempOppNode = v_temp(nodeL);
-      //std::cout << "velIp = (" << velIp[0] << " " << velIp[1] << " " << velIp[2] << "), tempIp = " << tempIp << std::endl;
-      //std::cout << "velOppNode = (" << velOppNode[0] << " " << velOppNode[1] << " " << velOppNode[2] << "), tempOppNode = " << tempOppNode << std::endl;
+        std::cout << "velIp = (" << velIp[0] << " " << velIp[1] << " " << velIp[2] << "), tempIp = " << tempIp << std::endl;
+        std::cout << "velOppNode = (" << velOppNode[0] << " " << velOppNode[1] << " " << velOppNode[2] << "), tempOppNode = " << tempOppNode << std::endl;
 
         DoubleType uIpTangential = 0.0;
         DoubleType uOppNodeTangential = 0.0;
@@ -594,10 +592,17 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
 
         DoubleType thetai = tempOppNode;
         DoubleType thetaiAvg = tempAverage;
-      //DoubleType sgnDenom = ((thetaiAvg - Tref) > 0.0) ? 1.0 : -1.0;
-      //qSurf_calc = (1.0 - avgFactor)*1.0 + (avgFactor*fluctuationFactor)*((((1.0-MoengFactor)*SAvg + MoengFactor*S)*(thetaiAvg-Tref) + SAvg*(thetai - thetaiAvg) ) / sgnDenom*stk::math::max((SAvg * stk::math::abs((thetaiAvg - Tref))),eps));
-        qSurf_calc = (1.0 - avgFactor)*1.0 + (avgFactor*fluctuationFactor)*((((1.0-MoengFactor)*SAvg + MoengFactor*S)*(thetaiAvg-Tref) + SAvg*(thetai - thetaiAvg) ) / stk::math::max((SAvg * (thetaiAvg - Tref)),eps));
-      //std::cout << "qSurf_calc = " << qSurf_calc << std::endl;
+        DoubleType sgnDeltaTheta = stk::math::if_then_else((thetaiAvg - Tref) >= 0.0, 1.0, -1.0);
+        DoubleType term1 = sgnDeltaTheta*stk::math::max(((1.0-MoengFactor)*SAvg + MoengFactor*S)*stk::math::abs(thetaiAvg - Tref),eps);
+        DoubleType term2 = SAvg*(thetai - thetaiAvg);
+        DoubleType term3 = sgnDeltaTheta*stk::math::max((SAvg * stk::math::abs((thetaiAvg - Tref))),eps);
+      //qSurf_calc = (1.0 - avgFactor)*1.0 
+      //           + (avgFactor*fluctuationFactor) * 
+      //             ((sgnDeltaTheta*stk::math::max(((1.0-MoengFactor)*SAvg + MoengFactor*S)*stk::math::abs(thetaiAvg - Tref),eps) + SAvg*(thetai - thetaiAvg)) / sgnDeltaTheta*stk::math::max((SAvg * stk::math::abs((thetaiAvg - Tref))),eps));
+        qSurf_calc = (1.0 - avgFactor)*1.0 + (avgFactor*fluctuationFactor)*((term1+term2)/term3);
+      //qSurf_calc = (1.0 - avgFactor)*1.0 + (avgFactor*fluctuationFactor)*((((1.0-MoengFactor)*SAvg + MoengFactor*S)*(thetaiAvg-Tref) + SAvg*(thetai - thetaiAvg) ) / stk::math::max((SAvg * (thetaiAvg - Tref)),eps));
+
+        std::cout << "qSurf_calc = " << qSurf_calc << " " << "term 1, 2, 3 = " << term1 << " " << term2 << " " << term3 << std::endl;
         
         DoubleType u_MO = (1.0 - avgFactor)*uOppNodeTangential + (avgFactor)*velMagAverage;
         DoubleType temp_MO = (1.0 - avgFactor)*(tempOppNode) + (avgFactor)*(tempAverage);
@@ -696,7 +701,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
               qSurf_alg2
             );
           }
-          else if (stk::simd::get_data(temp_MO, si) < -eps)
+          else if (stk::simd::get_data(temp_MO, si) - currSurfaceTemperature < -eps)
           {
             compute_fluxes_given_surface_temperature
             (
@@ -730,7 +735,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
           qSurf = ((1.0 - (currWeight - 1.0)) * currFlux   + (currWeight - 1.0) * qSurf_alg2) * stk::simd::get_data(rhoIp, si) * stk::simd::get_data(CpIp, si);
           Tsurf =  (1.0 - (currWeight - 1.0)) * Tsurf_alg1 + (currWeight - 1.0) * currSurfaceTemperature;
 
-        //std::cout << "utau = " << utau << " temp flux = " << qSurf/(stk::simd::get_data(rhoIp, si) * stk::simd::get_data(CpIp, si))  << " qSurf = " << qSurf << " Tsurf = " << Tsurf << " currFlux = " << currFlux << std::endl;
+          std::cout << "utau = " << utau << " temp flux = " << qSurf/(stk::simd::get_data(rhoIp, si) * stk::simd::get_data(CpIp, si))  << " qSurf = " << qSurf << " Tsurf = " << Tsurf << " currFlux = " << currFlux << std::endl;
 
 
           // Compute the fluctuating flux fields.
@@ -738,7 +743,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
              tauSurf[d] = -stk::simd::get_data(rhoIp, si) * utau * utau * stk::simd::get_data(tauSurf_calc[d], si);
           }
           qSurf *= stk::simd::get_data(qSurf_calc, si);
-        //std::cout << "tauSurf[0] = " << tauSurf[0] << " tauSurf[1] = " << tauSurf[1] << " tauSurf[2] = " << tauSurf[2] << " qSurf = " << qSurf << std::endl;
+          std::cout << "tauSurf[0] = " << tauSurf[0] << " tauSurf[1] = " << tauSurf[1] << " tauSurf[2] = " << tauSurf[2] << " qSurf = " << qSurf << std::endl;
 
 
 
