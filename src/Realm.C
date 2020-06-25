@@ -420,11 +420,7 @@ Realm::convert_bytes(double bytes)
   return out.str();
 }
 
-//--------------------------------------------------------------------------
-//-------- initialize -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::initialize()
+void Realm::initialize_prolog()
 {
   NaluEnv::self().naluOutputP0() << "Realm::initialize() Begin " << std::endl;
 
@@ -444,7 +440,7 @@ Realm::initialize()
 
   // create boundary conditions
   setup_bc();
-  
+
   // post processing algorithm creation
   setup_post_processing_algorithms();
 
@@ -516,7 +512,7 @@ Realm::initialize()
     bulkData_->sort_entities(EntityExposedFaceSorter());
     timerSortExposedFace_ += (NaluEnv::self().nalu_time() - timeSort);
   }
-  
+
   // variables that may come from the initial mesh
   input_variables_from_mesh();
 
@@ -545,12 +541,10 @@ Realm::initialize()
 
   if ( hasNonConformal_ )
     initialize_non_conformal();
+}
 
-  if ( hasOverset_ && !isExternalOverset_ ) {
-    oversetManager_->initialize();
-    initialize_overset();
-  }
-
+void Realm::initialize_epilog()
+{
   initialize_post_processing_algorithms();
 
   compute_l2_scaling();
@@ -1754,11 +1748,7 @@ Realm::makeSureNodesHaveValidTopology()
   ThrowRequire(0 == nodes_vector.size());
 }
 
-//--------------------------------------------------------------------------
-//-------- pre_timestep_work -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::pre_timestep_work()
+void Realm::pre_timestep_work_prolog()
 {
   // check for mesh motion
   if ( solutionOptions_->meshMotion_ ) {
@@ -1772,11 +1762,12 @@ Realm::pre_timestep_work()
     // and non-conformal algorithm
     if ( hasNonConformal_ )
       initialize_non_conformal();
+  }
+}
 
-    // and overset algorithm
-    if ( hasOverset_ )
-      initialize_overset();
-
+void Realm::pre_timestep_work_epilog()
+{
+  if ( solutionOptions_->meshMotion_ ) {
     // Reset the stk::mesh::NgpMesh instance
     meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
 

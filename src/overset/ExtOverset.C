@@ -64,6 +64,8 @@ void ExtOverset::breadboard()
       realm->isExternalOverset_ = true;
   }
 
+  isExtOverset_ = multiSolverMode_ || (noverset > 1);
+
   if (!multiSolverMode_)
     set_communicator();
 }

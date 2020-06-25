@@ -111,8 +111,9 @@ class Realm {
 
   virtual void breadboard();
 
-  virtual void initialize();
- 
+  virtual void initialize_prolog();
+  virtual void initialize_epilog();
+
   Simulation *root() const;
   Simulation *root();
   Realms *parent() const;
@@ -272,7 +273,8 @@ class Realm {
   virtual double compute_adaptive_time_step();
   virtual void swap_states();
   virtual void predict_state();
-  virtual void pre_timestep_work();
+  virtual void pre_timestep_work_prolog();
+  virtual void pre_timestep_work_epilog();
   virtual void output_banner();
   virtual void advance_time_step();
  

@@ -141,12 +141,15 @@ void Simulation::breadboard()
   timeIntegrator_->breadboard();
   transfers_->breadboard();
 }
+
 void Simulation::initialize()
 {
-  realms_->initialize();
+  realms_->initialize_prolog();
   timeIntegrator_->initialize();
   transfers_->initialize();
+  realms_->initialize_epilog();
 }
+
 void Simulation::run()
 {
   NaluEnv::self().naluOutputP0() << std::endl;

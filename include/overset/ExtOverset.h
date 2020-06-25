@@ -44,6 +44,8 @@ public:
   void set_multi_solver_mode(const bool flag)
   { multiSolverMode_ = flag; }
 
+  bool is_external_overset() const { return isExtOverset_; }
+
 private:
   TimeIntegrator& time_;
 
@@ -51,8 +53,16 @@ private:
   std::vector<tioga_nalu::TiogaSTKIface*> tgIfaceVec_;
 #endif
 
+  //! Flag indicating whether we are interfacing external solver
   bool multiSolverMode_{false};
+
+  //! Flag indicating whether there are multiple realms
+  bool isExtOverset_{false};
+
+  //! Is the algorithm decoupled solves
   bool isDecoupled_{true};
+
+  //! Is there any type of overset algorithm available
   bool hasOverset_{false};
 };
 
