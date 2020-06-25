@@ -28,47 +28,6 @@
 namespace sierra{
 namespace nalu{
 
-namespace {
-void pre_timestep_prolog(Realm& realm)
-{
-  if (!realm.solutionOptions_->meshMotion_)
-    return;
-
-  realm.meshMotionAlg_->execute(realm.get_current_time());
-
-  realm.compute_geometry();
-
-  realm.meshMotionAlg_->post_compute_geometry();
-
-  // and non-conformal algorithm
-  if (realm.hasNonConformal_)
-    realm.initialize_non_conformal();
-}
-
-void pre_timestep_epilog(Realm& realm) {
-  if (realm.solutionOptions_->meshMotion_) {
-    // now re-initialize linear system
-    realm.equationSystems_.reinitialize_linear_system();
-  }
-  // deal with non-topology changes, however, moving mesh
-  if ( realm.has_mesh_deformation() ) {
-    // extract target parts for this physics
-    if ( realm.solutionOptions_->externalMeshDeformation_ ) {
-      std::vector<std::string> targetNames = realm.get_physics_target_names();
-      for ( size_t itarget = 0; itarget < targetNames.size(); ++itarget ) {
-        stk::mesh::Part *targetPart = realm.metaData_->get_part(targetNames[itarget]);
-        realm.set_current_coordinates(targetPart);
-      }
-    }
-    realm.compute_geometry();
-  }
-
-  // ask the equation system to do some work
-  realm.equationSystems_.pre_timestep_work();
-}
-
-} // namespace
-
 TimeIntegrator::TimeIntegrator()
 {}
 
@@ -319,16 +278,14 @@ TimeIntegrator::integrate_realm()
     }
     
     {
-      bool updateOverset = false;
       for (auto realm: realmVec_) {
-        pre_timestep_prolog(*realm);
-        updateOverset = updateOverset || realm->does_mesh_move();
+        realm->pre_timestep_work_prolog();
       }
 
-      if (updateOverset) overset_->update_connectivity();
+      overset_->update_connectivity();
 
       for (auto realm: realmVec_) {
-        pre_timestep_epilog(*realm);
+        realm->pre_timestep_work_epilog();
       }
     }
 
@@ -353,7 +310,8 @@ TimeIntegrator::integrate_realm()
       NaluEnv::self().naluOutputP0()
         << "   Realm Nonlinear Iteration: " << k+1 << "/" << nonlinearIterations_ << std::endl
         << std::endl;
-      overset_->exchange_solution();
+      if (overset_->is_external_overset())
+        overset_->exchange_solution();
       for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
         (*ii)->advance_time_step();
         (*ii)->process_multi_physics_transfer();

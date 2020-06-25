@@ -1892,9 +1892,51 @@ Realm::makeSureNodesHaveValidTopology()
   ThrowRequire(0 == nodes_vector.size());
 }
 
-//--------------------------------------------------------------------------
-//-------- pre_timestep_work -----------------------------------------------
-//--------------------------------------------------------------------------
+void Realm::pre_timestep_work_prolog()
+{
+  // check for mesh motion
+  if ( solutionOptions_->meshMotion_ ) {
+
+    meshMotionAlg_->execute( get_current_time() );
+
+    compute_geometry();
+
+    meshMotionAlg_->post_compute_geometry();
+
+    // and non-conformal algorithm
+    if ( hasNonConformal_ )
+      initialize_non_conformal();
+  }
+}
+
+void Realm::pre_timestep_work_epilog()
+{
+  if ( solutionOptions_->meshMotion_ ) {
+    // Reset the stk::mesh::NgpMesh instance
+    meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
+
+    // now re-initialize linear system
+    equationSystems_.reinitialize_linear_system();
+
+  }
+
+  // deal with non-topology changes, however, moving mesh
+  if ( has_mesh_deformation() ) {
+    // extract target parts for this physics
+    if ( solutionOptions_->externalMeshDeformation_ ) {
+      std::vector<std::string> targetNames = get_physics_target_names();
+      for ( size_t itarget = 0; itarget < targetNames.size(); ++itarget ) {
+        stk::mesh::Part *targetPart = metaData_->get_part(targetNames[itarget]);
+        set_current_coordinates(targetPart);
+      }
+    }
+    compute_geometry();
+  }
+
+  // ask the equation system to do some work
+  equationSystems_.pre_timestep_work();
+}
+
 void
 Realm::pre_timestep_work()
 {
