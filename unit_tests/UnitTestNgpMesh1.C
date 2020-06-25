@@ -5,6 +5,7 @@
 #include "stk_mesh/base/GetEntities.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/GetNgpField.hpp"
 
 #include "UnitTestUtils.h"
 #include "UnitTestRealm.h"
@@ -85,8 +86,8 @@ void test_ngp_mesh_field_values(const stk::mesh::BulkData& bulk,
   const stk::mesh::BucketVector& elemBuckets = bulk.get_buckets(stk::topology::ELEM_RANK, all_local);
 
   stk::mesh::NgpMesh ngpMesh(bulk);
-  stk::mesh::NgpField<double> ngpVelocity(bulk, *velocity);
-  stk::mesh::NgpField<double> ngpMassFlowRate(bulk, *massFlowRate);
+  stk::mesh::NgpField<double>& ngpVelocity = stk::mesh::get_updated_ngp_field<double>(*velocity);
+  stk::mesh::NgpField<double>& ngpMassFlowRate = stk::mesh::get_updated_ngp_field<double>(*massFlowRate);
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = 0;

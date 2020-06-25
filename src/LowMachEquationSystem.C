@@ -909,14 +909,17 @@ LowMachEquationSystem::predict_state()
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
 
-  const auto& rhoN = fieldMgr.get_field<double>(
+  auto& rhoN = fieldMgr.get_field<double>(
     density_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
   auto& rhoNp1 = fieldMgr.get_field<double>(
     density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
-  const auto& presN = nalu_ngp::get_ngp_field(
+  auto& presN = nalu_ngp::get_ngp_field(
     meshInfo, "pressure", stk::mesh::StateN);
   auto& presNp1 = nalu_ngp::get_ngp_field(
     meshInfo, "pressure", stk::mesh::StateNP1);
+
+  rhoN.sync_to_device();
+  presN.sync_to_device();
 
   const auto& meta = realm_.meta_data();
   const stk::mesh::Selector sel =
@@ -2418,6 +2421,7 @@ MomentumEquationSystem::initialize()
     const double dt = realm_.get_time_step();
     const double gamma1 = realm_.get_gamma1();
     stk::mesh::field_fill(gamma1/dt, *Udiag_);
+    Udiag_->modify_on_host();
   }
 }
 
