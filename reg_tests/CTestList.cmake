@@ -210,6 +210,7 @@ if(NOT ENABLE_CUDA)
 
   if (ENABLE_TIOGA AND ENABLE_HYPRE)
     add_test_r(oversetRotCylinderHypre 4)
+    add_test_r(oversetRotCylMultiRealm 4)
   endif()
 
   #=============================================================================
