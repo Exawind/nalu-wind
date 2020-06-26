@@ -111,7 +111,7 @@ MassFractionEquationSystem::MassFractionEquationSystem(
 {
   // extract solver name and solver object
   std::string solverName = realm_.equationSystems_.get_solver_block_name("mass_fraction");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_MASS_FRACTION);
+  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, realm_.name(), EQ_MASS_FRACTION);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
   // turn off standard output
   linsys_->provideOutput_ = false;
