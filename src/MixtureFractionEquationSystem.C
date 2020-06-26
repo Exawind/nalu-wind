@@ -142,7 +142,7 @@ MixtureFractionEquationSystem::MixtureFractionEquationSystem(
 {
   // extract solver name and solver object
   std::string solverName = realm_.equationSystems_.get_solver_block_name("mixture_fraction");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_MIXTURE_FRACTION);
+  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, realm_.name(), EQ_MIXTURE_FRACTION);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   // determine nodal gradient form
@@ -858,19 +858,9 @@ MixtureFractionEquationSystem::reinitialize_linear_system()
   // delete linsys
   delete linsys_;
 
-  // delete old solver
-  const EquationType theEqID = EQ_MIXTURE_FRACTION;
-  LinearSolver *theSolver = NULL;
-  std::map<EquationType, LinearSolver *>::const_iterator iter
-    = realm_.root()->linearSolvers_->solvers_.find(theEqID);
-  if (iter != realm_.root()->linearSolvers_->solvers_.end()) {
-    theSolver = (*iter).second;
-    delete theSolver;
-  }
-
   // create new solver
   std::string solverName = realm_.equationSystems_.get_solver_block_name("mixture_fraction");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_MIXTURE_FRACTION);
+  LinearSolver *solver = realm_.root()->linearSolvers_->reinitialize_solver(solverName, realm_.name(), EQ_MIXTURE_FRACTION);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   // initialize
