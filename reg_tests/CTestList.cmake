@@ -174,6 +174,8 @@ if(NOT ENABLE_CUDA)
   add_test_r_cat(steadyTaylorVortex 4 6)
   add_test_r(variableDensNonIso 2)
   add_test_r(variableDensNonUniform 2)
+  add_test_r(ActLineSimple 4)
+  add_test_r(ActLineSimpleNGP 4)
 
   if (ENABLE_FFTW)
     add_test_r(ablHill3d_pp 4)
