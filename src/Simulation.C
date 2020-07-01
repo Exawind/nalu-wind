@@ -20,6 +20,7 @@
 #include <TimeIntegrator.h>
 #include <LinearSolvers.h>
 #include <NaluVersionInfo.h>
+#include "overset/ExtOverset.h"
 
 #include <Ioss_SerializeIO.h>
 
@@ -148,6 +149,18 @@ void Simulation::initialize()
   timeIntegrator_->initialize();
   transfers_->initialize();
   realms_->initialize_epilog();
+}
+
+void Simulation::init_prolog()
+{
+  realms_->initialize_prolog();
+  timeIntegrator_->overset_->initialize();
+}
+
+void Simulation::init_epilog()
+{
+  realms_->initialize_epilog();
+  transfers_->initialize();
 }
 
 void Simulation::run()
