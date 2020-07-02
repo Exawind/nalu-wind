@@ -331,8 +331,6 @@ ProjectedNodalGradientEquationSystem::reinitialize_linear_system()
   const bool provideOutput = linsys_->provideOutput_;
   delete linsys_;
 
-  // delete old solver
-  const EquationType theEqID = eqType_;
   // create new solver; reset parameters
   std::string solverName = realm_.equationSystems_.get_solver_block_name(dofName_);
   LinearSolver *solver = realm_.root()->linearSolvers_->reinitialize_solver(solverName, realm_.name(), eqType_);
