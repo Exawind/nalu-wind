@@ -14,7 +14,9 @@
 #include "NaluEnv.h"
 #include "Realm.h"
 
+#ifdef NALU_USES_TIOGA
 #include "tioga.h"
+#endif
 
 namespace sierra {
 namespace nalu {
