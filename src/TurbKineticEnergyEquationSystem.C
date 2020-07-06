@@ -9,6 +9,7 @@
 
 
 
+#include "FieldTypeDef.h"
 #include <TurbKineticEnergyEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <AssembleScalarEdgeOpenSolverAlgorithm.h>
@@ -935,6 +936,52 @@ TurbKineticEnergyEquationSystem::initial_work()
     });
 
   ngpTke.modify_on_device();
+}
+
+void
+TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
+{
+  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using MeshIndex = typename Traits::MeshIndex;
+
+  // do not let the user specify a negative field
+  const double clipValue = 1.0e-16;
+  const auto& meta = realm_.meta_data();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  auto ngpTke = realm_.ngp_field_manager().get_field<double>(
+    tke_->mesh_meta_data_ordinal());
+
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part())
+    & stk::mesh::selectField(*tke_);
+
+  nalu_ngp::run_entity_algorithm(
+    "clip_tke",
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      if (ngpTke.get(mi, 0) < 0.0)
+        ngpTke.get(mi, 0) = clipValue;
+    });
+  ngpTke.modify_on_device();
+
+  auto* tkeBCField =
+    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tke_bc");
+  if (tkeBCField != nullptr) {
+    const stk::mesh::Selector bc_sel =
+    (meta.locally_owned_part() | meta.globally_shared_part()) & stk::mesh::selectField(*tkeBCField);
+
+    auto ngpTkeBC = realm_.ngp_field_manager().get_field<double>(
+    tkeBCField->mesh_meta_data_ordinal());
+    ngpTkeBC.sync_to_device();
+    nalu_ngp::run_entity_algorithm(
+      "clip_tke_bc",
+      ngpMesh, stk::topology::NODE_RANK, sel,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        if (ngpTkeBC.get(mi, 0) < 0.0)
+          ngpTkeBC.get(mi, 0) = clipValue;
+      });
+    ngpTkeBC.modify_on_device();
+  }
 }
 
 //--------------------------------------------------------------------------
