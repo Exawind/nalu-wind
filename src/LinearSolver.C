@@ -26,7 +26,6 @@
 #include <BelosConfigDefs.hpp>
 #include <BelosLinearProblem.hpp>
 #include <BelosTpetraAdapter.hpp>
-#include <Belos_Tpetra_GmresSstep.hpp>
 
 #include <Ifpack2_Factory.hpp>
 #include <Kokkos_DefaultNode.hpp>
@@ -113,10 +112,6 @@ void TpetraLinearSolver::setupLinearSolver(
 
     // create the solver, e.g., gmres, cg, tfqmr, bicgstab
     LinSys::SolverFactory sFactory;
-    if (config_->get_method() == "TPETRA GMRES S-STEP") {
-      bool verbose = (params_->get<int>("Output Frequency", 0) > 0);
-      BelosTpetra::Impl::register_GmresSstep (verbose);
-    }
     solver_ = sFactory.create(config_->get_method(), params_);
     solver_->setProblem(problem_);
   }
