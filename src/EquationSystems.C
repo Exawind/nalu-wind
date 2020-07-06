@@ -881,6 +881,20 @@ EquationSystems::populate_boundary_data()
 }
 
 //--------------------------------------------------------------------------
+//-------- post_external_data_transfer_work --------------------------------
+//--------------------------------------------------------------------------
+void
+EquationSystems::post_external_data_transfer_work()
+{
+  EquationSystemVector::iterator ii;
+  for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii ) {
+    for ( size_t k = 0; k < (*ii)->bcDataAlg_.size(); ++k ) {
+      (*ii)->post_external_data_transfer_work();
+    }
+  }
+}
+
+//--------------------------------------------------------------------------
 //-------- boundary_data_to_state_data -------------------------------------
 //--------------------------------------------------------------------------
 void

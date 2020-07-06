@@ -4227,6 +4227,8 @@ Realm::process_external_data_transfer()
   std::vector<Transfer *>::iterator ii;
   for( ii=externalDataTransferVec_.begin(); ii!=externalDataTransferVec_.end(); ++ii )
     (*ii)->execute();
+
+  equationSystems_.post_external_data_transfer_work();
   timeXfer += NaluEnv::self().nalu_time();
   timerTransferExecute_ += timeXfer;
 }
