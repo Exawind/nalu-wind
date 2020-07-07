@@ -221,7 +221,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
           const auto lambda =
             0.5 * (tmdot - stk::math::sqrt(tmdot * tmdot + 8 * sigma * sigma));
           rhs(rowR) -= stk::math::if_then_else(tmdot > 0, tmdot * v_uNp1(nodeR, i),
-           tmdot * v_uNp1(nodeR, i) - lambda * (v_uNp1(nodeR, i) - v_uBc(nodeR, i)));
+           tmdot * v_uNp1(nodeR, i) - lambda * (v_uNp1(nodeR, i) - v_uBc(ip, i)));
           lhs(rowR, rowR) += stk::math::if_then_else(tmdot > 0, tmdot, tmdot - lambda);
         }
         break;
