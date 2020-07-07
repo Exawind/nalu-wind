@@ -41,6 +41,7 @@ public:
   const unsigned pressureField_  {stk::mesh::InvalidOrdinal};
   const unsigned gradP_          {stk::mesh::InvalidOrdinal};
   const unsigned coordinates_    {stk::mesh::InvalidOrdinal};
+  const unsigned dynPress_       {stk::mesh::InvalidOrdinal};
 
   MasterElement* meFC_ {nullptr};
   MasterElement* meSCS_{nullptr};

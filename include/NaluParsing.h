@@ -12,6 +12,7 @@
 #ifndef NaluParsing_h
 #define NaluParsing_h
 
+#include "edge_kernels/MomentumOpenEdgeKernel.h"
 #include <BoundaryConditions.h>
 #include <Enums.h>
 #include <InitialConditions.h>
@@ -129,10 +130,14 @@ struct OpenUserData : public UserData {
   bool sdrSpec_;
   bool mixFracSpec_;
   bool massFractionSpec_;
+  bool totalP_;
+  EntrainmentMethod entrainMethod_;
 
   OpenUserData()
     : UserData(),
-      uSpec_(false), pSpec_(false), tkeSpec_(false), sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false)
+      uSpec_(false), pSpec_(false), tkeSpec_(false), 
+      sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false), 
+      totalP_{false}, entrainMethod_{EntrainmentMethod::COMPUTED}
   {}
 };
 

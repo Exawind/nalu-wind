@@ -8,6 +8,7 @@
 //
 
 
+#include "Enums.h"
 #include "edge_kernels/MomentumOpenEdgeKernel.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
@@ -18,6 +19,8 @@
 #include "utils/StkHelpers.h"
 
 #include "stk_mesh/base/Field.hpp"
+#include <stk_math/StkMath.hpp>
+#include <stk_util/util/ReportHandler.hpp>
 
 namespace sierra{
 namespace nalu{
@@ -31,7 +34,8 @@ MomentumOpenEdgeKernel<BcAlgTraits>::MomentumOpenEdgeKernel(
   SolutionOptions* solnOpts,
   ScalarFieldType* viscosity,
   ElemDataRequests& faceData,
-  ElemDataRequests& elemData)
+  ElemDataRequests& elemData,
+  EntrainmentMethod method)
   : NGPKernel<MomentumOpenEdgeKernel<BcAlgTraits>>(),
     coordinates_(get_field_ordinal(meta, solnOpts->get_coordinates_name())),
     dudx_(get_field_ordinal(meta, "dudx")),
@@ -42,6 +46,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::MomentumOpenEdgeKernel(
     viscosity_(viscosity->mesh_meta_data_ordinal()),
     includeDivU_(solnOpts->includeDivU_),
     nfEntrain_(solnOpts->nearestFaceEntrain_),
+    entrain_(method),
     meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
            typename BcAlgTraits::FaceTraits>()),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element<
@@ -72,7 +77,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
   ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& elemScratchViews,
   int elemFaceOrdinal)
 {
-  // nearest face entrainment
+    // nearest face entrainment
   const double om_nfEntrain = 1.0 - nfEntrain_;
 
   // Work arrays
@@ -162,7 +167,6 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
       for (int j=0; j < BcAlgTraits::nDim_; ++j) {
         fx[i] += -visc * (duidxj[i][j] + duidxj[j][i]) * v_areavec(ip, j);
       }
-
       fxnx += nx[i] * fx[i];
     }
 
@@ -208,30 +212,49 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
       }
     }
 
-    // advection
-    const DoubleType tmdot = v_massflow(ip);
-
-    for (int i=0; i < BcAlgTraits::nDim_; ++i) {
-      const int rowR = nodeR * BcAlgTraits::nDim_ + i;
-
-      rhs(rowR) -= stk::math::if_then_else((tmdot > 0.0),
-        tmdot * v_uNp1(nodeR, i), // leaving the domain
-        tmdot * ((nfEntrain_ * uxnx + om_nfEntrain * uxnxip) * nx[i] + // constrain to be normal
-                 (v_uBc(ip, i) - uspecxnx * nx[i]))); // user spec entrainment (tangential)
-
-      // leaving the domain
-      lhs(rowR, rowR) += stk::math::if_then_else((tmdot > 0.0),tmdot,0.0);
-
-      // entraining; constrain to be normal
-      for (int j=0; j < BcAlgTraits::nDim_; ++j) {
-        const int colL = nodeL * BcAlgTraits::nDim_ + j;
-        const int colR = nodeR * BcAlgTraits::nDim_ + j;
-
-        lhs(rowR,colL) += stk::math::if_then_else((tmdot > 0.0),0.0,
-          tmdot * om_nfEntrain * 0.5 * nx[i] * nx[j]);
-        lhs(rowR,colR) += stk::math::if_then_else((tmdot > 0.0),0.0,
-          tmdot * (nfEntrain_ + om_nfEntrain*0.5) * nx[i] * nx[j]);
+    switch (entrain_) {
+      case EntrainmentMethod::SPECIFIED: {
+        const auto tmdot = v_massflow(ip);
+        for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
+          const int rowR = nodeR * BcAlgTraits::nDim_ + i;
+          const auto sigma = visc * asq * inv_axdx;
+          const auto lambda =
+            0.5 * (tmdot - stk::math::sqrt(tmdot * tmdot + 8 * sigma * sigma));
+          rhs(rowR) -= stk::math::if_then_else(tmdot > 0, tmdot * v_uNp1(nodeR, i),
+           tmdot * v_uNp1(nodeR, i) - lambda * (v_uNp1(nodeR, i) - v_uBc(nodeR, i)));
+          lhs(rowR, rowR) += stk::math::if_then_else(tmdot > 0, tmdot, tmdot - lambda);
+        }
+        break;
       }
+      case EntrainmentMethod::COMPUTED: {
+        // advection
+        const DoubleType tmdot = v_massflow(ip);
+
+        for (int i=0; i < BcAlgTraits::nDim_; ++i) {
+          const int rowR = nodeR * BcAlgTraits::nDim_ + i;
+
+          rhs(rowR) -= stk::math::if_then_else((tmdot > 0.0),
+            tmdot * v_uNp1(nodeR, i), // leaving the domain
+            tmdot * ((nfEntrain_ * uxnx + om_nfEntrain * uxnxip) * nx[i] + // constrain to be normal
+                     (v_uBc(ip, i) - uspecxnx * nx[i]))); // user spec entrainment (tangential)
+
+          // leaving the domain
+          lhs(rowR, rowR) += stk::math::if_then_else((tmdot > 0.0),tmdot,0.0);
+
+          // entraining; constrain to be normal
+          for (int j=0; j < BcAlgTraits::nDim_; ++j) {
+            const int colL = nodeL * BcAlgTraits::nDim_ + j;
+            const int colR = nodeR * BcAlgTraits::nDim_ + j;
+
+            lhs(rowR,colL) += stk::math::if_then_else((tmdot > 0.0),0.0,
+              tmdot * om_nfEntrain * 0.5 * nx[i] * nx[j]);
+            lhs(rowR,colR) += stk::math::if_then_else((tmdot > 0.0),0.0,
+              tmdot * (nfEntrain_ + om_nfEntrain*0.5) * nx[i] * nx[j]);
+          }
+        }
+        break;
+      }
+      default: NGP_ThrowErrorMsg("invalid entrainment method");
     }
   }
 }

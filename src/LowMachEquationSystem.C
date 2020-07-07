@@ -139,6 +139,7 @@
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_algorithms/TurbViscSSTAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
+#include "ngp_algorithms/DynamicPressureOpenAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
@@ -328,7 +329,6 @@ void
 LowMachEquationSystem::register_nodal_fields(
   stk::mesh::Part *part)
 {
-
   stk::mesh::MetaData &meta_data = realm_.meta_data();
 
   // add properties; denisty needs to be a restart field
@@ -497,6 +497,12 @@ LowMachEquationSystem::register_open_bc(
     = &(metaData.declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData.side_rank()),
                                                  "open_mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*mdotBip, *part, numScsBip, nullptr);
+
+  auto& dynPress 
+    = metaData.declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData.side_rank()),
+                                                 "dynamic_pressure");
+  std::vector<double> ic(numScsBip, 0);                                              
+  stk::mesh::put_field_on_mesh(dynPress, *part, numScsBip, ic.data());
 }
 
 //--------------------------------------------------------------------------
@@ -679,6 +685,7 @@ LowMachEquationSystem::solve_and_update()
     continuityEqSys_->compute_projected_nodal_gradient();
     timeA = NaluEnv::self().nalu_time();
     continuityEqSys_->mdotAlgDriver_->execute();
+    momentumEqSys_->dynPressAlgDriver_.execute();
 
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerMisc_ += (timeB-timeA);
@@ -722,6 +729,7 @@ LowMachEquationSystem::solve_and_update()
     if ( realm_.solutionOptions_->activateOpenMdotCorrection_ ) {
       timeA = NaluEnv::self().nalu_time();
       continuityEqSys_->mdotAlgDriver_->execute();
+      momentumEqSys_->dynPressAlgDriver_.execute();
       timeB = NaluEnv::self().nalu_time();
       continuityEqSys_->timerMisc_ += (timeB-timeA);
     }
@@ -744,6 +752,7 @@ LowMachEquationSystem::solve_and_update()
     // compute mdot
     timeA = NaluEnv::self().nalu_time();
     continuityEqSys_->mdotAlgDriver_->execute();
+    momentumEqSys_->dynPressAlgDriver_.execute();
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerMisc_ += (timeB-timeA);
 
@@ -965,6 +974,7 @@ MomentumEquationSystem::MomentumEquationSystem(
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "dudx"),
     wallFuncAlgDriver_(realm_),
+    dynPressAlgDriver_(realm_),
     cflReAlgDriver_(realm_),
     projectedNodalGradEqs_(NULL),
     firstPNGResidual_(0.0)
@@ -1745,19 +1755,22 @@ MomentumEquationSystem::register_open_bc(
 
     if (solverAlgWasBuilt) {
 
-      if (realm_.realmUsesEdges_)
+      if (realm_.realmUsesEdges_) {
         build_face_elem_topo_kernel_automatic<MomentumOpenEdgeKernel>
           (partTopo, elemTopo, *this, activeKernels, "momentum_open",
            realm_.meta_data(), realm_.solutionOptions_,
            realm_.is_turbulent() ? evisc_ : visc_,
-           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
-
-      else
+           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_, 
+           userData.entrainMethod_);
+      }
+      else {
         build_face_elem_topo_kernel_automatic<MomentumOpenAdvDiffElemKernel>
           (partTopo, elemTopo, *this, activeKernels, "momentum_open",
            realm_.meta_data(), *realm_.solutionOptions_, this,
            velocity_, dudx_, realm_.is_turbulent() ? evisc_ : visc_,
-           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
+           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_,
+           userData.entrainMethod_);
+      }
     }
   }
   else {
@@ -1773,6 +1786,19 @@ MomentumEquationSystem::register_open_bc(
       itsi->second->partVec_.push_back(part);
     }
   }
+
+  if (userData.totalP_) {
+    MasterElement *meFC = MasterElementRepo::get_surface_master_element(part->topology());
+    const int numScsBip = meFC->num_integration_points();
+    auto& dynPress 
+      = meta_data.declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(meta_data.side_rank()),
+                                                 "dynamic_pressure");
+    std::vector<double> ic(numScsBip, 0);                                              
+    stk::mesh::put_field_on_mesh(dynPress, *part, 2, ic.data());
+    dynPressAlgDriver_.register_face_algorithm<DynamicPressureOpenAlg>(algType, part, "dyn_press");
+  }
+
+
 }
 
 //--------------------------------------------------------------------------
@@ -3200,7 +3226,7 @@ void
 ContinuityEquationSystem::register_open_bc(
   stk::mesh::Part *part,
   const stk::topology &partTopo,
-  const OpenBoundaryConditionData & /* openBCData */)
+  const OpenBoundaryConditionData&)
 {
 
   const AlgorithmType algType = OPEN;
