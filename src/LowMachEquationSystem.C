@@ -685,7 +685,6 @@ LowMachEquationSystem::solve_and_update()
     continuityEqSys_->compute_projected_nodal_gradient();
     timeA = NaluEnv::self().nalu_time();
     continuityEqSys_->mdotAlgDriver_->execute();
-    momentumEqSys_->dynPressAlgDriver_.execute();
 
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerMisc_ += (timeB-timeA);
@@ -706,6 +705,7 @@ LowMachEquationSystem::solve_and_update()
                     << std::setw(15) << std::right << userSuppliedName_ << std::endl;
 
     for (int oi=0; oi < momentumEqSys_->numOversetIters_; ++oi) {
+      momentumEqSys_->dynPressAlgDriver_.execute();
       momentumEqSys_->assemble_and_solve(momentumEqSys_->uTmp_);
 
       timeA = NaluEnv::self().nalu_time();
@@ -729,7 +729,6 @@ LowMachEquationSystem::solve_and_update()
     if ( realm_.solutionOptions_->activateOpenMdotCorrection_ ) {
       timeA = NaluEnv::self().nalu_time();
       continuityEqSys_->mdotAlgDriver_->execute();
-      momentumEqSys_->dynPressAlgDriver_.execute();
       timeB = NaluEnv::self().nalu_time();
       continuityEqSys_->timerMisc_ += (timeB-timeA);
     }
@@ -752,7 +751,6 @@ LowMachEquationSystem::solve_and_update()
     // compute mdot
     timeA = NaluEnv::self().nalu_time();
     continuityEqSys_->mdotAlgDriver_->execute();
-    momentumEqSys_->dynPressAlgDriver_.execute();
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerMisc_ += (timeB-timeA);
 
@@ -1788,13 +1786,6 @@ MomentumEquationSystem::register_open_bc(
   }
 
   if (userData.totalP_) {
-    MasterElement *meFC = MasterElementRepo::get_surface_master_element(part->topology());
-    const int numScsBip = meFC->num_integration_points();
-    auto& dynPress 
-      = meta_data.declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(meta_data.side_rank()),
-                                                 "dynamic_pressure");
-    std::vector<double> ic(numScsBip, 0);                                              
-    stk::mesh::put_field_on_mesh(dynPress, *part, 2, ic.data());
     dynPressAlgDriver_.register_face_algorithm<DynamicPressureOpenAlg>(algType, part, "dyn_press");
   }
 
