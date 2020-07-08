@@ -614,6 +614,8 @@ Open Boundary Condition
      open_user_data:
        velocity: [0,0,0]
        pressure: 0.0
+       entrainment_method: {computed, specified}
+       total_pressure: {yes, no}
 
 Wall Boundary Condition
 +++++++++++++++++++++++
