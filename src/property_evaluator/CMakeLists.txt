@@ -2,7 +2,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ConstantPropertyEvaluator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/EnthalpyPropertyEvaluator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GenericPropAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/HDF5TablePropAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/IdealGasPropertyEvaluator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InverseDualVolumePropAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InversePropAlgorithm.C

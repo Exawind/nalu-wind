@@ -73,7 +73,6 @@ class SolutionOptions;
 class TimeIntegrator;
 class MasterElement;
 class PropertyEvaluator;
-class HDF5FilePtr;
 class Transfer;
 class MeshMotionAlg;
 class MeshTransformationAlg;
@@ -520,9 +519,6 @@ class Realm {
 
   // some post processing of entity counts
   bool provideEntityCount_;
-
-  // pointer to HDF5 file structure holding table
-  HDF5FilePtr *HDF5ptr_;
 
   // automatic mesh decomposition; None, rib, rcb, multikl, etc.
   std::string autoDecompType_;
