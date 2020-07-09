@@ -817,7 +817,7 @@ However, the local pressure gradient for each boundary contribution is
 based on the difference between the interior integration point and the
 user-specified pressure which takes on the boundary value. This can
 optionally be modified to be a ``total pressure"---removing the kinetic
-energy associated with entrainment at the option. The interior
+energy associated with entrainment at the open. The interior
 integration point is determined by linear interpolation. For CVFEM, full
 elemental averaging is used while in EBVC discretization, the midpoint
 value between the nearest node and opposing node to the boundary
