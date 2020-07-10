@@ -53,6 +53,7 @@ ContinuityOpenElemKernel<BcAlgTraits>::ContinuityOpenElemKernel(
   density_ = get_field_ordinal(metaData, "density");
   Udiag_ = get_field_ordinal(metaData, "momentum_diag");
   exposedAreaVec_ = get_field_ordinal(metaData, "exposed_area_vector", metaData.side_rank());
+  dynP_ = get_field_ordinal(metaData, "dynamic_pressure", metaData.side_rank());
   
   // extract master elements
   MasterElement* meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
@@ -69,6 +70,8 @@ ContinuityOpenElemKernel<BcAlgTraits>::ContinuityOpenElemKernel(
   faceDataPreReqs.add_gathered_nodal_field(velocityRTM_, BcAlgTraits::nDim_);
   faceDataPreReqs.add_gathered_nodal_field(Gpdx_, BcAlgTraits::nDim_);  
   faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  faceDataPreReqs.add_face_field(dynP_, BcAlgTraits::numFaceIp_);
+
   elemDataPreReqs.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
   elemDataPreReqs.add_gathered_nodal_field(pressure_, 1);
 
@@ -121,7 +124,8 @@ ContinuityOpenElemKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType*>& vf_udiag = faceScratchViews.get_scratch_view_1D(Udiag_);
   SharedMemView<DoubleType**>& vf_vrtm = faceScratchViews.get_scratch_view_2D(velocityRTM_);
   SharedMemView<DoubleType**>& vf_exposedAreaVec = faceScratchViews.get_scratch_view_2D(exposedAreaVec_);
- 
+  SharedMemView<DoubleType*>& vf_dynP = faceScratchViews.get_scratch_view_1D(dynP_);
+
   // element
   SharedMemView<DoubleType*>& v_pressure = elemScratchViews.get_scratch_view_1D(pressure_);
  
@@ -161,7 +165,7 @@ ContinuityOpenElemKernel<BcAlgTraits>::execute(
 
     // interpolate to bip
     DoubleType pBip = 0.0;
-    DoubleType pbcBip = 0.0;
+    DoubleType pbcBip = -vf_dynP(ip);
     DoubleType rhoBip = 0.0;
     DoubleType projTimeScaleBip = 0.0;
     for ( int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic ) {

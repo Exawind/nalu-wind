@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef MDOTOPENEDGEALG_H
-#define MDOTOPENEDGEALG_H
+#ifndef DynamicPressureOpenAlg_H
+#define DynamicPressureOpenAlg_H
 
 #include "Algorithm.h"
 #include "ElemDataRequests.h"
@@ -18,37 +18,27 @@ namespace sierra {
 namespace nalu {
 
 class Realm;
-class MdotAlgDriver;
 
 template<typename BcAlgTraits>
-class MdotOpenEdgeAlg : public Algorithm
+class DynamicPressureOpenAlg : public Algorithm
 {
 public:
-  MdotOpenEdgeAlg(
+  DynamicPressureOpenAlg(
     Realm&,
-    stk::mesh::Part*,
-    MdotAlgDriver&);
+    stk::mesh::Part*);
 
-  virtual ~MdotOpenEdgeAlg() = default;
-
+  virtual ~DynamicPressureOpenAlg() = default;
   virtual void execute() override;
 
 private:
-  MdotAlgDriver& mdotDriver_;
-
-  ElemDataRequests elemData_;
   ElemDataRequests faceData_;
-
-  unsigned coordinates_      {stk::mesh::InvalidOrdinal};
-  unsigned velocityRTM_      {stk::mesh::InvalidOrdinal};
-  unsigned pressure_         {stk::mesh::InvalidOrdinal};
-  unsigned pressureBC_       {stk::mesh::InvalidOrdinal};
-  unsigned Gpdx_             {stk::mesh::InvalidOrdinal};
-  unsigned density_          {stk::mesh::InvalidOrdinal};
+  unsigned density_         {stk::mesh::InvalidOrdinal};
+  unsigned velocity_         {stk::mesh::InvalidOrdinal};
   unsigned exposedAreaVec_   {stk::mesh::InvalidOrdinal};
   unsigned openMassFlowRate_ {stk::mesh::InvalidOrdinal};
-  unsigned Udiag_            {stk::mesh::InvalidOrdinal};
   unsigned dynPress_         {stk::mesh::InvalidOrdinal};
+
+  bool useShifted_{false};
 
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};
@@ -58,4 +48,4 @@ private:
 }  // sierra
 
 
-#endif /* MDOTOPENEDGEALG_H */
+#endif

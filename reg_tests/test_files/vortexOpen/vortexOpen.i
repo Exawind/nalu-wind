@@ -1,0 +1,139 @@
+# -*- mode: yaml -*-
+
+Simulations:
+  - name: sim1
+    time_integrator: ti_1
+    optimizer: opt1
+
+
+linear_solvers:
+
+  - name: solve_scalar
+    type: tpetra
+    method: gmres
+    preconditioner: ilut
+    tolerance: 1e-12
+    max_iterations: 200
+    kspace: 200
+    output_level: 0
+
+  - name: solve_cont
+    type: tpetra
+    method: gmres
+    preconditioner: muelu
+    tolerance: 1e-15
+    max_iterations: 100
+    kspace: 100
+    output_level: 0
+    recompute_preconditioner: no
+    muelu_xml_file_name: ../../xml/milestone.xml
+
+realms:
+
+  - name: fluids_realm
+    mesh: ../../mesh/tquad4_80.g
+    use_edges: yes
+    automatic_decomposition_type: rib
+
+    equation_systems:
+      name: theEqSys
+      max_iterations: 8
+
+      solver_system_specification:
+        velocity: solve_scalar
+        pressure: solve_cont
+
+      systems:
+
+        - LowMachEOM:
+            name: myLowMach
+            max_iterations: 1
+            convergence_tolerance: 1.0e-8
+
+    material_properties:
+
+      target_name: [block_1]
+
+      specifications:
+        - name: density
+          type: constant
+          value: 1.0
+
+        - name: viscosity
+          type: constant
+          value: 1.0e-5
+
+    initial_conditions:
+      - user_function: ic_1
+        target_name: [block_1]
+        user_function_name:
+         velocity: wind_energy_taylor_vortex
+         pressure: wind_energy_taylor_vortex
+        user_function_parameters:
+         velocity: [5.0, 0.0, 0.5, 256.0, 1.0]
+         pressure: [5.0, 0.0, 0.5, 256.0, 1.0]
+
+    boundary_conditions:
+
+    - open_boundary_condition: bc_bot
+      target_name: surface_3
+      open_user_data:
+        velocity: [1.0,0]
+        entrainment_method: specified
+        use_total_pressure: no
+        pressure: 0
+
+    - open_boundary_condition: bc_top
+      target_name: surface_4
+      open_user_data:
+        velocity: [1.0,0]
+        entrainment_method: specified
+        total_pressure: no
+        pressure: 0
+
+    - open_boundary_condition: bc_right
+      target_name: surface_2
+      open_user_data:
+        velocity: [1.0,0]
+        entrainment_method: computed
+        total_pressure: yes
+        pressure: 0
+
+    - inflow_boundary_condition: bc_left
+      target_name: surface_1
+      inflow_user_data:
+        velocity: [1.0,0]
+
+    solution_options:
+      name: myOptions
+      interp_rhou_together_for_mdot: yes
+
+      options:
+        - limiter:
+            pressure: no
+            velocity: no
+
+        - noc_correction:
+            velocity: yes
+            pressure: yes
+
+    output:
+      output_data_base_name: sol/vortex.e
+      output_frequency: 100
+      output_node_set: no
+      output_variables:
+       - velocity
+       - dpdx
+
+Time_Integrators:
+  - StandardTimeIntegrator:
+      name: ti_1
+      start_time: 0.0
+      termination_step_count: 40
+      time_step: 0.001
+      time_stepping_type: fixed
+      time_step_count: 0
+      second_order_accuracy: yes
+
+      realms:
+        - fluids_realm

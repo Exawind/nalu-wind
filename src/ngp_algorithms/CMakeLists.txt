@@ -1,6 +1,7 @@
 target_sources(nalu PRIVATE
   # Algorithms
   ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/DynamicPressureOpenAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradEdgeAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradElemAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradBndryElemAlg.C

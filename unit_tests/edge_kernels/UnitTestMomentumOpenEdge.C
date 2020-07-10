@@ -74,7 +74,8 @@ TEST_F(MomentumKernelHex8Mesh, NGP_open_edge)
       sierra::nalu::AlgTraitsQuad4Hex8>(
       meta_, &solnOpts_, viscosity_,
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
-      helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_));
+      helperObjs.assembleFaceElemSolverAlg->elemDataNeeded_,
+      sierra::nalu::EntrainmentMethod::COMPUTED));
 
   helperObjs.assembleFaceElemSolverAlg->activeKernels_.push_back(kernel.get());
 

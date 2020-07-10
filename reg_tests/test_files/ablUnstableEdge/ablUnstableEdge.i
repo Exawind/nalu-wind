@@ -125,6 +125,7 @@ realms:
         velocity: [10.0,0,0]
         pressure: 0.0
         temperature: 300.0
+        entrainment_method: specified
 
     - wall_boundary_condition: bc_lower
       target_name: Ground

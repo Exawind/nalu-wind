@@ -10,11 +10,13 @@
 
 /*------------------------------------------------------------------------*/
 
+#include "edge_kernels/MomentumOpenEdgeKernel.h"
 #include <NaluParsing.h>
 #include <NaluEnv.h>
 #include <Simulation.h>
 #include <Enums.h>
 
+#include <stdexcept>
 #include <stk_util/util/ReportHandler.hpp>
 
 // yaml for parsing..
@@ -1099,6 +1101,35 @@ namespace YAML
       openData.tempSpec_ = true;
     }
 
+    if (node["total_pressure"])
+    {
+      openData.totalP_ =
+          node["total_pressure"].as<bool>();
+    }
+
+    if (node["entrainment_method"])
+    {
+      const auto ent_meth =  node["entrainment_method"].as<std::string>();
+      bool found = false;
+      for (auto& nameMethPair : sierra::nalu::EntrainmentMethodMap) {
+        if (ent_meth == nameMethPair.first) {
+          openData.entrainMethod_ = nameMethPair.second;
+          found = true;
+        }
+      }
+      
+      if (!found) {
+        std::string avail = "Unknown entrainment method " + ent_meth + ". Available methods are";
+        for (auto& nameMethPair : sierra::nalu::EntrainmentMethodMap) {
+          avail += " " + nameMethPair.first;
+        }
+        throw std::runtime_error(avail);
+      }
+      if (openData.entrainMethod_ == sierra::nalu::EntrainmentMethod::SPECIFIED && openData.totalP_) {
+        throw std::runtime_error("Specifying both total pressure and specified entrainment is not supported");
+      }
+
+    }
     return true;
   }
 
