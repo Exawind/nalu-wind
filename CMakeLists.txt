@@ -308,11 +308,17 @@ export(
 install(
   EXPORT ${PROJECT_NAME}Targets
   NAMESPACE ${PROJECT_NAME}::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+  DESTINATION lib/cmake/${PROJECT_NAME})
 configure_package_config_file(
   cmake/${PROJECT_NAME}Config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+  INSTALL_DESTINATION lib/cmake/${PROJECT_NAME})
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+  DESTINATION lib/cmake/${PROJECT_NAME})
+
+# Provide CMake files for downstream projects
+install(FILES
+  ${PROJECT_SOURCE_DIR}/cmake/FindHYPRE.cmake
+  ${PROJECT_SOURCE_DIR}/cmake/FindFFTW.cmake
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/Modules)
