@@ -9,8 +9,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleFaceElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleEdgeSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleHeatCondIrradWallSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleHeatCondWallSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeWallFunctionSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemABLWallFunctionSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemOpenSolverAlgorithm.C
