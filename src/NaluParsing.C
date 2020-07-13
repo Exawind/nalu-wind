@@ -658,58 +658,6 @@ namespace YAML
     return true;
   }
 
-  bool convert<sierra::nalu::Emissivity>::decode(const Node& node,
-    sierra::nalu::Emissivity& emiss)
-  {
-    if (!node.IsScalar())
-    {
-      return false;
-    }
-
-    emiss.emissivity_ = node.as<double>();
-
-    return true;
-  }
-
-  bool convert<sierra::nalu::Irradiation>::decode(const Node& node,
-    sierra::nalu::Irradiation& irrad)
-  {
-    if (!node.IsScalar())
-    {
-      return false;
-    }
-
-    irrad.irradiation_ = node.as<double>();
-
-    return true;
-  }
-
-  bool convert<sierra::nalu::Transmissivity>::decode(const Node& node,
-    sierra::nalu::Transmissivity& tmiss)
-  {
-    if (!node.IsScalar())
-    {
-      return false;
-    }
-
-    tmiss.transmissivity_ = node.as<double>();
-
-    return true;
-  }
-
-  bool convert<sierra::nalu::EnvironmentalT>::decode(const Node& node,
-    sierra::nalu::EnvironmentalT& et)
-  {
-    if (!node.IsScalar())
-    {
-      return false;
-    }
-
-    et.environmentalT_ = node.as<double>();
-
-    return true;
-  }
-
   bool convert<sierra::nalu::RoughnessHeight>::decode(const Node& node,
     sierra::nalu::RoughnessHeight& z0)
   {
@@ -762,32 +710,6 @@ namespace YAML
     return true;
   }
 
-  bool convert<sierra::nalu::HeatTransferCoefficient>::decode(const Node& node,
-    sierra::nalu::HeatTransferCoefficient& htc)
-  {
-    if (!node.IsScalar())
-    {
-      return false;
-    }
-
-    htc.heatTransferCoefficient_ = node.as<double>();
-
-    return true;
-  }
-
-  bool convert<sierra::nalu::RobinCouplingParameter>::decode(const Node& node,
-    sierra::nalu::RobinCouplingParameter& alpha)
-  {
-    if (!node.IsScalar())
-    {
-      return false;
-    }
-
-    alpha.robinCouplingParameter_ = node.as<double>();
-
-    return true;
-  }
-
   bool convert<sierra::nalu::WallUserData>::decode(const Node& node,
     sierra::nalu::WallUserData& wallData)
   {
@@ -836,21 +758,6 @@ namespace YAML
       wallData.bcDataSpecifiedMap_["mass_fraction"] = true;
       wallData.bcDataTypeMap_["mass_fraction"] = sierra::nalu::CONSTANT_UD;
     }
-    if (node["emissivity"])
-    {
-      wallData.emissivity_ = node["emissivity"].as<sierra::nalu::Emissivity>();
-      wallData.emissSpec_ = true;
-    }
-    if (node["transmissivity"])
-    {
-      wallData.transmissivity_ = node["transmissivity"].as<
-          sierra::nalu::Transmissivity>();
-    }
-    if (node["environmental_temperature"])
-    {
-      wallData.environmentalT_ = node["environmental_temperature"].as<
-          sierra::nalu::EnvironmentalT>();
-    }
     if (node["adiabatic"])
     {
       wallData.isAdiabatic_ = node["adiabatic"].as<bool>();
@@ -875,24 +782,6 @@ namespace YAML
     {
       wallData.z0_ =
           node["roughness_height"].as<sierra::nalu::RoughnessHeight>();
-    }
-    if (node["heat_transfer_coefficient"])
-    {
-      wallData.heatTransferCoefficient_ = node["heat_transfer_coefficient"].as<
-          sierra::nalu::HeatTransferCoefficient>();
-      wallData.htcSpec_ = true;
-    }
-    if (node["irradiation"])
-    {
-      wallData.irradiation_ =
-          node["irradiation"].as<sierra::nalu::Irradiation>();
-      wallData.irradSpec_ = true;
-    }
-    if (node["robin_coupling_parameter"])
-    {
-      wallData.robinCouplingParameter_ = node["robin_coupling_parameter"].as<
-          sierra::nalu::RobinCouplingParameter>();
-      wallData.robinParameterSpec_ = true;
     }
     if (node["use_wall_function"])
     {

@@ -123,8 +123,6 @@ MatrixFreeHeatCondEquationSystem::register_wall_bc(
       part->topology().name() + ". Only Quad4 and Quad9 supported");
 
   WallUserData userData = wallBCData.userData_;
-  ThrowRequireMsg(!userData.irradSpec_, "Irradiation BC not implemented");
-  ThrowRequireMsg(!userData.robinParameterSpec_, "Robin BC not implemented");
 
   if (userData.tempSpec_) {
     const auto temperature_data = wallBCData.userData_.temperature_;
