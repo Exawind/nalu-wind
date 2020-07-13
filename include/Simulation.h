@@ -38,6 +38,8 @@ public:
   void load(const YAML::Node & node);
   void breadboard();
   void initialize();
+  void init_prolog();
+  void init_epilog();
   void run();
   void high_level_banner();
   Simulation *root() { return this; }
