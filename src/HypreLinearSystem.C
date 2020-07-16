@@ -266,52 +266,44 @@ HypreLinearSystem::buildFaceToNodeGraph(const stk::mesh::PartVector & parts)
 
   if (numDof_==1) {
     std::vector<HypreIntType> hids(0);
-    if (buckets.size()) {
-      const unsigned numNodes = (unsigned) (*buckets[0]).num_nodes(0);
-      hids.resize(numNodes);
-    }
 
     for(size_t ib=0; ib<buckets.size(); ++ib) {
       const stk::mesh::Bucket & b = *buckets[ib];
-      for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
 
-	const unsigned numNodes = (unsigned) b.num_nodes(k);
+      auto numNodes = b.topology().num_nodes();
+      hids.resize(numNodes);
+
+      for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
 	
-	if (numNodes) {
-	  stk::mesh::Entity const * nodes = b.begin_nodes(k);
+	stk::mesh::Entity const * nodes = b.begin_nodes(k);
 	  
-	  /* save the hypre ids */
-	  for (unsigned i=0; i<numNodes; ++i) hids[i] = get_entity_hypre_id(nodes[i]);
-	  
-	  /* fill owned/shared 1 Dof */
-	  fill_owned_shared_data_structures_1DoF(numNodes, hids);
-	}
+	/* save the hypre ids */
+	for (unsigned i=0; i<numNodes; ++i) hids[i] = get_entity_hypre_id(nodes[i]);
+	
+	/* fill owned/shared 1 Dof */
+	fill_owned_shared_data_structures_1DoF(numNodes, hids);
       }
     }
   } else {
     std::vector<HypreIntType> hids(0);
     std::vector<HypreIntType> columns(0);
-    if (buckets.size()) {
-      const unsigned numNodes = (unsigned) (*buckets[0]).num_nodes(0);
-      hids.resize(numNodes);
-      columns.resize(numNodes*numDof_);
-    }
     
     for(size_t ib=0; ib<buckets.size(); ++ib) {
       const stk::mesh::Bucket & b = *buckets[ib];
+
+      auto numNodes = b.topology().num_nodes();
+      hids.resize(numNodes);
+      columns.resize(numNodes*numDof_);
+
       for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
 	
-	const unsigned numNodes = (unsigned) b.num_nodes(k);
+	stk::mesh::Entity const * nodes = b.begin_nodes(k);
 	
-	if (numNodes) {
-	  stk::mesh::Entity const * nodes = b.begin_nodes(k);
-	  
-          /* save the hids and columns */
-	  fill_hids_columns(numNodes, nodes, hids, columns);
-
-	  /* fill owned/shared for more than 1 Dof */
-	  fill_owned_shared_data_structures(numNodes, hids, columns);
-	}
+	/* save the hids and columns */
+	fill_hids_columns(numNodes, nodes, hids, columns);
+	
+	/* fill owned/shared for more than 1 Dof */
+	fill_owned_shared_data_structures(numNodes, hids, columns);
       }
     }
   }
@@ -342,53 +334,44 @@ HypreLinearSystem::buildEdgeToNodeGraph(const stk::mesh::PartVector& parts)
 
   if (numDof_==1) {
     std::vector<HypreIntType> hids(0);
-    if (buckets.size()) {
-      const unsigned numNodes = (unsigned) (*buckets[0]).num_nodes(0);
-      hids.resize(numNodes);
-    }
 
     for(size_t ib=0; ib<buckets.size(); ++ib) {
       const stk::mesh::Bucket & b = *buckets[ib];
+      
+      auto numNodes = b.topology().num_nodes();
+      hids.resize(numNodes);
+
       for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
 
-	const unsigned numNodes = (unsigned) b.num_nodes(k);
+	stk::mesh::Entity const * nodes = b.begin_nodes(k);
+	  
+	/* save the hypre ids */
+	for (unsigned i=0; i<numNodes; ++i) hids[i] = get_entity_hypre_id(nodes[i]);
 	
-	/* get the first nodes hid */
-	if (numNodes) {
-	  stk::mesh::Entity const * nodes = b.begin_nodes(k);
-	  
-	  /* save the hypre ids */
-	  for (unsigned i=0; i<numNodes; ++i) hids[i] = get_entity_hypre_id(nodes[i]);
-	  
-	  /* fill owned/shared 1 Dof */
-	  fill_owned_shared_data_structures_1DoF(numNodes, hids);
-	}
+	/* fill owned/shared 1 Dof */
+	fill_owned_shared_data_structures_1DoF(numNodes, hids);
       }
     }
   } else {
     std::vector<HypreIntType> hids(0);
     std::vector<HypreIntType> columns(0);
-    if (buckets.size()) {
-      const unsigned numNodes = (unsigned) (*buckets[0]).num_nodes(0);
-      hids.resize(numNodes);
-      columns.resize(numNodes*numDof_);
-    }
 
     for(size_t ib=0; ib<buckets.size(); ++ib) {
       const stk::mesh::Bucket & b = *buckets[ib];
+
+      auto numNodes = b.topology().num_nodes();
+      hids.resize(numNodes);
+      columns.resize(numNodes*numDof_);
+
       for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
 
-	const unsigned numNodes = (unsigned) b.num_nodes(k);
+	stk::mesh::Entity const * nodes = b.begin_nodes(k);
 	
-	if (numNodes) {
-	  stk::mesh::Entity const * nodes = b.begin_nodes(k);
-	  
           /* save the hids and columns */
-	  fill_hids_columns(numNodes, nodes, hids, columns);
-	  
-	  /* fill owned/shared for more than 1 Dof */
-	  fill_owned_shared_data_structures(numNodes, hids, columns);
-	}
+	fill_hids_columns(numNodes, nodes, hids, columns);
+	
+	/* fill owned/shared for more than 1 Dof */
+	fill_owned_shared_data_structures(numNodes, hids, columns);
       }
     }
   }
@@ -419,52 +402,44 @@ HypreLinearSystem::buildElemToNodeGraph(const stk::mesh::PartVector & parts)
 
   if (numDof_==1) {
     std::vector<HypreIntType> hids(0);
-    if (buckets.size()) {
-      const unsigned numNodes = (unsigned) (*buckets[0]).num_nodes(0);
-      hids.resize(numNodes);
-    }
 
     for(size_t ib=0; ib<buckets.size(); ++ib) {
       const stk::mesh::Bucket & b = *buckets[ib];
+
+      auto numNodes = b.topology().num_nodes();
+      hids.resize(numNodes);
+
       for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
 
-	const unsigned numNodes = (unsigned) b.num_nodes(k);
-	
-	if (numNodes) {
-	  stk::mesh::Entity const * nodes = b.begin_nodes(k);
+	stk::mesh::Entity const * nodes = b.begin_nodes(k);
 
-	  /* save the hypre ids */
-	  for (unsigned i=0; i<numNodes; ++i) hids[i] = get_entity_hypre_id(nodes[i]);
-	  
-	  /* fill owned/shared 1 Dof */
-	  fill_owned_shared_data_structures_1DoF(numNodes, hids);
-	}
+	/* save the hypre ids */
+	for (unsigned i=0; i<numNodes; ++i) hids[i] = get_entity_hypre_id(nodes[i]);
+	
+	/* fill owned/shared 1 Dof */
+	fill_owned_shared_data_structures_1DoF(numNodes, hids);
       }
     }
   } else {
     std::vector<HypreIntType> hids(0);
     std::vector<HypreIntType> columns(0);
-    if (buckets.size()) {
-      const unsigned numNodes = (unsigned) (*buckets[0]).num_nodes(0);
-      hids.resize(numNodes);
-      columns.resize(numNodes*numDof_);
-    }
 
     for(size_t ib=0; ib<buckets.size(); ++ib) {
       const stk::mesh::Bucket & b = *buckets[ib];
+
+      auto numNodes = b.topology().num_nodes();
+      hids.resize(numNodes);
+      columns.resize(numNodes*numDof_);
+
       for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
 
-	const unsigned numNodes = (unsigned) b.num_nodes(k);
-	
-	if (numNodes) {
-	  stk::mesh::Entity const * nodes = b.begin_nodes(k);
+	stk::mesh::Entity const * nodes = b.begin_nodes(k);
 
-          /* save the hids and columns */
-	  fill_hids_columns(numNodes, nodes, hids, columns);
-	  
-	  /* fill owned/shared for more than 1 Dof */
-	  fill_owned_shared_data_structures(numNodes, hids, columns);
-	}
+	/* save the hids and columns */
+	fill_hids_columns(numNodes, nodes, hids, columns);
+	
+	/* fill owned/shared for more than 1 Dof */
+	fill_owned_shared_data_structures(numNodes, hids, columns);
       }
     }
   }
@@ -840,7 +815,7 @@ void HypreLinearSystem::fill_entity_to_row_mapping()
     for(size_t i=0; i<b.size(); ++i) {
       stk::mesh::Entity node = b[i];
       const auto naluId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
-      const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluId);
+      const auto mnode = (naluId == bulk.identifier(node)) ? node : bulk.get_entity(stk::topology::NODE_RANK, naluId);
       HypreIntType hid = *stk::mesh::field_data(*realm_.hypreGlobalId_, mnode);
       entityToLIDHost_[node.local_offset()] = hid;
     }
@@ -1991,7 +1966,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sortMatrixElementBins(const HypreInt
 
 
 void
-HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(void * mat, std::vector<void *> rhs) {
+HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(void * hypreMat, std::vector<void *> hypreRhs) {
   
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   /* record the start time */
@@ -2059,7 +2034,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(void * mat, std::vect
   /**********/
 
   /* Cast these to their types ... ugly */
-  HYPRE_IJMatrix hmat = *((HYPRE_IJMatrix *)mat);
+  HYPRE_IJMatrix hmat = *((HYPRE_IJMatrix *)hypreMat);
   
   /* Sort ... if chosen */
   sortMatrixElementBins(num_rows_owned_, num_mat_pts_to_assemble_total_owned_, globalNumRows_,
@@ -2113,7 +2088,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(void * mat, std::vect
   gettimeofday(&_start, NULL);
 #endif
 
-  for (unsigned i=0; i<rhs.size(); ++i) {
+  for (unsigned i=0; i<hypreRhs.size(); ++i) {
     /* Sort ... if chosen */
     sortRhsElementBins(num_rows_owned_, num_rhs_pts_to_assemble_total_owned_, i, 
     		       row_indices_owned_, rhs_row_start_owned_, iwork_, rhs_vals_owned_);
@@ -2136,10 +2111,10 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(void * mat, std::vect
   Kokkos::deep_copy(h_rhs_owned_, d_rhs_owned_);
   if (num_rows_shared_) Kokkos::deep_copy(h_rhs_shared_, d_rhs_shared_);
 
-  for (unsigned i=0; i<rhs.size(); ++i) {
+  for (unsigned i=0; i<hypreRhs.size(); ++i) {
 
     /* Cast these to their types ... ugly */
-    HYPRE_IJVector hrhs = *((HYPRE_IJVector *)rhs[i]);
+    HYPRE_IJVector hrhs = *((HYPRE_IJVector *)hypreRhs[i]);
 
     /* Set the owned part */
     HYPRE_IJVectorSetValues(hrhs, num_rows_owned_, h_row_indices_owned_.data(), h_rhs_owned_.data()+i*num_rows_owned_);
@@ -2280,7 +2255,7 @@ HypreLinearSystem::get_entity_hypre_id(const stk::mesh::Entity& node)
 {
   auto& bulk = realm_.bulk_data();
   const auto naluId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
-  const auto mnode = bulk.get_entity(stk::topology::NODE_RANK, naluId);
+  const auto mnode = (naluId == bulk.identifier(node)) ? node : bulk.get_entity(stk::topology::NODE_RANK, naluId);
 #ifndef NDEBUG
   if (!bulk.is_valid(node))
     throw std::runtime_error("BAD STK NODE");
