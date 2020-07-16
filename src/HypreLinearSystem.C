@@ -2181,7 +2181,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::resetInternalData() {
     /* These seem slightly faster than deep copies */
     Kokkos::deep_copy(cols_owned_, -1);
     Kokkos::deep_copy(cols_shared_, -1);
-    Kokkos::deep_copy(vals_owned_, 42);
+    Kokkos::deep_copy(vals_owned_, 0);
     Kokkos::deep_copy(vals_shared_, 0);
     Kokkos::deep_copy(rhs_vals_owned_, 0);
     Kokkos::deep_copy(rhs_vals_shared_, 0);
