@@ -3195,6 +3195,24 @@ Realm::populate_restart(
     const double restartTime = outputInfo_->restartTime_;
     std::vector<stk::io::MeshField> missingFields;
     foundRestartTime = ioBroker_->read_defined_input_fields(restartTime, &missingFields);
+
+    {
+      for (const auto& fname: outputInfo_->restartFieldNameSet_) {
+        auto* field = stk::mesh::get_field_by_name(
+            fname, *metaData_);
+        if (field == nullptr) continue;
+
+        const unsigned numStates = field->number_of_states();
+        for (unsigned i=0; i < numStates; ++i) {
+          auto* fld = field->field_state(
+              static_cast<stk::mesh::FieldState>(i));
+          fld->modify_on_host();
+          ngp_field_manager().get_field<double>(fld->mesh_meta_data_ordinal());
+          fld->sync_to_device();
+        }
+      }
+    }
+
     if ( missingFields.size() > 0 ){
       for ( size_t k = 0; k < missingFields.size(); ++k) {
         NaluEnv::self().naluOutputP0() << "WARNING: Restart value for Field "
