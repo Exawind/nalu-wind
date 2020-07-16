@@ -16,22 +16,31 @@ linear_solvers:
     type: tpetra
     method: gmres
     preconditioner: sgs
-    tolerance: 1e-10
-    max_iterations: 20
+    tolerance: 1e-5
+    max_iterations: 10
     kspace: 75
     output_level: 0
-    write_matrix_files: yes
+    write_matrix_files: no
 
   - name: solve_cont
     type: tpetra
     method: gmres
     preconditioner: muelu
-    tolerance: 1e-10
+    tolerance: 1e-5
     max_iterations: 200
     kspace: 75
     output_level: 0
-    write_matrix_files: yes
     muelu_xml_file_name: ../../xml/milestone_aspect_ratio_gs.xml
+
+  - name: solve_mom
+    type: tpetra
+    method: gmres
+    preconditioner: sgs
+    tolerance: 1e-5
+    max_iterations: 200
+    kspace: 75
+    output_level: 0
+    segregated_solver: yes
 
 realms:
 
@@ -49,7 +58,7 @@ realms:
       max_iterations: 2
 
       solver_system_specification:
-        velocity: solve_scalar
+        velocity: solve_mom
         turbulent_ke: solve_scalar
         specific_dissipation_rate: solve_scalar
         pressure: solve_cont
@@ -134,7 +143,7 @@ realms:
     solution_options:
       name: myOptions
       turbulence_model: sst
-      #projected_timescale_type: momentum_diag_inv #### Use 1/diagA formulation
+      projected_timescale_type: momentum_diag_inv #### Use 1/diagA formulation
 
       options:
         - hybrid_factor:
@@ -167,11 +176,11 @@ realms:
             turbulent_ke: element
             specific_dissipation_rate: element
 
-        #- relaxation_factor:
-        #    velocity: 0.7
-        #    pressure: 0.3
-        #    turbulent_ke: 0.7
-        #    specific_dissipation_rate: 0.7
+        - relaxation_factor:
+            velocity: 0.7
+            pressure: 0.3
+            turbulent_ke: 0.7
+            specific_dissipation_rate: 0.7
 
     post_processing:
 
@@ -199,7 +208,7 @@ Time_Integrators:
       name: ti_1
       start_time: 0
       time_step: 6.666666666666667e-2
-      termination_step_count: 1
+      termination_step_count: 5
       time_stepping_type: fixed
       time_step_count: 0
       second_order_accuracy: yes
