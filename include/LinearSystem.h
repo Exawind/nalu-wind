@@ -66,16 +66,6 @@ public:
 
   virtual void free_device_pointer() = 0;
   virtual CoeffApplier* device_pointer() = 0;
-  virtual void resetInternalData() {};
-  virtual void applyDirichletBCs(Realm & /* Reference to the realm */,
-				 stk::mesh::FieldBase * /* solution field */,
-				 stk::mesh::FieldBase * /* bc field */,
-				 const stk::mesh::PartVector& /* parts */) {};
-  virtual void finishAssembly(void * /* opaque pointer to a Hypre IJIMatrix data structure */,
-			      std::vector<void *> /* vector of opaque pointers to a Hypre IJIVector data structure */) {};
-  virtual void sum_into_nonNGP(const std::vector<stk::mesh::Entity>& /* vector of entities */,
-			       const std::vector<double>& /* rhs data */,
-			       const std::vector<double>& /* lhs data */) {};
   
 };
 

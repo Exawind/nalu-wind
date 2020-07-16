@@ -367,7 +367,7 @@ public:
 				   stk::mesh::FieldBase * bcValuesField,
 				   const stk::mesh::PartVector& parts);
     
-    virtual void finishAssembly(void * hypreMat, std::vector<void *> hypreRhs);
+    virtual void finishAssembly(HYPRE_IJMatrix hypreMat, std::vector<HYPRE_IJVector> hypreRhs);
     
     virtual void sum_into_nonNGP(const std::vector<stk::mesh::Entity>& entities,
 				 const std::vector<double>& rhs,

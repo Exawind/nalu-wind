@@ -143,9 +143,10 @@ HypreUVWLinearSystem::finalizeSolver()
 void
 HypreUVWLinearSystem::loadComplete()
 {
-  std::vector<void *> rhs(nDim_);
-  for (unsigned i=0; i<nDim_; ++i) rhs[i] = (void*)(&rhs_[i]);
-  hostCoeffApplier->finishAssembly((void*)&mat_, rhs);
+  HypreUVWLinSysCoeffApplier* hcApplier = dynamic_cast<HypreUVWLinSysCoeffApplier*>(hostCoeffApplier.get());
+  std::vector<HYPRE_IJVector> rhs(nDim_);
+  for (unsigned i=0; i<nDim_; ++i) rhs[i] = rhs_[i];
+  hcApplier->finishAssembly(mat_, rhs);
   loadCompleteSolver();
 }
 
@@ -226,9 +227,8 @@ HypreUVWLinearSystem::applyDirichletBCs(
   const unsigned,
   const unsigned)
 {
-  double adbc_time = -NaluEnv::self().nalu_time();
-  hostCoeffApplier->applyDirichletBCs(realm_, solutionField, bcValuesField, parts);
-  adbc_time += NaluEnv::self().nalu_time();
+  HypreUVWLinSysCoeffApplier* hcApplier = dynamic_cast<HypreUVWLinSysCoeffApplier*>(hostCoeffApplier.get());
+  hcApplier->applyDirichletBCs(realm_, solutionField, bcValuesField, parts);
 }
 
 int
@@ -369,7 +369,8 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
 sierra::nalu::CoeffApplier* HypreUVWLinearSystem::get_coeff_applier()
 {
   /* reset the internal counters */
-  hostCoeffApplier->resetInternalData();
+  HypreUVWLinSysCoeffApplier* hcApplier = dynamic_cast<HypreUVWLinSysCoeffApplier*>(hostCoeffApplier.get());
+  hcApplier->resetInternalData();
   return deviceCoeffApplier;
 }
 

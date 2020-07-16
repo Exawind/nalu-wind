@@ -1191,9 +1191,10 @@ void HypreLinearSystem::fill_device_data_structures()
 void
 HypreLinearSystem::loadComplete()
 {
-  std::vector<void *> rhs(1);
-  rhs[0] = (void*)(&rhs_);
-  hostCoeffApplier->finishAssembly((void*)&mat_, rhs);
+  HypreLinSysCoeffApplier* hcApplier = dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
+  std::vector<HYPRE_IJVector> rhs(1);
+  rhs[0] = rhs_;
+  hcApplier->finishAssembly(mat_, rhs);
   loadCompleteSolver();
 }
 
@@ -1264,7 +1265,8 @@ HypreLinearSystem::zeroSystem()
 sierra::nalu::CoeffApplier* HypreLinearSystem::get_coeff_applier()
 {
   /* reset the internal data */
-  hostCoeffApplier->resetInternalData();
+  HypreLinSysCoeffApplier* hcApplier = dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
+  hcApplier->resetInternalData();
   return deviceCoeffApplier;
 }
 
@@ -1966,7 +1968,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sortMatrixElementBins(const HypreInt
 
 
 void
-HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(void * hypreMat, std::vector<void *> hypreRhs) {
+HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(HYPRE_IJMatrix hypreMat, std::vector<HYPRE_IJVector> hypreRhs) {
   
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   /* record the start time */
@@ -2033,9 +2035,6 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(void * hypreMat, std:
   /* Matrix */
   /**********/
 
-  /* Cast these to their types ... ugly */
-  HYPRE_IJMatrix hmat = *((HYPRE_IJMatrix *)hypreMat);
-  
   /* Sort ... if chosen */
   sortMatrixElementBins(num_rows_owned_, num_mat_pts_to_assemble_total_owned_, globalNumRows_,
   			mat_row_start_owned_, row_indices_owned_, iwork_,
@@ -2049,7 +2048,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(void * hypreMat, std:
   Kokkos::deep_copy(h_values_owned_, d_values_owned_);
   Kokkos::deep_copy(h_col_indices_owned_, d_col_indices_owned_);
 
-  HYPRE_IJMatrixSetValues(hmat, num_rows_owned_,
+  HYPRE_IJMatrixSetValues(hypreMat, num_rows_owned_,
 			  h_row_counts_owned_.data(), h_row_indices_owned_.data(),
 			  h_col_indices_owned_.data(), h_values_owned_.data());  
       
@@ -2066,7 +2065,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(void * hypreMat, std:
     /* Add the shared part */
     Kokkos::deep_copy(h_values_shared_, d_values_shared_);
     Kokkos::deep_copy(h_col_indices_shared_, d_col_indices_shared_);
-    HYPRE_IJMatrixAddToValues(hmat, num_rows_shared_,
+    HYPRE_IJMatrixAddToValues(hypreMat, num_rows_shared_,
 			      h_row_counts_shared_.data(), h_row_indices_shared_.data(), 
 			      h_col_indices_shared_.data(), h_values_shared_.data());    
   }
@@ -2113,14 +2112,11 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(void * hypreMat, std:
 
   for (unsigned i=0; i<hypreRhs.size(); ++i) {
 
-    /* Cast these to their types ... ugly */
-    HYPRE_IJVector hrhs = *((HYPRE_IJVector *)hypreRhs[i]);
-
     /* Set the owned part */
-    HYPRE_IJVectorSetValues(hrhs, num_rows_owned_, h_row_indices_owned_.data(), h_rhs_owned_.data()+i*num_rows_owned_);
+    HYPRE_IJVectorSetValues(hypreRhs[i], num_rows_owned_, h_row_indices_owned_.data(), h_rhs_owned_.data()+i*num_rows_owned_);
 
     if (num_rows_shared_) 
-      HYPRE_IJVectorAddToValues(hrhs, num_rows_shared_, h_row_indices_shared_.data(), h_rhs_shared_.data()+i*num_rows_shared_);
+      HYPRE_IJVectorAddToValues(hypreRhs[i], num_rows_shared_, h_row_indices_shared_.data(), h_rhs_shared_.data()+i*num_rows_shared_);
   }
 
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
@@ -2234,7 +2230,8 @@ HypreLinearSystem::sumInto(
   const std::vector<double>& lhs,
   const char*  /* trace_tag */)
 {
-  hostCoeffApplier->sum_into_nonNGP(entities, rhs, lhs);
+  HypreLinSysCoeffApplier* hcApplier = dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
+  hcApplier->sum_into_nonNGP(entities, rhs, lhs);
 }
 
 void
@@ -2245,9 +2242,8 @@ HypreLinearSystem::applyDirichletBCs(
   const unsigned,
   const unsigned)
 {
-  double adbc_time = -NaluEnv::self().nalu_time();
-  hostCoeffApplier->applyDirichletBCs(realm_, solutionField, bcValuesField, parts);
-  adbc_time += NaluEnv::self().nalu_time();
+  HypreLinSysCoeffApplier* hcApplier = dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
+  hcApplier->applyDirichletBCs(realm_, solutionField, bcValuesField, parts);
 }
 
 HypreIntType
