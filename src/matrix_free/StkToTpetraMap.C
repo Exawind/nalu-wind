@@ -98,19 +98,7 @@ populate_global_id_field(
   const stk::mesh::Selector& active_linsys,
   stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids)
 {
-  const auto& bulk = mesh.get_bulk_on_host();
-  const auto& meta = bulk.mesh_meta_data();
-  const auto owned_selector = meta.locally_owned_part() & active_linsys;
-  auto first_index =
-    make_owned_row_map(mesh, active_linsys).getMinGlobalIndex();
-  enumerated_for_each_entity(
-    mesh, owned_selector,
-    KOKKOS_LAMBDA(int index, stk::mesh::FastMeshIndex mi) {
-      gids.get(mi, 0) = first_index + index;
-    });
-  gids.modify_on_device();
-  stk::mesh::communicate_field_data<global_ordinal_type>(
-    mesh.get_bulk_on_host(), {&gids});
+  populate_global_id_field(mesh.get_bulk_on_host(), active_linsys, gids);
 }
 
 void

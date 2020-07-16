@@ -7,34 +7,35 @@
 // for more details.
 //
 
-#ifndef LINEAR_VOLUME_H
-#define LINEAR_VOLUME_H
+#ifndef GREEN_GAUSS_BOUNDARY_CLOSURE_H
+#define GREEN_GAUSS_BOUNDARY_CLOSURE_H
 
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/KokkosFramework.h"
 #include "matrix_free/LocalArray.h"
 
+#include "Tpetra_MultiVector.hpp"
+
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
-namespace geom {
+using tpetra_view_type = typename Tpetra::MultiVector<>::dual_view_type::t_dev;
+using ra_tpetra_view_type =
+  typename Tpetra::MultiVector<>::dual_view_type::t_dev_const_randomread;
 
 namespace impl {
-
 template <int p>
-struct volume_metric_t
+struct gradient_boundary_closure_t
 {
-  static scalar_view<p> invoke(
-    const_scalar_view<p> alpha, const_vector_view<p> coordinates);
-  static scalar_view<p> invoke(const_vector_view<p> coordinates);
+  static void invoke(
+    const_face_offset_view<p> offsets,
+    const_face_scalar_view<p> q,
+    const_face_vector_view<p> areav,
+    tpetra_view_type owned_rhs);
 };
-
 } // namespace impl
-P_INVOKEABLE(volume_metric)
-
-} // namespace geom
+P_INVOKEABLE(gradient_boundary_closure)
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra
-
 #endif

@@ -73,6 +73,14 @@ Tpetra::Map<> make_owned_and_shared_row_map(
   const stk::mesh::Selector& active_linsys,
   stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids);
 
+// map to the entire mesh entities, with replicated gids
+// mapped appropriately
+Tpetra::Map<> make_owned_shared_constrained_row_map(
+  const stk::mesh::NgpMesh& mesh,
+  const stk::mesh::Selector& active_linsys,
+  const stk::mesh::Selector& replicas,
+  stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids);
+
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

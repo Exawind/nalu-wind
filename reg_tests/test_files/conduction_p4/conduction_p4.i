@@ -10,9 +10,16 @@ linear_solvers:
    method: gmres
    preconditioner: jacobi
    tolerance: 1e-7
-   max_iterations: 500 
+   max_iterations: 500
    kspace: 500
    output_level: 0
+
+ - name: solve_grad
+   type: tpetra
+   method: block gmres
+   preconditioner: jacobi
+   tolerance: 1e-5
+   max_iterations: 20
 
 realms:
 
@@ -29,6 +36,7 @@ realms:
 
       solver_system_specification:
         temperature: solve_scalar
+        dtdx: solve_grad
 
       systems:
         - HeatConduction:
@@ -57,20 +65,18 @@ realms:
           value: 1.0
 
     boundary_conditions:
+      - wall_boundary_condition: bc_1
+        target_name: surface_1
+        wall_user_data:
+          temperature: 10
 
-    - wall_boundary_condition: bc_1
-      target_name: surface_1
-      wall_user_data:
-       temperature: 10
-
-    - wall_boundary_condition: bc_2
-      target_name: surface_2
-      wall_user_data:
-       heat_flux: 10
+      - wall_boundary_condition: bc_2
+        target_name: surface_2
+        wall_user_data:
+          heat_flux: 10
 
     solution_options:
       name: myOptions
-      use_consolidated_solver_algorithm: no
       options:
         - noc_correction:
             temperature: no
@@ -78,9 +84,10 @@ realms:
     output:
       output_data_base_name: conduction_p4.e
       output_frequency: 10
-      output_node_set: no 
       output_variables:
-       - temperature
+        - temperature
+        - dtdx
+        - heat_flux_bc
 
 Time_Integrators:
   - StandardTimeIntegrator:

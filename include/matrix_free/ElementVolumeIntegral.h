@@ -42,6 +42,48 @@ edge_integral(const InArray& in, OutArray& out)
   }
 }
 
+template <int p, typename VolumeArray, typename DeltaArray, typename OutArray>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_mass(
+  int index, const VolumeArray& vol, const DeltaArray& delta, OutArray& out)
+{
+  static constexpr auto vandermonde = Coeffs<p>::W;
+  for (int k = 0; k < p + 1; ++k) {
+    for (int j = 0; j < p + 1; ++j) {
+      for (int i = 0; i < p + 1; ++i) {
+        ftype acc(0);
+        for (int q = 0; q < p + 1; ++q) {
+          acc -= vandermonde(i, q) * vol(index, k, j, q) * delta(k, j, q);
+        }
+        out(k, j, i) = acc;
+      }
+    }
+  }
+
+  for (int i = 0; i < p + 1; ++i) {
+    LocalArray<ftype[p + 1][p + 1]> scratch;
+    for (int k = 0; k < p + 1; ++k) {
+      for (int j = 0; j < p + 1; ++j) {
+        ftype acc(0);
+        for (int q = 0; q < p + 1; ++q) {
+          acc += vandermonde(j, q) * out(k, q, i);
+        }
+        scratch(k, j) = acc;
+      }
+    }
+
+    for (int k = 0; k < p + 1; ++k) {
+      for (int j = 0; j < p + 1; ++j) {
+        ftype acc(0);
+        for (int q = 0; q < p + 1; ++q) {
+          acc += vandermonde(k, q) * scratch(q, j);
+        }
+        out(k, j, i) = acc;
+      }
+    }
+  }
+}
+
 template <int p, typename InArray, typename ScratchArray, typename OutArray>
 KOKKOS_FUNCTION void
 volume(const InArray& in, ScratchArray& scratch, OutArray& out)

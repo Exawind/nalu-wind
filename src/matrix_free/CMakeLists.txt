@@ -8,7 +8,14 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionOperator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionSolutionUpdate.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionUpdate.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/FilterDiagonal.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/FilterJacobi.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GaussLegendreQuadratureRule.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/GreenGaussBoundaryClosure.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/GreenGaussGradient.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/GreenGaussGradientInterior.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/GreenGaussGradientOperator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/LinearAreas.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearExposedAreas.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearDiffusionMetric.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearVolume.C
