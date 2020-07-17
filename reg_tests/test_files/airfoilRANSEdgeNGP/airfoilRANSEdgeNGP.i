@@ -20,7 +20,7 @@ linear_solvers:
     max_iterations: 20
     kspace: 75
     output_level: 0
-    write_matrix_files: yes
+    write_matrix_files: no
   
   - name: solve_cont
     type: hypre
@@ -33,7 +33,7 @@ linear_solvers:
     bamg_coarsen_type: 8
     bamg_interp_type: 6
     bamg_cycle_type: 1
-    write_matrix_files: yes
+    write_matrix_files: no
 
 realms:
 
@@ -201,7 +201,7 @@ Time_Integrators:
       name: ti_1
       start_time: 0
       time_step: 6.666666666666667e-2
-      termination_step_count: 1
+      termination_step_count: 5
       time_stepping_type: fixed
       time_step_count: 0
       second_order_accuracy: yes
