@@ -120,7 +120,7 @@ TEST_F(GradientBoundaryFixture, bc_residual)
   for (size_t k = 0u; k < owned_rhs.getLocalLength(); ++k) {
     maxval = std::max(maxval, std::abs(view_h(k, 0)));
   }
-  // ASSERT_DOUBLE_EQ(maxval, std::abs(some_value / (scale * nx * scale * nx)));
+  ASSERT_DOUBLE_EQ(maxval, std::abs(some_value / (scale * nx * scale * nx)));
 }
 
 } // namespace matrix_free
