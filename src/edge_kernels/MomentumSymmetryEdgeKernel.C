@@ -8,6 +8,7 @@
 //
 
 
+#include "SimdInterface.h"
 #include "edge_kernels/MomentumSymmetryEdgeKernel.h"
 #include "master_element/MasterElement.h"
 #include "master_element/MasterElementFactory.h"
@@ -29,7 +30,8 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::MomentumSymmetryEdgeKernel(
   VectorFieldType* velocity,
   ScalarFieldType* viscosity,
   ElemDataRequests& faceDataPreReqs,
-  ElemDataRequests& elemDataPreReqs)
+  ElemDataRequests& elemDataPreReqs,
+  double penaltyFactor)
   : NGPKernel<MomentumSymmetryEdgeKernel<BcAlgTraits>>(),
     coordinates_(get_field_ordinal(meta, solnOpts.get_coordinates_name())),
     velocityNp1_(
@@ -42,7 +44,8 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::MomentumSymmetryEdgeKernel(
     meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
            typename BcAlgTraits::FaceTraits>()),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-           typename BcAlgTraits::ElemTraits>())
+           typename BcAlgTraits::ElemTraits>()),
+    penaltyFactor_(penaltyFactor)
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);
@@ -143,12 +146,24 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
       fxnx += nx[i] * fxi;
     }
 
+    const DoubleType diffusionMassRate = -visc * asq * inv_axdx;
+    const DoubleType penaltyFac = penaltyFactor_ * diffusionMassRate;
+    DoubleType uN = 0;
+    for (int i =0; i < BcAlgTraits::nDim_; ++i){
+      uN += v_uNp1(nodeR,i) * nx[i];
+    }
+    for(int i=0; i< BcAlgTraits::nDim_; ++i){
+      const int rowR = nodeR * BcAlgTraits::nDim_ + i;
+      rhs(rowR) += penaltyFac * uN * nx[i]; 
+    }
+
+
     for (int i=0; i < BcAlgTraits::nDim_; i++) {
       const int rowL = nodeL * BcAlgTraits::nDim_ + i;
       const int rowR = nodeR * BcAlgTraits::nDim_ + i;
 
       rhs(rowR) -= fxnx * nx[i];
-      DoubleType lhsfac = -visc * asq * inv_axdx * nx[i] * nx[i];
+      DoubleType lhsfac = diffusionMassRate * nx[i] * nx[i];
       lhs(rowR, rowL) -= lhsfac;
       lhs(rowR, rowR) += lhsfac;
 
