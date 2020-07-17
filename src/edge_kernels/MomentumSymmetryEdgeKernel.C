@@ -152,11 +152,14 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
     for (int i =0; i < BcAlgTraits::nDim_; ++i){
       uN += v_uNp1(nodeR,i) * nx[i];
     }
-    for(int i=0; i< BcAlgTraits::nDim_; ++i){
+    for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
       const int rowR = nodeR * BcAlgTraits::nDim_ + i;
-      rhs(rowR) += penaltyFac * uN * nx[i]; 
+      for (int j = 0; j < BcAlgTraits::nDim_; ++j) {
+        const int colR = nodeR * BcAlgTraits::nDim_ + j;
+        lhs(rowR, colR) -= penaltyFac * nx[i] * nx[j];
+      }
+      rhs(rowR) += penaltyFac * uN * nx[i];
     }
-
 
     for (int i=0; i < BcAlgTraits::nDim_; i++) {
       const int rowL = nodeL * BcAlgTraits::nDim_ + i;
