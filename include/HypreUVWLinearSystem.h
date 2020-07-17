@@ -33,6 +33,100 @@ public:
 
   virtual void zeroSystem();
 
+  // Graph/Matrix Construction
+  virtual void buildNodeGraph(const stk::mesh::PartVector & parts);// for nodal assembly (e.g., lumped mass and source)
+  virtual void buildFaceToNodeGraph(const stk::mesh::PartVector & parts);// face->node assembly
+  virtual void buildEdgeToNodeGraph(const stk::mesh::PartVector & parts);// edge->node assembly
+  virtual void buildElemToNodeGraph(const stk::mesh::PartVector & parts);// elem->node assembly
+  virtual void buildReducedElemToNodeGraph(const stk::mesh::PartVector&);// elem (nearest nodes only)->node assembly
+  virtual void buildFaceElemToNodeGraph(const stk::mesh::PartVector & parts);// elem:face->node assembly
+  virtual void buildNonConformalNodeGraph(const stk::mesh::PartVector&);// nonConformal->elem_node assembly
+  //virtual void buildOversetNodeGraph(const stk::mesh::PartVector&);// overset->elem_node assembly
+
+  /** Tag rows that must be handled as a Dirichlet BC node
+   *
+   *  @param[in] partVec List of parts that contain the Dirichlet nodes
+   */
+  virtual void buildDirichletNodeGraph(const stk::mesh::PartVector&);
+
+  /** Tag rows that must be handled as a Dirichlet  node
+   *
+   *  @param[in] entities List of nodes where Dirichlet conditions are applied
+   *
+   *  \sa sierra::nalu::FixPressureAtNodeAlgorithm
+   */
+  virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&);
+  virtual void buildDirichletNodeGraph(const stk::mesh::NgpMesh::ConnectedNodes);
+
+  sierra::nalu::CoeffApplier* get_coeff_applier();
+  
+  /***************************************************************************************************/
+  /*                     Beginning of HypreLinSysCoeffApplier definition                             */
+  /***************************************************************************************************/
+
+  class HypreUVWLinSysCoeffApplier : public HypreLinSysCoeffApplier
+  {
+  public:
+    
+    HypreUVWLinSysCoeffApplier(bool useNativeCudaSort, bool ensureReproducible, unsigned numDof,
+			       unsigned nDim, HypreIntType globalNumRows, int rank, 
+			       HypreIntType iLower, HypreIntType iUpper,
+			       HypreIntType jLower, HypreIntType jUpper,
+			       MemoryMap mat_map_shared, HypreIntTypeView mat_elem_keys_owned,
+			       UnsignedView mat_elem_start_owned, UnsignedView mat_elem_start_shared,
+			       UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared,
+			       MemoryMap rhs_map_shared, 
+			       UnsignedView rhs_row_start_owned, UnsignedView rhs_row_start_shared,
+			       HypreIntTypeView row_indices_owned, HypreIntTypeView row_indices_shared, 
+			       HypreIntTypeView row_counts_owned, HypreIntTypeView row_counts_shared,
+			       HypreIntType num_mat_pts_to_assemble_total_owned,
+			       HypreIntType num_mat_pts_to_assemble_total_shared,
+			       HypreIntType num_rhs_pts_to_assemble_total_owned,
+			       HypreIntType num_rhs_pts_to_assemble_total_shared,
+			       HypreIntTypeView periodic_bc_rows_owned,
+			       HypreIntTypeView entityToLID, HypreIntTypeViewHost entityToLIDHost,
+			       HypreIntTypeUnorderedMap skippedRowsMap, HypreIntTypeUnorderedMapHost skippedRowsMapHost,
+			       HypreIntTypeUnorderedMap oversetRowsMap, HypreIntTypeUnorderedMapHost oversetRowsMapHost,
+			       HypreIntType num_mat_overset_pts_owned, HypreIntType num_rhs_overset_pts_owned);
+
+    KOKKOS_FUNCTION
+    virtual ~HypreUVWLinSysCoeffApplier() {}
+
+    KOKKOS_FUNCTION
+    virtual void sum_into(unsigned numEntities,
+			  const stk::mesh::NgpMesh::ConnectedNodes& entities,
+			  const SharedMemView<int*,DeviceShmem> & localIds,
+			  const SharedMemView<const double*,DeviceShmem> & rhs,
+			  const SharedMemView<const double**,DeviceShmem> & lhs,
+			  const HypreIntType& iLower, const HypreIntType& iUpper,
+			  unsigned nDim);
+
+    KOKKOS_FUNCTION
+    virtual void operator()(unsigned numEntities,
+                            const stk::mesh::NgpMesh::ConnectedNodes& entities,
+                            const SharedMemView<int*,DeviceShmem> & localIds,
+                            const SharedMemView<int*,DeviceShmem> & sortPermutation,
+                            const SharedMemView<const double*,DeviceShmem> & rhs,
+                            const SharedMemView<const double**,DeviceShmem> & lhs,
+                            const char * trace_tag);
+
+    virtual void applyDirichletBCs(Realm & realm, 
+				   stk::mesh::FieldBase * solutionField,
+				   stk::mesh::FieldBase * bcValuesField,
+				   const stk::mesh::PartVector& parts);
+
+    virtual void free_device_pointer();
+
+    virtual sierra::nalu::CoeffApplier* device_pointer();
+
+  };
+
+  /***************************************************************************************************/
+  /*                        End of of HypreLinSysCoeffApplier definition                             */
+  /***************************************************************************************************/
+
+
+
   /** Update coefficients of a particular row(s) in the linear system
    *
    *  The core method of this class, it updates the matrix and RHS based on the
@@ -109,7 +203,12 @@ public:
   virtual unsigned numDof() const { return nDim_; }
 
 protected:
+
+  virtual void finalizeLinearSystem();
+
   virtual void finalizeSolver();
+
+  virtual void loadComplete();
 
   virtual void loadCompleteSolver();
 
@@ -118,14 +217,13 @@ protected:
 private:
   std::vector<std::string> vecNames_{"X", "Y", "Z"};
 
-  std::vector<double> scratchRowVals_;
-
   std::array<double, 3> firstNLR_;
 
   mutable std::vector<HYPRE_IJVector> rhs_;
   mutable std::vector<HYPRE_IJVector> sln_;
 
-  const int nDim_{3};
+  const unsigned nDim_{3};
+
 };
 
 }  // nalu

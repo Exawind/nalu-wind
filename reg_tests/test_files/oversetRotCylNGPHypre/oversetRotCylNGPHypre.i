@@ -1,3 +1,5 @@
+# -*- mode: yaml -*-
+
 Simulations:
   - name: sim1
     time_integrator: ti_1
@@ -5,23 +7,38 @@ Simulations:
 
 linear_solvers:
 
-  - name: solve_scalar
-    type: tpetra
-    method: gmres
-    preconditioner: sgs
-    tolerance: 1e-5
-    max_iterations: 50
-    kspace: 50
-    output_level: 0
-
-  - name: solve_cont
+  - name: solve_mom
     type: hypre
     method: hypre_gmres
     preconditioner: boomerAMG
-    tolerance: 1e-5
+    tolerance: 1e-12
     max_iterations: 200
-    kspace: 5
+    kspace: 50
     output_level: 0
+    bamg_max_levels: 1
+    bamg_relax_type: 8
+    bamg_num_sweeps: 2
+    bamg_relax_order: 0
+    segregated_solver: yes
+    ensure_reproducible: no
+    use_native_cuda_sort: no
+    write_matrix_files: no
+
+  # solver for the pressure
+  - name: solve_scalar
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-12
+    max_iterations: 200
+    kspace: 50
+    output_level: 0
+    bamg_coarsen_type: 8
+    bamg_interp_type: 6
+    bamg_cycle_type: 1
+    ensure_reproducible: no
+    use_native_cuda_sort: no
+    write_matrix_files:  no
 
 realms:
 
@@ -29,15 +46,15 @@ realms:
     mesh: ../../mesh/oversetCylinder.g
     use_edges: yes
     automatic_decomposition_type: rcb
-    activate_aura: true
 
     equation_systems:
       name: theEqSys
-      max_iterations: 3
+      max_iterations: 2
+      decoupled_overset_solve: yes
 
       solver_system_specification:
-        velocity: solve_scalar
-        pressure: solve_cont
+        velocity: solve_mom
+        pressure: solve_scalar
 
       systems:
 
@@ -120,7 +137,7 @@ realms:
       overset_user_data:
         tioga_options:
           symmetry_direction: 2
-          set_resolutions: no
+          set_resolutions: yes
         mesh_group:
           - overset_name: interior
             mesh_parts: [ Unspecified-2-HEX ]
@@ -141,10 +158,7 @@ realms:
     solution_options:
       name: myOptions
 
-      reduced_sens_cvfem_poisson: yes
-
       options:
-
         - hybrid_factor:
             velocity: 1.0
 
@@ -156,49 +170,29 @@ realms:
             pressure: element
             velocity: element
 
-    post_processing:
-
-      - type: surface
-        physics: surface_force_and_moment
-        output_file_name: oversetRotCylinder.dat
-        frequency: 1
-        parameters: [0,0]
-        target_name: wall
-
-    turbulence_averaging:
-      time_filter_interval: 100000.0
-
-      specifications:
-        - name: one
-          target_name: [Unspecified-2-HEX, Unspecified-3-HEX]
-          compute_q_criterion: yes
-          compute_vorticity: yes
-
     restart:
-      restart_data_base_name: rst/oversetRotCylinder.rst
+      restart_data_base_name: rst/cyl.rst
       restart_frequency: 100
       restart_start: 100
 
     output:
-      output_data_base_name: out/oversetRotCylinder.exo
-      output_frequency: 1000
+      output_data_base_name: out/cyl.e
+      output_frequency: 10
       output_node_set: no
       output_variables:
        - velocity
        - pressure
+       - dpdx
+       - mesh_displacement
        - iblank
        - iblank_cell
-       - mesh_displacement
-       - q_criterion
-       - vorticity
-
 
 
 Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
-      termination_step_count: 15
+      termination_step_count: 10
       time_step: 0.003
       time_stepping_type: fixed
       time_step_count: 0

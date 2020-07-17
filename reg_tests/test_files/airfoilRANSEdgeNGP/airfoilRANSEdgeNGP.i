@@ -16,8 +16,8 @@ linear_solvers:
     type: tpetra
     method: gmres
     preconditioner: sgs
-    tolerance: 1e-5
-    max_iterations: 10
+    tolerance: 1e-10
+    max_iterations: 20
     kspace: 75
     output_level: 0
     write_matrix_files: no
@@ -26,26 +26,14 @@ linear_solvers:
     type: hypre
     method: hypre_gmres
     preconditioner: boomerAMG
-    tolerance: 1e-5
+    tolerance: 1e-10
     max_iterations: 200
     kspace: 75
     output_level: 0
     bamg_coarsen_type: 8
     bamg_interp_type: 6
     bamg_cycle_type: 1
-
-  - name: solve_mom
-    type: hypre
-    method: hypre_bicgstab
-    preconditioner: boomerAMG
-    tolerance: 1e-5
-    max_iterations: 200
-    kspace: 75
-    output_level: 0
-    segregated_solver: yes
-    bamg_max_levels: 1
-    bamg_relax_type: 6
-    bamg_num_sweeps: 1
+    write_matrix_files: no
 
 realms:
 
@@ -60,7 +48,7 @@ realms:
    
     equation_systems:
       name: theEqSys
-      max_iterations: 2
+      max_iterations: 1
 
       solver_system_specification:
         velocity: solve_scalar

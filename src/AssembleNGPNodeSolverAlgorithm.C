@@ -74,6 +74,9 @@ AssembleNGPNodeSolverAlgorithm::~AssembleNGPNodeSolverAlgorithm()
 void
 AssembleNGPNodeSolverAlgorithm::initialize_connectivity()
 {
+  const size_t numKernels = nodeKernels_.size();
+  if (numKernels < 1) return;
+
   eqSystem_->linsys_->buildNodeGraph(partVec_);
 }
 
