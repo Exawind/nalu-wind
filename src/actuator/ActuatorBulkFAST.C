@@ -143,7 +143,7 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
   for (int iTurb = 0; iTurb < nTurb; iTurb++) {
     if (openFast_.get_procNo(iTurb) == NaluEnv::self().parallel_rank()) {
       ThrowAssert(actMeta.numPointsTotal_ >= openFast_.get_numForcePts(iTurb));
-      const int numForcePts = openFast_.get_numForcePts(iTurb);
+      const int numForcePts = actMeta.numPointsTurbine_.h_view(iTurb);
       const int offset = turbIdOffset_.h_view(iTurb);
       auto epsilonChord =
         Kokkos::subview(actMeta.epsilonChord_.view_host(), iTurb, Kokkos::ALL);
