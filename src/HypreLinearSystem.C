@@ -1246,7 +1246,7 @@ HypreLinearSystem::zeroSystem()
   // applications) when the data structures have been created but never used and
   // zeroSystem is called for a reset. Include a check to ensure we only
   // initialize if it was previously assembled.
-  
+
   if (matrixAssembled_) {
     HYPRE_IJMatrixInitialize(mat_);
     HYPRE_IJVectorInitialize(rhs_);
@@ -2035,23 +2035,26 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(HYPRE_IJMatrix hypreM
   /* Matrix */
   /**********/
 
-  /* Sort ... if chosen */
-  sortMatrixElementBins(num_rows_owned_, num_mat_pts_to_assemble_total_owned_, globalNumRows_,
-  			mat_row_start_owned_, row_indices_owned_, iwork_,
-  			cols_owned_, vals_owned_);
+  if (num_nonzeros_owned_) {
+    /* Sort ... if chosen */
+    sortMatrixElementBins(num_rows_owned_, num_mat_pts_to_assemble_total_owned_, globalNumRows_,
+			  mat_row_start_owned_, row_indices_owned_, iwork_,
+			  cols_owned_, vals_owned_);
   
-  /* Fill the owned matrix */
-  fillCSRMatrix(num_nonzeros_owned_, num_mat_pts_to_assemble_total_owned_, mat_elem_start_owned_,
-		cols_owned_, vals_owned_, d_col_indices_owned_, d_values_owned_);
+    /* Fill the owned matrix */
+    fillCSRMatrix(num_nonzeros_owned_, num_mat_pts_to_assemble_total_owned_, mat_elem_start_owned_,
+		  cols_owned_, vals_owned_, d_col_indices_owned_, d_values_owned_);
 
-  /* Set the owned part */
-  Kokkos::deep_copy(h_values_owned_, d_values_owned_);
-  Kokkos::deep_copy(h_col_indices_owned_, d_col_indices_owned_);
-
-  HYPRE_IJMatrixSetValues(hypreMat, num_rows_owned_,
-			  h_row_counts_owned_.data(), h_row_indices_owned_.data(),
-			  h_col_indices_owned_.data(), h_values_owned_.data());  
-      
+    /* Copy the data to the host */
+    Kokkos::deep_copy(h_values_owned_, d_values_owned_);
+    Kokkos::deep_copy(h_col_indices_owned_, d_col_indices_owned_);
+    
+    /* Set the owned part */
+    HYPRE_IJMatrixSetValues(hypreMat, num_rows_owned_,
+			    h_row_counts_owned_.data(), h_row_indices_owned_.data(),
+			    h_col_indices_owned_.data(), h_values_owned_.data());  
+  }
+  
   if (num_nonzeros_shared_) { 
     /* Sort ... if chosen */
     sortMatrixElementBins(num_rows_shared_, num_mat_pts_to_assemble_total_shared_, globalNumRows_,
@@ -2062,12 +2065,14 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(HYPRE_IJMatrix hypreM
     fillCSRMatrix(num_nonzeros_shared_, num_mat_pts_to_assemble_total_shared_, mat_elem_start_shared_,
 		  cols_shared_, vals_shared_, d_col_indices_shared_, d_values_shared_);
 
-    /* Add the shared part */
+    /* Copy the data to the host */
     Kokkos::deep_copy(h_values_shared_, d_values_shared_);
     Kokkos::deep_copy(h_col_indices_shared_, d_col_indices_shared_);
+
+    /* Add the shared part */
     HYPRE_IJMatrixAddToValues(hypreMat, num_rows_shared_,
 			      h_row_counts_shared_.data(), h_row_indices_shared_.data(), 
-			      h_col_indices_shared_.data(), h_values_shared_.data());    
+			      h_col_indices_shared_.data(), h_values_shared_.data());
   }
 
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
@@ -2075,8 +2080,8 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(HYPRE_IJMatrix hypreM
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 + 1.e3*((double)(_stop.tv_sec - _start.tv_sec));
   _assembleMatTime+=msec;
-  _nAssembleMat++;
 #endif
+  _nAssembleMat++;
 
   /********/
   /* Rhs */
@@ -2088,14 +2093,16 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(HYPRE_IJMatrix hypreM
 #endif
 
   for (unsigned i=0; i<hypreRhs.size(); ++i) {
-    /* Sort ... if chosen */
-    sortRhsElementBins(num_rows_owned_, num_rhs_pts_to_assemble_total_owned_, i, 
-    		       row_indices_owned_, rhs_row_start_owned_, iwork_, rhs_vals_owned_);
-
-    /* Fill the owned rhs */
-    fillRhsVector(num_rows_owned_, num_rhs_pts_to_assemble_total_owned_, i, 
-		  rhs_row_start_owned_, rhs_vals_owned_, d_rhs_owned_);
-
+    if (num_rows_owned_) {
+      /* Sort ... if chosen */
+      sortRhsElementBins(num_rows_owned_, num_rhs_pts_to_assemble_total_owned_, i, 
+			 row_indices_owned_, rhs_row_start_owned_, iwork_, rhs_vals_owned_);
+      
+      /* Fill the owned rhs */
+      fillRhsVector(num_rows_owned_, num_rhs_pts_to_assemble_total_owned_, i, 
+		    rhs_row_start_owned_, rhs_vals_owned_, d_rhs_owned_);
+    }
+    
     if (num_rows_shared_) {
       /* Sort ... if chosen */
       sortRhsElementBins(num_rows_shared_, num_rhs_pts_to_assemble_total_shared_, i, 
@@ -2107,16 +2114,20 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(HYPRE_IJMatrix hypreM
     }
   }
 
+  /* Copy the data to the host */
   Kokkos::deep_copy(h_rhs_owned_, d_rhs_owned_);
   if (num_rows_shared_) Kokkos::deep_copy(h_rhs_shared_, d_rhs_shared_);
 
   for (unsigned i=0; i<hypreRhs.size(); ++i) {
-
-    /* Set the owned part */
-    HYPRE_IJVectorSetValues(hypreRhs[i], num_rows_owned_, h_row_indices_owned_.data(), h_rhs_owned_.data()+i*num_rows_owned_);
-
-    if (num_rows_shared_) 
+    if (num_rows_owned_) {
+      /* Set the owned part */
+      HYPRE_IJVectorSetValues(hypreRhs[i], num_rows_owned_, h_row_indices_owned_.data(), h_rhs_owned_.data()+i*num_rows_owned_);
+    }
+    
+    if (num_rows_shared_) {
+      /* Add the shared part */
       HYPRE_IJVectorAddToValues(hypreRhs[i], num_rows_shared_, h_row_indices_shared_.data(), h_rhs_shared_.data()+i*num_rows_shared_);
+    }
   }
 
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
@@ -2124,8 +2135,8 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(HYPRE_IJMatrix hypreM
   gettimeofday(&_stop, NULL);
   msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 + 1.e3*((double)(_stop.tv_sec - _start.tv_sec));
   _assembleRhsTime+=msec;
-  _nAssembleRhs++;
 #endif
+  _nAssembleRhs++;
 
   /* Reset after assembly */
   reinitialize_= true;

@@ -636,27 +636,17 @@ HypreUVWLinearSystem::buildNodeGraph(const stk::mesh::PartVector & parts)
   stk::mesh::BucketVector const& buckets =
     realm_.get_buckets( stk::topology::NODE_RANK, s_owned );
 
+  std::vector<HypreIntType> hids(1);
+
   for(size_t ib=0; ib<buckets.size(); ++ib) {
     const stk::mesh::Bucket & b = *buckets[ib];
     for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
+
       stk::mesh::Entity node = b[k];
-      HypreIntType hid = get_entity_hypre_id(node);
-      if (hid>=iLower_ && hid<=iUpper_) {
-	HypreIntType lid = hid-iLower_;
-	rowCountOwned_[lid]++;
-	columnsOwned_[lid].push_back(hid);
-      } else {
-	if (rowCountShared_.find(hid)!=rowCountShared_.end()) {
-	  rowCountShared_.at(hid)++;
-	  columnsShared_.at(hid).push_back(hid);
-	} else {
-	  std::pair<HypreIntType, unsigned> foo = std::make_pair(hid,1);
-	  rowCountShared_.insert(foo);
-	  std::vector<HypreIntType> cols{hid};
-	  std::pair<HypreIntType, std::vector<HypreIntType> > bar = std::make_pair(hid,cols);
-	  columnsShared_.insert(bar);
-	}
-      }
+      hids[0] = get_entity_hypre_id(node);
+
+      /* fill owned/shared 1 Dof */
+      fill_owned_shared_data_structures_1DoF(1, hids);
     }
   }
 
@@ -686,44 +676,22 @@ HypreUVWLinearSystem::buildFaceToNodeGraph(const stk::mesh::PartVector & parts)
   stk::mesh::BucketVector const& buckets = realm_.get_buckets(realm_.meta_data().side_rank(), s_owned);
 
   std::vector<HypreIntType> hids(0);
-  if (buckets.size()) {
-    const unsigned NumNodes = (unsigned) (*buckets[0]).num_nodes(0);
-    hids.resize(NumNodes);
-  }
 
   for(size_t ib=0; ib<buckets.size(); ++ib) {
     const stk::mesh::Bucket & b = *buckets[ib];
+
+    auto numNodes = b.topology().num_nodes();
+    hids.resize(numNodes);
+
     for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
 
-      const unsigned numNodes = (unsigned)b.num_nodes(k);
+      stk::mesh::Entity const * nodes = b.begin_nodes(k);
 
-      if (numNodes) {
-	stk::mesh::Entity const * nodes = b.begin_nodes(k);
+      /* save the hypre ids */
+      for (unsigned i=0; i<numNodes; ++i) hids[i] = get_entity_hypre_id(nodes[i]);
 
-	/* save the hypre ids */
-	for (unsigned i=0; i<numNodes; ++i) {
-	  hids[i] = get_entity_hypre_id(nodes[i]);
-	}
-
-	for (unsigned i=0; i<numNodes; ++i) {
-	  HypreIntType hid = hids[i];
-	  if (hid>=iLower_ && hid<=iUpper_) {
-	    HypreIntType lid = hid-iLower_;
-	    rowCountOwned_[lid]++;
-	    columnsOwned_[lid].insert(columnsOwned_[lid].end(), hids.begin(), hids.end());
-	  } else {	      
-	    if (rowCountShared_.find(hid)!=rowCountShared_.end()) {
-	      rowCountShared_.at(hid)++;
-	      columnsShared_.at(hid).insert(columnsShared_.at(hid).end(), hids.begin(), hids.end());
-	    } else {
-	      std::pair<HypreIntType, unsigned> foo = std::make_pair(hid,1);
-	      rowCountShared_.insert(foo);
-	      std::pair<HypreIntType, std::vector<HypreIntType> > bar = std::make_pair(hid,hids);
-	      columnsShared_.insert(bar);
-	    }	      
-	  }
-	}
-      }
+      /* fill owned/shared 1 Dof */
+      fill_owned_shared_data_structures_1DoF(numNodes, hids);
     }
   }
 
@@ -753,43 +721,22 @@ HypreUVWLinearSystem::buildEdgeToNodeGraph(const stk::mesh::PartVector& parts)
   stk::mesh::BucketVector const& buckets = realm_.get_buckets(stk::topology::EDGE_RANK, s_owned);
 
   std::vector<HypreIntType> hids(0);
-  if (buckets.size()) {
-    const unsigned NumNodes = (unsigned) (*buckets[0]).num_nodes(0);
-    hids.resize(NumNodes);
-  }
 
   for(size_t ib=0; ib<buckets.size(); ++ib) {
     const stk::mesh::Bucket & b = *buckets[ib];
+
+    auto numNodes = b.topology().num_nodes();
+    hids.resize(numNodes);
+
     for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
 
-      const unsigned numNodes = (unsigned)b.num_nodes(k);
+      stk::mesh::Entity const * nodes = b.begin_nodes(k);
 
-      if (numNodes) {
-	stk::mesh::Entity const * nodes = b.begin_nodes(k);
+      /* save the hypre ids */
+      for (unsigned i=0; i<numNodes; ++i) hids[i] = get_entity_hypre_id(nodes[i]);
 
-	/* save the hypre ids */
-	for (unsigned i=0; i<numNodes; ++i)
-	  hids[i] = get_entity_hypre_id(nodes[i]);
-
-	for (unsigned i=0; i<numNodes; ++i) {
-	  HypreIntType hid = hids[i];
-	  if (hid>=iLower_ && hid<=iUpper_) {
-	    HypreIntType lid = hid-iLower_;
-	    rowCountOwned_[lid]++;
-	    columnsOwned_[lid].insert(columnsOwned_[lid].end(), hids.begin(), hids.end());
-	  } else {	      
-	    if (rowCountShared_.find(hid)!=rowCountShared_.end()) {
-	      rowCountShared_.at(hid)++;
-	      columnsShared_.at(hid).insert(columnsShared_.at(hid).end(), hids.begin(), hids.end());
-	    } else {
-	      std::pair<HypreIntType, unsigned> foo = std::make_pair(hid,1);
-	      rowCountShared_.insert(foo);
-	      std::pair<HypreIntType, std::vector<HypreIntType> > bar = std::make_pair(hid,hids);
-	      columnsShared_.insert(bar);
-	    }	      
-	  }
-	}
-      }
+      /* fill owned/shared 1 Dof */
+      fill_owned_shared_data_structures_1DoF(numNodes, hids);
     }
   }
 
@@ -819,43 +766,22 @@ HypreUVWLinearSystem::buildElemToNodeGraph(const stk::mesh::PartVector & parts)
   stk::mesh::BucketVector const& buckets = realm_.get_buckets(stk::topology::ELEM_RANK, s_owned);
 
   std::vector<HypreIntType> hids(0);
-  if (buckets.size()) {
-    const unsigned NumNodes = (unsigned) (*buckets[0]).num_nodes(0);
-    hids.resize(NumNodes);
-  }
 
   for(size_t ib=0; ib<buckets.size(); ++ib) {
     const stk::mesh::Bucket & b = *buckets[ib];
+
+    auto numNodes = b.topology().num_nodes();
+    hids.resize(numNodes);
+
     for ( stk::mesh::Bucket::size_type k = 0 ; k < b.size() ; ++k ) {
 
-      const unsigned numNodes = (unsigned)b.num_nodes(k);
+      stk::mesh::Entity const * nodes = b.begin_nodes(k);
 
-      if (numNodes) {
-	stk::mesh::Entity const * nodes = b.begin_nodes(k);
+      /* save the hypre ids */
+      for (unsigned i=0; i<numNodes; ++i) hids[i] = get_entity_hypre_id(nodes[i]);
 
-	/* save the hypre ids */
-	for (unsigned i=0; i<numNodes; ++i)
-	  hids[i] = get_entity_hypre_id(nodes[i]);
-
-	for (unsigned i=0; i<numNodes; ++i) {
-	  HypreIntType hid = hids[i];
-	  if (hid>=iLower_ && hid<=iUpper_) {
-	    HypreIntType lid = hid-iLower_;
-	    rowCountOwned_[lid]++;
-	    columnsOwned_[lid].insert(columnsOwned_[lid].end(), hids.begin(), hids.end());
-	  } else {	      
-	    if (rowCountShared_.find(hid)!=rowCountShared_.end()) {
-	      rowCountShared_.at(hid)++;
-	      columnsShared_.at(hid).insert(columnsShared_.at(hid).end(), hids.begin(), hids.end());
-	    } else {
-	      std::pair<HypreIntType, unsigned> foo = std::make_pair(hid,1);
-	      rowCountShared_.insert(foo);
-	      std::pair<HypreIntType, std::vector<HypreIntType> > bar = std::make_pair(hid,hids);
-	      columnsShared_.insert(bar);
-	    }	      
-	  }
-	}
-      }
+      /* fill owned/shared 1 Dof */
+      fill_owned_shared_data_structures_1DoF(numNodes, hids);
     }
   }
 
@@ -906,30 +832,11 @@ HypreUVWLinearSystem::buildFaceElemToNodeGraph(
       const unsigned numNodes = (unsigned)bulkData.num_nodes(element);
       hids.resize(numNodes);
 
-      if (numNodes) {
-	/* save the hypre ids */
-	for (unsigned i=0; i<numNodes; ++i)
-	  hids[i] = get_entity_hypre_id(elem_nodes[i]);
+      /* save the hypre ids */
+      for (unsigned i=0; i<numNodes; ++i) hids[i] = get_entity_hypre_id(elem_nodes[i]);
 
-	for (unsigned i=0; i<numNodes; ++i) {
-	  HypreIntType hid = hids[i];
-	  if (hid>=iLower_ && hid<=iUpper_) {
-	    HypreIntType lid = hid-iLower_;
-	    rowCountOwned_[lid]++;
-	    columnsOwned_[lid].insert(columnsOwned_[lid].end(), hids.begin(), hids.end());
-	  } else {	      
-	    if (rowCountShared_.find(hid)!=rowCountShared_.end()) {
-	      rowCountShared_.at(hid)++;
-	      columnsShared_.at(hid).insert(columnsShared_.at(hid).end(), hids.begin(), hids.end());
-	    } else {
-	      std::pair<HypreIntType, unsigned> foo = std::make_pair(hid,1);
-	      rowCountShared_.insert(foo);
-	      std::pair<HypreIntType, std::vector<HypreIntType> > bar = std::make_pair(hid,hids);
-	      columnsShared_.insert(bar);
-	    }	      
-	  }
-	}
-      }
+      /* fill owned/shared 1 Dof */
+      fill_owned_shared_data_structures_1DoF(numNodes, hids);
     }
   }
 
