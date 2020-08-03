@@ -89,10 +89,9 @@ HypreUVWLinearSystem::finalizeLinearSystem()
       
     hostCoeffApplier.reset(new HypreUVWLinSysCoeffApplier(useNativeCudaSort, ensureReproducible, 1, nDim_, globalNumRows_, 
 							  rank_, iLower_, iUpper_, jLower_, jUpper_,
-							  mat_map_shared_, mat_elem_keys_owned_,
+							  map_shared_, mat_elem_cols_owned_, mat_elem_cols_shared_,
 							  mat_elem_start_owned_, mat_elem_start_shared_,
-							  mat_row_start_owned_, mat_row_start_shared_,
-							  rhs_map_shared_,
+							  mat_row_start_owned_, mat_row_start_shared_,			  
 							  rhs_row_start_owned_, rhs_row_start_shared_,
 							  row_indices_owned_, row_indices_shared_, 
 							  row_counts_owned_, row_counts_shared_,
@@ -178,7 +177,6 @@ void
 HypreUVWLinearSystem::zeroSystem()
 {
   HypreUVWSolver* solver = reinterpret_cast<HypreUVWSolver*>(linearSolver_);
-
   if (matrixAssembled_) {
     HYPRE_IJMatrixInitialize(mat_);
     for (unsigned i=0; i<nDim_; ++i) {
@@ -381,11 +379,10 @@ sierra::nalu::CoeffApplier* HypreUVWLinearSystem::get_coeff_applier()
 HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::HypreUVWLinSysCoeffApplier(bool useNativeCudaSort, bool ensureReproducible, unsigned numDof,
 									     unsigned nDim, HypreIntType globalNumRows, int rank, 
 									     HypreIntType iLower, HypreIntType iUpper,
-									     HypreIntType jLower, HypreIntType jUpper,
-									     MemoryMap mat_map_shared, HypreIntTypeView mat_elem_keys_owned,
+									     HypreIntType jLower, HypreIntType jUpper, MemoryMap map_shared,
+									     HypreIntTypeView mat_elem_cols_owned, HypreIntTypeView mat_elem_cols_shared,
 									     UnsignedView mat_elem_start_owned, UnsignedView mat_elem_start_shared,
 									     UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared,
-									     MemoryMap rhs_map_shared, 
 									     UnsignedView rhs_row_start_owned, UnsignedView rhs_row_start_shared,
 									     HypreIntTypeView row_indices_owned, HypreIntTypeView row_indices_shared, 
 									     HypreIntTypeView row_counts_owned, HypreIntTypeView row_counts_shared,
@@ -399,9 +396,11 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::HypreUVWLinSysCoeffApplier(boo
 									     HypreIntTypeUnorderedMap oversetRowsMap, HypreIntTypeUnorderedMapHost oversetRowsMapHost,
 									     HypreIntType num_mat_overset_pts_owned, HypreIntType num_rhs_overset_pts_owned)
   : HypreLinSysCoeffApplier(useNativeCudaSort, ensureReproducible, numDof, nDim, globalNumRows, rank,
-			    iLower, iUpper, jLower, jUpper, mat_map_shared, mat_elem_keys_owned,
-			    mat_elem_start_owned, mat_elem_start_shared, mat_row_start_owned, mat_row_start_shared,
-			    rhs_map_shared, rhs_row_start_owned, rhs_row_start_shared,
+			    iLower, iUpper, jLower, jUpper, map_shared,
+			    mat_elem_cols_owned, mat_elem_cols_shared,
+			    mat_elem_start_owned, mat_elem_start_shared, 
+			    mat_row_start_owned, mat_row_start_shared,
+			    rhs_row_start_owned, rhs_row_start_shared,
 			    row_indices_owned, row_indices_shared, row_counts_owned, row_counts_shared,
 			    num_mat_pts_to_assemble_total_owned, num_mat_pts_to_assemble_total_shared,
 			    num_rhs_pts_to_assemble_total_owned, num_rhs_pts_to_assemble_total_shared,
@@ -428,41 +427,50 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::sum_into(
     if (checkSkippedRows_()) {
       if (skippedRowsMap_.exists(hid)) continue;
     }
-
+    
     if (hid>=iLower && hid<=iUpper) {
       int offset = 0;
+      unsigned lower = mat_row_start_owned_(hid-iLower);
+      unsigned upper = mat_row_start_owned_(hid-iLower+1)-1;
+
       for (unsigned k=0; k<numEntities; ++k) {
-	HypreIntType key = hid*globalNumRows_ + localIds[k];
 	/* binary search subrange rather than a map.find */
-	unsigned lower = mat_row_start_owned_(hid-iLower);
-	unsigned upper = mat_row_start_owned_(hid-iLower+1)-1;
+	HypreIntType col = localIds[k];
 	unsigned matIndex;
-	binarySearch(lower,upper,key,matIndex);	  
-	matIndex = Kokkos::atomic_fetch_add(&mat_counter_owned_(matIndex), 1);      
-	cols_owned_(matIndex) = localIds[k];
+	binarySearchOwned(lower,upper,col,matIndex);	  
+	/* Find the matrix element memory location */
+	matIndex = Kokkos::atomic_fetch_add(&mat_counter_owned_(matIndex), (unsigned)1);
+	/* write to the lists */
+	cols_owned_(matIndex) = col;
 	vals_owned_(matIndex) = lhs(ix, offset);
 	offset += nDim;
       }
 
       unsigned rhsIndex = hid-iLower;
-      rhsIndex = Kokkos::atomic_fetch_add(&rhs_counter_owned_(rhsIndex), 1);     
+      rhsIndex = Kokkos::atomic_fetch_add(&rhs_counter_owned_(rhsIndex), (unsigned)1);
       for (unsigned d=0; d<nDim; ++d) {
 	int ir = ix + d;
 	rhs_vals_owned_(rhsIndex,d) = rhs[ir];
       }
     } else {
       int offset = 0;
+      unsigned index = map_shared_.value_at(map_shared_.find(hid));
+      unsigned lower = mat_row_start_shared_(index);
+      unsigned upper = mat_row_start_shared_(index+1)-1;
       for (unsigned k=0; k<numEntities; ++k) {
-	HypreIntType key = hid*globalNumRows_ + localIds[k];
-	unsigned matIndex = mat_map_shared_.value_at(mat_map_shared_.find(key));
-	matIndex = Kokkos::atomic_fetch_add(&mat_counter_shared_(matIndex), 1);      
-	cols_shared_(matIndex) = localIds[k];
+	/* binary search subrange rather than a map.find */
+	HypreIntType col = localIds[k];
+	unsigned matIndex;
+	binarySearchShared(lower,upper,col,matIndex);	  
+	/* Find the matrix element memory location */
+	matIndex = Kokkos::atomic_fetch_add(&mat_counter_shared_(matIndex), (unsigned)1);
+	/* write to the lists */
+	cols_shared_(matIndex) = col;
 	vals_shared_(matIndex) = lhs(ix, offset);
 	offset += nDim;
       }
 
-      unsigned rhsIndex = rhs_map_shared_.value_at(rhs_map_shared_.find(hid));
-      rhsIndex = Kokkos::atomic_fetch_add(&rhs_counter_shared_(rhsIndex), 1);     
+      unsigned rhsIndex = Kokkos::atomic_fetch_add(&rhs_counter_shared_(index), (unsigned)1);
       for (unsigned d=0; d<nDim; ++d) {
 	int ir = ix + d;
 	rhs_vals_shared_(rhsIndex,d) = rhs[ir];

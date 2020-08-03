@@ -44,6 +44,7 @@ HypreLinearSolverConfig::load(const YAML::Node& node)
   get_if_present(node, "max_iterations", maxIterations_, maxIterations_);
   get_if_present(node, "output_level", outputLevel_, outputLevel_);
   get_if_present(node, "kspace", kspace_, kspace_);
+  get_if_present(node, "sync_alg", sync_alg_, sync_alg_);
 
   get_if_present(node, "write_matrix_files", writeMatrixFiles_, writeMatrixFiles_);
 
@@ -374,6 +375,8 @@ HypreLinearSolverConfig::hypre_cogmres_solver_config(const YAML::Node& node)
     Ifpack2::Hypre::Solver, &HYPRE_COGMRESSetMaxIter, maxIterations_)));
   funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
     Ifpack2::Hypre::Solver, &HYPRE_COGMRESSetTol, tolerance_)));
+  funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+    Ifpack2::Hypre::Solver, &HYPRE_COGMRESSetCGS, sync_alg_)));
 
   if (hasAbsTol_) {
     funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
