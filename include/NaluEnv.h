@@ -51,7 +51,20 @@ class NaluEnv
   MPI_Comm parallel_comm();
   int parallel_size();
   int parallel_rank();
-  void set_log_file_stream(std::string naluLogName, bool pprint = false);
+
+  /** Redirect output to a log file
+   *
+   *  \param naluLogName Name of the file where outputs are redirected
+   *
+   *  \param pprint (Parallel print) If true, all MPI ranks output to their own file
+   *
+   *  \param capture_cout If true, `std::cout` is redirected to log file
+   *
+   */
+  void set_log_file_stream(
+    std::string naluLogName,
+    bool pprint = false,
+    const bool capture_cout = false);
   void close_log_file_stream();
   double nalu_time();
 };
