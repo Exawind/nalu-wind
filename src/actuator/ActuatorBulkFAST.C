@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include <Kokkos_DualView.hpp>
 #include <actuator/ActuatorBulkFAST.h>
 #include <actuator/UtilitiesActuator.h>
 #include <actuator/ActuatorFunctorsFAST.h>
@@ -25,6 +26,7 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
     epsilon_("epsilonMeta", numberOfActuators_),
     epsilonChord_("epsilonChordMeta", numberOfActuators_),
     epsilonTower_("epsilonTowerMeta", numberOfActuators_),
+    epsilonHub_("epsilonHubMeta", numberOfActuators_),
     useUniformAziSampling_(
       "diskUseUniSample", is_disk() ? numberOfActuators_ : 0),
     nPointsSwept_("diskNumSwept", is_disk() ? numberOfActuators_ : 0),
@@ -161,27 +163,31 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
 
         switch (openFast_.getForceNodeType(iTurb, np)) {
         case fast::HUB: {
-          float nac_cd = openFast_.get_nacelleCd(iTurb);
-          // Compute epsilon only if drag coefficient is greater than zero
-          if (nac_cd > 0) {
-            float nac_area = openFast_.get_nacelleArea(iTurb);
+          // if epsilonHub hasn't already been set use model
+          // of the wake (Martinez-Tossas PhD Thesis 2017)
+          if(actMeta.epsilonHub_.h_view(iTurb, 0)<=0){
+            float nac_cd = openFast_.get_nacelleCd(iTurb);
+            // Compute epsilon only if drag coefficient is greater than zero
+            if (nac_cd > 0) {
+              float nac_area = openFast_.get_nacelleArea(iTurb);
 
-            // This model is used to set the momentum thickness
-            // of the wake (Martinez-Tossas PhD Thesis 2017)
-            float tmpEps = std::sqrt(2.0 / M_PI * nac_cd * nac_area);
-            for (int i = 0; i < 3; i++) {
-              epsilonLocal(i) = tmpEps;
+              // This model is used to set the momentum thickness
+              // of the wake (Martinez-Tossas PhD Thesis 2017)
+              float tmpEps = std::sqrt(2.0 / M_PI * nac_cd * nac_area);
+              for (int i = 0; i < 3; i++) {
+                epsilonLocal(i) = tmpEps;
+              }
             }
-          }
-          // If no nacelle force just specify the standard value
-          // (it will not be used)
-          else {
-            for (int i = 0; i < 3; i++) {
-              epsilonLocal(i) = epsilonRef(i);
+            // If no nacelle force just specify the standard value
+            // (it will not be used)
+            else {
+              for (int i = 0; i < 3; i++) {
+                epsilonLocal(i) = epsilonRef(i);
+              }
             }
-          }
-          for (int i = 0; i < 3; i++) {
-            epsilonOpt(i) = epsilonLocal(i);
+            for (int i = 0; i < 3; i++) {
+              epsilonOpt(i) = epsilonLocal(i);
+            }
           }
           break;
         }
