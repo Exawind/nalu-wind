@@ -7,7 +7,6 @@
 // for more details.
 //
 
-#include <Kokkos_DualView.hpp>
 #include <actuator/ActuatorBulkFAST.h>
 #include <actuator/UtilitiesActuator.h>
 #include <actuator/ActuatorFunctorsFAST.h>

@@ -11,8 +11,6 @@
 #include <NaluParsing.h>
 #include <actuator/ActuatorParsingFAST.h>
 #include <NaluEnv.h>
-#include <yaml-cpp/node/node.h>
-#include <yaml-cpp/node/type.h>
 
 namespace sierra {
 namespace nalu {
