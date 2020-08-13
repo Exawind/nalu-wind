@@ -7,9 +7,10 @@
 // for more details.
 //
 
-#ifndef LINEAR_VOLUME_H
-#define LINEAR_VOLUME_H
+#ifndef FILTER_DIAGONAL_H
+#define FILTER_DIAGONAL_H
 
+#include "Tpetra_MultiVector.hpp"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/KokkosFramework.h"
 #include "matrix_free/LocalArray.h"
@@ -17,24 +18,18 @@
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
-namespace geom {
-
 namespace impl {
-
 template <int p>
-struct volume_metric_t
+struct filter_diagonal_t
 {
-  static scalar_view<p> invoke(
-    const_scalar_view<p> alpha, const_vector_view<p> coordinates);
-  static scalar_view<p> invoke(const_vector_view<p> coordinates);
+  static void invoke(
+    const_elem_offset_view<p> offsets,
+    const_scalar_view<p> vols,
+    typename Tpetra::MultiVector<>::dual_view_type::t_dev yout);
 };
-
 } // namespace impl
-P_INVOKEABLE(volume_metric)
-
-} // namespace geom
+P_INVOKEABLE(filter_diagonal)
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra
-
 #endif

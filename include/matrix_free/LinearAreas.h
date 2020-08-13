@@ -7,12 +7,11 @@
 // for more details.
 //
 
-#ifndef LINEAR_VOLUME_H
-#define LINEAR_VOLUME_H
+#ifndef LINEAR_AREAS_H
+#define LINEAR_AREAS_H
 
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
 
 namespace sierra {
 namespace nalu {
@@ -20,17 +19,13 @@ namespace matrix_free {
 namespace geom {
 
 namespace impl {
-
 template <int p>
-struct volume_metric_t
+struct linear_areas_t
 {
-  static scalar_view<p> invoke(
-    const_scalar_view<p> alpha, const_vector_view<p> coordinates);
-  static scalar_view<p> invoke(const_vector_view<p> coordinates);
+  static scs_vector_view<p> invoke(const_vector_view<p> coordinates);
 };
-
 } // namespace impl
-P_INVOKEABLE(volume_metric)
+P_INVOKEABLE(linear_areas)
 
 } // namespace geom
 } // namespace matrix_free

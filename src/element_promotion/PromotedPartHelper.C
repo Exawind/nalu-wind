@@ -297,6 +297,17 @@ namespace nalu{
   {
     return (stk::create_superelement_topology(static_cast<unsigned>(std::pow(order+1, dim))));
   }
+  //--------------------------------------------------------------------------
+  stk::topology face_topology_for_order(int order)
+  {
+    if (order == 1) {
+      return stk::topology::QUAD_4;
+    }
+    else if (order == 2) {
+      return stk::topology::QUAD_9;
+    }
+    return stk::create_superface_topology((order+1)*(order+1));
+  }
 
 } // namespace nalu
 }  // namespace sierra

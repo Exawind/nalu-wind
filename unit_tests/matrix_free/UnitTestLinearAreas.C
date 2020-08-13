@@ -7,53 +7,49 @@
 // for more details.
 //
 
-#include "matrix_free/LinearVolume.h"
-#include "gtest/gtest.h"
-
+#include "matrix_free/LinearAreas.h"
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "matrix_free/TensorOperations.h"
+#include "matrix_free/StkSimdComparisons.h"
+#include "matrix_free/TensorOperations.h"
 #include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
 
-#include <Kokkos_Array.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_View.hpp>
 #include <stk_simd/Simd.hpp>
 
+#include "gtest/gtest.h"
+#include "mpi.h"
+
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
-
 namespace {
 
-template <int poly>
+template <int p>
 void
-single_affine_hex_p(bool cube)
+area_single_cube_hex_p()
 {
-  LocalArray<double[3][3]> transform = {{{0, 0, 1}, {1, 0, 0}, {0, 1, 0}}};
-  if (!cube) {
-    transform = {{{2, 1, 1.3333}, {0, 2, -1}, {1, 0, 2}}};
-  }
-  const auto det = determinant<double>(transform);
-  ASSERT_GT(det, 0);
+  constexpr int poly = p;
 
-  const int num_elems_1D = 32 / poly;
+  LocalArray<double[3][3]> jac = {
+    {{+1.1, -2.6, 0}, {-1.2, .7, -0.2}, {10, -std::sqrt(3.), 12}}};
+
+  constexpr auto nodes = GLL<poly>::nodes;
+  const int num_elems_1D = 64 / poly;
   const int num_elems_3D = num_elems_1D * num_elems_1D * num_elems_1D;
   vector_view<poly> coords("coordinates", num_elems_3D);
-  scalar_view<poly> alpha("alpha", num_elems_3D);
 
   Kokkos::parallel_for(
     num_elems_3D, KOKKOS_LAMBDA(int index) {
-      constexpr auto nodes = GLL<poly>::nodes;
       for (int k = 0; k < poly + 1; ++k) {
         for (int j = 0; j < poly + 1; ++j) {
           for (int i = 0; i < poly + 1; ++i) {
-            alpha(index, k, j, i) = 1.0;
-            const Kokkos::Array<ftype, 3> old_coords = {
-              {nodes[i], nodes[j], nodes[k]}};
+            const auto old_coords =
+              Kokkos::Array<ftype, 3>{{nodes[i], nodes[j], nodes[k]}};
             Kokkos::Array<ftype, 3> new_coords;
-            transform_vector(transform, old_coords, new_coords);
+            transform_vector(jac, old_coords, new_coords);
             for (int d = 0; d < 3; ++d) {
               coords(index, k, j, i, d) = new_coords[d] + 2;
             }
@@ -61,30 +57,35 @@ single_affine_hex_p(bool cube)
         }
       }
     });
-  exec_space().fence();
 
-  const auto volumes_d = geom::volume_metric<poly>(alpha, coords);
-  exec_space().fence();
+  auto areas = geom::linear_areas<p>(coords);
+  auto areas_h = Kokkos::create_mirror_view(areas);
+  Kokkos::deep_copy(areas_h, areas);
 
-  auto volumes_h = Kokkos::create_mirror_view(volumes_d);
-  Kokkos::deep_copy(volumes_h, volumes_d);
+  constexpr double tol = 1.e-10;
+  const auto adjjac = adjugate_matrix(jac);
 
   for (int index = 0; index < num_elems_3D; ++index) {
-    for (int k = 0; k < poly + 1; ++k) {
-      for (int j = 0; j < poly + 1; ++j) {
-        for (int i = 0; i < poly + 1; ++i) {
-          ASSERT_DOUBLE_EQ(
-            stk::simd::get_data(volumes_h(index, k, j, i), 0), det)
-            << "index: " << 0;
+    for (int dj = 0; dj < 3; ++dj) {
+      for (int l = 0; l < p; ++l) {
+        for (int s = 0; s < p + 1; ++s) {
+          for (int r = 0; r < p + 1; ++r) {
+            for (int di = 0; di < 3; ++di) {
+              ASSERT_DOUBLETYPE_NEAR(
+                areas_h(index, dj, l, s, r, di), -adjjac(di, dj), tol)
+                << "index: " << index << " dj " << dj << " di " << di;
+            }
+          }
         }
       }
     }
   }
 }
-} // namespace
-TEST(linear_volume, single_cube_hex8) { single_affine_hex_p<1>(true); }
-TEST(linear_volume, single_cube_hex27) { single_affine_hex_p<2>(false); }
 
+TEST(linear_areas, single_cube_hex8) { area_single_cube_hex_p<1>(); }
+TEST(linear_areas, single_cube_hex27) { area_single_cube_hex_p<2>(); }
+
+} // namespace
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

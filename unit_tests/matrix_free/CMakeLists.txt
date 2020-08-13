@@ -1,5 +1,6 @@
 target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/StkConductionFixture.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/StkGradientFixture.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkToTpetraMap.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionDiagonal.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionFields.C
@@ -10,6 +11,13 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionUpdate.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionSolutionUpdate.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestElementOperations.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGreenGaussGradientBoundaryClosure.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGreenGaussGradientInterior.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGreenGaussGradientOperator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGreenGaussGradient.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFilterDiagonal.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFilterJacobi.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearAreas.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearDiffusionMetric.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearExposedAreas.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearVolume.C
