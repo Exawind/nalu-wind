@@ -15,9 +15,9 @@ linear_solvers:
   - name: solve_scalar
     type: tpetra
     method: gmres
-    preconditioner: sgs
-    tolerance: 1e-5
-    max_iterations: 10
+    preconditioner: mt_sgs
+    tolerance: 1e-12
+    max_iterations: 200
     kspace: 75
     output_level: 0
     write_matrix_files: no
@@ -26,26 +26,27 @@ linear_solvers:
     type: tpetra
     method: gmres
     preconditioner: muelu
-    tolerance: 1e-5
+    tolerance: 1e-12
     max_iterations: 200
     kspace: 75
     output_level: 0
     muelu_xml_file_name: ../../xml/milestone_aspect_ratio_gs.xml
+    write_matrix_files: no
 
   - name: solve_mom
     type: tpetra
     method: gmres
-    preconditioner: sgs
-    tolerance: 1e-5
+    preconditioner: mt_sgs
+    tolerance: 1e-12
     max_iterations: 200
     kspace: 75
     output_level: 0
-    segregated_solver: yes
+    write_matrix_files: no
 
 realms:
 
   - name: realm_1
-    mesh: ../../mesh/airfoilRANSEdgeTrilinos.rst   
+    mesh: ../../mesh/airfoilRANSEdgeTrilinos.rst
     automatic_decomposition_type: rcb
     use_edges: yes
 
@@ -55,7 +56,7 @@ realms:
 
     equation_systems:
       name: theEqSys
-      max_iterations: 2
+      max_iterations: 4
 
       solver_system_specification:
         velocity: solve_mom
@@ -68,17 +69,17 @@ realms:
 
         - WallDistance:
             name: myNDTW
-            max_iterations: 1
+            max_iterations: 2
             convergence_tolerance: 1e-8
 
         - LowMachEOM:
             name: myLowMach
-            max_iterations: 1
+            max_iterations: 2
             convergence_tolerance: 1e-8
 
         - ShearStressTransport:
             name: mySST
-            max_iterations: 1
+            max_iterations: 2
             convergence_tolerance: 1e-8
 
     initial_conditions:
@@ -183,7 +184,6 @@ realms:
             specific_dissipation_rate: 0.7
 
     post_processing:
-
     - type: surface
       physics: surface_force_and_moment
       output_file_name: results/forces.dat
@@ -193,7 +193,7 @@ realms:
 
     output:
       output_data_base_name: results/du91w2.e
-      output_frequency: 5
+      output_frequency: 1
       output_node_set: no
       output_variables:
        - velocity
@@ -204,14 +204,14 @@ realms:
        - minimum_distance_to_wall
 
     restart:
-      restart_time: 100
+       restart_time: 100
 
 Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
       time_step: 6.666666666666667e-2
-      termination_step_count: 10
+      termination_step_count: 20
       time_stepping_type: fixed
       time_step_count: 0
       second_order_accuracy: yes
