@@ -69,7 +69,7 @@ realms:
 
         - WallDistance:
             name: myNDTW
-            max_iterations: 2
+            max_iterations: 1
             convergence_tolerance: 1e-8
 
         - LowMachEOM:
@@ -193,7 +193,7 @@ realms:
 
     output:
       output_data_base_name: results/du91w2.e
-      output_frequency: 1
+      output_frequency: 5
       output_node_set: no
       output_variables:
        - velocity
