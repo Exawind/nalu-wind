@@ -309,6 +309,14 @@ TimeIntegrator::integrate_realm()
 
   prepare_for_time_integration();
 
+  bool update_overset = false;
+  for (auto* realm: realmVec_) {
+    if (realm->has_mesh_motion()) {
+      update_overset = true;
+      break;
+    }
+  }
+
   //=====================================
   // time integration
   //=====================================
@@ -317,7 +325,7 @@ TimeIntegrator::integrate_realm()
     const double startTime = NaluEnv::self().nalu_time();
 
     pre_realm_advance_stage1();
-    overset_->update_connectivity();
+    if (update_overset) overset_->update_connectivity();
     pre_realm_advance_stage2();
 
     const double endPreProc = NaluEnv::self().nalu_time();
