@@ -34,6 +34,13 @@ void TiogaOptions::load(const YAML::Node& node)
     hasMexclude_ = true;
     mExclude_= node["num_exclude"].as<int>();
   }
+
+  if (node["cell_resolution_multiplier"]) {
+    cellResMult_ = node["cell_resolution_multiplier"].as<double>();
+  }
+  if (node["node_resolution_multiplier"]) {
+    nodeResMult_ = node["node_resolution_multiplier"].as<double>();
+  }
 }
 
 void TiogaOptions::set_options(TIOGA::tioga& tg)

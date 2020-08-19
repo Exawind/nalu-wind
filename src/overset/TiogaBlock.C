@@ -132,6 +132,7 @@ void TiogaBlock::update_coords()
   }
 #endif
 
+  const double fac = tiogaOpts_.node_res_mult();
   int ip = 0;
   for (auto b: mbkts) {
     for (size_t in=0; in < b->size(); in++) {
@@ -148,7 +149,7 @@ void TiogaBlock::update_coords()
       }
 
       double* nVol = stk::mesh::field_data(*nodeVol, node);
-      node_res_[ip] = *nVol;
+      node_res_[ip] = *nVol * fac;
       ip++;
     }
   }
@@ -185,13 +186,14 @@ TiogaBlock::update_element_volumes()
     eoffset += num_cells_[i];
   }
 
+  const double fac = tiogaOpts_.cell_res_mult();
   for (auto b: mbkts) {
     double* eVol = stk::mesh::field_data(*elemVolume, *b);
     const int npe = b->topology().num_nodes();
     int ep = elem_offsets[npe];
 
     for (size_t ie=0; ie < b->size(); ++ie)
-      cell_res_[ep++] = eVol[ie];
+      cell_res_[ep++] = eVol[ie] * fac;
 
     elem_offsets[npe] = ep;
   }
@@ -359,6 +361,7 @@ void TiogaBlock::process_nodes()
     nodeid_map_.resize(num_nodes_);
   }
 
+  const double fac = tiogaOpts_.node_res_mult();
   int ip =0; // Index into the xyz_ array
   for (auto b: mbkts) {
     for (size_t in=0; in < b->size(); in++) {
@@ -371,7 +374,7 @@ void TiogaBlock::process_nodes()
         xyz_[ip * ndim_ + i] = pt[i];
       }
 
-      node_res_[ip] = *nVol;
+      node_res_[ip] = *nVol * fac;
       node_map_[nid] = ip + 1; // TIOGA uses 1-based indexing
       nodeid_map_[ip] = nid;
       ip++;
@@ -614,7 +617,8 @@ void TiogaBlock::register_solution(
     }
   }
 
-  tg.registerSolution(meshtag_, field_data_.data());
+  constexpr int row_major = 0;
+  tg.register_unstructured_solution(meshtag_, field_data_.data(), ncomp, row_major);
 }
 
 void TiogaBlock::register_solution(
