@@ -66,7 +66,7 @@ function(add_test_u testname np)
       unset(GTEST_SHUFFLE)
     endif()
     add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${utest_ex_name} ${GTEST_SHUFFLE}")
-    set_tests_properties(${testname} PROPERTIES TIMEOUT 2000 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "unit")
+    set_tests_properties(${testname} PROPERTIES TIMEOUT 6000 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "unit")
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
     # create symlink to nrelmw.fst 
     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
@@ -79,7 +79,7 @@ endfunction(add_test_u)
 function(add_test_u_gpu testname np)
     set(FILTER "--gtest_filter=BasicKokkos.discover_execution_space:*.NGP*")
     add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${utest_ex_name} ${FILTER}")
-    set_tests_properties(${testname} PROPERTIES TIMEOUT 2000 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "unit")
+    set_tests_properties(${testname} PROPERTIES TIMEOUT 6000 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "unit")
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
 endfunction(add_test_u_gpu)
 
