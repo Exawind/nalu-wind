@@ -21,7 +21,7 @@ MotionWaves::MotionWaves(stk::mesh::MetaData& meta, const YAML::Node& node)
     ScalarFieldType* divV = &(meta.declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "div_mesh_velocity"));
     stk::mesh::put_field_on_mesh(*divV, meta.universal_part(), nullptr);
-    stk::mesh::field_fill(0.0, *divV);
+
 }
 
 void
@@ -389,7 +389,8 @@ MotionWaves::post_compute_geometry(
   ScalarFieldType* meshDivVelocity =
     bulk.mesh_meta_data().get_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "div_mesh_velocity");
-
+ 
+      stk::mesh::field_fill(0.0, *meshDivVelocity);
   compute_vector_divergence(
     bulk, partVec, partVecBc, meshVelocity, meshDivVelocity, true);
   computedMeshVelDiv = true;
