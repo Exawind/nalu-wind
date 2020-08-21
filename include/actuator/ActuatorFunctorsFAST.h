@@ -147,7 +147,7 @@ struct ActFastSpreadForceWhProjInnerLoop
   ActuatorBulkFAST& actBulk_;
 };
 
-inline void ActFastComputeThrust(ActuatorBulkFAST& actBulk, stk::mesh::BulkData& stkBulk)){
+inline void ActFastComputeThrust(ActuatorBulkFAST& actBulk, stk::mesh::BulkData& stkBulk){
   GenericLoopOverCoarseSearchResults<
   ActuatorBulkFAST,
   ActFastComputeThrustInnerLoop>(actBulk, stkBulk);
