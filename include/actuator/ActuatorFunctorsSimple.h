@@ -152,14 +152,17 @@ struct ActSimpleSpreadForceWhProjInnerLoop
   ActuatorBulkSimple& actBulk_;
 };
 
-using ActSimpleComputeThrust = GenericLoopOverCoarseSearchResults<
+inline void ActSimpleComputeThrust(ActuatorBulkSimple& actBulk, stk::mesh::BulkData& stkBulk){
+  GenericLoopOverCoarseSearchResults<
   ActuatorBulkSimple,
-  ActSimpleComputeThrustInnerLoop>;
+  ActSimpleComputeThrustInnerLoop>(actBulk, stkBulk);
+}
 
-using ActSimpleSpreadForceWhProjection = GenericLoopOverCoarseSearchResults<
+inline void ActSimpleSpreadForceWhProjection (ActuatorBulkSimple& actBulk, stk::mesh::BulkData& stkBulk){
+   GenericLoopOverCoarseSearchResults<
   ActuatorBulkSimple,
-  ActSimpleSpreadForceWhProjInnerLoop>;
-
+  ActSimpleSpreadForceWhProjInnerLoop>(actBulk, stkBulk);
+}
 } /* namespace nalu */
 } /* namespace sierra */
 

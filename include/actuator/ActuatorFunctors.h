@@ -60,8 +60,9 @@ struct SpreadForceInnerLoop
   ActuatorBulk& actBulk_;
 };
 
-using SpreadActuatorForce =
-  GenericLoopOverCoarseSearchResults<ActuatorBulk, SpreadForceInnerLoop>;
+inline void  SpreadActuatorForce(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk){
+  GenericLoopOverCoarseSearchResults<ActuatorBulk, SpreadForceInnerLoop>(actBulk, stkBulk);
+}
 
 } /* namespace nalu */
 } /* namespace sierra */

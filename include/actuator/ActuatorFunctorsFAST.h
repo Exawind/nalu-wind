@@ -10,10 +10,12 @@
 #ifndef ACTUATORFUNCTORSFAST_H_
 #define ACTUATORFUNCTORSFAST_H_
 
+#include "actuator/ActuatorBulk.h"
 #include <actuator/ActuatorTypes.h>
 #include <actuator/ActuatorBulkFAST.h>
 #include <actuator/ActuatorFunctors.h>
 #include <NaluEnv.h>
+#include <stk_mesh/base/BulkData.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -145,13 +147,17 @@ struct ActFastSpreadForceWhProjInnerLoop
   ActuatorBulkFAST& actBulk_;
 };
 
-using ActFastComputeThrust = GenericLoopOverCoarseSearchResults<
+inline void ActFastComputeThrust(ActuatorBulkFAST& actBulk, stk::mesh::BulkData& stkBulk)){
+  GenericLoopOverCoarseSearchResults<
   ActuatorBulkFAST,
-  ActFastComputeThrustInnerLoop>;
+  ActFastComputeThrustInnerLoop>(actBulk, stkBulk);
+}
 
-using ActFastSpreadForceWhProjection = GenericLoopOverCoarseSearchResults<
+inline void ActFastSpreadForceWhProjection (ActuatorBulkFAST& actBulk, stk::mesh::BulkData& stkBulk){
+   GenericLoopOverCoarseSearchResults<
   ActuatorBulkFAST,
-  ActFastSpreadForceWhProjInnerLoop>;
+  ActFastSpreadForceWhProjInnerLoop>(actBulk, stkBulk);
+}
 
 } /* namespace nalu */
 } /* namespace sierra */

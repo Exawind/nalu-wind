@@ -129,12 +129,7 @@ struct ActuatorTestSpreadForceFunctor
     InitSpreadTestFields(actBulk_);
 
     actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
-    const int localSizeCoarseSearch =
-      actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
-
-    Kokkos::parallel_for(
-      "spreadForce", localSizeCoarseSearch,
-      SpreadActuatorForce(actBulk_, stkBulk_));
+    SpreadActuatorForce(actBulk_, stkBulk_);
   }
 
   const ActuatorMeta& actMeta_;

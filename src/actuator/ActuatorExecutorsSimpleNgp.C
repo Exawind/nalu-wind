@@ -42,20 +42,13 @@ ActuatorLineSimpleNGP::operator()()
 
   actuator_utils::reduce_view_on_host(forceReduce);
 
-  const int localSizeCoarseSearch =
-    actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
-
   // === Always use SpreadActuatorForce() ===
   // -- for both isotropic and anisotropic Guassians ---
   if (useSpreadActuatorForce_) {
-    Kokkos::parallel_for(
-      "spreadForcesActuatorNgpSimple", localSizeCoarseSearch,
-      SpreadActuatorForce(actBulk_, stkBulk_));
+      SpreadActuatorForce(actBulk_, stkBulk_);
   } else {
     // --  use ActSimpleSpreadForceWhProjection
-    Kokkos::parallel_for(
-      "spreadForceUsingProjDistance", localSizeCoarseSearch,
-      ActSimpleSpreadForceWhProjection(actBulk_, stkBulk_));
+      ActSimpleSpreadForceWhProjection(actBulk_, stkBulk_);
   }
 
   actBulk_.parallel_sum_source_term(stkBulk_);
