@@ -306,9 +306,7 @@ ActuatorBulkFAST::output_torque_info(stk::mesh::BulkData& stkBulk)
   actuator_utils::reduce_view_on_host(hubLocations_);
   actuator_utils::reduce_view_on_host(hubOrientation_);
 
-  Kokkos::parallel_for(
-    "computeTorque", coarseSearchElemIds_.extent(0),
-    ActFastComputeThrust(*this, stkBulk));
+  ActFastComputeThrust(*this, stkBulk);
   actuator_utils::reduce_view_on_host(turbineThrust_);
   actuator_utils::reduce_view_on_host(turbineTorque_);
 
