@@ -8,14 +8,15 @@
 //
 
 #include "matrix_free/LinearVolume.h"
-#include "matrix_free/HexVertexCoordinates.h"
 #include "matrix_free/Coefficients.h"
+#include "matrix_free/HexVertexCoordinates.h"
+#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
+#include "matrix_free/LocalArray.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/TensorOperations.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
 
-#include <Kokkos_Macros.hpp>
+#include "Kokkos_Macros.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -30,7 +31,7 @@ KOKKOS_FUNCTION typename BoxArray::value_type
 hex_jacobian_component(
   const CoeffArray& Nlin, const BoxArray& box, int k, int j, int i)
 {
-  enum { LN = 0, RN = 1};
+  enum { LN = 0, RN = 1 };
   enum { XH = 0, YH = 1, ZH = 2 };
   if (dj == XH) {
     return (-Nlin(LN, j) * Nlin(LN, k) * box(di, 0) +
@@ -70,7 +71,7 @@ KOKKOS_FUNCTION LocalArray<typename BoxArray::value_type[3][3]>
 linear_hex_jacobian(
   const CoeffArray& coeff, const BoxArray& box, int k, int j, int i)
 {
-  enum { XH = 0, YH = 1, ZH = 2};
+  enum { XH = 0, YH = 1, ZH = 2 };
   LocalArray<typename BoxArray::value_type[3][3]> jac;
   jac(0, 0) = hex_jacobian_component<p, XH, XH>(coeff, box, k, j, i);
   jac(0, 1) = hex_jacobian_component<p, XH, YH>(coeff, box, k, j, i);

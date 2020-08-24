@@ -1,12 +1,28 @@
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 #include "matrix_free/FilterJacobi.h"
 
-#include "Teuchos_RCP.hpp"
-
-#include "Tpetra_Operator.hpp"
 #include "matrix_free/FilterDiagonal.h"
-
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
+
+#include "Teuchos_BLAS_types.hpp"
+#include "Teuchos_RCP.hpp"
+#include "Tpetra_Operator.hpp"
+#include "Tpetra_CombineMode.hpp"
+#include "Tpetra_MultiVector_decl.hpp"
+
+#include "Kokkos_Macros.hpp"
+#include "Kokkos_Parallel.hpp"
+
+#include <type_traits>
 
 namespace sierra {
 namespace nalu {
@@ -53,11 +69,11 @@ element_multiply(
   const_tpetra_view_type inv_diag, const_tpetra_view_type b, tpetra_view_type y)
 {
   constexpr int dim = FilterJacobiOperator<inst::P1>::num_vectors;
-
   Kokkos::parallel_for(
     "element_multiply", b.extent_int(0), KOKKOS_LAMBDA(int index) {
+      const auto inv_d = inv_diag(index, 0);
       for (int d = 0; d < dim; ++d) {
-        y(index, d) = inv_diag(index, 0) * b(index, d);
+        y(index, d) = inv_d * b(index, d);
       }
     });
 }
@@ -72,8 +88,9 @@ update_jacobi_sweep(
   constexpr int dim = FilterJacobiOperator<inst::P1>::num_vectors;
   Kokkos::parallel_for(
     "jacobi_sweep", inv_diag.extent_int(0), KOKKOS_LAMBDA(int index) {
+      const auto inv_d = inv_diag(index, 0);
       for (int d = 0; d < dim; ++d) {
-        y(index, d) += inv_diag(index, 0) * (b(index, d) - axprev(index, d));
+        y(index, d) += inv_d * (b(index, d) - axprev(index, d));
       }
     });
 }

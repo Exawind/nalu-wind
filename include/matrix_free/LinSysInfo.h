@@ -19,12 +19,14 @@ namespace sierra {
 namespace nalu {
 namespace matrix_free {
 
-using gid_type = typename Tpetra::Map<>::global_ordinal_type;
 using lid_type = typename Tpetra::Map<>::local_ordinal_type;
+using gid_type = typename Tpetra::Map<>::global_ordinal_type;
 
 using tpetra_view_type = typename Tpetra::MultiVector<>::dual_view_type::t_dev;
 using const_tpetra_view_type =
   typename Tpetra::MultiVector<>::dual_view_type::t_dev_const;
+using ra_tpetra_view_type =
+  typename Tpetra::MultiVector<>::dual_view_type::t_dev_const_randomread;
 
 struct linsys_info
 {

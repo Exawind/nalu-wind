@@ -11,7 +11,7 @@
 #define LINEAR_AREAS_H
 
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 
 namespace sierra {
 namespace nalu {

@@ -13,6 +13,8 @@
 #include "matrix_free/StkEntityToRowMap.h"
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/StkToTpetraMap.h"
+#include "matrix_free/StkToTpetraLocalIndices.h"
+
 #include "StkConductionFixture.h"
 
 #include <math.h>

@@ -1,6 +1,7 @@
 target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/StkConductionFixture.C
    ${CMAKE_CURRENT_SOURCE_DIR}/StkGradientFixture.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/StkLowMachFixture.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkToTpetraMap.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionDiagonal.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionFields.C
@@ -10,6 +11,10 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionOperator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionUpdate.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestConductionSolutionUpdate.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestContinuityInterior.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestContinuityOperator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestContinuitySolutionUpdate.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMaxCourantReynolds.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestElementOperations.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGreenGaussGradientBoundaryClosure.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGreenGaussGradientInterior.C
@@ -17,14 +22,23 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestGreenGaussGradient.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFilterDiagonal.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestFilterJacobi.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLowMachGatheredFieldManager.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearAreas.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearDiffusionMetric.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearExposedAreas.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearAdvectionMetric.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLinearVolume.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLocalArray.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestLowMachUpdate.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMatrixFreeSolver.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumDiagonal.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumInterior.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumJacobiOperator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumOperator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumSolutionUpdate.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarDirichletBC.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarFluxBC.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSparsifiedEdgeLaplacian.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkSimdConnectivityMap.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkSimdNodeConnectivityMap.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkSimdFaceConnectivityMap.C

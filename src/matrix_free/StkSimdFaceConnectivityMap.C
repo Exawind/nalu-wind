@@ -8,21 +8,16 @@
 //
 
 #include "matrix_free/StkSimdFaceConnectivityMap.h"
-#include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/NodeOrderMap.h"
-#include "matrix_free/StkSimdConnectivityMap.h"
+#include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/StkSimdMeshTraverser.h"
-#include "matrix_free/StkToTpetraMap.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/ValidSimdLength.h"
 
-#include "stk_mesh/base/Bucket.hpp"
-#include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Entity.hpp"
 #include "stk_mesh/base/Selector.hpp"
-#include "stk_mesh/base/Types.hpp"
-#include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_topology/topology.hpp"
-#include "stk_util/util/StkNgpVector.hpp"
+
+#include "Kokkos_Macros.hpp"
 
 namespace sierra {
 namespace nalu {

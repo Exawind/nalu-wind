@@ -8,21 +8,14 @@
 //
 
 #include "matrix_free/ConductionFields.h"
-
-#include "matrix_free/PolynomialOrders.h"
+#include "matrix_free/ConductionInfo.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LinearDiffusionMetric.h"
 #include "matrix_free/LinearVolume.h"
-#include "matrix_free/StkSimdConnectivityMap.h"
+#include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
-#include "matrix_free/KokkosFramework.h"
-#include "stk_mesh/base/CoordinateSystems.hpp"
-#include "stk_mesh/base/Field.hpp"
-#include "stk_mesh/base/FieldBase.hpp"
-#include "stk_mesh/base/FieldState.hpp"
-#include "stk_mesh/base/MetaData.hpp"
-#include "stk_topology/topology.hpp"
 
-#include <stdexcept>
+#include "stk_mesh/base/FieldState.hpp"
 
 namespace sierra {
 namespace nalu {

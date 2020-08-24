@@ -10,15 +10,14 @@
 #include "matrix_free/ConductionGatheredFieldManager.h"
 
 #include "matrix_free/ConductionFields.h"
+#include "matrix_free/ConductionInfo.h"
 #include "StkConductionFixture.h"
 
 #include "Kokkos_Macros.hpp"
 #include "Kokkos_Parallel_Reduce.hpp"
 
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_mesh/base/NgpFieldParallel.hpp"
 #include "stk_mesh/base/FieldState.hpp"
-#include "stk_math/StkMath.hpp"
 #include "stk_mesh/base/NgpForEachEntity.hpp"
 #include "stk_simd/Simd.hpp"
 

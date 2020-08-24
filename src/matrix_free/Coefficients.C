@@ -10,8 +10,6 @@
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/LocalArray.h"
 
-#include <cmath>
-
 namespace sierra {
 namespace nalu {
 namespace matrix_free {

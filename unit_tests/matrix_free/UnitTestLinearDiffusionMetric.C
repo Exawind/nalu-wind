@@ -16,7 +16,7 @@
 #include <Kokkos_View.hpp>
 #include <stk_simd/Simd.hpp>
 
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "gtest/gtest.h"
 #include "mpi.h"
 

@@ -11,8 +11,7 @@
 #define LINEAR_EXPOSED_AREA_H
 
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
+#include "matrix_free/KokkosViewTypes.h"
 
 namespace sierra {
 namespace nalu {

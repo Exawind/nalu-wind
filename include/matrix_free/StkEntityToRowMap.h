@@ -15,7 +15,7 @@
 #include <stk_mesh/base/Selector.hpp>
 
 #include "Kokkos_Core.hpp"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "stk_mesh/base/Types.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 

@@ -120,6 +120,8 @@ struct StkFaceNodeMapping<4>
      {3, 12, 11, 10, 2}}};
 };
 
+int node_map(int poly, int n, int m, int l);
+
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

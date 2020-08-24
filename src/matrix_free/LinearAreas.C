@@ -1,98 +1,26 @@
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
 #include "matrix_free/LinearAreas.h"
 
-#include "Kokkos_DualView.hpp"
-#include "Kokkos_Macros.hpp"
-
-#include "matrix_free/Coefficients.h"
-#include "matrix_free/PolynomialOrders.h"
+#include "matrix_free/GeometricFunctions.h"
 #include "matrix_free/HexVertexCoordinates.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
+#include "matrix_free/KokkosViewTypes.h"
+#include "matrix_free/PolynomialOrders.h"
+
+#include "Kokkos_Macros.hpp"
 
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
 namespace geom {
 namespace impl {
-namespace {
-
-template <int p, int dk, int dj, int di, typename BoxArray>
-KOKKOS_FUNCTION typename BoxArray::value_type
-hex_jacobian_component_scs(const BoxArray& box, int l, int s, int r)
-{
-  enum { LN = 0, RN = 1 };
-  enum { XH = 0, YH = 1, ZH = 2 };
-
-  static constexpr auto nlin = Coeffs<p>::Nlin;
-  static constexpr auto ntlin = Coeffs<p>::Ntlin;
-  typename BoxArray::value_type jac(0);
-  switch (dj) {
-  case XH: {
-    const double lj =
-      (dk == YH) ? ntlin(LN, l) : (dk == XH) ? nlin(LN, r) : nlin(LN, s);
-    const double rj =
-      (dk == YH) ? ntlin(RN, l) : (dk == XH) ? nlin(RN, r) : nlin(RN, s);
-
-    const double lk = (dk == ZH) ? ntlin(LN, l) : nlin(LN, s);
-    const double rk = (dk == ZH) ? ntlin(RN, l) : nlin(RN, s);
-
-    jac = -lj * lk * box(di, 0) + lj * lk * box(di, 1) + rj * lk * box(di, 2) -
-          rj * lk * box(di, 3) - lj * rk * box(di, 4) + lj * rk * box(di, 5) +
-          rj * rk * box(di, 6) - rj * rk * box(di, 7);
-    break;
-  }
-  case YH: {
-    const double li = (dk == XH) ? ntlin(LN, l) : nlin(LN, r);
-    const double ri = (dk == XH) ? ntlin(RN, l) : nlin(RN, r);
-
-    const double lk = (dk == ZH) ? ntlin(LN, l) : nlin(LN, s);
-    const double rk = (dk == ZH) ? ntlin(RN, l) : nlin(RN, s);
-
-    jac = -li * lk * box(di, 0) - ri * lk * box(di, 1) + ri * lk * box(di, 2) +
-          li * lk * box(di, 3) - li * rk * box(di, 4) - ri * rk * box(di, 5) +
-          ri * rk * box(di, 6) + li * rk * box(di, 7);
-    break;
-  }
-  case ZH: {
-    const double li = (dk == XH) ? ntlin(LN, l) : nlin(LN, r);
-    const double ri = (dk == XH) ? ntlin(RN, l) : nlin(RN, r);
-
-    const double lj =
-      (dk == YH) ? ntlin(LN, l) : (dk == XH) ? nlin(LN, r) : nlin(LN, s);
-    const double rj =
-      (dk == YH) ? ntlin(RN, l) : (dk == XH) ? nlin(RN, r) : nlin(RN, s);
-
-    jac = -li * lj * box(di, 0) - ri * lj * box(di, 1) - ri * rj * box(di, 2) -
-          li * rj * box(di, 3) + li * lj * box(di, 4) + ri * lj * box(di, 5) +
-          ri * rj * box(di, 6) + li * rj * box(di, 7);
-    break;
-  }
-  default:
-    break;
-  }
-  constexpr double isoParametricFactor = 0.5;
-  return jac * isoParametricFactor;
-}
-
-template <int p, int dk, typename BoxArray>
-KOKKOS_FUNCTION LocalArray<ftype[3]>
-linear_area(const BoxArray& box, int k, int j, int i)
-{
-  enum { XH = 0, YH = 1, ZH = 2 };
-  static constexpr int ds1 = (dk == XH) ? ZH : (dk == YH) ? XH : YH;
-  static constexpr int ds2 = (dk == XH) ? YH : (dk == YH) ? ZH : XH;
-  const auto dx_ds1 = hex_jacobian_component_scs<p, dk, ds1, XH>(box, k, j, i);
-  const auto dx_ds2 = hex_jacobian_component_scs<p, dk, ds2, XH>(box, k, j, i);
-  const auto dy_ds1 = hex_jacobian_component_scs<p, dk, ds1, YH>(box, k, j, i);
-  const auto dy_ds2 = hex_jacobian_component_scs<p, dk, ds2, YH>(box, k, j, i);
-  const auto dz_ds1 = hex_jacobian_component_scs<p, dk, ds1, ZH>(box, k, j, i);
-  const auto dz_ds2 = hex_jacobian_component_scs<p, dk, ds2, ZH>(box, k, j, i);
-  return LocalArray<ftype[3]>{
-    {dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2, dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2,
-     dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2}};
-}
-
-} // namespace
 
 template <int p>
 scs_vector_view<p>

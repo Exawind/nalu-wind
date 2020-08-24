@@ -9,18 +9,17 @@
 
 #include "matrix_free/ConductionGatheredFieldManager.h"
 
-#include <stk_mesh/base/Types.hpp>
-
 #include "matrix_free/ConductionFields.h"
-#include "matrix_free/PolynomialOrders.h"
+#include "matrix_free/ConductionInfo.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LinearExposedAreas.h"
+#include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/StkSimdFaceConnectivityMap.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
 #include "matrix_free/StkSimdNodeConnectivityMap.h"
-#include "matrix_free/KokkosFramework.h"
-#include "stk_mesh/base/MetaData.hpp"
 
+#include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 namespace sierra {

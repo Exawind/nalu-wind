@@ -10,19 +10,36 @@
 #ifndef CONDUCTION_SOLUTION_UPDATE_H
 #define CONDUCTION_SOLUTION_UPDATE_H
 
-#include "Teuchos_RCP.hpp"
-#include "Tpetra_Map.hpp"
-#include "matrix_free/MatrixFreeSolver.h"
 #include "matrix_free/ConductionJacobiPreconditioner.h"
 #include "matrix_free/ConductionOperator.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/StkToTpetraMap.h"
-#include <Teuchos_ParameterList.hpp>
-#include <Tpetra_MultiVector_decl.hpp>
+#include "matrix_free/KokkosViewTypes.h"
+#include "matrix_free/MatrixFreeSolver.h"
+
+#include "Kokkos_Array.hpp"
+#include "Kokkos_View.hpp"
+#include "Tpetra_Export_decl.hpp"
+#include "Tpetra_Map_decl.hpp"
+
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/Selector.hpp"
+
+namespace Teuchos {
+class ParameterList;
+}
 
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
+
+struct BCDirichletFields;
+template <int p>
+struct BCFluxFields;
+template <int p>
+struct InteriorResidualFields;
+template <int p>
+struct LinearizedResidualFields;
+
+struct StkToTpetraMaps;
 
 template <int p>
 struct ConductionOffsetViews
@@ -43,14 +60,12 @@ template <int p>
 struct ConductionSolutionUpdate
 {
 public:
+  static constexpr int num_vectors = 1;
   ConductionSolutionUpdate(
-    Teuchos::ParameterList,
-    const stk::mesh::NgpMesh& mesh,
-    stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids,
-    stk::mesh::Selector active_mesh,
-    stk::mesh::Selector dirichlet = {},
-    stk::mesh::Selector flux = {},
-    stk::mesh::Selector replicas = {});
+    Teuchos::ParameterList params,
+    const StkToTpetraMaps& linsys,
+    const Tpetra::Export<>& exporter,
+    const ConductionOffsetViews<p>& offset_views);
 
   void compute_residual(
     Kokkos::Array<double, 3>,
@@ -58,8 +73,9 @@ public:
     BCDirichletFields = {},
     BCFluxFields<p> = {});
 
-  void compute_delta(
-    double gamma, LinearizedResidualFields<p>, stk::mesh::NgpField<double>&);
+  const Tpetra::MultiVector<>&
+  compute_delta(double gamma, LinearizedResidualFields<p>);
+
   const MatrixFreeSolver& solver() const { return linear_solver_; }
   void compute_preconditioner(double gamma, LinearizedResidualFields<p>);
 
@@ -68,14 +84,13 @@ public:
   int num_iterations() const;
 
 private:
-  const StkToTpetraMaps linsys_;
-  const ConductionOffsetViews<p> offset_views_;
-
-  const Tpetra::Export<> exporter_;
+  const StkToTpetraMaps& linsys_;
+  const Tpetra::Export<>& exporter_;
+  const ConductionOffsetViews<p>& offset_views_;
 
   ConductionResidualOperator<p> resid_op_;
   ConductionLinearizedResidualOperator<p> lin_op_;
-  JacobiOperator<p> jacobi_preconditioner_;
+  JacobiOperator<p> prec_op_;
   MatrixFreeSolver linear_solver_;
   mutable Tpetra::MultiVector<> owned_and_shared_mv_;
 };

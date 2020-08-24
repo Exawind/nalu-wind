@@ -68,6 +68,9 @@ public:
   std::string preconditioner_type() const
   { return preconditionerType_;}
 
+  std::string preconditioner_name() const
+  { return precond_;}
+  
   inline double tolerance() const { return tolerance_; }
   inline double finalTolerance() const { return finalTolerance_; }
 

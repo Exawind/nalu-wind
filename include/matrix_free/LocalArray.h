@@ -12,7 +12,7 @@
 
 #include "Kokkos_Macros.hpp"
 #include "matrix_free/KokkosFramework.h"
-#include "stk_simd/Simd.hpp"
+#include <type_traits>
 
 namespace sierra {
 namespace nalu {
@@ -145,6 +145,36 @@ struct alignas(alignment) LocalArray<
     return internal_data_[m][l][k][j][i];
   }
 };
+
+template <typename ArrayType>
+struct alignas(alignment) LocalArray<
+  ArrayType,
+  typename std::enable_if<std::rank<ArrayType>::value == 6>::type>
+{
+  static constexpr int Rank = 6;
+  static constexpr int extent_0 = std::extent<ArrayType, 0>::value;
+  static constexpr int extent_1 = std::extent<ArrayType, 1>::value;
+  static constexpr int extent_2 = std::extent<ArrayType, 2>::value;
+  static constexpr int extent_3 = std::extent<ArrayType, 3>::value;
+  static constexpr int extent_4 = std::extent<ArrayType, 4>::value;
+  static constexpr int extent_5 = std::extent<ArrayType, 5>::value;
+
+  using value_type = typename std::remove_all_extents<ArrayType>::type;
+  value_type internal_data_[extent_0][extent_1][extent_2][extent_3][extent_4]
+                           [extent_5];
+
+  KOKKOS_FORCEINLINE_FUNCTION constexpr value_type
+  operator()(int n, int m, int l, int k, int j, int i) const noexcept
+  {
+    return internal_data_[n][m][l][k][j][i];
+  }
+  KOKKOS_FORCEINLINE_FUNCTION value_type&
+  operator()(int n, int m, int l, int k, int j, int i) noexcept
+  {
+    return internal_data_[n][m][l][k][j][i];
+  }
+};
+
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

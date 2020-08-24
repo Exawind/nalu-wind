@@ -20,7 +20,7 @@
 #include "Kokkos_Core.hpp"
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/StkToTpetraMap.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "stk_mesh/base/Bucket.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Entity.hpp"

@@ -11,13 +11,9 @@
 #define STK_SIMD_MESH_TRAVERSER_H
 
 #include <Kokkos_View.hpp>
-#include <memory>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/Selector.hpp>
 
-#include "Kokkos_Core.hpp"
-#include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
 #include "stk_mesh/base/Types.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
 
@@ -121,10 +117,12 @@ simd_traverse(
   ValidFunc func,
   RemainderFunc rem)
 {
+
   auto buckets = mesh.get_bucket_ids(rank, active);
   const auto bucket_offsets = impl::simd_bucket_offsets(mesh, rank, buckets);
   Kokkos::parallel_for(
-    Kokkos::TeamPolicy<exec_space>(buckets.size(), Kokkos::AUTO),
+    Kokkos::TeamPolicy<stk::mesh::NgpMesh::MeshExecSpace>(
+      buckets.size(), Kokkos::AUTO),
     KOKKOS_LAMBDA(
       const typename Kokkos::TeamPolicy<exec_space>::member_type& team) {
       const auto bucket_id = buckets.device_get(team.league_rank());

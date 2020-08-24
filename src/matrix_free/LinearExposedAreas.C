@@ -14,8 +14,7 @@
 #include "matrix_free/HexVertexCoordinates.h"
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/TensorOperations.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
 namespace sierra {

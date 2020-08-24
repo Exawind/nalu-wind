@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 
 // this allows calling the macros with a double instead of a DoubleType
 inline double
