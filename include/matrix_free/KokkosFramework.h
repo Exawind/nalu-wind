@@ -55,7 +55,7 @@ struct ExecTraits<Kokkos::Cuda>
     Kokkos::MemoryTraits<Kokkos::Restrict | Kokkos::Aligned>;
   using memory_space = typename Kokkos::Cuda::memory_space;
   using layout = Kokkos::LayoutLeft;
-  static constexpr int alignment = KOKKOS_MEMORY_ALIGNMENT;
+  static constexpr int alignment = alignof(data_type);
   static constexpr int simd_len = 1;
 };
 #endif
