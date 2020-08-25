@@ -196,7 +196,7 @@ int create_needed_field_views(const TEAMHANDLETYPE& team,
       }
     }
     else {
-      ThrowRequireMsg(false,"Unknown stk-rank" << fieldEntityRank);
+      NGP_ThrowRequireMsg(false,"Unknown stk-rank");
     }
   }
 
