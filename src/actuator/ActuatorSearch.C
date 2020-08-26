@@ -7,6 +7,7 @@
 // for more details.
 //
 
+#include "actuator/ActuatorTypes.h"
 #include <actuator/ActuatorSearch.h>
 #include <stk_search/CoarseSearch.hpp>
 #include <FieldTypeDef.h>
@@ -128,6 +129,7 @@ ExecuteCoarseSearch(
   ActScalarU64Dv& coarseElemIds,
   stk::search::SearchMethod searchMethod)
 {
+  ActDualViewHelper<ActuatorFixedMemSpace> helper;
   VecSearchKeyPair searchKeyPair;
   stk::search::coarse_search(
     spheres, elems, searchMethod, MPI_COMM_SELF, searchKeyPair);
@@ -137,8 +139,9 @@ ExecuteCoarseSearch(
   coarsePointIds.resize(numLocalMatches);
   coarseElemIds.resize(numLocalMatches);
 
-  coarsePointIds.modify_host();
-  coarseElemIds.modify_host();
+  helper.touch_dual_view(coarsePointIds);
+  helper.touch_dual_view(coarseElemIds);
+
 
   for (std::size_t i = 0; i < numLocalMatches; i++) {
     coarsePointIds.h_view(i) = searchKeyPair[i].first.id();
