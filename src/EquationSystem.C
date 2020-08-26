@@ -38,6 +38,8 @@
 #include <stk_mesh/base/MetaData.hpp>
 
 #include <stk_util/parallel/ParallelReduce.hpp>
+#include <stk_mesh/base/GetNgpField.hpp>
+#include <stk_mesh/base/NgpFieldParallel.hpp>
 
 namespace sierra{
 namespace nalu{
@@ -312,7 +314,12 @@ EquationSystem::assemble_and_solve(
 
   if ( realm_.hasPeriodic_) {
     timeA = NaluEnv::self().nalu_time();
-    realm_.periodic_delta_solution_update(deltaSolution, linsys_->numDof());
+    realm_.periodic_delta_solution_update(deltaSolution, linsys_->numDof(), false);
+    // update aura if applicable
+    if (realm_.get_activate_aura()) {
+      auto ngp_field = stk::mesh::get_updated_ngp_field<double>(*deltaSolution);
+      stk::mesh::communicate_field_data<double>(realm_.bulk_data().aura_ghosting(), {&ngp_field});
+    }    
     timeB = NaluEnv::self().nalu_time();
     timerMisc_ += (timeB-timeA);
   }

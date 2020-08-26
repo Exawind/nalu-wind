@@ -271,6 +271,8 @@ private:
 
   Teuchos::RCP<LinSys::Matrix>      sharedNotOwnedMatrix_;
   Teuchos::RCP<LinSys::MultiVector> sharedNotOwnedRhs_;
+  Teuchos::RCP<LinSys::MultiVector> sharedNotOwnedSln_;
+
 
   Teuchos::RCP<LinSys::MultiVector> sln_;
   Teuchos::RCP<LinSys::MultiVector> globalSln_;

@@ -989,6 +989,7 @@ void TpetraLinearSystem::finalizeLinearSystem()
   sharedNotOwnedLocalRhs_ = sharedNotOwnedRhs_->getLocalView<sierra::nalu::DeviceSpace>();
 
   sln_ = Teuchos::rcp(new LinSys::MultiVector(ownedRowsMap_, 1));
+  sharedNotOwnedSln_ = Teuchos::rcp(new LinSys::MultiVector(sharedNotOwnedRowsMap_, 1));
 
   const int nDim = metaData.spatial_dimension();
 
@@ -1565,7 +1566,6 @@ int TpetraLinearSystem::solve(stk::mesh::FieldBase * linearSolutionField)
   }
 
   copy_tpetra_to_stk(sln_, linearSolutionField);
-  sync_field(linearSolutionField);
 
   // computeL2 norm
   Teuchos::Array<double> mv_norm(1);
@@ -1871,20 +1871,21 @@ void TpetraLinearSystem::copy_tpetra_to_stk(
 
   ThrowAssert(!tpetraField.is_null());
   ThrowAssert(stkField);
-  const auto deviceVector = tpetraField->getLocalView<sierra::nalu::DeviceSpace>();
+  const auto ownedDeviceVector = tpetraField->getLocalView<sierra::nalu::DeviceSpace>();
 
   const int maxOwnedRowId = maxOwnedRowId_;
   const unsigned numDof = numDof_;
   auto entityToLID = entityToLID_;
 
   const stk::mesh::Selector selector = stk::mesh::selectField(*stkField)
-    & metaData.locally_owned_part()
-    & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
     & !(realm_.get_inactive_selector());
 
   NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(stkField->mesh_meta_data_ordinal());
 
   stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
+
+  sharedNotOwnedSln_->doImport(*sln_, *exporter_, Tpetra::INSERT);
+  auto sharedDeviceVector = sharedNotOwnedSln_->getLocalViewDevice();
 
   nalu_ngp::run_entity_algorithm(
     "TpetraLinSys::copy_tpetra_to_stk",
@@ -1895,12 +1896,14 @@ void TpetraLinearSystem::copy_tpetra_to_stk(
       const LocalOrdinal localIdOffset = entityToLID[node.local_offset()];
       for(unsigned d=0; d < numDof; ++d) {
         const LocalOrdinal localId = localIdOffset + d;
-        NGP_ThrowRequire(localId < maxOwnedRowId);
-  
-        ngpField.get(meshIdx, d) = deviceVector(localId,0);
+        if (localId < maxOwnedRowId) {
+          ngpField.get(meshIdx, d) = ownedDeviceVector(localId, 0);
+        }
+        else {
+          ngpField.get(meshIdx, d) = sharedDeviceVector(localId - maxOwnedRowId, 0);
+        }  
       }
   });
-
   ngpField.modify_on_device();
 }
 
