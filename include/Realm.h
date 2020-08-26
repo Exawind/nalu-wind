@@ -247,7 +247,8 @@ class Realm {
 
   void periodic_delta_solution_update(
      stk::mesh::FieldBase *theField,
-     const unsigned &sizeOfField) const;
+     const unsigned &sizeOfField,
+     bool doCommunication = true) const;
 
   void periodic_max_field_update(
      stk::mesh::FieldBase *theField,

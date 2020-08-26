@@ -883,18 +883,20 @@ PeriodicManager::ngp_apply_constraints(
   const unsigned &sizeOfField,
   const bool &bypassFieldCheck,
   const bool &addSlaves,
-  const bool &setSlaves) const
+  const bool &setSlaves,
+   const bool &doCommunication) const
 {
 
   // update periodically ghosted fields within add_ and set_
   if ( addSlaves )
-    ngp_add_slave_to_master(theField, sizeOfField, bypassFieldCheck);
+    ngp_add_slave_to_master(theField, sizeOfField, bypassFieldCheck, doCommunication);
   if ( setSlaves )
-    ngp_set_slave_to_master(theField, sizeOfField, bypassFieldCheck);
+    ngp_set_slave_to_master(theField, sizeOfField, bypassFieldCheck, doCommunication);
 
   // parallel communicate shared and aura-ed entities
-  ngp_parallel_communicate_field(theField);
-
+  if (doCommunication) {
+    ngp_parallel_communicate_field(theField);
+  }
 }
 
 
@@ -989,10 +991,12 @@ void
 PeriodicManager::ngp_add_slave_to_master(
   stk::mesh::FieldBase *theField,
   const unsigned &sizeOfField,
-  const bool &bypassFieldCheck) const
+  const bool &bypassFieldCheck,
+  const bool & doCommunication) const
 {
-  ngp_periodic_parallel_communicate_field(theField);
-
+  if (doCommunication) {
+    ngp_periodic_parallel_communicate_field(theField);
+  }
   ThrowRequireMsg(theField->type_is<double>(), "Error in PeriodicManager::add_slave_to_master, theField ("<<theField->name()<<") is required to be double.");
 
   unsigned fieldSize = sizeOfField;
@@ -1041,7 +1045,9 @@ PeriodicManager::ngp_add_slave_to_master(
   }
   ngpField.modify_on_device();
 
-  ngp_periodic_parallel_communicate_field(theField);
+  if (doCommunication) {
+    ngp_periodic_parallel_communicate_field(theField);
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -1104,9 +1110,12 @@ void
 PeriodicManager::ngp_set_slave_to_master(
   stk::mesh::FieldBase *theField,
   const unsigned &sizeOfField,
-  const bool &bypassFieldCheck) const
+  const bool &bypassFieldCheck,
+  const bool &doCommunication) const
 {
-  ngp_periodic_parallel_communicate_field(theField);
+  if (doCommunication) {
+    ngp_periodic_parallel_communicate_field(theField);
+  }
 
   ThrowRequireMsg(theField->type_is<double>(), "Argh, theField ("<<theField->name()<<") is not double.");
 
@@ -1155,7 +1164,9 @@ PeriodicManager::ngp_set_slave_to_master(
 
   ngpField.modify_on_device();
 
-  ngp_periodic_parallel_communicate_field(theField);
+  if (doCommunication) {
+    ngp_periodic_parallel_communicate_field(theField);
+  }
 }
 
 } // namespace nalu
