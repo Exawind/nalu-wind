@@ -73,6 +73,7 @@ inline void field_copy(
   using Traits = NGPMeshTraits<Mesh>;
   using MeshIndex = typename Traits::MeshIndex;
 
+  dest.clear_sync_state();
   nalu_ngp::run_entity_algorithm(
     "ngp_field_copy",
     ngpMesh, rank, sel,
