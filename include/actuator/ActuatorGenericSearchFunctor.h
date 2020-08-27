@@ -28,8 +28,9 @@
 namespace sierra {
 namespace nalu {
 
-  using execution_space = ActuatorFixedExecutionSpace;
-
+// Template function for looping over coarse search results
+// Specific operations on the elements are done by supplying
+// an inner loop functor to operate on the element data
 template <typename ActuatorBulk, typename functor>
 void GenericLoopOverCoarseSearchResults(
   ActuatorBulk& actBulk,
@@ -53,7 +54,7 @@ void GenericLoopOverCoarseSearchResults(
   const int localSizeCoarseSearch = elemIds.extent_int(0);
 
   Kokkos::parallel_for("genericLoopOverCoarseSearch",
-    Kokkos::RangePolicy<execution_space>(0,localSizeCoarseSearch),
+    Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(0,localSizeCoarseSearch),
     [pointIds, elemIds, &stkBulk, coordinates, actuatorSource, dualNodalVolume, innerLoopFunctor](int index){
   auto pointId = pointIds(index);
   auto elemId = elemIds(index);
@@ -104,6 +105,8 @@ void GenericLoopOverCoarseSearchResults(
   }});
 }
 
+// specialization for when the inner loop functor 
+// only requires ActuatorBulk in its constructor (most cases)
 template <typename ActuatorBulk, typename functor>
 inline void  GenericLoopOverCoarseSearchResults(
     ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
