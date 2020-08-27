@@ -157,15 +157,15 @@ public:
   HypreIntTypeView row_indices_owned_;
   HypreIntTypeView row_counts_owned_;
   HypreIntTypeView periodic_bc_rows_owned_;
-  HypreIntTypeView mat_elem_keys_owned_;
+  HypreIntTypeView mat_elem_cols_owned_;
   UnsignedView mat_elem_start_owned_;
   UnsignedView mat_row_start_owned_;
   UnsignedView rhs_row_start_owned_;
 
-  MemoryMap mat_map_shared_;
-  MemoryMap rhs_map_shared_;
+  MemoryMap map_shared_;
   HypreIntTypeView row_indices_shared_;
   HypreIntTypeView row_counts_shared_;
+  HypreIntTypeView mat_elem_cols_shared_;
   UnsignedView mat_elem_start_shared_;
   UnsignedView mat_row_start_shared_;
   UnsignedView rhs_row_start_shared_;
@@ -246,11 +246,10 @@ public:
     HypreLinSysCoeffApplier(bool useNativeCudaSort, bool ensureReproducible, unsigned numDof,
 			    unsigned numDim, HypreIntType globalNumRows, int rank, 
 			    HypreIntType iLower, HypreIntType iUpper,
-			    HypreIntType jLower, HypreIntType jUpper,
-			    MemoryMap mat_map_shared, HypreIntTypeView mat_elem_keys_owned,
+			    HypreIntType jLower, HypreIntType jUpper, MemoryMap map_shared,
+			    HypreIntTypeView mat_elem_cols_owned, HypreIntTypeView mat_elem_cols_shared,
 			    UnsignedView mat_elem_start_owned, UnsignedView mat_elem_start_shared,
 			    UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared,
-			    MemoryMap rhs_map_shared, 
 			    UnsignedView rhs_row_start_owned, UnsignedView rhs_row_start_shared,
 			    HypreIntTypeView row_indices_owned, HypreIntTypeView row_indices_shared, 
 			    HypreIntTypeView row_counts_owned, HypreIntTypeView row_counts_shared,
@@ -287,10 +286,10 @@ public:
     }
   
     KOKKOS_FUNCTION
-    virtual void binarySearch(unsigned l, unsigned r, HypreIntType x, unsigned& result);
+    virtual void binarySearchOwned(unsigned l, unsigned r, HypreIntType x, unsigned& result);
 
     KOKKOS_FUNCTION
-    virtual void binarySearch(HypreIntTypeView view, unsigned l, unsigned r, HypreIntType x, unsigned& result);
+    virtual void binarySearchShared(unsigned l, unsigned r, HypreIntType x, unsigned& result);
 
     KOKKOS_FUNCTION
     virtual void sum_into(unsigned numEntities,
@@ -395,9 +394,11 @@ public:
     HypreIntType jUpper_=0;
 
     //! map from dense index key to starting memory location ... shared
-    MemoryMap mat_map_shared_;
-    //! the matrix element keys ... owned
-    HypreIntTypeView mat_elem_keys_owned_;
+    MemoryMap map_shared_;
+    //! the matrix element columns ... owned
+    HypreIntTypeView mat_elem_cols_owned_;
+    //! the matrix element columns ... shared
+    HypreIntTypeView mat_elem_cols_shared_;
     //! the starting position(s) of the matrix element in the lists ... owned
     UnsignedView mat_elem_start_owned_;
     //! the starting position(s) of the matrix element in the lists ... shared
@@ -406,8 +407,6 @@ public:
     UnsignedView mat_row_start_owned_;
     //! the starting position(s) of a new row in the matrix lists ... shared
     UnsignedView mat_row_start_shared_;
-    //! map from rhs row index to starting memory location ... shared
-    MemoryMap rhs_map_shared_;
     //! the starting position(s) of the rhs lists ... owned
     UnsignedView rhs_row_start_owned_;
     //! the starting position(s) of the rhs lists ... shared
@@ -509,8 +508,10 @@ public:
     HypreIntTypeView d_overset_row_indices_;
     HypreIntTypeViewHost h_overset_row_indices_;
 
-    HypreIntTypeView d_overset_keys_;
-    HypreIntTypeViewHost h_overset_keys_;
+    HypreIntTypeView d_overset_rows_;
+    HypreIntTypeView d_overset_cols_;
+    HypreIntTypeViewHost h_overset_rows_;
+    HypreIntTypeViewHost h_overset_cols_;
 
     DoubleView d_overset_vals_;
     DoubleViewHost h_overset_vals_;

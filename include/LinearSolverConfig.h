@@ -144,6 +144,9 @@ protected:
   //! Krylov vector space used for GMRES solvers
   int kspace_{1};
 
+  //! COGMRES solvers
+  int sync_alg_{2};
+
   /* BoomerAMG options */
 
   //! BoomerAMG Strong Threshold
