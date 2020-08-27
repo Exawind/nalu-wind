@@ -1,4 +1,3 @@
-
 #include "mesh_motion/MotionWaves.h"
 
 #include <NaluParsing.h>
@@ -291,7 +290,7 @@ MotionWaves::Stokes_parameters()
 double
 MotionWaves::my_cosh_cos(int i, int j, double phase)
 {
-  double D;
+  double D=0.0;
   if (i == 1 && j == 1)
     D = a11_;
   if (i == 2 && j == 2)
@@ -318,7 +317,7 @@ MotionWaves::my_cosh_cos(int i, int j, double phase)
 double
 MotionWaves::my_sinh_sin(int i, int j, double phase)
 {
-  double D;
+  double D=0.0;
   if (i == 1 && j == 1)
     D = a11_;
   if (i == 2 && j == 2)
