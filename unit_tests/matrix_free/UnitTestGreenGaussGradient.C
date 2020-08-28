@@ -60,7 +60,8 @@ protected:
         const auto* cx = stk::mesh::field_data(coordinate_field(), node);
         *stk::mesh::field_data(q_field, node) = func(cx[0], cx[1], cx[2]);
         for (int d = 0; d < 3; ++d) {
-          stk::mesh::field_data(dqdx_exact_field, node)[d] = grad(d, cx[0], cx[1], cx[2]);
+          stk::mesh::field_data(dqdx_exact_field, node)[d] =
+            grad(d, cx[0], cx[1], cx[2]);
         }
       }
     }
@@ -69,7 +70,7 @@ protected:
   const double kx = 1;
   const double ky = 1;
   const double kz = 1;
-  
+
   double func(double x, double y, double z)
   {
     return std::cos(kx * x) * std::cos(ky * y) * std::cos(kz * z);
@@ -96,9 +97,8 @@ protected:
         const auto* cx = stk::mesh::field_data(coordinate_field(), node);
 
         for (int d = 0; d < 3; ++d) {
-          double lerr = 
-            stk::mesh::field_data(dqdx_field, node)[d] -
-            grad(d, cx[0], cx[1], cx[2]);
+          double lerr = stk::mesh::field_data(dqdx_field, node)[d] -
+                        grad(d, cx[0], cx[1], cx[2]);
           err += lerr * lerr;
         }
         ++count;
@@ -109,6 +109,29 @@ protected:
     int g_count;
     stk::all_reduce_sum(bulk.parallel(), &count, &g_count, 1);
     return std::sqrt(g_err / g_count);
+  }
+
+  GradientResidualFields<order> gather_required_fields()
+  {
+    auto conn = stk_connectivity_map<order>(mesh(), meta.universal_part());
+    GradientResidualFields<order> fields;
+    fields.q = scalar_view<order>("q", offsets.extent_int(0));
+    stk_simd_scalar_field_gather<order>(
+      conn, stk::mesh::get_updated_ngp_field<double>(q_field), fields.q);
+
+    fields.dqdx = vector_view<order>("dqdx", offsets.extent_int(0));
+    stk_simd_vector_field_gather<order>(
+      conn, stk::mesh::get_updated_ngp_field<double>(dqdx_field), fields.dqdx);
+
+    auto coords = vector_view<order>("coords", conn.extent_int(0));
+    stk_simd_vector_field_gather<order>(
+      conn, stk::mesh::get_updated_ngp_field<double>(coordinate_field()),
+      coords);
+
+    fields.vols = geom::volume_metric<order>(coords);
+    fields.areas = geom::linear_areas<order>(coords);
+
+    return fields;
   }
 
   Teuchos::ParameterList params{};
@@ -130,30 +153,8 @@ TEST_F(GradientSolveFixture, create)
 
 TEST_F(GradientSolveFixture, residual_is_greater_than_zero)
 {
-  bc_faces = face_offset_view<order>("d", 0);
-  GradientSolutionUpdate<order> update(
-    params, linsys, exporter, offsets, bc_faces);
-
-  auto conn = stk_connectivity_map<order>(mesh(), meta.universal_part());
-  GradientResidualFields<order> fields;
-  fields.q = scalar_view<order>("q", offsets.extent_int(0));
-  stk_simd_scalar_field_gather<order>(
-    conn, stk::mesh::get_updated_ngp_field<double>(q_field), fields.q);
-
-  fields.dqdx = vector_view<order>("dqdx", offsets.extent_int(0));
-
-  auto coords = vector_view<order>("coords", conn.extent_int(0));
-  stk_simd_vector_field_gather<order>(
-    conn, stk::mesh::get_updated_ngp_field<double>(coordinate_field()), coords);
-
-  fields.vols = geom::volume_metric<order>(coords);
-  fields.areas = geom::linear_areas<order>(coords);
-
-  BCGradientFields<order> bc;
-  bc.face_q = face_scalar_view<order>("v", 0);
-  bc.exposed_areas = face_vector_view<order>("w", 0);
-
-  update.compute_residual(fields, {});
+  GradientSolutionUpdate<order> update(params, linsys, exporter, offsets, {});
+  update.compute_residual(gather_required_fields(), {});
   ASSERT_GT(update.residual_norm(), 0);
 }
 
@@ -163,23 +164,7 @@ TEST_F(GradientSolveFixture, solve_is_reasonable)
   GradientSolutionUpdate<order> update(
     params, linsys, exporter, offsets, bc_faces);
 
-  auto conn = stk_connectivity_map<order>(mesh(), meta.universal_part());
-  GradientResidualFields<order> fields;
-  fields.q = scalar_view<order>("q", offsets.extent_int(0));
-  stk_simd_scalar_field_gather<order>(
-    conn, stk::mesh::get_updated_ngp_field<double>(q_field), fields.q);
-
-  fields.dqdx = vector_view<order>("dqdx", offsets.extent_int(0));
-  stk_simd_vector_field_gather<order>(
-    conn, stk::mesh::get_updated_ngp_field<double>(dqdx_field), fields.dqdx);
-
-  auto coords = vector_view<order>("coords", conn.extent_int(0));
-  stk_simd_vector_field_gather<order>(
-    conn, stk::mesh::get_updated_ngp_field<double>(coordinate_field()), coords);
-
-  fields.vols = geom::volume_metric<order>(coords);
-  fields.areas = geom::linear_areas<order>(coords);
-
+  auto fields = gather_required_fields();
   update.compute_residual(fields, {});
   auto& delta = update.compute_delta(fields.vols);
 
@@ -275,8 +260,9 @@ TEST_F(ComputeGradientFixture, error_in_gradient_is_smallish_for_harmonic_field)
     }
   }
 
-  GreenGaussGradient<1> g_grad(bulk, Teuchos::ParameterList{}, 
-    meta.universal_part(), side(), stk::mesh::Selector{});
+  GreenGaussGradient<1> g_grad(
+    bulk, Teuchos::ParameterList{}, meta.universal_part(), side(),
+    stk::mesh::Selector{});
 
   const auto& q = stk::mesh::get_updated_ngp_field<double>(q_field);
   auto& gq = stk::mesh::get_updated_ngp_field<double>(dqdx_field);
