@@ -32,6 +32,13 @@ void compute_vector_divergence(
   stk::mesh::FieldBase*,
   const bool hasMeshDeformation = false );
 
+void compute_scalar_divergence(
+  stk::mesh::BulkData&,
+  stk::mesh::PartVector&,
+  stk::mesh::PartVector&,
+  GenericFieldType*,
+  stk::mesh::FieldBase*);
+
 }
 }
 
