@@ -670,6 +670,39 @@ LowMachEquationSystem::solve_and_update()
       momentumEqSys_->AMSAlgDriver_->initial_mdot();
 
     isInit_ = false;
+  } else if (realm_.has_mesh_motion() && (realm_.currentNonlinearIteration_ == 1)) {
+    // continuity assemble, load_complete and solve
+    continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
+
+    // update pressure
+    timeA = NaluEnv::self().nalu_time();
+    solution_update(
+      1.0, *continuityEqSys_->pTmp_,
+      1.0, *continuityEqSys_->pressure_);
+    timeB = NaluEnv::self().nalu_time();
+    continuityEqSys_->timerAssemble_ += (timeB-timeA);
+
+    // compute mdot
+    timeA = NaluEnv::self().nalu_time();
+    continuityEqSys_->mdotAlgDriver_->execute();
+    timeB = NaluEnv::self().nalu_time();
+    continuityEqSys_->timerMisc_ += (timeB-timeA);
+
+    // project nodal velocity
+    project_nodal_velocity();
+
+    // update pressure
+    const std::string dofName="pressure";
+    const double relaxFP = realm_.solutionOptions_->get_relaxation_factor(dofName);
+    if (std::fabs(1.0 - relaxFP) > 1.0e-3) {
+      timeA = NaluEnv::self().nalu_time();
+      solution_update(
+        (relaxFP - 1.0), *continuityEqSys_->pTmp_,
+        1.0, *continuityEqSys_->pressure_);
+      continuityEqSys_->compute_projected_nodal_gradient();
+      timeB = NaluEnv::self().nalu_time();
+      continuityEqSys_->timerAssemble_ += (timeB-timeA);
+    }    
   }
 
   // compute tvisc and effective viscosity

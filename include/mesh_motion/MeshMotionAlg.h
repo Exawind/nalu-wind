@@ -23,6 +23,8 @@ public:
 
   void post_compute_geometry();
 
+  stk::mesh::PartVector get_partvec();
+
   bool onlyInitialDisplacement_ = true;
 
 private:

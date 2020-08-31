@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/ScalarMassBDFNodeKernel.h"
 #include "Realm.h"
 
@@ -15,24 +14,26 @@
 #include "stk_mesh/base/Types.hpp"
 #include "utils/StkHelpers.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 ScalarMassBDFNodeKernel::ScalarMassBDFNodeKernel(
-  const stk::mesh::BulkData& bulk,
-  ScalarFieldType *scalarQ
-) : NGPNodeKernel<ScalarMassBDFNodeKernel>()
+  const stk::mesh::BulkData& bulk, ScalarFieldType* scalarQ)
+  : NGPNodeKernel<ScalarMassBDFNodeKernel>()
 {
   const auto& meta = bulk.mesh_meta_data();
 
-  scalarQNID_ = scalarQ->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal();
+  scalarQNID_ =
+    scalarQ->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal();
 
   if (scalarQ->number_of_states() == 2)
     scalarQNm1ID_ = scalarQNID_;
   else
-    scalarQNm1ID_ = scalarQ->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
+    scalarQNm1ID_ =
+      scalarQ->field_of_state(stk::mesh::StateNM1).mesh_meta_data_ordinal();
 
-  scalarQNp1ID_ = scalarQ->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
+  scalarQNp1ID_ =
+    scalarQ->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal();
 
   densityNID_ = get_field_ordinal(meta, "density", stk::mesh::StateN);
 
@@ -42,7 +43,25 @@ ScalarMassBDFNodeKernel::ScalarMassBDFNodeKernel(
     densityNm1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNM1);
 
   densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
-  dualNodalVolumeID_ = get_field_ordinal(meta, "dual_nodal_volume");
+
+  dnvNp1ID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNP1);
+  const auto* dnv = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "dual_nodal_volume");
+  switch (dnv->number_of_states()) {
+  case 1:
+    dnvNID_ = dnvNp1ID_;
+    dnvNm1ID_ = dnvNp1ID_;
+  case 2:
+    dnvNID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateN);
+    dnvNm1ID_ = dnvNp1ID_;
+  case 3:
+    dnvNID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateN);
+    dnvNm1ID_ =
+      get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNM1);
+  default:
+    throw std::runtime_error(
+      "Number of states for dual_nodal_volume is not 1,2,3 and is undefined");
+  }
 }
 
 void
@@ -56,7 +75,9 @@ ScalarMassBDFNodeKernel::setup(Realm& realm)
   densityNm1_ = fieldMgr.get_field<double>(densityNm1ID_);
   densityN_ = fieldMgr.get_field<double>(densityNID_);
   densityNp1_ = fieldMgr.get_field<double>(densityNp1ID_);
-  dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
+  dnvNp1_ = fieldMgr.get_field<double>(dnvNp1ID_);
+  dnvN_ = fieldMgr.get_field<double>(dnvNID_);
+  dnvNm1_ = fieldMgr.get_field<double>(dnvNm1ID_);
   dt_ = realm.get_time_step();
   gamma1_ = realm.get_gamma1();
   gamma2_ = realm.get_gamma2();
@@ -69,17 +90,22 @@ ScalarMassBDFNodeKernel::execute(
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
-  const NodeKernelTraits::DblType qNm1       = scalarQNm1_.get(node, 0);
-  const NodeKernelTraits::DblType qN         = scalarQN_.get(node, 0);
-  const NodeKernelTraits::DblType qNp1       = scalarQNp1_.get(node, 0);
-  const NodeKernelTraits::DblType rhoNm1     = densityNm1_.get(node, 0);
-  const NodeKernelTraits::DblType rhoN       = densityN_.get(node, 0);
-  const NodeKernelTraits::DblType rhoNp1     = densityNp1_.get(node, 0);
-  const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
-  const NodeKernelTraits::DblType lhsTime    = gamma1_*rhoNp1*dualVolume/dt_;
-  rhs(0) -= (gamma1_*rhoNp1*qNp1 + gamma2_*qN*rhoN + gamma3_*qNm1*rhoNm1)*dualVolume/dt_;
+  const NodeKernelTraits::DblType qNm1 = scalarQNm1_.get(node, 0);
+  const NodeKernelTraits::DblType qN = scalarQN_.get(node, 0);
+  const NodeKernelTraits::DblType qNp1 = scalarQNp1_.get(node, 0);
+  const NodeKernelTraits::DblType rhoNm1 = densityNm1_.get(node, 0);
+  const NodeKernelTraits::DblType rhoN = densityN_.get(node, 0);
+  const NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
+  const NodeKernelTraits::DblType dnvNp1 = dnvNp1_.get(node, 0);
+  const NodeKernelTraits::DblType dnvN = dnvN_.get(node, 0);
+  const NodeKernelTraits::DblType dnvNm1 = dnvNm1_.get(node, 0);
+
+  const NodeKernelTraits::DblType lhsTime = gamma1_ * rhoNp1 * dnvNp1 / dt_;
+  rhs(0) -= (gamma1_ * rhoNp1 * qNp1 * dnvNp1 + gamma2_ * qN * rhoN * dnvN +
+             gamma3_ * qNm1 * rhoNm1 * dnvNm1) /
+            dt_;
   lhs(0, 0) += lhsTime;
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

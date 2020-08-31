@@ -262,7 +262,7 @@ public:
         &meta_.declare_field<TpetIDFieldType>(
           stk::topology::NODE_RANK, "tpet_global_id",1)),
       dnvField_(&meta_.declare_field<ScalarFieldType>(
-                  stk::topology::NODE_RANK, "dual_nodal_volume",2)),
+                  stk::topology::NODE_RANK, "dual_nodal_volume",3)),
       divMeshVelField_(&meta_.declare_field<ScalarFieldType>(
                   stk::topology::NODE_RANK, "div_mesh_velocity")),
       edgeAreaVec_(
