@@ -25,13 +25,13 @@ MdotEdgeAlg::MdotEdgeAlg(
   stk::mesh::Part* part
 ) : Algorithm(realm, part),
     coordinates_(get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
-    velocityRTM_(get_field_ordinal(
-      realm.meta_data(),
-      realm.does_mesh_move() ? "velocity_rtm" : "velocity")),
+    velocity_(get_field_ordinal(
+      realm.meta_data(), "velocity")),
     pressure_(get_field_ordinal(realm.meta_data(), "pressure")),
     densityNp1_(get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1)),
     Gpdx_(get_field_ordinal(realm.meta_data(), "dpdx")),
     edgeAreaVec_(get_field_ordinal(realm.meta_data(), "edge_area_vector", stk::topology::EDGE_RANK)),
+    edgeFaceVelMag_(get_field_ordinal(realm.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK)),
     Udiag_(get_field_ordinal(realm.meta_data(), "momentum_diag")),
     massFlowRate_(
       get_field_ordinal(
@@ -58,12 +58,13 @@ MdotEdgeAlg::execute()
   const auto ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
-  const auto velocity = fieldMgr.get_field<double>(velocityRTM_);
+  const auto velocity = fieldMgr.get_field<double>(velocity_);
   const auto Gpdx = fieldMgr.get_field<double>(Gpdx_);
   const auto density = fieldMgr.get_field<double>(densityNp1_);
   const auto pressure = fieldMgr.get_field<double>(pressure_);
   const auto udiag = fieldMgr.get_field<double>(Udiag_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
+  const auto edgeFaceVelMag = fieldMgr.get_field<double>(edgeFaceVelMag_);
   auto mdot = fieldMgr.get_field<double>(massFlowRate_);
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
@@ -104,7 +105,8 @@ MdotEdgeAlg::execute()
       }
       const DblType inv_axdx = 1.0 / axdx;
 
-      DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
+      DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx
+        - rhoIp * edgeFaceVelMag.get(einfo.meshIdx,0);
       for (int d=0; d < ndim; ++d) {
         const DblType dxj =
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);

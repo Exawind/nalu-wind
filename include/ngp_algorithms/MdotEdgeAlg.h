@@ -33,11 +33,12 @@ public:
 
 private:
   unsigned coordinates_ {stk::mesh::InvalidOrdinal};
-  unsigned velocityRTM_ {stk::mesh::InvalidOrdinal};
+  unsigned velocity_ {stk::mesh::InvalidOrdinal};
   unsigned pressure_ {stk::mesh::InvalidOrdinal};
   unsigned densityNp1_ {stk::mesh::InvalidOrdinal};
   unsigned Gpdx_ {stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
+  unsigned edgeFaceVelMag_ {stk::mesh::InvalidOrdinal};
   unsigned Udiag_ {stk::mesh::InvalidOrdinal};
   unsigned massFlowRate_ {stk::mesh::InvalidOrdinal};
 };

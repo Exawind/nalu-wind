@@ -93,9 +93,11 @@
 #include "ngp_utils/NgpFieldUtils.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/GeometryInteriorAlg.h"
-
-
 #include "ngp_algorithms/GeometryBoundaryAlg.h"
+
+#include "gcl/MeshVelocityAlg.h"
+#include "gcl/MeshVelocityAlgEdge.h"
+#include "AlgTraits.h"
 
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
@@ -863,6 +865,31 @@ Realm::setup_element_fields()
   // loop over all material props targets and register element fields
   std::vector<std::string> targetNames = get_physics_target_names();
   equationSystems_.register_element_fields(targetNames);
+  
+  const int numVolStates = does_mesh_move() ? number_of_states() : 1;
+
+  if (has_mesh_motion()) {
+    const auto entityRank = realmUsesEdges_ ? stk::topology::EDGE_RANK : stk::topology::ELEM_RANK;
+    const std::string fvm_fieldName = realmUsesEdges_ ? "edge_face_velocity_mag" :  "face_velocity_mag";
+    const std::string sv_fieldName = realmUsesEdges_ ? "edge_swept_face_volume" :  "swept_face_volume";
+    std::cerr << "fvm_fieldName = " << fvm_fieldName << std::endl;
+    std::cerr << "sv_fieldName = " << sv_fieldName << std::endl;
+    GenericFieldType* faceVelMag = &(metaData_->declare_field<GenericFieldType>(
+                                     entityRank, fvm_fieldName));
+    GenericFieldType* sweptFaceVolume = &(metaData_->declare_field<GenericFieldType>(
+                                          entityRank, sv_fieldName, numVolStates));
+    for (auto target: targetNames) {
+      auto * targetPart = metaData_->get_part(target);
+      auto fieldSize = 1;
+      if ( !realmUsesEdges_ ) {
+        auto *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(targetPart->topology());
+        fieldSize = meSCS->num_integration_points();
+      }
+      stk::mesh::put_field_on_mesh(*faceVelMag, *targetPart, fieldSize, nullptr);
+      stk::mesh::put_field_on_mesh(*sweptFaceVolume, *targetPart, fieldSize, nullptr);
+    }
+  }
+
 }
 
 //--------------------------------------------------------------------------
@@ -871,6 +898,27 @@ Realm::setup_element_fields()
 void
 Realm::setup_interior_algorithms()
 {
+  if (has_mesh_motion()) {
+    const AlgorithmType algType = INTERIOR;
+    stk::mesh::PartVector mmPartVec = meshMotionAlg_->get_partvec();
+    if (realmUsesEdges_)
+    {
+      std::cerr << "Setting up edge algorithm for mesh velocity" << std::endl;
+      for (auto p: mmPartVec) {
+        std::cerr << "Setting edge algorithm for a part" << std::endl;
+        geometryAlgDriver_->register_elem_algorithm<
+          MeshVelocityEdgeAlg>(algType, p, "mesh_vel");
+      }
+    } else
+    {
+      std::cerr << "Setting up element algorithm for mesh velocity" << std::endl;
+      for (auto p: mmPartVec) {
+        geometryAlgDriver_->register_elem_algorithm<
+          MeshVelocityAlg>(algType, p, "mesh_vel");
+      }
+    }
+  }
+
   // loop over all material props targets and register interior algs
   std::vector<std::string> targetNames = get_physics_target_names();
   equationSystems_.register_interior_algorithm(targetNames);
@@ -2464,7 +2512,7 @@ Realm::register_nodal_fields(
 
   // mesh motion/deformation is high level
   if ( solutionOptions_->meshMotion_ || solutionOptions_->externalMeshDeformation_) {
-    VectorFieldType *displacement = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement"));
+    VectorFieldType *displacement = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement",numVolStates));
     stk::mesh::put_field_on_mesh(*displacement, *part, nDim, nullptr);
     VectorFieldType *currentCoords = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
     stk::mesh::put_field_on_mesh(*currentCoords, *part, nDim, nullptr);
@@ -2478,6 +2526,8 @@ Realm::register_nodal_fields(
       ScalarFieldType *divV = &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
       stk::mesh::put_field_on_mesh(*divV, *part, nullptr);
     }
+      ScalarFieldType *divV = &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
+      stk::mesh::put_field_on_mesh(*divV, *part, nullptr);
   }
 
   ScalarIntFieldType& iblank = metaData_->declare_field<ScalarIntFieldType>(
