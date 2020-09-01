@@ -62,5 +62,16 @@ void MeshMotionAlg::post_compute_geometry()
     movingFrameVec_[i]->post_compute_geometry();
 }
 
+stk::mesh::PartVector MeshMotionAlg::get_partvec()
+{ 
+  stk::mesh::PartVector fpartVec;
+  for (size_t i=0; i < movingFrameVec_.size(); i++) {
+    stk::mesh::PartVector fPartVec = movingFrameVec_[i]->get_partvec();
+    for (auto p: fPartVec)
+      fpartVec.push_back(p);
+  }
+  return fpartVec;
+}
+
 } // nalu
 } // sierra
