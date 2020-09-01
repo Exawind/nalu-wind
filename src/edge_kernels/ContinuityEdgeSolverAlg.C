@@ -25,8 +25,7 @@ ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
   const auto& meta = realm.meta_data();
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
-  const std::string velField = realm.does_mesh_move()? "velocity_rtm" : "velocity";
-  velocity_ = get_field_ordinal(meta, velField);
+  velocity_ = get_field_ordinal(meta, "velocity");
   densityNp1_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   pressure_ = get_field_ordinal(meta, "pressure");
   Gpdx_ = get_field_ordinal(meta, "dpdx");
@@ -65,7 +64,6 @@ ContinuityEdgeSolverAlg::execute()
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto edgeFaceVelMag = fieldMgr.get_field<double>(edgeFaceVelMag_);
 
-
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(
@@ -103,6 +101,7 @@ ContinuityEdgeSolverAlg::execute()
 
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx
         - rhoIp * edgeFaceVelMag.get(edge,0);
+    
       for (int d = 0; d < ndim; ++d) {
         const DblType dxj =
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);

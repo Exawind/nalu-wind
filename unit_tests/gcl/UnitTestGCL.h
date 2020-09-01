@@ -19,7 +19,7 @@
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "gcl/MeshVelocityAlg.h"
-#include "gcl/MeshVelocityAlgEdge.h"
+#include "gcl/MeshVelocityEdgeAlg.h"
 #include "utils/StkHelpers.h"
 #include "utils/ComputeVectorDivergence.h"
 

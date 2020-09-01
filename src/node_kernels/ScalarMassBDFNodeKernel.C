@@ -77,7 +77,7 @@ ScalarMassBDFNodeKernel::setup(Realm& realm)
   densityN_ = fieldMgr.get_field<double>(densityNID_);
   densityNp1_ = fieldMgr.get_field<double>(densityNp1ID_);
   dnvNp1_ = fieldMgr.get_field<double>(dnvNp1ID_);
-  dnvN_ = fieldMgr.get_field<double>(dnvNID_);
+  dnvN_   = fieldMgr.get_field<double>(dnvNID_);
   dnvNm1_ = fieldMgr.get_field<double>(dnvNm1ID_);  dt_ = realm.get_time_step();
   gamma1_ = realm.get_gamma1();
   gamma2_ = realm.get_gamma2();

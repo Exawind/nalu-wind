@@ -103,7 +103,6 @@ void GeometryAlgDriver::pre_work()
 
   if (realm_.has_mesh_motion()) mesh_motion_prework();
 
-
   if (realm_.realmUsesEdges_) {
     auto* edgeAreaVec = meta.template get_field<VectorFieldType>(
       stk::topology::EDGE_RANK, "edge_area_vector");
@@ -135,11 +134,13 @@ void GeometryAlgDriver::mesh_motion_prework()
   const std::string fvmFieldName = realm_.realmUsesEdges_ ? "edge_face_velocity_mag" :  "face_velocity_mag";
   auto ngpFaceVelMag = nalu_ngp::get_ngp_field(realm_.mesh_info(), fvmFieldName, entityRank);
   ngpFaceVelMag.set_all(ngpMesh,0.0);
+  auto * faceVelMag = meta.get_field<GenericFieldType>(entityRank, fvmFieldName);
+  stk::mesh::field_fill(0.0, *faceVelMag);
   const std::string svFieldName = realm_.realmUsesEdges_ ? "edge_swept_face_volume" :  "swept_face_volume";
   auto ngpSweptVol = nalu_ngp::get_ngp_field(realm_.mesh_info(), svFieldName, entityRank);
   ngpSweptVol.set_all(ngpMesh,0.0);
   auto * sweptVol = meta.get_field<GenericFieldType>(entityRank, svFieldName);
-    stk::mesh::field_fill(0.0, *sweptVol);
+  stk::mesh::field_fill(0.0, *sweptVol);
 
   if (realm_.realmUsesEdges_) {
     const double dt = realm_.get_time_step();

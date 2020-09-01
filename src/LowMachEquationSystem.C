@@ -670,9 +670,8 @@ LowMachEquationSystem::solve_and_update()
       momentumEqSys_->AMSAlgDriver_->initial_mdot();
 
     isInit_ = false;
-  } else if (realm_.has_mesh_motion() && 
-  (realm_.currentNonlinearIteration_ == 1)) {
-   // continuity assemble, load_complete and solve
+  } else if (realm_.has_mesh_motion() && (realm_.currentNonlinearIteration_ == 1)) {
+    // continuity assemble, load_complete and solve
     continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
 
     // update pressure
