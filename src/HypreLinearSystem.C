@@ -1506,6 +1506,8 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sum_into(
 	const double* cur_lhs = &lhs(ir, 0);
 	hid = localIds[ir];
 	
+	if (!map_shared_.exists(hid)) continue;
+
 	/* Find the index of the row */
 	unsigned index = map_shared_.value_at(map_shared_.find(hid));
 	unsigned lower = mat_row_start_shared_(index);
@@ -1574,6 +1576,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sum_into_1DoF(
       rhsIndex = Kokkos::atomic_fetch_add(&rhs_counter_owned_(rhsIndex), (unsigned)1);
       rhs_vals_owned_(rhsIndex,0) = rhs[i];
     } else {
+      if (!map_shared_.exists(hid)) continue;
       /* Find the index of the row */
       unsigned index = map_shared_.value_at(map_shared_.find(hid));
       unsigned lower = mat_row_start_shared_(index);
@@ -1583,7 +1586,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sum_into_1DoF(
       for (unsigned k=0; k<numEntities; ++k) {
 	/* binary search subrange rather than a map.find */
 	HypreIntType col = localIds[k];
-	unsigned matIndex=globalNumRows_+1;
+	unsigned matIndex;
 	binarySearchShared(lower,upper,col,matIndex);	  
 	/* Find the matrix element memory location */
 	matIndex = Kokkos::atomic_fetch_add(&mat_counter_shared_(matIndex), (unsigned)1);

@@ -453,6 +453,7 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::sum_into(
 	rhs_vals_owned_(rhsIndex,d) = rhs[ir];
       }
     } else {
+      if (!map_shared_.exists(hid)) continue;
       int offset = 0;
       unsigned index = map_shared_.value_at(map_shared_.find(hid));
       unsigned lower = mat_row_start_shared_(index);
