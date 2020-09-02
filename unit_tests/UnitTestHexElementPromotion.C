@@ -21,7 +21,6 @@
 #include <element_promotion/PromoteElement.h>
 #include <element_promotion/PromotedElementIO.h>
 
-#include <nalu_make_unique.h>
 #include <NaluEnv.h>
 
 #include <memory>
@@ -60,7 +59,7 @@ protected:
   void init(int nx, int ny, int nz,  int in_polyOrder)
   {
     auto aura = stk::mesh::BulkData::NO_AUTO_AURA;
-    fixture = sierra::nalu::make_unique<stk::mesh::fixtures::HexFixture>(comm, nx, ny, nz, aura);
+    fixture = std::make_unique<stk::mesh::fixtures::HexFixture>(comm, nx, ny, nz, aura);
     meta = &fixture->m_meta;
     bulk = &fixture->m_bulk_data;
     surfSupPart = nullptr;
@@ -122,7 +121,7 @@ protected:
     const stk::mesh::PartVector& outParts = {hexPart};
     std::string fileName = "hv2.e" ;
 
-    io = sierra::nalu::make_unique<sierra::nalu::PromotedElementIO>(
+    io = std::make_unique<sierra::nalu::PromotedElementIO>(
        poly_order, *meta, *bulk, outParts, fileName, *coordField
     );
     io->write_database_data(0.0);

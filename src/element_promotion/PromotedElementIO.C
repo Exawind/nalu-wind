@@ -10,7 +10,6 @@
 #include <element_promotion/PromotedElementIO.h>
 
 #include <element_promotion/PromotedPartHelper.h>
-#include <nalu_make_unique.h>
 
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Bucket.hpp>
@@ -40,6 +39,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <utility>
+#include <memory>
 
 namespace sierra{
 namespace nalu{
@@ -96,7 +96,7 @@ PromotedElementIO::PromotedElementIO(
   );
   ThrowRequire(databaseIO != nullptr && databaseIO->ok(true));
 
-  output_ = make_unique<Ioss::Region>(databaseIO, "HighOrderOutput"); //sink for databaseIO
+  output_ = std::make_unique<Ioss::Region>(databaseIO, "HighOrderOutput"); //sink for databaseIO
   ThrowRequire(output_ != nullptr);
 
   const stk::mesh::BucketVector& elem_buckets = bulkData_.get_buckets(
@@ -198,7 +198,7 @@ PromotedElementIO::write_elem_block_definitions(
       const size_t numSubElems = num_sub_elements(nDim_,elemBuckets, elem_.polyOrder);
       const auto* baseElemPart = base_elem_part_from_super_elem_part(*ip);
 
-      auto block = make_unique<Ioss::ElementBlock>(
+      auto block = std::make_unique<Ioss::ElementBlock>(
         databaseIO,
         baseElemPart->name(),
         baseElemPart->topology().name(),
@@ -221,7 +221,7 @@ PromotedElementIO::write_node_block_definitions(
   const auto& nodeBuckets = bulkData_.get_buckets(
     stk::topology::NODE_RANK, stk::mesh::selectUnion(superElemParts));
   auto nodeCount = count_entities(nodeBuckets);
-  auto nodeBlock = make_unique<Ioss::NodeBlock>(
+  auto nodeBlock = std::make_unique<Ioss::NodeBlock>(
     databaseIO, "nodeblock", nodeCount, nDim_);
   ThrowRequireMsg(nodeBlock != nullptr, "Node block creation failed");
   nodeBlock_ = nodeBlock.get();

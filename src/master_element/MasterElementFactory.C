@@ -26,7 +26,6 @@
 #include "master_element/Tri33DCVFEM.h"
 
 #include "NaluEnv.h"
-#include "nalu_make_unique.h"
 #include "utils/CreateDeviceExpression.h"
 
 #include <stk_util/util/ReportHandler.hpp>
@@ -45,55 +44,55 @@ namespace nalu{
     switch ( topo.value() ) {
 
       case stk::topology::HEX_8:
-        return make_unique<HexSCS>();
+        return std::make_unique<HexSCS>();
 
       case stk::topology::HEX_27:
-        return make_unique<Hex27SCS>();
+        return std::make_unique<Hex27SCS>();
 
       case stk::topology::TET_4:
-        return make_unique<TetSCS>();
+        return std::make_unique<TetSCS>();
 
       case stk::topology::PYRAMID_5:
-        return make_unique<PyrSCS>();
+        return std::make_unique<PyrSCS>();
 
       case stk::topology::WEDGE_6:
-        return make_unique<WedSCS>();
+        return std::make_unique<WedSCS>();
 
       case stk::topology::QUAD_4:
-        return make_unique<Quad3DSCS>();
+        return std::make_unique<Quad3DSCS>();
 
       case stk::topology::QUAD_9:
-        return make_unique<Quad93DSCS>();
+        return std::make_unique<Quad93DSCS>();
 
       case stk::topology::TRI_3:
-        return make_unique<Tri3DSCS>();
+        return std::make_unique<Tri3DSCS>();
 
       case stk::topology::QUAD_4_2D:
-        return make_unique<Quad42DSCS>();
+        return std::make_unique<Quad42DSCS>();
 
       case stk::topology::QUAD_9_2D:
-        return make_unique<Quad92DSCS>();
+        return std::make_unique<Quad92DSCS>();
 
       case stk::topology::TRI_3_2D:
-        return make_unique<Tri32DSCS>();
+        return std::make_unique<Tri32DSCS>();
 
       case stk::topology::LINE_2:
-        return make_unique<Edge2DSCS>();
+        return std::make_unique<Edge2DSCS>();
 
       case stk::topology::LINE_3:
-        return make_unique<Edge32DSCS>();
+        return std::make_unique<Edge32DSCS>();
 
       case stk::topology::SHELL_QUAD_4:
         NaluEnv::self().naluOutputP0() << "SHELL_QUAD_4 only supported for io surface transfer applications" << std::endl;
-        return make_unique<Quad3DSCS>();
+        return std::make_unique<Quad3DSCS>();
 
       case stk::topology::SHELL_TRI_3:
         NaluEnv::self().naluOutputP0() << "SHELL_TRI_3 only supported for io surface transfer applications" << std::endl;
-        return make_unique<Tri3DSCS>();
+        return std::make_unique<Tri3DSCS>();
         
       case stk::topology::BEAM_2:
         NaluEnv::self().naluOutputP0() << "BEAM_2 is only supported for io surface transfer applications" << std::endl;
-        return make_unique<Edge2DSCS>();
+        return std::make_unique<Edge2DSCS>();
 
       default:
         NaluEnv::self().naluOutputP0() << "sorry, we only support hex8, tet4, pyr5, wed6,"
@@ -111,28 +110,28 @@ namespace nalu{
     switch ( topo.value() ) {
 
       case stk::topology::HEX_8:
-        return make_unique<HexSCV>();
+        return std::make_unique<HexSCV>();
 
       case stk::topology::HEX_27:
-        return make_unique<Hex27SCV>();
+        return std::make_unique<Hex27SCV>();
 
       case stk::topology::TET_4:
-        return make_unique<TetSCV>();
+        return std::make_unique<TetSCV>();
 
       case stk::topology::PYRAMID_5:
-        return make_unique<PyrSCV>();
+        return std::make_unique<PyrSCV>();
 
       case stk::topology::WEDGE_6:
-        return  make_unique<WedSCV>();
+        return  std::make_unique<WedSCV>();
 
       case stk::topology::QUAD_4_2D:
-        return make_unique<Quad42DSCV>();
+        return std::make_unique<Quad42DSCV>();
 
       case stk::topology::QUAD_9_2D:
-        return make_unique<Quad92DSCV>();
+        return std::make_unique<Quad92DSCV>();
 
       case stk::topology::TRI_3_2D:
-        return make_unique<Tri32DSCV>();
+        return std::make_unique<Tri32DSCV>();
 
       default:
         NaluEnv::self().naluOutputP0() << "sorry, we only support hex8, tet4, wed6, "

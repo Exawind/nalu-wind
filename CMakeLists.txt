@@ -22,9 +22,9 @@ option(ENABLE_ALL_WARNINGS "Show most warnings for most compilers" ON)
 option(ENABLE_WERROR "Warnings are errors" OFF)
 option(ENABLE_OPENMP "Enable OpenMP flags" OFF)
 
-set(CMAKE_CXX_STANDARD 11)       # Set nalu-wind C++11 standard
+set(CMAKE_CXX_STANDARD 14)       # Set nalu-wind C++14 standard
 set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions
-set(CMAKE_CXX_STANDARD_REQUIRED) # Force error if C++11 standard is not supported
+set(CMAKE_CXX_STANDARD_REQUIRED) # Force error if C++14 standard is not supported
 
 # Create targets
 set(nalu_ex_name "naluX")
