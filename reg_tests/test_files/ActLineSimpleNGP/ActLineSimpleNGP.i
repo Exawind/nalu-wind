@@ -40,8 +40,8 @@ linear_solvers:
   type: tpetra
   method: gmres
   preconditioner: sgs
-  tolerance: 1e-5
-  max_iterations: 50
+  tolerance: 1e-12
+  max_iterations: 200
   kspace: 50
   output_level: 0
 
@@ -49,8 +49,8 @@ linear_solvers:
   type: tpetra
   method: gmres
   preconditioner: muelu
-  tolerance: 1e-5
-  max_iterations: 50
+  tolerance: 1e-12
+  max_iterations: 200
   kspace: 50
   output_level: 0
   muelu_xml_file_name: ../../xml/milestone.xml
@@ -60,7 +60,7 @@ realms:
 
 - name: realm_1
   mesh: ../../mesh/mesh_actlinesimple.exo
-  use_edges: no
+  use_edges: yes
   automatic_decomposition_type: rcb
 
   equation_systems:
@@ -128,7 +128,6 @@ realms:
 
   solution_options:
     name: myOptions
-    use_consolidated_solver_algorithm: yes
 
     options:
 
@@ -143,9 +142,9 @@ realms:
         pressure: element
         velocity: element
 
-    - element_source_terms:
-        momentum: [lumped_momentum_time_derivative, upw_advection_diffusion, lumped_actuator]
-        continuity: [advection]
+    - source_terms:
+        momentum: 
+          - actuator
 
   actuator:
     type: ActLineSimpleNGP
