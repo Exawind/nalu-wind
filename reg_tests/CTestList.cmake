@@ -238,6 +238,7 @@ else(NOT ENABLE_CUDA)
   add_test_r(ablNeutralNGPTrilinos 2)
   add_test_r(conduction_p4 2)
   add_test_r(airfoilRANSEdgeNGPTrilinos.rst 1)
+  add_test_r(ActLineSimpleNGP 4)
 
   if(ENABLE_HYPRE)
     add_test_r(airfoilRANSEdgeNGP 2)

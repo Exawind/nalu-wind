@@ -39,7 +39,7 @@ linear_solvers:
 - name: solve_scalar
   type: tpetra
   method: gmres
-  preconditioner: sgs
+  preconditioner: mt_sgs
   tolerance: 1e-12
   max_iterations: 200
   kspace: 50
