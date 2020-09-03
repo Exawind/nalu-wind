@@ -24,6 +24,7 @@ InterpActuatorVel::InterpActuatorVel(
     velocity_(stkBulk_.mesh_meta_data().get_field<VectorFieldType>(
       stk::topology::NODE_RANK, "velocity"))
 {
+  velocity_->sync_to_host();
   actBulk_.velocity_.sync_host();
   actBulk_.velocity_.modify_host();
 }
