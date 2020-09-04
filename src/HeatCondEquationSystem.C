@@ -11,8 +11,6 @@
 #include <HeatCondEquationSystem.h>
 
 #include <AssembleElemSolverAlgorithm.h>
-#include <AssembleHeatCondWallSolverAlgorithm.h>
-#include <AssembleHeatCondIrradWallSolverAlgorithm.h>
 #include <AssembleScalarEdgeDiffSolverAlgorithm.h>
 #include <AssembleScalarElemDiffSolverAlgorithm.h>
 #include <AssembleScalarDiffNonConformalSolverAlgorithm.h>
@@ -128,7 +126,7 @@ HeatCondEquationSystem::HeatCondEquationSystem(
 {
   // extract solver name and solver object
   std::string solverName = realm_.equationSystems_.get_solver_block_name("temperature");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_TEMPERATURE);
+  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, realm_.name(), EQ_TEMPERATURE);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   // determine nodal gradient form
@@ -555,7 +553,7 @@ HeatCondEquationSystem::register_wall_bc(
       }
     }
   }
-  else if( userData.heatFluxSpec_ && !userData.robinParameterSpec_ ) {
+  else if( userData.heatFluxSpec_) {
 
     const AlgorithmType algTypeHF = WALL_HF;
 
@@ -589,206 +587,6 @@ HeatCondEquationSystem::register_wall_bc(
       itsi->second->partVec_.push_back(part);
     }
 
-  }
-  else if ( userData.irradSpec_ ) {
-    
-    const AlgorithmType algTypeRAD = WALL_RAD;
-
-    // check for emissivity
-    if ( !userData.emissSpec_)
-      throw std::runtime_error("Sorry, irradiation was specified while emissivity was not");
-
-    // register boundary data;
-    ScalarFieldType *irradField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "irradiation"));
-    stk::mesh::put_field_on_mesh(*irradField, *part, nullptr);
-    ScalarFieldType *emissField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "emissivity"));
-    stk::mesh::put_field_on_mesh(*emissField, *part, nullptr);
-
-    // aux algs; irradiation
-    Irradiation irrad = userData.irradiation_;
-    std::vector<double> irradUserSpec(1);
-    irradUserSpec[0] = irrad.irradiation_;
-    AuxFunction *irradAuxFunc = new ConstantAuxFunction(0, 1, irradUserSpec);
-    
-    AuxFunctionAlgorithm *irradAuxAlg
-      = new AuxFunctionAlgorithm(realm_, part,
-          irradField, irradAuxFunc,
-          stk::topology::NODE_RANK);
-    
-    // aux algs; emissivity
-    Emissivity emiss = userData.emissivity_;
-    std::vector<double> emissUserSpec(1);
-    emissUserSpec[0] = emiss.emissivity_;
-    AuxFunction *emissAuxFunc = new ConstantAuxFunction(0, 1, emissUserSpec);
-    
-    AuxFunctionAlgorithm *emissAuxAlg
-      = new AuxFunctionAlgorithm(realm_, part,
-          emissField, emissAuxFunc,
-          stk::topology::NODE_RANK);
-    
-    // if this is a multi-physics coupling, only populate IC for irradiation (xfer will handle it)
-    if ( userData.isInterface_ ) {
-      // xfer will handle population; only need to populate the initial value
-      realm_.initCondAlg_.push_back(irradAuxAlg);
-    }
-    else {
-      // put it on bcData
-      bcDataAlg_.push_back(irradAuxAlg);
-    }
-    
-    // emissivity is placed on bc data (never via XFER)
-    bcDataAlg_.push_back(emissAuxAlg);
-
-    // solver; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =
-      solverAlgDriver_->solverAlgMap_.find(algTypeRAD);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssembleHeatCondIrradWallSolverAlgorithm *theAlg
-        = new AssembleHeatCondIrradWallSolverAlgorithm(realm_, part, this,
-            realm_.realmUsesEdges_);
-      solverAlgDriver_->solverAlgMap_[algTypeRAD] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
-    }
-  }
-  else if ( userData.htcSpec_ || userData.refTempSpec_ || userData.robinParameterSpec_ ) {
-    
-    const AlgorithmType algTypeCHT = WALL_CHT;
-
-    // If the user specified a Robin parameter, this is a Robin-type CHT; otherwise, it's convection
-    bool isRobinCHT = userData.robinParameterSpec_;
-    bool isConvectionCHT = !isRobinCHT;
-
-    // first make sure all appropriate variables were specified
-    if (isConvectionCHT)
-    {
-      if ( !userData.refTempSpec_)
-        throw std::runtime_error("Sorry, h was specified while Tref was not");
-      if ( !userData.htcSpec_)
-        throw std::runtime_error("Sorry, Tref was specified while h was not");
-    }
-    else
-    {
-      if ( !userData.refTempSpec_)
-        throw std::runtime_error("Sorry, Robin parameter was specified while Tref was not");
-      if ( !userData.heatFluxSpec_)
-        throw std::runtime_error("Sorry, Robin parameter was specified while heat flux was not");
-    }
-
-    // register boundary data
-    ScalarFieldType *normalHeatFluxField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "normal_heat_flux"));
-    stk::mesh::put_field_on_mesh(*normalHeatFluxField, *part, nullptr);
-    ScalarFieldType *tRefField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "reference_temperature"));
-    stk::mesh::put_field_on_mesh(*tRefField, *part, nullptr);
-
-    ScalarFieldType *alphaField = NULL;
-    if (isConvectionCHT)
-    {
-      alphaField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "heat_transfer_coefficient"));
-    }
-    if (isRobinCHT)
-    {
-      alphaField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "robin_coupling_parameter"));
-    }
-    stk::mesh::put_field_on_mesh(*alphaField, *part, nullptr);
-  
-    // aux algs
-    AuxFunctionAlgorithm *alphaAuxAlg = nullptr;
-    if (isRobinCHT)
-    {
-      RobinCouplingParameter alpha = userData.robinCouplingParameter_;
-      std::vector<double> alphaUserSpec(1);
-      alphaUserSpec[0] = alpha.robinCouplingParameter_;
-      AuxFunction *alphaAuxFunc = new ConstantAuxFunction(0, 1, alphaUserSpec);
-      alphaAuxAlg = new AuxFunctionAlgorithm(realm_,
-                                             part,
-                                             alphaField,
-                                             alphaAuxFunc,
-                                             stk::topology::NODE_RANK);
-    }
-
-    AuxFunctionAlgorithm *htcAuxAlg = nullptr;
-    if (isConvectionCHT)
-    {
-      HeatTransferCoefficient htc = userData.heatTransferCoefficient_;
-      std::vector<double> htcUserSpec(1);
-      htcUserSpec[0] = htc.heatTransferCoefficient_;
-      AuxFunction *htcAuxFunc = new ConstantAuxFunction(0, 1, htcUserSpec);
-      htcAuxAlg = new AuxFunctionAlgorithm(realm_, 
-                                           part,
-                                           alphaField, 
-                                           htcAuxFunc,
-                                           stk::topology::NODE_RANK);
-    }
-
-    NormalHeatFlux heatFlux = userData.q_;
-    std::vector<double> qnUserSpec(1);
-    // For convection, pass a zero heat flux field; for Robin, use specified value
-    qnUserSpec[0] = (isRobinCHT ? heatFlux.qn_ : 0.0);
-    AuxFunction *qnAuxFunc = new ConstantAuxFunction(0, 1, qnUserSpec);
-    AuxFunctionAlgorithm *qnAuxAlg = new AuxFunctionAlgorithm(realm_,
-                                                              part,
-                                                              normalHeatFluxField,
-                                                              qnAuxFunc,
-                                                              stk::topology::NODE_RANK);
-  
-    ReferenceTemperature tRef = userData.referenceTemperature_;
-    std::vector<double> tRefUserSpec(1);
-    tRefUserSpec[0] = tRef.referenceTemperature_;
-    AuxFunction *tRefAuxFunc = new ConstantAuxFunction(0, 1, tRefUserSpec);
-    AuxFunctionAlgorithm *tRefAuxAlg = new AuxFunctionAlgorithm(realm_, 
-                                                                part,
-                                                                tRefField, 
-                                                                tRefAuxFunc,
-                                                                stk::topology::NODE_RANK);
-
-
-    // decide where to put population of data
-    // Normal heat flux, reference temperature, and coupling parameter
-    // come from a transfer if this is an interface, so in that case
-    // only need to populate the initial values
-    if ( userData.isInterface_ ) {
-      // xfer will handle population; only need to populate the initial value
-      realm_.initCondAlg_.push_back(tRefAuxAlg);
-      if (isRobinCHT) 
-      {
-        realm_.initCondAlg_.push_back(alphaAuxAlg);
-        realm_.initCondAlg_.push_back(qnAuxAlg);
-      }
-      if (isConvectionCHT) realm_.initCondAlg_.push_back(htcAuxAlg);
-    }
-    else {
-      // put it on bcData
-      bcDataAlg_.push_back(tRefAuxAlg);
-      if (isRobinCHT)
-      {
-        bcDataAlg_.push_back(alphaAuxAlg);
-        bcDataAlg_.push_back(qnAuxAlg);
-      }
-      if (isConvectionCHT) bcDataAlg_.push_back(htcAuxAlg);
-    }
-    // For convection-type, normal heat flux remains zero -- just set at IC
-    if (isConvectionCHT) realm_.initCondAlg_.push_back(qnAuxAlg);
-
-    // solver contribution
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =
-      solverAlgDriver_->solverAlgMap_.find(algTypeCHT);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssembleHeatCondWallSolverAlgorithm *theAlg
-        = new AssembleHeatCondWallSolverAlgorithm(realm_, 
-                                                  part, 
-                                                  this,
-                                                  tRefField,
-                                                  alphaField,
-                                                  normalHeatFluxField,
-                                                  realm_.realmUsesEdges_);
-      solverAlgDriver_->solverAlgMap_[algTypeCHT] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
-    }
-    
   }
 }
 
@@ -879,19 +677,9 @@ HeatCondEquationSystem::reinitialize_linear_system()
   // delete linsys
   delete linsys_;
 
-  // delete old solver
-  const EquationType theEqID = EQ_TEMPERATURE;
-  LinearSolver *theSolver = NULL;
-  std::map<EquationType, LinearSolver *>::const_iterator iter
-    = realm_.root()->linearSolvers_->solvers_.find(theEqID);
-  if (iter != realm_.root()->linearSolvers_->solvers_.end()) {
-    theSolver = (*iter).second;
-    delete theSolver;
-  }
-
   // create new solver
   std::string solverName = realm_.equationSystems_.get_solver_block_name("temperature");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_TEMPERATURE);
+  LinearSolver *solver = realm_.root()->linearSolvers_->reinitialize_solver(solverName, realm_.name(), EQ_TEMPERATURE);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   // initialize

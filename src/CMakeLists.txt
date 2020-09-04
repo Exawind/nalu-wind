@@ -9,14 +9,12 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleFaceElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleEdgeSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleHeatCondIrradWallSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleHeatCondWallSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeWallFunctionSolverAlgoirthm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeWallFunctionSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemABLWallFunctionSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemOpenSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemSymmetrySolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemWallFunctionSolverAlgoirthm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemWallFunctionSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradBoundaryAlgorithm.C
@@ -158,9 +156,7 @@ add_subdirectory(mesh_motion)
 add_subdirectory(ngp_algorithms)
 add_subdirectory(nso)
 add_subdirectory(overset)
-add_subdirectory(pmr)
 add_subdirectory(property_evaluator)
-add_subdirectory(tabular_props)
 add_subdirectory(utils)
 add_subdirectory(user_functions)
 add_subdirectory(xfer)

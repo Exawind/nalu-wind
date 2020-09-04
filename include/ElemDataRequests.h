@@ -19,6 +19,8 @@
 #include <stk_mesh/base/Ngp.hpp>
 
 #include <set>
+#include <array>
+#include <map>
 
 namespace sierra{
 namespace nalu{

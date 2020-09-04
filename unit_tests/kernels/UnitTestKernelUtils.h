@@ -366,7 +366,9 @@ public:
           stk::topology::NODE_RANK, "momentum_diag", 2)),
       velocityBC_(
         &meta_.declare_field<VectorFieldType>(
-          stk::topology::NODE_RANK, "velocity_bc"))
+          stk::topology::NODE_RANK, "velocity_bc")),
+      dynP_(&meta_.declare_field<GenericFieldType>(
+        meta_.side_rank(), "dynamic_pressure"))
   {
     stk::mesh::put_field_on_mesh(*velocity_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*dpdx_, meta_.universal_part(), spatialDim_, nullptr);
@@ -374,6 +376,8 @@ public:
     stk::mesh::put_field_on_mesh(*pressure_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*Udiag_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*velocityBC_, meta_.universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(*dynP_, meta_.universal_part(),
+     sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
   }
 
   virtual ~LowMachKernelHex8Mesh() {}
@@ -386,6 +390,7 @@ public:
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocity_);
     unit_test_kernel_utils::pressure_test_function(bulk_, *coordinates_, *pressure_);
     unit_test_kernel_utils::dpdx_test_function(bulk_, *coordinates_, *dpdx_);
+    stk::mesh::field_fill(0.0, *dynP_);
     stk::mesh::field_fill(1.0, *density_);
     stk::mesh::field_fill(1.0, *Udiag_);
     unit_test_kernel_utils::velocity_test_function(bulk_, *coordinates_, *velocityBC_);
@@ -397,6 +402,7 @@ public:
   ScalarFieldType* pressure_{nullptr};
   ScalarFieldType* Udiag_{nullptr};
   VectorFieldType* velocityBC_{nullptr};
+  GenericFieldType* dynP_{nullptr};
 };
 
 class ContinuityKernelHex8Mesh : public LowMachKernelHex8Mesh
@@ -406,9 +412,14 @@ public:
     : LowMachKernelHex8Mesh(),
       pressureBC_(
         &meta_.declare_field<ScalarFieldType>(
-          stk::topology::NODE_RANK, "pressure_bc"))
+          stk::topology::NODE_RANK, "pressure_bc")),
+      dynP_(&meta_.declare_field<GenericFieldType>(
+        meta_.side_rank(), "dynamic_pressure"))
   {
     stk::mesh::put_field_on_mesh(*pressureBC_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dynP_, meta_.universal_part(),
+      sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
   }
 
   virtual ~ContinuityKernelHex8Mesh() {}
@@ -418,10 +429,12 @@ public:
   {
     LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
     stk::mesh::field_fill(0.0, *pressureBC_);
+    stk::mesh::field_fill(0.0, *dynP_);
   }
 
 private:
   ScalarFieldType* pressureBC_{nullptr};
+  GenericFieldType* dynP_{nullptr};
 };
 
 // Provide separate namespace for Edge kernel tests
@@ -446,6 +459,8 @@ public:
         stk::topology::NODE_RANK, "temperature")),
       openMassFlowRate_(&meta_.declare_field<GenericFieldType>(
         meta_.side_rank(), "open_mass_flow_rate")),
+      dynP_(&meta_.declare_field<GenericFieldType>(
+        meta_.side_rank(), "dynamic_pressure")),
       openVelocityBC_(&meta_.declare_field<VectorFieldType>(
         stk::topology::NODE_RANK, "open_velocity_bc"))
   {
@@ -457,6 +472,9 @@ public:
     stk::mesh::put_field_on_mesh(
       *openMassFlowRate_, meta_.universal_part(),
       sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *dynP_, meta_.universal_part(),
+      sierra::nalu::AlgTraitsQuad4::numScsIp_, nullptr);
    stk::mesh::put_field_on_mesh(*openVelocityBC_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
@@ -466,6 +484,7 @@ public:
     const bool doPerturb = false, const bool generateSidesets = false) override
   {
     LowMachKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
+    stk::mesh::field_fill(0., *dynP_);
     unit_test_kernel_utils::calc_mass_flow_rate_scs(
       bulk_, stk::topology::HEX_8, *coordinates_, *density_, *velocity_, *massFlowRate_);
     unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
@@ -474,6 +493,7 @@ public:
     unit_test_kernel_utils::calc_open_mass_flow_rate(
       bulk_, stk::topology::QUAD_4, *coordinates_, *density_, *velocity_,
       *exposedAreaVec_, *openMassFlowRate_);
+
   }
 
   GenericFieldType* massFlowRate_{nullptr};
@@ -481,6 +501,7 @@ public:
   GenericFieldType* dudx_{nullptr};
   ScalarFieldType* temperature_{nullptr};
   GenericFieldType* openMassFlowRate_{nullptr};
+  GenericFieldType* dynP_{nullptr};
   VectorFieldType* openVelocityBC_{nullptr};
 };
 

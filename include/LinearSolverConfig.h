@@ -47,6 +47,12 @@ public:
   inline bool getWriteMatrixFiles() const
   { return writeMatrixFiles_; }
 
+  inline bool ensureReproducible() const
+  { return ensureReproducible_; }
+
+  inline bool useNativeCudaSort() const
+  { return useNativeCudaSort_; }
+
   inline bool recomputePreconditioner() const
   { return recomputePreconditioner_; }
 
@@ -85,6 +91,8 @@ protected:
   bool reusePreconditioner_{false};
   bool useSegregatedSolver_{false};
   bool writeMatrixFiles_{false};
+  bool ensureReproducible_{false};
+  bool useNativeCudaSort_{false};
 };
 
 class TpetraLinearSolverConfig : public LinearSolverConfig
@@ -135,6 +143,9 @@ protected:
 
   //! Krylov vector space used for GMRES solvers
   int kspace_{1};
+
+  //! COGMRES solvers
+  int sync_alg_{2};
 
   /* BoomerAMG options */
 

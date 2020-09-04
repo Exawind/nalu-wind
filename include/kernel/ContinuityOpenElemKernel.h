@@ -66,6 +66,7 @@ private:
   unsigned density_ {stk::mesh::InvalidOrdinal};
   unsigned Udiag_ {stk::mesh::InvalidOrdinal};
   unsigned exposedAreaVec_ {stk::mesh::InvalidOrdinal};
+  unsigned dynP_ {stk::mesh::InvalidOrdinal};
 
   double projTimeScale_{1.0};
   const double mdotCorrection_{0.0};

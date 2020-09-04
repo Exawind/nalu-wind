@@ -113,6 +113,7 @@ ActuatorBulk::parallel_sum_source_term(stk::mesh::BulkData& stkBulk)
     stk::topology::NODE_RANK, "actuator_source");
 
   stk::mesh::parallel_sum(stkBulk, {actuatorSource});
+  actuatorSource->modify_on_host();
 }
 
 } // namespace nalu

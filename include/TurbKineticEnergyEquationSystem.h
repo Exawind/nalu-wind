@@ -87,6 +87,8 @@ public:
   void manage_projected_nodal_gradient(
     EquationSystems& eqSystems);
   void compute_projected_nodal_gradient();
+
+  void post_external_data_transfer_work();
   
   const bool managePNG_;
 

@@ -27,7 +27,7 @@ realms:
 
   - name: realm_1
     mesh: ../../mesh/oversetCylinder.g
-    use_edges: no
+    use_edges: yes
     automatic_decomposition_type: rcb
     activate_aura: true
 
@@ -45,9 +45,6 @@ realms:
             name: myLowMach
             max_iterations: 1
             convergence_tolerance: 1e-7
-            decoupled_overset_solve: yes
-            num_overset_correctors: 1
-            continuity_num_overset_correctors: 2
 
     initial_conditions:
 

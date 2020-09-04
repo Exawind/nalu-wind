@@ -74,55 +74,12 @@ struct MassFraction {
   {}
 };
 
-struct Emissivity {
-  double emissivity_;
-  Emissivity()
-    : emissivity_(1.0)
-  {}
-};
-
-struct Irradiation {
-  double irradiation_;
-  Irradiation()
-    : irradiation_(1.0)
-  {}
-};
-
-struct Transmissivity {
-  double transmissivity_;
-  Transmissivity()
-    : transmissivity_(0.0)
-  {}
-};
-
-struct EnvironmentalT {
-  double environmentalT_;
-  EnvironmentalT()
-    : environmentalT_(298.0)
-  {}
-};
-
 struct ReferenceTemperature {
   double referenceTemperature_;
   ReferenceTemperature()
     : referenceTemperature_(298.0)
   {}
 };
-
-struct HeatTransferCoefficient {
-  double heatTransferCoefficient_;
-  HeatTransferCoefficient()
-    : heatTransferCoefficient_(0.0)
-  {}
-};
-
-struct RobinCouplingParameter {
-  double robinCouplingParameter_;
-  RobinCouplingParameter()
-    : robinCouplingParameter_(0.0)
-  {}
-};
-
 
 struct NormalHeatFlux {
   double qn_;

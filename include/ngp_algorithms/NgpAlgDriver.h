@@ -19,7 +19,6 @@
 #include "AlgTraits.h"
 #include "BuildTemplates.h"
 #include "Enums.h"
-#include "nalu_make_unique.h"
 #include "NaluEnv.h"
 #include "ngp_utils/NgpCreateElemInstance.h"
 

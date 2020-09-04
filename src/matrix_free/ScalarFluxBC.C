@@ -45,7 +45,6 @@ scalar_flux(
       const ftype ax = areav(index, j, i, 0);
       const ftype ay = areav(index, j, i, 1);
       const ftype az = areav(index, j, i, 2);
-
       out(j, i) =
         in(index, j, i) * stk::math::sqrt(ax * ax + ay * ay + az * az);
     }

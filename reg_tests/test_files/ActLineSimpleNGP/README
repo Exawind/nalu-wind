@@ -1,0 +1,34 @@
+FIXED WING ACTUATOR LINE REGRESSION TEST
+----------------------------------------
+ActLineSimpleNGP version
+
+For details of the verification problem that corresponds to this
+regression test, see
+https://nalu-wind.readthedocs.io/en/latest/source/verification/verification.html#fixed-wing-verification-problem
+
+Domain: 
+	- x: -50 m to +50 m
+	- y: -16 m to +16 m
+	- z: -16 m to +16 m
+
+Mesh:
+	- Uniform 1m x 1m x1m 
+
+BC:
+	- symmetric in y and z directions
+	- inflow at inlet
+	- open BC at exit
+	
+Velocity field:
+	- Uniform (2, 0, 0) m/s 
+
+Airfoil: 
+	- Span: 8m from y = -4 to +4
+	- Chord: uniform 1m (change via `chord_table`)
+	- AOA: 1 degree (change via `twist_table`)
+	- CL: `2*pi*alpha`
+	- CD: 0
+
+Note:
+	- Results (and norm) should be equivalent to ActLineSimple
+      regression test

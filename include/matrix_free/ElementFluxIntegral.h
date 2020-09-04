@@ -110,6 +110,59 @@ diffusive_flux(
   }
 }
 
+template <
+  int p,
+  int dir,
+  typename GeometricFactorArray,
+  typename InArray,
+  typename OutArray>
+KOKKOS_FORCEINLINE_FUNCTION void
+scalar_flux_vector(
+  int index,
+  int d,
+  const GeometricFactorArray& area,
+  const InArray& in,
+  OutArray& out)
+{
+  enum { LEVEL_0 = 0, LEVEL_1 = 1 };
+  for (int l = 0; l < p; ++l) {
+    LocalArray<ftype[2][p + 1][p + 1]> scratch;
+    for (int s = 0; s < p + 1; ++s) {
+      for (int r = 0; r < p + 1; ++r) {
+        ftype in_scs(0);
+        for (int q = 0; q < p + 1; ++q) {
+          static constexpr auto interp = Coeffs<p>::Nt;
+          in_scs += interp(l, q) * shuffled_access<dir>(in, s, r, q);
+        }
+        scratch(LEVEL_0, s, r) = in_scs * area(index, dir, l, s, r, d);
+      }
+    }
+
+    for (int s = 0; s < p + 1; ++s) {
+      for (int r = 0; r < p + 1; ++r) {
+        ftype acc = 0;
+        for (int q = 0; q < p + 1; ++q) {
+          static constexpr auto vandermonde = Coeffs<p>::W;
+          acc += vandermonde(r, q) * scratch(LEVEL_0, s, q);
+        }
+        scratch(LEVEL_1, s, r) = acc;
+      }
+    }
+
+    for (int s = 0; s < p + 1; ++s) {
+      for (int r = 0; r < p + 1; ++r) {
+        ftype acc = 0;
+        for (int q = 0; q < p + 1; ++q) {
+          static constexpr auto vandermonde = Coeffs<p>::W;
+          acc += vandermonde(s, q) * scratch(LEVEL_1, q, r);
+        }
+        shuffled_access<dir>(out, s, r, l + 0) -= acc;
+        shuffled_access<dir>(out, s, r, l + 1) += acc;
+      }
+    }
+  }
+}
+
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

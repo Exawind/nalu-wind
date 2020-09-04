@@ -73,7 +73,6 @@ class SolutionOptions;
 class TimeIntegrator;
 class MasterElement;
 class PropertyEvaluator;
-class HDF5FilePtr;
 class Transfer;
 class MeshMotionAlg;
 class MeshTransformationAlg;
@@ -111,8 +110,9 @@ class Realm {
 
   virtual void breadboard();
 
-  virtual void initialize();
- 
+  virtual void initialize_prolog();
+  virtual void initialize_epilog();
+
   Simulation *root() const;
   Simulation *root();
   Realms *parent() const;
@@ -272,7 +272,8 @@ class Realm {
   virtual double compute_adaptive_time_step();
   virtual void swap_states();
   virtual void predict_state();
-  virtual void pre_timestep_work();
+  virtual void pre_timestep_work_prolog();
+  virtual void pre_timestep_work_epilog();
   virtual void output_banner();
   virtual void advance_time_step();
  
@@ -518,9 +519,6 @@ class Realm {
 
   // some post processing of entity counts
   bool provideEntityCount_;
-
-  // pointer to HDF5 file structure holding table
-  HDF5FilePtr *HDF5ptr_;
 
   // automatic mesh decomposition; None, rib, rcb, multikl, etc.
   std::string autoDecompType_;

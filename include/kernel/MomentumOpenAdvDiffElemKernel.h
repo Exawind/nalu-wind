@@ -11,6 +11,7 @@
 #ifndef MomentumOpenAdvDiffElemKernel_h
 #define MomentumOpenAdvDiffElemKernel_h
 
+#include "Enums.h"
 #include "master_element/MasterElement.h"
 
 // scratch space
@@ -47,7 +48,8 @@ public:
     GenericFieldType *Gjui,
     ScalarFieldType *viscosity,
     ElemDataRequests &faceDataPreReqs,
-    ElemDataRequests &elemDataPreReqs);
+    ElemDataRequests &elemDataPreReqs,
+    EntrainmentMethod method = EntrainmentMethod::COMPUTED);
 
   virtual ~MomentumOpenAdvDiffElemKernel();
 
@@ -85,6 +87,7 @@ private:
   const double nocFac_;
   const bool shiftedGradOp_;
   const double small_{1.0e-16};
+  const EntrainmentMethod entrain_{EntrainmentMethod::COMPUTED};
 
   // Integration point to node mapping and master element for interior
   const int *faceIpNodeMap_{nullptr};

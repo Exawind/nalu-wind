@@ -45,21 +45,27 @@ set_parameter_if_not_set(
 
 Teuchos::ParameterList&
 add_default_parameters_to_parameter_list(
-  Teuchos::ParameterList& list, bool verbose = false)
+  Teuchos::ParameterList& list, int num_vectors, bool verbose = false)
 {
   set_parameter_if_not_set(list, "Num Blocks", 500);
   set_parameter_if_not_set(list, "Convergence Tolerance", 1.0e-7);
   set_parameter_if_not_set(
-    list, "Implicit Residual Scaling",
-    "Norm of Preconditioned Initial Residual");
-  set_parameter_if_not_set(list, "Solver Name", "gmres");
+    list, "Implicit Residual Scaling", "Norm of Initial Residual");
+  std::string name = (num_vectors > 1) ? "block gmres" : "gmres";
+  set_parameter_if_not_set(list, "Solver Name", name);
+  set_parameter_if_not_set(list, "Block Size", num_vectors);
+  set_parameter_if_not_set(list, "Adaptive Block Size", false);
+  set_parameter_if_not_set(list, "Deflation Quorum", num_vectors);
+  set_parameter_if_not_set(list, "Orthogonalization", "ICGS");
+
   if (verbose) {
-    set_parameter_if_not_set(
-      list, "Output Stream", Teuchos::rcpFromRef(std::cout));
-    set_parameter_if_not_set(
-      list, "Verbosity",
-      Belos::IterationDetails & Belos::OrthoDetails & Belos::FinalSummary);
+    list.set("Output Frequency", 1);
+    list.set("Output Stream", Teuchos::rcpFromRef(std::cout));
+    list.set(
+      "Verbosity",
+      Belos::IterationDetails | Belos::FinalSummary | Belos::TimingDetails);
   }
+
   return list;
 }
 
@@ -73,9 +79,10 @@ MatrixFreeSolver::MatrixFreeSolver(
       Teuchos::rcpFromRef(lhs_vector_),
       Teuchos::rcpFromRef(rhs_vector_)),
     solv_(Belos::TpetraSolverFactory<double, mv_type, base_op_type>().create(
-      add_default_parameters_to_parameter_list(params).get<std::string>(
-        "Solver Name"),
-      Teuchos::rcpFromRef(add_default_parameters_to_parameter_list(params))))
+      add_default_parameters_to_parameter_list(params, num_vectors_in)
+        .get<std::string>("Solver Name"),
+      Teuchos::rcpFromRef(
+        add_default_parameters_to_parameter_list(params, num_vectors_in))))
 {
   solv_->setProblem(Teuchos::rcpFromRef(problem_));
 }

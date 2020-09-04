@@ -190,6 +190,8 @@ class EquationSystems
    */
   void post_iter_work();
 
+  void post_external_data_transfer_work();
+
 
   void register_overset_field_update(stk::mesh::FieldBase*, int, int);
 

@@ -48,6 +48,7 @@ NodalGradPOpenBoundary<AlgTraits>::NodalGradPOpenBoundary(
     pressureField_ (get_field_ordinal(realm_.meta_data(), "pressure")),
     gradP_         (get_field_ordinal(realm_.meta_data(), "dpdx")),
     coordinates_   (get_field_ordinal(realm_.meta_data(), realm.get_coordinates_name())),
+    dynPress_ (get_field_ordinal(realm_.meta_data(), "dynamic_pressure", realm.meta_data().side_rank())),
     meFC_  (MasterElementRepo::get_surface_master_element<typename AlgTraits::FaceTraits>()),
     meSCS_ (MasterElementRepo::get_surface_master_element<typename AlgTraits::ElemTraits>()),
     faceData_(realm.meta_data()),
@@ -60,6 +61,7 @@ NodalGradPOpenBoundary<AlgTraits>::NodalGradPOpenBoundary(
   elemData_.add_gathered_nodal_field(pressureField_,1);
 
   faceData_.add_face_field(exposedAreaVec_, AlgTraits::numFaceIp_, AlgTraits::nDim_);
+  faceData_.add_face_field(dynPress_, AlgTraits::numFaceIp_);
   faceData_.add_gathered_nodal_field(dualNodalVol_,1);
   faceData_.add_gathered_nodal_field(exposedPressureField_,1);
   faceData_.add_gathered_nodal_field(gradP_,       AlgTraits::nodesPerFace_, AlgTraits::nDim_);
@@ -94,6 +96,8 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
   const unsigned exposedPressureField = exposedPressureField_;
   const unsigned pressureField        = pressureField_;
   const unsigned coordsID             = coordinates_;
+  const unsigned dynPID               = dynPress_;
+
 
   const auto& fieldMgr = meshInfo.ngp_field_manager();
   const auto   ngpMesh = meshInfo.ngp_mesh();
@@ -109,10 +113,13 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
                               std::to_string(AlgTraits::faceTopo_) + "_" +
                               std::to_string(AlgTraits::elemTopo_);
 
+
+  const auto pstabFac = realm_.solutionOptions_->activateOpenMdotCorrection_
+    ? 0.0 : 1.0;                        
+
   nalu_ngp::run_face_elem_algorithm(
     algName, meshInfo, faceData_, elemData_, s_locally_owned_union,
     KOKKOS_LAMBDA(SimdDataType& fdata) {
-
       const int* ipNodeMap = meFC->ipNodeMap();
 
       auto& faceView = fdata.simdFaceView;
@@ -120,6 +127,8 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
       const auto v_areav        = faceView.get_scratch_view_2D(exposedAreaVec);
       const auto v_dnv          = faceView.get_scratch_view_1D(dualNodalVol);
       const auto face_p_field   = faceView.get_scratch_view_1D(exposedPressureField);
+      const auto dyn_p_field   = faceView.get_scratch_view_1D(dynPID);
+
       const auto v_coord        = faceView.get_scratch_view_2D(coordsID);
       const auto elem_p_field   = elemView.get_scratch_view_1D(pressureField);
 
@@ -146,7 +155,7 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
 
         const int node = ipNodeMap[ip];
         const DoubleType vol = v_dnv(node);
-        const DoubleType press_div_vol = pIp / vol;
+        const DoubleType press_div_vol = (pIp - pstabFac * dyn_p_field(ip))/ vol;
 
         for ( int d = 0; d < AlgTraits::nDim_; ++d ) {
           const DoubleType areav = v_areav(ip, d);

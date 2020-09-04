@@ -25,7 +25,8 @@ template <int p>
 struct volume_metric_t
 {
   static scalar_view<p> invoke(
-    const const_scalar_view<p> alpha, const const_vector_view<p> coordinates);
+    const_scalar_view<p> alpha, const_vector_view<p> coordinates);
+  static scalar_view<p> invoke(const_vector_view<p> coordinates);
 };
 
 } // namespace impl

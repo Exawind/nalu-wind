@@ -38,6 +38,16 @@ public:
   virtual void banner(std::string, std::ostream&) const = 0;
 };
 
+class GradientUpdate
+{
+public:
+  virtual ~GradientUpdate() = default;
+  virtual void gradient(
+    const stk::mesh::NgpField<double>&, stk::mesh::NgpField<double>&) = 0;
+  virtual void banner(std::string, std::ostream&) const = 0;
+  virtual void reset_initial_residual() = 0;
+};
+
 inline bool
 part_is_valid_for_matrix_free(int order, const stk::mesh::Part& part)
 {
@@ -73,6 +83,26 @@ part_is_valid_for_matrix_free(int order, const stk::mesh::Part& part)
 template <template <int> class PhysicsUpdate, typename... Args>
 std::unique_ptr<EquationUpdate>
 make_equation_update(int p, Args&&... args)
+{
+  switch (p) {
+  case inst::P2:
+    return std::unique_ptr<PhysicsUpdate<inst::P2>>(
+      new PhysicsUpdate<inst::P2>(std::forward<Args>(args)...));
+  case inst::P3:
+    return std::unique_ptr<PhysicsUpdate<inst::P3>>(
+      new PhysicsUpdate<inst::P3>(std::forward<Args>(args)...));
+  case inst::P4:
+    return std::unique_ptr<PhysicsUpdate<inst::P4>>(
+      new PhysicsUpdate<inst::P4>(std::forward<Args>(args)...));
+  default:
+    return std::unique_ptr<PhysicsUpdate<inst::P1>>(
+      new PhysicsUpdate<inst::P1>(std::forward<Args>(args)...));
+  }
+}
+
+template <template <int> class PhysicsUpdate, typename... Args>
+std::unique_ptr<GradientUpdate>
+make_gradient_update(int p, Args&&... args)
 {
   switch (p) {
   case inst::P2:

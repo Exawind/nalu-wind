@@ -140,6 +140,7 @@
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_algorithms/TurbViscSSTAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
+#include "ngp_algorithms/DynamicPressureOpenAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
@@ -329,7 +330,6 @@ void
 LowMachEquationSystem::register_nodal_fields(
   stk::mesh::Part *part)
 {
-
   stk::mesh::MetaData &meta_data = realm_.meta_data();
 
   // add properties; denisty needs to be a restart field
@@ -498,6 +498,12 @@ LowMachEquationSystem::register_open_bc(
     = &(metaData.declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData.side_rank()),
                                                  "open_mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*mdotBip, *part, numScsBip, nullptr);
+
+  auto& dynPress 
+    = metaData.declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData.side_rank()),
+                                                 "dynamic_pressure");
+  std::vector<double> ic(numScsBip, 0);                                              
+  stk::mesh::put_field_on_mesh(dynPress, *part, numScsBip, ic.data());
 }
 
 //--------------------------------------------------------------------------
@@ -700,6 +706,7 @@ LowMachEquationSystem::solve_and_update()
                     << std::setw(15) << std::right << userSuppliedName_ << std::endl;
 
     for (int oi=0; oi < momentumEqSys_->numOversetIters_; ++oi) {
+      momentumEqSys_->dynPressAlgDriver_.execute();
       momentumEqSys_->assemble_and_solve(momentumEqSys_->uTmp_);
 
       timeA = NaluEnv::self().nalu_time();
@@ -966,6 +973,7 @@ MomentumEquationSystem::MomentumEquationSystem(
     evisc_(NULL),
     nodalGradAlgDriver_(realm_, "dudx"),
     wallFuncAlgDriver_(realm_),
+    dynPressAlgDriver_(realm_),
     cflReAlgDriver_(realm_),
     projectedNodalGradEqs_(NULL),
     firstPNGResidual_(0.0)
@@ -974,7 +982,7 @@ MomentumEquationSystem::MomentumEquationSystem(
 
   // extract solver name and solver object
   std::string solverName = realm_.equationSystems_.get_solver_block_name("velocity");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_MOMENTUM);
+  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, realm_.name(), EQ_MOMENTUM);
   linsys_ = LinearSystem::create(realm_, realm_.spatialDimension_, this, solver);
 
   // determine nodal gradient form
@@ -1746,19 +1754,22 @@ MomentumEquationSystem::register_open_bc(
 
     if (solverAlgWasBuilt) {
 
-      if (realm_.realmUsesEdges_)
+      if (realm_.realmUsesEdges_) {
         build_face_elem_topo_kernel_automatic<MomentumOpenEdgeKernel>
           (partTopo, elemTopo, *this, activeKernels, "momentum_open",
            realm_.meta_data(), realm_.solutionOptions_,
            realm_.is_turbulent() ? evisc_ : visc_,
-           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
-
-      else
+           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_, 
+           userData.entrainMethod_);
+      }
+      else {
         build_face_elem_topo_kernel_automatic<MomentumOpenAdvDiffElemKernel>
           (partTopo, elemTopo, *this, activeKernels, "momentum_open",
            realm_.meta_data(), *realm_.solutionOptions_, this,
            velocity_, dudx_, realm_.is_turbulent() ? evisc_ : visc_,
-           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
+           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_,
+           userData.entrainMethod_);
+      }
     }
   }
   else {
@@ -1774,6 +1785,12 @@ MomentumEquationSystem::register_open_bc(
       itsi->second->partVec_.push_back(part);
     }
   }
+
+  if (userData.totalP_) {
+    dynPressAlgDriver_.register_face_algorithm<DynamicPressureOpenAlg>(algType, part, "dyn_press");
+  }
+
+
 }
 
 //--------------------------------------------------------------------------
@@ -2435,19 +2452,9 @@ MomentumEquationSystem::reinitialize_linear_system()
   // delete linsys
   delete linsys_;
 
-  // delete old solver
-  const EquationType theEqID = EQ_MOMENTUM;
-  LinearSolver *theSolver = NULL;
-  std::map<EquationType, LinearSolver *>::const_iterator iter
-    = realm_.root()->linearSolvers_->solvers_.find(theEqID);
-  if (iter != realm_.root()->linearSolvers_->solvers_.end()) {
-    theSolver = (*iter).second;
-    delete theSolver;
-  }
-
   // create new solver
   std::string solverName = realm_.equationSystems_.get_solver_block_name("velocity");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_MOMENTUM);
+  LinearSolver *solver = realm_.root()->linearSolvers_->reinitialize_solver(solverName, realm_.name(), EQ_MOMENTUM);
   linsys_ = LinearSystem::create(realm_, realm_.spatialDimension_, this, solver);
 
   // initialize new solver
@@ -2792,7 +2799,7 @@ ContinuityEquationSystem::ContinuityEquationSystem(
 
   // extract solver name and solver object
   std::string solverName = realm_.equationSystems_.get_solver_block_name("pressure");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_CONTINUITY);
+  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, realm_.name(), EQ_CONTINUITY);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   // determine nodal gradient form
@@ -3227,7 +3234,7 @@ void
 ContinuityEquationSystem::register_open_bc(
   stk::mesh::Part *part,
   const stk::topology &partTopo,
-  const OpenBoundaryConditionData & /* openBCData */)
+  const OpenBoundaryConditionData&)
 {
 
   const AlgorithmType algType = OPEN;
@@ -3645,19 +3652,9 @@ ContinuityEquationSystem::reinitialize_linear_system()
   // delete linsys
   delete linsys_;
 
-  // delete old solver
-  const EquationType theEqID = EQ_CONTINUITY;
-  LinearSolver *theSolver = NULL;
-  std::map<EquationType, LinearSolver *>::const_iterator iter
-    = realm_.root()->linearSolvers_->solvers_.find(theEqID);
-  if (iter != realm_.root()->linearSolvers_->solvers_.end()) {
-    theSolver = (*iter).second;
-    delete theSolver;
-  }
-
   // create new solver
   std::string solverName = realm_.equationSystems_.get_solver_block_name("pressure");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_CONTINUITY);
+  LinearSolver *solver = realm_.root()->linearSolvers_->reinitialize_solver(solverName, realm_.name(), EQ_CONTINUITY);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   // initialize

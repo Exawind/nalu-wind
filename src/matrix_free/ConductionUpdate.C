@@ -39,8 +39,7 @@ ConductionUpdate<p>::ConductionUpdate(
     field_update_(
       params,
       bulk_in.get_updated_ngp_mesh(),
-      get_ngp_field<typename Tpetra::Map<>::global_ordinal_type>(
-        meta_, conduction_info::gid_name),
+      linsys_info::get_gid_field(meta_),
       active_in,
       dirichlet_in,
       flux_in,

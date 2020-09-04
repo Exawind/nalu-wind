@@ -31,11 +31,12 @@ template <int poly>
 void
 single_affine_hex_p(bool cube)
 {
-  LocalArray<double[3][3]> transform = {{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
+  LocalArray<double[3][3]> transform = {{{0, 0, 1}, {1, 0, 0}, {0, 1, 0}}};
   if (!cube) {
     transform = {{{2, 1, 1.3333}, {0, 2, -1}, {1, 0, 2}}};
   }
   const auto det = determinant<double>(transform);
+  ASSERT_GT(det, 0);
 
   const int num_elems_1D = 32 / poly;
   const int num_elems_3D = num_elems_1D * num_elems_1D * num_elems_1D;
