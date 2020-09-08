@@ -2,10 +2,10 @@
 #include <wind_energy/SyntheticLidar.h>
 
 #include <NaluParsing.h>
+#include <nalu_make_unique.h>
 #include <master_element/TensorOps.h>
 
 #include <xfer/Transfer.h>
-#include <memory>
 
 namespace sierra {
 namespace nalu {
@@ -184,14 +184,14 @@ LidarLineOfSite::determine_line_of_site_info(const YAML::Node& node)
 {
   load(node);
 
-  auto lidarLOSInfo = std::make_unique<DataProbeSpecInfo>();
+  auto lidarLOSInfo = make_unique<DataProbeSpecInfo>();
 
   lidarLOSInfo->xferName_ = "LidarSampling_xfer";
   lidarLOSInfo->fromToName_.emplace_back("velocity", "velocity_probe");
   lidarLOSInfo->fieldInfo_.emplace_back("velocity_probe", 3);
   lidarLOSInfo->fromTargetNames_ = fromTargetNames_;
 
-  auto probeInfo = std::make_unique<DataProbeInfo>();
+  auto probeInfo = make_unique<DataProbeInfo>();
 
   probeInfo->isLineOfSite_ = true;
   probeInfo->numProbes_ = nsamples_;
