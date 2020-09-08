@@ -22,6 +22,7 @@
 #include <element_promotion/PromotedElementIO.h>
 #include <element_promotion/HexNElementDescription.h>
 
+#include <nalu_make_unique.h>
 #include <NaluEnv.h>
 #include <BucketLoop.h>
 

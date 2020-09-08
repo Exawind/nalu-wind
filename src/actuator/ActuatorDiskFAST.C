@@ -21,7 +21,7 @@
 #include <cmath>
 #include <algorithm>
 #include <functional>
-#include <memory>
+#include <nalu_make_unique.h>
 
 namespace sierra {
 namespace nalu {
@@ -244,7 +244,7 @@ ActuatorDiskFAST::add_swept_points_to_map()
 
             actuatorPointInfoMap_.insert(std::make_pair(
                                            np,
-                                           std::make_unique<ActuatorFASTPointInfo>(
+                                           make_unique<ActuatorFASTPointInfo>(
                                              iTurb, centroidCoords, searchRadius,
                                              actuatorInfo->epsilon_,
                                              actuatorInfo->epsilon_,

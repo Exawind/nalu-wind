@@ -15,6 +15,7 @@
 #include <stk_topology/topology.hpp>
 
 #include <master_element/TensorOps.h>
+#include <nalu_make_unique.h>
 
 #include "UnitTestUtils.h"
 #include "UnitTestKokkosUtils.h"

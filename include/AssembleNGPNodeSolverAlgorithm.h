@@ -12,6 +12,7 @@
 #define ASSEMBLENGPNODESOLVERALGORITHM_H
 
 #include "SolverAlgorithm.h"
+#include "nalu_make_unique.h"
 
 #include <vector>
 #include <memory>
@@ -51,7 +52,7 @@ public:
   template<typename T, class... Args>
   void add_kernel(Args&&... args)
   {
-    nodeKernels_.push_back(std::make_unique<T>(std::forward<Args>(args)...));
+    nodeKernels_.push_back(make_unique<T>(std::forward<Args>(args)...));
   }
 
 private:

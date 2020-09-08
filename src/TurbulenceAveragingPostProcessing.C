@@ -16,6 +16,7 @@
 #include <Realm.h>
 #include <MovingAveragePostProcessor.h>
 #include <SolutionOptions.h>
+#include <nalu_make_unique.h>
 
 // NGP Algorithms
 #include "ElemDataRequests.h"
@@ -45,7 +46,6 @@
 #include <algorithm>
 #include <complex>
 #include <cmath>
-#include <memory>
 
 namespace sierra{
 namespace nalu{
@@ -255,7 +255,7 @@ TurbulenceAveragingPostProcessing::setup()
     stk::mesh::put_field_on_mesh(field, stk::mesh::selectField(*tempField), nullptr);
     realm_.augment_restart_variable_list(fTempName);
 
-    movingAvgPP_ = std::make_unique<MovingAveragePostProcessor>(
+    movingAvgPP_ = make_unique<MovingAveragePostProcessor>(
       realm_.bulk_data(),
       *realm_.timeIntegrator_,
       realm_.restarted_simulation()
