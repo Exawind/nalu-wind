@@ -136,9 +136,11 @@ void GeometryInteriorAlg<AlgTraits>::impl_negative_jacobian_check()
     }, reducer);
 
   if (numNegVol > 0) {
+    const stk::topology topology(AlgTraits::topo_);
     throw std::runtime_error(
       "GeometryInteriorAlg encountered " + std::to_string(numNegVol) +
-      " negative sub-control volumes for topology " + std::to_string(AlgTraits::topo_));
+      " negative sub-control volumes for topology " + std::to_string(AlgTraits::topo_)+ 
+      "  name:" + topology.char_name());
   }
 }
 
