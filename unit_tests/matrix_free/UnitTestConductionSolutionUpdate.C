@@ -155,7 +155,6 @@ TEST_F(ConductionSolutionUpdateFixture, correct_behavior_for_linear_problem)
       mesh.get_bulk_on_host(), {&delta});
   }
   delta.sync_to_host();
-  delta.sync_to_device();
 
   auto& coord_field =
     *meta.get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(

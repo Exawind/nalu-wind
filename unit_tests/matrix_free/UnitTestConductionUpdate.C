@@ -74,6 +74,19 @@ field_add(
   y.modify_on_device();
 }
 
+stk::mesh::NgpField<double>&
+get_ngp_field(
+  const stk::mesh::MetaData& meta,
+  std::string name,
+  stk::mesh::FieldState state = stk::mesh::StateNP1)
+{
+  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
+  ThrowAssert(
+    meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+  return stk::mesh::get_updated_ngp_field<double>(
+    *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+}
+
 double
 initial_condition(double x, double y, double z)
 {

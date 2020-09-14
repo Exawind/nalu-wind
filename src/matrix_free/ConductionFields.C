@@ -22,6 +22,21 @@ namespace nalu {
 namespace matrix_free {
 namespace impl {
 
+stk::mesh::NgpField<double>
+get_ngp_field(
+  const stk::mesh::MetaData& meta,
+  std::string name,
+  stk::mesh::FieldState state = stk::mesh::StateNP1)
+{
+  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
+  ThrowAssert(
+    meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+  auto field = stk::mesh::get_updated_ngp_field<double>(
+    *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+  field.sync_to_device();
+  return field;
+}
+
 template <int p>
 InteriorResidualFields<p>
 gather_required_conduction_fields_t<p>::invoke(

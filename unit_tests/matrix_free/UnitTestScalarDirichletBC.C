@@ -30,6 +30,7 @@
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
 #include "stk_mesh/base/FieldState.hpp"
+#include "stk_mesh/base/GetNgpField.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Types.hpp"
 #include "stk_topology/topology.hpp"
@@ -99,15 +100,16 @@ protected:
 
 TEST_F(DirichletFixture, bc_residual)
 {
+  auto qp1_ngp = stk::mesh::get_updated_ngp_field<double>(q_field);
+  qp1_ngp.sync_to_device();
   auto qp1 = node_scalar_view("qp1_at_bc", dirichlet_nodes.extent_int(0));
-  stk_simd_scalar_node_gather(
-    dirichlet_nodes, get_ngp_field<double>(meta, conduction_info::q_name), qp1);
+  stk_simd_scalar_node_gather(dirichlet_nodes, qp1_ngp, qp1);
 
+  auto qbc_ngp = stk::mesh::get_updated_ngp_field<double>(qbc_field);
+  qbc_ngp.sync_to_device();
   auto qbc =
     node_scalar_view("qspecified_at_bc", dirichlet_nodes.extent_int(0));
-  stk_simd_scalar_node_gather(
-    dirichlet_nodes, get_ngp_field<double>(meta, conduction_info::qbc_name),
-    qbc);
+  stk_simd_scalar_node_gather(dirichlet_nodes, qbc_ngp, qbc);
 
   owned_and_shared_rhs.putScalar(0.);
   scalar_dirichlet_residual(

@@ -118,10 +118,15 @@ void
 ConductionUpdate<p>::predict_state()
 {
   stk::mesh::ProfilingBlock pf("ConductionUpdate<p>::predict_state");
-  copy_state(
-    bulk_.get_updated_ngp_mesh(), active_,
-    get_ngp_field<double>(meta_, conduction_info::q_name, stk::mesh::StateNP1),
-    get_ngp_field<double>(meta_, conduction_info::q_name, stk::mesh::StateN));
+
+  auto qp1 = stk::mesh::get_updated_ngp_field<double>(
+    *meta_.get_field(stk::topology::NODE_RANK, conduction_info::q_name)
+       ->field_state(stk::mesh::StateNP1));
+
+  auto qp0 = stk::mesh::get_updated_ngp_field<double>(
+    *meta_.get_field(stk::topology::NODE_RANK, conduction_info::q_name)
+       ->field_state(stk::mesh::StateN));
+  copy_state(bulk_.get_updated_ngp_mesh(), active_, qp1, qp0);
   field_gather_.update_solution_fields();
   initial_residual_ = -1;
 }

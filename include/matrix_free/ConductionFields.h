@@ -27,20 +27,6 @@ namespace sierra {
 namespace nalu {
 namespace matrix_free {
 
-template <typename T = double>
-stk::mesh::NgpField<T>&
-get_ngp_field(
-  const stk::mesh::MetaData& meta,
-  std::string name,
-  stk::mesh::FieldState state = stk::mesh::StateNP1)
-{
-  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
-  ThrowAssert(
-    meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
-  return stk::mesh::get_updated_ngp_field<T>(
-    *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
-}
-
 struct BCDirichletFields
 {
   node_scalar_view qp1;

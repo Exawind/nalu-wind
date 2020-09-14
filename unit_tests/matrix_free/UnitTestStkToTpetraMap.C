@@ -50,10 +50,9 @@ protected:
     io.add_mesh_database(name, stk::io::READ_MESH);
     io.create_input_mesh();
     io.populate_bulk_data();
-    mesh = stk::mesh::NgpMesh(bulk);
-    gid_field =
-      stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type>(
-        bulk, gid_field_h);
+    mesh = bulk.get_updated_ngp_mesh();
+    using gid_type = typename Tpetra::Map<>::global_ordinal_type;
+    gid_field = stk::mesh::get_updated_ngp_field<gid_type>(gid_field_h);
   }
   stk::mesh::MetaData meta;
   stk::mesh::BulkData bulk;
