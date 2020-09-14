@@ -40,7 +40,8 @@ struct InterpActuatorVel
 inline
 void RunInterpActuatorVel(ActuatorBulk& actBulk, stk::mesh::BulkData& stkBulk)
 {
-  Kokkos::deep_copy(actBulk.velocity_.view_device(), 0.0);
+  Kokkos::deep_copy(actBulk.velocity_.view_host(), 0.0);
+  actBulk.velocity_.modify_host();
   Kokkos::parallel_for("InterpActVel", actBulk.velocity_.extent(0), InterpActuatorVel(actBulk, stkBulk));
   actuator_utils::reduce_view_on_host(actBulk.velocity_.view_host());
 }
