@@ -242,6 +242,11 @@ else(NOT ENABLE_CUDA)
   add_test_r(ActLineSimpleNGP 2)
   add_test_r(taylorGreenVortex_p3 2)
 
+  if(ENABLE_OPENFAST)
+    add_test_r(nrel5MWactuatorLine 4)
+    add_subdirectory(test_files/nrel5MWactuatorLine)
+  endif()
+
   if(ENABLE_HYPRE)
     add_test_r(airfoilRANSEdgeNGP 2)
     add_test_r(airfoilRANSEdgeNGPHypre 2)

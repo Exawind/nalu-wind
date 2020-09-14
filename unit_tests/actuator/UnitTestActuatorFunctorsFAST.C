@@ -35,7 +35,7 @@ protected:
 };
 
 
-TEST_F(ActuatorFunctorFastTests, runUpdatePoints)
+TEST_F(ActuatorFunctorFastTests, NGP_runUpdatePoints)
 {
   const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
 
@@ -80,7 +80,7 @@ TEST_F(ActuatorFunctorFastTests, runUpdatePoints)
   }
 }
 
-TEST_F(ActuatorFunctorFastTests, runAssignVelAndComputeForces)
+TEST_F(ActuatorFunctorFastTests, NGP_runAssignVelAndComputeForces)
 {
   const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
 
@@ -146,7 +146,7 @@ TEST_F(ActuatorFunctorFastTests, runAssignVelAndComputeForces)
     });
 }
 
-TEST_F(ActuatorFunctorFastTests, spreadForceWhProjIdentity)
+TEST_F(ActuatorFunctorFastTests, NGP_spreadForceWhProjIdentity)
 {
   auto epsLoc = std::find_if(
     fastParseParams_.begin(), fastParseParams_.end(),
