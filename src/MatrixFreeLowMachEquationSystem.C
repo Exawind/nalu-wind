@@ -280,8 +280,9 @@ MatrixFreeLowMachEquationSystem::sync_field_on_periodic_nodes(
 {
   stk::mesh::ProfilingBlock pf("sync periodic nodes");
   if (realm_.hasPeriodic_) {
+    const bool doCommunication = false;
     realm_.periodic_delta_solution_update(
-      meta_.get_field(stk::topology::NODE_RANK, name), len);
+      meta_.get_field(stk::topology::NODE_RANK, name), len, doCommunication);
   }
 }
 
