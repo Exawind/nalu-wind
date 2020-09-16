@@ -25,7 +25,6 @@
 #include "Tpetra_Map.hpp"
 #include "Tpetra_MultiVector.hpp"
 #include "Tpetra_Operator.hpp"
-#include "Tpetra_Details_residual.hpp"
 
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 
@@ -45,13 +44,15 @@ set_parameter_if_not_set(
 
 Teuchos::ParameterList&
 add_default_parameters_to_parameter_list(
-  Teuchos::ParameterList& list, int num_vectors, bool verbose = false)
+  Teuchos::ParameterList& list, int num_vectors, bool verbose = true)
 {
-  set_parameter_if_not_set(list, "Num Blocks", 500);
+  set_parameter_if_not_set(list, "Num Blocks", 200);
+  set_parameter_if_not_set(list, "Maximum Iterations", 200);
   set_parameter_if_not_set(list, "Convergence Tolerance", 1.0e-7);
   set_parameter_if_not_set(
-    list, "Implicit Residual Scaling", "Norm of Initial Residual");
-  std::string name = (num_vectors > 1) ? "block gmres" : "gmres";
+    list, "Implicit Residual Scaling",
+    "Norm of Preconditioned Initial Residual");
+  std::string name = (num_vectors > 1) ? "bicgstab" : "gmres";
   set_parameter_if_not_set(list, "Solver Name", name);
   set_parameter_if_not_set(list, "Block Size", num_vectors);
   set_parameter_if_not_set(list, "Adaptive Block Size", false);
@@ -61,11 +62,8 @@ add_default_parameters_to_parameter_list(
   if (verbose) {
     list.set("Output Frequency", 1);
     list.set("Output Stream", Teuchos::rcpFromRef(std::cout));
-    list.set(
-      "Verbosity",
-      Belos::IterationDetails | Belos::FinalSummary | Belos::TimingDetails);
+    list.set("Verbosity", Belos::IterationDetails);
   }
-
   return list;
 }
 
@@ -94,15 +92,6 @@ MatrixFreeSolver::set_preconditioner(const base_op_type& prec)
   problem_.setRightPrec(Teuchos::rcpFromRef(prec));
 }
 
-void
-MatrixFreeSolver::solve()
-{
-  stk::mesh::ProfilingBlock pf("MatrixFreeSolver::solve");
-  lhs_vector_.putScalar(0.);
-  problem_.setProblem();
-  solv_->solve();
-}
-
 namespace {
 
 double
@@ -126,6 +115,15 @@ normalized_mv_norm2(const typename MatrixFreeSolver::mv_type& mv)
   return mv_norm2(mv) / std::sqrt(mv.getNumVectors() * mv.getGlobalLength());
 }
 } // namespace
+
+void
+MatrixFreeSolver::solve()
+{
+  stk::mesh::ProfilingBlock pf("MatrixFreeSolver::solve");
+  lhs_vector_.putScalar(0.);
+  problem_.setProblem();
+  solv_->solve();
+}
 
 double
 MatrixFreeSolver::final_linear_norm() const

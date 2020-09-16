@@ -10,11 +10,10 @@
 #ifndef CONDUCTION_DIAGONAL_H
 #define CONDUCTION_DIAGONAL_H
 
-#include <Tpetra_MultiVector_decl.hpp>
-#include <Tpetra_Operator.hpp>
-
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
+
+#include <Tpetra_MultiVector_decl.hpp>
 
 namespace sierra {
 namespace nalu {

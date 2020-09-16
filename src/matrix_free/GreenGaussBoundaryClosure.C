@@ -8,16 +8,19 @@
 //
 
 #include "matrix_free/GreenGaussBoundaryClosure.h"
+
 #include "matrix_free/Coefficients.h"
-#include "matrix_free/ElementFluxIntegral.h"
-#include "matrix_free/ElementVolumeIntegral.h"
+#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
+#include "matrix_free/LocalArray.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ValidSimdLength.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
 
+#include "Kokkos_Macros.hpp"
 #include "Kokkos_ScatterView.hpp"
+
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
+#include "stk_simd/Simd.hpp"
 
 namespace sierra {
 namespace nalu {

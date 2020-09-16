@@ -175,7 +175,7 @@ MatrixFreeHeatCondEquationSystem::initialize()
   auto& bulk = realm_.bulk_data();
   {
     stk::mesh::ProfilingBlock pf_inner("make_equation_update");
-    update_ = matrix_free::make_equation_update<matrix_free::ConductionUpdate>(
+    update_ = matrix_free::make_updater<matrix_free::ConductionUpdate>(
       polynomial_order_, bulk, realm_.solver_parameters("temperature"),
       interior_selector_, dirichlet_selector_, flux_selector_,
       replica_selector);
@@ -187,9 +187,9 @@ MatrixFreeHeatCondEquationSystem::initialize()
     const auto all_promoted_boundary_faces =
       meta_.get_topology_root_part(face_topo) -
       stk::mesh::selectUnion(realm_.allPeriodicInteractingParts_);
-    grad_ = matrix_free::make_gradient_update<matrix_free::GreenGaussGradient>(
-      polynomial_order_, bulk, realm_.solver_parameters("dtdx"), interior_selector_,
-      all_promoted_boundary_faces, replica_selector);
+    grad_ = matrix_free::make_updater<matrix_free::GreenGaussGradient>(
+      polynomial_order_, bulk, realm_.solver_parameters("dtdx"),
+      interior_selector_, all_promoted_boundary_faces, replica_selector);
   }
 }
 

@@ -12,7 +12,7 @@
 
 #include "Tpetra_MultiVector.hpp"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
 namespace sierra {
@@ -25,7 +25,8 @@ struct filter_diagonal_t
   static void invoke(
     const_elem_offset_view<p> offsets,
     const_scalar_view<p> vols,
-    typename Tpetra::MultiVector<>::dual_view_type::t_dev yout);
+    typename Tpetra::MultiVector<>::dual_view_type::t_dev yout,
+    bool lumped = (p == 1));
 };
 } // namespace impl
 P_INVOKEABLE(filter_diagonal)

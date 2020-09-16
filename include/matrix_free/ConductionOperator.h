@@ -10,7 +10,7 @@
 #ifndef CONDUCTION_OPERATOR_H
 #define CONDUCTION_OPERATOR_H
 
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 
 #include "Kokkos_Array.hpp"
 #include "Teuchos_BLAS_types.hpp"

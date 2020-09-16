@@ -8,32 +8,27 @@
 //
 
 #include "StkConductionFixture.h"
-#include "matrix_free/StkToTpetraMap.h"
 #include "matrix_free/ConductionInfo.h"
-
-#include "Tpetra_Map.hpp"
-
-#include "gtest/gtest.h"
-#include "mpi.h"
-
+#include "matrix_free/StkToTpetraMap.h"
 #include "stk_io/StkMeshIoBroker.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/CoordinateSystems.hpp"
-#include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
-#include "stk_mesh/base/FieldParallel.hpp"
-#include "stk_mesh/base/GetEntities.hpp"
-#include "stk_mesh/base/MetaData.hpp"
-#include "stk_mesh/base/Selector.hpp"
-#include "stk_mesh/base/SkinBoundary.hpp"
-#include "stk_mesh/base/NgpMesh.hpp"
-#include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"
-
+#include "stk_mesh/base/MetaData.hpp"
+#include "stk_mesh/base/NgpField.hpp"
 #include "stk_topology/topology.hpp"
-#include "stk_unit_test_utils/stk_mesh_fixtures/CoordinateMapping.hpp"
-#include "stk_unit_test_utils/stk_mesh_fixtures/HexFixture.hpp"
+#include "stk_io/DatabasePurpose.hpp"
+#include "stk_io/IossBridge.hpp"
+#include "stk_mesh/base/Bucket.hpp"
+#include "stk_mesh/base/FieldState.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/Types.hpp"
+#include "stk_unit_test_utils/stk_mesh_fixtures/Hex27Fixture.hpp"
+
+#include <iosfwd>
+#include <string>
 
 ConductionFixture::ConductionFixture(int nx, double scale)
   : meta(3u),

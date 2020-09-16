@@ -7,39 +7,37 @@
 // for more details.
 //
 
-#include "matrix_free/ScalarFluxBC.h"
+#include "StkConductionFixture.h"
+#include "gtest/gtest.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LinearExposedAreas.h"
-#include "matrix_free/StkEntityToRowMap.h"
+#include "matrix_free/ScalarFluxBC.h"
 #include "matrix_free/StkSimdFaceConnectivityMap.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
-#include "matrix_free/StkSimdNodeConnectivityMap.h"
+#include "matrix_free/StkToTpetraLocalIndices.h"
 #include "matrix_free/StkToTpetraMap.h"
-#include "matrix_free/ConductionInfo.h"
-#include "matrix_free/ConductionFields.h"
-#include "matrix_free/KokkosFramework.h"
-#include "StkConductionFixture.h"
 
-#include "gtest/gtest.h"
+#include "stk_mesh/base/BulkData.hpp"
 
-#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp>
-#include <Kokkos_Array.hpp>
-#include <Kokkos_CopyViews.hpp>
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Parallel.hpp>
-#include <Kokkos_View.hpp>
-#include <Teuchos_ArrayView.hpp>
-#include <Teuchos_DefaultMpiComm.hpp>
-#include <Teuchos_OrdinalTraits.hpp>
-#include <Teuchos_RCP.hpp>
-#include <Tpetra_ConfigDefs.hpp>
-#include <Tpetra_Export.hpp>
-#include <Tpetra_Map_decl.hpp>
-#include <Tpetra_MultiVector_decl.hpp>
+#include "Kokkos_View.hpp"
+#include "Teuchos_RCP.hpp"
+#include "Tpetra_CombineMode.hpp"
+#include "Tpetra_Export_decl.hpp"
+#include "Tpetra_Map_decl.hpp"
+#include "Tpetra_MultiVector_decl.hpp"
+
+#include "stk_mesh/base/Bucket.hpp"
+#include "stk_mesh/base/Field.hpp"
+#include "stk_mesh/base/FieldBase.hpp"
+#include "stk_mesh/base/GetNgpField.hpp"
+#include "stk_mesh/base/MetaData.hpp"
+#include "stk_mesh/base/Types.hpp"
+#include "stk_topology/topology.hpp"
+
 #include <algorithm>
-#include <stk_simd/Simd.hpp>
+#include <math.h>
+#include <stddef.h>
 #include <type_traits>
-
-#include "mpi.h"
 
 namespace sierra {
 namespace nalu {

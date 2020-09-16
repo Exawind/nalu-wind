@@ -10,18 +10,10 @@
 #ifndef STK_SIMD_NODE_CONNECTIVITY_MAP_H
 #define STK_SIMD_NODE_CONNECTIVITY_MAP_H
 
-#include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
-
-#include <Kokkos_View.hpp>
-#include <memory>
-#include <stk_mesh/base/Field.hpp>
-#include <stk_mesh/base/Selector.hpp>
-
-#include "Kokkos_Core.hpp"
-
-#include "stk_mesh/base/Types.hpp"
+#include "matrix_free/KokkosViewTypes.h"
 #include "stk_mesh/base/Ngp.hpp"
+
+#include "stk_mesh/base/Selector.hpp"
 
 namespace stk {
 namespace mesh {

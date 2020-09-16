@@ -10,10 +10,10 @@
 #ifndef GRADIENT_INTERIOR_H
 #define GRADIENT_INTERIOR_H
 
-#include "Tpetra_MultiVector_decl.hpp"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
+#include "matrix_free/KokkosViewTypes.h"
+
+#include "Tpetra_MultiVector_decl.hpp"
 
 namespace sierra {
 namespace nalu {

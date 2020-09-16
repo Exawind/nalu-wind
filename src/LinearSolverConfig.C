@@ -54,7 +54,6 @@ TpetraLinearSolverConfig::load(const YAML::Node & node)
   tol = tolerance_;
 
   //Teuchos::RCP<Teuchos::ParameterList> params = Teuchos::params();
-  params_->set("Solver Name", method_);
   if (method_ == "sstep_gmres") {
     method_ = "TPETRA GMRES S-STEP";
 
@@ -124,6 +123,9 @@ TpetraLinearSolverConfig::load(const YAML::Node & node)
   else {
     throw std::runtime_error("invalid linear solver preconditioner specified ");
   }
+
+  params_->set("Solver Name", method_);
+
 
   get_if_present(node, "write_matrix_files",       writeMatrixFiles_,        writeMatrixFiles_);
   get_if_present(node, "summarize_muelu_timer",    summarizeMueluTimer_,     summarizeMueluTimer_);

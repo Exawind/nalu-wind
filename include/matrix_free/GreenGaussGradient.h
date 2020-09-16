@@ -10,57 +10,36 @@
 #ifndef COMPUTE_GRADIENT_H
 #define COMPUTE_GRADIENT_H
 
+#include "matrix_free/EquationUpdate.h"
+#include "matrix_free/GradientSolutionUpdate.h"
+#include "matrix_free/KokkosViewTypes.h"
+#include "matrix_free/LinSysInfo.h"
 #include "matrix_free/StkToTpetraMap.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/MatrixFreeSolver.h"
-#include "matrix_free/GreenGaussGradientOperator.h"
-#include "matrix_free/FilterJacobi.h"
 
-#include "EquationUpdate.h"
+#include "Kokkos_MemoryTraits.hpp"
+#include "Kokkos_View.hpp"
+#include "Teuchos_RCP.hpp"
+#include "Tpetra_Export_decl.hpp"
+#include "Tpetra_Map_decl.hpp"
 
-#include "Teuchos_ParameterList.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
-#include "stk_mesh/base/NgpField.hpp"
-#include "stk_mesh/base/Types.hpp"
+#include <stk_mesh/base/Ngp.hpp>
+#include <stk_mesh/base/Selector.hpp>
+
+#include <iosfwd>
+
+namespace Teuchos {
+class ParameterList;
+}
+namespace stk {
+namespace mesh {
+class BulkData;
+class MetaData;
+} // namespace mesh
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
-
-// actualy computation
-template <int p>
-class GradientSolutionUpdate
-{
-public:
-  GradientSolutionUpdate(
-    Teuchos::ParameterList params,
-    const StkToTpetraMaps& linsys,
-    const Tpetra::Export<>& exporter,
-    const_elem_offset_view<p> offsets,
-    const_face_offset_view<p> bc_faces);
-
-  void compute_preconditioner(const_scalar_view<p> vols);
-  const Tpetra::MultiVector<double>&
-  compute_residual(GradientResidualFields<p> fields, BCGradientFields<p> bc);
-  const Tpetra::MultiVector<double>&
-  compute_delta(const_scalar_view<p> volumes);
-  double residual_norm() const;
-  double final_linear_norm() const;
-  int num_iterations() const;
-  const MatrixFreeSolver& solver() const { return linear_solver_; }
-
-private:
-  const StkToTpetraMaps& linsys_;
-  const Tpetra::Export<>& exporter_;
-  const const_elem_offset_view<p> offsets_;
-  const const_face_offset_view<p> bc_faces_;
-
-  GradientResidualOperator<p> resid_op_;
-  GradientLinearizedResidualOperator<p> lin_op_;
-  FilterJacobiOperator<p> prec_op_;
-  mutable MatrixFreeSolver linear_solver_;
-  mutable Tpetra::MultiVector<double> owned_and_shared_mv_;
-};
 
 // gradient with shared pre-processing
 template <int p>
@@ -78,17 +57,23 @@ public:
     const_face_offset_view<p> bc_faces);
 
   void gradient(
-    const stk::mesh::NgpField<double>& q, stk::mesh::NgpField<double>& dqdx);
+    const stk::mesh::NgpMesh& mesh,
+    const stk::mesh::Selector& sel,
+    const stk::mesh::NgpField<double>& q,
+    stk::mesh::NgpField<double>& dqdx);
 
-  double residual_norm() const { return update_.residual_norm();}
-  double final_linear_norm() const { return update_.final_linear_norm();}
+  double residual_norm() const { return update_.residual_norm(); }
+  double final_linear_norm() const { return update_.final_linear_norm(); }
   int num_iterations() const { return update_.num_iterations(); }
 
 private:
   mutable GradientSolutionUpdate<p> update_;
   const const_elem_mesh_index_view<p> conn_;
   const const_face_mesh_index_view<p> face_conn_;
-  const Kokkos::View<const stk::mesh::FastMeshIndex*> lide_;
+  const Kokkos::View<
+    const typename Tpetra::Map<>::local_ordinal_type*,
+    Kokkos::MemoryRandomAccess>
+    elid_;
 
   scs_vector_view<p> areas_;
   face_vector_view<p> exposed_areas_;
@@ -108,7 +93,8 @@ public:
     Teuchos::ParameterList,
     stk::mesh::Selector active,
     stk::mesh::Selector sides,
-    stk::mesh::Selector replicas = {});
+    stk::mesh::Selector replicas = {},
+    Kokkos::View<gid_type*> rgids = {});
 
   void gradient(
     const stk::mesh::NgpField<double>& q,
@@ -118,6 +104,9 @@ public:
   void banner(std::string, std::ostream&) const final;
 
 private:
+  const stk::mesh::BulkData& bulk_;
+  const stk::mesh::Selector active_;
+
   const stk::mesh::MetaData& meta_;
   const StkToTpetraMaps linsys_;
   const Tpetra::Export<> exporter_;

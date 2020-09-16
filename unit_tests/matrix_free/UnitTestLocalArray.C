@@ -7,11 +7,11 @@
 // for more details.
 //
 
-#include "Kokkos_Macros.hpp"
-#include "StkSimdComparisons.h"
 #include "matrix_free/LocalArray.h"
-#include "gtest/gtest.h"
-#include "stk_simd/Simd.hpp"
+#include "matrix_free/KokkosFramework.h"
+
+#include "StkSimdComparisons.h"
+#include <gtest/gtest.h>
 
 namespace sierra {
 namespace nalu {

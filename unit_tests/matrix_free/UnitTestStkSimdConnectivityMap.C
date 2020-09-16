@@ -7,35 +7,37 @@
 // for more details.
 //
 
+#include "gtest/gtest.h"
+#include "matrix_free/KokkosFramework.h"
 #include "matrix_free/StkSimdConnectivityMap.h"
-#include "matrix_free/NodeOrderMap.h"
-#include "matrix_free/StkToTpetraMap.h"
+#include "matrix_free/ValidSimdLength.h"
 
-#include <Kokkos_View.hpp>
-#include <numeric>
-#include <stk_io/IossBridge.hpp>
-#include <stk_mesh/base/Bucket.hpp>
-#include <stk_mesh/base/Entity.hpp>
-#include <stk_mesh/base/FieldTraits.hpp>
-#include <stk_mesh/base/Types.hpp>
-#include <stk_mesh/base/Ngp.hpp>
-#include <stk_util/util/ReportHandler.hpp>
-#include <string>
-#include <vector>
+#include "Kokkos_CopyViews.hpp"
+#include "Kokkos_HostSpace.hpp"
+#include "Kokkos_Parallel.hpp"
+#include "Kokkos_View.hpp"
+
+#include "stk_io/IossBridge.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/CoordinateSystems.hpp"
+#include "stk_mesh/base/Entity.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
+#include "stk_mesh/base/FieldTraits.hpp"
 #include "stk_mesh/base/GetEntities.hpp"
 #include "stk_mesh/base/MetaData.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/Selector.hpp"
 #include "stk_mesh/base/SkinBoundary.hpp"
 #include "stk_mesh/base/Types.hpp"
-#include "stk_mesh/base/Ngp.hpp"
 #include "stk_topology/topology.hpp"
+#include "stk_util/util/ReportHandler.hpp"
 
-#include "gtest/gtest.h"
+#include <numeric>
+#include <string>
+#include <vector>
 
 namespace sierra {
 namespace nalu {

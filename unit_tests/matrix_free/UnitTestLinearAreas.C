@@ -7,20 +7,22 @@
 // for more details.
 //
 
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LinearAreas.h"
 #include "matrix_free/LobattoQuadratureRule.h"
+#include "matrix_free/LocalArray.h"
 #include "matrix_free/TensorOperations.h"
-#include "matrix_free/StkSimdComparisons.h"
-#include "matrix_free/TensorOperations.h"
-#include "matrix_free/KokkosFramework.h"
 
+#include "StkSimdComparisons.h"
+#include "gtest/gtest.h"
+
+#include <Kokkos_Array.hpp>
+#include <Kokkos_CopyViews.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Parallel.hpp>
-#include <Kokkos_View.hpp>
 #include <stk_simd/Simd.hpp>
 
-#include "gtest/gtest.h"
-#include "mpi.h"
+#include <math.h>
 
 namespace sierra {
 namespace nalu {
@@ -37,7 +39,7 @@ area_single_cube_hex_p()
     {{+1.1, -2.6, 0}, {-1.2, .7, -0.2}, {10, -std::sqrt(3.), 12}}};
 
   constexpr auto nodes = GLL<poly>::nodes;
-  const int num_elems_1D = 64 / poly;
+  const int num_elems_1D = 32 / poly;
   const int num_elems_3D = num_elems_1D * num_elems_1D * num_elems_1D;
   vector_view<poly> coords("coordinates", num_elems_3D);
 

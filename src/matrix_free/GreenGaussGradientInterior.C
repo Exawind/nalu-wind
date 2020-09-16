@@ -13,7 +13,7 @@
 #include "matrix_free/ElementVolumeIntegral.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ValidSimdLength.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
 #include "Kokkos_ScatterView.hpp"
@@ -37,52 +37,53 @@ gradient_residual_t<p>::invoke(
 {
   stk::mesh::ProfilingBlock pf("gradient_residual");
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
+
+  using range_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>, int>;
+  auto range = range_type({0, 0}, {offsets.extent_int(0), 3});
   Kokkos::parallel_for(
-    offsets.extent_int(0), KOKKOS_LAMBDA(int index) {
-      for (int d = 0; d < 3; ++d) {
-        LocalArray<ftype[p + 1][p + 1][p + 1]> rhs;
-        if (lumped) {
-          for (int k = 0; k < p + 1; ++k) {
-            for (int j = 0; j < p + 1; ++j) {
-              for (int i = 0; i < p + 1; ++i) {
-                constexpr auto Wl = Coeffs<p>::Wl;
-                rhs(k, j, i) = -Wl(k) * Wl(j) * Wl(i) * vols(index, k, j, i) *
-                               dqdx_predicted(index, k, j, i, d);
-              }
-            }
-          }
-        } else {
-          LocalArray<ftype[p + 1][p + 1][p + 1]> scratch;
-          for (int k = 0; k < p + 1; ++k) {
-            for (int j = 0; j < p + 1; ++j) {
-              for (int i = 0; i < p + 1; ++i) {
-                scratch(k, j, i) =
-                  -vols(index, k, j, i) * dqdx_predicted(index, k, j, i, d);
-              }
-            }
-          }
-          edge_integral<p, 0>(scratch, rhs);
-          edge_integral<p, 1>(rhs, scratch);
-          edge_integral<p, 2>(scratch, rhs);
-        }
-
-        {
-          const auto qv =
-            Kokkos::subview(q, index, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
-          scalar_flux_vector<p, 0>(index, d, areas, qv, rhs);
-          scalar_flux_vector<p, 1>(index, d, areas, qv, rhs);
-          scalar_flux_vector<p, 2>(index, d, areas, qv, rhs);
-        }
-
-        const auto valid_length = valid_offset<p>(index, offsets);
-        auto accessor = yout_scatter.access();
+    range, KOKKOS_LAMBDA(int index, int d) {
+      LocalArray<ftype[p + 1][p + 1][p + 1]> rhs;
+      if (lumped) {
         for (int k = 0; k < p + 1; ++k) {
           for (int j = 0; j < p + 1; ++j) {
             for (int i = 0; i < p + 1; ++i) {
-              for (int n = 0; n < valid_length; ++n) {
-                accessor(offsets(index, k, j, i, n), d) +=
-                  stk::simd::get_data(rhs(k, j, i), n);
-              }
+              constexpr auto Wl = Coeffs<p>::Wl;
+              rhs(k, j, i) = -Wl(k) * Wl(j) * Wl(i) * vols(index, k, j, i) *
+                             dqdx_predicted(index, k, j, i, d);
+            }
+          }
+        }
+      } else {
+        LocalArray<ftype[p + 1][p + 1][p + 1]> scratch;
+        for (int k = 0; k < p + 1; ++k) {
+          for (int j = 0; j < p + 1; ++j) {
+            for (int i = 0; i < p + 1; ++i) {
+              scratch(k, j, i) =
+                -vols(index, k, j, i) * dqdx_predicted(index, k, j, i, d);
+            }
+          }
+        }
+        edge_integral<p, 0>(scratch, rhs);
+        edge_integral<p, 1>(rhs, scratch);
+        edge_integral<p, 2>(scratch, rhs);
+      }
+
+      {
+        const auto qv =
+          Kokkos::subview(q, index, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
+        scalar_flux_vector<p, 0>(index, d, areas, qv, rhs);
+        scalar_flux_vector<p, 1>(index, d, areas, qv, rhs);
+        scalar_flux_vector<p, 2>(index, d, areas, qv, rhs);
+      }
+
+      const auto valid_length = valid_offset<p>(index, offsets);
+      auto accessor = yout_scatter.access();
+      for (int k = 0; k < p + 1; ++k) {
+        for (int j = 0; j < p + 1; ++j) {
+          for (int i = 0; i < p + 1; ++i) {
+            for (int n = 0; n < valid_length; ++n) {
+              accessor(offsets(index, k, j, i, n), d) +=
+                stk::simd::get_data(rhs(k, j, i), n);
             }
           }
         }
@@ -109,20 +110,28 @@ filter_linearized_residual_t<p>::invoke(
   bool lumped)
 {
   stk::mesh::ProfilingBlock pf("gradient_linearized_residual");
-
   auto yout_scatter = Kokkos::Experimental::create_scatter_view(yout);
+
   Kokkos::parallel_for(
     offsets.extent_int(0), KOKKOS_LAMBDA(int index) {
+      const auto length = valid_offset<p>(index, offsets);
+      LocalArray<int[p + 1][p + 1][p + 1][simd_len]> idx;
+      for (int k = 0; k < p + 1; ++k) {
+        for (int j = 0; j < p + 1; ++j) {
+          for (int i = 0; i < p + 1; ++i) {
+            for (int n = 0; n < length; ++n) {
+              idx(k, j, i, n) = offsets(index, k, j, i, n);
+            }
+          }
+        }
+      }
+
       for (int d = 0; d < 3; ++d) {
         LocalArray<ftype[p + 1][p + 1][p + 1]> delta;
-        LocalArray<int[p + 1][p + 1][p + 1][simd_len]> idx;
-        const auto length = valid_offset<p>(index, offsets);
-
         for (int k = 0; k < p + 1; ++k) {
           for (int j = 0; j < p + 1; ++j) {
             for (int i = 0; i < p + 1; ++i) {
               for (int n = 0; n < length; ++n) {
-                idx(k, j, i, n) = offsets(index, k, j, i, n);
                 stk::simd::set_data(delta(k, j, i), n, xin(idx(k, j, i, n), d));
               }
             }
@@ -135,13 +144,13 @@ filter_linearized_residual_t<p>::invoke(
             for (int j = 0; j < p + 1; ++j) {
               for (int i = 0; i < p + 1; ++i) {
                 constexpr auto Wl = Coeffs<p>::Wl;
-                rhs(k, j, i) =
-                  -Wl(k) * Wl(j) * Wl(i) * vols(index, k, j, i) * delta(k, j, i);
+                rhs(k, j, i) = -Wl(k) * Wl(j) * Wl(i) * vols(index, k, j, i) *
+                               delta(k, j, i);
               }
             }
           }
         } else {
-          apply_mass<p>(index, vols, delta, rhs);
+          apply_mass<p>(index, 1., vols, delta, rhs);
         }
 
         auto accessor = yout_scatter.access();
@@ -158,7 +167,7 @@ filter_linearized_residual_t<p>::invoke(
       }
     });
   Kokkos::Experimental::contribute(yout, yout_scatter);
-}
+} // namespace impl
 INSTANTIATE_POLYSTRUCT(filter_linearized_residual_t);
 } // namespace impl
 } // namespace matrix_free

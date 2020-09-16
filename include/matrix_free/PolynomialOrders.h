@@ -10,6 +10,8 @@
 #ifndef POLYNOMIAL_ORDER_H
 #define POLYNOMIAL_ORDER_H
 
+// tools for dealing with polynomial order templates
+
 #include <type_traits>
 
 #ifndef NALU_POLYNOMIAL_ORDER1
@@ -49,12 +51,33 @@ enum {
 #define INSTANTIATE_POLYCLASS(ClassName) INSTANTIATE_TYPE(class, ClassName)
 #define INSTANTIATE_POLYSTRUCT(ClassName) INSTANTIATE_TYPE(struct, ClassName)
 
+#define IMPLNAME(func) impl::func##_t
+
 #define P_INVOKEABLE(func)                                                     \
   template <int p, typename... Args>                                           \
   auto func(Args&&... args)                                                    \
-    ->decltype(impl::func##_t<p>::invoke(std::forward<Args>(args)...))         \
+    ->decltype(IMPLNAME(func) < p > ::invoke(std::forward<Args>(args)...))     \
   {                                                                            \
-    return impl::func##_t<p>::invoke(std::forward<Args>(args)...);             \
+    return IMPLNAME(func)<p>::invoke(std::forward<Args>(args)...);             \
+  }
+
+// can't return a value dependent on template parameter
+#define SWITCH_INVOKEABLE(func)                                                \
+  template <typename... Args>                                                  \
+  auto func(int p, Args&&... args)                                             \
+    ->decltype(                                                                \
+      IMPLNAME(func) < inst::P1 > ::invoke(std::forward<Args>(args)...))       \
+  {                                                                            \
+    switch (p) {                                                               \
+    case inst::P2:                                                             \
+      return IMPLNAME(func)<inst::P2>::invoke(std::forward<Args>(args)...);    \
+    case inst::P3:                                                             \
+      return IMPLNAME(func)<inst::P3>::invoke(std::forward<Args>(args)...);    \
+    case inst::P4:                                                             \
+      return IMPLNAME(func)<inst::P4>::invoke(std::forward<Args>(args)...);    \
+    default:                                                                   \
+      return IMPLNAME(func)<inst::P1>::invoke(std::forward<Args>(args)...);    \
+    }                                                                          \
   }
 
 } // namespace matrix_free

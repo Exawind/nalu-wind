@@ -10,13 +10,11 @@
 #include "matrix_free/ConductionOperator.h"
 
 #include "matrix_free/ConductionInterior.h"
-#include "matrix_free/ConductionFields.h"
 #include "matrix_free/ScalarDirichletBC.h"
 #include "matrix_free/ScalarFluxBC.h"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 
-#include "Tpetra_Operator.hpp"
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 namespace sierra {

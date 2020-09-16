@@ -10,26 +10,23 @@
 #include "matrix_free/ConductionJacobiPreconditioner.h"
 
 #include "StkConductionFixture.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/MakeRCP.h"
-#include "matrix_free/StkSimdConnectivityMap.h"
-#include "matrix_free/StkToTpetraMap.h"
 #include "gtest/gtest.h"
-
-#include "Kokkos_Core.hpp"
-#include <Teuchos_RCP.hpp>
-#include <Tpetra_ConfigDefs.hpp>
-#include <Tpetra_Map_decl.hpp>
 
 #include "matrix_free/ConductionFields.h"
+#include "matrix_free/KokkosViewTypes.h"
+#include "matrix_free/StkSimdConnectivityMap.h"
+#include "matrix_free/StkToTpetraLocalIndices.h"
+#include "matrix_free/StkToTpetraMap.h"
 
-#include "gtest/gtest.h"
-#include "stk_mesh/base/BulkData.hpp"
-#include "stk_mesh/base/Field.hpp"
-#include "stk_mesh/base/FieldBase.hpp"
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_topology/topology.hpp"
+#include "Kokkos_View.hpp"
+#include "Teuchos_RCP.hpp"
+#include "Tpetra_Export_decl.hpp"
+#include "Tpetra_Map_decl.hpp"
+#include "Tpetra_MultiVector_decl.hpp"
 
+#include <stddef.h>
+#include <type_traits>
 #include <algorithm>
 
 namespace sierra {

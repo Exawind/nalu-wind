@@ -25,6 +25,7 @@
 #include <EnthalpyEquationSystem.h>
 #include <HeatCondEquationSystem.h>
 #include <MatrixFreeHeatCondEquationSystem.h>
+#include <MatrixFreeLowMachEquationSystem.h>
 #include <LowMachEquationSystem.h>
 #include <MixtureFractionEquationSystem.h>
 #include <ShearStressTransportEquationSystem.h>
@@ -114,7 +115,12 @@ void EquationSystems::load(const YAML::Node & y_node)
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = LowMachEOM " << std::endl;
           bool elemCont = (realm_.realmUsesEdges_) ? false : true;
           get_if_present_no_default(y_eqsys, "element_continuity_eqs", elemCont);
-          eqSys = new LowMachEquationSystem(*this, elemCont);
+
+          if (realm_.matrix_free()) {
+            eqSys = new MatrixFreeLowMachEquationSystem(*this);
+          } else {
+            eqSys = new LowMachEquationSystem(*this, elemCont);
+          }          
         }
         else if( expect_map(y_system, "ShearStressTransport", true) ) {
 	  y_eqsys =  expect_map(y_system, "ShearStressTransport", true);

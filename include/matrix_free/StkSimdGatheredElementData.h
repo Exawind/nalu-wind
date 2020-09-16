@@ -10,16 +10,12 @@
 #ifndef STK_SIMD_GATHERED_ELEMENT_DATA_H
 #define STK_SIMD_GATHERED_ELEMENT_DATA_H
 
-#include <memory>
-#include <stk_mesh/base/Field.hpp>
-
-#include "Kokkos_Core.hpp"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/StkSimdConnectivityMap.h"
-#include "matrix_free/KokkosFramework.h"
-#include "stk_mesh/base/CoordinateSystems.hpp"
+
 #include "stk_mesh/base/Types.hpp"
-#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpMesh.hpp"
+#include "stk_mesh/base/NgpField.hpp"
 
 namespace stk {
 namespace mesh {

@@ -9,23 +9,35 @@
 
 #include "matrix_free/ConductionGatheredFieldManager.h"
 
-#include <stk_mesh/base/Types.hpp>
-
 #include "matrix_free/ConductionFields.h"
-#include "matrix_free/PolynomialOrders.h"
+#include "matrix_free/ConductionInfo.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LinearExposedAreas.h"
+#include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/StkSimdFaceConnectivityMap.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
 #include "matrix_free/StkSimdNodeConnectivityMap.h"
-#include "matrix_free/KokkosFramework.h"
-#include "stk_mesh/base/MetaData.hpp"
 
+#include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
+
+stk::mesh::NgpField<double>
+get_ngp_field(
+  const stk::mesh::MetaData& meta,
+  std::string name,
+  stk::mesh::FieldState state = stk::mesh::StateNP1)
+{
+  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
+  ThrowAssert(
+    meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+  return stk::mesh::get_updated_ngp_field<double>(
+    *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+}
 
 template <int p>
 ConductionGatheredFieldManager<p>::ConductionGatheredFieldManager(
@@ -57,13 +69,13 @@ ConductionGatheredFieldManager<p>::gather_all()
     bc_fields.qp1 =
       node_scalar_view("qp1_at_bc", dirichlet_nodes.extent_int(0));
     stk_simd_scalar_node_gather(
-      dirichlet_nodes, get_ngp_field<double>(meta, conduction_info::q_name),
+      dirichlet_nodes, get_ngp_field(meta, conduction_info::q_name),
       bc_fields.qp1);
 
     bc_fields.qbc =
       node_scalar_view("qspecified_at_bc", dirichlet_nodes.extent_int(0));
     stk_simd_scalar_node_gather(
-      dirichlet_nodes, get_ngp_field<double>(meta, conduction_info::qbc_name),
+      dirichlet_nodes, get_ngp_field(meta, conduction_info::qbc_name),
       bc_fields.qbc);
   }
 
@@ -72,13 +84,13 @@ ConductionGatheredFieldManager<p>::gather_all()
       auto face_coords =
         face_vector_view<p>("face_coords", flux_faces.extent_int(0));
       stk_simd_face_vector_field_gather<p>(
-        flux_faces, get_ngp_field<double>(meta, conduction_info::coord_name),
+        flux_faces, get_ngp_field(meta, conduction_info::coord_name),
         face_coords);
       flux_fields.exposed_areas = geom::exposed_areas<p>(face_coords);
     }
     flux_fields.flux = face_scalar_view<p>("flux", flux_faces.extent_int(0));
     stk_simd_face_scalar_field_gather<p>(
-      flux_faces, get_ngp_field<double>(meta, conduction_info::flux_name),
+      flux_faces, get_ngp_field(meta, conduction_info::flux_name),
       flux_fields.flux);
   }
 }
@@ -90,11 +102,11 @@ ConductionGatheredFieldManager<p>::update_solution_fields()
   stk::mesh::ProfilingBlock pf(
     "ConductionGatheredFieldManager<p>::update_solution_fields");
   stk_simd_scalar_field_gather<p>(
-    conn, get_ngp_field<double>(meta, conduction_info::q_name), fields.qp1);
+    conn, get_ngp_field(meta, conduction_info::q_name), fields.qp1);
 
   if (dirichlet_nodes.extent_int(0) > 0) {
     stk_simd_scalar_node_gather(
-      dirichlet_nodes, get_ngp_field<double>(meta, conduction_info::q_name),
+      dirichlet_nodes, get_ngp_field(meta, conduction_info::q_name),
       bc_fields.qp1);
   }
 }

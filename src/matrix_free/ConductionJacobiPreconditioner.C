@@ -9,34 +9,26 @@
 
 #include "matrix_free/ConductionJacobiPreconditioner.h"
 
+#include "matrix_free/ConductionDiagonal.h"
+#include "matrix_free/KokkosViewTypes.h"
+#include "matrix_free/PolynomialOrders.h"
+
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Parallel.hpp>
+
 #include <Teuchos_RCP.hpp>
-#include <stk_simd/Simd.hpp>
-
-#include "Tpetra_Details_residual.hpp"
+#include <Tpetra_CombineMode.hpp>
 #include "Tpetra_Operator.hpp"
-#include "matrix_free/ConductionFields.h"
-#include "matrix_free/ConductionDiagonal.h"
-#include "matrix_free/ConductionOperator.h"
-#include "matrix_free/Coefficients.h"
-#include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
-
-#include "stk_mesh/base/NgpProfilingBlock.hpp"
-
-#include <limits>
+#include <type_traits>
 
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
 namespace {
 
-using tpetra_view_type =
-  typename Tpetra::MultiVector<double, int long>::dual_view_type::t_dev;
+using tpetra_view_type = typename Tpetra::MultiVector<>::dual_view_type::t_dev;
 using const_tpetra_view_type =
-  typename Tpetra::MultiVector<double, int long>::dual_view_type::t_dev_const;
+  typename Tpetra::MultiVector<>::dual_view_type::t_dev_const;
 
 void
 reciprocal(tpetra_view_type x)

@@ -4,23 +4,37 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionFields.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionGatheredFieldManager.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionInterior.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityInterior.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionJacobiPreconditioner.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionOperator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityOperator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionSolutionUpdate.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuitySolutionUpdate.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConductionUpdate.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/MaxCourantReynolds.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FilterDiagonal.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FilterJacobi.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GaussLegendreQuadratureRule.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/GradientSolutionUpdate.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GreenGaussBoundaryClosure.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GreenGaussGradient.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GreenGaussGradientInterior.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GreenGaussGradientOperator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/LinearAdvectionMetric.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearAreas.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearExposedAreas.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearDiffusionMetric.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearVolume.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LobattoQuadratureRule.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/LowMachFields.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/LowMachGatheredFieldManager.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/LowMachUpdate.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeSolver.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumDiagonal.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumJacobi.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumInterior.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumOperator.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSolutionUpdate.C
    ${CMAKE_CURRENT_SOURCE_DIR}/NodeOrderMap.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarDirichletBC.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxBC.C
@@ -31,4 +45,5 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/StkToTpetraComm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/StkToTpetraLocalIndices.C
    ${CMAKE_CURRENT_SOURCE_DIR}/StkToTpetraMap.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/SparsifiedEdgeLaplacian.C
 )
