@@ -130,8 +130,10 @@ TEST_F(
        bulk.get_buckets(stk::topology::NODE_RANK, interior_selector)) {
     for (auto node : *ib) {
       auto lid = elid(node.local_offset());
-      for (int d = 0; d < 3; ++d) {
-        ASSERT_NEAR(view_h(lid, d), 0, 1.0e-14);
+      if (lid < view_h.extent_int(0)) {
+        for (int d = 0; d < 3; ++d) {
+          ASSERT_NEAR(view_h(lid, d), 0, 1.0e-14);
+        }
       }
     }
   }
@@ -150,9 +152,11 @@ TEST_F(
       const auto z = stk::mesh::field_data(coordinate_field(), node)[2];
 
       const auto lid = elid(node.local_offset());
-      host_lhs(lid, 0) = y * z;
-      host_lhs(lid, 1) = x * z;
-      host_lhs(lid, 2) = x * y;
+      if (lid < host_lhs.extent_int(0)) {
+        host_lhs(lid, 0) = y * z;
+        host_lhs(lid, 1) = x * z;
+        host_lhs(lid, 2) = x * y;
+      }
     }
   }
   lhs.modify_host();
@@ -173,9 +177,6 @@ TEST_F(
   Teuchos::Array<double> mv_norm(3);
   rhs.norm2(mv_norm());
   ASSERT_GT(mv_norm[0], 1.e-2);
-
-  rhs.sync_host();
-  auto host_rhs = rhs.getLocalViewHost();
 }
 
 } // namespace matrix_free
