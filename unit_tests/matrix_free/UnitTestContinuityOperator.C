@@ -58,29 +58,29 @@ protected:
 
   ContinuityOperatorFixture()
     : LowMachFixture(nx, scale),
-      owned_map(make_owned_row_map(mesh(), meta.universal_part())),
-      owned_and_shared_map(make_owned_and_shared_row_map(
-        mesh(), meta.universal_part(), gid_field_ngp)),
+      owned_map(make_owned_row_map(mesh(), active())),
+      owned_and_shared_map(
+        make_owned_and_shared_row_map(mesh(), active(), gid_field_ngp)),
       exporter(
         Teuchos::rcpFromRef(owned_and_shared_map),
         Teuchos::rcpFromRef(owned_map)),
       lhs(Teuchos::rcpFromRef(owned_map), 1),
       rhs(Teuchos::rcpFromRef(owned_map), 1),
       elid(make_stk_lid_to_tpetra_lid_map(
-        mesh(),
-        meta.universal_part(),
-        gid_field_ngp,
-        owned_and_shared_map.getLocalMap())),
-      conn(stk_connectivity_map<order>(mesh(), meta.universal_part())),
-      offsets(create_offset_map<order>(mesh(), meta.universal_part(), elid))
+        mesh(), active(), gid_field_ngp, owned_and_shared_map.getLocalMap())),
+      conn(stk_connectivity_map<order>(mesh(), active())),
+      offsets(create_offset_map<order>(mesh(), active(), elid))
   {
     lhs.putScalar(0.);
     rhs.putScalar(0.);
   }
 
-  const_scs_scalar_view<order> compute_mdot()
+  const_scs_scalar_view<order> compute_mdot(double tau)
   {
     auto fields = gather_required_lowmach_fields<order>(meta, conn);
+    geom::linear_advection_metric<order>(
+      tau, fields.area_metric, fields.laplacian_metric, fields.rho, fields.up1,
+      fields.gp, fields.pressure, fields.advection_metric);
     return fields.advection_metric;
   }
 
@@ -121,16 +121,16 @@ TEST_F(
     }
   }
 
-  const auto mdot = compute_mdot();
+  const double tau = 1;
+  const auto mdot = compute_mdot(tau);
   ContinuityResidualOperator<order> resid_op(offsets, exporter);
-  resid_op.set_fields(1., mdot);
+  resid_op.set_fields(tau, mdot);
   resid_op.compute(rhs);
 
   rhs.sync_host();
   auto view_h = rhs.getLocalViewHost();
 
   //  side should be #(faces connectded to node) * (scale/nx)^2
-
   const auto interior_selector =
     stk::mesh::Selector(meta.universal_part()) - stk::mesh::Selector(side());
   for (const auto* ib :
@@ -145,32 +145,36 @@ TEST_F(
   ContinuityOperatorFixture,
   linearized_residual_operator_zero_for_linear_function)
 {
-  auto host_view = lhs.getLocalViewHost();
+  auto host_lhs = lhs.getLocalViewHost();
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
     for (auto node : *ib) {
       const auto x = *stk::mesh::field_data(coordinate_field(), node);
-      host_view(elid(node.local_offset()), 0) = x;
+      const int lid = elid(node.local_offset());
+      if (lid < host_lhs.extent_int(0)) {
+        host_lhs(lid, 0) = x;
+      }
     }
   }
+  lhs.modify_host();
+  lhs.sync_device();
 
   const auto metric = compute_metric();
   ContinuityLinearizedResidualOperator<order> resid_op(offsets, exporter);
   resid_op.set_metric(metric);
   resid_op.apply(lhs, rhs);
 
-  Teuchos::Array<double> mv_norm(1);
-  rhs.norm2(mv_norm());
-
   rhs.sync_host();
   auto view_h = rhs.getLocalViewHost();
 
-  const auto interior_selector =
-    stk::mesh::Selector(meta.universal_part()) - stk::mesh::Selector(side());
+  const auto interior_selector = active() - side();
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, interior_selector)) {
     for (auto node : *ib) {
-      ASSERT_NEAR(view_h(elid(node.local_offset()), 0), 0, 1.0e-14);
+      const int lid = elid(node.local_offset());
+      if (lid < view_h.extent_int(0)) {
+        ASSERT_NEAR(view_h(lid, 0), 0, 1.0e-14);
+      }
     }
   }
 }
@@ -184,7 +188,10 @@ TEST_F(
        bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
     for (auto node : *ib) {
       const auto x = *stk::mesh::field_data(coordinate_field(), node);
-      host_lhs(elid(node.local_offset()), 0) = x * x;
+      const int lid = elid(node.local_offset());
+      if (lid < host_lhs.extent_int(0)) {
+        host_lhs(elid(node.local_offset()), 0) = x * x;
+      }
     }
   }
   lhs.modify_host();
@@ -200,12 +207,14 @@ TEST_F(
 
   //  side should be #(faces connectded to node) * (scale/nx)^2
   double max_val = -1;
-  const auto interior_selector = stk::mesh::Selector(meta.universal_part());
+  const auto interior_selector = active() - side();
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, interior_selector)) {
     for (auto node : *ib) {
-      max_val = stk::math::max(
-        stk::math::abs(view_h(elid(node.local_offset()), 0)), max_val);
+      const int lid = elid(node.local_offset());
+      if (lid < view_h.extent_int(0)) {
+        max_val = stk::math::max(stk::math::abs(view_h(lid, 0)), max_val);
+      }
     }
   }
   ASSERT_GT(max_val, 1.0e-2 * scale * scale / (nx * nx));
