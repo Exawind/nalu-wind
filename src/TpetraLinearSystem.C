@@ -1867,8 +1867,6 @@ void TpetraLinearSystem::copy_tpetra_to_stk(
   using Traits    = nalu_ngp::NGPMeshTraits<>;
   using MeshIndex = typename Traits::MeshIndex;
 
-  const stk::mesh::MetaData & metaData = realm_.meta_data();
-
   ThrowAssert(!tpetraField.is_null());
   ThrowAssert(stkField);
   const auto ownedDeviceVector = tpetraField->getLocalView<sierra::nalu::DeviceSpace>();

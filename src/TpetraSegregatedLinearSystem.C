@@ -23,6 +23,8 @@
 #include <master_element/MasterElementFactory.h>
 #include <EquationSystem.h>
 #include <NaluEnv.h>
+#include <ngp_utils/NgpLoopUtils.h>
+#include <ngp_utils/NgpFieldManager.h>
 #include <utils/StkHelpers.h>
 #include <utils/CreateDeviceExpression.h>
 
@@ -43,6 +45,7 @@
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/Selector.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
+#include <stk_mesh/base/GetNgpField.hpp>
 #include <stk_mesh/base/Part.hpp>
 #include <stk_topology/topology.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
@@ -910,6 +913,7 @@ void TpetraSegregatedLinearSystem::finalizeLinearSystem()
   sharedNotOwnedLocalRhs_ = sharedNotOwnedRhs_->getLocalView<sierra::nalu::DeviceSpace>();
 
   sln_ = Teuchos::rcp(new LinSys::MultiVector(ownedRowsMap_, numDof_));
+  sharedNotOwnedSln_ = Teuchos::rcp(new LinSys::MultiVector(sharedNotOwnedRowsMap_, numDof_));
 
   const int nDim = metaData.spatial_dimension();
 
@@ -1423,7 +1427,6 @@ int TpetraSegregatedLinearSystem::solve(stk::mesh::FieldBase * linearSolutionFie
   }
 
   copy_tpetra_to_stk(sln_, linearSolutionField);
-  sync_field(linearSolutionField);
 
   // computeL2 norm
   Teuchos::Array<double> mv_norm(ownedRhs_->getNumVectors());
@@ -1728,60 +1731,46 @@ void TpetraSegregatedLinearSystem::writeSolutionToFile(const char * base_filenam
 void TpetraSegregatedLinearSystem::copy_tpetra_to_stk(const Teuchos::RCP<LinSys::MultiVector> tpetraField,
                                                       stk::mesh::FieldBase * stkField)
 {
-  stk::mesh::BulkData & bulkData = realm_.bulk_data();
-  stk::mesh::MetaData & metaData = realm_.meta_data();
+  using Traits    = nalu_ngp::NGPMeshTraits<>;
+  using MeshIndex = typename Traits::MeshIndex;
 
   ThrowAssert(!tpetraField.is_null());
   ThrowAssert(stkField);
-  const LinSys::ConstOneDVector & tpetraVector = tpetraField->get1dView();
-  const size_t numNodes = tpetraField->getLocalLength();
+  const auto ownedDeviceVector = tpetraField->getLocalViewDevice();
 
-  const unsigned p_rank = bulkData.parallel_rank();
+  const int maxOwnedRowId = maxOwnedRowId_;
+  const unsigned numDof = numDof_;
+  ThrowRequire(numDof == tpetraField->getNumVectors());
+  auto entityToLID = entityToLID_;
 
   const stk::mesh::Selector selector = stk::mesh::selectField(*stkField)
-    & metaData.locally_owned_part()
-    & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
     & !(realm_.get_inactive_selector());
 
-  stk::mesh::BucketVector const& buckets =
-    realm_.get_buckets(stk::topology::NODE_RANK, selector);
+  ThrowRequire(stkField->type_is<double>());
+  NGPDoubleFieldType ngpField = stk::mesh::get_updated_ngp_field<double>(*stkField);
 
-  for (size_t ib=0; ib < buckets.size(); ++ib) {
-    stk::mesh::Bucket & b = *buckets[ib];
+  stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
 
-    const unsigned fieldSize = field_bytes_per_entity(*stkField, b) / sizeof(double);
-    ThrowRequire(fieldSize == numDof_);
+  sharedNotOwnedSln_->doImport(*sln_, *exporter_, Tpetra::INSERT);
+  auto sharedDeviceVector = sharedNotOwnedSln_->getLocalViewDevice();
 
-    const stk::mesh::Bucket::size_type length = b.size();
-    double * stkFieldPtr = (double*)stk::mesh::field_data(*stkField, *b.begin());
-    const stk::mesh::EntityId *naluGlobalId = stk::mesh::field_data(*realm_.naluGlobalId_, *b.begin());
-    for (stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      stk::mesh::Entity node = b[k];
-      const LocalOrdinal localIdOffset = entityToLID_[node.local_offset()];
-      for(unsigned dofIdx = 0; dofIdx < fieldSize; ++dofIdx) {
-        const LocalOrdinal localId = localIdOffset;
-        bool useOwned = true;
-        LocalOrdinal actualLocalId = localId;
-        if(localId >= maxOwnedRowId_) {
-          actualLocalId = localId - maxOwnedRowId_;
-          useOwned = false;
-        }
-
-        if (!useOwned) {
-          stk::mesh::EntityId naluId = naluGlobalId[k];
-          stk::mesh::EntityId stkId = bulkData.identifier(node);
-          std::cout << "P[" << p_rank << "] useOwned = " << useOwned << " localId = " << localId << " maxOwnedRowId_= " << maxOwnedRowId_ << " actualLocalId= " << actualLocalId
-                    << " naluGlobalId= " << naluGlobalId[k] << " stkId= " << stkId << " naluId= " << naluId << std::endl;
-        }
-        ThrowRequire(useOwned);
-
-        const size_t stkIndex = k*numDof_ + dofIdx;
-        if (useOwned){
-          stkFieldPtr[stkIndex] = tpetraVector[localId + dofIdx*numNodes];
-        }
-      }
+  nalu_ngp::run_entity_algorithm(
+    "TpetraLinSys::copy_tpetra_to_stk",
+    ngpMesh, stk::topology::NODE_RANK, selector,
+  KOKKOS_LAMBDA(const MeshIndex& meshIdx)
+  {
+    stk::mesh::Entity node = (*meshIdx.bucket)[meshIdx.bucketOrd];
+    const LocalOrdinal localId = entityToLID[node.local_offset()];
+    for(unsigned d=0; d < numDof; ++d) {
+      if (localId < maxOwnedRowId) {
+        ngpField.get(meshIdx, d) = ownedDeviceVector(localId, d);
+      } else {
+        const int actualLocalId = localId - maxOwnedRowId;
+        ngpField.get(meshIdx, d) = sharedDeviceVector(actualLocalId, d);
+      }  
     }
-  }
+  });
+  ngpField.modify_on_device();
 }
 
 } // namespace nalu

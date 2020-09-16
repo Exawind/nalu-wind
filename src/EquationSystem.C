@@ -314,7 +314,10 @@ EquationSystem::assemble_and_solve(
 
   if ( realm_.hasPeriodic_) {
     timeA = NaluEnv::self().nalu_time();
-    realm_.periodic_delta_solution_update(deltaSolution, linsys_->numDof(), false);
+    realm_.periodic_delta_solution_update(
+      deltaSolution, linsys_->numDof(),
+      linsys_->needs_communication_of_delta_on_periodic_nodes());
+    
     // update aura if applicable
     if (realm_.get_activate_aura()) {
       auto ngp_field = stk::mesh::get_updated_ngp_field<double>(*deltaSolution);

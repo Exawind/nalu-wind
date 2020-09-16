@@ -113,7 +113,10 @@ public:
   virtual void buildDirichletNodeGraph(const stk::mesh::NgpMesh::ConnectedNodes) {}
 
   // Matrix Assembly
-  virtual void zeroSystem()=0;
+  virtual void zeroSystem() = 0;
+
+  virtual bool needs_communication_of_delta_on_periodic_nodes() const  { return false; };
+
 
 
   virtual CoeffApplier* get_coeff_applier()

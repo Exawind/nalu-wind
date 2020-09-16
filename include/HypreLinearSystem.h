@@ -233,6 +233,9 @@ public:
   virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&);
   virtual void buildDirichletNodeGraph(const stk::mesh::NgpMesh::ConnectedNodes);
 
+  virtual bool needs_communication_of_delta_on_periodic_nodes() const { return true; }
+
+
   sierra::nalu::CoeffApplier* get_coeff_applier();
 
   /***************************************************************************************************/

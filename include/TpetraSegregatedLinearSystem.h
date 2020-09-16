@@ -256,7 +256,8 @@ private:
   Teuchos::RCP<LinSys::Map>    ownedRowsMap_;
 
   // Only nodes that share with other procs that I don't own
-  Teuchos::RCP<LinSys::Map>    sharedNotOwnedRowsMap_;
+  Teuchos::RCP<LinSys::Map> sharedNotOwnedRowsMap_;
+  Teuchos::RCP<LinSys::MultiVector> sharedNotOwnedSln_;
 
   Teuchos::RCP<LinSys::Graph>  ownedGraph_;
   Teuchos::RCP<LinSys::Graph>  sharedNotOwnedGraph_;
