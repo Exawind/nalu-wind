@@ -2913,13 +2913,14 @@ Realm::periodic_field_max(
 void
 Realm::periodic_delta_solution_update(
   stk::mesh::FieldBase *theField,
-  const unsigned &sizeOfField) const
+  const unsigned &sizeOfField,
+  const bool &doCommunication) const
 {
   const bool bypassFieldCheck = true;
   const bool addSlaves = false;
   const bool setSlaves = true;
   periodicManager_->ngp_apply_constraints(
-    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
+    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves, doCommunication);
 }
 
 //--------------------------------------------------------------------------

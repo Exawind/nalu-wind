@@ -74,7 +74,8 @@ class PeriodicManager {
     const unsigned &sizeOfField,
     const bool &bypassFieldCheck,
     const bool &addSlaves = true,
-    const bool &setSlaves = true) const;
+    const bool &setSlaves = true,
+    const bool &doCommunication = true) const;
 
   // find the max
   void apply_max_field(
@@ -160,12 +161,14 @@ class PeriodicManager {
   void ngp_add_slave_to_master(
     stk::mesh::FieldBase *theField,
     const unsigned &sizeOfField,
-    const bool &bypassFieldCheck) const;
+    const bool &bypassFieldCheck,
+    const bool &doCommunication) const;
 
   void ngp_set_slave_to_master(
     stk::mesh::FieldBase *theField,
     const unsigned &sizeOfField,
-    const bool &bypassFieldCheck) const;
+    const bool &bypassFieldCheck,
+    const bool &doCommunication) const;
 
  private:
 
