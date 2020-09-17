@@ -7,34 +7,48 @@
 // for more details.
 //
 
+#include "matrix_free/GradientSolutionUpdate.h"
 #include "matrix_free/GreenGaussGradient.h"
-
+#include "matrix_free/GreenGaussGradientOperator.h"
+#include "matrix_free/LinearAreas.h"
+#include "matrix_free/LinearVolume.h"
+#include "matrix_free/StkGradientFixture.h"
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/StkSimdFaceConnectivityMap.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
-#include "matrix_free/StkSimdNodeConnectivityMap.h"
+#include "matrix_free/StkToTpetraMap.h"
 
-#include "matrix_free/LinearVolume.h"
-#include "matrix_free/LinearAreas.h"
-
-#include "matrix_free/StkGradientFixture.h"
-
+#include "gtest/gtest.h"
+#include "Kokkos_View.hpp"
+#include "Teuchos_Array.hpp"
+#include "Teuchos_ArrayView.hpp"
+#include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_Export.hpp"
-#include "Tpetra_Export.hpp"
-#include "Tpetra_Map.hpp"
-#include "Tpetra_MultiVector.hpp"
-#include "Tpetra_Operator.hpp"
+
+#include "Tpetra_Export_decl.hpp"
+#include "Tpetra_MultiVector_decl.hpp"
+
+#include "stk_io/DatabasePurpose.hpp"
+#include "stk_io/StkMeshIoBroker.hpp"
+#include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/Bucket.hpp"
+#include "stk_mesh/base/Field.hpp"
+#include "stk_mesh/base/FieldBase.hpp"
+#include "stk_mesh/base/FieldTraits.hpp"
+#include "stk_mesh/base/GetNgpField.hpp"
 
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_mesh/base/NgpFieldParallel.hpp"
-#include "stk_mesh/base/GetNgpField.hpp"
-#include <stk_util/parallel/ParallelReduce.hpp>
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/Selector.hpp"
+#include "stk_mesh/base/Types.hpp"
+#include "stk_topology/topology.hpp"
+#include "stk_util/parallel/ParallelReduce.hpp"
 
-#include <Teuchos_RCP.hpp>
-#include <gtest/gtest.h>
-#include <memory>
+#include <iosfwd>
 #include <random>
+#include <math.h>
+#include <type_traits>
+#include <vector>
 
 namespace sierra {
 namespace nalu {
@@ -235,7 +249,7 @@ TEST_F(ComputeGradientFixture, correct_behavior_for_linear_field)
   }
   auto& q = stk::mesh::get_updated_ngp_field<double>(q_field);
   auto& gq = stk::mesh::get_updated_ngp_field<double>(dqdx_field);
-  grad.gradient(q, gq);
+  grad.gradient(mesh(), active(), q, gq);
   gq.sync_to_host();
   for (auto ib : bulk.get_buckets(stk::topology::NODE_RANK, active())) {
     for (auto node : *ib) {

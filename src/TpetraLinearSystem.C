@@ -28,6 +28,8 @@
 #include <ngp_utils/NgpLoopUtils.h>
 #include <ngp_utils/NgpFieldManager.h>
 
+#include <matrix_free/NodeOrderMap.h>
+
 #include <KokkosInterface.h>
 
 // overset
@@ -326,6 +328,17 @@ void TpetraLinearSystem::beginLinearSystemConstruction()
 
   exporter_ = Teuchos::rcp(new LinSys::Export(sharedNotOwnedRowsMap_, ownedRowsMap_));
 
+  if (realm_.matrix_free()) {
+    // assume owned and shared-not-owned are disjoint
+    std::vector<GlobalOrdinal> ownedAndSharedGids = ownedGids;
+    ownedAndSharedGids.insert(
+      ownedAndSharedGids.end(), sharedNotOwnedGids.begin(),
+      sharedNotOwnedGids.end());
+    ownedAndSharedRowsMap_ = Teuchos::rcp(new LinSys::Map(
+      Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid(),
+      ownedAndSharedGids, 1, tpetraComm));
+  }
+  
   fill_entity_to_row_LID_mapping();
   ownedAndSharedNodes_.reserve(owned_nodes.size()+shared_not_owned_nodes.size());
   ownedAndSharedNodes_ = owned_nodes;
@@ -473,6 +486,72 @@ void TpetraLinearSystem::buildReducedElemToNodeGraph(const stk::mesh::PartVector
           entities[n] = elem_nodes[lrscv[2*j+n]];
         }
         addConnections(entities.data(), entities.size());
+      }
+    }
+  }
+}
+
+
+void
+TpetraLinearSystem::buildSparsifiedEdgeElemToNodeGraph(const stk::mesh::Selector& sel)
+{
+  beginLinearSystemConstruction();
+  stk::mesh::MetaData & metaData = realm_.meta_data();
+
+  const stk::mesh::Selector s_owned = metaData.locally_owned_part()
+                                      & sel
+                                      & !(realm_.get_inactive_selector());
+
+  constexpr int edge_conn[12][2][3] = {
+    // bottom face
+    {{0, 0, 0}, {0, 0, 1}},
+    {{0, 0, 1}, {0, 1, 1}},
+    {{0, 1, 1}, {0, 1, 0}},
+    {{0, 1, 0}, {0, 0, 0}},
+
+    // top face
+    {{1, 0, 0}, {1, 0, 1}},
+    {{1, 0, 1}, {1, 1, 1}},
+    {{1, 1, 1}, {1, 1, 0}},
+    {{1, 1, 0}, {1, 0, 0}},
+
+    // edges from bottom to top
+    {{0, 0, 0}, {1, 0, 0}},
+    {{0, 0, 1}, {1, 0, 1}},
+    {{0, 1, 1}, {1, 1, 1}},
+    {{0, 1, 0}, {1, 1, 0}},
+  };
+
+  const int poly = realm_.polynomial_order();
+    stk::mesh::BucketVector const& buckets = realm_.get_buckets( stk::topology::ELEMENT_RANK, s_owned);
+  std::array<stk::mesh::Entity, 2> entities;
+  for (const auto* ib : buckets) {
+    const auto& b = *ib;
+    if (poly == 1) {
+      ThrowRequire(b.topology() == stk::topology::HEX_8);
+    } else if (poly == 2) {
+      ThrowRequire(b.topology() == stk::topology::HEX_27);
+    } else {
+      ThrowRequire(b.topology().is_superelement());
+    }
+    for (size_t k = 0u; k < b.size(); ++k ) {
+      stk::mesh::Entity const * elem_nodes = b.begin_nodes(k);
+      for (int n = 0; n < poly; ++n) {
+        for (int m = 0; m < poly; ++m) {
+          for (int l = 0; l < poly; ++l) {
+
+            for (int iedge = 0; iedge < 12; ++iedge) {
+              for (int lr = 0; lr < 2; ++lr) {
+                const auto sub_n_index = n + edge_conn[iedge][lr][0];
+                const auto sub_m_index = m + edge_conn[iedge][lr][1];
+                const auto sub_l_index = l + edge_conn[iedge][lr][2];
+                entities[lr] = elem_nodes[matrix_free::node_map(
+                  poly, sub_n_index, sub_m_index, sub_l_index)];
+              }
+              addConnections(entities.data(), 2u);
+            }
+          }
+        }
       }
     }
   }

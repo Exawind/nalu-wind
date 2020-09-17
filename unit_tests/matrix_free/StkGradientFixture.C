@@ -58,8 +58,8 @@ GradientFixture::GradientFixture(int nx, double scale)
   stk::mesh::put_field_on_mesh(dqdx_field, meta.universal_part(), 3, nullptr);
   stk::mesh::put_field_on_mesh(
     dqdx_tmp_field, meta.universal_part(), 3, nullptr);
- stk::mesh::put_field_on_mesh(dqdx_exact_field, meta.universal_part(), 3, nullptr);
-
+  stk::mesh::put_field_on_mesh(
+    dqdx_exact_field, meta.universal_part(), 3, nullptr);
 
   const std::string nx_s = std::to_string(nx);
   const std::string name =
@@ -75,9 +75,9 @@ GradientFixture::GradientFixture(int nx, double scale)
        bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
     for (auto node : *ib) {
       auto* coordptr = stk::mesh::field_data(coord_field, node);
-      const double x  = coordptr[0];
-      const double y  = coordptr[1];
-      const double z  = coordptr[2];
+      const double x = coordptr[0];
+      const double y = coordptr[1];
+      const double z = coordptr[2];
       coordptr[0] = scale * (x / nx - 0.5);
       coordptr[1] = scale * (y / nx - 0.5);
       coordptr[2] = scale * (z / nx - 0.5);

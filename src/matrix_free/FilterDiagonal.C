@@ -12,11 +12,12 @@
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ValidSimdLength.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 #include "matrix_free/LinSysInfo.h"
 
-#include <Kokkos_ScatterView.hpp>
+#include "Kokkos_ScatterView.hpp"
+
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 
 namespace sierra {
@@ -30,7 +31,8 @@ void
 filter_diagonal_t<p>::invoke(
   const_elem_offset_view<p> offsets,
   const_scalar_view<p> vols,
-  tpetra_view_type yout)
+  tpetra_view_type yout,
+  bool lumped)
 {
   stk::mesh::ProfilingBlock pf("filter_diagonal");
 
@@ -38,7 +40,7 @@ filter_diagonal_t<p>::invoke(
   Kokkos::parallel_for(
     offsets.extent_int(0), KOKKOS_LAMBDA(int index) {
       LocalArray<ftype[p + 1][p + 1][p + 1]> lhs;
-      {
+      if (lumped) {
         for (int k = 0; k < p + 1; ++k) {
           static constexpr auto Wl = Coeffs<p>::Wl;
           const auto Wk = Wl(k);
@@ -46,6 +48,17 @@ filter_diagonal_t<p>::invoke(
             const auto WjWk = Wl(j) * Wk;
             for (int i = 0; i < p + 1; ++i) {
               lhs(k, j, i) = Wl(i) * WjWk * vols(index, k, j, i);
+            }
+          }
+        }
+      } else {
+        for (int k = 0; k < p + 1; ++k) {
+          static constexpr auto W = Coeffs<p>::W;
+          const auto Wk = W(k, k);
+          for (int j = 0; j < p + 1; ++j) {
+            const auto WjWk = W(j, j) * Wk;
+            for (int i = 0; i < p + 1; ++i) {
+              lhs(k, j, i) = W(i, i) * WjWk * vols(index, k, j, i);
             }
           }
         }

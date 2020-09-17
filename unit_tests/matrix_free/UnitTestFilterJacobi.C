@@ -8,44 +8,29 @@
 //
 
 #include "matrix_free/FilterJacobi.h"
-#include "matrix_free/StkSimdConnectivityMap.h"
-#include "matrix_free/StkToTpetraMap.h"
-#include "matrix_free/StkSimdGatheredElementData.h"
-#include "matrix_free/MakeRCP.h"
-
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LinearVolume.h"
-
 #include "matrix_free/StkGradientFixture.h"
+#include "matrix_free/StkSimdConnectivityMap.h"
+#include "matrix_free/StkSimdGatheredElementData.h"
+#include "matrix_free/StkToTpetraLocalIndices.h"
+#include "matrix_free/StkToTpetraMap.h"
 
-#include "math.h"
-#include "stdlib.h"
-
-#include "Kokkos_Array.hpp"
 #include "Kokkos_View.hpp"
-#include "Teuchos_ArrayView.hpp"
-#include "Teuchos_DefaultMpiComm.hpp"
-#include "Teuchos_OrdinalTraits.hpp"
-#include "Teuchos_Ptr.hpp"
 #include "Teuchos_RCP.hpp"
-#include "Teuchos_RCPDecl.hpp"
-#include "Tpetra_ConfigDefs.hpp"
+#include "Tpetra_Export_decl.hpp"
 #include "Tpetra_Map_decl.hpp"
 #include "Tpetra_MultiVector_decl.hpp"
-#include <algorithm>
-#include <random>
-#include "stk_mesh/base/Bucket.hpp"
-#include "stk_mesh/base/FieldState.hpp"
-#include "stk_mesh/base/Types.hpp"
-#include "stk_util/parallel/Parallel.hpp"
-
 #include "gtest/gtest.h"
-#include "mpi.h"
-#include "stk_mesh/base/BulkData.hpp"
+
 #include "stk_mesh/base/Field.hpp"
-#include "stk_mesh/base/FieldBase.hpp"
-#include "stk_mesh/base/MetaData.hpp"
-#include "stk_topology/topology.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"
+#include "stk_mesh/base/MetaData.hpp"
+#include "stk_simd/Simd.hpp"
+
+#include <stddef.h>
+#include <cmath>
+#include <type_traits>
 
 namespace sierra {
 namespace nalu {

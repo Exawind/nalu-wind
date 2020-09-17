@@ -10,14 +10,16 @@
 #ifndef STK_TO_TPETRA_MAP_H
 #define STK_TO_TPETRA_MAP_H
 
-#include "matrix_free/StkToTpetraLocalIndices.h"
+#include "matrix_free/LinSysInfo.h"
 
-#include "Tpetra_Map_decl.hpp"
 #include "Kokkos_View.hpp"
-#include "stk_mesh/base/NgpMesh.hpp"
-#include "stk_mesh/base/Types.hpp"
-
 #include "Teuchos_RCP.hpp"
+#include "Tpetra_Map_decl.hpp"
+#include "Tpetra_MultiVector_decl.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/Selector.hpp"
+
+#include <iosfwd>
 
 namespace stk {
 namespace mesh {
@@ -31,23 +33,32 @@ namespace matrix_free {
 
 const auto global_ordinal_index_base = 1;
 
+void add_tpetra_solution_vector_to_stk_field(
+  const stk::mesh::NgpMesh& mesh,
+  const stk::mesh::Selector& sel,
+  Kokkos::View<const lid_type*> elid,
+  typename Tpetra::MultiVector<>::dual_view_type::t_dev_const_randomread
+    delta_view,
+  stk::mesh::NgpField<double>& field);
+
 struct StkToTpetraMaps
 {
 public:
-  using tpetra_lid_t = typename Tpetra::Map<>::local_ordinal_type;
-  using stk_lid_t = stk::mesh::FastMeshIndex;
-  using gid_t = typename Tpetra::Map<>::global_ordinal_type;
-
   StkToTpetraMaps(
     const stk::mesh::NgpMesh& mesh,
     const stk::mesh::Selector& active,
-    stk::mesh::NgpField<gid_t> gid,
-    stk::mesh::Selector replicas = {});
+    stk::mesh::NgpField<gid_type> gid,
+    stk::mesh::Selector replicas = {},
+    Kokkos::View<gid_type*> rgids = {});
+
+  StkToTpetraMaps(
+    const Tpetra::Map<>& owned,
+    const Tpetra::Map<>& owned_and_shared,
+    Kokkos::View<const lid_type*> stk_lid_to_tpetra_lid);
 
   const Tpetra::Map<> owned;
   const Tpetra::Map<> owned_and_shared;
-  const Kokkos::View<const tpetra_lid_t*> stk_lid_to_tpetra_lid;
-  const Kokkos::View<const stk_lid_t*> tpetra_lid_to_stk_lid;
+  const Kokkos::View<const lid_type*> stk_lid_to_tpetra_lid;
 };
 
 void populate_global_id_field(
@@ -78,7 +89,7 @@ Tpetra::Map<> make_owned_and_shared_row_map(
 Tpetra::Map<> make_owned_shared_constrained_row_map(
   const stk::mesh::NgpMesh& mesh,
   const stk::mesh::Selector& active_linsys,
-  const stk::mesh::Selector& replicas,
+  Kokkos::View<typename Tpetra::Map<>::global_ordinal_type*> rgids,
   stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gids);
 
 } // namespace matrix_free

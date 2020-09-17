@@ -13,7 +13,7 @@
 #include "matrix_free/ElementVolumeIntegral.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ValidSimdLength.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
 #include <Kokkos_ScatterView.hpp>
@@ -45,9 +45,8 @@ conduction_residual_t<p>::invoke(
     KOKKOS_LAMBDA(int index) {
       narray element_rhs;
       if (p > 1) {
-        narray scratch;
         consistent_mass_time_derivative<p>(
-          index, gammas, volume_metric, qm1, qp0, qp1, scratch, element_rhs);
+          index, gammas, volume_metric, qm1, qp0, qp1, element_rhs);
       } else {
         lumped_time_derivative<p>(
           index, gammas, volume_metric, qm1, qp0, qp1, element_rhs);

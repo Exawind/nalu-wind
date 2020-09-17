@@ -12,7 +12,7 @@
 
 #include <Tpetra_MultiVector_decl.hpp>
 
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
 namespace sierra {

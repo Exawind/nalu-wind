@@ -1,15 +1,14 @@
 #ifndef FILTER_JACOBI_H
 #define FILTER_JACOBI_H
 
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 
-#include "Kokkos_Array.hpp"
 #include "Teuchos_BLAS_types.hpp"
-
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_Export_decl.hpp"
 #include "Tpetra_MultiVector_decl.hpp"
 #include "Tpetra_Operator.hpp"
+#include "Tpetra_Map_decl.hpp"
 
 namespace sierra {
 namespace nalu {

@@ -8,7 +8,6 @@
 //
 
 #include "matrix_free/NodeOrderMap.h"
-
 #include "matrix_free/LocalArray.h"
 
 namespace sierra {
@@ -22,6 +21,22 @@ constexpr StkFaceNodeMapping<1>::node_map_type StkFaceNodeMapping<1>::map;
 constexpr StkFaceNodeMapping<2>::node_map_type StkFaceNodeMapping<2>::map;
 constexpr StkFaceNodeMapping<3>::node_map_type StkFaceNodeMapping<3>::map;
 constexpr StkFaceNodeMapping<4>::node_map_type StkFaceNodeMapping<4>::map;
+
+int
+node_map(int p, int n, int m, int l)
+{
+  switch (p) {
+  case 2:
+    return StkNodeOrderMapping<2>::map(n, m, l);
+  case 3:
+    return StkNodeOrderMapping<3>::map(n, m, l);
+  case 4:
+    return StkNodeOrderMapping<4>::map(n, m, l);
+  default:
+    return StkNodeOrderMapping<1>::map(n, m, l);
+  }
+}
+
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

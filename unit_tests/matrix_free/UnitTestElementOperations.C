@@ -17,7 +17,7 @@
 #include "matrix_free/GaussLegendreQuadratureRule.h"
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 #include "StkSimdComparisons.h"
 #include "gtest/gtest.h"

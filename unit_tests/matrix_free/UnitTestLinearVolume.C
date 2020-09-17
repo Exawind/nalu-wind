@@ -12,7 +12,7 @@
 
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "matrix_free/TensorOperations.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
 #include <Kokkos_Array.hpp>

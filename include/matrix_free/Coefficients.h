@@ -10,8 +10,6 @@
 #ifndef CVFEM_COEFFICIENTS_H
 #define CVFEM_COEFFICIENTS_H
 
-#include <cmath>
-
 #include "matrix_free/LocalArray.h"
 
 // An option to use a symmetric version of

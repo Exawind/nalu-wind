@@ -10,11 +10,11 @@
 #ifndef GREEN_GAUSS_BOUNDARY_CLOSURE_H
 #define GREEN_GAUSS_BOUNDARY_CLOSURE_H
 
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
 
-#include "Tpetra_MultiVector.hpp"
+#include "Teuchos_RCP.hpp"
+#include "Tpetra_MultiVector_decl.hpp"
 
 namespace sierra {
 namespace nalu {

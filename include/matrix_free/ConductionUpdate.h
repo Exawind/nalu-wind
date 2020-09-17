@@ -10,12 +10,32 @@
 #ifndef CONDUCTION_UPDATE_H
 #define CONDUCTION_UPDATE_H
 
-#include "matrix_free/EquationUpdate.h"
 #include "matrix_free/ConductionGatheredFieldManager.h"
 #include "matrix_free/ConductionSolutionUpdate.h"
-#include "matrix_free/KokkosFramework.h"
-#include <stk_mesh/base/BulkData.hpp>
-#include <stk_mesh/base/Ngp.hpp>
+#include "matrix_free/EquationUpdate.h"
+#include "matrix_free/LinSysInfo.h"
+#include "matrix_free/StkToTpetraMap.h"
+
+#include "Kokkos_Array.hpp"
+#include "Kokkos_View.hpp"
+
+#include "Teuchos_RCP.hpp"
+#include "Tpetra_Export_decl.hpp"
+#include "Tpetra_MultiVector_fwd.hpp"
+
+#include "stk_mesh/base/Selector.hpp"
+
+#include <iosfwd>
+
+namespace Teuchos {
+class ParameterList;
+}
+namespace stk {
+namespace mesh {
+class BulkData;
+class MetaData;
+} // namespace mesh
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
@@ -31,7 +51,8 @@ public:
     stk::mesh::Selector active,
     stk::mesh::Selector dirichlet,
     stk::mesh::Selector flux,
-    stk::mesh::Selector replicas = {});
+    stk::mesh::Selector replicas = {},
+    Kokkos::View<gid_type*> rgids = {});
 
   void initialize() final;
   void swap_states() final;
@@ -49,6 +70,10 @@ private:
   const stk::mesh::MetaData& meta_;
   stk::mesh::Selector active_;
 
+  const StkToTpetraMaps linsys_;
+  const Tpetra::Export<> exporter_;
+
+  ConductionOffsetViews<p> offset_views_;
   ConductionSolutionUpdate<p> field_update_;
   ConductionGatheredFieldManager<p> field_gather_;
 

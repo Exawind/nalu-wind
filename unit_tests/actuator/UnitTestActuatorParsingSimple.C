@@ -84,7 +84,7 @@ private:
   }
 };
 
-TEST_F(ActuatorParsingSimpleTests, minimumRequired)
+TEST_F(ActuatorParsingSimpleTests, NGP_minimumRequired)
 {
   ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineSimpleNGP"]);
   try {
@@ -131,7 +131,7 @@ TEST_F(ActuatorParsingSimpleTests, minimumRequired)
 }
 
 
-TEST_F(ActuatorParsingSimpleTests, oneValueEpsilonParses)
+TEST_F(ActuatorParsingSimpleTests, NGP_oneValueEpsilonParses)
 {
   ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineSimpleNGP"]);
   inputFileLines_[4] = "    epsilon: 3.0\n";

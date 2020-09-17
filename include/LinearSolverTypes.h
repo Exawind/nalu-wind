@@ -94,6 +94,8 @@ struct LinSys {
   using Preconditioner    = Ifpack2::Preconditioner<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
 
   using EntityToLIDView = Kokkos::View<LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
+  using ConstEntityToLIDView = Kokkos::View<const LocalOrdinal*, Kokkos::LayoutRight, LinSysMemSpace>;
+
 };
 
 

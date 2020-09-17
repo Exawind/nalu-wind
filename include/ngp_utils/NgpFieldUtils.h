@@ -19,6 +19,8 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"
 
+#include <array>
+
 namespace sierra {
 namespace nalu {
 namespace nalu_ngp {

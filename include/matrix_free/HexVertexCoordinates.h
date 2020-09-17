@@ -11,16 +11,17 @@
 #define HEX_VERTEX_COORDINATES_H
 
 #include "matrix_free/LocalArray.h"
-#include "Kokkos_Core.hpp"
+#include "matrix_free/Coefficients.h"
+#include "matrix_free/KokkosViewTypes.h"
 
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
-template <int p, typename InputArray>
+template <int p, typename ElemCoordsArray>
 KOKKOS_FUNCTION LocalArray<ftype[3][8]>
-hex_vertex_coordinates(int index, const InputArray& xc)
+hex_vertex_coordinates(int index, const ElemCoordsArray& xc)
 {
-  static_assert(InputArray::Rank == 5, "");
+  static_assert(ElemCoordsArray::Rank == 5, "");
   LocalArray<ftype[3][8]> box;
   for (int d = 0; d < 3; ++d) {
     box(d, 0) = xc(index, 0, 0, 0, d);
@@ -31,6 +32,25 @@ hex_vertex_coordinates(int index, const InputArray& xc)
     box(d, 5) = xc(index, p, 0, p, d);
     box(d, 6) = xc(index, p, p, p, d);
     box(d, 7) = xc(index, p, p, 0, d);
+  }
+  return box;
+}
+
+template <typename ElemCoordsArray>
+KOKKOS_FUNCTION LocalArray<ftype[3][8]>
+hex_vertex_coordinates(int n, int m, int l, const ElemCoordsArray& xc)
+{
+  static_assert(ElemCoordsArray::Rank == 4, "");
+  LocalArray<ftype[3][8]> box;
+  for (int d = 0; d < 3; ++d) {
+    box(d, 0) = xc(n + 0, m + 0, l + 0, d);
+    box(d, 1) = xc(n + 0, m + 0, l + 1, d);
+    box(d, 2) = xc(n + 0, m + 1, l + 1, d);
+    box(d, 3) = xc(n + 0, m + 1, l + 0, d);
+    box(d, 4) = xc(n + 1, m + 0, l + 0, d);
+    box(d, 5) = xc(n + 1, m + 0, l + 1, d);
+    box(d, 6) = xc(n + 1, m + 1, l + 1, d);
+    box(d, 7) = xc(n + 1, m + 1, l + 0, d);
   }
   return box;
 }

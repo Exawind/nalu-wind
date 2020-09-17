@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp>
+#include "matrix_free/KokkosViewTypes.h"
 #include <Kokkos_Array.hpp>
 #include <Kokkos_CopyViews.hpp>
 #include <Kokkos_Macros.hpp>
@@ -30,7 +30,7 @@
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "matrix_free/LinearDiffusionMetric.h"
 #include "matrix_free/LinearVolume.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/MakeRCP.h"
 #include "gtest/gtest.h"
 #include "mpi.h"

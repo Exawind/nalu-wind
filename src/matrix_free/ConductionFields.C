@@ -8,26 +8,34 @@
 //
 
 #include "matrix_free/ConductionFields.h"
-
-#include "matrix_free/PolynomialOrders.h"
+#include "matrix_free/ConductionInfo.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LinearDiffusionMetric.h"
 #include "matrix_free/LinearVolume.h"
-#include "matrix_free/StkSimdConnectivityMap.h"
+#include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
-#include "matrix_free/KokkosFramework.h"
-#include "stk_mesh/base/CoordinateSystems.hpp"
-#include "stk_mesh/base/Field.hpp"
-#include "stk_mesh/base/FieldBase.hpp"
-#include "stk_mesh/base/FieldState.hpp"
-#include "stk_mesh/base/MetaData.hpp"
-#include "stk_topology/topology.hpp"
 
-#include <stdexcept>
+#include "stk_mesh/base/FieldState.hpp"
 
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
 namespace impl {
+
+stk::mesh::NgpField<double>
+get_ngp_field(
+  const stk::mesh::MetaData& meta,
+  std::string name,
+  stk::mesh::FieldState state = stk::mesh::StateNP1)
+{
+  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
+  ThrowAssert(
+    meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+  auto field = stk::mesh::get_updated_ngp_field<double>(
+    *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+  field.sync_to_device();
+  return field;
+}
 
 template <int p>
 InteriorResidualFields<p>

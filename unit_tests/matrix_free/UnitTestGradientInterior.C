@@ -11,7 +11,7 @@
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "matrix_free/LinearAreas.h"
 #include "matrix_free/LinearVolume.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/MakeRCP.h"
 #include "gtest/gtest.h"
 #include "mpi.h"

@@ -192,6 +192,7 @@ PyrSCV::ipNodeMap(
   return ipNodeMap_;
 }
 
+KOKKOS_FUNCTION
 DoubleType polyhedral_volume_by_faces(int  /* ncoords */, const DoubleType volcoords[][3],
                                       int ntriangles, const int triangleFaceTable[][3])
 {
@@ -232,6 +233,7 @@ DoubleType polyhedral_volume_by_faces(int  /* ncoords */, const DoubleType volco
   return volume;
 }
 
+KOKKOS_FUNCTION
 DoubleType octohedron_volume_by_triangle_facets(const DoubleType volcoords[10][3])
 {
   DoubleType coords[14][3];
@@ -424,10 +426,8 @@ void PyrSCV::determinant(
       epyrcoords[inode][k] = coords[pyramidSubcontrolNodeTable[icv][inode]][k];
     }
   }
-#ifndef KOKKOS_ENABLE_CUDA
   // compute volume using an equivalent polyhedron
   vol(icv) = octohedron_volume_by_triangle_facets(epyrcoords);
-#endif
 }
 
 //--------------------------------------------------------------------------

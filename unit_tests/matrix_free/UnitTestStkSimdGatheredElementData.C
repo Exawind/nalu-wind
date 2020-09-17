@@ -11,28 +11,22 @@
 #include "matrix_free/StkSimdFaceConnectivityMap.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
 #include "matrix_free/StkSimdNodeConnectivityMap.h"
-#include "matrix_free/KokkosFramework.h"
-
-#include <Kokkos_Array.hpp>
-#include <Kokkos_Parallel.hpp>
-#include <Kokkos_View.hpp>
-#include <numeric>
-#include <stk_io/IossBridge.hpp>
-#include <stk_mesh/base/Bucket.hpp>
-#include <stk_mesh/base/Entity.hpp>
-#include <stk_mesh/base/FieldTraits.hpp>
-#include <stk_mesh/base/Types.hpp>
-#include <stk_simd/Simd.hpp>
-#include <stk_util/util/ReportHandler.hpp>
-#include <string>
-#include <vector>
+#include "matrix_free/KokkosViewTypes.h"
 
 #include "gtest/gtest.h"
+
+#include "Kokkos_Array.hpp"
+#include "Kokkos_Parallel.hpp"
+#include "Kokkos_View.hpp"
+
+#include "stk_io/IossBridge.hpp"
+#include "stk_mesh/base/Bucket.hpp"
 #include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/Entity.hpp"
 #include "stk_mesh/base/FEMHelpers.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/FieldBase.hpp"
-#include "stk_mesh/base/GetEntities.hpp"
+#include "stk_mesh/base/FieldTraits.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Selector.hpp"
 #include "stk_mesh/base/SkinBoundary.hpp"
@@ -41,7 +35,12 @@
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"
+#include "stk_simd/Simd.hpp"
 #include "stk_topology/topology.hpp"
+
+#include <numeric>
+#include <string>
+#include <vector>
 
 namespace sierra {
 namespace nalu {
@@ -179,9 +178,9 @@ TEST_F(SimdGatherFixture, gathered_q_field_is_consistent)
   for (int k = 0; k < order + 1; ++k) {
     for (int j = 0; j < order + 1; ++j) {
       for (int i = 0; i < order + 1; ++i) {
-        Kokkos::Array<ftype, 3> coord = {{coord_view_h(0, k, j, i, 0),
-                                          coord_view_h(0, k, j, i, 1),
-                                          coord_view_h(0, k, j, i, 2)}};
+        Kokkos::Array<ftype, 3> coord = {
+          {coord_view_h(0, k, j, i, 0), coord_view_h(0, k, j, i, 1),
+           coord_view_h(0, k, j, i, 2)}};
         ASSERT_DOUBLE_EQ(
           stk::simd::get_data(q_view_h(0, k, j, i), 0),
           stk::simd::get_data(qfunc(coord.data()), 0));
@@ -228,9 +227,9 @@ TEST_F(SimdGatherFixture, gathered_face_q_is_consistent)
 
   for (int j = 0; j < order + 1; ++j) {
     for (int i = 0; i < order + 1; ++i) {
-      Kokkos::Array<ftype, 3> coord = {{coord_view_h(0, j, i, 0),
-                                        coord_view_h(0, j, i, 1),
-                                        coord_view_h(0, j, i, 2)}};
+      Kokkos::Array<ftype, 3> coord = {
+        {coord_view_h(0, j, i, 0), coord_view_h(0, j, i, 1),
+         coord_view_h(0, j, i, 2)}};
       ASSERT_DOUBLE_EQ(
         stk::simd::get_data(q_view_h(0, j, i), 0),
         stk::simd::get_data(qfunc(coord.data()), 0));

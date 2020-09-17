@@ -720,6 +720,11 @@ Realm::load(const YAML::Node & node)
     throw std::runtime_error("Polynomial orders > 1 must be matrix free");
   }
 
+  if (matrixFree_) {
+     NaluEnv::self().naluOutputP0() 
+      << "Warning: matrix free capability is experimental and only supports a limited set of use cases" << std::endl;
+  }
+
   // let everyone know about core algorithm
   if ( realmUsesEdges_ ) {
     NaluEnv::self().naluOutputP0() << "Edge-based scheme will be activated" << std::endl;
@@ -2908,13 +2913,14 @@ Realm::periodic_field_max(
 void
 Realm::periodic_delta_solution_update(
   stk::mesh::FieldBase *theField,
-  const unsigned &sizeOfField) const
+  const unsigned &sizeOfField,
+  const bool &doCommunication) const
 {
   const bool bypassFieldCheck = true;
   const bool addSlaves = false;
   const bool setSlaves = true;
   periodicManager_->ngp_apply_constraints(
-    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
+    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves, doCommunication);
 }
 
 //--------------------------------------------------------------------------
@@ -4571,6 +4577,9 @@ Realm::get_inactive_selector()
     otherInactiveSelector = nothing;
   }
 
+  if (matrixFree_) {
+    return stk::mesh::Selector{};
+  }
   return inactiveOverSetSelector | otherInactiveSelector;
 }
 

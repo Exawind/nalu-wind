@@ -10,7 +10,7 @@
 #include "matrix_free/ScalarDirichletBC.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ValidSimdLength.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 
 #include <Teuchos_RCP.hpp>
 #include <stk_simd/Simd.hpp>

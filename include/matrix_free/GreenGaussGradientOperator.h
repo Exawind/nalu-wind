@@ -10,9 +10,8 @@
 #ifndef GREEN_GAUSS_GRADIENT_OPERATOR_H
 #define GREEN_GAUSS_GRADIENT_OPERATOR_H
 
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 
-#include "Kokkos_Array.hpp"
 #include "Teuchos_BLAS_types.hpp"
 
 #include "Teuchos_RCP.hpp"
@@ -77,7 +76,7 @@ private:
   const const_elem_offset_view<p> elem_offsets_;
   const export_type& exporter_;
 
-  mutable mv_type cached_shared_rhs_;
+  mutable mv_type cached_rhs_;
   GradientResidualFields<p> residual_fields_;
 
   bool face_bc_active_{false};
