@@ -73,7 +73,7 @@ TEST_F(SparsifiedEdgeFixture, fill_works)
   auto xc = vector_view<order>("coords", offsets.extent_int(0));
   auto coord_ngp = stk::mesh::get_updated_ngp_field<double>(coordinate_field());
   auto conn = stk_connectivity_map<order>(mesh, meta.universal_part());
-  stk_simd_vector_field_gather<order>(conn, coord_ngp, xc);
+  field_gather<order>(conn, coord_ngp, xc);
   auto mat =
     create_matrix<order>(linsys.owned, linsys.owned_and_shared, offsets);
 
@@ -87,7 +87,7 @@ TEST_F(SparsifiedEdgeFixture, dump)
   auto xc = vector_view<order>("coords", offsets.extent_int(0));
   auto coord_ngp = stk::mesh::get_updated_ngp_field<double>(coordinate_field());
   auto conn = stk_connectivity_map<order>(mesh, meta.universal_part());
-  stk_simd_vector_field_gather<order>(conn, coord_ngp, xc);
+  field_gather<order>(conn, coord_ngp, xc);
   auto mat =
     create_matrix<order>(linsys.owned, linsys.owned_and_shared, offsets);
   assemble_sparsified_edge_laplacian<order>(

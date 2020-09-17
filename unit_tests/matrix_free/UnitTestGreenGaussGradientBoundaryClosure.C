@@ -93,7 +93,7 @@ TEST_F(GradientBoundaryFixture, bc_residual)
 
   auto face_coords =
     face_vector_view<order>("face_coords", grad_bc_faces.extent_int(0));
-  stk_simd_face_vector_field_gather<order>(
+  field_gather<order>(
     grad_bc_faces,
     stk::mesh::get_updated_ngp_field<double>(*meta.coordinate_field()),
     face_coords);

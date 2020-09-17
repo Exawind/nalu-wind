@@ -153,7 +153,7 @@ assemble_sparsified_edge_laplacian_t<p>::invoke(
 
   const auto conn = stk_connectivity_map<p>(mesh, active);
   vector_view<p> xc{"coords", conn.extent(0)};
-  stk_simd_vector_field_gather<p>(conn, coords, xc);
+  field_gather<p>(conn, coords, xc);
 
   Kokkos::parallel_for(
     conn.extent_int(0), KOKKOS_LAMBDA(int index) {

@@ -103,13 +103,13 @@ TEST_F(DirichletFixture, bc_residual)
   auto qp1_ngp = stk::mesh::get_updated_ngp_field<double>(q_field);
   qp1_ngp.sync_to_device();
   auto qp1 = node_scalar_view("qp1_at_bc", dirichlet_nodes.extent_int(0));
-  stk_simd_scalar_node_gather(dirichlet_nodes, qp1_ngp, qp1);
+  field_gather(dirichlet_nodes, qp1_ngp, qp1);
 
   auto qbc_ngp = stk::mesh::get_updated_ngp_field<double>(qbc_field);
   qbc_ngp.sync_to_device();
   auto qbc =
     node_scalar_view("qspecified_at_bc", dirichlet_nodes.extent_int(0));
-  stk_simd_scalar_node_gather(dirichlet_nodes, qbc_ngp, qbc);
+  field_gather(dirichlet_nodes, qbc_ngp, qbc);
 
   owned_and_shared_rhs.putScalar(0.);
   scalar_dirichlet_residual(

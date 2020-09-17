@@ -82,7 +82,7 @@ TEST_F(FilterJacobiFixture, jacobi_operator_is_stricly_positive_for_mass)
 {
   vector_view<order> elem_coords("elem_coords", conn.extent(0));
   auto coord_ngp = stk::mesh::get_updated_ngp_field<double>(coordinate_field());
-  stk_simd_vector_field_gather<order>(conn, coord_ngp, elem_coords);
+  field_gather<order>(conn, coord_ngp, elem_coords);
   const auto vols = geom::volume_metric<order>(elem_coords);
 
   FilterJacobiOperator<order> prec_op(offsets, exporter);

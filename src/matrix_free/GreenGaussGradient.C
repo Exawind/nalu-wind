@@ -119,7 +119,7 @@ ComputeGradient<p>::ComputeGradient(
 {
   {
     auto coords = vector_view<p>("coords", conn_.extent_int(0));
-    stk_simd_vector_field_gather<p>(
+    field_gather<p>(
       conn_, stk::mesh::get_updated_ngp_field<double>(*meta.coordinate_field()),
       coords);
 
@@ -129,7 +129,7 @@ ComputeGradient<p>::ComputeGradient(
 
   {
     auto face_coords = face_vector_view<p>("coords", face_conn_.extent_int(0));
-    stk_simd_face_vector_field_gather<p>(
+    field_gather<p>(
       face_conn_,
       stk::mesh::get_updated_ngp_field<double>(*meta.coordinate_field()),
       face_coords);
@@ -147,9 +147,9 @@ ComputeGradient<p>::gradient(
   const stk::mesh::NgpField<double>& q,
   stk::mesh::NgpField<double>& dqdx)
 {
-  stk_simd_scalar_field_gather<p>(conn_, q, q_);
-  stk_simd_vector_field_gather<p>(conn_, dqdx, dqdx_);
-  stk_simd_face_scalar_field_gather<p>(face_conn_, q, face_q_);
+  field_gather<p>(conn_, q, q_);
+  field_gather<p>(conn_, dqdx, dqdx_);
+  field_gather<p>(face_conn_, q, face_q_);
 
   GradientResidualFields<p> fields;
   fields.q = q_;

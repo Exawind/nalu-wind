@@ -130,15 +130,15 @@ protected:
     auto conn = stk_connectivity_map<order>(mesh(), meta.universal_part());
     GradientResidualFields<order> fields;
     fields.q = scalar_view<order>("q", offsets.extent_int(0));
-    stk_simd_scalar_field_gather<order>(
+    field_gather<order>(
       conn, stk::mesh::get_updated_ngp_field<double>(q_field), fields.q);
 
     fields.dqdx = vector_view<order>("dqdx", offsets.extent_int(0));
-    stk_simd_vector_field_gather<order>(
+    field_gather<order>(
       conn, stk::mesh::get_updated_ngp_field<double>(dqdx_field), fields.dqdx);
 
     auto coords = vector_view<order>("coords", conn.extent_int(0));
-    stk_simd_vector_field_gather<order>(
+    field_gather<order>(
       conn, stk::mesh::get_updated_ngp_field<double>(coordinate_field()),
       coords);
 
