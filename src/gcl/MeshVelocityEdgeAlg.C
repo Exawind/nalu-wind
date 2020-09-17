@@ -25,45 +25,51 @@
 namespace sierra {
 namespace nalu {
 
-template<typename AlgTraits>
+template <typename AlgTraits>
 MeshVelocityEdgeAlg<AlgTraits>::MeshVelocityEdgeAlg(
-  Realm& realm,
-  stk::mesh::Part* part
-) : Algorithm(realm, part),
+  Realm& realm, stk::mesh::Part* part)
+  : Algorithm(realm, part),
     elemData_(realm.meta_data()),
     modelCoords_(get_field_ordinal(realm.meta_data(), "coordinates")),
     currentCoords_(get_field_ordinal(realm.meta_data(), "current_coordinates")),
-    meshDispNp1_(
-      get_field_ordinal(realm.meta_data(), "mesh_displacement", stk::mesh::StateNP1)),
-    meshDispN_(
-      get_field_ordinal(realm.meta_data(), "mesh_displacement", stk::mesh::StateN)),
-    edgeFaceVelMag_(
-      get_field_ordinal(realm.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK)),
-    edgeSweptVolumeNp1_(
-      get_field_ordinal(
-        realm.meta_data(), "edge_swept_face_volume", stk::mesh::StateNP1, stk::topology::EDGE_RANK)),
-    edgeSweptVolumeN_(
-      get_field_ordinal(
-        realm.meta_data(), "edge_swept_face_volume", stk::mesh::StateN, stk::topology::EDGE_RANK)),
+    meshDispNp1_(get_field_ordinal(
+      realm.meta_data(), "mesh_displacement", stk::mesh::StateNP1)),
+    meshDispN_(get_field_ordinal(
+      realm.meta_data(), "mesh_displacement", stk::mesh::StateN)),
+    edgeFaceVelMag_(get_field_ordinal(
+      realm.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK)),
+    edgeSweptVolumeNp1_(get_field_ordinal(
+      realm.meta_data(),
+      "edge_swept_face_volume",
+      stk::mesh::StateNP1,
+      stk::topology::EDGE_RANK)),
+    edgeSweptVolumeN_(get_field_ordinal(
+      realm.meta_data(),
+      "edge_swept_face_volume",
+      stk::mesh::StateN,
+      stk::topology::EDGE_RANK)),
     meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>())
 {
 
-
   elemData_.add_cvfem_surface_me(meSCS_);
 
-  elemData_.add_coordinates_field(modelCoords_, AlgTraits::nDim_, MODEL_COORDINATES);
-  elemData_.add_coordinates_field(currentCoords_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  elemData_.add_coordinates_field(
+    modelCoords_, AlgTraits::nDim_, MODEL_COORDINATES);
+  elemData_.add_coordinates_field(
+    currentCoords_, AlgTraits::nDim_, CURRENT_COORDINATES);
   elemData_.add_gathered_nodal_field(meshDispNp1_, AlgTraits::nDim_);
   elemData_.add_gathered_nodal_field(meshDispN_, AlgTraits::nDim_);
-  
+
   elemData_.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
   meSCS_->general_shape_fcn(19, isoParCoords_, isoCoordsShapeFcn_);
 }
 
-template<typename AlgTraits>
-void MeshVelocityEdgeAlg<AlgTraits>::execute()
+template <typename AlgTraits>
+void
+MeshVelocityEdgeAlg<AlgTraits>::execute()
 {
-  using ElemSimdDataType = sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
+  using ElemSimdDataType =
+    sierra::nalu::nalu_ngp::ElemSimdData<stk::mesh::NgpMesh>;
 
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
@@ -77,20 +83,20 @@ void MeshVelocityEdgeAlg<AlgTraits>::execute()
   const auto modelCoordsID = modelCoords_;
   const auto meshDispNp1ID = meshDispNp1_;
   const auto meshDispNID = meshDispN_;
-//  const auto sweptVolNID = sweptVolumeN_;
+  //  const auto sweptVolNID = sweptVolumeN_;
 
-  const stk::mesh::Selector sel = meta.locally_owned_part()
-    & stk::mesh::selectUnion(partVec_)
-    & !(realm_.get_inactive_selector());
+  const stk::mesh::Selector sel = meta.locally_owned_part() &
+                                  stk::mesh::selectUnion(partVec_) &
+                                  !(realm_.get_inactive_selector());
 
-  const std::string algName = "compute_mesh_vel_" + std::to_string(AlgTraits::topo_);
+  const std::string algName =
+    "compute_mesh_vel_" + std::to_string(AlgTraits::topo_);
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
-    KOKKOS_LAMBDA(ElemSimdDataType& edata) {
-
+    KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       const int* lrscv = meSCS_->adjacentNodes();
       const int* scsIpEdgeMap = meSCS_->scsIpEdgeOrd();
-      
+
       auto& scrView = edata.simdScrView;
 
       const auto& mCoords = scrView.get_scratch_view_2D(modelCoordsID);
@@ -99,31 +105,32 @@ void MeshVelocityEdgeAlg<AlgTraits>::execute()
 
       DoubleType scs_coords_n[19][AlgTraits::nDim_];
       DoubleType scs_coords_np1[19][AlgTraits::nDim_];
-      
-      for (int i=0; i < 19; i++) {
-          for (int j=0; j < AlgTraits::nDim_; j++) {
-              scs_coords_n[i][j] = 0.0;
-              scs_coords_np1[i][j] = 0.0;
+
+      for (int i = 0; i < 19; i++) {
+        for (int j = 0; j < AlgTraits::nDim_; j++) {
+          scs_coords_n[i][j] = 0.0;
+          scs_coords_np1[i][j] = 0.0;
+        }
+        for (int k = 0; k < AlgTraits::nodesPerElement_; k++) {
+          const DoubleType r =
+            isoCoordsShapeFcn_[i * AlgTraits::nodesPerElement_ + k];
+          for (int j = 0; j < AlgTraits::nDim_; j++) {
+            scs_coords_n[i][j] += r * (mCoords(k, j) + dispN(k, j));
+            scs_coords_np1[i][j] += r * (mCoords(k, j) + dispNp1(k, j));
           }
-          for (int k=0; k < AlgTraits::nodesPerElement_; k++ ) {
-              const DoubleType r = isoCoordsShapeFcn_[i*AlgTraits::nodesPerElement_ + k];
-              for (int j=0; j < AlgTraits::nDim_; j++) {
-                  scs_coords_n[i][j] += r * (mCoords(k,j) + dispN(k,j));
-                  scs_coords_np1[i][j] += r * (mCoords(k,j) + dispNp1(k,j));
-              }
-          }
+        }
       }
 
-      for (int ip =0; ip < AlgTraits::numScsIp_; ++ip) {
+      for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
 
         const int na = scsFaceNodeMap_[ip][0];
         const int nb = scsFaceNodeMap_[ip][1];
         const int nc = scsFaceNodeMap_[ip][2];
         const int nd = scsFaceNodeMap_[ip][3];
-        
+
         DoubleType scs_vol_coords[8][3];
-        
-        for (int j=0; j < AlgTraits::nDim_; j++) {
+
+        for (int j = 0; j < AlgTraits::nDim_; j++) {
           scs_vol_coords[0][j] = scs_coords_n[na][j];
           scs_vol_coords[1][j] = scs_coords_n[nb][j];
           scs_vol_coords[2][j] = scs_coords_n[nc][j];
@@ -135,9 +142,9 @@ void MeshVelocityEdgeAlg<AlgTraits>::execute()
         }
 
         DoubleType tmp = hex_volume_grandy(scs_vol_coords);
-        DoubleType tmp2 = gamma1 * tmp/dt ; 
+        DoubleType tmp2 = gamma1 * tmp / dt;
 
-        for (int si=0; si < edata.numSimdElems; ++si) {
+        for (int si = 0; si < edata.numSimdElems; ++si) {
           const auto edges = ngpMesh.get_edges(
             stk::topology::ELEM_RANK,
             ngpMesh.fast_mesh_index(edata.elemInfo[si].entity));
@@ -149,7 +156,8 @@ void MeshVelocityEdgeAlg<AlgTraits>::execute()
 
           // Nodes connected to this edge
           const auto edgeID = ngpMesh.fast_mesh_index(edges[nedge]);
-          const auto edge_nodes = ngpMesh.get_nodes(stk::topology::EDGE_RANK, edgeID);
+          const auto edge_nodes =
+            ngpMesh.get_nodes(stk::topology::EDGE_RANK, edgeID);
 
           // Left node comparison
           const auto lnElemId = edata.elemInfo[si].entityNodes[iLn];
@@ -158,18 +166,16 @@ void MeshVelocityEdgeAlg<AlgTraits>::execute()
           const double sign = (lnElemId == lnEdgeId) ? 1.0 : -1.0;
 
           Kokkos::atomic_add(
-            &edgeSweptVol.get(edgeID, 0),
-            stk::simd::get_data(tmp,si) * sign);
+            &edgeSweptVol.get(edgeID, 0), stk::simd::get_data(tmp, si) * sign);
           Kokkos::atomic_add(
             &edgeFaceVelMag.get(edgeID, 0),
-            stk::simd::get_data(tmp2,si) * sign);
+            stk::simd::get_data(tmp2, si) * sign);
         }
       }
-
     });
 }
 
 INSTANTIATE_KERNEL(MeshVelocityEdgeAlg)
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
