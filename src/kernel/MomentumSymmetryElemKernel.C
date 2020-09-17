@@ -138,8 +138,13 @@ MomentumSymmetryElemKernel<BcAlgTraits>::execute(
     }
 
 
-    NALU_ALIGNED Kokkos::Array<Kokkos::Array<DoubleType, 3>, 3> viscStressIp = {
-      {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}};
+    NALU_ALIGNED Kokkos::Array<Kokkos::Array<DoubleType, 3>, 3> viscStressIp;
+    for (int dj = 0; dj < dim; ++dj) {
+      for (int di = 0; di < dim; ++di) {
+        viscStressIp[dj][di] = 0;
+      }
+    }
+    
     for (int n = 0; n < BcAlgTraits::nodesPerElement_; ++n) {
       for (int dj = 0; dj < dim; ++dj) {
         for (int di = 0; di < dim; ++di) {
