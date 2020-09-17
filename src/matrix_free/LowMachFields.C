@@ -51,47 +51,47 @@ gather_required_lowmach_fields_t<p>::invoke(
   LowMachResidualFields<p> fields;
 
   fields.up1 = vector_view<p>{"up1", conn.extent(0)};
-  stk_simd_vector_field_gather<p>(
+  field_gather<p>(
     conn,
     get_and_sync_ngp_field(
       meta, lowmach_info::velocity_name, stk::mesh::StateNP1),
     fields.up1);
   fields.up0 = vector_view<p>{"up0", conn.extent(0)};
-  stk_simd_vector_field_gather<p>(
+  field_gather<p>(
     conn,
     get_and_sync_ngp_field(
       meta, lowmach_info::velocity_name, stk::mesh::StateN),
     fields.up0);
   fields.um1 = vector_view<p>{"um1", conn.extent(0)};
-  stk_simd_vector_field_gather<p>(
+  field_gather<p>(
     conn,
     get_and_sync_ngp_field(
       meta, lowmach_info::velocity_name, stk::mesh::StateNM1),
     fields.um1);
 
   fields.gp = vector_view<p>{"gp", conn.extent(0)};
-  stk_simd_vector_field_gather<p>(
+  field_gather<p>(
     conn, get_and_sync_ngp_field(meta, lowmach_info::pressure_grad_name),
     fields.gp);
 
   fields.pressure = scalar_view<p>{"pressure", conn.extent(0)};
-  stk_simd_scalar_field_gather<p>(
+  field_gather<p>(
     conn, get_and_sync_ngp_field(meta, lowmach_info::pressure_grad_name),
     fields.pressure);
 
   fields.xc = vector_view<p>{"coords", conn.extent(0)};
-  stk_simd_vector_field_gather<p>(
+  field_gather<p>(
     conn, get_and_sync_ngp_field(meta, lowmach_info::coord_name), fields.xc);
 
   fields.rho = scalar_view<p>{"rp1", conn.extent(0)};
-  stk_simd_scalar_field_gather<p>(
+  field_gather<p>(
     conn,
     get_and_sync_ngp_field(
       meta, lowmach_info::density_name, stk::mesh::StateNP1),
     fields.rho);
 
   fields.mu = scalar_view<p>{"mu", conn.extent(0)};
-  stk_simd_scalar_field_gather<p>(
+  field_gather<p>(
     conn, get_and_sync_ngp_field(meta, lowmach_info::viscosity_name),
     fields.mu);
 

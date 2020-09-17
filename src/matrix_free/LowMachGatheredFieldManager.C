@@ -89,7 +89,7 @@ LowMachGatheredFieldManager<p>::update_velocity()
 {
   auto vel = get_ngp_field<double>(
     meta, lowmach_info::velocity_name, stk::mesh::StateNP1);
-  stk_simd_vector_field_gather<p>(conn, vel, fields.up1);
+  field_gather<p>(conn, vel, fields.up1);
 }
 
 template <int p>
@@ -97,14 +97,14 @@ void
 LowMachGatheredFieldManager<p>::update_pressure()
 {
   auto pressure = get_ngp_field<double>(meta, lowmach_info::pressure_name);
-  stk_simd_scalar_field_gather<p>(conn, pressure, fields.pressure);
+  field_gather<p>(conn, pressure, fields.pressure);
 }
 template <int p>
 void
 LowMachGatheredFieldManager<p>::update_grad_p()
 {
   auto gp = get_ngp_field<double>(meta, lowmach_info::pressure_grad_name);
-  stk_simd_vector_field_gather<p>(conn, gp, fields.gp);
+  field_gather<p>(conn, gp, fields.gp);
 }
 
 namespace {

@@ -87,7 +87,7 @@ protected:
   const_scs_vector_view<order> compute_metric()
   {
     vector_view<order> coordinates("coordinates", offsets.extent_int(0));
-    stk_simd_vector_field_gather<order>(
+    field_gather<order>(
       conn, stk::mesh::get_updated_ngp_field<double>(coordinate_field()),
       coordinates);
 

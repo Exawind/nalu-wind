@@ -100,14 +100,14 @@ TEST_F(FluxFixture, bc_residual)
 {
   auto face_coords =
     face_vector_view<order>("face_coords", flux_bc_faces.extent_int(0));
-  stk_simd_face_vector_field_gather<order>(
+  field_gather<order>(
     flux_bc_faces,
     stk::mesh::get_updated_ngp_field<double>(*meta.coordinate_field()),
     face_coords);
   auto exposed_areas = geom::exposed_areas<order>(face_coords);
 
   auto flux = face_scalar_view<order>("flux", flux_bc_faces.extent_int(0));
-  stk_simd_face_scalar_field_gather<order>(
+  field_gather<order>(
     flux_bc_faces, stk::mesh::get_updated_ngp_field<double>(flux_field), flux);
 
   owned_and_shared_rhs.putScalar(0.);
