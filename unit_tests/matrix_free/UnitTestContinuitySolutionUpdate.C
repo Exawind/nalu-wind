@@ -56,7 +56,7 @@ namespace sierra {
 namespace nalu {
 namespace matrix_free {
 
-namespace test_solution_update {
+namespace test_continuity_solution_update {
 static constexpr double time_scale = 1;
 }
 
@@ -124,7 +124,8 @@ TEST_F(ContinuitySolutionUpdateFixture, solve_is_reasonable)
 
   auto delta = stk::mesh::get_updated_ngp_field<double>(pressure_field);
   // use a tmp
-  field_update.compute_residual(1., fields.advection_metric);
+  const double dt = test_continuity_solution_update::time_scale;
+  field_update.compute_residual(dt, fields.advection_metric);
   auto& delta_mv = field_update.compute_delta(fields.laplacian_metric);
 
   copy_tpetra_solution_vector_to_stk_field(

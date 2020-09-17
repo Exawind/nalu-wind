@@ -64,7 +64,7 @@ struct assemble_sparsified_edge_laplacian_t
 };
 } // namespace impl
 P_INVOKEABLE(assemble_sparsified_edge_laplacian)
-SWITCH_INVOKEABLE(assemble_sparsified_edge_laplacian);
+SWITCH_INVOKEABLE(assemble_sparsified_edge_laplacian)
 
 } // namespace matrix_free
 } // namespace nalu

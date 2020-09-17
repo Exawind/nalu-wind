@@ -105,10 +105,6 @@ create_edge_matrix(
 
 } // namespace sparsfied_edge_test
 
-namespace test_solution_update {
-static constexpr Kokkos::Array<double, 3> gammas = {{0, 0, 0}};
-}
-
 class SparsifiedEdgeLaplacianFixture : public ::ConductionFixture
 {
 protected:
@@ -149,9 +145,6 @@ TEST_F(SparsifiedEdgeLaplacianFixture, laplacian_is_an_l_matrix)
 
   for (int i = 0; i < mat->getNodeNumRows(); ++i) {
     auto row = local_mat.row(i);
-    double row_sum = 0;
-    int num_negative = 0;
-    double diag = -1;
     for (int j = 0; j < row.length; ++j) {
       if (row.colidx(j) == i) {
         ASSERT_TRUE(row.value(j) > 0);
