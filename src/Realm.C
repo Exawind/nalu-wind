@@ -902,14 +902,11 @@ Realm::setup_interior_algorithms()
     const AlgorithmType algType = INTERIOR;
     stk::mesh::PartVector mmPartVec = meshMotionAlg_->get_partvec();
     if (realmUsesEdges_){
-      std::cerr << "Setting up edge algorithm for mesh velocity" << std::endl;
       for (auto p: mmPartVec) {
-        std::cerr << "Setting edge algorithm for a part" << std::endl;
         geometryAlgDriver_->register_elem_algorithm<
           MeshVelocityEdgeAlg>(algType, p, "mesh_vel");
       }
     } else {
-      std::cerr << "Setting up element algorithm for mesh velocity" << std::endl;
       for (auto p: mmPartVec) {
         geometryAlgDriver_->register_elem_algorithm<
           MeshVelocityAlg>(algType, p, "mesh_vel");

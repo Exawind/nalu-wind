@@ -149,6 +149,7 @@ TEST_F(GCLTest, rigid_scaling_edge)
 }
 
 
+
 TEST_F(GCLTest, rigid_translation)
 {
   if (bulk_.parallel_size() > 1) return;
@@ -310,4 +311,12 @@ TEST_F(GCLTest, NGP_mesh_velocity_y_rot_scs_center)
     }
     EXPECT_EQ(counter,12);
   }
+}
+
+TEST_F(GCLTest, NGP_mesh_airy_waves)
+{
+  // Only execute for 1 processor runs
+  if (bulk_.parallel_size() > 1) return;
+  const std::string meshDims = "1x1x1";
+
 }
