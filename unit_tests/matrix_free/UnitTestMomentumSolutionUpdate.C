@@ -56,7 +56,7 @@ namespace sierra {
 namespace nalu {
 namespace matrix_free {
 
-namespace test_solution_update {
+namespace test_momentum_solution_update {
 static constexpr double time_scale = 1;
 }
 
@@ -104,8 +104,9 @@ TEST_F(MomentumSolutionUpdateFixture, solve_is_reasonable)
 
   auto delta = stk::mesh::get_updated_ngp_field<double>(velocity_field);
   // use a tmp
-  field_update.compute_residual({{1, -1, 0}}, fields);
-  auto& delta_mv = field_update.compute_delta(1., coefficient_fields);
+  const double inv_dt = 1./test_momentum_solution_update::time_scale;
+  field_update.compute_residual({{inv_dt, -inv_dt, 0}}, fields);
+  field_update.compute_delta(inv_dt, coefficient_fields);
 
   ASSERT_TRUE(
     field_update.num_iterations() > 2 && field_update.num_iterations() < 30);

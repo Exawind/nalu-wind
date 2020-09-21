@@ -59,7 +59,6 @@ protected:
 
   double max_value()
   {
-    auto& vel = velocity_field.field_of_state(stk::mesh::StateNP1);
     double max_val = std::numeric_limits<double>::lowest();
     for (auto ib :
          bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {

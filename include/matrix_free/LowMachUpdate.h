@@ -139,8 +139,8 @@ private:
   Teuchos::ParameterList muelu_params{};
 
   enum { VEL = 0, CONT = 1, GP = 2 };
-  mutable Kokkos::Array<double, 3> initial_residual_{-1, -1, -1};
-  mutable Kokkos::Array<double, 3> residual_norm_{0, 0, 0};
+  mutable Kokkos::Array<double, 3> initial_residual_{{-1, -1, -1}};
+  mutable Kokkos::Array<double, 3> residual_norm_{{0, 0, 0}};
 };
 
 } // namespace matrix_free

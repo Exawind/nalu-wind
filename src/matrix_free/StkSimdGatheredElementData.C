@@ -27,40 +27,9 @@ namespace nalu {
 namespace matrix_free {
 namespace impl {
 
-template <int p, int simd_len>
-struct MeshIndexGetter
-{
-  KOKKOS_FORCEINLINE_FUNCTION static stk::mesh::FastMeshIndex get(
-    const const_elem_mesh_index_view<p>& conn,
-    int index,
-    int k,
-    int j,
-    int i,
-    int n)
-  {
-    return valid_mesh_index(conn(index, k, j, i, n)) ? conn(index, k, j, i, n)
-                                                     : conn(index, k, j, i, 0);
-  }
-};
-
-template <int p>
-struct MeshIndexGetter<p, 1>
-{
-  KOKKOS_FORCEINLINE_FUNCTION static stk::mesh::FastMeshIndex get(
-    const const_elem_mesh_index_view<p>& conn,
-    int index,
-    int k,
-    int j,
-    int i,
-    int)
-  {
-    return conn(index, k, j, i, 0);
-  }
-};
-
 template <int p>
 void
-stk_simd_scalar_field_gather_t<p>::invoke(
+field_gather_t<p>::invoke(
   const_elem_mesh_index_view<p> conn,
   const stk::mesh::NgpField<double>& field,
   scalar_view<p> simd_element_field)
@@ -78,11 +47,10 @@ stk_simd_scalar_field_gather_t<p>::invoke(
       }
     });
 }
-INSTANTIATE_POLYSTRUCT(stk_simd_scalar_field_gather_t);
 
 template <int p>
 void
-stk_simd_vector_field_gather_t<p>::invoke(
+field_gather_t<p>::invoke(
   const_elem_mesh_index_view<p> conn,
   const stk::mesh::NgpField<double>& field,
   vector_view<p> simd_element_field)
@@ -103,11 +71,10 @@ stk_simd_vector_field_gather_t<p>::invoke(
       }
     });
 }
-INSTANTIATE_POLYSTRUCT(stk_simd_vector_field_gather_t);
 
 template <int p>
 void
-stk_simd_face_scalar_field_gather_t<p>::invoke(
+field_gather_t<p>::invoke(
   const_face_mesh_index_view<p> conn,
   const stk::mesh::NgpField<double>& field,
   face_scalar_view<p> simd_element_field)
@@ -125,11 +92,10 @@ stk_simd_face_scalar_field_gather_t<p>::invoke(
       }
     });
 }
-INSTANTIATE_POLYSTRUCT(stk_simd_face_scalar_field_gather_t);
 
 template <int p>
 void
-stk_simd_face_vector_field_gather_t<p>::invoke(
+field_gather_t<p>::invoke(
   const_face_mesh_index_view<p> conn,
   const stk::mesh::NgpField<double>& field,
   face_vector_view<p> simd_element_field)
@@ -150,17 +116,11 @@ stk_simd_face_vector_field_gather_t<p>::invoke(
       }
     });
 }
-INSTANTIATE_POLYSTRUCT(stk_simd_face_vector_field_gather_t);
+INSTANTIATE_POLYSTRUCT(field_gather_t);
 } // namespace impl
-} // namespace matrix_free
-} // namespace nalu
-} // namespace sierra
-namespace sierra {
-namespace nalu {
-namespace matrix_free {
 
 void
-stk_simd_scalar_node_gather(
+field_gather(
   const_node_mesh_index_view conn,
   const stk::mesh::NgpField<double>& field,
   node_scalar_view simd_node_field)
@@ -177,6 +137,7 @@ stk_simd_scalar_node_gather(
       }
     });
 }
+
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

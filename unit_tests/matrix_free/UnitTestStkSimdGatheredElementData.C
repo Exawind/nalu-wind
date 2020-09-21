@@ -139,7 +139,7 @@ TEST_F(SimdGatherFixture, coordinates_values_are_possible)
 {
   const auto map = stk_connectivity_map<order>(mesh, meta.universal_part());
   vector_view<order> coord_view{"coord_view", 1};
-  stk_simd_vector_field_gather<order>(map, coord_field_ngp, coord_view);
+  field_gather<order>(map, coord_field_ngp, coord_view);
 
   auto coord_view_h = Kokkos::create_mirror_view(coord_view);
   Kokkos::deep_copy(coord_view_h, coord_view);
@@ -165,9 +165,9 @@ TEST_F(SimdGatherFixture, gathered_q_field_is_consistent)
 {
   const auto map = stk_connectivity_map<order>(mesh, meta.universal_part());
   scalar_view<order> q_view{"q_view", 1};
-  stk_simd_scalar_field_gather<order>(map, q_field_ngp, q_view);
+  field_gather<order>(map, q_field_ngp, q_view);
   vector_view<order> coord_view{"coord_view", 1};
-  stk_simd_vector_field_gather<order>(map, coord_field_ngp, coord_view);
+  field_gather<order>(map, coord_field_ngp, coord_view);
 
   auto coord_view_h = Kokkos::create_mirror_view(coord_view);
   Kokkos::deep_copy(coord_view_h, coord_view);
@@ -194,7 +194,7 @@ TEST_F(SimdGatherFixture, gathered_nodal_q_field_has_values)
   const auto map = simd_node_map(mesh, meta.universal_part());
   node_scalar_view q_view{"qn_view", map.extent(0)};
 
-  stk_simd_scalar_node_gather(map, q_field_ngp, q_view);
+  field_gather(map, q_field_ngp, q_view);
 
   auto q_view_h = Kokkos::create_mirror_view(q_view);
   Kokkos::deep_copy(q_view_h, q_view);
@@ -214,10 +214,10 @@ TEST_F(SimdGatherFixture, gathered_face_q_is_consistent)
 {
   const auto map = face_node_map<order>(mesh, meta.universal_part());
   face_scalar_view<order> q_view("qf_view", map.extent(0));
-  stk_simd_face_scalar_field_gather<order>(map, q_field_ngp, q_view);
+  field_gather<order>(map, q_field_ngp, q_view);
 
   face_vector_view<order> coord_view{"coordf_view", map.extent(0)};
-  stk_simd_face_vector_field_gather<order>(map, coord_field_ngp, coord_view);
+  field_gather<order>(map, coord_field_ngp, coord_view);
 
   auto q_view_h = Kokkos::create_mirror_view(q_view);
   Kokkos::deep_copy(q_view_h, q_view);
