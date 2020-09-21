@@ -112,6 +112,19 @@ private:
   //!   - Brasseur - Brasseur's modification to Moeng.
   std::string fluctuationModel_{"Schumann"};
 
+
+  //! In computing the fluctuating temperature flux, the difference between the
+  //! planar averaged or local temperature at height z1 and some reference temperature
+  //! is taken.  Moeng does not really define that reference temperature.  We find that
+  //! if it is taken as TRef, and the simulation is such that the z1 temperature crosses
+  //! Tref, the fluctuations get very large during that crossover, which is unphysical.
+  //! Therefore we add the option of using current surface temperature as this reference
+  //! that is subtracted from the z1 temperature.  
+  //! Current options are:
+  //!   - surface - Use current surface temperature (time varying) as the reference.
+  //!   - reference - Use the reference temperature (time invariant) as the reference.
+  std::string fluctuatingTempRef_{"surface"};
+
   //! Monin-Obukhov scaling law constants.
   //! These should really be variable given stability, but they are just fixed for now.
   DblType kappa_{0.41};
