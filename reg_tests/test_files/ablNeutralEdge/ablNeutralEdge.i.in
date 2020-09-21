@@ -163,6 +163,7 @@ realms:
           gravity_vector_component: 3
           monin_obukhov_averaging_type: planar
           fluctuation_model: Moeng
+          fluctuating_temperature_ref: surface
 
     solution_options:
       name: myOptions
