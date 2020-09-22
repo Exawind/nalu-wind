@@ -77,34 +77,6 @@ invert_matrix(const LocalArray<Scalar[3][3]>& mat)
 
 template <typename Scalar>
 KOKKOS_FORCEINLINE_FUNCTION LocalArray<Scalar[3][3]>
-invert_transpose_matrix(const LocalArray<Scalar[3][3]>& mat)
-{
-  LocalArray<Scalar[3][3]> inv;
-  auto inv_detj = 1. / determinant(mat);
-  inv(XH, XH) =
-    inv_detj * (mat(YH, YH) * mat(ZH, ZH) - mat(ZH, YH) * mat(YH, ZH));
-  inv(YH, XH) =
-    inv_detj * (mat(YH, ZH) * mat(ZH, XH) - mat(ZH, ZH) * mat(YH, XH));
-  inv(ZH, XH) =
-    inv_detj * (mat(YH, XH) * mat(ZH, YH) - mat(ZH, XH) * mat(YH, YH));
-  inv(XH, YH) =
-    inv_detj * (mat(XH, ZH) * mat(ZH, YH) - mat(ZH, ZH) * mat(XH, YH));
-  inv(YH, YH) =
-    inv_detj * (mat(XH, XH) * mat(ZH, ZH) - mat(ZH, XH) * mat(XH, ZH));
-  inv(ZH, YH) =
-    inv_detj * (mat(XH, YH) * mat(ZH, XH) - mat(ZH, YH) * mat(XH, XH));
-  inv(XH, ZH) =
-    inv_detj * (mat(XH, YH) * mat(YH, ZH) - mat(YH, YH) * mat(XH, ZH));
-  inv(YH, ZH) =
-    inv_detj * (mat(XH, ZH) * mat(YH, XH) - mat(YH, ZH) * mat(XH, XH));
-  inv(ZH, ZH) =
-    inv_detj * (mat(XH, XH) * mat(YH, YH) - mat(YH, XH) * mat(XH, YH));
-
-  return inv;
-}
-
-template <typename Scalar>
-KOKKOS_FORCEINLINE_FUNCTION LocalArray<Scalar[3][3]>
 adjugate_matrix(const LocalArray<Scalar[3][3]>& mat)
 {
   return LocalArray<Scalar[3][3]>{
@@ -121,7 +93,7 @@ adjugate_matrix(const LocalArray<Scalar[3][3]>& mat)
 
 template <typename InpScalar, typename OutScalar>
 KOKKOS_FORCEINLINE_FUNCTION void
-transform_vector(
+transform(
   const LocalArray<InpScalar[3][3]>& A,
   const Kokkos::Array<OutScalar, 3>& x,
   Kokkos::Array<OutScalar, 3>& y)
@@ -133,7 +105,7 @@ transform_vector(
 
 template <typename InpScalar, typename OutScalar>
 KOKKOS_FORCEINLINE_FUNCTION void
-transform_tensor(
+transform(
   const LocalArray<InpScalar[3][3]>& A,
   const LocalArray<OutScalar[3][3]>& x,
   LocalArray<OutScalar[3][3]>& y)
@@ -146,7 +118,71 @@ transform_tensor(
     y(d, ZH) =
       A(ZH, XH) * x(d, XH) + A(ZH, YH) * x(d, YH) + A(ZH, ZH) * x(d, ZH);
   }
-} // namespace matrix_free
+}
+
+template <typename InpScalar, typename OutScalar>
+KOKKOS_FORCEINLINE_FUNCTION void
+inv_transform_t(
+  const LocalArray<InpScalar[3][3]>& A,
+  const LocalArray<OutScalar[3]>& b,
+  LocalArray<OutScalar[3]>& x)
+{
+  auto inv_det = 1. / determinant(A);
+  x(0) = ((A(YH, YH) * A(ZH, ZH) - A(YH, ZH) * A(ZH, YH)) * b(0) +
+          (A(XH, ZH) * A(ZH, YH) - A(XH, YH) * A(ZH, ZH)) * b(1) +
+          (A(XH, YH) * A(YH, ZH) - A(XH, ZH) * A(YH, YH)) * b(2)) *
+         inv_det;
+
+  x(1) = ((A(YH, ZH) * A(ZH, XH) - A(YH, XH) * A(ZH, ZH)) * b(0) +
+          (A(XH, XH) * A(ZH, ZH) - A(XH, ZH) * A(ZH, XH)) * b(1) +
+          (A(XH, ZH) * A(YH, XH) - A(XH, XH) * A(YH, ZH)) * b(2)) *
+         inv_det;
+
+  x(2) = ((A(YH, XH) * A(ZH, YH) - A(YH, YH) * A(ZH, XH)) * b(0) +
+          (A(XH, YH) * A(ZH, XH) - A(XH, XH) * A(ZH, YH)) * b(1) +
+          (A(XH, XH) * A(YH, YH) - A(XH, YH) * A(YH, XH)) * b(2)) *
+         inv_det;
+}
+
+template <typename InpScalar, typename OutScalar>
+KOKKOS_FORCEINLINE_FUNCTION void
+inv_transform_t(
+  const LocalArray<InpScalar[3][3]>& A,
+  const LocalArray<OutScalar[3][3]>& b,
+  LocalArray<OutScalar[3][3]>& x)
+{
+  auto inv_det = 1. / determinant(A);
+  for (int d = 0; d < 3; ++d) {
+    x(d, 0) = ((A(YH, YH) * A(ZH, ZH) - A(YH, ZH) * A(ZH, YH)) * b(d, 0) +
+               (A(XH, ZH) * A(ZH, YH) - A(XH, YH) * A(ZH, ZH)) * b(d, 1) +
+               (A(XH, YH) * A(YH, ZH) - A(XH, ZH) * A(YH, YH)) * b(d, 2)) *
+              inv_det;
+
+    x(d, 1) = ((A(YH, ZH) * A(ZH, XH) - A(YH, XH) * A(ZH, ZH)) * b(d, 0) +
+               (A(XH, XH) * A(ZH, ZH) - A(XH, ZH) * A(ZH, XH)) * b(d, 1) +
+               (A(XH, ZH) * A(YH, XH) - A(XH, XH) * A(YH, ZH)) * b(d, 2)) *
+              inv_det;
+
+    x(d, 2) = ((A(YH, XH) * A(ZH, YH) - A(YH, YH) * A(ZH, XH)) * b(d, 0) +
+               (A(XH, YH) * A(ZH, XH) - A(XH, XH) * A(ZH, YH)) * b(d, 1) +
+               (A(XH, XH) * A(YH, YH) - A(XH, YH) * A(YH, XH)) * b(d, 2)) *
+              inv_det;
+  }
+}
+
+template <typename Scalar>
+KOKKOS_FORCEINLINE_FUNCTION LocalArray<Scalar[3][3]>
+square(const LocalArray<Scalar[3][3]>& a)
+{
+  LocalArray<ftype[3][3]> b;
+  for (int dj = 0; dj < 3; ++dj) {
+    for (int di = 0; di < 3; ++di) {
+      b(dj, di) =
+        a(dj, 0) * a(0, di) + a(dj, 1) * a(1, di) + a(dj, 2) * a(2, di);
+    }
+  }
+  return b;
+}
 
 #undef XH
 #undef YH

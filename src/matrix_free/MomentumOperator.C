@@ -36,7 +36,7 @@ MomentumResidualOperator<p>::compute(mv_type& owned_rhs)
   if (exporter_.getTargetMap()->isDistributed()) {
     cached_rhs_.putScalar(0.);
     momentum_residual<p>(
-      gammas_, elem_offsets_, fields_.xc, fields_.mu, fields_.vm1, fields_.vp0,
+      gammas_, elem_offsets_, fields_.xc, fields_.rho, fields_.mu, fields_.vm1, fields_.vp0,
       fields_.volume_metric, fields_.um1, fields_.up0, fields_.up1, fields_.gp,
       fields_.advection_metric, cached_rhs_.getLocalViewDevice());
 
@@ -47,7 +47,7 @@ MomentumResidualOperator<p>::compute(mv_type& owned_rhs)
     }
   } else {
     momentum_residual<p>(
-      gammas_, elem_offsets_, fields_.xc, fields_.mu, fields_.vm1, fields_.vp0,
+      gammas_, elem_offsets_,  fields_.xc, fields_.rho, fields_.mu, fields_.vm1, fields_.vp0,
       fields_.volume_metric, fields_.um1, fields_.up0, fields_.up1, fields_.gp,
       fields_.advection_metric, owned_rhs.getLocalViewDevice());
     owned_rhs.modify_device();

@@ -118,6 +118,8 @@ public:
       "surface post-processing not implemented for matrix free");
   }
 
+  void compute_filter_scale() const;
+
 private:
   struct names
   {
@@ -125,6 +127,7 @@ private:
     static constexpr auto velocity = "velocity";
     static constexpr auto pressure = "pressure";
     static constexpr auto viscosity = "viscosity";
+    static constexpr auto scaled_filter_length = "scaled_filter_length";
     static constexpr auto dpdx_tmp = "dpdx_tmp";
     static constexpr auto dpdx = "dpdx";
     static constexpr auto tpetra_gid = "tpet_global_id";
@@ -143,6 +146,7 @@ private:
   void check_part_is_valid(const stk::mesh::Part*);
   void
   register_copy_state_algorithm(std::string, int dim, stk::mesh::Part& part);
+
 
   std::string get_muelu_xml_file_name();
 

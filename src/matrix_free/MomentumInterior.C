@@ -12,6 +12,7 @@
 #include "matrix_free/HexVertexCoordinates.h"
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/ElementFluxIntegral.h"
+#include "matrix_free/ElementGradient.h"
 #include "matrix_free/ElementVolumeIntegral.h"
 #include "matrix_free/GeometricFunctions.h"
 #include "matrix_free/PolynomialOrders.h"
@@ -36,56 +37,6 @@ template <
   int p,
   int dir,
   typename BoxArrayType,
-  typename UArrayType,
-  typename UHatArrayType>
-KOKKOS_FORCEINLINE_FUNCTION LocalArray<ftype[3][3]>
-compute_gradient(
-  const BoxArrayType& box,
-  const UArrayType& u,
-  const UHatArrayType& uhat,
-  int l,
-  int s,
-  int r)
-{
-  enum { XH = 0, YH = 1, ZH = 2 };
-  constexpr int dir_0 = dir;
-  constexpr int dir_1 = (dir == XH) ? YH : XH;
-  constexpr int dir_2 = (dir == ZH) ? YH : ZH;
-
-  LocalArray<ftype[3][3]> guh;
-  for (int d = 0; d < 3; ++d) {
-    ftype acc = 0;
-    for (int q = 0; q < p + 1; ++q) {
-      static constexpr auto deriv = Coeffs<p>::Dt;
-      acc += deriv(l, q) * shuffled_access<dir>(u, s, r, q, d);
-    }
-    guh(d, dir_0) = acc;
-
-    acc = 0;
-    for (int q = 0; q < p + 1; ++q) {
-      static constexpr auto deriv = Coeffs<p>::D;
-      acc += deriv(r, q) * uhat(s, q, d);
-    }
-    guh(d, dir_1) = acc;
-
-    acc = 0;
-    for (int q = 0; q < p + 1; ++q) {
-      static constexpr auto deriv = Coeffs<p>::D;
-      acc += deriv(s, q) * uhat(q, r, d);
-    }
-    guh(d, dir_2) = acc;
-  }
-
-  const auto invjact = geom::linear_hex_invjact_scs<p, dir>(box, l, s, r);
-  LocalArray<ftype[3][3]> gu;
-  transform_tensor(invjact, guh, gu);
-  return gu;
-}
-
-template <
-  int p,
-  int dir,
-  typename BoxArrayType,
   typename AdvArrayType,
   typename ViscosityArrayType,
   typename UArrayType>
@@ -102,7 +53,7 @@ momentum_flux(
 {
   enum { XH = 0, YH = 1, ZH = 2 };
 
-  const auto gu = compute_gradient<p, dir>(box, u, uhat, l, s, r);
+  const auto gu = gradient_scs<p, dir>(box, u, uhat, l, s, r);
   const auto mdot_h = adv(dir, l, s, r);
   const auto visc_ip = interp_scs<p, dir>(visc, l, s, r);
   const auto areav = geom::linear_area<p, dir>(box, l, s, r);
@@ -202,6 +153,7 @@ KOKKOS_FORCEINLINE_FUNCTION void
 momentum_mass(
   int index,
   const Kokkos::Array<double, 3> gammas,
+  const const_scalar_view<p>& rho,
   const const_scalar_view<p>& vm1,
   const const_scalar_view<p>& vp0,
   const const_scalar_view<p>& vp1,
@@ -219,12 +171,13 @@ momentum_mass(
         const auto vm1_val = vm1(index, k, j, i);
         const auto vp0_val = vp0(index, k, j, i);
         const auto vp1_val = vp1(index, k, j, i);
+        const auto vol = vp1(index, k, j, i) / rho(index, k, j, i);
         for (int d = 0; d < 3; ++d) {
           scratch(i, d) =
             -(gammas[0] * vp1_val * up1(index, k, j, i, d) +
               gammas[1] * vp0_val * up0(index, k, j, i, d) +
               gammas[2] * vm1_val * um1(index, k, j, i, d) +
-              vp1_val * gp(index, k, j, i, d));
+              vol * gp(index, k, j, i, d));
         }
       }
 
@@ -273,6 +226,7 @@ momentum_residual_t<p>::invoke(
   Kokkos::Array<double, 3> gammas,
   const_elem_offset_view<p> offsets,
   const_vector_view<p> xc,
+  const_scalar_view<p> rho,
   const_scalar_view<p> visc,
   const_scalar_view<p> vm1,
   const_scalar_view<p> vp0,
@@ -300,20 +254,21 @@ momentum_residual_t<p>::invoke(
               const auto scaled_vp1 = fac * vp1(index, k, j, i);
               const auto scaled_vp0 = fac * vp0(index, k, j, i);
               const auto scaled_vm1 = fac * vm1(index, k, j, i);
+              const auto vol = scaled_vp1 / rho(index, k, j, i);
 
               for (int d = 0; d < 3; ++d) {
                 elem_rhs(k, j, i, d) =
                   gammas[0] * scaled_vp1 * up1(index, k, j, i, d) +
                   gammas[1] * scaled_vp0 * up0(index, k, j, i, d) +
                   gammas[2] * scaled_vm1 * um1(index, k, j, i, d) +
-                  scaled_vp1 * gp(index, k, j, i, d);
+                  vol * gp(index, k, j, i, d);
               }
             }
           }
         }
       } else {
         momentum_mass<p>(
-          index, gammas, vm1, vp0, vp1, um1, up0, up1, gp, elem_rhs);
+          index, gammas, rho, vm1, vp0, vp1, um1, up0, up1, gp, elem_rhs);
       }
 
       auto uvec = Kokkos::subview(

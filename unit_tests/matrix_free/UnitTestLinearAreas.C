@@ -51,7 +51,7 @@ area_single_cube_hex_p()
             const auto old_coords =
               Kokkos::Array<ftype, 3>{{nodes[i], nodes[j], nodes[k]}};
             Kokkos::Array<ftype, 3> new_coords;
-            transform_vector(jac, old_coords, new_coords);
+            transform(jac, old_coords, new_coords);
             for (int d = 0; d < 3; ++d) {
               coords(index, k, j, i, d) = new_coords[d] + 2;
             }

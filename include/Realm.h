@@ -611,6 +611,8 @@ class Realm {
   double get_turb_model_constant(
     const TurbulenceModelConstant turbModelEnum);
 
+  TurbulenceModel get_turbulence_model() const;
+
   // element promotion options
   bool doPromotion_; // conto
   unsigned promotionOrder_;

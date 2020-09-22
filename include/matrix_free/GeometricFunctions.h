@@ -32,10 +32,12 @@ hex_jacobian_component_scs(const BoxArray& box, int l, int s, int r)
   typename BoxArray::value_type jac(0);
   switch (dj) {
   case XH: {
-    const double lj =
-      (dk == YH) ? ntlin(LN, l) : (dk == XH) ? nlin(LN, r) : nlin(LN, s);
-    const double rj =
-      (dk == YH) ? ntlin(RN, l) : (dk == XH) ? nlin(RN, r) : nlin(RN, s);
+    const double lj = (dk == YH)   ? ntlin(LN, l)
+                      : (dk == XH) ? nlin(LN, r)
+                                   : nlin(LN, s);
+    const double rj = (dk == YH)   ? ntlin(RN, l)
+                      : (dk == XH) ? nlin(RN, r)
+                                   : nlin(RN, s);
 
     const double lk = (dk == ZH) ? ntlin(LN, l) : nlin(LN, s);
     const double rk = (dk == ZH) ? ntlin(RN, l) : nlin(RN, s);
@@ -61,10 +63,12 @@ hex_jacobian_component_scs(const BoxArray& box, int l, int s, int r)
     const double li = (dk == XH) ? ntlin(LN, l) : nlin(LN, r);
     const double ri = (dk == XH) ? ntlin(RN, l) : nlin(RN, r);
 
-    const double lj =
-      (dk == YH) ? ntlin(LN, l) : (dk == XH) ? nlin(LN, r) : nlin(LN, s);
-    const double rj =
-      (dk == YH) ? ntlin(RN, l) : (dk == XH) ? nlin(RN, r) : nlin(RN, s);
+    const double lj = (dk == YH)   ? ntlin(LN, l)
+                      : (dk == XH) ? nlin(LN, r)
+                                   : nlin(LN, s);
+    const double rj = (dk == YH)   ? ntlin(RN, l)
+                      : (dk == XH) ? nlin(RN, r)
+                                   : nlin(RN, s);
 
     jac = -li * lj * box(di, 0) - ri * lj * box(di, 1) - ri * rj * box(di, 2) -
           li * rj * box(di, 3) + li * lj * box(di, 4) + ri * lj * box(di, 5) +
@@ -173,6 +177,66 @@ laplacian_metric(const BoxArray& box, int k, int j, int i)
                     adj_jac(ZH, ZH) * adj_jac(YH, ZH))}};
   }
 }
+
+template <int p, int dj, int di, typename CoeffArray, typename BoxArray>
+KOKKOS_FUNCTION typename BoxArray::value_type
+hex_jacobian_component(
+  const CoeffArray& Nlin, const BoxArray& box, int k, int j, int i)
+{
+  enum { LN = 0, RN = 1 };
+  enum { XH = 0, YH = 1, ZH = 2 };
+  if (dj == XH) {
+    return (-Nlin(LN, j) * Nlin(LN, k) * box(di, 0) +
+            Nlin(LN, j) * Nlin(LN, k) * box(di, 1) +
+            Nlin(RN, j) * Nlin(LN, k) * box(di, 2) -
+            Nlin(RN, j) * Nlin(LN, k) * box(di, 3) -
+            Nlin(LN, j) * Nlin(RN, k) * box(di, 4) +
+            Nlin(LN, j) * Nlin(RN, k) * box(di, 5) +
+            Nlin(RN, j) * Nlin(RN, k) * box(di, 6) -
+            Nlin(RN, j) * Nlin(RN, k) * box(di, 7)) *
+           0.5;
+  } else if (dj == YH) {
+    return (-Nlin(LN, i) * Nlin(LN, k) * box(di, 0) -
+            Nlin(RN, i) * Nlin(LN, k) * box(di, 1) +
+            Nlin(RN, i) * Nlin(LN, k) * box(di, 2) +
+            Nlin(LN, i) * Nlin(LN, k) * box(di, 3) -
+            Nlin(LN, i) * Nlin(RN, k) * box(di, 4) -
+            Nlin(RN, i) * Nlin(RN, k) * box(di, 5) +
+            Nlin(RN, i) * Nlin(RN, k) * box(di, 6) +
+            Nlin(LN, i) * Nlin(RN, k) * box(di, 7)) *
+           0.5;
+  } else {
+    return (-Nlin(LN, i) * Nlin(LN, j) * box(di, 0) -
+            Nlin(RN, i) * Nlin(LN, j) * box(di, 1) -
+            Nlin(RN, i) * Nlin(RN, j) * box(di, 2) -
+            Nlin(LN, i) * Nlin(RN, j) * box(di, 3) +
+            Nlin(LN, i) * Nlin(LN, j) * box(di, 4) +
+            Nlin(RN, i) * Nlin(LN, j) * box(di, 5) +
+            Nlin(RN, i) * Nlin(RN, j) * box(di, 6) +
+            Nlin(LN, i) * Nlin(RN, j) * box(di, 7)) *
+           0.5;
+  }
+}
+
+template <int p, typename BoxArray>
+KOKKOS_FUNCTION LocalArray<typename BoxArray::value_type[3][3]>
+linear_hex_jacobian(const BoxArray& box, int k, int j, int i)
+{
+  static constexpr auto coeff = Coeffs<p>::Nlin;
+  enum { XH = 0, YH = 1, ZH = 2 };
+  LocalArray<typename BoxArray::value_type[3][3]> jac;
+  jac(0, 0) = hex_jacobian_component<p, XH, XH>(coeff, box, k, j, i);
+  jac(0, 1) = hex_jacobian_component<p, XH, YH>(coeff, box, k, j, i);
+  jac(0, 2) = hex_jacobian_component<p, XH, ZH>(coeff, box, k, j, i);
+  jac(1, 0) = hex_jacobian_component<p, YH, XH>(coeff, box, k, j, i);
+  jac(1, 1) = hex_jacobian_component<p, YH, YH>(coeff, box, k, j, i);
+  jac(1, 2) = hex_jacobian_component<p, YH, ZH>(coeff, box, k, j, i);
+  jac(2, 0) = hex_jacobian_component<p, ZH, XH>(coeff, box, k, j, i);
+  jac(2, 1) = hex_jacobian_component<p, ZH, YH>(coeff, box, k, j, i);
+  jac(2, 2) = hex_jacobian_component<p, ZH, ZH>(coeff, box, k, j, i);
+  return jac;
+}
+
 
 } // namespace geom
 } // namespace matrix_free
