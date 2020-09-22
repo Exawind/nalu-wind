@@ -136,7 +136,10 @@ TEST_F(
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, interior_selector)) {
     for (auto node : *ib) {
-      ASSERT_NEAR(view_h(elid(node.local_offset()), 0), 0, 1.0e-14);
+      const int lid = elid(node.local_offset());
+      if (lid < view_h.extent_int(0)) {
+        ASSERT_NEAR(view_h(lid, 0), 0, 1.0e-14);
+      }
     }
   }
 }
