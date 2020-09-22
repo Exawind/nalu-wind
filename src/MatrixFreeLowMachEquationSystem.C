@@ -126,17 +126,15 @@ void
 MatrixFreeLowMachEquationSystem::register_copy_state_algorithm(
   std::string name, int length, stk::mesh::Part& part)
 {
-  auto* field =
-    meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, name);
+  auto* field = meta_.get_field(stk::topology::NODE_RANK, name);
   auto copy = new CopyFieldAlgorithm(
-    realm_, &part, &field->field_of_state(stk::mesh::StateNP1),
-    &field->field_of_state(stk::mesh::StateN), 0, length,
-    stk::topology::NODE_RANK);
+    realm_, &part, field->field_state(stk::mesh::StateNP1),
+    field->field_state(stk::mesh::StateN), 0, length, stk::topology::NODE_RANK);
   copyStateAlg_.push_back(copy);
 
   auto copyn = new CopyFieldAlgorithm(
-    realm_, &part, &field->field_of_state(stk::mesh::StateNP1),
-    &field->field_of_state(stk::mesh::StateNM1), 0, length,
+    realm_, &part, field->field_state(stk::mesh::StateNP1),
+    field->field_state(stk::mesh::StateNM1), 0, length,
     stk::topology::NODE_RANK);
   copyStateAlg_.push_back(copyn);
 }

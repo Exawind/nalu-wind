@@ -138,7 +138,7 @@ TEST_F(
     for (auto node : *ib) {
       const int lid = elid(node.local_offset());
       if (lid < view_h.extent_int(0)) {
-        ASSERT_NEAR(view_h(elid(node.local_offset()), 0), 0, 1.0e-14);
+        ASSERT_NEAR(view_h(lid, 0), 0, 1.0e-14);
       }
     }
   }
