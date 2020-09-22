@@ -169,6 +169,8 @@ MatrixFreeLowMachEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     meta_, names::pressure, *part, one_state, 0);
   realm_.augment_restart_variable_list(names::pressure);
 
+  register_scalar_nodal_field_on_part(
+    meta_, names::scaled_filter_length, *part, one_state, 0);
   register_vector_nodal_field_on_part(
     meta_, names::dpdx_tmp, *part, one_state, {{0, 0, 0}});
   register_vector_nodal_field_on_part(
