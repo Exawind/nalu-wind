@@ -243,7 +243,7 @@ else(NOT ENABLE_CUDA)
   add_test_r(taylorGreenVortex_p3 2)
 
   if(ENABLE_OPENFAST)
-    add_test_r(nrel5MWactuatorLine 4)
+    add_test_r(nrel5MWactuatorLine 2)
     add_subdirectory(test_files/nrel5MWactuatorLine)
   endif()
 
