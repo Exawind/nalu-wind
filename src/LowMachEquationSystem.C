@@ -2893,7 +2893,7 @@ void
 MomentumEquationSystem::compute_strelets_des_alpha_upw()
 {
     using DblType = double;
-    using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+    using Traits = nalu_ngp::NGPMeshTraits<>;
 
     stk::mesh::MetaData & meta = realm_.meta_data();
     const int nDim = meta.spatial_dimension();

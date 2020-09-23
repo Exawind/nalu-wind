@@ -61,9 +61,6 @@ MomentumEdgeSolverAlg::execute()
   const DblType relaxFacU = realm_.solutionOptions_->get_relaxation_factor(dofName);
   const bool useLimiter = realm_.primitive_uses_limiter(dofName);
 
-  const DblType om_alpha = 1.0 - alpha;
-  const DblType om_alphaUpw = 1.0 - alphaUpw;
-
   // STK ngp::Field instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
@@ -124,12 +121,8 @@ MomentumEdgeSolverAlg::execute()
         }
       }
 
-      NALU_ALIGNED DblType pecnum = stk::math::abs(udotx) / (diffIp + eps);
-      NALU_ALIGNED DblType pecfac = pecFunc->execute(pecnum);
-      NALU_ALIGNED DblType om_pecfac = 1.0 - pecfac;
-
-      NALU_ALIGNED DblType limitL[nDimMax_] = { 1.0, 1.0, 1.0};
-      NALU_ALIGNED DblType limitR[nDimMax_] = { 1.0, 1.0, 1.0};
+      NALU_ALIGNED DblType limitL[NDimMax_] = { 1.0, 1.0, 1.0};
+      NALU_ALIGNED DblType limitR[NDimMax_] = { 1.0, 1.0, 1.0};
 
       if (useLimiter) {
         for (int d=0; d < ndim; ++d) {

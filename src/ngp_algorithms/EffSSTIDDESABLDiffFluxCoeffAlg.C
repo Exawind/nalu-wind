@@ -42,7 +42,7 @@ EffSSTIDDESABLDiffFluxCoeffAlg::EffSSTIDDESABLDiffFluxCoeffAlg(
 void
 EffSSTIDDESABLDiffFluxCoeffAlg::execute()
 {
-  using Traits = nalu_ngp::NGPMeshTraits<ngp::Mesh>;
+  using Traits = nalu_ngp::NGPMeshTraits<>;
 
   const auto& meta = realm_.meta_data();
 

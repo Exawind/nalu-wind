@@ -222,20 +222,15 @@ enum TurbulenceModelConstant {
   TM_ch2 = 35,
   TM_ch3 = 36,
   TM_tau_des = 37,
-  TM_sigmaMax = 38,
-  TM_ch1 = 39,
-  TM_ch2 = 40,
-  TM_ch3 = 41,
-  TM_tau_des = 42,
-  TM_iddes_Cw = 43,
-  TM_iddes_Cdt1 = 44,
-  TM_iddes_Cdt2 = 45,
-  TM_iddes_Cl = 46,
-  TM_iddes_Ct = 47,
-  TM_abl_bndtw = 48,
-  TM_abl_deltandtw = 49,
-  TM_abl_sigma = 50,
-  TM_END = 51
+  TM_iddes_Cw = 38,
+  TM_iddes_Cdt1 = 39,
+  TM_iddes_Cdt2 = 40,
+  TM_iddes_Cl = 41,
+  TM_iddes_Ct = 42,
+  TM_abl_bndtw = 43,
+  TM_abl_deltandtw = 44,
+  TM_abl_sigma = 45,
+  TM_END = 46
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
