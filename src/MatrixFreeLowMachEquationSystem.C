@@ -400,7 +400,7 @@ MatrixFreeLowMachEquationSystem::initialize_solve_and_update()
   // the preconditioner isn't needed anymore
   // so we can get rid of it.  This isn't a good idea
   // if we want to support mesh motion here
-  precond_linsys_.release();
+  precond_linsys_.reset();
 
   update_->compute_gradient_preconditioner();
 
