@@ -62,6 +62,11 @@ public:
   void clip_min_distance_to_wall();
   void compute_f_one_blending();
   void update_and_clip();
+  void clip_sst(
+    const stk::mesh::NgpMesh& ngpMesh,
+    const stk::mesh::Selector& sel,
+    stk::mesh::NgpField<double>& tke, 
+    stk::mesh::NgpField<double>& sdr);
 
   TurbKineticEnergyEquationSystem *tkeEqSys_;
   SpecificDissipationRateEquationSystem *sdrEqSys_;
@@ -79,6 +84,10 @@ public:
   std::vector<stk::mesh::Part *> wallBcPart_;
 
   bool resetTAMSAverages_;     
+
+  const double tkeMinValue_{1.0e-8};
+  const double sdrMinValue_{1.0e-8};
+  const double sdrMaxValue_{1.0e12};
 };
 
 } // namespace nalu

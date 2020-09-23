@@ -274,48 +274,6 @@ ShearStressTransportEquationSystem::solve_and_update()
 
 }
 
-void clip_sst(
-  const stk::mesh::NgpMesh& ngpMesh,
-  const stk::mesh::Selector& sel,
-  const stk::mesh::NgpField<double>& density,
-  const stk::mesh::NgpField<double>& viscosity,
-  stk::mesh::NgpField<double>& tke, 
-  stk::mesh::NgpField<double>& sdr)
-{
-  tke.sync_to_device();
-  sdr.sync_to_device();
-
-  const double clipValue = 1.0e-8;
-  nalu_ngp::run_entity_algorithm(
-    "SST::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<>::MeshIndex& mi) {
-      const double tkeNew = tke.get(mi, 0);
-      const double sdrNew = sdr.get(mi, 0);
-
-      if ((tkeNew >= 0.0) && (sdrNew >= 0.0)) {
-        tke.get(mi, 0) = tkeNew;
-        sdr.get(mi, 0) = sdrNew;
-      } else if ((tkeNew < 0.0) && (sdrNew < 0.0)) {
-        // both negative; set TKE to small value, tvisc to molecular visc and use
-        // Prandtl/Kolm for SDR
-        tke.get(mi, 0) = clipValue;
-        sdr.get(mi, 0) = density.get(mi, 0) * clipValue / viscosity.get(mi, 0);
-      } else if (tkeNew < 0.0) {
-        // only TKE is off; reset turbulent viscosity to molecular vis and
-        // compute new TKE based on SDR and tvisc
-        sdr.get(mi, 0) = sdrNew;
-        tke.get(mi, 0) = viscosity.get(mi, 0) * sdrNew / density.get(mi, 0);
-      } else {
-        // Only SDR is off; reset turbulent viscosity to molecular visc and
-        // compute new SDR based on others
-        tke.get(mi, 0) = tkeNew;
-        sdr.get(mi, 0) = density.get(mi, 0) * tkeNew / viscosity.get(mi, 0);
-      }
-    });
-  tke.modify_on_device();
-  sdr.modify_on_device();
-}
-
 /** Perform sanity checks on TKE/SDR fields
  */
 void
@@ -330,12 +288,10 @@ ShearStressTransportEquationSystem::initial_work()
     tke_->mesh_meta_data_ordinal());
   auto& sdrNp1 = fieldMgr.get_field<double>(
     sdr_->mesh_meta_data_ordinal());
-  const auto& density = nalu_ngp::get_ngp_field(meshInfo, "density");
-  const auto& viscosity = nalu_ngp::get_ngp_field(meshInfo, "viscosity");
 
   const stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part()) & stk::mesh::selectField(*sdr_);
-  clip_sst(ngpMesh, sel, density, viscosity, tkeNp1, sdrNp1);
+  clip_sst(ngpMesh, sel, tkeNp1, sdrNp1);
 }
 
 void
@@ -350,13 +306,11 @@ ShearStressTransportEquationSystem::post_external_data_transfer_work()
     tke_->mesh_meta_data_ordinal());
   auto& sdrNp1 = fieldMgr.get_field<double>(
     sdr_->mesh_meta_data_ordinal());
-  const auto& density = nalu_ngp::get_ngp_field(meshInfo, "density");
-  const auto& viscosity = nalu_ngp::get_ngp_field(meshInfo, "viscosity");
 
   const stk::mesh::Selector owned_and_shared =
     (meta.locally_owned_part() | meta.globally_shared_part());
   auto interior_sel = owned_and_shared & stk::mesh::selectField(*sdr_);
-  clip_sst(ngpMesh, interior_sel, density, viscosity, tkeNp1, sdrNp1);
+  clip_sst(ngpMesh, interior_sel, tkeNp1, sdrNp1);
 
   auto sdrBCField = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "sdr_bc");
   auto tkeBCField = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tke_bc");
@@ -365,7 +319,7 @@ ShearStressTransportEquationSystem::post_external_data_transfer_work()
     auto bc_sel = owned_and_shared & stk::mesh::selectField(*sdrBCField);
     auto ngpTkeBC = fieldMgr.get_field<double>(tkeBCField->mesh_meta_data_ordinal());
     auto ngpSdrBC = fieldMgr.get_field<double>(sdrBCField->mesh_meta_data_ordinal());
-    clip_sst(ngpMesh, bc_sel, density, viscosity, ngpTkeBC, ngpSdrBC);
+    clip_sst(ngpMesh, bc_sel, ngpTkeBC, ngpSdrBC);
   }
 }
 
@@ -389,9 +343,6 @@ ShearStressTransportEquationSystem::update_and_clip()
     tkeEqSys_->kTmp_->mesh_meta_data_ordinal());
   const auto& wTmp = fieldMgr.get_field<double>(
     sdrEqSys_->wTmp_->mesh_meta_data_ordinal());
-  const auto& density = nalu_ngp::get_ngp_field(meshInfo, "density");
-  const auto& viscosity = nalu_ngp::get_ngp_field(meshInfo, "viscosity");
-  auto& turbVisc = nalu_ngp::get_ngp_field(meshInfo, "turbulent_viscosity");
 
   auto* turbViscosity = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "turbulent_viscosity");
@@ -400,40 +351,41 @@ ShearStressTransportEquationSystem::update_and_clip()
     (meta.locally_owned_part() | meta.globally_shared_part())
     & stk::mesh::selectField(*turbViscosity);
 
-  const double clipValue = 1.0e-8;
   nalu_ngp::run_entity_algorithm(
     "SST::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double tkeNew = tkeNp1.get(mi, 0) + kTmp.get(mi, 0);
       const double sdrNew = sdrNp1.get(mi, 0) + wTmp.get(mi, 0);
 
-      if ((tkeNew >= 0.0) && (sdrNew >= 0.0)) {
-        tkeNp1.get(mi, 0) = tkeNew;
-        sdrNp1.get(mi, 0) = sdrNew;
-      } else if ((tkeNew < 0.0) && (sdrNew < 0.0)) {
-        // both negative; set TKE to small value, tvisc to molecular visc and use
-        // Prandtl/Kolm for SDR
-        tkeNp1.get(mi, 0) = clipValue;
-        turbVisc.get(mi, 0) = viscosity.get(mi, 0);
-        sdrNp1.get(mi, 0) = density.get(mi, 0) * clipValue / viscosity.get(mi, 0);
-      } else if (tkeNew < 0.0) {
-        // only TKE is off; reset turbulent viscosity to molecular vis and
-        // compute new TKE based on SDR and tvisc
-        turbVisc.get(mi, 0) = viscosity.get(mi, 0);
-        sdrNp1.get(mi, 0) = sdrNew;
-        tkeNp1.get(mi, 0) = viscosity.get(mi, 0) * sdrNew / density.get(mi, 0);
-      } else {
-        // Only SDR is off; reset turbulent viscosity to molecular visc and
-        // compute new SDR based on others
-        turbVisc.get(mi, 0) = viscosity.get(mi, 0);
-        tkeNp1.get(mi, 0) = tkeNew;
-        sdrNp1.get(mi, 0) = density.get(mi, 0) * tkeNew / viscosity.get(mi, 0);
-      }
+      tkeNp1.get(mi, 0) = stk::math::max(tkeNew, tkeMinValue_);
+      sdrNp1.get(mi, 0) = stk::math::max( stk::math::min(sdrNew, sdrMaxValue_), sdrMinValue_);
     });
 
   tkeNp1.modify_on_device();
   sdrNp1.modify_on_device();
-  turbVisc.modify_on_device();
+}
+
+void
+ShearStressTransportEquationSystem::clip_sst(
+  const stk::mesh::NgpMesh& ngpMesh,
+  const stk::mesh::Selector& sel,
+  stk::mesh::NgpField<double>& tke, 
+  stk::mesh::NgpField<double>& sdr)
+{
+  tke.sync_to_device();
+  sdr.sync_to_device();
+
+  nalu_ngp::run_entity_algorithm(
+    "SST::clip", ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<>::MeshIndex& mi) {
+      const double tkeNew = tke.get(mi, 0);
+      const double sdrNew = sdr.get(mi, 0);
+
+      tke.get(mi, 0) = stk::math::max(tkeNew, tkeMinValue_);
+      sdr.get(mi, 0) = stk::math::max( stk::math::min(sdrNew, sdrMaxValue_), sdrMinValue_);
+    });
+  tke.modify_on_device();
+  sdr.modify_on_device();
 }
 
 //--------------------------------------------------------------------------
