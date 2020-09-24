@@ -49,6 +49,8 @@ LowMachFixture::LowMachFixture(int nx, double scale)
         stk::topology::NODE_RANK, "velocity", 3)),
     viscosity_field(meta.declare_field<stk::mesh::Field<double>>(
       stk::topology::NODE_RANK, "viscosity")),
+    filter_scale_field(meta.declare_field<stk::mesh::Field<double>>(
+      stk::topology::NODE_RANK, "scaled_filter_length")),
     pressure_field(meta.declare_field<stk::mesh::Field<double>>(
       stk::topology::NODE_RANK, "pressure")),
     dpdx_field(
@@ -66,6 +68,7 @@ LowMachFixture::LowMachFixture(int nx, double scale)
   stk::mesh::put_field_on_mesh(
     velocity_field, meta.universal_part(), 3, nullptr);
   stk::mesh::put_field_on_mesh(viscosity_field, meta.universal_part(), 1, &one);
+  stk::mesh::put_field_on_mesh(filter_scale_field, meta.universal_part(), 1, &one);
   stk::mesh::put_field_on_mesh(
     pressure_field, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(dpdx_field, meta.universal_part(), 3, nullptr);

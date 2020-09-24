@@ -15,6 +15,7 @@
 #include "matrix_free/GradientSolutionUpdate.h"
 #include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LinSysInfo.h"
+#include "matrix_free/LowMachInfo.h"
 #include "matrix_free/LowMachGatheredFieldManager.h"
 #include "matrix_free/MomentumSolutionUpdate.h"
 #include "matrix_free/StkToTpetraMap.h"
@@ -97,7 +98,7 @@ public:
   void gather_velocity();
   void gather_pressure();
   void gather_grad_p();
-  void update_transport_coefficients();
+  void update_transport_coefficients(GradTurbModel model);
   void update_advection_metric(double dt);
 
   double provide_norm() const { return residual_norm_[VEL]; };

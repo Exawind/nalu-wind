@@ -165,9 +165,6 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  value_type& reference() const { return value; }
-
-  KOKKOS_INLINE_FUNCTION
   result_view_type view() const { return result_view_type(&value); }
 
   KOKKOS_INLINE_FUNCTION

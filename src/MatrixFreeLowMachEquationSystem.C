@@ -10,8 +10,11 @@
 #include "MatrixFreeLowMachEquationSystem.h"
 
 #include "matrix_free/EquationUpdate.h"
+#include "matrix_free/LocalDualNodalVolume.h"
 #include "matrix_free/LowMachUpdate.h"
+#include "matrix_free/MaxCourantReynolds.h"
 #include "matrix_free/SparsifiedEdgeLaplacian.h"
+#include "matrix_free/LocalDualNodalVolume.h"
 
 #include "AuxFunctionAlgorithm.h"
 #include "CopyFieldAlgorithm.h"
@@ -21,9 +24,10 @@
 #include "LinearSolverConfig.h"
 #include "LinearSolvers.h"
 #include "NaluEnv.h"
-#include "nalu_make_unique.h"
+#include "NaluParsing.h"
 #include "Realm.h"
 #include "Simulation.h"
+#include "SolutionOptions.h"
 #include "TimeIntegrator.h"
 #include "TpetraLinearSystem.h"
 #include "user_functions/TaylorGreenPressureAuxFunction.h"
@@ -41,6 +45,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/NgpFieldParallel.hpp"
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 #include "stk_mesh/base/Part.hpp"
 #include "stk_mesh/base/Types.hpp"
@@ -164,6 +169,8 @@ MatrixFreeLowMachEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     meta_, names::pressure, *part, one_state, 0);
   realm_.augment_restart_variable_list(names::pressure);
 
+  register_scalar_nodal_field_on_part(
+    meta_, names::scaled_filter_length, *part, one_state, 0);
   register_vector_nodal_field_on_part(
     meta_, names::dpdx_tmp, *part, one_state, {{0, 0, 0}});
   register_vector_nodal_field_on_part(
@@ -176,6 +183,58 @@ MatrixFreeLowMachEquationSystem::register_interior_algorithm(
 {
   check_part_is_valid(part);
   interior_selector_ |= *part;
+}
+
+void
+MatrixFreeLowMachEquationSystem::compute_filter_scale() const
+{
+  {
+    stk::mesh::ProfilingBlock pf("compute_filter_scale");
+    auto coords = get_node_field(meta_, realm_.get_coordinates_name());
+    coords.sync_to_device();
+    // compute the dual node volume first, then overwrite the field
+    auto dnv = get_node_field(meta_, names::scaled_filter_length);
+    matrix_free::local_dual_nodal_volume(
+      realm_.polynomial_order(), realm_.ngp_mesh(), interior_selector_, coords,
+      dnv);
+
+    stk::mesh::parallel_sum<double>(realm_.bulk_data(), {&dnv}, false);
+    if (realm_.hasPeriodic_) {
+      realm_.periodic_field_update(
+        meta_.get_field(stk::topology::NODE_RANK, names::scaled_filter_length),
+        1);
+    }
+    dnv.sync_to_device();
+  }
+
+  {
+    stk::mesh::ProfilingBlock pf("compute filter scale from dnv");
+    auto filter_scale = get_node_field(meta_, names::scaled_filter_length);
+
+    double scaling = 0;
+    switch (realm_.get_turbulence_model()) {
+    case LAMINAR:
+      scaling = 0;
+      break;
+    case SMAGORINSKY:
+      scaling = realm_.get_turb_model_constant(TM_cmuCs);
+      break;
+    case WALE:
+      scaling = realm_.get_turb_model_constant(TM_Cw);
+      break;
+    default:
+      throw std::runtime_error("invalid turbulence model for matrix free");
+    }
+
+    stk::mesh::for_each_entity_run(
+      realm_.ngp_mesh(), stk::topology::NODE_RANK, interior_selector_,
+      KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) {
+        NGP_ThrowAssert(filter_scale.get(mi, 0) > 0);
+        filter_scale.get(mi, 0) =
+          scaling * stk::math::cbrt(filter_scale.get(mi, 0));
+      });
+    filter_scale.modify_on_device();
+  }
 }
 
 void
@@ -219,6 +278,8 @@ MatrixFreeLowMachEquationSystem::initialize()
 {
   stk::mesh::ProfilingBlock pf("MatrixFreeLowMachEquationSystem::initialize");
   validate_matrix_free_linear_solver_config();
+  compute_filter_scale();
+
   {
     stk::mesh::ProfilingBlock pfinner("create linsys");
 
@@ -228,7 +289,8 @@ MatrixFreeLowMachEquationSystem::initialize()
     auto* solver = realm_.root()->linearSolvers_->create_solver(
       solverName, realm_.name(), EQ_CONTINUITY);
 
-    precond_linsys_ = make_unique<TpetraLinearSystem>(realm_, 1, this, solver);
+    precond_linsys_ =
+      std::unique_ptr<TpetraLinearSystem>(new TpetraLinearSystem(realm_, 1, this, solver));
     precond_linsys_->buildSparsifiedEdgeElemToNodeGraph(interior_selector_);
     precond_linsys_->finalizeLinearSystem();
   }
@@ -258,6 +320,7 @@ void
 MatrixFreeLowMachEquationSystem::predict_state()
 {
   update_->predict_state();
+  update_->swap_states();
 }
 
 double
@@ -299,6 +362,8 @@ compute_scaled_gammas(const TimeIntegrator& ti)
 double
 compute_projected_timescale(const TimeIntegrator& ti)
 {
+  ThrowRequire(ti.get_time_step() > 0);
+  ThrowRequire(ti.get_gamma1() > 0);
   return ti.get_time_step() / ti.get_gamma1();
 }
 
@@ -443,7 +508,6 @@ MatrixFreeLowMachEquationSystem::correct_velocity(double proj_time_scale)
 {
   stk::mesh::ProfilingBlock pf(
     "MatrixFreeLowMachEquationSystem::correct_velocity");
-
   {
     stk::mesh::ProfilingBlock pf("pressure solve, periodic sync, and banner");
     ScopeTimer st{timerSolve_};
@@ -532,6 +596,25 @@ MatrixFreeLowMachEquationSystem::compute_courant_reynolds()
   }
 }
 
+namespace {
+
+matrix_free::GradTurbModel
+gradient_turbulence_model(TurbulenceModel all_models)
+{
+  switch (all_models) {
+  case LAMINAR:
+    return matrix_free::GradTurbModel::LAM;
+  case SMAGORINSKY:
+    return matrix_free::GradTurbModel::SMAG;
+  case WALE:
+    return matrix_free::GradTurbModel::WALE;
+  default:
+    throw std::runtime_error("Invalid turbulence model for matrix-free");
+    return matrix_free::GradTurbModel::LAM;
+  }
+}
+} // namespace
+
 void
 MatrixFreeLowMachEquationSystem::solve_and_update()
 {
@@ -542,24 +625,21 @@ MatrixFreeLowMachEquationSystem::solve_and_update()
     initialize_solve_and_update();
   }
 
-  {
-    ScopeTimer st{timerAssemble_};
-    update_->swap_states();
-    update_->gather_velocity();
-    update_->update_transport_coefficients();
-  }
-
   const auto gammas = compute_scaled_gammas(*realm_.timeIntegrator_);
   const auto proj_time_scale =
     compute_projected_timescale(*realm_.timeIntegrator_);
 
   {
-    ScopeTimer st{timerPrecond_};
-    update_->compute_momentum_preconditioner(gammas[0]);
+    ScopeTimer st{timerAssemble_};
+    update_->gather_velocity();
   }
 
   for (int k = 0; k < maxIterations_; ++k) {
     nonlinear_iteration_banner(k, maxIterations_, userSuppliedName_, log());
+    const auto gradient_model =
+      gradient_turbulence_model(realm_.get_turbulence_model());
+    update_->update_transport_coefficients(gradient_model);
+    update_->compute_momentum_preconditioner(gammas[0]);
     compute_provisional_velocity(gammas);
     correct_velocity(proj_time_scale);
   }
