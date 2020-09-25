@@ -13,7 +13,7 @@
 #include "matrix_free/ConductionFields.h"
 #include "matrix_free/ConductionInfo.h"
 #include "matrix_free/KokkosViewTypes.h"
-#include "matrix_free/ScalarDirichletBC.h"
+#include "matrix_free/StrongDirichletBC.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
 #include "matrix_free/StkSimdNodeConnectivityMap.h"
 #include "matrix_free/StkToTpetraLocalIndices.h"
@@ -55,10 +55,10 @@ protected:
       exporter(
         Teuchos::rcpFromRef(owned_and_shared_map),
         Teuchos::rcpFromRef(owned_map)),
-      owned_lhs(Teuchos::rcpFromRef(owned_map), 1),
-      owned_rhs(Teuchos::rcpFromRef(owned_map), 1),
-      owned_and_shared_lhs(Teuchos::rcpFromRef(owned_and_shared_map), 1),
-      owned_and_shared_rhs(Teuchos::rcpFromRef(owned_and_shared_map), 1),
+      owned_lhs(Teuchos::rcpFromRef(owned_map), 3),
+      owned_rhs(Teuchos::rcpFromRef(owned_map), 3),
+      owned_and_shared_lhs(Teuchos::rcpFromRef(owned_and_shared_map), 3),
+      owned_and_shared_rhs(Teuchos::rcpFromRef(owned_and_shared_map), 3),
       elid(make_stk_lid_to_tpetra_lid_map(
         mesh,
         meta.universal_part(),
@@ -98,21 +98,17 @@ protected:
   const const_node_offset_view dirichlet_offsets;
 };
 
-TEST_F(DirichletFixture, bc_residual)
+TEST_F(DirichletFixture, bc_residual_scalar)
 {
-  auto qp1_ngp = stk::mesh::get_updated_ngp_field<double>(q_field);
-  qp1_ngp.sync_to_device();
   auto qp1 = node_scalar_view("qp1_at_bc", dirichlet_nodes.extent_int(0));
-  field_gather(dirichlet_nodes, qp1_ngp, qp1);
+  Kokkos::deep_copy(qp1, 5);
 
-  auto qbc_ngp = stk::mesh::get_updated_ngp_field<double>(qbc_field);
-  qbc_ngp.sync_to_device();
   auto qbc =
     node_scalar_view("qspecified_at_bc", dirichlet_nodes.extent_int(0));
-  field_gather(dirichlet_nodes, qbc_ngp, qbc);
+  Kokkos::deep_copy(qbc, -2.3);
 
   owned_and_shared_rhs.putScalar(0.);
-  scalar_dirichlet_residual(
+  dirichlet_residual(
     dirichlet_offsets, qp1, qbc, owned_rhs.getLocalLength(),
     owned_and_shared_rhs.getLocalViewDevice());
   owned_and_shared_rhs.modify_device();
@@ -129,6 +125,34 @@ TEST_F(DirichletFixture, bc_residual)
   ASSERT_DOUBLE_EQ(maxval, 7.3);
 }
 
+TEST_F(DirichletFixture, bc_residual_vector)
+{
+  auto qp1 = node_vector_view("qp1_at_bc", dirichlet_nodes.extent_int(0));
+  Kokkos::deep_copy(qp1, 5.0);
+
+  auto qbc = node_vector_view("qbc", dirichlet_nodes.extent_int(0));
+  Kokkos::deep_copy(qbc, -2.3);
+
+  owned_and_shared_rhs.putScalar(0.);
+  dirichlet_residual(
+    dirichlet_offsets, qp1, qbc, owned_rhs.getLocalLength(),
+    owned_and_shared_rhs.getLocalViewDevice());
+  owned_and_shared_rhs.modify_device();
+  owned_rhs.putScalar(0.);
+  owned_rhs.doExport(owned_and_shared_rhs, exporter, Tpetra::ADD);
+
+  owned_rhs.sync_host();
+  auto view_h = owned_rhs.getLocalViewHost();
+
+  double maxval = -1;
+  for (size_t k = 0u; k < owned_rhs.getLocalLength(); ++k) {
+    for (int d = 0; d < 3; ++d) {
+      maxval = std::max(maxval, std::abs(view_h(k, d)));
+    }
+  }
+  ASSERT_DOUBLE_EQ(maxval, 7.3);
+}
+
 TEST_F(DirichletFixture, linearized_bc_residual)
 {
   constexpr double some_val = 85432.2;
@@ -136,7 +160,7 @@ TEST_F(DirichletFixture, linearized_bc_residual)
 
   owned_and_shared_lhs.doImport(owned_lhs, exporter, Tpetra::INSERT);
 
-  scalar_dirichlet_linearized(
+  dirichlet_linearized(
     dirichlet_offsets, owned_lhs.getLocalLength(),
     owned_and_shared_lhs.getLocalViewDevice(),
     owned_and_shared_rhs.getLocalViewDevice());

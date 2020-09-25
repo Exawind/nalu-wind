@@ -74,6 +74,10 @@ gather_required_lowmach_fields_t<p>::invoke(
     conn, get_and_sync_ngp_field(meta, lowmach_info::pressure_grad_name),
     fields.gp);
 
+  fields.force = vector_view<p>{"force", conn.extent(0)};
+  field_gather<p>(
+    conn, get_and_sync_ngp_field(meta, lowmach_info::force_name), fields.force);
+
   fields.pressure = scalar_view<p>{"pressure", conn.extent(0)};
   field_gather<p>(
     conn, get_and_sync_ngp_field(meta, lowmach_info::pressure_grad_name),

@@ -92,6 +92,11 @@ void field_gather(
   const stk::mesh::NgpField<double>&,
   node_scalar_view);
 
+void field_gather(
+  const_node_mesh_index_view,
+  const stk::mesh::NgpField<double>&,
+  node_vector_view);
+
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

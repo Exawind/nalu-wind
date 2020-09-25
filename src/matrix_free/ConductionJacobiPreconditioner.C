@@ -12,6 +12,7 @@
 #include "matrix_free/ConductionDiagonal.h"
 #include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/PolynomialOrders.h"
+#include "matrix_free/StrongDirichletBC.h"
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Parallel.hpp>

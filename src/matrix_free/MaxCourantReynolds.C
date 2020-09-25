@@ -90,10 +90,12 @@ compute_max_reynolds(
         }
 
         ftype mu_div_rho = 0;
-        for (int q = 0; q < p + 1; ++q) {
-          static constexpr auto interp = Coeffs<p>::Nt;
-          mu_div_rho += interp(l, q) * shuffled_access<dir>(visc, s, r, q) /
-                        shuffled_access<dir>(rho, s, r, q);
+        {
+          const auto ntlin = Coeffs<p>::Ntlin;
+          mu_div_rho = ntlin(0, l) * (shuffled_access<dir>(visc, s, r, 0) /
+                                      shuffled_access<dir>(rho, s, r, 0)) +
+                       ntlin(1, l) * (shuffled_access<dir>(visc, s, r, p) /
+                                      shuffled_access<dir>(rho, s, r, p));
         }
         constexpr double small = 1.e-16;
         const auto reynolds = stk::math::abs(udotx) / (mu_div_rho + small);

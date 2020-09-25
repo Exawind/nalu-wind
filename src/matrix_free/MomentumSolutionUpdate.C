@@ -32,10 +32,12 @@ MomentumSolutionUpdate<p>::MomentumSolutionUpdate(
   Teuchos::ParameterList params,
   const StkToTpetraMaps& linsys,
   const Tpetra::Export<>& exporter,
-  const_elem_offset_view<p> offsets)
+  const_elem_offset_view<p> offsets,
+  const_node_offset_view dirichlet_bc_offsets)
   : linsys_(linsys),
     exporter_(exporter),
     offsets_(offsets),
+    dirichlet_bc_offsets_(dirichlet_bc_offsets),
     resid_op_(offsets, exporter_),
     lin_op_(offsets, exporter_),
     prec_op_(offsets, exporter_),
@@ -54,6 +56,7 @@ MomentumSolutionUpdate<p>::compute_preconditioner(
 
   linear_solver_.set_preconditioner(prec_op_);
   prec_op_.set_linear_operator(Teuchos::rcpFromRef(lin_op_));
+  prec_op_.set_dirichlet_nodes(dirichlet_bc_offsets_);
   prec_op_.compute_diagonal(
     gamma, fields.volume_metric, fields.advection_metric,
     fields.diffusion_metric);
@@ -62,10 +65,13 @@ MomentumSolutionUpdate<p>::compute_preconditioner(
 template <int p>
 const Tpetra::MultiVector<double>&
 MomentumSolutionUpdate<p>::compute_residual(
-  Kokkos::Array<double, 3> gammas, LowMachResidualFields<p> fields)
+  Kokkos::Array<double, 3> gammas,
+  LowMachResidualFields<p> fields,
+  LowMachBCFields<p> bc)
 {
   stk::mesh::ProfilingBlock pf("MomentumSolutionUpdate<p>::compute_residual");
   resid_op_.set_fields(gammas, fields);
+  resid_op_.set_bc_fields(dirichlet_bc_offsets_, bc);
   linear_solver_.rhs().putScalar(0.);
   resid_op_.compute(linear_solver_.rhs());
   return linear_solver_.rhs();
@@ -77,6 +83,7 @@ MomentumSolutionUpdate<p>::compute_delta(
   double gamma, LowMachLinearizedResidualFields<p> coeffs)
 {
   stk::mesh::ProfilingBlock pf("MomentumSolutionUpdate<p>::compute_delta");
+  lin_op_.set_dirichlet_nodes(dirichlet_bc_offsets_);
   lin_op_.set_fields(gamma, coeffs);
   linear_solver_.solve();
   if (exporter_.getTargetMap()->isDistributed()) {

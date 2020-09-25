@@ -59,6 +59,9 @@ LowMachFixture::LowMachFixture(int nx, double scale)
     dpdx_tmp_field(
       meta.declare_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
         stk::topology::NODE_RANK, "dpdx_tmp")),
+    body_force_field(
+      meta.declare_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+        stk::topology::NODE_RANK, "body_force")),
     gid_field(meta.declare_field<stk::mesh::Field<gid_type>>(
       stk::topology::NODE_RANK, linsys_info::gid_name))
 {
@@ -68,12 +71,15 @@ LowMachFixture::LowMachFixture(int nx, double scale)
   stk::mesh::put_field_on_mesh(
     velocity_field, meta.universal_part(), 3, nullptr);
   stk::mesh::put_field_on_mesh(viscosity_field, meta.universal_part(), 1, &one);
-  stk::mesh::put_field_on_mesh(filter_scale_field, meta.universal_part(), 1, &one);
+  stk::mesh::put_field_on_mesh(
+    filter_scale_field, meta.universal_part(), 1, &one);
   stk::mesh::put_field_on_mesh(
     pressure_field, meta.universal_part(), 1, nullptr);
   stk::mesh::put_field_on_mesh(dpdx_field, meta.universal_part(), 3, nullptr);
   stk::mesh::put_field_on_mesh(
     dpdx_tmp_field, meta.universal_part(), 3, nullptr);
+  stk::mesh::put_field_on_mesh(
+    body_force_field, meta.universal_part(), 3, nullptr);
 
   const std::string nx_s = std::to_string(nx);
   const std::string name =
