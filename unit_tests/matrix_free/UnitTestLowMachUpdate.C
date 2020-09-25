@@ -51,6 +51,7 @@ protected:
         Teuchos::ParameterList{},
         Teuchos::ParameterList{},
         active(),
+        stk::mesh::Selector{},
         linsys.owned,
         linsys.owned_and_shared,
         linsys.stk_lid_to_tpetra_lid))

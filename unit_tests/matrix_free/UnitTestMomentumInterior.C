@@ -86,9 +86,10 @@ public:
     Kokkos::deep_copy(um1, 1.0);
     Kokkos::deep_copy(up0, 1.0);
     Kokkos::deep_copy(up1, 1.0);
-    Kokkos::deep_copy(visc, 1.0);
     Kokkos::deep_copy(rho, 1.0);
+    Kokkos::deep_copy(visc, 1.0);
     Kokkos::deep_copy(gp, 0.0);
+    Kokkos::deep_copy(force, 0.0);
 
     auto areas = geom::linear_areas<order>(xc);
     metric = geom::diffusion_metric<order>(xc);
@@ -106,10 +107,10 @@ public:
   vector_view<order> um1{"um1", num_elems};
   vector_view<order> up0{"up0", num_elems};
   vector_view<order> up1{"up1", num_elems};
-  scalar_view<order> visc{"visc", num_elems};
   scalar_view<order> rho{"rho", num_elems};
-
+  scalar_view<order> visc{"visc", num_elems};
   vector_view<order> gp{"gp", num_elems};
+  vector_view<order> force{"gp", num_elems};
 
   elem_offset_view<order> offsets{"offsets", num_elems};
   scalar_view<order> vol{"vol", num_elems};
@@ -125,8 +126,8 @@ TEST_F(MomentumResidualFixture, residual_executes)
 
   rhs.putScalar(0.);
   momentum_residual<order>(
-    gammas, offsets, xc, rho, visc, vol, vol, vol, um1, up0, up1, gp, mdot,
-    rhs.getLocalViewDevice());
+    gammas, offsets, xc, rho, visc, vol, vol, vol, um1, up0, up1, gp, force,
+    mdot, rhs.getLocalViewDevice());
 }
 
 TEST_F(MomentumResidualFixture, linearized_residual_executes)

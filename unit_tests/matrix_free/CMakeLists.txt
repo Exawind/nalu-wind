@@ -37,8 +37,8 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumJacobiOperator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumOperator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumSolutionUpdate.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarDirichletBC.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarFluxBC.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStrongDirichletBC.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSparsifiedEdgeLaplacian.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkSimdConnectivityMap.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestStkSimdNodeConnectivityMap.C

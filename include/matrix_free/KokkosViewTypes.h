@@ -230,6 +230,18 @@ using const_node_scalar_view = Kokkos::View<
   typename ExecTraits<exec_space>::memory_space,
   typename ExecTraits<exec_space>::memory_traits>;
 
+using node_vector_view = Kokkos::View<
+  ftype*[3],
+  typename ExecTraits<exec_space>::layout,
+  typename ExecTraits<exec_space>::memory_space,
+  typename ExecTraits<exec_space>::memory_traits>;
+
+using const_node_vector_view = Kokkos::View<
+  const ftype*[3],
+  typename ExecTraits<exec_space>::layout,
+  typename ExecTraits<exec_space>::memory_space,
+  typename ExecTraits<exec_space>::memory_traits>;
+
 template <int p>
 using scalar_view = view_type<p, FieldType::NODAL_SCALAR, exec_space>;
 template <int p>

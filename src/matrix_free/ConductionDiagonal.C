@@ -121,20 +121,6 @@ conduction_diagonal_t<p>::invoke(
 INSTANTIATE_POLYSTRUCT(conduction_diagonal_t);
 } // namespace impl
 
-void
-dirichlet_diagonal(
-  const_node_offset_view offsets, int max_owned_lid, tpetra_view_type yout)
-{
-  Kokkos::parallel_for(
-    "dirichlet_diagonal", offsets.extent_int(0), KOKKOS_LAMBDA(int index) {
-      const int valid_simd_len = valid_offset(index, offsets);
-      for (int n = 0; n < valid_simd_len; ++n) {
-        const auto row_lid = offsets(index, n);
-        yout(row_lid, 0) = row_lid < max_owned_lid;
-      }
-    });
-}
-
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

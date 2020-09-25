@@ -35,6 +35,7 @@ struct LowMachResidualFields
   vector_view<p> um1;
   scalar_view<p> pressure;
   vector_view<p> gp;
+  vector_view<p> force;
 
   // geometric terms
   scalar_view<p> unscaled_volume_metric;
@@ -55,6 +56,15 @@ struct LowMachLinearizedResidualFields
   scs_scalar_view<p> advection_metric;
   scs_vector_view<p> diffusion_metric;
   scs_vector_view<p> laplacian_metric;
+};
+
+template <int p>
+struct LowMachBCFields
+{
+  node_vector_view up1;
+  node_vector_view ubc;
+  face_scalar_view<p> exposed_pressure;
+  face_vector_view<p> exposed_areas;
 };
 
 namespace impl {

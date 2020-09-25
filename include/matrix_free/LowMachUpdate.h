@@ -15,7 +15,6 @@
 #include "matrix_free/GradientSolutionUpdate.h"
 #include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LinSysInfo.h"
-#include "matrix_free/LowMachInfo.h"
 #include "matrix_free/LowMachGatheredFieldManager.h"
 #include "matrix_free/MomentumSolutionUpdate.h"
 #include "matrix_free/StkToTpetraMap.h"
@@ -71,11 +70,12 @@ public:
     Kokkos::View<gid_type*>);
 
   LowMachUpdate(
-    stk::mesh::BulkData&,
-    Teuchos::ParameterList,
-    Teuchos::ParameterList,
-    Teuchos::ParameterList,
-    stk::mesh::Selector,
+    stk::mesh::BulkData& bulk_in,
+    Teuchos::ParameterList params_mom,
+    Teuchos::ParameterList params_cont,
+    Teuchos::ParameterList params_grad,
+    stk::mesh::Selector active,
+    stk::mesh::Selector dirichlet_wall,
     const Tpetra::Map<>& owned,
     const Tpetra::Map<>& owned_and_shared,
     Kokkos::View<const lid_type*> elids);
@@ -126,9 +126,12 @@ public:
 private:
   stk::mesh::BulkData& bulk_;
   const stk::mesh::Selector active_;
+  const stk::mesh::Selector dirichlet_;
   const StkToTpetraMaps linsys_;
   const Tpetra::Export<> exporter_;
   const const_elem_offset_view<p> offsets_;
+  const const_face_offset_view<p> exposed_face_offsets_;
+  const const_node_offset_view dirichlet_offsets_;
 
   LowMachGatheredFieldManager<p> field_gather_;
   LowMachPostProcessP<p> post_process_;

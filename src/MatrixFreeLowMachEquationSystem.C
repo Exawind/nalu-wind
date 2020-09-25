@@ -17,6 +17,7 @@
 #include "matrix_free/LocalDualNodalVolume.h"
 
 #include "AuxFunctionAlgorithm.h"
+#include "ConstantAuxFunction.h"
 #include "CopyFieldAlgorithm.h"
 #include "Enums.h"
 #include "EquationSystems.h"
@@ -32,6 +33,7 @@
 #include "TpetraLinearSystem.h"
 #include "user_functions/TaylorGreenPressureAuxFunction.h"
 #include "user_functions/TaylorGreenVelocityAuxFunction.h"
+#include "user_functions/SinProfileChannelFlowVelocityAuxFunction.h"
 #include "utils/StkHelpers.h"
 
 #include "Kokkos_Array.hpp"
@@ -126,29 +128,27 @@ void
 MatrixFreeLowMachEquationSystem::register_copy_state_algorithm(
   std::string name, int length, stk::mesh::Part& part)
 {
-  auto* field = meta_.get_field(stk::topology::NODE_RANK, name);
-  auto copy = new CopyFieldAlgorithm(
-    realm_, &part, field->field_state(stk::mesh::StateNP1),
-    field->field_state(stk::mesh::StateN), 0, length, stk::topology::NODE_RANK);
-  copyStateAlg_.push_back(copy);
-
-  auto copyn = new CopyFieldAlgorithm(
-    realm_, &part, field->field_state(stk::mesh::StateNP1),
-    field->field_state(stk::mesh::StateNM1), 0, length,
-    stk::topology::NODE_RANK);
-  copyStateAlg_.push_back(copyn);
+  if (!realm_.restarted_simulation()) {
+    auto* field = meta_.get_field(stk::topology::NODE_RANK, name);
+    auto copy = new CopyFieldAlgorithm(
+      realm_, &part, field->field_state(stk::mesh::StateNP1),
+      field->field_state(stk::mesh::StateN), 0, length,
+      stk::topology::NODE_RANK);
+    copyStateAlg_.push_back(copy);
+  }
 }
 
 void
 MatrixFreeLowMachEquationSystem::register_nodal_fields(stk::mesh::Part* part)
 {
   check_part_is_valid(part);
-
+  ThrowRequire(realm_.number_of_states() == 3);
   constexpr int one_state = 1;
   constexpr int three_states = 3;
 
   register_scalar_nodal_field_on_part(
     meta_, names::density, *part, three_states);
+  realm_.augment_restart_variable_list(names::density);
   realm_.augment_property_map(
     DENSITY_ID,
     meta_.get_field<ScalarFieldType>(stk::topology::NODE_RANK, names::density));
@@ -175,6 +175,8 @@ MatrixFreeLowMachEquationSystem::register_nodal_fields(stk::mesh::Part* part)
     meta_, names::dpdx_tmp, *part, one_state, {{0, 0, 0}});
   register_vector_nodal_field_on_part(
     meta_, names::dpdx, *part, one_state, {{0, 0, 0}});
+  register_vector_nodal_field_on_part(
+    meta_, names::body_force, *part, one_state, {{0, 0, 0}});
 }
 
 void
@@ -183,6 +185,47 @@ MatrixFreeLowMachEquationSystem::register_interior_algorithm(
 {
   check_part_is_valid(part);
   interior_selector_ |= *part;
+}
+
+void
+MatrixFreeLowMachEquationSystem::register_wall_bc(
+  stk::mesh::Part* part,
+  const stk::topology&,
+  const WallBoundaryConditionData& bc)
+{
+  check_part_is_valid(part);
+
+  auto data = bc.userData_;
+  ThrowRequireMsg(
+    !(data.wallFunctionApproach_ || data.ablWallFunctionApproach_),
+    "Wall function not implemented");
+
+  constexpr int one_state = 1;
+  register_vector_nodal_field_on_part(
+    meta_, names::velocity_bc, *part, one_state,
+    {{data.u_.ux_, data.u_.uy_, data.u_.uz_}});
+
+  auto velocity_name = std::string(names::velocity);
+  auto bc_data_type = get_bc_data_type(data, velocity_name);
+  ThrowRequireMsg(bc_data_type != FUNCTION_UD, "No user functions yet enabled");
+
+  auto* bc_field =
+    meta_.get_field(stk::topology::NODE_RANK, names::velocity_bc);
+  auto* u_field = meta_.get_field(stk::topology::NODE_RANK, names::velocity)
+                    ->field_state(stk::mesh::StateNP1);
+
+  auto ux = data.u_;
+  auto* theAuxFunc = new ConstantAuxFunction(0, dim, {ux.ux_, ux.uy_, ux.uz_});
+  auto* auxAlg = new AuxFunctionAlgorithm(
+    realm_, part, bc_field, theAuxFunc, stk::topology::NODE_RANK);
+
+  realm_.initCondAlg_.push_back(auxAlg);
+
+  CopyFieldAlgorithm* theCopyAlg = new CopyFieldAlgorithm(
+    realm_, part, bc_field, u_field, 0, dim, stk::topology::NODE_RANK);
+  bcDataMapAlg_.push_back(theCopyAlg);
+
+  wall_selector_ |= *part;
 }
 
 void
@@ -248,10 +291,11 @@ MatrixFreeLowMachEquationSystem::register_initial_condition_fcn(
   auto it = names.find(names::velocity);
   if (it != names.end()) {
     ThrowRequireMsg(
-      it->second == "TaylorGreen",
-      "Only TaylorGreen currently implemented for matrix-free");
+      (it->second == "TaylorGreen" || it->second == "SinProfileChannelFlow"),
+      "Only TaylorGreen/SinProfileChannelFlow currently implemented for "
+      "matrix-free");
 
-    {
+    if (it->second == "TaylorGreen") {
       auto* velocity_field = meta_.get_field<VectorFieldType>(
         stk::topology::NODE_RANK, names::velocity);
       ThrowRequire(velocity_field);
@@ -259,9 +303,17 @@ MatrixFreeLowMachEquationSystem::register_initial_condition_fcn(
       auto* vel_aux_alg = new AuxFunctionAlgorithm(
         realm_, part, velocity_field, vel_func, stk::topology::NODE_RANK);
       realm_.initCondAlg_.push_back(vel_aux_alg);
+    } else if (it->second == "SinProfileChannelFlow") {
+      auto* velocity_field = meta_.get_field<VectorFieldType>(
+        stk::topology::NODE_RANK, names::velocity);
+      ThrowRequire(velocity_field);
+      auto* vel_func = new SinProfileChannelFlowVelocityAuxFunction(0, dim);
+      auto* vel_aux_alg = new AuxFunctionAlgorithm(
+        realm_, part, velocity_field, vel_func, stk::topology::NODE_RANK);
+      realm_.initCondAlg_.push_back(vel_aux_alg);
     }
 
-    {
+    if (it->second == "TaylorGreen") {
       auto pressure_field = meta_.get_field<ScalarFieldType>(
         stk::topology::NODE_RANK, names::pressure);
       ThrowRequire(pressure_field);
@@ -279,7 +331,7 @@ MatrixFreeLowMachEquationSystem::initialize()
   stk::mesh::ProfilingBlock pf("MatrixFreeLowMachEquationSystem::initialize");
   validate_matrix_free_linear_solver_config();
   compute_filter_scale();
-
+  compute_body_force();
   {
     stk::mesh::ProfilingBlock pfinner("create linsys");
 
@@ -289,8 +341,8 @@ MatrixFreeLowMachEquationSystem::initialize()
     auto* solver = realm_.root()->linearSolvers_->create_solver(
       solverName, realm_.name(), EQ_CONTINUITY);
 
-    precond_linsys_ =
-      std::unique_ptr<TpetraLinearSystem>(new TpetraLinearSystem(realm_, 1, this, solver));
+    precond_linsys_ = std::unique_ptr<TpetraLinearSystem>(
+      new TpetraLinearSystem(realm_, 1, this, solver));
     precond_linsys_->buildSparsifiedEdgeElemToNodeGraph(interior_selector_);
     precond_linsys_->finalizeLinearSystem();
   }
@@ -302,7 +354,7 @@ MatrixFreeLowMachEquationSystem::initialize()
       polynomial_order_, realm_.bulk_data(),
       realm_.solver_parameters(names::velocity),
       realm_.solver_parameters(names::pressure),
-      realm_.solver_parameters(names::dpdx), interior_selector_,
+      realm_.solver_parameters(names::dpdx), interior_selector_, wall_selector_,
       *precond_linsys_->getOwnedRowsMap(),
       *precond_linsys_->getOwnedAndSharedRowsMap(),
       precond_linsys_->getRowLIDs());
@@ -594,6 +646,35 @@ MatrixFreeLowMachEquationSystem::compute_courant_reynolds()
     realm_.maxCourant_ = g_cflre[0];
     realm_.maxReynolds_ = g_cflre[1];
   }
+}
+
+void
+MatrixFreeLowMachEquationSystem::compute_body_force() const
+{
+  auto force = get_node_field(meta_, names::body_force);
+  Kokkos::Array<double, 3> constant_force{{0, 0, 0}};
+
+  // todo: coriolis, etc.
+  {
+    const auto it = realm_.solutionOptions_->srcTermParamMap_.find("momentum");
+    if (it != realm_.solutionOptions_->srcTermParamMap_.end()) {
+      const auto& force_vec = it->second;
+      ThrowRequireMsg(force_vec.size() == 3u, "Only 3d body force");
+
+      for (int d = 0; d < 3; ++d) {
+        constant_force[d] = force_vec[d];
+      }
+    }
+  }
+
+  stk::mesh::for_each_entity_run(
+    realm_.ngp_mesh(), stk::topology::NODE_RANK, interior_selector_,
+    KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) {
+      for (int d = 0; d < 3; ++d) {
+        force.get(mi, d) = constant_force[d];
+      };
+    });
+  force.modify_on_device();
 }
 
 namespace {
