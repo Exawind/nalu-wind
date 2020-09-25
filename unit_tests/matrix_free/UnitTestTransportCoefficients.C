@@ -31,7 +31,7 @@ public:
   TransportCoefficientsFixture()
     : LowMachFixture(2, 1),
       conn_(stk_connectivity_map<order>(mesh(), active())),
-      filter_scale_("scaled_filter_length", 1)
+      filter_scale_("scaled_filter_length", conn_.extent(0))
   {
     Kokkos::deep_copy(filter_scale_, 1);
     skew_mesh();
