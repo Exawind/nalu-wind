@@ -83,7 +83,6 @@ struct WallUserData : public UserData {
       refTempSpec_(false),
       wallFunctionApproach_(false),
       ablWallFunctionApproach_(false),
-      ablWallFunctionNode_(NULL) {},
       isFsiInterface_(false) {}    
 };
 
