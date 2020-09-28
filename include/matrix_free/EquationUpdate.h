@@ -11,6 +11,8 @@
 #define EQUATION_UPDATE_H
 
 #include "matrix_free/PolynomialOrders.h"
+#include "matrix_free/LowMachInfo.h"
+
 #include "Kokkos_Array.hpp"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Part.hpp"
@@ -84,7 +86,7 @@ public:
   virtual void gather_velocity() = 0;
   virtual void gather_pressure() = 0;
   virtual void gather_grad_p() = 0;
-  virtual void update_transport_coefficients() = 0;
+  virtual void update_transport_coefficients(GradTurbModel update) = 0;
   virtual void update_advection_metric(double dt) = 0;
 
   virtual double provide_norm() const = 0;

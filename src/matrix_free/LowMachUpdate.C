@@ -200,9 +200,9 @@ LowMachUpdate<p>::gather_grad_p()
 
 template <int p>
 void
-LowMachUpdate<p>::update_transport_coefficients()
+LowMachUpdate<p>::update_transport_coefficients(GradTurbModel model)
 {
-  field_gather_.update_transport_coefficients();
+  field_gather_.update_transport_coefficients(model);
 }
 
 template <int p>

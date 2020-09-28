@@ -10,6 +10,7 @@
 #ifndef LOWMACH_GATHERED_FIELD_MANAGER_H
 #define LOWMACH_GATHERED_FIELD_MANAGER_H
 
+#include "matrix_free/LowMachInfo.h"
 #include "matrix_free/LowMachFields.h"
 #include "matrix_free/KokkosViewTypes.h"
 
@@ -23,6 +24,7 @@ template <int p>
 class LowMachGatheredFieldManager
 {
 public:
+  using info = lowmach_info;
   LowMachGatheredFieldManager(stk::mesh::BulkData&, stk::mesh::Selector);
   void gather_all();
   void update_fields();
@@ -38,7 +40,7 @@ public:
   void update_pressure();
   void update_velocity();
   void update_grad_p();
-  void update_transport_coefficients();
+  void update_transport_coefficients(GradTurbModel model = GradTurbModel::LAM);
 
 private:
   stk::mesh::BulkData& bulk;
@@ -48,8 +50,8 @@ private:
   LowMachResidualFields<p> fields;
   LowMachLinearizedResidualFields<p> coefficient_fields;
 
-  scalar_view<p> scratch_volume_metric;
-};
+  scalar_view<p> filter_scale;
+}; // namespace matrix_free
 
 } // namespace matrix_free
 } // namespace nalu

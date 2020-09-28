@@ -804,8 +804,12 @@ HypreLinearSystem::finalizeSolver()
 
 void HypreLinearSystem::fill_entity_to_row_mapping()
 {
+  const auto& meta = realm_.meta_data();
   const stk::mesh::BulkData& bulk = realm_.bulk_data();
-  stk::mesh::Selector selector = bulk.mesh_meta_data().universal_part() & !(realm_.get_inactive_selector());
+  stk::mesh::Selector selector =
+    (meta.locally_owned_part() | meta.globally_shared_part())
+      & stk::mesh::selectField(*realm_.naluGlobalId_)
+      & !(realm_.get_inactive_selector());
   entityToLIDHost_ = HypreIntTypeViewHost("entityToRowLIDHost",bulk.get_size_of_entity_index_space());
   entityToLID_ = HypreIntTypeView("entityToRowLID",bulk.get_size_of_entity_index_space());
 

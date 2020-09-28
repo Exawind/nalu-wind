@@ -17,6 +17,26 @@
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
+
+template <int p, typename ElemCoordsArray>
+KOKKOS_FUNCTION LocalArray<ftype[3][8]>
+hex_vertex_coordinates(const ElemCoordsArray& xc)
+{
+  static_assert(ElemCoordsArray::Rank == 4, "");
+  LocalArray<ftype[3][8]> box;
+  for (int d = 0; d < 3; ++d) {
+    box(d, 0) = xc(0, 0, 0, d);
+    box(d, 1) = xc(0, 0, p, d);
+    box(d, 2) = xc(0, p, p, d);
+    box(d, 3) = xc(0, p, 0, d);
+    box(d, 4) = xc(p, 0, 0, d);
+    box(d, 5) = xc(p, 0, p, d);
+    box(d, 6) = xc(p, p, p, d);
+    box(d, 7) = xc(p, p, 0, d);
+  }
+  return box;
+}
+
 template <int p, typename ElemCoordsArray>
 KOKKOS_FUNCTION LocalArray<ftype[3][8]>
 hex_vertex_coordinates(int index, const ElemCoordsArray& xc)

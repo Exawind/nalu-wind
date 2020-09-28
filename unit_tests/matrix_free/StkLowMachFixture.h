@@ -63,6 +63,7 @@ protected:
   stk::mesh::Field<double>& density_field;
   stk::mesh::Field<double, stk::mesh::Cartesian3d>& velocity_field;
   stk::mesh::Field<double>& viscosity_field;
+  stk::mesh::Field<double>& filter_scale_field;
 
   stk::mesh::Field<double>& pressure_field;
   stk::mesh::Field<double, stk::mesh::Cartesian3d>& dpdx_field;
