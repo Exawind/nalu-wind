@@ -189,7 +189,7 @@ TEST_F(KsgsKernelHex8Mesh, NGP_geometry_wall_func)
   {
     stk::mesh::Selector sel(*part);
     const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
-    const double wdistGold = 0.25;
+    const double wdistGold = 1.0;
     const double wAreaGold = 0.25;
 
     const double tol = 1.0e-16;
