@@ -81,6 +81,11 @@ function(add_test_u_gpu testname np)
     add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${utest_ex_name} ${FILTER}")
     set_tests_properties(${testname} PROPERTIES TIMEOUT 6000 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "unit")
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
+    # create symlink to nrelmw.fst 
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+      ${CMAKE_BINARY_DIR}/reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst
+      ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}/nrel5mw.fst
+    )
 endfunction(add_test_u_gpu)
 
 # Regression test with catalyst capability
