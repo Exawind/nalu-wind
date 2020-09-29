@@ -190,6 +190,7 @@ if(NOT ENABLE_CUDA)
     add_test_r(ablNeutralNGPHypre 2)
     add_test_r(ablNeutralNGPHypreSegregated 2)
     add_test_r(airfoilRANSEdgeNGPHypre 2)
+    add_test_r(SSTWallHumpEdge 4)
   endif(ENABLE_HYPRE)
 
   if(ENABLE_OPENFAST)
