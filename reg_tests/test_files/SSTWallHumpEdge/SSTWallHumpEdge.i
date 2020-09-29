@@ -1,0 +1,366 @@
+Simulations:
+  - name: sim1
+    time_integrator: ti_1
+    optimizer: opt1
+
+linear_solvers:
+
+  - name: solve_scalar
+    type: tpetra
+    method: gmres
+    preconditioner: riluk
+    tolerance: 1e-5
+    max_iterations: 200
+    kspace: 200
+    output_level: 0
+
+  - name: solve_cont
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-5
+    max_iterations: 50
+    kspace: 75
+    output_level: 0
+    bamg_coarsen_type: 8
+    bamg_interp_type: 6
+    bamg_cycle_type: 1
+
+realms:
+
+  - name: realm_1
+    mesh: ../../mesh/hump2newtop_noplenumZ817x217x3.exo
+    use_edges: yes
+    check_for_missing_bcs: yes
+    automatic_decomposition_type: rcb
+
+    equation_systems:
+      name: theEqSys
+      max_iterations: 4
+
+      solver_system_specification:
+        velocity: solve_scalar
+        turbulent_ke: solve_scalar
+        specific_dissipation_rate: solve_scalar
+        pressure: solve_cont
+        ndtw: solve_cont
+
+      systems:
+        - WallDistance:
+            name: myNDTW
+            max_iterations: 1
+            convergence_tolerance: 1.0e-8
+
+        - LowMachEOM:
+            name: myLowMach
+            max_iterations: 1
+            convergence_tolerance: 1.0e-8
+
+        - ShearStressTransport:
+            name: mySST
+            max_iterations: 1
+            convergence_tolerance: 1.0e-8
+
+    initial_conditions:
+      - constant: ic_1
+        target_name: Unspecified-2-HEX
+        value:
+          pressure: 0
+          velocity: [34.6,0.0,0.0]
+          turbulent_ke: 0.00108
+          specific_dissipation_rate: 7710.9
+
+    material_properties:
+      target_name: Unspecified-2-HEX
+      specifications:
+        - name: density
+          type: constant
+          value: 1.185
+        - name: viscosity
+          type: constant
+          value: 1.8398e-5
+
+    boundary_conditions:
+
+    - open_boundary_condition: bc_open
+      target_name: outlet
+      open_user_data:
+        velocity: [0,0,0]
+        pressure: 0.0
+        turbulent_ke: 0.00108
+        specific_dissipation_rate: 7710.9
+
+    - symmetry_boundary_condition: bc_symTop
+      target_name: top
+      symmetry_user_data:
+
+    - inflow_boundary_condition: bc_inflow
+      target_name: inlet
+      inflow_user_data:
+        velocity: [34.6,0.0,0.0]
+        turbulent_ke: 0.00108
+        specific_dissipation_rate: 7710.9
+
+    - wall_boundary_condition: bc_wall
+      target_name: bottomwall
+      wall_user_data:
+        velocity: [0,0,0]
+        turbulent_ke: 0.0
+        use_wall_function: no
+
+    - periodic_boundary_condition: bc_front_back
+      target_name: [front, back]
+      periodic_user_data:
+        search_tolerance: 0.0001
+
+    solution_options:
+      name: myOptions
+      turbulence_model: sst
+      projected_timescale_type: momentum_diag_inv
+
+      options:
+        - hybrid_factor:
+            velocity: 1.0
+            turbulent_ke: 1.0
+            specific_dissipation_rate: 1.0
+
+        - alpha_upw:
+            velocity: 1.0
+            turbulent_ke: 1.0
+            specific_dissipation_rate: 1.0
+
+        - upw_factor:
+            velocity: 1.0
+            turbulent_ke: 0.0
+            specific_dissipation_rate: 0.0
+
+        - noc_correction:
+            pressure: yes
+
+        - projected_nodal_gradient:
+            velocity: element
+            pressure: element
+            turbulent_ke: element
+            specific_dissipation_rate: element
+            ndtw: element
+
+        - relaxation_factor:
+            velocity: 0.7
+            pressure: 0.3
+            turbulent_ke: 0.7
+            specific_dissipation_rate: 0.7
+
+        - turbulence_model_constants:
+            SDRWallFactor: 10.0
+
+    turbulence_averaging:
+      time_filter_interval: 0.7
+
+      specifications:
+
+        - name: one
+          target_name: [Unspecified-2-HEX]
+          compute_reynolds_stress: yes
+
+    data_probes:
+
+      output_frequency: 1
+
+      search_method: stk_octree
+      search_tolerance: 1.0e-3
+      search_expansion_factor: 2.0
+
+      specifications:
+        - name: probe_wall
+          from_target_part: bottomwall
+
+          line_of_site_specifications:
+            - name: results/probe_bottomwall
+              number_of_points: 500
+              tip_coordinates: [-6.39, 0.0, 0.0]
+              tail_coordinates: [4.0, 0.0, 0.0]
+
+          output_variables:
+            - field_name: tau_wall
+              field_size: 1
+            - field_name: pressure
+              field_size: 1
+
+        - name: probe_profile0
+          from_target_part: Unspecified-2-HEX
+
+          line_of_site_specifications:
+            - name: results/probe_profile0
+              number_of_points: 200
+              tip_coordinates: [-2.14, 0.0, 0.0]
+              tail_coordinates: [-2.14, 0.0, 0.9]
+
+          output_variables:
+            - field_name: velocity
+              field_size: 3
+            - field_name: reynolds_stress
+              field_size: 6
+
+        - name: probe_profile1
+          from_target_part: Unspecified-2-HEX
+
+          line_of_site_specifications:
+            - name: results/probe_profile1
+              number_of_points: 200
+              tip_coordinates: [0.65, 0.0, 0.116101]
+              tail_coordinates: [0.65, 0.0, 0.9]
+
+          output_variables:
+            - field_name: velocity
+              field_size: 3
+            - field_name: reynolds_stress
+              field_size: 6
+
+        - name: probe_profile2
+          from_target_part: Unspecified-2-HEX
+
+          line_of_site_specifications:
+            - name: results/probe_profile2
+              number_of_points: 200
+              tip_coordinates: [0.66, 0.0, 0.112975]
+              tail_coordinates: [0.66, 0.0, 0.9]
+
+          output_variables:
+            - field_name: velocity
+              field_size: 3
+            - field_name: reynolds_stress
+              field_size: 6
+
+        - name: probe_profile3
+          from_target_part: Unspecified-2-HEX
+
+          line_of_site_specifications:
+            - name: results/probe_profile3
+              number_of_points: 200
+              tip_coordinates: [0.8, 0.0, 0.0245493]
+              tail_coordinates: [0.8, 0.0, 0.9]
+
+          output_variables:
+            - field_name: velocity
+              field_size: 3
+            - field_name: reynolds_stress
+              field_size: 6
+
+        - name: probe_profile4
+          from_target_part: Unspecified-2-HEX
+
+          line_of_site_specifications:
+            - name: results/probe_profile4
+              number_of_points: 200
+              tip_coordinates: [0.9, 0.0, 0.00476345]
+              tail_coordinates: [0.9, 0.0, 0.9]
+
+          output_variables:
+            - field_name: velocity
+              field_size: 3
+            - field_name: reynolds_stress
+              field_size: 6
+
+        - name: probe_profile5
+          from_target_part: Unspecified-2-HEX
+
+          line_of_site_specifications:
+            - name: results/probe_profile5
+              number_of_points: 200
+              tip_coordinates: [1.0, 0.0, 0.0]
+              tail_coordinates: [1.0, 0.0, 0.9]
+
+          output_variables:
+            - field_name: velocity
+              field_size: 3
+            - field_name: reynolds_stress
+              field_size: 6
+
+        - name: probe_profile6
+          from_target_part: Unspecified-2-HEX
+
+          line_of_site_specifications:
+            - name: results/probe_profile6
+              number_of_points: 200
+              tip_coordinates: [1.1, 0.0, 0.0]
+              tail_coordinates: [1.1, 0.0, 0.9]
+
+          output_variables:
+            - field_name: velocity
+              field_size: 3
+            - field_name: reynolds_stress
+              field_size: 6
+
+        - name: probe_profile7
+          from_target_part: Unspecified-2-HEX
+
+          line_of_site_specifications:
+            - name: results/probe_profile7
+              number_of_points: 200
+              tip_coordinates: [1.2, 0.0, 0.0]
+              tail_coordinates: [1.2, 0.0, 0.9]
+
+          output_variables:
+            - field_name: velocity
+              field_size: 3
+            - field_name: reynolds_stress
+              field_size: 6
+
+        - name: probe_profile8
+          from_target_part: Unspecified-2-HEX
+
+          line_of_site_specifications:
+            - name: results/probe_profile8
+              number_of_points: 200
+              tip_coordinates: [1.3, 0.0, 0.0]
+              tail_coordinates: [1.3, 0.0, 0.9]
+
+          output_variables:
+            - field_name: velocity
+              field_size: 3
+            - field_name: reynolds_stress
+              field_size: 6
+
+
+    post_processing:
+
+    - type: surface
+      physics: surface_force_and_moment
+      output_file_name: SSTWallHumpEdge.dat
+      frequency: 1
+      parameters: [0,0]
+      target_name: bottomwall
+
+    restart:
+      restart_data_base_name: restart/SSTWallHumpEdge.rst
+      restart_frequency: 2500
+     
+    output:
+      output_data_base_name: results/SSTWallHumpEdge.e
+      output_frequency: 5
+      output_node_set: no 
+      output_variables:
+       - velocity
+       - density
+       - pressure
+       - pressure_force
+       - viscous_force
+       - tau_wall
+       - turbulent_ke
+       - specific_dissipation_rate
+       - minimum_distance_to_wall
+       - sst_f_one_blending
+       - turbulent_viscosity
+
+Time_Integrators:
+  - StandardTimeIntegrator:
+      name: ti_1
+      start_time: 0
+      time_step: 1.0e-3
+      termination_step_count: 5
+      time_stepping_type: fixed
+      time_step_count: 0
+      second_order_accuracy: yes
+
+      realms:
+        - realm_1
