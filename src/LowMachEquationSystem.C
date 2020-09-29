@@ -1036,6 +1036,8 @@ MomentumEquationSystem::initial_work()
   if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
     TAMSAlgDriver_->initial_work();
 
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
+
   if ( realm_.get_current_time() == 0.0) {
     auto & meta = realm_.meta_data();
     auto & bulk = realm_.bulk_data();
@@ -1095,6 +1097,8 @@ MomentumEquationSystem::initial_work()
     }
 
   }
+  }
+  
 
   {
     const double timeA = NaluEnv::self().nalu_time();

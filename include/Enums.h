@@ -179,7 +179,7 @@ static const std::string TurbulenceModelNames[] = {
   "wale",
   "sst",
   "sst_des",
-  "sst_tams"
+  "sst_tams",
   "sst_iddes",
   "sst_iddes_abl"};
 
