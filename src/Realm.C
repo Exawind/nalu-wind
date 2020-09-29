@@ -4560,14 +4560,24 @@ Realm::get_activate_aura()
   return activateAura_;
 }
 
-//--------------------------------------------------------------------------
-//-------- get_inactive_selector() -----------------------------------------
-//--------------------------------------------------------------------------
+/** Return a selector containing inactive parts
+ *
+ *  The selector returned from this method will contain entities from
+ *  parts that are do not participate in the PDE solution process, but
+ *  are created/used for pre and post-processing purposes. Examples include:
+ *  data probes, inactive sub-blocks from overset simulations after hole
+ *  cut, etc.
+ *
+ *  \return stk::mesh::Selector Inactive entities
+ */
 stk::mesh::Selector
 Realm::get_inactive_selector()
 {
-  // accumulate inactive parts relative to the universal part
-  
+  // Return early if matrix free is active, nothing to do
+  if (matrixFree_) {
+      return stk::mesh::Selector{};
+  }
+
   // provide inactive Overset part that excludes background surface
   //
   // Treat this selector differently because certain entities from interior
@@ -4575,6 +4585,11 @@ Realm::get_inactive_selector()
   stk::mesh::Selector nothing;
   stk::mesh::Selector inactiveOverSetSelector = (hasOverset_) ?
       oversetManager_->get_inactive_selector() : nothing;
+
+  stk::mesh::Selector inactiveDPSel =
+      (dataProbePostProcessing_ != nullptr)
+      ? dataProbePostProcessing_->get_inactive_selector()
+      : nothing;
 
   stk::mesh::Selector otherInactiveSelector = (
     metaData_->universal_part()
@@ -4585,10 +4600,7 @@ Realm::get_inactive_selector()
     otherInactiveSelector = nothing;
   }
 
-  if (matrixFree_) {
-    return stk::mesh::Selector{};
-  }
-  return inactiveOverSetSelector | otherInactiveSelector;
+  return inactiveOverSetSelector | otherInactiveSelector | inactiveDPSel;
 }
 
 //--------------------------------------------------------------------------
