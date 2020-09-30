@@ -44,6 +44,9 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
     searchRadius_("searchRadius", actMeta.numPointsTotal_),
     coarseSearchPointIds_("coarseSearchPointIds", 0),
     coarseSearchElemIds_("coarseSearchElemIds", 0),
+    relativeVelocity_(
+      "relativeVelocity", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
+    liftForceDistribution_("G", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
     localCoords_("localCoords", actMeta.numPointsTotal_),
     pointIsLocal_("pointIsLocal", actMeta.numPointsTotal_),
     localParallelRedundancy_("localParallelReundancy", actMeta.numPointsTotal_),
