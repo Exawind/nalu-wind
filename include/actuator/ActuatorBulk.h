@@ -46,6 +46,7 @@ struct ActuatorMeta
   std::vector<std::string> searchTargetNames_;
   stk::search::SearchMethod searchMethod_;
   ActScalarIntDv numPointsTurbine_;
+  bool useFLLC_ = false;
 };
 
 /*! \brief Where field data is stored and accessed for actuators
@@ -73,6 +74,10 @@ struct ActuatorBulk
   ActScalarDblDv searchRadius_;
   ActScalarU64Dv coarseSearchPointIds_;
   ActScalarU64Dv coarseSearchElemIds_;
+
+  // Filtered lifting line correction fields
+  ActVectorDblDv relativeVelocity_;
+  ActVectorDblDv liftForceDistribution_;
 
   // HOST ONLY DATA
   ActFixVectorDbl localCoords_;

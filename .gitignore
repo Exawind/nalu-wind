@@ -13,4 +13,8 @@ tags
 .vscode/
 compile_commands.json
 .clangd
+<<<<<<< HEAD
 spack*
+=======
+spack*
+>>>>>>> Actuator: Write unit test for computing G
