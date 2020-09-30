@@ -5,6 +5,7 @@
 #include "mesh_motion/MotionRotation.h"
 #include "mesh_motion/MotionScaling.h"
 #include "mesh_motion/MotionTranslation.h"
+#include "mesh_motion/MotionWaves.h"
 
 #include "NaluParsing.h"
 #include "FieldTypeDef.h"
@@ -57,6 +58,8 @@ void FrameBase::load(const YAML::Node& node)
       meshMotionVec_[i].reset(new MotionScaling(meta_,motion_def));
     else if (type == "translation")
       meshMotionVec_[i].reset(new MotionTranslation(motion_def));
+    else if (type == "waving_boundary")
+      meshMotionVec_[i].reset(new MotionWaves(meta_,motion_def));
     else
       throw std::runtime_error("FrameBase: Invalid mesh motion type: " + type);
 

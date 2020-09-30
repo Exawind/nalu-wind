@@ -73,7 +73,6 @@ class SolutionOptions;
 class TimeIntegrator;
 class MasterElement;
 class PropertyEvaluator;
-class HDF5FilePtr;
 class Transfer;
 class MeshMotionAlg;
 class MeshTransformationAlg;
@@ -248,7 +247,8 @@ class Realm {
 
   void periodic_delta_solution_update(
      stk::mesh::FieldBase *theField,
-     const unsigned &sizeOfField) const;
+     const unsigned &sizeOfField,
+     const bool &doCommunication = true) const;
 
   void periodic_max_field_update(
      stk::mesh::FieldBase *theField,
@@ -521,9 +521,6 @@ class Realm {
   // some post processing of entity counts
   bool provideEntityCount_;
 
-  // pointer to HDF5 file structure holding table
-  HDF5FilePtr *HDF5ptr_;
-
   // automatic mesh decomposition; None, rib, rcb, multikl, etc.
   std::string autoDecompType_;
 
@@ -613,6 +610,8 @@ class Realm {
   double get_stefan_boltzmann();
   double get_turb_model_constant(
     const TurbulenceModelConstant turbModelEnum);
+
+  TurbulenceModel get_turbulence_model() const;
 
   // element promotion options
   bool doPromotion_; // conto

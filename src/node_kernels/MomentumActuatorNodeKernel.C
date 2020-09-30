@@ -34,6 +34,7 @@ void MomentumActuatorNodeKernel::setup(Realm& realm)
   const auto& fieldMgr = realm.ngp_field_manager();
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   actuatorSrc_     = fieldMgr.get_field<double>(actuatorSrcID_);
+  actuatorSrc_.sync_to_device();
   actuatorSrcLHS_  = fieldMgr.get_field<double>(actuatorSrcLHSID_);
 }
 

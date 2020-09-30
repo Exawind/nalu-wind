@@ -132,6 +132,7 @@ realms:
         velocity: [0,0,0]
         pressure: 0.0
         temperature: 300.0
+        total_pressure: yes
 
     - open_boundary_condition: bc_top
       target_name: surface_5
@@ -139,6 +140,7 @@ realms:
         velocity: [0,0,0]
         pressure: 0.0
         temperature: 300.0
+        total_pressure: yes
 
     solution_options:
       name: myOptions

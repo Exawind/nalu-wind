@@ -10,11 +10,10 @@
 #ifndef STK_SIMD_VALID_LENGTH_H
 #define STK_SIMD_VALID_LENGTH_H
 
+#include "matrix_free/KokkosViewTypes.h"
+
 #include "Kokkos_View.hpp"
 #include "stk_simd/Simd.hpp"
-
-#include "matrix_free/KokkosFramework.h"
-
 #include "stk_mesh/base/Types.hpp"
 
 namespace sierra {
@@ -24,9 +23,9 @@ namespace matrix_free {
 static constexpr int invalid_offset = -1;
 
 constexpr stk::mesh::FastMeshIndex invalid_mesh_index =
-  stk::mesh::FastMeshIndex{stk::mesh::InvalidOrdinal,
-                           stk::mesh::InvalidOrdinal};
-KOKKOS_INLINE_FUNCTION bool
+  stk::mesh::FastMeshIndex{
+    stk::mesh::InvalidOrdinal, stk::mesh::InvalidOrdinal};
+KOKKOS_FORCEINLINE_FUNCTION bool
 valid_mesh_index(stk::mesh::FastMeshIndex index)
 {
   return !(
@@ -67,6 +66,16 @@ struct valid_offset_t
     }
     return n + 1;
   }
+
+  static KOKKOS_FORCEINLINE_FUNCTION int
+  valid_offset(int index, const const_elem_mesh_index_view<p>& offsets)
+  {
+    int n = simd_len - 1;
+    while (!valid_mesh_index(offsets(index, 0, 0, 0, n)) && n != 0) {
+      --n;
+    }
+    return n + 1;
+  }
 };
 
 template <int p>
@@ -97,6 +106,13 @@ KOKKOS_FORCEINLINE_FUNCTION int
 valid_offset(int index, const const_node_offset_view& offsets)
 {
   return impl::valid_offset_t<0, simd_len>::valid_offset(index, offsets);
+}
+
+template <int p>
+KOKKOS_FORCEINLINE_FUNCTION int
+valid_offset(int index, const const_elem_mesh_index_view<p>& offsets)
+{
+  return impl::valid_offset_t<p, simd_len>::valid_offset(index, offsets);
 }
 
 } // namespace matrix_free

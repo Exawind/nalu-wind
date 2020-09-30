@@ -4,7 +4,12 @@
 
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/GetNgpField.hpp>
 #include <stk_topology/topology.hpp>
+
+#include "FieldTypeDef.h"
+
+#include <array>
 
 namespace sierra {
 namespace nalu {
@@ -77,6 +82,37 @@ unsigned get_field_ordinal(
   const auto* fState = field->field_state(state);
   return fState->mesh_meta_data_ordinal();
 }
+
+template <typename T = double>
+stk::mesh::NgpField<T>&
+get_node_field(
+  const stk::mesh::MetaData& meta,
+  std::string name,
+  stk::mesh::FieldState state = stk::mesh::StateNP1)
+{
+  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
+  ThrowAssert(
+    meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+  return stk::mesh::get_updated_ngp_field<T>(
+    *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+}
+
+void
+register_scalar_nodal_field_on_part(
+  stk::mesh::MetaData& meta,
+  std::string name,
+  const stk::mesh::Part& selector,
+  int num_states,
+  double ic = 0);
+
+void
+register_vector_nodal_field_on_part(
+  stk::mesh::MetaData& meta,
+  std::string name,
+  const stk::mesh::Part& selector,
+  int num_states,
+  std::array<double, 3> x = {{0,0,0}});
+
 
 } // namespace nalu
 } // namespace sierra

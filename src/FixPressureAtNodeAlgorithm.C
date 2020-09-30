@@ -51,14 +51,15 @@ FixPressureAtNodeAlgorithm::~FixPressureAtNodeAlgorithm()
 void
 FixPressureAtNodeAlgorithm::initialize_connectivity()
 {
+  /* Hypre GPU Assembly requires initialize to happen here (for graph creation), not in execute */
+  if (doInit_)
+    initialize();
   eqSystem_->linsys_->buildDirichletNodeGraph(refNodeList_);
 }
 
 void
 FixPressureAtNodeAlgorithm::execute()
 {
-  if (doInit_)
-    initialize();
 
   int numNodes = refNodeList_.size();
   ThrowAssertMsg(numNodes <= 1,
@@ -71,7 +72,7 @@ FixPressureAtNodeAlgorithm::execute()
 
   // Reset LHS and RHS for this matrix
   CoeffApplier* deviceCoeffApplier = eqSystem_->linsys_->get_coeff_applier();
- 
+
   stk::mesh::NgpMesh ngpMesh = realm_.ngp_mesh();
   NGPDoubleFieldType ngpPressure = realm_.ngp_field_manager().get_field<double>(pressure_->mesh_meta_data_ordinal());
   double refPressure = info_.refPressure_;

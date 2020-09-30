@@ -137,6 +137,21 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
          actMetaFAST.epsilon_.h_view(iTurb, j);
      }
    }
+   const YAML::Node epsilon_hub = turbNode["epsilon_hub"];
+   if(epsilon_hub){
+     if(epsilon_hub.Type() == YAML::NodeType::Scalar){
+       const double epsilonHub = epsilon_hub.as<double>();
+       for(int j=0; j<3; j++){
+         actMetaFAST.epsilonHub_.h_view(iTurb, j) = epsilonHub;
+       }
+     }
+     else{
+       epsilonTemp = epsilon_hub.as<std::vector<double>>();
+       for(int j=0; j<3; j++){
+         actMetaFAST.epsilonHub_.h_view(iTurb, j) = epsilonTemp[j];
+       }
+     }
+   }
   get_required(turbNode, "turb_id", fi.globTurbineData[iTurb].TurbID);
   get_required(
     turbNode, "fast_input_filename",

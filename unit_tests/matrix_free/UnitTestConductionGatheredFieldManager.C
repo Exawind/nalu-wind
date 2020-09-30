@@ -10,15 +10,15 @@
 #include "matrix_free/ConductionGatheredFieldManager.h"
 
 #include "matrix_free/ConductionFields.h"
+#include "matrix_free/ConductionInfo.h"
 #include "StkConductionFixture.h"
 
 #include "Kokkos_Macros.hpp"
 #include "Kokkos_Parallel_Reduce.hpp"
 
 #include "stk_mesh/base/MetaData.hpp"
-#include "stk_mesh/base/NgpFieldParallel.hpp"
 #include "stk_mesh/base/FieldState.hpp"
-#include "stk_math/StkMath.hpp"
+#include "stk_mesh/base/GetNgpField.hpp"
 #include "stk_mesh/base/NgpForEachEntity.hpp"
 #include "stk_simd/Simd.hpp"
 
@@ -108,18 +108,6 @@ sum_field(scalar_view<p> qp1)
 }
 
 void
-set_field(
-  const stk::mesh::NgpMesh& mesh,
-  stk::mesh::Selector selector,
-  stk::mesh::NgpField<double> field,
-  double val)
-{
-  stk::mesh::for_each_entity_run(
-    mesh, stk::topology::NODE_RANK, selector,
-    KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) { field.get(mi, 0) = val; });
-}
-
-void
 double_field(
   const stk::mesh::NgpMesh& mesh,
   stk::mesh::Selector selector,
@@ -134,9 +122,8 @@ double_field(
 
 TEST_F(GatheredFieldManagerFixture, update_solution)
 {
-  auto sol_field =
-    get_ngp_field<double>(meta, conduction_info::q_name, stk::mesh::StateNP1);
-  set_field(mesh, meta.universal_part(), sol_field, 1);
+  auto sol_field = stk::mesh::get_updated_ngp_field<double>(q_field);
+  sol_field.set_all(mesh, 1.);
 
   field_gather.gather_all();
 

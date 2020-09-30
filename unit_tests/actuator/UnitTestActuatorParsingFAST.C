@@ -85,7 +85,7 @@ private:
   }
 };
 
-TEST_F(ActuatorParsingFastTests, minimumRequired)
+TEST_F(ActuatorParsingFastTests, NGP_minimumRequired)
 {
   ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFASTNGP"]);
   try {
@@ -103,7 +103,7 @@ TEST_F(ActuatorParsingFastTests, minimumRequired)
   test_wo_lines(inputFileLines_, actMeta);
 }
 
-TEST_F(ActuatorParsingFastTests, minimumRequiredAAL)
+TEST_F(ActuatorParsingFastTests, NGP_minimumRequiredAAL)
 {
   ActuatorMeta actMeta(1, ActuatorTypeMap["AdvActLineFASTNGP"]);
   inputFileLines_[8] = "    epsilon_chord: [1.0, 1.0, 1.0]\n";
@@ -118,7 +118,7 @@ TEST_F(ActuatorParsingFastTests, minimumRequiredAAL)
   test_wo_lines(inputFileLines_, actMeta);
 }
 
-TEST_F(ActuatorParsingFastTests, oneValueEpsilonParses)
+TEST_F(ActuatorParsingFastTests, NGP_oneValueEpsilonParses)
 {
   ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFASTNGP"]);
   inputFileLines_[8] = "    epsilon: 1.0\n";
@@ -132,7 +132,7 @@ TEST_F(ActuatorParsingFastTests, oneValueEpsilonParses)
   test_wo_lines(inputFileLines_, actMeta);
 }
 
-TEST_F(ActuatorParsingFastTests, epsilonTower)
+TEST_F(ActuatorParsingFastTests, NGP_epsilonTower)
 {
   ActuatorMeta actMeta(1, ActuatorTypeMap["ActLineFASTNGP"]);
   inputFileLines_.push_back("    epsilon_tower: [5.0, 5.0, 5.0]\n");

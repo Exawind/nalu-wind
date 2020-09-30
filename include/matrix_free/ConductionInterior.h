@@ -10,15 +10,12 @@
 #ifndef CONDUCTION_INTERIOR_H
 #define CONDUCTION_INTERIOR_H
 
-#include <KokkosCompat_ClassicNodeAPI_Wrapper.hpp>
-#include <Kokkos_Array.hpp>
-#include <Teuchos_RCP.hpp>
-#include <Tpetra_MultiVector_decl.hpp>
-
-#include "Tpetra_MultiVector.hpp"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
+
+#include "Kokkos_Array.hpp"
+#include "Tpetra_MultiVector.hpp"
 
 namespace sierra {
 namespace nalu {

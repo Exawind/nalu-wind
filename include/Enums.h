@@ -274,6 +274,16 @@ static std::map<std::string, ActuatorType> ActuatorTypeMap = {
   {"AdvActLineFASTNGP", ActuatorType::AdvActLineFASTNGP},
   {"ActDiskFASTNGP", ActuatorType::ActDiskFASTNGP}};
 
+
+enum class EntrainmentMethod { SPECIFIED = 0, COMPUTED = 1, CLASSIC = 2 };
+
+static std::map<std::string, EntrainmentMethod> EntrainmentMethodMap
+{
+  {"computed", EntrainmentMethod::COMPUTED}, 
+  {"specified", EntrainmentMethod::SPECIFIED}
+};
+
+
 } // namespace nalu
 } // namespace Sierra
 

@@ -36,7 +36,7 @@ namespace nalu {
   KOKKOS_FUNCTION void quad_area_by_triangulation(
     int ics,
     const typename ViewType::value_type areacoords[4][3],
-    const ViewType& area)
+    ViewType& area)
   {
     /**
      * Form up the area vec consistently with the triangulation used

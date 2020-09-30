@@ -11,6 +11,7 @@
 
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/StkSimdConnectivityMap.h"
+#include "matrix_free/ValidSimdLength.h"
 
 #include "Kokkos_ExecPolicy.hpp"
 #include "Kokkos_Macros.hpp"
@@ -28,129 +29,98 @@ namespace impl {
 
 template <int p>
 void
-stk_simd_scalar_field_gather_t<p>::invoke(
+field_gather_t<p>::invoke(
   const_elem_mesh_index_view<p> conn,
   const stk::mesh::NgpField<double>& field,
   scalar_view<p> simd_element_field)
 {
+  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<4>, int>;
+  const auto range =
+    policy_type({0, 0, 0, 0}, {conn.extent_int(0), p + 1, p + 1, p + 1});
   Kokkos::parallel_for(
-    Kokkos::RangePolicy<exec_space, int>(0, conn.extent_int(0)),
-    KOKKOS_LAMBDA(int index) {
+    range, KOKKOS_LAMBDA(int index, int k, int j, int i) {
       for (int n = 0; n < simd_len; ++n) {
-        for (int k = 0; k < p + 1; ++k) {
-          for (int j = 0; j < p + 1; ++j) {
-            for (int i = 0; i < p + 1; ++i) {
-              const auto mesh_index = valid_mesh_index(conn(index, 0, 0, 0, n))
-                                        ? conn(index, k, j, i, n)
-                                        : conn(index, k, j, i, 0);
-              stk::simd::set_data(
-                simd_element_field(index, k, j, i), n,
-                field.get(mesh_index, 0));
-            }
-          }
-        }
+        const auto mesh_index =
+          MeshIndexGetter<p, simd_len>::get(conn, index, k, j, i, n);
+        stk::simd::set_data(
+          simd_element_field(index, k, j, i), n, field.get(mesh_index, 0));
       }
     });
 }
-INSTANTIATE_POLYSTRUCT(stk_simd_scalar_field_gather_t);
 
 template <int p>
 void
-stk_simd_vector_field_gather_t<p>::invoke(
+field_gather_t<p>::invoke(
   const_elem_mesh_index_view<p> conn,
   const stk::mesh::NgpField<double>& field,
   vector_view<p> simd_element_field)
 {
+  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<4>, int>;
+  const auto range =
+    policy_type({0, 0, 0, 0}, {conn.extent_int(0), p + 1, p + 1, p + 1});
   Kokkos::parallel_for(
-    Kokkos::RangePolicy<exec_space, int>(0, conn.extent_int(0)),
-    KOKKOS_LAMBDA(int index) {
+    range, KOKKOS_LAMBDA(int index, int k, int j, int i) {
       for (int n = 0; n < simd_len; ++n) {
-        for (int k = 0; k < p + 1; ++k) {
-          for (int j = 0; j < p + 1; ++j) {
-            for (int i = 0; i < p + 1; ++i) {
-              const auto mesh_index = valid_mesh_index(conn(index, 0, 0, 0, n))
-                                        ? conn(index, k, j, i, n)
-                                        : conn(index, k, j, i, 0);
-              stk::simd::set_data(
-                simd_element_field(index, k, j, i, 0), n,
-                field.get(mesh_index, 0));
-              stk::simd::set_data(
-                simd_element_field(index, k, j, i, 1), n,
-                field.get(mesh_index, 1));
-              stk::simd::set_data(
-                simd_element_field(index, k, j, i, 2), n,
-                field.get(mesh_index, 2));
-            }
-          }
+        const auto mesh_index =
+          MeshIndexGetter<p, simd_len>::get(conn, index, k, j, i, n);
+
+        for (int d = 0; d < 3; ++d) {
+          stk::simd::set_data(
+            simd_element_field(index, k, j, i, d), n, field.get(mesh_index, d));
         }
       }
     });
 }
-INSTANTIATE_POLYSTRUCT(stk_simd_vector_field_gather_t);
 
 template <int p>
 void
-stk_simd_face_scalar_field_gather_t<p>::invoke(
+field_gather_t<p>::invoke(
   const_face_mesh_index_view<p> conn,
   const stk::mesh::NgpField<double>& field,
   face_scalar_view<p> simd_element_field)
 {
+  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<3>, int>;
+  const auto range = policy_type({0, 0, 0}, {conn.extent_int(0), p + 1, p + 1});
   Kokkos::parallel_for(
-    Kokkos::RangePolicy<exec_space, int>(0, conn.extent_int(0)),
-    KOKKOS_LAMBDA(int index) {
+    range, KOKKOS_LAMBDA(int index, int j, int i) {
       for (int n = 0; n < simd_len; ++n) {
-        for (int j = 0; j < p + 1; ++j) {
-          for (int i = 0; i < p + 1; ++i) {
-            const auto mesh_index = valid_mesh_index(conn(index, 0, 0, n))
-                                      ? conn(index, j, i, n)
-                                      : conn(index, j, i, 0);
-            stk::simd::set_data(
-              simd_element_field(index, j, i), n, field.get(mesh_index, 0));
-          }
-        }
+        const auto mesh_index = valid_mesh_index(conn(index, 0, 0, n))
+                                  ? conn(index, j, i, n)
+                                  : conn(index, j, i, 0);
+        stk::simd::set_data(
+          simd_element_field(index, j, i), n, field.get(mesh_index, 0));
       }
     });
 }
-INSTANTIATE_POLYSTRUCT(stk_simd_face_scalar_field_gather_t);
 
 template <int p>
 void
-stk_simd_face_vector_field_gather_t<p>::invoke(
+field_gather_t<p>::invoke(
   const_face_mesh_index_view<p> conn,
   const stk::mesh::NgpField<double>& field,
   face_vector_view<p> simd_element_field)
 {
+  using policy_type = Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<3>, int>;
+  const auto range = policy_type({0, 0, 0}, {conn.extent_int(0), p + 1, p + 1});
   Kokkos::parallel_for(
-    Kokkos::RangePolicy<exec_space, int>(0, conn.extent_int(0)),
-    KOKKOS_LAMBDA(int index) {
+    range, KOKKOS_LAMBDA(int index, int j, int i) {
       for (int n = 0; n < simd_len; ++n) {
-        for (int j = 0; j < p + 1; ++j) {
-          for (int i = 0; i < p + 1; ++i) {
-            const auto mesh_index = valid_mesh_index(conn(index, 0, 0, n))
-                                      ? conn(index, j, i, n)
-                                      : conn(index, j, i, 0);
-            stk::simd::set_data(
-              simd_element_field(index, j, i, 0), n, field.get(mesh_index, 0));
-            stk::simd::set_data(
-              simd_element_field(index, j, i, 1), n, field.get(mesh_index, 1));
-            stk::simd::set_data(
-              simd_element_field(index, j, i, 2), n, field.get(mesh_index, 2));
-          }
+        const auto mesh_index = valid_mesh_index(conn(index, 0, 0, n))
+                                  ? conn(index, j, i, n)
+                                  : conn(index, j, i, 0);
+
+        for (int d = 0; d < 3; ++d) {
+          stk::simd::set_data(
+            simd_element_field(index, j, i, d), n, field.get(mesh_index, d));
         }
       }
     });
 }
-INSTANTIATE_POLYSTRUCT(stk_simd_face_vector_field_gather_t);
+INSTANTIATE_POLYSTRUCT(field_gather_t);
 } // namespace impl
-} // namespace matrix_free
-} // namespace nalu
-} // namespace sierra
-namespace sierra {
-namespace nalu {
-namespace matrix_free {
 
 void
-stk_simd_scalar_node_gather(
+field_gather(
   const_node_mesh_index_view conn,
   const stk::mesh::NgpField<double>& field,
   node_scalar_view simd_node_field)
@@ -167,6 +137,28 @@ stk_simd_scalar_node_gather(
       }
     });
 }
+
+void
+field_gather(
+  const_node_mesh_index_view conn,
+  const stk::mesh::NgpField<double>& field,
+  node_vector_view simd_node_field)
+{
+  Kokkos::parallel_for(
+    Kokkos::RangePolicy<exec_space, int>(0, conn.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
+      for (int n = 0; n < simd_len; ++n) {
+        const auto simd_mesh_index = conn(index, n);
+        const auto mesh_index =
+          valid_mesh_index(simd_mesh_index) ? simd_mesh_index : conn(index, 0);
+        for (int d = 0; d < 3; ++d) {
+          stk::simd::set_data(
+            simd_node_field(index, d), n, field.get(mesh_index, d));
+        }
+      }
+    });
+}
+
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

@@ -64,6 +64,7 @@ private:
   const unsigned pressureBC_ {stk::mesh::InvalidOrdinal};
   const unsigned Gpdx_ {stk::mesh::InvalidOrdinal};
   const unsigned Udiag_ {stk::mesh::InvalidOrdinal};
+  const unsigned dynPress_ {stk::mesh::InvalidOrdinal};
 
   DoubleType tauScale_;
   DoubleType mdotCorr_;

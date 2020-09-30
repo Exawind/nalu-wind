@@ -802,7 +802,10 @@ assembled by iterating faces and the boundary integration points on the
 exposed face. The parent element is also required since oftentimes
 gradients are used (for momentum). For an open boundary condition the
 flow can either leave or enter the domain depending on what the computed
-mass flow rate at the exposed boundary integration point is.
+mass flow rate at the exposed boundary integration point is.  Two options
+are available computing the velocity of the entrained flow---either the
+normal velocity at the integration point is used or a specified normal
+velocity is used.  The tangential components are always specified.
 
 Continuity
 ~~~~~~~~~~
@@ -812,7 +815,9 @@ value is stored and used for the other equations that require advection.
 The same formula is used for the pressure-stabilized mass flow rate.
 However, the local pressure gradient for each boundary contribution is
 based on the difference between the interior integration point and the
-user-specified pressure which takes on the boundary value. The interior
+user-specified pressure which takes on the boundary value. This can
+optionally be modified to be a ``total pressure"---removing the kinetic
+energy associated with entrainment at the open. The interior
 integration point is determined by linear interpolation. For CVFEM, full
 elemental averaging is used while in EBVC discretization, the midpoint
 value between the nearest node and opposing node to the boundary
@@ -839,7 +844,7 @@ a backward facing step with a single inflow, side periodic, top wall and open
 boundary. Not that the ability for the continuity solve to be well conditioned
 may require an interior Dirichlet on pressure as the open pressure specification
 for the global correction algorithm is lacking. In most cases, a Dirichlet
-condition is not actually required as the NULL-space of the continuity system
+condition is not actually required as the nullspace of the continuity system
 may not be found in the solve.
 
 
@@ -874,12 +879,12 @@ non-orthogonal corrections used. In this formulation, the area vector is
 taken to be the exposed area vector. Non-orthogonal terms are noted when
 the area vector and edge vector are not aligned.
 
-For advection, If the flow is leaving the domain, we simply advect the
+For advection, if the flow is leaving the domain, we simply advect the
 nearest nodal value to the boundary integration point. If the flow is
 coming into the domain, we simply confine the flow to be normal to the
 open boundary integration point area vector. The value entrained can be
 the nearest node or an upstream velocity value defined by the edge
-midpoint value.
+midpoint value or by a specified value.
 
 Mixture Fraction, Enthalpy, Species, :math:`k_{sgs}`, k and :math:`\omega` 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

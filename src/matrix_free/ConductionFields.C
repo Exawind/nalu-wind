@@ -8,26 +8,34 @@
 //
 
 #include "matrix_free/ConductionFields.h"
-
-#include "matrix_free/PolynomialOrders.h"
+#include "matrix_free/ConductionInfo.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LinearDiffusionMetric.h"
 #include "matrix_free/LinearVolume.h"
-#include "matrix_free/StkSimdConnectivityMap.h"
+#include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/StkSimdGatheredElementData.h"
-#include "matrix_free/KokkosFramework.h"
-#include "stk_mesh/base/CoordinateSystems.hpp"
-#include "stk_mesh/base/Field.hpp"
-#include "stk_mesh/base/FieldBase.hpp"
-#include "stk_mesh/base/FieldState.hpp"
-#include "stk_mesh/base/MetaData.hpp"
-#include "stk_topology/topology.hpp"
 
-#include <stdexcept>
+#include "stk_mesh/base/FieldState.hpp"
 
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
 namespace impl {
+
+stk::mesh::NgpField<double>
+get_ngp_field(
+  const stk::mesh::MetaData& meta,
+  std::string name,
+  stk::mesh::FieldState state = stk::mesh::StateNP1)
+{
+  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
+  ThrowAssert(
+    meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+  auto field = stk::mesh::get_updated_ngp_field<double>(
+    *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+  field.sync_to_device();
+  return field;
+}
 
 template <int p>
 InteriorResidualFields<p>
@@ -37,29 +45,29 @@ gather_required_conduction_fields_t<p>::invoke(
   InteriorResidualFields<p> fields;
 
   fields.qp1 = scalar_view<p>{"qp1", conn.extent(0)};
-  stk_simd_scalar_field_gather<p>(
+  field_gather<p>(
     conn, get_ngp_field(meta, conduction_info::q_name, stk::mesh::StateNP1),
     fields.qp1);
   fields.qp0 = scalar_view<p>{"qp0", conn.extent(0)};
-  stk_simd_scalar_field_gather<p>(
+  field_gather<p>(
     conn, get_ngp_field(meta, conduction_info::q_name, stk::mesh::StateN),
     fields.qp0);
   fields.qm1 = scalar_view<p>{"qm1", conn.extent(0)};
-  stk_simd_scalar_field_gather<p>(
+  field_gather<p>(
     conn, get_ngp_field(meta, conduction_info::q_name, stk::mesh::StateNM1),
     fields.qm1);
 
   vector_view<p> coords{"coords", conn.extent(0)};
-  stk_simd_vector_field_gather<p>(
+  field_gather<p>(
     conn, get_ngp_field(meta, conduction_info::coord_name), coords);
 
   scalar_view<p> alpha{"alpha", conn.extent(0)};
-  stk_simd_scalar_field_gather<p>(
+  field_gather<p>(
     conn, get_ngp_field(meta, conduction_info::volume_weight_name), alpha);
   fields.volume_metric = geom::volume_metric<p>(alpha, coords);
 
   scalar_view<p> lambda{"lambda", conn.extent(0)};
-  stk_simd_scalar_field_gather<p>(
+  field_gather<p>(
     conn, get_ngp_field(meta, conduction_info::diffusion_weight_name), lambda);
   fields.diffusion_metric = geom::diffusion_metric<p>(lambda, coords);
 

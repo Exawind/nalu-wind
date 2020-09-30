@@ -52,6 +52,7 @@ ComputeMdotElemOpenPenaltyAlgorithm::ComputeMdotElemOpenPenaltyAlgorithm(
     density_(NULL),
     exposedAreaVec_(NULL),
     pressureBc_(NULL),
+    dynP_(NULL),
     interpTogether_(realm_.get_mdot_interp()),
     om_interpTogether_(1.0 - interpTogether_),
     shiftMdot_(realm_.get_cvfem_shifted_mdot()),
@@ -71,6 +72,7 @@ ComputeMdotElemOpenPenaltyAlgorithm::ComputeMdotElemOpenPenaltyAlgorithm(
   exposedAreaVec_ = meta_data.get_field<GenericFieldType>(meta_data.side_rank(), "exposed_area_vector");
   openMassFlowRate_ = meta_data.get_field<GenericFieldType>(meta_data.side_rank(), "open_mass_flow_rate");
   pressureBc_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, realm_.solutionOptions_->activateOpenMdotCorrection_ ? "pressure" : "pressure_bc");
+  dynP_ = meta_data.get_field<GenericFieldType>(meta_data.side_rank(), "dynamic_pressure");
 }
 
 //--------------------------------------------------------------------------
@@ -220,7 +222,7 @@ ComputeMdotElemOpenPenaltyAlgorithm::execute()
         double * vrtm = stk::mesh::field_data(*velocityRTM_, node);
         double * Gjp = stk::mesh::field_data(*Gpdx_, node);
         const int offSet = ni*nDim;
-        for ( int j=0; j < nDim; ++j ) {
+        for ( int j=0; j < nDim; ++j) {
           p_vrtm[offSet+j] = vrtm[j];
           p_Gpdx[offSet+j] = Gjp[j];
         }
@@ -228,6 +230,7 @@ ComputeMdotElemOpenPenaltyAlgorithm::execute()
 
       // pointer to face data
       const double * areaVec = stk::mesh::field_data(*exposedAreaVec_, face);
+      const double * dynP = stk::mesh::field_data(*dynP_, face);
       double * mdot = stk::mesh::field_data(*openMassFlowRate_, face);
 
       // extract the connected element to this exposed face; should be single in size!
@@ -295,7 +298,7 @@ ComputeMdotElemOpenPenaltyAlgorithm::execute()
 
         // interpolate to bip
         double pBip = 0.0;
-        double pbcBip = 0.0;
+        double pbcBip = -dynP[ip];
         double rhoBip = 0.0;
         const int offSetSF_face = ip*nodesPerFace;
         for ( int ic = 0; ic < nodesPerFace; ++ic ) {

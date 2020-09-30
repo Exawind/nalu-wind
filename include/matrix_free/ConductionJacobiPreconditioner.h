@@ -14,7 +14,7 @@
 #include <Tpetra_Operator.hpp>
 
 #include "matrix_free/ConductionFields.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 
 namespace sierra {
 namespace nalu {

@@ -146,7 +146,8 @@ int main( int argc, char ** argv )
     pprint = true;
   }
   // deal with log file stream
-  naluEnv.set_log_file_stream(logFileName, pprint);
+  const bool capture_stdout = true;
+  naluEnv.set_log_file_stream(logFileName, pprint, capture_stdout);
 
   // proceed with reading input file "document" from YAML
   YAML::Node doc = YAML::LoadFile(inputFileName.c_str());
@@ -244,6 +245,9 @@ int main( int argc, char ** argv )
     naluEnv.naluOutputP0(), false, true, false, Teuchos::Union);
   }
   Kokkos::finalize_all();
+
+  MPI_Finalize();
+
   // all done  
   return 0;
 }

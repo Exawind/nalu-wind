@@ -57,6 +57,7 @@ public:
   virtual void solve_and_update();
 
   void initial_work();
+  virtual void post_external_data_transfer_work();
 
   void clip_min_distance_to_wall();
   void compute_f_one_blending();

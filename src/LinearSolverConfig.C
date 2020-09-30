@@ -54,7 +54,19 @@ TpetraLinearSolverConfig::load(const YAML::Node & node)
   tol = tolerance_;
 
   //Teuchos::RCP<Teuchos::ParameterList> params = Teuchos::params();
-  params_->set("Solver Name", method_);
+  if (method_ == "sstep_gmres") {
+    method_ = "TPETRA GMRES S-STEP";
+
+    int step_size;
+    get_if_present(node, "krylov_step_size", step_size, step_size);
+    params_->set("Step Size", step_size);
+
+    bool ritz_on_fly = true;
+    params_->set("Compute Ritz Values on Fly", ritz_on_fly);
+
+    bool useCholQR2 = true;
+    params_->set("CholeskyQR2", useCholQR2);
+  }
   params_->set("Convergence Tolerance", tol);
   params_->set("Maximum Iterations", max_iterations);
   if (output_level > 0)
@@ -111,6 +123,9 @@ TpetraLinearSolverConfig::load(const YAML::Node & node)
   else {
     throw std::runtime_error("invalid linear solver preconditioner specified ");
   }
+
+  params_->set("Solver Name", method_);
+
 
   get_if_present(node, "write_matrix_files",       writeMatrixFiles_,        writeMatrixFiles_);
   get_if_present(node, "summarize_muelu_timer",    summarizeMueluTimer_,     summarizeMueluTimer_);

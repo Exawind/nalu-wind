@@ -32,7 +32,7 @@ protected:
 };
 
 // TODO(psakeiv) move this to a more appropriate location
-TEST_F(ActuatorBulkDiskFastTest, fastPointIndexLocator)
+TEST_F(ActuatorBulkDiskFastTest, NGP_fastPointIndexLocator)
 {
   auto y_node = actuator_unit::create_yaml_node(inputs_);
   auto myMeta = actuator_FAST_parse(y_node, *actMeta_);
@@ -60,7 +60,7 @@ TEST_F(ActuatorBulkDiskFastTest, fastPointIndexLocator)
   }
 }
 
-TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountUniform)
+TEST_F(ActuatorBulkDiskFastTest, NGP_computeSweptPointCountUniform)
 {
   inputs_.push_back("    num_swept_pts: 2\n");
   auto y_node = actuator_unit::create_yaml_node(inputs_);
@@ -73,7 +73,7 @@ TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountUniform)
   EXPECT_EQ(101, myMeta.numPointsTurbine_.h_view(0));
 }
 
-TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountVaried)
+TEST_F(ActuatorBulkDiskFastTest, NGP_computeSweptPointCountVaried)
 {
   auto y_node = actuator_unit::create_yaml_node(inputs_);
   auto myMeta = actuator_FAST_parse(y_node, *actMeta_);
@@ -85,7 +85,7 @@ TEST_F(ActuatorBulkDiskFastTest, computeSweptPointCountVaried)
   EXPECT_EQ(296, myMeta.numPointsTurbine_.h_view(0));
 }
 
-TEST_F(ActuatorBulkDiskFastTest, sweptPointsPopulatedUniform)
+TEST_F(ActuatorBulkDiskFastTest, NGP_sweptPointsPopulatedUniform)
 {
   inputs_.push_back("    num_swept_pts: 2\n");
   auto y_node = actuator_unit::create_yaml_node(inputs_);
@@ -120,7 +120,7 @@ TEST_F(ActuatorBulkDiskFastTest, sweptPointsPopulatedUniform)
   }
 }
 
-TEST_F(ActuatorBulkDiskFastTest, sweptPointsPopulatedVaried)
+TEST_F(ActuatorBulkDiskFastTest, NGP_sweptPointsPopulatedVaried)
 {
   auto y_node = actuator_unit::create_yaml_node(inputs_);
   auto myMeta = actuator_FAST_parse(y_node, *actMeta_);

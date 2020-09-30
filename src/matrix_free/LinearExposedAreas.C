@@ -14,8 +14,7 @@
 #include "matrix_free/HexVertexCoordinates.h"
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/TensorOperations.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
 namespace sierra {
@@ -26,22 +25,19 @@ namespace impl {
 
 namespace {
 
-#define XH 0
-#define YH 1
-#define ZH 2
-
 template <int di, int dj, typename BoxArray, typename CoeffArray>
 KOKKOS_FUNCTION ftype
 jacobian_component(
   const BoxArray& base_box, const CoeffArray& nlin, int j, int i)
 {
-  return (dj == XH)
-           ? (-nlin(0, j) * base_box(di, 0) + nlin(0, j) * base_box(di, 1) +
-              nlin(1, j) * base_box(di, 2) - nlin(1, j) * base_box(di, 3)) *
-               0.5
-           : (-nlin(0, i) * base_box(di, 0) - nlin(1, i) * base_box(di, 1) +
-              nlin(1, i) * base_box(di, 2) + nlin(0, i) * base_box(di, 3)) *
-               0.5;
+  enum { LN = 0, RN = 1 };
+  enum { DS1 = 0 };
+  return ((dj == DS1)
+            ? (-nlin(LN, j) * base_box(di, 0) + nlin(LN, j) * base_box(di, 1) +
+               nlin(RN, j) * base_box(di, 2) - nlin(RN, j) * base_box(di, 3))
+            : (-nlin(LN, i) * base_box(di, 0) - nlin(RN, i) * base_box(di, 1) +
+               nlin(RN, i) * base_box(di, 2) + nlin(LN, i) * base_box(di, 3))) *
+         0.5;
 }
 
 template <typename CoeffArray>
@@ -49,22 +45,19 @@ KOKKOS_FUNCTION LocalArray<ftype[3]>
 face_area(
   const LocalArray<ftype[3][4]>& base_box, const CoeffArray& nlin, int j, int i)
 {
-  static constexpr int ds1 = XH;
-  static constexpr int ds2 = YH;
-  const auto dx_ds1 = jacobian_component<XH, ds1>(base_box, nlin, j, i);
-  const auto dx_ds2 = jacobian_component<XH, ds2>(base_box, nlin, j, i);
-  const auto dy_ds1 = jacobian_component<YH, ds1>(base_box, nlin, j, i);
-  const auto dy_ds2 = jacobian_component<YH, ds2>(base_box, nlin, j, i);
-  const auto dz_ds1 = jacobian_component<ZH, ds1>(base_box, nlin, j, i);
-  const auto dz_ds2 = jacobian_component<ZH, ds2>(base_box, nlin, j, i);
-  return LocalArray<ftype[3]>{{dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2,
-                               dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2,
-                               dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2}};
-}
+  enum { XH = 0, YH = 1, ZH = 2 };
+  enum { DS1 = 0, DS2 = 1 };
 
-#undef XH
-#undef YH
-#undef ZH
+  const auto dx_ds1 = jacobian_component<XH, DS1>(base_box, nlin, j, i);
+  const auto dx_ds2 = jacobian_component<XH, DS2>(base_box, nlin, j, i);
+  const auto dy_ds1 = jacobian_component<YH, DS1>(base_box, nlin, j, i);
+  const auto dy_ds2 = jacobian_component<YH, DS2>(base_box, nlin, j, i);
+  const auto dz_ds1 = jacobian_component<ZH, DS1>(base_box, nlin, j, i);
+  const auto dz_ds2 = jacobian_component<ZH, DS2>(base_box, nlin, j, i);
+  return LocalArray<ftype[3]>{
+    {dy_ds1 * dz_ds2 - dz_ds1 * dy_ds2, dz_ds1 * dx_ds2 - dx_ds1 * dz_ds2,
+     dx_ds1 * dy_ds2 - dy_ds1 * dx_ds2}};
+}
 } // namespace
 
 template <int p>

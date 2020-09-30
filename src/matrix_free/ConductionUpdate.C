@@ -8,18 +8,29 @@
 //
 
 #include "matrix_free/ConductionUpdate.h"
-#include "matrix_free/ConductionGatheredFieldManager.h"
-#include "matrix_free/ConductionSolutionUpdate.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/ConductionFields.h"
+#include "matrix_free/ConductionInfo.h"
+#include "matrix_free/PolynomialOrders.h"
 
-#include "stk_mesh/base/FieldState.hpp"
-#include "stk_mesh/base/Types.hpp"
-#include "stk_mesh/base/MetaData.hpp"
-#include "stk_mesh/base/NgpProfilingBlock.hpp"
-
+#include "Kokkos_Macros.hpp"
+#include "Kokkos_Parallel.hpp"
+#include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 
+#include <algorithm>
+#include <iomanip>
 #include <limits>
+#include <ostream>
+
+#include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/FieldState.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/NgpForEachEntity.hpp"
+#include "stk_mesh/base/NgpProfilingBlock.hpp"
+#include "stk_mesh/base/Types.hpp"
+
+#include <stk_topology/topology.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -32,19 +43,27 @@ ConductionUpdate<p>::ConductionUpdate(
   stk::mesh::Selector active_in,
   stk::mesh::Selector dirichlet_in,
   stk::mesh::Selector flux_in,
-  stk::mesh::Selector replicas_in)
+  stk::mesh::Selector replicas_in,
+  Kokkos::View<gid_type*> rgids)
   : bulk_(bulk_in),
     meta_(bulk_in.mesh_meta_data()),
     active_(active_in),
-    field_update_(
-      params,
+    linsys_(
+      bulk_.get_updated_ngp_mesh(),
+      active_,
+      linsys_info::get_gid_field(meta_),
+      replicas_in,
+      rgids),
+    exporter_(
+      Teuchos::rcpFromRef(linsys_.owned_and_shared),
+      Teuchos::rcpFromRef(linsys_.owned)),
+    offset_views_(
       bulk_in.get_updated_ngp_mesh(),
-      get_ngp_field<typename Tpetra::Map<>::global_ordinal_type>(
-        meta_, conduction_info::gid_name),
+      linsys_.stk_lid_to_tpetra_lid,
       active_in,
       dirichlet_in,
-      flux_in,
-      replicas_in),
+      flux_in),
+    field_update_(params, linsys_, exporter_, offset_views_),
     field_gather_(bulk_in, active_in, dirichlet_in, flux_in)
 {
 }
@@ -84,7 +103,7 @@ copy_state(
   stk::mesh::NgpField<double> dst,
   stk::mesh::NgpField<double> src)
 {
-  stk::mesh::ProfilingBlock pf("BDF2TimeStepper<p>::copy_state");
+  stk::mesh::ProfilingBlock pf("ConductionUpdate<p>:::copy_state");
   stk::mesh::for_each_entity_run(
     mesh, stk::topology::NODE_RANK, active_,
     KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) {
@@ -99,10 +118,15 @@ void
 ConductionUpdate<p>::predict_state()
 {
   stk::mesh::ProfilingBlock pf("ConductionUpdate<p>::predict_state");
-  copy_state(
-    bulk_.get_updated_ngp_mesh(), active_,
-    get_ngp_field<double>(meta_, conduction_info::q_name, stk::mesh::StateNP1),
-    get_ngp_field<double>(meta_, conduction_info::q_name, stk::mesh::StateN));
+
+  auto qp1 = stk::mesh::get_updated_ngp_field<double>(
+    *meta_.get_field(stk::topology::NODE_RANK, conduction_info::q_name)
+       ->field_state(stk::mesh::StateNP1));
+
+  auto qp0 = stk::mesh::get_updated_ngp_field<double>(
+    *meta_.get_field(stk::topology::NODE_RANK, conduction_info::q_name)
+       ->field_state(stk::mesh::StateN));
+  copy_state(bulk_.get_updated_ngp_mesh(), active_, qp1, qp0);
   field_gather_.update_solution_fields();
   initial_residual_ = -1;
 }
@@ -117,8 +141,12 @@ ConductionUpdate<p>::compute_update(
     gammas, field_gather_.get_residual_fields(), field_gather_.get_bc_fields(),
     field_gather_.get_flux_fields());
 
-  field_update_.compute_delta(
-    gammas[0], field_gather_.get_coefficient_fields(), delta);
+  const auto& delta_mv = field_update_.compute_delta(
+    gammas[0], field_gather_.get_coefficient_fields());
+
+  add_tpetra_solution_vector_to_stk_field(
+    bulk_.get_updated_ngp_mesh(), active_, linsys_.stk_lid_to_tpetra_lid,
+    delta_mv.getLocalViewDevice(), delta);
 
   residual_norm_ = field_update_.residual_norm();
   if (initial_residual_ < 0) {
