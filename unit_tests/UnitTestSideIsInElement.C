@@ -13,7 +13,6 @@
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/SkinMesh.hpp>
 
-#include <nalu_make_unique.h>
 #include <NaluEnv.h>
 
 #include <master_element/MasterElementFactory.h>

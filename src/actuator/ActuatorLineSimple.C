@@ -14,7 +14,6 @@
 #include <NaluEnv.h>
 #include <Realm.h>
 #include <Simulation.h>
-#include <nalu_make_unique.h>
 #include "utils/LinearInterpolation.h"
 
 // master elements
