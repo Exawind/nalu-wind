@@ -88,9 +88,12 @@ class PeriodicManager {
 
   const stk::mesh::PartVector &get_slave_part_vector();
 
-  double get_search_time();
+  const stk::mesh::PartVector& periodic_parts_vector()
+  {
+    return periodicPartVec_;
+  }
 
-// private:
+  double get_search_time();
 
   void augment_periodic_selector_pairs();
 
@@ -174,6 +177,8 @@ class PeriodicManager {
 
   // vector of master:slave selector pairs
   std::vector<SelectorPair> periodicSelectorPairs_;
+
+  stk::mesh::PartVector periodicPartVec_;
 
   // vector of slave parts
   stk::mesh::PartVector slavePartVector_;
