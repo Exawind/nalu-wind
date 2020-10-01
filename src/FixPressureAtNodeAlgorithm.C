@@ -12,6 +12,7 @@
 #include "FixPressureAtNodeInfo.h"
 #include "Realm.h"
 #include "EquationSystem.h"
+#include "PeriodicManager.h"
 #include "TpetraLinearSystem.h"
 #include "SolutionOptions.h"
 
@@ -206,20 +207,36 @@ FixPressureAtNodeAlgorithm::process_pressure_fix_node(
 {
   auto& bulk = realm_.bulk_data();
 
-  // Store the target node on the owning processor as well as the shared processors.
+  // Store the target node on the owning processor as well as the shared
+  // processors.
   targetNode_ = bulk.get_entity(stk::topology::NODE_RANK, nodeID);
-  if (bulk.is_valid(targetNode_) &&
-      (bulk.bucket(targetNode_).owned() ||
-       bulk.bucket(targetNode_).shared())) {
+
+  // If this node isn't on this MPI rank, return early
+  if (!bulk.is_valid(targetNode_)) {
+    fixPressureNode_ = false;
+    return;
+  }
+
+  // For periodic simulations, make sure that the node doesn't lie on periodic
+  // boundaries.
+  if (realm_.hasPeriodic_) {
+    stk::mesh::Selector pSel =
+      stk::mesh::selectUnion(
+          realm_.periodicManager_->periodic_parts_vector());
+    if (pSel(bulk.bucket(targetNode_))) {
+      throw std::runtime_error(
+        "FixPressureAtNode: Target node lies on a periodic boundary. This is "
+        "not supported. Please change the target location.");
+    }
+  }
+
+  if (bulk.bucket(targetNode_).owned() || bulk.bucket(targetNode_).shared()) {
     refNodeList_ = stk::mesh::NgpMesh::ConnectedNodes(&targetNode_, 1);
 
     // Only apply pressure correction on the owning processor
     fixPressureNode_ = bulk.bucket(targetNode_).owned();
-  } else {
-    fixPressureNode_ = false;
   }
 }
-
 
 }  // nalu
 }  // sierra
