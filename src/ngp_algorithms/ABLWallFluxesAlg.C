@@ -383,11 +383,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
     hAverage = h[1];
   }
 
-  DblType fluctuationFactor = 0.0;
-  if (fluctuationModel_ != "none")
-  {
-    fluctuationFactor = 1.0;
-  }
+  DblType fluctationFactor = (fluctuationModel_ != "none") ? 1.0 : 0.0;
 
   DblType MoengFactor = 0.0;
   if (fluctuationModel_ == "Moeng")
