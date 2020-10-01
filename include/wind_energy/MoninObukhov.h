@@ -64,20 +64,6 @@ T psih_unstable(const T& zeta, const T gamma = 16.0)
   return (2.0 * stk::math::log(0.5 * (1.0 + phih)));
 }
 
-template<typename T>
-KOKKOS_FORCEINLINE_FUNCTION
-T psim_neutral()
-{
-  return 0.0;
-}
-
-template<typename T>
-KOKKOS_FORCEINLINE_FUNCTION
-T psih_neutral()
-{
-  return 0.0;
-}
-
 }
 }  // nalu
 }  // sierra
