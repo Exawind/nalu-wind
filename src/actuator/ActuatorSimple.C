@@ -14,7 +14,6 @@
 #include <NaluEnv.h>
 #include <Realm.h>
 #include <Simulation.h>
-#include <nalu_make_unique.h>
 
 // master elements
 #include <master_element/MasterElement.h>
@@ -42,6 +41,7 @@
 #include <string>
 #include <stdexcept>
 #include <cmath>
+#include <memory>
 
 // The utilities used for actuator
 #include "actuator/UtilitiesActuator.h"
@@ -870,7 +870,7 @@ ActuatorSimple::create_actuator_point_info_map()
 	// This is where the actuator point object is created
 	int NODETYPE=0;
 	actuatorPointInfoMap_.insert(std::make_pair(
-                     np, make_unique<ActuatorSimplePointInfo>(
+                     np, std::make_unique<ActuatorSimplePointInfo>(
                            iBlade, 
 			   iBlade,
                            centroidCoords, 

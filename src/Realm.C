@@ -47,8 +47,6 @@
 #include <mesh_motion/MeshMotionAlg.h>
 #include <mesh_motion/MeshTransformationAlg.h>
 
-#include <nalu_make_unique.h>
-
 // overset
 #include <overset/OversetManager.h>
 
@@ -1007,12 +1005,12 @@ Realm::setup_post_processing_algorithms()
 #ifdef NALU_USES_OPENFAST
     switch(actuatorMeta_->actuatorType_){
       case(ActuatorType::ActLineFASTNGP):{
-        actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
+        actuatorBulk_ = std::make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
           get_time_step_from_file());
        break;
       }
       case(ActuatorType::ActDiskFASTNGP):{
-        actuatorBulk_ = make_unique<ActuatorBulkDiskFAST>(*actuatorMeta_.get(),
+        actuatorBulk_ = std::make_unique<ActuatorBulkDiskFAST>(*actuatorMeta_.get(),
           get_time_step_from_file());
         break;
       }
@@ -1029,7 +1027,7 @@ Realm::setup_post_processing_algorithms()
   if (NULL != actuatorMetaSimple_)
   {
     NaluEnv::self().naluOutputP0() << "Initializing actuatorBulkSimple_"<< std::endl; // LCCOUT                                            
-    actuatorBulkSimple_ = make_unique<ActuatorBulkSimple>(*actuatorMetaSimple_.get());
+    actuatorBulkSimple_ = std::make_unique<ActuatorBulkSimple>(*actuatorMetaSimple_.get());
   }
 
 
@@ -4339,7 +4337,7 @@ Realm::create_promoted_output_mesh()
     }
 
     auto* coords = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-    promotionIO_ = make_unique<PromotedElementIO>(
+    promotionIO_ = std::make_unique<PromotedElementIO>(
       promotionOrder_,
       *metaData_,
       *bulkData_,
