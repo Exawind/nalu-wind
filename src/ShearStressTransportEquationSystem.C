@@ -349,15 +349,20 @@ ShearStressTransportEquationSystem::update_and_clip()
     (meta.locally_owned_part() | meta.globally_shared_part()) &
     stk::mesh::selectField(*turbViscosity);
 
+  // Bring class variables to local scope for lambda capture
+  const double tkeMinVal = tkeMinValue_;
+  const double sdrMinVal = sdrMinValue_;
+  const double sdrMaxVal = sdrMaxValue_;
+
   nalu_ngp::run_entity_algorithm(
     "SST::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double tkeNew = tkeNp1.get(mi, 0) + kTmp.get(mi, 0);
       const double sdrNew = sdrNp1.get(mi, 0) + wTmp.get(mi, 0);
 
-      tkeNp1.get(mi, 0) = stk::math::max(tkeNew, tkeMinValue_);
+      tkeNp1.get(mi, 0) = stk::math::max(tkeNew, tkeMinVal);
       sdrNp1.get(mi, 0) =
-        stk::math::max(stk::math::min(sdrNew, sdrMaxValue_), sdrMinValue_);
+        stk::math::max(stk::math::min(sdrNew, sdrMaxVal), sdrMinVal);
     });
 
   tkeNp1.modify_on_device();
@@ -374,15 +379,20 @@ ShearStressTransportEquationSystem::clip_sst(
   tke.sync_to_device();
   sdr.sync_to_device();
 
+  // Bring class variables to local scope for lambda capture
+  const double tkeMinVal = tkeMinValue_;
+  const double sdrMinVal = sdrMinValue_;
+  const double sdrMaxVal = sdrMaxValue_;
+
   nalu_ngp::run_entity_algorithm(
     "SST::clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<>::MeshIndex& mi) {
       const double tkeNew = tke.get(mi, 0);
       const double sdrNew = sdr.get(mi, 0);
 
-      tke.get(mi, 0) = stk::math::max(tkeNew, tkeMinValue_);
+      tke.get(mi, 0) = stk::math::max(tkeNew, tkeMinVal);
       sdr.get(mi, 0) =
-        stk::math::max(stk::math::min(sdrNew, sdrMaxValue_), sdrMinValue_);
+        stk::math::max(stk::math::min(sdrNew, sdrMaxVal), sdrMinVal);
     });
   tke.modify_on_device();
   sdr.modify_on_device();
