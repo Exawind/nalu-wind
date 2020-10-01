@@ -385,11 +385,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
 
   DblType fluctationFactor = (fluctuationModel_ != "none") ? 1.0 : 0.0;
 
-  DblType MoengFactor = 0.0;
-  if (fluctuationModel_ == "Moeng")
-  {
-    MoengFactor = 1.0;
-  }
+  DblType MoengFactor = (fluctuationModel_ == "Moeng") ? 1.0 : 0.0;
 
   DblType fluctuatingTempRef = currSurfaceTemperature;
   if (fluctuatingTempRef_ == "reference")
