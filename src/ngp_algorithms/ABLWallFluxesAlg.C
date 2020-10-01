@@ -387,11 +387,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
 
   DblType MoengFactor = (fluctuationModel_ == "Moeng") ? 1.0 : 0.0;
 
-  DblType fluctuatingTempRef = currSurfaceTemperature;
-  if (fluctuatingTempRef_ == "reference")
-  {
-    fluctuatingTempRef = Tref_;
-  }
+  DblType fluctuatingTempRef = (fluctuatingTemRef_ == "reference") ? Tref_ : currSurfaceTemperature;
 
   const double eps = 1.0e-8;
   const DoubleType Lmax = 1.0e8;
