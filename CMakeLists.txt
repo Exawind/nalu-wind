@@ -69,7 +69,7 @@ endif()
 
 ############################ YAML ######################################
 set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
-find_package(YAML-CPP QUIET REQUIRED)
+find_package(YAML-CPP 0.6.2 QUIET REQUIRED)
 message(STATUS "Found YAML-CPP = ${YAML_CPP_CMAKE_DIR}")
 target_link_libraries(nalu PUBLIC yaml-cpp)
 
