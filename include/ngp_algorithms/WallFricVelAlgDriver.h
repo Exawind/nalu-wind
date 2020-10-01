@@ -63,7 +63,6 @@ private:
    *  utau_average = (utau * area) / total_area;
    */
   DoubleType utauAreaSum_[2];
-
 };
 
 }  // nalu
