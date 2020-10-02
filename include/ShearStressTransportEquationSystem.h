@@ -82,7 +82,6 @@ public:
 
   const double tkeMinValue_{1.0e-8};
   const double sdrMinValue_{1.0e-8};
-  const double sdrMaxValue_{1.0e12};
 };
 
 } // namespace nalu

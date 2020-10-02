@@ -352,7 +352,6 @@ ShearStressTransportEquationSystem::update_and_clip()
   // Bring class variables to local scope for lambda capture
   const double tkeMinVal = tkeMinValue_;
   const double sdrMinVal = sdrMinValue_;
-  const double sdrMaxVal = sdrMaxValue_;
 
   nalu_ngp::run_entity_algorithm(
     "SST::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
@@ -361,8 +360,7 @@ ShearStressTransportEquationSystem::update_and_clip()
       const double sdrNew = sdrNp1.get(mi, 0) + wTmp.get(mi, 0);
 
       tkeNp1.get(mi, 0) = stk::math::max(tkeNew, tkeMinVal);
-      sdrNp1.get(mi, 0) =
-        stk::math::max(stk::math::min(sdrNew, sdrMaxVal), sdrMinVal);
+      sdrNp1.get(mi, 0) = stk::math::max(sdrNew, sdrMinVal);
     });
 
   tkeNp1.modify_on_device();
@@ -382,7 +380,6 @@ ShearStressTransportEquationSystem::clip_sst(
   // Bring class variables to local scope for lambda capture
   const double tkeMinVal = tkeMinValue_;
   const double sdrMinVal = sdrMinValue_;
-  const double sdrMaxVal = sdrMaxValue_;
 
   nalu_ngp::run_entity_algorithm(
     "SST::clip", ngpMesh, stk::topology::NODE_RANK, sel,
@@ -391,8 +388,7 @@ ShearStressTransportEquationSystem::clip_sst(
       const double sdrNew = sdr.get(mi, 0);
 
       tke.get(mi, 0) = stk::math::max(tkeNew, tkeMinVal);
-      sdr.get(mi, 0) =
-        stk::math::max(stk::math::min(sdrNew, sdrMaxVal), sdrMinVal);
+      sdr.get(mi, 0) = stk::math::max(sdrNew, sdrMinVal);
     });
   tke.modify_on_device();
   sdr.modify_on_device();
