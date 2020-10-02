@@ -72,6 +72,7 @@ set(CMAKE_PREFIX_PATH ${YAML_DIR} ${CMAKE_PREFIX_PATH})
 find_package(YAML-CPP 0.6.2 QUIET REQUIRED)
 message(STATUS "Found YAML-CPP = ${YAML_CPP_CMAKE_DIR}")
 target_link_libraries(nalu PUBLIC yaml-cpp)
+target_include_directories(nalu SYSTEM PUBLIC ${YAML_CPP_INCLUDE_DIR})
 
 ########################## OpenMP ####################################
 if(ENABLE_OPENMP)
