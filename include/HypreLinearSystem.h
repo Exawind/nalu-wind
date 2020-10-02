@@ -14,7 +14,12 @@
 #ifndef HYPRE_LINEAR_SYSTEM_TIMER
 #define HYPRE_LINEAR_SYSTEM_TIMER
 #endif // HYPRE_LINEAR_SYSTEM_TIMER
-#undef HYPRE_LINEAR_SYSTEM_TIMER
+//#undef HYPRE_LINEAR_SYSTEM_TIMER
+
+#ifndef HYPRE_LINEAR_SYSTEM_DEBUG
+#define HYPRE_LINEAR_SYSTEM_DEBUG
+#endif // HYPRE_LINEAR_SYSTEM_DEBUG
+#undef HYPRE_LINEAR_SYSTEM_DEBUG
 
 #include "LinearSystem.h"
 #include "XSDKHypreInterface.h"
@@ -126,6 +131,11 @@ using HypreIntTypeUnorderedMapHost = HypreIntTypeUnorderedMap::HostMirror;
 using MemoryMap = Kokkos::UnorderedMap<HypreIntType, unsigned, sierra::nalu::MemSpace>;
 using MemoryMapHost = MemoryMap::HostMirror;
 
+// UVM Views
+using DoubleViewUVM = Kokkos::View<double*, sierra::nalu::UVMSpace>;
+using DoubleView2DUVM = Kokkos::View<double**, Kokkos::LayoutLeft, sierra::nalu::UVMSpace>;
+using HypreIntTypeViewUVM = Kokkos::View<HypreIntType*, sierra::nalu::UVMSpace>;
+
 /** Nalu interface to populate a Hypre Linear System
  *
  *  This class provides an interface to the HYPRE IJMatrix and IJVector data
@@ -148,24 +158,37 @@ public:
   std::map<HypreIntType, std::vector<HypreIntType> > columnsShared_;
   std::map<HypreIntType, unsigned> rowCountShared_;
 
+#ifdef HYPRE_LINEAR_SYSTEM_TIMER
   float _hypreAssembleTime=0.f;
   int _nHypreAssembles=0;
+
+  std::vector<double> buildBeginLinSysConstTimer_;
+  std::vector<double> buildNodeGraphTimer_;
+  std::vector<double> buildFaceToNodeGraphTimer_;
+  std::vector<double> buildEdgeToNodeGraphTimer_;
+  std::vector<double> buildElemToNodeGraphTimer_;
+  std::vector<double> buildFaceElemToNodeGraphTimer_;
+  std::vector<double> buildOversetNodeGraphTimer_;
+  std::vector<double> buildDirichletNodeGraphTimer_;
+  std::vector<double> buildGraphTimer_;
+  std::vector<double> finalizeLinearSystemTimer_;
+#endif
 
   HypreIntTypeView entityToLID_;
   HypreIntTypeViewHost entityToLIDHost_;
 
-  HypreIntTypeView row_indices_owned_;
-  HypreIntTypeView row_counts_owned_;
+  HypreIntTypeViewUVM row_indices_owned_uvm_;
+  HypreIntTypeViewUVM row_counts_owned_uvm_;
   HypreIntTypeView periodic_bc_rows_owned_;
-  HypreIntTypeView mat_elem_cols_owned_;
+  HypreIntTypeViewUVM mat_elem_cols_owned_uvm_;
   UnsignedView mat_elem_start_owned_;
   UnsignedView mat_row_start_owned_;
   UnsignedView rhs_row_start_owned_;
 
   MemoryMap map_shared_;
-  HypreIntTypeView row_indices_shared_;
-  HypreIntTypeView row_counts_shared_;
-  HypreIntTypeView mat_elem_cols_shared_;
+  HypreIntTypeViewUVM row_indices_shared_uvm_;
+  HypreIntTypeViewUVM row_counts_shared_uvm_;
+  HypreIntTypeViewUVM mat_elem_cols_shared_uvm_;
   UnsignedView mat_elem_start_shared_;
   UnsignedView mat_row_start_shared_;
   UnsignedView rhs_row_start_shared_;
@@ -207,6 +230,9 @@ public:
 
   virtual ~HypreLinearSystem();
 
+  // print timings for initialize
+  virtual void printTimings(std::vector<double>& time, const char * name);
+
   // Graph/Matrix Construction
   virtual void buildNodeGraph(const stk::mesh::PartVector & parts);// for nodal assembly (e.g., lumped mass and source)
   virtual void buildFaceToNodeGraph(const stk::mesh::PartVector & parts);// face->node assembly
@@ -243,16 +269,15 @@ public:
   {
   public:
 
-    HypreLinSysCoeffApplier(bool useNativeCudaSort, bool ensureReproducible, unsigned numDof,
-			    unsigned numDim, HypreIntType globalNumRows, int rank, 
+    HypreLinSysCoeffApplier(unsigned numDof, unsigned numDim, HypreIntType globalNumRows, int rank, 
 			    HypreIntType iLower, HypreIntType iUpper,
 			    HypreIntType jLower, HypreIntType jUpper, MemoryMap map_shared,
-			    HypreIntTypeView mat_elem_cols_owned, HypreIntTypeView mat_elem_cols_shared,
+			    HypreIntTypeViewUVM mat_elem_cols_owned_uvm, HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
 			    UnsignedView mat_elem_start_owned, UnsignedView mat_elem_start_shared,
 			    UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared,
 			    UnsignedView rhs_row_start_owned, UnsignedView rhs_row_start_shared,
-			    HypreIntTypeView row_indices_owned, HypreIntTypeView row_indices_shared, 
-			    HypreIntTypeView row_counts_owned, HypreIntTypeView row_counts_shared,
+			    HypreIntTypeViewUVM row_indices_owned_uvm, HypreIntTypeViewUVM row_indices_shared_uvm,
+			    HypreIntTypeViewUVM row_counts_owned_uvm, HypreIntTypeViewUVM row_counts_shared_uvm,
 			    HypreIntType num_mat_pts_to_assemble_total_owned,
 			    HypreIntType num_mat_pts_to_assemble_total_shared,
 			    HypreIntType num_rhs_pts_to_assemble_total_owned,
@@ -266,7 +291,7 @@ public:
     KOKKOS_FUNCTION
     virtual ~HypreLinSysCoeffApplier() {
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
-      if (_nAssembleMat>0) {
+      if (_nAssembleMat>0 && rank_==0) {
 	printf("\tMean HYPRE_IJMatrixSetValues Time (%d samples)=%1.5f   Total=%1.5f\n",
 	       _nAssembleMat, _assembleMatTime/_nAssembleMat,_assembleMatTime);
 	printf("\tMean HYPRE_IJVectorSetValues Time (%d samples)=%1.5f   Total=%1.5f\n",
@@ -276,20 +301,23 @@ public:
     }
 
     KOKKOS_FUNCTION
-    virtual void resetRows(unsigned,
-                           const stk::mesh::Entity*,
-                           const unsigned,
-                           const unsigned,
-                           const double,
-                           const double) { 
-      checkSkippedRows_() = 0;
-    }
-  
-    KOKKOS_FUNCTION
-    virtual void binarySearchOwned(unsigned l, unsigned r, HypreIntType x, unsigned& result);
+    virtual void reset_rows(unsigned numNodes,
+			    const stk::mesh::Entity* nodeList,
+			    const double diag_value,
+			    const double rhs_residual,
+			    const HypreIntType iLower, const HypreIntType iUpper,
+			    const unsigned numDof);
 
     KOKKOS_FUNCTION
-    virtual void binarySearchShared(unsigned l, unsigned r, HypreIntType x, unsigned& result);
+    virtual void resetRows(unsigned numNodes,
+			   const stk::mesh::Entity* nodeList,
+			   const unsigned,
+                           const unsigned,
+                           const double diag_value,
+			   const double rhs_residual);
+  
+    KOKKOS_FUNCTION
+    virtual void binarySearch(HypreIntTypeViewUVM view, unsigned l, unsigned r, HypreIntType x, unsigned& result);
 
     KOKKOS_FUNCTION
     virtual void sum_into(unsigned numEntities,
@@ -308,7 +336,6 @@ public:
 			       const SharedMemView<const double**,DeviceShmem> & lhs,
 			       const HypreIntType& iLower, const HypreIntType& iUpper);
 
-
     KOKKOS_FUNCTION
     virtual void operator()(unsigned numEntities,
                             const stk::mesh::NgpMesh::ConnectedNodes& entities,
@@ -317,31 +344,6 @@ public:
                             const SharedMemView<const double*,DeviceShmem> & rhs,
                             const SharedMemView<const double**,DeviceShmem> & lhs,
                             const char * trace_tag);
-
-    virtual void sortMatrixElementBins(const HypreIntType nrows, const HypreIntType N,
-				       const HypreIntType global_num_cols, 
-				       const UnsignedView & mat_row_start,
-				       const HypreIntTypeView & row_indices,
-				       HypreIntTypeView & iwork,
-				       HypreIntTypeView & col_indices_in_out,
-				       DoubleView & values_in_out);
-
-
-    virtual void fillCSRMatrix(const HypreIntType nnz, const HypreIntType N,
-			       const UnsignedView & mat_elem_start,
-			       const HypreIntTypeView & col_indices_in,
-			       const DoubleView & values_in,
-			       HypreIntTypeView & col_indices_out,
-			       DoubleView & values_out);
-
-    virtual void sortRhsElementBins(const HypreIntType nrows, const HypreIntType N, const unsigned index,
-				    const HypreIntTypeView & row_indices, const UnsignedView & rhs_row_start,
-				    HypreIntTypeView & iwork, DoubleView2D & values_in_out);
-    
-    virtual void fillRhsVector(const HypreIntType nrows, const HypreIntType N, const int index,
-			       const UnsignedView & rhs_row_start,
-			       const DoubleView2D & values_in,
-			       DoubleView2D & values_out);
 
     virtual int nextPowerOfTwo(int v, int max) {
       v--;
@@ -372,10 +374,6 @@ public:
 				 const std::vector<double>& rhs,
 				 const std::vector<double>& lhs);
 
-    //! whether or not to enforce reproducibility
-    bool useNativeCudaSort_=false;
-    //! whether or not to enforce reproducibility
-    bool ensureReproducible_=false;
     //! number of degrees of freedom
     unsigned numDof_=0;
     //! number of rhs vectors
@@ -395,10 +393,10 @@ public:
 
     //! map from dense index key to starting memory location ... shared
     MemoryMap map_shared_;
-    //! the matrix element columns ... owned
-    HypreIntTypeView mat_elem_cols_owned_;
-    //! the matrix element columns ... shared
-    HypreIntTypeView mat_elem_cols_shared_;
+    //! the matrix element columns ... owned in uvm
+    HypreIntTypeViewUVM mat_elem_cols_owned_uvm_;
+    //! the matrix element columns ... shared in uvm
+    HypreIntTypeViewUVM mat_elem_cols_shared_uvm_;
     //! the starting position(s) of the matrix element in the lists ... owned
     UnsignedView mat_elem_start_owned_;
     //! the starting position(s) of the matrix element in the lists ... shared
@@ -411,14 +409,14 @@ public:
     UnsignedView rhs_row_start_owned_;
     //! the starting position(s) of the rhs lists ... shared
     UnsignedView rhs_row_start_shared_;
-    //! the row indices ... owned
-    HypreIntTypeView row_indices_owned_;
-    //! the row indices ... shared
-    HypreIntTypeView row_indices_shared_;
-    //! the row counts ... owned
-    HypreIntTypeView row_counts_owned_;
+    //! the row indices ... owned in uvm
+    HypreIntTypeViewUVM row_indices_owned_uvm_;
+    //! the row indices ... shared in uvm
+    HypreIntTypeViewUVM row_indices_shared_uvm_;
+    //! the row counts ... owned uvm
+    HypreIntTypeViewUVM row_counts_owned_uvm_;
     //! the row counts ... shared
-    HypreIntTypeView row_counts_shared_;
+    HypreIntTypeViewUVM row_counts_shared_uvm_;
     //! total number of points in the matrix owned lists
     HypreIntType num_mat_pts_to_assemble_total_owned_;
     //! total number of points in the matrix shared lists
@@ -453,56 +451,22 @@ public:
     /* flag to reinitialize or not */
     bool reinitialize_=true;
 
-    //! data structures to atomically update for augmenting the list */
-    UnsignedView mat_counter_owned_;
-    UnsignedView rhs_counter_owned_;
-    UnsignedView mat_counter_shared_;
-    UnsignedView rhs_counter_shared_;
-    
-    //! list for the column indices ... later to be assembled to the CSR matrix in Hypre
-    HypreIntTypeView cols_owned_;
-    HypreIntTypeView cols_shared_;
-
-    //! list for the values ... later to be assembled to the CSR matrix in Hypre
-    DoubleView vals_owned_;
-    DoubleView vals_shared_;
-
-    //! list for the rhs values ... later to be assembled to the rhs vector in Hypre
-    DoubleView2D rhs_vals_owned_;
-    DoubleView2D rhs_vals_shared_;
-
     //! Total number of rows owned by this particular MPI rank
     HypreIntType num_rows_;
     HypreIntType num_rows_owned_;
     HypreIntType num_rows_shared_;
-    DoubleView d_values_owned_;
-    DoubleViewHost h_values_owned_;
-    HypreIntTypeView d_col_indices_owned_;
-    HypreIntTypeViewHost h_col_indices_owned_;
-    HypreIntTypeViewHost h_row_indices_owned_;
-    HypreIntTypeViewHost h_row_counts_owned_;
-    DoubleView2D d_rhs_owned_;
-    DoubleView2DHost h_rhs_owned_;
+    DoubleViewUVM values_owned_uvm_;
+    DoubleView2DUVM rhs_owned_uvm_;
 
     //! Total number of rows shared by this particular MPI rank
     HypreIntType num_nonzeros_;
     HypreIntType num_nonzeros_owned_;
     HypreIntType num_nonzeros_shared_;
-    DoubleView d_values_shared_;
-    DoubleViewHost h_values_shared_;
-    HypreIntTypeView d_col_indices_shared_;
-    HypreIntTypeViewHost h_col_indices_shared_;
-    HypreIntTypeViewHost h_row_indices_shared_;
-    HypreIntTypeViewHost h_row_counts_shared_;
-    DoubleView2D d_rhs_shared_;
-    DoubleView2DHost h_rhs_shared_;
+    DoubleViewUVM values_shared_uvm_;
+    DoubleView2DUVM rhs_shared_uvm_;
 
     //! Flag indicating that sumInto should check to see if rows must be skipped
     HypreIntTypeViewScalar checkSkippedRows_;
-
-    /* Work space */
-    HypreIntTypeView iwork_;
-    DoubleView dwork_;
 
     /* Work space for overset. These are used to accumulate data from legacy, non-NGP sumInto calls */
     HypreIntTypeView d_overset_row_indices_;

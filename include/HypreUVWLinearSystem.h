@@ -68,16 +68,15 @@ public:
   {
   public:
     
-    HypreUVWLinSysCoeffApplier(bool useNativeCudaSort, bool ensureReproducible, unsigned numDof,
-			       unsigned nDim, HypreIntType globalNumRows, int rank, 
+    HypreUVWLinSysCoeffApplier(unsigned numDof, unsigned nDim, HypreIntType globalNumRows, int rank, 
 			       HypreIntType iLower, HypreIntType iUpper,
 			       HypreIntType jLower, HypreIntType jUpper, MemoryMap map_shared,
-			       HypreIntTypeView mat_elem_cols_owned, HypreIntTypeView mat_elem_cols_shared,
+                               HypreIntTypeViewUVM mat_elem_cols_owned_uvm, HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
 			       UnsignedView mat_elem_start_owned, UnsignedView mat_elem_start_shared,
 			       UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared,
 			       UnsignedView rhs_row_start_owned, UnsignedView rhs_row_start_shared,
-			       HypreIntTypeView row_indices_owned, HypreIntTypeView row_indices_shared, 
-			       HypreIntTypeView row_counts_owned, HypreIntTypeView row_counts_shared,
+			       HypreIntTypeViewUVM row_indices_owned_uvm, HypreIntTypeViewUVM row_indices_shared_uvm, 
+			       HypreIntTypeViewUVM row_counts_owned_uvm, HypreIntTypeViewUVM row_counts_shared_uvm,
 			       HypreIntType num_mat_pts_to_assemble_total_owned,
 			       HypreIntType num_mat_pts_to_assemble_total_shared,
 			       HypreIntType num_rhs_pts_to_assemble_total_owned,
@@ -92,6 +91,22 @@ public:
     virtual ~HypreUVWLinSysCoeffApplier() {}
 
     KOKKOS_FUNCTION
+    virtual void reset_rows(unsigned numNodes,
+			    const stk::mesh::Entity* nodeList,
+			    const double diag_value,
+			    const double rhs_residual,
+			    const HypreIntType iLower, const HypreIntType iUpper,
+			    const unsigned nDim);
+
+    KOKKOS_FUNCTION
+    virtual void resetRows(unsigned numNodes,
+			   const stk::mesh::Entity* nodeList,
+			   const unsigned,
+                           const unsigned,
+                           const double diag_value,
+			   const double rhs_residual);
+
+    KOKKOS_FUNCTION
     virtual void sum_into(unsigned numEntities,
 			  const stk::mesh::NgpMesh::ConnectedNodes& entities,
 			  const SharedMemView<int*,DeviceShmem> & localIds,
@@ -99,7 +114,7 @@ public:
 			  const SharedMemView<const double**,DeviceShmem> & lhs,
 			  const HypreIntType& iLower, const HypreIntType& iUpper,
 			  unsigned nDim);
-
+    
     KOKKOS_FUNCTION
     virtual void operator()(unsigned numEntities,
                             const stk::mesh::NgpMesh::ConnectedNodes& entities,

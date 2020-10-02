@@ -38,6 +38,8 @@
 #include <iomanip>
 #include <stdexcept>
 
+#include "HypreNGP.h"
+
 static std::string human_bytes_double(double bytes)
 {
   const double K = 1024;
@@ -72,7 +74,12 @@ int main( int argc, char ** argv )
 
   // NaluEnv singleton
   sierra::nalu::NaluEnv &naluEnv = sierra::nalu::NaluEnv::self();
+
   Kokkos::initialize(argc, argv);
+
+  // Hypre initialization
+  nalu_hypre::hypre_initialize();
+
   {
   
   stk::diag::setEnabledTimerMetricsMask(stk::diag::METRICS_CPU_TIME | stk::diag::METRICS_WALL_TIME);
@@ -244,6 +251,10 @@ int main( int argc, char ** argv )
   Teuchos::TimeMonitor::summarize(
     naluEnv.naluOutputP0(), false, true, false, Teuchos::Union);
   }
+
+  // Hypre cleanup
+  nalu_hypre::hypre_finalize();
+
   Kokkos::finalize_all();
 
   MPI_Finalize();
