@@ -2325,6 +2325,9 @@ HypreLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
 
   status = solver->solve(iters, finalResidNorm, realm_.isFinalOuterIter_);
 
+  /* set this after the solve calls */
+  solver->set_initialize_solver_flag();
+
   if (solver->getConfig()->getWriteMatrixFiles()) {
     std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);
     const std::string slnFile = eqSysName_ + ".IJV." + writeCounter + ".sln";

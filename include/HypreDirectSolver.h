@@ -62,6 +62,9 @@ public:
   //! Return the type of solver instance
   virtual PetraType getType() override { return PT_HYPRE; }
 
+  //! public API for resetting the flag for how often the preconditioner is recomputed
+  virtual void set_initialize_solver_flag();
+  
   //! Instance of the Hypre parallel matrix
   mutable HYPRE_ParCSRMatrix parMat_;
 
@@ -133,7 +136,10 @@ protected:
   bool isPrecondSetup_{false};
 
   //! Flag indicating whether this class instance has been initialized fully
-  bool isInitialized_{false};
+  bool initializeSolver_{true};
+
+  //! Used with recomputePrecondFrequency to determine when to reinitialize the solver/preconditioner
+  unsigned internalIterCounter_{0};
 
 private:
   HypreDirectSolver() = delete;

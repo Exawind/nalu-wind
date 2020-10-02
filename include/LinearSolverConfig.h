@@ -56,6 +56,9 @@ public:
   inline bool recomputePreconditioner() const
   { return recomputePreconditioner_; }
 
+  inline unsigned recomputePrecondFrequency() const
+  { return recomputePrecondFrequency_; }
+
   inline bool reusePreconditioner() const
   { return reusePreconditioner_; }
 
@@ -91,6 +94,7 @@ protected:
   Teuchos::RCP<Teuchos::ParameterList> paramsPrecond_;
 
   bool recomputePreconditioner_{true};
+  unsigned recomputePrecondFrequency_{1}; /* positive integer. Recompute precond before all solves */
   bool reusePreconditioner_{false};
   bool useSegregatedSolver_{false};
   bool writeMatrixFiles_{false};

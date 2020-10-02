@@ -53,6 +53,8 @@ HypreLinearSolverConfig::load(const YAML::Node& node)
 
   get_if_present(node, "recompute_preconditioner",
                  recomputePreconditioner_, recomputePreconditioner_);
+  get_if_present(node, "recompute_preconditioner_frequency",
+                 recomputePrecondFrequency_, recomputePrecondFrequency_);
   get_if_present(node, "reuse_preconditioner",
                  reusePreconditioner_, reusePreconditioner_);
   get_if_present(node, "segregated_solver", useSegregatedSolver_, useSegregatedSolver_);

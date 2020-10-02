@@ -257,6 +257,9 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
   copy_hypre_to_stk(slnField, rhsNorm);
   sync_field(slnField);
 
+  /* set this after the solve calls */
+  solver->set_initialize_solver_flag();
+
   if (solver->getConfig()->getWriteMatrixFiles()) {
     for (unsigned d=0; d < nDim_; ++d) {
       std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);

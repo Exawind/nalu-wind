@@ -36,8 +36,7 @@ HypreUVWSolver::solve(
 {
   // Initialize the solver on first entry
   double time = -NaluEnv::self().nalu_time();
-  if (!isInitialized_ || config_->recomputePreconditioner())
-    initSolver();
+  if (initializeSolver_) initSolver();
   time += NaluEnv::self().nalu_time();
   timerPrecond_ = time;
 
