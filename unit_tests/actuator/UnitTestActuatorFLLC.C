@@ -55,7 +55,7 @@ TEST(ActuatorFLLC, NGP_ComputeLiftForceDistribution)
       density(i) = 1.0;
     });
 
-  Kokkos::parallel_for("compute forces", range_policy, ActSimpleComputeForce(actBulk, actMetaSim));
+  ActSimpleComputeForce(actBulk, actMetaSim);
 
   // given a CL, CD, chord and U vector we can compute a lift and total force
   // then ensure our computation gives the expected lift force distribution from
