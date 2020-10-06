@@ -26,8 +26,6 @@ ActuatorLineSimpleNGP::ActuatorLineSimpleNGP(
 void
 ActuatorLineSimpleNGP::operator()()
 {
-  auto forceReduce = actBulk_.actuatorForce_.view_host();
-
   actBulk_.zero_source_terms(stkBulk_);
 
   update();
@@ -35,12 +33,7 @@ ActuatorLineSimpleNGP::operator()()
   // set range policy to only operating over points owned by local fast turbine
   auto fastRangePolicy = actBulk_.local_range_policy();
 
-
-  Kokkos::parallel_for(
-    "computeForcesActuatorNgpSimple", fastRangePolicy,
-    ActSimpleComputeForce(actBulk_, actMeta_));
-
-  actuator_utils::reduce_view_on_host(forceReduce);
+  ActSimpleComputeForce(actBulk_, actMeta_);
 
   const int localSizeCoarseSearch =
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
@@ -59,7 +52,6 @@ ActuatorLineSimpleNGP::operator()()
   }
 
   actBulk_.parallel_sum_source_term(stkBulk_);
-
 }
 
 void
