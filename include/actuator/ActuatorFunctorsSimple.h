@@ -94,6 +94,7 @@ struct ActSimpleComputeForce
 
   ActDualViewHelper<ActuatorFixedMemSpace> helper_;
   ActFixVectorDbl velocity_;
+  ActFixVectorDbl vel2d_;
   ActFixScalarDbl density_;
   ActFixVectorDbl force_;
   ActFixScalarInt offset_;

@@ -49,14 +49,8 @@ TEST(ActuatorFLLC, NGP_ComputeLiftForceDistribution)
   auto range_policy=actBulk.local_range_policy();
   Kokkos::parallel_for(
     "init velocities", range_policy, KOKKOS_LAMBDA(int i) {
-      double windSpeedSpan = 0.0;
       for (int j = 0; j < 3; ++j) {
         vel(i, j) = 1.0;
-        windSpeedSpan += vel(i, j) * spanDir(0, j);
-      }
-      // compute 2d velocity for computing lift/drag to compare
-      for (int j = 0; j < 3; ++j) {
-        relVel(i, j) = vel(i, j) - windSpeedSpan * spanDir(0, j);
       }
       density(i) = 1.0;
     });
