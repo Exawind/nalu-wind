@@ -16,6 +16,7 @@ namespace sierra {
 namespace nalu {
 
 struct ActuatorBulk;
+struct ActuatorMeta;
 
 namespace FLLC {
 /**
@@ -26,8 +27,19 @@ namespace FLLC {
  * we will extract lift from the total force by subtracting drag
  *
  * @param actBulk - Container to hold all the fields
+ * @param actMeta - Container for general turbine info
  */
-void compute_lift_force_distribution(ActuatorBulk& actBulk);
+void compute_lift_force_distribution(
+  ActuatorBulk& actBulk, const ActuatorMeta& actMeta);
+/**
+ * @brief Compute gradient of the lift force distribution (\Delta G)
+ * Compute equations 5.4 and 5.5 from Martinez-Tossas and Meneveau 2019
+ *
+ * @param actBulk
+ * @param actMeta
+ */
+void grad_lift_force_distribution(
+  ActuatorBulk& actBulk, const ActuatorMeta& actMeta);
 
 } // namespace FLLC
 } // namespace nalu

@@ -58,10 +58,6 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
-    localTurbineId_(
-      NaluEnv::self().parallel_rank() >= actMeta.numberOfActuators_
-        ? -1
-        : NaluEnv::self().parallel_rank()), // assign 1 turbine per rank for now
     tStepRatio_(naluTimeStep / actMeta.fastInputs_.dtFAST)
 {
   init_openfast(actMeta, naluTimeStep);

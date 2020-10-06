@@ -30,9 +30,6 @@ ActuatorLineSimpleNGP::operator()()
 
   update();
 
-  // set range policy to only operating over points owned by local fast turbine
-  auto fastRangePolicy = actBulk_.local_range_policy();
-
   ActSimpleComputeForce(actBulk_, actMeta_);
 
   const int localSizeCoarseSearch =
