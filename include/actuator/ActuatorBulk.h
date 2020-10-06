@@ -64,6 +64,8 @@ struct ActuatorBulk
   void zero_source_terms(stk::mesh::BulkData& stkBulk);
   void parallel_sum_source_term(stk::mesh::BulkData& stkBulk);
   void compute_offsets(const ActuatorMeta& actMeta);
+  Kokkos::RangePolicy<ActuatorFixedExecutionSpace>
+  local_range_policy(const ActuatorMeta& actMeta);
 
   // HOST AND DEVICE DATA (DualViews)
   ActScalarIntDv turbIdOffset_;
@@ -77,13 +79,16 @@ struct ActuatorBulk
 
   // Filtered lifting line correction fields
   ActVectorDblDv relativeVelocity_;
-  ActVectorDblDv liftForceDistribution_;
+  ActScalarDblDv liftForceDistribution_;
+  ActScalarDblDv deltaLiftForceDistribution_;
 
   // HOST ONLY DATA
   ActFixVectorDbl localCoords_;
   ActFixScalarBool pointIsLocal_;
   ActFixScalarInt localParallelRedundancy_;
   ActFixElemIds elemContainingPoint_;
+
+  const int localTurbineId_;
 };
 
 } // namespace nalu

@@ -20,7 +20,6 @@ struct ActuatorMetaSimple : public ActuatorMeta
   ActuatorMetaSimple(const ActuatorMeta& actMeta);
 
   // HOST ONLY
-  bool filterLiftLineCorrection_;
   bool isotropicGaussian_;
 
   //int maxNumPntsPerBlade_;
@@ -79,7 +78,6 @@ struct ActuatorBulkSimple : public ActuatorBulk
   const int       num_blades_;
   const bool      debug_output_;
 
-  const int localTurbineId_;
   ActDualViewHelper<ActuatorMemSpace> dvHelper_;
 };
 

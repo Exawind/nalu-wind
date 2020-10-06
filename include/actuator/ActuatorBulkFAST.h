@@ -68,7 +68,6 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActTensorDblDv orientationTensor_;
 
   fast::OpenFAST openFast_;
-  const int localTurbineId_;
   const int tStepRatio_;
   ActDualViewHelper<ActuatorMemSpace> dvHelper_;
 };

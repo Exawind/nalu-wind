@@ -16,7 +16,6 @@ namespace nalu {
 
 ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
-    filterLiftLineCorrection_(false),
     isotropicGaussian_(false),
     epsilon_("epsilonMeta", numberOfActuators_),
     epsilonChord_("epsilonChordMeta", numberOfActuators_),
@@ -32,10 +31,9 @@ ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
 {
 }
 
-ActuatorBulkSimple::ActuatorBulkSimple(
-  const ActuatorMetaSimple& actMeta)
+ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   : ActuatorBulk(actMeta),
-    density_("actDensity", actMeta.numPointsTotal_), 
+    density_("actDensity", actMeta.numPointsTotal_),
     turbineThrust_("turbineThrust", actMeta.numberOfActuators_),
     epsilonOpt_("epsilonOptimal", actMeta.numPointsTotal_),
     orientationTensor_(
@@ -44,10 +42,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(
     num_force_pts_blade_("numForcePtsBladeBulk", actMeta.numberOfActuators_),
     assignedProc_("assignedProcBulk", actMeta.numberOfActuators_),
     num_blades_(actMeta.numberOfActuators_),
-    debug_output_(actMeta.debug_output_),
-    localTurbineId_(
-      NaluEnv::self().parallel_rank() >= actMeta.numberOfActuators_
-        ? -1 : NaluEnv::self().parallel_rank())
+    debug_output_(actMeta.debug_output_)
 {
   // Allocate blades to turbines
   const int nProcs = NaluEnv::self().parallel_size();

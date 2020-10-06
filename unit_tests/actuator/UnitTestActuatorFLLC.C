@@ -77,16 +77,14 @@ TEST(ActuatorFLLC, NGP_ComputeLiftForceDistribution)
 
   actuator_utils::reduce_view_on_host(G);
 
-  FLLC::compute_lift_force_distribution(actBulk);
+  FLLC::compute_lift_force_distribution(actBulk, actMetaSim);
 
   auto fllc_lift_force = actBulk.liftForceDistribution_.view_host();
     // assert that the two lift forces are equal
   Kokkos::parallel_for(
     "check values", range_policy, KOKKOS_LAMBDA(int i) {
       double gmag = 0.0;
-      for (int j = 0; j < 3; ++j)
-        gmag += fllc_lift_force(i, j) * fllc_lift_force(i, j);
-      gmag = std::sqrt(gmag) / area(0, i) / density(i);
+      gmag = fllc_lift_force(i) / area(0, i) / density(i);
       EXPECT_DOUBLE_EQ(G(i), gmag);
     });
 }
