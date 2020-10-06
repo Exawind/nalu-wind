@@ -56,8 +56,7 @@ TEST(ActuatorFLLC, NGP_ComputeLiftForceDistribution)
       }
       // compute 2d velocity for computing lift/drag to compare
       for (int j = 0; j < 3; ++j) {
-        // relVel(i, j) = vel(i, j) - windSpeedSpan * spanDir(0, j);
-        relVel(i,j) = vel(i,j);
+        relVel(i, j) = vel(i, j) - windSpeedSpan * spanDir(0, j);
       }
       density(i) = 1.0;
     });
@@ -94,7 +93,6 @@ TEST(ActuatorFLLC, NGP_ComputeLiftForceDistribution)
       for (int j = 0; j < 3; ++j)
         gmag += fllc_lift_force(i, j) * fllc_lift_force(i, j);
       gmag = std::sqrt(gmag) / area(0, i) / density(i);
-      // currently G(i) is 3 and gmag is 1.5549
       EXPECT_DOUBLE_EQ(G(i), gmag);
     });
 }
