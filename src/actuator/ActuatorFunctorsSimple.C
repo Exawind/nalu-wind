@@ -132,24 +132,30 @@ ActSimpleAssignVel::operator()(int index) const
 
 }
 
-ActSimpleComputeForce::ActSimpleComputeForce(ActuatorBulkSimple& actBulk,
-					     const ActuatorMetaSimple& actMeta)
+ActSimpleComputeForce::ActSimpleComputeForce(
+  ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta)
   : velocity_(helper_.get_local_view(actBulk.velocity_)),
+    vel2d_(helper_.get_local_view(actBulk.relativeVelocity_)),
     density_(helper_.get_local_view(actBulk.density_)),
     force_(helper_.get_local_view(actBulk.actuatorForce_)),
     offset_(helper_.get_local_view(actBulk.turbIdOffset_)),
     turbId_(actBulk.localTurbineId_),
     nPolarTable(actMeta.polarTableSize_.h_view(turbId_)),
-    aoaPolarTableDv_("aoa_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
-    clPolarTableDv_("cl_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
-    cdPolarTableDv_("cd_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
+    aoaPolarTableDv_(
+      "aoa_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
+    clPolarTableDv_(
+      "cl_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
+    cdPolarTableDv_(
+      "cd_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
     nPts(actMeta.num_force_pts_blade_.h_view(turbId_)),
-    twistTableDv_("twist_table_Dv", actMeta.num_force_pts_blade_.h_view(turbId_)),
+    twistTableDv_(
+      "twist_table_Dv", actMeta.num_force_pts_blade_.h_view(turbId_)),
     elemAreaDv_("elem_area_Dv", actMeta.num_force_pts_blade_.h_view(turbId_)),
     debug_output_(actBulk.debug_output_)
 {
 
   helper_.touch_dual_view(actBulk.actuatorForce_);
+  helper_.touch_dual_view(actBulk.relativeVelocity_);
   if (NaluEnv::self().parallel_rank() == turbId_) {
     // Set up the polar table arrays
     for (size_t i=0; i<nPolarTable; i++) {
@@ -181,6 +187,8 @@ ActSimpleComputeForce::operator()(int index) const
   const int localId = index - offset_(turbId_);
 
   auto vel     = Kokkos::subview(velocity_, index, Kokkos::ALL);
+  // TODO if we add blade motion then subtract that from the relative vel
+  auto ws2d = Kokkos::subview(vel2d_, index, Kokkos::ALL);
   auto density = Kokkos::subview(density_, index);
 
   if (NaluEnv::self().parallel_rank() == turbId_) {
@@ -191,10 +199,8 @@ ActSimpleComputeForce::operator()(int index) const
  
   // Calculate the angle of attack (AOA)
   double alpha;
-  double ws2D[3];
-  AirfoilTheory2D::calculate_alpha(ws, p1ZeroAlphaDir, 
-				   spanDir, chodrNormalDir, twist, 
-				   ws2D, alpha);
+  AirfoilTheory2D::calculate_alpha(
+    ws, p1ZeroAlphaDir, spanDir, chodrNormalDir, twist, ws2d.data(), alpha);
 
   // set up the polar tables
   std::vector<double> aoatable;
@@ -213,10 +219,9 @@ ActSimpleComputeForce::operator()(int index) const
   utils::linear_interp(aoatable, cdtable, alpha, cd);
 
   // Magnitude of wind speed
-  double ws2Dnorm = sqrt(ws2D[0]*ws2D[0] + 
-			 ws2D[1]*ws2D[1] +
-			 ws2D[2]*ws2D[2]);
-  
+  double ws2Dnorm =
+    sqrt(ws2d(0) * ws2d(0) + ws2d(1) * ws2d(1) + ws2d(2) * ws2d(2));
+
   // Calculate lift and drag forces
   double rho  = *density.data();
   double area = elemAreaDv_.h_view(localId); 
@@ -227,9 +232,9 @@ ActSimpleComputeForce::operator()(int index) const
   // Set the directions
   double ws2Ddir[3];  // Direction of drag force
   if (ws2Dnorm > 0.0) {
-    ws2Ddir[0] = ws2D[0]/ws2Dnorm;
-    ws2Ddir[1] = ws2D[1]/ws2Dnorm;
-    ws2Ddir[2] = ws2D[2]/ws2Dnorm;
+    ws2Ddir[0] = ws2d(0) / ws2Dnorm;
+    ws2Ddir[1] = ws2d(1) / ws2Dnorm;
+    ws2Ddir[2] = ws2d(2) / ws2Dnorm;
   } else {
     ws2Ddir[0] = 0.0; 
     ws2Ddir[1] = 0.0; 
@@ -252,14 +257,12 @@ ActSimpleComputeForce::operator()(int index) const
   pointForce(2) = -(lift*liftdir[2] + drag*ws2Ddir[2]);
 
   if (debug_output_)
-    NaluEnv::self().naluOutput() 
-      << "Blade "<< turbId_  // LCCOUT 
-      << " pointId: " << localId << std::setprecision(5)
-      << " alpha: "<<alpha
-      << " ws2D: "<<ws2D[0]<<" "<<ws2D[1]<<" "<<ws2D[2]<<" "
-      << " Cl, Cd: "<<cl<<" "<<cd
-      << " lift, drag = "<<lift<<" "<<drag
-      << std::endl;
+    NaluEnv::self().naluOutput()
+      << "Blade " << turbId_ // LCCOUT
+      << " pointId: " << localId << std::setprecision(5) << " alpha: " << alpha
+      << " ws2D: " << ws2d(0) << " " << ws2d(1) << " " << ws2d(2) << " "
+      << " Cl, Cd: " << cl << " " << cd << " lift, drag = " << lift << " "
+      << drag << std::endl;
   }
 }
 
