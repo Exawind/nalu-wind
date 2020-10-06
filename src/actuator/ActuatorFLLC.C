@@ -31,12 +31,11 @@ compute_lift_force_distribution(ActuatorBulk& actBulk)
     "extract lift", range_policy, KOKKOS_LAMBDA(int i) {
       const double vmag2 =
         vel(i, 0) * vel(i, 0) + vel(i, 1) * vel(i, 1) + vel(i, 2) * vel(i, 2);
-      const double fv[3] = {
-        vel(i, 0) * force(i, 0), vel(i, 1) * force(i, 1),
-        vel(i, 2) * force(i, 2)};
+      const double fv = vel(i, 0) * force(i, 0) + vel(i, 1) * force(i, 1) +
+                        vel(i, 2) * force(i, 2);
 
       for (int j = 0; j < 3; ++j) {
-        G(i, j) = force(i, j) - vel(i, j) * fv[j] / vmag2;
+        G(i, j) = force(i, j) - vel(i, j) * fv / vmag2;
       }
     });
 }
