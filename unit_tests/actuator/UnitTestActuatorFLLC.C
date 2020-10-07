@@ -18,7 +18,7 @@ namespace sierra {
 namespace nalu {
 
 namespace {
-const char* actuatorPars = R"act(actuator:
+const char* actuatorParameters = R"act(actuator:
   type: ActLineSimple
   n_simpleblades: 1
   Blade0:
@@ -33,9 +33,9 @@ const char* actuatorPars = R"act(actuator:
     cl_table:  [2, 2, 2]
     cd_table:  [1.2])act";
 
-TEST(ActuatorFLLC, NGP_ComputeLiftForceDistribution)
+TEST(ActuatorFLLC, ComputeLiftForceDistribution)
 {
-  const YAML::Node y_node = YAML::Load(actuatorPars);
+  const YAML::Node y_node = YAML::Load(actuatorParameters);
   auto actMeta = ActuatorMeta(1, ActuatorType::ActLineSimpleNGP);
   auto actMetaSim = actuator_Simple_parse(y_node, actMeta);
   actMetaSim.useFLLC_ = true;

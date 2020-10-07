@@ -41,7 +41,20 @@ void compute_lift_force_distribution(
 void grad_lift_force_distribution(
   ActuatorBulk& actBulk, const ActuatorMeta& actMeta);
 
+/**
+ * @brief Compute difference in induced velocities
+ * Compute equation 5.7 from Martinez-Tossas and Meneveau 2019
+ *
+ * @param actBulk
+ * @param actMeta
+ */
+void
+compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta);
+
 } // namespace FLLC
+
+void compute_fllc(ActuatorBulk& actBulk, const ActuatorMeta& actMeta);
+
 } // namespace nalu
 } // namespace sierra
 
