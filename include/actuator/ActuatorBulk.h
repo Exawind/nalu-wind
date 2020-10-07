@@ -81,6 +81,8 @@ struct ActuatorBulk
   ActVectorDblDv relativeVelocity_;
   ActScalarDblDv liftForceDistribution_;
   ActScalarDblDv deltaLiftForceDistribution_;
+  ActVectorDblDv epsilonOpt_;
+  ActVectorDblDv fllVelocityCorrection_;
 
   // HOST ONLY DATA
   ActFixVectorDbl localCoords_;

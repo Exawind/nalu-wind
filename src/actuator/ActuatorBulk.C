@@ -48,6 +48,9 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
     liftForceDistribution_("G", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
     deltaLiftForceDistribution_(
       "deltaG", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
+    epsilonOpt_("epsOpt", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
+    fllVelocityCorrection_(
+      "fllVelocityCorrection", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
     localCoords_("localCoords", actMeta.numPointsTotal_),
     pointIsLocal_("pointIsLocal", actMeta.numPointsTotal_),
     localParallelRedundancy_("localParallelReundancy", actMeta.numPointsTotal_),
@@ -55,7 +58,7 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
     localTurbineId_(
       NaluEnv::self().parallel_rank() >= actMeta.numberOfActuators_
         ? -1
-       
+
         : NaluEnv::self().parallel_rank())
 {
   compute_offsets(actMeta);

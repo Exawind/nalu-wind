@@ -16,20 +16,25 @@ namespace sierra {
 namespace nalu {
 namespace FLLC {
 
+// TODO(psakiev) - do we NEED to do local range policy on any of these?, other
+// parallelization options?
+
 void
 compute_lift_force_distribution(
   ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
 {
   ActDualViewHelper<ActuatorFixedMemSpace> helper;
+  helper.touch_dual_view(actBulk.deltaLiftForceDistribution_);
+
   auto vel = helper.get_local_view(actBulk.relativeVelocity_);
   auto force = helper.get_local_view(actBulk.actuatorForce_);
   auto G = helper.get_local_view(actBulk.liftForceDistribution_);
 
-  helper.touch_dual_view(actBulk.deltaLiftForceDistribution_);
-
   Kokkos::deep_copy(G, 0.0);
 
   auto range_policy = actBulk.local_range_policy(actMeta);
+
+  // surrogate for equation 5.3
   Kokkos::parallel_for(
     "extract lift", range_policy, KOKKOS_LAMBDA(int i) {
       const double vmag2 =
@@ -52,6 +57,8 @@ void
 grad_lift_force_distribution(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
 {
   ActDualViewHelper<ActuatorFixedMemSpace> helper;
+  helper.touch_dual_view(actBulk.deltaLiftForceDistribution_);
+
   auto G = helper.get_local_view(actBulk.liftForceDistribution_);
   auto deltaG = helper.get_local_view(actBulk.deltaLiftForceDistribution_);
 
@@ -61,11 +68,11 @@ grad_lift_force_distribution(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
   const int numEntityPoints =
     helper.get_local_view(actMeta.numPointsTurbine_)(actBulk.localTurbineId_);
 
-  helper.touch_dual_view(actBulk.deltaLiftForceDistribution_);
-
   Kokkos::deep_copy(deltaG, 0.0);
 
   auto range_policy = actBulk.local_range_policy(actMeta);
+
+  // equations 5.4 and 5.5 a/b
   Kokkos::parallel_for(
     "compute dG", range_policy, KOKKOS_LAMBDA(int i) {
       const int index = i - offset;
@@ -79,6 +86,99 @@ grad_lift_force_distribution(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
   actuator_utils::reduce_view_on_host(deltaG);
 }
 
+void
+compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
+{
+  using mem_space = ActuatorFixedMemSpace;
+  using mem_layout = ActuatorFixedMemLayout;
+
+  ActDualViewHelper<mem_space> helper;
+  helper.touch_dual_view(actBulk.fllVelocityCorrection_);
+
+  auto deltaG = helper.get_local_view(actBulk.deltaLiftForceDistribution_);
+  auto epsilon = helper.get_local_view(actBulk.epsilon_);
+  auto epsilonOpt = helper.get_local_view(actBulk.epsilonOpt_);
+  auto point = helper.get_local_view(actBulk.pointCentroid_);
+  auto relVel = helper.get_local_view(actBulk.relativeVelocity_);
+  auto deltaU = helper.get_local_view(actBulk.fllVelocityCorrection_);
+
+  const int nTurb = actBulk.localTurbineId_;
+  const int offset = helper.get_local_view(actBulk.turbIdOffset_)(nTurb);
+  const int nPoints = helper.get_local_view(actMeta.numPointsTurbine_)(nTurb);
+
+  const double dx[3] = {
+    point(offset, 0) - point(offset + 1, 0),
+    point(offset, 1) - point(offset + 1, 1),
+    point(offset, 2) - point(offset + 1, 2)};
+
+  const double dR = std::sqrt(dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2]);
+  const double normal[3] = {dx[0] / dR, dx[1] / dR, dx[2] / dR};
+  const double relaxation_factor = 0.1;
+
+  // copy deltaU so we can zero it for our data reduction strategy
+  Kokkos::View<double* [3], mem_layout, mem_space> deltaU_stash(
+    "temp copy", deltaU.extent_int(0));
+  Kokkos::deep_copy(deltaU_stash, deltaU);
+  Kokkos::deep_copy(deltaU, 0.0);
+
+  auto range_policy = actBulk.local_range_policy(actMeta);
+
+  Kokkos::parallel_for(
+    "induced velocities", range_policy, KOKKOS_LAMBDA(int index) {
+      double optInd = 0;
+      double lesInd = 0;
+
+      const int i = index - offset;
+      const double Uinf = std::sqrt(
+                            relVel(index, 0) * relVel(index, 0) +
+                            relVel(index, 1) * relVel(index, 1) +
+                            relVel(index, 2) * relVel(index, 2)) +
+                          1.e-12;
+
+      const double oneOverUinf = 1.0 / Uinf;
+
+      // Compute equation 5.7 in reference paper
+      // could do clock arithmatic to avoid if statement
+      // for (int j = (i+1)%nPoints, k=0; k < nPoints-1; ++k, j=(j+1)%nPoints) {
+      for (int j = 0; j < nPoints; ++j) {
+        if (i == j)
+          continue;
+        // constant point spacing
+        const double dr = dR * (i - j);
+        const double coefficient = deltaG(j + offset) / (4.0 * M_PI * dr);
+        optInd +=
+          coefficient *
+          (1.0 -
+           std::exp(-dr * dr / (epsilonOpt(index, 0) * epsilonOpt(index, 0))));
+
+        lesInd +=
+          coefficient *
+          (1.0 - std::exp(-dr * dr / (epsilon(index, 0) * epsilon(index, 0))));
+      }
+      const double deltaU_N = oneOverUinf * (optInd - lesInd);
+
+      // update the correction term with relaxation
+      // equation 5.8
+      for (int j = 0; j < 3; ++j) {
+        deltaU(index, j) = relaxation_factor * deltaU_N * normal[j] +
+                           (1.0 - relaxation_factor) * deltaU_stash(index, j);
+      }
+    });
+
+  actuator_utils::reduce_view_on_host(deltaU);
+};
+
 } // namespace FLLC
+
+void
+compute_fllc(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
+{
+  if (!actMeta.useFLLC_)
+    return;
+  FLLC::compute_lift_force_distribution(actBulk, actMeta);
+  FLLC::grad_lift_force_distribution(actBulk, actMeta);
+  FLLC::compute_induced_velocities(actBulk, actMeta);
+}
+
 } // namespace nalu
 } // namespace sierra
