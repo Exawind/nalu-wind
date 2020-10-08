@@ -24,7 +24,6 @@ struct ActuatorMetaFAST : public ActuatorMeta
   fast::fastInputs fastInputs_;
   std::vector<std::string> turbineNames_;
   std::vector<std::string> turbineOutputFileNames_;
-  bool filterLiftLineCorrection_;
   bool isotropicGaussian_;
   bool is_disk();
   int get_fast_index(

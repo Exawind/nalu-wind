@@ -87,6 +87,9 @@ struct ActDualViewHelper
     dualView.template sync<memory_space>();
     dualView.template modify<memory_space>();
   }
+
+  // TODO create view in this space
+  // TODO create range policy
 };
 
 } // namespace nalu

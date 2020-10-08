@@ -192,6 +192,8 @@ ActSimpleComputeForce(
     }
   }
 
+  // TODO(psakiev) extract relative velocity computation to an individual
+  // function
   Kokkos::parallel_for("ActSimpleComputeForce", actBulk.local_range_policy(), KOKKOS_LAMBDA(int index){
 
   auto pointForce = Kokkos::subview(force, index, Kokkos::ALL);
