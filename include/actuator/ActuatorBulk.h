@@ -79,8 +79,9 @@ struct ActuatorBulk
 
   // Filtered lifting line correction fields
   ActVectorDblDv relativeVelocity_;
-  ActScalarDblDv liftForceDistribution_;
-  ActScalarDblDv deltaLiftForceDistribution_;
+  ActScalarDblDv relativeVelocityMagnitude_;
+  ActVectorDblDv liftForceDistribution_;
+  ActVectorDblDv deltaLiftForceDistribution_;
   ActVectorDblDv epsilonOpt_;
   ActVectorDblDv fllVelocityCorrection_;
 

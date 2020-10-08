@@ -19,7 +19,6 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
     turbineNames_(numberOfActuators_),
     turbineOutputFileNames_(numberOfActuators_),
-    filterLiftLineCorrection_(false),
     isotropicGaussian_(false),
     maxNumPntsPerBlade_(0),
     epsilon_("epsilonMeta", numberOfActuators_),

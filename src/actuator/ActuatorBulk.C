@@ -45,6 +45,9 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
     coarseSearchPointIds_("coarseSearchPointIds", 0),
     coarseSearchElemIds_("coarseSearchElemIds", 0),
     relativeVelocity_("relativeVelocity", actMeta.numPointsTotal_),
+    relativeVelocityMagnitude_(
+      "relativeVelocitymagnitude",
+      actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
     liftForceDistribution_("G", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
     deltaLiftForceDistribution_(
       "deltaG", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),

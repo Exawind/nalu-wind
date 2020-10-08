@@ -25,12 +25,15 @@ compute_lift_force_distribution(
 {
   ActDualViewHelper<ActuatorFixedMemSpace> helper;
   helper.touch_dual_view(actBulk.deltaLiftForceDistribution_);
+  helper.touch_dual_view(actBulk.relativeVelocityMagnitude_);
 
   auto vel = helper.get_local_view(actBulk.relativeVelocity_);
   auto force = helper.get_local_view(actBulk.actuatorForce_);
   auto G = helper.get_local_view(actBulk.liftForceDistribution_);
+  auto Uinf = helper.get_local_view(actBulk.relativeVelocityMagnitude_);
 
   Kokkos::deep_copy(G, 0.0);
+  Kokkos::deep_copy(Uinf, 0.0);
 
   auto range_policy = actBulk.local_range_policy(actMeta);
 
@@ -39,18 +42,19 @@ compute_lift_force_distribution(
     "extract lift", range_policy, KOKKOS_LAMBDA(int i) {
       const double vmag2 =
         vel(i, 0) * vel(i, 0) + vel(i, 1) * vel(i, 1) + vel(i, 2) * vel(i, 2);
+
+      Uinf(i) = std::sqrt(vmag2);
+
       const double fv = vel(i, 0) * force(i, 0) + vel(i, 1) * force(i, 1) +
                         vel(i, 2) * force(i, 2);
 
       for (int j = 0; j < 3; ++j) {
-        double temp = 0.0;
-        temp = force(i, j) - vel(i, j) * fv / vmag2;
-        G(i) += temp * temp;
+        G(i, j) = force(i, j) - vel(i, j) * fv / vmag2;
       }
-      G(i) = std::sqrt(G(i));
     });
 
   actuator_utils::reduce_view_on_host(G);
+  actuator_utils::reduce_view_on_host(Uinf);
 }
 
 void
@@ -76,10 +80,14 @@ grad_lift_force_distribution(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
   Kokkos::parallel_for(
     "compute dG", range_policy, KOKKOS_LAMBDA(int i) {
       const int index = i - offset;
-      if (index == 0 || index == numEntityPoints - 1) {
-        deltaG(i) = G(i);
-      } else {
-        deltaG(i) = 0.5 * (G(i + 1) - G(i - 1));
+      for (int j = 0; j < 3; ++j) {
+        if (index == 0) {
+          deltaG(i, j) = G(i, j);
+        } else if (index == numEntityPoints - 1) {
+          deltaG(i, j) = -1.0 * G(i, j);
+        } else {
+          deltaG(i, j) = 0.5 * (G(i + 1, j) - G(i - 1, j));
+        }
       }
     });
 
@@ -101,6 +109,7 @@ compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
   auto point = helper.get_local_view(actBulk.pointCentroid_);
   auto relVel = helper.get_local_view(actBulk.relativeVelocity_);
   auto deltaU = helper.get_local_view(actBulk.fllVelocityCorrection_);
+  auto Uinf = helper.get_local_view(actBulk.relativeVelocityMagnitude_);
 
   const int nTurb = actBulk.localTurbineId_;
   const int offset = helper.get_local_view(actBulk.turbIdOffset_)(nTurb);
@@ -125,42 +134,39 @@ compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
 
   Kokkos::parallel_for(
     "induced velocities", range_policy, KOKKOS_LAMBDA(int index) {
-      double optInd = 0;
-      double lesInd = 0;
+      double optInd[3] = {0, 0, 0};
+      double lesInd[3] = {0, 0, 0};
 
       const int i = index - offset;
-      const double Uinf = std::sqrt(
-                            relVel(index, 0) * relVel(index, 0) +
-                            relVel(index, 1) * relVel(index, 1) +
-                            relVel(index, 2) * relVel(index, 2)) +
-                          1.e-12;
-
-      const double oneOverUinf = 1.0 / Uinf;
 
       // Compute equation 5.7 in reference paper
       // could do clock arithmatic to avoid if statement
-      // for (int j = (i+1)%nPoints, k=0; k < nPoints-1; ++k, j=(j+1)%nPoints) {
-      for (int j = 0; j < nPoints; ++j) {
+      for (int j = (i + 1) % nPoints, k = 0; k < nPoints - 1;
+           ++k, j = (j + 1) % nPoints) {
+          // for (int j = 0; j < nPoints; ++j) {
         if (i == j)
           continue;
         // constant point spacing
-        const double dr = dR * (i - j);
-        const double coefficient = deltaG(j + offset) / (4.0 * M_PI * dr);
-        optInd +=
-          coefficient *
-          (1.0 -
-           std::exp(-dr * dr / (epsilonOpt(index, 0) * epsilonOpt(index, 0))));
+        for (int dir = 0; dir < 3; ++dir) {
+          const double dr = dR * (i - j);
+          const double coefficient =
+            deltaG(j + offset, dir) / (-4.0 * M_PI * dr * Uinf(j + offset));
+          optInd[dir] +=
+            coefficient *
+            (1.0 - std::exp(
+                     -dr * dr / (epsilonOpt(index, 0) * epsilonOpt(index, 0))));
 
-        lesInd +=
-          coefficient *
-          (1.0 - std::exp(-dr * dr / (epsilon(index, 0) * epsilon(index, 0))));
+          lesInd[dir] +=
+            coefficient *
+            (1.0 -
+             std::exp(-dr * dr / (epsilon(index, 0) * epsilon(index, 0))));
+        }
       }
-      const double deltaU_N = oneOverUinf * (optInd - lesInd);
 
       // update the correction term with relaxation
       // equation 5.8
       for (int j = 0; j < 3; ++j) {
-        deltaU(index, j) = relaxation_factor * deltaU_N * normal[j] +
+        deltaU(index, j) = relaxation_factor * (optInd[j] - lesInd[j]) +
                            (1.0 - relaxation_factor) * deltaU_stash(index, j);
       }
     });

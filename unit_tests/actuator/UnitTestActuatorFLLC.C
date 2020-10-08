@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 #include <actuator/ActuatorTypes.h>
+#include <actuator/ActuatorParsing.h>
 #include <actuator/ActuatorBulkSimple.h>
 #include <actuator/ActuatorParsingSimple.h>
 #include <actuator/ActuatorFunctorsSimple.h>
@@ -19,10 +20,13 @@ namespace nalu {
 
 namespace {
 const char* actuatorParameters = R"act(actuator:
+  search_target_part: dummy
+  search_method: stk_kdtree
   type: ActLineSimple
   n_simpleblades: 1
+  fllt_correction: yes
   Blade0:
-    num_force_pts_blade: 1
+    num_force_pts_blade: 5
     epsilon: [3.0, 3.0, 3.0]
     p1: [0, -4, 0] 
     p2: [0,  4, 0]
@@ -32,37 +36,51 @@ const char* actuatorParameters = R"act(actuator:
     aoa_table: [-180, 0, 180]
     cl_table:  [2, 2, 2]
     cd_table:  [1.2])act";
-
-TEST(ActuatorFLLC, ComputeLiftForceDistribution)
+class ActuatorFLLC : public ::testing::Test
 {
-  const YAML::Node y_node = YAML::Load(actuatorParameters);
-  auto actMeta = ActuatorMeta(1, ActuatorType::ActLineSimpleNGP);
-  auto actMetaSim = actuator_Simple_parse(y_node, actMeta);
-  actMetaSim.useFLLC_ = true;
-  ActuatorBulkSimple actBulk(actMetaSim);
+protected:
+  ActDualViewHelper<ActuatorFixedMemSpace> helper_;
+  ActuatorMeta actMetaBase_;
+  ActuatorMetaSimple actMeta_;
+  ActuatorBulkSimple actBulk_;
+  
+  ActuatorFLLC():
+    actMetaBase_(actuator_parse(YAML::Load(actuatorParameters))),
+    actMeta_(actuator_Simple_parse(YAML::Load(actuatorParameters), actMetaBase_)),
+    actBulk_(actMeta_)
+  {
+  }
+  void SetUp(){
+    ASSERT_TRUE(actMetaBase_.useFLLC_);
+    ASSERT_TRUE(actMeta_.useFLLC_);
+  }
+};
 
-  auto vel = actBulk.velocity_.view_host();
-  auto relVel = actBulk.relativeVelocity_.view_host();
-  auto density = actBulk.density_.view_host();
-  auto spanDir = actMetaSim.spanDir_.view_host();
+TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
+{
 
-  auto range_policy=actBulk.local_range_policy();
+  auto vel = helper_.get_local_view(actBulk_.velocity_);
+  auto relVel = helper_.get_local_view(actBulk_.relativeVelocity_);
+  auto density = helper_.get_local_view(actBulk_.density_);
+  auto spanDir = helper_.get_local_view(actMeta_.spanDir_);
+
+  auto range_policy=actBulk_.local_range_policy();
   Kokkos::parallel_for(
     "init velocities", range_policy, KOKKOS_LAMBDA(int i) {
       for (int j = 0; j < 3; ++j) {
         vel(i, j) = 1.0;
       }
-      density(i) = 1.0;
+      density(i) = 2.0;
     });
 
-  ActSimpleComputeForce(actBulk, actMetaSim);
+  ActSimpleComputeForce(actBulk_, actMeta_);
 
   // given a CL, CD, chord and U vector we can compute a lift and total force
   // then ensure our computation gives the expected lift force distribution from
   // the paper
 
   ActFixScalarDbl G("G-paper", vel.extent_int(0));
-  auto area = actMetaSim.elemAreaDv_.view_host();
+  auto area = helper_.get_local_view(actMeta_.elemAreaDv_);
 
   const double chord = 1.0;
   const double Cl = 2.0;
@@ -77,16 +95,155 @@ TEST(ActuatorFLLC, ComputeLiftForceDistribution)
 
   actuator_utils::reduce_view_on_host(G);
 
-  FLLC::compute_lift_force_distribution(actBulk, actMetaSim);
+  FLLC::compute_lift_force_distribution(actBulk_, actMeta_);
 
-  auto fllc_lift_force = actBulk.liftForceDistribution_.view_host();
+  auto fllc_lift_force = helper_.get_local_view(actBulk_.liftForceDistribution_);
     // assert that the two lift forces are equal
   Kokkos::parallel_for(
     "check values", range_policy, KOKKOS_LAMBDA(int i) {
+      // TODO - this computation needs to get wrapped into the main function at
+      // some point
       double gmag = 0.0;
-      gmag = fllc_lift_force(i) / area(0, i) / density(i);
+      for(int j=0; j<3; ++j){
+        gmag += fllc_lift_force(i,j) *fllc_lift_force(i,j);
+      }
+      gmag = std::sqrt(gmag);
+      gmag /= area(0, i) * density(i);
       EXPECT_DOUBLE_EQ(G(i), gmag);
     });
+}
+
+TEST_F(ActuatorFLLC, ComputeGradG_Eq_5_4_and_5_5)
+{
+  auto G = helper_.get_local_view(actBulk_.liftForceDistribution_);
+  auto points = helper_.get_local_view(actBulk_.pointCentroid_);
+
+  ASSERT_TRUE(points.extent_int(0) > 2);
+
+  const double fixedDR[3] = {0.5, 0.1, 0.6};
+
+  auto range_policy = actBulk_.local_range_policy();
+  ActFixVectorDbl r("radius", G.extent_int(0));
+  // create a parabola from the point locations then compute deltaG and dG/dr
+  Kokkos::parallel_for(
+    "init G as r^2", range_policy, KOKKOS_LAMBDA(int i) {
+      for(int j=0; j<3; ++j){
+        r(i,j) = i * fixedDR[j];
+        G(i, j) = r(i,j) * r(i,j);
+      }
+    });
+  actuator_utils::reduce_view_on_host(G);
+  actuator_utils::reduce_view_on_host(r);
+
+  FLLC::grad_lift_force_distribution(actBulk_, actMeta_);
+
+  auto dG = helper_.get_local_view(actBulk_.deltaLiftForceDistribution_);
+
+  const int lastPoint = G.extent_int(0) - 1;
+
+  for (int i = 1; i < lastPoint; ++i) {
+    for (int j=0; j<3; ++j)
+    // compare against analytical derivative
+    EXPECT_NEAR(2.0 * r(i,j), dG(i, j) / fixedDR[j], 1e-12)
+      << "index: " << i <<", "<<j<< " radius: " << r(i,j) << "  G(i+1): " << G(i + 1, j)
+      << " G(i-1): " << G(i - 1,j );
+  }
+  // Check eq 5.5 a and b
+  for (int j=0; j<3;++j){
+    EXPECT_DOUBLE_EQ(G(0,j), dG(0,j));
+    EXPECT_DOUBLE_EQ(-G(lastPoint,j), dG(lastPoint,j));
+  }
+}
+
+double distance(double* p1, double* p2){
+  double distance = 0.0;
+  for (int i=0; i<3; ++i){
+    double temp=p2[i]-p1[i];
+    distance += temp*temp;
+  }
+  return std::sqrt(distance);
+}
+
+TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
+  auto Uinf = helper_.get_local_view(actBulk_.relativeVelocityMagnitude_);
+  auto dG = helper_.get_local_view(actBulk_.deltaLiftForceDistribution_);
+  auto epsLES = helper_.get_local_view(actBulk_.epsilon_);
+  auto epsOpt = helper_.get_local_view(actBulk_.epsilonOpt_);
+  auto points = helper_.get_local_view(actBulk_.pointCentroid_);
+
+  auto range_policy = actBulk_.local_range_policy();
+
+  /*
+   These values should reduce equaiton 5.7 should be (note Uinf is incorrect in the paper)
+   
+   u_y(z_i, eps_i) =  \sum_j \Delta G(z_j) / (-Uinf_j*4* \pi * (r_ij))*(1-exp(-r_ij^2/eps_i^2))
+   
+   to 
+
+   \delta U_i =-\sum_j 1/r_ij * (1-exp(-r_ij^2/eps^2))
+
+   where r_ij is z_i-z_j
+
+   because \Delta G will cancel the 4 \pi term
+   and the magnitude of the relative velocity is fixed to 1.0
+
+   so for correction (old timestep values are zero in this test)
+   f*(\delta U_opt_i- \delta U_les_i)
+
+   the 1 minus tersm will cancel out leaving just the exponential terms
+   which we can wrap into one summation as
+
+   f*(\sum_j (-exp(-r_ij^2/epsOpt^2)+exp(-r_ij^2/epsLES^2))/r_ij)
+  */
+
+  const double epsilonLES = 2.0;
+  const double epsilonOpt = 3.5;
+  const double epsLes2 = epsilonLES*epsilonLES;
+  const double epsOpt2 = epsilonOpt*epsilonOpt;
+
+  Kokkos::parallel_for("init values", range_policy, KOKKOS_LAMBDA(int index){
+    for (int j=0; j<3; ++j){
+      dG(index, j) = 4.0*M_PI;
+      epsLES(index, j) = epsilonLES;
+      epsOpt(index, j) = epsilonOpt;
+    }
+    Uinf(index) = 1.0;
+  });
+
+  actuator_utils::reduce_view_on_host(dG);
+  actuator_utils::reduce_view_on_host(epsLES);
+  actuator_utils::reduce_view_on_host(epsOpt);
+
+  ActFixVectorDbl uExpect("uExpect", dG.extent_int(0));
+  const int offset = helper_.get_local_view(actBulk_.turbIdOffset_)(actBulk_.localTurbineId_);
+  const int numPoints = helper_.get_local_view(actMeta_.numPointsTurbine_)(actBulk_.localTurbineId_);
+
+  Kokkos::parallel_for("compute values", range_policy, KOKKOS_LAMBDA(int index){
+    const int i = index - offset;
+    auto pI = Kokkos::subview(points,index,Kokkos::ALL);
+    for(int j=0; j<numPoints; ++j){
+      if(i==j) continue;
+      auto pJ = Kokkos::subview(points,j+offset, Kokkos::ALL);
+      const double r = distance(pJ.data(), pI.data());
+      const double r2 = r*r;
+      double temp = (std::exp(-r2/epsLes2)-std::exp(-r2/epsOpt2))/r;
+
+      for (int k=0; k<3; ++k){
+        uExpect(index, k) += temp;
+      }
+    }
+  });
+
+  actuator_utils::reduce_view_on_host(uExpect);
+  FLLC::compute_induced_velocities(actBulk_, actMeta_);
+  auto uInduced = helper_.get_local_view(actBulk_.fllVelocityCorrection_);
+
+  for(int i=0; i<uExpect.extent_int(0); ++i){
+    //for(int j=0; j<3; ++j){
+      EXPECT_NEAR(0.1*uExpect(i,0),uInduced(i,0), 1e-12);
+    //}
+  }
+
 }
 
 } // namespace
