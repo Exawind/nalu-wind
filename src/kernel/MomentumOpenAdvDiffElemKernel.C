@@ -100,10 +100,22 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
   get_scs_shape_fn_data<BcAlgTraits>([&](double* ptr){meSCS_->shape_fcn(ptr);}, v_shape_function_);
 
   const bool skewSymmetric = solnOpts.get_skew_symmetric(velocity->name());
-  get_face_shape_fn_data<BcAlgTraits>([&](double* ptr){skewSymmetric ? meFC->shifted_shape_fcn(ptr) : meFC->shape_fcn(ptr);}, 
-                                      vf_adv_shape_function_);
-  get_scs_shape_fn_data<BcAlgTraits>([&](double* ptr){skewSymmetric ? meSCS_->shifted_shape_fcn(ptr) : meSCS_->shape_fcn(ptr);}, 
-                                     v_adv_shape_function_);
+  get_face_shape_fn_data<BcAlgTraits>(
+    [&](double* ptr) {
+      if (skewSymmetric)
+        meFC->shifted_shape_fcn(ptr);
+      else
+        meFC->shape_fcn(ptr);
+    },
+    vf_adv_shape_function_);
+  get_scs_shape_fn_data<BcAlgTraits>(
+    [&](double* ptr) {
+      if (skewSymmetric)
+        meSCS_->shifted_shape_fcn(ptr);
+      else
+        meSCS_->shape_fcn(ptr);
+    },
+    v_adv_shape_function_);
 }
 
 template<typename BcAlgTraits>
