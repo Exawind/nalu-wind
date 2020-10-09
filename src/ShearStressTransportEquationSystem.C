@@ -359,7 +359,7 @@ ShearStressTransportEquationSystem::update_and_clip()
       const double tkeNew = tkeNp1.get(mi, 0) + kTmp.get(mi, 0);
       const double sdrNew = sdrNp1.get(mi, 0) + wTmp.get(mi, 0);
 
-      tkeNp1.get(mi, 0) = stk::math::max(tkeNew, tkeMinVal);
+      tkeNp1.get(mi, 0) = (tkeNew < 0.0) ? tkeMinVal : tkeNew;
       sdrNp1.get(mi, 0) = stk::math::max(sdrNew, sdrMinVal);
     });
 
@@ -387,7 +387,7 @@ ShearStressTransportEquationSystem::clip_sst(
       const double tkeNew = tke.get(mi, 0);
       const double sdrNew = sdr.get(mi, 0);
 
-      tke.get(mi, 0) = stk::math::max(tkeNew, tkeMinVal);
+      tke.get(mi, 0) = (tkeNew < 0.0) ? tkeMinVal : tkeNew;
       sdr.get(mi, 0) = stk::math::max(sdrNew, sdrMinVal);
     });
   tke.modify_on_device();
