@@ -43,11 +43,12 @@ protected:
   ActuatorMeta actMetaBase_;
   ActuatorMetaSimple actMeta_;
   ActuatorBulkSimple actBulk_;
-  
-  ActuatorFLLC():
-    actMetaBase_(actuator_parse(YAML::Load(actuatorParameters))),
-    actMeta_(actuator_Simple_parse(YAML::Load(actuatorParameters), actMetaBase_)),
-    actBulk_(actMeta_)
+
+  ActuatorFLLC()
+    : actMetaBase_(actuator_parse(YAML::Load(actuatorParameters))),
+      actMeta_(
+        actuator_Simple_parse(YAML::Load(actuatorParameters), actMetaBase_)),
+      actBulk_(actMeta_)
   {
   }
   void SetUp(){
@@ -58,7 +59,6 @@ protected:
 
 TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
 {
-
   auto vel = helper_.get_local_view(actBulk_.velocity_);
   auto relVel = helper_.get_local_view(actBulk_.relativeVelocity_);
   auto density = helper_.get_local_view(actBulk_.density_);
@@ -155,15 +155,6 @@ TEST_F(ActuatorFLLC, ComputeGradG_Eq_5_4_and_5_5)
   }
 }
 
-double distance(double* p1, double* p2){
-  double distance = 0.0;
-  for (int i=0; i<3; ++i){
-    double temp=p2[i]-p1[i];
-    distance += temp*temp;
-  }
-  return std::sqrt(distance);
-}
-
   /*
    Equaiton 5.7  from the paper should be 
    (note Uinf is incorrect in the paper and should be indexed on j inside the summation):
@@ -206,12 +197,10 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
 
   auto range_policy = actBulk_.local_range_policy();
 
-
   const double lesFac = 3.0;
   const double optFac = 2.0;
   const double epsilonLES = 1.0 / std::sqrt(std::log(lesFac));
   const double epsilonOpt = 1.0 / std::sqrt(std::log(optFac));
-  ASSERT_TRUE(epsilonOpt>0.0);
   const double epsLes2 = epsilonLES*epsilonLES;
   const double epsOpt2 = epsilonOpt*epsilonOpt;
 
@@ -224,15 +213,13 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
   helper_.touch_dual_view(actBulk_.epsilonOpt_);
   helper_.touch_dual_view(actBulk_.epsilon_);
   helper_.touch_dual_view(actBulk_.pointCentroid_);
-  Kokkos::deep_copy(epsOpt, 0.0);
-  Kokkos::deep_copy(epsLES, 0.0);
+  Kokkos::deep_copy(epsOpt, epsilonOpt);
+  Kokkos::deep_copy(epsLES, epsilonLES);
   Kokkos::deep_copy(points, 0.0);
 
   Kokkos::parallel_for("init values", range_policy, KOKKOS_LAMBDA(int index){
     for (int j=0; j<3; ++j){
       dG(index, j) = 4.0*M_PI;
-      epsLES(index, j) = epsilonLES;
-      epsOpt(index, j) = epsilonOpt;
     }
     points(index, 0) = index;
     points(index, 1) = 0.0;
@@ -261,16 +248,16 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
   });
 
   for (int i=0; i<numPoints; ++i){
-    EXPECT_TRUE(epsOpt(i,0)==0)<<epsOpt(i,0);
+    EXPECT_TRUE(epsOpt(i, 0) == epsilonOpt) << epsOpt(i, 0);
   }
 
-  actuator_utils::reduce_view_on_host(uExpect);
   FLLC::compute_induced_velocities(actBulk_, actMeta_);
+  actuator_utils::reduce_view_on_host(uExpect);
 
   for(int i=0; i<uExpect.extent_int(0); ++i){
-    //for(int j=0; j<3; ++j){
-    EXPECT_NEAR(uExpect(i, 0), uInduced(i, 0), 1e-12) << "index: " << i;
-    //}
+    for (int j = 0; j < 3; ++j) {
+      EXPECT_NEAR(uExpect(i, j), uInduced(i, j), 1e-12) << "index: " << i;
+    }
   }
 
 }

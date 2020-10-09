@@ -48,6 +48,10 @@ void grad_lift_force_distribution(
  * @param actBulk
  * @param actMeta
  */
+// void
+// compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta&
+// actMeta);
+
 void
 compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta);
 

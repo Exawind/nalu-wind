@@ -131,10 +131,12 @@ grad_lift_force_distribution(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
 }
 
 void
-compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
+compute_induced_velocities(
+  ActuatorBulk& actBulk,
+  const ActuatorMeta& actMeta)
 {
-  using mem_space = ActuatorFixedMemSpace;
-  using mem_layout = ActuatorFixedMemLayout;
+  using mem_space = ActuatorMemSpace;
+  using mem_layout = ActuatorMemLayout;
 
   ActDualViewHelper<mem_space> helper;
   helper.touch_dual_view(actBulk.fllVelocityCorrection_);
@@ -165,15 +167,17 @@ compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
   Kokkos::deep_copy(deltaU_stash, deltaU);
   Kokkos::deep_copy(deltaU, 0.0);
 
-  auto range_policy = actBulk.local_range_policy(actMeta);
+  //auto range_policy = actBulk.local_range_policy(actMeta);
 
-  Kokkos::parallel_for(
-    "induced velocities", range_policy, KOKKOS_LAMBDA(int index) {
+  for (int index = 0; index < epsilon.extent_int(0); ++index) {
       double optInd[3] = {0, 0, 0};
       double lesInd[3] = {0, 0, 0};
 
       const int i = index - offset;
 
+      const double epsLes2 = epsilon(index, 0) * epsilon(index, 0);
+      const double epsOpt2 = epsilonOpt(index,0)*epsilonOpt(index,0);
+      
       // Compute equation 5.7 in reference paper
       for (int j = 0; j < nPoints; ++j) {
         if (i == j)
@@ -181,17 +185,6 @@ compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
         // constant point spacing
         const double dr = dR * (i - j);
         const double dr2 = dr * dr;
-        const double epsLes2 = epsilon(index, 0) * epsilon(index, 0);
-        ThrowErrorMsgIf(
-          std::abs(epsLes2 - 1.0 / std::log(3.0)) > 1e-12,
-          "eps2: " + std::to_string(std::abs(epsLes2 - 1.0 / std::log(3.0))));
-        // ThrowErrorIf(epsilonOpt(index, 0) == 0);
-        const double epsOpt2 = epsilonOpt(index, 0) * epsilonOpt(index, 0);
-        ThrowErrorMsgIf(
-          std::abs(epsOpt2 - 1.0 / std::log(2.0)) > 1e12,
-          "diff eps2: " +
-            std::to_string(std::abs(epsOpt2 - 1.0 / std::log(2.0))) +
-            " epsOpt2: " + std::to_string(epsOpt2));
 
         const double coefficient = 1.0 / (-4.0 * M_PI * dr * Uinf(j + offset));
         const double coefOpt = 1.0 - std::exp(-dr2 / epsOpt2);
@@ -208,7 +201,7 @@ compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
         deltaU(index, j) = relaxation_factor * (optInd[j] - lesInd[j]) +
                            (1.0 - relaxation_factor) * deltaU_stash(index, j);
       }
-    });
+    }
 
   actuator_utils::reduce_view_on_host(deltaU);
 };

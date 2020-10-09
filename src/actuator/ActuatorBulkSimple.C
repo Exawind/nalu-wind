@@ -35,7 +35,6 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   : ActuatorBulk(actMeta),
     density_("actDensity", actMeta.numPointsTotal_),
     turbineThrust_("turbineThrust", actMeta.numberOfActuators_),
-    epsilonOpt_("epsilonOptimal", actMeta.numPointsTotal_),
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),

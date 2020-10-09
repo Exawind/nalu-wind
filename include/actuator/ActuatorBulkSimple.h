@@ -69,7 +69,6 @@ struct ActuatorBulkSimple : public ActuatorBulk
 
   ActFixVectorDbl turbineThrust_;
 
-  ActVectorDblDv epsilonOpt_;
   ActTensorDblDv orientationTensor_;
 
   // Stuff for simple blade
