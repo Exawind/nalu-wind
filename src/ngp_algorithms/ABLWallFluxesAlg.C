@@ -35,20 +35,13 @@ namespace nalu {
 namespace {
 
 
-//--------------------------------------------------------------------------
-//-------- compute_fluxes_given_surface_heat_flux -------------------------
-//--------------------------------------------------------------------------
-//
-// This is algorithm 1 outlined by Basu et al.
-//
 template <typename PsiFunc>
 KOKKOS_FUNCTION
-void compute_fluxes_given_surface_heat_flux
+void compute_fluxes
 (
     const double tol,
     const double up,
     const double Tp,
-    double& Tsurface,
     const double zp,
     PsiFunc Psi_m_func,
     PsiFunc Psi_h_func,
@@ -58,11 +51,12 @@ void compute_fluxes_given_surface_heat_flux
     const double Tref,
     const double Psi_m_factor,
     const double Psi_h_factor,
+    const int algorithmType,
     double& frictionVelocity,
-    const double temperatureFlux
+    double& temperatureFlux,
+    double& Tsurface
 )
 {
-  // This is algorithm 1 outlined by Basu et al.
 
   // Set Psi_h and Psi_m initially to zero.
   double Psi_h = 0.0;
@@ -70,88 +64,14 @@ void compute_fluxes_given_surface_heat_flux
 
   // Enter the iterative solver loop and iterate until convergence
   frictionVelocity = 0.0;
-  double frictionVelocityOld = 1.0E10;
-  double L = 1.0E10;
-  double frictionVelocityDelta = std::abs(frictionVelocity - frictionVelocityOld);
-  int iterMax = 1000;
-  int iter = 0;
-  while ((frictionVelocityDelta > tol ) && (iter < iterMax))
-  {
-    // Update the old values.
-    frictionVelocityOld = frictionVelocity;
-
-    // Compute friction velocity using Monin-Obukhov similarity.
-    frictionVelocity = (kappa * up) / (std::log(zp / z0) - Psi_m);
-
-    // Compute Obukhov length.
-    if (temperatureFlux == 0.0)
-    {
-      L = 1.0E10;
-    }
-    else
-    {
-      L = -(Tref * std::pow(frictionVelocity,3))/(kappa * g * temperatureFlux);
-    }
-
-    // Recompute Psi_h and Psi_m.
-    Psi_h = Psi_h_func(zp/L, Psi_h_factor);
-    Psi_m = Psi_m_func(zp/L, Psi_m_factor);
-
-    // Compute changes in solution.
-    frictionVelocityDelta = std::abs(frictionVelocity - frictionVelocityOld);
-
-    // Compute the surface temperature.
-    Tsurface = Tp + (temperatureFlux * ((std::log(zp / z0) - Psi_h) / (std::max(frictionVelocity,0.001) * kappa)));
-
-    // Add to the iteration count.
-    iter++;
-
-  }
-}
-
-
-
-//--------------------------------------------------------------------------
-//-------- compute_fluxes_given_surface_temperature ------------------------
-//--------------------------------------------------------------------------
-//
-// This is algorithm 2 outlined by Basu et al.
-//
-template <typename PsiFunc>
-KOKKOS_FUNCTION
-void compute_fluxes_given_surface_temperature
-(
-    const double tol, 
-    const double up, 
-    const double Tp, 
-    const double Tsurface, 
-    const double zp, 
-    PsiFunc Psi_m_func,
-    PsiFunc Psi_h_func,
-    const double kappa,
-    const double z0,
-    const double g,
-    const double Tref,
-    const double Psi_m_factor,
-    const double Psi_h_factor,
-    double& frictionVelocity,
-    double& temperatureFlux
-)
-{
-  // Set Psi_h and Psi_m initially to zero.
-  double Psi_h = 0.0;
-  double Psi_m = 0.0;
-
-  // Enter the iterative solver loop and iterate until convergence
-  frictionVelocity = 0.0;
-  temperatureFlux = 0.0;
   double frictionVelocityOld = 1.0E10;
   double temperatureFluxOld = 1.0E10;
   double L = 1.0E10;
-  double frictionVelocityDelta = std::abs(frictionVelocity - frictionVelocityOld);
-  double temperatureFluxDelta = std::abs(temperatureFlux - temperatureFluxOld);
+  double frictionVelocityDelta = 1.0E10;
+  double temperatureFluxDelta = 1.0E10;;
   int iterMax = 1000;
   int iter = 0;
+
   while (((frictionVelocityDelta > tol ) || (temperatureFluxDelta > tol)) && (iter < iterMax))
   {
     // Update the old values.
@@ -161,10 +81,12 @@ void compute_fluxes_given_surface_temperature
     // Compute friction velocity using Monin-Obukhov similarity.
     frictionVelocity = (kappa * up) / (std::log(zp / z0) - Psi_m);
 
-    // Compute heat flux using Monin-Obukhov similarity.
-    double deltaT = Tp - Tsurface;
-    temperatureFlux = -(deltaT * frictionVelocity * kappa) / (std::log(zp / z0) - Psi_m);
-
+    // If given surface temperature, compute heat flux using Monin-Obukhov similarity.
+    if (algorithmType == 2)
+    {
+      double deltaT = Tp - Tsurface;
+      temperatureFlux = -(deltaT * frictionVelocity * kappa) / (std::log(zp / z0) - Psi_m);
+    }
 
     // Compute Obukhov length.
     if (temperatureFlux == 0.0)
@@ -176,7 +98,6 @@ void compute_fluxes_given_surface_temperature
       L = -(Tref * std::pow(frictionVelocity,3))/(kappa * g * temperatureFlux);
     }
 
-
     // Recompute Psi_h and Psi_m.
     Psi_h = Psi_h_func(zp/L, Psi_h_factor);
     Psi_m = Psi_m_func(zp/L, Psi_m_factor);
@@ -185,13 +106,16 @@ void compute_fluxes_given_surface_temperature
     frictionVelocityDelta = std::abs(frictionVelocity - frictionVelocityOld);
     temperatureFluxDelta = std::abs(temperatureFlux - temperatureFluxOld);
 
+    // If given surface flux, compute the surface temperature.
+    if (algorithmType == 1)
+    {       
+      Tsurface = Tp + (temperatureFlux * ((std::log(zp / z0) - Psi_h) / (std::max(frictionVelocity,0.001) * kappa)));
+    }
+
     // Add to the iteration count.
     iter++;
-  
   }
 }
-
-
 
 }
 
@@ -383,11 +307,11 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
     hAverage = h[1];
   }
 
-  DblType fluctationFactor = (fluctuationModel_ != "none") ? 1.0 : 0.0;
+  DblType fluctuationFactor = (fluctuationModel_ != "none") ? 1.0 : 0.0;
 
   DblType MoengFactor = (fluctuationModel_ == "Moeng") ? 1.0 : 0.0;
 
-  DblType fluctuatingTempRef = (fluctuatingTemRef_ == "reference") ? Tref_ : currSurfaceTemperature;
+  DblType fluctuatingTempRef = (fluctuatingTempRef_ == "reference") ? Tref_ : currSurfaceTemperature;
 
   const double eps = 1.0e-8;
   const DoubleType Lmax = 1.0e8;
@@ -575,18 +499,20 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
           NALU_ALIGNED DblType tauSurf[3];
           DblType qSurf = 0.0;
           DblType Tsurf = 0.0;
+          int algType;
 
           // Compute fluxes with algorithm 1.
           DblType utau_alg1 = 0.0;
           DblType Tsurf_alg1 = 0.0;
+          DblType givenFlux = currFlux;
+          algType = 1;
           if (stk::simd::get_data(q_MO, si) < -eps)
           {
-            compute_fluxes_given_surface_heat_flux
+            compute_fluxes
             (
               tol,
               stk::simd::get_data(u_MO, si),
               stk::simd::get_data(temp_MO, si),
-              Tsurf_alg1,
               stk::simd::get_data(zh, si),
               mo::psim_stable<double>,
               mo::psih_stable<double>,
@@ -596,18 +522,19 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
               stk::simd::get_data(Tref, si),
               stk::simd::get_data(beta_m, si),
               stk::simd::get_data(beta_h, si),
+              algType,
               utau_alg1,
-              currFlux
+              givenFlux,
+              Tsurf_alg1
             );
           }
           else if (stk::simd::get_data(q_MO, si) > eps)
           {
-            compute_fluxes_given_surface_heat_flux
+            compute_fluxes
             (
               tol,
               stk::simd::get_data(u_MO, si),
               stk::simd::get_data(temp_MO, si),
-              Tsurf_alg1,
               stk::simd::get_data(zh, si),
               mo::psim_unstable<double>,
               mo::psih_unstable<double>,
@@ -617,8 +544,10 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
               stk::simd::get_data(Tref, si),
               stk::simd::get_data(gamma_m, si),
               stk::simd::get_data(gamma_h, si),
+              algType,
               utau_alg1,
-              currFlux
+              givenFlux,
+              Tsurf_alg1
             );
           }
           else
@@ -633,14 +562,15 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
           // Compute fluxes with algorithm 2.
           DblType utau_alg2 = 0.0;
           DblType qSurf_alg2 = 0.0;
+          DblType givenSurfaceTemperature = currSurfaceTemperature;
+          algType = 2;
           if (stk::simd::get_data(temp_MO, si) - currSurfaceTemperature > eps)
           {
-            compute_fluxes_given_surface_temperature
+            compute_fluxes
             (
               tol,
               stk::simd::get_data(u_MO, si),
               stk::simd::get_data(temp_MO, si),
-              currSurfaceTemperature,
               stk::simd::get_data(zh, si),
               mo::psim_stable<double>,
               mo::psih_stable<double>,
@@ -650,18 +580,19 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
               stk::simd::get_data(Tref, si),
               stk::simd::get_data(beta_m, si),
               stk::simd::get_data(beta_h, si),
+              algType,
               utau_alg2,
-              qSurf_alg2
+              qSurf_alg2,
+              givenSurfaceTemperature
             );
           }
           else if (stk::simd::get_data(temp_MO, si) - currSurfaceTemperature < -eps)
           {
-            compute_fluxes_given_surface_temperature
+            compute_fluxes
             (
               tol,
               stk::simd::get_data(u_MO, si),
               stk::simd::get_data(temp_MO, si),
-              currSurfaceTemperature,
               stk::simd::get_data(zh, si),
               mo::psim_unstable<double>,
               mo::psih_unstable<double>,
@@ -671,8 +602,10 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
               stk::simd::get_data(Tref, si),
               stk::simd::get_data(gamma_m, si),
               stk::simd::get_data(gamma_h, si),
+              algType,
               utau_alg2,
-              qSurf_alg2
+              qSurf_alg2,
+              givenSurfaceTemperature
             );
           }
           else

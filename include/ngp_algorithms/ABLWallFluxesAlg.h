@@ -25,16 +25,51 @@
 namespace sierra {
 namespace nalu {
 
-/** Compute the wall friction velocity at integration points for the wall
- *  boundary of a given topology.
+/** Simultaneously compute the wall shear stress and heat flux/surface
+ *  temperature.  This boundary condition follows the algorithms outlined
+ *  in
  *
- *  In addition to computing the friction velocity (utau) at the integration
- *  points, it also computes a partial sum (utau * area) and (area) at the
- *  integration points that is used to compute the area-weighted average utau
- *  over the ABL wall by WallFricVelAlgDriver.
+ *     Basu, S., Holtslag, A. A. M., Bas, J. H., Van de Wiel, B. J. H., 
+ *     Moene, A. F., and Steeneveld, G.-J., An Inconvenient "Truth" About
+ *     Using Sensible Heat Flux As A Surface Boundary Condition in Models.
+ *     Acta Geophysica, 56(1), pp. 88-99. 
+ *     https://doi.org/10.2478/s11600-007-0038-y
  *
- *  \sa WallFricVelAlgDriver, BdyLayerStatistics
- */
+ *  The velocity and temperature are sampled at the nodes opposing the
+ *  wall nodes with the option for some type of averaging.  Then those
+ *  values are used in the Monin-Obukhov similarity laws to compute
+ *  friction velocity and heat flux.  Friction velocity is then used to
+ *  compute wall shear stress with directionality related to the opposing
+ *  node velocity vector.  Wall shear stress and heat flux can then be
+ *  made locally fluctuating.
+ * 
+ *  An example from the input file is:
+ *
+ *    - wall_boundary_condition: bc_lower
+ *      target_name: lower
+ *       wall_user_data:
+ *         velocity: [0.0,0.0,0.0]
+ *         abl_wall_function:
+ *           surface_heating_table:
+ *             - [     0.0, 0.00, 300.0, 1.0]
+ *             - [999999.9, 0.00, 300.0, 1.0]
+ *           reference_temperature: 300.0
+ *           roughness_height: 0.1
+ *           kappa: 0.4
+ *           beta_m: 5.0
+ *           beta_h: 5.0
+ *           gamma_m: 16.0
+ *           gamma_h: 16.0
+ *           gravity_vector_component: 3
+ *           monin_obukhov_averaging_type: planar
+ *           fluctuation_model: Moeng
+ *           fluctuating_temperature_ref: surface
+ *
+ *  
+ *
+ *  /sa WallFricVelAlgDriver, BdyLayerStatistics, WallFuncGeometryAlg  
+*/
+
 template <typename BcAlgTraits>
 class ABLWallFluxesAlg : public Algorithm
 {
@@ -77,8 +112,8 @@ private:
   unsigned wallFricVel_     {stk::mesh::InvalidOrdinal};
   unsigned wallNormDist_    {stk::mesh::InvalidOrdinal};
 
-  // Break the flux/surface temperature vs. time input table into vectors
-  // of each quantity and store in the following vectors.
+  //! Break the flux/surface temperature vs. time input table into vectors
+  //! of each quantity and store in the following vectors.
   std::vector<DblType> tableTimes_{0.0,999999.9};
   std::vector<DblType> tableFluxes_{0.0,0.0};
   std::vector<DblType> tableSurfaceTemperatures_{Tref_,Tref_};
