@@ -74,9 +74,10 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
     const int nodeR = ipNodeMap[ip];
 
     DoubleType amag = 0.0;
-    for (int d=0; d < BcAlgTraits::nDim_; ++d)
+    for (int d=0; d < BcAlgTraits::nDim_; ++d) {
       tauWall[d] = v_wallshearstress(ip, d);
       amag += v_areavec(ip, d) * v_areavec(ip, d);
+    }
     amag = stk::math::sqrt(amag);
 
     for (int i=0; i < BcAlgTraits::nDim_; ++i) {
