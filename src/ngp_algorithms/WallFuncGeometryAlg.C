@@ -108,7 +108,6 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
         DoubleType ypBip = 0.0;
         for (int d=0; d < BcAlgTraits::nDim_; ++d) {
           const DoubleType nj = v_area(ip, d) / aMag;
-        //const DoubleType ej = 0.25 * (v_coord(nodeR, d) - v_coord(nodeL, d));
           const DoubleType ej = 1.0 * (v_coord(nodeR, d) - v_coord(nodeL, d));
           ypBip += nj * ej * nj * ej;
         }
