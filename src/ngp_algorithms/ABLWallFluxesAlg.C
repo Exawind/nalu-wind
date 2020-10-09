@@ -35,6 +35,12 @@ namespace nalu {
 namespace {
 
 
+/* A function that applies Basu et al.'s algorithm 1 or 2 to compute
+ * base wall friction velocity and flux.  Later in the class, that
+ * information is taken and turned into a stress vector and flux that 
+ * can have local fluctuations.
+ *
+ */
 template <typename PsiFunc>
 KOKKOS_FUNCTION
 void compute_fluxes

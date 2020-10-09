@@ -21,6 +21,11 @@
 namespace sierra {
 namespace nalu {
 
+
+/**
+ * This class applies the computed wall shear stress field to the boundary.
+ *
+ */
 template<typename BcAlgTraits>
 class MomentumABLWallShearStressEdgeKernel: public NGPKernel<MomentumABLWallShearStressEdgeKernel<BcAlgTraits>>
 {

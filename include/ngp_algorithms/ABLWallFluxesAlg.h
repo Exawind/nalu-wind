@@ -45,6 +45,7 @@ namespace nalu {
  * 
  *  An example from the input file is:
  *
+ *```
  *    - wall_boundary_condition: bc_lower
  *      target_name: lower
  *       wall_user_data:
@@ -64,11 +65,11 @@ namespace nalu {
  *           monin_obukhov_averaging_type: planar
  *           fluctuation_model: Moeng
  *           fluctuating_temperature_ref: surface
- *
+ *``
  *  
  *
  *  /sa WallFricVelAlgDriver, BdyLayerStatistics, WallFuncGeometryAlg  
-*/
+ */
 
 template <typename BcAlgTraits>
 class ABLWallFluxesAlg : public Algorithm

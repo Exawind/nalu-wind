@@ -23,6 +23,10 @@ namespace nalu {
 class ElemDataRequests;
 class MasterElement;
 
+/**
+ * This class applies the computed wall heat flux field to the boundary.
+ *
+ */
 template <typename BcAlgTraits>
 class ScalarFaceFluxBCElemKernel
   : public NGPKernel<ScalarFaceFluxBCElemKernel<BcAlgTraits>>
