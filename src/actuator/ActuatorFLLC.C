@@ -16,8 +16,39 @@ namespace sierra {
 namespace nalu {
 namespace FLLC {
 
+// free functions for vector operations
+double
+dot(double* u, double* v)
+{
+  double result = 0.0;
+  for (int i = 0; i < 3; ++i) {
+    result += u[i] * v[i];
+  }
+  return result;
+}
+
+void
+cross(double* u, double* v, double* result)
+{
+  result[0] = u[1] * v[2] - u[2] * v[1];
+  result[1] = u[2] * v[0] - u[0] * v[2];
+  result[2] = u[0] * v[1] - u[1] * v[0];
+}
+
+void
+norm(double* u, double* norm)
+{
+  const double mag = std::sqrt(dot(u, u));
+  for (int i = 0; i < 3; ++i) {
+    norm[i] = u[i] / mag;
+  }
+}
+
 // TODO(psakiev) - do we NEED to do local range policy on any of these?, other
 // parallelization options?
+// TODO(psakiev) - need to set this up to run per blade and not over entire
+// turbine for the openfast case
+// TODO(psakiev) - add option to run over portion of the blade
 
 void
 compute_lift_force_distribution(
@@ -31,26 +62,31 @@ compute_lift_force_distribution(
   auto force = helper.get_local_view(actBulk.actuatorForce_);
   auto G = helper.get_local_view(actBulk.liftForceDistribution_);
   auto Uinf = helper.get_local_view(actBulk.relativeVelocityMagnitude_);
+  auto points = helper.get_local_view(actBulk.pointCentroid_);
 
   Kokkos::deep_copy(G, 0.0);
   Kokkos::deep_copy(Uinf, 0.0);
 
   auto range_policy = actBulk.local_range_policy(actMeta);
 
+  // for now let's just worry about constant span direction (no blade
+  // deformation)
+  ActFixScalarDbl span_dir("span norma", 1);
+
   // surrogate for equation 5.3
   Kokkos::parallel_for(
     "extract lift", range_policy, KOKKOS_LAMBDA(int i) {
-      const double vmag2 =
-        vel(i, 0) * vel(i, 0) + vel(i, 1) * vel(i, 1) + vel(i, 2) * vel(i, 2);
+      auto v = Kokkos::subview(vel, i, Kokkos::ALL);
+      auto f = Kokkos::subview(force, i, Kokkos::ALL);
 
+      const double fv = dot(f.data(), v.data());
+      const double vmag2 = dot(v.data(), v.data());
       Uinf(i) = std::sqrt(vmag2);
-
-      const double fv = vel(i, 0) * force(i, 0) + vel(i, 1) * force(i, 1) +
-                        vel(i, 2) * force(i, 2);
 
       for (int j = 0; j < 3; ++j) {
         G(i, j) = force(i, j) - vel(i, j) * fv / vmag2;
       }
+      // dot force with lift direction to perserve sign
     });
 
   actuator_utils::reduce_view_on_host(G);
@@ -121,7 +157,6 @@ compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
     point(offset, 2) - point(offset + 1, 2)};
 
   const double dR = std::sqrt(dx[0] * dx[0] + dx[1] * dx[1] + dx[2] * dx[2]);
-  const double normal[3] = {dx[0] / dR, dx[1] / dR, dx[2] / dR};
   const double relaxation_factor = 0.1;
 
   // copy deltaU so we can zero it for our data reduction strategy
@@ -140,29 +175,33 @@ compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
       const int i = index - offset;
 
       // Compute equation 5.7 in reference paper
-      // could do clock arithmatic to avoid if statement
-      for (int j = (i + 1) % nPoints, k = 0; k < nPoints - 1;
-           ++k, j = (j + 1) % nPoints) {
-          // for (int j = 0; j < nPoints; ++j) {
+      for (int j = 0; j < nPoints; ++j) {
         if (i == j)
           continue;
         // constant point spacing
-        for (int dir = 0; dir < 3; ++dir) {
-          const double dr = dR * (i - j);
-          const double coefficient =
-            deltaG(j + offset, dir) / (-4.0 * M_PI * dr * Uinf(j + offset));
-          optInd[dir] +=
-            coefficient *
-            (1.0 - std::exp(
-                     -dr * dr / (epsilonOpt(index, 0) * epsilonOpt(index, 0))));
+        const double dr = dR * (i - j);
+        const double dr2 = dr * dr;
+        const double epsLes2 = epsilon(index, 0) * epsilon(index, 0);
+        ThrowErrorMsgIf(
+          std::abs(epsLes2 - 1.0 / std::log(3.0)) > 1e-12,
+          "eps2: " + std::to_string(std::abs(epsLes2 - 1.0 / std::log(3.0))));
+        // ThrowErrorIf(epsilonOpt(index, 0) == 0);
+        const double epsOpt2 = epsilonOpt(index, 0) * epsilonOpt(index, 0);
+        ThrowErrorMsgIf(
+          std::abs(epsOpt2 - 1.0 / std::log(2.0)) > 1e12,
+          "diff eps2: " +
+            std::to_string(std::abs(epsOpt2 - 1.0 / std::log(2.0))) +
+            " epsOpt2: " + std::to_string(epsOpt2));
 
-          lesInd[dir] +=
-            coefficient *
-            (1.0 -
-             std::exp(-dr * dr / (epsilon(index, 0) * epsilon(index, 0))));
+        const double coefficient = 1.0 / (-4.0 * M_PI * dr * Uinf(j + offset));
+        const double coefOpt = 1.0 - std::exp(-dr2 / epsOpt2);
+        const double coefLes = 1.0 - std::exp(-dr2 / epsLes2);
+
+        for (int dir = 0; dir < 3; ++dir) {
+          optInd[dir] += deltaG(j + offset, dir) * coefficient * coefOpt;
+          lesInd[dir] += deltaG(j + offset, dir) * coefficient * coefLes;
         }
       }
-
       // update the correction term with relaxation
       // equation 5.8
       for (int j = 0; j < 3; ++j) {
