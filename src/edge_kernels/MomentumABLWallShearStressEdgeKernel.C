@@ -75,50 +75,13 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
 
     DoubleType amag = 0.0;
     for (int d=0; d < BcAlgTraits::nDim_; ++d)
+      tauWall[d] = v_wallshearstress(ip, d);
       amag += v_areavec(ip, d) * v_areavec(ip, d);
     amag = stk::math::sqrt(amag);
 
-    // unit normal
-    for (int d=0; d < BcAlgTraits::nDim_; ++d)
-      nx[d] = v_areavec(ip, d) / amag;
-
-    // get the shear stress
-    for (int d=0; d < BcAlgTraits::nDim_; ++d)
-      tauWall[d] = v_wallshearstress(ip, d);
-
-    const DoubleType zh = v_wallnormdist(ip);
-    const DoubleType ustar = v_wallfricvel(ip);
-
-    const DoubleType rho = v_density(nodeR);
-
-
-    const DoubleType lambda = 1.0;
-//      (rho * kappa_ * ustar / (stk::math::log(zh / z0_) - psim)) * amag;
-
     for (int i=0; i < BcAlgTraits::nDim_; ++i) {
       const int rowR = nodeR * BcAlgTraits::nDim_ + i;
-      DoubleType uiTan = 0.0;
-      DoubleType uiBcTan = 0.0;
-
-      for (int j=0; j < BcAlgTraits::nDim_; ++j) {
-        DoubleType ninj = nx[i] * nx[j];
-        if (i == j) {
-          const DoubleType om_ninj = 1.0 - ninj;
-          uiTan += om_ninj * v_vel(nodeR, j);
-          uiBcTan += om_ninj * v_bcvel(nodeR, j);
-
-          lhs(rowR, rowR) = 0.0;
-        } else {
-          const int colR = nodeR * BcAlgTraits::nDim_ + j;
-          uiTan -= ninj * v_vel(nodeR, j);
-          uiBcTan -= ninj * v_bcvel(nodeR, j);
-
-          lhs(rowR, colR) = 0.0;
-        }
-      }
-    //rhs(rowR) -= lambda * (uiTan - uiBcTan);
       rhs(rowR) += tauWall[i]*amag;
-    //std::cout << tauWall[i] << std::endl;
     }
   }
 }

@@ -1971,12 +1971,7 @@ MomentumEquationSystem::register_wall_bc(
       // register the algorithm that computes geometry that the wall model uses.
       realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
         wfAlgType, part, get_elem_topo(realm_, *part), "geometry_wall_func");
-/*
-      wallFuncAlgDriver_.register_face_algorithm<ABLWallFrictionVelAlg>(
-        wfAlgType, part, "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
-        grav, z0, referenceTemperature,
-        realm_.get_turb_model_constant(TM_kappa));
-*/
+      
       // register the algorithm that calculates the momentum and heat flux on the wall.
       wallFuncAlgDriver_.register_face_elem_algorithm<ABLWallFluxesAlg>(
         wfAlgType, part, get_elem_topo(realm_, *part), "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
@@ -1992,40 +1987,23 @@ MomentumEquationSystem::register_wall_bc(
       ReferenceTemperature Tref = userData.referenceTemperature_;
       const double referenceTemperature = Tref.referenceTemperature_;
 
-      // if using the edge-based solver assemble wall stresses via the edge algorithm.
-      if (realm_.realmUsesEdges_) {
-        auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-        AssembleElemSolverAlgorithm* solverAlg = nullptr;
-        bool solverAlgWasBuilt = false;
+      // Assemble wall stresses via the edge algorithm.
+      auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+      AssembleElemSolverAlgorithm* solverAlg = nullptr;
+      bool solverAlgWasBuilt = false;
 
-        std::tie(solverAlg, solverAlgWasBuilt) =
-          build_or_add_part_to_face_bc_solver_alg(
-            *this, *part, solverAlgMap, "wall_fcn");
+      std::tie(solverAlg, solverAlgWasBuilt) =
+        build_or_add_part_to_face_bc_solver_alg(
+          *this, *part, solverAlgMap, "wall_fcn");
 
-        ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
-        auto& activeKernels = solverAlg->activeKernels_;
+      ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+      auto& activeKernels = solverAlg->activeKernels_;
 
-        if (solverAlgWasBuilt) {
-          build_face_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>
-            (partTopo, *this, activeKernels, "momentum_abl_wall",
-             realm_.meta_data(), dataPreReqs);
+      if (solverAlgWasBuilt) {
+        build_face_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>
+          (partTopo, *this, activeKernels, "momentum_abl_wall",
+           realm_.meta_data(), dataPreReqs);
         }
-      }
-
-      // if using the element based solver, assemble wall stresses via the element algorithm.
-      else {
-        std::map<AlgorithmType, SolverAlgorithm *>::iterator it_wf =
-          solverAlgDriver_->solverAlgMap_.find(wfAlgType);
-        if ( it_wf == solverAlgDriver_->solverAlgMap_.end() ) {
-          auto* theAlg = new AssembleMomentumElemABLWallFunctionSolverAlgorithm(
-            realm_, part, this, realm_.realmUsesEdges_, grav, z0,
-            referenceTemperature);
-          solverAlgDriver_->solverAlgMap_[wfAlgType] = theAlg;
-        }
-        else {
-          it_wf->second->partVec_.push_back(part);
-        }
-      }
     }
 
     // Engineering-style wall model.

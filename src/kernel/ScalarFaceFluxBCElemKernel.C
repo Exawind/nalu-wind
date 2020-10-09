@@ -69,7 +69,7 @@ ScalarFaceFluxBCElemKernel<BcAlgTraits>::execute(
   const int* ipNodeMap = meFC_->ipNodeMap();
 
   for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
-    const int nearestNode = ipNodeMap[ip];
+    const int nodeR = ipNodeMap[ip];
 
     // Compute magnitude of area vector at this integration point
     DoubleType aMag = 0.0;
@@ -77,14 +77,10 @@ ScalarFaceFluxBCElemKernel<BcAlgTraits>::execute(
       aMag += v_areav(ip, d) * v_areav(ip, d);
     aMag = stk::math::sqrt(aMag);
 
-    // Interpolate desired data to the face integration points
-    DoubleType fluxBip = 0.0;
-    for (int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic) {
-      const DoubleType r = v_shape_fcn(ip, ic);
-      fluxBip += r * v_bcQ(ic);
-    }
+    // Get the flux at this integration point.
+    DoubleType fluxBip = v_bcQ(ip);
 
-    rhs(nearestNode) += fluxBip * aMag;
+    rhs(nodeR) += fluxBip * aMag;
   }
 }
 
