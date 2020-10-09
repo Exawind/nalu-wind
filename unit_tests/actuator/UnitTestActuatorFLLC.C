@@ -164,28 +164,27 @@ double distance(double* p1, double* p2){
   return std::sqrt(distance);
 }
 
-TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
-  auto Uinf = helper_.get_local_view(actBulk_.relativeVelocityMagnitude_);
-  auto dG = helper_.get_local_view(actBulk_.deltaLiftForceDistribution_);
-  auto epsLES = helper_.get_local_view(actBulk_.epsilon_);
-  auto epsOpt = helper_.get_local_view(actBulk_.epsilonOpt_);
-  auto points = helper_.get_local_view(actBulk_.pointCentroid_);
-
-  auto range_policy = actBulk_.local_range_policy();
-
   /*
-   These values should reduce equaiton 5.7 should be (note Uinf is incorrect in the paper)
+   Equaiton 5.7  from the paper should be 
+   (note Uinf is incorrect in the paper and should be indexed on j inside the summation):
    
    u_y(z_i, eps_i) =  \sum_j \Delta G(z_j) / (-Uinf_j*4* \pi * (r_ij))*(1-exp(-r_ij^2/eps_i^2))
-   
-   to 
 
-   \delta U_i =-\sum_j 1/r_ij * (1-exp(-r_ij^2/eps^2))
+   where r_ij = z_i-z_j = dr*(i-j) (for fixed point spacing)
 
-   where r_ij is z_i-z_j
+   if we set 
+  
+   \Delta G(z_j) = 4\pi
+   dr = 1.0
+   eps = 1.0/sqrt(ln(\xi)) where \xi >1.0
+   Uinf_j = 1.0
+
+   the equaiton reduces to
+
+   \delta U_i =\sum_j -1/(i-j) * (1-\xi^(-(i-j)^2))
 
    because \Delta G will cancel the 4 \pi term
-   and the magnitude of the relative velocity is fixed to 1.0
+   and the magnitude of the relative velocity is fixed to dr
 
    so for correction (old timestep values are zero in this test)
    f*(\delta U_opt_i- \delta U_les_i)
@@ -193,13 +192,41 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
    the 1 minus tersm will cancel out leaving just the exponential terms
    which we can wrap into one summation as
 
-   f*(\sum_j (-exp(-r_ij^2/epsOpt^2)+exp(-r_ij^2/epsLES^2))/r_ij)
-  */
+   f*(\sum_j [\xi_opt^(-(i-j)^2) - \xi_les^(-(i-j)^2)]/(i-j) )
 
-  const double epsilonLES = 2.0;
-  const double epsilonOpt = 3.5;
+   this is the equaiton we will test against to verify the computation
+  */
+TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
+  auto Uinf = helper_.get_local_view(actBulk_.relativeVelocityMagnitude_);
+  auto dG = helper_.get_local_view(actBulk_.deltaLiftForceDistribution_);
+  auto epsLES = helper_.get_local_view(actBulk_.epsilon_);
+  auto epsOpt = helper_.get_local_view(actBulk_.epsilonOpt_);
+  auto points = helper_.get_local_view(actBulk_.pointCentroid_);
+  auto uInduced = helper_.get_local_view(actBulk_.fllVelocityCorrection_);
+
+  auto range_policy = actBulk_.local_range_policy();
+
+
+  const double lesFac = 3.0;
+  const double optFac = 2.0;
+  const double epsilonLES = 1.0 / std::sqrt(std::log(lesFac));
+  const double epsilonOpt = 1.0 / std::sqrt(std::log(optFac));
+  ASSERT_TRUE(epsilonOpt>0.0);
   const double epsLes2 = epsilonLES*epsilonLES;
   const double epsOpt2 = epsilonOpt*epsilonOpt;
+
+  ActFixVectorDbl uExpect("uExpect", dG.extent_int(0));
+  const int offset =
+    helper_.get_local_view(actBulk_.turbIdOffset_)(actBulk_.localTurbineId_);
+  const int numPoints = helper_.get_local_view(actMeta_.numPointsTurbine_)(
+    actBulk_.localTurbineId_);
+
+  helper_.touch_dual_view(actBulk_.epsilonOpt_);
+  helper_.touch_dual_view(actBulk_.epsilon_);
+  helper_.touch_dual_view(actBulk_.pointCentroid_);
+  Kokkos::deep_copy(epsOpt, 0.0);
+  Kokkos::deep_copy(epsLES, 0.0);
+  Kokkos::deep_copy(points, 0.0);
 
   Kokkos::parallel_for("init values", range_policy, KOKKOS_LAMBDA(int index){
     for (int j=0; j<3; ++j){
@@ -207,40 +234,42 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
       epsLES(index, j) = epsilonLES;
       epsOpt(index, j) = epsilonOpt;
     }
+    points(index, 0) = index;
+    points(index, 1) = 0.0;
+    points(index, 2) = 0.0;
     Uinf(index) = 1.0;
   });
 
   actuator_utils::reduce_view_on_host(dG);
   actuator_utils::reduce_view_on_host(epsLES);
   actuator_utils::reduce_view_on_host(epsOpt);
-
-  ActFixVectorDbl uExpect("uExpect", dG.extent_int(0));
-  const int offset = helper_.get_local_view(actBulk_.turbIdOffset_)(actBulk_.localTurbineId_);
-  const int numPoints = helper_.get_local_view(actMeta_.numPointsTurbine_)(actBulk_.localTurbineId_);
+  actuator_utils::reduce_view_on_host(points);
 
   Kokkos::parallel_for("compute values", range_policy, KOKKOS_LAMBDA(int index){
     const int i = index - offset;
-    auto pI = Kokkos::subview(points,index,Kokkos::ALL);
     for(int j=0; j<numPoints; ++j){
       if(i==j) continue;
-      auto pJ = Kokkos::subview(points,j+offset, Kokkos::ALL);
-      const double r = distance(pJ.data(), pI.data());
+      
+      const double r = (i-j);
       const double r2 = r*r;
-      double temp = (std::exp(-r2/epsLes2)-std::exp(-r2/epsOpt2))/r;
+      double temp = (std::pow(optFac, -r2) - std::pow(lesFac, -r2)) / r;
 
       for (int k=0; k<3; ++k){
-        uExpect(index, k) += temp;
+        uExpect(index, k) += 0.1 * temp;
       }
     }
   });
 
+  for (int i=0; i<numPoints; ++i){
+    EXPECT_TRUE(epsOpt(i,0)==0)<<epsOpt(i,0);
+  }
+
   actuator_utils::reduce_view_on_host(uExpect);
   FLLC::compute_induced_velocities(actBulk_, actMeta_);
-  auto uInduced = helper_.get_local_view(actBulk_.fllVelocityCorrection_);
 
   for(int i=0; i<uExpect.extent_int(0); ++i){
     //for(int j=0; j<3; ++j){
-      EXPECT_NEAR(0.1*uExpect(i,0),uInduced(i,0), 1e-12);
+    EXPECT_NEAR(uExpect(i, 0), uInduced(i, 0), 1e-12) << "index: " << i;
     //}
   }
 
