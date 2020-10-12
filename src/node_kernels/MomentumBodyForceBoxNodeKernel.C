@@ -55,7 +55,7 @@ MomentumBodyForceBoxNodeKernel::execute(
   bool is_inside = true;
   for (int i = 0; i < nDim_; ++i)
     is_inside =
-      (is_inside and (lo_[i] <= coordinates_.get(node, i)) and
+      (is_inside && (lo_[i] <= coordinates_.get(node, i)) &&
        (coordinates_.get(node, i) <= hi_[i]));
 
   const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
