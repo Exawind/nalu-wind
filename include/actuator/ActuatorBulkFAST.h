@@ -63,7 +63,6 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActFixVectorDbl hubLocations_;
   ActFixVectorDbl hubOrientation_;
 
-  ActVectorDblDv epsilonOpt_;
   ActTensorDblDv orientationTensor_;
 
   fast::OpenFAST openFast_;

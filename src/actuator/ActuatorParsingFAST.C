@@ -41,7 +41,7 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
        "epsilon and epsilon_chord have both been specified for Turbine " +
        std::to_string(iTurb) + "\nYou must pick one or the other.");
    }
-   if (epsilon && actMetaFAST.filterLiftLineCorrection_) {
+   if (epsilon && actMetaFAST.useFLLC_) {
      throw std::runtime_error(
        "epsilon and fllt_correction have both been specified for "
        "Turbine " +

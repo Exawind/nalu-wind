@@ -7,6 +7,7 @@
 // for more details.
 //
 #include <actuator/ActuatorExecutorsSimpleNgp.h>
+#include <actuator/ActuatorFLLC.h>
 
 namespace sierra {
 namespace nalu {
@@ -60,7 +61,7 @@ ActuatorLineSimpleNGP::update()
   actBulk_.zero_open_fast_views();
 
   // set range policy to only operating over points owned by local fast turbine
-  auto fastRangePolicy = actBulk_.local_range_policy();
+  auto localRangePolicy = actBulk_.local_range_policy();
 
 #ifdef ENABLE_ACTSIMPLE_PTMOTION
   // -- Get p1 and p2 for blade geometry --
@@ -72,9 +73,9 @@ ActuatorLineSimpleNGP::update()
     p2[j] = actMeta_.p2_.h_view(actBulk_.localTurbineId_,j);
   }
   int nPts=actMeta_.num_force_pts_blade_.h_view(actBulk_.localTurbineId_);
-  // -- functor to update points -- 
+  // -- functor to update points --
   Kokkos::parallel_for(
-    "updatePointLocationsActuatorNgpSimple", fastRangePolicy,
+    "updatePointLocationsActuatorNgpSimple", localRangePolicy,
     ActSimpleUpdatePoints(actBulk_, nPts, p1, p2));
   actuator_utils::reduce_view_on_host(pointReduce);
 #endif
@@ -86,17 +87,21 @@ ActuatorLineSimpleNGP::update()
     InterpActuatorVel(actBulk_, stkBulk_));
   actuator_utils::reduce_view_on_host(velReduce);
 
+  Apply_FLLC(actBulk_, actMeta_);
+
   Kokkos::parallel_for(
     "interpolateDensityActuatorNgpSimple", numActPoints_,
     InterpActuatorDensity(actBulk_, stkBulk_));
   auto rhoReduce = actBulk_.density_.view_host();
   actuator_utils::reduce_view_on_host(rhoReduce);
 
+  ActSimpleComputeRelativeVelocity(actBulk_, actMeta_);
+  Compute_FLLC(actBulk_, actMeta_);
+
   // This is for output purposes
   Kokkos::parallel_for(
-    "assignSimpleVelActuatorNgpSimple", fastRangePolicy,
+    "assignSimpleVelActuatorNgpSimple", localRangePolicy,
     ActSimpleAssignVel(actBulk_));
-
 }
 
 } // namespace nalu

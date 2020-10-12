@@ -139,14 +139,14 @@ compute_induced_velocities(
   using mem_layout = ActuatorMemLayout;
 
   ActDualViewHelper<mem_space> helper;
-  helper.touch_dual_view(actBulk.fllVelocityCorrection_);
+  helper.touch_dual_view(actBulk.fllc_);
 
   auto deltaG = helper.get_local_view(actBulk.deltaLiftForceDistribution_);
   auto epsilon = helper.get_local_view(actBulk.epsilon_);
   auto epsilonOpt = helper.get_local_view(actBulk.epsilonOpt_);
   auto point = helper.get_local_view(actBulk.pointCentroid_);
   auto relVel = helper.get_local_view(actBulk.relativeVelocity_);
-  auto deltaU = helper.get_local_view(actBulk.fllVelocityCorrection_);
+  auto deltaU = helper.get_local_view(actBulk.fllc_);
   auto Uinf = helper.get_local_view(actBulk.relativeVelocityMagnitude_);
 
   const int nTurb = actBulk.localTurbineId_;
@@ -209,13 +209,36 @@ compute_induced_velocities(
 } // namespace FLLC
 
 void
-compute_fllc(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
+Compute_FLLC(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
 {
   if (!actMeta.useFLLC_)
     return;
   FLLC::compute_lift_force_distribution(actBulk, actMeta);
   FLLC::grad_lift_force_distribution(actBulk, actMeta);
   FLLC::compute_induced_velocities(actBulk, actMeta);
+}
+
+void
+Apply_FLLC(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
+{
+  if (!actMeta.useFLLC_)
+    return;
+  ActDualViewHelper<ActuatorMemSpace> helper;
+
+  helper.sync(actBulk.fllc_);
+  helper.touch_dual_view(actBulk.velocity_);
+
+  auto fllc = helper.get_local_view(actBulk.fllc_);
+  auto vel = helper.get_local_view(actBulk.velocity_);
+
+  Kokkos::parallel_for(
+    "apply fllc",
+    Kokkos::RangePolicy<ActuatorExecutionSpace>(0, vel.extent_int(0)),
+    KOKKOS_LAMBDA(int i) {
+      for (int j = 0; j < 3; ++j) {
+        vel(i, j) += fllc(i, j);
+      }
+    });
 }
 
 } // namespace nalu

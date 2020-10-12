@@ -57,7 +57,8 @@ compute_induced_velocities(ActuatorBulk& actBulk, const ActuatorMeta& actMeta);
 
 } // namespace FLLC
 
-void compute_fllc(ActuatorBulk& actBulk, const ActuatorMeta& actMeta);
+void Compute_FLLC(ActuatorBulk& actBulk, const ActuatorMeta& actMeta);
+void Apply_FLLC(ActuatorBulk& actBulk, const ActuatorMeta& actMeta);
 
 } // namespace nalu
 } // namespace sierra

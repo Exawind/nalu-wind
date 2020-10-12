@@ -84,6 +84,9 @@ struct ActSimpleAssignVel
   std::vector<double> p2_;
 };
 
+void ActSimpleComputeRelativeVelocity(
+  ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta);
+
 void ActSimpleComputeForce(
   ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta);
 

@@ -73,6 +73,7 @@ TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
       density(i) = 2.0;
     });
 
+  ActSimpleComputeRelativeVelocity(actBulk_, actMeta_);
   ActSimpleComputeForce(actBulk_, actMeta_);
 
   // given a CL, CD, chord and U vector we can compute a lift and total force
@@ -193,7 +194,7 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
   auto epsLES = helper_.get_local_view(actBulk_.epsilon_);
   auto epsOpt = helper_.get_local_view(actBulk_.epsilonOpt_);
   auto points = helper_.get_local_view(actBulk_.pointCentroid_);
-  auto uInduced = helper_.get_local_view(actBulk_.fllVelocityCorrection_);
+  auto uInduced = helper_.get_local_view(actBulk_.fllc_);
 
   auto range_policy = actBulk_.local_range_policy();
 
@@ -216,20 +217,16 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
   Kokkos::deep_copy(epsOpt, epsilonOpt);
   Kokkos::deep_copy(epsLES, epsilonLES);
   Kokkos::deep_copy(points, 0.0);
+  Kokkos::deep_copy(dG, 4.0 * M_PI);
+  Kokkos::deep_copy(Uinf, 1.0);
 
-  Kokkos::parallel_for("init values", range_policy, KOKKOS_LAMBDA(int index){
-    for (int j=0; j<3; ++j){
-      dG(index, j) = 4.0*M_PI;
-    }
-    points(index, 0) = index;
-    points(index, 1) = 0.0;
-    points(index, 2) = 0.0;
-    Uinf(index) = 1.0;
-  });
+  Kokkos::parallel_for(
+    "init values", range_policy, KOKKOS_LAMBDA(int index) {
+      points(index, 0) = index;
+      points(index, 1) = 0.0;
+      points(index, 2) = 0.0;
+    });
 
-  actuator_utils::reduce_view_on_host(dG);
-  actuator_utils::reduce_view_on_host(epsLES);
-  actuator_utils::reduce_view_on_host(epsOpt);
   actuator_utils::reduce_view_on_host(points);
 
   Kokkos::parallel_for("compute values", range_policy, KOKKOS_LAMBDA(int index){
@@ -248,7 +245,7 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
   });
 
   for (int i=0; i<numPoints; ++i){
-    EXPECT_TRUE(epsOpt(i, 0) == epsilonOpt) << epsOpt(i, 0);
+    EXPECT_DOUBLE_EQ(epsOpt(i, 0), epsilonOpt) << epsOpt(i, 0);
   }
 
   FLLC::compute_induced_velocities(actBulk_, actMeta_);

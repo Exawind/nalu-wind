@@ -52,8 +52,7 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
     deltaLiftForceDistribution_(
       "deltaG", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
     epsilonOpt_("epsOpt", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
-    fllVelocityCorrection_(
-      "fllVelocityCorrection", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
+    fllc_("fll_Correction", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
     localCoords_("localCoords", actMeta.numPointsTotal_),
     pointIsLocal_("pointIsLocal", actMeta.numPointsTotal_),
     localParallelRedundancy_("localParallelReundancy", actMeta.numPointsTotal_),

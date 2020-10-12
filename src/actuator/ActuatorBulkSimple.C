@@ -34,6 +34,7 @@ ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
 ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   : ActuatorBulk(actMeta),
     density_("actDensity", actMeta.numPointsTotal_),
+    alpha_("actAgngleOfAttack", actMeta.numPointsTotal_),
     turbineThrust_("turbineThrust", actMeta.numberOfActuators_),
     orientationTensor_(
       "orientationTensor",

@@ -78,6 +78,7 @@ struct ActDualViewHelper
   inline auto get_local_view(T dualView) const
     -> decltype(dualView.template view<memory_space>())
   {
+    dualView.template sync<memory_space>();
     return dualView.template view<memory_space>();
   }
 
@@ -88,6 +89,11 @@ struct ActDualViewHelper
     dualView.template modify<memory_space>();
   }
 
+  template <typename T>
+  inline void sync(T dualView)
+  {
+    dualView.template sync<memory_space>();
+  }
   // TODO create view in this space
   // TODO create range policy
 };
