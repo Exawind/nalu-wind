@@ -66,6 +66,7 @@ struct ActuatorBulkSimple : public ActuatorBulk
   virtual ~ActuatorBulkSimple();
 
   ActScalarDblDv density_;
+  ActScalarDblDv alpha_;
 
   ActFixVectorDbl turbineThrust_;
 

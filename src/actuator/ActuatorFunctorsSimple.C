@@ -133,64 +133,76 @@ ActSimpleAssignVel::operator()(int index) const
 }
 
 void
+ActSimpleComputeRelativeVelocity(
+  ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta)
+{
+  ActDualViewHelper<ActuatorFixedMemSpace> helper;
+  helper.touch_dual_view(actBulk.alpha_);
+  helper.touch_dual_view(actBulk.relativeVelocity_);
+  auto velocity = helper.get_local_view(actBulk.velocity_);
+  auto relVelocity = helper.get_local_view(actBulk.relativeVelocity_);
+  auto alpha = helper.get_local_view(actBulk.alpha_);
+  auto offset = helper.get_local_view(actBulk.turbIdOffset_);
+
+  const int turbId = actBulk.localTurbineId_;
+
+  Kokkos::deep_copy(alpha, 0);
+  Kokkos::deep_copy(relVelocity, 0);
+
+  Kokkos::parallel_for(
+    "compute relative velocities", actBulk.local_range_policy(),
+    KOKKOS_LAMBDA(int index) {
+      auto twistTable = Kokkos::subview(
+        helper.get_local_view(actMeta.twistTableDv_), turbId, Kokkos::ALL);
+      auto p1ZeroAlphaDir = Kokkos::subview(
+        helper.get_local_view(actMeta.p1ZeroAlphaDir_), turbId, Kokkos::ALL);
+      auto chordNormalDir = Kokkos::subview(
+        helper.get_local_view(actMeta.chordNormalDir_), turbId, Kokkos::ALL);
+      auto spanDir = Kokkos::subview(
+        helper.get_local_view(actMeta.spanDir_), turbId, Kokkos::ALL);
+      const int i = index - offset(turbId);
+
+      auto vel = Kokkos::subview(velocity, index, Kokkos::ALL);
+      auto relVel = Kokkos::subview(relVelocity, index, Kokkos::ALL);
+      double twist = twistTable(i);
+
+      double ws[3] = {vel(0), vel(1), vel(2)}; // Total wind speed
+
+      // Calculate the angle of attack (AOA) and 2d velocity (over write
+      // interpolated velocity)
+      AirfoilTheory2D::calculate_alpha(
+        ws, p1ZeroAlphaDir.data(), spanDir.data(), chordNormalDir.data(), twist,
+        relVel.data(), alpha(index));
+    });
+
+  actuator_utils::reduce_view_on_host(alpha);
+  actuator_utils::reduce_view_on_host(relVelocity);
+}
+
+void
 ActSimpleComputeForce(
   ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta)
 {
 
   ActDualViewHelper<ActuatorFixedMemSpace> helper;
   helper.touch_dual_view(actBulk.actuatorForce_);
-  helper.touch_dual_view(actBulk.relativeVelocity_);
 
-  auto velocity = helper.get_local_view(actBulk.velocity_);
-  auto relVelocity = helper.get_local_view(actBulk.relativeVelocity_);
   auto density = helper.get_local_view(actBulk.density_);
   auto force = helper.get_local_view(actBulk.actuatorForce_);
   auto offset = helper.get_local_view(actBulk.turbIdOffset_);
+  auto alpha = helper.get_local_view(actBulk.alpha_);
+  auto relVelocity = helper.get_local_view(actBulk.relativeVelocity_);
+
+  auto aoaPolarTable = helper.get_local_view(actMeta.aoaPolarTableDv_);
+  auto clPolarTable = helper.get_local_view(actMeta.clPolarTableDv_);
+  auto cdPolarTable = helper.get_local_view(actMeta.cdPolarTableDv_);
+  auto elemArea = helper.get_local_view(actMeta.elemAreaDv_);
+  auto spanDirection = helper.get_local_view(actMeta.spanDir_);
 
   const int turbId = actBulk.localTurbineId_;
   const unsigned nPolarTable = actMeta.polarTableSize_.h_view(turbId);
 
-  auto aoaPolarTableDv = ActScalarDblDv(
-    "aoa_polartable_Dv", actMeta.polarTableSize_.h_view(turbId));
-  auto clPolarTableDv =
-    ActScalarDblDv("cl_polartable_Dv", actMeta.polarTableSize_.h_view(turbId));
-  auto cdPolarTableDv =
-    ActScalarDblDv("cd_polartable_Dv", actMeta.polarTableSize_.h_view(turbId));
-
-  const unsigned nPts = actMeta.num_force_pts_blade_.h_view(turbId);
-
-  auto twistTableDv = ActScalarDblDv(
-    "twist_table_Dv", actMeta.num_force_pts_blade_.h_view(turbId));
-  auto elemAreaDv = ActScalarDblDv(
-    "elem_area_Dv", actMeta.num_force_pts_blade_.h_view(turbId));
-
-  const int debug_output=actBulk.debug_output_;
-
-
-  ActFixScalarDbl p1ZeroAlphaDir("p1ZeroAlpha", 3); // Direction of zero alpha at p1
-  ActFixScalarDbl chodrNormalDir("chordNorm", 3); // Direction normal to the chord
-  ActFixScalarDbl spanDir("spanDir", 3);        // Direction in the span
-
-  if (NaluEnv::self().parallel_rank() == turbId) {
-    // Set up the polar table arrays
-    for (size_t i=0; i<nPolarTable; i++) {
-      aoaPolarTableDv.h_view(i) = actMeta.aoaPolarTableDv_.h_view(turbId,i);
-      clPolarTableDv.h_view(i)  = actMeta.clPolarTableDv_.h_view(turbId, i);
-      cdPolarTableDv.h_view(i)  = actMeta.cdPolarTableDv_.h_view(turbId, i);
-    }
-    // Copy over the twist/area tables
-    for (size_t i=0; i<nPts; i++) {
-      twistTableDv.h_view(i) = actMeta.twistTableDv_.h_view(turbId, i);
-      elemAreaDv.h_view(i)   = actMeta.elemAreaDv_.h_view(turbId, i);
-    }
-    
-    // extract the directions
-    for (int i=0; i<3; i++) {
-      p1ZeroAlphaDir(i) = actMeta.p1ZeroAlphaDir_.h_view(turbId, i);
-      chodrNormalDir(i) = actMeta.chordNormalDir_.h_view(turbId, i);
-      spanDir(i)        = actMeta.spanDir_.h_view(turbId, i);
-    }
-  }
+  const int debug_output = actBulk.debug_output_;
 
   // TODO(psakiev) extract relative velocity computation to an individual
   // function
@@ -199,34 +211,25 @@ ActSimpleComputeForce(
   auto pointForce = Kokkos::subview(force, index, Kokkos::ALL);
   const int localId = index - offset(turbId);
 
-  auto vel     = Kokkos::subview(velocity, index, Kokkos::ALL);
-  // TODO if we add blade motion then subtract that from the relative velt
   auto ws2d = Kokkos::subview(relVelocity, index, Kokkos::ALL);
 
-  double twist = twistTableDv.h_view(localId); 
-
-  double ws[3] = {vel(0), vel(1), vel(2)} ; // Total wind speed
- 
-  // Calculate the angle of attack (AOA)
-  double alpha;
-  AirfoilTheory2D::calculate_alpha(
-    ws, p1ZeroAlphaDir.data(), spanDir.data(), chodrNormalDir.data(), twist, ws2d.data(), alpha);
-
   // set up the polar tables
-  std::vector<double> aoatable;
-  std::vector<double> cltable;
-  std::vector<double> cdtable;
-  for (unsigned i=0; i<nPolarTable; i++) {
-    aoatable.push_back(aoaPolarTableDv.h_view(i));
-    cltable.push_back(clPolarTableDv.h_view(i));
-    cdtable.push_back(cdPolarTableDv.h_view(i));
-  }
+  double* polarPointer =
+    Kokkos::subview(aoaPolarTable, turbId, Kokkos::ALL).data();
+  double* clPointer = Kokkos::subview(clPolarTable, turbId, Kokkos::ALL).data();
+  double* cdPointer = Kokkos::subview(cdPolarTable, turbId, Kokkos::ALL).data();
+
+  std::vector<double> aoatable(polarPointer, polarPointer + nPolarTable);
+  std::vector<double> cltable(clPointer, clPointer + nPolarTable);
+  std::vector<double> cdtable(cdPointer, cdPointer + nPolarTable);
+
+  auto spanDir = Kokkos::subview(spanDirection, turbId, Kokkos::ALL);
 
   // Calculate Cl and Cd
   double cl;
   double cd;
-  utils::linear_interp(aoatable, cltable, alpha, cl);
-  utils::linear_interp(aoatable, cdtable, alpha, cd);
+  utils::linear_interp(aoatable, cltable, alpha(index), cl);
+  utils::linear_interp(aoatable, cdtable, alpha(index), cd);
 
   // Magnitude of wind speed
   double ws2Dnorm =
@@ -234,7 +237,7 @@ ActSimpleComputeForce(
 
   // Calculate lift and drag forces
   double rho  = density(index);
-  double area = elemAreaDv.h_view(localId); 
+  double area = elemArea(turbId, localId);
   double Q    = 0.5*rho*ws2Dnorm*ws2Dnorm;
   double lift = cl*Q*area;
   double drag = cd*Q*area;
@@ -269,15 +272,15 @@ ActSimpleComputeForce(
   if (debug_output)
     NaluEnv::self().naluOutput()
       << "Blade " << turbId // LCCOUT
-      << " pointId: " << localId << std::setprecision(5) << " alpha: " << alpha
-      << " ws2D: " << ws2d(0) << " " << ws2d(1) << " " << ws2d(2) << " "
+      << " pointId: " << localId << std::setprecision(5)
+      << " alpha: " << alpha(index) << " ws2D: " << ws2d(0) << " " << ws2d(1)
+      << " " << ws2d(2) << " "
       << " Cl, Cd: " << cl << " " << cd << " lift, drag = " << lift << " "
       << drag << std::endl;
   });
 
-  actuator_utils::reduce_view_on_host(relVelocity);
   actuator_utils::reduce_view_on_host(force);
-  }
+}
 
 void 
 AirfoilTheory2D::calculate_alpha(
