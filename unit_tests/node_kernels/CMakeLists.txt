@@ -4,6 +4,7 @@ target_sources(${utest_ex_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestEnthalpyABLForceNode.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumABLForceNode.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumBodyForceNode.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumBodyForceBoxNode.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumBoussinesqNode.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumGclSrcNodeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumMassBDFNodeKernel.C
