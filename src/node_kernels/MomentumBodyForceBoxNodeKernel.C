@@ -53,14 +53,19 @@ MomentumBodyForceBoxNodeKernel::execute(
 {
 
   bool is_inside = true;
-  for (int i = 0; i < nDim_; ++i)
-    is_inside =
-      (is_inside && (lo_[i] <= coordinates_.get(node, i)) &&
-       (coordinates_.get(node, i) <= hi_[i]));
+  for (int i = 0; i < nDim_; ++i) {
+    if (!((lo_[i] <= coordinates_.get(node, i)) &&
+          (coordinates_.get(node, i) <= hi_[i]))) {
+      is_inside = false;
+      break;
+    }
+  }
 
-  const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
-  for (int i = 0; i < nDim_; ++i)
-    rhs(i) += (is_inside) ? dualVolume * forceVector_[i] : 0.0;
+  if (is_inside) {
+    const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
+    for (int i = 0; i < nDim_; ++i)
+      rhs(i) += dualVolume * forceVector_[i];
+  }
 }
 
 } // namespace nalu
