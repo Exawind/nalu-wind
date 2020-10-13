@@ -32,7 +32,10 @@ ActuatorLineSimpleNGP::operator()()
   update();
 
   ActSimpleComputeForce(actBulk_, actMeta_);
+
   Compute_FLLC(actBulk_, actMeta_);
+
+  ActSimpleWriteToFile(actBulk_, actMeta_);
 
   const int localSizeCoarseSearch =
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);

@@ -78,10 +78,9 @@ struct ActuatorBulkSimple : public ActuatorBulk
   ActScalarIntDv  assignedProc_;
   const int       num_blades_;
   const bool      debug_output_;
-  const bool      file_output_;
 
   ActDualViewHelper<ActuatorMemSpace> dvHelper_;
-  std::vector<std::string> output_cache;
+  std::vector<std::string> output_cache_;
 };
 
 

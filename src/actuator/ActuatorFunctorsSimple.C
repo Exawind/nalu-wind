@@ -115,20 +115,23 @@ void ActSimpleWriteToFile(ActuatorBulkSimple &actBulk, const ActuatorMetaSimple 
 
   if (actBulk.localTurbineId_==NaluEnv::self().parallel_rank()){
     std::ofstream outFile;
+    //ThrowErrorIf(NaluEnv::self().parallel_rank()!=0);
 
-    outFile.open(filename, std::ofstream::out);
-    auto range = actBulk.local_range_policy();
+    outFile.open(filename, std::ios_base::app);
+    const int stop = offset + actMeta.numPointsTurbine_.h_view(actBulk.localTurbineId_);
+    std::cerr << "start, stop: " << offset <<", "<<stop <<std::endl;
 
-    Kokkos::parallel_for("output stuff", range, KOKKOS_LAMBDA(int index){
+    for(int index = offset; index < stop; ++index){
+      std::cerr << index <<std::endl;
       const int i = index - offset;
       // write cached stuff from earlier computations
-      outFile << actBulk.output_cache[i];
+      outFile << actBulk.output_cache_[i];
       outFile << vel(index, 0) << ", "<< vel(index, 1) << ", "<< vel(index, 2) << ", ";
       outFile << relVel(index, 0) << ", "<< relVel(index, 1) << ", "<< relVel(index, 2) << ", ";
       outFile << force(index, 0) << ", "<< force(index, 1) << ", "<< force(index, 2) << ", ";
       outFile << density(index) << std::endl;
-      actBulk.output_cache[i].clear();
-    });
+      actBulk.output_cache_[i].clear();
+    }
     outFile.close();
   }
 }
@@ -235,6 +238,7 @@ ActSimpleComputeForce(
   const unsigned nPolarTable = actMeta.polarTableSize_.h_view(turbId);
 
   const int debug_output = actBulk.debug_output_;
+  std::vector<std::string>* cache = &actBulk.output_cache_;
 
   Kokkos::parallel_for("ActSimpleComputeForce", actBulk.local_range_policy(), KOKKOS_LAMBDA(int index){
 
@@ -314,8 +318,8 @@ ActSimpleComputeForce(
            << cl << ", "
            << cd << ", "
            << lift << ", "
-           << drag << ", "
-    actBulk.output_cache_ += stream.str();
+           << drag << ", ";
+    cache->at(localId)+=stream.str();
   }
   });
 
