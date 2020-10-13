@@ -22,7 +22,7 @@ namespace {
 const char* actuatorParameters = R"act(actuator:
   search_target_part: dummy
   search_method: stk_kdtree
-  type: ActLineSimple
+  type: ActLineSimpleNGP
   n_simpleblades: 1
   fllt_correction: yes
   Blade0:
@@ -54,6 +54,8 @@ protected:
   void SetUp(){
     ASSERT_TRUE(actMetaBase_.useFLLC_);
     ASSERT_TRUE(actMeta_.useFLLC_);
+    ASSERT_EQ(actMetaBase_.actuatorType_, ActuatorType::ActLineSimpleNGP);
+    ASSERT_EQ(actMeta_.actuatorType_, ActuatorType::ActLineSimpleNGP);
   }
 };
 
@@ -81,7 +83,6 @@ TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
   // the paper
 
   ActFixScalarDbl G("G-paper", vel.extent_int(0));
-  auto area = helper_.get_local_view(actMeta_.elemAreaDv_);
 
   const double chord = 1.0;
   const double Cl = 2.0;
@@ -102,14 +103,11 @@ TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
     // assert that the two lift forces are equal
   Kokkos::parallel_for(
     "check values", range_policy, KOKKOS_LAMBDA(int i) {
-      // TODO - this computation needs to get wrapped into the main function at
-      // some point
       double gmag = 0.0;
       for(int j=0; j<3; ++j){
         gmag += fllc_lift_force(i,j) *fllc_lift_force(i,j);
       }
       gmag = std::sqrt(gmag);
-      gmag /= area(0, i) * density(i);
       EXPECT_DOUBLE_EQ(G(i), gmag);
     });
 }

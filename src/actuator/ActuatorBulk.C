@@ -51,7 +51,7 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
     liftForceDistribution_("G", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
     deltaLiftForceDistribution_(
       "deltaG", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
-    epsilonOpt_("epsOpt", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
+    epsilonOpt_("epsOpt", actMeta.numPointsTotal_),
     fllc_("fll_Correction", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
     localCoords_("localCoords", actMeta.numPointsTotal_),
     pointIsLocal_("pointIsLocal", actMeta.numPointsTotal_),

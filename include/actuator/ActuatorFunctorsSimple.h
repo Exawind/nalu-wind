@@ -66,6 +66,8 @@ struct ActSimpleUpdatePoints
 };
 #endif
 
+void ActSimpleWriteToFile(ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta);
+
 struct ActSimpleAssignVel
 {
   using execution_space = ActuatorFixedExecutionSpace;

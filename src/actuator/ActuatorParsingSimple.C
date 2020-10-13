@@ -82,6 +82,8 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   std::vector<std::vector<double>> input_aoa_polartable;
   std::vector<std::vector<double>> input_cl_polartable;
   std::vector<std::vector<double>> input_cd_polartable;
+
+  actMetaSimple.output_filenames_.resize(actMetaSimple.n_simpleblades_);
  
   if (actMetaSimple.n_simpleblades_ > 0) {
     actMetaSimple.numPointsTotal_ = 0;
@@ -89,6 +91,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 
       const YAML::Node cur_blade =
 	y_actuator["Blade" + std::to_string(iBlade)];
+      get_if_present_no_default(cur_blade, "output_file_name", actMetaSimple.output_filenames_[iBlade]);
 
       size_t num_force_pts_blade;
       get_required(cur_blade, "num_force_pts_blade", num_force_pts_blade);

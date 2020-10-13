@@ -15,6 +15,8 @@
 #include <FieldTypeDef.h>
 #include "utils/LinearInterpolation.h"
 #include <cmath>
+#include <string>
+#include <ostream>
 
 namespace sierra {
 namespace nalu {
@@ -100,6 +102,37 @@ ActSimpleUpdatePoints::operator()(int index) const
 }
 #endif
 
+void ActSimpleWriteToFile(ActuatorBulkSimple &actBulk, const ActuatorMetaSimple &actMeta){
+  std::string filename = actMeta.output_filenames_[actBulk.localTurbineId_];
+  if(filename.empty())
+    return;
+  ActDualViewHelper<ActuatorFixedMemSpace> helper;
+  auto vel = helper.get_local_view(actBulk.velocity_);
+  auto force = helper.get_local_view(actBulk.actuatorForce_);
+  auto relVel = helper.get_local_view(actBulk.relativeVelocity_);
+  auto density = helper.get_local_view(actBulk.density_);
+  const int offset  = actBulk.turbIdOffset_.h_view(actBulk.localTurbineId_);
+
+  if (actBulk.localTurbineId_==NaluEnv::self().parallel_rank()){
+    std::ofstream outFile;
+
+    outFile.open(filename, std::ofstream::out);
+    auto range = actBulk.local_range_policy();
+
+    Kokkos::parallel_for("output stuff", range, KOKKOS_LAMBDA(int index){
+      const int i = index - offset;
+      // write cached stuff from earlier computations
+      outFile << actBulk.output_cache[i];
+      outFile << vel(index, 0) << ", "<< vel(index, 1) << ", "<< vel(index, 2) << ", ";
+      outFile << relVel(index, 0) << ", "<< relVel(index, 1) << ", "<< relVel(index, 2) << ", ";
+      outFile << force(index, 0) << ", "<< force(index, 1) << ", "<< force(index, 2) << ", ";
+      outFile << density(index) << std::endl;
+      actBulk.output_cache[i].clear();
+    });
+    outFile.close();
+  }
+}
+
 ActSimpleAssignVel::ActSimpleAssignVel(ActuatorBulkSimple& actBulk)
   : velocity_(helper_.get_local_view(actBulk.velocity_)),
     density_(helper_.get_local_view(actBulk.density_)),
@@ -168,8 +201,7 @@ ActSimpleComputeRelativeVelocity(
 
       double ws[3] = {vel(0), vel(1), vel(2)}; // Total wind speed
 
-      // Calculate the angle of attack (AOA) and 2d velocity (over write
-      // interpolated velocity)
+      // Calculate the angle of attack (AOA) and 2d velocity 
       AirfoilTheory2D::calculate_alpha(
         ws, p1ZeroAlphaDir.data(), spanDir.data(), chordNormalDir.data(), twist,
         relVel.data(), alpha(index));
@@ -204,8 +236,6 @@ ActSimpleComputeForce(
 
   const int debug_output = actBulk.debug_output_;
 
-  // TODO(psakiev) extract relative velocity computation to an individual
-  // function
   Kokkos::parallel_for("ActSimpleComputeForce", actBulk.local_range_policy(), KOKKOS_LAMBDA(int index){
 
   auto pointForce = Kokkos::subview(force, index, Kokkos::ALL);
@@ -277,6 +307,16 @@ ActSimpleComputeForce(
       << " " << ws2d(2) << " "
       << " Cl, Cd: " << cl << " " << cd << " lift, drag = " << lift << " "
       << drag << std::endl;
+  if (!actMeta.output_filenames_[turbId].empty()){
+    std::ostringstream stream;
+    stream << localId << ", "
+           << alpha(index) << ", "
+           << cl << ", "
+           << cd << ", "
+           << lift << ", "
+           << drag << ", "
+    actBulk.output_cache_ += stream.str();
+  }
   });
 
   actuator_utils::reduce_view_on_host(force);
