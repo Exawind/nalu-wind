@@ -153,9 +153,6 @@ realms:
 
         - turbulence_model_constants:
             SDRWallFactor: 0.625
-            periodicForcingLengthX: 4.5
-            periodicForcingLengthY: 1.0
-            periodicForcingLengthZ: 2.25
 
         - source_terms:
             momentum: body_force_box
