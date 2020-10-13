@@ -478,9 +478,6 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   MPI_Allreduce(MPI_IN_PLACE, rhoAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
                 bulk.parallel());
 
-  for (size_t ih=0; ih < nHeights; ih++) {
-  }
-
   // Compute averages
   for (size_t ih=0; ih < nHeights; ih++) {
     int offset = ih * nDim_;

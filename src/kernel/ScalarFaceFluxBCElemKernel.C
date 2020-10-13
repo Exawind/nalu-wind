@@ -43,7 +43,6 @@ ScalarFaceFluxBCElemKernel<BcAlgTraits>::ScalarFaceFluxBCElemKernel(
 
   faceDataPreReqs.add_coordinates_field(
     coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
-//faceDataPreReqs.add_gathered_nodal_field(bcScalarQ_, 1);
   faceDataPreReqs.add_face_field(bcScalarQ_, BcAlgTraits::numFaceIp_);
   faceDataPreReqs.add_face_field(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
