@@ -42,7 +42,9 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
     num_force_pts_blade_("numForcePtsBladeBulk", actMeta.numberOfActuators_),
     assignedProc_("assignedProcBulk", actMeta.numberOfActuators_),
     num_blades_(actMeta.numberOfActuators_),
-    debug_output_(actMeta.debug_output_)
+    debug_output_(actMeta.debug_output_),
+    output_cache(actMeta.output_filenames_[localTurbineId_].empty()?0:actMeta.numPointsTurbine_[localTurbineId_]);
+
 {
   // Allocate blades to turbines
   const int nProcs = NaluEnv::self().parallel_size();
@@ -88,9 +90,6 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   init_orientation(actMeta);
   NaluEnv::self().naluOutputP0() << "Done ActuatorBulkSimple Init "
 				 << std::endl; // LCCOUT
-}
-
-ActuatorBulkSimple::~ActuatorBulkSimple() { 
 }
 
 void
@@ -241,7 +240,7 @@ ActuatorBulkSimple::local_range_policy()
 
 
 void
-ActuatorBulkSimple::zero_open_fast_views()
+ActuatorBulkSimple::zero_actuator_views()
 {
   dvHelper_.touch_dual_view(actuatorForce_);
   dvHelper_.touch_dual_view(velocity_);

@@ -32,6 +32,7 @@ ActuatorLineSimpleNGP::operator()()
   update();
 
   ActSimpleComputeForce(actBulk_, actMeta_);
+  Compute_FLLC(actBulk_, actMeta_);
 
   const int localSizeCoarseSearch =
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
@@ -58,7 +59,7 @@ ActuatorLineSimpleNGP::update()
 
   auto velReduce = actBulk_.velocity_.view_host();
   auto pointReduce = actBulk_.pointCentroid_.view_host();
-  actBulk_.zero_open_fast_views();
+  actBulk_.zero_actuator_views();
 
   // set range policy to only operating over points owned by local fast turbine
   auto localRangePolicy = actBulk_.local_range_policy();
@@ -87,7 +88,6 @@ ActuatorLineSimpleNGP::update()
     InterpActuatorVel(actBulk_, stkBulk_));
   actuator_utils::reduce_view_on_host(velReduce);
 
-  Apply_FLLC(actBulk_, actMeta_);
 
   Kokkos::parallel_for(
     "interpolateDensityActuatorNgpSimple", numActPoints_,
@@ -95,8 +95,8 @@ ActuatorLineSimpleNGP::update()
   auto rhoReduce = actBulk_.density_.view_host();
   actuator_utils::reduce_view_on_host(rhoReduce);
 
+  Apply_FLLC(actBulk_, actMeta_);
   ActSimpleComputeRelativeVelocity(actBulk_, actMeta_);
-  Compute_FLLC(actBulk_, actMeta_);
 
   // This is for output purposes
   Kokkos::parallel_for(

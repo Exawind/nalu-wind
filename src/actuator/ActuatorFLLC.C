@@ -10,6 +10,7 @@
 #include <actuator/ActuatorFLLC.h>
 #include <actuator/ActuatorBulk.h>
 #include <actuator/UtilitiesActuator.h>
+#include <actuator/ActuatorScalingFLLC.h>
 #include <cmath>
 
 namespace sierra {
@@ -17,7 +18,7 @@ namespace nalu {
 namespace FLLC {
 
 // free functions for vector operations
-double
+inline double
 dot(double* u, double* v)
 {
   double result = 0.0;
@@ -25,23 +26,6 @@ dot(double* u, double* v)
     result += u[i] * v[i];
   }
   return result;
-}
-
-void
-cross(double* u, double* v, double* result)
-{
-  result[0] = u[1] * v[2] - u[2] * v[1];
-  result[1] = u[2] * v[0] - u[0] * v[2];
-  result[2] = u[0] * v[1] - u[1] * v[0];
-}
-
-void
-norm(double* u, double* norm)
-{
-  const double mag = std::sqrt(dot(u, u));
-  for (int i = 0; i < 3; ++i) {
-    norm[i] = u[i] / mag;
-  }
 }
 
 // TODO(psakiev) - do we NEED to do local range policy on any of these?, other
@@ -71,7 +55,7 @@ compute_lift_force_distribution(
 
   // for now let's just worry about constant span direction (no blade
   // deformation)
-  ActFixScalarDbl span_dir("span norma", 1);
+  ActFixScalarDbl span_dir("span normal", 1);
 
   // surrogate for equation 5.3
   Kokkos::parallel_for(
@@ -86,9 +70,10 @@ compute_lift_force_distribution(
       for (int j = 0; j < 3; ++j) {
         G(i, j) = force(i, j) - vel(i, j) * fv / vmag2;
       }
-      // dot force with lift direction to perserve sign
-    });
+  });
 
+  scale_lift_force(actBulk, actMeta, range_policy, helper);
+  
   actuator_utils::reduce_view_on_host(G);
   actuator_utils::reduce_view_on_host(Uinf);
 }
@@ -167,9 +152,9 @@ compute_induced_velocities(
   Kokkos::deep_copy(deltaU_stash, deltaU);
   Kokkos::deep_copy(deltaU, 0.0);
 
-  //auto range_policy = actBulk.local_range_policy(actMeta);
+  auto range_policy = actBulk.local_range_policy(actMeta);
 
-  for (int index = 0; index < epsilon.extent_int(0); ++index) {
+  Kokkos::parallel_for("compute flucs", range_policy, KOKKOS_LAMBDA(int index) {
       double optInd[3] = {0, 0, 0};
       double lesInd[3] = {0, 0, 0};
 
@@ -201,7 +186,7 @@ compute_induced_velocities(
         deltaU(index, j) = relaxation_factor * (optInd[j] - lesInd[j]) +
                            (1.0 - relaxation_factor) * deltaU_stash(index, j);
       }
-    }
+    });
 
   actuator_utils::reduce_view_on_host(deltaU);
 };
