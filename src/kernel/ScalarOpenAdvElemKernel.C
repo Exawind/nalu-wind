@@ -81,7 +81,10 @@ ScalarOpenAdvElemKernel<BcAlgTraits>::ScalarOpenAdvElemKernel(
   const bool skewSymmetric = solnOpts.get_skew_symmetric(scalarQ->name());
   get_face_shape_fn_data<BcAlgTraits>(
     [&](double* ptr) {
-      skewSymmetric ? meFC->shifted_shape_fcn(ptr) : meFC->shape_fcn(ptr);
+      if (skewSymmetric)
+        meFC->shifted_shape_fcn(ptr);
+      else
+        meFC->shape_fcn(ptr);
     },
     vf_adv_shape_function_);
 }

@@ -36,10 +36,6 @@ struct conduction_diagonal_t
 } // namespace impl
 P_INVOKEABLE(conduction_diagonal)
 
-void dirichlet_diagonal(
-  const_node_offset_view offsets,
-  int max_owned_lid,
-  tpetra_view_type owned_yout);
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

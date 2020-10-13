@@ -807,7 +807,7 @@ void HypreLinearSystem::fill_entity_to_row_mapping()
   const auto& meta = realm_.meta_data();
   const stk::mesh::BulkData& bulk = realm_.bulk_data();
   stk::mesh::Selector selector =
-    (meta.locally_owned_part() | meta.globally_shared_part())
+      meta.universal_part()
       & stk::mesh::selectField(*realm_.naluGlobalId_)
       & !(realm_.get_inactive_selector());
   entityToLIDHost_ = HypreIntTypeViewHost("entityToRowLIDHost",bulk.get_size_of_entity_index_space());
@@ -820,6 +820,8 @@ void HypreLinearSystem::fill_entity_to_row_mapping()
       stk::mesh::Entity node = b[i];
       const auto naluId = *stk::mesh::field_data(*realm_.naluGlobalId_, node);
       const auto mnode = (naluId == bulk.identifier(node)) ? node : bulk.get_entity(stk::topology::NODE_RANK, naluId);
+
+      if (!bulk.is_valid(mnode)) continue;
       HypreIntType hid = *stk::mesh::field_data(*realm_.hypreGlobalId_, mnode);
       entityToLIDHost_[node.local_offset()] = hid;
     }
@@ -2322,6 +2324,9 @@ HypreLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
   int status = 0;
 
   status = solver->solve(iters, finalResidNorm, realm_.isFinalOuterIter_);
+
+  /* set this after the solve calls */
+  solver->set_initialize_solver_flag();
 
   if (solver->getConfig()->getWriteMatrixFiles()) {
     std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);

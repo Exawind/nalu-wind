@@ -9,10 +9,10 @@
 
 #include "matrix_free/MomentumInterior.h"
 
+#include "matrix_free/ElementGradient.h"
 #include "matrix_free/HexVertexCoordinates.h"
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/ElementFluxIntegral.h"
-#include "matrix_free/ElementGradient.h"
 #include "matrix_free/ElementVolumeIntegral.h"
 #include "matrix_free/GeometricFunctions.h"
 #include "matrix_free/PolynomialOrders.h"
@@ -55,10 +55,11 @@ momentum_flux(
 
   const auto gu = gradient_scs<p, dir>(box, u, uhat, l, s, r);
   const auto mdot_h = adv(dir, l, s, r);
-  const auto visc_ip = interp_scs<p, dir>(visc, l, s, r);
+  const auto visc_ip = stk::math::max(0, interp_scs<p, dir>(visc, l, s, r));
   const auto areav = geom::linear_area<p, dir>(box, l, s, r);
 
-  const auto one_third_divu = (1 / 3.) * (gu(XH, XH) + gu(YH, YH) + gu(ZH, ZH));
+  const auto one_third_divu =
+    (1. / 3.) * (gu(XH, XH) + gu(YH, YH) + gu(ZH, ZH));
 
   LocalArray<ftype[3]> flux;
   flux(0) = 2 * visc_ip *
@@ -74,7 +75,7 @@ momentum_flux(
             mdot_h * uhat(s, r, 1);
 
   flux(2) = 2 * visc_ip *
-              (0.5 * (gu(XH, ZH) + gu(ZH, XH)) * areav(XH) +
+              (0.5 * (gu(ZH, XH) + gu(XH, ZH)) * areav(XH) +
                0.5 * (gu(ZH, YH) + gu(YH, ZH)) * areav(YH) +
                (gu(ZH, ZH) - one_third_divu) * areav(ZH)) -
             mdot_h * uhat(s, r, 2);
@@ -161,6 +162,7 @@ momentum_mass(
   const const_vector_view<p>& up0,
   const const_vector_view<p>& up1,
   const const_vector_view<p>& gp,
+  const const_vector_view<p>& force,
   OutArray& out)
 {
   static constexpr auto vandermonde = Coeffs<p>::W;
@@ -171,13 +173,13 @@ momentum_mass(
         const auto vm1_val = vm1(index, k, j, i);
         const auto vp0_val = vp0(index, k, j, i);
         const auto vp1_val = vp1(index, k, j, i);
-        const auto vol = vp1(index, k, j, i) / rho(index, k, j, i);
+        const auto vol = vp1_val / rho(index, k, j, i);
         for (int d = 0; d < 3; ++d) {
           scratch(i, d) =
             -(gammas[0] * vp1_val * up1(index, k, j, i, d) +
               gammas[1] * vp0_val * up0(index, k, j, i, d) +
               gammas[2] * vm1_val * um1(index, k, j, i, d) +
-              vol * gp(index, k, j, i, d));
+              vol * (gp(index, k, j, i, d) - force(index, k, j, i, d)));
         }
       }
 
@@ -235,6 +237,7 @@ momentum_residual_t<p>::invoke(
   const_vector_view<p> up0,
   const_vector_view<p> up1,
   const_vector_view<p> gp,
+  const_vector_view<p> force,
   const_scs_scalar_view<p> mdot,
   tpetra_view_type yout)
 {
@@ -255,20 +258,20 @@ momentum_residual_t<p>::invoke(
               const auto scaled_vp0 = fac * vp0(index, k, j, i);
               const auto scaled_vm1 = fac * vm1(index, k, j, i);
               const auto vol = scaled_vp1 / rho(index, k, j, i);
-
               for (int d = 0; d < 3; ++d) {
                 elem_rhs(k, j, i, d) =
                   gammas[0] * scaled_vp1 * up1(index, k, j, i, d) +
                   gammas[1] * scaled_vp0 * up0(index, k, j, i, d) +
                   gammas[2] * scaled_vm1 * um1(index, k, j, i, d) +
-                  vol * gp(index, k, j, i, d);
+                  vol * (gp(index, k, j, i, d) - force(index, k, j, i, d));
               }
             }
           }
         }
       } else {
         momentum_mass<p>(
-          index, gammas, rho, vm1, vp0, vp1, um1, up0, up1, gp, elem_rhs);
+          index, gammas, rho, vm1, vp0, vp1, um1, up0, up1, gp, force,
+          elem_rhs);
       }
 
       auto uvec = Kokkos::subview(

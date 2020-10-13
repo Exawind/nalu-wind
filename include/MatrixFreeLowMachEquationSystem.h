@@ -63,10 +63,7 @@ public:
   virtual void register_wall_bc(
     stk::mesh::Part*,
     const stk::topology&,
-    const WallBoundaryConditionData&) final
-  {
-    throw std::runtime_error("wall not implemented for matrix free");
-  }
+    const WallBoundaryConditionData&) final;
 
   virtual void register_inflow_bc(
     stk::mesh::Part*,
@@ -119,17 +116,20 @@ public:
   }
 
   void compute_filter_scale() const;
+  void compute_body_force() const;
 
 private:
   struct names
   {
     static constexpr auto density = "density";
     static constexpr auto velocity = "velocity";
+    static constexpr auto velocity_bc = "velocity_bc";
     static constexpr auto pressure = "pressure";
     static constexpr auto viscosity = "viscosity";
     static constexpr auto scaled_filter_length = "scaled_filter_length";
     static constexpr auto dpdx_tmp = "dpdx_tmp";
     static constexpr auto dpdx = "dpdx";
+    static constexpr auto body_force = "body_force";
     static constexpr auto tpetra_gid = "tpet_global_id";
   };
 
@@ -147,12 +147,12 @@ private:
   void
   register_copy_state_algorithm(std::string, int dim, stk::mesh::Part& part);
 
-
   std::string get_muelu_xml_file_name();
 
   const int polynomial_order_{1};
   stk::mesh::MetaData& meta_;
   stk::mesh::Selector interior_selector_;
+  stk::mesh::Selector wall_selector_;
   std::unique_ptr<matrix_free::LowMachEquationUpdate> update_;
   std::unique_ptr<TpetraLinearSystem> precond_linsys_;
   bool initialized_{false};

@@ -86,6 +86,8 @@ PeriodicManager::add_periodic_pair(
   // use most stringent tolerance (min) for all of user specifications
   searchTolerance_ = std::min(searchTolerance_, userSearchTolerance);
 
+  periodicPartVec_.push_back(masterMeshPart);
+  periodicPartVec_.push_back(slaveMeshPart);
   // form the slave part vector
   slavePartVector_.push_back(slaveMeshPart);
 

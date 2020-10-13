@@ -4,6 +4,7 @@
 
 #include "Tpetra_Operator.hpp"
 #include "matrix_free/MomentumDiagonal.h"
+#include "matrix_free/StrongDirichletBC.h"
 
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/KokkosViewTypes.h"
@@ -34,7 +35,7 @@ MomentumJacobiOperator<p>::MomentumJacobiOperator(
     exporter(exporter_in),
     num_sweeps(num_sweeps_in),
     owned_diagonal(exporter.getTargetMap(), num_vectors),
-    shared_diagonal(exporter.getSourceMap(), num_vectors),
+    owned_and_shared_diagonal(exporter.getSourceMap(), num_vectors),
     cached_mv(exporter.getTargetMap(), num_vectors)
 {
 }
@@ -56,8 +57,9 @@ element_multiply(
 
   Kokkos::parallel_for(
     "element_multiply", b.extent_int(0), KOKKOS_LAMBDA(int index) {
+      const auto inv_d = inv_diag(index, 0);
       for (int d = 0; d < dim; ++d) {
-        y(index, d) = inv_diag(index, 0) * b(index, d);
+        y(index, d) = inv_d * b(index, d);
       }
     });
 }
@@ -72,8 +74,9 @@ update_jacobi_sweep(
   constexpr int dim = MomentumJacobiOperator<inst::P1>::num_vectors;
   Kokkos::parallel_for(
     "jacobi_sweep", inv_diag.extent_int(0), KOKKOS_LAMBDA(int index) {
+      const auto inv_d = inv_diag(index, 0);
       for (int d = 0; d < dim; ++d) {
-        y(index, d) += inv_diag(index, 0) * (b(index, d) - axprev(index, d));
+        y(index, d) += inv_d * (b(index, d) - axprev(index, d));
       }
     });
 }
@@ -103,12 +106,19 @@ MomentumJacobiOperator<p>::compute_diagonal(
   const_scs_scalar_view<p> adv,
   const_scs_vector_view<p> diff)
 {
-  shared_diagonal.putScalar(0.);
+  owned_and_shared_diagonal.putScalar(0.);
   advdiff_diagonal<p>(
-    gamma, elem_offsets, vol, adv, diff, shared_diagonal.getLocalViewDevice());
-  shared_diagonal.modify_device();
+    gamma, elem_offsets, vol, adv, diff,
+    owned_and_shared_diagonal.getLocalViewDevice());
+
+  if (dirichlet_bc_active_) {
+    dirichlet_diagonal(
+      dirichlet_bc_offsets_, owned_diagonal.getLocalLength(),
+      owned_and_shared_diagonal.getLocalViewDevice());
+  }
+  owned_and_shared_diagonal.modify_device();
   owned_diagonal.putScalar(0.);
-  owned_diagonal.doExport(shared_diagonal, exporter, Tpetra::ADD);
+  owned_diagonal.doExport(owned_and_shared_diagonal, exporter, Tpetra::ADD);
   reciprocal(owned_diagonal.getLocalViewDevice());
 }
 INSTANTIATE_POLYCLASS(MomentumJacobiOperator);

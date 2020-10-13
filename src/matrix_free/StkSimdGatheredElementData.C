@@ -138,6 +138,27 @@ field_gather(
     });
 }
 
+void
+field_gather(
+  const_node_mesh_index_view conn,
+  const stk::mesh::NgpField<double>& field,
+  node_vector_view simd_node_field)
+{
+  Kokkos::parallel_for(
+    Kokkos::RangePolicy<exec_space, int>(0, conn.extent_int(0)),
+    KOKKOS_LAMBDA(int index) {
+      for (int n = 0; n < simd_len; ++n) {
+        const auto simd_mesh_index = conn(index, n);
+        const auto mesh_index =
+          valid_mesh_index(simd_mesh_index) ? simd_mesh_index : conn(index, 0);
+        for (int d = 0; d < 3; ++d) {
+          stk::simd::set_data(
+            simd_node_field(index, d), n, field.get(mesh_index, d));
+        }
+      }
+    });
+}
+
 } // namespace matrix_free
 } // namespace nalu
 } // namespace sierra

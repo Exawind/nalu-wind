@@ -10,7 +10,7 @@
 #include "matrix_free/ConductionOperator.h"
 
 #include "matrix_free/ConductionInterior.h"
-#include "matrix_free/ScalarDirichletBC.h"
+#include "matrix_free/StrongDirichletBC.h"
 #include "matrix_free/ScalarFluxBC.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/KokkosViewTypes.h"
@@ -51,7 +51,7 @@ ConductionResidualOperator<p>::compute(mv_type& owned_rhs)
     }
 
     if (dirichlet_bc_active_) {
-      scalar_dirichlet_residual(
+      dirichlet_residual(
         dirichlet_bc_offsets_, bc_nodal_solution_field_,
         bc_nodal_specified_field_, owned_rhs.getLocalLength(),
         cached_shared_rhs_.getLocalViewDevice());
@@ -75,7 +75,7 @@ ConductionResidualOperator<p>::compute(mv_type& owned_rhs)
     }
 
     if (dirichlet_bc_active_) {
-      scalar_dirichlet_residual(
+      dirichlet_residual(
         dirichlet_bc_offsets_, bc_nodal_solution_field_,
         bc_nodal_specified_field_, owned_rhs.getLocalLength(),
         owned_rhs.getLocalViewDevice());
@@ -117,7 +117,7 @@ ConductionLinearizedResidualOperator<p>::apply(
       cached_sln_.getLocalViewDevice(), cached_rhs_.getLocalViewDevice());
 
     if (dirichlet_bc_active_) {
-      scalar_dirichlet_linearized(
+      dirichlet_linearized(
         dirichlet_bc_offsets_, owned_rhs.getLocalLength(),
         cached_sln_.getLocalViewDevice(), cached_rhs_.getLocalViewDevice());
     }
@@ -134,7 +134,7 @@ ConductionLinearizedResidualOperator<p>::apply(
       owned_sln.getLocalViewDevice(), owned_rhs.getLocalViewDevice());
 
     if (dirichlet_bc_active_) {
-      scalar_dirichlet_linearized(
+      dirichlet_linearized(
         dirichlet_bc_offsets_, owned_rhs.getLocalLength(),
         owned_sln.getLocalViewDevice(), owned_rhs.getLocalViewDevice());
     }

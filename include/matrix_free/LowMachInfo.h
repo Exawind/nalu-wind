@@ -25,10 +25,12 @@ struct lowmach_info
   static constexpr auto coord_name = "coordinates";
   static constexpr auto density_name = "density";
   static constexpr auto velocity_name = "velocity";
+  static constexpr auto velocity_bc_name = "velocity_bc";
   static constexpr auto pressure_name = "pressure";
   static constexpr auto pressure_grad_name = "dpdx";
   static constexpr auto viscosity_name = "viscosity";
   static constexpr auto scaled_filter_length_name = "scaled_filter_length";
+  static constexpr auto force_name = "body_force";
   static constexpr auto gid_name = linsys_info::gid_name;
 };
 

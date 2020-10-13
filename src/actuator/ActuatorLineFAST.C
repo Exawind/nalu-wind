@@ -14,7 +14,6 @@
 #include <NaluEnv.h>
 #include <Realm.h>
 #include <Simulation.h>
-#include <nalu_make_unique.h>
 
 // master elements
 #include <master_element/MasterElement.h>

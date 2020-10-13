@@ -11,7 +11,7 @@
 #include <actuator/ActuatorParsingFAST.h>
 #include "UnitTestActuatorUtil.h"
 #include <actuator/UtilitiesActuator.h>
-#include <nalu_make_unique.h>
+#include <memory>
 #include <gtest/gtest.h>
 
 namespace sierra {
@@ -24,7 +24,7 @@ class ActuatorBulkDiskFastTest : public ::testing::Test
 protected:
   void SetUp()
   {
-    actMeta_ = make_unique<ActuatorMeta>(1, ActuatorType::ActDiskFASTNGP);
+    actMeta_ = std::make_unique<ActuatorMeta>(1, ActuatorType::ActDiskFASTNGP);
   }
 
   std::vector<std::string> inputs_{actuator_unit::nrel5MWinputs};

@@ -14,6 +14,8 @@
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/StkToTpetraMap.h"
 #include "matrix_free/StkSimdConnectivityMap.h"
+#include "matrix_free/StkSimdFaceConnectivityMap.h"
+#include "matrix_free/StkSimdNodeConnectivityMap.h"
 
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
@@ -84,11 +86,13 @@ LowMachUpdate<p>::LowMachUpdate(
   Teuchos::ParameterList params_cont,
   Teuchos::ParameterList params_grad,
   stk::mesh::Selector active_in,
+  stk::mesh::Selector dirichlet_in,
   const Tpetra::Map<>& owned,
   const Tpetra::Map<>& owned_and_shared,
   Kokkos::View<const lid_type*> elids)
   : bulk_(bulk_in),
     active_(active_in),
+    dirichlet_(dirichlet_in),
     linsys_(owned, owned_and_shared, elids),
     exporter_(
       Teuchos::rcpFromRef(linsys_.owned_and_shared),
@@ -97,11 +101,21 @@ LowMachUpdate<p>::LowMachUpdate(
       bulk_in.get_updated_ngp_mesh(),
       active_in,
       linsys_.stk_lid_to_tpetra_lid)),
-    field_gather_(bulk_in, active_in),
+    exposed_face_offsets_(face_offsets<p>(
+      bulk_in.get_updated_ngp_mesh(),
+      dirichlet_in,
+      linsys_.stk_lid_to_tpetra_lid)),
+    dirichlet_offsets_(simd_node_offsets(
+      bulk_in.get_updated_ngp_mesh(),
+      dirichlet_in,
+      linsys_.stk_lid_to_tpetra_lid)),
+    field_gather_(bulk_in, active_in, dirichlet_in),
     post_process_(field_gather_),
-    momentum_update_(params_mom, linsys_, exporter_, offsets_),
+    momentum_update_(
+      params_mom, linsys_, exporter_, offsets_, dirichlet_offsets_),
     continuity_update_(params_cont, linsys_, exporter_, offsets_),
-    gradient_update_(params_grad, linsys_, exporter_, offsets_, {})
+    gradient_update_(
+      params_grad, linsys_, exporter_, offsets_, exposed_face_offsets_)
 {
 }
 
@@ -148,6 +162,7 @@ LowMachUpdate<p>::predict_state()
 
   auto current_state =
     get_ngp_field(meta, lowmach_info::velocity_name, stk::mesh::StateN);
+  current_state.sync_to_device();
 
   stk::mesh::for_each_entity_run(
     bulk_.get_updated_ngp_mesh(), stk::topology::NODE_RANK, active_,
@@ -213,7 +228,7 @@ LowMachUpdate<p>::update_provisional_velocity(
   stk::mesh::ProfilingBlock pf("update provisional velocity");
 
   momentum_update_.compute_residual(
-    gammas, field_gather_.get_residual_fields());
+    gammas, field_gather_.get_residual_fields(), field_gather_.get_bc_fields());
   auto& delta_mv = momentum_update_.compute_delta(
     gammas[0], field_gather_.get_coefficient_fields());
 
@@ -255,7 +270,14 @@ LowMachUpdate<p>::update_pressure_gradient(stk::mesh::NgpField<double>& field)
     fields.vols = lmfields.unscaled_volume_metric;
     fields.areas = lmfields.area_metric;
   }
-  gradient_update_.compute_residual(fields, {});
+
+  BCGradientFields<p> bc;
+  {
+    auto lmbc = field_gather_.get_bc_fields();
+    bc.face_q = lmbc.exposed_pressure;
+    bc.exposed_areas = lmbc.exposed_areas;
+  }
+  gradient_update_.compute_residual(fields, bc);
   auto& delta_mv = gradient_update_.compute_delta(fields.vols);
   add_tpetra_solution_vector_to_stk_field(
     bulk_.get_updated_ngp_mesh(), active_, linsys_.stk_lid_to_tpetra_lid,
@@ -331,7 +353,7 @@ LowMachUpdate<p>::project_velocity(
   gp_star.sync_to_device();
   gp.sync_to_device();
   stk::mesh::for_each_entity_run(
-    bulk_.get_updated_ngp_mesh(), stk::topology::NODE_RANK, active_,
+    bulk_.get_updated_ngp_mesh(), stk::topology::NODE_RANK, active_ - dirichlet_,
     KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) {
       const auto fac = proj_time_scale / rho(mi, 0);
       for (int d = 0; d < dim; ++d) {

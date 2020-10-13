@@ -37,6 +37,9 @@ template <int p>
 struct LowMachResidualFields;
 
 template <int p>
+struct LowMachBCFields;
+
+template <int p>
 class MomentumSolutionUpdate
 {
 public:
@@ -45,16 +48,17 @@ public:
     Teuchos::ParameterList,
     const StkToTpetraMaps&,
     const Tpetra::Export<>&,
-    const_elem_offset_view<p>);
+    const_elem_offset_view<p>,
+    const_node_offset_view = {});
 
-  const Tpetra::MultiVector<double>&
-    compute_residual(Kokkos::Array<double, 3>, LowMachResidualFields<p>);
+  const Tpetra::MultiVector<double>& compute_residual(
+    Kokkos::Array<double, 3>,
+    LowMachResidualFields<p>,
+    LowMachBCFields<p>);
 
   const Tpetra::MultiVector<double>&
   compute_delta(double, LowMachLinearizedResidualFields<p>);
-
   void compute_preconditioner(double, LowMachLinearizedResidualFields<p>);
-
   const MatrixFreeSolver& solver() const { return linear_solver_; }
 
   double residual_norm() const;
@@ -65,6 +69,7 @@ private:
   const StkToTpetraMaps& linsys_;
   const Tpetra::Export<>& exporter_;
   const const_elem_offset_view<p> offsets_;
+  const const_node_offset_view dirichlet_bc_offsets_;
 
   MomentumResidualOperator<p> resid_op_;
   MomentumLinearizedResidualOperator<p> lin_op_;

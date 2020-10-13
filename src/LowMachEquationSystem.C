@@ -115,6 +115,7 @@
 #include "node_kernels/MomentumABLForceNodeKernel.h"
 #include "node_kernels/MomentumActuatorNodeKernel.h"
 #include "node_kernels/MomentumBodyForceNodeKernel.h"
+#include "node_kernels/MomentumBodyForceBoxNodeKernel.h"
 #include "node_kernels/MomentumBoussinesqNodeKernel.h"
 #include "node_kernels/MomentumCoriolisNodeKernel.h"
 #include "node_kernels/MomentumMassBDFNodeKernel.h"
@@ -1426,6 +1427,26 @@ MomentumEquationSystem::register_interior_algorithm(
               realm_.bulk_data(), it->second);
           else
             throw std::runtime_error("MomentumEQS::body_force: No force vector found");
+        }
+        else if (srcName == "body_force_box") {
+          const auto it =
+            realm_.solutionOptions_->srcTermParamMap_.find("momentum");
+          if (it != realm_.solutionOptions_->srcTermParamMap_.end()) {
+            const auto bx =
+              realm_.solutionOptions_->srcTermParamMap_.find("momentum_box");
+            if (bx != realm_.solutionOptions_->srcTermParamMap_.end()) {
+              nodeAlg.add_kernel<MomentumBodyForceBoxNodeKernel>(
+                realm_.bulk_data(),
+                realm_.solutionOptions_->get_coordinates_name(), it->second,
+                bx->second);
+            } else {
+              throw std::runtime_error(
+                "MomentumEQS::body_force_box: No box vector found");
+            }
+          } else {
+            throw std::runtime_error(
+              "MomentumEQS::body_force_box: No force vector found");
+          }
         }
         else if (srcName == "abl_forcing") {
           ThrowRequireMsg(

@@ -11,6 +11,7 @@
 #define MOMENTUM_OPERATOR_H
 
 #include "matrix_free/KokkosViewTypes.h"
+#include "matrix_free/LinSysInfo.h"
 
 #include "Kokkos_Array.hpp"
 #include "Teuchos_BLAS_types.hpp"
@@ -21,6 +22,8 @@
 #include "Tpetra_Operator.hpp"
 
 #include "LowMachFields.h"
+
+#include "stk_util/util/ReportHandler.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -38,6 +41,7 @@ public:
   MomentumResidualOperator(
     const_elem_offset_view<p> elem_offsets_in, const export_type& exporter);
 
+  void local_compute(tpetra_view_type rhs) const;
   void compute(mv_type& owned_rhs);
 
   void
@@ -47,11 +51,26 @@ public:
     fields_ = fields;
   }
 
+  void set_bc_fields(
+    const_node_offset_view dirichlet_offsets_in, LowMachBCFields<p> bc)
+  {
+    dirichlet_bc_active_ = dirichlet_offsets_in.extent_int(0) > 0;
+    dirichlet_bc_offsets_ = dirichlet_offsets_in;
+    bc_ = bc;
+    ThrowRequire(bc.up1.extent_int(0) == dirichlet_bc_offsets_.extent_int(0));
+    ThrowRequire(bc.ubc.extent_int(0) == bc.up1.extent_int(0));
+  }
+
 private:
   const const_elem_offset_view<p> elem_offsets_;
   const export_type& exporter_;
+  const int max_owned_row_id_;
 
   mutable mv_type cached_rhs_;
+
+  bool dirichlet_bc_active_{false};
+  const_node_offset_view dirichlet_bc_offsets_;
+  LowMachBCFields<p> bc_;
 
   Kokkos::Array<double, 3> gammas_;
   LowMachResidualFields<p> fields_;
@@ -78,6 +97,8 @@ public:
     double alpha = 1.0,
     double beta = 0.0) const final;
 
+  void local_apply(ra_tpetra_view_type xin, tpetra_view_type yout) const;
+
   Teuchos::RCP<const map_type> getDomainMap() const final
   {
     return exporter_.getTargetMap();
@@ -93,12 +114,22 @@ public:
     fields_ = fields;
   }
 
+  void set_dirichlet_nodes(const_node_offset_view dirichlet_offsets_in)
+  {
+    dirichlet_bc_active_ = dirichlet_offsets_in.extent_int(0) > 0;
+    dirichlet_bc_offsets_ = dirichlet_offsets_in;
+  }
+
 private:
   const const_elem_offset_view<p> elem_offsets_;
   const export_type& exporter_;
+  const int max_owned_row_id_;
 
   double gamma_0_{-1};
   LowMachLinearizedResidualFields<p> fields_;
+
+  bool dirichlet_bc_active_{false};
+  const_node_offset_view dirichlet_bc_offsets_;
 
   mutable mv_type cached_sln_;
   mutable mv_type cached_rhs_;

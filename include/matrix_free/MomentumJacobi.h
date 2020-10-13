@@ -45,6 +45,12 @@ public:
   mv_type& get_inverse_diagonal() { return owned_diagonal; }
   void set_linear_operator(Teuchos::RCP<const Tpetra::Operator<>>);
 
+  void set_dirichlet_nodes(const_node_offset_view dirichlet)
+  {
+    dirichlet_bc_active_ = dirichlet.extent(0) > 0;
+    dirichlet_bc_offsets_ = dirichlet;
+  }
+
   Teuchos::RCP<const map_type> getDomainMap() const final
   {
     return exporter.getTargetMap();
@@ -59,8 +65,11 @@ private:
   const export_type& exporter;
   const int num_sweeps;
   mv_type owned_diagonal;
-  mv_type shared_diagonal;
+  mv_type owned_and_shared_diagonal;
   mutable mv_type cached_mv;
+
+  bool dirichlet_bc_active_{false};
+  const_node_offset_view dirichlet_bc_offsets_;
 
   Teuchos::RCP<const base_operator_type> op;
 };

@@ -83,26 +83,14 @@ advdiff_diagonal_t<p>::invoke(
   Kokkos::parallel_for(
     offsets.extent_int(0), KOKKOS_LAMBDA(int index) {
       LocalArray<ftype[p + 1][p + 1][p + 1]> lhs;
-      if (p == 1) {
-        for (int k = 0; k < p + 1; ++k) {
-          static constexpr auto Wl = Coeffs<p>::Wl;
-          const auto gammaWk = gamma * Wl(k);
-          for (int j = 0; j < p + 1; ++j) {
-            const auto gammaWkWj = gammaWk * Wl(j);
-            for (int i = 0; i < p + 1; ++i) {
-              lhs(k, j, i) = gammaWkWj * Wl(i) * volumes(index, k, j, i);
-            }
-          }
-        }
-      } else {
-        for (int k = 0; k < p + 1; ++k) {
-          static constexpr auto W = Coeffs<p>::W;
-          const auto gammaWk = gamma * W(k, k);
-          for (int j = 0; j < p + 1; ++j) {
-            const auto gammaWkWj = gammaWk * W(j, j);
-            for (int i = 0; i < p + 1; ++i) {
-              lhs(k, j, i) = gammaWkWj * W(i, i) * volumes(index, k, j, i);
-            }
+      // generally works better to lump the mass term to the diagonal here
+      for (int k = 0; k < p + 1; ++k) {
+        static constexpr auto Wl = Coeffs<p>::Wl;
+        const auto gammaWk = gamma * Wl(k);
+        for (int j = 0; j < p + 1; ++j) {
+          const auto gammaWkWj = gammaWk * Wl(j);
+          for (int i = 0; i < p + 1; ++i) {
+            lhs(k, j, i) = gammaWkWj * Wl(i) * volumes(index, k, j, i);
           }
         }
       }

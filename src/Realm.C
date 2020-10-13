@@ -47,8 +47,6 @@
 #include <mesh_motion/MeshMotionAlg.h>
 #include <mesh_motion/MeshTransformationAlg.h>
 
-#include <nalu_make_unique.h>
-
 // overset
 #include <overset/OversetManager.h>
 
@@ -1007,12 +1005,12 @@ Realm::setup_post_processing_algorithms()
 #ifdef NALU_USES_OPENFAST
     switch(actuatorMeta_->actuatorType_){
       case(ActuatorType::ActLineFASTNGP):{
-        actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
+        actuatorBulk_ = std::make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
           get_time_step_from_file());
        break;
       }
       case(ActuatorType::ActDiskFASTNGP):{
-        actuatorBulk_ = make_unique<ActuatorBulkDiskFAST>(*actuatorMeta_.get(),
+        actuatorBulk_ = std::make_unique<ActuatorBulkDiskFAST>(*actuatorMeta_.get(),
           get_time_step_from_file());
         break;
       }
@@ -1029,7 +1027,7 @@ Realm::setup_post_processing_algorithms()
   if (NULL != actuatorMetaSimple_)
   {
     NaluEnv::self().naluOutputP0() << "Initializing actuatorBulkSimple_"<< std::endl; // LCCOUT                                            
-    actuatorBulkSimple_ = make_unique<ActuatorBulkSimple>(*actuatorMetaSimple_.get());
+    actuatorBulkSimple_ = std::make_unique<ActuatorBulkSimple>(*actuatorMetaSimple_.get());
   }
 
 
@@ -4339,7 +4337,7 @@ Realm::create_promoted_output_mesh()
     }
 
     auto* coords = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-    promotionIO_ = make_unique<PromotedElementIO>(
+    promotionIO_ = std::make_unique<PromotedElementIO>(
       promotionOrder_,
       *metaData_,
       *bulkData_,
@@ -4560,14 +4558,24 @@ Realm::get_activate_aura()
   return activateAura_;
 }
 
-//--------------------------------------------------------------------------
-//-------- get_inactive_selector() -----------------------------------------
-//--------------------------------------------------------------------------
+/** Return a selector containing inactive parts
+ *
+ *  The selector returned from this method will contain entities from
+ *  parts that are do not participate in the PDE solution process, but
+ *  are created/used for pre and post-processing purposes. Examples include:
+ *  data probes, inactive sub-blocks from overset simulations after hole
+ *  cut, etc.
+ *
+ *  \return stk::mesh::Selector Inactive entities
+ */
 stk::mesh::Selector
 Realm::get_inactive_selector()
 {
-  // accumulate inactive parts relative to the universal part
-  
+  // Return early if matrix free is active, nothing to do
+  if (matrixFree_) {
+      return stk::mesh::Selector{};
+  }
+
   // provide inactive Overset part that excludes background surface
   //
   // Treat this selector differently because certain entities from interior
@@ -4575,6 +4583,11 @@ Realm::get_inactive_selector()
   stk::mesh::Selector nothing;
   stk::mesh::Selector inactiveOverSetSelector = (hasOverset_) ?
       oversetManager_->get_inactive_selector() : nothing;
+
+  stk::mesh::Selector inactiveDPSel =
+      (dataProbePostProcessing_ != nullptr)
+      ? dataProbePostProcessing_->get_inactive_selector()
+      : nothing;
 
   stk::mesh::Selector otherInactiveSelector = (
     metaData_->universal_part()
@@ -4585,10 +4598,7 @@ Realm::get_inactive_selector()
     otherInactiveSelector = nothing;
   }
 
-  if (matrixFree_) {
-    return stk::mesh::Selector{};
-  }
-  return inactiveOverSetSelector | otherInactiveSelector;
+  return inactiveOverSetSelector | otherInactiveSelector | inactiveDPSel;
 }
 
 //--------------------------------------------------------------------------

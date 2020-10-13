@@ -17,7 +17,6 @@
 #include <Simulation.h>
 
 #include <stk_io/StkMeshIoBroker.hpp>
-#include <nalu_make_unique.h>
 
 // xfer
 #include <xfer/Transfer.h>
@@ -737,7 +736,7 @@ DataProbePostProcessing::initialize()
 
 void DataProbePostProcessing::create_exodus()
 {
-  io = make_unique<stk::io::StkMeshIoBroker>(realm_.bulk_data().parallel());
+  io = std::make_unique<stk::io::StkMeshIoBroker>(realm_.bulk_data().parallel());
   io->set_bulk_data(realm_.bulk_data());
   fileIndex_ = io->create_output_mesh(exoName_, stk::io::WRITE_RESULTS);
 

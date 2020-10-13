@@ -47,6 +47,7 @@ struct momentum_residual_t
     const_vector_view<p> up0,
     const_vector_view<p> up1,
     const_vector_view<p> gp,
+    const_vector_view<p> force,
     const_scs_scalar_view<p> mdot,
     tpetra_view_type yout);
 };
