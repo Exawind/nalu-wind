@@ -12,12 +12,14 @@
 
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/ElementFluxIntegral.h"
+#include "matrix_free/ElementGradient.h"
 #include "matrix_free/ElementSCSInterpolate.h"
 #include "matrix_free/ElementVolumeIntegral.h"
 #include "matrix_free/GaussLegendreQuadratureRule.h"
+#include "matrix_free/HexVertexCoordinates.h"
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 #include "StkSimdComparisons.h"
 #include "gtest/gtest.h"
@@ -36,6 +38,16 @@ poly_val(std::vector<double> coeffs, double x)
   double val = 0.0;
   for (unsigned j = 0; j < coeffs.size(); ++j) {
     val += coeffs[j] * std::pow(x, j);
+  }
+  return val;
+}
+
+double
+poly_der(std::vector<double> coeffs, double x)
+{
+  double val = 0.0;
+  for (unsigned j = 1; j < coeffs.size(); ++j) {
+    val += j * coeffs[j] * std::pow(x, j - 1);
   }
   return val;
 }
@@ -76,6 +88,18 @@ struct TensorPoly
   {
     return poly_int(coeffsX, xl, xr) * poly_int(coeffsY, yl, yr) *
            poly_int(coeffsZ, zl, zr);
+  }
+
+  double der(int d, double x, double y, double z)
+  {
+    switch (d) {
+    case 0:
+      return poly_der(coeffsX, x) * poly_val(coeffsY, y) * poly_val(coeffsZ, z);
+    case 1:
+      return poly_val(coeffsX, x) * poly_der(coeffsY, y) * poly_val(coeffsZ, z);
+    default:
+      return poly_val(coeffsX, x) * poly_val(coeffsY, y) * poly_der(coeffsZ, z);
+    }
   }
 
   std::vector<double> coeffsX;
@@ -174,6 +198,129 @@ TEST(element_operations, integrate_volume)
           scs_end_loc[i], scs_end_loc[i + 1], scs_end_loc[j],
           scs_end_loc[j + 1], scs_end_loc[k], scs_end_loc[k + 1]);
         ASSERT_DOUBLETYPE_NEAR(volumes(k, j, i), value, my_tol);
+      }
+    }
+  }
+}
+
+TEST(element_operations, nodal_grad)
+{
+  constexpr int p = inst::P2;
+  LocalArray<ftype[p + 1][p + 1][p + 1]> nodal_values;
+
+  LocalArray<ftype[p + 1][p + 1][p + 1][3]> xc;
+
+  auto poly = TensorPoly(p);
+  for (int k = 0; k < p + 1; ++k) {
+    for (int j = 0; j < p + 1; ++j) {
+      for (int i = 0; i < p + 1; ++i) {
+        const auto x = GLL<p>::nodes[i];
+        const auto y = GLL<p>::nodes[j];
+        const auto z = GLL<p>::nodes[k];
+        xc(k, j, i, 0) = x;
+        xc(k, j, i, 1) = y;
+        xc(k, j, i, 2) = z;
+        nodal_values(k, j, i) = poly(x, y, z);
+      }
+    }
+  }
+
+  auto box = hex_vertex_coordinates<p>(xc);
+  for (int k = 0; k < p + 1; ++k) {
+    for (int j = 0; j < p + 1; ++j) {
+      for (int i = 0; i < p + 1; ++i) {
+        auto grad_approx = gradient_nodal<p>(box, nodal_values, k, j, i);
+
+        const auto x = GLL<p>::nodes[i];
+        const auto y = GLL<p>::nodes[j];
+        const auto z = GLL<p>::nodes[k];
+
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[0], poly.der(0, x, y, z), my_tol);
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[1], poly.der(1, x, y, z), my_tol);
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[2], poly.der(2, x, y, z), my_tol);
+      }
+    }
+  }
+}
+
+TEST(element_operations, fp_grad)
+{
+  constexpr int p = inst::P3;
+  LocalArray<ftype[p + 1][p + 1][p + 1]> nodal_values;
+
+  LocalArray<ftype[p + 1][p + 1][p + 1][3]> xc;
+
+  auto poly = TensorPoly(p);
+  for (int k = 0; k < p + 1; ++k) {
+    for (int j = 0; j < p + 1; ++j) {
+      for (int i = 0; i < p + 1; ++i) {
+        const auto x = GLL<p>::nodes[i];
+        const auto y = GLL<p>::nodes[j];
+        const auto z = GLL<p>::nodes[k];
+        xc(k, j, i, 0) = x;
+        xc(k, j, i, 1) = y;
+        xc(k, j, i, 2) = z;
+        nodal_values(k, j, i) = poly(x, y, z);
+      }
+    }
+  }
+
+  auto box = hex_vertex_coordinates<p>(xc);
+  for (int l = 0; l < p; ++l) {
+    LocalArray<ftype[p + 1][p + 1]> nhat;
+    for (int s = 0; s < p + 1; ++s) {
+      for (int r = 0; r < p + 1; ++r) {
+        nhat(s, r) = interp_scs<p, 0>(nodal_values, l, s, r);
+      }
+    }
+    for (int s = 0; s < p + 1; ++s) {
+      for (int r = 0; r < p + 1; ++r) {
+        auto grad_approx = gradient_scs<p, 0>(box, nodal_values, nhat, l, s, r);
+        const auto x = LGL<p>::nodes[l];
+        const auto y = GLL<p>::nodes[r];
+        const auto z = GLL<p>::nodes[s];
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[0], poly.der(0, x, y, z), my_tol);
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[1], poly.der(1, x, y, z), my_tol);
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[2], poly.der(2, x, y, z), my_tol);
+      }
+    }
+  }
+
+  for (int l = 0; l < p; ++l) {
+    LocalArray<ftype[p + 1][p + 1]> nhat;
+    for (int s = 0; s < p + 1; ++s) {
+      for (int r = 0; r < p + 1; ++r) {
+        nhat(s, r) = interp_scs<p, 1>(nodal_values, l, s, r);
+      }
+    }
+    for (int s = 0; s < p + 1; ++s) {
+      for (int r = 0; r < p + 1; ++r) {
+        auto grad_approx = gradient_scs<p, 1>(box, nodal_values, nhat, l, s, r);
+        const auto x = GLL<p>::nodes[r];
+        const auto y = LGL<p>::nodes[l];
+        const auto z = GLL<p>::nodes[s];
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[0], poly.der(0, x, y, z), my_tol);
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[1], poly.der(1, x, y, z), my_tol);
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[2], poly.der(2, x, y, z), my_tol);
+      }
+    }
+  }
+  for (int l = 0; l < p; ++l) {
+    LocalArray<ftype[p + 1][p + 1]> nhat;
+    for (int s = 0; s < p + 1; ++s) {
+      for (int r = 0; r < p + 1; ++r) {
+        nhat(s, r) = interp_scs<p, 2>(nodal_values, l, s, r);
+      }
+    }
+    for (int s = 0; s < p + 1; ++s) {
+      for (int r = 0; r < p + 1; ++r) {
+        auto grad_approx = gradient_scs<p, 2>(box, nodal_values, nhat, l, s, r);
+        const auto x = GLL<p>::nodes[r];
+        const auto y = GLL<p>::nodes[s];
+        const auto z = LGL<p>::nodes[l];
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[0], poly.der(0, x, y, z), my_tol);
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[1], poly.der(1, x, y, z), my_tol);
+        ASSERT_DOUBLETYPE_NEAR(grad_approx[2], poly.der(2, x, y, z), my_tol);
       }
     }
   }

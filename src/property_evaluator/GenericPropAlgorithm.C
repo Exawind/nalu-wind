@@ -13,6 +13,7 @@
 #include <property_evaluator/GenericPropAlgorithm.h>
 #include <FieldTypeDef.h>
 #include <property_evaluator/PropertyEvaluator.h>
+#include <property_evaluator/ConstantPropertyEvaluator.h>
 #include <Realm.h>
 
 #include <stk_mesh/base/BulkData.hpp>
@@ -39,6 +40,16 @@ GenericPropAlgorithm::GenericPropAlgorithm(
 void
 GenericPropAlgorithm::execute()
 {
+  const bool is_constant_prop =
+    dynamic_cast<ConstantPropertyEvaluator*>(propEvaluator_) != nullptr;
+  if (is_constant_prop) {
+    const double val =
+      dynamic_cast<ConstantPropertyEvaluator*>(propEvaluator_)->value_;
+    auto prop_ngp = stk::mesh::get_updated_ngp_field<double>(*prop_);
+    prop_ngp.set_all(realm_.ngp_mesh(), val);
+    prop_ngp.modify_on_device();
+    return;
+  }
 
   // make sure that partVec_ is size one
   ThrowAssert( partVec_.size() == 1 );

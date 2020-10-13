@@ -1,0 +1,305 @@
+Simulations:
+  - name: sim1
+    time_integrator: ti_1
+    optimizer: opt1
+
+
+# Specify the linear system solvers.
+linear_solvers:
+
+  # solver for scalar equations
+  - name: solve_mom
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-12
+    max_iterations: 10
+    kspace: 40
+    output_level: 0
+    bamg_max_levels: 1
+    bamg_relax_type: 8
+    bamg_num_sweeps: 2
+    bamg_relax_order: 0
+    segregated_solver: no
+    ensure_reproducible: no
+    use_native_cuda_sort: no
+    write_matrix_files: no
+
+  # solver for the pressure
+  - name: solve_scalar
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-12
+    max_iterations: 100
+    kspace: 40
+    output_level: 0
+    bamg_coarsen_type: 8
+    bamg_interp_type: 6
+    bamg_cycle_type: 1
+    ensure_reproducible: no
+    use_native_cuda_sort: no
+    write_matrix_files:  no
+
+realms:
+
+  - name: fluidRealm
+    mesh: ../../mesh/abl_5km_5km_1km_neutral.g
+    use_edges: yes
+    automatic_decomposition_type: rcb
+
+    equation_systems:
+      name: theEqSys
+      max_iterations: 4
+
+      solver_system_specification:
+        velocity: solve_mom
+        pressure: solve_scalar
+        enthalpy: solve_scalar
+        turbulent_ke: solve_scalar
+
+      systems:
+        - LowMachEOM:
+            name: myLowMach
+            max_iterations: 1
+            convergence_tolerance: 1.0e-16
+
+        - Enthalpy:
+            name: myEnth
+            max_iterations: 1
+            convergence_tolerance: 1.0e-16
+
+        - TurbKineticEnergy:
+            name: myTke
+            max_iterations: 1
+            convergence_tolerance: 1.0e-16
+
+    # Specify the properties of the fluid, in this case air.
+    material_properties:
+
+      target_name: [fluid_part]
+
+      constant_specification:
+       universal_gas_constant: 8314.4621
+       reference_pressure: 101325.0
+
+      reference_quantities:
+        - species_name: Air
+          mw: 29.0
+          mass_fraction: 1.0
+
+      specifications:
+
+        # Density here was computed such that P_ref = rho_ref*(R/mw)*300K
+        - name: density
+          type: constant
+          value: 1.178037722969475
+
+        - name: viscosity
+          type: constant
+          value: 1.2E-5
+
+        - name: specific_heat
+          type: constant
+          value: 1000.0
+
+    initial_conditions:
+      - constant: ic_1
+        target_name: [fluid_part]
+        value:
+          pressure: 0.0
+          velocity: [7.250462296293199, 3.380946093925596, 0.0]
+          temperature: 300.0
+          turbulent_ke: 1.0e-8
+
+      - user_function: ic_2
+        target_name: [fluid_part]
+        user_function_name:
+          velocity: boundary_layer_perturbation
+        user_function_parameters:
+          velocity: [1.0,0.0075398,0.0075398,50.0,8.0]
+
+
+    # Boundary conditions are periodic on the north, south, east, and west
+    # sides.  The lower boundary condition is a wall that uses an atmospheric
+    # rough wall shear stress model.  The upper boundary is a stress free
+    # rigid lid, but the temperature is set to hold
+    # a specified boundary normal gradient that matches the stable layer
+    # immediately below.
+    boundary_conditions:
+
+    - periodic_boundary_condition: bc_north_south
+      target_name: [north, south]
+      periodic_user_data:
+        search_tolerance: 0.0001
+
+    - periodic_boundary_condition: bc_east_west
+      target_name: [east, west]
+      periodic_user_data:
+        search_tolerance: 0.0001 
+
+    - abltop_boundary_condition: bc_upper
+      target_name: upper
+      abltop_user_data:
+        potential_flow_bc: false
+        normal_temperature_gradient: -0.003
+
+    - wall_boundary_condition: bc_lower
+      target_name: lower
+      wall_user_data:
+        velocity: [0.0,0.0,0.0]
+        abl_wall_function:
+          surface_heating_table:
+            - [     0.0, 0.0, 300.0, 1.0]
+            - [999999.9, 0.0, 300.0, 1.0]
+          reference_temperature: 300.0
+          roughness_height: 0.1
+          kappa: 0.4
+          beta_m: 5.0
+          beta_h: 5.0
+          gamma_m: 16.0
+          gamma_h: 16.0
+          gravity_vector_component: 3
+          monin_obukhov_averaging_type: planar
+          fluctuation_model: Moeng
+          fluctuating_temperature_ref: surface
+
+    solution_options:
+      name: myOptions
+      turbulence_model: ksgs
+      interp_rhou_together_for_mdot: yes
+
+      # Pressure is not fixed anywhere on the boundaries, so set it at
+      # the node closest to the specified location.
+      fix_pressure_at_node:
+        value: 0.0
+        node_lookup_type: spatial_location
+        location: [100.0, 2500.0, 1.0]
+        search_target_part: [fluid_part]
+        search_method: stk_kdtree
+
+      options:
+
+        # Model constants for the 1-eq k SGS model.
+        - turbulence_model_constants:
+            kappa: 0.4
+            cEps: 0.93
+            cmuEps: 0.0673
+
+        - laminar_prandtl:
+            enthalpy: 0.7
+
+        # Turbulent Prandtl number is 1/3 following Moeng (1984).
+        - turbulent_prandtl:
+            enthalpy: 0.3333333333333333
+
+        # SGS viscosity is divided by Schmidt number in the k SGS diffusion
+        # term.  In Moeng (1984), SGS viscosity is multiplied by 2, hence
+        # we divide by 1/2
+        - turbulent_schmidt:
+            turbulent_ke: 0.5
+
+        # The momentum source terms are a Boussinesq bouyancy term,
+        # Coriolis from Earth's rotation, and a source term to drive
+        # the planar-averaged wind at a certain height to a certain
+        # speed.
+        - source_terms:
+            momentum: 
+              - buoyancy_boussinesq
+              - EarthCoriolis
+              - abl_forcing
+
+        - user_constants:
+            reference_density: 1.178037722969475
+            reference_temperature: 300.0
+            gravity: [0.0,0.0,-9.81]
+            thermal_expansion_coefficient: 3.33333333e-3           
+            east_vector: [1.0, 0.0, 0.0]
+            north_vector: [0.0, 1.0, 0.0]
+            latitude: 45.0
+            earth_angular_velocity: 7.2921159e-5
+
+        - limiter:
+            pressure: no
+            velocity: no
+            enthalpy: yes 
+
+        - peclet_function_form:
+            velocity: tanh
+            enthalpy: tanh
+            turbulent_ke: tanh
+
+        - peclet_function_tanh_transition:
+            velocity: 50000.0
+            enthalpy: 2.0
+            turbulent_ke: 2.0
+
+        - peclet_function_tanh_width:
+            velocity: 200.0
+            enthalpy: 1.0
+            turbulent_ke: 1.0
+
+        # This means that the initial temperature is read in
+        # from the Exodus mesh/field file.
+        - input_variables_from_file:
+            temperature: temperature
+
+
+    output:
+      output_data_base_name: out/abl.e
+      output_frequency: 10
+      output_node_set: no
+      output_variables:
+       - velocity
+       - pressure
+       - enthalpy
+       - temperature
+       - turbulent_ke
+       - turbulent_viscosity
+
+    # Compute spatial averages of velocity and temperature at all height levels
+    # available on the ABL mesh. This is used for post-processing as well as
+    # determining the ABL forcing necessary to drive the wind to a certain
+    # speed/direction at different heights. See `abl_forcing` section below for
+    # details of the driving wind forcing.
+    boundary_layer_statistics:
+      target_name: [ fluid_part ]
+      stats_output_file: "abl_statistics.nc"
+      compute_temperature_statistics: yes
+      output_frequency: 10
+      time_hist_output_frequency: 100
+
+    # This defines the ABL forcing to drive the winds to 8 m/s from
+    # 245 degrees (southwest) at 90 m above the surface in a planar
+    # averaged sense.
+    abl_forcing:
+      output_format: "abl_%s_sources.dat"
+      momentum:
+        type: computed
+        relaxation_factor: 1.0
+        heights: [90.0]
+        velocity_x:
+          - [0.0, 7.250462296293199]
+          - [900000.0, 7.250462296293199]
+
+        velocity_y:
+          - [0.0, 3.380946093925596]
+          - [90000.0, 3.380946093925596]
+
+        velocity_z:
+          - [0.0, 0.0]
+          - [90000.0, 0.0]
+
+# This defines the time step size, count, etc.
+Time_Integrators:
+  - StandardTimeIntegrator:
+      name: ti_1
+      start_time: 0.0
+      termination_step_count: 10
+      time_step: 0.5
+      time_stepping_type: fixed
+      time_step_count: 0
+      second_order_accuracy: yes
+
+      realms:
+        - fluidRealm

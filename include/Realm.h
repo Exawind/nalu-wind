@@ -73,7 +73,6 @@ class SolutionOptions;
 class TimeIntegrator;
 class MasterElement;
 class PropertyEvaluator;
-class HDF5FilePtr;
 class Transfer;
 class MeshMotionAlg;
 class MeshTransformationAlg;
@@ -113,8 +112,9 @@ class Realm {
 
   virtual void breadboard();
 
-  virtual void initialize();
- 
+  virtual void initialize_prolog();
+  virtual void initialize_epilog();
+
   Simulation *root() const;
   Simulation *root();
   Realms *parent() const;
@@ -254,18 +254,14 @@ class Realm {
 
   void periodic_delta_solution_update(
      stk::mesh::FieldBase *theField,
-     const unsigned &sizeOfField) const;
+     const unsigned &sizeOfField,
+     const bool &doCommunication = true) const;
 
   void periodic_max_field_update(
      stk::mesh::FieldBase *theField,
      const unsigned &sizeOfField) const;
 
   const stk::mesh::PartVector &get_slave_part_vector();
-
-  void overset_orphan_node_field_update(
-    stk::mesh::FieldBase *theField,
-    const unsigned sizeRow,
-    const unsigned sizeCol);
 
   void overset_field_update(
     stk::mesh::FieldBase* field,
@@ -284,7 +280,8 @@ class Realm {
   virtual double compute_adaptive_time_step();
   virtual void swap_states();
   virtual void predict_state();
-  virtual void pre_timestep_work();
+  virtual void pre_timestep_work_prolog();
+  virtual void pre_timestep_work_epilog();
   virtual void output_banner();
   virtual void advance_time_step();
  
@@ -497,6 +494,7 @@ class Realm {
   OversetManager *oversetManager_;
   bool hasNonConformal_;
   bool hasOverset_;
+  bool isExternalOverset_{false};
 
   // three type of transfer operations
   bool hasMultiPhysicsTransfer_;
@@ -529,9 +527,6 @@ class Realm {
 
   // some post processing of entity counts
   bool provideEntityCount_;
-
-  // pointer to HDF5 file structure holding table
-  HDF5FilePtr *HDF5ptr_;
 
   // automatic mesh decomposition; None, rib, rcb, multikl, etc.
   std::string autoDecompType_;
@@ -622,6 +617,8 @@ class Realm {
   double get_stefan_boltzmann();
   double get_turb_model_constant(
     const TurbulenceModelConstant turbModelEnum);
+
+  TurbulenceModel get_turbulence_model() const;
 
   // element promotion options
   bool doPromotion_; // conto

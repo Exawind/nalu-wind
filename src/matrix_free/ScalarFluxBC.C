@@ -12,12 +12,11 @@
 #include "matrix_free/Coefficients.h"
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/ValidSimdLength.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 
 #include "Kokkos_ScatterView.hpp"
 #include "Kokkos_Macros.hpp"
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_Operator.hpp"
 
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 #include "stk_simd/Simd.hpp"
@@ -45,7 +44,6 @@ scalar_flux(
       const ftype ax = areav(index, j, i, 0);
       const ftype ay = areav(index, j, i, 1);
       const ftype az = areav(index, j, i, 2);
-
       out(j, i) =
         in(index, j, i) * stk::math::sqrt(ax * ax + ay * ay + az * az);
     }

@@ -614,6 +614,8 @@ Open Boundary Condition
      open_user_data:
        velocity: [0,0,0]
        pressure: 0.0
+       entrainment_method: {computed, specified}
+       total_pressure: {yes, no}
 
 Wall Boundary Condition
 +++++++++++++++++++++++
@@ -864,6 +866,50 @@ Material Properties
                type: mixture_fraction
                primary_value: 1.967e-4
                secondary_value: 1.85e-4
+
+Solution Options
+````````````````
+
+.. note::
+
+   The documentation for this section is incomplete.
+
+.. inpfile:: solution_options
+
+   This section defines the discretization and numerical stability
+   approaches, as well as turbulence models.
+
+.. inpfile:: solution_options.name
+
+   Name of solution options group.
+
+.. inpfile:: solution_options.turbulence_model
+
+   Turbulence model used in simulation.
+
+.. inpfile:: solution_options.options
+
+   This subsection defines additional options for the solution options.
+
+   For example, one could modify turbulence model constants:
+
+   .. code-block:: yaml
+
+      - turbulence_model_constants:
+          SDRWallFactor: 0.625
+
+   One could also define source terms, such as a momentum forcing in a
+   box of the domain:
+
+   .. code-block:: yaml
+
+      - source_terms:
+          momentum: body_force_box
+
+      - source_term_parameters:
+          momentum: [0.011, 0.0, 0.0]
+          momentum_box: [-1.0, 1.00001, 0.0, 10.0, 4.0, 5.0]
+
 
 Mesh Transformation
 ```````````````````

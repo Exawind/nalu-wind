@@ -11,10 +11,12 @@
 
 #include "StkConductionFixture.h"
 #include "matrix_free/ConductionFields.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/MakeRCP.h"
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/StkToTpetraMap.h"
+#include "matrix_free/StkToTpetraLocalIndices.h"
+
 #include "gtest/gtest.h"
 
 #include "Kokkos_Core.hpp"
@@ -36,12 +38,12 @@ namespace sierra {
 namespace nalu {
 namespace matrix_free {
 
-class OperatorFixture : public ConductionFixture
+class ConductionOperatorFixture : public ConductionFixture
 {
 protected:
   static constexpr int nodes_per_elem = (order + 1) * (order + 1) * (order + 1);
 
-  OperatorFixture()
+  ConductionOperatorFixture()
     : ConductionFixture(nx, scale),
       owned_map(make_owned_row_map(mesh, meta.universal_part())),
       owned_and_shared_map(make_owned_and_shared_row_map(
@@ -79,7 +81,7 @@ protected:
   const Kokkos::Array<double, 3> gammas = {{+1, -1, 0}};
 };
 
-TEST_F(OperatorFixture, residual_operator_zero_for_constant_data)
+TEST_F(ConductionOperatorFixture, residual_operator_zero_for_constant_data)
 {
   for (const auto* ib :
        bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part())) {
@@ -108,7 +110,8 @@ TEST_F(OperatorFixture, residual_operator_zero_for_constant_data)
   }
 }
 
-TEST_F(OperatorFixture, residual_operator_not_zero_for_nonconstant_data)
+TEST_F(
+  ConductionOperatorFixture, residual_operator_not_zero_for_nonconstant_data)
 {
   std::mt19937 rng;
   rng.seed(0); // fixed seed
@@ -143,7 +146,9 @@ TEST_F(OperatorFixture, residual_operator_not_zero_for_nonconstant_data)
   ASSERT_TRUE(max_error > 1.0e-8);
 }
 //
-TEST_F(OperatorFixture, linearized_residual_operator_zero_for_constant_data)
+TEST_F(
+  ConductionOperatorFixture,
+  linearized_residual_operator_zero_for_constant_data)
 {
   auto fields = gather_required_conduction_fields<order>(meta, conn);
   LinearizedResidualFields<order> coefficient_fields;
@@ -164,7 +169,8 @@ TEST_F(OperatorFixture, linearized_residual_operator_zero_for_constant_data)
 }
 
 TEST_F(
-  OperatorFixture, linearized_residual_operator_not_zero_for_nonconstant_data)
+  ConductionOperatorFixture,
+  linearized_residual_operator_not_zero_for_nonconstant_data)
 {
   std::mt19937 rng;
   rng.seed(0); // fixed seed

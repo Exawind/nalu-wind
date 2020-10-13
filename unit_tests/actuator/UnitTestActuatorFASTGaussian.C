@@ -14,7 +14,7 @@
 
 namespace {
 
-TEST(ActuatorFAST, unityGaussianTest)
+TEST(ActuatorFAST, NGP_unityGaussianTest)
 {
   sierra::nalu::Coordinates epsilon;
 

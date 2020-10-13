@@ -15,9 +15,9 @@ linear_solvers:
   - name: solve_scalar
     type: tpetra
     method: gmres
-    preconditioner: sgs
-    tolerance: 1e-5
-    max_iterations: 10
+    preconditioner: mt_sgs
+    tolerance: 1e-12
+    max_iterations: 200
     kspace: 75
     output_level: 0
     write_matrix_files: no
@@ -26,21 +26,22 @@ linear_solvers:
     type: tpetra
     method: gmres
     preconditioner: muelu
-    tolerance: 1e-5
+    tolerance: 1e-12
     max_iterations: 200
     kspace: 75
     output_level: 0
     muelu_xml_file_name: ../../xml/milestone_aspect_ratio_gs.xml
+    write_matrix_files: no
 
   - name: solve_mom
     type: tpetra
     method: gmres
-    preconditioner: sgs
-    tolerance: 1e-5
+    preconditioner: mt_sgs
+    tolerance: 1e-12
     max_iterations: 200
     kspace: 75
     output_level: 0
-    segregated_solver: yes
+    write_matrix_files: no
 
 realms:
 
@@ -183,7 +184,6 @@ realms:
             specific_dissipation_rate: 0.7
 
     post_processing:
-
     - type: surface
       physics: surface_force_and_moment
       output_file_name: results/forces.dat

@@ -10,41 +10,22 @@
 #ifndef CONDUCTION_FIELDS_H
 #define CONDUCTION_FIELDS_H
 
-#include "matrix_free/ConductionInfo.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/StkSimdConnectivityMap.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
-
-#include "Kokkos_Array.hpp"
-#include "Tpetra_MultiVector.hpp"
-
-#include "stk_mesh/base/Types.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"
 
-namespace stk {
-namespace mesh {
-class MetaData;
-} // namespace mesh
-} // namespace stk
+#include <stk_mesh/base/FieldBase.hpp>
+#include <stk_mesh/base/FieldState.hpp>
+#include <stk_mesh/base/MetaData.hpp>
+#include <stk_mesh/base/Ngp.hpp>
+#include <stk_topology/topology.hpp>
+#include <stk_util/util/ReportHandler.hpp>
+
+#include <iosfwd>
 
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
-
-template <typename T = double>
-stk::mesh::NgpField<T>&
-get_ngp_field(
-  const stk::mesh::MetaData& meta,
-  std::string name,
-  stk::mesh::FieldState state = stk::mesh::StateNP1)
-{
-  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
-  ThrowAssert(
-    meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
-  return stk::mesh::get_updated_ngp_field<T>(
-    *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
-}
 
 struct BCDirichletFields
 {

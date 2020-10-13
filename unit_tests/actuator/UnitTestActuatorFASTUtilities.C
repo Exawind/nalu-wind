@@ -57,7 +57,7 @@ F_RotateAboutAxis(
 
 } // namespace
 
-TEST(ActuatorSweptPointLocator, PointsOnACircle)
+TEST(ActuatorSweptPointLocator, NGP_PointsOnACircle)
 {
   const double PI = std::acos(-1.0);
   const std::vector<double> origin(3, 0.0);

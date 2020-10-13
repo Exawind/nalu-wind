@@ -57,6 +57,9 @@ TemperaturePropAlgorithm::execute()
   stk::mesh::BucketVector const& node_buckets =
     realm_.get_buckets( stk::topology::NODE_RANK, selector );
 
+  prop_->sync_to_host();
+  temperature_->sync_to_host();
+
   for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin();
         ib != node_buckets.end() ; ++ib ) {
     stk::mesh::Bucket & b = **ib ;

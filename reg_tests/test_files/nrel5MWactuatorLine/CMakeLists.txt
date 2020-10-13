@@ -9,5 +9,10 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/NRELOffshrBsline5MW_Onshore_ServoDyn.
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/nrel5mw.fst.in
                ${CMAKE_CURRENT_BINARY_DIR}/nrel5mw.fst @ONLY)
 
+# create symlink to nrelmw.fst for unit tests in build directory
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_BINARY_DIR}/nrel5mw.fst
+  ${CMAKE_BINARY_DIR}/nrel5mw.fst
+  )
 # Add subdirectory that will actually build the DISCON library
 add_subdirectory(5MW_Baseline/ServoData)

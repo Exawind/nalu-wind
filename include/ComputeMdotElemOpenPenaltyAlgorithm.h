@@ -45,6 +45,7 @@ public:
   GenericFieldType *exposedAreaVec_;
   GenericFieldType *openMassFlowRate_;
   ScalarFieldType *pressureBc_;
+  GenericFieldType *dynP_;
 
   const double interpTogether_;
   const double om_interpTogether_;

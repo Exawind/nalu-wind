@@ -41,6 +41,7 @@ class LinearSystem;
 class ProjectedNodalGradientEquationSystem;
 class SurfaceForceAndMomentAlgorithmDriver;
 class MdotAlgDriver;
+class NgpAlgDriver;
 
 /** Low-Mach formulation of the Navier-Stokes Equations
  *
@@ -105,7 +106,6 @@ public:
   VectorFieldType *edgeAreaVec_;
 
   SurfaceForceAndMomentAlgorithmDriver *surfaceForceAndMomentAlgDriver_;
-
   std::vector<int> xyBCType_;
 
   bool isInit_;
@@ -218,6 +218,7 @@ public:
 
   VectorNodalGradAlgDriver nodalGradAlgDriver_;
   WallFricVelAlgDriver wallFuncAlgDriver_;
+  NgpAlgDriver dynPressAlgDriver_;
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
   std::unique_ptr<Algorithm> tviscAlg_{nullptr};
 

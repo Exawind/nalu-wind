@@ -11,8 +11,7 @@
 #define LINEAR_VOLUME_H
 
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/LocalArray.h"
+#include "matrix_free/KokkosViewTypes.h"
 
 namespace sierra {
 namespace nalu {
@@ -24,8 +23,9 @@ namespace impl {
 template <int p>
 struct volume_metric_t
 {
-  static scalar_view<p> invoke(
-    const const_scalar_view<p> alpha, const const_vector_view<p> coordinates);
+  static scalar_view<p>
+  invoke(const_scalar_view<p> alpha, const_vector_view<p> coordinates);
+  static scalar_view<p> invoke(const_vector_view<p> coordinates);
 };
 
 } // namespace impl

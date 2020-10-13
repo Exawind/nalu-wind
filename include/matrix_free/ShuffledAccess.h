@@ -10,11 +10,10 @@
 #ifndef SHUFFLED_ACCESS_H
 #define SHUFFLED_ACCESS_H
 
-#include <Kokkos_Macros.hpp>
-#include <cmath>
-
 #include "matrix_free/KokkosFramework.h"
 #include "matrix_free/LocalArray.h"
+
+#include "Kokkos_Macros.hpp"
 
 namespace sierra {
 namespace nalu {
@@ -40,6 +39,18 @@ struct shuffled_accessor<ViewType, 0>
   {
     return v(k, j, i);
   }
+
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr typename ViewType::value_type
+  access(const ViewType& v, int k, int j, int i, int d) noexcept
+  {
+    return v(k, j, i, d);
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION static typename ViewType::value_type&
+  access(ViewType& v, int k, int j, int i, int d) noexcept
+  {
+    return v(k, j, i, d);
+  }
 };
 
 template <typename ViewType>
@@ -56,6 +67,18 @@ struct shuffled_accessor<ViewType, 1>
   {
     return v(k, i, j);
   }
+
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr typename ViewType::value_type
+  access(const ViewType& v, int k, int j, int i, int d) noexcept
+  {
+    return v(k, i, j, d);
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION static typename ViewType::value_type&
+  access(ViewType& v, int k, int j, int i, int d) noexcept
+  {
+    return v(k, i, j, d);
+  }
 };
 
 template <typename ViewType>
@@ -71,6 +94,18 @@ struct shuffled_accessor<ViewType, 2>
   access(ViewType& v, int k, int j, int i) noexcept
   {
     return v(i, k, j);
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr typename ViewType::value_type
+  access(const ViewType& v, int k, int j, int i, int d) noexcept
+  {
+    return v(i, k, j, d);
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION static typename ViewType::value_type&
+  access(ViewType& v, int k, int j, int i, int d) noexcept
+  {
+    return v(i, k, j, d);
   }
 };
 
@@ -117,6 +152,20 @@ KOKKOS_FORCEINLINE_FUNCTION ftype&
 shuffled_access(ViewType& v, int k, int j, int i)
 {
   return impl::shuffled_accessor<ViewType, d>::access(v, k, j, i);
+}
+
+template <int dir, typename ViewType>
+KOKKOS_FORCEINLINE_FUNCTION ftype
+shuffled_access(const ViewType& v, int k, int j, int i, int d)
+{
+  return impl::shuffled_accessor<ViewType, dir>::access(v, k, j, i, d);
+}
+
+template <int dir, typename ViewType>
+KOKKOS_FORCEINLINE_FUNCTION ftype&
+shuffled_access(ViewType& v, int k, int j, int i, int d)
+{
+  return impl::shuffled_accessor<ViewType, dir>::access(v, k, j, i, d);
 }
 
 } // namespace matrix_free

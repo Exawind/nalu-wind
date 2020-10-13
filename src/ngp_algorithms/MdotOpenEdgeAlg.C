@@ -51,6 +51,10 @@ MdotOpenEdgeAlg<BcAlgTraits>::MdotOpenEdgeAlg(
                         "open_mass_flow_rate",
                         realm_.meta_data().side_rank())),
     Udiag_(get_field_ordinal(realm.meta_data(), "momentum_diag")),
+    dynPress_(get_field_ordinal(
+                    realm_.meta_data(),
+                    "dynamic_pressure",
+                    realm_.meta_data().side_rank())),
     meFC_(MasterElementRepo::get_surface_master_element<
           typename BcAlgTraits::FaceTraits>()),
     meSCS_(MasterElementRepo::get_surface_master_element<
@@ -61,11 +65,14 @@ MdotOpenEdgeAlg<BcAlgTraits>::MdotOpenEdgeAlg(
 
   faceData_.add_coordinates_field(coordinates_, BcAlgTraits::nDim_ , CURRENT_COORDINATES);
   faceData_.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  faceData_.add_face_field(dynPress_, BcAlgTraits::numFaceIp_);
+
   faceData_.add_gathered_nodal_field(velocityRTM_, BcAlgTraits::nDim_);
   faceData_.add_gathered_nodal_field(density_, 1);
   faceData_.add_gathered_nodal_field(pressureBC_, 1);
   faceData_.add_gathered_nodal_field(Udiag_, 1);
   faceData_.add_gathered_nodal_field(Gpdx_, BcAlgTraits::nDim_);
+  
   elemData_.add_coordinates_field(coordinates_, BcAlgTraits::nDim_ , CURRENT_COORDINATES);
   elemData_.add_gathered_nodal_field(pressure_, 1);
 }
@@ -101,6 +108,7 @@ void MdotOpenEdgeAlg<BcAlgTraits>::execute()
   const unsigned GpdxID = Gpdx_;
   const unsigned udiagID = Udiag_;
   const unsigned areavecID = exposedAreaVec_;
+  const unsigned dynPressID = dynPress_;
 
   MasterElement* meSCS = meSCS_;
 
@@ -121,6 +129,8 @@ void MdotOpenEdgeAlg<BcAlgTraits>::execute()
       const auto& v_udiag = simdFaceView.get_scratch_view_1D(udiagID);
       const auto& v_area = simdFaceView.get_scratch_view_2D(areavecID);
       const auto& v_Gpdx = simdFaceView.get_scratch_view_2D(GpdxID);
+      const auto& v_dyn_press = simdFaceView.get_scratch_view_1D(dynPressID);
+
 
       for (int ip = 0; ip < BcAlgTraits::nodesPerFace_; ++ip) {
         const int nodeR = meSCS->side_node_ordinals(fdata.faceOrd)[ip];
@@ -138,8 +148,9 @@ void MdotOpenEdgeAlg<BcAlgTraits>::execute()
         }
         const DoubleType inv_axdx = 1.0 / axdx;
 
+        DoubleType pbc = v_pbc(ip) - v_dyn_press(ip);
         DoubleType pressureIp = 0.5 * (v_pressure(nodeL) + v_pressure(nodeR));
-        DoubleType tmdot = -projTimeScale * (v_pbc(ip) - pressureIp) * asq * inv_axdx;
+        DoubleType tmdot = -projTimeScale * (pbc - pressureIp) * asq * inv_axdx;
 
         for (int d =0; d < BcAlgTraits::nDim_; ++d) {
           const DoubleType coordIp = 0.5 * (v_coord(nodeR, d) + v_coord(nodeL, d));

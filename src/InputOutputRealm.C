@@ -60,7 +60,7 @@ InputOutputRealm::~InputOutputRealm()
 //-------- initialize ------------------------------------------------------
 //--------------------------------------------------------------------------
 void 
-InputOutputRealm::initialize()
+InputOutputRealm::initialize_prolog()
 {
   // bar minimum to register fields and to extract from possible mesh file
   register_io_fields();
@@ -69,6 +69,9 @@ InputOutputRealm::initialize()
   create_output_mesh();
   input_variables_from_mesh();
 }
+
+void InputOutputRealm::initialize_epilog()
+{}
 
 //--------------------------------------------------------------------------
 //-------- register_io_fields ------------------------------------------------------

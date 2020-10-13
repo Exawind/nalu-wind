@@ -13,13 +13,65 @@
 #include <cmath>
 
 #include "matrix_free/Coefficients.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 #include "matrix_free/ShuffledAccess.h"
 
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
+
+//
+
+template <int p, typename VolumeArray, typename DeltaArray, typename OutArray>
+KOKKOS_FORCEINLINE_FUNCTION void
+apply_mass(
+  int index,
+  double gamma,
+  const VolumeArray& vol,
+  const DeltaArray& delta,
+  OutArray& out)
+{
+  static constexpr auto vandermonde = Coeffs<p>::W;
+  for (int k = 0; k < p + 1; ++k) {
+    for (int j = 0; j < p + 1; ++j) {
+      LocalArray<ftype[p + 1]> scratch;
+      for (int i = 0; i < p + 1; ++i) {
+        scratch(i) = -gamma * vol(index, k, j, i) * delta(k, j, i);
+      }
+      for (int i = 0; i < p + 1; ++i) {
+        ftype acc(0);
+        for (int q = 0; q < p + 1; ++q) {
+          acc += vandermonde(i, q) * scratch(q);
+        }
+        out(k, j, i) = acc;
+      }
+    }
+  }
+
+  for (int i = 0; i < p + 1; ++i) {
+    LocalArray<ftype[p + 1][p + 1]> scratch;
+    for (int k = 0; k < p + 1; ++k) {
+      for (int j = 0; j < p + 1; ++j) {
+        ftype acc(0);
+        for (int q = 0; q < p + 1; ++q) {
+          acc += vandermonde(j, q) * out(k, q, i);
+        }
+        scratch(k, j) = acc;
+      }
+    }
+
+    for (int k = 0; k < p + 1; ++k) {
+      for (int j = 0; j < p + 1; ++j) {
+        ftype acc(0);
+        for (int q = 0; q < p + 1; ++q) {
+          acc += vandermonde(k, q) * scratch(q, j);
+        }
+        out(k, j, i) = acc;
+      }
+    }
+  }
+}
 
 template <int p, int dir, typename InArray, typename OutArray>
 KOKKOS_FORCEINLINE_FUNCTION void
@@ -51,12 +103,7 @@ volume(const InArray& in, ScratchArray& scratch, OutArray& out)
   edge_integral<p, 2>(scratch, out);
 }
 
-template <
-  int p,
-  typename VolumeArray,
-  typename InArray,
-  typename ScratchArray,
-  typename OutArray>
+template <int p, typename VolumeArray, typename InArray, typename OutArray>
 KOKKOS_FUNCTION void
 consistent_mass_time_derivative(
   int index,
@@ -65,22 +112,51 @@ consistent_mass_time_derivative(
   const InArray& qm1,
   const InArray& qp0,
   const InArray& qp1,
-  ScratchArray& scratch,
   OutArray& out)
 {
+  static constexpr auto vandermonde = Coeffs<p>::W;
+
   for (int k = 0; k < p + 1; ++k) {
     for (int j = 0; j < p + 1; ++j) {
+      LocalArray<ftype[p + 1]> scratch_1d;
       for (int i = 0; i < p + 1; ++i) {
-        scratch(k, j, i) =
+        scratch_1d(i) =
           -vol(index, k, j, i) *
           (gammas[0] * qp1(index, k, j, i) + gammas[1] * qp0(index, k, j, i) +
            gammas[2] * qm1(index, k, j, i));
       }
+
+      for (int i = 0; i < p + 1; ++i) {
+        ftype integral_for_subcv_i = 0;
+        for (int q = 0; q < p + 1; ++q) {
+          integral_for_subcv_i += vandermonde(i, q) * scratch_1d(q);
+        }
+        out(k, j, i) = integral_for_subcv_i;
+      }
     }
   }
-  edge_integral<p, 0>(scratch, out);
-  edge_integral<p, 1>(out, scratch);
-  edge_integral<p, 2>(scratch, out);
+
+  for (int i = 0; i < p + 1; ++i) {
+    LocalArray<ftype[p + 1][p + 1]> scratch;
+    for (int k = 0; k < p + 1; ++k) {
+      for (int j = 0; j < p + 1; ++j) {
+        scratch(k, j) = 0;
+        for (int q = 0; q < p + 1; ++q) {
+          scratch(k, j) += vandermonde(j, q) * out(k, q, i);
+        }
+      }
+    }
+
+    for (int j = 0; j < p + 1; ++j) {
+      for (int k = 0; k < p + 1; ++k) {
+        ftype integral_for_subcv_k = 0;
+        for (int q = 0; q < p + 1; ++q) {
+          integral_for_subcv_k += vandermonde(k, q) * scratch(q, j);
+        }
+        out(k, j, i) = integral_for_subcv_k;
+      }
+    }
+  }
 }
 
 template <int p, typename VolumeArray, typename InArray, typename OutArray>

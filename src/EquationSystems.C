@@ -25,12 +25,12 @@
 #include <EnthalpyEquationSystem.h>
 #include <HeatCondEquationSystem.h>
 #include <MatrixFreeHeatCondEquationSystem.h>
+#include <MatrixFreeLowMachEquationSystem.h>
 #include <LowMachEquationSystem.h>
 #include <MixtureFractionEquationSystem.h>
 #include <ShearStressTransportEquationSystem.h>
 #include <MassFractionEquationSystem.h>
 #include <TurbKineticEnergyEquationSystem.h>
-#include <pmr/RadiativeTransportEquationSystem.h>
 #include <mesh_motion/MeshDisplacementEquationSystem.h>
 #include "WallDistEquationSystem.h"
 
@@ -115,7 +115,12 @@ void EquationSystems::load(const YAML::Node & y_node)
           if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = LowMachEOM " << std::endl;
           bool elemCont = (realm_.realmUsesEdges_) ? false : true;
           get_if_present_no_default(y_eqsys, "element_continuity_eqs", elemCont);
-          eqSys = new LowMachEquationSystem(*this, elemCont);
+
+          if (realm_.matrix_free()) {
+            eqSys = new MatrixFreeLowMachEquationSystem(*this);
+          } else {
+            eqSys = new LowMachEquationSystem(*this, elemCont);
+          }          
         }
         else if( expect_map(y_system, "ShearStressTransport", true) ) {
 	  y_eqsys =  expect_map(y_system, "ShearStressTransport", true);
@@ -165,25 +170,7 @@ void EquationSystems::load(const YAML::Node & y_node)
           }
         }
         else if( expect_map(y_system, "RadiativeTransport", true) ) {
-	  y_eqsys =  expect_map(y_system, "RadiativeTransport", true);
-          if (root()->debug()) NaluEnv::self().naluOutputP0() << "eqSys = RadiativeTransport " << std::endl;
-          int quadratureOrder = 2;
-          get_if_present_no_default(y_eqsys, "quadrature_order", quadratureOrder);
-          bool activateScattering = false;
-          bool activatePmrUpwind = false;
-          bool deactivatePmrSucv = false;
-          bool externalCoupling = false;
-          get_if_present_no_default(y_eqsys, "activate_scattering", activateScattering);
-          get_if_present_no_default(y_eqsys, "activate_upwind", activatePmrUpwind);
-          get_if_present_no_default(y_eqsys, "deactivate_sucv", deactivatePmrSucv);
-          get_if_present_no_default(y_eqsys, "external_coupling", externalCoupling);
-          if ( externalCoupling )
-            NaluEnv::self().naluOutputP0() << "PMR External Coupling; absorption coefficient/radiation_source expected by xfer" << std::endl;
-          if ( activatePmrUpwind )
-            NaluEnv::self().naluOutputP0() << "PMR residual stabilization is off, pure upwind will be used" << std::endl;
-
-          eqSys = new RadiativeTransportEquationSystem(*this,
-            quadratureOrder, activateScattering, activatePmrUpwind, deactivatePmrSucv, externalCoupling);
+          throw std::runtime_error("Radiative transport has been removed from nalu-wind.  Please check out naluCFD");
         }
         else if( expect_map(y_system, "MeshDisplacement", true) ) {
 	  y_eqsys =  expect_map(y_system, "MeshDisplacement", true) ;
@@ -876,6 +863,20 @@ EquationSystems::populate_boundary_data()
   for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii ) {
     for ( size_t k = 0; k < (*ii)->bcDataAlg_.size(); ++k ) {
       (*ii)->bcDataAlg_[k]->execute();
+    }
+  }
+}
+
+//--------------------------------------------------------------------------
+//-------- post_external_data_transfer_work --------------------------------
+//--------------------------------------------------------------------------
+void
+EquationSystems::post_external_data_transfer_work()
+{
+  EquationSystemVector::iterator ii;
+  for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii ) {
+    for ( size_t k = 0; k < (*ii)->bcDataAlg_.size(); ++k ) {
+      (*ii)->post_external_data_transfer_work();
     }
   }
 }

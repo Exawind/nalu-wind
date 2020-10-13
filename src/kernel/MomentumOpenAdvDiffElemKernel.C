@@ -8,6 +8,7 @@
 //
 
 
+#include "Enums.h"
 #include "kernel/MomentumOpenAdvDiffElemKernel.h"
 #include "EquationSystem.h"
 #include "master_element/MasterElement.h"
@@ -37,7 +38,8 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
   GenericFieldType *Gjui,
   ScalarFieldType *viscosity,
   ElemDataRequests &faceDataPreReqs,
-  ElemDataRequests &elemDataPreReqs)
+  ElemDataRequests &elemDataPreReqs,
+  EntrainmentMethod method)
   : Kernel(),
     viscosity_(viscosity->mesh_meta_data_ordinal()),
     Gjui_(Gjui->mesh_meta_data_ordinal()),
@@ -49,6 +51,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
     includeDivU_(solnOpts.includeDivU_),
     nocFac_(solnOpts.get_noc_usage("velocity") ? 1.0 : 0.0),
     shiftedGradOp_(solnOpts.get_shifted_grad_op(velocity->name())),
+    entrain_(method),
     faceIpNodeMap_(sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_)->ipNodeMap()),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_)),
     pecletFunction_(eqSystem->create_peclet_function<DoubleType>(velocity->name()))
@@ -97,10 +100,22 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::MomentumOpenAdvDiffElemKernel(
   get_scs_shape_fn_data<BcAlgTraits>([&](double* ptr){meSCS_->shape_fcn(ptr);}, v_shape_function_);
 
   const bool skewSymmetric = solnOpts.get_skew_symmetric(velocity->name());
-  get_face_shape_fn_data<BcAlgTraits>([&](double* ptr){skewSymmetric ? meFC->shifted_shape_fcn(ptr) : meFC->shape_fcn(ptr);}, 
-                                      vf_adv_shape_function_);
-  get_scs_shape_fn_data<BcAlgTraits>([&](double* ptr){skewSymmetric ? meSCS_->shifted_shape_fcn(ptr) : meSCS_->shape_fcn(ptr);}, 
-                                     v_adv_shape_function_);
+  get_face_shape_fn_data<BcAlgTraits>(
+    [&](double* ptr) {
+      if (skewSymmetric)
+        meFC->shifted_shape_fcn(ptr);
+      else
+        meFC->shape_fcn(ptr);
+    },
+    vf_adv_shape_function_);
+  get_scs_shape_fn_data<BcAlgTraits>(
+    [&](double* ptr) {
+      if (skewSymmetric)
+        meSCS_->shifted_shape_fcn(ptr);
+      else
+        meSCS_->shape_fcn(ptr);
+    },
+    v_adv_shape_function_);
 }
 
 template<typename BcAlgTraits>
@@ -287,7 +302,7 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
       }
 
       //===================
-      // flow is extraining
+      // flow is entraining
       //===================
 
       DoubleType ubipnx = 0.0;
@@ -302,34 +317,62 @@ MomentumOpenAdvDiffElemKernel<BcAlgTraits>::execute(
         uspecbipnx += w_uspecBip[j]*nj;
       }
 
-      const DoubleType nxi = w_nx[i];
-      
-      // total advection; with tangeant entrain
-      const DoubleType afluxEntraining =
-        tmdot*(pecfac*ubipExtrapnx+om_pecfac*(nfEntrain_*ubipnx + om_nfEntrain_*uscsnx))*nxi
-        + tmdot*(w_uspecBip[i] - uspecbipnx*nxi);
+      switch (entrain_) {
+        case EntrainmentMethod::COMPUTED: {
+          const DoubleType nxi = w_nx[i];
+          
+          // total advection; with tangent entrain
+          const DoubleType afluxEntraining =
+            tmdot*(pecfac*ubipExtrapnx+om_pecfac*(nfEntrain_*ubipnx + om_nfEntrain_*uscsnx))*nxi
+            + tmdot*(w_uspecBip[i] - uspecbipnx*nxi);
 
-      rhs(indexR) -= afluxEntraining*om_mdotLeaving;
-      
-      // upwind and central
-      for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
-        const DoubleType nxinxj = nxi*w_nx[j];
+          rhs(indexR) -= afluxEntraining*om_mdotLeaving;
+          
+          // upwind and central
+          for ( int j = 0; j < BcAlgTraits::nDim_; ++j ) {
+            const DoubleType nxinxj = nxi*w_nx[j];
 
-        // upwind
-        lhs(indexR,nearestNode*BcAlgTraits::nDim_+j) += tmdot*pecfac*alphaUpw_*nxinxj*om_mdotLeaving;
+            // upwind
+            lhs(indexR,nearestNode*BcAlgTraits::nDim_+j) += tmdot*pecfac*alphaUpw_*nxinxj*om_mdotLeaving;
 
-        // central part; exposed face
-        DoubleType fac = tmdot*(pecfac*om_alphaUpw_+om_pecfac*nfEntrain_)*nxinxj*om_mdotLeaving;
-        for ( int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic ) {
-          const int nn = face_node_ordinals[ic];
-          lhs(indexR,nn*BcAlgTraits::nDim_+j) += vf_adv_shape_function_(ip,ic)*fac;
+            // central part; exposed face
+            DoubleType fac = tmdot*(pecfac*om_alphaUpw_+om_pecfac*nfEntrain_)*nxinxj*om_mdotLeaving;
+            for ( int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic ) {
+              const int nn = face_node_ordinals[ic];
+              lhs(indexR,nn*BcAlgTraits::nDim_+j) += vf_adv_shape_function_(ip,ic)*fac;
+            }
+
+            // central part; scs face
+            fac = tmdot*om_pecfac*om_nfEntrain_*nxinxj*om_mdotLeaving;
+            for ( int ic = 0; ic < BcAlgTraits::nodesPerElement_; ++ic ) {
+              lhs(indexR,ic*BcAlgTraits::nDim_+j) += v_shape_function_(opposingScsIp,ic)*fac;
+            }
+          }
+          break;
         }
+        case EntrainmentMethod::SPECIFIED: {   
+          DoubleType sigma = 0;
+          for (int n = 0; n < BcAlgTraits::nodesPerFace_; ++n) {
+            const int nn = face_node_ordinals[n];
+            for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
+              sigma += v_dndx(ip, nn, d) * vf_exposedAreaVec(ip, d);
+            }
+          }
+          sigma *= viscBip;
+          const auto tmdot = vf_openMassFlowRate(ip);
+          const auto lambda = 0.5 * (tmdot - stk::math::sqrt(tmdot * tmdot + 8 * sigma * sigma));
+          rhs(indexR) -= (tmdot * w_uBip[i] - lambda * (w_uBip[i] - w_uspecBip[i]))*om_mdotLeaving;
 
-        // central part; scs face
-        fac = tmdot*om_pecfac*om_nfEntrain_*nxinxj*om_mdotLeaving;
-        for ( int ic = 0; ic < BcAlgTraits::nodesPerElement_; ++ic ) {
-          lhs(indexR,ic*BcAlgTraits::nDim_+j) += v_shape_function_(opposingScsIp,ic)*fac;
+          const auto fac = (tmdot - lambda) * om_mdotLeaving;
+          for ( int ic = 0; ic < BcAlgTraits::nodesPerFace_; ++ic ) {
+            const int nn = face_node_ordinals[ic];
+            for (int d = 0; d < BcAlgTraits::nDim_; ++d){
+              lhs(indexR, nn * BcAlgTraits::nDim_ + d) += vf_adv_shape_function_(ip, ic)*fac;
+            }
+          }
+          break;
         }
+        default: NGP_ThrowErrorMsg("invalid entrainment method");
       }
     }
 

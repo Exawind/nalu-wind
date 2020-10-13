@@ -14,7 +14,6 @@
 #include <FieldTypeDef.h>
 #include <Realm.h>
 #include <master_element/MasterElement.h>
-#include <nalu_make_unique.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/Entity.hpp>

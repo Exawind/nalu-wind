@@ -48,10 +48,15 @@ TurbViscKsgsAlg::execute()
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
-  const auto tke = fieldMgr.get_field<double>(tke_);
-  const auto density = fieldMgr.get_field<double>(density_);
-  const auto dualNodalVolume = fieldMgr.get_field<double>(dualNodalVolume_);
+  auto tke = fieldMgr.get_field<double>(tke_);
+  auto density = fieldMgr.get_field<double>(density_);
+  auto dualNodalVolume = fieldMgr.get_field<double>(dualNodalVolume_);
   auto tvisc = fieldMgr.get_field<double>(tvisc_);
+
+  tke.sync_to_device();
+  density.sync_to_device();
+  dualNodalVolume.sync_to_device();
+  tvisc.sync_to_device();
 
   const DblType invDim = 1.0 / static_cast<double>(meta.spatial_dimension());
   const DblType cmuEps = cmuEps_;

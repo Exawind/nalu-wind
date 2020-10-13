@@ -11,7 +11,15 @@
 #define CONDUCTION_GATHERED_FIELD_MANAGER_H
 
 #include "matrix_free/ConductionFields.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
+#include <stk_mesh/base/Selector.hpp>
+
+namespace stk {
+namespace mesh {
+class BulkData;
+class MetaData;
+} // namespace mesh
+} // namespace stk
 
 namespace sierra {
 namespace nalu {

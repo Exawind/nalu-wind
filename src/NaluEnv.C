@@ -36,7 +36,7 @@ NaluEnv::NaluEnv()
     pSize_(-1),
     pRank_(-1),
     stdoutStream_(std::cout.rdbuf()),
-    naluLogStream_(&std::cout), // std::cout redirects to log file
+    naluLogStream_(new std::ostream(std::cout.rdbuf())),
     naluParallelStream_(new std::ostream(&naluParallelStreamBuffer_)),
     parallelLog_(false)
 {
@@ -103,7 +103,8 @@ NaluEnv::parallel_comm()
 //-------- set_log_file_stream ---------------------------------------------
 //--------------------------------------------------------------------------
 void
-NaluEnv::set_log_file_stream(std::string naluLogName, bool pprint)
+NaluEnv::set_log_file_stream(
+  std::string naluLogName, bool pprint, const bool capture_cout)
 {
   if ( pRank_ == 0 ) {
     naluStreamBuffer_.open(naluLogName.c_str(), std::ios::out);
@@ -112,6 +113,9 @@ NaluEnv::set_log_file_stream(std::string naluLogName, bool pprint)
   else {
     naluLogStream_->rdbuf(&naluEmptyStreamBuffer_);
   }
+
+  if (capture_cout)
+    std::cout.rdbuf(naluLogStream_->rdbuf());
 
   // default to an empty stream buffer for parallel unless pprint is set
   parallelLog_ = pprint;
@@ -153,10 +157,11 @@ NaluEnv::close_log_file_stream()
 NaluEnv::~NaluEnv()
 {
   close_log_file_stream();
+  delete naluLogStream_;
   delete naluParallelStream_;
 
   // shut down MPI
-  MPI_Finalize();
+  // MPI_Finalize();
 }
 
 //--------------------------------------------------------------------------

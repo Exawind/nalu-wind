@@ -1,0 +1,37 @@
+name: Nalu-Wind-CI
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'cmake/**'
+      - 'include/**'
+      - 'src/**'
+      - 'unit_tests/**'
+      - 'CMakeLists.txt'
+      - 'CTestConfig.cmake'
+      - 'Dockerfile'
+      - 'nalu.C'
+      - 'unit_tests.C'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'cmake/**'
+      - 'include/**'
+      - 'src/**'
+      - 'unit_tests/**'
+      - 'CMakeLists.txt'
+      - 'CTestConfig.cmake'
+      - 'Dockerfile'
+      - 'nalu.C'
+      - 'unit_tests.C'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build and test
+        run: docker build -t nalu-wind .

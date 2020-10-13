@@ -22,6 +22,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarDiffElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarDiffFemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxBCElemKernel.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFaceFluxBCElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxPenaltyElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarMassElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarOpenAdvElemKernel.C

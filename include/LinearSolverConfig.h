@@ -47,8 +47,17 @@ public:
   inline bool getWriteMatrixFiles() const
   { return writeMatrixFiles_; }
 
+  inline bool ensureReproducible() const
+  { return ensureReproducible_; }
+
+  inline bool useNativeCudaSort() const
+  { return useNativeCudaSort_; }
+
   inline bool recomputePreconditioner() const
   { return recomputePreconditioner_; }
+
+  inline unsigned recomputePrecondFrequency() const
+  { return recomputePrecondFrequency_; }
 
   inline bool reusePreconditioner() const
   { return reusePreconditioner_; }
@@ -62,6 +71,9 @@ public:
   std::string preconditioner_type() const
   { return preconditionerType_;}
 
+  std::string preconditioner_name() const
+  { return precond_;}
+  
   inline double tolerance() const { return tolerance_; }
   inline double finalTolerance() const { return finalTolerance_; }
 
@@ -82,9 +94,12 @@ protected:
   Teuchos::RCP<Teuchos::ParameterList> paramsPrecond_;
 
   bool recomputePreconditioner_{true};
+  unsigned recomputePrecondFrequency_{1}; /* positive integer. Recompute precond before all solves */
   bool reusePreconditioner_{false};
   bool useSegregatedSolver_{false};
   bool writeMatrixFiles_{false};
+  bool ensureReproducible_{false};
+  bool useNativeCudaSort_{false};
 };
 
 class TpetraLinearSolverConfig : public LinearSolverConfig
@@ -135,6 +150,9 @@ protected:
 
   //! Krylov vector space used for GMRES solvers
   int kspace_{1};
+
+  //! COGMRES solvers
+  int sync_alg_{2};
 
   /* BoomerAMG options */
 

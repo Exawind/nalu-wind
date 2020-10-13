@@ -47,8 +47,6 @@
 #include <mesh_motion/MeshMotionAlg.h>
 #include <mesh_motion/MeshTransformationAlg.h>
 
-#include <nalu_make_unique.h>
-
 // overset
 #include <overset/OversetManager.h>
 
@@ -83,7 +81,6 @@
 
 // props; algs, evaluators and data
 #include <property_evaluator/GenericPropAlgorithm.h>
-#include <property_evaluator/HDF5TablePropAlgorithm.h>
 #include <property_evaluator/InverseDualVolumePropAlgorithm.h>
 #include <property_evaluator/InversePropAlgorithm.h>
 #include <property_evaluator/TemperaturePropAlgorithm.h>
@@ -97,9 +94,6 @@
 #include <property_evaluator/SutherlandsPropertyEvaluator.h>
 #include <property_evaluator/WaterPropertyEvaluator.h>
 #include <property_evaluator/MaterialPropertyData.h>
-
-// tables
-#include <tabular_props/HDF5FilePtr.h>
 
 // transfer
 #include <xfer/Transfer.h>
@@ -257,7 +251,6 @@ namespace nalu{
     isothermalFlow_(true),
     uniformFlow_(true),
     provideEntityCount_(false),
-    HDF5ptr_(NULL),
     autoDecompType_("None"),
     activateAura_(false),
     activateMemoryDiagnostic_(false),
@@ -322,10 +315,6 @@ Realm::~Realm()
   // delete periodic related things
   if ( NULL != periodicManager_ )
     delete periodicManager_;
-
-  // delete HDF5 file ptr
-  if ( NULL != HDF5ptr_ )
-    delete HDF5ptr_;
 
   // Delete abl forcing pointer
   if (NULL != ablForcingAlg_) delete ablForcingAlg_;
@@ -422,11 +411,7 @@ Realm::convert_bytes(double bytes)
   return out.str();
 }
 
-//--------------------------------------------------------------------------
-//-------- initialize -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::initialize()
+void Realm::initialize_prolog()
 {
   NaluEnv::self().naluOutputP0() << "Realm::initialize() Begin " << std::endl;
 
@@ -449,7 +434,7 @@ Realm::initialize()
 
   // create boundary conditions
   setup_bc();
-  
+
   // post processing algorithm creation
   setup_post_processing_algorithms();
 
@@ -524,7 +509,7 @@ Realm::initialize()
     bulkData_->sort_entities(EntityExposedFaceSorter());
     timerSortExposedFace_ += (NaluEnv::self().nalu_time() - timeSort);
   }
-  
+
   // variables that may come from the initial mesh
   input_variables_from_mesh();
 
@@ -553,10 +538,10 @@ Realm::initialize()
 
   if ( hasNonConformal_ )
     initialize_non_conformal();
+}
 
-  if ( hasOverset_ )
-    initialize_overset();
-
+void Realm::initialize_epilog()
+{
   initialize_post_processing_algorithms();
 
   compute_l2_scaling();
@@ -742,6 +727,11 @@ Realm::load(const YAML::Node & node)
   get_if_present(node, "matrix_free", matrixFree_, matrixFree_);
   if (polynomial_order() > 1 && !matrixFree_) {
     throw std::runtime_error("Polynomial orders > 1 must be matrix free");
+  }
+
+  if (matrixFree_) {
+     NaluEnv::self().naluOutputP0() 
+      << "Warning: matrix free capability is experimental and only supports a limited set of use cases" << std::endl;
   }
 
   // let everyone know about core algorithm
@@ -1026,12 +1016,12 @@ Realm::setup_post_processing_algorithms()
 #ifdef NALU_USES_OPENFAST
     switch(actuatorMeta_->actuatorType_){
       case(ActuatorType::ActLineFASTNGP):{
-        actuatorBulk_ = make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
+        actuatorBulk_ = std::make_unique<ActuatorBulkFAST>(*actuatorMeta_.get(),
           get_time_step_from_file());
        break;
       }
       case(ActuatorType::ActDiskFASTNGP):{
-        actuatorBulk_ = make_unique<ActuatorBulkDiskFAST>(*actuatorMeta_.get(),
+        actuatorBulk_ = std::make_unique<ActuatorBulkDiskFAST>(*actuatorMeta_.get(),
           get_time_step_from_file());
         break;
       }
@@ -1048,7 +1038,7 @@ Realm::setup_post_processing_algorithms()
   if (NULL != actuatorMetaSimple_)
   {
     NaluEnv::self().naluOutputP0() << "Initializing actuatorBulkSimple_"<< std::endl; // LCCOUT                                            
-    actuatorBulkSimple_ = make_unique<ActuatorBulkSimple>(*actuatorMetaSimple_.get());
+    actuatorBulkSimple_ = std::make_unique<ActuatorBulkSimple>(*actuatorMetaSimple_.get());
   }
 
 
@@ -1602,48 +1592,6 @@ Realm::setup_property()
         }
         break;
 
-        case HDF5_TABLE_MAT:
-        {
-	  if ( HDF5ptr_ == NULL ) {
-	    HDF5ptr_ = new HDF5FilePtr( materialPropertys_.propertyTableName_ );
-	  }
-
- 	  // create the new TablePropAlgorithm that knows how to read from HDF5 file
- 	  HDF5TablePropAlgorithm * auxAlg = new HDF5TablePropAlgorithm(*this, 
-								       targetPart, 
-								       HDF5ptr_->get_H5IO(),
-								       thePropField, 
-								       matData->tablePropName_, 
-								       matData->indVarName_, 
-								       matData->indVarTableName_,
-								       *metaData_ );
-          propertyAlg_.push_back(auxAlg);
-
-	  NaluEnv::self().naluOutputP0() << "With " << matData->tablePropName_ << " also read table for auxVarName " <<matData->auxVarName_  << std::endl;
-	  
-	  //TODO : need to make auxVarName_ and tableAuxVarName_ into vectors and loop over them to create a set of new auxVar's and algorithms
-
-          // auxVariable	  
-          std::string auxVarName = matData->auxVarName_;
-          if ( "na" != auxVarName ) {
-            // register and put the field; assume a scalar for now; species extraction will complicate the matter
-            ScalarFieldType *auxVar =  &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, auxVarName));
-            stk::mesh::put_field_on_mesh(*auxVar, *targetPart, nullptr);
-            // create the algorithm to populate it from an HDF5 file
-	    HDF5TablePropAlgorithm * auxVarAlg = new HDF5TablePropAlgorithm(*this, 
-									 targetPart, 
-									 HDF5ptr_->get_H5IO(),
-									 auxVar, 
-									 matData->tableAuxVarName_, 
-									 matData->indVarName_, 
-									 matData->indVarTableName_,
-									 *metaData_ );
-            propertyAlg_.push_back(auxVarAlg);
-          }
-
-	}
-	break;
-
       case GENERIC: 
         { 
           // default property evaluator
@@ -1763,11 +1711,7 @@ Realm::makeSureNodesHaveValidTopology()
   ThrowRequire(0 == nodes_vector.size());
 }
 
-//--------------------------------------------------------------------------
-//-------- pre_timestep_work -----------------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::pre_timestep_work()
+void Realm::pre_timestep_work_prolog()
 {
   // check for mesh motion
   if ( solutionOptions_->meshMotion_ ) {
@@ -1781,11 +1725,12 @@ Realm::pre_timestep_work()
     // and non-conformal algorithm
     if ( hasNonConformal_ )
       initialize_non_conformal();
+  }
+}
 
-    // and overset algorithm
-    if ( hasOverset_ )
-      initialize_overset();
-
+void Realm::pre_timestep_work_epilog()
+{
+  if ( solutionOptions_->meshMotion_ ) {
     // Reset the stk::mesh::NgpMesh instance
     meshInfo_.reset(new typename Realm::NgpMeshInfo(*bulkData_));
 
@@ -2359,7 +2304,8 @@ Realm::initialize_non_conformal()
 void
 Realm::initialize_overset()
 {
-  oversetManager_->initialize(equationSystems_.all_systems_decoupled());
+  if (hasOverset_ && !isExternalOverset_)
+    oversetManager_->execute(equationSystems_.all_systems_decoupled());
 }
 
 //--------------------------------------------------------------------------
@@ -2528,8 +2474,11 @@ Realm::compute_vrtm(const std::string& velName)
   auto vrtm = fieldMgr.get_field<double>(
     get_field_ordinal(*metaData_, velName + "_rtm"));
 
+  auto* vrtm_field = metaData_->get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, velName + "_rtm");
   const stk::mesh::Selector sel = (
-    metaData_->locally_owned_part() | metaData_->globally_shared_part());
+    metaData_->locally_owned_part() | metaData_->globally_shared_part()) &
+    stk::mesh::selectField(*vrtm_field);
   nalu_ngp::run_entity_algorithm(
     "compute_vrtm",
     ngpMesh, stk::topology::NODE_RANK, sel,
@@ -2555,7 +2504,8 @@ Realm::init_current_coordinates()
   VectorFieldType *displacement = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement");
 
   stk::mesh::Selector s_all_nodes
-    = (metaData_->locally_owned_part() | metaData_->globally_shared_part());
+    = (metaData_->locally_owned_part() | metaData_->globally_shared_part()) &
+    stk::mesh::selectField(*currentCoords);
 
   stk::mesh::BucketVector const& node_buckets = bulkData_->get_buckets( stk::topology::NODE_RANK, s_all_nodes );
   for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
@@ -2972,13 +2922,14 @@ Realm::periodic_field_max(
 void
 Realm::periodic_delta_solution_update(
   stk::mesh::FieldBase *theField,
-  const unsigned &sizeOfField) const
+  const unsigned &sizeOfField,
+  const bool &doCommunication) const
 {
   const bool bypassFieldCheck = true;
   const bool addSlaves = false;
   const bool setSlaves = true;
   periodicManager_->ngp_apply_constraints(
-    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves);
+    theField, sizeOfField, bypassFieldCheck, addSlaves, setSlaves, doCommunication);
 }
 
 //--------------------------------------------------------------------------
@@ -3004,25 +2955,6 @@ Realm::get_slave_part_vector()
     return emptyPartVector_;
 }
 
-#ifdef KOKKOS_ENABLE_CUDA
-void
-Realm::overset_orphan_node_field_update(
-  stk::mesh::FieldBase*, const unsigned, const unsigned)
-{
-  throw std::runtime_error(
-    "Non-NGP version of overset algorithm called in NGP build");
-}
-#else
-void
-Realm::overset_orphan_node_field_update(
-  stk::mesh::FieldBase *theField,
-  const unsigned sizeRow,
-  const unsigned sizeCol)
-{
-  oversetManager_->overset_update_field(theField, sizeRow, sizeCol);
-}
-#endif
-
 void
 Realm::overset_field_update(
   stk::mesh::FieldBase* field,
@@ -3030,7 +2962,7 @@ Realm::overset_field_update(
   const unsigned nCols,
   const bool doFinalSyncToDevice)
 {
-  if (!hasOverset_) return;
+  if (!hasOverset_ || isExternalOverset_) return;
 
   const double timeA = NaluEnv::self().nalu_time();
   oversetManager_->overset_update_field(
@@ -3278,6 +3210,24 @@ Realm::populate_restart(
     const double restartTime = outputInfo_->restartTime_;
     std::vector<stk::io::MeshField> missingFields;
     foundRestartTime = ioBroker_->read_defined_input_fields(restartTime, &missingFields);
+
+    {
+      for (const auto& fname: outputInfo_->restartFieldNameSet_) {
+        auto* field = stk::mesh::get_field_by_name(
+            fname, *metaData_);
+        if (field == nullptr) continue;
+
+        const unsigned numStates = field->number_of_states();
+        for (unsigned i=0; i < numStates; ++i) {
+          auto* fld = field->field_state(
+              static_cast<stk::mesh::FieldState>(i));
+          fld->modify_on_host();
+          ngp_field_manager().get_field<double>(fld->mesh_meta_data_ordinal());
+          fld->sync_to_device();
+        }
+      }
+    }
+
     if ( missingFields.size() > 0 ){
       for ( size_t k = 0; k < missingFields.size(); ++k) {
         NaluEnv::self().naluOutputP0() << "WARNING: Restart value for Field "
@@ -4259,6 +4209,8 @@ Realm::process_external_data_transfer()
   std::vector<Transfer *>::iterator ii;
   for( ii=externalDataTransferVec_.begin(); ii!=externalDataTransferVec_.end(); ++ii )
     (*ii)->execute();
+
+  equationSystems_.post_external_data_transfer_work();
   timeXfer += NaluEnv::self().nalu_time();
   timerTransferExecute_ += timeXfer;
 }
@@ -4396,7 +4348,7 @@ Realm::create_promoted_output_mesh()
     }
 
     auto* coords = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-    promotionIO_ = make_unique<PromotedElementIO>(
+    promotionIO_ = std::make_unique<PromotedElementIO>(
       promotionOrder_,
       *metaData_,
       *bulkData_,
@@ -4545,7 +4497,7 @@ Realm::get_stefan_boltzmann()
 }
 
 //--------------------------------------------------------------------------
-//-------- get_turb_model_constant() ------------------------------------------
+//-------- get_turb_model_constant() ---------------------------------------
 //--------------------------------------------------------------------------
 double
 Realm::get_turb_model_constant(
@@ -4562,7 +4514,15 @@ Realm::get_turb_model_constant(
 }
 
 //--------------------------------------------------------------------------
-//-------- get_buckets() ----------------------------------------------
+//-------- get_turbulence_model() ------------------------------------------
+//--------------------------------------------------------------------------
+TurbulenceModel
+Realm::get_turbulence_model() const {
+  return solutionOptions_->turbulenceModel_;
+}
+
+//--------------------------------------------------------------------------
+//-------- get_buckets() ---------------------------------------------------
 //--------------------------------------------------------------------------
 stk::mesh::BucketVector const& Realm::get_buckets( stk::mesh::EntityRank rank,
                                                    const stk::mesh::Selector & selector) const
@@ -4609,14 +4569,24 @@ Realm::get_activate_aura()
   return activateAura_;
 }
 
-//--------------------------------------------------------------------------
-//-------- get_inactive_selector() -----------------------------------------
-//--------------------------------------------------------------------------
+/** Return a selector containing inactive parts
+ *
+ *  The selector returned from this method will contain entities from
+ *  parts that are do not participate in the PDE solution process, but
+ *  are created/used for pre and post-processing purposes. Examples include:
+ *  data probes, inactive sub-blocks from overset simulations after hole
+ *  cut, etc.
+ *
+ *  \return stk::mesh::Selector Inactive entities
+ */
 stk::mesh::Selector
 Realm::get_inactive_selector()
 {
-  // accumulate inactive parts relative to the universal part
-  
+  // Return early if matrix free is active, nothing to do
+  if (matrixFree_) {
+      return stk::mesh::Selector{};
+  }
+
   // provide inactive Overset part that excludes background surface
   //
   // Treat this selector differently because certain entities from interior
@@ -4624,6 +4594,11 @@ Realm::get_inactive_selector()
   stk::mesh::Selector nothing;
   stk::mesh::Selector inactiveOverSetSelector = (hasOverset_) ?
       oversetManager_->get_inactive_selector() : nothing;
+
+  stk::mesh::Selector inactiveDPSel =
+      (dataProbePostProcessing_ != nullptr)
+      ? dataProbePostProcessing_->get_inactive_selector()
+      : nothing;
 
   stk::mesh::Selector otherInactiveSelector = (
     metaData_->universal_part()
@@ -4634,7 +4609,7 @@ Realm::get_inactive_selector()
     otherInactiveSelector = nothing;
   }
 
-  return inactiveOverSetSelector | otherInactiveSelector;
+  return inactiveOverSetSelector | otherInactiveSelector | inactiveDPSel;
 }
 
 //--------------------------------------------------------------------------

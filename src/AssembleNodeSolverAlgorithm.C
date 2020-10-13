@@ -52,6 +52,10 @@ AssembleNodeSolverAlgorithm::AssembleNodeSolverAlgorithm(
 void
 AssembleNodeSolverAlgorithm::initialize_connectivity()
 {
+  //Do NOT build the graph if you don't have supplementalAlgs
+  const size_t supplementalAlgSize = supplementalAlg_.size();
+  if (supplementalAlgSize < 1) return;
+
   eqSystem_->linsys_->buildNodeGraph(partVec_);
 }
 //--------------------------------------------------------------------------

@@ -38,6 +38,7 @@ struct ActuatorMetaFAST : public ActuatorMeta
   ActVectorDblDv epsilon_;
   ActVectorDblDv epsilonChord_;
   ActVectorDblDv epsilonTower_;
+  ActVectorDblDv epsilonHub_;
   ActFixScalarBool useUniformAziSampling_;
   ActFixScalarInt nPointsSwept_;
   ActFixScalarInt nBlades_;

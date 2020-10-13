@@ -48,6 +48,7 @@ private:
   unsigned exposedAreaVec_   {stk::mesh::InvalidOrdinal};
   unsigned openMassFlowRate_ {stk::mesh::InvalidOrdinal};
   unsigned Udiag_            {stk::mesh::InvalidOrdinal};
+  unsigned dynPress_         {stk::mesh::InvalidOrdinal};
 
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};

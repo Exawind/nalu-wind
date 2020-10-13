@@ -43,7 +43,7 @@ protected:
 };
 
 
-TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
+TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
 {
   const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
@@ -79,7 +79,7 @@ TEST_F(ActuatorBulkFastTests, initializeActuatorBulk)
 }
 
 
-TEST_F(ActuatorBulkFastTests, epsilonTowerAndAnisotropicEpsilon)
+TEST_F(ActuatorBulkFastTests, NGP_epsilonTowerAndAnisotropicEpsilon)
 {
 
   auto epsLoc = std::find_if(fastParseParams_.begin(), fastParseParams_.end(),

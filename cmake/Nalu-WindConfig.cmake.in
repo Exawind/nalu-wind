@@ -1,0 +1,54 @@
+@PACKAGE_INIT@
+
+list(APPEND CMAKE_MODULE_PATH "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/cmake/Modules")
+
+# Set informational variables for all dependencies that were enabled
+set(NALU_USES_HYPRE @ENABLE_HYPRE@)
+set(NALU_USES_TIOGA @ENABLE_TIOGA@)
+set(NALU_USES_OPENFAST @ENABLE_OPENFAST@)
+set(NALU_USES_FFTW @ENABLE_FFTW@)
+
+# Load dependency libraries so that the targets are available
+
+if (NOT ${Trilinos_FOUND})
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "@Trilinos_DIR@")
+  find_package(Trilinos QUIET REQUIRED)
+endif()
+
+if (NOT ${YAML-CPP_FOUND})
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "@YAML-CPP_DIR@")
+  find_package(YAML-CPP QUIET REQUIRED)
+endif()
+
+if (NOT ${Boost_FOUND})
+  find_package(Boost QUIET REQUIRED COMPONENTS filesystem iostreams)
+endif()
+
+if (${NALU_USES_TIOGA} AND NOT ${TIOGA_FOUND})
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "@TIOGA_DIR@")
+  find_package(TIOGA QUIET REQUIRED)
+endif()
+
+if (${NALU_USES_OPENFAST} AND NOT ${OpenFAST_FOUND})
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "@OpenFAST_DIR@")
+  find_package(OpenFAST QUIET REQUIRED)
+endif()
+
+if (${NALU_USES_HYPRE} AND NOT ${HYPRE_FOUND})
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "@HYPRE_DIR@")
+  find_package(HYPRE QUIET REQUIRED)
+endif()
+
+if (${NALU_USES_FFTW} AND NOT ${FFTW_FOUND})
+  set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "@FFTW_DIR@")
+  find_package(FFTW QUIET REQUIRED)
+endif()
+
+set_and_check(NALU_WIND_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/include")
+set_and_check(NALU_WIND_LIBRARY_DIRS "${PACKAGE_PREFIX_DIR}/lib")
+
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+set(NALU_WIND_LIBRARIES "@PROJECT_NAME@::nalu")
+set(NALU_WIND_FOUND TRUE)
+
+check_required_components(NALU_WIND)

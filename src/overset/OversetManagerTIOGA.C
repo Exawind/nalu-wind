@@ -11,13 +11,11 @@
 #ifdef NALU_USES_TIOGA
 
 #include "overset/OversetManagerTIOGA.h"
-
 #include "overset/OversetInfo.h"
-
-#include <NaluEnv.h>
-#include <NaluParsing.h>
-#include <Realm.h>
-#include <master_element/MasterElement.h>
+#include "overset/OversetFieldData.h"
+#include "NaluEnv.h"
+#include "NaluParsing.h"
+#include "Realm.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -37,7 +35,8 @@ OversetManagerTIOGA::OversetManagerTIOGA(
   const OversetUserData& oversetUserData)
   : OversetManager(realm),
     oversetUserData_(oversetUserData),
-    tiogaIface_(*this, oversetUserData.oversetBlocks_)
+    tiogaIface_(*this, oversetUserData.oversetBlocks_,
+                realm.get_coordinates_name())
 {
   ThrowRequireMsg(
     metaData_->spatial_dimension() == 3u,
@@ -53,19 +52,25 @@ OversetManagerTIOGA::setup()
   tiogaIface_.setup(realm_.bcPartVec_);
 }
 
-void
-OversetManagerTIOGA::initialize(const bool isDecoupled)
+void OversetManagerTIOGA::initialize()
 {
   const double timeA = NaluEnv::self().nalu_time();
   if (isInit_) {
     tiogaIface_.initialize();
     isInit_ = false;
   }
+  const double timeB = NaluEnv::self().nalu_time();
+  timerConnectivity_ += (timeB - timeA);
+}
 
-  delete_info_vec();
-  oversetInfoVec_.clear();
-  holeNodes_.clear();
-  fringeNodes_.clear();
+void
+OversetManagerTIOGA::execute(const bool isDecoupled)
+{
+  const double timeA = NaluEnv::self().nalu_time();
+  if (isInit_) {
+    tiogaIface_.initialize();
+    isInit_ = false;
+  }
 
   tiogaIface_.execute(isDecoupled);
 

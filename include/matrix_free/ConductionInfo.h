@@ -10,6 +10,8 @@
 #ifndef CONDUCTION_INFO_H
 #define CONDUCTION_INFO_H
 
+#include "matrix_free/LinSysInfo.h"
+
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
@@ -31,7 +33,7 @@ struct conduction_info
   static constexpr auto qtmp_name = "tTmp";
   static constexpr auto volume_weight_name = "volumetric_heat_capacity";
   static constexpr auto diffusion_weight_name = "thermal_conductivity";
-  static constexpr auto gid_name = "tpet_global_id";
+  static constexpr auto gid_name = linsys_info::gid_name;
   static constexpr auto qbc_name = "temperature_bc";
   static constexpr auto flux_name = "heat_flux_bc";
 };

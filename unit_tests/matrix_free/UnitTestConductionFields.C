@@ -8,6 +8,8 @@
 //
 
 #include "matrix_free/ConductionFields.h"
+#include "matrix_free/ConductionInfo.h"
+
 #include "matrix_free/StkSimdConnectivityMap.h"
 
 #include "gtest/gtest.h"

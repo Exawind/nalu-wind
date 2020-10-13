@@ -42,6 +42,7 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
       solnOpts->activateOpenMdotCorrection_ ? "pressure" : "pressure_bc")),
     Gpdx_(get_field_ordinal(meta, "dpdx")),
     Udiag_(get_field_ordinal(meta, "momentum_diag")),
+    dynPress_(get_field_ordinal(meta, "dynamic_pressure", meta.side_rank())),
     pstabFac_(solnOpts->activateOpenMdotCorrection_ ? 0.0 : 1.0),
     nocFac_(solnOpts_->get_noc_usage("pressure")),
     meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
@@ -53,6 +54,8 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
   elemData.add_cvfem_surface_me(meSCS_);
 
   faceData.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+  faceData.add_face_field(dynPress_, BcAlgTraits::numFaceIp_);
+
   faceData.add_gathered_nodal_field(velocityRTM_, BcAlgTraits::nDim_);
   faceData.add_gathered_nodal_field(density_, 1);
   faceData.add_gathered_nodal_field(pressureBC_, 1);
@@ -89,6 +92,8 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
   const auto& v_pbc = faceScratchViews.get_scratch_view_1D(pressureBC_);
   const auto& v_area = faceScratchViews.get_scratch_view_2D(exposedAreaVec_);
   const auto& v_Gpdx = faceScratchViews.get_scratch_view_2D(Gpdx_);
+  const auto& v_dyn_press = faceScratchViews.get_scratch_view_1D(dynPress_);
+
 
   const auto& v_pressure = elemScratchViews.get_scratch_view_1D(pressure_);
   const auto& v_coord = elemScratchViews.get_scratch_view_2D(coordinates_);
@@ -111,8 +116,9 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::execute(
     }
     const DoubleType inv_axdx = 1.0 / axdx;
 
+    const DoubleType pbc = v_pbc(ip) - v_dyn_press(ip);
     DoubleType tmdot =
-      -projTimeScale * (v_pbc(ip) - pressureIp) * asq * inv_axdx * pstabFac_ -
+      -projTimeScale * (pbc - pressureIp) * asq * inv_axdx * pstabFac_ -
       mdotCorr_;
 
     for (int d=0; d < BcAlgTraits::nDim_; ++d) {

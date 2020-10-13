@@ -7,26 +7,40 @@
 // for more details.
 //
 
-#include "matrix_free/ConductionUpdate.h"
-#include "matrix_free/ConductionFields.h"
 #include "StkConductionFixture.h"
 
-#include <Teuchos_ParameterList.hpp>
-#include <memory>
-#include <stk_mesh/base/Selector.hpp>
-#include <stk_mesh/base/Ngp.hpp>
-#include <stk_mesh/base/NgpForEachEntity.hpp>
-#include <stk_topology/topology.hpp>
-#include <streambuf>
+#include "matrix_free/ConductionFields.h"
+#include "matrix_free/ConductionInfo.h"
+#include "matrix_free/ConductionUpdate.h"
+#include "matrix_free/EquationUpdate.h"
 
+#include "gtest/gtest.h"
+
+#include "Kokkos_Array.hpp"
+#include "Kokkos_Macros.hpp"
+#include "Kokkos_Parallel.hpp"
+#include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_Export.hpp"
-#include "Tpetra_Import.hpp"
-#include "Tpetra_Map.hpp"
-#include "Tpetra_MultiVector.hpp"
-#include "Tpetra_Operator.hpp"
-#include "stk_mesh/base/FieldBLAS.hpp"
+
+#include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/Bucket.hpp"
+#include "stk_mesh/base/BulkData.hpp"
+#include "stk_mesh/base/Field.hpp"
+#include "stk_mesh/base/FieldBase.hpp"
+#include "stk_mesh/base/FieldState.hpp"
+#include "stk_mesh/base/FieldTraits.hpp"
 #include "stk_mesh/base/MetaData.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/NgpForEachEntity.hpp"
+#include "stk_mesh/base/Selector.hpp"
+#include "stk_mesh/base/Types.hpp"
+#include "stk_topology/topology.hpp"
+
+#include <math.h>
+#include <algorithm>
+#include <limits>
+#include <memory>
 
 namespace sierra {
 namespace nalu {
@@ -60,6 +74,19 @@ field_add(
   y.modify_on_device();
 }
 
+stk::mesh::NgpField<double>&
+get_ngp_field(
+  const stk::mesh::MetaData& meta,
+  std::string name,
+  stk::mesh::FieldState state = stk::mesh::StateNP1)
+{
+  ThrowAssert(meta.get_field(stk::topology::NODE_RANK, name));
+  ThrowAssert(
+    meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+  return stk::mesh::get_updated_ngp_field<double>(
+    *meta.get_field(stk::topology::NODE_RANK, name)->field_state(state));
+}
+
 double
 initial_condition(double x, double y, double z)
 {
@@ -82,7 +109,7 @@ class ConductionSimulationFixture : public ::ConductionFixture
 protected:
   ConductionSimulationFixture()
     : ConductionFixture(nx, scale),
-      update(make_equation_update<ConductionUpdate>(
+      update(make_updater<ConductionUpdate>(
         order,
         bulk,
         Teuchos::ParameterList{},
@@ -122,11 +149,7 @@ protected:
     update->initialize();
     update->compute_preconditioner(gammas[0]);
     update->compute_update(
-      gammas, get_ngp_field(meta, conduction_info::qtmp_name));
-    field_add(
-      mesh, meta.universal_part(),
-      get_ngp_field(meta, conduction_info::qtmp_name),
-      get_ngp_field(meta, conduction_info::q_name, stk::mesh::StateNP1));
+      gammas, get_ngp_field(meta, conduction_info::q_name));
     update->update_solution_fields();
     time += dt;
 
@@ -143,11 +166,7 @@ protected:
       update->predict_state();
 
       update->compute_update(
-        gammas, get_ngp_field(meta, conduction_info::qtmp_name));
-      field_add(
-        mesh, meta.universal_part(),
-        get_ngp_field(meta, conduction_info::qtmp_name),
-        get_ngp_field(meta, conduction_info::q_name, stk::mesh::StateNP1));
+        gammas, get_ngp_field(meta, conduction_info::q_name));
       update->update_solution_fields();
       time += dt;
     }
@@ -211,7 +230,7 @@ class QuadraticElementConductionSimulationFixture : public ::ConductionFixtureP2
 protected:
   QuadraticElementConductionSimulationFixture()
     : ConductionFixtureP2(nx / order, scale),
-      update(make_equation_update<ConductionUpdate>(
+      update(make_updater<ConductionUpdate>(
         order,
         bulk,
         Teuchos::ParameterList{},
@@ -281,11 +300,7 @@ protected:
     update->initialize();
     update->compute_preconditioner(gammas[0]);
     update->compute_update(
-      gammas, get_ngp_field(meta, conduction_info::qtmp_name));
-    field_add(
-      mesh, meta.universal_part(),
-      get_ngp_field(meta, conduction_info::qtmp_name),
-      get_ngp_field(meta, conduction_info::q_name, stk::mesh::StateNP1));
+      gammas, get_ngp_field(meta, conduction_info::q_name));
     update->update_solution_fields();
     time += dt;
 
@@ -302,11 +317,7 @@ protected:
       update->predict_state();
 
       update->compute_update(
-        gammas, get_ngp_field(meta, conduction_info::qtmp_name));
-      field_add(
-        mesh, meta.universal_part(),
-        get_ngp_field(meta, conduction_info::qtmp_name),
-        get_ngp_field(meta, conduction_info::q_name, stk::mesh::StateNP1));
+        gammas, get_ngp_field(meta, conduction_info::q_name));
       update->update_solution_fields();
       time += dt;
     }

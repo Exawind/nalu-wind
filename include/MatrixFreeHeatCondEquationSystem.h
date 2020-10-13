@@ -32,6 +32,7 @@ namespace nalu {
 class MatrixFreeHeatCondEquationSystem final : public EquationSystem
 {
 public:
+  static constexpr int dim = 3;
   MatrixFreeHeatCondEquationSystem(EquationSystems& equationSystems);
   virtual ~MatrixFreeHeatCondEquationSystem();
 
@@ -42,6 +43,7 @@ public:
     stk::mesh::Part* part,
     const stk::topology& partTopo,
     const WallBoundaryConditionData& wallBCData) final;
+
   double provide_norm() const final;
   double provide_scaled_norm() const final;
   void solve_and_update() final;
@@ -62,10 +64,11 @@ private:
     static constexpr auto thermal_conductivity = "thermal_conductivity";
     static constexpr auto density = "density";
     static constexpr auto specific_heat = "specific_heat";
+    static constexpr auto dtdx = "dtdx";
   };
 
   void initialize_solve_and_update();
-  void sync_delta_on_periodic_nodes() const;
+  void sync_field_on_periodic_nodes(std::string name, int len) const;
   void compute_volumetric_heat_capacity() const;
 
   const int polynomial_order_{1};
@@ -76,6 +79,7 @@ private:
   stk::mesh::Selector flux_selector_;
 
   std::unique_ptr<matrix_free::EquationUpdate> update_;
+  std::unique_ptr<matrix_free::GradientUpdate> grad_;
 
   bool initialized_{false};
 };

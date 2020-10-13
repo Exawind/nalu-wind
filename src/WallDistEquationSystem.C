@@ -115,8 +115,8 @@ WallDistEquationSystem::WallDistEquationSystem(
       "Consistent mass matrix PNG is not available for WallDistEquationSystem");
 
   auto solverName = eqSystems.get_solver_block_name("ndtw");
-  LinearSolver* solver =
-    realm_.root()->linearSolvers_->create_solver(solverName, EQ_WALL_DISTANCE);
+  LinearSolver* solver = realm_.root()->linearSolvers_->create_solver(
+    solverName, realm_.name(), EQ_WALL_DISTANCE);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   NaluEnv::self().naluOutputP0()
@@ -411,14 +411,9 @@ WallDistEquationSystem::reinitialize_linear_system()
 {
   delete linsys_;
   const EquationType eqID = EQ_WALL_DISTANCE;
-  auto it = realm_.root()->linearSolvers_->solvers_.find(eqID);
-  if (it != realm_.root()->linearSolvers_->solvers_.end())
-    delete it->second;
-
-  auto solverName =
-    realm_.equationSystems_.get_solver_block_name("ndtw");
-  LinearSolver* solver =
-    realm_.root()->linearSolvers_->create_solver(solverName, eqID);
+  auto solverName = realm_.equationSystems_.get_solver_block_name("ndtw");
+  LinearSolver* solver = realm_.root()->linearSolvers_->reinitialize_solver(
+    solverName, realm_.name(), eqID);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   solverAlgDriver_->initialize_connectivity();

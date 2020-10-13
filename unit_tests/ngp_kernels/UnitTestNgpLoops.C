@@ -19,6 +19,7 @@
 #include "ngp_utils/NgpFieldManager.h"
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/GetNgpField.hpp"
 
 #include <cmath>
 
@@ -85,7 +86,7 @@ void basic_node_loop(
   const auto& meta = bulk.mesh_meta_data();
   stk::mesh::Selector sel = meta.universal_part();
   stk::mesh::NgpMesh ngpMesh(bulk);
-  stk::mesh::NgpField<double> ngpPressure(bulk, pressure);
+  stk::mesh::NgpField<double>& ngpPressure = stk::mesh::get_updated_ngp_field<double>(pressure);
 
   sierra::nalu::nalu_ngp::run_entity_algorithm(
     "unittest_basic_node_loop",
@@ -121,7 +122,7 @@ void basic_node_reduce(
   const auto& meta = bulk.mesh_meta_data();
   stk::mesh::Selector sel = meta.universal_part();
   stk::mesh::NgpMesh ngpMesh(bulk);
-  stk::mesh::NgpField<double> ngpPressure(bulk, pressure);
+  stk::mesh::NgpField<double>& ngpPressure = stk::mesh::get_updated_ngp_field<double>(pressure);
 
 
   double reduceVal = 0.0;
@@ -167,7 +168,7 @@ void basic_node_reduce_minmax(
   const auto& coords =  meta.coordinate_field();
   stk::mesh::Selector sel = meta.universal_part();
   stk::mesh::NgpMesh ngpMesh(bulk);
-  stk::mesh::NgpField<double> ngpCoords(bulk, *coords);
+  stk::mesh::NgpField<double>& ngpCoords = stk::mesh::get_updated_ngp_field<double>(*coords);
 
   using value_type = Kokkos::Max<double>::value_type;
   value_type max;
@@ -206,7 +207,7 @@ void basic_node_reduce_minmax_alt(
   const auto& coords =  meta.coordinate_field();
   stk::mesh::Selector sel = meta.universal_part();
   stk::mesh::NgpMesh ngpMesh(bulk);
-  stk::mesh::NgpField<double> ngpCoords(bulk, *coords);
+  stk::mesh::NgpField<double>& ngpCoords = stk::mesh::get_updated_ngp_field<double>(*coords);
 
   using value_type = Kokkos::MinMax<double>::value_type;
   value_type minmax;
@@ -238,7 +239,7 @@ void basic_node_reduce_minmaxsum(
   const auto& coords =  meta.coordinate_field();
   stk::mesh::Selector sel = meta.universal_part();
   stk::mesh::NgpMesh ngpMesh(bulk);
-  stk::mesh::NgpField<double> ngpCoords(bulk, *coords);
+  stk::mesh::NgpField<double>& ngpCoords = stk::mesh::get_updated_ngp_field<double>(*coords);
 
   value_type minmaxsum;
   MinMaxSum reducer(minmaxsum);
@@ -268,7 +269,7 @@ basic_node_reduce_array(
   const auto& meta = bulk.mesh_meta_data();
   stk::mesh::Selector sel = meta.universal_part();
   stk::mesh::NgpMesh ngpMesh(bulk);
-  stk::mesh::NgpField<double> ngpPressure(bulk, pressure);
+  stk::mesh::NgpField<double>& ngpPressure = stk::mesh::get_updated_ngp_field<double>(pressure);
 
   using value_type = Kokkos::Sum<sierra::nalu::nalu_ngp::ArrayDbl2>::value_type;
   value_type lsum;
@@ -296,8 +297,8 @@ void basic_elem_loop(
   const double presSet = 10.0;
 
   stk::mesh::NgpMesh ngpMesh(bulk);
-  stk::mesh::NgpField<double> ngpMassFlowRate(bulk, massFlowRate);
-  stk::mesh::NgpField<double> ngpPressure(bulk, pressure);
+  stk::mesh::NgpField<double>& ngpMassFlowRate = stk::mesh::get_updated_ngp_field<double>(massFlowRate);
+  stk::mesh::NgpField<double>& ngpPressure = stk::mesh::get_updated_ngp_field<double>(pressure);
 
   const auto& meta = bulk.mesh_meta_data();
   stk::mesh::Selector sel = meta.universal_part();
@@ -351,8 +352,8 @@ void basic_edge_loop(
   const double presSet = 10.0;
 
   stk::mesh::NgpMesh ngpMesh(bulk);
-  stk::mesh::NgpField<double> ngpMassFlowRate(bulk, mdotEdge);
-  stk::mesh::NgpField<double> ngpPressure(bulk, pressure);
+  stk::mesh::NgpField<double>& ngpMassFlowRate = stk::mesh::get_updated_ngp_field<double>(mdotEdge);
+  stk::mesh::NgpField<double>& ngpPressure = stk::mesh::get_updated_ngp_field<double>(pressure);
 
   const auto& meta = bulk.mesh_meta_data();
   stk::mesh::Selector sel = meta.universal_part();

@@ -12,6 +12,7 @@
 #ifndef NaluParsing_h
 #define NaluParsing_h
 
+#include "edge_kernels/MomentumOpenEdgeKernel.h"
 #include <BoundaryConditions.h>
 #include <Enums.h>
 #include <InitialConditions.h>
@@ -55,14 +56,8 @@ struct WallUserData : public UserData {
   TurbKinEnergy tke_;
   MixtureFraction mixFrac_;
   MassFraction massFraction_;
-  Emissivity emissivity_;
-  Irradiation irradiation_;
-  Transmissivity transmissivity_;
-  EnvironmentalT environmentalT_;
   NormalHeatFlux q_;
   ReferenceTemperature referenceTemperature_;
-  HeatTransferCoefficient heatTransferCoefficient_;
-  RobinCouplingParameter robinCouplingParameter_;
   Pressure pressure_;
   unsigned gravityComponent_;
   RoughnessHeight z0_;
@@ -72,13 +67,10 @@ struct WallUserData : public UserData {
   bool heatFluxSpec_;
   bool isInterface_;
   bool refTempSpec_;
-  bool htcSpec_;
-  bool robinParameterSpec_;
-  bool irradSpec_;
-  bool emissSpec_;
 
   bool wallFunctionApproach_;
   bool ablWallFunctionApproach_;
+  YAML::Node ablWallFunctionNode_;
 
   bool isFsiInterface_;
 
@@ -89,9 +81,6 @@ struct WallUserData : public UserData {
       heatFluxSpec_(false),
       isInterface_(false),
       refTempSpec_(false),
-      htcSpec_(false),
-      robinParameterSpec_(false),
-      irradSpec_(false),
       wallFunctionApproach_(false),
       ablWallFunctionApproach_(false),
       isFsiInterface_(false) {}    
@@ -129,10 +118,14 @@ struct OpenUserData : public UserData {
   bool sdrSpec_;
   bool mixFracSpec_;
   bool massFractionSpec_;
+  bool totalP_;
+  EntrainmentMethod entrainMethod_;
 
   OpenUserData()
     : UserData(),
-      uSpec_(false), pSpec_(false), tkeSpec_(false), sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false)
+      uSpec_(false), pSpec_(false), tkeSpec_(false), 
+      sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false), 
+      totalP_{false}, entrainMethod_{EntrainmentMethod::COMPUTED}
   {}
 };
 
@@ -458,32 +451,8 @@ template<> struct convert<sierra::nalu::MassFraction> {
   static bool decode(const Node& node, sierra::nalu::MassFraction& rhs) ;
 };
 
-template<> struct convert<sierra::nalu::Emissivity> {
-  static bool decode(const Node& node, sierra::nalu::Emissivity& rhs) ;
-};
-
-template<> struct convert<sierra::nalu::Irradiation> {
-  static bool decode(const Node& node, sierra::nalu::Irradiation& rhs) ;
-};
-
-template<> struct convert<sierra::nalu::Transmissivity> {
-  static bool decode(const Node& node, sierra::nalu::Transmissivity& rhs) ;
-};
-
-template<> struct convert<sierra::nalu::EnvironmentalT> {
-  static bool decode(const Node& node, sierra::nalu::EnvironmentalT& rhs) ;
-};
-
 template<> struct convert<sierra::nalu::ReferenceTemperature> {
   static bool decode(const Node& node, sierra::nalu::ReferenceTemperature& rhs) ;
-};
-
-template<> struct convert<sierra::nalu::HeatTransferCoefficient> {
-  static bool decode(const Node& node, sierra::nalu::HeatTransferCoefficient& rhs) ;
-};
-
-template<> struct convert<sierra::nalu::RobinCouplingParameter> {
-  static bool decode(const Node& node, sierra::nalu::RobinCouplingParameter& rhs) ;
 };
 
 template<> struct convert<sierra::nalu::UserData> {

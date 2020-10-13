@@ -8,34 +8,29 @@
 //
 
 #include "matrix_free/ConductionSolutionUpdate.h"
-#include "matrix_free/MatrixFreeSolver.h"
+
 #include "matrix_free/ConductionFields.h"
-#include "matrix_free/ConductionJacobiPreconditioner.h"
-#include "matrix_free/ConductionOperator.h"
+#include "matrix_free/MatrixFreeSolver.h"
 #include "matrix_free/PolynomialOrders.h"
-#include "matrix_free/StkEntityToRowMap.h"
 #include "matrix_free/StkSimdConnectivityMap.h"
 #include "matrix_free/StkSimdFaceConnectivityMap.h"
-#include "matrix_free/StkSimdGatheredElementData.h"
 #include "matrix_free/StkSimdNodeConnectivityMap.h"
-#include "matrix_free/StkToTpetraMap.h"
-#include "matrix_free/KokkosFramework.h"
-#include "matrix_free/Coefficients.h"
 
-#include <Kokkos_Parallel.hpp>
-#include <Teuchos_ParameterList.hpp>
-#include <Teuchos_RCPDecl.hpp>
-#include <Tpetra_MultiVector_decl.hpp>
-#include <mpi.h>
-#include "stk_mesh/base/NgpProfilingBlock.hpp"
+#include "Kokkos_Array.hpp"
+#include "Kokkos_View.hpp"
 
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_Export.hpp"
-#include "Tpetra_Map.hpp"
-#include "Tpetra_MultiVector.hpp"
-#include "Tpetra_Operator.hpp"
+#include "Teuchos_ParameterList.hpp"
+#include "Tpetra_CombineMode.hpp"
+#include "Tpetra_Export_decl.hpp"
+#include "Tpetra_Map_decl.hpp"
+#include "Tpetra_MultiVector_decl.hpp"
 
-#include "mpi.h"
+#include "stk_mesh/base/NgpProfilingBlock.hpp"
+#include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/Selector.hpp"
+
+#include <type_traits>
 
 namespace sierra {
 namespace nalu {
@@ -58,28 +53,22 @@ INSTANTIATE_POLYSTRUCT(ConductionOffsetViews);
 template <int p>
 ConductionSolutionUpdate<p>::ConductionSolutionUpdate(
   Teuchos::ParameterList params,
-  const stk::mesh::NgpMesh& mesh_in,
-  stk::mesh::NgpField<typename Tpetra::Map<>::global_ordinal_type> gid,
-  stk::mesh::Selector active_in,
-  stk::mesh::Selector dirichlet_in,
-  stk::mesh::Selector flux_in,
-  stk::mesh::Selector replicas_in)
-  : linsys_(mesh_in, active_in, gid, replicas_in),
-    offset_views_(
-      mesh_in, linsys_.stk_lid_to_tpetra_lid, active_in, dirichlet_in, flux_in),
-    exporter_(
-      Teuchos::rcpFromRef(linsys_.owned_and_shared),
-      Teuchos::rcpFromRef(linsys_.owned)),
-    resid_op_(offset_views_.offsets, exporter_),
-    lin_op_(offset_views_.offsets, exporter_),
-    jacobi_preconditioner_(
-      offset_views_.offsets,
+  const StkToTpetraMaps& linsys,
+  const Tpetra::Export<>& exporter,
+  const ConductionOffsetViews<p>& offset_views)
+  : linsys_(linsys),
+    exporter_(exporter),
+    offset_views_(offset_views),
+    resid_op_(offset_views.offsets, exporter),
+    lin_op_(offset_views.offsets, exporter_),
+    prec_op_(
+      offset_views.offsets,
       exporter_,
       params.isParameter("Number of Sweeps")
         ? params.get<int>("Number of Sweeps")
         : 1),
-    linear_solver_(lin_op_, 1, params),
-    owned_and_shared_mv_(exporter_.getSourceMap(), 1)
+    linear_solver_(lin_op_, num_vectors, params),
+    owned_and_shared_mv_(exporter_.getSourceMap(), num_vectors)
 {
 }
 
@@ -90,12 +79,11 @@ ConductionSolutionUpdate<p>::compute_preconditioner(
 {
   stk::mesh::ProfilingBlock pf(
     "ConductionSolutionUpdate<p>::compute_preconditioner");
-  linear_solver_.set_preconditioner(jacobi_preconditioner_);
-  jacobi_preconditioner_.set_dirichlet_nodes(
-    offset_views_.dirichlet_bc_offsets);
-  jacobi_preconditioner_.set_coefficients(gamma, coeffs);
-  jacobi_preconditioner_.compute_diagonal();
-  jacobi_preconditioner_.set_linear_operator(Teuchos::rcpFromRef(lin_op_));
+  linear_solver_.set_preconditioner(prec_op_);
+  prec_op_.set_dirichlet_nodes(offset_views_.dirichlet_bc_offsets);
+  prec_op_.set_coefficients(gamma, coeffs);
+  prec_op_.set_linear_operator(Teuchos::rcpFromRef(lin_op_));
+  prec_op_.compute_diagonal();
 }
 
 template <int p>
@@ -116,28 +104,11 @@ ConductionSolutionUpdate<p>::compute_residual(
     flux_bc_fields.flux);
   resid_op_.compute(linear_solver_.rhs());
 }
-namespace {
 
-void
-copy_tpetra_solution_vector_to_stk_field(
-  const_mesh_index_row_view_type lide,
-  const typename Tpetra::MultiVector<>::dual_view_type::t_dev delta_view,
-  stk::mesh::NgpField<double>& delta_stk_field)
-{
-  Kokkos::parallel_for(
-    delta_view.extent_int(0), KOKKOS_LAMBDA(int k) {
-      delta_stk_field.get(lide(k), 0) = delta_view(k, 0);
-    });
-  delta_stk_field.modify_on_device();
-}
-
-} // namespace
 template <int p>
-void
+const Tpetra::MultiVector<>&
 ConductionSolutionUpdate<p>::compute_delta(
-  double gamma,
-  LinearizedResidualFields<p> coeffs,
-  stk::mesh::NgpField<double>& delta)
+  double gamma, LinearizedResidualFields<p> coeffs)
 {
   stk::mesh::ProfilingBlock pf("ConductionSolutionUpdate<p>::compute_delta");
   lin_op_.set_dirichlet_nodes(offset_views_.dirichlet_bc_offsets);
@@ -146,14 +117,9 @@ ConductionSolutionUpdate<p>::compute_delta(
   if (exporter_.getTargetMap()->isDistributed()) {
     owned_and_shared_mv_.doImport(
       linear_solver_.lhs(), exporter_, Tpetra::INSERT);
-    copy_tpetra_solution_vector_to_stk_field(
-      linsys_.tpetra_lid_to_stk_lid, owned_and_shared_mv_.getLocalViewDevice(),
-      delta);
-  } else {
-    copy_tpetra_solution_vector_to_stk_field(
-      linsys_.tpetra_lid_to_stk_lid, linear_solver_.lhs().getLocalViewDevice(),
-      delta);
+    return owned_and_shared_mv_;
   }
+  return linear_solver_.lhs();
 }
 
 template <int p>

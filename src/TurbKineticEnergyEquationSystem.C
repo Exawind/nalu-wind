@@ -9,6 +9,7 @@
 
 
 
+#include "FieldTypeDef.h"
 #include <TurbKineticEnergyEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <AssembleScalarEdgeOpenSolverAlgorithm.h>
@@ -153,7 +154,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
 
   // extract solver name and solver object
   std::string solverName = realm_.equationSystems_.get_solver_block_name("turbulent_ke");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_TURBULENT_KE);
+  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, realm_.name(), EQ_TURBULENT_KE);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   // determine nodal gradient form
@@ -847,19 +848,9 @@ TurbKineticEnergyEquationSystem::reinitialize_linear_system()
   // delete linsys
   delete linsys_;
 
-  // delete old solver
-  const EquationType theEqID = EQ_TURBULENT_KE;
-  LinearSolver *theSolver = NULL;
-  std::map<EquationType, LinearSolver *>::const_iterator iter
-    = realm_.root()->linearSolvers_->solvers_.find(theEqID);
-  if (iter != realm_.root()->linearSolvers_->solvers_.end()) {
-    theSolver = (*iter).second;
-    delete theSolver;
-  }
-
   // create new solver
   std::string solverName = realm_.equationSystems_.get_solver_block_name("turbulent_ke");
-  LinearSolver *solver = realm_.root()->linearSolvers_->create_solver(solverName, EQ_TURBULENT_KE);
+  LinearSolver *solver = realm_.root()->linearSolvers_->reinitialize_solver(solverName, realm_.name(), EQ_TURBULENT_KE);
   linsys_ = LinearSystem::create(realm_, 1, this, solver);
 
   // initialize
@@ -945,6 +936,52 @@ TurbKineticEnergyEquationSystem::initial_work()
     });
 
   ngpTke.modify_on_device();
+}
+
+void
+TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
+{
+  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  using MeshIndex = typename Traits::MeshIndex;
+
+  // do not let the user specify a negative field
+  const double clipValue = 1.0e-16;
+  const auto& meta = realm_.meta_data();
+  const auto& ngpMesh = realm_.ngp_mesh();
+  auto ngpTke = realm_.ngp_field_manager().get_field<double>(
+    tke_->mesh_meta_data_ordinal());
+
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part())
+    & stk::mesh::selectField(*tke_);
+
+  nalu_ngp::run_entity_algorithm(
+    "clip_tke",
+    ngpMesh, stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(const MeshIndex& mi) {
+      if (ngpTke.get(mi, 0) < 0.0)
+        ngpTke.get(mi, 0) = clipValue;
+    });
+  ngpTke.modify_on_device();
+
+  auto* tkeBCField =
+    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tke_bc");
+  if (tkeBCField != nullptr) {
+    const stk::mesh::Selector bc_sel =
+    (meta.locally_owned_part() | meta.globally_shared_part()) & stk::mesh::selectField(*tkeBCField);
+
+    auto ngpTkeBC = realm_.ngp_field_manager().get_field<double>(
+    tkeBCField->mesh_meta_data_ordinal());
+    ngpTkeBC.sync_to_device();
+    nalu_ngp::run_entity_algorithm(
+      "clip_tke_bc",
+      ngpMesh, stk::topology::NODE_RANK, sel,
+      KOKKOS_LAMBDA(const MeshIndex& mi) {
+        if (ngpTkeBC.get(mi, 0) < 0.0)
+          ngpTkeBC.get(mi, 0) = clipValue;
+      });
+    ngpTkeBC.modify_on_device();
+  }
 }
 
 //--------------------------------------------------------------------------

@@ -36,6 +36,8 @@ UpdateOversetFringeAlgorithmDriver::register_overset_field_update(
 
 void UpdateOversetFringeAlgorithmDriver::execute()
 {
+  if (realm_.isExternalOverset_) return;
+
   const double timeA = NaluEnv::self().nalu_time();
   auto* oversetManager = realm_.oversetManager_;
   if (oversetManager->oversetGhosting_ != nullptr) {

@@ -12,7 +12,7 @@
 
 #include "matrix_free/LobattoQuadratureRule.h"
 #include "matrix_free/TensorOperations.h"
-#include "matrix_free/KokkosFramework.h"
+#include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"
 
 #include <Kokkos_Array.hpp>
@@ -31,11 +31,12 @@ template <int poly>
 void
 single_affine_hex_p(bool cube)
 {
-  LocalArray<double[3][3]> transform = {{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
+  LocalArray<double[3][3]> jac = {{{0, 0, 1}, {1, 0, 0}, {0, 1, 0}}};
   if (!cube) {
-    transform = {{{2, 1, 1.3333}, {0, 2, -1}, {1, 0, 2}}};
+    jac = {{{2, 1, 1.3333}, {0, 2, -1}, {1, 0, 2}}};
   }
-  const auto det = determinant<double>(transform);
+  const auto det = determinant<double>(jac);
+  ASSERT_GT(det, 0);
 
   const int num_elems_1D = 32 / poly;
   const int num_elems_3D = num_elems_1D * num_elems_1D * num_elems_1D;
@@ -52,7 +53,7 @@ single_affine_hex_p(bool cube)
             const Kokkos::Array<ftype, 3> old_coords = {
               {nodes[i], nodes[j], nodes[k]}};
             Kokkos::Array<ftype, 3> new_coords;
-            transform_vector(transform, old_coords, new_coords);
+            transform(jac, old_coords, new_coords);
             for (int d = 0; d < 3; ++d) {
               coords(index, k, j, i, d) = new_coords[d] + 2;
             }
