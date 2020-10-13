@@ -43,7 +43,7 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
     assignedProc_("assignedProcBulk", actMeta.numberOfActuators_),
     num_blades_(actMeta.numberOfActuators_),
     debug_output_(actMeta.debug_output_),
-    output_cache(actMeta.output_filenames_[localTurbineId_].empty()?0:actMeta.numPointsTurbine_[localTurbineId_]);
+    output_cache_(actMeta.output_filenames_[localTurbineId_].empty()?0:actMeta.numPointsTurbine_.h_view(localTurbineId_))
 
 {
   // Allocate blades to turbines

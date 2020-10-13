@@ -151,9 +151,10 @@ realms:
     fllt_correction: yes
 
     n_simpleblades: 1
-    debug_output: True
+    debug_output: no
     Blade0:
       num_force_pts_blade: 50
+      output_file_name: blade_dump.csv
       epsilon: [3.0, 3.0, 3.0]
       p1: [0, -6.25, 0] 
       p2: [0,  6.25, 0]
