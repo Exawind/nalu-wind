@@ -38,15 +38,16 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   std::string viscName;
   if ((realm.is_turbulent()) && (realm.solutionOptions_->turbulenceModel_ != SST_TAMS))
        viscName = "effective_viscosity_u";
-  else
+  else 
        viscName = "viscosity";
 
   viscosity_ = get_field_ordinal(meta, viscName);
+  density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   dudx_ = get_field_ordinal(meta, "dudx");
   edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
-  alpha_upw_ = get_field_ordinal(meta,"alpha_upw", stk::topology::NODE_RANK);
 
+  pecletFunction_ = eqSystem->ngp_create_peclet_function<double>(velName);
 }
 
 void
@@ -57,20 +58,28 @@ MomentumEdgeSolverAlg::execute()
 
   const std::string dofName = "velocity";
   const DblType includeDivU = realm_.get_divU();
-  //const DblType hoUpwind = realm_.get_upw_factor(dofName);
+  const DblType alpha = realm_.get_alpha_factor(dofName);
+  const DblType alphaUpw = realm_.get_alpha_upw_factor(dofName);
+  const DblType hoUpwind = realm_.get_upw_factor(dofName);
   const DblType relaxFacU = realm_.solutionOptions_->get_relaxation_factor(dofName);
   const bool useLimiter = realm_.primitive_uses_limiter(dofName);
 
-  // STK ngp::Field instances for capture by lambda
+  const DblType om_alpha = 1.0 - alpha;
+  const DblType om_alphaUpw = 1.0 - alphaUpw;
+
+  // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
   const auto vrtm = fieldMgr.get_field<double>(velocityRTM_);
   const auto vel = fieldMgr.get_field<double>(velocity_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
+  const auto density = fieldMgr.get_field<double>(density_);
   const auto viscosity = fieldMgr.get_field<double>(viscosity_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
-  const auto alphaUpw_ = fieldMgr.get_field<double>(alpha_upw_);
+
+  // Local pointer for device capture
+  auto* pecFunc = pecletFunction_;
 
   run_algorithm(
     realm_.bulk_data(),
@@ -88,10 +97,14 @@ MomentumEdgeSolverAlg::execute()
 
       const DblType mdot = massFlowRate.get(edge, 0);
 
+      const DblType densityL = density.get(nodeL, 0);
+      const DblType densityR = density.get(nodeR, 0);
+
       const DblType viscosityL = viscosity.get(nodeL, 0);
       const DblType viscosityR = viscosity.get(nodeR, 0);
 
       const DblType viscIp = 0.5 * (viscosityL + viscosityR);
+      const DblType diffIp = 0.5 * (viscosityL / densityL + viscosityR / densityR);
 
       // Compute area vector related quantities and (U dot areaVec)
       DblType axdx = 0.0;
@@ -121,6 +134,10 @@ MomentumEdgeSolverAlg::execute()
         }
       }
 
+      const DblType pecnum = stk::math::abs(udotx) / (diffIp + eps);
+      const DblType pecfac = pecFunc->execute(pecnum);
+      const DblType om_pecfac = 1.0 - pecfac;
+
       NALU_ALIGNED DblType limitL[NDimMax_] = { 1.0, 1.0, 1.0};
       NALU_ALIGNED DblType limitR[NDimMax_] = { 1.0, 1.0, 1.0};
 
@@ -138,8 +155,8 @@ MomentumEdgeSolverAlg::execute()
       NALU_ALIGNED DblType uIpL[NDimMax_];
       NALU_ALIGNED DblType uIpR[NDimMax_];
       for (int d=0; d < ndim; ++d) {
-        uIpL[d] = vel.get(nodeL, d) + duL[d] * limitL[d];
-        uIpR[d] = vel.get(nodeR, d) - duR[d] * limitR[d];
+        uIpL[d] = vel.get(nodeL, d) + duL[d] * hoUpwind * limitL[d];
+        uIpR[d] = vel.get(nodeR, d) - duR[d] * hoUpwind * limitR[d];
       }
 
       // Computation of duidxj term, reproduce original comment by S. P. Domino
@@ -174,21 +191,24 @@ MomentumEdgeSolverAlg::execute()
       // diffusion LHS term
       const DblType dlhsfac = -viscIp * asq * inv_axdx;
 
-      const DblType alphaUpw = 0.5 * (alphaUpw_.get(nodeL,0) + alphaUpw_.get(nodeR,0));
-      const DblType om_alphaUpw = 1.0 - alphaUpw;
-
       for (int i=0; i < ndim; ++i) {
         // Left and right row/col indices
         const int rowL = i;
         const int rowR = i + ndim;
 
-        const DblType uiCds = 0.5 * (vel.get(nodeR, i) + vel.get(nodeL, i));
+        const DblType uiIp = 0.5 * (vel.get(nodeR, i) + vel.get(nodeL, i));
 
         // Upwind contribution
-        const DblType uiUpw = (mdot > 0.0) ? uIpL[i] : uIpR[i];
+        const DblType uiUpw = (mdot > 0.0)
+          ? (alphaUpw * uIpL[i] + om_alphaUpw * uiIp)
+          : (alphaUpw * uIpR[i] + om_alphaUpw * uiIp);
+
+        const DblType uiHatL = (alpha * uIpL[i] + om_alpha * uiIp);
+        const DblType uiHatR = (alpha * uIpR[i] + om_alpha * uiIp);
+        const DblType uiCds = 0.5 * (uiHatL + uiHatR);
 
         // Advective flux
-        const DblType adv_flux = mdot * (alphaUpw * uiUpw + om_alphaUpw * uiCds);
+        const DblType adv_flux = mdot * (pecfac * uiUpw + om_pecfac * uiCds);
 
         DblType diff_flux = 0.0;
         // div(U) part first
@@ -203,17 +223,24 @@ MomentumEdgeSolverAlg::execute()
         smdata.rhs(rowL) -= total_flux;
         smdata.rhs(rowR) += total_flux;
 
-        // Left node contribution;
-        DblType alhsfac = 0.5 * ( (mdot + stk::math::abs(mdot))
-                          * alphaUpw + om_alphaUpw * mdot );
+        // Left node contribution; upwind terms
+        DblType alhsfac = 0.5 * (mdot + stk::math::abs(mdot))
+          * pecfac * alphaUpw + 0.5 * alpha * om_pecfac * mdot;
         smdata.lhs(rowL, rowL) += alhsfac / relaxFacU;
         smdata.lhs(rowR, rowL) -= alhsfac;
 
-        // Right node contribution;
-        alhsfac = 0.5 * ( (mdot - stk::math::abs(mdot))
-                          * alphaUpw + om_alphaUpw * mdot );
+        // Right node contribution; upwind terms
+        alhsfac = 0.5 * (mdot - stk::math::abs(mdot))
+          * pecfac * alphaUpw + 0.5 * alpha * om_pecfac * mdot;
         smdata.lhs(rowR, rowR) -= alhsfac / relaxFacU;
         smdata.lhs(rowL, rowR) += alhsfac;
+
+        // central terms
+        alhsfac = 0.5 * mdot * (pecfac * om_alphaUpw + om_pecfac * om_alpha);
+        smdata.lhs(rowL, rowL) += alhsfac / relaxFacU;
+        smdata.lhs(rowL, rowR) += alhsfac;
+        smdata.lhs(rowR, rowL) -= alhsfac;
+        smdata.lhs(rowR, rowR) -= alhsfac / relaxFacU;
 
         // Diffusion terms
         smdata.lhs(rowL, rowL) -= dlhsfac / relaxFacU;
