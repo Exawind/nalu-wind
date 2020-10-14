@@ -140,7 +140,6 @@ public:
 
   inline void add_face_field(unsigned field, unsigned scalarsPerFace)
   {
-    ThrowRequire(meta_.get_fields()[field]);
     add_face_field(*meta_.get_fields()[field], scalarsPerFace);
   }
 
