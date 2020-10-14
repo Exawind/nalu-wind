@@ -53,7 +53,6 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     turbineTorque_("turbineTorque", actMeta.numberOfActuators_),
     hubLocations_("hubLocations", actMeta.numberOfActuators_),
     hubOrientation_("hubOrientations", actMeta.numberOfActuators_),
-    epsilonOpt_("epsilonOptimal", actMeta.numPointsTotal_),
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
