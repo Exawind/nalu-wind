@@ -161,24 +161,24 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
 
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
-  if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ )
-       || ( SST_IDDES_ABL == realm_.solutionOptions_->turbulenceModel_ ) ) {
+  if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES_ABL == realm_.solutionOptions_->turbulenceModel_ ) ) {
 
-  if (SST_DES == realm_.solutionOptions_->turbulenceModel_) {
+    if (SST_DES == realm_.solutionOptions_->turbulenceModel_) {
 
-    if (NULL == sstMaxLengthScaleAlgDriver_)
-      sstMaxLengthScaleAlgDriver_ = new AlgorithmDriver(realm_);
+      if (NULL == sstMaxLengthScaleAlgDriver_)
+        sstMaxLengthScaleAlgDriver_ = new AlgorithmDriver(realm_);
 
-    // create edge algorithm
-    std::map<AlgorithmType, Algorithm*>::iterator it =
-      sstMaxLengthScaleAlgDriver_->algMap_.find(algType);
+      // create edge algorithm
+      std::map<AlgorithmType, Algorithm*>::iterator it =
+        sstMaxLengthScaleAlgDriver_->algMap_.find(algType);
 
-    if (it == sstMaxLengthScaleAlgDriver_->algMap_.end()) {
-      ComputeSSTMaxLengthScaleElemAlgorithm* theAlg =
-        new ComputeSSTMaxLengthScaleElemAlgorithm(realm_, part);
-      sstMaxLengthScaleAlgDriver_->algMap_[algType] = theAlg;
-    } else {
-      it->second->partVec_.push_back(part);
+      if (it == sstMaxLengthScaleAlgDriver_->algMap_.end()) {
+        ComputeSSTMaxLengthScaleElemAlgorithm* theAlg =
+          new ComputeSSTMaxLengthScaleElemAlgorithm(realm_, part);
+        sstMaxLengthScaleAlgDriver_->algMap_[algType] = theAlg;
+      } else {
+        it->second->partVec_.push_back(part);
+      }
     }
   }
 }

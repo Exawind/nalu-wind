@@ -13,3 +13,4 @@ tags
 .vscode/
 compile_commands.json
 .clangd
+spack*
