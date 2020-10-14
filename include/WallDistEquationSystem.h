@@ -7,6 +7,7 @@
 // for more details.
 //
 
+
 #ifndef WALLDISTEQUATIONSYSTEM_H
 #define WALLDISTEQUATIONSYSTEM_H
 
@@ -42,10 +43,14 @@ public:
   void register_interior_algorithm(stk::mesh::Part*);
 
   void register_inflow_bc(
-    stk::mesh::Part*, const stk::topology&, const InflowBoundaryConditionData&);
+    stk::mesh::Part*,
+    const stk::topology&,
+    const InflowBoundaryConditionData&);
 
   void register_open_bc(
-    stk::mesh::Part*, const stk::topology&, const OpenBoundaryConditionData&);
+    stk::mesh::Part*,
+    const stk::topology&,
+    const OpenBoundaryConditionData&);
 
   void register_wall_bc(
     stk::mesh::Part*, const stk::topology&, const WallBoundaryConditionData&);
@@ -55,8 +60,9 @@ public:
     const stk::topology&,
     const SymmetryBoundaryConditionData&);
 
-  virtual void
-  register_non_conformal_bc(stk::mesh::Part*, const stk::topology&);
+  virtual void register_non_conformal_bc(
+    stk::mesh::Part*,
+    const stk::topology&);
 
   virtual void register_overset_bc();
 
@@ -97,6 +103,7 @@ private:
   WallDistEquationSystem() = delete;
   WallDistEquationSystem(const WallDistEquationSystem&) = delete;
 
+
   VectorFieldType* coordinates_{nullptr};
   ScalarFieldType* wallDistPhi_{nullptr};
   VectorFieldType* dphidx_{nullptr};
@@ -117,7 +124,6 @@ private:
 
   //! User option to force recomputation of wall distance on restart
   bool forceInitOnRestart_{false};
-
   std::string wallName_{""};
 };
 
@@ -149,7 +155,7 @@ private:
   stk::mesh::PartVector bc_;
 };
 
-} // namespace nalu
-} // namespace sierra
+}  // nalu
+}  // sierra
 
 #endif /* WALLDISTEQUATIONSYSTEM_H */

@@ -232,7 +232,6 @@
 #include <stk_mesh/base/Comm.hpp>
 #include "stk_mesh/base/NgpMesh.hpp"
 
-
 // stk_topo
 #include <stk_topology/topology.hpp>
 
@@ -1145,6 +1144,7 @@ MomentumEquationSystem::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*g, *part, nullptr);
   }
+
 }
 
 //--------------------------------------------------------------------------
