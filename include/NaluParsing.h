@@ -70,6 +70,7 @@ struct WallUserData : public UserData {
 
   bool wallFunctionApproach_;
   bool ablWallFunctionApproach_;
+  YAML::Node ablWallFunctionNode_;
 
   bool isFsiInterface_;
 

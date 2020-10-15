@@ -41,6 +41,8 @@ private:
   unsigned wallArea_ {stk::mesh::InvalidOrdinal};
   unsigned wallNormDist_ {stk::mesh::InvalidOrdinal};
 
+  static constexpr DblType wallNormalHeightFactor{1.0};
+
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};
 };

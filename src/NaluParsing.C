@@ -783,15 +783,20 @@ namespace YAML
       wallData.z0_ =
           node["roughness_height"].as<sierra::nalu::RoughnessHeight>();
     }
+    // To use the engineering wall model.
     if (node["use_wall_function"])
     {
       wallData.wallFunctionApproach_ = node["use_wall_function"].as<bool>();
     }
-    if (node["use_abl_wall_function"])
+    // If the wall is treated as an atmospheric boundary layer surface stress model.
+    if (node["abl_wall_function"])
     {
-      wallData.wallFunctionApproach_ = node["use_abl_wall_function"].as<bool>();
-      wallData.ablWallFunctionApproach_ =
-          node["use_abl_wall_function"].as<bool>();
+      // - set the wall function and ABL wall function flags to true.
+      wallData.wallFunctionApproach_ = true;
+      wallData.ablWallFunctionApproach_ = true;
+        
+      // - get the overall ABL wall function YAML node.
+      wallData.ablWallFunctionNode_ = node["abl_wall_function"];
     }
     if (node["pressure"])
     {
