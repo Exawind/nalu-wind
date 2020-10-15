@@ -18,11 +18,22 @@
 namespace sierra{
 namespace nalu{
 
+
+
+/** Create simple capping inversion profile aux function for wind energy applications
+ *
+ *  This function is used as an initial or boundary condition,
+ *  primarily in simulation of wind turbines in the atmospheric
+ *  boundary layer with a typical profile of temperature that
+ *  includes a mixed region, a strong cap, and a weak inversion 
+ *  above.
+ */
 class CappingInversionTemperatureAuxFunction : public AuxFunction
 {
 public:
 
-  CappingInversionTemperatureAuxFunction();
+  CappingInversionTemperatureAuxFunction(
+    const std::vector<double> &theParams);
 
   virtual ~CappingInversionTemperatureAuxFunction() {}
   
@@ -35,7 +46,14 @@ public:
     double * fieldPtr,
     const unsigned fieldSize,
     const unsigned beginPos,
-    const unsigned endPos) const;  
+    const unsigned endPos) const; 
+
+private:
+    double T_belowCap_; // Constant temperature below the strong capping inversion.
+    double T_aboveCap_; // Temperature at the top of the strong capping inversion.
+    double weakInversionStrength_; // Strength of the weak inversion above the strong capping inversion (dT/dz [K/m])
+    double z_bottomCap_; // Height of the bottom of the strong capping inversion.
+    double z_topCap_; // Height of the top of the strong capping inversion.
 };
 
 } // namespace nalu
