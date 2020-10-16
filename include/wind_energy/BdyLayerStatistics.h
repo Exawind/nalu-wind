@@ -82,6 +82,9 @@ public:
    */
   void time_averaged_velocity(double, double*);
 
+  //! Return the spatial average of the magnitude of the horizontal velocity field at a given height
+  void velocity_magnitude(double, double*);
+
   //! Return the spatial average of the instantaneous density field at a given height
   void density(double, double*);
 
@@ -152,6 +155,9 @@ private:
   //! Spatially averaged instantaneous velocity at desired heights [nHeights, nDim]
   ArrayType d_velAvg_;
 
+  //! Spatially averaged instantaneous horizontal velocity magnitude at desired heights [nHeights]
+  ArrayType d_velMagAvg_;
+
   //! Spatially and temporally averaged velocity at desired heights [nHeights, nDim]
   ArrayType d_velBarAvg_;
 
@@ -201,6 +207,9 @@ private:
 
   //! Spatially averaged instantaneous velocity at desired heights [nHeights, nDim]
   HostArrayType velAvg_;
+
+  //! Spatially averaged instantaneous horizontal velocity magnitude at desired heights [nHeights]
+  HostArrayType velMagAvg_;
 
   //! Spatially and temporally averaged velocity at desired heights [nHeights, nDim]
   HostArrayType velBarAvg_;

@@ -204,6 +204,7 @@ BdyLayerStatistics::initialize()
   d_sumVol_     = ArrayType("d_sumVol_", nHeights);
   d_rhoAvg_     = ArrayType("d_rhoAvg_", nHeights);
   d_velAvg_     = ArrayType("d_velAvg_", nHeights * nDim_);
+  d_velMagAvg_  = ArrayType("d_velMagAvg_", nHeights);
   d_velBarAvg_  = ArrayType("d_velBarAvg_", nHeights * nDim_);
   d_uiujAvg_    = ArrayType("d_uiujAvg_", nHeights * nDim_ * 2);
   d_uiujBarAvg_ = ArrayType("d_uiujBarAvg_", nHeights * nDim_ * 2);
@@ -214,6 +215,7 @@ BdyLayerStatistics::initialize()
   sumVol_     = Kokkos::create_mirror_view(d_sumVol_);
   rhoAvg_     = Kokkos::create_mirror_view(d_rhoAvg_);
   velAvg_     = Kokkos::create_mirror_view(d_velAvg_);
+  velMagAvg_  = Kokkos::create_mirror_view(d_velMagAvg_);
   velBarAvg_  = Kokkos::create_mirror_view(d_velBarAvg_);
   uiujAvg_    = Kokkos::create_mirror_view(d_uiujAvg_);
   uiujBarAvg_ = Kokkos::create_mirror_view(d_uiujBarAvg_);
@@ -265,6 +267,7 @@ BdyLayerStatistics::execute()
   write_time_hist_file();
 }
 
+
 void
 BdyLayerStatistics::velocity(
   double height,
@@ -283,6 +286,12 @@ BdyLayerStatistics::time_averaged_velocity(
   interpolate_variable(
     realm_.meta_data().spatial_dimension(),
     velBarAvg_, height, velVector);
+}
+
+void
+BdyLayerStatistics::velocity_magnitude(double height, double* velMag)
+{
+    interpolate_variable(1, velMagAvg_, height, velMag);
 }
 
 void
@@ -361,10 +370,12 @@ BdyLayerStatistics::impl_compute_velocity_stats()
 
   stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
     & stk::mesh::selectUnion(fluidParts_)
-    & !(realm_.get_inactive_selector());
+    & !(realm_.get_inactive_selector())
+    & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()));
 
   // Reset arrays before accumulation
   Kokkos::deep_copy(d_velAvg_, 0.0);
+  Kokkos::deep_copy(d_velMagAvg_, 0.0);
   Kokkos::deep_copy(d_velBarAvg_, 0.0);
   Kokkos::deep_copy(d_sfsBarAvg_, 0.0);
   Kokkos::deep_copy(d_sfsAvg_, 0.0);
@@ -375,6 +386,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
 
   // Bring arrays into local scope for capture on device
   auto d_velAvg     = d_velAvg_;
+  auto d_velMagAvg  = d_velMagAvg_;
   auto d_velBarAvg  = d_velBarAvg_;
   auto d_sfsBarAvg  = d_sfsBarAvg_;
   auto d_uiujAvg    = d_uiujAvg_;
@@ -398,6 +410,17 @@ BdyLayerStatistics::impl_compute_velocity_stats()
 
       // Velocity computations
       int offset = ih * ndim;
+
+      // -this is the horizontal velocity magnitude--needs to be generalized to let the user specify if it
+      //  should just be horizontal, what the horizontal plane is, or the full vector magnitude.  This implementation
+      //  assumes horizontal is in Cartesian x and y.
+      double velMag = 0.0;
+      for (int d=0; d < ndim-1; ++d) {
+        velMag += velocity.get(mi, d) * velocity.get(mi, d);
+      }
+      velMag = stk::math::sqrt(velMag);
+      Kokkos::atomic_add(&d_velMagAvg(ih), (velMag * rho * dVol));
+
       for (int d=0; d < ndim; ++d) {
         Kokkos::atomic_add(&d_velAvg(offset + d), (velocity.get(mi, d) * rho * dVol));
 
@@ -424,6 +447,7 @@ BdyLayerStatistics::impl_compute_velocity_stats()
     });
 
   Kokkos::deep_copy(velAvg_,     d_velAvg_);
+  Kokkos::deep_copy(velMagAvg_,  d_velMagAvg_);
   Kokkos::deep_copy(velBarAvg_,  d_velBarAvg_);
   Kokkos::deep_copy(sfsBarAvg_,  d_sfsBarAvg_);
   Kokkos::deep_copy(sfsAvg_,     d_sfsAvg_);
@@ -437,6 +461,8 @@ BdyLayerStatistics::impl_compute_velocity_stats()
   const auto& bulk = realm_.bulk_data();
   MPI_Allreduce(MPI_IN_PLACE, velAvg_.data(), nHeights * nDim_, MPI_DOUBLE,
                 MPI_SUM, bulk.parallel());
+  MPI_Allreduce(MPI_IN_PLACE, velMagAvg_.data(), nHeights, MPI_DOUBLE, MPI_SUM,
+                bulk.parallel());
   MPI_Allreduce(MPI_IN_PLACE, velBarAvg_.data(), nHeights * nDim_,
                 MPI_DOUBLE, MPI_SUM, bulk.parallel());
   MPI_Allreduce(MPI_IN_PLACE, sfsBarAvg_.data(), nHeights * nDim_ * 2,
@@ -460,6 +486,9 @@ BdyLayerStatistics::impl_compute_velocity_stats()
       velAvg_(offset + d) /= rhoAvg_(ih);
       velBarAvg_(offset + d) /= rhoAvg_(ih);
     }
+
+    velMagAvg_(ih) /= rhoAvg_(ih);
+
 
     offset *= 2;
     for (int i=0; i < nDim_ * 2; i++) {
@@ -509,7 +538,8 @@ BdyLayerStatistics::impl_compute_temperature_stats()
 
   stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
     & stk::mesh::selectUnion(fluidParts_)
-    & !(realm_.get_inactive_selector());
+    & !(realm_.get_inactive_selector())
+    & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()));
 
   // Reset arrays before accumulation
   Kokkos::deep_copy(d_thetaAvg_, 0.0);

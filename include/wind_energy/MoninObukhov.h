@@ -61,7 +61,7 @@ T psih_unstable(const T& zeta, const T gamma = 16.0)
 {
   // Actually (1.0 / phih)
   const T phih = stk::math::sqrt(1.0 - gamma * zeta);
-  return (stk::math::log(0.5 * (1.0 + phih)));
+  return (2.0 * stk::math::log(0.5 * (1.0 + phih)));
 }
 
 }
