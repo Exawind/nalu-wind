@@ -66,11 +66,50 @@
 namespace sierra {
 namespace nalu {
 
+void
+ComputeDistanceToSurface::register_fields()
+{
+  for (auto* part : interior_) {
+    eqsys.register_nodal_fields(part);
+  }
+}
+
+void
+ComputeDistanceToSurface::create_algorithms()
+{
+  for (auto* part : interior_) {
+    eqsys.register_interior_algorithm(part);
+  }
+
+  for (auto* part : bc_) {
+    if (part->name() == surface_name_) {
+      for (auto* subpart : part->subsets()) {
+        eqsys.register_disting_surface(subpart);
+      }
+    } else {
+      for (auto* subpart : part->subsets()) {
+        eqsys.register_nodal_grad_algorithm_on_part(subpart);
+      }
+    }
+  }
+}
+
+const ScalarFieldType&
+ComputeDistanceToSurface::compute()
+{
+  eqsys.initialize();
+  eqsys.initial_work();
+  return *meta_.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK,
+    WallDistEquationSystem::min_wall_distance_name(surface_name_));
+}
+
 WallDistEquationSystem::WallDistEquationSystem(
-  EquationSystems& eqSystems)
-  : EquationSystem(eqSystems, "WallDistEQS", "ndtw"),
-    nodalGradAlgDriver_(realm_, "dwalldistdx"),
-    managePNG_(realm_.get_consistent_mass_matrix_png("ndtw"))
+  EquationSystems& eqSystems, std::string wallname)
+  : EquationSystem(eqSystems, "WallDistEQS" + wallname, "ndtw"),
+    nodalGradAlgDriver_(realm_, dphidx_name(wallname)),
+    managePNG_(realm_.get_consistent_mass_matrix_png("ndtw")),
+    wallName_(wallname)
 {
   if (managePNG_)
     throw std::runtime_error("Consistent mass matrix PNG is not available for WallDistEquationSystem");
@@ -84,7 +123,9 @@ WallDistEquationSystem::WallDistEquationSystem(
     << "Edge projected nodal gradient for minimum distance to wall: "
     << edgeNodalGradient_ << std::endl;
 
-  realm_.push_equation_to_systems(this);
+  if (wallname == "") {
+    realm_.push_equation_to_systems(this);
+  }
 }
 
 WallDistEquationSystem::~WallDistEquationSystem()
@@ -114,15 +155,15 @@ WallDistEquationSystem::register_nodal_fields(
   const int nDim = meta.spatial_dimension();
 
   wallDistPhi_ = &(meta.declare_field<ScalarFieldType>(
-                     stk::topology::NODE_RANK, "wall_distance_phi"));
+                     stk::topology::NODE_RANK, wall_distance_phi_name(wallName_)));
   stk::mesh::put_field_on_mesh(*wallDistPhi_, *part, nullptr);
 
   dphidx_ = &(meta.declare_field<VectorFieldType>(
-                stk::topology::NODE_RANK, "dwalldistdx"));
+                stk::topology::NODE_RANK, dphidx_name(wallName_)));
   stk::mesh::put_field_on_mesh(*dphidx_, *part, nDim, nullptr);
 
   wallDistance_ = &(meta.declare_field<ScalarFieldType>(
-                  stk::topology::NODE_RANK, "minimum_distance_to_wall"));
+                  stk::topology::NODE_RANK, min_wall_distance_name(wallName_)));
   stk::mesh::put_field_on_mesh(*wallDistance_, *part, nullptr);
 
   coordinates_ = &(meta.declare_field<VectorFieldType>(
@@ -221,44 +262,43 @@ WallDistEquationSystem::register_interior_algorithm(
 }
 
 void
+WallDistEquationSystem::register_nodal_grad_algorithm_on_part(
+  stk::mesh::Part* part)
+{
+  auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
+  auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
+
+  // Set up dphi/dx calculation algorithms
+  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
+    BOUNDARY, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
+}
+
+void
 WallDistEquationSystem::register_inflow_bc(
   stk::mesh::Part* part,
   const stk::topology&,
   const InflowBoundaryConditionData&)
 {
-  const AlgorithmType algType = INFLOW;
-
-  auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
-  auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
-
-  // Set up dphi/dx calculation algorithms
-  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
+  register_nodal_grad_algorithm_on_part(part);
 }
 
 void
 WallDistEquationSystem::register_open_bc(
-  stk::mesh::Part* part,
-  const stk::topology&,
+  stk::mesh::Part* part, 
+  const stk::topology&, 
   const OpenBoundaryConditionData&)
 {
-  const AlgorithmType algType = OPEN;
-
-  auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
-  auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
-
-  // Set up dphi/dx calculation algorithms
-  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
+  register_nodal_grad_algorithm_on_part(part);
 }
 
 void
-WallDistEquationSystem::register_wall_bc(
-  stk::mesh::Part* part,
-  const stk::topology&,
-  const WallBoundaryConditionData& wallBCData)
+WallDistEquationSystem::register_disting_surface(
+  stk::mesh::Part* part, bool ablwallfunc)
 {
   const AlgorithmType algType = WALL;
+
+  ThrowRequire(wallDistPhi_);
+  ThrowRequire(dphidx_);
 
   auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
   auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
@@ -269,7 +309,7 @@ WallDistEquationSystem::register_wall_bc(
 
   auto& meta = realm_.meta_data();
   ScalarFieldType& theBCField = meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "wall_distance_phi_bc");
+    stk::topology::NODE_RANK, wall_distance_phi_bc_name(wallName_));
   stk::mesh::put_field_on_mesh(theBCField, *part, nullptr);
   std::vector<double> userSpec(1, 0.0);
   AuxFunction* theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
@@ -281,11 +321,9 @@ WallDistEquationSystem::register_wall_bc(
   // For terrain BC, the wall distance calculations must not compute the
   // distance normal to this wall, but must compute distance from the nearest
   // turbine, so we will disable Dirichlet for the terrain walls.
-  WallUserData userData = wallBCData.userData_;
-  const bool ablWallFunctionActivated = userData.ablWallFunctionApproach_;
 
   // Apply Dirichlet BC on non-ABL wall boundaries
-  if (!ablWallFunctionActivated) {
+  if (!ablwallfunc) {
     auto it = solverAlgDriver_->solverDirichAlgMap_.find(algType);
     if (it == solverAlgDriver_->solverDirichAlgMap_.end()) {
       DirichletBC* theAlg
@@ -298,19 +336,24 @@ WallDistEquationSystem::register_wall_bc(
 }
 
 void
+WallDistEquationSystem::register_wall_bc(
+  stk::mesh::Part* part,
+  const stk::topology&,
+  const WallBoundaryConditionData& wallBCData)
+{
+
+  WallUserData userData = wallBCData.userData_;
+  const bool ablWallFunctionActivated = userData.ablWallFunctionApproach_;
+  register_disting_surface(part, ablWallFunctionActivated);
+}
+
+void
 WallDistEquationSystem::register_symmetry_bc(
   stk::mesh::Part* part,
   const stk::topology&,
   const SymmetryBoundaryConditionData&)
 {
-  const AlgorithmType algType = SYMMETRY;
-
-  auto& wPhiNp1 = wallDistPhi_->field_of_state(stk::mesh::StateNone);
-  auto& dPhiDxNone = dphidx_->field_of_state(stk::mesh::StateNone);
-
-  // Set up dphi/dx calculation algorithms
-  nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-    algType, part, "nodal_grad", &wPhiNp1, &dPhiDxNone, edgeNodalGradient_);
+  register_nodal_grad_algorithm_on_part(part);
 }
 
 void
@@ -410,7 +453,7 @@ WallDistEquationSystem::solve_and_update()
   // inform meshes about the field when using decoupled overset
   const int numOversetIters =
     decoupledOverset_ ? std::max(numOversetIters_, 2) : numOversetIters_;
-  for (int k=0; k< numOversetIters; k++) {
+  for (int k = 0; k < numOversetIters; k++) {
     assemble_and_solve(wallDistPhi_);
 
     if (decoupledOverset_)
@@ -449,7 +492,7 @@ WallDistEquationSystem::compute_wall_distance()
     ngpMesh, stk::topology::NODE_RANK, sel, KOKKOS_LAMBDA(const MeshIndex& mi) {
       double dpdxsq = 0.0;
 
-      for (int d=0; d < nDim; ++d) {
+      for (int d = 0; d < nDim; ++d) {
         double tmp = dphidx.get(mi, d);
         dpdxsq += tmp * tmp;
       }

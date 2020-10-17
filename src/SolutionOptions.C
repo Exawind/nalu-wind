@@ -209,6 +209,26 @@ SolutionOptions::load(const YAML::Node & y_node)
     get_if_present(y_solution_options, "explicitly_zero_open_pressure_gradient",
       explicitlyZeroOpenPressureGradient_, explicitlyZeroOpenPressureGradient_);
 
+    auto rayleigh_nodes = y_solution_options["rayleigh_damping"];
+    if (rayleigh_nodes) {
+      for (size_t inode = 0; inode < rayleigh_nodes.size(); ++inode) {
+        const auto node = rayleigh_nodes[inode];
+        const auto name  = node["surface"].as<std::string>();
+        RayleighDampingParameters params;
+        get_if_present(node, "cmax", params.cmax, params.cmax);
+        get_if_present(node, "width", params.width, params.width);
+
+        auto uref = node["uref"].as<std::vector<double>>();
+        for (size_t d = 0; d < uref.size(); ++d) {
+          params.uref[d] = uref[d];
+        }
+        if (rdParams_.find(name) != rdParams_.end()) {
+          throw std::runtime_error("Redundant key for rayleigh damping");
+        }
+        rdParams_.emplace(name, params);
+      }
+    }
+
     // first set of options; hybrid, source, etc.
     const YAML::Node y_options = expect_sequence(y_solution_options, "options", required);
     if (y_options)

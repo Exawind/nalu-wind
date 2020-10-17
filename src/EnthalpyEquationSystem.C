@@ -1128,7 +1128,7 @@ void
 EnthalpyEquationSystem::register_initial_condition_fcn(
   stk::mesh::Part *part,
   const std::map<std::string, std::string> &theNames,
-  const std::map<std::string, std::vector<double> > &/*theParams*/)
+  const std::map<std::string, std::vector<double> > &theParams)
 {
   // iterate map and check for name
   const std::string dofName = "temperature";
@@ -1144,7 +1144,14 @@ EnthalpyEquationSystem::register_initial_condition_fcn(
       theAuxFunc = new BoussinesqNonIsoTemperatureAuxFunction();
     }
     else if ( fcnName == "capping_inversion" ) {
-      theAuxFunc = new CappingInversionTemperatureAuxFunction();
+        auto it = theParams.find(dofName);
+        if (it != theParams.end()) {
+            auto& fp = it->second;
+            theAuxFunc = new CappingInversionTemperatureAuxFunction(fp);
+        }
+        else {
+            throw std::runtime_error("Wind Energy Capping Inversion aux function missing parameter in initial condition");
+        }
     }
     else {
       throw std::runtime_error("EnthalpyEquationSystem::register_initial_condition_fcn: limited user functions supported");
@@ -1497,6 +1504,9 @@ EnthalpyEquationSystem::temperature_bc_setup(
   else if ( FUNCTION_UD == theDataType ) {
     // extract the name
     std::string fcnName = get_bc_function_name(userData, temperatureName);
+    std::vector<double> theParams = get_bc_function_params(userData, temperatureName);
+    if ( theParams.size() == 0 )
+      NaluEnv::self().naluOutputP0() << "function parameter size is zero" << std::endl;
     // switch on the name found...
     if ( fcnName == "flow_past_cylinder" ) {
       theAuxFunc = new FlowPastCylinderTempAuxFunction();
@@ -1508,7 +1518,7 @@ EnthalpyEquationSystem::temperature_bc_setup(
       theAuxFunc = new BoussinesqNonIsoTemperatureAuxFunction();
     }
     else if ( fcnName == "capping_inversion" ) {
-      theAuxFunc = new CappingInversionTemperatureAuxFunction();
+      theAuxFunc = new CappingInversionTemperatureAuxFunction(theParams);
     }
     else {
       throw std::runtime_error("EnthalpyEquationSystem::temperature_bc_setup; limited user functions supported");

@@ -26,7 +26,7 @@ class EquationSystems;
 class WallDistEquationSystem : public EquationSystem
 {
 public:
-  WallDistEquationSystem(EquationSystems&);
+  WallDistEquationSystem(EquationSystems&, std::string = "");
 
   virtual ~WallDistEquationSystem();
 
@@ -77,6 +77,28 @@ public:
 
   void compute_wall_distance();
 
+  static std::string min_wall_distance_name(std::string wallName)
+  {
+    return "minimum_distance_to_" + wallName;
+  }
+  static std::string wall_distance_phi_name(std::string wallName)
+  {
+    return wallName + "_distance_phi";
+  }
+
+  static std::string wall_distance_phi_bc_name(std::string wallName)
+  {
+    return wallName + "_distance_phi_bc";
+  }
+
+  static std::string dphidx_name(std::string wallName)
+  {
+    return "grad_" + wall_distance_phi_name(wallName);
+  }
+
+  void register_nodal_grad_algorithm_on_part(stk::mesh::Part* part);
+  void register_disting_surface(stk::mesh::Part* part, bool = false);
+
 private:
   WallDistEquationSystem() = delete;
   WallDistEquationSystem(const WallDistEquationSystem&) = delete;
@@ -102,6 +124,35 @@ private:
 
   //! User option to force recomputation of wall distance on restart
   bool forceInitOnRestart_{false};
+  std::string wallName_{""};
+};
+
+class ComputeDistanceToSurface
+{
+public:
+  ComputeDistanceToSurface(
+    Realm& realm, 
+    std::string surface_name,
+    stk::mesh::PartVector interior,
+    stk::mesh::PartVector bc)
+    : meta_(*realm.metaData_),
+      eqsys(realm.equationSystems_, surface_name),
+      surface_name_(surface_name),
+      interior_(interior),
+      bc_(bc)
+  {
+  }
+
+  void register_fields();
+  void create_algorithms();
+  const ScalarFieldType& compute();
+private:
+  stk::mesh::MetaData& meta_;
+  WallDistEquationSystem eqsys;
+  const std::string surface_name_;
+
+  stk::mesh::PartVector interior_;
+  stk::mesh::PartVector bc_;
 };
 
 }  // nalu

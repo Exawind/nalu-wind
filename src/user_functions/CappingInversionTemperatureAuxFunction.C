@@ -21,10 +21,18 @@
 namespace sierra{
 namespace nalu{
 
-CappingInversionTemperatureAuxFunction::CappingInversionTemperatureAuxFunction() :
+CappingInversionTemperatureAuxFunction::CappingInversionTemperatureAuxFunction(
+  const std::vector<double> &params) :
   AuxFunction(0,1)
 {
-  // does nothing
+  // check size and populate
+  if ( params.size() != 5 )
+    throw std::runtime_error("Realm::setup_initial_conditions: capping_inversion requires 5 params: ");
+  T_belowCap_ = params[0]; 
+  T_aboveCap_ = params[1]; 
+  weakInversionStrength_ = params[2];
+  z_bottomCap_ = params[3];
+  z_topCap_ = params[4];
 }
 
 void
@@ -42,23 +50,14 @@ CappingInversionTemperatureAuxFunction::do_evaluate(
 
     const double z = coords[2];
 
-    
-    //heights: [    0, 650.0, 750.0, 1000.0 ]
-    //values:  [300.0, 300.0, 308.0,  308.75]
+    const double slope_1 = (T_aboveCap_ - T_belowCap_) / (z_topCap_ - z_bottomCap_);
 
-
-    const double slope_1 = (308.0-300.0)/(750.0-650.0);
-    const double slope_2 =(308.75-308.0)/(1000.0-750.0);
-
-    double temp = 300.0;
-    if ( z > 650.0 && z <= 750.0 ) {
-      temp = 300.0 + slope_1*(z-650.0);
+    double temp = T_belowCap_;
+    if ( z > z_bottomCap_ && z <= z_topCap_ ) {
+      temp = T_belowCap_ + slope_1*(z-z_bottomCap_);
     }
-    else if ( z > 750.0 && z <= 1000.0 ) {
-      temp = 308.0 + slope_2*(z-750.0);
-    }
-    else if ( z > 1000.0 ) {
-      temp = 308.75;
+    else if ( z > z_topCap_ ) {
+      temp = T_aboveCap_ + weakInversionStrength_*(z-z_topCap_);
     }
       
     fieldPtr[0] = temp;
