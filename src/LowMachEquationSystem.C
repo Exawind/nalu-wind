@@ -1998,16 +1998,6 @@ MomentumEquationSystem::register_wall_bc(
         wfAlgType, part, get_elem_topo(realm_, *part), "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
         ablWallFunctionNode);
 
-      // create algorithm for utau, yp and assembled nodal wall area (_WallFunction)
-      std::vector<double> gravity;
-      gravity.resize(nDim);
-      gravity = realm_.solutionOptions_->gravity_;
-      const double grav = std::abs(gravity[userData.gravityComponent_ - 1]);
-      RoughnessHeight rough = userData.z0_;
-      const double z0 = rough.z0_;
-      ReferenceTemperature Tref = userData.referenceTemperature_;
-      const double referenceTemperature = Tref.referenceTemperature_;
-
       // Assemble wall stresses via the edge algorithm.
       auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
       AssembleElemSolverAlgorithm* solverAlg = nullptr;

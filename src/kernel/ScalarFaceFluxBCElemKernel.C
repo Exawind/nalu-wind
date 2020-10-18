@@ -46,9 +46,6 @@ ScalarFaceFluxBCElemKernel<BcAlgTraits>::ScalarFaceFluxBCElemKernel(
   faceDataPreReqs.add_face_field(bcScalarQ_, BcAlgTraits::numFaceIp_);
   faceDataPreReqs.add_face_field(
     exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
-
-  faceDataPreReqs.add_master_element_call(
-    (useShifted_ ? FC_SHIFTED_SHAPE_FCN : FC_SHAPE_FCN), CURRENT_COORDINATES);
 }
 
 template<typename BcAlgTraits>
@@ -62,8 +59,6 @@ ScalarFaceFluxBCElemKernel<BcAlgTraits>::execute(
   const auto& v_areav = scratchViews.get_scratch_view_2D(exposedAreaVec_);
 
   const auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
-  const auto& v_shape_fcn =
-    useShifted_ ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
   const int* ipNodeMap = meFC_->ipNodeMap();
 

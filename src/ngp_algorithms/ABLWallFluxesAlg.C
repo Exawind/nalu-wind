@@ -299,19 +299,19 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   const bool useShifted = useShifted_;
 
   DblType avgFactor = 0.0;
-  DblType hAverage;
   DblType tempAverage;
-  NALU_ALIGNED DblType velAverage[BcAlgTraits::nDim_];
   DblType velMagAverage;
+  Kokkos::View<double[3]> velAverage;
+  auto hVelAverage = Kokkos::create_mirror_view(velAverage);
   if (averagingType_ == "planar")
   {
     avgFactor = 1.0;
     BdyLayerStatistics::HostArrayType h = realm_.bdyLayerStats_->abl_heights();
-    realm_.bdyLayerStats_->velocity(h[1], velAverage);  
+    realm_.bdyLayerStats_->velocity(h[1], hVelAverage.data());
     realm_.bdyLayerStats_->velocity_magnitude(h[1], &velMagAverage);
     realm_.bdyLayerStats_->temperature(h[1], &tempAverage);  
-    hAverage = h[1];
   }
+  Kokkos::deep_copy(velAverage, hVelAverage);
 
   DblType fluctuationFactor = (fluctuationModel_ != "none") ? 1.0 : 0.0;
 
@@ -320,7 +320,6 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   DblType fluctuatingTempRef = (fluctuatingTempRef_ == "reference") ? Tref_ : currSurfaceTemperature;
 
   const double eps = 1.0e-8;
-  const DoubleType Lmax = 1.0e8;
 
   const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
@@ -372,10 +371,8 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
       const auto& v_shape_fcn = useShifted
         ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
 
-      const int* faceIpNodeMap = meFC->ipNodeMap();
       for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
 
-        const int nodeR = meSCS->ipNodeMap(feData.faceOrd)[ip];
         const int nodeL = meSCS->opposingNodes(feData.faceOrd, ip);
 
         DoubleType aMag = 0.0;
@@ -491,10 +488,6 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
         DoubleType temp_MO = (1.0 - avgFactor)*(tempOppNode) + (avgFactor)*(tempAverage);
         DoubleType q_MO = currFlux;
 
-        const DoubleType Tflux = heatFluxIp / (rhoIp * CpIp);
-        const DoubleType Lfac = stk::math::if_then_else(
-          (stk::math::abs(Tflux) < eps), Lmax,
-          (-Tref / (kappa * gravity * Tflux)));
         const DoubleType term = stk::math::log(zh / z0);
 
 
@@ -504,14 +497,12 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
           DblType utau = 0.0;
           NALU_ALIGNED DblType tauSurf[3];
           DblType qSurf = 0.0;
-          DblType Tsurf = 0.0;
-          int algType;
 
           // Compute fluxes with algorithm 1.
           DblType utau_alg1 = 0.0;
           DblType Tsurf_alg1 = 0.0;
           DblType givenFlux = currFlux;
-          algType = 1;
+          int algType = 1;
           if (stk::simd::get_data(q_MO, si) < -eps)
           {
             compute_fluxes
@@ -625,8 +616,6 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
           // Combine the fluxes computed with the two different algorithms based on the user-selected weighting.
           utau =   (1.0 - (currWeight - 1.0)) * utau_alg1  + (currWeight - 1.0) * utau_alg2;
           qSurf = ((1.0 - (currWeight - 1.0)) * currFlux   + (currWeight - 1.0) * qSurf_alg2) * stk::simd::get_data(rhoIp, si) * stk::simd::get_data(CpIp, si);
-          Tsurf =  (1.0 - (currWeight - 1.0)) * Tsurf_alg1 + (currWeight - 1.0) * currSurfaceTemperature;
-
 
           // Compute the fluctuating flux fields.
           for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
@@ -634,16 +623,12 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
           }
           qSurf *= stk::simd::get_data(qSurf_calc, si);
 
-
-
-
           // Collect the data back up to put on the fields.
           stk::simd::set_data(utau_calc, si, utau);
           stk::simd::set_data(qSurf_calc, si, qSurf);
           for (int d=0; d < BcAlgTraits::nDim_; ++d) {
             stk::simd::set_data(tauSurf_calc[d], si, tauSurf[d]);
           }
-
         }
         utauOps(feData, ip) = utau_calc;
         qSurfOps(feData, ip) = qSurf_calc;

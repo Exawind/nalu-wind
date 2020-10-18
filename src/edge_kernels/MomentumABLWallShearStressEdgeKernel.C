@@ -28,45 +28,28 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::MomentumABLWallShearStressEdg
   stk::mesh::MetaData& meta,
   ElemDataRequests& faceDataPreReqs
 ) : NGPKernel<MomentumABLWallShearStressEdgeKernel<BcAlgTraits>>(),
-    velocityNp1_(get_field_ordinal(meta, "velocity", stk::mesh::StateNP1)),
-    bcVelocity_(get_field_ordinal(meta, "wall_velocity_bc")),
-    density_(get_field_ordinal(meta, "density")),
     exposedAreaVec_(get_field_ordinal(meta, "exposed_area_vector", meta.side_rank())),
-    wallFricVel_(get_field_ordinal(meta, "wall_friction_velocity_bip", meta.side_rank())),
     wallShearStress_(get_field_ordinal(meta, "wall_shear_stress_bip", meta.side_rank())),
-    wallNormDist_(get_field_ordinal(meta, "wall_normal_distance_bip", meta.side_rank())),
     meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<BcAlgTraits>())
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
 
-  faceDataPreReqs.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
-  faceDataPreReqs.add_gathered_nodal_field(bcVelocity_, BcAlgTraits::nDim_);
-  faceDataPreReqs.add_gathered_nodal_field(density_, 1);
   faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
-  faceDataPreReqs.add_face_field(wallFricVel_, BcAlgTraits::numFaceIp_);
   faceDataPreReqs.add_face_field(wallShearStress_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
-  faceDataPreReqs.add_face_field(wallNormDist_, BcAlgTraits::numFaceIp_);
 }
 
 template<typename BcAlgTraits>
 void
 MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
-  SharedMemView<DoubleType**, DeviceShmem>& lhs,
+  SharedMemView<DoubleType**, DeviceShmem>& /* lhs */,
   SharedMemView<DoubleType*, DeviceShmem>& rhs,
   ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
 {
 
-  // Unit normal vector
-  NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
   NALU_ALIGNED DoubleType tauWall[BcAlgTraits::nDim_];
 
-  const auto& v_vel = scratchViews.get_scratch_view_2D(velocityNp1_);
-  const auto& v_bcvel = scratchViews.get_scratch_view_2D(bcVelocity_);
-  const auto& v_density = scratchViews.get_scratch_view_1D(density_);
   const auto& v_areavec = scratchViews.get_scratch_view_2D(exposedAreaVec_);
-  const auto& v_wallfricvel = scratchViews.get_scratch_view_1D(wallFricVel_);
   const auto& v_wallshearstress = scratchViews.get_scratch_view_2D(wallShearStress_);
-  const auto& v_wallnormdist = scratchViews.get_scratch_view_1D(wallNormDist_);
 
   const int* ipNodeMap = meFC_->ipNodeMap();
 

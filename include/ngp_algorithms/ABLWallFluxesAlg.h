@@ -107,10 +107,10 @@ private:
   unsigned density_         {stk::mesh::InvalidOrdinal};
   unsigned bcHeatFlux_      {stk::mesh::InvalidOrdinal};
   unsigned wallHeatFlux_    {stk::mesh::InvalidOrdinal};
-  unsigned wallShearStress_ {stk::mesh::InvalidOrdinal};
   unsigned specificHeat_    {stk::mesh::InvalidOrdinal};
   unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
   unsigned wallFricVel_     {stk::mesh::InvalidOrdinal};
+  unsigned wallShearStress_ {stk::mesh::InvalidOrdinal};
   unsigned wallNormDist_    {stk::mesh::InvalidOrdinal};
 
   //! Break the flux/surface temperature vs. time input table into vectors

@@ -47,13 +47,8 @@ public:
     ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
 
 private:
-  unsigned velocityNp1_     {stk::mesh::InvalidOrdinal};
-  unsigned bcVelocity_      {stk::mesh::InvalidOrdinal};
-  unsigned density_         {stk::mesh::InvalidOrdinal};
   unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
-  unsigned wallFricVel_     {stk::mesh::InvalidOrdinal};
   unsigned wallShearStress_ {stk::mesh::InvalidOrdinal};
-  unsigned wallNormDist_    {stk::mesh::InvalidOrdinal};
 
   MasterElement* meFC_{nullptr};
 };
