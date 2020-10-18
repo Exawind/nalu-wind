@@ -285,7 +285,6 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   const unsigned wDistID = wallNormDist_;
 
   auto* meSCS = meSCS_;
-  auto* meFC = meFC_;
 
   const DoubleType gravity = gravity_;
   const DoubleType z0 = z0_;
@@ -301,7 +300,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   DblType avgFactor = 0.0;
   DblType tempAverage;
   DblType velMagAverage;
-  Kokkos::View<double[3]> velAverage;
+  Kokkos::View<double[3]> velAverage("vel_average");
   auto hVelAverage = Kokkos::create_mirror_view(velAverage);
   if (averagingType_ == "planar")
   {

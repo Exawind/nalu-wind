@@ -58,8 +58,6 @@ ScalarFaceFluxBCElemKernel<BcAlgTraits>::execute(
   const auto& v_bcQ = scratchViews.get_scratch_view_1D(bcScalarQ_);
   const auto& v_areav = scratchViews.get_scratch_view_2D(exposedAreaVec_);
 
-  const auto& meViews = scratchViews.get_me_views(CURRENT_COORDINATES);
-
   const int* ipNodeMap = meFC_->ipNodeMap();
 
   for (int ip=0; ip < BcAlgTraits::numFaceIp_; ++ip) {
