@@ -147,6 +147,13 @@ realms:
           fluctuation_model: Moeng
           fluctuating_temperature_ref: surface
 
+    boundary_layer_statistics:
+      target_name: [ unspecified-2-hex ]
+      stats_output_file: "abl_statistics.nc"
+      compute_temperature_statistics: yes
+      output_frequency: 10
+      time_hist_output_frequency: 100
+
     solution_options:
       name: myOptions
       turbulence_model: wale
