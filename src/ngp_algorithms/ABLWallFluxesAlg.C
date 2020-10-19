@@ -298,34 +298,34 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   const bool useShifted = useShifted_;
 
   DblType avgFactor = 0.0;
-  DblType tempAverage;
-  DblType velMagAverage;
+  DblType tempAverage = Tref_;
+  DblType velMagAverage = 0.0;
   Kokkos::View<double[3]> velAverage("vel_average");
   auto hVelAverage = Kokkos::create_mirror_view(velAverage);
-  if (averagingType_ == "planar")
-  {
-    avgFactor = 1.0;
-    BdyLayerStatistics::HostArrayType h = realm_.bdyLayerStats_->abl_heights();
-    realm_.bdyLayerStats_->velocity(h[1], hVelAverage.data());
-    realm_.bdyLayerStats_->velocity_magnitude(h[1], &velMagAverage);
-    realm_.bdyLayerStats_->temperature(h[1], &tempAverage);  
-  }
+  if (averagingType_ != "planar")
+    throw std::runtime_error("ABLWallFluxesAlg: Only planar averaging type supported.");
+
+  avgFactor = 1.0;
+  BdyLayerStatistics::HostArrayType h = realm_.bdyLayerStats_->abl_heights();
+  realm_.bdyLayerStats_->velocity(h[1], hVelAverage.data());
+  realm_.bdyLayerStats_->velocity_magnitude(h[1], &velMagAverage);
+  realm_.bdyLayerStats_->temperature(h[1], &tempAverage);
   Kokkos::deep_copy(velAverage, hVelAverage);
 
   DblType fluctuationFactor = (fluctuationModel_ != "none") ? 1.0 : 0.0;
-
   DblType MoengFactor = (fluctuationModel_ == "Moeng") ? 1.0 : 0.0;
-
-  DblType fluctuatingTempRef = (fluctuatingTempRef_ == "reference") ? Tref_ : currSurfaceTemperature;
-
+  DblType fluctuatingTempRef =
+    (fluctuatingTempRef_ == "reference") ? Tref_ : currSurfaceTemperature;
   const double eps = 1.0e-8;
 
   const stk::mesh::Selector sel = realm_.meta_data().locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
 
   const auto utauOps = nalu_ngp::simd_face_elem_field_updater(ngpMesh, ngpUtau);
-  const auto qSurfOps = nalu_ngp::simd_face_elem_field_updater(ngpMesh, ngpqSurf);
-  const auto tauSurfOps = nalu_ngp::simd_face_elem_field_updater(ngpMesh, ngptauSurf);
+  const auto qSurfOps =
+    nalu_ngp::simd_face_elem_field_updater(ngpMesh, ngpqSurf);
+  const auto tauSurfOps =
+    nalu_ngp::simd_face_elem_field_updater(ngpMesh, ngptauSurf);
 
   // Reducer to accumulate the area-weighted utau sum as well as total area for
   // wall boundary of this specific topology.
@@ -336,12 +336,10 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
     std::to_string(BcAlgTraits::faceTopo_) + "_" +
     std::to_string(BcAlgTraits::elemTopo_);
 
-
-
   nalu_ngp::run_face_elem_par_reduce(
     algName, meshInfo, faceData_, elemData_, sel,
-    KOKKOS_LAMBDA(FaceElemSimdData& feData, nalu_ngp::ArraySimdDouble2& uSum) {
-
+    KOKKOS_LAMBDA(
+      FaceElemSimdData & feData, nalu_ngp::ArraySimdDouble2 & uSum) {
       // Unit normal vector
       NALU_ALIGNED DoubleType nx[BcAlgTraits::nDim_];
 
@@ -349,7 +347,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
       NALU_ALIGNED DoubleType velIp[BcAlgTraits::nDim_];
       NALU_ALIGNED DoubleType velOppNode[BcAlgTraits::nDim_];
       NALU_ALIGNED DoubleType bcVelIp[BcAlgTraits::nDim_];
-      
+
       // Surface stress
       NALU_ALIGNED DoubleType tauSurf_calc[BcAlgTraits::nDim_];
       DoubleType utau_calc;
@@ -415,7 +413,7 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
         }
 
         for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
-            velOppNode[d] = v_vel(nodeL,d);
+          velOppNode[d] = v_vel(nodeL, d);
         }
         tempOppNode = v_temp(nodeL);
 
@@ -618,7 +616,8 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
 
           // Compute the fluctuating flux fields.
           for (int d = 0; d < BcAlgTraits::nDim_; ++d) {
-             tauSurf[d] = -stk::simd::get_data(rhoIp, si) * utau * utau * stk::simd::get_data(tauSurf_calc[d], si);
+            tauSurf[d] = -stk::simd::get_data(rhoIp, si) * utau * utau *
+                         stk::simd::get_data(tauSurf_calc[d], si);
           }
           qSurf *= stk::simd::get_data(qSurf_calc, si);
 
@@ -639,7 +638,8 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
         uSum.array_[0] += utau_calc * aMag;
         uSum.array_[1] += aMag;
       }
-    }, utauReducer);
+    },
+    utauReducer);
 
   algDriver_.accumulate_utau_area_sum(utauSum.array_[0], utauSum.array_[1]);
 }

@@ -117,7 +117,7 @@ private:
   //! of each quantity and store in the following vectors.
   std::vector<DblType> tableTimes_{0.0,999999.9};
   std::vector<DblType> tableFluxes_{0.0,0.0};
-  std::vector<DblType> tableSurfaceTemperatures_{Tref_,Tref_};
+  std::vector<DblType> tableSurfaceTemperatures_{301.0, 301.0};
   std::vector<DblType> tableWeights_{0.0,0.0};
 
   //! Acceleration due to gravity (m/s^2)
