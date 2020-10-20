@@ -47,7 +47,13 @@ public:
 
   bool reduce_fringes() const { return reduceFringes_; }
 
+  double cell_res_mult() const { return cellResMult_; }
+  double node_res_mult() const { return nodeResMult_; }
+
 private:
+  double cellResMult_{1.0};
+  double nodeResMult_{1.0};
+
   //! Symmetry plane direction [1 = x; 2 = y; 3 = z]; default = 3
   int symmetryDir_{3};
 
