@@ -42,12 +42,31 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
        viscName = "viscosity";
 
   viscosity_ = get_field_ordinal(meta, viscName);
-  density_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   dudx_ = get_field_ordinal(meta, "dudx");
   edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
+  peclectFactor_ =
+    get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
 
-  pecletFunction_ = eqSystem->ngp_create_peclet_function<double>(velName);
+  // if turb model is iddes then
+  const auto turbModel = realm.solutionOptions_->turbulenceModel_;
+  if (turbModel == SST_IDDES || turbModel == SST_IDDES_ABL) {
+    const DblType alpha = realm_.get_alpha_factor(dofName);
+    const DblType alphaUpw = realm_.get_alpha_upw_factor(dofName);
+    const DblType hoUpwind = realm_.get_upw_factor(dofName);
+    // check that upwinding factors are set so we only blend with the peclet
+    // parameter
+    // treat as error for now, could switch to warning though.
+    std::string error_message;
+    if (alpha != 1.0)
+      error_message += "alpha must be 1.0 when using IDDES or IDDES-ABL\n";
+    if (alphaUpw != 1.0)
+      error_message += "alpha_upw must be 1.0 when using IDDES or IDDES-ABL\n";
+    if (hoUpwind != 0.0)
+      error_message += "upw_factor must be 0.0 when using IDDES or IDDES-ABL\n";
+    ThrowErrorMsgIf(
+      !error_message.empty(), "For the momementum equation:\n" + error_message);
+  }
 }
 
 void
@@ -73,10 +92,11 @@ MomentumEdgeSolverAlg::execute()
   const auto vrtm = fieldMgr.get_field<double>(velocityRTM_);
   const auto vel = fieldMgr.get_field<double>(velocity_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
-  const auto density = fieldMgr.get_field<double>(density_);
+  // const auto density = fieldMgr.get_field<double>(density_);
   const auto viscosity = fieldMgr.get_field<double>(viscosity_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
+  const auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
 
   // Local pointer for device capture
   auto* pecFunc = pecletFunction_;
@@ -97,24 +117,25 @@ MomentumEdgeSolverAlg::execute()
 
       const DblType mdot = massFlowRate.get(edge, 0);
 
-      const DblType densityL = density.get(nodeL, 0);
-      const DblType densityR = density.get(nodeR, 0);
+      // const DblType densityL = density.get(nodeL, 0);
+      // const DblType densityR = density.get(nodeR, 0);
 
       const DblType viscosityL = viscosity.get(nodeL, 0);
       const DblType viscosityR = viscosity.get(nodeR, 0);
 
       const DblType viscIp = 0.5 * (viscosityL + viscosityR);
-      const DblType diffIp = 0.5 * (viscosityL / densityL + viscosityR / densityR);
+      // const DblType diffIp = 0.5 * (viscosityL / densityL + viscosityR /
+      // densityR);
 
       // Compute area vector related quantities and (U dot areaVec)
       DblType axdx = 0.0;
       DblType asq = 0.0;
-      DblType udotx = 0.0;
+      // DblType udotx = 0.0;
       for (int d=0; d < ndim; ++d) {
         const DblType dxj = coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
-        udotx += 0.5 * dxj * (vrtm.get(nodeR, d) + vrtm.get(nodeL, d));
+        // udotx += 0.5 * dxj * (vrtm.get(nodeR, d) + vrtm.get(nodeL, d));
       }
       const DblType inv_axdx = 1.0 / axdx;
 
@@ -134,8 +155,8 @@ MomentumEdgeSolverAlg::execute()
         }
       }
 
-      const DblType pecnum = stk::math::abs(udotx) / (diffIp + eps);
-      const DblType pecfac = pecFunc->execute(pecnum);
+      // const DblType pecnum = stk::math::abs(udotx) / (diffIp + eps);
+      const DblType pecfac = pecletFactor.get(edge);
       const DblType om_pecfac = 1.0 - pecfac;
 
       NALU_ALIGNED DblType limitL[NDimMax_] = { 1.0, 1.0, 1.0};

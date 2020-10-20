@@ -1175,7 +1175,7 @@ MomentumEquationSystem::register_nodal_fields(
   }
 
   if (
-    realm_.solutionOptions_ - turbulenceModel_ == SST_IDDES ||
+    realm_.solutionOptions_->turbulenceModel_ == SST_IDDES ||
     realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
 
     des_lturb_ = &(meta_data.declare_field<ScalarFieldType>(
