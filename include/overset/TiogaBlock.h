@@ -9,6 +9,7 @@
 
 #include "overset/TiogaOptions.h"
 #include "overset/OversetFieldData.h"
+#include "overset/OversetNGP.h"
 #include "yaml-cpp/yaml.h"
 
 #include <vector>
@@ -24,6 +25,31 @@ namespace tioga_nalu {
 typedef stk::mesh::Field<double, stk::mesh::Cartesian> VectorFieldType;
 typedef stk::mesh::Field<double> ScalarFieldType;
 typedef stk::mesh::Field<int> ScalarIntFieldType;
+
+/** Data representing an unstructured mesh block
+ */
+struct NgpTiogaBlock
+{
+  static constexpr int max_vertex_types = 4;
+
+  OversetArrayType<double*> xyz_;
+  OversetArrayType<double*> node_res_;
+  OversetArrayType<double*> cell_res_;
+  OversetArrayType<double*> qnode_;
+  OversetArrayType<int*> iblank_;
+  OversetArrayType<int*> iblank_cell_;
+  OversetArrayType<int*> wallIDs_;
+  OversetArrayType<int*> ovsetIDs_;
+  OversetArrayType<int*> num_verts_;
+  OversetArrayType<int*> num_cells_;
+  OversetArrayType<int*> connect_[max_vertex_types];
+
+  OversetArrayType<int*> eid_map_;
+  OversetArrayType<stk::mesh::EntityId*> node_gid_;
+  OversetArrayType<stk::mesh::EntityId*> cell_gid_;
+
+  OversetArrayType<double*> qsol_;
+};
 
 /**
  * Interface to convert STK Mesh Part(s) to TIOGA blocks.
@@ -123,20 +149,6 @@ public:
 
   void update_solution(const sierra::nalu::OversetFieldData&);
 
-  // Accessors
-
-  //! STK Global ID for all the nodes comprising this mesh block
-  inline const std::vector<stk::mesh::EntityId>& node_id_map() const
-  { return nodeid_map_; }
-
-  //! STK Global ID for all the elements comprising this mesh block
-  inline const std::vector<stk::mesh::EntityId>& elem_id_map() const
-  { return elemid_map_; }
-
-  //! IBLANK mask indicating whether the element is active or inactive
-  inline const std::vector<int>& iblank_cell() const
-  { return iblank_cell_; }
-
   //! Return the block name for this mesh
   const std::string& block_name() const { return block_name_; }
 
@@ -220,39 +232,8 @@ private:
   //! Overset BC parts
   stk::mesh::PartVector ovsetParts_;
 
-  //! Coordinates for this mesh block in TIOGA format
-  std::vector<double> xyz_;
-
-  //! Node IBLANK information from TIOGA
-  std::vector<int> iblank_;
-
-  //! Element IBLANK information from TIOGA
-  std::vector<int> iblank_cell_;
-
-  /** Lookup table for node ID to local index in xyz_ array
-   *
-   *  Used to populate the wall and overset BC arrays as well as the overset
-   *  connectivity information.
-   */
-  std::map<stk::mesh::EntityId, size_t> node_map_;
-
-  //! Wall BC index array
-  std::vector<int> wallIDs_;
-
-  //! Overset BC index array
-  std::vector<int> ovsetIDs_;
-
-  //! Number of vertices per topology type found
-  std::vector<int> num_verts_;
-
-  //! Number of cells per topology in this mesh
-  std::vector<int> num_cells_;
-
-  /** Connectivity data structure
-   *
-   *  A two-dimensional list of size (num_elems, num_elems * nodes_per_elem)
-   */
-  std::vector<std::vector<int>> connect_;
+  //! Data representing this unstructured block
+  NgpTiogaBlock bdata_;
 
   /** Connectivity map.
    *
@@ -266,23 +247,8 @@ private:
    */
   int** tioga_conn_{nullptr};
 
-  //! STK Global ID for Nodes
-  std::vector<stk::mesh::EntityId> nodeid_map_;
-
-  //! STK Global ID for elements
-  std::vector<stk::mesh::EntityId> elemid_map_;
-
   //! Receptor information for this mesh block
   std::vector<int> receptor_info_;
-
-  //! User-specified node resolution
-  std::vector<double> node_res_;
-
-  //! User-specified cell resolution
-  std::vector<double> cell_res_;
-
-  //! Field data
-  std::vector<double> field_data_;
 
   //! Name of coordinates Field
   std::string coords_name_;
@@ -308,6 +274,20 @@ private:
   //! Flag to check if we are are already initialized
   bool is_init_ { true };
 
+public:
+  // Accessors
+
+  //! STK Global ID for all the nodes comprising this mesh block
+  inline auto node_id_map() const -> decltype(bdata_.node_gid_.h_view)
+  { return bdata_.node_gid_.h_view; }
+
+  //! STK Global ID for all the elements comprising this mesh block
+  inline auto elem_id_map() const -> decltype(bdata_.cell_gid_.h_view)
+  { return bdata_.cell_gid_.h_view; }
+
+  //! IBLANK mask indicating whether the element is active or inactive
+  inline auto iblank_cell() const -> decltype(bdata_.iblank_cell_.h_view)
+  { return bdata_.iblank_cell_.h_view; }
 };
 
 } // namespace tioga
