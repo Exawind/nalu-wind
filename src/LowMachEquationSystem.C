@@ -1174,51 +1174,74 @@ MomentumEquationSystem::register_nodal_fields(
       TAMSAlgDriver_->register_nodal_fields(part);
   }
 
+  if (
+    realm_.solutionOptions_ - turbulenceModel_ == SST_IDDES ||
+    realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
+
+    des_lturb_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "des_lturb"));
+    stk::mesh::put_field_on_mesh(*des_lturb_, *part, nullptr);
+    realm_.augment_restart_variable_list("des_lturb");
+
+    alpha_upw_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "alpha_upw"));
+    stk::mesh::put_field_on_mesh(*alpha_upw_, *part, nullptr);
+    realm_.augment_restart_variable_list("alpha_upw");
+
+    des_g_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "des_g"));
+    stk::mesh::put_field_on_mesh(*des_g_, *part, nullptr);
+    realm_.augment_restart_variable_list("des_g");
+
+    des_B_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "des_B"));
+    stk::mesh::put_field_on_mesh(*des_B_, *part, nullptr);
+    realm_.augment_restart_variable_list("des_B");
+
+    des_A_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "des_A"));
+    stk::mesh::put_field_on_mesh(*des_A_, *part, nullptr);
+    realm_.augment_restart_variable_list("des_A");
+
+    des_K_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "des_K"));
+    stk::mesh::put_field_on_mesh(*des_K_, *part, nullptr);
+    realm_.augment_restart_variable_list("des_K");
+
+    des_S_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "des_S"));
+    stk::mesh::put_field_on_mesh(*des_S_, *part, nullptr);
+    realm_.augment_restart_variable_list("des_S");
+
+    des_Omega_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "des_Omega"));
+    stk::mesh::put_field_on_mesh(*des_Omega_, *part, nullptr);
+    realm_.augment_restart_variable_list("des_Omega");
+
+    if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
+      std::cout << "Declaring fields for IDDES-ABL" << std::endl;
+      VectorFieldType& velocity_abl = meta_data.declare_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "velocity_abl");
+      VectorFieldType& velocity_rans = meta_data.declare_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "velocity_rans");
+      ScalarFieldType& tke_rans = meta_data.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "tke_rans");
+      ScalarFieldType& tke_abl = meta_data.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "tke_abl");
+      ScalarFieldType& sdr_rans = meta_data.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "sdr_rans");
+      stk::mesh::put_field_on_mesh(velocity_abl, *part, nDim, nullptr);
+      stk::mesh::put_field_on_mesh(velocity_rans, *part, nDim, nullptr);
+      stk::mesh::put_field_on_mesh(tke_abl, *part, nullptr);
+      stk::mesh::put_field_on_mesh(tke_rans, *part, nullptr);
+      stk::mesh::put_field_on_mesh(sdr_rans, *part, nullptr);
+    }
+  }
+
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
-               stk::topology::NODE_RANK, "momentum_diag"));
+    stk::topology::NODE_RANK, "momentum_diag"));
   stk::mesh::put_field_on_mesh(*Udiag_, *part, nullptr);
   realm_.augment_restart_variable_list("momentum_diag");
-
-  des_lturb_ = &(meta_data.declare_field<ScalarFieldType>(
-                 stk::topology::NODE_RANK, "des_lturb"));
-  stk::mesh::put_field_on_mesh(*des_lturb_, *part, nullptr);
-  realm_.augment_restart_variable_list("des_lturb");
-
-  alpha_upw_ = &(meta_data.declare_field<ScalarFieldType>(
-                 stk::topology::NODE_RANK, "alpha_upw"));
-  stk::mesh::put_field_on_mesh(*alpha_upw_, *part, nullptr);
-  realm_.augment_restart_variable_list("alpha_upw");
-
-  des_g_ = &(meta_data.declare_field<ScalarFieldType>(
-                     stk::topology::NODE_RANK, "des_g"));
-  stk::mesh::put_field_on_mesh(*des_g_, *part, nullptr);
-  realm_.augment_restart_variable_list("des_g");
-
-  des_B_ = &(meta_data.declare_field<ScalarFieldType>(
-                 stk::topology::NODE_RANK, "des_B"));
-  stk::mesh::put_field_on_mesh(*des_B_, *part, nullptr);
-  realm_.augment_restart_variable_list("des_B");
-
-  des_A_ = &(meta_data.declare_field<ScalarFieldType>(
-                 stk::topology::NODE_RANK, "des_A"));
-  stk::mesh::put_field_on_mesh(*des_A_, *part, nullptr);
-  realm_.augment_restart_variable_list("des_A");
-
-  des_K_ = &(meta_data.declare_field<ScalarFieldType>(
-                 stk::topology::NODE_RANK, "des_K"));
-  stk::mesh::put_field_on_mesh(*des_K_, *part, nullptr);
-  realm_.augment_restart_variable_list("des_K");
-
-  des_S_ = &(meta_data.declare_field<ScalarFieldType>(
-                 stk::topology::NODE_RANK, "des_S"));
-  stk::mesh::put_field_on_mesh(*des_S_, *part, nullptr);
-  realm_.augment_restart_variable_list("des_S");
-
-  des_Omega_ = &(meta_data.declare_field<ScalarFieldType>(
-                 stk::topology::NODE_RANK, "des_Omega"));
-  stk::mesh::put_field_on_mesh(*des_Omega_, *part, nullptr);
-  realm_.augment_restart_variable_list("des_Omega");
-
 
   // make sure all states are properly populated (restart can handle this)
   if ( numStates > 2 && (!realm_.restarted_simulation() || realm_.support_inconsistent_restart()) ) {
@@ -1252,24 +1275,6 @@ MomentumEquationSystem::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*g, *part, nullptr);
   }
-
-  std::cout << "Declaring fields for IDDES-ABL" << std::endl ;
-  VectorFieldType& velocity_abl = meta_data.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "velocity_abl");
-  VectorFieldType& velocity_rans = meta_data.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "velocity_rans");
-  ScalarFieldType& tke_rans = meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "tke_rans");
-  ScalarFieldType& tke_abl = meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "tke_abl");
-  ScalarFieldType& sdr_rans = meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "sdr_rans");
-  stk::mesh::put_field_on_mesh(velocity_abl, *part, nDim, nullptr);
-  stk::mesh::put_field_on_mesh(velocity_rans, *part, nDim, nullptr);
-  stk::mesh::put_field_on_mesh(tke_abl, *part, nullptr);
-  stk::mesh::put_field_on_mesh(tke_rans, *part, nullptr);
-  stk::mesh::put_field_on_mesh(sdr_rans, *part, nullptr);
-
 }
 
 //--------------------------------------------------------------------------
@@ -2888,11 +2893,14 @@ void MomentumEquationSystem::compute_turbulence_parameters()
   if (realm_.is_turbulent()) {
     tviscAlg_->execute();
     diffFluxCoeffAlg_->execute();
-    if ( (realm_.solutionOptions_->turbulenceModel_ == SST_DES) || (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES) )
-        compute_strelets_des_alpha_upw();
+    const auto turbModel = realm_.solutionOptions_->turbulenceModel_;
+    if (turbModel== SST_IDDES || turbModel==SST_IDDES_ABL){
+      compute_strelets_des_alpha_upw();
+    }
   }
 }
 
+// TODO unit test this function's computation
 void
 MomentumEquationSystem::compute_strelets_des_alpha_upw()
 {
