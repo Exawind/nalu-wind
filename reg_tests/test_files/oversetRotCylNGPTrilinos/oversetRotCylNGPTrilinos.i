@@ -15,6 +15,7 @@ linear_solvers:
     max_iterations: 200
     kspace: 50
     output_level: 0
+    reuse_linear_system: yes
 
   - name: solve_cont
     type: tpetra
@@ -25,6 +26,7 @@ linear_solvers:
     kspace: 50
     muelu_xml_file_name: ../../xml/milestone.xml
     output_level: 0
+    reuse_linear_system: yes
 
 realms:
 
