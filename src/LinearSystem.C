@@ -97,6 +97,12 @@ bool LinearSystem::useSegregatedSolver() const {
   return linearSolver_ ? linearSolver_->getConfig()->useSegregatedSolver() : false;
 }
 
+const LinearSolverConfig& LinearSystem::config() const
+{
+  ThrowAssert(linearSolver_ != nullptr);
+  return *(linearSolver_->getConfig());
+}
+
 // static method
 LinearSystem *LinearSystem::create(Realm& realm, const unsigned numDof, EquationSystem *eqSys, LinearSolver *solver)
 {

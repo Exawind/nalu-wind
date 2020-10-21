@@ -133,7 +133,7 @@ TpetraLinearSolverConfig::load(const YAML::Node & node)
   get_if_present(node, "recompute_preconditioner", recomputePreconditioner_, recomputePreconditioner_);
   get_if_present(node, "reuse_preconditioner",     reusePreconditioner_,     reusePreconditioner_);
   get_if_present(node, "segregated_solver",        useSegregatedSolver_,     useSegregatedSolver_);
-
+  get_if_present(node, "reuse_linear_system", reuseLinSysIfPossible_, reuseLinSysIfPossible_);
 }
 
 } // namespace nalu

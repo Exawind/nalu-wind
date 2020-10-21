@@ -2437,6 +2437,9 @@ MomentumEquationSystem::initialize()
 void
 MomentumEquationSystem::reinitialize_linear_system()
 {
+  // If this is decoupled overset simulation and the user has requested that the
+  // linear system be reused, then do nothing
+  if (decoupledOverset_ && linsys_->config().reuseLinSysIfPossible()) return;
 
   // delete linsys
   delete linsys_;
@@ -3637,6 +3640,9 @@ ContinuityEquationSystem::initialize()
 void
 ContinuityEquationSystem::reinitialize_linear_system()
 {
+  // If this is decoupled overset simulation and the user has requested that the
+  // linear system be reused, then do nothing
+  if (decoupledOverset_ && linsys_->config().reuseLinSysIfPossible()) return;
 
   // delete linsys
   delete linsys_;

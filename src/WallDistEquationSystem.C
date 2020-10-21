@@ -374,6 +374,10 @@ WallDistEquationSystem::initialize()
 void
 WallDistEquationSystem::reinitialize_linear_system()
 {
+  // If this is decoupled overset simulation and the user has requested that the
+  // linear system be reused, then do nothing
+  if (decoupledOverset_ && linsys_->config().reuseLinSysIfPossible()) return;
+
   delete linsys_;
   const EquationType eqID = EQ_WALL_DISTANCE;
   auto solverName = realm_.equationSystems_.get_solver_block_name("ndtw");

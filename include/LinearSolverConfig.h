@@ -65,6 +65,16 @@ public:
   inline bool useSegregatedSolver() const
   { return useSegregatedSolver_; }
 
+  /** User flag indicating whether equation systems must attempt to reuse linear
+   *  system data structures even for cases with mesh motion.
+   *
+   *  This option only affects decoupled overset system solves where the matrix
+   *  graph doesn't change, only the entries within the graph. This can be
+   *  controlled on a per-solver basis.
+   */
+  inline bool reuseLinSysIfPossible() const
+  { return reuseLinSysIfPossible_; }
+
   std::string get_method() const
   {return method_;}
 
@@ -100,6 +110,7 @@ protected:
   bool writeMatrixFiles_{false};
   bool ensureReproducible_{false};
   bool useNativeCudaSort_{false};
+  bool reuseLinSysIfPossible_{false};
 };
 
 class TpetraLinearSolverConfig : public LinearSolverConfig

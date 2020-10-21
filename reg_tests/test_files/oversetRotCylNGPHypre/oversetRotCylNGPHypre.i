@@ -23,6 +23,7 @@ linear_solvers:
     ensure_reproducible: no
     use_native_cuda_sort: no
     write_matrix_files: no
+    reuse_linear_system: yes
 
   # solver for the pressure
   - name: solve_scalar
@@ -39,6 +40,7 @@ linear_solvers:
     ensure_reproducible: no
     use_native_cuda_sort: no
     write_matrix_files:  no
+    reuse_linear_system: yes
 
 realms:
 

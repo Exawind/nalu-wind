@@ -58,6 +58,7 @@ HypreLinearSolverConfig::load(const YAML::Node& node)
   get_if_present(node, "reuse_preconditioner",
                  reusePreconditioner_, reusePreconditioner_);
   get_if_present(node, "segregated_solver", useSegregatedSolver_, useSegregatedSolver_);
+  get_if_present(node, "reuse_linsys", reuseLinSysIfPossible_, reuseLinSysIfPossible_);
 
   if (node["absolute_tolerance"]) {
     hasAbsTol_ = true;
