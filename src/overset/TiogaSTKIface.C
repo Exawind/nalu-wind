@@ -149,7 +149,7 @@ void TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
 
     // For each block determine donor elements that needs to be ghosted to other
     // MPI ranks
-    tb->get_donor_info(tg_, elemsToGhost_);
+    if (!isDecoupled) tb->get_donor_info(tg_, elemsToGhost_);
   }
 
   // Synchronize IBLANK data for shared nodes
