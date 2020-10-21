@@ -30,24 +30,78 @@ typedef stk::mesh::Field<int> ScalarIntFieldType;
  */
 struct NgpTiogaBlock
 {
+  /** Number of cell types supported by TIOGA
+   *
+   *  Currently it supports hex, tet, wedge, and pyramids
+   */
   static constexpr int max_vertex_types = 4;
 
+  //! Coordinates of the nodes for this mesh (size = 3 * num_nodes)
   OversetArrayType<double*> xyz_;
+
+  //! Nodal resolutions used for resolution check (size = num_nodes)
   OversetArrayType<double*> node_res_;
+
+  //! Cell resolutions used for resolution checks (size = num_elements)
   OversetArrayType<double*> cell_res_;
-  OversetArrayType<double*> qnode_;
+
+  //! IBLANK array populated after overset connectivity (size = num_nodes)
   OversetArrayType<int*> iblank_;
+
+  //! IBLANK array populated after overset connectivity (size = num_nodes)
   OversetArrayType<int*> iblank_cell_;
+
+  /** Indices of the nodes that define the wall boundaries
+   *
+   *  The indices are 1-based (Fortran style)
+   */
   OversetArrayType<int*> wallIDs_;
+
+  /** Indices of the nodes that define the overset boundaries
+   *
+   *  The indices are 1-based (Fortran style)
+   */
   OversetArrayType<int*> ovsetIDs_;
+
+  /** Array indicating the number of vertices in the element topologies
+   *
+   *  The number of vertices indicate the element type, i.e., `8 = hex, 6 =
+   *  wedge, 5 = pyramid, 4 = tet`. No other values are allowed.
+   *
+   *  For a mesh containing solely hex elements, this array just contains one
+   *  entry: `{8}`.
+   */
   OversetArrayType<int*> num_verts_;
+
+  /** Array indicating the number of elements for each element topology.
+   *
+   *  This array is the same size as `num_verts_`.
+   */
   OversetArrayType<int*> num_cells_;
+
+  /** Element connectivity information
+   *
+   *  Pointers to arrays containing connectivity information for the elements.
+   *  Ony num_vertex_types entries are filled. Each array has (num_vertices *
+   *  num_cells) entries for individual topologies.
+   */
   OversetArrayType<int*> connect_[max_vertex_types];
 
+  //! TIOGA index lookup using local entity index. TIOGA uses 1-based indexing,
+  //! so the first entry (node/element) has the index set to 1. This must be
+  //! taken into account when dereferencing entries in TIOGA data arrays.
   OversetArrayType<int*> eid_map_;
+
+  //! The global STK identifier for this node. Used to identify shared nodes
+  //! across domain partitions.
   OversetArrayType<stk::mesh::EntityId*> node_gid_;
+
+  //! The global STK identifier for an element. Used to identify donors on a
+  //! different MPI partition at the receptor MPI ranks. Not necessary if STK
+  //! ghosting is not used.
   OversetArrayType<stk::mesh::EntityId*> cell_gid_;
 
+  //! Solution array used to exchange data between meshes through TIOGA
   OversetArrayType<double*> qsol_;
 };
 
