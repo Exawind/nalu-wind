@@ -106,6 +106,10 @@ public:
    */
   void update_element_volumes();
 
+  /** Adjust resolutions of mandatory fringe entities
+   */
+  void adjust_resolutions();
+
   /** Register this block with TIOGA
    *
    *  Wrapper method to handle mesh block registration using TIOGA API. In

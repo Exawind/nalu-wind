@@ -134,6 +134,8 @@ void TiogaSTKIface::register_mesh()
   for (auto& tb: blocks_) {
     tb->update_coords();
     tb->update_element_volumes();
+    if (tiogaOpts_.adjust_resolutions())
+      tb->adjust_resolutions();
     tb->register_block(tg_);
   }
 }
