@@ -109,6 +109,7 @@
 #include <edge_kernels/MomentumOpenEdgeKernel.h>
 #include <edge_kernels/MomentumABLWallShearStressEdgeKernel.h>
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
+#include <edge_kernels/MomentumEdgePecletAlg.h>
 
 // node kernels
 #include "node_kernels/NodeKernelUtils.h"
@@ -712,6 +713,7 @@ LowMachEquationSystem::solve_and_update()
 
     for (int oi=0; oi < momentumEqSys_->numOversetIters_; ++oi) {
       momentumEqSys_->dynPressAlgDriver_.execute();
+      momentumEqSys_->pecletAlg_->execute();
       momentumEqSys_->assemble_and_solve(momentumEqSys_->uTmp_);
 
       timeA = NaluEnv::self().nalu_time();
@@ -1104,6 +1106,7 @@ MomentumEquationSystem::initial_work()
     const double timeA = NaluEnv::self().nalu_time();
     compute_wall_function_params();
     compute_turbulence_parameters();
+    pecletAlg_->execute();
     cflReAlgDriver_.execute();
 
     const double timeB = NaluEnv::self().nalu_time();
@@ -1329,6 +1332,8 @@ MomentumEquationSystem::register_interior_algorithm(
         edgeNodalGradient_);
   }
 
+  const auto theTurbModel = realm_.solutionOptions_->turbulenceModel_;
+
   // solver; interior contribution (advection + diffusion) [possible CMM time]
   if ( !realm_.solutionOptions_->useConsolidatedSolverAlg_ ) {
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
@@ -1337,10 +1342,17 @@ MomentumEquationSystem::register_interior_algorithm(
       SolverAlgorithm *theSolverAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
         theSolverAlg = new MomentumEdgeSolverAlg(realm_, part, this);
-        if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS) {
+        if (theTurbModel == SST_TAMS) {
           SolverAlgorithm *theSolverSrcAlg = NULL;
           theSolverSrcAlg = new AssembleTAMSEdgeKernelAlg(realm_, part, this);
           solverAlgDriver_->solverAlgMap_[SRC] = theSolverSrcAlg;
+        }
+        if (
+          realm_.is_turbulent() &&
+          (theTurbModel == SST_IDDES || theTurbModel == SST_IDDES_ABL)) {
+          // TODO create alg implementation for strelets
+        } else {
+          pecletAlg_.reset(new MomentumEdgePecletAlg(realm_, part, this));
         }
       }
       else {
@@ -2893,14 +2905,18 @@ void MomentumEquationSystem::compute_turbulence_parameters()
   if (realm_.is_turbulent()) {
     tviscAlg_->execute();
     diffFluxCoeffAlg_->execute();
+
+    // TODO(psakiev) for edge only
     const auto turbModel = realm_.solutionOptions_->turbulenceModel_;
     if (turbModel== SST_IDDES || turbModel==SST_IDDES_ABL){
       compute_strelets_des_alpha_upw();
-    }
+    } 
   }
 }
 
 // TODO unit test this function's computation
+// TODO we need to make this an edge field to be consistent with the other
+// upwinding
 void
 MomentumEquationSystem::compute_strelets_des_alpha_upw()
 {
@@ -2914,8 +2930,8 @@ MomentumEquationSystem::compute_strelets_des_alpha_upw()
     const auto ngpMesh = meshInfo.ngp_mesh();
     const auto& fieldMgr = meshInfo.ngp_field_manager();
 
-    auto alpha_upw = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "alpha_upw"));
+    auto alpha_upw =
+      fieldMgr.get_field<double>(get_field_ordinal(meta, "peclet_factor"));
     const auto fone = fieldMgr.get_field<double>(
         get_field_ordinal(meta, "sst_f_one_blending"));
     const auto dnv = fieldMgr.get_field<double>(
