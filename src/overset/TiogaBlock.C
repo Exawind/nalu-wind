@@ -265,6 +265,47 @@ void TiogaBlock::update_iblank_cell()
   }
 }
 
+void TiogaBlock::adjust_resolutions()
+{
+  // For every face on the sideset, grab the connected element and set its
+  // cell resolution to a large value. Also for each node of that element, set
+  // the nodal resolution to a large value.
+
+  constexpr double large_volume = std::numeric_limits<double>::max();
+  stk::mesh::Selector mesh_selector = get_node_selector(ovsetParts_);
+  const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
+    meta_.side_rank(), mesh_selector);
+
+  auto& eidmap = bdata_.eid_map_.h_view;
+  auto& cellres = bdata_.cell_res_.h_view;
+  auto& noderes = bdata_.node_res_.h_view;
+  for (auto b: mbkts) {
+    for (size_t fi=0; fi < b->size(); ++fi) {
+      const auto face = (*b)[fi];
+      const auto* elems = bulk_.begin_elements(face);
+      const auto num_elems = bulk_.num_elements(face);
+
+      for (unsigned ie=0; ie < num_elems; ++ie) {
+        const auto elem = elems[ie];
+        const int eidx = eidmap(elem.local_offset()) - 1;
+        cellres[eidx] = large_volume;
+
+        const auto* nodes = bulk_.begin_nodes(elem);
+        const auto num_nodes = bulk_.num_nodes(elem);
+
+        for (unsigned in=0; in < num_nodes; ++in) {
+          const auto node = nodes[in];
+          const int nidx = eidmap(node.local_offset()) - 1;
+          noderes[nidx] = large_volume;
+        }
+      }
+    }
+  }
+
+  bdata_.cell_res_.sync_device();
+  bdata_.node_res_.sync_device();
+}
+
 void TiogaBlock::get_donor_info(TIOGA::tioga& tg, stk::mesh::EntityProcVec& egvec)
 {
   // Do nothing if this mesh block isn't present in this MPI Rank

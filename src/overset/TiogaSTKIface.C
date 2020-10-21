@@ -134,6 +134,8 @@ void TiogaSTKIface::register_mesh()
   for (auto& tb: blocks_) {
     tb->update_coords();
     tb->update_element_volumes();
+    if (tiogaOpts_.adjust_resolutions())
+      tb->adjust_resolutions();
     tb->register_block(tg_);
   }
 }
@@ -147,7 +149,7 @@ void TiogaSTKIface::post_connectivity_work(const bool isDecoupled)
 
     // For each block determine donor elements that needs to be ghosted to other
     // MPI ranks
-    tb->get_donor_info(tg_, elemsToGhost_);
+    if (!isDecoupled) tb->get_donor_info(tg_, elemsToGhost_);
   }
 
   // Synchronize IBLANK data for shared nodes

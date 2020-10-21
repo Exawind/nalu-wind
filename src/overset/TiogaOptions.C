@@ -41,6 +41,11 @@ void TiogaOptions::load(const YAML::Node& node)
   if (node["node_resolution_multiplier"]) {
     nodeResMult_ = node["node_resolution_multiplier"].as<double>();
   }
+
+  if (node["adjust_mandatory_fringe_resolutions"]) {
+    adjustResolutionsForFringes_ =
+      node["adjust_mandatory_fringe_resolutions"].as<bool>();
+  }
 }
 
 void TiogaOptions::set_options(TIOGA::tioga& tg)
