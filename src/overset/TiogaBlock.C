@@ -287,7 +287,7 @@ void TiogaBlock::adjust_resolutions()
 
       for (unsigned ie=0; ie < num_elems; ++ie) {
         const auto elem = elems[ie];
-        const int eidx = eidmap(elem.local_offset() - 1);
+        const int eidx = eidmap(elem.local_offset()) - 1;
         cellres[eidx] = large_volume;
 
         const auto* nodes = bulk_.begin_nodes(elem);
@@ -295,7 +295,7 @@ void TiogaBlock::adjust_resolutions()
 
         for (unsigned in=0; in < num_nodes; ++in) {
           const auto node = nodes[in];
-          const int nidx = eidmap(node.local_offset() - 1);
+          const int nidx = eidmap(node.local_offset()) - 1;
           noderes[nidx] = large_volume;
         }
       }
