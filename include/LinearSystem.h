@@ -37,6 +37,7 @@ namespace nalu{
 class EquationSystem;
 class Realm;
 class LinearSolver;
+class LinearSolverConfig;
 
 class CoeffApplier
 {
@@ -87,6 +88,8 @@ public:
   }
 
   static LinearSystem *create(Realm& realm, const unsigned numDof, EquationSystem *eqSys, LinearSolver *linearSolver);
+
+  const LinearSolverConfig& config() const;
 
   // Graph/Matrix Construction
   virtual void buildNodeGraph(const stk::mesh::PartVector & parts)=0; // for nodal assembly (e.g., lumped mass and source)
@@ -204,7 +207,7 @@ protected:
 
   const unsigned numDof_;
   const std::string eqSysName_;
-  LinearSolver * linearSolver_;
+  LinearSolver * linearSolver_{nullptr};
   int linearSolveIterations_;
   double nonLinearResidual_;
   double linearResidual_;
