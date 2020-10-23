@@ -47,26 +47,6 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
-
-  // if turb model is iddes then
-  const auto turbModel = realm.solutionOptions_->turbulenceModel_;
-  if (turbModel == SST_IDDES || turbModel == SST_IDDES_ABL) {
-    const DblType alpha = realm_.get_alpha_factor(velName);
-    const DblType alphaUpw = realm_.get_alpha_upw_factor(velName);
-    const DblType hoUpwind = realm_.get_upw_factor(velName);
-    // check that upwinding factors are set so we only blend with the peclet
-    // parameter
-    // treat as error for now, could switch to warning though.
-    std::string error_message;
-    if (alpha != 1.0)
-      error_message += "alpha must be 1.0 when using IDDES or IDDES-ABL\n";
-    if (alphaUpw != 1.0)
-      error_message += "alpha_upw must be 1.0 when using IDDES or IDDES-ABL\n";
-    if (hoUpwind != 0.0)
-      error_message += "upw_factor must be 0.0 when using IDDES or IDDES-ABL\n";
-    ThrowErrorMsgIf(
-      !error_message.empty(), "For the momementum equation:\n" + error_message);
-  }
 }
 
 void

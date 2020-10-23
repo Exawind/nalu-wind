@@ -39,6 +39,23 @@ StreletsUpwindEdgeAlg::StreletsUpwindEdgeAlg(
       realm.meta_data(), realm.solutionOptions_->get_coordinates_name())),
     velocity_(get_field_ordinal(realm.meta_data(), velocityName_))
 {
+  // TODO(psakiev) Double check upwind quantities have been populated when this
+  // gets constructed
+  const DblType alpha = realm_.get_alpha_factor(velocityName_);
+  const DblType alphaUpw = realm_.get_alpha_upw_factor(velocityName_);
+  const DblType hoUpwind = realm_.get_upw_factor(velocityName_);
+  // check that upwinding factors are set so we only blend with the peclet
+  // parameter
+  // treat as error for now, could switch to warning though.
+  std::string error_message;
+  if (alpha != 1.0)
+    error_message += "alpha must be 1.0 when using IDDES or IDDES-ABL\n";
+  if (alphaUpw != 1.0)
+    error_message += "alpha_upw must be 1.0 when using IDDES or IDDES-ABL\n";
+  if (hoUpwind != 0.0)
+    error_message += "upw_factor must be 0.0 when using IDDES or IDDES-ABL\n";
+  ThrowErrorMsgIf(
+    !error_message.empty(), "For the momementum equation:\n" + error_message);
 }
 
 void
