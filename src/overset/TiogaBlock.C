@@ -741,7 +741,7 @@ void TiogaBlock::register_solution(
 
 #if TIOGA_HAS_NGP_IFACE
   constexpr int row_major = 0;
-  tg.register_unstructured_solution(meshtag_, qsol.h_view.data(), ncomp, row_major);
+  tg.register_unstructured_solution(meshtag_, qsol.h_view.data(), fsize, row_major);
 #else
   tg.registerSolution(meshtag_, qsol.h_view.data());
 #endif
