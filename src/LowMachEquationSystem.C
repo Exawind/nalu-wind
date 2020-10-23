@@ -110,6 +110,7 @@
 #include <edge_kernels/MomentumABLWallShearStressEdgeKernel.h>
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
 #include <edge_kernels/MomentumEdgePecletAlg.h>
+#include <edge_kernels/StreletsUpwindEdgeAlg.h>
 
 // node kernels
 #include "node_kernels/NodeKernelUtils.h"
@@ -1177,68 +1178,23 @@ MomentumEquationSystem::register_nodal_fields(
       TAMSAlgDriver_->register_nodal_fields(part);
   }
 
-  if (
-    realm_.solutionOptions_->turbulenceModel_ == SST_IDDES ||
-    realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
-
-    des_lturb_ = &(meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "des_lturb"));
-    stk::mesh::put_field_on_mesh(*des_lturb_, *part, nullptr);
-    realm_.augment_restart_variable_list("des_lturb");
-
-    alpha_upw_ = &(meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "alpha_upw"));
-    stk::mesh::put_field_on_mesh(*alpha_upw_, *part, nullptr);
-    realm_.augment_restart_variable_list("alpha_upw");
-
-    des_g_ = &(meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "des_g"));
-    stk::mesh::put_field_on_mesh(*des_g_, *part, nullptr);
-    realm_.augment_restart_variable_list("des_g");
-
-    des_B_ = &(meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "des_B"));
-    stk::mesh::put_field_on_mesh(*des_B_, *part, nullptr);
-    realm_.augment_restart_variable_list("des_B");
-
-    des_A_ = &(meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "des_A"));
-    stk::mesh::put_field_on_mesh(*des_A_, *part, nullptr);
-    realm_.augment_restart_variable_list("des_A");
-
-    des_K_ = &(meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "des_K"));
-    stk::mesh::put_field_on_mesh(*des_K_, *part, nullptr);
-    realm_.augment_restart_variable_list("des_K");
-
-    des_S_ = &(meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "des_S"));
-    stk::mesh::put_field_on_mesh(*des_S_, *part, nullptr);
-    realm_.augment_restart_variable_list("des_S");
-
-    des_Omega_ = &(meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "des_Omega"));
-    stk::mesh::put_field_on_mesh(*des_Omega_, *part, nullptr);
-    realm_.augment_restart_variable_list("des_Omega");
-
-    if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
-      std::cout << "Declaring fields for IDDES-ABL" << std::endl;
-      VectorFieldType& velocity_abl = meta_data.declare_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "velocity_abl");
-      VectorFieldType& velocity_rans = meta_data.declare_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "velocity_rans");
-      ScalarFieldType& tke_rans = meta_data.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "tke_rans");
-      ScalarFieldType& tke_abl = meta_data.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "tke_abl");
-      ScalarFieldType& sdr_rans = meta_data.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "sdr_rans");
-      stk::mesh::put_field_on_mesh(velocity_abl, *part, nDim, nullptr);
-      stk::mesh::put_field_on_mesh(velocity_rans, *part, nDim, nullptr);
-      stk::mesh::put_field_on_mesh(tke_abl, *part, nullptr);
-      stk::mesh::put_field_on_mesh(tke_rans, *part, nullptr);
-      stk::mesh::put_field_on_mesh(sdr_rans, *part, nullptr);
-    }
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
+    std::cout << "Declaring fields for IDDES-ABL" << std::endl;
+    VectorFieldType& velocity_abl = meta_data.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity_abl");
+    VectorFieldType& velocity_rans = meta_data.declare_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "velocity_rans");
+    ScalarFieldType& tke_rans = meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "tke_rans");
+    ScalarFieldType& tke_abl = meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "tke_abl");
+    ScalarFieldType& sdr_rans = meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "sdr_rans");
+    stk::mesh::put_field_on_mesh(velocity_abl, *part, nDim, nullptr);
+    stk::mesh::put_field_on_mesh(velocity_rans, *part, nDim, nullptr);
+    stk::mesh::put_field_on_mesh(tke_abl, *part, nullptr);
+    stk::mesh::put_field_on_mesh(tke_rans, *part, nullptr);
+    stk::mesh::put_field_on_mesh(sdr_rans, *part, nullptr);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
@@ -1350,7 +1306,7 @@ MomentumEquationSystem::register_interior_algorithm(
         if (
           realm_.is_turbulent() &&
           (theTurbModel == SST_IDDES || theTurbModel == SST_IDDES_ABL)) {
-          // TODO create alg implementation for strelets
+          pecletAlg_.reset(new StreletsUpwindEdgeAlg(realm_, part));
         } else {
           pecletAlg_.reset(new MomentumEdgePecletAlg(realm_, part, this));
         }
@@ -2580,7 +2536,6 @@ MomentumEquationSystem::initialize()
 
     Udiag_->modify_on_host();
   }
-  stk::mesh::field_fill(1.0, *alpha_upw_);
 }
 
 //--------------------------------------------------------------------------
@@ -2905,134 +2860,7 @@ void MomentumEquationSystem::compute_turbulence_parameters()
   if (realm_.is_turbulent()) {
     tviscAlg_->execute();
     diffFluxCoeffAlg_->execute();
-
-    // TODO(psakiev) for edge only
-    const auto turbModel = realm_.solutionOptions_->turbulenceModel_;
-    if (turbModel== SST_IDDES || turbModel==SST_IDDES_ABL){
-      compute_strelets_des_alpha_upw();
-    } 
   }
-}
-
-// TODO unit test this function's computation
-// TODO we need to make this an edge field to be consistent with the other
-// upwinding
-void
-MomentumEquationSystem::compute_strelets_des_alpha_upw()
-{
-    using DblType = double;
-    using Traits = nalu_ngp::NGPMeshTraits<>;
-
-    stk::mesh::MetaData & meta = realm_.meta_data();
-    const int nDim = meta.spatial_dimension();
-
-    const auto& meshInfo = realm_.mesh_info();
-    const auto ngpMesh = meshInfo.ngp_mesh();
-    const auto& fieldMgr = meshInfo.ngp_field_manager();
-
-    auto alpha_upw =
-      fieldMgr.get_field<double>(get_field_ordinal(meta, "peclet_factor"));
-    const auto fone = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "sst_f_one_blending"));
-    const auto dnv = fieldMgr.get_field<double>(
-        get_field_ordinal(meta,"dual_nodal_volume"));
-    const auto sst_maxlen = fieldMgr.get_field<double>(
-        get_field_ordinal(meta,"sst_max_length_scale"));
-    const auto dudx = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "dudx"));
-    const auto rho = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "density"));
-    const auto visc = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "viscosity"));
-    const auto tvisc = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "turbulent_viscosity"));
-    const auto tke = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "turbulent_ke"));
-    const auto sdr = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "specific_dissipation_rate"));
-
-    const auto des_lturb = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "des_lturb"));
-    const auto des_g = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "des_g"));
-    const auto des_b = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "des_B"));
-    const auto des_a = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "des_A"));
-    const auto des_k = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "des_K"));
-    const auto des_s = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "des_S"));
-    const auto des_omega = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "des_omega"));
-
-    const DblType cdes_ke = realm_.get_turb_model_constant(TM_cDESke);
-    const DblType cdes_kw = realm_.get_turb_model_constant(TM_cDESkw);
-    const DblType cmu = realm_.get_turb_model_constant(TM_cMu);
-    const DblType sigmaMax = realm_.get_turb_model_constant(TM_sigmaMax);
-    const DblType ch1 = realm_.get_turb_model_constant(TM_ch1);
-    const DblType ch2 = realm_.get_turb_model_constant(TM_ch2);
-    const DblType ch3 = realm_.get_turb_model_constant(TM_ch3);
-    const DblType tau_des = realm_.get_turb_model_constant(TM_tau_des);
-
-    stk::mesh::Selector sel = (
-        meta.locally_owned_part() | meta.globally_shared_part())
-        & stk::mesh::selectField(*tvisc_);
-
-    nalu_ngp::run_entity_algorithm(
-        "compute_streletes_des_alpha_upw",
-        ngpMesh, stk::topology::NODE_RANK, sel,
-        KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
-
-        DblType sijMag = 0.0;
-        DblType omegaMag = 0.0;
-        for (int i = 0; i < nDim; i++) {
-            const int offSet = nDim*i;
-            for (int j = 0; j < nDim; j++) {
-                const DblType rateOfStrain =
-                    0.5*(dudx.get(meshIdx, offSet+j)
-                         + dudx.get(meshIdx, nDim*j+i));
-                sijMag += rateOfStrain*rateOfStrain;
-                const DblType rateOfOmega =
-                    0.5*(dudx.get(meshIdx, offSet+j)
-                         - dudx.get(meshIdx, nDim*j+i));
-                omegaMag += rateOfOmega * rateOfOmega;
-            }
-        }
-        const DblType ssq_p_osq_o2 = (sijMag + omegaMag);
-        sijMag = stk::math::sqrt(2.0*sijMag);
-        omegaMag = stk::math::sqrt(2.0*omegaMag);
-        des_s.get(meshIdx,0) = sijMag;
-        des_omega.get(meshIdx,0) = omegaMag;
-
-        const DblType B =
-            ch3 * omegaMag * stk::math::max(sijMag, omegaMag)
-            / stk::math::max(ssq_p_osq_o2, 1e-20);
-        des_b.get(meshIdx,0) = B;
-        const DblType g = stk::math::tanh(B*B*B*B);
-        des_g.get(meshIdx,0) = g;
-        const DblType K = stk::math::max(std::sqrt(ssq_p_osq_o2), 0.1 / tau_des);
-        des_k.get(meshIdx,0) = K;
-        const DblType l_turb = stk::math::max(
-            (visc.get(meshIdx,0)+tvisc.get(meshIdx,0))
-            / rho.get(meshIdx,0)
-            / stk::math::sqrt(cmu * stk::math::sqrt(cmu) * K),
-            stk::math::sqrt(tke.get(meshIdx,0))/(cmu * sdr.get(meshIdx,0)) );
-        des_lturb.get(meshIdx,0) = l_turb;
-        const DblType cdes =
-            cdes_ke + fone.get(meshIdx,0)
-            * (cdes_kw - cdes_ke);
-        const DblType A =
-            ch2 * stk::math::max(
-                cdes * sst_maxlen.get(meshIdx,0)/l_turb/g - 0.5,0.0);
-        des_a.get(meshIdx,0) = A;
-
-        alpha_upw.get(meshIdx,0) =
-            sigmaMax * stk::math::tanh(
-                stk::math::pow(A,ch1));
-    });
-
-
 }
 
 //==========================================================================

@@ -169,6 +169,7 @@ MomentumEdgeSolverAlg::execute()
         uIpR[d] = vel.get(nodeR, d) - duR[d] * hoUpwind * limitR[d];
       }
 
+      // TODO(psakiev) extract this a funciton into EdgeKernelUtils.h
       // Computation of duidxj term, reproduce original comment by S. P. Domino
       /*
         form duidxj with over-relaxed procedure of Jasak:
