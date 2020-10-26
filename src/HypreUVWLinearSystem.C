@@ -86,15 +86,9 @@ HypreUVWLinearSystem::finalizeLinearSystem()
     hostCoeffApplier.reset(new HypreUVWLinSysCoeffApplier(1, nDim_, globalNumRows_, 
 							  rank_, iLower_, iUpper_, jLower_, jUpper_,
 							  map_shared_, mat_elem_cols_owned_uvm_, mat_elem_cols_shared_uvm_,
-							  mat_elem_start_owned_, mat_elem_start_shared_,
-							  mat_row_start_owned_, mat_row_start_shared_,			  
-							  rhs_row_start_owned_, rhs_row_start_shared_,
+							  mat_row_start_owned_, mat_row_start_shared_, rhs_row_start_shared_,
 							  row_indices_owned_uvm_, row_indices_shared_uvm_, 
 							  row_counts_owned_uvm_, row_counts_shared_uvm_,
-							  num_mat_pts_to_assemble_total_owned_,
-							  num_mat_pts_to_assemble_total_shared_,
-							  num_rhs_pts_to_assemble_total_owned_,
-							  num_rhs_pts_to_assemble_total_shared_,
 							  periodic_bc_rows_owned_, entityToLID_, entityToLIDHost_, 
 							  skippedRowsMap_, skippedRowsMapHost_, 
 							  oversetRowsMap_, oversetRowsMapHost_,
@@ -379,15 +373,10 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::HypreUVWLinSysCoeffApplier(uns
 									     HypreIntType iLower, HypreIntType iUpper,
 									     HypreIntType jLower, HypreIntType jUpper, MemoryMap map_shared,
 									     HypreIntTypeViewUVM mat_elem_cols_owned_uvm, HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
-									     UnsignedView mat_elem_start_owned, UnsignedView mat_elem_start_shared,
 									     UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared,
-									     UnsignedView rhs_row_start_owned, UnsignedView rhs_row_start_shared,
+									     UnsignedView rhs_row_start_shared,
 									     HypreIntTypeViewUVM row_indices_owned_uvm, HypreIntTypeViewUVM row_indices_shared_uvm, 
 									     HypreIntTypeViewUVM row_counts_owned_uvm, HypreIntTypeViewUVM row_counts_shared_uvm,
-									     HypreIntType num_mat_pts_to_assemble_total_owned,
-									     HypreIntType num_mat_pts_to_assemble_total_shared,
-									     HypreIntType num_rhs_pts_to_assemble_total_owned,
-									     HypreIntType num_rhs_pts_to_assemble_total_shared,
 									     HypreIntTypeView periodic_bc_rows_owned,
 									     HypreIntTypeView entityToLID, HypreIntTypeViewHost entityToLIDHost,
 									     HypreIntTypeUnorderedMap skippedRowsMap, HypreIntTypeUnorderedMapHost skippedRowsMapHost,
@@ -396,12 +385,8 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::HypreUVWLinSysCoeffApplier(uns
   : HypreLinSysCoeffApplier(numDof, nDim, globalNumRows, rank,
 			    iLower, iUpper, jLower, jUpper, map_shared,
 			    mat_elem_cols_owned_uvm, mat_elem_cols_shared_uvm,
-			    mat_elem_start_owned, mat_elem_start_shared, 
-			    mat_row_start_owned, mat_row_start_shared,
-			    rhs_row_start_owned, rhs_row_start_shared,
+			    mat_row_start_owned, mat_row_start_shared, rhs_row_start_shared,
 			    row_indices_owned_uvm, row_indices_shared_uvm, row_counts_owned_uvm, row_counts_shared_uvm,
-			    num_mat_pts_to_assemble_total_owned, num_mat_pts_to_assemble_total_shared,
-			    num_rhs_pts_to_assemble_total_owned, num_rhs_pts_to_assemble_total_shared,
 			    periodic_bc_rows_owned, entityToLID, entityToLIDHost, skippedRowsMap, skippedRowsMapHost,
 			    oversetRowsMap, oversetRowsMapHost, num_mat_overset_pts_owned, num_rhs_overset_pts_owned) { }
 
@@ -437,18 +422,13 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::sum_into(
 	HypreIntType col = localIds[k];
 	unsigned matIndex;
 	binarySearch(mat_elem_cols_owned_uvm_,lower,upper,col,matIndex);	  
-	/* Find the matrix element memory location */
-	matIndex = mat_elem_start_owned_(matIndex);
 	/* write the matrix element */
 	Kokkos::atomic_add(&values_owned_uvm_(matIndex),lhs(ix, offset));
 	offset += nDim;
       }
-
-      unsigned rhsIndex = hid-iLower;
-      rhsIndex = rhs_row_start_owned_(rhsIndex);
       for (unsigned d=0; d<nDim; ++d) {
 	int ir = ix + d;
-	Kokkos::atomic_add(&rhs_owned_uvm_(rhsIndex,d),rhs[ir]);
+	Kokkos::atomic_add(&rhs_owned_uvm_(hid-iLower,d),rhs[ir]);
       }
     } else {
       if (!map_shared_.exists(hid)) continue;
@@ -461,8 +441,6 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::sum_into(
 	HypreIntType col = localIds[k];
 	unsigned matIndex;
 	binarySearch(mat_elem_cols_shared_uvm_,lower,upper,col,matIndex);	  
-	/* Find the matrix element memory location */
-	matIndex = mat_elem_start_shared_(matIndex);
 	/* write the matrix element */
 	Kokkos::atomic_add(&values_shared_uvm_(matIndex),lhs(ix, offset));
 	offset += nDim;
@@ -508,17 +486,15 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::reset_rows(unsigned numNodes,
     if (hid>=iLower && hid<=iUpper) {
       unsigned lower = mat_row_start_owned_(hid-iLower);
       unsigned upper = mat_row_start_owned_(hid-iLower+1)-1;
-      for (unsigned k=mat_elem_start_owned_(lower); k<=mat_elem_start_owned_(upper); ++k)
+      for (unsigned k=lower; k<=upper; ++k)
         values_owned_uvm_(k) = 0.0;
 
       unsigned matIndex;
       binarySearch(mat_elem_cols_owned_uvm_,lower,upper,hid,matIndex);
-      matIndex = mat_elem_start_owned_(matIndex);
       values_owned_uvm_(matIndex) = diag_value;
 
-      unsigned rhsIndex = rhs_row_start_owned_(hid-iLower);
       for (unsigned d=0; d<nDim; ++d)
-	rhs_owned_uvm_(rhsIndex,d) = rhs_residual;
+	rhs_owned_uvm_(hid-iLower,d) = rhs_residual;
 
     } else {
       if (!map_shared_.exists(hid)) continue;
@@ -526,12 +502,11 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::reset_rows(unsigned numNodes,
       unsigned index = map_shared_.value_at(map_shared_.find(hid));
       unsigned lower = mat_row_start_shared_(index);
       unsigned upper = mat_row_start_shared_(index+1)-1;
-      for (unsigned k=mat_elem_start_shared_(lower); k<=mat_elem_start_shared_(upper); ++k)
+      for (unsigned k=lower; k<=upper; ++k)
 	values_shared_uvm_(k) = 0.0;
 
       unsigned matIndex;
       binarySearch(mat_elem_cols_shared_uvm_,lower,upper,hid,matIndex);
-      matIndex = mat_elem_start_shared_(matIndex);
       values_shared_uvm_(matIndex) = diag_value;
 
       unsigned rhsIndex = rhs_row_start_shared_(index);
@@ -638,8 +613,6 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::applyDirichletBCs(Realm & real
 
   /* For device capture */
   auto mat_row_start_owned = mat_row_start_owned_;
-  auto mat_elem_start_owned = mat_elem_start_owned_;
-  auto rhs_row_start_owned = rhs_row_start_owned_;
   auto nDim = nDim_;
   auto iLower = iLower_;
   int N = (int) tCols.size();
@@ -648,14 +621,9 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::applyDirichletBCs(Realm & real
   Kokkos::parallel_for("dirichlet_bcs_UVW", N, KOKKOS_LAMBDA(const unsigned& i) {
       HypreIntType hid = c(i);
       unsigned matIndex = mat_row_start_owned(hid-iLower);
-      matIndex = mat_elem_start_owned(matIndex);
-      
-      unsigned rhsIndex = hid-iLower;
-      rhsIndex = rhs_row_start_owned(rhsIndex);
-      
       vals(matIndex)=v(i);
       for (unsigned d=0; d<nDim; ++d) {
-	rhs_vals(rhsIndex,d) = rv(i,d);
+	rhs_vals(hid-iLower,d) = rv(i,d);
 	}
     });
 }
