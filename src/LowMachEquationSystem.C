@@ -1255,6 +1255,10 @@ void
 MomentumEquationSystem::register_edge_fields(
   stk::mesh::Part * part)
 {
+  ScalarFieldType* pecletFactor =
+    &(realm_.meta_data().declare_field<ScalarFieldType>(
+      stk::topology::EDGE_RANK, "peclet_factor"));
+  stk::mesh::put_field_on_mesh(*pecletFactor, *part, nullptr);
   if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
     TAMSAlgDriver_->register_edge_fields(part);
 }
