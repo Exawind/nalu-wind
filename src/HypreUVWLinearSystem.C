@@ -83,18 +83,14 @@ HypreUVWLinearSystem::finalizeLinearSystem()
   /**********************************************************************************/
   /* Build the coeff applier ... host data structure for building the linear system */
   if (!hostCoeffApplier) {
-    HypreUVWSolver* solver = reinterpret_cast<HypreUVWSolver*>(linearSolver_);
-    bool ensureReproducible = solver->getConfig()->ensureReproducible();
-    bool useNativeCudaSort = solver->getConfig()->useNativeCudaSort();
-      
-    hostCoeffApplier.reset(new HypreUVWLinSysCoeffApplier(useNativeCudaSort, ensureReproducible, 1, nDim_, globalNumRows_, 
+    hostCoeffApplier.reset(new HypreUVWLinSysCoeffApplier(1, nDim_, globalNumRows_, 
 							  rank_, iLower_, iUpper_, jLower_, jUpper_,
-							  map_shared_, mat_elem_cols_owned_, mat_elem_cols_shared_,
+							  map_shared_, mat_elem_cols_owned_uvm_, mat_elem_cols_shared_uvm_,
 							  mat_elem_start_owned_, mat_elem_start_shared_,
 							  mat_row_start_owned_, mat_row_start_shared_,			  
 							  rhs_row_start_owned_, rhs_row_start_shared_,
-							  row_indices_owned_, row_indices_shared_, 
-							  row_counts_owned_, row_counts_shared_,
+							  row_indices_owned_uvm_, row_indices_shared_uvm_, 
+							  row_counts_owned_uvm_, row_counts_shared_uvm_,
 							  num_mat_pts_to_assemble_total_owned_,
 							  num_mat_pts_to_assemble_total_shared_,
 							  num_rhs_pts_to_assemble_total_owned_,
@@ -379,16 +375,15 @@ sierra::nalu::CoeffApplier* HypreUVWLinearSystem::get_coeff_applier()
 /*                     Beginning of HypreUVWLinSysCoeffApplier implementations                          */
 /********************************************************************************************************/
 
-HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::HypreUVWLinSysCoeffApplier(bool useNativeCudaSort, bool ensureReproducible, unsigned numDof,
-									     unsigned nDim, HypreIntType globalNumRows, int rank, 
+HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::HypreUVWLinSysCoeffApplier(unsigned numDof, unsigned nDim, HypreIntType globalNumRows, int rank, 
 									     HypreIntType iLower, HypreIntType iUpper,
 									     HypreIntType jLower, HypreIntType jUpper, MemoryMap map_shared,
-									     HypreIntTypeView mat_elem_cols_owned, HypreIntTypeView mat_elem_cols_shared,
+									     HypreIntTypeViewUVM mat_elem_cols_owned_uvm, HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
 									     UnsignedView mat_elem_start_owned, UnsignedView mat_elem_start_shared,
 									     UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared,
 									     UnsignedView rhs_row_start_owned, UnsignedView rhs_row_start_shared,
-									     HypreIntTypeView row_indices_owned, HypreIntTypeView row_indices_shared, 
-									     HypreIntTypeView row_counts_owned, HypreIntTypeView row_counts_shared,
+									     HypreIntTypeViewUVM row_indices_owned_uvm, HypreIntTypeViewUVM row_indices_shared_uvm, 
+									     HypreIntTypeViewUVM row_counts_owned_uvm, HypreIntTypeViewUVM row_counts_shared_uvm,
 									     HypreIntType num_mat_pts_to_assemble_total_owned,
 									     HypreIntType num_mat_pts_to_assemble_total_shared,
 									     HypreIntType num_rhs_pts_to_assemble_total_owned,
@@ -398,17 +393,18 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::HypreUVWLinSysCoeffApplier(boo
 									     HypreIntTypeUnorderedMap skippedRowsMap, HypreIntTypeUnorderedMapHost skippedRowsMapHost,
 									     HypreIntTypeUnorderedMap oversetRowsMap, HypreIntTypeUnorderedMapHost oversetRowsMapHost,
 									     HypreIntType num_mat_overset_pts_owned, HypreIntType num_rhs_overset_pts_owned)
-  : HypreLinSysCoeffApplier(useNativeCudaSort, ensureReproducible, numDof, nDim, globalNumRows, rank,
+  : HypreLinSysCoeffApplier(numDof, nDim, globalNumRows, rank,
 			    iLower, iUpper, jLower, jUpper, map_shared,
-			    mat_elem_cols_owned, mat_elem_cols_shared,
+			    mat_elem_cols_owned_uvm, mat_elem_cols_shared_uvm,
 			    mat_elem_start_owned, mat_elem_start_shared, 
 			    mat_row_start_owned, mat_row_start_shared,
 			    rhs_row_start_owned, rhs_row_start_shared,
-			    row_indices_owned, row_indices_shared, row_counts_owned, row_counts_shared,
+			    row_indices_owned_uvm, row_indices_shared_uvm, row_counts_owned_uvm, row_counts_shared_uvm,
 			    num_mat_pts_to_assemble_total_owned, num_mat_pts_to_assemble_total_shared,
 			    num_rhs_pts_to_assemble_total_owned, num_rhs_pts_to_assemble_total_shared,
 			    periodic_bc_rows_owned, entityToLID, entityToLIDHost, skippedRowsMap, skippedRowsMapHost,
 			    oversetRowsMap, oversetRowsMapHost, num_mat_overset_pts_owned, num_rhs_overset_pts_owned) { }
+
 
 KOKKOS_FUNCTION
 void
@@ -440,20 +436,19 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::sum_into(
 	/* binary search subrange rather than a map.find */
 	HypreIntType col = localIds[k];
 	unsigned matIndex;
-	binarySearchOwned(lower,upper,col,matIndex);	  
+	binarySearch(mat_elem_cols_owned_uvm_,lower,upper,col,matIndex);	  
 	/* Find the matrix element memory location */
-	matIndex = Kokkos::atomic_fetch_add(&mat_counter_owned_(matIndex), (unsigned)1);
-	/* write to the lists */
-	cols_owned_(matIndex) = col;
-	vals_owned_(matIndex) = lhs(ix, offset);
+	matIndex = mat_elem_start_owned_(matIndex);
+	/* write the matrix element */
+	Kokkos::atomic_add(&values_owned_uvm_(matIndex),lhs(ix, offset));
 	offset += nDim;
       }
 
       unsigned rhsIndex = hid-iLower;
-      rhsIndex = Kokkos::atomic_fetch_add(&rhs_counter_owned_(rhsIndex), (unsigned)1);
+      rhsIndex = rhs_row_start_owned_(rhsIndex);
       for (unsigned d=0; d<nDim; ++d) {
 	int ir = ix + d;
-	rhs_vals_owned_(rhsIndex,d) = rhs[ir];
+	Kokkos::atomic_add(&rhs_owned_uvm_(rhsIndex,d),rhs[ir]);
       }
     } else {
       if (!map_shared_.exists(hid)) continue;
@@ -465,23 +460,23 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::sum_into(
 	/* binary search subrange rather than a map.find */
 	HypreIntType col = localIds[k];
 	unsigned matIndex;
-	binarySearchShared(lower,upper,col,matIndex);	  
+	binarySearch(mat_elem_cols_shared_uvm_,lower,upper,col,matIndex);	  
 	/* Find the matrix element memory location */
-	matIndex = Kokkos::atomic_fetch_add(&mat_counter_shared_(matIndex), (unsigned)1);
-	/* write to the lists */
-	cols_shared_(matIndex) = col;
-	vals_shared_(matIndex) = lhs(ix, offset);
+	matIndex = mat_elem_start_shared_(matIndex);
+	/* write the matrix element */
+	Kokkos::atomic_add(&values_shared_uvm_(matIndex),lhs(ix, offset));
 	offset += nDim;
       }
 
-      unsigned rhsIndex = Kokkos::atomic_fetch_add(&rhs_counter_shared_(index), (unsigned)1);
+      unsigned rhsIndex = rhs_row_start_shared_(index);
       for (unsigned d=0; d<nDim; ++d) {
 	int ir = ix + d;
-	rhs_vals_shared_(rhsIndex,d) = rhs[ir];
+	Kokkos::atomic_add(&rhs_shared_uvm_(rhsIndex,d),rhs[ir]);
       }
     }
   }
 }
+
 
 KOKKOS_FUNCTION
 void
@@ -496,6 +491,69 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::operator()(
 {
   sum_into(numEntities,entities,localIds,rhs,lhs,iLower_,iUpper_,nDim_);
 }
+
+
+KOKKOS_FUNCTION
+void
+HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::reset_rows(unsigned numNodes,
+							     const stk::mesh::Entity* nodeList,
+							     const double diag_value,
+							     const double rhs_residual,
+							     const HypreIntType iLower, const HypreIntType iUpper,
+							     const unsigned nDim) {
+
+  for (unsigned i=0; i<numNodes; ++i) {
+    HypreIntType hid = entityToLID_[nodeList[i].local_offset()];
+
+    if (hid>=iLower && hid<=iUpper) {
+      unsigned lower = mat_row_start_owned_(hid-iLower);
+      unsigned upper = mat_row_start_owned_(hid-iLower+1)-1;
+      for (unsigned k=mat_elem_start_owned_(lower); k<=mat_elem_start_owned_(upper); ++k)
+        values_owned_uvm_(k) = 0.0;
+
+      unsigned matIndex;
+      binarySearch(mat_elem_cols_owned_uvm_,lower,upper,hid,matIndex);
+      matIndex = mat_elem_start_owned_(matIndex);
+      values_owned_uvm_(matIndex) = diag_value;
+
+      unsigned rhsIndex = rhs_row_start_owned_(hid-iLower);
+      for (unsigned d=0; d<nDim; ++d)
+	rhs_owned_uvm_(rhsIndex,d) = rhs_residual;
+
+    } else {
+      if (!map_shared_.exists(hid)) continue;
+
+      unsigned index = map_shared_.value_at(map_shared_.find(hid));
+      unsigned lower = mat_row_start_shared_(index);
+      unsigned upper = mat_row_start_shared_(index+1)-1;
+      for (unsigned k=mat_elem_start_shared_(lower); k<=mat_elem_start_shared_(upper); ++k)
+	values_shared_uvm_(k) = 0.0;
+
+      unsigned matIndex;
+      binarySearch(mat_elem_cols_shared_uvm_,lower,upper,hid,matIndex);
+      matIndex = mat_elem_start_shared_(matIndex);
+      values_shared_uvm_(matIndex) = diag_value;
+
+      unsigned rhsIndex = rhs_row_start_shared_(index);
+      for (unsigned d=0; d<nDim; ++d)
+	rhs_shared_uvm_(rhsIndex,d) = rhs_residual;
+    }
+  }
+}
+
+
+KOKKOS_FUNCTION
+void
+HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::resetRows(unsigned numNodes,
+                           const stk::mesh::Entity* nodeList,
+                           const unsigned,
+                           const unsigned,
+                           const double diag_value,
+                           const double rhs_residual) {
+  checkSkippedRows_() = 0;
+  reset_rows(numNodes, nodeList, diag_value, rhs_residual, iLower_, iUpper_, nDim_);
+}
+
 
 void
 HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::applyDirichletBCs(Realm & realm, 
@@ -580,29 +638,25 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::applyDirichletBCs(Realm & real
 
   /* For device capture */
   auto mat_row_start_owned = mat_row_start_owned_;
-  auto mat_counter = mat_counter_owned_;
-  auto rhs_counter = rhs_counter_owned_;
-  auto cols = cols_owned_;
-  auto vals = vals_owned_;
-  auto rhs_vals = rhs_vals_owned_;
+  auto mat_elem_start_owned = mat_elem_start_owned_;
+  auto rhs_row_start_owned = rhs_row_start_owned_;
   auto nDim = nDim_;
   auto iLower = iLower_;
-
-  /* Step 5 : append this to the existing data structure */
   int N = (int) tCols.size();
+  auto vals = values_owned_uvm_;
+  auto rhs_vals = rhs_owned_uvm_;
   Kokkos::parallel_for("dirichlet_bcs_UVW", N, KOKKOS_LAMBDA(const unsigned& i) {
       HypreIntType hid = c(i);
       unsigned matIndex = mat_row_start_owned(hid-iLower);
-      matIndex = mat_counter(matIndex);
-
+      matIndex = mat_elem_start_owned(matIndex);
+      
       unsigned rhsIndex = hid-iLower;
-      rhsIndex = rhs_counter(rhsIndex);
-
-      cols(matIndex)=c(i);
+      rhsIndex = rhs_row_start_owned(rhsIndex);
+      
       vals(matIndex)=v(i);
       for (unsigned d=0; d<nDim; ++d) {
 	rhs_vals(rhsIndex,d) = rv(i,d);
-      }
+	}
     });
 }
 
@@ -665,7 +719,8 @@ HypreUVWLinearSystem::buildNodeGraph(const stk::mesh::PartVector & parts)
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 + 1.e3*((double)(_stop.tv_sec - _start.tv_sec));
-  printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
+  buildNodeGraphTimer_.push_back(msec);
+  //printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
 #endif
 }
 
@@ -710,7 +765,8 @@ HypreUVWLinearSystem::buildFaceToNodeGraph(const stk::mesh::PartVector & parts)
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 + 1.e3*((double)(_stop.tv_sec - _start.tv_sec));
-  printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
+  buildFaceToNodeGraphTimer_.push_back(msec);
+  //printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
 #endif
 }
 
@@ -755,7 +811,8 @@ HypreUVWLinearSystem::buildEdgeToNodeGraph(const stk::mesh::PartVector& parts)
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 + 1.e3*((double)(_stop.tv_sec - _start.tv_sec));
-  printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
+  buildEdgeToNodeGraphTimer_.push_back(msec);
+  //printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
 #endif
 }
 
@@ -800,7 +857,8 @@ HypreUVWLinearSystem::buildElemToNodeGraph(const stk::mesh::PartVector & parts)
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 + 1.e3*((double)(_stop.tv_sec - _start.tv_sec));
-  printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
+  buildElemToNodeGraphTimer_.push_back(msec);
+  //printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
 #endif
 }
 
@@ -855,7 +913,8 @@ HypreUVWLinearSystem::buildFaceElemToNodeGraph(
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 + 1.e3*((double)(_stop.tv_sec - _start.tv_sec));
-  printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
+  buildFaceElemToNodeGraphTimer_.push_back(msec);
+  //printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
 #endif
 }
 
@@ -909,7 +968,8 @@ HypreUVWLinearSystem::buildDirichletNodeGraph(
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 + 1.e3*((double)(_stop.tv_sec - _start.tv_sec));
-  printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
+  buildDirichletNodeGraphTimer_.push_back(msec);
+  //printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
 #endif
 }
 
@@ -938,7 +998,8 @@ HypreUVWLinearSystem::buildDirichletNodeGraph(
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 + 1.e3*((double)(_stop.tv_sec - _start.tv_sec));
-  printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
+  buildDirichletNodeGraphTimer_.push_back(msec);
+  //printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
 #endif
 }
 
@@ -967,7 +1028,8 @@ HypreUVWLinearSystem::buildDirichletNodeGraph(
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 + 1.e3*((double)(_stop.tv_sec - _start.tv_sec));
-  printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
+  buildDirichletNodeGraphTimer_.push_back(msec);
+  //printf("rank_=%d EqnName=%s : %s %s %d : dt=%1.5lf\n",rank_,name_.c_str(),__FILE__,__FUNCTION__,__LINE__,msec);
 #endif
 }
 
