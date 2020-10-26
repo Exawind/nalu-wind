@@ -68,6 +68,7 @@ private:
   const double includeDivU_;
   const double nfEntrain_;
   const EntrainmentMethod entrain_;
+  const TurbulenceModel turbModel_; 
 
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};

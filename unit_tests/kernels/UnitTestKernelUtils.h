@@ -517,7 +517,7 @@ public:
   {
     stk::mesh::put_field_on_mesh(
       *massFlowRateEdge_, meta_.universal_part(), spatialDim_, nullptr);
-    stk::mesh::put_field_on_mesh(*pecletFactor_, meta_.universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(*pecletFactor_, meta_.universal_part(), 1, nullptr);
   }
 
   virtual ~MomentumEdgeHex8Mesh() = default;
