@@ -162,7 +162,9 @@ public:
 
   /** Adjust resolutions of mandatory fringe entities
    */
-  void adjust_resolutions();
+  void adjust_cell_resolutions();
+
+  void adjust_node_resolutions();
 
   /** Register this block with TIOGA
    *
