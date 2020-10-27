@@ -69,9 +69,6 @@ TEST_F(MomentumEdgeHex8Mesh, NGP_open_edge)
   unit_test_utils::FaceElemHelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 3, part, isEdge);
 
-  auto* pecletField = meta_.get_field<GenericFieldType>(
-    stk::topology::EDGE_RANK, "peclet_factor");
-  ASSERT_NE(pecletField, nullptr);
   std::unique_ptr<sierra::nalu::Kernel> kernel(
     new sierra::nalu::MomentumOpenEdgeKernel<
       sierra::nalu::AlgTraitsQuad4Hex8>(

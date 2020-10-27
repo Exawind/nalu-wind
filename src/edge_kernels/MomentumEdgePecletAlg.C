@@ -25,7 +25,7 @@ MomentumEdgePecletAlg::MomentumEdgePecletAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
   : Algorithm(realm, part),
     pecletFactor_(get_field_ordinal(
-      realm.meta_data(), "peclet_function", stk::topology::EDGE_RANK)),
+      realm.meta_data(), "peclet_factor", stk::topology::EDGE_RANK)),
     density_(get_field_ordinal(realm.meta_data(), "denisty")),
     viscosity_(get_field_ordinal(
       realm.meta_data(),

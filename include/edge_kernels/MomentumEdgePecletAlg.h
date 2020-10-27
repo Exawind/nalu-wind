@@ -22,7 +22,6 @@ class EquationSystem;
 
 class MomentumEdgePecletAlg: public Algorithm{
 public:
-  // use simd due to ngp_peclet function
   using DblType = double;
 
   MomentumEdgePecletAlg(Realm& , stk::mesh::Part*, EquationSystem*);

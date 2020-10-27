@@ -23,7 +23,7 @@ StreletsUpwindEdgeAlg::StreletsUpwindEdgeAlg(
     velocityName_("velocity"),
     pecletFactor_(get_field_ordinal(
       realm_.meta_data(), "peclet_factor", stk::topology::EDGE_RANK)),
-    fOne_(get_field_ordinal(realm.meta_data(), "sst_f_blending")),
+    fOne_(get_field_ordinal(realm.meta_data(), "sst_f_one_blending")),
     dualNodalVolume_(get_field_ordinal(realm.meta_data(), "dual_nodal_volume")),
     sstMaxLen_(get_field_ordinal(realm.meta_data(), "sst_max_length_scale")),
     dudx_(get_field_ordinal(realm.meta_data(), "dudx")),
@@ -48,12 +48,15 @@ StreletsUpwindEdgeAlg::StreletsUpwindEdgeAlg(
   // parameter
   // treat as error for now, could switch to warning though.
   std::string error_message;
-  if (alpha != 1.0)
-    error_message += "alpha must be 1.0 when using IDDES or IDDES-ABL\n";
+  if (alpha != 0.0)
+    error_message += "alpha is set to: " + std::to_string(alpha) +
+                     " alpha must be 0.0 when using IDDES or IDDES-ABL\n";
   if (alphaUpw != 1.0)
-    error_message += "alpha_upw must be 1.0 when using IDDES or IDDES-ABL\n";
+    error_message += "alpha_upw is set to: " + std::to_string(alphaUpw) +
+                     " alpha_upw must be 1.0 when using IDDES or IDDES-ABL\n";
   if (hoUpwind != 0.0)
-    error_message += "upw_factor must be 0.0 when using IDDES or IDDES-ABL\n";
+    error_message += "upw_factor is set to: " + std::to_string(hoUpwind) +
+                     " upw_factor must be 0.0 when using IDDES or IDDES-ABL\n";
   ThrowErrorMsgIf(
     !error_message.empty(), "For the momementum equation:\n" + error_message);
 }
