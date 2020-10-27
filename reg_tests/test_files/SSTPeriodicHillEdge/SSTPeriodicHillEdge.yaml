@@ -161,6 +161,14 @@ realms:
             momentum: [0.011, 0.0, 0.0]
             momentum_box: [-1.0, 1.00001, 0.0, 10.0, 4.0, 5.0]
 
+        - dynamic_body_force_box_parameters:
+            forcing_direction: 0
+            velocity_reference: 1.0
+            density_reference: 1.0
+            velocity_target_name: inlet
+            drag_target_name: [top, wall]
+            output_file_name: forcing.dat
+
     post_processing:
 
     - type: surface
@@ -168,7 +176,7 @@ realms:
       output_file_name: periodicHill.dat
       frequency: 1
       parameters: [0,0]
-      target_name: wall
+      target_name: [top, wall]
 
     restart:
       restart_data_base_name: restart/periodicHill.rst

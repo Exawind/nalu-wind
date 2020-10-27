@@ -42,7 +42,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_body_force_box_inside)
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumBodyForceBoxNodeKernel>(
-    bulk_, "coordinates", forces, box);
+    helperObjs.realm, forces, box);
 
   helperObjs.execute();
 
@@ -72,7 +72,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_body_force_box_outside)
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
   helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumBodyForceBoxNodeKernel>(
-    bulk_, "coordinates", forces, box);
+    helperObjs.realm, forces, box);
 
   helperObjs.execute();
 

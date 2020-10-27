@@ -910,6 +910,19 @@ Solution Options
           momentum: [0.011, 0.0, 0.0]
           momentum_box: [-1.0, 1.00001, 0.0, 10.0, 4.0, 5.0]
 
+   One can make the momentum forcing in a box dynamic to achieve a
+   target velocity on a face:
+
+   .. code-block:: yaml
+
+      - dynamic_body_force_box_parameters:
+          forcing_direction: 0
+          velocity_reference: 21.0
+          density_reference: 1.0
+          velocity_target_name: inlet
+          drag_target_name: [top, bottom]
+          output_file_name: forcing.dat
+
 
 Mesh Transformation
 ```````````````````

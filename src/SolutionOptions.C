@@ -399,6 +399,20 @@ SolutionOptions::load(const YAML::Node & y_node)
         else if (expect_map( y_option, "consistent_mass_matrix_png", optional)) {
           y_option["consistent_mass_matrix_png"] >> consistentMassMatrixPngMap_ ;
         }
+        else if (expect_map( y_option, "dynamic_body_force_box_parameters", optional)) {
+          const YAML::Node yDyn = y_option["dynamic_body_force_box_parameters"];
+          get_required(yDyn, "forcing_direction", dynamicBodyForceDir_);
+          get_required(yDyn, "velocity_reference", dynamicBodyForceVelReference_);
+          get_required(yDyn, "density_reference", dynamicBodyForceDenReference_);
+          get_required(yDyn, "velocity_target_name", dynamicBodyForceVelTarget_);
+          const int dragTargetSize = yDyn["drag_target_name"].size();
+          dynamicBodyForceDragTarget_.resize(dragTargetSize);
+          for (int i = 0; i < dragTargetSize; ++i ) {
+            dynamicBodyForceDragTarget_[i] = yDyn["drag_target_name"][i].as<std::string>();
+          }
+          get_required(yDyn, "output_file_name", dynamicBodyForceOutFile_);
+          dynamicBodyForceBox_ = true;
+        }
         else {
           if (!NaluEnv::self().parallel_rank())
           {
