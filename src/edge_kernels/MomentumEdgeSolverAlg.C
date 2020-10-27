@@ -72,7 +72,6 @@ MomentumEdgeSolverAlg::execute()
   const auto vrtm = fieldMgr.get_field<double>(velocityRTM_);
   const auto vel = fieldMgr.get_field<double>(velocity_);
   const auto dudx = fieldMgr.get_field<double>(dudx_);
-  // const auto density = fieldMgr.get_field<double>(density_);
   const auto viscosity = fieldMgr.get_field<double>(viscosity_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
