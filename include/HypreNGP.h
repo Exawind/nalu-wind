@@ -13,24 +13,32 @@
 #include "HYPRE.h"
 #include "_hypre_utilities.h"
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(NALU_HYPRE_CUDA_INTERFACE) && (KOKKOS_ENABLE_CUDA)
 #include "_hypre_utilities.hpp"
 #endif
 
 namespace nalu_hypre {
-  void hypre_initialize()
-  {
-#ifdef KOKKOS_ENABLE_CUDA
-    HYPRE_Init();
-    hypre_HandleDefaultExecPolicy(hypre_handle()) = HYPRE_EXEC_DEVICE;
-    hypre_HandleSpgemmUseCusparse(hypre_handle()) = 0;
-#endif
-  }
 
-  void hypre_finalize()
-  {
-    HYPRE_Finalize();
-  }
+#if defined(NALU_HYPRE_CUDA_INTERFACE) && (KOKKOS_ENABLE_CUDA)
+
+inline void hypre_initialize()
+{
+  HYPRE_Init();
+  hypre_HandleDefaultExecPolicy(hypre_handle()) = HYPRE_EXEC_DEVICE;
+  hypre_HandleSpgemmUseCusparse(hypre_handle()) = 0;
+}
+
+inline void hypre_finalize()
+{
+  HYPRE_Finalize();
+}
+
+#else
+
+inline void hypre_initialize() {}
+inline void hypre_finalize() {}
+
+#endif
 }
 
 #endif
