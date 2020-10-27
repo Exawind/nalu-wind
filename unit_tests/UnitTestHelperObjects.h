@@ -22,9 +22,11 @@ namespace unit_test_utils {
 struct HelperObjectsBase
 {
   HelperObjectsBase(
-    stk::mesh::BulkData& bulk
-  ) : yamlNode(unit_test_utils::get_default_inputs()),
-      realmDefaultNode(unit_test_utils::get_realm_default_node()),
+    stk::mesh::BulkData& bulk,
+    YAML::Node yaml_node = unit_test_utils::get_default_inputs(),
+    YAML::Node realm_node = unit_test_utils::get_realm_default_node())
+    : yamlNode(yaml_node),
+      realmDefaultNode(realm_node),
       naluObj(new unit_test_utils::NaluTest(yamlNode)),
       realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
       eqSystems(realm),
@@ -80,8 +82,10 @@ struct HelperObjects : public HelperObjectsBase
     stk::topology topo,
     int numDof,
     stk::mesh::Part* part,
-    bool isEdge = false
-  ) : HelperObjectsBase(bulk),
+    bool isEdge = false,
+    YAML::Node yaml_node_pre_realm = unit_test_utils::get_default_inputs(),
+    YAML::Node yaml_node_realm = unit_test_utils::get_realm_default_node()
+  ) : HelperObjectsBase(bulk, yaml_node_pre_realm, yaml_node_realm),
       linsys(new unit_test_utils::TestLinearSystem(realm, numDof, &eqSystem, topo, isEdge))
   {
     eqSystem.linsys_ = linsys;

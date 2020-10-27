@@ -150,13 +150,13 @@ NaluTest::create_realm(const YAML::Node& realm_node, const std::string realm_typ
   sierra::nalu::Realm* realm = nullptr;
   if (realm_type == "multi_physics") {
     realm = new sierra::nalu::Realm(*sim_.realms_, realm_node);
+    realm->solutionOptions_->load(realm_node);
     realm->equationSystems_.load(realm_node);
   }
-  else
+  else{
     realm = new sierra::nalu::InputOutputRealm(*sim_.realms_, realm_node);
-
-  // Populate solution options
-  realm->solutionOptions_->load(realm_node);
+    realm->solutionOptions_->load(realm_node);
+  }
 
   // Set-up mesh metadata and bulkdata ... let user fill mesh in test function
   if (createMeshObjects) {
