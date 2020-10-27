@@ -13,13 +13,13 @@
 #include "HYPRE.h"
 #include "_hypre_utilities.h"
 
-#if defined(NALU_HYPRE_CUDA_INTERFACE) && (KOKKOS_ENABLE_CUDA)
+#if defined(NALU_HYPRE_CUDA_INTERFACE) && defined(KOKKOS_ENABLE_CUDA)
 #include "_hypre_utilities.hpp"
 #endif
 
 namespace nalu_hypre {
 
-#if defined(NALU_HYPRE_CUDA_INTERFACE) && (KOKKOS_ENABLE_CUDA)
+#if defined(NALU_HYPRE_CUDA_INTERFACE) && defined(KOKKOS_ENABLE_CUDA)
 
 inline void hypre_initialize()
 {
