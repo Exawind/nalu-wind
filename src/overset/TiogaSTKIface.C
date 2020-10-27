@@ -25,6 +25,7 @@
 #include "master_element/MasterElementFactory.h"
 #include "stk_util/parallel/ParallelReduce.hpp"
 #include "stk_mesh/base/FieldParallel.hpp"
+#include "stk_mesh/base/FieldBLAS.hpp"
 #include "stk_mesh/base/SkinBoundary.hpp"
 
 #include "yaml-cpp/yaml.h"
@@ -135,7 +136,17 @@ void TiogaSTKIface::register_mesh()
     tb->update_coords();
     tb->update_element_volumes();
     if (tiogaOpts_.adjust_resolutions())
-      tb->adjust_resolutions();
+      tb->adjust_cell_resolutions();
+  }
+
+  if (tiogaOpts_.adjust_resolutions()) {
+    auto* nodeVol = meta_.get_field(stk::topology::NODE_RANK, "tioga_nodal_volume");
+    stk::mesh::parallel_max(bulk_, {nodeVol});
+  }
+
+  for (auto& tb: blocks_) {
+    if (tiogaOpts_.adjust_resolutions())
+      tb->adjust_node_resolutions();
     tb->register_block(tg_);
   }
 }
@@ -533,6 +544,11 @@ void TiogaSTKIface::pre_connectivity_sync()
   coords->sync_to_host();
   dualVol->sync_to_host();
   elemVol->sync_to_host();
+
+  // Needed for adjusting resolutions
+  auto* tgNodalVol = meta_.get_field(
+      stk::topology::NODE_RANK, "tioga_nodal_volume");
+  stk::mesh::field_copy(*dualVol, *tgNodalVol);
 }
 
 void TiogaSTKIface::post_connectivity_sync()

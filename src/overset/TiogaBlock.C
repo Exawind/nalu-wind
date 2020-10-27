@@ -88,9 +88,13 @@ void TiogaBlock::setup(stk::mesh::PartVector& bcPartVec)
   ScalarIntFieldType& ibcell = meta_.declare_field<ScalarIntFieldType>(
     stk::topology::ELEM_RANK, "iblank_cell");
 
+  ScalarFieldType& nVol = meta_.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "tioga_nodal_volume");
+
   for (auto p: blkParts_) {
     stk::mesh::put_field_on_mesh(ibf, *p, nullptr);
     stk::mesh::put_field_on_mesh(ibcell, *p, nullptr);
+    stk::mesh::put_field_on_mesh(nVol, *p, nullptr);
   }
 
   // Push overset BC parts to the realm_.bcPartVec_ so that they are ignored
@@ -265,7 +269,7 @@ void TiogaBlock::update_iblank_cell()
   }
 }
 
-void TiogaBlock::adjust_resolutions()
+void TiogaBlock::adjust_cell_resolutions()
 {
   // For every face on the sideset, grab the connected element and set its
   // cell resolution to a large value. Also for each node of that element, set
@@ -274,35 +278,56 @@ void TiogaBlock::adjust_resolutions()
   constexpr double large_volume = std::numeric_limits<double>::max();
   stk::mesh::Selector mesh_selector = get_node_selector(ovsetParts_);
   const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
-    meta_.side_rank(), mesh_selector);
+    stk::topology::NODE_RANK, mesh_selector);
+  auto* nodeVol = meta_.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "tioga_nodal_volume");
 
   auto& eidmap = bdata_.eid_map_.h_view;
   auto& cellres = bdata_.cell_res_.h_view;
-  auto& noderes = bdata_.node_res_.h_view;
-  for (auto b: mbkts) {
-    for (size_t fi=0; fi < b->size(); ++fi) {
-      const auto face = (*b)[fi];
-      const auto* elems = bulk_.begin_elements(face);
-      const auto num_elems = bulk_.num_elements(face);
 
-      for (unsigned ie=0; ie < num_elems; ++ie) {
+  for (auto b: mbkts) {
+    for (const auto node : *b) {
+      const auto* elems = bulk_.begin_elements(node);
+      const auto num_elems = bulk_.num_elements(node);
+
+      for (unsigned ie = 0; ie < num_elems; ++ie) {
         const auto elem = elems[ie];
         const int eidx = eidmap(elem.local_offset()) - 1;
         cellres[eidx] = large_volume;
 
-        const auto* nodes = bulk_.begin_nodes(elem);
-        const auto num_nodes = bulk_.num_nodes(elem);
-
-        for (unsigned in=0; in < num_nodes; ++in) {
-          const auto node = nodes[in];
-          const int nidx = eidmap(node.local_offset()) - 1;
-          noderes[nidx] = large_volume;
+        const auto* elem_nodes = bulk_.begin_nodes(elem);
+        const auto num_enodes = bulk_.num_nodes(elem);
+        for (unsigned ii=0; ii < num_enodes; ++ii) {
+          double* vol = stk::mesh::field_data(*nodeVol, elem_nodes[ii]);
+          vol[0] = large_volume;
         }
       }
     }
   }
 
   bdata_.cell_res_.sync_device();
+}
+
+void TiogaBlock::adjust_node_resolutions()
+{
+  stk::mesh::Selector mesh_selector = get_node_selector(blkParts_);
+  const stk::mesh::BucketVector& mbkts = bulk_.get_buckets(
+    stk::topology::NODE_RANK, mesh_selector);
+  ScalarFieldType* nodeVol = meta_.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "tioga_nodal_volume");
+
+  auto& eidmap = bdata_.eid_map_.h_view;
+  auto& noderes = bdata_.node_res_.h_view;
+
+  for (auto b: mbkts) {
+    const double* nVol = stk::mesh::field_data(*nodeVol, *b);
+    for (size_t in = 0; in < b->size(); ++in) {
+      const auto node = (*b)[in];
+      const int nidx = eidmap(node.local_offset()) - 1;
+      noderes[nidx] = nVol[in];
+    }
+  }
+
   bdata_.node_res_.sync_device();
 }
 
