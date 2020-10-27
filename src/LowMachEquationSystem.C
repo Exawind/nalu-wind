@@ -73,6 +73,7 @@
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <FixPressureAtNodeAlgorithm.h>
 #include <FixPressureAtNodeInfo.h>
+#include <MiscIDDESABL.h>
 
 #ifdef NALU_USES_HYPRE
 #include <HypreLinearSystem.h>
@@ -1040,66 +1041,7 @@ MomentumEquationSystem::initial_work()
     TAMSAlgDriver_->initial_work();
 
   if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
-
-  if ( realm_.get_current_time() == 0.0) {
-    auto & meta = realm_.meta_data();
-    auto & bulk = realm_.bulk_data();
-    auto* ndtw_ = meta.get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "minimum_distance_to_wall");
-    auto* dual_nodal_volume_ = meta.get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "dual_nodal_volume");
-    auto* velocity_abl_ = meta.get_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "velocity_abl");
-    auto* velocity_rans_ = meta.get_field<VectorFieldType>(
-        stk::topology::NODE_RANK, "velocity_rans");
-    auto* tke_abl_ = meta.get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "tke_abl");
-    auto* tke_rans_ = meta.get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "tke_rans");
-    auto* sdr_rans_ = meta.get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "sdr_rans");
-    auto* tke_ = meta.get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "turbulent_ke");
-    auto* sdr_ = meta.get_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "specific_dissipation_rate");
-
-    const double b_ndtw = realm_.get_turb_model_constant(TM_abl_bndtw);
-    const double delta_ndtw = realm_.get_turb_model_constant(TM_abl_deltandtw);
-    std::array<double,3> hubVelVec{0.0,0.0,0.0};
-    hubVelVec[0] = 8.0 * std::cos(40.0*M_PI/180.0);
-    hubVelVec[1] = 8.0 * std::sin(40.0*M_PI/180.0);
-    hubVelVec[2] = 0.0;
-
-    const stk::mesh::BucketVector& node_buckets = bulk.get_buckets(
-        stk::topology::NODE_RANK, meta.universal_part());
-
-    for(auto b: node_buckets) {
-        for(size_t in=0; in < b->size(); in++) {
-            auto node = (*b)[in];
-            double dnv = *(stk::mesh::field_data(*dual_nodal_volume_, node));
-            double minD = *(stk::mesh::field_data(*ndtw_, node));
-            double* vel_abl = stk::mesh::field_data(*velocity_abl_, node);
-            double* vel_rans = stk::mesh::field_data(*velocity_rans_, node);
-            double* vel = stk::mesh::field_data(*velocity_, node);
-            double tke_abl = *(stk::mesh::field_data(*tke_abl_, node));
-            double tke_rans = *(stk::mesh::field_data(*tke_rans_, node));
-            double* tke = stk::mesh::field_data(*tke_, node);
-            double sdr_rans = *(stk::mesh::field_data(*sdr_rans_, node));
-            double* sdr = stk::mesh::field_data(*sdr_, node);
-
-            double f_des_abl = 0.5*std::tanh ( (b_ndtw - minD )/delta_ndtw ) + 0.5;
-
-            for (auto i=0; i < 3; i++)
-                vel[i] = f_des_abl * vel_rans[i]
-                    + (1.0 - f_des_abl) * (vel_abl[i] + vel_rans[i] - hubVelVec[i]);
-
-            *tke = f_des_abl * (tke_rans) + (1.0 - f_des_abl) * (tke_abl);
-            *sdr = f_des_abl * (sdr_rans) + (1.0 - f_des_abl) * std::sqrt(tke_abl)/ (0.0856 * std::cbrt(dnv));
-
-        }
-    }
-
-  }
+    initial_work_iddes_abl(realm_);
   }
   
 
@@ -1179,22 +1121,7 @@ MomentumEquationSystem::register_nodal_fields(
   }
 
   if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
-    std::cout << "Declaring fields for IDDES-ABL" << std::endl;
-    VectorFieldType& velocity_abl = meta_data.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "velocity_abl");
-    VectorFieldType& velocity_rans = meta_data.declare_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "velocity_rans");
-    ScalarFieldType& tke_rans = meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "tke_rans");
-    ScalarFieldType& tke_abl = meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "tke_abl");
-    ScalarFieldType& sdr_rans = meta_data.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "sdr_rans");
-    stk::mesh::put_field_on_mesh(velocity_abl, *part, nDim, nullptr);
-    stk::mesh::put_field_on_mesh(velocity_rans, *part, nDim, nullptr);
-    stk::mesh::put_field_on_mesh(tke_abl, *part, nullptr);
-    stk::mesh::put_field_on_mesh(tke_rans, *part, nullptr);
-    stk::mesh::put_field_on_mesh(sdr_rans, *part, nullptr);
+    register_iddes_abl_fields(meta_data, part);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
