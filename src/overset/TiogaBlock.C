@@ -286,8 +286,7 @@ void TiogaBlock::adjust_cell_resolutions()
   auto& cellres = bdata_.cell_res_.h_view;
 
   for (auto b: mbkts) {
-    for (size_t in =0; in < b->size(); ++in) {
-      const auto node = (*b)[in];
+    for (const auto node : *b) {
       const auto* elems = bulk_.begin_elements(node);
       const auto num_elems = bulk_.num_elements(node);
 
