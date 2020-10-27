@@ -77,8 +77,10 @@ int main( int argc, char ** argv )
 
   Kokkos::initialize(argc, argv);
 
+#ifdef NALU_USES_HYPRE
   // Hypre initialization
   nalu_hypre::hypre_initialize();
+#endif
 
   {
   
@@ -252,8 +254,10 @@ int main( int argc, char ** argv )
     naluEnv.naluOutputP0(), false, true, false, Teuchos::Union);
   }
 
+#ifdef NALU_USES_HYPRE
   // Hypre cleanup
   nalu_hypre::hypre_finalize();
+#endif
 
   Kokkos::finalize_all();
 
