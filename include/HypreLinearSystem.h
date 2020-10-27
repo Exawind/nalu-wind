@@ -14,7 +14,7 @@
 #ifndef HYPRE_LINEAR_SYSTEM_TIMER
 #define HYPRE_LINEAR_SYSTEM_TIMER
 #endif // HYPRE_LINEAR_SYSTEM_TIMER
-//#undef HYPRE_LINEAR_SYSTEM_TIMER
+#undef HYPRE_LINEAR_SYSTEM_TIMER
 
 #ifndef HYPRE_LINEAR_SYSTEM_DEBUG
 #define HYPRE_LINEAR_SYSTEM_DEBUG
@@ -181,15 +181,12 @@ public:
   HypreIntTypeViewUVM row_counts_owned_uvm_;
   HypreIntTypeView periodic_bc_rows_owned_;
   HypreIntTypeViewUVM mat_elem_cols_owned_uvm_;
-  UnsignedView mat_elem_start_owned_;
   UnsignedView mat_row_start_owned_;
-  UnsignedView rhs_row_start_owned_;
 
   MemoryMap map_shared_;
   HypreIntTypeViewUVM row_indices_shared_uvm_;
   HypreIntTypeViewUVM row_counts_shared_uvm_;
   HypreIntTypeViewUVM mat_elem_cols_shared_uvm_;
-  UnsignedView mat_elem_start_shared_;
   UnsignedView mat_row_start_shared_;
   UnsignedView rhs_row_start_shared_;
 
@@ -197,10 +194,6 @@ public:
   HypreIntTypeUnorderedMapHost skippedRowsMapHost_;
   HypreIntTypeUnorderedMap oversetRowsMap_;
   HypreIntTypeUnorderedMapHost oversetRowsMapHost_;
-  HypreIntType num_mat_pts_to_assemble_total_owned_;
-  HypreIntType num_mat_pts_to_assemble_total_shared_;
-  HypreIntType num_rhs_pts_to_assemble_total_owned_;
-  HypreIntType num_rhs_pts_to_assemble_total_shared_;
   HypreIntType num_mat_overset_pts_owned_;
   HypreIntType num_rhs_overset_pts_owned_;
 
@@ -269,21 +262,13 @@ public:
   {
   public:
 
-    HypreLinSysCoeffApplier(unsigned numDof, unsigned numDim, HypreIntType globalNumRows, int rank, 
-			    HypreIntType iLower, HypreIntType iUpper,
-			    HypreIntType jLower, HypreIntType jUpper, MemoryMap map_shared,
-			    HypreIntTypeViewUVM mat_elem_cols_owned_uvm, HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
-			    UnsignedView mat_elem_start_owned, UnsignedView mat_elem_start_shared,
-			    UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared,
-			    UnsignedView rhs_row_start_owned, UnsignedView rhs_row_start_shared,
+    HypreLinSysCoeffApplier(unsigned numDof, unsigned numDim, HypreIntType globalNumRows, int rank,
+			    HypreIntType iLower, HypreIntType iUpper, HypreIntType jLower, HypreIntType jUpper,
+			    MemoryMap map_shared, HypreIntTypeViewUVM mat_elem_cols_owned_uvm, HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
+			    UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared, UnsignedView rhs_row_start_shared,
 			    HypreIntTypeViewUVM row_indices_owned_uvm, HypreIntTypeViewUVM row_indices_shared_uvm,
 			    HypreIntTypeViewUVM row_counts_owned_uvm, HypreIntTypeViewUVM row_counts_shared_uvm,
-			    HypreIntType num_mat_pts_to_assemble_total_owned,
-			    HypreIntType num_mat_pts_to_assemble_total_shared,
-			    HypreIntType num_rhs_pts_to_assemble_total_owned,
-			    HypreIntType num_rhs_pts_to_assemble_total_shared,
-			    HypreIntTypeView periodic_bc_rows_owned,
-			    HypreIntTypeView entityToLID, HypreIntTypeViewHost entityToLIDHost,
+			    HypreIntTypeView periodic_bc_rows_owned, HypreIntTypeView entityToLID, HypreIntTypeViewHost entityToLIDHost,
 			    HypreIntTypeUnorderedMap skippedRowsMap, HypreIntTypeUnorderedMapHost skippedRowsMapHost,
 			    HypreIntTypeUnorderedMap oversetRowsMap, HypreIntTypeUnorderedMapHost oversetRowsMapHost,
 			    HypreIntType num_mat_overset_pts_owned, HypreIntType num_rhs_overset_pts_owned);
@@ -397,16 +382,10 @@ public:
     HypreIntTypeViewUVM mat_elem_cols_owned_uvm_;
     //! the matrix element columns ... shared in uvm
     HypreIntTypeViewUVM mat_elem_cols_shared_uvm_;
-    //! the starting position(s) of the matrix element in the lists ... owned
-    UnsignedView mat_elem_start_owned_;
-    //! the starting position(s) of the matrix element in the lists ... shared
-    UnsignedView mat_elem_start_shared_;
     //! the starting position(s) of a new row in the matrix lists ... owned
     UnsignedView mat_row_start_owned_;
     //! the starting position(s) of a new row in the matrix lists ... shared
     UnsignedView mat_row_start_shared_;
-    //! the starting position(s) of the rhs lists ... owned
-    UnsignedView rhs_row_start_owned_;
     //! the starting position(s) of the rhs lists ... shared
     UnsignedView rhs_row_start_shared_;
     //! the row indices ... owned in uvm
@@ -417,14 +396,6 @@ public:
     HypreIntTypeViewUVM row_counts_owned_uvm_;
     //! the row counts ... shared
     HypreIntTypeViewUVM row_counts_shared_uvm_;
-    //! total number of points in the matrix owned lists
-    HypreIntType num_mat_pts_to_assemble_total_owned_;
-    //! total number of points in the matrix shared lists
-    HypreIntType num_mat_pts_to_assemble_total_shared_;
-    //! total number of points in the rhs owned lists
-    HypreIntType num_rhs_pts_to_assemble_total_owned_;
-    //! total number of points in the rhs shared lists
-    HypreIntType num_rhs_pts_to_assemble_total_shared_;
       
     //! rows for the periodic boundary conditions ... owned. There is no shared version of this
     HypreIntTypeView periodic_bc_rows_owned_;
