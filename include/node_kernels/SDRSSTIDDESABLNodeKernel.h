@@ -24,8 +24,7 @@ class SDRSSTIDDESABLNodeKernel : public NGPNodeKernel<SDRSSTIDDESABLNodeKernel>
 public:
   SDRSSTIDDESABLNodeKernel(const stk::mesh::MetaData&);
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  SDRSSTIDDESABLNodeKernel() = default;
+  SDRSSTIDDESABLNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~SDRSSTIDDESABLNodeKernel() = default;
