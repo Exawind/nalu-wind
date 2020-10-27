@@ -168,13 +168,32 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   realm_.push_equation_to_systems(this);
 
   // sanity check on turbulence model
-  if ( (turbulenceModel_ != SST) && (turbulenceModel_ != KSGS) && (turbulenceModel_ != SST_DES) && (turbulenceModel_ != SST_TAMS) && (turbulenceModel_ != SST_IDDES) && (turbulenceModel_ != SST_IDDES_ABL) ) {
-    throw std::runtime_error("User has requested TurbKinEnergyEqs, however, turbulence model is not KSGS, SST, SST_DES, SST_IDDES or SST_TAMS");
+  if (!check_for_valid_turblence_model(turbulenceModel_)) {
+    throw std::runtime_error(
+      "User has requested TurbKinEnergyEqs, however, turbulence model is not "
+      "KSGS, SST, SST_DES, SST_IDDES, SST_IDDES_ABL or SST_TAMS");
   }
 
   // create projected nodal gradient equation system
   if ( managePNG_ ) {
     manage_projected_nodal_gradient(eqSystems);
+  }
+}
+
+bool
+TurbKineticEnergyEquationSystem::check_for_valid_turblence_model(
+  TurbulenceModel turbModel)
+{
+  switch (turbModel) {
+  case SST:
+  case KSGS:
+  case SST_DES:
+  case SST_TAMS:
+  case SST_IDDES:
+  case SST_IDDES_ABL:
+    return true;
+  default:
+    return false;
   }
 }
 
@@ -347,8 +366,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
             nodeAlg.add_kernel<TKESSTIDDESABLNodeKernel>(realm_.meta_data());
             break;
         default:
-          std::runtime_error("TKEEqSys: Invalid turbulence model, only SST, "
-                             "SST_DES, SST_TAMS, SST_IDDES, SST_IDDES_ABL and  Ksgs supported");
+          std::runtime_error("TKEEqSys: Invalid turbulence model");
           break;
         }          
       },
@@ -493,8 +511,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         break;
     }
     default:
-      throw std::runtime_error("Unsupported turbulence model in TurbKe: only "
-                               "SST, SST_DES, SST_TAMS and Ksgs supported");
+      throw std::runtime_error("Unsupported turbulence model in TurbKe");
     }
   } else {
     effDiffFluxCoeffAlg_->partVec_.push_back(part);

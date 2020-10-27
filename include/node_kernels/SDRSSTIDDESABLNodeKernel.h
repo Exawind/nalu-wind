@@ -79,7 +79,7 @@ private:
   NodeKernelTraits::DblType abl_deltandtw_;
     
 
-  const int nDim_;
+  int nDim_;
 };
 
 }  // nalu
