@@ -189,24 +189,5 @@ void FrameBase::compute_centroid_on_parts(
     centroid[j] = 0.5*(g_maxCoord[j] + g_minCoord[j]);
 }
 
-MotionBase::TransMatType FrameBase::compute_transformation(
-  const double time,
-  const double* xyz)
-{
-  // all frame motions are based off of the reference frame
-  MotionBase::TransMatType comp_trans_mat = MotionBase::identityMat_;
-
-  for (auto& mm: meshMotionVec_)
-  {
-    // build and get transformation matrix
-    mm->build_transformation(time,xyz);
-
-    // composite addition of motions in current group
-    comp_trans_mat = mm->add_motion(mm->get_trans_mat(),comp_trans_mat);
-  }
-
-  return comp_trans_mat;
-}
-
 } // nalu
 } // sierra

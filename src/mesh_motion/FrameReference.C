@@ -38,16 +38,23 @@ void FrameReference::update_coordinates(const double time)
       for ( int i = 0; i < nDim; ++i )
         mX[i] = xyz[i];
 
-      // compute composite transformation matrix
-      MotionBase::TransMatType trans_mat = compute_transformation(time,mX);
+      // all frame motions are based off of the reference frame
+      MotionBase::TransMatType comp_trans_mat = MotionBase::identityMat_;
+      for (auto& mm: meshMotionVec_)
+      {
+        // build and get transformation matrix
+        mm->build_transformation(time,mX);
+        // composite addition of motions in current group
+        comp_trans_mat = mm->add_motion(mm->get_trans_mat(),comp_trans_mat);
+      }
 
       // perform matrix multiplication between transformation matrix
       // and old coordinates to obtain current coordinates
       for (int d = 0; d < nDim; d++) {
-        xyz[d] = trans_mat[d][0]*mX[0]
-                +trans_mat[d][1]*mX[1]
-                +trans_mat[d][2]*mX[2]
-                +trans_mat[d][3];
+        xyz[d] = comp_trans_mat[d][0]*mX[0]
+                +comp_trans_mat[d][1]*mX[1]
+                +comp_trans_mat[d][2]*mX[2]
+                +comp_trans_mat[d][3];
       } // end for loop - d index
 
     } // end for loop - in index
