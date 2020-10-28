@@ -908,8 +908,7 @@ So this produces the final form for the TAMS model term,
    &= 2 \alpha \nu^{RANS}_t \langle S_{ij} \rangle - \frac{2}{3} \alpha k_{tot} \delta_{ij} + C(\mathcal{M}) \langle \epsilon \rangle^{1/3} \left( \mathcal{M}_{jk}^{4/3} \frac{\partial u_i^>}{\partial x_k} + \mathcal{M}_{ik}^{4/3} \frac{\partial u_j^>}{\partial x_k} \right).
    \end{aligned}
 
-The TAMS model terms are implemented for the consolidated element
-scheme in *MomentumSSTTAMSDiffElemKernel* and for the edge based
+The TAMS model terms are implemented for the edge based
 scheme in *MomentumSSTTAMSDiffEdgeKernel*.
 
 The contributions to :math:`\tau_{ij}^M` to the mean flow use a model
@@ -1108,8 +1107,7 @@ being added as a source term to the momentum solve, at this time we
 are not projecting onto a divergence free field and are instead
 allowing that to pass into the continuity solve, where the
 intermediate velocity field with the forcing will then be projected
-onto a divergence free field. This is implemented in the element
-kernels as *MomentumSSTTAMSForcingElemKernel* and the node kernels as
+onto a divergence free field. This is implemented in the node kernels as
 *MomentumSSTTAMSForcingNodeKernel*.
 
 Solid Stress

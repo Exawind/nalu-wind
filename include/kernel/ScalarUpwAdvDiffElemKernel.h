@@ -41,8 +41,7 @@ public:
     ScalarFieldType*,
     VectorFieldType*,
     ScalarFieldType*,
-    ElemDataRequests&,
-    const bool useAvgMdot = false);
+    ElemDataRequests&);
 
   KOKKOS_FUNCTION ScalarUpwAdvDiffElemKernel() = default;
 
