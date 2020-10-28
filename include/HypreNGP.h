@@ -7,13 +7,14 @@
 // for more details.
 //
 
-#ifdef NALU_USES_HYPRE
+#ifndef HYPRENGP_H
+#define HYPRENGP_H
+
+#if defined(NALU_HYPRE_CUDA_INTERFACE) && defined(KOKKOS_ENABLE_CUDA)
 #include "HYPRE_utilities.h"
 #include "krylov.h"
 #include "HYPRE.h"
 #include "_hypre_utilities.h"
-
-#if defined(NALU_HYPRE_CUDA_INTERFACE) && defined(KOKKOS_ENABLE_CUDA)
 #include "_hypre_utilities.hpp"
 #endif
 
@@ -41,4 +42,4 @@ inline void hypre_finalize() {}
 #endif
 }
 
-#endif
+#endif /* HYPRENGP_H */
