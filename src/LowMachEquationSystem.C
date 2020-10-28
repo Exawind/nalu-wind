@@ -156,8 +156,6 @@
 // UT Austin Hybrid TAMS kernels
 #include <edge_kernels/AssembleTAMSEdgeKernelAlg.h>
 #include <node_kernels/MomentumSSTTAMSForcingNodeKernel.h>
-#include <kernel/MomentumSSTTAMSDiffElemKernel.h>
-#include <kernel/MomentumSSTTAMSForcingElemKernel.h>
 
 // user function
 #include <user_functions/ConvectingTaylorVortexVelocityAuxFunction.h>
@@ -1154,8 +1152,6 @@ MomentumEquationSystem::register_element_fields(
   stk::mesh::Part * part,
   const stk::topology & theTopo)
 {
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
-    TAMSAlgDriver_->register_element_fields(part, theTopo);
 }
 
 //--------------------------------------------------------------------------
@@ -1377,14 +1373,6 @@ MomentumEquationSystem::register_interior_algorithm(
       "lumped_body_force", realm_.bulk_data(), *realm_.solutionOptions_,
       realm_.solutionOptions_->srcTermParamMap_.find("momentum")->second,
       dataPreReqs);
-    // UT Austin Hybrid TAMS model implementation for subgrid quantities
-    kb.build_topo_kernel_if_requested<MomentumSSTTAMSDiffElemKernel>
-      ("sst_tams",
-       realm_.bulk_data(), *realm_.solutionOptions_, tvisc_, dataPreReqs);
-
-    kb.build_topo_kernel_if_requested<MomentumSSTTAMSForcingElemKernel>
-      ("sst_tams_forcing",
-       realm_.bulk_data(), *realm_.solutionOptions_, visc_, tvisc_, dataPreReqs);
 
     kb.report();
 

@@ -16,7 +16,6 @@
 #include "ngp_algorithms/NgpAlgDriver.h"
 #include "ngp_algorithms/FieldUpdateAlgDriver.h"
 #include "ngp_algorithms/TAMSAvgMdotEdgeAlg.h"
-#include "ngp_algorithms/TAMSAvgMdotElemAlg.h"
 #include "ngp_algorithms/SSTTAMSAveragesAlg.h"
 
 namespace stk {
@@ -37,8 +36,6 @@ public:
   TAMSAlgDriver(Realm& realm);
   virtual ~TAMSAlgDriver() = default;
   virtual void register_nodal_fields(stk::mesh::Part* part);
-  virtual void
-  register_element_fields(stk::mesh::Part* part, const stk::topology& theTopo);
   virtual void register_edge_fields(stk::mesh::Part* part);
   void register_interior_algorithm(stk::mesh::Part* part);
   void execute();
@@ -61,7 +58,6 @@ private:
   ScalarFieldType* avgResAdequacy_;
   ScalarFieldType* avgProduction_;
   ScalarFieldType* avgTime_;
-  GenericFieldType* avgMdotScs_;
   ScalarFieldType* avgMdot_;
 
   FieldUpdateAlgDriver metricTensorAlgDriver_;

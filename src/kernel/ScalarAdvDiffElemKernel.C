@@ -34,8 +34,7 @@ ScalarAdvDiffElemKernel<AlgTraits>::ScalarAdvDiffElemKernel(
   const SolutionOptions& solnOpts,
   ScalarFieldType* scalarQ,
   ScalarFieldType* diffFluxCoeff,
-  ElemDataRequests& dataPreReqs,
-  const bool useAvgMdot /*=false*/)
+  ElemDataRequests& dataPreReqs)
   : scalarQ_(scalarQ->mesh_meta_data_ordinal()),
     diffFluxCoeff_(diffFluxCoeff->mesh_meta_data_ordinal()),
     shiftedGradOp_(solnOpts.get_shifted_grad_op(scalarQ->name())),
@@ -44,13 +43,7 @@ ScalarAdvDiffElemKernel<AlgTraits>::ScalarAdvDiffElemKernel(
   // Save off required fields
   const stk::mesh::MetaData& metaData = bulkData.mesh_meta_data();
   coordinates_ = get_field_ordinal(metaData, solnOpts.get_coordinates_name());
-  if (useAvgMdot) {
-    massFlowRate_ = get_field_ordinal(metaData, 
-      "average_mass_flow_rate_scs", stk::topology::ELEM_RANK);
-  } else {
-    massFlowRate_ = get_field_ordinal(metaData, 
-      "mass_flow_rate_scs", stk::topology::ELEM_RANK);
-  }
+  massFlowRate_ = get_field_ordinal(metaData, "mass_flow_rate_scs", stk::topology::ELEM_RANK);
 
   meSCS_ = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
 
