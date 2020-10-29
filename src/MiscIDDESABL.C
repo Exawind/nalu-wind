@@ -21,7 +21,6 @@ namespace nalu {
 void
 register_iddes_abl_fields(stk::mesh::MetaData& meta_data, stk::mesh::Part* part)
 {
-  std::cout << "Declaring fields for IDDES-ABL" << std::endl;
   const int nDim = meta_data.spatial_dimension();
   VectorFieldType& velocity_abl = meta_data.declare_field<VectorFieldType>(
     stk::topology::NODE_RANK, "velocity_abl");

@@ -39,8 +39,6 @@ StreletsUpwindEdgeAlg::StreletsUpwindEdgeAlg(
       realm.meta_data(), realm.solutionOptions_->get_coordinates_name())),
     velocity_(get_field_ordinal(realm.meta_data(), velocityName_))
 {
-  // TODO(psakiev) Double check upwind quantities have been populated when this
-  // gets constructed
   const DblType alpha = realm_.get_alpha_factor(velocityName_);
   const DblType alphaUpw = realm_.get_alpha_upw_factor(velocityName_);
   const DblType hoUpwind = realm_.get_upw_factor(velocityName_);

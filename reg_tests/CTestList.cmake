@@ -197,6 +197,7 @@ if(NOT ENABLE_CUDA)
     add_test_r(airfoilRANSEdgeNGPHypre 2)
     add_test_r(SSTWallHumpEdge 4)
     add_test_r(SSTPeriodicHillEdge 4)
+    add_test_r(IDDESPeriodicHillEdge 4)
   endif(ENABLE_HYPRE)
 
   if(ENABLE_OPENFAST)
