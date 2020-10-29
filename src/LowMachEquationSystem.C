@@ -1149,10 +1149,9 @@ MomentumEquationSystem::register_nodal_fields(
 //--------------------------------------------------------------------------
 void
 MomentumEquationSystem::register_element_fields(
-  stk::mesh::Part * part,
-  const stk::topology & theTopo)
-{
-}
+  stk::mesh::Part* /* part */,
+  const stk::topology& /* theTopo */ )
+{}
 
 //--------------------------------------------------------------------------
 //-------- register_edge_fields -------------------------------------------
