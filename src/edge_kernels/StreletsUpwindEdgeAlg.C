@@ -52,9 +52,9 @@ StreletsUpwindEdgeAlg::StreletsUpwindEdgeAlg(
   if (alphaUpw != 1.0)
     error_message += "alpha_upw is set to: " + std::to_string(alphaUpw) +
                      " alpha_upw must be 1.0 when using IDDES or IDDES-ABL\n";
-  if (hoUpwind != 0.0)
+  if (hoUpwind != 1.0)
     error_message += "upw_factor is set to: " + std::to_string(hoUpwind) +
-                     " upw_factor must be 0.0 when using IDDES or IDDES-ABL\n";
+                     " upw_factor must be 1.0 when using IDDES or IDDES-ABL\n";
   ThrowErrorMsgIf(
     !error_message.empty(), "For the momementum equation:\n" + error_message);
 }

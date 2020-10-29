@@ -163,8 +163,6 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
   const AlgorithmType algType = INTERIOR;
   if ( ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) || ( SST_IDDES_ABL == realm_.solutionOptions_->turbulenceModel_ ) ) {
 
-    if (SST_DES == realm_.solutionOptions_->turbulenceModel_) {
-
       if (NULL == sstMaxLengthScaleAlgDriver_)
         sstMaxLengthScaleAlgDriver_ = new AlgorithmDriver(realm_);
 
@@ -179,7 +177,6 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
       } else {
         it->second->partVec_.push_back(part);
       }
-    }
   }
 }
 
@@ -286,10 +283,15 @@ ShearStressTransportEquationSystem::initial_work()
 {
   const auto& meshInfo = realm_.mesh_info();
   const auto& meta = meshInfo.meta();
+  const auto& ngpMesh = meshInfo.ngp_mesh();
+  const auto& fieldMgr = meshInfo.ngp_field_manager();
 
+  auto& tkeNp1 = fieldMgr.get_field<double>(tke_->mesh_meta_data_ordinal());
+  auto& sdrNp1 = fieldMgr.get_field<double>(sdr_->mesh_meta_data_ordinal());
   const stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part()) &
     stk::mesh::selectField(*sdr_);
+  clip_sst(ngpMesh, sel, tkeNp1, sdrNp1);
 }
 
 void

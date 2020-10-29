@@ -131,7 +131,7 @@ realms:
             specific_dissipation_rate: 1.0
 
         - upw_factor:
-            velocity: 0.0
+            velocity: 1.0
             turbulent_ke: 0.0
             specific_dissipation_rate: 0.0
 

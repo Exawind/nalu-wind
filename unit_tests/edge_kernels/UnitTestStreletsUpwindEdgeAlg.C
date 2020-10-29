@@ -60,7 +60,6 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
 
     options:
       - hybrid_factor:
-          velocity: 1.0
           turbulent_ke: 1.0
           specific_dissipation_rate: 1.0
 
@@ -70,7 +69,7 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
           specific_dissipation_rate: 1.0
 
       - upw_factor:
-          velocity: 0.0
+          velocity: 1.0
           turbulent_ke: 0.0
           specific_dissipation_rate: 0.0
 
