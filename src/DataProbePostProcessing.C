@@ -47,10 +47,12 @@
 #include <iostream>
 
 // boost
+#ifdef NALU_USES_BOOST
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#endif
 
 namespace sierra{
 namespace nalu{

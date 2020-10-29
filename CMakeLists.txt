@@ -21,6 +21,7 @@ option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
 option(ENABLE_ALL_WARNINGS "Show most warnings for most compilers" ON)
 option(ENABLE_WERROR "Warnings are errors" OFF)
 option(ENABLE_OPENMP "Enable OpenMP flags" OFF)
+option(ENABLE_BOOST  "Enable Boost libraries" ON)
 
 set(CMAKE_CXX_STANDARD 14)       # Set nalu-wind C++14 standard
 set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions
@@ -59,12 +60,15 @@ if(Trilinos_BUILD_SHARED_LIBS)
 endif()
 
 ############################ BOOST #####################################
-set(CMAKE_PREFIX_PATH ${Boost_DIR} ${CMAKE_PREFIX_PATH})
-find_package(Boost REQUIRED COMPONENTS filesystem iostreams)
-if(Boost_VERSION VERSION_GREATER_EQUAL "1.70.0")
-  target_link_libraries(nalu PUBLIC Boost::filesystem Boost::iostreams)
-else()
-  target_link_libraries(nalu PUBLIC ${Boost_LIBRARIES})
+if(ENABLE_BOOST)
+  set(CMAKE_PREFIX_PATH ${Boost_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(Boost REQUIRED COMPONENTS filesystem iostreams)
+  if(Boost_VERSION VERSION_GREATER_EQUAL "1.70.0")
+    target_link_libraries(nalu PUBLIC Boost::filesystem Boost::iostreams)
+  else()
+    target_link_libraries(nalu PUBLIC ${Boost_LIBRARIES})
+  endif()
+  target_compile_definitions(nalu PUBLIC NALU_USES_BOOST)
 endif()
 
 ############################ YAML ######################################
