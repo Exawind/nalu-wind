@@ -2,7 +2,7 @@ Neutral Atmospheric Boundary Layer Case
 
 08 June 2020
 
-This case is a variant of ablNeutralEdge.  It usese the same case, but
+This case is a variant of ablNeutralEdge.  It uses the same case, but
 runs a post-processing script (passfail.py) at the end to check with
 ABL statistics averaging is correct.
 

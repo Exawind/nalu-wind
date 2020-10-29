@@ -7,7 +7,7 @@ path_to_executable=$(which nccmp)
 scriptdir=`dirname "$0"`
 
 # Path to the gold file
-goldfile=$scriptdir/abl_statistics.nc.gold
+goldfile=$scriptdir/ablNeutralStat.nc.gold
 
 if [ -x "$path_to_executable" ];  then
     echo "Found nccmp: $path_to_executable"
@@ -40,7 +40,7 @@ utau
 # Test each of the standard variables one by one
 for var in $stdtestvars; do
     echo "TESTING $var"
-    nccmp -d -l -f -v $var -t $STDTOL abl_statistics.nc $goldfile
+    nccmp -d -l -f -v $var -t $STDTOL ablNeutralStat.nc $goldfile
     result=$?
     if [ "$result" -ne 0 ]; then
 	echo "FAIL: $var"
@@ -58,7 +58,7 @@ temperature_variance_tavg
 # Test each of the temperature variance variables one by one
 for var in $tempvars; do
     echo "TESTING $var"
-    nccmp -d -l -f -v $var -t $TEMPTOL abl_statistics.nc $goldfile
+    nccmp -d -l -f -v $var -t $TEMPTOL ablNeutralStat.nc $goldfile
     result=$?
     if [ "$result" -ne 0 ]; then
 	echo "FAIL: $var"
