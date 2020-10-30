@@ -6,6 +6,8 @@
 #include <NaluParsing.h>
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
+#include "ngp_algorithms/WallDistGradAlgDriver.h"
+#include "ngp_algorithms/NDotVGradAlgDriver.h"
 
 namespace stk{
 struct topology;
@@ -17,6 +19,7 @@ namespace nalu{
 class Realm;
 class LinearSystem;
 class EquationSystems;
+class WallDistEquationSystem;
 
 
 class GammaEquationSystem : public EquationSystem {
@@ -57,21 +60,34 @@ public:
 
   void predict_state();
 
+  void normalize_dwalldistdx();
+  void compute_norm_dot_vel();
+
   void assemble_nodal_gradient();
+  void assemble_walldist_gradient();
+  void assemble_ndotv_gradient();
   void comp_eff_diff_coeff();
 
   const bool managePNG_;
+
+  WallDistEquationSystem *walldistEqSys_;
 
   ScalarFieldType *gamma_;
   ScalarFieldType *gammaprod_;
   ScalarFieldType *gammasink_;
   ScalarFieldType *gammareth_;
   VectorFieldType *dGamdx_;
+  VectorFieldType *dWallDistdx_;
+  VectorFieldType *dNDotVdx_;
   ScalarFieldType *gamTmp_;
+  ScalarFieldType *minDistanceToWall_;
+  ScalarFieldType *NDotV_;
   ScalarFieldType *visc_;
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
   ScalarNodalGradAlgDriver nodalGradAlgDriver_;
+  ScalarWallDistGradAlgDriver walldistGradAlgDriver_;
+  ScalarNDotVGradAlgDriver ndotvGradAlgDriver_;
   std::unique_ptr<Algorithm> effDiffFluxCoeffAlg_;
 
 };

@@ -68,8 +68,9 @@ namespace nalu {
 WallDistEquationSystem::WallDistEquationSystem(
   EquationSystems& eqSystems)
   : EquationSystem(eqSystems, "WallDistEQS", "ndtw"),
-    nodalGradAlgDriver_(realm_, "dwalldistdx"),
-    managePNG_(realm_.get_consistent_mass_matrix_png("ndtw"))
+    nodalGradAlgDriver_(realm_, "dwalldistphidx"),
+    managePNG_(realm_.get_consistent_mass_matrix_png("ndtw")),
+    dphidx_(NULL)
 {
   if (managePNG_)
     throw std::runtime_error("Consistent mass matrix PNG is not available for WallDistEquationSystem");
@@ -117,7 +118,7 @@ WallDistEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*wallDistPhi_, *part, nullptr);
 
   dphidx_ = &(meta.declare_field<VectorFieldType>(
-                stk::topology::NODE_RANK, "dwalldistdx"));
+                stk::topology::NODE_RANK, "dwalldistphidx"));
   stk::mesh::put_field_on_mesh(*dphidx_, *part, nDim, nullptr);
 
   wallDistance_ = &(meta.declare_field<ScalarFieldType>(

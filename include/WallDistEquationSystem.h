@@ -77,6 +77,9 @@ public:
 
   void compute_wall_distance();
 
+public:
+  VectorFieldType* dphidx_{nullptr};
+
 private:
   WallDistEquationSystem() = delete;
   WallDistEquationSystem(const WallDistEquationSystem&) = delete;
@@ -84,7 +87,7 @@ private:
 
   VectorFieldType* coordinates_{nullptr};
   ScalarFieldType* wallDistPhi_{nullptr};
-  VectorFieldType* dphidx_{nullptr};
+  //VectorFieldType* dphidx_{nullptr};
   ScalarFieldType* wallDistance_{nullptr};
   ScalarFieldType* dualNodalVolume_{nullptr};
   VectorFieldType* edgeAreaVec_{nullptr};

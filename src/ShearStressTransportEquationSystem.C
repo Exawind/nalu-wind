@@ -143,6 +143,7 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   // SST parameters that everyone needs
   minDistanceToWall_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "minimum_distance_to_wall"));
   stk::mesh::put_field_on_mesh(*minDistanceToWall_, *part, nullptr);
+
   fOneBlending_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_f_one_blending"));
   stk::mesh::put_field_on_mesh(*fOneBlending_, *part, nullptr);
   
@@ -210,11 +211,20 @@ ShearStressTransportEquationSystem::solve_and_update()
 {
   // wrap timing
   // SST_FIXME: deal with timers; all on misc for SSTEqs double timeA, timeB;
+  printf("ShearStressTransportEquationSystem::solve_and_update\n");
+
   if ( isInit_ ) {
     // compute projected nodal gradients
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
     gammaEqSys_->assemble_nodal_gradient();
+    printf("ShearStressTransportEquationSystem: call assemble_walldist_gradient\n");
+    gammaEqSys_->assemble_walldist_gradient();
+    printf("ShearStressTransportEquationSystem: call normalize_walldist\n");
+    gammaEqSys_->normalize_dwalldistdx();
+    gammaEqSys_->compute_norm_dot_vel();
+    gammaEqSys_->assemble_ndotv_gradient();
+
     clip_min_distance_to_wall();
 
     // deal with DES option
@@ -289,7 +299,7 @@ ShearStressTransportEquationSystem::initial_work()
   // required fields with state
   ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
   ScalarFieldType &sdrNp1 = sdr_->field_of_state(stk::mesh::StateNP1);
-  ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
+  //ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
 
   // define some common selectors
   const stk::mesh::Selector s_all_nodes
@@ -307,7 +317,7 @@ ShearStressTransportEquationSystem::initial_work()
     const double *rho = stk::mesh::field_data(*density, b);
     double *tke = stk::mesh::field_data(tkeNp1, b);
     double *sdr = stk::mesh::field_data(sdrNp1, b);
-    double *gamma = stk::mesh::field_data(gammaNp1, b);
+    //double *gamma = stk::mesh::field_data(gammaNp1, b);
 
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
 
@@ -379,8 +389,8 @@ ShearStressTransportEquationSystem::update_and_clip()
   ScalarFieldType *viscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
   ScalarFieldType *turbViscosity = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "turbulent_viscosity");
 
-  VectorFieldType *coordsNp1 = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType *velNp1 = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+  //VectorFieldType *coordsNp1 = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
+  //VectorFieldType *velNp1 = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
 
   // required fields with state
   ScalarFieldType &tkeNp1 = tke_->field_of_state(stk::mesh::StateNP1);
@@ -409,8 +419,8 @@ ShearStressTransportEquationSystem::update_and_clip()
     double *gamma = stk::mesh::field_data(gammaNp1, b);
     double *tvisc = stk::mesh::field_data(*turbViscosity, b);
 
-    double *coords = stk::mesh::field_data(*coordsNp1, b);
-    double *vel = stk::mesh::field_data(*velNp1, b);
+    //double *coords = stk::mesh::field_data(*coordsNp1, b);
+    //double *vel = stk::mesh::field_data(*velNp1, b);
 
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
 
@@ -444,14 +454,14 @@ ShearStressTransportEquationSystem::update_and_clip()
 
 //      if (gammaNew >= 0.0 && gammaNew <= 1.0) {
         // if all is well
-      if (coords[0] <= 1.999) {
+      //if (coords[0] <= 1.999) {
         gamma[k] = gammaNew;
         if (gammaNew < 0.0) gamma[k] = 0.0;
         if (gammaNew > 1.0) gamma[k] = 1.0;
-      }
-      else {
-        gamma[k] = 0.98*vel[3*k]/uinfFreestream + 0.02;
-      } 
+      //}
+      //else {
+      //  gamma[k] = 0.98*vel[3*k]/uinfFreestream + 0.02;
+      //} 
 
     }
   }
@@ -618,6 +628,7 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
     const double * mu = stk::mesh::field_data(*viscosity, b);
     const double * dk = stk::mesh::field_data(*dkdx, b);
     const double * dw = stk::mesh::field_data(*dwdx, b);
+
     double * fOne = stk::mesh::field_data(*fOneBlending_, b);
 
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {

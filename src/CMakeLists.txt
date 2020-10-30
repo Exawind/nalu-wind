@@ -136,6 +136,9 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscWaleAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbulenceAveragingPostProcessing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleWallDistNonConformalAlgorithm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleWallDistGradElemAlgorithm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNDotVNonConformalAlgorithm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNDotVGradElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/WallDistEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/GammaEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/RethetaEquationSystem.C

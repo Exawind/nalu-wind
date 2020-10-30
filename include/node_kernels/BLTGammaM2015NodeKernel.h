@@ -47,6 +47,9 @@ private:
   ngp::Field<double> visc_;
   ngp::Field<double> dudx_;
   ngp::Field<double> minD_;
+  ngp::Field<double> dWallDistdx_;
+  ngp::Field<double> dNDotVdx_;
+  ngp::Field<double> NDotV_;
   ngp::Field<double> dualNodalVolume_;
   ngp::Field<double> coordinates_;
   ngp::Field<double> velocityNp1_;
@@ -58,13 +61,16 @@ private:
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
   unsigned sdrID_             {stk::mesh::InvalidOrdinal};
   unsigned densityID_         {stk::mesh::InvalidOrdinal};
-  unsigned viscID_           {stk::mesh::InvalidOrdinal};
+  unsigned viscID_            {stk::mesh::InvalidOrdinal};
   unsigned dudxID_            {stk::mesh::InvalidOrdinal};
   unsigned minDID_            {stk::mesh::InvalidOrdinal};
+  unsigned dWallDistdxID_     {stk::mesh::InvalidOrdinal};
+  unsigned dNDotVdxID_        {stk::mesh::InvalidOrdinal};
+  unsigned NDotVID_           {stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_     {stk::mesh::InvalidOrdinal};
   unsigned velocityNp1ID_     {stk::mesh::InvalidOrdinal};
-  unsigned gamintID_       {stk::mesh::InvalidOrdinal};
+  unsigned gamintID_          {stk::mesh::InvalidOrdinal};
   unsigned gammaprodID_       {stk::mesh::InvalidOrdinal};
   unsigned gammasinkID_       {stk::mesh::InvalidOrdinal};
   unsigned gammarethID_       {stk::mesh::InvalidOrdinal};

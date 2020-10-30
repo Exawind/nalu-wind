@@ -25,6 +25,9 @@ BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
     viscID_(get_field_ordinal(meta, "viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
     minDID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
+    dWallDistdxID_(get_field_ordinal(meta, "dWallDistdx")),
+    dNDotVdxID_(get_field_ordinal(meta, "dNDotVdx")),
+    NDotVID_(get_field_ordinal(meta, "NDotV")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     coordinatesID_(get_field_ordinal(meta, "coordinates")),
     velocityNp1ID_(get_field_ordinal(meta, "velocity")),
@@ -46,6 +49,9 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   visc_            = fieldMgr.get_field<double>(viscID_);
   dudx_            = fieldMgr.get_field<double>(dudxID_);
   minD_            = fieldMgr.get_field<double>(minDID_);
+  dWallDistdx_     = fieldMgr.get_field<double>(dWallDistdxID_);
+  dNDotVdx_        = fieldMgr.get_field<double>(dNDotVdxID_);
+  NDotV_           = fieldMgr.get_field<double>(NDotVID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   coordinates_     = fieldMgr.get_field<double>(coordinatesID_);
   velocityNp1_     = fieldMgr.get_field<double>(velocityNp1ID_);
@@ -99,6 +105,8 @@ BLTGammaM2015NodeKernel::execute(
 
   NALU_ALIGNED NodeKernelTraits::DblType coords[NodeKernelTraits::NDimMax]; // coordinates
   NALU_ALIGNED NodeKernelTraits::DblType vel[NodeKernelTraits::NDimMax];
+  NALU_ALIGNED NodeKernelTraits::DblType dwalldistdx[NodeKernelTraits::NDimMax];
+  NALU_ALIGNED NodeKernelTraits::DblType dndotvdx[NodeKernelTraits::NDimMax];
 
   const DblType tke       = tke_.get(node, 0);
   const DblType sdr       = sdr_.get(node, 0);
@@ -107,11 +115,10 @@ BLTGammaM2015NodeKernel::execute(
   const DblType density   = density_.get(node, 0);
   const DblType visc      = visc_.get(node, 0);
   const DblType minD      = minD_.get(node, 0);
+  const DblType NDotV     = NDotV_.get(node, 0);
   const DblType dVol      = dualNodalVolume_.get(node, 0);
 
   // define the wall normal vector (for now, hardwire to NASA TM case: z = wall norm direction)
-  int wallnorm_dir = 2;
-
   DblType Re0c = 0.0;
   DblType flength = 100.0;
   DblType Rev = 0.0;
@@ -136,6 +143,9 @@ BLTGammaM2015NodeKernel::execute(
   for (int d = 0; d < nDim_; d++) {
     coords[d] = coordinates_.get(node, d);
     vel[d] = velocityNp1_.get(node, d);
+    dwalldistdx[d] = dWallDistdx_.get(node, d);
+    dndotvdx[d] = dNDotVdx_.get(node, d);
+    dvnn += dndotvdx[d] * dwalldistdx[d];
   }
 
   for (int i=0; i < nDim_; ++i) {
@@ -153,15 +163,9 @@ BLTGammaM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(2.0*sijMag);
   vortMag = stk::math::sqrt(2.0*vortMag);
 
-//!!!!!!!!!!!!!! Just for debug, turn off pressure gradient (this term is zero for flat plate BL)
-  dvnn = 0.0;
-// !!!!!!!!!!!!!!
 
   TuL = stk::math::min(81.6496580927726 * stk::math::sqrt(tke) / sdr / (minD + 1.0e-10), 100.0);
-// %%%%%%%%%%%%%%%%%%%%%%%%%%
-  //lamda0L = -7.57e-3 * dvnn * minD * minD *density / visc + 0.0128;
-  //// %%%%%%%%%%%%%%%%%%%%%%%%%%
-  lamda0L = 0.0128;
+  lamda0L = -7.57e-3 * dvnn * minD * minD *density / visc + 0.0128;
   lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
   Re0c = Ctu1 + Ctu2 * stk::math::exp(-Ctu3 * TuL * FPG(lamda0L));
   Rev = density * minD * minD * sijMag / visc;
@@ -186,6 +190,16 @@ BLTGammaM2015NodeKernel::execute(
 //  if (dist <= 0.005) {
 //    le_fact = dist/0.005;
 //  }
+//
+//    const double dy   = stk::math::abs(coords[1] + 0.50);
+//
+//    if (dy < 0.1 && timeStepCount <= 3) {
+//      std::printf("%i %.12E %.12E %.12E %.12E %.12E %.12E %.12E %.12E %.12E %.12E %.12E %.12E %.12E %.12E %.12E\n", 
+//        timeStepCount, coords[0], coords[1], coords[2], minD, vel[0], vel[1], vel[2], NDotV, 
+//        dndotvdx[0], dndotvdx[1],dndotvdx[2], 
+//        dwalldistdx[0], dwalldistdx[1],dwalldistdx[2], 
+//        dvnn);
+//    }
 
   rhs(0) += (Pgamma - Dgamma) * dVol;
   lhs(0, 0) -= 0.0;
