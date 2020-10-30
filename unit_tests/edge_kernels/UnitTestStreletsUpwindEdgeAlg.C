@@ -182,8 +182,6 @@ TEST_F(SSTKernelHex8Mesh, StreletsUpwindComputation)
       EXPECT_NEAR(tanhOne, fieldVal, 1e-12);
     }
   }
-  // force unit test to fail until ready to merge
-  ASSERT_TRUE(false);
 }
 
 } // namespace nalu
