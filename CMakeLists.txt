@@ -21,7 +21,7 @@ option(ENABLE_TIOGA "Use TIOGA TPL to perform overset connectivity" OFF)
 option(ENABLE_ALL_WARNINGS "Show most warnings for most compilers" ON)
 option(ENABLE_WERROR "Warnings are errors" OFF)
 option(ENABLE_OPENMP "Enable OpenMP flags" OFF)
-option(ENABLE_BOOST  "Enable Boost libraries" ON)
+option(ENABLE_BOOST  "Enable Boost libraries" OFF)
 
 set(CMAKE_CXX_STANDARD 14)       # Set nalu-wind C++14 standard
 set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions
