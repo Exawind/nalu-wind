@@ -73,7 +73,6 @@
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <FixPressureAtNodeAlgorithm.h>
 #include <FixPressureAtNodeInfo.h>
-#include <MiscIDDESABL.h>
 
 #ifdef NALU_USES_HYPRE
 #include <HypreLinearSystem.h>
@@ -143,7 +142,6 @@
 #include "ngp_algorithms/EffDiffFluxCoeffAlg.h"
 #include "ngp_algorithms/TurbViscKsgsAlg.h"
 #include "ngp_algorithms/TurbViscSSTAlg.h"
-#include "ngp_algorithms/TurbViscSSTIDDESABLAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_algorithms/DynamicPressureOpenAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
@@ -1040,11 +1038,6 @@ MomentumEquationSystem::initial_work()
   if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
     TAMSAlgDriver_->initial_work();
 
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
-    initial_work_iddes_abl(realm_);
-  }
-  
-
   {
     const double timeA = NaluEnv::self().nalu_time();
     compute_wall_function_params();
@@ -1118,10 +1111,6 @@ MomentumEquationSystem::register_nodal_fields(
 
     if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
       TAMSAlgDriver_->register_nodal_fields(part);
-  }
-
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES_ABL) {
-    register_iddes_abl_fields(meta_data, part);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
@@ -1234,9 +1223,7 @@ MomentumEquationSystem::register_interior_algorithm(
           theSolverSrcAlg = new AssembleTAMSEdgeKernelAlg(realm_, part, this);
           solverAlgDriver_->solverAlgMap_[SRC] = theSolverSrcAlg;
         }
-        if (
-          realm_.is_turbulent() &&
-          (theTurbModel == SST_IDDES || theTurbModel == SST_IDDES_ABL)) {
+        if (realm_.is_turbulent() && theTurbModel == SST_IDDES) {
           pecletAlg_.reset(new StreletsUpwindEdgeAlg(realm_, part));
         } else {
           pecletAlg_.reset(new MomentumEdgePecletAlg(realm_, part, this));
@@ -1592,11 +1579,6 @@ MomentumEquationSystem::register_interior_algorithm(
 
         tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_));
         break;
-
-      case SST_IDDES_ABL:
-
-          tviscAlg_.reset(new TurbViscSSTIDDESABLAlg(realm_, part, tvisc_));
-          break;
 
       case SST_TAMS:
         tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_, true));

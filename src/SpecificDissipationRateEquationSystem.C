@@ -62,7 +62,6 @@
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
 #include <node_kernels/SDRSSTNodeKernel.h>
 #include <node_kernels/SDRSSTDESNodeKernel.h>
-#include <node_kernels/SDRSSTIDDESABLNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
 
 // ngp
@@ -308,10 +307,9 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
         }
         else if (SST_TAMS == realm_.solutionOptions_->turbulenceModel_)
-          nodeAlg.add_kernel<SDRSSTTAMSNodeKernel>(realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
-        else if ( SST_IDDES_ABL == realm_.solutionOptions_->turbulenceModel_ ) {
-          nodeAlg.add_kernel<SDRSSTIDDESABLNodeKernel>(realm_.meta_data());
-        }
+          nodeAlg.add_kernel<SDRSSTTAMSNodeKernel>(
+            realm_.meta_data(),
+            realm_.solutionOptions_->get_coordinates_name());
         else {
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
         }

@@ -220,7 +220,7 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
       }
     }
 
-    if(turbModel_ == SST_IDDES || turbModel_ == SST_IDDES_ABL){
+    if (turbModel_ == SST_IDDES) {
       // TODO(psakiev) check this to see if we can consolidate it
       const DoubleType tmdot = v_massflow(ip);
 

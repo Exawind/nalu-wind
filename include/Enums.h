@@ -167,7 +167,6 @@ enum TurbulenceModel {
   SST_DES = 5,
   SST_TAMS = 6,
   SST_IDDES = 7,
-  SST_IDDES_ABL = 8,
   TurbulenceModel_END
 };  
 
@@ -180,8 +179,7 @@ static const std::string TurbulenceModelNames[] = {
   "sst",
   "sst_des",
   "sst_tams",
-  "sst_iddes",
-  "sst_iddes_abl"};
+  "sst_iddes"};
 
 enum TurbulenceModelConstant {
   TM_cMu = 0,
