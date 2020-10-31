@@ -7,6 +7,7 @@ set(NALU_USES_HYPRE @ENABLE_HYPRE@)
 set(NALU_USES_TIOGA @ENABLE_TIOGA@)
 set(NALU_USES_OPENFAST @ENABLE_OPENFAST@)
 set(NALU_USES_FFTW @ENABLE_FFTW@)
+set(NALU_USES_BOOST @ENABLE_BOOST@)
 
 # Load dependency libraries so that the targets are available
 
@@ -20,7 +21,7 @@ if (NOT ${YAML-CPP_FOUND})
   find_package(YAML-CPP QUIET REQUIRED)
 endif()
 
-if (NOT ${Boost_FOUND})
+if (${NALU_USES_BOOST} AND NOT ${Boost_FOUND})
   find_package(Boost QUIET REQUIRED COMPONENTS filesystem iostreams)
 endif()
 

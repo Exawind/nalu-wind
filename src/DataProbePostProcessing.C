@@ -47,10 +47,12 @@
 #include <iostream>
 
 // boost
+#ifdef NALU_USES_BOOST
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#endif
 
 namespace sierra{
 namespace nalu{
@@ -941,6 +943,7 @@ DataProbePostProcessing::provide_output_txt(
         if ( processorId == NaluEnv::self().parallel_rank()) {    
 
 	  // Get the path to the file name, and create any directories necessary
+          #ifdef NALU_USES_BOOST
 	  boost::filesystem::path pathdir{fileName};
 	  if (pathdir.has_parent_path()) { 
 	    if (!boost::filesystem::exists(pathdir.parent_path().string())) 
@@ -956,6 +959,7 @@ DataProbePostProcessing::provide_output_txt(
 		}
 	      }
 	  }
+	  #endif
           
           // one banner per file 
           const bool addBanner = std::ifstream(fileName.c_str()) ? false : true;
@@ -1035,14 +1039,17 @@ DataProbePostProcessing::provide_output_txt(
 	      const int pointsPerPlane = N1*N2;
 
 	      // Use gzip compression when writing
+	      #ifdef NALU_USES_BOOST
 	      boost::iostreams::filtering_streambuf<boost::iostreams::output> outbuf;
 	      if ((0<gzlevel)&&(gzlevel<10)) {
 		fileName = fileName+".gz";
 		outbuf.push(boost::iostreams::gzip_compressor(
 		boost::iostreams::gzip_params(gzlevel, boost::iostreams::zlib::deflated, 15, 9, boost::iostreams::zlib::huffman_only)));
 	      }
+	      #endif
 
 	      // Get the path to the file name, and create any directories necessary
+              #ifdef NALU_USES_BOOST
 	      boost::filesystem::path pathdir{fileName};
 	      if (pathdir.has_parent_path()) { 
 		if (!boost::filesystem::exists(pathdir.parent_path().string())) 
@@ -1058,6 +1065,7 @@ DataProbePostProcessing::provide_output_txt(
 		    }
 		  }
 	      }
+	      #endif
 
 	      // ** Check to see if we need to add a coordinate file
 	      std::string coordFileName = 
@@ -1068,6 +1076,7 @@ DataProbePostProcessing::provide_output_txt(
 		  = std::ifstream(coordFileName.c_str()) ? false : true;
 		if (addCoordFile) { 
 		  // -- Add the coordinate file
+	          #ifdef NALU_USES_BOOST
 		  boost::iostreams::filtering_streambuf<boost::iostreams::output> outstream;
 		  if ((0<gzlevel)&&(gzlevel<10)) {
 		    outstream.push(boost::iostreams::gzip_compressor(
@@ -1108,12 +1117,15 @@ DataProbePostProcessing::provide_output_txt(
 
 		  boost::iostreams::close(outstream); 
 		  coordfile.close();
+		  #endif
 		  // -- Done with the coordinate file
 		}
 	      }
 
 	      std::ofstream file(fileName.c_str(), std::ios_base::out);
+              #ifdef NALU_USES_BOOST
 	      outbuf.push(file);
+	      #endif
 	      std::string filestring;
 	      std::string coordfilestring("");
 	      char buffer[1000];
@@ -1193,10 +1205,12 @@ DataProbePostProcessing::provide_output_txt(
 		// row complete
 		filestring += '\n';
 	      }
+              #ifdef NALU_USES_BOOST
 	      // done with file output
 	      std::ostream fileout(&outbuf);
 	      fileout<<filestring;
 	      boost::iostreams::close(outbuf); // Don't forget this!
+	      #endif
 	      file.close();
 
 	    } // END if ( processorId == NaluEnv::self().parallel_rank())
