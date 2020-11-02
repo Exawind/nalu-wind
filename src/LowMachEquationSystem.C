@@ -109,6 +109,8 @@
 #include <edge_kernels/MomentumOpenEdgeKernel.h>
 #include <edge_kernels/MomentumABLWallShearStressEdgeKernel.h>
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
+#include <edge_kernels/MomentumEdgePecletAlg.h>
+#include <edge_kernels/StreletsUpwindEdgeAlg.h>
 
 // node kernels
 #include "node_kernels/NodeKernelUtils.h"
@@ -146,6 +148,8 @@
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
 #include "stk_mesh/base/NgpFieldParallel.hpp"
+#include "ngp_utils/NgpTypes.h"
+
 
 // nso
 #include <nso/MomentumNSOElemKernel.h>
@@ -217,6 +221,7 @@
 #include <stk_util/util/SortAndUnique.hpp>
 
 // stk_mesh/base/fem
+#include "stk_mesh/base/Types.hpp"
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
@@ -374,6 +379,7 @@ LowMachEquationSystem::register_nodal_fields(
                                stk::topology::NODE_RANK);
     copyStateAlg_.push_back(theCopyAlgDlNdVol);
   }
+
 }
 
 //--------------------------------------------------------------------------
@@ -498,10 +504,10 @@ LowMachEquationSystem::register_open_bc(
                                                  "open_mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*mdotBip, *part, numScsBip, nullptr);
 
-  auto& dynPress 
+  auto& dynPress
     = metaData.declare_field<GenericFieldType>(static_cast<stk::topology::rank_t>(metaData.side_rank()),
                                                  "dynamic_pressure");
-  std::vector<double> ic(numScsBip, 0);                                              
+  std::vector<double> ic(numScsBip, 0);
   stk::mesh::put_field_on_mesh(dynPress, *part, numScsBip, ic.data());
 }
 
@@ -685,7 +691,6 @@ LowMachEquationSystem::solve_and_update()
     continuityEqSys_->compute_projected_nodal_gradient();
     timeA = NaluEnv::self().nalu_time();
     continuityEqSys_->mdotAlgDriver_->execute();
-
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerMisc_ += (timeB-timeA);
 
@@ -706,6 +711,7 @@ LowMachEquationSystem::solve_and_update()
 
     for (int oi=0; oi < momentumEqSys_->numOversetIters_; ++oi) {
       momentumEqSys_->dynPressAlgDriver_.execute();
+      momentumEqSys_->pecletAlg_->execute();
       momentumEqSys_->assemble_and_solve(momentumEqSys_->uTmp_);
 
       timeA = NaluEnv::self().nalu_time();
@@ -1034,6 +1040,7 @@ MomentumEquationSystem::initial_work()
     const double timeA = NaluEnv::self().nalu_time();
     compute_wall_function_params();
     compute_turbulence_parameters();
+    pecletAlg_->execute();
     cflReAlgDriver_.execute();
 
     const double timeB = NaluEnv::self().nalu_time();
@@ -1105,7 +1112,7 @@ MomentumEquationSystem::register_nodal_fields(
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
-               stk::topology::NODE_RANK, "momentum_diag"));
+    stk::topology::NODE_RANK, "momentum_diag"));
   stk::mesh::put_field_on_mesh(*Udiag_, *part, nullptr);
   realm_.augment_restart_variable_list("momentum_diag");
 
@@ -1141,7 +1148,6 @@ MomentumEquationSystem::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*g, *part, nullptr);
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -1160,6 +1166,10 @@ void
 MomentumEquationSystem::register_edge_fields(
   stk::mesh::Part * part)
 {
+  ScalarFieldType* pecletFactor =
+    &(realm_.meta_data().declare_field<ScalarFieldType>(
+      stk::topology::EDGE_RANK, "peclet_factor"));
+  stk::mesh::put_field_on_mesh(*pecletFactor, *part, nullptr);
   if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
     TAMSAlgDriver_->register_edge_fields(part);
 }
@@ -1193,6 +1203,8 @@ MomentumEquationSystem::register_interior_algorithm(
         edgeNodalGradient_);
   }
 
+  const auto theTurbModel = realm_.solutionOptions_->turbulenceModel_;
+
   // solver; interior contribution (advection + diffusion) [possible CMM time]
   if ( !realm_.solutionOptions_->useConsolidatedSolverAlg_ ) {
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
@@ -1201,10 +1213,15 @@ MomentumEquationSystem::register_interior_algorithm(
       SolverAlgorithm *theSolverAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
         theSolverAlg = new MomentumEdgeSolverAlg(realm_, part, this);
-        if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS) {
+        if (theTurbModel == SST_TAMS) {
           SolverAlgorithm *theSolverSrcAlg = NULL;
           theSolverSrcAlg = new AssembleTAMSEdgeKernelAlg(realm_, part, this);
           solverAlgDriver_->solverAlgMap_[SRC] = theSolverSrcAlg;
+        }
+        if (realm_.is_turbulent() && theTurbModel == SST_IDDES) {
+          pecletAlg_.reset(new StreletsUpwindEdgeAlg(realm_, part));
+        } else {
+          pecletAlg_.reset(new MomentumEdgePecletAlg(realm_, part, this));
         }
       }
       else {
@@ -1545,6 +1562,8 @@ MomentumEquationSystem::register_interior_algorithm(
 
       case SST:
       case SST_DES:
+      case SST_IDDES:
+
         tviscAlg_.reset(new TurbViscSSTAlg(realm_, part, tvisc_));
         break;
 
@@ -1767,7 +1786,7 @@ MomentumEquationSystem::register_open_bc(
           (partTopo, elemTopo, *this, activeKernels, "momentum_open",
            realm_.meta_data(), realm_.solutionOptions_,
            realm_.is_turbulent() ? evisc_ : visc_,
-           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_, 
+           faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_,
            userData.entrainMethod_);
       }
       else {
@@ -2414,6 +2433,7 @@ MomentumEquationSystem::initialize()
     const double dt = realm_.get_time_step();
     const double gamma1 = realm_.get_gamma1();
     stk::mesh::field_fill(gamma1/dt, *Udiag_);
+
     Udiag_->modify_on_host();
   }
 }

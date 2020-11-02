@@ -512,10 +512,12 @@ public:
   MomentumEdgeHex8Mesh()
     : MomentumKernelHex8Mesh(),
       massFlowRateEdge_(&meta_.declare_field<ScalarFieldType>(
-                          stk::topology::EDGE_RANK, "mass_flow_rate"))
+                          stk::topology::EDGE_RANK, "mass_flow_rate")),
+      pecletFactor_(&meta_.declare_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_factor"))
   {
     stk::mesh::put_field_on_mesh(
       *massFlowRateEdge_, meta_.universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(*pecletFactor_, meta_.universal_part(), 1, nullptr);
   }
 
   virtual ~MomentumEdgeHex8Mesh() = default;
@@ -529,6 +531,7 @@ public:
   }
 
   ScalarFieldType* massFlowRateEdge_{nullptr};
+  ScalarFieldType* pecletFactor_{nullptr};
 };
 
 class MomentumABLKernelHex8Mesh : public MomentumKernelHex8Mesh
@@ -692,7 +695,8 @@ public:
       sdrWallArea_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "assembled_wall_area_sdr")),
       wallFricVel_(&meta_.declare_field<GenericFieldType>(
-        meta_.side_rank(), "wall_friction_velocity_bip"))
+        meta_.side_rank(), "wall_friction_velocity_bip")),
+      pecletFactor_(&meta_.declare_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_factor"))
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*tkebc_, meta_.universal_part(), 1, nullptr);
@@ -720,6 +724,7 @@ public:
     stk::mesh::put_field_on_mesh(*sdrWallbc_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*sdrWallArea_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*wallFricVel_, meta_.universal_part(), 4, nullptr);
+    stk::mesh::put_field_on_mesh(*pecletFactor_, meta_.universal_part(), 1, nullptr);
   }
 
   virtual ~SSTKernelHex8Mesh() {}
@@ -741,6 +746,7 @@ public:
     unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *dudx_);
     stk::mesh::field_fill(0.0, *dkdx_);
     stk::mesh::field_fill(0.0, *dwdx_);
+    stk::mesh::field_fill(0.0, *pecletFactor_);
   }
 
   ScalarFieldType* tke_{nullptr};
@@ -760,6 +766,7 @@ public:
   ScalarFieldType* sdrWallbc_{nullptr};
   ScalarFieldType* sdrWallArea_{nullptr};
   GenericFieldType* wallFricVel_{nullptr};
+  ScalarFieldType* pecletFactor_ {nullptr};
 };
 
 /** Test Fixture for the Turbulence Kernels

@@ -221,6 +221,7 @@ public:
   NgpAlgDriver dynPressAlgDriver_;
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
   std::unique_ptr<Algorithm> tviscAlg_{nullptr};
+  std::unique_ptr<Algorithm> pecletAlg_{nullptr};
 
   CourantReAlgDriver cflReAlgDriver_;
   std::unique_ptr<TAMSAlgDriver> TAMSAlgDriver_{nullptr};

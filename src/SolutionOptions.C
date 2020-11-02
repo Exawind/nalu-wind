@@ -487,7 +487,11 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_kappa] = 0.41;
   turbModelConstantMap_[TM_cDESke] = 0.61; 
   turbModelConstantMap_[TM_cDESkw] = 0.78;
-  turbModelConstantMap_[TM_tkeProdLimitRatio] = (turbulenceModel_ == SST || turbulenceModel_ == SST_DES || turbulenceModel_ == SST_TAMS) ? 10.0 : 500.0;
+  turbModelConstantMap_[TM_tkeProdLimitRatio] =
+    (turbulenceModel_ == SST || turbulenceModel_ == SST_DES ||
+     turbulenceModel_ == SST_TAMS || turbulenceModel_ == SST_IDDES)
+      ? 10.0
+      : 500.0;
   turbModelConstantMap_[TM_cmuEps] = 0.0856; 
   turbModelConstantMap_[TM_cEps] = 0.845;
   turbModelConstantMap_[TM_betaStar] = 0.09;
@@ -516,6 +520,19 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_forBlKol] = 1.0;
   turbModelConstantMap_[TM_forFac] = 8.0;
   turbModelConstantMap_[TM_v2cMu] = 0.22;
+  turbModelConstantMap_[TM_sigmaMax] = 1.0;
+  turbModelConstantMap_[TM_ch1] = 3.0;
+  turbModelConstantMap_[TM_ch2] = 1.0;
+  turbModelConstantMap_[TM_ch3] = 0.5;
+  turbModelConstantMap_[TM_tau_des] = 100.0/15.0;
+  turbModelConstantMap_[TM_iddes_Cw] = 0.15;
+  turbModelConstantMap_[TM_iddes_Cdt1] = 20.0;
+  turbModelConstantMap_[TM_iddes_Cdt2] = 3.0;
+  turbModelConstantMap_[TM_iddes_Cl] = 5.0;
+  turbModelConstantMap_[TM_iddes_Ct] = 1.87;
+  turbModelConstantMap_[TM_abl_bndtw] = 5.0;
+  turbModelConstantMap_[TM_abl_deltandtw] = 1.0;
+  turbModelConstantMap_[TM_abl_sigma] = 2.0;
 }
 
 

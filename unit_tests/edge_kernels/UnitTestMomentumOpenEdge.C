@@ -51,7 +51,7 @@ static constexpr double lhs[24][24] = {
 }
 }
 
-TEST_F(MomentumKernelHex8Mesh, NGP_open_edge)
+TEST_F(MomentumEdgeHex8Mesh, NGP_open_edge)
 {
   if (bulk_.parallel_size() > 1) return;
 

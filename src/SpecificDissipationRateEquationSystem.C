@@ -302,11 +302,15 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (SST == realm_.solutionOptions_->turbulenceModel_){
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
         }
-        else if (SST_DES == realm_.solutionOptions_->turbulenceModel_){
+        else if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_) || (SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ){
           nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
         }
-        else if (SST_TAMS == realm_.solutionOptions_->turbulenceModel_){
-          nodeAlg.add_kernel<SDRSSTTAMSNodeKernel>(realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
+        else if (SST_TAMS == realm_.solutionOptions_->turbulenceModel_)
+          nodeAlg.add_kernel<SDRSSTTAMSNodeKernel>(
+            realm_.meta_data(),
+            realm_.solutionOptions_->get_coordinates_name());
+        else {
+          nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
         }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {

@@ -7,6 +7,8 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSSTTAMSDiffEdgeKernel.C
   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarEdgeSolverAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/WallDistEdgeSolverAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/MomentumEdgePecletAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/StreletsUpwindEdgeAlg.C
 
   # Face/edge BC kernels
   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityOpenEdgeKernel.C

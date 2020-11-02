@@ -28,7 +28,6 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/SDRWallFuncAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradPOpenBoundaryAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/SSTMaxLengthScaleAlg.C
-
   # Algorithm Drivers
   ${CMAKE_CURRENT_SOURCE_DIR}/CourantReAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/FieldUpdateAlgDriver.C

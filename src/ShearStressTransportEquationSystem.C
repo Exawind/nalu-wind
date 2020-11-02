@@ -138,10 +138,13 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*minDistanceToWall_, *part, nullptr);
   fOneBlending_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_f_one_blending"));
   stk::mesh::put_field_on_mesh(*fOneBlending_, *part, nullptr);
-  
+
   // DES model
-  if ( SST_DES == realm_.solutionOptions_->turbulenceModel_ ) {
-    maxLengthScale_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_max_length_scale"));
+  if (
+    (SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
+    (SST_IDDES == realm_.solutionOptions_->turbulenceModel_)) {
+    maxLengthScale_ = &(meta_data.declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "sst_max_length_scale"));
     stk::mesh::put_field_on_mesh(*maxLengthScale_, *part, nullptr);
   }
 
@@ -160,8 +163,9 @@ ShearStressTransportEquationSystem::register_interior_algorithm(
 
   // types of algorithms
   const AlgorithmType algType = INTERIOR;
-
-  if (SST_DES == realm_.solutionOptions_->turbulenceModel_) {
+  if (
+    (SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
+    (SST_IDDES == realm_.solutionOptions_->turbulenceModel_)) {
 
     if (NULL == sstMaxLengthScaleAlgDriver_)
       sstMaxLengthScaleAlgDriver_ = new AlgorithmDriver(realm_);
@@ -225,7 +229,9 @@ ShearStressTransportEquationSystem::solve_and_update()
     clip_min_distance_to_wall();
 
     // deal with DES option
-    if (SST_DES == realm_.solutionOptions_->turbulenceModel_)
+    if (
+      (SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
+      (SST_IDDES == realm_.solutionOptions_->turbulenceModel_))
       sstMaxLengthScaleAlgDriver_->execute();
 
     isInit_ = false;
@@ -233,7 +239,9 @@ ShearStressTransportEquationSystem::solve_and_update()
     if (realm_.currentNonlinearIteration_ == 1)
       clip_min_distance_to_wall();
 
-    if (SST_DES == realm_.solutionOptions_->turbulenceModel_)
+    if (
+      (SST_DES == realm_.solutionOptions_->turbulenceModel_) ||
+      (SST_IDDES == realm_.solutionOptions_->turbulenceModel_))
       sstMaxLengthScaleAlgDriver_->execute();
   }
 
@@ -271,6 +279,7 @@ ShearStressTransportEquationSystem::solve_and_update()
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
   }
+
 }
 
 /** Perform sanity checks on TKE/SDR fields
@@ -285,7 +294,6 @@ ShearStressTransportEquationSystem::initial_work()
 
   auto& tkeNp1 = fieldMgr.get_field<double>(tke_->mesh_meta_data_ordinal());
   auto& sdrNp1 = fieldMgr.get_field<double>(sdr_->mesh_meta_data_ordinal());
-
   const stk::mesh::Selector sel =
     (meta.locally_owned_part() | meta.globally_shared_part()) &
     stk::mesh::selectField(*sdr_);

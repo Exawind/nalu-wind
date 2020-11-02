@@ -166,6 +166,7 @@ enum TurbulenceModel {
   SST = 4,
   SST_DES = 5,
   SST_TAMS = 6,
+  SST_IDDES = 7,
   TurbulenceModel_END
 };  
 
@@ -177,7 +178,8 @@ static const std::string TurbulenceModelNames[] = {
   "wale",
   "sst",
   "sst_des",
-  "sst_tams"};
+  "sst_tams",
+  "sst_iddes"};
 
 enum TurbulenceModelConstant {
   TM_cMu = 0,
@@ -213,7 +215,20 @@ enum TurbulenceModelConstant {
   TM_forBlKol = 30,
   TM_forFac = 31,
   TM_v2cMu = 32,
-  TM_END = 33
+  TM_sigmaMax = 33,
+  TM_ch1 = 34,
+  TM_ch2 = 35,
+  TM_ch3 = 36,
+  TM_tau_des = 37,
+  TM_iddes_Cw = 38,
+  TM_iddes_Cdt1 = 39,
+  TM_iddes_Cdt2 = 40,
+  TM_iddes_Cl = 41,
+  TM_iddes_Ct = 42,
+  TM_abl_bndtw = 43,
+  TM_abl_deltandtw = 44,
+  TM_abl_sigma = 45,
+  TM_END = 46
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -250,6 +265,19 @@ static const std::string TurbulenceModelConstantNames[] = {
   "forcingBlKol",
   "forcingFactor",
   "v2cMu",
+  "sigmaMax",
+  "ch1",
+  "ch2",
+  "ch3",
+  "tau_des",
+  "iddes_Cw",
+  "iddes_Cdt1",
+  "iddes_Cdt2",
+  "iddes_Cl",
+  "iddes_Ct",
+  "abl_bndtw",
+  "abl_deltandtw",
+  "abl_sigma",
   "END"};
 
 enum ActuatorType {
