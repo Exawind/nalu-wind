@@ -266,7 +266,7 @@ realms:
     # details of the driving wind forcing.
     boundary_layer_statistics:
       target_name: [ fluid_part ]
-      stats_output_file: "abl_statistics.nc"
+      stats_output_file: "ablNeutralStat.nc"
       compute_temperature_statistics: yes
       output_frequency: 10
       time_hist_output_frequency: 2
