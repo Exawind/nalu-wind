@@ -302,14 +302,14 @@ void ABLWallFluxesAlg<BcAlgTraits>::execute()
   DblType velMagAverage = 0.0;
   Kokkos::View<double[3]> velAverage("vel_average");
   auto hVelAverage = Kokkos::create_mirror_view(velAverage);
-  if (averagingType_ != "planar")
-    throw std::runtime_error("ABLWallFluxesAlg: Only planar averaging type supported.");
 
-  avgFactor = 1.0;
-  BdyLayerStatistics::HostArrayType h = realm_.bdyLayerStats_->abl_heights();
-  realm_.bdyLayerStats_->velocity(h[1], hVelAverage.data());
-  realm_.bdyLayerStats_->velocity_magnitude(h[1], &velMagAverage);
-  realm_.bdyLayerStats_->temperature(h[1], &tempAverage);
+  if (averagingType_ == "planar") {
+    avgFactor = 1.0;
+    BdyLayerStatistics::HostArrayType h = realm_.bdyLayerStats_->abl_heights();
+    realm_.bdyLayerStats_->velocity(h[1], hVelAverage.data());
+    realm_.bdyLayerStats_->velocity_magnitude(h[1], &velMagAverage);
+    realm_.bdyLayerStats_->temperature(h[1], &tempAverage);
+  }
   Kokkos::deep_copy(velAverage, hVelAverage);
 
   DblType fluctuationFactor = (fluctuationModel_ != "none") ? 1.0 : 0.0;

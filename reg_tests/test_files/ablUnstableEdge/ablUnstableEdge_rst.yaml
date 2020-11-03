@@ -148,7 +148,7 @@ realms:
           gamma_m: 16.0
           gamma_h: 16.0
           gravity_vector_component: 3
-          monin_obukhov_averaging_type: planar
+          monin_obukhov_averaging_type: none
           fluctuation_model: Moeng
           fluctuating_temperature_ref: surface
 
