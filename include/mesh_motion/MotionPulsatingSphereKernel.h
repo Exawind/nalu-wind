@@ -1,29 +1,28 @@
-#ifndef MOTIONSCALING_H
-#define MOTIONSCALING_H
+#ifndef MOTIONPULSATINGSPHERE_H
+#define MOTIONPULSATINGSPHERE_H
 
-#include "MotionBase.h"
+#include "NgpMotion.h"
 
-namespace stk {
-namespace mesh {
-class MetaData;
-}
-}
+namespace YAML { class Node; }
 
 namespace sierra{
 namespace nalu{
 
-class MotionScaling : public MotionBase
+class MotionPulsatingSphereKernel : public NgpMotionKernel<MotionPulsatingSphereKernel>
 {
 public:
-  MotionScaling(
+  MotionPulsatingSphereKernel(
     stk::mesh::MetaData&,
     const YAML::Node&);
 
-  virtual ~MotionScaling()
-  {
-  }
+  KOKKOS_FUNCTION
+  MotionPulsatingSphereKernel() = default;
 
-  virtual void build_transformation(const double, const double* = nullptr);
+  KOKKOS_FUNCTION
+  virtual ~MotionPulsatingSphereKernel() = default;
+
+  KOKKOS_FUNCTION
+  virtual void build_transformation(const double, const double*);
 
   /** Function to compute motion-specific velocity
    *
@@ -33,6 +32,7 @@ public:
    * @param[in] mxyz           Model coordinates
    * @param[in] mxyz           Transformed coordinates
    */
+  KOKKOS_FUNCTION
   virtual ThreeDVecType compute_velocity(
     const double time,
     const TransMatType& compTrans,
@@ -51,21 +51,15 @@ public:
     bool& computedMeshVelDiv );
 
 private:
-  MotionScaling() = delete;
-  MotionScaling(const MotionScaling&) = delete;
-
   void load(const YAML::Node&);
 
-  void scaling_mat(const ThreeDVecType&);
+  void scaling_mat(const double, const double*);
 
-  ThreeDVecType factor_ = {{0.0,0.0,0.0}};
-  ThreeDVecType rate_ = {{0.0,0.0,0.0}};
-
-  bool useRate_ = false;
+  double amplitude_{0.0};
+  double frequency_{0.0};
 };
-
 
 } // nalu
 } // sierra
 
-#endif /* MOTIONSCALING_H */
+#endif /* MOTIONPULSATINGSPHERE_H */

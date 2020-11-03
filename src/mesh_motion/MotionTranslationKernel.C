@@ -1,5 +1,5 @@
 
-#include "mesh_motion/MotionTranslation.h"
+#include "mesh_motion/MotionTranslationKernel.h"
 
 #include <NaluParsing.h>
 
@@ -8,13 +8,13 @@
 namespace sierra{
 namespace nalu{
 
-MotionTranslation::MotionTranslation(const YAML::Node& node)
-  : MotionBase()
+MotionTranslationKernel::MotionTranslationKernel(const YAML::Node& node)
+  : NgpMotionKernel<MotionTranslationKernel>()
 {
   load(node);
 }
 
-void MotionTranslation::load(const YAML::Node& node)
+void MotionTranslationKernel::load(const YAML::Node& node)
 {
   // perturb start and end times with a small value for
   // accurate comparison with floats
@@ -37,7 +37,7 @@ void MotionTranslation::load(const YAML::Node& node)
   useVelocity_ = ( node["velocity"] ? true : false);
 }
 
-void MotionTranslation::build_transformation(
+void MotionTranslationKernel::build_transformation(
   const double time,
   const double* /* mxyz */ )
 {
@@ -49,7 +49,7 @@ void MotionTranslation::build_transformation(
   if (useVelocity_)
   {
     ThreeDVecType curr_disp = {};
-    for (int d=0; d < threeDVecSize; d++)
+    for (int d=0; d < NgpMotionTraits::NDimMax; d++)
       curr_disp[d] = velocity_[d]*(motionTime-startTime_);
 
     translation_mat(curr_disp);
@@ -58,7 +58,7 @@ void MotionTranslation::build_transformation(
     translation_mat(displacement_);
 }
 
-void MotionTranslation::translation_mat(const ThreeDVecType& curr_disp)
+void MotionTranslationKernel::translation_mat(const ThreeDVecType& curr_disp)
 {
   reset_mat(transMat_);
 
@@ -68,7 +68,7 @@ void MotionTranslation::translation_mat(const ThreeDVecType& curr_disp)
   transMat_[2][3] = curr_disp[2];
 }
 
-MotionBase::ThreeDVecType MotionTranslation::compute_velocity(
+NgpMotion::ThreeDVecType MotionTranslationKernel::compute_velocity(
   const double time,
   const TransMatType&  /* compTrans */,
   const double* /* mxyz */,

@@ -51,8 +51,8 @@ void FrameMoving::update_coordinates_velocity(const double time)
         mX[i] = oldxyz[i];
 
       // all frame motions are based off of the reference frame
-      MotionBase::TransMatType comp_trans_mat = MotionBase::identityMat_;
-      for (auto& mm: meshMotionVec_)
+      NgpMotion::TransMatType comp_trans_mat = NgpMotion::identity_mat();
+      for (auto& mm: motionKernels_)
       {
         // build and get transformation matrix
         mm->build_transformation(time,mX);
@@ -77,9 +77,9 @@ void FrameMoving::update_coordinates_velocity(const double time)
 
       // compute velocity vector on current node resulting from all
       // motions in current motion frame
-      for (auto& mm: meshMotionVec_)
+      for (auto& mm: motionKernels_)
       {
-        MotionBase::ThreeDVecType mm_vel = mm->compute_velocity(time,comp_trans_mat,mX,cX);
+        NgpMotion::ThreeDVecType mm_vel = mm->compute_velocity(time,comp_trans_mat,mX,cX);
 
         for (int d = 0; d < nDim; d++)
           velxyz[d] += mm_vel[d];
@@ -94,7 +94,7 @@ void FrameMoving::post_compute_geometry()
   // flag denoting if mesh velocity divergence already computed
   bool computedMeshVelDiv = false;
 
-  for (auto& mm: meshMotionVec_)
+  for (auto& mm: motionKernels_)
     mm->post_compute_geometry(bulk_,partVec_,partVecBc_,computedMeshVelDiv);
 }
 

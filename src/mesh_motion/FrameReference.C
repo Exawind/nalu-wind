@@ -39,8 +39,8 @@ void FrameReference::update_coordinates(const double time)
         mX[i] = xyz[i];
 
       // all frame motions are based off of the reference frame
-      MotionBase::TransMatType comp_trans_mat = MotionBase::identityMat_;
-      for (auto& mm: meshMotionVec_)
+      NgpMotion::TransMatType comp_trans_mat = NgpMotion::identity_mat();
+      for (auto& mm: motionKernels_)
       {
         // build and get transformation matrix
         mm->build_transformation(time,mX);

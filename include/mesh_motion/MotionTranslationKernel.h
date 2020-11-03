@@ -1,20 +1,23 @@
-#ifndef MOTIONROTATION_H
-#define MOTIONROTATION_H
+#ifndef MOTIONTRANSLATIONKERNEL_H
+#define MOTIONTRANSLATIONKERNEL_H
 
-#include "MotionBase.h"
+#include "NgpMotion.h"
 
 namespace sierra{
 namespace nalu{
 
-class MotionRotation : public MotionBase
+class MotionTranslationKernel : public NgpMotionKernel<MotionTranslationKernel>
 {
 public:
-  MotionRotation(const YAML::Node&);
+  MotionTranslationKernel(const YAML::Node&);
 
-  virtual ~MotionRotation()
-  {
-  }
+  KOKKOS_FUNCTION
+  MotionTranslationKernel() = default;
 
+  KOKKOS_FUNCTION
+  virtual ~MotionTranslationKernel() = default;
+
+  KOKKOS_FUNCTION
   virtual void build_transformation(const double, const double* = nullptr);
 
   /** Function to compute motion-specific velocity
@@ -25,6 +28,7 @@ public:
    * @param[in] mxyz           Model coordinates
    * @param[in] mxyz           Transformed coordinates
    */
+  KOKKOS_FUNCTION
   virtual ThreeDVecType compute_velocity(
     const double time,
     const TransMatType& compTrans,
@@ -32,23 +36,17 @@ public:
     const double* cxyz );
 
 private:
-  MotionRotation() = delete;
-  MotionRotation(const MotionRotation&) = delete;
-
   void load(const YAML::Node&);
 
-  void rotation_mat(const double);
+  void translation_mat(const ThreeDVecType&);
 
-  ThreeDVecType axis_ = {{0.0,0.0,1.0}};
+  ThreeDVecType displacement_ = {{0.0,0.0,0.0}};
+  ThreeDVecType velocity_ = {{0.0,0.0,0.0}};
 
-  double omega_{0.0};
-  double angle_{0.0};
-
-  bool useOmega_ = true;
+  bool useVelocity_ = false;
 };
 
-
 } // nalu
-} //sierra
+} // sierra
 
-#endif /* MOTIONROTATION_H */
+#endif /* MOTIONTRANSLATIONKERNEL_H */

@@ -4,7 +4,7 @@
 
 #include <string>
 #include <cmath>
-#include "MotionBase.h"
+#include "NgpMotion.h"
 
 namespace stk {
 namespace mesh {
@@ -14,18 +14,21 @@ class MetaData;
 
 namespace sierra{
 namespace nalu{
-class MotionWaves : public MotionBase
+class MotionWavesKernel : public NgpMotionKernel<MotionWavesKernel>
 {
 public:
-  MotionWaves(
+  MotionWavesKernel(
     stk::mesh::MetaData&,
     const YAML::Node&);
 
-  virtual ~MotionWaves()
-  {
-  }
+  KOKKOS_FUNCTION
+  MotionWavesKernel() = default;
 
-virtual void build_transformation(const double, const double*);
+  KOKKOS_FUNCTION
+  virtual ~MotionWavesKernel() = default;
+
+  KOKKOS_FUNCTION
+  virtual void build_transformation(const double, const double*);
 
   /** Function to compute motion-specific velocity
    *
@@ -35,6 +38,7 @@ virtual void build_transformation(const double, const double*);
    * @param[in] mxyz           Model coordinates
    * @param[in] mxyz           Transformed coordinates
    */
+  KOKKOS_FUNCTION
   virtual ThreeDVecType compute_velocity(
     const double time,
     const TransMatType& compTrans,
@@ -82,9 +86,6 @@ virtual void build_transformation(const double, const double*);
     void get_StokesCoeff(StokesCoeff *stokes);
 
 private:
-  MotionWaves() = delete;
-  MotionWaves(const MotionWaves&) = delete;
-
   void load(const YAML::Node&);
   void translation_mat(const ThreeDVecType&);
 

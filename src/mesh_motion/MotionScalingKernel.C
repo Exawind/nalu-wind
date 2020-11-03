@@ -1,5 +1,5 @@
 
-#include "mesh_motion/MotionScaling.h"
+#include "mesh_motion/MotionScalingKernel.h"
 
 #include <NaluParsing.h>
 #include "utils/ComputeVectorDivergence.h"
@@ -12,10 +12,10 @@
 namespace sierra{
 namespace nalu{
 
-MotionScaling::MotionScaling(
+MotionScalingKernel::MotionScalingKernel(
   stk::mesh::MetaData& meta,
   const YAML::Node& node)
-  : MotionBase()
+  : NgpMotionKernel<MotionScalingKernel>()
 {
   load(node);
 
@@ -27,7 +27,7 @@ MotionScaling::MotionScaling(
   }
 }
 
-void MotionScaling::load(const YAML::Node& node)
+void MotionScalingKernel::load(const YAML::Node& node)
 {
   // perturb start and end times with a small value for
   // accurate comparison with floats
@@ -54,7 +54,7 @@ void MotionScaling::load(const YAML::Node& node)
     origin_ = node["centroid"].as<ThreeDVecType>();
 }
 
-void MotionScaling::build_transformation(
+void MotionScalingKernel::build_transformation(
   const double time,
   const double* /* xyz */)
 {
@@ -67,7 +67,7 @@ void MotionScaling::build_transformation(
   {
     ThreeDVecType curr_fac = {};
 
-    for (int d=0; d < threeDVecSize; d++)
+    for (int d=0; d < NgpMotionTraits::NDimMax; d++)
       curr_fac[d] = rate_[d]*(motionTime-startTime_) + 1.0;
 
     scaling_mat(curr_fac);
@@ -76,7 +76,7 @@ void MotionScaling::build_transformation(
     scaling_mat(factor_);
 }
 
-void MotionScaling::scaling_mat(const ThreeDVecType& factor)
+void MotionScalingKernel::scaling_mat(const ThreeDVecType& factor)
 {
   reset_mat(transMat_);
 
@@ -106,7 +106,7 @@ void MotionScaling::scaling_mat(const ThreeDVecType& factor)
   transMat_ = add_motion(currTransMat,transMat_);
 }
 
-MotionBase::ThreeDVecType MotionScaling::compute_velocity(
+NgpMotion::ThreeDVecType MotionScalingKernel::compute_velocity(
   const double time,
   const TransMatType& compTrans,
   const double* mxyz,
@@ -118,20 +118,20 @@ MotionBase::ThreeDVecType MotionScaling::compute_velocity(
 
   // transform the origin of the scaling body
   ThreeDVecType transOrigin = {};
-  for (int d = 0; d < threeDVecSize; d++) {
+  for (int d = 0; d < NgpMotionTraits::NDimMax; d++) {
     transOrigin[d] = compTrans[d][0]*origin_[0]
                     +compTrans[d][1]*origin_[1]
                     +compTrans[d][2]*origin_[2]
                     +compTrans[d][3];
   }
 
-  for (int d=0; d < threeDVecSize; d++)
+  for (int d=0; d < NgpMotionTraits::NDimMax; d++)
     vel[d] = rate_[d] * (mxyz[d]-transOrigin[d]);
 
   return vel;
 }
 
-void MotionScaling::post_compute_geometry(
+void MotionScalingKernel::post_compute_geometry(
   stk::mesh::BulkData& bulk,
   stk::mesh::PartVector& partVec,
   stk::mesh::PartVector& partVecBc,

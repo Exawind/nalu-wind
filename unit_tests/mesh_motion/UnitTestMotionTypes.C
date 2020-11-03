@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <limits>
 
-#include "mesh_motion/MotionRotation.h"
-#include "mesh_motion/MotionScaling.h"
-#include "mesh_motion/MotionTranslation.h"
+#include "mesh_motion/MotionRotationKernel.h"
+#include "mesh_motion/MotionScalingKernel.h"
+#include "mesh_motion/MotionTranslationKernel.h"
 
 #include "UnitTestRealm.h"
 
@@ -12,14 +12,14 @@ namespace {
   const double testTol = 1e-14;
 
   std::vector<double> transform(
-    const sierra::nalu::MotionBase::TransMatType& transMat,
+    const sierra::nalu::NgpMotion::TransMatType& transMat,
     const double* xyz )
   {
     std::vector<double> transCoord(3,0.0);
 
     // perform matrix multiplication between transformation matrix
     // and original coordinates to obtain transformed coordinates
-    for (int d = 0; d < sierra::nalu::MotionBase::threeDVecSize; d++) {
+    for (int d = 0; d < sierra::nalu::NgpMotionTraits::NDimMax; d++) {
       transCoord[d] = transMat[d][0]*xyz[0]
                      +transMat[d][1]*xyz[1]
                      +transMat[d][2]*xyz[2]
@@ -42,7 +42,7 @@ TEST(meshMotion, rotation_omega)
   YAML::Node rotNode = YAML::Load(rotInfo);
 
   // initialize the mesh rotation class
-  sierra::nalu::MotionRotation rotClass(rotNode);
+  sierra::nalu::MotionRotationKernel rotClass(rotNode);
 
   // build transformation
   const double time = 3.5;
@@ -59,7 +59,7 @@ TEST(meshMotion, rotation_omega)
   EXPECT_NEAR(norm[1], gold_norm_y, testTol);
   EXPECT_NEAR(norm[2], gold_norm_z, testTol);
 
-  sierra::nalu::MotionBase::ThreeDVecType vel =
+  sierra::nalu::NgpMotion::ThreeDVecType vel =
     rotClass.compute_velocity(time, rotClass.get_trans_mat(), nullptr, &xyz[0]);
 
   const double gold_norm_vx = -3.0;
@@ -82,7 +82,7 @@ TEST(meshMotion, rotation_angle)
   YAML::Node rotNode = YAML::Load(rotInfo);
 
   // initialize the mesh rotation class
-  sierra::nalu::MotionRotation rotClass(rotNode);
+  sierra::nalu::MotionRotationKernel rotClass(rotNode);
 
   // build transformation
   const double time = 0.0;
@@ -115,7 +115,7 @@ TEST(meshMotion, scaling)
   sierra::nalu::Realm& realm = naluObj.create_realm();
 
   // initialize the mesh scaling class
-  sierra::nalu::MotionScaling scaleClass(realm.meta_data(), scaleNode);
+  sierra::nalu::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
 
   // build transformation
   const double time = 0.0;
@@ -145,7 +145,7 @@ TEST(meshMotion, translation_velocity)
   YAML::Node transNode = YAML::Load(transInfo);
 
   // initialize the mesh translation class
-  sierra::nalu::MotionTranslation transClass(transNode);
+  sierra::nalu::MotionTranslationKernel transClass(transNode);
 
   // build transformation at t = 10.0
   double time = 10.0;
@@ -198,7 +198,7 @@ TEST(meshMotion, translation_displacement)
   YAML::Node transNode = YAML::Load(transInfo);
 
   // initialize the mesh translation class
-  sierra::nalu::MotionTranslation transClass(transNode);
+  sierra::nalu::MotionTranslationKernel transClass(transNode);
 
   // build transformation
   const double time = 0.0;

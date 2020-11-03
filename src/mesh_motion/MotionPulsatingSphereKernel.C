@@ -1,4 +1,4 @@
-#include "mesh_motion/MotionPulsatingSphere.h"
+#include "mesh_motion/MotionPulsatingSphereKernel.h"
 
 #include <NaluParsing.h>
 #include "utils/ComputeVectorDivergence.h"
@@ -11,10 +11,10 @@
 namespace sierra{
 namespace nalu{
 
-MotionPulsatingSphere::MotionPulsatingSphere(
+MotionPulsatingSphereKernel::MotionPulsatingSphereKernel(
   stk::mesh::MetaData& meta,
   const YAML::Node& node)
-  : MotionBase()
+  : NgpMotionKernel<MotionPulsatingSphereKernel>()
 {
   load(node);
 
@@ -24,7 +24,7 @@ MotionPulsatingSphere::MotionPulsatingSphere(
   stk::mesh::field_fill(0.0, *divV);
 }
 
-void MotionPulsatingSphere::load(const YAML::Node& node)
+void MotionPulsatingSphereKernel::load(const YAML::Node& node)
 {
   // perturb start and end times with a small value for
   // accurate comparison with floats
@@ -45,7 +45,7 @@ void MotionPulsatingSphere::load(const YAML::Node& node)
     origin_ = node["centroid"].as<ThreeDVecType>();
 }
 
-void MotionPulsatingSphere::build_transformation(
+void MotionPulsatingSphereKernel::build_transformation(
   const double time,
   const double* xyz)
 {
@@ -56,7 +56,7 @@ void MotionPulsatingSphere::build_transformation(
   scaling_mat(motionTime,xyz);
 }
 
-void MotionPulsatingSphere::scaling_mat(
+void MotionPulsatingSphereKernel::scaling_mat(
   const double time,
   const double* xyz)
 {
@@ -97,7 +97,7 @@ void MotionPulsatingSphere::scaling_mat(
   transMat_ = add_motion(currTransMat,transMat_);
 }
 
-MotionBase::ThreeDVecType MotionPulsatingSphere::compute_velocity(
+NgpMotion::ThreeDVecType MotionPulsatingSphereKernel::compute_velocity(
   const double time,
   const TransMatType&  /* compTrans */,
   const double* mxyz,
@@ -117,13 +117,13 @@ MotionBase::ThreeDVecType MotionPulsatingSphere::compute_velocity(
   // account for zero radius
   if(radius == 0) pulsatingVelocity = 0;
 
-  for (int d=0; d < threeDVecSize; d++)
+  for (int d=0; d < NgpMotionTraits::NDimMax; d++)
     vel[d] = pulsatingVelocity * (mxyz[d]-origin_[d]);
 
   return vel;
 }
 
-void MotionPulsatingSphere::post_compute_geometry(
+void MotionPulsatingSphereKernel::post_compute_geometry(
   stk::mesh::BulkData& bulk,
   stk::mesh::PartVector& partVec,
   stk::mesh::PartVector& partVecBc,

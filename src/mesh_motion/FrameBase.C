@@ -1,12 +1,11 @@
 
 #include "mesh_motion/FrameBase.h"
 
-#include "mesh_motion/MotionPulsatingSphere.h"
-#include "mesh_motion/MotionRotation.h"
-#include "mesh_motion/MotionScaling.h"
-#include "mesh_motion/MotionTranslation.h"
-#include "mesh_motion/MotionWaves.h"
-
+#include "mesh_motion/MotionPulsatingSphereKernel.h"
+#include "mesh_motion/MotionScalingKernel.h"
+#include "mesh_motion/MotionRotationKernel.h"
+#include "mesh_motion/MotionTranslationKernel.h"
+#include "mesh_motion/MotionWavesKernel.h"
 #include "NaluParsing.h"
 #include "FieldTypeDef.h"
 
@@ -37,7 +36,7 @@ void FrameBase::load(const YAML::Node& node)
   const auto& motions = node["motion"];
 
   const int num_motions = motions.size();
-  meshMotionVec_.resize(num_motions);
+  motionKernels_.resize(num_motions);
 
   // create the classes associated with every motion in current group
   for (int i=0; i < num_motions; i++) {
@@ -51,15 +50,15 @@ void FrameBase::load(const YAML::Node& node)
 
     // determine type of mesh motion based on user definition in input file
     if (type == "pulsating_sphere")
-      meshMotionVec_[i].reset(new MotionPulsatingSphere(meta_,motion_def));
+      motionKernels_[i].reset(new MotionPulsatingSphereKernel(meta_,motion_def));
     else if (type == "rotation")
-      meshMotionVec_[i].reset(new MotionRotation(motion_def));
+      motionKernels_[i].reset(new MotionRotationKernel(motion_def));
     else if (type == "scaling")
-      meshMotionVec_[i].reset(new MotionScaling(meta_,motion_def));
+      motionKernels_[i].reset(new MotionScalingKernel(meta_,motion_def));
     else if (type == "translation")
-      meshMotionVec_[i].reset(new MotionTranslation(motion_def));
+      motionKernels_[i].reset(new MotionTranslationKernel(motion_def));
     else if (type == "waving_boundary")
-      meshMotionVec_[i].reset(new MotionWaves(meta_,motion_def));
+      motionKernels_[i].reset(new MotionWavesKernel(meta_,motion_def));
     else
       throw std::runtime_error("FrameBase: Invalid mesh motion type: " + type);
 

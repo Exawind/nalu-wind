@@ -1,7 +1,7 @@
 #ifndef FRAMEBASE_H
 #define FRAMEBASE_H
 
-#include "MotionBase.h"
+#include "NgpMotion.h"
 
 // stk base header files
 #include "stk_mesh/base/CoordinateSystems.hpp"
@@ -29,8 +29,8 @@ public:
 
   void set_computed_centroid( std::vector<double>& centroid )
   {
-    for (size_t i=0; i < meshMotionVec_.size(); i++)
-      meshMotionVec_[i]->set_computed_centroid(centroid);
+    for (size_t i=0; i < motionKernels_.size(); i++)
+      motionKernels_[i]->set_computed_centroid(centroid);
   }
 
   virtual void post_compute_geometry()
@@ -48,7 +48,7 @@ protected:
    *
    *  A vector of size number of motion/transformation groups
    */
-  std::vector<std::unique_ptr<MotionBase>> meshMotionVec_;
+  std::vector<std::unique_ptr<NgpMotion>> motionKernels_;
 
   /** Motion parts
    *

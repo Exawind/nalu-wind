@@ -1,5 +1,5 @@
 
-#include "mesh_motion/MotionWaves.h"
+#include "mesh_motion/MotionWavesKernel.h"
 
 #include <NaluParsing.h>
 #include "utils/ComputeVectorDivergence.h"
@@ -12,8 +12,8 @@
 namespace sierra {
 namespace nalu {
 
-MotionWaves::MotionWaves(stk::mesh::MetaData& meta, const YAML::Node& node)
-  : MotionBase()
+MotionWavesKernel::MotionWavesKernel(stk::mesh::MetaData& meta, const YAML::Node& node)
+  : NgpMotionKernel<MotionWavesKernel>()
 {
   load(node);
 
@@ -25,7 +25,7 @@ MotionWaves::MotionWaves(stk::mesh::MetaData& meta, const YAML::Node& node)
 }
 
 void
-MotionWaves::load(const YAML::Node& node)
+MotionWavesKernel::load(const YAML::Node& node)
 {
   // Get type of input prescribed wave
   get_if_present(node, "wave_model", waveModel_, waveModel_);
@@ -72,7 +72,7 @@ MotionWaves::load(const YAML::Node& node)
 }
 
 void
-MotionWaves::build_transformation(const double time, const double* xyz)
+MotionWavesKernel::build_transformation(const double time, const double* xyz)
 {
   if (time < (startTime_))
     return;
@@ -109,7 +109,7 @@ MotionWaves::build_transformation(const double time, const double* xyz)
 }
 
 void
-MotionWaves::translation_mat(const ThreeDVecType& curr_disp)
+MotionWavesKernel::translation_mat(const ThreeDVecType& curr_disp)
 {
   reset_mat(transMat_);
 
@@ -119,8 +119,8 @@ MotionWaves::translation_mat(const ThreeDVecType& curr_disp)
   transMat_[2][3] = curr_disp[2];
 }
 
-MotionBase::ThreeDVecType
-MotionWaves::compute_velocity(
+NgpMotion::ThreeDVecType
+MotionWavesKernel::compute_velocity(
   const double time,
   const TransMatType& /* compTrans */,
   const double* mxyz,
@@ -180,7 +180,7 @@ MotionWaves::compute_velocity(
  * Theory for Steady Waves" (J. D. Fenton, 1985)
  */
 void
-MotionWaves::Stokes_coefficients()
+MotionWavesKernel::Stokes_coefficients()
 {
   double kd = k_ * waterdepth_;
   if (kd > 50 * M_PI)
@@ -273,7 +273,7 @@ MotionWaves::Stokes_coefficients()
 }
 
 void
-MotionWaves::Stokes_parameters()
+MotionWavesKernel::Stokes_parameters()
 {
   k_ = 2 * M_PI / length_;
   eps_ = k_ * height_ / 2.; // Steepness (ka)
@@ -289,7 +289,7 @@ MotionWaves::Stokes_parameters()
 }
 
 double
-MotionWaves::my_cosh_cos(int i, int j, double phase)
+MotionWavesKernel::my_cosh_cos(int i, int j, double phase)
 {
   double D=0.0;
   if (i == 1 && j == 1)
@@ -316,7 +316,7 @@ MotionWaves::my_cosh_cos(int i, int j, double phase)
 }
 
 double
-MotionWaves::my_sinh_sin(int i, int j, double phase)
+MotionWavesKernel::my_sinh_sin(int i, int j, double phase)
 {
   double D=0.0;
   if (i == 1 && j == 1)
@@ -343,7 +343,7 @@ MotionWaves::my_sinh_sin(int i, int j, double phase)
 }
 
 void
-MotionWaves::get_StokesCoeff(StokesCoeff* stokes)
+MotionWavesKernel::get_StokesCoeff(StokesCoeff* stokes)
 {
   stokes->k = k_;
   stokes->d = height_;
@@ -372,7 +372,7 @@ MotionWaves::get_StokesCoeff(StokesCoeff* stokes)
 }
 
 void
-MotionWaves::post_compute_geometry(
+MotionWavesKernel::post_compute_geometry(
   stk::mesh::BulkData& bulk,
   stk::mesh::PartVector& partVec,
   stk::mesh::PartVector& partVecBc,
