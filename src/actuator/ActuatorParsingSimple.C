@@ -50,6 +50,8 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 {
   ActuatorMetaSimple actMetaSimple(actMeta);
 
+  actMetaSimple.dR_.modify_host();
+
   NaluEnv::self().naluOutputP0() << "In actuator_Simple_parse() "<< std::endl; //LCCOUT
 
   const YAML::Node y_actuator = y_node["actuator"];
@@ -83,8 +85,6 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   std::vector<std::vector<double>> input_cl_polartable;
   std::vector<std::vector<double>> input_cd_polartable;
 
-  actMetaSimple.output_filenames_.resize(actMetaSimple.n_simpleblades_);
- 
   if (actMetaSimple.n_simpleblades_ > 0) {
     actMetaSimple.numPointsTotal_ = 0;
     for (unsigned iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
@@ -92,6 +92,11 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
       const YAML::Node cur_blade =
 	y_actuator["Blade" + std::to_string(iBlade)];
       get_if_present_no_default(cur_blade, "output_file_name", actMetaSimple.output_filenames_[iBlade]);
+      if (
+        !actMetaSimple.output_filenames_[iBlade].empty() &&
+        NaluEnv::self().parallel_rank() == (int)iBlade) {
+        actMetaSimple.has_output_file_ = true;
+      }
 
       size_t num_force_pts_blade;
       get_required(cur_blade, "num_force_pts_blade", num_force_pts_blade);
@@ -202,10 +207,10 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 	NaluEnv::self().naluOutputP0()  // LCCOUT
 	  << "Blade: " << iBlade << " p1zeroAOA dir: "
 	  <<p1zeroAOA.x_<<" "<<p1zeroAOA.y_<<" "<<p1zeroAOA.z_<< std::endl;
-	NaluEnv::self().naluOutputP0()  // LCCOUT
-	  << "Blade: " << iBlade << " Span dir: "
-	  <<spanDir.x_<<" "<<spanDir.y_<<" "<<spanDir.z_<< std::endl; 
-	NaluEnv::self().naluOutputP0() // LCCOUT
+  NaluEnv::self().naluOutputP0() // LCCOU
+    << "Blade: " << iBlade << " Span dir: " << spanDir.x_ << " " << spanDir.y_
+    << " " << spanDir.z_ << std::endl;
+  NaluEnv::self().naluOutputP0() // LCCOUT
 	  << "Blade: " << iBlade 
 	  << " chord norm dir: "<<std::setprecision(5)
 	  <<chodrNormalDir.x_<<" "<<chodrNormalDir.y_<<" "<<chodrNormalDir.z_<< std::endl; 
@@ -237,6 +242,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
       for (int i=0; i<3; i++) 
 	dx[i] = (p2Temp[i] - p1Temp[i])/(double)num_force_pts_blade;
       double dx_norm = sqrt(dx[0]*dx[0] + dx[1]*dx[1] + dx[2]*dx[2]);
+      actMetaSimple.dR_.h_view(iBlade) = dx_norm;
       for (unsigned i=0; i<num_force_pts_blade; i++)
 	elemareatemp[i] = dx_norm*chord_table_extended[i];
       input_elem_area.push_back(elemareatemp);

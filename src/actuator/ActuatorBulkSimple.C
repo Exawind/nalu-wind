@@ -22,12 +22,15 @@ ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
     num_force_pts_blade_("numForcePtsBladeMeta", numberOfActuators_),
     p1_("p1Meta", numberOfActuators_),
     p2_("p2Meta", numberOfActuators_),
+    dR_("dRMeta", numberOfActuators_),
     p1ZeroAlphaDir_("p1zeroalphadirMeta", numberOfActuators_),
     chordNormalDir_("chordnormaldirMeta", numberOfActuators_),
     spanDir_("spandirMeta", numberOfActuators_),
     max_num_force_pts_blade_(0),
     maxPolarTableSize_(0),
-    polarTableSize_("polartablesizeMeta", numberOfActuators_)
+    polarTableSize_("polartablesizeMeta", numberOfActuators_),
+    output_filenames_(numberOfActuators_),
+    has_output_file_(false)
 {
 }
 
@@ -43,7 +46,10 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
     assignedProc_("assignedProcBulk", actMeta.numberOfActuators_),
     num_blades_(actMeta.numberOfActuators_),
     debug_output_(actMeta.debug_output_),
-    output_cache_(actMeta.output_filenames_[localTurbineId_].empty()?0:actMeta.numPointsTurbine_.h_view(localTurbineId_))
+    output_cache_(
+      actMeta.has_output_file_
+        ? actMeta.numPointsTurbine_.h_view(localTurbineId_)
+        : 0)
 
 {
   // Allocate blades to turbines
@@ -88,8 +94,26 @@ ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   init_epsilon(actMeta);
   init_points(actMeta);
   init_orientation(actMeta);
+  add_output_headers(actMeta);
   NaluEnv::self().naluOutputP0() << "Done ActuatorBulkSimple Init "
 				 << std::endl; // LCCOUT
+}
+
+void
+ActuatorBulkSimple::add_output_headers(const ActuatorMetaSimple& actMeta)
+{
+  if (!actMeta.has_output_file_)
+    return;
+  std::string filename = actMeta.output_filenames_[localTurbineId_];
+
+  if (localTurbineId_ == NaluEnv::self().parallel_rank()) {
+    std::ofstream outFile;
+
+    outFile.open(filename, std::ios_base::out);
+    outFile << "pointId,alpha,cl,cd,lift,drag,velX,velY,velZ,relVelX,relVelY,"
+               "relVelZ,forceX,forceY,forceZ,density\n";
+    outFile.close();
+  }
 }
 
 void

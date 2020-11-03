@@ -87,11 +87,15 @@ TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
   const double chord = 1.0;
   const double Cl = 2.0;
 
+  auto area = helper_.get_local_view(actMeta_.elemAreaDv_);
+  auto dR = helper_.get_local_view(actMeta_.dR_);
+
   Kokkos::parallel_for(
     "compute G like paper", range_policy, KOKKOS_LAMBDA(int i) {
       const double umag2 = relVel(i, 0) * relVel(i, 0) +
                            relVel(i, 1) * relVel(i, 1) +
                            relVel(i, 2) * relVel(i, 2);
+      ASSERT_DOUBLE_EQ(chord, area(0, i) / dR(0));
       G(i) = 0.5 * chord * Cl * umag2; // chord is 1.0 and Cl is 2.0 everywhere
     });
 

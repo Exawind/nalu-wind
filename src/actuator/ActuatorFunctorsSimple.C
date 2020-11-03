@@ -103,9 +103,9 @@ ActSimpleUpdatePoints::operator()(int index) const
 #endif
 
 void ActSimpleWriteToFile(ActuatorBulkSimple &actBulk, const ActuatorMetaSimple &actMeta){
-  std::string filename = actMeta.output_filenames_[actBulk.localTurbineId_];
-  if(filename.empty())
+  if (!actMeta.has_output_file_)
     return;
+  std::string filename = actMeta.output_filenames_[actBulk.localTurbineId_];
   ActDualViewHelper<ActuatorFixedMemSpace> helper;
   auto vel = helper.get_local_view(actBulk.velocity_);
   auto force = helper.get_local_view(actBulk.actuatorForce_);
@@ -118,11 +118,10 @@ void ActSimpleWriteToFile(ActuatorBulkSimple &actBulk, const ActuatorMetaSimple 
     //ThrowErrorIf(NaluEnv::self().parallel_rank()!=0);
 
     outFile.open(filename, std::ios_base::app);
-    const int stop = offset + actMeta.numPointsTurbine_.h_view(actBulk.localTurbineId_);
-    std::cerr << "start, stop: " << offset <<", "<<stop <<std::endl;
+    const int stop =
+      offset + actMeta.numPointsTurbine_.h_view(actBulk.localTurbineId_);
 
-    for(int index = offset; index < stop; ++index){
-      std::cerr << index <<std::endl;
+    for (int index = offset; index < stop; ++index) {
       const int i = index - offset;
       // write cached stuff from earlier computations
       outFile << actBulk.output_cache_[i];
@@ -311,15 +310,11 @@ ActSimpleComputeForce(
       << " " << ws2d(2) << " "
       << " Cl, Cd: " << cl << " " << cd << " lift, drag = " << lift << " "
       << drag << std::endl;
-  if (!actMeta.output_filenames_[turbId].empty()){
+  if (actMeta.has_output_file_) {
     std::ostringstream stream;
-    stream << localId << ", "
-           << alpha(index) << ", "
-           << cl << ", "
-           << cd << ", "
-           << lift << ", "
-           << drag << ", ";
-    cache->at(localId)+=stream.str();
+    stream << localId << ", " << alpha(index) << ", " << cl << ", " << cd
+           << ", " << lift << ", " << drag << ", ";
+    cache->at(localId) += stream.str();
   }
   });
 

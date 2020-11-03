@@ -60,7 +60,6 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
     localTurbineId_(
       NaluEnv::self().parallel_rank() >= actMeta.numberOfActuators_
         ? -1
-
         : NaluEnv::self().parallel_rank())
 {
   compute_offsets(actMeta);

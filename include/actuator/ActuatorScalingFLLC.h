@@ -26,12 +26,12 @@ void scale_lift_force(ActuatorBulk& actBulk, const ActuatorMeta& actMeta, range_
     auto actMetaSimple = dynamic_cast<const ActuatorMetaSimple&>(actMeta);
     auto G = helper.get_local_view(actBulkSimple.liftForceDistribution_);
     auto rho = helper.get_local_view(actBulkSimple.density_);
-    auto area = helper.get_local_view(actMetaSimple.elemAreaDv_);
 
     const int turbId = actBulkSimple.localTurbineId_;
+    double dR = actMetaSimple.dR_.h_view(turbId);
 
     Kokkos::parallel_for("scale G", rangePolicy, KOKKOS_LAMBDA(int i){
-      const double denom = rho(i)*area(turbId,i);
+      const double denom = rho(i)*dR;
       for(int j=0; j<3; ++j){
         G(i,j) /= denom;
       }
