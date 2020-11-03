@@ -31,7 +31,7 @@ linear_solvers:
 realms:
 
 - name: realm_1
-  mesh: "generated:30x30x30|bbox:-15.265,-15.265,-15.265,15.265,15.265,15.265|sideset:xXyYzZ|show"
+  mesh: "generated:50x50x50|bbox:-15.265,-15.265,-15.265,15.265,15.265,15.265|sideset:xXyYzZ|show"
   use_edges: yes
   automatic_decomposition_type: rcb
 
@@ -62,6 +62,7 @@ realms:
     value:
       pressure: 0.0
       velocity: [1.0, 0.0, 0.0]
+      turbulent_ke: 1.0e-6
 
   material_properties:
     target_name: block_1
@@ -138,11 +139,9 @@ realms:
         pressure: element
         velocity: element
 
-    - source_terms:
-        momentum: 
-          - actuator
-        turblent_ke:
-          - rodi
+   # - source_terms:
+   #     momentum: 
+   #       - actuator
 
   actuator:
     type: ActLineSimpleNGP
@@ -153,7 +152,7 @@ realms:
     n_simpleblades: 1
     debug_output: no
     Blade0:
-      num_force_pts_blade: 50
+      num_force_pts_blade: 500
       output_file_name: blade_dump.csv
       epsilon: [3.0, 3.0, 3.0]
       p1: [0, -6.25, 0] 
@@ -193,7 +192,7 @@ Time_Integrators:
     name: ti_1
     start_time: 0
     termination_step_count: 100
-    time_step: 0.0125
+    time_step: 0.00125
     time_stepping_type: fixed
     time_step_count: 0
     second_order_accuracy: no

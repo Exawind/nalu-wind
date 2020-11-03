@@ -221,7 +221,10 @@ Apply_FLLC(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
     Kokkos::RangePolicy<ActuatorExecutionSpace>(0, vel.extent_int(0)),
     KOKKOS_LAMBDA(int i) {
       for (int j = 0; j < 3; ++j) {
-        vel(i, j) += fllc(i, j);
+        double temp = fllc(i, j);
+        vel(i, j) += temp;
+        double temp2 = vel(i, j);
+        double temp3 = temp2;
       }
     });
 }
