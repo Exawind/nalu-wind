@@ -1656,7 +1656,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::finishAssembly(HYPRE_IJMatrix hypreM
   /*******************/    
 
   if (overset_mat_counter_) {
-    printf("rank_=%d : %s %s %d\n",rank_,__FILE__,__FUNCTION__,__LINE__);
+    //printf("rank_=%d : %s %s %d\n",rank_,__FILE__,__FUNCTION__,__LINE__);
     /* Matrix */
     /* Fill the "Device" views */
     Kokkos::deep_copy(d_overset_rows_, h_overset_rows_);
