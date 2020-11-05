@@ -27,7 +27,8 @@ const char* actuatorParameters = R"act(actuator:
   fllt_correction: yes
   Blade0:
     num_force_pts_blade: 5
-    epsilon: [3.0, 3.0, 3.0]
+    epsilon_min: [3.0, 3.0, 3.0]
+    epsilon_chord: [0.25, 0.25, 0.25]
     p1: [0, -4, 0] 
     p2: [0,  4, 0]
     p1_zero_alpha_dir: [1, 0, 0]
@@ -241,7 +242,7 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
       double temp = (std::pow(optFac, -r2) - std::pow(lesFac, -r2)) / r;
 
       for (int k=0; k<3; ++k){
-        uExpect(index, k) += 0.1 * temp;
+        uExpect(index, k) -= 0.1 * temp;
       }
     }
   });

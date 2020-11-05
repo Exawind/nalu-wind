@@ -29,37 +29,6 @@ ActuatorLineSimpleNGP::operator()()
 {
   actBulk_.zero_source_terms(stkBulk_);
 
-  update();
-
-  ActSimpleComputeForce(actBulk_, actMeta_);
-
-  Compute_FLLC(actBulk_, actMeta_);
-
-  ActSimpleWriteToFile(actBulk_, actMeta_);
-
-  const int localSizeCoarseSearch =
-    actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
-
-  // === Always use SpreadActuatorForce() ===
-  // -- for both isotropic and anisotropic Guassians ---
-  if (useSpreadActuatorForce_) {
-    Kokkos::parallel_for(
-      "spreadForcesActuatorNgpSimple", localSizeCoarseSearch,
-      SpreadActuatorForce(actBulk_, stkBulk_));
-  } else {
-    // --  use ActSimpleSpreadForceWhProjection
-    Kokkos::parallel_for(
-      "spreadForceUsingProjDistance", localSizeCoarseSearch,
-      ActSimpleSpreadForceWhProjection(actBulk_, stkBulk_));
-  }
-
-  actBulk_.parallel_sum_source_term(stkBulk_);
-}
-
-void
-ActuatorLineSimpleNGP::update()
-{
-
   auto velReduce = actBulk_.velocity_.view_host();
   auto pointReduce = actBulk_.pointCentroid_.view_host();
   actBulk_.zero_actuator_views();
@@ -99,12 +68,37 @@ ActuatorLineSimpleNGP::update()
   actuator_utils::reduce_view_on_host(rhoReduce);
 
   Apply_FLLC(actBulk_, actMeta_);
+
   ActSimpleComputeRelativeVelocity(actBulk_, actMeta_);
 
   // This is for output purposes
   Kokkos::parallel_for(
     "assignSimpleVelActuatorNgpSimple", localRangePolicy,
     ActSimpleAssignVel(actBulk_));
+
+  ActSimpleComputeForce(actBulk_, actMeta_);
+
+  Compute_FLLC(actBulk_, actMeta_);
+
+  ActSimpleWriteToFile(actBulk_, actMeta_);
+
+  const int localSizeCoarseSearch =
+    actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
+
+  // === Always use SpreadActuatorForce() ===
+  // -- for both isotropic and anisotropic Guassians ---
+  if (useSpreadActuatorForce_) {
+    Kokkos::parallel_for(
+      "spreadForcesActuatorNgpSimple", localSizeCoarseSearch,
+      SpreadActuatorForce(actBulk_, stkBulk_));
+  } else {
+    // --  use ActSimpleSpreadForceWhProjection
+    Kokkos::parallel_for(
+      "spreadForceUsingProjDistance", localSizeCoarseSearch,
+      ActSimpleSpreadForceWhProjection(actBulk_, stkBulk_));
+  }
+
+  actBulk_.parallel_sum_source_term(stkBulk_);
 }
 
 } // namespace nalu

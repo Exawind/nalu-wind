@@ -176,8 +176,8 @@ compute_induced_velocities(
         const double coefLes = 1.0 - std::exp(-dr2 / epsLes2);
 
         for (int dir = 0; dir < 3; ++dir) {
-          optInd[dir] += deltaG(j + offset, dir) * coefficient * coefOpt;
-          lesInd[dir] += deltaG(j + offset, dir) * coefficient * coefLes;
+          optInd[dir] -= deltaG(j + offset, dir) * coefficient * coefOpt;
+          lesInd[dir] -= deltaG(j + offset, dir) * coefficient * coefLes;
         }
       }
       // update the correction term with relaxation
@@ -221,10 +221,7 @@ Apply_FLLC(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
     Kokkos::RangePolicy<ActuatorExecutionSpace>(0, vel.extent_int(0)),
     KOKKOS_LAMBDA(int i) {
       for (int j = 0; j < 3; ++j) {
-        double temp = fllc(i, j);
-        vel(i, j) += temp;
-        double temp2 = vel(i, j);
-        double temp3 = temp2;
+        vel(i, j) += fllc(i, j);
       }
     });
 }
