@@ -1,5 +1,8 @@
 # -*- mode: yaml -*-
 # NALU-WIND PARAMETERS
+# This simulation will converge to the same results as figure 8 
+# in Martinez-Tossas and Meneveau, 2019, Filtered lifting line theory and application to the actuator line model 
+# This was confirmed by running with 600 actuator points on a 50x50x50 grid
 # ------
 Simulations:
 - name: sim1
@@ -31,7 +34,7 @@ linear_solvers:
 realms:
 
 - name: realm_1
-  mesh: "generated:50x50x50|bbox:-15.265,-15.265,-15.265,15.265,15.265,15.265|sideset:xXyYzZ|show"
+  mesh: "generated:40x40x40|bbox:-15.265,-15.265,-15.265,15.265,15.265,15.265|sideset:xXyYzZ|show"
   use_edges: yes
   automatic_decomposition_type: rcb
 
@@ -152,7 +155,7 @@ realms:
     n_simpleblades: 1
     debug_output: no
     Blade0:
-      num_force_pts_blade: 600
+      num_force_pts_blade: 100
       output_file_name: blade_dump.csv
       epsilon_min: [3.0, 3.0, 3.0]
       epsilon_chord: [0.25, 0.25, 0.25]
@@ -192,7 +195,7 @@ Time_Integrators:
 - StandardTimeIntegrator:
     name: ti_1
     start_time: 0
-    termination_step_count: 100
+    termination_step_count: 10
     time_step: 0.25
     time_stepping_type: fixed
     time_step_count: 0
