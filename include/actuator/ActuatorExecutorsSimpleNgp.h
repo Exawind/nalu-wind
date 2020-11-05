@@ -27,8 +27,6 @@ struct ActuatorLineSimpleNGP
 
   void operator()();
 
-  void update();
-
   const ActuatorMetaSimple& actMeta_;
   ActuatorBulkSimple& actBulk_;
   stk::mesh::BulkData& stkBulk_;

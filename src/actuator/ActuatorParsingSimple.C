@@ -114,43 +114,75 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 	  << " num_force_pts_blade: "
 	  << actMetaSimple.numPointsTurbine_.h_view(iBlade) << std::endl; //LCCOUT
 
-      // Get the epsilon
+      // The value epsilon / chord [non-dimensional]
+      // This is a vector containing the values for:
+      //   - chord aligned (x),
+      //   - tangential to chord (y),
+      //   - spanwise (z)
       const YAML::Node epsilon_chord = cur_blade["epsilon_chord"];
       const YAML::Node epsilon = cur_blade["epsilon"];
       if (epsilon && epsilon_chord) {
-	throw std::runtime_error(
-	  "epsilon and epsilon_chord have both been specified for Blade " +
-	  std::to_string(iBlade) + "\nYou must pick one or the other.");
-      }
-      std::vector<double> epsilonTemp(3);
-      
-      // only require epsilon
-      if (epsilon.Type() == YAML::NodeType::Scalar) {
-	double isotropicEpsilon;
-	get_required(cur_blade, "epsilon", isotropicEpsilon);
-	actMetaSimple.isotropicGaussian_ = true;
-	for (int j = 0; j < 3; j++) {
-	  actMetaSimple.epsilon_.h_view(iBlade, j) = isotropicEpsilon;
-	}
-      } else {
-	get_required(cur_blade, "epsilon", epsilonTemp);
-	for (int j = 0; j < 3; j++) {
-	  actMetaSimple.epsilon_.h_view(iBlade, j) = epsilonTemp[j];
-	}
-	if (
-	    epsilonTemp[0] == epsilonTemp[1] &&
-	    epsilonTemp[1] == epsilonTemp[2]) {
-	  actMetaSimple.isotropicGaussian_ = true;
-	} 
-      }
-      // check epsilon values
-      for (int j = 0; j < 3; j++) {
-	if (actMetaSimple.epsilon_.h_view(iBlade, j) <= 0.0) {
-	  throw std::runtime_error(
-              "ERROR:: zero value for epsilon detected. "
-              "All epsilon components must be greater than zero");
-          }
-      }
+        throw std::runtime_error(
+          "epsilon and epsilon_chord have both been specified for Turbine " +
+          std::to_string(iBlade) + "\nYou must pick one or the other.");
+   }
+   if (epsilon && actMetaSimple.useFLLC_) {
+     throw std::runtime_error(
+       "epsilon and fllt_correction have both been specified for "
+       "Turbine " +
+       std::to_string(iBlade) +
+       "\nepsilon_chord and epsilon_min should be used with "
+       "fllt_correction.");
+   }
+
+   std::vector<double> epsilonTemp(3);
+   if (epsilon) {
+     // only require epsilon
+     if (epsilon.Type() == YAML::NodeType::Scalar) {
+       double isotropicEpsilon;
+       get_required(cur_blade, "epsilon", isotropicEpsilon);
+       actMetaSimple.isotropicGaussian_ = true;
+       for (int j = 0; j < 3; j++) {
+         actMetaSimple.epsilon_.h_view(iBlade, j) = isotropicEpsilon;
+       }
+     } else {
+       get_required(cur_blade, "epsilon", epsilonTemp);
+       for (int j = 0; j < 3; j++) {
+         actMetaSimple.epsilon_.h_view(iBlade, j) = epsilonTemp[j];
+       }
+       if (
+         epsilonTemp[0] == epsilonTemp[1] &&
+         epsilonTemp[1] == epsilonTemp[2]) {
+         actMetaSimple.isotropicGaussian_ = true;
+       }
+     }
+   } else if (epsilon_chord) {
+     // require epsilon chord and epsilon min
+     get_required(cur_blade, "epsilon_chord", epsilonTemp);
+     for (int j = 0; j < 3; j++) {
+       if (epsilonTemp[j] <= 0.0) {
+         throw std::runtime_error(
+           "ERROR:: zero value for epsilon_chord detected. "
+           "All epsilon components must be greater than zero");
+       }
+       actMetaSimple.epsilonChord_.h_view(iBlade, j) = epsilonTemp[j];
+     }
+
+     // Minimum epsilon allowed in simulation. This is required when
+     //   specifying epsilon/chord
+     get_required(cur_blade, "epsilon_min", epsilonTemp);
+     for (int j = 0; j < 3; j++) {
+       actMetaSimple.epsilon_.h_view(iBlade, j) = epsilonTemp[j];
+     }
+   }
+   // check epsilon values
+   for (int j = 0; j < 3; j++) {
+     if (actMetaSimple.epsilon_.h_view(iBlade, j) <= 0.0) {
+       throw std::runtime_error(
+         "ERROR:: zero value for epsilon detected. "
+         "All epsilon components must be greater than zero");
+     }
+   }
       // Handle blade properties
       // p1 
       std::vector<double> p1Temp(3);
