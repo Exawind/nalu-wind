@@ -121,10 +121,6 @@ public:
 				   stk::mesh::FieldBase * bcValuesField,
 				   const stk::mesh::PartVector& parts);
 
-    virtual void free_device_pointer();
-
-    virtual sierra::nalu::CoeffApplier* device_pointer();
-
   };
 
   /***************************************************************************************************/

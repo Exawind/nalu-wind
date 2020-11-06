@@ -628,24 +628,6 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::applyDirichletBCs(Realm & real
     });
 }
 
-void HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::free_device_pointer()
-{
-  if (this != devicePointer_) {
-    sierra::nalu::kokkos_free_on_device(devicePointer_);
-    devicePointer_ = nullptr;
-  }
-}
-
-sierra::nalu::CoeffApplier* HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::device_pointer()
-{
-  if (devicePointer_ != nullptr) {
-    sierra::nalu::kokkos_free_on_device(devicePointer_);
-    devicePointer_ = nullptr;
-  }
-  devicePointer_ = sierra::nalu::create_device_expression(*this);
-  return devicePointer_;
-}
-
 
 /*********************************************************************************************************/
 /*                           End of HypreUVWLinSysCoeffApplier implementations                           */
