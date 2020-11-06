@@ -18,6 +18,7 @@ namespace nalu {
 struct ActuatorBulk;
 struct ActuatorMeta;
 
+// TODO refactor namespace to this struct
 namespace FLLC {
 /**
  * @brief Compute the lift force distribution (G)

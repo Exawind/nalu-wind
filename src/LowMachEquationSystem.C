@@ -12,6 +12,7 @@
 #include <LowMachEquationSystem.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
+#include <actuator/ActuatorModel.h>
 #include <AssembleContinuityElemSolverAlgorithm.h>
 #include <AssembleContinuityInflowSolverAlgorithm.h>
 #include <AssembleContinuityElemOpenSolverAlgorithm.h>
@@ -1137,7 +1138,7 @@ MomentumEquationSystem::register_nodal_fields(
   }
 
   // speciality source
-  if ( NULL != realm_.actuator_ || NULL != realm_.actuatorMeta_ || NULL != realm_.actuatorMetaSimple_) {
+  if (NULL != realm_.actuator_ || realm_.actuatorModel_->is_active()) {
     VectorFieldType *actuatorSource
       =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source"));
     VectorFieldType *actuatorSourceLHS

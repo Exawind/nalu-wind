@@ -14,11 +14,12 @@
 #include <actuator/ActuatorBulkDiskFAST.h>
 #include <actuator/ActuatorFunctorsFAST.h>
 #include <actuator/UtilitiesActuator.h>
+#include <actuator/ActuatorExecutor.h>
 
 namespace sierra {
 namespace nalu {
 
-struct ActuatorLineFastNGP
+struct ActuatorLineFastNGP: public ActuatorExecutor
 {
 
   ActuatorLineFastNGP(
@@ -26,7 +27,9 @@ struct ActuatorLineFastNGP
     ActuatorBulkFAST& actBulk,
     stk::mesh::BulkData& stkBulk);
 
-  void operator()();
+  virtual ~ActuatorLineFastNGP(){};
+
+  void operator()() final;
 
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkFAST& actBulk_;
@@ -35,14 +38,16 @@ struct ActuatorLineFastNGP
   ActDualViewHelper<ActuatorMemSpace> dualViewHelper_;
 };
 
-struct ActuatorDiskFastNGP
+struct ActuatorDiskFastNGP : public ActuatorExecutor
 {
   ActuatorDiskFastNGP(
     const ActuatorMetaFAST& actMeta,
     ActuatorBulkDiskFAST& actBulk,
     stk::mesh::BulkData& stkBulk);
 
-  void operator()();
+  virtual ~ActuatorDiskFastNGP(){};
+
+  void operator()() final;
 
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkDiskFAST& actBulk_;
