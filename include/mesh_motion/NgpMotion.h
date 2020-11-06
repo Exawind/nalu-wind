@@ -46,9 +46,9 @@ public:
   KOKKOS_FUNCTION
   virtual ~NgpMotion() {}
 
-//  virtual NgpMotion* create_on_device() = 0;
+  virtual NgpMotion* create_on_device() = 0;
 
-//  virtual void free_on_device() = 0;
+  virtual void free_on_device() = 0;
 
   virtual void build_transformation(const double, const double* = nullptr) = 0;
 
@@ -129,10 +129,10 @@ protected:
    */
   TransMatType transMat_ = identity_mat();
 
-  /** Computed centroid
+  /** Centroid
    *
-   * A 3x1 vector storing the centroid computed respective
-   * to a collection of parts defined in the input file
+   * A 3x1 vector storing the centroid as computed
+   * to a collection of parts or as defined in the input file
    */
   ThreeDVecType origin_ = {{0.0,0.0,0.0}};
 
