@@ -101,8 +101,8 @@ TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
     });
 
   actuator_utils::reduce_view_on_host(G);
-
-  FLLC::compute_lift_force_distribution(actBulk_, actMeta_);
+  FilteredLiftingLineCorrection fllc(actMeta_, actBulk_);
+  fllc.compute_lift_force_distribution();
 
   auto fllc_lift_force = helper_.get_local_view(actBulk_.liftForceDistribution_);
     // assert that the two lift forces are equal
@@ -139,7 +139,8 @@ TEST_F(ActuatorFLLC, ComputeGradG_Eq_5_4_and_5_5)
   actuator_utils::reduce_view_on_host(G);
   actuator_utils::reduce_view_on_host(r);
 
-  FLLC::grad_lift_force_distribution(actBulk_, actMeta_);
+  FilteredLiftingLineCorrection fllc(actMeta_, actBulk_);
+  fllc.grad_lift_force_distribution();
 
   auto dG = helper_.get_local_view(actBulk_.deltaLiftForceDistribution_);
 
@@ -251,7 +252,8 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
     EXPECT_DOUBLE_EQ(epsOpt(i, 0), epsilonOpt) << epsOpt(i, 0);
   }
 
-  FLLC::compute_induced_velocities(actBulk_, actMeta_);
+  FilteredLiftingLineCorrection fllc(actMeta_, actBulk_);
+  fllc.compute_induced_velocities();
   actuator_utils::reduce_view_on_host(uExpect);
 
   for(int i=0; i<uExpect.extent_int(0); ++i){

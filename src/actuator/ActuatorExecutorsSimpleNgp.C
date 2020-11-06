@@ -7,7 +7,6 @@
 // for more details.
 //
 #include <actuator/ActuatorExecutorsSimpleNgp.h>
-#include <actuator/ActuatorFLLC.h>
 
 namespace sierra {
 namespace nalu {
@@ -16,7 +15,8 @@ ActuatorLineSimpleNGP::ActuatorLineSimpleNGP(
   const ActuatorMetaSimple& actMeta,
   ActuatorBulkSimple& actBulk,
   stk::mesh::BulkData& stkBulk)
-  : actMeta_(actMeta),
+  : ActuatorExecutor(actMeta, actBulk),
+    actMeta_(actMeta),
     actBulk_(actBulk),
     stkBulk_(stkBulk),
     numActPoints_(actMeta_.numPointsTotal_),
@@ -67,7 +67,7 @@ ActuatorLineSimpleNGP::operator()()
   auto rhoReduce = actBulk_.density_.view_host();
   actuator_utils::reduce_view_on_host(rhoReduce);
 
-  Apply_FLLC(actBulk_, actMeta_);
+  Apply_FLLC(actBulk_);
 
   ActSimpleComputeRelativeVelocity(actBulk_, actMeta_);
 
@@ -78,7 +78,7 @@ ActuatorLineSimpleNGP::operator()()
 
   ActSimpleComputeForce(actBulk_, actMeta_);
 
-  Compute_FLLC(actBulk_, actMeta_);
+  Compute_FLLC();
 
   ActSimpleWriteToFile(actBulk_, actMeta_);
 

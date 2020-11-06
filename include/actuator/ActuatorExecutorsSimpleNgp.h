@@ -14,13 +14,15 @@
 #include <actuator/ActuatorFunctorsSimple.h>
 #include <actuator/UtilitiesActuator.h>
 #include <actuator/ActuatorExecutor.h>
+#include <memory>
 
 namespace sierra {
 namespace nalu {
 
-struct ActuatorLineSimpleNGP: public ActuatorExecutor
-{
 
+class ActuatorLineSimpleNGP: public ActuatorExecutor
+{
+public:
   ActuatorLineSimpleNGP(
     const ActuatorMetaSimple& actMeta,
     ActuatorBulkSimple& actBulk,
@@ -29,12 +31,14 @@ struct ActuatorLineSimpleNGP: public ActuatorExecutor
   virtual ~ActuatorLineSimpleNGP(){};
   void operator()() final;
 
+private:
   const ActuatorMetaSimple& actMeta_;
   ActuatorBulkSimple& actBulk_;
   stk::mesh::BulkData& stkBulk_;
   const int numActPoints_;
   const bool useSpreadActuatorForce_;
   ActDualViewHelper<ActuatorMemSpace> dualViewHelper_;
+
 };
 
 } /* namespace nalu */

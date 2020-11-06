@@ -15,7 +15,6 @@
 
 namespace sierra {
 namespace nalu {
-namespace FLLC {
 
 // free functions for vector operations
 inline double
@@ -33,25 +32,29 @@ dot(double* u, double* v)
 // TODO(psakiev) - need to set this up to run per blade and not over entire
 // turbine for the openfast case
 // TODO(psakiev) - add option to run over portion of the blade
+FilteredLiftingLineCorrection::FilteredLiftingLineCorrection(
+  const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
+  : actBulk_(actBulk), actMeta_(actMeta)
+{
+}
 
 void
-compute_lift_force_distribution(
-  ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
+FilteredLiftingLineCorrection::compute_lift_force_distribution()
 {
   ActDualViewHelper<ActuatorFixedMemSpace> helper;
-  helper.touch_dual_view(actBulk.deltaLiftForceDistribution_);
-  helper.touch_dual_view(actBulk.relativeVelocityMagnitude_);
+  helper.touch_dual_view(actBulk_.deltaLiftForceDistribution_);
+  helper.touch_dual_view(actBulk_.relativeVelocityMagnitude_);
 
-  auto vel = helper.get_local_view(actBulk.relativeVelocity_);
-  auto force = helper.get_local_view(actBulk.actuatorForce_);
-  auto G = helper.get_local_view(actBulk.liftForceDistribution_);
-  auto Uinf = helper.get_local_view(actBulk.relativeVelocityMagnitude_);
-  auto points = helper.get_local_view(actBulk.pointCentroid_);
+  auto vel = helper.get_local_view(actBulk_.relativeVelocity_);
+  auto force = helper.get_local_view(actBulk_.actuatorForce_);
+  auto G = helper.get_local_view(actBulk_.liftForceDistribution_);
+  auto Uinf = helper.get_local_view(actBulk_.relativeVelocityMagnitude_);
+  auto points = helper.get_local_view(actBulk_.pointCentroid_);
 
   Kokkos::deep_copy(G, 0.0);
   Kokkos::deep_copy(Uinf, 0.0);
 
-  auto range_policy = actBulk.local_range_policy(actMeta);
+  auto range_policy = actBulk_.local_range_policy(actMeta_);
 
   // for now let's just worry about constant span direction (no blade
   // deformation)
@@ -72,30 +75,30 @@ compute_lift_force_distribution(
       }
   });
 
-  scale_lift_force(actBulk, actMeta, range_policy, helper);
-  
+  FLLC::scale_lift_force(actBulk_, actMeta_, range_policy, helper);
+
   actuator_utils::reduce_view_on_host(G);
   actuator_utils::reduce_view_on_host(Uinf);
 }
 
 void
-grad_lift_force_distribution(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
+FilteredLiftingLineCorrection::grad_lift_force_distribution()
 {
   ActDualViewHelper<ActuatorFixedMemSpace> helper;
-  helper.touch_dual_view(actBulk.deltaLiftForceDistribution_);
+  helper.touch_dual_view(actBulk_.deltaLiftForceDistribution_);
 
-  auto G = helper.get_local_view(actBulk.liftForceDistribution_);
-  auto deltaG = helper.get_local_view(actBulk.deltaLiftForceDistribution_);
+  auto G = helper.get_local_view(actBulk_.liftForceDistribution_);
+  auto deltaG = helper.get_local_view(actBulk_.deltaLiftForceDistribution_);
 
   const int offset =
-    helper.get_local_view(actBulk.turbIdOffset_)(actBulk.localTurbineId_);
+    helper.get_local_view(actBulk_.turbIdOffset_)(actBulk_.localTurbineId_);
 
   const int numEntityPoints =
-    helper.get_local_view(actMeta.numPointsTurbine_)(actBulk.localTurbineId_);
+    helper.get_local_view(actMeta_.numPointsTurbine_)(actBulk_.localTurbineId_);
 
   Kokkos::deep_copy(deltaG, 0.0);
 
-  auto range_policy = actBulk.local_range_policy(actMeta);
+  auto range_policy = actBulk_.local_range_policy(actMeta_);
 
   // equations 5.4 and 5.5 a/b
   Kokkos::parallel_for(
@@ -116,27 +119,25 @@ grad_lift_force_distribution(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
 }
 
 void
-compute_induced_velocities(
-  ActuatorBulk& actBulk,
-  const ActuatorMeta& actMeta)
+FilteredLiftingLineCorrection::compute_induced_velocities()
 {
   using mem_space = ActuatorMemSpace;
   using mem_layout = ActuatorMemLayout;
 
   ActDualViewHelper<mem_space> helper;
-  helper.touch_dual_view(actBulk.fllc_);
+  helper.touch_dual_view(actBulk_.fllc_);
 
-  auto deltaG = helper.get_local_view(actBulk.deltaLiftForceDistribution_);
-  auto epsilon = helper.get_local_view(actBulk.epsilon_);
-  auto epsilonOpt = helper.get_local_view(actBulk.epsilonOpt_);
-  auto point = helper.get_local_view(actBulk.pointCentroid_);
-  auto relVel = helper.get_local_view(actBulk.relativeVelocity_);
-  auto deltaU = helper.get_local_view(actBulk.fllc_);
-  auto Uinf = helper.get_local_view(actBulk.relativeVelocityMagnitude_);
+  auto deltaG = helper.get_local_view(actBulk_.deltaLiftForceDistribution_);
+  auto epsilon = helper.get_local_view(actBulk_.epsilon_);
+  auto epsilonOpt = helper.get_local_view(actBulk_.epsilonOpt_);
+  auto point = helper.get_local_view(actBulk_.pointCentroid_);
+  auto relVel = helper.get_local_view(actBulk_.relativeVelocity_);
+  auto deltaU = helper.get_local_view(actBulk_.fllc_);
+  auto Uinf = helper.get_local_view(actBulk_.relativeVelocityMagnitude_);
 
-  const int nTurb = actBulk.localTurbineId_;
-  const int offset = helper.get_local_view(actBulk.turbIdOffset_)(nTurb);
-  const int nPoints = helper.get_local_view(actMeta.numPointsTurbine_)(nTurb);
+  const int nTurb = actBulk_.localTurbineId_;
+  const int offset = helper.get_local_view(actBulk_.turbIdOffset_)(nTurb);
+  const int nPoints = helper.get_local_view(actMeta_.numPointsTurbine_)(nTurb);
 
   const double dx[3] = {
     point(offset, 0) - point(offset + 1, 0),
@@ -152,7 +153,7 @@ compute_induced_velocities(
   Kokkos::deep_copy(deltaU_stash, deltaU);
   Kokkos::deep_copy(deltaU, 0.0);
 
-  auto range_policy = actBulk.local_range_policy(actMeta);
+  auto range_policy = actBulk_.local_range_policy(actMeta_);
 
   Kokkos::parallel_for("compute flucs", range_policy, KOKKOS_LAMBDA(int index) {
       double optInd[3] = {0, 0, 0};
@@ -191,40 +192,12 @@ compute_induced_velocities(
   actuator_utils::reduce_view_on_host(deltaU);
 };
 
-} // namespace FLLC
-
-void
-Compute_FLLC(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
+bool
+FilteredLiftingLineCorrection::is_active()
 {
-  if (!actMeta.useFLLC_)
-    return;
-  FLLC::compute_lift_force_distribution(actBulk, actMeta);
-  FLLC::grad_lift_force_distribution(actBulk, actMeta);
-  FLLC::compute_induced_velocities(actBulk, actMeta);
+  return actMeta_.useFLLC_;
 }
 
-void
-Apply_FLLC(ActuatorBulk& actBulk, const ActuatorMeta& actMeta)
-{
-  if (!actMeta.useFLLC_)
-    return;
-  ActDualViewHelper<ActuatorMemSpace> helper;
-
-  helper.sync(actBulk.fllc_);
-  helper.touch_dual_view(actBulk.velocity_);
-
-  auto fllc = helper.get_local_view(actBulk.fllc_);
-  auto vel = helper.get_local_view(actBulk.velocity_);
-
-  Kokkos::parallel_for(
-    "apply fllc",
-    Kokkos::RangePolicy<ActuatorExecutionSpace>(0, vel.extent_int(0)),
-    KOKKOS_LAMBDA(int i) {
-      for (int j = 0; j < 3; ++j) {
-        vel(i, j) += fllc(i, j);
-      }
-    });
-}
 
 } // namespace nalu
 } // namespace sierra

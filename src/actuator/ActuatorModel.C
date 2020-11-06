@@ -72,7 +72,7 @@ ActuatorModel::parse(const YAML::Node& actuatorNode)
 void
 ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
 {
-  if (actMeta_ == NULL)
+  if (!is_active())
     return;
 
   switch (actMeta_->actuatorType_) {
@@ -80,9 +80,13 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
 #ifndef NALU_USES_OPENFAST
     ThrowErrorMsg("Actuator methods require OpenFAST");
 #else
-    auto tempMeta = dynamic_cast<ActuatorMetaFAST*>(actMeta_.get());
-    auto tempBulk = dynamic_cast<ActuatorBulkFAST*>(actBulk_.get());
+    auto tempMeta =
+      dcast::dcast_and_check_pointer<ActuatorMeta, ActuatorMetaFAST>(
+        actMeta_.get());
     actBulk_.reset(new ActuatorBulkFAST(*tempMeta, timeStep));
+    auto tempBulk =
+      dcast::dcast_and_check_pointer<ActuatorBulk, ActuatorBulkFAST>(
+        actBulk_.get());
     actExec_.reset(new ActuatorLineFastNGP(*tempMeta, *tempBulk, stkBulk));
 #endif
 #ifndef __CUDACC__
@@ -93,9 +97,13 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
 #ifndef NALU_USES_OPENFAST
     ThrowErrorMsg("Actuator methods require OpenFAST");
 #else
-    auto tempMeta = dynamic_cast<ActuatorMetaFAST*>(actMeta_.get());
-    auto tempBulk = dynamic_cast<ActuatorBulkDiskFAST*>(actBulk_.get());
+    auto tempMeta =
+      dcast::dcast_and_check_pointer<ActuatorMeta, ActuatorMetaFAST>(
+        actMeta_.get());
     actBulk_.reset(new ActuatorBulkDiskFAST(*tempMeta, timeStep));
+    auto tempBulk =
+      dcast::dcast_and_check_pointer<ActuatorBulk, ActuatorBulkDiskFAST>(
+        actBulk_.get());
     actExec_.reset(new ActuatorDiskFastNGP(*tempMeta, *tempBulk, stkBulk));
 #endif
 #ifndef __CUDACC__
@@ -103,10 +111,15 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
 #endif
   }
   case (ActuatorType::ActLineSimpleNGP): {
-    auto tempMeta = dynamic_cast<ActuatorMetaSimple*>(actMeta_.get());
-    auto tempBulk = dynamic_cast<ActuatorBulkSimple*>(actBulk_.get());
+    auto tempMeta =
+      dcast::dcast_and_check_pointer<ActuatorMeta, ActuatorMetaSimple>(
+        actMeta_.get());
     actBulk_.reset(new ActuatorBulkSimple(*tempMeta));
+    auto tempBulk =
+      dcast::dcast_and_check_pointer<ActuatorBulk, ActuatorBulkSimple>(
+        actBulk_.get());
     actExec_.reset(new ActuatorLineSimpleNGP(*tempMeta, *tempBulk, stkBulk));
+    break;
   }
   default: {
     ThrowErrorMsg("Unsupported actuator type");
@@ -117,23 +130,25 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
 void
 ActuatorModel::init(stk::mesh::BulkData& stkBulk)
 {
-  if (is_active())
+  if (!is_active())
     return;
 
   switch (actMeta_->actuatorType_) {
   case (ActuatorType::ActLineFASTNGP):
-  case (ActuatorType::ActDiskFASTNGP):
+  case (ActuatorType::ActDiskFASTNGP): {
 #ifndef NALU_USES_OPENFAST
     ThrowErrorMsg("Actuator methods require OpenFAST");
 #endif
     // perform search for actline and actdisk
     actBulk_->stk_search_act_pnts(*actMeta_.get(), stkBulk);
     break;
+  }
   case (ActuatorType::ActLineSimpleNGP):
   case (ActuatorType::ActLineSimple):
   case (ActuatorType::ActLineFAST):
-  case (ActuatorType::ActDiskFAST):
+  case (ActuatorType::ActDiskFAST): {
     break;
+  }
   default: {
     ThrowErrorMsg("Unsupported actuator type");
   }
@@ -143,7 +158,7 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
 void
 ActuatorModel::execute(double& timer)
 {
-  if (actExec_ == NULL)
+  if (!is_active())
     return;
 
   const double start_time = NaluEnv::self().nalu_time();

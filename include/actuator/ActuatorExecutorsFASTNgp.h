@@ -19,9 +19,9 @@
 namespace sierra {
 namespace nalu {
 
-struct ActuatorLineFastNGP: public ActuatorExecutor
+class ActuatorLineFastNGP: public ActuatorExecutor
 {
-
+public:
   ActuatorLineFastNGP(
     const ActuatorMetaFAST& actMeta,
     ActuatorBulkFAST& actBulk,
@@ -30,7 +30,7 @@ struct ActuatorLineFastNGP: public ActuatorExecutor
   virtual ~ActuatorLineFastNGP(){};
 
   void operator()() final;
-
+private:
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkFAST& actBulk_;
   stk::mesh::BulkData& stkBulk_;
@@ -38,8 +38,9 @@ struct ActuatorLineFastNGP: public ActuatorExecutor
   ActDualViewHelper<ActuatorMemSpace> dualViewHelper_;
 };
 
-struct ActuatorDiskFastNGP : public ActuatorExecutor
+class ActuatorDiskFastNGP : public ActuatorExecutor
 {
+public:
   ActuatorDiskFastNGP(
     const ActuatorMetaFAST& actMeta,
     ActuatorBulkDiskFAST& actBulk,
@@ -48,12 +49,11 @@ struct ActuatorDiskFastNGP : public ActuatorExecutor
   virtual ~ActuatorDiskFastNGP(){};
 
   void operator()() final;
-
+private:
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkDiskFAST& actBulk_;
   stk::mesh::BulkData& stkBulk_;
   const int numActPoints_;
-  ActDualViewHelper<ActuatorMemSpace> dualViewHelper_;
 };
 
 } /* namespace nalu */

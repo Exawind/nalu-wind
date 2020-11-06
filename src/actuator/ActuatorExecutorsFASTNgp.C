@@ -15,7 +15,8 @@ ActuatorLineFastNGP::ActuatorLineFastNGP(
   const ActuatorMetaFAST& actMeta,
   ActuatorBulkFAST& actBulk,
   stk::mesh::BulkData& stkBulk)
-  : actMeta_(actMeta),
+  : ActuatorExecutor(actMeta, actBulk),
+    actMeta_(actMeta),
     actBulk_(actBulk),
     stkBulk_(stkBulk),
     numActPoints_(actMeta_.numPointsTotal_)
@@ -74,7 +75,8 @@ ActuatorDiskFastNGP::ActuatorDiskFastNGP(
   const ActuatorMetaFAST& actMeta,
   ActuatorBulkDiskFAST& actBulk,
   stk::mesh::BulkData& stkBulk)
-  : actMeta_(actMeta),
+  : ActuatorExecutor(actMeta, actBulk),
+    actMeta_(actMeta),
     actBulk_(actBulk),
     stkBulk_(stkBulk),
     numActPoints_(actMeta_.numPointsTotal_)

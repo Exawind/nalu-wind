@@ -11,6 +11,7 @@
 #define ACTUATORMODEL_H_
 
 #include <memory>
+#include <stdexcept>
 #include <actuator/ActuatorExecutor.h>
 #include <actuator/ActuatorFLLC.h>
 #include <actuator/ActuatorBulk.h>
@@ -23,6 +24,15 @@ namespace stk{
 namespace mesh{
 class BulkData;
 }
+}
+
+namespace dcast{
+  template<typename IN, typename OUT>
+  OUT* dcast_and_check_pointer(IN* input){
+    auto out = dynamic_cast<OUT*>(input);
+    if(out == nullptr) throw std::runtime_error("dynamic cast failed");
+    return out;
+  }
 }
 
 namespace sierra{
@@ -49,7 +59,7 @@ void execute(double& timer);
 void init(stk::mesh::BulkData& stkBulk);
 inline 
 bool is_active(){
-  return actExec_ != nullptr;
+  return actMeta_!=nullptr;
 }
 
 };

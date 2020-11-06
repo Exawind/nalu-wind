@@ -10,17 +10,28 @@
 #ifndef ACTUATOREXECUTOR_H_
 #define ACTUATOREXECUTOR_H_
 
+#include <actuator/ActuatorFLLC.h>
+#include <actuator/ActuatorBulk.h>
 namespace sierra{
 namespace nalu{
 
 /**
  * @brief Interface class for actuator execution model
  * 
+ * This class should be compatible with ActuatorBulk and ActuatorMeta, 
+ * and only immplementations/models that are compatible with these data types 
+ * should interface with this class directly
  */
-struct ActuatorExecutor{
-  ActuatorExecutor() = default;
+class ActuatorExecutor{
+public:
+  ActuatorExecutor(const ActuatorMeta& actMeta, ActuatorBulk& actBulk);
+  ActuatorExecutor() = delete;
   virtual ~ActuatorExecutor(){};
   virtual void operator()()=0;
+  void Compute_FLLC();
+  void Apply_FLLC(ActuatorBulk& actBulk);
+private:
+  FilteredLiftingLineCorrection fLiftLineCorr_;
 };
 
 }
