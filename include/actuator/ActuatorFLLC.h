@@ -11,6 +11,8 @@
 #define ACTUATORFLLC_H_
 
 #include <actuator/ActuatorTypes.h>
+#include <vector>
+#include <utility>
 
 namespace sierra {
 namespace nalu {
@@ -20,6 +22,10 @@ struct ActuatorMeta;
 
 class FilteredLiftingLineCorrection {
 public:
+using exec_space = ActuatorFixedExecutionSpace;
+using mem_space = ActuatorFixedMemSpace;
+using mem_layout = ActuatorFixedMemLayout;
+
 FilteredLiftingLineCorrection(const ActuatorMeta& actMeta, ActuatorBulk& actBulk);
 FilteredLiftingLineCorrection() = delete;
 
@@ -53,6 +59,7 @@ bool is_active();
 private:
 ActuatorBulk& actBulk_;
 const ActuatorMeta& actMeta_;
+std::vector<std::pair<int,int>> bladeOffsetLengthPair_;
 
 };
 } // namespace nalu
