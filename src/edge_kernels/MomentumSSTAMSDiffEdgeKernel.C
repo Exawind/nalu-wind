@@ -7,8 +7,7 @@
 // for more details.
 //
 
-
-#include "edge_kernels/MomentumSSTTAMSDiffEdgeKernel.h"
+#include "edge_kernels/MomentumSSTAMSDiffEdgeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "EigenDecomposition.h"
@@ -16,18 +15,19 @@
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Types.hpp"
 #include "utils/StkHelpers.h"
-#include "utils/TAMSUtils.h"
+#include "utils/AMSUtils.h"
 #include <SimdInterface.h>
 
 namespace sierra {
 namespace nalu {
 
-MomentumSSTTAMSDiffEdgeKernel::MomentumSSTTAMSDiffEdgeKernel(
+MomentumSSTAMSDiffEdgeKernel::MomentumSSTAMSDiffEdgeKernel(
   const stk::mesh::BulkData& bulk, const SolutionOptions& solnOpts)
-  : NGPEdgeKernel<MomentumSSTTAMSDiffEdgeKernel>(),
+  : NGPEdgeKernel<MomentumSSTAMSDiffEdgeKernel>(),
     includeDivU_(solnOpts.includeDivU_),
     betaStar_(solnOpts.get_turb_model_constant(TM_betaStar)),
     CMdeg_(solnOpts.get_turb_model_constant(TM_CMdeg)),
+    aspectRatioSwitch_(solnOpts.get_turb_model_constant(TM_aspRatSwitch)),
     nDim_(bulk.mesh_meta_data().spatial_dimension())
 {
   const auto& meta = bulk.mesh_meta_data();
@@ -42,20 +42,21 @@ MomentumSSTTAMSDiffEdgeKernel::MomentumSSTTAMSDiffEdgeKernel(
   tkeNp1ID_ = get_field_ordinal(meta, "turbulent_ke", stk::mesh::StateNP1);
   sdrNp1ID_ =
     get_field_ordinal(meta, "specific_dissipation_rate", stk::mesh::StateNP1);
-  alphaID_ = get_field_ordinal(meta, "k_ratio");
+  betaID_ = get_field_ordinal(meta, "k_ratio");
   MijID_ = get_field_ordinal(meta, "metric_tensor");
   dudxID_ = get_field_ordinal(meta, "dudx");
 
   // average quantities
   avgVelocityID_ = get_field_ordinal(meta, "average_velocity");
   avgDudxID_ = get_field_ordinal(meta, "average_dudx");
+  avgResAdeqID_ = get_field_ordinal(meta, "avg_res_adequacy_parameter");
 
   const std::string dofName = "velocity";
   relaxFacU_ = solnOpts.get_relaxation_factor(dofName);
 }
 
 void
-MomentumSSTTAMSDiffEdgeKernel::setup(Realm& realm)
+MomentumSSTAMSDiffEdgeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
   edgeAreaVec_ = fieldMgr.get_field<double>(edgeAreaVecID_);
@@ -65,15 +66,16 @@ MomentumSSTTAMSDiffEdgeKernel::setup(Realm& realm)
   density_ = fieldMgr.get_field<double>(densityNp1ID_);
   tke_ = fieldMgr.get_field<double>(tkeNp1ID_);
   sdr_ = fieldMgr.get_field<double>(sdrNp1ID_);
-  alpha_ = fieldMgr.get_field<double>(alphaID_);
+  beta_ = fieldMgr.get_field<double>(betaID_);
   nodalMij_ = fieldMgr.get_field<double>(MijID_);
   dudx_ = fieldMgr.get_field<double>(dudxID_);
   avgVelocity_ = fieldMgr.get_field<double>(avgVelocityID_);
   avgDudx_ = fieldMgr.get_field<double>(avgDudxID_);
+  avgResAdeq_ = fieldMgr.get_field<double>(avgResAdeqID_);
 }
 
 void
-MomentumSSTTAMSDiffEdgeKernel::execute(
+MomentumSSTAMSDiffEdgeKernel::execute(
   EdgeKernelTraits::ShmemDataType& smdata,
   const stk::mesh::FastMeshIndex& edge,
   const stk::mesh::FastMeshIndex& nodeL,
@@ -95,6 +97,7 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
                              [EdgeKernelTraits::NDimMax];
   EdgeKernelTraits::DblType D[EdgeKernelTraits::NDimMax]
                              [EdgeKernelTraits::NDimMax];
+
   for (int i = 0; i < ndim; i++)
     for (int j = 0; j < ndim; j++)
       Mij[i][j] = 0.5 * (nodalMij_.get(nodeL, i * ndim + j) +
@@ -120,9 +123,26 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
     }
   }
 
+  // Compute cell aspect ratio blending
+  const EdgeKernelTraits::DblType maxEigM =
+    stk::math::max(D[0][0], stk::math::max(D[1][1], D[2][2]));
+  const EdgeKernelTraits::DblType minEigM =
+    stk::math::min(D[0][0], stk::math::min(D[1][1], D[2][2]));
+  const EdgeKernelTraits::DblType aspectRatio = maxEigM / minEigM;
+
+  const EdgeKernelTraits::DblType arScale = stk::math::if_then_else(
+    aspectRatio > aspectRatioSwitch_,
+    1.0 - stk::math::tanh((aspectRatio - aspectRatioSwitch_) / 10.0), 1.0);
+  const EdgeKernelTraits::DblType arInvScale = 1.0 - arScale;
+
   // Compute CM43
-  EdgeKernelTraits::DblType CM43 = tams_utils::get_M43_constant<
+  EdgeKernelTraits::DblType CM43 = ams_utils::get_M43_constant<
     EdgeKernelTraits::DblType, EdgeKernelTraits::NDimMax>(D, CMdeg_);
+
+  const EdgeKernelTraits::DblType CM43scale = stk::math::max(
+    stk::math::min(
+      0.5 * (avgResAdeq_.get(nodeL, 0) + avgResAdeq_.get(nodeR, 0)), 10.0),
+    1.0);
 
   const EdgeKernelTraits::DblType muIp =
     0.5 * (tvisc_.get(nodeL, 0) + tvisc_.get(nodeR, 0));
@@ -135,7 +155,8 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
     0.5 * (stk::math::max(sdr_.get(nodeL, 0), 1.0e-12) +
            stk::math::max(sdr_.get(nodeR, 0), 1.0e-12));
   const EdgeKernelTraits::DblType alphaIp =
-    0.5 * (alpha_.get(nodeL, 0) + alpha_.get(nodeR, 0));
+    0.5 * (stk::math::pow(beta_.get(nodeL, 0), 1.7) +
+           stk::math::pow(beta_.get(nodeR, 0), 1.7));
 
   EdgeKernelTraits::DblType avgdUidxj[EdgeKernelTraits::NDimMax]
                                      [EdgeKernelTraits::NDimMax];
@@ -210,66 +231,79 @@ MomentumSSTTAMSDiffEdgeKernel::execute(
     // tau_ij^SGRS Since we are letting SST calculate it's normal mu_t, we
     // need to scale by alpha here
     const EdgeKernelTraits::DblType avgDivUstress =
-      2.0 / 3.0 * alphaIp * muIp * avgDivU * av[i] * includeDivU_;
+      2.0 / 3.0 * alphaIp * (2.0 - alphaIp) * muIp * avgDivU * av[i] *
+      includeDivU_;
     smdata.rhs(rowL) -= avgDivUstress;
     smdata.rhs(rowR) += avgDivUstress;
 
-    // Hybrid turbulence diffusion term; -(mu^jk*dui/dxk + mu^ik*duj/dxk -
-    // 2/3*rho*tke*del_ij)*Aj
-
     EdgeKernelTraits::DblType lhs_riC_i = 0.0;
+    EdgeKernelTraits::DblType lhs_riC_SGRS_i = 0.0;
     for (int j = 0; j < ndim; ++j) {
 
       // -mut^jk*dui/dxk*A_j; fixed i over j loop; see below..
       EdgeKernelTraits::DblType rhsfacDiff_i = 0.0;
       EdgeKernelTraits::DblType lhsfacDiff_i = 0.0;
       for (int k = 0; k < ndim; ++k) {
-        lhsfacDiff_i +=
-          -rhoIp * CM43 * epsilon13Ip * M43[j][k] * av[k] * av[j] * inv_axdx;
-        rhsfacDiff_i +=
-          -rhoIp * CM43 * epsilon13Ip * M43[j][k] * fluctdUidxj[i][k] * av[j];
+        lhsfacDiff_i += -rhoIp * CM43scale * CM43 * epsilon13Ip * arScale *
+                        M43[j][k] * av[k] * av[j] * inv_axdx;
+        rhsfacDiff_i += -rhoIp * CM43scale * CM43 * epsilon13Ip * arScale *
+                        M43[j][k] * fluctdUidxj[i][k] * av[j];
       }
+
+      lhsfacDiff_i += -arInvScale * muIp * av[j] * av[j] * inv_axdx;
+      rhsfacDiff_i += -arInvScale * muIp * fluctdUidxj[i][j] * av[j];
 
       // Accumulate lhs
       lhs_riC_i += lhsfacDiff_i;
 
       // SGRS (average) term, scaled by alpha
-      const EdgeKernelTraits::DblType rhsSGRCfacDiff_i =
-        -alphaIp * muIp * avgdUidxj[i][j] * av[j];
+      const EdgeKernelTraits::DblType rhsSGRSfacDiff_i =
+        -alphaIp * (2.0 - alphaIp) * muIp * avgdUidxj[i][j] * av[j];
 
-      smdata.rhs(rowL) -= rhsfacDiff_i + rhsSGRCfacDiff_i;
-      smdata.rhs(rowR) += rhsfacDiff_i + rhsSGRCfacDiff_i;
+      // Implicit treatment of SGRS (average) term
+      lhs_riC_SGRS_i +=
+        -alphaIp * (2.0 - alphaIp) * muIp * av[j] * av[j] * inv_axdx;
+
+      smdata.rhs(rowL) -= rhsfacDiff_i + rhsSGRSfacDiff_i;
+      smdata.rhs(rowR) += rhsfacDiff_i + rhsSGRSfacDiff_i;
 
       // -mut^ik*duj/dxk*A_j
       EdgeKernelTraits::DblType rhsfacDiff_j = 0.0;
       EdgeKernelTraits::DblType lhsfacDiff_j = 0.0;
       for (int k = 0; k < ndim; ++k) {
-        lhsfacDiff_j +=
-          -rhoIp * CM43 * epsilon13Ip * M43[i][k] * av[k] * av[j] * inv_axdx;
-        rhsfacDiff_j +=
-          -rhoIp * CM43 * epsilon13Ip * M43[i][k] * fluctdUidxj[j][k] * av[j];
+        lhsfacDiff_j += -rhoIp * CM43scale * CM43 * epsilon13Ip * arScale *
+                        M43[i][k] * av[k] * av[j] * inv_axdx;
+        rhsfacDiff_j += -rhoIp * CM43scale * CM43 * epsilon13Ip * arScale *
+                        M43[i][k] * fluctdUidxj[j][k] * av[j];
       }
 
-      // SGRS (average) term, scaled by alpha
-      const EdgeKernelTraits::DblType rhsSGRCfacDiff_j =
-        -alphaIp * muIp * avgdUidxj[j][i] * av[j];
+      lhsfacDiff_j += -arInvScale * muIp * av[i] * av[j] * inv_axdx;
+      rhsfacDiff_j += -arInvScale * muIp * fluctdUidxj[j][i] * av[j];
 
-      smdata.rhs(rowL) -= rhsfacDiff_j + rhsSGRCfacDiff_j;
-      smdata.rhs(rowR) += rhsfacDiff_j + rhsSGRCfacDiff_j;
+      // SGRS (average) term, scaled by alpha
+      const EdgeKernelTraits::DblType rhsSGRSfacDiff_j =
+        -alphaIp * (2.0 - alphaIp) * muIp * avgdUidxj[j][i] * av[j];
+
+      // Implicit treatment of SGRS (average) term
+      const EdgeKernelTraits::DblType lhsSGRSfacDiff_j =
+        -alphaIp * (2.0 - alphaIp) * muIp * av[i] * av[j] * inv_axdx;
+
+      smdata.rhs(rowL) -= rhsfacDiff_j + rhsSGRSfacDiff_j;
+      smdata.rhs(rowR) += rhsfacDiff_j + rhsSGRSfacDiff_j;
 
       const int colL = j;
       const int colR = j + ndim;
 
-      smdata.lhs(rowL, colL) -= lhsfacDiff_j / relaxFacU_;
-      smdata.lhs(rowL, colR) += lhsfacDiff_j;
-      smdata.lhs(rowR, colL) += lhsfacDiff_j;
-      smdata.lhs(rowR, colR) -= lhsfacDiff_j / relaxFacU_;
+      smdata.lhs(rowL, colL) -= (lhsfacDiff_j + lhsSGRSfacDiff_j) / relaxFacU_;
+      smdata.lhs(rowL, colR) += (lhsfacDiff_j + lhsSGRSfacDiff_j);
+      smdata.lhs(rowR, colL) += (lhsfacDiff_j + lhsSGRSfacDiff_j);
+      smdata.lhs(rowR, colR) -= (lhsfacDiff_j + lhsSGRSfacDiff_j) / relaxFacU_;
     }
 
-    smdata.lhs(rowL, rowL) -= lhs_riC_i / relaxFacU_;
-    smdata.lhs(rowL, rowR) += lhs_riC_i;
-    smdata.lhs(rowR, rowL) += lhs_riC_i;
-    smdata.lhs(rowR, rowR) -= lhs_riC_i / relaxFacU_;
+    smdata.lhs(rowL, rowL) -= (lhs_riC_i + lhs_riC_SGRS_i) / relaxFacU_;
+    smdata.lhs(rowL, rowR) += (lhs_riC_i + lhs_riC_SGRS_i);
+    smdata.lhs(rowR, rowL) += (lhs_riC_i + lhs_riC_SGRS_i);
+    smdata.lhs(rowR, rowR) -= (lhs_riC_i + lhs_riC_SGRS_i) / relaxFacU_;
   }
 }
 

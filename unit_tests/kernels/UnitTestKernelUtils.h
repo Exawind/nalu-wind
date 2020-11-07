@@ -867,13 +867,13 @@ public:
   ScalarFieldType*    wallNormDist_{nullptr};
 };
 
-/** Test Fixture for the TAMS Kernels
+/** Test Fixture for the AMS Kernels
  *
  */
-class TAMSKernelHex8Mesh : public LowMachKernelHex8Mesh
+class AMSKernelHex8Mesh : public LowMachKernelHex8Mesh
 {
 public:
-  TAMSKernelHex8Mesh()
+  AMSKernelHex8Mesh()
     : LowMachKernelHex8Mesh(),
       tke_(&meta_.declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "turbulent_ke")),
@@ -930,7 +930,7 @@ public:
       *dwdx_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
-  virtual ~TAMSKernelHex8Mesh() {}
+  virtual ~AMSKernelHex8Mesh() {}
     
   virtual void fill_mesh_and_init_fields(
     const bool doPerturb = false, const bool generateSidesets = false) override

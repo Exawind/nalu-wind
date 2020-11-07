@@ -7,9 +7,8 @@
 // for more details.
 //
 
-
-#ifndef SSTTAMSAveragesAlg_h
-#define SSTTAMSAveragesAlg_h
+#ifndef SSTAMSAveragesAlg_h
+#define SSTAMSAveragesAlg_h
 
 #include "Algorithm.h"
 #include "FieldTypeDef.h"
@@ -21,14 +20,14 @@ namespace nalu {
 
 class Realm;
 
-class SSTTAMSAveragesAlg : public Algorithm
+class SSTAMSAveragesAlg : public Algorithm
 {
 public:
   using DblType = double;
 
-  SSTTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part);
+  SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part);
 
-  virtual ~SSTTAMSAveragesAlg() = default;
+  virtual ~SSTAMSAveragesAlg() = default;
 
   virtual void execute() override;
 
@@ -36,10 +35,8 @@ private:
   const DblType betaStar_;
   const DblType CMdeg_;
   const DblType v2cMu_;
+  const DblType aspectRatioSwitch_;
   const bool meshMotion_;
-
-  // FIXME: What to do with alpha_kol in SST? This needs some thought...
-  static constexpr double alpha_kol = 0.1;
 
   unsigned velocity_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};
@@ -48,14 +45,24 @@ private:
   unsigned turbKineticEnergy_{stk::mesh::InvalidOrdinal};
   unsigned specDissipationRate_{stk::mesh::InvalidOrdinal};
   unsigned avgVelocity_{stk::mesh::InvalidOrdinal};
+  unsigned avgVelocityN_{stk::mesh::InvalidOrdinal};
   unsigned avgDudx_{stk::mesh::InvalidOrdinal};
+  unsigned avgDudxN_{stk::mesh::InvalidOrdinal};
   unsigned avgTkeRes_{stk::mesh::InvalidOrdinal};
+  unsigned avgTkeResN_{stk::mesh::InvalidOrdinal};
   unsigned avgProd_{stk::mesh::InvalidOrdinal};
+  unsigned avgProdN_{stk::mesh::InvalidOrdinal};
   unsigned avgTime_{stk::mesh::InvalidOrdinal};
   unsigned avgResAdeq_{stk::mesh::InvalidOrdinal};
+  unsigned avgResAdeqN_{stk::mesh::InvalidOrdinal};
   unsigned tvisc_{stk::mesh::InvalidOrdinal};
-  unsigned alpha_{stk::mesh::InvalidOrdinal};
+  unsigned visc_{stk::mesh::InvalidOrdinal};
+  unsigned beta_{stk::mesh::InvalidOrdinal};
   unsigned Mij_{stk::mesh::InvalidOrdinal};
+  unsigned wallDist_{stk::mesh::InvalidOrdinal};
+
+  // FIXME: What to do with beta_kol in SST? This needs some thought...
+  static constexpr double beta_kol = 0.01;
 };
 
 } // namespace nalu

@@ -12,14 +12,14 @@
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
 
-#include "node_kernels/SDRSSTTAMSNodeKernel.h"
-#include "node_kernels/TKESSTTAMSNodeKernel.h"
-#include "node_kernels/MomentumSSTTAMSForcingNodeKernel.h"
+#include "node_kernels/SDRSSTAMSNodeKernel.h"
+#include "node_kernels/TKESSTAMSNodeKernel.h"
+#include "node_kernels/MomentumSSTAMSForcingNodeKernel.h"
 
 #ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
-namespace tke_tams {
+namespace tke_ams {
 static constexpr double rhs[8] = {
   0.03, 0.03, 0.011797117626563686,  0.01930061419167952,
   0.03, 0.03, 0.0010727535418449535, 0.013845363192687317,
@@ -35,9 +35,9 @@ static constexpr double lhs[8][8] = {
   {0, 0, 0, 0, 0, 0, 0.02986322059335908, 0, },
   {0, 0, 0, 0, 0, 0, 0, 0.026827992474152702, },
 };
-} // tke_tams
+} // tke_ams
 
-namespace sdr_tams {
+namespace sdr_ams {
 static constexpr double rhs[8] = {
   0.0686,
   0.0686,
@@ -59,21 +59,21 @@ static constexpr double lhs[8][8] = {
   {0, 0, 0, 0, 0, 0, 0.054948325891780704, 0, },
   {0, 0, 0, 0, 0, 0, 0, 0.047574531285689135, },
 };
-} // sdr_tams
+} // sdr_ams
 
-namespace forcing_tams {
+namespace forcing_ams {
 static constexpr double rhs[24] = {
   0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, -0.017225957747838128, 0
 };
-} // forcing_tams
+} // forcing_ams
 } // hex8_golds
 }
 
 #endif
 
-TEST_F(TAMSKernelHex8Mesh, NGP_tke_tams_node)
+TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
@@ -89,7 +89,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_tke_tams_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTTAMSNodeKernel>(meta_, solnOpts_.get_coordinates_name());
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::TKESSTAMSNodeKernel>(meta_, solnOpts_.get_coordinates_name());
 
   helperObjs.execute();
 
@@ -98,7 +98,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_tke_tams_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
-  namespace hex8_golds = hex8_golds::tke_tams;
+  namespace hex8_golds = hex8_golds::tke_ams;
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
@@ -106,7 +106,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_tke_tams_node)
 #endif
 }
 
-TEST_F(TAMSKernelHex8Mesh, NGP_sdr_tams_node)
+TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
@@ -122,7 +122,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_sdr_tams_node)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 1, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTTAMSNodeKernel>(meta_, solnOpts_.get_coordinates_name());
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::SDRSSTAMSNodeKernel>(meta_, solnOpts_.get_coordinates_name());
 
   helperObjs.execute();
 
@@ -131,7 +131,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_sdr_tams_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
 
-  namespace hex8_golds = hex8_golds::sdr_tams;
+  namespace hex8_golds = hex8_golds::sdr_ams;
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<8>(
@@ -139,7 +139,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_sdr_tams_node)
 #endif
 }
 
-TEST_F(TAMSKernelHex8Mesh, NGP_tams_forcing)
+TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1)
@@ -156,7 +156,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_tams_forcing)
   unit_test_utils::NodeHelperObjects helperObjs(
     bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
-  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumSSTTAMSForcingNodeKernel>(
+  helperObjs.nodeAlg->add_kernel<sierra::nalu::MomentumSSTAMSForcingNodeKernel>(
     bulk_, solnOpts_);
 
   sierra::nalu::TimeIntegrator timeIntegrator;
@@ -175,7 +175,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_tams_forcing)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
 
-  namespace hex8_golds = hex8_golds::forcing_tams;
+  namespace hex8_golds = hex8_golds::forcing_ams;
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, hex8_golds::rhs, 1.0e-12);
   // unit_test_kernel_utils::expect_all_near<24>(

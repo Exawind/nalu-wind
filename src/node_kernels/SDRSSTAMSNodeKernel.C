@@ -7,8 +7,7 @@
 // for more details.
 //
 
-
-#include "node_kernels/SDRSSTTAMSNodeKernel.h"
+#include "node_kernels/SDRSSTAMSNodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 
@@ -20,15 +19,16 @@
 namespace sierra {
 namespace nalu {
 
-SDRSSTTAMSNodeKernel::SDRSSTTAMSNodeKernel(const stk::mesh::MetaData& meta, const std::string coordsName)
-  : NGPNodeKernel<SDRSSTTAMSNodeKernel>(),
+SDRSSTAMSNodeKernel::SDRSSTAMSNodeKernel(
+  const stk::mesh::MetaData& meta, const std::string coordsName)
+  : NGPNodeKernel<SDRSSTAMSNodeKernel>(),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     coordinatesID_(get_field_ordinal(meta, coordsName)),
     tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
     tkeNp1ID_(get_field_ordinal(meta, "turbulent_ke", stk::mesh::StateNP1)),
     sdrNp1ID_(get_field_ordinal(
       meta, "specific_dissipation_rate", stk::mesh::StateNP1)),
-    alphaID_(get_field_ordinal(meta, "k_ratio")),
+    betaID_(get_field_ordinal(meta, "k_ratio")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
     dkdxID_(get_field_ordinal(meta, "dkdx")),
     dwdxID_(get_field_ordinal(meta, "dwdx")),
@@ -39,7 +39,7 @@ SDRSSTTAMSNodeKernel::SDRSSTTAMSNodeKernel(const stk::mesh::MetaData& meta, cons
 }
 
 void
-SDRSSTTAMSNodeKernel::setup(Realm& realm)
+SDRSSTAMSNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
@@ -48,7 +48,7 @@ SDRSSTTAMSNodeKernel::setup(Realm& realm)
   rho_ = fieldMgr.get_field<double>(densityID_);
   tke_ = fieldMgr.get_field<double>(tkeNp1ID_);
   sdr_ = fieldMgr.get_field<double>(sdrNp1ID_);
-  alpha_ = fieldMgr.get_field<double>(alphaID_);
+  beta_ = fieldMgr.get_field<double>(betaID_);
   prod_ = fieldMgr.get_field<double>(prodID_);
   fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
   dkdx_ = fieldMgr.get_field<double>(dkdxID_);
@@ -65,14 +65,15 @@ SDRSSTTAMSNodeKernel::setup(Realm& realm)
 }
 
 void
-SDRSSTTAMSNodeKernel::execute(
+SDRSSTAMSNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
   const NodeKernelTraits::DblType rho = rho_.get(node, 0);
   const NodeKernelTraits::DblType sdr = sdr_.get(node, 0);
-  const NodeKernelTraits::DblType tke = stk::math::max(tke_.get(node, 0), 1.0e-12);
+  const NodeKernelTraits::DblType tke =
+    stk::math::max(tke_.get(node, 0), 1.0e-12);
   const NodeKernelTraits::DblType tvisc = tvisc_.get(node, 0);
   const NodeKernelTraits::DblType fOneBlend = fOneBlend_.get(node, 0);
 
@@ -80,7 +81,8 @@ SDRSSTTAMSNodeKernel::execute(
   for (int d = 0; d < nDim_; ++d)
     crossDiff += dkdx_.get(node, d) * dwdx_.get(node, d);
 
-  NodeKernelTraits::DblType Pk = prod_.get(node, 0);
+  // Clip negative productions, consistent with TKE
+  NodeKernelTraits::DblType Pk = stk::math::max(prod_.get(node, 0), 0.0);
   const NodeKernelTraits::DblType Dk = betaStar_ * rho * sdr * tke;
   Pk = stk::math::min(Pk, tkeProdLimitRatio_ * Dk);
 

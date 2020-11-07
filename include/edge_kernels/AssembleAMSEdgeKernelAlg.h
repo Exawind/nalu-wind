@@ -8,8 +8,8 @@
 //
 
 
-#ifndef ASSEMBLETAMSEDGEKERNEL_H
-#define ASSEMBLETAMSEDGEKERNEL_H
+#ifndef ASSEMBLEAMSEDGEKERNEL_H
+#define ASSEMBLEAMSEDGEKERNEL_H
 
 #include "AssembleEdgeKernelAlg.h"
 
@@ -18,13 +18,13 @@ namespace nalu {
 
 class Realm;
 
-class AssembleTAMSEdgeKernelAlg : public AssembleEdgeKernelAlg
+class AssembleAMSEdgeKernelAlg : public AssembleEdgeKernelAlg
 {
   public:
-    AssembleTAMSEdgeKernelAlg(Realm&, stk::mesh::Part*, EquationSystem*);
+    AssembleAMSEdgeKernelAlg(Realm&, stk::mesh::Part*, EquationSystem*);
 };
 
 } // namespace nalu
 } // namespace sierra
 
-#endif /* ASSEMBLETAMSEDGEKERNEL_H */
+#endif /* ASSEMBLEAMSEDGEKERNEL_H */

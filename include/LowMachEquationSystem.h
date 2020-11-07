@@ -17,7 +17,7 @@
 #include "EquationSystem.h"
 #include "FieldTypeDef.h"
 #include "NaluParsedTypes.h"
-#include "TAMSAlgDriver.h"
+#include "AMSAlgDriver.h"
 
 #include "ngp_algorithms/NodalGradAlgDriver.h"
 #include "ngp_algorithms/WallFricVelAlgDriver.h"
@@ -225,7 +225,7 @@ public:
   std::unique_ptr<Algorithm> pecletAlg_{nullptr};
 
   CourantReAlgDriver cflReAlgDriver_;
-  std::unique_ptr<TAMSAlgDriver> TAMSAlgDriver_{nullptr};
+  std::unique_ptr<AMSAlgDriver> AMSAlgDriver_{nullptr};
 
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 

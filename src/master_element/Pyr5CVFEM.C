@@ -568,6 +568,7 @@ void PyrSCS::Mij(
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
+  pyr_deriv(numIntPoints_, &intgLoc_[0], deriv);
   generic_Mij_3d<AlgTraitsPyr5>(deriv, coords, metric);
 }
 
@@ -1243,6 +1244,7 @@ void PyrSCV::Mij(
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
+  pyr_deriv(numIntPoints_, &intgLoc_[0], deriv);
   generic_Mij_3d<AlgTraitsPyr5>(deriv, coords, metric);
 }
 

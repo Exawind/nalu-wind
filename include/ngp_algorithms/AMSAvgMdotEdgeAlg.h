@@ -8,8 +8,8 @@
 //
 
 
-#ifndef TAMSAVGMDOTEDGEALG_H
-#define TAMSAVGMDOTEDGEALG_H
+#ifndef AMSAVGMDOTEDGEALG_H
+#define AMSAVGMDOTEDGEALG_H
 
 #include "Algorithm.h"
 
@@ -20,14 +20,14 @@ namespace nalu {
 
 class Realm;
 
-class TAMSAvgMdotEdgeAlg : public Algorithm
+class AMSAvgMdotEdgeAlg : public Algorithm
 {
 public:
   using DblType = double;
 
-  TAMSAvgMdotEdgeAlg(Realm&, stk::mesh::Part*);
+  AMSAvgMdotEdgeAlg(Realm&, stk::mesh::Part*);
 
-  virtual ~TAMSAvgMdotEdgeAlg() = default;
+  virtual ~AMSAvgMdotEdgeAlg() = default;
 
   void execute() override;
 
@@ -42,4 +42,4 @@ private:
 } // namespace nalu
 } // namespace sierra
 
-#endif /* TAMSAVGMDOTEDGEALG_H */
+#endif /* AMSAVGMDOTEDGEALG_H */

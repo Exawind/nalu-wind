@@ -7,37 +7,38 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/TurbViscSSTAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
 #include "ngp_utils/NgpFieldManager.h"
 #include "Realm.h"
 #include "utils/StkHelpers.h"
-
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 TurbViscSSTAlg::TurbViscSSTAlg(
-  Realm &realm,
-  stk::mesh::Part *part,
+  Realm& realm,
+  stk::mesh::Part* part,
   ScalarFieldType* tvisc,
-  const bool useAverages
-) : Algorithm(realm, part),
+  const bool useAverages)
+  : Algorithm(realm, part),
     tviscField_(tvisc),
     density_(get_field_ordinal(realm.meta_data(), "density")),
     viscosity_(get_field_ordinal(realm.meta_data(), "viscosity")),
     tke_(get_field_ordinal(realm.meta_data(), "turbulent_ke")),
     sdr_(get_field_ordinal(realm.meta_data(), "specific_dissipation_rate")),
-    minDistance_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
-    dudx_(get_field_ordinal(realm.meta_data(), (useAverages) ? "average_dudx" : "dudx")),
+    minDistance_(
+      get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
+    dudx_(get_field_ordinal(
+      realm.meta_data(), (useAverages) ? "average_dudx" : "dudx")),
     tvisc_(tvisc->mesh_meta_data_ordinal()),
     aOne_(realm.get_turb_model_constant(TM_aOne)),
     betaStar_(realm.get_turb_model_constant(TM_betaStar))
-{}
+{
+}
 
 void
 TurbViscSSTAlg::execute()
@@ -46,9 +47,9 @@ TurbViscSSTAlg::execute()
 
   const auto& meta = realm_.meta_data();
 
-  stk::mesh::Selector sel = (
-    meta.locally_owned_part() | meta.globally_shared_part())
-    & stk::mesh::selectField(*tviscField_);
+  stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part()) &
+    stk::mesh::selectField(*tviscField_);
 
   const auto& meshInfo = realm_.mesh_info();
   const auto ngpMesh = meshInfo.ngp_mesh();
@@ -66,29 +67,34 @@ TurbViscSSTAlg::execute()
   const int nDim = meta.spatial_dimension();
 
   nalu_ngp::run_entity_algorithm(
-    "TurbViscSSTAlg",
-    ngpMesh, stk::topology::NODE_RANK, sel,
+    "TurbViscSSTAlg", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
       DblType sijMag = 0.0;
-      for ( int i = 0; i < nDim; ++i ) {
-        const int offSet = nDim*i;
-        for ( int j = 0; j < nDim; ++j ) {
-          const DblType rateOfStrain = 0.5*(dudx.get(meshIdx, offSet+j) + dudx.get(meshIdx, nDim*j+i));
-          sijMag += rateOfStrain*rateOfStrain;
+      for (int i = 0; i < nDim; ++i) {
+        const int offSet = nDim * i;
+        for (int j = 0; j < nDim; ++j) {
+          const DblType rateOfStrain = 0.5 * (dudx.get(meshIdx, offSet + j) +
+                                              dudx.get(meshIdx, nDim * j + i));
+          sijMag += rateOfStrain * rateOfStrain;
         }
       }
-      sijMag = stk::math::sqrt(2.0*sijMag);
+      sijMag = stk::math::sqrt(2.0 * sijMag);
 
-      const DblType minDSq = minD.get(meshIdx, 0)*minD.get(meshIdx, 0);
-      const DblType trbDiss = stk::math::sqrt(tke.get(meshIdx, 0))/betaStar/sdr.get(meshIdx, 0)/minD.get(meshIdx, 0);
-      const DblType lamDiss = 500.0*visc.get(meshIdx, 0)/density.get(meshIdx, 0)/sdr.get(meshIdx, 0)/minDSq;
-      const DblType fArgTwo = stk::math::max(2.0*trbDiss, lamDiss);
-      const DblType fTwo = stk::math::tanh(fArgTwo*fArgTwo);
+      const DblType minDSq = minD.get(meshIdx, 0) * minD.get(meshIdx, 0);
+      const DblType trbDiss = stk::math::sqrt(tke.get(meshIdx, 0)) / betaStar /
+                              sdr.get(meshIdx, 0) / minD.get(meshIdx, 0);
+      const DblType lamDiss = 500.0 * visc.get(meshIdx, 0) /
+                              density.get(meshIdx, 0) / sdr.get(meshIdx, 0) /
+                              minDSq;
+      const DblType fArgTwo = stk::math::max(2.0 * trbDiss, lamDiss);
+      const DblType fTwo = stk::math::tanh(fArgTwo * fArgTwo);
 
-      tvisc.get(meshIdx, 0) = aOne*density.get(meshIdx, 0)*tke.get(meshIdx, 0)/stk::math::max(aOne*sdr.get(meshIdx, 0), sijMag*fTwo);
+      tvisc.get(meshIdx, 0) =
+        aOne * density.get(meshIdx, 0) * tke.get(meshIdx, 0) /
+        stk::math::max(aOne * sdr.get(meshIdx, 0), sijMag * fTwo);
     });
   tvisc.modify_on_device();
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra

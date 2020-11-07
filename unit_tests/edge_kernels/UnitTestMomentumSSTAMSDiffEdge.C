@@ -12,12 +12,12 @@
 #include "UnitTestUtils.h"
 #include "UnitTestHelperObjects.h"
 
-#include "edge_kernels/MomentumSSTTAMSDiffEdgeKernel.h"
+#include "edge_kernels/MomentumSSTAMSDiffEdgeKernel.h"
 
 #ifndef KOKKOS_ENABLE_CUDA
 namespace {
 namespace hex8_golds {
-namespace tams_diff {
+namespace ams_diff {
 static constexpr double rhs[24] = {
   0.074164348914169,  -0.05174162272322,  0,
   0.038157425923915,  0.047996838594458,  0,
@@ -55,12 +55,12 @@ static constexpr double lhs[24][24] = {
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.0059071652819831, 0, 0, 0, 0, 0, -0.011406588904965, 0, 0, -0.0061875666809929, 0, 0, 0.023501320867941, 0, },
 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.011814330563966, 0, 0, 0, 0, 0, -0.0057032944524824, 0, 0, -0.0061875666809929, 0, 0, 0.023705191697441, },
 }; 
-} // tams_diff
+} // ams_diff
 } // hex8_golds
 } // anonymous namespace
 #endif
 
-TEST_F(TAMSKernelHex8Mesh, NGP_tams_diff)
+TEST_F(AMSKernelHex8Mesh, NGP_ams_diff)
 {
   if (bulk_.parallel_size() > 1) return;
 
@@ -78,7 +78,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_tams_diff)
 
   unit_test_utils::EdgeKernelHelperObjects helperObjs(bulk_, stk::topology::HEX_8, 3, partVec_[0]);
 
-  helperObjs.edgeAlg->add_kernel<sierra::nalu::MomentumSSTTAMSDiffEdgeKernel>(bulk_, solnOpts_);
+  helperObjs.edgeAlg->add_kernel<sierra::nalu::MomentumSSTAMSDiffEdgeKernel>(bulk_, solnOpts_);
     
   helperObjs.execute();
 
@@ -87,7 +87,7 @@ TEST_F(TAMSKernelHex8Mesh, NGP_tams_diff)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
 
-  namespace gold_values = ::hex8_golds::tams_diff;
+  namespace gold_values = ::hex8_golds::ams_diff;
   unit_test_kernel_utils::expect_all_near(
    helperObjs.linsys->rhs_, gold_values::rhs, 1.0e-12);
   unit_test_kernel_utils::expect_all_near<24>(

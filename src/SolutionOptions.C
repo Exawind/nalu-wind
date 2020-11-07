@@ -83,7 +83,7 @@ SolutionOptions::SolutionOptions()
     activateOpenMdotCorrection_(false),
     mdotAlgOpenCorrection_(0.0),
     explicitlyZeroOpenPressureGradient_(false),
-    resetTAMSAverages_(true)
+    resetAMSAverages_(true)
 {
   // nothing to do
 }
@@ -155,9 +155,9 @@ SolutionOptions::load(const YAML::Node & y_node)
     else
       throw std::runtime_error("SolutionOptions: Invalid option provided for projected_timescale_type");
 
-    // reset running TAMS averages to instantaneous quantities during intialization
+    // reset running AMS averages to instantaneous quantities during intialization
     // you would want to do this when restarting from a RANS simulation 
-    get_if_present(y_solution_options, "reset_TAMS_averages_on_init", resetTAMSAverages_, resetTAMSAverages_);
+    get_if_present(y_solution_options, "reset_AMS_averages_on_init", resetAMSAverages_, resetAMSAverages_);
 
     // extract turbulence model; would be nice if we could parse an enum..
     std::string specifiedTurbModel;
@@ -489,7 +489,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_cDESkw] = 0.78;
   turbModelConstantMap_[TM_tkeProdLimitRatio] =
     (turbulenceModel_ == SST || turbulenceModel_ == SST_DES ||
-     turbulenceModel_ == SST_TAMS || turbulenceModel_ == SST_IDDES)
+     turbulenceModel_ == SST_AMS || turbulenceModel_ == SST_IDDES)
       ? 10.0
       : 500.0;
   turbModelConstantMap_[TM_cmuEps] = 0.0856; 
@@ -512,7 +512,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_ci] = 0.9;
   turbModelConstantMap_[TM_elog] = 9.8;
   turbModelConstantMap_[TM_yplus_crit] = 11.63;
-  turbModelConstantMap_[TM_CMdeg] = 0.13;
+  turbModelConstantMap_[TM_CMdeg] = 0.11;
   turbModelConstantMap_[TM_forCl] = 4.0;
   turbModelConstantMap_[TM_forCeta] = 70.0;
   turbModelConstantMap_[TM_forCt] = 6.0;
@@ -520,6 +520,10 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_forBlKol] = 1.0;
   turbModelConstantMap_[TM_forFac] = 8.0;
   turbModelConstantMap_[TM_v2cMu] = 0.22;
+  turbModelConstantMap_[TM_aspRatSwitch] = 64.0;
+  turbModelConstantMap_[TM_periodicForcingLengthX] = M_PI;
+  turbModelConstantMap_[TM_periodicForcingLengthY] = 0.25;
+  turbModelConstantMap_[TM_periodicForcingLengthZ] = 3.0 / 8.0 * M_PI;
   turbModelConstantMap_[TM_sigmaMax] = 1.0;
   turbModelConstantMap_[TM_ch1] = 3.0;
   turbModelConstantMap_[TM_ch2] = 1.0;

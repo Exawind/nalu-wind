@@ -172,11 +172,11 @@ SST RANS Model
 As noted, Nalu-Wind does support a SST RANS-based model (the reader is
 referred to the SST equation set description).
 
-UT-A Hybrid Turbulence Model (TAMS)
+Hybrid RANS/LES Models
 +++++++++++++++++++++++++++++++++++
 
-Nalu-Wind supports the Time Averaged Model Split (TAMS) model. The
-reader is referred to the TAMS equation set for more details.
+Nalu-Wind supports the Active Model Split (AMS) hybrid RANS/LES turbulence model :cite:`Haering-etal:2020`. 
+The reader is referred to the AMS equation set for more details.
 
 Wall Models
 +++++++++++

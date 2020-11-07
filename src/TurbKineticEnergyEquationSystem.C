@@ -56,8 +56,8 @@
 #include <kernel/TurbKineticEnergySSTSrcElemKernel.h>
 #include <kernel/TurbKineticEnergySSTDESSrcElemKernel.h>
 
-// UT Austin Hybrid TAMS kernel
-#include <node_kernels/TKESSTTAMSNodeKernel.h>
+// UT Austin Hybrid AMS kernel
+#include <node_kernels/TKESSTAMSNodeKernel.h>
 
 // bc kernels
 #include <kernel/ScalarOpenAdvElemKernel.h>
@@ -168,7 +168,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   if (!check_for_valid_turblence_model(turbulenceModel_)) {
     throw std::runtime_error(
       "User has requested TurbKinEnergyEqs, however, turbulence model is not "
-      "KSGS, SST, SST_DES, SST_IDDES, or SST_TAMS");
+      "KSGS, SST, SST_DES, SST_IDDES, or SST_AMS");
   }
 
   // create projected nodal gradient equation system
@@ -185,7 +185,7 @@ TurbKineticEnergyEquationSystem::check_for_valid_turblence_model(
   case SST:
   case KSGS:
   case SST_DES:
-  case SST_TAMS:
+  case SST_AMS:
   case SST_IDDES:
     return true;
   default:
@@ -273,7 +273,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
       SolverAlgorithm *theAlg = NULL;
       if ( realm_.realmUsesEdges_ ) {
-        const bool useAvgMdot = (turbulenceModel_ == SST_TAMS) ? true : false;
+        const bool useAvgMdot = (turbulenceModel_ == SST_AMS) ? true : false;
         theAlg = new ScalarEdgeSolverAlg(realm_, part, this, tke_, dkdx_, evisc_, useAvgMdot);
       }
       else {
@@ -352,8 +352,8 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         case SST_DES:
           nodeAlg.add_kernel<TKESSTDESNodeKernel>(realm_.meta_data());
           break;
-        case SST_TAMS:
-          nodeAlg.add_kernel<TKESSTTAMSNodeKernel>(realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
+        case SST_AMS:
+          nodeAlg.add_kernel<TKESSTAMSNodeKernel>(realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
           break;
         case SST_IDDES:
             nodeAlg.add_kernel<TKESSTIDDESNodeKernel>(realm_.meta_data());
@@ -409,7 +409,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
          realm_.bulk_data(), *realm_.solutionOptions_, tke_, evisc_, dataPreReqs);
 
       build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
-        (partTopo, *this, activeKernels, "TAMS_advection_diffusion",
+        (partTopo, *this, activeKernels, "AMS_advection_diffusion",
          realm_.bulk_data(), *realm_.solutionOptions_, tke_, evisc_, dataPreReqs);
       
       build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
@@ -417,7 +417,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
          realm_.bulk_data(), *realm_.solutionOptions_, this, tke_, dkdx_, evisc_, dataPreReqs);
 
       build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
-        (partTopo, *this, activeKernels, "TAMS_upw_advection_diffusion",
+        (partTopo, *this, activeKernels, "AMS_upw_advection_diffusion",
          realm_.bulk_data(), *realm_.solutionOptions_, this, tke_, dkdx_, evisc_, dataPreReqs);
 
       build_topo_kernel_if_requested<TurbKineticEnergyKsgsSrcElemKernel>
@@ -478,7 +478,7 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
     }
     case SST:
     case SST_DES:
-    case SST_TAMS:
+    case SST_AMS:
     case SST_IDDES: {
       const double sigmaKOne = realm_.get_turb_model_constant(TM_sigmaKOne);
       const double sigmaKTwo = realm_.get_turb_model_constant(TM_sigmaKTwo);

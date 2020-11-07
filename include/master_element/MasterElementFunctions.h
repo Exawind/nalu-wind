@@ -420,11 +420,12 @@ namespace nalu {
       // At this point we have Q, the eigenvectors and D the eigenvalues of Mij^2, so to
       // create Mij, we use Q sqrt(D) Q^T
       for (unsigned i = 0; i < 3; i++)
-        for (unsigned j = 0; j < 3; j++)
+        for (unsigned j = 0; j < 3; j++) {
           metric[(ip * AlgTraits::nDim_ + i) * AlgTraits::nDim_ + j] =
             Q[i][0]*Q[j][0]*stk::math::sqrt(D[0][0]) +
             Q[i][1]*Q[j][1]*stk::math::sqrt(D[1][1]) +
             Q[i][2]*Q[j][2]*stk::math::sqrt(D[2][2]);
+      }
     }
   }
 

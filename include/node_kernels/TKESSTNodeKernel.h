@@ -7,13 +7,12 @@
 // for more details.
 //
 
-
 #ifndef TKESSTNODEKERNEL_H
 #define TKESSTNODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
-
+#include "NaluEnv.h"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"
@@ -48,14 +47,15 @@ private:
   stk::mesh::NgpField<double> density_;
   stk::mesh::NgpField<double> tvisc_;
   stk::mesh::NgpField<double> dudx_;
+  stk::mesh::NgpField<double> coords_;
   stk::mesh::NgpField<double> dualNodalVolume_;
 
-  unsigned tkeID_             {stk::mesh::InvalidOrdinal};
-  unsigned sdrID_             {stk::mesh::InvalidOrdinal};
-  unsigned densityID_         {stk::mesh::InvalidOrdinal};
-  unsigned tviscID_           {stk::mesh::InvalidOrdinal};
-  unsigned dudxID_            {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned tkeID_{stk::mesh::InvalidOrdinal};
+  unsigned sdrID_{stk::mesh::InvalidOrdinal};
+  unsigned densityID_{stk::mesh::InvalidOrdinal};
+  unsigned tviscID_{stk::mesh::InvalidOrdinal};
+  unsigned dudxID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
@@ -64,8 +64,7 @@ private:
   const int nDim_;
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* TKESSTNODEKERNEL_H */
