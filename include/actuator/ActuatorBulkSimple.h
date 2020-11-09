@@ -23,10 +23,6 @@ struct ActuatorMetaSimple : public ActuatorMeta
   // HOST ONLY
   bool isotropicGaussian_;
 
-  //int maxNumPntsPerBlade_;
-  ActVectorDblDv epsilon_;
-  ActVectorDblDv epsilonChord_;
-
   // Stuff for the simple blade
   bool            debug_output_;
   bool            useSpreadActuatorForce;

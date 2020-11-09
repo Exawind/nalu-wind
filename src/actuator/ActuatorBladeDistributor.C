@@ -10,6 +10,10 @@
 #include <actuator/ActuatorBladeDistributor.h>
 #include <actuator/ActuatorBulkSimple.h>
 #include <NaluEnv.h>
+#ifdef NALU_USES_OPENFAST
+#include <actuator/ActuatorBulkFAST.h>
+#include <actuator/UtilitiesActuator.h>
+#endif
 
 namespace sierra {
 namespace nalu {
@@ -19,6 +23,7 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
 {
   std::vector<std::pair<int, int>> results;
   const int rank = NaluEnv::self().parallel_rank();
+  const int numRanks = NaluEnv::self().parallel_size();
 
   switch (actMeta.actuatorType_) {
   case (ActuatorType::ActLineSimpleNGP): {
@@ -32,7 +37,57 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
     }
     break;
   }
+  case (ActuatorType::ActDiskFASTNGP):
+  case (ActuatorType::ActDiskFAST):
+  case (ActuatorType::ActLineFAST):
+  case (ActuatorType::ActLineFASTNGP): {
+#ifdef NALU_USES_OPENFAST
+    auto actMetaFast = dynamic_cast<const ActuatorMetaFAST&>(actMeta);
+    int numBladesTotal = 0;
+    // compute the total number of blades
+    for (int iTurb = 0; iTurb < actMeta.numberOfActuators_; ++iTurb) {
+      numBladesTotal += actMetaFast.nBlades_(iTurb);
+    }
+
+    const int div = numRanks / numBladesTotal;
+    const int remainder = numRanks % numBladesTotal;
+
+    // loop through and assign them to the processors
+
+    for (int iTurb = 0, gBlade = 0; iTurb < actMeta.numberOfActuators_;
+         ++iTurb) {
+      const int turbOffset = actBulk.turbIdOffset_.h_view(iTurb);
+      const int nBlades = actMetaFast.nBlades_(iTurb);
+
+      for (int iBlade = 0; iBlade < nBlades; ++iBlade) {
+        const int bladeStart = actuator_utils::get_fast_point_index(
+          actMetaFast.fastInputs_, iTurb, nBlades,
+          fast::ActuatorNodeType::BLADE, 0, iBlade);
+
+        const int offset = turbOffset + bladeStart;
+        const int nPoints =
+          actMetaFast.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
+
+        if (
+          (gBlade >= div * rank && gBlade < div * (rank + 1)) ||
+          gBlade % numRanks < remainder) {
+          results.push_back(std::make_pair(offset, nPoints));
+        }
+        gBlade++;
+      }
+    }
+    break;
+#else
+    throw std::runtime_error(
+      "The code was not compiled with OpenFAST support.  Please recompile to "
+      "use a FAST variant of the actuator models.");
+#ifndef __CUDACC__
+    break;
+#endif
+#endif
+  }
   default:
+    // should never hit this execpt through developer mistake
     throw std::runtime_error(
       "compute_blade_distribution::invalid actuator type hit");
   }

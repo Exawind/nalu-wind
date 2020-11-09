@@ -18,8 +18,7 @@ ActuatorLineFastNGP::ActuatorLineFastNGP(
   : ActuatorExecutor(actMeta, actBulk),
     actMeta_(actMeta),
     actBulk_(actBulk),
-    stkBulk_(stkBulk),
-    numActPoints_(actMeta_.numPointsTotal_)
+    stkBulk_(stkBulk)
 {
 }
 
@@ -33,9 +32,15 @@ ActuatorLineFastNGP::operator()()
 
   RunInterpActuatorVel(actBulk_, stkBulk_);
 
+  Apply_FLLC(actBulk_);
+
   Kokkos::parallel_for(
     "assignFastVelActuatorNgpFAST", fastRangePolicy,
     ActFastAssignVel(actBulk_));
+
+  ActFastCacheRelativeVelocities(actBulk_);
+
+  Compute_FLLC();
 
   actBulk_.interpolate_velocities_to_fast();
 
@@ -78,8 +83,7 @@ ActuatorDiskFastNGP::ActuatorDiskFastNGP(
   : ActuatorExecutor(actMeta, actBulk),
     actMeta_(actMeta),
     actBulk_(actBulk),
-    stkBulk_(stkBulk),
-    numActPoints_(actMeta_.numPointsTotal_)
+    stkBulk_(stkBulk)
 {
 }
 

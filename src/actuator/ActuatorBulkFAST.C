@@ -19,10 +19,7 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
     turbineNames_(numberOfActuators_),
     turbineOutputFileNames_(numberOfActuators_),
-    isotropicGaussian_(false),
     maxNumPntsPerBlade_(0),
-    epsilon_("epsilonMeta", numberOfActuators_),
-    epsilonChord_("epsilonChordMeta", numberOfActuators_),
     epsilonTower_("epsilonTowerMeta", numberOfActuators_),
     epsilonHub_("epsilonHubMeta", numberOfActuators_),
     useUniformAziSampling_(

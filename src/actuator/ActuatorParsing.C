@@ -83,5 +83,82 @@ actuator_parse(const YAML::Node& y_node)
   return actMeta;
 }
 
+void
+epsilon_parsing(int iTurb, const YAML::Node& turbNode, ActuatorMeta& actMeta)
+{
+  // The value epsilon / chord [non-dimensional]
+  // This is a vector containing the values for:
+  //   - chord aligned (x),
+  //   - tangential to chord (y),
+  //   - spanwise (z)
+  const YAML::Node epsilon_chord = turbNode["epsilon_chord"];
+  const YAML::Node epsilon = turbNode["epsilon"];
+  if (epsilon && epsilon_chord) {
+    throw std::runtime_error(
+      "epsilon and epsilon_chord have both been specified for Turbine " +
+      std::to_string(iTurb) + "\nYou must pick one or the other.");
+  }
+  if (epsilon && actMeta.useFLLC_) {
+    throw std::runtime_error(
+      "epsilon and fllt_correction have both been specified for "
+      "Turbine " +
+      std::to_string(iTurb) +
+      "\nepsilon_chord and epsilon_min should be used with "
+      "fllt_correction.");
+  }
+
+  std::vector<double> epsilonTemp(3);
+  if (epsilon) {
+    // only require epsilon
+    if (epsilon.Type() == YAML::NodeType::Scalar) {
+      double isotropicEpsilon;
+      get_required(turbNode, "epsilon", isotropicEpsilon);
+      actMeta.isotropicGaussian_ = true;
+      for (int j = 0; j < 3; j++) {
+        actMeta.epsilon_.h_view(iTurb, j) = isotropicEpsilon;
+      }
+    } else {
+      get_required(turbNode, "epsilon", epsilonTemp);
+      for (int j = 0; j < 3; j++) {
+        actMeta.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
+      }
+      if (
+        epsilonTemp[0] == epsilonTemp[1] && epsilonTemp[1] == epsilonTemp[2]) {
+        actMeta.isotropicGaussian_ = true;
+      }
+    }
+  } else if (epsilon_chord) {
+    // require epsilon chord and epsilon min
+    get_required(turbNode, "epsilon_chord", epsilonTemp);
+    for (int j = 0; j < 3; j++) {
+      if (epsilonTemp[j] <= 0.0) {
+        throw std::runtime_error(
+          "ERROR:: zero value for epsilon_chord detected. "
+          "All epsilon components must be greater than zero");
+      }
+      actMeta.epsilonChord_.h_view(iTurb, j) = epsilonTemp[j];
+    }
+
+    // Minimum epsilon allowed in simulation. This is required when
+    //   specifying epsilon/chord
+    get_required(turbNode, "epsilon_min", epsilonTemp);
+    for (int j = 0; j < 3; j++) {
+      actMeta.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
+    }
+  } else {
+    throw std::runtime_error(
+      "Neither epsilon or epsilon_chord was declared in the input deck.  "
+      "One of these two options must be used for the actuator model "
+      "specified.");
+  }
+  // check epsilon values
+  for (int j = 0; j < 3; j++) {
+    if (actMeta.epsilon_.h_view(iTurb, j) <= 0.0) {
+      throw std::runtime_error(
+        "ERROR:: zero value for epsilon detected. "
+        "All epsilon components must be greater than zero");
+    }
+  }
+}
 } // namespace nalu
 } // namespace sierra

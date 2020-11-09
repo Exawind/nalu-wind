@@ -10,6 +10,7 @@
 #include <actuator/ActuatorBulkFAST.h>
 #include <NaluParsing.h>
 #include <actuator/ActuatorParsingFAST.h>
+#include <actuator/ActuatorParsing.h>
 #include <NaluEnv.h>
 
 namespace sierra {
@@ -29,82 +30,13 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
      turbNode, "file_to_dump_turb_pts",
      actMetaFAST.turbineOutputFileNames_[iTurb]);
 
-   // The value epsilon / chord [non-dimensional]
-   // This is a vector containing the values for:
-   //   - chord aligned (x),
-   //   - tangential to chord (y),
-   //   - spanwise (z)
-   const YAML::Node epsilon_chord = turbNode["epsilon_chord"];
-   const YAML::Node epsilon = turbNode["epsilon"];
-   if (epsilon && epsilon_chord) {
+   epsilon_parsing(iTurb, turbNode, actMetaFAST);
+   if (actMetaFAST.is_disk() && !actMetaFAST.isotropicGaussian_) {
      throw std::runtime_error(
-       "epsilon and epsilon_chord have both been specified for Turbine " +
-       std::to_string(iTurb) + "\nYou must pick one or the other.");
-   }
-   if (epsilon && actMetaFAST.useFLLC_) {
-     throw std::runtime_error(
-       "epsilon and fllt_correction have both been specified for "
-       "Turbine " +
-       std::to_string(iTurb) +
-       "\nepsilon_chord and epsilon_min should be used with "
-       "fllt_correction.");
+       "Actuator Disk methods do not support an anisotropic Guassian");
    }
 
    std::vector<double> epsilonTemp(3);
-   if (
-     actMetaFAST.actuatorType_ == ActuatorType::ActLineFASTNGP ||
-     actMetaFAST.actuatorType_ == ActuatorType::ActDiskFASTNGP) {
-     // only require epsilon
-     if (epsilon.Type() == YAML::NodeType::Scalar) {
-       double isotropicEpsilon;
-       get_required(turbNode, "epsilon", isotropicEpsilon);
-       actMetaFAST.isotropicGaussian_ = true;
-       for (int j = 0; j < 3; j++) {
-         actMetaFAST.epsilon_.h_view(iTurb, j) = isotropicEpsilon;
-       }
-     }
-     else {
-       get_required(turbNode, "epsilon", epsilonTemp);
-       for (int j = 0; j < 3; j++) {
-         actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
-       }
-       if (
-         epsilonTemp[0] == epsilonTemp[1] &&
-         epsilonTemp[1] == epsilonTemp[2]) {
-         actMetaFAST.isotropicGaussian_ = true;
-       }
-       else if (actMetaFAST.is_disk()) {
-         throw std::runtime_error("ActDiskFASTNGP does not currently "
-                                  "support anisotropic epsilons.");
-       }
-     }
-   } else if (actMetaFAST.actuatorType_ == ActuatorType::AdvActLineFASTNGP) {
-     // require epsilon chord and epsilon min
-     get_required(turbNode, "epsilon_chord", epsilonTemp);
-     for (int j = 0; j < 3; j++) {
-       if (epsilonTemp[j] <= 0.0) {
-         throw std::runtime_error(
-           "ERROR:: zero value for epsilon_chord detected. "
-           "All epsilon components must be greater than zero");
-       }
-       actMetaFAST.epsilonChord_.h_view(iTurb, j) = epsilonTemp[j];
-     }
-
-     // Minimum epsilon allowed in simulation. This is required when
-     //   specifying epsilon/chord
-     get_required(turbNode, "epsilon_min", epsilonTemp);
-     for (int j = 0; j < 3; j++) {
-       actMetaFAST.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
-     }
-   }
-   // check epsilon values
-   for (int j = 0; j < 3; j++) {
-     if (actMetaFAST.epsilon_.h_view(iTurb, j) <= 0.0) {
-       throw std::runtime_error(
-         "ERROR:: zero value for epsilon detected. "
-         "All epsilon components must be greater than zero");
-     }
-   }
 
    // An epsilon value used for the tower
    const YAML::Node epsilon_tower = turbNode["epsilon_tower"];

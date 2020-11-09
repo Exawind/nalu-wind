@@ -34,8 +34,6 @@ private:
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkFAST& actBulk_;
   stk::mesh::BulkData& stkBulk_;
-  const int numActPoints_;
-  ActDualViewHelper<ActuatorMemSpace> dualViewHelper_;
 };
 
 class ActuatorDiskFastNGP : public ActuatorExecutor
@@ -53,7 +51,6 @@ private:
   const ActuatorMetaFAST& actMeta_;
   ActuatorBulkDiskFAST& actBulk_;
   stk::mesh::BulkData& stkBulk_;
-  const int numActPoints_;
 };
 
 } /* namespace nalu */

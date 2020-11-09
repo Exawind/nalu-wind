@@ -18,6 +18,8 @@
 namespace sierra {
 namespace nalu {
 
+void ActFastCacheRelativeVelocities(ActuatorBulkFAST& actBulk);
+
 struct ActFastUpdatePoints
 {
   using execution_space = ActuatorFixedExecutionSpace;

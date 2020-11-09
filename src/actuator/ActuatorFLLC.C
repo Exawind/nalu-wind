@@ -28,10 +28,6 @@ dot(double* u, double* v)
   return result;
 }
 
-// TODO(psakiev) - do we NEED to do local range policy on any of these?, other
-// parallelization options?
-// TODO(psakiev) - need to set this up to run per blade and not over entire
-// turbine for the openfast case
 // TODO(psakiev) - add option to run over portion of the blade
 FilteredLiftingLineCorrection::FilteredLiftingLineCorrection(
   const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
