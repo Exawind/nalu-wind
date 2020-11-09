@@ -40,7 +40,7 @@ target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>)
 target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_Fortran_FOUND}>:MPI::MPI_Fortran>)
 
 if(ENABLE_CUDA)
-  find_package(CUDA REQUIRED)
+  enable_language(CUDA)
   target_link_libraries(nalu PUBLIC
     ${CUDA_cusparse_LIBRARY}
     ${CUDA_curand_LIBRARY}
@@ -91,6 +91,9 @@ if(ENABLE_CUDA)
   separate_arguments(Trilinos_CXX_COMPILER_FLAGS)
   target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${Trilinos_CXX_COMPILER_FLAGS}>)
   target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:--expt-relaxed-constexpr>)
+  if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0.194")
+    target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-Wext-lambda-captures-this>)
+  endif()
 endif()
 
 ############################ FFTW ######################################
