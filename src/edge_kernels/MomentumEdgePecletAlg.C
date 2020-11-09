@@ -66,6 +66,8 @@ MomentumEdgePecletAlg::execute()
 
   // pointer for device capture
   auto* pecFunc = pecletFunction_;
+  const int ndim = nDim_;
+  const auto eps = eps_;
 
   nalu_ngp::run_edge_algorithm(
     "compute_peclet_factor", ngpMesh, sel,
@@ -74,7 +76,7 @@ MomentumEdgePecletAlg::execute()
       DblType asq{0.0}, axdx{0.0}, udotx{0.0};
 
       const auto edge = eInfo.meshIdx;
-      for (int d = 0; d < nDim_; d++) {
+      for (int d = 0; d < ndim; d++) {
         av[d] = edgeAreaVec.get(edge, d);
       }
       const auto& nodes = eInfo.entityNodes;
@@ -89,7 +91,7 @@ MomentumEdgePecletAlg::execute()
       const DblType diffIp =
         0.5 * (viscosityL / densityL + viscosityR / densityR);
 
-      for (int d = 0; d < nDim_; ++d) {
+      for (int d = 0; d < ndim; ++d) {
         const DblType dxj =
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         asq += av[d] * av[d];
@@ -97,7 +99,7 @@ MomentumEdgePecletAlg::execute()
         udotx += 0.5 * dxj * (vrtm.get(nodeR, d) + vrtm.get(nodeL, d));
       }
 
-      const DblType pecnum = stk::math::abs(udotx) / (diffIp + eps_);
+      const DblType pecnum = stk::math::abs(udotx) / (diffIp + eps);
       pecletFactor.get(edge, 0) = pecFunc->execute(pecnum);
     });
 }
