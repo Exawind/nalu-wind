@@ -28,13 +28,11 @@ void MotionPulsatingSphereKernel::load(const YAML::Node& node)
 {
   // perturb start and end times with a small value for
   // accurate comparison with floats
-  DblType eps = std::numeric_limits<double>::epsilon();
-
   get_if_present(node, "start_time", startTime_, startTime_);
-  startTime_ = startTime_-eps;
+  startTime_ = startTime_-DBL_EPSILON;
 
   get_if_present(node, "end_time", endTime_, endTime_);
-  endTime_ = endTime_+eps;
+  endTime_ = endTime_+DBL_EPSILON;
 
   get_if_present(node, "amplitude", amplitude_, amplitude_);
 

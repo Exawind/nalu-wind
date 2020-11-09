@@ -136,7 +136,7 @@ protected:
   ThreeDVecType origin_ = {0.0,0.0,0.0};
 
   double startTime_{0.0};
-  double endTime_{std::numeric_limits<double>::max()};
+  double endTime_{DBL_MAX};
 };
 
 template<typename T>

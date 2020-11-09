@@ -61,13 +61,12 @@ MotionWavesKernel::load(const YAML::Node& node)
   } else {
     throw std::runtime_error("invalid wave_motion model specified ");
   }
-  double eps = std::numeric_limits<double>::epsilon();
 
   // Time parameters
   get_if_present(node, "start_time", startTime_, startTime_);
-  startTime_ = startTime_ - eps;
+  startTime_ = startTime_ - DBL_EPSILON;
   get_if_present(node, "end_time", endTime_, endTime_);
-  endTime_ = endTime_ + eps;
+  endTime_ = endTime_ + DBL_EPSILON;
   get_if_present(node, "sea_level_z", sealevelz_, sealevelz_);
 }
 
@@ -163,9 +162,7 @@ void MotionWavesKernel::compute_velocity(
     throw std::runtime_error("invalid wave_motion model specified ");
   }
 
-  double eps = std::numeric_limits<double>::epsilon();
-
-  if (mxyz[2] < sealevelz_ + eps) {
+  if (mxyz[2] < sealevelz_ + DBL_EPSILON) {
     vel[0] = StreamwiseWaveVelocity;
     vel[1] = LateralWaveVelocity;
     vel[2] = VerticalWaveVelocity;
