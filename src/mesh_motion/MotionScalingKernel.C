@@ -31,7 +31,7 @@ void MotionScalingKernel::load(const YAML::Node& node)
 {
   // perturb start and end times with a small value for
   // accurate comparison with floats
-  double eps = std::numeric_limits<double>::epsilon();
+  DblType eps = std::numeric_limits<double>::epsilon();
 
   get_if_present(node, "start_time", startTime_, startTime_);
   startTime_ = startTime_-eps;
@@ -40,18 +40,24 @@ void MotionScalingKernel::load(const YAML::Node& node)
   endTime_ = endTime_+eps;
 
   // translation could be based on rate or factor
-  if( node["rate"] )
-     rate_ = node["rate"].as<ThreeDVecType>();
+  if( node["rate"] ) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      rate_[d] = node["rate"][d].as<DblType>();
+  }
 
   // default approach is to use a constant displacement
   useRate_ = ( node["rate"] ? true : false);
 
-  if( node["factor"] )
-    factor_ = node["factor"].as<ThreeDVecType>();
+  if( node["factor"] ) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      factor_[d] = node["factor"][d].as<DblType>();
+  }
 
   // get origin based on if it was defined or is to be computed
-  if( node["centroid"] )
-    origin_ = node["centroid"].as<ThreeDVecType>();
+  if( node["centroid"] ) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      origin_[d] = node["centroid"][d].as<DblType>();
+  }
 }
 
 void MotionScalingKernel::build_transformation(
@@ -67,7 +73,7 @@ void MotionScalingKernel::build_transformation(
   {
     ThreeDVecType curr_fac = {};
 
-    for (int d=0; d < NgpMotionTraits::NDimMax; d++)
+    for (int d=0; d < nalu_ngp::NDimMax; d++)
       curr_fac[d] = rate_[d]*(motionTime-startTime_) + 1.0;
 
     scaling_mat(curr_fac);
@@ -106,29 +112,31 @@ void MotionScalingKernel::scaling_mat(const ThreeDVecType& factor)
   transMat_ = add_motion(currTransMat,transMat_);
 }
 
-NgpMotion::ThreeDVecType MotionScalingKernel::compute_velocity(
+void MotionScalingKernel::compute_velocity(
   const double time,
   const TransMatType& compTrans,
   const double* mxyz,
-  const double* /* cxyz */ )
+  const double* /* cxyz */,
+  ThreeDVecType& vel )
 {
-  ThreeDVecType vel = {};
+  if((time < startTime_) || (time > endTime_)) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      vel[d] = 0.0;
 
-  if( (time < startTime_) || (time > endTime_) ) return vel;
+    return;
+  }
 
   // transform the origin of the scaling body
   ThreeDVecType transOrigin = {};
-  for (int d = 0; d < NgpMotionTraits::NDimMax; d++) {
+  for (int d = 0; d < nalu_ngp::NDimMax; d++) {
     transOrigin[d] = compTrans[d][0]*origin_[0]
                     +compTrans[d][1]*origin_[1]
                     +compTrans[d][2]*origin_[2]
                     +compTrans[d][3];
   }
 
-  for (int d=0; d < NgpMotionTraits::NDimMax; d++)
+  for (int d=0; d < nalu_ngp::NDimMax; d++)
     vel[d] = rate_[d] * (mxyz[d]-transOrigin[d]);
-
-  return vel;
 }
 
 void MotionScalingKernel::post_compute_geometry(

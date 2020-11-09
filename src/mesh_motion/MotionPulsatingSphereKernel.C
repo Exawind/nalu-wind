@@ -28,7 +28,7 @@ void MotionPulsatingSphereKernel::load(const YAML::Node& node)
 {
   // perturb start and end times with a small value for
   // accurate comparison with floats
-  double eps = std::numeric_limits<double>::epsilon();
+  DblType eps = std::numeric_limits<double>::epsilon();
 
   get_if_present(node, "start_time", startTime_, startTime_);
   startTime_ = startTime_-eps;
@@ -41,8 +41,10 @@ void MotionPulsatingSphereKernel::load(const YAML::Node& node)
   get_if_present(node, "frequency", frequency_, frequency_);
 
   // get origin based on if it was defined
-  if( node["centroid"] )
-    origin_ = node["centroid"].as<ThreeDVecType>();
+  if( node["centroid"] ) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      origin_[d] = node["centroid"][d].as<DblType>();
+  }
 }
 
 void MotionPulsatingSphereKernel::build_transformation(
@@ -97,15 +99,19 @@ void MotionPulsatingSphereKernel::scaling_mat(
   transMat_ = add_motion(currTransMat,transMat_);
 }
 
-NgpMotion::ThreeDVecType MotionPulsatingSphereKernel::compute_velocity(
+void MotionPulsatingSphereKernel::compute_velocity(
   const double time,
   const TransMatType&  /* compTrans */,
   const double* mxyz,
-  const double* /* cxyz */ )
+  const double* /* cxyz */,
+  ThreeDVecType& vel )
 {
-  ThreeDVecType vel = {};
+  if((time < startTime_) || (time > endTime_)) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      vel[d] = 0.0;
 
-  if( (time < startTime_) || (time > endTime_) ) return vel;
+    return;
+  }
 
   double radius = std::sqrt( std::pow(mxyz[0]-origin_[0],2)
                             +std::pow(mxyz[1]-origin_[1],2)
@@ -117,10 +123,8 @@ NgpMotion::ThreeDVecType MotionPulsatingSphereKernel::compute_velocity(
   // account for zero radius
   if(radius == 0) pulsatingVelocity = 0;
 
-  for (int d=0; d < NgpMotionTraits::NDimMax; d++)
+  for (int d=0; d < nalu_ngp::NDimMax; d++)
     vel[d] = pulsatingVelocity * (mxyz[d]-origin_[d]);
-
-  return vel;
 }
 
 void MotionPulsatingSphereKernel::post_compute_geometry(

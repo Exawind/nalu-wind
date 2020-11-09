@@ -19,7 +19,7 @@ namespace {
 
     // perform matrix multiplication between transformation matrix
     // and original coordinates to obtain transformed coordinates
-    for (int d = 0; d < sierra::nalu::NgpMotionTraits::NDimMax; d++) {
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
       transCoord[d] = transMat[d][0]*xyz[0]
                      +transMat[d][1]*xyz[1]
                      +transMat[d][2]*xyz[2]

@@ -19,7 +19,7 @@ void MotionRotationKernel::load(const YAML::Node& node)
 {
   // perturb start and end times with a small value for
   // accurate comparison with floats
-  double eps = std::numeric_limits<double>::epsilon();
+  DblType eps = std::numeric_limits<double>::epsilon();
 
   get_if_present(node, "start_time", startTime_, startTime_);
   startTime_ = startTime_-eps;
@@ -35,14 +35,18 @@ void MotionRotationKernel::load(const YAML::Node& node)
   // default approach is to use omega
   useOmega_ = ( node["angle"] ? false : true);
 
-  if( node["axis"] )
-    axis_ = node["axis"].as<ThreeDVecType>();
+  if( node["axis"] ) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      axis_[d] = node["axis"][d].as<DblType>();
+  }
   else
     NaluEnv::self().naluOutputP0() << "MotionRotationKernel: axis of rotation not supplied; will use 0,0,1" << std::endl;
 
   // get origin based on if it was defined or is to be computed
-  if( node["centroid"] )
-    origin_ = node["centroid"].as<ThreeDVecType>();
+  if( node["centroid"] ) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      origin_[d] = node["centroid"][d].as<DblType>();
+  }
 }
 
 void MotionRotationKernel::build_transformation(
@@ -75,7 +79,7 @@ void MotionRotationKernel::rotation_mat(const double angle)
   // Build matrix for rotating object
   // compute magnitude of axis around which to rotate
   double mag = 0.0;
-  for (int d=0; d < NgpMotionTraits::NDimMax; d++)
+  for (int d=0; d < nalu_ngp::NDimMax; d++)
       mag += axis_[d] * axis_[d];
   mag = std::sqrt(mag);
 
@@ -117,21 +121,25 @@ void MotionRotationKernel::rotation_mat(const double angle)
   transMat_ = add_motion(currTransMat,transMat_);
 }
 
-NgpMotion::ThreeDVecType MotionRotationKernel::compute_velocity(
+void MotionRotationKernel::compute_velocity(
   const double time,
   const TransMatType& compTrans,
   const double* /* mxyz */,
-  const double* cxyz )
+  const double* cxyz,
+  ThreeDVecType& vel )
 {
-  ThreeDVecType vel = {};
+  if((time < startTime_) || (time > endTime_)) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      vel[d] = 0.0;
 
-  if( (time < startTime_) || (time > endTime_) ) return vel;
+    return;
+  }
 
   // construct unit vector
   ThreeDVecType unitVec = {};
 
   double mag = 0.0;
-  for (int d=0; d < NgpMotionTraits::NDimMax; d++)
+  for (int d=0; d < nalu_ngp::NDimMax; d++)
     mag += axis_[d] * axis_[d];
   mag = std::sqrt(mag);
 
@@ -141,7 +149,7 @@ NgpMotion::ThreeDVecType MotionRotationKernel::compute_velocity(
 
   // transform the origin of the rotating body
   ThreeDVecType transOrigin = {};
-  for (int d = 0; d < NgpMotionTraits::NDimMax; d++) {
+  for (int d = 0; d < nalu_ngp::NDimMax; d++) {
     transOrigin[d] = compTrans[d][0]*origin_[0]
                     +compTrans[d][1]*origin_[1]
                     +compTrans[d][2]*origin_[2]
@@ -151,7 +159,7 @@ NgpMotion::ThreeDVecType MotionRotationKernel::compute_velocity(
   // compute relative coords and vector omega (dimension 3) for general cross product
   ThreeDVecType relCoord = {};
   ThreeDVecType vecOmega = {};
-  for (int d=0; d < NgpMotionTraits::NDimMax; d++) {
+  for (int d=0; d < nalu_ngp::NDimMax; d++) {
     relCoord[d] = cxyz[d] - transOrigin[d];
     vecOmega[d] = omega_*unitVec[d];
   }
@@ -160,8 +168,6 @@ NgpMotion::ThreeDVecType MotionRotationKernel::compute_velocity(
   vel[0] = vecOmega[1]*relCoord[2] - vecOmega[2]*relCoord[1];
   vel[1] = vecOmega[2]*relCoord[0] - vecOmega[0]*relCoord[2];
   vel[2] = vecOmega[0]*relCoord[1] - vecOmega[1]*relCoord[0];
-
-  return vel;
 }
 
 } // nalu

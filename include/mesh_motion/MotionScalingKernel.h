@@ -30,18 +30,20 @@ public:
 
   /** Function to compute motion-specific velocity
    *
-   * @param[in] time           Current time
-   * @param[in] compTrans      Transformation matrix
-   *                           for points other than xyz
-   * @param[in] mxyz           Model coordinates
-   * @param[in] mxyz           Transformed coordinates
+   * @param[in]  time       Current time
+   * @param[in]  compTrans  Transformation matrix
+   *                        for points other than xyz
+   * @param[in]  mxyz       Model coordinates
+   * @param[in]  mxyz       Transformed coordinates
+   * @param[out] vel        Velocity associated with coordinates
    */
   KOKKOS_FUNCTION
-  virtual ThreeDVecType compute_velocity(
+  virtual void compute_velocity(
     const double time,
     const TransMatType& compTrans,
     const double* mxyz,
-    const double* cxyz );
+    const double* cxyz,
+    ThreeDVecType& vel);
 
   /** perform post compute geometry work for this motion
    *
@@ -59,8 +61,8 @@ private:
 
   void scaling_mat(const ThreeDVecType&);
 
-  ThreeDVecType factor_ = {{0.0,0.0,0.0}};
-  ThreeDVecType rate_ = {{0.0,0.0,0.0}};
+  ThreeDVecType factor_ = {0.0,0.0,0.0};
+  ThreeDVecType rate_ = {0.0,0.0,0.0};
 
   bool useRate_ = false;
 };

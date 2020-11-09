@@ -19,7 +19,7 @@ namespace {
 
     // perform matrix multiplication between transformation matrix
     // and original coordinates to obtain transformed coordinates
-    for (int d = 0; d < sierra::nalu::NgpMotionTraits::NDimMax; d++) {
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
       transCoord[d] = transMat[d][0]*xyz[0]
                      +transMat[d][1]*xyz[1]
                      +transMat[d][2]*xyz[2]
@@ -59,8 +59,8 @@ TEST(meshMotion, rotation_omega)
   EXPECT_NEAR(norm[1], gold_norm_y, testTol);
   EXPECT_NEAR(norm[2], gold_norm_z, testTol);
 
-  sierra::nalu::NgpMotion::ThreeDVecType vel =
-    rotClass.compute_velocity(time, rotClass.get_trans_mat(), nullptr, &xyz[0]);
+  sierra::nalu::NgpMotion::ThreeDVecType vel = {};
+  rotClass.compute_velocity(time, rotClass.get_trans_mat(), nullptr, &xyz[0], vel);
 
   const double gold_norm_vx = -3.0;
   const double gold_norm_vy =  6.6;

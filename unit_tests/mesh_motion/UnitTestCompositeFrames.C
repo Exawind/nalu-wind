@@ -99,7 +99,7 @@ namespace {
 
     // perform matrix multiplication between transformation matrix
     // and original coordinates to obtain transformed coordinates
-    for (int d = 0; d < sierra::nalu::NgpMotionTraits::NDimMax; d++) {
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
       transCoord[d] = transMat[d][0]*xyz[0]
                      +transMat[d][1]*xyz[1]
                      +transMat[d][2]*xyz[2]
@@ -116,11 +116,11 @@ namespace {
     const double* cxyz )
   {
     std::vector<double> vel(3,0.0);
+    sierra::nalu::NgpMotion::ThreeDVecType motionVel = {};
 
     // perform rotation transformation
     sierra::nalu::MotionRotationKernel rotClass(rotNode);
-    sierra::nalu::NgpMotion::ThreeDVecType motionVel =
-      rotClass.compute_velocity(time, transMat, mxyz, cxyz);
+    rotClass.compute_velocity(time, transMat, mxyz, cxyz, motionVel);
 
     for (size_t d = 0; d < vel.size(); d++)
       vel[d] += motionVel[d];
@@ -132,7 +132,7 @@ namespace {
     if( (time >= (startTime-testTol)) && (time <= (endTime+testTol)) )
     {
       sierra::nalu::MotionTranslationKernel transClass(transNode);
-      motionVel = transClass.compute_velocity(time, transMat, mxyz, cxyz);
+      transClass.compute_velocity(time, transMat, mxyz, cxyz, motionVel);
 
       for (size_t d = 0; d < vel.size(); d++)
         vel[d] += motionVel[d];

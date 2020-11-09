@@ -38,7 +38,7 @@ namespace {
 
     // perform matrix multiplication between transformation matrix
     // and original coordinates to obtain transformed coordinates
-    for (int d = 0; d < sierra::nalu::NgpMotionTraits::NDimMax; d++) {
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
       transCoord[d] = transMat[d][0]*xyz[0]
                      +transMat[d][1]*xyz[1]
                      +transMat[d][2]*xyz[2]
@@ -67,8 +67,8 @@ TEST(meshMotion, composite_motions)
   comp_trans = rotClass.add_motion(rotClass.get_trans_mat(), comp_trans);
 
   // compute rotational velocity in absence of translation
-  sierra::nalu::NgpMotion::ThreeDVecType rotVel =
-    rotClass.compute_velocity(time, rotClass.get_trans_mat(), xyz, &rotCoord[0]);
+  sierra::nalu::NgpMotion::ThreeDVecType rotVel = {};
+  rotClass.compute_velocity(time, rotClass.get_trans_mat(), xyz, &rotCoord[0], rotVel);
 
   // initialize the mesh translation class
   sierra::nalu::MotionTranslationKernel transClass(transNode);
@@ -77,8 +77,8 @@ TEST(meshMotion, composite_motions)
   std::vector<double> newCoord = transform(comp_trans, xyz);
 
   // compute rotational velocity in absence of translation
-  sierra::nalu::NgpMotion::ThreeDVecType compVelRot =
-    rotClass.compute_velocity(time, comp_trans, xyz, &newCoord[0]);
+  sierra::nalu::NgpMotion::ThreeDVecType compVelRot = {};
+  rotClass.compute_velocity(time, comp_trans, xyz, &newCoord[0], compVelRot);
 
   // ensure the rotational componenets of the velocity remains same
   EXPECT_NEAR(compVelRot[0], rotVel[0], testTol);

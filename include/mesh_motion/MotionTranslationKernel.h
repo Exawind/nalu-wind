@@ -22,26 +22,28 @@ public:
 
   /** Function to compute motion-specific velocity
    *
-   * @param[in] time           Current time
-   * @param[in] compTrans      Transformation matrix
-   *                           for points other than xyz
-   * @param[in] mxyz           Model coordinates
-   * @param[in] mxyz           Transformed coordinates
+   * @param[in]  time       Current time
+   * @param[in]  compTrans  Transformation matrix
+   *                        for points other than xyz
+   * @param[in]  mxyz       Model coordinates
+   * @param[in]  mxyz       Transformed coordinates
+   * @param[out] vel        Velocity associated with coordinates
    */
   KOKKOS_FUNCTION
-  virtual ThreeDVecType compute_velocity(
+  virtual void compute_velocity(
     const double time,
     const TransMatType& compTrans,
     const double* mxyz,
-    const double* cxyz );
+    const double* cxyz,
+    ThreeDVecType& vel);
 
 private:
   void load(const YAML::Node&);
 
   void translation_mat(const ThreeDVecType&);
 
-  ThreeDVecType displacement_ = {{0.0,0.0,0.0}};
-  ThreeDVecType velocity_ = {{0.0,0.0,0.0}};
+  ThreeDVecType displacement_ = {0.0,0.0,0.0};
+  ThreeDVecType velocity_ = {0.0,0.0,0.0};
 
   bool useVelocity_ = false;
 };

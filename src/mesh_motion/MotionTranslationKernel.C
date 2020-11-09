@@ -18,7 +18,7 @@ void MotionTranslationKernel::load(const YAML::Node& node)
 {
   // perturb start and end times with a small value for
   // accurate comparison with floats
-  double eps = std::numeric_limits<double>::epsilon();
+  DblType eps = std::numeric_limits<double>::epsilon();
 
   get_if_present(node, "start_time", startTime_, startTime_);
   startTime_ = startTime_-eps;
@@ -27,14 +27,18 @@ void MotionTranslationKernel::load(const YAML::Node& node)
   endTime_ = endTime_+eps;
 
   // translation could be based on velocity or displacement
-  if( node["velocity"] )
-     velocity_ = node["velocity"].as<ThreeDVecType>();
+  if( node["velocity"] ) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      velocity_[d] = node["velocity"][d].as<DblType>();
+  }
 
-  if( node["displacement"] )
-    displacement_ = node["displacement"].as<ThreeDVecType>();
+  if( node["displacement"] ) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      displacement_[d] = node["displacement"][d].as<DblType>();
+  }
 
   // default approach is to use a constant displacement
-  useVelocity_ = ( node["velocity"] ? true : false);
+  useVelocity_ = (node["velocity"] ? true : false);
 }
 
 void MotionTranslationKernel::build_transformation(
@@ -49,7 +53,7 @@ void MotionTranslationKernel::build_transformation(
   if (useVelocity_)
   {
     ThreeDVecType curr_disp = {};
-    for (int d=0; d < NgpMotionTraits::NDimMax; d++)
+    for (int d=0; d < nalu_ngp::NDimMax; d++)
       curr_disp[d] = velocity_[d]*(motionTime-startTime_);
 
     translation_mat(curr_disp);
@@ -68,18 +72,21 @@ void MotionTranslationKernel::translation_mat(const ThreeDVecType& curr_disp)
   transMat_[2][3] = curr_disp[2];
 }
 
-NgpMotion::ThreeDVecType MotionTranslationKernel::compute_velocity(
+void MotionTranslationKernel::compute_velocity(
   const double time,
   const TransMatType&  /* compTrans */,
   const double* /* mxyz */,
-  const double* /* cxyz */ )
+  const double* /* cxyz */,
+  ThreeDVecType& vel )
 {
-  ThreeDVecType vel = {};
-
-  if( (time >= startTime_) && (time <= endTime_) )
-    vel = velocity_;
-
-  return vel;
+  if((time < startTime_) || (time > endTime_)) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      vel[d] = 0.0;
+  }
+  else {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      vel[d] = velocity_[d];
+  }
 }
 
 } // nalu

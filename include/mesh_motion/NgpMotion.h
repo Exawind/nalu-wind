@@ -8,6 +8,7 @@
 #include <array>
 
 #include "NGPInstance.h"
+#include "ngp_utils/NgpTypes.h"
 
 namespace YAML { class Node; }
 
@@ -24,21 +25,16 @@ typedef std::vector<Part*> PartVector;
 namespace sierra{
 namespace nalu{
 
-struct NgpMotionTraits
-{
-  static constexpr int NDimMax = 3;
-  using DblType = double;
-  using ShmemType = DeviceShmem;
-};
-
 class NgpMotion
 {
 public:
+  using DblType = double;
+
   //! Define matrix type alias
-  using TransMatType = std::array<std::array<double, NgpMotionTraits::NDimMax+1>, NgpMotionTraits::NDimMax+1>;
+  using TransMatType = std::array<std::array<double, nalu_ngp::NDimMax+1>, nalu_ngp::NDimMax+1>;
 
   //! Define 3D vector type alias
-  using ThreeDVecType = std::array<double, NgpMotionTraits::NDimMax>;
+  using ThreeDVecType = double [nalu_ngp::NDimMax];
 
   KOKKOS_FORCEINLINE_FUNCTION
   NgpMotion() = default;
@@ -54,17 +50,19 @@ public:
 
   /** Function to compute motion-specific velocity
    *
-   * @param[in] time           Current time
-   * @param[in] compTrans      Transformation matrix
-   *                           for points other than xyz
-   * @param[in] mxyz           Model coordinates
-   * @param[in] mxyz           Transformed coordinates
+   * @param[in]  time       Current time
+   * @param[in]  compTrans  Transformation matrix
+   *                        for points other than xyz
+   * @param[in]  mxyz       Model coordinates
+   * @param[in]  mxyz       Transformed coordinates
+   * @param[out] vel        Velocity associated with coordinates
    */
-  virtual ThreeDVecType compute_velocity(
+  virtual void compute_velocity(
     const double time,
     const TransMatType& compTrans,
     const double* mxyz,
-    const double* cxyz ) = 0;
+    const double* cxyz,
+    ThreeDVecType& vel) = 0;
 
   virtual void post_compute_geometry(
     stk::mesh::BulkData&,
@@ -87,9 +85,9 @@ public:
   {
     TransMatType comp_trans_mat_ = {};
 
-    for (int r = 0; r < NgpMotionTraits::NDimMax+1; r++)
-      for (int c = 0; c < NgpMotionTraits::NDimMax+1; c++)
-        for (int k = 0; k < NgpMotionTraits::NDimMax+1; k++) {
+    for (int r = 0; r < nalu_ngp::NDimMax+1; r++)
+      for (int c = 0; c < nalu_ngp::NDimMax+1; c++)
+        for (int k = 0; k < nalu_ngp::NDimMax+1; k++) {
           comp_trans_mat_[r][c] += motionL[r][k] * motionR[k][c];
         }
 
@@ -98,7 +96,8 @@ public:
 
   void set_computed_centroid( std::vector<double>& centroid )
   {
-    std::copy_n(centroid.begin(), NgpMotionTraits::NDimMax, origin_.begin());
+    for (int d = 0; d < nalu_ngp::NDimMax; ++d)
+      origin_[d] = centroid[d];
   }
 
   const TransMatType& get_trans_mat() const
@@ -134,7 +133,7 @@ protected:
    * A 3x1 vector storing the centroid as computed
    * to a collection of parts or as defined in the input file
    */
-  ThreeDVecType origin_ = {{0.0,0.0,0.0}};
+  ThreeDVecType origin_ = {0.0,0.0,0.0};
 
   double startTime_{0.0};
   double endTime_{std::numeric_limits<double>::max()};

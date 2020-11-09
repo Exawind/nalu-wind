@@ -89,8 +89,10 @@ void FrameMoving::update_coordinates_velocity(const double time)
     // motions in current motion frame
     for (size_t i=0; i < numKernels; ++i) {
       NgpMotion* kernel = ngpKernels(i);
-      // build and get transformation matrix
-      NgpMotion::ThreeDVecType mm_vel = kernel->compute_velocity(time,comp_trans_mat,mX,cX);
+
+      // evaluate velocity associated with motion
+      NgpMotion::ThreeDVecType mm_vel = {};
+      kernel->compute_velocity(time,comp_trans_mat,mX,cX,mm_vel);
 
       for (int d = 0; d < nDim; ++d)
         meshVelocity.get(mi,d) += mm_vel[d];

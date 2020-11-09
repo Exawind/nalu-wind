@@ -119,17 +119,19 @@ MotionWavesKernel::translation_mat(const ThreeDVecType& curr_disp)
   transMat_[2][3] = curr_disp[2];
 }
 
-NgpMotion::ThreeDVecType
-MotionWavesKernel::compute_velocity(
+void MotionWavesKernel::compute_velocity(
   const double time,
   const TransMatType& /* compTrans */,
   const double* mxyz,
-  const double* /* cxyz */)
+  const double* /* cxyz */,
+  ThreeDVecType& vel)
 {
-  ThreeDVecType vel = {};
+  if((time < startTime_) || (time > endTime_)) {
+    for (int d=0; d < nalu_ngp::NDimMax; ++d)
+      vel[d] = 0.0;
 
-  if ((time < startTime_) || (time > endTime_))
-    return vel;
+    return;
+  }
 
   double motionTime = (time < endTime_) ? time : endTime_;
 
@@ -172,8 +174,6 @@ MotionWavesKernel::compute_velocity(
     vel[1] = 0.;
     vel[2] = 0.;
   }
-
-  return vel;
 }
 
 /* Define the Stokes expansion coefficients based on "A Fifth-Order Stokes
