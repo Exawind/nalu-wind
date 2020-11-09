@@ -10,7 +10,7 @@
 #ifndef HYPRENGP_H
 #define HYPRENGP_H
 
-#if defined(NALU_HYPRE_CUDA_INTERFACE) && defined(KOKKOS_ENABLE_CUDA)
+#ifdef HYPRE_USING_CUDA
 #include "HYPRE_utilities.h"
 #include "krylov.h"
 #include "HYPRE.h"
@@ -20,7 +20,7 @@
 
 namespace nalu_hypre {
 
-#if defined(NALU_HYPRE_CUDA_INTERFACE) && defined(KOKKOS_ENABLE_CUDA)
+#ifdef HYPRE_USING_CUDA
 
 inline void hypre_initialize()
 {
