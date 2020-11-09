@@ -365,7 +365,6 @@ HypreLinearSolverConfig::hypre_gmres_solver_config(const YAML::Node& node)
 void
 HypreLinearSolverConfig::hypre_cogmres_solver_config(const YAML::Node& node)
 {
-#ifdef HYPRE_COGMRES
   int logLevel = 1;
   get_if_present(node, "log_level", logLevel, logLevel);
 
@@ -388,7 +387,6 @@ HypreLinearSolverConfig::hypre_cogmres_solver_config(const YAML::Node& node)
   funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
     Ifpack2::Hypre::Solver, &HYPRE_COGMRESSetLogging, logLevel)));
   paramsPrecond_->set("Solver", Ifpack2::Hypre::COGMRES);
-#endif
 }
 
 void
@@ -523,11 +521,7 @@ HypreLinearSolverConfig::configure_hypre_solver
     hypre_gmres_solver_config(node);
   }
   else if (method_ == "hypre_cogmres") {
-#ifdef HYPRE_COGMRES
     hypre_cogmres_solver_config(node);
-#else
-    throw std::runtime_error("HYPRE version does not support COGMRES");
-#endif
   }
   else if (method_ == "hypre_lgmres") {
     hypre_lgmres_solver_config(node);
