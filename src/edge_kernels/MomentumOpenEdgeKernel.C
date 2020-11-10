@@ -46,7 +46,6 @@ MomentumOpenEdgeKernel<BcAlgTraits>::MomentumOpenEdgeKernel(
     velocityBc_(get_field_ordinal(meta, "open_velocity_bc")),
     velocityNp1_(get_field_ordinal(meta, "velocity", stk::mesh::StateNP1)),
     viscosity_(viscosity->mesh_meta_data_ordinal()),
-    alpha_upw_(get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK)),
     includeDivU_(solnOpts->includeDivU_),
     nfEntrain_(solnOpts->nearestFaceEntrain_),
     entrain_(method),
@@ -64,7 +63,6 @@ MomentumOpenEdgeKernel<BcAlgTraits>::MomentumOpenEdgeKernel(
   faceData.add_face_field(openMassFlowRate_, BcAlgTraits::numFaceIp_);
   faceData.add_gathered_nodal_field(velocityBc_, BcAlgTraits::nDim_);
   faceData.add_gathered_nodal_field(viscosity_, 1);
-  faceData.add_face_field(alpha_upw_, 1);
 
   elemData.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
   elemData.add_gathered_nodal_field(velocityNp1_, BcAlgTraits::nDim_);
@@ -96,7 +94,6 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
   auto& v_massflow = faceScratchViews.get_scratch_view_1D(openMassFlowRate_);
   auto& v_uBc = faceScratchViews.get_scratch_view_2D(velocityBc_);
   auto& v_visc = faceScratchViews.get_scratch_view_1D(viscosity_);
-  auto& v_alphaUpw = faceScratchViews.get_scratch_view_1D(alpha_upw_);
 
   // Field variables on element connected to the boundary face
   auto& v_coords = elemScratchViews.get_scratch_view_2D(coordinates_);
@@ -113,8 +110,6 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
 
     // Extract viscosity for this node from face data
     const auto visc = v_visc(ip);
-    const auto alphaUpw = v_alphaUpw(ip);
-    const auto om_alphaUpw = 1.0 - alphaUpw;
 
     // Compute area vector related quantities
     DoubleType axdx = 0.0;
@@ -218,24 +213,6 @@ MomentumOpenEdgeKernel<BcAlgTraits>::execute(
         lhs(rowR, rowL) -= lhsFac;
         lhs(rowR, rowR) += lhsFac;
       }
-    }
-
-    if (turbModel_ == SST_IDDES) {
-      // TODO(psakiev) check this to see if we can consolidate it
-      const DoubleType tmdot = v_massflow(ip);
-
-      for (int i=0; i < BcAlgTraits::nDim_; ++i) {
-        const int rowR = nodeR * BcAlgTraits::nDim_ + i;
-        const int rowL = nodeL * BcAlgTraits::nDim_ + i;
-        rhs(rowR) -= stk::math::if_then_else((tmdot > 0.0),
-          tmdot * (om_alphaUpw * v_uNp1(nodeR, i) + 0.5 * alphaUpw * (v_uNp1(nodeL,i) + v_uNp1(nodeR,i)) ), // leaving the domain
-          tmdot * (om_alphaUpw * v_uNp1(nodeR, i) + alphaUpw * v_uBc(ip,i) )); // entering the domain
-
-        lhs(rowR, rowR) += stk::math::if_then_else((tmdot > 0.0), (om_alphaUpw + 0.5 * alphaUpw) * tmdot,om_alphaUpw * tmdot);
-        lhs(rowR, rowL) += stk::math::if_then_else((tmdot > 0.0), 0.5 * alphaUpw * tmdot,0.0);
-
-      }
-      continue;
     }
 
     switch (entrain_) {
