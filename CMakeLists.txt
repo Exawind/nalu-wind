@@ -41,6 +41,7 @@ target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_Fortran_FOUND}>:MPI::MPI_Fortra
 
 if(ENABLE_CUDA)
   enable_language(CUDA)
+  find_package(CUDA)
   target_link_libraries(nalu PUBLIC
     ${CUDA_cusparse_LIBRARY}
     ${CUDA_curand_LIBRARY}
