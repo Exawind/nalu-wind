@@ -567,7 +567,6 @@ GammaEquationSystem::compute_norm_dot_vel()
   const int nDim = meta_data.spatial_dimension();
 
   // fields not saved off
-  VectorFieldType *coordsNp1 = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
   VectorFieldType *velNp1 = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
   VectorFieldType *dwalldistdx = dWallDistdx_;
 
@@ -583,7 +582,6 @@ GammaEquationSystem::compute_norm_dot_vel()
     stk::mesh::Bucket & b = **ib ;
     const stk::mesh::Bucket::size_type length   = b.size();
     const double * dwalldist = stk::mesh::field_data(*dwalldistdx, b);
-    const double *coords = stk::mesh::field_data(*coordsNp1, b);     
     double *vel = stk::mesh::field_data(*velNp1, b);
     double * NDotV = stk::mesh::field_data(*NDotV_, b);
 
@@ -591,11 +589,6 @@ GammaEquationSystem::compute_norm_dot_vel()
     for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
 
       NDotV[k] = 0.0;
-    // ********************* Temp test of grad operator *************************
-    //  vel[k*nDim+0] = 0.0;
-    //  vel[k*nDim+1] = 0.0;
-    //  vel[k*nDim+2] = 10.0*coords[2];
-    // ********************* Temp test of grad operator *************************
       for ( int j = 0; j < nDim; ++j ) {
         NDotV[k] += dwalldist[k*nDim+j] * vel[k*nDim+j];
       }

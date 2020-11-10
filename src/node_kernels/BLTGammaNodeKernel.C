@@ -22,7 +22,6 @@ BLTGammaNodeKernel::BLTGammaNodeKernel(
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
     densityID_(get_field_ordinal(meta, "density")),
-    tviscID_(get_field_ordinal(meta, "turbulent_viscosity")),
     viscID_(get_field_ordinal(meta, "viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
     minDID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
@@ -40,7 +39,6 @@ BLTGammaNodeKernel::setup(Realm& realm)
   tke_             = fieldMgr.get_field<double>(tkeID_);
   sdr_             = fieldMgr.get_field<double>(sdrID_);
   density_         = fieldMgr.get_field<double>(densityID_);
-  tvisc_           = fieldMgr.get_field<double>(tviscID_);
   visc_            = fieldMgr.get_field<double>(viscID_);
   dudx_            = fieldMgr.get_field<double>(dudxID_);
   minD_            = fieldMgr.get_field<double>(minDID_);
@@ -111,7 +109,6 @@ BLTGammaNodeKernel::execute(
   const DblType gamint    = gamint_.get(node, 0);
   const DblType re0t      = re0t_.get(node, 0);
   const DblType density   = density_.get(node, 0);
-  const DblType tvisc     = tvisc_.get(node, 0);
   const DblType visc      = visc_.get(node, 0);
   const DblType minD      = minD_.get(node, 0);
   const DblType dVol      = dualNodalVolume_.get(node, 0);
@@ -160,7 +157,6 @@ BLTGammaNodeKernel::execute(
   fonset3 = stk::math::max(1.0 - 0.0640*rt*rt*rt, 0.0);
   fonset =  stk::math::max(fonset2 - fonset3,0.0);
   fturb =   stk::math::exp(-rt*rt*rt*rt/256.0);
-  DblType gamint_arg = stk::math::max( 1.0e-10, fonset * gamint);
 
 
   DblType Pgamma = flength * caOne_ * density * sijMag * stk::math::sqrt( stk::math::max( fonset * gamint, 0.0 ) ) * ( 1.0 - ceOne_ * gamint );
