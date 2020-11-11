@@ -48,15 +48,15 @@ void MotionRotationKernel::load(const YAML::Node& node)
 }
 
 void MotionRotationKernel::build_transformation(
-  double time,
-  const double*  /* xyz */)
+  DblType time,
+  const DblType*  /* xyz */)
 {
   if(time < (startTime_)) return;
 
-  double motionTime = (time < endTime_)? time : endTime_;
+  DblType motionTime = (time < endTime_)? time : endTime_;
 
   // determine current angle
-  double curr_angle = 0.0;
+  DblType curr_angle = 0.0;
   if (useOmega_)
     curr_angle = omega_*(motionTime-startTime_);
   else
@@ -65,7 +65,7 @@ void MotionRotationKernel::build_transformation(
   rotation_mat(curr_angle);
 }
 
-void MotionRotationKernel::rotation_mat(const double angle)
+void MotionRotationKernel::rotation_mat(const DblType angle)
 {
   reset_mat(transMat_);
 
@@ -76,18 +76,18 @@ void MotionRotationKernel::rotation_mat(const double angle)
 
   // Build matrix for rotating object
   // compute magnitude of axis around which to rotate
-  double mag = 0.0;
+  DblType mag = 0.0;
   for (int d=0; d < nalu_ngp::NDimMax; d++)
       mag += axis_[d] * axis_[d];
   mag = std::sqrt(mag);
 
   // build quaternion based on angle and axis of rotation
-  const double cosang = std::cos(0.5*angle);
-  const double sinang = std::sin(0.5*angle);
-  const double q0 = cosang;
-  const double q1 = sinang * axis_[0]/mag;
-  const double q2 = sinang * axis_[1]/mag;
-  const double q3 = sinang * axis_[2]/mag;
+  const DblType cosang = std::cos(0.5*angle);
+  const DblType sinang = std::sin(0.5*angle);
+  const DblType q0 = cosang;
+  const DblType q1 = sinang * axis_[0]/mag;
+  const DblType q2 = sinang * axis_[1]/mag;
+  const DblType q3 = sinang * axis_[2]/mag;
 
   // rotation matrix based on quaternion
   TransMatType currTransMat = {};
@@ -120,10 +120,10 @@ void MotionRotationKernel::rotation_mat(const double angle)
 }
 
 void MotionRotationKernel::compute_velocity(
-  const double time,
+  const DblType time,
   const TransMatType& compTrans,
-  const double* /* mxyz */,
-  const double* cxyz,
+  const DblType* /* mxyz */,
+  const DblType* cxyz,
   ThreeDVecType& vel )
 {
   if((time < startTime_) || (time > endTime_)) {
@@ -136,7 +136,7 @@ void MotionRotationKernel::compute_velocity(
   // construct unit vector
   ThreeDVecType unitVec = {};
 
-  double mag = 0.0;
+  DblType mag = 0.0;
   for (int d=0; d < nalu_ngp::NDimMax; d++)
     mag += axis_[d] * axis_[d];
   mag = std::sqrt(mag);

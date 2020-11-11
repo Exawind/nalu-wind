@@ -59,12 +59,12 @@ void MotionScalingKernel::load(const YAML::Node& node)
 }
 
 void MotionScalingKernel::build_transformation(
-  const double time,
-  const double* /* xyz */)
+  const DblType time,
+  const DblType* /* xyz */)
 {
   if(time < (startTime_)) return;
 
-  double motionTime = (time < endTime_)? time : endTime_;
+  DblType motionTime = (time < endTime_)? time : endTime_;
 
   // determine translation based on user defined input
   if (useRate_)
@@ -111,10 +111,10 @@ void MotionScalingKernel::scaling_mat(const ThreeDVecType& factor)
 }
 
 void MotionScalingKernel::compute_velocity(
-  const double time,
+  const DblType time,
   const TransMatType& compTrans,
-  const double* mxyz,
-  const double* /* cxyz */,
+  const DblType* mxyz,
+  const DblType* /* cxyz */,
   ThreeDVecType& vel )
 {
   if((time < startTime_) || (time > endTime_)) {

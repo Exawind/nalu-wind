@@ -22,7 +22,7 @@ public:
   virtual ~MotionPulsatingSphereKernel() = default;
 
   KOKKOS_FUNCTION
-  virtual void build_transformation(const double, const double*);
+  virtual void build_transformation(const DblType, const DblType*);
 
   /** Function to compute motion-specific velocity
    *
@@ -35,10 +35,10 @@ public:
    */
   KOKKOS_FUNCTION
   virtual void compute_velocity(
-    const double time,
+    const DblType time,
     const TransMatType& compTrans,
-    const double* mxyz,
-    const double* cxyz,
+    const DblType* mxyz,
+    const DblType* cxyz,
     ThreeDVecType& vel);
 
   /** perform post compute geometry work for this motion
@@ -55,10 +55,10 @@ public:
 private:
   void load(const YAML::Node&);
 
-  void scaling_mat(const double, const double*);
+  void scaling_mat(const DblType, const DblType*);
 
-  double amplitude_{0.0};
-  double frequency_{0.0};
+  DblType amplitude_{0.0};
+  DblType frequency_{0.0};
 };
 
 } // nalu

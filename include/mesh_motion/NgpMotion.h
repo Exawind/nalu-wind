@@ -31,10 +31,10 @@ public:
   using DblType = double;
 
   //! Define matrix type alias
-  using TransMatType = std::array<std::array<double, nalu_ngp::NDimMax+1>, nalu_ngp::NDimMax+1>;
+  using TransMatType = std::array<std::array<DblType, nalu_ngp::NDimMax+1>, nalu_ngp::NDimMax+1>;
 
   //! Define 3D vector type alias
-  using ThreeDVecType = double [nalu_ngp::NDimMax];
+  using ThreeDVecType = DblType [nalu_ngp::NDimMax];
 
   KOKKOS_FORCEINLINE_FUNCTION
   NgpMotion() = default;
@@ -46,7 +46,7 @@ public:
 
   virtual void free_on_device() = 0;
 
-  virtual void build_transformation(const double, const double* = nullptr) = 0;
+  virtual void build_transformation(const DblType, const DblType* = nullptr) = 0;
 
   /** Function to compute motion-specific velocity
    *
@@ -58,10 +58,10 @@ public:
    * @param[out] vel        Velocity associated with coordinates
    */
   virtual void compute_velocity(
-    const double time,
+    const DblType time,
     const TransMatType& compTrans,
-    const double* mxyz,
-    const double* cxyz,
+    const DblType* mxyz,
+    const DblType* cxyz,
     ThreeDVecType& vel) = 0;
 
   virtual void post_compute_geometry(
@@ -94,7 +94,7 @@ public:
     return comp_trans_mat_;
   }
 
-  void set_computed_centroid( std::vector<double>& centroid )
+  void set_computed_centroid( std::vector<DblType>& centroid )
   {
     for (int d = 0; d < nalu_ngp::NDimMax; ++d)
       origin_[d] = centroid[d];
@@ -135,8 +135,8 @@ protected:
    */
   ThreeDVecType origin_ = {0.0,0.0,0.0};
 
-  double startTime_{0.0};
-  double endTime_{DBL_MAX};
+  DblType startTime_{0.0};
+  DblType endTime_{DBL_MAX};
 };
 
 template<typename T>

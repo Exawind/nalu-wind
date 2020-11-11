@@ -18,7 +18,7 @@ public:
   virtual ~MotionRotationKernel() = default;
 
   KOKKOS_FUNCTION
-  virtual void build_transformation(const double, const double* = nullptr);
+  virtual void build_transformation(const DblType, const DblType* = nullptr);
 
   /** Function to compute motion-specific velocity
    *
@@ -31,21 +31,21 @@ public:
    */
   KOKKOS_FUNCTION
   virtual void compute_velocity(
-    const double time,
+    const DblType time,
     const TransMatType& compTrans,
-    const double* mxyz,
-    const double* cxyz,
+    const DblType* mxyz,
+    const DblType* cxyz,
     ThreeDVecType& vel);
 
 private:
   void load(const YAML::Node&);
 
-  void rotation_mat(const double);
+  void rotation_mat(const DblType);
 
   ThreeDVecType axis_ = {0.0,0.0,1.0};
 
-  double omega_{0.0};
-  double angle_{0.0};
+  DblType omega_{0.0};
+  DblType angle_{0.0};
 
   bool useOmega_ = true;
 };

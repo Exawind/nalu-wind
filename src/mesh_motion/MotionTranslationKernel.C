@@ -1,4 +1,3 @@
-
 #include "mesh_motion/MotionTranslationKernel.h"
 
 #include <NaluParsing.h>
@@ -40,12 +39,12 @@ void MotionTranslationKernel::load(const YAML::Node& node)
 }
 
 void MotionTranslationKernel::build_transformation(
-  const double time,
-  const double* /* mxyz */ )
+  const DblType time,
+  const DblType* /* mxyz */ )
 {
   if(time < (startTime_)) return;
 
-  double motionTime = (time < endTime_)? time : endTime_;
+  DblType motionTime = (time < endTime_)? time : endTime_;
 
   // determine translation based on user defined input
   if (useVelocity_)
@@ -71,10 +70,10 @@ void MotionTranslationKernel::translation_mat(const ThreeDVecType& curr_disp)
 }
 
 void MotionTranslationKernel::compute_velocity(
-  const double time,
+  const DblType time,
   const TransMatType&  /* compTrans */,
-  const double* /* mxyz */,
-  const double* /* cxyz */,
+  const DblType* /* mxyz */,
+  const DblType* /* cxyz */,
   ThreeDVecType& vel )
 {
   if((time < startTime_) || (time > endTime_)) {
