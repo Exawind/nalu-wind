@@ -11,6 +11,7 @@
 #include "overset/TiogaRef.h"
 #include "overset/OversetManagerTIOGA.h"
 #include "overset/UpdateOversetFringeAlgorithmDriver.h"
+#include "overset/overset_utils.h"
 #include "NaluEnv.h"
 #include "Realm.h"
 
@@ -157,17 +158,22 @@ void ExtOverset::exchange_solution()
 #endif
 }
 
-int ExtOverset::register_solution()
+int ExtOverset::register_solution(const std::vector<std::string>& fnames)
 {
   int ncomp = 0;
   if (!hasOverset_) return ncomp;
+
+  ThrowAssert(fnames.size() > 0u);
+  // Store field names for update solution phase
+  slnFieldNames_ = fnames;
 
 #ifdef NALU_USES_TIOGA
   for (auto* realm: time_.realmVec_) {
     if (!realm->hasOverset_) continue;
 
+    const auto fields = overset_utils::get_overset_field_data(*realm, slnFieldNames_);
     auto& mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
-    ncomp = mgr.register_solution(realm->equationSystems_.oversetUpdater_->fields_);
+    ncomp = mgr.register_solution(fields);
   }
 #endif
   return ncomp;
@@ -177,12 +183,15 @@ void ExtOverset::update_solution()
 {
   if (!hasOverset_) return;
 
+  ThrowAssert(slnFieldNames_.size() > 0u);
+
 #ifdef NALU_USES_TIOGA
   for (auto* realm: time_.realmVec_) {
     if (!realm->hasOverset_) continue;
 
+    const auto fields = overset_utils::get_overset_field_data(*realm, slnFieldNames_);
     auto& mgr = dynamic_cast<OversetManagerTIOGA*>(realm->oversetManager_)->tiogaIface_;
-    mgr.update_solution(realm->equationSystems_.oversetUpdater_->fields_);
+    mgr.update_solution(fields);
   }
 #endif
 }
