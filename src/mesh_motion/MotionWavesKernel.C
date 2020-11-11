@@ -2,7 +2,6 @@
 #include "mesh_motion/MotionWavesKernel.h"
 
 #include <NaluParsing.h>
-#include "utils/ComputeVectorDivergence.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/FieldBLAS.hpp>
@@ -17,10 +16,11 @@ MotionWavesKernel::MotionWavesKernel(stk::mesh::MetaData& meta, const YAML::Node
 {
   load(node);
 
-    // declare divergence of mesh velocity for this motion
-    ScalarFieldType* divV = &(meta.declare_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "div_mesh_velocity"));
-    stk::mesh::put_field_on_mesh(*divV, meta.universal_part(), nullptr);
+  // declare divergence of mesh velocity for this motion
+  isDeforming_ = true;
+  ScalarFieldType* divV = &(meta.declare_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "div_mesh_velocity"));
+  stk::mesh::put_field_on_mesh(*divV, meta.universal_part(), nullptr);
 
 }
 
@@ -366,31 +366,6 @@ MotionWavesKernel::get_StokesCoeff(StokesCoeff* stokes)
   stokes->d4 = d4_;
   stokes->e2 = e2_;
   stokes->e4 = e4_;
-}
-
-void
-MotionWavesKernel::post_compute_geometry(
-  stk::mesh::BulkData& bulk,
-  stk::mesh::PartVector& partVec,
-  stk::mesh::PartVector& partVecBc,
-  bool& computedMeshVelDiv)
-{
-  if (computedMeshVelDiv)
-    return;
-
-  // compute divergence of mesh velocity
-  VectorFieldType* meshVelocity =
-    bulk.mesh_meta_data().get_field<VectorFieldType>(
-      stk::topology::NODE_RANK, "mesh_velocity");
-
-  ScalarFieldType* meshDivVelocity =
-    bulk.mesh_meta_data().get_field<ScalarFieldType>(
-      stk::topology::NODE_RANK, "div_mesh_velocity");
- 
-      stk::mesh::field_fill(0.0, *meshDivVelocity);
-  compute_vector_divergence(
-    bulk, partVec, partVecBc, meshVelocity, meshDivVelocity, true);
-  computedMeshVelDiv = true;
 }
 
 } // namespace nalu

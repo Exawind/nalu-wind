@@ -1,7 +1,6 @@
 #include "mesh_motion/MotionPulsatingSphereKernel.h"
 
 #include <NaluParsing.h>
-#include "utils/ComputeVectorDivergence.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/FieldBLAS.hpp>
@@ -19,6 +18,7 @@ MotionPulsatingSphereKernel::MotionPulsatingSphereKernel(
   load(node);
 
   // declare divergence of mesh velocity for this motion
+  isDeforming_ = true;
   ScalarFieldType *divV = &(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
   stk::mesh::put_field_on_mesh(*divV, meta.universal_part(), nullptr);
   stk::mesh::field_fill(0.0, *divV);
@@ -126,25 +126,6 @@ void MotionPulsatingSphereKernel::compute_velocity(
 
   for (int d=0; d < nalu_ngp::NDimMax; d++)
     vel[d] = pulsatingVelocity * (mxyz[d]-origin_[d]);
-}
-
-void MotionPulsatingSphereKernel::post_compute_geometry(
-  stk::mesh::BulkData& bulk,
-  stk::mesh::PartVector& partVec,
-  stk::mesh::PartVector& partVecBc,
-  bool& computedMeshVelDiv)
-{
-  if(computedMeshVelDiv) return;
-
-  // compute divergence of mesh velocity
-  VectorFieldType* meshVelocity = bulk.mesh_meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_velocity");
-
-  ScalarFieldType* meshDivVelocity = bulk.mesh_meta_data().get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "div_mesh_velocity");
-
-  compute_vector_divergence(bulk, partVec, partVecBc, meshVelocity, meshDivVelocity, true);
-  computedMeshVelDiv = true;
 }
 
 } // nalu

@@ -12,16 +12,6 @@
 
 namespace YAML { class Node; }
 
-namespace stk {
-namespace mesh {
-class MetaData;
-class BulkData;
-class Part;
-
-typedef std::vector<Part*> PartVector;
-}
-}
-
 namespace sierra{
 namespace nalu{
 
@@ -64,14 +54,6 @@ public:
     const DblType* cxyz,
     ThreeDVecType& vel) = 0;
 
-  virtual void post_compute_geometry(
-    stk::mesh::BulkData&,
-    stk::mesh::PartVector&,
-    stk::mesh::PartVector&,
-    bool&)
-  {
-  }
-
   /** Composite addition of motions
    *
    * @param[in]  motionL        Left matrix in composite transformation of matrices
@@ -103,6 +85,11 @@ public:
   const TransMatType& get_trans_mat() const
   {
     return transMat_;
+  }
+
+  bool is_deforming()
+  {
+    return isDeforming_;
   }
 
   /** Reset matrix to an identity matrix
@@ -156,6 +143,8 @@ protected:
 
   DblType startTime_{0.0};
   DblType endTime_{DBL_MAX};
+
+  bool isDeforming_ = false;
 };
 
 template<typename T>

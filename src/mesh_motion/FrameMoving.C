@@ -4,6 +4,7 @@
 #include "FieldTypeDef.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
+#include "utils/ComputeVectorDivergence.h"
 
 #include <cassert>
 
@@ -109,11 +110,21 @@ void FrameMoving::update_coordinates_velocity(const double time)
 
 void FrameMoving::post_compute_geometry()
 {
-  // flag denoting if mesh velocity divergence already computed
-  bool computedMeshVelDiv = false;
+  for (auto& mm: motionKernels_) {
+    if (!mm->is_deforming())
+      continue;
 
-  for (auto& mm: motionKernels_)
-    mm->post_compute_geometry(bulk_,partVec_,partVecBc_,computedMeshVelDiv);
+    // compute divergence of mesh velocity
+    VectorFieldType* meshVelocity = meta_.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_velocity");
+    ScalarFieldType* meshDivVelocity = meta_.get_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "div_mesh_velocity");
+    compute_vector_divergence(bulk_, partVec_, partVecBc_, meshVelocity, meshDivVelocity, true);
+
+    // Mesh velocity divergence is not motion-specific and
+    // is computed for the aggregated mesh velocity
+    break;
+  }
 }
 
 } // nalu

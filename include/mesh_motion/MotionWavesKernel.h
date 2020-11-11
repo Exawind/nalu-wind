@@ -47,17 +47,6 @@ public:
     const DblType* cxyz,
     ThreeDVecType& vel);
 
-  /** perform post compute geometry work for this motion
-   *
-   * @param[in] computedMeshVelDiv flag to denote if divergence of
-   *                               mesh velocity already computed
-   */
-	void post_compute_geometry(
-		stk::mesh::BulkData&,
-        stk::mesh::PartVector&,
-        stk::mesh::PartVector&,
-        bool& computedMeshVelDiv );
-
     struct StokesCoeff{
         DblType k;
         DblType d;
