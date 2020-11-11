@@ -1,78 +1,74 @@
-Simulations:
-  - name: sim1
-    time_integrator: ti_1
-    optimizer: opt1
+# -*- mode: yaml -*-
 
+Simulations:
+- name: sim1
+  time_integrator: ti_1
+  optimizer: opt1
+
+
+# Specify the linear system solvers.
 linear_solvers:
 
+    # solver for scalar equations
   - name: solve_scalar
     type: tpetra
     method: gmres
     preconditioner: sgs
-    tolerance: 1e-5
-    max_iterations: 50
-    kspace: 50
+    tolerance: 1e-6
+    max_iterations: 75
+    kspace: 75
     output_level: 0
 
+    # solver for the pressure Poisson equation
   - name: solve_cont
     type: tpetra
     method: gmres
     preconditioner: muelu
-    tolerance: 1e-5
-    max_iterations: 50
-    kspace: 50
+    tolerance: 1e-6
+    max_iterations: 75
+    kspace: 75
     output_level: 0
+    recompute_preconditioner: no
     muelu_xml_file_name: ../../xml/milestone.xml
 
-transfers:
-
-# Fluid to ....
-
-  - name: xfer_fluid_io
-    type: geometric
-    realm_pair: [fluidRealm, ioRealm]
-    mesh_part_pair: [Front, block_101]
-    objective: input_output
-    transfer_variables:
-      - [velocity, velocity_bc]
-      - [velocity, cont_velocity_bc]
-      - [temperature, temperature_bc]
-
 realms:
-
   - name: fluidRealm
-    mesh: ../../mesh/abl_1km_cube_toy.g
+    mesh: ../../mesh/abl_5km_5km_1km_neutral.g
     use_edges: yes
     automatic_decomposition_type: rcb
 
     equation_systems:
       name: theEqSys
-      max_iterations: 4
+      max_iterations: 2
 
       solver_system_specification:
         velocity: solve_scalar
         pressure: solve_cont
         enthalpy: solve_scalar
+        turbulent_ke: solve_scalar
 
       systems:
-
         - LowMachEOM:
             name: myLowMach
             max_iterations: 1
-            convergence_tolerance: 1e-5
+            convergence_tolerance: 1.0e-5
 
         - Enthalpy:
             name: myEnth
             max_iterations: 1
-            convergence_tolerance: 1e-5
+            convergence_tolerance: 1.0e-5
+
+        - TurbKineticEnergy:
+            name: myTke
+            max_iterations: 1
+            convergence_tolerance: 1.0e-5
 
     material_properties:
-
-      target_name: Unspecified-2-HEX
+      target_name: [fluid_part]
 
       constant_specification:
-       universal_gas_constant: 8314.4621
-       reference_pressure: 101325.0
+        universal_gas_constant: 8314.4621
+        reference_pressure: 83144.621  # = rho_ref*(R/mw)*Tref
 
       reference_quantities:
         - species_name: Air
@@ -80,178 +76,185 @@ realms:
           mass_fraction: 1.0
 
       specifications:
- 
         - name: density
-          type: ideal_gas_t
+          type: constant
+          value: 1.00
 
         - name: viscosity
-          type: polynomial
-          coefficient_declaration:
-           - species_name: Air
-             coefficients: [1.7894e-5, 273.11, 110.56]
+          type: constant
+          value: 0.0
 
         - name: specific_heat
-          type: polynomial
-          coefficient_declaration:
-           - species_name: Air
-             low_coefficients: [3.298677000E+00, 1.408240400E-03, -3.963222000E-06, 
-                                5.641515000E-09, -2.444854000E-12,-1.020899900E+03]
-             high_coefficients: [3.298677000E+00, 1.408240400E-03, -3.963222000E-06, 
-                                 5.641515000E-09, -2.444854000E-12,-1.020899900E+03]
+          type: constant
+          value: 1007.0
 
     initial_conditions:
       - constant: ic_1
-        target_name: Unspecified-2-HEX
+        target_name: [fluid_part]
         value:
-          pressure: 0
-          temperature: 300.0
+          pressure: 0.0
           velocity: [10.0, 0.0, 0.0]
 
+      - user_function: ic_2
+        target_name: [fluid_part]
+        user_function_name:
+          velocity: boundary_layer_perturbation
+        user_function_parameters:
+          velocity: [1.0,0.0075398,0.0075398,50.0,8.0]
+
     boundary_conditions:
+      - periodic_boundary_condition: bc_north_south
+        target_name: [north, south]
+        periodic_user_data:
+          search_tolerance: 0.0001
 
-    - periodic_boundary_condition: bc_left_right
-      target_name: [Front, Back]
-      periodic_user_data:
-        search_tolerance: 0.0001
+      - periodic_boundary_condition: bc_east_west
+        target_name: [east, west]
+        periodic_user_data:
+          search_tolerance: 0.0001
 
-    - periodic_boundary_condition: bc_front_back
-      target_name: [Left, Right]
-      periodic_user_data:
-        search_tolerance: 0.0001 
+      - abltop_boundary_condition: bc_upper
+        target_name: upper
+        abltop_user_data:
+          normal_temperature_gradient: 0.003
 
-    - open_boundary_condition: bc_open
-      target_name: Top
-      open_user_data:
-        velocity: [10.0,0,0]
-        pressure: 0.0
-        temperature: 300.0
-
-    - wall_boundary_condition: bc_lower
-      target_name: Ground
-      wall_user_data:
-        velocity: [0.0,0.0,0.0]
-        abl_wall_function:
-          surface_heating_table:
-            - [     0.0, 0.05, 300.0, 1.0]
-            - [999999.9, 0.05, 300.0, 1.0]
-          reference_temperature: 300.0
-          roughness_height: 0.1
-          kappa: 0.4
-          beta_m: 5.0
-          beta_h: 5.0
-          gamma_m: 16.0
-          gamma_h: 16.0
-          gravity_vector_component: 3
-          monin_obukhov_averaging_type: planar
-          fluctuation_model: Moeng
-          fluctuating_temperature_ref: surface
-
-    boundary_layer_statistics:
-      target_name: [ unspecified-2-hex ]
-      stats_output_file: "abl_statistics.nc"
-      compute_temperature_statistics: yes
-      output_frequency: 10
-      time_hist_output_frequency: 100
+      - wall_boundary_condition: bc_lower
+        target_name: lower
+        wall_user_data:
+          velocity: [0.0,0.0,0.0]
+          abl_wall_function:
+            surface_heating_table:
+              - [     0.0, 0.00, 290.0, 1.0]
+              - [999999.9, 0.00, 290.0, 1.0]
+            reference_temperature: 290.0
+            roughness_height: 0.01
+            kappa: 0.4
+            beta_m: 5.0
+            beta_h: 5.0
+            gamma_m: 16.0
+            gamma_h: 16.0
+            gravity_vector_component: 3
+            monin_obukhov_averaging_type: planar
+            fluctuation_model: Moeng
 
     solution_options:
       name: myOptions
-      turbulence_model: wale
+      turbulence_model: ksgs
       interp_rhou_together_for_mdot: yes
 
+      fix_pressure_at_node:
+        value: 0.0
+        node_lookup_type: spatial_location
+        location: [100.0, 2500.0, 1.0]
+        search_target_part: [fluid_part]
+        search_method: stk_kdtree
+
       options:
+        - turbulence_model_constants:
+            kappa: 0.41
+            cEps: 0.93
+            cmuEps: 0.0673
+            cmuCs: 0.135
 
         - laminar_prandtl:
             enthalpy: 0.7
 
         - turbulent_prandtl:
-            enthalpy: 1.0
+            enthalpy: 0.3333
+
+        - turbulent_schmidt:
+            turbulent_ke: 0.5
 
         - source_terms:
-            momentum: buoyancy_boussinesq_ra
-            continuity: density_time_derivative
+            momentum:
+            - buoyancy_boussinesq_ra
+            - EarthCoriolis
+            - body_force
+            turbulent_ke:
+            - rodi
 
         - user_constants:
-            gravity: [0.0,0.0,-9.81]
-            reference_density: 1.2
-            boussinesq_time_scale: 3600.0 #seconds
-
-        - hybrid_factor:
-            velocity: 0.0
-            enthalpy: 1.0
+            reference_density: 1.00
+            reference_temperature: 290.0
+            gravity: [0.0, 0.0, -9.81]
+            thermal_expansion_coefficient: 3.33333333e-3
+            east_vector: [1.0, 0.0, 0.0]
+            north_vector: [0.0, 1.0, 0.0]
+            latitude: 90.0
+            earth_angular_velocity: 5.0e-5
+            boussinesq_time_scale: 3600.0 # seconds
 
         - limiter:
             pressure: no
             velocity: no
-            enthalpy: yes 
+            enthalpy: yes
 
         - peclet_function_form:
             velocity: tanh
             enthalpy: tanh
+            turbulent_ke: tanh
 
         - peclet_function_tanh_transition:
-            velocity: 5000.0
-            enthalpy: 2.01
+            velocity: 50000.0
+            enthalpy: 2.0
+            turbulent_ke: 2.0
 
         - peclet_function_tanh_width:
             velocity: 200.0
-            enthalpy: 4.02
-
-        - source_terms:
-            momentum: body_force
+            enthalpy: 1.0
+            turbulent_ke: 1.0
 
         - source_term_parameters:
-            momentum: [0.000135, 0.0, 0.0]
+            momentum: [-0.0, 0.001, 0.0]
+
+        - input_variables_from_file:
+            temperature: temperature
 
 
     output:
-      output_data_base_name: abl_1km_cube_ra.e
-      output_frequency: 5
+      output_data_base_name: output/abl_unstable.exo
+      output_frequency: 1000
       output_node_set: no
       output_variables:
-       - velocity
-       - pressure
-       - enthalpy
-       - temperature
-       - specific_heat
-       - viscosity
-       - temperature_ma #always populated with moving average Boussinesq model
+      - velocity
+      - pressure
+      - enthalpy
+      - temperature_ma
+      - turbulent_ke
 
-  - name: ioRealm
-    mesh: ../../mesh/abl_io.g
-    type: input_output
-    automatic_decomposition_type: rcb
+    boundary_layer_statistics:
+      target_name: [fluid_part]
+      stats_output_file: abl_statistics.nc
+      compute_temperature_statistics: yes
+      output_frequency: 10000
+      time_hist_output_frequency: 10
 
-    field_registration:
-      specifications:
+    data_probes:
+      output_frequency: 10
+      search_method: stk_kdtree
+      search_tolerance: 1.0e-3
+      search_expansion_factor: 2.0
 
-        - field_name: velocity_bc
-          target_name: block_101
-          field_size: 3
-          field_type: node_rank
-
-        - field_name: cont_velocity_bc
-          target_name: block_101
-          field_size: 3
-          field_type: node_rank
-
-        - field_name: temperature_bc
-          target_name: block_101
-          field_size: 1
-          field_type: node_rank
-
-    output:
-      output_data_base_name: abl_io_results_ra.e
-      output_frequency: 1
-      output_node_set: no
-      output_variables:
-       - velocity_bc
-       - cont_velocity_bc
-       - temperature_bc
+      lidar_specifications:
+        from_target_part: [fluid_part]
+        inner_prism_initial_theta: 90
+        inner_prism_rotation_rate: 3.5
+        inner_prism_azimuth: 15.2
+        outer_prism_initial_theta: 90
+        outer_prism_rotation_rate: 6.5
+        outer_prism_azimuth: 15.2
+        scan_time: 2 #seconds
+        number_of_samples: 2
+        points_along_line: 1
+        center: [500,500,100]
+        beam_length: 1.0
+        axis: [1,0,0]
+        ground_direction: [0,0,1]
 
 Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
-      start_time: 0
+      start_time: 0.0
       termination_step_count: 10
       time_step: 0.5
       time_stepping_type: fixed
@@ -260,4 +263,3 @@ Time_Integrators:
 
       realms:
         - fluidRealm
-        - ioRealm
