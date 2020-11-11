@@ -16,32 +16,44 @@ linear_solvers:
     type: hypre
     method: hypre_gmres
     preconditioner: boomerAMG
-    tolerance: 1e-12
+    tolerance: 1e-10
     max_iterations: 100
-    kspace: 40
+    kspace: 75
     output_level: 0
     bamg_max_levels: 1
     bamg_relax_type: 8
     bamg_num_sweeps: 2
     bamg_relax_order: 0
     segregated_solver: yes
-    ensure_reproducible: no
-    use_native_cuda_sort: no
     write_matrix_files: no
 
   - name: solve_scalar
     type: hypre
     method: hypre_gmres
     preconditioner: boomerAMG
-    tolerance: 1e-12
-    max_iterations: 100
-    kspace: 40
+    tolerance: 1e-10
+    max_iterations: 200
+    kspace: 75
     output_level: 0
+    bamg_max_levels: 1
+    bamg_relax_type: 8
+    bamg_num_sweeps: 2
+    bamg_relax_order: 0
+    write_matrix_files: no
+
+  - name: solve_elliptic
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-10
+    max_iterations: 200
+    kspace: 75
+    output_level: 0
+    bamg_max_levels: 7
     bamg_coarsen_type: 8
     bamg_interp_type: 6
+    bamg_num_sweeps: 2
     bamg_cycle_type: 1
-    ensure_reproducible: no
-    use_native_cuda_sort: no
     write_matrix_files: no
 
 realms:
@@ -63,8 +75,8 @@ realms:
         velocity: solve_mom
         turbulent_ke: solve_scalar
         specific_dissipation_rate: solve_scalar
-        pressure: solve_scalar
-        ndtw: solve_scalar
+        pressure: solve_elliptic
+        ndtw: solve_elliptic
 
       systems:
 
@@ -145,7 +157,7 @@ realms:
     solution_options:
       name: myOptions
       turbulence_model: sst
-      #projected_timescale_type: momentum_diag_inv #### Use 1/diagA formulation
+      projected_timescale_type: momentum_diag_inv #### Use 1/diagA formulation
 
       options:
         - hybrid_factor:
@@ -178,11 +190,11 @@ realms:
             turbulent_ke: element
             specific_dissipation_rate: element
 
-        #- relaxation_factor:
-        #    velocity: 0.7
-        #    pressure: 0.3
-        #    turbulent_ke: 0.7
-        #    specific_dissipation_rate: 0.7
+        - relaxation_factor:
+            velocity: 0.7
+            pressure: 0.3
+            turbulent_ke: 0.7
+            specific_dissipation_rate: 0.7
 
     post_processing:
 
