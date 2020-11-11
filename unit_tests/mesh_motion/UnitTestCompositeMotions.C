@@ -56,15 +56,15 @@ TEST(meshMotion, composite_motions)
   const double time = 3.5;
   double xyz[3] = {2.5,1.5,6.5};
 
-  // initialize composite trasnformation matrix
-  sierra::nalu::NgpMotion::TransMatType comp_trans
-    = sierra::nalu::NgpMotion::identity_mat();
-
   // initialize the mesh rotation class
   sierra::nalu::MotionRotationKernel rotClass(rotNode);
   rotClass.build_transformation(time, xyz);
   std::vector<double> rotCoord = transform(rotClass.get_trans_mat(), xyz);
-  comp_trans = rotClass.add_motion(rotClass.get_trans_mat(), comp_trans);
+
+  // add rotation to composite motion
+  sierra::nalu::NgpMotion::TransMatType tempMat1, tempMat2 = {};
+  sierra::nalu::NgpMotion::reset_mat(tempMat1);
+  rotClass.add_motion(rotClass.get_trans_mat(), tempMat1, tempMat2);
 
   // compute rotational velocity in absence of translation
   sierra::nalu::NgpMotion::ThreeDVecType rotVel = {};
@@ -73,12 +73,15 @@ TEST(meshMotion, composite_motions)
   // initialize the mesh translation class
   sierra::nalu::MotionTranslationKernel transClass(transNode);
   transClass.build_transformation(time, xyz);
-  comp_trans = transClass.add_motion(transClass.get_trans_mat(), comp_trans);
-  std::vector<double> newCoord = transform(comp_trans, xyz);
+
+  // add translation to composite motion and transform coordinate
+  sierra::nalu::NgpMotion::TransMatType compTrans = {};
+  transClass.add_motion(transClass.get_trans_mat(), tempMat2, compTrans);
+  std::vector<double> newCoord = transform(compTrans, xyz);
 
   // compute rotational velocity in absence of translation
   sierra::nalu::NgpMotion::ThreeDVecType compVelRot = {};
-  rotClass.compute_velocity(time, comp_trans, xyz, &newCoord[0], compVelRot);
+  rotClass.compute_velocity(time, compTrans, xyz, &newCoord[0], compVelRot);
 
   // ensure the rotational componenets of the velocity remains same
   EXPECT_NEAR(compVelRot[0], rotVel[0], testTol);

@@ -72,29 +72,32 @@ void MotionPulsatingSphereKernel::scaling_mat(
   if(radius == 0.0) uniform_scaling = 1.0;
 
   // Build matrix for translating object to cartesian origin
-  transMat_[0][3] = -origin_[0];
-  transMat_[1][3] = -origin_[1];
-  transMat_[2][3] = -origin_[2];
+  TransMatType tempMat = {};
+  reset_mat(tempMat);
+  tempMat[0][3] = -origin_[0];
+  tempMat[1][3] = -origin_[1];
+  tempMat[2][3] = -origin_[2];
 
   // Build matrix for scaling object
-  TransMatType currTransMat = {};
-
-  currTransMat[0][0] = uniform_scaling;
-  currTransMat[1][1] = uniform_scaling;
-  currTransMat[2][2] = uniform_scaling;
-  currTransMat[3][3] = 1.0;
+  TransMatType tempMat2 = {};
+  reset_mat(tempMat2);
+  tempMat2[0][0] = uniform_scaling;
+  tempMat2[1][1] = uniform_scaling;
+  tempMat2[2][2] = uniform_scaling;
+  tempMat2[3][3] = 1.0;
 
   // composite addition of motions in current group
-  transMat_ = add_motion(currTransMat,transMat_);
+  TransMatType tempMat3 = {};
+  add_motion(tempMat2,tempMat,tempMat3);
 
   // Build matrix for translating object back to its origin
-  reset_mat(currTransMat);
-  currTransMat[0][3] = origin_[0];
-  currTransMat[1][3] = origin_[1];
-  currTransMat[2][3] = origin_[2];
+  reset_mat(tempMat);
+  tempMat[0][3] = origin_[0];
+  tempMat[1][3] = origin_[1];
+  tempMat[2][3] = origin_[2];
 
   // composite addition of motions
-  transMat_ = add_motion(currTransMat,transMat_);
+  add_motion(tempMat,tempMat3,transMat_);
 }
 
 void MotionPulsatingSphereKernel::compute_velocity(

@@ -31,7 +31,7 @@ public:
   using DblType = double;
 
   //! Define matrix type alias
-  using TransMatType = std::array<std::array<DblType, nalu_ngp::NDimMax+1>, nalu_ngp::NDimMax+1>;
+  using TransMatType = DblType [nalu_ngp::NDimMax+1][nalu_ngp::NDimMax+1];
 
   //! Define 3D vector type alias
   using ThreeDVecType = DblType [nalu_ngp::NDimMax];
@@ -74,24 +74,24 @@ public:
 
   /** Composite addition of motions
    *
-   * @param[in] motionL Left matrix in composite transformation of matrices
-   * @param[in] motionR Right matrix in composite transformation of matrices
-   * @return    4x4 matrix representing composite addition of motions
+   * @param[in]  motionL        Left matrix in composite transformation of matrices
+   * @param[in]  motionR        Right matrix in composite transformation of matrices
+   * @param[out] comp_trans_mat 4x4 matrix representing composite addition of motions
    */
   KOKKOS_FORCEINLINE_FUNCTION
-  TransMatType add_motion(
+  void add_motion(
     const TransMatType& motionL,
-    const TransMatType& motionR)
+    const TransMatType& motionR,
+    TransMatType& comp_trans_mat)
   {
-    TransMatType comp_trans_mat_ = {};
-
-    for (int r = 0; r < nalu_ngp::NDimMax+1; r++)
-      for (int c = 0; c < nalu_ngp::NDimMax+1; c++)
+    for (int r = 0; r < nalu_ngp::NDimMax+1; r++) {
+      for (int c = 0; c < nalu_ngp::NDimMax+1; c++) {
+        comp_trans_mat[r][c] = 0.0;
         for (int k = 0; k < nalu_ngp::NDimMax+1; k++) {
-          comp_trans_mat_[r][c] += motionL[r][k] * motionR[k][c];
+          comp_trans_mat[r][c] += motionL[r][k] * motionR[k][c];
         }
-
-    return comp_trans_mat_;
+      }
+    }
   }
 
   void set_computed_centroid( std::vector<DblType>& centroid )
@@ -105,28 +105,47 @@ public:
     return transMat_;
   }
 
+  /** Reset matrix to an identity matrix
+   *
+   * @param[in]  mat  4x4 matrix
+   */
   KOKKOS_FORCEINLINE_FUNCTION
-  static constexpr TransMatType identity_mat()
+  static void reset_mat(TransMatType& mat)
   {
-    return {{{{1,0,0,0}},
-             {{0,1,0,0}},
-             {{0,0,1,0}},
-             {{0,0,0,1}}}};
+    for (int r = 0; r < nalu_ngp::NDimMax+1; r++) {
+      for (int c = 0; c < nalu_ngp::NDimMax+1; c++) {
+        if(r == c)
+          mat[r][c] = 1.0;
+        else
+          mat[r][c] = 0.0;
+      }
+    }
+  }
+
+  /** Make matrix into an identity matrix
+   *
+   * @param[in]  dest_mat  4x4 matrix to be copied into
+   * @param[in]  src_mat   4x4 matrix to be copied from
+   */
+  KOKKOS_FORCEINLINE_FUNCTION
+  static void copy_mat(
+    TransMatType& dest_mat,
+    const TransMatType& src_mat)
+  {
+    for (int r = 0; r < nalu_ngp::NDimMax+1; r++) {
+      for (int c = 0; c < nalu_ngp::NDimMax+1; c++) {
+        dest_mat[r][c] = src_mat[r][c];
+      }
+    }
   }
 
 protected:
-  KOKKOS_FORCEINLINE_FUNCTION
-  void reset_mat(TransMatType& mat)
-  {
-    mat = identity_mat();
-  }
-
   /** Transformation matrix
    *
    * A 4x4 matrix that combines rotation, translation, scaling,
    * allowing representation of all affine transformations
    */
-  TransMatType transMat_ = identity_mat();
+  TransMatType transMat_ = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
 
   /** Centroid
    *

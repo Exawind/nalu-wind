@@ -44,15 +44,21 @@ void FrameReference::update_coordinates(const double time)
     for (int d = 0; d < nDim; ++d)
       mX[d] = modelCoords.get(mi,d);
 
-    // all frame motions are based off of the reference frame
-    NgpMotion::TransMatType comp_trans_mat = NgpMotion::identity_mat();
+    // initialize composite transformation matrix
+    NgpMotion::TransMatType comp_trans_mat;
+    NgpMotion::reset_mat(comp_trans_mat);
 
+    // create composite transformation matrix based off of all motions
     for (size_t i=0; i < numKernels; ++i) {
       NgpMotion* kernel = ngpKernels(i);
+
       // build and get transformation matrix
       kernel->build_transformation(time,mX);
+
       // composite addition of motions in current group
-      comp_trans_mat = kernel->add_motion(kernel->get_trans_mat(),comp_trans_mat);
+      NgpMotion::TransMatType temp_trans_mat = {};
+      kernel->add_motion(kernel->get_trans_mat(),comp_trans_mat,temp_trans_mat);
+      NgpMotion::copy_mat(comp_trans_mat,temp_trans_mat);
     }
 
     // perform matrix multiplication between transformation matrix

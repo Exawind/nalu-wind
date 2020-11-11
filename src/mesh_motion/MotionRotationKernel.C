@@ -70,9 +70,11 @@ void MotionRotationKernel::rotation_mat(const DblType angle)
   reset_mat(transMat_);
 
   // Build matrix for translating object to cartesian origin
-  transMat_[0][3] = -origin_[0];
-  transMat_[1][3] = -origin_[1];
-  transMat_[2][3] = -origin_[2];
+  TransMatType tempMat = {};
+  reset_mat(tempMat);
+  tempMat[0][3] = -origin_[0];
+  tempMat[1][3] = -origin_[1];
+  tempMat[2][3] = -origin_[2];
 
   // Build matrix for rotating object
   // compute magnitude of axis around which to rotate
@@ -90,33 +92,34 @@ void MotionRotationKernel::rotation_mat(const DblType angle)
   const DblType q3 = sinang * axis_[2]/mag;
 
   // rotation matrix based on quaternion
-  TransMatType currTransMat = {};
+  TransMatType tempMat2 = {};
   // 1st row
-  currTransMat[0][0] = q0*q0 + q1*q1 - q2*q2 - q3*q3;
-  currTransMat[0][1] = 2.0*(q1*q2 - q0*q3);
-  currTransMat[0][2] = 2.0*(q0*q2 + q1*q3);
+  tempMat2[0][0] = q0*q0 + q1*q1 - q2*q2 - q3*q3;
+  tempMat2[0][1] = 2.0*(q1*q2 - q0*q3);
+  tempMat2[0][2] = 2.0*(q0*q2 + q1*q3);
   // 2nd row
-  currTransMat[1][0] = 2.0*(q1*q2 + q0*q3);
-  currTransMat[1][1] = q0*q0 - q1*q1 + q2*q2 - q3*q3;
-  currTransMat[1][2] = 2.0*(q2*q3 - q0*q1);
+  tempMat2[1][0] = 2.0*(q1*q2 + q0*q3);
+  tempMat2[1][1] = q0*q0 - q1*q1 + q2*q2 - q3*q3;
+  tempMat2[1][2] = 2.0*(q2*q3 - q0*q1);
   // 3rd row
-  currTransMat[2][0] = 2.0*(q1*q3 - q0*q2);
-  currTransMat[2][1] = 2.0*(q0*q1 + q2*q3);
-  currTransMat[2][2] = q0*q0 - q1*q1 - q2*q2 + q3*q3;
+  tempMat2[2][0] = 2.0*(q1*q3 - q0*q2);
+  tempMat2[2][1] = 2.0*(q0*q1 + q2*q3);
+  tempMat2[2][2] = q0*q0 - q1*q1 - q2*q2 + q3*q3;
   // 4th row
-  currTransMat[3][3] = 1.0;
+  tempMat2[3][3] = 1.0;
 
   // composite addition of motions in current group
-  transMat_ = add_motion(currTransMat,transMat_);
+  TransMatType tempMat3 = {};
+  add_motion(tempMat2,tempMat,tempMat3);
 
   // Build matrix for translating object back to its origin
-  reset_mat(currTransMat);
-  currTransMat[0][3] = origin_[0];
-  currTransMat[1][3] = origin_[1];
-  currTransMat[2][3] = origin_[2];
+  reset_mat(tempMat);
+  tempMat[0][3] = origin_[0];
+  tempMat[1][3] = origin_[1];
+  tempMat[2][3] = origin_[2];
 
   // composite addition of motions
-  transMat_ = add_motion(currTransMat,transMat_);
+  add_motion(tempMat,tempMat3,transMat_);
 }
 
 void MotionRotationKernel::compute_velocity(
