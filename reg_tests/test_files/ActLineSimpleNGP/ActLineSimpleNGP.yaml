@@ -152,7 +152,7 @@ realms:
     search_target_part: Unspecified-2-HEX
 
     n_simpleblades: 1
-    debug_output: True
+    debug_output: no
     Blade0:
       num_force_pts_blade: 10
       epsilon: [3.0, 3.0, 3.0]
