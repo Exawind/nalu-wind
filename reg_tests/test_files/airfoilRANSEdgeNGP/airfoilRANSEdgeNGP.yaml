@@ -48,7 +48,7 @@ realms:
    
     equation_systems:
       name: theEqSys
-      max_iterations: 1
+      max_iterations: 2
 
       solver_system_specification:
         velocity: solve_scalar
