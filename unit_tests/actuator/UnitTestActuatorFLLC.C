@@ -37,6 +37,7 @@ const char* actuatorParameters = R"act(actuator:
     aoa_table: [-180, 0, 180]
     cl_table:  [2, 2, 2]
     cd_table:  [1.2])act";
+
 class ActuatorFLLC : public ::testing::Test
 {
 protected:
@@ -60,6 +61,7 @@ protected:
   }
 };
 
+#ifndef KOKKOS_ENABLE_CUDA
 TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
 {
   auto vel = helper_.get_local_view(actBulk_.velocity_);
@@ -261,6 +263,7 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
   }
 
 }
+#endif
 
 } // namespace
 } // namespace nalu
