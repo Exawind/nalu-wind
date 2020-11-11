@@ -15,6 +15,8 @@
 #include <FieldTypeDef.h>
 #include "utils/LinearInterpolation.h"
 #include <cmath>
+#include <string>
+#include <ostream>
 
 namespace sierra {
 namespace nalu {
@@ -100,6 +102,39 @@ ActSimpleUpdatePoints::operator()(int index) const
 }
 #endif
 
+void ActSimpleWriteToFile(ActuatorBulkSimple &actBulk, const ActuatorMetaSimple &actMeta){
+  if (!actMeta.has_output_file_)
+    return;
+  std::string filename = actMeta.output_filenames_[actBulk.localTurbineId_];
+  ActDualViewHelper<ActuatorFixedMemSpace> helper;
+  auto vel = helper.get_local_view(actBulk.velocity_);
+  auto force = helper.get_local_view(actBulk.actuatorForce_);
+  auto relVel = helper.get_local_view(actBulk.relativeVelocity_);
+  auto density = helper.get_local_view(actBulk.density_);
+  const int offset  = actBulk.turbIdOffset_.h_view(actBulk.localTurbineId_);
+
+  if (actBulk.localTurbineId_==NaluEnv::self().parallel_rank()){
+    std::ofstream outFile;
+    //ThrowErrorIf(NaluEnv::self().parallel_rank()!=0);
+
+    outFile.open(filename, std::ios_base::app);
+    const int stop =
+      offset + actMeta.numPointsTurbine_.h_view(actBulk.localTurbineId_);
+
+    for (int index = offset; index < stop; ++index) {
+      const int i = index - offset;
+      // write cached stuff from earlier computations
+      outFile << actBulk.output_cache_[i];
+      outFile << vel(index, 0) << ", "<< vel(index, 1) << ", "<< vel(index, 2) << ", ";
+      outFile << relVel(index, 0) << ", "<< relVel(index, 1) << ", "<< relVel(index, 2) << ", ";
+      outFile << force(index, 0) << ", "<< force(index, 1) << ", "<< force(index, 2) << ", ";
+      outFile << density(index) << std::endl;
+      actBulk.output_cache_[i].clear();
+    }
+    outFile.close();
+  }
+}
+
 ActSimpleAssignVel::ActSimpleAssignVel(ActuatorBulkSimple& actBulk)
   : velocity_(helper_.get_local_view(actBulk.velocity_)),
     density_(helper_.get_local_view(actBulk.density_)),
@@ -132,94 +167,110 @@ ActSimpleAssignVel::operator()(int index) const
 
 }
 
-ActSimpleComputeForce::ActSimpleComputeForce(ActuatorBulkSimple& actBulk,
-					     const ActuatorMetaSimple& actMeta)
-  : velocity_(helper_.get_local_view(actBulk.velocity_)),
-    density_(helper_.get_local_view(actBulk.density_)),
-    force_(helper_.get_local_view(actBulk.actuatorForce_)),
-    offset_(helper_.get_local_view(actBulk.turbIdOffset_)),
-    turbId_(actBulk.localTurbineId_),
-    nPolarTable(actMeta.polarTableSize_.h_view(turbId_)),
-    aoaPolarTableDv_("aoa_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
-    clPolarTableDv_("cl_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
-    cdPolarTableDv_("cd_polartable_Dv", actMeta.polarTableSize_.h_view(turbId_)),
-    nPts(actMeta.num_force_pts_blade_.h_view(turbId_)),
-    twistTableDv_("twist_table_Dv", actMeta.num_force_pts_blade_.h_view(turbId_)),
-    elemAreaDv_("elem_area_Dv", actMeta.num_force_pts_blade_.h_view(turbId_)),
-    debug_output_(actBulk.debug_output_)
+void
+ActSimpleComputeRelativeVelocity(
+  ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta)
 {
+  ActDualViewHelper<ActuatorFixedMemSpace> helper;
+  helper.touch_dual_view(actBulk.alpha_);
+  helper.touch_dual_view(actBulk.relativeVelocity_);
+  auto velocity = helper.get_local_view(actBulk.velocity_);
+  auto relVelocity = helper.get_local_view(actBulk.relativeVelocity_);
+  auto alpha = helper.get_local_view(actBulk.alpha_);
+  auto offset = helper.get_local_view(actBulk.turbIdOffset_);
 
-  helper_.touch_dual_view(actBulk.actuatorForce_);
-  if (NaluEnv::self().parallel_rank() == turbId_) {
-    // Set up the polar table arrays
-    for (size_t i=0; i<nPolarTable; i++) {
-      aoaPolarTableDv_.h_view(i) = actMeta.aoaPolarTableDv_.h_view(turbId_,i);
-      clPolarTableDv_.h_view(i)  = actMeta.clPolarTableDv_.h_view(turbId_, i);
-      cdPolarTableDv_.h_view(i)  = actMeta.cdPolarTableDv_.h_view(turbId_, i);
-    }
-    // Copy over the twist/area tables
-    for (size_t i=0; i<nPts; i++) {
-      twistTableDv_.h_view(i) = actMeta.twistTableDv_.h_view(turbId_, i);
-      elemAreaDv_.h_view(i)   = actMeta.elemAreaDv_.h_view(turbId_, i);
-    }
-    
-    // extract the directions
-    for (int i=0; i<3; i++) {
-      p1ZeroAlphaDir[i] = actMeta.p1ZeroAlphaDir_.h_view(turbId_, i);
-      chodrNormalDir[i] = actMeta.chordNormalDir_.h_view(turbId_, i);
-      spanDir[i]        = actMeta.spanDir_.h_view(turbId_, i);
-    }
+  const int turbId = actBulk.localTurbineId_;
 
-  }
+  Kokkos::deep_copy(alpha, 0);
+  Kokkos::deep_copy(relVelocity, 0);
+
+  Kokkos::parallel_for(
+    "compute relative velocities", actBulk.local_range_policy(),
+    KOKKOS_LAMBDA(int index) {
+      auto twistTable = Kokkos::subview(
+        helper.get_local_view(actMeta.twistTableDv_), turbId, Kokkos::ALL);
+      auto p1ZeroAlphaDir = Kokkos::subview(
+        helper.get_local_view(actMeta.p1ZeroAlphaDir_), turbId, Kokkos::ALL);
+      auto chordNormalDir = Kokkos::subview(
+        helper.get_local_view(actMeta.chordNormalDir_), turbId, Kokkos::ALL);
+      auto spanDir = Kokkos::subview(
+        helper.get_local_view(actMeta.spanDir_), turbId, Kokkos::ALL);
+      const int i = index - offset(turbId);
+
+      auto vel = Kokkos::subview(velocity, index, Kokkos::ALL);
+      auto relVel = Kokkos::subview(relVelocity, index, Kokkos::ALL);
+      double twist = twistTable(i);
+
+      double ws[3] = {vel(0), vel(1), vel(2)}; // Total wind speed
+
+      // Calculate the angle of attack (AOA) and 2d velocity 
+      AirfoilTheory2D::calculate_alpha(
+        ws, p1ZeroAlphaDir.data(), spanDir.data(), chordNormalDir.data(), twist,
+        relVel.data(), alpha(index));
+    });
+
+  actuator_utils::reduce_view_on_host(alpha);
+  actuator_utils::reduce_view_on_host(relVelocity);
 }
 
 void
-ActSimpleComputeForce::operator()(int index) const
+ActSimpleComputeForce(
+  ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta)
 {
 
-  auto pointForce = Kokkos::subview(force_, index, Kokkos::ALL);
-  const int localId = index - offset_(turbId_);
+  ActDualViewHelper<ActuatorFixedMemSpace> helper;
+  helper.touch_dual_view(actBulk.actuatorForce_);
 
-  auto vel     = Kokkos::subview(velocity_, index, Kokkos::ALL);
-  auto density = Kokkos::subview(density_, index);
+  auto density = helper.get_local_view(actBulk.density_);
+  auto force = helper.get_local_view(actBulk.actuatorForce_);
+  auto offset = helper.get_local_view(actBulk.turbIdOffset_);
+  auto alpha = helper.get_local_view(actBulk.alpha_);
+  auto relVelocity = helper.get_local_view(actBulk.relativeVelocity_);
 
-  if (NaluEnv::self().parallel_rank() == turbId_) {
+  auto aoaPolarTable = helper.get_local_view(actMeta.aoaPolarTableDv_);
+  auto clPolarTable = helper.get_local_view(actMeta.clPolarTableDv_);
+  auto cdPolarTable = helper.get_local_view(actMeta.cdPolarTableDv_);
+  auto elemArea = helper.get_local_view(actMeta.elemAreaDv_);
+  auto spanDirection = helper.get_local_view(actMeta.spanDir_);
 
-  double twist = twistTableDv_.h_view(localId); 
+  const int turbId = actBulk.localTurbineId_;
+  const unsigned nPolarTable = actMeta.polarTableSize_.h_view(turbId);
 
-  double ws[3] = {vel(0), vel(1), vel(2)} ; // Total wind speed
- 
-  // Calculate the angle of attack (AOA)
-  double alpha;
-  double ws2D[3];
-  AirfoilTheory2D::calculate_alpha(ws, p1ZeroAlphaDir, 
-				   spanDir, chodrNormalDir, twist, 
-				   ws2D, alpha);
+  const int debug_output = actBulk.debug_output_;
+  std::vector<std::string>* cache = &actBulk.output_cache_;
+
+  Kokkos::parallel_for("ActSimpleComputeForce", actBulk.local_range_policy(), KOKKOS_LAMBDA(int index){
+
+  auto pointForce = Kokkos::subview(force, index, Kokkos::ALL);
+  const int localId = index - offset(turbId);
+
+  auto ws2d = Kokkos::subview(relVelocity, index, Kokkos::ALL);
 
   // set up the polar tables
-  std::vector<double> aoatable;
-  std::vector<double> cltable;
-  std::vector<double> cdtable;
-  for (unsigned i=0; i<nPolarTable; i++) {
-    aoatable.push_back(aoaPolarTableDv_.h_view(i));
-    cltable.push_back(clPolarTableDv_.h_view(i));
-    cdtable.push_back(cdPolarTableDv_.h_view(i));
-  }
+  double* polarPointer =
+    Kokkos::subview(aoaPolarTable, turbId, Kokkos::ALL).data();
+  double* clPointer = Kokkos::subview(clPolarTable, turbId, Kokkos::ALL).data();
+  double* cdPointer = Kokkos::subview(cdPolarTable, turbId, Kokkos::ALL).data();
+
+  std::vector<double> aoatable(polarPointer, polarPointer + nPolarTable);
+  std::vector<double> cltable(clPointer, clPointer + nPolarTable);
+  std::vector<double> cdtable(cdPointer, cdPointer + nPolarTable);
+
+  auto spanDir = Kokkos::subview(spanDirection, turbId, Kokkos::ALL);
 
   // Calculate Cl and Cd
   double cl;
   double cd;
-  utils::linear_interp(aoatable, cltable, alpha, cl);
-  utils::linear_interp(aoatable, cdtable, alpha, cd);
+  utils::linear_interp(aoatable, cltable, alpha(index), cl);
+  utils::linear_interp(aoatable, cdtable, alpha(index), cd);
 
   // Magnitude of wind speed
-  double ws2Dnorm = sqrt(ws2D[0]*ws2D[0] + 
-			 ws2D[1]*ws2D[1] +
-			 ws2D[2]*ws2D[2]);
-  
+  double ws2Dnorm =
+    sqrt(ws2d(0) * ws2d(0) + ws2d(1) * ws2d(1) + ws2d(2) * ws2d(2));
+
   // Calculate lift and drag forces
-  double rho  = *density.data();
-  double area = elemAreaDv_.h_view(localId); 
+  double rho  = density(index);
+  double area = elemArea(turbId, localId);
   double Q    = 0.5*rho*ws2Dnorm*ws2Dnorm;
   double lift = cl*Q*area;
   double drag = cd*Q*area;
@@ -227,9 +278,9 @@ ActSimpleComputeForce::operator()(int index) const
   // Set the directions
   double ws2Ddir[3];  // Direction of drag force
   if (ws2Dnorm > 0.0) {
-    ws2Ddir[0] = ws2D[0]/ws2Dnorm;
-    ws2Ddir[1] = ws2D[1]/ws2Dnorm;
-    ws2Ddir[2] = ws2D[2]/ws2Dnorm;
+    ws2Ddir[0] = ws2d(0) / ws2Dnorm;
+    ws2Ddir[1] = ws2d(1) / ws2Dnorm;
+    ws2Ddir[2] = ws2d(2) / ws2Dnorm;
   } else {
     ws2Ddir[0] = 0.0; 
     ws2Ddir[1] = 0.0; 
@@ -237,9 +288,9 @@ ActSimpleComputeForce::operator()(int index) const
   }
   double liftdir[3];      // Direction of lift force
   if (ws2Dnorm > 0.0) {
-    liftdir[0] = ws2Ddir[1]*spanDir[2] - ws2Ddir[2]*spanDir[1]; 
-    liftdir[1] = ws2Ddir[2]*spanDir[0] - ws2Ddir[0]*spanDir[2]; 
-    liftdir[2] = ws2Ddir[0]*spanDir[1] - ws2Ddir[1]*spanDir[0]; 
+    liftdir[0] = ws2Ddir[1]*spanDir(2) - ws2Ddir[2]*spanDir(1); 
+    liftdir[1] = ws2Ddir[2]*spanDir(0) - ws2Ddir[0]*spanDir(2); 
+    liftdir[2] = ws2Ddir[0]*spanDir(1) - ws2Ddir[1]*spanDir(0); 
   } else {
     liftdir[0] = 0.0; 
     liftdir[1] = 0.0; 
@@ -251,16 +302,23 @@ ActSimpleComputeForce::operator()(int index) const
   pointForce(1) = -(lift*liftdir[1] + drag*ws2Ddir[1]);
   pointForce(2) = -(lift*liftdir[2] + drag*ws2Ddir[2]);
 
-  if (debug_output_)
-    NaluEnv::self().naluOutput() 
-      << "Blade "<< turbId_  // LCCOUT 
+  if (debug_output)
+    NaluEnv::self().naluOutput()
+      << "Blade " << turbId // LCCOUT
       << " pointId: " << localId << std::setprecision(5)
-      << " alpha: "<<alpha
-      << " ws2D: "<<ws2D[0]<<" "<<ws2D[1]<<" "<<ws2D[2]<<" "
-      << " Cl, Cd: "<<cl<<" "<<cd
-      << " lift, drag = "<<lift<<" "<<drag
-      << std::endl;
+      << " alpha: " << alpha(index) << " ws2D: " << ws2d(0) << " " << ws2d(1)
+      << " " << ws2d(2) << " "
+      << " Cl, Cd: " << cl << " " << cd << " lift, drag = " << lift << " "
+      << drag << std::endl;
+  if (actMeta.has_output_file_) {
+    std::ostringstream stream;
+    stream << localId << ", " << alpha(index) << ", " << cl << ", " << cd
+           << ", " << lift << ", " << drag << ", ";
+    cache->at(localId) += stream.str();
   }
+  });
+
+  actuator_utils::reduce_view_on_host(force);
 }
 
 void 

@@ -175,6 +175,7 @@ if(NOT ENABLE_CUDA)
   add_test_r(variableDensNonUniform 2)
   add_test_r(vortexOpen 4)
   add_test_r(ActLineSimple 4)
+  add_test_r(ActLineSimpleFLLC 4)
   add_test_r(ActLineSimpleNGP 2)
 
   if (ENABLE_FFTW)

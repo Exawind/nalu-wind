@@ -1,0 +1,205 @@
+# -*- mode: yaml -*-
+# NALU-WIND PARAMETERS
+# This simulation will converge to the same results as figure 8 
+# in Martinez-Tossas and Meneveau, 2019, Filtered lifting line theory and application to the actuator line model 
+# This was confirmed by running with 600 actuator points on a 50x50x50 grid
+# ------
+Simulations:
+- name: sim1
+  time_integrator: ti_1
+  optimizer: opt1
+
+linear_solvers:
+
+- name: solve_scalar
+  type: tpetra
+  method: gmres
+  preconditioner: mt_sgs
+  tolerance: 1e-12
+  max_iterations: 200
+  kspace: 50
+  output_level: 0
+
+- name: solve_cont
+  type: tpetra
+  method: gmres
+  preconditioner: muelu
+  tolerance: 1e-12
+  max_iterations: 200
+  kspace: 50
+  output_level: 0
+  muelu_xml_file_name: ../../xml/milestone.xml
+  summarize_muelu_timer: no
+
+realms:
+
+- name: realm_1
+  mesh: "generated:40x40x40|bbox:-15.265,-15.265,-15.265,15.265,15.265,15.265|sideset:xXyYzZ|show"
+  use_edges: yes
+  automatic_decomposition_type: rcb
+
+  equation_systems:
+    name: theEqSys
+    max_iterations: 2
+
+    solver_system_specification:
+      velocity: solve_scalar
+      pressure: solve_cont
+      turbulent_ke: solve_scalar
+
+    systems:
+
+    - LowMachEOM:
+        name: myLowMach
+        max_iterations: 1
+        convergence_tolerance: 1e-5
+    - TurbKineticEnergy:
+        name: myTke
+        max_iterations: 1
+        convergence_tolerance: 1.0e-5
+
+  initial_conditions:
+
+  - constant: ic_1
+    target_name: block_1
+    value:
+      pressure: 0.0
+      velocity: [1.0, 0.0, 0.0]
+      turbulent_ke: 1.0e-6
+
+  material_properties:
+    target_name: block_1
+    specifications:
+    - name: density
+      type: constant
+      value: 1.0
+
+    - name: viscosity
+      type: constant
+      value: 1e-5
+
+  boundary_conditions:
+
+  - inflow_boundary_condition: bc_1
+    target_name: surface_1
+    inflow_user_data:
+      velocity: [1.0, 0.0, 0.0]
+
+  - open_boundary_condition: bc_2
+    target_name: surface_2
+    open_user_data:
+      pressure: 0.0
+      velocity: [1.0, 0.0, 0.0]
+
+  - symmetry_boundary_condition: bc_3
+    target_name: surface_3
+    symmetry_user_data:
+
+  - symmetry_boundary_condition: bc_4
+    target_name: surface_4
+    symmetry_user_data:
+
+  - symmetry_boundary_condition: bc_5
+    target_name: surface_5
+    symmetry_user_data:
+
+  - symmetry_boundary_condition: bc_6
+    target_name: surface_6
+    symmetry_user_data:
+
+  solution_options:
+    name: myOptions
+    turbulence_model: ksgs
+
+    options:
+    # Model constants for the 1-eq k SGS model.
+    - turbulence_model_constants:
+        kappa: 0.4
+        cEps: 0.93
+        cmuEps: 0.0673
+
+    - laminar_prandtl:
+        enthalpy: 0.7
+
+    # Turbulent Prandtl number is 1/3 following Moeng (1984).
+    - turbulent_prandtl:
+        enthalpy: 0.3333
+
+    # SGS viscosity is divided by Schmidt number in the k SGS diffusion
+    # term.  In Moeng (1984), SGS viscosity is multiplied by 2, hence
+    # we divide by 1/2
+    - turbulent_schmidt:
+        turbulent_ke: 0.5
+
+    - hybrid_factor:
+        velocity: 1.0
+
+    - limiter:
+        pressure: no
+        velocity: no
+
+    - projected_nodal_gradient:
+        pressure: element
+        velocity: element
+
+    - source_terms:
+        momentum: 
+          - actuator
+
+  actuator:
+    type: ActLineSimpleNGP
+    search_method: stk_kdtree
+    search_target_part: block_1
+    fllt_correction: yes
+
+    n_simpleblades: 1
+    debug_output: no
+    Blade0:
+      num_force_pts_blade: 100
+      output_file_name: blade_dump.csv
+      epsilon_min: [3.0, 3.0, 3.0]
+      epsilon_chord: [0.25, 0.25, 0.25]
+      p1: [-3.0, -6.25, 0] 
+      p2: [-3.0,  6.25, 0]
+      p1_zero_alpha_dir: [1, 0, 0]
+      chord_table: [1.0]
+      twist_table: [6.0]
+      aoa_table:  [-180.0, -174.99999999999997, -170.0, -160.0, -155.0, -150.0, -145.0, -140.0, -135.0, -130.0, -124.99999999999999, -119.99999999999999, -115.0, -110.0, -105.00000000000001, -100.0, -95.0, -90.0, -85.0, -80.0, -75.0, -70.0, -65.0, -59.99999999999999, -55.0, -50.0, -45.0, -40.0, -35.0, -29.999999999999996, -25.0, -24.0, -22.999999999999996, -22.0, -21.0, -20.0, -18.999999999999996, -18.0, -17.0, -16.0, -14.999999999999998, -14.0, -13.5, -13.0, -12.0, -11.0, -10.0, -9.0, -8.0, -7.0, -6.0, -5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.5, 9.0, 9.499999999999998, 10.0, 10.5, 11.0, 11.499999999999998, 12.0, 12.5, 13.0, 13.5, 14.0, 14.500000000000002, 14.999999999999998, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 18.999999999999996, 19.5, 20.0, 21.0, 22.0, 22.999999999999996, 24.0, 25.0, 26.0, 28.0, 29.999999999999996, 32.0, 35.0, 40.0, 45.0, 50.0, 55.0, 59.99999999999999, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, 105.00000000000001, 110.0, 115.0, 119.99999999999999, 124.99999999999999, 130.0, 135.0, 140.0, 145.0, 150.0, 155.0, 160.0, 170.0, 174.99999999999997, 180.0]
+      cl_table: [-0.0012980832577013347, 0.37927138936723, 0.7421163918965019, 0.6677912315886078, 0.725489123152158, 0.7877773216487073, 0.8095003857173001, 0.7992751137251166, 0.7657183040393372, 0.7162163267780824, 0.6532338390632283, 0.5780050697675925, 0.4917642477639911, 0.39574560192524055, 0.2911833611241576, 0.1793117542335585, 0.06136501012626002, -0.061045293690459364, -0.18479818517147154, -0.30639534363718723, -0.42233844840801615, -0.5291291788043686, -0.6232692141466549, -0.7012602337552848, -0.759603916950669, -0.7966002849695065, -0.8177427267136551, -0.8303229730012619, -0.8416327546504737, -0.8589638024794374, -0.8896078473062998, -0.8979758882234171, -0.9072264520997212, -0.917845765454511, -0.932031625498098, -0.9524097221135488, -0.9816057451839276, -1.0198234975145903, -1.057579233600057, -1.082967320857136, -1.0840821267026373, -1.052466783945734, -1.025837944747679, -0.9934594869650534, -0.9158471955315858, -0.8271493534837311, -0.7298153409295238, -0.625027022044408, -0.5139662610038271, -0.39779229241462444, -0.27757383260924257, -0.15435696835152335, -0.029187786405308638, 0.09688762646555946, 0.22282318349723912, 0.3475727979258882, 0.4700903829876647, 0.589329851918727, 0.7042451179552329, 0.8137900943333406, 0.9169186942892077, 1.0125848310589927, 1.0997424178788535, 1.1773453679849486, 1.244622889057457, 1.2744756532584496, 1.3019053665526488, 1.3269877389275921, 1.349798480370815, 1.370413300869855, 1.3889079104122473, 1.4053580189855293, 1.4198393365772373, 1.4324275731749068, 1.4431984387660752, 1.4522276433382788, 1.4595908968790532, 1.4653639093759356, 1.4696223908164623, 1.47244205118817, 1.4738567022747449, 1.4737325630444738, 1.4718939542617946, 1.4681651966911449, 1.462370611096961, 1.4543345182436815, 1.4438812388957427, 1.4308350938175831, 1.4150944130488177, 1.376380922275965, 1.3298137686260685, 1.2775399634231903, 1.2217065179913915, 1.1644604436547346, 1.1079487517372806, 1.00571656045623, 0.9285049718966855, 0.8750847624309006, 0.828822032375974, 0.8011119860694785, 0.7808848079601696, 0.7525832774500356, 0.7128833750458191, 0.6584610812542633, 0.5869833906400332, 0.5000813539994873, 0.40037703618690584, 0.29049250205656985, 0.1730498164627595, 0.05067104425975604, -0.07402174969816044, -0.19840650055670872, -0.31986007076960676, -0.4357550320225644, -0.5434628833092897, -0.6403551236234915, -0.7238032519588774, -0.7911787673091569, -0.8398531686680367, -0.8671979550292261, -0.8702004558751633, -0.8443113226432083, -0.7925864638238079, -0.7500394941648353, -0.670168306210621, -0.4516559336609397, -0.0012980832577013347]
+      cd_table:  [0]
+
+  output:
+    output_data_base_name: output/fllc.exo
+    output_frequency: 5
+    output_node_set: no
+    output_variables:
+    - velocity
+    - pressure
+    - actuator_source
+
+  data_probes:  
+    output_format: text 
+    output_frequency: 1
+    search_method: stk_kdtree
+    search_tolerance: 1.0e-5 #1.0e-3
+    search_expansion_factor: 2.0
+
+  restart:
+    restart_data_base_name: actuatorLine.rst
+    restart_frequency: 10
+    restart_start: 10
+    compression_level: 9
+    compression_shuffle: yes
+
+Time_Integrators:
+- StandardTimeIntegrator:
+    name: ti_1
+    start_time: 0
+    termination_step_count: 10
+    time_step: 0.25
+    time_stepping_type: fixed
+    time_step_count: 0
+    second_order_accuracy: no
+
+    realms:
+    - realm_1

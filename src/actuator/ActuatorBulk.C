@@ -44,10 +44,23 @@ ActuatorBulk::ActuatorBulk(const ActuatorMeta& actMeta)
     searchRadius_("searchRadius", actMeta.numPointsTotal_),
     coarseSearchPointIds_("coarseSearchPointIds", 0),
     coarseSearchElemIds_("coarseSearchElemIds", 0),
+    relativeVelocity_("relativeVelocity", actMeta.numPointsTotal_),
+    relativeVelocityMagnitude_(
+      "relativeVelocitymagnitude",
+      actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
+    liftForceDistribution_("G", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
+    deltaLiftForceDistribution_(
+      "deltaG", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
+    epsilonOpt_("epsOpt", actMeta.numPointsTotal_),
+    fllc_("fll_Correction", actMeta.useFLLC_ ? actMeta.numPointsTotal_ : 0),
     localCoords_("localCoords", actMeta.numPointsTotal_),
     pointIsLocal_("pointIsLocal", actMeta.numPointsTotal_),
     localParallelRedundancy_("localParallelReundancy", actMeta.numPointsTotal_),
-    elemContainingPoint_("elemContainPoint", actMeta.numPointsTotal_)
+    elemContainingPoint_("elemContainPoint", actMeta.numPointsTotal_),
+    localTurbineId_(
+      NaluEnv::self().parallel_rank() >= actMeta.numberOfActuators_
+        ? -1
+        : NaluEnv::self().parallel_rank())
 {
   compute_offsets(actMeta);
 }
@@ -114,6 +127,20 @@ ActuatorBulk::parallel_sum_source_term(stk::mesh::BulkData& stkBulk)
 
   stk::mesh::parallel_sum(stkBulk, {actuatorSource});
   actuatorSource->modify_on_host();
+}
+
+Kokkos::RangePolicy<ActuatorFixedExecutionSpace>
+ActuatorBulk::local_range_policy(const ActuatorMeta &actMeta)
+{
+  auto rank = NaluEnv::self().parallel_rank();
+  if (rank < turbIdOffset_.extent_int(0)) {
+    const int offset = turbIdOffset_.h_view(rank);
+    const int size   = actMeta.numPointsTurbine_.h_view(rank); 
+    return Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(
+      offset, offset + size);
+  } else {
+    return Kokkos::RangePolicy<ActuatorFixedExecutionSpace>(0, 0);
+  }
 }
 
 } // namespace nalu

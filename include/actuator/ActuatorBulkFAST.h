@@ -24,7 +24,6 @@ struct ActuatorMetaFAST : public ActuatorMeta
   fast::fastInputs fastInputs_;
   std::vector<std::string> turbineNames_;
   std::vector<std::string> turbineOutputFileNames_;
-  bool filterLiftLineCorrection_;
   bool isotropicGaussian_;
   bool is_disk();
   int get_fast_index(
@@ -64,11 +63,9 @@ struct ActuatorBulkFAST : public ActuatorBulk
   ActFixVectorDbl hubLocations_;
   ActFixVectorDbl hubOrientation_;
 
-  ActVectorDblDv epsilonOpt_;
   ActTensorDblDv orientationTensor_;
 
   fast::OpenFAST openFast_;
-  const int localTurbineId_;
   const int tStepRatio_;
   ActDualViewHelper<ActuatorMemSpace> dvHelper_;
 };

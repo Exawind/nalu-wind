@@ -39,6 +39,7 @@ struct ActuatorMeta
 {
   ActuatorMeta(
     int numTurbines, ActuatorType actType = ActuatorType::ActLinePointDrag);
+  virtual ~ActuatorMeta(){}
   void add_turbine(const ActuatorInfoNGP& info);
   const int numberOfActuators_;
   const ActuatorType actuatorType_;
@@ -46,6 +47,7 @@ struct ActuatorMeta
   std::vector<std::string> searchTargetNames_;
   stk::search::SearchMethod searchMethod_;
   ActScalarIntDv numPointsTurbine_;
+  bool useFLLC_ = false;
 };
 
 /*! \brief Where field data is stored and accessed for actuators
@@ -57,12 +59,15 @@ struct ActuatorMeta
 struct ActuatorBulk
 {
   ActuatorBulk(const ActuatorMeta& actMeta);
+  virtual ~ActuatorBulk(){}
 
   void stk_search_act_pnts(
     const ActuatorMeta& actMeta, stk::mesh::BulkData& stkBulk);
   void zero_source_terms(stk::mesh::BulkData& stkBulk);
   void parallel_sum_source_term(stk::mesh::BulkData& stkBulk);
   void compute_offsets(const ActuatorMeta& actMeta);
+  Kokkos::RangePolicy<ActuatorFixedExecutionSpace>
+  local_range_policy(const ActuatorMeta& actMeta);
 
   // HOST AND DEVICE DATA (DualViews)
   ActScalarIntDv turbIdOffset_;
@@ -74,11 +79,21 @@ struct ActuatorBulk
   ActScalarU64Dv coarseSearchPointIds_;
   ActScalarU64Dv coarseSearchElemIds_;
 
+  // Filtered lifting line correction fields
+  ActVectorDblDv relativeVelocity_;
+  ActScalarDblDv relativeVelocityMagnitude_;
+  ActVectorDblDv liftForceDistribution_;
+  ActVectorDblDv deltaLiftForceDistribution_;
+  ActVectorDblDv epsilonOpt_;
+  ActVectorDblDv fllc_;
+
   // HOST ONLY DATA
   ActFixVectorDbl localCoords_;
   ActFixScalarBool pointIsLocal_;
   ActFixScalarInt localParallelRedundancy_;
   ActFixElemIds elemContainingPoint_;
+
+  const int localTurbineId_;
 };
 
 } // namespace nalu

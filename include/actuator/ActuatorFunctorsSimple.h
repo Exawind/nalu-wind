@@ -66,6 +66,8 @@ struct ActSimpleUpdatePoints
 };
 #endif
 
+void ActSimpleWriteToFile(ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta);
+
 struct ActSimpleAssignVel
 {
   using execution_space = ActuatorFixedExecutionSpace;
@@ -84,38 +86,11 @@ struct ActSimpleAssignVel
   std::vector<double> p2_;
 };
 
-struct ActSimpleComputeForce
-{
-  using execution_space = ActuatorFixedExecutionSpace;
+void ActSimpleComputeRelativeVelocity(
+  ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta);
 
-  ActSimpleComputeForce(ActuatorBulkSimple& actBulk, 
-			const ActuatorMetaSimple& actMeta);
-  void operator()(int index) const;
-
-  ActDualViewHelper<ActuatorFixedMemSpace> helper_;
-  ActFixVectorDbl velocity_;
-  ActFixScalarDbl density_;
-  ActFixVectorDbl force_;
-  ActFixScalarInt offset_;
-  const int turbId_;
-    
-  // Dual view polar tables and blade definitions
-  ActScalarIntDv   polarTableSize_;
-  const unsigned   nPolarTable;
-  ActScalarDblDv   aoaPolarTableDv_;
-  ActScalarDblDv   clPolarTableDv_;
-  ActScalarDblDv   cdPolarTableDv_;
-  const unsigned   nPts;
-  ActScalarDblDv   twistTableDv_;
-  ActScalarDblDv   elemAreaDv_;
-
-  double p1ZeroAlphaDir[3];         // Directon of zero alpha at p1
-  double chodrNormalDir[3];         // Direction normal to chord
-  double spanDir[3];                // Direction in the span
-
-  const int debug_output_;
-
-};
+void ActSimpleComputeForce(
+  ActuatorBulkSimple& actBulk, const ActuatorMetaSimple& actMeta);
 
 struct ActSimpleComputeThrustInnerLoop
 {

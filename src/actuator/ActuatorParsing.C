@@ -78,6 +78,8 @@ actuator_parse(const YAML::Node& y_node)
   } else {
     throw std::runtime_error("Actuator:: search_target_part is not declared.");
   }
+  get_if_present_no_default(y_actuator, "fllt_correction", actMeta.useFLLC_);
+
   return actMeta;
 }
 

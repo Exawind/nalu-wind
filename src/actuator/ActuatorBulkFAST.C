@@ -19,7 +19,6 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
     turbineNames_(numberOfActuators_),
     turbineOutputFileNames_(numberOfActuators_),
-    filterLiftLineCorrection_(false),
     isotropicGaussian_(false),
     maxNumPntsPerBlade_(0),
     epsilon_("epsilonMeta", numberOfActuators_),
@@ -54,14 +53,9 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     turbineTorque_("turbineTorque", actMeta.numberOfActuators_),
     hubLocations_("hubLocations", actMeta.numberOfActuators_),
     hubOrientation_("hubOrientations", actMeta.numberOfActuators_),
-    epsilonOpt_("epsilonOptimal", actMeta.numPointsTotal_),
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
-    localTurbineId_(
-      NaluEnv::self().parallel_rank() >= actMeta.numberOfActuators_
-        ? -1
-        : NaluEnv::self().parallel_rank()), // assign 1 turbine per rank for now
     tStepRatio_(naluTimeStep / actMeta.fastInputs_.dtFAST)
 {
   init_openfast(actMeta, naluTimeStep);

@@ -7,6 +7,7 @@
 // for more details.
 //
 #include <actuator/ActuatorExecutorsSimpleNgp.h>
+#include <actuator/ActuatorFLLC.h>
 
 namespace sierra {
 namespace nalu {
@@ -26,21 +27,60 @@ ActuatorLineSimpleNGP::ActuatorLineSimpleNGP(
 void
 ActuatorLineSimpleNGP::operator()()
 {
-  auto forceReduce = actBulk_.actuatorForce_.view_host();
-
   actBulk_.zero_source_terms(stkBulk_);
 
-  update();
+  auto velReduce = actBulk_.velocity_.view_host();
+  auto pointReduce = actBulk_.pointCentroid_.view_host();
+  actBulk_.zero_actuator_views();
 
   // set range policy to only operating over points owned by local fast turbine
-  auto fastRangePolicy = actBulk_.local_range_policy();
+  auto localRangePolicy = actBulk_.local_range_policy();
+
+#ifdef ENABLE_ACTSIMPLE_PTMOTION
+  // -- Get p1 and p2 for blade geometry --
+  // (for blade motion, points p1 and p2 can change with time)
+  double p1[3]; 
+  double p2[3]; 
+  for (int j=0; j<3; j++) { 
+    p1[j] = actMeta_.p1_.h_view(actBulk_.localTurbineId_,j);
+    p2[j] = actMeta_.p2_.h_view(actBulk_.localTurbineId_,j);
+  }
+  int nPts=actMeta_.num_force_pts_blade_.h_view(actBulk_.localTurbineId_);
+  // -- functor to update points --
+  Kokkos::parallel_for(
+    "updatePointLocationsActuatorNgpSimple", localRangePolicy,
+    ActSimpleUpdatePoints(actBulk_, nPts, p1, p2));
+  actuator_utils::reduce_view_on_host(pointReduce);
+#endif
+
+  actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
+
+  Kokkos::parallel_for(
+    "interpolateVelocitiesActuatorNgpSimple", numActPoints_,
+    InterpActuatorVel(actBulk_, stkBulk_));
+  actuator_utils::reduce_view_on_host(velReduce);
 
 
   Kokkos::parallel_for(
-    "computeForcesActuatorNgpSimple", fastRangePolicy,
-    ActSimpleComputeForce(actBulk_, actMeta_));
+    "interpolateDensityActuatorNgpSimple", numActPoints_,
+    InterpActuatorDensity(actBulk_, stkBulk_));
+  auto rhoReduce = actBulk_.density_.view_host();
+  actuator_utils::reduce_view_on_host(rhoReduce);
 
-  actuator_utils::reduce_view_on_host(forceReduce);
+  Apply_FLLC(actBulk_, actMeta_);
+
+  ActSimpleComputeRelativeVelocity(actBulk_, actMeta_);
+
+  // This is for output purposes
+  Kokkos::parallel_for(
+    "assignSimpleVelActuatorNgpSimple", localRangePolicy,
+    ActSimpleAssignVel(actBulk_));
+
+  ActSimpleComputeForce(actBulk_, actMeta_);
+
+  Compute_FLLC(actBulk_, actMeta_);
+
+  ActSimpleWriteToFile(actBulk_, actMeta_);
 
   const int localSizeCoarseSearch =
     actBulk_.coarseSearchElemIds_.view_host().extent_int(0);
@@ -59,55 +99,6 @@ ActuatorLineSimpleNGP::operator()()
   }
 
   actBulk_.parallel_sum_source_term(stkBulk_);
-
-}
-
-void
-ActuatorLineSimpleNGP::update()
-{
-
-  auto velReduce = actBulk_.velocity_.view_host();
-  auto pointReduce = actBulk_.pointCentroid_.view_host();
-  actBulk_.zero_open_fast_views();
-
-  // set range policy to only operating over points owned by local fast turbine
-  auto fastRangePolicy = actBulk_.local_range_policy();
-
-#ifdef ENABLE_ACTSIMPLE_PTMOTION
-  // -- Get p1 and p2 for blade geometry --
-  // (for blade motion, points p1 and p2 can change with time)
-  double p1[3]; 
-  double p2[3]; 
-  for (int j=0; j<3; j++) { 
-    p1[j] = actMeta_.p1_.h_view(actBulk_.localTurbineId_,j);
-    p2[j] = actMeta_.p2_.h_view(actBulk_.localTurbineId_,j);
-  }
-  int nPts=actMeta_.num_force_pts_blade_.h_view(actBulk_.localTurbineId_);
-  // -- functor to update points -- 
-  Kokkos::parallel_for(
-    "updatePointLocationsActuatorNgpSimple", fastRangePolicy,
-    ActSimpleUpdatePoints(actBulk_, nPts, p1, p2));
-  actuator_utils::reduce_view_on_host(pointReduce);
-#endif
-
-  actBulk_.stk_search_act_pnts(actMeta_, stkBulk_);
-
-  Kokkos::parallel_for(
-    "interpolateVelocitiesActuatorNgpSimple", numActPoints_,
-    InterpActuatorVel(actBulk_, stkBulk_));
-  actuator_utils::reduce_view_on_host(velReduce);
-
-  Kokkos::parallel_for(
-    "interpolateDensityActuatorNgpSimple", numActPoints_,
-    InterpActuatorDensity(actBulk_, stkBulk_));
-  auto rhoReduce = actBulk_.density_.view_host();
-  actuator_utils::reduce_view_on_host(rhoReduce);
-
-  // This is for output purposes
-  Kokkos::parallel_for(
-    "assignSimpleVelActuatorNgpSimple", fastRangePolicy,
-    ActSimpleAssignVel(actBulk_));
-
 }
 
 } // namespace nalu

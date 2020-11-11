@@ -29,14 +29,6 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
      turbNode, "file_to_dump_turb_pts",
      actMetaFAST.turbineOutputFileNames_[iTurb]);
 
-   get_if_present_no_default(
-     turbNode, "fllt_correction",
-     actMetaFAST.filterLiftLineCorrection_);
-
-   ThrowErrorMsgIf(
-     actMetaFAST.filterLiftLineCorrection_,
-     "Filtered lifting line correction has not been implemented in the NGP"
-     " actuator models yet.  Please use ActLineFAST instead.");
    // The value epsilon / chord [non-dimensional]
    // This is a vector containing the values for:
    //   - chord aligned (x),
@@ -49,7 +41,7 @@ readTurbineData(int iTurb, ActuatorMetaFAST& actMetaFAST, YAML::Node turbNode)
        "epsilon and epsilon_chord have both been specified for Turbine " +
        std::to_string(iTurb) + "\nYou must pick one or the other.");
    }
-   if (epsilon && actMetaFAST.filterLiftLineCorrection_) {
+   if (epsilon && actMetaFAST.useFLLC_) {
      throw std::runtime_error(
        "epsilon and fllt_correction have both been specified for "
        "Turbine " +

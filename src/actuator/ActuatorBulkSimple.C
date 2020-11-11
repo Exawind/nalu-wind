@@ -16,28 +16,29 @@ namespace nalu {
 
 ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
-    filterLiftLineCorrection_(false),
     isotropicGaussian_(false),
     epsilon_("epsilonMeta", numberOfActuators_),
     epsilonChord_("epsilonChordMeta", numberOfActuators_),
     num_force_pts_blade_("numForcePtsBladeMeta", numberOfActuators_),
     p1_("p1Meta", numberOfActuators_),
     p2_("p2Meta", numberOfActuators_),
+    dR_("dRMeta", numberOfActuators_),
     p1ZeroAlphaDir_("p1zeroalphadirMeta", numberOfActuators_),
     chordNormalDir_("chordnormaldirMeta", numberOfActuators_),
     spanDir_("spandirMeta", numberOfActuators_),
     max_num_force_pts_blade_(0),
     maxPolarTableSize_(0),
-    polarTableSize_("polartablesizeMeta", numberOfActuators_)
+    polarTableSize_("polartablesizeMeta", numberOfActuators_),
+    output_filenames_(numberOfActuators_),
+    has_output_file_(false)
 {
 }
 
-ActuatorBulkSimple::ActuatorBulkSimple(
-  const ActuatorMetaSimple& actMeta)
+ActuatorBulkSimple::ActuatorBulkSimple(const ActuatorMetaSimple& actMeta)
   : ActuatorBulk(actMeta),
-    density_("actDensity", actMeta.numPointsTotal_), 
+    density_("actDensity", actMeta.numPointsTotal_),
+    alpha_("actAgngleOfAttack", actMeta.numPointsTotal_),
     turbineThrust_("turbineThrust", actMeta.numberOfActuators_),
-    epsilonOpt_("epsilonOptimal", actMeta.numPointsTotal_),
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
@@ -45,9 +46,11 @@ ActuatorBulkSimple::ActuatorBulkSimple(
     assignedProc_("assignedProcBulk", actMeta.numberOfActuators_),
     num_blades_(actMeta.numberOfActuators_),
     debug_output_(actMeta.debug_output_),
-    localTurbineId_(
-      NaluEnv::self().parallel_rank() >= actMeta.numberOfActuators_
-        ? -1 : NaluEnv::self().parallel_rank())
+    output_cache_(
+      actMeta.has_output_file_
+        ? actMeta.numPointsTurbine_.h_view(localTurbineId_)
+        : 0)
+
 {
   // Allocate blades to turbines
   const int nProcs = NaluEnv::self().parallel_size();
@@ -91,11 +94,26 @@ ActuatorBulkSimple::ActuatorBulkSimple(
   init_epsilon(actMeta);
   init_points(actMeta);
   init_orientation(actMeta);
+  add_output_headers(actMeta);
   NaluEnv::self().naluOutputP0() << "Done ActuatorBulkSimple Init "
 				 << std::endl; // LCCOUT
 }
 
-ActuatorBulkSimple::~ActuatorBulkSimple() { 
+void
+ActuatorBulkSimple::add_output_headers(const ActuatorMetaSimple& actMeta)
+{
+  if (!actMeta.has_output_file_)
+    return;
+  std::string filename = actMeta.output_filenames_[localTurbineId_];
+
+  if (localTurbineId_ == NaluEnv::self().parallel_rank()) {
+    std::ofstream outFile;
+
+    outFile.open(filename, std::ios_base::out);
+    outFile << "pointId,alpha,cl,cd,lift,drag,velX,velY,velZ,relVelX,relVelY,"
+               "relVelZ,forceX,forceY,forceZ,density\n";
+    outFile.close();
+  }
 }
 
 void
@@ -246,7 +264,7 @@ ActuatorBulkSimple::local_range_policy()
 
 
 void
-ActuatorBulkSimple::zero_open_fast_views()
+ActuatorBulkSimple::zero_actuator_views()
 {
   dvHelper_.touch_dual_view(actuatorForce_);
   dvHelper_.touch_dual_view(velocity_);

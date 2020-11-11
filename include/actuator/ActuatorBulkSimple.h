@@ -18,9 +18,9 @@ namespace nalu {
 struct ActuatorMetaSimple : public ActuatorMeta
 {
   ActuatorMetaSimple(const ActuatorMeta& actMeta);
+  virtual ~ActuatorMetaSimple(){}
 
   // HOST ONLY
-  bool filterLiftLineCorrection_;
   bool isotropicGaussian_;
 
   //int maxNumPntsPerBlade_;
@@ -34,6 +34,7 @@ struct ActuatorMetaSimple : public ActuatorMeta
   ActScalarIntDv  num_force_pts_blade_;
   ActVectorDblDv  p1_;  // Start of blade
   ActVectorDblDv  p2_;  // End of blade
+  ActScalarDblDv  dR_;
   ActVectorDblDv  p1ZeroAlphaDir_;         // Directon of zero alpha at p1
   ActVectorDblDv  chordNormalDir_;         // Direction normal to chord
   ActVectorDblDv  spanDir_;                // Direction in the span
@@ -51,26 +52,28 @@ struct ActuatorMetaSimple : public ActuatorMeta
   Act2DArrayDblDv  clPolarTableDv_;
   Act2DArrayDblDv  cdPolarTableDv_;
 
+  std::vector<std::string> output_filenames_;
+  bool has_output_file_;
 };
 
 struct ActuatorBulkSimple : public ActuatorBulk
 {
   ActuatorBulkSimple(const ActuatorMetaSimple& actMeta);
+  virtual ~ActuatorBulkSimple(){}
 
   Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy();
 
   void init_epsilon(const ActuatorMetaSimple& actMeta);
   void init_points(const ActuatorMetaSimple& actMeta);
   void init_orientation(const ActuatorMetaSimple& actMeta);
-  virtual void zero_open_fast_views();
-
-  virtual ~ActuatorBulkSimple();
+  void add_output_headers( const ActuatorMetaSimple& actMeta);
+  virtual void zero_actuator_views();
 
   ActScalarDblDv density_;
+  ActScalarDblDv alpha_;
 
   ActFixVectorDbl turbineThrust_;
 
-  ActVectorDblDv epsilonOpt_;
   ActTensorDblDv orientationTensor_;
 
   // Stuff for simple blade
@@ -79,8 +82,8 @@ struct ActuatorBulkSimple : public ActuatorBulk
   const int       num_blades_;
   const bool      debug_output_;
 
-  const int localTurbineId_;
   ActDualViewHelper<ActuatorMemSpace> dvHelper_;
+  std::vector<std::string> output_cache_;
 };
 
 

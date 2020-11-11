@@ -50,6 +50,8 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 {
   ActuatorMetaSimple actMetaSimple(actMeta);
 
+  actMetaSimple.dR_.modify_host();
+
   NaluEnv::self().naluOutputP0() << "In actuator_Simple_parse() "<< std::endl; //LCCOUT
 
   const YAML::Node y_actuator = y_node["actuator"];
@@ -82,13 +84,19 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
   std::vector<std::vector<double>> input_aoa_polartable;
   std::vector<std::vector<double>> input_cl_polartable;
   std::vector<std::vector<double>> input_cd_polartable;
- 
+
   if (actMetaSimple.n_simpleblades_ > 0) {
     actMetaSimple.numPointsTotal_ = 0;
     for (unsigned iBlade= 0; iBlade < n_simpleblades_; iBlade++) {
 
       const YAML::Node cur_blade =
 	y_actuator["Blade" + std::to_string(iBlade)];
+      get_if_present_no_default(cur_blade, "output_file_name", actMetaSimple.output_filenames_[iBlade]);
+      if (
+        !actMetaSimple.output_filenames_[iBlade].empty() &&
+        NaluEnv::self().parallel_rank() == (int)iBlade) {
+        actMetaSimple.has_output_file_ = true;
+      }
 
       size_t num_force_pts_blade;
       get_required(cur_blade, "num_force_pts_blade", num_force_pts_blade);
@@ -106,43 +114,75 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 	  << " num_force_pts_blade: "
 	  << actMetaSimple.numPointsTurbine_.h_view(iBlade) << std::endl; //LCCOUT
 
-      // Get the epsilon
+      // The value epsilon / chord [non-dimensional]
+      // This is a vector containing the values for:
+      //   - chord aligned (x),
+      //   - tangential to chord (y),
+      //   - spanwise (z)
       const YAML::Node epsilon_chord = cur_blade["epsilon_chord"];
       const YAML::Node epsilon = cur_blade["epsilon"];
       if (epsilon && epsilon_chord) {
-	throw std::runtime_error(
-	  "epsilon and epsilon_chord have both been specified for Blade " +
-	  std::to_string(iBlade) + "\nYou must pick one or the other.");
-      }
-      std::vector<double> epsilonTemp(3);
-      
-      // only require epsilon
-      if (epsilon.Type() == YAML::NodeType::Scalar) {
-	double isotropicEpsilon;
-	get_required(cur_blade, "epsilon", isotropicEpsilon);
-	actMetaSimple.isotropicGaussian_ = true;
-	for (int j = 0; j < 3; j++) {
-	  actMetaSimple.epsilon_.h_view(iBlade, j) = isotropicEpsilon;
-	}
-      } else {
-	get_required(cur_blade, "epsilon", epsilonTemp);
-	for (int j = 0; j < 3; j++) {
-	  actMetaSimple.epsilon_.h_view(iBlade, j) = epsilonTemp[j];
-	}
-	if (
-	    epsilonTemp[0] == epsilonTemp[1] &&
-	    epsilonTemp[1] == epsilonTemp[2]) {
-	  actMetaSimple.isotropicGaussian_ = true;
-	} 
-      }
-      // check epsilon values
-      for (int j = 0; j < 3; j++) {
-	if (actMetaSimple.epsilon_.h_view(iBlade, j) <= 0.0) {
-	  throw std::runtime_error(
-              "ERROR:: zero value for epsilon detected. "
-              "All epsilon components must be greater than zero");
-          }
-      }
+        throw std::runtime_error(
+          "epsilon and epsilon_chord have both been specified for Turbine " +
+          std::to_string(iBlade) + "\nYou must pick one or the other.");
+   }
+   if (epsilon && actMetaSimple.useFLLC_) {
+     throw std::runtime_error(
+       "epsilon and fllt_correction have both been specified for "
+       "Turbine " +
+       std::to_string(iBlade) +
+       "\nepsilon_chord and epsilon_min should be used with "
+       "fllt_correction.");
+   }
+
+   std::vector<double> epsilonTemp(3);
+   if (epsilon) {
+     // only require epsilon
+     if (epsilon.Type() == YAML::NodeType::Scalar) {
+       double isotropicEpsilon;
+       get_required(cur_blade, "epsilon", isotropicEpsilon);
+       actMetaSimple.isotropicGaussian_ = true;
+       for (int j = 0; j < 3; j++) {
+         actMetaSimple.epsilon_.h_view(iBlade, j) = isotropicEpsilon;
+       }
+     } else {
+       get_required(cur_blade, "epsilon", epsilonTemp);
+       for (int j = 0; j < 3; j++) {
+         actMetaSimple.epsilon_.h_view(iBlade, j) = epsilonTemp[j];
+       }
+       if (
+         epsilonTemp[0] == epsilonTemp[1] &&
+         epsilonTemp[1] == epsilonTemp[2]) {
+         actMetaSimple.isotropicGaussian_ = true;
+       }
+     }
+   } else if (epsilon_chord) {
+     // require epsilon chord and epsilon min
+     get_required(cur_blade, "epsilon_chord", epsilonTemp);
+     for (int j = 0; j < 3; j++) {
+       if (epsilonTemp[j] <= 0.0) {
+         throw std::runtime_error(
+           "ERROR:: zero value for epsilon_chord detected. "
+           "All epsilon components must be greater than zero");
+       }
+       actMetaSimple.epsilonChord_.h_view(iBlade, j) = epsilonTemp[j];
+     }
+
+     // Minimum epsilon allowed in simulation. This is required when
+     //   specifying epsilon/chord
+     get_required(cur_blade, "epsilon_min", epsilonTemp);
+     for (int j = 0; j < 3; j++) {
+       actMetaSimple.epsilon_.h_view(iBlade, j) = epsilonTemp[j];
+     }
+   }
+   // check epsilon values
+   for (int j = 0; j < 3; j++) {
+     if (actMetaSimple.epsilon_.h_view(iBlade, j) <= 0.0) {
+       throw std::runtime_error(
+         "ERROR:: zero value for epsilon detected. "
+         "All epsilon components must be greater than zero");
+     }
+   }
       // Handle blade properties
       // p1 
       std::vector<double> p1Temp(3);
@@ -199,10 +239,10 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
 	NaluEnv::self().naluOutputP0()  // LCCOUT
 	  << "Blade: " << iBlade << " p1zeroAOA dir: "
 	  <<p1zeroAOA.x_<<" "<<p1zeroAOA.y_<<" "<<p1zeroAOA.z_<< std::endl;
-	NaluEnv::self().naluOutputP0()  // LCCOUT
-	  << "Blade: " << iBlade << " Span dir: "
-	  <<spanDir.x_<<" "<<spanDir.y_<<" "<<spanDir.z_<< std::endl; 
-	NaluEnv::self().naluOutputP0() // LCCOUT
+  NaluEnv::self().naluOutputP0() // LCCOU
+    << "Blade: " << iBlade << " Span dir: " << spanDir.x_ << " " << spanDir.y_
+    << " " << spanDir.z_ << std::endl;
+  NaluEnv::self().naluOutputP0() // LCCOUT
 	  << "Blade: " << iBlade 
 	  << " chord norm dir: "<<std::setprecision(5)
 	  <<chodrNormalDir.x_<<" "<<chodrNormalDir.y_<<" "<<chodrNormalDir.z_<< std::endl; 
@@ -234,6 +274,7 @@ actuator_Simple_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
       for (int i=0; i<3; i++) 
 	dx[i] = (p2Temp[i] - p1Temp[i])/(double)num_force_pts_blade;
       double dx_norm = sqrt(dx[0]*dx[0] + dx[1]*dx[1] + dx[2]*dx[2]);
+      actMetaSimple.dR_.h_view(iBlade) = dx_norm;
       for (unsigned i=0; i<num_force_pts_blade; i++)
 	elemareatemp[i] = dx_norm*chord_table_extended[i];
       input_elem_area.push_back(elemareatemp);
