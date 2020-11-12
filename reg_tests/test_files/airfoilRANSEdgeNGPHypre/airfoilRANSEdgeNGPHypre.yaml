@@ -20,12 +20,13 @@ linear_solvers:
     max_iterations: 100
     kspace: 75
     output_level: 0
-    bamg_max_levels: 1
-    bamg_relax_type: 8
-    bamg_num_sweeps: 2
-    bamg_relax_order: 0
     segregated_solver: yes
     write_matrix_files: no
+
+    # File containing hypre specific configuration options
+    hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
+    # YAML node used for this linear solver
+    hypre_cfg_node: hypre_simple_precon
 
   - name: solve_scalar
     type: hypre
@@ -35,11 +36,12 @@ linear_solvers:
     max_iterations: 200
     kspace: 75
     output_level: 0
-    bamg_max_levels: 1
-    bamg_relax_type: 8
-    bamg_num_sweeps: 2
-    bamg_relax_order: 0
     write_matrix_files: no
+
+    # File containing hypre specific configuration options
+    hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
+    # YAML node used for this linear solver
+    hypre_cfg_node: hypre_simple_precon
 
   - name: solve_elliptic
     type: hypre
@@ -49,12 +51,12 @@ linear_solvers:
     max_iterations: 200
     kspace: 75
     output_level: 0
-    bamg_max_levels: 7
-    bamg_coarsen_type: 8
-    bamg_interp_type: 6
-    bamg_num_sweeps: 2
-    bamg_cycle_type: 1
     write_matrix_files: no
+
+    # File containing hypre specific configuration options
+    hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
+    # YAML node used for this linear solver
+    hypre_cfg_node: hypre_elliptic
 
 realms:
 

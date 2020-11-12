@@ -45,6 +45,9 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
                 ${CMAKE_CURRENT_SOURCE_DIR}/xml
                 ${CMAKE_CURRENT_BINARY_DIR}/xml)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+                ${CMAKE_CURRENT_SOURCE_DIR}/hypre_settings
+                ${CMAKE_CURRENT_BINARY_DIR}/hypre_settings)
 
 # Add tests in list
 include(${CMAKE_CURRENT_SOURCE_DIR}/CTestList.cmake)
