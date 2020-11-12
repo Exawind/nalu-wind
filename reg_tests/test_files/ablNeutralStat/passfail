@@ -28,7 +28,6 @@ velocity_tavg
 sfs_stress
 resolved_stress
 sfs_stress_tavg
-resolved_stress_tavg
 temperature
 temperature_tavg
 temperature_sfs_flux_tavg
@@ -49,10 +48,12 @@ for var in $stdtestvars; do
 done
 
 # Now do the temperature variance variables
+# (And any other variables who need looser tolerances)
 TEMPTOL=1.0E-9
 tempvars="
 temperature_variance
 temperature_variance_tavg
+resolved_stress_tavg
 "
 
 # Test each of the temperature variance variables one by one
