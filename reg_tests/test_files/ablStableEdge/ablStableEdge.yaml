@@ -38,7 +38,7 @@ realms:
   # The fluid realm that uses the atmospheric LES mesh created above
 - name: fluidRealm
   mesh: ../../mesh/abl_5km_5km_1km_neutral.g
-  use_edges: no
+  use_edges: yes
   automatic_decomposition_type: rcb
 
   # This defines the equations to be solved: momentum, pressure, static enthalpy,
