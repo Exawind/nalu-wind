@@ -67,18 +67,40 @@ HypreLinearSolverConfig::load(const YAML::Node& node)
   if ( (precond_ == "none") && !isHypreSolver_)
     throw std::runtime_error("Invalid combination of Hypre preconditioner and solver method specified.");
 
+  // Determine how we are parsing options for hypre solvers
+  std::string hypreOptsFile;
+  get_if_present_no_default(node, "hypre_cfg_file", hypreOptsFile);
+  YAML::Node doc, hnode;
+  if (hypreOptsFile.empty()) {
+    // No hypre configuration file provided, parse options from Nalu-Wind input file
+    hnode = node;
+  } else {
+    // Hypre configuration file available, parse options from a specific node
+    // within the configuration file. Default is `hypre`, but can be tailored
+    // for `hypre_elliptic`, `hypre_momentum`, `hypre_scalar` and so on.
+    std::string hypreOptsNode{"hypre"};
+    get_if_present_no_default(node, "hypre_cfg_node", hypreOptsNode);
+    doc = YAML::LoadFile(hypreOptsFile.c_str());
+    if (doc[hypreOptsNode])
+      hnode = doc[hypreOptsNode];
+    else
+      throw std::runtime_error(
+        "HypreLinearSolverConfig: Cannot find configuration " + hypreOptsNode +
+        " in file " + hypreOptsFile);
+  }
+
   if (method_ == "hypre_boomerAMG") {
-    boomerAMG_solver_config(node);
+    boomerAMG_solver_config(hnode);
   }
   else {
     funcParams_.clear();
 
     // Configure preconditioner (must always be Hypre)
-    configure_hypre_preconditioner(node);
+    configure_hypre_preconditioner(hnode);
 
     if (isHypreSolver_) {
       paramsPrecond_->set("SolveOrPrecondition", Ifpack2::Hypre::Solver);
-      configure_hypre_solver(node);
+      configure_hypre_solver(hnode);
     } else {
       throw std::runtime_error("Non-hypre solver option not supported yet");
     }
