@@ -30,7 +30,7 @@ public:
   SDRSSTDESNodeKernel(const stk::mesh::MetaData&);
 
   KOKKOS_FORCEINLINE_FUNCTION
-  SDRSSTDESNodeKernel() = default;
+  SDRSSTDESNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~SDRSSTDESNodeKernel() = default;

@@ -167,8 +167,6 @@ namespace sierra
         }
       }
 
-      const YAML::Node& oversetUserData = node["overset_user_data"];
-
       switch (oversetBC.oversetConnectivityType_)
       {
         case OversetBoundaryConditionData::TPL_TIOGA:

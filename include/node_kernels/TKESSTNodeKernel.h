@@ -30,7 +30,7 @@ public:
   TKESSTNodeKernel(const stk::mesh::MetaData&);
 
   KOKKOS_FORCEINLINE_FUNCTION
-  TKESSTNodeKernel() = default;
+  TKESSTNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~TKESSTNodeKernel() = default;

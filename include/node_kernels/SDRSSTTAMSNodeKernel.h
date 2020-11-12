@@ -29,7 +29,7 @@ public:
   SDRSSTTAMSNodeKernel(const stk::mesh::MetaData&, const std::string);
 
   KOKKOS_FUNCTION
-  SDRSSTTAMSNodeKernel() = default;
+  SDRSSTTAMSNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~SDRSSTTAMSNodeKernel() = default;

@@ -32,7 +32,7 @@ public:
     const std::vector<double>& = std::vector<double>());
 
   KOKKOS_FUNCTION
-  MomentumBodyForceBoxNodeKernel() = default;
+  MomentumBodyForceBoxNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~MomentumBodyForceBoxNodeKernel() = default;

@@ -32,7 +32,7 @@ public:
     const SolutionOptions&);
 
   KOKKOS_FUNCTION
-  EnthalpyABLForceNodeKernel() = default;
+  EnthalpyABLForceNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~EnthalpyABLForceNodeKernel() = default;

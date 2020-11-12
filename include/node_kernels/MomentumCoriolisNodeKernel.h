@@ -32,7 +32,7 @@ public:
     const SolutionOptions&);
 
   KOKKOS_FUNCTION
-  MomentumCoriolisNodeKernel() = default;
+  MomentumCoriolisNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~MomentumCoriolisNodeKernel() = default;
