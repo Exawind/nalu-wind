@@ -189,7 +189,7 @@ compute_induced_velocities(
     });
 
   actuator_utils::reduce_view_on_host(deltaU);
-};
+}
 
 } // namespace FLLC
 
