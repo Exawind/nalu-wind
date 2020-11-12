@@ -68,7 +68,7 @@ void ExtOverset::breadboard()
 
   isExtOverset_ = multiSolverMode_ || (noverset > 1);
 
-  if (!multiSolverMode_)
+  if (!multiSolverMode_ && hasOverset_)
     set_communicator();
 }
 
