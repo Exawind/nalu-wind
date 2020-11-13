@@ -74,8 +74,11 @@ HypreUVWLinearSystem::finalizeLinearSystem()
   
   finalizeSolver();
 
+  /* get this field */
+  auto ngpHypreGlobalId_ = realm_.ngp_field_manager().get_field<HypreIntType>(realm_.hypreGlobalId_->mesh_meta_data_ordinal());
+
   /* create these mappings */
-  fill_entity_to_row_mapping();
+  fill_periodic_node_to_hid_mapping();
 
   /* fill the various device data structures need in device coeff applier */
   fill_device_data_structures();
@@ -83,15 +86,13 @@ HypreUVWLinearSystem::finalizeLinearSystem()
   /**********************************************************************************/
   /* Build the coeff applier ... host data structure for building the linear system */
   if (!hostCoeffApplier) {
-    hostCoeffApplier.reset(new HypreUVWLinSysCoeffApplier(1, nDim_, globalNumRows_, 
-							  rank_, iLower_, iUpper_, jLower_, jUpper_,
+    hostCoeffApplier.reset(new HypreUVWLinSysCoeffApplier(realm_.ngp_mesh(), ngpHypreGlobalId_, 1, nDim_,
+							  globalNumRows_, rank_, iLower_, iUpper_, jLower_, jUpper_,
 							  map_shared_, mat_elem_cols_owned_uvm_, mat_elem_cols_shared_uvm_,
 							  mat_row_start_owned_, mat_row_start_shared_, rhs_row_start_shared_,
-							  row_indices_owned_uvm_, row_indices_shared_uvm_, 
-							  row_counts_owned_uvm_, row_counts_shared_uvm_,
-							  periodic_bc_rows_owned_, entityToLID_, entityToLIDHost_, 
-							  skippedRowsMap_, skippedRowsMapHost_, 
-							  oversetRowsMap_, oversetRowsMapHost_,
+							  row_indices_owned_uvm_, row_indices_shared_uvm_, row_counts_owned_uvm_,
+							  row_counts_shared_uvm_, periodic_bc_rows_owned_, periodic_node_to_hypre_id_,
+							  skippedRowsMap_, skippedRowsMapHost_, oversetRowsMap_, oversetRowsMapHost_,
 							  num_mat_overset_pts_owned_, num_rhs_overset_pts_owned_));
     deviceCoeffApplier = hostCoeffApplier->device_pointer();
   }
@@ -369,25 +370,22 @@ sierra::nalu::CoeffApplier* HypreUVWLinearSystem::get_coeff_applier()
 /*                     Beginning of HypreUVWLinSysCoeffApplier implementations                          */
 /********************************************************************************************************/
 
-HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::HypreUVWLinSysCoeffApplier(unsigned numDof, unsigned nDim, HypreIntType globalNumRows, int rank, 
-									     HypreIntType iLower, HypreIntType iUpper,
-									     HypreIntType jLower, HypreIntType jUpper, MemoryMap map_shared,
+HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::HypreUVWLinSysCoeffApplier(const stk::mesh::NgpMesh ngpMesh, NGPHypreIDFieldType ngpHypreGlobalId,
+									     unsigned numDof, unsigned nDim, HypreIntType globalNumRows, int rank, 
+									     HypreIntType iLower, HypreIntType iUpper, HypreIntType jLower, HypreIntType jUpper, MemoryMap map_shared,
 									     HypreIntTypeViewUVM mat_elem_cols_owned_uvm, HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
-									     UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared,
-									     UnsignedView rhs_row_start_shared,
+									     UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared, UnsignedView rhs_row_start_shared,
 									     HypreIntTypeViewUVM row_indices_owned_uvm, HypreIntTypeViewUVM row_indices_shared_uvm, 
 									     HypreIntTypeViewUVM row_counts_owned_uvm, HypreIntTypeViewUVM row_counts_shared_uvm,
-									     HypreIntTypeView periodic_bc_rows_owned,
-									     HypreIntTypeView entityToLID, HypreIntTypeViewHost entityToLIDHost,
+									     HypreIntTypeView periodic_bc_rows_owned, PeriodicNodeMap periodic_node_to_hypre_id,
 									     HypreIntTypeUnorderedMap skippedRowsMap, HypreIntTypeUnorderedMapHost skippedRowsMapHost,
 									     HypreIntTypeUnorderedMap oversetRowsMap, HypreIntTypeUnorderedMapHost oversetRowsMapHost,
 									     HypreIntType num_mat_overset_pts_owned, HypreIntType num_rhs_overset_pts_owned)
-  : HypreLinSysCoeffApplier(numDof, nDim, globalNumRows, rank,
-			    iLower, iUpper, jLower, jUpper, map_shared,
-			    mat_elem_cols_owned_uvm, mat_elem_cols_shared_uvm,
+  : HypreLinSysCoeffApplier(ngpMesh, ngpHypreGlobalId, numDof, nDim, globalNumRows, rank,
+			    iLower, iUpper, jLower, jUpper, map_shared, mat_elem_cols_owned_uvm, mat_elem_cols_shared_uvm,
 			    mat_row_start_owned, mat_row_start_shared, rhs_row_start_shared,
 			    row_indices_owned_uvm, row_indices_shared_uvm, row_counts_owned_uvm, row_counts_shared_uvm,
-			    periodic_bc_rows_owned, entityToLID, entityToLIDHost, skippedRowsMap, skippedRowsMapHost,
+			    periodic_bc_rows_owned, periodic_node_to_hypre_id, skippedRowsMap, skippedRowsMapHost,
 			    oversetRowsMap, oversetRowsMapHost, num_mat_overset_pts_owned, num_rhs_overset_pts_owned) { }
 
 
@@ -402,8 +400,13 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::sum_into(
   const HypreIntType& iLower, const HypreIntType& iUpper,
   unsigned nDim) {
 
-  for(unsigned i=0; i<numEntities; ++i)
-    localIds[i] = entityToLID_[entities[i].local_offset()];
+  for(unsigned i=0; i<numEntities; ++i) {
+    auto node = entities[i];
+    if (periodic_node_to_hypre_id_.exists(node.local_offset()))
+      localIds[i] = periodic_node_to_hypre_id_.value_at(periodic_node_to_hypre_id_.find(node.local_offset()));
+    else
+      localIds[i] = ngpHypreGlobalId_.get(ngpMesh_, node, 0);
+  }
 
   for (unsigned i=0; i<numEntities; ++i) {
     int ix = i * nDim;
@@ -481,7 +484,12 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::reset_rows(unsigned numNodes,
 							     const unsigned nDim) {
 
   for (unsigned i=0; i<numNodes; ++i) {
-    HypreIntType hid = entityToLID_[nodeList[i].local_offset()];
+    auto node = nodeList[i];
+    HypreIntType hid;
+    if (periodic_node_to_hypre_id_.exists(node.local_offset()))
+      hid = periodic_node_to_hypre_id_.value_at(periodic_node_to_hypre_id_.find(node.local_offset()));
+    else
+      hid = ngpHypreGlobalId_.get(ngpMesh_, node, 0);
 
     if (hid>=iLower && hid<=iUpper) {
       unsigned lower = mat_row_start_owned_(hid-iLower);
