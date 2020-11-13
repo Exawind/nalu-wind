@@ -630,20 +630,26 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::applyDirichletBCs(Realm & real
 
 void HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::free_device_pointer()
 {
+#ifdef KOKKOS_ENABLE_CUDA
   if (this != devicePointer_) {
     sierra::nalu::kokkos_free_on_device(devicePointer_);
     devicePointer_ = nullptr;
   }
+#endif
 }
 
 sierra::nalu::CoeffApplier* HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::device_pointer()
 {
+#ifdef KOKKOS_ENABLE_CUDA
   if (devicePointer_ != nullptr) {
     sierra::nalu::kokkos_free_on_device(devicePointer_);
     devicePointer_ = nullptr;
   }
   devicePointer_ = sierra::nalu::create_device_expression(*this);
   return devicePointer_;
+#else
+  return this;
+#endif
 }
 
 
