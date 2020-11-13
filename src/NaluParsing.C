@@ -171,7 +171,7 @@ namespace sierra
       {
         case OversetBoundaryConditionData::TPL_TIOGA:
 #ifdef NALU_USES_TIOGA
-          oversetBC.userData_.oversetBlocks_ = oversetUserData;
+          oversetBC.userData_.oversetBlocks_ = node["overset_user_data"];
           break;
 #else
           throw std::runtime_error(
