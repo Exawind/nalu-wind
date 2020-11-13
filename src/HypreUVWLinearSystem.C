@@ -319,43 +319,92 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
 {
   auto& meta = realm_.meta_data();
   auto& bulk = realm_.bulk_data();
-  const auto sel = stk::mesh::selectField(*stkField)
+  const auto selector = stk::mesh::selectField(*stkField)
     & meta.locally_owned_part()
     & !(stk::mesh::selectUnion(realm_.get_slave_part_vector()))
     & !(realm_.get_inactive_selector());
 
-  const auto& bkts = bulk.get_buckets(
-    stk::topology::NODE_RANK, sel);
+  /* get the pointer to the Hypre data structure */
+  HYPRE_BigInt vec_start, vec_stop;
+  HYPRE_IJVectorGetLocalRange(sln_[0], &vec_start, &vec_stop);
 
-  std::vector<double> lclnorm(nDim_, 0.0);
-  std::vector<double> gblnorm(nDim_, 0.0);
-  double rhsVal = 0.0;
+  using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
+  auto ngpField = realm_.ngp_field_manager().get_field<double>(stkField->mesh_meta_data_ordinal());
+  auto ngpHypreGlobalId = realm_.ngp_field_manager().get_field<HypreIntType>(realm_.hypreGlobalId_->mesh_meta_data_ordinal());
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto periodic_node_to_hypre_id = periodic_node_to_hypre_id_;
 
-  for (auto b: bkts) {
-    double* field = (double*) stk::mesh::field_data(*stkField, *b);
-    for (size_t in=0; in < b->size(); in++) {
-      auto node = (*b)[in];
-      HypreIntType hid = get_entity_hypre_id(node);
+  auto iLower = iLower_;
+  auto iUpper = iUpper_;
+  auto nDim=nDim_;
+  auto N = numRows_;
+  
+  /******************************/
+  /* Move solution to stk field */
 
-      for (unsigned d=0; d<nDim_; ++d) {
-        int sid = in * nDim_ + d;
-        HYPRE_IJVectorGetValues(sln_[d], 1, &hid, &field[sid]);
-        HYPRE_IJVectorGetValues(rhs_[d], 1, &hid, &rhsVal);
-        lclnorm[d] += rhsVal * rhsVal;
+  if (nDim==2) {
+    /* use internal hypre APIs to get directly at the pointer to the owned SLN vector */
+    double * sln_data0 = hypre_VectorData(hypre_ParVectorLocalVector((hypre_ParVector*) hypre_IJVectorObject(sln_[0])));
+    double * sln_data1 = hypre_VectorData(hypre_ParVectorLocalVector((hypre_ParVector*) hypre_IJVectorObject(sln_[1])));
+
+    nalu_ngp::run_entity_algorithm(
+      "HypreUVWLinearSystem::copy_hypre_to_stk_3D", ngpMesh, stk::topology::NODE_RANK, selector,
+      KOKKOS_LAMBDA (const Traits::MeshIndex& mi) {
+      const auto node = (*mi.bucket)[mi.bucketOrd];
+      HypreIntType hid;
+      if (periodic_node_to_hypre_id.exists(node.local_offset()))
+	hid = periodic_node_to_hypre_id.value_at(periodic_node_to_hypre_id.find(node.local_offset()));
+      else
+	hid = ngpHypreGlobalId.get(ngpMesh, node, 0);
+      
+      if (hid>=iLower && hid<=iUpper) {
+	ngpField.get(mi, 0) = sln_data0[hid-vec_start];
+	ngpField.get(mi, 1) = sln_data1[hid-vec_start];
       }
-    }
+    });
+  } else {
+    /* use internal hypre APIs to get directly at the pointer to the owned SLN vector */
+    double * sln_data0 = hypre_VectorData(hypre_ParVectorLocalVector((hypre_ParVector*) hypre_IJVectorObject(sln_[0])));
+    double * sln_data1 = hypre_VectorData(hypre_ParVectorLocalVector((hypre_ParVector*) hypre_IJVectorObject(sln_[1])));
+    double * sln_data2 = hypre_VectorData(hypre_ParVectorLocalVector((hypre_ParVector*) hypre_IJVectorObject(sln_[2])));
+
+    nalu_ngp::run_entity_algorithm(
+      "HypreUVWLinearSystem::copy_hypre_to_stk_3D", ngpMesh, stk::topology::NODE_RANK, selector,
+      KOKKOS_LAMBDA (const Traits::MeshIndex& mi) {
+      const auto node = (*mi.bucket)[mi.bucketOrd];
+      HypreIntType hid;
+      if (periodic_node_to_hypre_id.exists(node.local_offset()))
+	hid = periodic_node_to_hypre_id.value_at(periodic_node_to_hypre_id.find(node.local_offset()));
+      else
+	hid = ngpHypreGlobalId.get(ngpMesh, node, 0);
+      
+      if (hid>=iLower && hid<=iUpper) {
+	ngpField.get(mi, 0) = sln_data0[hid-vec_start];
+	ngpField.get(mi, 1) = sln_data1[hid-vec_start];
+	ngpField.get(mi, 2) = sln_data2[hid-vec_start];
+      }
+    });
+  }
+  ngpField.modify_on_device();
+
+  /********************/
+  /* Compute RHS norm */
+  std::vector<double> rhsnorm(nDim);
+  std::fill(rhsnorm.begin(), rhsnorm.end(), 0);
+
+  for (unsigned d=0; d<nDim; ++d) {
+    double * rhs_data = hypre_VectorData(hypre_ParVectorLocalVector((hypre_ParVector*) hypre_IJVectorObject(rhs_[d])));
+    Kokkos::parallel_reduce ("HypreUVWLinearSystem::Reduction", N, KOKKOS_LAMBDA (const int i, double& update) {
+	double t=rhs_data[i];
+	update += t*t;
+      }, rhsnorm[d]);
   }
 
-  NGPDoubleFieldType ngpField = realm_.ngp_field_manager().get_field<double>(stkField->mesh_meta_data_ordinal());
-  ngpField.modify_on_host();
-  ngpField.sync_to_device();
-
-  stk::all_reduce_sum(bulk.parallel(), lclnorm.data(), gblnorm.data(), nDim_);
-
-  for (unsigned d=0; d<nDim_; ++d)
-    rhsNorm[d] = std::sqrt(gblnorm[d]);
+  /* initialize this */
+  std::fill(rhsNorm.begin(), rhsNorm.end(), 0);
+  stk::all_reduce_sum(bulk.parallel(), rhsnorm.data(), rhsNorm.data(), nDim);
+  for (unsigned i=0; i<nDim; ++i) rhsNorm[i] = std::sqrt(rhsNorm[i]);
 }
-
 
 
 sierra::nalu::CoeffApplier* HypreUVWLinearSystem::get_coeff_applier()
