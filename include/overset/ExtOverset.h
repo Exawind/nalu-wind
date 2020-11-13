@@ -53,7 +53,7 @@ public:
   void post_overset_conn_work();
 
   //! Register solution fields to TIOGA before interpolation step
-  int register_solution();
+  int register_solution(const std::vector<std::string>& fnames);
 
   //! Update solution fields after TIOGA has performed interpolations
   void update_solution();
@@ -71,6 +71,8 @@ private:
 #ifdef NALU_USES_TIOGA
   std::vector<tioga_nalu::TiogaSTKIface*> tgIfaceVec_;
 #endif
+
+  std::vector<std::string> slnFieldNames_;
 
   //! Flag indicating whether we are interfacing external solver
   bool multiSolverMode_{false};
