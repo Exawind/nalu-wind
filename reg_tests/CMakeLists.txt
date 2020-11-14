@@ -17,7 +17,8 @@ set(NALU_GOLD_NORMS_DIR "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH
 
 if (NOT ${NALU_GOLD_NORMS_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
   message(STATUS "Setting custom gold norms path: ${NALU_GOLD_NORMS_DIR}")
-  set(TEST_TOLERANCE 0.000000000000001)
+  set(TEST_TOLERANCE "1.0e-15")
+  set(TEST_REL_TOL "1.0e-12")
 endif()
 
 # Set TOLERANCE for testing
@@ -29,12 +30,26 @@ else(NOT ${TEST_TOLERANCE} STREQUAL "")
      AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
      AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 7.0
      AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 8.0)
-    set(TOLERANCE 0.000000000000001)
+    set(TOLERANCE "1.0e-15")
   else()
     set(TOLERANCE 0.05) # Otherwise set some useless default
   endif()
 endif()
-message(STATUS "Using test tolerance of ${TOLERANCE}")
+
+if(NOT ${TEST_REL_TOL} STREQUAL "")
+  set(REL_TOLERANCE ${TEST_REL_TOL}) # User defined
+else(NOT ${TEST_REL_TOL} STREQUAL "")
+  # Golds are generated with Linux GCC 7.4.0
+  if(${CMAKE_SYSTEM_NAME} MATCHES "Linux"
+      AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+      AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 7.0
+      AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 8.0)
+    set(REL_TOLERANCE "1.0e-13")
+  else()
+    set(REL_TOLERANCE "1.0e-7")
+  endif()
+endif()
+message(STATUS "Using test tolerance: abs = ${TOLERANCE}; rel = ${REL_TOLERANCE}")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
 
