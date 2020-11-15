@@ -26,7 +26,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Nalu-Wind regression test check utility")
     parser.add_argument(
-        '--abs-tol', type=float, default=1.0e-16,
+        '--abs-tol', type=float, default=1.0e-15,
         help="Tolerance for absolute error")
     parser.add_argument(
         '--rel-tol', type=float, default=1.0e-7,
@@ -51,7 +51,7 @@ def generate_test_norms(testname):
     """Parse the log file and generate test norms"""
     logname = testname + ".log"
     norm_name = testname + ".norm"
-    cmdline = """grep "Mean System Norm:" "%s" | awk '{ print $4, $5, $6; }' > %s """%(
+    cmdline = """awk '/Mean System Norm:/ { print $4, $5, $6; }' %s > %s """%(
         logname, norm_name)
     os.system(cmdline)
     return load_norm_file(norm_name)
@@ -59,7 +59,7 @@ def generate_test_norms(testname):
 def get_run_time(testname):
     """Return STKPERF total time"""
     logname = testname + ".log"
-    cmdline = """ grep "STKPERF: Total Time" "%s" | awk '{ print $4; }' """%(
+    cmdline = """awk '/STKPERF: Total Time/ { print $4; }' %s """%(
         logname)
     try:
         pp = subprocess.run(cmdline, shell=True, check=True, capture_output=True)
