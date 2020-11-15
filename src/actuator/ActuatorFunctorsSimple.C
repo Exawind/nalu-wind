@@ -21,6 +21,8 @@
 namespace sierra {
 namespace nalu {
 
+#define ACTUATOR_LAMBDA [=]
+
 InterpActuatorDensity::InterpActuatorDensity(
   ActuatorBulkSimple& actBulk, stk::mesh::BulkData& stkBulk)
   : actBulk_(actBulk),
@@ -186,7 +188,7 @@ ActSimpleComputeRelativeVelocity(
 
   Kokkos::parallel_for(
     "compute relative velocities", actBulk.local_range_policy(),
-    KOKKOS_LAMBDA(int index) {
+    ACTUATOR_LAMBDA(int index) {
       auto twistTable = Kokkos::subview(
         helper.get_local_view(actMeta.twistTableDv_), turbId, Kokkos::ALL);
       auto p1ZeroAlphaDir = Kokkos::subview(
@@ -239,7 +241,7 @@ ActSimpleComputeForce(
   const int debug_output = actBulk.debug_output_;
   std::vector<std::string>* cache = &actBulk.output_cache_;
 
-  Kokkos::parallel_for("ActSimpleComputeForce", actBulk.local_range_policy(), KOKKOS_LAMBDA(int index){
+  Kokkos::parallel_for("ActSimpleComputeForce", actBulk.local_range_policy(), ACTUATOR_LAMBDA(int index){
 
   auto pointForce = Kokkos::subview(force, index, Kokkos::ALL);
   const int localId = index - offset(turbId);
@@ -431,6 +433,8 @@ ActSimpleSpreadForceWhProjInnerLoop::operator()(
   }
 
 }
+
+#undef ACTUATOR_LAMBDA
 
 } /* namespace nalu */
 } /* namespace sierra */
