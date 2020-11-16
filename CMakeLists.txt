@@ -92,9 +92,9 @@ if(ENABLE_CUDA)
   separate_arguments(Trilinos_CXX_COMPILER_FLAGS)
   target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${Trilinos_CXX_COMPILER_FLAGS}>)
   target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:--expt-relaxed-constexpr>)
-  if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0.194")
-    target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-Wext-lambda-captures-this>)
-  endif()
+  # if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0.194")
+  #   target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:--Werror ext-lambda-captures-this>)
+  # endif()
 endif()
 
 ############################ FFTW ######################################

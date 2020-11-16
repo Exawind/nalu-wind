@@ -12,6 +12,7 @@ on:
       - 'CMakeLists.txt'
       - 'CTestConfig.cmake'
       - 'Dockerfile'
+      - 'docker/**'
       - 'nalu.C'
       - 'unit_tests.C'
   pull_request:
@@ -25,13 +26,22 @@ on:
       - 'CMakeLists.txt'
       - 'CTestConfig.cmake'
       - 'Dockerfile'
+      - 'docker/**'
       - 'nalu.C'
       - 'unit_tests.C'
 
 jobs:
   build:
+    name: GCC-8.3.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build and test
         run: docker build -t nalu-wind .
+  cuda-build:
+    name: CUDA-11.1/GCC-8.3.0
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build and test
+        run: docker build -f ./docker/Dockerfile.cuda -t nalu-wind .
