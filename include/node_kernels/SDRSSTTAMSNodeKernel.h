@@ -28,7 +28,6 @@ class SDRSSTTAMSNodeKernel : public NGPNodeKernel<SDRSSTTAMSNodeKernel>
 public:
   SDRSSTTAMSNodeKernel(const stk::mesh::MetaData&, const std::string);
 
-  KOKKOS_FUNCTION
   SDRSSTTAMSNodeKernel() = delete;
 
   KOKKOS_FUNCTION

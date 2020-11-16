@@ -31,7 +31,6 @@ public:
     const stk::mesh::BulkData&,
     const SolutionOptions&);
 
-  KOKKOS_FUNCTION
   EnthalpyABLForceNodeKernel() = delete;
 
   KOKKOS_FUNCTION
