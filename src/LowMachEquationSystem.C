@@ -527,6 +527,8 @@ LowMachEquationSystem::register_surface_pp_algorithm(
   stk::mesh::put_field_on_mesh(*pressureForce, stk::mesh::selectUnion(partVector), meta_data.spatial_dimension(), nullptr);
   VectorFieldType *viscousForce =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "viscous_force"));
   stk::mesh::put_field_on_mesh(*viscousForce, stk::mesh::selectUnion(partVector), meta_data.spatial_dimension(), nullptr);
+  VectorFieldType *tauWallVector =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "tau_wall_vector"));
+  stk::mesh::put_field_on_mesh(*tauWallVector, stk::mesh::selectUnion(partVector), meta_data.spatial_dimension(), nullptr);
   ScalarFieldType *tauWall =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "tau_wall"));
   stk::mesh::put_field_on_mesh(*tauWall, stk::mesh::selectUnion(partVector), nullptr);
   ScalarFieldType *yplus =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "yplus"));
