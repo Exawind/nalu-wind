@@ -30,8 +30,7 @@ public:
     const stk::mesh::BulkData&,
     const SolutionOptions&);
 
-  KOKKOS_FUNCTION
-  MomentumBoussinesqNodeKernel() = default;
+  MomentumBoussinesqNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~MomentumBoussinesqNodeKernel() = default;

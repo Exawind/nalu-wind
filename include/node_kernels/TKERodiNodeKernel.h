@@ -34,8 +34,7 @@ class TKERodiNodeKernel : public NGPNodeKernel<TKERodiNodeKernel>
 public:
   TKERodiNodeKernel(const stk::mesh::MetaData&, const SolutionOptions&);
 
-  KOKKOS_FUNCTION
-  TKERodiNodeKernel() = default;
+  TKERodiNodeKernel() = delete;
   
   KOKKOS_FUNCTION
   virtual ~TKERodiNodeKernel() = default;

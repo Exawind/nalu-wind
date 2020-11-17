@@ -30,8 +30,7 @@ public:
   MomentumSSTTAMSForcingNodeKernel(
     const stk::mesh::BulkData&, const SolutionOptions&);
 
-  KOKKOS_FUNCTION
-  MomentumSSTTAMSForcingNodeKernel() = default;
+  MomentumSSTTAMSForcingNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~MomentumSSTTAMSForcingNodeKernel() = default;

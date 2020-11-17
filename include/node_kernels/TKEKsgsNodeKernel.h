@@ -29,8 +29,7 @@ class TKEKsgsNodeKernel : public NGPNodeKernel<TKEKsgsNodeKernel>
 public:
   TKEKsgsNodeKernel(const stk::mesh::MetaData&);
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  TKEKsgsNodeKernel() = default;
+  TKEKsgsNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~TKEKsgsNodeKernel() = default;

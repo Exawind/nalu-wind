@@ -29,8 +29,7 @@ class SDRSSTNodeKernel : public NGPNodeKernel<SDRSSTNodeKernel>
 public:
   SDRSSTNodeKernel(const stk::mesh::MetaData&);
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  SDRSSTNodeKernel() = default;
+  SDRSSTNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~SDRSSTNodeKernel() = default;

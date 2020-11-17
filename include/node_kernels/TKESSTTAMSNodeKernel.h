@@ -28,8 +28,7 @@ class TKESSTTAMSNodeKernel : public NGPNodeKernel<TKESSTTAMSNodeKernel>
 public:
   TKESSTTAMSNodeKernel(const stk::mesh::MetaData&, const std::string);
 
-  KOKKOS_FUNCTION
-  TKESSTTAMSNodeKernel() = default;
+  TKESSTTAMSNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~TKESSTTAMSNodeKernel() = default;

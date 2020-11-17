@@ -26,8 +26,7 @@ class MomentumActuatorNodeKernel : public NGPNodeKernel<MomentumActuatorNodeKern
 public:
   MomentumActuatorNodeKernel(const stk::mesh::MetaData&);
 
-  KOKKOS_FUNCTION
-  MomentumActuatorNodeKernel() = default;
+  MomentumActuatorNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~MomentumActuatorNodeKernel() = default;

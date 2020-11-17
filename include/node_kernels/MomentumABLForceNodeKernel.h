@@ -31,8 +31,7 @@ public:
     const stk::mesh::BulkData&,
     const SolutionOptions&);
 
-  KOKKOS_FUNCTION
-  MomentumABLForceNodeKernel() = default;
+  MomentumABLForceNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~MomentumABLForceNodeKernel() = default;

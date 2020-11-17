@@ -30,8 +30,7 @@ public:
   MomentumSSTTAMSDiffEdgeKernel(
     const stk::mesh::BulkData&, const SolutionOptions&);
 
-  KOKKOS_FUNCTION
-  MomentumSSTTAMSDiffEdgeKernel() = default;
+  MomentumSSTTAMSDiffEdgeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~MomentumSSTTAMSDiffEdgeKernel() = default;

@@ -28,8 +28,7 @@ public:
     const stk::mesh::BulkData&,
     const std::vector<double>&);
 
-  KOKKOS_FUNCTION
-  MomentumBodyForceNodeKernel() = default;
+  MomentumBodyForceNodeKernel() = delete;
 
   KOKKOS_FUNCTION
   virtual ~MomentumBodyForceNodeKernel() = default;
