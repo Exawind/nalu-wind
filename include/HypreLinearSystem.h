@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #ifndef HYPRELINEARSYSTEM_H
 #define HYPRELINEARSYSTEM_H
 
@@ -36,7 +35,7 @@
 #include "HYPRE_parcsr_mv.h"
 #include "krylov.h"
 #include "HYPRE.h"
-// why are these included 
+// why are these included
 #include "_hypre_parcsr_mv.h"
 #include "_hypre_IJ_mv.h"
 #include "HYPRE_config.h"
@@ -84,29 +83,36 @@ using HypreIntTypeView = Kokkos::View<HypreIntType*, sierra::nalu::MemSpace>;
 using HypreIntTypeViewHost = HypreIntTypeView::HostMirror;
 
 // This 2D view needs to be LayoutLeft. Do NOT change
-using DoubleView2D = Kokkos::View<double**, Kokkos::LayoutLeft, sierra::nalu::MemSpace>;
+using DoubleView2D =
+  Kokkos::View<double**, Kokkos::LayoutLeft, sierra::nalu::MemSpace>;
 using DoubleView2DHost = DoubleView2D::HostMirror;
 
 // This 2D view needs to be LayoutLeft. Do NOT change
-using HypreIntTypeView2D = Kokkos::View<HypreIntType**, Kokkos::LayoutLeft, sierra::nalu::MemSpace>;
+using HypreIntTypeView2D =
+  Kokkos::View<HypreIntType**, Kokkos::LayoutLeft, sierra::nalu::MemSpace>;
 using HypreIntTypeView2DHost = HypreIntTypeView2D::HostMirror;
 
-using HypreIntTypeViewScalar = Kokkos::View<HypreIntType, sierra::nalu::MemSpace>;
+using HypreIntTypeViewScalar =
+  Kokkos::View<HypreIntType, sierra::nalu::MemSpace>;
 using HypreIntTypeViewScalarHost = HypreIntTypeViewScalar::HostMirror;
 
-using HypreIntTypeUnorderedMap = Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::nalu::MemSpace>;
+using HypreIntTypeUnorderedMap =
+  Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::nalu::MemSpace>;
 using HypreIntTypeUnorderedMapHost = HypreIntTypeUnorderedMap::HostMirror;
 
-using MemoryMap = Kokkos::UnorderedMap<HypreIntType, unsigned, sierra::nalu::MemSpace>;
+using MemoryMap =
+  Kokkos::UnorderedMap<HypreIntType, unsigned, sierra::nalu::MemSpace>;
 using MemoryMapHost = MemoryMap::HostMirror;
 
 // UVM Views
 using DoubleViewUVM = Kokkos::View<double*, sierra::nalu::UVMSpace>;
-using DoubleView2DUVM = Kokkos::View<double**, Kokkos::LayoutLeft, sierra::nalu::UVMSpace>;
+using DoubleView2DUVM =
+  Kokkos::View<double**, Kokkos::LayoutLeft, sierra::nalu::UVMSpace>;
 using HypreIntTypeViewUVM = Kokkos::View<HypreIntType*, sierra::nalu::UVMSpace>;
 
 // Periodic Node Map
-using PeriodicNodeMap = Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::nalu::MemSpace>;
+using PeriodicNodeMap =
+  Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::nalu::MemSpace>;
 using PeriodicNodeMapHost = PeriodicNodeMap::HostMirror;
 
 /** Nalu interface to populate a Hypre Linear System
@@ -125,15 +131,15 @@ public:
   std::string name_;
 
   /* data structures for accumulating the matrix elements */
-  std::vector<std::vector<HypreIntType> > columnsOwned_;
+  std::vector<std::vector<HypreIntType>> columnsOwned_;
   std::vector<HypreIntType> rowCountOwned_;
 
-  std::map<HypreIntType, std::vector<HypreIntType> > columnsShared_;
+  std::map<HypreIntType, std::vector<HypreIntType>> columnsShared_;
   std::map<HypreIntType, unsigned> rowCountShared_;
 
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
-  float _hypreAssembleTime=0.f;
-  int _nHypreAssembles=0;
+  float _hypreAssembleTime = 0.f;
+  int _nHypreAssembles = 0;
 
   std::vector<double> buildBeginLinSysConstTimer_;
   std::vector<double> buildNodeGraphTimer_;
@@ -171,42 +177,57 @@ public:
 
   void fill_periodic_node_to_hid_mapping();
   void fill_device_data_structures();
-  void fill_hids_columns(const unsigned numNodes, 
-			 stk::mesh::Entity const * nodes,
-			 std::vector<HypreIntType> & hids,
-			 std::vector<HypreIntType> & columns);
-  void fill_owned_shared_data_structures_1DoF(const unsigned numNodes, std::vector<HypreIntType>& hids);
-  void fill_owned_shared_data_structures(const unsigned numNodes, std::vector<HypreIntType>& hids, 
-					 std::vector<HypreIntType>& columns);
+  void fill_hids_columns(
+    const unsigned numNodes,
+    stk::mesh::Entity const* nodes,
+    std::vector<HypreIntType>& hids,
+    std::vector<HypreIntType>& columns);
+  void fill_owned_shared_data_structures_1DoF(
+    const unsigned numNodes, std::vector<HypreIntType>& hids);
+  void fill_owned_shared_data_structures(
+    const unsigned numNodes,
+    std::vector<HypreIntType>& hids,
+    std::vector<HypreIntType>& columns);
 
   // Quiet "partially overridden" compiler warnings.
   using LinearSystem::buildDirichletNodeGraph;
   /**
-   * @param[in] realm The realm instance that holds the EquationSystem being solved
-   * @param[in] numDof The degrees of freedom for the equation system created (Default: 1)
+   * @param[in] realm The realm instance that holds the EquationSystem being
+   * solved
+   * @param[in] numDof The degrees of freedom for the equation system created
+   * (Default: 1)
    * @param[in] eqSys The equation system instance
    * @param[in] linearSolver Handle to the HypreDirectSolver instance
    */
   HypreLinearSystem(
     Realm& realm,
     const unsigned numDof,
-    EquationSystem *eqSys,
-    LinearSolver *linearSolver);
+    EquationSystem* eqSys,
+    LinearSolver* linearSolver);
 
   virtual ~HypreLinearSystem();
 
   // print timings for initialize
-  virtual void printTimings(std::vector<double>& time, const char * name);
+  virtual void printTimings(std::vector<double>& time, const char* name);
 
   // Graph/Matrix Construction
-  virtual void buildNodeGraph(const stk::mesh::PartVector & parts);// for nodal assembly (e.g., lumped mass and source)
-  virtual void buildFaceToNodeGraph(const stk::mesh::PartVector & parts);// face->node assembly
-  virtual void buildEdgeToNodeGraph(const stk::mesh::PartVector & parts);// edge->node assembly
-  virtual void buildElemToNodeGraph(const stk::mesh::PartVector & parts);// elem->node assembly
-  virtual void buildReducedElemToNodeGraph(const stk::mesh::PartVector&);// elem (nearest nodes only)->node assembly
-  virtual void buildFaceElemToNodeGraph(const stk::mesh::PartVector & parts);// elem:face->node assembly
-  virtual void buildNonConformalNodeGraph(const stk::mesh::PartVector&);// nonConformal->elem_node assembly
-  virtual void buildOversetNodeGraph(const stk::mesh::PartVector&);// overset->elem_node assembly
+  virtual void
+  buildNodeGraph(const stk::mesh::PartVector&
+                   parts); // for nodal assembly (e.g., lumped mass and source)
+  virtual void buildFaceToNodeGraph(
+    const stk::mesh::PartVector& parts); // face->node assembly
+  virtual void buildEdgeToNodeGraph(
+    const stk::mesh::PartVector& parts); // edge->node assembly
+  virtual void buildElemToNodeGraph(
+    const stk::mesh::PartVector& parts); // elem->node assembly
+  virtual void buildReducedElemToNodeGraph(
+    const stk::mesh::PartVector&); // elem (nearest nodes only)->node assembly
+  virtual void buildFaceElemToNodeGraph(
+    const stk::mesh::PartVector& parts); // elem:face->node assembly
+  virtual void buildNonConformalNodeGraph(
+    const stk::mesh::PartVector&); // nonConformal->elem_node assembly
+  virtual void buildOversetNodeGraph(
+    const stk::mesh::PartVector&); // overset->elem_node assembly
   virtual void finalizeLinearSystem();
 
   /** Tag rows that must be handled as a Dirichlet BC node
@@ -222,86 +243,122 @@ public:
    *  \sa sierra::nalu::FixPressureAtNodeAlgorithm
    */
   virtual void buildDirichletNodeGraph(const std::vector<stk::mesh::Entity>&);
-  virtual void buildDirichletNodeGraph(const stk::mesh::NgpMesh::ConnectedNodes);
+  virtual void
+  buildDirichletNodeGraph(const stk::mesh::NgpMesh::ConnectedNodes);
 
   sierra::nalu::CoeffApplier* get_coeff_applier();
 
   /***************************************************************************************************/
-  /*                     Beginning of HypreLinSysCoeffApplier definition                             */
+  /*                     Beginning of HypreLinSysCoeffApplier definition */
   /***************************************************************************************************/
 
   class HypreLinSysCoeffApplier : public CoeffApplier
   {
   public:
-
-    HypreLinSysCoeffApplier(const stk::mesh::NgpMesh ngpMesh, NGPHypreIDFieldType ngpHypreGlobalId,
-			    unsigned numDof, unsigned numDim, HypreIntType globalNumRows, int rank,
-			    HypreIntType iLower, HypreIntType iUpper, HypreIntType jLower, HypreIntType jUpper,
-			    MemoryMap map_shared, HypreIntTypeViewUVM mat_elem_cols_owned_uvm, HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
-			    UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared, UnsignedView rhs_row_start_shared,
-			    HypreIntTypeViewUVM row_indices_owned_uvm, HypreIntTypeViewUVM row_indices_shared_uvm,
-			    HypreIntTypeViewUVM row_counts_owned_uvm, HypreIntTypeViewUVM row_counts_shared_uvm,
-			    HypreIntTypeView periodic_bc_rows_owned, PeriodicNodeMap periodic_node_to_hypre_id,
-			    HypreIntTypeUnorderedMap skippedRowsMap, HypreIntTypeUnorderedMapHost skippedRowsMapHost,
-			    HypreIntTypeUnorderedMap oversetRowsMap, HypreIntTypeUnorderedMapHost oversetRowsMapHost,
-			    HypreIntType num_mat_overset_pts_owned, HypreIntType num_rhs_overset_pts_owned);
+    HypreLinSysCoeffApplier(
+      const stk::mesh::NgpMesh ngpMesh,
+      NGPHypreIDFieldType ngpHypreGlobalId,
+      unsigned numDof,
+      unsigned numDim,
+      HypreIntType globalNumRows,
+      int rank,
+      HypreIntType iLower,
+      HypreIntType iUpper,
+      HypreIntType jLower,
+      HypreIntType jUpper,
+      MemoryMap map_shared,
+      HypreIntTypeViewUVM mat_elem_cols_owned_uvm,
+      HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
+      UnsignedView mat_row_start_owned,
+      UnsignedView mat_row_start_shared,
+      UnsignedView rhs_row_start_shared,
+      HypreIntTypeViewUVM row_indices_owned_uvm,
+      HypreIntTypeViewUVM row_indices_shared_uvm,
+      HypreIntTypeViewUVM row_counts_owned_uvm,
+      HypreIntTypeViewUVM row_counts_shared_uvm,
+      HypreIntTypeView periodic_bc_rows_owned,
+      PeriodicNodeMap periodic_node_to_hypre_id,
+      HypreIntTypeUnorderedMap skippedRowsMap,
+      HypreIntTypeUnorderedMapHost skippedRowsMapHost,
+      HypreIntTypeUnorderedMap oversetRowsMap,
+      HypreIntTypeUnorderedMapHost oversetRowsMapHost,
+      HypreIntType num_mat_overset_pts_owned,
+      HypreIntType num_rhs_overset_pts_owned);
 
     KOKKOS_FUNCTION
-    virtual ~HypreLinSysCoeffApplier() {
+    virtual ~HypreLinSysCoeffApplier()
+    {
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
-      if (_nAssembleMat>0 && rank_==0) {
-	printf("\tMean HYPRE_IJMatrixSetValues Time (%d samples)=%1.5f   Total=%1.5f\n",
-	       _nAssembleMat, _assembleMatTime/_nAssembleMat,_assembleMatTime);
-	printf("\tMean HYPRE_IJVectorSetValues Time (%d samples)=%1.5f   Total=%1.5f\n",
-	       _nAssembleRhs, _assembleRhsTime/_nAssembleRhs,_assembleRhsTime);
+      if (_nAssembleMat > 0 && rank_ == 0) {
+        printf(
+          "\tMean HYPRE_IJMatrixSetValues Time (%d samples)=%1.5f   "
+          "Total=%1.5f\n",
+          _nAssembleMat, _assembleMatTime / _nAssembleMat, _assembleMatTime);
+        printf(
+          "\tMean HYPRE_IJVectorSetValues Time (%d samples)=%1.5f   "
+          "Total=%1.5f\n",
+          _nAssembleRhs, _assembleRhsTime / _nAssembleRhs, _assembleRhsTime);
       }
 #endif
     }
 
     KOKKOS_FUNCTION
-    virtual void reset_rows(unsigned numNodes,
-			    const stk::mesh::Entity* nodeList,
-			    const double diag_value,
-			    const double rhs_residual,
-			    const HypreIntType iLower, const HypreIntType iUpper,
-			    const unsigned numDof);
+    virtual void reset_rows(
+      unsigned numNodes,
+      const stk::mesh::Entity* nodeList,
+      const double diag_value,
+      const double rhs_residual,
+      const HypreIntType iLower,
+      const HypreIntType iUpper,
+      const unsigned numDof);
 
     KOKKOS_FUNCTION
-    virtual void resetRows(unsigned numNodes,
-			   const stk::mesh::Entity* nodeList,
-			   const unsigned,
-                           const unsigned,
-                           const double diag_value,
-			   const double rhs_residual);
-  
-    KOKKOS_FUNCTION
-    virtual void binarySearch(HypreIntTypeViewUVM view, unsigned l, unsigned r, HypreIntType x, unsigned& result);
+    virtual void resetRows(
+      unsigned numNodes,
+      const stk::mesh::Entity* nodeList,
+      const unsigned,
+      const unsigned,
+      const double diag_value,
+      const double rhs_residual);
 
     KOKKOS_FUNCTION
-    virtual void sum_into(unsigned numEntities,
-			  const stk::mesh::NgpMesh::ConnectedNodes& entities,
-			  const SharedMemView<int*,DeviceShmem> & localIds,
-			  const SharedMemView<const double*,DeviceShmem> & rhs,
-			  const SharedMemView<const double**,DeviceShmem> & lhs,
-			  const HypreIntType& iLower, const HypreIntType& iUpper,
-			  unsigned numDof);
+    virtual void binarySearch(
+      HypreIntTypeViewUVM view,
+      unsigned l,
+      unsigned r,
+      HypreIntType x,
+      unsigned& result);
 
     KOKKOS_FUNCTION
-    virtual void sum_into_1DoF(unsigned numEntities,
-			       const stk::mesh::NgpMesh::ConnectedNodes& entities,
-			       const SharedMemView<int*,DeviceShmem> & localIds,
-			       const SharedMemView<const double*,DeviceShmem> & rhs,
-			       const SharedMemView<const double**,DeviceShmem> & lhs,
-			       const HypreIntType& iLower, const HypreIntType& iUpper);
+    virtual void sum_into(
+      unsigned numEntities,
+      const stk::mesh::NgpMesh::ConnectedNodes& entities,
+      const SharedMemView<int*, DeviceShmem>& localIds,
+      const SharedMemView<const double*, DeviceShmem>& rhs,
+      const SharedMemView<const double**, DeviceShmem>& lhs,
+      const HypreIntType& iLower,
+      const HypreIntType& iUpper,
+      unsigned numDof);
 
     KOKKOS_FUNCTION
-    virtual void operator()(unsigned numEntities,
-                            const stk::mesh::NgpMesh::ConnectedNodes& entities,
-                            const SharedMemView<int*,DeviceShmem> & localIds,
-                            const SharedMemView<int*,DeviceShmem> &,
-                            const SharedMemView<const double*,DeviceShmem> & rhs,
-                            const SharedMemView<const double**,DeviceShmem> & lhs,
-                            const char * trace_tag);
+    virtual void sum_into_1DoF(
+      unsigned numEntities,
+      const stk::mesh::NgpMesh::ConnectedNodes& entities,
+      const SharedMemView<int*, DeviceShmem>& localIds,
+      const SharedMemView<const double*, DeviceShmem>& rhs,
+      const SharedMemView<const double**, DeviceShmem>& lhs,
+      const HypreIntType& iLower,
+      const HypreIntType& iUpper);
+
+    KOKKOS_FUNCTION
+    virtual void operator()(
+      unsigned numEntities,
+      const stk::mesh::NgpMesh::ConnectedNodes& entities,
+      const SharedMemView<int*, DeviceShmem>& localIds,
+      const SharedMemView<int*, DeviceShmem>&,
+      const SharedMemView<const double*, DeviceShmem>& rhs,
+      const SharedMemView<const double**, DeviceShmem>& lhs,
+      const char* trace_tag);
 
     virtual void free_device_pointer();
 
@@ -309,38 +366,41 @@ public:
 
     virtual void resetInternalData();
 
-    virtual void applyDirichletBCs(Realm & realm, 
-				   stk::mesh::FieldBase * solutionField,
-				   stk::mesh::FieldBase * bcValuesField,
-				   const stk::mesh::PartVector& parts);
-    
-    virtual void finishAssembly(HYPRE_IJMatrix hypreMat, std::vector<HYPRE_IJVector> hypreRhs);
-    
-    virtual void sum_into_nonNGP(Realm & realm,
-				 const std::vector<stk::mesh::Entity>& entities,
-				 const std::vector<double>& rhs,
-				 const std::vector<double>& lhs);
+    virtual void applyDirichletBCs(
+      Realm& realm,
+      stk::mesh::FieldBase* solutionField,
+      stk::mesh::FieldBase* bcValuesField,
+      const stk::mesh::PartVector& parts);
+
+    virtual void finishAssembly(
+      HYPRE_IJMatrix hypreMat, std::vector<HYPRE_IJVector> hypreRhs);
+
+    virtual void sum_into_nonNGP(
+      Realm& realm,
+      const std::vector<stk::mesh::Entity>& entities,
+      const std::vector<double>& rhs,
+      const std::vector<double>& lhs);
 
     //! mesh
     const stk::mesh::NgpMesh ngpMesh_;
     //! stk mesh field for the Hypre Global Id
     NGPHypreIDFieldType ngpHypreGlobalId_;
     //! number of degrees of freedom
-    unsigned numDof_=0;
+    unsigned numDof_ = 0;
     //! number of rhs vectors
-    unsigned nDim_=0;
+    unsigned nDim_ = 0;
     //! Maximum Row ID in the Hypre linear system
     HypreIntType globalNumRows_;
     //! Maximum Row ID in the Hypre linear system
     int rank_;
     //! The lowest row owned by this MPI rank
-    HypreIntType iLower_=0;
+    HypreIntType iLower_ = 0;
     //! The highest row owned by this MPI rank
-    HypreIntType iUpper_=0;
+    HypreIntType iUpper_ = 0;
     //! The lowest column owned by this MPI rank; currently jLower_ == iLower_
-    HypreIntType jLower_=0;
+    HypreIntType jLower_ = 0;
     //! The highest column owned by this MPI rank; currently jUpper_ == iUpper_
-    HypreIntType jUpper_=0;
+    HypreIntType jUpper_ = 0;
 
     //! map from dense index key to starting memory location ... shared
     MemoryMap map_shared_;
@@ -362,8 +422,9 @@ public:
     HypreIntTypeViewUVM row_counts_owned_uvm_;
     //! the row counts ... shared
     HypreIntTypeViewUVM row_counts_shared_uvm_;
-      
-    //! rows for the periodic boundary conditions ... owned. There is no shared version of this
+
+    //! rows for the periodic boundary conditions ... owned. There is no shared
+    //! version of this
     HypreIntTypeView periodic_bc_rows_owned_;
     //! map of the periodic nodes to hypre ids
     PeriodicNodeMap periodic_node_to_hypre_id_;
@@ -384,7 +445,7 @@ public:
     HypreLinSysCoeffApplier* devicePointer_;
 
     /* flag to reinitialize or not */
-    bool reinitialize_=true;
+    bool reinitialize_ = true;
 
     //! Total number of rows owned by this particular MPI rank
     HypreIntType num_rows_;
@@ -403,7 +464,8 @@ public:
     //! Flag indicating that sumInto should check to see if rows must be skipped
     HypreIntTypeViewScalar checkSkippedRows_;
 
-    /* Work space for overset. These are used to accumulate data from legacy, non-NGP sumInto calls */
+    /* Work space for overset. These are used to accumulate data from legacy,
+     * non-NGP sumInto calls */
     HypreIntTypeView d_overset_row_indices_;
     HypreIntTypeViewHost h_overset_row_indices_;
 
@@ -419,17 +481,17 @@ public:
     DoubleViewHost h_overset_rhs_vals_;
 
     /* counters for adding to the array */
-    int overset_mat_counter_=0;
-    int overset_rhs_counter_=0;
+    int overset_mat_counter_ = 0;
+    int overset_rhs_counter_ = 0;
 
-    float _assembleMatTime=0.f;
-    float _assembleRhsTime=0.f;
-    int _nAssembleMat=0;
-    int _nAssembleRhs=0;
+    float _assembleMatTime = 0.f;
+    float _assembleRhsTime = 0.f;
+    int _nAssembleMat = 0;
+    int _nAssembleRhs = 0;
   };
 
   /***************************************************************************************************/
-  /*                        End of of HypreLinSysCoeffApplier definition                             */
+  /*                        End of of HypreLinSysCoeffApplier definition */
   /***************************************************************************************************/
 
   /** Reset the matrix and rhs data structures for the next iteration/timestep
@@ -444,9 +506,11 @@ public:
    *  this method skips over the fringe points of Overset mesh and the Dirichlet
    *  nodes rather than resetting them afterward.
    *
-   *  This overloaded method deals with Kernels designed with Kokkos::View arrays.
+   *  This overloaded method deals with Kernels designed with Kokkos::View
+   * arrays.
    *
-   *  @param[in] numEntities The total number of nodes where data is to be updated
+   *  @param[in] numEntities The total number of nodes where data is to be
+   * updated
    *  @param[in] entities A list of STK node entities
    *
    *  @param[in] rhs Array containing RHS entries to be summed into
@@ -462,12 +526,11 @@ public:
   virtual void sumInto(
     unsigned numEntities,
     const stk::mesh::NgpMesh::ConnectedNodes& entities,
-    const SharedMemView<const double*, DeviceShmem> & rhs,
-    const SharedMemView<const double**, DeviceShmem> & lhs,
-    const SharedMemView<int*, DeviceShmem> & localIds,
-    const SharedMemView<int*, DeviceShmem> & sortPermutation,
-    const char * trace_tag
-  );
+    const SharedMemView<const double*, DeviceShmem>& rhs,
+    const SharedMemView<const double**, DeviceShmem>& lhs,
+    const SharedMemView<int*, DeviceShmem>& localIds,
+    const SharedMemView<int*, DeviceShmem>& sortPermutation,
+    const char* trace_tag);
 
   /** Update coefficients of a particular row(s) in the linear system
    *
@@ -491,20 +554,19 @@ public:
    *  @param[in] trace_tag Debugging message
    */
   virtual void sumInto(
-    const std::vector<stk::mesh::Entity> & sym_meshobj,
-    std::vector<int> &scratchIds,
-    std::vector<double> &scratchVals,
-    const std::vector<double> & rhs,
-    const std::vector<double> & lhs,
-    const char *trace_tag
-  );
+    const std::vector<stk::mesh::Entity>& sym_meshobj,
+    std::vector<int>& scratchIds,
+    std::vector<double>& scratchVals,
+    const std::vector<double>& rhs,
+    const std::vector<double>& lhs,
+    const char* trace_tag);
 
   /** Populate the LHS and RHS for the Dirichlet rows in linear system
    */
   virtual void applyDirichletBCs(
-    stk::mesh::FieldBase * solutionField,
-    stk::mesh::FieldBase * bcValuesField,
-    const stk::mesh::PartVector & parts,
+    stk::mesh::FieldBase* solutionField,
+    stk::mesh::FieldBase* bcValuesField,
+    const stk::mesh::PartVector& parts,
     const unsigned beginPos,
     const unsigned endPos);
 
@@ -540,7 +602,7 @@ public:
    *
    *  @param[out] linearSolutionField STK field where the solution is populated
    */
-  virtual int solve(stk::mesh::FieldBase * linearSolutionField);
+  virtual int solve(stk::mesh::FieldBase* linearSolutionField);
 
   /** Finalize construction of the linear system matrix and rhs vector
    *
@@ -550,15 +612,20 @@ public:
    */
   virtual void loadComplete();
 
-  virtual void writeToFile(const char * /* filename */, bool /* useOwned */ =true) {}
-  virtual void writeSolutionToFile(const char * /* filename */, bool /* useOwned */ =true) {}
+  virtual void
+  writeToFile(const char* /* filename */, bool /* useOwned */ = true)
+  {
+  }
+  virtual void
+  writeSolutionToFile(const char* /* filename */, bool /* useOwned */ = true)
+  {
+  }
 
   //! Helper method to transfer the solution from a HYPRE_IJVector instance to
   //! the STK field data instance.
   double copy_hypre_to_stk(stk::mesh::FieldBase*);
 
 protected:
-
   /** Prepare the instance for system construction
    *
    *  During initialization, this creates the hypre data structures via API
@@ -581,9 +648,7 @@ protected:
 
   /** Dummy method to satisfy inheritance
    */
-  void checkError(
-    const int,
-    const char*) {}
+  void checkError(const int, const char*) {}
 
   //! The HYPRE matrix data structure
   mutable HYPRE_IJMatrix mat_;
@@ -623,11 +688,9 @@ private:
 
   //! HYPRE solution vector
   mutable HYPRE_IJVector sln_;
-
 };
 
-}  // nalu
-}  // sierra
-
+} // namespace nalu
+} // namespace sierra
 
 #endif /* HYPRELINEARSYSTEM_H */
