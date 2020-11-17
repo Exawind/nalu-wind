@@ -26,12 +26,12 @@ void MotionTranslationKernel::load(const YAML::Node& node)
   // translation could be based on velocity or displacement
   if( node["velocity"] ) {
     for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      velocity_[d] = node["velocity"][d].as<DblType>();
+      velocity_[d] = node["velocity"][d].as<double>();
   }
 
   if( node["displacement"] ) {
     for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      displacement_[d] = node["displacement"][d].as<DblType>();
+      displacement_[d] = node["displacement"][d].as<double>();
   }
 
   // default approach is to use a constant displacement
@@ -39,12 +39,12 @@ void MotionTranslationKernel::load(const YAML::Node& node)
 }
 
 void MotionTranslationKernel::build_transformation(
-  const DblType time,
-  const DblType* /* mxyz */ )
+  const double time,
+  const double* /* mxyz */ )
 {
   if(time < (startTime_)) return;
 
-  DblType motionTime = (time < endTime_)? time : endTime_;
+  double motionTime = (time < endTime_)? time : endTime_;
 
   // determine translation based on user defined input
   if (useVelocity_)
@@ -70,10 +70,10 @@ void MotionTranslationKernel::translation_mat(const ThreeDVecType& curr_disp)
 }
 
 void MotionTranslationKernel::compute_velocity(
-  const DblType time,
+  const double time,
   const TransMatType&  /* compTrans */,
-  const DblType* /* mxyz */,
-  const DblType* /* cxyz */,
+  const double* /* mxyz */,
+  const double* /* cxyz */,
   ThreeDVecType& vel )
 {
   if((time < startTime_) || (time > endTime_)) {

@@ -71,14 +71,14 @@ MotionWavesKernel::load(const YAML::Node& node)
 }
 
 void
-MotionWavesKernel::build_transformation(const DblType time, const DblType* xyz)
+MotionWavesKernel::build_transformation(const double time, const double* xyz)
 {
   if (time < (startTime_))
     return;
 
-  DblType motionTime = (time < endTime_) ? time : endTime_;
+  double motionTime = (time < endTime_) ? time : endTime_;
 
-  DblType phase = k_ * xyz[0] - omega_ * motionTime;
+  double phase = k_ * xyz[0] - omega_ * motionTime;
   ThreeDVecType curr_disp = {};
   if (waveModel_ == "Airy") {
     curr_disp[0] = 0.;
@@ -119,10 +119,10 @@ MotionWavesKernel::translation_mat(const ThreeDVecType& curr_disp)
 }
 
 void MotionWavesKernel::compute_velocity(
-  const DblType time,
+  const double time,
   const TransMatType& /* compTrans */,
-  const DblType* mxyz,
-  const DblType* /* cxyz */,
+  const double* mxyz,
+  const double* /* cxyz */,
   ThreeDVecType& vel)
 {
   if((time < startTime_) || (time > endTime_)) {
@@ -132,12 +132,12 @@ void MotionWavesKernel::compute_velocity(
     return;
   }
 
-  DblType motionTime = (time < endTime_) ? time : endTime_;
+  double motionTime = (time < endTime_) ? time : endTime_;
 
-  DblType StreamwiseWaveVelocity = 0;
-  DblType LateralWaveVelocity = 0;
-  DblType VerticalWaveVelocity = 0;
-  DblType phase = k_ * mxyz[0] - omega_ * motionTime;
+  double StreamwiseWaveVelocity = 0;
+  double LateralWaveVelocity = 0;
+  double VerticalWaveVelocity = 0;
+  double phase = k_ * mxyz[0] - omega_ * motionTime;
 
   if (waveModel_ == "Airy") {
     StreamwiseWaveVelocity = omega_ * height_ / 2. *
@@ -179,14 +179,14 @@ void MotionWavesKernel::compute_velocity(
 void
 MotionWavesKernel::Stokes_coefficients()
 {
-  DblType kd = k_ * waterdepth_;
+  double kd = k_ * waterdepth_;
   if (kd > 50 * M_PI)
     kd = 50 * M_PI; // Limited value
 
-  DblType S = 2 * std::exp(2 * kd) / (std::exp(4 * kd) + 1);
-  DblType Sh = std::sinh(kd);
-  DblType Th = std::tanh(kd);
-  DblType CTh =
+  double S = 2 * std::exp(2 * kd) / (std::exp(4 * kd) + 1);
+  double Sh = std::sinh(kd);
+  double Th = std::tanh(kd);
+  double CTh =
     (1 + std::exp(-2. * kd)) / (1 - std::exp(-2 * kd)); // Hyperbolic cotangent
 
   a11_ = 1. / std::sinh(kd); // Hyperbolic cosecant
@@ -285,10 +285,10 @@ MotionWavesKernel::Stokes_parameters()
   return;
 }
 
-NgpMotion::DblType
-MotionWavesKernel::my_cosh_cos(int i, int j, DblType phase)
+double
+MotionWavesKernel::my_cosh_cos(int i, int j, double phase)
 {
-  DblType D=0.0;
+  double D=0.0;
   if (i == 1 && j == 1)
     D = a11_;
   if (i == 2 && j == 2)
@@ -312,10 +312,10 @@ MotionWavesKernel::my_cosh_cos(int i, int j, DblType phase)
          std::cos(j * phase);
 }
 
-NgpMotion::DblType
-MotionWavesKernel::my_sinh_sin(int i, int j, DblType phase)
+double
+MotionWavesKernel::my_sinh_sin(int i, int j, double phase)
 {
-  DblType D=0.0;
+  double D=0.0;
   if (i == 1 && j == 1)
     D = a11_;
   if (i == 2 && j == 2)

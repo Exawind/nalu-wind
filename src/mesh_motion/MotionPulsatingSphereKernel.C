@@ -41,34 +41,34 @@ void MotionPulsatingSphereKernel::load(const YAML::Node& node)
   // get origin based on if it was defined
   if( node["centroid"] ) {
     for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      origin_[d] = node["centroid"][d].as<DblType>();
+      origin_[d] = node["centroid"][d].as<double>();
   }
 }
 
 void MotionPulsatingSphereKernel::build_transformation(
-  const DblType time,
-  const DblType* xyz)
+  const double time,
+  const double* xyz)
 {
   if(time < (startTime_)) return;
 
-  DblType motionTime = (time < endTime_)? time : endTime_;
+  double motionTime = (time < endTime_)? time : endTime_;
 
   scaling_mat(motionTime,xyz);
 }
 
 void MotionPulsatingSphereKernel::scaling_mat(
-  const DblType time,
-  const DblType* xyz)
+  const double time,
+  const double* xyz)
 {
   reset_mat(transMat_);
 
-  DblType radius = std::sqrt( std::pow(xyz[0]-origin_[0],2)
+  double radius = std::sqrt( std::pow(xyz[0]-origin_[0],2)
                              +std::pow(xyz[1]-origin_[1],2)
                              +std::pow(xyz[2]-origin_[2],2));
 
-  DblType curr_radius = radius + amplitude_*(1 - std::cos(2*M_PI*frequency_*time));
+  double curr_radius = radius + amplitude_*(1 - std::cos(2*M_PI*frequency_*time));
 
-  DblType uniform_scaling = curr_radius/radius;
+  double uniform_scaling = curr_radius/radius;
   if(radius == 0.0) uniform_scaling = 1.0;
 
   // Build matrix for translating object to cartesian origin
@@ -101,10 +101,10 @@ void MotionPulsatingSphereKernel::scaling_mat(
 }
 
 void MotionPulsatingSphereKernel::compute_velocity(
-  const DblType time,
+  const double time,
   const TransMatType&  /* compTrans */,
-  const DblType* mxyz,
-  const DblType* /* cxyz */,
+  const double* mxyz,
+  const double* /* cxyz */,
   ThreeDVecType& vel )
 {
   if((time < startTime_) || (time > endTime_)) {
@@ -114,11 +114,11 @@ void MotionPulsatingSphereKernel::compute_velocity(
     return;
   }
 
-  DblType radius = std::sqrt( std::pow(mxyz[0]-origin_[0],2)
+  double radius = std::sqrt( std::pow(mxyz[0]-origin_[0],2)
                              +std::pow(mxyz[1]-origin_[1],2)
                              +std::pow(mxyz[2]-origin_[2],2));
 
-  DblType pulsatingVelocity =
+  double pulsatingVelocity =
     amplitude_ * std::sin(2*M_PI*frequency_*time) * 2*M_PI*frequency_ / radius;
 
   // account for zero radius

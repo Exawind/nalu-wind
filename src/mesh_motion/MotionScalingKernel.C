@@ -40,7 +40,7 @@ void MotionScalingKernel::load(const YAML::Node& node)
   // translation could be based on rate or factor
   if( node["rate"] ) {
     for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      rate_[d] = node["rate"][d].as<DblType>();
+      rate_[d] = node["rate"][d].as<double>();
   }
 
   // default approach is to use a constant displacement
@@ -48,23 +48,23 @@ void MotionScalingKernel::load(const YAML::Node& node)
 
   if( node["factor"] ) {
     for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      factor_[d] = node["factor"][d].as<DblType>();
+      factor_[d] = node["factor"][d].as<double>();
   }
 
   // get origin based on if it was defined or is to be computed
   if( node["centroid"] ) {
     for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      origin_[d] = node["centroid"][d].as<DblType>();
+      origin_[d] = node["centroid"][d].as<double>();
   }
 }
 
 void MotionScalingKernel::build_transformation(
-  const DblType time,
-  const DblType* /* xyz */)
+  const double time,
+  const double* /* xyz */)
 {
   if(time < (startTime_)) return;
 
-  DblType motionTime = (time < endTime_)? time : endTime_;
+  double motionTime = (time < endTime_)? time : endTime_;
 
   // determine translation based on user defined input
   if (useRate_)
@@ -114,10 +114,10 @@ void MotionScalingKernel::scaling_mat(const ThreeDVecType& factor)
 }
 
 void MotionScalingKernel::compute_velocity(
-  const DblType time,
+  const double time,
   const TransMatType& compTrans,
-  const DblType* mxyz,
-  const DblType* /* cxyz */,
+  const double* mxyz,
+  const double* /* cxyz */,
   ThreeDVecType& vel )
 {
   if((time < startTime_) || (time > endTime_)) {

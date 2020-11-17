@@ -35,7 +35,7 @@ void MotionRotationKernel::load(const YAML::Node& node)
 
   if( node["axis"] ) {
     for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      axis_[d] = node["axis"][d].as<DblType>();
+      axis_[d] = node["axis"][d].as<double>();
   }
   else
     NaluEnv::self().naluOutputP0() << "MotionRotationKernel: axis of rotation not supplied; will use 0,0,1" << std::endl;
@@ -43,20 +43,20 @@ void MotionRotationKernel::load(const YAML::Node& node)
   // get origin based on if it was defined or is to be computed
   if( node["centroid"] ) {
     for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      origin_[d] = node["centroid"][d].as<DblType>();
+      origin_[d] = node["centroid"][d].as<double>();
   }
 }
 
 void MotionRotationKernel::build_transformation(
-  DblType time,
-  const DblType*  /* xyz */)
+  double time,
+  const double*  /* xyz */)
 {
   if(time < (startTime_)) return;
 
-  DblType motionTime = (time < endTime_)? time : endTime_;
+  double motionTime = (time < endTime_)? time : endTime_;
 
   // determine current angle
-  DblType curr_angle = 0.0;
+  double curr_angle = 0.0;
   if (useOmega_)
     curr_angle = omega_*(motionTime-startTime_);
   else
@@ -65,7 +65,7 @@ void MotionRotationKernel::build_transformation(
   rotation_mat(curr_angle);
 }
 
-void MotionRotationKernel::rotation_mat(const DblType angle)
+void MotionRotationKernel::rotation_mat(const double angle)
 {
   reset_mat(transMat_);
 
@@ -78,18 +78,18 @@ void MotionRotationKernel::rotation_mat(const DblType angle)
 
   // Build matrix for rotating object
   // compute magnitude of axis around which to rotate
-  DblType mag = 0.0;
+  double mag = 0.0;
   for (int d=0; d < nalu_ngp::NDimMax; d++)
       mag += axis_[d] * axis_[d];
   mag = std::sqrt(mag);
 
   // build quaternion based on angle and axis of rotation
-  const DblType cosang = std::cos(0.5*angle);
-  const DblType sinang = std::sin(0.5*angle);
-  const DblType q0 = cosang;
-  const DblType q1 = sinang * axis_[0]/mag;
-  const DblType q2 = sinang * axis_[1]/mag;
-  const DblType q3 = sinang * axis_[2]/mag;
+  const double cosang = std::cos(0.5*angle);
+  const double sinang = std::sin(0.5*angle);
+  const double q0 = cosang;
+  const double q1 = sinang * axis_[0]/mag;
+  const double q2 = sinang * axis_[1]/mag;
+  const double q3 = sinang * axis_[2]/mag;
 
   // rotation matrix based on quaternion
   TransMatType tempMat2 = {};
@@ -123,10 +123,10 @@ void MotionRotationKernel::rotation_mat(const DblType angle)
 }
 
 void MotionRotationKernel::compute_velocity(
-  const DblType time,
+  const double time,
   const TransMatType& compTrans,
-  const DblType* /* mxyz */,
-  const DblType* cxyz,
+  const double* /* mxyz */,
+  const double* cxyz,
   ThreeDVecType& vel )
 {
   if((time < startTime_) || (time > endTime_)) {
@@ -139,7 +139,7 @@ void MotionRotationKernel::compute_velocity(
   // construct unit vector
   ThreeDVecType unitVec = {};
 
-  DblType mag = 0.0;
+  double mag = 0.0;
   for (int d=0; d < nalu_ngp::NDimMax; d++)
     mag += axis_[d] * axis_[d];
   mag = std::sqrt(mag);

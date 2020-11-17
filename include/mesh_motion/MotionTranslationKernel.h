@@ -18,7 +18,7 @@ public:
   virtual ~MotionTranslationKernel() = default;
 
   KOKKOS_FUNCTION
-  virtual void build_transformation(const DblType, const DblType* = nullptr);
+  virtual void build_transformation(const double, const double* = nullptr);
 
   /** Function to compute motion-specific velocity
    *
@@ -31,10 +31,10 @@ public:
    */
   KOKKOS_FUNCTION
   virtual void compute_velocity(
-    const DblType time,
+    const double time,
     const TransMatType& compTrans,
-    const DblType* mxyz,
-    const DblType* cxyz,
+    const double* mxyz,
+    const double* cxyz,
     ThreeDVecType& vel);
 
 private:
