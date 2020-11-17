@@ -553,6 +553,10 @@ public:
   virtual void writeToFile(const char * /* filename */, bool /* useOwned */ =true) {}
   virtual void writeSolutionToFile(const char * /* filename */, bool /* useOwned */ =true) {}
 
+  //! Helper method to transfer the solution from a HYPRE_IJVector instance to
+  //! the STK field data instance.
+  double copy_hypre_to_stk(stk::mesh::FieldBase*);
+
 protected:
 
   /** Prepare the instance for system construction
@@ -574,10 +578,6 @@ protected:
    *  @return The HYPRE row ID
    */
   HypreIntType get_entity_hypre_id(const stk::mesh::Entity&);
-
-  //! Helper method to transfer the solution from a HYPRE_IJVector instance to
-  //! the STK field data instance.
-  double copy_hypre_to_stk(stk::mesh::FieldBase*);
 
   /** Dummy method to satisfy inheritance
    */

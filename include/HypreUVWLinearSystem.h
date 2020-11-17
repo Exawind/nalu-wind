@@ -209,6 +209,8 @@ public:
 
   virtual unsigned numDof() const { return nDim_; }
 
+  void copy_hypre_to_stk(stk::mesh::FieldBase*, std::vector<double>&);
+
 protected:
 
   virtual void finalizeLinearSystem();
@@ -218,8 +220,6 @@ protected:
   virtual void loadComplete();
 
   virtual void loadCompleteSolver();
-
-  void copy_hypre_to_stk(stk::mesh::FieldBase*, std::vector<double>&);
 
 private:
   std::vector<std::string> vecNames_{"X", "Y", "Z"};
