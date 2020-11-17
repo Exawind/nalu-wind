@@ -71,37 +71,6 @@
 #include <Kokkos_Vector.hpp>
 #include <Kokkos_Sort.hpp>
 
-#ifdef KOKKOS_ENABLE_CUDA
-#include <cuda_runtime.h>
-#include <thrust/scan.h>
-#include <thrust/execution_policy.h>
-#include <thrust/fill.h>
-#include <thrust/transform.h>
-#include <thrust/gather.h>
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-
-template<typename TYPE>
-struct absAscendingOrdering
-{
-  absAscendingOrdering() {}
-  __host__ __device__
-  bool operator()(const thrust::tuple<TYPE,double>& x, const thrust::tuple<TYPE,double>& y) const
-  { 
-    TYPE x1 = thrust::get<0>(x);
-    double x2 = thrust::get<1>(x);
-    TYPE y1 = thrust::get<0>(y);
-    double y2 = thrust::get<1>(y);
-    if (x1<y1) return true;
-    else if (x1>y1) return false;
-    else {
-      if (abs(x2)<abs(y2)) return true;
-      else return false;
-    }
-  }
-};
-#endif
-
 namespace sierra {
 namespace nalu {
 
@@ -135,6 +104,10 @@ using MemoryMapHost = MemoryMap::HostMirror;
 using DoubleViewUVM = Kokkos::View<double*, sierra::nalu::UVMSpace>;
 using DoubleView2DUVM = Kokkos::View<double**, Kokkos::LayoutLeft, sierra::nalu::UVMSpace>;
 using HypreIntTypeViewUVM = Kokkos::View<HypreIntType*, sierra::nalu::UVMSpace>;
+
+// Periodic Node Map
+using PeriodicNodeMap = Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::nalu::MemSpace>;
+using PeriodicNodeMapHost = PeriodicNodeMap::HostMirror;
 
 /** Nalu interface to populate a Hypre Linear System
  *
@@ -174,14 +147,13 @@ public:
   std::vector<double> finalizeLinearSystemTimer_;
 #endif
 
-  HypreIntTypeView entityToLID_;
-  HypreIntTypeViewHost entityToLIDHost_;
-
   HypreIntTypeViewUVM row_indices_owned_uvm_;
   HypreIntTypeViewUVM row_counts_owned_uvm_;
   HypreIntTypeView periodic_bc_rows_owned_;
   HypreIntTypeViewUVM mat_elem_cols_owned_uvm_;
   UnsignedView mat_row_start_owned_;
+
+  PeriodicNodeMap periodic_node_to_hypre_id_;
 
   MemoryMap map_shared_;
   HypreIntTypeViewUVM row_indices_shared_uvm_;
@@ -197,7 +169,7 @@ public:
   HypreIntType num_mat_overset_pts_owned_;
   HypreIntType num_rhs_overset_pts_owned_;
 
-  void fill_entity_to_row_mapping();
+  void fill_periodic_node_to_hid_mapping();
   void fill_device_data_structures();
   void fill_hids_columns(const unsigned numNodes, 
 			 stk::mesh::Entity const * nodes,
@@ -262,13 +234,14 @@ public:
   {
   public:
 
-    HypreLinSysCoeffApplier(unsigned numDof, unsigned numDim, HypreIntType globalNumRows, int rank,
+    HypreLinSysCoeffApplier(const stk::mesh::NgpMesh ngpMesh, NGPHypreIDFieldType ngpHypreGlobalId,
+			    unsigned numDof, unsigned numDim, HypreIntType globalNumRows, int rank,
 			    HypreIntType iLower, HypreIntType iUpper, HypreIntType jLower, HypreIntType jUpper,
 			    MemoryMap map_shared, HypreIntTypeViewUVM mat_elem_cols_owned_uvm, HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
 			    UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared, UnsignedView rhs_row_start_shared,
 			    HypreIntTypeViewUVM row_indices_owned_uvm, HypreIntTypeViewUVM row_indices_shared_uvm,
 			    HypreIntTypeViewUVM row_counts_owned_uvm, HypreIntTypeViewUVM row_counts_shared_uvm,
-			    HypreIntTypeView periodic_bc_rows_owned, HypreIntTypeView entityToLID, HypreIntTypeViewHost entityToLIDHost,
+			    HypreIntTypeView periodic_bc_rows_owned, PeriodicNodeMap periodic_node_to_hypre_id,
 			    HypreIntTypeUnorderedMap skippedRowsMap, HypreIntTypeUnorderedMapHost skippedRowsMapHost,
 			    HypreIntTypeUnorderedMap oversetRowsMap, HypreIntTypeUnorderedMapHost oversetRowsMapHost,
 			    HypreIntType num_mat_overset_pts_owned, HypreIntType num_rhs_overset_pts_owned);
@@ -330,18 +303,6 @@ public:
                             const SharedMemView<const double**,DeviceShmem> & lhs,
                             const char * trace_tag);
 
-    virtual int nextPowerOfTwo(int v, int max) {
-      v--;
-      v |= v >> 1;
-      v |= v >> 2;
-      v |= v >> 4;
-      v |= v >> 8;
-      v |= v >> 16;
-      v++;
-      if (v>max) v=max;
-      return v;
-    }
-
     virtual void free_device_pointer();
 
     virtual sierra::nalu::CoeffApplier* device_pointer();
@@ -355,10 +316,15 @@ public:
     
     virtual void finishAssembly(HYPRE_IJMatrix hypreMat, std::vector<HYPRE_IJVector> hypreRhs);
     
-    virtual void sum_into_nonNGP(const std::vector<stk::mesh::Entity>& entities,
+    virtual void sum_into_nonNGP(Realm & realm,
+				 const std::vector<stk::mesh::Entity>& entities,
 				 const std::vector<double>& rhs,
 				 const std::vector<double>& lhs);
 
+    //! mesh
+    const stk::mesh::NgpMesh ngpMesh_;
+    //! stk mesh field for the Hypre Global Id
+    NGPHypreIDFieldType ngpHypreGlobalId_;
     //! number of degrees of freedom
     unsigned numDof_=0;
     //! number of rhs vectors
@@ -399,10 +365,8 @@ public:
       
     //! rows for the periodic boundary conditions ... owned. There is no shared version of this
     HypreIntTypeView periodic_bc_rows_owned_;
-
-    //! A way to map the entity local offset to the hypre id
-    HypreIntTypeView entityToLID_;
-    HypreIntTypeViewHost entityToLIDHost_;
+    //! map of the periodic nodes to hypre ids
+    PeriodicNodeMap periodic_node_to_hypre_id_;
 
     //! unordered map for skipped rows
     HypreIntTypeUnorderedMap skippedRowsMap_;

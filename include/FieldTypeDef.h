@@ -54,6 +54,7 @@ typedef int HypreIntType;
 
 typedef stk::mesh::Field<Tpetra::Details::DefaultTypes::global_ordinal_type> TpetIDFieldType;
 typedef stk::mesh::Field<HypreIntType> HypreIDFieldType;
+typedef stk::mesh::NgpField<HypreIntType> NGPHypreIDFieldType;
 
 } // namespace nalu
 } // namespace Sierra

@@ -68,13 +68,14 @@ public:
   {
   public:
     
-    HypreUVWLinSysCoeffApplier(unsigned numDof, unsigned nDim, HypreIntType globalNumRows, int rank, 
+    HypreUVWLinSysCoeffApplier(const stk::mesh::NgpMesh ngpMesh, NGPHypreIDFieldType ngpHypreGlobalId,
+			       unsigned numDof, unsigned nDim, HypreIntType globalNumRows, int rank, 
 			       HypreIntType iLower, HypreIntType iUpper, HypreIntType jLower, HypreIntType jUpper, 
 			       MemoryMap map_shared, HypreIntTypeViewUVM mat_elem_cols_owned_uvm, HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
 			       UnsignedView mat_row_start_owned, UnsignedView mat_row_start_shared, UnsignedView rhs_row_start_shared,
 			       HypreIntTypeViewUVM row_indices_owned_uvm, HypreIntTypeViewUVM row_indices_shared_uvm, 
 			       HypreIntTypeViewUVM row_counts_owned_uvm, HypreIntTypeViewUVM row_counts_shared_uvm,
-			       HypreIntTypeView periodic_bc_rows_owned, HypreIntTypeView entityToLID, HypreIntTypeViewHost entityToLIDHost,
+			       HypreIntTypeView periodic_bc_rows_owned, PeriodicNodeMap periodic_node_to_hypre_id,
 			       HypreIntTypeUnorderedMap skippedRowsMap, HypreIntTypeUnorderedMapHost skippedRowsMapHost,
 			       HypreIntTypeUnorderedMap oversetRowsMap, HypreIntTypeUnorderedMapHost oversetRowsMapHost,
 			       HypreIntType num_mat_overset_pts_owned, HypreIntType num_rhs_overset_pts_owned);
