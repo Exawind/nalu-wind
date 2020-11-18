@@ -713,7 +713,7 @@ LowMachEquationSystem::solve_and_update()
 
     for (int oi=0; oi < momentumEqSys_->numOversetIters_; ++oi) {
       momentumEqSys_->dynPressAlgDriver_.execute();
-      // if (momentumEqSys_->pecletAlg_) momentumEqSys_->pecletAlg_->execute();
+      if (momentumEqSys_->pecletAlg_) momentumEqSys_->pecletAlg_->execute();
       momentumEqSys_->assemble_and_solve(momentumEqSys_->uTmp_);
 
       timeA = NaluEnv::self().nalu_time();
@@ -1042,7 +1042,7 @@ MomentumEquationSystem::initial_work()
     const double timeA = NaluEnv::self().nalu_time();
     compute_wall_function_params();
     compute_turbulence_parameters();
-    // if (pecletAlg_) pecletAlg_->execute();
+    if (pecletAlg_) pecletAlg_->execute();
     cflReAlgDriver_.execute();
 
     const double timeB = NaluEnv::self().nalu_time();
@@ -1289,12 +1289,18 @@ MomentumEquationSystem::register_interior_algorithm(
           theSolverAlg->supplementalAlg_.push_back(suppAlg);
         }
       }
-    }
-    else {
+    } else {
       itsi->second->partVec_.push_back(part);
+
+      const bool hasAMS = realm_.realmUsesEdges_ && (theTurbModel == SST_TAMS);
+      if (hasAMS) {
+        auto* tamsAlg = solverAlgDriver_->solverAlgMap_.at(SRC);
+        tamsAlg->partVec_.push_back(part);
+      }
+
+      if (pecletAlg_) pecletAlg_->partVec_.push_back(part);
     }
-  }
-  else {
+  } else {
     // Homogeneous implementation
     if ( realm_.realmUsesEdges_ )
       throw std::runtime_error("MomentumElemSrcTerms::Error can not use element source terms for an edge-based scheme");
@@ -1393,7 +1399,6 @@ MomentumEquationSystem::register_interior_algorithm(
       dataPreReqs);
 
     kb.report();
-
   }
 
   // Check if the user has requested CMM or LMM algorithms; if so, do not
