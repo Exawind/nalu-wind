@@ -1298,13 +1298,7 @@ MomentumEquationSystem::register_interior_algorithm(
         tamsAlg->partVec_.push_back(part);
       }
 
-      const bool useStrelets =
-        realm_.realmUsesEdges_ && (theTurbModel == SST_IDDES);
-      if (useStrelets) {
-        // Should have been instantiated previously with another part
-        ThrowAssert(pecletAlg_);
-        pecletAlg_->partVec_.push_back(part);
-      }
+      if (pecletAlg_) pecletAlg_->partVec_.push_back(part);
     }
   } else {
     // Homogeneous implementation
