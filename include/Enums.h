@@ -75,14 +75,13 @@ enum EquationType {
   EQ_MESH_DISPLACEMENT = 7,
   EQ_SPEC_DISS_RATE = 8,
   EQ_MASS_FRACTION = 9,
-  EQ_AMS = 10,
-  EQ_PNG   = 11,
-  EQ_PNG_P = 12,
-  EQ_PNG_Z = 13,
-  EQ_PNG_H = 14,
-  EQ_PNG_U = 15,
-  EQ_PNG_TKE = 16, // FIXME... Last PNG managed like this..
-  EQ_WALL_DISTANCE = 17,
+  EQ_PNG   = 10,
+  EQ_PNG_P = 11,
+  EQ_PNG_Z = 12,
+  EQ_PNG_H = 13,
+  EQ_PNG_U = 14,
+  EQ_PNG_TKE = 15, // FIXME... Last PNG managed like this..
+  EQ_WALL_DISTANCE = 16,
   EquationSystemType_END
 };
 
@@ -97,7 +96,6 @@ static const std::string EquationTypeMap[] = {
   "MeshVelocity",
   "Specific_Dissipation_Rate",
   "Mass_Fraction",
-  "AMS",
   "PNG",
   "PNG_P",
   "PNG_Z",
