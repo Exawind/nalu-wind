@@ -33,11 +33,13 @@ private:
   unsigned coordinates_ {stk::mesh::InvalidOrdinal};
   unsigned velocityRTM_ {stk::mesh::InvalidOrdinal};
   unsigned velocity_ {stk::mesh::InvalidOrdinal};
+  unsigned density_ {stk::mesh::InvalidOrdinal};
   unsigned dudx_ {stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_ {stk::mesh::InvalidOrdinal};
   unsigned massFlowRate_ {stk::mesh::InvalidOrdinal};
   unsigned viscosity_ {stk::mesh::InvalidOrdinal};
-  unsigned pecletFactor_ {stk::mesh::InvalidOrdinal};
+
+  PecletFunction<AssembleEdgeSolverAlgorithm::DblType>* pecletFunction_{nullptr};
 };
 
 }  // nalu
