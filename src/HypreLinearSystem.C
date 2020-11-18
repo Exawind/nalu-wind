@@ -2216,10 +2216,6 @@ HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
     !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
     !(realm_.get_inactive_selector());
 
-  /* get the pointer to the Hypre data structure */
-  HYPRE_BigInt vec_start, vec_stop;
-  HYPRE_IJVectorGetLocalRange(sln_, &vec_start, &vec_stop);
-
   using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   auto ngpField = realm_.ngp_field_manager().get_field<double>(
     stkField->mesh_meta_data_ordinal());
@@ -2254,7 +2250,7 @@ HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
       for (unsigned d = 0; d < numDof; ++d) {
         HypreIntType lid = hid * numDof + d;
         if (lid >= iLower && lid <= iUpper) {
-          ngpField.get(mi, d) = sln_data[lid - vec_start];
+          ngpField.get(mi, d) = sln_data[lid - iLower];
         }
       }
     });
