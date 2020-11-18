@@ -326,10 +326,6 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
     !(stk::mesh::selectUnion(realm_.get_slave_part_vector())) &
     !(realm_.get_inactive_selector());
 
-  /* get the pointer to the Hypre data structure */
-  HYPRE_BigInt vec_start, vec_stop;
-  HYPRE_IJVectorGetLocalRange(sln_[0], &vec_start, &vec_stop);
-
   using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
   auto ngpField = realm_.ngp_field_manager().get_field<double>(
     stkField->mesh_meta_data_ordinal());
@@ -367,8 +363,8 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
           hid = ngpHypreGlobalId.get(ngpMesh, node, 0);
 
         if (hid >= iLower && hid <= iUpper) {
-          ngpField.get(mi, 0) = sln_data0[hid - vec_start];
-          ngpField.get(mi, 1) = sln_data1[hid - vec_start];
+          ngpField.get(mi, 0) = sln_data0[hid - iLower];
+          ngpField.get(mi, 1) = sln_data1[hid - iLower];
         }
       });
   } else {
@@ -394,9 +390,9 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
           hid = ngpHypreGlobalId.get(ngpMesh, node, 0);
 
         if (hid >= iLower && hid <= iUpper) {
-          ngpField.get(mi, 0) = sln_data0[hid - vec_start];
-          ngpField.get(mi, 1) = sln_data1[hid - vec_start];
-          ngpField.get(mi, 2) = sln_data2[hid - vec_start];
+          ngpField.get(mi, 0) = sln_data0[hid - iLower];
+          ngpField.get(mi, 1) = sln_data1[hid - iLower];
+          ngpField.get(mi, 2) = sln_data2[hid - iLower];
         }
       });
   }
