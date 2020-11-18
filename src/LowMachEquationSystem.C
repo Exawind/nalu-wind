@@ -713,7 +713,7 @@ LowMachEquationSystem::solve_and_update()
 
     for (int oi=0; oi < momentumEqSys_->numOversetIters_; ++oi) {
       momentumEqSys_->dynPressAlgDriver_.execute();
-      // if (momentumEqSys_->pecletAlg_) momentumEqSys_->pecletAlg_->execute();
+      if (momentumEqSys_->pecletAlg_) momentumEqSys_->pecletAlg_->execute();
       momentumEqSys_->assemble_and_solve(momentumEqSys_->uTmp_);
 
       timeA = NaluEnv::self().nalu_time();
@@ -1042,7 +1042,7 @@ MomentumEquationSystem::initial_work()
     const double timeA = NaluEnv::self().nalu_time();
     compute_wall_function_params();
     compute_turbulence_parameters();
-    // if (pecletAlg_) pecletAlg_->execute();
+    if (pecletAlg_) pecletAlg_->execute();
     cflReAlgDriver_.execute();
 
     const double timeB = NaluEnv::self().nalu_time();
