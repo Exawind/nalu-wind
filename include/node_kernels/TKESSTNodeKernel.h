@@ -12,7 +12,6 @@
 
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
-#include "NaluEnv.h"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"
@@ -47,7 +46,6 @@ private:
   stk::mesh::NgpField<double> density_;
   stk::mesh::NgpField<double> tvisc_;
   stk::mesh::NgpField<double> dudx_;
-  stk::mesh::NgpField<double> coords_;
   stk::mesh::NgpField<double> dualNodalVolume_;
 
   unsigned tkeID_{stk::mesh::InvalidOrdinal};

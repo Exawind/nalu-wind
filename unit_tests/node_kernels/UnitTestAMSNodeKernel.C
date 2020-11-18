@@ -65,7 +65,7 @@ namespace forcing_ams {
 static constexpr double rhs[24] = {
   0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, -0.017225957747838128, 0
+  0, 0, 0, 0, 0, 0, -0.01722586002226411, 0
 };
 } // forcing_ams
 } // hex8_golds

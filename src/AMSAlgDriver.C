@@ -201,10 +201,6 @@ AMSAlgDriver::initial_production()
 
     const auto tvisc = fieldMgr.get_field<double>(
       get_field_ordinal(meta, "turbulent_viscosity"));
-    const auto density =
-      fieldMgr.get_field<double>(get_field_ordinal(meta, "density"));
-    const auto tke =
-      fieldMgr.get_field<double>(get_field_ordinal(meta, "turbulent_ke"));
     auto avgDudx =
       fieldMgr.get_field<double>(avgDudx_->mesh_meta_data_ordinal());
 

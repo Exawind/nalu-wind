@@ -343,12 +343,12 @@ KOKKOS_FUNCTION void
   const auto check_one = disc < 0.0;
   const bool exit_now = stk::simd::are_all(check_one);
   if (exit_now) {
-    NaluEnv::self().naluOutputP0()
+    NaluEnv::self().naluOutput()
       << "Error, complex eigenvalues in EigenDecomposition::general_eigenvalues"
       << disc << "([[" << A[0][0] << "," << A[0][1] << "," << A[0][2] << "],["
       << A[1][0] << "," << A[1][1] << "," << A[1][2] << "],[" << A[2][0] << ","
       << A[2][1] << "," << A[2][2] << "]])" << std::endl;
-    throw std::runtime_error("Exiting... ");
+    throw std::runtime_error("ERROR, complex eigenvalues in EigenDecomposition::general_eigenvalues");
   }
 
   // Convert to depressed cubic (substitute x = t - b/3a = t + trA/3)

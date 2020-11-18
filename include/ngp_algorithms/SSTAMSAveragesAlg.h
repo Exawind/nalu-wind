@@ -61,7 +61,8 @@ private:
   unsigned Mij_{stk::mesh::InvalidOrdinal};
   unsigned wallDist_{stk::mesh::InvalidOrdinal};
 
-  // FIXME: What to do with beta_kol in SST? This needs some thought...
+  // Proper definition of beta_kol in SST-AMS doesn't work 
+  // near walls, so emprically tested floor is used currently
   static constexpr double beta_kol = 0.01;
 };
 
