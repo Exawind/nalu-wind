@@ -1,13 +1,16 @@
 
 #include "mesh_motion/FrameBase.h"
 
+#include "FieldTypeDef.h"
 #include "mesh_motion/MotionPulsatingSphereKernel.h"
 #include "mesh_motion/MotionScalingKernel.h"
 #include "mesh_motion/MotionRotationKernel.h"
 #include "mesh_motion/MotionTranslationKernel.h"
 #include "mesh_motion/MotionWavesKernel.h"
 #include "NaluParsing.h"
-#include "FieldTypeDef.h"
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpReducers.h"
+#include "ngp_utils/NgpTypes.h"
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/FieldBLAS.hpp>
@@ -144,48 +147,72 @@ void FrameBase::setup()
 void FrameBase::compute_centroid_on_parts(
   std::vector<double>& centroid)
 {
-  // set min/max
-  const int nDim = meta_.spatial_dimension();
-  ThrowRequire(nDim <= 3);
+  // get NGP mesh
+  const auto& ngpMesh = bulk_.get_updated_ngp_mesh();
+  const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
 
-  const double largeNumber = 1.0e16;
-  double minCoord[3] = {largeNumber, largeNumber, largeNumber};
-  double maxCoord[3] = {-largeNumber, -largeNumber, -largeNumber};
+  // get the field from the NGP mesh
+  stk::mesh::NgpField<double> modelCoords = stk::mesh::get_updated_ngp_field<double>(
+    *meta_.get_field<VectorFieldType>(entityRank, "coordinates"));
 
-  // model coords are fine in this case
-  VectorFieldType *modelCoords = meta_.get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
-
-  // select all nodes
+  // select all nodes in the parts
   stk::mesh::Selector sel = stk::mesh::selectUnion(partVec_);
 
-  // select all locally owned nodes for bounding box
-  stk::mesh::BucketVector const& bkts = bulk_.get_buckets( stk::topology::NODE_RANK, sel );
-  for ( stk::mesh::BucketVector::const_iterator ib = bkts.begin(); ib != bkts.end() ; ++ib ) {
-    stk::mesh::Bucket & b = **ib ;
-    const stk::mesh::Bucket::size_type length   = b.size();
-    double * mCoord = stk::mesh::field_data(*modelCoords, b);
-    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
-      minCoord[0] = std::min(minCoord[0], mCoord[k*nDim+0]);
-      maxCoord[0] = std::max(maxCoord[0], mCoord[k*nDim+0]);
-      minCoord[1] = std::min(minCoord[1], mCoord[k*nDim+1]);
-      maxCoord[1] = std::max(maxCoord[1], mCoord[k*nDim+1]);
-      if (nDim == 3) {
-        minCoord[2] = std::min(minCoord[2], mCoord[k*nDim+2]);
-        maxCoord[2] = std::max(maxCoord[2], mCoord[k*nDim+2]);
-      }
-    }
-  }
+  nalu_ngp::MinMaxSumScalar<double> xCoord, yCoord, zCoord;
+  nalu_ngp::MinMaxSum<double> xReducer(xCoord), yReducer(yCoord), zReducer(zCoord);
 
-  // parallel reduction on min/max
-  double g_minCoord[3] = {};
-  double g_maxCoord[3] = {};
-  stk::ParallelMachine comm = NaluEnv::self().parallel_comm();
-  stk::all_reduce_min(comm, minCoord, g_minCoord, 3);
-  stk::all_reduce_max(comm, maxCoord, g_maxCoord, 3);
+  nalu_ngp::run_entity_par_reduce(
+    "FrameBase::compute_x_centroid_on_parts",
+    ngpMesh, entityRank, sel,
+    KOKKOS_LAMBDA(
+      const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi,
+      nalu_ngp::MinMaxSumScalar<double>& threadVal){
+      const double xc = modelCoords.get(mi,0);
+
+      if (xc < threadVal.min_val) threadVal.min_val = xc;
+      if (xc > threadVal.max_val) threadVal.max_val = xc;
+    }, xReducer);
+  nalu_ngp::run_entity_par_reduce(
+    "FrameBase::compute_y_centroid_on_parts", ngpMesh,
+    stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(
+      const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi,
+      nalu_ngp::MinMaxSumScalar<double>& threadVal){
+      const double yc = modelCoords.get(mi,1);
+
+      if (yc < threadVal.min_val) threadVal.min_val = yc;
+      if (yc > threadVal.max_val) threadVal.max_val = yc;
+    }, yReducer);
+  nalu_ngp::run_entity_par_reduce(
+    "FrameBase::compute_z_centroid_on_parts", ngpMesh,
+    stk::topology::NODE_RANK, sel,
+    KOKKOS_LAMBDA(
+      const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi,
+      nalu_ngp::MinMaxSumScalar<double>& threadVal){
+      const double zc = modelCoords.get(mi,2);
+
+      if (zc < threadVal.min_val) threadVal.min_val = zc;
+      if (zc > threadVal.max_val) threadVal.max_val = zc;
+    }, zReducer);
+
+  double lXC[2] = {xCoord.min_val, xCoord.max_val};
+  double lYC[2] = {yCoord.min_val, yCoord.max_val};
+  double lZC[2] = {zCoord.min_val, zCoord.max_val};
+
+  double gXC[2], gYC[2], gZC[2] = {0.0, 0.0};
+
+  stk::all_reduce_min(bulk_.parallel(), &lXC[0], &gXC[0], 1);
+  stk::all_reduce_min(bulk_.parallel(), &lYC[0], &gYC[0], 1);
+  stk::all_reduce_min(bulk_.parallel(), &lZC[0], &gZC[0], 1);
+
+  stk::all_reduce_max(bulk_.parallel(), &lXC[1], &gXC[1], 1);
+  stk::all_reduce_max(bulk_.parallel(), &lYC[1], &gYC[1], 1);
+  stk::all_reduce_max(bulk_.parallel(), &lZC[1], &gZC[1], 1);
 
   // ensure the centroid is size number of dimensions
-  for ( int j = 0; j < nDim; ++j )
-    centroid[j] = 0.5*(g_maxCoord[j] + g_minCoord[j]);
+  centroid[0] = 0.5*(gXC[0] + gXC[1]);
+  centroid[1] = 0.5*(gYC[0] + gYC[1]);
+  centroid[2] = 0.5*(gZC[0] + gZC[1]);
 }
 
 } // nalu

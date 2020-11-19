@@ -4,8 +4,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cfloat>
-#include <vector>
-#include <array>
 
 #include "NGPInstance.h"
 #include "ngp_utils/NgpTypes.h"
@@ -76,7 +74,7 @@ public:
     }
   }
 
-  void set_computed_centroid( std::vector<double>& centroid )
+  void set_computed_centroid(ThreeDVecType centroid)
   {
     for (int d = 0; d < nalu_ngp::NDimMax; ++d)
       origin_[d] = centroid[d];

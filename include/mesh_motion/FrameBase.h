@@ -27,10 +27,10 @@ public:
 
   void setup();
 
-  void set_computed_centroid( std::vector<double>& centroid )
+  void set_computed_centroid(std::vector<double> centroid)
   {
     for (size_t i=0; i < motionKernels_.size(); i++)
-      motionKernels_[i]->set_computed_centroid(centroid);
+      motionKernels_[i]->set_computed_centroid(centroid.data());
   }
 
   virtual void post_compute_geometry()
