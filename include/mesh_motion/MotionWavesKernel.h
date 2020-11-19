@@ -47,34 +47,34 @@ public:
     const double* cxyz,
     ThreeDVecType& vel);
 
-    struct StokesCoeff{
-        double k;
-        double d;
-        double a11;
-        double a22;
-        double a31;
-        double a33;
-        double a42;
-        double a44;
-        double a51;
-        double a53;
-        double a55;
-        double b22;
-        double b31;
-        double b42;
-        double b44;
-        double b53;
-        double b55;
-        double c0;
-        double c2;
-        double c4;
-        double d2;
-        double d4;
-        double e2;
-        double e4;
-    };
+  struct StokesCoeff{
+    double k;
+    double d;
+    double a11;
+    double a22;
+    double a31;
+    double a33;
+    double a42;
+    double a44;
+    double a51;
+    double a53;
+    double a55;
+    double b22;
+    double b31;
+    double b42;
+    double b44;
+    double b53;
+    double b55;
+    double c0;
+    double c2;
+    double c4;
+    double d2;
+    double d4;
+    double e2;
+    double e4;
+  };
 
-    void get_StokesCoeff(StokesCoeff *stokes);
+  void get_StokesCoeff(StokesCoeff *stokes);
 
 private:
   void load(const YAML::Node&);
@@ -128,7 +128,7 @@ private:
   double Q_{0.};
   double cs_{0.2}; //Mean Stokes drift speed
 
-    // Deformation damping function
+  // Deformation damping function
   double meshdampinglength_{1000};
   int meshdampingcoeff_{3};
     

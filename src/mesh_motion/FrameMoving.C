@@ -82,9 +82,9 @@ void FrameMoving::update_coordinates_velocity(const double time)
     // and old coordinates to obtain current coordinates
     for (int d = 0; d < nDim; ++d) {
       currCoords.get(mi,d) = comp_trans_mat[d][0]*mX[0]
-                              +comp_trans_mat[d][1]*mX[1]
-                              +comp_trans_mat[d][2]*mX[2]
-                              +comp_trans_mat[d][3];
+                            +comp_trans_mat[d][1]*mX[1]
+                            +comp_trans_mat[d][2]*mX[2]
+                            +comp_trans_mat[d][3];
 
       displacement.get(mi,d) = currCoords.get(mi,d) - modelCoords.get(mi,d);
     } // end for loop - d index
