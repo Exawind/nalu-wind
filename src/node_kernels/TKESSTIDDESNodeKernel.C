@@ -48,6 +48,8 @@ TKESSTIDDESNodeKernel::setup(Realm& realm)
   maxLenScale_     = fieldMgr.get_field<double>(maxLenScaleID_);
   fOneBlend_       = fieldMgr.get_field<double>(fOneBlendID_);
   lengthScaleRatio_ = fieldMgr.get_field<double>(lengthScaleRatioID_);
+  // call modify before this field gets modified in kernel execute phase
+  lengthScaleRatio_.modify_on_device();
 
   const std::string dofName = "turbulent_ke";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
