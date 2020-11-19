@@ -16,9 +16,8 @@
 namespace sierra {
 namespace nalu {
 
-TKESSTIDDESNodeKernel::TKESSTIDDESNodeKernel(
-  const stk::mesh::MetaData& meta
-) : NGPNodeKernel<TKESSTIDDESNodeKernel>(),
+TKESSTIDDESNodeKernel::TKESSTIDDESNodeKernel(const stk::mesh::MetaData& meta)
+  : NGPNodeKernel<TKESSTIDDESNodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
     densityID_(get_field_ordinal(meta, "density")),
@@ -29,6 +28,7 @@ TKESSTIDDESNodeKernel::TKESSTIDDESNodeKernel(
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     maxLenScaleID_(get_field_ordinal(meta, "sst_max_length_scale")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
+    lengthScaleRatioID_(get_field_ordinal(meta, "iddes_les_scale_ratio")),
     nDim_(meta.spatial_dimension())
 {}
 
@@ -47,6 +47,7 @@ TKESSTIDDESNodeKernel::setup(Realm& realm)
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   maxLenScale_     = fieldMgr.get_field<double>(maxLenScaleID_);
   fOneBlend_       = fieldMgr.get_field<double>(fOneBlendID_);
+  lengthScaleRatio_ = fieldMgr.get_field<double>(lengthScaleRatioID_);
 
   const std::string dofName = "turbulent_ke";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
@@ -122,11 +123,14 @@ void TKESSTIDDESNodeKernel::execute(
 
   const DblType sqrtTke = stk::math::sqrt(tke);
   const DblType lSST = sqrtTke / betaStar_ / sdr;
+  const DblType lLES = cDES * delta;
 
   // Find minimum length scale, limit minimum value to 1.0e-16 to prevent
   // division by zero later on
   const DblType lIDDES =
-      stk::math::max(1.0e-16, fdHat * (1.0  + fe) * lSST + (1.0 - fdHat) * cDES * delta);
+    stk::math::max(1.0e-16, fdHat * (1.0 + fe) * lSST + (1.0 - fdHat) * lLES);
+
+  lengthScaleRatio_.get(node, 0) = lLES / lIDDES;
 
   DblType Dk = density * tke * sqrtTke / lIDDES;
 
