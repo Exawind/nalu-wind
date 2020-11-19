@@ -132,6 +132,7 @@ void TKESSTIDDESNodeKernel::execute(
   const DblType lIDDES =
     stk::math::max(1.0e-16, fdHat * (1.0 + fe) * lSST + (1.0 - fdHat) * lLES);
 
+  // modify on device called in setup
   lengthScaleRatio_.get(node, 0) = lLES / lIDDES;
 
   DblType Dk = density * tke * sqrtTke / lIDDES;
