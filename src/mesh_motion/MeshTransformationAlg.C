@@ -55,8 +55,8 @@ void MeshTransformationAlg::initialize( const double time )
     auto* coords = bulk_.mesh_meta_data().get_field(
         stk::topology::NODE_RANK, "coordinates");
     if (coords != nullptr) {
-      coords->modify_on_host();
-      coords->sync_to_device();
+      coords->modify_on_device();
+      coords->sync_to_host();
     }
   }
   isInit_ = true;

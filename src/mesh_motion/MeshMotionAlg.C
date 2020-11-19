@@ -61,8 +61,8 @@ void MeshMotionAlg::initialize( const double time )
 
     for (const auto& ff: fnames) {
       auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
-      fld->modify_on_host();
-      fld->sync_to_device();
+      fld->modify_on_device();
+      fld->sync_to_host();
     }
   }
 
@@ -87,8 +87,8 @@ void MeshMotionAlg::execute(const double time)
 
     for (const auto& ff: fnames) {
       auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
-      fld->modify_on_host();
-      fld->sync_to_device();
+      fld->modify_on_device();
+      fld->sync_to_host();
     }
   }
 }

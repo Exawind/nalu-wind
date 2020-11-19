@@ -38,7 +38,7 @@ void FrameReference::update_coordinates(const double time)
     KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
 
     // temporary model coords for a generic 2D and 3D implementation
-    double mX[3] = {0.0,0.0,0.0};
+    NgpMotion::ThreeDVecType mX = {};
 
     // copy over model coordinates
     for (int d = 0; d < nDim; ++d)

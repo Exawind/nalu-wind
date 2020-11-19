@@ -54,8 +54,8 @@ void FrameMoving::update_coordinates_velocity(const double time)
     KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
 
     // temporary current and model coords for a generic 2D and 3D implementation
-    double mX[3] = {0.0,0.0,0.0};
-    double cX[3] = {0.0,0.0,0.0};
+    NgpMotion::ThreeDVecType mX = {};
+    NgpMotion::ThreeDVecType cX = {};
 
     // copy over model coordinates and reset velocity
     for (int d = 0; d < nDim; ++d)

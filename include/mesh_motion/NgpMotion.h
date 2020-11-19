@@ -34,6 +34,7 @@ public:
 
   virtual void free_on_device() = 0;
 
+  KOKKOS_FUNCTION
   virtual void build_transformation(const double, const double* = nullptr) = 0;
 
   /** Function to compute motion-specific velocity
@@ -45,6 +46,7 @@ public:
    * @param[in]  mxyz       Transformed coordinates
    * @param[out] vel        Velocity associated with coordinates
    */
+  KOKKOS_FUNCTION
   virtual void compute_velocity(
     const double time,
     const TransMatType& compTrans,
@@ -80,6 +82,7 @@ public:
       origin_[d] = centroid[d];
   }
 
+  KOKKOS_FORCEINLINE_FUNCTION
   const TransMatType& get_trans_mat() const
   {
     return transMat_;
