@@ -1111,6 +1111,12 @@ MomentumEquationSystem::register_nodal_fields(
 
     if (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS)
       TAMSAlgDriver_->register_nodal_fields(part);
+
+    if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES) {
+      iddesLengthScaleRatio_ = &(meta_data.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "iddes_les_scale_ratio"));
+      stk::mesh::put_field_on_mesh(*iddesLengthScaleRatio_, *part, nullptr);
+    }
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
