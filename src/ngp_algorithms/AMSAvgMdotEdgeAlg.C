@@ -8,7 +8,7 @@
 //
 
 
-#include "ngp_algorithms/TAMSAvgMdotEdgeAlg.h"
+#include "ngp_algorithms/AMSAvgMdotEdgeAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
 #include "ngp_utils/NgpFieldManager.h"
@@ -19,7 +19,7 @@
 namespace sierra {
 namespace nalu {
 
-TAMSAvgMdotEdgeAlg::TAMSAvgMdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
+AMSAvgMdotEdgeAlg::AMSAvgMdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
     coordinates_(get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
     avgVelocityRTM_(get_field_ordinal(
@@ -33,7 +33,7 @@ TAMSAvgMdotEdgeAlg::TAMSAvgMdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
 }
 
 void
-TAMSAvgMdotEdgeAlg::execute()
+AMSAvgMdotEdgeAlg::execute()
 {
   constexpr int NDimMax = 3;
   const auto& meta = realm_.meta_data();

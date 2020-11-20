@@ -30,7 +30,7 @@ MomentumEdgePecletAlg::MomentumEdgePecletAlg(
     viscosity_(get_field_ordinal(
       realm.meta_data(),
       realm.is_turbulent() &&
-          realm.solutionOptions_->turbulenceModel_ != SST_TAMS
+          realm.solutionOptions_->turbulenceModel_ != SST_AMS
         ? "effective_viscosity_u"
         : "viscosity")),
     coordinates_(get_field_ordinal(

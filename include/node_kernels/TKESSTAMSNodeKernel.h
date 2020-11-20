@@ -8,8 +8,8 @@
 //
 
 
-#ifndef SDRSSTTAMSNODEKERNEL_H
-#define SDRSSTTAMSNODEKERNEL_H
+#ifndef TKESSTAMSNODEKERNEL_H
+#define TKESSTAMSNODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 
@@ -23,15 +23,15 @@ namespace nalu {
 
 class SolutionOptions;
 
-class SDRSSTTAMSNodeKernel : public NGPNodeKernel<SDRSSTTAMSNodeKernel>
+class TKESSTAMSNodeKernel : public NGPNodeKernel<TKESSTAMSNodeKernel>
 {
 public:
-  SDRSSTTAMSNodeKernel(const stk::mesh::MetaData&, const std::string);
+  TKESSTAMSNodeKernel(const stk::mesh::MetaData&, const std::string);
 
-  SDRSSTTAMSNodeKernel() = delete;
+  TKESSTAMSNodeKernel() = delete;
 
   KOKKOS_FUNCTION
-  virtual ~SDRSSTTAMSNodeKernel() = default;
+  virtual ~TKESSTAMSNodeKernel() = default;
 
   virtual void setup(Realm&) override;
 
@@ -50,30 +50,18 @@ private:
   stk::mesh::NgpField<double> rho_;
   stk::mesh::NgpField<double> tke_;
   stk::mesh::NgpField<double> sdr_;
-  stk::mesh::NgpField<double> alpha_;
   stk::mesh::NgpField<double> prod_;
-  stk::mesh::NgpField<double> fOneBlend_;
-  stk::mesh::NgpField<double> dkdx_;
-  stk::mesh::NgpField<double> dwdx_;
 
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
+  unsigned viscID_{stk::mesh::InvalidOrdinal};
   unsigned tviscID_{stk::mesh::InvalidOrdinal};
   unsigned tkeNp1ID_{stk::mesh::InvalidOrdinal};
   unsigned sdrNp1ID_{stk::mesh::InvalidOrdinal};
-  unsigned alphaID_{stk::mesh::InvalidOrdinal};
-  unsigned fOneBlendID_{stk::mesh::InvalidOrdinal};
-  unsigned dkdxID_{stk::mesh::InvalidOrdinal};
-  unsigned dwdxID_{stk::mesh::InvalidOrdinal};
   unsigned prodID_{stk::mesh::InvalidOrdinal};
   unsigned densityID_{stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;
-  NodeKernelTraits::DblType sigmaWTwo_;
-  NodeKernelTraits::DblType betaOne_;
-  NodeKernelTraits::DblType betaTwo_;
-  NodeKernelTraits::DblType gammaOne_;
-  NodeKernelTraits::DblType gammaTwo_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
   const int nDim_;
 };
@@ -81,4 +69,4 @@ private:
 } // namespace nalu
 } // namespace sierra
 
-#endif /* SDRSSTTAMSNODEKERNEL_H */
+#endif /* TKESSTAMSNODEKERNEL_H */

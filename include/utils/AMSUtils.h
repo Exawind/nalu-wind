@@ -7,30 +7,28 @@
 // for more details.
 //
 
-
-#ifndef TAMSUTILS_H
-#define TAMSUTILS_H
+#ifndef AMSUTILS_H
+#define AMSUTILS_H
 
 #include <SimdInterface.h>
 
 namespace sierra {
 namespace nalu {
 
-namespace tams_utils {
+namespace ams_utils {
 
 template <class T, int dim = 3>
-KOKKOS_FUNCTION
-T
+KOKKOS_FUNCTION T
 get_M43_constant(T D[dim][dim], const double CMdeg)
 {
   NGP_ThrowRequireMsg(dim == 3, "Compute of M43 constant requires 3D problem");
 
   // Coefficients for the polynomial
-  double c[15] = {1.033749474513071,  -0.154122686264488, -0.007737595743644,
-                  0.177611732560139,  0.060868024017604,  0.162200630336440,
-                  -0.041086757724764, -0.027380130027626, 0.005521188430182,
-                  0.049139605169403,  0.002926283060215,  0.002672790587853,
-                  0.000486437925728,  0.002136258066662,  0.005113058518679};
+  double c[15] = {0.971903113666644,  0.065591700544879,  0.071103489538998,
+                  0.049918716158500,  -0.056904657182031, 0.097974249406576,
+                  -0.015589487087603, 0.002003723064733,  0.002177318950949,
+                  0.034227247973836,  0.001219656091495,  0.000417947294931,
+                  0.000421085902741,  0.001223678414510,  0.003695127828465};
 
   T smallestEV = stk::math::min(D[0][0], stk::math::min(D[1][1], D[2][2]));
   T largestEV = stk::math::max(D[0][0], stk::math::max(D[1][1], D[2][2]));
@@ -49,7 +47,7 @@ get_M43_constant(T D[dim][dim], const double CMdeg)
   T theta = stk::math::acos(largestEV / r);
 
   T x = stk::math::log(r);
-  T y = stk::math::log(stk::math::sin(2 * theta));
+  T y = stk::math::log(stk::math::sin(2.0 * theta));
 
   T poly = c[0] + c[1] * x + c[2] * y + c[3] * x * x + c[4] * x * y +
            c[5] * y * y + c[6] * x * x * x + c[7] * x * x * y +
@@ -60,9 +58,9 @@ get_M43_constant(T D[dim][dim], const double CMdeg)
   return poly * CMdeg;
 }
 
-} // namespace tams_utils
+} // namespace ams_utils
 
 } // namespace nalu
 } // namespace sierra
 
-#endif /* TAMSUTILS_H */
+#endif /* AMSUTILS_H */

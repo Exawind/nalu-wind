@@ -7,12 +7,12 @@
 // for more details.
 //
 
-
 #ifndef EIGENDECOMPOSITION_H
 #define EIGENDECOMPOSITION_H
 
 #include <FieldTypeDef.h>
 #include <SimdInterface.h>
+#include <NaluEnv.h>
 
 namespace sierra {
 namespace nalu {
@@ -24,19 +24,20 @@ namespace EigenDecomposition {
 //-------- symmetric diagonalize (2D) --------------------------------------
 //--------------------------------------------------------------------------
 template <class T>
-KOKKOS_FUNCTION
-void sym_diagonalize(const T (&A)[2][2], T (&Q)[2][2], T (&D)[2][2]) {
+KOKKOS_FUNCTION void
+sym_diagonalize(const T (&A)[2][2], T (&Q)[2][2], T (&D)[2][2])
+{
   // Note that A must be symmetric here
   const T trace = A[0][0] + A[1][1];
   const T det = A[0][0] * A[1][1] - A[0][1] * A[1][0];
 
   // calculate eigenvalues
   D[0][0] = stk::math::if_then_else(
-      A[1][0] == 0.0, A[0][0],
-      trace / 2.0 + stk::math::sqrt(trace * trace / 4.0 - det));
+    A[1][0] == 0.0, A[0][0],
+    trace / 2.0 + stk::math::sqrt(trace * trace / 4.0 - det));
   D[1][1] = stk::math::if_then_else(
-      A[1][0] == 0.0, A[1][1],
-      trace / 2.0 - stk::math::sqrt(trace * trace / 4.0 - det));
+    A[1][0] == 0.0, A[1][1],
+    trace / 2.0 - stk::math::sqrt(trace * trace / 4.0 - det));
   D[0][1] = 0.0;
   D[1][0] = 0.0;
 
@@ -68,8 +69,9 @@ void sym_diagonalize(const T (&A)[2][2], T (&Q)[2][2], T (&D)[2][2]) {
 //-------- matrix_matrix_multiply 2D ---------------------------------------
 //--------------------------------------------------------------------------
 template <class T>
-void matrix_matrix_multiply(const T (&A)[2][2], const T (&B)[2][2],
-                            T (&C)[2][2]) {
+void
+matrix_matrix_multiply(const T (&A)[2][2], const T (&B)[2][2], T (&C)[2][2])
+{
   // C = A*B
   for (int i = 0; i < 2; ++i) {
     for (int j = 0; j < 2; ++j) {
@@ -86,8 +88,10 @@ void matrix_matrix_multiply(const T (&A)[2][2], const T (&B)[2][2],
 //-------- reconstruct_matrix_from_decomposition 2D ------------------------
 //--------------------------------------------------------------------------
 template <class T>
-void reconstruct_matrix_from_decomposition(const T (&D)[2][2],
-                                           const T (&Q)[2][2], T (&A)[2][2]) {
+void
+reconstruct_matrix_from_decomposition(
+  const T (&D)[2][2], const T (&Q)[2][2], T (&A)[2][2])
+{
   // A = Q*D*QT
   T QT[2][2];
   T B[2][2];
@@ -108,8 +112,9 @@ void reconstruct_matrix_from_decomposition(const T (&D)[2][2],
 //-------- symmetric diagonalize (3D) --------------------------------------
 //--------------------------------------------------------------------------
 template <class T>
-KOKKOS_FUNCTION
-void sym_diagonalize(const T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3]) {
+KOKKOS_FUNCTION void
+sym_diagonalize(const T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
+{
   /*
     obtained from:
     http://stackoverflow.com/questions/4372224/
@@ -182,44 +187,44 @@ void sym_diagonalize(const T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3]) {
 
     // index of largest element of offdiag
     oLarge =
-        stk::math::if_then_else((m[0] > m[1]) && (m[0] > m[2]), D[1][2], 0.0);
-    oLarge = stk::math::if_then_else((m[1] > m[2]) && (m[1] > m[0]), D[0][2],
-                                     oLarge);
-    oLarge = stk::math::if_then_else((m[2] > m[1]) && (m[2] > m[0]), D[0][1],
-                                     oLarge);
+      stk::math::if_then_else((m[0] > m[1]) && (m[0] > m[2]), D[1][2], 0.0);
+    oLarge =
+      stk::math::if_then_else((m[1] > m[2]) && (m[1] > m[0]), D[0][2], oLarge);
+    oLarge =
+      stk::math::if_then_else((m[2] > m[1]) && (m[2] > m[0]), D[0][1], oLarge);
 
-    dDiff = stk::math::if_then_else((m[0] > m[1]) && (m[0] > m[2]),
-                                    D[2][2] - D[1][1], 0.0);
-    dDiff = stk::math::if_then_else((m[1] > m[2]) && (m[1] > m[0]),
-                                    D[0][0] - D[2][2], dDiff);
-    dDiff = stk::math::if_then_else((m[2] > m[1]) && (m[2] > m[0]),
-                                    D[1][1] - D[0][0], dDiff);
+    dDiff = stk::math::if_then_else(
+      (m[0] > m[1]) && (m[0] > m[2]), D[2][2] - D[1][1], 0.0);
+    dDiff = stk::math::if_then_else(
+      (m[1] > m[2]) && (m[1] > m[0]), D[0][0] - D[2][2], dDiff);
+    dDiff = stk::math::if_then_else(
+      (m[2] > m[1]) && (m[2] > m[0]), D[1][1] - D[0][0], dDiff);
 
     // if oLarge == 0.0, then we are already diagonal
     // we need to be able to divide by thet, so set to 1.0 temporarily and
     // catch c at the end and correct it to 1 to handle the diagonal case
     thet =
-        stk::math::if_then_else(oLarge == 0.0, 1.0, (dDiff) / (2.0 * oLarge));
+      stk::math::if_then_else(oLarge == 0.0, 1.0, (dDiff) / (2.0 * oLarge));
     sgn = stk::math::if_then_else(thet > 0.0, 1.0, -1.0);
     thet = thet * sgn;
     // sign(T)/(|T|+sqrt(T^2+1))
     t = stk::math::if_then_else(
-        thet < 1.E6, sgn / (thet + stk::math::sqrt(thet * thet + 1.0)),
-        0.5 * sgn / thet);
-    c = stk::math::if_then_else(oLarge == 0.0, 1.0,
-                                1.0 / stk::math::sqrt(t * t + 1.0));
+      thet < 1.E6, sgn / (thet + stk::math::sqrt(thet * thet + 1.0)),
+      0.5 * sgn / thet);
+    c = stk::math::if_then_else(
+      oLarge == 0.0, 1.0, 1.0 / stk::math::sqrt(t * t + 1.0));
 
     // using 1/2 angle identity sin(a/2) = std::sqrt((1-cos(a))/2)
     // -1.0 since our quat-to-matrix convention was for v*M instead of M*v
     jr[0] = stk::math::if_then_else(
-        (m[0] > m[1]) && (m[0] > m[2]),
-        -1.0 * (sgn * stk::math::sqrt((1.0 - c) / 2.0)), 0.0);
+      (m[0] > m[1]) && (m[0] > m[2]),
+      -1.0 * (sgn * stk::math::sqrt((1.0 - c) / 2.0)), 0.0);
     jr[1] = stk::math::if_then_else(
-        (m[1] > m[2]) && (m[1] > m[0]),
-        -1.0 * (sgn * stk::math::sqrt((1.0 - c) / 2.0)), 0.0);
+      (m[1] > m[2]) && (m[1] > m[0]),
+      -1.0 * (sgn * stk::math::sqrt((1.0 - c) / 2.0)), 0.0);
     jr[2] = stk::math::if_then_else(
-        (m[2] > m[1]) && (m[2] > m[0]),
-        -1.0 * (sgn * stk::math::sqrt((1.0 - c) / 2.0)), 0.0);
+      (m[2] > m[1]) && (m[2] > m[0]),
+      -1.0 * (sgn * stk::math::sqrt((1.0 - c) / 2.0)), 0.0);
 
     jrL = stk::math::if_then_else((m[0] > m[1]) && (m[0] > m[2]), jr[0], 0.0);
     jrL = stk::math::if_then_else((m[1] > m[2]) && (m[1] > m[0]), jr[1], jrL);
@@ -227,9 +232,9 @@ void sym_diagonalize(const T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3]) {
 
     jr[3] = stk::math::sqrt(1.0f - jrL * jrL);
 
-    const auto check_one = jr[3]==1.0;
+    const auto check_one = jr[3] == 1.0;
     const bool exit_now = stk::simd::are_all(check_one);
-    if (exit_now){
+    if (exit_now) {
       break; // reached limits of floating point precision
     }
 
@@ -249,8 +254,9 @@ void sym_diagonalize(const T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3]) {
 //-------- matrix_matrix_multiply 3D ---------------------------------------
 //--------------------------------------------------------------------------
 template <class T>
-void matrix_matrix_multiply(const T (&A)[3][3], const T (&B)[3][3],
-                            T (&C)[3][3]) {
+void
+matrix_matrix_multiply(const T (&A)[3][3], const T (&B)[3][3], T (&C)[3][3])
+{
   // C = A*B
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
@@ -267,8 +273,10 @@ void matrix_matrix_multiply(const T (&A)[3][3], const T (&B)[3][3],
 //-------- reconstruct_matrix_from_decomposition 3D ------------------------
 //--------------------------------------------------------------------------
 template <class T>
-void reconstruct_matrix_from_decomposition(const T (&D)[3][3],
-                                           const T (&Q)[3][3], T (&A)[3][3]) {
+void
+reconstruct_matrix_from_decomposition(
+  const T (&D)[3][3], const T (&Q)[3][3], T (&A)[3][3])
+{
   // A = Q*D*QT
   T QT[3][3];
   T B[3][3];
@@ -290,21 +298,97 @@ void reconstruct_matrix_from_decomposition(const T (&D)[3][3],
 //------------------ unsym_matrix_force_sym_3D -----------------------------
 //--------------------------------------------------------------------------
 template <class T>
-KOKKOS_FUNCTION
-void unsym_matrix_force_sym(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3]) {
+KOKKOS_FUNCTION void
+  unsym_matrix_force_sym(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
+{
 
-  // force symmetry force 
+  // force symmetry force
   for (int i = 0; i < 3; i++) {
     for (int j = i; j < 3; j++) {
-      A[i][j] = (A[i][j] + A[j][i])/2.0;
+      A[i][j] = (A[i][j] + A[j][i]) / 2.0;
       A[j][i] = A[i][j];
     }
   }
 
-  // then call symmetric diagonalize 
+  // then call symmetric diagonalize
   sym_diagonalize(A, Q, D);
 }
 
+//--------------------------------------------------------------------------
+//------------------ general_eigenvalues_3D -----------------------------
+//--------------------------------------------------------------------------
+template <class T>
+KOKKOS_FUNCTION void
+  general_eigenvalues(T (&A)[3][3], T (&Q)[3][3], T (&D)[3][3])
+{
+
+  const T pi = stk::math::acos(-1.0);
+
+  // Characteristic equation for A is ax^3 + bx^2 + cx + d = 0 where x are the
+  // eigenvalues and a = 1, b = -trA, c = coFacA, d = -detA
+  const T trA = A[0][0] + A[1][1] + A[2][2];
+  const T detA = A[0][0] * A[1][1] * A[2][2] + A[0][1] * A[1][2] * A[2][0] +
+                 A[0][2] * A[1][0] * A[2][1] - A[0][0] * A[1][2] * A[2][1] -
+                 A[0][1] * A[1][0] * A[2][2] - A[0][2] * A[1][1] * A[2][0];
+  const T coFacA = A[0][0] * A[1][1] - A[0][1] * A[1][0] + A[1][1] * A[2][2] -
+                   A[1][2] * A[2][1] + A[0][0] * A[2][2] - A[0][2] * A[2][0];
+
+  // Check to make sure all eigenvalues are real
+  // discriminant = (bc)^2 - 4ac^3 -4b^3d -27a^2d^2 + 18abcd where
+  // a = 1, b = -trA, c = coFacA, d = -detA
+  const T disc = trA * trA * coFacA * coFacA - 4.0 * coFacA * coFacA * coFacA -
+                 4.0 * trA * trA * trA * detA - 27.0 * detA * detA +
+                 18.0 * trA * coFacA * detA;
+
+  const auto check_one = disc < 0.0;
+  const bool exit_now = stk::simd::are_all(check_one);
+  if (exit_now) {
+    NaluEnv::self().naluOutput()
+      << "Error, complex eigenvalues in EigenDecomposition::general_eigenvalues"
+      << disc << "([[" << A[0][0] << "," << A[0][1] << "," << A[0][2] << "],["
+      << A[1][0] << "," << A[1][1] << "," << A[1][2] << "],[" << A[2][0] << ","
+      << A[2][1] << "," << A[2][2] << "]])" << std::endl;
+    throw std::runtime_error("ERROR, complex eigenvalues in EigenDecomposition::general_eigenvalues");
+  }
+
+  // Convert to depressed cubic (substitute x = t - b/3a = t + trA/3)
+  // This leads to cubic: t^3 + pt + q  where the linear and constant
+  // coefficient are defined as below
+  const T linCoef = coFacA - trA * trA / 3.0;
+  const T constCoef = coFacA * trA / 3.0 - 2.0 * trA * trA * trA / 27.0 - detA;
+
+  // Solve roots of depressed cubic polynomial analytically (Francois Viete
+  // formula)
+  const T t1 =
+    2.0 * stk::math::sqrt(-linCoef / 3.0) *
+    stk::math::cos(
+      stk::math::acos(
+        3.0 * constCoef * stk::math::sqrt(-3.0 / linCoef) / (2.0 * linCoef)) /
+      3.0);
+  const T t2 =
+    2.0 * stk::math::sqrt(-linCoef / 3.0) *
+    stk::math::cos(
+      stk::math::acos(
+        3.0 * constCoef * stk::math::sqrt(-3.0 / linCoef) / (2.0 * linCoef)) /
+        3.0 -
+      2.0 * pi / 3.0);
+  const T t3 =
+    2.0 * stk::math::sqrt(-linCoef / 3.0) *
+    stk::math::cos(
+      stk::math::acos(
+        3.0 * constCoef * stk::math::sqrt(-3.0 / linCoef) / (2.0 * linCoef)) /
+        3.0 -
+      4.0 * pi / 3.0);
+
+  // Convert roots of depressed polynomial back to the eigenvalues
+  D[0][0] = t1 + trA / 3.0;
+  D[1][1] = t2 + trA / 3.0;
+  D[2][2] = t3 + trA / 3.0;
+
+  // Zero out Q since this only returns eigenvalues
+  Q[0][0] = Q[0][1] = Q[0][2] = Q[1][0] = Q[1][1] = Q[1][2] = Q[2][0] =
+    Q[2][1] = Q[2][2] = 0.0;
+}
 
 } // namespace EigenDecomposition
 

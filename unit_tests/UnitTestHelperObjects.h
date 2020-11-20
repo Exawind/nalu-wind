@@ -8,7 +8,7 @@
 #include "AssembleElemSolverAlgorithm.h"
 #include "AssembleFaceElemSolverAlgorithm.h"
 #include "AssembleNGPNodeSolverAlgorithm.h"
-#include "edge_kernels/AssembleTAMSEdgeKernelAlg.h"
+#include "edge_kernels/AssembleAMSEdgeKernelAlg.h"
 #include "EquationSystem.h"
 #include "kernel/Kernel.h"
 
@@ -232,7 +232,7 @@ struct EdgeKernelHelperObjects : public HelperObjectsBase
       linsys(new TestEdgeLinearSystem(realm, numDof, &eqSystem, topo))
   {
     eqSystem.linsys_ = linsys;
-    edgeAlg.reset(new sierra::nalu::AssembleTAMSEdgeKernelAlg(
+    edgeAlg.reset(new sierra::nalu::AssembleAMSEdgeKernelAlg(
                     realm, part, &eqSystem));
   }
 
@@ -250,7 +250,7 @@ struct EdgeKernelHelperObjects : public HelperObjectsBase
   }
 
   unit_test_utils::TestEdgeLinearSystem* linsys{nullptr};
-  std::unique_ptr<sierra::nalu::AssembleTAMSEdgeKernelAlg> edgeAlg;
+  std::unique_ptr<sierra::nalu::AssembleAMSEdgeKernelAlg> edgeAlg;
 };
 
 struct NodeHelperObjects : public HelperObjectsBase

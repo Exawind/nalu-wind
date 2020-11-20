@@ -118,8 +118,8 @@ realms:
 
     solution_options:
       name: myOptions
-      turbulence_model: sst_tams
-      reset_TAMS_averages_on_init: true 
+      turbulence_model: sst_ams
+      reset_AMS_averages_on_init: true 
       projected_timescale_type: momentum_diag_inv
 
       fix_pressure_at_node:
@@ -178,12 +178,12 @@ realms:
             momentum: [1.00, 0.0, 0.0]
 
     restart:
-      restart_data_base_name: tamsChannelEdge.rst
+      restart_data_base_name: amsChannelEdge.rst
       restart_frequency: 10
       restart_start: 0
 
     output:
-      output_data_base_name: tamsChannelEdge.e
+      output_data_base_name: amsChannelEdge.e
       output_frequency: 1
       output_node_set: no
       output_variables:

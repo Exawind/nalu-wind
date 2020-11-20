@@ -62,12 +62,12 @@ TEST_F(SSTKernelHex8Mesh, NGP_turb_visc_sst_alg)
   }
 }
 
-TEST_F(TAMSKernelHex8Mesh, NGP_turb_visc_ssttams_alg)
+TEST_F(AMSKernelHex8Mesh, NGP_turb_visc_sstams_alg)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
 
-  TAMSKernelHex8Mesh::fill_mesh_and_init_fields();
+  AMSKernelHex8Mesh::fill_mesh_and_init_fields();
 
   // Initialize turbulence parameters in solution options
   solnOpts_.initialize_turbulence_constants();

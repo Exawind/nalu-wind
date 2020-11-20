@@ -7,16 +7,15 @@
 // for more details.
 //
 
-
-#ifndef TAMSAlgDriver_h
-#define TAMSAlgDriver_h
+#ifndef AMSAlgDriver_h
+#define AMSAlgDriver_h
 
 #include "FieldTypeDef.h"
 #include "Algorithm.h"
 #include "ngp_algorithms/NgpAlgDriver.h"
 #include "ngp_algorithms/FieldUpdateAlgDriver.h"
-#include "ngp_algorithms/TAMSAvgMdotEdgeAlg.h"
-#include "ngp_algorithms/SSTTAMSAveragesAlg.h"
+#include "ngp_algorithms/AMSAvgMdotEdgeAlg.h"
+#include "ngp_algorithms/SSTAMSAveragesAlg.h"
 
 namespace stk {
 struct topology;
@@ -27,14 +26,14 @@ namespace nalu {
 
 class Realm;
 
-class TAMSAlgDriver
+class AMSAlgDriver
 {
 
 public:
   using DblType = double;
 
-  TAMSAlgDriver(Realm& realm);
-  virtual ~TAMSAlgDriver() = default;
+  AMSAlgDriver(Realm& realm);
+  virtual ~AMSAlgDriver() = default;
   virtual void register_nodal_fields(stk::mesh::Part* part);
   virtual void register_edge_fields(stk::mesh::Part* part);
   void register_interior_algorithm(stk::mesh::Part* part);
@@ -43,6 +42,7 @@ public:
   void initial_production();
   void initial_mdot();
   void compute_metric_tensor();
+  void predict_state();
 
 private:
   Realm& realm_;
@@ -52,7 +52,7 @@ private:
   ScalarFieldType* avgTkeResolved_;
   GenericFieldType* avgDudx_;
   GenericFieldType* metric_;
-  ScalarFieldType* alpha_;
+  ScalarFieldType* beta_;
 
   ScalarFieldType* resAdequacy_;
   ScalarFieldType* avgResAdequacy_;
@@ -61,12 +61,12 @@ private:
   ScalarFieldType* avgMdot_;
 
   FieldUpdateAlgDriver metricTensorAlgDriver_;
-  std::unique_ptr<SSTTAMSAveragesAlg> avgAlg_;
+  std::unique_ptr<SSTAMSAveragesAlg> avgAlg_;
   NgpAlgDriver avgMdotAlg_;
 
   const TurbulenceModel turbulenceModel_;
 
-  bool resetTAMSAverages_;
+  bool resetAMSAverages_;
 };
 } // namespace nalu
 } // namespace sierra

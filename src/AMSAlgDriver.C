@@ -7,8 +7,7 @@
 // for more details.
 //
 
-
-#include "TAMSAlgDriver.h"
+#include "AMSAlgDriver.h"
 #include "master_element/MasterElementFactory.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
@@ -24,14 +23,14 @@ namespace nalu {
 
 class Realm;
 
-TAMSAlgDriver::TAMSAlgDriver(Realm& realm)
+AMSAlgDriver::AMSAlgDriver(Realm& realm)
   : realm_(realm),
     avgVelocity_(NULL),
     avgVelocityRTM_(NULL),
     avgTkeResolved_(NULL),
     avgDudx_(NULL),
     metric_(NULL),
-    alpha_(NULL),
+    beta_(NULL),
     resAdequacy_(NULL),
     avgResAdequacy_(NULL),
     avgProduction_(NULL),
@@ -40,30 +39,33 @@ TAMSAlgDriver::TAMSAlgDriver(Realm& realm)
     metricTensorAlgDriver_(realm_, "metric_tensor"),
     avgMdotAlg_(realm_),
     turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
-    resetTAMSAverages_(realm_.solutionOptions_->resetTAMSAverages_)
+    resetAMSAverages_(realm_.solutionOptions_->resetAMSAverages_)
 {
   if (!realm.realmUsesEdges_)
-    throw std::runtime_error("TAMS not supported on element runs.");
-  if (turbulenceModel_ != SST_TAMS) {
+    throw std::runtime_error("AMS not supported on element runs.");
+  if (turbulenceModel_ != SST_AMS) {
     throw std::runtime_error(
-      "User has requested TAMS, however, turbulence model has not been set "
-      "to sst_tams, the only one supported by this driver currently.");
+      "User has requested AMS, however, turbulence model has not been set "
+      "to sst_ams, the only one supported by this driver currently.");
   }
 }
 
 void
-TAMSAlgDriver::register_nodal_fields(stk::mesh::Part* part)
+AMSAlgDriver::register_nodal_fields(stk::mesh::Part* part)
 {
   stk::mesh::MetaData& meta = realm_.meta_data();
   const int nDim = meta.spatial_dimension();
 
+  // Set numStates as 2, so avg quantities can be updated through Picard iters
+  const int numStates = 2;
+
   // Nodal fields
-  alpha_ =
+  beta_ =
     &(meta.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "k_ratio"));
-  stk::mesh::put_field_on_mesh(*alpha_, *part, nullptr);
+  stk::mesh::put_field_on_mesh(*beta_, *part, nullptr);
 
   avgVelocity_ = &(meta.declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "average_velocity"));
+    stk::topology::NODE_RANK, "average_velocity", numStates));
   stk::mesh::put_field_on_mesh(*avgVelocity_, *part, nDim, nullptr);
   realm_.augment_restart_variable_list("average_velocity");
 
@@ -73,21 +75,20 @@ TAMSAlgDriver::register_nodal_fields(stk::mesh::Part* part)
     avgVelocityRTM_ = &(meta.declare_field<VectorFieldType>(
       stk::topology::NODE_RANK, "average_velocity_rtm"));
     stk::mesh::put_field_on_mesh(*avgVelocityRTM_, *part, nDim, nullptr);
-    realm_.augment_restart_variable_list("average_velocity_rtm");
   }
 
   avgProduction_ = &(meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "average_production"));
+    stk::topology::NODE_RANK, "average_production", numStates));
   stk::mesh::put_field_on_mesh(*avgProduction_, *part, nullptr);
   realm_.augment_restart_variable_list("average_production");
 
   avgDudx_ = &(meta.declare_field<GenericFieldType>(
-    stk::topology::NODE_RANK, "average_dudx"));
+    stk::topology::NODE_RANK, "average_dudx", numStates));
   stk::mesh::put_field_on_mesh(*avgDudx_, *part, nDim * nDim, nullptr);
   realm_.augment_restart_variable_list("average_dudx");
 
   avgTkeResolved_ = &(meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "average_tke_resolved"));
+    stk::topology::NODE_RANK, "average_tke_resolved", numStates));
   stk::mesh::put_field_on_mesh(*avgTkeResolved_, *part, nullptr);
   realm_.augment_restart_variable_list("average_tke_resolved");
 
@@ -104,17 +105,17 @@ TAMSAlgDriver::register_nodal_fields(stk::mesh::Part* part)
   stk::mesh::put_field_on_mesh(*resAdequacy_, *part, nullptr);
 
   avgResAdequacy_ = &(meta.declare_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "avg_res_adequacy_parameter"));
+    stk::topology::NODE_RANK, "avg_res_adequacy_parameter", numStates));
   stk::mesh::put_field_on_mesh(*avgResAdequacy_, *part, nullptr);
   realm_.augment_restart_variable_list("avg_res_adequacy_parameter");
 }
 
 void
-TAMSAlgDriver::register_edge_fields(stk::mesh::Part* part)
+AMSAlgDriver::register_edge_fields(stk::mesh::Part* part)
 {
   stk::mesh::MetaData& meta = realm_.meta_data();
   NaluEnv::self().naluOutputP0()
-    << "Edge Mdot average added in TAMS " << std::endl;
+    << "Edge Mdot average added in AMS " << std::endl;
   avgMdot_ = &(meta.declare_field<ScalarFieldType>(
     stk::topology::EDGE_RANK, "average_mass_flow_rate"));
   stk::mesh::put_field_on_mesh(*avgMdot_, *part, nullptr);
@@ -122,7 +123,7 @@ TAMSAlgDriver::register_edge_fields(stk::mesh::Part* part)
 }
 
 void
-TAMSAlgDriver::register_interior_algorithm(stk::mesh::Part* part)
+AMSAlgDriver::register_interior_algorithm(stk::mesh::Part* part)
 {
   const AlgorithmType algType = INTERIOR;
 
@@ -131,29 +132,29 @@ TAMSAlgDriver::register_interior_algorithm(stk::mesh::Part* part)
 
   if (!avgAlg_) {
     switch (realm_.solutionOptions_->turbulenceModel_) {
-    case SST_TAMS:
-      avgAlg_.reset(new SSTTAMSAveragesAlg(realm_, part));
+    case SST_AMS:
+      avgAlg_.reset(new SSTAMSAveragesAlg(realm_, part));
       break;
     default:
-      throw std::runtime_error("TAMSAlgDriver: non-supported turb model");
+      throw std::runtime_error("AMSAlgDriver: non-supported turb model");
     }
   } else {
     avgAlg_->partVec_.push_back(part);
   }
 
   // avgMdot algorithm
-  avgMdotAlg_.register_edge_algorithm<TAMSAvgMdotEdgeAlg>(
-      algType, part, "tams_avg_mdot_edge");
+  avgMdotAlg_.register_edge_algorithm<AMSAvgMdotEdgeAlg>(
+      algType, part, "ams_avg_mdot_edge");
 }
 
 void
-TAMSAlgDriver::initial_work()
+AMSAlgDriver::initial_work()
 {
   compute_metric_tensor();
 
   // Initialize average_velocity, avg_dudx
-  // We don't want to do this on restart where TAMS fields are present
-  if (resetTAMSAverages_) {
+  // We don't want to do this on restart where AMS fields are present
+  if (resetAMSAverages_) {
     const auto& meta = realm_.meta_data();
     const auto& ngpMesh = realm_.ngp_mesh();
     const auto& fieldMgr = realm_.ngp_field_manager();
@@ -181,13 +182,13 @@ TAMSAlgDriver::initial_work()
 }
 
 void
-TAMSAlgDriver::initial_production()
+AMSAlgDriver::initial_production()
 {
   using Traits = nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>;
 
   // Initialize average_production (after tvisc)
-  // We don't want to do this on restart where TAMS fields are present
-  if (resetTAMSAverages_) {
+  // We don't want to do this on restart where AMS fields are present
+  if (resetAMSAverages_) {
 
     const auto& meta = realm_.meta_data();
     const auto& ngpMesh = realm_.ngp_mesh();
@@ -207,8 +208,7 @@ TAMSAlgDriver::initial_production()
     auto avgProd =
       fieldMgr.get_field<double>(avgProduction_->mesh_meta_data_ordinal());
     nalu_ngp::run_entity_algorithm(
-      "TAMSAlgDriver_avgProd",
-      ngpMesh, stk::topology::NODE_RANK, sel,
+      "AMSAlgDriver_avgProd", ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const Traits::MeshIndex& mi) {
         NALU_ALIGNED DblType tij[nalu_ngp::NDimMax * nalu_ngp::NDimMax];
         for (int i = 0; i < nDim; ++i) {
@@ -244,10 +244,10 @@ TAMSAlgDriver::initial_production()
 }
 
 void
-TAMSAlgDriver::initial_mdot()
+AMSAlgDriver::initial_mdot()
 {
   // Initialize mdot
-  if (resetTAMSAverages_) {
+  if (resetAMSAverages_) {
 
     const auto& meta = realm_.meta_data();
     const auto& ngpMesh = realm_.ngp_mesh();
@@ -269,7 +269,7 @@ TAMSAlgDriver::initial_mdot()
 }
 
 void
-TAMSAlgDriver::execute()
+AMSAlgDriver::execute()
 {
   avgAlg_->execute();
   if (
@@ -281,7 +281,7 @@ TAMSAlgDriver::execute()
 }
 
 void
-TAMSAlgDriver::compute_metric_tensor()
+AMSAlgDriver::compute_metric_tensor()
 {
   metricTensorAlgDriver_.execute();
 }

@@ -12,5 +12,5 @@ target_sources(${utest_ex_name} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumOpenEdge.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumSymmetryEdge.C
   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScalarOpenEdge.C
-  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumSSTTAMSDiffEdge.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMomentumSSTAMSDiffEdge.C
   )

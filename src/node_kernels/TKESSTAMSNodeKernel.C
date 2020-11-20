@@ -7,8 +7,7 @@
 // for more details.
 //
 
-
-#include "node_kernels/TKESSTTAMSNodeKernel.h"
+#include "node_kernels/TKESSTAMSNodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 
@@ -20,9 +19,9 @@
 namespace sierra {
 namespace nalu {
 
-TKESSTTAMSNodeKernel::TKESSTTAMSNodeKernel(
+TKESSTAMSNodeKernel::TKESSTAMSNodeKernel(
   const stk::mesh::MetaData& meta, const std::string coordsName)
-  : NGPNodeKernel<TKESSTTAMSNodeKernel>(),
+  : NGPNodeKernel<TKESSTAMSNodeKernel>(),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     coordinatesID_(get_field_ordinal(meta, coordsName)),
     viscID_(get_field_ordinal(meta, "viscosity")),
@@ -37,7 +36,7 @@ TKESSTTAMSNodeKernel::TKESSTTAMSNodeKernel(
 }
 
 void
-TKESSTTAMSNodeKernel::setup(Realm& realm)
+TKESSTAMSNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
@@ -55,7 +54,7 @@ TKESSTTAMSNodeKernel::setup(Realm& realm)
 }
 
 void
-TKESSTTAMSNodeKernel::execute(
+TKESSTAMSNodeKernel::execute(
   NodeKernelTraits::LhsType& lhs,
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
@@ -64,9 +63,10 @@ TKESSTTAMSNodeKernel::execute(
 
   const NodeKernelTraits::DblType tkeFac =
     betaStar_ * rho_.get(node, 0) * sdr_.get(node, 0);
-  NodeKernelTraits::DblType Dk = tkeFac * stk::math::max(tke_.get(node, 0), 1.0e-12);
+  NodeKernelTraits::DblType Dk =
+    tkeFac * stk::math::max(tke_.get(node, 0), 1.0e-12);
 
-  Pk = stk::math::min(Pk, tkeProdLimitRatio_ * Dk);
+  Pk = stk::math::min(stk::math::max(Pk, 0.0), tkeProdLimitRatio_ * Dk);
 
   const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
 

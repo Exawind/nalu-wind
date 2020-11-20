@@ -326,6 +326,7 @@ void WedSCV::Mij(
   SharedMemView<DoubleType***, DeviceShmem>& metric,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
+  wed_deriv(numIntPoints_, &intgLoc_[0], deriv); 
   generic_Mij_3d<AlgTraitsWed6>(deriv, coords, metric);
 }
 
@@ -791,6 +792,7 @@ void WedSCS::Mij(
   SharedMemView<DoubleType***, DeviceShmem>& metric,
   SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
+  wed_deriv(numIntPoints_, &intgLoc_[0], deriv);
   generic_Mij_3d<AlgTraitsWed6>(deriv, coords, metric);
 }
 

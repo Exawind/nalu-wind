@@ -75,14 +75,13 @@ enum EquationType {
   EQ_MESH_DISPLACEMENT = 7,
   EQ_SPEC_DISS_RATE = 8,
   EQ_MASS_FRACTION = 9,
-  EQ_TAMS = 10,
-  EQ_PNG   = 11,
-  EQ_PNG_P = 12,
-  EQ_PNG_Z = 13,
-  EQ_PNG_H = 14,
-  EQ_PNG_U = 15,
-  EQ_PNG_TKE = 16, // FIXME... Last PNG managed like this..
-  EQ_WALL_DISTANCE = 17,
+  EQ_PNG   = 10,
+  EQ_PNG_P = 11,
+  EQ_PNG_Z = 12,
+  EQ_PNG_H = 13,
+  EQ_PNG_U = 14,
+  EQ_PNG_TKE = 15, // FIXME... Last PNG managed like this..
+  EQ_WALL_DISTANCE = 16,
   EquationSystemType_END
 };
 
@@ -97,7 +96,6 @@ static const std::string EquationTypeMap[] = {
   "MeshVelocity",
   "Specific_Dissipation_Rate",
   "Mass_Fraction",
-  "TAMS",
   "PNG",
   "PNG_P",
   "PNG_Z",
@@ -165,7 +163,7 @@ enum TurbulenceModel {
   WALE = 3,
   SST = 4,
   SST_DES = 5,
-  SST_TAMS = 6,
+  SST_AMS = 6,
   SST_IDDES = 7,
   TurbulenceModel_END
 };  
@@ -178,7 +176,7 @@ static const std::string TurbulenceModelNames[] = {
   "wale",
   "sst",
   "sst_des",
-  "sst_tams",
+  "sst_ams",
   "sst_iddes"};
 
 enum TurbulenceModelConstant {
@@ -215,20 +213,24 @@ enum TurbulenceModelConstant {
   TM_forBlKol = 30,
   TM_forFac = 31,
   TM_v2cMu = 32,
-  TM_sigmaMax = 33,
-  TM_ch1 = 34,
-  TM_ch2 = 35,
-  TM_ch3 = 36,
-  TM_tau_des = 37,
-  TM_iddes_Cw = 38,
-  TM_iddes_Cdt1 = 39,
-  TM_iddes_Cdt2 = 40,
-  TM_iddes_Cl = 41,
-  TM_iddes_Ct = 42,
-  TM_abl_bndtw = 43,
-  TM_abl_deltandtw = 44,
-  TM_abl_sigma = 45,
-  TM_END = 46
+  TM_aspRatSwitch = 33,
+  TM_periodicForcingLengthX = 34,
+  TM_periodicForcingLengthY = 35,
+  TM_periodicForcingLengthZ = 36,
+  TM_sigmaMax = 37,
+  TM_ch1 = 38,
+  TM_ch2 = 39,
+  TM_ch3 = 40,
+  TM_tau_des = 41,
+  TM_iddes_Cw = 42,
+  TM_iddes_Cdt1 = 43,
+  TM_iddes_Cdt2 = 44,
+  TM_iddes_Cl = 45,
+  TM_iddes_Ct = 46,
+  TM_abl_bndtw = 47,
+  TM_abl_deltandtw = 48,
+  TM_abl_sigma = 49,
+  TM_END = 50
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -265,6 +267,10 @@ static const std::string TurbulenceModelConstantNames[] = {
   "forcingBlKol",
   "forcingFactor",
   "v2cMu",
+  "aspectRatioSwitch",
+  "periodicForcingLengthX",
+  "periodicForcingLengthY",
+  "periodicForcingLengthZ",
   "sigmaMax",
   "ch1",
   "ch2",

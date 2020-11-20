@@ -8,19 +8,19 @@
 //
 
 
-#include "edge_kernels/AssembleTAMSEdgeKernelAlg.h"
+#include "edge_kernels/AssembleAMSEdgeKernelAlg.h"
 #include "edge_kernels/EdgeKernel.h"
-#include "edge_kernels/MomentumSSTTAMSDiffEdgeKernel.h"
+#include "edge_kernels/MomentumSSTAMSDiffEdgeKernel.h"
 
 namespace sierra {
 namespace nalu {
 
-AssembleTAMSEdgeKernelAlg::AssembleTAMSEdgeKernelAlg(
+AssembleAMSEdgeKernelAlg::AssembleAMSEdgeKernelAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
   : AssembleEdgeKernelAlg(realm, part, eqSystem)
 {
-  // Register TAMS Kernels directly
-  add_kernel<MomentumSSTTAMSDiffEdgeKernel>(
+  // Register AMS Kernels directly
+  add_kernel<MomentumSSTAMSDiffEdgeKernel>(
     realm_.bulk_data(), *realm_.solutionOptions_);
 }
 

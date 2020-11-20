@@ -75,8 +75,8 @@
 #include "ngp_algorithms/SDRWallFuncAlgDriver.h"
 #include "utils/StkHelpers.h"
 
-// UT Austin Hybrid TAMS kernel
-#include <node_kernels/SDRSSTTAMSNodeKernel.h>
+// UT Austin Hybrid AMS kernel
+#include <node_kernels/SDRSSTAMSNodeKernel.h>
 
 // nso
 #include <nso/ScalarNSOElemKernel.h>
@@ -234,7 +234,7 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
     if (itsi == solverAlgDriver_->solverAlgMap_.end()) {
       SolverAlgorithm* theAlg = NULL;
       if (realm_.realmUsesEdges_) {
-        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ == SST_TAMS) ? true : false;
+        const bool useAvgMdot = (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) ? true : false;
         theAlg = new ScalarEdgeSolverAlg(realm_, part, this, sdr_, dwdx_, evisc_, useAvgMdot);
       }
       else {
@@ -305,8 +305,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         else if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_) || (SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ){
           nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
         }
-        else if (SST_TAMS == realm_.solutionOptions_->turbulenceModel_)
-          nodeAlg.add_kernel<SDRSSTTAMSNodeKernel>(
+        else if (SST_AMS == realm_.solutionOptions_->turbulenceModel_)
+          nodeAlg.add_kernel<SDRSSTAMSNodeKernel>(
             realm_.meta_data(),
             realm_.solutionOptions_->get_coordinates_name());
         else {
@@ -353,7 +353,7 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
          realm_.bulk_data(), *realm_.solutionOptions_, sdr_, evisc_, dataPreReqs);
 
       build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
-        (partTopo, *this, activeKernels, "TAMS_advection_diffusion",
+        (partTopo, *this, activeKernels, "AMS_advection_diffusion",
          realm_.bulk_data(), *realm_.solutionOptions_, sdr_, evisc_, dataPreReqs);
 
       build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
@@ -361,7 +361,7 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         realm_.bulk_data(), *realm_.solutionOptions_, this, sdr_, dwdx_, evisc_, dataPreReqs);
 
       build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
-        (partTopo, *this, activeKernels, "TAMS_upw_advection_diffusion",
+        (partTopo, *this, activeKernels, "AMS_upw_advection_diffusion",
          realm_.bulk_data(), *realm_.solutionOptions_, this, sdr_, dwdx_, evisc_, dataPreReqs);
 
       build_topo_kernel_if_requested<SpecificDissipationRateSSTSrcElemKernel>

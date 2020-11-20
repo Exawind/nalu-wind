@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/SDRSSTNodeKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
@@ -20,9 +19,8 @@
 namespace sierra {
 namespace nalu {
 
-SDRSSTNodeKernel::SDRSSTNodeKernel(
-  const stk::mesh::MetaData& meta
-) : NGPNodeKernel<SDRSSTNodeKernel>(),
+SDRSSTNodeKernel::SDRSSTNodeKernel(const stk::mesh::MetaData& meta)
+  : NGPNodeKernel<SDRSSTNodeKernel>(),
     tkeID_(get_field_ordinal(meta, "turbulent_ke")),
     sdrID_(get_field_ordinal(meta, "specific_dissipation_rate")),
     densityID_(get_field_ordinal(meta, "density")),
@@ -33,22 +31,23 @@ SDRSSTNodeKernel::SDRSSTNodeKernel(
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
     nDim_(meta.spatial_dimension())
-{}
+{
+}
 
 void
 SDRSSTNodeKernel::setup(Realm& realm)
 {
   const auto& fieldMgr = realm.ngp_field_manager();
 
-  tke_             = fieldMgr.get_field<double>(tkeID_);
-  sdr_             = fieldMgr.get_field<double>(sdrID_);
-  density_         = fieldMgr.get_field<double>(densityID_);
-  tvisc_           = fieldMgr.get_field<double>(tviscID_);
-  dudx_            = fieldMgr.get_field<double>(dudxID_);
-  dkdx_            = fieldMgr.get_field<double>(dkdxID_);
-  dwdx_            = fieldMgr.get_field<double>(dwdxID_);
+  tke_ = fieldMgr.get_field<double>(tkeID_);
+  sdr_ = fieldMgr.get_field<double>(sdrID_);
+  density_ = fieldMgr.get_field<double>(densityID_);
+  tvisc_ = fieldMgr.get_field<double>(tviscID_);
+  dudx_ = fieldMgr.get_field<double>(dudxID_);
+  dkdx_ = fieldMgr.get_field<double>(dkdxID_);
+  dwdx_ = fieldMgr.get_field<double>(dwdxID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
-  fOneBlend_       = fieldMgr.get_field<double>(fOneBlendID_);
+  fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
 
   const std::string dofName = "specific_dissipation_rate";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
@@ -71,29 +70,29 @@ SDRSSTNodeKernel::execute(
 {
   using DblType = NodeKernelTraits::DblType;
 
-  const DblType tke       = tke_.get(node, 0);
-  const DblType sdr       = sdr_.get(node, 0);
-  const DblType density   = density_.get(node, 0);
-  const DblType tvisc     = tvisc_.get(node, 0);
-  const DblType dVol      = dualNodalVolume_.get(node, 0);
+  const DblType tke = tke_.get(node, 0);
+  const DblType sdr = sdr_.get(node, 0);
+  const DblType density = density_.get(node, 0);
+  const DblType tvisc = tvisc_.get(node, 0);
+  const DblType dVol = dualNodalVolume_.get(node, 0);
   const DblType fOneBlend = fOneBlend_.get(node, 0);
 
   DblType Pk = 0.0;
   DblType crossDiff = 0.0;
-  for (int i=0; i < nDim_; ++i) {
+  for (int i = 0; i < nDim_; ++i) {
     crossDiff += dkdx_.get(node, i) * dwdx_.get(node, i);
     const int offset = nDim_ * i;
-    for (int j=0; j < nDim_; ++j) {
-      const auto dudxij = dudx_.get(node, offset+j);
-      Pk += dudxij * (dudxij + dudx_.get(node, j*nDim_ + i));
+    for (int j = 0; j < nDim_; ++j) {
+      const auto dudxij = dudx_.get(node, offset + j);
+      Pk += dudxij * (dudxij + dudx_.get(node, j * nDim_ + i));
     }
   }
   Pk *= tvisc;
 
   const DblType Dk = betaStar_ * density * sdr * tke;
 
-  // Clip production term
-  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
+  // Clip production term and clip negative productions
+  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, stk::math::max(Pk, 0.0));
 
   // Blend constants for SDR
   const DblType omf1 = (1.0 - fOneBlend);
@@ -107,9 +106,9 @@ SDRSSTNodeKernel::execute(
   const DblType Sw = sigmaD * density * crossDiff / sdr;
 
   rhs(0) += (Pw - Dw + Sw) * dVol;
-  lhs(0, 0) += (2.0 * beta * density * sdr + stk::math::max(Sw / sdr, 0.0)) *
-               dVol;
+  lhs(0, 0) +=
+    (2.0 * beta * density * sdr + stk::math::max(Sw / sdr, 0.0)) * dVol;
 }
 
 } // namespace nalu
-}  // sierra
+} // namespace sierra

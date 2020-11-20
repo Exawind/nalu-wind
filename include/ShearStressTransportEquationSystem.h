@@ -78,7 +78,7 @@ public:
   // saved of mesh parts that are for wall bcs
   std::vector<stk::mesh::Part*> wallBcPart_;
 
-  bool resetTAMSAverages_;
+  bool resetAMSAverages_;
 
   const double tkeMinValue_{1.0e-8};
   const double sdrMinValue_{1.0e-8};

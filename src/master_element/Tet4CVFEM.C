@@ -311,6 +311,7 @@ void TetSCV::Mij(
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
+  tet_deriv(deriv);
   generic_Mij_3d<AlgTraitsTet4>(deriv, coords, metric);
 }
 
@@ -706,6 +707,7 @@ void TetSCS::Mij(
     SharedMemView<DoubleType***, DeviceShmem>& metric,
     SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
+  tet_deriv(deriv);
   generic_Mij_3d<AlgTraitsTet4>(deriv, coords, metric);
 }
 

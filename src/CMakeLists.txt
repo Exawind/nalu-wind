@@ -116,7 +116,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentWallFunctionAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TAMSAlgDriver.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AMSAlgDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TimeIntegrator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystemHelpers.C
