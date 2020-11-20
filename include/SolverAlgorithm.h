@@ -70,6 +70,7 @@ struct NGPApplyCoeff
   const unsigned nDim_{3};
   const bool hasOverset_{false};
   const bool extractDiagonal_{false};
+  const bool resetOversetRows_{true};
 };
 
 class SolverAlgorithm : public Algorithm

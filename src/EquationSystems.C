@@ -623,12 +623,8 @@ EquationSystems::register_non_conformal_bc(
 //-------- register_overset_bc ---------------------------------------------
 //--------------------------------------------------------------------------
 void
-EquationSystems::register_overset_bc(
-  const OversetBoundaryConditionData &oversetBCData)
+EquationSystems::register_overset_bc(const OversetBoundaryConditionData&)
 {
-  // set up the overset bc, e.g., manager, parts, etc.
-  realm_.setup_overset_bc(oversetBCData);
-
   // register algs on the equation system
   EquationSystemVector::iterator ii;
   for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii )

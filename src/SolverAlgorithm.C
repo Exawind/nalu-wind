@@ -62,7 +62,8 @@ NGPApplyCoeff::NGPApplyCoeff(EquationSystem* eqSystem)
     deviceSumInto_(eqSystem->linsys_->get_coeff_applier()),
     nDim_(eqSystem->linsys_->numDof()),
     hasOverset_(eqSystem->realm_.hasOverset_),
-    extractDiagonal_(eqSystem->extractDiagonal_)
+    extractDiagonal_(eqSystem->extractDiagonal_),
+    resetOversetRows_(eqSystem->resetOversetRows_)
 {
   if (extractDiagonal_) {
     diagField_ = nalu_ngp::get_ngp_field(
@@ -127,7 +128,7 @@ void NGPApplyCoeff::operator()(
   if (extractDiagonal_)
     extract_diagonal(numMeshobjs, symMeshobjs, lhs);
 
-  if (hasOverset_)
+  if (hasOverset_ && resetOversetRows_)
     reset_overset_rows(numMeshobjs, symMeshobjs, rhs, lhs);
 
   (*deviceSumInto_)(

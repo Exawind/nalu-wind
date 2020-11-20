@@ -356,6 +356,7 @@ public:
   bool decoupledOverset_{false};
 
   bool extractDiagonal_{false};
+  bool resetOversetRows_{true};
 
 
   virtual ScalarFieldType* get_diagonal_field() { return nullptr; }
