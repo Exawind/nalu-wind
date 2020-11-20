@@ -233,6 +233,8 @@ class Realm {
     stk::mesh::Part *part,
     const stk::topology &theTopo);
 
+  void register_overset_bc();
+
   void setup_overset_bc(
     const OversetBoundaryConditionData &oversetBCData);
 
@@ -566,6 +568,7 @@ class Realm {
    *
    */
   stk::mesh::PartVector bcPartVec_;
+  stk::mesh::PartVector oversetBCPartVec_;
 
   // empty part vector should it be required
   stk::mesh::PartVector emptyPartVector_;

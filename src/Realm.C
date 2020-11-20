@@ -1080,16 +1080,17 @@ Realm::setup_bc()
       case NON_CONFORMAL_BC:
         equationSystems_.register_non_conformal_bc(*reinterpret_cast<const NonConformalBoundaryConditionData *>(&bc));
         break;
-      case OVERSET_BC:
-        equationSystems_.register_overset_bc(*reinterpret_cast<const OversetBoundaryConditionData *>(&bc));
+      case OVERSET_BC: {
+        const OversetBoundaryConditionData& obc =
+          reinterpret_cast<const OversetBoundaryConditionData&>(bc);
+        setup_overset_bc(obc);
+        equationSystems_.register_overset_bc(obc);
         break;
+      }
       default:
         throw std::runtime_error("unknown bc");
     }
   }
-
-  if (hasOverset_)
-    oversetManager_->setup();
 }
 
 //--------------------------------------------------------------------------
@@ -2850,6 +2851,30 @@ Realm::register_non_conformal_bc(
     algType, part, "geometry");
 }
 
+void Realm::register_overset_bc()
+{
+  for (auto* superPart: oversetBCPartVec_)
+    for (auto* part: superPart->subsets()) {
+      const auto topo = part->topology();
+      const int nDim = metaData_->spatial_dimension();
+      // register fields
+      MasterElement* meFC = MasterElementRepo::get_surface_master_element(topo);
+      const int numScsIp = meFC->num_integration_points();
+
+      // exposed area vector
+      GenericFieldType* exposedAreaVec_ =
+        &(metaData_->declare_field<GenericFieldType>(
+          static_cast<stk::topology::rank_t>(metaData_->side_rank()),
+          "exposed_area_vector"));
+      stk::mesh::put_field_on_mesh(
+        *exposedAreaVec_, *part, nDim * numScsIp, nullptr);
+
+      const AlgorithmType algType = BOUNDARY;
+      geometryAlgDriver_->register_face_algorithm<GeometryBoundaryAlg>(
+        algType, part, "geometry");
+    }
+}
+
 //--------------------------------------------------------------------------
 //-------- setup_overset_bc ------------------------------------------------
 //--------------------------------------------------------------------------
@@ -2857,29 +2882,34 @@ void
 Realm::setup_overset_bc(
   const OversetBoundaryConditionData &oversetBCData)
 {
-  // setting flag for linear system setup (may have been set via earlier "query")
+  // setting flag for linear system setup (may have been set via earlier
+  // "query")
   hasOverset_ = true;
-  
+
   // create manager while providing overset data
-  if ( NULL == oversetManager_ ) {
+  if (NULL == oversetManager_) {
     switch (oversetBCData.oversetConnectivityType_) {
     case OversetBoundaryConditionData::TPL_TIOGA:
 #ifdef NALU_USES_TIOGA
       oversetManager_ = new OversetManagerTIOGA(*this, oversetBCData.userData_);
-      NaluEnv::self().naluOutputP0()
-        << "Realm::setup_overset_bc:: Selecting TIOGA TPL for overset connectivity"
-        << std::endl;
+      NaluEnv::self().naluOutputP0() << "Realm::setup_overset_bc:: Selecting "
+                                        "TIOGA TPL for overset connectivity"
+                                     << std::endl;
       break;
 #else
-      // should not get here... we should have thrown error in input file processing stage
-      throw std::runtime_error("TIOGA TPL support not enabled during compilation phase");
+      // should not get here... we should have thrown error in input file
+      // processing stage
+      throw std::runtime_error(
+        "TIOGA TPL support not enabled during compilation phase");
 #endif
 
-    case OversetBoundaryConditionData::OVERSET_NONE:
     default:
       throw std::runtime_error("Invalid setting for overset connectivity");
     }
-  }   
+  }
+
+  oversetManager_->setup();
+  register_overset_bc();
 }
 
 //--------------------------------------------------------------------------
