@@ -343,7 +343,7 @@ KOKKOS_FUNCTION void
   const auto check_one = disc < 0.0;
   const bool exit_now = stk::simd::are_all(check_one);
   if (exit_now) {
-#ifndef KOKKOS_ENABLE_GPU
+#ifndef KOKKOS_ENABLE_CUDA
     NaluEnv::self().naluOutput()
       << "Error, complex eigenvalues in EigenDecomposition::general_eigenvalues"
       << disc << "([[" << A[0][0] << "," << A[0][1] << "," << A[0][2] << "],["
