@@ -82,6 +82,7 @@ void DynamicPressureOpenAlg<BcAlgTraits>::execute()
   const unsigned areavecID = exposedAreaVec_;
   const unsigned mdotID = openMassFlowRate_;
   const unsigned velID = velocity_;
+  const auto useShifted = useShifted_;
 
   nalu_ngp::run_elem_algorithm(
     algName, meshInfo, realm_.meta_data().side_rank(), faceData_, sel,
@@ -92,7 +93,7 @@ void DynamicPressureOpenAlg<BcAlgTraits>::execute()
       const auto& vel = scrViews.get_scratch_view_2D(velID);
 
       const auto meViews = scrViews.get_me_views(CURRENT_COORDINATES);
-      const auto& interp = useShifted_
+      const auto& interp = useShifted
         ? meViews.fc_shifted_shape_fcn : meViews.fc_shape_fcn;
       for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
         DoubleType asq = 0.0;
