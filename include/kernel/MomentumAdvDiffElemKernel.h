@@ -39,7 +39,7 @@ public:
     ScalarFieldType*,
     ElemDataRequests&);
 
-  KOKKOS_FUNCTION MomentumAdvDiffElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION MomentumAdvDiffElemKernel() = default;
 
   virtual ~MomentumAdvDiffElemKernel() = default;
 

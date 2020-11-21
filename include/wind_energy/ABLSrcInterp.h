@@ -46,8 +46,8 @@ class ABLScalarInterpolator
 {
 public:
   using Array1D = abl_impl::Array1D;
-  KOKKOS_FORCEINLINE_FUNCTION ABLScalarInterpolator() = default;
-  KOKKOS_FORCEINLINE_FUNCTION ~ABLScalarInterpolator() = default;
+  KOKKOS_DEFAULTED_FUNCTION ABLScalarInterpolator() = default;
+  KOKKOS_DEFAULTED_FUNCTION ~ABLScalarInterpolator() = default;
 
   ABLScalarInterpolator(
     const std::vector<double>& xinp,
@@ -120,8 +120,8 @@ class ABLVectorInterpolator
 public:
   using Array1D = abl_impl::Array1D;
   using Array2D = abl_impl::Array2D;
-  KOKKOS_FORCEINLINE_FUNCTION ABLVectorInterpolator() = default;
-  KOKKOS_FORCEINLINE_FUNCTION ~ABLVectorInterpolator() = default;
+  KOKKOS_DEFAULTED_FUNCTION ABLVectorInterpolator() = default;
+  KOKKOS_DEFAULTED_FUNCTION ~ABLVectorInterpolator() = default;
 
   ABLVectorInterpolator(
     const std::vector<double>& xinp,

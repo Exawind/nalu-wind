@@ -50,7 +50,7 @@ struct SimpleNodeFieldOp
     : ngpMesh_(ngpMesh), ngpField_(ngpField)
   {}
 
-  KOKKOS_FUNCTION ~SimpleNodeFieldOp() = default;
+  KOKKOS_DEFAULTED_FUNCTION ~SimpleNodeFieldOp() = default;
 
   /** Implementation of supported operators for nodal fields
    */
@@ -59,7 +59,7 @@ struct SimpleNodeFieldOp
     KOKKOS_INLINE_FUNCTION
     Ops() = default;
 
-    KOKKOS_FUNCTION ~Ops() = default;
+    KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;
 
     KOKKOS_INLINE_FUNCTION
     void operator=(const double& val) const
@@ -137,7 +137,7 @@ struct NodeFieldOp
   KOKKOS_INLINE_FUNCTION
   NodeFieldOp() = default;
 
-  KOKKOS_FUNCTION ~NodeFieldOp() = default;
+  KOKKOS_DEFAULTED_FUNCTION ~NodeFieldOp() = default;
 
   /** Implementation of the supported operators for the fields
    */
@@ -146,7 +146,7 @@ struct NodeFieldOp
     KOKKOS_INLINE_FUNCTION
     Ops() = default;
 
-    KOKKOS_FUNCTION ~Ops() = default;
+    KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;
 
     KOKKOS_INLINE_FUNCTION
     void operator= (const DoubleType& val) const
@@ -268,7 +268,7 @@ struct ElemFieldOp
   ElemFieldOp(const Field& ngpField) : ngpField_(ngpField)
   {}
 
-  KOKKOS_FUNCTION ~ElemFieldOp() = default;
+  KOKKOS_DEFAULTED_FUNCTION ~ElemFieldOp() = default;
 
   /** Implementation of the operators
    */
@@ -277,7 +277,7 @@ struct ElemFieldOp
     KOKKOS_INLINE_FUNCTION
     Ops() = default;
 
-    KOKKOS_FUNCTION ~Ops() = default;
+    KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;
 
     KOKKOS_INLINE_FUNCTION
     void operator= (const DoubleType& val) const

@@ -43,9 +43,9 @@ public:
     ScalarFieldType*,
     ElemDataRequests&);
 
-  KOKKOS_FUNCTION ScalarUpwAdvDiffElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION ScalarUpwAdvDiffElemKernel() = default;
 
-  KOKKOS_FUNCTION virtual ~ScalarUpwAdvDiffElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~ScalarUpwAdvDiffElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve

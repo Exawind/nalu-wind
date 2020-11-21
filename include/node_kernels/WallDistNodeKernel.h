@@ -28,9 +28,9 @@ class WallDistNodeKernel : public NGPNodeKernel<WallDistNodeKernel>
 public:
   WallDistNodeKernel(stk::mesh::BulkData&);
 
-  KOKKOS_FUNCTION WallDistNodeKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION WallDistNodeKernel() = default;
 
-  KOKKOS_FUNCTION ~WallDistNodeKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION ~WallDistNodeKernel() = default;
 
   virtual void setup(Realm&) override;
 

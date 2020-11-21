@@ -39,7 +39,7 @@ public:
     ElemDataRequests&,
     const bool);
 
-  KOKKOS_FUNCTION MomentumMassElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION MomentumMassElemKernel() = default;
 
   virtual ~MomentumMassElemKernel() = default;
 

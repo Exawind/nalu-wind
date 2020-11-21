@@ -43,9 +43,9 @@ public:
     GenericFieldType*,
     ElemDataRequests&);
 
-  KOKKOS_FUNCTION MomentumUpwAdvDiffElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION MomentumUpwAdvDiffElemKernel() = default;
 
-  KOKKOS_FUNCTION virtual ~MomentumUpwAdvDiffElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~MomentumUpwAdvDiffElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve

@@ -31,9 +31,9 @@ public:
     const SolutionOptions&,
     ElemDataRequests&);
 
-  KOKKOS_FUNCTION WallDistElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION WallDistElemKernel() = default;
 
-  KOKKOS_FUNCTION virtual ~WallDistElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~WallDistElemKernel() = default;
 
   using Kernel::execute;
   KOKKOS_FUNCTION

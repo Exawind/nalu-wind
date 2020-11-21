@@ -102,7 +102,7 @@ void get_face_shape_fn_data(LambdaFunction lambdaFunction, ViewType& shape_fn_vi
 class Kernel
 {
 public:
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   Kernel() = default;
 
   virtual ~Kernel() = default;
@@ -172,7 +172,7 @@ template<typename T>
 class NGPKernel : public Kernel
 {
 public:
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   NGPKernel() = default;
 
   // Implementation note
@@ -182,7 +182,7 @@ public:
   // Instead the `deviceCopy_` is freed by explicitly calling `free_on_device`
   // from sierra::nalu::Algorithm::~Algorithm() before freeing the host pointers
   // stored in `activeKernels_`
-  KOKKOS_FUNCTION virtual ~NGPKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~NGPKernel() = default;
 
   virtual Kernel* create_on_device() final
   {

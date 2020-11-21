@@ -60,13 +60,13 @@ struct CoordFieldInfo
     : coordField(fld)
   {}
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   CoordFieldInfo() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   CoordFieldInfo(const CoordFieldInfo&) = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ~CoordFieldInfo() = default;
 
   KOKKOS_FUNCTION

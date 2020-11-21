@@ -33,9 +33,9 @@ public:
     const double&,
     ElemDataRequests& faceDataPreReqs);
 
-  KOKKOS_FORCEINLINE_FUNCTION MomentumABLWallFuncEdgeKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION MomentumABLWallFuncEdgeKernel() = default;
 
-  KOKKOS_FORCEINLINE_FUNCTION virtual ~MomentumABLWallFuncEdgeKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~MomentumABLWallFuncEdgeKernel() = default;
 
   using Kernel::execute;
 

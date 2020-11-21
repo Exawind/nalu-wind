@@ -35,9 +35,9 @@ public:
     ElemDataRequests&,
     const bool);
 
-  KOKKOS_FUNCTION TurbKineticEnergySSTSrcElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION TurbKineticEnergySSTSrcElemKernel() = default;
 
-  KOKKOS_FUNCTION virtual ~TurbKineticEnergySSTSrcElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~TurbKineticEnergySSTSrcElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve

@@ -35,9 +35,9 @@ public:
     ElemDataRequests&,
     const bool);
 
-  KOKKOS_FUNCTION SpecificDissipationRateSSTSrcElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION SpecificDissipationRateSSTSrcElemKernel() = default;
 
-  KOKKOS_FUNCTION virtual ~SpecificDissipationRateSSTSrcElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~SpecificDissipationRateSSTSrcElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve

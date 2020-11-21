@@ -38,8 +38,8 @@ public:
     ElemDataRequests&,
     bool lumped);
 
-  KOKKOS_FUNCTION MomentumActuatorSrcElemKernel() = default;
-  KOKKOS_FUNCTION virtual ~MomentumActuatorSrcElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION MomentumActuatorSrcElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~MomentumActuatorSrcElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve

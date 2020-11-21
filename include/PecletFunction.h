@@ -26,8 +26,8 @@ template<typename T>
 class PecletFunction : public PecletFunctionBase
 {
 public:
-  KOKKOS_FUNCTION PecletFunction() = default;
-  KOKKOS_FUNCTION virtual ~PecletFunction() = default;
+  KOKKOS_DEFAULTED_FUNCTION PecletFunction() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~PecletFunction() = default;
   KOKKOS_FUNCTION virtual T execute(const T pecletNumber) = 0;
 };
 
@@ -36,7 +36,7 @@ class ClassicPecletFunction : public PecletFunction<T>
 {
 public:
   KOKKOS_FUNCTION ClassicPecletFunction(T A, T hf);
-  KOKKOS_FUNCTION virtual ~ClassicPecletFunction() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~ClassicPecletFunction() = default;
   KOKKOS_FUNCTION T execute(const T pecletNumber);
 
   T A_;
@@ -48,7 +48,7 @@ class TanhFunction : public PecletFunction<T>
 {
 public:
   KOKKOS_FUNCTION TanhFunction( T c1, T c2 );
-  KOKKOS_FUNCTION virtual ~TanhFunction() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~TanhFunction() = default;
   KOKKOS_FUNCTION T execute(const T indVar);
 
   T c1_; // peclet number at which transition occurs

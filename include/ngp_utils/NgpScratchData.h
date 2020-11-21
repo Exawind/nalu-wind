@@ -60,7 +60,7 @@ struct ElemSimdData
     simdScrView.fill_static_meviews(dataReq);
   }
 
-  KOKKOS_FUNCTION ~ElemSimdData() = default;
+  KOKKOS_DEFAULTED_FUNCTION ~ElemSimdData() = default;
 
   KOKKOS_INLINE_FUNCTION
   const EntityInfoType* info() const
@@ -123,7 +123,7 @@ struct FaceElemSimdData
     simdElemView.fill_static_meviews(elemDataReqs);
   }
 
-  KOKKOS_FUNCTION ~FaceElemSimdData() = default;
+  KOKKOS_DEFAULTED_FUNCTION ~FaceElemSimdData() = default;
 
   KOKKOS_INLINE_FUNCTION
   const EntityInfoType* info() const

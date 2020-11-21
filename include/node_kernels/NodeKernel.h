@@ -35,11 +35,11 @@ struct NodeKernelTraits
 class NodeKernel
 {
 public:
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   NodeKernel() = default;
 
-  KOKKOS_FUNCTION
-  virtual ~NodeKernel() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  virtual ~NodeKernel() = default;
 
   virtual NodeKernel* create_on_device() = 0;
 
@@ -58,10 +58,10 @@ template<typename T>
 class NGPNodeKernel : public NodeKernel
 {
 public:
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   NGPNodeKernel() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~NGPNodeKernel() = default;
 
   virtual NodeKernel* create_on_device() final

@@ -37,8 +37,8 @@ public:
     const SolutionOptions&,
     ElemDataRequests&);
 
-  KOKKOS_FUNCTION MomentumBuoyancySrcElemKernel() = default;
-  KOKKOS_FUNCTION virtual ~MomentumBuoyancySrcElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION MomentumBuoyancySrcElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~MomentumBuoyancySrcElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for
    *  the linear solve

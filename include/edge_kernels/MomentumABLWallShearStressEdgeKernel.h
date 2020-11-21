@@ -34,9 +34,9 @@ public:
     stk::mesh::MetaData&,
     ElemDataRequests& faceDataPreReqs);
 
-  KOKKOS_FORCEINLINE_FUNCTION MomentumABLWallShearStressEdgeKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION MomentumABLWallShearStressEdgeKernel() = default;
 
-  KOKKOS_FORCEINLINE_FUNCTION virtual ~MomentumABLWallShearStressEdgeKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION virtual ~MomentumABLWallShearStressEdgeKernel() = default;
 
   using Kernel::execute;
 

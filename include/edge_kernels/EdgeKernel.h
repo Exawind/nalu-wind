@@ -46,11 +46,11 @@ struct EdgeKernelTraits
 class EdgeKernel
 {
 public:
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   EdgeKernel() = default;
 
-  KOKKOS_FUNCTION
-  virtual ~EdgeKernel() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  virtual ~EdgeKernel() = default;
 
   virtual EdgeKernel* create_on_device() = 0;
 
@@ -70,10 +70,10 @@ template <typename T>
 class NGPEdgeKernel : public EdgeKernel
 {
 public:
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   NGPEdgeKernel() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~NGPEdgeKernel() = default;
 
   virtual EdgeKernel* create_on_device() final

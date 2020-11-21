@@ -39,7 +39,7 @@ public:
     ScalarFieldType*,
     ElemDataRequests&);
 
-  KOKKOS_FUNCTION ScalarAdvDiffElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION ScalarAdvDiffElemKernel() = default;
 
   virtual ~ScalarAdvDiffElemKernel() = default;
 

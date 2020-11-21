@@ -80,10 +80,10 @@ class MasterElementViews
 public:
   typedef T value_type;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   MasterElementViews() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MasterElementViews() = default;
 
   KOKKOS_FUNCTION

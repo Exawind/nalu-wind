@@ -40,7 +40,7 @@ public:
     ElemDataRequests&,
     const bool lumpedMass);
 
-  KOKKOS_FUNCTION ScalarMassElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION ScalarMassElemKernel() = default;
 
   virtual ~ScalarMassElemKernel() = default;
 

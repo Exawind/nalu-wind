@@ -39,7 +39,7 @@ public:
     ElemDataRequests&,
     const bool);
 
-  KOKKOS_FUNCTION ContinuityMassElemKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION ContinuityMassElemKernel() = default;
 
   virtual ~ContinuityMassElemKernel() = default;
 

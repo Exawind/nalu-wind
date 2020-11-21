@@ -42,7 +42,7 @@ class LinearSolverConfig;
 class CoeffApplier
 {
 public:
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   CoeffApplier() = default;
 
   KOKKOS_FUNCTION
