@@ -31,10 +31,10 @@ public:
   ContinuityGclNodeKernel(
     const stk::mesh::BulkData&);
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ContinuityGclNodeKernel() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~ContinuityGclNodeKernel() = default;
 
   virtual void setup(Realm&) override;

@@ -30,10 +30,10 @@ public:
     ScalarFieldType*,
     ElemDataRequests&);
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ScalarOpenEdgeKernel() = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~ScalarOpenEdgeKernel() = default;
 
   using Kernel::execute;

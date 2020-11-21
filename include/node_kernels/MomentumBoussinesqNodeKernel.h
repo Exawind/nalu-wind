@@ -32,7 +32,7 @@ public:
 
   MomentumBoussinesqNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MomentumBoussinesqNodeKernel() = default;
 
   virtual void setup(Realm&) override;

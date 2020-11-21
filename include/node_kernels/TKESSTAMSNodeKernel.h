@@ -30,7 +30,7 @@ public:
 
   TKESSTAMSNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~TKESSTAMSNodeKernel() = default;
 
   virtual void setup(Realm&) override;

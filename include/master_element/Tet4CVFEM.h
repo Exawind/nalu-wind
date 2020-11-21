@@ -28,7 +28,7 @@ public:
 
   KOKKOS_FUNCTION
   TetSCV();
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~TetSCV() = default;
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
@@ -127,7 +127,7 @@ public:
 
   KOKKOS_FUNCTION
   TetSCS();
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~TetSCS() = default;
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;

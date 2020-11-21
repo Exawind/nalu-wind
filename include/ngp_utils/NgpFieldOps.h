@@ -56,7 +56,7 @@ struct SimpleNodeFieldOp
    */
   struct Ops
   {
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     Ops() = default;
 
     KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;
@@ -134,7 +134,7 @@ struct NodeFieldOp
       ngpField_(ngpField)
   {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   NodeFieldOp() = default;
 
   KOKKOS_DEFAULTED_FUNCTION ~NodeFieldOp() = default;
@@ -143,7 +143,7 @@ struct NodeFieldOp
    */
   struct Ops
   {
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     Ops() = default;
 
     KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;
@@ -274,7 +274,7 @@ struct ElemFieldOp
    */
   struct Ops
   {
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     Ops() = default;
 
     KOKKOS_DEFAULTED_FUNCTION ~Ops() = default;

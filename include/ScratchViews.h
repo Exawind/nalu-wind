@@ -215,7 +215,7 @@ public:
                int nodesPerEntity,
                const ElemDataRequestsGPU& dataNeeded);
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ~ScratchViews() = default;
 
   inline

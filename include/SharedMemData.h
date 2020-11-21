@@ -51,7 +51,7 @@ struct SharedMemData {
         simdPrereqData.fill_static_meviews(dataNeededByKernels);
     }
 
-    KOKKOS_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     ~SharedMemData() = default;
 
     stk::mesh::NgpMesh::ConnectedNodes ngpElemNodes[simdLen];
@@ -105,7 +105,7 @@ struct SharedMemData_FaceElem {
         simdElemViews.fill_static_meviews(elemDataNeeded);
     }
 
-    KOKKOS_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     ~SharedMemData_FaceElem() = default;
 
     stk::mesh::NgpMesh::ConnectedNodes ngpConnectedNodes[simdLen];

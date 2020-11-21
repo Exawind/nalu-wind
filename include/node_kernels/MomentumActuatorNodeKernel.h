@@ -28,7 +28,7 @@ public:
 
   MomentumActuatorNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MomentumActuatorNodeKernel() = default;
 
   virtual void setup(Realm&) override;

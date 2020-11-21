@@ -39,10 +39,10 @@ public:
     ElemDataRequests&,
     ElemDataRequests&);
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ScalarEdgeOpenSolverAlg() = default;
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~ScalarEdgeOpenSolverAlg() = default;
 
   using Kernel::execute;

@@ -31,7 +31,7 @@ public:
 
   TKESSTDESNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~TKESSTDESNodeKernel() = default;
 
   virtual void setup(Realm&) override;

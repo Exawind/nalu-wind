@@ -24,7 +24,7 @@ class WedSCV : public MasterElement
 public:
   KOKKOS_FUNCTION
   WedSCV();
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~WedSCV() = default;
 
   using AlgTraits = AlgTraitsWed6;
@@ -122,7 +122,7 @@ class WedSCS : public MasterElement
 public:
   KOKKOS_FUNCTION
   WedSCS();
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~WedSCS() = default;
 
   using AlgTraits = AlgTraitsWed6;

@@ -33,7 +33,7 @@ public:
 
   MomentumABLForceNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MomentumABLForceNodeKernel() = default;
 
   virtual void setup(Realm&) override;

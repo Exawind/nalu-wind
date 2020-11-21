@@ -35,7 +35,7 @@ class Edge2DSCS : public MasterElement
 public:
   KOKKOS_FUNCTION
   Edge2DSCS();
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~Edge2DSCS() = default;
   using AlgTraits = AlgTraitsEdge_2D;
   using MasterElement::shape_fcn;

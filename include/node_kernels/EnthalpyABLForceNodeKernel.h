@@ -33,7 +33,7 @@ public:
 
   EnthalpyABLForceNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~EnthalpyABLForceNodeKernel() = default;
 
   virtual void setup(Realm&) override;

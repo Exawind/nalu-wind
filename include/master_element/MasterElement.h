@@ -47,7 +47,7 @@ class MasterElement
 public:
   KOKKOS_FUNCTION
   MasterElement(const double scaleToStandardIsoFac=1.0);
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MasterElement() {} // = default is apparently not allowed for virtual destructors...
 
   // NGP-ready methods first

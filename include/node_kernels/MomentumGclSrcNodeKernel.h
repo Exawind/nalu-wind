@@ -31,10 +31,10 @@ public:
   MomentumGclSrcNodeKernel(
     const stk::mesh::BulkData&);
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   MomentumGclSrcNodeKernel() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MomentumGclSrcNodeKernel() = default;
 
   virtual void setup(Realm&) override;

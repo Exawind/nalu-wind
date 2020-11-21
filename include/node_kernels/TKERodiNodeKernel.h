@@ -36,7 +36,7 @@ public:
 
   TKERodiNodeKernel() = delete;
   
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~TKERodiNodeKernel() = default;
 
   virtual void setup(Realm &) override;

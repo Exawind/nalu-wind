@@ -34,7 +34,7 @@ public:
   KOKKOS_FUNCTION
   MomentumBodyForceBoxNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MomentumBodyForceBoxNodeKernel() = default;
 
   virtual void setup(Realm&) override;

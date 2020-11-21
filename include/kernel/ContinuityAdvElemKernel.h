@@ -38,7 +38,7 @@ public:
     const SolutionOptions&,
     ElemDataRequests&);
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ContinuityAdvElemKernel() = default;
 
   virtual ~ContinuityAdvElemKernel() = default;

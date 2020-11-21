@@ -32,10 +32,10 @@ struct NGPApplyCoeff
 {
   NGPApplyCoeff(EquationSystem*);
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   NGPApplyCoeff() = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ~NGPApplyCoeff() = default;
 
   KOKKOS_FUNCTION

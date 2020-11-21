@@ -38,10 +38,10 @@ public:
     ElemDataRequests&,
     EntrainmentMethod = EntrainmentMethod::CLASSIC);
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   MomentumOpenEdgeKernel() = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MomentumOpenEdgeKernel() = default;
 
   using Kernel::execute;

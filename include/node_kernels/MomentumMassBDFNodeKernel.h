@@ -31,10 +31,10 @@ public:
   MomentumMassBDFNodeKernel(
     const stk::mesh::BulkData&);
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   MomentumMassBDFNodeKernel() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MomentumMassBDFNodeKernel() = default;
 
   virtual void setup(Realm&) override;

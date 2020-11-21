@@ -24,7 +24,7 @@ public:
 
   KOKKOS_FUNCTION
   Hex8FEM();
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~Hex8FEM() = default;
 
   using AlgTraits = AlgTraitsHex8;

@@ -31,7 +31,7 @@ public:
 
   SDRSSTNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~SDRSSTNodeKernel() = default;
 
   virtual void setup(Realm&) override;

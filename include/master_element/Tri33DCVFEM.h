@@ -37,7 +37,7 @@ public:
 
   KOKKOS_FUNCTION
   Tri3DSCS();
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~Tri3DSCS() = default;
 
   using AlgTraits = AlgTraitsTri3;

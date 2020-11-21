@@ -31,7 +31,7 @@ public:
 
   MomentumSSTAMSForcingNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MomentumSSTAMSForcingNodeKernel() = default;
 
   virtual void setup(Realm&) override;

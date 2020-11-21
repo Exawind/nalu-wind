@@ -34,10 +34,10 @@ public:
     ElemDataRequests&,
     ElemDataRequests&);
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ContinuityOpenEdgeKernel() = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~ContinuityOpenEdgeKernel() = default;
 
   virtual void setup(const TimeIntegrator&);

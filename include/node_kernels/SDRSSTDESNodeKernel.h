@@ -32,7 +32,7 @@ public:
   KOKKOS_FORCEINLINE_FUNCTION
   SDRSSTDESNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~SDRSSTDESNodeKernel() = default;
 
   virtual void setup(Realm&) override;

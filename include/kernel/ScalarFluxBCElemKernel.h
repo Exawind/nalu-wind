@@ -35,10 +35,10 @@ public:
     const bool,
     ElemDataRequests&);
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ScalarFluxBCElemKernel() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~ScalarFluxBCElemKernel() = default;
 
   /** Execute the kernel within a Kokkos loop and populate the LHS and RHS for

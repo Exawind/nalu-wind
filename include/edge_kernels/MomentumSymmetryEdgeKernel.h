@@ -37,10 +37,10 @@ public:
     ElemDataRequests&,
     ElemDataRequests&);
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   MomentumSymmetryEdgeKernel() = default;
 
-  KOKKOS_FORCEINLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MomentumSymmetryEdgeKernel() = default;
 
   using Kernel::execute;

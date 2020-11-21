@@ -31,10 +31,10 @@ public:
     const stk::mesh::BulkData&,
     ScalarFieldType*);
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ScalarMassBDFNodeKernel() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~ScalarMassBDFNodeKernel() = default;
 
   virtual void setup(Realm&) override;

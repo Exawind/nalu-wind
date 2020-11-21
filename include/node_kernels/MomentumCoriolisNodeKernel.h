@@ -33,7 +33,7 @@ public:
 
   MomentumCoriolisNodeKernel() = delete;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~MomentumCoriolisNodeKernel() = default;
 
   virtual void setup(Realm&) override;

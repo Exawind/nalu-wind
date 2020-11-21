@@ -41,7 +41,7 @@ public:
 
   KOKKOS_FUNCTION
   Tri32DSCV();
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~Tri32DSCV() = default;
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
@@ -140,7 +140,7 @@ public:
 
   KOKKOS_FUNCTION
   Tri32DSCS();
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~Tri32DSCS() = default;
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;

@@ -31,10 +31,10 @@ public:
   ContinuityMassBDFNodeKernel(
     const stk::mesh::BulkData&);
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ContinuityMassBDFNodeKernel() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~ContinuityMassBDFNodeKernel() = default;
 
   virtual void setup(Realm&) override;

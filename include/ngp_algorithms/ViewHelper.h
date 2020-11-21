@@ -38,7 +38,7 @@ struct ViewHelper<ElemSimdDataType, ScalarFieldType>
     : v_phi_(scrView.get_scratch_view_1D(phiID))
   {}
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ~ViewHelper() = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -62,7 +62,7 @@ struct ViewHelper<ElemSimdDataType, VectorFieldType>
     : v_phi_(scrView.get_scratch_view_2D(phiID))
   {}
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ~ViewHelper() = default;
 
   KOKKOS_INLINE_FUNCTION

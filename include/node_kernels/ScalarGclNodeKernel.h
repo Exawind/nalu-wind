@@ -32,10 +32,10 @@ public:
     const stk::mesh::BulkData&,
     ScalarFieldType*);
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ScalarGclNodeKernel() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   virtual ~ScalarGclNodeKernel() = default;
 
   virtual void setup(Realm&) override;
