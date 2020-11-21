@@ -79,7 +79,7 @@ public:
     isEdge_(isEdge), numDof_(nDof)
   {}
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   TestCoeffApplier(const TestCoeffApplier&) = default;
 
   KOKKOS_FUNCTION
