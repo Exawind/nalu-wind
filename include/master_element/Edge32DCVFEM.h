@@ -41,8 +41,8 @@ public:
 
   KOKKOS_FUNCTION
   Edge32DSCS();
-  KOKKOS_FUNCTION
-  virtual ~Edge32DSCS() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  virtual ~Edge32DSCS() = default;
   using MasterElement::determinant;
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;

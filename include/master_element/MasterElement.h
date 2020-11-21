@@ -48,7 +48,7 @@ public:
   KOKKOS_FUNCTION
   MasterElement(const double scaleToStandardIsoFac=1.0);
   KOKKOS_DEFAULTED_FUNCTION
-  virtual ~MasterElement() {} // = default is apparently not allowed for virtual destructors...
+  virtual ~MasterElement() = default;
 
   // NGP-ready methods first
   KOKKOS_FUNCTION virtual void shape_fcn(

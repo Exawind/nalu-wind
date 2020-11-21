@@ -187,8 +187,8 @@ public:
       devicePointer_(nullptr)
     {}
 
-    KOKKOS_FUNCTION
-    ~TpetraLinSysCoeffApplier() {}
+    KOKKOS_DEFAULTED_FUNCTION
+    ~TpetraLinSysCoeffApplier() = default;
 
     KOKKOS_FUNCTION
     virtual void resetRows(unsigned numNodes,

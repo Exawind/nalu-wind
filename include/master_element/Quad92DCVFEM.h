@@ -38,8 +38,8 @@ public:
 
   KOKKOS_FUNCTION
   QuadrilateralP2Element();
-  KOKKOS_FUNCTION
-  virtual ~QuadrilateralP2Element() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  virtual ~QuadrilateralP2Element() = default;
 
 protected:
   struct ContourData {
@@ -148,8 +148,8 @@ public:
 
   KOKKOS_FUNCTION
   Quad92DSCV();
-  KOKKOS_FUNCTION
-  virtual ~Quad92DSCV() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  virtual ~Quad92DSCV() = default;
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final ;
 
@@ -233,8 +233,8 @@ public:
 
   KOKKOS_FUNCTION
   Quad92DSCS();
-  KOKKOS_FUNCTION
-  virtual ~Quad92DSCS() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  virtual ~Quad92DSCS() = default;
 
   KOKKOS_FUNCTION virtual void shape_fcn(
      SharedMemView<DoubleType**, DeviceShmem> &shpfc) override;

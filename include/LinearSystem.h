@@ -45,8 +45,8 @@ public:
   KOKKOS_DEFAULTED_FUNCTION
   CoeffApplier() = default;
 
-  KOKKOS_FUNCTION
-  virtual ~CoeffApplier() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  virtual ~CoeffApplier() = default;
 
   KOKKOS_FUNCTION
   virtual void resetRows(unsigned numNodes,

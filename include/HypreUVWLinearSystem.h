@@ -103,8 +103,8 @@ public:
       HypreIntType num_mat_overset_pts_owned,
       HypreIntType num_rhs_overset_pts_owned);
 
-    KOKKOS_FUNCTION
-    virtual ~HypreUVWLinSysCoeffApplier() {}
+    KOKKOS_DEFAULTED_FUNCTION
+    virtual ~HypreUVWLinSysCoeffApplier() = default;
 
     KOKKOS_FUNCTION
     virtual void reset_rows(
