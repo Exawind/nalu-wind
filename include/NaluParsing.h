@@ -12,7 +12,6 @@
 #ifndef NaluParsing_h
 #define NaluParsing_h
 
-#include "edge_kernels/MomentumOpenEdgeKernel.h"
 #include <BoundaryConditions.h>
 #include <Enums.h>
 #include <InitialConditions.h>

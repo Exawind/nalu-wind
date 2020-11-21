@@ -18,7 +18,6 @@
 #include <stk_util/util/ReportHandler.hpp>
 
 #include "AlgTraits.h"
-#include "master_element/Quad43DCVFEM.h"
 #include "utils/CreateDeviceExpression.h"
 
 namespace stk { struct topology; }
