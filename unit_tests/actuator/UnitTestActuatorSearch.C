@@ -20,6 +20,8 @@ namespace nalu {
 
 namespace {
 
+#define ACTUATOR_LAMBDA [=]
+
 class ActuatorSearchTest : public ::testing::Test
 {
 public:
@@ -48,7 +50,7 @@ public:
     ASSERT_EQ(slabSize, (unsigned)nx(0) * nx(1));
     ASSERT_EQ(nPoints, (int)slabSize * nProcs);
     Kokkos::parallel_for(
-      "populateValues", ActFixRangePolicy(0, nPoints), KOKKOS_LAMBDA(int i) {
+      "populateValues", ActFixRangePolicy(0, nPoints), ACTUATOR_LAMBDA(int i) {
         // place point in center of elements for easy parallel mapping
         points(i, 0) = i % nx(0) + 0.5;
         points(i, 1) = (i / nx(0)) % nx(1) + 0.5;
@@ -182,6 +184,8 @@ TEST_F(ActuatorSearchTest, NGP_executeFineSearch)
     FAIL() << err.what();
   }
 }
+
+#undef ACTUATOR_LAMBDA
 
 } // namespace
 
