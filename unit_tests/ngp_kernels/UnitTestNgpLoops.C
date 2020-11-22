@@ -17,6 +17,8 @@
 #include "ngp_utils/NgpReduceUtils.h"
 #include "ngp_utils/NgpReducers.h"
 #include "ngp_utils/NgpFieldManager.h"
+#include "master_element/Hex8CVFEM.h"
+#include "master_element/Quad43DCVFEM.h"
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/GetNgpField.hpp"

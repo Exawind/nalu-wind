@@ -12,6 +12,8 @@
 #include "UnitTestKokkosUtils.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
+#include "master_element/Hex8CVFEM.h"
+#include "master_element/Quad43DCVFEM.h"
 
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_mesh/base/FieldParallel.hpp>
