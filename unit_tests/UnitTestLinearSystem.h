@@ -82,10 +82,8 @@ public:
   KOKKOS_DEFAULTED_FUNCTION
   TestCoeffApplier(const TestCoeffApplier&) = default;
 
-  KOKKOS_FUNCTION
-  ~TestCoeffApplier()
-  {
-  }
+  KOKKOS_DEFAULTED_FUNCTION
+  ~TestCoeffApplier() = default;
 
 KOKKOS_FUNCTION
 void resetRows(unsigned /*numNodes*/,
