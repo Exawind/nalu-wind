@@ -285,8 +285,11 @@ public:
       HypreIntType num_mat_overset_pts_owned,
       HypreIntType num_rhs_overset_pts_owned);
 
-    KOKKOS_FUNCTION
-    virtual ~HypreLinSysCoeffApplier()
+    KOKKOS_DEFAULTED_FUNCTION
+    virtual ~HypreLinSysCoeffApplier() = default;
+
+#if 0
+    // Should not be part of coeffapplier
     {
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
       if (_nAssembleMat > 0 && rank_ == 0) {
@@ -301,6 +304,7 @@ public:
       }
 #endif
     }
+#endif
 
     KOKKOS_FUNCTION
     virtual void reset_rows(
