@@ -49,8 +49,7 @@ void MeshMotionAlg::initialize( const double time )
     movingFrameVec_[i]->update_coordinates_velocity(time);
   }
 
-  // TODO: NGP Transition
-  // Manually synchronize fields to device
+  // Manually synchronize fields to hosts
   {
     const auto& meta = bulk_.mesh_meta_data();
     std::vector<std::string> fnames{
@@ -75,8 +74,7 @@ void MeshMotionAlg::execute(const double time)
     movingFrameVec_[i]->update_coordinates_velocity(time);
   }
 
-  // TODO: NGP Transition
-  // Manually synchronize fields to device
+  // Manually synchronize fields to host
   {
     const auto& meta = bulk_.mesh_meta_data();
     std::vector<std::string> fnames{
@@ -98,7 +96,6 @@ void MeshMotionAlg::post_compute_geometry()
   for (size_t i=0; i < movingFrameVec_.size(); i++)
     movingFrameVec_[i]->post_compute_geometry();
 
-  // TODO: NGP Transition
   // Manually synchronize fields to device
   {
     auto* divMeshVel = bulk_.mesh_meta_data().get_field(

@@ -134,7 +134,7 @@ namespace {
   }
 }
 
-TEST(meshMotion, initialize)
+TEST(meshMotion, NGP_initialize)
 {
   // create realm
   unit_test_utils::NaluTest naluObj;
@@ -194,16 +194,16 @@ TEST(meshMotion, initialize)
   meshMotionAlg.reset(
     new sierra::nalu::MeshMotionAlg( realm.bulk_data(), mesh_motion ));
 
+  // initialize and execute mesh motion algorithm
+  const double currTime = 0.0;
+  meshTransformationAlg->initialize(currTime);
+  meshMotionAlg->initialize(currTime);
+
   // get fields to be tested
   VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "current_coordinates");
   VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_velocity");
-
-  // initialize and execute mesh motion algorithm
-  const double currTime = 0.0;
-  meshTransformationAlg->initialize(currTime);
-  meshMotionAlg->initialize(currTime);
 
   for (auto b: bkts) {
     for (size_t in=0; in < b->size(); in++) {
@@ -230,7 +230,7 @@ TEST(meshMotion, initialize)
   } // end for loop - bkts
 }
 
-TEST(meshMotion, execute)
+TEST(meshMotion, NGP_execute)
 {
   // create realm
   unit_test_utils::NaluTest naluObj;
@@ -290,12 +290,6 @@ TEST(meshMotion, execute)
   meshMotionAlg.reset(
     new sierra::nalu::MeshMotionAlg( realm.bulk_data(), mesh_motion ));
 
-  // get fields to be tested
-  VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_velocity");
-
   // initialize and execute mesh motion algorithm
   double currTime = 0.0;
   meshTransformationAlg->initialize(currTime);
@@ -304,6 +298,12 @@ TEST(meshMotion, execute)
   // execute mesh motion algorithm
   currTime = 30.0;
   meshMotionAlg->execute(currTime);
+
+  // get fields to be tested
+  VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "current_coordinates");
+  VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_velocity");
 
   for (auto b: bkts) {
     for (size_t in=0; in < b->size(); in++) {

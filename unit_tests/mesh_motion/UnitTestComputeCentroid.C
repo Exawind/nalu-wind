@@ -96,7 +96,7 @@ namespace {
   }
 }
 
-TEST(meshMotion, compute_centroid)
+TEST(meshMotion, NGP_compute_centroid)
 {
   // create realm
   unit_test_utils::NaluTest naluObj;
@@ -116,7 +116,7 @@ TEST(meshMotion, compute_centroid)
   // because mesh_transformation changes the field - coordinates
   int nDim = realm.meta_data().spatial_dimension();
   VectorFieldType *modelCoordsGold = &(realm.meta_data().declare_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates_copy"));
+    stk::topology::NODE_RANK, "coordinates_gold"));
   stk::mesh::put_field_on_mesh(*modelCoordsGold, realm.meta_data().universal_part(), nDim, nullptr);
 
   // create mesh and get dimensions

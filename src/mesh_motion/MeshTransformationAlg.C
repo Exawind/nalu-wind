@@ -50,7 +50,7 @@ void MeshTransformationAlg::initialize( const double time )
   }
 
   // TODO: NGP Transition
-  // Manually synchronize fields to device
+  // Manually synchronize fields to host
   {
     auto* coords = bulk_.mesh_meta_data().get_field(
         stk::topology::NODE_RANK, "coordinates");
