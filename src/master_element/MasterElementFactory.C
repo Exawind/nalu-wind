@@ -182,20 +182,10 @@ namespace nalu{
     surfaceMeMap_.clear();
     volumeMeMap_.clear();
     for (std::pair<stk::topology, MasterElement*> a : volumeMeMapDev()) {
-      const std::string debuggingName(typeid(MasterElement).name());
-      MasterElement* A=a.second;
-      Kokkos::parallel_for(debuggingName, 1, KOKKOS_LAMBDA (const int /* i */) {
-        A->~MasterElement();
-      });
       sierra::nalu::kokkos_free_on_device(a.second);
     }
     volumeMeMapDev().clear();
     for (std::pair<stk::topology, MasterElement*> a : surfaceMeMapDev()) {
-      const std::string debuggingName(typeid(MasterElement).name());
-      MasterElement* A=a.second;
-      Kokkos::parallel_for(debuggingName, 1, KOKKOS_LAMBDA (const int /* i */) {
-        A->~MasterElement();
-      });
       sierra::nalu::kokkos_free_on_device(a.second);
     }
     surfaceMeMapDev().clear();
