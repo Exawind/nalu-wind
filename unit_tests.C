@@ -13,6 +13,7 @@
 #include "Kokkos_Core.hpp"
 #include "stk_util/parallel/Parallel.hpp"
 
+#include "NaluVersionInfo.h"
 #include "NaluEnv.h"
 #include "master_element/MasterElementFactory.h"
 
@@ -20,7 +21,6 @@ int main(int argc, char **argv)
 {
     MPI_Init(&argc, &argv);
 
-    //NaluEnv will call MPI_Finalize for us.
     sierra::nalu::NaluEnv::self();
     Kokkos::initialize(argc, argv);
     int returnVal = 0;
@@ -33,6 +33,15 @@ int main(int argc, char **argv)
     // Kokkos::finalize_all. The instances owning threaded Kokkos loops must be
     // cleared out before Kokkos::finalize is called.
     {
+      // clang-format off
+      namespace version = sierra::nalu::version;
+      sierra::nalu::NaluEnv::self().naluOutputP0()
+        << "   Nalu-Wind Version: " << version::NaluVersionTag << std::endl
+        << "   Nalu-Wind GIT Commit SHA: " << version::NaluGitCommitSHA
+        << ((version::RepoIsDirty == "DIRTY") ? ("-" + version::RepoIsDirty) : "") << std::endl
+        << "   Trilinos Version: " << version::TrilinosVersionTag << std::endl << std::endl;
+      // clang-format on
+
       testing::InitGoogleTest(&argc, argv);
 
       returnVal = RUN_ALL_TESTS();
@@ -47,8 +56,6 @@ int main(int argc, char **argv)
     Kokkos::finalize_all();
     MPI_Finalize();
 
-    //NaluEnv will call MPI_Finalize when the NaluEnv singleton is cleaned up,
-    //which is after we return.
     return returnVal;
 }
 
