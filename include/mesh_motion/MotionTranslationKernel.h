@@ -40,6 +40,7 @@ public:
 private:
   void load(const YAML::Node&);
 
+  KOKKOS_FUNCTION
   void translation_mat(const ThreeDVecType&);
 
   ThreeDVecType displacement_ = {0.0,0.0,0.0};

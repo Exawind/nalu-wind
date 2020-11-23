@@ -1,12 +1,10 @@
-
 #include "mesh_motion/MeshTransformationAlg.h"
 
+#include "mesh_motion/FrameReference.h"
 #include "NaluParsing.h"
 
 #include <cassert>
 #include <iostream>
-
-#include "../../include/mesh_motion/FrameReference.h"
 
 namespace sierra{
 namespace nalu{
@@ -41,6 +39,11 @@ void MeshTransformationAlg::initialize( const double time )
   if(isInit_)
     throw std::runtime_error("MeshTransformationAlg::initialize(): Re-initialization of MeshTransformationAlg not valid");
 
+  // Synchronize fields to device
+  auto* coords = bulk_.mesh_meta_data().get_field(
+    stk::topology::NODE_RANK, "coordinates");
+  coords->sync_to_device();
+
   for (size_t i=0; i < referenceFrameVec_.size(); i++)
   {
     referenceFrameVec_[i]->setup();
@@ -49,16 +52,9 @@ void MeshTransformationAlg::initialize( const double time )
     referenceFrameVec_[i]->update_coordinates(time);
   }
 
-  // TODO: NGP Transition
-  // Manually synchronize fields to host
-  {
-    auto* coords = bulk_.mesh_meta_data().get_field(
-        stk::topology::NODE_RANK, "coordinates");
-    if (coords != nullptr) {
-      coords->modify_on_device();
-      coords->sync_to_host();
-    }
-  }
+  // Mark fields as modified on device
+  coords->modify_on_device();
+
   isInit_ = true;
 }
 

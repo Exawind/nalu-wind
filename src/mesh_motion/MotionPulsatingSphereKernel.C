@@ -1,5 +1,6 @@
 #include "mesh_motion/MotionPulsatingSphereKernel.h"
 
+#include<FieldTypeDef.h>
 #include <NaluParsing.h>
 
 // stk_mesh/base/fem

@@ -40,6 +40,7 @@ public:
 private:
   void load(const YAML::Node&);
 
+  KOKKOS_FUNCTION
   void rotation_mat(const double);
 
   ThreeDVecType axis_ = {0.0,0.0,1.0};

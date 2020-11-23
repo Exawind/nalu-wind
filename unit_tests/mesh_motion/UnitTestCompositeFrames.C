@@ -148,7 +148,6 @@ TEST(meshMotion, NGP_initialize)
 
   // register mesh motion fields and initialize coordinate fields
   realm.register_nodal_fields( &(realm.meta_data().universal_part()) );
-  realm.init_current_coordinates();
 
   // create field to copy coordinates
   // NOTE: This is done to allow computation of gold values later on
@@ -161,8 +160,9 @@ TEST(meshMotion, NGP_initialize)
   // create mesh
   const std::string meshSpec("generated:2x2x2");
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
+  realm.init_current_coordinates();
 
-  // copy coordinatees to copy coordinates
+  // copy coordinates to copy coordinates
   VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
 
@@ -205,6 +205,10 @@ TEST(meshMotion, NGP_initialize)
   VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_velocity");
 
+  // sync coordinates to host
+  currCoords->sync_to_host();
+  meshVelocity->sync_to_host();
+
   for (auto b: bkts) {
     for (size_t in=0; in < b->size(); in++) {
 
@@ -244,7 +248,6 @@ TEST(meshMotion, NGP_execute)
 
   // register mesh motion fields and initialize coordinate fields
   realm.register_nodal_fields( &(realm.meta_data().universal_part()) );
-  realm.init_current_coordinates();
 
   // create field to copy coordinates
   // NOTE: This is done to allow computation of gold values later on
@@ -257,8 +260,9 @@ TEST(meshMotion, NGP_execute)
   // create mesh
   const std::string meshSpec("generated:2x2x2");
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
+  realm.init_current_coordinates();
 
-  // copy coordinatees to copy coordinates
+  // copy coordinates to copy coordinates
   VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
 
@@ -304,6 +308,10 @@ TEST(meshMotion, NGP_execute)
     stk::topology::NODE_RANK, "current_coordinates");
   VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_velocity");
+
+  // sync modified coordinates and velocity to host
+  currCoords->sync_to_host();
+  meshVelocity->sync_to_host();
 
   for (auto b: bkts) {
     for (size_t in=0; in < b->size(); in++) {

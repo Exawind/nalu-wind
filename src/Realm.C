@@ -2486,7 +2486,6 @@ Realm::compute_vrtm(const std::string& velName)
 void
 Realm::init_current_coordinates()
 {
-
   const int nDim = metaData_->spatial_dimension();
 
   VectorFieldType *modelCoords = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
@@ -2513,6 +2512,13 @@ Realm::init_current_coordinates()
       }
     }
   }
+
+  // sync fields to device
+  currentCoords->modify_on_host();
+  currentCoords->sync_to_device();
+
+  displacement->modify_on_host();
+  displacement->sync_to_device();
 }
 
 //--------------------------------------------------------------------------

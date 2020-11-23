@@ -48,6 +48,7 @@ public:
 private:
   void load(const YAML::Node&);
 
+  KOKKOS_FUNCTION
   void scaling_mat(const ThreeDVecType&);
 
   ThreeDVecType factor_ = {0.0,0.0,0.0};

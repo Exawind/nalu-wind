@@ -109,7 +109,6 @@ TEST(meshMotion, NGP_compute_centroid)
 
   // register mesh motion fields and initialize coordinate fields
   realm.register_nodal_fields( &(realm.meta_data().universal_part()) );
-  realm.init_current_coordinates();
 
   // create field to copy coordinates
   // NOTE: This is done to allow computation of gold values later on
@@ -149,6 +148,9 @@ TEST(meshMotion, NGP_compute_centroid)
     realm.bulk_data(), mesh_transformation);
   const double time = 0.0;
   meshTransformationAlg.initialize(time);
+
+  // sync coordinates to host
+  modelCoords->sync_to_host();
 
   // compare coordinates
   for (auto b: bkts) {

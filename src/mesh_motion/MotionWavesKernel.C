@@ -1,6 +1,6 @@
-
 #include "mesh_motion/MotionWavesKernel.h"
 
+#include<FieldTypeDef.h>
 #include <NaluParsing.h>
 
 // stk_mesh/base/fem

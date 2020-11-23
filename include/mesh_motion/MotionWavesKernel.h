@@ -78,12 +78,17 @@ public:
 
 private:
   void load(const YAML::Node&);
+
+  KOKKOS_FUNCTION
   void translation_mat(const ThreeDVecType&);
 
   void Stokes_coefficients();
   void Stokes_parameters();
   
+  KOKKOS_FUNCTION
   double my_sinh_sin(int i, int j,double phase);
+
+  KOKKOS_FUNCTION
   double my_cosh_cos(int i, int j,double phase);
 
   const double g_{9.81};

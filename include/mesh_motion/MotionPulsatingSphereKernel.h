@@ -44,6 +44,7 @@ public:
 private:
   void load(const YAML::Node&);
 
+  KOKKOS_FUNCTION
   void scaling_mat(const double, const double*);
 
   double amplitude_{0.0};
