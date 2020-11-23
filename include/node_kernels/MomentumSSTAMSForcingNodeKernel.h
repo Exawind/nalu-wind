@@ -88,8 +88,6 @@ private:
 
   double time_;
   double dt_;
-  int timestep_;
-  int iter_;
 };
 
 } // namespace nalu
