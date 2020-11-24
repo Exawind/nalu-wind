@@ -6,8 +6,6 @@
 // stk_mesh/base/fem
 #include <stk_mesh/base/FieldBLAS.hpp>
 
-#include <cmath>
-
 namespace sierra{
 namespace nalu{
 
@@ -63,11 +61,11 @@ void MotionPulsatingSphereKernel::scaling_mat(
 {
   reset_mat(transMat_);
 
-  double radius = std::sqrt( std::pow(xyz[0]-origin_[0],2)
-                             +std::pow(xyz[1]-origin_[1],2)
-                             +std::pow(xyz[2]-origin_[2],2));
+  double radius = stk::math::sqrt(stk::math::pow(xyz[0]-origin_[0],2)
+                                 +stk::math::pow(xyz[1]-origin_[1],2)
+                                 +stk::math::pow(xyz[2]-origin_[2],2));
 
-  double curr_radius = radius + amplitude_*(1 - std::cos(2*M_PI*frequency_*time));
+  double curr_radius = radius + amplitude_*(1 - stk::math::cos(2*M_PI*frequency_*time));
 
   double uniform_scaling = curr_radius/radius;
   if(radius == 0.0) uniform_scaling = 1.0;
@@ -115,12 +113,12 @@ void MotionPulsatingSphereKernel::compute_velocity(
     return;
   }
 
-  double radius = std::sqrt( std::pow(mxyz[0]-origin_[0],2)
-                             +std::pow(mxyz[1]-origin_[1],2)
-                             +std::pow(mxyz[2]-origin_[2],2));
+  double radius = stk::math::sqrt(stk::math::pow(mxyz[0]-origin_[0],2)
+                                 +stk::math::pow(mxyz[1]-origin_[1],2)
+                                 +stk::math::pow(mxyz[2]-origin_[2],2));
 
   double pulsatingVelocity =
-    amplitude_ * std::sin(2*M_PI*frequency_*time) * 2*M_PI*frequency_ / radius;
+    amplitude_ * stk::math::sin(2*M_PI*frequency_*time) * 2*M_PI*frequency_ / radius;
 
   // account for zero radius
   if(radius == 0) pulsatingVelocity = 0;

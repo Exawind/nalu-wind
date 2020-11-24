@@ -4,8 +4,6 @@
 #include <NaluEnv.h>
 #include <NaluParsing.h>
 
-#include <cmath>
-
 namespace sierra{
 namespace nalu{
 
@@ -81,11 +79,11 @@ void MotionRotationKernel::rotation_mat(const double angle)
   double mag = 0.0;
   for (int d=0; d < nalu_ngp::NDimMax; d++)
       mag += axis_[d] * axis_[d];
-  mag = std::sqrt(mag);
+  mag = stk::math::sqrt(mag);
 
   // build quaternion based on angle and axis of rotation
-  const double cosang = std::cos(0.5*angle);
-  const double sinang = std::sin(0.5*angle);
+  const double cosang = stk::math::cos(0.5*angle);
+  const double sinang = stk::math::sin(0.5*angle);
   const double q0 = cosang;
   const double q1 = sinang * axis_[0]/mag;
   const double q2 = sinang * axis_[1]/mag;
@@ -142,7 +140,7 @@ void MotionRotationKernel::compute_velocity(
   double mag = 0.0;
   for (int d=0; d < nalu_ngp::NDimMax; d++)
     mag += axis_[d] * axis_[d];
-  mag = std::sqrt(mag);
+  mag = stk::math::sqrt(mag);
 
   unitVec[0] = axis_[0]/mag;
   unitVec[1] = axis_[1]/mag;

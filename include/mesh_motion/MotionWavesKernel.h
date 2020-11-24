@@ -1,10 +1,9 @@
 #ifndef MOTIONWAVES_H
 #define MOTIONWAVES_H
 
+#include "NgpMotion.h"
 
 #include <string>
-#include <cmath>
-#include "NgpMotion.h"
 
 namespace stk {
 namespace mesh {
@@ -93,7 +92,8 @@ private:
 
   const double g_{9.81};
 
-  std::string waveModel_{"Airy"};   
+  int waveModel_{1};
+
   // General parameters for waves
   double height_{0.1}; // Wave height
   double period_{1.0}; // Wave period

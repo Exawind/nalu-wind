@@ -27,6 +27,9 @@ public:
 
   void setup();
 
+  void compute_centroid_on_parts(
+    std::vector<double> &centroid);
+
   void set_computed_centroid(std::vector<double> centroid)
   {
     for (size_t i=0; i < motionKernels_.size(); i++)
@@ -71,9 +74,6 @@ private:
   void load(const YAML::Node&);
 
   void populate_part_vec(const YAML::Node&);
-
-  void compute_centroid_on_parts(
-    std::vector<double> &centroid);
 };
 
 } // nalu
