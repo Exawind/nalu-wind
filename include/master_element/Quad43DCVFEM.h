@@ -28,8 +28,7 @@ public:
 
   KOKKOS_FUNCTION
   Quad3DSCS();
-  KOKKOS_DEFAULTED_FUNCTION
-  virtual ~Quad3DSCS() = default;
+  KOKKOS_FUNCTION virtual ~Quad3DSCS() {}
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
  

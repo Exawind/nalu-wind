@@ -47,8 +47,7 @@ class MasterElement
 public:
   KOKKOS_FUNCTION
   MasterElement(const double scaleToStandardIsoFac=1.0);
-  KOKKOS_DEFAULTED_FUNCTION
-  virtual ~MasterElement() = default;
+  KOKKOS_FUNCTION virtual ~MasterElement() {}
 
   // NGP-ready methods first
   KOKKOS_FUNCTION virtual void shape_fcn(

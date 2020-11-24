@@ -168,13 +168,17 @@ namespace nalu{
     return theElem;
   }
 
-  std::map<stk::topology, MasterElement*> &MasterElementRepo::volumeMeMapDev() {
-     static std::map<stk::topology, MasterElement*> M;
-     return M;
+  std::map<stk::topology, MasterElement*>&
+  MasterElementRepo::volumeMeMapDev()
+  {
+    static std::map<stk::topology, MasterElement*> M;
+    return M;
   }
-  std::map<stk::topology, MasterElement*> &MasterElementRepo::surfaceMeMapDev() {
-     static std::map<stk::topology, MasterElement*> M;
-     return M;
+  std::map<stk::topology, MasterElement*>&
+  MasterElementRepo::surfaceMeMapDev()
+  {
+    static std::map<stk::topology, MasterElement*> M;
+    return M;
   }
 
   void MasterElementRepo::clear()
@@ -182,10 +186,18 @@ namespace nalu{
     surfaceMeMap_.clear();
     volumeMeMap_.clear();
     for (std::pair<stk::topology, MasterElement*> a : volumeMeMapDev()) {
+      const std::string debuggingName("MEDestroy: " + a.first.name());
+      auto* meobj = a.second;
+      Kokkos::parallel_for(
+        debuggingName, 1, KOKKOS_LAMBDA(int) { meobj->~MasterElement(); });
       sierra::nalu::kokkos_free_on_device(a.second);
     }
     volumeMeMapDev().clear();
     for (std::pair<stk::topology, MasterElement*> a : surfaceMeMapDev()) {
+      const std::string debuggingName("MEDestroy: " + a.first.name());
+      auto* meobj = a.second;
+      Kokkos::parallel_for(
+        debuggingName, 1, KOKKOS_LAMBDA(int) { meobj->~MasterElement(); });
       sierra::nalu::kokkos_free_on_device(a.second);
     }
     surfaceMeMapDev().clear();
