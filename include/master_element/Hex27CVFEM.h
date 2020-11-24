@@ -40,8 +40,7 @@ public:
 
   KOKKOS_FUNCTION
   HexahedralP2Element();
-  KOKKOS_DEFAULTED_FUNCTION
-  virtual ~HexahedralP2Element() = default;
+  KOKKOS_FUNCTION virtual ~HexahedralP2Element() {}
 
   void shape_fcn(double *shpfc);
   void shifted_shape_fcn(double *shpfc);
@@ -243,8 +242,7 @@ class Hex27SCV : public HexahedralP2Element
 public:
   KOKKOS_FUNCTION
   Hex27SCV();
-  KOKKOS_DEFAULTED_FUNCTION
-  virtual ~Hex27SCV() = default;
+  KOKKOS_FUNCTION virtual ~Hex27SCV() {}
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
@@ -329,8 +327,7 @@ class Hex27SCS : public HexahedralP2Element
 public:
   KOKKOS_FUNCTION
   Hex27SCS();
-  KOKKOS_DEFAULTED_FUNCTION
-  virtual ~Hex27SCS() = default;
+  KOKKOS_FUNCTION virtual ~Hex27SCS() {}
 
   using MasterElement::shape_fcn;
   using MasterElement::shifted_shape_fcn;

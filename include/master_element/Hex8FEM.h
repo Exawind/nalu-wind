@@ -24,8 +24,7 @@ public:
 
   KOKKOS_FUNCTION
   Hex8FEM();
-  KOKKOS_DEFAULTED_FUNCTION
-  virtual ~Hex8FEM() = default;
+  KOKKOS_FUNCTION virtual ~Hex8FEM() {}
 
   using AlgTraits = AlgTraitsHex8;
   using MasterElement::grad_op;

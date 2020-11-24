@@ -39,8 +39,7 @@ public:
 
   KOKKOS_FUNCTION
   Quad42DSCV();
-  KOKKOS_DEFAULTED_FUNCTION
-  virtual ~Quad42DSCV() = default;
+  KOKKOS_FUNCTION virtual ~Quad42DSCV() {}
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
@@ -135,8 +134,7 @@ public:
 
   KOKKOS_FUNCTION
   Quad42DSCS();
-  KOKKOS_DEFAULTED_FUNCTION
-  virtual ~Quad42DSCS() = default;
+  KOKKOS_FUNCTION virtual ~Quad42DSCS() {}
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 

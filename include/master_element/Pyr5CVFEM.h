@@ -46,8 +46,7 @@ public:
 
   KOKKOS_FUNCTION
   PyrSCV();
-  KOKKOS_DEFAULTED_FUNCTION
-  virtual ~PyrSCV() = default;
+  KOKKOS_FUNCTION virtual ~PyrSCV() {}
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
@@ -149,8 +148,7 @@ public:
 
   KOKKOS_FUNCTION
   PyrSCS();
-  KOKKOS_DEFAULTED_FUNCTION
-  virtual ~PyrSCS() = default;
+  KOKKOS_FUNCTION virtual ~PyrSCS() {}
 
   KOKKOS_FUNCTION virtual const int *  ipNodeMap(int ordinal = 0) const final;
 
