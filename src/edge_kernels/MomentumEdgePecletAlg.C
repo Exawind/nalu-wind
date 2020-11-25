@@ -107,7 +107,7 @@ MomentumEdgePecletAlg::execute()
 }
 
 void
-DetermineMaxPecletFactor(
+determine_max_peclet_factor(
   stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta)
 {
   ScalarFieldType* maxPecFac = meta.get_field<ScalarFieldType>(

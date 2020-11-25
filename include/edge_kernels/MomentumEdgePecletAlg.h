@@ -41,7 +41,7 @@ private:
   PecletFunction<DblType>* pecletFunction_{nullptr};
 };
 
-void DetermineMaxPecletFactor(stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta);
+void determine_max_peclet_factor(stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta);
 
 }
 }

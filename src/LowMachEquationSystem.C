@@ -963,7 +963,7 @@ LowMachEquationSystem::post_converged_work()
   if (realm_.realmUsesEdges_) {
     // get max peclet factor touching each node
     // (host only operation since this is a post processor)
-    DetermineMaxPecletFactor(realm_.bulk_data(), realm_.meta_data());
+    determine_max_peclet_factor(realm_.bulk_data(), realm_.meta_data());
   }
 }
 

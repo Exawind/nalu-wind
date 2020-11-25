@@ -523,7 +523,7 @@ ShearStressTransportEquationSystem::post_iter_work()
 
     stk::mesh::copy_owned_to_shared(bulk, {iddesRansInd});
     if (realm_.hasPeriodic_) {
-      realm_.periodic_field_update(iddesRansInd, 1);
+      realm_.periodic_delta_solution_update(iddesRansInd, 1);
     }
   }
 }
