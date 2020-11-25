@@ -959,6 +959,12 @@ LowMachEquationSystem::post_converged_work()
 
   // output mass closure
   continuityEqSys_->mdotAlgDriver_->provide_output();
+
+  if (realm_.realmUsesEdges_) {
+    // get max peclet factor touching each node
+    // (host only operation since this is a post processor)
+    DetermineMaxPecletFactor(realm_.bulk_data(), realm_.meta_data());
+  }
 }
 
 //==========================================================================

@@ -57,7 +57,9 @@ TKESSTIDDESNodeKernel::setup(Realm& realm)
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
+  // this is the cdes2 from the Gritskavich 2012 paper
   cDESke_ = realm.get_turb_model_constant(TM_cDESke);
+  // this is the cdes1 from the Gritskavich 2012 paper
   cDESkw_ = realm.get_turb_model_constant(TM_cDESkw);
   kappa_ = realm.get_turb_model_constant(TM_kappa);
   iddes_Cw_ = realm.get_turb_model_constant(TM_iddes_Cw);

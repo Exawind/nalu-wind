@@ -16,8 +16,6 @@
 #include "edge_kernels/EdgeKernelUtils.h"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
-#include <stk_mesh/base/FieldBLAS.hpp>
-#include <stk_mesh/base/FieldParallel.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -49,7 +47,6 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
-  maxPecletAtNode_ = get_field_ordinal(meta, "max_peclet_factor");
 }
 
 void
@@ -79,21 +76,13 @@ MomentumEdgeSolverAlg::execute()
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
   const auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
-  auto maxPeclet = fieldMgr.get_field<double>(maxPecletAtNode_);
-
-  maxPeclet.modify_on_device();
-  const auto& meshInfo = realm_.mesh_info();
-  const auto ngpMesh = meshInfo.ngp_mesh();
-  maxPeclet.set_all(ngpMesh, 0.0);
 
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(
-      ShmemDataType& smdata,
-      const stk::mesh::FastMeshIndex& edge,
+      ShmemDataType & smdata, const stk::mesh::FastMeshIndex& edge,
       const stk::mesh::FastMeshIndex& nodeL,
-      const stk::mesh::FastMeshIndex& nodeR)
-    {
+      const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
       // Populate area vector work array
@@ -135,8 +124,6 @@ MomentumEdgeSolverAlg::execute()
 
       const DblType pecfac = pecletFactor.get(edge, 0);
       const DblType om_pecfac = 1.0 - pecfac;
-      maxPeclet.get(nodeR, 0) = stk::math::max(maxPeclet.get(nodeR, 0), pecfac);
-      maxPeclet.get(nodeL, 0) = stk::math::max(maxPeclet.get(nodeL, 0), pecfac);
 
       NALU_ALIGNED DblType limitL[NDimMax_] = { 1.0, 1.0, 1.0};
       NALU_ALIGNED DblType limitR[NDimMax_] = { 1.0, 1.0, 1.0};
@@ -262,13 +249,6 @@ MomentumEdgeSolverAlg::execute()
         }
       }
     });
-
-  maxPeclet.sync_to_host();
-
-  ScalarFieldType* maxPecFac = realm_.meta_data().get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "max_peclet_factor");
-
-  stk::mesh::copy_owned_to_shared(realm_.bulk_data(), {maxPecFac});
 }
 
 }  // nalu
