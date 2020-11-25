@@ -216,6 +216,7 @@ public:
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
   ScalarFieldType *iddesLengthScaleRatio_;
+  ScalarFieldType *iddesRansIndicator_;
 
   VectorNodalGradAlgDriver nodalGradAlgDriver_;
   WallFricVelAlgDriver wallFuncAlgDriver_;
