@@ -48,7 +48,6 @@ private:
   stk::mesh::NgpField<double> dualNodalVolume_;
   stk::mesh::NgpField<double> maxLenScale_;
   stk::mesh::NgpField<double> fOneBlend_;
-  stk::mesh::NgpField<double> lengthScaleRatio_;
   stk::mesh::NgpField<double> ransIndicator_;
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
@@ -61,7 +60,6 @@ private:
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
   unsigned maxLenScaleID_     {stk::mesh::InvalidOrdinal};
   unsigned fOneBlendID_       {stk::mesh::InvalidOrdinal};
-  unsigned lengthScaleRatioID_{stk::mesh::InvalidOrdinal};
   unsigned ransIndicatorID_   {stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;

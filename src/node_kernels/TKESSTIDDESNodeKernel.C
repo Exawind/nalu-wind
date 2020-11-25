@@ -28,7 +28,6 @@ TKESSTIDDESNodeKernel::TKESSTIDDESNodeKernel(const stk::mesh::MetaData& meta)
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     maxLenScaleID_(get_field_ordinal(meta, "sst_max_length_scale")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
-    lengthScaleRatioID_(get_field_ordinal(meta, "iddes_les_scale_ratio")),
     ransIndicatorID_(get_field_ordinal(meta, "iddes_rans_indicator")),
     nDim_(meta.spatial_dimension())
 {}
@@ -47,11 +46,9 @@ TKESSTIDDESNodeKernel::setup(Realm& realm)
   wallDist_        = fieldMgr.get_field<double>(wallDistID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   maxLenScale_     = fieldMgr.get_field<double>(maxLenScaleID_);
-  fOneBlend_       = fieldMgr.get_field<double>(fOneBlendID_);
-  lengthScaleRatio_ = fieldMgr.get_field<double>(lengthScaleRatioID_);
+  fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
   ransIndicator_ = fieldMgr.get_field<double>(ransIndicatorID_);
   // call modify before this field gets modified in kernel execute phase
-  lengthScaleRatio_.modify_on_device();
   ransIndicator_.modify_on_device();
 
   const std::string dofName = "turbulent_ke";
@@ -137,9 +134,6 @@ void TKESSTIDDESNodeKernel::execute(
 
   const DblType lIDDES =
     stk::math::max(1.0e-16, ransInd * lSST + (1.0 - fdHat) * lLES);
-
-  // modify on device called in setup
-  lengthScaleRatio_.get(node, 0) = lLES / lIDDES;
 
   DblType Dk = density * tke * sqrtTke / lIDDES;
 

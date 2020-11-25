@@ -17,6 +17,7 @@
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
 #include <stk_mesh/base/FieldBLAS.hpp>
+#include <stk_mesh/base/FieldParallel.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -262,12 +263,12 @@ MomentumEdgeSolverAlg::execute()
       }
     });
 
-  // if (realm_.hasPeriodic_) {
-  //  ScalarFieldType* pecletPeriodicSync =
-  //    realm_.meta_data().get_field<ScalarFieldType>(
-  //      stk::topology::NODE_RANK, "max_peclet_factor");
-  //  realm_.periodic_field_update(pecletPeriodicSync, 1);
-  //}
+  maxPeclet.sync_to_host();
+
+  ScalarFieldType* maxPecFac = realm_.meta_data().get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "max_peclet_factor");
+
+  stk::mesh::copy_owned_to_shared(realm_.bulk_data(), {maxPecFac});
 }
 
 }  // nalu
