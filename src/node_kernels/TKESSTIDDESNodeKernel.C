@@ -112,7 +112,7 @@ void TKESSTIDDESNodeKernel::execute(
   DblType rdl = visc/(density * kappa_ * kappa_ * dw * dw * stk::math::sqrt(0.5 * (sijSq + omegaSq) ));
   DblType rdt = tvisc/(density * kappa_ * kappa_ * dw * dw * (stk::math::sqrt(0.5 * (sijSq + omegaSq) ) + 1e-10) );
   DblType fl = stk::math::tanh( stk::math::pow( iddes_Cl_ * iddes_Cl_ * rdl, 10));
-  DblType ft = stk::math::tanh( stk::math::pow( iddes_Cl_ * iddes_Cl_ * rdt, 3));
+  DblType ft = stk::math::tanh(stk::math::pow(iddes_Ct_ * iddes_Ct_ * rdt, 3));
   DblType alpha = 0.25 - dw/maxLenScale;
   DblType fe1 = (alpha < 0) ? 2.0 * stk::math::exp(-9.0 * alpha * alpha) : 2.0 * stk::math::exp(-11.09 * alpha * alpha);
   DblType fe2 = 1.0 - stk::math::max(ft,fl);
