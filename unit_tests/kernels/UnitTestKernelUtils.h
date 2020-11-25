@@ -513,7 +513,7 @@ public:
     : MomentumKernelHex8Mesh(),
       massFlowRateEdge_(&meta_.declare_field<ScalarFieldType>(
                           stk::topology::EDGE_RANK, "mass_flow_rate")),
-      pecletFactor_(&meta_.declare_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_factor")),
+      pecletFactor_(&meta_.declare_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_factor"))
   {
     stk::mesh::put_field_on_mesh(
       *massFlowRateEdge_, meta_.universal_part(), spatialDim_, nullptr);
