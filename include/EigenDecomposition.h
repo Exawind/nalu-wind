@@ -323,6 +323,7 @@ KOKKOS_FUNCTION void
 {
 
   const T pi = stk::math::acos(-1.0);
+  const T machEps = std::numeric_limits<T>::min();
 
   // Characteristic equation for A is ax^3 + bx^2 + cx + d = 0 where x are the
   // eigenvalues and a = 1, b = -trA, c = coFacA, d = -detA
@@ -340,7 +341,7 @@ KOKKOS_FUNCTION void
                  4.0 * trA * trA * trA * detA - 27.0 * detA * detA +
                  18.0 * trA * coFacA * detA;
 
-  const auto check_one = disc < 0.0;
+  const auto check_one = disc < -machEps;
   const bool exit_now = stk::simd::are_all(check_one);
   if (exit_now) {
 #ifndef KOKKOS_ENABLE_CUDA
