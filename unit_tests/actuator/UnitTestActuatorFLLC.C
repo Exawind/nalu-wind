@@ -37,7 +37,6 @@ const char* actuatorParameters = R"act(actuator:
     aoa_table: [-180, 0, 180]
     cl_table:  [2, 2, 2]
     cd_table:  [1.2])act";
-
 class ActuatorFLLC : public ::testing::Test
 {
 protected:
@@ -53,7 +52,8 @@ protected:
       actBulk_(actMeta_)
   {
   }
-  void SetUp(){
+  void SetUp()
+  {
     ASSERT_TRUE(actMetaBase_.useFLLC_);
     ASSERT_TRUE(actMeta_.useFLLC_);
     ASSERT_EQ(actMetaBase_.actuatorType_, ActuatorType::ActLineSimpleNGP);
@@ -61,7 +61,6 @@ protected:
   }
 };
 
-#ifndef KOKKOS_ENABLE_CUDA
 TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
 {
   auto vel = helper_.get_local_view(actBulk_.velocity_);
@@ -69,7 +68,7 @@ TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
   auto density = helper_.get_local_view(actBulk_.density_);
   auto spanDir = helper_.get_local_view(actMeta_.spanDir_);
 
-  auto range_policy=actBulk_.local_range_policy();
+  auto range_policy = actBulk_.local_range_policy();
   Kokkos::parallel_for(
     "init velocities", range_policy, KOKKOS_LAMBDA(int i) {
       for (int j = 0; j < 3; ++j) {
@@ -103,16 +102,17 @@ TEST_F(ActuatorFLLC, ComputeLiftForceDistribution_G_Eq_5_3)
     });
 
   actuator_utils::reduce_view_on_host(G);
+  FilteredLiftingLineCorrection fllc(actMeta_, actBulk_);
+  fllc.compute_lift_force_distribution();
 
-  FLLC::compute_lift_force_distribution(actBulk_, actMeta_);
-
-  auto fllc_lift_force = helper_.get_local_view(actBulk_.liftForceDistribution_);
-    // assert that the two lift forces are equal
+  auto fllc_lift_force =
+    helper_.get_local_view(actBulk_.liftForceDistribution_);
+  // assert that the two lift forces are equal
   Kokkos::parallel_for(
     "check values", range_policy, KOKKOS_LAMBDA(int i) {
       double gmag = 0.0;
-      for(int j=0; j<3; ++j){
-        gmag += fllc_lift_force(i,j) *fllc_lift_force(i,j);
+      for (int j = 0; j < 3; ++j) {
+        gmag += fllc_lift_force(i, j) * fllc_lift_force(i, j);
       }
       gmag = std::sqrt(gmag);
       EXPECT_DOUBLE_EQ(G(i), gmag);
@@ -133,67 +133,71 @@ TEST_F(ActuatorFLLC, ComputeGradG_Eq_5_4_and_5_5)
   // create a parabola from the point locations then compute deltaG and dG/dr
   Kokkos::parallel_for(
     "init G as r^2", range_policy, KOKKOS_LAMBDA(int i) {
-      for(int j=0; j<3; ++j){
-        r(i,j) = i * fixedDR[j];
-        G(i, j) = r(i,j) * r(i,j);
+      for (int j = 0; j < 3; ++j) {
+        r(i, j) = i * fixedDR[j];
+        G(i, j) = r(i, j) * r(i, j);
       }
     });
   actuator_utils::reduce_view_on_host(G);
   actuator_utils::reduce_view_on_host(r);
 
-  FLLC::grad_lift_force_distribution(actBulk_, actMeta_);
+  FilteredLiftingLineCorrection fllc(actMeta_, actBulk_);
+  fllc.grad_lift_force_distribution();
 
   auto dG = helper_.get_local_view(actBulk_.deltaLiftForceDistribution_);
 
   const int lastPoint = G.extent_int(0) - 1;
 
   for (int i = 1; i < lastPoint; ++i) {
-    for (int j=0; j<3; ++j)
-    // compare against analytical derivative
-    EXPECT_NEAR(2.0 * r(i,j), dG(i, j) / fixedDR[j], 1e-12)
-      << "index: " << i <<", "<<j<< " radius: " << r(i,j) << "  G(i+1): " << G(i + 1, j)
-      << " G(i-1): " << G(i - 1,j );
+    for (int j = 0; j < 3; ++j)
+      // compare against analytical derivative
+      EXPECT_NEAR(2.0 * r(i, j), dG(i, j) / fixedDR[j], 1e-12)
+        << "index: " << i << ", " << j << " radius: " << r(i, j)
+        << "  G(i+1): " << G(i + 1, j) << " G(i-1): " << G(i - 1, j);
   }
   // Check eq 5.5 a and b
-  for (int j=0; j<3;++j){
-    EXPECT_DOUBLE_EQ(G(0,j), dG(0,j));
-    EXPECT_DOUBLE_EQ(-G(lastPoint,j), dG(lastPoint,j));
+  for (int j = 0; j < 3; ++j) {
+    EXPECT_DOUBLE_EQ(G(0, j), dG(0, j));
+    EXPECT_DOUBLE_EQ(-G(lastPoint, j), dG(lastPoint, j));
   }
 }
 
-  /*
-   Equaiton 5.7  from the paper should be 
-   (note Uinf is incorrect in the paper and should be indexed on j inside the summation):
-   
-   u_y(z_i, eps_i) =  \sum_j \Delta G(z_j) / (-Uinf_j*4* \pi * (r_ij))*(1-exp(-r_ij^2/eps_i^2))
+/*
+ Equaiton 5.7  from the paper should be
+ (note Uinf is incorrect in the paper and should be indexed on j inside the
+ summation):
 
-   where r_ij = z_i-z_j = dr*(i-j) (for fixed point spacing)
+ u_y(z_i, eps_i) =  \sum_j \Delta G(z_j) / (-Uinf_j*4* \pi *
+ (r_ij))*(1-exp(-r_ij^2/eps_i^2))
 
-   if we set 
-  
-   \Delta G(z_j) = 4\pi
-   dr = 1.0
-   eps = 1.0/sqrt(ln(\xi)) where \xi >1.0
-   Uinf_j = 1.0
+ where r_ij = z_i-z_j = dr*(i-j) (for fixed point spacing)
 
-   the equaiton reduces to
+ if we set
 
-   \delta U_i =\sum_j -1/(i-j) * (1-\xi^(-(i-j)^2))
+ \Delta G(z_j) = 4\pi
+ dr = 1.0
+ eps = 1.0/sqrt(ln(\xi)) where \xi >1.0
+ Uinf_j = 1.0
 
-   because \Delta G will cancel the 4 \pi term
-   and the magnitude of the relative velocity is fixed to dr
+ the equaiton reduces to
 
-   so for correction (old timestep values are zero in this test)
-   f*(\delta U_opt_i- \delta U_les_i)
+ \delta U_i =\sum_j -1/(i-j) * (1-\xi^(-(i-j)^2))
 
-   the 1 minus tersm will cancel out leaving just the exponential terms
-   which we can wrap into one summation as
+ because \Delta G will cancel the 4 \pi term
+ and the magnitude of the relative velocity is fixed to dr
 
-   f*(\sum_j [\xi_opt^(-(i-j)^2) - \xi_les^(-(i-j)^2)]/(i-j) )
+ so for correction (old timestep values are zero in this test)
+ f*(\delta U_opt_i- \delta U_les_i)
 
-   this is the equaiton we will test against to verify the computation
-  */
-TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
+ the 1 minus tersm will cancel out leaving just the exponential terms
+ which we can wrap into one summation as
+
+ f*(\sum_j [\xi_opt^(-(i-j)^2) - \xi_les^(-(i-j)^2)]/(i-j) )
+
+ this is the equaiton we will test against to verify the computation
+*/
+TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7)
+{
   auto Uinf = helper_.get_local_view(actBulk_.relativeVelocityMagnitude_);
   auto dG = helper_.get_local_view(actBulk_.deltaLiftForceDistribution_);
   auto epsLES = helper_.get_local_view(actBulk_.epsilon_);
@@ -207,8 +211,8 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
   const double optFac = 2.0;
   const double epsilonLES = 1.0 / std::sqrt(std::log(lesFac));
   const double epsilonOpt = 1.0 / std::sqrt(std::log(optFac));
-  const double epsLes2 = epsilonLES*epsilonLES;
-  const double epsOpt2 = epsilonOpt*epsilonOpt;
+  const double epsLes2 = epsilonLES * epsilonLES;
+  const double epsOpt2 = epsilonOpt * epsilonOpt;
 
   ActFixVectorDbl uExpect("uExpect", dG.extent_int(0));
   const int offset =
@@ -234,36 +238,37 @@ TEST_F(ActuatorFLLC, ComputeInducedVelocity_Eq_5_7) {
 
   actuator_utils::reduce_view_on_host(points);
 
-  Kokkos::parallel_for("compute values", range_policy, KOKKOS_LAMBDA(int index){
-    const int i = index - offset;
-    for(int j=0; j<numPoints; ++j){
-      if(i==j) continue;
-      
-      const double r = (i-j);
-      const double r2 = r*r;
-      double temp = (std::pow(optFac, -r2) - std::pow(lesFac, -r2)) / r;
+  Kokkos::parallel_for(
+    "compute values", range_policy, KOKKOS_LAMBDA(int index) {
+      const int i = index - offset;
+      for (int j = 0; j < numPoints; ++j) {
+        if (i == j)
+          continue;
 
-      for (int k=0; k<3; ++k){
-        uExpect(index, k) -= 0.1 * temp;
+        const double r = (i - j);
+        const double r2 = r * r;
+        double temp = (std::pow(optFac, -r2) - std::pow(lesFac, -r2)) / r;
+
+        for (int k = 0; k < 3; ++k) {
+          uExpect(index, k) -= 0.1 * temp;
+        }
       }
-    }
-  });
+    });
 
-  for (int i=0; i<numPoints; ++i){
+  for (int i = 0; i < numPoints; ++i) {
     EXPECT_DOUBLE_EQ(epsOpt(i, 0), epsilonOpt) << epsOpt(i, 0);
   }
 
-  FLLC::compute_induced_velocities(actBulk_, actMeta_);
+  FilteredLiftingLineCorrection fllc(actMeta_, actBulk_);
+  fllc.compute_induced_velocities();
   actuator_utils::reduce_view_on_host(uExpect);
 
-  for(int i=0; i<uExpect.extent_int(0); ++i){
+  for (int i = 0; i < uExpect.extent_int(0); ++i) {
     for (int j = 0; j < 3; ++j) {
       EXPECT_NEAR(uExpect(i, j), uInduced(i, j), 1e-12) << "index: " << i;
     }
   }
-
 }
-#endif
 
 } // namespace
 } // namespace nalu

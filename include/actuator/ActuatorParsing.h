@@ -27,6 +27,15 @@ namespace nalu {
  */
 ActuatorMeta actuator_parse(const YAML::Node& y_node);
 
+/**
+ * @brief Parsing logic for epsilon for the FLLC setup
+ * 
+ * @param turbId 
+ * @param y_node
+ * @param actMeta 
+ */
+void epsilon_parsing(int turbId, const YAML::Node& y_node, ActuatorMeta& actMeta);
+
 } // namespace nalu
 } // namespace sierra
 

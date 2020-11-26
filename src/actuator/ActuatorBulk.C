@@ -23,8 +23,11 @@ ActuatorMeta::ActuatorMeta(int numTurbines, ActuatorType actuatorType)
   : numberOfActuators_(numTurbines),
     actuatorType_(actuatorType),
     numPointsTotal_(0),
+    isotropicGaussian_(false),
     searchMethod_(stk::search::KDTREE),
-    numPointsTurbine_("numPointsTurbine", numberOfActuators_)
+    numPointsTurbine_("numPointsTurbine", numberOfActuators_),
+    epsilonChord_("epsilonChordMeta", numberOfActuators_),
+    epsilon_("epsilonMeta", numberOfActuators_)
 {
 }
 

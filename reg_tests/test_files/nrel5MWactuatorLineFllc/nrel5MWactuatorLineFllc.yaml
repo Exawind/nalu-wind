@@ -117,7 +117,7 @@ realms:
             continuity: [advection]
 
     actuator:
-      type: ActLineFAST
+      type: ActLineFASTNGP
       search_method: stk_kdtree
       search_target_part: Unspecified-2-HEX
 
