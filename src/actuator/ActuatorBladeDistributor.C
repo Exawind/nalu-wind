@@ -81,7 +81,7 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
     throw std::runtime_error(
       "The code was not compiled with OpenFAST support.  Please recompile to "
       "use a FAST variant of the actuator models.");
-#ifndef __CUDACC__
+#ifndef KOKKOS_ENABLE_CUDA
     break;
 #endif
 #endif

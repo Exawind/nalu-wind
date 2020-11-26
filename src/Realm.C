@@ -610,8 +610,8 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
 #else
 	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + actuatorTypeName + ", but was not enabled at compile time");
 // Avoid nvcc unreachable statement warnings
-#ifndef __CUDACC__
-	break;
+#ifndef KOKKOS_ENABLE_CUDA
+      break;
 #endif
 #endif
       }
@@ -622,8 +622,8 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
 #else
 	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + actuatorTypeName + ", but was not enabled at compile time");
 // Avoid nvcc unreachable statement warnings
-#ifndef __CUDACC__
-	break;
+#ifndef KOKKOS_ENABLE_CUDA
+      break;
 #endif
 #endif
       }
@@ -634,8 +634,8 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
       default : {
         throw std::runtime_error("look_ahead_and_create::error: unrecognized actuator type: " + actuatorTypeName);
 // Avoid nvcc unreachable statement warnings
-#ifndef __CUDACC__
-        break;
+#ifndef KOKKOS_ENABLE_CUDA
+      break;
 #endif
       }
       }
