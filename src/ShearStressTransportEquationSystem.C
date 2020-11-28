@@ -505,5 +505,28 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
   fOneBlend.modify_on_device();
 }
 
+void
+ShearStressTransportEquationSystem::post_iter_work()
+{
+  const auto turbModel = realm_.solutionOptions_->turbulenceModel_;
+  if (turbModel == SST_IDDES) {
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    const auto& meta = realm_.meta_data();
+    auto& bulk = realm_.bulk_data();
+
+    auto ngpIddesRans = fieldMgr.get_field<double>(
+      get_field_ordinal(meta, "iddes_rans_indicator"));
+    ngpIddesRans.sync_to_host();
+
+    ScalarFieldType* iddesRansInd = meta.get_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "iddes_rans_indicator");
+
+    stk::mesh::copy_owned_to_shared(bulk, {iddesRansInd});
+    if (realm_.hasPeriodic_) {
+      realm_.periodic_delta_solution_update(iddesRansInd, 1);
+    }
+  }
+}
+
 } // namespace nalu
 } // namespace sierra

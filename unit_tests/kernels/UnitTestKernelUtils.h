@@ -532,6 +532,7 @@ public:
 
   ScalarFieldType* massFlowRateEdge_{nullptr};
   ScalarFieldType* pecletFactor_{nullptr};
+  ScalarFieldType* maxPecletFactor_{nullptr};
 };
 
 class MomentumABLKernelHex8Mesh : public MomentumKernelHex8Mesh

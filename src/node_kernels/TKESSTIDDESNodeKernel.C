@@ -28,7 +28,7 @@ TKESSTIDDESNodeKernel::TKESSTIDDESNodeKernel(const stk::mesh::MetaData& meta)
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     maxLenScaleID_(get_field_ordinal(meta, "sst_max_length_scale")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
-    lengthScaleRatioID_(get_field_ordinal(meta, "iddes_les_scale_ratio")),
+    ransIndicatorID_(get_field_ordinal(meta, "iddes_rans_indicator")),
     nDim_(meta.spatial_dimension())
 {}
 
@@ -46,10 +46,10 @@ TKESSTIDDESNodeKernel::setup(Realm& realm)
   wallDist_        = fieldMgr.get_field<double>(wallDistID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   maxLenScale_     = fieldMgr.get_field<double>(maxLenScaleID_);
-  fOneBlend_       = fieldMgr.get_field<double>(fOneBlendID_);
-  lengthScaleRatio_ = fieldMgr.get_field<double>(lengthScaleRatioID_);
+  fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
+  ransIndicator_ = fieldMgr.get_field<double>(ransIndicatorID_);
   // call modify before this field gets modified in kernel execute phase
-  lengthScaleRatio_.modify_on_device();
+  ransIndicator_.modify_on_device();
 
   const std::string dofName = "turbulent_ke";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
@@ -57,7 +57,9 @@ TKESSTIDDESNodeKernel::setup(Realm& realm)
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
+  // this is the cdes2 from the Gritskavich 2012 paper
   cDESke_ = realm.get_turb_model_constant(TM_cDESke);
+  // this is the cdes1 from the Gritskavich 2012 paper
   cDESkw_ = realm.get_turb_model_constant(TM_cDESkw);
   kappa_ = realm.get_turb_model_constant(TM_kappa);
   iddes_Cw_ = realm.get_turb_model_constant(TM_iddes_Cw);
@@ -106,15 +108,15 @@ void TKESSTIDDESNodeKernel::execute(
   omegaSq *= 2.0;
   Pk *= tvisc;
 
-  DblType rdl = visc/(density * kappa_ * kappa_ * dw * dw * stk::math::sqrt(0.5 * (sijSq + omegaSq) ));
+  DblType rdl = visc/(density * kappa_ * kappa_ * dw * dw * stk::math::sqrt(0.5 * (sijSq + omegaSq) ) + 1e-10);
   DblType rdt = tvisc/(density * kappa_ * kappa_ * dw * dw * (stk::math::sqrt(0.5 * (sijSq + omegaSq) ) + 1e-10) );
   DblType fl = stk::math::tanh( stk::math::pow( iddes_Cl_ * iddes_Cl_ * rdl, 10));
-  DblType ft = stk::math::tanh( stk::math::pow( iddes_Cl_ * iddes_Cl_ * rdt, 3));
+  DblType ft = stk::math::tanh(stk::math::pow(iddes_Ct_ * iddes_Ct_ * rdt, 3));
   DblType alpha = 0.25 - dw/maxLenScale;
   DblType fe1 = (alpha < 0) ? 2.0 * stk::math::exp(-9.0 * alpha * alpha) : 2.0 * stk::math::exp(-11.09 * alpha * alpha);
   DblType fe2 = 1.0 - stk::math::max(ft,fl);
   DblType fe = fe2 * stk::math::max( (fe1 - 1.0), 0.0);
-  DblType fb = stk::math::min(2.0 * stk::math::exp(-2.0 * alpha * alpha), 1.0);
+  DblType fb = stk::math::min(2.0 * stk::math::exp(-9.0 * alpha * alpha), 1.0);
   DblType fdt = 1.0 - stk::math::tanh( stk::math::pow(iddes_Cdt1_ * rdt, iddes_Cdt2_) );
   DblType fdHat = stk::math::max( (1.0 - fdt), fb);
   DblType delta = stk::math::min( iddes_Cw_ * stk::math::max(dw, maxLenScale), maxLenScale);
@@ -129,11 +131,11 @@ void TKESSTIDDESNodeKernel::execute(
 
   // Find minimum length scale, limit minimum value to 1.0e-16 to prevent
   // division by zero later on
-  const DblType lIDDES =
-    stk::math::max(1.0e-16, fdHat * (1.0 + fe) * lSST + (1.0 - fdHat) * lLES);
+  const DblType ransInd = fdHat * (1.0 + fe);
+  ransIndicator_.get(node, 0) = ransInd;
 
-  // modify on device called in setup
-  lengthScaleRatio_.get(node, 0) = lLES / lIDDES;
+  const DblType lIDDES =
+    stk::math::max(1.0e-16, ransInd * lSST + (1.0 - fdHat) * lLES);
 
   DblType Dk = density * tke * sqrtTke / lIDDES;
 

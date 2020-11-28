@@ -959,6 +959,12 @@ LowMachEquationSystem::post_converged_work()
 
   // output mass closure
   continuityEqSys_->mdotAlgDriver_->provide_output();
+
+  if (realm_.realmUsesEdges_) {
+    // get max peclet factor touching each node
+    // (host only operation since this is a post processor)
+    determine_max_peclet_factor(realm_.bulk_data(), realm_.meta_data());
+  }
 }
 
 //==========================================================================
@@ -1112,10 +1118,17 @@ MomentumEquationSystem::register_nodal_fields(
       AMSAlgDriver_->register_nodal_fields(part);
 
     if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES) {
-      iddesLengthScaleRatio_ = &(meta_data.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "iddes_les_scale_ratio"));
-      stk::mesh::put_field_on_mesh(*iddesLengthScaleRatio_, *part, nullptr);
+      iddesRansIndicator_ = &(meta_data.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "iddes_rans_indicator"));
+      stk::mesh::put_field_on_mesh(*iddesRansIndicator_, *part, nullptr);
     }
+  }
+
+  if (realm_.realmUsesEdges_) {
+    ScalarFieldType* pecletAtNodes =
+      &(realm_.meta_data().declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "max_peclet_factor"));
+    stk::mesh::put_field_on_mesh(*pecletAtNodes, *part, nullptr);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(

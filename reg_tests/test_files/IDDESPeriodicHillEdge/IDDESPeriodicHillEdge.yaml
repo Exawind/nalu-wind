@@ -190,7 +190,8 @@ realms:
        - minimum_distance_to_wall
        - sst_f_one_blending
        - turbulent_viscosity
-       - iddes_les_scale_ratio
+       - iddes_rans_indicator
+       - max_peclet_factor
 
 Time_Integrators:
   - StandardTimeIntegrator:
