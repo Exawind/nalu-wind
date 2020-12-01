@@ -27,6 +27,14 @@ FrameBase::FrameBase(
   load(node);
 }
 
+FrameBase::~FrameBase()
+{
+  // Release the device pointers if any
+  for (auto& kern: motionKernels_) {
+    kern->free_on_device();
+  }
+}
+
 void FrameBase::load(const YAML::Node& node)
 {
   // get any part names associated with current motion group

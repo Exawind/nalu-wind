@@ -21,9 +21,7 @@ public:
     stk::mesh::BulkData&,
     const YAML::Node&);
 
-  virtual ~FrameBase()
-  {
-  }
+  virtual ~FrameBase();
 
   void setup();
 
