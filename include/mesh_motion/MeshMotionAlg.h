@@ -33,8 +33,6 @@ private:
     stk::mesh::BulkData&,
     const YAML::Node&);
 
-  void compute_set_centroid();
-
   const stk::mesh::BulkData& bulk_;
 
   /** Moving frame vector
