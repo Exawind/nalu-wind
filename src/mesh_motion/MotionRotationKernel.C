@@ -46,26 +46,21 @@ void MotionRotationKernel::load(const YAML::Node& node)
 }
 
 void MotionRotationKernel::build_transformation(
-  double time,
-  const double*  /* xyz */)
+  const double& time,
+  const ThreeDVecType& /* xyz */,
+  TransMatType& transMat)
 {
-  if(time < (startTime_)) return;
+  reset_mat(transMat);
 
+  if(time < (startTime_)) return;
   double motionTime = (time < endTime_)? time : endTime_;
 
   // determine current angle
-  double curr_angle = 0.0;
+  double angle = 0.0;
   if (useOmega_)
-    curr_angle = omega_*(motionTime-startTime_);
+    angle = omega_*(motionTime-startTime_);
   else
-    curr_angle = angle_*M_PI/180;
-
-  rotation_mat(curr_angle);
-}
-
-void MotionRotationKernel::rotation_mat(const double angle)
-{
-  reset_mat(transMat_);
+    angle = angle_*M_PI/180;
 
   // Build matrix for translating object to cartesian origin
   TransMatType tempMat = {};
@@ -117,14 +112,14 @@ void MotionRotationKernel::rotation_mat(const double angle)
   tempMat[2][3] = origin_[2];
 
   // composite addition of motions
-  add_motion(tempMat,tempMat3,transMat_);
+  add_motion(tempMat,tempMat3,transMat);
 }
 
 void MotionRotationKernel::compute_velocity(
-  const double time,
+  const double& time,
   const TransMatType& compTrans,
-  const double* /* mxyz */,
-  const double* cxyz,
+  const ThreeDVecType& /* mxyz */,
+  const ThreeDVecType& cxyz,
   ThreeDVecType& vel )
 {
   if((time < startTime_) || (time > endTime_)) {

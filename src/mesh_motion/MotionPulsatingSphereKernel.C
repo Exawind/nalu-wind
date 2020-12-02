@@ -45,27 +45,19 @@ void MotionPulsatingSphereKernel::load(const YAML::Node& node)
 }
 
 void MotionPulsatingSphereKernel::build_transformation(
-  const double time,
-  const double* xyz)
+  const double& time,
+  const ThreeDVecType& xyz,
+  TransMatType& transMat)
 {
+  reset_mat(transMat);
+
   if(time < (startTime_)) return;
-
-  double motionTime = (time < endTime_)? time : endTime_;
-
-  scaling_mat(motionTime,xyz);
-}
-
-void MotionPulsatingSphereKernel::scaling_mat(
-  const double time,
-  const double* xyz)
-{
-  reset_mat(transMat_);
+  double currTime = (time < endTime_)? time : endTime_;
 
   double radius = stk::math::sqrt(stk::math::pow(xyz[0]-origin_[0],2)
                                  +stk::math::pow(xyz[1]-origin_[1],2)
                                  +stk::math::pow(xyz[2]-origin_[2],2));
-
-  double curr_radius = radius + amplitude_*(1 - stk::math::cos(2*M_PI*frequency_*time));
+  double curr_radius = radius + amplitude_*(1 - stk::math::cos(2*M_PI*frequency_*currTime));
 
   double uniform_scaling = curr_radius/radius;
   if(radius == 0.0) uniform_scaling = 1.0;
@@ -96,15 +88,15 @@ void MotionPulsatingSphereKernel::scaling_mat(
   tempMat[2][3] = origin_[2];
 
   // composite addition of motions
-  add_motion(tempMat,tempMat3,transMat_);
+  add_motion(tempMat,tempMat3,transMat);
 }
 
 void MotionPulsatingSphereKernel::compute_velocity(
-  const double time,
+  const double& time,
   const TransMatType&  /* compTrans */,
-  const double* mxyz,
-  const double* /* cxyz */,
-  ThreeDVecType& vel )
+  const ThreeDVecType& mxyz,
+  const ThreeDVecType& /* cxyz */,
+  ThreeDVecType& vel)
 {
   if((time < startTime_) || (time > endTime_)) {
     for (int d=0; d < nalu_ngp::NDimMax; ++d)

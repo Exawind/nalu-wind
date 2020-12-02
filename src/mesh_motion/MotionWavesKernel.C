@@ -71,27 +71,29 @@ MotionWavesKernel::load(const YAML::Node& node)
   get_if_present(node, "sea_level_z", sealevelz_, sealevelz_);
 }
 
-void
-MotionWavesKernel::build_transformation(const double time, const double* xyz)
+void MotionWavesKernel::build_transformation(
+  const double& time,
+  const ThreeDVecType& xyz,
+  TransMatType& transMat)
 {
-  if (time < (startTime_))
-    return;
+  reset_mat(transMat);
 
-  double motionTime = (time < endTime_) ? time : endTime_;
+  if(time < (startTime_)) return;
+  double motionTime = (time < endTime_)? time : endTime_;
 
+  ThreeDVecType disp = {};
   double phase = k_ * xyz[0] - omega_ * motionTime;
-  ThreeDVecType curr_disp = {};
   if (waveModel_ == 1) {
-    curr_disp[0] = 0.;
-    curr_disp[1] = 0.;
-    curr_disp[2] =
+    disp[0] = 0.;
+    disp[1] = 0.;
+    disp[2] =
       sealevelz_ +
       height_ / 2. * stk::math::cos(phase) *
         stk::math::pow(1 - xyz[2] / meshdampinglength_, meshdampingcoeff_);
   } else if (waveModel_ == 2) {
-    curr_disp[0] = 0.;
-    curr_disp[1] = 0.;
-    curr_disp[2] =
+    disp[0] = 0.;
+    disp[1] = 0.;
+    disp[2] =
       sealevelz_ +
       (eps_ * stk::math::cos(phase)                            // first order term
        + stk::math::pow(eps_, 2) * b22_ * stk::math::cos(2. * phase) // second order term
@@ -101,28 +103,20 @@ MotionWavesKernel::build_transformation(const double time, const double* xyz)
        stk::math::pow(eps_, 5) *
          (-(b53_ + b55_) * stk::math::cos(phase) + b53_ * stk::math::cos(3 * phase) +
           b55_ * stk::math::cos(5 * phase))) /
-        k_ * stk::math::pow(1 - xyz[2] / meshdampinglength_, meshdampingcoeff_);
+       k_ * stk::math::pow(1 - xyz[2] / meshdampinglength_, meshdampingcoeff_);
   }
 
-  translation_mat(curr_disp);
-}
-
-void
-MotionWavesKernel::translation_mat(const ThreeDVecType& curr_disp)
-{
-  reset_mat(transMat_);
-
   // Build matrix for translating object
-  transMat_[0][3] = curr_disp[0];
-  transMat_[1][3] = curr_disp[1];
-  transMat_[2][3] = curr_disp[2];
+  transMat[0][3] = disp[0];
+  transMat[1][3] = disp[1];
+  transMat[2][3] = disp[2];
 }
 
 void MotionWavesKernel::compute_velocity(
-  const double time,
+  const double& time,
   const TransMatType& /* compTrans */,
-  const double* mxyz,
-  const double* /* cxyz */,
+  const ThreeDVecType& mxyz,
+  const ThreeDVecType& /* cxyz */,
   ThreeDVecType& vel)
 {
   if((time < startTime_) || (time > endTime_)) {
@@ -284,7 +278,7 @@ MotionWavesKernel::Stokes_parameters()
 }
 
 double
-MotionWavesKernel::my_cosh_cos(int i, int j, double phase)
+MotionWavesKernel::my_cosh_cos(int i, int j, const double& phase)
 {
   double D=0.0;
   if (i == 1 && j == 1)
@@ -311,7 +305,7 @@ MotionWavesKernel::my_cosh_cos(int i, int j, double phase)
 }
 
 double
-MotionWavesKernel::my_sinh_sin(int i, int j, double phase)
+MotionWavesKernel::my_sinh_sin(int i, int j, const double& phase)
 {
   double D=0.0;
   if (i == 1 && j == 1)

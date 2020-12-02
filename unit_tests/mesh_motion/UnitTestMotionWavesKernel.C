@@ -42,6 +42,7 @@ TEST(meshMotion, airy_wave)
     "mesh_damping_length: 1.     \n"
     ;
   YAML::Node Airy_Wave_node = YAML::Load(Airy_Wave_info);
+
   // initialize the mesh Wave motion class
   unit_test_utils::NaluTest naluObj;
   sierra::nalu::Realm& realm = naluObj.create_realm();
@@ -52,8 +53,9 @@ TEST(meshMotion, airy_wave)
   const double time = 1.0;
   double xyz[3] = {2.5,1.5,0.};
 
-  MotionWavesKernel.build_transformation(time, xyz);
-  std::vector<double> norm = transform(MotionWavesKernel.get_trans_mat(), xyz);
+  sierra::nalu::NgpMotion::TransMatType transMat = {};
+  MotionWavesKernel.build_transformation(time, xyz, transMat);
+  std::vector<double> norm = transform(transMat, xyz);
 
   const double gold_norm_z = 0.0053635368158730;
 

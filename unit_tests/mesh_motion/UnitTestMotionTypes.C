@@ -46,10 +46,10 @@ TEST(meshMotion, rotation_omega)
 
   // build transformation
   const double time = 3.5;
-  double xyz[3] = {2.5,1.5,6.5};
-  rotClass.build_transformation(time, xyz);
-
-  std::vector<double> norm = transform(rotClass.get_trans_mat(), xyz);
+  sierra::nalu::NgpMotion::ThreeDVecType xyz = {2.5,1.5,6.5};
+  sierra::nalu::NgpMotion::TransMatType transMat = {};
+  rotClass.build_transformation(time, xyz, transMat);
+  std::vector<double> norm = transform(transMat, xyz);
 
   const double gold_norm_x =  0.133514518380489;
   const double gold_norm_y = -1.910867599933667;
@@ -60,7 +60,8 @@ TEST(meshMotion, rotation_omega)
   EXPECT_NEAR(norm[2], gold_norm_z, testTol);
 
   sierra::nalu::NgpMotion::ThreeDVecType vel = {};
-  rotClass.compute_velocity(time, rotClass.get_trans_mat(), nullptr, &xyz[0], vel);
+  sierra::nalu::NgpMotion::ThreeDVecType tmp = {};
+  rotClass.compute_velocity(time, transMat, tmp, xyz, vel);
 
   const double gold_norm_vx = -3.0;
   const double gold_norm_vy =  6.6;
@@ -87,9 +88,9 @@ TEST(meshMotion, rotation_angle)
   // build transformation
   const double time = 0.0;
   double xyz[3] = {2.5,1.5,6.5};
-  rotClass.build_transformation(time, xyz);
-
-  std::vector<double> norm = transform(rotClass.get_trans_mat(), xyz);
+  sierra::nalu::NgpMotion::TransMatType transMat = {};
+  rotClass.build_transformation(time, xyz, transMat);
+  std::vector<double> norm = transform(transMat, xyz);
 
   const double gold_norm_x = -1.9;
   const double gold_norm_y = -0.5;
@@ -120,9 +121,9 @@ TEST(meshMotion, scaling)
   // build transformation
   const double time = 0.0;
   double xyz[3] = {2.5,1.5,6.5};
-  scaleClass.build_transformation(time, xyz);
-
-  std::vector<double> norm = transform(scaleClass.get_trans_mat(), xyz);
+  sierra::nalu::NgpMotion::TransMatType transMat = {};
+  scaleClass.build_transformation(time, xyz, transMat);
+  std::vector<double> norm = transform(transMat, xyz);
 
   const double gold_norm_x = 4.7;
   const double gold_norm_y = 2.5;
@@ -150,8 +151,9 @@ TEST(meshMotion, translation_velocity)
   // build transformation at t = 10.0
   double time = 10.0;
   double xyz[3] = {2.5,1.5,6.5};
-  transClass.build_transformation(time, xyz);
-  std::vector<double> norm = transform(transClass.get_trans_mat(), xyz);
+  sierra::nalu::NgpMotion::TransMatType transMat = {};
+  transClass.build_transformation(time, xyz, transMat);
+  std::vector<double> norm = transform(transMat, xyz);
 
   double gold_norm_x = xyz[0];
   double gold_norm_y = xyz[1];
@@ -163,8 +165,8 @@ TEST(meshMotion, translation_velocity)
 
   // build transformation at t = 20.0
   time = 20.0;
-  transClass.build_transformation(time, xyz);
-  norm = transform(transClass.get_trans_mat(), xyz);
+  transClass.build_transformation(time, xyz, transMat);
+  norm = transform(transMat, xyz);
 
   gold_norm_x = 10.0;
   gold_norm_y = 19.0;
@@ -176,8 +178,8 @@ TEST(meshMotion, translation_velocity)
 
   // build transformation at t = 30.0
   time = 30.0;
-  transClass.build_transformation(time, xyz);
-  norm = transform(transClass.get_trans_mat(), xyz);
+  transClass.build_transformation(time, xyz, transMat);
+  norm = transform(transMat, xyz);
   
   gold_norm_x = 17.5;
   gold_norm_y = 36.5;
@@ -203,9 +205,9 @@ TEST(meshMotion, translation_displacement)
   // build transformation
   const double time = 0.0;
   double xyz[3] = {2.5,1.5,6.5};
-  transClass.build_transformation(time, xyz);
-
-  std::vector<double> norm = transform(transClass.get_trans_mat(), xyz);
+  sierra::nalu::NgpMotion::TransMatType transMat = {};
+  transClass.build_transformation(time, xyz, transMat);
+  std::vector<double> norm = transform(transMat, xyz);
   
   const double gold_norm_x = 4.0;
   const double gold_norm_y = 5.0;

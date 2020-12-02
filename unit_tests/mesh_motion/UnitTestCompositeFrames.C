@@ -61,26 +61,32 @@ namespace {
     const double* xyz,
     sierra::nalu::NgpMotion::TransMatType& compTrans)
   {
+    // transform data structures to confirm to mesh motion
+    sierra::nalu::NgpMotion::ThreeDVecType vecX = {};
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++)
+      vecX[d] = xyz[d];
+
     // initialize temp identity matrix
     sierra::nalu::NgpMotion::TransMatType tempMat1 = {};
     sierra::nalu::NgpMotion::reset_mat(tempMat1);
 
     // perform scaling transformation
+    sierra::nalu::NgpMotion::TransMatType transMat = {};
     sierra::nalu::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
-    scaleClass.build_transformation(time, xyz);
+    scaleClass.build_transformation(time, vecX, transMat);
     sierra::nalu::NgpMotion::TransMatType tempMat2 = {};
-    scaleClass.add_motion(scaleClass.get_trans_mat(), tempMat1, tempMat2);
+    scaleClass.add_motion(transMat, tempMat1, tempMat2);
 
     // perform rotation transformation
     sierra::nalu::MotionRotationKernel rotClass(rotNode);
-    rotClass.build_transformation(time, xyz);
+    rotClass.build_transformation(time, vecX, transMat);
     sierra::nalu::NgpMotion::reset_mat(tempMat1);
-    rotClass.add_motion(rotClass.get_trans_mat(), tempMat2, tempMat1);
+    rotClass.add_motion(transMat, tempMat2, tempMat1);
 
     // perform translation transformation
     sierra::nalu::MotionTranslationKernel transClass(transNode);
-    transClass.build_transformation(time, xyz);
-    transClass.add_motion(transClass.get_trans_mat(), tempMat1, compTrans);
+    transClass.build_transformation(time, vecX, transMat);
+    transClass.add_motion(transMat, tempMat1, compTrans);
   }
 
   std::vector<double> eval_coords(
@@ -110,9 +116,17 @@ namespace {
     std::vector<double> vel(3,0.0);
     sierra::nalu::NgpMotion::ThreeDVecType motionVel = {};
 
+    // transform data structures to confirm to mesh motion
+    sierra::nalu::NgpMotion::ThreeDVecType vecMX = {};
+    sierra::nalu::NgpMotion::ThreeDVecType vecCX = {};
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
+      vecMX[d] = mxyz[d];
+      vecCX[d] = cxyz[d];
+    }
+
     // perform rotation transformation
     sierra::nalu::MotionRotationKernel rotClass(rotNode);
-    rotClass.compute_velocity(time, transMat, mxyz, cxyz, motionVel);
+    rotClass.compute_velocity(time, transMat, vecMX, vecCX, motionVel);
 
     for (size_t d = 0; d < vel.size(); d++)
       vel[d] += motionVel[d];
@@ -124,7 +138,7 @@ namespace {
     if( (time >= (startTime-testTol)) && (time <= (endTime+testTol)) )
     {
       sierra::nalu::MotionTranslationKernel transClass(transNode);
-      transClass.compute_velocity(time, transMat, mxyz, cxyz, motionVel);
+      transClass.compute_velocity(time, transMat, vecMX, vecCX, motionVel);
 
       for (size_t d = 0; d < vel.size(); d++)
         vel[d] += motionVel[d];

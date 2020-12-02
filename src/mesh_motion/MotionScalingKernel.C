@@ -59,30 +59,14 @@ void MotionScalingKernel::load(const YAML::Node& node)
 }
 
 void MotionScalingKernel::build_transformation(
-  const double time,
-  const double* /* xyz */)
+  const double& time,
+  const ThreeDVecType& /* xyz */,
+  TransMatType& transMat)
 {
+  reset_mat(transMat);
+
   if(time < (startTime_)) return;
-
   double motionTime = (time < endTime_)? time : endTime_;
-
-  // determine translation based on user defined input
-  if (useRate_)
-  {
-    ThreeDVecType curr_fac = {};
-
-    for (int d=0; d < nalu_ngp::NDimMax; d++)
-      curr_fac[d] = rate_[d]*(motionTime-startTime_) + 1.0;
-
-    scaling_mat(curr_fac);
-  }
-  else
-    scaling_mat(factor_);
-}
-
-void MotionScalingKernel::scaling_mat(const ThreeDVecType& factor)
-{
-  reset_mat(transMat_);
 
   // Build matrix for translating object to cartesian origin
   TransMatType tempMat = {};
@@ -91,13 +75,19 @@ void MotionScalingKernel::scaling_mat(const ThreeDVecType& factor)
   tempMat[1][3] = -origin_[1];
   tempMat[2][3] = -origin_[2];
 
-  // Build matrix for scaling object
+  // Determine scaling based on user defined input
   TransMatType tempMat2 = {};
   reset_mat(tempMat2);
-  tempMat2[0][0] = factor[0];
-  tempMat2[1][1] = factor[1];
-  tempMat2[2][2] = factor[2];
-  tempMat2[3][3] = 1.0;
+  if (useRate_)
+  {
+    for (int d=0; d < nalu_ngp::NDimMax; d++)
+      tempMat2[d][d] = rate_[d]*(motionTime-startTime_) + 1.0;
+  }
+  else
+  {
+    for (int d=0; d < nalu_ngp::NDimMax; d++)
+      tempMat2[d][d] = factor_[d];
+  }
 
   // composite addition of motions in current group
   TransMatType tempMat3 = {};
@@ -110,14 +100,14 @@ void MotionScalingKernel::scaling_mat(const ThreeDVecType& factor)
   tempMat[2][3] = origin_[2];
 
   // composite addition of motions
-  add_motion(tempMat,tempMat3,transMat_);
+  add_motion(tempMat,tempMat3,transMat);
 }
 
 void MotionScalingKernel::compute_velocity(
-  const double time,
+  const double& time,
   const TransMatType& compTrans,
-  const double* mxyz,
-  const double* /* cxyz */,
+  const ThreeDVecType& mxyz,
+  const ThreeDVecType& /* cxyz */,
   ThreeDVecType& vel )
 {
   if((time < startTime_) || (time > endTime_)) {

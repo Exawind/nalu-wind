@@ -25,31 +25,37 @@ public:
   KOKKOS_FUNCTION
   virtual ~MotionScalingKernel() = default;
 
+  /** Function to compute motion-specific transformation matrix
+   *
+   * @param[in]  time     Current time
+   * @param[in]  xyz      Coordinates
+   * @param[out] transMat Transformation matrix
+   */
   KOKKOS_FUNCTION
-  virtual void build_transformation(const double, const double* = nullptr);
+  virtual void build_transformation(
+    const double& time,
+    const ThreeDVecType& xyz,
+    TransMatType& transMat);
 
   /** Function to compute motion-specific velocity
    *
    * @param[in]  time       Current time
    * @param[in]  compTrans  Transformation matrix
-   *                        for points other than xyz
+   *                        including all motions
    * @param[in]  mxyz       Model coordinates
-   * @param[in]  mxyz       Transformed coordinates
+   * @param[in]  cxyz       Transformed coordinates
    * @param[out] vel        Velocity associated with coordinates
    */
   KOKKOS_FUNCTION
   virtual void compute_velocity(
-    const double time,
+    const double& time,
     const TransMatType& compTrans,
-    const double* mxyz,
-    const double* cxyz,
+    const ThreeDVecType& mxyz,
+    const ThreeDVecType& cxyz,
     ThreeDVecType& vel);
 
 private:
   void load(const YAML::Node&);
-
-  KOKKOS_FUNCTION
-  void scaling_mat(const ThreeDVecType&);
 
   ThreeDVecType factor_ = {0.0,0.0,0.0};
   ThreeDVecType rate_ = {0.0,0.0,0.0};

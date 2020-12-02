@@ -32,24 +32,33 @@ public:
 
   virtual void free_on_device() = 0;
 
+  /** Function to compute motion-specific transformation matrix
+   *
+   * @param[in]  time     Current time
+   * @param[in]  xyz      Coordinates
+   * @param[out] transMat Transformation matrix
+   */
   KOKKOS_FUNCTION
-  virtual void build_transformation(const double, const double* = nullptr) = 0;
+  virtual void build_transformation(
+    const double& time,
+    const ThreeDVecType& xyz,
+    TransMatType& transMat) = 0;
 
   /** Function to compute motion-specific velocity
    *
    * @param[in]  time       Current time
    * @param[in]  compTrans  Transformation matrix
-   *                        for points other than xyz
+   *                        including all motions
    * @param[in]  mxyz       Model coordinates
-   * @param[in]  mxyz       Transformed coordinates
+   * @param[in]  cxyz       Transformed coordinates
    * @param[out] vel        Velocity associated with coordinates
    */
   KOKKOS_FUNCTION
   virtual void compute_velocity(
-    const double time,
+    const double& time,
     const TransMatType& compTrans,
-    const double* mxyz,
-    const double* cxyz,
+    const ThreeDVecType& mxyz,
+    const ThreeDVecType& cxyz,
     ThreeDVecType& vel) = 0;
 
   /** Composite addition of motions
@@ -78,12 +87,6 @@ public:
   {
     for (int d = 0; d < nalu_ngp::NDimMax; ++d)
       origin_[d] = centroid[d];
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  const TransMatType& get_trans_mat() const
-  {
-    return transMat_;
   }
 
   bool is_deforming()
@@ -115,8 +118,8 @@ public:
    */
   KOKKOS_FORCEINLINE_FUNCTION
   static void copy_mat(
-    TransMatType& dest_mat,
-    const TransMatType& src_mat)
+    const TransMatType& src_mat,
+    TransMatType& dest_mat)
   {
     for (int r = 0; r < nalu_ngp::NDimMax+1; r++) {
       for (int c = 0; c < nalu_ngp::NDimMax+1; c++) {
@@ -126,13 +129,6 @@ public:
   }
 
 protected:
-  /** Transformation matrix
-   *
-   * A 4x4 matrix that combines rotation, translation, scaling,
-   * allowing representation of all affine transformations
-   */
-  TransMatType transMat_ = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
-
   /** Centroid
    *
    * A 3x1 vector storing the centroid as computed

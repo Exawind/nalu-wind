@@ -45,29 +45,30 @@ void FrameReference::update_coordinates(const double time)
       mX[d] = modelCoords.get(mi,d);
 
     // initialize composite transformation matrix
-    NgpMotion::TransMatType comp_trans_mat;
-    NgpMotion::reset_mat(comp_trans_mat);
+    NgpMotion::TransMatType compTransMat = {};
+    NgpMotion::reset_mat(compTransMat);
 
     // create composite transformation matrix based off of all motions
     for (size_t i=0; i < numKernels; ++i) {
       NgpMotion* kernel = ngpKernels(i);
 
       // build and get transformation matrix
-      kernel->build_transformation(time,mX);
+      NgpMotion::TransMatType currTransMat = {};
+      kernel->build_transformation(time,mX,currTransMat);
 
       // composite addition of motions in current group
-      NgpMotion::TransMatType temp_trans_mat = {};
-      kernel->add_motion(kernel->get_trans_mat(),comp_trans_mat,temp_trans_mat);
-      NgpMotion::copy_mat(comp_trans_mat,temp_trans_mat);
+      NgpMotion::TransMatType tempTransMat = {};
+      kernel->add_motion(currTransMat,compTransMat,tempTransMat);
+      NgpMotion::copy_mat(tempTransMat,compTransMat);
     }
 
     // perform matrix multiplication between transformation matrix
     // and old coordinates to obtain current coordinates
     for (int d = 0; d < nDim; ++d) {
-      modelCoords.get(mi,d) = comp_trans_mat[d][0]*mX[0]
-                             +comp_trans_mat[d][1]*mX[1]
-                             +comp_trans_mat[d][2]*mX[2]
-                             +comp_trans_mat[d][3];
+      modelCoords.get(mi,d) = compTransMat[d][0]*mX[0]
+                             +compTransMat[d][1]*mX[1]
+                             +compTransMat[d][2]*mX[2]
+                             +compTransMat[d][3];
     } // end for loop - d index
   }); // end NGP for loop
 }

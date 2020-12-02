@@ -61,20 +61,26 @@ namespace {
     const double* xyz,
     sierra::nalu::NgpMotion::TransMatType& compTrans)
   {
+    // transform data structures to confirm to mesh motion
+    sierra::nalu::NgpMotion::ThreeDVecType vecX = {};
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++)
+      vecX[d] = xyz[d];
+
     // initialize temp identity matrix
     sierra::nalu::NgpMotion::TransMatType tempMat1 = {};
     sierra::nalu::NgpMotion::reset_mat(tempMat1);
 
     // perform 1st rotation transformation
+    sierra::nalu::NgpMotion::TransMatType transMat = {};
     sierra::nalu::MotionRotationKernel rotClass(rotNode);
-    rotClass.build_transformation(time, xyz);
+    rotClass.build_transformation(time, vecX, transMat);
     sierra::nalu::NgpMotion::TransMatType tempMat2 = {};
-    rotClass.add_motion(rotClass.get_trans_mat(), tempMat1, tempMat2);
+    rotClass.add_motion(transMat, tempMat1, tempMat2);
 
     // perform 2nd srotation transformation
     sierra::nalu::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
-    scaleClass.build_transformation(time, xyz);
-    scaleClass.add_motion(scaleClass.get_trans_mat(), tempMat2, compTrans);
+    scaleClass.build_transformation(time, vecX, transMat);
+    scaleClass.add_motion(transMat, tempMat2, compTrans);
   }
 
   std::vector<double> eval_coords(
