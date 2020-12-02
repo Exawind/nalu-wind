@@ -600,12 +600,12 @@ SpecificDissipationRateEquationSystem::register_wall_bc(
   // create proper algorithms to fill nodal omega and assembled wall area; utau managed by momentum
   if (!wallModelAlgDriver_)
     wallModelAlgDriver_.reset(new SDRWallFuncAlgDriver(realm_));
-  if (wallFunctionApproach)
-    wallModelAlgDriver_->register_face_elem_algorithm<SDRWallFuncAlg>(
-      algType, part, get_elem_topo(realm_, *part), "sdr_wall_func");
-  else
-    wallModelAlgDriver_->register_face_elem_algorithm<SDRLowReWallAlg>(
-      algType, part, get_elem_topo(realm_, *part), "sdr_wall_func", realm_.realmUsesEdges_);
+  //if (wallFunctionApproach)
+  wallModelAlgDriver_->register_face_elem_algorithm<SDRWallFuncAlg>(
+    algType, part, get_elem_topo(realm_, *part), "sdr_wall_func");
+  //else
+  //  wallModelAlgDriver_->register_face_elem_algorithm<SDRLowReWallAlg>(
+  //    algType, part, get_elem_topo(realm_, *part), "sdr_wall_func", realm_.realmUsesEdges_);
 
   // Dirichlet bc
   std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =

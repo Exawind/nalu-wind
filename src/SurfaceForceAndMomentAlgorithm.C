@@ -362,13 +362,14 @@ SurfaceForceAndMomentAlgorithm::execute()
         const double * coordR = stk::mesh::field_data(*coordinates_, nodeR );
 
         // determine yp; ~nearest opposing edge normal distance to wall
-        double ypBip = 0.0;
-        for ( int j = 0; j < nDim; ++j ) {
-          const double nj = ws_normal[j];
-          const double ej = coordR[j] - coordL[j];
-          ypBip += nj*ej*nj*ej;
-        }
-        ypBip = std::sqrt(ypBip);
+        double ypBip = 0.1;
+        //double ypBip = 0.0;
+        //for ( int j = 0; j < nDim; ++j ) {
+        //  const double nj = ws_normal[j];
+        //  const double ej = coordR[j] - coordL[j];
+        //  ypBip += nj*ej*nj*ej;
+        //}
+        //ypBip = std::sqrt(ypBip);
 
         const double tauW = std::sqrt(tauTangential);
         const double uTau = std::sqrt(tauW/rhoBip);

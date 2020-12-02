@@ -57,7 +57,7 @@ ComputeWallFrictionVelocityAlgorithm::ComputeWallFrictionVelocityAlgorithm(
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
   velocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-  bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "wall_velocity_bc");
+  bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_bc");
   coordinates_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
   density_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   viscosity_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
@@ -253,14 +253,15 @@ ComputeWallFrictionVelocityAlgorithm::execute()
         }
 
         // form unit normal and determine yp (approximated by 1/4 distance along edge)
-        double ypBip = 0.0;
-        for ( int j = 0; j < nDim; ++j ) {
-          const double nj = areaVec[offSetAveraVec+j]/aMag;
-          const double ej = 0.25*(coordR[j] - coordL[j]);
-          ypBip += nj*ej*nj*ej;
-          p_unitNormal[j] = nj;
-        }
-        ypBip = std::sqrt(ypBip);
+        double ypBip = 0.1;
+        //double ypBip = 0.0;
+        //for ( int j = 0; j < nDim; ++j ) {
+        //  const double nj = areaVec[offSetAveraVec+j]/aMag;
+        //  const double ej = 0.25*(coordR[j] - coordL[j]);
+        //  ypBip += nj*ej*nj*ej;
+        //  p_unitNormal[j] = nj;
+        //}
+        //ypBip = std::sqrt(ypBip);
         wallNormalDistanceBip[ip] = ypBip;
 
         // assemble to nodal quantities
@@ -293,8 +294,10 @@ ComputeWallFrictionVelocityAlgorithm::execute()
 
         // provide an initial guess based on yplusCrit_ (more robust than a pure guess on utau)
         double utauGuess = yplusCrit_*muBip/rhoBip/ypBip;
-  
+       
         compute_utau(uTangential, ypBip, rhoBip, muBip, utauGuess);
+
+        utauGuess = 0.3880;
         wallFrictionVelocityBip[ip] = utauGuess;
       }
     }

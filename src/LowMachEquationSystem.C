@@ -1974,34 +1974,40 @@ MomentumEquationSystem::register_wall_bc(
       edgeNodalGradient_);
   }
 
+  //Masson--copied this part ouf of if (anyWallFunctionActivated)
+  // register fields; nodal
+  ScalarFieldType *assembledWallArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_area_wf"));
+  stk::mesh::put_field_on_mesh(*assembledWallArea, *part, nullptr);
+
+  ScalarFieldType *assembledWallNormalDistance=  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_normal_distance"));
+  stk::mesh::put_field_on_mesh(*assembledWallNormalDistance, *part, nullptr);
+
+  // integration point; size it based on number of boundary integration points
+  MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(partTopo);
+  const int numScsBip = meFC->num_integration_points();
+
+  stk::topology::rank_t sideRank = static_cast<stk::topology::rank_t>(meta_data.side_rank());
+
+  GenericFieldType *wallFrictionVelocityBip 
+    =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_friction_velocity_bip"));
+  stk::mesh::put_field_on_mesh(*wallFrictionVelocityBip, *part, numScsBip, nullptr);
+
+  GenericFieldType *wallNormalDistanceBip 
+    =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_normal_distance_bip"));
+  stk::mesh::put_field_on_mesh(*wallNormalDistanceBip, *part, numScsBip, nullptr);
+ 
+  const AlgorithmType wfAlgType = WALL_FCN;
+
+  wallFuncAlgDriver_
+    .register_legacy_algorithm<ComputeWallFrictionVelocityAlgorithm>(
+      wfAlgType, part, "wall_func", realm_.realmUsesEdges_);
+
   // Wall models.
   if ( anyWallFunctionActivated ) {
-
-    // register fields; nodal
-    ScalarFieldType *assembledWallArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_area_wf"));
-    stk::mesh::put_field_on_mesh(*assembledWallArea, *part, nullptr);
-
-    ScalarFieldType *assembledWallNormalDistance=  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_normal_distance"));
-    stk::mesh::put_field_on_mesh(*assembledWallNormalDistance, *part, nullptr);
-
-    // integration point; size it based on number of boundary integration points
-    MasterElement *meFC = sierra::nalu::MasterElementRepo::get_surface_master_element(partTopo);
-    const int numScsBip = meFC->num_integration_points();
-
-    stk::topology::rank_t sideRank = static_cast<stk::topology::rank_t>(meta_data.side_rank());
-
-    GenericFieldType *wallFrictionVelocityBip 
-      =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_friction_velocity_bip"));
-    stk::mesh::put_field_on_mesh(*wallFrictionVelocityBip, *part, numScsBip, nullptr);
-
     GenericFieldType *wallShearStressBip
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_shear_stress_bip"));
     stk::mesh::put_field_on_mesh(*wallShearStressBip, *part, nDim*numScsBip, nullptr);
-
-    GenericFieldType *wallNormalDistanceBip 
-      =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_normal_distance_bip"));
-    stk::mesh::put_field_on_mesh(*wallNormalDistanceBip, *part, numScsBip, nullptr);
-
+  
     // register the standard time-space-invariant wall heat flux (not used by the ABL wall model).
     NormalHeatFlux heatFlux = userData.q_;
     std::vector<double> userSpec(1);

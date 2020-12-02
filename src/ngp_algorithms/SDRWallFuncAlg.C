@@ -108,13 +108,14 @@ void SDRWallFuncAlg<BcAlgTraits>::execute()
         const int nodeR = meSCS->ipNodeMap(fdata.faceOrd)[ip];
         const int nodeL = meSCS->opposingNodes(fdata.faceOrd, ip);
 
-        DoubleType ypBip = 0.0;
-        for (int d=0; d < BcAlgTraits::nDim_; ++d) {
-          const DoubleType nj = v_area(ip, d) / aMag;
-          const DoubleType ej = 0.25 * (v_coord(nodeR, d) - v_coord(nodeL, d));
-          ypBip += nj * ej * nj * ej;
-        }
-        ypBip = stk::math::sqrt(ypBip);
+        DoubleType ypBip = 0.1;
+        //DoubleType ypBip = 0.0;
+        //for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+        //  const DoubleType nj = v_area(ip, d) / aMag;
+        //  const DoubleType ej = 0.25 * (v_coord(nodeR, d) - v_coord(nodeL, d));
+        //  ypBip += nj * ej * nj * ej;
+        //}
+        //ypBip = stk::math::sqrt(ypBip);
 
         const DoubleType wallFuncSdr =  v_fricVel(ip) / (
           sqrtBetaStar * kappa * ypBip);

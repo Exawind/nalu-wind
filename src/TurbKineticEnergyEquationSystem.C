@@ -700,48 +700,48 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
     wallFunctionApproach = false;
   }
 
-  if ( wallFunctionApproach ) {
+  //if ( wallFunctionApproach ) {
     // need to register the assembles wall value for tke; can not share with tke_bc
-    ScalarFieldType *theAssembledField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "wall_model_tke_bc"));
-    stk::mesh::put_field_on_mesh(*theAssembledField, *part, nullptr);
+  ScalarFieldType *theAssembledField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "wall_model_tke_bc"));
+  stk::mesh::put_field_on_mesh(*theAssembledField, *part, nullptr);
 
-    if (!wallFuncAlgDriver_)
-      wallFuncAlgDriver_.reset(new TKEWallFuncAlgDriver(realm_));
+  if (!wallFuncAlgDriver_)
+    wallFuncAlgDriver_.reset(new TKEWallFuncAlgDriver(realm_));
 
-    wallFuncAlgDriver_->register_face_algorithm<TKEWallFuncAlg>(
-      algType, part, "tke_wall_func");
-  }
-  else if ( tkeSpecified ) {
+  wallFuncAlgDriver_->register_face_algorithm<TKEWallFuncAlg>(
+    algType, part, "tke_wall_func");
+  //}
+  //else if ( tkeSpecified ) {
 
-    // FIXME: Generalize for constant vs function
+  //  // FIXME: Generalize for constant vs function
 
-    // extract data
-    std::vector<double> userSpec(1);
-    TurbKinEnergy tke = userData.tke_;
-    userSpec[0] = tke.turbKinEnergy_;
+  //  // extract data
+  //  std::vector<double> userSpec(1);
+  //  TurbKinEnergy tke = userData.tke_;
+  //  userSpec[0] = tke.turbKinEnergy_;
 
-    // new it
-    ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
+  //  // new it
+  //  ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
 
-    // bc data alg
-    AuxFunctionAlgorithm *auxAlg
-      = new AuxFunctionAlgorithm(realm_, part,
-                                 theBcField, theAuxFunc,
-                                 stk::topology::NODE_RANK);
-    bcDataAlg_.push_back(auxAlg);
+  //  // bc data alg
+  //  AuxFunctionAlgorithm *auxAlg
+  //    = new AuxFunctionAlgorithm(realm_, part,
+  //                               theBcField, theAuxFunc,
+  //                               stk::topology::NODE_RANK);
+  //  bcDataAlg_.push_back(auxAlg);
 
-    // copy tke_bc to tke np1...
-    CopyFieldAlgorithm *theCopyAlg
-      = new CopyFieldAlgorithm(realm_, part,
-                               theBcField, &tkeNp1,
-                               0, 1,
-                               stk::topology::NODE_RANK);
-    bcDataMapAlg_.push_back(theCopyAlg);
+  //  // copy tke_bc to tke np1...
+  //  CopyFieldAlgorithm *theCopyAlg
+  //    = new CopyFieldAlgorithm(realm_, part,
+  //                             theBcField, &tkeNp1,
+  //                             0, 1,
+  //                             stk::topology::NODE_RANK);
+  //  bcDataMapAlg_.push_back(theCopyAlg);
 
-  }
-  else {
-    throw std::runtime_error("TKE active with wall bc, however, no value of tke or wall function specified");
-  }
+  //}
+  //else {
+  //  throw std::runtime_error("TKE active with wall bc, however, no value of tke or wall function specified");
+  //}
 
   // Dirichlet bc
   std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =
