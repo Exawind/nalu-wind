@@ -39,7 +39,7 @@ const char* actuatorParameters = R"act(actuator:
     cd_table:  [1.2])act";
 class ActuatorFLLC : public ::testing::Test
 {
-protected:
+public:
   ActDualViewHelper<ActuatorFixedMemSpace> helper_;
   ActuatorMeta actMetaBase_;
   ActuatorMetaSimple actMeta_;
@@ -52,6 +52,8 @@ protected:
       actBulk_(actMeta_)
   {
   }
+
+protected:
   void SetUp()
   {
     ASSERT_TRUE(actMetaBase_.useFLLC_);
