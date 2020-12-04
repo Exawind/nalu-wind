@@ -82,6 +82,9 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
   case (ActuatorType::ActLineFASTNGP): {
 #ifndef NALU_USES_OPENFAST
     ThrowErrorMsg("Actuator methods require OpenFAST");
+#ifndef KOKKOS_ENABLE_CUDA
+    break;
+#endif
 #else
     auto tempMeta =
       dcast::dcast_and_check_pointer<ActuatorMeta, ActuatorMetaFAST>(
@@ -91,14 +94,15 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
       dcast::dcast_and_check_pointer<ActuatorBulk, ActuatorBulkFAST>(
         actBulk_.get());
     actExec_.reset(new ActuatorLineFastNGP(*tempMeta, *tempBulk, stkBulk));
-#endif
-#ifndef KOKKOS_ENABLE_CUDA
     break;
 #endif
   }
   case (ActuatorType::ActDiskFASTNGP): {
 #ifndef NALU_USES_OPENFAST
     ThrowErrorMsg("Actuator methods require OpenFAST");
+#ifndef KOKKOS_ENABLE_CUDA
+    break;
+#endif
 #else
     auto tempMeta =
       dcast::dcast_and_check_pointer<ActuatorMeta, ActuatorMetaFAST>(
@@ -108,8 +112,6 @@ ActuatorModel::setup(double timeStep, stk::mesh::BulkData& stkBulk)
       dcast::dcast_and_check_pointer<ActuatorBulk, ActuatorBulkDiskFAST>(
         actBulk_.get());
     actExec_.reset(new ActuatorDiskFastNGP(*tempMeta, *tempBulk, stkBulk));
-#endif
-#ifndef KOKKOS_ENABLE_CUDA
     break;
 #endif
   }
@@ -141,10 +143,14 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
   case (ActuatorType::ActDiskFASTNGP): {
 #ifndef NALU_USES_OPENFAST
     ThrowErrorMsg("Actuator methods require OpenFAST");
+#ifndef KOKKOS_ENABLE_CUDA
+    break;
 #endif
+#else
     // perform search for actline and actdisk
     actBulk_->stk_search_act_pnts(*actMeta_.get(), stkBulk);
     break;
+#endif
   }
   case (ActuatorType::ActLineSimpleNGP):
   case (ActuatorType::ActLineSimple):

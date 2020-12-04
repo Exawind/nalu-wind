@@ -18,7 +18,8 @@ namespace sierra {
 namespace nalu {
 
 // free functions for vector operations
-inline double
+KOKKOS_INLINE_FUNCTION
+double
 dot(double* u, double* v)
 {
   double result = 0.0;

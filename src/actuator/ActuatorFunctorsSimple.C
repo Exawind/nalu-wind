@@ -21,8 +21,6 @@
 namespace sierra {
 namespace nalu {
 
-#define ACTUATOR_LAMBDA [=]
-
 InterpActuatorDensity::InterpActuatorDensity(
   ActuatorBulkSimple& actBulk, stk::mesh::BulkData& stkBulk)
   : actBulk_(actBulk),
@@ -433,8 +431,6 @@ ActSimpleSpreadForceWhProjInnerLoop::operator()(
     sourceTerm[j] += projectedForce[j] * scvIp / dual_vol;
   }
 }
-
-#undef ACTUATOR_LAMBDA
 
 } /* namespace nalu */
 } /* namespace sierra */
