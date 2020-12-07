@@ -30,7 +30,8 @@ class SDRWallFuncAlg : public Algorithm
 public:
   SDRWallFuncAlg(
     Realm&,
-    stk::mesh::Part*);
+    stk::mesh::Part*,
+    double = 0.0);
 
   virtual ~SDRWallFuncAlg() = default;
 
@@ -51,6 +52,8 @@ private:
 
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};
+
+  double z0_;
 };
 
 }  // nalu

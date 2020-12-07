@@ -781,6 +781,16 @@ namespace YAML
       wallData.z0_ =
           node["roughness_height"].as<sierra::nalu::RoughnessHeight>();
     }
+    if (node["velocity_hub_height"])
+    {
+      wallData.u_HH_ =
+          node["velocity_hub_height"].as<double>();
+    }
+    if (node["hub_height"])
+    {
+      wallData.z_HH_ =
+          node["hub_height"].as<double>();
+    }
     // To use the engineering wall model.
     if (node["use_wall_function"])
     {

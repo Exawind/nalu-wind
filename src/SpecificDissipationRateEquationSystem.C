@@ -596,13 +596,15 @@ SpecificDissipationRateEquationSystem::register_wall_bc(
   // are we using wall functions or is this a low Re model?
   WallUserData userData = wallBCData.userData_;
   bool wallFunctionApproach = userData.wallFunctionApproach_;
-
+  RoughnessHeight rough = userData.z0_;
+  double z0_ = rough.z0_;
+ 
   // create proper algorithms to fill nodal omega and assembled wall area; utau managed by momentum
   if (!wallModelAlgDriver_)
     wallModelAlgDriver_.reset(new SDRWallFuncAlgDriver(realm_));
   //if (wallFunctionApproach)
   wallModelAlgDriver_->register_face_elem_algorithm<SDRWallFuncAlg>(
-    algType, part, get_elem_topo(realm_, *part), "sdr_wall_func");
+    algType, part, get_elem_topo(realm_, *part), "sdr_wall_func", z0_);
   //else
   //  wallModelAlgDriver_->register_face_elem_algorithm<SDRLowReWallAlg>(
   //    algType, part, get_elem_topo(realm_, *part), "sdr_wall_func", realm_.realmUsesEdges_);

@@ -18,6 +18,7 @@
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFactory.h>
 #include <NaluEnv.h>
+#include <NaluParsing.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -45,7 +46,8 @@ namespace nalu{
 ComputeWallFrictionVelocityAlgorithm::ComputeWallFrictionVelocityAlgorithm(
   Realm &realm,
   stk::mesh::Part *part,
-  const bool &useShifted)
+  const bool &useShifted,
+  const WallBoundaryConditionData &wallBCData)
   : Algorithm(realm, part),
     useShifted_(useShifted),
     yplusCrit_(11.63),
@@ -66,6 +68,12 @@ ComputeWallFrictionVelocityAlgorithm::ComputeWallFrictionVelocityAlgorithm(
   wallNormalDistanceBip_ = meta_data.get_field<GenericFieldType>(meta_data.side_rank(), "wall_normal_distance_bip");
   assembledWallArea_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_area_wf");
   assembledWallNormalDistance_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_normal_distance");
+
+  WallUserData userData = wallBCData.userData_;
+  u_HH_ = userData.u_HH_;
+  z_HH_ = userData.z_HH_;
+  RoughnessHeight rough = userData.z0_;
+  z0_ = rough.z0_;
 }
 
 //--------------------------------------------------------------------------
@@ -253,7 +261,7 @@ ComputeWallFrictionVelocityAlgorithm::execute()
         }
 
         // form unit normal and determine yp (approximated by 1/4 distance along edge)
-        double ypBip = 0.1;
+        double ypBip = z0_;
         //double ypBip = 0.0;
         //for ( int j = 0; j < nDim; ++j ) {
         //  const double nj = areaVec[offSetAveraVec+j]/aMag;
@@ -297,7 +305,7 @@ ComputeWallFrictionVelocityAlgorithm::execute()
        
         compute_utau(uTangential, ypBip, rhoBip, muBip, utauGuess);
 
-        utauGuess = 0.3880;
+        utauGuess = (u_HH_*kappa_)/(std::log((z_HH_+z0_)/z0_));
         wallFrictionVelocityBip[ip] = utauGuess;
       }
     }

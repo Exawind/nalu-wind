@@ -2000,7 +2000,7 @@ MomentumEquationSystem::register_wall_bc(
 
   wallFuncAlgDriver_
     .register_legacy_algorithm<ComputeWallFrictionVelocityAlgorithm>(
-      wfAlgType, part, "wall_func", realm_.realmUsesEdges_);
+      wfAlgType, part, "wall_func", realm_.realmUsesEdges_, wallBCData);
 
   // Wall models.
   if ( anyWallFunctionActivated ) {
@@ -2061,7 +2061,7 @@ MomentumEquationSystem::register_wall_bc(
 
       wallFuncAlgDriver_
         .register_legacy_algorithm<ComputeWallFrictionVelocityAlgorithm>(
-          wfAlgType, part, "wall_func", realm_.realmUsesEdges_);
+          wfAlgType, part, "wall_func", realm_.realmUsesEdges_, wallBCData);
 
       // create lhs/rhs algorithm; generalized for edge (nearest node usage) and element
       if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {
