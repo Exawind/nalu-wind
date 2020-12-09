@@ -28,32 +28,30 @@ public:
 
   /** Function to compute motion-specific transformation matrix
    *
-   * @param[in]  time     Current time
-   * @param[in]  xyz      Coordinates
-   * @param[out] transMat Transformation matrix
+   * @param[in] time Current time
+   * @param[in] xyz  Coordinates
+   * @return Transformation matrix
    */
   KOKKOS_FUNCTION
-  virtual void build_transformation(
+  virtual mm::TransMatType build_transformation(
     const double& time,
-    const ThreeDVecType& xyz,
-    TransMatType& transMat);
+    const mm::ThreeDVecType& xyz);
 
   /** Function to compute motion-specific velocity
    *
-   * @param[in]  time       Current time
-   * @param[in]  compTrans  Transformation matrix
-   *                        including all motions
-   * @param[in]  mxyz       Model coordinates
-   * @param[in]  cxyz       Transformed coordinates
-   * @param[out] vel        Velocity associated with coordinates
+   * @param[in]  time      Current time
+   * @param[in]  compTrans Transformation matrix
+   *                       including all motions
+   * @param[in]  mxyz      Model coordinates
+   * @param[in]  cxyz      Transformed coordinates
+   * @return Velocity vector associated with coordinates
    */
   KOKKOS_FUNCTION
-  virtual void compute_velocity(
+  virtual mm::ThreeDVecType compute_velocity(
     const double& time,
-    const TransMatType& compTrans,
-    const ThreeDVecType& mxyz,
-    const ThreeDVecType& cxyz,
-    ThreeDVecType& vel);
+    const mm::TransMatType& compTrans,
+    const mm::ThreeDVecType& mxyz,
+    const mm::ThreeDVecType& cxyz);
 
   struct StokesCoeff{
     double k;

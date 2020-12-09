@@ -38,44 +38,39 @@ void MotionTranslationKernel::load(const YAML::Node& node)
   useVelocity_ = (node["velocity"] ? true : false);
 }
 
-void MotionTranslationKernel::build_transformation(
+mm::TransMatType MotionTranslationKernel::build_transformation(
   const double& time,
-  const ThreeDVecType& /* mxyz */,
-  TransMatType& transMat)
+  const mm::ThreeDVecType& /* mxyz */)
 {
-  reset_mat(transMat);
+  mm::TransMatType transMat;
 
-  if(time < (startTime_)) return;
+  if(time < (startTime_)) return transMat;
   double motionTime = (time < endTime_)? time : endTime_;
 
   // determine translation based on user defined input
   if (useVelocity_)
   {
     for (int d=0; d < nalu_ngp::NDimMax; d++)
-      transMat[d][3] = velocity_[d]*(motionTime-startTime_);
+      transMat[d*mm::matSize+3] = velocity_[d]*(motionTime-startTime_);
   }
   else
   {
     for (int d=0; d < nalu_ngp::NDimMax; d++)
-      transMat[d][3] = displacement_[d];
+      transMat[d*mm::matSize+3] = displacement_[d];
   }
+  return transMat;
 }
 
-void MotionTranslationKernel::compute_velocity(
+mm::ThreeDVecType MotionTranslationKernel::compute_velocity(
   const double& time,
-  const TransMatType&  /* compTrans */,
-  const ThreeDVecType& /* mxyz */,
-  const ThreeDVecType& /* cxyz */,
-  ThreeDVecType& vel )
+  const mm::TransMatType&  /* compTrans */,
+  const mm::ThreeDVecType& /* mxyz */,
+  const mm::ThreeDVecType& /* cxyz */)
 {
-  if((time < startTime_) || (time > endTime_)) {
-    for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      vel[d] = 0.0;
-  }
-  else {
-    for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      vel[d] = velocity_[d];
-  }
+  if((time < startTime_) || (time > endTime_))
+    return mm::ThreeDVecType{0,0,0};
+  else
+    return velocity_;
 }
 
 } // nalu

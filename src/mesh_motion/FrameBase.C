@@ -1,4 +1,3 @@
-
 #include "mesh_motion/FrameBase.h"
 
 #include "FieldTypeDef.h"
@@ -146,14 +145,14 @@ void FrameBase::setup()
 {
   // compute and set centroid if requested
   if(computeCentroid_) {
-    std::vector<double> computedCentroid(3,0.0);
+    mm::ThreeDVecType computedCentroid;
     compute_centroid_on_parts( computedCentroid );
     set_computed_centroid( computedCentroid );
   }
 }
 
 void FrameBase::compute_centroid_on_parts(
-  std::vector<double>& centroid)
+  mm::ThreeDVecType& centroid)
 {
   // get NGP mesh
   const auto& ngpMesh = bulk_.get_updated_ngp_mesh();

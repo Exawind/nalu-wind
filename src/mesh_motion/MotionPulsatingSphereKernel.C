@@ -44,14 +44,13 @@ void MotionPulsatingSphereKernel::load(const YAML::Node& node)
   }
 }
 
-void MotionPulsatingSphereKernel::build_transformation(
+mm::TransMatType MotionPulsatingSphereKernel::build_transformation(
   const double& time,
-  const ThreeDVecType& xyz,
-  TransMatType& transMat)
+  const mm::ThreeDVecType& xyz)
 {
-  reset_mat(transMat);
+  mm::TransMatType transMat;
 
-  if(time < (startTime_)) return;
+  if(time < (startTime_)) return transMat;
   double currTime = (time < endTime_)? time : endTime_;
 
   double radius = stk::math::sqrt(stk::math::pow(xyz[0]-origin_[0],2)
@@ -63,47 +62,39 @@ void MotionPulsatingSphereKernel::build_transformation(
   if(radius == 0.0) uniform_scaling = 1.0;
 
   // Build matrix for translating object to cartesian origin
-  TransMatType tempMat = {};
-  reset_mat(tempMat);
-  tempMat[0][3] = -origin_[0];
-  tempMat[1][3] = -origin_[1];
-  tempMat[2][3] = -origin_[2];
+  transMat[0*mm::matSize+3] = -origin_[0];
+  transMat[1*mm::matSize+3] = -origin_[1];
+  transMat[2*mm::matSize+3] = -origin_[2];
 
   // Build matrix for scaling object
-  TransMatType tempMat2 = {};
-  reset_mat(tempMat2);
-  tempMat2[0][0] = uniform_scaling;
-  tempMat2[1][1] = uniform_scaling;
-  tempMat2[2][2] = uniform_scaling;
-  tempMat2[3][3] = 1.0;
+  mm::TransMatType tempMat;
+  tempMat[0*mm::matSize+0] = uniform_scaling;
+  tempMat[1*mm::matSize+1] = uniform_scaling;
+  tempMat[2*mm::matSize+2] = uniform_scaling;
 
   // composite addition of motions in current group
-  TransMatType tempMat3 = {};
-  add_motion(tempMat2,tempMat,tempMat3);
+  transMat = add_motion(tempMat,transMat);
 
   // Build matrix for translating object back to its origin
-  reset_mat(tempMat);
-  tempMat[0][3] = origin_[0];
-  tempMat[1][3] = origin_[1];
-  tempMat[2][3] = origin_[2];
+  tempMat = mm::TransMatType::I();
+  tempMat[0*mm::matSize+3] = origin_[0];
+  tempMat[1*mm::matSize+3] = origin_[1];
+  tempMat[2*mm::matSize+3] = origin_[2];
 
   // composite addition of motions
-  add_motion(tempMat,tempMat3,transMat);
+  return add_motion(tempMat,transMat);
 }
 
-void MotionPulsatingSphereKernel::compute_velocity(
+mm::ThreeDVecType MotionPulsatingSphereKernel::compute_velocity(
   const double& time,
-  const TransMatType&  /* compTrans */,
-  const ThreeDVecType& mxyz,
-  const ThreeDVecType& /* cxyz */,
-  ThreeDVecType& vel)
+  const mm::TransMatType&  /* compTrans */,
+  const mm::ThreeDVecType& mxyz,
+  const mm::ThreeDVecType& /* cxyz */)
 {
-  if((time < startTime_) || (time > endTime_)) {
-    for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      vel[d] = 0.0;
+  mm::ThreeDVecType vel;
 
-    return;
-  }
+  if((time < startTime_) || (time > endTime_))
+    return vel;
 
   double radius = stk::math::sqrt(stk::math::pow(mxyz[0]-origin_[0],2)
                                  +stk::math::pow(mxyz[1]-origin_[1],2)
@@ -117,6 +108,8 @@ void MotionPulsatingSphereKernel::compute_velocity(
 
   for (int d=0; d < nalu_ngp::NDimMax; d++)
     vel[d] = pulsatingVelocity * (mxyz[d]-origin_[d]);
+
+  return vel;
 }
 
 } // nalu

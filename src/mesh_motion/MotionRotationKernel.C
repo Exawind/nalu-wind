@@ -45,14 +45,13 @@ void MotionRotationKernel::load(const YAML::Node& node)
   }
 }
 
-void MotionRotationKernel::build_transformation(
+mm::TransMatType MotionRotationKernel::build_transformation(
   const double& time,
-  const ThreeDVecType& /* xyz */,
-  TransMatType& transMat)
+  const mm::ThreeDVecType& /* xyz */)
 {
-  reset_mat(transMat);
+  mm::TransMatType transMat;
 
-  if(time < (startTime_)) return;
+  if(time < (startTime_)) return transMat;
   double motionTime = (time < endTime_)? time : endTime_;
 
   // determine current angle
@@ -63,17 +62,15 @@ void MotionRotationKernel::build_transformation(
     angle = angle_*M_PI/180;
 
   // Build matrix for translating object to cartesian origin
-  TransMatType tempMat = {};
-  reset_mat(tempMat);
-  tempMat[0][3] = -origin_[0];
-  tempMat[1][3] = -origin_[1];
-  tempMat[2][3] = -origin_[2];
+  transMat[0*mm::matSize+3] = -origin_[0];
+  transMat[1*mm::matSize+3] = -origin_[1];
+  transMat[2*mm::matSize+3] = -origin_[2];
 
   // Build matrix for rotating object
   // compute magnitude of axis around which to rotate
   double mag = 0.0;
   for (int d=0; d < nalu_ngp::NDimMax; d++)
-      mag += axis_[d] * axis_[d];
+    mag += axis_[d] * axis_[d];
   mag = stk::math::sqrt(mag);
 
   // build quaternion based on angle and axis of rotation
@@ -85,52 +82,46 @@ void MotionRotationKernel::build_transformation(
   const double q3 = sinang * axis_[2]/mag;
 
   // rotation matrix based on quaternion
-  TransMatType tempMat2 = {};
+  mm::TransMatType tempMat;
   // 1st row
-  tempMat2[0][0] = q0*q0 + q1*q1 - q2*q2 - q3*q3;
-  tempMat2[0][1] = 2.0*(q1*q2 - q0*q3);
-  tempMat2[0][2] = 2.0*(q0*q2 + q1*q3);
+  tempMat[0*mm::matSize+0] = q0*q0 + q1*q1 - q2*q2 - q3*q3;
+  tempMat[0*mm::matSize+1] = 2.0*(q1*q2 - q0*q3);
+  tempMat[0*mm::matSize+2] = 2.0*(q0*q2 + q1*q3);
   // 2nd row
-  tempMat2[1][0] = 2.0*(q1*q2 + q0*q3);
-  tempMat2[1][1] = q0*q0 - q1*q1 + q2*q2 - q3*q3;
-  tempMat2[1][2] = 2.0*(q2*q3 - q0*q1);
+  tempMat[1*mm::matSize+0] = 2.0*(q1*q2 + q0*q3);
+  tempMat[1*mm::matSize+1] = q0*q0 - q1*q1 + q2*q2 - q3*q3;
+  tempMat[1*mm::matSize+2] = 2.0*(q2*q3 - q0*q1);
   // 3rd row
-  tempMat2[2][0] = 2.0*(q1*q3 - q0*q2);
-  tempMat2[2][1] = 2.0*(q0*q1 + q2*q3);
-  tempMat2[2][2] = q0*q0 - q1*q1 - q2*q2 + q3*q3;
-  // 4th row
-  tempMat2[3][3] = 1.0;
+  tempMat[2*mm::matSize+0] = 2.0*(q1*q3 - q0*q2);
+  tempMat[2*mm::matSize+1] = 2.0*(q0*q1 + q2*q3);
+  tempMat[2*mm::matSize+2] = q0*q0 - q1*q1 - q2*q2 + q3*q3;
 
   // composite addition of motions in current group
-  TransMatType tempMat3 = {};
-  add_motion(tempMat2,tempMat,tempMat3);
+  transMat = add_motion(tempMat,transMat);
 
   // Build matrix for translating object back to its origin
-  reset_mat(tempMat);
-  tempMat[0][3] = origin_[0];
-  tempMat[1][3] = origin_[1];
-  tempMat[2][3] = origin_[2];
+  tempMat = mm::TransMatType::I();
+  tempMat[0*mm::matSize+3] = origin_[0];
+  tempMat[1*mm::matSize+3] = origin_[1];
+  tempMat[2*mm::matSize+3] = origin_[2];
 
   // composite addition of motions
-  add_motion(tempMat,tempMat3,transMat);
+  return add_motion(tempMat,transMat);
 }
 
-void MotionRotationKernel::compute_velocity(
+mm::ThreeDVecType MotionRotationKernel::compute_velocity(
   const double& time,
-  const TransMatType& compTrans,
-  const ThreeDVecType& /* mxyz */,
-  const ThreeDVecType& cxyz,
-  ThreeDVecType& vel )
+  const mm::TransMatType& compTrans,
+  const mm::ThreeDVecType& /* mxyz */,
+  const mm::ThreeDVecType& cxyz)
 {
-  if((time < startTime_) || (time > endTime_)) {
-    for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      vel[d] = 0.0;
+  mm::ThreeDVecType vel;
 
-    return;
-  }
+  if((time < startTime_) || (time > endTime_))
+    return vel;
 
   // construct unit vector
-  ThreeDVecType unitVec = {};
+  mm::ThreeDVecType unitVec;
 
   double mag = 0.0;
   for (int d=0; d < nalu_ngp::NDimMax; d++)
@@ -142,17 +133,17 @@ void MotionRotationKernel::compute_velocity(
   unitVec[2] = axis_[2]/mag;
 
   // transform the origin of the rotating body
-  ThreeDVecType transOrigin = {};
+  mm::ThreeDVecType transOrigin;
   for (int d = 0; d < nalu_ngp::NDimMax; d++) {
-    transOrigin[d] = compTrans[d][0]*origin_[0]
-                    +compTrans[d][1]*origin_[1]
-                    +compTrans[d][2]*origin_[2]
-                    +compTrans[d][3];
+    transOrigin[d] = compTrans[d*mm::matSize+0]*origin_[0]
+                    +compTrans[d*mm::matSize+1]*origin_[1]
+                    +compTrans[d*mm::matSize+2]*origin_[2]
+                    +compTrans[d*mm::matSize+3];
   }
 
   // compute relative coords and vector omega (dimension 3) for general cross product
-  ThreeDVecType relCoord = {};
-  ThreeDVecType vecOmega = {};
+  mm::ThreeDVecType relCoord;
+  mm::ThreeDVecType vecOmega;
   for (int d=0; d < nalu_ngp::NDimMax; d++) {
     relCoord[d] = cxyz[d] - transOrigin[d];
     vecOmega[d] = omega_*unitVec[d];
@@ -162,6 +153,7 @@ void MotionRotationKernel::compute_velocity(
   vel[0] = vecOmega[1]*relCoord[2] - vecOmega[2]*relCoord[1];
   vel[1] = vecOmega[2]*relCoord[0] - vecOmega[0]*relCoord[2];
   vel[2] = vecOmega[0]*relCoord[1] - vecOmega[1]*relCoord[0];
+  return vel;
 }
 
 } // nalu

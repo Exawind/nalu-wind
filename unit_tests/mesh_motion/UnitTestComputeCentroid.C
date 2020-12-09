@@ -28,7 +28,7 @@ namespace {
     "       axis: [0, 0, 1]             \n"
     "                                   \n"
     "     - type: scaling               \n"
-    "       factor: [1.2,  1.0, 1.2]    \n"
+    "       factor: [1.2, 1.0, 1.2]     \n"
     ;
   // define YAML node
   const YAML::Node yamlNode = YAML::Load(mInfo);
@@ -45,7 +45,7 @@ namespace {
     "       centroid: [2.5, 4.5, 5.5]   \n"
     "                                   \n"
     "     - type: scaling               \n"
-    "       factor: [1.2,  1.0, 1.2]    \n"
+    "       factor: [1.2, 1.0, 1.2]     \n"
     "       centroid: [2.5, 4.5, 5.5]   \n"
     ;
   // define YAML node
@@ -55,36 +55,28 @@ namespace {
   const YAML::Node rotNode   = rot_scl[0];
   const YAML::Node scaleNode = rot_scl[1];
 
-  void eval_transformation(
+  sierra::nalu::mm::TransMatType eval_transformation(
     sierra::nalu::Realm& realm,
     double time,
-    const double* xyz,
-    sierra::nalu::NgpMotion::TransMatType& compTrans)
+    const double* xyz)
   {
     // transform data structures to confirm to mesh motion
-    sierra::nalu::NgpMotion::ThreeDVecType vecX = {};
+    sierra::nalu::mm::ThreeDVecType vecX;
     for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++)
       vecX[d] = xyz[d];
 
-    // initialize temp identity matrix
-    sierra::nalu::NgpMotion::TransMatType tempMat1 = {};
-    sierra::nalu::NgpMotion::reset_mat(tempMat1);
-
     // perform 1st rotation transformation
-    sierra::nalu::NgpMotion::TransMatType transMat = {};
     sierra::nalu::MotionRotationKernel rotClass(rotNode);
-    rotClass.build_transformation(time, vecX, transMat);
-    sierra::nalu::NgpMotion::TransMatType tempMat2 = {};
-    rotClass.add_motion(transMat, tempMat1, tempMat2);
+    sierra::nalu::mm::TransMatType compTrans = rotClass.build_transformation(time, vecX);
 
     // perform 2nd srotation transformation
     sierra::nalu::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
-    scaleClass.build_transformation(time, vecX, transMat);
-    scaleClass.add_motion(transMat, tempMat2, compTrans);
+    sierra::nalu::mm::TransMatType tempMat = scaleClass.build_transformation(time, vecX);
+    return scaleClass.add_motion(tempMat, compTrans);
   }
 
   std::vector<double> eval_coords(
-    const sierra::nalu::NgpMotion::TransMatType& transMat,
+    const sierra::nalu::mm::TransMatType& transMat,
     const double* xyz )
   {
     std::vector<double> transCoord(3,0.0);
@@ -92,10 +84,10 @@ namespace {
     // perform matrix multiplication between transformation matrix
     // and original coordinates to obtain transformed coordinates
     for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
-      transCoord[d] = transMat[d][0]*xyz[0]
-                     +transMat[d][1]*xyz[1]
-                     +transMat[d][2]*xyz[2]
-                     +transMat[d][3];
+      transCoord[d] = transMat[d*sierra::nalu::mm::matSize+0]*xyz[0]
+                     +transMat[d*sierra::nalu::mm::matSize+1]*xyz[1]
+                     +transMat[d*sierra::nalu::mm::matSize+2]*xyz[2]
+                     +transMat[d*sierra::nalu::mm::matSize+3];
     }
 
     return transCoord;
@@ -165,8 +157,7 @@ TEST(meshMotion, NGP_compute_centroid)
       double* gxyz = stk::mesh::field_data(*modelCoordsGold, node);
       double* mxyz = stk::mesh::field_data(*modelCoords, node);
 
-      sierra::nalu::NgpMotion::TransMatType transMat = {};
-      eval_transformation(realm, time, gxyz, transMat);
+      sierra::nalu::mm::TransMatType transMat = eval_transformation(realm, time, gxyz);
 
       std::vector<double> gold_norm_xyz = eval_coords(transMat, gxyz);
 

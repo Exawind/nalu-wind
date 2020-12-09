@@ -26,12 +26,12 @@ public:
   void setup();
 
   void compute_centroid_on_parts(
-    std::vector<double> &centroid);
+    mm::ThreeDVecType& centroid);
 
-  void set_computed_centroid(std::vector<double> centroid)
+  void set_computed_centroid(const mm::ThreeDVecType& centroid)
   {
     for (size_t i=0; i < motionKernels_.size(); i++)
-      motionKernels_[i]->set_computed_centroid(centroid.data());
+      motionKernels_[i]->set_computed_centroid(centroid);
   }
 
   virtual void post_compute_geometry()

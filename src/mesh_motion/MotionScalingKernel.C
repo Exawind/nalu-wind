@@ -58,76 +58,70 @@ void MotionScalingKernel::load(const YAML::Node& node)
   }
 }
 
-void MotionScalingKernel::build_transformation(
+mm::TransMatType MotionScalingKernel::build_transformation(
   const double& time,
-  const ThreeDVecType& /* xyz */,
-  TransMatType& transMat)
+  const mm::ThreeDVecType& /* xyz */)
 {
-  reset_mat(transMat);
+  mm::TransMatType transMat;
 
-  if(time < (startTime_)) return;
+  if(time < (startTime_)) return transMat;
   double motionTime = (time < endTime_)? time : endTime_;
 
   // Build matrix for translating object to cartesian origin
-  TransMatType tempMat = {};
-  reset_mat(tempMat);
-  tempMat[0][3] = -origin_[0];
-  tempMat[1][3] = -origin_[1];
-  tempMat[2][3] = -origin_[2];
+  transMat[0*mm::matSize+3] = -origin_[0];
+  transMat[1*mm::matSize+3] = -origin_[1];
+  transMat[2*mm::matSize+3] = -origin_[2];
 
   // Determine scaling based on user defined input
-  TransMatType tempMat2 = {};
-  reset_mat(tempMat2);
+  mm::TransMatType tempMat;
   if (useRate_)
   {
     for (int d=0; d < nalu_ngp::NDimMax; d++)
-      tempMat2[d][d] = rate_[d]*(motionTime-startTime_) + 1.0;
+      tempMat[d*mm::matSize+d] = rate_[d]*(motionTime-startTime_) + 1.0;
   }
   else
   {
     for (int d=0; d < nalu_ngp::NDimMax; d++)
-      tempMat2[d][d] = factor_[d];
+      tempMat[d*mm::matSize+d] = factor_[d];
   }
 
   // composite addition of motions in current group
-  TransMatType tempMat3 = {};
-  add_motion(tempMat2,tempMat,tempMat3);
+  transMat = add_motion(tempMat,transMat);
 
   // Build matrix for translating object back to its origin
-  reset_mat(tempMat);
-  tempMat[0][3] = origin_[0];
-  tempMat[1][3] = origin_[1];
-  tempMat[2][3] = origin_[2];
+  tempMat = mm::TransMatType::I();
+  tempMat[0*mm::matSize+3] = origin_[0];
+  tempMat[1*mm::matSize+3] = origin_[1];
+  tempMat[2*mm::matSize+3] = origin_[2];
 
   // composite addition of motions
-  add_motion(tempMat,tempMat3,transMat);
+  return add_motion(tempMat,transMat);
 }
 
-void MotionScalingKernel::compute_velocity(
+mm::ThreeDVecType MotionScalingKernel::compute_velocity(
   const double& time,
-  const TransMatType& compTrans,
-  const ThreeDVecType& mxyz,
-  const ThreeDVecType& /* cxyz */,
-  ThreeDVecType& vel )
+  const mm::TransMatType& compTrans,
+  const mm::ThreeDVecType& mxyz,
+  const mm::ThreeDVecType& /* cxyz */)
 {
-  if((time < startTime_) || (time > endTime_)) {
-    for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      vel[d] = 0.0;
+  mm::ThreeDVecType vel;
 
-    return;
-  }
+  if((time < startTime_) || (time > endTime_))
+    return vel;
 
   // transform the origin of the scaling body
-  ThreeDVecType transOrigin = {};
+  mm::ThreeDVecType transOrigin;
   for (int d = 0; d < nalu_ngp::NDimMax; d++) {
-    transOrigin[d] = compTrans[d][0]*origin_[0]
-                    +compTrans[d][1]*origin_[1]
-                    +compTrans[d][2]*origin_[2]
-                    +compTrans[d][3];
+    transOrigin[d] = compTrans[d*mm::matSize+0]*origin_[0]
+                    +compTrans[d*mm::matSize+1]*origin_[1]
+                    +compTrans[d*mm::matSize+2]*origin_[2]
+                    +compTrans[d*mm::matSize+3];
   }
 
   for (int d=0; d < nalu_ngp::NDimMax; d++)
     vel[d] = rate_[d] * (mxyz[d]-transOrigin[d]);
+
+  return vel;
 }
 
 } // nalu

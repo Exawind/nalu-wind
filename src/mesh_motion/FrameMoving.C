@@ -54,38 +54,34 @@ void FrameMoving::update_coordinates_velocity(const double time)
     KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
 
     // temporary current and model coords for a generic 2D and 3D implementation
-    NgpMotion::ThreeDVecType mX = {};
-    NgpMotion::ThreeDVecType cX = {};
+    mm::ThreeDVecType mX;
+    mm::ThreeDVecType cX;
 
     // copy over model coordinates and reset velocity
     for (int d = 0; d < nDim; ++d)
       mX[d] = modelCoords.get(mi,d);
 
     // initialize composite transformation matrix
-    NgpMotion::TransMatType compTransMat = {};
-    NgpMotion::reset_mat(compTransMat);
+    mm::TransMatType compTransMat;
 
     // create composite transformation matrix based off of all motions
     for (size_t i=0; i < numKernels; ++i) {
       NgpMotion* kernel = ngpKernels(i);
 
       // build and get transformation matrix
-      NgpMotion::TransMatType currTransMat = {};
-      kernel->build_transformation(time,mX,currTransMat);
+      mm::TransMatType currTransMat = kernel->build_transformation(time,mX);
 
       // composite addition of motions in current group
-      NgpMotion::TransMatType tempTransMat = {};
-      kernel->add_motion(currTransMat,compTransMat,tempTransMat);
-      NgpMotion::copy_mat(tempTransMat,compTransMat);
+      compTransMat = kernel->add_motion(currTransMat,compTransMat);
     }
 
     // perform matrix multiplication between transformation matrix
     // and old coordinates to obtain current coordinates
     for (int d = 0; d < nDim; ++d) {
-      currCoords.get(mi,d) = compTransMat[d][0]*mX[0]
-                            +compTransMat[d][1]*mX[1]
-                            +compTransMat[d][2]*mX[2]
-                            +compTransMat[d][3];
+      currCoords.get(mi,d) = compTransMat[d*mm::matSize+0]*mX[0]
+                            +compTransMat[d*mm::matSize+1]*mX[1]
+                            +compTransMat[d*mm::matSize+2]*mX[2]
+                            +compTransMat[d*mm::matSize+3];
 
       displacement.get(mi,d) = currCoords.get(mi,d) - modelCoords.get(mi,d);
     } // end for loop - d index
@@ -100,8 +96,7 @@ void FrameMoving::update_coordinates_velocity(const double time)
       NgpMotion* kernel = ngpKernels(i);
 
       // evaluate velocity associated with motion
-      NgpMotion::ThreeDVecType mm_vel = {};
-      kernel->compute_velocity(time,compTransMat,mX,cX,mm_vel);
+      mm::ThreeDVecType mm_vel = kernel->compute_velocity(time,compTransMat,mX,cX);
 
       for (int d = 0; d < nDim; ++d)
         meshVelocity.get(mi,d) += mm_vel[d];

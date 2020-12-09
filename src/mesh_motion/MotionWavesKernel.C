@@ -71,17 +71,16 @@ MotionWavesKernel::load(const YAML::Node& node)
   get_if_present(node, "sea_level_z", sealevelz_, sealevelz_);
 }
 
-void MotionWavesKernel::build_transformation(
+mm::TransMatType MotionWavesKernel::build_transformation(
   const double& time,
-  const ThreeDVecType& xyz,
-  TransMatType& transMat)
+  const mm::ThreeDVecType& xyz)
 {
-  reset_mat(transMat);
+  mm::TransMatType transMat;
 
-  if(time < (startTime_)) return;
+  if(time < (startTime_)) return transMat;
   double motionTime = (time < endTime_)? time : endTime_;
 
-  ThreeDVecType disp = {};
+   mm::ThreeDVecType disp;
   double phase = k_ * xyz[0] - omega_ * motionTime;
   if (waveModel_ == 1) {
     disp[0] = 0.;
@@ -107,24 +106,22 @@ void MotionWavesKernel::build_transformation(
   }
 
   // Build matrix for translating object
-  transMat[0][3] = disp[0];
-  transMat[1][3] = disp[1];
-  transMat[2][3] = disp[2];
+  transMat[0*mm::matSize+3] = disp[0];
+  transMat[1*mm::matSize+3] = disp[1];
+  transMat[2*mm::matSize+3] = disp[2];
+  return transMat;
 }
 
-void MotionWavesKernel::compute_velocity(
+mm::ThreeDVecType MotionWavesKernel::compute_velocity(
   const double& time,
-  const TransMatType& /* compTrans */,
-  const ThreeDVecType& mxyz,
-  const ThreeDVecType& /* cxyz */,
-  ThreeDVecType& vel)
+  const mm::TransMatType& /* compTrans */,
+  const mm::ThreeDVecType& mxyz,
+  const mm::ThreeDVecType& /* cxyz */)
 {
-  if((time < startTime_) || (time > endTime_)) {
-    for (int d=0; d < nalu_ngp::NDimMax; ++d)
-      vel[d] = 0.0;
+  mm::ThreeDVecType vel;
 
-    return;
-  }
+  if((time < startTime_) || (time > endTime_))
+    return vel;
 
   double motionTime = (time < endTime_) ? time : endTime_;
 
@@ -163,6 +160,7 @@ void MotionWavesKernel::compute_velocity(
     vel[1] = 0.;
     vel[2] = 0.;
   }
+  return vel;
 }
 
 /* Define the Stokes expansion coefficients based on "A Fifth-Order Stokes

@@ -38,37 +38,33 @@ void FrameReference::update_coordinates(const double time)
     KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
 
     // temporary model coords for a generic 2D and 3D implementation
-    NgpMotion::ThreeDVecType mX = {};
+    mm::ThreeDVecType mX;
 
     // copy over model coordinates
     for (int d = 0; d < nDim; ++d)
       mX[d] = modelCoords.get(mi,d);
 
     // initialize composite transformation matrix
-    NgpMotion::TransMatType compTransMat = {};
-    NgpMotion::reset_mat(compTransMat);
+    mm::TransMatType compTransMat;
 
     // create composite transformation matrix based off of all motions
     for (size_t i=0; i < numKernels; ++i) {
       NgpMotion* kernel = ngpKernels(i);
 
       // build and get transformation matrix
-      NgpMotion::TransMatType currTransMat = {};
-      kernel->build_transformation(time,mX,currTransMat);
+      mm::TransMatType currTransMat = kernel->build_transformation(time,mX);
 
       // composite addition of motions in current group
-      NgpMotion::TransMatType tempTransMat = {};
-      kernel->add_motion(currTransMat,compTransMat,tempTransMat);
-      NgpMotion::copy_mat(tempTransMat,compTransMat);
+      compTransMat = kernel->add_motion(currTransMat,compTransMat);
     }
 
     // perform matrix multiplication between transformation matrix
     // and old coordinates to obtain current coordinates
     for (int d = 0; d < nDim; ++d) {
-      modelCoords.get(mi,d) = compTransMat[d][0]*mX[0]
-                             +compTransMat[d][1]*mX[1]
-                             +compTransMat[d][2]*mX[2]
-                             +compTransMat[d][3];
+      modelCoords.get(mi,d) = compTransMat[d*mm::matSize+0]*mX[0]
+                             +compTransMat[d*mm::matSize+1]*mX[1]
+                             +compTransMat[d*mm::matSize+2]*mX[2]
+                             +compTransMat[d*mm::matSize+3];
     } // end for loop - d index
   }); // end NGP for loop
 }

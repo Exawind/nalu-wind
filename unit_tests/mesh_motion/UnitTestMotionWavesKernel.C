@@ -12,18 +12,18 @@ namespace {
   const double CoeffTol = 1e-4; //Reduced tolerance for the Stokes Coeffs 
 
   std::vector<double> transform(
-    const sierra::nalu::NgpMotion::TransMatType& transMat,
-    const double* xyz )
+    const sierra::nalu::mm::TransMatType& transMat,
+    const sierra::nalu::mm::ThreeDVecType& xyz )
   {
     std::vector<double> transCoord(3,0.0);
 
     // perform matrix multiplication between transformation matrix
     // and original coordinates to obtain transformed coordinates
     for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
-      transCoord[d] = transMat[d][0]*xyz[0]
-                     +transMat[d][1]*xyz[1]
-                     +transMat[d][2]*xyz[2]
-                     +transMat[d][3];
+      transCoord[d] = transMat[d*sierra::nalu::mm::matSize+0]*xyz[0]
+                     +transMat[d*sierra::nalu::mm::matSize+1]*xyz[1]
+                     +transMat[d*sierra::nalu::mm::matSize+2]*xyz[2]
+                     +transMat[d*sierra::nalu::mm::matSize+3];
     }
 
     return transCoord;
@@ -51,10 +51,9 @@ TEST(meshMotion, airy_wave)
 
   // build transformation
   const double time = 1.0;
-  double xyz[3] = {2.5,1.5,0.};
+  sierra::nalu::mm::ThreeDVecType xyz{2.5,1.5,0.};
 
-  sierra::nalu::NgpMotion::TransMatType transMat = {};
-  MotionWavesKernel.build_transformation(time, xyz, transMat);
+  sierra::nalu::mm::TransMatType transMat = MotionWavesKernel.build_transformation(time, xyz);
   std::vector<double> norm = transform(transMat, xyz);
 
   const double gold_norm_z = 0.0053635368158730;
