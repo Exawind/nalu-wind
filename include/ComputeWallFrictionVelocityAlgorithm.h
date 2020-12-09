@@ -64,6 +64,7 @@ public:
   ScalarFieldType *assembledWallNormalDistance_;
   ScalarFieldType *assembledWallArea_;
 
+  bool RANSAblBcApproach_;
   double u_HH_;
   double z_HH_;
   double z0_;

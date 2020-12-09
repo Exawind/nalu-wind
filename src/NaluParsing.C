@@ -781,6 +781,11 @@ namespace YAML
       wallData.z0_ =
           node["roughness_height"].as<sierra::nalu::RoughnessHeight>();
     }
+    if (node["RANS_abl_bc"])
+    {
+      wallData.RANSAblBcApproach_ =
+          node["RANS_abl_bc"].as<bool>();
+    }
     if (node["velocity_hub_height"])
     {
       wallData.u_HH_ =

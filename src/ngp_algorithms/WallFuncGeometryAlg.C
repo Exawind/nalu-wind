@@ -26,6 +26,7 @@ template<typename BcAlgTraits>
 WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
   Realm& realm,
   stk::mesh::Part* part,
+  bool RANSAblBcApproach,
   double z0)
   : Algorithm(realm, part),
     faceData_(realm.meta_data()),
@@ -44,6 +45,7 @@ WallFuncGeometryAlg<BcAlgTraits>::WallFuncGeometryAlg(
           typename BcAlgTraits::FaceTraits>()),
     meSCS_(MasterElementRepo::get_surface_master_element<
            typename BcAlgTraits::ElemTraits>()),
+    RANSAblBcApproach_(RANSAblBcApproach),
     z0_(z0)
 {
   faceData_.add_cvfem_face_me(meFC_);

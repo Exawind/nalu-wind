@@ -1859,6 +1859,7 @@ MomentumEquationSystem::register_wall_bc(
   WallUserData userData = wallBCData.userData_;
   const bool wallFunctionApproach = userData.wallFunctionApproach_;
   const bool ablWallFunctionApproach = userData.ablWallFunctionApproach_;
+  const bool RANSAblBcApproach = userData.RANSAblBcApproach_;
   const bool anyWallFunctionActivated = wallFunctionApproach || ablWallFunctionApproach;
   auto& ablWallFunctionNode = userData.ablWallFunctionNode_;
 

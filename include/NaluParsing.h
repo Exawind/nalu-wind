@@ -68,6 +68,7 @@ struct WallUserData : public UserData {
   bool isInterface_;
   bool refTempSpec_;
 
+  bool RANSAblBcApproach_;
   bool wallFunctionApproach_;
   bool ablWallFunctionApproach_;
   YAML::Node ablWallFunctionNode_;
@@ -83,6 +84,7 @@ struct WallUserData : public UserData {
       heatFluxSpec_(false),
       isInterface_(false),
       refTempSpec_(false),
+      RANSAblBcApproach_(false),
       wallFunctionApproach_(false),
       ablWallFunctionApproach_(false),
       isFsiInterface_(false) {}    

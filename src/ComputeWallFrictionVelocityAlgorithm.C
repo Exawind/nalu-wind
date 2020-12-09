@@ -70,10 +70,13 @@ ComputeWallFrictionVelocityAlgorithm::ComputeWallFrictionVelocityAlgorithm(
   assembledWallNormalDistance_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_normal_distance");
 
   WallUserData userData = wallBCData.userData_;
-  u_HH_ = userData.u_HH_;
-  z_HH_ = userData.z_HH_;
-  RoughnessHeight rough = userData.z0_;
-  z0_ = rough.z0_;
+  RANSAblBcApproach_ = userData.RANSAblBcApproach_;
+  if (RANSAblBcApproach_) {
+    u_HH_ = userData.u_HH_;
+    z_HH_ = userData.z_HH_;
+    RoughnessHeight rough = userData.z0_;
+    z0_ = rough.z0_;
+  }
 }
 
 //--------------------------------------------------------------------------
