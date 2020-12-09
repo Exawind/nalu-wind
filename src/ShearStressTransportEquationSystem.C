@@ -197,8 +197,6 @@ ShearStressTransportEquationSystem::register_wall_bc(
 
   WallUserData userData = wallBCData.userData_;
   bool RANSAblBcApproach = userData.RANSAblBcApproach_;
-  RoughnessHeight rough = userData.z0_;
-  double z0 = rough.z0_;
 
   // push mesh part
   wallBcPart_.push_back(part);
@@ -216,9 +214,18 @@ ShearStressTransportEquationSystem::register_wall_bc(
   const int numScsBip = meFC->num_integration_points();
   stk::mesh::put_field_on_mesh(wallNormDistBip, *part, numScsBip, nullptr);
 
-  realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
-    sierra::nalu::WALL, part, get_elem_topo(realm_, *part),
-    "sst_geometry_wall", RANSAblBcApproach, z0);
+  if (RANSAblBcApproach) {
+    RoughnessHeight rough = userData.z0_;
+    double z0 = rough.z0_;
+    realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
+      sierra::nalu::WALL, part, get_elem_topo(realm_, *part),
+      "sst_geometry_wall", RANSAblBcApproach, z0);
+  }
+  else {
+    realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
+      sierra::nalu::WALL, part, get_elem_topo(realm_, *part),
+      "sst_geometry_wall");
+  }
 }
 
 //--------------------------------------------------------------------------
