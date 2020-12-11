@@ -121,7 +121,8 @@ class EquationSystems
     const NonConformalBoundaryConditionData &nonConformalBCData);
 
   void register_surface_pp_algorithm(
-    const PostProcessingData &theData);
+    const PostProcessingData &theData,
+    const WallBoundaryConditionData &wallBCData);
 
   void register_initial_condition_fcn(
     stk::mesh::Part *part,

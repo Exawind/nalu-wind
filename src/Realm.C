@@ -974,7 +974,13 @@ Realm::setup_post_processing_algorithms()
 
     // call through to the Eqsys
     if ( theType == "surface" ) {
-      equationSystems_.register_surface_pp_algorithm(theData);
+      for (size_t ibc = 0; ibc < boundaryConditions_.size(); ++ibc) {
+        BoundaryCondition& bc = *boundaryConditions_[ibc];
+        std::string name = physics_part_name(bc.targetName_);
+        if (bc.theBcType_ == WALL_BC) { 
+          equationSystems_.register_surface_pp_algorithm(theData, *reinterpret_cast<const WallBoundaryConditionData *>(&bc));
+        }
+      }
     }
     else {
       throw std::runtime_error("Post Processing Error: only  surface-based is supported");

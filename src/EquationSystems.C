@@ -636,7 +636,8 @@ EquationSystems::register_overset_bc(const OversetBoundaryConditionData&)
 //--------------------------------------------------------------------------
 void
 EquationSystems::register_surface_pp_algorithm(
-  const PostProcessingData &theData)
+  const PostProcessingData &theData,
+  const WallBoundaryConditionData &wallBCData)
 {
   stk::mesh::MetaData &meta_data = realm_.meta_data();
 
@@ -665,7 +666,7 @@ EquationSystems::register_surface_pp_algorithm(
   // call through to equation systems
   EquationSystemVector::iterator ii;
   for( ii=equationSystemVector_.begin(); ii!=equationSystemVector_.end(); ++ii )
-    (*ii)->register_surface_pp_algorithm(theData, partVector);
+    (*ii)->register_surface_pp_algorithm(theData, partVector, wallBCData);
 }
 
 //--------------------------------------------------------------------------

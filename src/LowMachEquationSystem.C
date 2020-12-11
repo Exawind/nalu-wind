@@ -517,7 +517,8 @@ LowMachEquationSystem::register_open_bc(
 void
 LowMachEquationSystem::register_surface_pp_algorithm(
   const PostProcessingData &theData,
-  stk::mesh::PartVector &partVector)
+  stk::mesh::PartVector &partVector,
+  const WallBoundaryConditionData &wallBCData)
 {
   const std::string thePhysics = theData.physics_;
 
@@ -549,7 +550,7 @@ LowMachEquationSystem::register_surface_pp_algorithm(
     SurfaceForceAndMomentAlgorithm *ppAlg
       = new SurfaceForceAndMomentAlgorithm(
           realm_, partVector, theData.outputFileName_, theData.frequency_,
-          theData.parameters_, realm_.realmUsesEdges_);
+          theData.parameters_, realm_.realmUsesEdges_, wallBCData);
     surfaceForceAndMomentAlgDriver_->algVec_.push_back(ppAlg);
   }
   else if ( thePhysics == "surface_force_and_moment_wall_function" ) {
@@ -560,7 +561,7 @@ LowMachEquationSystem::register_surface_pp_algorithm(
     SurfaceForceAndMomentWallFunctionAlgorithm *ppAlg
       = new SurfaceForceAndMomentWallFunctionAlgorithm(
           realm_, partVector, theData.outputFileName_, theData.frequency_,
-          theData.parameters_, realm_.realmUsesEdges_);
+          theData.parameters_, realm_.realmUsesEdges_, wallBCData);
     surfaceForceAndMomentAlgDriver_->algVec_.push_back(ppAlg);
   }
 }

@@ -14,6 +14,7 @@
 
 #include<Algorithm.h>
 #include<FieldTypeDef.h>
+#include <NaluParsedTypes.h>
 
 // stk
 #include <stk_mesh/base/Part.hpp>
@@ -33,7 +34,8 @@ public:
     const std::string &outputFileName,
     const int &frequency_,
     const std::vector<double > &parameters,
-    const bool &useShifted);
+    const bool &useShifted,
+    const WallBoundaryConditionData &wallBCData);
   ~SurfaceForceAndMomentAlgorithm();
 
   void execute();
@@ -48,6 +50,9 @@ public:
   const std::vector<double > &parameters_;
   const bool useShifted_;
   const double includeDivU_;
+
+  bool RANSAblBcApproach_;
+  double z0_; 
 
   VectorFieldType *coordinates_;
   ScalarFieldType *pressure_;
