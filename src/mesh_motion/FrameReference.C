@@ -27,6 +27,9 @@ void FrameReference::update_coordinates(const double time)
   stk::mesh::NgpField<double> modelCoords = stk::mesh::get_updated_ngp_field<double>(
     *meta_.get_field<VectorFieldType>(entityRank, "coordinates"));
 
+  // sync fields to device
+  modelCoords.sync_to_device();
+
   // get the parts in the current motion frame
   stk::mesh::Selector sel = stk::mesh::selectUnion(partVec_) &
       (meta_.locally_owned_part() | meta_.globally_shared_part());
@@ -67,6 +70,9 @@ void FrameReference::update_coordinates(const double time)
                              +compTransMat[d*mm::matSize+3];
     } // end for loop - d index
   }); // end NGP for loop
+
+  // Mark fields as modified on device
+  modelCoords.modify_on_device();
 }
 
 } // nalu

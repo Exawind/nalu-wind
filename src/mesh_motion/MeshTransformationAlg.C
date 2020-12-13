@@ -12,7 +12,6 @@ namespace nalu{
 MeshTransformationAlg::MeshTransformationAlg(
   stk::mesh::BulkData& bulk,
   const YAML::Node& node)
-  : bulk_(bulk)
 {
   load(bulk, node);
 }
@@ -39,11 +38,6 @@ void MeshTransformationAlg::initialize( const double time )
   if(isInit_)
     throw std::runtime_error("MeshTransformationAlg::initialize(): Re-initialization of MeshTransformationAlg not valid");
 
-  // Synchronize fields to device
-  auto* coords = bulk_.mesh_meta_data().get_field(
-    stk::topology::NODE_RANK, "coordinates");
-  coords->sync_to_device();
-
   for (size_t i=0; i < referenceFrameVec_.size(); i++)
   {
     referenceFrameVec_[i]->setup();
@@ -51,9 +45,6 @@ void MeshTransformationAlg::initialize( const double time )
     // update coordinates
     referenceFrameVec_[i]->update_coordinates(time);
   }
-
-  // Mark fields as modified on device
-  coords->modify_on_device();
 
   isInit_ = true;
 }

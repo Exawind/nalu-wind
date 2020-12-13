@@ -31,8 +31,6 @@ private:
     stk::mesh::BulkData&,
     const YAML::Node&);
 
-  const stk::mesh::BulkData& bulk_;
-
   /** Reference frame vector
    *
    *  Vector of reference frames

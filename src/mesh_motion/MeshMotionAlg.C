@@ -12,7 +12,6 @@ namespace nalu{
 MeshMotionAlg::MeshMotionAlg(
   stk::mesh::BulkData& bulk,
   const YAML::Node& node)
-  : bulk_(bulk)
 {
   load(bulk, node);
 }
@@ -39,19 +38,6 @@ void MeshMotionAlg::initialize( const double time )
   if(isInit_)
     throw std::runtime_error("MeshMotionAlg::initialize(): Re-initialization of MeshMotionAlg not valid");
 
-  // Synchronize fields to device
-  const auto& meta = bulk_.mesh_meta_data();
-  std::vector<std::string> fnames{
-    "coordinates",
-    "current_coordinates",
-    "mesh_displacement",
-    "mesh_velocity",
-  };
-  for (const auto& ff: fnames) {
-    auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
-    fld->sync_to_device();
-  }
-
   for (size_t i=0; i < movingFrameVec_.size(); i++)
   {
     movingFrameVec_[i]->setup();
@@ -60,66 +46,20 @@ void MeshMotionAlg::initialize( const double time )
     movingFrameVec_[i]->update_coordinates_velocity(time);
   }
 
-  // Mark fields as modified on device
-  fnames.erase(std::remove(fnames.begin(), fnames.end(), "coordinates"), fnames.end());
-  for (const auto& ff: fnames) {
-    auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
-    fld->modify_on_device();
-  }
-
   isInit_ = true;
 }
 
 void MeshMotionAlg::execute(const double time)
 {
-  // Synchronize fields to device
-  const auto& meta = bulk_.mesh_meta_data();
-  std::vector<std::string> fnames{
-    "coordinates",
-    "current_coordinates",
-    "mesh_displacement",
-    "mesh_velocity",
-  };
-  for (const auto& ff: fnames) {
-    auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
-    fld->sync_to_device();
-  }
-
   for (size_t i=0; i < movingFrameVec_.size(); i++) {
     movingFrameVec_[i]->update_coordinates_velocity(time);
-  }
-
-  // Mark fields as modified on device
-  fnames.erase(std::remove(fnames.begin(), fnames.end(), "coordinates"), fnames.end());
-  for (const auto& ff: fnames) {
-    auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
-    fld->modify_on_device();
   }
 }
 
 void MeshMotionAlg::post_compute_geometry()
 {
-  // Synchronize fields to host
-  const auto& meta = bulk_.mesh_meta_data();
-  std::vector<std::string> fnames{
-    "current_coordinates",
-    "mesh_velocity"
-  };
-  for (const auto& ff: fnames) {
-    auto* fld = meta.get_field(stk::topology::NODE_RANK, ff);
-    fld->sync_to_host();
-  }
-
   for (size_t i=0; i < movingFrameVec_.size(); i++)
     movingFrameVec_[i]->post_compute_geometry();
-
-  // Synchronize fields to device
-  auto* divMeshVel = bulk_.mesh_meta_data().get_field(
-    stk::topology::NODE_RANK, "div_mesh_velocity");
-  if (divMeshVel != nullptr) {
-    divMeshVel->modify_on_host();
-    divMeshVel->sync_to_device();
-  }
 }
 
 } // nalu

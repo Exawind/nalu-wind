@@ -44,6 +44,12 @@ void compute_vector_divergence(
   GenericFieldType* exposedAreaVec
   = meta.get_field<GenericFieldType>(meta.side_rank(), "exposed_area_vector");
 
+  // sync fields to host
+  coordinates->sync_to_host();
+  dualVol->sync_to_host();
+  exposedAreaVec->sync_to_host();
+  vectorField->sync_to_host();
+
   std::vector<double> wsCoordinates;
   std::vector<double> wsScsArea;
   std::vector<double> wsMeshVector;
@@ -144,6 +150,11 @@ void compute_vector_divergence(
   // sum up interior divergence values and return if boundary part not specified
   if(bndyPartVec.size() == 0) {
     stk::mesh::parallel_sum(bulk, {scalarField});
+
+    // Synchronize fields to device
+    scalarField->modify_on_host();
+    scalarField->sync_to_device();
+
     return;
   }
 
@@ -218,6 +229,10 @@ void compute_vector_divergence(
   }
   // parallel sum the divergence across all processors
   stk::mesh::parallel_sum(bulk, {scalarField});
+
+  // Synchronize fields to device
+  scalarField->modify_on_host();
+  scalarField->sync_to_device();
 }
 
 }

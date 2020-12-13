@@ -38,6 +38,12 @@ void FrameMoving::update_coordinates_velocity(const double time)
   stk::mesh::NgpField<double> meshVelocity = stk::mesh::get_updated_ngp_field<double>(
     *meta_.get_field<VectorFieldType>(entityRank, "mesh_velocity"));
 
+  // sync fields to device
+  modelCoords.sync_to_device();
+  currCoords.sync_to_device();
+  displacement.sync_to_device();
+  meshVelocity.sync_to_device();
+
   // always reset velocity field
   nalu_ngp::run_entity_algorithm(
     "FrameMoving_reset_velocity",
@@ -102,6 +108,11 @@ void FrameMoving::update_coordinates_velocity(const double time)
         meshVelocity.get(mi,d) += mm_vel[d];
     } // end for loop - mm
   }); // end NGP for loop
+
+  // Mark fields as modified on device
+  currCoords.modify_on_device();
+  displacement.modify_on_device();
+  meshVelocity.modify_on_device();
 }
 
 void FrameMoving::post_compute_geometry()

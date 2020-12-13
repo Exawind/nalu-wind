@@ -33,8 +33,6 @@ private:
     stk::mesh::BulkData&,
     const YAML::Node&);
 
-  const stk::mesh::BulkData& bulk_;
-
   /** Moving frame vector
    *
    *  Vector of moving frames
