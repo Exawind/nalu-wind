@@ -561,7 +561,7 @@ LowMachEquationSystem::register_surface_pp_algorithm(
     SurfaceForceAndMomentWallFunctionAlgorithm *ppAlg
       = new SurfaceForceAndMomentWallFunctionAlgorithm(
           realm_, partVector, theData.outputFileName_, theData.frequency_,
-          theData.parameters_, realm_.realmUsesEdges_, wallBCData);
+          theData.parameters_, realm_.realmUsesEdges_);
     surfaceForceAndMomentAlgDriver_->algVec_.push_back(ppAlg);
   }
 }
