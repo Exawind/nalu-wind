@@ -818,10 +818,12 @@ The :math:`k`, :math:`\omega`, and :math:`u` wall boundary conditions are set in
 
 This height, :math:`h`, and velocity, :math:`u_h`, could, for example, be the hub height of a wind turbine and the velocity measured at that height. 
 
-The input file should also include ``momentum``. The momentum source term, :math:`dp/dx`, is calculated by balancing this pressure gradient with the wall shear stress, :math:`\tau_{w}`.
+The input file should also include a momentum source term, ``momentum``. 
 
 .. literalinclude:: ransAbl_sourceTerm.i
    :language: yaml
+
+The momentum source term, :math:`dp/dx`, is calculated by balancing this pressure gradient with the wall shear stress, :math:`\tau_{w}`.
 
 .. math:: \frac{dp}{dx} V = \tau_{w} A
 
