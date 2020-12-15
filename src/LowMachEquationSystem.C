@@ -1860,9 +1860,11 @@ MomentumEquationSystem::register_wall_bc(
   WallUserData userData = wallBCData.userData_;
   const bool wallFunctionApproach = userData.wallFunctionApproach_;
   const bool ablWallFunctionApproach = userData.ablWallFunctionApproach_;
-  const bool RANSAblBcApproach = userData.RANSAblBcApproach_;
   const bool anyWallFunctionActivated = wallFunctionApproach || ablWallFunctionApproach;
   auto& ablWallFunctionNode = userData.ablWallFunctionNode_;
+
+  // find out if this is RANS SST for modeling the ABL
+  const bool RANSAblBcApproach = userData.RANSAblBcApproach_;
 
   // push mesh part
   if ( !anyWallFunctionActivated )
@@ -1997,6 +1999,7 @@ MomentumEquationSystem::register_wall_bc(
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_normal_distance_bip"));
     stk::mesh::put_field_on_mesh(*wallNormalDistanceBip, *part, numScsBip, nullptr);
 
+    // need wall friction velocity for TKE boundary condition
     if (RANSAblBcApproach) { 
       const AlgorithmType wfAlgType = WALL_FCN;
 

@@ -77,6 +77,7 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
     assembledArea_(NULL),
     w_(16)
 {
+  // save wall BC values for RANS of ABL
   WallUserData userData = wallBCData.userData_;
   RANSAblBcApproach_ = userData.RANSAblBcApproach_;
   if (RANSAblBcApproach_) {
@@ -370,12 +371,13 @@ SurfaceForceAndMomentAlgorithm::execute()
         const double * coordL = stk::mesh::field_data(*coordinates_, nodeL );
         const double * coordR = stk::mesh::field_data(*coordinates_, nodeR );
 
-        // determine yp; ~nearest opposing edge normal distance to wall
         double ypBip;
         if (RANSAblBcApproach_) {
+          // if RANS of ABL, set yp to roughness height for wall function calculation
           ypBip = z0_;
         }
         else {
+          // determine yp; ~nearest opposing edge normal distance to wall
           ypBip = 0.0;
           for ( int j = 0; j < nDim; ++j ) {
             const double nj = ws_normal[j];

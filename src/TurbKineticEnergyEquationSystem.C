@@ -695,6 +695,8 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
   std::string tkeName = "turbulent_ke";
   const bool tkeSpecified = bc_data_specified(userData, tkeName);
   bool wallFunctionApproach = userData.wallFunctionApproach_;
+
+  // determine if using RANS for ABL
   bool RANSAblBcApproach = userData.RANSAblBcApproach_;
 
   if ( tkeSpecified && wallFunctionApproach ) {

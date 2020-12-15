@@ -56,7 +56,7 @@ ComputeWallFrictionVelocityAlgorithm::ComputeWallFrictionVelocityAlgorithm(
     maxIteration_(20),
     tolerance_(1.0e-6)
 {
-  // save wall BC values for RANS ABL
+  // save wall BC values for RANS of ABL
   WallUserData userData = wallBCData.userData_;
   RANSAblBcApproach_ = userData.RANSAblBcApproach_;
   if (RANSAblBcApproach_) {
@@ -271,7 +271,7 @@ ComputeWallFrictionVelocityAlgorithm::execute()
 
         double ypBip;
         if (RANSAblBcApproach_) {
-          // set ypBip to roughness height instead of calculating
+          // set ypBip to roughness height for wall function calculation
           ypBip = z0_;
         }
         else {
@@ -294,35 +294,39 @@ ComputeWallFrictionVelocityAlgorithm::execute()
         *assembledWallArea += aMag;
         *assembledWallNormalDistance += aMag*ypBip;
 
-        // determine tangential velocity
-        double uTangential = 0.0;
-        for ( int i = 0; i < nDim; ++i ) {
-          double uiTan = 0.0;
-          double uiBcTan = 0.0;
-          for ( int j = 0; j < nDim; ++j ) {
-            const double ninj = p_unitNormal[i]*p_unitNormal[j];
-            if ( i==j ) {
-              const double om_nini = 1.0 - ninj;
-              uiTan += om_nini*p_uBip[j];
-              uiBcTan += om_nini*p_uBcBip[j];
-            }
-            else {
-              uiTan -= ninj*p_uBip[j];
-              uiBcTan -= ninj*p_uBcBip[j];
-            }
-          }
-          uTangential += (uiTan-uiBcTan)*(uiTan-uiBcTan);
-        }
-        uTangential = std::sqrt(uTangential);
-
-        // provide an initial guess based on yplusCrit_ (more robust than a pure guess on utau)
-        double utauGuess = yplusCrit_*muBip/rhoBip/ypBip;
-       
-        compute_utau(uTangential, ypBip, rhoBip, muBip, utauGuess);
-     
+        double utauGuess;
         if (RANSAblBcApproach_) {
+          // calculate utau using Monin Obukhov profile
           utauGuess = (uFixed_*kappa_)/(std::log((zFixed_+z0_)/z0_));
         }
+        else {
+          // calculate tangential velocity
+          double uTangential = 0.0;
+          for ( int i = 0; i < nDim; ++i ) {
+            double uiTan = 0.0;
+            double uiBcTan = 0.0;
+            for ( int j = 0; j < nDim; ++j ) {
+              const double ninj = p_unitNormal[i]*p_unitNormal[j];
+              if ( i==j ) {
+                const double om_nini = 1.0 - ninj;
+                uiTan += om_nini*p_uBip[j];
+                uiBcTan += om_nini*p_uBcBip[j];
+              }
+              else {
+                uiTan -= ninj*p_uBip[j];
+                uiBcTan -= ninj*p_uBcBip[j];
+              }
+            }
+            uTangential += (uiTan-uiBcTan)*(uiTan-uiBcTan);
+          }
+          uTangential = std::sqrt(uTangential);
+
+          // provide an initial guess based on yplusCrit_ (more robust than a pure guess on utau)
+          utauGuess = yplusCrit_*muBip/rhoBip/ypBip;
+         
+          compute_utau(uTangential, ypBip, rhoBip, muBip, utauGuess);
+        } 
+        
         wallFrictionVelocityBip[ip] = utauGuess;
       }
     }

@@ -194,7 +194,7 @@ ShearStressTransportEquationSystem::register_wall_bc(
   const stk::topology& partTopo,
   const WallBoundaryConditionData &wallBCData)
 {
-
+  // determine if using RANS for ABL
   WallUserData userData = wallBCData.userData_;
   bool RANSAblBcApproach = userData.RANSAblBcApproach_;
 

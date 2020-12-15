@@ -115,6 +115,7 @@ void SDRWallFuncAlg<BcAlgTraits>::execute()
 
         DoubleType ypBip;
         if (RANSAblBcApproach_) {
+          // set ypBip to roughness height for wall function calculation
           ypBip = z0_;
         }
         else {
