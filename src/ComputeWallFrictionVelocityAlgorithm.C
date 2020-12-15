@@ -59,8 +59,8 @@ ComputeWallFrictionVelocityAlgorithm::ComputeWallFrictionVelocityAlgorithm(
   WallUserData userData = wallBCData.userData_;
   RANSAblBcApproach_ = userData.RANSAblBcApproach_;
   if (RANSAblBcApproach_) {
-    u_HH_ = userData.u_HH_;
-    z_HH_ = userData.z_HH_;
+    uFixed_ = userData.uFixed_;
+    zFixed_ = userData.zFixed_;
     RoughnessHeight rough = userData.z0_;
     z0_ = rough.z0_;
   }
@@ -319,7 +319,7 @@ ComputeWallFrictionVelocityAlgorithm::execute()
         compute_utau(uTangential, ypBip, rhoBip, muBip, utauGuess);
      
         if (RANSAblBcApproach_) {
-          utauGuess = (u_HH_*kappa_)/(std::log((z_HH_+z0_)/z0_));
+          utauGuess = (uFixed_*kappa_)/(std::log((zFixed_+z0_)/z0_));
         }
         wallFrictionVelocityBip[ip] = utauGuess;
       }

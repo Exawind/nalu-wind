@@ -794,6 +794,39 @@ surface as,
 
 .. _theory_open_bc:
 
+SST RANS Model for Atmospheric Boundary Layer
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The following boundary conditions simulate the Atmospheric Boundary Layer, as described in Bautista, :cite:`Bautista:2011` and :cite:`Bautista:2015`. The Nalu-Wind SST RANS implementation matches the Monin-Obukhov profile when used with the model constants from Table-A I-1 (Boundreault, 2011) in `Bautista:2011` and the meshing method described  in `Bautista:2015`. The mesh described in `Bautista:2015` gives the Monin-Obukhov profile for roughness height 0.1. When the roughness height is decreased, the mesh must be refined near the wall. For example, for the `Bautista:2015` test case using instead roughness height of 0.001, the mesh size needs to be halved near the wall. 
+    
+The :math:`k` and :math:`\omega` boundary conditions are the same as in Turbulent Kinetic Energy, :math:`k_{sgs}` LES model:Turbulent Kinetic Energy and Specific Dissipation SST High Reynolds Number Boundary conditions:
+
+.. math:: k = \frac{u_{\tau}^{2}}{\sqrt{\beta^*}}.
+
+and 
+
+.. math:: \omega = \frac{u_{\tau}} {\sqrt{\beta^*} \kappa y},
+
+The momentum boundary condition is a no-slip Dirichlet condition, as described in Wall Boundary Conditions: Momentum, :math:`u_i = 0`.
+
+The streamwise and spanwise boundary conditions are periodic, as described in Periodic Boundary Condition.
+
+The :math:`k`, :math:`\omega`, and :math:`u` wall boundary conditions are set in the input file by specifying a wall boundary condition with wall_user_data:RANS_abl_bc:yes. The input file must also specify a height and the velocity at that height with wall_user_data:fixed_height and wall_user_data:fixed_velocity. This height, :math:`h`, and velocity, :math:`u_h`, could, for example, be the hub height of a wind turbine and the velocity measured at that height. 
+
+The input file should also include source_terms:momentum:body_force and source_term_parameters:momentum. The momentum source term, :math:`dp/dx`, is calculated by balancing this pressure gradient with the wall shear stress, :math:`\tau_{w}`.
+
+.. math:: \frac{dp}{dx} V = \tau_{w} A
+
+where :math:`V` is the volume of the domain and :math:`A` is the area of the domain that touches the ground. Cancelling the length and width of the domain and dividing by the height of the domain, :math:`H`, gives
+
+.. math:: \frac{dp}{dx} = \frac{\rho u_{\tau}^2}{H}
+
+:math:`u_{\tau}` is calculated from the Monin-Obukhov profile
+
+.. math:: u_{\tau}=\frac{u_h \kappa}{log((h+z_0)/z_0)}
+
+where :math:`\kappa` is the Von K{\'a}rm{\'a}n constant and :math:`z_0` is the roughness height.
+
 Open Boundary Condition
 +++++++++++++++++++++++
 

@@ -65,8 +65,8 @@ public:
   ScalarFieldType *assembledWallArea_;
 
   bool RANSAblBcApproach_;
-  double u_HH_;
-  double z_HH_;
+  double uFixed_;
+  double zFixed_;
   double z0_;
 };
 
