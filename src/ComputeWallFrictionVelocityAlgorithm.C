@@ -56,6 +56,7 @@ ComputeWallFrictionVelocityAlgorithm::ComputeWallFrictionVelocityAlgorithm(
     maxIteration_(20),
     tolerance_(1.0e-6)
 {
+  // save wall BC values for RANS ABL
   WallUserData userData = wallBCData.userData_;
   RANSAblBcApproach_ = userData.RANSAblBcApproach_;
   if (RANSAblBcApproach_) {
@@ -268,12 +269,13 @@ ComputeWallFrictionVelocityAlgorithm::execute()
           }
         }
 
-        // form unit normal and determine yp (approximated by 1/4 distance along edge)
         double ypBip;
         if (RANSAblBcApproach_) {
+          // set ypBip to roughness height instead of calculating
           ypBip = z0_;
         }
         else {
+          // form unit normal and determine yp (approximated by 1/4 distance along edge)
           ypBip = 0.0;
           for ( int j = 0; j < nDim; ++j ) {
             const double nj = areaVec[offSetAveraVec+j]/aMag;
