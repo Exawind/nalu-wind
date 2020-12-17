@@ -92,8 +92,7 @@ void TKESSTIDDESNodeKernel::execute(
   for (int i=0; i < nDim_; ++i) {
     const int offset = nDim_ * i;
     for (int j=0; j < nDim_; ++j) {
-      const auto dudxij = dudx_.get(node, offset+j);
-      Pk += dudxij * (dudxij + dudx_.get(node, j*nDim_ + i));
+      const auto dudxij = dudx_.get(node, offset + j);
       const DblType rateOfStrain =
           0.5*(dudxij
                + dudx_.get(node, j*nDim_ + i));
@@ -106,7 +105,7 @@ void TKESSTIDDESNodeKernel::execute(
   }
   sijSq *= 2.0;
   omegaSq *= 2.0;
-  Pk *= tvisc;
+  Pk = tvisc * sijSq;
 
   DblType denom =
     density * kappa_ * kappa_ * dw * dw *
