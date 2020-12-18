@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <limits>
 
-#include "mesh_motion/MotionRotation.h"
-#include "mesh_motion/MotionScaling.h"
-#include "mesh_motion/MotionTranslation.h"
+#include "mesh_motion/MotionRotationKernel.h"
+#include "mesh_motion/MotionScalingKernel.h"
+#include "mesh_motion/MotionTranslationKernel.h"
 
 #include "UnitTestRealm.h"
 
@@ -12,18 +12,18 @@ namespace {
   const double testTol = 1e-14;
 
   std::vector<double> transform(
-    const sierra::nalu::MotionBase::TransMatType& transMat,
-    const double* xyz )
+    const sierra::nalu::mm::TransMatType& transMat,
+    const sierra::nalu::mm::ThreeDVecType& xyz)
   {
     std::vector<double> transCoord(3,0.0);
 
     // perform matrix multiplication between transformation matrix
     // and original coordinates to obtain transformed coordinates
-    for (int d = 0; d < sierra::nalu::MotionBase::threeDVecSize; d++) {
-      transCoord[d] = transMat[d][0]*xyz[0]
-                     +transMat[d][1]*xyz[1]
-                     +transMat[d][2]*xyz[2]
-                     +transMat[d][3];
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
+      transCoord[d] = transMat[d*sierra::nalu::mm::matSize+0]*xyz[0]
+                     +transMat[d*sierra::nalu::mm::matSize+1]*xyz[1]
+                     +transMat[d*sierra::nalu::mm::matSize+2]*xyz[2]
+                     +transMat[d*sierra::nalu::mm::matSize+3];
     }
 
     return transCoord;
@@ -42,14 +42,13 @@ TEST(meshMotion, rotation_omega)
   YAML::Node rotNode = YAML::Load(rotInfo);
 
   // initialize the mesh rotation class
-  sierra::nalu::MotionRotation rotClass(rotNode);
+  sierra::nalu::MotionRotationKernel rotClass(rotNode);
 
   // build transformation
   const double time = 3.5;
-  double xyz[3] = {2.5,1.5,6.5};
-  rotClass.build_transformation(time, xyz);
-
-  std::vector<double> norm = transform(rotClass.get_trans_mat(), xyz);
+  sierra::nalu::mm::ThreeDVecType xyz{2.5,1.5,6.5};
+  sierra::nalu::mm::TransMatType transMat = rotClass.build_transformation(time, xyz);
+  std::vector<double> norm = transform(transMat, xyz);
 
   const double gold_norm_x =  0.133514518380489;
   const double gold_norm_y = -1.910867599933667;
@@ -59,8 +58,8 @@ TEST(meshMotion, rotation_omega)
   EXPECT_NEAR(norm[1], gold_norm_y, testTol);
   EXPECT_NEAR(norm[2], gold_norm_z, testTol);
 
-  sierra::nalu::MotionBase::ThreeDVecType vel =
-    rotClass.compute_velocity(time, rotClass.get_trans_mat(), nullptr, &xyz[0]);
+  sierra::nalu::mm::ThreeDVecType tmp;
+  sierra::nalu::mm::ThreeDVecType vel = rotClass.compute_velocity(time, transMat, tmp, xyz);
 
   const double gold_norm_vx = -3.0;
   const double gold_norm_vy =  6.6;
@@ -82,14 +81,13 @@ TEST(meshMotion, rotation_angle)
   YAML::Node rotNode = YAML::Load(rotInfo);
 
   // initialize the mesh rotation class
-  sierra::nalu::MotionRotation rotClass(rotNode);
+  sierra::nalu::MotionRotationKernel rotClass(rotNode);
 
   // build transformation
   const double time = 0.0;
-  double xyz[3] = {2.5,1.5,6.5};
-  rotClass.build_transformation(time, xyz);
-
-  std::vector<double> norm = transform(rotClass.get_trans_mat(), xyz);
+  sierra::nalu::mm::ThreeDVecType xyz{2.5,1.5,6.5};
+  sierra::nalu::mm::TransMatType transMat = rotClass.build_transformation(time, xyz);
+  std::vector<double> norm = transform(transMat, xyz);
 
   const double gold_norm_x = -1.9;
   const double gold_norm_y = -0.5;
@@ -115,14 +113,13 @@ TEST(meshMotion, scaling)
   sierra::nalu::Realm& realm = naluObj.create_realm();
 
   // initialize the mesh scaling class
-  sierra::nalu::MotionScaling scaleClass(realm.meta_data(), scaleNode);
+  sierra::nalu::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
 
   // build transformation
   const double time = 0.0;
-  double xyz[3] = {2.5,1.5,6.5};
-  scaleClass.build_transformation(time, xyz);
-
-  std::vector<double> norm = transform(scaleClass.get_trans_mat(), xyz);
+  sierra::nalu::mm::ThreeDVecType xyz{2.5,1.5,6.5};
+  sierra::nalu::mm::TransMatType transMat = scaleClass.build_transformation(time, xyz);
+  std::vector<double> norm = transform(transMat, xyz);
 
   const double gold_norm_x = 4.7;
   const double gold_norm_y = 2.5;
@@ -145,13 +142,13 @@ TEST(meshMotion, translation_velocity)
   YAML::Node transNode = YAML::Load(transInfo);
 
   // initialize the mesh translation class
-  sierra::nalu::MotionTranslation transClass(transNode);
+  sierra::nalu::MotionTranslationKernel transClass(transNode);
 
   // build transformation at t = 10.0
   double time = 10.0;
-  double xyz[3] = {2.5,1.5,6.5};
-  transClass.build_transformation(time, xyz);
-  std::vector<double> norm = transform(transClass.get_trans_mat(), xyz);
+  sierra::nalu::mm::ThreeDVecType xyz{2.5,1.5,6.5};
+  sierra::nalu::mm::TransMatType transMat = transClass.build_transformation(time, xyz);
+  std::vector<double> norm = transform(transMat, xyz);
 
   double gold_norm_x = xyz[0];
   double gold_norm_y = xyz[1];
@@ -163,8 +160,8 @@ TEST(meshMotion, translation_velocity)
 
   // build transformation at t = 20.0
   time = 20.0;
-  transClass.build_transformation(time, xyz);
-  norm = transform(transClass.get_trans_mat(), xyz);
+  transMat = transClass.build_transformation(time, xyz);
+  norm = transform(transMat, xyz);
 
   gold_norm_x = 10.0;
   gold_norm_y = 19.0;
@@ -176,8 +173,8 @@ TEST(meshMotion, translation_velocity)
 
   // build transformation at t = 30.0
   time = 30.0;
-  transClass.build_transformation(time, xyz);
-  norm = transform(transClass.get_trans_mat(), xyz);
+  transMat = transClass.build_transformation(time, xyz);
+  norm = transform(transMat, xyz);
   
   gold_norm_x = 17.5;
   gold_norm_y = 36.5;
@@ -198,14 +195,13 @@ TEST(meshMotion, translation_displacement)
   YAML::Node transNode = YAML::Load(transInfo);
 
   // initialize the mesh translation class
-  sierra::nalu::MotionTranslation transClass(transNode);
+  sierra::nalu::MotionTranslationKernel transClass(transNode);
 
   // build transformation
   const double time = 0.0;
-  double xyz[3] = {2.5,1.5,6.5};
-  transClass.build_transformation(time, xyz);
-
-  std::vector<double> norm = transform(transClass.get_trans_mat(), xyz);
+  sierra::nalu::mm::ThreeDVecType xyz{2.5,1.5,6.5};
+  sierra::nalu::mm::TransMatType transMat = transClass.build_transformation(time, xyz);
+  std::vector<double> norm = transform(transMat, xyz);
   
   const double gold_norm_x = 4.0;
   const double gold_norm_y = 5.0;

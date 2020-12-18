@@ -3,9 +3,9 @@
 
 #include "mesh_motion/MeshMotionAlg.h"
 #include "mesh_motion/MeshTransformationAlg.h"
-#include "mesh_motion/MotionRotation.h"
-#include "mesh_motion/MotionScaling.h"
-#include "mesh_motion/MotionTranslation.h"
+#include "mesh_motion/MotionRotationKernel.h"
+#include "mesh_motion/MotionScalingKernel.h"
+#include "mesh_motion/MotionTranslationKernel.h"
 #include "Realm.h"
 #include "SolutionOptions.h"
 #include "TimeIntegrator.h"
@@ -23,7 +23,7 @@ namespace {
     "    mesh_parts: [ all_blocks ]     \n"
     "    motion:                        \n"
     "     - type: scaling               \n"
-    "       factor: [1.2,  1.0, 1.2]    \n"
+    "       factor: [1.2, 1.0, 1.2]     \n"
     "                                   \n"
     "mesh_motion:                       \n"
     "  - name: trans_rot                \n"
@@ -55,55 +55,45 @@ namespace {
 
   const double testTol = 1e-12;
 
-  sierra::nalu::MotionBase::TransMatType eval_transformation(
+  sierra::nalu::mm::TransMatType eval_transformation(
     sierra::nalu::Realm& realm,
     double time,
     const double* xyz)
   {
-    // initialize composite trasnformation matrix
-    sierra::nalu::MotionBase::TransMatType comp_trans
-      = sierra::nalu::MotionBase::identityMat_;
+    // transform data structures to confirm to mesh motion
+    sierra::nalu::mm::ThreeDVecType vecX;
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++)
+      vecX[d] = xyz[d];
 
     // perform scaling transformation
-    sierra::nalu::MotionScaling scaleClass(realm.meta_data(), scaleNode);
-    scaleClass.build_transformation(time, xyz);
-    comp_trans = scaleClass.add_motion(scaleClass.get_trans_mat(), comp_trans);
+    sierra::nalu::MotionScalingKernel scaleClass(realm.meta_data(), scaleNode);
+    sierra::nalu::mm::TransMatType compTrans = scaleClass.build_transformation(time, vecX);
 
     // perform rotation transformation
-    sierra::nalu::MotionRotation rotClass(rotNode);
-    rotClass.build_transformation(time, xyz);
-    comp_trans = rotClass.add_motion(rotClass.get_trans_mat(), comp_trans);
+    sierra::nalu::MotionRotationKernel rotClass(rotNode);
+    sierra::nalu::mm::TransMatType tempMat = rotClass.build_transformation(time, vecX);
+    compTrans = rotClass.add_motion(tempMat, compTrans);
 
     // perform translation transformation
-    const double startTime = transNode["start_time"].as<double>();
-    const double endTime   = transNode["end_time"].as<double>();
+    sierra::nalu::MotionTranslationKernel transClass(transNode);
+    tempMat = transClass.build_transformation(time, vecX);
 
-    if( time >= (startTime-testTol) )
-    {
-      if( time >= (endTime+testTol) )
-        time = endTime;
-
-      sierra::nalu::MotionTranslation transClass(transNode);
-      transClass.build_transformation(time, xyz);
-      comp_trans = transClass.add_motion(transClass.get_trans_mat(), comp_trans);
-    }
-
-    return comp_trans;
+    return rotClass.add_motion(tempMat, compTrans);
   }
 
   std::vector<double> eval_coords(
-    const sierra::nalu::MotionBase::TransMatType& transMat,
+    const sierra::nalu::mm::TransMatType& transMat,
     const double* xyz )
   {
     std::vector<double> transCoord(3,0.0);
 
     // perform matrix multiplication between transformation matrix
     // and original coordinates to obtain transformed coordinates
-    for (int d = 0; d < sierra::nalu::MotionBase::threeDVecSize; d++) {
-      transCoord[d] = transMat[d][0]*xyz[0]
-                     +transMat[d][1]*xyz[1]
-                     +transMat[d][2]*xyz[2]
-                     +transMat[d][3];
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
+      transCoord[d] = transMat[d*sierra::nalu::mm::matSize+0]*xyz[0]
+                     +transMat[d*sierra::nalu::mm::matSize+1]*xyz[1]
+                     +transMat[d*sierra::nalu::mm::matSize+2]*xyz[2]
+                     +transMat[d*sierra::nalu::mm::matSize+3];
     }
 
     return transCoord;
@@ -111,16 +101,24 @@ namespace {
 
   std::vector<double> eval_vel(
     const double time,
-    const sierra::nalu::MotionBase::TransMatType& transMat,
+    const sierra::nalu::mm::TransMatType& transMat,
     const double* mxyz,
     const double* cxyz )
   {
     std::vector<double> vel(3,0.0);
+    sierra::nalu::mm::ThreeDVecType motionVel;
+
+    // transform data structures to confirm to mesh motion
+    sierra::nalu::mm::ThreeDVecType vecMX;
+    sierra::nalu::mm::ThreeDVecType vecCX;
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
+      vecMX[d] = mxyz[d];
+      vecCX[d] = cxyz[d];
+    }
 
     // perform rotation transformation
-    sierra::nalu::MotionRotation rotClass(rotNode);
-    sierra::nalu::MotionBase::ThreeDVecType motionVel =
-      rotClass.compute_velocity(time, transMat, mxyz, cxyz);
+    sierra::nalu::MotionRotationKernel rotClass(rotNode);
+    motionVel = rotClass.compute_velocity(time, transMat, vecMX, vecCX);
 
     for (size_t d = 0; d < vel.size(); d++)
       vel[d] += motionVel[d];
@@ -131,8 +129,8 @@ namespace {
 
     if( (time >= (startTime-testTol)) && (time <= (endTime+testTol)) )
     {
-      sierra::nalu::MotionTranslation transClass(transNode);
-      motionVel = transClass.compute_velocity(time, transMat, mxyz, cxyz);
+      sierra::nalu::MotionTranslationKernel transClass(transNode);
+      motionVel = transClass.compute_velocity(time, transMat, vecMX, vecCX);
 
       for (size_t d = 0; d < vel.size(); d++)
         vel[d] += motionVel[d];
@@ -142,7 +140,7 @@ namespace {
   }
 }
 
-TEST(meshMotion, initialize)
+TEST(meshMotion, NGP_initialize)
 {
   // create realm
   unit_test_utils::NaluTest naluObj;
@@ -156,7 +154,6 @@ TEST(meshMotion, initialize)
 
   // register mesh motion fields and initialize coordinate fields
   realm.register_nodal_fields( &(realm.meta_data().universal_part()) );
-  realm.init_current_coordinates();
 
   // create field to copy coordinates
   // NOTE: This is done to allow computation of gold values later on
@@ -169,8 +166,9 @@ TEST(meshMotion, initialize)
   // create mesh
   const std::string meshSpec("generated:2x2x2");
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
+  realm.init_current_coordinates();
 
-  // copy coordinatees to copy coordinates
+  // copy coordinates to copy coordinates
   VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
 
@@ -202,16 +200,20 @@ TEST(meshMotion, initialize)
   meshMotionAlg.reset(
     new sierra::nalu::MeshMotionAlg( realm.bulk_data(), mesh_motion ));
 
+  // initialize and execute mesh motion algorithm
+  const double currTime = 0.0;
+  meshTransformationAlg->initialize(currTime);
+  meshMotionAlg->initialize(currTime);
+
   // get fields to be tested
   VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "current_coordinates");
   VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "mesh_velocity");
 
-  // initialize and execute mesh motion algorithm
-  const double currTime = 0.0;
-  meshTransformationAlg->initialize(currTime);
-  meshMotionAlg->initialize(currTime);
+  // sync coordinates to host
+  currCoords->sync_to_host();
+  meshVelocity->sync_to_host();
 
   for (auto b: bkts) {
     for (size_t in=0; in < b->size(); in++) {
@@ -221,8 +223,7 @@ TEST(meshMotion, initialize)
       double*  xyz = stk::mesh::field_data(*currCoords, node);
       double*  vel = stk::mesh::field_data(*meshVelocity, node);
 
-      sierra::nalu::MotionBase::TransMatType transMat =
-        eval_transformation(realm, currTime, oxyz);
+      sierra::nalu::mm::TransMatType transMat = eval_transformation(realm, currTime, oxyz);
 
       std::vector<double> gold_norm_xyz = eval_coords(transMat, oxyz);
       std::vector<double> gold_norm_vel = eval_vel(currTime, transMat, oxyz, &gold_norm_xyz[0]);
@@ -238,7 +239,7 @@ TEST(meshMotion, initialize)
   } // end for loop - bkts
 }
 
-TEST(meshMotion, execute)
+TEST(meshMotion, NGP_execute)
 {
   // create realm
   unit_test_utils::NaluTest naluObj;
@@ -252,7 +253,6 @@ TEST(meshMotion, execute)
 
   // register mesh motion fields and initialize coordinate fields
   realm.register_nodal_fields( &(realm.meta_data().universal_part()) );
-  realm.init_current_coordinates();
 
   // create field to copy coordinates
   // NOTE: This is done to allow computation of gold values later on
@@ -265,8 +265,9 @@ TEST(meshMotion, execute)
   // create mesh
   const std::string meshSpec("generated:2x2x2");
   unit_test_utils::fill_hex8_mesh(meshSpec, realm.bulk_data());
+  realm.init_current_coordinates();
 
-  // copy coordinatees to copy coordinates
+  // copy coordinates to copy coordinates
   VectorFieldType* modelCoords = realm.meta_data().get_field<VectorFieldType>(
     stk::topology::NODE_RANK, "coordinates");
 
@@ -298,12 +299,6 @@ TEST(meshMotion, execute)
   meshMotionAlg.reset(
     new sierra::nalu::MeshMotionAlg( realm.bulk_data(), mesh_motion ));
 
-  // get fields to be tested
-  VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_velocity");
-
   // initialize and execute mesh motion algorithm
   double currTime = 0.0;
   meshTransformationAlg->initialize(currTime);
@@ -313,6 +308,16 @@ TEST(meshMotion, execute)
   currTime = 30.0;
   meshMotionAlg->execute(currTime);
 
+  // get fields to be tested
+  VectorFieldType* currCoords = realm.meta_data().get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "current_coordinates");
+  VectorFieldType* meshVelocity = realm.meta_data().get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "mesh_velocity");
+
+  // sync modified coordinates and velocity to host
+  currCoords->sync_to_host();
+  meshVelocity->sync_to_host();
+
   for (auto b: bkts) {
     for (size_t in=0; in < b->size(); in++) {
 
@@ -321,8 +326,7 @@ TEST(meshMotion, execute)
       double*  xyz = stk::mesh::field_data(*currCoords, node);
       double*  vel = stk::mesh::field_data(*meshVelocity, node);
 
-      sierra::nalu::MotionBase::TransMatType transMat =
-        eval_transformation(realm,currTime, oxyz);
+      sierra::nalu::mm::TransMatType transMat = eval_transformation(realm, currTime, oxyz);
 
       std::vector<double> gold_norm_xyz = eval_coords(transMat, oxyz);
       std::vector<double> gold_norm_vel = eval_vel(currTime, transMat, oxyz, &gold_norm_xyz[0]);

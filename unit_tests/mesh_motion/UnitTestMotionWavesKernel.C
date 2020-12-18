@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <limits>
 
-#include "mesh_motion/MotionWaves.h"
-#include "mesh_motion/MotionBase.h"
+#include "mesh_motion/MotionWavesKernel.h"
+#include "mesh_motion/NgpMotion.h"
 
 #include "UnitTestRealm.h"
 
@@ -12,18 +12,18 @@ namespace {
   const double CoeffTol = 1e-4; //Reduced tolerance for the Stokes Coeffs 
 
   std::vector<double> transform(
-    const sierra::nalu::MotionBase::TransMatType& transMat,
-    const double* xyz )
+    const sierra::nalu::mm::TransMatType& transMat,
+    const sierra::nalu::mm::ThreeDVecType& xyz )
   {
     std::vector<double> transCoord(3,0.0);
 
     // perform matrix multiplication between transformation matrix
     // and original coordinates to obtain transformed coordinates
-    for (int d = 0; d < sierra::nalu::MotionBase::threeDVecSize; d++) {
-      transCoord[d] = transMat[d][0]*xyz[0]
-                     +transMat[d][1]*xyz[1]
-                     +transMat[d][2]*xyz[2]
-                     +transMat[d][3];
+    for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
+      transCoord[d] = transMat[d*sierra::nalu::mm::matSize+0]*xyz[0]
+                     +transMat[d*sierra::nalu::mm::matSize+1]*xyz[1]
+                     +transMat[d*sierra::nalu::mm::matSize+2]*xyz[2]
+                     +transMat[d*sierra::nalu::mm::matSize+3];
     }
 
     return transCoord;
@@ -42,18 +42,19 @@ TEST(meshMotion, airy_wave)
     "mesh_damping_length: 1.     \n"
     ;
   YAML::Node Airy_Wave_node = YAML::Load(Airy_Wave_info);
+
   // initialize the mesh Wave motion class
   unit_test_utils::NaluTest naluObj;
   sierra::nalu::Realm& realm = naluObj.create_realm();
 
-  sierra::nalu::MotionWaves MotionWaves(realm.meta_data(),Airy_Wave_node);
+  sierra::nalu::MotionWavesKernel MotionWavesKernel(realm.meta_data(),Airy_Wave_node);
 
   // build transformation
   const double time = 1.0;
-  double xyz[3] = {2.5,1.5,0.};
+  sierra::nalu::mm::ThreeDVecType xyz{2.5,1.5,0.};
 
-  MotionWaves.build_transformation(time, xyz);
-  std::vector<double> norm = transform(MotionWaves.get_trans_mat(), xyz);
+  sierra::nalu::mm::TransMatType transMat = MotionWavesKernel.build_transformation(time, xyz);
+  std::vector<double> norm = transform(transMat, xyz);
 
   const double gold_norm_z = 0.0053635368158730;
 
@@ -78,10 +79,10 @@ TEST(meshMotion, stokes_coefficients)
   unit_test_utils::NaluTest naluObj;
   sierra::nalu::Realm& realm = naluObj.create_realm();
   
-  sierra::nalu::MotionWaves MotionWaves(realm.meta_data(),Stokes_Wave_node);
+  sierra::nalu::MotionWavesKernel MotionWavesKernel(realm.meta_data(),Stokes_Wave_node);
   // Coefficients values as presented in table 2 of Fenton 1985
-  sierra::nalu::MotionWaves::StokesCoeff stokes_coeff;
-  MotionWaves.get_StokesCoeff(&stokes_coeff);
+  sierra::nalu::MotionWavesKernel::StokesCoeff stokes_coeff;
+  MotionWavesKernel.get_StokesCoeff(&stokes_coeff);
 
   const double gold_A11 = 1.208490;  
   const double gold_A22 = 0.799840;

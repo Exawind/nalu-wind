@@ -1,10 +1,9 @@
 
-#include "../../include/mesh_motion/FrameReference.h"
+#include "mesh_motion/FrameReference.h"
 
 #include "FieldTypeDef.h"
-
-// stk_mesh/base/fem
-#include <stk_mesh/base/FieldBLAS.hpp>
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpTypes.h"
 
 #include <cassert>
 
@@ -15,43 +14,65 @@ void FrameReference::update_coordinates(const double time)
 {
   assert (partVec_.size() > 0);
 
-  const int nDim = meta_.spatial_dimension();
+  // create NGP view of motion kernels
+  const size_t numKernels = motionKernels_.size();
+  auto ngpKernels = nalu_ngp::create_ngp_view<NgpMotion>(motionKernels_);
 
-  VectorFieldType* modelCoords = meta_.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
+  // define mesh entities
+  const int nDim = meta_.spatial_dimension();
+  const auto& ngpMesh = bulk_.get_updated_ngp_mesh();
+  const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
+
+  // get the field from the NGP mesh
+  stk::mesh::NgpField<double> modelCoords = stk::mesh::get_updated_ngp_field<double>(
+    *meta_.get_field<VectorFieldType>(entityRank, "coordinates"));
+
+  // sync fields to device
+  modelCoords.sync_to_device();
 
   // get the parts in the current motion frame
   stk::mesh::Selector sel = stk::mesh::selectUnion(partVec_) &
       (meta_.locally_owned_part() | meta_.globally_shared_part());
-  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
 
-  for (auto b: bkts) {
-    for (size_t in=0; in < b->size(); in++) {
+  // NGP for loop to update coordinates
+  nalu_ngp::run_entity_algorithm(
+    "FrameReference_update_coordinates",
+    ngpMesh, entityRank, sel,
+    KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
 
-      auto node = (*b)[in]; // mesh node and NOT YAML node
-      double* xyz = stk::mesh::field_data(*modelCoords, node);
+    // temporary model coords for a generic 2D and 3D implementation
+    mm::ThreeDVecType mX;
 
-      // temporary model coords for a generic 2D and 3D implementation
-      double mX[3] = {0.0,0.0,0.0};
+    // copy over model coordinates
+    for (int d = 0; d < nDim; ++d)
+      mX[d] = modelCoords.get(mi,d);
 
-      // copy over model coordinates
-      for ( int i = 0; i < nDim; ++i )
-        mX[i] = xyz[i];
+    // initialize composite transformation matrix
+    mm::TransMatType compTransMat;
 
-      // compute composite transformation matrix
-      MotionBase::TransMatType trans_mat = compute_transformation(time,mX);
+    // create composite transformation matrix based off of all motions
+    for (size_t i=0; i < numKernels; ++i) {
+      NgpMotion* kernel = ngpKernels(i);
 
-      // perform matrix multiplication between transformation matrix
-      // and old coordinates to obtain current coordinates
-      for (int d = 0; d < nDim; d++) {
-        xyz[d] = trans_mat[d][0]*mX[0]
-                +trans_mat[d][1]*mX[1]
-                +trans_mat[d][2]*mX[2]
-                +trans_mat[d][3];
-      } // end for loop - d index
+      // build and get transformation matrix
+      mm::TransMatType currTransMat = kernel->build_transformation(time,mX);
 
-    } // end for loop - in index
-  } // end for loop - bkts
+      // composite addition of motions in current group
+      compTransMat = kernel->add_motion(currTransMat,compTransMat);
+    }
+
+    // perform matrix multiplication between transformation matrix
+    // and old coordinates to obtain current coordinates
+    for (int d = 0; d < nDim; ++d) {
+      modelCoords.get(mi,d) = compTransMat[d*mm::matSize+0]*mX[0]
+                             +compTransMat[d*mm::matSize+1]*mX[1]
+                             +compTransMat[d*mm::matSize+2]*mX[2]
+                             +compTransMat[d*mm::matSize+3];
+    } // end for loop - d index
+  }); // end NGP for loop
+
+  // Mark fields as modified on device
+  modelCoords.modify_on_device();
 }
 
 } // nalu
