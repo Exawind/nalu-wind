@@ -975,6 +975,7 @@ Realm::setup_post_processing_algorithms()
     // call through to the Eqsys
     if ( theType == "surface" ) {
       equationSystems_.register_surface_pp_algorithm(theData);
+    }
     else {
       throw std::runtime_error("Post Processing Error: only  surface-based is supported");
     }

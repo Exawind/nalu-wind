@@ -109,9 +109,7 @@ public:
   }
 
   virtual void register_surface_pp_algorithm(
-    const PostProcessingData&, 
-    stk::mesh::PartVector&,
-    const WallBoundaryConditionData&) final
+    const PostProcessingData&, stk::mesh::PartVector&) final
   {
     throw std::runtime_error(
       "surface post-processing not implemented for matrix free");
