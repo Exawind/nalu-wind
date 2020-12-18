@@ -88,6 +88,8 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
   const unsigned exposedAreaVecID = exposedAreaVec_;
   auto* meSCS = meSCS_;
   auto* meFC = meFC_;
+  bool RANSAblBcApproach = RANSAblBcApproach_;
+  double z0 = z0_;
 
   const std::string algName = "WallFuncGeometryAlg_" +
     std::to_string(BcAlgTraits::faceTopo_) + "_" +
@@ -110,9 +112,9 @@ void WallFuncGeometryAlg<BcAlgTraits>::execute()
         const int nodeL = meSCS->opposingNodes(fdata.faceOrd, ip);
 
         DoubleType ypBip;
-        if (RANSAblBcApproach_) {
+        if (RANSAblBcApproach) {
           // set ypBip to roughness height for wall function calculation
-          ypBip = z0_;
+          ypBip = z0;
         }
         else {
           ypBip = 0.0;

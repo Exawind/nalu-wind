@@ -88,6 +88,8 @@ void SDRWallFuncAlg<BcAlgTraits>::execute()
 
   auto* meFC = meFC_;
   auto* meSCS = meSCS_;
+  bool RANSAblBcApproach = RANSAblBcApproach_;
+  double z0 = z0_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
@@ -114,9 +116,9 @@ void SDRWallFuncAlg<BcAlgTraits>::execute()
         const int nodeL = meSCS->opposingNodes(fdata.faceOrd, ip);
 
         DoubleType ypBip;
-        if (RANSAblBcApproach_) {
+        if (RANSAblBcApproach) {
           // set ypBip to roughness height for wall function calculation
-          ypBip = z0_;
+          ypBip = z0;
         }
         else {
           ypBip = 0.0;
