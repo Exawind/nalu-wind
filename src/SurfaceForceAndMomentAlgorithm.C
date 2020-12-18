@@ -17,7 +17,6 @@
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFactory.h>
 #include <NaluEnv.h>
-#include <NaluParsing.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -55,8 +54,7 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
   const std::string &outputFileName,
   const int &frequency,
   const std::vector<double > &parameters,
-  const bool &useShifted,
-  const WallBoundaryConditionData &wallBCData)
+  const bool &useShifted)
   : Algorithm(realm, partVec),
     outputFileName_(outputFileName),
     frequency_(frequency),
@@ -77,14 +75,6 @@ SurfaceForceAndMomentAlgorithm::SurfaceForceAndMomentAlgorithm(
     assembledArea_(NULL),
     w_(16)
 {
-  // save wall BC values for RANS of ABL
-  WallUserData userData = wallBCData.userData_;
-  RANSAblBcApproach_ = userData.RANSAblBcApproach_;
-  if (RANSAblBcApproach_) {
-    RoughnessHeight rough = userData.z0_;
-    z0_ = rough.z0_;
-  }
-
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
   coordinates_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
@@ -371,21 +361,13 @@ SurfaceForceAndMomentAlgorithm::execute()
         const double * coordL = stk::mesh::field_data(*coordinates_, nodeL );
         const double * coordR = stk::mesh::field_data(*coordinates_, nodeR );
 
-        double ypBip;
-        if (RANSAblBcApproach_) {
-          // if RANS of ABL, set yp to roughness height for wall function calculation
-          ypBip = z0_;
+        double ypBip = 0.0;
+        for ( int j = 0; j < nDim; ++j ) {
+          const double nj = ws_normal[j];
+          const double ej = coordR[j] - coordL[j];
+          ypBip += nj*ej*nj*ej;
         }
-        else {
-          // determine yp; ~nearest opposing edge normal distance to wall
-          ypBip = 0.0;
-          for ( int j = 0; j < nDim; ++j ) {
-            const double nj = ws_normal[j];
-            const double ej = coordR[j] - coordL[j];
-            ypBip += nj*ej*nj*ej;
-          }
-          ypBip = std::sqrt(ypBip);
-        }
+        ypBip = std::sqrt(ypBip);
 
         const double tauW = std::sqrt(tauTangential);
         const double uTau = std::sqrt(tauW/rhoBip);

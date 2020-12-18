@@ -517,8 +517,7 @@ LowMachEquationSystem::register_open_bc(
 void
 LowMachEquationSystem::register_surface_pp_algorithm(
   const PostProcessingData &theData,
-  stk::mesh::PartVector &partVector,
-  const WallBoundaryConditionData &wallBCData)
+  stk::mesh::PartVector &partVector)
 {
   const std::string thePhysics = theData.physics_;
 
@@ -545,12 +544,12 @@ LowMachEquationSystem::register_surface_pp_algorithm(
   if ( thePhysics == "surface_force_and_moment" ) {
     ScalarFieldType *assembledArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_area_force_moment"));
     stk::mesh::put_field_on_mesh(*assembledArea, stk::mesh::selectUnion(partVector), nullptr);
-    if ( NULL == surfaceForceAndMomentAlgDriver_ )
+	    if ( NULL == surfaceForceAndMomentAlgDriver_ )
       surfaceForceAndMomentAlgDriver_ = new SurfaceForceAndMomentAlgorithmDriver(realm_);
     SurfaceForceAndMomentAlgorithm *ppAlg
       = new SurfaceForceAndMomentAlgorithm(
           realm_, partVector, theData.outputFileName_, theData.frequency_,
-          theData.parameters_, realm_.realmUsesEdges_, wallBCData);
+          theData.parameters_, realm_.realmUsesEdges_);
     surfaceForceAndMomentAlgDriver_->algVec_.push_back(ppAlg);
   }
   else if ( thePhysics == "surface_force_and_moment_wall_function" ) {

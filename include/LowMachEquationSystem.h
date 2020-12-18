@@ -80,8 +80,7 @@ public:
 
   virtual void register_surface_pp_algorithm(
        const PostProcessingData &theData,
-       stk::mesh::PartVector &partVector,
-       const WallBoundaryConditionData &wallBCData);
+       stk::mesh::PartVector &partVector);
 
   virtual void register_initial_condition_fcn(
       stk::mesh::Part *part,
