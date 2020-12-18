@@ -783,18 +783,13 @@ namespace YAML
     }
     if (node["RANS_abl_bc"])
     {
-      wallData.RANSAblBcApproach_ =
-          node["RANS_abl_bc"].as<bool>();
-    }
-    if (node["fixed_velocity"])
-    {
-      wallData.uFixed_ =
-          node["fixed_velocity"].as<double>();
-    }
-    if (node["fixed_height"])
-    {
-      wallData.zFixed_ =
-          node["fixed_height"].as<double>();
+      const bool is_activated = node["RANS_abl_bc"].as<bool>();
+      wallData.RANSAblBcApproach_ = is_activated;
+
+      if (is_activated) {
+        wallData.uRef_ = node["reference_velocity"].as<double>();
+        wallData.zRef_ = node["reference_height"].as<double>();
+      }
     }
     // To use the engineering wall model.
     if (node["use_wall_function"])

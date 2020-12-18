@@ -60,8 +60,8 @@ ComputeWallFrictionVelocityAlgorithm::ComputeWallFrictionVelocityAlgorithm(
   WallUserData userData = wallBCData.userData_;
   RANSAblBcApproach_ = userData.RANSAblBcApproach_;
   if (RANSAblBcApproach_) {
-    uFixed_ = userData.uFixed_;
-    zFixed_ = userData.zFixed_;
+    uRef_ = userData.uRef_;
+    zRef_ = userData.zRef_;
     RoughnessHeight rough = userData.z0_;
     z0_ = rough.z0_;
   }
@@ -297,7 +297,7 @@ ComputeWallFrictionVelocityAlgorithm::execute()
         double utauGuess;
         if (RANSAblBcApproach_) {
           // calculate utau using Monin Obukhov profile
-          utauGuess = (uFixed_*kappa_)/(std::log((zFixed_+z0_)/z0_));
+          utauGuess = (uRef_*kappa_)/(std::log((zRef_+z0_)/z0_));
         }
         else {
           // calculate tangential velocity

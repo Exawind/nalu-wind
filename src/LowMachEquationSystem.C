@@ -1978,7 +1978,7 @@ MomentumEquationSystem::register_wall_bc(
       edgeNodalGradient_);
   }
 
-  if (anyWallFunctionActivated | RANSAblBcApproach) {
+  if (anyWallFunctionActivated || RANSAblBcApproach) {
     ScalarFieldType *assembledWallArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_area_wf"));
     stk::mesh::put_field_on_mesh(*assembledWallArea, *part, nullptr);
 

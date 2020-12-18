@@ -61,8 +61,8 @@ struct WallUserData : public UserData {
   Pressure pressure_;
   unsigned gravityComponent_;
   RoughnessHeight z0_;
-  double uFixed_;
-  double zFixed_;
+  double uRef_;
+  double zRef_;
   
   bool isAdiabatic_;
   bool heatFluxSpec_;
@@ -79,8 +79,8 @@ struct WallUserData : public UserData {
   WallUserData()
     : UserData(),
       gravityComponent_(3),
-      uFixed_(6.6),
-      zFixed_(90.0),
+      uRef_(6.6),
+      zRef_(90.0),
       isAdiabatic_(false),
       heatFluxSpec_(false),
       isInterface_(false),

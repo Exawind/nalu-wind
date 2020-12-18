@@ -704,7 +704,7 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
     wallFunctionApproach = false;
   }
 
-  if ( wallFunctionApproach | RANSAblBcApproach ) {
+  if ( wallFunctionApproach || RANSAblBcApproach ) {
     // need to register the assembles wall value for tke; can not share with tke_bc
     ScalarFieldType *theAssembledField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "wall_model_tke_bc"));
     stk::mesh::put_field_on_mesh(*theAssembledField, *part, nullptr);

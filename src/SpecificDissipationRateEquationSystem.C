@@ -604,15 +604,11 @@ SpecificDissipationRateEquationSystem::register_wall_bc(
   if (!wallModelAlgDriver_)
     wallModelAlgDriver_.reset(new SDRWallFuncAlgDriver(realm_));
 
-  if (RANSAblBcApproach) {
+  if (wallFunctionApproach || RANSAblBcApproach) {
     RoughnessHeight rough = userData.z0_;
     double z0 = rough.z0_;
     wallModelAlgDriver_->register_face_elem_algorithm<SDRWallFuncAlg>(
       algType, part, get_elem_topo(realm_, *part), "sdr_wall_func", RANSAblBcApproach, z0);
-  }
-  else if (wallFunctionApproach) {
-    wallModelAlgDriver_->register_face_elem_algorithm<SDRWallFuncAlg>(
-      algType, part, get_elem_topo(realm_, *part), "sdr_wall_func"); 
   }
   else {
     wallModelAlgDriver_->register_face_elem_algorithm<SDRLowReWallAlg>(
