@@ -129,7 +129,7 @@ realms:
       t_max:    0.625
       dt_fast: 0.00625
       n_every_checkpoint: 100
-      fllt_correction: False
+      fllt_correction: True
 
       Turbine0:
         num_force_pts_blade: 100

@@ -67,10 +67,10 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
         const int offset = turbOffset + bladeStart;
         const int nPoints =
           actMetaFast.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
-
-        if (
-          (gBlade >= div * rank && gBlade < div * (rank + 1)) ||
-          gBlade % numRanks < remainder) {
+        const bool isInDivisionIncrement =
+          gBlade >= (div * rank) && gBlade < div * (rank + 1);
+        const bool isInRemainderIncrement = rank % numRanks == gBlade;
+        if (isInDivisionIncrement || isInRemainderIncrement) {
           results.push_back(std::make_pair(offset, nPoints));
         }
         gBlade++;
