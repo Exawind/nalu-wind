@@ -34,6 +34,11 @@ FilteredLiftingLineCorrection::FilteredLiftingLineCorrection(
   : actBulk_(actBulk), actMeta_(actMeta)
 {
   bladeOffsetLengthPair_ = compute_blade_distributions(actMeta, actBulk);
+  for (auto&& b : bladeOffsetLengthPair_) {
+    NaluEnv::self().naluOutput()
+      << "Rank: " << NaluEnv::self().parallel_rank() << " offset: " << b.first
+      << " nPoints: " << b.second << std::endl;
+  }
 }
 
 void
@@ -192,7 +197,7 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
       });
   }
   actuator_utils::reduce_view_on_host(deltaU);
-};
+}
 
 bool
 FilteredLiftingLineCorrection::is_active()

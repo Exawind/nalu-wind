@@ -18,6 +18,18 @@
 namespace sierra {
 namespace nalu {
 
+bool
+does_blade_belong_on_this_rank(
+  int numBladesTotal, int globBladeNum, int numRanks, int rank)
+{
+  const int div = numBladesTotal / numRanks;
+  const bool isInDivisionIncrement =
+    globBladeNum >= (div * rank) && globBladeNum < div * (rank + 1);
+  const bool isInRemainderIncrement = (globBladeNum - div * numRanks) == rank;
+  ThrowAssert(isInDivisionIncrement && isInRemainderIncrement);
+  return isInDivisionIncrement || isInRemainderIncrement;
+}
+
 std::vector<std::pair<int, int>>
 compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
 {
@@ -49,12 +61,8 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
       numBladesTotal += actMetaFast.nBlades_(iTurb);
     }
 
-    const int div = numRanks / numBladesTotal;
-    const int remainder = numRanks % numBladesTotal;
-
     // loop through and assign them to the processors
-
-    for (int iTurb = 0, gBlade = 0; iTurb < actMeta.numberOfActuators_;
+    for (int iTurb = 0, globBladeNum = 0; iTurb < actMeta.numberOfActuators_;
          ++iTurb) {
       const int turbOffset = actBulk.turbIdOffset_.h_view(iTurb);
       const int nBlades = actMetaFast.nBlades_(iTurb);
@@ -65,15 +73,16 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
           fast::ActuatorNodeType::BLADE, 0, iBlade);
 
         const int offset = turbOffset + bladeStart;
+
         const int nPoints =
           actMetaFast.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
-        const bool isInDivisionIncrement =
-          gBlade >= (div * rank) && gBlade < div * (rank + 1);
-        const bool isInRemainderIncrement = rank % numRanks == gBlade;
-        if (isInDivisionIncrement || isInRemainderIncrement) {
+
+        if (does_blade_belong_on_this_rank(
+              numBladesTotal, globBladeNum, numRanks, rank)) {
           results.push_back(std::make_pair(offset, nPoints));
         }
-        gBlade++;
+
+        globBladeNum++;
       }
     }
     break;

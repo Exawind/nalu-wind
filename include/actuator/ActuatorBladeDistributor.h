@@ -28,7 +28,8 @@ struct ActuatorMeta;
   is the number of points along the blade
  */
 std::vector<std::pair<int,int>> compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk);
-
+bool does_blade_belong_on_this_rank(
+  int totalNumBlades, int globBladeNum, int rank, int numRanks);
 }
 }
 
