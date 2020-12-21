@@ -18,8 +18,7 @@ namespace sierra {
 namespace nalu {
 
 // free functions for vector operations
-KOKKOS_INLINE_FUNCTION
-double
+inline double
 dot(double* u, double* v)
 {
   double result = 0.0;
@@ -61,13 +60,9 @@ FilteredLiftingLineCorrection::compute_lift_force_distribution()
     auto range_policy =
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
 
-    // for now let's just worry about constant span direction (no blade
-    // deformation)
-    ActFixScalarDbl span_dir("span normal", 1);
-
     // surrogate for equation 5.3
     Kokkos::parallel_for(
-      "extract lift", range_policy, KOKKOS_LAMBDA(int i) {
+      "extract lift", range_policy, ACTUATOR_LAMBDA(int i) {
         auto v = Kokkos::subview(vel, i, Kokkos::ALL);
         auto f = Kokkos::subview(force, i, Kokkos::ALL);
 
@@ -79,7 +74,8 @@ FilteredLiftingLineCorrection::compute_lift_force_distribution()
           G(i, j) = force(i, j) - vel(i, j) * fv / vmag2;
         }
       });
-    FLLC::scale_lift_force(actBulk_, actMeta_, range_policy, helper);
+    FLLC::scale_lift_force(
+      actBulk_, actMeta_, range_policy, helper, offset, nPoints);
   }
 
   actuator_utils::reduce_view_on_host(G);
@@ -105,7 +101,7 @@ FilteredLiftingLineCorrection::grad_lift_force_distribution()
 
     // equations 5.4 and 5.5 a/b
     Kokkos::parallel_for(
-      "compute dG", range_policy, KOKKOS_LAMBDA(int i) {
+      "compute dG", range_policy, ACTUATOR_LAMBDA(int i) {
         const int index = i - offset;
         for (int j = 0; j < 3; ++j) {
           if (index == 0) {
@@ -136,7 +132,7 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
   auto deltaU = helper.get_local_view(actBulk_.fllc_);
   auto Uinf = helper.get_local_view(actBulk_.relativeVelocityMagnitude_);
 
-  const double relaxation_factor = 0.1;
+  const double relaxationFactor = 0.1;
 
   // copy deltaU so we can zero it for our data reduction strategy
   Kokkos::View<double* [3], mem_layout, mem_space> deltaU_stash(
@@ -160,7 +156,7 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
 
     Kokkos::parallel_for(
-      "compute flucs", range_policy, KOKKOS_LAMBDA(int index) {
+      "compute flucs", range_policy, ACTUATOR_LAMBDA(int index) {
         double optInd[3] = {0, 0, 0};
         double lesInd[3] = {0, 0, 0};
 
@@ -190,8 +186,8 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
         // update the correction term with relaxation
         // equation 5.8
         for (int j = 0; j < 3; ++j) {
-          deltaU(index, j) = relaxation_factor * (optInd[j] - lesInd[j]) +
-                             (1.0 - relaxation_factor) * deltaU_stash(index, j);
+          deltaU(index, j) = relaxationFactor * (optInd[j] - lesInd[j]) +
+                             (1.0 - relaxationFactor) * deltaU_stash(index, j);
         }
       });
   }

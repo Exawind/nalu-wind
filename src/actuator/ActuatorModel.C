@@ -28,7 +28,7 @@ namespace nalu {
 void
 ActuatorModel::parse(const YAML::Node& actuatorNode)
 {
-  ActuatorMeta actMetaBase = actuator_parse(actuatorNode);
+  const ActuatorMeta actMetaBase = actuator_parse(actuatorNode);
   const std::string actuatorType =
     actuatorNode["actuator"]["type"].as<std::string>();
   switch (actMetaBase.actuatorType_) {
