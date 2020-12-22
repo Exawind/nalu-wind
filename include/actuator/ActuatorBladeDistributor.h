@@ -28,8 +28,20 @@ struct ActuatorMeta;
   is the number of points along the blade
  */
 std::vector<std::pair<int,int>> compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk);
-bool does_blade_belong_on_this_rank(
-  int totalNumBlades, int globBladeNum, int rank, int numRanks);
+/**
+ * @brief determine if a blade's lifting line correction should be computed on
+ * the reference processor
+ *
+ * @param totalNumBlades  the total number of actuator blades in the simulation
+ * @param globBladeNum the index of the current blade being evaluated
+ * @param numRanks the rank being evaluated with the globBladeNum to see if they
+ * match
+ * @param ranks the total number of ranks in the simulation
+ * @return true
+ * @return false
+ */
+bool blade_belongs_on_this_rank(
+  int totalNumBlades, int globBladeNum, int numRanks, int ranks);
 }
 }
 

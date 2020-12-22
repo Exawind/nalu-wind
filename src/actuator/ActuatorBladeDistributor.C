@@ -19,7 +19,7 @@ namespace sierra {
 namespace nalu {
 
 bool
-does_blade_belong_on_this_rank(
+blade_belongs_on_this_rank(
   int numBladesTotal, int globBladeNum, int numRanks, int rank)
 {
   const int div = numBladesTotal / numRanks;
@@ -77,7 +77,7 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
         const int nPoints =
           actMetaFast.fastInputs_.globTurbineData[iTurb].numForcePtsBlade;
 
-        if (does_blade_belong_on_this_rank(
+        if (blade_belongs_on_this_rank(
               numBladesTotal, globBladeNum, numRanks, rank)) {
           results.push_back(std::make_pair(offset, nPoints));
         }
