@@ -231,6 +231,8 @@ public:
 
   double firstPNGResidual_;
 
+  bool RANSAblBcApproach_;
+
   // saved of mesh parts that are not to be projected
   std::vector<stk::mesh::Part *> notProjectedPart_;
   std::array<std::vector<stk::mesh::Part*>,3> notProjectedDir_;

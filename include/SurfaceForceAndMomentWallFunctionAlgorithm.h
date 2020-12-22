@@ -33,7 +33,8 @@ public:
     const std::string &outputFileName,
     const int &frequency_,
     const std::vector<double > &parameters,
-    const bool &useShifted);
+    const bool &useShifted,
+    bool RANSAblBcApproach);
   ~SurfaceForceAndMomentWallFunctionAlgorithm();
 
   void execute();
@@ -67,6 +68,8 @@ public:
   ScalarFieldType *assembledArea_;
 
   const int w_;
+
+  bool RANSAblBcApproach_;
 };
 
 } // namespace nalu

@@ -53,7 +53,8 @@ SurfaceForceAndMomentWallFunctionAlgorithm::SurfaceForceAndMomentWallFunctionAlg
   const std::string &outputFileName,
   const int &frequency,
   const std::vector<double > &parameters,
-  const bool &useShifted)
+  const bool &useShifted,
+  bool RANSAblBcApproach)
   : Algorithm(realm, partVec),
     outputFileName_(outputFileName),
     frequency_(frequency),
@@ -76,7 +77,8 @@ SurfaceForceAndMomentWallFunctionAlgorithm::SurfaceForceAndMomentWallFunctionAlg
     wallNormalDistanceBip_(NULL),
     exposedAreaVec_(NULL),
     assembledArea_(NULL),
-    w_(16)
+    w_(16),
+    RANSAblBcApproach_(RANSAblBcApproach)
 {
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -87,7 +89,12 @@ SurfaceForceAndMomentWallFunctionAlgorithm::SurfaceForceAndMomentWallFunctionAlg
   viscousForce_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "viscous_force");
   tauWall_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tau_wall");
   yplus_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "yplus");
-  bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "wall_velocity_bc");
+  if (RANSAblBcApproach_) {
+    bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_bc");
+  }
+  else {
+    bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "wall_velocity_bc");
+  }
   density_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   viscosity_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
   wallFrictionVelocityBip_ = meta_data.get_field<GenericFieldType>(meta_data.side_rank(), "wall_friction_velocity_bip");
@@ -345,9 +352,15 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
         yplusMin = std::min(yplusMin, yplusBip);
         yplusMax = std::max(yplusMax, yplusBip);
 
-        double lambda = muBip/yp*aMag;
-        if ( yplusBip > yplusCrit_)
-          lambda = rhoBip*kappa_*utau/std::log(elog_*yplusBip)*aMag;
+        double lambda;
+        if (RANSAblBcApproach_) {
+          lambda = rhoBip;
+        }
+        else {
+          lambda = muBip/yp*aMag;
+          if ( yplusBip > yplusCrit_)
+            lambda = rhoBip*kappa_*utau/std::log(elog_*yplusBip)*aMag;
+        }
 
         // extract nodal fields
         stk::mesh::Entity node = face_node_rels[localFaceNode];
