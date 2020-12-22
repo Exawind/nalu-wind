@@ -35,11 +35,39 @@ TEST_P(BladeDistributorTest, checkSpecificValues)
   EXPECT_EQ(GetParam().answer_, result);
 }
 
+TEST_P(BladeDistributorTest, allBladesAreUsedOnlyOnce)
+{
+  std::vector<int> counter(GetParam().nTotalBlades_);
+  for (int r = 0; r < GetParam().numRanks_; r++) {
+    for (int b = 0; b < GetParam().nTotalBlades_; b++) {
+      if (does_blade_belong_on_this_rank(
+            GetParam().nTotalBlades_, b, GetParam().numRanks_, r)) {
+        counter[b]++;
+      }
+    }
+  }
+  for (int i = 0; i < GetParam().nTotalBlades_; i++) {
+    EXPECT_EQ(1, counter[i]) << "Failed for index: " << i;
+  }
+}
+
+std::ostream&
+operator<<(std::ostream& os, const TestInputs ti)
+{
+  return os << "nTotalBlades: " << ti.nTotalBlades_
+            << " globBladeNum: " << ti.globBladeNum_
+            << " numRanks: " << ti.numRanks_ << " rank: " << ti.rank_
+            << " answer: " << ti.answer_;
+}
+
 INSTANTIATE_TEST_SUITE_P(
   BladeTestCases,
   BladeDistributorTest,
   testing::Values(
-    TestInputs({3, 0, 4, 0, true}), TestInputs({3, 0, 4, 3, false})));
+    TestInputs({3, 0, 4, 0, true}),
+    TestInputs({6, 0, 4, 3, false}),
+    TestInputs({9, 1, 4, 0, true}),
+    TestInputs({3, 4, 36, 3, false})));
 
 } // namespace
 } // namespace nalu
