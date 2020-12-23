@@ -16,6 +16,50 @@
 namespace sierra {
 namespace nalu {
 
+/**
+ * @brief General options for each actuator instance
+ *
+ * @param actMeta
+ * @param y_actuator
+ */
+void
+actuator_instance_parse(ActuatorMeta& actMeta, const YAML::Node& y_actuator)
+{
+  actMeta.numNearestPointsFllcInt_.modify_host();
+
+  for (int i = 0; i < actMeta.numberOfActuators_; i++) {
+    std::string key;
+
+    // TODO: I really don't like that we have these conditionals here.
+    // I'd really like to align the naming conventions so the data in these
+    // cases can be agnostic to actuator types
+    switch (actMeta.actuatorType_) {
+    case (ActuatorType::ActLineSimpleNGP): {
+      key = "Blade" + std::to_string(i);
+      break;
+    }
+    default: {
+      key = "Turbine" + std::to_string(i);
+      break;
+    }
+    }
+    const YAML::Node y_instance = y_actuator[key];
+
+    get_if_present_no_default(
+      y_instance, "fllt_correction", actMeta.entityFLLC_(i));
+    if (actMeta.entityFLLC_(i)) {
+      actMeta.useFLLC_ = true;
+    }
+
+    get_required(
+      y_instance, "num_force_pts_blade",
+      actMeta.numNearestPointsFllcInt_.h_view(i));
+    get_if_present_no_default(
+      y_instance, "fllt_num_nearest_point",
+      actMeta.numNearestPointsFllcInt_.h_view(i));
+  }
+} // namespace nalu
+
 /*! \brief Parse parameters to construct meta data for actuators
  *  Parse parameters and construct meta data for actuators.
  *  Intent is to divorce object creation/memory allocation from parsing
@@ -78,11 +122,20 @@ actuator_parse(const YAML::Node& y_node)
   } else {
     throw std::runtime_error("Actuator:: search_target_part is not declared.");
   }
-  get_if_present_no_default(y_actuator, "fllt_correction", actMeta.useFLLC_);
+
+  actuator_instance_parse(actMeta, y_actuator);
 
   return actMeta;
 }
 
+/**
+ * @brief Standard interface for parsing epsilon values to be reused by sub
+ * models
+ *
+ * @param iTurb
+ * @param turbNode
+ * @param actMeta
+ */
 void
 epsilon_parsing(int iTurb, const YAML::Node& turbNode, ActuatorMeta& actMeta)
 {

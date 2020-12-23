@@ -11,6 +11,7 @@
 #define ACTUATORFLLC_H_
 
 #include <actuator/ActuatorTypes.h>
+#include <actuator/ActuatorBladeDistributor.h>
 #include <vector>
 #include <utility>
 
@@ -59,7 +60,7 @@ bool is_active();
 private:
 ActuatorBulk& actBulk_;
 const ActuatorMeta& actMeta_;
-std::vector<std::pair<int,int>> bladeOffsetLengthPair_;
+std::vector<BladeDistributionInfo> bladeDistInfo_;
 
 };
 } // namespace nalu

@@ -32,7 +32,6 @@ struct ActuatorInfoNGP;
  * be accessed on host or device. Specialization for different models is
  * intended via inheritance.
  *
- * The meta data should be copyable.
  */
 
 struct ActuatorMeta
@@ -51,6 +50,8 @@ struct ActuatorMeta
   bool useFLLC_ = false;
   ActVectorDblDv epsilonChord_;
   ActVectorDblDv epsilon_;
+  ActFixScalarBool entityFLLC_;
+  ActScalarIntDv numNearestPointsFllcInt_;
 };
 
 /*! \brief Where field data is stored and accessed for actuators

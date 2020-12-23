@@ -69,7 +69,9 @@ private:
     inputFileLines_.push_back("actuator:\n");
     inputFileLines_.push_back("  type: ActLineFAST\n");
     inputFileLines_.push_back("  n_turbines_glob: 1\n");
-    inputFileLines_.push_back("  search_target_part: [part1, part2]");
+    inputFileLines_.push_back("  search_target_part: [part1, part2]\n");
+    inputFileLines_.push_back("  Turbine0:\n");
+    inputFileLines_.push_back("   num_force_pts_blade: 2\n");
   }
 };
 

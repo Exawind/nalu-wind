@@ -157,7 +157,6 @@ TEST_F(ActuatorParsingFastTests, useFLLC)
   search_method: stk_kdtree
   type: ActLineFASTNGP
   n_turbines_glob: 1
-  fllt_correction: yes
   t_start: 0
   simStart: init
   n_every_checkpoint: 1
@@ -165,6 +164,7 @@ TEST_F(ActuatorParsingFastTests, useFLLC)
   t_max: 0.0625
   debug: no
   Turbine0:
+    fllt_correction: yes
     turbine_name: turbinator
     epsilon_min: [5.0, 5.0, 5.00]
     epsilon_chord: [1.0, 1.0, 1.00]

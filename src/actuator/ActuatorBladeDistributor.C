@@ -30,21 +30,24 @@ blade_belongs_on_this_rank(
   return isInDivisionIncrement || isInRemainderIncrement;
 }
 
-std::vector<std::pair<int, int>>
+std::vector<BladeDistributionInfo>
 compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
 {
-  std::vector<std::pair<int, int>> results;
+  std::vector<BladeDistributionInfo> results;
   const int rank = NaluEnv::self().parallel_rank();
 
   switch (actMeta.actuatorType_) {
   case (ActuatorType::ActLineSimpleNGP): {
     auto actMetaSimp = dynamic_cast<const ActuatorMetaSimple&>(actMeta);
     // one blade per processor for this case, but we could change this
+    if (!actMeta.entityFLLC_(actBulk.localTurbineId_))
+      break;
     if (rank == actBulk.localTurbineId_) {
       const int iBlade = actBulk.localTurbineId_;
       const int offset = actBulk.turbIdOffset_.h_view(iBlade);
       const int nPoints = actMetaSimp.num_force_pts_blade_.h_view(iBlade);
-      results.push_back(std::make_pair(offset, nPoints));
+      const int nNeighbor = actMetaSimp.numNearestPointsFllcInt_.h_view(iBlade);
+      results.push_back({offset, nPoints, nNeighbor});
     }
     break;
   }
@@ -58,14 +61,23 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
     int numBladesTotal = 0;
     // compute the total number of blades
     for (int iTurb = 0; iTurb < actMeta.numberOfActuators_; ++iTurb) {
+      // skip this entity if fllc isn't active
+      if (!actMeta.entityFLLC_(iTurb))
+        continue;
       numBladesTotal += actMetaFast.nBlades_(iTurb);
     }
 
     // loop through and assign them to the processors
     for (int iTurb = 0, globBladeNum = 0; iTurb < actMeta.numberOfActuators_;
          ++iTurb) {
+
+      // skip this turbine if fllc isn't active
+      if (!actMeta.entityFLLC_(iTurb))
+        continue;
+
       const int turbOffset = actBulk.turbIdOffset_.h_view(iTurb);
       const int nBlades = actMetaFast.nBlades_(iTurb);
+      const int nNeighbors = actMeta.numNearestPointsFllcInt_.h_view(iTurb);
 
       for (int iBlade = 0; iBlade < nBlades; ++iBlade) {
         const int bladeStart = actuator_utils::get_fast_point_index(
@@ -79,7 +91,7 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
 
         if (blade_belongs_on_this_rank(
               numBladesTotal, globBladeNum, numRanks, rank)) {
-          results.push_back(std::make_pair(offset, nPoints));
+          results.push_back({offset, nPoints, nNeighbors});
         }
 
         globBladeNum++;

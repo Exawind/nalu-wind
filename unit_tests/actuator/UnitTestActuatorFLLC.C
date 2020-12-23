@@ -24,8 +24,8 @@ const char* actuatorParameters = R"act(actuator:
   search_method: stk_kdtree
   type: ActLineSimpleNGP
   n_simpleblades: 1
-  fllt_correction: yes
   Blade0:
+    fllt_correction: yes
     num_force_pts_blade: 5
     epsilon_min: [3.0, 3.0, 3.0]
     epsilon_chord: [0.25, 0.25, 0.25]

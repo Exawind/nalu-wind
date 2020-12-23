@@ -27,7 +27,9 @@ ActuatorMeta::ActuatorMeta(int numTurbines, ActuatorType actuatorType)
     searchMethod_(stk::search::KDTREE),
     numPointsTurbine_("numPointsTurbine", numberOfActuators_),
     epsilonChord_("epsilonChordMeta", numberOfActuators_),
-    epsilon_("epsilonMeta", numberOfActuators_)
+    epsilon_("epsilonMeta", numberOfActuators_),
+    entityFLLC_("entityFLLC_", numberOfActuators_),
+    numNearestPointsFllcInt_("numNearestPointsFllcInt", numberOfActuators_)
 {
 }
 

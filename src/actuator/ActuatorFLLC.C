@@ -33,12 +33,7 @@ FilteredLiftingLineCorrection::FilteredLiftingLineCorrection(
   const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
   : actBulk_(actBulk), actMeta_(actMeta)
 {
-  bladeOffsetLengthPair_ = compute_blade_distributions(actMeta, actBulk);
-  for (auto&& b : bladeOffsetLengthPair_) {
-    NaluEnv::self().naluOutput()
-      << "Rank: " << NaluEnv::self().parallel_rank() << " offset: " << b.first
-      << " nPoints: " << b.second << std::endl;
-  }
+  bladeDistInfo_ = compute_blade_distributions(actMeta, actBulk);
 }
 
 void
@@ -57,10 +52,10 @@ FilteredLiftingLineCorrection::compute_lift_force_distribution()
   Kokkos::deep_copy(G, 0.0);
   Kokkos::deep_copy(Uinf, 0.0);
 
-  for (auto&& pair : bladeOffsetLengthPair_) {
+  for (auto&& info : bladeDistInfo_) {
 
-    const auto offset = pair.first;
-    const auto nPoints = pair.second;
+    const auto offset = info.offset_;
+    const auto nPoints = info.nPoints_;
 
     auto range_policy =
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
@@ -97,9 +92,10 @@ FilteredLiftingLineCorrection::grad_lift_force_distribution()
   auto deltaG = helper.get_local_view(actBulk_.deltaLiftForceDistribution_);
 
   Kokkos::deep_copy(deltaG, 0.0);
-  for (auto&& pair : bladeOffsetLengthPair_) {
-    const auto offset = pair.first;
-    const auto nPoints = pair.second;
+  for (auto&& info : bladeDistInfo_) {
+
+    const auto offset = info.offset_;
+    const auto nPoints = info.nPoints_;
 
     auto range_policy =
       Kokkos::RangePolicy<exec_space>(offset, offset + nPoints);
@@ -145,9 +141,11 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
   Kokkos::deep_copy(deltaU_stash, deltaU);
   Kokkos::deep_copy(deltaU, 0.0);
 
-  for (auto&& pair : bladeOffsetLengthPair_) {
-    const int offset = pair.first;
-    const int nPoints = pair.second;
+  for (auto&& info : bladeDistInfo_) {
+
+    const auto offset = info.offset_;
+    const auto nPoints = info.nPoints_;
+    const auto nNeighbors = info.nNeighbors_;
 
     auto pointHost = actBulk_.pointCentroid_.view_host();
     const double dx[3] = {
@@ -170,8 +168,13 @@ FilteredLiftingLineCorrection::compute_induced_velocities()
         const double epsLes2 = epsilon(index, 0) * epsilon(index, 0);
         const double epsOpt2 = epsilonOpt(index, 0) * epsilonOpt(index, 0);
 
-        // Compute equation 5.7 in reference paper
-        for (int j = 0; j < nPoints; ++j) {
+        // limits to approximate integral and speed up computation
+        const int start = std::max(i - nNeighbors, 0);
+        const int end = std::min(i  +  nNeighbors, nPoints);
+            // Compute equation 5.7 in reference paper
+            for (int j = start; j < end; ++j)
+       
+        {
           if (i == j)
             continue;
           // constant point spacing
