@@ -44,7 +44,7 @@ linear_solvers:
     
 
 
-# Specify the differnt physics realms.  Here, we just have one for the fluid.
+# Specify the different physics realms.  Here, we just have one for the fluid.
 realms:
 
   # The fluid realm that uses the 5 km x 5 km x 1 km atmospheric LES mesh.
@@ -152,8 +152,8 @@ realms:
         gravity_vector_component: 3
         #turbulent_ke: 0.0
         RANS_abl_bc: yes
-        fixed_velocity: 6.6
-        fixed_height: 90.0
+        reference_velocity: 6.6
+        reference_height: 90.0
 
     solution_options:
       name: myOptions
