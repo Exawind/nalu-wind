@@ -300,26 +300,26 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
         double pBip = 0.0;
         double rhoBip = 0.0;
         double muBip = 0.0;
-        for ( int ic = 0; ic < nodesPerFace; ++ic ) {
-          const double r = p_face_shape_function[offSetSF_face+ic];
-          pBip += r*p_pressure[ic];
-          rhoBip += r*p_density[ic];
-          muBip += r*p_viscosity[ic];
-          const int offSetFN = ic*nDim;
-          for ( int j = 0; j < nDim; ++j ) {
-            p_uBip[j] += r*p_velocityNp1[offSetFN+j];
-            p_uBcBip[j] += r*p_bcVelocity[offSetFN+j];
-          }
-        }
+	for ( int ic = 0; ic < nodesPerFace; ++ic ) {
+		const double r = p_face_shape_function[offSetSF_face+ic];
+		pBip += r*p_pressure[ic];
+		rhoBip += r*p_density[ic];
+		muBip += r*p_viscosity[ic];
+		const int offSetFN = ic*nDim;
+		for ( int j = 0; j < nDim; ++j ) {
+			p_uBip[j] += r*p_velocityNp1[offSetFN+j];
+			p_uBcBip[j] += r*p_bcVelocity[offSetFN+j];
+		}
+	}
 
-        // form unit normal
-        for ( int j = 0; j < nDim; ++j ) {
-          p_unitNormal[j] = areaVec[offSetAveraVec+j]/aMag;
-        }
+	// form unit normal
+	for ( int j = 0; j < nDim; ++j ) {
+		p_unitNormal[j] = areaVec[offSetAveraVec+j]/aMag;
+	}
 
-        // determine tangential velocity
-        double uTangential = 0.0;
-        for ( int i = 0; i < nDim; ++i ) {
+	// determine tangential velocity
+	double uTangential = 0.0;
+	for ( int i = 0; i < nDim; ++i ) {
           double uiTan = 0.0;
           double uiBcTan = 0.0;
           for ( int j = 0; j < nDim; ++j ) {
@@ -352,15 +352,9 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
         yplusMin = std::min(yplusMin, yplusBip);
         yplusMax = std::max(yplusMax, yplusBip);
 
-        double lambda;
-        if (RANSAblBcApproach_) {
-          lambda = rhoBip;
-        }
-        else {
-          lambda = muBip/yp*aMag;
-          if ( yplusBip > yplusCrit_)
-            lambda = rhoBip*kappa_*utau/std::log(elog_*yplusBip)*aMag;
-        }
+        double lambda = muBip/yp*aMag;
+        if ( yplusBip > yplusCrit_)
+          lambda = rhoBip*kappa_*utau/std::log(elog_*yplusBip)*aMag;
 
         // extract nodal fields
         stk::mesh::Entity node = face_node_rels[localFaceNode];
@@ -378,7 +372,31 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
           ws_radius[i] = coord[i] - centroid[i];
           const double uDiff = p_uiTangential[i] - p_uiBcTangential[i];
           ws_p_force[i] = pBip*ai;
-          ws_v_force[i] = lambda*uDiff;
+          if (RANSAblBcApproach_) {
+            // Dirichlet BC so p_uiTangential[i]=p_uiBcTangential[i] (meaning uDiff=0)
+            // so just use utau
+            // shear stress acts in the direction of velocity
+            double p_uBip_mag = 0.0;
+            for (int j = 0; j < nDim; ++j ) {
+              printf("p_uBip_mag: %f\n", p_uBip_mag);
+              printf("p_uBip[j]: %f\n", p_uBip[j]);
+              p_uBip_mag += p_uBip[j]*p_uBip[j];
+            }
+            p_uBip_mag = std::sqrt(p_uBip_mag);
+            printf("p_uBip_mag: %f\n", p_uBip_mag);
+            printf("rhoBip: %f\n", rhoBip);
+            printf("utau: %f\n", utau);
+            printf("p_uBip[i]: %f\n", p_uBip[i]);
+            ws_v_force[i] = rhoBip*utau*utau*p_uBip[i]/p_uBip_mag;
+            printf("ws_v_force[i]: %f\n", ws_v_force[i]);
+          }
+          else {
+            // use implicit method from solve, which gets one of the utau from
+            // the log law:
+            // viscous force = rho*utau*utau*area = rho*utau*(kappa/log(yp)*utau)*area
+            ws_v_force[i] = lambda*uDiff;
+          }
+          printf("ws_v_force[i]: %f\n", ws_v_force[i]);
           ws_t_force[i] = ws_p_force[i] + ws_v_force[i];
           pressureForce[i] += ws_p_force[i];
           viscousForce[i] += ws_v_force[i];
