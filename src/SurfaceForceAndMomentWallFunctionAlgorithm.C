@@ -53,8 +53,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::SurfaceForceAndMomentWallFunctionAlg
   const std::string &outputFileName,
   const int &frequency,
   const std::vector<double > &parameters,
-  const bool &useShifted,
-  bool RANSAblBcApproach)
+  const bool &useShifted)
   : Algorithm(realm, partVec),
     outputFileName_(outputFileName),
     frequency_(frequency),
@@ -77,8 +76,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::SurfaceForceAndMomentWallFunctionAlg
     wallNormalDistanceBip_(NULL),
     exposedAreaVec_(NULL),
     assembledArea_(NULL),
-    w_(16),
-    RANSAblBcApproach_(RANSAblBcApproach)
+    w_(16)
 {
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
@@ -89,12 +87,7 @@ SurfaceForceAndMomentWallFunctionAlgorithm::SurfaceForceAndMomentWallFunctionAlg
   viscousForce_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "viscous_force");
   tauWall_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "tau_wall");
   yplus_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "yplus");
-  if (RANSAblBcApproach_) {
-    bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_bc");
-  }
-  else {
-    bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "wall_velocity_bc");
-  }
+  bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "wall_velocity_bc");
   density_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   viscosity_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
   wallFrictionVelocityBip_ = meta_data.get_field<GenericFieldType>(meta_data.side_rank(), "wall_friction_velocity_bip");
@@ -372,31 +365,10 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
           ws_radius[i] = coord[i] - centroid[i];
           const double uDiff = p_uiTangential[i] - p_uiBcTangential[i];
           ws_p_force[i] = pBip*ai;
-          if (RANSAblBcApproach_) {
-            // Dirichlet BC so p_uiTangential[i]=p_uiBcTangential[i] (meaning uDiff=0)
-            // so just use utau
-            // shear stress acts in the direction of velocity
-            double p_uBip_mag = 0.0;
-            for (int j = 0; j < nDim; ++j ) {
-              printf("p_uBip_mag: %f\n", p_uBip_mag);
-              printf("p_uBip[j]: %f\n", p_uBip[j]);
-              p_uBip_mag += p_uBip[j]*p_uBip[j];
-            }
-            p_uBip_mag = std::sqrt(p_uBip_mag);
-            printf("p_uBip_mag: %f\n", p_uBip_mag);
-            printf("rhoBip: %f\n", rhoBip);
-            printf("utau: %f\n", utau);
-            printf("p_uBip[i]: %f\n", p_uBip[i]);
-            ws_v_force[i] = rhoBip*utau*utau*p_uBip[i]/p_uBip_mag;
-            printf("ws_v_force[i]: %f\n", ws_v_force[i]);
-          }
-          else {
-            // use implicit method from solve, which gets one of the utau from
-            // the log law:
-            // viscous force = rho*utau*utau*area = rho*utau*(kappa/log(yp)*utau)*area
-            ws_v_force[i] = lambda*uDiff;
-          }
-          printf("ws_v_force[i]: %f\n", ws_v_force[i]);
+          // use implicit method from solve, which gets one of the utau from
+          // the log law:
+          // viscous force = rho*utau*utau*area = rho*utau*(kappa/log(yp)*utau)*area
+          ws_v_force[i] = lambda*uDiff;
           ws_t_force[i] = ws_p_force[i] + ws_v_force[i];
           pressureForce[i] += ws_p_force[i];
           viscousForce[i] += ws_v_force[i];

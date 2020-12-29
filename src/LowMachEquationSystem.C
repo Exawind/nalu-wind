@@ -544,9 +544,9 @@ LowMachEquationSystem::register_surface_pp_algorithm(
 
   if ( thePhysics == "surface_force_and_moment" ) {
     if (RANSAblBcApproach) {
-      std::cout << "Must use surface_force_and_moment_wall_function not surface_force_and_moment with RANS_abl_bc." << std::endl;
+      std::cout << "surface_force_and_moment not implemented with RANS_abl_bc." << std::endl;
     }
-
+    
     ScalarFieldType *assembledArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_area_force_moment"));
     stk::mesh::put_field_on_mesh(*assembledArea, stk::mesh::selectUnion(partVector), nullptr);
 	    if ( NULL == surfaceForceAndMomentAlgDriver_ )
@@ -558,6 +558,10 @@ LowMachEquationSystem::register_surface_pp_algorithm(
     surfaceForceAndMomentAlgDriver_->algVec_.push_back(ppAlg);
   }
   else if ( thePhysics == "surface_force_and_moment_wall_function" ) {
+    if (RANSAblBcApproach) {
+      std::cout << "surface_force_and_moment_wall_function not implemented with RANS_abl_bc." << std::endl;
+    }
+
     ScalarFieldType *assembledArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_area_force_moment_wf"));
     stk::mesh::put_field_on_mesh(*assembledArea, stk::mesh::selectUnion(partVector), nullptr);
     if ( NULL == surfaceForceAndMomentAlgDriver_ )
@@ -565,7 +569,7 @@ LowMachEquationSystem::register_surface_pp_algorithm(
     SurfaceForceAndMomentWallFunctionAlgorithm *ppAlg
       = new SurfaceForceAndMomentWallFunctionAlgorithm(
           realm_, partVector, theData.outputFileName_, theData.frequency_,
-          theData.parameters_, realm_.realmUsesEdges_, RANSAblBcApproach);
+          theData.parameters_, realm_.realmUsesEdges_);
     surfaceForceAndMomentAlgDriver_->algVec_.push_back(ppAlg);
   }
 }
@@ -996,8 +1000,7 @@ MomentumEquationSystem::MomentumEquationSystem(
     dynPressAlgDriver_(realm_),
     cflReAlgDriver_(realm_),
     projectedNodalGradEqs_(NULL),
-    firstPNGResidual_(0.0),
-    RANSAblBcApproach_(false)
+    firstPNGResidual_(0.0)
 {
   dofName_ = "velocity";
 
@@ -1870,9 +1873,6 @@ MomentumEquationSystem::register_wall_bc(
 
   // find out if this is RANS SST for modeling the ABL
   const bool RANSAblBcApproach = userData.RANSAblBcApproach_;
-
-  // stash RANSAblBcApproach for post processing (SurfaceForceAndMomentWallFunctionAlgorithm)
-  RANSAblBcApproach_ = RANSAblBcApproach;
 
   // push mesh part
   if ( !anyWallFunctionActivated )
