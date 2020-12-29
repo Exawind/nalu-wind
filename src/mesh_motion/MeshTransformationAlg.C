@@ -1,12 +1,10 @@
-
 #include "mesh_motion/MeshTransformationAlg.h"
 
+#include "mesh_motion/FrameReference.h"
 #include "NaluParsing.h"
 
 #include <cassert>
 #include <iostream>
-
-#include "../../include/mesh_motion/FrameReference.h"
 
 namespace sierra{
 namespace nalu{
@@ -14,7 +12,6 @@ namespace nalu{
 MeshTransformationAlg::MeshTransformationAlg(
   stk::mesh::BulkData& bulk,
   const YAML::Node& node)
-  : bulk_(bulk)
 {
   load(bulk, node);
 }
@@ -49,16 +46,6 @@ void MeshTransformationAlg::initialize( const double time )
     referenceFrameVec_[i]->update_coordinates(time);
   }
 
-  // TODO: NGP Transition
-  // Manually synchronize fields to device
-  {
-    auto* coords = bulk_.mesh_meta_data().get_field(
-        stk::topology::NODE_RANK, "coordinates");
-    if (coords != nullptr) {
-      coords->modify_on_host();
-      coords->sync_to_device();
-    }
-  }
   isInit_ = true;
 }
 

@@ -1,7 +1,7 @@
 #ifndef FRAMEBASE_H
 #define FRAMEBASE_H
 
-#include "MotionBase.h"
+#include "NgpMotion.h"
 
 // stk base header files
 #include "stk_mesh/base/CoordinateSystems.hpp"
@@ -21,16 +21,17 @@ public:
     stk::mesh::BulkData&,
     const YAML::Node&);
 
-  virtual ~FrameBase()
-  {
-  }
+  virtual ~FrameBase();
 
   void setup();
 
-  void set_computed_centroid( std::vector<double>& centroid )
+  void compute_centroid_on_parts(
+    mm::ThreeDVecType& centroid);
+
+  void set_computed_centroid(const mm::ThreeDVecType& centroid)
   {
-    for (size_t i=0; i < meshMotionVec_.size(); i++)
-      meshMotionVec_[i]->set_computed_centroid(centroid);
+    for (size_t i=0; i < motionKernels_.size(); i++)
+      motionKernels_[i]->set_computed_centroid(centroid);
   }
 
   virtual void post_compute_geometry()
@@ -38,14 +39,6 @@ public:
   }
 
 protected:
-  /** Compute transformation matrix
-   *
-   * @return 4x4 matrix representing composite addition of motions
-   */
-  MotionBase::TransMatType compute_transformation(
-    const double,
-    const double*);
-
   //! Reference to the STK Mesh BulkData object
   stk::mesh::BulkData& bulk_;
 
@@ -56,7 +49,7 @@ protected:
    *
    *  A vector of size number of motion/transformation groups
    */
-  std::vector<std::unique_ptr<MotionBase>> meshMotionVec_;
+  std::vector<std::unique_ptr<NgpMotion>> motionKernels_;
 
   /** Motion parts
    *
@@ -79,9 +72,6 @@ private:
   void load(const YAML::Node&);
 
   void populate_part_vec(const YAML::Node&);
-
-  void compute_centroid_on_parts(
-    std::vector<double> &centroid);
 };
 
 } // nalu
