@@ -18,6 +18,7 @@
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFactory.h>
 #include <NaluEnv.h>
+#include <NaluParsing.h>
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
@@ -45,7 +46,8 @@ namespace nalu{
 ComputeWallFrictionVelocityAlgorithm::ComputeWallFrictionVelocityAlgorithm(
   Realm &realm,
   stk::mesh::Part *part,
-  const bool &useShifted)
+  const bool &useShifted,
+  const WallBoundaryConditionData &wallBCData)
   : Algorithm(realm, part),
     useShifted_(useShifted),
     yplusCrit_(11.63),
@@ -54,10 +56,25 @@ ComputeWallFrictionVelocityAlgorithm::ComputeWallFrictionVelocityAlgorithm(
     maxIteration_(20),
     tolerance_(1.0e-6)
 {
+  // save wall BC values for RANS of ABL
+  WallUserData userData = wallBCData.userData_;
+  RANSAblBcApproach_ = userData.RANSAblBcApproach_;
+  if (RANSAblBcApproach_) {
+    uRef_ = userData.uRef_;
+    zRef_ = userData.zRef_;
+    RoughnessHeight rough = userData.z0_;
+    z0_ = rough.z0_;
+  }
+
   // save off fields
   stk::mesh::MetaData & meta_data = realm_.meta_data();
   velocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
-  bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "wall_velocity_bc");
+  if (RANSAblBcApproach_) {
+    bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_bc");
+  }
+  else {
+    bcVelocity_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "wall_velocity_bc");
+  }
   coordinates_ = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, realm_.get_coordinates_name());
   density_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
   viscosity_ = meta_data.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "viscosity");
@@ -252,15 +269,22 @@ ComputeWallFrictionVelocityAlgorithm::execute()
           }
         }
 
-        // form unit normal and determine yp (approximated by 1/4 distance along edge)
-        double ypBip = 0.0;
-        for ( int j = 0; j < nDim; ++j ) {
-          const double nj = areaVec[offSetAveraVec+j]/aMag;
-          const double ej = 0.25*(coordR[j] - coordL[j]);
-          ypBip += nj*ej*nj*ej;
-          p_unitNormal[j] = nj;
+        double ypBip;
+        if (RANSAblBcApproach_) {
+          // set ypBip to roughness height for wall function calculation
+          ypBip = z0_;
         }
-        ypBip = std::sqrt(ypBip);
+        else {
+          // form unit normal and determine yp (approximated by 1/4 distance along edge)
+          ypBip = 0.0;
+          for ( int j = 0; j < nDim; ++j ) {
+            const double nj = areaVec[offSetAveraVec+j]/aMag;
+            const double ej = 0.25*(coordR[j] - coordL[j]);
+            ypBip += nj*ej*nj*ej;
+            p_unitNormal[j] = nj;
+          }
+          ypBip = std::sqrt(ypBip);
+        }
         wallNormalDistanceBip[ip] = ypBip;
 
         // assemble to nodal quantities
@@ -270,31 +294,39 @@ ComputeWallFrictionVelocityAlgorithm::execute()
         *assembledWallArea += aMag;
         *assembledWallNormalDistance += aMag*ypBip;
 
-        // determine tangential velocity
-        double uTangential = 0.0;
-        for ( int i = 0; i < nDim; ++i ) {
-          double uiTan = 0.0;
-          double uiBcTan = 0.0;
-          for ( int j = 0; j < nDim; ++j ) {
-            const double ninj = p_unitNormal[i]*p_unitNormal[j];
-            if ( i==j ) {
-              const double om_nini = 1.0 - ninj;
-              uiTan += om_nini*p_uBip[j];
-              uiBcTan += om_nini*p_uBcBip[j];
-            }
-            else {
-              uiTan -= ninj*p_uBip[j];
-              uiBcTan -= ninj*p_uBcBip[j];
-            }
-          }
-          uTangential += (uiTan-uiBcTan)*(uiTan-uiBcTan);
+        double utauGuess;
+        if (RANSAblBcApproach_) {
+          // calculate utau using Monin Obukhov profile
+          utauGuess = (uRef_*kappa_)/(std::log((zRef_+z0_)/z0_));
         }
-        uTangential = std::sqrt(uTangential);
+        else {
+          // calculate tangential velocity
+          double uTangential = 0.0;
+          for ( int i = 0; i < nDim; ++i ) {
+            double uiTan = 0.0;
+            double uiBcTan = 0.0;
+            for ( int j = 0; j < nDim; ++j ) {
+              const double ninj = p_unitNormal[i]*p_unitNormal[j];
+              if ( i==j ) {
+                const double om_nini = 1.0 - ninj;
+                uiTan += om_nini*p_uBip[j];
+                uiBcTan += om_nini*p_uBcBip[j];
+              }
+              else {
+                uiTan -= ninj*p_uBip[j];
+                uiBcTan -= ninj*p_uBcBip[j];
+              }
+            }
+            uTangential += (uiTan-uiBcTan)*(uiTan-uiBcTan);
+          }
+          uTangential = std::sqrt(uTangential);
 
-        // provide an initial guess based on yplusCrit_ (more robust than a pure guess on utau)
-        double utauGuess = yplusCrit_*muBip/rhoBip/ypBip;
-  
-        compute_utau(uTangential, ypBip, rhoBip, muBip, utauGuess);
+          // provide an initial guess based on yplusCrit_ (more robust than a pure guess on utau)
+          utauGuess = yplusCrit_*muBip/rhoBip/ypBip;
+         
+          compute_utau(uTangential, ypBip, rhoBip, muBip, utauGuess);
+        } 
+        
         wallFrictionVelocityBip[ip] = utauGuess;
       }
     }

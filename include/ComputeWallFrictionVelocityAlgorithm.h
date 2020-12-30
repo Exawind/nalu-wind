@@ -14,6 +14,7 @@
 
 #include<Algorithm.h>
 #include<FieldTypeDef.h>
+#include<NaluParsedTypes.h>
 
 // stk
 #include <stk_mesh/base/Part.hpp>
@@ -30,7 +31,8 @@ public:
   ComputeWallFrictionVelocityAlgorithm(
     Realm &realm,
     stk::mesh::Part *part,
-    const bool &useShifted);
+    const bool &useShifted,
+    const WallBoundaryConditionData &wallBCData);
   virtual ~ComputeWallFrictionVelocityAlgorithm();
 
   void execute();
@@ -61,6 +63,11 @@ public:
   GenericFieldType *wallNormalDistanceBip_;
   ScalarFieldType *assembledWallNormalDistance_;
   ScalarFieldType *assembledWallArea_;
+
+  bool RANSAblBcApproach_;
+  double uRef_;
+  double zRef_;
+  double z0_;
 };
 
 } // namespace nalu

@@ -293,26 +293,26 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
         double pBip = 0.0;
         double rhoBip = 0.0;
         double muBip = 0.0;
-        for ( int ic = 0; ic < nodesPerFace; ++ic ) {
-          const double r = p_face_shape_function[offSetSF_face+ic];
-          pBip += r*p_pressure[ic];
-          rhoBip += r*p_density[ic];
-          muBip += r*p_viscosity[ic];
-          const int offSetFN = ic*nDim;
-          for ( int j = 0; j < nDim; ++j ) {
-            p_uBip[j] += r*p_velocityNp1[offSetFN+j];
-            p_uBcBip[j] += r*p_bcVelocity[offSetFN+j];
-          }
-        }
+	for ( int ic = 0; ic < nodesPerFace; ++ic ) {
+		const double r = p_face_shape_function[offSetSF_face+ic];
+		pBip += r*p_pressure[ic];
+		rhoBip += r*p_density[ic];
+		muBip += r*p_viscosity[ic];
+		const int offSetFN = ic*nDim;
+		for ( int j = 0; j < nDim; ++j ) {
+			p_uBip[j] += r*p_velocityNp1[offSetFN+j];
+			p_uBcBip[j] += r*p_bcVelocity[offSetFN+j];
+		}
+	}
 
-        // form unit normal
-        for ( int j = 0; j < nDim; ++j ) {
-          p_unitNormal[j] = areaVec[offSetAveraVec+j]/aMag;
-        }
+	// form unit normal
+	for ( int j = 0; j < nDim; ++j ) {
+		p_unitNormal[j] = areaVec[offSetAveraVec+j]/aMag;
+	}
 
-        // determine tangential velocity
-        double uTangential = 0.0;
-        for ( int i = 0; i < nDim; ++i ) {
+	// determine tangential velocity
+	double uTangential = 0.0;
+	for ( int i = 0; i < nDim; ++i ) {
           double uiTan = 0.0;
           double uiBcTan = 0.0;
           for ( int j = 0; j < nDim; ++j ) {
@@ -365,6 +365,9 @@ SurfaceForceAndMomentWallFunctionAlgorithm::execute()
           ws_radius[i] = coord[i] - centroid[i];
           const double uDiff = p_uiTangential[i] - p_uiBcTangential[i];
           ws_p_force[i] = pBip*ai;
+          // use implicit method from solve, which gets one of the utau from
+          // the log law:
+          // viscous force = rho*utau*utau*area = rho*utau*(kappa/log(yp)*utau)*area
           ws_v_force[i] = lambda*uDiff;
           ws_t_force[i] = ws_p_force[i] + ws_v_force[i];
           pressureForce[i] += ws_p_force[i];

@@ -781,6 +781,16 @@ namespace YAML
       wallData.z0_ =
           node["roughness_height"].as<sierra::nalu::RoughnessHeight>();
     }
+    if (node["RANS_abl_bc"])
+    {
+      const bool is_activated = node["RANS_abl_bc"].as<bool>();
+      wallData.RANSAblBcApproach_ = is_activated;
+
+      if (is_activated) {
+        wallData.uRef_ = node["reference_velocity"].as<double>();
+        wallData.zRef_ = node["reference_height"].as<double>();
+      }
+    }
     // To use the engineering wall model.
     if (node["use_wall_function"])
     {

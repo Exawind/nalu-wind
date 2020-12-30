@@ -695,16 +695,20 @@ TurbKineticEnergyEquationSystem::register_wall_bc(
   std::string tkeName = "turbulent_ke";
   const bool tkeSpecified = bc_data_specified(userData, tkeName);
   bool wallFunctionApproach = userData.wallFunctionApproach_;
+
+  // determine if using RANS for ABL
+  bool RANSAblBcApproach = userData.RANSAblBcApproach_;
+
   if ( tkeSpecified && wallFunctionApproach ) {
     NaluEnv::self().naluOutputP0() << "Both wall function and tke specified; will go with dirichlet" << std::endl;
     wallFunctionApproach = false;
   }
 
-  if ( wallFunctionApproach ) {
+  if ( wallFunctionApproach || RANSAblBcApproach ) {
     // need to register the assembles wall value for tke; can not share with tke_bc
     ScalarFieldType *theAssembledField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "wall_model_tke_bc"));
     stk::mesh::put_field_on_mesh(*theAssembledField, *part, nullptr);
-
+  
     if (!wallFuncAlgDriver_)
       wallFuncAlgDriver_.reset(new TKEWallFuncAlgDriver(realm_));
 

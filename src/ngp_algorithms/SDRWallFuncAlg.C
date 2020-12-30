@@ -23,8 +23,11 @@ namespace nalu {
 
 template<typename BcAlgTraits>
 SDRWallFuncAlg<BcAlgTraits>::SDRWallFuncAlg(
-  Realm& realm, stk::mesh::Part* part
-) : Algorithm(realm, part),
+  Realm& realm, 
+  stk::mesh::Part* part,
+  bool RANSAblBcApproach,
+  double z0):
+    Algorithm(realm, part),
     faceData_(realm.meta_data()),
     elemData_(realm.meta_data()),
     coordinates_(
@@ -42,7 +45,9 @@ SDRWallFuncAlg<BcAlgTraits>::SDRWallFuncAlg(
     meFC_(MasterElementRepo::get_surface_master_element<
           typename BcAlgTraits::FaceTraits>()),
     meSCS_(MasterElementRepo::get_surface_master_element<
-           typename BcAlgTraits::ElemTraits>())
+           typename BcAlgTraits::ElemTraits>()),
+    RANSAblBcApproach_(RANSAblBcApproach),
+    z0_(z0)
 {
   faceData_.add_cvfem_face_me(meFC_);
   elemData_.add_cvfem_surface_me(meSCS_);
@@ -83,6 +88,8 @@ void SDRWallFuncAlg<BcAlgTraits>::execute()
 
   auto* meFC = meFC_;
   auto* meSCS = meSCS_;
+  bool RANSAblBcApproach = RANSAblBcApproach_;
+  double z0 = z0_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_);
@@ -108,14 +115,20 @@ void SDRWallFuncAlg<BcAlgTraits>::execute()
         const int nodeR = meSCS->ipNodeMap(fdata.faceOrd)[ip];
         const int nodeL = meSCS->opposingNodes(fdata.faceOrd, ip);
 
-        DoubleType ypBip = 0.0;
-        for (int d=0; d < BcAlgTraits::nDim_; ++d) {
-          const DoubleType nj = v_area(ip, d) / aMag;
-          const DoubleType ej = 0.25 * (v_coord(nodeR, d) - v_coord(nodeL, d));
-          ypBip += nj * ej * nj * ej;
+        DoubleType ypBip;
+        if (RANSAblBcApproach) {
+          // set ypBip to roughness height for wall function calculation
+          ypBip = z0;
         }
-        ypBip = stk::math::sqrt(ypBip);
-
+        else {
+          ypBip = 0.0;
+          for (int d=0; d < BcAlgTraits::nDim_; ++d) {
+            const DoubleType nj = v_area(ip, d) / aMag;
+            const DoubleType ej = 0.25 * (v_coord(nodeR, d) - v_coord(nodeL, d));
+            ypBip += nj * ej * nj * ej;
+          }
+          ypBip = stk::math::sqrt(ypBip);
+        }
         const DoubleType wallFuncSdr =  v_fricVel(ip) / (
           sqrtBetaStar * kappa * ypBip);
 

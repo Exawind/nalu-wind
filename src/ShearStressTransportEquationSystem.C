@@ -16,6 +16,7 @@
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFactory.h>
 #include <NaluEnv.h>
+#include <NaluParsing.h>
 #include <SpecificDissipationRateEquationSystem.h>
 #include <SolutionOptions.h>
 #include <TurbKineticEnergyEquationSystem.h>
@@ -191,8 +192,12 @@ void
 ShearStressTransportEquationSystem::register_wall_bc(
   stk::mesh::Part* part,
   const stk::topology& partTopo,
-  const WallBoundaryConditionData& /*wallBCData*/)
+  const WallBoundaryConditionData& wallBCData)
 {
+  // determine if using RANS for ABL
+  WallUserData userData = wallBCData.userData_;
+  bool RANSAblBcApproach = userData.RANSAblBcApproach_;
+
   // push mesh part
   wallBcPart_.push_back(part);
 
@@ -209,9 +214,11 @@ ShearStressTransportEquationSystem::register_wall_bc(
   const int numScsBip = meFC->num_integration_points();
   stk::mesh::put_field_on_mesh(wallNormDistBip, *part, numScsBip, nullptr);
 
+  RoughnessHeight rough = userData.z0_;
+  double z0 = rough.z0_;
   realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
     sierra::nalu::WALL, part, get_elem_topo(realm_, *part),
-    "sst_geometry_wall");
+    "sst_geometry_wall", RANSAblBcApproach, z0);
 }
 
 //--------------------------------------------------------------------------
