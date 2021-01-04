@@ -802,17 +802,17 @@ SST RANS Model for Atmospheric Boundary Layer
 
 The following boundary conditions simulate the Atmospheric Boundary Layer, as described in Bautista, :cite:`Bautista:2011` and :cite:`Bautista:2015`. The Nalu-Wind SST RANS implementation matches the Monin-Obukhov profile when used with the model constants from Table-A I-1 (Boundreault, 2011) in :cite:`Bautista:2011` and the meshing method described  in :cite:`Bautista:2015`. The mesh described in :cite:`Bautista:2015` gives the Monin-Obukhov profile for roughness height 0.1. When the roughness height is decreased, the mesh must be refined near the wall. For example, for the :cite:`Bautista:2015` ABL test case using roughness height 0.001 instead of 0.1, the mesh size needs to be halved near the wall. 
     
-The :math:`k` and :math:`\omega` boundary conditions are the same as in the :ref:`k-omega SST boundary conditions` <_kwsst_high_re_bc>:
+The :math:`k` and :math:`\omega` boundary conditions are the same as in the :ref:`k-omega SST boundary conditions <_kwsst_high_re_bc>`:
 
-.. math:: k = \frac{u_{\tau}^{2}}{\sqrt{\beta^*}}.
+.. math:: k = \frac{u_{\tau}^{2}}{\sqrt{\beta^*}},
 
 and 
 
-.. math:: \omega = \frac{u_{\tau}}{\sqrt{\beta^*} \kappa y},
+.. math:: \omega = \frac{u_{\tau}}{\sqrt{\beta^*} \kappa y}.
 
-The momentum boundary condition is a no-slip Dirichlet condition, :math:`u_i=0`, as described in the :ref:`momentum wall boundary conditions` <_wall_bc_momentum>.
+The momentum boundary condition is a no-slip Dirichlet condition, :math:`u_i=0`, as described in the :ref:`momentum wall boundary conditions <_wall_bc_momentum>`.
 
-The streamwise and spanwise boundary conditions are periodic, as described in the :ref:`periodic boundary conditions` <_periodic_bc>.
+The streamwise and spanwise boundary conditions are periodic, as described in the :ref:`periodic boundary conditions <_periodic_bc>`.
 
 The :math:`k`, :math:`\omega`, and :math:`u` wall boundary conditions are set in the input file by specifying a wall boundary condition with ``RANS_abl_bc``. The input file must also specify a height and the velocity at that height with ``fixed_height`` and ``fixed_velocity``. 
 
