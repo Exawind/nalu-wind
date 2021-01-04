@@ -814,7 +814,7 @@ The momentum boundary condition is a no-slip Dirichlet condition, :math:`u_i=0`,
 
 The streamwise and spanwise boundary conditions are periodic, as described in the :ref:`periodic boundary conditions <_periodic_bc>`.
 
-The :math:`k`, :math:`\omega`, and :math:`u` wall boundary conditions are set in the input file by specifying a wall boundary condition with ``RANS_abl_bc``. The input file must also specify a height and the velocity at that height with ``fixed_height`` and ``fixed_velocity``. 
+The :math:`k`, :math:`\omega`, and :math:`u` wall boundary conditions are set in the input file by specifying a wall boundary condition with ``RANS_abl_bc``. The input file must also specify a height and the velocity at that height with ``reference_height`` and ``reference_velocity``. 
 
 .. literalinclude:: ransAbl_wallUserData.yaml
    :language: yaml
