@@ -57,6 +57,9 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
   // average quantities
   avgVelocityID_ = get_field_ordinal(meta, "average_velocity");
   avgResAdeqID_ = get_field_ordinal(meta, "avg_res_adequacy_parameter");
+
+  // output quantities
+  forcingCompID_ = get_field_ordinal(meta, "forcing_components");
 }
 
 void
@@ -80,6 +83,7 @@ MomentumSSTAMSForcingNodeKernel::setup(Realm& realm)
   minDist_ = fieldMgr.get_field<double>(minDistID_);
   avgVelocity_ = fieldMgr.get_field<double>(avgVelocityID_);
   avgResAdeq_ = fieldMgr.get_field<double>(avgResAdeqID_);
+  forcingComp_ = fieldMgr.get_field<double>(forcingCompID_);
 }
 
 void
@@ -206,6 +210,10 @@ MomentumSSTAMSForcingNodeKernel::execute(
   NodeKernelTraits::DblType gX = C_F * hX;
   NodeKernelTraits::DblType gY = C_F * hY;
   NodeKernelTraits::DblType gZ = C_F * hZ;
+
+  forcingComp_.get(node, 0) = gX;
+  forcingComp_.get(node, 1) = gY;
+  forcingComp_.get(node, 2) = gZ;
 
   rhs(0) += dualVolume * gX;
   rhs(1) += dualVolume * gY;
