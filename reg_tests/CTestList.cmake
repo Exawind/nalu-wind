@@ -252,7 +252,7 @@ else(NOT ENABLE_CUDA)
   add_test_r(drivenCavity_p1 2)
 
   if(ENABLE_OPENFAST)
-    add_test_r(nrel5MWactuatorLine 2)
+    #add_test_r(nrel5MWactuatorLine 2)
     add_subdirectory(test_files/nrel5MWactuatorLine)
   endif()
 
