@@ -2210,8 +2210,7 @@ MomentumEquationSystem::register_symmetry_bc(
                metaData, *realm_.solutionOptions_,
                metaData.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity"),
                metaData.get_field<ScalarFieldType>(stk::topology::NODE_RANK, viscName),
-               faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_,
-               symmBCData.userData_.penaltyFactor_
+               faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_
               );
           else
             build_face_elem_topo_kernel_automatic<MomentumSymmetryElemKernel>

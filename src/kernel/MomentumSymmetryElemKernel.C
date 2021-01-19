@@ -42,7 +42,8 @@ MomentumSymmetryElemKernel<BcAlgTraits>::MomentumSymmetryElemKernel(
       get_field_ordinal(metaData, "exposed_area_vector", metaData.side_rank())),
     includeDivU_(solnOpts.includeDivU_),
     meSCS_(
-      MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_))
+      MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_)),
+    penaltyFactor_(solnOpts.symmetryBcPenatlyFactor_)
 {
   auto* meFC =
     MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);
@@ -124,7 +125,7 @@ MomentumSymmetryElemKernel<BcAlgTraits>::execute(
     const auto un = ddot<dim>(uIp.data(), areavIp) * inv_amag;
 
     const auto penaltyFac =
-      -viscous_penalty * viscIp * areaWeightedInverseLengthScale;
+      -penaltyFactor_ * viscIp * areaWeightedInverseLengthScale;
     for (int dj = 0; dj < dim; ++dj) {
       const int indexR = nn * dim + dj;
       for (int di = 0; di < dim; ++di) {

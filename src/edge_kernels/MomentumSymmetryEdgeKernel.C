@@ -30,8 +30,7 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::MomentumSymmetryEdgeKernel(
   VectorFieldType* velocity,
   ScalarFieldType* viscosity,
   ElemDataRequests& faceDataPreReqs,
-  ElemDataRequests& elemDataPreReqs,
-  double penaltyFactor)
+  ElemDataRequests& elemDataPreReqs)
   : NGPKernel<MomentumSymmetryEdgeKernel<BcAlgTraits>>(),
     coordinates_(get_field_ordinal(meta, solnOpts.get_coordinates_name())),
     velocityNp1_(
@@ -42,10 +41,10 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::MomentumSymmetryEdgeKernel(
     dudx_(get_field_ordinal(meta, "dudx")),
     includeDivU_(solnOpts.includeDivU_),
     meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<
-           typename BcAlgTraits::FaceTraits>()),
+          typename BcAlgTraits::FaceTraits>()),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element<
            typename BcAlgTraits::ElemTraits>()),
-    penaltyFactor_(penaltyFactor)
+    penaltyFactor_(solnOpts.symmetryBcPenatlyFactor_)
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);

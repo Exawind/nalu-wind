@@ -197,9 +197,6 @@ namespace sierra
       if(symmetryUserData["use_projections"]){
         symmetryBC.userData_.useProjections_ = symmetryUserData["use_projections"].as<bool>();
       }
-      if(symmetryUserData["penalty_factor"]){
-        symmetryBC.userData_.penaltyFactor_ = symmetryUserData["penalty_factor"].as<double>();
-      }
       if(symmetryUserData["symmetry_type"]){
         const std::string symmType =
             symmetryUserData["symmetry_type"].as<std::string>();
