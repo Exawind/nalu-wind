@@ -43,7 +43,7 @@ MomentumSymmetryElemKernel<BcAlgTraits>::MomentumSymmetryElemKernel(
     includeDivU_(solnOpts.includeDivU_),
     meSCS_(
       MasterElementRepo::get_surface_master_element(BcAlgTraits::elemTopo_)),
-    penaltyFactor_(solnOpts.symmetryBcPenatlyFactor_)
+    penaltyFactor_(solnOpts.symmetryBcPenaltyFactor_)
 {
   auto* meFC =
     MasterElementRepo::get_surface_master_element(BcAlgTraits::faceTopo_);

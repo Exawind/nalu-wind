@@ -80,7 +80,7 @@ SolutionOptions::SolutionOptions()
     earthAngularVelocity_(7.2921159e-5),
     latitude_(0.0),
     raBoussinesqTimeScale_(-1.0),
-    symmetryBcPenatlyFactor_(2.0),
+    symmetryBcPenaltyFactor_(2.0),
     activateOpenMdotCorrection_(false),
     mdotAlgOpenCorrection_(0.0),
     explicitlyZeroOpenPressureGradient_(false),
@@ -118,7 +118,7 @@ SolutionOptions::load(const YAML::Node & y_node)
     // boundary condition but will also increase the condition number of the
     // linear system and increase the error in the interior
     get_if_present(
-      y_node, "symmetry_bc_penalty_factor", symmetryBcPenatlyFactor_);
+      y_node, "symmetry_bc_penalty_factor", symmetryBcPenaltyFactor_);
 
     // divU factor for stress
     get_if_present(y_solution_options, "divU_stress_scaling", includeDivU_, includeDivU_);

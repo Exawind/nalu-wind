@@ -44,7 +44,7 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::MomentumSymmetryEdgeKernel(
           typename BcAlgTraits::FaceTraits>()),
     meSCS_(sierra::nalu::MasterElementRepo::get_surface_master_element<
            typename BcAlgTraits::ElemTraits>()),
-    penaltyFactor_(solnOpts.symmetryBcPenatlyFactor_)
+    penaltyFactor_(solnOpts.symmetryBcPenaltyFactor_)
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);

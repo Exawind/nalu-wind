@@ -150,7 +150,7 @@ public:
   double earthAngularVelocity_;
   double latitude_;
   double raBoussinesqTimeScale_;
-  double symmetryBcPenatlyFactor_;
+  double symmetryBcPenaltyFactor_;
 
   // global mdot correction alg
   bool activateOpenMdotCorrection_;
