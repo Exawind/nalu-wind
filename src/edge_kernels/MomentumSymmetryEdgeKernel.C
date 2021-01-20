@@ -151,6 +151,7 @@ MomentumSymmetryEdgeKernel<BcAlgTraits>::execute(
     for (int i =0; i < BcAlgTraits::nDim_; ++i){
       uN += v_uNp1(nodeR,i) * nx[i];
     }
+
     for (int i = 0; i < BcAlgTraits::nDim_; ++i) {
       const int rowR = nodeR * BcAlgTraits::nDim_ + i;
       for (int j = 0; j < BcAlgTraits::nDim_; ++j) {
