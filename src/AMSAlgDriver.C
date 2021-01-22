@@ -36,6 +36,7 @@ AMSAlgDriver::AMSAlgDriver(Realm& realm)
     avgProduction_(NULL),
     avgTime_(NULL),
     avgMdot_(NULL),
+    forcingComp_(NULL),
     metricTensorAlgDriver_(realm_, "metric_tensor"),
     avgMdotAlg_(realm_),
     turbulenceModel_(realm_.solutionOptions_->turbulenceModel_),
@@ -108,6 +109,10 @@ AMSAlgDriver::register_nodal_fields(stk::mesh::Part* part)
     stk::topology::NODE_RANK, "avg_res_adequacy_parameter", numStates));
   stk::mesh::put_field_on_mesh(*avgResAdequacy_, *part, nullptr);
   realm_.augment_restart_variable_list("avg_res_adequacy_parameter");
+
+  forcingComp_ = &(meta.declare_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "forcing_components", numStates));
+  stk::mesh::put_field_on_mesh(*forcingComp_, *part, nDim, nullptr);
 }
 
 void

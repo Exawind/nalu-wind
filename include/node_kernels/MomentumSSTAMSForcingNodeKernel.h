@@ -58,6 +58,7 @@ private:
   stk::mesh::NgpField<double> avgVelocity_;
   stk::mesh::NgpField<double> avgTime_;
   stk::mesh::NgpField<double> avgResAdeq_;
+  stk::mesh::NgpField<double> forcingComp_;
 
   unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
@@ -72,6 +73,7 @@ private:
   unsigned minDistID_{stk::mesh::InvalidOrdinal};
   unsigned avgVelocityID_{stk::mesh::InvalidOrdinal};
   unsigned avgResAdeqID_{stk::mesh::InvalidOrdinal};
+  unsigned forcingCompID_{stk::mesh::InvalidOrdinal};
 
   const double betaStar_;
   const double forceCl_;
