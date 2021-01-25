@@ -80,7 +80,7 @@ SolutionOptions::SolutionOptions()
     earthAngularVelocity_(7.2921159e-5),
     latitude_(0.0),
     raBoussinesqTimeScale_(-1.0),
-    symmetryBcPenaltyFactor_(2.0),
+    symmetryBcPenaltyFactor_(0.0),
     activateOpenMdotCorrection_(false),
     mdotAlgOpenCorrection_(0.0),
     explicitlyZeroOpenPressureGradient_(false),

@@ -97,7 +97,6 @@ TEST_F(MomentumKernelHex8Mesh, NGP_symmetry_edge)
   solnOpts_.meshMotion_ = false;
   solnOpts_.meshDeformation_ = false;
   solnOpts_.externalMeshDeformation_ = false;
-  solnOpts_.symmetryBcPenaltyFactor_ = 0.0;
 
   auto* part = meta_.get_part("surface_2");
   bool isEdge = true;
@@ -130,6 +129,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_symmetry_edge_penalty)
   solnOpts_.meshMotion_ = false;
   solnOpts_.meshDeformation_ = false;
   solnOpts_.externalMeshDeformation_ = false;
+  solnOpts_.symmetryBcPenaltyFactor_ = 2.0;
 
   auto* part = meta_.get_part("surface_2");
   bool isEdge = true;
