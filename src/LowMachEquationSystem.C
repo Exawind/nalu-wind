@@ -111,6 +111,7 @@
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
 #include <edge_kernels/MomentumEdgePecletAlg.h>
 #include <edge_kernels/StreletsUpwindEdgeAlg.h>
+#include <edge_kernels/MomentumABLWallFuncMaskUtil.h>
 
 // node kernels
 #include "node_kernels/NodeKernelUtils.h"
@@ -1041,6 +1042,8 @@ MomentumEquationSystem::initial_work()
 {
   // call base class method (BDF2 state management, etc)
   EquationSystem::initial_work();
+  // TODO(HFM) - utility to populate the mask field
+  if(ablWallMask_) ablWallMask_->execute();
 
   // proceed with a bunch of initial work; wrap in timer
   {
@@ -1138,6 +1141,11 @@ MomentumEquationSystem::register_nodal_fields(
       &(realm_.meta_data().declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "max_peclet_factor"));
     stk::mesh::put_field_on_mesh(*pecletAtNodes, *part, nullptr);
+
+    ScalarFieldType* ablNoSlipWallFuncMask =
+      &(realm_.meta_data().declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_mask"));
+    stk::mesh::put_field_on_mesh(*ablNoSlipWallFuncMask, *part, nullptr);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
@@ -1966,8 +1974,12 @@ MomentumEquationSystem::register_wall_bc(
     }
   }
 
+  // nmatula here
+  const bool slip_implementation = true;
+
+
   // Only set velocityNp1 at the wall boundary if we are not using any wall functions
-  if (!anyWallFunctionActivated) {
+  if (!anyWallFunctionActivated || !slip_implementation) {
     // copy velocity_bc to velocity np1
     CopyFieldAlgorithm *theCopyAlg
       = new CopyFieldAlgorithm(realm_, part,
@@ -2007,6 +2019,8 @@ MomentumEquationSystem::register_wall_bc(
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_normal_distance_bip"));
     stk::mesh::put_field_on_mesh(*wallNormalDistanceBip, *part, numScsBip, nullptr);
 
+
+
     // need wall friction velocity for TKE boundary condition
     if (RANSAblBcApproach) { 
       const AlgorithmType wfAlgType = WALL_FCN;
@@ -2033,8 +2047,11 @@ MomentumEquationSystem::register_wall_bc(
 
       // Atmospheric-boundary-layer-style wall model.
       if (ablWallFunctionApproach) {
-        
+
         const AlgorithmType wfAlgType = WALL_ABL;
+
+        // nmatula definitely in here, correspnds to line 1945 from Robert
+        // Might have to build some stuff here, for the solverAlgWasBuilt stuff below
 
         // register boundary data: wall_heat_flux_bip.  This is the ABL integration-point-based heat flux field.
         GenericFieldType *wallHeatFluxBip = &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_heat_flux_bip"));
@@ -2044,27 +2061,52 @@ MomentumEquationSystem::register_wall_bc(
         realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
           wfAlgType, part, get_elem_topo(realm_, *part), "geometry_wall_func");
         
+        // nmatula this is different
         // register the algorithm that calculates the momentum and heat flux on the wall.
         wallFuncAlgDriver_.register_face_elem_algorithm<ABLWallFluxesAlg>(
           wfAlgType, part, get_elem_topo(realm_, *part), "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
           ablWallFunctionNode);
 
+        // nmatula seems we assume edges these days
+
         // Assemble wall stresses via the edge algorithm.
         auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-        AssembleElemSolverAlgorithm* solverAlg = nullptr;
+        stk::topology elemTopo = get_elem_topo(realm_, *part); 
+        AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
         bool solverAlgWasBuilt = false;
 
-        std::tie(solverAlg, solverAlgWasBuilt) =
-          build_or_add_part_to_face_bc_solver_alg(
-            *this, *part, solverAlgMap, "wall_fcn");
+        std::tie(faceElemSolverAlg, solverAlgWasBuilt) =
+          build_or_add_part_to_face_elem_solver_alg(
+            wfAlgType, *this, *part, elemTopo, solverAlgMap, "wall_func");
 
-        ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
-        auto& activeKernels = solverAlg->activeKernels_;
+        //ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;  // nmatula Can leave out
+        auto& activeKernels = faceElemSolverAlg->activeKernels_;
+        // TODO(HFM) - register our mask utility here so we get the same surfaces as the wall model kernel
+        if (slip_implementation){
+          //ablWallMask_ = std::make_unique<MomentumABLWallFuncMaskUtil>(realm_, part);
+          GenericFieldType& edge_mask =
+            meta_data.declare_field<GenericFieldType>(
+              stk::topology::EDGE_RANK, "abl_wall_no_slip_wall_func_mask");
+          
+          double one = 1;
+          stk::mesh::put_field_on_mesh(edge_mask, *part, 1, &one);
+          
+          ablWallMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
+        }
 
         if (solverAlgWasBuilt) {
-          build_face_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>
-            (partTopo, *this, activeKernels, "momentum_abl_wall",
-             realm_.meta_data(), dataPreReqs);
+          // nmatula I still need to update this guy, based on robert's, to accomodate whatever I do to MomentumABLWallShearStressEdgeKernel
+          //build_face_elem_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>
+          //  (partTopo, *this, activeKernels, "momentum_abl_wall",
+          //   realm_.meta_data(), dataPreReqs);
+          //}
+          build_face_elem_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>(
+            partTopo, elemTopo, *this, activeKernels, "momentum_abl_wall",
+            slip_implementation,
+            realm_.meta_data(), 
+            realm_.get_coordinates_name(),
+            faceElemSolverAlg->faceDataNeeded_,
+            faceElemSolverAlg->elemDataNeeded_);
           }
       }
 
@@ -2120,7 +2162,7 @@ MomentumEquationSystem::register_wall_bc(
   }
 
   // Dirichlet wall boundary condition.
-  if (!anyWallFunctionActivated) {
+  if (!anyWallFunctionActivated || !slip_implementation) {
     const AlgorithmType algType = WALL;
 
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =

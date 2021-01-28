@@ -47,6 +47,8 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
+  // todo - set this only when using abl wall function
+  maskField_ = get_field_ordinal(meta, "abl_wall_no_slip_wall_func_mask", stk::topology::EDGE_RANK);
 }
 
 void
@@ -76,6 +78,7 @@ MomentumEdgeSolverAlg::execute()
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
   const auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
+  const auto maskField = fieldMgr.get_field<double>(maskField_);
 
   run_algorithm(
     realm_.bulk_data(),
@@ -207,7 +210,8 @@ MomentumEdgeSolverAlg::execute()
         for (int j=0; j < ndim; ++j)
           diff_flux += -viscIp * (duidxj[i][j] + duidxj[j][i]) * av[j];
 
-        const DblType total_flux = adv_flux + diff_flux;
+        const DblType mask = maskField.get(edge, 0);
+        const DblType total_flux = adv_flux + diff_flux * mask;  // nmatula here!!!!
         smdata.rhs(rowL) -= total_flux;
         smdata.rhs(rowR) += total_flux;
 
