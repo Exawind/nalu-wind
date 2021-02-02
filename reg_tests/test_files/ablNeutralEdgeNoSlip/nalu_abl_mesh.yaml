@@ -1,0 +1,22 @@
+nalu_abl_mesh:
+  output_db: abl_5km_5km_1km_neutral.g
+
+  spec_type: bounding_box
+
+  vertices:
+    - [0.0, 0.0, 0.0]
+    - [5000.0, 5000.0, 1000.0]
+
+  mesh_dimensions: [125, 125, 25]
+
+  xmin_boundary_name: west
+
+  xmax_boundary_name: east
+
+  ymin_boundary_name: south
+
+  ymax_boundary_name: north
+
+  zmin_boundary_name: lower
+
+  zmax_boundary_name: upper
