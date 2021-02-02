@@ -1,0 +1,85 @@
+===============================================================================
+                                  Nalu-Wind                                    
+       An incompressible, turbulent computational fluid dynamics solver        
+                  for wind turbine and wind farm simulations                   
+===============================================================================
+
+   Nalu-Wind Version: v1.2.0
+   Nalu-Wind GIT Commit SHA: bb224bc981d757ea7649371af24a60fd86c7c584-DIRTY
+   Trilinos Version: 13.1-g69f1931
+
+   TPLs: Boost, HDF5, netCDF, STK, Trilinos, yaml-cpp and zlib   
+   Optional TPLs enabled: Hypre
+   Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC   
+   (NTESS), National Renewable Energy Laboratory, University of Texas Austin,  
+    Northwest Research Associates. Under the terms of Contract DE-NA0003525    
+    with NTESS, the U.S. Government retains certain rights in this software.   
+                                                                               
+           This software is released under the BSD 3-clause license.           
+   See LICENSE file at https://github.com/exawind/nalu-wind for more details.  
+-------------------------------------------------------------------------------
+
+
+Realm Options Review: fluidRealm
+===========================
+Edge-based scheme will be activated
+Warning: When using automatic_decomposition_type, one must have a serial file
+Nalu will deactivate aura ghosting
+
+Turbulence Model Review:   
+===========================
+Turbulence Model is: ksgs 1
+
+PPE review:   
+===========================
+Realm::create_mesh(): Begin
+Realm::create_mesh() End
+
+Boundary Condition Review: 
+===========================
+Periodic BC name:    bc_north_south between north and south
+Periodic BC name:    bc_east_west between east and west
+ABLTop BC name:    bc_upper on upper
+Wall BC name:        bc_lower on lower
+
+Initial Condition Review:  
+===========================
+Initial Is Type constant 
+Initial Is Type user-function 
+
+Material Prop Review:      
+===========================
+density is a constant property: 1.17804
+viscosity is a constant property: 1.2e-05
+specific_heat is a constant property: 1000
+
+EqSys/options Review:      
+===========================
+Edge projected nodal gradient for velocity: 1
+Edge projected nodal gradient for pressure: 1
+Edge projected nodal gradient for enthalpy: 1
+Edge projected nodal gradient for turbulent_ke: 1
+
+Realm memory Review:       fluidRealm
+===========================
+Node count from meta data = 428652
+Total memory estimate for Matrix solve (per core)= 3.10428 GB.
+Total memory estimate (per core) = 3.10428 GB.
+
+Time Integrator Review:  
+=========================
+StandardTimeIntegrator 
+ name=              ti_1
+ second order =     1
+ maxTimeStepCount = 1000
+ fixed time step is active   with time step: 0.5
+StandardTimeIntegrator realm_name[0]= fluidRealm
+
+Transfer Review:         
+=========================
+Realm::initialize() Begin 
+Laminar Prandtl provided; will compute Thermal conductivity based on this constant value
+WARNING: Reference value for reference_temperature not found  using 300
+Created algorithm = Alg0000_elem_HEXAHEDRON_8_geometry
+Created algorithm = Alg0000_elem_HEXAHEDRON_8_courant_reynolds
+Created algorithm = Alg0000_edge_momentum_nodal_grad

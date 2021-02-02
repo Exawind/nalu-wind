@@ -1141,11 +1141,6 @@ MomentumEquationSystem::register_nodal_fields(
       &(realm_.meta_data().declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "max_peclet_factor"));
     stk::mesh::put_field_on_mesh(*pecletAtNodes, *part, nullptr);
-
-    ScalarFieldType* ablNoSlipWallFuncMask =
-      &(realm_.meta_data().declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_mask"));
-    stk::mesh::put_field_on_mesh(*ablNoSlipWallFuncMask, *part, nullptr);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
@@ -1209,6 +1204,12 @@ MomentumEquationSystem::register_edge_fields(
   stk::mesh::put_field_on_mesh(*pecletFactor, *part, nullptr);
   if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
     AMSAlgDriver_->register_edge_fields(part);
+  GenericFieldType& edge_mask =
+    realm_.meta_data().declare_field<GenericFieldType>(
+      stk::topology::EDGE_RANK, "abl_wall_no_slip_wall_func_mask");
+
+  double one = 1;
+  stk::mesh::put_field_on_mesh(edge_mask, *part, 1, &one);
 }
 
 //--------------------------------------------------------------------------
@@ -2082,15 +2083,11 @@ MomentumEquationSystem::register_wall_bc(
         //ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;  // nmatula Can leave out
         auto& activeKernels = faceElemSolverAlg->activeKernels_;
         // TODO(HFM) - register our mask utility here so we get the same surfaces as the wall model kernel
+        ThrowAssert(slip_implementation);
         if (slip_implementation){
-          //ablWallMask_ = std::make_unique<MomentumABLWallFuncMaskUtil>(realm_, part);
-          GenericFieldType& edge_mask =
-            meta_data.declare_field<GenericFieldType>(
-              stk::topology::EDGE_RANK, "abl_wall_no_slip_wall_func_mask");
-          
-          double one = 1;
-          stk::mesh::put_field_on_mesh(edge_mask, *part, 1, &one);
-          
+          // ablWallMask_ =
+          // std::make_unique<MomentumABLWallFuncMaskUtil>(realm_, part);
+
           ablWallMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
         }
 
