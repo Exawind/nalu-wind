@@ -4,6 +4,7 @@
 #include "FieldTypeDef.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 
 #include <cassert>
 
@@ -20,7 +21,7 @@ void FrameReference::update_coordinates(const double time)
 
   // define mesh entities
   const int nDim = meta_.spatial_dimension();
-  const auto& ngpMesh = bulk_.get_updated_ngp_mesh();
+  const auto& ngpMesh = stk::mesh::get_updated_ngp_mesh(bulk_);
   const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
 
   // get the field from the NGP mesh

@@ -5,6 +5,7 @@
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpTypes.h"
 #include "utils/ComputeVectorDivergence.h"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 
 #include <cassert>
 
@@ -21,7 +22,7 @@ void FrameMoving::update_coordinates_velocity(const double time)
 
   // define mesh entities
   const int nDim = meta_.spatial_dimension();
-  const auto& ngpMesh = bulk_.get_updated_ngp_mesh();
+  const auto& ngpMesh = stk::mesh::get_updated_ngp_mesh(bulk_);
   const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
 
   // get the parts in the current motion frame
