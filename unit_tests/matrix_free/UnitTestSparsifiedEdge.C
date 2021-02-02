@@ -33,6 +33,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <stk_mesh/base/GetNgpField.hpp>
+#include "stk_mesh/base/GetNgpMesh.hpp"
 
 #include <Tpetra_MatrixIO.hpp>
 #include <MatrixMarket_Tpetra.hpp>
@@ -50,7 +51,7 @@ class SparsifiedEdgeFixture : public ::ConductionFixture
 protected:
   SparsifiedEdgeFixture()
     : ConductionFixture(nx, scale),
-      linsys(bulk.get_updated_ngp_mesh(), meta.universal_part(), gid_field_ngp),
+      linsys(stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(), gid_field_ngp),
       offsets(create_offset_map<order>(
         mesh, meta.universal_part(), linsys.stk_lid_to_tpetra_lid))
   {

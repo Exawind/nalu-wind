@@ -13,6 +13,7 @@
 
 // stk_mesh/base/fem
 #include <stk_mesh/base/FieldBLAS.hpp>
+#include "stk_mesh/base/GetNgpMesh.hpp"
 
 namespace sierra{
 namespace nalu{
@@ -155,7 +156,7 @@ void FrameBase::compute_centroid_on_parts(
   mm::ThreeDVecType& centroid)
 {
   // get NGP mesh
-  const auto& ngpMesh = bulk_.get_updated_ngp_mesh();
+  const auto& ngpMesh = stk::mesh::get_updated_ngp_mesh(bulk_);
   const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
 
   // get the field from the NGP mesh

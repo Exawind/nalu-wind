@@ -45,6 +45,7 @@
 #include "stk_mesh/base/NgpForEachEntity.hpp"
 #include "stk_mesh/base/Selector.hpp"
 #include "stk_mesh/base/Types.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 #include "stk_topology/topology.hpp"
 
 #include <math.h>
@@ -65,7 +66,7 @@ class MomentumSolutionUpdateFixture : public LowMachFixture
 protected:
   MomentumSolutionUpdateFixture()
     : LowMachFixture(nx, scale),
-      linsys(bulk.get_updated_ngp_mesh(), meta.universal_part(), gid_field_ngp),
+      linsys(stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(), gid_field_ngp),
       exporter(
         Teuchos::rcpFromRef(linsys.owned_and_shared),
         Teuchos::rcpFromRef(linsys.owned)),

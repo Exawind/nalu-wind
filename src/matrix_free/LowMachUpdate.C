@@ -20,6 +20,8 @@
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
 
+#include "stk_mesh/base/GetNgpMesh.hpp"
+
 namespace sierra {
 namespace nalu {
 namespace matrix_free {
@@ -59,7 +61,7 @@ LowMachUpdate<p>::LowMachUpdate(
   : bulk_(bulk_in),
     active_(active_in),
     linsys_(
-      bulk_in.get_updated_ngp_mesh(),
+      stk::mesh::get_updated_ngp_mesh(bulk_in),
       active_in,
       linsys_info::get_gid_field(bulk_in.mesh_meta_data()),
       replicas_in,
@@ -68,7 +70,7 @@ LowMachUpdate<p>::LowMachUpdate(
       Teuchos::rcpFromRef(linsys_.owned_and_shared),
       Teuchos::rcpFromRef(linsys_.owned)),
     offsets_(create_offset_map<p>(
-      bulk_in.get_updated_ngp_mesh(),
+      stk::mesh::get_updated_ngp_mesh(bulk_in),
       active_in,
       linsys_.stk_lid_to_tpetra_lid)),
     field_gather_(bulk_in, active_in),
@@ -98,15 +100,15 @@ LowMachUpdate<p>::LowMachUpdate(
       Teuchos::rcpFromRef(linsys_.owned_and_shared),
       Teuchos::rcpFromRef(linsys_.owned)),
     offsets_(create_offset_map<p>(
-      bulk_in.get_updated_ngp_mesh(),
+      stk::mesh::get_updated_ngp_mesh(bulk_in),
       active_in,
       linsys_.stk_lid_to_tpetra_lid)),
     exposed_face_offsets_(face_offsets<p>(
-      bulk_in.get_updated_ngp_mesh(),
+      stk::mesh::get_updated_ngp_mesh(bulk_in),
       dirichlet_in,
       linsys_.stk_lid_to_tpetra_lid)),
     dirichlet_offsets_(simd_node_offsets(
-      bulk_in.get_updated_ngp_mesh(),
+      stk::mesh::get_updated_ngp_mesh(bulk_in),
       dirichlet_in,
       linsys_.stk_lid_to_tpetra_lid)),
     field_gather_(bulk_in, active_in, dirichlet_in),
@@ -165,7 +167,7 @@ LowMachUpdate<p>::predict_state()
   current_state.sync_to_device();
 
   stk::mesh::for_each_entity_run(
-    bulk_.get_updated_ngp_mesh(), stk::topology::NODE_RANK, active_,
+    stk::mesh::get_updated_ngp_mesh(bulk_), stk::topology::NODE_RANK, active_,
     KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) {
       for (int d = 0; d < 3; ++d) {
         predicted_state.get(mi, d) = current_state.get(mi, d);
@@ -233,7 +235,7 @@ LowMachUpdate<p>::update_provisional_velocity(
     gammas[0], field_gather_.get_coefficient_fields());
 
   add_tpetra_solution_vector_to_stk_field(
-    bulk_.get_updated_ngp_mesh(), active_, linsys_.stk_lid_to_tpetra_lid,
+    stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
     delta_mv.getLocalViewDevice(), field);
 }
 
@@ -252,7 +254,7 @@ LowMachUpdate<p>::update_pressure(
     field_gather_.get_coefficient_fields().laplacian_metric);
 
   add_tpetra_solution_vector_to_stk_field(
-    bulk_.get_updated_ngp_mesh(), active_, linsys_.stk_lid_to_tpetra_lid,
+    stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
     delta_mv.getLocalViewDevice(), field);
 }
 
@@ -280,7 +282,7 @@ LowMachUpdate<p>::update_pressure_gradient(stk::mesh::NgpField<double>& field)
   gradient_update_.compute_residual(fields, bc);
   auto& delta_mv = gradient_update_.compute_delta(fields.vols);
   add_tpetra_solution_vector_to_stk_field(
-    bulk_.get_updated_ngp_mesh(), active_, linsys_.stk_lid_to_tpetra_lid,
+    stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
     delta_mv.getLocalViewDevice(), field);
 }
 
@@ -353,7 +355,7 @@ LowMachUpdate<p>::project_velocity(
   gp_star.sync_to_device();
   gp.sync_to_device();
   stk::mesh::for_each_entity_run(
-    bulk_.get_updated_ngp_mesh(), stk::topology::NODE_RANK, active_ - dirichlet_,
+    stk::mesh::get_updated_ngp_mesh(bulk_), stk::topology::NODE_RANK, active_ - dirichlet_,
     KOKKOS_LAMBDA(stk::mesh::FastMeshIndex mi) {
       const auto fac = proj_time_scale / rho(mi, 0);
       for (int d = 0; d < dim; ++d) {
@@ -400,7 +402,7 @@ LowMachUpdate<p>::create_continuity_preconditioner(
     new Tpetra::MultiVector<>(Teuchos::rcpFromRef(linsys_.owned), 3));
 
   copy_stk_field_to_owned_tpetra_vector(
-    bulk_.get_updated_ngp_mesh(), active_, linsys_.stk_lid_to_tpetra_lid,
+    stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
     coords, coord_mv->getLocalViewDevice());
   coord_mv->modify_device();
 
