@@ -1976,8 +1976,7 @@ MomentumEquationSystem::register_wall_bc(
   }
 
   // nmatula here
-  const bool slip_implementation = true;
-
+  const bool slip_implementation = false;
 
   // Only set velocityNp1 at the wall boundary if we are not using any wall functions
   if (!anyWallFunctionActivated || !slip_implementation) {
@@ -2083,8 +2082,8 @@ MomentumEquationSystem::register_wall_bc(
         //ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;  // nmatula Can leave out
         auto& activeKernels = faceElemSolverAlg->activeKernels_;
         // TODO(HFM) - register our mask utility here so we get the same surfaces as the wall model kernel
-        ThrowAssert(slip_implementation);
-        if (slip_implementation){
+        ThrowAssert(!slip_implementation);
+        if (!slip_implementation) {
           // ablWallMask_ =
           // std::make_unique<MomentumABLWallFuncMaskUtil>(realm_, part);
 
