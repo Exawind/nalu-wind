@@ -2086,6 +2086,7 @@ MomentumEquationSystem::register_wall_bc(
         if (!slip_implementation) {
           // ablWallMask_ =
           // std::make_unique<MomentumABLWallFuncMaskUtil>(realm_, part);
+          notProjectedPart_.push_back(part);
 
           ablWallMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
         }
