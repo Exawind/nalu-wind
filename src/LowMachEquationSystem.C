@@ -1042,7 +1042,6 @@ MomentumEquationSystem::initial_work()
 {
   // call base class method (BDF2 state management, etc)
   EquationSystem::initial_work();
-  // TODO(HFM) - utility to populate the mask field
   if(ablWallMask_) ablWallMask_->execute();
 
   // proceed with a bunch of initial work; wrap in timer
@@ -1975,7 +1974,6 @@ MomentumEquationSystem::register_wall_bc(
     }
   }
 
-  // nmatula here
   const bool slip_implementation = false;
 
   // Only set velocityNp1 at the wall boundary if we are not using any wall functions
@@ -2019,8 +2017,6 @@ MomentumEquationSystem::register_wall_bc(
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_normal_distance_bip"));
     stk::mesh::put_field_on_mesh(*wallNormalDistanceBip, *part, numScsBip, nullptr);
 
-
-
     // need wall friction velocity for TKE boundary condition
     if (RANSAblBcApproach) { 
       const AlgorithmType wfAlgType = WALL_FCN;
@@ -2050,9 +2046,6 @@ MomentumEquationSystem::register_wall_bc(
 
         const AlgorithmType wfAlgType = WALL_ABL;
 
-        // nmatula definitely in here, correspnds to line 1945 from Robert
-        // Might have to build some stuff here, for the solverAlgWasBuilt stuff below
-
         // register boundary data: wall_heat_flux_bip.  This is the ABL integration-point-based heat flux field.
         GenericFieldType *wallHeatFluxBip = &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_heat_flux_bip"));
         stk::mesh::put_field_on_mesh(*wallHeatFluxBip, *part, numScsBip, nullptr);
@@ -2061,17 +2054,14 @@ MomentumEquationSystem::register_wall_bc(
         realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
           wfAlgType, part, get_elem_topo(realm_, *part), "geometry_wall_func");
         
-        // nmatula this is different
         // register the algorithm that calculates the momentum and heat flux on the wall.
         wallFuncAlgDriver_.register_face_elem_algorithm<ABLWallFluxesAlg>(
           wfAlgType, part, get_elem_topo(realm_, *part), "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
           ablWallFunctionNode);
 
-        // nmatula seems we assume edges these days
-
         // Assemble wall stresses via the edge algorithm.
         auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-        stk::topology elemTopo = get_elem_topo(realm_, *part); 
+        stk::topology elemTopo = get_elem_topo(realm_, *part);
         AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
         bool solverAlgWasBuilt = false;
 
@@ -2079,28 +2069,17 @@ MomentumEquationSystem::register_wall_bc(
           build_or_add_part_to_face_elem_solver_alg(
             wfAlgType, *this, *part, elemTopo, solverAlgMap, "wall_func");
 
-        //ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;  // nmatula Can leave out
-        auto& activeKernels = faceElemSolverAlg->activeKernels_;
-        // TODO(HFM) - register our mask utility here so we get the same surfaces as the wall model kernel
-        ThrowAssert(!slip_implementation);
         if (!slip_implementation) {
-          // ablWallMask_ =
-          // std::make_unique<MomentumABLWallFuncMaskUtil>(realm_, part);
           notProjectedPart_.push_back(part);
-
           ablWallMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
         }
 
+        auto& activeKernels = faceElemSolverAlg->activeKernels_;
         if (solverAlgWasBuilt) {
-          // nmatula I still need to update this guy, based on robert's, to accomodate whatever I do to MomentumABLWallShearStressEdgeKernel
-          //build_face_elem_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>
-          //  (partTopo, *this, activeKernels, "momentum_abl_wall",
-          //   realm_.meta_data(), dataPreReqs);
-          //}
           build_face_elem_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>(
             partTopo, elemTopo, *this, activeKernels, "momentum_abl_wall",
             slip_implementation,
-            realm_.meta_data(), 
+            realm_.meta_data(),
             realm_.get_coordinates_name(),
             faceElemSolverAlg->faceDataNeeded_,
             faceElemSolverAlg->elemDataNeeded_);

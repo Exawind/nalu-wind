@@ -25,7 +25,6 @@ public:
   void execute() override;
 private:
   unsigned maskIndex_{stk::mesh::InvalidOrdinal};
-  
 
 };
 

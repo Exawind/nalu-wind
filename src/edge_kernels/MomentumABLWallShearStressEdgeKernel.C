@@ -53,10 +53,9 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>& /* lhs */,
   SharedMemView<DoubleType*, DeviceShmem>& rhs,
   ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews,
-  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& elemScratchViews,
-  int elemFaceOrdinal) // nmatula where does this come from?
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& /* elemScratchViews */,
+  int elemFaceOrdinal)
 {
-
   NALU_ALIGNED DoubleType tauWall[BcAlgTraits::nDim_];
 
   const auto& v_areavec = scratchViews.get_scratch_view_2D(exposedAreaVec_);
@@ -65,9 +64,17 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
   const int* ipNodeMap = meFC_->ipNodeMap();
 
   for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
-    const int nodeR = ipNodeMap[ip];
-    const int nodeL = meSCS_->opposingNodes(elemFaceOrdinal, ip); // nmatula
-    
+
+    // Decide which node the shear stress will be applied to
+    // rowBase is the first row in the matrix associated with the velocity for this node
+    int rowBase;
+    if (slip_) {
+      // For slip, we want the node on the wall
+      rowBase = ipNodeMap[ip] * BcAlgTraits::nDim_;
+    } else {
+      // For no-slip, we want the node opposite the node at the wall
+      rowBase = meSCS_->opposingNodes(elemFaceOrdinal, ip) * BcAlgTraits::nDim_;
+    }
 
     DoubleType amag = 0.0;
     for (int d=0; d < BcAlgTraits::nDim_; ++d) {
@@ -77,14 +84,8 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
     amag = stk::math::sqrt(amag);
 
     for (int i=0; i < BcAlgTraits::nDim_; ++i) {
-      // this is a less desirable design pattern.  Ideally we want the conditional as high up the call tree as possible.  having it in the inner loop will slow the kernel execution down a lot.
-      if (!slip_) {
-        const int rowL = nodeL * BcAlgTraits::nDim_ + i; // nmatula
-        rhs(rowL) +=tauWall[i]*amag;
-      } else {
-        const int rowR = nodeR * BcAlgTraits::nDim_ + i;
-        rhs(rowR) += tauWall[i]*amag;
-      }
+      const int myRow = rowBase + i;
+      rhs(myRow) += tauWall[i] * amag;
     }
   }
 }
