@@ -1042,7 +1042,7 @@ MomentumEquationSystem::initial_work()
 {
   // call base class method (BDF2 state management, etc)
   EquationSystem::initial_work();
-  if(ablWallMask_) ablWallMask_->execute();
+  if(ablWallNodeMask_) ablWallNodeMask_->execute();
 
   // proceed with a bunch of initial work; wrap in timer
   {
@@ -1203,12 +1203,12 @@ MomentumEquationSystem::register_edge_fields(
   stk::mesh::put_field_on_mesh(*pecletFactor, *part, nullptr);
   if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
     AMSAlgDriver_->register_edge_fields(part);
-  GenericFieldType& edge_mask =
+  GenericFieldType& node_mask =
     realm_.meta_data().declare_field<GenericFieldType>(
-      stk::topology::EDGE_RANK, "abl_wall_no_slip_wall_func_mask");
+      stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
 
   double one = 1;
-  stk::mesh::put_field_on_mesh(edge_mask, *part, 1, &one);
+  stk::mesh::put_field_on_mesh(node_mask, *part, 1, &one);
 }
 
 //--------------------------------------------------------------------------
@@ -1974,10 +1974,8 @@ MomentumEquationSystem::register_wall_bc(
     }
   }
 
-  const bool slip_implementation = false;
-
   // Only set velocityNp1 at the wall boundary if we are not using any wall functions
-  if (!anyWallFunctionActivated || !slip_implementation) {
+  if (!anyWallFunctionActivated || userData.isNoSlip_) {
     // copy velocity_bc to velocity np1
     CopyFieldAlgorithm *theCopyAlg
       = new CopyFieldAlgorithm(realm_, part,
@@ -2069,16 +2067,16 @@ MomentumEquationSystem::register_wall_bc(
           build_or_add_part_to_face_elem_solver_alg(
             wfAlgType, *this, *part, elemTopo, solverAlgMap, "wall_func");
 
-        if (!slip_implementation) {
+        if (userData.isNoSlip_) {
           notProjectedPart_.push_back(part);
-          ablWallMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
+          ablWallNodeMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
         }
 
         auto& activeKernels = faceElemSolverAlg->activeKernels_;
         if (solverAlgWasBuilt) {
           build_face_elem_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>(
             partTopo, elemTopo, *this, activeKernels, "momentum_abl_wall",
-            slip_implementation,
+            !userData.isNoSlip_,
             realm_.meta_data(),
             realm_.get_coordinates_name(),
             faceElemSolverAlg->faceDataNeeded_,
@@ -2138,7 +2136,7 @@ MomentumEquationSystem::register_wall_bc(
   }
 
   // Dirichlet wall boundary condition.
-  if (!anyWallFunctionActivated || !slip_implementation) {
+  if (!anyWallFunctionActivated || userData.isNoSlip_) {
     const AlgorithmType algType = WALL;
 
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =

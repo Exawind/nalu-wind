@@ -21,7 +21,7 @@ namespace nalu{
 
 MomentumABLWallFuncMaskUtil::MomentumABLWallFuncMaskUtil(Realm& realm, stk::mesh::Part* part):
   Algorithm(realm, part),
-  maskIndex_(get_field_ordinal(realm.meta_data(), "abl_wall_no_slip_wall_func_mask", stk::topology::EDGE_RANK))
+  maskNodeIndex_(get_field_ordinal(realm.meta_data(), "abl_wall_no_slip_wall_func_node_mask", stk::topology::NODE_RANK))
 {}
 
 void
@@ -30,7 +30,7 @@ MomentumABLWallFuncMaskUtil::execute()
   const auto& meta     = realm_.meta_data();
   const auto ngpMesh   = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
-  const auto myMask    = fieldMgr.get_field<double>(maskIndex_);
+  const auto myNodeMask    = fieldMgr.get_field<double>(maskNodeIndex_);
 
   // This selector only includes edges that touch the abl wall (including those edges on the wall)
   const stk::mesh::Selector sel = (meta.locally_owned_part() | meta.globally_shared_part()) &
@@ -39,13 +39,11 @@ MomentumABLWallFuncMaskUtil::execute()
 
   const auto& bulk    = realm_.bulk_data();
   const auto& buckets = bulk.get_buckets(stk::topology::NODE_RANK, sel);
-  auto* edge_field    = meta.get_fields()[maskIndex_];
+  auto* node_field    = meta.get_fields()[maskNodeIndex_];
 
   for (const auto* ib : buckets) {
     for (auto node : *ib) {
-      const auto* connected_edges = bulk.begin_edges(node);
-      for (unsigned edge_ord = 0; edge_ord < bulk.num_edges(node); ++edge_ord)
-        *((double*)stk::mesh::field_data(*edge_field, connected_edges[edge_ord])) = 0;
+       *((double*)stk::mesh::field_data(*node_field, node)) = 0;
     }
   }
 }

@@ -24,7 +24,7 @@ public:
   virtual ~MomentumABLWallFuncMaskUtil() = default;
   void execute() override;
 private:
-  unsigned maskIndex_{stk::mesh::InvalidOrdinal};
+  unsigned maskNodeIndex_{stk::mesh::InvalidOrdinal};
 
 };
 
