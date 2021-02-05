@@ -142,6 +142,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 // stk_balance
+#include <Zoltan2_config.h>
 #include <stk_balance/balance.hpp>
 #include <stk_balance/balanceUtils.hpp>
 
