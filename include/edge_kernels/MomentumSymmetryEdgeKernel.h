@@ -64,6 +64,7 @@ private:
 
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};
+  const double penaltyFactor_;
 };
 
 }  // nalu
