@@ -30,6 +30,7 @@
 #include "Tpetra_Assembly_Helpers.hpp"
 
 #include "stk_mesh/base/GetNgpField.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 
 #include <math.h>
 #include <memory>
@@ -110,7 +111,7 @@ class SparsifiedEdgeLaplacianFixture : public ::ConductionFixture
 protected:
   SparsifiedEdgeLaplacianFixture()
     : ConductionFixture(nx, scale),
-      linsys(bulk.get_updated_ngp_mesh(), meta.universal_part(), gid_field_ngp),
+      linsys(stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(), gid_field_ngp),
       offsets(create_offset_map<order>(
         mesh, meta.universal_part(), linsys.stk_lid_to_tpetra_lid)),
       mat(sparsfied_edge_test::create_edge_matrix<order>(linsys, offsets))

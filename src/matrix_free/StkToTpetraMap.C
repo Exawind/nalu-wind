@@ -16,6 +16,7 @@
 #include "Kokkos_Sort.hpp"
 
 #include "stk_mesh/base/NgpFieldParallel.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 #include "stk_topology/topology.hpp"
 
 namespace sierra {
@@ -155,10 +156,10 @@ populate_global_id_field(
   const auto& meta = bulk.mesh_meta_data();
   const auto owned_selector = meta.locally_owned_part() & active_linsys;
   auto first_index =
-    make_owned_row_map(bulk.get_updated_ngp_mesh(), active_linsys)
+    make_owned_row_map(stk::mesh::get_updated_ngp_mesh(bulk), active_linsys)
       .getMinGlobalIndex();
   enumerated_for_each_entity(
-    bulk.get_updated_ngp_mesh(), owned_selector,
+    stk::mesh::get_updated_ngp_mesh(bulk), owned_selector,
     KOKKOS_LAMBDA(int index, stk::mesh::FastMeshIndex mi) {
       gids.get(mi, 0) = first_index + index;
     });

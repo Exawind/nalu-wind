@@ -24,6 +24,7 @@
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
@@ -50,7 +51,7 @@ GreenGaussGradient<p>::GreenGaussGradient(
     active_(active),
     meta_(bulk.mesh_meta_data()),
     linsys_(
-      bulk.get_updated_ngp_mesh(),
+      stk::mesh::get_updated_ngp_mesh(bulk),
       active,
       linsys_info::get_gid_field(meta_),
       replicas,
@@ -58,12 +59,12 @@ GreenGaussGradient<p>::GreenGaussGradient(
     exporter_(
       Teuchos::rcpFromRef(linsys_.owned_and_shared),
       Teuchos::rcpFromRef(linsys_.owned)),
-    conn_(stk_connectivity_map<p>(bulk.get_updated_ngp_mesh(), active)),
+    conn_(stk_connectivity_map<p>(stk::mesh::get_updated_ngp_mesh(bulk), active)),
     offsets_(create_offset_map<p>(
-      bulk.get_updated_ngp_mesh(), active, linsys_.stk_lid_to_tpetra_lid)),
-    face_conn_(face_node_map<p>(bulk.get_updated_ngp_mesh(), sides)),
+      stk::mesh::get_updated_ngp_mesh(bulk), active, linsys_.stk_lid_to_tpetra_lid)),
+    face_conn_(face_node_map<p>(stk::mesh::get_updated_ngp_mesh(bulk), sides)),
     bc_faces_(face_offsets<p>(
-      bulk.get_updated_ngp_mesh(), sides, linsys_.stk_lid_to_tpetra_lid)),
+      stk::mesh::get_updated_ngp_mesh(bulk), sides, linsys_.stk_lid_to_tpetra_lid)),
     grad_(
       params, meta_, linsys_, exporter_, conn_, offsets_, face_conn_, bc_faces_)
 {
@@ -74,7 +75,7 @@ void
 GreenGaussGradient<p>::gradient(
   const stk::mesh::NgpField<double>& q, stk::mesh::NgpField<double>& dq)
 {
-  grad_.gradient(bulk_.get_updated_ngp_mesh(), active_, q, dq);
+  grad_.gradient(stk::mesh::get_updated_ngp_mesh(bulk_), active_, q, dq);
 }
 
 template <int p>
