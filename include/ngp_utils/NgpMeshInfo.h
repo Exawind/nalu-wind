@@ -17,6 +17,7 @@
 
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 #include "ngp_utils/NgpFieldManager.h"
 
 namespace sierra {
@@ -53,7 +54,7 @@ public:
 
   inline const stk::mesh::MetaData& meta() const { return meta_; }
 
-  inline const Mesh& ngp_mesh() const { return bulk_.get_updated_ngp_mesh(); }
+  inline const Mesh& ngp_mesh() const { return stk::mesh::get_updated_ngp_mesh(bulk_); }
 
   inline const FieldManager& ngp_field_manager() const { return ngpFieldMgr_; }
 

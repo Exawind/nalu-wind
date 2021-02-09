@@ -23,6 +23,7 @@
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Selector.hpp"
 #include "stk_mesh/base/SkinBoundary.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 #include "stk_topology/topology.hpp"
 #include "stk_io/IossBridge.hpp"
 
@@ -129,7 +130,7 @@ protected:
         *stk::mesh::field_data(lambda_field, node) = 1.0;
       }
     }
-    mesh = bulk.get_updated_ngp_mesh();
+    mesh = stk::mesh::get_updated_ngp_mesh(bulk);
   }
   stk::mesh::MetaData meta;
   stk::mesh::BulkData bulk;

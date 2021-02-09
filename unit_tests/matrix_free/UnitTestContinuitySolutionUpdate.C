@@ -45,6 +45,7 @@
 #include "stk_mesh/base/NgpForEachEntity.hpp"
 #include "stk_mesh/base/Selector.hpp"
 #include "stk_mesh/base/Types.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 #include "stk_topology/topology.hpp"
 
 #include <math.h>
@@ -65,7 +66,7 @@ class ContinuitySolutionUpdateFixture : public LowMachFixture
 protected:
   ContinuitySolutionUpdateFixture()
     : LowMachFixture(nx, scale),
-      linsys(bulk.get_updated_ngp_mesh(), meta.universal_part(), gid_field_ngp),
+      linsys(stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(), gid_field_ngp),
       exporter(
         Teuchos::rcpFromRef(linsys.owned_and_shared),
         Teuchos::rcpFromRef(linsys.owned)),
@@ -129,7 +130,7 @@ TEST_F(ContinuitySolutionUpdateFixture, solve_is_reasonable)
   auto& delta_mv = field_update.compute_delta(fields.laplacian_metric);
 
   copy_tpetra_solution_vector_to_stk_field(
-    bulk.get_updated_ngp_mesh(), meta.universal_part(),
+    stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(),
     linsys.stk_lid_to_tpetra_lid, delta_mv.getLocalViewDevice(), delta);
 
   if (bulk.parallel_size() > 1) {

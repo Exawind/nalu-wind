@@ -29,6 +29,7 @@
 #include "stk_mesh/base/NgpForEachEntity.hpp"
 #include "stk_mesh/base/NgpProfilingBlock.hpp"
 #include "stk_mesh/base/Types.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 
 #include <stk_topology/topology.hpp>
 
@@ -49,7 +50,7 @@ ConductionUpdate<p>::ConductionUpdate(
     meta_(bulk_in.mesh_meta_data()),
     active_(active_in),
     linsys_(
-      bulk_.get_updated_ngp_mesh(),
+      stk::mesh::get_updated_ngp_mesh(bulk_),
       active_,
       linsys_info::get_gid_field(meta_),
       replicas_in,
@@ -58,7 +59,7 @@ ConductionUpdate<p>::ConductionUpdate(
       Teuchos::rcpFromRef(linsys_.owned_and_shared),
       Teuchos::rcpFromRef(linsys_.owned)),
     offset_views_(
-      bulk_in.get_updated_ngp_mesh(),
+      stk::mesh::get_updated_ngp_mesh(bulk_in),
       linsys_.stk_lid_to_tpetra_lid,
       active_in,
       dirichlet_in,
@@ -126,7 +127,7 @@ ConductionUpdate<p>::predict_state()
   auto qp0 = stk::mesh::get_updated_ngp_field<double>(
     *meta_.get_field(stk::topology::NODE_RANK, conduction_info::q_name)
        ->field_state(stk::mesh::StateN));
-  copy_state(bulk_.get_updated_ngp_mesh(), active_, qp1, qp0);
+  copy_state(stk::mesh::get_updated_ngp_mesh(bulk_), active_, qp1, qp0);
   field_gather_.update_solution_fields();
   initial_residual_ = -1;
 }
@@ -145,7 +146,7 @@ ConductionUpdate<p>::compute_update(
     gammas[0], field_gather_.get_coefficient_fields());
 
   add_tpetra_solution_vector_to_stk_field(
-    bulk_.get_updated_ngp_mesh(), active_, linsys_.stk_lid_to_tpetra_lid,
+    stk::mesh::get_updated_ngp_mesh(bulk_), active_, linsys_.stk_lid_to_tpetra_lid,
     delta_mv.getLocalViewDevice(), delta);
 
   residual_norm_ = field_update_.residual_norm();
