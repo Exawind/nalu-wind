@@ -104,6 +104,10 @@ promote_elements_hex(
 
   stk::mesh::PartVector promotedSideParts = create_boundary_elements(poly, bulk, partsToBePromoted);
 
+  promotedElemParts.erase(
+    std::remove(promotedElemParts.begin(), promotedElemParts.end(), nullptr),
+    promotedElemParts.end());
+
   set_coordinates_hex(nodeLocs1D, bulk, desc, promotedElemParts, coordField);
   return std::make_pair(promotedElemParts, promotedSideParts);
 }
