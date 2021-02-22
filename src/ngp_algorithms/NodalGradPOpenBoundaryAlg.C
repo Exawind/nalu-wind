@@ -64,8 +64,7 @@ NodalGradPOpenBoundary<AlgTraits>::NodalGradPOpenBoundary(
   faceData_.add_face_field(dynPress_, AlgTraits::numFaceIp_);
   faceData_.add_gathered_nodal_field(dualNodalVol_,1);
   faceData_.add_gathered_nodal_field(exposedPressureField_,1);
-  faceData_.add_gathered_nodal_field(gradP_,       AlgTraits::nodesPerFace_, AlgTraits::nDim_);
-  faceData_.add_coordinates_field   (coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
+  faceData_.add_gathered_nodal_field(gradP_, AlgTraits::nDim_);
 
   const ELEM_DATA_NEEDED fc_shape_fcn  = useShifted_ ?  FC_SHIFTED_SHAPE_FCN :  FC_SHAPE_FCN;
   const ELEM_DATA_NEEDED scs_shape_fcn = useShifted_ ? SCS_SHIFTED_SHAPE_FCN : SCS_SHAPE_FCN;
