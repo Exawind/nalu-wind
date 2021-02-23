@@ -111,7 +111,6 @@
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
 #include <edge_kernels/MomentumEdgePecletAlg.h>
 #include <edge_kernels/StreletsUpwindEdgeAlg.h>
-#include <edge_kernels/MomentumABLWallFuncMaskUtil.h>
 
 // node kernels
 #include "node_kernels/NodeKernelUtils.h"
@@ -145,6 +144,7 @@
 #include "ngp_algorithms/TurbViscSSTAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_algorithms/DynamicPressureOpenAlg.h"
+#include <ngp_algorithms/MomentumABLWallFuncMaskUtil.h>
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
@@ -1179,6 +1179,12 @@ MomentumEquationSystem::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*g, *part, nullptr);
   }
+
+  GenericFieldType& node_mask =
+    realm_.meta_data().declare_field<GenericFieldType>(
+      stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
+  double one = 1;
+  stk::mesh::put_field_on_mesh(node_mask, *part, 1, &one);
 }
 
 //--------------------------------------------------------------------------
@@ -1203,12 +1209,6 @@ MomentumEquationSystem::register_edge_fields(
   stk::mesh::put_field_on_mesh(*pecletFactor, *part, nullptr);
   if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
     AMSAlgDriver_->register_edge_fields(part);
-  GenericFieldType& node_mask =
-    realm_.meta_data().declare_field<GenericFieldType>(
-      stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
-
-  double one = 1;
-  stk::mesh::put_field_on_mesh(node_mask, *part, 1, &one);
 }
 
 //--------------------------------------------------------------------------
@@ -2069,7 +2069,11 @@ MomentumEquationSystem::register_wall_bc(
 
         if (userData.isNoSlip_) {
           notProjectedPart_.push_back(part);
-          ablWallNodeMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
+          if( ablWallNodeMask_ == nullptr ) {
+            ablWallNodeMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
+          } else {
+            ablWallNodeMask_->partVec_.push_back(part);
+          }
         }
 
         auto& activeKernels = faceElemSolverAlg->activeKernels_;

@@ -147,7 +147,8 @@ realms:
 
     - wall_boundary_condition: bc_lower
       target_name: lower
-      wall_user_data:
+      wall_user_data: 
+        no_slip: true     
         velocity: [0.0,0.0,0.0]
         abl_wall_function:
           surface_heating_table:
@@ -297,7 +298,7 @@ Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0.0
-      termination_step_count: 1000
+      termination_step_count: 10
       time_step: 0.5
       time_stepping_type: fixed
       time_step_count: 0
