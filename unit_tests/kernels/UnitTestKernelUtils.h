@@ -513,11 +513,14 @@ public:
     : MomentumKernelHex8Mesh(),
       massFlowRateEdge_(&meta_.declare_field<ScalarFieldType>(
                           stk::topology::EDGE_RANK, "mass_flow_rate")),
-      pecletFactor_(&meta_.declare_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_factor"))
+      pecletFactor_(&meta_.declare_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_factor")),
+      ablWallNodeMask_(&meta_.declare_field<ScalarFieldType>(
+                 stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask"))
   {
     stk::mesh::put_field_on_mesh(
       *massFlowRateEdge_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*pecletFactor_, meta_.universal_part(), 1, nullptr);
+    stk::mesh::put_field_on_mesh(*ablWallNodeMask_, meta_.universal_part(), 1, nullptr);
   }
 
   virtual ~MomentumEdgeHex8Mesh() = default;
@@ -528,11 +531,16 @@ public:
     MomentumKernelHex8Mesh::fill_mesh_and_init_fields(doPerturb, generateSidesets);
     unit_test_kernel_utils::calc_mass_flow_rate(
       bulk_, *velocity_, *density_, *edgeAreaVec_, *massFlowRateEdge_);
+    stk::mesh::field_fill(1.0, *ablWallNodeMask_);
+    ablWallNodeMask_->modify_on_host();
+    ablWallNodeMask_->sync_to_device();
   }
 
   ScalarFieldType* massFlowRateEdge_{nullptr};
   ScalarFieldType* pecletFactor_{nullptr};
   ScalarFieldType* maxPecletFactor_{nullptr};
+  ScalarFieldType* ablWallNodeMask_{nullptr};
+
 };
 
 class MomentumABLKernelHex8Mesh : public MomentumKernelHex8Mesh
@@ -554,6 +562,7 @@ public:
                  stk::topology::NODE_RANK, "temperature_gradient_bc")),
       ustar_(kappa_ * uh_ / std::log(zh_ / z0_))
   {
+
     stk::mesh::put_field_on_mesh(
       *wallVelocityBC_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(*bcHeatFlux_, meta_.universal_part(), 1, nullptr);

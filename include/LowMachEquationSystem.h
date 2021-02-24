@@ -223,6 +223,7 @@ public:
   std::unique_ptr<EffDiffFluxCoeffAlg> diffFluxCoeffAlg_{nullptr};
   std::unique_ptr<Algorithm> tviscAlg_{nullptr};
   std::unique_ptr<Algorithm> pecletAlg_{nullptr};
+  std::unique_ptr<Algorithm> ablWallNodeMask_ {nullptr};
 
   CourantReAlgDriver cflReAlgDriver_;
   std::unique_ptr<AMSAlgDriver> AMSAlgDriver_{nullptr};

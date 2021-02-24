@@ -38,6 +38,7 @@ private:
   unsigned massFlowRate_ {stk::mesh::InvalidOrdinal};
   unsigned viscosity_ {stk::mesh::InvalidOrdinal};
   unsigned pecletFactor_ {stk::mesh::InvalidOrdinal};
+  unsigned maskNodeField_ {stk::mesh::InvalidOrdinal};
 };
 
 }  // nalu

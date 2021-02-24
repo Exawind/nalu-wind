@@ -25,17 +25,26 @@ namespace nalu {
 
 template<typename BcAlgTraits>
 MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::MomentumABLWallShearStressEdgeKernel(
+  bool slip,
   stk::mesh::MetaData& meta,
-  ElemDataRequests& faceDataPreReqs
-) : NGPKernel<MomentumABLWallShearStressEdgeKernel<BcAlgTraits>>(),
+  std::string coordname,
+  ElemDataRequests& faceDataPreReqs,
+  ElemDataRequests& elemData
+  ) : NGPKernel<MomentumABLWallShearStressEdgeKernel<BcAlgTraits>>(),
+    slip_(slip),
+    coordinates_(get_field_ordinal(meta, coordname)),
     exposedAreaVec_(get_field_ordinal(meta, "exposed_area_vector", meta.side_rank())),
     wallShearStress_(get_field_ordinal(meta, "wall_shear_stress_bip", meta.side_rank())),
-    meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<BcAlgTraits>())
+    meFC_(MasterElementRepo::get_surface_master_element<typename BcAlgTraits::FaceTraits>()),
+    meSCS_(MasterElementRepo::get_surface_master_element<typename BcAlgTraits::ElemTraits>())
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
+  elemData.add_cvfem_surface_me(meSCS_);
 
   faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceDataPreReqs.add_face_field(wallShearStress_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
+
+  elemData.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
 }
 
 template<typename BcAlgTraits>
@@ -43,9 +52,10 @@ void
 MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
   SharedMemView<DoubleType**, DeviceShmem>& /* lhs */,
   SharedMemView<DoubleType*, DeviceShmem>& rhs,
-  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews)
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& scratchViews,
+  ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>& /* elemScratchViews */,
+  int elemFaceOrdinal)
 {
-
   NALU_ALIGNED DoubleType tauWall[BcAlgTraits::nDim_];
 
   const auto& v_areavec = scratchViews.get_scratch_view_2D(exposedAreaVec_);
@@ -54,7 +64,17 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
   const int* ipNodeMap = meFC_->ipNodeMap();
 
   for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
-    const int nodeR = ipNodeMap[ip];
+
+    // Decide which node the shear stress will be applied to
+    // rowBase is the first row in the matrix associated with the velocity for this node
+    int rowBase;
+    if (slip_) {
+      // For slip, we want the node on the wall
+      rowBase = ipNodeMap[ip] * BcAlgTraits::nDim_;
+    } else {
+      // For no-slip, we want the node opposite the node at the wall
+      rowBase = meSCS_->opposingNodes(elemFaceOrdinal, ip) * BcAlgTraits::nDim_;
+    }
 
     DoubleType amag = 0.0;
     for (int d=0; d < BcAlgTraits::nDim_; ++d) {
@@ -64,13 +84,13 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
     amag = stk::math::sqrt(amag);
 
     for (int i=0; i < BcAlgTraits::nDim_; ++i) {
-      const int rowR = nodeR * BcAlgTraits::nDim_ + i;
-      rhs(rowR) += tauWall[i]*amag;
+      const int myRow = rowBase + i;
+      rhs(myRow) += tauWall[i] * amag;
     }
   }
 }
 
-INSTANTIATE_KERNEL_FACE(MomentumABLWallShearStressEdgeKernel)
+INSTANTIATE_KERNEL_FACE_ELEMENT(MomentumABLWallShearStressEdgeKernel)
 
 }  // nalu
 }  // sierra
