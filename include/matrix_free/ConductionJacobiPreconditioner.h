@@ -10,7 +10,7 @@
 #ifndef CONDUCTION_JACOBI_PRECONDITIONER_H
 #define CONDUCTION_JACOBI_PRECONDITIONER_H
 
-#include <Tpetra_MultiVector_decl.hpp>
+#include <Tpetra_MultiVector.hpp>
 #include <Tpetra_Operator.hpp>
 
 #include "matrix_free/ConductionFields.h"

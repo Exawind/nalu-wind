@@ -20,8 +20,8 @@
 #include "Teuchos_Ptr.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_ConfigDefs.hpp"
-#include "Tpetra_Map_decl.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_Map.hpp"
+#include "Tpetra_MultiVector.hpp"
 #include "stk_simd/Simd.hpp"
 #include <algorithm>
 #include <type_traits>

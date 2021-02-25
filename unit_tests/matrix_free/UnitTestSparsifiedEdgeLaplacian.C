@@ -24,9 +24,9 @@
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_FECrsGraph.hpp"
 #include "Tpetra_FECrsMatrix.hpp"
-#include "Tpetra_Export_decl.hpp"
-#include "Tpetra_Map_decl.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_Export.hpp"
+#include "Tpetra_Map.hpp"
+#include "Tpetra_MultiVector.hpp"
 #include "Tpetra_Assembly_Helpers.hpp"
 
 #include "stk_mesh/base/GetNgpField.hpp"

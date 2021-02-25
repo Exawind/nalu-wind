@@ -18,7 +18,7 @@
 #include "MueLu_CreateTpetraPreconditioner.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_Operator.hpp"
-#include "Tpetra_CrsMatrix_decl.hpp"
+#include "Tpetra_CrsMatrix.hpp"
 
 #include <exception>
 #include <string>

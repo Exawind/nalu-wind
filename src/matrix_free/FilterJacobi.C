@@ -17,7 +17,7 @@
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_Operator.hpp"
 #include "Tpetra_CombineMode.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_MultiVector.hpp"
 
 #include "Kokkos_Macros.hpp"
 #include "Kokkos_Parallel.hpp"

@@ -14,10 +14,10 @@
 #include <Teuchos_OrdinalTraits.hpp>
 #include <Teuchos_Ptr.hpp>
 #include <Teuchos_RCP.hpp>
-#include <Teuchos_RCPDecl.hpp>
+#include <Teuchos_RCP.hpp>
 #include <Tpetra_ConfigDefs.hpp>
-#include <Tpetra_Map_decl.hpp>
-#include <Tpetra_MultiVector_decl.hpp>
+#include <Tpetra_Map.hpp>
+#include <Tpetra_MultiVector.hpp>
 #include <algorithm>
 #include <stk_simd/Simd.hpp>
 #include <type_traits>
