@@ -20,6 +20,9 @@ template<class Scalar>
 struct MinMaxSumScalar {
   Scalar min_val,max_val, total_sum;
 
+  KOKKOS_DEFAULTED_FUNCTION
+  MinMaxSumScalar(const MinMaxSumScalar&) = default;
+
   KOKKOS_INLINE_FUNCTION
   void operator = (const MinMaxSumScalar& rhs) {
     min_val = rhs.min_val;
