@@ -11,7 +11,7 @@
 #include "matrix_free/StkToTpetraLocalIndices.h"
 
 #include "gtest/gtest.h"
-#include "Tpetra_Map_decl.hpp"
+#include "Tpetra_Map.hpp"
 #include "stk_io/StkMeshIoBroker.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/MetaData.hpp"

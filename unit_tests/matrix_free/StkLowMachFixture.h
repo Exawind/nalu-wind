@@ -10,7 +10,7 @@
 #ifndef STK_LOWMACH_FIXTURE_H
 #define STK_LOWMACH_FIXTURE_H
 
-#include "Tpetra_Map_decl.hpp"
+#include "Tpetra_Map.hpp"
 #include "gtest/gtest.h"
 #include "mpi.h"
 

@@ -18,8 +18,8 @@
 
 #include "Kokkos_Core.hpp"
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_Map_decl.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_Map.hpp"
+#include "Tpetra_MultiVector.hpp"
 
 #include "stk_simd/Simd.hpp"
 #include "gtest/gtest.h"

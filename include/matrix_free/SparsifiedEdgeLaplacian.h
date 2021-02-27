@@ -15,7 +15,7 @@
 #include "Kokkos_View.hpp"
 #include "Teuchos_RCP.hpp"
 
-#include "Tpetra_CrsMatrix_decl.hpp"
+#include "Tpetra_CrsMatrix.hpp"
 
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"

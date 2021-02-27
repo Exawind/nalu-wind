@@ -21,9 +21,9 @@
 #include "stk_mesh/base/MetaData.hpp"
 #include "Kokkos_View.hpp"
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_Export_decl.hpp"
-#include "Tpetra_Map_decl.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_Export.hpp"
+#include "Tpetra_Map.hpp"
+#include "Tpetra_MultiVector.hpp"
 
 #include <stddef.h>
 #include <type_traits>

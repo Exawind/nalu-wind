@@ -22,7 +22,7 @@
 #include "Kokkos_Core.hpp"
 #include <Teuchos_RCP.hpp>
 #include <Tpetra_ConfigDefs.hpp>
-#include <Tpetra_Map_decl.hpp>
+#include <Tpetra_Map.hpp>
 
 #include "gtest/gtest.h"
 #include "stk_mesh/base/BulkData.hpp"

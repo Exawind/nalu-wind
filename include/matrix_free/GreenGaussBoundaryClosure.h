@@ -14,7 +14,7 @@
 #include "matrix_free/PolynomialOrders.h"
 
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_MultiVector.hpp"
 
 namespace sierra {
 namespace nalu {

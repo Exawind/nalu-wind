@@ -10,7 +10,7 @@
 #ifndef SCALAR_DIRICHLET_BC_H
 #define SCALAR_DIRICHLET_BC_H
 
-#include <Tpetra_MultiVector_decl.hpp>
+#include <Tpetra_MultiVector.hpp>
 
 #include "matrix_free/KokkosViewTypes.h"
 #include "matrix_free/LocalArray.h"

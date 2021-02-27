@@ -10,7 +10,7 @@
 #ifndef STK_TO_TPETRA_LOCAL_INDICES_H
 #define STK_TO_TPETRA_LOCAL_INDICES_H
 
-#include "Tpetra_Map_decl.hpp"
+#include "Tpetra_Map.hpp"
 
 #include "Kokkos_View.hpp"
 
