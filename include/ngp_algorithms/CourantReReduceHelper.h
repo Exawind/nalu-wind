@@ -26,6 +26,9 @@ struct CflRe
     max_re = -1.0e6;
   }
 
+  KOKKOS_DEFAULTED_FUNCTION
+  CflRe(const CflRe&) = default;
+
   KOKKOS_INLINE_FUNCTION
   void operator=(const CflRe& rhs)
   {
