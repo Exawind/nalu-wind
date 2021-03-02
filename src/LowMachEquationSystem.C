@@ -1181,8 +1181,8 @@ MomentumEquationSystem::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*g, *part, nullptr);
   }
 
-  GenericFieldType& node_mask =
-    realm_.meta_data().declare_field<GenericFieldType>(
+  ScalarFieldType& node_mask =
+    realm_.meta_data().declare_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
   double one = 1;
   stk::mesh::put_field_on_mesh(node_mask, *part, 1, &one);
@@ -2070,7 +2070,7 @@ MomentumEquationSystem::register_wall_bc(
 
         if (userData.isNoSlip_) {
           notProjectedPart_.push_back(part);
-          if( ablWallNodeMask_ == nullptr ) {
+          if( ablWallNodeMask_ ) {
             ablWallNodeMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
           } else {
             ablWallNodeMask_->partVec_.push_back(part);

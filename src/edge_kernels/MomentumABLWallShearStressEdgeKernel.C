@@ -32,7 +32,6 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::MomentumABLWallShearStressEdg
   ElemDataRequests& elemData
   ) : NGPKernel<MomentumABLWallShearStressEdgeKernel<BcAlgTraits>>(),
     slip_(slip),
-    coordinates_(get_field_ordinal(meta, coordname)),
     exposedAreaVec_(get_field_ordinal(meta, "exposed_area_vector", meta.side_rank())),
     wallShearStress_(get_field_ordinal(meta, "wall_shear_stress_bip", meta.side_rank())),
     meFC_(MasterElementRepo::get_surface_master_element<typename BcAlgTraits::FaceTraits>()),
@@ -44,7 +43,7 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::MomentumABLWallShearStressEdg
   faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceDataPreReqs.add_face_field(wallShearStress_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
 
-  elemData.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
+  //elemData.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
 }
 
 template<typename BcAlgTraits>
@@ -67,14 +66,9 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
 
     // Decide which node the shear stress will be applied to
     // rowBase is the first row in the matrix associated with the velocity for this node
-    int rowBase;
-    if (slip_) {
-      // For slip, we want the node on the wall
-      rowBase = ipNodeMap[ip] * BcAlgTraits::nDim_;
-    } else {
-      // For no-slip, we want the node opposite the node at the wall
-      rowBase = meSCS_->opposingNodes(elemFaceOrdinal, ip) * BcAlgTraits::nDim_;
-    }
+    const int rowBase = slip_ 
+      ? (ipNodeMap[ip] * BcAlgTraits::nDim_) 
+      : (meSCS_->opposingNodes(elemFaceOrdinal, ip) * BcAlgTraits::nDim_);
 
     DoubleType amag = 0.0;
     for (int d=0; d < BcAlgTraits::nDim_; ++d) {
