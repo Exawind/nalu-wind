@@ -3,16 +3,10 @@ Neutral Atmospheric Boundary Layer Case
 30 Nov 2017
 
 This case is an example for running a large-eddy simulation of a neutral-
-stability atmospheric boundary layer.  The mesh resolution is much coarser 
-than would be run in practice, but that can be easily changed for a real 
-case.  The case should be run for at least 16,000 s to acheive a level
-of quasi equlibrium.  We recommend running this case with 10 m uniform
-resolution in all directions (it is set up for uniform 40 m resolution
-for this regression test).  The stability is neutral with no heat flux
-at the ground, but the boundary layer is capped with a stable inversion
-layer.  Because of constant density used here, because we do not include
-pressure work term in the enthalpy equation, and becuase we use Boussinesq
-buoyancy, temperature is potential temperature.
+stability atmospheric boundary layer using a no-slip wall stress implementation
+outlined in the 2010 paper by Jaegle et al, "Implementation Methods of Wall Functions in Cell-vertex Numerical Solvers"
+
+The rest of the setup matches the ablNeutralEdge regression test.
 
 - To build the mesh, use NaluWindUtils abl_mesh with nalu_abl_mesh.yaml
 - To initialze the fiels, use NaluWindUtils nalu_preprocess with 
@@ -65,4 +59,3 @@ Other:
   - Reference density: 1.178037 kg/m^3 (ideal gas based on 
     reference pressure gives this rho_ref = p_ref/((R/mw)*T_ref)
   - Viscosity: 1.2E-5 kg/m-s
-

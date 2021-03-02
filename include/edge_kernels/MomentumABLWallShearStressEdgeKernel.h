@@ -53,7 +53,6 @@ public:
 
 private:
   bool slip_{true};
-  unsigned coordinates_     {stk::mesh::InvalidOrdinal};
   unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
   unsigned wallShearStress_ {stk::mesh::InvalidOrdinal};
 

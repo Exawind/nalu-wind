@@ -35,7 +35,6 @@ MomentumABLWallFuncMaskUtil::execute()
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto myNodeMask    = fieldMgr.get_field<double>(maskNodeIndex_);
 
-  // This selector only includes edges that touch the abl wall (including those edges on the wall)
   const stk::mesh::Selector sel = (meta.locally_owned_part() | meta.globally_shared_part()) &
                                   stk::mesh::selectUnion(partVec_) &
                                   !(realm_.get_inactive_selector());
