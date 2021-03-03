@@ -28,8 +28,8 @@ public:
   ActuatorExecutor() = delete;
   virtual ~ActuatorExecutor(){};
   virtual void operator()()=0;
-  void Compute_FLLC();
-  void Apply_FLLC(ActuatorBulk& actBulk);
+  void compute_fllc();
+  void apply_fllc(ActuatorBulk& actBulk);
 private:
   FilteredLiftingLineCorrection fLiftLineCorr_;
 };

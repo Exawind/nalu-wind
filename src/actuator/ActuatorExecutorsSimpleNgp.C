@@ -67,7 +67,7 @@ ActuatorLineSimpleNGP::operator()()
   auto rhoReduce = actBulk_.density_.view_host();
   actuator_utils::reduce_view_on_host(rhoReduce);
 
-  Apply_FLLC(actBulk_);
+  apply_fllc(actBulk_);
 
   ActSimpleComputeRelativeVelocity(actBulk_, actMeta_);
 
@@ -78,7 +78,7 @@ ActuatorLineSimpleNGP::operator()()
 
   ActSimpleComputeForce(actBulk_, actMeta_);
 
-  Compute_FLLC();
+  compute_fllc();
 
   ActSimpleWriteToFile(actBulk_, actMeta_);
 

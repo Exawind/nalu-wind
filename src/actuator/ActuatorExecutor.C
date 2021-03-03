@@ -19,7 +19,7 @@ ActuatorExecutor::ActuatorExecutor(
 }
 
 void
-ActuatorExecutor::Compute_FLLC()
+ActuatorExecutor::compute_fllc()
 {
   if (!fLiftLineCorr_.is_active())
     return;
@@ -29,7 +29,7 @@ ActuatorExecutor::Compute_FLLC()
 }
 
 void
-ActuatorExecutor::Apply_FLLC(ActuatorBulk& actBulk)
+ActuatorExecutor::apply_fllc(ActuatorBulk& actBulk)
 {
   if (!fLiftLineCorr_.is_active())
     return;

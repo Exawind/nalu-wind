@@ -32,7 +32,7 @@ ActuatorLineFastNGP::operator()()
 
   RunInterpActuatorVel(actBulk_, stkBulk_);
 
-  Apply_FLLC(actBulk_);
+  apply_fllc(actBulk_);
 
   Kokkos::parallel_for(
     "assignFastVelActuatorNgpFAST", fastRangePolicy,
@@ -40,7 +40,7 @@ ActuatorLineFastNGP::operator()()
 
   ActFastCacheRelativeVelocities(actBulk_);
 
-  Compute_FLLC();
+  compute_fllc();
 
   actBulk_.interpolate_velocities_to_fast();
 
@@ -94,7 +94,7 @@ ActuatorDiskFastNGP::operator()()
 
   RunInterpActuatorVel(actBulk_, stkBulk_);
 
-  Apply_FLLC(actBulk_);
+  apply_fllc(actBulk_);
 
   auto fastRangePolicy = actBulk_.local_range_policy();
 
@@ -104,7 +104,7 @@ ActuatorDiskFastNGP::operator()()
 
   ActFastCacheRelativeVelocities(actBulk_);
 
-  Compute_FLLC();
+  compute_fllc();
 
   auto forceReduce = actBulk_.actuatorForce_.view_host();
 
