@@ -25,6 +25,7 @@
 #include "stk_mesh/base/FieldState.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/Types.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 #include "stk_unit_test_utils/stk_mesh_fixtures/Hex27Fixture.hpp"
 
 #include <iosfwd>
@@ -100,7 +101,7 @@ ConductionFixture::ConductionFixture(int nx, double scale)
       *stk::mesh::field_data(gid_field, node) = bulk.identifier(node);
     }
   }
-  mesh = bulk.get_updated_ngp_mesh();
+  mesh = stk::mesh::get_updated_ngp_mesh(bulk);
   gid_field_ngp = stk::mesh::get_updated_ngp_field<gid_type>(gid_field);
   sierra::nalu::matrix_free::populate_global_id_field(
     mesh, meta.universal_part(), gid_field_ngp);
@@ -174,7 +175,7 @@ ConductionFixtureP2::ConductionFixtureP2(int nx, double scale)
     }
   }
   io.set_bulk_data(bulk);
-  mesh = bulk.get_updated_ngp_mesh();
+  mesh = stk::mesh::get_updated_ngp_mesh(bulk);
   gid_field_ngp = stk::mesh::get_updated_ngp_field<gid_type>(gid_field);
   sierra::nalu::matrix_free::populate_global_id_field(
     mesh, meta.universal_part(), gid_field_ngp);

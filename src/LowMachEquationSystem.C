@@ -541,11 +541,16 @@ LowMachEquationSystem::register_surface_pp_algorithm(
   realm_.augment_output_variable_list(tauWall->name());
   realm_.augment_output_variable_list(yplus->name());
 
+  bool RANSAblBcApproach = momentumEqSys_->RANSAblBcApproach_;
 
   if ( thePhysics == "surface_force_and_moment" ) {
+    if (RANSAblBcApproach) {
+      std::cout << "surface_force_and_moment not implemented with RANS_abl_bc." << std::endl;
+    }
+    
     ScalarFieldType *assembledArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_area_force_moment"));
     stk::mesh::put_field_on_mesh(*assembledArea, stk::mesh::selectUnion(partVector), nullptr);
-    if ( NULL == surfaceForceAndMomentAlgDriver_ )
+	    if ( NULL == surfaceForceAndMomentAlgDriver_ )
       surfaceForceAndMomentAlgDriver_ = new SurfaceForceAndMomentAlgorithmDriver(realm_);
     SurfaceForceAndMomentAlgorithm *ppAlg
       = new SurfaceForceAndMomentAlgorithm(
@@ -554,6 +559,10 @@ LowMachEquationSystem::register_surface_pp_algorithm(
     surfaceForceAndMomentAlgDriver_->algVec_.push_back(ppAlg);
   }
   else if ( thePhysics == "surface_force_and_moment_wall_function" ) {
+    if (RANSAblBcApproach) {
+      std::cout << "surface_force_and_moment_wall_function not implemented with RANS_abl_bc." << std::endl;
+    }
+
     ScalarFieldType *assembledArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_area_force_moment_wf"));
     stk::mesh::put_field_on_mesh(*assembledArea, stk::mesh::selectUnion(partVector), nullptr);
     if ( NULL == surfaceForceAndMomentAlgDriver_ )
@@ -960,6 +969,12 @@ LowMachEquationSystem::post_converged_work()
 
   // output mass closure
   continuityEqSys_->mdotAlgDriver_->provide_output();
+
+  if (realm_.realmUsesEdges_) {
+    // get max peclet factor touching each node
+    // (host only operation since this is a post processor)
+    determine_max_peclet_factor(realm_.bulk_data(), realm_.meta_data());
+  }
 }
 
 //==========================================================================
@@ -1113,10 +1128,17 @@ MomentumEquationSystem::register_nodal_fields(
       AMSAlgDriver_->register_nodal_fields(part);
 
     if (realm_.solutionOptions_->turbulenceModel_ == SST_IDDES) {
-      iddesLengthScaleRatio_ = &(meta_data.declare_field<ScalarFieldType>(
-        stk::topology::NODE_RANK, "iddes_les_scale_ratio"));
-      stk::mesh::put_field_on_mesh(*iddesLengthScaleRatio_, *part, nullptr);
+      iddesRansIndicator_ = &(meta_data.declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "iddes_rans_indicator"));
+      stk::mesh::put_field_on_mesh(*iddesRansIndicator_, *part, nullptr);
     }
+  }
+
+  if (realm_.realmUsesEdges_) {
+    ScalarFieldType* pecletAtNodes =
+      &(realm_.meta_data().declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "max_peclet_factor"));
+    stk::mesh::put_field_on_mesh(*pecletAtNodes, *part, nullptr);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
@@ -1850,6 +1872,9 @@ MomentumEquationSystem::register_wall_bc(
   const bool anyWallFunctionActivated = wallFunctionApproach || ablWallFunctionApproach;
   auto& ablWallFunctionNode = userData.ablWallFunctionNode_;
 
+  // find out if this is RANS SST for modeling the ABL
+  const bool RANSAblBcApproach = userData.RANSAblBcApproach_;
+
   // push mesh part
   if ( !anyWallFunctionActivated )
     notProjectedPart_.push_back(part);
@@ -1962,10 +1987,7 @@ MomentumEquationSystem::register_wall_bc(
       edgeNodalGradient_);
   }
 
-  // Wall models.
-  if ( anyWallFunctionActivated ) {
-
-    // register fields; nodal
+  if (anyWallFunctionActivated || RANSAblBcApproach) {
     ScalarFieldType *assembledWallArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_area_wf"));
     stk::mesh::put_field_on_mesh(*assembledWallArea, *part, nullptr);
 
@@ -1982,112 +2004,124 @@ MomentumEquationSystem::register_wall_bc(
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_friction_velocity_bip"));
     stk::mesh::put_field_on_mesh(*wallFrictionVelocityBip, *part, numScsBip, nullptr);
 
-    GenericFieldType *wallShearStressBip
-      =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_shear_stress_bip"));
-    stk::mesh::put_field_on_mesh(*wallShearStressBip, *part, nDim*numScsBip, nullptr);
-
     GenericFieldType *wallNormalDistanceBip 
       =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_normal_distance_bip"));
     stk::mesh::put_field_on_mesh(*wallNormalDistanceBip, *part, numScsBip, nullptr);
 
-    // register the standard time-space-invariant wall heat flux (not used by the ABL wall model).
-    NormalHeatFlux heatFlux = userData.q_;
-    std::vector<double> userSpec(1);
-    userSpec[0] = heatFlux.qn_;
-    ConstantAuxFunction *theHeatFluxAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
-    ScalarFieldType *theHeatFluxBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "heat_flux_bc"));
-    stk::mesh::put_field_on_mesh(*theHeatFluxBcField, *part, nullptr);
-    bcDataAlg_.push_back( new AuxFunctionAlgorithm(realm_, part, theHeatFluxBcField, theHeatFluxAuxFunc, stk::topology::NODE_RANK));
-
-    // Atmospheric-boundary-layer-style wall model.
-    if (ablWallFunctionApproach) {
-      
-      const AlgorithmType wfAlgType = WALL_ABL;
-
-      // register boundary data: wall_heat_flux_bip.  This is the ABL integration-point-based heat flux field.
-      GenericFieldType *wallHeatFluxBip = &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_heat_flux_bip"));
-      stk::mesh::put_field_on_mesh(*wallHeatFluxBip, *part, numScsBip, nullptr);
-
-      // register the algorithm that computes geometry that the wall model uses.
-      realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
-        wfAlgType, part, get_elem_topo(realm_, *part), "geometry_wall_func");
-      
-      // register the algorithm that calculates the momentum and heat flux on the wall.
-      wallFuncAlgDriver_.register_face_elem_algorithm<ABLWallFluxesAlg>(
-        wfAlgType, part, get_elem_topo(realm_, *part), "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
-        ablWallFunctionNode);
-
-      // Assemble wall stresses via the edge algorithm.
-      auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-      AssembleElemSolverAlgorithm* solverAlg = nullptr;
-      bool solverAlgWasBuilt = false;
-
-      std::tie(solverAlg, solverAlgWasBuilt) =
-        build_or_add_part_to_face_bc_solver_alg(
-          *this, *part, solverAlgMap, "wall_fcn");
-
-      ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
-      auto& activeKernels = solverAlg->activeKernels_;
-
-      if (solverAlgWasBuilt) {
-        build_face_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>
-          (partTopo, *this, activeKernels, "momentum_abl_wall",
-           realm_.meta_data(), dataPreReqs);
-        }
-    }
-
-    // Engineering-style wall model.
-    else {
-
+    // need wall friction velocity for TKE boundary condition
+    if (RANSAblBcApproach) { 
       const AlgorithmType wfAlgType = WALL_FCN;
 
       wallFuncAlgDriver_
         .register_legacy_algorithm<ComputeWallFrictionVelocityAlgorithm>(
-          wfAlgType, part, "wall_func", realm_.realmUsesEdges_);
+          wfAlgType, part, "wall_func", realm_.realmUsesEdges_, wallBCData);
+    }
 
-      // create lhs/rhs algorithm; generalized for edge (nearest node usage) and element
-      if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {
-        // element-based uses consolidated approach fully
+    // Wall models.
+    if ( anyWallFunctionActivated ) {
+      GenericFieldType *wallShearStressBip
+        =  &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_shear_stress_bip"));
+      stk::mesh::put_field_on_mesh(*wallShearStressBip, *part, nDim*numScsBip, nullptr);
+    
+      // register the standard time-space-invariant wall heat flux (not used by the ABL wall model).
+      NormalHeatFlux heatFlux = userData.q_;
+      std::vector<double> userSpec(1);
+      userSpec[0] = heatFlux.qn_;
+      ConstantAuxFunction *theHeatFluxAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
+      ScalarFieldType *theHeatFluxBcField = &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "heat_flux_bc"));
+      stk::mesh::put_field_on_mesh(*theHeatFluxBcField, *part, nullptr);
+      bcDataAlg_.push_back( new AuxFunctionAlgorithm(realm_, part, theHeatFluxBcField, theHeatFluxAuxFunc, stk::topology::NODE_RANK));
+
+      // Atmospheric-boundary-layer-style wall model.
+      if (ablWallFunctionApproach) {
+        
+        const AlgorithmType wfAlgType = WALL_ABL;
+
+        // register boundary data: wall_heat_flux_bip.  This is the ABL integration-point-based heat flux field.
+        GenericFieldType *wallHeatFluxBip = &(meta_data.declare_field<GenericFieldType>(sideRank, "wall_heat_flux_bip"));
+        stk::mesh::put_field_on_mesh(*wallHeatFluxBip, *part, numScsBip, nullptr);
+
+        // register the algorithm that computes geometry that the wall model uses.
+        realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
+          wfAlgType, part, get_elem_topo(realm_, *part), "geometry_wall_func");
+        
+        // register the algorithm that calculates the momentum and heat flux on the wall.
+        wallFuncAlgDriver_.register_face_elem_algorithm<ABLWallFluxesAlg>(
+          wfAlgType, part, get_elem_topo(realm_, *part), "abl_wall_func", wallFuncAlgDriver_, realm_.realmUsesEdges_,
+          ablWallFunctionNode);
+
+        // Assemble wall stresses via the edge algorithm.
         auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-
         AssembleElemSolverAlgorithm* solverAlg = nullptr;
         bool solverAlgWasBuilt = false;
 
-        std::tie(solverAlg, solverAlgWasBuilt) = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "wall_fcn");
+        std::tie(solverAlg, solverAlgWasBuilt) =
+          build_or_add_part_to_face_bc_solver_alg(
+            *this, *part, solverAlgMap, "wall_fcn");
 
         ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
         auto& activeKernels = solverAlg->activeKernels_;
 
         if (solverAlgWasBuilt) {
-          build_face_topo_kernel_automatic<MomentumWallFunctionElemKernel>
-            (partTopo, *this, activeKernels, "momentum_wall_function",
-             realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs);
-          report_built_supp_alg_names();
-        }
+          build_face_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>
+            (partTopo, *this, activeKernels, "momentum_abl_wall",
+             realm_.meta_data(), dataPreReqs);
+          }
       }
+
+      // Engineering-style wall model.
       else {
-        // deprecated element-based and supported edge-based approach
-        std::map<AlgorithmType, SolverAlgorithm *>::iterator it_wf =
-          solverAlgDriver_->solverAlgMap_.find(wfAlgType);
-        if ( it_wf == solverAlgDriver_->solverAlgMap_.end() ) {
-          SolverAlgorithm *theAlg = NULL;
-          if ( realm_.realmUsesEdges_ ) {
-            theAlg = new AssembleMomentumEdgeWallFunctionSolverAlgorithm(realm_, part, this);
+
+        const AlgorithmType wfAlgType = WALL_FCN;
+
+        wallFuncAlgDriver_
+          .register_legacy_algorithm<ComputeWallFrictionVelocityAlgorithm>(
+            wfAlgType, part, "wall_func", realm_.realmUsesEdges_, wallBCData);
+
+        // create lhs/rhs algorithm; generalized for edge (nearest node usage) and element
+        if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {
+          // element-based uses consolidated approach fully
+          auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+
+          AssembleElemSolverAlgorithm* solverAlg = nullptr;
+          bool solverAlgWasBuilt = false;
+
+          std::tie(solverAlg, solverAlgWasBuilt) = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "wall_fcn");
+
+          ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+          auto& activeKernels = solverAlg->activeKernels_;
+
+          if (solverAlgWasBuilt) {
+            build_face_topo_kernel_automatic<MomentumWallFunctionElemKernel>
+              (partTopo, *this, activeKernels, "momentum_wall_function",
+               realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs);
+            report_built_supp_alg_names();
           }
-          else {
-            theAlg = new AssembleMomentumElemWallFunctionSolverAlgorithm(realm_, part, this, realm_.realmUsesEdges_);
-          }
-          solverAlgDriver_->solverAlgMap_[wfAlgType] = theAlg;
         }
         else {
-          it_wf->second->partVec_.push_back(part);
+          // deprecated element-based and supported edge-based approach
+          std::map<AlgorithmType, SolverAlgorithm *>::iterator it_wf =
+            solverAlgDriver_->solverAlgMap_.find(wfAlgType);
+          if ( it_wf == solverAlgDriver_->solverAlgMap_.end() ) {
+            SolverAlgorithm *theAlg = NULL;
+            if ( realm_.realmUsesEdges_ ) {
+              theAlg = new AssembleMomentumEdgeWallFunctionSolverAlgorithm(realm_, part, this);
+            }
+            else {
+              theAlg = new AssembleMomentumElemWallFunctionSolverAlgorithm(realm_, part, this, realm_.realmUsesEdges_);
+            }
+            solverAlgDriver_->solverAlgMap_[wfAlgType] = theAlg;
+          }
+          else {
+            it_wf->second->partVec_.push_back(part);
+          }
         }
       }
     }
   }
 
   // Dirichlet wall boundary condition.
-  else {
+  if (!anyWallFunctionActivated) {
     const AlgorithmType algType = WALL;
 
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =

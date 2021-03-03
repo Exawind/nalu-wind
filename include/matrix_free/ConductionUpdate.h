@@ -20,7 +20,7 @@
 #include "Kokkos_View.hpp"
 
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_Export_decl.hpp"
+#include "Tpetra_Export.hpp"
 #include "Tpetra_MultiVector_fwd.hpp"
 
 #include "stk_mesh/base/Selector.hpp"

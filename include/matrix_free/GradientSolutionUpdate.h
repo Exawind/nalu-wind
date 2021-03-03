@@ -17,7 +17,7 @@
 
 #include "Teuchos_RCP.hpp"
 #include "Tpetra_Export_fwd.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_MultiVector.hpp"
 
 namespace Teuchos {
 class ParameterList;

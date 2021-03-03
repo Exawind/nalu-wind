@@ -532,6 +532,7 @@ public:
 
   ScalarFieldType* massFlowRateEdge_{nullptr};
   ScalarFieldType* pecletFactor_{nullptr};
+  ScalarFieldType* maxPecletFactor_{nullptr};
 };
 
 class MomentumABLKernelHex8Mesh : public MomentumKernelHex8Mesh
@@ -905,8 +906,10 @@ public:
         stk::topology::NODE_RANK, "average_dudx")),
       dkdx_(&meta_.declare_field<VectorFieldType>(
         stk::topology::NODE_RANK, "dkdx")),
-      dwdx_(
-        &meta_.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dwdx"))
+      dwdx_(&meta_.declare_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "dwdx")),
+      forcingComp_(&meta_.declare_field<VectorFieldType>(
+        stk::topology::NODE_RANK, "forcing_components"))
   {
     stk::mesh::put_field_on_mesh(*tke_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*sdr_, meta_.universal_part(), 1, nullptr);
@@ -928,6 +931,8 @@ public:
       *dkdx_, meta_.universal_part(), spatialDim_, nullptr);
     stk::mesh::put_field_on_mesh(
       *dwdx_, meta_.universal_part(), spatialDim_, nullptr);
+    stk::mesh::put_field_on_mesh(
+      *forcingComp_, meta_.universal_part(), spatialDim_, nullptr);
   }
 
   virtual ~AMSKernelHex8Mesh() {}
@@ -953,6 +958,7 @@ public:
     unit_test_kernel_utils::dudx_test_function(bulk_, *coordinates_, *avgDudx_);
     stk::mesh::field_fill(0.0, *dkdx_);
     stk::mesh::field_fill(0.0, *dwdx_);
+    stk::mesh::field_fill(0.0, *forcingComp_);
 }
 
   ScalarFieldType* tke_{nullptr};
@@ -971,6 +977,7 @@ public:
   GenericFieldType* avgDudx_{nullptr};
   VectorFieldType* dkdx_{nullptr};
   VectorFieldType* dwdx_{nullptr};
+  VectorFieldType* forcingComp_{nullptr};
 };
 
 /** Test Fixture for the hybrid turbulence Kernels

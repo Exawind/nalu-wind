@@ -10,6 +10,10 @@
 #ifndef HYPRENGP_H
 #define HYPRENGP_H
 
+#ifdef NALU_USES_HYPRE
+#include "HYPRE_config.h"
+#endif
+
 #ifdef HYPRE_USING_CUDA
 #include "HYPRE_utilities.h"
 #include "krylov.h"

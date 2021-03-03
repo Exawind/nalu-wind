@@ -18,7 +18,7 @@
 #include <BelosTpetraAdapter.hpp>
 #include <BelosTypes.hpp>
 #include <Teuchos_ParameterList.hpp>
-#include <Teuchos_RCPDecl.hpp>
+#include <Teuchos_RCP.hpp>
 #include <cmath>
 
 #include "Teuchos_RCP.hpp"

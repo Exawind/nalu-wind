@@ -24,9 +24,9 @@
 #include "Kokkos_View.hpp"
 #include "Teuchos_ParameterList.hpp"
 
-#include "Tpetra_Export_decl.hpp"
-#include "Tpetra_Map_decl.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_Export.hpp"
+#include "Tpetra_Map.hpp"
+#include "Tpetra_MultiVector.hpp"
 
 #include "stk_mesh/base/Bucket.hpp"
 #include "stk_mesh/base/BulkData.hpp"
@@ -44,6 +44,7 @@
 #include "stk_mesh/base/NgpForEachEntity.hpp"
 #include "stk_mesh/base/Selector.hpp"
 #include "stk_mesh/base/Types.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 #include "stk_topology/topology.hpp"
 
 #include <math.h>
@@ -64,12 +65,12 @@ class ConductionSolutionUpdateFixture : public ::ConductionFixture
 protected:
   ConductionSolutionUpdateFixture()
     : ConductionFixture(nx, scale),
-      linsys(bulk.get_updated_ngp_mesh(), meta.universal_part(), gid_field_ngp),
+      linsys(stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(), gid_field_ngp),
       exporter(
         Teuchos::rcpFromRef(linsys.owned_and_shared),
         Teuchos::rcpFromRef(linsys.owned)),
       offset_views(
-        bulk.get_updated_ngp_mesh(),
+        stk::mesh::get_updated_ngp_mesh(bulk),
         linsys.stk_lid_to_tpetra_lid,
         meta.universal_part()),
       field_update(Teuchos::ParameterList{}, linsys, exporter, offset_views)
@@ -147,7 +148,7 @@ TEST_F(ConductionSolutionUpdateFixture, correct_behavior_for_linear_problem)
     test_solution_update::gammas[0], coefficient_fields);
 
   copy_tpetra_solution_vector_to_stk_field(
-    bulk.get_updated_ngp_mesh(), meta.universal_part(),
+    stk::mesh::get_updated_ngp_mesh(bulk), meta.universal_part(),
     linsys.stk_lid_to_tpetra_lid, delta_mv.getLocalViewDevice(), delta);
 
   if (mesh.get_bulk_on_host().parallel_size() > 1) {

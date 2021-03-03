@@ -16,8 +16,8 @@
 #include "matrix_free/MomentumOperator.h"
 
 #include "Kokkos_Array.hpp"
-#include "Tpetra_Export_decl.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_Export.hpp"
+#include "Tpetra_MultiVector.hpp"
 #include "Teuchos_RCP.hpp"
 
 namespace Teuchos {

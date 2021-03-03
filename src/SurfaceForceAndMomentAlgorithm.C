@@ -361,7 +361,6 @@ SurfaceForceAndMomentAlgorithm::execute()
         const double * coordL = stk::mesh::field_data(*coordinates_, nodeL );
         const double * coordR = stk::mesh::field_data(*coordinates_, nodeR );
 
-        // determine yp; ~nearest opposing edge normal distance to wall
         double ypBip = 0.0;
         for ( int j = 0; j < nDim; ++j ) {
           const double nj = ws_normal[j];

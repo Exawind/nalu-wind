@@ -10,7 +10,7 @@
 #ifndef STK_GRADIENT_FIXTURE_H
 #define STK_GRADIENT_FIXTURE_H
 
-#include "Tpetra_Map_decl.hpp"
+#include "Tpetra_Map.hpp"
 #include "gtest/gtest.h"
 #include "mpi.h"
 
@@ -28,6 +28,7 @@
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 #include "stk_topology/topology.hpp"
 #include "stk_unit_test_utils/stk_mesh_fixtures/CoordinateMapping.hpp"
 #include "stk_unit_test_utils/stk_mesh_fixtures/Hex27Fixture.hpp"
@@ -48,7 +49,7 @@ protected:
     return *meta.get_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
       stk::topology::NODE_RANK, "coordinates");
   }
-  stk::mesh::NgpMesh& mesh() { return bulk.get_updated_ngp_mesh(); }
+  stk::mesh::NgpMesh& mesh() { return stk::mesh::get_updated_ngp_mesh(bulk); }
 
   stk::mesh::Selector active() { return meta.universal_part(); }
   stk::mesh::Selector side()

@@ -25,7 +25,10 @@ class WallFuncGeometryAlg : public Algorithm
 public:
   using DblType = double;
 
-  WallFuncGeometryAlg(Realm&, stk::mesh::Part*);
+  WallFuncGeometryAlg(Realm&, 
+    stk::mesh::Part*,
+    bool = false,
+    double = 0.0);
 
   virtual ~WallFuncGeometryAlg() = default;
 
@@ -45,6 +48,9 @@ private:
 
   MasterElement* meFC_{nullptr};
   MasterElement* meSCS_{nullptr};
+
+  bool RANSAblBcApproach_;
+  double z0_;
 };
 
 }  // nalu

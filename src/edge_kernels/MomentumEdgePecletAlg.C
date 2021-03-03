@@ -17,6 +17,8 @@
 #include <EquationSystem.h>
 #include <ngp_utils/NgpFieldUtils.h>
 #include <ngp_utils/NgpLoopUtils.h>
+#include <stk_mesh/base/FieldParallel.hpp>
+#include <stk_mesh/base/FieldBLAS.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -103,5 +105,36 @@ MomentumEdgePecletAlg::execute()
       pecletFactor.get(edge, 0) = pecFunc->execute(pecnum);
     });
 }
+
+void
+determine_max_peclet_factor(
+  stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta)
+{
+  ScalarFieldType* maxPecFac = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "max_peclet_factor");
+  ScalarFieldType* pecletFactor =
+    meta.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_factor");
+
+  stk::mesh::field_fill(0.0, *maxPecFac);
+
+  const stk::mesh::Selector sel =
+    stk::mesh::selectField(*pecletFactor) & meta.locally_owned_part();
+
+  for (const auto* ib : bulk.get_buckets(stk::topology::EDGE_RANK, sel)) {
+    const auto& b = *ib;
+    const size_t length = b.size();
+    for (size_t k = 0; k < length; ++k) {
+      stk::mesh::Entity edge = b[k];
+      const double* pecFac = stk::mesh::field_data(*pecletFactor, edge);
+      const auto* nodes = bulk.begin_nodes(edge);
+      double* maxPecL = stk::mesh::field_data(*maxPecFac, nodes[0]);
+      double* maxPecR = stk::mesh::field_data(*maxPecFac, nodes[1]);
+      *maxPecL = std::max(*maxPecL, *pecFac);
+      *maxPecR = std::max(*maxPecR, *pecFac);
+    }
+  }
+  stk::mesh::copy_owned_to_shared(bulk, {maxPecFac});
+}
+
 } // namespace nalu
 } // namespace sierra

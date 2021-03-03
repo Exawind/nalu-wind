@@ -16,6 +16,7 @@
 #include <master_element/MasterElement.h>
 #include <master_element/MasterElementFactory.h>
 #include <NaluEnv.h>
+#include <NaluParsing.h>
 #include <SpecificDissipationRateEquationSystem.h>
 #include <SolutionOptions.h>
 #include <TurbKineticEnergyEquationSystem.h>
@@ -191,8 +192,12 @@ void
 ShearStressTransportEquationSystem::register_wall_bc(
   stk::mesh::Part* part,
   const stk::topology& partTopo,
-  const WallBoundaryConditionData& /*wallBCData*/)
+  const WallBoundaryConditionData& wallBCData)
 {
+  // determine if using RANS for ABL
+  WallUserData userData = wallBCData.userData_;
+  bool RANSAblBcApproach = userData.RANSAblBcApproach_;
+
   // push mesh part
   wallBcPart_.push_back(part);
 
@@ -209,9 +214,11 @@ ShearStressTransportEquationSystem::register_wall_bc(
   const int numScsBip = meFC->num_integration_points();
   stk::mesh::put_field_on_mesh(wallNormDistBip, *part, numScsBip, nullptr);
 
+  RoughnessHeight rough = userData.z0_;
+  double z0 = rough.z0_;
   realm_.geometryAlgDriver_->register_wall_func_algorithm<WallFuncGeometryAlg>(
     sierra::nalu::WALL, part, get_elem_topo(realm_, *part),
-    "sst_geometry_wall");
+    "sst_geometry_wall", RANSAblBcApproach, z0);
 }
 
 //--------------------------------------------------------------------------
@@ -503,6 +510,29 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
     });
 
   fOneBlend.modify_on_device();
+}
+
+void
+ShearStressTransportEquationSystem::post_iter_work()
+{
+  const auto turbModel = realm_.solutionOptions_->turbulenceModel_;
+  if (turbModel == SST_IDDES) {
+    const auto& fieldMgr = realm_.ngp_field_manager();
+    const auto& meta = realm_.meta_data();
+    auto& bulk = realm_.bulk_data();
+
+    auto ngpIddesRans = fieldMgr.get_field<double>(
+      get_field_ordinal(meta, "iddes_rans_indicator"));
+    ngpIddesRans.sync_to_host();
+
+    ScalarFieldType* iddesRansInd = meta.get_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "iddes_rans_indicator");
+
+    stk::mesh::copy_owned_to_shared(bulk, {iddesRansInd});
+    if (realm_.hasPeriodic_) {
+      realm_.periodic_delta_solution_update(iddesRansInd, 1);
+    }
+  }
 }
 
 } // namespace nalu

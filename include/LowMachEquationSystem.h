@@ -215,7 +215,7 @@ public:
   ScalarFieldType *visc_;
   ScalarFieldType *tvisc_;
   ScalarFieldType *evisc_;
-  ScalarFieldType *iddesLengthScaleRatio_;
+  ScalarFieldType *iddesRansIndicator_;
 
   VectorNodalGradAlgDriver nodalGradAlgDriver_;
   WallFricVelAlgDriver wallFuncAlgDriver_;
@@ -230,6 +230,8 @@ public:
   ProjectedNodalGradientEquationSystem *projectedNodalGradEqs_;
 
   double firstPNGResidual_;
+
+  bool RANSAblBcApproach_;
 
   // saved of mesh parts that are not to be projected
   std::vector<stk::mesh::Part *> notProjectedPart_;

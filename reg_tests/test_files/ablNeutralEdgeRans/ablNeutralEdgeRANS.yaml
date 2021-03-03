@@ -1,0 +1,269 @@
+Simulations:
+  - name: sim1
+    time_integrator: ti_1
+    optimizer: opt1
+
+
+# Specify the linear system solvers.
+linear_solvers:
+
+  # solver for scalar equations
+  - name: solve_scalar
+    type: tpetra
+    method: gmres
+    preconditioner: sgs
+    tolerance: 1e-6
+    max_iterations: 200
+    kspace: 75
+    output_level: 0
+
+  # solver for the pressure Poisson equation
+  - name: solve_cont_trilinos
+    type: tpetra
+    method: gmres
+    preconditioner: muelu
+    tolerance: 1e-6
+    max_iterations: 200
+    kspace: 75
+    output_level: 0
+    recompute_preconditioner: no
+    muelu_xml_file_name: ../../xml/milestone.xml
+
+  - name: solve_cont
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
+    tolerance: 1e-6
+    max_iterations: 200
+    kspace: 200
+    output_level: 0
+    bamg_coarsen_type: 8
+    bamg_interp_type: 6
+    bamg_cycle_type: 1
+    write_matrix_files: no
+    
+
+
+# Specify the different physics realms.  Here, we just have one for the fluid.
+realms:
+
+  # The fluid realm that uses a 75 m x 75 m x 500 km column of
+  #   an atmospheric RANS mesh.
+  - name: fluidRealm
+    mesh: ../../mesh/ablNeutralEdgeRans.exo
+    use_edges: yes
+    automatic_decomposition_type: rcb
+
+    # This defines the equations to be solved: momentum, pressure,
+    # and subgrid-scale turbulent kinetic energy.  The equation system will be iterated
+    # a maximum of 4 outer iterations.
+    equation_systems:
+      name: theEqSys
+      max_iterations: 4
+
+      # This defines which solver to use for each equation set.  See the
+      # "linear_solvers" block.  All use the scalar solver, except pressure.
+      solver_system_specification:
+        velocity: solve_scalar
+        pressure: solve_cont
+        turbulent_ke: solve_scalar
+        specific_dissipation_rate: solve_scalar
+        ndtw: solve_cont
+
+      # This defines the equation systems, maximum number of inner iterations,
+      # and scaled nonlinear residual tolerance.
+      systems:
+        - WallDistance:
+            name: myNDTW
+            max_iterations: 1
+            convergence_tolerance: 1e-8
+    
+        - LowMachEOM:
+            name: myLowMach
+            max_iterations: 1
+            convergence_tolerance: 1.0e-5
+
+        - ShearStressTransport:
+            name: mySST 
+            max_iterations: 1
+            convergence_tolerance: 1e-8
+
+    # Specify the properties of the fluid, in this case air.
+    material_properties:
+
+      target_name: [fluid_part]
+
+      constant_specification:
+       universal_gas_constant: 8314.4621
+       reference_pressure: 101325.0
+
+      reference_quantities:
+        - species_name: Air
+          mw: 29.0
+          mass_fraction: 1.0
+
+      specifications:
+
+        # Density here was computed such that P_ref = rho_ref*(R/mw)*300K
+        - name: density
+          type: constant
+          value: 1.178037722969475
+
+        - name: viscosity
+          type: constant
+          value: 1.2E-5
+
+        - name: specific_heat
+          type: constant
+          value: 1000.0
+
+    initial_conditions:
+      - constant: ic_1
+        target_name: [fluid_part]
+        value:
+          pressure: 0.0
+          velocity: [0.0, 0.0, 0.0]
+          turbulent_ke: 0.1
+          specific_dissipation_rate: 2300.0
+
+    boundary_conditions:
+
+    - periodic_boundary_condition: bc_north_south
+      target_name: [north, south]
+      periodic_user_data:
+        search_tolerance: 0.0001
+
+    - periodic_boundary_condition: bc_east_west
+      target_name: [east, west]
+      periodic_user_data:
+        search_tolerance: 0.0001 
+
+    - symmetry_boundary_condition: bc_upper
+      target_name: upper
+      symmetry_user_data:
+
+    - wall_boundary_condition: bc_lower
+      target_name: lower
+      wall_user_data:
+        velocity: [0,0,0]
+        use_wall_function: no
+        heat_flux: 0.0
+        reference_temperature: 300.0
+        roughness_height: 0.1
+        gravity_vector_component: 3
+        RANS_abl_bc: yes
+        reference_velocity: 6.6
+        reference_height: 90.0
+
+    solution_options:
+      name: myOptions
+      turbulence_model: sst
+      projected_timescale_type: momentum_diag_inv
+      interp_rhou_together_for_mdot: yes
+
+      # Pressure is not fixed anywhere on the boundaries, so set it at
+      # the node closest to the specified location.
+      fix_pressure_at_node:
+        value: 0.0
+        node_lookup_type: spatial_location
+        location: [12.5, 37.5, 4.8]
+        search_target_part: [fluid_part]
+        search_method: stk_kdtree
+
+      options:
+        - hybrid_factor:
+            velocity: 1.0
+            turbulent_ke: 1.0
+            specific_dissipation_rate: 1.0
+
+        - alpha_upw:
+            velocity: 1.0
+            turbulent_ke: 1.0
+            specific_dissipation_rate: 1.0
+
+        - upw_factor:
+            velocity: 1.0
+            turbulent_ke: 0.0
+            specific_dissipation_rate: 0.0
+
+        - relaxation_factor:
+            velocity: 0.7
+            pressure: 0.3
+            turbulent_ke: 0.7
+            specific_dissipation_rate: 0.7
+
+        - noc_correction:
+            pressure: yes
+
+        - limiter:
+            pressure: no
+            velocity: yes
+            turbulent_ke: yes
+            specific_dissipation_rate: yes
+
+        - projected_nodal_gradient:
+            velocity: element
+            pressure: element
+            turbulent_ke: element
+            specific_dissipation_rate: element
+
+        - turbulence_model_constants:
+            kappa: 0.40
+            tkeProdLimitRatio: 10.0 # 2015 Masson paper's c1 (I think based on comparing Nalu-Wind implementation eqns. and 2011 thesis)
+            betaStar: 0.03
+            cMu: 0.03
+            aOne: 0.31
+            betaOne: 0.0236
+            betaTwo: 0.0276
+            gammaOne: 0.3255
+            gammaTwo: 0.3011
+            sigmaKOne: 0.85
+            sigmaKTwo: 1.0
+            sigmaWOne: 0.5
+            sigmaWTwo: 0.67
+            SDRWallFactor: 10.0 # for timestepping not turbulence model
+
+        - source_terms:
+            momentum: 
+              - body_force
+
+        - source_term_parameters:
+            momentum: [0.0003547, 0.0, 0.0]
+
+        - input_variables_from_file:
+            velocity: velocity
+
+    output:
+      output_data_base_name: rans_abl_neutral.e
+      output_frequency: 10
+      output_nodse_set: no
+      output_variables:
+       - velocity
+       - pressure
+       - turbulent_ke
+       - specific_dissipation_rate
+       - minimum_distance_to_wall
+       - turbulent_viscosity
+
+   # Compute spatial averages of velocity and temperature at all height levels
+   # available on the ABL mesh. This is used for post-processing.
+    boundary_layer_statistics:
+      target_name: [ fluid_part ]
+      stats_output_file: "abl_statistics.nc"
+      compute_temperature_statistics: no
+      output_frequency: 10
+      time_hist_output_frequency: 2
+
+# This defines the time step size, count, etc.
+Time_Integrators:
+  - StandardTimeIntegrator:
+      name: ti_1
+      start_time: 0.0
+      termination_step_count: 10
+      time_step: 100.0
+      time_stepping_type: fixed
+      time_step_count: 0
+      second_order_accuracy: yes
+
+      realms:
+        - fluidRealm

@@ -1,9 +1,11 @@
 
 #include "mesh_motion/FrameMoving.h"
-#include "FieldTypeDef.h"
 
-// stk_mesh/base/fem
-#include <stk_mesh/base/FieldBLAS.hpp>
+#include "FieldTypeDef.h"
+#include "ngp_utils/NgpLoopUtils.h"
+#include "ngp_utils/NgpTypes.h"
+#include "utils/ComputeVectorDivergence.h"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 
 #include <cassert>
 
@@ -14,81 +16,123 @@ void FrameMoving::update_coordinates_velocity(const double time)
 {
   assert (partVec_.size() > 0);
 
-  const int nDim = meta_.spatial_dimension();
+  // create NGP view of motion kernels
+  const size_t numKernels = motionKernels_.size();
+  auto ngpKernels = nalu_ngp::create_ngp_view<NgpMotion>(motionKernels_);
 
-  VectorFieldType* modelCoords = meta_.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "coordinates");
-  VectorFieldType* currCoords = meta_.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "current_coordinates");
-  VectorFieldType* displacement = meta_.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_displacement");
-  VectorFieldType* meshVelocity = meta_.get_field<VectorFieldType>(
-    stk::topology::NODE_RANK, "mesh_velocity");
+  // define mesh entities
+  const int nDim = meta_.spatial_dimension();
+  const auto& ngpMesh = stk::mesh::get_updated_ngp_mesh(bulk_);
+  const stk::mesh::EntityRank entityRank = stk::topology::NODE_RANK;
 
   // get the parts in the current motion frame
   stk::mesh::Selector sel = stk::mesh::selectUnion(partVec_) &
       (meta_.locally_owned_part() | meta_.globally_shared_part());
-  const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
+
+  // get the field from the NGP mesh
+  stk::mesh::NgpField<double> modelCoords = stk::mesh::get_updated_ngp_field<double>(
+    *meta_.get_field<VectorFieldType>(entityRank, "coordinates"));
+  stk::mesh::NgpField<double> currCoords = stk::mesh::get_updated_ngp_field<double>(
+    *meta_.get_field<VectorFieldType>(entityRank, "current_coordinates"));
+  stk::mesh::NgpField<double> displacement = stk::mesh::get_updated_ngp_field<double>(
+    *meta_.get_field<VectorFieldType>(entityRank, "mesh_displacement"));
+  stk::mesh::NgpField<double> meshVelocity = stk::mesh::get_updated_ngp_field<double>(
+    *meta_.get_field<VectorFieldType>(entityRank, "mesh_velocity"));
+
+  // sync fields to device
+  modelCoords.sync_to_device();
+  currCoords.sync_to_device();
+  displacement.sync_to_device();
+  meshVelocity.sync_to_device();
 
   // always reset velocity field
-  stk::mesh::field_fill(0.0, *meshVelocity, sel);
+  nalu_ngp::run_entity_algorithm(
+    "FrameMoving_reset_velocity",
+    ngpMesh, entityRank, sel,
+    KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
+    for (int d = 0; d < nDim; ++d)
+      meshVelocity.get(mi,d) = 0.0;
+  });
 
-  for (auto b: bkts) {
-    for (size_t in=0; in < b->size(); in++) {
+  // NGP for loop to update coordinates and velocity
+  nalu_ngp::run_entity_algorithm(
+    "FrameMoving_update_coordinates_velocity",
+    ngpMesh, entityRank, sel,
+    KOKKOS_LAMBDA(const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
 
-      auto node = (*b)[in]; // mesh node and NOT YAML node
-      double* oldxyz = stk::mesh::field_data(*modelCoords, node);
-      double* xyz = stk::mesh::field_data(*currCoords, node);
-      double* dx = stk::mesh::field_data(*displacement, node);
-      double* velxyz = stk::mesh::field_data(*meshVelocity, node);
+    // temporary current and model coords for a generic 2D and 3D implementation
+    mm::ThreeDVecType mX;
+    mm::ThreeDVecType cX;
 
-      // temporary current and model coords for a generic 2D and 3D implementation
-      double mX[3] = {0.0,0.0,0.0};
-      double cX[3] = {0.0,0.0,0.0};
+    // copy over model coordinates and reset velocity
+    for (int d = 0; d < nDim; ++d)
+      mX[d] = modelCoords.get(mi,d);
 
-      // copy over model coordinates
-      for ( int i = 0; i < nDim; ++i )
-        mX[i] = oldxyz[i];
+    // initialize composite transformation matrix
+    mm::TransMatType compTransMat;
 
-      // compute composite transformation matrix
-      MotionBase::TransMatType trans_mat = compute_transformation(time,mX);
+    // create composite transformation matrix based off of all motions
+    for (size_t i=0; i < numKernels; ++i) {
+      NgpMotion* kernel = ngpKernels(i);
 
-      // perform matrix multiplication between transformation matrix
-      // and old coordinates to obtain current coordinates
-      for (int d = 0; d < nDim; d++) {
-        xyz[d] = trans_mat[d][0]*mX[0]
-                +trans_mat[d][1]*mX[1]
-                +trans_mat[d][2]*mX[2]
-                +trans_mat[d][3];
+      // build and get transformation matrix
+      mm::TransMatType currTransMat = kernel->build_transformation(time,mX);
 
-        dx[d] = xyz[d] - mX[d];
-      } // end for loop - d index
+      // composite addition of motions in current group
+      compTransMat = kernel->add_motion(currTransMat,compTransMat);
+    }
 
-      // copy over current coordinates
-      for ( int i = 0; i < nDim; ++i )
-        cX[i] = xyz[i];
+    // perform matrix multiplication between transformation matrix
+    // and old coordinates to obtain current coordinates
+    for (int d = 0; d < nDim; ++d) {
+      currCoords.get(mi,d) = compTransMat[d*mm::matSize+0]*mX[0]
+                            +compTransMat[d*mm::matSize+1]*mX[1]
+                            +compTransMat[d*mm::matSize+2]*mX[2]
+                            +compTransMat[d*mm::matSize+3];
 
-      // compute velocity vector on current node resulting from all
-      // motions in current motion frame
-      for (auto& mm: meshMotionVec_)
-      {
-        MotionBase::ThreeDVecType mm_vel = mm->compute_velocity(time,trans_mat,mX,cX);
+      displacement.get(mi,d) = currCoords.get(mi,d) - modelCoords.get(mi,d);
+    } // end for loop - d index
 
-        for (int d = 0; d < nDim; d++)
-          velxyz[d] += mm_vel[d];
-      } // end for loop - mm
+    // copy over current coordinates
+    for (int d = 0; d < nDim; ++d)
+      cX[d] = currCoords.get(mi,d);
 
-    } // end for loop - in index
-  } // end for loop - bkts
+    // compute velocity vector on current node resulting from all
+    // motions in current motion frame
+    for (size_t i=0; i < numKernels; ++i) {
+      NgpMotion* kernel = ngpKernels(i);
+
+      // evaluate velocity associated with motion
+      mm::ThreeDVecType mm_vel = kernel->compute_velocity(time,compTransMat,mX,cX);
+
+      for (int d = 0; d < nDim; ++d)
+        meshVelocity.get(mi,d) += mm_vel[d];
+    } // end for loop - mm
+  }); // end NGP for loop
+
+  // Mark fields as modified on device
+  currCoords.modify_on_device();
+  displacement.modify_on_device();
+  meshVelocity.modify_on_device();
 }
 
 void FrameMoving::post_compute_geometry()
 {
-  // flag denoting if mesh velocity divergence already computed
-  bool computedMeshVelDiv = false;
+  for (auto& mm: motionKernels_) {
+    if (!mm->is_deforming())
+      continue;
 
-  for (auto& mm: meshMotionVec_)
-    mm->post_compute_geometry(bulk_,partVec_,partVecBc_,computedMeshVelDiv);
+    // compute divergence of mesh velocity
+    VectorFieldType* meshVelocity = meta_.get_field<VectorFieldType>(
+      stk::topology::NODE_RANK, "mesh_velocity");
+    ScalarFieldType* meshDivVelocity = meta_.get_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "div_mesh_velocity");
+    compute_vector_divergence(bulk_, partVec_, partVecBc_, meshVelocity, meshDivVelocity, true);
+
+    // Mesh velocity divergence is not motion-specific and
+    // is computed for the aggregated mesh velocity
+    break;
+  }
 }
 
 } // nalu

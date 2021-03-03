@@ -14,9 +14,9 @@
 
 #include "Teuchos_BLAS_types.hpp"
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_Export_decl.hpp"
-#include "Tpetra_Map_decl.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_Export.hpp"
+#include "Tpetra_Map.hpp"
+#include "Tpetra_MultiVector.hpp"
 #include "Tpetra_Operator.hpp"
 
 namespace sierra {

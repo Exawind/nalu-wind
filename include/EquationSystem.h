@@ -19,6 +19,8 @@
 #include "NGPInstance.h"
 #include "SimdInterface.h"
 
+#include<NaluParsedTypes.h>
+
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
 

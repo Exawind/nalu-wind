@@ -11,13 +11,14 @@
 #include "matrix_free/StkToTpetraLocalIndices.h"
 
 #include "gtest/gtest.h"
-#include "Tpetra_Map_decl.hpp"
+#include "Tpetra_Map.hpp"
 #include "stk_io/StkMeshIoBroker.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Field.hpp"
 #include "stk_mesh/base/NgpMesh.hpp"
 #include "stk_mesh/base/NgpField.hpp"
+#include "stk_mesh/base/GetNgpMesh.hpp"
 #include "stk_util/parallel/ParallelReduce.hpp"
 
 namespace stk {
@@ -50,7 +51,7 @@ protected:
     io.add_mesh_database(name, stk::io::READ_MESH);
     io.create_input_mesh();
     io.populate_bulk_data();
-    mesh = bulk.get_updated_ngp_mesh();
+    mesh = stk::mesh::get_updated_ngp_mesh(bulk);
     using gid_type = typename Tpetra::Map<>::global_ordinal_type;
     gid_field = stk::mesh::get_updated_ngp_field<gid_type>(gid_field_h);
   }

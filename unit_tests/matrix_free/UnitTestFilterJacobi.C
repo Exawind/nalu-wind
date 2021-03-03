@@ -18,9 +18,9 @@
 
 #include "Kokkos_View.hpp"
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_Export_decl.hpp"
-#include "Tpetra_Map_decl.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_Export.hpp"
+#include "Tpetra_Map.hpp"
+#include "Tpetra_MultiVector.hpp"
 #include "gtest/gtest.h"
 
 #include "stk_mesh/base/Field.hpp"

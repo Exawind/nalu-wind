@@ -77,7 +77,6 @@ AssembleMomentumEdgeWallFunctionSolverAlgorithm::initialize_connectivity()
 void
 AssembleMomentumEdgeWallFunctionSolverAlgorithm::execute()
 {
-
   stk::mesh::BulkData & bulk_data = realm_.bulk_data();
   stk::mesh::MetaData & meta_data = realm_.meta_data();
 

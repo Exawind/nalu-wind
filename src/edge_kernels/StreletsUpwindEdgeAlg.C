@@ -13,6 +13,7 @@
 #include <ngp_utils/NgpFieldUtils.h>
 #include <ngp_utils/NgpLoopUtils.h>
 #include <SolutionOptions.h>
+#include <NaluEnv.h>
 
 namespace sierra {
 namespace nalu {
@@ -48,15 +49,17 @@ StreletsUpwindEdgeAlg::StreletsUpwindEdgeAlg(
   std::string error_message;
   if (alpha != 0.0)
     error_message += "alpha is set to: " + std::to_string(alpha) +
-                     " alpha must be 0.0 when using IDDES or IDDES-ABL\n";
+                     " alpha should be 0.0 when using IDDES\n";
   if (alphaUpw != 1.0)
     error_message += "alpha_upw is set to: " + std::to_string(alphaUpw) +
-                     " alpha_upw must be 1.0 when using IDDES or IDDES-ABL\n";
+                     " alpha_upw should be 1.0 when using IDDES\n";
   if (hoUpwind != 1.0)
     error_message += "upw_factor is set to: " + std::to_string(hoUpwind) +
-                     " upw_factor must be 1.0 when using IDDES or IDDES-ABL\n";
-  ThrowErrorMsgIf(
-    !error_message.empty(), "For the momementum equation:\n" + error_message);
+                     " upw_factor should be 1.0 when using IDDES\n";
+
+  if (!error_message.empty())
+    NaluEnv::self().naluOutputP0() << "WARNING::For the momementum equation:\n"
+                                   << error_message;
 }
 
 void
@@ -70,7 +73,7 @@ StreletsUpwindEdgeAlg::execute()
   const auto ngpMesh = meshInfo.ngp_mesh();
   const auto& fieldMgr = meshInfo.ngp_field_manager();
 
-  auto alphaUpw = fieldMgr.get_field<double>(pecletFactor_);
+  auto pecFactor = fieldMgr.get_field<double>(pecletFactor_);
   const auto fone = fieldMgr.get_field<double>(fOne_);
   const auto dnv = fieldMgr.get_field<double>(dualNodalVolume_);
   const auto sst_maxlen = fieldMgr.get_field<double>(sstMaxLen_);
@@ -193,7 +196,7 @@ StreletsUpwindEdgeAlg::execute()
       const DblType A =
         ch2 * stk::math::max(cdes * sstMaxLenEdge / l_turb / g - 0.5, 0.0);
 
-      alphaUpw.get(edge, 0) =
+      pecFactor.get(edge, 0) =
         sigmaMax * stk::math::tanh(stk::math::pow(A, ch1));
     });
 }

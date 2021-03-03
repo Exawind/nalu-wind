@@ -1,0 +1,8 @@
+realms:
+  - name: fluidRealm
+    boundary_conditions:
+    - wall_boundary_condition: bc_lower
+      wall_user_data:
+        RANS_abl_bc: yes
+        reference_velocity: 6.6
+        reference_height: 90.0

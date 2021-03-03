@@ -80,11 +80,9 @@ MomentumEdgeSolverAlg::execute()
   run_algorithm(
     realm_.bulk_data(),
     KOKKOS_LAMBDA(
-      ShmemDataType& smdata,
-      const stk::mesh::FastMeshIndex& edge,
+      ShmemDataType & smdata, const stk::mesh::FastMeshIndex& edge,
       const stk::mesh::FastMeshIndex& nodeL,
-      const stk::mesh::FastMeshIndex& nodeR)
-    {
+      const stk::mesh::FastMeshIndex& nodeR) {
       // Scratch work array for edgeAreaVector
       NALU_ALIGNED DblType av[NDimMax_];
       // Populate area vector work array

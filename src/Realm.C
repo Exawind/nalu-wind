@@ -135,6 +135,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 // stk_balance
+#include <Zoltan2_config.h>
 #include <stk_balance/balance.hpp>
 #include <stk_balance/balanceUtils.hpp>
 
@@ -1135,6 +1136,11 @@ Realm::setup_initial_conditions()
 
       // target need not be subsetted since nothing below will depend on topo
       stk::mesh::Part *targetPart = metaData_->get_part(targetName);
+      if (!targetPart) {
+        throw std::runtime_error(
+          "Part: " + targetName +
+          " in the initial_conditions target does not exist.");
+      }
 
       switch(initCond.theIcType_) {
 
@@ -1196,6 +1202,11 @@ Realm::setup_property()
 
     // target need not be subsetted since nothing below will depend on topo
     stk::mesh::Part *targetPart = metaData_->get_part(targetNames[itarget]);
+    if (!targetPart) {
+      throw std::runtime_error(
+        "Part: " + targetNames[itarget] +
+        " in the material_properties target does not exist.");
+    }
 
     // loop over propertyMap
     std::map<PropertyIdentifier, ScalarFieldType *>::iterator ii;
@@ -2400,7 +2411,6 @@ Realm::compute_vrtm(const std::string& velName)
 void
 Realm::init_current_coordinates()
 {
-
   const int nDim = metaData_->spatial_dimension();
 
   VectorFieldType *modelCoords = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
@@ -2427,6 +2437,13 @@ Realm::init_current_coordinates()
       }
     }
   }
+
+  // sync fields to device
+  currentCoords->modify_on_host();
+  currentCoords->sync_to_device();
+
+  displacement->modify_on_host();
+  displacement->sync_to_device();
 }
 
 //--------------------------------------------------------------------------

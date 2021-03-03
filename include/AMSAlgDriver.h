@@ -59,6 +59,7 @@ private:
   ScalarFieldType* avgProduction_;
   ScalarFieldType* avgTime_;
   ScalarFieldType* avgMdot_;
+  VectorFieldType* forcingComp_;
 
   FieldUpdateAlgDriver metricTensorAlgDriver_;
   std::unique_ptr<SSTAMSAveragesAlg> avgAlg_;

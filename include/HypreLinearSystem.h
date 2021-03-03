@@ -21,54 +21,21 @@
 #undef HYPRE_LINEAR_SYSTEM_DEBUG
 
 #include "LinearSystem.h"
-#include "XSDKHypreInterface.h"
-
-#include "stk_mesh/base/BulkData.hpp"
-#include "stk_mesh/base/NgpMesh.hpp"
-#include "stk_mesh/base/MetaData.hpp"
-#include "stk_mesh/base/Field.hpp"
-#include "stk_mesh/base/FieldParallel.hpp"
-#include "stk_util/parallel/ParallelReduce.hpp"
-
-#include "HYPRE_IJ_mv.h"
-#include "HYPRE_parcsr_ls.h"
-#include "HYPRE_parcsr_mv.h"
-#include "krylov.h"
-#include "HYPRE.h"
-// why are these included
-#include "_hypre_parcsr_mv.h"
-#include "_hypre_IJ_mv.h"
-#include "HYPRE_config.h"
-
 #include "HypreDirectSolver.h"
-#include "Realm.h"
-#include "EquationSystem.h"
-#include "LinearSolver.h"
-#include "PeriodicManager.h"
-#include "NaluEnv.h"
-#include "NonConformalManager.h"
-#include "overset/OversetManager.h"
-#include "overset/OversetInfo.h"
 
-#include <utils/StkHelpers.h>
-#include <utils/CreateDeviceExpression.h>
+// This is needed fro get_gpu_memory_info
+#include "stk_util/environment/memory_util.hpp"
 
 // NGP Algorithms
 #include "ngp_utils/NgpLoopUtils.h"
 
-#include <cmath>
-#include <cstdint>
-#include <iostream>
-#include <fstream>
-#include <unordered_set>
-
-#include <Kokkos_Core.hpp>
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_ScatterView.hpp>
-#include <Kokkos_Parallel.hpp>
-#include <Kokkos_UnorderedMap.hpp>
-#include <Kokkos_Vector.hpp>
-#include <Kokkos_Sort.hpp>
+// These are all necessary for compilation
+#include "EquationSystem.h"
+#include "NaluEnv.h"
+#include "NonConformalManager.h"
+#include "overset/OversetManager.h"
+#include "overset/OversetInfo.h"
+#include <utils/CreateDeviceExpression.h>
 
 namespace sierra {
 namespace nalu {
@@ -128,69 +95,6 @@ using PeriodicNodeMapHost = PeriodicNodeMap::HostMirror;
 class HypreLinearSystem : public LinearSystem
 {
 public:
-  std::string name_;
-
-  /* data structures for accumulating the matrix elements */
-  std::vector<std::vector<HypreIntType>> columnsOwned_;
-  std::vector<HypreIntType> rowCountOwned_;
-
-  std::map<HypreIntType, std::vector<HypreIntType>> columnsShared_;
-  std::map<HypreIntType, unsigned> rowCountShared_;
-
-#ifdef HYPRE_LINEAR_SYSTEM_TIMER
-  float _hypreAssembleTime = 0.f;
-  int _nHypreAssembles = 0;
-
-  std::vector<double> buildBeginLinSysConstTimer_;
-  std::vector<double> buildNodeGraphTimer_;
-  std::vector<double> buildFaceToNodeGraphTimer_;
-  std::vector<double> buildEdgeToNodeGraphTimer_;
-  std::vector<double> buildElemToNodeGraphTimer_;
-  std::vector<double> buildFaceElemToNodeGraphTimer_;
-  std::vector<double> buildOversetNodeGraphTimer_;
-  std::vector<double> buildDirichletNodeGraphTimer_;
-  std::vector<double> buildGraphTimer_;
-  std::vector<double> finalizeLinearSystemTimer_;
-#endif
-
-  HypreIntTypeViewUVM row_indices_owned_uvm_;
-  HypreIntTypeViewUVM row_counts_owned_uvm_;
-  HypreIntTypeView periodic_bc_rows_owned_;
-  HypreIntTypeViewUVM mat_elem_cols_owned_uvm_;
-  UnsignedView mat_row_start_owned_;
-
-  PeriodicNodeMap periodic_node_to_hypre_id_;
-
-  MemoryMap map_shared_;
-  HypreIntTypeViewUVM row_indices_shared_uvm_;
-  HypreIntTypeViewUVM row_counts_shared_uvm_;
-  HypreIntTypeViewUVM mat_elem_cols_shared_uvm_;
-  UnsignedView mat_row_start_shared_;
-  UnsignedView rhs_row_start_shared_;
-
-  HypreIntTypeUnorderedMap skippedRowsMap_;
-  HypreIntTypeUnorderedMapHost skippedRowsMapHost_;
-  HypreIntTypeUnorderedMap oversetRowsMap_;
-  HypreIntTypeUnorderedMapHost oversetRowsMapHost_;
-  HypreIntType num_mat_overset_pts_owned_;
-  HypreIntType num_rhs_overset_pts_owned_;
-
-  void fill_periodic_node_to_hid_mapping();
-  void fill_device_data_structures();
-  void fill_hids_columns(
-    const unsigned numNodes,
-    stk::mesh::Entity const* nodes,
-    std::vector<HypreIntType>& hids,
-    std::vector<HypreIntType>& columns);
-  void fill_owned_shared_data_structures_1DoF(
-    const unsigned numNodes, std::vector<HypreIntType>& hids);
-  void fill_owned_shared_data_structures(
-    const unsigned numNodes,
-    std::vector<HypreIntType>& hids,
-    std::vector<HypreIntType>& columns);
-
-  // Quiet "partially overridden" compiler warnings.
-  using LinearSystem::buildDirichletNodeGraph;
   /**
    * @param[in] realm The realm instance that holds the EquationSystem being
    * solved
@@ -207,9 +111,35 @@ public:
 
   virtual ~HypreLinearSystem();
 
-  // print timings for initialize
-  virtual void printTimings(std::vector<double>& time, const char* name);
+  /* equation system name */
+  std::string name_;
 
+  /* data structures for accumulating the matrix elements */
+  std::vector<std::vector<HypreIntType>> columnsOwned_;
+  std::vector<HypreIntType> rowCountOwned_;
+
+  std::map<HypreIntType, std::vector<HypreIntType>> columnsShared_;
+  std::map<HypreIntType, unsigned> rowCountShared_;
+
+#ifdef HYPRE_LINEAR_SYSTEM_TIMER
+  struct timeval _start, _stop;
+  std::vector<double> buildBeginLinSysConstTimer_;
+  std::vector<double> buildNodeGraphTimer_;
+  std::vector<double> buildFaceToNodeGraphTimer_;
+  std::vector<double> buildEdgeToNodeGraphTimer_;
+  std::vector<double> buildElemToNodeGraphTimer_;
+  std::vector<double> buildFaceElemToNodeGraphTimer_;
+  std::vector<double> buildOversetNodeGraphTimer_;
+  std::vector<double> buildDirichletNodeGraphTimer_;
+  std::vector<double> buildGraphTimer_;
+  std::vector<double> finalizeLinearSystemTimer_;
+  std::vector<double> hypreAssemblyTimer_;
+  std::vector<double> hypreMatAssemblyTimer_;
+  std::vector<double> hypreRhsAssemblyTimer_;
+#endif
+
+  // Quiet "partially overridden" compiler warnings.
+  using LinearSystem::buildDirichletNodeGraph;
   // Graph/Matrix Construction
   virtual void
   buildNodeGraph(const stk::mesh::PartVector&
@@ -229,13 +159,11 @@ public:
   virtual void buildOversetNodeGraph(
     const stk::mesh::PartVector&); // overset->elem_node assembly
   virtual void finalizeLinearSystem();
-
   /** Tag rows that must be handled as a Dirichlet BC node
    *
    *  @param[in] partVec List of parts that contain the Dirichlet nodes
    */
   virtual void buildDirichletNodeGraph(const stk::mesh::PartVector&);
-
   /** Tag rows that must be handled as a Dirichlet  node
    *
    *  @param[in] entities List of nodes where Dirichlet conditions are applied
@@ -246,7 +174,63 @@ public:
   virtual void
   buildDirichletNodeGraph(const stk::mesh::NgpMesh::ConnectedNodes);
 
+  /** Finalize construction of the linear system matrix and rhs vector
+   *
+   *  This method calls the appropriate Hypre functions to assemble the matrix
+   *  and rhs in a parallel run, as well as registers the matrix and rhs with
+   *  the solver preconditioner.
+   */
+  virtual void loadComplete();
+
+  /** Reset the matrix and rhs data structures for the next iteration/timestep
+   *
+   */
+  virtual void zeroSystem();
+
+  /** Solve the system Ax = b
+   *
+   *  The solution vector is returned in linearSolutionField
+   *
+   *  @param[out] linearSolutionField STK field where the solution is populated
+   */
+  virtual int solve(stk::mesh::FieldBase* linearSolutionField);
+
+  //! Helper method to transfer the solution from a HYPRE_IJVector instance to
+  //! the STK field data instance.
+  double copy_hypre_to_stk(stk::mesh::FieldBase*);
+
+  /** Populate the LHS and RHS for the Dirichlet rows in linear system
+   */
+  virtual void applyDirichletBCs(
+    stk::mesh::FieldBase* solutionField,
+    stk::mesh::FieldBase* bcValuesField,
+    const stk::mesh::PartVector& parts,
+    const unsigned beginPos,
+    const unsigned endPos);
+
   sierra::nalu::CoeffApplier* get_coeff_applier();
+
+  // print timings for initialize
+  virtual void printTimings(std::vector<double>& time, const char* name);
+  virtual void buildCoeffApplierPeriodicNodeToHIDMapping();
+  virtual void resetCoeffApplierData();
+  virtual void finishCoupledOversetAssembly();
+  virtual void hypreIJMatrixSetAddToValues();
+  virtual void hypreIJVectorSetAddToValues();
+  virtual void buildCoeffApplierDeviceOwnedDataStructures();
+  virtual void buildCoeffApplierDeviceSharedDataStructures();
+  virtual void buildCoeffApplierDeviceDataStructures();
+  virtual void fill_hids_columns(
+    const unsigned numNodes,
+    stk::mesh::Entity const* nodes,
+    std::vector<HypreIntType>& hids,
+    std::vector<HypreIntType>& columns);
+  virtual void fill_owned_shared_data_structures_1DoF(
+    const unsigned numNodes, std::vector<HypreIntType>& hids);
+  virtual void fill_owned_shared_data_structures(
+    const unsigned numNodes,
+    std::vector<HypreIntType>& hids,
+    std::vector<HypreIntType>& columns);
 
   /***************************************************************************************************/
   /*                     Beginning of HypreLinSysCoeffApplier definition */
@@ -256,55 +240,10 @@ public:
   {
   public:
     HypreLinSysCoeffApplier(
-      const stk::mesh::NgpMesh ngpMesh,
-      NGPHypreIDFieldType ngpHypreGlobalId,
-      unsigned numDof,
-      unsigned numDim,
-      HypreIntType globalNumRows,
-      int rank,
-      HypreIntType iLower,
-      HypreIntType iUpper,
-      HypreIntType jLower,
-      HypreIntType jUpper,
-      MemoryMap map_shared,
-      HypreIntTypeViewUVM mat_elem_cols_owned_uvm,
-      HypreIntTypeViewUVM mat_elem_cols_shared_uvm,
-      UnsignedView mat_row_start_owned,
-      UnsignedView mat_row_start_shared,
-      UnsignedView rhs_row_start_shared,
-      HypreIntTypeViewUVM row_indices_owned_uvm,
-      HypreIntTypeViewUVM row_indices_shared_uvm,
-      HypreIntTypeViewUVM row_counts_owned_uvm,
-      HypreIntTypeViewUVM row_counts_shared_uvm,
-      HypreIntTypeView periodic_bc_rows_owned,
-      PeriodicNodeMap periodic_node_to_hypre_id,
-      HypreIntTypeUnorderedMap skippedRowsMap,
-      HypreIntTypeUnorderedMapHost skippedRowsMapHost,
-      HypreIntTypeUnorderedMap oversetRowsMap,
-      HypreIntTypeUnorderedMapHost oversetRowsMapHost,
-      HypreIntType num_mat_overset_pts_owned,
-      HypreIntType num_rhs_overset_pts_owned);
+      unsigned numDof, unsigned nDim, HypreIntType iLower, HypreIntType iUpper);
 
     KOKKOS_DEFAULTED_FUNCTION
     virtual ~HypreLinSysCoeffApplier() = default;
-
-#if 0
-    // Should not be part of coeffapplier
-    {
-#ifdef HYPRE_LINEAR_SYSTEM_TIMER
-      if (_nAssembleMat > 0 && rank_ == 0) {
-        printf(
-          "\tMean HYPRE_IJMatrixSetValues Time (%d samples)=%1.5f   "
-          "Total=%1.5f\n",
-          _nAssembleMat, _assembleMatTime / _nAssembleMat, _assembleMatTime);
-        printf(
-          "\tMean HYPRE_IJVectorSetValues Time (%d samples)=%1.5f   "
-          "Total=%1.5f\n",
-          _nAssembleRhs, _assembleRhsTime / _nAssembleRhs, _assembleRhsTime);
-      }
-#endif
-    }
-#endif
 
     KOKKOS_FUNCTION
     virtual void reset_rows(
@@ -368,71 +307,53 @@ public:
 
     virtual sierra::nalu::CoeffApplier* device_pointer();
 
-    virtual void resetInternalData();
-
-    virtual void applyDirichletBCs(
-      Realm& realm,
-      stk::mesh::FieldBase* solutionField,
-      stk::mesh::FieldBase* bcValuesField,
-      const stk::mesh::PartVector& parts);
-
-    virtual void finishAssembly(
-      HYPRE_IJMatrix hypreMat, std::vector<HYPRE_IJVector> hypreRhs);
-
-    virtual void sum_into_nonNGP(
-      Realm& realm,
-      const std::vector<stk::mesh::Entity>& entities,
-      const std::vector<double>& rhs,
-      const std::vector<double>& lhs);
-
     //! mesh
-    const stk::mesh::NgpMesh ngpMesh_;
+    stk::mesh::NgpMesh ngpMesh_;
     //! stk mesh field for the Hypre Global Id
     NGPHypreIDFieldType ngpHypreGlobalId_;
     //! number of degrees of freedom
     unsigned numDof_ = 0;
     //! number of rhs vectors
     unsigned nDim_ = 0;
-    //! Maximum Row ID in the Hypre linear system
-    HypreIntType globalNumRows_;
-    //! Maximum Row ID in the Hypre linear system
-    int rank_;
     //! The lowest row owned by this MPI rank
     HypreIntType iLower_ = 0;
     //! The highest row owned by this MPI rank
     HypreIntType iUpper_ = 0;
-    //! The lowest column owned by this MPI rank; currently jLower_ == iLower_
-    HypreIntType jLower_ = 0;
-    //! The highest column owned by this MPI rank; currently jUpper_ == iUpper_
-    HypreIntType jUpper_ = 0;
 
-    //! map from dense index key to starting memory location ... shared
-    MemoryMap map_shared_;
-    //! the matrix element columns ... owned in uvm
+    //! Data structures for the owned CSR Matrix and RHS Vector(s)
+    HypreIntType num_rows_owned_;
+    HypreIntType num_nonzeros_owned_;
+
+    DoubleView2DUVM rhs_owned_uvm_;
+    DoubleViewUVM values_owned_uvm_;
     HypreIntTypeViewUVM mat_elem_cols_owned_uvm_;
-    //! the matrix element columns ... shared in uvm
-    HypreIntTypeViewUVM mat_elem_cols_shared_uvm_;
-    //! the starting position(s) of a new row in the matrix lists ... owned
-    UnsignedView mat_row_start_owned_;
-    //! the starting position(s) of a new row in the matrix lists ... shared
-    UnsignedView mat_row_start_shared_;
-    //! the starting position(s) of the rhs lists ... shared
-    UnsignedView rhs_row_start_shared_;
-    //! the row indices ... owned in uvm
     HypreIntTypeViewUVM row_indices_owned_uvm_;
-    //! the row indices ... shared in uvm
-    HypreIntTypeViewUVM row_indices_shared_uvm_;
-    //! the row counts ... owned uvm
     HypreIntTypeViewUVM row_counts_owned_uvm_;
-    //! the row counts ... shared
+
+    UnsignedView mat_row_start_owned_;
+    HypreIntTypeView periodic_bc_rows_owned_;
+
+    //! Data structures for the shared CSR Matrix and RHS Vector(s)
+    HypreIntType num_rows_shared_;
+    HypreIntType num_nonzeros_shared_;
+
+    DoubleView2DUVM rhs_shared_uvm_;
+    DoubleViewUVM values_shared_uvm_;
+    HypreIntTypeViewUVM mat_elem_cols_shared_uvm_;
+    HypreIntTypeViewUVM row_indices_shared_uvm_;
     HypreIntTypeViewUVM row_counts_shared_uvm_;
 
-    //! rows for the periodic boundary conditions ... owned. There is no shared
-    //! version of this
-    HypreIntTypeView periodic_bc_rows_owned_;
+    MemoryMap map_shared_;
+    UnsignedView mat_row_start_shared_;
+    UnsignedView rhs_row_start_shared_;
+
+    //! Auxilliary Data structures
+
     //! map of the periodic nodes to hypre ids
     PeriodicNodeMap periodic_node_to_hypre_id_;
 
+    //! Flag indicating that sumInto should check to see if rows must be skipped
+    HypreIntTypeViewScalar checkSkippedRows_;
     //! unordered map for skipped rows
     HypreIntTypeUnorderedMap skippedRowsMap_;
     HypreIntTypeUnorderedMapHost skippedRowsMapHost_;
@@ -441,32 +362,15 @@ public:
     HypreIntTypeUnorderedMap oversetRowsMap_;
     HypreIntTypeUnorderedMapHost oversetRowsMapHost_;
 
-    //! number of points in the overset data structures
-    HypreIntType num_mat_overset_pts_owned_;
-    HypreIntType num_rhs_overset_pts_owned_;
-
     //! this is the pointer to the device function ... that assembles the lists
     HypreLinSysCoeffApplier* devicePointer_;
 
     /* flag to reinitialize or not */
     bool reinitialize_ = true;
 
-    //! Total number of rows owned by this particular MPI rank
-    HypreIntType num_rows_;
-    HypreIntType num_rows_owned_;
-    HypreIntType num_rows_shared_;
-    DoubleViewUVM values_owned_uvm_;
-    DoubleView2DUVM rhs_owned_uvm_;
-
-    //! Total number of rows shared by this particular MPI rank
-    HypreIntType num_nonzeros_;
-    HypreIntType num_nonzeros_owned_;
-    HypreIntType num_nonzeros_shared_;
-    DoubleViewUVM values_shared_uvm_;
-    DoubleView2DUVM rhs_shared_uvm_;
-
-    //! Flag indicating that sumInto should check to see if rows must be skipped
-    HypreIntTypeViewScalar checkSkippedRows_;
+    //! number of points in the overset data structures
+    HypreIntType num_mat_overset_pts_owned_;
+    HypreIntType num_rhs_overset_pts_owned_;
 
     /* Work space for overset. These are used to accumulate data from legacy,
      * non-NGP sumInto calls */
@@ -487,54 +391,11 @@ public:
     /* counters for adding to the array */
     int overset_mat_counter_ = 0;
     int overset_rhs_counter_ = 0;
-
-    float _assembleMatTime = 0.f;
-    float _assembleRhsTime = 0.f;
-    int _nAssembleMat = 0;
-    int _nAssembleRhs = 0;
   };
 
   /***************************************************************************************************/
   /*                        End of of HypreLinSysCoeffApplier definition */
   /***************************************************************************************************/
-
-  /** Reset the matrix and rhs data structures for the next iteration/timestep
-   *
-   */
-  virtual void zeroSystem();
-
-  /** Update coefficients of a particular row(s) in the linear system
-   *
-   *  The core method of this class, it updates the matrix and RHS based on the
-   *  inputs from the various algorithms. Note that, unlike TpetraLinearSystem,
-   *  this method skips over the fringe points of Overset mesh and the Dirichlet
-   *  nodes rather than resetting them afterward.
-   *
-   *  This overloaded method deals with Kernels designed with Kokkos::View
-   * arrays.
-   *
-   *  @param[in] numEntities The total number of nodes where data is to be
-   * updated
-   *  @param[in] entities A list of STK node entities
-   *
-   *  @param[in] rhs Array containing RHS entries to be summed into
-   *      [numEntities * numDof]
-   *
-   *  @param[in] lhs Array containing LHS entries to be summed into.
-   *      [numEntities * numDof, numEntities * numDof]
-   *
-   *  @param[in] localIds Work array for storing local row IDs
-   *  @param[in] sortPermutation Work array for sorting row IDs
-   *  @param[in] trace_tag Debugging message
-   */
-  virtual void sumInto(
-    unsigned numEntities,
-    const stk::mesh::NgpMesh::ConnectedNodes& entities,
-    const SharedMemView<const double*, DeviceShmem>& rhs,
-    const SharedMemView<const double**, DeviceShmem>& lhs,
-    const SharedMemView<int*, DeviceShmem>& localIds,
-    const SharedMemView<int*, DeviceShmem>& sortPermutation,
-    const char* trace_tag);
 
   /** Update coefficients of a particular row(s) in the linear system
    *
@@ -565,22 +426,20 @@ public:
     const std::vector<double>& lhs,
     const char* trace_tag);
 
-  /** Populate the LHS and RHS for the Dirichlet rows in linear system
-   */
-  virtual void applyDirichletBCs(
-    stk::mesh::FieldBase* solutionField,
-    stk::mesh::FieldBase* bcValuesField,
-    const stk::mesh::PartVector& parts,
-    const unsigned beginPos,
-    const unsigned endPos);
+  /*****************************************/
+  /* Legacy methods needed for Compilation */
+  /*****************************************/
+  virtual void sumInto(
+    unsigned /*numEntities*/,
+    const stk::mesh::NgpMesh::ConnectedNodes& /*entities*/,
+    const SharedMemView<const double*, DeviceShmem>& /*rhs*/,
+    const SharedMemView<const double**, DeviceShmem>& /*lhs*/,
+    const SharedMemView<int*, DeviceShmem>& /*localIds*/,
+    const SharedMemView<int*, DeviceShmem>& /*sortPermutation*/,
+    const char* /*trace_tag*/)
+  {
+  }
 
-  /** Prepare assembly for Dirichlet-type rows
-   *
-   *  Dirichlet rows are skipped over by the sumInto method when the interior
-   *  parts are processed. This method toggles the flag alerting the sumInto
-   *  method that the Dirichlet rows will be processed next and sumInto can
-   *  proceed.
-   */
   virtual void resetRows(
     const std::vector<stk::mesh::Entity>&,
     const unsigned,
@@ -600,22 +459,6 @@ public:
   {
   }
 
-  /** Solve the system Ax = b
-   *
-   *  The solution vector is returned in linearSolutionField
-   *
-   *  @param[out] linearSolutionField STK field where the solution is populated
-   */
-  virtual int solve(stk::mesh::FieldBase* linearSolutionField);
-
-  /** Finalize construction of the linear system matrix and rhs vector
-   *
-   *  This method calls the appropriate Hypre functions to assemble the matrix
-   *  and rhs in a parallel run, as well as registers the matrix and rhs with
-   *  the solver preconditioner.
-   */
-  virtual void loadComplete();
-
   virtual void
   writeToFile(const char* /* filename */, bool /* useOwned */ = true)
   {
@@ -624,10 +467,6 @@ public:
   writeSolutionToFile(const char* /* filename */, bool /* useOwned */ = true)
   {
   }
-
-  //! Helper method to transfer the solution from a HYPRE_IJVector instance to
-  //! the STK field data instance.
-  double copy_hypre_to_stk(stk::mesh::FieldBase*);
 
 protected:
   /** Prepare the instance for system construction
