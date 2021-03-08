@@ -142,6 +142,7 @@
 #include <stk_util/parallel/ParallelReduce.hpp>
 
 // stk_balance
+#include <Zoltan2_config.h>
 #include <stk_balance/balance.hpp>
 #include <stk_balance/balanceUtils.hpp>
 
@@ -1178,6 +1179,11 @@ Realm::setup_initial_conditions()
 
       // target need not be subsetted since nothing below will depend on topo
       stk::mesh::Part *targetPart = metaData_->get_part(targetName);
+      if (!targetPart) {
+        throw std::runtime_error(
+          "Part: " + targetName +
+          " in the initial_conditions target does not exist.");
+      }
 
       switch(initCond.theIcType_) {
 
@@ -1239,6 +1245,11 @@ Realm::setup_property()
 
     // target need not be subsetted since nothing below will depend on topo
     stk::mesh::Part *targetPart = metaData_->get_part(targetNames[itarget]);
+    if (!targetPart) {
+      throw std::runtime_error(
+        "Part: " + targetNames[itarget] +
+        " in the material_properties target does not exist.");
+    }
 
     // loop over propertyMap
     std::map<PropertyIdentifier, ScalarFieldType *>::iterator ii;

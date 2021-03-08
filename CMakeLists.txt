@@ -1,5 +1,5 @@
 ############################ BASE ######################################
-cmake_minimum_required (VERSION 3.10.0 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.17.0 FATAL_ERROR)
 project(Nalu-Wind CXX Fortran)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -41,12 +41,14 @@ target_link_libraries(nalu PUBLIC $<$<BOOL:${MPI_Fortran_FOUND}>:MPI::MPI_Fortra
 
 if(ENABLE_CUDA)
   enable_language(CUDA)
-  find_package(CUDA)
+  find_package(CUDAToolkit REQUIRED)
+  message(STATUS "Found CUDAToolkit = ${CUDAToolkit_VERSION} (${CUDAToolkit_LIBRARY_DIR})")
   target_link_libraries(nalu PUBLIC
-    ${CUDA_cusparse_LIBRARY}
-    ${CUDA_curand_LIBRARY}
-    ${CUDA_LIBRARIES}
-    ${CUDA_CUBLAS_LIBRARIES})
+    CUDA::cusparse
+    CUDA::curand
+    CUDA::cudart
+    CUDA::cublas
+    CUDA::nvToolsExt)
 endif()
 
 ########################## TRILINOS ####################################
@@ -204,8 +206,10 @@ if (NOT ${TRILINOS_HAVE_GIT_INFO} MATCHES ".*-NOTFOUND")
   list(GET TRILINOS_REPO_VERSION_TXT 1 TRILINOS_REPO_COMMIT_STR)
   string(REGEX MATCH "^[a-z0-9]+" TRILINOS_GIT_COMMIT_SHA ${TRILINOS_REPO_COMMIT_STR})
   set(TRILINOS_VERSION_TAG "${Trilinos_VERSION}-g${TRILINOS_GIT_COMMIT_SHA}")
+  message(STATUS "Trilinos git commit = ${TRILINOS_GIT_COMMIT_SHA}")
 else()
   set(TRILINOS_VERSION_TAG "${Trilinos_VERSION}")
+  message(STATUS "Cannot determine Trilinos git commit")
 endif()
 string(TIMESTAMP NALU_VERSION_TIMESTAMP "%Y-%m-%d %H:%M:%S (UTC)" UTC)
 configure_file("${CMAKE_SOURCE_DIR}/cmake/NaluVersionInfo.h.in"

@@ -68,11 +68,13 @@ function(add_test_u testname np)
     add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${utest_ex_name} ${GTEST_SHUFFLE}")
     set_tests_properties(${testname} PROPERTIES TIMEOUT 6000 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "unit")
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
-    # create symlink to nrelmw.fst 
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-      ${CMAKE_BINARY_DIR}/reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst
-      ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}/nrel5mw.fst
-    )
+    if(ENABLE_OPENFAST)
+      # create symlink to nrelmw.fst 
+      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_BINARY_DIR}/reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst
+        ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}/nrel5mw.fst
+      )
+    endif()
 endfunction(add_test_u)
 
 # GPU unit test
@@ -81,11 +83,13 @@ function(add_test_u_gpu testname np)
     add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${utest_ex_name} ${FILTER}")
     set_tests_properties(${testname} PROPERTIES TIMEOUT 6000 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "unit")
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
-    # create symlink to nrelmw.fst 
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-      ${CMAKE_BINARY_DIR}/reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst
-      ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}/nrel5mw.fst
-    )
+    if(ENABLE_OPENFAST)
+      # create symlink to nrelmw.fst 
+      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_BINARY_DIR}/reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst
+        ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}/nrel5mw.fst
+      )
+    endif()
 endfunction(add_test_u_gpu)
 
 # Regression test with catalyst capability
@@ -178,6 +182,7 @@ if(NOT ENABLE_CUDA)
   add_test_r(ActLineSimple 4)
   add_test_r(ActLineSimpleFLLC 4)
   add_test_r(ActLineSimpleNGP 2)
+  add_test_r(ablHill3dSymPenalty 4)
 
   if (ENABLE_FFTW)
     add_test_r(ablHill3d_pp 4)
@@ -191,7 +196,7 @@ if(NOT ENABLE_CUDA)
     add_test_r_rst(amsChannelEdge 4)
     add_test_r(SSTChannelEdge 4)
     add_test_r_rst(SSTAMSChannelEdge 4)
-    add_test_r_rst(SSTAMSOversetRotCylinder 2)
+    #add_test_r_rst(SSTAMSOversetRotCylinder 2)
     add_test_r(ablNeutralNGPHypre 2)
     add_test_r(ablNeutralNGPHypreSegregated 2)
     add_test_r(airfoilRANSEdgeNGPHypre.rst 2)

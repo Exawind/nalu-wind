@@ -10,8 +10,8 @@
 #ifndef LINSYS_INFO_H
 #define LINSYS_INFO_H
 
-#include "Tpetra_Map_decl.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_Map.hpp"
+#include "Tpetra_MultiVector.hpp"
 
 #include "stk_mesh/base/GetNgpField.hpp"
 

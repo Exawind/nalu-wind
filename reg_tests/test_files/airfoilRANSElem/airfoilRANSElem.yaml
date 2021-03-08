@@ -82,7 +82,7 @@ realms:
 
     initial_conditions:
       - constant: ic_1
-        target_name: [Flow-QUAD,Flow-TRIANGLE]
+        target_name: [Flow-QUAD]
         value:
           pressure: 0
           velocity: [14.96346075389736,1.046347106161880]

@@ -10,7 +10,7 @@
 #ifndef SCALAR_FLUX_BC_H
 #define SCALAR_FLUX_BC_H
 
-#include <Tpetra_MultiVector_decl.hpp>
+#include <Tpetra_MultiVector.hpp>
 
 #include "matrix_free/PolynomialOrders.h"
 #include "matrix_free/KokkosViewTypes.h"

@@ -25,8 +25,8 @@
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
 
-#include "Tpetra_Export_decl.hpp"
-#include "Tpetra_MultiVector_decl.hpp"
+#include "Tpetra_Export.hpp"
+#include "Tpetra_MultiVector.hpp"
 
 #include "stk_io/DatabasePurpose.hpp"
 #include "stk_io/StkMeshIoBroker.hpp"

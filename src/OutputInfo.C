@@ -47,7 +47,7 @@ OutputInfo::OutputInfo()
     restartTime_(0.0),
     restartDBName_("restart.rst"),
     restartFreq_(500),
-    restartStart_(500),
+    restartStart_(0),
     restartMaxDataBaseStepSize_(100000),
     restartNodeSet_(true),
     outputCompressionLevel_(0),

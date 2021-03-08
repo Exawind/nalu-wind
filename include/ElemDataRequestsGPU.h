@@ -49,6 +49,9 @@ struct FieldInfoNGP {
   : field(), scalarsDim1(0), scalarsDim2(0)
   {}
 
+  KOKKOS_DEFAULTED_FUNCTION
+  FieldInfoNGP& operator=(const FieldInfoNGP&) = default;
+
   NGPDoubleFieldType field;
   unsigned scalarsDim1;
   unsigned scalarsDim2;

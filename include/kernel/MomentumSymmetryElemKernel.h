@@ -31,11 +31,6 @@ template <typename BcAlgTraits>
 class MomentumSymmetryElemKernel : public Kernel
 {
 public:
-  // Strengthening this penalty will better approximate the
-  // boundary condition but will also increase the condition number of the
-  // linear system and increase the error in the interior
-  static constexpr double viscous_penalty = 2;
-
   MomentumSymmetryElemKernel(
     const stk::mesh::MetaData& metaData,
     const SolutionOptions& solnOpts,
@@ -67,6 +62,7 @@ private:
   const double includeDivU_;
 
   MasterElement* meSCS_{nullptr};
+  const double penaltyFactor_;
 
   /// Shape functions
   AlignedViewType<
