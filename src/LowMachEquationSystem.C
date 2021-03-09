@@ -2070,7 +2070,7 @@ MomentumEquationSystem::register_wall_bc(
 
         if (userData.isNoSlip_) {
           notProjectedPart_.push_back(part);
-          if( ablWallNodeMask_ ) {
+          if( !ablWallNodeMask_ ) {
             ablWallNodeMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
           } else {
             ablWallNodeMask_->partVec_.push_back(part);

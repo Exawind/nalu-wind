@@ -42,8 +42,6 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::MomentumABLWallShearStressEdg
 
   faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceDataPreReqs.add_face_field(wallShearStress_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
-
-  //elemData.add_coordinates_field(coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);
 }
 
 template<typename BcAlgTraits>
