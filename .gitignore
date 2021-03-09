@@ -14,3 +14,4 @@ tags
 compile_commands.json
 .clangd
 spack*
+*.cache

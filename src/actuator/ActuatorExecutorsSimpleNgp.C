@@ -16,7 +16,8 @@ ActuatorLineSimpleNGP::ActuatorLineSimpleNGP(
   const ActuatorMetaSimple& actMeta,
   ActuatorBulkSimple& actBulk,
   stk::mesh::BulkData& stkBulk)
-  : actMeta_(actMeta),
+  : ActuatorExecutor(actMeta, actBulk),
+    actMeta_(actMeta),
     actBulk_(actBulk),
     stkBulk_(stkBulk),
     numActPoints_(actMeta_.numPointsTotal_),
@@ -39,13 +40,13 @@ ActuatorLineSimpleNGP::operator()()
 #ifdef ENABLE_ACTSIMPLE_PTMOTION
   // -- Get p1 and p2 for blade geometry --
   // (for blade motion, points p1 and p2 can change with time)
-  double p1[3]; 
-  double p2[3]; 
-  for (int j=0; j<3; j++) { 
-    p1[j] = actMeta_.p1_.h_view(actBulk_.localTurbineId_,j);
-    p2[j] = actMeta_.p2_.h_view(actBulk_.localTurbineId_,j);
+  double p1[3];
+  double p2[3];
+  for (int j = 0; j < 3; j++) {
+    p1[j] = actMeta_.p1_.h_view(actBulk_.localTurbineId_, j);
+    p2[j] = actMeta_.p2_.h_view(actBulk_.localTurbineId_, j);
   }
-  int nPts=actMeta_.num_force_pts_blade_.h_view(actBulk_.localTurbineId_);
+  int nPts = actMeta_.num_force_pts_blade_.h_view(actBulk_.localTurbineId_);
   // -- functor to update points --
   Kokkos::parallel_for(
     "updatePointLocationsActuatorNgpSimple", localRangePolicy,
@@ -60,14 +61,13 @@ ActuatorLineSimpleNGP::operator()()
     InterpActuatorVel(actBulk_, stkBulk_));
   actuator_utils::reduce_view_on_host(velReduce);
 
-
   Kokkos::parallel_for(
     "interpolateDensityActuatorNgpSimple", numActPoints_,
     InterpActuatorDensity(actBulk_, stkBulk_));
   auto rhoReduce = actBulk_.density_.view_host();
   actuator_utils::reduce_view_on_host(rhoReduce);
 
-  Apply_FLLC(actBulk_, actMeta_);
+  apply_fllc(actBulk_);
 
   ActSimpleComputeRelativeVelocity(actBulk_, actMeta_);
 
@@ -78,7 +78,7 @@ ActuatorLineSimpleNGP::operator()()
 
   ActSimpleComputeForce(actBulk_, actMeta_);
 
-  Compute_FLLC(actBulk_, actMeta_);
+  compute_fllc();
 
   ActSimpleWriteToFile(actBulk_, actMeta_);
 

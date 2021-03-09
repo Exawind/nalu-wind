@@ -24,7 +24,6 @@ struct ActuatorMetaFAST : public ActuatorMeta
   fast::fastInputs fastInputs_;
   std::vector<std::string> turbineNames_;
   std::vector<std::string> turbineOutputFileNames_;
-  bool isotropicGaussian_;
   bool is_disk();
   int get_fast_index(
     fast::ActuatorNodeType type,
@@ -34,8 +33,6 @@ struct ActuatorMetaFAST : public ActuatorMeta
 
   // TODO(SAKIEVICH) not certain all these need to be dual views
   int maxNumPntsPerBlade_;
-  ActVectorDblDv epsilon_;
-  ActVectorDblDv epsilonChord_;
   ActVectorDblDv epsilonTower_;
   ActVectorDblDv epsilonHub_;
   ActFixScalarBool useUniformAziSampling_;
