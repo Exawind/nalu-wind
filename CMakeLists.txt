@@ -51,6 +51,17 @@ if(ENABLE_CUDA)
     CUDA::nvToolsExt)
 endif()
 
+# Handle issues for Power9 builds
+if ((${CMAKE_SYSTEM_PROCESSOR} MATCHES "ppc") AND (NOT ENABLE_CUDA))
+  # Fix warnings regarding NALU_ALIGNED in CPU builds
+  target_compile_definitions(nalu PUBLIC NALU_USE_POWER9_ALIGNMENT)
+  if ((${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU") AND
+      (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 9.0))
+    # Skip SIMD when building with GCC versions less than 9.0
+    target_compile_definitions(nalu PUBLIC USE_STK_SIMD_NONE)
+  endif()
+endif()
+
 ########################## TRILINOS ####################################
 set(CMAKE_PREFIX_PATH ${Trilinos_DIR} ${CMAKE_PREFIX_PATH})
 find_package(Trilinos QUIET REQUIRED)
