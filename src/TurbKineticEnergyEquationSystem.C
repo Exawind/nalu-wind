@@ -993,7 +993,7 @@ TurbKineticEnergyEquationSystem::post_external_data_transfer_work()
     ngpTkeBC.sync_to_device();
     nalu_ngp::run_entity_algorithm(
       "clip_tke_bc",
-      ngpMesh, stk::topology::NODE_RANK, sel,
+      ngpMesh, stk::topology::NODE_RANK, bc_sel,
       KOKKOS_LAMBDA(const MeshIndex& mi) {
         if (ngpTkeBC.get(mi, 0) < 0.0)
           ngpTkeBC.get(mi, 0) = clipValue;
