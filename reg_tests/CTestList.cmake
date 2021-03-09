@@ -253,6 +253,7 @@ else(NOT ENABLE_CUDA)
   add_test_r(conduction_p4 2)
   add_test_r(airfoilRANSEdgeNGPTrilinos.rst 1)
   add_test_r(ActLineSimpleNGP 2)
+  add_test_r(ActLineSimpleFLLC 2)
   add_test_r(taylorGreenVortex_p3 2)
   add_test_r(drivenCavity_p1 2)
 

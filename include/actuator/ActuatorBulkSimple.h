@@ -23,10 +23,6 @@ struct ActuatorMetaSimple : public ActuatorMeta
   // HOST ONLY
   bool isotropicGaussian_;
 
-  //int maxNumPntsPerBlade_;
-  ActVectorDblDv epsilon_;
-  ActVectorDblDv epsilonChord_;
-
   // Stuff for the simple blade
   bool            debug_output_;
   bool            useSpreadActuatorForce;
@@ -34,7 +30,7 @@ struct ActuatorMetaSimple : public ActuatorMeta
   ActScalarIntDv  num_force_pts_blade_;
   ActVectorDblDv  p1_;  // Start of blade
   ActVectorDblDv  p2_;  // End of blade
-  ActScalarDblDv  dR_;
+  ActScalarDblDv  dR_;  // Spacing between points
   ActVectorDblDv  p1ZeroAlphaDir_;         // Directon of zero alpha at p1
   ActVectorDblDv  chordNormalDir_;         // Direction normal to chord
   ActVectorDblDv  spanDir_;                // Direction in the span

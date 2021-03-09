@@ -16,6 +16,10 @@
 namespace sierra {
 namespace nalu {
 
+#ifndef ACTUATOR_LAMBDA
+#define ACTUATOR_LAMBDA [=]
+#endif
+
 #ifdef KOKKOS_ENABLE_CUDA
 using ActuatorMemSpace = Kokkos::CudaSpace;
 using ActuatorExecutionSpace = Kokkos::DefaultExecutionSpace;

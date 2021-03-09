@@ -20,8 +20,6 @@ namespace nalu {
 
 namespace {
 
-#define ACTUATOR_LAMBDA [=]
-
 class ActuatorSearchTest : public ::testing::Test
 {
 public:
@@ -184,8 +182,6 @@ TEST_F(ActuatorSearchTest, NGP_executeFineSearch)
     FAIL() << err.what();
   }
 }
-
-#undef ACTUATOR_LAMBDA
 
 } // namespace
 

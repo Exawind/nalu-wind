@@ -15,10 +15,10 @@ ActuatorLineFastNGP::ActuatorLineFastNGP(
   const ActuatorMetaFAST& actMeta,
   ActuatorBulkFAST& actBulk,
   stk::mesh::BulkData& stkBulk)
-  : actMeta_(actMeta),
+  : ActuatorExecutor(actMeta, actBulk),
+    actMeta_(actMeta),
     actBulk_(actBulk),
-    stkBulk_(stkBulk),
-    numActPoints_(actMeta_.numPointsTotal_)
+    stkBulk_(stkBulk)
 {
 }
 
@@ -32,9 +32,15 @@ ActuatorLineFastNGP::operator()()
 
   RunInterpActuatorVel(actBulk_, stkBulk_);
 
+  apply_fllc(actBulk_);
+
   Kokkos::parallel_for(
     "assignFastVelActuatorNgpFAST", fastRangePolicy,
     ActFastAssignVel(actBulk_));
+
+  ActFastCacheRelativeVelocities(actBulk_);
+
+  compute_fllc();
 
   actBulk_.interpolate_velocities_to_fast();
 
@@ -74,10 +80,10 @@ ActuatorDiskFastNGP::ActuatorDiskFastNGP(
   const ActuatorMetaFAST& actMeta,
   ActuatorBulkDiskFAST& actBulk,
   stk::mesh::BulkData& stkBulk)
-  : actMeta_(actMeta),
+  : ActuatorExecutor(actMeta, actBulk),
+    actMeta_(actMeta),
     actBulk_(actBulk),
-    stkBulk_(stkBulk),
-    numActPoints_(actMeta_.numPointsTotal_)
+    stkBulk_(stkBulk)
 {
 }
 
@@ -88,11 +94,17 @@ ActuatorDiskFastNGP::operator()()
 
   RunInterpActuatorVel(actBulk_, stkBulk_);
 
+  apply_fllc(actBulk_);
+
   auto fastRangePolicy = actBulk_.local_range_policy();
 
   Kokkos::parallel_for(
     "assignFastVelActuatorNgpFAST", fastRangePolicy,
     ActFastAssignVel(actBulk_));
+
+  ActFastCacheRelativeVelocities(actBulk_);
+
+  compute_fllc();
 
   auto forceReduce = actBulk_.actuatorForce_.view_host();
 

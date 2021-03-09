@@ -6,6 +6,7 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorFunctors.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorParsingSimple.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorFLLC.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestActuatorBladeDistributor.C
 )
 if(ENABLE_OPENFAST)
    target_sources(${utest_ex_name} PRIVATE

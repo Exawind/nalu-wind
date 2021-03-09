@@ -17,6 +17,30 @@
 namespace sierra {
 namespace nalu {
 
+void
+ActFastCacheRelativeVelocities(ActuatorBulkFAST& actBulk)
+{
+  ActDualViewHelper<ActuatorFixedMemSpace> helper;
+
+  helper.touch_dual_view(actBulk.relativeVelocity_);
+  auto relVel = helper.get_local_view(actBulk.relativeVelocity_);
+  fast::OpenFAST* fast = &actBulk.openFast_;
+
+  Kokkos::deep_copy(relVel, 0.0);
+  auto range_policy = actBulk.local_range_policy();
+  auto offset = helper.get_local_view(actBulk.turbIdOffset_);
+  const int turbId = actBulk.localTurbineId_;
+
+  Kokkos::parallel_for(
+    "cache rel vel", range_policy, KOKKOS_LAMBDA(int i) {
+      int index = i - offset(turbId);
+      auto rV = Kokkos::subview(relVel, i, Kokkos::ALL);
+      fast->getRelativeVelForceNode(rV.data(), index, turbId);
+    });
+
+  actuator_utils::reduce_view_on_host(relVel);
+}
+
 ActFastUpdatePoints::ActFastUpdatePoints(ActuatorBulkFAST& actBulk)
   : points_(helper_.get_local_view(actBulk.pointCentroid_)),
     offsets_(helper_.get_local_view(actBulk.turbIdOffset_)),
