@@ -1,0 +1,61 @@
+Neutral Atmospheric Boundary Layer Case
+
+30 Nov 2017
+
+This case is an example for running a large-eddy simulation of a neutral-
+stability atmospheric boundary layer using a no-slip wall stress implementation
+outlined in the 2010 paper by Jaegle et al, "Implementation Methods of Wall Functions in Cell-vertex Numerical Solvers"
+
+The rest of the setup matches the ablNeutralEdge regression test.
+
+- To build the mesh, use NaluWindUtils abl_mesh with nalu_abl_mesh.yaml
+- To initialze the fiels, use NaluWindUtils nalu_preprocess with 
+  nalu_preprocess.yaml
+
+Domain: 
+  - x: 0 m - 5000 m
+  - y: 0 m - 5000 m
+  - z: 0 m - 1000 m
+  - periodic laterally
+
+Winds:
+  - specified 8 m/s from 245 degrees (southwest) enforced with a
+    P-controlled driving source term.
+
+Initial temperature profile:
+  - 300 K constant to 650 m
+  - linear varying 300 K - 308 K from 650 m - 750 m
+  - linear increasing at a rate of 3 K per 1000 m above 750 m
+
+Initial velocity:
+  - Constant 8 m/s from 245 degrees throughout with sinusoidal
+    perturbations near the surface
+
+Surface:
+  - Rough wall shear stress model based on Monin-Obukhov similarity.
+  - z0 = 0.2 m
+  - qWall = 0 W/m^2
+
+Upper Boundary:
+  - Symmetry for momentum (effectively a no-stress lid).
+  - Heat flux to maintain a specified temperature gradient
+
+Coriolis:
+  - Coriolis terms to account for Earth's rotation at 45 degrees
+    north latitude
+
+Bouyancy:
+  - Density is set to constant
+  - Boussinesq bouyancy in z-momentum 
+
+SGS model:
+  - one-equation subgrid-scale turbulent kinetic energy with 
+    buoyancy source term.  Model constants are set to work well
+    with ABL applications.
+
+Other:
+  - Reference pressure: 101325 Pa
+  - Reference temperature: 300 K
+  - Reference density: 1.178037 kg/m^3 (ideal gas based on 
+    reference pressure gives this rho_ref = p_ref/((R/mw)*T_ref)
+  - Viscosity: 1.2E-5 kg/m-s

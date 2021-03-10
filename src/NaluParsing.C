@@ -760,6 +760,12 @@ namespace YAML
     {
       wallData.isAdiabatic_ = node["adiabatic"].as<bool>();
     }
+
+    if (node["no_slip"])
+    {
+      wallData.isNoSlip_ = node["no_slip"].as<bool>();
+    }
+
     if (node["interface"])
     {
       wallData.isInterface_ = node["interface"].as<bool>();
