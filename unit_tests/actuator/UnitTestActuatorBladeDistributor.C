@@ -41,6 +41,17 @@ INSTANTIATE_TEST_SUITE_P(
   BladeDistributorTest,
   testing::Values(
     TestInputs({3, 0, 4, 0, true}),
+    TestInputs({3, 1, 4, 0, false}),
+    TestInputs({3, 2, 4, 0, false}),
+    TestInputs({3, 0, 4, 1, false}),
+    TestInputs({3, 1, 4, 1, true}),
+    TestInputs({3, 2, 4, 1, false}),
+    TestInputs({3, 0, 4, 2, false}),
+    TestInputs({3, 1, 4, 2, false}),
+    TestInputs({3, 2, 4, 2, true}),
+    TestInputs({3, 0, 4, 3, false}),
+    TestInputs({3, 1, 4, 3, false}),
+    TestInputs({3, 2, 4, 3, false}),
     TestInputs({6, 0, 4, 3, false}),
     TestInputs({9, 1, 4, 0, true}),
     TestInputs({3, 2, 36, 2, true})));

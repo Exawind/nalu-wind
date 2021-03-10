@@ -34,7 +34,9 @@ actuator_instance_parse(ActuatorMeta& actMeta, const YAML::Node& y_actuator)
     // I'd really like to align the naming conventions so the data in these
     // cases can be agnostic to actuator types
     switch (actMeta.actuatorType_) {
-    case (ActuatorType::ActLineSimpleNGP): {
+    case (ActuatorType::ActLineSimpleNGP):
+    case (ActuatorType::ActLineSimple):
+    {
       key = "Blade" + std::to_string(i);
       break;
     }
@@ -81,14 +83,19 @@ actuator_parse(const YAML::Node& y_node)
                  "missing from yaml node passed to actuator_parse");
   int nTurbines = 0;
   std::string actuatorTypeName;
+ 
   get_required(y_actuator, "type", actuatorTypeName);
+
   if ((ActuatorTypeMap[actuatorTypeName]==ActuatorType::ActLineSimpleNGP)||
       (ActuatorTypeMap[actuatorTypeName]==ActuatorType::ActLineSimple))
-    {
-      get_required(y_actuator, "n_simpleblades", nTurbines);
-    } else {
+  {
+    get_required(y_actuator, "n_simpleblades", nTurbines);
+  }
+  else
+  {
     get_required(y_actuator, "n_turbines_glob", nTurbines);
   }
+ 
   ActuatorMeta actMeta(nTurbines, ActuatorTypeMap[actuatorTypeName]);
   // search specifications
   std::string searchMethodName = "na";
