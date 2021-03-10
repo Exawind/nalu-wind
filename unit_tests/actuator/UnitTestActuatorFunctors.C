@@ -214,6 +214,7 @@ TEST_F(ActuatorFunctorTests, NGP_testSearchAndInterpolate)
                         "    num_force_pts_blade: 3";
   YAML::Node y_actuator = YAML::Load(inputFileSurrogate_);
   ActuatorMeta actMeta = actuator_parse(y_actuator);
+  actMeta.numPointsTotal_ = 3;
 
   // construct object and allocate memory
   ActuatorBulk actBulk(actMeta);
@@ -247,6 +248,7 @@ TEST_F(ActuatorFunctorTests, NGP_testSpreadForces)
                         "    num_force_pts_blade: 1";
   YAML::Node y_actuator = YAML::Load(inputFileSurrogate_);
   ActuatorMeta actMeta = actuator_parse(y_actuator);
+  actMeta.numPointsTotal_ = 1;
 
   ActuatorInfoNGP actInfo;
   actInfo.epsilon_.x_ = 2.0;
