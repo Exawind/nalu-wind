@@ -2083,7 +2083,6 @@ MomentumEquationSystem::register_wall_bc(
             partTopo, elemTopo, *this, activeKernels, "momentum_abl_wall",
             !userData.isNoSlip_,
             realm_.meta_data(),
-            realm_.get_coordinates_name(),
             faceElemSolverAlg->faceDataNeeded_,
             faceElemSolverAlg->elemDataNeeded_);
           }
