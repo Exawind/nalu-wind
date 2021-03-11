@@ -33,7 +33,6 @@ public:
   MomentumABLWallShearStressEdgeKernel(
     bool slip,
     stk::mesh::MetaData&,
-    std::string,
     ElemDataRequests&,
     ElemDataRequests&);
 

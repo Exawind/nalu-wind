@@ -27,7 +27,6 @@ template<typename BcAlgTraits>
 MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::MomentumABLWallShearStressEdgeKernel(
   bool slip,
   stk::mesh::MetaData& meta,
-  std::string coordname,
   ElemDataRequests& faceDataPreReqs,
   ElemDataRequests& elemData
   ) : NGPKernel<MomentumABLWallShearStressEdgeKernel<BcAlgTraits>>(),
