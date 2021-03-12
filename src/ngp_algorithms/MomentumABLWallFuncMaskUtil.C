@@ -33,7 +33,7 @@ MomentumABLWallFuncMaskUtil::execute()
   const auto& meta     = realm_.meta_data();
   const auto ngpMesh   = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
-  const auto myNodeMask    = fieldMgr.get_field<double>(maskNodeIndex_);
+  auto myNodeMask = fieldMgr.get_field<double>(maskNodeIndex_);
 
   const stk::mesh::Selector sel = (meta.locally_owned_part() | meta.globally_shared_part()) &
                                   stk::mesh::selectUnion(partVec_) &
@@ -45,6 +45,7 @@ MomentumABLWallFuncMaskUtil::execute()
      KOKKOS_LAMBDA(const Traits::MeshIndex& meshIdx) {
        myNodeMask.get(meshIdx, 0) = 0;
      });
+  myNodeMask.modify_on_device();
 }
 
 }
