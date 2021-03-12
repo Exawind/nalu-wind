@@ -58,15 +58,13 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::execute(
   const auto& v_areavec = scratchViews.get_scratch_view_2D(exposedAreaVec_);
   const auto& v_wallshearstress = scratchViews.get_scratch_view_2D(wallShearStress_);
 
-  const int* ipNodeMap = meFC_->ipNodeMap();
-
   for (int ip = 0; ip < BcAlgTraits::numFaceIp_; ++ip) {
 
     // Decide which node the shear stress will be applied to
     // rowBase is the first row in the matrix associated with the velocity for this node
-    const int rowBase = slip_ 
-      ? (ipNodeMap[ip] * BcAlgTraits::nDim_) 
-      : (meSCS_->opposingNodes(elemFaceOrdinal, ip) * BcAlgTraits::nDim_);
+    const int rowBase =
+      slip_ ? (meSCS_->ipNodeMap(elemFaceOrdinal)[ip] * BcAlgTraits::nDim_)
+            : (meSCS_->opposingNodes(elemFaceOrdinal, ip) * BcAlgTraits::nDim_);
 
     DoubleType amag = 0.0;
     for (int d=0; d < BcAlgTraits::nDim_; ++d) {
