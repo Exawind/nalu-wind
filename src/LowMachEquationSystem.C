@@ -1186,8 +1186,6 @@ MomentumEquationSystem::register_nodal_fields(
       stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
   double one = 1;
   stk::mesh::put_field_on_mesh(node_mask, *part, 1, &one);
-  node_mask.modify_on_host();
-  node_mask.sync_to_device();
 }
 
 //--------------------------------------------------------------------------
