@@ -14,7 +14,7 @@ class Shape
 {
 public :
   KOKKOS_FORCEINLINE_FUNCTION Shape() {}
-  virtual ~Shape() {}
+  KOKKOS_DEFAULTED_FUNCTION virtual ~Shape() = default;
   KOKKOS_FUNCTION
   virtual double area() const = 0;
 };
@@ -26,7 +26,7 @@ public :
   KOKKOS_FORCEINLINE_FUNCTION Rectangle(const Rectangle& r)
     : Shape(), length_(r.length_), width_(r.width_)
   {}
-  virtual ~Rectangle() {}
+  KOKKOS_DEFAULTED_FUNCTION virtual ~Rectangle() = default;
   KOKKOS_FUNCTION
   virtual double area() const final {
     return length_ * width_;
@@ -40,7 +40,7 @@ public :
   KOKKOS_FORCEINLINE_FUNCTION Circle(const Circle& c)
     : Shape(), radius_(c.radius_)
   {}
-  virtual ~Circle() {}
+  KOKKOS_DEFAULTED_FUNCTION virtual ~Circle() = default;
   KOKKOS_FUNCTION
   virtual double area() const final {
     return 3.14159265 * radius_ * radius_;
