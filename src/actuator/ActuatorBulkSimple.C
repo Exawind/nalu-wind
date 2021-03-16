@@ -17,8 +17,6 @@ namespace nalu {
 ActuatorMetaSimple::ActuatorMetaSimple(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
     isotropicGaussian_(false),
-    epsilon_("epsilonMeta", numberOfActuators_),
-    epsilonChord_("epsilonChordMeta", numberOfActuators_),
     num_force_pts_blade_("numForcePtsBladeMeta", numberOfActuators_),
     p1_("p1Meta", numberOfActuators_),
     p2_("p2Meta", numberOfActuators_),

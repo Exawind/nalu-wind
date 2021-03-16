@@ -10,27 +10,11 @@
 #include <KokkosInterface.h>
 #include "utils/CreateDeviceExpression.h"
 
-class Deviceable {
-protected :
-  Deviceable *deviceCopy_;
+class Shape
+{
 public :
-  KOKKOS_FORCEINLINE_FUNCTION Deviceable() : deviceCopy_(nullptr) {} 
-  virtual ~Deviceable() {
-    if (deviceCopy_) delete_device_copy();
-    deviceCopy_ = nullptr;
-  }
-  template <class T> void copy_to_device(const T &t) {
-    deviceCopy_ = sierra::nalu::create_device_expression(t);
-  }
-  void delete_device_copy() {
-    sierra::nalu::kokkos_free_on_device(deviceCopy_);
-  }
-};
-
-class Shape : public Deviceable {
-public :
-  KOKKOS_FORCEINLINE_FUNCTION Shape() {} 
-  virtual ~Shape() {}
+  KOKKOS_FORCEINLINE_FUNCTION Shape() {}
+  KOKKOS_DEFAULTED_FUNCTION virtual ~Shape() = default;
   KOKKOS_FUNCTION
   virtual double area() const = 0;
 };
@@ -38,11 +22,11 @@ public :
 class Rectangle : public Shape {
   const double length_,width_;
 public :
-  Rectangle(const double l,const double w):Shape(),length_(l),width_(w) {
-    copy_to_device(*this);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION Rectangle(const Rectangle &r):Shape(),length_(r.length_),width_(r.width_) {} 
-  virtual ~Rectangle(){}
+  Rectangle(const double l,const double w):Shape(),length_(l),width_(w) {}
+  KOKKOS_FORCEINLINE_FUNCTION Rectangle(const Rectangle& r)
+    : Shape(), length_(r.length_), width_(r.width_)
+  {}
+  KOKKOS_DEFAULTED_FUNCTION virtual ~Rectangle() = default;
   KOKKOS_FUNCTION
   virtual double area() const final {
     return length_ * width_;
@@ -52,11 +36,11 @@ public :
 class Circle : public Shape {
   const double radius_;
 public :
-  Circle(const double radius):Shape(),radius_(radius) {
-    copy_to_device(*this);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION Circle(const Circle &c):Shape(),radius_(c.radius_) {} 
-  virtual ~Circle(){}
+  Circle(const double radius):Shape(),radius_(radius) {}
+  KOKKOS_FORCEINLINE_FUNCTION Circle(const Circle& c)
+    : Shape(), radius_(c.radius_)
+  {}
+  KOKKOS_DEFAULTED_FUNCTION virtual ~Circle() = default;
   KOKKOS_FUNCTION
   virtual double area() const final {
     return 3.14159265 * radius_ * radius_;

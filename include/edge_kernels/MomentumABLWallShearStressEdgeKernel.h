@@ -31,8 +31,10 @@ class MomentumABLWallShearStressEdgeKernel: public NGPKernel<MomentumABLWallShea
 {
 public:
   MomentumABLWallShearStressEdgeKernel(
+    bool slip,
     stk::mesh::MetaData&,
-    ElemDataRequests& faceDataPreReqs);
+    ElemDataRequests&,
+    ElemDataRequests&);
 
   KOKKOS_DEFAULTED_FUNCTION MomentumABLWallShearStressEdgeKernel() = default;
 
@@ -44,13 +46,17 @@ public:
   virtual void execute(
     SharedMemView<DoubleType**, DeviceShmem>&,
     SharedMemView<DoubleType*, DeviceShmem>&,
-    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&);
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&,
+    ScratchViews<DoubleType, DeviceTeamHandleType, DeviceShmem>&,
+    int);
 
 private:
+  bool slip_{true};
   unsigned exposedAreaVec_  {stk::mesh::InvalidOrdinal};
   unsigned wallShearStress_ {stk::mesh::InvalidOrdinal};
 
   MasterElement* meFC_{nullptr};
+  MasterElement* meSCS_{nullptr};
 };
 
 }  // nalu

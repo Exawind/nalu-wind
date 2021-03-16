@@ -9,6 +9,7 @@
 
 #include <actuator/ActuatorParsingFAST.h>
 #include <actuator/ActuatorBulkFAST.h>
+#include <actuator/ActuatorParsing.h>
 #include <NaluParsing.h>
 #include <gtest/gtest.h>
 
@@ -147,6 +148,41 @@ TEST_F(ActuatorParsingFastTests, NGP_epsilonTower)
   } catch (std::exception const& err) {
     FAIL() << err.what();
   }
+}
+
+TEST_F(ActuatorParsingFastTests, useFLLC)
+{
+  const char* actuatorYaml = R"blk(actuator:
+  search_target_part: dummy
+  search_method: stk_kdtree
+  type: ActLineFASTNGP
+  n_turbines_glob: 1
+  t_start: 0
+  simStart: init
+  n_every_checkpoint: 1
+  dt_fast: 0.00625
+  t_max: 0.0625
+  debug: no
+  Turbine0:
+    fllt_correction: yes
+    turbine_name: turbinator
+    epsilon_min: [5.0, 5.0, 5.00]
+    epsilon_chord: [1.0, 1.0, 1.00]
+    turb_id: 0
+    fast_input_filename: nrel5mw.fst
+    restart_filename: blah
+    num_force_pts_blade: 10
+    num_force_pts_tower: 10
+    turbine_base_pos: [0,0,0]
+    air_density:  1.0
+    nacelle_area:  1.0
+    nacelle_cd:  1.0
+ )blk";
+  const YAML::Node actuatorNode = YAML::Load(actuatorYaml);
+  auto actBase = actuator_parse(actuatorNode);
+  ASSERT_TRUE(actBase.useFLLC_);
+  auto actMeta = actuator_FAST_parse(actuatorNode, actBase);
+  ASSERT_TRUE(actMeta.useFLLC_);
 }
 
 } // namespace

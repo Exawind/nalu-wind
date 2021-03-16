@@ -47,6 +47,7 @@ MomentumEdgeSolverAlg::MomentumEdgeSolverAlg(
   massFlowRate_ = get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK);
   pecletFactor_ =
     get_field_ordinal(meta, "peclet_factor", stk::topology::EDGE_RANK);
+  maskNodeField_ = get_field_ordinal(meta, "abl_wall_no_slip_wall_func_node_mask", stk::topology::NODE_RANK);
 }
 
 void
@@ -63,19 +64,20 @@ MomentumEdgeSolverAlg::execute()
   const DblType relaxFacU = realm_.solutionOptions_->get_relaxation_factor(dofName);
   const bool useLimiter = realm_.primitive_uses_limiter(dofName);
 
-  const DblType om_alpha = 1.0 - alpha;
+  const DblType om_alpha    = 1.0 - alpha;
   const DblType om_alphaUpw = 1.0 - alphaUpw;
 
   // STK stk::mesh::NgpField instances for capture by lambda
-  const auto& fieldMgr = realm_.ngp_field_manager();
-  const auto coordinates = fieldMgr.get_field<double>(coordinates_);
-  const auto vrtm = fieldMgr.get_field<double>(velocityRTM_);
-  const auto vel = fieldMgr.get_field<double>(velocity_);
-  const auto dudx = fieldMgr.get_field<double>(dudx_);
-  const auto viscosity = fieldMgr.get_field<double>(viscosity_);
-  const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
+  const auto& fieldMgr    = realm_.ngp_field_manager();
+  const auto coordinates  = fieldMgr.get_field<double>(coordinates_);
+  const auto vrtm         = fieldMgr.get_field<double>(velocityRTM_);
+  const auto vel          = fieldMgr.get_field<double>(velocity_);
+  const auto dudx         = fieldMgr.get_field<double>(dudx_);
+  const auto viscosity    = fieldMgr.get_field<double>(viscosity_);
+  const auto edgeAreaVec  = fieldMgr.get_field<double>(edgeAreaVec_);
   const auto massFlowRate = fieldMgr.get_field<double>(massFlowRate_);
   const auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
+  const auto maskNodeField    = fieldMgr.get_field<double>(maskNodeField_);
 
   run_algorithm(
     realm_.bulk_data(),
@@ -207,7 +209,9 @@ MomentumEdgeSolverAlg::execute()
         for (int j=0; j < ndim; ++j)
           diff_flux += -viscIp * (duidxj[i][j] + duidxj[j][i]) * av[j];
 
-        const DblType total_flux = adv_flux + diff_flux;
+        const DblType maskNode = std::min(maskNodeField.get(nodeL, 0), maskNodeField.get(nodeR, 0));
+        const DblType total_flux = adv_flux + diff_flux * maskNode;
+
         smdata.rhs(rowL) -= total_flux;
         smdata.rhs(rowR) += total_flux;
 

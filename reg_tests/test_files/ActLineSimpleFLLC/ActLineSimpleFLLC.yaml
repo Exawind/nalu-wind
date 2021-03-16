@@ -150,11 +150,11 @@ realms:
     type: ActLineSimpleNGP
     search_method: stk_kdtree
     search_target_part: block_1
-    fllt_correction: yes
 
     n_simpleblades: 1
     debug_output: no
     Blade0:
+      fllt_correction: yes
       num_force_pts_blade: 100
       output_file_name: blade_dump.csv
       epsilon_min: [3.0, 3.0, 3.0]

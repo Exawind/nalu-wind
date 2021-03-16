@@ -12,6 +12,7 @@
 #include <LowMachEquationSystem.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
+#include <actuator/ActuatorModel.h>
 #include <AssembleContinuityElemSolverAlgorithm.h>
 #include <AssembleContinuityInflowSolverAlgorithm.h>
 #include <AssembleContinuityElemOpenSolverAlgorithm.h>
@@ -144,6 +145,7 @@
 #include "ngp_algorithms/TurbViscSSTAlg.h"
 #include "ngp_algorithms/WallFuncGeometryAlg.h"
 #include "ngp_algorithms/DynamicPressureOpenAlg.h"
+#include "ngp_algorithms/MomentumABLWallFuncMaskUtil.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldBLAS.h"
 #include "ngp_utils/NgpFieldUtils.h"
@@ -1041,6 +1043,7 @@ MomentumEquationSystem::initial_work()
 {
   // call base class method (BDF2 state management, etc)
   EquationSystem::initial_work();
+  if(ablWallNodeMask_) ablWallNodeMask_->execute();
 
   // proceed with a bunch of initial work; wrap in timer
   {
@@ -1166,7 +1169,7 @@ MomentumEquationSystem::register_nodal_fields(
   }
 
   // speciality source
-  if ( NULL != realm_.actuator_ || NULL != realm_.actuatorMeta_ || NULL != realm_.actuatorMetaSimple_) {
+  if (NULL != realm_.actuator_ || realm_.actuatorModel_->is_active()) {
     VectorFieldType *actuatorSource
       =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "actuator_source"));
     VectorFieldType *actuatorSourceLHS
@@ -1177,6 +1180,12 @@ MomentumEquationSystem::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*actuatorSourceLHS, *part, nDim, nullptr);
     stk::mesh::put_field_on_mesh(*g, *part, nullptr);
   }
+
+  ScalarFieldType& node_mask =
+    realm_.meta_data().declare_field<ScalarFieldType>(
+      stk::topology::NODE_RANK, "abl_wall_no_slip_wall_func_node_mask");
+  double one = 1;
+  stk::mesh::put_field_on_mesh(node_mask, *part, 1, &one);
 }
 
 //--------------------------------------------------------------------------
@@ -1967,7 +1976,7 @@ MomentumEquationSystem::register_wall_bc(
   }
 
   // Only set velocityNp1 at the wall boundary if we are not using any wall functions
-  if (!anyWallFunctionActivated) {
+  if (!anyWallFunctionActivated || userData.isNoSlip_) {
     // copy velocity_bc to velocity np1
     CopyFieldAlgorithm *theCopyAlg
       = new CopyFieldAlgorithm(realm_, part,
@@ -2033,7 +2042,7 @@ MomentumEquationSystem::register_wall_bc(
 
       // Atmospheric-boundary-layer-style wall model.
       if (ablWallFunctionApproach) {
-        
+
         const AlgorithmType wfAlgType = WALL_ABL;
 
         // register boundary data: wall_heat_flux_bip.  This is the ABL integration-point-based heat flux field.
@@ -2051,20 +2060,31 @@ MomentumEquationSystem::register_wall_bc(
 
         // Assemble wall stresses via the edge algorithm.
         auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-        AssembleElemSolverAlgorithm* solverAlg = nullptr;
+        stk::topology elemTopo = get_elem_topo(realm_, *part);
+        AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
         bool solverAlgWasBuilt = false;
 
-        std::tie(solverAlg, solverAlgWasBuilt) =
-          build_or_add_part_to_face_bc_solver_alg(
-            *this, *part, solverAlgMap, "wall_fcn");
+        std::tie(faceElemSolverAlg, solverAlgWasBuilt) =
+          build_or_add_part_to_face_elem_solver_alg(
+            wfAlgType, *this, *part, elemTopo, solverAlgMap, "wall_func");
 
-        ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
-        auto& activeKernels = solverAlg->activeKernels_;
+        if (userData.isNoSlip_) {
+          notProjectedPart_.push_back(part);
+          if( !ablWallNodeMask_ ) {
+            ablWallNodeMask_.reset(new MomentumABLWallFuncMaskUtil(realm_, part));
+          } else {
+            ablWallNodeMask_->partVec_.push_back(part);
+          }
+        }
 
+        auto& activeKernels = faceElemSolverAlg->activeKernels_;
         if (solverAlgWasBuilt) {
-          build_face_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>
-            (partTopo, *this, activeKernels, "momentum_abl_wall",
-             realm_.meta_data(), dataPreReqs);
+          build_face_elem_topo_kernel_automatic<MomentumABLWallShearStressEdgeKernel>(
+            partTopo, elemTopo, *this, activeKernels, "momentum_abl_wall",
+            !userData.isNoSlip_,
+            realm_.meta_data(),
+            faceElemSolverAlg->faceDataNeeded_,
+            faceElemSolverAlg->elemDataNeeded_);
           }
       }
 
@@ -2120,7 +2140,7 @@ MomentumEquationSystem::register_wall_bc(
   }
 
   // Dirichlet wall boundary condition.
-  if (!anyWallFunctionActivated) {
+  if (!anyWallFunctionActivated || userData.isNoSlip_) {
     const AlgorithmType algType = WALL;
 
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =

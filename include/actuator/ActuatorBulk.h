@@ -32,7 +32,6 @@ struct ActuatorInfoNGP;
  * be accessed on host or device. Specialization for different models is
  * intended via inheritance.
  *
- * The meta data should be copyable.
  */
 
 struct ActuatorMeta
@@ -44,10 +43,15 @@ struct ActuatorMeta
   const int numberOfActuators_;
   const ActuatorType actuatorType_;
   int numPointsTotal_;
+  bool isotropicGaussian_;
   std::vector<std::string> searchTargetNames_;
   stk::search::SearchMethod searchMethod_;
   ActScalarIntDv numPointsTurbine_;
   bool useFLLC_ = false;
+  ActVectorDblDv epsilonChord_;
+  ActVectorDblDv epsilon_;
+  ActFixScalarBool entityFLLC_;
+  ActScalarIntDv numNearestPointsFllcInt_;
 };
 
 /*! \brief Where field data is stored and accessed for actuators

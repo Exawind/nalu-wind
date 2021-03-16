@@ -19,10 +19,7 @@ ActuatorMetaFAST::ActuatorMetaFAST(const ActuatorMeta& actMeta)
   : ActuatorMeta(actMeta),
     turbineNames_(numberOfActuators_),
     turbineOutputFileNames_(numberOfActuators_),
-    isotropicGaussian_(false),
     maxNumPntsPerBlade_(0),
-    epsilon_("epsilonMeta", numberOfActuators_),
-    epsilonChord_("epsilonChordMeta", numberOfActuators_),
     epsilonTower_("epsilonTowerMeta", numberOfActuators_),
     epsilonHub_("epsilonHubMeta", numberOfActuators_),
     useUniformAziSampling_(
@@ -103,10 +100,9 @@ ActuatorBulkFAST::init_openfast(
     openFast_.setTurbineProcNo(i + nOffset, i);
   }
 
-  if(actMeta.fastInputs_.debug){
+  if (actMeta.fastInputs_.debug) {
     openFast_.init();
-  }
-  else{
+  } else {
     squash_fast_output(std::bind(&fast::OpenFAST::init, &openFast_));
   }
 
@@ -132,8 +128,9 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
   searchRadius_.modify_host();
   const int nTurb = openFast_.get_nTurbinesGlob();
 
-  NaluEnv::self().naluOutputP0() << "Total Number of Actuator Points is: "
-      << actMeta.numPointsTotal_<<std::endl;
+  NaluEnv::self().naluOutputP0()
+    << "Total Number of Actuator Points is: " << actMeta.numPointsTotal_
+    << std::endl;
 
   for (int iTurb = 0; iTurb < nTurb; iTurb++) {
     if (openFast_.get_procNo(iTurb) == NaluEnv::self().parallel_rank()) {
@@ -158,7 +155,7 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
         case fast::HUB: {
           // if epsilonHub hasn't already been set use model
           // of the wake (Martinez-Tossas PhD Thesis 2017)
-          if(actMeta.epsilonHub_.h_view(iTurb, 0)<=0){
+          if (actMeta.epsilonHub_.h_view(iTurb, 0) <= 0) {
             float nac_cd = openFast_.get_nacelleCd(iTurb);
             // Compute epsilon only if drag coefficient is greater than zero
             if (nac_cd > 0) {
@@ -220,7 +217,7 @@ ActuatorBulkFAST::init_epsilon(const ActuatorMetaFAST& actMeta)
         searchRadius_.h_view(np + offset) =
           std::max(
             epsilonLocal(0), std::max(epsilonLocal(1), epsilonLocal(2))) *
-            2.6282608848784661; //sqrt(log(1000))
+          2.6282608848784661; // sqrt(log(1000))
       }
     } else {
       NaluEnv::self().naluOutput() << "Proc " << NaluEnv::self().parallel_rank()
@@ -255,10 +252,9 @@ ActuatorBulkFAST::interpolate_velocities_to_fast()
   openFast_.interpolateVel_ForceToVelNodes();
 
   if (openFast_.isTimeZero()) {
-    if(openFast_.isDebug()){
+    if (openFast_.isDebug()) {
       openFast_.solution0();
-    }
-    else{
+    } else {
       squash_fast_output(std::bind(&fast::OpenFAST::solution0, &openFast_));
     }
   }
@@ -267,12 +263,11 @@ ActuatorBulkFAST::interpolate_velocities_to_fast()
 void
 ActuatorBulkFAST::step_fast()
 {
-  if(openFast_.isDebug()){
+  if (openFast_.isDebug()) {
     for (int j = 0; j < tStepRatio_; j++) {
       openFast_.step();
     }
-  }
-  else{
+  } else {
     for (int j = 0; j < tStepRatio_; j++) {
       squash_fast_output(std::bind(&fast::OpenFAST::step, &openFast_));
     }
@@ -294,8 +289,7 @@ void
 ActuatorBulkFAST::output_torque_info(stk::mesh::BulkData& stkBulk)
 {
   Kokkos::parallel_for(
-    "setUpTorqueCalc", hubLocations_.extent(0),
-    ActFastSetUpThrustCalc(*this));
+    "setUpTorqueCalc", hubLocations_.extent(0), ActFastSetUpThrustCalc(*this));
 
   actuator_utils::reduce_view_on_host(hubLocations_);
   actuator_utils::reduce_view_on_host(hubOrientation_);

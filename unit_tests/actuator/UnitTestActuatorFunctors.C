@@ -209,14 +209,12 @@ TEST_F(ActuatorFunctorTests, NGP_testSearchAndInterpolate)
                         "  type: ActLinePointDrag\n"
                         "  n_turbines_glob: 1\n"
                         "  search_method: stk_kdtree\n"
-                        "  search_target_part: [block_1]\n";
+                        "  search_target_part: [block_1]\n"
+                        "  Turbine0:\n"
+                        "    num_force_pts_blade: 3";
   YAML::Node y_actuator = YAML::Load(inputFileSurrogate_);
   ActuatorMeta actMeta = actuator_parse(y_actuator);
-
-  // more parse stuff to be implemented
-  ActuatorInfoNGP actInfo;
-  actInfo.numPoints_ = 3;
-  actMeta.add_turbine(actInfo);
+  actMeta.numPointsTotal_ = 3;
 
   // construct object and allocate memory
   ActuatorBulk actBulk(actMeta);
@@ -245,12 +243,14 @@ TEST_F(ActuatorFunctorTests, NGP_testSpreadForces)
                         "  type: ActLinePointDrag\n"
                         "  n_turbines_glob: 1\n"
                         "  search_method: stk_kdtree\n"
-                        "  search_target_part: [block_1]\n";
+                        "  search_target_part: [block_1]\n"
+                        "  Turbine0:\n"
+                        "    num_force_pts_blade: 1";
   YAML::Node y_actuator = YAML::Load(inputFileSurrogate_);
   ActuatorMeta actMeta = actuator_parse(y_actuator);
+  actMeta.numPointsTotal_ = 1;
 
   ActuatorInfoNGP actInfo;
-  actInfo.numPoints_ = 1;
   actInfo.epsilon_.x_ = 2.0;
   actInfo.epsilon_.y_ = 2.0;
   actInfo.epsilon_.z_ = 2.0;

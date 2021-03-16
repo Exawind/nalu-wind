@@ -16,6 +16,52 @@
 namespace sierra {
 namespace nalu {
 
+/**
+ * @brief General options for each actuator instance
+ *
+ * @param actMeta
+ * @param y_actuator
+ */
+void
+actuator_instance_parse(ActuatorMeta& actMeta, const YAML::Node& y_actuator)
+{
+  actMeta.numNearestPointsFllcInt_.modify_host();
+
+  for (int i = 0; i < actMeta.numberOfActuators_; i++) {
+    std::string key;
+
+    // TODO: I really don't like that we have these conditionals here.
+    // I'd really like to align the naming conventions so the data in these
+    // cases can be agnostic to actuator types
+    switch (actMeta.actuatorType_) {
+    case (ActuatorType::ActLineSimpleNGP):
+    case (ActuatorType::ActLineSimple):
+    {
+      key = "Blade" + std::to_string(i);
+      break;
+    }
+    default: {
+      key = "Turbine" + std::to_string(i);
+      break;
+    }
+    }
+    const YAML::Node y_instance = y_actuator[key];
+
+    get_if_present_no_default(
+      y_instance, "fllt_correction", actMeta.entityFLLC_(i));
+    if (actMeta.entityFLLC_(i)) {
+      actMeta.useFLLC_ = true;
+    }
+
+    get_required(
+      y_instance, "num_force_pts_blade",
+      actMeta.numNearestPointsFllcInt_.h_view(i));
+    get_if_present_no_default(
+      y_instance, "fllt_num_nearest_point",
+      actMeta.numNearestPointsFllcInt_.h_view(i));
+  }
+} // namespace nalu
+
 /*! \brief Parse parameters to construct meta data for actuators
  *  Parse parameters and construct meta data for actuators.
  *  Intent is to divorce object creation/memory allocation from parsing
@@ -37,14 +83,19 @@ actuator_parse(const YAML::Node& y_node)
                  "missing from yaml node passed to actuator_parse");
   int nTurbines = 0;
   std::string actuatorTypeName;
+ 
   get_required(y_actuator, "type", actuatorTypeName);
+
   if ((ActuatorTypeMap[actuatorTypeName]==ActuatorType::ActLineSimpleNGP)||
       (ActuatorTypeMap[actuatorTypeName]==ActuatorType::ActLineSimple))
-    {
-      get_required(y_actuator, "n_simpleblades", nTurbines);
-    } else {
+  {
+    get_required(y_actuator, "n_simpleblades", nTurbines);
+  }
+  else
+  {
     get_required(y_actuator, "n_turbines_glob", nTurbines);
   }
+ 
   ActuatorMeta actMeta(nTurbines, ActuatorTypeMap[actuatorTypeName]);
   // search specifications
   std::string searchMethodName = "na";
@@ -78,10 +129,96 @@ actuator_parse(const YAML::Node& y_node)
   } else {
     throw std::runtime_error("Actuator:: search_target_part is not declared.");
   }
-  get_if_present_no_default(y_actuator, "fllt_correction", actMeta.useFLLC_);
+
+  actuator_instance_parse(actMeta, y_actuator);
 
   return actMeta;
 }
 
+/**
+ * @brief Standard interface for parsing epsilon values to be reused by sub
+ * models
+ *
+ * @param iTurb
+ * @param turbNode
+ * @param actMeta
+ */
+void
+epsilon_parsing(int iTurb, const YAML::Node& turbNode, ActuatorMeta& actMeta)
+{
+  // The value epsilon / chord [non-dimensional]
+  // This is a vector containing the values for:
+  //   - chord aligned (x),
+  //   - tangential to chord (y),
+  //   - spanwise (z)
+  const YAML::Node epsilon_chord = turbNode["epsilon_chord"];
+  const YAML::Node epsilon = turbNode["epsilon"];
+  if (epsilon && epsilon_chord) {
+    throw std::runtime_error(
+      "epsilon and epsilon_chord have both been specified for Turbine " +
+      std::to_string(iTurb) + "\nYou must pick one or the other.");
+  }
+  if (epsilon && actMeta.useFLLC_) {
+    throw std::runtime_error(
+      "epsilon and fllt_correction have both been specified for "
+      "Turbine " +
+      std::to_string(iTurb) +
+      "\nepsilon_chord and epsilon_min should be used with "
+      "fllt_correction.");
+  }
+
+  std::vector<double> epsilonTemp(3);
+  if (epsilon) {
+    // only require epsilon
+    if (epsilon.Type() == YAML::NodeType::Scalar) {
+      double isotropicEpsilon;
+      get_required(turbNode, "epsilon", isotropicEpsilon);
+      actMeta.isotropicGaussian_ = true;
+      for (int j = 0; j < 3; j++) {
+        actMeta.epsilon_.h_view(iTurb, j) = isotropicEpsilon;
+      }
+    } else {
+      get_required(turbNode, "epsilon", epsilonTemp);
+      for (int j = 0; j < 3; j++) {
+        actMeta.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
+      }
+      if (
+        epsilonTemp[0] == epsilonTemp[1] && epsilonTemp[1] == epsilonTemp[2]) {
+        actMeta.isotropicGaussian_ = true;
+      }
+    }
+  } else if (epsilon_chord) {
+    // require epsilon chord and epsilon min
+    get_required(turbNode, "epsilon_chord", epsilonTemp);
+    for (int j = 0; j < 3; j++) {
+      if (epsilonTemp[j] <= 0.0) {
+        throw std::runtime_error(
+          "ERROR:: zero value for epsilon_chord detected. "
+          "All epsilon components must be greater than zero");
+      }
+      actMeta.epsilonChord_.h_view(iTurb, j) = epsilonTemp[j];
+    }
+
+    // Minimum epsilon allowed in simulation. This is required when
+    //   specifying epsilon/chord
+    get_required(turbNode, "epsilon_min", epsilonTemp);
+    for (int j = 0; j < 3; j++) {
+      actMeta.epsilon_.h_view(iTurb, j) = epsilonTemp[j];
+    }
+  } else {
+    throw std::runtime_error(
+      "Neither epsilon or epsilon_chord was declared in the input deck.  "
+      "One of these two options must be used for the actuator model "
+      "specified.");
+  }
+  // check epsilon values
+  for (int j = 0; j < 3; j++) {
+    if (actMeta.epsilon_.h_view(iTurb, j) <= 0.0) {
+      throw std::runtime_error(
+        "ERROR:: zero value for epsilon detected. "
+        "All epsilon components must be greater than zero");
+    }
+  }
+}
 } // namespace nalu
 } // namespace sierra
