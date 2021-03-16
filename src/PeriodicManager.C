@@ -790,28 +790,28 @@ PeriodicManager::ngp_parallel_communicate_field(
 
     if (theField->type_is<double>()) {
       std::vector<NGPDoubleFieldType *> fieldVec(1, &fieldMgr.get_field<double>(fieldOrd));
-      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec, false);
       stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
     else if (theField->type_is<stk::mesh::EntityId>()) {
       std::vector<NGPGlobalIdFieldType *> fieldVec(1, &fieldMgr.get_field<stk::mesh::EntityId>(fieldOrd));
-      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec, false);
       stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
     else if (theField->type_is<int>()) {
       std::vector<NGPScalarIntFieldType *> fieldVec(1, &fieldMgr.get_field<int>(fieldOrd));
-      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec, false);
       stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
     else if (theField->type_is<LinSys::GlobalOrdinal>()) {
       std::vector<stk::mesh::NgpField<LinSys::GlobalOrdinal>*> fieldVec(1, &fieldMgr.get_field<LinSys::GlobalOrdinal>(fieldOrd));
-      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec, false);
       stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
 #ifdef NALU_USES_HYPRE
     else if (theField->type_is<HypreIntType>()) {
       std::vector<stk::mesh::NgpField<HypreIntType>*> fieldVec(1, &fieldMgr.get_field<HypreIntType>(fieldOrd));
-      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec);
+      stk::mesh::copy_owned_to_shared( bulk_data, fieldVec, false);
       stk::mesh::communicate_field_data(bulk_data.aura_ghosting(), fieldVec);
     }
 #endif
