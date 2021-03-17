@@ -141,7 +141,6 @@ FrameMoving::post_compute_geometry()
 
     compute_edge_scalar_divergence(
       bulk_, partVec_, partVecBc_, edgeFaceVelMag_, meshDivVelocity);
-
     // compute_vector_divergence(
     //  bulk_, partVec_, partVecBc_, meshVelocity, meshDivVelocity, true);
     // Mesh velocity divergence is not motion-specific and
