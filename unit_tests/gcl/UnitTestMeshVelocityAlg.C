@@ -18,6 +18,7 @@
 #include "utils/StkHelpers.h"
 
 #include "mesh_motion/FrameBase.h"
+#include "mesh_motion/MotionRotationKernel.h"
 
 #include "UnitTestRealm.h"
 #include "UnitTestUtils.h"
@@ -26,46 +27,49 @@ namespace {
 
 std::vector<double>
 transform(
-  const sierra::nalu::MotionBase::TransMatType& transMat, const double* xyz)
+  const sierra::nalu::mm::TransMatType& transMat,
+  const sierra::nalu::mm::ThreeDVecType& xyz )
 {
   std::vector<double> transCoord(3, 0.0);
 
   // perform matrix multiplication between transformation matrix
   // and original coordinates to obtain transformed coordinates
-  for (int d = 0; d < sierra::nalu::MotionBase::threeDVecSize; d++) {
-    transCoord[d] = transMat[d][0] * xyz[0] + transMat[d][1] * xyz[1] +
-                    transMat[d][2] * xyz[2] + transMat[d][3];
+  for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; d++) {
+    transCoord[d] = transMat[d*sierra::nalu::mm::matSize+0]*xyz[0]
+                   +transMat[d*sierra::nalu::mm::matSize+1]*xyz[1]
+                   +transMat[d*sierra::nalu::mm::matSize+2]*xyz[2]
+                   +transMat[d*sierra::nalu::mm::matSize+3];
   }
 
   return transCoord;
 }
 
 namespace hex8_golds_x_rot {
-namespace ngp_mesh_velocity {
-static constexpr double swept_vol[12] = {0.0,    -0.0625, 0.0,     -0.0625,
+namespace mesh_velocity {
+static constexpr double swept_vol[12] = {0.0,   -0.0625,  0.0,    -0.0625,
                                          0.0,    0.0625,  0.0,     0.0625,
-                                         0.0625, 0.0625,  -0.0625, -0.0625};
+                                         0.0625, 0.0625, -0.0625, -0.0625};
 
-static constexpr double face_vel_mag[12] = {0.0,   -0.125, 0.0,    -0.125,
+static constexpr double face_vel_mag[12] = {0.0,  -0.125,  0.0,   -0.125,
                                             0.0,   0.125,  0.0,    0.125,
-                                            0.125, 0.125,  -0.125, -0.125};
-} // namespace ngp_mesh_velocity
+                                            0.125, 0.125, -0.125, -0.125};
+} // namespace mesh_velocity
 } // namespace hex8_golds_x_rot
 
 namespace hex8_golds_y_rot {
-namespace ngp_mesh_velocity {
-static constexpr double swept_vol[12] = {0.0625,  0.0,    -0.0625, 0.0,
-                                         -0.0625, 0.0,    0.0625,  0.0,
-                                         -0.0625, 0.0625, 0.0625,  -0.0625};
+namespace mesh_velocity {
+static constexpr double swept_vol[12] = {0.0625, 0.0,   -0.0625,  0.0,
+                                        -0.0625, 0.0,    0.0625,  0.0,
+                                        -0.0625, 0.0625, 0.0625, -0.0625};
 
-static constexpr double face_vel_mag[12] = {0.125,  0.0,   -0.125, 0.0,
-                                            -0.125, 0.0,   0.125,  0.0,
-                                            -0.125, 0.125, 0.125,  -0.125};
-} // namespace ngp_mesh_velocity
+static constexpr double face_vel_mag[12] = {0.125, 0.0,  -0.125,  0.0,
+                                           -0.125, 0.0,   0.125,  0.0,
+                                           -0.125, 0.125, 0.125, -0.125};
+} // namespace mesh_velocity
 } // namespace hex8_golds_y_rot
 } // namespace
 
-TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_x_rot)
+TEST_F(TestKernelHex8Mesh, mesh_velocity_x_rot)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1)
@@ -128,12 +132,14 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_x_rot)
                               "axis: [1.0,0.0,0.0]        \n"
                               "centroid: [0.5,0.5,0.5]    \n";
   YAML::Node rotNode = YAML::Load(rotInfo);
-  sierra::nalu::MotionRotation rotClass(rotNode);
+  sierra::nalu::MotionRotationKernel rotClass(rotNode);
+
   VectorFieldType* meshDispNp1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNP1));
   VectorFieldType* meshDispN = &(meshDisp_->field_of_state(stk::mesh::StateN));
   VectorFieldType* meshDispNm1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
+
   {
     stk::mesh::Selector sel = meta_.universal_part();
     const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
@@ -148,18 +154,24 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_x_rot)
         dispNm1[1] = 0.0;
         dispNm1[2] = 0.0;
 
-        rotClass.build_transformation(0.0, mcoord);
-        std::vector<double> rot_xyz =
-          transform(rotClass.get_trans_mat(), mcoord);
-        dispN[0] = rot_xyz[0] - mcoord[0];
-        dispN[1] = rot_xyz[1] - mcoord[1];
-        dispN[2] = rot_xyz[2] - mcoord[2];
+        // transform data structures to confirm to mesh motion
+        sierra::nalu::mm::ThreeDVecType mX;
+        for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; ++d)
+          mX[d] = mcoord[d];
 
-        rotClass.build_transformation(0.5, mcoord);
-        rot_xyz = transform(rotClass.get_trans_mat(), mcoord);
-        dispNp1[0] = rot_xyz[0] - mcoord[0];
-        dispNp1[1] = rot_xyz[1] - mcoord[1];
-        dispNp1[2] = rot_xyz[2] - mcoord[2];
+        sierra::nalu::mm::TransMatType transMat = rotClass.build_transformation(0.0, mX);
+        std::vector<double> rot_xyz = transform(transMat, mX);
+
+        dispN[0] = rot_xyz[0] - mX[0];
+        dispN[1] = rot_xyz[1] - mX[1];
+        dispN[2] = rot_xyz[2] - mX[2];
+
+        transMat = rotClass.build_transformation(0.5, mX);
+        rot_xyz = transform(transMat, mX);
+
+        dispNp1[0] = rot_xyz[0] - mX[0];
+        dispNp1[1] = rot_xyz[1] - mX[1];
+        dispNp1[2] = rot_xyz[2] - mX[2];
 
         ccoord[0] = rot_xyz[0];
         ccoord[1] = rot_xyz[1];
@@ -170,7 +182,7 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_x_rot)
   geomAlgDriver.execute();
 
   const double tol = 1.0e-15;
-  namespace gold_values = ::hex8_golds_x_rot::ngp_mesh_velocity;
+  namespace gold_values = ::hex8_golds_x_rot::mesh_velocity;
   {
     stk::mesh::Selector sel = meta_.universal_part();
     const auto& bkts = bulk_.get_buckets(stk::topology::ELEM_RANK, sel);
@@ -186,10 +198,10 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_x_rot)
       }
     }
     EXPECT_EQ(counter, 24);
-  } // namespace =::hex8_golds_x_rot::ngp_mesh_velocity;
+  } // namespace =::hex8_golds_x_rot::mesh_velocity;
 }
 
-TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_y_rot)
+TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1)
@@ -252,12 +264,14 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_y_rot)
                               "axis: [0.0,1.0,0.0]        \n"
                               "centroid: [0.5,0.5,0.5]    \n";
   YAML::Node rotNode = YAML::Load(rotInfo);
-  sierra::nalu::MotionRotation rotClass(rotNode);
+  sierra::nalu::MotionRotationKernel rotClass(rotNode);
+
   VectorFieldType* meshDispNp1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNP1));
   VectorFieldType* meshDispN = &(meshDisp_->field_of_state(stk::mesh::StateN));
   VectorFieldType* meshDispNm1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
+
   {
     stk::mesh::Selector sel = meta_.universal_part();
     const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
@@ -272,18 +286,24 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_y_rot)
         dispNm1[1] = 0.0;
         dispNm1[2] = 0.0;
 
-        rotClass.build_transformation(0.0, mcoord);
-        std::vector<double> rot_xyz =
-          transform(rotClass.get_trans_mat(), mcoord);
-        dispN[0] = rot_xyz[0] - mcoord[0];
-        dispN[1] = rot_xyz[1] - mcoord[1];
-        dispN[2] = rot_xyz[2] - mcoord[2];
+        // transform data structures to confirm to mesh motion
+        sierra::nalu::mm::ThreeDVecType mX;
+        for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; ++d)
+          mX[d] = mcoord[d];
 
-        rotClass.build_transformation(0.5, mcoord);
-        rot_xyz = transform(rotClass.get_trans_mat(), mcoord);
-        dispNp1[0] = rot_xyz[0] - mcoord[0];
-        dispNp1[1] = rot_xyz[1] - mcoord[1];
-        dispNp1[2] = rot_xyz[2] - mcoord[2];
+        sierra::nalu::mm::TransMatType transMat = rotClass.build_transformation(0.0, mX);
+        std::vector<double> rot_xyz = transform(transMat, mX);
+
+        dispN[0] = rot_xyz[0] - mX[0];
+        dispN[1] = rot_xyz[1] - mX[1];
+        dispN[2] = rot_xyz[2] - mX[2];
+
+        transMat = rotClass.build_transformation(0.5, mX);
+        rot_xyz = transform(transMat, mX);
+
+        dispNp1[0] = rot_xyz[0] - mX[0];
+        dispNp1[1] = rot_xyz[1] - mX[1];
+        dispNp1[2] = rot_xyz[2] - mX[2];
 
         ccoord[0] = rot_xyz[0];
         ccoord[1] = rot_xyz[1];
@@ -294,7 +314,7 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_y_rot)
   geomAlgDriver.execute();
 
   const double tol = 1.0e-15;
-  namespace gold_values = ::hex8_golds_y_rot::ngp_mesh_velocity;
+  namespace gold_values = ::hex8_golds_y_rot::mesh_velocity;
   {
     stk::mesh::Selector sel = meta_.universal_part();
     const auto& bkts = bulk_.get_buckets(stk::topology::ELEM_RANK, sel);
@@ -310,10 +330,10 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_y_rot)
       }
     }
     EXPECT_EQ(counter, 24);
-  } // namespace =::hex8_golds_y_rot::ngp_mesh_velocity;
+  } // namespace =::hex8_golds_y_rot::mesh_velocity;
 }
 
-TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_y_rot_scs_center)
+TEST_F(TestKernelHex8Mesh, mesh_velocity_y_rot_scs_center)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1)
@@ -376,12 +396,14 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_y_rot_scs_center)
                               "axis: [0.0,1.0,0.0]        \n"
                               "centroid: [0.5,0.5,0.75]   \n";
   YAML::Node rotNode = YAML::Load(rotInfo);
-  sierra::nalu::MotionRotation rotClass(rotNode);
+  sierra::nalu::MotionRotationKernel rotClass(rotNode);
+
   VectorFieldType* meshDispNp1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNP1));
   VectorFieldType* meshDispN = &(meshDisp_->field_of_state(stk::mesh::StateN));
   VectorFieldType* meshDispNm1 =
     &(meshDisp_->field_of_state(stk::mesh::StateNM1));
+
   {
     stk::mesh::Selector sel = meta_.universal_part();
     const auto& bkts = bulk_.get_buckets(stk::topology::NODE_RANK, sel);
@@ -396,15 +418,21 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_y_rot_scs_center)
         dispNm1[1] = 0.0;
         dispNm1[2] = 0.0;
 
-        rotClass.build_transformation(0.0, mcoord);
-        std::vector<double> rot_xyz =
-          transform(rotClass.get_trans_mat(), mcoord);
-        dispN[0] = rot_xyz[0] - mcoord[0];
-        dispN[1] = rot_xyz[1] - mcoord[1];
-        dispN[2] = rot_xyz[2] - mcoord[2];
+        // transform data structures to confirm to mesh motion
+        sierra::nalu::mm::ThreeDVecType mX;
+        for (int d = 0; d < sierra::nalu::nalu_ngp::NDimMax; ++d)
+          mX[d] = mcoord[d];
 
-        rotClass.build_transformation(0.25, mcoord);
-        rot_xyz = transform(rotClass.get_trans_mat(), mcoord);
+        sierra::nalu::mm::TransMatType transMat = rotClass.build_transformation(0.0, mX);
+        std::vector<double> rot_xyz = transform(transMat, mX);
+
+        dispN[0] = rot_xyz[0] - mX[0];
+        dispN[1] = rot_xyz[1] - mX[1];
+        dispN[2] = rot_xyz[2] - mX[2];
+
+        transMat = rotClass.build_transformation(0.5, mX);
+        rot_xyz = transform(transMat, mX);
+
         dispNp1[0] = rot_xyz[0] - mcoord[0];
         dispNp1[1] = rot_xyz[1] - mcoord[1];
         dispNp1[2] = rot_xyz[2] - mcoord[2];
@@ -418,7 +446,7 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_y_rot_scs_center)
   geomAlgDriver.execute();
 
   const double tol = 1.0e-15;
-  namespace gold_values = ::hex8_golds_y_rot::ngp_mesh_velocity;
+  namespace gold_values = ::hex8_golds_y_rot::mesh_velocity;
   {
     stk::mesh::Selector sel = meta_.universal_part();
     const auto& bkts = bulk_.get_buckets(stk::topology::ELEM_RANK, sel);
@@ -440,5 +468,5 @@ TEST_F(TestKernelHex8Mesh, NGP_mesh_velocity_y_rot_scs_center)
       }
     }
     EXPECT_EQ(counter, 12);
-  } // namespace =::hex8_golds_y_rot::ngp_mesh_velocity;
+  } // namespace =::hex8_golds_y_rot::mesh_velocity;
 }

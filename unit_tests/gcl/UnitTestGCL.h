@@ -271,7 +271,6 @@ public:
     auto& motionAlg = *realm_.meshMotionAlg_;
     motionAlg.initialize(0.0);
     for (int it = 0; it < numStates_; ++it) {
-      std::cerr << "state = " << it << ", time = " << it * deltaT << std::endl;
       realm_.swap_states();
       motionAlg.execute(it * deltaT);
       geomAlgDriver_.execute();

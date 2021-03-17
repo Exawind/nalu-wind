@@ -12,7 +12,7 @@
 namespace {
 
   namespace hex8_golds_x_rot {
-    namespace ngp_mesh_velocity {
+    namespace mesh_velocity {
       static constexpr double swept_vol[12] = {
         0.0, -0.0625, 0.0, -0.0625, 0.0, 0.0625,
         0.0, 0.0625, 0.0625, 0.0625, -0.0625, -0.0625
@@ -26,7 +26,7 @@ namespace {
   }
 
   namespace hex8_golds_y_rot {
-    namespace ngp_mesh_velocity {
+    namespace mesh_velocity {
       static constexpr double swept_vol[12] = {
         0.0625, 0.0, -0.0625, 0.0, -0.0625, 0.0,
         0.0625, 0.0, -0.0625, 0.0625, 0.0625, -0.0625
@@ -50,7 +50,6 @@ TEST_F(GCLTest, rigid_rotation_elem)
   const std::string mesh_motion =
     "mesh_motion:                                                          \n"
     "  - name: interior                                                    \n"
-    "    frame: non_inertial                                               \n"
     "    mesh_parts: [ block_1 ]                                           \n"
     "    motion:                                                           \n"
     "      - type: rotation                                                \n"
@@ -78,7 +77,6 @@ TEST_F(GCLTest, rigid_rotation_edge)
   const std::string mesh_motion =
     "mesh_motion:                                                          \n"
     "  - name: interior                                                    \n"
-    "    frame: non_inertial                                               \n"
     "    mesh_parts: [ block_1 ]                                           \n"
     "    motion:                                                           \n"
     "      - type: rotation                                                \n"
@@ -105,7 +103,6 @@ TEST_F(GCLTest, rigid_scaling_elem)
   const std::string mesh_motion =
     "mesh_motion:                                                          \n"
     "  - name: interior                                                    \n"
-    "    frame: non_inertial                                               \n"
     "    mesh_parts: [ block_1 ]                                           \n"
     "    motion:                                                           \n"
     "      - type: scaling                                                 \n"
@@ -132,7 +129,6 @@ TEST_F(GCLTest, rigid_scaling_edge)
   const std::string mesh_motion =
     "mesh_motion:                                                          \n"
     "  - name: interior                                                    \n"
-    "    frame: non_inertial                                               \n"
     "    mesh_parts: [ block_1 ]                                           \n"
     "    motion:                                                           \n"
     "      - type: scaling                                                 \n"
@@ -160,7 +156,6 @@ TEST_F(GCLTest, rigid_translation)
   const std::string mesh_motion =
     "mesh_motion:                                                          \n"
     "  - name: interior                                                    \n"
-    "    frame: non_inertial                                               \n"
     "    mesh_parts: [ block_1 ]                                           \n"
     "    motion:                                                           \n"
     "      - type: translation                                             \n"
@@ -175,7 +170,7 @@ TEST_F(GCLTest, rigid_translation)
   compute_absolute_error();
 }
 
-TEST_F(GCLTest, NGP_mesh_velocity_x_rot)
+TEST_F(GCLTest, mesh_velocity_x_rot)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
@@ -186,7 +181,6 @@ TEST_F(GCLTest, NGP_mesh_velocity_x_rot)
   const std::string mesh_motion =
     "mesh_motion:                                                          \n"
     "  - name: interior                                                    \n"
-    "    frame: non_inertial                                               \n"
     "    mesh_parts: [ block_1 ]                                           \n"
     "    motion:                                                           \n"
     "      - type: rotation                                                \n"
@@ -200,7 +194,7 @@ TEST_F(GCLTest, NGP_mesh_velocity_x_rot)
   init_states();
 
   const double tol = 1.0e-15;
-  namespace gold_values = ::hex8_golds_x_rot::ngp_mesh_velocity;
+  namespace gold_values = ::hex8_golds_x_rot::mesh_velocity;
   {
     stk::mesh::Selector sel = meta_.universal_part();
     const auto& bkts = bulk_.get_buckets(stk::topology::ELEM_RANK, sel);
@@ -220,7 +214,7 @@ TEST_F(GCLTest, NGP_mesh_velocity_x_rot)
 }
 
 
-TEST_F(GCLTest, NGP_mesh_velocity_y_rot)
+TEST_F(GCLTest, mesh_velocity_y_rot)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
@@ -231,7 +225,6 @@ TEST_F(GCLTest, NGP_mesh_velocity_y_rot)
   const std::string mesh_motion =
     "mesh_motion:                                                          \n"
     "  - name: interior                                                    \n"
-    "    frame: non_inertial                                               \n"
     "    mesh_parts: [ block_1 ]                                           \n"
     "    motion:                                                           \n"
     "      - type: rotation                                                \n"
@@ -245,7 +238,7 @@ TEST_F(GCLTest, NGP_mesh_velocity_y_rot)
   init_states();
 
   const double tol = 1.0e-15;
-  namespace gold_values = ::hex8_golds_y_rot::ngp_mesh_velocity;
+  namespace gold_values = ::hex8_golds_y_rot::mesh_velocity;
   {
     stk::mesh::Selector sel = meta_.universal_part();
     const auto& bkts = bulk_.get_buckets(stk::topology::ELEM_RANK, sel);
@@ -264,7 +257,7 @@ TEST_F(GCLTest, NGP_mesh_velocity_y_rot)
   }
 }
 
-TEST_F(GCLTest, NGP_mesh_velocity_y_rot_scs_center)
+TEST_F(GCLTest, mesh_velocity_y_rot_scs_center)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
@@ -275,7 +268,6 @@ TEST_F(GCLTest, NGP_mesh_velocity_y_rot_scs_center)
   const std::string mesh_motion =
     "mesh_motion:                                                          \n"
     "  - name: interior                                                    \n"
-    "    frame: non_inertial                                               \n"
     "    mesh_parts: [ block_1 ]                                           \n"
     "    motion:                                                           \n"
     "      - type: rotation                                                \n"
@@ -289,7 +281,7 @@ TEST_F(GCLTest, NGP_mesh_velocity_y_rot_scs_center)
   init_states();
 
   const double tol = 1.0e-15;
-  namespace gold_values = ::hex8_golds_y_rot::ngp_mesh_velocity;
+  namespace gold_values = ::hex8_golds_y_rot::mesh_velocity;
   {
     stk::mesh::Selector sel = meta_.universal_part();
     const auto& bkts = bulk_.get_buckets(stk::topology::ELEM_RANK, sel);
@@ -313,7 +305,7 @@ TEST_F(GCLTest, NGP_mesh_velocity_y_rot_scs_center)
   }
 }
 
-TEST_F(GCLTest, NGP_mesh_airy_waves)
+TEST_F(GCLTest, mesh_airy_waves)
 {
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1) return;
