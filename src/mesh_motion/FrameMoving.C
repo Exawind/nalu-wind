@@ -132,17 +132,24 @@ FrameMoving::post_compute_geometry()
       continue;
 
     // compute divergence of mesh velocity
-    // VectorFieldType* meshVelocity = meta_.get_field<VectorFieldType>(
-    // stk::topology::NODE_RANK, "mesh_velocity");
     ScalarFieldType* meshDivVelocity = meta_.get_field<ScalarFieldType>(
       stk::topology::NODE_RANK, "div_mesh_velocity");
-    GenericFieldType* edgeFaceVelMag_ = meta_.get_field<GenericFieldType>(
-      stk::topology::EDGE_RANK, "edge_face_velocity_mag");
+    GenericFieldType* faceVelMag = meta_.get_field<GenericFieldType>(
+      stk::topology::ELEMENT_RANK, "face_velocity_mag");
 
-    compute_edge_scalar_divergence(
-      bulk_, partVec_, partVecBc_, edgeFaceVelMag_, meshDivVelocity);
-    // compute_vector_divergence(
-    //  bulk_, partVec_, partVecBc_, meshVelocity, meshDivVelocity, true);
+    if(faceVelMag == NULL) {
+      faceVelMag = meta_.get_field<GenericFieldType>(
+        stk::topology::EDGE_RANK, "edge_face_velocity_mag");
+
+      std::cerr << "Using edge algorithm for mesh vel div" << std::endl;
+      compute_edge_scalar_divergence(bulk_, partVec_, partVecBc_, faceVelMag, meshDivVelocity);
+    }
+    else
+    {
+      std::cerr << "Using element algorithm for mesh vel div" << std::endl;
+      compute_scalar_divergence(bulk_, partVec_, partVecBc_, faceVelMag, meshDivVelocity);
+    }
+
     // Mesh velocity divergence is not motion-specific and
     // is computed for the aggregated mesh velocity
     break;
