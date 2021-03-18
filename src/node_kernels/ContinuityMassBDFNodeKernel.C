@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "node_kernels/ContinuityMassBDFNodeKernel.h"
 #include "Realm.h"
 
@@ -15,16 +14,17 @@
 #include "stk_mesh/base/Types.hpp"
 #include "utils/StkHelpers.h"
 
-namespace sierra{
-namespace nalu{
+namespace sierra {
+namespace nalu {
 
 ContinuityMassBDFNodeKernel::ContinuityMassBDFNodeKernel(
-  const stk::mesh::BulkData& bulk
-) : NGPNodeKernel<ContinuityMassBDFNodeKernel>()
+  const stk::mesh::BulkData& bulk)
+  : NGPNodeKernel<ContinuityMassBDFNodeKernel>()
 {
   const auto& meta = bulk.mesh_meta_data();
 
-  const ScalarFieldType *density = meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
+  const ScalarFieldType* density =
+    meta.get_field<ScalarFieldType>(stk::topology::NODE_RANK, "density");
 
   densityNID_ = get_field_ordinal(meta, "density", stk::mesh::StateN);
 
@@ -33,10 +33,10 @@ ContinuityMassBDFNodeKernel::ContinuityMassBDFNodeKernel(
   else
     densityNm1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNM1);
 
-  densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1); 
+  densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
 
   dnvNp1ID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNP1);
-    const auto* dnv = meta.get_field<ScalarFieldType>(
+  const auto* dnv = meta.get_field<ScalarFieldType>(
     stk::topology::NODE_RANK, "dual_nodal_volume");
   switch (dnv->number_of_states()) {
   case 1:
@@ -49,10 +49,12 @@ ContinuityMassBDFNodeKernel::ContinuityMassBDFNodeKernel(
     break;
   case 3:
     dnvNID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateN);
-    dnvNm1ID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNM1);
+    dnvNm1ID_ =
+      get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNM1);
     break;
   default:
-    throw std::runtime_error("Number of states for dual_nodal_volume is not 1,2,3 and is undefined");
+    throw std::runtime_error(
+      "Number of states for dual_nodal_volume is not 1,2,3 and is undefined");
   }
 }
 
@@ -80,21 +82,23 @@ ContinuityMassBDFNodeKernel::execute(
   NodeKernelTraits::RhsType& rhs,
   const stk::mesh::FastMeshIndex& node)
 {
-  const NodeKernelTraits::DblType rhoNm1     = densityNm1_.get(node, 0);
-  const NodeKernelTraits::DblType rhoN       = densityN_.get(node, 0);
-  const NodeKernelTraits::DblType rhoNp1     = densityNp1_.get(node, 0);
-  const NodeKernelTraits::DblType dnvNp1     = dnvNp1_.get(node, 0);
-  const NodeKernelTraits::DblType dnvN       = dnvN_.get(node, 0);
-  const NodeKernelTraits::DblType dnvNm1     = dnvNm1_.get(node, 0);  
+  const NodeKernelTraits::DblType rhoNm1 = densityNm1_.get(node, 0);
+  const NodeKernelTraits::DblType rhoN = densityN_.get(node, 0);
+  const NodeKernelTraits::DblType rhoNp1 = densityNp1_.get(node, 0);
+  const NodeKernelTraits::DblType dnvNp1 = dnvNp1_.get(node, 0);
+  const NodeKernelTraits::DblType dnvN = dnvN_.get(node, 0);
+  const NodeKernelTraits::DblType dnvNm1 = dnvNm1_.get(node, 0);
 
-  //original kernel
-  //const NodeKernelTraits::DblType projTimeScale = dt_/gamma1_;
-  //rhs(0) -= (gamma1_*rhoNp1 + gamma2_*rhoN + gamma3_*rhoNm1)*dualVolume/dt_/projTimeScale;
-  //lhs(0, 0) += 0.0;
+  // original kernel
+  // const NodeKernelTraits::DblType projTimeScale = dt_/gamma1_;
+  // rhs(0) -= (gamma1_*rhoNp1 + gamma2_*rhoN +
+  // gamma3_*rhoNm1)*dualVolume/dt_/projTimeScale; lhs(0, 0) += 0.0;
 
-  //simplified kernel
-  rhs(0) -= (gamma1_*rhoNp1*dnvNp1 + gamma2_*rhoN*dnvN + gamma3_*rhoNm1*dnvNm1)/dt_*(gamma1_/dt_);
+  // simplified kernel
+  rhs(0) -= (gamma1_ * rhoNp1 * dnvNp1 + gamma2_ * rhoN * dnvN +
+             gamma3_ * rhoNm1 * dnvNm1) /
+            dt_ * (gamma1_ / dt_);
 }
 
 } // namespace nalu
-} // namespace Sierra
+} // namespace sierra
