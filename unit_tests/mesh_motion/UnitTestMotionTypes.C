@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 
+#include "mesh_motion/MotionDeformingInteriorKernel.h"
 #include "mesh_motion/MotionRotationKernel.h"
 #include "mesh_motion/MotionScalingKernel.h"
 #include "mesh_motion/MotionTranslationKernel.h"
@@ -210,4 +211,97 @@ TEST(meshMotion, translation_displacement)
   EXPECT_NEAR(norm[0], gold_norm_x, testTol);
   EXPECT_NEAR(norm[1], gold_norm_y, testTol);
   EXPECT_NEAR(norm[2], gold_norm_z, testTol);
+}
+
+TEST(meshMotion, deform_interior_outside_node)
+{
+  // create a yaml node describing translation
+  const std::string deformInfo =
+    "xyz_min: [0,0,0]         \n"
+    "xyz_max: [15,5,5]        \n"
+    "amplitude: [1.5,0.0,1.5] \n"
+    "frequency: [0.1,0.0,0.1] \n"
+    "centroid: [7.5,2.5,2.5]  \n"
+    ;
+
+  YAML::Node deformNode = YAML::Load(deformInfo);
+
+  // create realm
+  unit_test_utils::NaluTest naluObj;
+  sierra::nalu::Realm& realm = naluObj.create_realm();
+
+  // initialize the mesh translation class
+  sierra::nalu::MotionDeformingInteriorKernel deformClass(realm.meta_data(),deformNode);
+
+  // build transformation
+  const double time = 1.66666667;
+  sierra::nalu::mm::ThreeDVecType xyz{9,7,3.5};
+  sierra::nalu::mm::TransMatType transMat = deformClass.build_transformation(time, xyz);
+  std::vector<double> currCoord = transform(transMat, xyz);
+
+  const double gold_norm_x = 9.0;
+  const double gold_norm_y = 7.0;
+  const double gold_norm_z = 3.5;
+
+  EXPECT_NEAR(currCoord[0], gold_norm_x, testTol);
+  EXPECT_NEAR(currCoord[1], gold_norm_y, testTol);
+  EXPECT_NEAR(currCoord[2], gold_norm_z, testTol);
+
+  sierra::nalu::mm::ThreeDVecType tmp;
+  sierra::nalu::mm::ThreeDVecType vel = deformClass.compute_velocity(time, transMat, xyz, tmp);
+
+  const double gold_norm_vx = 0.0;
+  const double gold_norm_vy = 0.0;
+  const double gold_norm_vz = 0.0;
+
+  EXPECT_NEAR(vel[0], gold_norm_vx, testTol);
+  EXPECT_NEAR(vel[1], gold_norm_vy, testTol);
+  EXPECT_NEAR(vel[2], gold_norm_vz, testTol);
+}
+
+TEST(meshMotion, deform_interior_inside_node)
+{
+  // create a yaml node describing translation
+  const std::string deformInfo =
+    "xyz_min: [0,0,0]         \n"
+    "xyz_max: [15,5,5]        \n"
+    "amplitude: [1.5,0.0,1.5] \n"
+    "frequency: [0.1,0.0,0.1] \n"
+    "centroid: [7.5,2.5,2.5]  \n"
+    ;
+
+  YAML::Node deformNode = YAML::Load(deformInfo);
+
+  // create realm
+  unit_test_utils::NaluTest naluObj;
+  sierra::nalu::Realm& realm = naluObj.create_realm();
+
+  // initialize the mesh translation class
+  sierra::nalu::MotionDeformingInteriorKernel deformClass(realm.meta_data(),deformNode);
+
+  // build transformation
+  const double time = 1.66666667;
+  sierra::nalu::mm::ThreeDVecType xyz{9.0,4,1.5};
+  sierra::nalu::mm::TransMatType transMat = deformClass.build_transformation(time, xyz);
+  std::vector<double> currCoord = transform(transMat, xyz);
+
+  const double gold_norm_x = 9.7500000027207;
+  const double gold_norm_y = 4.0;
+  const double gold_norm_z = 0.749999997279301;
+
+  EXPECT_NEAR(currCoord[0], gold_norm_x, testTol);
+  EXPECT_NEAR(currCoord[1], gold_norm_y, testTol);
+  EXPECT_NEAR(currCoord[2], gold_norm_z, testTol);
+
+  sierra::nalu::mm::ThreeDVecType tmp;
+  sierra::nalu::mm::ThreeDVecType vel = deformClass.compute_velocity(time, transMat, xyz, tmp);
+
+  const double gold_norm_vx = 0.816209714892358;
+  const double gold_norm_vy = 0.0;
+  const double gold_norm_vz = -0.816209714892358;
+
+  EXPECT_NEAR(vel[0], gold_norm_vx, testTol);
+  EXPECT_NEAR(vel[1], gold_norm_vy, testTol);
+  EXPECT_NEAR(vel[2], gold_norm_vz, testTol);
+
 }
