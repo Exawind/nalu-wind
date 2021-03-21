@@ -13,16 +13,9 @@
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
 #include <actuator/ActuatorModel.h>
-#include <AssembleContinuityElemSolverAlgorithm.h>
 #include <AssembleContinuityInflowSolverAlgorithm.h>
-#include <AssembleContinuityElemOpenSolverAlgorithm.h>
 #include <AssembleContinuityNonConformalSolverAlgorithm.h>
-#include <AssembleMomentumElemSolverAlgorithm.h>
-#include <AssembleMomentumElemOpenSolverAlgorithm.h>
-#include <AssembleMomentumElemSymmetrySolverAlgorithm.h>
 #include <AssembleMomentumEdgeWallFunctionSolverAlgorithm.h>
-#include <AssembleMomentumElemWallFunctionSolverAlgorithm.h>
-#include <AssembleMomentumElemABLWallFunctionSolverAlgorithm.h>
 #ifdef NALU_USES_FFTW
 #include <AssembleMomentumEdgeABLTopBC.h>
 #endif
@@ -157,7 +150,6 @@
 #include <nso/MomentumNSOElemKernel.h>
 #include <nso/MomentumNSOKeElemKernel.h>
 #include <nso/MomentumNSOSijElemKernel.h>
-#include <nso/MomentumNSOGradElemSuppAlg.h>
 
 // UT Austin Hybrid AMS kernels
 #include <edge_kernels/AssembleAMSEdgeKernelAlg.h>
@@ -171,17 +163,13 @@
 #include <user_functions/WindEnergyTaylorVortexAuxFunction.h>
 #include <user_functions/WindEnergyTaylorVortexPressureAuxFunction.h>
 
-#include <user_functions/SteadyTaylorVortexMomentumSrcElemSuppAlg.h>
-#include <user_functions/SteadyTaylorVortexContinuitySrcElemSuppAlg.h>
 #include <user_functions/SteadyTaylorVortexMomentumSrcNodeSuppAlg.h>
 #include <user_functions/SteadyTaylorVortexVelocityAuxFunction.h>
 #include <user_functions/SteadyTaylorVortexPressureAuxFunction.h>
 
 #include <user_functions/VariableDensityVelocityAuxFunction.h>
 #include <user_functions/VariableDensityPressureAuxFunction.h>
-#include <user_functions/VariableDensityContinuitySrcElemSuppAlg.h>
 #include <user_functions/VariableDensityContinuitySrcNodeSuppAlg.h>
-#include <user_functions/VariableDensityMomentumSrcElemSuppAlg.h>
 #include <user_functions/VariableDensityMomentumSrcNodeSuppAlg.h>
 
 #include <user_functions/VariableDensityNonIsoContinuitySrcNodeSuppAlg.h>
@@ -211,11 +199,6 @@
 #include <user_functions/GaussJetVelocityAuxFunction.h>
 
 // deprecated
-#include <ContinuityMassElemSuppAlgDep.h>
-#include <MomentumMassElemSuppAlgDep.h>
-#include <MomentumBuoyancySrcElemSuppAlgDep.h>
-#include <nso/MomentumNSOKeElemSuppAlgDep.h>
-#include <nso/MomentumNSOElemSuppAlgDep.h>
 
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
@@ -1263,67 +1246,17 @@ MomentumEquationSystem::register_interior_algorithm(
         }
       }
       else {
-        theSolverAlg = new AssembleMomentumElemSolverAlgorithm(realm_, part, this);
+        throw std::runtime_error("MomentumEQS: Attempting to use non-NGP element algorithm");
       }
       solverAlgDriver_->solverAlgMap_[algType] = theSolverAlg;
 
       // look for fully integrated source terms
       std::map<std::string, std::vector<std::string> >::iterator isrc
         = realm_.solutionOptions_->elemSrcTermsMap_.find("momentum");
-      if ( isrc != realm_.solutionOptions_->elemSrcTermsMap_.end() ) {
-
-        if ( realm_.realmUsesEdges_ )
-          throw std::runtime_error("MomentumElemSrcTerms::Error can not use element source terms for an edge-based scheme");
-
-        std::vector<std::string> mapNameVec = isrc->second;
-        for (size_t k = 0; k < mapNameVec.size(); ++k ) {
-          std::string sourceName = mapNameVec[k];
-          SupplementalAlgorithm *suppAlg = NULL;
-          if (sourceName == "momentum_time_derivative" ) {
-            suppAlg = new MomentumMassElemSuppAlgDep(realm_, false);
-          }
-          else if (sourceName == "lumped_momentum_time_derivative" ) {
-            suppAlg = new MomentumMassElemSuppAlgDep(realm_, true);
-          }
-          else if (sourceName == "SteadyTaylorVortex" ) {
-            suppAlg = new SteadyTaylorVortexMomentumSrcElemSuppAlg(realm_);
-          }
-          else if (sourceName == "VariableDensity" ) {
-            suppAlg = new VariableDensityMomentumSrcElemSuppAlg(realm_);
-          }
-          else if (sourceName == "NSO_2ND" ) {
-            suppAlg = new MomentumNSOElemSuppAlgDep(realm_, velocity_, dudx_, realm_.is_turbulent() ? evisc_ : visc_, 0.0, 0.0);
-          }
-          else if (sourceName == "NSO_2ND_ALT" ) {
-            suppAlg = new MomentumNSOElemSuppAlgDep(realm_, velocity_, dudx_, realm_.is_turbulent() ? evisc_ : visc_, 0.0, 1.0);
-          }
-          else if (sourceName == "NSO_4TH" ) {
-            suppAlg = new MomentumNSOElemSuppAlgDep(realm_, velocity_, dudx_, realm_.is_turbulent() ? evisc_ : visc_, 1.0, 0.0);
-          }
-          else if (sourceName == "NSO_4TH_ALT" ) {
-            suppAlg = new MomentumNSOElemSuppAlgDep(realm_, velocity_, dudx_, realm_.is_turbulent() ? evisc_ : visc_, 1.0, 1.0);
-          }
-          else if (sourceName == "NSO_2ND_KE" ) {
-            suppAlg = new MomentumNSOKeElemSuppAlgDep(realm_, velocity_, dudx_, 0.0);
-          }
-          else if (sourceName == "NSO_4TH_KE" ) {
-            suppAlg = new MomentumNSOKeElemSuppAlgDep(realm_, velocity_, dudx_, 1.0);
-          }
-          else if (sourceName == "NSO_2ND_GRAD" ) {
-            suppAlg = new MomentumNSOGradElemSuppAlg(realm_, velocity_, dudx_, 0.0);
-          }
-          else if (sourceName == "NSO_4TH_GRAD" ) {
-            suppAlg = new MomentumNSOGradElemSuppAlg(realm_, velocity_, dudx_, 1.0);
-          }
-          else if (sourceName == "buoyancy" ) {
-            suppAlg = new MomentumBuoyancySrcElemSuppAlgDep(realm_);
-          }
-          else {
-            throw std::runtime_error("MomentumElemSrcTerms::Error Source term is not supported: " + sourceName);
-          }
-          NaluEnv::self().naluOutputP0() << "MomentumElemSrcTerms::added() " << sourceName << std::endl;
-          theSolverAlg->supplementalAlg_.push_back(suppAlg);
-        }
+      if (isrc != realm_.solutionOptions_->elemSrcTermsMap_.end()) {
+        throw std::runtime_error(
+          "MomentumElemSrcTerms::Error can not use element source terms for an "
+          "edge-based scheme");
       }
     } else {
       itsi->second->partVec_.push_back(part);
@@ -1843,17 +1776,7 @@ MomentumEquationSystem::register_open_bc(
     }
   }
   else {
-    // solver algs; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
-      = solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      SolverAlgorithm* theAlg =
-        new AssembleMomentumElemOpenSolverAlgorithm(realm_, part, this);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
-    }
+      throw std::runtime_error("MomentumEQS: Attempt to use non-NGP element open algorithm");
   }
 
   if (userData.totalP_) {
@@ -2127,7 +2050,8 @@ MomentumEquationSystem::register_wall_bc(
               theAlg = new AssembleMomentumEdgeWallFunctionSolverAlgorithm(realm_, part, this);
             }
             else {
-              theAlg = new AssembleMomentumElemWallFunctionSolverAlgorithm(realm_, part, this, realm_.realmUsesEdges_);
+              throw std::runtime_error(
+                "MomentumEQS: Cannot use non-NGP wall function algorithm");
             }
             solverAlgDriver_->solverAlgMap_[wfAlgType] = theAlg;
           }
@@ -2192,17 +2116,7 @@ MomentumEquationSystem::register_symmetry_bc(
    case SYMMTYPES::GENERAL_WEAK:
       if (!realm_.solutionOptions_->useConsolidatedBcSolverAlg_
           && !realm_.realmUsesEdges_) {
-        // solver algs; lhs
-        std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
-          = solverAlgDriver_->solverAlgMap_.find(algType);
-        if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-          auto* theAlg =
-            new AssembleMomentumElemSymmetrySolverAlgorithm(realm_, part, this);
-          solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-        }
-        else {
-          itsi->second->partVec_.push_back(part);
-        }
+          throw std::runtime_error("MomentumEQS: Attempt to use non-NGP element algorithm");
       }
       else {
         auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
@@ -2992,48 +2906,7 @@ ContinuityEquationSystem::register_interior_algorithm(
 
     // solver
     if (!realm_.solutionOptions_->useConsolidatedSolverAlg_) {
-      std::map<AlgorithmType, SolverAlgorithm *>::iterator its
-        = solverAlgDriver_->solverAlgMap_.find(algType);
-      if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
-        SolverAlgorithm *theSolverAlg = NULL;
-        theSolverAlg = new AssembleContinuityElemSolverAlgorithm(realm_, part, this);
-        solverAlgDriver_->solverAlgMap_[algType] = theSolverAlg;
-
-        // look for fully integrated source terms
-        std::map<std::string, std::vector<std::string> >::iterator isrc
-          = realm_.solutionOptions_->elemSrcTermsMap_.find("continuity");
-
-        if ( isrc != realm_.solutionOptions_->elemSrcTermsMap_.end() ) {
-
-          if ( realm_.realmUsesEdges_ )
-            throw std::runtime_error("ContinuityElemSrcTerms::Error can not use element source terms for an edge-based scheme");
-
-          std::vector<std::string> mapNameVec = isrc->second;
-          for (size_t k = 0; k < mapNameVec.size(); ++k ) {
-            std::string sourceName = mapNameVec[k];
-            SupplementalAlgorithm *suppAlg = NULL;
-            if (sourceName == "SteadyTaylorVortex" ) {
-              suppAlg = new SteadyTaylorVortexContinuitySrcElemSuppAlg(realm_);
-            }
-            else if ( sourceName == "VariableDensity" ) {
-              suppAlg = new VariableDensityContinuitySrcElemSuppAlg(realm_);
-            }
-            else if (sourceName == "density_time_derivative" ) {
-              suppAlg = new ContinuityMassElemSuppAlgDep(realm_, false);
-            }
-            else if (sourceName == "lumped_density_time_derivative" ) {
-              suppAlg = new ContinuityMassElemSuppAlgDep(realm_, true);
-            }
-            else {
-              throw std::runtime_error("ContinuityElemSrcTerms::Error Source term is not supported: " + sourceName);
-            }
-            NaluEnv::self().naluOutputP0() << "ContinuityElemSrcTerms::added " << sourceName << std::endl;
-            theSolverAlg->supplementalAlg_.push_back(suppAlg);
-          }
-        }
-      } else {
-        its->second->partVec_.push_back(part);
-      }
+        throw std::runtime_error("ContinuityEQS: Attempt to use non-NGP element algorithm");
     } else {
       // Homogeneous kernel implementation
       if ( realm_.realmUsesEdges_ )
@@ -3380,22 +3253,8 @@ ContinuityEquationSystem::register_open_bc(
       }
     }
     else {
-      // non-solver elem alg; compute open mdot
-      mdotAlgDriver_->register_open_mdot_algorithm<ComputeMdotElemOpenAlgorithm>(
-        algType, part, "mdot_open_elem",
-        realm_.solutionOptions_->activateOpenMdotCorrection_, *mdotAlgDriver_);
-
-      // solver; lhs
-      std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi =
-        solverAlgDriver_->solverAlgMap_.find(algType);
-      if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-        AssembleContinuityElemOpenSolverAlgorithm *theAlg
-          = new AssembleContinuityElemOpenSolverAlgorithm(realm_, part, this);
-        solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-      }
-      else {
-        itsi->second->partVec_.push_back(part);
-      }
+      throw std::runtime_error(
+        "ContinuityEQS: Attempt to use non-NGP element open algorithm");
     }
   }
 }

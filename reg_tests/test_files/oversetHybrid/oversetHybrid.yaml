@@ -30,7 +30,7 @@ realms:
 
   - name: realm_1
     mesh: ../../mesh/hybrid_sphere.g
-    use_edges: no 
+    use_edges: yes
 
     time_step_control:
      target_courant: 2.0

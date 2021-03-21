@@ -28,7 +28,7 @@ realms:
 
   - name: realm_1
     mesh: ../../mesh/oversetCylinder.g
-    use_edges: no
+    use_edges: yes
     automatic_decomposition_type: rcb
     activate_aura: true
 

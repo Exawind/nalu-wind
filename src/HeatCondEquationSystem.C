@@ -12,7 +12,6 @@
 
 #include <AssembleElemSolverAlgorithm.h>
 #include <AssembleScalarEdgeDiffSolverAlgorithm.h>
-#include <AssembleScalarElemDiffSolverAlgorithm.h>
 #include <AssembleScalarDiffNonConformalSolverAlgorithm.h>
 #include <AssembleScalarFluxBCSolverAlgorithm.h>
 #include <AssembleNodalGradAlgorithmDriver.h>
@@ -60,10 +59,8 @@
 // user functions
 #include <user_functions/SteadyThermalContactAuxFunction.h>
 #include <user_functions/SteadyThermalContactSrcNodeSuppAlg.h>
-#include <user_functions/SteadyThermalContactSrcElemSuppAlg.h>
 #include <user_functions/SteadyThermal3dContactAuxFunction.h>
 #include <user_functions/SteadyThermalContact3DSrcNodeSuppAlg.h>
-#include <user_functions/SteadyThermal3dContactSrcElemSuppAlgDep.h>
 #include <user_functions/SteadyThermal3dContactSrcElemKernel.h>
 
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
@@ -322,43 +319,22 @@ HeatCondEquationSystem::register_interior_algorithm(
                                                                  &tempNp1, &dtdxNone, thermalCond_);
       }
       else {
-        theSolverAlg = new AssembleScalarElemDiffSolverAlgorithm(realm_, part, this,
-                                                                 &tempNp1, &dtdxNone, thermalCond_);
+          throw std::runtime_error(
+              "HCEQS: Attempt to use non-NGP elem solver algorithm");
       }
       solverAlgDriver_->solverAlgMap_[algType] = theSolverAlg;
       
       // look for fully integrated source terms
       std::map<std::string, std::vector<std::string> >::iterator isrc 
         = realm_.solutionOptions_->elemSrcTermsMap_.find("temperature");
-      if ( isrc != realm_.solutionOptions_->elemSrcTermsMap_.end() ) {
-        
-        if ( realm_.realmUsesEdges_ )
-          throw std::runtime_error("HeatCondElemSrcTerms::Error can not use element source terms for an edge-based scheme");
-        
-        std::vector<std::string> mapNameVec = isrc->second;
-        for (size_t k = 0; k < mapNameVec.size(); ++k ) {
-          std::string sourceName = mapNameVec[k];
-          SupplementalAlgorithm *suppAlg = NULL;
-          if (sourceName == "steady_2d_thermal" ) {
-            suppAlg = new SteadyThermalContactSrcElemSuppAlg(realm_);
-          }
-          else if (sourceName == "steady_3d_thermal" ) {
-            suppAlg = new SteadyThermal3dContactSrcElemSuppAlgDep(realm_);
-          }
-          else if (sourceName == "FEM" ) {
-            throw std::runtime_error("HeatCondElemSrcTerms::Error FEM must use consolidated approach");
-          }
-          else {
-            throw std::runtime_error("HeatCondElemSrcTerms::Error Source term is not supported: " + sourceName);
-          }
-          NaluEnv::self().naluOutputP0() << "HeatCondElemSrcTerms::added() " << sourceName << std::endl;
-          theSolverAlg->supplementalAlg_.push_back(suppAlg);
-        }
+      if (isrc != realm_.solutionOptions_->elemSrcTermsMap_.end()) {
+        throw std::runtime_error(
+          "HeatCondElemSrcTerms::Error can not use element source terms for an "
+          "edge-based scheme");
       }
-    }
-    else {
+    } else {
       itsi->second->partVec_.push_back(part);
-    } 
+    }
   }
   else {
     if ( realm_.realmUsesEdges_ )

@@ -31,7 +31,7 @@ realms:
 
   - name: realm_1
     mesh: ../../mesh/oversetSphereTioga.g
-    use_edges: no
+    use_edges: yes
     automatic_decomposition_type: rcb
     check_for_missing_bcs: yes
 
