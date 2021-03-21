@@ -12,8 +12,6 @@
 #include <SpecificDissipationRateEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <AssembleScalarEdgeOpenSolverAlgorithm.h>
-#include <AssembleScalarElemSolverAlgorithm.h>
-#include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
 #include <AssembleNodalGradElemAlgorithm.h>
@@ -33,7 +31,6 @@
 #include <NaluParsing.h>
 #include <Realm.h>
 #include <Realms.h>
-#include <ScalarMassElemSuppAlgDep.h>
 #include <Simulation.h>
 #include <SolutionOptions.h>
 #include <TimeIntegrator.h>
@@ -46,12 +43,6 @@
 
 // consolidated
 #include <AssembleElemSolverAlgorithm.h>
-#include <kernel/ScalarMassElemKernel.h>
-#include <kernel/ScalarAdvDiffElemKernel.h>
-#include <kernel/ScalarUpwAdvDiffElemKernel.h>
-#include <kernel/SpecificDissipationRateSSTSrcElemKernel.h>
-#include <kernel/SpecificDissipationRateSSTDESSrcElemKernel.h>
-
 
 // edge kernels
 #include <edge_kernels/ScalarEdgeSolverAlg.h>
@@ -77,11 +68,6 @@
 
 // UT Austin Hybrid AMS kernel
 #include <node_kernels/SDRSSTAMSNodeKernel.h>
-
-// nso
-#include <nso/ScalarNSOElemKernel.h>
-#include <nso/ScalarNSOKeElemSuppAlg.h>
-#include <nso/ScalarNSOElemSuppAlgDep.h>
 
 #include <overset/UpdateOversetFringeAlgorithmDriver.h>
 
@@ -238,7 +224,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         theAlg = new ScalarEdgeSolverAlg(realm_, part, this, sdr_, dwdx_, evisc_, useAvgMdot);
       }
       else {
-        theAlg = new AssembleScalarElemSolverAlgorithm(realm_, part, this, sdr_, dwdx_, evisc_);
+          throw std::runtime_error(
+              "SDREQS: Attempt to use non-NGP element solver algorithm");
       }
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
 
@@ -246,43 +233,11 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       std::map<std::string, std::vector<std::string> >::iterator isrc
         = realm_.solutionOptions_->elemSrcTermsMap_.find("specific_dissipation_rate");
       if (isrc != realm_.solutionOptions_->elemSrcTermsMap_.end()) {
-
-        if (realm_.realmUsesEdges_)
-          throw std::runtime_error("SpecificDissipationElemSrcTerms::Error can not use element source terms for an edge-based scheme");
-
-        std::vector<std::string> mapNameVec = isrc->second;
-        for (size_t k = 0; k < mapNameVec.size(); ++k) {
-          std::string sourceName = mapNameVec[k];
-          SupplementalAlgorithm* suppAlg = NULL;
-          if (sourceName == "NSO_2ND_ALT") {
-            suppAlg = new ScalarNSOElemSuppAlgDep(realm_, sdr_, dwdx_, evisc_, 0.0, 1.0);
-          }
-          else if (sourceName == "NSO_4TH_ALT") {
-            suppAlg = new ScalarNSOElemSuppAlgDep(realm_, sdr_, dwdx_, evisc_, 1.0, 1.0);
-          }
-          else if (sourceName == "NSO_2ND_KE") {
-            const double turbSc = realm_.get_turb_schmidt(sdr_->name());
-            suppAlg = new ScalarNSOKeElemSuppAlg(realm_, sdr_, dwdx_, turbSc, 0.0);
-          }
-          else if (sourceName == "NSO_4TH_KE") {
-            const double turbSc = realm_.get_turb_schmidt(sdr_->name());
-            suppAlg = new ScalarNSOKeElemSuppAlg(realm_, sdr_, dwdx_, turbSc, 1.0);
-          }
-          else if (sourceName == "specific_dissipation_rate_time_derivative" ) {
-            suppAlg = new ScalarMassElemSuppAlgDep(realm_, sdr_, false);
-          }
-          else if (sourceName == "lumped_specific_dissipation_rate_time_derivative" ) {
-            suppAlg = new ScalarMassElemSuppAlgDep(realm_, sdr_, true);
-          }
-          else {
-            throw std::runtime_error("SpecificDissipationElemSrcTerms::Error Source term is not supported: " + sourceName);
-          }
-          NaluEnv::self().naluOutputP0() << "SpecificDissipationElemSrcTerms::added() " << sourceName << std::endl;
-          theAlg->supplementalAlg_.push_back(suppAlg);
-        }
+        throw std::runtime_error(
+          "SpecificDissipationElemSrcTerms::Error can not use element source "
+          "terms for an edge-based scheme");
       }
-    }
-    else {
+    } else {
       itsi->second->partVec_.push_back(part);
     }
 
@@ -323,82 +278,8 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
       });
   }
   else {
-    // Homogeneous kernel implementation
-    if (realm_.realmUsesEdges_)
-      throw std::runtime_error("SpecificDissipationRateEquationSystem::Error can not use element source terms for an edge-based scheme");
-
-    stk::topology partTopo = part->topology();
-    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-
-    AssembleElemSolverAlgorithm* solverAlg = nullptr;
-    bool solverAlgWasBuilt = false;
-
-    std::tie(solverAlg, solverAlgWasBuilt) =
-      build_or_add_part_to_solver_alg(*this, *part, solverAlgMap);
-
-    ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
-    auto& activeKernels = solverAlg->activeKernels_;
-
-    if (solverAlgWasBuilt) {
-      build_topo_kernel_if_requested<ScalarMassElemKernel>
-        (partTopo, *this, activeKernels, "specific_dissipation_rate_time_derivative",
-         realm_.bulk_data(), *realm_.solutionOptions_, sdr_, dataPreReqs, false);
-
-      build_topo_kernel_if_requested<ScalarMassElemKernel>
-        (partTopo, *this, activeKernels,  "lumped_specific_dissipation_rate_time_derivative",
-         realm_.bulk_data(), *realm_.solutionOptions_, sdr_, dataPreReqs, true);
-
-      build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
-        (partTopo, *this, activeKernels, "advection_diffusion",
-         realm_.bulk_data(), *realm_.solutionOptions_, sdr_, evisc_, dataPreReqs);
-
-      build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
-        (partTopo, *this, activeKernels, "AMS_advection_diffusion",
-         realm_.bulk_data(), *realm_.solutionOptions_, sdr_, evisc_, dataPreReqs);
-
-      build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
-        (partTopo, *this, activeKernels, "upw_advection_diffusion",
-        realm_.bulk_data(), *realm_.solutionOptions_, this, sdr_, dwdx_, evisc_, dataPreReqs);
-
-      build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
-        (partTopo, *this, activeKernels, "AMS_upw_advection_diffusion",
-         realm_.bulk_data(), *realm_.solutionOptions_, this, sdr_, dwdx_, evisc_, dataPreReqs);
-
-      build_topo_kernel_if_requested<SpecificDissipationRateSSTSrcElemKernel>
-        (partTopo, *this, activeKernels, "sst",
-         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, false);
-
-      build_topo_kernel_if_requested<SpecificDissipationRateSSTDESSrcElemKernel>
-        (partTopo, *this, activeKernels, "sst_des",
-         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, false);
-
-      build_topo_kernel_if_requested<SpecificDissipationRateSSTSrcElemKernel>
-        (partTopo, *this, activeKernels, "lumped_sst",
-         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, true);
-
-      build_topo_kernel_if_requested<SpecificDissipationRateSSTDESSrcElemKernel>
-        (partTopo, *this, activeKernels, "lumped_sst_des",
-         realm_.bulk_data(), *realm_.solutionOptions_, dataPreReqs, true);
-
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        (partTopo, *this, activeKernels, "NSO_2ND",
-         realm_.bulk_data(), *realm_.solutionOptions_, sdr_, dwdx_, evisc_, 0.0, 0.0, dataPreReqs);
-
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        (partTopo, *this, activeKernels, "NSO_2ND_ALT",
-         realm_.bulk_data(), *realm_.solutionOptions_, sdr_, dwdx_, evisc_, 0.0, 1.0, dataPreReqs);
-
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        (partTopo, *this, activeKernels, "NSO_4TH",
-         realm_.bulk_data(), *realm_.solutionOptions_, sdr_, dwdx_, evisc_, 1.0, 0.0, dataPreReqs);
-
-      build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        (partTopo, *this, activeKernels, "NSO_4TH_ALT",
-         realm_.bulk_data(), *realm_.solutionOptions_, sdr_, dwdx_, evisc_, 1.0, 1.0, dataPreReqs);
-
-      report_invalid_supp_alg_names();
-      report_built_supp_alg_names();
-    }
+      throw std::runtime_error(
+          "SDREQS: Element terms not supported");
   }
 
   // effective diffusive flux coefficient alg for SST
@@ -543,22 +424,8 @@ SpecificDissipationRateEquationSystem::register_open_bc(
       realm_.meta_data(), *realm_.solutionOptions_, sdr_, theBcField, dataPreReqs);
   }
   else {
-    // solver open; lhs
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
-      = solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( itsi == solverAlgDriver_->solverAlgMap_.end() ) {
-      SolverAlgorithm *theAlg = NULL;
-      if ( realm_.realmUsesEdges_ ) {
-        theAlg = new AssembleScalarEdgeOpenSolverAlgorithm(realm_, part, this, sdr_, theBcField, &dwdxNone, evisc_);
-      }
-      else {
-        theAlg = new AssembleScalarElemOpenSolverAlgorithm(realm_, part, this, sdr_, theBcField, &dwdxNone, evisc_);
-      }
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      itsi->second->partVec_.push_back(part);
-    }
+      throw std::runtime_error(
+          "SDREQS: Attempt to use non-NGP element open algorithm");
   }
 
 }

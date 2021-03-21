@@ -29,7 +29,7 @@ realms:
 
   - name: realm_1
     mesh: ../../mesh/nrel5MWactuatorLine.g
-    use_edges: no
+    use_edges: yes
     automatic_decomposition_type: rcb
 
     equation_systems:
@@ -97,7 +97,6 @@ realms:
 
     solution_options:
       name: myOptions
-      use_consolidated_solver_algorithm: yes
 
       options:
 
@@ -112,9 +111,8 @@ realms:
             pressure: element
             velocity: element
 
-        - element_source_terms:
-            momentum: [lumped_momentum_time_derivative, upw_advection_diffusion, lumped_actuator]
-            continuity: [advection]
+        - source_terms:
+            momentum: [actuator]
 
     actuator:
       type: ActDiskFASTNGP
