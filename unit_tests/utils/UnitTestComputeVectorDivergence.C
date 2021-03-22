@@ -39,6 +39,10 @@ TEST(utils, compute_vector_divergence)
     stk::topology::ELEMENT_RANK, "element_volume");
   stk::mesh::put_field_on_mesh(elemVol, realm.meta_data().universal_part(), nullptr);
 
+  auto& edgeAreaVec = realm.meta_data().declare_field<VectorFieldType>(
+      stk::topology::EDGE_RANK, "edge_area_vector");
+  stk::mesh::put_field_on_mesh(edgeAreaVec, realm.meta_data().universal_part(), nDim, nullptr);
+
   VectorFieldType *meshVec = &(realm.meta_data().declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_vector"));
   stk::mesh::put_field_on_mesh(*meshVec, realm.meta_data().universal_part(), nDim, nullptr);
 

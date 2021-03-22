@@ -2513,8 +2513,10 @@ Realm::register_nodal_fields(
   stk::mesh::put_field_on_mesh(elemVol, *part, 1, nullptr);
 
   if (realmUsesEdges_) {
-    auto& edgeAreaVec = metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "edge_area_vector");
-    stk::mesh::put_field_on_mesh(edgeAreaVec, *part, metaData_->spatial_dimension(), nullptr);
+    auto& edgeAreaVec = metaData_->declare_field<VectorFieldType>(
+      stk::topology::EDGE_RANK, "edge_area_vector");
+    stk::mesh::put_field_on_mesh(
+      edgeAreaVec, *part, metaData_->spatial_dimension(), nullptr);
   }
 
   // mesh motion/deformation is high level

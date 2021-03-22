@@ -69,7 +69,7 @@ const std::string naluDefaultInputs =
 
 const std::string realmDefaultSettings =
   "- name: unitTestRealm                                                  \n"
-  "  use_edges: no                                                        \n"
+  "  use_edges: yes                                                       \n"
   "                                                                       \n"
   "  equation_systems:                                                    \n"
   "    name: theEqSys                                                     \n"

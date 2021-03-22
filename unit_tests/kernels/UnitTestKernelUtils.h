@@ -26,8 +26,6 @@
 
 #include <gtest/gtest.h>
 
-#include "stk_mesh/base/CreateEdges.hpp"
-
 #include <mpi.h>
 #include <vector>
 #include <memory>
@@ -299,7 +297,6 @@ public:
     if (doPerturb) {
       unit_test_utils::perturb_coord_hex_8(bulk_, 0.125);
     }
-    stk::mesh::create_edges(bulk_, meta_.universal_part());
 
     partVec_ = {meta_.get_part("block_1")};
 
