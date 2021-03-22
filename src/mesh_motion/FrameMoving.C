@@ -137,17 +137,14 @@ FrameMoving::post_compute_geometry()
     GenericFieldType* faceVelMag = meta_.get_field<GenericFieldType>(
       stk::topology::ELEMENT_RANK, "face_velocity_mag");
 
-    if(faceVelMag == NULL) {
+    if (faceVelMag == NULL) {
       faceVelMag = meta_.get_field<GenericFieldType>(
         stk::topology::EDGE_RANK, "edge_face_velocity_mag");
-
-      std::cerr << "Using edge algorithm for mesh vel div" << std::endl;
-      compute_edge_scalar_divergence(bulk_, partVec_, partVecBc_, faceVelMag, meshDivVelocity);
-    }
-    else
-    {
-      std::cerr << "Using element algorithm for mesh vel div" << std::endl;
-      compute_scalar_divergence(bulk_, partVec_, partVecBc_, faceVelMag, meshDivVelocity);
+      compute_edge_scalar_divergence(
+        bulk_, partVec_, partVecBc_, faceVelMag, meshDivVelocity);
+    } else {
+      compute_scalar_divergence(
+        bulk_, partVec_, partVecBc_, faceVelMag, meshDivVelocity);
     }
 
     // Mesh velocity divergence is not motion-specific and
