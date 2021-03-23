@@ -166,8 +166,6 @@ public:
     const auto& dispN = meshDisp_->field_of_state(stk::mesh::StateN);
     const auto& dispNp1 = meshDisp_->field_of_state(stk::mesh::StateNP1);
 
-    std::cerr << "Timestep info: dt = " << dt << " gamma1 = " << gamma1
-              << " gamma2 = " << gamma2 << " gamma3 = " << gamma3 << std::endl;
     for (auto* b : bkts) {
       const double* dxNm1 = stk::mesh::field_data(dispNm1, *b);
       const double* dxN = stk::mesh::field_data(dispN, *b);
@@ -215,9 +213,10 @@ public:
       const double* dvNp1 = stk::mesh::field_data(dVolNp1, *b);
       double* dvdt = stk::mesh::field_data(*dVoldt_, *b);
 
-      for (size_t in = 0; in < b->size(); ++in)
+      for (size_t in = 0; in < b->size(); ++in) {
         dvdt[in] =
           (gamma1 * dvNp1[in] + gamma2 * dvN[in] + gamma3 * dvNm1[in]) / dt;
+      }
     }
   }
 

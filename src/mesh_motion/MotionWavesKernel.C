@@ -68,6 +68,11 @@ MotionWavesKernel::load(const YAML::Node& node)
     k_ = 2 * M_PI / length_;
     omega_ = c_ * k_;
     period_ = length_ / c_;
+  } else if (waveString == "Piston") {
+    waveModel_ = 4;
+    get_if_present(node, "wave_height", height_, height_);
+    get_if_present(node, "frequency", omega_, omega_);
+    get_if_present(node, "phase_velocity", c_, c_);
   } else {
     throw std::runtime_error("invalid wave_motion model specified ");
   }
@@ -78,7 +83,7 @@ MotionWavesKernel::load(const YAML::Node& node)
   get_if_present(node, "end_time", endTime_, endTime_);
   endTime_ = endTime_ + DBL_EPSILON;
   get_if_present(node, "sea_level_z", sealevelz_, sealevelz_);
-}
+} // namespace nalu
 
 mm::TransMatType
 MotionWavesKernel::build_transformation(
@@ -121,6 +126,12 @@ MotionWavesKernel::build_transformation(
     disp[2] =
       height_ / 2. * stk::math::sin(phase) *
       stk::math::pow(1 - xyz[2] / meshdampinglength_, meshdampingcoeff_);
+  } else if (waveModel_ == 4) {
+    disp[0] = 0.;
+    disp[1] = 0.;
+    disp[2] = c_ * motionTime;
+    // height_ * stk::math::sin(omega_ * motionTime) *
+    // stk::math::pow(1 - xyz[2] / meshdampinglength_, meshdampingcoeff_);
   }
 
   // Build matrix for translating object
@@ -128,7 +139,7 @@ MotionWavesKernel::build_transformation(
   transMat[1 * mm::matSize + 3] = disp[1];
   transMat[2 * mm::matSize + 3] = disp[2];
   return transMat;
-}
+} // namespace nalu
 
 mm::ThreeDVecType
 MotionWavesKernel::compute_velocity(
@@ -171,6 +182,10 @@ MotionWavesKernel::compute_velocity(
   } else if (waveModel_ == 3) {
     StreamwiseWaveVelocity = omega_ * height_ / 2. * stk::math::sin(phase);
     VerticalWaveVelocity = -omega_ * height_ / 2. * stk::math::cos(phase);
+  } else if (waveModel_ == 4) {
+    StreamwiseWaveVelocity = 0.;
+    VerticalWaveVelocity = c_;
+    //-omega_ * height_ * stk::math::cos(omega_ * motionTime);
   }
 
   if (mxyz[2] < sealevelz_ + DBL_EPSILON) {
