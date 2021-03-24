@@ -83,6 +83,13 @@ MotionWavesKernel::load(const YAML::Node& node)
   get_if_present(node, "end_time", endTime_, endTime_);
   endTime_ = endTime_ + DBL_EPSILON;
   get_if_present(node, "sea_level_z", sealevelz_, sealevelz_);
+
+  get_if_present(node, "waves_rampup", do_rampup_, do_rampup_);
+  if (do_rampup_) {
+    get_if_present(
+      node, "rampup_start_time", rampup_start_time_, rampup_start_time_);
+    get_if_present(node, "rampup_period", rampup_period_, rampup_period_);
+  }
 } // namespace nalu
 
 mm::TransMatType
@@ -134,10 +141,18 @@ MotionWavesKernel::build_transformation(
     // stk::math::pow(1 - xyz[2] / meshdampinglength_, meshdampingcoeff_);
   }
 
+  double fac = 1.0;
+  if (
+    do_rampup_ && time >= rampup_start_time_ &&
+    time < rampup_start_time_ + rampup_period_) {
+    std::cerr << "Ramping-up waves at time :" << time << std::endl;
+    fac = stk::math::tanh(2.0 * (time - rampup_start_time_) / rampup_period_);
+  }
+
   // Build matrix for translating object
-  transMat[0 * mm::matSize + 3] = disp[0];
-  transMat[1 * mm::matSize + 3] = disp[1];
-  transMat[2 * mm::matSize + 3] = disp[2];
+  transMat[0 * mm::matSize + 3] = disp[0] * fac;
+  transMat[1 * mm::matSize + 3] = disp[1] * fac;
+  transMat[2 * mm::matSize + 3] = disp[2] * fac;
   return transMat;
 } // namespace nalu
 
@@ -187,10 +202,17 @@ MotionWavesKernel::compute_velocity(
     VerticalWaveVelocity = c_;
   }
 
+  double fac = 1.0;
+  if (
+    do_rampup_ && time >= rampup_start_time_ &&
+    time < rampup_start_time_ + rampup_period_) {
+    fac = stk::math::tanh(2.0 * (time - rampup_start_time_) / rampup_period_);
+  }
+
   if (mxyz[2] < sealevelz_ + DBL_EPSILON) {
-    vel[0] = StreamwiseWaveVelocity;
-    vel[1] = LateralWaveVelocity;
-    vel[2] = VerticalWaveVelocity;
+    vel[0] = StreamwiseWaveVelocity * fac;
+    vel[1] = LateralWaveVelocity * fac;
+    vel[2] = VerticalWaveVelocity * fac;
   } else {
     vel[0] = 0.;
     vel[1] = 0.;
