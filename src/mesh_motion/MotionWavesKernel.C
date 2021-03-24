@@ -145,7 +145,6 @@ MotionWavesKernel::build_transformation(
   if (
     do_rampup_ && time >= rampup_start_time_ &&
     time < rampup_start_time_ + rampup_period_) {
-    std::cerr << "Ramping-up waves at time :" << time << std::endl;
     fac = stk::math::tanh(2.0 * (time - rampup_start_time_) / rampup_period_);
   }
 
