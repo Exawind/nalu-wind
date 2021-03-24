@@ -185,7 +185,6 @@ MotionWavesKernel::compute_velocity(
   } else if (waveModel_ == 4) {
     StreamwiseWaveVelocity = 0.;
     VerticalWaveVelocity = c_;
-    //-omega_ * height_ * stk::math::cos(omega_ * motionTime);
   }
 
   if (mxyz[2] < sealevelz_ + DBL_EPSILON) {
