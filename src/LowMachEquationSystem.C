@@ -675,7 +675,20 @@ LowMachEquationSystem::solve_and_update()
 {
   // wrap timing
   double timeA, timeB;
-  if (realm_.has_mesh_motion() && (realm_.currentNonlinearIteration_ == 1)) {
+
+  if (isInit_) {
+    continuityEqSys_->compute_projected_nodal_gradient();
+    timeA = NaluEnv::self().nalu_time();
+    continuityEqSys_->mdotAlgDriver_->execute();
+    timeB = NaluEnv::self().nalu_time();
+    continuityEqSys_->timerMisc_ += (timeB - timeA);
+
+    if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+      momentumEqSys_->AMSAlgDriver_->initial_mdot();
+
+    isInit_ = false;
+  } else if (
+    realm_.has_mesh_motion() && (realm_.currentNonlinearIteration_ == 1)) {
     // continuity assemble, load_complete and solve
     continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
 
@@ -708,17 +721,6 @@ LowMachEquationSystem::solve_and_update()
       timeB = NaluEnv::self().nalu_time();
       continuityEqSys_->timerAssemble_ += (timeB - timeA);
     }
-  } else if (isInit_) {
-    continuityEqSys_->compute_projected_nodal_gradient();
-    timeA = NaluEnv::self().nalu_time();
-    continuityEqSys_->mdotAlgDriver_->execute();
-    timeB = NaluEnv::self().nalu_time();
-    continuityEqSys_->timerMisc_ += (timeB - timeA);
-
-    if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
-      momentumEqSys_->AMSAlgDriver_->initial_mdot();
-
-    isInit_ = false;
   }
 
   // compute tvisc and effective viscosity
@@ -815,8 +817,8 @@ LowMachEquationSystem::solve_and_update()
     }
     // Pressure isn't actually a state, we do this to support multiple overset
     // correctors when the relaxation factor is not 1.0. So copy the current
-    // pressure into `StateN` so that we can perform solution update correction
-    // with the correct relaxation factor
+    // pressure into `StateN` so that we can perform solution update
+    // correction with the correct relaxation factor
     nalu_ngp::field_copy(
       realm_.mesh_info(),
       continuityEqSys_->pressure_->field_of_state(stk::mesh::StateN),
@@ -1334,9 +1336,9 @@ MomentumEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   bool elementMassAlg = supp_alg_is_requested(checkAlgNames);
   // solver; time contribution (lumped mass matrix)
   if (!elementMassAlg || nodal_src_is_requested()) {
-    // Handle error checking during transition period. Some kernels are handled
-    // through the NGP-ready interface while others are handled via legacy
-    // interface and only supported on CPUs.
+    // Handle error checking during transition period. Some kernels are
+    // handled through the NGP-ready interface while others are handled via
+    // legacy interface and only supported on CPUs.
     int ngpSrcSkipped = 0;
     int nonNgpSrcSkipped = 0;
     int numUsrSrc = 0;
@@ -1534,7 +1536,8 @@ MomentumEquationSystem::register_inflow_bc(
     stk::topology::NODE_RANK, "velocity_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
 
-  // extract the value for user specified velocity and save off the AuxFunction
+  // extract the value for user specified velocity and save off the
+  // AuxFunction
   InflowUserData userData = inflowBCData.userData_;
   std::string velocityName = "velocity";
   UserDataType theDataType = get_bc_data_type(userData, velocityName);
@@ -1646,7 +1649,8 @@ MomentumEquationSystem::register_open_bc(
     stk::topology::NODE_RANK, "open_velocity_bc"));
   stk::mesh::put_field_on_mesh(*theBcField, *part, nDim, nullptr);
 
-  // extract the value for user specified velocity and save off the AuxFunction
+  // extract the value for user specified velocity and save off the
+  // AuxFunction
   OpenUserData userData = openBCData.userData_;
   Velocity ux = userData.u_;
   std::vector<double> userSpec(nDim);
@@ -1794,7 +1798,8 @@ MomentumEquationSystem::register_wall_bc(
           theAuxFunc = new TornadoAuxFunction(0, nDim);
         } else if (fcnName == "wind_energy") {
           NaluEnv::self().naluOutputP0()
-            << "MomentumEqSys: WARNING! mesh_motion user function for wall BC "
+            << "MomentumEqSys: WARNING! mesh_motion user function for wall "
+               "BC "
                "has been deprecated"
             << std::endl;
         } else {
@@ -1848,7 +1853,8 @@ MomentumEquationSystem::register_wall_bc(
         stk::topology::NODE_RANK, "assembled_wall_normal_distance"));
     stk::mesh::put_field_on_mesh(*assembledWallNormalDistance, *part, nullptr);
 
-    // integration point; size it based on number of boundary integration points
+    // integration point; size it based on number of boundary integration
+    // points
     MasterElement* meFC =
       sierra::nalu::MasterElementRepo::get_surface_master_element(partTopo);
     const int numScsBip = meFC->num_integration_points();
@@ -1885,8 +1891,8 @@ MomentumEquationSystem::register_wall_bc(
       stk::mesh::put_field_on_mesh(
         *wallShearStressBip, *part, nDim * numScsBip, nullptr);
 
-      // register the standard time-space-invariant wall heat flux (not used by
-      // the ABL wall model).
+      // register the standard time-space-invariant wall heat flux (not used
+      // by the ABL wall model).
       NormalHeatFlux heatFlux = userData.q_;
       std::vector<double> userSpec(1);
       userSpec[0] = heatFlux.qn_;
@@ -1920,8 +1926,8 @@ MomentumEquationSystem::register_wall_bc(
             wfAlgType, part, get_elem_topo(realm_, *part),
             "geometry_wall_func");
 
-        // register the algorithm that calculates the momentum and heat flux on
-        // the wall.
+        // register the algorithm that calculates the momentum and heat flux
+        // on the wall.
         wallFuncAlgDriver_.register_face_elem_algorithm<ABLWallFluxesAlg>(
           wfAlgType, part, get_elem_topo(realm_, *part), "abl_wall_func",
           wallFuncAlgDriver_, realm_.realmUsesEdges_, ablWallFunctionNode);
@@ -2027,8 +2033,8 @@ MomentumEquationSystem::register_wall_bc(
 
   // specialty FSI
   if (userData.isFsiInterface_) {
-    // FIXME: need p^n+1/2; requires "old" pressure... need a utility to save it
-    // and compute it...
+    // FIXME: need p^n+1/2; requires "old" pressure... need a utility to save
+    // it and compute it...
     NaluEnv::self().naluOutputP0()
       << "Warning: Second-order FSI requires p^n+1/2; BC is using p^n+1"
       << std::endl;
@@ -2036,7 +2042,8 @@ MomentumEquationSystem::register_wall_bc(
 }
 
 //--------------------------------------------------------------------------
-//-------- register_symmetry_bc ------------------------------------------------
+//-------- register_symmetry_bc
+//------------------------------------------------
 //--------------------------------------------------------------------------
 void
 MomentumEquationSystem::register_symmetry_bc(
@@ -2132,7 +2139,8 @@ MomentumEquationSystem::register_symmetry_bc(
          "symmetry boundary "
       << "condition. This leads to an approximation of the momentum equation "
          "for the tangential "
-      << "velocity component(s) at the symmetry surface because it deletes LHS "
+      << "velocity component(s) at the symmetry surface because it deletes "
+         "LHS "
          "sensitivities."
       << std::endl
       << "Warning (cont): Testing shows the error to be negligible, but "
@@ -2363,8 +2371,8 @@ MomentumEquationSystem::initialize()
 void
 MomentumEquationSystem::reinitialize_linear_system()
 {
-  // If this is decoupled overset simulation and the user has requested that the
-  // linear system be reused, then do nothing
+  // If this is decoupled overset simulation and the user has requested that
+  // the linear system be reused, then do nothing
   if (decoupledOverset_ && linsys_->config().reuseLinSysIfPossible())
     return;
 
@@ -2432,8 +2440,8 @@ MomentumEquationSystem::manage_projected_nodal_gradient(
     // turn off output
     projectedNodalGradEqs_->deactivate_output();
   }
-  // fill the map for expected boundary condition names; recycle pTmp (ui copied
-  // in as needed)
+  // fill the map for expected boundary condition names; recycle pTmp (ui
+  // copied in as needed)
   projectedNodalGradEqs_->set_data_map(INFLOW_BC, "pTmp");
   projectedNodalGradEqs_->set_data_map(
     WALL_BC, "pTmp"); // might want wall_function velocity_bc?
@@ -2452,9 +2460,9 @@ MomentumEquationSystem::compute_projected_nodal_gradient()
     nodalGradAlgDriver_.execute();
     timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
   } else {
-    // this option is more complex... Rather than solving a nDim*nDim system, we
-    // copy each velocity component i to the expected dof for the PNG system;
-    // pTmp
+    // this option is more complex... Rather than solving a nDim*nDim system,
+    // we copy each velocity component i to the expected dof for the PNG
+    // system; pTmp
 
     // extract fields
     ScalarFieldType* pTmp = realm_.meta_data().get_field<ScalarFieldType>(
@@ -2884,9 +2892,9 @@ ContinuityEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
   std::map<std::string, std::vector<std::string>>::iterator isrc =
     realm_.solutionOptions_->srcTermsMap_.find("continuity");
   if (isrc != realm_.solutionOptions_->srcTermsMap_.end()) {
-    // Handle error checking during transition period. Some kernels are handled
-    // through the NGP-ready interface while others are handled via legacy
-    // interface and only supported on CPUs.
+    // Handle error checking during transition period. Some kernels are
+    // handled through the NGP-ready interface while others are handled via
+    // legacy interface and only supported on CPUs.
     int ngpSrcSkipped = 0;
     int nonNgpSrcSkipped = 0;
     int numUsrSrc = 0;
@@ -3384,8 +3392,8 @@ ContinuityEquationSystem::initialize()
 void
 ContinuityEquationSystem::reinitialize_linear_system()
 {
-  // If this is decoupled overset simulation and the user has requested that the
-  // linear system be reused, then do nothing
+  // If this is decoupled overset simulation and the user has requested that
+  // the linear system be reused, then do nothing
   if (decoupledOverset_ && linsys_->config().reuseLinSysIfPossible())
     return;
 
