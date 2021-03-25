@@ -143,7 +143,7 @@ MotionWavesKernel::build_transformation(
 
   double fac = 0.0;
   if (do_rampup_ && time >= startTime_ && time < startTime_ + rampup_period_) {
-    fac = stk::math::tanh(2.0 * (time - rampup_start_time_) / rampup_period_);
+    fac = stk::math::tanh(2.0 * (time - startTime_) / rampup_period_);
   } else {
     fac = 1.0;
   }
@@ -203,7 +203,7 @@ MotionWavesKernel::compute_velocity(
 
   double fac = 0.0;
   if (do_rampup_ && time >= startTime_ && time < startTime_ + rampup_period_) {
-    fac = stk::math::tanh(2.0 * (time - rampup_start_time_) / rampup_period_);
+    fac = stk::math::tanh(2.0 * (time - startTime_) / rampup_period_);
   } else {
     fac = 1.0;
   }
