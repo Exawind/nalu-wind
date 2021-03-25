@@ -141,11 +141,11 @@ MotionWavesKernel::build_transformation(
     // stk::math::pow(1 - xyz[2] / meshdampinglength_, meshdampingcoeff_);
   }
 
-  double fac = 1.0;
-  if (
-    do_rampup_ && time >= rampup_start_time_ &&
-    time < rampup_start_time_ + rampup_period_) {
+  double fac = 0.0;
+  if (do_rampup_ && time >= startTime_ && time < startTime_ + rampup_period_) {
     fac = stk::math::tanh(2.0 * (time - rampup_start_time_) / rampup_period_);
+  } else {
+    fac = 1.0
   }
 
   // Build matrix for translating object
@@ -201,11 +201,11 @@ MotionWavesKernel::compute_velocity(
     VerticalWaveVelocity = c_;
   }
 
-  double fac = 1.0;
-  if (
-    do_rampup_ && time >= rampup_start_time_ &&
-    time < rampup_start_time_ + rampup_period_) {
+  double fac = 0.0;
+  if (do_rampup_ && time >= startTime_ && time < startTime_ + rampup_period_) {
     fac = stk::math::tanh(2.0 * (time - rampup_start_time_) / rampup_period_);
+  } else {
+    fac = 1.0
   }
 
   if (mxyz[2] < sealevelz_ + DBL_EPSILON) {
