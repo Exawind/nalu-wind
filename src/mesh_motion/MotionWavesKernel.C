@@ -145,7 +145,7 @@ MotionWavesKernel::build_transformation(
   if (do_rampup_ && time >= startTime_ && time < startTime_ + rampup_period_) {
     fac = stk::math::tanh(2.0 * (time - rampup_start_time_) / rampup_period_);
   } else {
-    fac = 1.0
+    fac = 1.0;
   }
 
   // Build matrix for translating object
@@ -205,7 +205,7 @@ MotionWavesKernel::compute_velocity(
   if (do_rampup_ && time >= startTime_ && time < startTime_ + rampup_period_) {
     fac = stk::math::tanh(2.0 * (time - rampup_start_time_) / rampup_period_);
   } else {
-    fac = 1.0
+    fac = 1.0;
   }
 
   if (mxyz[2] < sealevelz_ + DBL_EPSILON) {
