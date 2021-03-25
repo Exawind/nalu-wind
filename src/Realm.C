@@ -179,7 +179,7 @@ namespace nalu{
     type_("multi_physics"),
     inputDBName_("input_unknown"),
     spatialDimension_(3u),  // for convenience; can always get it from meta data
-    realmUsesEdges_(false),
+    realmUsesEdges_(true),
     solveFrequency_(1),
     isTurbulent_(false),
     needsEnthalpy_(false),
@@ -706,16 +706,22 @@ Realm::load(const YAML::Node & node)
   }
 
   if (matrixFree_) {
-     NaluEnv::self().naluOutputP0() 
-      << "Warning: matrix free capability is experimental and only supports a limited set of use cases" << std::endl;
+    NaluEnv::self().naluOutputP0()
+      << "Warning: matrix free capability is experimental and only supports a "
+         "limited set of use cases"
+      << std::endl;
   }
 
   // let everyone know about core algorithm
   if ( realmUsesEdges_ ) {
     NaluEnv::self().naluOutputP0() << "Edge-based scheme will be activated" << std::endl;
   }
-  else {
-    NaluEnv::self().naluOutputP0() <<"Element-based scheme will be activated" << std::endl;
+  else if (matrixFree_) {
+    NaluEnv::self().naluOutputP0()
+      << "Matrix-free scheme will be activated" << std::endl;
+  } else {
+    throw std::runtime_error(
+      "Realm: Nalu-Wind only supports edge-based or matrix-free schemes");
   }
 
   // how often is the realm solved..
@@ -2507,8 +2513,10 @@ Realm::register_nodal_fields(
   stk::mesh::put_field_on_mesh(elemVol, *part, 1, nullptr);
 
   if (realmUsesEdges_) {
-    auto& edgeAreaVec = metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "edge_area_vector");
-    stk::mesh::put_field_on_mesh(edgeAreaVec, *part, metaData_->spatial_dimension(), nullptr);
+    auto& edgeAreaVec = metaData_->declare_field<VectorFieldType>(
+      stk::topology::EDGE_RANK, "edge_area_vector");
+    stk::mesh::put_field_on_mesh(
+      edgeAreaVec, *part, metaData_->spatial_dimension(), nullptr);
   }
 
   // mesh motion/deformation is high level

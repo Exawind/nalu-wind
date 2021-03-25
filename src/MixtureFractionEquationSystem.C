@@ -12,8 +12,6 @@
 #include <MixtureFractionEquationSystem.h>
 #include <AlgorithmDriver.h>
 #include <AssembleScalarEdgeOpenSolverAlgorithm.h>
-#include <AssembleScalarElemSolverAlgorithm.h>
-#include <AssembleScalarElemOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
 #include <AssembleNodalGradAlgorithmDriver.h>
 #include <AssembleNodalGradEdgeAlgorithm.h>
@@ -50,12 +48,6 @@
 
 // kernels
 #include <AssembleElemSolverAlgorithm.h>
-#include <kernel/ScalarMassElemKernel.h>
-#include <kernel/ScalarAdvDiffElemKernel.h>
-#include <kernel/ScalarUpwAdvDiffElemKernel.h>
-
-// bc kernels
-#include <kernel/ScalarOpenAdvElemKernel.h>
 
 // edge_kernels
 #include <edge_kernels/ScalarEdgeSolverAlg.h>
@@ -65,17 +57,7 @@
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
 
-// deprecated
-#include <ScalarMassElemSuppAlgDep.h>
-#include <nso/ScalarNSOElemSuppAlgDep.h>
-
-// nso
-#include <nso/ScalarNSOElemKernel.h>
-#include <nso/ScalarNSOKeElemKernel.h>
-#include <nso/ScalarNSOKeElemSuppAlg.h>
-
 // user function
-#include <user_functions/VariableDensityMixFracSrcElemSuppAlg.h>
 #include <user_functions/VariableDensityMixFracSrcNodeSuppAlg.h>
 #include <user_functions/VariableDensityMixFracAuxFunction.h>
 #include <user_functions/RayleighTaylorMixFracAuxFunction.h>
@@ -285,63 +267,23 @@ MixtureFractionEquationSystem::register_interior_algorithm(
         theAlg = new ScalarEdgeSolverAlg(realm_, part, this, mixFrac_, dzdx_, evisc_);
       }
       else {
-        theAlg = new AssembleScalarElemSolverAlgorithm(realm_, part, this, mixFrac_, dzdx_, evisc_);
+          throw std::runtime_error(
+              "MixFracEQS: Attempt to use non-NGP element algorithm");
       }
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
       
       // look for fully integrated source terms
       std::map<std::string, std::vector<std::string> >::iterator isrc 
         = realm_.solutionOptions_->elemSrcTermsMap_.find("mixture_fraction");
-      if ( isrc != realm_.solutionOptions_->elemSrcTermsMap_.end() ) {
-        
-        if ( realm_.realmUsesEdges_ )
-          throw std::runtime_error("MixtureFractionElemSrcTerms::Error can not use element source terms for an edge-based scheme");
-        
-        std::vector<std::string> mapNameVec = isrc->second;
-        for (size_t k = 0; k < mapNameVec.size(); ++k ) {
-          std::string sourceName = mapNameVec[k];
-          SupplementalAlgorithm *suppAlg = NULL;
-          if (sourceName == "VariableDensity" ) {
-            suppAlg = new VariableDensityMixFracSrcElemSuppAlg(realm_);
-          }
-          else if (sourceName == "NSO_2ND" ) {
-            suppAlg = new ScalarNSOElemSuppAlgDep(realm_, mixFrac_, dzdx_, evisc_, 0.0, 0.0);
-          }
-          else if (sourceName == "NSO_2ND_ALT" ) {
-            suppAlg = new ScalarNSOElemSuppAlgDep(realm_, mixFrac_, dzdx_, evisc_, 0.0, 1.0);
-          }
-          else if (sourceName == "NSO_4TH" ) {
-            suppAlg = new ScalarNSOElemSuppAlgDep(realm_, mixFrac_, dzdx_, evisc_, 1.0, 0.0);
-          }
-          else if (sourceName == "NSO_4TH_ALT" ) {
-            suppAlg = new ScalarNSOElemSuppAlgDep(realm_, mixFrac_, dzdx_, evisc_, 1.0, 1.0);
-          }
-          else if (sourceName == "NSO_2ND_KE" ) {
-            const double turbSc = realm_.get_turb_schmidt(mixFrac_->name());
-            suppAlg = new ScalarNSOKeElemSuppAlg(realm_, mixFrac_, dzdx_, turbSc, 0.0);
-          }
-          else if (sourceName == "NSO_4TH_KE" ) {
-            const double turbSc = realm_.get_turb_schmidt(mixFrac_->name());
-            suppAlg = new ScalarNSOKeElemSuppAlg(realm_, mixFrac_, dzdx_, turbSc, 1.0);
-          }
-          else if (sourceName == "mixture_fraction_time_derivative" ) {
-            suppAlg = new ScalarMassElemSuppAlgDep(realm_, mixFrac_, false);
-          }
-          else if (sourceName == "lumped_mixture_fraction_time_derivative" ) {
-            suppAlg = new ScalarMassElemSuppAlgDep(realm_, mixFrac_, true);
-          }
-          else {
-            throw std::runtime_error("MixtureFractionElemSrcTerms::Error Source term is not supported: " + sourceName);
-          }     
-          NaluEnv::self().naluOutputP0() << "MixtureFractionElemSrcTerms::added() " << sourceName << std::endl;
-          theAlg->supplementalAlg_.push_back(suppAlg); 
-        }
+      if (isrc != realm_.solutionOptions_->elemSrcTermsMap_.end()) {
+        throw std::runtime_error(
+          "MixtureFractionElemSrcTerms::Error can not use element source terms "
+          "for an edge-based scheme");
       }
-    }
-    else {
+    } else {
       itsi->second->partVec_.push_back(part);
     }
-    
+
     // time term; nodally lumped
     const AlgorithmType algMass = SRC;
     // Check if the user has requested CMM or LMM algorithms; if so, do not
@@ -394,54 +336,8 @@ MixtureFractionEquationSystem::register_interior_algorithm(
     }
   }
   else {
-    // Homogeneous kernel implementation
-    if ( realm_.realmUsesEdges_ )
-      throw std::runtime_error("MixtureFraction::Error can not use element source terms for an edge-based scheme");
-    
-    KernelBuilder kb(*this, *part, solverAlgDriver_->solverAlgorithmMap_);
-    auto& dataPreReqs = kb.data_prereqs();
-
-    kb.build_topo_kernel_if_requested<ScalarMassElemKernel>
-        ( "mixture_fraction_time_derivative",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dataPreReqs, false);
-      
-    kb.build_topo_kernel_if_requested<ScalarMassElemKernel>
-        ("lumped_mixture_fraction_time_derivative",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dataPreReqs, true);
-      
-    kb.build_topo_kernel_if_requested<ScalarAdvDiffElemKernel>
-        ("advection_diffusion",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, evisc_, dataPreReqs);
-      
-    kb.build_topo_kernel_if_requested<ScalarUpwAdvDiffElemKernel>
-        ("upw_advection_diffusion",
-         realm_.bulk_data(), *realm_.solutionOptions_, this, mixFrac_, dzdx_, evisc_, dataPreReqs);
-
-    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        ("NSO_2ND",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, evisc_, 0.0, 0.0, dataPreReqs);
-      
-    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        ("NSO_2ND_ALT",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, evisc_, 0.0, 1.0, dataPreReqs);
-      
-    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        ("NSO_4TH",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, evisc_, 1.0, 0.0, dataPreReqs);
-      
-    kb.build_topo_kernel_if_requested<ScalarNSOElemKernel>
-        ("NSO_4TH_ALT",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, evisc_, 1.0, 1.0, dataPreReqs);
-
-    kb.build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
-        ("NSO_2ND_KE",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, realm_.get_turb_schmidt(mixFrac_->name()), 0.0, dataPreReqs);
-      
-    kb.build_topo_kernel_if_requested<ScalarNSOKeElemKernel>
-        ("NSO_4TH_KE",
-         realm_.bulk_data(), *realm_.solutionOptions_, mixFrac_, dzdx_, realm_.get_turb_schmidt(mixFrac_->name()), 1.0, dataPreReqs);
-
-    kb.report();
+      throw std::runtime_error(
+          "MixFracEQS: Element terms not supported");
   }
 
   // effective viscosity alg
@@ -567,7 +463,7 @@ MixtureFractionEquationSystem::register_inflow_bc(
 void
 MixtureFractionEquationSystem::register_open_bc(
   stk::mesh::Part *part,
-  const stk::topology &partTopo,
+  const stk::topology &,
   const OpenBoundaryConditionData &openBCData)
 {
 
@@ -615,28 +511,7 @@ MixtureFractionEquationSystem::register_open_bc(
 
   // now solver contributions; open; lhs
   if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ) {
-            
-    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
-    
-    stk::topology elemTopo = get_elem_topo(realm_, *part);
-    
-    AssembleFaceElemSolverAlgorithm* faceElemSolverAlg = nullptr;
-    bool solverAlgWasBuilt = false;
-    
-    std::tie(faceElemSolverAlg, solverAlgWasBuilt) 
-      = build_or_add_part_to_face_elem_solver_alg(algType, *this, *part, elemTopo, solverAlgMap, "open");
-    
-    auto& activeKernels = faceElemSolverAlg->activeKernels_;
-    
-    if (solverAlgWasBuilt) {
-  
-      build_face_elem_topo_kernel_automatic<ScalarOpenAdvElemKernel>
-        (partTopo, elemTopo, *this, activeKernels, "mixture_fraction_open",
-         realm_.meta_data(), *realm_.solutionOptions_,
-         this, mixFrac_, theBcField, dzdx_, evisc_, 
-         faceElemSolverAlg->faceDataNeeded_, faceElemSolverAlg->elemDataNeeded_);
-      
-    }
+      throw std::runtime_error("MixFracEQS: Element terms not supported");
   }
   else {
     std::map<AlgorithmType, SolverAlgorithm *>::iterator itsi
@@ -647,7 +522,8 @@ MixtureFractionEquationSystem::register_open_bc(
         theAlg = new AssembleScalarEdgeOpenSolverAlgorithm(realm_, part, this, mixFrac_, theBcField, &dzdxNone, evisc_);
       }
       else {
-        theAlg = new AssembleScalarElemOpenSolverAlgorithm(realm_, part, this, mixFrac_, theBcField, &dzdxNone, evisc_);
+          throw std::runtime_error(
+              "MixFracEQS: Attempt to use non-NGP element open solver algorithm");
       }
       solverAlgDriver_->solverAlgMap_[algType] = theAlg;
     }

@@ -2,19 +2,11 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ABLProfileFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AlgorithmDriver.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityElemOpenSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityElemSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityInflowSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleFaceElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleEdgeSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeWallFunctionSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemABLWallFunctionSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemOpenSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemSymmetrySolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumElemWallFunctionSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradBoundaryAlgorithm.C
@@ -34,9 +26,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarEdgeDiffSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarEdgeOpenSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarEigenEdgeSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarElemDiffSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarElemOpenSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarFluxBCSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleWallHeatTransferAlgorithmDriver.C
@@ -53,7 +42,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeWallFrictionVelocityAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ConstantAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityLowSpeedCompressibleNodeSuppAlg.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityMassElemSuppAlgDep.C
    ${CMAKE_CURRENT_SOURCE_DIR}/CopyFieldAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/CoriolisSrc.C
    ${CMAKE_CURRENT_SOURCE_DIR}/DataProbePostProcessing.C
@@ -88,9 +76,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeLowMachEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MixtureFractionEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBoussinesqRASrcNodeSuppAlg.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancySrcElemSuppAlgDep.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancySrcNodeSuppAlg.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumMassElemSuppAlgDep.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MovingAveragePostProcessor.C
    ${CMAKE_CURRENT_SOURCE_DIR}/NaluEnv.C
    ${CMAKE_CURRENT_SOURCE_DIR}/NaluParsing.C
@@ -103,7 +89,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ProjectedNodalGradientEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Realm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Realms.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarMassElemSuppAlgDep.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScratchViews.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ShearStressTransportEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Simulation.C
@@ -122,7 +107,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystemHelpers.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraSegregatedLinearSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergyEquationSystem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergyKsgsBuoyantElemSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscSmagorinskyAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscWaleAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbulenceAveragingPostProcessing.C
@@ -155,7 +139,6 @@ add_subdirectory(node_kernels)
 add_subdirectory(master_element)
 add_subdirectory(mesh_motion)
 add_subdirectory(ngp_algorithms)
-add_subdirectory(nso)
 add_subdirectory(overset)
 add_subdirectory(property_evaluator)
 add_subdirectory(utils)

@@ -1,36 +1,16 @@
 target_sources(nalu PRIVATE
-   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityAdvElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityInflowElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityMassElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityOpenElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/EnthalpyTGradBCElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/KernelBuilderLog.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumActuatorSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumAdvDiffElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancyBoussinesqSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancySrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumCoriolisSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBodyForceSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumMassElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumOpenAdvDiffElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSymmetryElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumUpwAdvDiffElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumWallFunctionElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarAdvDiffElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarDiffElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarDiffFemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxBCElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFaceFluxBCElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxPenaltyElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarMassElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarOpenAdvElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarUpwAdvDiffElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/SpecificDissipationRateSSTSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/SpecificDissipationRateSSTDESSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergyKsgsDesignOrderSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergyKsgsSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergySSTDESSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/TurbKineticEnergySSTSrcElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/WallDistElemKernel.C
 )
 

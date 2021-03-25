@@ -1,6 +1,5 @@
 target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTest1ElemCoordCheck.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestABLWallFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestBasicKokkos.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestCopyAndInterleave.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestCreateOnDevice.C
@@ -35,8 +34,6 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSideNodeOrdinals.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSidePCoords.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSimdBasic.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSimdContAdvElem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSimdMomentum.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSingleHexPromotion.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSpinnerLidarPattern.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSuppAlgDataSharing.C
