@@ -3121,142 +3121,51 @@ ContinuityEquationSystem::register_abltop_bc(
   // algorithm type
   const AlgorithmType algType = TOP_ABL;
 
-  if ( !realm_.realmUsesEdges_ )
-    throw std::runtime_error("ABLTopBoundaryCondition::Error you must use the edge-based scheme");
+  if (!realm_.realmUsesEdges_)
+    throw std::runtime_error(
+      "ABLTopBoundaryCondition::Error you must use the edge-based scheme");
 
-  ScalarFieldType &pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
-  VectorFieldType &dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
-
-/*
-  // register boundary data; cont_velocity_bc
-  if ( !realm_.solutionOptions_->activateOpenMdotCorrection_ ) {
-  std::string bcFieldName = realm_.solutionOptions_->activateOpenMdotCorrection_?"velocity_bc" : "cont_velocity_bc";
-    VectorFieldType *theBcField = &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, bcFieldName));
-    stk::mesh::put_field(*theBcField, *part, nDim);
-
-    // extract the value for user specified velocity and save off the AuxFunction
-    InflowUserData userData = inflowBCData.userData_;
-    std::string velocityName = "velocity";
-    UserDataType theDataType = get_bc_data_type(userData, velocityName);
-
-    AuxFunction *theAuxFunc = NULL;
-    if ( CONSTANT_UD == theDataType ) {
-      Velocity ux = userData.u_;
-      std::vector<double> userSpec(nDim);
-      userSpec[0] = ux.ux_;
-      userSpec[1] = ux.uy_;
-      if ( nDim > 2)
-        userSpec[2] = ux.uz_;
-
-      // new it
-      theAuxFunc = new ConstantAuxFunction(0, nDim, userSpec);
-    }
-    else if ( FUNCTION_UD == theDataType ) {
-      // extract the name/params
-      std::string fcnName = get_bc_function_name(userData, velocityName);
-      std::vector<double> theParams = get_bc_function_params(userData, velocityName);
-      if ( theParams.size() == 0 )
-        NaluEnv::self().naluOutputP0() << "function parameter size is zero" << std::endl;
-      // switch on the name found...
-      if ( fcnName == "convecting_taylor_vortex" ) {
-        theAuxFunc = new ConvectingTaylorVortexVelocityAuxFunction(0,nDim);
-      }
-      else if ( fcnName == "SteadyTaylorVortex" ) {
-        theAuxFunc = new SteadyTaylorVortexVelocityAuxFunction(0,nDim);
-      }
-      else if ( fcnName == "VariableDensity" ) {
-        theAuxFunc = new VariableDensityVelocityAuxFunction(0,nDim);
-      }
-      else if ( fcnName == "VariableDensityNonIso" ) {
-        theAuxFunc = new VariableDensityVelocityAuxFunction(0,nDim);
-      }
-      else if ( fcnName == "kovasznay") {
-        theAuxFunc = new KovasznayVelocityAuxFunction(0,nDim);
-      }
-      else if ( fcnName == "TaylorGreen") {
-        theAuxFunc = new TaylorGreenVelocityAuxFunction(0, nDim);
-      }
-      else if ( fcnName == "BoussinesqNonIso") {
-        theAuxFunc = new BoussinesqNonIsoVelocityAuxFunction(0, nDim);
-      }
-      else {
-        throw std::runtime_error("ContEquationSystem::register_inflow_bc: limited functions supported");
-      }
-    }
-    else {
-      throw std::runtime_error("ContEquationSystem::register_inflow_bc: only constant and user function supported");
-    }
-
-
-    // bc data alg
-    AuxFunctionAlgorithm *auxAlg
-      = new AuxFunctionAlgorithm(realm_, part,
-                                 theBcField, theAuxFunc,
-                                 stk::topology::NODE_RANK);
-
-    // how to populate the field?
-    if ( userData.externalData_ ) {
-      // xfer will handle population; only need to populate the initial value
-      realm_.initCondAlg_.push_back(auxAlg);
-    }
-    else {
-      // put it on bcData
-      bcDataAlg_.push_back(auxAlg);
-    }
-  }
-*/
+  ScalarFieldType& pressureNp1 = pressure_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType& dpdxNone = dpdx_->field_of_state(stk::mesh::StateNone);
 
   // non-solver; contribution to Gjp; allow for element-based shifted
-  if ( !managePNG_ ) {
+  if (!managePNG_) {
     nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
-      algType, part, "continuity_nodal_grad",
-      &pressureNp1, &dpdxNone, edgeNodalGradient_);
+      algType, part, "continuity_nodal_grad", &pressureNp1, &dpdxNone,
+      edgeNodalGradient_);
   }
 
   // check to see if we are using shifted as inflow is shared
-  const bool useShifted = !elementContinuityEqs_ ? true : realm_.get_cvfem_shifted_mdot();
+  const bool useShifted =
+    !elementContinuityEqs_ ? true : realm_.get_cvfem_shifted_mdot();
 
   // non-solver inflow mdot - shared by both elem/edge
   mdotAlgDriver_->register_face_algorithm<MdotInflowAlg>(
     algType, part, "mdot_inflow", *mdotAlgDriver_, useShifted);
 
   // solver; lhs
-  if ( realm_.solutionOptions_->useConsolidatedBcSolverAlg_ ||
-       realm_.realmUsesEdges_) {
+  auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
 
-    auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
+  AssembleElemSolverAlgorithm* solverAlg = nullptr;
+  bool solverAlgWasBuilt = false;
 
-    AssembleElemSolverAlgorithm* solverAlg = nullptr;
-    bool solverAlgWasBuilt = false;
+  std::tie(solverAlg, solverAlgWasBuilt) =
+    build_or_add_part_to_face_bc_solver_alg(
+      *this, *part, solverAlgMap, "inflow");
 
-    std::tie(solverAlg, solverAlgWasBuilt)
-      = build_or_add_part_to_face_bc_solver_alg(*this, *part, solverAlgMap, "inflow");
+  ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
+  auto& activeKernels = solverAlg->activeKernels_;
 
-    ElemDataRequests& dataPreReqs = solverAlg->dataNeededByKernels_;
-    auto& activeKernels = solverAlg->activeKernels_;
-
-    if (solverAlgWasBuilt) {
-      build_face_topo_kernel_automatic<ContinuityInflowElemKernel>
-        (partTopo, *this, activeKernels, "continuity_inflow",
-         realm_.bulk_data(), *realm_.solutionOptions_, useShifted, dataPreReqs);
-    }
-
+  if (solverAlgWasBuilt) {
+    build_face_topo_kernel_automatic<ContinuityInflowElemKernel>(
+      partTopo, *this, activeKernels, "continuity_inflow", realm_.bulk_data(),
+      *realm_.solutionOptions_, useShifted, dataPreReqs);
   }
-  else {
-    std::map<AlgorithmType, SolverAlgorithm *>::iterator its =
-      solverAlgDriver_->solverAlgMap_.find(algType);
-    if ( its == solverAlgDriver_->solverAlgMap_.end() ) {
-      AssembleContinuityInflowSolverAlgorithm *theAlg
-        = new AssembleContinuityInflowSolverAlgorithm(realm_, part, this, useShifted);
-      solverAlgDriver_->solverAlgMap_[algType] = theAlg;
-    }
-    else {
-      its->second->partVec_.push_back(part);
-    }
-  }
-
 #else
-  throw std::runtime_error("Cannot initialize ABL top BC because FFTW support is mising.\n Set ENABLE_FFTW to ON in nalu-wind/CMakeLists.txt, reconfigure and recompile.");
+  throw std::runtime_error(
+    "Cannot initialize ABL top BC because FFTW support is mising.\n Set "
+    "ENABLE_FFTW to ON in nalu-wind/CMakeLists.txt, reconfigure and "
+    "recompile.");
 #endif
 }
 
