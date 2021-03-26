@@ -76,7 +76,7 @@ const std::string realmDefaultSettings =
   "    max_iterations: 2                                                  \n"
   "                                                                       \n"
   "    solver_system_specification:                                       \n"
-  "      wall_distance: solve_scalar                                      \n"
+  "      ndtw : solve_scalar                                              \n"
   "                                                                       \n"
   "    systems:                                                           \n"
   "      - WallDistance:                                                  \n"
