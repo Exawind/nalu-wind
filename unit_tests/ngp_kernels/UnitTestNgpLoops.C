@@ -372,6 +372,11 @@ void basic_edge_loop(
         ngpPressure.get(ngpMesh, nodes[i], 0) = presSet;
     });
 
+  ngpMassFlowRate.modify_on_device();
+  ngpMassFlowRate.sync_to_host();
+  ngpPressure.modify_on_device();
+  ngpPressure.sync_to_host();
+
   {
     const auto& edgeBuckets = bulk.get_buckets(stk::topology::EDGE_RANK,  sel);
     const double tol = 1.0e-16;
