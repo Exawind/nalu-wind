@@ -30,9 +30,6 @@
 
 #include <kernel/KernelBuilder.h>
 
-// user functions
-#include <user_functions/SteadyThermalContactAuxFunction.h>
-
 // stk_mesh/base/fem
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/Field.hpp>

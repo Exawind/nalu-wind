@@ -12,10 +12,8 @@
 #include "FieldTypeDef.h"
 #include <TurbKineticEnergyEquationSystem.h>
 #include <AlgorithmDriver.h>
-#include <AssembleScalarEdgeOpenSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
-#include <AssembleNodalGradElemAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AuxFunctionAlgorithm.h>
 #include <ConstantAuxFunction.h>

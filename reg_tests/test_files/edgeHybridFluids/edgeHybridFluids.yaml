@@ -40,7 +40,6 @@ realms:
 
       solver_system_specification:
         velocity: solve_scalar
-        mixture_fraction: solve_scalar
         pressure: solve_cont
 
       systems:
@@ -49,18 +48,12 @@ realms:
             max_iterations: 1
             convergence_tolerance: 1e-5
 
-        - MixtureFraction:
-            name: myZ
-            max_iterations: 1
-            convergence_tolerance: 1.e-5
-
     initial_conditions:
       - constant: ic_1
         target_name: [block_1, block_2, block_3, block_4, block_5, block_6]
         value:
           pressure: 0
           velocity: [11.5,0,0]
-          mixture_fraction: 0.0
 
     material_properties:
       target_name: [block_1, block_2, block_3, block_4, block_5, block_6]
@@ -78,20 +71,17 @@ realms:
       target_name: surface_1
       inflow_user_data:
         velocity: [11.5,0,0]
-        mixture_fraction: 1.0
 
     - inflow_boundary_condition: bc_inflowB
       target_name: surface_2
       inflow_user_data:
         velocity: [11.5,0,0]
-        mixture_fraction: 1.0
 
     - open_boundary_condition: bc_back
       target_name: surface_3
       open_user_data:
         velocity: [0,0,0]
         pressure: 0.0
-        mixture_fraction: 0.0
 
     - symmetry_boundary_condition: bc_sides
       target_name: surface_4
@@ -112,18 +102,10 @@ realms:
       options:
         - hybrid_factor:
             velocity: 0.0 
-            mixture_fraction: 1.0
 
         - alpha_upw:
             velocity: 1.0 
-            mixture_fraction: 1.0
 
-        - laminar_schmidt:
-            mixture_fraction: 0.5
-
-        - turbulent_schmidt:
-            mixture_fraction: 1.0
-          
     output:
       output_data_base_name: output.e
       output_frequency: 5
@@ -131,9 +113,6 @@ realms:
       output_variables:
        - velocity
        - pressure
-       - mixture_fraction
-       - scalar_variance
-       - scalar_dissipation
        - turbulent_viscosity
 
 Time_Integrators:
