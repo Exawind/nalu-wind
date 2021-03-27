@@ -11,22 +11,14 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/GaussJetVelocityAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/KovasznayPressureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/KovasznayVelocityAuxFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/LinearRampMeshDisplacementAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/OneTwoTenVelocityAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PerturbedShearLayerAuxFunctions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/RayleighTaylorMixFracAuxFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/SinMeshDisplacementAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SinProfileChannelFlowVelocityAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyTaylorVortexGradPressureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyTaylorVortexMomentumSrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyTaylorVortexPressureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SteadyTaylorVortexVelocityAuxFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermal3dContactAuxFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermal3dContactDtDxAuxFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermal3dContactSrcElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermalContact3DSrcNodeSuppAlg.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermalContactAuxFunction.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/SteadyThermalContactSrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TaylorGreenPressureAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TaylorGreenVelocityAuxFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TornadoAuxFunction.C

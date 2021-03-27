@@ -5,8 +5,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumOpenAdvDiffElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumSymmetryElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumWallFunctionElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarDiffElemKernel.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ScalarDiffFemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxBCElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFaceFluxBCElemKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScalarFluxPenaltyElemKernel.C

@@ -19,15 +19,10 @@
 #include <AssembleMomentumEdgeABLTopBC.h>
 #endif
 #include <AssembleMomentumNonConformalSolverAlgorithm.h>
-#include <AssembleNodalGradElemAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
-#include <AssembleNodalGradUElemAlgorithm.h>
 #include <AssembleNodalGradUNonConformalAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
 #include <AuxFunctionAlgorithm.h>
-#include <ComputeMdotElemAlgorithm.h>
-#include <ComputeMdotElemOpenAlgorithm.h>
-#include <ComputeMdotElemOpenPenaltyAlgorithm.h>
 #include <ComputeMdotNonConformalAlgorithm.h>
 #include <ComputeWallFrictionVelocityAlgorithm.h>
 #include <ConstantAuxFunction.h>

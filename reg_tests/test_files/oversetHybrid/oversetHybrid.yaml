@@ -42,18 +42,12 @@ realms:
   
       solver_system_specification:
         velocity: solve_scalar
-        mixture_fraction: solve_scalar
         pressure: solve_cont
    
       systems:
 
         - LowMachEOM:
             name: myLowMach
-            max_iterations: 1
-            convergence_tolerance: 1e-5
-
-        - MixtureFraction:
-            name: myMixFrac
             max_iterations: 1
             convergence_tolerance: 1e-5
 
@@ -64,7 +58,6 @@ realms:
         value:
           pressure: 0.0
           velocity: [0.0,0.0,0.0]
-          mixture_fraction: 0.0
 
     material_properties:
       target_name: [block_1, block_2]
@@ -83,14 +76,12 @@ realms:
       target_name: surface_1
       inflow_user_data:
         velocity: [50.0,0.0,0.0]
-        mixture_fraction: 0.0
 
     - open_boundary_condition: bc_2
       target_name: surface_2
       open_user_data:
         pressure: 0.0
         velocity: [0.0,0.0,0.0]
-        mixture_fraction: 0.0
 
     - symmetry_boundary_condition: bc_3
       target_name: surface_3
@@ -100,7 +91,6 @@ realms:
       target_name: surface_5
       wall_user_data:
         velocity: [0.0,0.0]
-        mixture_fraction: 1.0
 
     - overset_boundary_condition: bc_left
       overset_connectivity_type: tioga
@@ -123,17 +113,14 @@ realms:
 
         - hybrid_factor:
             velocity: 0.1
-            mixture_fraction: 1.0
 
         - limiter:
             pressure: no
             velocity: no
-            mixture_fraction: yes
 
         - projected_nodal_gradient:
             pressure: element
             velocity: element
-            mixture_fraction: element
  
     output:
       output_data_base_name: hyrbid_sphere.e
@@ -143,7 +130,6 @@ realms:
        - dual_nodal_volume
        - velocity
        - pressure
-       - mixture_fraction
        - iblank
        - iblank_cell
 

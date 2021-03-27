@@ -8,35 +8,20 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleEdgeSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumEdgeWallFunctionSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleMomentumNonConformalSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradAlgorithmDriver.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradBoundaryAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradEdgeAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradNonConformalAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradUAlgorithmDriver.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradUBoundaryAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradUElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodalGradUNonConformalAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNodeSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleNGPNodeSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssemblePNGBoundarySolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssemblePNGElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssemblePNGNonConformalSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarDiffNonConformalSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarEdgeDiffSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarEdgeOpenSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarEigenEdgeSolverAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarFluxBCSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleWallHeatTransferAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AuxFunctionAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AveragingInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/BoundaryConditions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeHeatTransferEdgeWallAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeHeatTransferElemWallAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemOpenAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotElemOpenPenaltyAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeMdotNonConformalAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeSSTMaxLengthScaleElemAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ComputeWallFrictionVelocityAlgorithm.C
@@ -59,9 +44,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/EquationSystems.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FieldFunctions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/FixPressureAtNodeAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/HeatCondEquationSystem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/HeatCondMassBDF2NodeSuppAlg.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/HeatCondMassBackwardEulerNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InitialConditions.C
    ${CMAKE_CURRENT_SOURCE_DIR}/InputOutputRealm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSolver.C
@@ -69,12 +51,10 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSolvers.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LinearSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/LowMachEquationSystem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MassFractionEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MaterialProperty.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MaterialPropertys.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeHeatCondEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MatrixFreeLowMachEquationSystem.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/MixtureFractionEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBoussinesqRASrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MomentumBuoyancySrcNodeSuppAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MovingAveragePostProcessor.C

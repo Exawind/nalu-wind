@@ -12,17 +12,13 @@
 #include <EnthalpyEquationSystem.h>
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <AlgorithmDriver.h>
-#include <AssembleScalarFluxBCSolverAlgorithm.h>
-#include <AssembleScalarEdgeOpenSolverAlgorithm.h>
 #include <AssembleScalarEigenEdgeSolverAlgorithm.h>
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
-#include <AssembleNodalGradElemAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
 #include <AssembleWallHeatTransferAlgorithmDriver.h>
 #include <AuxFunctionAlgorithm.h>
 #include <ComputeHeatTransferEdgeWallAlgorithm.h>
-#include <ComputeHeatTransferElemWallAlgorithm.h>
 #include <ConstantAuxFunction.h>
 #include <CopyFieldAlgorithm.h>
 #include <DirichletBC.h>
@@ -715,7 +711,7 @@ EnthalpyEquationSystem::register_wall_bc(
         theAlg = new ComputeHeatTransferEdgeWallAlgorithm(realm_, part);
       }
       else {
-        theAlg = new ComputeHeatTransferElemWallAlgorithm(realm_, part);
+          throw std::runtime_error("HeatTransfer: Element algorithm not supported");
       }
       assembleWallHeatTransferAlgDriver_->algMap_[algType] = theAlg;
     }
