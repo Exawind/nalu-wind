@@ -620,6 +620,7 @@ ActuatorSimple::execute()
   // apply the forcing terms
   execute_class_specific(nDim, coordinates, actuator_source, dualNodalVolume);
 
+  if (debug_output_) {
   // Write the thrust outputs
   NaluEnv::self().naluOutputP0() << " -- START BLADE summary --" <<std::endl;
   // Outputs from source terms
@@ -663,6 +664,7 @@ ActuatorSimple::execute()
       }
   }
   NaluEnv::self().naluOutputP0() << " -- END summary --" <<std::endl;
+  }
 
 
   //throw std::runtime_error("ActuatorSimple: done execute_class_specific()");  //LCCSTOP
