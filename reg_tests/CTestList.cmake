@@ -194,7 +194,9 @@ if(NOT ENABLE_CUDA)
   #=============================================================================
   # Comparing solution norm tests
   #=============================================================================
-  add_test_v_sol_norm(convTaylorVortex 2)
+  if(ENABLE_HYPRE)
+    add_test_v_sol_norm(convTaylorVortex 2)
+  endif(ENABLE_HYPRE)
 
   #=============================================================================
   # Convergence tests
@@ -243,6 +245,13 @@ else(NOT ENABLE_CUDA)
   if (ENABLE_TIOGA AND ENABLE_HYPRE)
     add_test_r(oversetRotCylNGPHypre 2)
   endif()
+  
+  #=============================================================================
+  # Comparing solution norm tests
+  #=============================================================================
+  if(ENABLE_HYPRE)
+    add_test_v_sol_norm(convTaylorVortex 2)
+  endif(ENABLE_HYPRE)
 
   #=============================================================================
   # GPU unit tests

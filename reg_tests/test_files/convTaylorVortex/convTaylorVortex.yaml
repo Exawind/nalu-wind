@@ -15,15 +15,13 @@ linear_solvers:
     output_level: 0
 
   - name: solve_cont
-    type: tpetra
-    method: gmres
-    preconditioner: muelu
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
     tolerance: 1e-12
-    max_iterations: 100
-    kspace: 100
+    max_iterations: 200
+    kspace: 75
     output_level: 0
-    muelu_xml_file_name: ../../xml/milestone.xml
-    recompute_preconditioner: no
 
 realms:
 
