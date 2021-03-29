@@ -52,7 +52,7 @@ def compute_and_check_norms(base_name, gold_norm_name, tol):
                 exit(1)
 
 
-tol = 1e-12
+tol = 1e-10
 args = parse_arguments()
 compute_and_check_norms(args.test_name, args.gold_norms, tol)
 exit(0)
