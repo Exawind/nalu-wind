@@ -142,6 +142,10 @@ realms:
         pressure: element
         velocity: element
 
+    - source_terms:
+        momentum:
+          - actuator
+
   actuator:
     type: ActLineSimple
     search_method: stk_kdtree
