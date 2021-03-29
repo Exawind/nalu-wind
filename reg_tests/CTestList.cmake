@@ -148,6 +148,7 @@ if(NOT ENABLE_CUDA)
   add_test_r(ActLineSimpleFLLC 4)
   add_test_r(ActLineSimpleNGP 2)
   add_test_r(ablHill3dSymPenalty 4)
+  add_test_r(MeshMotionInterior 4)
 
   if (ENABLE_FFTW)
     add_test_r(ablHill3d_pp 4)

@@ -8,7 +8,7 @@
 //
 
 #include <limits>
-#include <stk_mesh/base/CreateEdges.h>
+#include <stk_mesh/base/CreateEdges.hpp>
 #include "kernels/UnitTestKernelUtils.h"
 #include "UnitTestHelperObjects.h"
 
