@@ -2072,7 +2072,6 @@ MomentumEquationSystem::register_symmetry_bc(
    case SYMMTYPES::GENERAL_WEAK:
       if (!realm_.realmUsesEdges_) {
           throw std::runtime_error("MomentumEQS: Attempt to use element symm algorithm");
-      }
     } else {
       auto& solverAlgMap = solverAlgDriver_->solverAlgorithmMap_;
 
@@ -2090,6 +2089,9 @@ MomentumEquationSystem::register_symmetry_bc(
       auto& activeKernels = faceElemSolverAlg->activeKernels_;
 
       if (solverAlgWasBuilt) {
+          const stk::mesh::MetaData& metaData = realm_.meta_data();
+          const std::string viscName = realm_.is_turbulent()
+                ? "effective_viscosity_u" : "viscosity";
 
           build_face_elem_topo_kernel_automatic<MomentumSymmetryEdgeKernel>(
             partTopo, elemTopo, *this, activeKernels, "momentum_symmetry_edge",
@@ -2102,7 +2104,6 @@ MomentumEquationSystem::register_symmetry_bc(
             faceElemSolverAlg->elemDataNeeded_);
         }
       }
-    }
     return;
 // Avoid nvcc unreachable statement warnings
 #ifndef __CUDACC__
@@ -2902,14 +2903,16 @@ ContinuityEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       auto& solverAlgMap = solverAlgDriver_->solverAlgMap_;
       process_ngp_node_kernels(
         solverAlgMap, realm_, part, this,
-        [&](AssembleNGPNodeSolverAlgorithm&) {
-          // Time derivative terms not yet implemented
+        [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
+          if(realm_.has_mesh_motion()){
+            nodeAlg.add_kernel<ContinuityMassBDFNodeKernel>(realm_.bulk_data());
+            hasMass = true;
+            lumpedMass = true; 
+          }
         },
         [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
           bool added = true;
-          if (srcName == "gcl") {
-            nodeAlg.add_kernel<ContinuityGclNodeKernel>(realm_.bulk_data());
-          } else if (srcName == "density_time_derivative") {
+          if (srcName == "density_time_derivative" && !realm_.has_mesh_motion()) {
             nodeAlg.add_kernel<ContinuityMassBDFNodeKernel>(realm_.bulk_data());
             hasMass = true;
             lumpedMass = true;
