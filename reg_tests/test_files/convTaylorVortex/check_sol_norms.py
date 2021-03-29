@@ -8,13 +8,11 @@ import os
 import os.path
 import argparse
 
+
 def parse_arguments():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
         description="Nalu-Wind verification test check utility")
-    parser.add_argument(
-        '--abs-tol', type=float, default=1.0e-15,
-        help="Tolerance for absolute error")
     parser.add_argument(
         "test_name", help="Verification test name")
     parser.add_argument(
@@ -54,7 +52,7 @@ def compute_and_check_norms(base_name, gold_norm_name, tol):
                 exit(1)
 
 
+tol = 1e-12
 args = parse_arguments()
-compute_and_check_norms(args.test_name, args.gold_norms, args.abs_tol)
-
+compute_and_check_norms(args.test_name, args.gold_norms, tol)
 exit(0)
