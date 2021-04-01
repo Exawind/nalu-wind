@@ -339,6 +339,9 @@ SolutionNormPostProcessing::execute()
     int offSet = 0;
     for ( size_t j = 0; j < fieldPairVec_.size(); ++j ) {
 
+      // sync solution fields
+      fieldPairVec_[j].first->sync_to_host();
+
       // extract fields
       const double *dofField = (double*)stk::mesh::field_data(*(fieldPairVec_[j].first), b);
       double *exactDofField = (double*)stk::mesh::field_data(*(fieldPairVec_[j].second), b);

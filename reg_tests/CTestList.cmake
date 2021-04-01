@@ -37,6 +37,13 @@ function(add_test_r_inp testname np)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
 endfunction(add_test_r_inp)
 
+# Verification test comparing solution norms
+function(add_test_v_sol_norm testname np)
+    add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${nalu_ex_name} ${MPIEXEC_POSTFLAGS} -i ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/${testname}.yaml -o ${testname}.log && python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/check_sol_norms.py ${testname} ${NALU_GOLD_NORMS_DIR}/test_files/${testname}/${testname}.norm.gold")
+    set_tests_properties(${testname} PROPERTIES TIMEOUT 18000 PROCESSORS ${np} WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}" LABELS "verification")
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname})
+endfunction(add_test_v_sol_norm)
+
 # Verification test with three resolutions
 function(add_test_v3 testname np)
     add_test(${testname} sh -c "${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${nalu_ex_name} ${MPIEXEC_POSTFLAGS} -i ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/${testname}_R0.yaml -o ${testname}_R0.log && ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${nalu_ex_name} ${MPIEXEC_POSTFLAGS} -i ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/${testname}_R1.yaml -o ${testname}_R1.log && ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${np} ${MPIEXEC_PREFLAGS} ${CMAKE_BINARY_DIR}/${nalu_ex_name} ${MPIEXEC_POSTFLAGS} -i ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/${testname}_R2.yaml -o ${testname}_R2.log && python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_files/${testname}/norms.py")
@@ -184,10 +191,17 @@ if(NOT ENABLE_CUDA)
   endif()
 
   #=============================================================================
+  # Comparing solution norm tests
+  #=============================================================================
+  if(ENABLE_HYPRE)
+    add_test_v_sol_norm(convTaylorVortex 2)
+  endif(ENABLE_HYPRE)
+
+  #=============================================================================
   # Convergence tests
   #=============================================================================
   add_test_v2(BoussinesqNonIso 8)
-
+  
   #=============================================================================
   # Unit tests
   #=============================================================================
@@ -230,6 +244,13 @@ else(NOT ENABLE_CUDA)
   if (ENABLE_TIOGA AND ENABLE_HYPRE)
     add_test_r(oversetRotCylNGPHypre 2)
   endif()
+  
+  #=============================================================================
+  # Comparing solution norm tests
+  #=============================================================================
+  if(ENABLE_HYPRE)
+    add_test_v_sol_norm(convTaylorVortex 2)
+  endif(ENABLE_HYPRE)
 
   #=============================================================================
   # GPU unit tests
