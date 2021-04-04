@@ -155,7 +155,7 @@
 #include <stdint.h>
 
 // catalyst visualization output
-#include <Iovs_DatabaseIO.h>
+#include <Iovs_exodus_DatabaseIO.h>
 
 #define USE_NALU_PERFORMANCE_TESTING_CALLGRIND 0
 #if USE_NALU_PERFORMANCE_TESTING_CALLGRIND
