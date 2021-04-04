@@ -246,6 +246,7 @@ if(ENABLE_PARAVIEW_CATALYST)
    set(PARAVIEW_CATALYST_INSTALL_PATH "" CACHE PATH
        "Path to external installation of Trilinos Catalyst IOSS plugin.")
    configure_file(cmake/naluXCatalyst.in ${nalu_ex_catalyst_name} @ONLY)
+   target_compile_definitions(nalu PUBLIC NALU_USES_CATALYST)
 endif()
 
 install(TARGETS ${utest_ex_name} ${nalu_ex_name} nalu

@@ -154,8 +154,10 @@
 #include <utility>
 #include <stdint.h>
 
+#ifdef NALU_USES_CATALYST
 // catalyst visualization output
 #include <Iovs_exodus_DatabaseIO.h>
+#endif
 
 #define USE_NALU_PERFORMANCE_TESTING_CALLGRIND 0
 #if USE_NALU_PERFORMANCE_TESTING_CALLGRIND
@@ -787,10 +789,14 @@ Realm::load(const YAML::Node & node)
   // Parse catalyst input file if requested
   if(!outputInfo_->catalystFileName_.empty())
   {
-  int error = Iovs::DatabaseIO::parseCatalystFile(outputInfo_->catalystFileName_,
+#ifdef NALU_USES_CATALYST
+  int error = Iovs_exodus::DatabaseIO::parseCatalystFile(outputInfo_->catalystFileName_,
                                                   outputInfo_->catalystParseJson_);
   if(error)
     throw std::runtime_error("Catalyst file parse failed: " + outputInfo_->catalystFileName_);
+#else
+    throw std::runtime_error("Nalu-Wind not built with Catalyst support");
+#endif
   }
 
   // solution options - loaded before create_mesh
@@ -1917,6 +1923,7 @@ Realm::create_output_mesh()
     std::string oname =  outputInfo_->outputDBName_ ;
     if(!outputInfo_->catalystFileName_.empty()||
        !outputInfo_->paraviewScriptName_.empty()) {
+#ifdef NALU_USES_CATALYST
       outputInfo_->outputPropertyManager_->add(Ioss::Property("CATALYST_BLOCK_PARSE_JSON_STRING",
                                                outputInfo_->catalystParseJson_));
       std::string input_deck_name = "%B";
@@ -1929,6 +1936,9 @@ Realm::create_output_mesh()
       outputInfo_->outputPropertyManager_->add(Ioss::Property("CATALYST_CREATE_SIDE_SETS", 1));
       
       resultsFileIndex_ = ioBroker_->create_output_mesh( oname, stk::io::WRITE_RESULTS, *outputInfo_->outputPropertyManager_, "catalyst" );
+#else
+      throw std::runtime_error("Nalu-Wind not built with Catalyst support");
+#endif
    }
    else {
       resultsFileIndex_ = ioBroker_->create_output_mesh( oname, stk::io::WRITE_RESULTS, *outputInfo_->outputPropertyManager_);
