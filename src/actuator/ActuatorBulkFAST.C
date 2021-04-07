@@ -40,7 +40,8 @@ ActuatorMetaFAST::get_fast_index(
 bool
 ActuatorMetaFAST::is_disk()
 {
-  return actuatorType_ == ActuatorType::ActDiskFASTNGP;
+  return actuatorType_ == ActuatorType::ActDiskFASTNGP ||
+         actuatorType_ == ActuatorType::ActDiskFAST;
 }
 
 ActuatorBulkFAST::ActuatorBulkFAST(

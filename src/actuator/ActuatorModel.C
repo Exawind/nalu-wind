@@ -32,7 +32,9 @@ ActuatorModel::parse(const YAML::Node& actuatorNode)
   const std::string actuatorType =
     actuatorNode["actuator"]["type"].as<std::string>();
   switch (actMetaBase.actuatorType_) {
+  case ActuatorType::ActDiskFAST:
   case ActuatorType::ActDiskFASTNGP:
+  case ActuatorType::ActLineFAST:
   case ActuatorType::ActLineFASTNGP: {
 #ifdef NALU_USES_OPENFAST
     actMeta_.reset(
@@ -47,16 +49,12 @@ ActuatorModel::parse(const YAML::Node& actuatorNode)
     break;
 #endif
   }
+  case ActuatorType::ActLineSimple:
   case ActuatorType::ActLineSimpleNGP: {
     actMeta_.reset(
       new ActuatorMetaSimple(actuator_Simple_parse(actuatorNode, actMetaBase)));
     break;
   }
-  case ActuatorType::ActLineSimple:
-  case ActuatorType::ActLineFAST:
-  case ActuatorType::ActDiskFAST:
-    break; // TODO move these to the appropriate version above when old code is
-           // deleted
   default: {
     throw std::runtime_error(
       "look_ahead_and_create::error: unrecognized actuator type: " +

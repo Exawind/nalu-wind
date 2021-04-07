@@ -61,13 +61,7 @@
 #include <wind_energy/BdyLayerStatistics.h>
 
 // actuator line
-#include <actuator/Actuator.h>
 #include <actuator/ActuatorModel.h>
-#include <actuator/ActuatorLineSimple.h>
-#ifdef NALU_USES_OPENFAST
-#include <actuator/ActuatorLineFAST.h>
-#include <actuator/ActuatorDiskFAST.h>
-#endif
 
 #include <wind_energy/ABLForcingAlgorithm.h>
 #include <wind_energy/SyntheticLidar.h>
@@ -175,12 +169,12 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-  Realm::Realm(Realms& realms, const YAML::Node & node)
+Realm::Realm(Realms& realms, const YAML::Node& node)
   : realms_(realms),
     name_("na"),
     type_("multi_physics"),
     inputDBName_("input_unknown"),
-    spatialDimension_(3u),  // for convenience; can always get it from meta data
+    spatialDimension_(3u), // for convenience; can always get it from meta data
     realmUsesEdges_(true),
     solveFrequency_(1),
     isTurbulent_(false),
@@ -208,7 +202,6 @@ namespace nalu{
     solutionNormPostProcessing_(NULL),
     turbulenceAveragingPostProcessing_(NULL),
     dataProbePostProcessing_(NULL),
-    actuator_(NULL),
     actuatorModel_(new ActuatorModel()),
     ablForcingAlg_(NULL),
     nodeCount_(0),
@@ -299,9 +292,6 @@ Realm::~Realm()
 
   if ( NULL != dataProbePostProcessing_ )
     delete dataProbePostProcessing_;
-
-  if ( NULL != actuator_ )
-    delete actuator_;
 
   // delete non-conformal related things
   if ( NULL != nonConformalManager_ )
@@ -594,55 +584,9 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
   NaluParsingHelper::find_nodes_given_key("actuator", node, foundActuator);
   if ( foundActuator.size() > 0 ) {
     if ( foundActuator.size() != 1 )
-      throw std::runtime_error("look_ahead_and_create::error: Too many actuator line blocks");
-
-
+      throw std::runtime_error(
+        "look_ahead_and_create::error: Too many actuator line blocks");
     actuatorModel_->parse(*foundActuator[0]);
-
-    // TODO delete the rest of this switch statement when remove old actuator code 
-    const std::string actuatorTypeName = (*foundActuator[0])["actuator"]["type"].as<std::string>();
-    switch ( ActuatorTypeMap[actuatorTypeName] ) {
-      case ActuatorType::ActLineSimpleNGP:
-      case ActuatorType::ActLineFASTNGP:
-      case ActuatorType::ActDiskFASTNGP:
-        break;
-      case ActuatorType::ActLineFAST : {
-#ifdef NALU_USES_OPENFAST
-	actuator_ =  new ActuatorLineFAST(*this, *foundActuator[0]);
-	break;
-#else
-	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + actuatorTypeName + ", but was not enabled at compile time");
-// Avoid nvcc unreachable statement warnings
-#ifndef KOKKOS_ENABLE_CUDA
-      break;
-#endif
-#endif
-      }
-      case ActuatorType::ActDiskFAST : {
-#ifdef NALU_USES_OPENFAST
-	actuator_ =  new ActuatorDiskFAST(*this, *foundActuator[0]);
-	break;
-#else
-	throw std::runtime_error("look_ahead_and_create::error: Requested actuator type: " + actuatorTypeName + ", but was not enabled at compile time");
-// Avoid nvcc unreachable statement warnings
-#ifndef KOKKOS_ENABLE_CUDA
-      break;
-#endif
-#endif
-      }
-      case ActuatorType::ActLineSimple : {
-	actuator_ =  new ActuatorLineSimple(*this, *foundActuator[0]);
-	break;
-      }
-      default : {
-        throw std::runtime_error("look_ahead_and_create::error: unrecognized actuator type: " + actuatorTypeName);
-// Avoid nvcc unreachable statement warnings
-#ifndef KOKKOS_ENABLE_CUDA
-      break;
-#endif
-      }
-      }
-    
   }
 
   // Boundary Layer Statistics post-processing
@@ -994,10 +938,6 @@ Realm::setup_post_processing_algorithms()
   if ( NULL != dataProbePostProcessing_ ) {
     dataProbePostProcessing_->setup();
   }
-
-  // check for actuator line
-  if ( NULL != actuator_ )
-    actuator_->setup();
 
   actuatorModel_->setup(get_time_step_from_file(), bulk_data());
 
@@ -1778,17 +1718,13 @@ Realm::advance_time_step()
   // compute velocity relative to mesh
   compute_vrtm();
 
-  // check for actuator line; assemble the source terms for this time step
-  if ( NULL != actuator_ ) {
+  // check for  actuator; assemble the source terms for this step
+  if (actuatorModel_->is_active()) {
     const double start_time = NaluEnv::self().nalu_time();
-    actuator_->execute();
+    actuatorModel_->execute(timerActuator_);
     const double end_time = NaluEnv::self().nalu_time();
     timerActuator_ += end_time - start_time;
   }
-
-  // check for  actuator; assemble the source terms for this step
-  actuatorModel_->execute(timerActuator_);
-
   // Check for ABL forcing; estimate source terms for this time step
   if ( NULL != ablForcingAlg_) {
     ablForcingAlg_->execute();
@@ -2264,11 +2200,6 @@ Realm::initialize_post_processing_algorithms()
   // check for data probes
   if ( NULL != dataProbePostProcessing_ )
     dataProbePostProcessing_->initialize();
-
-  // check for actuator... probably a better place for this
-  if ( NULL != actuator_ ) {
-    actuator_->initialize();
-  }
 
   if ( NULL != ablForcingAlg_) {
     ablForcingAlg_->initialize();
