@@ -202,7 +202,6 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     solutionNormPostProcessing_(NULL),
     turbulenceAveragingPostProcessing_(NULL),
     dataProbePostProcessing_(NULL),
-    actuatorModel_(new ActuatorModel()),
     ablForcingAlg_(NULL),
     nodeCount_(0),
     estimateMemoryOnly_(false),
@@ -586,6 +585,7 @@ Realm::look_ahead_and_creation(const YAML::Node & node)
     if ( foundActuator.size() != 1 )
       throw std::runtime_error(
         "look_ahead_and_create::error: Too many actuator line blocks");
+    actuatorModel_ = std::make_unique<ActuatorModel>();
     actuatorModel_->parse(*foundActuator[0]);
   }
 
