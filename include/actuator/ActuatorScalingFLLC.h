@@ -31,6 +31,10 @@ scale_lift_force(
   const int offset,
   const int nPoints)
 {
+  // suppress compiler warnings for unused variables when compiling w/o openfast
+  (void)offset;
+  (void)nPoints;
+
   switch (actMeta.actuatorType_) {
   case (ActuatorType::ActLineSimpleNGP): {
     auto actBulkSimple = dynamic_cast<ActuatorBulkSimple&>(actBulk);
