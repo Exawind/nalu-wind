@@ -32,9 +32,7 @@ ActuatorModel::parse(const YAML::Node& actuatorNode)
   const std::string actuatorType =
     actuatorNode["actuator"]["type"].as<std::string>();
   switch (actMetaBase.actuatorType_) {
-  case ActuatorType::ActDiskFAST:
   case ActuatorType::ActDiskFASTNGP:
-  case ActuatorType::ActLineFAST:
   case ActuatorType::ActLineFASTNGP: {
 #ifdef NALU_USES_OPENFAST
     actMeta_.reset(
@@ -49,7 +47,6 @@ ActuatorModel::parse(const YAML::Node& actuatorNode)
     break;
 #endif
   }
-  case ActuatorType::ActLineSimple:
   case ActuatorType::ActLineSimpleNGP: {
     actMeta_.reset(
       new ActuatorMetaSimple(actuator_Simple_parse(actuatorNode, actMetaBase)));
@@ -150,10 +147,7 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
     break;
 #endif
   }
-  case (ActuatorType::ActLineSimpleNGP):
-  case (ActuatorType::ActLineSimple):
-  case (ActuatorType::ActLineFAST):
-  case (ActuatorType::ActDiskFAST): {
+  case (ActuatorType::ActLineSimpleNGP): {
     break;
   }
   default: {

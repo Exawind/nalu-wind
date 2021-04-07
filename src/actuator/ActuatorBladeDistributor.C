@@ -52,8 +52,6 @@ compute_blade_distributions(const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
     break;
   }
   case (ActuatorType::ActDiskFASTNGP):
-  case (ActuatorType::ActDiskFAST):
-  case (ActuatorType::ActLineFAST):
   case (ActuatorType::ActLineFASTNGP): {
 #ifdef NALU_USES_OPENFAST
     const int numRanks = NaluEnv::self().parallel_size();
