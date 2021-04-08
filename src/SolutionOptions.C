@@ -315,8 +315,24 @@ SolutionOptions::load(const YAML::Node & y_node)
           const YAML::Node y_user_constants = y_option["user_constants"];
           get_if_present(y_user_constants, "reference_density",  referenceDensity_, referenceDensity_);
           get_if_present(y_user_constants, "reference_temperature",  referenceTemperature_, referenceTemperature_);
-          get_if_present(y_user_constants, "thermal_expansion_coefficient",  thermalExpansionCoeff_, thermalExpansionCoeff_);
-          get_if_present(y_user_constants, "stefan_boltzmann",  stefanBoltzmann_, stefanBoltzmann_);
+
+          const auto thermal_expansion_option = "thermal_expansion_coefficient";
+          if (
+            y_user_constants["reference_temperature"] &&
+            !y_user_constants[thermal_expansion_option]) {
+            thermalExpansionCoeff_ = 1 / referenceTemperature_;
+            NaluEnv::self().naluOutputP0()
+              << "Using ideal gas relationship for thermal expansion "
+                 "coefficient of "
+              << thermalExpansionCoeff_ << "\n  -- specify "
+              << thermal_expansion_option
+              << " in user constants to set a different value"
+              << std::endl;
+          }
+          get_if_present(
+            y_user_constants, thermal_expansion_option, thermalExpansionCoeff_,
+            thermalExpansionCoeff_);
+          
           get_if_present(y_user_constants, "earth_angular_velocity", earthAngularVelocity_, earthAngularVelocity_);
           get_if_present(y_user_constants, "latitude", latitude_, latitude_);
           get_if_present(y_user_constants, "boussinesq_time_scale", raBoussinesqTimeScale_, raBoussinesqTimeScale_);

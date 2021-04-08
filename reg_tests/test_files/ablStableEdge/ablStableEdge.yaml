@@ -211,7 +211,6 @@ realms:
         reference_density: 1.3223
         reference_temperature: 263.5
         gravity: [0.0, 0.0, -9.81]
-        thermal_expansion_coefficient: 3.33333333e-3
         east_vector: [1.0, 0.0, 0.0]
         north_vector: [0.0, 1.0, 0.0]
         latitude: 73.0
