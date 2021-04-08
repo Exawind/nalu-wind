@@ -28,7 +28,6 @@ dot(double* u, double* v)
   return result;
 }
 
-// TODO(psakiev) - add option to run over portion of the blade
 FilteredLiftingLineCorrection::FilteredLiftingLineCorrection(
   const ActuatorMeta& actMeta, ActuatorBulk& actBulk)
   : actBulk_(actBulk), actMeta_(actMeta)

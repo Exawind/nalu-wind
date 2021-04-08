@@ -80,7 +80,6 @@ class MeshTransformationAlg;
 class SolutionNormPostProcessing;
 class TurbulenceAveragingPostProcessing;
 class DataProbePostProcessing;
-class Actuator;
 struct ActuatorModel;
 class ABLForcingAlgorithm;
 class BdyLayerStatistics;
@@ -449,8 +448,7 @@ class Realm {
   PostProcessingInfo *postProcessingInfo_;
   SolutionNormPostProcessing *solutionNormPostProcessing_;
   TurbulenceAveragingPostProcessing *turbulenceAveragingPostProcessing_;
-  DataProbePostProcessing *dataProbePostProcessing_;
-  Actuator *actuator_;
+  DataProbePostProcessing* dataProbePostProcessing_;
   std::unique_ptr<ActuatorModel> actuatorModel_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};

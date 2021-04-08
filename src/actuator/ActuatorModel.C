@@ -52,11 +52,6 @@ ActuatorModel::parse(const YAML::Node& actuatorNode)
       new ActuatorMetaSimple(actuator_Simple_parse(actuatorNode, actMetaBase)));
     break;
   }
-  case ActuatorType::ActLineSimple:
-  case ActuatorType::ActLineFAST:
-  case ActuatorType::ActDiskFAST:
-    break; // TODO move these to the appropriate version above when old code is
-           // deleted
   default: {
     throw std::runtime_error(
       "look_ahead_and_create::error: unrecognized actuator type: " +
@@ -152,10 +147,7 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
     break;
 #endif
   }
-  case (ActuatorType::ActLineSimpleNGP):
-  case (ActuatorType::ActLineSimple):
-  case (ActuatorType::ActLineFAST):
-  case (ActuatorType::ActDiskFAST): {
+  case (ActuatorType::ActLineSimpleNGP): {
     break;
   }
   default: {
