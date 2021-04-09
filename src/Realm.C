@@ -939,7 +939,8 @@ Realm::setup_post_processing_algorithms()
     dataProbePostProcessing_->setup();
   }
 
-  actuatorModel_->setup(get_time_step_from_file(), bulk_data());
+  if (actuatorModel_)
+    actuatorModel_->setup(get_time_step_from_file(), bulk_data());
 
   // check for norm nodal fields
   if ( NULL != solutionNormPostProcessing_ )
@@ -1719,7 +1720,7 @@ Realm::advance_time_step()
   compute_vrtm();
 
   // check for  actuator; assemble the source terms for this step
-  if (actuatorModel_->is_active()) {
+  if (actuatorModel_) {
     const double start_time = NaluEnv::self().nalu_time();
     actuatorModel_->execute(timerActuator_);
     const double end_time = NaluEnv::self().nalu_time();
@@ -2205,7 +2206,8 @@ Realm::initialize_post_processing_algorithms()
     ablForcingAlg_->initialize();
   }
 
-  actuatorModel_->init(bulk_data());
+  if (actuatorModel_)
+    actuatorModel_->init(bulk_data());
 }
 
 //--------------------------------------------------------------------------
