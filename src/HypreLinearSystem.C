@@ -24,6 +24,10 @@ HypreLinearSystem::HypreLinearSystem(
   rowCountOwned_.clear();
   columnsShared_.clear();
   rowCountShared_.clear();
+  globalMatSharedRowCounts_.clear();
+  localMatSharedRowCounts_.clear();
+  globalRhsSharedRowCounts_.clear();
+  localRhsSharedRowCounts_.clear();
 }
 
 HypreLinearSystem::~HypreLinearSystem()
@@ -56,8 +60,6 @@ HypreLinearSystem::~HypreLinearSystem()
     printTimings(buildGraphTimer_, "buildGraphTimer");
   if (finalizeLinearSystemTimer_.size() > 0)
     printTimings(finalizeLinearSystemTimer_, "finalizeLinearSystemTimer");
-  if (hypreAssemblyTimer_.size() > 0)
-    printTimings(hypreAssemblyTimer_, "hypreAssemblyTimer");
   if (hypreMatAssemblyTimer_.size() > 0)
     printTimings(hypreMatAssemblyTimer_, "hypreMatAssemblyTimer");
   if (hypreRhsAssemblyTimer_.size() > 0)
@@ -98,7 +100,6 @@ HypreLinearSystem::beginLinearSystemConstruction()
   buildDirichletNodeGraphTimer_.resize(0);
   buildGraphTimer_.resize(0);
   finalizeLinearSystemTimer_.resize(0);
-  hypreAssemblyTimer_.resize(0);
   hypreMatAssemblyTimer_.resize(0);
   hypreRhsAssemblyTimer_.resize(0);
 #endif
@@ -157,6 +158,16 @@ HypreLinearSystem::beginLinearSystemConstruction()
 
   rowCountShared_.clear();
   columnsShared_.clear();
+
+  int nprocs = realm_.bulk_data().parallel_size();
+  globalMatSharedRowCounts_.resize(nprocs);
+  localMatSharedRowCounts_.resize(nprocs);
+  globalRhsSharedRowCounts_.resize(nprocs);
+  localRhsSharedRowCounts_.resize(nprocs);
+  offProcNNZToSend_ = 0;
+  offProcNNZToRecv_ = 0;
+  offProcRhsToSend_ = 0;
+  offProcRhsToRecv_ = 0;
 
   // Allocate memory for the arrays used to track row types and row filled
   // status.
@@ -804,8 +815,6 @@ HypreLinearSystem::finalizeLinearSystem()
   ThrowRequire(inConstruction_);
   inConstruction_ = false;
 
-  finalizeSolver();
-
 #ifdef HYPRE_LINEAR_SYSTEM_DEBUG
   size_t used1 = 0, free1 = 0;
   stk::get_gpu_memory_info(used1, free1);
@@ -833,6 +842,12 @@ HypreLinearSystem::finalizeLinearSystem()
   /* fill the various device data structures need in device coeff applier */
   buildCoeffApplierDeviceDataStructures();
 
+  /* Call finalize solver here */
+  finalizeSolver();
+
+  /* compute the exact row sizes by reducing row counts at row indices across all ranks */
+  computeRowSizes();
+
 #ifdef HYPRE_LINEAR_SYSTEM_DEBUG
   size_t used2 = 0, free2 = 0;
   stk::get_gpu_memory_info(used2, free2);
@@ -858,10 +873,108 @@ HypreLinearSystem::finalizeLinearSystem()
 #endif
 }
 
+
+void
+HypreLinearSystem::computeRowSizes()
+{
+  MPI_Comm comm = realm_.bulk_data().parallel();
+  int nprocs = realm_.bulk_data().parallel_size();
+  int iproc = realm_.bulk_data().parallel_rank();
+
+  HypreLinSysCoeffApplier* hcApplier =
+    dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
+
+  std::fill(globalMatSharedRowCounts_.begin(), globalMatSharedRowCounts_.end(), 0);
+  std::fill(localMatSharedRowCounts_.begin(), localMatSharedRowCounts_.end(), 0);
+
+  std::fill(globalRhsSharedRowCounts_.begin(), globalRhsSharedRowCounts_.end(), 0);
+  std::fill(localRhsSharedRowCounts_.begin(), localRhsSharedRowCounts_.end(), 0);
+
+  /* set the send NNZ per row on this rank */
+  for (unsigned i=0; i<row_indices_shared_host_.extent(0); ++i) {
+    HypreIntType shared_row = row_indices_shared_host_(i);
+    HypreIntType shared_count = row_counts_shared_host_(i);
+    for (int j=0; j<nprocs; ++j) {
+      HypreIntType lower = (HypreIntType) realm_.hypreOffsets_[j]*numDof_;
+      HypreIntType upper = (HypreIntType) realm_.hypreOffsets_[j+1]*numDof_;
+      if (shared_row>=lower && shared_row<upper) {
+	localMatSharedRowCounts_[j] += shared_count;
+	localRhsSharedRowCounts_[j] += 1;
+      }
+    }
+  }
+
+  /* reduce the shared NNZ per row across all ranks */
+  MPI_Allreduce(localMatSharedRowCounts_.data(), globalMatSharedRowCounts_.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, comm);
+  MPI_Allreduce(localRhsSharedRowCounts_.data(), globalRhsSharedRowCounts_.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, comm);
+  
+  /* compute the receive NNZ per row from all other ranks */
+  offProcNNZToRecv_ = globalMatSharedRowCounts_[iproc];
+  offProcRhsToRecv_ = globalRhsSharedRowCounts_[iproc];
+
+  HypreIntType totalMatElmts = hcApplier->num_nonzeros_owned_;
+  HypreIntType totalRhsElmts = hcApplier->num_rows_owned_;
+
+  HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
+  if (solver->getConfig()->simpleHypreMatrixAssemble()) {
+    /* set the key hypre parameters */
+    offProcNNZToSend_ = hcApplier->num_nonzeros_shared_;
+    offProcRhsToSend_ = hcApplier->num_rows_shared_;
+    totalMatElmts += std::max(offProcNNZToSend_, offProcNNZToRecv_);
+    totalRhsElmts += std::max(offProcRhsToSend_, offProcRhsToRecv_);
+  }
+  else {
+    totalMatElmts += hcApplier->num_nonzeros_shared_;
+    totalRhsElmts += hcApplier->num_rows_shared_;
+  }
+
+  /* Make big monolithic data structures for values and columns */
+  hcApplier->values_uvm_ = DoubleViewUVM("values_uvm", totalMatElmts);
+  hcApplier->rhs_uvm_ = DoubleView2DUVM("values_uvm", totalRhsElmts, hcApplier->nDim_);
+
+  cols_host_ = HypreIntTypeViewHost("cols_host", totalMatElmts);
+  for (HypreIntType i=0; i<hcApplier->num_nonzeros_owned_; ++i)  cols_host_(i)                                = cols_owned_host_(i);
+  for (HypreIntType i=0; i<hcApplier->num_nonzeros_shared_; ++i) cols_host_(i+hcApplier->num_nonzeros_owned_) = cols_shared_host_(i);
+
+  hcApplier->cols_uvm_ = HypreIntTypeViewUVM("cols_uvm", totalMatElmts);
+  Kokkos::deep_copy(hcApplier->cols_uvm_, cols_host_);
+
+  /* Creat the rows for the mat (rows_host_ and rows_uvm_) and rhs (rhs_rows_host_ and rhs_rows_uvm_)*/
+  rows_host_ = HypreIntTypeViewHost("rows_host", totalMatElmts);
+  rhs_rows_host_ = HypreIntTypeView2DHost("rhs_rows_host", totalRhsElmts, hcApplier->nDim_);
+  HypreIntType k=0;
+  for (HypreIntType i=0; i<hcApplier->num_rows_owned_; ++i) {
+    HypreIntType row = row_indices_owned_host_(i);
+    for (unsigned j=0; j<hcApplier->nDim_; ++j)
+      rhs_rows_host_(i, j) = row;
+    for (HypreIntType j=0; j<row_counts_owned_host_(i); ++j) {
+      rows_host_(k) = row;
+      ++k;
+    }
+  }
+  k=hcApplier->num_nonzeros_owned_;
+  for (HypreIntType i=0; i<hcApplier->num_rows_shared_; ++i) {
+    HypreIntType row = row_indices_shared_host_(i);
+    for (unsigned j=0; j<hcApplier->nDim_; ++j)
+      rhs_rows_host_(i+hcApplier->num_rows_owned_, j) = row;
+    for (HypreIntType j=0; j<row_counts_shared_host_(i); ++j) {
+      rows_host_(k) = row;
+      ++k;
+    }
+  }
+  rows_uvm_ = HypreIntTypeViewUVM("rows_uvm", totalMatElmts);
+  Kokkos::deep_copy(rows_uvm_, rows_host_);
+
+  rhs_rows_uvm_ = HypreIntTypeView2DUVM("rhs_rows_uvm", totalRhsElmts, hcApplier->nDim_);
+  Kokkos::deep_copy(rhs_rows_uvm_, rhs_rows_host_);
+}
+
+
 void
 HypreLinearSystem::finalizeSolver()
 {
   MPI_Comm comm = realm_.bulk_data().parallel();
+
   // Now perform HYPRE assembly so that the data structures are ready to be used
   // by the solvers/preconditioners.
   HypreDirectSolver* solver =
@@ -960,32 +1073,20 @@ HypreLinearSystem::buildCoeffApplierDeviceOwnedDataStructures()
   hcApplier->num_rows_owned_ = validRowsOwned.size();
   hcApplier->num_nonzeros_owned_ = matElemColsOwned.size();
 
-  hcApplier->values_owned_uvm_ =
-    DoubleViewUVM("values_owned_uvm", hcApplier->num_nonzeros_owned_);
-  hcApplier->rhs_owned_uvm_ = DoubleView2DUVM(
-    "rhs_owned_uvm", hcApplier->num_rows_owned_, hcApplier->nDim_);
-  hcApplier->mat_elem_cols_owned_uvm_ = HypreIntTypeViewUVM(
-    "mat_elem_cols_owned_uvm", hcApplier->num_nonzeros_owned_);
-  hcApplier->row_indices_owned_uvm_ =
-    HypreIntTypeViewUVM("row_indices_owned_uvm", hcApplier->num_rows_owned_);
-  hcApplier->row_counts_owned_uvm_ =
-    HypreIntTypeViewUVM("row_counts_owned_uvm", hcApplier->num_rows_owned_);
   hcApplier->mat_row_start_owned_ =
     UnsignedView("mat_row_start_owned", hcApplier->num_rows_owned_ + 1);
 
-  HypreIntTypeViewHost mat_elem_cols_owned_host = HypreIntTypeViewHost(
-    "mat_elem_cols_owned_host", hcApplier->num_nonzeros_owned_);
+  cols_owned_host_ = HypreIntTypeViewHost(
+    "cols_owned_host", hcApplier->num_nonzeros_owned_);
   for (auto i = 0; i < hcApplier->num_nonzeros_owned_; ++i)
-    mat_elem_cols_owned_host(i) = matElemColsOwned[i];
-  Kokkos::deep_copy(
-    hcApplier->mat_elem_cols_owned_uvm_, mat_elem_cols_owned_host);
-
+    cols_owned_host_(i) = matElemColsOwned[i];
+  
   /***********************************/
   /* Other data structures ... owned */
   /***********************************/
-  HypreIntTypeViewHost row_indices_owned_host =
+  row_indices_owned_host_ =
     HypreIntTypeViewHost("row_indices_owned_host", hcApplier->num_rows_owned_);
-  HypreIntTypeViewHost row_counts_owned_host =
+  row_counts_owned_host_ =
     HypreIntTypeViewHost("row_counts_owned_host", hcApplier->num_rows_owned_);
   UnsignedViewHost mat_row_start_owned_host =
     Kokkos::create_mirror_view(hcApplier->mat_row_start_owned_);
@@ -993,14 +1094,12 @@ HypreLinearSystem::buildCoeffApplierDeviceOwnedDataStructures()
   /* create the maps */
   mat_row_start_owned_host(0) = 0;
   for (auto i = 0; i < hcApplier->num_rows_owned_; ++i) {
-    row_indices_owned_host(i) = validRowsOwned[i];
-    row_counts_owned_host(i) = matColumnsPerRowCountOwned[i];
+    row_indices_owned_host_(i) = validRowsOwned[i];
+    row_counts_owned_host_(i) = matColumnsPerRowCountOwned[i];
     mat_row_start_owned_host(i + 1) =
       mat_row_start_owned_host(i) + matColumnsPerRowCountOwned[i];
   }
   Kokkos::deep_copy(hcApplier->mat_row_start_owned_, mat_row_start_owned_host);
-  Kokkos::deep_copy(hcApplier->row_indices_owned_uvm_, row_indices_owned_host);
-  Kokkos::deep_copy(hcApplier->row_counts_owned_uvm_, row_counts_owned_host);
 
   /* Handle periodic boundary conditions */
   hcApplier->periodic_bc_rows_owned_ =
@@ -1093,17 +1192,6 @@ HypreLinearSystem::buildCoeffApplierDeviceSharedDataStructures()
   hcApplier->num_rows_shared_ = validRowsShared.size();
   hcApplier->num_nonzeros_shared_ = matElemColsShared.size();
 
-  hcApplier->values_shared_uvm_ =
-    DoubleViewUVM("values_shared_uvm", hcApplier->num_nonzeros_shared_);
-  hcApplier->rhs_shared_uvm_ = DoubleView2DUVM(
-    "rhs_shared_uvm", hcApplier->num_rows_shared_, hcApplier->nDim_);
-  hcApplier->mat_elem_cols_shared_uvm_ = HypreIntTypeViewUVM(
-    "mat_elem_cols_shared_uvm", hcApplier->num_nonzeros_shared_);
-  hcApplier->row_indices_shared_uvm_ =
-    HypreIntTypeViewUVM("row_indices_shared_uvm", hcApplier->num_rows_shared_);
-  hcApplier->row_counts_shared_uvm_ =
-    HypreIntTypeViewUVM("row_counts_shared_uvm", hcApplier->num_rows_shared_);
-
   hcApplier->rhs_row_start_shared_ =
     UnsignedView("rhs_row_start_shared", hcApplier->num_rows_shared_ + 1);
   hcApplier->mat_row_start_shared_ =
@@ -1112,19 +1200,17 @@ HypreLinearSystem::buildCoeffApplierDeviceSharedDataStructures()
   /*********************************************/
   /* Matrix element data structures ... shared */
   /*********************************************/
-  HypreIntTypeViewHost mat_elem_cols_shared_host = HypreIntTypeViewHost(
-    "mat_elem_cols_shared_host", hcApplier->num_nonzeros_shared_);
+  cols_shared_host_ = HypreIntTypeViewHost(
+    "cols_shared_host_", hcApplier->num_nonzeros_shared_);
   for (auto i = 0; i < hcApplier->num_nonzeros_shared_; ++i)
-    mat_elem_cols_shared_host(i) = matElemColsShared[i];
-  Kokkos::deep_copy(
-    hcApplier->mat_elem_cols_shared_uvm_, mat_elem_cols_shared_host);
+    cols_shared_host_(i) = matElemColsShared[i];
 
   /************************************/
   /* Other data structures ... shared */
   /************************************/
-  HypreIntTypeViewHost row_indices_shared_host = HypreIntTypeViewHost(
+  row_indices_shared_host_ = HypreIntTypeViewHost(
     "row_indices_shared_host", hcApplier->num_rows_shared_);
-  HypreIntTypeViewHost row_counts_shared_host =
+  row_counts_shared_host_ =
     HypreIntTypeViewHost("row_counts_shared_host", hcApplier->num_rows_shared_);
   UnsignedViewHost rhs_row_start_shared_host =
     Kokkos::create_mirror_view(hcApplier->rhs_row_start_shared_);
@@ -1135,8 +1221,8 @@ HypreLinearSystem::buildCoeffApplierDeviceSharedDataStructures()
   rhs_row_start_shared_host(0) = 0;
   mat_row_start_shared_host(0) = 0;
   for (auto i = 0; i < hcApplier->num_rows_shared_; ++i) {
-    row_indices_shared_host(i) = validRowsShared[i];
-    row_counts_shared_host(i) = matColumnsPerRowCountShared[i];
+    row_indices_shared_host_(i) = validRowsShared[i];
+    row_counts_shared_host_(i) = matColumnsPerRowCountShared[i];
     rhs_row_start_shared_host(i + 1) = rhs_row_start_shared_host(i) + 1;
     mat_row_start_shared_host(i + 1) =
       mat_row_start_shared_host(i) + matColumnsPerRowCountShared[i];
@@ -1146,14 +1232,11 @@ HypreLinearSystem::buildCoeffApplierDeviceSharedDataStructures()
     hcApplier->rhs_row_start_shared_, rhs_row_start_shared_host);
   Kokkos::deep_copy(
     hcApplier->mat_row_start_shared_, mat_row_start_shared_host);
-  Kokkos::deep_copy(
-    hcApplier->row_indices_shared_uvm_, row_indices_shared_host);
-  Kokkos::deep_copy(hcApplier->row_counts_shared_uvm_, row_counts_shared_host);
 
   /* Create the map on device */
   HypreIntTypeView row_indices_shared =
     HypreIntTypeView("row_indices_shared", hcApplier->num_rows_shared_);
-  Kokkos::deep_copy(row_indices_shared, row_indices_shared_host);
+  Kokkos::deep_copy(row_indices_shared, row_indices_shared_host_);
 
   hcApplier->map_shared_ = MemoryMap(hcApplier->num_rows_shared_);
   auto ms = hcApplier->map_shared_;
@@ -1213,13 +1296,7 @@ HypreLinearSystem::buildCoeffApplierDeviceDataStructures()
     sizeof(double) * (num_nonzeros + hcApplier->nDim_ * num_rows);
 
   // uvm pass in to this class:
-  totalMemUVM += (hcApplier->row_indices_owned_uvm_.extent(0) +
-                  hcApplier->row_counts_owned_uvm_.extent(0) +
-                  hcApplier->mat_elem_cols_owned_uvm_.extent(0) +
-                  hcApplier->row_indices_shared_uvm_.extent(0) +
-                  hcApplier->row_counts_shared_uvm_.extent(0) +
-                  hcApplier->mat_elem_cols_shared_uvm_.extent(0)) *
-                 sizeof(HypreIntType);
+  totalMemUVM += (hcApplier->cols_uvm_.extent(0)) * sizeof(HypreIntType);
 
   // passed in as an arugment to this class
   size_t totalMemDevice = (hcApplier->mat_row_start_owned_.extent(0) +
@@ -1337,16 +1414,22 @@ HypreLinearSystem::resetCoeffApplierData()
     hcApplier->overset_mat_counter_ = 0;
     hcApplier->overset_rhs_counter_ = 0;
 
-    Kokkos::deep_copy(hcApplier->values_owned_uvm_, 0);
-    Kokkos::deep_copy(hcApplier->values_shared_uvm_, 0);
-    Kokkos::deep_copy(hcApplier->rhs_owned_uvm_, 0);
-    Kokkos::deep_copy(hcApplier->rhs_shared_uvm_, 0);
+    Kokkos::deep_copy(hcApplier->cols_uvm_, cols_host_);
+    Kokkos::deep_copy(rows_uvm_, rows_host_);
+    Kokkos::deep_copy(rhs_rows_uvm_, rhs_rows_host_);
+    Kokkos::deep_copy(hcApplier->values_uvm_, 0);
+    Kokkos::deep_copy(hcApplier->rhs_uvm_, 0);
+
+    // set the random access memory textures
+    hcApplier->mat_row_start_owned_ra_ = hcApplier->mat_row_start_owned_;
+    hcApplier->mat_row_start_shared_ra_ = hcApplier->mat_row_start_shared_;
+    hcApplier->cols_uvm_ra_ = hcApplier->cols_uvm_;
 
     auto N = hcApplier->periodic_bc_rows_owned_.extent(0);
     auto periodic_bc_rows = hcApplier->periodic_bc_rows_owned_;
-    auto mat_row_start_owned = hcApplier->mat_row_start_owned_;
-    auto vals = hcApplier->values_owned_uvm_;
-    auto rhs_vals = hcApplier->rhs_owned_uvm_;
+    auto mat_row_start_owned = hcApplier->mat_row_start_owned_ra_;
+    auto vals = hcApplier->values_uvm_;
+    auto rhs_vals = hcApplier->rhs_uvm_;
     auto nDim = hcApplier->nDim_;
 
     auto iLower = iLower_;
@@ -1384,9 +1467,9 @@ HypreLinearSystem::finishCoupledOversetAssembly()
     auto ocols = hcApplier->d_overset_cols_;
     auto ovals = hcApplier->d_overset_vals_;
     auto iLower = iLower_;
-    auto mat_row_start = hcApplier->mat_row_start_owned_;
-    auto mat_elem_cols_owned_uvm = hcApplier->mat_elem_cols_owned_uvm_;
-    auto vals = hcApplier->values_owned_uvm_;
+    auto mat_row_start = hcApplier->mat_row_start_owned_ra_;
+    auto cols_uvm = hcApplier->cols_uvm_ra_;
+    auto vals = hcApplier->values_uvm_;
     /* write to the matrix */
     Kokkos::parallel_for(
       "fillOversetMatrixRows", N, KOKKOS_LAMBDA(const unsigned& i) {
@@ -1397,7 +1480,7 @@ HypreLinearSystem::finishCoupledOversetAssembly()
         unsigned upper = mat_row_start(row - iLower + 1) - 1;
         unsigned matIndex = lower;
         for (matIndex = lower; matIndex <= upper; ++matIndex) {
-          if (mat_elem_cols_owned_uvm(matIndex) == col)
+          if (cols_uvm(matIndex) == col)
             break;
         }
         vals(matIndex) = ovals(i);
@@ -1413,7 +1496,7 @@ HypreLinearSystem::finishCoupledOversetAssembly()
     N = hcApplier->d_overset_rhs_vals_.extent(0);
     auto orow_indices = hcApplier->d_overset_row_indices_;
     auto orvals = hcApplier->d_overset_rhs_vals_;
-    auto rhs_vals = hcApplier->rhs_owned_uvm_;
+    auto rhs_vals = hcApplier->rhs_uvm_;
     /* write to the rhs */
     Kokkos::parallel_for(
       "fillOversetRhsVector", N, KOKKOS_LAMBDA(const unsigned& i) {
@@ -1429,30 +1512,32 @@ HypreLinearSystem::hypreIJMatrixSetAddToValues()
   HypreLinSysCoeffApplier* hcApplier =
     dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
 
-  auto num_rows_owned = hcApplier->num_rows_owned_;
-  auto num_rows_shared = hcApplier->num_rows_shared_;
-
   auto num_nonzeros_owned = hcApplier->num_nonzeros_owned_;
   auto num_nonzeros_shared = hcApplier->num_nonzeros_shared_;
 
+  HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
+  if (solver->getConfig()->simpleHypreMatrixAssemble()) {
+#if 0
+    /* set the key hypre parameters */
+    HYPRE_IJMatrixSetMaxOnProcElmts(mat_, hcApplier->num_nonzeros_owned_);
+    HYPRE_IJMatrixSetOffProcSendElmts(mat_, offProcNNZToSend_);
+    HYPRE_IJMatrixSetOffProcRecvElmts(mat_, offProcNNZToRecv_);
+#endif
+  }
+
   if (num_nonzeros_owned) {
     /* Set the owned part */
-    HYPRE_IJMatrixSetValues(
-      mat_, num_rows_owned, hcApplier->row_counts_owned_uvm_.data(),
-      hcApplier->row_indices_owned_uvm_.data(),
-      hcApplier->mat_elem_cols_owned_uvm_.data(),
-      hcApplier->values_owned_uvm_.data());
+    HYPRE_IJMatrixSetValues2(mat_, num_nonzeros_owned, NULL, rows_uvm_.data(), NULL,
+ 			     hcApplier->cols_uvm_.data(), hcApplier->values_uvm_.data());
   }
 
   if (num_nonzeros_shared) {
     /* Add the shared part */
-    HYPRE_IJMatrixAddToValues(
-      mat_, num_rows_shared, hcApplier->row_counts_shared_uvm_.data(),
-      hcApplier->row_indices_shared_uvm_.data(),
-      hcApplier->mat_elem_cols_shared_uvm_.data(),
-      hcApplier->values_shared_uvm_.data());
+    HYPRE_IJMatrixAddToValues2(mat_, num_nonzeros_shared, NULL, rows_uvm_.data()+num_nonzeros_owned, NULL,
+			       hcApplier->cols_uvm_.data()+num_nonzeros_owned, hcApplier->values_uvm_.data()+num_nonzeros_owned);
   }
-}
+} 
+
 
 void
 HypreLinearSystem::hypreIJVectorSetAddToValues()
@@ -1463,18 +1548,124 @@ HypreLinearSystem::hypreIJVectorSetAddToValues()
   auto num_rows_owned = hcApplier->num_rows_owned_;
   auto num_rows_shared = hcApplier->num_rows_shared_;
 
+  HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
+  if (solver->getConfig()->simpleHypreMatrixAssemble()) {
+#if 0
+    /* set the key hypre parameters */
+    HYPRE_IJVectorSetMaxOnProcElmts(rhs_, num_rows_owned);
+    HYPRE_IJVectorSetOffProcSendElmts(rhs_, offProcRhsToSend_);
+    HYPRE_IJVectorSetOffProcRecvElmts(rhs_, offProcRhsToRecv_);
+#endif
+  }
+
   if (num_rows_owned) {
     /* Set the owned part */
     HYPRE_IJVectorSetValues(
-      rhs_, num_rows_owned, hcApplier->row_indices_owned_uvm_.data(),
-      hcApplier->rhs_owned_uvm_.data());
+      rhs_, num_rows_owned, rhs_rows_uvm_.data(),
+      hcApplier->rhs_uvm_.data());
   }
 
   if (num_rows_shared) {
     /* Add the shared part */
     HYPRE_IJVectorAddToValues(
-      rhs_, num_rows_shared, hcApplier->row_indices_shared_uvm_.data(),
-      hcApplier->rhs_shared_uvm_.data());
+      rhs_, num_rows_shared, rhs_rows_uvm_.data()+num_rows_owned,
+      hcApplier->rhs_uvm_.data()+num_rows_owned);
+  }
+}
+
+void
+HypreLinearSystem::dumpRowsNNZStats()
+{
+  HypreLinSysCoeffApplier* hcApplier =
+    dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
+  HypreIntType totalMatElmts = hcApplier->num_nonzeros_owned_;
+  HypreIntType totalRhsElmts = hcApplier->num_rows_owned_;
+
+  /* parallel info */
+  int nprocs = realm_.bulk_data().parallel_size();
+  int iproc = realm_.bulk_data().parallel_rank();
+
+  std::vector<HypreIntType> rows(numRows_);
+  for (HypreIntType i=0; i<numRows_; ++i) rows[i] = iLower_+i;
+  std::vector<HypreIntType> cols(numRows_);
+  std::fill(cols.begin(), cols.end(), 0);
+
+  /* retrive nnz per row from Hypre */
+  HYPRE_IJMatrixGetRowCounts(mat_, numRows_, rows.data(), cols.data());
+
+  /* compute nnz for this rank */
+  HypreIntType nnz=0;
+  for (HypreIntType i=0; i<numRows_; ++i) nnz += cols[i];
+
+  /* NNZ from Hypre row counts .. after assembly */
+  std::vector<HypreIntType> tmp(nprocs);
+  std::fill(tmp.begin(), tmp.end(), 0);
+  std::vector<HypreIntType> globalNNZPerProc(nprocs);
+  std::fill(globalNNZPerProc.begin(), globalNNZPerProc.end(), 0);
+  tmp[iproc] = nnz;
+  MPI_Allreduce(tmp.data(), globalNNZPerProc.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, realm_.bulk_data().parallel());
+
+  /* NNZ owned ... before assembly */
+  std::fill(tmp.begin(), tmp.end(), 0);
+  tmp[iproc] = totalMatElmts;
+  std::vector<HypreIntType> nnz_owned(nprocs);
+  std::fill(nnz_owned.begin(), nnz_owned.end(), 0);
+  MPI_Allreduce(tmp.data(), nnz_owned.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, realm_.bulk_data().parallel());
+
+  /* NNZ send ... before assembly */
+  std::fill(tmp.begin(), tmp.end(), 0);
+  tmp[iproc] = offProcNNZToSend_;
+  std::vector<HypreIntType> nnz_send(nprocs);
+  std::fill(nnz_send.begin(), nnz_send.end(), 0);
+  MPI_Allreduce(tmp.data(), nnz_send.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, realm_.bulk_data().parallel());
+
+  /* NNZ recv ... before assembly */
+  std::fill(tmp.begin(), tmp.end(), 0);
+  tmp[iproc] = offProcNNZToRecv_;
+  std::vector<HypreIntType> nnz_recv(nprocs);
+  std::fill(nnz_recv.begin(), nnz_recv.end(), 0);
+  MPI_Allreduce(tmp.data(), nnz_recv.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, realm_.bulk_data().parallel());
+
+  /* num rows */
+  std::fill(tmp.begin(), tmp.end(), 0);
+  tmp[iproc] = totalRhsElmts;
+  std::vector<HypreIntType> nrows(nprocs);
+  std::fill(nrows.begin(), nrows.end(), 0);
+  MPI_Allreduce(tmp.data(), nrows.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, realm_.bulk_data().parallel());
+
+  /* Write to a file from rank 0 */
+  if (iproc==0) {
+    char fname[1000];
+#ifdef KOKKOS_ENABLE_CUDA
+    sprintf(fname, "%s_decomp_%dGPUs.txt", name_.c_str(), nprocs);
+#else
+    sprintf(fname, "%s_decomp_%dCPUs.txt", name_.c_str(), nprocs);
+#endif
+
+    std::ofstream myfile;
+    myfile.open(fname);
+    myfile << "rank"
+	   << ",lower"
+	   << ",upper"
+	   << ",num_rows"
+	   << ",nnz"
+	   << ",nnz_owned"
+	   << ",nnz_send"
+	   << ",nnz_recv"
+	   << std::endl;
+    
+    for (int i=0; i<nprocs; ++i) {
+      myfile << i
+	     << "," << realm_.hypreOffsets_[i]
+	     << "," << realm_.hypreOffsets_[i+1]
+	     << "," << nrows[i]
+	     << "," << globalNNZPerProc[i]
+	     << "," << nnz_owned[i]
+	     << "," << nnz_send[i]
+	     << "," << nnz_recv[i]
+	     << std::endl;
+    }
+    myfile.close();
   }
 }
 
@@ -1494,6 +1685,14 @@ HypreLinearSystem::loadCompleteSolver()
   HYPRE_IJMatrixAssemble(mat_);
   HYPRE_IJMatrixGetObject(mat_, (void**)&(solver->parMat_));
 
+#ifdef HYPRE_LINEAR_SYSTEM_TIMER
+  gettimeofday(&_stop, NULL);
+  double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 +
+                1.e3 * ((double)(_stop.tv_sec - _start.tv_sec));
+  hypreMatAssemblyTimer_.back() += msec;
+  gettimeofday(&_start, NULL);
+#endif
+
   HYPRE_IJVectorAssemble(rhs_);
   HYPRE_IJVectorGetObject(rhs_, (void**)&(solver->parRhs_));
 
@@ -1502,12 +1701,17 @@ HypreLinearSystem::loadCompleteSolver()
 
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
-  double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 +
+  msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 +
                 1.e3 * ((double)(_stop.tv_sec - _start.tv_sec));
-  hypreAssemblyTimer_.push_back(msec);
+  hypreRhsAssemblyTimer_.back() += msec;
 #endif
 
   solver->comm_ = realm_.bulk_data().parallel();
+
+  if (solver->getConfig()->dumpHypreMatrixStats() && !matrixStatsDumped_) {
+    dumpRowsNNZStats();
+    matrixStatsDumped_ = true;
+  }
 
   // Set flag to indicate zeroSystem that the matrix must be reinitialized
   // during the next invocation.
@@ -1608,26 +1812,43 @@ HypreLinearSystem::HypreLinSysCoeffApplier::HypreLinSysCoeffApplier(
 {
 }
 
+
 KOKKOS_FUNCTION
 void
-HypreLinearSystem::HypreLinSysCoeffApplier::binarySearch(
-  HypreIntTypeViewUVM view,
-  unsigned l,
-  unsigned r,
-  HypreIntType x,
-  unsigned& result)
-{
-  if (r >= l) {
-    unsigned mid = l + (r - l) / 2;
-    if (view(mid) == x) {
-      result = mid;
-      return;
-    }
-    if (view(mid) > x) {
-      binarySearch(view, l, mid - 1, x, result);
-      return;
-    }
-    binarySearch(view, mid + 1, r, x, result);
+HypreLinearSystem::HypreLinSysCoeffApplier::sort(
+  const SharedMemView<int*, DeviceShmem>& localIds,
+  const SharedMemView<int*, DeviceShmem>& sortPermutation,
+  unsigned N)
+{ 
+  if (N==2) {
+    int tmp;
+    if (localIds[0] > localIds[1]) { tmp = localIds[0]; localIds[0] = localIds[1]; localIds[1] = tmp; tmp = sortPermutation[0]; sortPermutation[0] = sortPermutation[1]; sortPermutation[1] = tmp;}
+  } 
+  else if (N==3) {
+    int tmp;
+    if (localIds[0] > localIds[1]) { tmp = localIds[0]; localIds[0] = localIds[1]; localIds[1] = tmp; tmp = sortPermutation[0]; sortPermutation[0] = sortPermutation[1]; sortPermutation[1] = tmp;}
+    if (localIds[0] > localIds[2]) { tmp = localIds[0]; localIds[0] = localIds[2]; localIds[2] = tmp; tmp = sortPermutation[0]; sortPermutation[0] = sortPermutation[2]; sortPermutation[2] = tmp;}
+    if (localIds[1] > localIds[2]) { tmp = localIds[1]; localIds[1] = localIds[2]; localIds[2] = tmp; tmp = sortPermutation[1]; sortPermutation[1] = sortPermutation[2]; sortPermutation[2] = tmp;}
+  }
+  else if (N==4) {
+    int tmp;
+    if (localIds[0] > localIds[1]) { tmp = localIds[0]; localIds[0] = localIds[1]; localIds[1] = tmp; tmp = sortPermutation[0]; sortPermutation[0] = sortPermutation[1]; sortPermutation[1] = tmp;}
+    if (localIds[2] > localIds[3]) { tmp = localIds[2]; localIds[2] = localIds[3]; localIds[3] = tmp; tmp = sortPermutation[2]; sortPermutation[2] = sortPermutation[3]; sortPermutation[3] = tmp;}
+    if (localIds[0] > localIds[2]) { tmp = localIds[0]; localIds[0] = localIds[2]; localIds[2] = tmp; tmp = sortPermutation[0]; sortPermutation[0] = sortPermutation[2]; sortPermutation[2] = tmp;}
+    if (localIds[1] > localIds[3]) { tmp = localIds[1]; localIds[1] = localIds[3]; localIds[3] = tmp; tmp = sortPermutation[1]; sortPermutation[1] = sortPermutation[3]; sortPermutation[3] = tmp;}
+    if (localIds[1] > localIds[2]) { tmp = localIds[1]; localIds[1] = localIds[2]; localIds[2] = tmp; tmp = sortPermutation[1]; sortPermutation[1] = sortPermutation[2]; sortPermutation[2] = tmp;}
+  }
+  else {
+    for (unsigned i = 0; i < N-1; ++i)       
+      for (unsigned j = 0; j < N-i-1; ++j) 
+	if (localIds[j] > localIds[j+1]) {
+	  int t = localIds[j];
+	  localIds[j] = localIds[j+1];
+	  localIds[j+1] = t;
+	  t = sortPermutation[j];
+	  sortPermutation[j] = sortPermutation[j+1];
+	  sortPermutation[j+1] = t;
+	}
   }
 }
 
@@ -1637,11 +1858,13 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sum_into(
   unsigned numEntities,
   const stk::mesh::NgpMesh::ConnectedNodes& entities,
   const SharedMemView<int*, DeviceShmem>& localIds,
+  const SharedMemView<int*, DeviceShmem>& sortPermutation,
   const SharedMemView<const double*, DeviceShmem>& rhs,
   const SharedMemView<const double**, DeviceShmem>& lhs,
   const HypreIntType& iLower,
   const HypreIntType& iUpper,
-  unsigned numDof)
+  unsigned numDof,
+  HypreIntType memShift)
 {
 
   unsigned numRows = numEntities * numDof;
@@ -1658,8 +1881,12 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sum_into(
     for (unsigned d = 0; d < numDof; ++d) {
       unsigned lid = i * numDof + d;
       localIds[lid] = hid * numDof + d;
+      sortPermutation[lid] = lid;
     }
   }
+
+  // sort the local ids
+  sort(localIds, sortPermutation, numEntities*numDof);
 
   for (unsigned i = 0; i < numEntities; ++i) {
     int ix = i * numDof;
@@ -1673,51 +1900,56 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sum_into(
 
       for (unsigned d = 0; d < numDof; ++d) {
         unsigned ir = ix + d;
-        HypreIntType hid = (HypreIntType)localIds[ir];
-        const double* cur_lhs = &lhs(ir, 0);
-        unsigned lower = mat_row_start_owned_(hid - iLower);
-        unsigned upper = mat_row_start_owned_(hid - iLower + 1) - 1;
+        hid = localIds[ir];
+
+	int ii = sortPermutation[ir];
+        const double* cur_lhs = &lhs(ii, 0);
+
+	HypreIntType index = hid - iLower;
 
         /* fill the matrix values */
+	unsigned matIndex = mat_row_start_owned_ra_(index);
         for (unsigned k = 0; k < numRows; ++k) {
           /* binary search subrange rather than a map.find */
           HypreIntType col = localIds[k];
-          unsigned matIndex;
-          binarySearch(mat_elem_cols_owned_uvm_, lower, upper, col, matIndex);
+	  while(cols_uvm_ra_(matIndex)<col) matIndex++;
+	  int kk = sortPermutation[k];
+
           /* write the matrix element */
-          Kokkos::atomic_add(&values_owned_uvm_(matIndex), cur_lhs[k]);
+          Kokkos::atomic_add(&values_uvm_(matIndex), cur_lhs[kk]);
         }
         /* fill the right hand side values */
-        Kokkos::atomic_add(&rhs_owned_uvm_(hid - iLower, 0), rhs[ir]);
+        Kokkos::atomic_add(&rhs_uvm_(index, 0), rhs[ii]);
       }
 
     } else {
 
       for (unsigned d = 0; d < numDof; ++d) {
         unsigned ir = ix + d;
-        const double* cur_lhs = &lhs(ir, 0);
         hid = localIds[ir];
+
+	int ii = sortPermutation[ir];
+        const double* cur_lhs = &lhs(ii, 0);
 
         if (!map_shared_.exists(hid))
           continue;
 
         /* Find the index of the row */
         unsigned index = map_shared_.value_at(map_shared_.find(hid));
-        unsigned lower = mat_row_start_shared_(index);
-        unsigned upper = mat_row_start_shared_(index + 1) - 1;
+        unsigned matIndex = mat_row_start_shared_ra_(index) + memShift;
 
         /* fill the matrix values */
         for (unsigned k = 0; k < numRows; ++k) {
           /* binary search subrange rather than a map.find */
           HypreIntType col = localIds[k];
-          unsigned matIndex;
-          binarySearch(mat_elem_cols_shared_uvm_, lower, upper, col, matIndex);
+          while(cols_uvm_ra_(matIndex)<col) matIndex++;
+	  int kk = sortPermutation[k];
           /* write the matrix element */
-          Kokkos::atomic_add(&values_shared_uvm_(matIndex), cur_lhs[k]);
+          Kokkos::atomic_add(&values_uvm_(matIndex), cur_lhs[kk]);
         }
         /* fill the right hand side values */
-        unsigned rhsIndex = rhs_row_start_shared_(index);
-        Kokkos::atomic_add(&rhs_shared_uvm_(rhsIndex, 0), rhs[ir]);
+        unsigned rhsIndex = rhs_row_start_shared_(index) + (iUpper-iLower+1);
+        Kokkos::atomic_add(&rhs_uvm_(rhsIndex, 0), rhs[ii]);
       }
     }
   }
@@ -1729,10 +1961,12 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sum_into_1DoF(
   unsigned numEntities,
   const stk::mesh::NgpMesh::ConnectedNodes& entities,
   const SharedMemView<int*, DeviceShmem>& localIds,
+  const SharedMemView<int*, DeviceShmem>& sortPermutation,
   const SharedMemView<const double*, DeviceShmem>& rhs,
   const SharedMemView<const double**, DeviceShmem>& lhs,
   const HypreIntType& iLower,
-  const HypreIntType& iUpper)
+  const HypreIntType& iUpper,
+  HypreIntType memShift)
 {
 
   for (unsigned i = 0; i < numEntities; ++i) {
@@ -1742,7 +1976,11 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sum_into_1DoF(
         periodic_node_to_hypre_id_.find(node.local_offset()));
     else
       localIds[i] = ngpHypreGlobalId_.get(ngpMesh_, node, 0);
+    sortPermutation[i] = i;
   }
+
+  // sort the local ids
+  sort(localIds, sortPermutation, numEntities);
 
   for (unsigned i = 0; i < numEntities; ++i) {
     HypreIntType hid = localIds[i];
@@ -1751,45 +1989,48 @@ HypreLinearSystem::HypreLinSysCoeffApplier::sum_into_1DoF(
         continue;
     }
 
-    const double* cur_lhs = &lhs(i, 0);
+    int ii = sortPermutation[i];
+    const double* cur_lhs = &lhs(ii, 0);
 
     if (hid >= iLower && hid <= iUpper) {
       /* fill the matrix values */
-      unsigned lower = mat_row_start_owned_(hid - iLower);
-      unsigned upper = mat_row_start_owned_(hid - iLower + 1) - 1;
+      HypreIntType index = hid - iLower;
+      unsigned matIndex = mat_row_start_owned_ra_(index);
       for (unsigned k = 0; k < numEntities; ++k) {
         /* binary search subrange rather than a map.find */
         HypreIntType col = localIds[k];
-        unsigned matIndex;
-        binarySearch(mat_elem_cols_owned_uvm_, lower, upper, col, matIndex);
+	while(cols_uvm_ra_(matIndex)<col) matIndex++;
         /* write the matrix element */
-        Kokkos::atomic_add(&values_owned_uvm_(matIndex), cur_lhs[k]);
+	int kk = sortPermutation[k];
+        Kokkos::atomic_add(&values_uvm_(matIndex), cur_lhs[kk]);
+	matIndex++;
       }
       /* fill the right hand side values */
-      Kokkos::atomic_add(&rhs_owned_uvm_(hid - iLower, 0), rhs[i]);
+      Kokkos::atomic_add(&rhs_uvm_(index, 0), rhs[ii]);
+
     } else {
+
       if (!map_shared_.exists(hid))
         continue;
       /* Find the index of the row */
       unsigned index = map_shared_.value_at(map_shared_.find(hid));
-      unsigned lower = mat_row_start_shared_(index);
-      unsigned upper = mat_row_start_shared_(index + 1) - 1;
-
-      /* fill the matrix values */
+      unsigned matIndex = mat_row_start_shared_ra_(index) + memShift;
       for (unsigned k = 0; k < numEntities; ++k) {
         /* binary search subrange rather than a map.find */
         HypreIntType col = localIds[k];
-        unsigned matIndex;
-        binarySearch(mat_elem_cols_shared_uvm_, lower, upper, col, matIndex);
+	while(cols_uvm_ra_(matIndex)<col) matIndex++;
         /* write the matrix element */
-        Kokkos::atomic_add(&values_shared_uvm_(matIndex), cur_lhs[k]);
+	int kk = sortPermutation[k];
+        Kokkos::atomic_add(&values_uvm_(matIndex), cur_lhs[kk]);
+	matIndex++;
       }
       /* fill the right hand side values */
-      unsigned rhsIndex = rhs_row_start_shared_(index);
-      Kokkos::atomic_add(&rhs_shared_uvm_(rhsIndex, 0), rhs[i]);
+      unsigned rhsIndex = rhs_row_start_shared_(index) + (iUpper-iLower+1);
+      Kokkos::atomic_add(&rhs_uvm_(rhsIndex, 0), rhs[ii]);
     }
   }
 }
+
 
 KOKKOS_FUNCTION
 void
@@ -1797,16 +2038,15 @@ HypreLinearSystem::HypreLinSysCoeffApplier::operator()(
   unsigned numEntities,
   const stk::mesh::NgpMesh::ConnectedNodes& entities,
   const SharedMemView<int*, DeviceShmem>& localIds,
-  const SharedMemView<int*, DeviceShmem>&,
+  const SharedMemView<int*, DeviceShmem>& sortPermutation,
   const SharedMemView<const double*, DeviceShmem>& rhs,
   const SharedMemView<const double**, DeviceShmem>& lhs,
   const char* /*trace_tag*/)
 {
   if (numDof_ == 1)
-    sum_into_1DoF(numEntities, entities, localIds, rhs, lhs, iLower_, iUpper_);
+    sum_into_1DoF(numEntities, entities, localIds, sortPermutation, rhs, lhs, iLower_, iUpper_, num_nonzeros_owned_);
   else
-    sum_into(
-      numEntities, entities, localIds, rhs, lhs, iLower_, iUpper_, numDof_);
+    sum_into(numEntities, entities, localIds, sortPermutation, rhs, lhs, iLower_, iUpper_, numDof_, num_nonzeros_owned_);
 }
 
 KOKKOS_FUNCTION
@@ -1818,7 +2058,8 @@ HypreLinearSystem::HypreLinSysCoeffApplier::reset_rows(
   const double rhs_residual,
   const HypreIntType iLower,
   const HypreIntType iUpper,
-  const unsigned numDof)
+  const unsigned numDof,
+  HypreIntType memShift)
 {
   for (unsigned i = 0; i < numNodes; ++i) {
     HypreIntType lid;
@@ -1833,35 +2074,32 @@ HypreLinearSystem::HypreLinSysCoeffApplier::reset_rows(
       HypreIntType hid = lid * numDof + d;
 
       if (hid >= iLower && hid <= iUpper) {
-        unsigned lower = mat_row_start_owned_(hid - iLower);
-        unsigned upper = mat_row_start_owned_(hid - iLower + 1) - 1;
-        for (unsigned k = lower; k <= upper; ++k)
-          values_owned_uvm_(k) = 0.0;
-
-        unsigned matIndex;
-        binarySearch(mat_elem_cols_owned_uvm_, lower, upper, hid, matIndex);
-        values_owned_uvm_(matIndex) = diag_value;
-        rhs_owned_uvm_(hid - iLower, 0) = rhs_residual;
+	HypreIntType index = hid - iLower;
+        unsigned lower = mat_row_start_owned_ra_(index);
+        unsigned upper = mat_row_start_owned_ra_(index + 1);
+        for (unsigned k = lower; k < upper; ++k) {
+          values_uvm_(k) = 0.0;
+	  if (cols_uvm_ra_(k)==hid) values_uvm_(k) = diag_value;
+	}
+        rhs_uvm_(hid - iLower, 0) = rhs_residual;
 
       } else {
         if (!map_shared_.exists(hid))
           continue;
         unsigned index = map_shared_.value_at(map_shared_.find(hid));
-        unsigned lower = mat_row_start_shared_(index);
-        unsigned upper = mat_row_start_shared_(index + 1) - 1;
-        for (unsigned k = lower; k <= upper; ++k)
-          values_shared_uvm_(k) = 0.0;
-
-        unsigned matIndex;
-        binarySearch(mat_elem_cols_shared_uvm_, lower, upper, hid, matIndex);
-        values_shared_uvm_(matIndex) = diag_value;
-
-        unsigned rhsIndex = rhs_row_start_shared_(index);
-        rhs_shared_uvm_(rhsIndex, 0) = rhs_residual;
+        unsigned lower = mat_row_start_shared_ra_(index) + memShift;
+        unsigned upper = mat_row_start_shared_ra_(index + 1) + memShift;
+        for (unsigned k = lower; k < upper; ++k) {
+          values_uvm_(k) = 0.0;
+	  if (cols_uvm_ra_(k)==hid) values_uvm_(k) = diag_value;
+	}
+        unsigned rhsIndex = rhs_row_start_shared_(index) + (iUpper-iLower+1);
+        rhs_uvm_(rhsIndex, 0) = rhs_residual;
       }
     }
   }
 }
+
 
 KOKKOS_FUNCTION
 void
@@ -1874,8 +2112,7 @@ HypreLinearSystem::HypreLinSysCoeffApplier::resetRows(
   const double rhs_residual)
 {
   checkSkippedRows_() = 0;
-  reset_rows(
-    numNodes, nodeList, diag_value, rhs_residual, iLower_, iUpper_, numDof_);
+  reset_rows(numNodes, nodeList, diag_value, rhs_residual, iLower_, iUpper_, numDof_, num_nonzeros_owned_);
 }
 
 void
@@ -1983,9 +2220,9 @@ HypreLinearSystem::applyDirichletBCs(
   /* data from hcApplier */
   const auto& ngpMesh = hcApplier->ngpMesh_;
   const auto hypreGID = hcApplier->ngpHypreGlobalId_;
-  auto mat_row_start_owned = hcApplier->mat_row_start_owned_;
-  auto vals = hcApplier->values_owned_uvm_;
-  auto rhs_vals = hcApplier->rhs_owned_uvm_;
+  auto mat_row_start_owned = hcApplier->mat_row_start_owned_ra_;
+  auto vals = hcApplier->values_uvm_;
+  auto rhs_vals = hcApplier->rhs_uvm_;
 
   auto numDof = numDof_;
   auto iLower = iLower_;

@@ -22,6 +22,8 @@ linear_solvers:
     output_level: 0
     segregated_solver: yes
     write_matrix_files: no
+    simple_hypre_matrix_assemble: no
+    dump_hypre_matrix_stats: no
 
     # File containing hypre specific configuration options
     hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
@@ -37,6 +39,8 @@ linear_solvers:
     kspace: 75
     output_level: 0
     write_matrix_files: no
+    simple_hypre_matrix_assemble: no
+    dump_hypre_matrix_stats: no
 
     # File containing hypre specific configuration options
     hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
@@ -52,6 +56,8 @@ linear_solvers:
     kspace: 75
     output_level: 0
     write_matrix_files: no
+    simple_hypre_matrix_assemble: no
+    dump_hypre_matrix_stats: no
 
     # File containing hypre specific configuration options
     hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
