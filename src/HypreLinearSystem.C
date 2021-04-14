@@ -920,10 +920,12 @@ HypreLinearSystem::computeRowSizes()
 
   HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
   HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
+
+  /* set the key hypre parameters */
+  offProcNNZToSend_ = hcApplier->num_nonzeros_shared_;
+  offProcRhsToSend_ = hcApplier->num_rows_shared_;
+
   if (config->simpleHypreMatrixAssemble()) {
-    /* set the key hypre parameters */
-    offProcNNZToSend_ = hcApplier->num_nonzeros_shared_;
-    offProcRhsToSend_ = hcApplier->num_rows_shared_;
     totalMatElmts += std::max(offProcNNZToSend_, offProcNNZToRecv_);
     totalRhsElmts += std::max(offProcRhsToSend_, offProcRhsToRecv_);
   }
@@ -1609,35 +1611,35 @@ HypreLinearSystem::dumpMatrixStats()
   std::vector<HypreIntType> globalNNZPerProc(nprocs);
   std::fill(globalNNZPerProc.begin(), globalNNZPerProc.end(), 0);
   tmp[iproc] = nnz;
-  MPI_Allreduce(tmp.data(), globalNNZPerProc.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, realm_.bulk_data().parallel());
+  MPI_Reduce(tmp.data(), globalNNZPerProc.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, 0, realm_.bulk_data().parallel());
 
   /* NNZ owned ... before assembly */
   std::fill(tmp.begin(), tmp.end(), 0);
   tmp[iproc] = totalMatElmts;
   std::vector<HypreIntType> nnz_owned(nprocs);
   std::fill(nnz_owned.begin(), nnz_owned.end(), 0);
-  MPI_Allreduce(tmp.data(), nnz_owned.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, realm_.bulk_data().parallel());
+  MPI_Reduce(tmp.data(), nnz_owned.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, 0, realm_.bulk_data().parallel());
 
   /* NNZ send ... before assembly */
   std::fill(tmp.begin(), tmp.end(), 0);
   tmp[iproc] = offProcNNZToSend_;
   std::vector<HypreIntType> nnz_send(nprocs);
   std::fill(nnz_send.begin(), nnz_send.end(), 0);
-  MPI_Allreduce(tmp.data(), nnz_send.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, realm_.bulk_data().parallel());
+  MPI_Reduce(tmp.data(), nnz_send.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, 0, realm_.bulk_data().parallel());
 
   /* NNZ recv ... before assembly */
   std::fill(tmp.begin(), tmp.end(), 0);
   tmp[iproc] = offProcNNZToRecv_;
   std::vector<HypreIntType> nnz_recv(nprocs);
   std::fill(nnz_recv.begin(), nnz_recv.end(), 0);
-  MPI_Allreduce(tmp.data(), nnz_recv.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, realm_.bulk_data().parallel());
+  MPI_Reduce(tmp.data(), nnz_recv.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, 0, realm_.bulk_data().parallel());
 
   /* num rows */
   std::fill(tmp.begin(), tmp.end(), 0);
   tmp[iproc] = totalRhsElmts;
   std::vector<HypreIntType> nrows(nprocs);
   std::fill(nrows.begin(), nrows.end(), 0);
-  MPI_Allreduce(tmp.data(), nrows.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, realm_.bulk_data().parallel());
+  MPI_Reduce(tmp.data(), nrows.data(), nprocs, HYPRE_MPI_INT, MPI_SUM, 0, realm_.bulk_data().parallel());
 
   /* Write to a file from rank 0 */
   if (iproc==0) {
