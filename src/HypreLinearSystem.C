@@ -9,6 +9,9 @@
 
 #include "HypreLinearSystem.h"
 
+#include <iostream>
+#include <fstream>
+
 namespace sierra {
 namespace nalu {
 
@@ -916,7 +919,8 @@ HypreLinearSystem::computeRowSizes()
   HypreIntType totalRhsElmts = hcApplier->num_rows_owned_;
 
   HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
-  if (solver->getConfig()->simpleHypreMatrixAssemble()) {
+  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
+  if (config->simpleHypreMatrixAssemble()) {
     /* set the key hypre parameters */
     offProcNNZToSend_ = hcApplier->num_nonzeros_shared_;
     offProcRhsToSend_ = hcApplier->num_rows_shared_;
@@ -1516,7 +1520,8 @@ HypreLinearSystem::hypreIJMatrixSetAddToValues()
   auto num_nonzeros_shared = hcApplier->num_nonzeros_shared_;
 
   HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
-  if (solver->getConfig()->simpleHypreMatrixAssemble()) {
+  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
+  if (config->simpleHypreMatrixAssemble()) {
 #if 0
     /* set the key hypre parameters */
     HYPRE_IJMatrixSetMaxOnProcElmts(mat_, hcApplier->num_nonzeros_owned_);
@@ -1549,7 +1554,8 @@ HypreLinearSystem::hypreIJVectorSetAddToValues()
   auto num_rows_shared = hcApplier->num_rows_shared_;
 
   HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
-  if (solver->getConfig()->simpleHypreMatrixAssemble()) {
+  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
+  if (config->simpleHypreMatrixAssemble()) {
 #if 0
     /* set the key hypre parameters */
     HYPRE_IJVectorSetMaxOnProcElmts(rhs_, num_rows_owned);
@@ -1574,7 +1580,7 @@ HypreLinearSystem::hypreIJVectorSetAddToValues()
 }
 
 void
-HypreLinearSystem::dumpRowsNNZStats()
+HypreLinearSystem::dumpMatrixStats()
 {
   HypreLinSysCoeffApplier* hcApplier =
     dynamic_cast<HypreLinSysCoeffApplier*>(hostCoeffApplier.get());
@@ -1708,8 +1714,9 @@ HypreLinearSystem::loadCompleteSolver()
 
   solver->comm_ = realm_.bulk_data().parallel();
 
-  if (solver->getConfig()->dumpHypreMatrixStats() && !matrixStatsDumped_) {
-    dumpRowsNNZStats();
+  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
+  if (config->dumpHypreMatrixStats() && !matrixStatsDumped_) {
+    dumpMatrixStats();
     matrixStatsDumped_ = true;
   }
 

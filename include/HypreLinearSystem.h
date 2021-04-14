@@ -20,9 +20,6 @@
 #endif // HYPRE_LINEAR_SYSTEM_DEBUG
 #undef HYPRE_LINEAR_SYSTEM_DEBUG
 
-#include <iostream>
-#include <fstream>
-
 #include "LinearSystem.h"
 #include "HypreDirectSolver.h"
 
@@ -215,7 +212,7 @@ public:
    */
   virtual void loadComplete();
 
-  virtual void dumpRowsNNZStats();
+  virtual void dumpMatrixStats();
 
   /** Reset the matrix and rhs data structures for the next iteration/timestep
    *

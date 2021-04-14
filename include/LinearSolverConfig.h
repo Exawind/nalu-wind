@@ -59,12 +59,6 @@ public:
   inline bool useSegregatedSolver() const
   { return useSegregatedSolver_; }
 
-  inline bool simpleHypreMatrixAssemble() const
-  { return simpleHypreMatrixAssemble_; }
-
-  inline bool dumpHypreMatrixStats() const
-  { return dumpHypreMatrixStats_; }
-
   /** User flag indicating whether equation systems must attempt to reuse linear
    *  system data structures even for cases with mesh motion.
    *
@@ -109,8 +103,6 @@ protected:
   bool useSegregatedSolver_{false};
   bool writeMatrixFiles_{false};
   bool reuseLinSysIfPossible_{false};
-  bool simpleHypreMatrixAssemble_{false};
-  bool dumpHypreMatrixStats_{false};
 };
 
 class TpetraLinearSolverConfig : public LinearSolverConfig
@@ -144,6 +136,12 @@ public:
   virtual void load(const YAML::Node&);
 
   bool useSegregatedSolver() const { return useSegregatedSolver_; }
+
+  inline bool simpleHypreMatrixAssemble() const
+  { return simpleHypreMatrixAssemble_; }
+
+  inline bool dumpHypreMatrixStats() const
+  { return dumpHypreMatrixStats_; }
 
 protected:
   //! List of HYPRE API calls and corresponding arugments to configure solver
@@ -184,6 +182,8 @@ protected:
   bool isHypreSolver_{true};
   bool hasAbsTol_{false};
   bool useSegregatedSolver_{false};
+  bool simpleHypreMatrixAssemble_{false};
+  bool dumpHypreMatrixStats_{false};
 
 private:
   void boomerAMG_solver_config(const YAML::Node&);

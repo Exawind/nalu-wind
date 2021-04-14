@@ -143,8 +143,9 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
   auto num_rows_shared = hcApplier->num_rows_shared_;
 
   HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
+  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
   for (unsigned i = 0; i < nDim_; ++i) {
-    if (solver->getConfig()->simpleHypreMatrixAssemble()) {
+    if (config->simpleHypreMatrixAssemble()) {
 #if 0
       /* set the key hypre parameters */
       HYPRE_IJVectorSetMaxOnProcElmts(rhs_[i], num_rows_owned);
@@ -254,8 +255,9 @@ HypreUVWLinearSystem::loadCompleteSolver()
 
   solver->comm_ = realm_.bulk_data().parallel();
 
-  if (solver->getConfig()->dumpHypreMatrixStats() && !matrixStatsDumped_) {
-    dumpRowsNNZStats();
+  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
+  if (config->dumpHypreMatrixStats() && !matrixStatsDumped_) {
+    dumpMatrixStats();
     matrixStatsDumped_ = true;
   }
 
