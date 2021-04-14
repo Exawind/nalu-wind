@@ -137,6 +137,12 @@ public:
 
   bool useSegregatedSolver() const { return useSegregatedSolver_; }
 
+  inline bool simpleHypreMatrixAssemble() const
+  { return simpleHypreMatrixAssemble_; }
+
+  inline bool dumpHypreMatrixStats() const
+  { return dumpHypreMatrixStats_; }
+
 protected:
   //! List of HYPRE API calls and corresponding arugments to configure solver
   //! and preconditioner after they are created.
@@ -166,6 +172,9 @@ protected:
   int bamgRelaxType_{6};
   int bamgRelaxOrder_{1};
   int bamgNumSweeps_{2};
+  int bamgNumDownSweeps_{1};
+  int bamgNumUpSweeps_{2};
+  int bamgNumCoarseSweeps_{2};
   int bamgMaxLevels_{20};
   int bamgInterpType_{0};
   std::string bamgEuclidFile_{""};
@@ -173,6 +182,8 @@ protected:
   bool isHypreSolver_{true};
   bool hasAbsTol_{false};
   bool useSegregatedSolver_{false};
+  bool simpleHypreMatrixAssemble_{false};
+  bool dumpHypreMatrixStats_{false};
 
 private:
   void boomerAMG_solver_config(const YAML::Node&);

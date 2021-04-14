@@ -3251,7 +3251,8 @@ Realm::set_hypre_global_id()
   int nprocs = bulkData_->parallel_size();
   int iproc = bulkData_->parallel_rank();
   std::vector<int> nodesPerProc(nprocs);
-  std::vector<stk::mesh::EntityId> hypreOffsets(nprocs+1);
+  //std::vector<stk::mesh::EntityId> hypreOffsets(nprocs+1);
+  hypreOffsets_.resize(nprocs+1);
 
   // 1. Determine the number of nodes per partition and determine appropriate
   // offsets on each MPI rank.
@@ -3260,15 +3261,15 @@ Realm::set_hypre_global_id()
   MPI_Allgather(&num_nodes, 1, MPI_INT, nodesPerProc.data(), 1, MPI_INT,
                 bulkData_->parallel());
 
-  hypreOffsets[0] = 0;
+  hypreOffsets_[0] = 0;
   for (int i=1; i <= nprocs; i++)
-    hypreOffsets[i] = hypreOffsets[i-1] + nodesPerProc[i-1];
+    hypreOffsets_[i] = hypreOffsets_[i-1] + nodesPerProc[i-1];
 
   // These are set up for NDOF=1, the actual lower/upper extents will be
   // finalized in HypreLinearSystem class based on the equation being solved.
-  hypreILower_ = hypreOffsets[iproc];
-  hypreIUpper_ = hypreOffsets[iproc+1];
-  hypreNumNodes_ = hypreOffsets[nprocs];
+  hypreILower_ = hypreOffsets_[iproc];
+  hypreIUpper_ = hypreOffsets_[iproc+1];
+  hypreNumNodes_ = hypreOffsets_[nprocs];
 
   // 2. Sort the local STK IDs so that we retain a 1-1 mapping as much as possible
   size_t ii=0;

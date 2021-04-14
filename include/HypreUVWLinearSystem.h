@@ -101,7 +101,8 @@ public:
       const double rhs_residual,
       const HypreIntType iLower,
       const HypreIntType iUpper,
-      const unsigned nDim);
+      const unsigned nDim,
+      HypreIntType memShift);
 
     KOKKOS_FUNCTION
     virtual void resetRows(
@@ -117,11 +118,13 @@ public:
       unsigned numEntities,
       const stk::mesh::NgpMesh::ConnectedNodes& entities,
       const SharedMemView<int*, DeviceShmem>& localIds,
+      const SharedMemView<int*, DeviceShmem>& sortPermutation,
       const SharedMemView<const double*, DeviceShmem>& rhs,
       const SharedMemView<const double**, DeviceShmem>& lhs,
       const HypreIntType& iLower,
       const HypreIntType& iUpper,
-      unsigned nDim);
+      unsigned nDim,
+      HypreIntType memShift);
 
     KOKKOS_FUNCTION
     virtual void operator()(

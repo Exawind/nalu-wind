@@ -643,6 +643,8 @@ class Realm {
 
   bool isFinalOuterIter_{false};
 
+  std::vector<stk::mesh::EntityId> hypreOffsets_;
+
   /** The starting index (global) of the HYPRE linear system in this MPI rank
    *
    *  Note that this is actually the offset into the linear system. This index

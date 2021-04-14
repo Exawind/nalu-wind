@@ -55,6 +55,8 @@ HypreLinearSolverConfig::load(const YAML::Node& node)
   get_if_present(node, "reuse_preconditioner",
                  reusePreconditioner_, reusePreconditioner_);
   get_if_present(node, "segregated_solver", useSegregatedSolver_, useSegregatedSolver_);
+  get_if_present(node, "simple_hypre_matrix_assemble", simpleHypreMatrixAssemble_, simpleHypreMatrixAssemble_);
+  get_if_present(node, "dump_hypre_matrix_stats", dumpHypreMatrixStats_, dumpHypreMatrixStats_);
   get_if_present(node, "reuse_linear_system", reuseLinSysIfPossible_, reuseLinSysIfPossible_);
 
   if (node["absolute_tolerance"]) {
@@ -178,6 +180,9 @@ HypreLinearSolverConfig::boomerAMG_precond_config(const YAML::Node& node)
   get_if_present(node, "bamg_relax_type", bamgRelaxType_, bamgRelaxType_);
   get_if_present(node, "bamg_relax_order", bamgRelaxOrder_, bamgRelaxOrder_);
   get_if_present(node, "bamg_num_sweeps", bamgNumSweeps_, bamgNumSweeps_);
+  get_if_present(node, "bamg_num_down_sweeps", bamgNumDownSweeps_, bamgNumDownSweeps_);
+  get_if_present(node, "bamg_num_up_sweeps", bamgNumUpSweeps_, bamgNumUpSweeps_);
+  get_if_present(node, "bamg_num_coarse_sweeps", bamgNumCoarseSweeps_, bamgNumCoarseSweeps_);
   get_if_present(node, "bamg_max_levels", bamgMaxLevels_, bamgMaxLevels_);
   get_if_present(node, "bamg_strong_threshold", bamgStrongThreshold_, bamgStrongThreshold_);
   get_if_present(node, "bamg_output_level", output_level, output_level);
@@ -199,9 +204,23 @@ HypreLinearSolverConfig::boomerAMG_precond_config(const YAML::Node& node)
     bamgRelaxType_)));
   funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
     Ifpack2::Hypre::Prec, &HYPRE_BoomerAMGSetRelaxOrder, bamgRelaxOrder_)));
-  funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
-    Ifpack2::Hypre::Prec, &HYPRE_BoomerAMGSetNumSweeps,
-    bamgNumSweeps_)));
+
+  if (node["bamg_num_down_sweeps"] && node["bamg_num_up_sweeps"] && node["bamg_num_coarse_sweeps"]) {
+    funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+      Ifpack2::Hypre::Prec, &HYPRE_BoomerAMGSetCycleNumSweeps,
+      bamgNumDownSweeps_, 1)));
+    funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+      Ifpack2::Hypre::Prec, &HYPRE_BoomerAMGSetCycleNumSweeps,
+      bamgNumUpSweeps_, 2)));
+    funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+      Ifpack2::Hypre::Prec, &HYPRE_BoomerAMGSetCycleNumSweeps,
+      bamgNumCoarseSweeps_, 3)));
+  } else {
+    funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
+      Ifpack2::Hypre::Prec, &HYPRE_BoomerAMGSetNumSweeps,
+      bamgNumSweeps_)));
+  }
+
   funcParams_.push_back(Teuchos::rcp(new Ifpack2::FunctionParameter(
     Ifpack2::Hypre::Prec, &HYPRE_BoomerAMGSetMaxLevels,
     bamgMaxLevels_)));
