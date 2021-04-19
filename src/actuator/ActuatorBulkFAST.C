@@ -62,18 +62,23 @@ ActuatorBulkFAST::ActuatorBulkFAST(
 
 ActuatorBulkFAST::~ActuatorBulkFAST() { openFast_.end(); }
 
+bool
+ActuatorBulkFAST::is_tstep_ratio_admissable(
+  const ActuatorMetaFAST& actMeta, const double naluTimeStep)
+{
+  const double stepCheck =
+    std::abs(naluTimeStep / actMeta.fastInputs_.dtFAST - tStepRatio_);
+  return stepCheck < 1e-12;
+}
+
 void
 ActuatorBulkFAST::init_openfast(
   const ActuatorMetaFAST& actMeta, const double naluTimeStep)
 {
   openFast_.setInputs(actMeta.fastInputs_);
-  const double stepCheck =
-    std::abs(naluTimeStep / actMeta.fastInputs_.dtFAST - tStepRatio_);
-  if (stepCheck > 1e-12) {
-    throw std::runtime_error(
-      "ActuatorFAST: Ratio of Nalu's time step is not "
-      "an integral multiple of FAST time step. Round off error is " +
-      std::to_string(stepCheck));
+  if (!is_tstep_ratio_admissable(actMeta, naluTimeStep)) {
+    throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
+                             "an integral multiple of FAST time step.");
   } else {
     NaluEnv::self().naluOutputP0()
       << "Time step ratio  dtNalu/dtFAST: " << tStepRatio_ << std::endl;
@@ -103,6 +108,12 @@ ActuatorBulkFAST::init_openfast(
     openFast_.init();
   } else {
     squash_fast_output(std::bind(&fast::OpenFAST::init, &openFast_));
+  }
+  if (!is_tstep_ratio_admissable(actMeta, naluTimeStep)) {
+    throw std::runtime_error("OpenFAST is using a different time step than "
+                             "what was specified in the input deck. "
+                             "Please check that your workflow is consistent "
+                             "(restarts, FAST files, etc.");
   }
 
   for (int i = 0; i < nTurb; ++i) {
