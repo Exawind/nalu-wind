@@ -53,7 +53,7 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
-    tStepRatio_(naluTimeStep / actMeta.fastInputs_.dtFAST)
+    tStepRatio_(std::round(naluTimeStep / actMeta.fastInputs_.dtFAST))
 {
   init_openfast(actMeta, naluTimeStep);
   init_epsilon(actMeta);
@@ -64,20 +64,19 @@ ActuatorBulkFAST::~ActuatorBulkFAST() { openFast_.end(); }
 
 void
 ActuatorBulkFAST::init_openfast(
-  const ActuatorMetaFAST& actMeta, double naluTimeStep)
+  const ActuatorMetaFAST& actMeta, const double naluTimeStep)
 {
   openFast_.setInputs(actMeta.fastInputs_);
-
-  if (
-    std::abs(naluTimeStep - tStepRatio_ * actMeta.fastInputs_.dtFAST) <
-    0.001) { // TODO: Fix
-    // arbitrary number
-    // 0.001
+  const double stepCheck =
+    std::abs(naluTimeStep / actMeta.fastInputs_.dtFAST - tStepRatio_);
+  if (stepCheck > 1e-12) {
+    throw std::runtime_error(
+      "ActuatorFAST: Ratio of Nalu's time step is not "
+      "an integral multiple of FAST time step. Round off error is " +
+      std::to_string(stepCheck));
+  } else {
     NaluEnv::self().naluOutputP0()
       << "Time step ratio  dtNalu/dtFAST: " << tStepRatio_ << std::endl;
-  } else {
-    throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
-                             "an integral multiple of FAST time step");
   }
 
   const int nProcs = NaluEnv::self().parallel_size();
