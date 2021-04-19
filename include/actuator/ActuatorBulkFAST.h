@@ -54,7 +54,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
   init_openfast(const ActuatorMetaFAST& actMeta, const double naluTimeStep);
   void init_epsilon(const ActuatorMetaFAST& actMeta);
   bool is_tstep_ratio_admissable(
-    const ActuatorMetaFAST& actMeta, const double naluTimeStep);
+    const double fastTimeStep, const double naluTimeStep);
 
   virtual ~ActuatorBulkFAST();
 
