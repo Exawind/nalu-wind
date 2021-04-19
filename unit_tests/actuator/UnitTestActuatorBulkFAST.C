@@ -45,7 +45,10 @@ protected:
 
 TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
 {
-  const YAML::Node y_node = actuator_unit::create_yaml_node(fastParseParams_);
+  std::vector<std::string> modInputs(fastParseParams_);
+  modInputs[4] = "  dt_fast: 0.005\n";
+  modInputs[5] = "  t_max: 0.29\n";
+  const YAML::Node y_node = actuator_unit::create_yaml_node(modInputs);
   auto actMetaFast = actuator_FAST_parse(y_node, actMeta_);
 
   const fast::fastInputs& fi = actMetaFast.fastInputs_;
@@ -57,8 +60,8 @@ TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
   ASSERT_EQ(fi.tStart, 0.0);
   ASSERT_EQ(fi.simStart, fast::init);
   ASSERT_EQ(fi.nEveryCheckPoint, 1);
-  ASSERT_EQ(fi.dtFAST, 0.00625);
-  ASSERT_EQ(fi.tMax, 0.0625);
+  ASSERT_EQ(fi.dtFAST, 0.005);
+  ASSERT_EQ(fi.tMax, 0.29);
 
   ASSERT_EQ(
     fi.globTurbineData[0].FASTInputFileName, "nrel5mw.fst");
@@ -71,7 +74,8 @@ TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
   ASSERT_EQ(fi.globTurbineData[0].nacelle_cd, 1.0);
 
   try {
-    ActuatorBulkFAST actBulk(actMetaFast, 0.0625);
+    ActuatorBulkFAST actBulk(actMetaFast, 0.29);
+    EXPECT_EQ(actBulk.tStepRatio_, 58);
     EXPECT_FALSE(actBulk.openFast_.isDebug());
   } catch (std::exception const& err) {
     FAIL() << err.what();

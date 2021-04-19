@@ -53,7 +53,7 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
-    tStepRatio_(naluTimeStep / actMeta.fastInputs_.dtFAST)
+    tStepRatio_(std::round(naluTimeStep / actMeta.fastInputs_.dtFAST))
 {
   init_openfast(actMeta, naluTimeStep);
   init_epsilon(actMeta);
@@ -62,22 +62,25 @@ ActuatorBulkFAST::ActuatorBulkFAST(
 
 ActuatorBulkFAST::~ActuatorBulkFAST() { openFast_.end(); }
 
+bool
+ActuatorBulkFAST::is_tstep_ratio_admissable(
+  const double fastTimeStep, const double naluTimeStep)
+{
+  const double stepCheck = std::abs(naluTimeStep / fastTimeStep - tStepRatio_);
+  return stepCheck < 1e-12;
+}
+
 void
 ActuatorBulkFAST::init_openfast(
-  const ActuatorMetaFAST& actMeta, double naluTimeStep)
+  const ActuatorMetaFAST& actMeta, const double naluTimeStep)
 {
   openFast_.setInputs(actMeta.fastInputs_);
-
-  if (
-    std::abs(naluTimeStep - tStepRatio_ * actMeta.fastInputs_.dtFAST) <
-    0.001) { // TODO: Fix
-    // arbitrary number
-    // 0.001
+  if (!is_tstep_ratio_admissable(actMeta.fastInputs_.dtFAST, naluTimeStep)) {
+    throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
+                             "an integral multiple of FAST time step.");
+  } else {
     NaluEnv::self().naluOutputP0()
       << "Time step ratio  dtNalu/dtFAST: " << tStepRatio_ << std::endl;
-  } else {
-    throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
-                             "an integral multiple of FAST time step");
   }
 
   const int nProcs = NaluEnv::self().parallel_size();
@@ -105,6 +108,15 @@ ActuatorBulkFAST::init_openfast(
   } else {
     squash_fast_output(std::bind(&fast::OpenFAST::init, &openFast_));
   }
+  /* TODO update/uncomment this check once openfast adds in a way 
+  to get the actual time step from fast::OpenFAST
+  if (!is_tstep_ratio_admissable(openFast_.dtFAST, naluTimeStep)) {
+    throw std::runtime_error("OpenFAST is using a different time step than "
+                             "what was specified in the input deck. "
+                             "Please check that your workflow is consistent "
+                             "(restarts, FAST files, etc.");
+  }
+  */
 
   for (int i = 0; i < nTurb; ++i) {
     if (localTurbineId_ == openFast_.get_procNo(i)) {
