@@ -5,6 +5,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ########################## OPTIONS #####################################
 option(ENABLE_CUDA "Enable build targeting GPU" OFF)
+option(ENABLE_UMPIRE "Enable Umpire GPU memory pools" OFF)
 option(ENABLE_TESTS "Enable regression testing." OFF)
 option(ENABLE_EXAMPLES "Enable examples." OFF)
 option(ENABLE_DOCUMENTATION "Build documentation." OFF)
@@ -49,6 +50,12 @@ if(ENABLE_CUDA)
     CUDA::cudart
     CUDA::cublas
     CUDA::nvToolsExt)
+endif()
+
+if (ENABLE_UMPIRE)
+  set(CMAKE_PREFIX_PATH ${UMPIRE_DIR} ${CMAKE_PREFIX_PATH})
+  find_package(Umpire REQUIRED)
+  include_directories(SYSTEM ${UMPIRE_INCLUDE_DIRS})
 endif()
 
 # Handle issues for Power9 builds
