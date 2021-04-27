@@ -22,6 +22,14 @@ linear_solvers:
     max_iterations: 200
     kspace: 75
     output_level: 0
+    write_matrix_files: no
+    reuse_linear_system: yes
+    recompute_preconditioner_frequency: 1
+
+    # File containing hypre specific configuration options
+    hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
+    # YAML node used for this linear solver
+    hypre_cfg_node: hypre_elliptic
 
 realms:
 
