@@ -28,7 +28,7 @@ linear_solvers:
 realms:
 
   - name: realm_1
-    mesh: ../../mesh/nrel5MWactuatorLine.g
+    mesh: "generated:30x80x160|bbox:-30.0,-80.0,-90.0,30.0,80.0,240.0|sideset:xXyYzZ|show"
     use_edges: yes
     automatic_decomposition_type: rcb
 
@@ -50,13 +50,13 @@ realms:
     initial_conditions:
 
       - constant: ic_1
-        target_name: Unspecified-2-HEX
+        target_name: block_1
         value:
           pressure: 0.0
           velocity: [8.0,0.0,0.0]
 
     material_properties:
-      target_name: Unspecified-2-HEX
+      target_name: block_1
       specifications:
         - name: density
           type: constant
@@ -69,30 +69,30 @@ realms:
     boundary_conditions:
 
     - inflow_boundary_condition: bc_1
-      target_name: inflow
+      target_name: surface_1
       inflow_user_data:
         velocity: [8.0,0.0,0.0]
 
     - open_boundary_condition: bc_2
-      target_name: outflow
+      target_name: surface_2
       open_user_data:
         pressure: 0.0
         velocity: [8.0,0.0,0.0]
 
     - symmetry_boundary_condition: bc_3
-      target_name: left
+      target_name: surface_3
       symmetry_user_data:
 
     - symmetry_boundary_condition: bc_4
-      target_name: right
+      target_name: surface_4
       symmetry_user_data:
 
     - symmetry_boundary_condition: bc_5
-      target_name: bottom
+      target_name: surface_5
       symmetry_user_data:
 
     - symmetry_boundary_condition: bc_6
-      target_name: top
+      target_name: surface_6
       symmetry_user_data:
 
     solution_options:
@@ -117,7 +117,7 @@ realms:
     actuator:
       type: ActLineFASTNGP
       search_method: stk_kdtree
-      search_target_part: Unspecified-2-HEX
+      search_target_part: block_1
 
       n_turbines_glob: 1
       dry_run:  False
