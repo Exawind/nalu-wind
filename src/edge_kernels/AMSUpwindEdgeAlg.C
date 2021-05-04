@@ -61,6 +61,9 @@ AMSUpwindEdgeAlg::execute()
   auto pecFactor = fieldMgr.get_field<double>(pecletFactor_);
   const auto beta = fieldMgr.get_field<double>(beta_);
 
+  const DblType ams_peclet_offset = realm_.get_turb_model_constant(TM_ams_peclet_offset);
+  const DblType ams_peclet_slope = realm_.get_turb_model_constant(TM_ams_peclet_slope);
+
   const stk::mesh::Selector sel = meta.locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &
                                   !(realm_.get_inactive_selector());
@@ -77,7 +80,8 @@ AMSUpwindEdgeAlg::execute()
       const DblType betaEdge = 0.5 * (beta.get(nodeL, 0) + beta.get(nodeR, 0));
 
       pecFactor.get(edge, 0) =
-        0.5 * stk::math::tanh(12.0 * (betaEdge - 0.6) + 1.0);
+        0.5 * stk::math::tanh(
+                ams_peclet_slope * (betaEdge - ams_peclet_offset) + 1.0);
     });
 }
 
