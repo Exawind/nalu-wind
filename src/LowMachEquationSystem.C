@@ -84,6 +84,7 @@
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
 #include <edge_kernels/MomentumEdgePecletAlg.h>
 #include <edge_kernels/StreletsUpwindEdgeAlg.h>
+#include <edge_kernels/AMSUpwindEdgeAlg.h>
 
 // node kernels
 #include "node_kernels/NodeKernelUtils.h"
@@ -1212,6 +1213,8 @@ MomentumEquationSystem::register_interior_algorithm(
         }
         if (realm_.is_turbulent() && theTurbModel == SST_IDDES) {
           pecletAlg_.reset(new StreletsUpwindEdgeAlg(realm_, part));
+        } else if (realm_.is_turbulent() && theTurbModel == SST_AMS) {
+          pecletAlg_.reset(new AMSUpwindEdgeAlg(realm_, part));
         } else {
           pecletAlg_.reset(new MomentumEdgePecletAlg(realm_, part, this));
         }
