@@ -7,8 +7,8 @@
 // for more details.
 //
 
-#ifndef AMSUPWINDEDGEALG_H_
-#define AMSUPWINDEDGEALG_H_
+#ifndef AMSMOMENTUMPECLETEDGEALG_H_
+#define AMSMOMENTUMPECLETEDGEALG_H_
 
 #include <string>
 #include <Algorithm.h>
@@ -19,12 +19,12 @@ namespace nalu {
 
 class Realm;
 
-class AMSUpwindEdgeAlg : public Algorithm
+class AMSMomentumPecletEdgeAlg : public Algorithm
 {
 public:
   using DblType = double;
-  AMSUpwindEdgeAlg(Realm&, stk::mesh::Part*);
-  virtual ~AMSUpwindEdgeAlg() = default;
+  AMSMomentumPecletEdgeAlg(Realm&, stk::mesh::Part*);
+  virtual ~AMSMomentumPecletEdgeAlg() = default;
   void execute() override;
 
 private:
@@ -36,4 +36,4 @@ private:
 } // namespace nalu
 } // namespace sierra
 
-#endif /* AMSUPWINDEDGEALG_H_ */
+#endif /* AMSMOMENTUMPECLETEDGEALG_H_ */

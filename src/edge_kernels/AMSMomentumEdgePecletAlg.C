@@ -7,7 +7,7 @@
 // for more details.
 //
 
-#include <edge_kernels/AMSUpwindEdgeAlg.h>
+#include <edge_kernels/AMSMomentumPecletEdgeAlg.h>
 #include <Realm.h>
 #include "stk_mesh/base/NgpField.hpp"
 #include <ngp_utils/NgpFieldUtils.h>
@@ -18,7 +18,7 @@
 namespace sierra {
 namespace nalu {
 
-AMSUpwindEdgeAlg::AMSUpwindEdgeAlg(Realm& realm, stk::mesh::Part* part)
+AMSMomentumPecletEdgeAlg::AMSMomentumPecletEdgeAlg(Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
     velocityName_("velocity"),
     pecletFactor_(get_field_ordinal(
@@ -48,7 +48,7 @@ AMSUpwindEdgeAlg::AMSUpwindEdgeAlg(Realm& realm, stk::mesh::Part* part)
 }
 
 void
-AMSUpwindEdgeAlg::execute()
+AMSMomentumPecletEdgeAlg::execute()
 {
   using EntityInfoType = nalu_ngp::EntityInfo<stk::mesh::NgpMesh>;
   stk::mesh::MetaData& meta = realm_.meta_data();

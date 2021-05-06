@@ -9,7 +9,7 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/WallDistEdgeSolverAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MomentumEdgePecletAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/StreletsUpwindEdgeAlg.C
-  ${CMAKE_CURRENT_SOURCE_DIR}/AMSUpwindEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/AMSMomentumPecletEdgeAlg.C
 
   # Face/edge BC kernels
   ${CMAKE_CURRENT_SOURCE_DIR}/ContinuityOpenEdgeKernel.C
