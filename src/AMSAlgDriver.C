@@ -17,6 +17,10 @@
 #include "ngp_utils/NgpFieldManager.h"
 #include "ngp_algorithms/MetricTensorElemAlg.h"
 #include "stk_mesh/base/NgpMesh.hpp"
+#include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/Field.hpp>
+#include <stk_mesh/base/FieldParallel.hpp>
+#include <stk_mesh/base/MetaData.hpp>
 
 namespace sierra {
 namespace nalu {
@@ -149,7 +153,7 @@ AMSAlgDriver::register_interior_algorithm(stk::mesh::Part* part)
 
   // avgMdot algorithm
   avgMdotAlg_.register_edge_algorithm<AMSAvgMdotEdgeAlg>(
-      algType, part, "ams_avg_mdot_edge");
+    algType, part, "ams_avg_mdot_edge");
 }
 
 void
@@ -259,17 +263,17 @@ AMSAlgDriver::initial_mdot()
     const auto& fieldMgr = realm_.ngp_field_manager();
 
     auto& avgMdot = fieldMgr.get_field<double>(get_field_ordinal(
-                                                 meta, "average_mass_flow_rate", stk::topology::EDGE_RANK));
+      meta, "average_mass_flow_rate", stk::topology::EDGE_RANK));
     const auto& massFlowRate = fieldMgr.get_field<double>(
-        get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK));
+      get_field_ordinal(meta, "mass_flow_rate", stk::topology::EDGE_RANK));
 
-      const stk::mesh::Selector sel =
-        (meta.locally_owned_part() | meta.globally_shared_part()) &
-        stk::mesh::selectField(
-          *meta.get_field(stk::topology::EDGE_RANK, "average_mass_flow_rate"));
+    const stk::mesh::Selector sel =
+      (meta.locally_owned_part() | meta.globally_shared_part()) &
+      stk::mesh::selectField(
+        *meta.get_field(stk::topology::EDGE_RANK, "average_mass_flow_rate"));
 
-      nalu_ngp::field_copy(
-        ngpMesh, sel, avgMdot, massFlowRate, 1, stk::topology::EDGE_RANK);
+    nalu_ngp::field_copy(
+      ngpMesh, sel, avgMdot, massFlowRate, 1, stk::topology::EDGE_RANK);
   }
 }
 
@@ -291,5 +295,76 @@ AMSAlgDriver::compute_metric_tensor()
   metricTensorAlgDriver_.execute();
 }
 
+void
+AMSAlgDriver::post_iter_work()
+{
+  // const auto& fieldMgr = realm_.ngp_field_manager();
+  // const auto& meta = realm_.meta_data();
+  // auto& bulk = realm_.bulk_data();
+  // auto ngpForcingComp =
+  //   fieldMgr.get_field<double>(forcingComp_->mesh_meta_data_ordinal());
+  // ngpForcingComp.sync_to_host();
+  // VectorFieldType* forcingComp = meta.get_field<VectorFieldType>(
+  //   stk::topology::NODE_RANK, "forcing_components");
+  // stk::mesh::copy_owned_to_shared(bulk, {forcingComp});
+  // if (realm_.hasPeriodic_) {
+  //   realm_.periodic_delta_solution_update(forcingComp, 3);
+  // }
+}
+
+void
+AMSAlgDriver::predict_state()
+{
+  const auto& ngpMesh = realm_.ngp_mesh();
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  auto& avgVelN = fieldMgr.get_field<double>(
+    avgVelocity_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& avgVelNp1 = fieldMgr.get_field<double>(
+    avgVelocity_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+  auto& avgDudxN = fieldMgr.get_field<double>(
+    avgDudx_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& avgDudxNp1 = fieldMgr.get_field<double>(
+    avgDudx_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+  auto& avgProdN = fieldMgr.get_field<double>(
+    avgProduction_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
+  auto& avgProdNp1 = fieldMgr.get_field<double>(
+    avgProduction_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+  auto& avgTkeResN = fieldMgr.get_field<double>(
+    avgTkeResolved_->field_of_state(stk::mesh::StateN)
+      .mesh_meta_data_ordinal());
+  auto& avgTkeResNp1 = fieldMgr.get_field<double>(
+    avgTkeResolved_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+  auto& avgResAdeqN = fieldMgr.get_field<double>(
+    avgResAdequacy_->field_of_state(stk::mesh::StateN)
+      .mesh_meta_data_ordinal());
+  auto& avgResAdeqNp1 = fieldMgr.get_field<double>(
+    avgResAdequacy_->field_of_state(stk::mesh::StateNP1)
+      .mesh_meta_data_ordinal());
+  avgVelN.sync_to_device();
+  avgDudxN.sync_to_device();
+  avgProdN.sync_to_device();
+  avgTkeResN.sync_to_device();
+  avgResAdeqN.sync_to_device();
+  const auto& meta = realm_.meta_data();
+  const stk::mesh::Selector sel =
+    (meta.locally_owned_part() | meta.globally_shared_part() |
+     meta.aura_part()) &
+    stk::mesh::selectField(*avgVelocity_);
+  nalu_ngp::field_copy(
+    ngpMesh, sel, avgVelNp1, avgVelN, meta.spatial_dimension());
+  nalu_ngp::field_copy(
+    ngpMesh, sel, avgDudxNp1, avgDudxN,
+    meta.spatial_dimension() * meta.spatial_dimension());
+  nalu_ngp::field_copy(ngpMesh, sel, avgProdNp1, avgProdN, 1);
+  nalu_ngp::field_copy(ngpMesh, sel, avgTkeResNp1, avgTkeResN, 1);
+  nalu_ngp::field_copy(ngpMesh, sel, avgResAdeqNp1, avgResAdeqN, 1);
+  avgVelNp1.modify_on_device();
+  avgDudxNp1.modify_on_device();
+  avgProdNp1.modify_on_device();
+  avgTkeResNp1.modify_on_device();
+  avgResAdeqNp1.modify_on_device();
+}
 } // namespace nalu
 } // namespace sierra
