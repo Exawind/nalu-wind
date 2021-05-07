@@ -96,6 +96,8 @@ public:
 
   void post_converged_work();
 
+  virtual void post_iter_work();
+
   const bool elementContinuityEqs_; /* allow for mixed element/edge for continuity */
   MomentumEquationSystem *momentumEqSys_;
   ContinuityEquationSystem *continuityEqSys_;

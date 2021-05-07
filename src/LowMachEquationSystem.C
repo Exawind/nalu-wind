@@ -935,6 +935,16 @@ LowMachEquationSystem::post_converged_work()
   }
 }
 
+//--------------------------------------------------------------------------
+//-------- post_iter_work --------------------------------------------------
+//--------------------------------------------------------------------------
+void
+LowMachEquationSystem::post_iter_work()
+{
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+    momentumEqSys_->AMSAlgDriver_->post_iter_work();
+}
+
 //==========================================================================
 // Class Definition
 //==========================================================================
@@ -2320,6 +2330,9 @@ MomentumEquationSystem::predict_state()
     & stk::mesh::selectField(*velocity_);
   nalu_ngp::field_copy(ngpMesh, sel, velNp1, velN, meta.spatial_dimension());
   velNp1.modify_on_device();
+
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+    AMSAlgDriver_->predict_state();
 }
 
 //--------------------------------------------------------------------------
