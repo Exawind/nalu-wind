@@ -141,7 +141,9 @@ MomentumSSTAMSDiffEdgeKernel::execute(
 
   const EdgeKernelTraits::DblType CM43scale = stk::math::max(
     stk::math::min(
-      0.5 * (avgResAdeq_.get(nodeL, 0) + avgResAdeq_.get(nodeR, 0)), 10.0),
+      0.5 * (stk::math::pow(avgResAdeq_.get(nodeL, 0), 2.0) +
+             stk::math::pow(avgResAdeq_.get(nodeR, 0), 2.0)),
+      30.0),
     1.0);
 
   const EdgeKernelTraits::DblType muIp =
