@@ -7,33 +7,45 @@
 // for more details.
 //
 
-#ifndef AMSMOMENTUMPECLETEDGEALG_H_
-#define AMSMOMENTUMPECLETEDGEALG_H_
+#ifndef AMSMOMENTUMEDGEPECLETKERNEL_H_
+#define AMSMOMENTUMEDGEPECLETKERNEL_H_
 
-#include <string>
 #include <Algorithm.h>
 #include "stk_mesh/base/Types.hpp"
+#include "PecletFunction.h"
 
 namespace sierra {
 namespace nalu {
 
 class Realm;
+class EquationSystem;
 
-class AMSMomentumPecletEdgeAlg : public Algorithm
+class AMSMomentumEdgePecletAlg : public Algorithm
 {
 public:
   using DblType = double;
-  AMSMomentumPecletEdgeAlg(Realm&, stk::mesh::Part*);
-  virtual ~AMSMomentumPecletEdgeAlg() = default;
+
+  AMSMomentumEdgePecletAlg(Realm&, stk::mesh::Part*, EquationSystem*);
+  virtual ~AMSMomentumEdgePecletAlg() = default;
   void execute() override;
 
 private:
-  const std::string velocityName_;
   unsigned pecletFactor_{stk::mesh::InvalidOrdinal};
-  unsigned beta_{stk::mesh::InvalidOrdinal};
+  unsigned density_{stk::mesh::InvalidOrdinal};
+  unsigned viscosity_{stk::mesh::InvalidOrdinal};
+  unsigned tvisc_{stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
+  unsigned vrtm_{stk::mesh::InvalidOrdinal};
+  unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
+  const double eps_{1.0e-16};
+  const int nDim_;
+  PecletFunction<DblType>* pecletFunction_{nullptr};
 };
+
+void determine_max_peclet_factor(
+  stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta);
 
 } // namespace nalu
 } // namespace sierra
 
-#endif /* AMSMOMENTUMPECLETEDGEALG_H_ */
+#endif /* AMSMOMENTUMEDGEPECLETKERNEL_H_ */
