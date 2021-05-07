@@ -89,8 +89,8 @@ AMSMomentumEdgePecletAlg::execute()
       const DblType tviscL = tvisc.get(nodeL, 0);
       const DblType tviscR = tvisc.get(nodeR, 0);
 
-      const DblType diffIp = 0.5 * ((viscosityL + scaleL * tviscL) / densityL +
-                                    (viscosityR + scaleR * tviscR) / densityR);
+      const DblType diffIp = 0.5 * ((viscosityL + tviscL) / densityL +
+                                    (viscosityR + tviscR) / densityR);
 
       for (int d = 0; d < ndim; ++d) {
         const DblType dxj =
@@ -103,36 +103,6 @@ AMSMomentumEdgePecletAlg::execute()
       const DblType pecnum = stk::math::abs(udotx) / (diffIp + eps);
       pecletFactor.get(edge, 0) = pecFunc->execute(pecnum);
     });
-}
-
-void
-determine_max_peclet_factor(
-  stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta)
-{
-  ScalarFieldType* maxPecFac = meta.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "max_peclet_factor");
-  ScalarFieldType* pecletFactor =
-    meta.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_factor");
-
-  stk::mesh::field_fill(0.0, *maxPecFac);
-
-  const stk::mesh::Selector sel =
-    stk::mesh::selectField(*pecletFactor) & meta.locally_owned_part();
-
-  for (const auto* ib : bulk.get_buckets(stk::topology::EDGE_RANK, sel)) {
-    const auto& b = *ib;
-    const size_t length = b.size();
-    for (size_t k = 0; k < length; ++k) {
-      stk::mesh::Entity edge = b[k];
-      const double* pecFac = stk::mesh::field_data(*pecletFactor, edge);
-      const auto* nodes = bulk.begin_nodes(edge);
-      double* maxPecL = stk::mesh::field_data(*maxPecFac, nodes[0]);
-      double* maxPecR = stk::mesh::field_data(*maxPecFac, nodes[1]);
-      *maxPecL = std::max(*maxPecL, *pecFac);
-      *maxPecR = std::max(*maxPecR, *pecFac);
-    }
-  }
-  stk::mesh::copy_owned_to_shared(bulk, {maxPecFac});
 }
 
 } // namespace nalu
