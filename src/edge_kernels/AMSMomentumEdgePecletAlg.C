@@ -39,7 +39,9 @@ AMSMomentumEdgePecletAlg::AMSMomentumEdgePecletAlg(
     nodalMij_(get_field_ordinal(realm.meta_data(), "metric_tensor")),
     avgResAdeq_(
       get_field_ordinal(realm.meta_data(), "avg_res_adequacy_parameter")),
-    avgVelocity_(get_field_ordinal(realm.meta_data(), "average_velocity")),
+    avgVelocityRTM_(get_field_ordinal(
+      realm.meta_data(),
+      realm.does_mesh_move() ? "average_velocity_rtm" : "average_velocity")),
     coordinates_(get_field_ordinal(
       realm.meta_data(), realm.solutionOptions_->get_coordinates_name())),
     vrtm_(get_field_ordinal(
@@ -70,7 +72,7 @@ AMSMomentumEdgePecletAlg::execute()
   const auto sdr = fieldMgr.get_field<double>(sdr_);
   const auto avgResAdeq = fieldMgr.get_field<double>(avgResAdeq_);
   const auto nodalMij = fieldMgr.get_field<double>(nodalMij_);
-  const auto avgu = fieldMgr.get_field<double>(avgVelocity_);
+  const auto avgu = fieldMgr.get_field<double>(avgVelocityRTM_);
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
   const auto vrtm = fieldMgr.get_field<double>(vrtm_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);

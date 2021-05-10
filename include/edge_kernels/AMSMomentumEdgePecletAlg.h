@@ -39,7 +39,7 @@ private:
   unsigned sdr_{stk::mesh::InvalidOrdinal};
   unsigned nodalMij_{stk::mesh::InvalidOrdinal};
   unsigned avgResAdeq_{stk::mesh::InvalidOrdinal};
-  unsigned avgVelocity_{stk::mesh::InvalidOrdinal};
+  unsigned avgVelocityRTM_{stk::mesh::InvalidOrdinal};
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
   unsigned vrtm_{stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
