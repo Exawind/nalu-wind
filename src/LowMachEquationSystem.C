@@ -931,6 +931,7 @@ LowMachEquationSystem::post_converged_work()
   if (realm_.realmUsesEdges_) {
     // get max peclet factor touching each node
     // (host only operation since this is a post processor)
+    determine_max_peclet_number(realm_.bulk_data(), realm_.meta_data());
     determine_max_peclet_factor(realm_.bulk_data(), realm_.meta_data());
   }
 }
@@ -1108,6 +1109,10 @@ MomentumEquationSystem::register_nodal_fields(
       &(realm_.meta_data().declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "max_peclet_factor"));
     stk::mesh::put_field_on_mesh(*pecletAtNodes, *part, nullptr);
+    ScalarFieldType* pecletNumAtNodes =
+      &(realm_.meta_data().declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "max_peclet_number"));
+    stk::mesh::put_field_on_mesh(*pecletNumAtNodes, *part, nullptr);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
@@ -1173,6 +1178,10 @@ MomentumEquationSystem::register_edge_fields(
     &(realm_.meta_data().declare_field<ScalarFieldType>(
       stk::topology::EDGE_RANK, "peclet_factor"));
   stk::mesh::put_field_on_mesh(*pecletFactor, *part, nullptr);
+  ScalarFieldType* pecletNumber =
+    &(realm_.meta_data().declare_field<ScalarFieldType>(
+      stk::topology::EDGE_RANK, "peclet_number"));
+  stk::mesh::put_field_on_mesh(*pecletNumber, *part, nullptr);
   if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
     AMSAlgDriver_->register_edge_fields(part);
 }

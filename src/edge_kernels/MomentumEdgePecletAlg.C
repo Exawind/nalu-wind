@@ -26,6 +26,8 @@ namespace nalu {
 MomentumEdgePecletAlg::MomentumEdgePecletAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
   : Algorithm(realm, part),
+    pecletNumber_(get_field_ordinal(
+      realm.meta_data(), "peclet_number", stk::topology::EDGE_RANK)),
     pecletFactor_(get_field_ordinal(
       realm.meta_data(), "peclet_factor", stk::topology::EDGE_RANK)),
     density_(get_field_ordinal(realm.meta_data(), "density")),
@@ -59,6 +61,7 @@ MomentumEdgePecletAlg::execute()
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
   const auto vrtm = fieldMgr.get_field<double>(vrtm_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
+  auto pecletNumber = fieldMgr.get_field<double>(pecletNumber_);
   auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &
@@ -101,6 +104,7 @@ MomentumEdgePecletAlg::execute()
       }
 
       const DblType pecnum = stk::math::abs(udotx) / (diffIp + eps);
+      pecletNumber.get(edge, 0) = pecnum;
       pecletFactor.get(edge, 0) = pecFunc->execute(pecnum);
     });
 }
@@ -133,6 +137,36 @@ determine_max_peclet_factor(
     }
   }
   stk::mesh::copy_owned_to_shared(bulk, {maxPecFac});
+}
+
+void
+determine_max_peclet_number(
+  stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta)
+{
+  ScalarFieldType* maxPecNum = meta.get_field<ScalarFieldType>(
+    stk::topology::NODE_RANK, "max_peclet_number");
+  ScalarFieldType* pecletNumber =
+    meta.get_field<ScalarFieldType>(stk::topology::EDGE_RANK, "peclet_number");
+
+  stk::mesh::field_fill(0.0, *maxPecNum);
+
+  const stk::mesh::Selector sel =
+    stk::mesh::selectField(*pecletNumber) & meta.locally_owned_part();
+
+  for (const auto* ib : bulk.get_buckets(stk::topology::EDGE_RANK, sel)) {
+    const auto& b = *ib;
+    const size_t length = b.size();
+    for (size_t k = 0; k < length; ++k) {
+      stk::mesh::Entity edge = b[k];
+      const double* pecNum = stk::mesh::field_data(*pecletNumber, edge);
+      const auto* nodes = bulk.begin_nodes(edge);
+      double* maxPecL = stk::mesh::field_data(*maxPecNum, nodes[0]);
+      double* maxPecR = stk::mesh::field_data(*maxPecNum, nodes[1]);
+      *maxPecL = std::max(*maxPecL, *pecNum);
+      *maxPecR = std::max(*maxPecR, *pecNum);
+    }
+  }
+  stk::mesh::copy_owned_to_shared(bulk, {maxPecNum});
 }
 
 } // namespace nalu

@@ -30,6 +30,7 @@ public:
   void execute() override;
 
 private:
+  unsigned pecletNumber_{stk::mesh::InvalidOrdinal};
   unsigned pecletFactor_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};
   unsigned viscosity_{stk::mesh::InvalidOrdinal};
@@ -39,7 +40,6 @@ private:
   unsigned sdr_{stk::mesh::InvalidOrdinal};
   unsigned nodalMij_{stk::mesh::InvalidOrdinal};
   unsigned avgResAdeq_{stk::mesh::InvalidOrdinal};
-  unsigned avgVelocityRTM_{stk::mesh::InvalidOrdinal};
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
   unsigned vrtm_{stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
@@ -49,9 +49,6 @@ private:
   const int nDim_;
   PecletFunction<DblType>* pecletFunction_{nullptr};
 };
-
-void determine_max_peclet_factor(
-  stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta);
 
 } // namespace nalu
 } // namespace sierra

@@ -28,6 +28,8 @@ namespace nalu {
 AMSMomentumEdgePecletAlg::AMSMomentumEdgePecletAlg(
   Realm& realm, stk::mesh::Part* part, EquationSystem* eqSystem)
   : Algorithm(realm, part),
+    pecletNumber_(get_field_ordinal(
+      realm.meta_data(), "peclet_number", stk::topology::EDGE_RANK)),
     pecletFactor_(get_field_ordinal(
       realm.meta_data(), "peclet_factor", stk::topology::EDGE_RANK)),
     density_(get_field_ordinal(realm.meta_data(), "density")),
@@ -39,9 +41,6 @@ AMSMomentumEdgePecletAlg::AMSMomentumEdgePecletAlg(
     nodalMij_(get_field_ordinal(realm.meta_data(), "metric_tensor")),
     avgResAdeq_(
       get_field_ordinal(realm.meta_data(), "avg_res_adequacy_parameter")),
-    avgVelocityRTM_(get_field_ordinal(
-      realm.meta_data(),
-      realm.does_mesh_move() ? "average_velocity_rtm" : "average_velocity")),
     coordinates_(get_field_ordinal(
       realm.meta_data(), realm.solutionOptions_->get_coordinates_name())),
     vrtm_(get_field_ordinal(
@@ -72,10 +71,10 @@ AMSMomentumEdgePecletAlg::execute()
   const auto sdr = fieldMgr.get_field<double>(sdr_);
   const auto avgResAdeq = fieldMgr.get_field<double>(avgResAdeq_);
   const auto nodalMij = fieldMgr.get_field<double>(nodalMij_);
-  const auto avgu = fieldMgr.get_field<double>(avgVelocityRTM_);
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
   const auto vrtm = fieldMgr.get_field<double>(vrtm_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
+  auto pecletNumber = fieldMgr.get_field<double>(pecletNumber_);
   auto pecletFactor = fieldMgr.get_field<double>(pecletFactor_);
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &
@@ -91,7 +90,7 @@ AMSMomentumEdgePecletAlg::execute()
     "compute_peclet_factor", ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& eInfo) {
       NALU_ALIGNED DblType av[nalu_ngp::NDimMax];
-      DblType asq{0.0}, axdx{0.0}, udotx{0.0}, avgudotx{0.0}, fluctudotx{0.0};
+      DblType asq{0.0}, axdx{0.0}, udotx{0.0};
 
       const auto edge = eInfo.meshIdx;
       for (int d = 0; d < ndim; d++) {
@@ -168,21 +167,12 @@ AMSMomentumEdgePecletAlg::execute()
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
-        const DblType uR = vrtm.get(nodeR, d);
-        const DblType uL = vrtm.get(nodeL, d);
-        const DblType avguR = avgu.get(nodeR, d);
-        const DblType avguL = avgu.get(nodeL, d);
-        const DblType fluctuR = (uR - avguR);
-        const DblType fluctuL = (uL - avguL);
-        udotx += 0.5 * dxj * (uR + uL);
-        avgudotx += 0.5 * dxj * (avguR + avguL);
-        fluctudotx += 0.5 * dxj * (fluctuR + fluctuL);
+        udotx += 0.5 * dxj * (vrtm.get(nodeR, d) + vrtm.get(nodeL, d));
       }
 
       const DblType pecnum =
-        rhoIp * stk::math::abs(udotx) / (muIp + eps) +
-        rhoIp * stk::math::abs(avgudotx) / (muRansIp + eps) +
-        rhoIp * stk::math::abs(fluctudotx) / (muM43Ip + eps);
+        rhoIp * stk::math::abs(udotx) / (muIp + muRansIp + muM43Ip + eps);
+      pecletNumber.get(edge, 0) = pecnum;
       pecletFactor.get(edge, 0) = pecFunc->execute(pecnum);
     });
 }
