@@ -145,7 +145,7 @@ AMSMomentumEdgePecletAlg::execute()
       }
       DblType traceM43 = 0.0;
       for (int i = 0; i < ndim; i++) {
-        traceM43 += 0.5 * M43[i][i];
+        traceM43 += M43[i][i];
       }
 
       // Compute CM43
@@ -159,7 +159,6 @@ AMSMomentumEdgePecletAlg::execute()
           30.0),
         1.0);
 
-      // Do we want arScale in here?
       const DblType muM43Ip = 0.5 * CM43scale * CM43 * epsilon13Ip * traceM43;
 
       for (int d = 0; d < ndim; ++d) {
