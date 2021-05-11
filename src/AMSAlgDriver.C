@@ -298,18 +298,18 @@ AMSAlgDriver::compute_metric_tensor()
 void
 AMSAlgDriver::post_iter_work()
 {
-  // const auto& fieldMgr = realm_.ngp_field_manager();
-  // const auto& meta = realm_.meta_data();
-  // auto& bulk = realm_.bulk_data();
-  // auto ngpForcingComp =
-  //   fieldMgr.get_field<double>(forcingComp_->mesh_meta_data_ordinal());
-  // ngpForcingComp.sync_to_host();
-  // VectorFieldType* forcingComp = meta.get_field<VectorFieldType>(
-  //   stk::topology::NODE_RANK, "forcing_components");
-  // stk::mesh::copy_owned_to_shared(bulk, {forcingComp});
-  // if (realm_.hasPeriodic_) {
-  //   realm_.periodic_delta_solution_update(forcingComp, 3);
-  // }
+  const auto& fieldMgr = realm_.ngp_field_manager();
+  const auto& meta = realm_.meta_data();
+  auto& bulk = realm_.bulk_data();
+  auto ngpForcingComp =
+    fieldMgr.get_field<double>(forcingComp_->mesh_meta_data_ordinal());
+  ngpForcingComp.sync_to_host();
+  VectorFieldType* forcingComp = meta.get_field<VectorFieldType>(
+    stk::topology::NODE_RANK, "forcing_components");
+  stk::mesh::copy_owned_to_shared(bulk, {forcingComp});
+  if (realm_.hasPeriodic_) {
+    realm_.periodic_delta_solution_update(forcingComp, 3);
+  }
 }
 
 void
