@@ -171,7 +171,7 @@ AMSMomentumEdgePecletAlg::execute()
       }
 
       const DblType pecnum =
-        rhoIp * stk::math::abs(udotx) / (muIp + muRansIp + muM43Ip + eps);
+        rhoIp * stk::math::abs(udotx) / (muIp + 100 * mutIp + eps);
       pecletNumber.get(edge, 0) = pecnum;
       pecletFactor.get(edge, 0) = pecFunc->execute(pecnum);
     });
