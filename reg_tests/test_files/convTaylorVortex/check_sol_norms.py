@@ -17,6 +17,9 @@ def parse_arguments():
         "test_name", help="Verification test name")
     parser.add_argument(
         "gold_norms", help="Absolute path to the gold norms file")
+    parser.add_argument(
+        '--abs-tol', type=float, default=1.0e-10,
+        help="Tolerance for absolute error")
     return parser.parse_args()
 
 
@@ -52,7 +55,6 @@ def compute_and_check_norms(base_name, gold_norm_name, tol):
                 exit(1)
 
 
-tol = 1e-10
 args = parse_arguments()
-compute_and_check_norms(args.test_name, args.gold_norms, tol)
+compute_and_check_norms(args.test_name, args.gold_norms, args.abs_tol)
 exit(0)
