@@ -290,10 +290,6 @@ AMSAlgDriver::execute()
   avgAlg_->execute();
 
   if (realm_.hasOverset_) {
-    const auto& meta = realm_.meta_data();
-    const auto& bulk = realm_.bulk_data();
-    const auto& meshInfo = realm_.mesh_info();
-
     realm_.overset_field_update(avgVelocity_, 1, 3, false);
     realm_.overset_field_update(avgProduction_, 1, 1, false);
     realm_.overset_field_update(avgTkeResolved_, 1, 1, false);

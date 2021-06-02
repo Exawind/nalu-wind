@@ -35,17 +35,10 @@ private:
   unsigned density_{stk::mesh::InvalidOrdinal};
   unsigned viscosity_{stk::mesh::InvalidOrdinal};
   unsigned tvisc_{stk::mesh::InvalidOrdinal};
-  unsigned beta_{stk::mesh::InvalidOrdinal};
-  unsigned tke_{stk::mesh::InvalidOrdinal};
-  unsigned sdr_{stk::mesh::InvalidOrdinal};
-  unsigned nodalMij_{stk::mesh::InvalidOrdinal};
-  unsigned avgResAdeq_{stk::mesh::InvalidOrdinal};
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
   unsigned vrtm_{stk::mesh::InvalidOrdinal};
   unsigned edgeAreaVec_{stk::mesh::InvalidOrdinal};
   const double eps_{1.0e-16};
-  const double betaStar_;
-  const double CMdeg_;
   const double pecScale_;
   const int nDim_;
   PecletFunction<DblType>* pecletFunction_{nullptr};
