@@ -46,6 +46,7 @@ private:
   const double eps_{1.0e-16};
   const double betaStar_;
   const double CMdeg_;
+  const double pecScale_;
   const int nDim_;
   PecletFunction<DblType>* pecletFunction_{nullptr};
 };

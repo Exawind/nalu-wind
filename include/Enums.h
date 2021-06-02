@@ -232,7 +232,8 @@ enum TurbulenceModelConstant {
   TM_abl_sigma = 49,
   TM_ams_peclet_offset = 50,
   TM_ams_peclet_slope = 51,
-  TM_END = 52
+  TM_ams_peclet_scale = 52,
+  TM_END = 53
 };
 
 static const std::string TurbulenceModelConstantNames[] = {
@@ -287,7 +288,8 @@ static const std::string TurbulenceModelConstantNames[] = {
   "abl_deltandtw",
   "abl_sigma",
   "ams_peclet_offset",
-  "ams_peclet_slope"
+  "ams_peclet_slope",
+  "ams_peclet_scale",
   "END"};
 
 enum ActuatorType {

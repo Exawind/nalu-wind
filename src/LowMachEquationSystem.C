@@ -942,9 +942,10 @@ LowMachEquationSystem::post_converged_work()
 void
 LowMachEquationSystem::post_iter_work()
 {
-  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) 
     momentumEqSys_->AMSAlgDriver_->post_iter_work();
 }
+
 
 //==========================================================================
 // Class Definition

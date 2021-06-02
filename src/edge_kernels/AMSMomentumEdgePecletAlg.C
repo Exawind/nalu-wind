@@ -49,6 +49,7 @@ AMSMomentumEdgePecletAlg::AMSMomentumEdgePecletAlg(
       realm.meta_data(), "edge_area_vector", stk::topology::EDGE_RANK)),
     betaStar_(realm.get_turb_model_constant(TM_betaStar)),
     CMdeg_(realm.get_turb_model_constant(TM_CMdeg)),
+    pecScale_(realm.get_turb_model_constant(TM_ams_peclet_scale)),
     nDim_(realm.meta_data().spatial_dimension())
 {
   const std::string dofName = "velocity";
@@ -171,7 +172,7 @@ AMSMomentumEdgePecletAlg::execute()
       }
 
       const DblType pecnum =
-        rhoIp * stk::math::abs(udotx) / (muIp + 100 * mutIp + eps);
+        rhoIp * stk::math::abs(udotx) / (muIp + pecScale_ * mutIp + eps);
       pecletNumber.get(edge, 0) = pecnum;
       pecletFactor.get(edge, 0) = pecFunc->execute(pecnum);
     });

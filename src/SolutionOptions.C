@@ -563,6 +563,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_abl_sigma] = 2.0;
   turbModelConstantMap_[TM_ams_peclet_offset] = 0.6;
   turbModelConstantMap_[TM_ams_peclet_slope] = 12.0;
+  turbModelConstantMap_[TM_ams_peclet_scale] = 100.0;
 }
 
 
