@@ -84,6 +84,7 @@
 #include <edge_kernels/MomentumSymmetryEdgeKernel.h>
 #include <edge_kernels/MomentumEdgePecletAlg.h>
 #include <edge_kernels/StreletsUpwindEdgeAlg.h>
+#include <edge_kernels/AMSMomentumEdgePecletAlg.h>
 
 // node kernels
 #include "node_kernels/NodeKernelUtils.h"
@@ -930,9 +931,21 @@ LowMachEquationSystem::post_converged_work()
   if (realm_.realmUsesEdges_) {
     // get max peclet factor touching each node
     // (host only operation since this is a post processor)
+    determine_max_peclet_number(realm_.bulk_data(), realm_.meta_data());
     determine_max_peclet_factor(realm_.bulk_data(), realm_.meta_data());
   }
 }
+
+//--------------------------------------------------------------------------
+//-------- post_iter_work --------------------------------------------------
+//--------------------------------------------------------------------------
+void
+LowMachEquationSystem::post_iter_work()
+{
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) 
+    momentumEqSys_->AMSAlgDriver_->post_iter_work();
+}
+
 
 //==========================================================================
 // Class Definition
@@ -1097,6 +1110,10 @@ MomentumEquationSystem::register_nodal_fields(
       &(realm_.meta_data().declare_field<ScalarFieldType>(
         stk::topology::NODE_RANK, "max_peclet_factor"));
     stk::mesh::put_field_on_mesh(*pecletAtNodes, *part, nullptr);
+    ScalarFieldType* pecletNumAtNodes =
+      &(realm_.meta_data().declare_field<ScalarFieldType>(
+        stk::topology::NODE_RANK, "max_peclet_number"));
+    stk::mesh::put_field_on_mesh(*pecletNumAtNodes, *part, nullptr);
   }
 
   Udiag_ = &(meta_data.declare_field<ScalarFieldType>(
@@ -1162,6 +1179,10 @@ MomentumEquationSystem::register_edge_fields(
     &(realm_.meta_data().declare_field<ScalarFieldType>(
       stk::topology::EDGE_RANK, "peclet_factor"));
   stk::mesh::put_field_on_mesh(*pecletFactor, *part, nullptr);
+  ScalarFieldType* pecletNumber =
+    &(realm_.meta_data().declare_field<ScalarFieldType>(
+      stk::topology::EDGE_RANK, "peclet_number"));
+  stk::mesh::put_field_on_mesh(*pecletNumber, *part, nullptr);
   if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
     AMSAlgDriver_->register_edge_fields(part);
 }
@@ -1212,6 +1233,8 @@ MomentumEquationSystem::register_interior_algorithm(
         }
         if (realm_.is_turbulent() && theTurbModel == SST_IDDES) {
           pecletAlg_.reset(new StreletsUpwindEdgeAlg(realm_, part));
+        } else if (realm_.is_turbulent() && theTurbModel == SST_AMS) {
+          pecletAlg_.reset(new AMSMomentumEdgePecletAlg(realm_, part, this));
         } else {
           pecletAlg_.reset(new MomentumEdgePecletAlg(realm_, part, this));
         }
@@ -2317,6 +2340,9 @@ MomentumEquationSystem::predict_state()
     & stk::mesh::selectField(*velocity_);
   nalu_ngp::field_copy(ngpMesh, sel, velNp1, velN, meta.spatial_dimension());
   velNp1.modify_on_device();
+
+  if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+    AMSAlgDriver_->predict_state();
 }
 
 //--------------------------------------------------------------------------

@@ -384,6 +384,7 @@ SSTAMSAveragesAlg::execute()
       avgResAdeq.get(mi, 0) =
         weightAvg * avgResAdeqN.get(mi, 0) + weightInst * resAdeq.get(mi, 0);
     });
+
 }
 
 } // namespace nalu

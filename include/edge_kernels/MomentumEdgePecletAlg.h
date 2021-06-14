@@ -30,6 +30,7 @@ public:
 
   
 private:
+  unsigned pecletNumber_{stk::mesh::InvalidOrdinal};
   unsigned pecletFactor_ {stk::mesh::InvalidOrdinal};
   unsigned density_ {stk::mesh::InvalidOrdinal};
   unsigned viscosity_ {stk::mesh::InvalidOrdinal};
@@ -42,6 +43,8 @@ private:
 };
 
 void determine_max_peclet_factor(stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta);
+
+void determine_max_peclet_number(stk::mesh::BulkData& bulk, const stk::mesh::MetaData& meta);
 
 }
 }

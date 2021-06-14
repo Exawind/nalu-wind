@@ -147,11 +147,11 @@ MomentumSSTAMSForcingNodeKernel::execute(
     stk::math::min(lengthY, periodicForcingLengthZ_);
 
   const NodeKernelTraits::DblType ratioX =
-    std::floor(periodicForcingLengthX_ / clipLengthX + 0.5);
+    std::floor(periodicForcingLengthX_ / (clipLengthX + 1.e-12) + 0.5);
   const NodeKernelTraits::DblType ratioY =
-    std::floor(periodicForcingLengthY_ / clipLengthY + 0.5);
+    std::floor(periodicForcingLengthY_ / (clipLengthY + 1.e-12) + 0.5);
   const NodeKernelTraits::DblType ratioZ =
-    std::floor(periodicForcingLengthZ_ / clipLengthZ + 0.5);
+    std::floor(periodicForcingLengthZ_ / (clipLengthZ + 1.e-12) + 0.5);
 
   const NodeKernelTraits::DblType denomX = periodicForcingLengthX_ / ratioX;
   const NodeKernelTraits::DblType denomY = periodicForcingLengthY_ / ratioY;

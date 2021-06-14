@@ -43,6 +43,7 @@ public:
   void initial_mdot();
   void compute_metric_tensor();
   void predict_state();
+  void post_iter_work();
 
 private:
   Realm& realm_;
