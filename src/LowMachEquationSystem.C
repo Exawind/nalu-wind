@@ -499,7 +499,7 @@ LowMachEquationSystem::register_surface_pp_algorithm(
   realm_.augment_output_variable_list(tauWall->name());
   realm_.augment_output_variable_list(yplus->name());
 
-  bool RANSAblBcApproach = momentumEqSys_->RANSAblBcApproach_;
+  const bool RANSAblBcApproach = momentumEqSys_->RANSAblBcApproach_;
 
   if ( thePhysics == "surface_force_and_moment" ) {
     if (RANSAblBcApproach) {
@@ -1691,7 +1691,7 @@ MomentumEquationSystem::register_wall_bc(
   auto& ablWallFunctionNode = userData.ablWallFunctionNode_;
 
   // find out if this is RANS SST for modeling the ABL
-  const bool RANSAblBcApproach = userData.RANSAblBcApproach_;
+  RANSAblBcApproach_ = userData.RANSAblBcApproach_;
 
   // push mesh part
   if ( !anyWallFunctionActivated )
@@ -1805,7 +1805,7 @@ MomentumEquationSystem::register_wall_bc(
       edgeNodalGradient_);
   }
 
-  if (anyWallFunctionActivated || RANSAblBcApproach) {
+  if (anyWallFunctionActivated || RANSAblBcApproach_) {
     ScalarFieldType *assembledWallArea =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "assembled_wall_area_wf"));
     stk::mesh::put_field_on_mesh(*assembledWallArea, *part, nullptr);
 
@@ -1827,7 +1827,7 @@ MomentumEquationSystem::register_wall_bc(
     stk::mesh::put_field_on_mesh(*wallNormalDistanceBip, *part, numScsBip, nullptr);
 
     // need wall friction velocity for TKE boundary condition
-    if (RANSAblBcApproach) { 
+    if (RANSAblBcApproach_) {
       const AlgorithmType wfAlgType = WALL_FCN;
 
       wallFuncAlgDriver_
