@@ -63,7 +63,7 @@ class GeometryAlgDriver;
 class NonConformalManager;
 class ErrorIndicatorAlgorithmDriver;
 class EquationSystems;
-class OutputInfo;
+class OutputManager;
 class OversetManager;
 class PostProcessingInfo;
 class PeriodicManager;
@@ -419,7 +419,6 @@ class Realm {
   stk::io::StkMeshIoBroker *ioBroker_;
 
   size_t resultsFileIndex_;
-  size_t dummyFileIndex_;
   size_t restartFileIndex_;
 
   // nalu field data
@@ -445,7 +444,7 @@ class Realm {
   int currentNonlinearIteration_;
 
   SolutionOptions *solutionOptions_;
-  OutputInfo *outputInfo_;
+  std::unique_ptr<OutputManager> outputManager_;
   PostProcessingInfo *postProcessingInfo_;
   SolutionNormPostProcessing *solutionNormPostProcessing_;
   TurbulenceAveragingPostProcessing *turbulenceAveragingPostProcessing_;

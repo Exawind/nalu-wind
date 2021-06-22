@@ -28,7 +28,7 @@
 #include <NaluParsing.h>
 #include <NonConformalManager.h>
 #include <NonConformalInfo.h>
-#include <OutputInfo.h>
+#include <OutputManager.h>
 #include <PostProcessingInfo.h>
 #include <PostProcessingData.h>
 #include <PecletFunction.h>
@@ -197,7 +197,7 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     timeStepChangeFactor_(1.25),
     currentNonlinearIteration_(1),
     solutionOptions_(new SolutionOptions()),
-    outputInfo_(new OutputInfo()),
+    outputManager_(new OutputManager()),
     postProcessingInfo_(new PostProcessingInfo()),
     solutionNormPostProcessing_(NULL),
     turbulenceAveragingPostProcessing_(NULL),
@@ -279,7 +279,6 @@ Realm::~Realm()
     delete ialg;
 
   delete solutionOptions_;
-  delete outputInfo_;
   delete postProcessingInfo_;
 
   // post processing-like objects
@@ -722,22 +721,24 @@ Realm::load(const YAML::Node & node)
   //======================================
 
   // load output first so we can check for serializing i/o
-  outputInfo_->load(node);
+  outputManager_->load(node);
   if (root()->serializedIOGroupSize_ == 0)
   {
     // only set from input file if command-line didn't set it
-    root()->setSerializedIOGroupSize(outputInfo_->serializedIOGroupSize_);
+    root()->setSerializedIOGroupSize(outputManager_->serializedIOGroupSize_);
   }
 
 
   // Parse catalyst input file if requested
-  if(!outputInfo_->catalystFileName_.empty())
-  {
+  if (outputManager_->has_catalyst_output()) {
 #ifdef NALU_USES_CATALYST
-  int error = Iovs_exodus::DatabaseIO::parseCatalystFile(outputInfo_->catalystFileName_,
-                                                  outputInfo_->catalystParseJson_);
-  if(error)
-    throw std::runtime_error("Catalyst file parse failed: " + outputInfo_->catalystFileName_);
+    auto& outputInfo = outputManager_->get_catalyst_output_info();
+    int error = Iovs_exodus::DatabaseIO::parseCatalystFile(
+      outputInfo.catalystFileName_, outputInfo.catalystParseJson_);
+    if (error)
+      throw std::runtime_error(
+
+        "Catalyst file parse failed: " + outputInfo.catalystFileName_);
 #else
     throw std::runtime_error("Nalu-Wind not built with Catalyst support");
 #endif
@@ -1849,66 +1850,18 @@ void
 Realm::create_output_mesh()
 {
   // exodus output file creation
-  if (outputInfo_->hasOutputBlock_ ) {
 
-    double start_time = NaluEnv::self().nalu_time();
-    NaluEnv::self().naluOutputP0() << "Realm::create_output_mesh(): Begin" << std::endl;
+  double start_time = NaluEnv::self().nalu_time();
+  NaluEnv::self().naluOutputP0()
+    << "Realm::create_output_mesh(): Begin" << std::endl;
+  outputManager_->create_output_mesh(ioBroker_, metaData_);
 
-    if (outputInfo_->outputFreq_ == 0)
-      return;
+  // set mesh creation
+  const double end_time = NaluEnv::self().nalu_time();
+  timerCreateMesh_ = (end_time - start_time);
 
-    std::string oname =  outputInfo_->outputDBName_ ;
-    if(!outputInfo_->catalystFileName_.empty()||
-       !outputInfo_->paraviewScriptName_.empty()) {
-#ifdef NALU_USES_CATALYST
-      outputInfo_->outputPropertyManager_->add(Ioss::Property("CATALYST_BLOCK_PARSE_JSON_STRING",
-                                               outputInfo_->catalystParseJson_));
-      std::string input_deck_name = "%B";
-      stk::util::filename_substitution(input_deck_name);
-      outputInfo_->outputPropertyManager_->add(Ioss::Property("CATALYST_BLOCK_PARSE_INPUT_DECK_NAME", input_deck_name));
-
-      if(!outputInfo_->paraviewScriptName_.empty())
-        outputInfo_->outputPropertyManager_->add(Ioss::Property("CATALYST_SCRIPT", outputInfo_->paraviewScriptName_.c_str()));
-
-      outputInfo_->outputPropertyManager_->add(Ioss::Property("CATALYST_CREATE_SIDE_SETS", 1));
-      
-      resultsFileIndex_ = ioBroker_->create_output_mesh( oname, stk::io::WRITE_RESULTS, *outputInfo_->outputPropertyManager_, "catalyst" );
-#else
-      throw std::runtime_error("Nalu-Wind not built with Catalyst support");
-#endif
-   }
-   else {
-      resultsFileIndex_ = ioBroker_->create_output_mesh( oname, stk::io::WRITE_RESULTS, *outputInfo_->outputPropertyManager_);
-   }
-
-    // Tell stk_io how to output element block nodal fields:
-    // if 'true' passed to function, then output them as nodeset fields;
-    // if 'false', then output as nodal fields (on all nodes of the mesh, zero-filled)
-    // The option is provided since some post-processing/visualization codes do not
-    // correctly handle nodeset fields.
-    ioBroker_->use_nodeset_for_part_nodes_fields(resultsFileIndex_, outputInfo_->outputNodeSet_);
-
-    // FIXME: add_field can take user-defined output name, not just varName
-    for ( std::set<std::string>::iterator itorSet = outputInfo_->outputFieldNameSet_.begin();
-        itorSet != outputInfo_->outputFieldNameSet_.end(); ++itorSet ) {
-      std::string varName = *itorSet;
-      stk::mesh::FieldBase *theField = stk::mesh::get_field_by_name(varName, *metaData_);
-      if ( NULL == theField ) {
-        NaluEnv::self().naluOutputP0() << " Sorry, no field by the name " << varName << std::endl;
-      }
-      else {
-        // 'varName' is the name that will be written to the database
-        // For now, just using the name of the stk field
-        ioBroker_->add_field(resultsFileIndex_, *theField, varName);
-      }
-    }
-
-    // set mesh creation
-    const double end_time = NaluEnv::self().nalu_time();
-    timerCreateMesh_ = (end_time - start_time);
-
-    NaluEnv::self().naluOutputP0() << "Realm::create_output_mesh() End" << std::endl;
-  }
+  NaluEnv::self().naluOutputP0()
+    << "Realm::create_output_mesh() End" << std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -1918,16 +1871,20 @@ void
 Realm::create_restart_mesh()
 {
   // exodus restart file creation
-  if (outputInfo_->hasRestartBlock_ ) {
+  if (outputManager_->has_restart_output()) {
+    auto& outputInfo = outputManager_->get_restart_output_info();
 
-    if (outputInfo_->restartFreq_ == 0)
+    if (outputInfo.restartFreq_ == 0)
       return;
-    
-    restartFileIndex_ = ioBroker_->create_output_mesh(outputInfo_->restartDBName_, stk::io::WRITE_RESTART, *outputInfo_->restartPropertyManager_);
-    
+
+    restartFileIndex_ = ioBroker_->create_output_mesh(
+      outputInfo.restartDBName_, stk::io::WRITE_RESTART,
+      *outputInfo.restartPropertyManager_);
+
     // loop over restart variable field names supplied by Eqs
-    for ( std::set<std::string>::iterator itorSet = outputInfo_->restartFieldNameSet_.begin();
-        itorSet != outputInfo_->restartFieldNameSet_.end(); ++itorSet ) {
+    for (std::set<std::string>::iterator itorSet =
+           outputInfo.restartFieldNameSet_.begin();
+         itorSet != outputInfo.restartFieldNameSet_.end(); ++itorSet) {
       std::string varName = *itorSet;
       stk::mesh::FieldBase *theField = stk::mesh::get_field_by_name(varName,*metaData_);
       if ( NULL == theField ) {
@@ -1954,9 +1911,10 @@ Realm::create_restart_mesh()
     }
 
     // set max size for restart data base
-    ioBroker_->get_output_io_region(restartFileIndex_)->get_database()->set_cycle_count(outputInfo_->restartMaxDataBaseStepSize_);
+    ioBroker_->get_output_io_region(restartFileIndex_)
+      ->get_database()
+      ->set_cycle_count(outputInfo.restartMaxDataBaseStepSize_);
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -2007,7 +1965,8 @@ void
 Realm::augment_output_variable_list(
     const std::string fieldName)
 {
-  outputInfo_->outputFieldNameSet_.insert(fieldName);
+  for (auto&& outputInfo : outputManager_->infoVec_)
+    outputInfo.outputFieldNameSet_.insert(fieldName);
 }
 
 //--------------------------------------------------------------------------
@@ -2017,7 +1976,8 @@ void
 Realm::augment_restart_variable_list(
   std::string restartFieldName)
 {
-  outputInfo_->restartFieldNameSet_.insert(restartFieldName);
+  for (auto&& outputInfo : outputManager_->infoVec_)
+    outputInfo.restartFieldNameSet_.insert(restartFieldName);
 }
 
 //--------------------------------------------------------------------------
@@ -2880,77 +2840,30 @@ Realm::provide_output()
 {
   stk::diag::TimeBlock mesh_output_timeblock(Simulation::outputTimer());
 
-  if ( outputInfo_->hasOutputBlock_ ) {
-
-    if (outputInfo_->outputFreq_ == 0)
-      return;
-
     const double start_time = NaluEnv::self().nalu_time();
 
     // process output via io
     const double currentTime = get_current_time();
     const int timeStepCount = get_time_step_count();
-    const int modStep = timeStepCount - outputInfo_->outputStart_;
-
-    // check for elapsed WALL time threshold
-    bool forcedOutput = false;
-    if ( outputInfo_->userWallTimeResults_.first) {
-      const double elapsedWallTime = stk::wall_time() - wallTimeStart_;
-      // find the max over all core
-      double g_elapsedWallTime = 0.0;
-      stk::all_reduce_max(NaluEnv::self().parallel_comm(), &elapsedWallTime, &g_elapsedWallTime, 1);
-      // convert to hours
-      g_elapsedWallTime /= 3600.0;
-      // only force output the first time the timer is exceeded
-      if ( g_elapsedWallTime > outputInfo_->userWallTimeResults_.second ) {
-        forcedOutput = true;
-        outputInfo_->userWallTimeResults_.first = false;
-        NaluEnv::self().naluOutputP0()
-            << "Realm::provide_output()::Forced Result output will be processed at current time: "
-            << currentTime << std::endl;
-        NaluEnv::self().naluOutputP0()
-            <<  " Elapsed (max) WALL time: " << g_elapsedWallTime << " (hours)" << std::endl;
-        // provide timer information
-        dump_simulation_time();
-      }
-    }
-
-    const bool isOutput 
-      = (timeStepCount >=outputInfo_->outputStart_ && modStep % outputInfo_->outputFreq_ == 0) || forcedOutput;
-
-    if ( isOutput ) {
-      NaluEnv::self().naluOutputP0() << "Realm shall provide output files at : currentTime/timeStepCount: "
-                                     << currentTime << "/" <<  timeStepCount << " (" << name_ << ")" << std::endl;
-
-      // not set up for globals
-      if (!doPromotion_) {
-        // Sync fields to host on NGP builds before output
-        for (auto* fld: metaData_->get_fields()) {
-          fld->sync_to_host();
+    outputManager_->perform_outputs(
+      timeStepCount, currentTime, ioBroker_, metaData_, wallTimeStart_);
+    if (doPromotion_) {
+      for (auto& stringFieldPair : promotionIO_->get_output_fields()) {
+        auto& field = *stringFieldPair.second;
+        if (field.type_is<double>()) {
+          stk::mesh::get_updated_ngp_field<double>(field).sync_to_host();
+        } else if (field.type_is<int>()) {
+          stk::mesh::get_updated_ngp_field<int>(field).sync_to_host();
         }
-
-        ioBroker_->process_output_request(resultsFileIndex_, currentTime);
       }
-      else {
-        for (auto& stringFieldPair : promotionIO_->get_output_fields()) {
-          auto& field = *stringFieldPair.second;
-          if (field.type_is<double>()) {
-            stk::mesh::get_updated_ngp_field<double>(field).sync_to_host();
-          }
-          else if (field.type_is<int>()) {
-            stk::mesh::get_updated_ngp_field<int>(field).sync_to_host();
-          }
-        }
-        promotionIO_->write_database_data(currentTime);
-      }
-      equationSystems_.provide_output();
+      promotionIO_->write_database_data(currentTime);
     }
+    equationSystems_.provide_output();
 
     const double stop_time = NaluEnv::self().nalu_time();
 
     // increment time for output
     timerOutputFields_ += (stop_time - start_time);
-  }
 }
 
 //--------------------------------------------------------------------------
@@ -2961,9 +2874,10 @@ Realm::provide_restart_output()
 {
   stk::diag::TimeBlock mesh_output_timeblock(Simulation::outputTimer());
 
-  if ( outputInfo_->hasRestartBlock_ ) {
+  if (outputManager_->has_restart_output()) {
+    auto& outputInfo = outputManager_->get_restart_output_info();
 
-    if (outputInfo_->restartFreq_ == 0)
+    if (outputInfo.restartFreq_ == 0)
       return;
 
     const double start_time = NaluEnv::self().nalu_time();
@@ -2971,11 +2885,11 @@ Realm::provide_restart_output()
     // process restart via io
     const double currentTime = get_current_time();
     const int timeStepCount = get_time_step_count();
-    const int modStep = timeStepCount - outputInfo_->restartStart_;
+    const int modStep = timeStepCount - outputInfo.restartStart_;
 
     // check for elapsed WALL time threshold
     bool forcedOutput = false;
-    if ( outputInfo_->userWallTimeRestart_.first) {
+    if (outputInfo.userWallTimeRestart_.first) {
       const double elapsedWallTime = stk::wall_time() - wallTimeStart_;
       // find the max over all core
       double g_elapsedWallTime = 0.0;
@@ -2983,9 +2897,9 @@ Realm::provide_restart_output()
       // convert to hours
       g_elapsedWallTime /= 3600.0;
       // only force output the first time the timer is exceeded
-      if ( g_elapsedWallTime > outputInfo_->userWallTimeRestart_.second ) {
+      if (g_elapsedWallTime > outputInfo.userWallTimeRestart_.second) {
         forcedOutput = true;
-        outputInfo_->userWallTimeRestart_.first = false;
+        outputInfo.userWallTimeRestart_.first = false;
         NaluEnv::self().naluOutputP0()
             << "Realm::provide_restart_output()::Forced Restart output will be processed at current time: "
             << currentTime << std::endl;
@@ -2994,9 +2908,11 @@ Realm::provide_restart_output()
       }
     }
 
-    const bool isRestartOutputStep 
-      = (timeStepCount >= outputInfo_->restartStart_ && modStep % outputInfo_->restartFreq_ == 0) || forcedOutput;
-    
+    const bool isRestartOutputStep =
+      (timeStepCount >= outputInfo.restartStart_ &&
+       modStep % outputInfo.restartFreq_ == 0) ||
+      forcedOutput;
+
     if ( isRestartOutputStep ) {
       NaluEnv::self().naluOutputP0() << "Realm shall provide restart files at: currentTime/timeStepCount: "
                                      << currentTime << "/" <<  timeStepCount << " (" << name_ << ")" << std::endl;      
@@ -3032,7 +2948,6 @@ Realm::provide_restart_output()
     // increment time for output
     timerOutputFields_ += (stop_time - start_time);
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -3108,12 +3023,13 @@ Realm::populate_restart(
   double foundRestartTime = get_current_time();
   if ( restarted_simulation() ) {
     // allow restart to skip missed required fields
-    const double restartTime = outputInfo_->restartTime_;
+    auto& outputInfo = outputManager_->get_restart_output_info();
+    const double restartTime = outputInfo.restartTime_;
     std::vector<stk::io::MeshField> missingFields;
     foundRestartTime = ioBroker_->read_defined_input_fields(restartTime, &missingFields);
 
     {
-      for (const auto& fname: outputInfo_->restartFieldNameSet_) {
+      for (const auto& fname : outputInfo.restartFieldNameSet_) {
         auto* field = stk::mesh::get_field_by_name(
             fname, *metaData_);
         if (field == nullptr) continue;
@@ -4085,10 +4001,17 @@ Realm::process_io_transfer()
   if ( !hasIoTransfer_ )
     return;
 
+  auto& outputInfo = outputManager_->infoVec_[0];
+  if (outputManager_->infoVec_.size() > 1) {
+    throw std::runtime_error(
+      "input_output transfers can only take place in realms "
+      "with 1 output section.");
+  }
+
   double timeXfer = -NaluEnv::self().nalu_time();
   // only do at an IO step
   const int timeStepCount = get_time_step_count();
-  const bool isOutput = (timeStepCount % outputInfo_->outputFreq_) == 0;
+  const bool isOutput = (timeStepCount % outputInfo.outputFreq_) == 0;
   if ( isOutput ) {
     std::vector<Transfer *>::iterator ii;
     for( ii=ioTransferVec_.begin(); ii!=ioTransferVec_.end(); ++ii )
@@ -4244,23 +4167,21 @@ Realm::create_promoted_output_mesh()
 {
   NaluEnv::self().naluOutputP0() << "Realm::create_promoted_output_mesh() Begin " << std::endl;
 
-  if (outputInfo_->hasOutputBlock_ ) {
-    if (outputInfo_->outputFreq_ == 0) {
+  if (outputManager_->infoVec_.size() < 1)
+    return;
+  auto& outputInfo = outputManager_->infoVec_[0];
+  if (outputInfo.hasOutputBlock_) {
+    if (outputInfo.outputFreq_ == 0) {
       return;
     }
 
     auto* coords = metaData_->get_field<VectorFieldType>(stk::topology::NODE_RANK, "coordinates");
     promotionIO_ = std::make_unique<PromotedElementIO>(
-      promotionOrder_,
-      *metaData_,
-      *bulkData_,
-      metaData_->get_mesh_parts(),
-      outputInfo_->outputDBName_,
-      *coords
-    );
+      promotionOrder_, *metaData_, *bulkData_, metaData_->get_mesh_parts(),
+      outputInfo.outputDBName_, *coords);
 
     std::vector<stk::mesh::FieldBase*> outputFields;
-    for (const auto& varName : outputInfo_->outputFieldNameSet_) {
+    for (const auto& varName : outputInfo.outputFieldNameSet_) {
       outputFields.push_back(stk::mesh::get_field_by_name(varName, *metaData_));
     }
     promotionIO_->add_fields(outputFields);
@@ -4377,7 +4298,9 @@ Realm::get_time_step_count() const
 bool
 Realm::restarted_simulation()
 {
-  return outputInfo_->activateRestart_ ;
+  return outputManager_->hasRestartBlock_
+           ? false
+           : outputManager_->get_restart_output_info().activateRestart_;
 }
 
 //--------------------------------------------------------------------------

@@ -14,6 +14,7 @@
 #include <stk_util/environment/WallTime.hpp>
 #include <stk_util/parallel/ParallelReduce.hpp>
 #include <string>
+#include <sstream>
 #include <set>
 
 namespace sierra {
@@ -30,6 +31,41 @@ OutputManager::load(const YAML::Node& node)
 
   for (int i = 0; i < nFound; i++) {
     infoVec_[i].load(*foundNodes[i]);
+  }
+
+  // check for conflicts and unsupported behavior between multiple output
+  // instances
+  std::stringstream errors;
+  int tempIoGroupValue = 0;
+  for (int i = 0; i < nFound; i++) {
+    if (infoVec_[i].hasCatalystOutput_) {
+      if (hasCatalystOutput_)
+        errors << "Repeated catalyst output section. Only 1 output can have "
+                  "catalyst.";
+      hasCatalystOutput_ = true;
+      catalystInfoId_ = i;
+    }
+    if (infoVec_[i].hasRestartBlock_) {
+      if (hasRestartBlock_)
+        errors << "Repeated restart output section. Only 1 output can have "
+                  "restart.";
+      hasRestartBlock_ = true;
+      restartInfoId_ = i;
+    }
+    if (infoVec_[i].serializedIOGroupSize_) {
+      if (i == 0) {
+        tempIoGroupValue = infoVec_[i].serializedIOGroupSize_;
+      }
+      if (tempIoGroupValue == infoVec_[i].serializedIOGroupSize_) {
+        serializedIOGroupSize_ = tempIoGroupValue;
+      } else {
+        errors << "Serialized IO Group Size must be the same for all outputs";
+      }
+    }
+  }
+
+  if (!errors.str().empty()) {
+    throw std::runtime_error(errors.str());
   }
 }
 

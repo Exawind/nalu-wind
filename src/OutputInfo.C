@@ -31,7 +31,7 @@ namespace nalu{
 //--------------------------------------------------------------------------
 //-------- constructor -----------------------------------------------------
 //--------------------------------------------------------------------------
-OutputInfo::OutputInfo() 
+OutputInfo::OutputInfo()
   : outputDBName_("output.e"),
     catalystFileName_(""),
     catalystParseJson_(""),
@@ -43,6 +43,7 @@ OutputInfo::OutputInfo()
     hasOutputBlock_(false),
     hasRestartBlock_(false),
     activateRestart_(false),
+    hasCatalystOutput_(false),
     meshAdapted_(false),
     restartTime_(0.0),
     restartDBName_("restart.rst"),
@@ -57,7 +58,7 @@ OutputInfo::OutputInfo()
     userWallTimeResults_(false, 1.0e6),
     userWallTimeRestart_(false, 1.0e6),
     outputPropertyManager_(new Ioss::PropertyManager()),
-    restartPropertyManager_(new Ioss::PropertyManager())  
+    restartPropertyManager_(new Ioss::PropertyManager())
 {
   // does nothing
 }
@@ -98,6 +99,9 @@ OutputInfo::load(
 
     // output start
     get_if_present(y_output, "output_start", outputStart_, outputStart_);
+
+    hasCatalystOutput_ =
+      !catalystFileName_.empty() || !paraviewScriptName_.empty();
 
     // output at WALL time
     if ( y_output["output_forced_wall_time"]) {

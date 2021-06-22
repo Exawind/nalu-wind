@@ -28,10 +28,15 @@ class OutputInfo;
 
 class OutputManager
 {
+public:
   std::vector<OutputInfo> infoVec_;
   std::vector<size_t> indexVec_;
+  // allow for only one catalyst and restart output
+  bool hasCatalystOutput_{false};
+  int catalystInfoId_{-1};
+  bool hasRestartBlock_{false};
+  int restartInfoId_{-1};
 
-public:
   OutputManager() {}
   void load(const YAML::Node& node);
   void create_output_mesh(
@@ -42,6 +47,11 @@ public:
     stk::io::StkMeshIoBroker* ioBroker,
     stk::mesh::MetaData* metaData,
     const double wallTimeStart);
+  OutputInfo& get_catalyst_output_info() { return infoVec_[catalystInfoId_]; }
+  inline bool has_catalyst_output() { return hasCatalystOutput_; }
+  OutputInfo& get_restart_output_info() { return infoVec_[restartInfoId_]; }
+  inline bool has_restart_output() { return hasRestartBlock_; }
+  int serializedIOGroupSize_{0};
 };
 } // namespace nalu
 } // namespace sierra
