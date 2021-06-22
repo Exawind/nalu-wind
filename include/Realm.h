@@ -419,6 +419,7 @@ class Realm {
   stk::io::StkMeshIoBroker *ioBroker_;
 
   size_t resultsFileIndex_;
+  size_t dummyFileIndex_;
   size_t restartFileIndex_;
 
   // nalu field data

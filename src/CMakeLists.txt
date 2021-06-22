@@ -63,6 +63,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/NonConformalInfo.C
    ${CMAKE_CURRENT_SOURCE_DIR}/NonConformalManager.C
    ${CMAKE_CURRENT_SOURCE_DIR}/OutputInfo.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/OutputManager.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PecletFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PeriodicManager.C
    ${CMAKE_CURRENT_SOURCE_DIR}/PostProcessingInfo.C

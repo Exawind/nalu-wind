@@ -26,6 +26,7 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMovingAverage.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNGPMasterElements.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestNgpMesh1.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestOutputManager.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestPecletFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestRealm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestScratchViews.C

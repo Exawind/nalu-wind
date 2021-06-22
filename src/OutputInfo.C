@@ -78,7 +78,6 @@ void
 OutputInfo::load(
   const YAML::Node & y_node)
 {
-
   const YAML::Node y_output = y_node["output"];
   if (y_output)
   {
