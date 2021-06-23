@@ -8,11 +8,12 @@
 //
 
 #include <OutputManager.h>
-#include <NaluParsing.h>
+#include <NaluParsingHelper.h>
 #include <stk_io/StkMeshIoBroker.hpp>
 #include <stk_mesh/base/MetaData.hpp>
 #include <stk_util/environment/WallTime.hpp>
 #include <stk_util/parallel/ParallelReduce.hpp>
+#include <NaluEnv.h>
 #include <string>
 #include <sstream>
 #include <set>
@@ -30,6 +31,7 @@ OutputManager::load(const YAML::Node& node)
   indexVec_.resize(nFound);
 
   for (int i = 0; i < nFound; i++) {
+    std::cout << *foundNodes[i] << std::endl;
     infoVec_[i].load(*foundNodes[i]);
   }
 

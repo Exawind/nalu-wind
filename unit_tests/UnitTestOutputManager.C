@@ -7,8 +7,9 @@
 // for more details.
 //
 
-#include "OutputInfo.h"
+#include "OutputManager.h"
 #include "gtest/gtest.h"
+#include <iostream>
 
 #include "NaluParsing.h"
 
@@ -17,15 +18,19 @@ namespace nalu {
 namespace {
 TEST(OutputManagerTest, can_read_multiple_output_nodes)
 {
-  const char* parseText =
-    R"par(  output:
+  const char* parseText = R"par(realm:
+  name: the_name
+  output:
     output_data_base_name: test1
   output:
     output_data_base_name: test2
   )par";
-  const YAML::Node y_node = YAML::Load(parseText);
-  OutputInfo oInfo;
-  ASSERT_NO_THROW(oInfo.load(y_node));
+  ASSERT_NO_FATAL_FAILURE(YAML::Load(parseText)) << "YAML::Node failure:\n"
+                                                 << parseText;
+  const YAML::Node y_node = YAML::Load(parseText)["realm"];
+  OutputManager oManager;
+  ASSERT_NO_THROW(oManager.load(y_node));
+  EXPECT_EQ(2, oManager.infoVec_.size());
 }
 } // namespace
 
