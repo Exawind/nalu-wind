@@ -70,9 +70,9 @@ OutputManager::load(const YAML::Node& node)
 }
 
 void
-OutputManager::create_output_mesh(
-  stk::io::StkMeshIoBroker* ioBroker, stk::mesh::MetaData* metaData)
+OutputManager::create_output_mesh(stk::io::StkMeshIoBroker* ioBroker)
 {
+  const auto& metaData = ioBroker->meta_data();
   const int nOutputs = infoVec_.size();
   for (int i = 0; i < nOutputs; i++) {
     OutputInfo* outputInfo = &(infoVec_[i]);
@@ -110,7 +110,7 @@ OutputManager::create_output_mesh(
         auto& partNameList = outputInfo->targetNames_;
         stk::mesh::PartVector searchParts;
         for (size_t k = 0; k < partNameList.size(); ++k) {
-          stk::mesh::Part* thePart = metaData->get_part(partNameList[k]);
+          stk::mesh::Part* thePart = metaData.get_part(partNameList[k]);
           if (NULL != thePart)
             searchParts.push_back(thePart);
           else
@@ -121,7 +121,7 @@ OutputManager::create_output_mesh(
 
         // selector and bucket loop
         stk::mesh::Selector s_locally_owned =
-          metaData->locally_owned_part() & stk::mesh::selectUnion(searchParts);
+          metaData.locally_owned_part() & stk::mesh::selectUnion(searchParts);
         // restrict output to the selector and entity rank
         ioBroker->set_output_selector(
           indexVec_[i], get_entity_rank(outputInfo, metaData), s_locally_owned);
@@ -143,7 +143,7 @@ OutputManager::create_output_mesh(
          itorSet != outputInfo->outputFieldNameSet_.end(); ++itorSet) {
       std::string varName = *itorSet;
       stk::mesh::FieldBase* theField =
-        stk::mesh::get_field_by_name(varName, *metaData);
+        stk::mesh::get_field_by_name(varName, metaData);
       if (NULL == theField) {
         NaluEnv::self().naluOutputP0()
           << " Sorry, no field by the name " << varName << std::endl;
@@ -161,9 +161,9 @@ OutputManager::perform_outputs(
   const int timeStepCount,
   const double currentTime,
   stk::io::StkMeshIoBroker* ioBroker,
-  stk::mesh::MetaData* metaData,
   const double wallTimeStart)
 {
+  const auto& metaData = ioBroker->meta_data();
   const int nOutputs = infoVec_.size();
   for (int i = 0; i < nOutputs; i++) {
     auto* outputInfo = &(infoVec_[i]);
@@ -205,7 +205,7 @@ OutputManager::perform_outputs(
          << std::endl;*/
 
       // Sync fields to host on NGP builds before output
-      for (auto* fld : metaData->get_fields()) {
+      for (auto* fld : metaData.get_fields()) {
         fld->sync_to_host();
       }
 
@@ -216,10 +216,10 @@ OutputManager::perform_outputs(
 
 stk::mesh::EntityRank
 OutputManager::get_entity_rank(
-  const OutputInfo* oInfo, const stk::mesh::MetaData* metaData)
+  const OutputInfo* oInfo, const stk::mesh::MetaData& metaData)
 {
   if (oInfo->targetType_ == "siderank") {
-    return metaData->side_rank();
+    return metaData.side_rank();
   }
   // not sure if I should make an option for element rank as well?
   return stk::topology::NODE_RANK;
