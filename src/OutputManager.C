@@ -104,6 +104,28 @@ OutputManager::create_output_mesh(
     } else {
       indexVec_[i] = ioBroker->create_output_mesh(
         oname, stk::io::WRITE_RESULTS, *outputInfo->outputPropertyManager_);
+      // create selector and limit output if necessary
+      if (!outputInfo->targetNames_.empty()) {
+        // extract part
+        auto& partNameList = outputInfo->targetNames_;
+        stk::mesh::PartVector searchParts;
+        for (size_t k = 0; k < partNameList.size(); ++k) {
+          stk::mesh::Part* thePart = metaData->get_part(partNameList[k]);
+          if (NULL != thePart)
+            searchParts.push_back(thePart);
+          else
+            throw std::runtime_error(
+              "OutputManager::create_output_mesh: Part is null" +
+              partNameList[k]);
+        }
+
+        // selector and bucket loop
+        stk::mesh::Selector s_locally_owned =
+          metaData->locally_owned_part() & stk::mesh::selectUnion(searchParts);
+        // restrict output to the selector and entity rank
+        ioBroker->set_output_selector(
+          indexVec_[i], get_entity_rank(outputInfo, metaData), s_locally_owned);
+      }
     }
 
     // Tell stk_io how to output element block nodal fields:
@@ -190,6 +212,17 @@ OutputManager::perform_outputs(
       ioBroker->process_output_request(resultsFileIndex, currentTime);
     }
   }
+}
+
+stk::mesh::EntityRank
+OutputManager::get_entity_rank(
+  const OutputInfo* oInfo, const stk::mesh::MetaData* metaData)
+{
+  if (oInfo->targetType_ == "siderank") {
+    return metaData->side_rank();
+  }
+  // not sure if I should make an option for element rank as well?
+  return stk::topology::NODE_RANK;
 }
 
 } // namespace nalu

@@ -13,6 +13,7 @@
 #define OutputInfo_h
 
 #include <string>
+#include <vector>
 #include <set>
 
 namespace YAML { class Node; }
@@ -39,13 +40,15 @@ public:
   
   int get_restart_compression();
   bool get_restart_shuffle();
-  
+
   std::string outputDBName_;
   
   // catalyst options
   std::string catalystFileName_;
   std::string catalystParseJson_;
   std::string paraviewScriptName_;
+  std::vector<std::string> targetNames_;
+  std::string targetType_;
 
   int outputFreq_;
   int outputStart_;

@@ -140,6 +140,20 @@ OutputInfo::load(
       }
     }
 
+    if (y_output["target_name"]) {
+      const YAML::Node& targets = y_output["target_name"];
+      if (targets.Type() == YAML::NodeType::Scalar) {
+        targetNames_.resize(1);
+        targetNames_[0] = targets.as<std::string>();
+      } else {
+        targetNames_.resize(targets.size());
+        for (size_t i = 0; i < targets.size(); ++i) {
+          targetNames_[i] = targets[i].as<std::string>();
+        }
+      }
+      get_required(y_output, "target_type", targetType_);
+    }
+
     const YAML::Node y_vars = y_output["output_variables"];
     if (y_vars)
     {

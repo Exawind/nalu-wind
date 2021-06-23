@@ -12,6 +12,8 @@
 
 #include <OutputInfo.h>
 #include <vector>
+#include <string>
+#include <stk_mesh/base/Types.hpp> // for EntityRank, etc
 
 namespace stk {
 namespace io {
@@ -51,6 +53,8 @@ public:
   inline bool has_catalyst_output() { return hasCatalystOutput_; }
   OutputInfo& get_restart_output_info() { return infoVec_[restartInfoId_]; }
   inline bool has_restart_output() { return hasRestartBlock_; }
+  stk::mesh::EntityRank
+  get_entity_rank(const OutputInfo* oInfo, const stk::mesh::MetaData* metaData);
   int serializedIOGroupSize_{0};
 };
 } // namespace nalu
