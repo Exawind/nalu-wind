@@ -3050,6 +3050,14 @@ Realm::populate_restart(double& timeStepNm1, int& timeStepCount)
   double foundRestartTime = get_current_time();
   if (restarted_simulation()) {
     // allow restart to skip missed required fields
+
+    ThrowRequireMsg(
+      !outputManager_->infoVec_.empty(),
+      "OutputInfo vec is empty when calling restart");
+
+    ThrowRequireMsg(
+      outputManager_->has_restart_output(), "No restart registered");
+
     auto& outputInfo = outputManager_->get_restart_output_info();
     const double restartTime = outputInfo.restartTime_;
     std::vector<stk::io::MeshField> missingFields;
@@ -4328,9 +4336,11 @@ Realm::get_time_step_count() const
 bool
 Realm::restarted_simulation()
 {
-  return outputManager_->hasRestartBlock_
-           ? false
-           : outputManager_->get_restart_output_info().activateRestart_;
+  for (auto&& oi : outputManager_->infoVec_) {
+    if (oi.activateRestart_)
+      return true;
+  }
+  return false;
 }
 
 //--------------------------------------------------------------------------

@@ -165,17 +165,19 @@ OutputManager::perform_outputs(
 {
   const auto& metaData = ioBroker->meta_data();
   const int nOutputs = infoVec_.size();
+
+  const double elapsedWallTime = stk::wall_time() - wallTimeStart;
+  // find the max over all core
+  double g_elapsedWallTime = 0.0;
+  stk::all_reduce_max(
+    NaluEnv::self().parallel_comm(), &elapsedWallTime, &g_elapsedWallTime, 1);
+  // convert to hours
+  g_elapsedWallTime /= 3600.0;
+
   for (int i = 0; i < nOutputs; i++) {
     auto* outputInfo = &(infoVec_[i]);
     const auto resultsFileIndex = indexVec_[i];
     const int modStep = timeStepCount - outputInfo->outputStart_;
-    const double elapsedWallTime = stk::wall_time() - wallTimeStart;
-    // find the max over all core
-    double g_elapsedWallTime = 0.0;
-    stk::all_reduce_max(
-      NaluEnv::self().parallel_comm(), &elapsedWallTime, &g_elapsedWallTime, 1);
-    // convert to hours
-    g_elapsedWallTime /= 3600.0;
 
     // check for elapsed WALL time threshold
     bool forcedOutput = false;
@@ -184,10 +186,10 @@ OutputManager::perform_outputs(
       if (g_elapsedWallTime > outputInfo->userWallTimeResults_.second) {
         forcedOutput = true;
         outputInfo->userWallTimeResults_.first = false;
-        NaluEnv::self().naluOutputP0()
-          << "Realm::provide_output()::Forced Result output will be processed "
-             "at current time: "
-          << currentTime << std::endl;
+        NaluEnv::self().naluOutputP0() << "Realm::provide_output()::Forced "
+                                          "Result output will be processed "
+                                          "at current time: "
+                                       << currentTime << std::endl;
         NaluEnv::self().naluOutputP0()
           << " Elapsed (max) WALL time: " << g_elapsedWallTime << " (hours)"
           << std::endl;
@@ -200,7 +202,8 @@ OutputManager::perform_outputs(
 
     if (isOutput) { /*
        NaluEnv::self().naluOutputP0()
-         << "Realm shall provide output files at : currentTime/timeStepCount: "
+         << "Realm shall provide output files at : currentTime/timeStepCount:
+       "
          << currentTime << "/" << timeStepCount << " (" << name_ << ")"
          << std::endl;*/
 
