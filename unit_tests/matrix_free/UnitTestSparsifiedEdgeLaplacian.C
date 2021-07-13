@@ -83,7 +83,7 @@ create_edge_matrix(
 
   using host_policy = Kokkos::MDRangePolicy<
     Kokkos::DefaultHostExecutionSpace, Kokkos::Rank<5>, int>;
-  Tpetra::beginFill(*graph);
+  Tpetra::beginAssembly(*graph);
   auto range =
     host_policy({0, 0, 0, 0, 0}, {offsets_h.extent_int(0), p, p, p, 12});
   Kokkos::parallel_for(range, [&](int index, int n, int m, int l, int iedge) {
@@ -100,7 +100,7 @@ create_edge_matrix(
       graph->insertLocalIndices(ids[1], 2, ids.data());
     }
   });
-  Tpetra::endFill(*graph);
+  Tpetra::endAssembly(*graph);
   return Teuchos::rcp(new Tpetra::FECrsMatrix<>(graph));
 }
 
@@ -139,10 +139,10 @@ TEST_F(SparsifiedEdgeLaplacianFixture, laplacian_is_an_l_matrix)
   auto& coords = coordinate_field();
   auto coords_ngp = stk::mesh::get_updated_ngp_field<double>(coords);
 
-  Tpetra::beginFill(*mat);
+  Tpetra::beginAssembly(*mat);
   assemble_sparsified_edge_laplacian(
     order, mesh, meta.universal_part(), coords_ngp, devmat);
-  Tpetra::endFill(*mat);
+  Tpetra::endAssembly(*mat);
 
   for (int i = 0; i < mat->getNodeNumRows(); ++i) {
     auto row = local_mat.row(i);
@@ -170,10 +170,10 @@ TEST_F(SparsifiedEdgeLaplacianFixture, row_and_column_sums_are_zero)
   auto& coords = coordinate_field();
   auto coords_ngp = stk::mesh::get_updated_ngp_field<double>(coords);
 
-  Tpetra::beginFill(*mat);
+  Tpetra::beginAssembly(*mat);
   assemble_sparsified_edge_laplacian(
     order, mesh, meta.universal_part(), coords_ngp, devmat);
-  Tpetra::endFill(*mat);
+  Tpetra::endAssembly(*mat);
 
   Tpetra::Vector<> ones(Teuchos::rcpFromRef(linsys.owned));
   ones.putScalar(1.);
@@ -200,10 +200,10 @@ TEST_F(SparsifiedEdgeLaplacianFixture, sample_for_positive_definiteness)
   auto& coords = coordinate_field();
   auto coords_ngp = stk::mesh::get_updated_ngp_field<double>(coords);
 
-  Tpetra::beginFill(*mat);
+  Tpetra::beginAssembly(*mat);
   assemble_sparsified_edge_laplacian(
     order, mesh, meta.universal_part(), coords_ngp, devmat);
-  Tpetra::endFill(*mat);
+  Tpetra::endAssembly(*mat);
 
   Tpetra::Vector<> ones(Teuchos::rcpFromRef(linsys.owned));
   ones.randomize();
