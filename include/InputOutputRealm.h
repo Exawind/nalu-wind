@@ -76,6 +76,7 @@ public:
  
   // internal calls
   void register_io_fields();
+  void register_mesh_motion_fields();
 
   // hold the field information
   std::vector<InputOutputInfo *> inputOutputFieldInfo_;

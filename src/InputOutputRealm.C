@@ -13,6 +13,7 @@
 #include <NaluParsing.h>
 #include <Realm.h>
 #include <SolutionOptions.h>
+#include <mesh_motion/MeshMotionAlg.h>
 
 // transfer
 #include <xfer/Transfer.h>
@@ -64,14 +65,44 @@ InputOutputRealm::initialize_prolog()
 {
   // bar minimum to register fields and to extract from possible mesh file
   register_io_fields();
+  if (solutionOptions_->meshMotion_)
+    register_mesh_motion_fields();
+
   ioBroker_->populate_mesh();
   ioBroker_->populate_field_data();
   create_output_mesh();
   input_variables_from_mesh();
+  if (solutionOptions_->meshMotion_) {
+    init_current_coordinates();
+    meshMotionAlg_->initialize(get_current_time());
+  }
 }
 
 void InputOutputRealm::initialize_epilog()
 {}
+
+void
+InputOutputRealm::register_mesh_motion_fields()
+{
+  const int nDim = metaData_->spatial_dimension();
+  for (auto&& info : inputOutputFieldInfo_) {
+    std::vector<std::string> targetNames = info->targetNames_;
+    // loop over target parts and declare/put the field
+    for (size_t j = 0; j < targetNames.size(); ++j) {
+      const std::string targetName = targetNames[j];
+      stk::mesh::Part* part = metaData_->get_part(targetName);
+
+      VectorFieldType* displacement =
+        &(metaData_->declare_field<VectorFieldType>(
+          stk::topology::NODE_RANK, "mesh_displacement"));
+      stk::mesh::put_field_on_mesh(*displacement, *part, nDim, nullptr);
+      VectorFieldType* currentCoords =
+        &(metaData_->declare_field<VectorFieldType>(
+          stk::topology::NODE_RANK, "current_coordinates"));
+      stk::mesh::put_field_on_mesh(*currentCoords, *part, nDim, nullptr);
+    }
+  }
+}
 
 //--------------------------------------------------------------------------
 //-------- register_io_fields ------------------------------------------------------
