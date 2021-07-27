@@ -2,6 +2,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/ABLProfileFunction.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AlgorithmDriver.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AMSAlgDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleContinuityNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleElemSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleFaceElemSolverAlgorithm.C
@@ -17,6 +18,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/AssemblePNGNonConformalSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarEigenEdgeSolverAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleScalarNonConformalSolverAlgorithm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleWallDistNonConformalAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AssembleWallHeatTransferAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AuxFunctionAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/AveragingInfo.C
@@ -71,6 +73,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/Realms.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ScratchViews.C
    ${CMAKE_CURRENT_SOURCE_DIR}/ShearStressTransportEquationSystem.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/SideWriter.C
    ${CMAKE_CURRENT_SOURCE_DIR}/Simulation.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SolutionNormPostProcessing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SolutionOptions.C
@@ -81,7 +84,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentWallFunctionAlgorithm.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AMSAlgDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TimeIntegrator.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TpetraLinearSystemHelpers.C
@@ -90,7 +92,6 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscSmagorinskyAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbViscWaleAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/TurbulenceAveragingPostProcessing.C
-   ${CMAKE_CURRENT_SOURCE_DIR}/AssembleWallDistNonConformalAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/WallDistEquationSystem.C
 )
 

@@ -1,0 +1,313 @@
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
+
+#include "SideWriter.h"
+
+#include <stk_mesh/base/MetaData.hpp>
+#include <stk_mesh/base/Bucket.hpp>
+#include <stk_mesh/base/BulkData.hpp>
+#include <stk_mesh/base/Entity.hpp>
+#include <stk_mesh/base/FieldBase.hpp>
+#include <stk_mesh/base/Part.hpp>
+#include <stk_mesh/base/Selector.hpp>
+#include <stk_topology/topology.hpp>
+#include <stk_util/util/ReportHandler.hpp>
+
+#include <Ioss_Region.h>
+#include <Ioss_DBUsage.h>
+#include <Ioss_DatabaseIO.h>
+#include <Ioss_ElementBlock.h>
+#include <Ioss_Field.h>
+#include <Ioss_IOFactory.h>
+#include <Ioss_NodeBlock.h>
+#include <Ioss_Property.h>
+#include <Ioss_PropertyManager.h>
+#include <Ioss_State.h>
+#include "Ionit_Initializer.h"
+
+#include <algorithm>
+#include <iostream>
+#include <stdexcept>
+#include <utility>
+#include <memory>
+
+namespace sierra {
+namespace nalu {
+
+namespace {
+
+int
+count_ent(const stk::mesh::BucketVector& buckets)
+{
+  int sum = 0;
+  for (const auto* ib : buckets) {
+    sum += ib->size();
+  }
+  return sum;
+}
+
+int
+count_faces(const stk::mesh::BulkData& bulk, const stk::mesh::Selector& sel)
+{
+  return count_ent(bulk.get_buckets(stk::topology::FACE_RANK, sel));
+}
+
+int
+get_dimension(const stk::mesh::BulkData& bulk)
+{
+  return int(bulk.mesh_meta_data().spatial_dimension());
+}
+
+stk::topology::rank_t
+get_side_rank(const stk::mesh::BulkData& bulk)
+{
+  return bulk.mesh_meta_data().side_rank();
+}
+
+std::map<std::string, Ioss::ElementBlock*>
+write_element_block_definition(
+  Ioss::Region& region,
+  Ioss::DatabaseIO& io,
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::ConstPartVector& sides)
+{
+  std::map<std::string, Ioss::ElementBlock*> blocks;
+  for (const auto* side : sides) {
+    for (const auto* subset : side->subsets()) {
+      auto block = std::make_unique<Ioss::ElementBlock>(
+        &io, subset->name(), subset->topology().name(),
+        count_faces(bulk, *subset));
+      ThrowRequire(block);
+      blocks.insert({subset->name(), block.get()});
+      region.add(block.release());
+    }
+  }
+  return blocks;
+}
+
+void
+write_node_block_definition(
+  Ioss::Region& region,
+  Ioss::DatabaseIO& io,
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::ConstPartVector& sides)
+{
+  const auto& buckets =
+    bulk.get_buckets(stk::topology::NODE_RANK, stk::mesh::selectUnion(sides));
+  const auto nnodes = count_ent(buckets);
+  const int dim = get_dimension(bulk);
+  auto block = std::make_unique<Ioss::NodeBlock>(&io, "nodeblock", nnodes, dim);
+  region.add(block.release());
+}
+
+void
+write_node_ids(
+  Ioss::NodeBlock& block,
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::ConstPartVector& parts)
+{
+  const auto& buckets =
+    bulk.get_buckets(stk::topology::NODE_RANK, stk::mesh::selectUnion(parts));
+
+  std::vector<int64_t> node_ids;
+  node_ids.reserve(count_ent(buckets));
+
+  for (const auto* ib : buckets) {
+    for (const auto node : *ib) {
+      node_ids.push_back(bulk.identifier(node));
+    }
+  }
+  block.put_field_data("ids", node_ids);
+}
+
+void
+write_coordinate_list(
+  Ioss::NodeBlock& block,
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::FieldBase& coord_field,
+  const stk::mesh::ConstPartVector& parts)
+{
+  const auto& buckets =
+    bulk.get_buckets(stk::topology::NODE_RANK, stk::mesh::selectUnion(parts));
+  const int dim = get_dimension(bulk);
+  std::vector<double> coords;
+  coords.reserve(count_ent(buckets) * dim);
+  for (const auto* ib : buckets) {
+    for (const auto node : *ib) {
+      auto xnode =
+        static_cast<const double*>(stk::mesh::field_data(coord_field, node));
+      for (int k = 0; k < dim; ++k) {
+        coords.push_back(xnode[k]);
+      }
+    }
+  }
+  block.put_field_data("mesh_model_coordinates", coords);
+}
+
+void
+write_element_connectivity(
+  const stk::mesh::BulkData& bulk,
+  const stk::mesh::ConstPartVector& parts,
+  std::map<std::string, Ioss::ElementBlock*> part_block_mapping)
+{
+  for (const auto* part : parts) {
+    for (const auto* subset : part->subsets()) {
+      const auto buckets = bulk.get_buckets(get_side_rank(bulk), *part);
+
+      std::vector<int64_t> connectivity;
+      connectivity.reserve([&]() {
+        int count = 0;
+        for (const auto* ib : buckets) {
+          for (const auto face : *ib) {
+            count += bulk.num_nodes(face);
+          }
+        }
+        return count;
+      }());
+
+      std::vector<int64_t> ids;
+      ids.reserve(count_faces(bulk, *subset));
+      for (const auto* ib : buckets) {
+        for (const auto face : *ib) {
+          ids.push_back(bulk.identifier(face));
+          const auto nodes_per_face = bulk.num_nodes(face);
+          const auto nodes = bulk.begin_nodes(face);
+          for (unsigned k = 0; k < nodes_per_face; ++k) {
+            connectivity.push_back(bulk.identifier(nodes[k]));
+          }
+        }
+      }
+      auto* block = part_block_mapping.at(subset->name());
+      block->put_field_data("ids", ids);
+      block->put_field_data("connectivity", connectivity);
+    }
+  }
+}
+
+template <typename T>
+void
+put_data_on_node_block(
+  Ioss::NodeBlock& block,
+  const stk::mesh::BulkData& bulk,
+  const std::vector<int64_t>& ids,
+  const stk::mesh::FieldBase& field)
+{
+  ThrowRequire(field.type_is<T>());
+  const int max_size = field.max_size(stk::topology::NODE_RANK);
+  std::vector<T> flat_array(ids.size() * max_size, 0);
+  for (decltype(ids.size()) k = 0; k < ids.size(); ++k) {
+    const auto node = bulk.get_entity(stk::topology::NODE_RANK, ids[k]);
+    const T* field_data = static_cast<T*>(stk::mesh::field_data(field, node));
+    if (field_data) {
+      for (int j = 0; j < max_size; ++j) {
+        flat_array[k * max_size + j] = field_data[j];
+      }
+    }
+  }
+  block.put_field_data(field.name(), flat_array);
+}
+
+template <typename... Args>
+void
+put_data_on_node_block(Args&&... args)
+{
+  // TODO more than double
+  put_data_on_node_block<double>(std::forward<Args>(args)...);
+}
+
+} // namespace
+
+SideWriter::SideWriter(
+  const stk::mesh::BulkData& bulk,
+  std::vector<const stk::mesh::Part*> sides,
+  std::vector<const stk::mesh::FieldBase*> fields,
+  std::string fname)
+  : bulk_(bulk)
+{
+  Ioss::Init::Initializer init_db;
+
+  Ioss::PropertyManager prop;
+  prop.add(Ioss::Property{"INTEGER_SIZE_API", 8});
+  prop.add(Ioss::Property{"INTEGER_SIZE_DB", 8});
+
+  auto database = Ioss::IOFactory::create(
+    "exodus", fname, Ioss::WRITE_RESULTS, bulk.parallel(), prop);
+  ThrowRequire(database != nullptr && database->ok(true));
+  output_ = std::make_unique<Ioss::Region>(database, "SideOutput");
+
+  std::map<std::string, Ioss::ElementBlock*> part_block_mapping;
+  output_->begin_mode(Ioss::STATE_DEFINE_MODEL);
+  {
+    write_node_block_definition(*output_, *database, bulk, sides);
+    part_block_mapping =
+      write_element_block_definition(*output_, *database, bulk, sides);
+  }
+  output_->end_mode(Ioss::STATE_DEFINE_MODEL);
+
+  output_->begin_mode(Ioss::STATE_MODEL);
+  {
+    auto& block = *output_->get_node_blocks().front();
+    write_node_ids(block, bulk, sides);
+
+    auto& coords = *bulk.mesh_meta_data().coordinate_field();
+    write_coordinate_list(block, bulk, coords, sides);
+
+    write_element_connectivity(bulk, sides, part_block_mapping);
+  }
+  output_->end_mode(Ioss::STATE_MODEL);
+
+  output_->begin_mode(Ioss::STATE_DEFINE_TRANSIENT);
+  {
+    add_fields(fields);
+  }
+  output_->end_mode(Ioss::STATE_DEFINE_TRANSIENT);
+}
+
+void
+SideWriter::write_database_data(double time)
+{
+  output_->begin_mode(Ioss::STATE_TRANSIENT);
+  {
+    auto current_output_step = output_->add_state(time);
+    output_->begin_state(current_output_step);
+    {
+      for (auto* block : output_->get_node_blocks()) {
+        ThrowRequire(block);
+        std::vector<int64_t> ids;
+        block->get_field_data("ids", ids);
+        for (const auto* field : fields_) {
+          put_data_on_node_block(*block, bulk_, ids, *field);
+        }
+      }
+    }
+    output_->end_state(current_output_step);
+  }
+  output_->end_mode(Ioss::STATE_TRANSIENT);
+}
+
+void
+SideWriter::add_fields(std::vector<const stk::mesh::FieldBase*> fields)
+{
+  for (auto* field : fields) {
+    fields_.insert(field);
+  }
+  for (auto* block : output_->get_node_blocks()) {
+    for (const auto* field : fields_) {
+      const int nb_size = block->get_property("entity_count").get_int();
+      ThrowRequireMsg(field->type_is<double>(), "only double fields supported");
+      Ioss::Field ioss_field(
+        field->name(), Ioss::Field::DOUBLE, "scalar", Ioss::Field::TRANSIENT,
+        nb_size);
+      block->field_add(ioss_field);
+    }
+  }
+}
+
+} // namespace nalu
+} // namespace sierra

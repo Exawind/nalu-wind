@@ -33,6 +33,7 @@ target_sources(${utest_ex_name} PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSideIsInElement.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSideNodeOrdinals.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSidePCoords.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSideWriter.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSimdBasic.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSingleHexPromotion.C
    ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestSpinnerLidarPattern.C
