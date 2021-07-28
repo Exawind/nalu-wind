@@ -7,11 +7,17 @@
 // for more details.
 //
 #include <set>
+#include <vector>
+#include <string>
+#include <memory>
 
 namespace Ioss {
 class Region;
 } // namespace Ioss
 
+namespace YAML {
+class Node;
+}
 namespace stk {
 namespace mesh {
 class BulkData;
@@ -40,6 +46,24 @@ private:
   const stk::mesh::BulkData& bulk_;
   std::unique_ptr<Ioss::Region> output_;
   std::set<const stk::mesh::FieldBase*> fields_;
+};
+
+class SideWriterContainer
+{
+public:
+  void load(const YAML::Node& node);
+  void construct_writers(const stk::mesh::BulkData& bulk);
+  void write_sides(const int stepCount, const double time);
+  // use outputFileNames since writers have to be constructed
+  // so this can be used before the construction
+  inline int number_of_writers() { return outputFileNames_.size(); };
+
+private:
+  std::vector<SideWriter> sideWriters_;
+  std::vector<std::string> outputFileNames_;
+  std::vector<int> outputFrequency_;
+  std::vector<std::vector<std::string>> sideNames_;
+  std::vector<std::vector<std::string>> fieldNames_;
 };
 } // namespace nalu
 } // namespace sierra

@@ -4,6 +4,7 @@
 #include "stk_io/StkMeshIoBroker.hpp"
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Field.hpp"
+#include <yaml-cpp/yaml.h>
 
 namespace sierra {
 namespace nalu {
@@ -58,6 +59,26 @@ TEST_F(SideWriterFixture, side)
     }
   }
   side_io.write_database_data(1.);
+}
+
+TEST(SideWriterContainerTest, load)
+{
+  const char* input = R"test(sideset_writers:
+    - name: w1
+      output_data_base_name: w1.exo
+      output_frequency: 1
+      target_name: side_1
+      output_variables: [velocity]
+    - name: w2
+      output_data_base_name: w2.exo
+      output_frequency: 2
+      target_name: [side_2]
+      output_variables: [pressure])test";
+
+  const YAML::Node y_node = YAML::Load(input);
+  SideWriterContainer container;
+  ASSERT_NO_THROW(container.load(y_node));
+  EXPECT_EQ(container.number_of_writers(), 2);
 }
 
 } // namespace nalu

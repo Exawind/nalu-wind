@@ -31,11 +31,12 @@
 #include <Ioss_State.h>
 #include "Ionit_Initializer.h"
 
+#include "NaluParsing.h"
+
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
-#include <memory>
 
 namespace sierra {
 namespace nalu {
@@ -306,6 +307,76 @@ SideWriter::add_fields(std::vector<const stk::mesh::FieldBase*> fields)
         nb_size);
       block->field_add(ioss_field);
     }
+  }
+}
+
+void
+SideWriterContainer::load(const YAML::Node& node)
+{
+  const YAML::Node y_writers = node["sideset_writers"];
+  if (y_writers) {
+    for (size_t i = 0; i < y_writers.size(); ++i) {
+      const YAML::Node w_node = y_writers[i];
+      std::string name = w_node["name"].as<std::string>();
+
+      outputFileNames_.push_back(
+        w_node["output_data_base_name"].as<std::string>());
+
+      outputFrequency_.push_back(w_node["output_frequency"].as<int>());
+
+      const YAML::Node& fromTargets = w_node["target_name"];
+      std::vector<std::string> tempPartList;
+      if (fromTargets.Type() == YAML::NodeType::Scalar) {
+        tempPartList.resize(1);
+        tempPartList[0] = fromTargets.as<std::string>();
+      } else {
+        tempPartList.resize(fromTargets.size());
+        for (size_t i = 0; i < fromTargets.size(); ++i) {
+          tempPartList[i] = fromTargets[i].as<std::string>();
+        }
+      }
+      sideNames_.push_back(tempPartList);
+      const YAML::Node& fieldNames = w_node["output_variables"];
+      std::vector<std::string> tempFieldNames;
+      if (fieldNames.Type() == YAML::NodeType::Scalar) {
+        tempFieldNames.resize(1);
+        tempFieldNames[0] = fieldNames.as<std::string>();
+      } else {
+        tempFieldNames.resize(fieldNames.size());
+        for (size_t i = 0; i < fieldNames.size(); ++i) {
+          tempFieldNames[i] = fieldNames[i].as<std::string>();
+        }
+      }
+      fieldNames_.push_back(tempFieldNames);
+    }
+  }
+}
+
+void
+SideWriterContainer::construct_writers(const stk::mesh::BulkData& bulk)
+{
+  const auto& meta = bulk.mesh_meta_data();
+  for (int i = 0; i < number_of_writers(); i++) {
+    // construct part lists
+    std::vector<const stk::mesh::Part*> sides;
+    for (auto name : sideNames_[i])
+      sides.push_back(meta.get_part(name));
+
+    std::vector<const stk::mesh::FieldBase*> fields;
+    for (auto name : fieldNames_[i])
+      fields.push_back(meta.get_field(stk::topology::NODE_RANK, name));
+
+    sideWriters_.push_back(
+      SideWriter(bulk, sides, fields, outputFileNames_[i]));
+  }
+}
+
+void
+SideWriterContainer::write_sides(const int stepCount, const double time)
+{
+  for (int i = 0; i < number_of_writers(); i++) {
+    if (stepCount % outputFrequency_[i] == 0)
+      sideWriters_[i].write_database_data(time);
   }
 }
 

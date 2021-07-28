@@ -35,6 +35,7 @@
 #include <PeriodicManager.h>
 #include <Realms.h>
 #include <SolutionOptions.h>
+#include <SideWriter.h>
 #include <TimeIntegrator.h>
 
 #include <element_promotion/PromoteElement.h>
@@ -183,6 +184,7 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     metaData_(NULL),
     bulkData_(NULL),
     ioBroker_(NULL),
+    sideWriters_(new SideWriterContainer()),
     resultsFileIndex_(99),
     restartFileIndex_(99),
     numInitialElements_(0),
@@ -745,6 +747,7 @@ Realm::load(const YAML::Node & node)
 
   // solution options - loaded before create_mesh
   solutionOptions_->load(node);
+  sideWriters_->load(node);
 
   // once we know the mesh name, we can open the meta data, and set spatial dimension
   create_mesh();
@@ -1848,8 +1851,9 @@ Realm::create_mesh()
 void
 Realm::create_output_mesh()
 {
+  sideWriters_->construct_writers(bulk_data());
   // exodus output file creation
-  if (outputInfo_->hasOutputBlock_ ) {
+  if (outputInfo_->hasOutputBlock_) {
 
     double start_time = NaluEnv::self().nalu_time();
     NaluEnv::self().naluOutputP0() << "Realm::create_output_mesh(): Begin" << std::endl;
@@ -2879,17 +2883,17 @@ void
 Realm::provide_output()
 {
   stk::diag::TimeBlock mesh_output_timeblock(Simulation::outputTimer());
+  const double start_time = NaluEnv::self().nalu_time();
+  const double currentTime = get_current_time();
+  const int timeStepCount = get_time_step_count();
+  sideWriters_->write_sides(timeStepCount, currentTime);
 
   if ( outputInfo_->hasOutputBlock_ ) {
 
     if (outputInfo_->outputFreq_ == 0)
       return;
 
-    const double start_time = NaluEnv::self().nalu_time();
-
     // process output via io
-    const double currentTime = get_current_time();
-    const int timeStepCount = get_time_step_count();
     const int modStep = timeStepCount - outputInfo_->outputStart_;
 
     // check for elapsed WALL time threshold
