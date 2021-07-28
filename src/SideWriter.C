@@ -302,10 +302,32 @@ SideWriter::add_fields(std::vector<const stk::mesh::FieldBase*> fields)
     for (const auto* field : fields_) {
       const int nb_size = block->get_property("entity_count").get_int();
       ThrowRequireMsg(field->type_is<double>(), "only double fields supported");
-      Ioss::Field ioss_field(
-        field->name(), Ioss::Field::DOUBLE, "scalar", Ioss::Field::TRANSIENT,
-        nb_size);
-      block->field_add(ioss_field);
+      switch (field->max_size(stk::topology::NODE_RANK)) {
+      case 1: {
+        Ioss::Field ioss_field(
+          field->name(), Ioss::Field::DOUBLE, "scalar", Ioss::Field::TRANSIENT,
+          nb_size);
+        block->field_add(ioss_field);
+        break;
+      }
+      case 2: {
+        Ioss::Field ioss_field(
+          field->name(), Ioss::Field::DOUBLE, "vector_2d",
+          Ioss::Field::TRANSIENT, nb_size);
+        block->field_add(ioss_field);
+        break;
+      }
+      case 3: {
+        Ioss::Field ioss_field(
+          field->name(), Ioss::Field::DOUBLE, "vector_3d",
+          Ioss::Field::TRANSIENT, nb_size);
+        block->field_add(ioss_field);
+        break;
+      }
+      default:
+        throw std::runtime_error(
+          "Field type not supported for sideset_writers: " + field->name());
+      }
     }
   }
 }
