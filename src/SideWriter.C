@@ -324,6 +324,27 @@ SideWriter::add_fields(std::vector<const stk::mesh::FieldBase*> fields)
         block->field_add(ioss_field);
         break;
       }
+      case 4: {
+        Ioss::Field ioss_field(
+          field->name(), Ioss::Field::DOUBLE, "full_tensor_22",
+          Ioss::Field::TRANSIENT, nb_size);
+        block->field_add(ioss_field);
+        break;
+      }
+      case 6: {
+        Ioss::Field ioss_field(
+          field->name(), Ioss::Field::DOUBLE, "sym_tensor_33",
+          Ioss::Field::TRANSIENT, nb_size);
+        block->field_add(ioss_field);
+        break;
+      }
+      case 9: {
+        Ioss::Field ioss_field(
+          field->name(), Ioss::Field::DOUBLE, "full_tensor_36",
+          Ioss::Field::TRANSIENT, nb_size);
+        block->field_add(ioss_field);
+        break;
+      }
       default:
         throw std::runtime_error(
           "Field type not supported for sideset_writers: " + field->name());
