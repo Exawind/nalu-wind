@@ -16,46 +16,73 @@ public:
       bulk(meta, MPI_COMM_WORLD, stk::mesh::BulkData::NO_AUTO_AURA),
       io(bulk.parallel()),
       test_field(meta.declare_field<stk::mesh::Field<double>>(
-        stk::topology::NODE_RANK, "test"))
-
+        stk::topology::NODE_RANK, "test")),
+      test_vector_field(
+        meta.declare_field<stk::mesh::Field<double, stk::mesh::Cartesian3d>>(
+          stk::topology::NODE_RANK, "test_vector"))
   {
     double minus_one = -1;
     stk::mesh::put_field_on_mesh(
       test_field, meta.universal_part(), 1, &minus_one);
+
+    stk::mesh::put_field_on_mesh(
+      test_vector_field, meta.universal_part(), 3, &minus_one);
+
+    const std::string name = "generated:3x3x3|sideset:xXyYzZ";
+    io.set_bulk_data(bulk);
+    io.add_mesh_database(name, stk::io::READ_MESH);
+    io.create_input_mesh();
+    io.populate_bulk_data();
+    stk::io::put_io_part_attribute(meta.universal_part());
   }
+
   stk::mesh::MetaData meta;
   stk::mesh::BulkData bulk;
   stk::io::StkMeshIoBroker io;
   stk::mesh::Field<double>& test_field;
+  stk::mesh::Field<double, stk::mesh::Cartesian3d>& test_vector_field;
 };
 
 TEST_F(SideWriterFixture, side)
 {
-  const std::string name = "generated:3x3x3|sideset:xXyYzZ";
-  io.set_bulk_data(bulk);
-  io.add_mesh_database(name, stk::io::READ_MESH);
-  io.create_input_mesh();
-  io.populate_bulk_data();
-  stk::io::put_io_part_attribute(meta.universal_part());
+
   std::vector<const stk::mesh::Part*> sides{
     meta.get_part("surface_1"), meta.get_part("surface_2")};
+  SideWriter side_io(
+    bulk, sides, {&test_field, &test_vector_field}, "test_output/file.e");
+
   auto& coord_field =
     *static_cast<const stk::mesh::Field<double, stk::mesh::Cartesian3d>*>(
       meta.coordinate_field());
+
   const auto& all_node_buckets =
     bulk.get_buckets(stk::topology::NODE_RANK, meta.universal_part());
   for (const auto* ib : all_node_buckets) {
     for (const auto node : *ib) {
-      *stk::mesh::field_data(test_field, node) =
-        stk::mesh::field_data(coord_field, node)[0];
+      const double x = stk::mesh::field_data(coord_field, node)[0];
+      const double y = stk::mesh::field_data(coord_field, node)[1];
+      const double z = stk::mesh::field_data(coord_field, node)[2];
+
+      *stk::mesh::field_data(test_field, node) = x;
+
+      stk::mesh::field_data(test_vector_field, node)[0] = -y;
+      stk::mesh::field_data(test_vector_field, node)[1] = x;
+      stk::mesh::field_data(test_vector_field, node)[2] = z;
     }
   }
-  SideWriter side_io(bulk, sides, {&test_field}, "file.e");
   side_io.write_database_data(0.);
 
   for (const auto* ib : all_node_buckets) {
     for (const auto node : *ib) {
-      *stk::mesh::field_data(test_field, node) = stk::mesh::field_data(coord_field, node)[1];
+      const double x = stk::mesh::field_data(coord_field, node)[0];
+      const double y = stk::mesh::field_data(coord_field, node)[1];
+      const double z = stk::mesh::field_data(coord_field, node)[2];
+
+      *stk::mesh::field_data(test_field, node) = y;
+
+      stk::mesh::field_data(test_vector_field, node)[0] = -z;
+      stk::mesh::field_data(test_vector_field, node)[1] = y;
+      stk::mesh::field_data(test_vector_field, node)[2] = x;
     }
   }
   side_io.write_database_data(1.);

@@ -6,6 +6,10 @@
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
 //
+
+#ifndef SIDEWRITER_H
+#define SIDEWRITER_H
+
 #include <set>
 #include <vector>
 #include <string>
@@ -67,3 +71,4 @@ private:
 };
 } // namespace nalu
 } // namespace sierra
+#endif
