@@ -53,10 +53,16 @@ count_ent(const stk::mesh::BucketVector& buckets)
   return sum;
 }
 
+stk::topology::rank_t
+get_side_rank(const stk::mesh::BulkData& bulk)
+{
+  return bulk.mesh_meta_data().side_rank();
+}
+
 int
 count_faces(const stk::mesh::BulkData& bulk, const stk::mesh::Selector& sel)
 {
-  return count_ent(bulk.get_buckets(stk::topology::FACE_RANK, sel));
+  return count_ent(bulk.get_buckets(get_side_rank(bulk), sel));
 }
 
 int
@@ -65,31 +71,32 @@ get_dimension(const stk::mesh::BulkData& bulk)
   return int(bulk.mesh_meta_data().spatial_dimension());
 }
 
-stk::topology::rank_t
-get_side_rank(const stk::mesh::BulkData& bulk)
+const stk::mesh::Field<double, stk::mesh::Cartesian>&
+get_coordinate_field(const stk::mesh::BulkData& bulk)
 {
-  return bulk.mesh_meta_data().side_rank();
+  auto* coord =
+    dynamic_cast<const stk::mesh::Field<double, stk::mesh::Cartesian>*>(
+      bulk.mesh_meta_data().coordinate_field());
+  ThrowRequireMsg(coord, "Model coordinates must be a double-valued vector");
+  return *coord;
 }
 
-std::map<std::string, Ioss::ElementBlock*>
+void
 write_element_block_definition(
   Ioss::Region& region,
   Ioss::DatabaseIO& io,
   const stk::mesh::BulkData& bulk,
   const stk::mesh::ConstPartVector& sides)
 {
-  std::map<std::string, Ioss::ElementBlock*> blocks;
   for (const auto* side : sides) {
     for (const auto* subset : side->subsets()) {
       auto block = std::make_unique<Ioss::ElementBlock>(
         &io, subset->name(), subset->topology().name(),
         count_faces(bulk, *subset));
       ThrowRequire(block);
-      blocks.insert({subset->name(), block.get()});
       region.add(block.release());
     }
   }
-  return blocks;
 }
 
 void
@@ -97,13 +104,15 @@ write_node_block_definition(
   Ioss::Region& region,
   Ioss::DatabaseIO& io,
   const stk::mesh::BulkData& bulk,
-  const stk::mesh::ConstPartVector& sides)
+  const stk::mesh::ConstPartVector& sides,
+  std::string block_name)
 {
   const auto& buckets =
     bulk.get_buckets(stk::topology::NODE_RANK, stk::mesh::selectUnion(sides));
   const auto nnodes = count_ent(buckets);
   const int dim = get_dimension(bulk);
-  auto block = std::make_unique<Ioss::NodeBlock>(&io, "nodeblock", nnodes, dim);
+  auto block = std::make_unique<Ioss::NodeBlock>(&io, block_name, nnodes, dim);
+  ThrowRequire(block);
   region.add(block.release());
 }
 
@@ -131,9 +140,9 @@ void
 write_coordinate_list(
   Ioss::NodeBlock& block,
   const stk::mesh::BulkData& bulk,
-  const stk::mesh::FieldBase& coord_field,
   const stk::mesh::ConstPartVector& parts)
 {
+  const auto& coord_field = get_coordinate_field(bulk);
   const auto& buckets =
     bulk.get_buckets(stk::topology::NODE_RANK, stk::mesh::selectUnion(parts));
   const int dim = get_dimension(bulk);
@@ -141,8 +150,7 @@ write_coordinate_list(
   coords.reserve(count_ent(buckets) * dim);
   for (const auto* ib : buckets) {
     for (const auto node : *ib) {
-      auto xnode =
-        static_cast<const double*>(stk::mesh::field_data(coord_field, node));
+      const auto* xnode = stk::mesh::field_data(coord_field, node);
       for (int k = 0; k < dim; ++k) {
         coords.push_back(xnode[k]);
       }
@@ -153,9 +161,9 @@ write_coordinate_list(
 
 void
 write_element_connectivity(
+  Ioss::Region& region,
   const stk::mesh::BulkData& bulk,
-  const stk::mesh::ConstPartVector& parts,
-  std::map<std::string, Ioss::ElementBlock*> part_block_mapping)
+  const stk::mesh::ConstPartVector& parts)
 {
   for (const auto* part : parts) {
     for (const auto* subset : part->subsets()) {
@@ -184,7 +192,8 @@ write_element_connectivity(
           }
         }
       }
-      auto* block = part_block_mapping.at(subset->name());
+      auto block = region.get_element_block(subset->name());
+      ThrowRequire(block);
       block->put_field_data("ids", ids);
       block->put_field_data("connectivity", connectivity);
     }
@@ -206,6 +215,9 @@ put_data_on_node_block(
     const auto node = bulk.get_entity(stk::topology::NODE_RANK, ids[k]);
     const T* field_data = static_cast<T*>(stk::mesh::field_data(field, node));
     if (field_data) {
+      ThrowRequire(
+        stk::mesh::field_scalars_per_entity(field, node) ==
+        static_cast<unsigned>(max_size));
       for (int j = 0; j < max_size; ++j) {
         flat_array[k * max_size + j] = field_data[j];
       }
@@ -242,24 +254,21 @@ SideWriter::SideWriter(
   ThrowRequire(database != nullptr && database->ok(true));
   output_ = std::make_unique<Ioss::Region>(database, "SideOutput");
 
-  std::map<std::string, Ioss::ElementBlock*> part_block_mapping;
+  const std::string node_block_name("side_nodes");
   output_->begin_mode(Ioss::STATE_DEFINE_MODEL);
   {
-    write_node_block_definition(*output_, *database, bulk, sides);
-    part_block_mapping =
-      write_element_block_definition(*output_, *database, bulk, sides);
+    write_node_block_definition(
+      *output_, *database, bulk, sides, node_block_name);
+    write_element_block_definition(*output_, *database, bulk, sides);
   }
   output_->end_mode(Ioss::STATE_DEFINE_MODEL);
 
   output_->begin_mode(Ioss::STATE_MODEL);
   {
-    auto& block = *output_->get_node_blocks().front();
-    write_node_ids(block, bulk, sides);
-
-    auto& coords = *bulk.mesh_meta_data().coordinate_field();
-    write_coordinate_list(block, bulk, coords, sides);
-
-    write_element_connectivity(bulk, sides, part_block_mapping);
+    auto& node_block = *output_->get_node_block(node_block_name);
+    write_node_ids(node_block, bulk, sides);
+    write_coordinate_list(node_block, bulk, sides);
+    write_element_connectivity(*output_, bulk, sides);
   }
   output_->end_mode(Ioss::STATE_MODEL);
 
@@ -295,13 +304,14 @@ SideWriter::write_database_data(double time)
 void
 SideWriter::add_fields(std::vector<const stk::mesh::FieldBase*> fields)
 {
-  for (auto* field : fields) {
+  for (const auto* field : fields) {
     fields_.insert(field);
   }
+
   for (auto* block : output_->get_node_blocks()) {
     for (const auto* field : fields_) {
-      const int nb_size = block->get_property("entity_count").get_int();
       ThrowRequireMsg(field->type_is<double>(), "only double fields supported");
+      const size_t nb_size = block->get_property("entity_count").get_int();
       switch (field->max_size(stk::topology::NODE_RANK)) {
       case 1: {
         Ioss::Field ioss_field(
