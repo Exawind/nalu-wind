@@ -78,6 +78,7 @@ class MeshMotionAlg;
 class MeshTransformationAlg;
 
 class SolutionNormPostProcessing;
+class SideWriterContainer;
 class TurbulenceAveragingPostProcessing;
 class DataProbePostProcessing;
 struct ActuatorModel;
@@ -417,6 +418,7 @@ class Realm {
   stk::mesh::MetaData *metaData_;
   stk::mesh::BulkData *bulkData_;
   stk::io::StkMeshIoBroker *ioBroker_;
+  std::unique_ptr<SideWriterContainer> sideWriters_;
 
   size_t resultsFileIndex_;
   size_t restartFileIndex_;
