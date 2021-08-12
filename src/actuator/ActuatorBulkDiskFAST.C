@@ -132,6 +132,7 @@ ActuatorBulkDiskFAST::resize_arrays(const ActuatorMetaFAST& actMeta)
   Kokkos::resize(pointIsLocal_, newSize);
   Kokkos::resize(localParallelRedundancy_, newSize);
   Kokkos::resize(elemContainingPoint_, newSize);
+  Kokkos::resize(relativeVelocity_, newSize);
 }
 
 void
