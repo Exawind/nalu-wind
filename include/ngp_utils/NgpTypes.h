@@ -91,7 +91,7 @@ struct NGPMeshTraits
   using FieldScalarType = double;
 
   using TeamPolicy =
-    Kokkos::TeamPolicy<typename Mesh::MeshExecSpace, stk::mesh::ScheduleType>;
+    Kokkos::TeamPolicy<typename Mesh::MeshExecSpace, stk::ngp::ScheduleType>;
   using TeamHandleType = typename TeamPolicy::member_type;
   using ShmemType = typename Mesh::MeshExecSpace::scratch_memory_space;
   using MeshIndex = typename Mesh::MeshIndex;
