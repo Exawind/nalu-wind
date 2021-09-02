@@ -715,7 +715,7 @@ TurbulenceAveragingPostProcessing::compute_averages(
   const double currentTimeFilter = currentTimeFilter_;
 
   FieldInfoView fieldPairs(
-    "turbAveragesFields", (numRePairs + numFavrePairs + numResolvedPairs));
+    Kokkos::ViewAllocateWithoutInitializing("turbAveragesFields"), (numRePairs + numFavrePairs + numResolvedPairs));
   auto hostFieldPairs = Kokkos::create_mirror_view(fieldPairs);
 
   for (int i=0; i < numRePairs; i++) {
