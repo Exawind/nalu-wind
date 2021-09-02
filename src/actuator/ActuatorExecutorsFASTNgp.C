@@ -42,7 +42,7 @@ ActuatorLineFastNGP::operator()()
 
   compute_fllc();
 
-  actBulk_.interpolate_velocities_to_fast();
+  actBulk_.interpolate_velocities_to_fast(actMeta_);
 
   RunActFastUpdatePoints(actBulk_);
 
@@ -105,7 +105,7 @@ ActuatorDiskFastNGP::operator()()
 
   auto forceReduce = actBulk_.actuatorForce_.view_host();
 
-  actBulk_.interpolate_velocities_to_fast();
+  actBulk_.interpolate_velocities_to_fast(actMeta_);
 
   actBulk_.step_fast();
 

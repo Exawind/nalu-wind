@@ -23,6 +23,7 @@ public:
   ActFixArrayInt numSweptCount_;
   ActFixArrayInt numSweptOffset_;
   void spread_forces_over_disk(const ActuatorMetaFAST& actMeta);
+  void interpolate_velocities_to_fast(const ActuatorMetaFAST& actMeta);
 
 private:
   void compute_swept_point_count(ActuatorMetaFAST& actMeta);

@@ -46,7 +46,7 @@ struct ActuatorBulkFAST : public ActuatorBulk
 
   Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> local_range_policy();
 
-  void interpolate_velocities_to_fast();
+  void interpolate_velocities_to_fast(const ActuatorMetaFAST& actMeta);
   void step_fast();
   bool fast_is_time_zero();
   void output_torque_info(stk::mesh::BulkData& stkBulk);

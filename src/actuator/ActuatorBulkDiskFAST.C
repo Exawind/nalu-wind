@@ -42,17 +42,24 @@ ActuatorBulkDiskFAST::ActuatorBulkDiskFAST(
     });
   compute_offsets(actMeta);
   init_epsilon(actMeta);
-  // LCC: Debug ADM turbine yaw
+  //RunActFastUpdatePoints(*this);
+  //initialize_swept_points(actMeta);
+}
+
+void
+ActuatorBulkDiskFAST::interpolate_velocities_to_fast(const ActuatorMetaFAST& actMeta)
+{
+  openFast_.interpolateVel_ForceToVelNodes();
+
   if (openFast_.isTimeZero()) {
     if (openFast_.isDebug()) {
       openFast_.solution0();
     } else {
       squash_fast_output(std::bind(&fast::OpenFAST::solution0, &openFast_));
     }
+    RunActFastUpdatePoints(*this);
+    initialize_swept_points(actMeta);
   }
-  // -------------------------
-  RunActFastUpdatePoints(*this);
-  initialize_swept_points(actMeta);
 }
 
 void
