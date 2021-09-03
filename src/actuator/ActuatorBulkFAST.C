@@ -259,7 +259,7 @@ ActuatorBulkFAST::local_range_policy()
 }
 
 void
-ActuatorBulkFAST::interpolate_velocities_to_fast(const ActuatorMetaFAST& actMeta)
+ActuatorBulkFAST::interpolate_velocities_to_fast()
 {
   openFast_.interpolateVel_ForceToVelNodes();
 

@@ -20,10 +20,11 @@ struct ActuatorBulkDiskFAST : public ActuatorBulkFAST
 public:
   ActuatorBulkDiskFAST(ActuatorMetaFAST& actMeta, double naluTimeStep);
 
+  bool initialized_ADM_points=false;
   ActFixArrayInt numSweptCount_;
   ActFixArrayInt numSweptOffset_;
   void spread_forces_over_disk(const ActuatorMetaFAST& actMeta);
-  void interpolate_velocities_to_fast(const ActuatorMetaFAST& actMeta);
+  void initialize_ADM_points(const ActuatorMetaFAST& actMeta);
 
 private:
   void compute_swept_point_count(ActuatorMetaFAST& actMeta);

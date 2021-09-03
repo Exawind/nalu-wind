@@ -110,7 +110,7 @@ TEST_F(ActuatorFunctorFastTests, NGP_runAssignVelAndComputeForces)
   Kokkos::parallel_for(
     "testAssignVel", localRangePolicy, ActFastAssignVel(actBulk));
 
-  actBulk.interpolate_velocities_to_fast(actMeta_);
+  actBulk.interpolate_velocities_to_fast();
   actBulk.step_fast();
 
   RunActFastComputeForce(actBulk);
@@ -173,7 +173,7 @@ TEST_F(ActuatorFunctorFastTests, NGP_spreadForceWhProjIdentity)
   Kokkos::parallel_for(
     "testAssignVel", fastRangePolicy, ActFastAssignVel(actBulk));
 
-  actBulk.interpolate_velocities_to_fast(actMeta_);
+  actBulk.interpolate_velocities_to_fast();
   actBulk.step_fast();
 
   RunActFastComputeForce(actBulk);
