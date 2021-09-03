@@ -4,31 +4,9 @@ on:
   push:
     branches:
       - master
-    paths:
-      - 'cmake/**'
-      - 'include/**'
-      - 'src/**'
-      - 'unit_tests/**'
-      - 'CMakeLists.txt'
-      - 'CTestConfig.cmake'
-      - 'Dockerfile'
-      - 'docker/**'
-      - 'nalu.C'
-      - 'unit_tests.C'
   pull_request:
     branches:
       - master
-    paths:
-      - 'cmake/**'
-      - 'include/**'
-      - 'src/**'
-      - 'unit_tests/**'
-      - 'CMakeLists.txt'
-      - 'CTestConfig.cmake'
-      - 'Dockerfile'
-      - 'docker/**'
-      - 'nalu.C'
-      - 'unit_tests.C'
 
 jobs:
   build:
