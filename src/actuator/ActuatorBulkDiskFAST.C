@@ -52,10 +52,10 @@ ActuatorBulkDiskFAST::initialize_ADM_points(const ActuatorMetaFAST& actMeta)
   // Note: Can change to this conditional below to allow for
   // time-varying turbine yaw/turbine motion (currently assumes fixed
   // yaw)
-  if (!initialized_ADM_points) {
-    initialize_swept_points(actMeta);    
-    initialized_ADM_points = true;
-  }  
+  //if (!initialized_ADM_points) {
+  initialize_swept_points(actMeta);    
+  //initialized_ADM_points = true;
+  //}  
 }
 
 void
