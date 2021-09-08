@@ -69,7 +69,11 @@ ElemDataRequestsGPU::fill_host_data_enums(
 void ElemDataRequestsGPU::fill_host_fields(
   const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr)
 {
+#ifdef KOKKOS_ENABLE_CUDA
   fields = FieldInfoView(Kokkos::ViewAllocateWithoutInitializing("Fields"), dataReq.get_fields().size());
+#else
+  fields = FieldInfoView("Fields", dataReq.get_fields().size());
+#endif
   hostFields = Kokkos::create_mirror_view(fields);
   unsigned i = 0;
   for (const FieldInfo& finfo : dataReq.get_fields()) {
@@ -82,7 +86,11 @@ void ElemDataRequestsGPU::fill_host_fields(
 void ElemDataRequestsGPU::fill_host_coords_fields(
   const ElemDataRequests& dataReq, const nalu_ngp::FieldManager& fieldMgr)
 {
+#ifdef KOKKOS_ENABLE_CUDA
   coordsFields_ = FieldView(Kokkos::ViewAllocateWithoutInitializing("CoordsFields"), dataReq.get_coordinates_map().size());
+#else
+  coordsFields_ = FieldView("CoordsFields", dataReq.get_coordinates_map().size());
+#endif
   coordsFieldsTypes_ = CoordsTypesView("CoordsFieldsTypes", dataReq.get_coordinates_map().size());
 
   hostCoordsFields_ = Kokkos::create_mirror_view(coordsFields_);
