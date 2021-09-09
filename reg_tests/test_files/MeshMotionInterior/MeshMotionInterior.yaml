@@ -105,6 +105,8 @@ realms:
       projected_timescale_type: momentum_diag_inv
 
       options:
+        - source_terms:
+            continuity: density_time_derivative
         - hybrid_factor:
             velocity: 1.0
 
