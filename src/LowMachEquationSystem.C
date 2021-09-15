@@ -2904,15 +2904,15 @@ ContinuityEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       process_ngp_node_kernels(
         solverAlgMap, realm_, part, this,
         [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
-          if(realm_.has_mesh_motion()){
+          if (realm_.does_mesh_move()) {
             nodeAlg.add_kernel<ContinuityMassBDFNodeKernel>(realm_.bulk_data());
             hasMass = true;
-            lumpedMass = true; 
+            lumpedMass = true;
           }
         },
         [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
           bool added = true;
-          if (srcName == "density_time_derivative" && !realm_.has_mesh_motion()) {
+          if (srcName == "density_time_derivative") {
             nodeAlg.add_kernel<ContinuityMassBDFNodeKernel>(realm_.bulk_data());
             hasMass = true;
             lumpedMass = true;
