@@ -2904,11 +2904,7 @@ ContinuityEquationSystem::register_interior_algorithm(stk::mesh::Part* part)
       process_ngp_node_kernels(
         solverAlgMap, realm_, part, this,
         [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
-          if (realm_.does_mesh_move()) {
-            nodeAlg.add_kernel<ContinuityMassBDFNodeKernel>(realm_.bulk_data());
-            hasMass = true;
-            lumpedMass = true;
-          }
+          // Time derivative terms not yet implemented in this context
         },
         [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
           bool added = true;
