@@ -9,13 +9,13 @@
 
 #include <cassert>
 
-namespace sierra {
-namespace nalu {
+namespace sierra{
+namespace nalu{
 
 void
 FrameMoving::update_coordinates_velocity(const double time)
 {
-  assert(partVec_.size() > 0);
+  assert (partVec_.size() > 0);
 
   // create NGP view of motion kernels
   const size_t numKernels = motionKernels_.size();
@@ -29,21 +29,21 @@ FrameMoving::update_coordinates_velocity(const double time)
   // get the parts in the current motion frame
   stk::mesh::Selector sel =
     stk::mesh::selectUnion(partVec_) &
-    (meta_.locally_owned_part() | meta_.globally_shared_part());
+      (meta_.locally_owned_part() | meta_.globally_shared_part());
 
   // get the field from the NGP mesh
   stk::mesh::NgpField<double> modelCoords =
     stk::mesh::get_updated_ngp_field<double>(
-      *meta_.get_field<VectorFieldType>(entityRank, "coordinates"));
+    *meta_.get_field<VectorFieldType>(entityRank, "coordinates"));
   stk::mesh::NgpField<double> currCoords =
     stk::mesh::get_updated_ngp_field<double>(
-      *meta_.get_field<VectorFieldType>(entityRank, "current_coordinates"));
+    *meta_.get_field<VectorFieldType>(entityRank, "current_coordinates"));
   stk::mesh::NgpField<double> displacement =
     stk::mesh::get_updated_ngp_field<double>(
-      *meta_.get_field<VectorFieldType>(entityRank, "mesh_displacement"));
+    *meta_.get_field<VectorFieldType>(entityRank, "mesh_displacement"));
   stk::mesh::NgpField<double> meshVelocity =
     stk::mesh::get_updated_ngp_field<double>(
-      *meta_.get_field<VectorFieldType>(entityRank, "mesh_velocity"));
+    *meta_.get_field<VectorFieldType>(entityRank, "mesh_velocity"));
 
   // sync fields to device
   modelCoords.sync_to_device();
@@ -56,9 +56,9 @@ FrameMoving::update_coordinates_velocity(const double time)
     "FrameMoving_reset_velocity", ngpMesh, entityRank, sel,
     KOKKOS_LAMBDA(
       const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
-      for (int d = 0; d < nDim; ++d)
-        meshVelocity.get(mi, d) = 0.0;
-    });
+    for (int d = 0; d < nDim; ++d)
+      meshVelocity.get(mi,d) = 0.0;
+  });
 
   // NGP for loop to update coordinates and velocity
   nalu_ngp::run_entity_algorithm(
@@ -67,30 +67,30 @@ FrameMoving::update_coordinates_velocity(const double time)
       const nalu_ngp::NGPMeshTraits<stk::mesh::NgpMesh>::MeshIndex& mi) {
       // temporary current and model coords for a generic 2D and 3D
       // implementation
-      mm::ThreeDVecType mX;
-      mm::ThreeDVecType cX;
+    mm::ThreeDVecType mX;
+    mm::ThreeDVecType cX;
 
-      // copy over model coordinates and reset velocity
-      for (int d = 0; d < nDim; ++d)
-        mX[d] = modelCoords.get(mi, d);
+    // copy over model coordinates and reset velocity
+    for (int d = 0; d < nDim; ++d)
+      mX[d] = modelCoords.get(mi,d);
 
-      // initialize composite transformation matrix
-      mm::TransMatType compTransMat;
+    // initialize composite transformation matrix
+    mm::TransMatType compTransMat;
 
-      // create composite transformation matrix based off of all motions
-      for (size_t i = 0; i < numKernels; ++i) {
-        NgpMotion* kernel = ngpKernels(i);
+    // create composite transformation matrix based off of all motions
+    for (size_t i=0; i < numKernels; ++i) {
+      NgpMotion* kernel = ngpKernels(i);
 
-        // build and get transformation matrix
-        mm::TransMatType currTransMat = kernel->build_transformation(time, mX);
+      // build and get transformation matrix
+      mm::TransMatType currTransMat = kernel->build_transformation(time,mX);
 
-        // composite addition of motions in current group
-        compTransMat = kernel->add_motion(currTransMat, compTransMat);
-      }
+      // composite addition of motions in current group
+      compTransMat = kernel->add_motion(currTransMat,compTransMat);
+    }
 
-      // perform matrix multiplication between transformation matrix
-      // and old coordinates to obtain current coordinates
-      for (int d = 0; d < nDim; ++d) {
+    // perform matrix multiplication between transformation matrix
+    // and old coordinates to obtain current coordinates
+    for (int d = 0; d < nDim; ++d) {
         currCoords.get(mi, d) = compTransMat[d * mm::matSize + 0] * mX[0] +
                                 compTransMat[d * mm::matSize + 1] * mX[1] +
                                 compTransMat[d * mm::matSize + 2] * mX[2] +
@@ -98,25 +98,25 @@ FrameMoving::update_coordinates_velocity(const double time)
 
         displacement.get(mi, d) =
           currCoords.get(mi, d) - modelCoords.get(mi, d);
-      } // end for loop - d index
+    } // end for loop - d index
 
-      // copy over current coordinates
-      for (int d = 0; d < nDim; ++d)
-        cX[d] = currCoords.get(mi, d);
+    // copy over current coordinates
+    for (int d = 0; d < nDim; ++d)
+      cX[d] = currCoords.get(mi,d);
 
-      // compute velocity vector on current node resulting from all
-      // motions in current motion frame
-      for (size_t i = 0; i < numKernels; ++i) {
-        NgpMotion* kernel = ngpKernels(i);
+    // compute velocity vector on current node resulting from all
+    // motions in current motion frame
+    for (size_t i=0; i < numKernels; ++i) {
+      NgpMotion* kernel = ngpKernels(i);
 
-        // evaluate velocity associated with motion
+      // evaluate velocity associated with motion
         mm::ThreeDVecType mm_vel =
           kernel->compute_velocity(time, compTransMat, mX, cX);
 
-        for (int d = 0; d < nDim; ++d)
-          meshVelocity.get(mi, d) += mm_vel[d];
-      } // end for loop - mm
-    }); // end NGP for loop
+      for (int d = 0; d < nDim; ++d)
+        meshVelocity.get(mi,d) += mm_vel[d];
+    } // end for loop - mm
+  }); // end NGP for loop
 
   // Mark fields as modified on device
   currCoords.modify_on_device();
@@ -127,7 +127,7 @@ FrameMoving::update_coordinates_velocity(const double time)
 void
 FrameMoving::post_compute_geometry()
 {
-  for (auto& mm : motionKernels_) {
+  for (auto& mm: motionKernels_) {
     if (!mm->is_deforming())
       continue;
 
