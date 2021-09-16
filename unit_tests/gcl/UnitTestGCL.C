@@ -176,6 +176,7 @@ TEST_F(GCLTest, mesh_velocity_x_rot)
     return;
 
   const std::string meshDims = "1x1x1";
+  realm_.realmUsesEdges_ = false;
   const bool secondOrder = false;
   const double deltaT = 0.5;
   const std::string mesh_motion =
@@ -218,6 +219,7 @@ TEST_F(GCLTest, mesh_velocity_y_rot)
   // Only execute for 1 processor runs
   if (bulk_.parallel_size() > 1)
     return;
+  realm_.realmUsesEdges_ = false;
 
   const std::string meshDims = "1x1x1";
   const bool secondOrder = false;
