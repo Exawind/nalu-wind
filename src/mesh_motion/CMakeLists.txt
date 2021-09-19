@@ -6,6 +6,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/MeshTransformationAlg.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MotionPulsatingSphereKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MotionRotationKernel.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/MotionSinRotationKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MotionScalingKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MotionTranslationKernel.C
    ${CMAKE_CURRENT_SOURCE_DIR}/MotionWavesKernel.C
