@@ -2,6 +2,7 @@
 #include <limits>
 
 #include "mesh_motion/MotionRotationKernel.h"
+#include "mesh_motion/MotionSinRotationKernel.h"
 #include "mesh_motion/MotionScalingKernel.h"
 #include "mesh_motion/MotionTranslationKernel.h"
 
@@ -98,6 +99,46 @@ TEST(meshMotion, rotation_angle)
   EXPECT_NEAR(norm[2], gold_norm_z, testTol);
 }
 
+TEST(meshMotion, rotation_sin)
+{
+  // create a yaml node describing sinusoidal rotation
+  const std::string sinRotInfo =
+    "amplitude: 0.37           \n"
+    "omega: 3.0               \n"
+    "centroid: [0.25,0.0,0.0] \n"
+    ;
+
+  YAML::Node sinRotNode = YAML::Load(sinRotInfo);
+
+  // initialize the mesh rotation class
+  sierra::nalu::MotionSinRotationKernel rotClass(sinRotNode);
+
+  // build transformation
+  const double time = 3.5;
+  sierra::nalu::mm::ThreeDVecType xyz{2.5,1.5,6.5};
+  sierra::nalu::mm::TransMatType transMat = rotClass.build_transformation(time, xyz);
+  std::vector<double> norm = transform(transMat, xyz);
+
+  const double gold_norm_x = 2.508484889512976;
+  const double gold_norm_y = 1.4871940034311466;
+  const double gold_norm_z = 6.5;
+
+  EXPECT_NEAR(norm[0], gold_norm_x, testTol);
+  EXPECT_NEAR(norm[1], gold_norm_y, testTol);
+  EXPECT_NEAR(norm[2], gold_norm_z, testTol);
+
+  sierra::nalu::mm::ThreeDVecType tmp;
+  sierra::nalu::mm::ThreeDVecType vel = rotClass.compute_velocity(time, transMat, tmp, xyz);
+
+  const double gold_norm_vx = 0.0138189757054015;
+  const double gold_norm_vy = -0.0207284635581023;
+  const double gold_norm_vz = 0.0;
+
+  EXPECT_NEAR(vel[0], gold_norm_vx, testTol);
+  EXPECT_NEAR(vel[1], gold_norm_vy, testTol);
+  EXPECT_NEAR(vel[2], gold_norm_vz, testTol);
+}
+
 TEST(meshMotion, scaling)
 {
   // create a yaml node describing scaling
@@ -175,7 +216,7 @@ TEST(meshMotion, translation_velocity)
   time = 30.0;
   transMat = transClass.build_transformation(time, xyz);
   norm = transform(transMat, xyz);
-  
+
   gold_norm_x = 17.5;
   gold_norm_y = 36.5;
   gold_norm_z = 26.5;
@@ -202,7 +243,7 @@ TEST(meshMotion, translation_displacement)
   sierra::nalu::mm::ThreeDVecType xyz{2.5,1.5,6.5};
   sierra::nalu::mm::TransMatType transMat = transClass.build_transformation(time, xyz);
   std::vector<double> norm = transform(transMat, xyz);
-  
+
   const double gold_norm_x = 4.0;
   const double gold_norm_y = 5.0;
   const double gold_norm_z = 8.5;

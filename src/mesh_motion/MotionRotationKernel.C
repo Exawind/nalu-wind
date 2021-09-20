@@ -1,4 +1,3 @@
-
 #include "mesh_motion/MotionRotationKernel.h"
 
 #include <NaluEnv.h>
@@ -45,13 +44,8 @@ void MotionRotationKernel::load(const YAML::Node& node)
   }
 }
 
-mm::TransMatType MotionRotationKernel::build_transformation(
-  const double& time,
-  const mm::ThreeDVecType& /* xyz */)
+double MotionRotationKernel::get_cur_angle(const double time)
 {
-  mm::TransMatType transMat;
-
-  if(time < (startTime_)) return transMat;
   double motionTime = (time < endTime_)? time : endTime_;
 
   // determine current angle
@@ -60,6 +54,24 @@ mm::TransMatType MotionRotationKernel::build_transformation(
     angle = omega_*(motionTime-startTime_);
   else
     angle = angle_*M_PI/180;
+
+  return angle;
+}
+
+double MotionRotationKernel::get_cur_ang_vel(const double /* time */)
+{
+    return omega_;
+}        
+
+mm::TransMatType MotionRotationKernel::build_transformation(
+  const double& time,
+  const mm::ThreeDVecType& /* xyz */)
+{
+  mm::TransMatType transMat;
+
+  if(time < (startTime_)) return transMat;
+
+  double angle = get_cur_angle(time);
 
   // Build matrix for translating object to cartesian origin
   transMat[0*mm::matSize+3] = -origin_[0];
@@ -142,11 +154,12 @@ mm::ThreeDVecType MotionRotationKernel::compute_velocity(
   }
 
   // compute relative coords and vector omega (dimension 3) for general cross product
+  double ang_vel = get_cur_ang_vel(time);
   mm::ThreeDVecType relCoord;
   mm::ThreeDVecType vecOmega;
   for (int d=0; d < nalu_ngp::NDimMax; d++) {
     relCoord[d] = cxyz[d] - transOrigin[d];
-    vecOmega[d] = omega_*unitVec[d];
+    vecOmega[d] = ang_vel*unitVec[d];
   }
 
   // cross product v = \omega \cross \x

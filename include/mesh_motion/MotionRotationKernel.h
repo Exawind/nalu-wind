@@ -44,8 +44,12 @@ public:
     const mm::ThreeDVecType& mxyz,
     const mm::ThreeDVecType& cxyz);
 
-private:
+protected:
   void load(const YAML::Node&);
+
+  virtual double get_cur_angle(const double time);
+
+  virtual double get_cur_ang_vel(const double /* time */);
 
   mm::ThreeDVecType axis_{0.0,0.0,1.0};
 
