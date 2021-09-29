@@ -868,10 +868,10 @@ Realm::setup_element_fields()
   // loop over all material props targets and register element fields
   std::vector<std::string> targetNames = get_physics_target_names();
   equationSystems_.register_element_fields(targetNames);
-  
+
   const int numVolStates = does_mesh_move() ? number_of_states() : 1;
 
-  if (has_mesh_motion()) {
+  if (has_mesh_deformation()) {
     const auto entityRank = realmUsesEdges_ ? stk::topology::EDGE_RANK : stk::topology::ELEM_RANK;
     const std::string fvm_fieldName = realmUsesEdges_ ? "edge_face_velocity_mag" :  "face_velocity_mag";
     const std::string sv_fieldName = realmUsesEdges_ ? "edge_swept_face_volume" :  "swept_face_volume";
@@ -890,7 +890,6 @@ Realm::setup_element_fields()
       stk::mesh::put_field_on_mesh(*sweptFaceVolume, *targetPart, fieldSize, nullptr);
     }
   }
-
 }
 
 //--------------------------------------------------------------------------
@@ -899,7 +898,7 @@ Realm::setup_element_fields()
 void
 Realm::setup_interior_algorithms()
 {
-  if (has_mesh_motion()) {
+  if (has_mesh_deformation()) {
     const AlgorithmType algType = INTERIOR;
     stk::mesh::PartVector mmPartVec = meshMotionAlg_->get_partvec();
     if (realmUsesEdges_){
@@ -2508,7 +2507,8 @@ Realm::register_nodal_fields(
   }
 
   // mesh motion/deformation is high level
-  if ( solutionOptions_->meshMotion_ || solutionOptions_->externalMeshDeformation_) {
+  // clang-format off
+  if ( does_mesh_move()) {
     VectorFieldType *displacement = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement",numVolStates));
     stk::mesh::put_field_on_mesh(*displacement, *part, nDim, nullptr);
     VectorFieldType *currentCoords = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
@@ -2517,9 +2517,12 @@ Realm::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*meshVelocity, *part, nDim, nullptr);
     VectorFieldType *velocityRTM = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm"));
     stk::mesh::put_field_on_mesh(*velocityRTM, *part, nDim, nullptr);
-    ScalarFieldType *divV = &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
-    stk::mesh::put_field_on_mesh(*divV, *part, nullptr);
+    if(has_mesh_deformation()){
+      ScalarFieldType *divV = &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
+      stk::mesh::put_field_on_mesh(*divV, *part, nullptr);
+    }
   }
+  // clang-format on
 
   ScalarIntFieldType& iblank = metaData_->declare_field<ScalarIntFieldType>(
     stk::topology::NODE_RANK, "iblank");

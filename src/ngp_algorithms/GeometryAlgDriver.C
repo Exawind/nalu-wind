@@ -103,7 +103,7 @@ GeometryAlgDriver::pre_work()
 
   ngpDualVol.set_all(ngpMesh, 0.0);
 
-  if (realm_.has_mesh_motion())
+  if (realm_.has_mesh_deformation())
     mesh_motion_prework();
 
   if (realm_.realmUsesEdges_) {
@@ -190,7 +190,7 @@ GeometryAlgDriver::post_work()
       meshInfo, "edge_area_vector", stk::topology::EDGE_RANK);
     fields.push_back(&ngpEdgeArea);
 
-    if (realm_.has_mesh_motion()) {
+    if (realm_.has_mesh_deformation()) {
       auto& ngpedgeFaceVel =
         nalu_ngp::get_ngp_field(meshInfo, "edge_face_velocity_mag", entityRank);
       auto& ngpedgeSweptVol =

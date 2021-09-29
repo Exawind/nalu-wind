@@ -81,9 +81,9 @@ MdotInflowAlg<BcAlgTraits>::execute()
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
 
-  bool has_mesh_motion = false;
-  if (realm_.has_mesh_motion()) {
-    has_mesh_motion = true;
+  bool needs_gcl = false;
+  if (realm_.has_mesh_deformation()) {
+    needs_gcl = true;
     edgeFaceVelMag_ = get_field_ordinal(
       realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
     edgeFaceVelMag = fieldMgr.template get_field<double>(edgeFaceVelMag_);
@@ -131,7 +131,8 @@ MdotInflowAlg<BcAlgTraits>::execute()
                   v_areav(ip, d);
         }
 
-        if (has_mesh_motion) {
+        if (needs_gcl) {
+          // TODO(psakiev)
         }
 
         mdotInflow += mdot;

@@ -62,6 +62,9 @@ MeshVelocityEdgeAlg<AlgTraits>::MeshVelocityEdgeAlg(
 
   elemData_.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
   meSCS_->general_shape_fcn(19, isoParCoords_, isoCoordsShapeFcn_);
+  if (!std::is_same<AlgTraits, AlgTraitsHex8>::value) {
+    throw std::runtime_error("MeshVelocityEdgeAlg is only supported for Hex8");
+  }
 }
 
 template <typename AlgTraits>

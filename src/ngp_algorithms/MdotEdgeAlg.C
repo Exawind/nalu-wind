@@ -23,7 +23,10 @@ MdotEdgeAlg::MdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
     coordinates_(
       get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
-    velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
+    velocity_(get_field_ordinal(
+      realm.meta_data(),
+      realm.has_mesh_motion() && !realm.has_mesh_deformation() ? "velocity_rtm"
+                                                               : "velocity")),
     pressure_(get_field_ordinal(realm.meta_data(), "pressure")),
     densityNp1_(
       get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1)),
@@ -64,9 +67,9 @@ MdotEdgeAlg::execute()
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
 
-  bool has_mesh_motion = false;
-  if (realm_.has_mesh_motion()) {
-    has_mesh_motion = true;
+  bool needs_gcl = false;
+  if (realm_.has_mesh_deformation()) {
+    needs_gcl = true;
     edgeFaceVelMag_ = get_field_ordinal(
       realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
     edgeFaceVelMag = fieldMgr.get_field<double>(edgeFaceVelMag_);
@@ -112,7 +115,7 @@ MdotEdgeAlg::execute()
       const DblType inv_axdx = 1.0 / axdx;
 
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
-      if (has_mesh_motion) {
+      if (needs_gcl) {
         tmdot -= rhoIp * edgeFaceVelMag.get(einfo.meshIdx, 0);
       }
       for (int d = 0; d < ndim; ++d) {

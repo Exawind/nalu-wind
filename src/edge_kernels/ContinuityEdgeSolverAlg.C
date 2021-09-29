@@ -25,12 +25,14 @@ ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
   const auto& meta = realm.meta_data();
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
-  velocity_ = get_field_ordinal(meta, "velocity");
+  velocity_ = realm.has_mesh_motion() && !realm.has_mesh_deformation()
+                ? get_field_ordinal(meta, "velocity_rtm")
+                : get_field_ordinal(meta, "velocity");
   densityNp1_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   pressure_ = get_field_ordinal(meta, "pressure");
   Gpdx_ = get_field_ordinal(meta, "dpdx");
-  edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
-  //edgeFaceVelMag_ = get_field_ordinal(realm.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
+  edgeAreaVec_ =
+    get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   Udiag_ = get_field_ordinal(meta, "momentum_diag");
 }
 
@@ -64,12 +66,12 @@ ContinuityEdgeSolverAlg::execute()
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
   
   stk::mesh::NgpField<double> edgeFaceVelMag;
-  bool has_mesh_motion = false;
-  if (realm_.has_mesh_motion()) {
-    has_mesh_motion = true;
+  bool needs_gcl = false;
+  if (realm_.has_mesh_deformation()) {
+    needs_gcl = true;
     edgeFaceVelMag_ = get_field_ordinal(realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
     edgeFaceVelMag = fieldMgr.get_field<double>(edgeFaceVelMag_);
-  } 
+  }
 
   run_algorithm(
     realm_.bulk_data(),
@@ -107,7 +109,7 @@ ContinuityEdgeSolverAlg::execute()
       const DblType inv_axdx = 1.0 / axdx;
 
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
-      if(has_mesh_motion){
+      if (needs_gcl) {
         tmdot -= rhoIp * edgeFaceVelMag.get(edge,0);
       }
 
