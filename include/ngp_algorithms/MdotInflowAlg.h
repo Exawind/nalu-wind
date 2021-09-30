@@ -20,11 +20,15 @@ namespace nalu {
 class Realm;
 class MdotAlgDriver;
 
-template <typename BcAlgTraits>
+template<typename BcAlgTraits>
 class MdotInflowAlg : public Algorithm
 {
 public:
-  MdotInflowAlg(Realm&, stk::mesh::Part*, MdotAlgDriver&, bool);
+  MdotInflowAlg(
+    Realm&,
+    stk::mesh::Part*,
+    MdotAlgDriver&,
+    bool);
 
   virtual ~MdotInflowAlg() = default;
 
@@ -38,14 +42,14 @@ private:
   unsigned velocityBC_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};
   unsigned exposedAreaVec_{stk::mesh::InvalidOrdinal};
-  unsigned edgeFaceVelMag_{stk::mesh::InvalidOrdinal};
 
   bool useShifted_;
 
   MasterElement* meFC_{nullptr};
 };
 
-} // namespace nalu
-} // namespace sierra
+}  // nalu
+}  // sierra
+
 
 #endif /* MDOTINFLOWALG_H */
