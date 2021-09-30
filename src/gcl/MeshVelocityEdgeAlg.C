@@ -86,7 +86,6 @@ MeshVelocityEdgeAlg<AlgTraits>::execute()
   const auto modelCoordsID = modelCoords_;
   const auto meshDispNp1ID = meshDispNp1_;
   const auto meshDispNID = meshDispN_;
-  //  const auto sweptVolNID = sweptVolumeN_;
 
   const stk::mesh::Selector sel = meta.locally_owned_part() &
                                   stk::mesh::selectUnion(partVec_) &
