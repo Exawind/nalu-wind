@@ -37,8 +37,8 @@ void MeshMotionAlg::load(
 
 void MeshMotionAlg::set_deformation_flag()
 {
-  for (size_t i=0; i < frameVec_.size(); i++)
-    if( frameVec_[i]->is_deforming() )
+  for (size_t i = 0; i < movingFrameVec_.size(); i++)
+    if (movingFrameVec_[i]->is_deforming())
       isDeforming_ = true;
 }
 
