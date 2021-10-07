@@ -131,10 +131,6 @@ MdotInflowAlg<BcAlgTraits>::execute()
                   v_areav(ip, d);
         }
 
-        if (needs_gcl) {
-          // TODO(psakiev)
-        }
-
         mdotInflow += mdot;
       }
     },

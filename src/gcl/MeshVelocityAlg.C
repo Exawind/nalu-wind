@@ -105,8 +105,6 @@ MeshVelocityAlg<AlgTraits>::execute()
     algName, meshInfo, stk::topology::ELEM_RANK, elemData_, sel,
     KOKKOS_LAMBDA(ElemSimdDataType & edata) {
       auto& scrView = edata.simdScrView;
-      const auto& meViews = scrView.get_me_views(CURRENT_COORDINATES);
-      const auto& v_areav = meViews.scs_areav;
 
       const auto& mCoords = scrView.get_scratch_view_2D(modelCoordsID);
       const auto& dispNp1 = scrView.get_scratch_view_2D(meshDispNp1ID);
