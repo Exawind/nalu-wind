@@ -54,7 +54,6 @@ SolutionOptions::SolutionOptions()
     mdotInterpRhoUTogether_(true),
     isTurbulent_(false),
     turbulenceModel_(LAMINAR),
-    meshDeformation_(false),
     meshMotion_(false),
     meshTransformation_(false),
     externalMeshDeformation_(false),

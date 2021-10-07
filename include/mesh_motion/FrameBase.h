@@ -71,7 +71,8 @@ protected:
 
   bool computeCentroid_ = false;
 
-  bool isDeforming_ = false; // flag to denote if mesh deformation exists
+  // flag to denote if mesh deformation exists
+  bool isDeforming_ = false;
 
 private:
   FrameBase() = delete;

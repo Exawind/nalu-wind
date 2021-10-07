@@ -167,10 +167,7 @@ public:
       origin_[d] = centroid[d];
   }
 
-  bool is_deforming()
-  {
-    return isDeforming_;
-  }
+  bool is_deforming() { return isDeforming_; }
 
 protected:
   /** Centroid

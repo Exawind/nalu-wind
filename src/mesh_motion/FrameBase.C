@@ -2,7 +2,6 @@
 
 #include "FieldTypeDef.h"
 #include "mesh_motion/MotionDeformingInteriorKernel.h"
-#include "mesh_motion/MotionPulsatingSphereKernel.h"
 #include "mesh_motion/MotionScalingKernel.h"
 #include "mesh_motion/MotionRotationKernel.h"
 #include "mesh_motion/MotionTranslationKernel.h"
@@ -25,7 +24,7 @@ FrameBase::FrameBase(stk::mesh::BulkData& bulk, const YAML::Node& node)
   load(node);
 
   // set deformation flag based on motions in the frame
-  for (auto& mm : motionKernels_)
+  for (auto& mm: motionKernels_)
     if ( mm->is_deforming() )
       isDeforming_ = true;
 }
@@ -66,8 +65,6 @@ FrameBase::load(const YAML::Node& node)
     // determine type of mesh motion based on user definition in input file
     if (type == "deforming_interior")
       motionKernels_[i].reset(new MotionDeformingInteriorKernel(meta_, motion_def));
-    else if (type == "pulsating_sphere")
-      motionKernels_[i].reset(new MotionPulsatingSphereKernel(meta_,motion_def));
     else if (type == "rotation")
       motionKernels_[i].reset(new MotionRotationKernel(motion_def));
     else if (type == "scaling")
