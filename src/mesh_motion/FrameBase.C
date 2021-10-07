@@ -23,11 +23,6 @@ FrameBase::FrameBase(stk::mesh::BulkData& bulk, const YAML::Node& node)
   : bulk_(bulk), meta_(bulk.mesh_meta_data())
 {
   load(node);
-
-  // set deformation flag based on motions in the frame
-  for (auto& mm : motionKernels_)
-    if ( mm->is_deforming() )
-      isDeforming_ = true;
 }
 
 FrameBase::~FrameBase()

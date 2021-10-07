@@ -890,11 +890,6 @@ Realm::setup_element_fields()
       stk::mesh::put_field_on_mesh(*sweptFaceVolume, *targetPart, fieldSize, nullptr);
     }
   }
-  if (!has_mesh_deformation())
-    throw std::runtime_error("Mesh motion not turned on in setup_edge_fields");
-  if (!metaData_->get_field<GenericFieldType>(
-        stk::topology::EDGE_RANK, "edge_face_velocity_mag"))
-    throw std::runtime_error("Failure to register in realm");
 }
 
 //--------------------------------------------------------------------------
