@@ -14,6 +14,8 @@ MeshMotionAlg::MeshMotionAlg(
   const YAML::Node& node)
 {
   load(bulk, node);
+
+  set_deformation_flag();
 }
 
 void MeshMotionAlg::load(
@@ -31,6 +33,13 @@ void MeshMotionAlg::load(
 
     movingFrameVec_[i].reset(new FrameMoving(bulk, ginfo));
   }
+}
+
+void MeshMotionAlg::set_deformation_flag()
+{
+  for (size_t i=0; i < movingFrameVec_.size(); i++)
+    if( movingFrameVec_[i]->is_deforming() )
+      isDeforming_ = true;
 }
 
 void MeshMotionAlg::initialize( const double time )
