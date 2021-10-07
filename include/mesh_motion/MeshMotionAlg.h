@@ -34,6 +34,13 @@ private:
 
   void compute_set_centroid();
 
+  /** Motion frame vector
+   *
+   *  Vector of type of frame of corresponding motion
+   *  Size is the number of motion groups in input file
+   */
+  std::vector<std::shared_ptr<FrameBase>> frameVec_;
+
   /** Reference frame map
    *
    *  Vector of moving frames

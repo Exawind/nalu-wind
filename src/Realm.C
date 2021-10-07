@@ -406,7 +406,6 @@ void Realm::initialize_prolog()
   if (doPromotion_) {
     setup_element_promotion();
   }
-
   // field registration
   setup_nodal_fields();
   setup_edge_fields();
@@ -511,8 +510,8 @@ void Realm::initialize_prolog()
   if ( solutionOptions_->meshTransformation_ )
     meshTransformationAlg_->initialize( get_current_time() );
 
-  if (solutionOptions_->meshMotion_)
-    meshMotionAlg_->initialize(get_current_time());
+  if ( solutionOptions_->meshMotion_ )
+    meshMotionAlg_->initialize( get_current_time() );
 
   compute_geometry();
 
@@ -891,6 +890,11 @@ Realm::setup_element_fields()
       stk::mesh::put_field_on_mesh(*sweptFaceVolume, *targetPart, fieldSize, nullptr);
     }
   }
+  if (!has_mesh_deformation())
+    throw std::runtime_error("Mesh motion not turned on in setup_edge_fields");
+  if (!metaData_->get_field<GenericFieldType>(
+        stk::topology::EDGE_RANK, "edge_face_velocity_mag"))
+    throw std::runtime_error("Failure to register in realm");
 }
 
 //--------------------------------------------------------------------------
@@ -2271,7 +2275,7 @@ Realm::get_coordinates_name()
 bool
 Realm::has_mesh_motion() const
 {
-  return meshMotionAlg_ != NULL;
+  return solutionOptions_->meshMotion_;
 }
 
 //--------------------------------------------------------------------------
@@ -2280,12 +2284,7 @@ Realm::has_mesh_motion() const
 bool
 Realm::has_mesh_deformation() const
 {
-  // not sure if we need this solution option check but leaving it in for now
-  if (meshMotionAlg_)
-    return meshMotionAlg_->is_deforming() |
-           solutionOptions_->externalMeshDeformation_;
-  else
-    return false;
+  return solutionOptions_->externalMeshDeformation_ | solutionOptions_->meshDeformation_;
 }
 
 //--------------------------------------------------------------------------
