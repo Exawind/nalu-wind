@@ -82,7 +82,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_tke_ams_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.meshDeformation_ = false;
   solnOpts_.externalMeshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
@@ -115,7 +114,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_sdr_ams_node)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.meshDeformation_ = false;
   solnOpts_.externalMeshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 
@@ -149,7 +147,6 @@ TEST_F(AMSKernelHex8Mesh, NGP_ams_forcing)
 
   // Setup solution options
   solnOpts_.meshMotion_ = false;
-  solnOpts_.meshDeformation_ = false;
   solnOpts_.externalMeshDeformation_ = false;
   solnOpts_.initialize_turbulence_constants();
 

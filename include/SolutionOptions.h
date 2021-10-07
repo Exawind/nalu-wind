@@ -61,7 +61,7 @@ public:
 
   inline bool has_mesh_deformation() const
   {
-    return externalMeshDeformation_ | meshDeformation_;
+    return externalMeshDeformation_;
   }
 
   inline bool does_mesh_move() const
@@ -124,7 +124,6 @@ public:
   bool mdotInterpRhoUTogether_;
   bool isTurbulent_;
   TurbulenceModel turbulenceModel_;
-  bool meshDeformation_;
   bool meshMotion_;
   bool meshTransformation_;
   bool externalMeshDeformation_;

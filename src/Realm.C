@@ -794,7 +794,7 @@ Realm::load(const YAML::Node & node)
   if (meshMotionNode)
   {
     // has a user stated that mesh motion is external?
-    if ( solutionOptions_->meshDeformation_ ) {
+    if ( solutionOptions_->externalMeshDeformation_ ) {
       NaluEnv::self().naluOutputP0() << "mesh motion set to external (will prevail over mesh motion specification)!" << std::endl;
     }
     else {
@@ -2260,7 +2260,7 @@ Realm::initialize_post_processing_algorithms()
 std::string
 Realm::get_coordinates_name()
 {
-  return ( (solutionOptions_->meshMotion_ | solutionOptions_->meshDeformation_ | solutionOptions_->externalMeshDeformation_) 
+  return ( (solutionOptions_->meshMotion_ | solutionOptions_->externalMeshDeformation_)
            ? "current_coordinates" : "coordinates");
 }
 
@@ -2270,7 +2270,7 @@ Realm::get_coordinates_name()
 bool
 Realm::has_mesh_motion() const
 {
-  return solutionOptions_->meshMotion_;
+    return meshMotionAlg_ != NULL;;
 }
 
 //--------------------------------------------------------------------------
@@ -2279,7 +2279,12 @@ Realm::has_mesh_motion() const
 bool
 Realm::has_mesh_deformation() const
 {
-  return solutionOptions_->externalMeshDeformation_ | solutionOptions_->meshDeformation_;
+    if (meshMotionAlg_) {
+       return meshMotionAlg_->is_deforming() |
+              solutionOptions_->externalMeshDeformation_;
+    }
+    else
+        return solutionOptions_->externalMeshDeformation_;
 }
 
 //--------------------------------------------------------------------------
