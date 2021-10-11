@@ -11,6 +11,7 @@
 
 #include "node_kernels/MomentumMassBDFNodeKernel.h"
 #include "Realm.h"
+#include "utils/FieldHelpers.h"
 
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Types.hpp"
@@ -46,26 +47,8 @@ MomentumMassBDFNodeKernel::MomentumMassBDFNodeKernel(
     densityNm1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNM1);
 
   densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
-  
-  dnvNp1ID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNP1);
-  const auto* dnv = meta.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume");
-  switch (dnv->number_of_states()) {
-  case 1:
-    dnvNID_ = dnvNp1ID_;
-    dnvNm1ID_ = dnvNp1ID_;
-    break;
-  case 2:
-    dnvNID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateN);
-    dnvNm1ID_ = dnvNp1ID_;
-    break;
-  case 3:
-    dnvNID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateN);
-    dnvNm1ID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNM1);
-    break;
-  default:
-    throw std::runtime_error("Number of states for dual_nodal_volume is not 1,2,3 and is undefined");
-  }
+
+  populate_dnv_states(meta, dnvNm1ID_, dnvNID_, dnvNp1ID_);
 
   dpdxID_ = get_field_ordinal(meta, "dpdx");
 }
