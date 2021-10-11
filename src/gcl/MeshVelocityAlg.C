@@ -27,6 +27,9 @@
 namespace sierra {
 namespace nalu {
 
+// fixed for hex right now
+constexpr int NUM_IP = 19;
+
 template <typename AlgTraits>
 MeshVelocityAlg<AlgTraits>::MeshVelocityAlg(Realm& realm, stk::mesh::Part* part)
   : Algorithm(realm, part),
@@ -68,7 +71,7 @@ MeshVelocityAlg<AlgTraits>::MeshVelocityAlg(Realm& realm, stk::mesh::Part* part)
   elemData_.add_gathered_nodal_field(meshDispN_, AlgTraits::nDim_);
 
   elemData_.add_master_element_call(SCS_AREAV, CURRENT_COORDINATES);
-  meSCS_->general_shape_fcn(19, isoParCoords_, isoCoordsShapeFcn_);
+  meSCS_->general_shape_fcn(NUM_IP, isoParCoords_, isoCoordsShapeFcn_);
 } // namespace nalu
 
 template <typename AlgTraits>
@@ -111,11 +114,11 @@ MeshVelocityAlg<AlgTraits>::execute()
       const auto& dispN = scrView.get_scratch_view_2D(meshDispNID);
       const auto& sweptVolN = scrView.get_scratch_view_1D(sweptVolNID);
 
-      DoubleType dx[19][AlgTraits::nDim_];
-      DoubleType scs_coords_n[19][AlgTraits::nDim_];
-      DoubleType scs_coords_np1[19][AlgTraits::nDim_];
+      DoubleType dx[NUM_IP][AlgTraits::nDim_];
+      DoubleType scs_coords_n[NUM_IP][AlgTraits::nDim_];
+      DoubleType scs_coords_np1[NUM_IP][AlgTraits::nDim_];
 
-      for (int i = 0; i < 19; i++) {
+      for (int i = 0; i < NUM_IP; i++) {
         for (int j = 0; j < AlgTraits::nDim_; j++) {
           dx[i][j] = 0.0;
           scs_coords_n[i][j] = 0.0;
