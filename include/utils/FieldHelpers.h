@@ -11,10 +11,9 @@ namespace sierra {
 namespace nalu {
 void populate_dnv_states(
   const stk::mesh::MetaData& meta,
-  unsigned nmID,
-  unsigned n1ID,
-  unsigned np1ID);
-
+  unsigned& nmID,
+  unsigned& n1ID,
+  unsigned& np1ID);
 }
 } // namespace sierra
 

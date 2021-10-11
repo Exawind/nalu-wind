@@ -8,7 +8,10 @@ namespace sierra {
 namespace nalu {
 void
 populate_dnv_states(
-  const stk::mesh::MetaData& meta, unsigned nm1ID, unsigned nID, unsigned np1ID)
+  const stk::mesh::MetaData& meta,
+  unsigned& nm1ID,
+  unsigned& nID,
+  unsigned& np1ID)
 {
   np1ID = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNP1);
   const auto* dnv = meta.get_field<ScalarFieldType>(
