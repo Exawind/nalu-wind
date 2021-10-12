@@ -25,12 +25,14 @@ ContinuityEdgeSolverAlg::ContinuityEdgeSolverAlg(
   const auto& meta = realm.meta_data();
 
   coordinates_ = get_field_ordinal(meta, realm.get_coordinates_name());
-  const std::string velField = realm.does_mesh_move()? "velocity_rtm" : "velocity";
-  velocityRTM_ = get_field_ordinal(meta, velField);
+  velocity_ = realm.has_mesh_motion() && !realm.has_mesh_deformation()
+                ? get_field_ordinal(meta, "velocity_rtm")
+                : get_field_ordinal(meta, "velocity");
   densityNp1_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
   pressure_ = get_field_ordinal(meta, "pressure");
   Gpdx_ = get_field_ordinal(meta, "dpdx");
-  edgeAreaVec_ = get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
+  edgeAreaVec_ =
+    get_field_ordinal(meta, "edge_area_vector", stk::topology::EDGE_RANK);
   Udiag_ = get_field_ordinal(meta, "momentum_diag");
 }
 
@@ -56,12 +58,20 @@ ContinuityEdgeSolverAlg::execute()
   // STK stk::mesh::NgpField instances for capture by lambda
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
-  const auto velocity = fieldMgr.get_field<double>(velocityRTM_);
+  const auto velocity = fieldMgr.get_field<double>(velocity_);
   const auto Gpdx = fieldMgr.get_field<double>(Gpdx_);
   const auto density = fieldMgr.get_field<double>(densityNp1_);
   const auto pressure = fieldMgr.get_field<double>(pressure_);
   const auto udiag = fieldMgr.get_field<double>(Udiag_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
+  
+  stk::mesh::NgpField<double> edgeFaceVelMag;
+  bool needs_gcl = false;
+  if (realm_.has_mesh_deformation()) {
+    needs_gcl = true;
+    edgeFaceVelMag_ = get_field_ordinal(realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
+    edgeFaceVelMag = fieldMgr.get_field<double>(edgeFaceVelMag_);
+  }
 
   run_algorithm(
     realm_.bulk_data(),
@@ -99,6 +109,10 @@ ContinuityEdgeSolverAlg::execute()
       const DblType inv_axdx = 1.0 / axdx;
 
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
+      if (needs_gcl) {
+        tmdot -= rhoIp * edgeFaceVelMag.get(edge,0);
+      }
+
       for (int d = 0; d < ndim; ++d) {
         const DblType dxj =
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);

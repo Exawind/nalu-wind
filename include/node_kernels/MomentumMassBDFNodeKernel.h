@@ -53,7 +53,10 @@ private:
   stk::mesh::NgpField<double> densityN_;
   stk::mesh::NgpField<double> densityNp1_;
   stk::mesh::NgpField<double> dpdx_;
-  stk::mesh::NgpField<double> dualNodalVolume_;
+  stk::mesh::NgpField<double> dnvNp1_;
+  stk::mesh::NgpField<double> dnvN_;
+  stk::mesh::NgpField<double> dnvNm1_;
+
 
   unsigned velocityNm1ID_ {stk::mesh::InvalidOrdinal};
   unsigned velocityNID_ {stk::mesh::InvalidOrdinal};
@@ -62,7 +65,9 @@ private:
   unsigned densityNID_ {stk::mesh::InvalidOrdinal};
   unsigned densityNp1ID_ {stk::mesh::InvalidOrdinal};
   unsigned dpdxID_ {stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
+  unsigned dnvNp1ID_ {stk::mesh::InvalidOrdinal};
+  unsigned dnvNID_ {stk::mesh::InvalidOrdinal};
+  unsigned dnvNm1ID_ {stk::mesh::InvalidOrdinal};
   
   double dt_;
   int nDim_;

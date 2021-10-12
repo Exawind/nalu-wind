@@ -1,25 +1,23 @@
-#ifndef MOTIONPULSATINGSPHERE_H
-#define MOTIONPULSATINGSPHERE_H
+#ifndef MOTIONDEFORMINGINTERIORKERNEL_H
+#define MOTIONDEFORMINGINTERIORKERNEL_H
 
 #include "NgpMotion.h"
-
-namespace YAML { class Node; }
 
 namespace sierra{
 namespace nalu{
 
-class MotionPulsatingSphereKernel : public NgpMotionKernel<MotionPulsatingSphereKernel>
+class MotionDeformingInteriorKernel : public NgpMotionKernel<MotionDeformingInteriorKernel>
 {
 public:
-  MotionPulsatingSphereKernel(
+  MotionDeformingInteriorKernel(
     stk::mesh::MetaData&,
     const YAML::Node&);
 
   KOKKOS_FUNCTION
-  MotionPulsatingSphereKernel() = default;
+  MotionDeformingInteriorKernel() = default;
 
   KOKKOS_FUNCTION
-  virtual ~MotionPulsatingSphereKernel() = default;
+  virtual ~MotionDeformingInteriorKernel() = default;
 
   /** Function to compute motion-specific transformation matrix
    *
@@ -48,14 +46,28 @@ public:
     const mm::ThreeDVecType& mxyz,
     const mm::ThreeDVecType& cxyz);
 
+  /** perform post compute geometry work for this motion
+   *
+   * @param[in] computedMeshVelDiv flag to denote if divergence of
+   *                               mesh velocity already computed
+   */
+  void post_compute_geometry(
+    stk::mesh::BulkData&,
+    stk::mesh::PartVector&,
+    stk::mesh::PartVector&,
+    bool& computedMeshVelDiv );
+
 private:
   void load(const YAML::Node&);
 
-  double amplitude_{0.0};
-  double frequency_{0.0};
+  mm::ThreeDVecType xyzMin_;
+  mm::ThreeDVecType xyzMax_;
+
+  mm::ThreeDVecType amplitude_{0.0,0.0,0.0};
+  mm::ThreeDVecType frequency_{0.0,0.0,0.0};
 };
 
 } // nalu
 } // sierra
 
-#endif /* MOTIONPULSATINGSPHERE_H */
+#endif /* MOTIONDEFORMINGINTERIORKERNEL_H */

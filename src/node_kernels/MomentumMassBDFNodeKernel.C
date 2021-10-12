@@ -11,6 +11,7 @@
 
 #include "node_kernels/MomentumMassBDFNodeKernel.h"
 #include "Realm.h"
+#include "utils/FieldHelpers.h"
 
 #include "stk_mesh/base/MetaData.hpp"
 #include "stk_mesh/base/Types.hpp"
@@ -46,7 +47,9 @@ MomentumMassBDFNodeKernel::MomentumMassBDFNodeKernel(
     densityNm1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNM1);
 
   densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
-  dualNodalVolumeID_ = get_field_ordinal(meta, "dual_nodal_volume");
+
+  populate_dnv_states(meta, dnvNm1ID_, dnvNID_, dnvNp1ID_);
+
   dpdxID_ = get_field_ordinal(meta, "dpdx");
 }
 
@@ -61,8 +64,9 @@ MomentumMassBDFNodeKernel::setup(Realm& realm)
   densityNm1_ = fieldMgr.get_field<double>(densityNm1ID_);
   densityN_ = fieldMgr.get_field<double>(densityNID_);
   densityNp1_ = fieldMgr.get_field<double>(densityNp1ID_);
-  dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
-  dpdx_ = fieldMgr.get_field<double>(dpdxID_);
+  dnvNp1_ = fieldMgr.get_field<double>(dnvNp1ID_);
+  dnvN_ = fieldMgr.get_field<double>(dnvNID_);
+  dnvNm1_ = fieldMgr.get_field<double>(dnvNm1ID_);  dpdx_ = fieldMgr.get_field<double>(dpdxID_);
   dt_ = realm.get_time_step();
   gamma1_ = realm.get_gamma1();
   gamma2_ = realm.get_gamma2();
@@ -80,9 +84,10 @@ MomentumMassBDFNodeKernel::execute(
   const NodeKernelTraits::DblType rhoNm1     = densityNm1_.get(node, 0);
   const NodeKernelTraits::DblType rhoN       = densityN_.get(node, 0);
   const NodeKernelTraits::DblType rhoNp1     = densityNp1_.get(node, 0);
-  const NodeKernelTraits::DblType dualVolume = dualNodalVolume_.get(node, 0);
-  const NodeKernelTraits::DblType lhsfac     = gamma1_*rhoNp1*dualVolume/dt_;
-
+   const NodeKernelTraits::DblType dnvNp1    = dnvNp1_.get(node, 0);
+  const NodeKernelTraits::DblType dnvN       = dnvN_.get(node, 0);
+  const NodeKernelTraits::DblType dnvNm1     = dnvNm1_.get(node, 0);  
+  const NodeKernelTraits::DblType lhsfac     = gamma1_*rhoNp1*dnvNp1/dt_;
   // deal with lumped mass matrix (diagonal matrix)
   for ( int i = 0; i < nDim; ++i ) {
     const NodeKernelTraits::DblType uNm1   = velocityNm1_.get(node, i);
@@ -90,7 +95,7 @@ MomentumMassBDFNodeKernel::execute(
     const NodeKernelTraits::DblType uNp1   = velocityNp1_.get(node, i);
     const NodeKernelTraits::DblType dpdx   = dpdx_.get(node, i);
 
-    rhs(i) += -(gamma1_*rhoNp1*uNp1 + gamma2_*rhoN*uN + gamma3_*rhoNm1*uNm1)*dualVolume/dt_ - dpdx*dualVolume;
+    rhs(i) += -(gamma1_*rhoNp1*uNp1*dnvNp1 + gamma2_*rhoN*uN*dnvN + gamma3_*rhoNm1*uNm1*dnvNm1)/dt_ - dpdx*dnvNp1;
     lhs(i, i) += lhsfac;
   }
 }

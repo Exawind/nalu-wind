@@ -14,6 +14,8 @@ MeshMotionAlg::MeshMotionAlg(
   const YAML::Node& node)
 {
   load(bulk, node);
+
+  set_deformation_flag();
 }
 
 void MeshMotionAlg::load(
@@ -31,6 +33,13 @@ void MeshMotionAlg::load(
 
     movingFrameVec_[i].reset(new FrameMoving(bulk, ginfo));
   }
+}
+
+void MeshMotionAlg::set_deformation_flag()
+{
+  for (size_t i=0; i < movingFrameVec_.size(); i++)
+    if( movingFrameVec_[i]->is_deforming() )
+      isDeforming_ = true;
 }
 
 void MeshMotionAlg::initialize( const double time )
@@ -60,6 +69,17 @@ void MeshMotionAlg::post_compute_geometry()
 {
   for (size_t i=0; i < movingFrameVec_.size(); i++)
     movingFrameVec_[i]->post_compute_geometry();
+}
+
+stk::mesh::PartVector MeshMotionAlg::get_partvec()
+{ 
+  stk::mesh::PartVector fpartVec;
+  for (size_t i=0; i < movingFrameVec_.size(); i++) {
+    stk::mesh::PartVector fPartVec = movingFrameVec_[i]->get_partvec();
+    for (auto p: fPartVec)
+      fpartVec.push_back(p);
+  }
+  return fpartVec;
 }
 
 } // nalu

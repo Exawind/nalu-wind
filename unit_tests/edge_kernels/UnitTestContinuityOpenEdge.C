@@ -44,7 +44,6 @@ TEST_F(ContinuityKernelHex8Mesh,NGP_open_edge)
 
   // Setup solution options for velocityRTM queries
   solnOpts_.meshMotion_ = false;
-  solnOpts_.meshDeformation_ = false;
   solnOpts_.externalMeshDeformation_ = false;
 
   auto* part = meta_.get_part("surface_2");

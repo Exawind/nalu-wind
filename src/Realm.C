@@ -94,9 +94,11 @@
 #include "ngp_utils/NgpFieldUtils.h"
 #include "ngp_algorithms/GeometryAlgDriver.h"
 #include "ngp_algorithms/GeometryInteriorAlg.h"
-
-
 #include "ngp_algorithms/GeometryBoundaryAlg.h"
+
+#include "gcl/MeshVelocityAlg.h"
+#include "gcl/MeshVelocityEdgeAlg.h"
+#include "AlgTraits.h"
 
 // stk_util
 #include <stk_util/parallel/Parallel.hpp>
@@ -792,7 +794,7 @@ Realm::load(const YAML::Node & node)
   if (meshMotionNode)
   {
     // has a user stated that mesh motion is external?
-    if ( solutionOptions_->meshDeformation_ ) {
+    if ( solutionOptions_->externalMeshDeformation_ ) {
       NaluEnv::self().naluOutputP0() << "mesh motion set to external (will prevail over mesh motion specification)!" << std::endl;
     }
     else {
@@ -866,6 +868,28 @@ Realm::setup_element_fields()
   // loop over all material props targets and register element fields
   std::vector<std::string> targetNames = get_physics_target_names();
   equationSystems_.register_element_fields(targetNames);
+
+  const int numVolStates = does_mesh_move() ? number_of_states() : 1;
+
+  if (has_mesh_deformation()) {
+    const auto entityRank = realmUsesEdges_ ? stk::topology::EDGE_RANK : stk::topology::ELEM_RANK;
+    const std::string fvm_fieldName = realmUsesEdges_ ? "edge_face_velocity_mag" :  "face_velocity_mag";
+    const std::string sv_fieldName = realmUsesEdges_ ? "edge_swept_face_volume" :  "swept_face_volume";
+    GenericFieldType* faceVelMag = &(metaData_->declare_field<GenericFieldType>(
+                                     entityRank, fvm_fieldName));
+    GenericFieldType* sweptFaceVolume = &(metaData_->declare_field<GenericFieldType>(
+                                          entityRank, sv_fieldName, numVolStates));
+    for (auto target: targetNames) {
+      auto * targetPart = metaData_->get_part(target);
+      auto fieldSize = 1;
+      if ( !realmUsesEdges_ ) {
+        auto *meSCS = sierra::nalu::MasterElementRepo::get_surface_master_element(targetPart->topology());
+        fieldSize = meSCS->num_integration_points();
+      }
+      stk::mesh::put_field_on_mesh(*faceVelMag, *targetPart, fieldSize, nullptr);
+      stk::mesh::put_field_on_mesh(*sweptFaceVolume, *targetPart, fieldSize, nullptr);
+    }
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -874,6 +898,22 @@ Realm::setup_element_fields()
 void
 Realm::setup_interior_algorithms()
 {
+  if (has_mesh_deformation()) {
+    const AlgorithmType algType = INTERIOR;
+    stk::mesh::PartVector mmPartVec = meshMotionAlg_->get_partvec();
+    if (realmUsesEdges_){
+      for (auto p: mmPartVec) {
+        geometryAlgDriver_->register_elem_algorithm<
+          MeshVelocityEdgeAlg>(algType, p, "mesh_vel");
+      }
+    } else {
+      for (auto p: mmPartVec) {
+        geometryAlgDriver_->register_elem_algorithm<
+          MeshVelocityAlg>(algType, p, "mesh_vel");
+      }
+    }
+  }
+
   // loop over all material props targets and register interior algs
   std::vector<std::string> targetNames = get_physics_target_names();
   equationSystems_.register_interior_algorithm(targetNames);
@@ -2220,7 +2260,7 @@ Realm::initialize_post_processing_algorithms()
 std::string
 Realm::get_coordinates_name()
 {
-  return ( (solutionOptions_->meshMotion_ | solutionOptions_->meshDeformation_ | solutionOptions_->externalMeshDeformation_) 
+  return ( (solutionOptions_->meshMotion_ | solutionOptions_->externalMeshDeformation_)
            ? "current_coordinates" : "coordinates");
 }
 
@@ -2230,7 +2270,7 @@ Realm::get_coordinates_name()
 bool
 Realm::has_mesh_motion() const
 {
-  return solutionOptions_->meshMotion_;
+    return meshMotionAlg_ != NULL;;
 }
 
 //--------------------------------------------------------------------------
@@ -2239,7 +2279,12 @@ Realm::has_mesh_motion() const
 bool
 Realm::has_mesh_deformation() const
 {
-  return solutionOptions_->externalMeshDeformation_ | solutionOptions_->meshDeformation_;
+    if (meshMotionAlg_) {
+       return meshMotionAlg_->is_deforming() |
+              solutionOptions_->externalMeshDeformation_;
+    }
+    else
+        return solutionOptions_->externalMeshDeformation_;
 }
 
 //--------------------------------------------------------------------------
@@ -2467,8 +2512,9 @@ Realm::register_nodal_fields(
   }
 
   // mesh motion/deformation is high level
-  if ( solutionOptions_->meshMotion_ || solutionOptions_->externalMeshDeformation_) {
-    VectorFieldType *displacement = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement"));
+  // clang-format off
+  if ( does_mesh_move()) {
+    VectorFieldType *displacement = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement",numVolStates));
     stk::mesh::put_field_on_mesh(*displacement, *part, nDim, nullptr);
     VectorFieldType *currentCoords = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
     stk::mesh::put_field_on_mesh(*currentCoords, *part, nDim, nullptr);
@@ -2476,13 +2522,12 @@ Realm::register_nodal_fields(
     stk::mesh::put_field_on_mesh(*meshVelocity, *part, nDim, nullptr);
     VectorFieldType *velocityRTM = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm"));
     stk::mesh::put_field_on_mesh(*velocityRTM, *part, nDim, nullptr);
-
-    // only external mesh deformation requires dvi/dxj (for GCL)
-    if ( solutionOptions_->externalMeshDeformation_) {
+    if(has_mesh_deformation()){
       ScalarFieldType *divV = &(metaData_->declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "div_mesh_velocity"));
       stk::mesh::put_field_on_mesh(*divV, *part, nullptr);
     }
   }
+  // clang-format on
 
   ScalarIntFieldType& iblank = metaData_->declare_field<ScalarIntFieldType>(
     stk::topology::NODE_RANK, "iblank");

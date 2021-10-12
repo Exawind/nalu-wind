@@ -45,7 +45,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
-  solnOpts_.meshDeformation_ = false;
   solnOpts_.externalMeshDeformation_ = false;
 
   auto* part = meta_.get_part("surface_2");
@@ -96,7 +95,6 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_open_edge)
 
   // Setup solution options for default advection kernel
   solnOpts_.meshMotion_ = false;
-  solnOpts_.meshDeformation_ = false;
   solnOpts_.externalMeshDeformation_ = false;
   solnOpts_.relaxFactorMap_["turbulent_ke"] = 0.5;
 

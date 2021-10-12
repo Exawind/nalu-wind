@@ -38,6 +38,12 @@ public:
   {
   }
 
+  stk::mesh::PartVector get_partvec() {
+    return partVec_;
+  };
+
+  bool is_deforming(){ return isDeforming_; }
+
 protected:
   //! Reference to the STK Mesh BulkData object
   stk::mesh::BulkData& bulk_;
@@ -64,6 +70,9 @@ protected:
   stk::mesh::PartVector partVecBc_;
 
   bool computeCentroid_ = false;
+
+  // flag to denote if mesh deformation exists
+  bool isDeforming_ = false;
 
 private:
   FrameBase() = delete;

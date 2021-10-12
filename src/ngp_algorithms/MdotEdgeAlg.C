@@ -7,7 +7,6 @@
 // for more details.
 //
 
-
 #include "ngp_algorithms/MdotEdgeAlg.h"
 #include "ngp_utils/NgpLoopUtils.h"
 #include "ngp_utils/NgpFieldOps.h"
@@ -20,23 +19,25 @@
 namespace sierra {
 namespace nalu {
 
-MdotEdgeAlg::MdotEdgeAlg(
-  Realm& realm,
-  stk::mesh::Part* part
-) : Algorithm(realm, part),
-    coordinates_(get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
-    velocityRTM_(get_field_ordinal(
+MdotEdgeAlg::MdotEdgeAlg(Realm& realm, stk::mesh::Part* part)
+  : Algorithm(realm, part),
+    coordinates_(
+      get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
+    velocity_(get_field_ordinal(
       realm.meta_data(),
-      realm.does_mesh_move() ? "velocity_rtm" : "velocity")),
+      realm.has_mesh_motion() && !realm.has_mesh_deformation() ? "velocity_rtm"
+                                                               : "velocity")),
     pressure_(get_field_ordinal(realm.meta_data(), "pressure")),
-    densityNp1_(get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1)),
+    densityNp1_(
+      get_field_ordinal(realm.meta_data(), "density", stk::mesh::StateNP1)),
     Gpdx_(get_field_ordinal(realm.meta_data(), "dpdx")),
-    edgeAreaVec_(get_field_ordinal(realm.meta_data(), "edge_area_vector", stk::topology::EDGE_RANK)),
+    edgeAreaVec_(get_field_ordinal(
+      realm.meta_data(), "edge_area_vector", stk::topology::EDGE_RANK)),
     Udiag_(get_field_ordinal(realm.meta_data(), "momentum_diag")),
-    massFlowRate_(
-      get_field_ordinal(
-        realm.meta_data(), "mass_flow_rate", stk::topology::EDGE_RANK))
-{}
+    massFlowRate_(get_field_ordinal(
+      realm.meta_data(), "mass_flow_rate", stk::topology::EDGE_RANK))
+{
+}
 
 void
 MdotEdgeAlg::execute()
@@ -47,8 +48,7 @@ MdotEdgeAlg::execute()
   const int ndim = meta.spatial_dimension();
 
   const std::string dofName = "pressure";
-  const DblType nocFac
-    = (realm_.get_noc_usage(dofName)) ? 1.0 : 0.0;
+  const DblType nocFac = (realm_.get_noc_usage(dofName)) ? 1.0 : 0.0;
 
   // Interpolation option for rho*U
   const DblType interpTogether = realm_.get_mdot_interp();
@@ -58,25 +58,34 @@ MdotEdgeAlg::execute()
   const auto ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
   const auto coordinates = fieldMgr.get_field<double>(coordinates_);
-  const auto velocity = fieldMgr.get_field<double>(velocityRTM_);
+  const auto velocity = fieldMgr.get_field<double>(velocity_);
   const auto Gpdx = fieldMgr.get_field<double>(Gpdx_);
   const auto density = fieldMgr.get_field<double>(densityNp1_);
   const auto pressure = fieldMgr.get_field<double>(pressure_);
   const auto udiag = fieldMgr.get_field<double>(Udiag_);
   const auto edgeAreaVec = fieldMgr.get_field<double>(edgeAreaVec_);
+
+  stk::mesh::NgpField<double> edgeFaceVelMag;
+
+  bool needs_gcl = false;
+  if (realm_.has_mesh_deformation()) {
+    needs_gcl = true;
+    edgeFaceVelMag_ = get_field_ordinal(
+      realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
+    edgeFaceVelMag = fieldMgr.get_field<double>(edgeFaceVelMag_);
+  }
   auto mdot = fieldMgr.get_field<double>(massFlowRate_);
 
-  const stk::mesh::Selector sel = meta.locally_owned_part()
-    & stk::mesh::selectUnion(partVec_)
-    & !(realm_.get_inactive_selector());
+  const stk::mesh::Selector sel = meta.locally_owned_part() &
+                                  stk::mesh::selectUnion(partVec_) &
+                                  !(realm_.get_inactive_selector());
 
   nalu_ngp::run_edge_algorithm(
-    "compute_mdot_edge_interior",
-    ngpMesh, sel,
+    "compute_mdot_edge_interior", ngpMesh, sel,
     KOKKOS_LAMBDA(const EntityInfoType& einfo) {
       NALU_ALIGNED DblType av[NDimMax];
 
-      for (int d=0; d < ndim; ++d)
+      for (int d = 0; d < ndim; ++d)
         av[d] = edgeAreaVec.get(einfo.meshIdx, d);
 
       const auto& nodes = einfo.entityNodes;
@@ -92,20 +101,24 @@ MdotEdgeAlg::execute()
       const DblType udiagL = udiag.get(nodeL, 0);
       const DblType udiagR = udiag.get(nodeR, 0);
 
-      const DblType projTimeScale = 0.5 * (1.0/udiagL + 1.0/udiagR);
+      const DblType projTimeScale = 0.5 * (1.0 / udiagL + 1.0 / udiagR);
       const DblType rhoIp = 0.5 * (densityL + densityR);
 
       DblType axdx = 0.0;
       DblType asq = 0.0;
-      for (int d=0; d < ndim; ++d) {
-        const DblType dxj = coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
+      for (int d = 0; d < ndim; ++d) {
+        const DblType dxj =
+          coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         asq += av[d] * av[d];
         axdx += av[d] * dxj;
       }
       const DblType inv_axdx = 1.0 / axdx;
 
       DblType tmdot = -projTimeScale * (pressureR - pressureL) * asq * inv_axdx;
-      for (int d=0; d < ndim; ++d) {
+      if (needs_gcl) {
+        tmdot -= rhoIp * edgeFaceVelMag.get(einfo.meshIdx, 0);
+      }
+      for (int d = 0; d < ndim; ++d) {
         const DblType dxj =
           coordinates.get(nodeR, d) - coordinates.get(nodeL, d);
         // non-orthogonal correction
@@ -116,9 +129,10 @@ MdotEdgeAlg::execute()
           0.5 * (velocity.get(nodeR, d) + velocity.get(nodeL, d));
         const DblType GjIp =
           0.5 * (Gpdx.get(nodeR, d) / udiagR + Gpdx.get(nodeL, d) / udiagL);
-        tmdot += (interpTogether * rhoUjIp +
-                  om_interpTogether * rhoIp * ujIp + GjIp) * av[d]
-          - kxj * GjIp * nocFac;
+        tmdot +=
+          (interpTogether * rhoUjIp + om_interpTogether * rhoIp * ujIp + GjIp) *
+            av[d] -
+          kxj * GjIp * nocFac;
       }
 
       // Update edge field
@@ -129,6 +143,5 @@ MdotEdgeAlg::execute()
   mdot.modify_on_device();
 }
 
-
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra

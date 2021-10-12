@@ -262,7 +262,7 @@ public:
         &meta_.declare_field<TpetIDFieldType>(
           stk::topology::NODE_RANK, "tpet_global_id",1)),
       dnvField_(&meta_.declare_field<ScalarFieldType>(
-                  stk::topology::NODE_RANK, "dual_nodal_volume",2)),
+                  stk::topology::NODE_RANK, "dual_nodal_volume",3)),
       divMeshVelField_(&meta_.declare_field<ScalarFieldType>(
                   stk::topology::NODE_RANK, "div_mesh_velocity")),
       edgeAreaVec_(
@@ -793,7 +793,7 @@ public:
       maxLengthScale_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "sst_max_length_scale")),
       fOneBlend_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "sst_f_one_blending")),
       evisc_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "effective_viscosity")),
-      dualNodalVolume_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "dual_nodal_volume", 2)),
+      dualNodalVolume_(&meta_.declare_field<ScalarFieldType>( stk::topology::NODE_RANK, "dual_nodal_volume", 3)),
       dkdx_(&meta_.declare_field<VectorFieldType>( stk::topology::NODE_RANK, "dkdx")),
       dwdx_(&meta_.declare_field<VectorFieldType>( stk::topology::NODE_RANK, "dwdx")),
       dhdx_(&meta_.declare_field<VectorFieldType>( stk::topology::NODE_RANK, "dhdx")),

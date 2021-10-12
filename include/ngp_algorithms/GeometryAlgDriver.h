@@ -52,6 +52,9 @@ public:
   //! Synchronize fields after algorithms have done their work
   virtual void post_work() override;
 
+  //! Pre work for mesh motion
+  virtual void mesh_motion_prework();
+
   /** Register wall function geometry calculation algorithm
    *
    *  Need a specialization here to track whether the user has requested wall functions
