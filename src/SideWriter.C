@@ -129,7 +129,7 @@ write_node_ids(
   node_ids.reserve(count_ent(buckets));
 
   for (const auto* ib : buckets) {
-    for (const auto node : *ib) {
+    for (const auto& node : *ib) {
       node_ids.push_back(bulk.identifier(node));
     }
   }
@@ -149,7 +149,7 @@ write_coordinate_list(
   std::vector<double> coords;
   coords.reserve(count_ent(buckets) * dim);
   for (const auto* ib : buckets) {
-    for (const auto node : *ib) {
+    for (const auto& node : *ib) {
       const auto* xnode = stk::mesh::field_data(coord_field, node);
       for (int k = 0; k < dim; ++k) {
         coords.push_back(xnode[k]);
@@ -173,7 +173,7 @@ write_element_connectivity(
       connectivity.reserve([&]() {
         int count = 0;
         for (const auto* ib : buckets) {
-          for (const auto face : *ib) {
+          for (const auto& face : *ib) {
             count += bulk.num_nodes(face);
           }
         }
@@ -183,7 +183,7 @@ write_element_connectivity(
       std::vector<int64_t> ids;
       ids.reserve(count_faces(bulk, *subset));
       for (const auto* ib : buckets) {
-        for (const auto face : *ib) {
+        for (const auto& face : *ib) {
           ids.push_back(bulk.identifier(face));
           const auto nodes_per_face = bulk.num_nodes(face);
           const auto nodes = bulk.begin_nodes(face);
