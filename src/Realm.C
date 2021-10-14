@@ -2270,7 +2270,7 @@ Realm::get_coordinates_name()
 bool
 Realm::has_mesh_motion() const
 {
-    return meshMotionAlg_ != NULL;;
+  return solutionOptions_->meshMotion_;
 }
 
 //--------------------------------------------------------------------------
