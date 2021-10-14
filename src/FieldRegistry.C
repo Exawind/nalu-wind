@@ -8,26 +8,72 @@
 //
 
 #include <FieldRegistry.h>
+#include <stdexcept>
 
 namespace sierra {
 namespace nalu {
 
-// clang-format off
-//std::map<std::string, FieldEntity> presetFields{ {"velocity", {stk::topology::NODE_RANK}}, };
-// clang-format on
-
 FieldRegistry::FieldRegistry()
-  : fieldEntityMap_({
-      {"velocity",
-       std::make_unique<VectorFieldEntity>(stk::topology::NODE_RANK)},
+  : fieldDefMap_({
+      {"velocity", {stk::topology::NODE_RANK, FieldTypes::VECTOR}},
+      {"temperature", {stk::topology::NODE_RANK, FieldTypes::SCALAR}},
     })
 {
 }
 
-VectorFieldEntity*
-FieldRegistry::get_field_entity(std::string name)
+FieldDefinition
+FieldRegistry::get_field_definition(std::string name)
 {
-  return dynamic_cast<VectorFieldEntity*>(fieldEntityMap_.at(name).get());
+  // right now this will throw if the field isn't registered in the map
+  // maybe we'd want a compile time error though for developer mistakes?
+  return fieldDefMap_.at(name);
+}
+
+void
+FieldRegistry::register_field(
+  stk::mesh::MetaData& meta,
+  std::string name,
+  const stk::mesh::PartVector& parts)
+{
+  const auto def = get_field_definition(name);
+  // i'd like to remove this switch and just grab the type based off the enum
+  // value but I haven't found a good way yet
+  // I was considering something like this:
+  // https://stackoverflow.com/questions/41415265/map-enum-value-to-a-type-in-c
+  // but this only seems valid for concrete types
+  switch (def.ftype) {
+  case FieldTypes::VECTOR: {
+    meta.declare_field<VectorFieldType>(def.rank, name);
+    break;
+  }
+  case FieldTypes::SCALAR: {
+    meta.declare_field<ScalarFieldType>(def.rank, name);
+    break;
+  }
+  default:
+    // this can't really be hit since our switch is based on an enum class
+    throw std::runtime_error(
+      "FieldTypes value not implemented in FieldRegistry");
+    break;
+  }
+}
+
+bool
+FieldRegistry::field_exists(const stk::mesh::MetaData& meta, std::string name)
+{
+  const auto def = get_field_definition(name);
+  switch (def.ftype) {
+  case FieldTypes::VECTOR: {
+    return meta.get_field<VectorFieldType>(def.rank, name) != nullptr;
+  }
+  case FieldTypes::SCALAR: {
+    return meta.get_field<ScalarFieldType>(def.rank, name) != nullptr;
+  }
+  default:
+    throw std::runtime_error(
+      "FieldTypes value not implemented in FieldRegistry");
+    return false;
+  }
 }
 } // namespace nalu
 } // namespace sierra

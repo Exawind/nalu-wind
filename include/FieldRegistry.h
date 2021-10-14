@@ -13,44 +13,48 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <vector>
 #include <stk_topology/topology.hpp>
 #include <FieldTypeDef.h>
+
+namespace stk {
+namespace mesh {
+class Part;
+using PartVector = std::vector<Part*>;
+} // namespace mesh
+} // namespace stk
 
 namespace sierra {
 namespace nalu {
 
 // once we move to c++17 we can just use a map with std::any like
 // https://raymii.org/s/articles/Store_multiple_types_in_a_single_stdmap_in_cpp_just_like_a_python_dict.html
+// this will solve the type/map issues and simplify the code
 
-class FieldEntityInterface
+// TODO move to FieldTypeDef.h
+enum class FieldTypes { SCALAR, VECTOR };
+struct FieldDefinition
 {
-  virtual ~FieldEntityInterface() = default;
-};
-
-template <typename T>
-class FieldEntity : public FieldEntityInterface
-{
-public:
-  using type = T;
-  FieldEntity<T>(stk::topology::rank_t rank) : rank(rank) {}
-  FieldEntity<T>(FieldEntity<T>& entity) { return FieldEntity<T>(entity.rank); }
   stk::topology::rank_t rank;
+  FieldTypes ftype;
 };
-
-using ScalarFieldEntity = FieldEntity<ScalarFieldType>;
-using VectorFieldEntity = FieldEntity<VectorFieldType>;
 
 class FieldRegistry
 {
 public:
   // probably want this to be a singleton
   FieldRegistry();
-  VectorFieldEntity* get_field_entity(std::string name);
-  // void register_field(stk::mesh::MetaData& meta, std::string)
+  FieldDefinition get_field_definition(std::string name);
+  void register_field(
+    stk::mesh::MetaData& meta,
+    std::string name,
+    const stk::mesh::PartVector& parts);
+  bool field_exists(const stk::mesh::MetaData& meta, std::string name);
 
 private:
-  const std::map<std::string, std::unique_ptr<FieldEntityInterface>>
-    fieldEntityMap_;
+  // clang-format off
+  const std::map<std::string, FieldDefinition> fieldDefMap_;
+  // clang-format on
 };
 
 } // namespace nalu

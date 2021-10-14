@@ -13,6 +13,7 @@
 #include "stk_io/StkMeshIoBroker.hpp"
 #include <FieldRegistry.h>
 #include <memory>
+#include <stdexcept>
 
 namespace sierra {
 namespace nalu {
@@ -33,35 +34,51 @@ protected:
   std::unique_ptr<stk::mesh::BulkData> bulk_;
 };
 
-TEST_F(FieldRegistryTest, entityHasInfoToRegisterAField)
+TEST_F(FieldRegistryTest, nameIsEnoughInfoToRegisterAField)
 {
   const std::string name = "velocity";
   FieldRegistry fieldRegistry;
-  auto* field = fieldRegistry.get_field_entity(name);
-  EXPECT_EQ(stk::topology::NODE_RANK, field->rank);
+  EXPECT_FALSE(fieldRegistry.field_exists(*meta_, name));
 
-  const auto parts = meta_->get_parts();
-  const auto id = &(meta_->declare_field<VectorFieldType>(field->rank, name));
-
-  for (auto&& part : parts)
-    stk::mesh::put_field_on_mesh(*id, *part, nullptr);
+  fieldRegistry.register_field(*meta_, name, meta_->get_parts());
 
   // check that field is on the mesh
   const auto findFieldPtr =
-    meta_->get_field<VectorFieldType>(field->rank, name);
+    meta_->get_field<VectorFieldType>(stk::topology::NODE_RANK, name);
   EXPECT_TRUE(findFieldPtr);
+  EXPECT_TRUE(fieldRegistry.field_exists(*meta_, name));
 }
 
-// TEST_F(FieldRegistryTest, canQueryDifferentFieldTypesThroughOneInterface)
-//{
-//  const std::string vectorName = "velocity";
-//  const std::string scalarName = "temperature";
-//  FieldRegistry fieldRegistry;
-//  const auto vectorEntity = fieldRegistry.get_field_entity(vectorName);
-//  const auto scalarEntity = fieldRegistry.get_field_entity(scalarName);
-//  EXPECT_EQ(stk::topology::NODE_RANK, vectorEntity.rank);
-//  EXPECT_EQ(stk::topology::NODE_RANK, scalarEntity.rank);
-//}
+TEST_F(FieldRegistryTest, throwsForFieldNotInDatabase)
+{
+  FieldRegistry f;
+  EXPECT_THROW(f.field_exists(*meta_, "acrazyqoi"), std::out_of_range);
+}
+
+TEST_F(FieldRegistryTest, canRegisterDifferentFieldTypesThroughOneInterface)
+{
+  const std::string vectorName = "velocity";
+  const std::string scalarName = "temperature";
+  FieldRegistry f;
+  EXPECT_FALSE(f.field_exists(*meta_, vectorName));
+  EXPECT_FALSE(f.field_exists(*meta_, scalarName));
+  EXPECT_NO_THROW(f.register_field(*meta_, vectorName, meta_->get_parts()));
+  EXPECT_NO_THROW(f.register_field(*meta_, scalarName, meta_->get_parts()));
+  EXPECT_TRUE(f.field_exists(*meta_, vectorName));
+  EXPECT_TRUE(f.field_exists(*meta_, scalarName));
+}
+
+TEST_F(FieldRegistryTest, fieldCanBeRegisteredMultipleTimes)
+{
+  const std::string name = "velocity";
+  FieldRegistry fieldRegistry;
+  EXPECT_FALSE(fieldRegistry.field_exists(*meta_, name));
+  EXPECT_NO_THROW(
+    fieldRegistry.register_field(*meta_, name, meta_->get_parts()));
+  EXPECT_NO_THROW(
+    fieldRegistry.register_field(*meta_, name, meta_->get_parts()));
+  EXPECT_TRUE(fieldRegistry.field_exists(*meta_, name));
+}
 
 } // namespace
 } // namespace nalu
