@@ -133,6 +133,9 @@ ActuatorModel::init(stk::mesh::BulkData& stkBulk)
   if (!is_active())
     return;
 
+  // do nothing call to surpress warning when built w/o openfast
+  (void)stkBulk;
+
   switch (actMeta_->actuatorType_) {
   case (ActuatorType::ActLineFASTNGP):
   case (ActuatorType::ActDiskFASTNGP): {

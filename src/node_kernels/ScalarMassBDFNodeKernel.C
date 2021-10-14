@@ -46,8 +46,6 @@ ScalarMassBDFNodeKernel::ScalarMassBDFNodeKernel(
   densityNp1ID_ = get_field_ordinal(meta, "density", stk::mesh::StateNP1);
 
   dnvNp1ID_ = get_field_ordinal(meta, "dual_nodal_volume", stk::mesh::StateNP1);
-  const auto* dnv = meta.get_field<ScalarFieldType>(
-    stk::topology::NODE_RANK, "dual_nodal_volume");
   populate_dnv_states(meta, dnvNm1ID_, dnvNID_, dnvNp1ID_);
 }
 
