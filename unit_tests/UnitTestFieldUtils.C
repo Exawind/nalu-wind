@@ -9,6 +9,7 @@
 
 
 #include "UnitTestFieldUtils.h"
+#include "FieldTypeDef.h"
 
 namespace unit_test_utils {
 
