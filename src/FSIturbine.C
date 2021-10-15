@@ -1,7 +1,6 @@
 #include "FSIturbine.h"
 
 #include "SurfaceFMPostProcessing.h"
-#include <nalu_make_unique.h>
 #include "utils/ComputeVectorDivergence.h"
 
 #include "stk_util/parallel/ParallelReduce.hpp"
@@ -402,14 +401,14 @@ void fsiTurbine::write_nc_ref_pos() {
     const int iproc = bulk_.parallel_rank();
     if ( iproc != turbineProc_) return;
 
-    int nTwrPts = params_.nBRfsiPtsTwr;
-    int nBlades = params_.numBlades;
-    int nTotBldPts = 0;
+    size_t nTwrPts = params_.nBRfsiPtsTwr;
+    size_t nBlades = params_.numBlades;
+    size_t nTotBldPts = 0;
     for (int i=0; i < nBlades; i++) {
         nTotBldPts += params_.nBRfsiPtsBlade[i];
     }
-    int nBldPts = nTotBldPts/nBlades;
-    int ncid, ierr;
+    size_t nBldPts = nTotBldPts/nBlades;
+    size_t ncid, ierr;
 
     std::stringstream defloads_fstream;
     defloads_fstream << "turb_" ;
@@ -426,13 +425,13 @@ void fsiTurbine::write_nc_ref_pos() {
     tmpArray.resize(nTwrPts);
     {
         std::vector<size_t> count_dim{1,nTwrPts};
-        for (auto idim=0;idim < 3; idim++) {
+        for (size_t idim=0;idim < 3; idim++) {
             for (auto i=0; i < nTwrPts; i++)
                 tmpArray[i] = brFSIdata_.twr_ref_pos[i*6+idim] ;
             std::vector<size_t> start_dim{idim,0};
             ierr = nc_put_vara_double(ncid, ncVarIDs_["twr_ref_pos"], start_dim.data(), count_dim.data(), tmpArray.data());
         }
-        for (auto idim=0;idim < 3; idim++) {
+        for (size_t idim=0;idim < 3; idim++) {
             for (auto i=0; i < nTwrPts; i++)
                 tmpArray[i] = brFSIdata_.twr_ref_pos[i*6+3+idim] ;
             std::vector<size_t> start_dim{idim,0};
@@ -443,10 +442,10 @@ void fsiTurbine::write_nc_ref_pos() {
     tmpArray.resize(nBldPts);
     {
         std::vector<size_t> count_dim{1,1,nBldPts};
-        for (auto iDim=0;iDim < 3; iDim++) {
-            int iStart = 0 ;
-            for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-                for (auto i=0; i < nBldPts; i++) {
+        for (size_t iDim=0;iDim < 3; iDim++) {
+            size_t iStart = 0 ;
+            for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+                for (size_t i=0; i < nBldPts; i++) {
                     tmpArray[i] = brFSIdata_.bld_ref_pos[(iStart*6)+iDim];
                     iStart++;
                 }
@@ -454,10 +453,10 @@ void fsiTurbine::write_nc_ref_pos() {
                 ierr = nc_put_vara_double(ncid, ncVarIDs_["bld_ref_pos"], start_dim.data(), count_dim.data(), tmpArray.data());
             }
         }
-        for (auto iDim=0;iDim < 3; iDim++) {
-            int iStart = 0 ;
-            for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-                for (auto i=0; i < nBldPts; i++) {
+        for (size_t iDim=0;iDim < 3; iDim++) {
+            size_t iStart = 0 ;
+            for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+                for (size_t i=0; i < nBldPts; i++) {
                     tmpArray[i] = brFSIdata_.bld_ref_pos[(iStart*6)+iDim+3];
                     iStart++;
                 }
@@ -467,9 +466,9 @@ void fsiTurbine::write_nc_ref_pos() {
         }
 
         std::vector<size_t> param_count_dim{1,nBldPts};
-        int iStart = 0 ;
-        for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-            for (auto i=0; i < nBldPts; i++) {
+        size_t iStart = 0 ;
+        for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+            for (size_t i=0; i < nBldPts; i++) {
                 tmpArray[i] = brFSIdata_.bld_chord[iStart];
                 iStart++;
             }
@@ -477,8 +476,8 @@ void fsiTurbine::write_nc_ref_pos() {
             ierr = nc_put_vara_double(ncid, ncVarIDs_["bld_chord"], start_dim.data(), param_count_dim.data(), tmpArray.data());
         }
         iStart = 0 ;
-        for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-            for (auto i=0; i < nBldPts; i++) {
+        for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+            for (size_t i=0; i < nBldPts; i++) {
                 tmpArray[i] = brFSIdata_.bld_rloc[iStart];
                 iStart++;
             }
