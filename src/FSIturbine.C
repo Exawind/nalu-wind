@@ -505,7 +505,7 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
     size_t nTwrPts = params_.nBRfsiPtsTwr;
     size_t nBlades = params_.numBlades;
     size_t nTotBldPts = 0;
-    for (auto i=0; i < nBlades; i++)
+    for (size_t i=0; i < nBlades; i++)
         nTotBldPts += params_.nBRfsiPtsBlade[i];
     size_t nBldPts = nTotBldPts/nBlades;
     
@@ -552,39 +552,39 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
     tmpArray.resize(nTwrPts);
     {
         std::vector<size_t> count_dim{1,1,nTwrPts};
-        for (auto idim=0;idim < 3; idim++) {
-            for (auto i=0; i < nTwrPts; i++)
+        for (size_t idim=0;idim < 3; idim++) {
+            for (size_t i=0; i < nTwrPts; i++)
                 tmpArray[i] = brFSIdata_.twr_def[i*6+idim] ;
             std::vector<size_t> start_dim{tStep,idim,0};
             ierr = nc_put_vara_double(ncid, ncVarIDs_["twr_disp"], start_dim.data(), count_dim.data(), tmpArray.data());
         }
-        for (auto idim=0;idim < 3; idim++) {
-            for (auto i=0; i < nTwrPts; i++)
+        for (size_t idim=0;idim < 3; idim++) {
+            for (size_t i=0; i < nTwrPts; i++)
                 tmpArray[i] = brFSIdata_.twr_def[i*6+3+idim] ;
             std::vector<size_t> start_dim{tStep,idim,0};
             ierr = nc_put_vara_double(ncid, ncVarIDs_["twr_orient"], start_dim.data(), count_dim.data(), tmpArray.data());
         }
-        for (auto idim=0;idim < 3; idim++) {
-            for (auto i=0; i < nTwrPts; i++)
+        for (size_t idim=0;idim < 3; idim++) {
+            for (size_t i=0; i < nTwrPts; i++)
                 tmpArray[i] = brFSIdata_.twr_vel[i*6+idim] ;
             std::vector<size_t> start_dim{tStep,idim,0};
             ierr = nc_put_vara_double(ncid, ncVarIDs_["twr_vel"], start_dim.data(), count_dim.data(), tmpArray.data());
         }
-        for (auto idim=0;idim < 3; idim++) {
-            for (auto i=0; i < nTwrPts; i++)
+        for (size_t idim=0;idim < 3; idim++) {
+            for (size_t i=0; i < nTwrPts; i++)
                 tmpArray[i] = brFSIdata_.twr_def[i*6+3+idim] ;
             std::vector<size_t> start_dim{tStep,idim,0};
             ierr = nc_put_vara_double(ncid, ncVarIDs_["twr_rotvel"], start_dim.data(), count_dim.data(), tmpArray.data());
         }
 
-        for (auto idim=0;idim < 3; idim++) {
-            for (auto i=0; i < nTwrPts; i++)
+        for (size_t idim=0;idim < 3; idim++) {
+            for (size_t i=0; i < nTwrPts; i++)
                 tmpArray[i] = brFSIdata_.twr_ld[i*6+idim] ;
             std::vector<size_t> start_dim{tStep,idim,0};
             ierr = nc_put_vara_double(ncid, ncVarIDs_["twr_ld"], start_dim.data(), count_dim.data(), tmpArray.data());
         }
-        for (auto idim=0;idim < 3; idim++) {
-            for (auto i=0; i < nTwrPts; i++)
+        for (size_t idim=0;idim < 3; idim++) {
+            for (size_t i=0; i < nTwrPts; i++)
                 tmpArray[i] = brFSIdata_.twr_ld[i*6+3+idim];
             std::vector<size_t> start_dim{tStep,idim,0};
             ierr = nc_put_vara_double(ncid, ncVarIDs_["twr_moment"], start_dim.data(), count_dim.data(), tmpArray.data());
@@ -594,10 +594,10 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
     tmpArray.resize(nBldPts);
     {
         std::vector<size_t> count_dim{1,1,1,nBldPts};
-        for (auto iDim=0;iDim < 3; iDim++) {
-            int iStart = 0 ;
-            for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-                for (auto i=0; i < nBldPts; i++) {
+        for (size_t iDim=0;iDim < 3; iDim++) {
+            size_t iStart = 0 ;
+            for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+                for (size_t i=0; i < nBldPts; i++) {
                     tmpArray[i] = brFSIdata_.bld_def[(iStart*6)+iDim];
                     iStart++;
                 }
@@ -605,10 +605,10 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
                 ierr = nc_put_vara_double(ncid, ncVarIDs_["bld_disp"], start_dim.data(), count_dim.data(), tmpArray.data());
             }
         }
-        for (auto iDim=0;iDim < 3; iDim++) {
-            int iStart = 0 ;
-            for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-                for (auto i=0; i < nBldPts; i++) {
+        for (size_t iDim=0;iDim < 3; iDim++) {
+            size_t iStart = 0 ;
+            for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+                for (size_t i=0; i < nBldPts; i++) {
                     tmpArray[i] = brFSIdata_.bld_def[(iStart*6)+3+iDim];
                     iStart++;
                 }
@@ -616,10 +616,10 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
                 ierr = nc_put_vara_double(ncid, ncVarIDs_["bld_orient"], start_dim.data(), count_dim.data(), tmpArray.data());
             }
         }
-        for (auto iDim=0;iDim < 3; iDim++) {
-            int iStart = 0 ;
-            for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-                for (auto i=0; i < nBldPts; i++) {
+        for (size_t iDim=0;iDim < 3; iDim++) {
+            size_t iStart = 0 ;
+            for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+                for (size_t i=0; i < nBldPts; i++) {
                     tmpArray[i] = brFSIdata_.bld_vel[(iStart*6)+iDim];
                     iStart++;
                 }
@@ -627,10 +627,10 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
                 ierr = nc_put_vara_double(ncid, ncVarIDs_["bld_vel"], start_dim.data(), count_dim.data(), tmpArray.data());
             }
         }
-        for (auto iDim=0; iDim < 3; iDim++) {
-            int iStart = 0 ;
-            for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-                for (auto i=0; i < nBldPts; i++) {
+        for (size_t iDim=0; iDim < 3; iDim++) {
+            size_t iStart = 0 ;
+            for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+                for (size_t i=0; i < nBldPts; i++) {
                     tmpArray[i] = brFSIdata_.bld_vel[(iStart*6)+3+iDim];
                     iStart++;
                 }
@@ -638,10 +638,10 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
                 ierr = nc_put_vara_double(ncid, ncVarIDs_["bld_rotvel"], start_dim.data(), count_dim.data(), tmpArray.data());
             }
         }
-        for (auto iDim=0;iDim < 3; iDim++) {
-            int iStart = 0 ;
-            for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-                for (auto i=0; i < nBldPts; i++) {
+        for (size_t iDim=0;iDim < 3; iDim++) {
+            size_t iStart = 0 ;
+            for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+                for (size_t i=0; i < nBldPts; i++) {
                     tmpArray[i] = brFSIdata_.bld_ld[(iStart*6)+iDim];
                     iStart++;
                 }
@@ -651,13 +651,13 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
         }
 
         std::vector<double> ld_loc(3*nTotBldPts,0.0);
-        for (auto i=0; i < nTotBldPts; i++) {
+        for (size_t i=0; i < nTotBldPts; i++) {
             applyWMrotation(&brFSIdata_.bld_def[i*6+3], &brFSIdata_.bld_ld[i*6], &ld_loc[i*3]);
         }
-        for (auto iDim=0;iDim < 3; iDim++) {
-            int iStart = 0 ;
-            for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-                for (auto i=0; i < nBldPts; i++) {
+        for (size_t iDim=0;iDim < 3; iDim++) {
+            size_t iStart = 0 ;
+            for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+                for (size_t i=0; i < nBldPts; i++) {
                     tmpArray[i] = ld_loc[iStart*3+iDim];
                     iStart++;
                 }
@@ -666,10 +666,10 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
             }
         }
 
-        for (auto iDim=0; iDim < 3; iDim++) {
-            int iStart = 0 ;
-            for (auto iBlade=0; iBlade < nBlades; iBlade++) {
-                for (auto i=0; i < nBldPts; i++) {
+        for (size_t iDim=0; iDim < 3; iDim++) {
+            size_t iStart = 0 ;
+            for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+                for (size_t i=0; i < nBldPts; i++) {
                     tmpArray[i] = brFSIdata_.bld_ld[(iStart*6)+3+iDim];
                     iStart++;
                 }

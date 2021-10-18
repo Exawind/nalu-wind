@@ -473,7 +473,7 @@ void OpenfastFSI::map_loads(const int tStep, const double curTime)
                 iError = MPI_Reduce(fsiTurbineData_[i]->brFSIdata_.bld_ld.data(), NULL, (nTotBldNodes)*6, MPI_DOUBLE, MPI_SUM, turbProc, bulk_.parallel());
             }
             if (bulk_.parallel_rank() == turbProc) {
-                for (size_t j=0 ; j < nTotBldNodes; j++) {
+                for (int j=0 ; j < nTotBldNodes; j++) {
                     std::cerr
                         << fsiTurbineData_[i]->brFSIdata_.bld_ld[j*6+0] << " "
                         << fsiTurbineData_[i]->brFSIdata_.bld_ld[j*6+1] << " "
