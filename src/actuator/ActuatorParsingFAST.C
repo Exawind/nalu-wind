@@ -164,7 +164,7 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
       fi.simStart = fast::restartDriverInitFAST;
     }
     get_required(y_actuator, "n_every_checkpoint", fi.nEveryCheckPoint);
-    get_required(y_actuator, "dt_fast", fi.dtFAST);
+    get_required(y_actuator, "dt_fast", fi.dt);
 
     get_required(y_actuator, "t_max", fi.tMax);
 

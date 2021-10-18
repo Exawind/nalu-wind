@@ -207,7 +207,6 @@ Realm::Realm(Realms& realms, const YAML::Node& node)
     solutionNormPostProcessing_(NULL),
     turbulenceAveragingPostProcessing_(NULL),
     dataProbePostProcessing_(NULL),
-    actuator_(NULL),
     openfast_(NULL),
     ablForcingAlg_(NULL),
     nodeCount_(0),
@@ -297,9 +296,6 @@ Realm::~Realm()
 
   if ( NULL != dataProbePostProcessing_ )
     delete dataProbePostProcessing_;
-
-  if ( NULL != actuator_ )
-    delete actuator_;
 
   if ( NULL != openfast_ )
       delete openfast_;
@@ -776,7 +772,7 @@ Realm::load(const YAML::Node & node)
       expect_sequence(node, "surface_force_moment", true);
   if (y_sfm_pp) {
       surfaceFMPostProcessing_ =
-          make_unique<SurfaceFMPostProcessing>(*this);
+          std::make_unique<SurfaceFMPostProcessing>(*this);
       surfaceFMPostProcessing_->load(y_sfm_pp);
   }
 
@@ -784,7 +780,7 @@ Realm::load(const YAML::Node & node)
   if (node["openfast_fsi"]) {
       if (surfaceFMPostProcessing_ == NULL)
           surfaceFMPostProcessing_ =
-              make_unique<SurfaceFMPostProcessing>(*this);
+            std::make_unique<SurfaceFMPostProcessing>(*this);
 
       const YAML::Node openfastNode = node["openfast_fsi"];
       openfast_ = new OpenfastFSI(meta_data(), bulk_data(),
@@ -4108,12 +4104,6 @@ Realm::process_init_multi_physics_transfer()
 {
     double timeXfer = -NaluEnv::self().nalu_time();
 
-    // check for actuator line
-    if ( NULL != actuator_ ) {
-        actuator_->sample_vel();
-        actuator_->init_predict_struct_states();
-    }
-
     if ( !hasMultiPhysicsTransfer_ )
         return;
 
@@ -4135,12 +4125,6 @@ Realm::process_multi_physics_transfer()
 
   if (openfast_ != NULL)
       openfast_->predict_struct_timestep(get_current_time());
-
-  // check for actuator line
-  if ( NULL != actuator_ ) {
-      actuator_->sample_vel();
-      actuator_->predict_struct_time_step();
-  }
 
   if ( !hasMultiPhysicsTransfer_ )
       return;
@@ -4218,10 +4202,6 @@ void
 Realm::post_converged_work()
 {
   equationSystems_.post_converged_work();
-
-  if ( NULL != actuator_ ) {
-      actuator_->advance_struct_time_step();
-  }
 
   if (openfast_ != NULL)
       openfast_->advance_struct_timestep(get_current_time());

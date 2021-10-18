@@ -53,7 +53,7 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
-    tStepRatio_(std::round(naluTimeStep / actMeta.fastInputs_.dtFAST))
+    tStepRatio_(std::round(naluTimeStep / actMeta.fastInputs_.dt))
 {
   init_openfast(actMeta, naluTimeStep);
   init_epsilon(actMeta);

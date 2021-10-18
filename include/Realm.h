@@ -455,7 +455,6 @@ class Realm {
   DataProbePostProcessing* dataProbePostProcessing_;
   std::unique_ptr<ActuatorModel> actuatorModel_;
   std::unique_ptr<SurfaceFMPostProcessing> surfaceFMPostProcessing_;
-  Actuator *actuator_;
   OpenfastFSI *openfast_;
   ABLForcingAlgorithm *ablForcingAlg_;
   BdyLayerStatistics* bdyLayerStats_{nullptr};
