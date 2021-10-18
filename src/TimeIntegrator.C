@@ -339,7 +339,8 @@ TimeIntegrator::integrate_realm()
       if (overset_->is_external_overset())
         overset_->exchange_solution();
       for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-        (*ii)->pre_timestep_work();
+        // TODO(gantech) I don't think this was supposed to be put here.  I don't see any other changes that match this at the realm level.
+        //(*ii)->pre_timestep_work();
         (*ii)->advance_time_step();
         (*ii)->process_multi_physics_transfer();
       }

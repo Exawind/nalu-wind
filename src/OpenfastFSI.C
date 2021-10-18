@@ -117,11 +117,11 @@ void OpenfastFSI::load(const YAML::Node& node)
         std::string simStartType = "na";
         get_required(node, "sim_start", simStartType);
         if (simStartType == "init") {
-            fi.simStart = fast::INIT;
+            fi.simStart = fast::simStartType::init;
         } else if (simStartType == "trueRestart") {
-            fi.simStart = fast::TRUERESTART;
+            fi.simStart = fast::simStartType::trueRestart;
         } else if (simStartType == "restartDriverInitFAST") {
-            fi.simStart = fast::RESTARTDRIVERINITFAST;
+            fi.simStart = fast::simStartType::restartDriverInitFAST;
         }
         get_required(node, "t_max", fi.tMax); // tMax is the total
         // duration to which you want to run FAST.  This should be the
@@ -264,8 +264,8 @@ void OpenfastFSI::compute_mapping() {
                 FAST.getBladeRefPositions(fsiTurbineData_[i]->brFSIdata_.bld_ref_pos, i);
                 FAST.getHubRefPosition(fsiTurbineData_[i]->brFSIdata_.hub_ref_pos, i);
                 FAST.getNacelleRefPosition(fsiTurbineData_[i]->brFSIdata_.nac_ref_pos, i);
-                FAST.getBladeRloc(fsiTurbineData_[i]->brFSIdata_.bld_rloc, i);
-                FAST.getBladeChord(fsiTurbineData_[i]->brFSIdata_.bld_chord, i);
+                // TODO(gantech) this function is not implemented in openfast
+                //FAST.getBladeRloc(fsiTurbineData_[i]->brFSIdata_.bld_rloc, i);
             }
 
             int iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.twr_ref_pos.data(), (fsiTurbineData_[i]->params_.nBRfsiPtsTwr)*6, MPI_DOUBLE, turbProc, bulk_.parallel());
@@ -273,7 +273,8 @@ void OpenfastFSI::compute_mapping() {
             iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.bld_ref_pos.data(), nTotBldNodes*6, MPI_DOUBLE, turbProc, bulk_.parallel());
             iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.hub_ref_pos.data(), 6, MPI_DOUBLE, turbProc, bulk_.parallel());
             iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.nac_ref_pos.data(), 6, MPI_DOUBLE, turbProc, bulk_.parallel());
-            iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.bld_rloc.data(), nTotBldNodes, MPI_DOUBLE, turbProc, bulk_.parallel());
+            // TODO(gantech) no memeber named bld_rloc
+            //iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.bld_rloc.data(), nTotBldNodes, MPI_DOUBLE, turbProc, bulk_.parallel());
             // No need to bcast chord
             if (! bulk_.parallel_rank())
                 std::cerr << "Computing mapping " << std::endl ;

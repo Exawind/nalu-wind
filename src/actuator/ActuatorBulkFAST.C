@@ -53,7 +53,7 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
-    tStepRatio_(std::round(naluTimeStep / actMeta.fastInputs_.dt))
+    tStepRatio_(std::round(naluTimeStep / actMeta.fastInputs_.dtDriver))
 {
   init_openfast(actMeta, naluTimeStep);
   init_epsilon(actMeta);
@@ -75,7 +75,7 @@ ActuatorBulkFAST::init_openfast(
   const ActuatorMetaFAST& actMeta, const double naluTimeStep)
 {
   openFast_.setInputs(actMeta.fastInputs_);
-  if (!is_tstep_ratio_admissable(actMeta.fastInputs_.dtFAST, naluTimeStep)) {
+  if (!is_tstep_ratio_admissable(actMeta.fastInputs_.dtDriver, naluTimeStep)) {
     throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
                              "an integral multiple of FAST time step.");
   } else {
@@ -272,6 +272,7 @@ ActuatorBulkFAST::interpolate_velocities_to_fast()
   }
 }
 
+// TODO(gantech,psakiev) update for new timestepping scheme
 void
 ActuatorBulkFAST::step_fast()
 {

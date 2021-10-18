@@ -263,8 +263,7 @@ void fsiTurbine::initialize() {
     brFSIdata_.twr_def.resize(6*nTwrPts);
     brFSIdata_.twr_vel.resize(6*nTwrPts);
     brFSIdata_.twr_ld.resize(6*nTwrPts);
-    brFSIdata_.bld_rloc.resize(nTotBldPts);
-    brFSIdata_.bld_chord.resize(nTotBldPts);
+    brFSIdata_.bld_ref_pos.resize(nTotBldPts);
     brFSIdata_.bld_ref_pos.resize(6*nTotBldPts);
     brFSIdata_.bld_def.resize(6*nTotBldPts);
     brFSIdata_.bld_vel.resize(6*nTotBldPts);
@@ -325,10 +324,8 @@ void fsiTurbine::prepare_nc_file(const int nTwrPts, const int nBlades, const int
     ncVarIDs_["twr_ref_pos"] = varid;
     ierr = nc_def_var(ncid, "twr_ref_orient", NC_DOUBLE, 2, twrRefDims.data(), &varid);
     ncVarIDs_["twr_ref_orient"] = varid;
-    ierr = nc_def_var(ncid, "bld_chord", NC_DOUBLE, 2, bldParamDims.data(), &varid);
-    ncVarIDs_["bld_chord"] = varid;
-    ierr = nc_def_var(ncid, "bld_rloc", NC_DOUBLE, 2, bldParamDims.data(), &varid);
-    ncVarIDs_["bld_rloc"] = varid;
+    ierr = nc_def_var(ncid, "bld_ref_pos", NC_DOUBLE, 2, bldParamDims.data(), &varid);
+    ncVarIDs_["bld_ref_pos"] = varid;
     ierr = nc_def_var(ncid, "bld_ref_pos", NC_DOUBLE, 3, bldRefDims.data(), &varid);
     ncVarIDs_["bld_ref_pos"] = varid;
     ierr = nc_def_var(ncid, "bld_ref_orient", NC_DOUBLE, 3, bldRefDims.data(), &varid);
@@ -408,7 +405,7 @@ void fsiTurbine::write_nc_ref_pos() {
         nTotBldPts += params_.nBRfsiPtsBlade[i];
     }
     size_t nBldPts = nTotBldPts/nBlades;
-    size_t ncid, ierr;
+    int ncid, ierr;
 
     std::stringstream defloads_fstream;
     defloads_fstream << "turb_" ;
@@ -465,24 +462,16 @@ void fsiTurbine::write_nc_ref_pos() {
             }
         }
 
-        std::vector<size_t> param_count_dim{1,nBldPts};
         size_t iStart = 0 ;
         for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
             for (size_t i=0; i < nBldPts; i++) {
-                tmpArray[i] = brFSIdata_.bld_chord[iStart];
+                tmpArray[i] = brFSIdata_.bld_ref_pos[iStart];
                 iStart++;
             }
             std::vector<size_t> start_dim{iBlade,0};
-            ierr = nc_put_vara_double(ncid, ncVarIDs_["bld_chord"], start_dim.data(), param_count_dim.data(), tmpArray.data());
-        }
-        iStart = 0 ;
-        for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
-            for (size_t i=0; i < nBldPts; i++) {
-                tmpArray[i] = brFSIdata_.bld_rloc[iStart];
-                iStart++;
-            }
-            std::vector<size_t> start_dim{iBlade,0};
+            std::vector<size_t> param_count_dim{1,nBldPts};
             ierr = nc_put_vara_double(ncid, ncVarIDs_["bld_rloc"], start_dim.data(), param_count_dim.data(), tmpArray.data());
+            ierr = nc_put_vara_double(ncid, ncVarIDs_["bld_ref_pos"], start_dim.data(), param_count_dim.data(), tmpArray.data());
         }
     }
 
@@ -520,22 +509,22 @@ void fsiTurbine::write_nc_def_loads(const size_t tStep, const double curTime) {
     check_nc_error(ierr, "nc_open");
     ierr = nc_enddef(ncid);
 
-    int iStart = 0;
-    for (int iBlade = 0; iBlade < nBlades; iBlade++) {
+    size_t iStart = 0;
+    for (size_t iBlade = 0; iBlade < nBlades; iBlade++) {
         for (size_t i=1 ; i < nBldPts-1; i++) {
-            brFSIdata_.bld_ld[(i + iStart)*6+4] = (0.5 * (brFSIdata_.bld_rloc[i + iStart + 1] - brFSIdata_.bld_rloc[i + iStart - 1]) );
+            brFSIdata_.bld_ld[(i + iStart)*6+4] = (0.5 * (brFSIdata_.bld_ref_pos[i + iStart + 1] - brFSIdata_.bld_ref_pos[i + iStart - 1]) );
         }
-        brFSIdata_.bld_ld[(iStart)*6+4] = (0.5 * (brFSIdata_.bld_rloc[iStart + 1] - brFSIdata_.bld_rloc[iStart]));
-        brFSIdata_.bld_ld[(iStart + nBldPts-1)*6+4] = (0.5 * (brFSIdata_.bld_rloc[iStart + nBldPts - 1] - brFSIdata_.bld_rloc[iStart + nBldPts - 2]));
+        brFSIdata_.bld_ld[(iStart)*6+4] = (0.5 * (brFSIdata_.bld_ref_pos[iStart + 1] - brFSIdata_.bld_ref_pos[iStart]));
+        brFSIdata_.bld_ld[(iStart + nBldPts-1)*6+4] = (0.5 * (brFSIdata_.bld_ref_pos[iStart + nBldPts - 1] - brFSIdata_.bld_ref_pos[iStart + nBldPts - 2]));
         iStart += nBldPts;
     }
     
     std::ofstream csvOut;
     csvOut.open("defloads.csv", std::ofstream::out);
-    csvOut << "rloc, x, y, z, ld_x, ld_y, ld_z, area, chord, dr" << std::endl;
+    csvOut << "rloc, x, y, z, ld_x, ld_y, ld_z, area, dr" << std::endl;
     for (auto i=0; i < nTotBldPts; i++) {
-        csvOut << brFSIdata_.bld_rloc[i] << ", " << brFSIdata_.bld_ref_pos[i*6] + brFSIdata_.bld_def[i*6] << ", " << brFSIdata_.bld_ref_pos[i*6+1] + brFSIdata_.bld_def[i*6+1] << ", " << brFSIdata_.bld_ref_pos[i*6+2] + brFSIdata_.bld_def[i*6+2] << ", " ;
-        csvOut << brFSIdata_.bld_ld[i*6] << ", " << brFSIdata_.bld_ld[i*6+1] << ", " << brFSIdata_.bld_ld[i*6+2] << ", " << brFSIdata_.bld_ld[i*6+3] << ", " << brFSIdata_.bld_chord[i] << ", " << brFSIdata_.bld_ld[i*6+4] << std::endl ;
+        csvOut << brFSIdata_.bld_ref_pos[i] << ", " << brFSIdata_.bld_ref_pos[i*6] + brFSIdata_.bld_def[i*6] << ", " << brFSIdata_.bld_ref_pos[i*6+1] + brFSIdata_.bld_def[i*6+1] << ", " << brFSIdata_.bld_ref_pos[i*6+2] + brFSIdata_.bld_def[i*6+2] << ", " ;
+        csvOut << brFSIdata_.bld_ld[i*6] << ", " << brFSIdata_.bld_ld[i*6+1] << ", " << brFSIdata_.bld_ld[i*6+2] << ", " << brFSIdata_.bld_ld[i*6+3] << ", " << brFSIdata_.bld_ld[i*6+4] << std::endl ;
     }
     csvOut.close();
     
@@ -897,8 +886,8 @@ void fsiTurbine::mapLoads() {
                     int loadMap_bip = loadMapFace[ip];
                     //Radial location of scs center projected onto blade beam mesh
                     double interpFac = loadMapInterpFace[ip];
-                    double r_n = brFSIdata_.bld_rloc[iStart + loadMap_bip];
-                    double r_np1 = brFSIdata_.bld_rloc[iStart + loadMap_bip + 1];
+                    double r_n = brFSIdata_.bld_ref_pos[iStart + loadMap_bip];
+                    double r_np1 = brFSIdata_.bld_ref_pos[iStart + loadMap_bip + 1];
                     double rloc_proj = r_n + interpFac * (r_np1 - r_n);
 
                     if (interpFac < 0.0) {
@@ -970,7 +959,7 @@ void fsiTurbine::mapLoads() {
                             tmpForceMoment[i] *= 0.5;
 
                         if ((interpFac - 0.5*sl_ratio) < 0.0) {
-                            double r_nm1 = brFSIdata_.bld_rloc[iStart + loadMap_bip - 1];
+                            double r_nm1 = brFSIdata_.bld_ref_pos[iStart + loadMap_bip - 1];
                             double l_interpFac = (rloc_proj - 0.5*sl - r_nm1)/(r_n - r_nm1);
                             splitForceMoment(tmpForceMoment.data(), l_interpFac,
                                              &(brFSIdata_.bld_ld[(loadMap_bip - 1 + iStart)*6]),
@@ -984,7 +973,7 @@ void fsiTurbine::mapLoads() {
                         }
 
                         if ((interpFac + 0.5*sl_ratio) > 1.0) {
-                            double r_np2 = brFSIdata_.bld_rloc[iStart + loadMap_bip + 2];
+                            double r_np2 = brFSIdata_.bld_ref_pos[iStart + loadMap_bip + 2];
                             double r_interpFac = (rloc_proj + 0.5*sl - r_np1)/(r_np2 - r_np1);
                             splitForceMoment(tmpForceMoment.data(), r_interpFac,
                                              &(brFSIdata_.bld_ld[(loadMap_bip + iStart + 1)*6]),
@@ -1015,13 +1004,13 @@ void fsiTurbine::mapLoads() {
                         // std::array<double,6> locTmpForceMoment;
                         // double totfrac = 0.0;
                         // for (auto iNode = loadMap_bip-1 ; iNode < loadMap_bip+2; iNode++) {
-                        //     double x_lower = std::max(brFSIdata_.bld_rloc[iStart+iNode],rloc_proj-0.5*sl);
-                        //     double x_higher = std::min(brFSIdata_.bld_rloc[iStart+iNode+1],rloc_proj+0.5*sl);
+                        //     double x_lower = std::max(brFSIdata_.bld_ref_pos[iStart+iNode],rloc_proj-0.5*sl);
+                        //     double x_higher = std::min(brFSIdata_.bld_ref_pos[iStart+iNode+1],rloc_proj+0.5*sl);
                         //     if (x_higher > x_lower) {
                         //         double locfrac = (x_higher - x_lower)/sl;
                         //         totfrac += locfrac;
-                        //         double locInterpFac = (0.5*(x_higher + x_lower) - brFSIdata_.bld_rloc[iStart+iNode])
-                        //             /(brFSIdata_.bld_rloc[iStart+iNode+1]-brFSIdata_.bld_rloc[iStart+iNode]);
+                        //         double locInterpFac = (0.5*(x_higher + x_lower) - brFSIdata_.bld_ref_pos[iStart+iNode])
+                        //             /(brFSIdata_.bld_ref_pos[iStart+iNode+1]-brFSIdata_.bld_ref_pos[iStart+iNode]);
 
                         //         for(auto i=0; i<6; i++)
                         //             locTmpForceMoment[i] = locfrac*tmpForceMoment[i];
@@ -1970,20 +1959,20 @@ void fsiTurbine::computeLoadMapping() {
     // int iStart = 0;
     // for (int iBlade=0; iBlade < nBlades; iBlade++) {
     //     int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
-    //     bld_rmm_[iStart][0] = brFSIdata_.bld_rloc[iStart];
-    //     bld_rmm_[iStart][1] = 0.5*(brFSIdata_.bld_rloc[iStart] + brFSIdata_.bld_rloc[iStart+1]);
+    //     bld_rmm_[iStart][0] = brFSIdata_.bld_ref_pos[iStart];
+    //     bld_rmm_[iStart][1] = 0.5*(brFSIdata_.bld_ref_pos[iStart] + brFSIdata_.bld_ref_pos[iStart+1]);
     //     bld_dr_[iStart] = (bld_rmm_[iStart][1]-bld_rmm_[iStart][0]);
     //     // if (!bulk_.parallel_rank())
     //     //     std::cout << "i = 0, " << bld_rmm_[iStart][0] << " - " << bld_rmm_[iStart][1] << ", dr = " << bld_dr_[iStart] << std::endl ;
     //     for (int i=1; i < nPtsBlade-1; i++) {
-    //         bld_rmm_[iStart + i][0] = 0.5*(brFSIdata_.bld_rloc[iStart+i-1] + brFSIdata_.bld_rloc[iStart+i]);
-    //         bld_rmm_[iStart + i][1] = 0.5*(brFSIdata_.bld_rloc[iStart+i] + brFSIdata_.bld_rloc[iStart+i+1]);
+    //         bld_rmm_[iStart + i][0] = 0.5*(brFSIdata_.bld_ref_pos[iStart+i-1] + brFSIdata_.bld_ref_pos[iStart+i]);
+    //         bld_rmm_[iStart + i][1] = 0.5*(brFSIdata_.bld_ref_pos[iStart+i] + brFSIdata_.bld_ref_pos[iStart+i+1]);
     //         bld_dr_[iStart + i] = (bld_rmm_[iStart + i][1]-bld_rmm_[iStart + i][0]);
     //         // if (!bulk_.parallel_rank())
     //         //     std::cout << "i = " << i << ", " << bld_rmm_[iStart+i][0] << " - " << bld_rmm_[iStart+i][1] << ", dr = " << bld_dr_[iStart+i] << std::endl ;
     //     }
-    //     bld_rmm_[iStart+nPtsBlade-1][0] = 0.5*(brFSIdata_.bld_rloc[iStart+nPtsBlade-2]+brFSIdata_.bld_rloc[iStart+nPtsBlade-1]);
-    //     bld_rmm_[iStart+nPtsBlade-1][1] = brFSIdata_.bld_rloc[iStart+nPtsBlade-1];
+    //     bld_rmm_[iStart+nPtsBlade-1][0] = 0.5*(brFSIdata_.bld_ref_pos[iStart+nPtsBlade-2]+brFSIdata_.bld_ref_pos[iStart+nPtsBlade-1]);
+    //     bld_rmm_[iStart+nPtsBlade-1][1] = brFSIdata_.bld_ref_pos[iStart+nPtsBlade-1];
     //     bld_dr_[iStart+nPtsBlade-1] = (bld_rmm_[iStart+nPtsBlade-1][1]-bld_rmm_[iStart+nPtsBlade-1][0]);
     //     // if (!bulk_.parallel_rank())
     //     //     std::cout << "i = " << nPtsBlade-1 << ", " << bld_rmm_[iStart+nPtsBlade-1][0] << " - " << bld_rmm_[iStart+nPtsBlade-1][1] << ", dr = " << bld_dr_[iStart+nPtsBlade-1] << std::endl ;
@@ -2111,7 +2100,7 @@ void fsiTurbine::computeLoadMapping() {
                             loadMapInterpFace[ip] = 0.0;
                             loadMapFace[ip] = 0;
                         } else if (nDimCoord > 1.0) { //Assign this node to the last point and element of the OpenFAST mesh
-                            loadMapInterpFace[ip] = 1.0;//brFSIdata_.bld_rloc[iStart+nPtsBlade-1];
+                            loadMapInterpFace[ip] = 1.0;//brFSIdata_.bld_ref_pos[iStart+nPtsBlade-1];
                             loadMapFace[ip] = nPtsBlade-2;
                         }
                     }
