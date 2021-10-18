@@ -404,7 +404,7 @@ void fsiTurbine::write_nc_ref_pos() {
     size_t nTwrPts = params_.nBRfsiPtsTwr;
     size_t nBlades = params_.numBlades;
     size_t nTotBldPts = 0;
-    for (int i=0; i < nBlades; i++) {
+    for (size_t i=0; i < nBlades; i++) {
         nTotBldPts += params_.nBRfsiPtsBlade[i];
     }
     size_t nBldPts = nTotBldPts/nBlades;
@@ -426,13 +426,13 @@ void fsiTurbine::write_nc_ref_pos() {
     {
         std::vector<size_t> count_dim{1,nTwrPts};
         for (size_t idim=0;idim < 3; idim++) {
-            for (auto i=0; i < nTwrPts; i++)
+            for (size_t i=0; i < nTwrPts; i++)
                 tmpArray[i] = brFSIdata_.twr_ref_pos[i*6+idim] ;
             std::vector<size_t> start_dim{idim,0};
             ierr = nc_put_vara_double(ncid, ncVarIDs_["twr_ref_pos"], start_dim.data(), count_dim.data(), tmpArray.data());
         }
         for (size_t idim=0;idim < 3; idim++) {
-            for (auto i=0; i < nTwrPts; i++)
+            for (size_t i=0; i < nTwrPts; i++)
                 tmpArray[i] = brFSIdata_.twr_ref_pos[i*6+3+idim] ;
             std::vector<size_t> start_dim{idim,0};
             ierr = nc_put_vara_double(ncid, ncVarIDs_["twr_ref_orient"], start_dim.data(), count_dim.data(), tmpArray.data());
@@ -708,17 +708,17 @@ void fsiTurbine::mapLoads() {
     //To implement this function - assume that 'loadMap_' field contains the node id along the blade or the tower that will accumulate the load corresponding to the node on the CFD surface mesh
 
     //First zero out forces on the OpenFAST mesh
-    for (size_t i=0; i < params_.nBRfsiPtsTwr; i++) {
-        for (size_t j=0; j < 6; j++)
+    for (int i=0; i < params_.nBRfsiPtsTwr; i++) {
+        for (int j=0; j < 6; j++)
             brFSIdata_.twr_ld[i*6+j] = 0.0;
     }
 
     int nBlades = params_.numBlades;
     int iRunTot = 0;
-    for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+    for (int iBlade=0; iBlade < nBlades; iBlade++) {
         int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
-        for (size_t i=0; i < nPtsBlade; i++) {
-            for (size_t j=0; j < 6; j++)
+        for (int i=0; i < nPtsBlade; i++) {
+            for (int j=0; j < 6; j++)
                 brFSIdata_.bld_ld[iRunTot*6+j] = 0.0;
             iRunTot++;
         }
@@ -1093,7 +1093,7 @@ void fsiTurbine::mapLoads() {
 
 //! Split a force and moment into the surrounding 'left' and 'right' nodes in a variationally consistent manner using
 void fsiTurbine::splitForceMoment(double *totForceMoment, double interpFac, double *leftForceMoment, double *rightForceMoment) {
-    for(size_t i=0; i<6; i++) {
+    for(int i=0; i<6; i++) {
         leftForceMoment[i] += (1.0 - interpFac) * totForceMoment[i];
         rightForceMoment[i] += interpFac * totForceMoment[i];
     }
@@ -1134,7 +1134,7 @@ void fsiTurbine::computeHubForceMomentForPart(std::vector<double> & hubForceMome
 void fsiTurbine::computeEffForceMoment(double *forceCFD, double *xyzCFD, double *forceMomOF, double *xyzOF) {
 
     const int ndim=3; //I don't see this ever being used in other situations
-    for(size_t j=0; j < ndim; j++)
+    for(int j=0; j < ndim; j++)
         forceMomOF[j] += forceCFD[j];
     forceMomOF[3] += (xyzCFD[1]-xyzOF[1])*forceCFD[2] - (xyzCFD[2]-xyzOF[2])*forceCFD[1] ;
     forceMomOF[4] += (xyzCFD[2]-xyzOF[2])*forceCFD[0] - (xyzCFD[0]-xyzOF[0])*forceCFD[2] ;
@@ -1161,22 +1161,22 @@ void fsiTurbine::setRotationDisplacement(std::array<double,3> axis, double omega
     //For each node on the openfast blade1 mesh - compute distance from the blade root node. Apply a rotation varying as the square of the distance between 0 - 45 degrees about the [0 1 0] axis. Apply a translation displacement that produces a tip displacement of 5m
     int iStart = 0;
     int nBlades = params_.numBlades;;
-    for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+    for (int iBlade=0; iBlade < nBlades; iBlade++) {
         double bladeRot = 4.0*tan(0.25 * iBlade * 120.0 * M_PI / 180.0);
         std::vector<double> wmRotBlade_ref = {bladeRot * axis[0], bladeRot * axis[1], bladeRot * axis[2]};
         std::vector<double> wmRotBlade(3,0.0);
         composeWM(wmHubRot.data(), wmRotBlade_ref.data(), wmRotBlade.data());
 
         int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
-        for (size_t i=0; i < nPtsBlade; i++) {
+        for (int i=0; i < nPtsBlade; i++) {
             
             //Transpose the whole thing
-            for(size_t j=0; j < 3; j++)
+            for(int j=0; j < 3; j++)
                 brFSIdata_.bld_def[(iStart+i)*6+3+j] = -wmRotBlade[j];
 
             //Set translational displacement
             std::vector<double> r(3,0.0);
-            for(size_t j=0; j < 3; j++)
+            for(int j=0; j < 3; j++)
                 r[j] = brFSIdata_.bld_ref_pos[(iStart+i)*6+j] - brFSIdata_.hub_ref_pos[j];
 
             std::vector<double> rRot(3,0.0);
@@ -1212,13 +1212,13 @@ void fsiTurbine::setSampleDisplacement(double curTime) {
     //For each node on the openfast blade1 mesh - compute distance from the blade root node. Apply a rotation varying as the square of the distance between 0 - 45 degrees about the [0 1 0] axis. Apply a translation displacement that produces a tip displacement of 5m
     int iStart = 0;
     int nBlades = params_.numBlades;;
-    for (size_t iBlade=0; iBlade < nBlades; iBlade++) {
+    for (int iBlade=0; iBlade < nBlades; iBlade++) {
         std::vector<double> wmRotBlade_ref = {4.0*tan(0.25 * iBlade * 120.0 * M_PI / 180.0), 0.0, 0.0};
         std::vector<double> wmRotBlade(3,0.0);
         composeWM(wmHubRot.data(), wmRotBlade_ref.data(), wmRotBlade.data());
 
         int nPtsBlade = params_.nBRfsiPtsBlade[iBlade];
-        for (size_t i=0; i < nPtsBlade; i++) {
+        for (int i=0; i < nPtsBlade; i++) {
 
             double rDistSq = calcDistanceSquared(&(brFSIdata_.bld_ref_pos[(iStart+i)*6]), &(brFSIdata_.bld_ref_pos[(iStart)*6]) )/10000.0;
             double sinRdistSq = std::sin(rDistSq);
@@ -1228,7 +1228,7 @@ void fsiTurbine::setSampleDisplacement(double curTime) {
             std::vector<double> wmRot(3,0.0);
             applyWMrotation(wmRotBlade.data(), wmRot1.data(), wmRot.data());
             double rot = 4.0*tan(0.25 * (45.0 * M_PI / 180.0) * sinRdistSq  * sinOmegaT ); // 4.0 * tan(phi/4.0) parameter for Wiener-Milenkovic
-            for(size_t j= 0; j < 3; j++) {
+            for(int j= 0; j < 3; j++) {
                 wmRot[j] *= rot;
             }
 
@@ -1240,7 +1240,7 @@ void fsiTurbine::setSampleDisplacement(double curTime) {
             applyWMrotation(finalRot.data(), origZaxis.data(), rotZaxis.data());
 
             //Finally transpose the whole thing
-            for(size_t j=0; j < 3; j++)
+            for(int j=0; j < 3; j++)
                 brFSIdata_.bld_def[(iStart+i)*6+3+j] = -finalRot[j];
 
 
@@ -1248,7 +1248,7 @@ void fsiTurbine::setSampleDisplacement(double curTime) {
             double xDisp = sinRdistSq * 15.0 * sinOmegaT;
 
             std::vector<double> r(3,0.0);
-            for(size_t j=0; j < 3; j++)
+            for(int j=0; j < 3; j++)
                 r[j] = brFSIdata_.bld_ref_pos[(iStart+i)*6+j] - brFSIdata_.hub_ref_pos[j];
 
             std::vector<double> rRot(3,0.0);
@@ -1344,7 +1344,7 @@ void fsiTurbine::setRefDisplacement(double curTime) {
               double xyzMhubDotNHatRef = dot(xyzMhub.data(), nHatRef.data());
               std::vector<double> pGlobRef(3,0.0);
               std::vector<double> pLoc(3,0.0);
-              for(size_t j=0; j < 3; j++)
+              for(int j=0; j < 3; j++)
                   pGlobRef[j] = xyzMhub[j] - xyzMhubDotNHatRef * nHatRef[j];
               applyWMrotation(wmRotBlade_ref.data(),pGlobRef.data(),pLoc.data(),-1.0);
               std::vector<double> pGlob(3,0.0);
@@ -1354,19 +1354,19 @@ void fsiTurbine::setRefDisplacement(double curTime) {
               std::vector<double> wmRot1 = {1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0), 1.0/std::sqrt(3.0)};
               std::vector<double> wmRot(3,0.0);
               applyWMrotation(wmRotBlade.data(), wmRot1.data(), wmRot.data());
-              for(size_t j= 0; j < 3; j++)
+              for(int j= 0; j < 3; j++)
                   wmRot[j] *= rot;
 
               std::vector<double> r_rot(3,0.0);
               applyWMrotation(wmRot.data(), pGlob.data(), r_rot.data());
 
-              for(size_t j=0; j < ndim; j++ )
+              for(int j=0; j < ndim; j++ )
                   vecRefNode[j] = xyzMhubRot[j] - xyzMhub[j] + transDispRot[j] + r_rot[j] - pGlob[j];
 
               std::vector<double> omega = {sinRdistSq * 6.232, sinRdistSq * 6.232, sinRdistSq * 6.232};
               std::vector<double> omegaCrossRrot(3,0.0);
               cross(omega.data(), r_rot.data(), omegaCrossRrot.data());
-              for(size_t j=0; j < ndim; j++ )
+              for(int j=0; j < ndim; j++ )
                   velRefNode[j] = tanRdistSq * 3.743 +  omegaCrossRrot[j];
 
           }
