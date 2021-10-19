@@ -60,7 +60,7 @@ TEST_F(ActuatorBulkFastTests, NGP_initializeActuatorBulk)
   ASSERT_EQ(fi.tStart, 0.0);
   ASSERT_EQ(fi.simStart, fast::init);
   ASSERT_EQ(fi.nEveryCheckPoint, 1);
-  ASSERT_EQ(fi.dtFAST, 0.005);
+  ASSERT_EQ(fi.dtDriver, 0.005);
   ASSERT_EQ(fi.tMax, 0.29);
 
   ASSERT_EQ(

@@ -473,6 +473,17 @@ SurfaceForceAndMomentAlgorithm::pre_work()
   }
 }
 
+//--------------------------------------------------------------------------
+//-------- cross_product ----------------------------------------------------
+//--------------------------------------------------------------------------
+void
+SurfaceForceAndMomentAlgorithm::cross_product(
+  double *force, double *cross, double *rad)
+{
+  cross[0] =   rad[1]*force[2] - rad[2]*force[1];
+  cross[1] = -(rad[0]*force[2] - rad[2]*force[0]);
+  cross[2] =   rad[0]*force[1] - rad[1]*force[0];
+}
 
 } // namespace nalu
 } // namespace Sierra

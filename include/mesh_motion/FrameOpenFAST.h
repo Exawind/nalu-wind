@@ -1,7 +1,7 @@
 #ifndef FRAMEOPENFAST_H
 #define FRAMEOPENFAST_H
 
-#include "FrameBase.h"
+#include "FrameMoving.h"
 #include "FSIturbine.h"
 
 #include "yaml-cpp/yaml.h"
@@ -12,14 +12,14 @@
 namespace sierra{
 namespace nalu{
 
-class FrameOpenFAST : public FrameBase
+class FrameOpenFAST : public FrameMoving
 {
 public:
   FrameOpenFAST(
     stk::mesh::BulkData& bulk,
-    YAML::Node node,
+    const YAML::Node& node,
     fsiTurbine* fsiturbinedata
-  ) : FrameBase(bulk,node),
+  ) : FrameMoving(bulk,node),
       fsiTurbineData_(fsiturbinedata)
   {
   }
@@ -30,7 +30,7 @@ public:
 
   void update_coordinates_velocity(const double time);
 
-  void post_compute_geometry();
+  void post_compute_geometry(){};
 
 private:
     FrameOpenFAST() = delete;

@@ -7,7 +7,6 @@
 
 #include <SurfaceFMPostProcessing.h>
 
-#include <nalu_make_unique.h>
 #include <FieldFunctions.h>
 #include <FieldTypeDef.h>
 #include <Realm.h>

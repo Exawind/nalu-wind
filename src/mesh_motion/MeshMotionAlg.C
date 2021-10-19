@@ -40,7 +40,7 @@ void MeshMotionAlg::load(
 
   if (openfast != NULL) {
       int nTurbinesGlob = openfast->get_nTurbinesGlob();
-      frameVec_.resize(num_groups + nTurbinesGlob);
+      movingFrameVec_.resize(num_groups + nTurbinesGlob);
 
       int n_moving_turb = 0;
       for (auto iTurb=0; iTurb < nTurbinesGlob; iTurb++) {
