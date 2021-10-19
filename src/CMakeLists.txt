@@ -83,6 +83,7 @@ target_sources(nalu PRIVATE
    ${CMAKE_CURRENT_SOURCE_DIR}/SolverAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SpecificDissipationRateEquationSystem.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SupplementalAlgorithm.C
+   ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceFMPostProcessing.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithm.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentAlgorithmDriver.C
    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceForceAndMomentWallFunctionAlgorithm.C
