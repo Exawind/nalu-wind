@@ -11,6 +11,7 @@
 #define FIELDREGISTRY_H_
 
 #include <string>
+#include <functional>
 #include <map>
 #include <memory>
 #include <vector>
@@ -37,13 +38,14 @@ struct FieldDefinition
 {
   stk::topology::rank_t rank;
   FieldTypes ftype;
+  std::function<int(int)> get_states;
 };
 
 class FieldRegistry
 {
 public:
   // probably want this to be a singleton
-  FieldRegistry();
+  FieldRegistry(int numStates = 1);
   FieldDefinition get_field_definition(std::string name);
   void register_field(
     stk::mesh::MetaData& meta,
@@ -54,6 +56,7 @@ public:
 private:
   // clang-format off
   const std::map<std::string, FieldDefinition> fieldDefMap_;
+	const int numStates_;
   // clang-format on
 };
 

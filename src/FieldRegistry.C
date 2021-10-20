@@ -13,11 +13,25 @@
 namespace sierra {
 namespace nalu {
 
-FieldRegistry::FieldRegistry()
-  : fieldDefMap_({
-      {"velocity", {stk::topology::NODE_RANK, FieldTypes::VECTOR}},
-      {"temperature", {stk::topology::NODE_RANK, FieldTypes::SCALAR}},
-    })
+static std::function<int(int)> variable_states = [](int n) { return n; };
+static std::function<int(int)> constant_states = [](int) { return 1; };
+
+static const FieldDefinition StatedNodalVector = {
+  stk::topology::NODE_RANK, FieldTypes::VECTOR, variable_states};
+static const FieldDefinition StatedNodalScalar = {
+  stk::topology::NODE_RANK, FieldTypes::SCALAR, variable_states};
+static const FieldDefinition UnstatedNodalVector = {
+  stk::topology::NODE_RANK, FieldTypes::VECTOR, constant_states};
+static const FieldDefinition UnstatedNodalScalar = {
+  stk::topology::NODE_RANK, FieldTypes::VECTOR, constant_states};
+
+static const std::map<std::string, FieldDefinition> fieldMap = {
+  {"velocity", StatedNodalVector},
+  {"temperature", StatedNodalScalar},
+};
+
+FieldRegistry::FieldRegistry(int numStates)
+  : fieldDefMap_(fieldMap), numStates_(numStates)
 {
 }
 
@@ -43,11 +57,13 @@ FieldRegistry::register_field(
   // but this only seems valid for concrete types
   switch (def.ftype) {
   case FieldTypes::VECTOR: {
-    meta.declare_field<VectorFieldType>(def.rank, name);
+    meta.declare_field<VectorFieldType>(
+      def.rank, name, def.get_states(numStates_));
     break;
   }
   case FieldTypes::SCALAR: {
-    meta.declare_field<ScalarFieldType>(def.rank, name);
+    meta.declare_field<ScalarFieldType>(
+      def.rank, name, def.get_states(numStates_));
     break;
   }
   default:

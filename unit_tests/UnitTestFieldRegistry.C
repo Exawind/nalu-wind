@@ -80,6 +80,25 @@ TEST_F(FieldRegistryTest, fieldCanBeRegisteredMultipleTimes)
   EXPECT_TRUE(fieldRegistry.field_exists(*meta_, name));
 }
 
+TEST_F(FieldRegistryTest, fieldStatesCanBeConfigured)
+{
+  const std::string name = "velocity";
+  int numStates = 1;
+  FieldRegistry fieldRegistry(numStates);
+  fieldRegistry.register_field(*meta_, name, meta_->get_parts());
+  EXPECT_EQ(
+    numStates, meta_->get_field<VectorFieldType>(stk::topology::NODE_RANK, name)
+                 ->number_of_states());
+  // have to reset
+  meta_.reset(new stk::mesh::MetaData());
+  numStates = 2;
+  FieldRegistry fieldRegistry2(numStates);
+  fieldRegistry2.register_field(*meta_, name, meta_->get_parts());
+  EXPECT_EQ(
+    numStates, meta_->get_field<VectorFieldType>(stk::topology::NODE_RANK, name)
+                 ->number_of_states());
+}
+
 } // namespace
 } // namespace nalu
 } // namespace sierra
