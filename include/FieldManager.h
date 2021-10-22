@@ -36,15 +36,14 @@ class FieldManager
 {
 public:
   // probably want this to be a singleton
-  FieldManager(FieldStateLogic logic = FieldStateLogic());
+  FieldManager(
+    stk::mesh::MetaData& meta, FieldStateLogic logic = FieldStateLogic());
   FieldDefinition get_field_definition(std::string name);
-  void register_field(
-    stk::mesh::MetaData& meta,
-    std::string name,
-    const stk::mesh::PartVector& parts);
-  bool field_exists(const stk::mesh::MetaData& meta, std::string name);
+  void register_field(std::string name, const stk::mesh::PartVector& parts);
+  bool field_exists(std::string name);
 
 private:
+  stk::mesh::MetaData& metaData_;
   const FieldStateLogic stateLogic_;
 };
 

@@ -14,7 +14,10 @@
 namespace sierra {
 namespace nalu {
 
-FieldManager::FieldManager(FieldStateLogic logic) : stateLogic_(logic) {}
+FieldManager::FieldManager(stk::mesh::MetaData& meta, FieldStateLogic logic)
+  : metaData_(meta), stateLogic_(logic)
+{
+}
 
 FieldDefinition
 FieldManager::get_field_definition(std::string name)
@@ -26,9 +29,7 @@ FieldManager::get_field_definition(std::string name)
 
 void
 FieldManager::register_field(
-  stk::mesh::MetaData& meta,
-  std::string name,
-  const stk::mesh::PartVector& parts)
+  std::string name, const stk::mesh::PartVector& parts)
 {
   const auto def = get_field_definition(name);
   // i'd like to remove this switch and just grab the type based off the enum
@@ -38,17 +39,20 @@ FieldManager::register_field(
   // but this only seems valid for concrete types
   switch (def.ftype) {
   case FieldTypes::VECTOR: {
-    meta.declare_field<VectorFieldType>(
-      def.rank, name, def.get_states(stateLogic_));
+    auto* id = &(metaData_.declare_field<VectorFieldType>(
+      def.rank, name, def.get_states(stateLogic_)));
+    for (auto&& p : parts)
+      stk::mesh::put_field_on_mesh(*id, *p, nullptr);
     break;
   }
   case FieldTypes::SCALAR: {
-    meta.declare_field<ScalarFieldType>(
-      def.rank, name, def.get_states(stateLogic_));
+    auto* id = &(metaData_.declare_field<ScalarFieldType>(
+      def.rank, name, def.get_states(stateLogic_)));
+    for (auto&& p : parts)
+      stk::mesh::put_field_on_mesh(*id, *p, nullptr);
     break;
   }
   default:
-    // this can't really be hit since our switch is based on an enum class
     throw std::runtime_error(
       "FieldTypes value not implemented in FieldManager");
     break;
@@ -56,15 +60,15 @@ FieldManager::register_field(
 }
 
 bool
-FieldManager::field_exists(const stk::mesh::MetaData& meta, std::string name)
+FieldManager::field_exists(std::string name)
 {
   const auto def = get_field_definition(name);
   switch (def.ftype) {
   case FieldTypes::VECTOR: {
-    return meta.get_field<VectorFieldType>(def.rank, name) != nullptr;
+    return metaData_.get_field<VectorFieldType>(def.rank, name) != nullptr;
   }
   case FieldTypes::SCALAR: {
-    return meta.get_field<ScalarFieldType>(def.rank, name) != nullptr;
+    return metaData_.get_field<ScalarFieldType>(def.rank, name) != nullptr;
   }
   default:
     throw std::runtime_error(
