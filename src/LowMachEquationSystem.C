@@ -671,7 +671,7 @@ LowMachEquationSystem::solve_and_update()
 
       isInit_ = false;
     } else if (
-    realm_.has_mesh_motion() && (realm_.currentNonlinearIteration_ == 1)) {
+    realm_.has_mesh_deformation() && (realm_.currentNonlinearIteration_ == 1)) {
     // continuity assemble, load_complete and solve
     continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
 
