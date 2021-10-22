@@ -8,13 +8,16 @@
 //
 
 #include <FieldRegistry.h>
-#include <stdexcept>
+#include <FieldStateLogic.h>
+#include <stk_topology/topology.hpp>
+#include <functional>
 
 namespace sierra {
 namespace nalu {
-
-static std::function<int(int)> variable_states = [](int n) { return n; };
-static std::function<int(int)> constant_states = [](int) { return 1; };
+static const std::function<int(FieldStateLogic)> variable_states =
+  [](FieldStateLogic l) { return l.useBDF2_ ? 3 : 2; };
+static const std::function<int(FieldStateLogic)> constant_states =
+  [](FieldStateLogic) { return 1; };
 
 static const FieldDefinition StatedNodalVector = {
   stk::topology::NODE_RANK, FieldTypes::VECTOR, variable_states};
@@ -25,71 +28,12 @@ static const FieldDefinition UnstatedNodalVector = {
 static const FieldDefinition UnstatedNodalScalar = {
   stk::topology::NODE_RANK, FieldTypes::VECTOR, constant_states};
 
-static const std::map<std::string, FieldDefinition> fieldMap = {
+static const std::map<std::string, FieldDefinition> Registry = {
   {"velocity", StatedNodalVector},
   {"temperature", StatedNodalScalar},
 };
 
-FieldRegistry::FieldRegistry(int numStates)
-  : fieldDefMap_(fieldMap), numStates_(numStates)
-{
-}
+FieldRegistry::FieldRegistry() : database_(Registry) {}
 
-FieldDefinition
-FieldRegistry::get_field_definition(std::string name)
-{
-  // right now this will throw if the field isn't registered in the map
-  // maybe we'd want a compile time error though for developer mistakes?
-  return fieldDefMap_.at(name);
-}
-
-void
-FieldRegistry::register_field(
-  stk::mesh::MetaData& meta,
-  std::string name,
-  const stk::mesh::PartVector& parts)
-{
-  const auto def = get_field_definition(name);
-  // i'd like to remove this switch and just grab the type based off the enum
-  // value but I haven't found a good way yet
-  // I was considering something like this:
-  // https://stackoverflow.com/questions/41415265/map-enum-value-to-a-type-in-c
-  // but this only seems valid for concrete types
-  switch (def.ftype) {
-  case FieldTypes::VECTOR: {
-    meta.declare_field<VectorFieldType>(
-      def.rank, name, def.get_states(numStates_));
-    break;
-  }
-  case FieldTypes::SCALAR: {
-    meta.declare_field<ScalarFieldType>(
-      def.rank, name, def.get_states(numStates_));
-    break;
-  }
-  default:
-    // this can't really be hit since our switch is based on an enum class
-    throw std::runtime_error(
-      "FieldTypes value not implemented in FieldRegistry");
-    break;
-  }
-}
-
-bool
-FieldRegistry::field_exists(const stk::mesh::MetaData& meta, std::string name)
-{
-  const auto def = get_field_definition(name);
-  switch (def.ftype) {
-  case FieldTypes::VECTOR: {
-    return meta.get_field<VectorFieldType>(def.rank, name) != nullptr;
-  }
-  case FieldTypes::SCALAR: {
-    return meta.get_field<ScalarFieldType>(def.rank, name) != nullptr;
-  }
-  default:
-    throw std::runtime_error(
-      "FieldTypes value not implemented in FieldRegistry");
-    return false;
-  }
-}
 } // namespace nalu
 } // namespace sierra

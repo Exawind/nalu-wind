@@ -18,6 +18,8 @@
 #include <stk_mesh/base/NgpField.hpp>
 
 #include <Tpetra_Details_DefaultTypes.hpp>
+#include <functional>
+#include <FieldStateLogic.h>
 
 #ifdef NALU_USES_HYPRE
 #include "HYPRE_utilities.h"
@@ -55,6 +57,14 @@ typedef int HypreIntType;
 typedef stk::mesh::Field<Tpetra::Details::DefaultTypes::global_ordinal_type> TpetIDFieldType;
 typedef stk::mesh::Field<HypreIntType> HypreIDFieldType;
 typedef stk::mesh::NgpField<HypreIntType> NGPHypreIDFieldType;
+
+enum class FieldTypes { SCALAR, VECTOR };
+struct FieldDefinition
+{
+  stk::topology::rank_t rank;
+  FieldTypes ftype;
+  std::function<int(FieldStateLogic)> get_states;
+};
 
 } // namespace nalu
 } // namespace Sierra

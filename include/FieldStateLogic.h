@@ -6,34 +6,20 @@
 // This software is released under the BSD 3-clause license. See LICENSE file
 // for more details.
 //
-
-#ifndef FIELDREGISTRY_H_
-#define FIELDREGISTRY_H_
-
-#include <string>
-#include <map>
-#include <FieldTypeDef.h>
+#ifndef FIELDSTATELOGIC_H_
+#define FIELDSTATELOGIC_H_
 
 namespace sierra {
 namespace nalu {
-
-class FieldRegistry
+/** Struct to handle logic exceptions for configuring field states
+ * @brief
+ *
+ */
+struct FieldStateLogic
 {
-public:
-  static const FieldDefinition& query(std::string name)
-  {
-    static FieldRegistry instance;
-    return instance.database_.at(name);
-  }
-  FieldRegistry(const FieldRegistry&) = delete;
-  void operator=(FieldRegistry const&) = delete;
-
-private:
-  FieldRegistry();
-  const std::map<std::string, FieldDefinition>& database_;
+  bool useBDF2_ = false;
 };
-
 } // namespace nalu
 } // namespace sierra
 
-#endif /* FIELDREGISTRY_H_ */
+#endif /* FIELDSTATELOGIC_H_ */
