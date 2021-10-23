@@ -58,7 +58,15 @@ typedef stk::mesh::Field<Tpetra::Details::DefaultTypes::global_ordinal_type> Tpe
 typedef stk::mesh::Field<HypreIntType> HypreIDFieldType;
 typedef stk::mesh::NgpField<HypreIntType> NGPHypreIDFieldType;
 
-enum class FieldTypes { SCALAR, VECTOR };
+enum class FieldTypes {
+  SCALAR,
+  VECTOR,
+  GENERIC,
+  GLOBALID,
+  LOCALID,
+  TPETID,
+  HYPREID
+};
 struct FieldDefinition
 {
   stk::topology::rank_t rank;

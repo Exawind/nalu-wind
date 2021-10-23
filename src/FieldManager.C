@@ -27,6 +27,14 @@ FieldManager::get_field_definition(std::string name)
   return FieldRegistry::query(name);
 }
 
+// clang-format off
+#define REGISTER(TYPE, SIZE) auto* id = &(metaData_.declare_field<TYPE>( \
+    def.rank, name, def.get_states(stateLogic_))); \
+  for (auto&& p : parts) \
+    stk::mesh::put_field_on_mesh(*id, *p, SIZE, nullptr); \
+  break
+// clang-format on
+
 void
 FieldManager::register_field(
   std::string name, const stk::mesh::PartVector& parts)
@@ -39,18 +47,26 @@ FieldManager::register_field(
   // but this only seems valid for concrete types
   switch (def.ftype) {
   case FieldTypes::VECTOR: {
-    auto* id = &(metaData_.declare_field<VectorFieldType>(
-      def.rank, name, def.get_states(stateLogic_)));
-    for (auto&& p : parts)
-      stk::mesh::put_field_on_mesh(*id, *p, nullptr);
-    break;
+    REGISTER(VectorFieldType, 3);
   }
   case FieldTypes::SCALAR: {
-    auto* id = &(metaData_.declare_field<ScalarFieldType>(
-      def.rank, name, def.get_states(stateLogic_)));
-    for (auto&& p : parts)
-      stk::mesh::put_field_on_mesh(*id, *p, nullptr);
-    break;
+    REGISTER(ScalarFieldType, 1);
+  }
+  case FieldTypes::GENERIC: {
+    // TODO this size needs to be encoded in the FieldDefinition
+    REGISTER(GenericFieldType, 1);
+  }
+  case FieldTypes::GLOBALID: {
+    REGISTER(GlobalIdFieldType, 1);
+  }
+  case FieldTypes::LOCALID: {
+    REGISTER(LocalIdFieldType, 1);
+  }
+  case FieldTypes::TPETID: {
+    REGISTER(TpetIDFieldType, 1);
+  }
+  case FieldTypes::HYPREID: {
+    REGISTER(HypreIDFieldType, 1);
   }
   default:
     throw std::runtime_error(
@@ -70,11 +86,27 @@ FieldManager::field_exists(std::string name)
   case FieldTypes::SCALAR: {
     return metaData_.get_field<ScalarFieldType>(def.rank, name) != nullptr;
   }
+  case FieldTypes::GENERIC: {
+    return metaData_.get_field<GenericFieldType>(def.rank, name) != nullptr;
+  }
+  case FieldTypes::GLOBALID: {
+    return metaData_.get_field<GlobalIdFieldType>(def.rank, name) != nullptr;
+  }
+  case FieldTypes::LOCALID: {
+    return metaData_.get_field<LocalIdFieldType>(def.rank, name) != nullptr;
+  }
+  case FieldTypes::TPETID: {
+    return metaData_.get_field<TpetIDFieldType>(def.rank, name) != nullptr;
+  }
+  case FieldTypes::HYPREID: {
+    return metaData_.get_field<HypreIDFieldType>(def.rank, name) != nullptr;
+  }
   default:
     throw std::runtime_error(
       "FieldTypes value not implemented in FieldManager");
     return false;
   }
 }
+#undef REGISTER
 } // namespace nalu
 } // namespace sierra
