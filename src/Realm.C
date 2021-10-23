@@ -826,31 +826,17 @@ Realms *Realm::parent() const { return &realms_; }
 void
 Realm::setup_nodal_fields()
 {
-#ifdef NALU_USES_HYPRE
-  hypreGlobalId_ = &(metaData_->declare_field<HypreIDFieldType>(
-                       stk::topology::NODE_RANK, "hypre_global_id"));
-#endif
-  tpetGlobalId_ = &(metaData_->declare_field<TpetIDFieldType>(
-                       stk::topology::NODE_RANK, "tpet_global_id"));
-
   // register global id and rank fields on all parts
   const stk::mesh::PartVector parts = metaData_->get_parts();
-  for ( size_t ipart = 0; ipart < parts.size(); ++ipart ) {
-    naluGlobalId_ = &(metaData_->declare_field<GlobalIdFieldType>(stk::topology::NODE_RANK, "nalu_global_id"));
-    stk::mesh::put_field_on_mesh(*naluGlobalId_, *parts[ipart], nullptr);
-
 #ifdef NALU_USES_HYPRE
-    stk::mesh::put_field_on_mesh(*hypreGlobalId_, *parts[ipart], nullptr);
+  fieldManager_->register_field("hypre_global_id", parts);
 #endif
-    stk::mesh::put_field_on_mesh(*tpetGlobalId_, *parts[ipart], nullptr);
-    stk::mesh::field_fill(std::numeric_limits<LinSys::GlobalOrdinal>::max(), *tpetGlobalId_);
-  }
-
+  fieldManager_->register_field("tpet_global_id", parts);
+  fieldManager_->register_field("nalu_global_id", parts);
 
   // loop over all material props targets and register nodal fields
   std::vector<std::string> targetNames = get_physics_target_names();
   equationSystems_.register_nodal_fields(targetNames);
-
 }
 
 //--------------------------------------------------------------------------

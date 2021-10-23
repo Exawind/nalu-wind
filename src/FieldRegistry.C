@@ -31,6 +31,12 @@ static const FieldDefinition UnstatedNodalScalar = {
 static const std::map<std::string, FieldDefinition> Registry = {
   {"velocity", StatedNodalVector},
   {"temperature", StatedNodalScalar},
+  {"hypre_global_id",
+   {stk::topology::NODE_RANK, FieldTypes::HYPREID, constant_states}},
+  {"tpet_global_id",
+   {stk::topology::NODE_RANK, FieldTypes::TPETID, constant_states}},
+  {"nalu_global_id",
+   {stk::topology::NODE_RANK, FieldTypes::GLOBALID, constant_states}},
 };
 
 FieldRegistry::FieldRegistry() : database_(Registry) {}
