@@ -28,16 +28,10 @@ using PartVector = std::vector<Part*>;
 namespace sierra {
 namespace nalu {
 
-// once we move to c++17 we can just use a map with std::any like
-// https://raymii.org/s/articles/Store_multiple_types_in_a_single_stdmap_in_cpp_just_like_a_python_dict.html
-// this will solve the type/map issues and simplify the code
-
 class FieldManager
 {
 public:
-  // probably want this to be a singleton
-  FieldManager(
-    stk::mesh::MetaData& meta, FieldStateLogic logic = FieldStateLogic());
+  FieldManager(stk::mesh::MetaData& meta, FieldStateLogic logic = {false});
   FieldDefinition get_field_definition(std::string name);
   void register_field(std::string name, const stk::mesh::PartVector& parts);
   bool field_exists(std::string name);

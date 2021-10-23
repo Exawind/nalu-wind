@@ -63,6 +63,7 @@ class GeometryAlgDriver;
 class NonConformalManager;
 class ErrorIndicatorAlgorithmDriver;
 class EquationSystems;
+class FieldManager;
 class OutputInfo;
 class OversetManager;
 class PostProcessingInfo;
@@ -122,6 +123,7 @@ class Realm {
 
   void create_mesh();
 
+  // TODO remove all of these by registering fields inside algorithms
   void setup_nodal_fields();
   void setup_edge_fields();
   void setup_element_fields();
@@ -621,6 +623,7 @@ class Realm {
   const YAML::Node & node_;
 
   // tools
+  std::unique_ptr<FieldManager> fieldManager_;
   std::unique_ptr<PromotedElementIO> promotionIO_; // mesh outputer
   std::vector<std::string> superTargetNames_;
 

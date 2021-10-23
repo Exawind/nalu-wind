@@ -20,6 +20,8 @@
 #include <EquationSystem.h>
 #include <EquationSystems.h>
 #include <FieldTypeDef.h>
+#include <FieldManager.h>
+#include <FieldStateLogic.h>
 #include <LinearSystem.h>
 #include <LinearSolvers.h>
 #include <master_element/MasterElement.h>
@@ -753,6 +755,8 @@ Realm::load(const YAML::Node & node)
 
   // once we know the mesh name, we can open the meta data, and set spatial dimension
   create_mesh();
+  FieldStateLogic logic = {timeIntegrator_->secondOrderTimeAccurate_};
+  fieldManager_ = std::make_unique<FieldManager>(meta_data(), logic);
   spatialDimension_ = metaData_->spatial_dimension();
 
   // post processing
