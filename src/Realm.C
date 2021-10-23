@@ -829,9 +829,10 @@ Realm::setup_nodal_fields()
   // register global id and rank fields on all parts
   const stk::mesh::PartVector parts = metaData_->get_parts();
 #ifdef NALU_USES_HYPRE
+  // TODO move this to HypreLinearSystem.C
   fieldManager_->register_field("hypre_global_id", parts);
 #endif
-  fieldManager_->register_field("tpet_global_id", parts);
+  // TODO move this to TpetraLinearSystem.C
   fieldManager_->register_field("nalu_global_id", parts);
 
   // loop over all material props targets and register nodal fields

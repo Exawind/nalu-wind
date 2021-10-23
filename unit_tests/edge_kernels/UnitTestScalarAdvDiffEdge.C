@@ -95,7 +95,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra)
   unit_test_utils::TpetraHelperObjectsEdge helperObjs(bulk_, numDof);
 
   helperObjs.realm.naluGlobalId_ = naluGlobalId_;
-  helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
 
   helperObjs.realm.set_global_id();
 
@@ -169,7 +168,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_fix_pressure_at_n
   solnOpts->fixPressureInfo_->stkNodeId_ = 1;
 
   helperObjs.realm.naluGlobalId_ = naluGlobalId_;
-  helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
 
   helperObjs.realm.set_global_id();
 
@@ -229,7 +227,6 @@ TEST_F(MixtureFractionKernelHex8Mesh, NGP_adv_diff_edge_tpetra_dirichlet)
   solnOpts->fixPressureInfo_->stkNodeId_ = 1;
 
   helperObjs.realm.naluGlobalId_ = naluGlobalId_;
-  helperObjs.realm.tpetGlobalId_ = tpetGlobalId_;
 
   helperObjs.realm.set_global_id();
 

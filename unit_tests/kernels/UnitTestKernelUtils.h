@@ -255,28 +255,20 @@ public:
       bulk_(meta_, comm_),
       solnOpts_(),
       coordinates_(nullptr),
-      naluGlobalId_(
-        &meta_.declare_field<GlobalIdFieldType>(
-          stk::topology::NODE_RANK, "nalu_global_id",1)),
-      tpetGlobalId_(
-        &meta_.declare_field<TpetIDFieldType>(
-          stk::topology::NODE_RANK, "tpet_global_id",1)),
+      naluGlobalId_(&meta_.declare_field<GlobalIdFieldType>(
+        stk::topology::NODE_RANK, "nalu_global_id", 1)),
       dnvField_(&meta_.declare_field<ScalarFieldType>(
-                  stk::topology::NODE_RANK, "dual_nodal_volume",3)),
+        stk::topology::NODE_RANK, "dual_nodal_volume", 3)),
       divMeshVelField_(&meta_.declare_field<ScalarFieldType>(
-                  stk::topology::NODE_RANK, "div_mesh_velocity")),
-      edgeAreaVec_(
-        &meta_.declare_field<VectorFieldType>(
-          stk::topology::EDGE_RANK, "edge_area_vector")),
-      elementVolume_(
-        &meta_.declare_field<ScalarFieldType>(
-          stk::topology::ELEM_RANK, "element_volume")),
-      exposedAreaVec_(
-        &meta_.declare_field<GenericFieldType>(
-          meta_.side_rank(), "exposed_area_vector"))
+        stk::topology::NODE_RANK, "div_mesh_velocity")),
+      edgeAreaVec_(&meta_.declare_field<VectorFieldType>(
+        stk::topology::EDGE_RANK, "edge_area_vector")),
+      elementVolume_(&meta_.declare_field<ScalarFieldType>(
+        stk::topology::ELEM_RANK, "element_volume")),
+      exposedAreaVec_(&meta_.declare_field<GenericFieldType>(
+        meta_.side_rank(), "exposed_area_vector"))
   {
     stk::mesh::put_field_on_mesh(*naluGlobalId_, meta_.universal_part(), 1, nullptr);
-    stk::mesh::put_field_on_mesh(*tpetGlobalId_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*dnvField_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*divMeshVelField_, meta_.universal_part(), 1, nullptr);
     stk::mesh::put_field_on_mesh(*edgeAreaVec_, meta_.universal_part(), spatialDim_, nullptr);
@@ -325,7 +317,6 @@ public:
 
   const VectorFieldType* coordinates_{nullptr};
   GlobalIdFieldType* naluGlobalId_{nullptr};
-  TpetIDFieldType* tpetGlobalId_{nullptr};
   ScalarFieldType* dnvField_{nullptr};
   ScalarFieldType* divMeshVelField_{nullptr};
   VectorFieldType* edgeAreaVec_{nullptr};

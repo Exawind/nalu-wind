@@ -298,6 +298,7 @@ public:
   LocalOrdinal maxSharedNotOwnedRowId_; // = (num_owned_nodes + num_sharedNotOwned_nodes) * numDof_
 
   std::vector<int> sortPermutation_;
+  TpetIDFieldType* tpetGlobalId_;
 };
 
 template<typename T1, typename T2>

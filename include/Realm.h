@@ -680,7 +680,6 @@ class Realm {
    *  endIdx(MPI_rank) + 1.
    */
   HypreIDFieldType* hypreGlobalId_{nullptr};
-  TpetIDFieldType* tpetGlobalId_{nullptr};
 
   /** Flag indicating whether Hypre solver is being used for any of the equation
    * systems.
