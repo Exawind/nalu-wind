@@ -12,6 +12,7 @@
 #include <stk_mesh/base/FieldBase.hpp>
 
 #include <master_element/MasterElement.h>
+#include <master_element/MasterElementWork.h>
 
 #include <master_element/Hex8CVFEM.h>
 #include <master_element/Hex27CVFEM.h>
@@ -232,6 +233,116 @@ void check_derivatives(
   }
 }
 
+void check_determinates(
+  const stk::mesh::BulkData& bulk,
+  const stk::topology& topo,
+  sierra::nalu::MasterElement& me,
+  unsigned poly_order)
+{
+  const int nint = sierra::nalu::AlgTraitsHex8::numScsIp_;
+  const int num_nodes = sierra::nalu::AlgTraitsHex8::nodesPerElement_;
+  const int dim = 3;
+  const int num_elem = 4;
+  stk::mesh::EntityVector elems;
+  stk::mesh::get_entities(bulk, stk::topology::ELEM_RANK, elems);
+  EXPECT_EQ(elems.size(), 1u); // single element test
+  EXPECT_EQ(num_nodes, topo.num_nodes());
+  EXPECT_EQ(dim, topo.dimension());
+  EXPECT_EQ(nint, me.num_integration_points());
+
+  auto elem = elems.front();
+
+  const double unit_ans[nint][dim] = 
+    {{0.25,0,0},{0,0.25,0},{-0.25,0,0},{0,0.25,0},{0.25,0,0},{0,0.25,0},
+     {-0.25,0,0},{0,0.25,0},{0,0,0.25},{0,0,0.25},{0,0,0.25},{0,0,0.25}};
+  const auto* const coordField = bulk.mesh_meta_data().coordinate_field();
+  EXPECT_TRUE(coordField != nullptr);
+
+  std::vector<std::array<std::array<double,dim>,num_nodes>> ws_coords(num_elem);
+  const auto* nodes = bulk.begin_nodes(elem);
+  for (int j = 0; j < num_nodes; ++j) {
+    const double* coords = static_cast<const double*>(stk::mesh::field_data(*coordField, nodes[j]));
+    for (int d = 0; d < dim; ++d) {
+      ws_coords[0][j][d] = coords[d];
+    }
+  }
+
+  const double pi = std::acos(-1.0);
+  const double theta0 = pi/3;
+  const double theta1 = pi/4;
+  const double theta2 = pi/5;
+  const double cost0  = std::cos(theta0);
+  const double sint0  = std::sin(theta0);
+  const double cost1  = std::cos(theta1);
+  const double sint1  = std::sin(theta1);
+  const double cost2  = std::cos(theta2);
+  const double sint2  = std::sin(theta2);
+  const double rotx[3][3] = {{1,0,0},{0,cost0,-sint0},{0,sint0,cost0}};
+  const double roty[3][3] = {{cost1,0,sint1},{0,1,0},{-sint1,0,cost1}};
+  const double rotz[3][3] = {{cost2,-sint2,0},{sint2,cost2,0},{0,0,1}};
+
+  for (int j = 0; j < num_nodes; ++j) {
+    for (int d = 0; d < dim; ++d) {
+      for (int i = 1; i < num_elem; ++i) {
+        ws_coords[i][j][d] = 0;
+      }
+    }
+  }
+  for (int j = 0; j < num_nodes; ++j) {
+    for (int d = 0; d < dim; ++d) {
+      for (int i = 0; i < dim; ++i) {
+        ws_coords[1][j][i] += rotx[i][d]*ws_coords[0][j][d];
+      }
+    }
+  }
+  for (int j = 0; j < num_nodes; ++j) {
+    for (int d = 0; d < dim; ++d) {
+      for (int i = 0; i < dim; ++i) {
+        ws_coords[2][j][i] += roty[i][d]*ws_coords[1][j][d];
+      }
+    }
+  }
+  for (int j = 0; j < num_nodes; ++j) {
+    for (int d = 0; d < dim; ++d) {
+      for (int i = 0; i < dim; ++i) {
+        ws_coords[3][j][i] += rotz[i][d]*ws_coords[2][j][d];
+      }
+    }
+  }
+  std::vector<std::array<std::array<double,dim>,num_elem>> area_det(nint);
+
+  sierra::nalu::hex_scs_det(num_elem, ws_coords.data()->data()->data(), area_det.data()->data()->data());
+  for (int j = 0 ; j < nint; ++j) {
+    for (int i = 0 ; i < dim; ++i) {
+      EXPECT_NEAR(area_det[j][0][i], unit_ans[j][i], 1.0e-12);
+    }
+  }
+  for (int n=0; n<num_elem; ++n) {
+    for (int j = 0 ; j < nint; ++j) {
+      double norm = 0;
+      for (int i = 0 ; i < dim; ++i) 
+        norm += area_det[j][n][i]*area_det[j][n][i];
+      // Not sure what the exact answer is, but a rotation
+      // should not change the length of the area vector.
+      EXPECT_NEAR(std::sqrt(norm), 0.25, 1.0e-12);
+    }
+  }
+
+  // Check against old version.  Will delete when Fortran is Removed.
+  double error = 0.0;
+  std::vector<std::array<std::array<double,dim>,num_elem>> meDetj(nint);
+  me.determinant(num_elem, ws_coords.data()->data()->data(), meDetj.data()->data()->data(), &error);
+  EXPECT_EQ(error, 0.0);
+  for (int n=0; n<num_elem; ++n) {
+    for (int j = 0 ; j < nint; ++j) {
+      double norm = 0;
+      for (int i = 0 ; i < dim; ++i) {
+        EXPECT_NEAR(area_det[j][n][i], meDetj[j][n][i], 1.0e-12);
+      }
+    }
+  }
+}
+
 class MasterElementHexSerial : public ::testing::Test
 {
 protected:
@@ -287,6 +398,15 @@ TEST_F(MasterElementHexSerial, hex8_scs_derivatives)
     setup_poly_order_1_hex_8();
     sierra::nalu::HexSCS hexscs;
     check_derivatives(bulk, topo, hexscs, poly_order);
+  }
+}
+
+TEST_F(MasterElementHexSerial, hex8_scs_determinates)
+{
+  if (stk::parallel_machine_size(comm) == 1) {
+    setup_poly_order_1_hex_8();
+    sierra::nalu::HexSCS hexscs;
+    check_determinates(bulk, topo, hexscs, poly_order);
   }
 }
 
