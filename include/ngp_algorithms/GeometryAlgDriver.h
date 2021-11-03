@@ -72,9 +72,14 @@ public:
     hasWallFunc_ = true;
   }
 
+  double total_volume() { return volStats_[2];}
+
 private:
   //! Flag to track whether wall functions are active
   bool hasWallFunc_{false};
+
+  //! Volume statistics
+  double volStats_[3] = { 0.0, 0.0, 0.0 };
 };
 
 }  // nalu

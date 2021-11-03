@@ -12,11 +12,18 @@
 
 #include "node_kernels/NodeKernel.h"
 #include "SolutionOptions.h"
+#include "EquationSystems.h"
+#include "EquationSystem.h"
 
 #include "stk_mesh/base/BulkData.hpp"
 #include "stk_mesh/base/Ngp.hpp"
 #include "stk_mesh/base/NgpField.hpp"
 #include "stk_mesh/base/Types.hpp"
+
+#include "ngp_algorithms/GeometryAlgDriver.h"
+#include "ngp_algorithms/GeometryBoundaryAlg.h"
+#include "ngp_algorithms/MdotAlgDriver.h"
+#include "ngp_algorithms/MdotInflowAlg.h"
 
 namespace sierra {
 namespace nalu {
@@ -26,8 +33,7 @@ class MomentumBodyForceBoxNodeKernel
 {
 public:
   MomentumBodyForceBoxNodeKernel(
-    const stk::mesh::BulkData&,
-    const std::string,
+    Realm& realm,
     const std::vector<double>&,
     const std::vector<double>& = std::vector<double>());
 
@@ -53,11 +59,20 @@ private:
     forceVector_[NodeKernelTraits::NDimMax];
   NALU_ALIGNED NodeKernelTraits::DblType lo_[NodeKernelTraits::NDimMax];
   NALU_ALIGNED NodeKernelTraits::DblType hi_[NodeKernelTraits::NDimMax];
-
-  unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
-  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
+  stk::mesh::Part* mdotPart_;
+  stk::mesh::PartVector dragPartVec_;
+  GeometryAlgDriver* geometryAlgDriver_;
+  MdotAlgDriver* mdotAlgDriver_;
 
   const int nDim_;
+  unsigned coordinatesID_{stk::mesh::InvalidOrdinal};
+  unsigned dualNodalVolumeID_{stk::mesh::InvalidOrdinal};
+  unsigned exposedAreaVecID_{stk::mesh::InvalidOrdinal};
+  unsigned pressureForceID_{stk::mesh::InvalidOrdinal};
+  unsigned viscousForceID_{stk::mesh::InvalidOrdinal};
+  const std::string& outputFileName_;
+  const bool& dynamic_;
+  const int w_;
 };
 
 } // namespace nalu

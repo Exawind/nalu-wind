@@ -1349,9 +1349,7 @@ MomentumEquationSystem::register_interior_algorithm(
               realm_.solutionOptions_->srcTermParamMap_.find("momentum_box");
             if (bx != realm_.solutionOptions_->srcTermParamMap_.end()) {
               nodeAlg.add_kernel<MomentumBodyForceBoxNodeKernel>(
-                realm_.bulk_data(),
-                realm_.solutionOptions_->get_coordinates_name(), it->second,
-                bx->second);
+                realm_, it->second, bx->second);
             } else {
               throw std::runtime_error(
                 "MomentumEQS::body_force_box: No box vector found");
