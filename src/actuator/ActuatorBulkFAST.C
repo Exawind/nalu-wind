@@ -75,7 +75,7 @@ ActuatorBulkFAST::init_openfast(
   const ActuatorMetaFAST& actMeta, const double naluTimeStep)
 {
   openFast_.setInputs(actMeta.fastInputs_);
-  if (!is_tstep_ratio_admissable(actMeta.fastInputs_.dtFAST, naluTimeStep)) {
+  if (!is_tstep_ratio_admissable(actMeta.fastInputs_.dt, naluTimeStep)) {
     throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
                              "an integral multiple of FAST time step.");
   } else {

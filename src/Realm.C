@@ -835,7 +835,6 @@ Realm::load(const YAML::Node & node)
   // set number of nodes, check job run size
   check_job(true);
 
-  }
 }
 
 Simulation *Realm::root() { return parent()->root(); }

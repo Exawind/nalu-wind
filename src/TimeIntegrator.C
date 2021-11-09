@@ -329,17 +329,33 @@ TimeIntegrator::integrate_realm()
     pre_realm_advance_stage1();
     if (update_overset) overset_->update_connectivity();
     pre_realm_advance_stage2();
-
+    
     const double endPreProc = NaluEnv::self().nalu_time();
     // nonlinear iteration loop; Picard-style
     for ( int k = 0; k < nonlinearIterations_; ++k ) {
       NaluEnv::self().naluOutputP0()
         << "   Realm Nonlinear Iteration: " << k+1 << "/" << nonlinearIterations_ << std::endl
         << std::endl;
+
+      if (k > 0) {
+
+          for (auto realm: realmVec_)
+              realm->pre_timestep_work_prolog();
+          
+          if (update_overset) overset_->update_connectivity();
+      }
+
       if (overset_->is_external_overset())
-        overset_->exchange_solution();
+          overset_->exchange_solution();          
+
+      if (k > 0) {
+          
+          for (auto realm: realmVec_)
+              realm->pre_timestep_work_epilog();
+
+      }
+
       for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
-        (*ii)->pre_timestep_work();
         (*ii)->advance_time_step();
         (*ii)->process_multi_physics_transfer();
       }

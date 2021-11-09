@@ -408,7 +408,7 @@ void fsiTurbine::write_nc_ref_pos() {
         nTotBldPts += params_.nBRfsiPtsBlade[i];
     }
     size_t nBldPts = nTotBldPts/nBlades;
-    size_t ncid, ierr;
+    int ncid, ierr;
 
     std::stringstream defloads_fstream;
     defloads_fstream << "turb_" ;

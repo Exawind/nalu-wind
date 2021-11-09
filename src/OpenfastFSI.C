@@ -117,11 +117,11 @@ void OpenfastFSI::load(const YAML::Node& node)
         std::string simStartType = "na";
         get_required(node, "sim_start", simStartType);
         if (simStartType == "init") {
-            fi.simStart = fast::INIT;
+            fi.simStart = fast::init;
         } else if (simStartType == "trueRestart") {
-            fi.simStart = fast::TRUERESTART;
+            fi.simStart = fast::trueRestart;
         } else if (simStartType == "restartDriverInitFAST") {
-            fi.simStart = fast::RESTARTDRIVERINITFAST;
+            fi.simStart = fast::restartDriverInitFAST;
         }
         get_required(node, "t_max", fi.tMax); // tMax is the total
         // duration to which you want to run FAST.  This should be the

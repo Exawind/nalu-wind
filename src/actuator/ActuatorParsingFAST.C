@@ -163,7 +163,7 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     } else if (simStartType == "restartDriverInitFAST") {
       fi.simStart = fast::restartDriverInitFAST;
     }
-    get_required(y_actuator, "n_every_checkpoint", fi.nEveryCheckPoint);
+    get_required(y_actuator, "restartFreq", fi.restartFreq);
     get_required(y_actuator, "dt_fast", fi.dt);
 
     get_required(y_actuator, "t_max", fi.tMax);
@@ -171,8 +171,6 @@ actuator_FAST_parse(const YAML::Node& y_node, const ActuatorMeta& actMeta)
     if (y_actuator["super_controller"]) {
       get_required(y_actuator, "super_controller", fi.scStatus);
       get_required(y_actuator, "sc_libFile", fi.scLibFile);
-      get_required(y_actuator, "num_sc_inputs", fi.numScInputs);
-      get_required(y_actuator, "num_sc_outputs", fi.numScOutputs);
     }
 
     fi.globTurbineData.resize(fi.nTurbinesGlob);
