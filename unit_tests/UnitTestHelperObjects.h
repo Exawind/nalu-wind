@@ -28,12 +28,10 @@ struct HelperObjectsBase
     : yamlNode(yaml_node),
       realmDefaultNode(realm_node),
       naluObj(new unit_test_utils::NaluTest(yamlNode)),
-      realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
+      realm(naluObj->create_realm(realmDefaultNode, "multi_physics", &bulk)),
       eqSystems(realm),
       eqSystem(eqSystems)
   {
-    realm.metaData_ = &bulk.mesh_meta_data();
-    realm.bulkData_ = &bulk;
   }
 
   virtual ~HelperObjectsBase()

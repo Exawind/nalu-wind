@@ -78,29 +78,6 @@ TEST_F(FieldManagerTest, fieldCanBeRegisteredMultipleTimes)
   EXPECT_TRUE(fm.field_exists(name));
 }
 
-TEST_F(FieldManagerTest, fieldStatesCanBeConfigured)
-{
-  const std::string name = "velocity";
-  int numStates = 2;
-  FieldManager fm(*meta_);
-  fm.register_field(name, meta_->get_parts());
-  EXPECT_EQ(
-    numStates, meta_->get_field<VectorFieldType>(stk::topology::NODE_RANK, name)
-                 ->number_of_states());
-  // have to reset
-  stk::mesh::MetaData meta;
-  stk::mesh::BulkData bulk(meta, MPI_COMM_WORLD);
-  stk::io::StkMeshIoBroker broker;
-  broker.set_bulk_data(bulk);
-  broker.add_mesh_database("generated:8x8x8", stk::io::READ_MESH);
-  numStates = 3;
-  FieldManager fm2(meta, {true});
-  fm2.register_field(name, meta.get_parts());
-  EXPECT_EQ(
-    numStates, meta.get_field<VectorFieldType>(stk::topology::NODE_RANK, name)
-                 ->number_of_states());
-}
-
 } // namespace
 } // namespace nalu
 } // namespace sierra

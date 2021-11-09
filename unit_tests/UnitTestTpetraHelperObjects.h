@@ -29,16 +29,15 @@ bool find_col(int col,
 
 struct TpetraHelperObjectsBase {
   TpetraHelperObjectsBase(stk::mesh::BulkData& bulk, int numDof)
-  : yamlNode(unit_test_utils::get_default_inputs()),
-    realmDefaultNode(unit_test_utils::get_realm_default_node()),
-    naluObj(new unit_test_utils::NaluTest(yamlNode)),
-    realm(naluObj->create_realm(realmDefaultNode, "multi_physics", false)),
-    eqSystems(realm),
-    eqSystem(eqSystems),
-    linsys(new sierra::nalu::TpetraLinearSystem(realm, numDof, &eqSystem, nullptr))
+    : yamlNode(unit_test_utils::get_default_inputs()),
+      realmDefaultNode(unit_test_utils::get_realm_default_node()),
+      naluObj(new unit_test_utils::NaluTest(yamlNode)),
+      realm(naluObj->create_realm(realmDefaultNode, "multi_physics", &bulk)),
+      eqSystems(realm),
+      eqSystem(eqSystems),
+      linsys(
+        new sierra::nalu::TpetraLinearSystem(realm, numDof, &eqSystem, nullptr))
   {
-    realm.metaData_ = &bulk.mesh_meta_data();
-    realm.bulkData_ = &bulk;
     eqSystem.linsys_ = linsys;
   }
 

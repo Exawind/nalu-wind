@@ -32,8 +32,8 @@ public:
 
   sierra::nalu::Realm& create_realm(
     const YAML::Node& realm_node = get_realm_default_node(),
-    const std::string realm_type="multi_physics",
-    const bool createMeshObjects = true);
+    const std::string realm_type = "multi_physics",
+    stk::mesh::BulkData* = nullptr);
 
   YAML::Node doc_;
   stk::ParallelMachine comm_;

@@ -14,29 +14,25 @@
 
 namespace sierra {
 namespace nalu {
-static const std::function<int(FieldStateLogic)> variable_states =
-  [](FieldStateLogic l) { return l.useBDF2_ ? 3 : 2; };
-static const std::function<int(FieldStateLogic)> constant_states =
-  [](FieldStateLogic) { return 1; };
 
 static const FieldDefinition StatedNodalVector = {
-  stk::topology::NODE_RANK, FieldTypes::VECTOR, variable_states};
+  stk::topology::NODE_RANK, FieldTypes::VECTOR, N_STATED};
 static const FieldDefinition StatedNodalScalar = {
-  stk::topology::NODE_RANK, FieldTypes::SCALAR, variable_states};
+  stk::topology::NODE_RANK, FieldTypes::SCALAR, N_STATED};
 static const FieldDefinition UnstatedNodalVector = {
-  stk::topology::NODE_RANK, FieldTypes::VECTOR, constant_states};
+  stk::topology::NODE_RANK, FieldTypes::VECTOR, N_UNSTATED};
 static const FieldDefinition UnstatedNodalScalar = {
-  stk::topology::NODE_RANK, FieldTypes::VECTOR, constant_states};
+  stk::topology::NODE_RANK, FieldTypes::VECTOR, N_UNSTATED};
 
 static const std::map<std::string, FieldDefinition> Registry = {
   {"velocity", StatedNodalVector},
   {"temperature", StatedNodalScalar},
   {"hypre_global_id",
-   {stk::topology::NODE_RANK, FieldTypes::HYPREID, constant_states}},
+   {stk::topology::NODE_RANK, FieldTypes::HYPREID, N_UNSTATED}},
   {"tpet_global_id",
-   {stk::topology::NODE_RANK, FieldTypes::TPETID, constant_states}},
+   {stk::topology::NODE_RANK, FieldTypes::TPETID, N_UNSTATED}},
   {"nalu_global_id",
-   {stk::topology::NODE_RANK, FieldTypes::GLOBALID, constant_states}},
+   {stk::topology::NODE_RANK, FieldTypes::GLOBALID, N_UNSTATED}},
 };
 
 FieldRegistry::FieldRegistry() : database_(Registry) {}

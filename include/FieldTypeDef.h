@@ -69,9 +69,9 @@ enum class FieldTypes {
 };
 struct FieldDefinition
 {
-  stk::topology::rank_t rank;
-  FieldTypes ftype;
-  std::function<int(FieldStateLogic)> get_states;
+  const stk::topology::rank_t rank;
+  const FieldTypes ftype;
+  const int num_states;
 };
 
 } // namespace nalu

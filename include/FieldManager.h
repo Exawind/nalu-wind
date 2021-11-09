@@ -31,14 +31,13 @@ namespace nalu {
 class FieldManager
 {
 public:
-  FieldManager(stk::mesh::MetaData& meta, FieldStateLogic logic = {false});
+  FieldManager(stk::mesh::MetaData& meta);
   FieldDefinition get_field_definition(std::string name);
   void register_field(std::string name, const stk::mesh::PartVector& parts);
   bool field_exists(std::string name);
 
 private:
   stk::mesh::MetaData& metaData_;
-  const FieldStateLogic stateLogic_;
 };
 
 } // namespace nalu

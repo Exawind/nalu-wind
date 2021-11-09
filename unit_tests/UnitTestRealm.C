@@ -16,6 +16,7 @@
 #include "LinearSolvers.h"
 #include "Realms.h"
 #include "Realm.h"
+#include "FieldManager.h"
 #include "InputOutputRealm.h"
 #include "SolutionOptions.h"
 #include "TimeIntegrator.h"
@@ -142,27 +143,42 @@ NaluTest::NaluTest(const YAML::Node& doc)
   sim_.timeIntegrator_->load(doc);
 }
 
+void
+create_mesh(
+  stk::mesh::BulkData* bulk_data,
+  sierra::nalu::Realm* realm,
+  unsigned spatialDim,
+  stk::ParallelMachine comm)
+{
+  if (!bulk_data) {
+    realm->metaData_ = new stk::mesh::MetaData(spatialDim);
+    realm->bulkData_ = new stk::mesh::BulkData(*realm->metaData_, comm);
+  } else {
+    realm->metaData_ = &(bulk_data->mesh_meta_data());
+    realm->bulkData_ = bulk_data;
+  }
+  realm->fieldManager_ =
+    std::make_unique<sierra::nalu::FieldManager>(realm->meta_data());
+}
+
 sierra::nalu::Realm&
-NaluTest::create_realm(const YAML::Node& realm_node, const std::string realm_type,
-                       const bool createMeshObjects)
+NaluTest::create_realm(
+  const YAML::Node& realm_node,
+  const std::string realm_type,
+  stk::mesh::BulkData* bulk_data)
 {
   sierra::nalu::Realm* realm = nullptr;
   if (realm_type == "multi_physics") {
     realm = new sierra::nalu::Realm(*sim_.realms_, realm_node);
+    create_mesh(bulk_data, realm, spatialDim_, comm_);
     realm->solutionOptions_->load(realm_node);
     realm->equationSystems_.load(realm_node);
   }
   else{
     realm = new sierra::nalu::InputOutputRealm(*sim_.realms_, realm_node);
+    create_mesh(bulk_data, realm, spatialDim_, comm_);
     realm->solutionOptions_->load(realm_node);
   }
-
-  // Set-up mesh metadata and bulkdata ... let user fill mesh in test function
-  if (createMeshObjects) {
-    realm->metaData_ = new stk::mesh::MetaData(spatialDim_);
-    realm->bulkData_ = new stk::mesh::BulkData(*realm->metaData_, comm_);
-  }
-  sim_.realms_->realmVector_.push_back(realm);
 
   return *realm;
 }

@@ -17,6 +17,8 @@
 namespace sierra {
 namespace nalu {
 
+constexpr int N_STATED = 3;
+constexpr int N_UNSTATED = 1;
 class FieldRegistry
 {
 public:

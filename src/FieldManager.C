@@ -14,10 +14,7 @@
 namespace sierra {
 namespace nalu {
 
-FieldManager::FieldManager(stk::mesh::MetaData& meta, FieldStateLogic logic)
-  : metaData_(meta), stateLogic_(logic)
-{
-}
+FieldManager::FieldManager(stk::mesh::MetaData& meta) : metaData_(meta) {}
 
 FieldDefinition
 FieldManager::get_field_definition(std::string name)
@@ -29,7 +26,7 @@ FieldManager::get_field_definition(std::string name)
 
 // clang-format off
 #define REGISTER(TYPE, SIZE) auto* id = &(metaData_.declare_field<TYPE>( \
-    def.rank, name, def.get_states(stateLogic_))); \
+    def.rank, name, SIZE)); \
   for (auto&& p : parts) \
     stk::mesh::put_field_on_mesh(*id, *p, SIZE, nullptr); \
   break

@@ -99,7 +99,8 @@ TpetraLinearSystem::TpetraLinearSystem(
   LinearSolver * linearSolver)
   : LinearSystem(realm, numDof, eqSys, linearSolver)
 {
-
+  if (!realm.fieldManager_)
+    throw std::runtime_error("Field manager is null");
   realm_.fieldManager_->register_field(
     "tpet_global_id", realm_.meta_data().get_parts());
   tpetGlobalId_ = realm_.meta_data().get_field<TpetIDFieldType>(

@@ -755,8 +755,6 @@ Realm::load(const YAML::Node & node)
 
   // once we know the mesh name, we can open the meta data, and set spatial dimension
   create_mesh();
-  FieldStateLogic logic = {timeIntegrator_->secondOrderTimeAccurate_};
-  fieldManager_ = std::make_unique<FieldManager>(meta_data(), logic);
   spatialDimension_ = metaData_->spatial_dimension();
 
   // post processing
@@ -1868,6 +1866,8 @@ Realm::create_mesh()
   if (realmUsesEdges_) {
     edgesPart_ = &metaData_->declare_part("create_edges_part", stk::topology::EDGE_RANK);
   }
+
+  fieldManager_ = std::make_unique<FieldManager>(meta_data());
 
   // set mesh creation
   const double end_time = NaluEnv::self().nalu_time();
