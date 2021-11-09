@@ -21,6 +21,7 @@
 #include "NaluEnv.h"
 #include "Realms.h"
 #include "Realm.h"
+#include "FieldManager.h"
 #include "EquationSystem.h"
 #include "SolutionOptions.h"
 #include "TimeIntegrator.h"

@@ -179,6 +179,7 @@ NaluTest::create_realm(
     create_mesh(bulk_data, realm, spatialDim_, comm_);
     realm->solutionOptions_->load(realm_node);
   }
+  sim_.realms_->realmVector_.push_back(realm);
 
   return *realm;
 }

@@ -8,7 +8,6 @@
 //
 
 #include <FieldRegistry.h>
-#include <FieldStateLogic.h>
 #include <stk_topology/topology.hpp>
 #include <functional>
 

@@ -21,7 +21,6 @@
 #include <EquationSystems.h>
 #include <FieldTypeDef.h>
 #include <FieldManager.h>
-#include <FieldStateLogic.h>
 #include <LinearSystem.h>
 #include <LinearSolvers.h>
 #include <master_element/MasterElement.h>
@@ -832,6 +831,9 @@ Realm::setup_nodal_fields()
 #endif
   // TODO move this to TpetraLinearSystem.C
   fieldManager_->register_field("nalu_global_id", parts);
+  // TODO move this to accessor function on field manager at some point
+  // too big of a change to deal with now, but want to get away from global pointers on realm
+  naluGlobalId_ = meta_data().get_field<GlobalIdFieldType>(stk::topology::NODE_RANK, "nalu_global_id");
 
   // loop over all material props targets and register nodal fields
   std::vector<std::string> targetNames = get_physics_target_names();

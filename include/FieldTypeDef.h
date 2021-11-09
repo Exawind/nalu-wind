@@ -19,7 +19,6 @@
 
 #include <Tpetra_Details_DefaultTypes.hpp>
 #include <functional>
-#include <FieldStateLogic.h>
 
 #ifdef NALU_USES_HYPRE
 #include "HYPRE_utilities.h"
