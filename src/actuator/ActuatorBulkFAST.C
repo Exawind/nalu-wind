@@ -53,7 +53,7 @@ ActuatorBulkFAST::ActuatorBulkFAST(
     orientationTensor_(
       "orientationTensor",
       actMeta.isotropicGaussian_ ? 0 : actMeta.numPointsTotal_),
-    tStepRatio_(std::round(naluTimeStep / actMeta.fastInputs_.dt))
+    tStepRatio_(std::round(naluTimeStep / actMeta.fastInputs_.dtFAST))
 {
   init_openfast(actMeta, naluTimeStep);
   init_epsilon(actMeta);
@@ -75,7 +75,7 @@ ActuatorBulkFAST::init_openfast(
   const ActuatorMetaFAST& actMeta, const double naluTimeStep)
 {
   openFast_.setInputs(actMeta.fastInputs_);
-  if (!is_tstep_ratio_admissable(actMeta.fastInputs_.dt, naluTimeStep)) {
+  if (!is_tstep_ratio_admissable(actMeta.fastInputs_.dtFAST, naluTimeStep)) {
     throw std::runtime_error("ActuatorFAST: Ratio of Nalu's time step is not "
                              "an integral multiple of FAST time step.");
   } else {
