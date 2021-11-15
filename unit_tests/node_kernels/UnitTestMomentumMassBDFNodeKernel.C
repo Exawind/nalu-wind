@@ -60,7 +60,7 @@ TEST_F(MomentumKernelHex8Mesh, NGP_momentum_mass_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
 
   // Exact LHS expected
   std::vector<double> lhsExact(576, 0.0);

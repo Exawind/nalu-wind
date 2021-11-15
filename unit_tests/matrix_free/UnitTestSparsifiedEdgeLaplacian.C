@@ -144,10 +144,10 @@ TEST_F(SparsifiedEdgeLaplacianFixture, laplacian_is_an_l_matrix)
     order, mesh, meta.universal_part(), coords_ngp, devmat);
   Tpetra::endAssembly(*mat);
 
-  for (int i = 0; i < mat->getNodeNumRows(); ++i) {
+  for (unsigned i = 0; i < mat->getNodeNumRows(); ++i) {
     auto row = local_mat.row(i);
     for (int j = 0; j < row.length; ++j) {
-      if (row.colidx(j) == i) {
+      if (static_cast<unsigned>(row.colidx(j)) == i) {
         ASSERT_TRUE(row.value(j) > 0);
       } else {
         ASSERT_TRUE(row.value(j) <= 0);

@@ -617,7 +617,7 @@ void calc_mass_flow_rate_scs(
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
-  const int npe = Hex8Traits::nodesPerElement_;
+  const unsigned npe = Hex8Traits::nodesPerElement_;
   EXPECT_EQ(ndim, 3);
   EXPECT_EQ(topo.num_nodes(), npe);
 
@@ -698,7 +698,7 @@ void calc_open_mass_flow_rate(
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
-  const int npe = Quad4Traits::nodesPerFace_;
+  const unsigned npe = Quad4Traits::nodesPerFace_;
   EXPECT_EQ(ndim, 3);
   EXPECT_EQ(topo.num_nodes(), npe);
 
@@ -848,7 +848,7 @@ void calc_exposed_area_vec(
 
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
-  const int npe = Quad4Traits::nodesPerFace_;
+  const unsigned npe = Quad4Traits::nodesPerFace_;
   EXPECT_EQ(ndim, 3);
   EXPECT_EQ(topo.num_nodes(), npe);
 
@@ -994,7 +994,7 @@ void calc_projected_nodal_gradient_interior(
     ? Hex8Traits::nDim_ : 1;
   const auto& meta = bulk.mesh_meta_data();
   const int ndim = meta.spatial_dimension();
-  const int npe = Hex8Traits::nodesPerElement_;
+  const unsigned npe = Hex8Traits::nodesPerElement_;
   EXPECT_EQ(ndim, 3);
   EXPECT_EQ(topo.num_nodes(), npe);
 

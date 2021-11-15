@@ -123,7 +123,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
 
   namespace hex8_golds = hex8_golds::tke_sst;
   unit_test_kernel_utils::expect_all_near(
@@ -154,7 +154,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_tke_sst_des_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
 
   namespace hex8_golds = hex8_golds::tke_sst_des;
   unit_test_kernel_utils::expect_all_near(
@@ -185,7 +185,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
 
   namespace hex8_golds = hex8_golds::sdr_sst;
   unit_test_kernel_utils::expect_all_near(
@@ -216,7 +216,7 @@ TEST_F(SSTKernelHex8Mesh, NGP_sdr_sst_des_node)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 8u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 8u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 8u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
 
   // only differs by a production limiting, which is never active in this case
   namespace hex8_golds = hex8_golds::sdr_sst_des;

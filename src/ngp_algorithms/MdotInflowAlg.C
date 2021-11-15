@@ -81,9 +81,7 @@ MdotInflowAlg<BcAlgTraits>::execute()
 
   stk::mesh::NgpField<double> edgeFaceVelMag;
 
-  bool needs_gcl = false;
   if (realm_.has_mesh_deformation()) {
-    needs_gcl = true;
     edgeFaceVelMag_ = get_field_ordinal(
       realm_.meta_data(), "edge_face_velocity_mag", stk::topology::EDGE_RANK);
     edgeFaceVelMag = fieldMgr.template get_field<double>(edgeFaceVelMag_);

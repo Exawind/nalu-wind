@@ -193,7 +193,7 @@ void check_scv_shifted_ips_are_nodal(
 
   const int nint = meSV.num_integration_points()*meSV.nDim_;
   const double* shiftedIps = meSV.integration_location_shift();
-  EXPECT_EQ(ws_coords.size(), nint) << "P1 test";
+  EXPECT_EQ(ws_coords.size(), static_cast<unsigned>(nint)) << "P1 test";
   for (int j = 0; j < nint; ++j) {
     EXPECT_NEAR(ws_coords[j], shiftedIps[j], tol);
   }

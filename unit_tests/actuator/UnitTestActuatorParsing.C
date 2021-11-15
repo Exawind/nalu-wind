@@ -83,7 +83,7 @@ TEST_F(ActuatorParsingTest, NGP_bareMinimumParse)
     auto y_actuator = create_yaml_node(inputFileLines_);
     ActuatorMeta actMeta = actuator_parse(y_actuator);
     EXPECT_EQ(stk::search::KDTREE, actMeta.searchMethod_);
-    EXPECT_EQ(2, actMeta.searchTargetNames_.size());
+    EXPECT_EQ(2u, actMeta.searchTargetNames_.size());
   } catch (std::exception const& err) {
     FAIL() << err.what();
   }
