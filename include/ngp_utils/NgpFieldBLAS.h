@@ -46,6 +46,8 @@ inline void field_axpby(
   using Traits = NGPMeshTraits<Mesh>;
   using MeshIndex = typename Traits::MeshIndex;
 
+  yField.sync_to_device();
+
   nalu_ngp::run_entity_algorithm(
     "ngp_field_axpby",
     ngpMesh, rank, sel,

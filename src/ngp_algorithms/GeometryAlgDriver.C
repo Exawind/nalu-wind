@@ -150,6 +150,7 @@ GeometryAlgDriver::mesh_motion_prework()
   ngpSweptVol.set_all(ngpMesh, 0.0);
   auto* sweptVol = meta.get_field<GenericFieldType>(entityRank, svFieldName);
   stk::mesh::field_fill(0.0, *sweptVol);
+  ngpSweptVol.sync_to_device();
 
   if (realm_.realmUsesEdges_) {
     const double dt = realm_.get_time_step();

@@ -78,6 +78,8 @@ void GeometryInteriorAlg<AlgTraits>::impl_compute_dual_nodal_volume()
   const auto dnvOps = nalu_ngp::simd_elem_nodal_field_updater(ngpMesh, dualVol);
   const auto elemVolOps = nalu_ngp::simd_elem_field_updater(ngpMesh, elemVol);
   MasterElement *meSCV = meSCV_;
+  dualVol.sync_to_device();
+  elemVol.sync_to_device();
 
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_)

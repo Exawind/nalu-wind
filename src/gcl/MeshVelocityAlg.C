@@ -135,7 +135,12 @@ MeshVelocityAlg<AlgTraits>::execute()
         }
       }
 
-      for (int ip = 0; ip < AlgTraits::numScsIp_; ++ip) {
+      int nip = std::min(12,AlgTraits::numScsIp_);
+      if (AlgTraits::numScsIp_ > nip) {
+        std::cerr << "Error: MeshVelocityAlg can't support more than 12 integration points." << std::endl;
+      }
+
+      for (int ip = 0; ip < nip; ++ip) {
 
         DoubleType scs_vol_coords[8][3];
 
