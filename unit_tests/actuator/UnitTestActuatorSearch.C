@@ -46,7 +46,7 @@ public:
     nx(1) = 2;
     nx(2) = 1;
     ASSERT_EQ(slabSize, (unsigned)nx(0) * nx(1));
-    ASSERT_EQ(nPoints, (int)slabSize * nProcs);
+    ASSERT_EQ(static_cast<unsigned>(nPoints), (int)slabSize * nProcs);
     Kokkos::parallel_for(
       "populateValues", ActFixRangePolicy(0, nPoints), ACTUATOR_LAMBDA(int i) {
         // place point in center of elements for easy parallel mapping
@@ -135,7 +135,7 @@ TEST_F(ActuatorSearchTest, NGP_executeCoarseSearch)
     ExecuteCoarseSearch(
       spheres, elemBoxes, coarsePointIds, coarseElemIds, stk::search::KDTREE);
     // Each search should find one slab of element/point pairs
-    EXPECT_EQ(slabSize, coarsePointIds.view_host().extent_int(0))
+    EXPECT_EQ(slabSize, static_cast<unsigned>(coarsePointIds.view_host().extent_int(0)))
       << "Coarse Search result size: "
       << coarsePointIds.view_host().extent_int(0) << " on rank: " << myRank;
     for (unsigned i = 0; i < coarsePointIds.extent(0); i++) {
@@ -168,7 +168,7 @@ TEST_F(ActuatorSearchTest, NGP_executeFineSearch)
     ExecuteFineSearch(
       stkBulk, coarsePointIds, coarseElemIds, points, matchElemIds, localCoords,
       isLocal, localParallelRedundancy);
-    int numLocal = 0;
+    unsigned numLocal = 0;
     for (unsigned i = 0; i < points.extent(0); i++) {
       if (isLocal(i)) {
         numLocal++;

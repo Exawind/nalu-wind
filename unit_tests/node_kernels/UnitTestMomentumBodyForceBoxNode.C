@@ -49,7 +49,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_body_force_box_inside)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
 
   unit_test_kernel_utils::expect_all_near(
     helperObjs.linsys->rhs_, 1.0, 1.0e-12);
@@ -79,7 +79,7 @@ TEST_F(MomentumNodeHex8Mesh, NGP_momentum_body_force_box_outside)
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(0), 24u);
   EXPECT_EQ(helperObjs.linsys->lhs_.extent(1), 24u);
   EXPECT_EQ(helperObjs.linsys->rhs_.extent(0), 24u);
-  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8);
+  EXPECT_EQ(helperObjs.linsys->numSumIntoCalls_(0), 8u);
 
   namespace gold_values = hex8_golds::box_outside;
   unit_test_kernel_utils::expect_all_near(

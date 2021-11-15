@@ -116,9 +116,9 @@ struct TpetraHelperObjectsBase {
     using VectorType = sierra::nalu::LinSys::LocalVector;
     const VectorType& localRhs = linsys->getOwnedRhs()->getLocalView<sierra::nalu::DeviceSpace>();
 
-    EXPECT_EQ(rowOffsets.size()-1, localMatrix.numRows());
+    EXPECT_EQ(rowOffsets.size()-1, static_cast<unsigned>(localMatrix.numRows()));
     EXPECT_EQ(rhs.size(), localRhs.size());
-    EXPECT_EQ(rhs.size(), localMatrix.numRows());
+    EXPECT_EQ(rhs.size(), static_cast<unsigned>(localMatrix.numRows()));
 
     for(int i=0; i<localMatrix.numRows(); ++i) {
       KokkosSparse::SparseRowViewConst<MatrixType> constRowView = localMatrix.rowConst(i);

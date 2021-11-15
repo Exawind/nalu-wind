@@ -200,7 +200,7 @@ TEST_F(EntityLidFixture, all_active_stk_entities_have_a_valid_tpetra_lid)
   Kokkos::deep_copy(elid_h, elid);
   for (const auto* ib : bulk.get_buckets(stk::topology::NODE_RANK, active)) {
     for (const auto node : *ib) {
-      ASSERT_NE(elid(node.local_offset()), invalid);
+      ASSERT_NE(static_cast<unsigned>(elid(node.local_offset())), invalid);
     }
   }
 }
