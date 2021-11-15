@@ -137,6 +137,8 @@ ExecuteCoarseSearch(
   coarsePointIds.resize(numLocalMatches);
   coarseElemIds.resize(numLocalMatches);
 
+  coarsePointIds.sync_host();
+  coarseElemIds.sync_host();
   coarsePointIds.modify_host();
   coarseElemIds.modify_host();
 
