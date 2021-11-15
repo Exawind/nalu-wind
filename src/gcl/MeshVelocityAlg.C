@@ -135,10 +135,7 @@ MeshVelocityAlg<AlgTraits>::execute()
         }
       }
 
-      int nip = std::min(12,AlgTraits::numScsIp_);
-      if (AlgTraits::numScsIp_ > nip) {
-        std::cerr << "Error: MeshVelocityAlg can't support more than 12 integration points." << std::endl;
-      }
+      int nip = std::min(AlgTraitsHex8::numScsIp_,AlgTraits::numScsIp_);
 
       for (int ip = 0; ip < nip; ++ip) {
 
