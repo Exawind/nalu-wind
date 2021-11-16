@@ -2362,10 +2362,13 @@ MomentumEquationSystem::predict_state()
 {
   const auto& ngpMesh = realm_.ngp_mesh();
   const auto& fieldMgr = realm_.ngp_field_manager();
-  const auto& velN = fieldMgr.get_field<double>(
+  auto& velN = fieldMgr.get_field<double>(
     velocity_->field_of_state(stk::mesh::StateN).mesh_meta_data_ordinal());
   auto& velNp1 = fieldMgr.get_field<double>(
     velocity_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
+
+  velN.sync_to_device();
+  velNp1.sync_to_device();
 
   const auto& meta = realm_.meta_data();
   const stk::mesh::Selector sel =
