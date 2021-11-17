@@ -47,6 +47,7 @@ void NodalGradAlgDriver<GradPhiType>::pre_work()
     fieldMgr.template get_field<double>(gradPhi->mesh_meta_data_ordinal());
 
   ngpGradPhi.set_all(ngpMesh, 0.0);
+  ngpGradPhi.clear_sync_state();
 }
 
 template<typename GradPhiType>
@@ -60,7 +61,6 @@ void NodalGradAlgDriver<GradPhiType>::post_work()
   auto* gradPhi = meta.template get_field<GradPhiType>(
     stk::topology::NODE_RANK, gradPhiName_);
   auto& ngpGradPhi = nalu_ngp::get_ngp_field(meshInfo, gradPhiName_);
-  ngpGradPhi.modify_on_device();
   ngpGradPhi.sync_to_host();
 
   const std::vector<NGPDoubleFieldType*> fVec{&ngpGradPhi};

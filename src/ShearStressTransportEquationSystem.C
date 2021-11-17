@@ -430,6 +430,7 @@ ShearStressTransportEquationSystem::clip_min_distance_to_wall()
     (meta.locally_owned_part() | meta.globally_shared_part()) &
     stk::mesh::selectUnion(wallBcPart_);
 
+  ndtw.sync_to_device();
   nalu_ngp::run_entity_algorithm(
     "SST::clip_ndtw", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {

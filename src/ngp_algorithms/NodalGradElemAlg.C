@@ -74,6 +74,8 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
   const auto phiID = phi_;
   auto* meSCS = meSCS_;
 
+  gradPhi.sync_to_device();
+
   const stk::mesh::Selector sel = meta.locally_owned_part()
     & stk::mesh::selectUnion(partVec_)
     & !(realm_.get_inactive_selector());
@@ -116,6 +118,8 @@ void NodalGradElemAlg<AlgTraits, PhiType, GradPhiType>::execute()
         }
       }
     });
+
+  gradPhi.modify_on_device();
 }
 
 // NOTE: Can't use BuildTemplates here because of additional template arguments
