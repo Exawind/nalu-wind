@@ -837,14 +837,14 @@ LowMachEquationSystem::project_nodal_velocity()
   const auto& fieldMgr = realm_.ngp_field_manager();
   auto uTmp = fieldMgr.get_field<double>(
     momentumEqSys_->uTmp_->mesh_meta_data_ordinal());
-  const auto dpdx = fieldMgr.get_field<double>(
+  auto dpdx = fieldMgr.get_field<double>(
     continuityEqSys_->dpdx_->mesh_meta_data_ordinal());
-  const auto Udiag = fieldMgr.get_field<double>(
+  auto Udiag = fieldMgr.get_field<double>(
     momentumEqSys_->get_diagonal_field()->mesh_meta_data_ordinal());
   auto velNp1 = fieldMgr.get_field<double>(
     momentumEqSys_->velocity_->field_of_state(stk::mesh::StateNP1)
       .mesh_meta_data_ordinal());
-  const auto rhoNp1 = fieldMgr.get_field<double>(
+  auto rhoNp1 = fieldMgr.get_field<double>(
     density_->field_of_state(stk::mesh::StateNP1).mesh_meta_data_ordinal());
 
   //==========================================================
@@ -860,6 +860,12 @@ LowMachEquationSystem::project_nodal_velocity()
   // safe to update pressure gradient
   //==========================================================
   continuityEqSys_->compute_projected_nodal_gradient();
+
+  uTmp.sync_to_device();
+  dpdx.sync_to_device();
+  Udiag.sync_to_device();
+  velNp1.sync_to_device();
+  rhoNp1.sync_to_device();
 
   //==========================================================
   // project u, u^n+1 = u^k+1 - dt/rho*(Gjp^N+1 - uTmp);

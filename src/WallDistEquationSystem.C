@@ -469,6 +469,7 @@ WallDistEquationSystem::compute_wall_distance()
     wallDistance_->mesh_meta_data_ordinal());
   const stk::mesh::Selector sel = stk::mesh::selectField(*wallDistPhi_);
 
+  wdist.sync_to_device();
   nalu_ngp::run_entity_algorithm(
     "compute_wall_dist",
     ngpMesh, stk::topology::NODE_RANK, sel, KOKKOS_LAMBDA(const MeshIndex& mi) {

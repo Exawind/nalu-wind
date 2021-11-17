@@ -60,6 +60,8 @@ void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
   const int dim1 = dim1_;
   const int dim2 = dim2_;
 
+  gradPhi.sync_to_device();
+
   const std::string algName = meta.get_fields()[gradPhi_]->name() + "_edge";
   nalu_ngp::run_edge_algorithm(
     algName, ngpMesh, sel,
@@ -88,6 +90,7 @@ void NodalGradEdgeAlg<PhiType, GradPhiType>::execute()
         }
       }
     });
+  gradPhi.modify_on_device();
 }
 
 template class NodalGradEdgeAlg<ScalarFieldType, VectorFieldType>;

@@ -208,6 +208,8 @@ AssembleNodalGradUNonConformalAlgorithm::execute()
       }
     }
   }
+
+  dqdx_->modify_on_host();
 }
 
 } // namespace nalu
