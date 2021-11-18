@@ -890,6 +890,7 @@ TurbulenceAveragingPostProcessing::compute_reynolds_stress(
   const double oldWeight = oldTimeFilter * zeroCurrent;
   const double currentTimeFilter = currentTimeFilter_;
 
+  stress.sync_to_device();
   nalu_ngp::run_entity_algorithm(
     "TurbPP::compute_restress",
     ngpMesh, stk::topology::NODE_RANK, s_all_nodes,
