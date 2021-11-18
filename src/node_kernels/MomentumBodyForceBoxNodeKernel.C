@@ -57,7 +57,7 @@ MomentumBodyForceBoxNodeKernel::MomentumBodyForceBoxNodeKernel(
       realm.solutionOptions_->dynamicBodyForceVelTarget_);
     const auto& dragTarget =
       realm.solutionOptions_->dynamicBodyForceDragTarget_;
-    for (const auto dt : dragTarget) {
+    for (const auto& dt : dragTarget) {
       stk::mesh::Part* targetPart =
         realm.bulk_data().mesh_meta_data().get_part(dt);
       dragPartVec_.push_back(targetPart);
