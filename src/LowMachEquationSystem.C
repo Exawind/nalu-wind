@@ -669,8 +669,8 @@ LowMachEquationSystem::solve_and_update()
     if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
       momentumEqSys_->AMSAlgDriver_->initial_mdot();
 
-      isInit_ = false;
-    } else if (
+    isInit_ = false;
+  } else if (
     realm_.has_mesh_deformation() && (realm_.currentNonlinearIteration_ == 1)) {
     // continuity assemble, load_complete and solve
     continuityEqSys_->assemble_and_solve(continuityEqSys_->pTmp_);
