@@ -13,6 +13,7 @@
 #include <stk_mesh/base/FieldBase.hpp>
 #include <stk_mesh/base/Ngp.hpp>
 #include <stk_mesh/base/NgpMesh.hpp>
+#include <stk_mesh/base/GetNgpMesh.hpp>
 #include <stk_mesh/base/NgpField.hpp>
 #include <stk_mesh/base/GetNgpField.hpp>
 #include <stk_mesh/base/Types.hpp>
@@ -127,7 +128,7 @@ void check_interpolation(
   const int num_int_pt = SCS ? AlgTraits::numScsIp_ : AlgTraits::numScvIp_;
   const int poly_order = num_nodes == 8 ? 1 : 2;
  
-  stk::mesh::NgpMesh ngpMesh(bulk);
+  stk::mesh::NgpMesh& ngpMesh = stk::mesh::get_updated_ngp_mesh(bulk);
 
   ME    *me = SCS ? 
     dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_)):
@@ -227,7 +228,7 @@ void check_derivatives(
   const int num_int_pt = AlgTraits::numScsIp_;
   const int poly_order = num_nodes == 8 ? 1 : 2;
  
-  stk::mesh::NgpMesh ngpMesh(bulk);
+  stk::mesh::NgpMesh& ngpMesh = stk::mesh::get_updated_ngp_mesh(bulk);
 
   ME    *me = dynamic_cast<ME*>(sierra::nalu::MasterElementRepo::get_surface_master_element(AlgTraits::topo_));
   auto *ngpMe = sierra::nalu::MasterElementRepo::get_surface_master_element<AlgTraits>();
@@ -331,7 +332,7 @@ protected:
     MasterElementHexSerialNGP()
     : comm(MPI_COMM_WORLD), spatialDimension(3),
       meta(spatialDimension), bulk(meta, comm),
-      ngpMesh(bulk),
+      ngpMesh(stk::mesh::get_updated_ngp_mesh(bulk)),
       poly_order(1), topo(stk::topology::HEX_8)
     {
     }
