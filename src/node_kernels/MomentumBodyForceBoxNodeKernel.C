@@ -55,13 +55,6 @@ MomentumBodyForceBoxNodeKernel::MomentumBodyForceBoxNodeKernel(
     // Define the parts
     mdotPart_ = realm.meta_data().get_part(
       realm.solutionOptions_->dynamicBodyForceVelTarget_);
-    const auto& dragTarget =
-      realm.solutionOptions_->dynamicBodyForceDragTarget_;
-    for (const auto& dt : dragTarget) {
-      stk::mesh::Part* targetPart =
-        realm.bulk_data().mesh_meta_data().get_part(dt);
-      dragPartVec_.push_back(targetPart);
-    }
 
     // Register the exposed area vector
     geometryAlgDriver_ = realm.geometryAlgDriver_.get();
@@ -165,8 +158,16 @@ MomentumBodyForceBoxNodeKernel::setup(Realm& realm)
     auto vForce = fieldMgr.get_field<double>(viscousForceID_);
     double l_drag = 0.0;
     const std::string algName = "compute_drag";
+    const auto& dragTarget =
+      realm.solutionOptions_->dynamicBodyForceDragTarget_;
+    stk::mesh::PartVector dragPartVec;
+    for (const auto& dt : dragTarget) {
+      stk::mesh::Part* targetPart =
+        realm.bulk_data().mesh_meta_data().get_part(dt);
+      dragPartVec.push_back(targetPart);
+    }
     const stk::mesh::Selector sel = realm.meta_data().locally_owned_part() &
-                                    stk::mesh::selectUnion(dragPartVec_);
+                                    stk::mesh::selectUnion(dragPartVec);
     nalu_ngp::run_entity_par_reduce(
       algName, ngpMesh, stk::topology::NODE_RANK, sel,
       KOKKOS_LAMBDA(const MeshIndex& mi, double& total_force_x) {
