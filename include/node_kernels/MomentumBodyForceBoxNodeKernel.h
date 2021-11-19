@@ -60,7 +60,6 @@ private:
   NALU_ALIGNED NodeKernelTraits::DblType lo_[NodeKernelTraits::NDimMax];
   NALU_ALIGNED NodeKernelTraits::DblType hi_[NodeKernelTraits::NDimMax];
   stk::mesh::Part* mdotPart_;
-  stk::mesh::PartVector dragPartVec_;
   GeometryAlgDriver* geometryAlgDriver_;
   MdotAlgDriver* mdotAlgDriver_;
 
