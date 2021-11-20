@@ -14,8 +14,11 @@
 namespace sierra {
 namespace nalu {
 
-static const DefVectorUnstated StatedNodalVector = {stk::topology::NODE_RANK};
-static const DefScalarUnstated StatedNodalScalar = {stk::topology::NODE_RANK};
+static const DefVectorStated StatedNodalVector = {stk::topology::NODE_RANK};
+static const DefScalarStated StatedNodalScalar = {stk::topology::NODE_RANK};
+
+static const DefVectorUnstated UnstatedNodalVector = {stk::topology::NODE_RANK};
+static const DefScalarUnstated UnstatedNodalScalar = {stk::topology::NODE_RANK};
 
 static const std::map<std::string, FieldDefTypes> Registry = {
   {"velocity", StatedNodalVector},

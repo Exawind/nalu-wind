@@ -36,7 +36,7 @@ protected:
   std::string key_;
 };
 
-TEST_F(FieldRegistryTest, allDataNeededToAddFieldIsOnDefintion)
+TEST_F(FieldRegistryTest, allDataNeededToDeclareFieldIsKnownThroughQuery)
 {
   auto def = FieldRegistry::query(key_);
 
