@@ -26,6 +26,7 @@ using DefScalarUnstated = FieldDefinition<ScalarFieldType, 1>;
 using DefVectorUnstated = FieldDefinition<VectorFieldType, 1>;
 
 using FieldDefTypes = std::variant<DefScalarUnstated, DefVectorUnstated>;
+using FieldPointerTypes = std::variant<ScalarFieldType*, VectorFieldType*>;
 
 } // namespace nalu
 } // namespace sierra
