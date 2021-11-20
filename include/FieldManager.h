@@ -29,10 +29,24 @@ private:
 
 public:
   FieldManager(stk::mesh::MetaData& meta);
+
   FieldPointerTypes
   register_field(std::string name, const stk::mesh::PartVector& parts);
+
   FieldPointerTypes
   register_field(std::string name, const stk::mesh::Part& part);
+
+  FieldPointerTypes get_field_ptr(std::string name)
+  {
+    auto fieldDef = FieldRegistry::query(name);
+    return std::visit(
+      [&](auto def) -> FieldPointerTypes {
+        return meta_.get_field<typename decltype(def)::FieldType>(
+          def.rank, name);
+      },
+      fieldDef);
+  }
+
   bool field_exists(std::string name);
 };
 } // namespace nalu

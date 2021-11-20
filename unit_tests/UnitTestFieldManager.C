@@ -47,6 +47,9 @@ TEST_F(FieldManagerTest, nameIsEnoughInfoToRegisterAField)
     meta_->get_field<VectorFieldType>(stk::topology::NODE_RANK, name);
   EXPECT_EQ(findFieldPtr, std::get<VectorFieldType*>(ptr));
   EXPECT_TRUE(fm.field_exists(name));
+
+  auto ptr2 = std::get<VectorFieldType*>(fm.get_field_ptr(name));
+  EXPECT_EQ(findFieldPtr, ptr2);
 }
 
 TEST_F(FieldManagerTest, throwsForFieldNotInDatabase)
