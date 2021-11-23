@@ -80,6 +80,7 @@ SolutionOptions::SolutionOptions()
     latitude_(0.0),
     raBoussinesqTimeScale_(-1.0),
     symmetryBcPenaltyFactor_(0.0),
+    useStreletsUpwinding_(false),
     activateOpenMdotCorrection_(false),
     mdotAlgOpenCorrection_(0.0),
     explicitlyZeroOpenPressureGradient_(false),
@@ -193,6 +194,11 @@ SolutionOptions::load(const YAML::Node & y_node)
     }
     if ( turbulenceModel_ != LAMINAR ) {
       isTurbulent_ = true;
+    }
+    if (turbulenceModel_ == SST_IDDES) {
+      get_if_present(
+        y_solution_options, "strelets_upwinding", useStreletsUpwinding_,
+        useStreletsUpwinding_);
     }
     // initialize turbuelnce constants since some laminar models may need such variables, e.g., kappa
     initialize_turbulence_constants();

@@ -49,7 +49,7 @@ TKESSTIDDESNodeKernel::setup(Realm& realm)
   fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
   ransIndicator_ = fieldMgr.get_field<double>(ransIndicatorID_);
   // call modify before this field gets modified in kernel execute phase
-  ransIndicator_.modify_on_device();
+  ransIndicator_.sync_to_device();
 
   const std::string dofName = "turbulent_ke";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);

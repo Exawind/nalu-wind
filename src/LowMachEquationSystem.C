@@ -666,8 +666,9 @@ LowMachEquationSystem::solve_and_update()
     timeB = NaluEnv::self().nalu_time();
     continuityEqSys_->timerMisc_ += (timeB-timeA);
 
-    if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS)
+    if (realm_.solutionOptions_->turbulenceModel_ == SST_AMS) {
       momentumEqSys_->AMSAlgDriver_->initial_mdot();
+    }
 
     isInit_ = false;
   } else if (
@@ -704,7 +705,6 @@ LowMachEquationSystem::solve_and_update()
       timeB = NaluEnv::self().nalu_time();
       continuityEqSys_->timerAssemble_ += (timeB - timeA);
     }
-
   }
 
   // compute tvisc and effective viscosity
@@ -1272,7 +1272,9 @@ MomentumEquationSystem::register_interior_algorithm(
           theSolverSrcAlg = new AssembleAMSEdgeKernelAlg(realm_, part, this);
           solverAlgDriver_->solverAlgMap_[SRC] = theSolverSrcAlg;
         }
-        if (realm_.is_turbulent() && theTurbModel == SST_IDDES) {
+        if (
+          realm_.is_turbulent() &&
+          realm_.solutionOptions_->useStreletsUpwinding_) {
           pecletAlg_.reset(new StreletsUpwindEdgeAlg(realm_, part));
         } else if (realm_.is_turbulent() && theTurbModel == SST_AMS) {
           pecletAlg_.reset(new AMSMomentumEdgePecletAlg(realm_, part, this));
