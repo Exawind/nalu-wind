@@ -110,6 +110,7 @@ realms:
     solution_options:
       name: myOptions
       turbulence_model: sst_iddes
+      strelets_upwinding: yes
       projected_timescale_type: momentum_diag_inv
 
       fix_pressure_at_node:

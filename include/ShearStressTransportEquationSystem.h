@@ -53,7 +53,8 @@ public:
 
   void initial_work();
   virtual void post_external_data_transfer_work();
-  virtual void post_iter_work();
+  void post_iter_work() final;
+  void pre_iter_work() final;
 
   void clip_min_distance_to_wall();
   void compute_f_one_blending();
