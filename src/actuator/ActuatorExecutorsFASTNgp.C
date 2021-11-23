@@ -104,8 +104,6 @@ ActuatorDiskFastNGP::operator()()
 
   ActFastCacheRelativeVelocities(actBulk_);
 
-  compute_fllc();
-
   auto forceReduce = actBulk_.actuatorForce_.view_host();
 
   actBulk_.interpolate_velocities_to_fast();
@@ -113,6 +111,8 @@ ActuatorDiskFastNGP::operator()()
   actBulk_.step_fast();
 
   RunActFastComputeForce(actBulk_);
+  
+  compute_fllc();
 
   actBulk_.spread_forces_over_disk(actMeta_);
 
