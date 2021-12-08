@@ -520,7 +520,6 @@ ShearStressTransportEquationSystem::pre_iter_work()
   if (turbModel == SST_IDDES) {
     const auto& fieldMgr = realm_.ngp_field_manager();
     const auto& meta = realm_.meta_data();
-    auto& bulk = realm_.bulk_data();
 
     auto ngpIddesRans = fieldMgr.get_field<double>(
       get_field_ordinal(meta, "iddes_rans_indicator"));
