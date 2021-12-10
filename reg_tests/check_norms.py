@@ -20,6 +20,7 @@ import os
 import math
 import subprocess
 import argparse
+from shutil import copyfile
 
 def parse_arguments():
     """Parse command line arguments"""
@@ -35,6 +36,9 @@ def parse_arguments():
         "test_name", help="Regression test name")
     parser.add_argument(
         "gold_norms", help="Absolute path to the gold norms file")
+    parser.add_argument(
+        '--save-norm-file', required=False,
+        help="File in which to save a copy of the norms")
     return parser.parse_args()
 
 def load_norm_file(fname):
@@ -54,6 +58,10 @@ def generate_test_norms(testname):
     cmdline = """awk '/Mean System Norm:/ { print $4, $5, $6; }' %s > %s """%(
         logname, norm_name)
     os.system(cmdline)
+    args = parse_arguments()
+    if (args.save_norm_file != None):
+        copyfile(norm_name, args.save_norm_file)
+
     return load_norm_file(norm_name)
 
 def get_run_time(testname):
