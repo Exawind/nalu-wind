@@ -49,7 +49,7 @@ utau
 # Test each of the standard variables one by one
 for var in $stdtestvars; do
     echo "TESTING $var"
-    nccmp -d -l -f -v $var -t $STDTOL $referenceFile $goldfile
+    nccmp -d -l -f -v $var -t $STDTOL $referenceFile $goldFile
     result=$?
     if [ "$result" -ne 0 ]; then
 	echo "FAIL: $var"
@@ -69,7 +69,7 @@ resolved_stress_tavg
 # Test each of the temperature variance variables one by one
 for var in $tempvars; do
     echo "TESTING $var"
-    nccmp -d -l -f -v $var -t $TEMPTOL $referenceFile $goldfile
+    nccmp -d -l -f -v $var -t $TEMPTOL $referenceFile $goldFile
     result=$?
     if [ "$result" -ne 0 ]; then
 	echo "FAIL: $var"
