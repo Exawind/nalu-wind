@@ -1,19 +1,29 @@
 #!/bin/bash
 
-# Check to make sure nccmp is there
 path_to_executable=$(which nccmp)
+referenceFile=$1
+goldFile=$2
+saveFile=$3
 
-# Path to script
-scriptdir=`dirname "$0"`
+if [ ! -f "$referenceFile" ]; then
+    echo "Reference file $referenceFile does not exist"
+    exit 1;
+fi
 
-# Path to the gold file
-goldfile=$scriptdir/ablNeutralStat.nc.gold
+if [ ! -f "$goldFile" ]; then
+    echo "Gold file $goldFile does not exist"
+    exit 1;
+fi
+
+if [ -f "$saveFile" ]; then
+    echo "Gold file will be saved to $saveFile"
+    cp $referenceFile $saveFile
+fi
 
 if [ -x "$path_to_executable" ];  then
     echo "Found nccmp: $path_to_executable"
 else
     echo "ERROR: Cannot find nccmp in path"
-    echo "Execute from $scriptdir"
     exit 1;
 fi
 
@@ -39,7 +49,7 @@ utau
 # Test each of the standard variables one by one
 for var in $stdtestvars; do
     echo "TESTING $var"
-    nccmp -d -l -f -v $var -t $STDTOL ablNeutralStat.nc $goldfile
+    nccmp -d -l -f -v $var -t $STDTOL $referenceFile $goldfile
     result=$?
     if [ "$result" -ne 0 ]; then
 	echo "FAIL: $var"
@@ -59,7 +69,7 @@ resolved_stress_tavg
 # Test each of the temperature variance variables one by one
 for var in $tempvars; do
     echo "TESTING $var"
-    nccmp -d -l -f -v $var -t $TEMPTOL ablNeutralStat.nc $goldfile
+    nccmp -d -l -f -v $var -t $TEMPTOL $referenceFile $goldfile
     result=$?
     if [ "$result" -ne 0 ]; then
 	echo "FAIL: $var"
