@@ -5,22 +5,22 @@ referenceFile=$1
 goldFile=$2
 saveFile=$3
 
-if [ ! -f "$referenceFile" ]; then
+if [[ ! -f $referenceFile ]]; then
     echo "Reference file $referenceFile does not exist"
     exit 1;
 fi
 
-if [ -f "$saveFile" ]; then
+if [[ -n $saveFile ]]; then
     echo "Gold file will be saved to $saveFile"
     cp $referenceFile $saveFile
 fi
 
-if [ ! -f "$goldFile" ]; then
+if [[ ! -f $goldFile ]]; then
     echo "Gold file $goldFile does not exist"
     exit 1;
 fi
 
-if [ -x "$path_to_executable" ];  then
+if [[ -x $path_to_executable ]];  then
     echo "Found nccmp: $path_to_executable"
 else
     echo "ERROR: Cannot find nccmp in path"
