@@ -23,6 +23,7 @@ option(ENABLE_ALL_WARNINGS "Show most warnings for most compilers" ON)
 option(ENABLE_WERROR "Warnings are errors" OFF)
 option(ENABLE_OPENMP "Enable OpenMP flags" OFF)
 option(ENABLE_BOOST  "Enable Boost libraries" OFF)
+option(NALU_WIND_SAVE_GOLDS  "Save gold files to directory when running tests" OFF)
 
 set(CMAKE_CXX_STANDARD 14)       # Set nalu-wind C++14 standard
 set(CMAKE_CXX_EXTENSIONS OFF)    # Do not enable GNU extensions

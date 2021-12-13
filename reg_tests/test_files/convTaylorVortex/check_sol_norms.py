@@ -7,6 +7,7 @@ Check L2 norms
 import os
 import os.path
 import argparse
+from shutil import copyfile
 
 
 def parse_arguments():
@@ -20,6 +21,9 @@ def parse_arguments():
     parser.add_argument(
         '--abs-tol', type=float, default=1.0e-10,
         help="Tolerance for absolute error")
+    parser.add_argument(
+         '--save-norm-file', required=False,
+         help="File in which to save a copy of the norms")
     return parser.parse_args()
 
 
@@ -32,6 +36,9 @@ def exit_if_file_does_not_exist(fname):
 def compute_and_check_norms(base_name, gold_norm_name, tol):
     norm_name = base_name + ".dat"
     exit_if_file_does_not_exist(norm_name)
+    args = parse_arguments()
+    if (args.save_norm_file != None):
+        copyfile(norm_name, args.save_norm_file)
     f_norm = open(norm_name,'r')
     norm_lines = f_norm.readlines()[2:]
     

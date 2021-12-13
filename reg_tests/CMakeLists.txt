@@ -12,27 +12,41 @@ if(RES_LEN EQUAL 0)
  before running the tests.")
 endif()
 
-set(NALU_GOLD_NORMS_DIR "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH
+set(NALU_WIND_REFERENCE_GOLDS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test_files" CACHE PATH
   "Custom directory for checking gold norms")
 
-if (NOT ${NALU_GOLD_NORMS_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-  message(STATUS "Setting custom gold norms path: ${NALU_GOLD_NORMS_DIR}")
-  set(TEST_TOLERANCE "1.0e-15")
+if (NOT ${NALU_WIND_REFERENCE_GOLDS_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  set(NALU_WIND_REFERENCE_GOLDS_DIR "${NALU_WIND_REFERENCE_GOLDS_DIR}/${CMAKE_SYSTEM_NAME}/${CMAKE_CXX_COMPILER_ID}/${CMAKE_CXX_COMPILER_VERSION}")
+  message(STATUS "Setting custom path for reference golds: ${NALU_WIND_REFERENCE_GOLDS_DIR}")
+  set(TEST_ABS_TOL "1.0e-15")
   set(TEST_REL_TOL "1.0e-12")
 endif()
 
-# Set TOLERANCE for testing
-if(NOT ${TEST_TOLERANCE} STREQUAL "")
-  set(TOLERANCE ${TEST_TOLERANCE}) # User defined
-else(NOT ${TEST_TOLERANCE} STREQUAL "")
+if(NALU_WIND_SAVE_GOLDS)
+  if("${NALU_WIND_SAVED_GOLDS_DIR}" STREQUAL "")
+    message(FATAL_ERROR "To save gold files, NALU_WIND_SAVED_GOLDS_DIR must be set and the directory exist")
+  else()
+    if(EXISTS ${NALU_WIND_SAVED_GOLDS_DIR})
+      set(SAVED_GOLDS_DIR ${NALU_WIND_SAVED_GOLDS_DIR}/${CMAKE_SYSTEM_NAME}/${CMAKE_CXX_COMPILER_ID}/${CMAKE_CXX_COMPILER_VERSION})
+      message(STATUS "Gold files will be saved to: ${SAVED_GOLDS_DIR}")
+    else()
+      message(FATAL_ERROR "Specified directory for saving gold files does not exist: ${NALU_WIND_SAVED_GOLDS_DIR}")
+    endif()
+  endif()
+endif()
+
+# Set ABS_TOLERANCE for testing
+if(NOT ${TEST_ABS_TOL} STREQUAL "")
+  set(ABS_TOLERANCE ${TEST_ABS_TOL}) # User defined
+else(NOT ${TEST_ABS_TOL} STREQUAL "")
   # Golds are generated with Linux GCC 8.4.0
   if(${CMAKE_SYSTEM_NAME} MATCHES "Linux"
      AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
      AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 8.0
      AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 9.0)
-    set(TOLERANCE "1.0e-15")
+    set(ABS_TOLERANCE "1.0e-15")
   else()
-    set(TOLERANCE 0.05) # Otherwise set some useless default
+    set(ABS_TOLERANCE 0.05) # Otherwise set some useless default
   endif()
 endif()
 
@@ -49,7 +63,7 @@ else(NOT ${TEST_REL_TOL} STREQUAL "")
     set(REL_TOLERANCE "1.0e-7")
   endif()
 endif()
-message(STATUS "Using test tolerance: abs = ${TOLERANCE}; rel = ${REL_TOLERANCE}")
+message(STATUS "Using test tolerance: abs = ${ABS_TOLERANCE}; rel = ${REL_TOLERANCE}")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
 
