@@ -10,14 +10,14 @@ if [ ! -f "$referenceFile" ]; then
     exit 1;
 fi
 
-if [ ! -f "$goldFile" ]; then
-    echo "Gold file $goldFile does not exist"
-    exit 1;
-fi
-
 if [ -f "$saveFile" ]; then
     echo "Gold file will be saved to $saveFile"
     cp $referenceFile $saveFile
+fi
+
+if [ ! -f "$goldFile" ]; then
+    echo "Gold file $goldFile does not exist"
+    exit 1;
 fi
 
 if [ -x "$path_to_executable" ];  then
