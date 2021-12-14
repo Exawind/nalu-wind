@@ -269,6 +269,8 @@ void fsiTurbine::initialize() {
     brFSIdata_.bld_def.resize(6*nTotBldPts);
     brFSIdata_.bld_vel.resize(6*nTotBldPts);
     brFSIdata_.bld_ld.resize(6*nTotBldPts);
+    brFSIdata_.bld_root_def.resize(6*nBlades);
+    brFSIdata_.bld_pitch.resize(nBlades);
     brFSIdata_.hub_ref_pos.resize(6);
     brFSIdata_.hub_def.resize(6);
     brFSIdata_.hub_vel.resize(6);
@@ -1467,7 +1469,7 @@ void fsiTurbine::mapDisplacements() {
                 linInterpTotDisplacement(&brFSIdata_.bld_def[(*dispMapNode + iStart)*6], &brFSIdata_.bld_def[(*dispMapNode + iStart + 1)*6], *dispMapInterpNode, totDispNode.data());
 
                 //Now transfer the interpolated displacement to the CFD mesh node
-                computeDisplacement(totDispNode.data(), tmpNodePos.data(), dx, oldxyz);
+                computeBladeDisplacement(totDispNode.data(), tmpNodePos.data(), dx, oldxyz, brFSIdata_.bld_pitch[iBlade], &brFSIdata_.bld_root_def[iBlade*6 + 3], brFSIdata_.bld_pitch[iStart]);
 
                 //Now linearly interpolate the velocity to the intermediate location
                 linInterpTotVelocity(&brFSIdata_.bld_vel[(*dispMapNode + iStart)*6], &brFSIdata_.bld_vel[(*dispMapNode + iStart + 1)*6], *dispMapInterpNode, totVelNode.data());
@@ -1629,6 +1631,45 @@ void fsiTurbine::computeDisplacement(double *totDispNode, double * totPosOF,  do
     for (size_t i=0; i < 3; i++)
         transDispNode[i] = totDispNode[i] + pRot[i] - p[i];
 
+}
+
+//! Accounting for ptich, convert one array of 6 deflections (transX, transY, transZ, wmX, wmY, wmZ) into one vector of translational displacement at a given node on the turbine surface CFD mesh.
+void fsiTurbine::computeBladeDisplacement(double *totDispNode, double * totPosOF,  double *transDispNode, double * xyzCFD,
+    double pitch, double * bldRootDef, double rLoc) {
+
+    //Get the relative distance between totPosOF and xyzCFD in the inertial frame
+    std::vector<double> p(3,0.0);
+    for (size_t i=0; i < 3; i++)
+        p[i] = xyzCFD[i] - totPosOF[i];
+
+    //Convert 'p' vector to the local frame of reference
+    std::vector<double> pLoc(3,0.0);
+    applyWMrotation(&(totPosOF[3]), p.data(), pLoc.data());
+
+    std::vector<double> pRot(3,0.0);
+    applyWMrotation(&(totDispNode[3]), pLoc.data(), pRot.data(),-1); // Apply the rotation corresponding to the final orientation to bring back to inertial frame
+
+    // Get `p` due to pitch
+    std::vector<double> pitchRotWM(3,0.0);
+    std::vector<double> globZ(3,0.0);
+    std::vector<double> locZ = {{0.0, 0.0, 1.0}};
+    applyWMrotation(bldRootDef, locZ.data(), globZ.data());
+    for (size_t i=0; i < 3; i++)
+        pitchRotWM[i] = 4 * std::tan(pitch/4 * M_PI/180.0) * globZ[i];
+
+    std::vector<double> pPitchRot(3,0.0);
+    applyWMrotation(pitchRotWM.data(), p.data(), pPitchRot.data());
+
+    // Get `p` due to ramped pitch
+    double k = 2.0; // controls steepness of the pitch ramp
+    double rampPitch = pitch * (1 - std::exp(-k*rLoc)) / (1 + std::exp(-k*rLoc));
+    std::vector<double> pRampPitchRot(3,0.0);
+    for (size_t i=0; i < 3; i++)
+        pitchRotWM[i] = 4 * std::tan(rampPitch/4 * M_PI/180.0) * globZ[i];
+    applyWMrotation(pitchRotWM.data(), p.data(), pRampPitchRot.data());
+
+    for (size_t i=0; i < 3; i++)
+        transDispNode[i] = totDispNode[i] + pRot[i] - p[i] - pPitchRot[i] + pRampPitchRot[i];
 }
 
 //! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ) into one vector of translational velocity at a given node on the turbine surface CFD mesh.
