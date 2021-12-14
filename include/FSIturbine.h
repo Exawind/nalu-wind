@@ -156,6 +156,10 @@ private:
     //! Convert one array of 6 deflections (transX, transY, transZ, wmX, wmY, wmZ) into one vector of translational displacement at a given node on the turbine surface CFD mesh.
     void computeDisplacement(double *totDispNode, double * xyzOF,  double *transDispNode, double * xyzCFD);
 
+    //! Accounting for blade pitch Convert one array of 6 deflections (transX, transY, transZ, wmX, wmY, wmZ) into one vector of translational displacement at a given node on the turbine surface CFD mesh.
+    void computeBladeDisplacement(double *totDispNode, double * xyzOF,  double *transDispNode, double * xyzCFD,
+        double pitch, double * bldRootRot, double rLoc);
+
     //! Convert one array of 6 velocities (transX, transY, transZ, wmX, wmY, wmZ) into one vector of translational velocity at a given node on the turbine surface CFD mesh.
     void computeMeshVelocity(double *totVelNode, double * totDispNode, double * totPosOF,  double *transVelNode, double * xyzCFD);
 

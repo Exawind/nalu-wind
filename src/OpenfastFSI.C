@@ -352,13 +352,18 @@ void OpenfastFSI::get_displacements(double current_time) {
             if (bulk_.parallel_rank() == turbProc) {
                 FAST.getTowerDisplacements(fsiTurbineData_[i]->brFSIdata_.twr_def, fsiTurbineData_[i]->brFSIdata_.twr_vel, i);
                 FAST.getBladeDisplacements(fsiTurbineData_[i]->brFSIdata_.bld_def, fsiTurbineData_[i]->brFSIdata_.bld_vel, i);
+                FAST.getBladeRootDisplacements(fsiTurbineData_[i]->brFSIdata_.bld_root_def, i);
+                FAST.getBladePitch(fsiTurbineData_[i]->brFSIdata_.bld_pitch, i);
                 FAST.getHubDisplacement(fsiTurbineData_[i]->brFSIdata_.hub_def, fsiTurbineData_[i]->brFSIdata_.hub_vel, i);
                 FAST.getNacelleDisplacement(fsiTurbineData_[i]->brFSIdata_.nac_def, fsiTurbineData_[i]->brFSIdata_.nac_vel, i);
             }
 
             int iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.twr_def.data(), (fsiTurbineData_[i]->params_.nBRfsiPtsTwr)*6, MPI_DOUBLE, turbProc, bulk_.parallel());
+            int numBlades = fsiTurbineData_[i]->params_.numBlades;
             int nTotBldNodes = fsiTurbineData_[i]->params_.nTotBRfsiPtsBlade;
             iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.bld_def.data(), nTotBldNodes*6, MPI_DOUBLE, turbProc, bulk_.parallel());
+            iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.bld_root_def.data(), numBlades*6, MPI_DOUBLE, turbProc, bulk_.parallel());
+            iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.bld_pitch.data(), numBlades, MPI_DOUBLE, turbProc, bulk_.parallel());
             iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.hub_def.data(), 6, MPI_DOUBLE, turbProc, bulk_.parallel());
             iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.nac_def.data(), 6, MPI_DOUBLE, turbProc, bulk_.parallel());
             iError = MPI_Bcast(fsiTurbineData_[i]->brFSIdata_.twr_vel.data(), (fsiTurbineData_[i]->params_.nBRfsiPtsTwr)*6, MPI_DOUBLE, turbProc, bulk_.parallel());
