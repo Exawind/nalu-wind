@@ -225,6 +225,7 @@ else(NOT ENABLE_CUDA)
   add_test_r(ActLineSimpleFLLC 2)
   add_test_r(taylorGreenVortex_p3 2)
   add_test_r(drivenCavity_p1 2)
+  add_test_r(BLTFlatPlateT3A 4)
 
   if(ENABLE_OPENFAST)
     add_test_r(nrel5MWactuatorLine 2)

@@ -98,15 +98,17 @@ struct InflowUserData : public UserData {
   SpecDissRate sdr_;
   MixtureFraction mixFrac_;
   MassFraction massFraction_;
+  GammaInf gamma_;
  
   bool uSpec_;
   bool tkeSpec_;
   bool sdrSpec_;
   bool mixFracSpec_;
   bool massFractionSpec_;
+  bool gammaSpec_;
   InflowUserData()
     : UserData(),
-    uSpec_(false), tkeSpec_(false), sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false)
+    uSpec_(false), tkeSpec_(false), sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false), gammaSpec_(false)
   {}
 };
 
@@ -117,6 +119,7 @@ struct OpenUserData : public UserData {
   SpecDissRate sdr_;
   MixtureFraction mixFrac_;
   MassFraction massFraction_;
+  GammaOpen gamma_;
  
   bool uSpec_;
   bool pSpec_;
@@ -125,13 +128,14 @@ struct OpenUserData : public UserData {
   bool mixFracSpec_;
   bool massFractionSpec_;
   bool totalP_;
+  bool gammaSpec_;
   EntrainmentMethod entrainMethod_;
 
   OpenUserData()
     : UserData(),
       uSpec_(false), pSpec_(false), tkeSpec_(false), 
       sdrSpec_(false), mixFracSpec_(false), massFractionSpec_(false), 
-      totalP_{false}, entrainMethod_{EntrainmentMethod::COMPUTED}
+      totalP_{false}, gammaSpec_(false), entrainMethod_{EntrainmentMethod::COMPUTED}
   {}
 };
 
@@ -443,6 +447,10 @@ template<> struct convert<sierra::nalu::TurbKinEnergy> {
 
 template<> struct convert<sierra::nalu::SpecDissRate> {
   static bool decode(const Node& node, sierra::nalu::SpecDissRate& rhs) ;
+};
+
+template<> struct convert<sierra::nalu::GammaInf> {
+  static bool decode(const Node& node, sierra::nalu::GammaInf& rhs) ;
 };
 
 template<> struct convert<sierra::nalu::Temperature> {
