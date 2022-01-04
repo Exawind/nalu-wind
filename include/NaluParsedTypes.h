@@ -54,6 +54,20 @@ struct SpecDissRate {
   {}
 };
 
+struct GammaInf {
+  double gamma_;
+  GammaInf()
+    : gamma_(1.0)
+  {}
+};
+
+struct GammaOpen {
+  double gamma_;
+  GammaOpen()
+    : gamma_(1.0)
+  {}
+};
+
 struct Temperature {
   double temperature_;
   Temperature()
