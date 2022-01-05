@@ -229,6 +229,28 @@ namespace sierra
       abltopBC.theBcType_ = ABLTOP_BC;
       const YAML::Node& abltopUserData = node["abltop_user_data"];
       abltopBC.userData_ = abltopUserData.as<ABLTopUserData>();
+      const YAML::Node& symmetryUserData = node["symmetry_user_data"];
+      abltopBC.symmetryUserData_ = symmetryUserData.as<SymmetryUserData>();
+      if (symmetryUserData["symmetry_type"]) {
+        const std::string symmType = symmetryUserData["symmetry_type"].as<std::string>();
+        if(symmType == "generalized_weak" || symmType == "default"){
+          // do nothing already set, but keep for parse checking
+        }
+        else if(symmType == "x_direction_strong"){
+          abltopBC.symmetryUserData_.symmType_ = SymmetryUserData::SymmetryTypes::X_DIR_STRONG;
+        }
+        else if(symmType == "y_direction_strong"){
+          abltopBC.symmetryUserData_.symmType_ = SymmetryUserData::SymmetryTypes::Y_DIR_STRONG;
+        }
+        else if(symmType == "z_direction_strong"){
+          abltopBC.symmetryUserData_.symmType_ = SymmetryUserData::SymmetryTypes::Z_DIR_STRONG;
+        }
+        else{
+          throw std::runtime_error(
+            "Unrecognized value for symmetry_type: " + symmType
+            );
+        }
+      }
     }
 
     void operator >>(const YAML::Node& node,
