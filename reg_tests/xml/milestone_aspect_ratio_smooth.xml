@@ -15,7 +15,6 @@
   <Parameter        name="aggregation: drop tol"            type="double"   value="0.01"/>
   <Parameter        name="aggregation: drop scheme"         type="string"   value="distance laplacian"/>
 
-  <Parameter        name="aggregation: phase2a include root" type="bool"   value="false"/>
   <Parameter        name="repartition: enable"              type="bool"     value="true"/>
   <Parameter        name="repartition: min rows per proc"   type="int"      value="1000"/>
   <Parameter        name="repartition: start level"         type="int"      value="2"/>
