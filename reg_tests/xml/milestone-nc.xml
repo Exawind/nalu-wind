@@ -14,7 +14,6 @@
   <Parameter        name="aggregation: type"                type="string"   value="uncoupled"/>
   <Parameter        name="aggregation: drop tol"            type="double"   value="0.02"/>
 
-  <Parameter        name="aggregation: phase2a include root" type="bool"   value="false"/>
   <Parameter        name="repartition: enable"              type="bool"     value="true"/>
   <Parameter        name="repartition: min rows per proc"   type="int"      value="1000"/>
   <Parameter        name="repartition: start level"         type="int"      value="2"/>
