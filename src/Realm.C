@@ -3199,6 +3199,23 @@ Realm::populate_restart(
     if ( NULL != turbulenceAveragingPostProcessing_ ) {
       ioBroker_->get_global("currentTimeFilter", turbulenceAveragingPostProcessing_->currentTimeFilter_, abortIfNotFound);
     }
+    if (meshMotionAlg_) {
+      /* TODO follow steps from Realm::initialize_prolog
+
+      reset coordinates from reading them from restart file should happen
+      implicitly
+
+      TODO Add coords, and disp to restart autormatic fields, and throw if they
+      are missing from a restart
+
+      1) Realm::init_current_coordinates
+      */
+      meshMotionAlg_->restart_reinit(foundRestartTime);
+      /*
+      2) Realm::compute_geometry
+      3) meshMotionAlg_->post_compute_geometry
+      */
+    }
   }
   return foundRestartTime;
 }

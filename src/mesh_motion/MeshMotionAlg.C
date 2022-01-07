@@ -58,6 +58,19 @@ void MeshMotionAlg::initialize( const double time )
   isInit_ = true;
 }
 
+void
+MeshMotionAlg::restart_reinit(const double time)
+{
+  if (isInit_) {
+    isInit_ = false;
+    initialize(time);
+  } else {
+    throw std::runtime_error(
+      "MeshMotionAlg::restart_reinit(): Re-initialization of MeshMotionAlg for "
+      "restart should be called after initialize");
+  }
+}
+
 void MeshMotionAlg::execute(const double time)
 {
   for (size_t i=0; i < movingFrameVec_.size(); i++) {
