@@ -140,7 +140,7 @@ if(ENABLE_HYPRE)
   check_cxx_symbol_exists(
     HYPRE_BIGINT "${HYPRE_INCLUDE_DIRS}/HYPRE_config.h" NALU_HYPRE_BIGINT)
   if(NOT NALU_HYPRE_BIGINT AND NOT ENABLE_CUDA)
-    message(WARNING
+    message(STATUS
       "HYPRE does not enable 64-bit integer support; will fail on large problems!")
   endif()
 endif()
