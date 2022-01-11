@@ -399,7 +399,8 @@ Realm::convert_bytes(double bytes)
   return out.str();
 }
 
-void Realm::initialize_prolog()
+void
+Realm::initialize_prolog()
 {
   NaluEnv::self().naluOutputP0() << "Realm::initialize() Begin " << std::endl;
 
@@ -2516,10 +2517,13 @@ Realm::register_nodal_fields(
   if ( does_mesh_move()) {
     VectorFieldType *displacement = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement",numVolStates));
     stk::mesh::put_field_on_mesh(*displacement, *part, nDim, nullptr);
+    augment_restart_variable_list("mesh_displacement");
     VectorFieldType *currentCoords = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
     stk::mesh::put_field_on_mesh(*currentCoords, *part, nDim, nullptr);
+    augment_restart_variable_list("current_coordinates");
     VectorFieldType *meshVelocity = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity"));
     stk::mesh::put_field_on_mesh(*meshVelocity, *part, nDim, nullptr);
+    augment_restart_variable_list("mesh_velocity");
     VectorFieldType *velocityRTM = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm"));
     stk::mesh::put_field_on_mesh(*velocityRTM, *part, nDim, nullptr);
     if(has_mesh_deformation()){
@@ -3210,7 +3214,10 @@ Realm::populate_restart(
 
       1) Realm::init_current_coordinates
       */
+      init_current_coordinates();
       meshMotionAlg_->restart_reinit(foundRestartTime);
+      compute_geometry();
+      meshMotionAlg_->post_compute_geometry();
       /*
       2) Realm::compute_geometry
       3) meshMotionAlg_->post_compute_geometry
