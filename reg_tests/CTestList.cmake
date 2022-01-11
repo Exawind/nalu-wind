@@ -60,7 +60,7 @@ endfunction(add_test_p)
 # Regression test with single restart
 function(add_test_r_rst testname np)
     setup_test(${testname} ${np})
-    add_test(${testname} sh -c "${RUN_COMMAND}${COMPARE_GOLDS_COMMAND}; ${RUN_COMMAND}${COMPARE_GOLDS_COMMAND_RST}")
+    add_test(${testname} sh -c "${RUN_COMMAND}${COMPARE_GOLDS_COMMAND}; ${RUN_COMMAND_RST}${COMPARE_GOLDS_COMMAND_RST}")
     set_properties(${testname})
     set_tests_properties(${testname} PROPERTIES LABELS "regression")
 endfunction(add_test_r_rst)
