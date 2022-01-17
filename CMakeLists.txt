@@ -4,7 +4,8 @@ project(Nalu-Wind CXX Fortran)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 ########################## OPTIONS #####################################
-option(ENABLE_CUDA "Enable build targeting GPU" OFF)
+option(ENABLE_CUDA "Enable build targeting Nvidia GPU" OFF)
+option(ENABLE_ROCM "Enable build targeting AMD GPU" OFF)
 option(ENABLE_UMPIRE "Enable Umpire GPU memory pools" OFF)
 option(ENABLE_TESTS "Enable regression testing." OFF)
 option(ENABLE_EXAMPLES "Enable examples." OFF)
@@ -51,6 +52,12 @@ if(ENABLE_CUDA)
     CUDA::cudart
     CUDA::cublas
     CUDA::nvToolsExt)
+endif()
+
+if(ENABLE_ROCM)
+  find_package(hip REQUIRED)
+  message(STATUS "Found HIP = ${HIP_PATH}")
+  target_link_libraries(nalu PUBLIC ${HIP_LIBRARIES})
 endif()
 
 if (ENABLE_UMPIRE)
@@ -107,15 +114,17 @@ if(ENABLE_OPENMP)
   target_link_libraries(nalu PUBLIC $<$<BOOL:${OpenMP_Fortran_FOUND}>:OpenMP::OpenMP_Fortran>)
 endif()
 
-############################ CUDA ######################################
-if(ENABLE_CUDA)
+############################ GPU ######################################
+if(ENABLE_CUDA OR ENABLE_ROCM)
   target_compile_definitions(nalu PUBLIC USE_STK_SIMD_NONE)
   separate_arguments(Trilinos_CXX_COMPILER_FLAGS)
   target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${Trilinos_CXX_COMPILER_FLAGS}>)
-  target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:--expt-relaxed-constexpr>)
-  # if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0.194")
-  #   target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:--Werror ext-lambda-captures-this>)
-  # endif()
+  if(ENABLE_CUDA)
+    target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:--expt-relaxed-constexpr>)
+    # if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0.194")
+    #   target_compile_options(nalu PUBLIC $<$<COMPILE_LANGUAGE:CXX>:--Werror ext-lambda-captures-this>)
+    # endif()
+  endif()
 endif()
 
 ############################ FFTW ######################################
