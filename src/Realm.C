@@ -3204,24 +3204,14 @@ Realm::populate_restart(
       ioBroker_->get_global("currentTimeFilter", turbulenceAveragingPostProcessing_->currentTimeFilter_, abortIfNotFound);
     }
     if (meshMotionAlg_) {
-      /* TODO follow steps from Realm::initialize_prolog
-
-      reset coordinates from reading them from restart file should happen
-      implicitly
-
-      TODO Add coords, and disp to restart autormatic fields, and throw if they
-      are missing from a restart
-
-      1) Realm::init_current_coordinates
-      */
+      // Redo all the mesh and motionAlg setup after reading files from the
+      // restart reset the current_coordinate and mesh_velocity fields after
+      // reading them
       init_current_coordinates();
+      // reset the current time for the meshMotionAlgs
       meshMotionAlg_->restart_reinit(foundRestartTime);
       compute_geometry();
       meshMotionAlg_->post_compute_geometry();
-      /*
-      2) Realm::compute_geometry
-      3) meshMotionAlg_->post_compute_geometry
-      */
     }
   }
   return foundRestartTime;
