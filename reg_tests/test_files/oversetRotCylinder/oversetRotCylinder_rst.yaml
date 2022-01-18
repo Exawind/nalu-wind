@@ -27,7 +27,7 @@ linear_solvers:
 realms:
 
   - name: realm_1
-    mesh: rst/oversetCylinder.rst
+    mesh: rst/oversetRotCylinder.rst
     use_edges: yes
     activate_aura: true
 
