@@ -319,7 +319,7 @@ TEST(MijTensorNGP, hex27_simd) {
           mij_ev[i][2] * mij_ev[j][2] * stk::math::sqrt(mij_evals[2][2]);
 
   using AlgTraits = sierra::nalu::AlgTraitsHex27;
-  DoubleType QDT[9];
+  NALU_ALIGNED DoubleType QDT[9];
   for (int i = 0; i < 9; i++)
     QDT[i] = Q[i];
   const auto &coordField =
@@ -330,11 +330,12 @@ TEST(MijTensorNGP, hex27_simd) {
   for (unsigned j = 0; j < topo.num_nodes(); ++j) {
     const double *coords = stk::mesh::field_data(coordField, nodes[j]);
 
-    std::vector<DoubleType> coordsDT(dim);
-    for (int k = 0; k < dim; ++k)
+    NALU_ALIGNED DoubleType coordsDT[3/*dim*/];
+    for (int k = 0; k < dim; ++k) {
       coordsDT[k] = coords[k];
+    }
 
-    sierra::nalu::matvec33(QDT, coordsDT.data(), &v_coords(j, 0));
+    sierra::nalu::matvec33(QDT, &coordsDT[0], &v_coords(j, 0));
   }
 
   Kokkos::View<DoubleType ***> mij_tensor("mij_tensor", AlgTraits::numScsIp_,

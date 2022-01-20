@@ -56,7 +56,7 @@ TEST(PecletFunction, NGP_classic_simd)
 {
   const DoubleType A = 5.0;
   const DoubleType hybridFactor = 1.0;
-  std::vector<DoubleType> pecletNumbers = {0.0, 1.0, std::sqrt(5.0), 1e5};
+  NALU_ALIGNED DoubleType pecletNumbers[] = {0.0, 1.0, std::sqrt(5.0), 1e5};
   std::vector<double> pecletFactors = {0.0, 1.0/6.0, 0.5, 1.0};
 
   auto* pecFunc =
@@ -99,7 +99,7 @@ TEST(PecletFunction, NGP_tanh_simd)
 {
   const DoubleType c1 = 5000.0;
   const DoubleType c2 = 200.0;
-  std::vector<DoubleType> pecletNumbers = {-10.0 * c2, c1, c1 + 10.0 * c2};
+  NALU_ALIGNED DoubleType pecletNumbers[] = {-10.0 * c2, c1, c1 + 10.0 * c2};
   std::vector<double> pecletFactors = {0.0, 0.5, 1.0};
 
   auto* pecFunc =
