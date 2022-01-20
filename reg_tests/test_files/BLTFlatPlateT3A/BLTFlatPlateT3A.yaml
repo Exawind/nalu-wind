@@ -29,7 +29,7 @@ linear_solvers:
 realms:
 
   - name: realm_1
-    mesh: mesh/grid_struct_137x97x3_vol.exo
+    mesh: ../meshes/grid_struct_137x97x3_vol.exo
     use_edges: yes
     check_for_missing_bcs: yes
     automatic_decomposition_type: rcb
@@ -46,6 +46,7 @@ realms:
         velocity: solve_scalar
         turbulent_ke: solve_scalar
         specific_dissipation_rate: solve_scalar
+        gamma_transition: solve_scalar
         pressure: solve_cont
         ndtw: solve_cont
 
@@ -73,6 +74,7 @@ realms:
           velocity: [5.18,0.0,0.0]
           turbulent_ke: 0.04383073
           specific_dissipation_rate: 243.50403000
+          gamma_transition: 1.0
 
     material_properties:
       target_name: Unspecified-2-HEX
@@ -108,7 +110,7 @@ realms:
         velocity: [5.18000,0.0,0.0]
         turbulent_ke: 0.04383073
         specific_dissipation_rate: 243.50403000
-        gamma_transition: 1.0
+        gamma: 1.0
 
     - symmetry_boundary_condition: bc_symBottom
       target_name: bottomsym
@@ -130,7 +132,7 @@ realms:
 
     solution_options:
       name: myOptions
-      turbulence_model: sst
+      turbulence_model: sst_blt
       projected_timescale_type: momentum_diag_inv
 
       options:
@@ -138,16 +140,19 @@ realms:
             velocity: 1.0
             turbulent_ke: 1.0
             specific_dissipation_rate: 1.0
+            gamma_transition: 1.0
 
         - alpha_upw:
             velocity: 1.0
             turbulent_ke: 1.0
             specific_dissipation_rate: 1.0
+            gamma_transition: 1.0
 
         - upw_factor:
             velocity: 1.0
             turbulent_ke: 0.0
             specific_dissipation_rate: 0.0
+            gamma_transition: 0.0
 
         - noc_correction:
             pressure: yes
@@ -157,6 +162,7 @@ realms:
             pressure: element
             turbulent_ke: element
             specific_dissipation_rate: element
+            gamma_transition: element
             ndtw: element
 
         - relaxation_factor:
@@ -164,6 +170,7 @@ realms:
             pressure: 0.3
             turbulent_ke: 0.7
             specific_dissipation_rate: 0.7
+            gamma_transition: 0.7
 
         - turbulence_model_constants:
             SDRWallFactor: 10.0
@@ -207,7 +214,7 @@ realms:
      
     output:
       output_data_base_name: results/flatPlate.e
-      output_frequency: 500
+      output_frequency: 200
       output_node_set: no 
       output_variables:
        - velocity
@@ -220,13 +227,14 @@ realms:
        - minimum_distance_to_wall
        - sst_f_one_blending
        - turbulent_viscosity
+       - gamma_transition
 
 Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
       time_step: 1.0e-2
-      termination_step_count: 5
+      termination_step_count: 3000
       time_stepping_type: fixed
       time_step_count: 0
       second_order_accuracy: yes
