@@ -28,6 +28,7 @@ class EquationSystems;
 class AlgorithmDriver;
 class TurbKineticEnergyEquationSystem;
 class SpecificDissipationRateEquationSystem;
+class GammaEquationSystem;
 
 class ShearStressTransportEquationSystem : public EquationSystem
 {
@@ -59,17 +60,24 @@ public:
   void clip_min_distance_to_wall();
   void compute_f_one_blending();
   void update_and_clip();
+  void update_and_clip_gamma();
   void clip_sst(
     const stk::mesh::NgpMesh& ngpMesh,
     const stk::mesh::Selector& sel,
     stk::mesh::NgpField<double>& tke,
     stk::mesh::NgpField<double>& sdr);
+  void clip_sst_gamma(
+    const stk::mesh::NgpMesh& ngpMesh,
+    const stk::mesh::Selector& sel,
+    stk::mesh::NgpField<double>& gamma);
 
   TurbKineticEnergyEquationSystem* tkeEqSys_;
   SpecificDissipationRateEquationSystem* sdrEqSys_;
+  GammaEquationSystem *gammaEqSys_;
 
   ScalarFieldType* tke_;
   ScalarFieldType* sdr_;
+  ScalarFieldType* gamma_;
   ScalarFieldType* minDistanceToWall_;
   ScalarFieldType* fOneBlending_;
   ScalarFieldType* maxLengthScale_;
@@ -84,6 +92,8 @@ public:
 
   const double tkeMinValue_{1.0e-8};
   const double sdrMinValue_{1.0e-8};
+  const double gammaMinValue_{0.0};
+  const double gammaMaxValue_{1.0};
 };
 
 } // namespace nalu

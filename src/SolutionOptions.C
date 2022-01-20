@@ -531,7 +531,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_cDESke] = 0.61; 
   turbModelConstantMap_[TM_cDESkw] = 0.78;
   turbModelConstantMap_[TM_tkeProdLimitRatio] =
-    (turbulenceModel_ == SST || turbulenceModel_ == SST_DES ||
+    (turbulenceModel_ == SST || turbulenceModel_ == SST_BLT || turbulenceModel_ == SST_DES ||
      turbulenceModel_ == SST_AMS || turbulenceModel_ == SST_IDDES)
       ? 10.0
       : 500.0;

@@ -1476,6 +1476,7 @@ MomentumEquationSystem::register_interior_algorithm(
         break;
 
       case SST:
+      case SST_BLT:
       case SST_DES:
       case SST_IDDES:
 
