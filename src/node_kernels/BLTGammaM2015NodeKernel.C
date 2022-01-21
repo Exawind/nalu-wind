@@ -167,34 +167,6 @@ BLTGammaM2015NodeKernel::execute(
   DblType PgammaDir =   flength * density * sijMag * fonset * ( 1.0 - 2.0 * gamint );
   DblType DgammaDir = - caTwo_ * density * vortMag * fturb  * ( 2.0 * ceTwo_ * gamint - 1.0 );
 
-    const double dx   = stk::math::abs(coords[0] - 0.50);
-    const double dy   = stk::math::abs(coords[1] + 0.50);
-
-#if 0
-    //printf("y = %.8E dy = %.8E\n", coords[1], dy);
-
-    if (dy < 0.1 && timeStepCount == 100) {
-      NaluEnv::self().naluOutputP0() <<
-        timeStepCount << " " << coords[0] << " " << coords[1] << " " << coords[2] << " " << vel[0] << " " << 
-        vel[2] << " " << gamint << " " << tke << " " << sdr << " " << minD << " " << 
-        dvnn << " " << TuL << " " << lamda0L << " " << Re0c << " " << Rev << " " << 
-        fonset1 << " " << fonset2 << " " << fonset3 << " " << fonset << " " << fturb << " " << 
-        rt << " " << sijMag << " " << vortMag << " " << Pgamma << " " << Dgamma << " " << 
-        Pgamma-Dgamma << std::endl;
-
-   if (dx < 0.08) {
-      NaluEnv::self().naluOutputP0() <<
-        timeStepCount+0.12345678 << " " << coords[0] << " " << coords[1] << " " << coords[2] << " " << vel[0] << " " <<
-        vel[2] << " " << gamint << " " << tke << " " << sdr << " " << minD << " " <<
-        dvnn << " " << TuL << " " << lamda0L << " " << Re0c << " " << Rev << " " <<
-        fonset1 << " " << fonset2 << " " << fonset3 << " " << fonset << " " << fturb << " " <<
-        rt << " " << sijMag << " " << vortMag << " " << Pgamma << " " << Dgamma << " " <<
-        Pgamma-Dgamma << std::endl;
-   }
-
-   }
-#endif
-
   rhs(0) += (Pgamma + Dgamma) * dVol;
   lhs(0, 0) -= (PgammaDir + DgammaDir) * dVol;
 

@@ -18,6 +18,16 @@
 namespace sierra {
 namespace nalu {
 
+/*------------------------------------------------------------------------*/
+/* BLTGammaM2015NodeKernel is a correlation-based transition model        */ 
+/* consisting of the baseline k-omega SST plus one augmented transport    */ 
+/* equation for Gamma (turbulence intermettency)                          */
+/*                                                                        */
+/* Menter, F.R., Smirnov, P.E., Liu, T. et al. A One-Equation Local       */
+/* Correlation-Based Transition Model. Flow Turbulence Combust 95, 583–619*/ 
+/* (2015). https://doi.org/10.1007/s10494-015-9622-4                      */
+/*------------------------------------------------------------------------*/
+
 class Realm;
 
 class BLTGammaM2015NodeKernel : public NGPNodeKernel<BLTGammaM2015NodeKernel>
