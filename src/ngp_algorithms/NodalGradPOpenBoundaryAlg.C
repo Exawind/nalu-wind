@@ -163,6 +163,7 @@ NodalGradPOpenBoundary<AlgTraits>::execute()
       }
     }
   );
+  gradP.modify_on_device();
 }
 
 INSTANTIATE_KERNEL_FACE_ELEMENT(NodalGradPOpenBoundary)
