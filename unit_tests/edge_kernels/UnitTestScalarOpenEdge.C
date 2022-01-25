@@ -51,8 +51,8 @@ TEST_F(SSTKernelHex8Mesh, NGP_scalar_edge_open_solver_alg)
   unit_test_utils::FaceElemHelperObjects helperObjs(
     bulk_, stk::topology::QUAD_4, stk::topology::HEX_8, 1, part);
 
-  std::unique_ptr<sierra::nalu::Kernel> kernel(
-    new sierra::nalu::ScalarEdgeOpenSolverAlg<
+  std::unique_ptr<sierra::nalu::ScalarEdgeOpenSolverAlg<sierra::nalu::AlgTraitsQuad4Hex8>>
+    kernel (new sierra::nalu::ScalarEdgeOpenSolverAlg<
       sierra::nalu::AlgTraitsQuad4Hex8>(
       meta_, solnOpts_, tke_, tkebc_, dkdx_, tvisc_, 
       helperObjs.assembleFaceElemSolverAlg->faceDataNeeded_,
