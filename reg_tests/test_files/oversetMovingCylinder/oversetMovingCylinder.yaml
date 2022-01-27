@@ -4,7 +4,6 @@ Simulations:
     optimizer: opt1
 
 linear_solvers:
-
   - name: solve_scalar
     type: tpetra
     method: gmres
@@ -14,15 +13,25 @@ linear_solvers:
     kspace: 50
     output_level: 0
 
+  #- name: solve_cont
+  #  type: tpetra
+  #  method: gmres
+  #  preconditioner: muelu
+  #  tolerance: 1e-5
+  #  max_iterations: 200
+  #  kspace: 5
+  #  muelu_xml_file_name: ../../xml/milestone.xml
+  #  output_level: 0
+
   - name: solve_cont
-    type: tpetra
-    method: gmres
-    preconditioner: muelu
+    type: hypre
+    method: hypre_gmres
+    preconditioner: boomerAMG
     tolerance: 1e-5
     max_iterations: 200
     kspace: 5
-    muelu_xml_file_name: ../../xml/milestone.xml
     output_level: 0
+
 
 realms:
 
@@ -95,7 +104,10 @@ realms:
     - wall_boundary_condition: bc_5
       target_name: wall
       wall_user_data:
-        velocity: [0.0, 0.0, 0.0]
+        user_function_name:
+         velocity: wind_energy
+        user_function_string_parameters:
+         velocity: [interior]
 
     - symmetry_boundary_condition: bc_6
       target_name: side11
@@ -132,11 +144,12 @@ realms:
     mesh_motion:
       - name: interior
         mesh_parts: [ Unspecified-2-HEX ]
+        frame: non_inertial
         motion:
          - type: rotation
-           omega: 24.00
+           omega: 1.00
            axis: [0.0, 1.0, 0.0]
-           origin: [5.0, 0.0, 0.0]
+           centroid: [5.0, 0.0, 0.0]
 
     solution_options:
       name: myOptions
@@ -167,7 +180,7 @@ realms:
 
       - type: surface
         physics: surface_force_and_moment
-        output_file_name: oversetMovingCylinder_rst.dat
+        output_file_name: oversetMovingCylinder.dat
         frequency: 1
         parameters: [0,0]
         target_name: wall
@@ -205,8 +218,8 @@ Time_Integrators:
   - StandardTimeIntegrator:
       name: ti_1
       start_time: 0
-      termination_step_count: 30
-      time_step: 0.003
+      termination_step_count: 15
+      time_step: 0.03
       time_stepping_type: fixed
       time_step_count: 0
       second_order_accuracy: yes
