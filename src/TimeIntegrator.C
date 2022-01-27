@@ -179,6 +179,7 @@ void TimeIntegrator::prepare_for_time_integration()
   // possible restart; need to extract current time (max wins)
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
     currentTime_ = std::max(currentTime_, (*ii)->populate_restart(timeStepNm1_, timeStepCount_));
+    overset_->update_connectivity();
   }
 
   // populate data from transfer; init, io and external
