@@ -2228,16 +2228,6 @@ Realm::initialize_non_conformal()
 }
 
 //--------------------------------------------------------------------------
-//-------- initialize_overset ----------------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::initialize_overset()
-{
-  if (hasOverset_ && !isExternalOverset_)
-    oversetManager_->execute(equationSystems_.all_systems_decoupled());
-}
-
-//--------------------------------------------------------------------------
 //-------- initialize_post_processing_algorithms ---------------------------
 //--------------------------------------------------------------------------
 void
@@ -3212,8 +3202,6 @@ Realm::populate_restart(
       meshMotionAlg_->restart_reinit(foundRestartTime);
       compute_geometry();
       meshMotionAlg_->post_compute_geometry();
-      if (hasOverset_ && !isExternalOverset_)
-        oversetManager_->execute(equationSystems_.all_systems_decoupled());
     }
   }
   return foundRestartTime;
