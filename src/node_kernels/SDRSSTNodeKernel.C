@@ -30,7 +30,9 @@ SDRSSTNodeKernel::SDRSSTNodeKernel(const stk::mesh::MetaData& meta)
     dwdxID_(get_field_ordinal(meta, "dwdx")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
-    nDim_(meta.spatial_dimension())
+    nDim_(meta.spatial_dimension()),
+    ltID_(get_field_ordinal(meta, "l_t")),
+    gammaID_(get_field_ordinal(meta, "gamma"))
 {
 }
 
@@ -48,9 +50,21 @@ SDRSSTNodeKernel::setup(Realm& realm)
   dwdx_ = fieldMgr.get_field<double>(dwdxID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
+  lt_ = fieldMgr.get_field<double>(ltID_);
+  gamma_ = fieldMgr.get_field<double>(gammaID_);
 
   const std::string dofName = "specific_dissipation_rate";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
+
+  // get input values to calculate length scale limiter
+  lengthScaleLimiter_ = realm.solutionOptions_->lengthScaleLimiter_;
+  if (lengthScaleLimiter_) {
+    const double earthAngularVelocity = realm.solutionOptions_->earthAngularVelocity_;
+    const double pi = std::acos(-1.0);
+    const double latitude = realm.solutionOptions_->latitude_*pi/180.0;
+    referenceVelocity_ = realm.solutionOptions_->referenceVelocity_;
+    corfac_ = 2.0*earthAngularVelocity*std::sin(latitude);
+  }
 
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
@@ -98,8 +112,44 @@ SDRSSTNodeKernel::execute(
   // Blend constants for SDR
   const DblType omf1 = (1.0 - fOneBlend);
   const DblType beta = fOneBlend * betaOne_ + omf1 * betaTwo_;
-  const DblType gamma = fOneBlend * gammaOne_ + omf1 * gammaTwo_;
   const DblType sigmaD = 2.0 * omf1 * sigmaWTwo_;
+
+  // update fields to output (only need l_t for length scale limiter
+  // but output regardless for comparison)
+  const DblType l_t = stk::math::sqrt(tke)/(stk::math::pow(betaStar_, .25)*sdr);
+  lt_.get(node,0) = l_t;
+
+  // maximum length scale--calculate if using length scale limiter
+  NodeKernelTraits::DblType l_e;
+  if (lengthScaleLimiter_) {
+    l_e = .00027*referenceVelocity_/corfac_;
+  }
+
+  // modify gammaTwo if using derived limiter
+  NodeKernelTraits::DblType gammaTwo_apply;
+  NodeKernelTraits::DblType gammaOne_apply;
+  if (lengthScaleLimiter_) {
+    // apply limiter to cEpsOne -> calculate gammaTwo
+    const NodeKernelTraits::DblType cEpsOne_two = gammaTwo_ + 1.;
+    const NodeKernelTraits::DblType cEpsTwo_two = betaTwo_/betaStar_ + 1.;
+    const NodeKernelTraits::DblType cEpsOneStar_two = cEpsOne_two + (cEpsTwo_two - cEpsOne_two)*(l_t/l_e);
+    const NodeKernelTraits::DblType gammaTwoStar = cEpsOneStar_two - 1.;
+    gammaTwo_apply = gammaTwoStar;
+
+    const NodeKernelTraits::DblType cEpsOne_one = gammaOne_ + 1.;
+    const NodeKernelTraits::DblType cEpsTwo_one = betaOne_/betaStar_ + 1.;
+    const NodeKernelTraits::DblType cEpsOneStar_one = cEpsOne_one + (cEpsTwo_one - cEpsOne_one)*(l_t/l_e);
+    const NodeKernelTraits::DblType gammaOneStar = cEpsOneStar_one - 1.;
+    gammaOne_apply = gammaOneStar;
+  }
+  else {
+    gammaTwo_apply = gammaTwo_;
+    gammaOne_apply = gammaOne_;
+  }
+
+  //calculate gamma
+  const NodeKernelTraits::DblType gamma = fOneBlend * gammaOne_apply + omf1 * gammaTwo_apply;
+  gamma_.get(node,0) = gamma;
 
   // Production term with appropriate clipping of tvisc
   const DblType Pw = gamma * density * Pk / stk::math::max(tvisc, 1.0e-16);

@@ -35,7 +35,8 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
       solnOpts.get_turb_model_constant(TM_periodicForcingLengthY)),
     periodicForcingLengthZ_(
       solnOpts.get_turb_model_constant(TM_periodicForcingLengthZ)),
-    nDim_(bulk.mesh_meta_data().spatial_dimension())
+    nDim_(bulk.mesh_meta_data().spatial_dimension()),
+    kappa_(solnOpts.get_turb_model_constant(TM_kappa))
 {
   const auto& meta = bulk.mesh_meta_data();
 
@@ -84,6 +85,8 @@ MomentumSSTAMSForcingNodeKernel::setup(Realm& realm)
   avgVelocity_ = fieldMgr.get_field<double>(avgVelocityID_);
   avgResAdeq_ = fieldMgr.get_field<double>(avgResAdeqID_);
   forcingComp_ = fieldMgr.get_field<double>(forcingCompID_);
+  zeroForcingBelowKs_ = realm.solutionOptions_->zeroForcingBelowKs_;
+  z0_ = realm.solutionOptions_->roughnessHeight_;
 }
 
 void
@@ -210,6 +213,15 @@ MomentumSSTAMSForcingNodeKernel::execute(
   NodeKernelTraits::DblType gX = C_F * hX;
   NodeKernelTraits::DblType gY = C_F * hY;
   NodeKernelTraits::DblType gZ = C_F * hZ;
+
+  if (zeroForcingBelowKs_) {
+    const NodeKernelTraits::DblType k_s = 30.*z0_;
+    if (coords[2] <= k_s) {
+      gX = 0.0;
+      gY = 0.0;
+      gZ = 0.0;
+    }
+  }
 
   forcingComp_.get(node, 0) = gX;
   forcingComp_.get(node, 1) = gY;

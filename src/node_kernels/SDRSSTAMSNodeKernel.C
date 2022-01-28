@@ -34,7 +34,9 @@ SDRSSTAMSNodeKernel::SDRSSTAMSNodeKernel(
     dwdxID_(get_field_ordinal(meta, "dwdx")),
     prodID_(get_field_ordinal(meta, "average_production")),
     densityID_(get_field_ordinal(meta, "density")),
-    nDim_(meta.spatial_dimension())
+    nDim_(meta.spatial_dimension()),
+    ltID_(get_field_ordinal(meta, "l_t")),
+    gammaID_(get_field_ordinal(meta, "gamma"))
 {
 }
 
@@ -53,6 +55,17 @@ SDRSSTAMSNodeKernel::setup(Realm& realm)
   fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
   dkdx_ = fieldMgr.get_field<double>(dkdxID_);
   dwdx_ = fieldMgr.get_field<double>(dwdxID_);
+  lt_ = fieldMgr.get_field<double>(ltID_);
+  gamma_ = fieldMgr.get_field<double>(gammaID_);
+
+  lengthScaleLimiter_ = realm.solutionOptions_->lengthScaleLimiter_;
+  if (lengthScaleLimiter_) {
+    const double earthAngularVelocity = realm.solutionOptions_->earthAngularVelocity_;
+    const double pi = std::acos(-1.0);
+    const double latitude = realm.solutionOptions_->latitude_*pi/180.0;
+    referenceVelocity_ = realm.solutionOptions_->referenceVelocity_;
+    corfac_ = 2.0*earthAngularVelocity*std::sin(latitude);
+  }
 
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
@@ -90,9 +103,44 @@ SDRSSTAMSNodeKernel::execute(
   const NodeKernelTraits::DblType om_fOneBlend = 1.0 - fOneBlend;
   const NodeKernelTraits::DblType beta =
     fOneBlend * betaOne_ + om_fOneBlend * betaTwo_;
-  const NodeKernelTraits::DblType gamma =
-    fOneBlend * gammaOne_ + om_fOneBlend * gammaTwo_;
   const NodeKernelTraits::DblType sigmaD = 2.0 * om_fOneBlend * sigmaWTwo_;
+
+  // update fields to output (only need l_t for length scale limiter
+  // but output regardless for comparison)
+  const NodeKernelTraits::DblType l_t = stk::math::sqrt(tke)/(stk::math::pow(betaStar_, .25)*sdr);
+  lt_.get(node,0) = l_t;
+
+  // maximum length scale--calculate if using length scale limiter
+  NodeKernelTraits::DblType l_e;
+  if (lengthScaleLimiter_) {
+    l_e = .00027*referenceVelocity_/corfac_;
+  }
+
+  // modify gammaTwo if using derived limiter
+  NodeKernelTraits::DblType gammaTwo_apply;
+  NodeKernelTraits::DblType gammaOne_apply;
+  if (lengthScaleLimiter_) {
+    // apply limiter to cEpsOne -> calculate gammaTwo
+    const NodeKernelTraits::DblType cEpsOne_two = gammaTwo_ + 1.;
+    const NodeKernelTraits::DblType cEpsTwo_two = betaTwo_/betaStar_ + 1.;
+    const NodeKernelTraits::DblType cEpsOneStar_two = cEpsOne_two + (cEpsTwo_two - cEpsOne_two)*(l_t/l_e);
+    const NodeKernelTraits::DblType gammaTwoStar = cEpsOneStar_two - 1.;
+    gammaTwo_apply = gammaTwoStar;
+
+    const NodeKernelTraits::DblType cEpsOne_one = gammaOne_ + 1.;
+    const NodeKernelTraits::DblType cEpsTwo_one = betaOne_/betaStar_ + 1.;
+    const NodeKernelTraits::DblType cEpsOneStar_one = cEpsOne_one + (cEpsTwo_one - cEpsOne_one)*(l_t/l_e);
+    const NodeKernelTraits::DblType gammaOneStar = cEpsOneStar_one - 1.;
+    gammaOne_apply = gammaOneStar;
+  }
+  else {
+    gammaTwo_apply = gammaTwo_;
+    gammaOne_apply = gammaOne_;
+  }
+
+  // calculate gamma
+  const NodeKernelTraits::DblType gamma = fOneBlend * gammaOne_apply + om_fOneBlend * gammaTwo_apply;
+  gamma_.get(node,0) = gamma;
 
   // Pw includes 1/tvisc scaling; tvisc may be zero at a dirichlet low Re
   // approach (clip)

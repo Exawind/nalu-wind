@@ -37,6 +37,8 @@ private:
   const DblType v2cMu_;
   const DblType aspectRatioSwitch_;
   const bool meshMotion_;
+  const bool zeroForcingBelowKs_;
+  const DblType z0_;
 
   unsigned velocity_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};
@@ -60,6 +62,8 @@ private:
   unsigned beta_{stk::mesh::InvalidOrdinal};
   unsigned Mij_{stk::mesh::InvalidOrdinal};
   unsigned wallDist_{stk::mesh::InvalidOrdinal};
+  unsigned lt_{stk::mesh::InvalidOrdinal};
+  unsigned coordinates_{stk::mesh::InvalidOrdinal};
 
   // Proper definition of beta_kol in SST-AMS doesn't work 
   // near walls, so emprically tested floor is used currently

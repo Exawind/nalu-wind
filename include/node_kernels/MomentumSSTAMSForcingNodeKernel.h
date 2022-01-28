@@ -90,6 +90,10 @@ private:
 
   double time_;
   double dt_;
+
+  bool zeroForcingBelowKs_;
+  double z0_;
+  double kappa_;
 };
 
 } // namespace nalu
