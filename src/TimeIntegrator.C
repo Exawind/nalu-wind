@@ -178,8 +178,12 @@ void TimeIntegrator::prepare_for_time_integration()
 
   // possible restart; need to extract current time (max wins)
   for ( ii = realmVec_.begin(); ii!=realmVec_.end(); ++ii) {
+    const double time_coming_in = currentTime_;
     currentTime_ = std::max(currentTime_, (*ii)->populate_restart(timeStepNm1_, timeStepCount_));
-    overset_->update_connectivity();
+    // we can do exact comparison because the numbers will be bit-wise exact the
+    // same unless the value was changed by the restart
+    if (time_coming_in != currentTime_)
+      overset_->update_connectivity();
   }
 
   // populate data from transfer; init, io and external
