@@ -132,7 +132,8 @@ realms:
 
     solution_options:
       name: myOptions
-      turbulence_model: sst_blt
+      turbulence_model: sst
+      transition_model: true
       projected_timescale_type: momentum_diag_inv
 
       options:
