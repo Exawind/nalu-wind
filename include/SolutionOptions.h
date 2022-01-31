@@ -151,6 +151,8 @@ public:
   double raBoussinesqTimeScale_;
   double symmetryBcPenaltyFactor_;
   bool useStreletsUpwinding_;
+  bool transition_model_;
+  bool gammaEqActive_;
 
   // global mdot correction alg
   bool activateOpenMdotCorrection_;
