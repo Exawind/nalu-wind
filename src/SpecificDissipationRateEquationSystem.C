@@ -258,10 +258,6 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
           NaluEnv::self().naluOutputP0() << "call SDRSSTNodeKernel1: " <<std::endl;
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
         }
-        else if (SST_BLT == realm_.solutionOptions_->turbulenceModel_){
-          NaluEnv::self().naluOutputP0() << "call SDRSSTNodeKernel1: " <<std::endl;
-          nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
-        }
         else if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_) || (SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ){
           nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
         }

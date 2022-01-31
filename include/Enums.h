@@ -166,7 +166,6 @@ enum TurbulenceModel {
   SST_DES = 5,
   SST_AMS = 6,
   SST_IDDES = 7,
-  SST_BLT = 8,
   TurbulenceModel_END
 };  
 

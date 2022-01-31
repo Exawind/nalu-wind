@@ -446,7 +446,7 @@ ShearStressTransportEquationSystem::update_and_clip_gamma()
     const double gammaMaxVal = gammaMaxValue_;
   
   nalu_ngp::run_entity_algorithm(
-    "SST_BLT::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
+    "SST_GammaEQActive::update_and_clip", ngpMesh, stk::topology::NODE_RANK, sel,
     KOKKOS_LAMBDA(const MeshIndex& mi) {
       const double gammaNew = gammaNp1.get(mi, 0) + gamTmp.get(mi, 0);
       gammaNp1.get(mi, 0) = stk::math::min(  stk::math::max(gammaNew, gammaMinVal)  , gammaMaxVal);

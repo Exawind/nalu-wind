@@ -146,7 +146,7 @@ TurbKineticEnergyEquationSystem::TurbKineticEnergyEquationSystem(
   if (!check_for_valid_turblence_model(turbulenceModel_)) {
     throw std::runtime_error(
       "User has requested TurbKinEnergyEqs, however, turbulence model is not "
-      "KSGS, SST, SST_BLT, SST_DES, SST_IDDES, or SST_AMS");
+      "KSGS, SST, SST_DES, SST_IDDES, or SST_AMS");
   }
 
   // create projected nodal gradient equation system
@@ -161,7 +161,6 @@ TurbKineticEnergyEquationSystem::check_for_valid_turblence_model(
 {
   switch (turbModel) {
   case SST:
-  case SST_BLT:
   case KSGS:
   case SST_DES:
   case SST_AMS:
@@ -292,9 +291,6 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
         case SST:
           nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
           break;
-        case SST_BLT:
-          nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
-          break;
         case SST_DES:
           nodeAlg.add_kernel<TKESSTDESNodeKernel>(realm_.meta_data());
           break;
@@ -341,7 +337,6 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
       break;
     }
     case SST:
-    case SST_BLT:
     case SST_DES:
     case SST_AMS:
     case SST_IDDES: {
