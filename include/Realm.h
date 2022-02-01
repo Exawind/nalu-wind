@@ -177,7 +177,6 @@ class Realm {
 
   // non-conformal-like algorithm suppoer
   void initialize_non_conformal();
-  void initialize_overset();
   void initialize_post_processing_algorithms();
 
   void compute_geometry();

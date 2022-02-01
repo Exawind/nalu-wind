@@ -399,7 +399,8 @@ Realm::convert_bytes(double bytes)
   return out.str();
 }
 
-void Realm::initialize_prolog()
+void
+Realm::initialize_prolog()
 {
   NaluEnv::self().naluOutputP0() << "Realm::initialize() Begin " << std::endl;
 
@@ -2227,16 +2228,6 @@ Realm::initialize_non_conformal()
 }
 
 //--------------------------------------------------------------------------
-//-------- initialize_overset ----------------------------------------------
-//--------------------------------------------------------------------------
-void
-Realm::initialize_overset()
-{
-  if (hasOverset_ && !isExternalOverset_)
-    oversetManager_->execute(equationSystems_.all_systems_decoupled());
-}
-
-//--------------------------------------------------------------------------
 //-------- initialize_post_processing_algorithms ---------------------------
 //--------------------------------------------------------------------------
 void
@@ -2516,10 +2507,13 @@ Realm::register_nodal_fields(
   if ( does_mesh_move()) {
     VectorFieldType *displacement = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_displacement",numVolStates));
     stk::mesh::put_field_on_mesh(*displacement, *part, nDim, nullptr);
+    augment_restart_variable_list("mesh_displacement");
     VectorFieldType *currentCoords = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "current_coordinates"));
     stk::mesh::put_field_on_mesh(*currentCoords, *part, nDim, nullptr);
+    augment_restart_variable_list("current_coordinates");
     VectorFieldType *meshVelocity = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "mesh_velocity"));
     stk::mesh::put_field_on_mesh(*meshVelocity, *part, nDim, nullptr);
+    augment_restart_variable_list("mesh_velocity");
     VectorFieldType *velocityRTM = &(metaData_->declare_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity_rtm"));
     stk::mesh::put_field_on_mesh(*velocityRTM, *part, nDim, nullptr);
     if(has_mesh_deformation()){
@@ -3198,6 +3192,16 @@ Realm::populate_restart(
     ioBroker_->get_global("timeStepCount", timeStepCount, abortIfNotFound);
     if ( NULL != turbulenceAveragingPostProcessing_ ) {
       ioBroker_->get_global("currentTimeFilter", turbulenceAveragingPostProcessing_->currentTimeFilter_, abortIfNotFound);
+    }
+    if (meshMotionAlg_) {
+      // Redo all the mesh and motionAlg setup after reading files from the
+      // restart reset the current_coordinate and mesh_velocity fields after
+      // reading them
+      init_current_coordinates();
+      // reset the current time for the meshMotionAlgs
+      meshMotionAlg_->restart_reinit(foundRestartTime);
+      compute_geometry();
+      meshMotionAlg_->post_compute_geometry();
     }
   }
   return foundRestartTime;

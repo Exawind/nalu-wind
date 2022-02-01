@@ -225,6 +225,7 @@ if(NOT ENABLE_CUDA)
     add_test_r(oversetRotCylNGPHypre 2)
     add_test_r(oversetRotCylinderHypre 2)
     add_test_r(oversetRotCylMultiRealm 2)
+    add_test_r_rst(oversetMovingCylinder 4)
   endif()
 
   #=============================================================================

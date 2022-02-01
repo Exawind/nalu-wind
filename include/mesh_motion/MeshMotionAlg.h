@@ -19,6 +19,8 @@ public:
 
   void initialize(const double);
 
+  void restart_reinit(const double);
+
   void execute(const double);
 
   void post_compute_geometry();
