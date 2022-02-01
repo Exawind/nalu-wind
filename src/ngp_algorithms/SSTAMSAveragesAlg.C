@@ -28,6 +28,7 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     CMdeg_(realm.get_turb_model_constant(TM_CMdeg)),
     v2cMu_(realm.get_turb_model_constant(TM_v2cMu)),
     aspectRatioSwitch_(realm.get_turb_model_constant(TM_aspRatSwitch)),
+    avgTimeScaleCoeff_(realm.get_turb_model_constant(TM_avgTimeScaleCoeff)),
     meshMotion_(realm.does_mesh_move()),
     velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
     density_(get_field_ordinal(realm.meta_data(), "density")),
@@ -116,6 +117,7 @@ SSTAMSAveragesAlg::execute()
   const DblType v2cMu = v2cMu_;
   const DblType beta_kol_local = beta_kol;
   const DblType aspectRatioSwitch = aspectRatioSwitch_;
+  const DblType avgTimeScaleCoeff = avgTimeScaleCoeff_;
 
   const bool zeroForcingBelowKs = zeroForcingBelowKs_;
   DblType k_s;
@@ -147,7 +149,7 @@ SSTAMSAveragesAlg::execute()
       const DblType alpha = stk::math::pow(beta.get(mi, 0), 1.7);
 
       // store RANS time scale
-     avgTime.get(mi, 0) = lt.get(mi, 0) / stk::math::sqrt(tke.get(mi, 0));
+     avgTime.get(mi, 0) = avgTimeScaleCoeff * lt.get(mi, 0) / stk::math::sqrt(tke.get(mi, 0));
 
       // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)
       const DblType weightAvg =
