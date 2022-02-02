@@ -84,7 +84,9 @@ SolutionOptions::SolutionOptions()
     activateOpenMdotCorrection_(false),
     mdotAlgOpenCorrection_(0.0),
     explicitlyZeroOpenPressureGradient_(false),
-    resetAMSAverages_(true)
+    resetAMSAverages_(true),
+    transition_model_(false),
+    gammaEqActive_(false)
 {
   // nothing to do
 }
@@ -200,7 +202,13 @@ SolutionOptions::load(const YAML::Node & y_node)
         y_solution_options, "strelets_upwinding", useStreletsUpwinding_,
         useStreletsUpwinding_);
     }
-    // initialize turbuelnce constants since some laminar models may need such variables, e.g., kappa
+    if (turbulenceModel_ == SST) {
+      get_if_present(
+        y_solution_options, "transition_model", transition_model_,
+        transition_model_);
+        if (transition_model_ == true) gammaEqActive_ = true;
+    }
+    // initialize turbulence constants since some laminar models may need such variables, e.g., kappa
     initialize_turbulence_constants();
 
     // extract possible copy from input fields restoration time
@@ -488,6 +496,12 @@ SolutionOptions::load(const YAML::Node & y_node)
    NaluEnv::self().naluOutputP0() << "===========================" << std::endl;
    NaluEnv::self().naluOutputP0() << "Turbulence Model is: "
        << TurbulenceModelNames[turbulenceModel_] << " " << isTurbulent_ <<std::endl;
+   if (gammaEqActive_ == true)  {
+     NaluEnv::self().naluOutputP0() << "Transition Model is: One Equation Gamma" << std::endl;
+   }
+   else {
+     NaluEnv::self().naluOutputP0() << "No Transition Model" << std::endl;
+   }
 
    // over view PPE specifications
    NaluEnv::self().naluOutputP0() << std::endl;
