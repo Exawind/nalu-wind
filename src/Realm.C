@@ -1001,13 +1001,13 @@ Realm::setup_interior_algorithms()
   if (has_mesh_deformation()) {
     const AlgorithmType algType = INTERIOR;
     stk::mesh::PartVector mmPartVec = meshMotionAlg_->get_partvec();
-    if (realmUsesEdges_) {
-      for (auto p : mmPartVec) {
+    for (auto p : mmPartVec) {
+      if (p->topology() != stk::topology::HEX_8)
+        continue;
+      if (realmUsesEdges_) {
         geometryAlgDriver_->register_elem_algorithm<MeshVelocityEdgeAlg>(
           algType, p, "mesh_vel");
-      }
-    } else {
-      for (auto p : mmPartVec) {
+      } else {
         geometryAlgDriver_->register_elem_algorithm<MeshVelocityAlg>(
           algType, p, "mesh_vel");
       }
