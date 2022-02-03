@@ -67,7 +67,9 @@ private:
 
   double dt_;
   double tkeFreestream;
-  int timeStepCount;
+  int timeStepCount_;
+  double xcoordEndFixedTurb_;
+  int iterSwitchTransition_;
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;

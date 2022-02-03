@@ -55,9 +55,6 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   caTwo_ = realm.get_turb_model_constant(TM_caTwo);
   ceOne_ = realm.get_turb_model_constant(TM_ceOne);
   ceTwo_ = realm.get_turb_model_constant(TM_ceTwo);
-  timeStepCount = realm.get_time_step_count();
-  maxStepCount  = realm.get_max_time_step_count();
-  currentNonlinearIteration = realm.currentNonlinearIteration_;
 }
 
 double

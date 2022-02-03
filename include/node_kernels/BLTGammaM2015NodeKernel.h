@@ -70,10 +70,6 @@ private:
   NodeKernelTraits::DblType ceOne_;
   NodeKernelTraits::DblType ceTwo_;
 
-  int timeStepCount;
-  int maxStepCount;
-  int currentNonlinearIteration;
-
   const int nDim_;
 };
 

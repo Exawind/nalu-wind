@@ -75,6 +75,7 @@ SDRSSTBLTM2015NodeKernel::setup(Realm& realm)
   gammaOne_ = realm.get_turb_model_constant(TM_gammaOne);
   gammaTwo_ = realm.get_turb_model_constant(TM_gammaTwo);
   c0t_ = realm.get_turb_model_constant(TM_c0t);
+  xcoordEndFixedTurb_ = realm.solutionOptions_->xcoordEndFixedTurb_;
 }
 
 void
@@ -126,7 +127,7 @@ SDRSSTBLTM2015NodeKernel::execute(
   // Clip production term
   Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
 
-  if (coords[0] < -0.04) {
+  if (coords[0] < xcoordEndFixedTurb_) {
     tc = 500.0 * visc / density / velMag2;
     sdrForcing = c0t_ * density * (sdrFreestream - sdr) / tc;
     rhs(0) += sdrForcing * dVol;

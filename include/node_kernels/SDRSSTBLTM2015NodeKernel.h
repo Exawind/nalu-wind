@@ -72,6 +72,7 @@ private:
   unsigned coordinatesID_     {stk::mesh::InvalidOrdinal};
   unsigned velocityNp1ID_     {stk::mesh::InvalidOrdinal};
 
+  double xcoordEndFixedTurb_;
   double sdrFreestream;
 
   NodeKernelTraits::DblType betaStar_;

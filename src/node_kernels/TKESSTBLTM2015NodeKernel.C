@@ -66,7 +66,9 @@ TKESSTBLTM2015NodeKernel::setup(Realm& realm)
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
   c0t_               = realm.get_turb_model_constant(TM_c0t);
-  timeStepCount = realm.get_time_step_count();
+  timeStepCount_ = realm.get_time_step_count();
+  xcoordEndFixedTurb_ = realm.solutionOptions_->xcoordEndFixedTurb_;
+  iterSwitchTransition_ = realm.solutionOptions_->iterSwitchTransition_;
 }
 
 void
@@ -131,14 +133,14 @@ TKESSTBLTM2015NodeKernel::execute(
   DblType Fonlim = stk::math::min(stk::math::max(Rev / 2.20 / Re0clim - 1.0, 0.0), 3.0);
 
 
-  if (coords[0] < -0.04) {
+  if (coords[0] < xcoordEndFixedTurb_) {
     tc = 500.0 * visc / density / velMag2;
     tkeForcing = c0t_ * density * (tkeFreestream - tke) / tc;
     rhs(0) += tkeForcing * dVol;
     lhs(0, 0) += c0t_ * density * dVol/ tc;
   }
   else {
-    if (timeStepCount >= 400) gamTMP = gamint;
+    if (timeStepCount_ >= iterSwitchTransition_) gamTMP = gamint;
 
     Pk = gamTMP * tvisc * sijMag * vortMag; // Pk based on Kato-Launder formulation. Recommended in Menter (2015) to avoid excessive levels of TKE in stagnation regions
     Pklim = 5.0 * Ck_BLT * stk::math::max(gamTMP - 0.20, 0.0) * (1.0 - gamTMP) * Fonlim * stk::math::max(3.0 * CSEP * visc - tvisc, 0.0) * sijMag * vortMag;
