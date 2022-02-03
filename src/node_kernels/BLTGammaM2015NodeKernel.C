@@ -32,7 +32,7 @@ BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
     velocityNp1ID_(get_field_ordinal(meta, "velocity")),
     gamintID_(get_field_ordinal(meta, "gamma_transition")),
     nDim_(meta.spatial_dimension())
-{}
+{ }
 
 void
 BLTGammaM2015NodeKernel::setup(Realm& realm)
@@ -57,6 +57,7 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   ceTwo_ = realm.get_turb_model_constant(TM_ceTwo);
   timeStepCount = realm.get_time_step_count();
   maxStepCount  = realm.get_max_time_step_count();
+  currentNonlinearIteration = realm.currentNonlinearIteration_;
 }
 
 double
@@ -64,7 +65,7 @@ BLTGammaM2015NodeKernel::FPG(const double& lamda0L )
 {
     using DblType = NodeKernelTraits::DblType;
 
-    DblType out; // this is the result of this calculation
+    DblType out;
     DblType CPG1=14.68;
     DblType CPG2=-7.34;
     DblType CPG3=0.0;
@@ -80,6 +81,31 @@ BLTGammaM2015NodeKernel::FPG(const double& lamda0L )
     }
 
     out=stk::math::max(out, 0.0);
+
+  return out;
+}
+
+double
+BLTGammaM2015NodeKernel::BLTmax(const double& g1, const double& g2 )
+{
+    using DblType = NodeKernelTraits::DblType;
+
+    DblType out; 
+    DblType pswitch = 1.0e-15; 
+    DblType p = 300.0; 
+    DblType absp, a, b; 
+
+    absp = stk::math::abs(p);
+
+    a = stk::math::abs(g1 - g2);
+    b = -stk::math::log( absp*pswitch ) / absp;
+
+    if (a > b) {
+      out = stk::math::max(g1, g2);
+    }
+    else {
+      out = stk::math::log( stk::math::exp(p * g1) + stk::math::exp(p * g2) ) / p;
+    }
 
   return out;
 }
@@ -148,7 +174,6 @@ BLTGammaM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(2.0*sijMag);
   vortMag = stk::math::sqrt(2.0*vortMag);
 
-
   TuL = stk::math::min(81.6496580927726 * stk::math::sqrt(tke) / sdr / (minD + 1.0e-10), 100.0);
   lamda0L = -7.57e-3 * dvnn * minD * minD *density / visc + 0.0128;
   lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
@@ -157,8 +182,8 @@ BLTGammaM2015NodeKernel::execute(
   fonset1 = Rev / 2.2 / Re0c;
   fonset2 = stk::math::min(fonset1, 2.0);
   rt = density*tke/sdr/visc;
-  fonset3 = stk::math::max(1.0 - 0.0233236151603499 * rt * rt * rt, 0.0);
-  fonset = stk::math::max(fonset2 - fonset3, 0.0);
+  fonset3 = BLTmax(0.0, 1.0 - 0.0233236151603499 * rt * rt * rt);
+  fonset = BLTmax(0.0, fonset2 - fonset3);
   fturb = stk::math::exp(-rt * rt * rt * rt / 16.0);
 
   DblType Pgamma =   flength * density * sijMag * fonset * gamint * ( 1.0 - gamint );

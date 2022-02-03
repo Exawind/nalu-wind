@@ -208,7 +208,7 @@ SolutionOptions::load(const YAML::Node & y_node)
         transition_model_);
         if (transition_model_ == true) gammaEqActive_ = true;
     }
-    // initialize turbulence constants since some laminar models may need such variables, e.g., kappa
+    // initialize turbuelnce constants since some laminar models may need such variables, e.g., kappa
     initialize_turbulence_constants();
 
     // extract possible copy from input fields restoration time
@@ -601,6 +601,7 @@ SolutionOptions::initialize_turbulence_constants()
   turbModelConstantMap_[TM_caTwo] = 0.06;
   turbModelConstantMap_[TM_ceOne] = 1.0;
   turbModelConstantMap_[TM_ceTwo] = 50.0;
+  turbModelConstantMap_[TM_c0t] = 0.03;
 }
 
 

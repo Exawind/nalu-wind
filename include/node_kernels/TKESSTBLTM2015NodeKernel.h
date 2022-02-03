@@ -1,12 +1,14 @@
-/*------------------------------------------------------------------------*/
-/*  Copyright 2019 National Renewable Energy Laboratory.                  */
-/*  This software is released under the license detailed                  */
-/*  in the file, LICENSE, which is located in the top-level Nalu          */
-/*  directory structure                                                   */
-/*------------------------------------------------------------------------*/
+// Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS), National Renewable Energy Laboratory, University of Texas Austin,
+// Northwest Research Associates. Under the terms of Contract DE-NA0003525
+// with NTESS, the U.S. Government retains certain rights in this software.
+//
+// This software is released under the BSD 3-clause license. See LICENSE file
+// for more details.
+//
 
-#ifndef BLTGAMMAM2015NODEKERNEL_H
-#define BLTGAMMAM2015NODEKERNEL_H
+#ifndef TKESSTBLTM2015NODEKERNEL_H
+#define TKESSTBLTM2015NODEKERNEL_H
 
 #include "node_kernels/NodeKernel.h"
 #include "FieldTypeDef.h"
@@ -20,16 +22,15 @@ namespace nalu {
 
 class Realm;
 
-class BLTGammaM2015NodeKernel : public NGPNodeKernel<BLTGammaM2015NodeKernel>
+class TKESSTBLTM2015NodeKernel : public NGPNodeKernel<TKESSTBLTM2015NodeKernel>
 {
 public:
-  BLTGammaM2015NodeKernel(const stk::mesh::MetaData&);
+  TKESSTBLTM2015NodeKernel(const stk::mesh::MetaData&);
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  BLTGammaM2015NodeKernel() = default;
+  TKESSTBLTM2015NodeKernel() = delete;
 
-  KOKKOS_FUNCTION
-  virtual ~BLTGammaM2015NodeKernel() = default;
+  KOKKOS_DEFAULTED_FUNCTION
+  virtual ~TKESSTBLTM2015NodeKernel() = default;
 
   virtual void setup(Realm&) override;
 
@@ -39,47 +40,44 @@ public:
     NodeKernelTraits::RhsType&,
     const stk::mesh::FastMeshIndex&) override;
 
-  double FPG(const double& out);
-  double BLTmax(const double& g1, const double& g2);
-
 private:
   stk::mesh::NgpField<double> tke_;
   stk::mesh::NgpField<double> sdr_;
+  stk::mesh::NgpField<double> gamint_;
   stk::mesh::NgpField<double> density_;
+  stk::mesh::NgpField<double> tvisc_;
   stk::mesh::NgpField<double> visc_;
   stk::mesh::NgpField<double> dudx_;
   stk::mesh::NgpField<double> minD_;
   stk::mesh::NgpField<double> dualNodalVolume_;
   stk::mesh::NgpField<double> coordinates_;
   stk::mesh::NgpField<double> velocityNp1_;
-  stk::mesh::NgpField<double> gamint_;
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
   unsigned sdrID_             {stk::mesh::InvalidOrdinal};
+  unsigned gamintID_          {stk::mesh::InvalidOrdinal};
   unsigned densityID_         {stk::mesh::InvalidOrdinal};
   unsigned viscID_            {stk::mesh::InvalidOrdinal};
+  unsigned tviscID_           {stk::mesh::InvalidOrdinal};
   unsigned dudxID_            {stk::mesh::InvalidOrdinal};
   unsigned minDID_            {stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
   unsigned coordinatesID_     {stk::mesh::InvalidOrdinal};
   unsigned velocityNp1ID_     {stk::mesh::InvalidOrdinal};
-  unsigned gamintID_          {stk::mesh::InvalidOrdinal};
 
-  NodeKernelTraits::DblType caOne_;
-  NodeKernelTraits::DblType caTwo_;
-  NodeKernelTraits::DblType ceOne_;
-  NodeKernelTraits::DblType ceTwo_;
-
+  double dt_;
+  double tkeFreestream;
   int timeStepCount;
-  int maxStepCount;
-  int currentNonlinearIteration;
+
+  NodeKernelTraits::DblType betaStar_;
+  NodeKernelTraits::DblType tkeProdLimitRatio_;
+  NodeKernelTraits::DblType c0t_;
+  NodeKernelTraits::DblType relaxFac_;
 
   const int nDim_;
 };
 
-}  // nalu
-}  // sierra
+} // namespace nalu
+} // namespace sierra
 
-
-#endif
-  
+#endif /* TKESSTBLTM2015NODEKERNEL_H */
