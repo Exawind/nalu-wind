@@ -32,7 +32,7 @@ BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
     velocityNp1ID_(get_field_ordinal(meta, "velocity")),
     gamintID_(get_field_ordinal(meta, "gamma_transition")),
     nDim_(meta.spatial_dimension())
-{ }
+{}
 
 void
 BLTGammaM2015NodeKernel::setup(Realm& realm)
@@ -62,7 +62,7 @@ BLTGammaM2015NodeKernel::FPG(const double& lamda0L )
 {
     using DblType = NodeKernelTraits::DblType;
 
-    DblType out;
+    DblType out; // this is the result of this calculation
     DblType CPG1=14.68;
     DblType CPG2=-7.34;
     DblType CPG3=0.0;

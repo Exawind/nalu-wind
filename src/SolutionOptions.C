@@ -216,7 +216,7 @@ SolutionOptions::load(const YAML::Node & y_node)
       get_if_present(
         y_solution_options, "xcoord_end_fixed_turb", xcoordEndFixedTurb_, xcoordEndFixedTurb_);
     }
-    // initialize turbuelnce constants since some laminar models may need such variables, e.g., kappa
+    // initialize turbulence constants since some laminar models may need such variables, e.g., kappa
     initialize_turbulence_constants();
 
     // extract possible copy from input fields restoration time
