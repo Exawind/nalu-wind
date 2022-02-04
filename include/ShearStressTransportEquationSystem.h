@@ -59,6 +59,8 @@ public:
 
   void clip_min_distance_to_wall();
   void compute_f_one_blending();
+  void compute_lt();
+  void compute_gamma();
   void update_and_clip();
   void update_and_clip_gamma();
   void clip_sst(
