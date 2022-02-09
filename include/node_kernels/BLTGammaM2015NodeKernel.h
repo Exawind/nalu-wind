@@ -81,6 +81,12 @@ private:
   NodeKernelTraits::DblType ceTwo_;
 
   const int nDim_;
+
+  //fonset3_const_ = stk::math::pow(1.0/3.5, 3.0) as defined in Menter (2015)
+  static constexpr double fonset3_const_ = 0.0233236151603499;
+  //TuL_const_ = 100.0 * stk::math::sqrt(2.0/3.0) as defined in Menter (2015)
+  static constexpr double TuL_const_ = 81.6496580927726;
+
 };
 
 }  // nalu

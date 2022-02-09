@@ -56,11 +56,7 @@ TKESSTBLTM2015NodeKernel::setup(Realm& realm)
 
   const std::string dofName = "turbulent_ke";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
-
-  FILE * fp;
-  fp = std::fopen ("tkeFreestream.dat", "r");
-  std::fscanf(fp,"%lf\n",&tkeFreestream);
-  std::fclose(fp);
+  tkeFreestream = realm.tkeFS;
 
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);

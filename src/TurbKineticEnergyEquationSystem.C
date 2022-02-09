@@ -389,13 +389,7 @@ TurbKineticEnergyEquationSystem::register_inflow_bc(
   TurbKinEnergy tke = userData.tke_;
   std::vector<double> userSpec(1);
   userSpec[0] = tke.turbKinEnergy_;
-
-  std::printf("Open file for writing tkeFS\n");
-  FILE * fp;
-  fp = std::fopen ("tkeFreestream.dat", "w");
-  std::fprintf(fp,"%lf\n", userSpec[0]);
-  std::fclose(fp);
-  std::printf("TKE EqnSys Inlet K value = %.12E\n", userSpec[0]);
+  realm_.tkeFS = userSpec[0];
 
   // new it
   ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);

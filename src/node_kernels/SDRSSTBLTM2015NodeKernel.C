@@ -60,11 +60,7 @@ SDRSSTBLTM2015NodeKernel::setup(Realm& realm)
 
   const std::string dofName = "specific_dissipation_rate";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
-
-  FILE * fp;
-  fp = std::fopen ("sdrFreestream.dat", "r");
-  std::fscanf(fp,"%lf\n",&sdrFreestream);
-  std::fclose(fp);
+  sdrFreestream = realm.sdrFS;
 
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
