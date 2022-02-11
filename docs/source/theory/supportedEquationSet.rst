@@ -688,6 +688,9 @@ For simulations in which a buoyancy source term is desired, the code supports th
 Shear Stress Transport (SST) RANS Model Suite
 +++++++++++++++++++++++++++++++++++++++++++++
 
+SST Formulation
+~~~~~~~~~~~~~~~
+
 Although Nalu-Wind is primarily expected to be a LES simulation tool, RANS
 modeling is supported through the activation of the SST equation set.
 
@@ -777,7 +780,6 @@ The final parameter is
    arg_{2} = \max\left( \frac{2 \sqrt{k}}{\beta^* \omega y},
    \frac{500 \mu}{\bar{\rho} \omega y^{2}} \right).
 
-
 The Menter SST Two-Equation Model with Controlled Decay (SST-SUST) is
 also supported, :cite:`Spalart:2007`. Two new constants are added that
 are incorporated into additional source terms for the transport
@@ -798,6 +800,50 @@ where :math:`L` is a defining length scale for the particular problem,
 and :math:`U_\infty` is the freestream velocity. The value chosen for
 these constants should match the values for :math:`\omega` and
 :math:`k` at the inflow BC.
+
+.. _sst_limiter:
+
+SST Mixing Length Limiter
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using SST to model the Atmospheric Boundary Layer with the Coriolis effect, a mixing length limiter should be included. The limiter included here is based on the limiter for the k-epsilon model in :cite:`Koblitz:2013`. An analogous limiter was derived for the SST model. The SST limiter was presented in :cite:`Adcock:2021` and will be written up in a future publication.
+
+The mixing length limiter replaces the SST model parameter, :math:`\gamma`, in the :math:`\omega` equation with :math:`\gamma^*`. :math:`\gamma^*` is a blend of :math:`\gamma_1^*` and :math:`\gamma_2^*` using the SST blending function, :math:`F`
+
+.. math::
+   \gamma^* = F \gamma_1^* + (1-F) \gamma_2^*.
+
+:math:`\gamma_i^*` for :math:`i=1,2` is calculated from :math:`C_{\varepsilon 1, i}^*` as
+
+.. math::
+   \gamma_i^* = C_{\varepsilon 1, i}^* -1.
+
+:math:`C_{\varepsilon 1, i}^*` is calculated by applying the mixing length limiter to :math:`C_{\varepsilon 1, i}` as
+
+.. math::
+   C_{\varepsilon 1, i}^* = C_{\varepsilon 1,i} + (C_{\varepsilon 2,i} - C_{\varepsilon 1, i} ) \frac{l_t}{l_e}.
+
+:math:`C_{\varepsilon 1, i}` is calculated from the SST model constant :math:`gamma_1` as
+
+.. math::
+   C_{\varepsilon 1, i} = \gamma_i + 1.
+
+:math:`C_{\varepsilon 2, i}` is calculated from the SST model constants :math:`\beta_i` and :math:`\beta^*` as
+
+.. math::
+   C_{\varepsilon 1, i} = \frac{\beta_i}{\beta^*} + 1.
+
+The maximum mixing length, :math:`l_e` is calculated as
+
+.. math::
+   l_e = .00027 G / f_c,
+
+where :math:`G` is the geostrophic (freestream) velocity and :math:`f_c` is the Coriolis force. The Coriolis force is calculated as
+
+.. math::
+   f_c = 2 \Omega sin \lambda,
+
+where :math:`\Omega` is the earth's angular velocity and :math:`\lambda` is the latitude. 
 
 .. _eqn_sst_des:
 
@@ -1103,6 +1149,14 @@ allowing that to pass into the continuity solve, where the
 intermediate velocity field with the forcing will then be projected
 onto a divergence free field. This is implemented in the node kernels as
 *MomentumSSTAMSForcingNodeKernel*.
+
+AMS with SST Mixing Length Limiter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using AMS with SST as the mean (RANS) contribution to model the Atmospheric Boundary Layer with the Coriolis effect, SST should include a mixing length limiter. The mixing length limiter is described in :ref:`SST Mixing Length Limiter <sst_limiter>`. For consistency, when using the limiter the RANS time scale, :math:`T_{RANS}^*`, should depend on the mixing length rather than :math:`\omega` to account for the effect of the limiter. The time scale becomes
+
+.. math::
+   T_{RANS}^* = \frac{l_t}{\sqrt{k}}.
 
 Solid Stress
 ++++++++++++

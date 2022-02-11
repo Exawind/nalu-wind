@@ -796,13 +796,13 @@ surface as,
                      + \epsilon \sigma T_w^4
                      + \left(1 - \epsilon - \tau \right) K \right].
 
-
-SST RANS Model for Atmospheric Boundary Layer
+.. _sst_abl:
+SST of the Atmospheric Boundary Layer
 +++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The following boundary conditions simulate the Atmospheric Boundary Layer, as described in Bautista, :cite:`Bautista:2011` and :cite:`Bautista:2015`. The Nalu-Wind SST RANS implementation matches the Monin-Obukhov profile when used with the model constants from Table-A I-1 (Boundreault, 2011) in :cite:`Bautista:2011` and the meshing method described  in :cite:`Bautista:2015`. The mesh described in :cite:`Bautista:2015` gives the Monin-Obukhov profile for roughness height 0.1. When the roughness height is decreased, the mesh must be refined near the wall. For example, for the :cite:`Bautista:2015` ABL test case using roughness height 0.001 instead of 0.1, the mesh size needs to be halved near the wall. 
     
-The :math:`k` and :math:`\omega` boundary conditions are the same as in the :ref:`k-omega SST boundary conditions <kwsst_high_re_bc>`:
+The :math:`k` and :math:`\omega` boundary conditions are the same as in the :ref:`Turbulent Kinetic Energy and Specific Dissipation SST High Reynolds Number Boundary Conditions <kwsst_high_re_bc>`:
 
 .. math:: k = \frac{u_{\tau}^{2}}{\sqrt{\beta^*}},
 
@@ -810,37 +810,37 @@ and
 
 .. math:: \omega = \frac{u_{\tau}}{\sqrt{\beta^*} \kappa y}.
 
+The friction velocity, :math:`u_{\tau}` is calculated from a reference velocity, :math:`u_h`, at height, :math:`h`. :math:`h` and :math:`u_h` could, for example, be the hub height of a wind turbine and the velocity measured at that height. 
+
+.. math:: u_{\tau} = \frac{u_h \kappa}{log((h+z_0)/z_0),
+
+where :math:`\kappa` is the Von K{\'a}rm{\'a}n constant and :math:`z_0` is the roughness height.
+
 The momentum boundary condition is a no-slip Dirichlet condition, :math:`u_i=0`, as described in the :ref:`momentum wall boundary conditions <wall_bc_momentum>`.
 
-The streamwise and spanwise boundary conditions are periodic, as described in the :ref:`periodic boundary conditions <periodic_bc>`.
+The streamwise and spanwise boundary conditions are periodic, as described in :ref:`periodic boundary conditions <periodic_bc>`.
 
 The :math:`k`, :math:`\omega`, and :math:`u` wall boundary conditions are set in the input file by specifying a wall boundary condition with ``RANS_abl_bc``. The input file must also specify a height and the velocity at that height with ``reference_height`` and ``reference_velocity``. 
 
 .. literalinclude:: ransAbl_wallUserData.yaml
    :language: yaml
 
-This height, :math:`h`, and velocity, :math:`u_h`, could, for example, be the hub height of a wind turbine and the velocity measured at that height. 
+Rather than specifying a momentum source term, :math:`dp/dx`, the velocity is set to the geostrophic (freestream) value near the top of the domain using the ABL forcing method described in :ref:`ABL Forcing Source Terms`. The ABL forcing term is turned on and the desired wind velocity and height must be speciied in the input file: 
 
-The input file should also include a momentum source term, ``momentum``. 
-
-.. literalinclude:: ransAbl_sourceTerm.yaml
-   :language: yaml
-
-The momentum source term, :math:`dp/dx`, is calculated by balancing this pressure gradient with the wall shear stress, :math:`\tau_{w}`.
-
-.. math:: \frac{dp}{dx} V = \tau_{w} A
-
-where :math:`V` is the volume of the domain and :math:`A` is the area of the domain that touches the ground. Cancelling the length and width of the domain and dividing by the height of the domain, :math:`H`, gives
-
-.. math:: \frac{dp}{dx} = \frac{\rho u_{\tau}^2}{H}
-
-:math:`u_{\tau}` is calculated from the Monin-Obukhov profile,
-
-.. math:: u_{\tau}=\frac{u_h \kappa}{log((h+z_0)/z_0)}
-
-where :math:`\kappa` is the Von K{\'a}rm{\'a}n constant and :math:`z_0` is the roughness height.
+.. literalinclude:: ransAbl_momentum.yaml
+    :language: yaml
 
 .. _theory_open_bc:
+
+AMS of the Atmospheric Boundary Layer
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The following boundary conditions are meant for Active Model Split (AMS) of the Atmospheric Boundary Layer (ABL) when using SST as the mean (RANS) contribution to AMS. The boundary conditions on :math:`u_i`, :math:`k`, and :math:`\omega` are the same as for SST of the ABL, as described in :ref:`SST of the Atmospheric Boundary Layer  <sst_abl>`. When using this boundary condition for AMS, the energy transfer (LES) components of AMS should be turned off below the sand grain roughness height, :math:`k_s = 30 z_0`, where :math:`z_0` is the roughness height. Below this height the solution from the boundary condition is not necessarily accurate. Therefore including energy transfer components of AMS, such as the active forcing, in this region could introduce errors.
+
+Specifically, the energy transfer components of AMS below :math:`k_s` are turned off by setting the scaling coefficient on the energy transfer contribution to AMS to one, resolution adequacy indicator to one, and active forcing to zero. To turn off the energy transfer components the input file should include:
+
+.. literalinclude:: amsAbl_zeroForcingBelowKs.yaml
+   :language: yaml 
 
 Open Boundary Condition
 +++++++++++++++++++++++
@@ -864,7 +864,7 @@ The same formula is used for the pressure-stabilized mass flow rate.
 However, the local pressure gradient for each boundary contribution is
 based on the difference between the interior integration point and the
 user-specified pressure which takes on the boundary value. This can
-optionally be modified to be a ``total pressure"---removing the kinetic
+optionally be modified to be a "total pressure"---removing the kinetic
 energy associated with entrainment at the open. The interior
 integration point is determined by linear interpolation. For CVFEM, full
 elemental averaging is used while in EBVC discretization, the midpoint
@@ -965,6 +965,16 @@ applied:
 which can be written in general component form as,
 
 .. math:: F^n_i = F_j n_j n_i.
+
+Strong versus Weak Symmetry
+~~~~~~~~~~~~~~~
+
+There are two implementations of the symmetry boundary condition: strong and weak. In the strong symmetry implementation, the normal velocity is set to zero at the boundary. Strong symmetry has only been implemented for a cartesian mesh, meaning it can be used for flat but not curved surfaces. In the weak symmetry implementation, normal velocity can be nonzero. The Poisson solve tries to enforce mass conservation. Weak symmetry has not been implemented for Active Model Splits (AMS.)
+
+If the symmetry type is not specified in the input file then the code defaults to weak symmetry. If the ABL top boundary condition is used and it defaults to symmetry, as described in ref:`Atmospheric Boundary Layer Top Conditions <theory_abltop_bc>`:, then strong or weak symmetry can be specified explicitly in the input file:
+
+.. literalinclude:: symmetry.yaml
+      :language: yaml 
 
 Specified Boundary-Normal Temperature Gradient Option
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

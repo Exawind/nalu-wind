@@ -1,0 +1,25 @@
+realms:
+  - name: fluidRealm
+    solution_options:
+      options:
+        - source_terms:
+            momentum:
+              - abl_forcing
+
+    abl_forcing:
+      output_format: "abl_%s_sources.dat"
+      momentum:
+        type: computed
+        relaxation_factor: 1.0
+        heights: [2500.0]
+        velocity_x:
+          - [0.0, 17.5]
+          - [1000000.0, 17.5]
+
+        velocity_y:
+          - [0.0, 0.0]
+          - [1000000.0, 0.0]
+
+        velocity_z:
+          - [0.0, 0.0]
+          - [1000000.0, 0.0]
