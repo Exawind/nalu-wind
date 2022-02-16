@@ -131,15 +131,13 @@ SSTAMSAveragesAlg::execute()
       // Calculate alpha
       if (tke.get(mi, 0) == 0.0)
         beta.get(mi, 0) = 1.0;
-      else if (zeroForcingBelowKs_) {
-        if (coords.get(mi,2) <= k_s) {
-          beta.get(mi, 0) = 1.0;
-        }
+      else if ((zeroForcingBelowKs_) && (coords.get(mi,2) <= k_s)) {
+        beta.get(mi, 0) = 1.0;
       }
       else {
         beta.get(mi, 0) =
           (tke.get(mi, 0) - avgTkeRes.get(mi, 0)) / tke.get(mi, 0);
-
+        
         // limiters
         beta.get(mi, 0) = stk::math::min(beta.get(mi, 0), 1.0);
 
@@ -369,10 +367,8 @@ SSTAMSAveragesAlg::execute()
       // Handle case where tke = 0, should only occur at a wall boundary
       if (tke.get(mi, 0) == 0.0)
         resAdeq.get(mi, 0) = 1.0;
-      else if (zeroForcingBelowKs_) {
-        if (coords.get(mi,2) <= k_s) {
-          resAdeq.get(mi, 0) = 1.0;
-        }
+      else if ((zeroForcingBelowKs_) && (coords.get(mi,2) <= k_s)) {
+        resAdeq.get(mi, 0) = 1.0;
       }
       else {
         for (int i = 0; i < nalu_ngp::NDimMax; ++i)

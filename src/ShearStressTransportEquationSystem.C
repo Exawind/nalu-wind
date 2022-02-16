@@ -79,8 +79,7 @@ ShearStressTransportEquationSystem::ShearStressTransportEquationSystem(
     isInit_(true),
     sstMaxLengthScaleAlgDriver_(NULL),
     resetAMSAverages_(realm_.solutionOptions_->resetAMSAverages_),
-    lt_(NULL),
-    gamma_(NULL)
+    lt_(NULL)
 {
   // push back EQ to manager
   realm_.push_equation_to_systems(this);
