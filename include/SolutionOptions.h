@@ -153,7 +153,7 @@ public:
   double roughnessHeight_;
   bool lengthScaleLimiter_;
   double referenceVelocity_;
-  bool zeroForcingBelowKs_;
+  bool RANSBelowKs_;
   bool useStreletsUpwinding_;
   bool transition_model_;
   bool gammaEqActive_;

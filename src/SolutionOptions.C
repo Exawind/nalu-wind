@@ -90,7 +90,7 @@ SolutionOptions::SolutionOptions()
     lengthScaleLimiter_(false),
     referenceVelocity_(6.6),
     roughnessHeight_(0.1),
-    zeroForcingBelowKs_(false)
+    RANSBelowKs_(false)
 {
   // nothing to do
 }
@@ -356,7 +356,7 @@ SolutionOptions::load(const YAML::Node & y_node)
           get_if_present(y_user_constants, "roughness_height", roughnessHeight_, roughnessHeight_);
           get_if_present(y_user_constants, "length_scale_limiter", lengthScaleLimiter_, lengthScaleLimiter_);
           get_if_present(y_user_constants, "reference_velocity", referenceVelocity_, referenceVelocity_);
-          get_if_present(y_user_constants, "zero_forcing_below_ks", zeroForcingBelowKs_, zeroForcingBelowKs_);
+          get_if_present(y_user_constants, "rans_below_ks", RANSBelowKs_, RANSBelowKs_);
 
           if (expect_sequence( y_user_constants, "gravity", optional) ) {
             const int gravSize = y_user_constants["gravity"].size();

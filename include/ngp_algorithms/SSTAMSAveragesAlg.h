@@ -38,8 +38,9 @@ private:
   const DblType aspectRatioSwitch_;
   const DblType avgTimeScaleCoeff_;
   const bool meshMotion_;
-  const bool zeroForcingBelowKs_;
+  const bool RANSBelowKs_;
   const DblType z0_;
+  const bool lengthScaleLimiter_;
 
   unsigned velocity_{stk::mesh::InvalidOrdinal};
   unsigned density_{stk::mesh::InvalidOrdinal};

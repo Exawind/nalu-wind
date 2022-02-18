@@ -91,7 +91,7 @@ private:
   double time_;
   double dt_;
 
-  bool zeroForcingBelowKs_;
+  bool RANSBelowKs_;
   double z0_;
   double kappa_;
 };

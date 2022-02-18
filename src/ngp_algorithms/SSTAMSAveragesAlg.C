@@ -62,8 +62,9 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     wallDist_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
     lt_(get_field_ordinal(realm.meta_data(), "l_t")),
     coordinates_(get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
-    zeroForcingBelowKs_(realm_.solutionOptions_->zeroForcingBelowKs_),
-    z0_(realm_.solutionOptions_->roughnessHeight_)
+    RANSBelowKs_(realm_.solutionOptions_->RANSBelowKs_),
+    z0_(realm_.solutionOptions_->roughnessHeight_),
+    lengthScaleLimiter_(realm_.solutionOptions_->lengthScaleLimiter_)
 {
 }
 
@@ -119,9 +120,9 @@ SSTAMSAveragesAlg::execute()
   const DblType aspectRatioSwitch = aspectRatioSwitch_;
   const DblType avgTimeScaleCoeff = avgTimeScaleCoeff_;
 
-  const bool zeroForcingBelowKs = zeroForcingBelowKs_;
+  const bool RANSBelowKs = RANSBelowKs_;
   DblType k_s;
-  if (zeroForcingBelowKs) {
+  if (RANSBelowKs) {
     k_s = 30.*z0_;
   }
 
@@ -131,7 +132,7 @@ SSTAMSAveragesAlg::execute()
       // Calculate alpha
       if (tke.get(mi, 0) == 0.0)
         beta.get(mi, 0) = 1.0;
-      else if ((zeroForcingBelowKs_) && (coords.get(mi,2) <= k_s)) {
+      else if ((RANSBelowKs) && (coords.get(mi,2) <= k_s)) {
         beta.get(mi, 0) = 1.0;
       }
       else {
@@ -147,7 +148,12 @@ SSTAMSAveragesAlg::execute()
       const DblType alpha = stk::math::pow(beta.get(mi, 0), 1.7);
 
       // store RANS time scale
-     avgTime.get(mi, 0) = avgTimeScaleCoeff * lt.get(mi, 0) / stk::math::sqrt(tke.get(mi, 0));
+     if (lengthScaleLimiter_) {
+       avgTime.get(mi, 0) = avgTimeScaleCoeff * lt.get(mi, 0) / stk::math::sqrt(tke.get(mi, 0));
+     }
+     else {
+       avgTime.get(mi, 0) = avgTimeScaleCoeff / (betaStar * sdr.get(mi, 0)); 
+     }
 
       // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)
       const DblType weightAvg =
@@ -367,7 +373,7 @@ SSTAMSAveragesAlg::execute()
       // Handle case where tke = 0, should only occur at a wall boundary
       if (tke.get(mi, 0) == 0.0)
         resAdeq.get(mi, 0) = 1.0;
-      else if ((zeroForcingBelowKs_) && (coords.get(mi,2) <= k_s)) {
+      else if ((RANSBelowKs) && (coords.get(mi,2) <= k_s)) {
         resAdeq.get(mi, 0) = 1.0;
       }
       else {

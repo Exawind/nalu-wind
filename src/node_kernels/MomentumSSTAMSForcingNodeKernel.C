@@ -85,7 +85,7 @@ MomentumSSTAMSForcingNodeKernel::setup(Realm& realm)
   avgVelocity_ = fieldMgr.get_field<double>(avgVelocityID_);
   avgResAdeq_ = fieldMgr.get_field<double>(avgResAdeqID_);
   forcingComp_ = fieldMgr.get_field<double>(forcingCompID_);
-  zeroForcingBelowKs_ = realm.solutionOptions_->zeroForcingBelowKs_;
+  RANSBelowKs_ = realm.solutionOptions_->RANSBelowKs_;
   z0_ = realm.solutionOptions_->roughnessHeight_;
 }
 
@@ -214,7 +214,7 @@ MomentumSSTAMSForcingNodeKernel::execute(
   NodeKernelTraits::DblType gY = C_F * hY;
   NodeKernelTraits::DblType gZ = C_F * hZ;
 
-  if (zeroForcingBelowKs_) {
+  if (RANSBelowKs_) {
     const NodeKernelTraits::DblType k_s = 30.*z0_;
     if (coords[2] <= k_s) {
       gX = 0.0;
