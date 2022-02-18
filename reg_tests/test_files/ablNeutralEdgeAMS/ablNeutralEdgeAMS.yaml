@@ -252,7 +252,7 @@ realms:
             reference_velocity: 17.5
             reference_height: 2500.0
             roughness_height: 0.3
-            zero_forcing_below_ks: true
+            rans_below_ks: true
             length_scale_limiter: yes
 
         - input_variables_from_file:
