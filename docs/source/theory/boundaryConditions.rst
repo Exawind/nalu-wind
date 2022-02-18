@@ -839,7 +839,7 @@ The following boundary conditions are meant for Active Model Split (AMS) of the 
 
 Specifically, the energy transfer components of AMS below :math:`k_s` are turned off by setting the scaling coefficient on the energy transfer contribution to AMS to one, resolution adequacy indicator to one, and active forcing to zero. To turn off the energy transfer components the input file should include:
 
-.. literalinclude:: amsAbl_zeroForcingBelowKs.yaml
+.. literalinclude:: amsAbl_ransBelowKs.yaml
    :language: yaml 
 
 Open Boundary Condition
