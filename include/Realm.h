@@ -275,7 +275,7 @@ class Realm {
   virtual void pre_timestep_work_epilog();
   virtual void output_banner();
   virtual void advance_time_step();
- 
+  virtual void nonlinear_iteration(const int); 
   virtual void initial_work();
   
   void set_global_id();

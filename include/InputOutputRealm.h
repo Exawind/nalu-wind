@@ -71,6 +71,7 @@ public:
   void pre_timestep_work() {}  
   void output_banner() {}
   void advance_time_step() {}
+  void nonlinear_iteration(const int) {}
   double populate_restart( double &timeStepNm1, int &timeStepCount);
   void populate_external_variables_from_input(const double currentTime);
  
