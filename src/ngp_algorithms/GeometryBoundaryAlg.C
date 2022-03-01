@@ -36,6 +36,8 @@ GeometryBoundaryAlg<AlgTraits>::GeometryBoundaryAlg(
     meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>())
 {
   dataNeeded_.add_cvfem_surface_me(meSCS_);
+  dataNeeded_.addNodesPerElement(AlgTraits::nodesPerElement_);
+
   const auto coordID = get_field_ordinal(
     realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());
   dataNeeded_.add_coordinates_field(coordID, AlgTraits::nDim_, CURRENT_COORDINATES);

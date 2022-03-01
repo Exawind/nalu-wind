@@ -42,6 +42,7 @@ MdotInflowAlg<BcAlgTraits>::MdotInflowAlg(
     meFC_(MasterElementRepo::get_surface_master_element<BcAlgTraits>())
 {
   faceData_.add_cvfem_surface_me(meFC_);
+  faceData_.addNodesPerElement(BcAlgTraits::nodesPerElement_);
 
   const auto coordID = get_field_ordinal(
     realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());

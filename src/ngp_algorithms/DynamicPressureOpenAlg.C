@@ -49,6 +49,7 @@ DynamicPressureOpenAlg<BcAlgTraits>::DynamicPressureOpenAlg(
     meFC_(MasterElementRepo::get_surface_master_element<BcAlgTraits>())
 {
   faceData_.add_cvfem_face_me(meFC_);
+  faceData_.addNodesPerElement(BcAlgTraits::nodesPerElement_);
   faceData_.add_coordinates_field(
     get_field_ordinal(realm_.meta_data(), realm_.get_coordinates_name()),
     BcAlgTraits::nDim_, CURRENT_COORDINATES);

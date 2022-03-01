@@ -40,6 +40,7 @@ WallDistElemKernel<AlgTraits>::WallDistElemKernel(
 
   dataPreReqs.add_cvfem_surface_me(meSCS_);
   dataPreReqs.add_cvfem_volume_me(meSCV_);
+  dataPreReqs.addNodesPerElement(AlgTraits::nodesPerElement_);
   dataPreReqs.add_coordinates_field(
     coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
   dataPreReqs.add_master_element_call(SCV_VOLUME, CURRENT_COORDINATES);

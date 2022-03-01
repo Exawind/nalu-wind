@@ -35,6 +35,7 @@ ScalarOpenEdgeKernel<BcAlgTraits>::ScalarOpenEdgeKernel(
     meFC_(sierra::nalu::MasterElementRepo::get_surface_master_element<BcAlgTraits>())
 {
   faceData.add_cvfem_face_me(meFC_);
+  faceData.addNodesPerElement(BcAlgTraits::nodesPerElement_);
 
   faceData.add_gathered_nodal_field(scalarQ_, 1);
   faceData.add_gathered_nodal_field(bcScalarQ_, 1);

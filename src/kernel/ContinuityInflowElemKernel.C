@@ -50,6 +50,7 @@ ContinuityInflowElemKernel<BcAlgTraits>::ContinuityInflowElemKernel(
 
   // add master elements
   dataPreReqs.add_cvfem_face_me(meFC_);
+  dataPreReqs.addNodesPerElement(BcAlgTraits::nodesPerElement_);
 
   // required fields
   dataPreReqs.add_coordinates_field(

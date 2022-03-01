@@ -65,7 +65,7 @@ public:
 
       const int bytes_per_team = 0;
       const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(
-        lhsSize, rhsSize, scratchIdsSize, nDim, faceDataNGP, elemDataNGP);
+          lhsSize, rhsSize, scratchIdsSize, nDim, faceDataNeeded_.nodesPerElement_, elemDataNeeded_.nodesPerElement_, faceDataNGP, elemDataNGP);
 
       const auto nodesPerFace = nodesPerFace_;
       const auto nodesPerElem = nodesPerElem_;

@@ -81,7 +81,7 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   const int nodesPerElement = sierra::nalu::AlgTraitsHex8::nodesPerElement_;
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<sierra::nalu::AlgTraitsHex8>();
   dataReq.add_cvfem_volume_me(meSCV);
-
+  dataReq.addNodesPerElement(nodesPerElement);
   auto* coordsField = bulk.mesh_meta_data().coordinate_field();
 
   dataReq.add_coordinates_field(*coordsField, 3, sierra::nalu::CURRENT_COORDINATES);
@@ -106,7 +106,7 @@ void do_the_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType* press
   const int bytes_per_team = 0;
   const int bytes_per_thread =
     (sierra::nalu::calculate_shared_mem_bytes_per_thread(
-       lhsSize, rhsSize, rhsSize, meta.spatial_dimension(), dataNGP) +
+        lhsSize, rhsSize, rhsSize, dataReq.nodesPerElement_, meta.spatial_dimension(), dataNGP) +
      (rhsSize + lhsSize) * sizeof(double) * sierra::nalu::simdLen);
 
   int numResults = 5;
@@ -236,6 +236,7 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
   sierra::nalu::ElemDataRequests dataReq(bulk.mesh_meta_data());
   auto meSCV = sierra::nalu::MasterElementRepo::get_volume_master_element<sierra::nalu::AlgTraitsHex8>();
   dataReq.add_cvfem_volume_me(meSCV);
+  dataReq.addNodesPerElement(sierra::nalu::AlgTraitsHex8::nodesPerElement_);
 
   auto* coordsField = bulk.mesh_meta_data().coordinate_field();
 
@@ -261,7 +262,7 @@ void do_the_smdata_test(stk::mesh::BulkData& bulk, sierra::nalu::ScalarFieldType
   const int bytes_per_team = 0;
   const int bytes_per_thread =
     (sierra::nalu::calculate_shared_mem_bytes_per_thread(
-       lhsSize, rhsSize, rhsSize, meta.spatial_dimension(), dataNGP) +
+       lhsSize, rhsSize, rhsSize, meta.spatial_dimension(), dataReq.nodesPerElement_, dataNGP) +
      (rhsSize + lhsSize) * sizeof(double) * sierra::nalu::simdLen);
 
   int numResults = sierra::nalu::AlgTraitsHex8::numScvIp_;
