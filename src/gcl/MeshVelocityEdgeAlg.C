@@ -52,7 +52,6 @@ MeshVelocityEdgeAlg<AlgTraits>::MeshVelocityEdgeAlg(
 {
 
   elemData_.add_cvfem_surface_me(meSCS_);
-  elemData_.addNodesPerElement(AlgTraits::nodesPerElement_);
 
   elemData_.add_coordinates_field(
     modelCoords_, AlgTraits::nDim_, MODEL_COORDINATES);

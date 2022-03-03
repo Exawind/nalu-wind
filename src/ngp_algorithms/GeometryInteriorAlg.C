@@ -39,7 +39,6 @@ GeometryInteriorAlg<AlgTraits>::GeometryInteriorAlg(
 {
   dataNeeded_.add_cvfem_volume_me(meSCV_);
   dataNeeded_.add_cvfem_surface_me(meSCS_);
-  dataNeeded_.addNodesPerElement(AlgTraits::nodesPerElement_);
 
   const auto coordID = get_field_ordinal(
     realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());

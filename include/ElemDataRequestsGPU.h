@@ -191,10 +191,10 @@ private:
   FieldInfoView fields;
   FieldInfoView::HostMirror hostFields;
 
-  MasterElement *meFC_=nullptr;
-  MasterElement *meSCS_=nullptr;
-  MasterElement *meSCV_=nullptr;
-  MasterElement *meFEM_=nullptr;
+  MasterElement *meFC_;
+  MasterElement *meSCS_;
+  MasterElement *meSCV_;
+  MasterElement *meFEM_;
 };
 
 } // namespace nalu
