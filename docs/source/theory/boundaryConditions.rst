@@ -969,7 +969,7 @@ which can be written in general component form as,
 Strong versus Weak Symmetry
 ~~~~~~~~~~~~~~~
 
-There are two implementations of the symmetry boundary condition: strong and weak. In the strong symmetry implementation, the normal velocity is set to zero at the boundary. Strong symmetry has only been implemented for a cartesian mesh, meaning it can be used for flat but not curved surfaces. In the weak symmetry implementation, normal velocity can be nonzero. The Poisson solve tries to enforce mass conservation. Weak symmetry has not been implemented for Active Model Splits (AMS.)
+There are two implementations of the symmetry boundary condition: strong and weak. In the strong symmetry implementation, the normal velocity is set to zero at the boundary. Strong symmetry has only been implemented for a cartesian mesh, meaning it can be used for flat but not curved surfaces. In the weak symmetry implementation, normal velocity can be nonzero. The Poisson solve tries to enforce mass conservation. Weak symmetry has not been implemented for Active Model Splits (AMS).
 
 If the symmetry type is not specified in the input file then the code defaults to weak symmetry. If the ABL top boundary condition is used and it defaults to symmetry, as described in ref:`Atmospheric Boundary Layer Top Conditions <theory_abltop_bc>`:, then strong or weak symmetry can be specified explicitly in the input file:
 
