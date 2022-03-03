@@ -56,6 +56,7 @@ CourantReAlg<AlgTraits>::CourantReAlg(
     meSCS_(MasterElementRepo::get_surface_master_element<AlgTraits>())
 {
   elemData_.add_cvfem_surface_me(meSCS_);
+  elemData_.addNodesPerElement(AlgTraits::nodesPerElement_);
 
   elemData_.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
   elemData_.add_gathered_nodal_field(density_, 1);

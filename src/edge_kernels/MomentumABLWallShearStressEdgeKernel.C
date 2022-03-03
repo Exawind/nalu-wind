@@ -38,6 +38,8 @@ MomentumABLWallShearStressEdgeKernel<BcAlgTraits>::MomentumABLWallShearStressEdg
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
   elemData.add_cvfem_surface_me(meSCS_);
+  faceDataPreReqs.addNodesPerElement(BcAlgTraits::FaceTraits::nodesPerFace_);
+  elemData.addNodesPerElement(BcAlgTraits::ElemTraits::nodesPerElement_);
 
   faceDataPreReqs.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceDataPreReqs.add_face_field(wallShearStress_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);

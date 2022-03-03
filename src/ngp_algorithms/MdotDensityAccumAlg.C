@@ -43,6 +43,7 @@ MdotDensityAccumAlg<AlgTraits>::MdotDensityAccumAlg(
     lumpedMass_(lumpedMass)
 {
   elemData_.add_cvfem_volume_me(meSCV_);
+  elemData_.addNodesPerElement(AlgTraits::nodesPerElement_);
 
   const auto coordID = get_field_ordinal(
     realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());

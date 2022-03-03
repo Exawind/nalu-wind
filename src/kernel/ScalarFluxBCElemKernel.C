@@ -40,6 +40,7 @@ ScalarFluxBCElemKernel<BcAlgTraits>::ScalarFluxBCElemKernel(
 {
   // Register necessary data for use in execute method
   faceDataPreReqs.add_cvfem_face_me(meFC_);
+  faceDataPreReqs.addNodesPerElement(BcAlgTraits::nodesPerElement_);
 
   faceDataPreReqs.add_coordinates_field(
     coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);

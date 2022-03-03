@@ -186,7 +186,7 @@ void gather_elem_node_field(const stk::mesh::FieldBase& field,
 }
 
 int get_num_scalars_pre_req_data(
-  const ElemDataRequestsGPU& dataNeeded, int nDim, const ElemReqType reqType)
+  const ElemDataRequestsGPU& dataNeeded, int nDim, int nodesPerElement, const ElemReqType reqType)
 {
   /* master elements are allowed to be null if they are not required */
   MasterElement *meFC  = dataNeeded.get_cvfem_face_me();
@@ -223,7 +223,10 @@ int get_num_scalars_pre_req_data(
 
   // The previous check guarantees that we get the correct nodesPerEntity for
   // all request types
-  const int nodesPerEntity = nodes_per_entity(dataNeeded);
+
+  //const int nodesPerEntity = nodes_per_entity(dataNeeded);
+  //NGP_ThrowRequire(nodesPerElement == nodesPerEntity);
+  const int nodesPerEntity = nodesPerElement;
 
   int numScalars = 0;
 

@@ -54,6 +54,8 @@ NodalGradPOpenBoundary<AlgTraits>::NodalGradPOpenBoundary(
     faceData_(realm.meta_data()),
     elemData_(realm.meta_data())
 {
+  faceData_.addNodesPerElement(AlgTraits::FaceTraits::nodesPerFace_);
+  elemData_.addNodesPerElement(AlgTraits::ElemTraits::nodesPerElement_);
   faceData_.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
   elemData_.add_coordinates_field(coordinates_, AlgTraits::nDim_, CURRENT_COORDINATES);
   faceData_.add_cvfem_face_me   (meFC_);

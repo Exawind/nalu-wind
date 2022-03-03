@@ -172,6 +172,8 @@ ABLWallFluxesAlg<BcAlgTraits>::ABLWallFluxesAlg(
 {
   faceData_.add_cvfem_face_me(meFC_);
   elemData_.add_cvfem_surface_me(meSCS_);
+  faceData_.addNodesPerElement(BcAlgTraits::FaceTraits::nodesPerFace_);
+  elemData_.addNodesPerElement(BcAlgTraits::ElemTraits::nodesPerElement_);
 
   faceData_.add_coordinates_field(
     coordinates_, BcAlgTraits::nDim_, CURRENT_COORDINATES);

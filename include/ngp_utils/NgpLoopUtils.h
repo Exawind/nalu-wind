@@ -60,9 +60,9 @@ ngp_mesh_team_policy(
 template<typename T, typename DataReqType>
 inline int
 ngp_calc_thread_shmem_size(
-  int ndim, const DataReqType& dataReq, const ElemReqType reqType)
+    int ndim, const DataReqType& dataReq, int nodesPerElement, const ElemReqType reqType)
 {
-  int preReqSize = get_num_bytes_pre_req_data<T>(dataReq, ndim, reqType);
+    int preReqSize = get_num_bytes_pre_req_data<T>(dataReq, ndim, nodesPerElement, reqType);
   int mdvSize = MultiDimViews<T>::bytes_needed(
     dataReq.get_total_num_fields(),
     count_needed_field_views(dataReq.get_host_fields()));
@@ -87,13 +87,15 @@ ngp_calc_thread_shmem_size(
 template<typename T, typename DataReqType>
 inline int ngp_calc_thread_shmem_size(
   int ndim,
+  int nodesPerFace,
+  int nodesPerElement,
   const DataReqType& faceDataReq,
   const DataReqType& elemDataReq)
 {
   const int faceMemSize =
-    ngp_calc_thread_shmem_size<T>(ndim, faceDataReq, ElemReqType::FACE);
+      ngp_calc_thread_shmem_size<T>(ndim, faceDataReq, nodesPerFace, ElemReqType::FACE);
   const int elemMemSize =
-    ngp_calc_thread_shmem_size<T>(ndim, elemDataReq, ElemReqType::ELEM);
+      ngp_calc_thread_shmem_size<T>(ndim, elemDataReq, nodesPerElement, ElemReqType::ELEM);
 
   return (faceMemSize + elemMemSize);
 }
@@ -345,7 +347,8 @@ void run_elem_algorithm(
 
   ElemDataRequestsGPU dataReqNGP(fieldMgr, dataReqs, meshInfo.num_fields());
 
-  const int nodesPerElement = nodes_per_entity(dataReqNGP);
+  //const int nodesPerElement = nodes_per_entity(dataReqNGP);
+  const int nodesPerElement = dataReqs.nodesPerElement_;
   NGP_ThrowRequire(nodesPerElement != 0);
 
   const auto reqType = (rank == stk::topology::ELEM_RANK)
@@ -353,7 +356,7 @@ void run_elem_algorithm(
   const int bytes_per_team = 0;
   const int bytes_per_thread =
     impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
-      ndim, dataReqNGP, reqType);
+        ndim, dataReqNGP, nodesPerElement, reqType);
 
   const auto& buckets = ngpMesh.get_bucket_ids(rank, sel);
   auto team_exec = impl::ngp_mesh_team_policy<TeamPolicy>(
@@ -440,7 +443,8 @@ void run_elem_par_reduce(
 
   ElemDataRequestsGPU dataReqNGP(fieldMgr, dataReqs, meshInfo.num_fields());
 
-  const int nodesPerElement = nodes_per_entity(dataReqNGP);
+  //const int nodesPerElement = nodes_per_entity(dataReqNGP);
+  const int nodesPerElement = dataReqs.nodesPerElement_;
   NGP_ThrowRequire(nodesPerElement != 0);
 
   const auto reqType = (rank == stk::topology::ELEM_RANK)
@@ -448,7 +452,7 @@ void run_elem_par_reduce(
   const int bytes_per_team = 0;
   const int bytes_per_thread =
     impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
-      ndim, dataReqNGP, reqType);
+      ndim, dataReqNGP, nodesPerElement, reqType);
 
   const auto& buckets = ngpMesh.get_bucket_ids(rank, sel);
   auto team_exec = impl::ngp_mesh_team_policy<TeamPolicy>(
@@ -527,15 +531,18 @@ void run_face_elem_algorithm(
   ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs, numFields);
   ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs, numFields);
 
-  const int nodesPerElement = nodes_per_entity(elemDataNGP);
-  const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
+  //const int nodesPerElement = nodes_per_entity(elemDataNGP);
+  //const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
+  const int nodesPerElement = elemDataReqs.nodesPerElement_;
+  const int nodesPerFace = faceDataReqs.nodesPerElement_;
+
   NGP_ThrowRequire(nodesPerElement != 0);
   NGP_ThrowRequire(nodesPerFace != 0);
 
   const int bytes_per_team = 0;
   const int bytes_per_thread =
     impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
-      ndim, faceDataNGP, elemDataNGP);
+      ndim, nodesPerFace, nodesPerElement, faceDataNGP, elemDataNGP);
 
   const auto& buckets = ngpMesh.get_bucket_ids(sideRank, sel);
   auto team_exec = impl::ngp_mesh_team_policy<TeamPolicy>(
@@ -651,15 +658,18 @@ void run_face_elem_par_reduce(
   ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs, numFields);
   ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs, numFields);
 
-  const int nodesPerElement = nodes_per_entity(elemDataNGP);
-  const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
+  //const int nodesPerElement = nodes_per_entity(elemDataNGP);
+  //const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
+  const int nodesPerElement = elemDataReqs.nodesPerElement_;
+  const int nodesPerFace = faceDataReqs.nodesPerElement_;
+
   NGP_ThrowRequire(nodesPerElement != 0);
   NGP_ThrowRequire(nodesPerFace != 0);
 
   const int bytes_per_team = 0;
   const int bytes_per_thread =
     impl::ngp_calc_thread_shmem_size<sierra::nalu::DoubleType>(
-      ndim, faceDataNGP, elemDataNGP);
+      ndim, nodesPerFace, nodesPerElement, faceDataNGP, elemDataNGP);
 
   const auto& buckets = ngpMesh.get_bucket_ids(sideRank, sel);
   auto team_exec = impl::ngp_mesh_team_policy<TeamPolicy>(
@@ -779,14 +789,17 @@ void run_face_elem_algorithm_nosimd(
   ElemDataRequestsGPU faceDataNGP(fieldMgr, faceDataReqs, numFields);
   ElemDataRequestsGPU elemDataNGP(fieldMgr, elemDataReqs, numFields);
 
-  const int nodesPerElement = nodes_per_entity(elemDataNGP);
-  const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
+  //const int nodesPerElement = nodes_per_entity(elemDataNGP);
+  //const int nodesPerFace = nodes_per_entity(faceDataNGP, METype::FACE);
+  const int nodesPerElement = elemDataReqs.nodesPerElement_;
+  const int nodesPerFace = faceDataReqs.nodesPerElement_;
+
   NGP_ThrowRequire(nodesPerElement != 0);
   NGP_ThrowRequire(nodesPerFace != 0);
 
   const int bytes_per_team = 0;
   const int bytes_per_thread = impl::ngp_calc_thread_shmem_size<double>(
-    ndim, faceDataNGP, elemDataNGP);
+    ndim, nodesPerFace, nodesPerElement, faceDataNGP, elemDataNGP);
 
   const auto& buckets = ngpMesh.get_bucket_ids(sideRank, sel);
   auto team_exec = impl::ngp_mesh_team_policy<TeamPolicy>(
