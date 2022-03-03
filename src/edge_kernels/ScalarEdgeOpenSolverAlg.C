@@ -47,8 +47,6 @@ ScalarEdgeOpenSolverAlg<BcAlgTraits>::ScalarEdgeOpenSolverAlg(
 {
   faceDataPreReqs.add_cvfem_face_me(meFC_);
   elemDataPreReqs.add_cvfem_surface_me(meSCS_);
-  faceDataPreReqs.addNodesPerElement(BcAlgTraits::FaceTraits::nodesPerFace_);
-  elemDataPreReqs.addNodesPerElement(BcAlgTraits::ElemTraits::nodesPerElement_);
 
   faceDataPreReqs.add_gathered_nodal_field(diffFluxCoeff_, 1);
   faceDataPreReqs.add_face_field(openMassFlowRate_, BcAlgTraits::numFaceIp_);

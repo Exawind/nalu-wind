@@ -45,7 +45,6 @@ NodalGradBndryElemAlg<AlgTraits, PhiType, GradPhiType>::NodalGradBndryElemAlg(
     meFC_(MasterElementRepo::get_surface_master_element<AlgTraits>())
 {
   dataNeeded_.add_cvfem_face_me(meFC_);
-  dataNeeded_.addNodesPerElement(AlgTraits::nodesPerElement_);
 
   const auto coordID = get_field_ordinal(
     realm_.meta_data(), realm_.solutionOptions_->get_coordinates_name());

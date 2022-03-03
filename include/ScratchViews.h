@@ -836,7 +836,7 @@ ScratchViews<T, TEAMHANDLETYPE, SHMEM>::fill_static_meviews(
 }
 
 int get_num_scalars_pre_req_data(
-  const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim, int nodesPerElement,
+  const ElemDataRequestsGPU& dataNeededBySuppAlgs, int nDim,
   const ElemReqType reqType);
 
 template<typename T>
@@ -876,10 +876,9 @@ template <typename T, typename ELEMDATAREQUESTSTYPE>
 int get_num_bytes_pre_req_data(
   const ELEMDATAREQUESTSTYPE& dataNeededBySuppAlgs,
   int nDim,
-  int nodesPerElement,
   const ElemReqType reqType)
 {
-  return sizeof(T) * get_num_scalars_pre_req_data(dataNeededBySuppAlgs, nDim, nodesPerElement, reqType);
+  return sizeof(T) * get_num_scalars_pre_req_data(dataNeededBySuppAlgs, nDim, reqType);
 }
 
 template <typename ELEMDATAREQUESTSTYPE>
@@ -889,13 +888,12 @@ calculate_shared_mem_bytes_per_thread(
   int rhsSize,
   int scratchIdsSize,
   int nDim,
-  int nodesPerElement,
   const ELEMDATAREQUESTSTYPE& dataNeededByKernels,
   const ElemReqType reqType = ElemReqType::ELEM)
 {
   int bytes_per_thread =
     (rhsSize + lhsSize) * sizeof(double) + (2 * scratchIdsSize) * sizeof(int) +
-    get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim, nodesPerElement, reqType) +
+    get_num_bytes_pre_req_data<double>(dataNeededByKernels, nDim, reqType) +
     MultiDimViews<double>::bytes_needed(
       dataNeededByKernels.get_total_num_fields(),
       count_needed_field_views(dataNeededByKernels.get_host_fields()));
@@ -922,17 +920,15 @@ calculate_shared_mem_bytes_per_thread(
   int rhsSize,
   int scratchIdsSize,
   int nDim,
-  int nodesPerFace,
-  int nodesPerElement,
   const ELEMDATAREQUESTSTYPE& faceDataNeeded,
   const ELEMDATAREQUESTSTYPE& elemDataNeeded)
 {
   int bytes_per_thread =
     (rhsSize + lhsSize) * sizeof(double) + (2 * scratchIdsSize) * sizeof(int) +
     sierra::nalu::get_num_bytes_pre_req_data<double>(
-        faceDataNeeded, nDim, nodesPerFace, ElemReqType::FACE) +
+      faceDataNeeded, nDim, ElemReqType::FACE) +
     sierra::nalu::get_num_bytes_pre_req_data<double>(
-        elemDataNeeded, nDim, nodesPerElement, ElemReqType::FACE_ELEM) +
+      elemDataNeeded, nDim, ElemReqType::FACE_ELEM) +
     MultiDimViews<double>::bytes_needed(
       faceDataNeeded.get_total_num_fields(),
       count_needed_field_views(faceDataNeeded.get_host_fields())) +

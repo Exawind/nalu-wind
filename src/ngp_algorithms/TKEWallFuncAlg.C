@@ -43,7 +43,6 @@ TKEWallFuncAlg<BcAlgTraits>::TKEWallFuncAlg(Realm& realm, stk::mesh::Part* part)
           BcAlgTraits>())
 {
   faceData_.add_cvfem_face_me(meFC_);
-  faceData_.addNodesPerElement(BcAlgTraits::nodesPerElement_);
 
   faceData_.add_coordinates_field(
     get_field_ordinal(realm.meta_data(), realm.get_coordinates_name()),

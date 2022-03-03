@@ -67,7 +67,7 @@ public:
     const int bytes_per_team = 0;
     const int bytes_per_thread = calculate_shared_mem_bytes_per_thread(
       lhsSize, rhsSize_, scratchIdsSize, meta_data.spatial_dimension(),
-      nodesPerEntity_, dataNeededNGP, reqType);
+      dataNeededNGP, reqType);
 
     stk::mesh::Selector elemSelector = meta_data.locally_owned_part() &
                                        stk::mesh::selectUnion(partVec_) &

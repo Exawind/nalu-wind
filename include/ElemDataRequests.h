@@ -216,11 +216,6 @@ public:
   MasterElement *get_cvfem_surface_me() const {return meSCS_;}
   MasterElement *get_fem_volume_me() const {return meFEM_;}
 
-  void addNodesPerElement(const int nodesPerElement) {
-      nodesPerElement_=nodesPerElement;
-  }
-  int nodesPerElement_ = -1;
-
 private:
   const stk::mesh::MetaData& meta_;
   std::array<std::set<ELEM_DATA_NEEDED>, MAX_COORDS_TYPES> dataEnums;

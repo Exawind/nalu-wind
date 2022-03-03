@@ -52,8 +52,6 @@ ContinuityOpenEdgeKernel<BcAlgTraits>::ContinuityOpenEdgeKernel(
 {
   faceData.add_cvfem_face_me(meFC_);
   elemData.add_cvfem_surface_me(meSCS_);
-  faceData.addNodesPerElement(BcAlgTraits::FaceTraits::nodesPerFace_);
-  elemData.addNodesPerElement(BcAlgTraits::ElemTraits::nodesPerElement_);
 
   faceData.add_face_field(exposedAreaVec_, BcAlgTraits::numFaceIp_, BcAlgTraits::nDim_);
   faceData.add_face_field(dynPress_, BcAlgTraits::numFaceIp_);
