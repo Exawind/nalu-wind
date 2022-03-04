@@ -277,8 +277,8 @@ class Realm {
   virtual void advance_time_step();
  
   virtual void initial_work();
-  double tkeFS;
-  double sdrFS;
+  double tkeFS = -1.0;
+  double sdrFS = -1.0;
   
   void set_global_id();
 

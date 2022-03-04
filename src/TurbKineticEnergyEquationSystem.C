@@ -389,7 +389,13 @@ TurbKineticEnergyEquationSystem::register_inflow_bc(
   TurbKinEnergy tke = userData.tke_;
   std::vector<double> userSpec(1);
   userSpec[0] = tke.turbKinEnergy_;
-  realm_.tkeFS = userSpec[0];
+  if (realm_.tkeFS < 0.0) {
+     NaluEnv::self().naluOutputP0() << "Inflow BC registered" << std::endl; 
+    realm_.tkeFS = userSpec[0];
+  }
+  else {
+    throw std::runtime_error("TurbKineticEnergyEquationSystem: Attempted to set more than one inflow boundary");
+  }
 
   // new it
   ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);

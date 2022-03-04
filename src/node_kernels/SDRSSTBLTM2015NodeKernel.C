@@ -98,6 +98,8 @@ SDRSSTBLTM2015NodeKernel::execute(
   DblType crossDiff = 0.0;
   DblType sdrForcing = 0.0;
   DblType tc = 0.0;
+  DblType sijMag    = 0.0;
+  DblType vortMag   = 0.0;
   DblType velMag2 = 0.0;
 
   for (int d = 0; d < nDim_; d++) {
@@ -109,19 +111,22 @@ SDRSSTBLTM2015NodeKernel::execute(
     crossDiff += dkdx_.get(node, i) * dwdx_.get(node, i);
     const int offset = nDim_ * i;
     for (int j=0; j < nDim_; ++j) {
-      const auto dudxij = dudx_.get(node, offset+j);
-      Pk += dudxij * (dudxij + dudx_.get(node, j*nDim_ + i));
+     const double duidxj = dudx_.get(node, nDim_ * i + j);
+     const double dujdxi = dudx_.get(node, nDim_ * j + i);
+
+     const double rateOfStrain = 0.5 * (duidxj + dujdxi);
+     const double vortTensor = 0.5 * (duidxj - dujdxi);
+     sijMag += rateOfStrain * rateOfStrain;
+     vortMag += vortTensor * vortTensor;
     }
   }
 
+  sijMag = stk::math::sqrt(2.0*sijMag);
+  vortMag = stk::math::sqrt(2.0*vortMag);
   velMag2 = vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2] + 1.e-14;
 
-  Pk *= tvisc;
-
   const DblType Dk = betaStar_ * density * sdr * tke;
-
-  // Clip production term
-  Pk = stk::math::min(tkeProdLimitRatio_ * Dk, Pk);
+  Pk = tvisc * sijMag * vortMag; // Pk based on Kato-Launder formulation. Recommended in Menter (2015) to avoid excessive levels of TKE in stagnation regions
 
   if (coords[0] < xcoordEndFixedTurb_) {
     tc = 500.0 * visc / density / velMag2;
