@@ -60,6 +60,7 @@ SDRSSTNodeKernel::setup(Realm& realm)
   betaTwo_ = realm.get_turb_model_constant(TM_betaTwo);
   gammaOne_ = realm.get_turb_model_constant(TM_gammaOne);
   gammaTwo_ = realm.get_turb_model_constant(TM_gammaTwo);
+  sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
 void
@@ -105,7 +106,10 @@ SDRSSTNodeKernel::execute(
   const DblType Dw = beta * density * sdr * sdr;
   const DblType Sw = sigmaD * density * crossDiff / sdr;
 
-  rhs(0) += (Pw - Dw + Sw) * dVol;
+  // SUST source term
+  const DblType Dwamb = beta * density * sdrAmb_ * sdrAmb_;
+
+  rhs(0) += (Pw - Dw + Dwamb + Sw) * dVol;
   lhs(0, 0) +=
     (2.0 * beta * density * sdr + stk::math::max(Sw / sdr, 0.0)) * dVol;
 }

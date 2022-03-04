@@ -49,6 +49,8 @@ TKESSTNodeKernel::setup(Realm& realm)
   // Update turbulence model constants
   betaStar_ = realm.get_turb_model_constant(TM_betaStar);
   tkeProdLimitRatio_ = realm.get_turb_model_constant(TM_tkeProdLimitRatio);
+  tkeAmb_ = realm.get_turb_model_constant(TM_tkeAmb);
+  sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
 }
 
 void
@@ -76,13 +78,15 @@ TKESSTNodeKernel::execute(
     }
   }
   Pk *= tvisc;
-
-  DblType Dk = betaStar_ * density * sdr * tke;
+  const DblType Dk = betaStar_ * density * sdr * tke;
 
   // Clip production term and prevent Pk from being negative
   Pk = stk::math::min(tkeProdLimitRatio_ * Dk, stk::math::max(Pk, 0.0));
 
-  rhs(0) += (Pk - Dk) * dVol;
+  // SUST source term
+  const DblType Dkamb = betaStar_ * density * sdrAmb_ * tkeAmb_;
+
+  rhs(0) += (Pk - Dk + Dkamb) * dVol;
   lhs(0, 0) += betaStar_ * density * sdr * dVol;
 }
 
