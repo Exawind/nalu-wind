@@ -779,7 +779,7 @@ The final parameter is
 
 
 The Menter SST Two-Equation Model with Controlled Decay (SST-SUST) is
-also supported, :cite:`Spalart2007`. Two new constants are added that
+also supported, :cite:`Spalart:2007`. Two new constants are added that
 are incorporated into additional source terms for the transport
 equations:
 
