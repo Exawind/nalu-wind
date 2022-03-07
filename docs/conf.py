@@ -76,6 +76,7 @@ extensions = [
               'sphinx.ext.intersphinx',
               'sphinxcontrib.bibtex',
              ]
+bibtex_bibfiles = ['references/references.bib']
 
 if use_breathe:
     extensions.append('breathe')
