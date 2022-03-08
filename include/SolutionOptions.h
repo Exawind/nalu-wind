@@ -153,6 +153,8 @@ public:
   bool useStreletsUpwinding_;
   bool transition_model_;
   bool gammaEqActive_;
+  int iterSwitchTransition_;
+  double xcoordEndFixedTurb_;
 
   // global mdot correction alg
   bool activateOpenMdotCorrection_;

@@ -50,6 +50,7 @@
 #include <node_kernels/NodeKernelUtils.h>
 #include <node_kernels/ScalarMassBDFNodeKernel.h>
 #include <node_kernels/SDRSSTNodeKernel.h>
+#include <node_kernels/SDRSSTBLTM2015NodeKernel.h>
 #include <node_kernels/SDRSSTDESNodeKernel.h>
 #include <node_kernels/ScalarGclNodeKernel.h>
 
@@ -254,9 +255,13 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
-        if (SST == realm_.solutionOptions_->turbulenceModel_){
-          NaluEnv::self().naluOutputP0() << "call SDRSSTNodeKernel1: " <<std::endl;
+        if (SST == realm_.solutionOptions_->turbulenceModel_ && !realm_.solutionOptions_->gammaEqActive_){
+          NaluEnv::self().naluOutputP0() << "call SDRSSTNodeKernel: " <<std::endl;
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
+        }
+        else if (SST == realm_.solutionOptions_->turbulenceModel_ && realm_.solutionOptions_->gammaEqActive_){
+          NaluEnv::self().naluOutputP0() << "call SDRSSTBLTM2015NodeKernel: " <<std::endl;
+          nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
         }
         else if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_) || (SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ){
           nodeAlg.add_kernel<SDRSSTDESNodeKernel>(realm_.meta_data());
@@ -322,6 +327,7 @@ SpecificDissipationRateEquationSystem::register_inflow_bc(
   SpecDissRate sdr = userData.sdr_;
   std::vector<double> userSpec(1);
   userSpec[0] = sdr.specDissRate_;
+  realm_.sdrFS = userSpec[0];
 
   // new it
   ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);

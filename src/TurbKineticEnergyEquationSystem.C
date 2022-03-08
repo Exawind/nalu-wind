@@ -60,6 +60,7 @@
 #include <node_kernels/TKESSTIDDESNodeKernel.h>
 #include <node_kernels/TKESSTNodeKernel.h>
 #include <node_kernels/TKERodiNodeKernel.h>
+#include <node_kernels/TKESSTBLTM2015NodeKernel.h>
 
 // ngp
 #include <ngp_utils/NgpLoopUtils.h>
@@ -289,7 +290,14 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<TKEKsgsNodeKernel>(realm_.meta_data());
           break;
         case SST:
-          nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
+          if (!realm_.solutionOptions_->gammaEqActive_) {
+            NaluEnv::self().naluOutputP0() << "  call TKESSTNodeKernel  " << std::endl;
+            nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
+          }
+          else {
+            NaluEnv::self().naluOutputP0() << "  call TKESSTBLTM2015NodeKernel  " << std::endl;
+            nodeAlg.add_kernel<TKESSTBLTM2015NodeKernel>(realm_.meta_data());
+          }
           break;
         case SST_DES:
           nodeAlg.add_kernel<TKESSTDESNodeKernel>(realm_.meta_data());
@@ -381,6 +389,13 @@ TurbKineticEnergyEquationSystem::register_inflow_bc(
   TurbKinEnergy tke = userData.tke_;
   std::vector<double> userSpec(1);
   userSpec[0] = tke.turbKinEnergy_;
+  if (realm_.tkeFS < 0.0) {
+     NaluEnv::self().naluOutputP0() << "Inflow BC registered" << std::endl; 
+    realm_.tkeFS = userSpec[0];
+  }
+  else {
+    throw std::runtime_error("TurbKineticEnergyEquationSystem: Attempted to set more than one inflow boundary");
+  }
 
   // new it
   ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
