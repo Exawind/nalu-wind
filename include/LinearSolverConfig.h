@@ -143,6 +143,12 @@ public:
   inline bool dumpHypreMatrixStats() const
   { return dumpHypreMatrixStats_; }
 
+  inline bool getWritePreassemblyMatrixFiles() const
+  { return writePreassemblyMatrixFiles_; }
+
+  inline bool getUseCusparseSGEMM() const
+  { return useCusparseSGEMM_; }
+
 protected:
   //! List of HYPRE API calls and corresponding arugments to configure solver
   //! and preconditioner after they are created.
@@ -184,6 +190,8 @@ protected:
   bool useSegregatedSolver_{false};
   bool simpleHypreMatrixAssemble_{false};
   bool dumpHypreMatrixStats_{false};
+  bool writePreassemblyMatrixFiles_{false};
+  bool useCusparseSGEMM_{false};
 
 private:
   void boomerAMG_solver_config(const YAML::Node&);

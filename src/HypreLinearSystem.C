@@ -2283,6 +2283,9 @@ HypreLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
   // Call solve
   int status = 0;
 
+  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
+  HYPRE_SetSpGemmUseCusparse(config->getUseCusparseSGEMM());
+
   status = solver->solve(iters, finalResidNorm, realm_.isFinalOuterIter_);
 
   /* set this after the solve calls */

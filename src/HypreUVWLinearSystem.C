@@ -360,6 +360,9 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
   std::vector<double> finalNorm(nDim_, 1.0);
   std::vector<double> rhsNorm(nDim_, std::numeric_limits<double>::max());
 
+  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
+  HYPRE_SetSpGemmUseCusparse(config->getUseCusparseSGEMM());
+
   for (unsigned d = 0; d < nDim_; ++d) {
     status = solver->solve(d, iters[d], finalNorm[d], realm_.isFinalOuterIter_);
   }

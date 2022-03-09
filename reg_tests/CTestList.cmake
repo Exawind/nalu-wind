@@ -283,7 +283,7 @@ else(NOT ENABLE_CUDA)
   if (ENABLE_TIOGA AND ENABLE_HYPRE)
     add_test_r(oversetRotCylNGPHypre 2)
   endif()
-  
+
   #=============================================================================
   # Comparing solution norm tests
   #=============================================================================
