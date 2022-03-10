@@ -75,14 +75,6 @@ using MemoryMap =
   Kokkos::UnorderedMap<HypreIntType, unsigned, sierra::nalu::MemSpace>;
 using MemoryMapHost = MemoryMap::HostMirror;
 
-// UVM Views
-using DoubleViewUVM = Kokkos::View<double*, sierra::nalu::UVMSpace>;
-using DoubleView2DUVM =
-  Kokkos::View<double**, Kokkos::LayoutLeft, sierra::nalu::UVMSpace>;
-using HypreIntTypeViewUVM = Kokkos::View<HypreIntType*, sierra::nalu::UVMSpace>;
-using HypreIntTypeView2DUVM =
-  Kokkos::View<HypreIntType**, Kokkos::LayoutLeft, sierra::nalu::UVMSpace>;
-
 // Periodic Node Map
 using PeriodicNodeMap =
   Kokkos::UnorderedMap<HypreIntType, HypreIntType, sierra::nalu::MemSpace>;
@@ -146,10 +138,10 @@ public:
   HypreIntTypeViewHost cols_shared_host_;
   HypreIntTypeViewHost cols_host_;
 
-  HypreIntTypeViewUVM rows_uvm_;
+  HypreIntTypeView rows_dev_;
   HypreIntTypeViewHost rows_host_;  
 
-  HypreIntTypeView2DUVM rhs_rows_uvm_;
+  HypreIntTypeView2D rhs_rows_dev_;
   HypreIntTypeView2DHost rhs_rows_host_;  
 
 #ifdef HYPRE_LINEAR_SYSTEM_DEBUG
@@ -369,9 +361,9 @@ public:
 
     /* monolithic data structures for holding all the values for
        the owned and shared parts. Shared MUST come after owned. */
-    DoubleViewUVM values_uvm_;
-    HypreIntTypeViewUVM cols_uvm_;
-    DoubleView2DUVM rhs_uvm_;
+    DoubleView values_dev_;
+    HypreIntTypeView cols_dev_;
+    DoubleView2D rhs_dev_;
 
     //! Data structures for the owned CSR Matrix and RHS Vector(s)
     HypreIntType num_rows_owned_;
@@ -389,7 +381,7 @@ public:
     //! Random access views
     UnsignedViewRA mat_row_start_owned_ra_;
     UnsignedViewRA mat_row_start_shared_ra_;
-    HypreIntTypeViewRA cols_uvm_ra_;
+    HypreIntTypeViewRA cols_dev_ra_;
 
     //! Auxilliary Data structures
 
