@@ -59,8 +59,6 @@ public:
 
   void clip_min_distance_to_wall();
   void compute_f_one_blending();
-  void compute_lt();
-  void compute_gamma();
   void update_and_clip();
   void update_and_clip_gamma();
   void clip_sst(
@@ -83,7 +81,6 @@ public:
   ScalarFieldType* minDistanceToWall_;
   ScalarFieldType* fOneBlending_;
   ScalarFieldType* maxLengthScale_;
-  ScalarFieldType* lt_;
 
   bool isInit_;
   AlgorithmDriver* sstMaxLengthScaleAlgDriver_;

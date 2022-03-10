@@ -30,8 +30,7 @@ SDRSSTNodeKernel::SDRSSTNodeKernel(const stk::mesh::MetaData& meta)
     dwdxID_(get_field_ordinal(meta, "dwdx")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     fOneBlendID_(get_field_ordinal(meta, "sst_f_one_blending")),
-    nDim_(meta.spatial_dimension()),
-    gammaID_(get_field_ordinal(meta, "gamma"))
+    nDim_(meta.spatial_dimension())
 {
 }
 
@@ -49,7 +48,6 @@ SDRSSTNodeKernel::setup(Realm& realm)
   dwdx_ = fieldMgr.get_field<double>(dwdxID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   fOneBlend_ = fieldMgr.get_field<double>(fOneBlendID_);
-  gamma_ = fieldMgr.get_field<double>(gammaID_);
 
   const std::string dofName = "specific_dissipation_rate";
   relaxFac_ = realm.solutionOptions_->get_relaxation_factor(dofName);
@@ -63,6 +61,15 @@ SDRSSTNodeKernel::setup(Realm& realm)
   gammaOne_ = realm.get_turb_model_constant(TM_gammaOne);
   gammaTwo_ = realm.get_turb_model_constant(TM_gammaTwo);
   sdrAmb_ = realm.get_turb_model_constant(TM_sdrAmb);
+
+  lengthScaleLimiter_ = realm.solutionOptions_->lengthScaleLimiter_;
+  if (lengthScaleLimiter_) {
+    const NodeKernelTraits::DblType earthAngularVelocity = realm.solutionOptions_->earthAngularVelocity_;
+    const NodeKernelTraits::DblType pi = std::acos(-1.0);
+    const NodeKernelTraits::DblType latitude = realm.solutionOptions_->latitude_*pi/180.0;
+    corfac_ = 2.0*earthAngularVelocity*std::sin(latitude);
+    referenceVelocity_ = realm.solutionOptions_->referenceVelocity_;
+  }
 }
 
 void
@@ -79,7 +86,6 @@ SDRSSTNodeKernel::execute(
   const DblType tvisc = tvisc_.get(node, 0);
   const DblType dVol = dualNodalVolume_.get(node, 0);
   const DblType fOneBlend = fOneBlend_.get(node, 0);
-  const DblType gamma = gamma_.get(node, 0);
 
   DblType Pk = 0.0;
   DblType crossDiff = 0.0;
@@ -102,6 +108,34 @@ SDRSSTNodeKernel::execute(
   const DblType omf1 = (1.0 - fOneBlend);
   const DblType beta = fOneBlend * betaOne_ + omf1 * betaTwo_;
   const DblType sigmaD = 2.0 * omf1 * sigmaWTwo_;
+
+  DblType gammaOne_apply;
+  DblType gammaTwo_apply;
+  // apply limiter to gamma
+  if (lengthScaleLimiter_) {
+    // calculate mixing length
+    const DblType l_t = stk::math::sqrt(tke)/(stk::math::pow(betaStar_, .25)*sdr);
+
+    // calculate maximum mixing length
+    const DblType l_e = .00027*referenceVelocity_/corfac_;
+
+    // apply limiter to cEpsOne -> calculate gammaOne
+    const DblType cEpsOne_one = gammaOne_ + 1.;
+    const DblType cEpsTwo_one = betaOne_/betaStar_ + 1.;
+    const DblType cEpsOneStar_one = cEpsOne_one + (cEpsTwo_one - cEpsOne_one) * (l_t/l_e);
+    gammaOne_apply = cEpsOneStar_one - 1.; 
+
+    // apply limiter to cEpsTwo -> calculate gammaTwo
+    const DblType cEpsOne_two = gammaTwo_ + 1.;
+    const DblType cEpsTwo_two = betaTwo_/betaStar_ + 1.;
+    const DblType cEpsOneStar_two = cEpsOne_two + (cEpsTwo_two - cEpsOne_two) * (l_t/l_e);
+    gammaTwo_apply = cEpsOneStar_two - 1.;
+  }
+  else{ 
+   gammaOne_apply = gammaOne_;
+   gammaTwo_apply = gammaTwo_; 
+  } 
+  const DblType gamma = fOneBlend * gammaOne_apply + omf1 * gammaTwo_apply;
 
   // Production term with appropriate clipping of tvisc
   const DblType Pw = gamma * density * Pk / stk::math::max(tvisc, 1.0e-16);

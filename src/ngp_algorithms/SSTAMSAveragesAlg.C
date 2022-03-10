@@ -60,7 +60,6 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     beta_(get_field_ordinal(realm.meta_data(), "k_ratio")),
     Mij_(get_field_ordinal(realm.meta_data(), "metric_tensor")),
     wallDist_(get_field_ordinal(realm.meta_data(), "minimum_distance_to_wall")),
-    lt_(get_field_ordinal(realm.meta_data(), "l_t")),
     coordinates_(get_field_ordinal(realm.meta_data(), realm.get_coordinates_name())),
     RANSBelowKs_(realm_.solutionOptions_->RANSBelowKs_),
     z0_(realm_.solutionOptions_->roughnessHeight_),
@@ -110,7 +109,6 @@ SSTAMSAveragesAlg::execute()
   auto avgDudxN = fieldMgr.get_field<double>(avgDudxN_);
   const auto Mij = fieldMgr.get_field<double>(Mij_);
   const auto wallDist = fieldMgr.get_field<double>(wallDist_);
-  const auto lt = fieldMgr.get_field<double>(lt_);
   const auto coords = fieldMgr.get_field<double>(coordinates_);
 
   const DblType betaStar = betaStar_;
@@ -149,7 +147,8 @@ SSTAMSAveragesAlg::execute()
 
       // store RANS time scale
      if (lengthScaleLimiter_) {
-       avgTime.get(mi, 0) = avgTimeScaleCoeff * lt.get(mi, 0) / stk::math::sqrt(tke.get(mi, 0));
+       const DblType l_t = stk::math::sqrt(tke.get(mi, 0))/(stk::math::pow(betaStar, .25)*sdr.get(mi, 0));
+       avgTime.get(mi, 0) = avgTimeScaleCoeff * l_t / stk::math::sqrt(tke.get(mi, 0));
      }
      else {
        avgTime.get(mi, 0) = avgTimeScaleCoeff / (betaStar * sdr.get(mi, 0)); 

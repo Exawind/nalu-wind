@@ -52,7 +52,6 @@ private:
   stk::mesh::NgpField<double> dwdx_;
   stk::mesh::NgpField<double> dualNodalVolume_;
   stk::mesh::NgpField<double> fOneBlend_;
-  stk::mesh::NgpField<double> gamma_;
 
   unsigned tkeID_             {stk::mesh::InvalidOrdinal};
   unsigned sdrID_             {stk::mesh::InvalidOrdinal};
@@ -63,7 +62,6 @@ private:
   unsigned dwdxID_            {stk::mesh::InvalidOrdinal};
   unsigned dualNodalVolumeID_ {stk::mesh::InvalidOrdinal};
   unsigned fOneBlendID_       {stk::mesh::InvalidOrdinal};
-  unsigned gammaID_           {stk::mesh::InvalidOrdinal};
 
   NodeKernelTraits::DblType betaStar_;
   NodeKernelTraits::DblType tkeProdLimitRatio_;
@@ -76,6 +74,12 @@ private:
   NodeKernelTraits::DblType relaxFac_;
 
   const int nDim_;
+
+  bool lengthScaleLimiter_;
+  NodeKernelTraits::DblType corfac_;
+  NodeKernelTraits::DblType referenceVelocity_;
+  NodeKernelTraits::DblType gammaOne_;
+  NodeKernelTraits::DblType gammaTwo_;
 };
 
 }  // nalu

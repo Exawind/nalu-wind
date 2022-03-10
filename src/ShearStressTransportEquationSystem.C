@@ -78,8 +78,7 @@ ShearStressTransportEquationSystem::ShearStressTransportEquationSystem(
     maxLengthScale_(NULL),
     isInit_(true),
     sstMaxLengthScaleAlgDriver_(NULL),
-    resetAMSAverages_(realm_.solutionOptions_->resetAMSAverages_),
-    lt_(NULL)
+    resetAMSAverages_(realm_.solutionOptions_->resetAMSAverages_)
 {
   // push back EQ to manager
   realm_.push_equation_to_systems(this);
@@ -153,12 +152,6 @@ ShearStressTransportEquationSystem::register_nodal_fields(
   stk::mesh::put_field_on_mesh(*minDistanceToWall_, *part, nullptr);
   fOneBlending_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "sst_f_one_blending"));
   stk::mesh::put_field_on_mesh(*fOneBlending_, *part, nullptr);
-
-  // lt, gamma
-  lt_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "l_t"));
-  stk::mesh::put_field_on_mesh(*lt_, *part, nullptr);
-  gamma_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "gamma"));
-  stk::mesh::put_field_on_mesh(*gamma_, *part, nullptr);
 
   // DES model
   if (
@@ -277,12 +270,6 @@ ShearStressTransportEquationSystem::solve_and_update()
 
   // compute blending for SST model
   compute_f_one_blending();
-
-  // compute mixing length for SST model
-  compute_lt();
- 
-  // compute gamma for SST model
-  compute_gamma();
 
   // SST effective viscosity for k and omega
   tkeEqSys_->compute_effective_diff_flux_coeff();
@@ -620,119 +607,6 @@ ShearStressTransportEquationSystem::compute_f_one_blending()
     });
 
   fOneBlend.modify_on_device();
-}
-
-/** Compute mixing length for 2003 SST implementation
- */
-void
-ShearStressTransportEquationSystem::compute_lt()
-{
-  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
-
-  const auto& meshInfo = realm_.mesh_info();
-  const auto& meta = meshInfo.meta();
-  const auto& ngpMesh = meshInfo.ngp_mesh();
-  const auto& fieldMgr = meshInfo.ngp_field_manager();
-
-  const double betaStar = realm_.get_turb_model_constant(TM_betaStar);
-
-  const auto& tkeNp1 =
-    fieldMgr.get_field<double>(tke_->mesh_meta_data_ordinal());
-  const auto& sdrNp1 =
-    fieldMgr.get_field<double>(sdr_->mesh_meta_data_ordinal());
-  auto& lt =
-    fieldMgr.get_field<double>(lt_->mesh_meta_data_ordinal());
-
-  const stk::mesh::Selector sel =
-    (meta.locally_owned_part() | meta.globally_shared_part()) &
-    (stk::mesh::selectField(*lt_));
-
-  nalu_ngp::run_entity_algorithm(
-    "SST::compute_lt", ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const MeshIndex& mi) {
-      const double tke = tkeNp1.get(mi, 0);
-      const double sdr = sdrNp1.get(mi, 0);
-
-      const double l_t = stk::math::sqrt(tke)/(stk::math::pow(betaStar, .25)*sdr);
-      lt.get(mi, 0) = l_t;
-    });
-
-  lt.modify_on_device();
-}
-
-/** Compute mixing length and gamma fields for 2003 SST implementation
- */
-void
-ShearStressTransportEquationSystem::compute_gamma()
-{
-  using MeshIndex = nalu_ngp::NGPMeshTraits<>::MeshIndex;
-
-  const auto& meshInfo = realm_.mesh_info();
-  const auto& meta = meshInfo.meta();
-  const auto& ngpMesh = meshInfo.ngp_mesh();
-  const auto& fieldMgr = meshInfo.ngp_field_manager();
-
-  const double betaStar = realm_.get_turb_model_constant(TM_betaStar);
-  const double betaOne = realm_.get_turb_model_constant(TM_betaOne);
-  const double betaTwo = realm_.get_turb_model_constant(TM_betaTwo);
-  const double gammaOne = realm_.get_turb_model_constant(TM_gammaOne);
-  const double gammaTwo = realm_.get_turb_model_constant(TM_gammaTwo);
-
-  const bool lengthScaleLimiter = realm_.solutionOptions_->lengthScaleLimiter_;
-  double l_e;
-  if (lengthScaleLimiter) { 
-    // calculate maximum length scale
-    const double earthAngularVelocity = realm_.solutionOptions_->earthAngularVelocity_;
-    const double pi = std::acos(-1.0);
-    const double latitude = realm_.solutionOptions_->latitude_*pi/180.0;
-    const double referenceVelocity = realm_.solutionOptions_->referenceVelocity_;
-    const double corfac = 2.0*earthAngularVelocity*std::sin(latitude);
-    l_e = .00027*referenceVelocity/corfac;
-  }
-
-  const auto& fOneBlend =
-    fieldMgr.get_field<double>(fOneBlending_->mesh_meta_data_ordinal());
-  const auto& lt =
-    fieldMgr.get_field<double>(lt_->mesh_meta_data_ordinal());
-  auto& gamma =
-    fieldMgr.get_field<double>(gamma_->mesh_meta_data_ordinal());
-
-  const stk::mesh::Selector sel =
-    (meta.locally_owned_part() | meta.globally_shared_part()) &
-    (stk::mesh::selectField(*gamma_)); 
-
-  nalu_ngp::run_entity_algorithm(
-    "SST::compute_gamma", ngpMesh, stk::topology::NODE_RANK, sel,
-    KOKKOS_LAMBDA(const MeshIndex& mi) {
-      const double f1 = fOneBlend.get(mi, 0); 
-      const double l_t = lt.get(mi, 0);
-
-      const double omf1 = 1.0 - f1;
-
-      double gammaOne_apply;
-      double gammaTwo_apply;
-      if (lengthScaleLimiter) {
-        // apply limiter to cEpsOne -> calculate gammaOne
-        const double  cEpsOne_one = gammaOne + 1.;
-        const double  cEpsTwo_one = betaOne/betaStar + 1.;
-        const double  cEpsOneStar_one = cEpsOne_one + (cEpsTwo_one - cEpsOne_one)*(l_t/l_e);
-        gammaOne_apply = cEpsOneStar_one - 1.;
-
-       // apply limiter to cEpsTwo -> calculate gammaTwo 
-       const double cEpsOne_two = gammaTwo + 1.;
-       const double cEpsTwo_two = betaTwo/betaStar + 1.;
-       const double cEpsOneStar_two = cEpsOne_two + (cEpsTwo_two - cEpsOne_two)*(l_t/l_e);
-       gammaTwo_apply = cEpsOneStar_two - 1.;
-      }
-      else {
-        gammaOne_apply = gammaOne;
-        gammaTwo_apply = gammaTwo;
-      }
-
-      gamma.get(mi, 0) = f1 * gammaOne_apply + omf1 * gammaTwo_apply;
-    });
-
-  gamma.modify_on_device();
 }
 
 void

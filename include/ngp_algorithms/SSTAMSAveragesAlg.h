@@ -64,7 +64,6 @@ private:
   unsigned beta_{stk::mesh::InvalidOrdinal};
   unsigned Mij_{stk::mesh::InvalidOrdinal};
   unsigned wallDist_{stk::mesh::InvalidOrdinal};
-  unsigned lt_{stk::mesh::InvalidOrdinal};
   unsigned coordinates_{stk::mesh::InvalidOrdinal};
 
   // Proper definition of beta_kol in SST-AMS doesn't work 
