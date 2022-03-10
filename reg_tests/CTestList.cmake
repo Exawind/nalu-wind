@@ -66,7 +66,7 @@ function(add_test_r_rst testname np)
     set_tests_properties(${testname} PROPERTIES LABELS "regression")
 endfunction(add_test_r_rst)
 
-# Regression test with postprocessing 
+# Regression test with postprocessing
 function(add_test_r_post testname np)
     setup_test(${testname} ${np})
     add_test(${testname} sh -c "${RUN_COMMAND}${COMPARE_GOLDS_COMMAND_NC}")
@@ -110,7 +110,7 @@ function(add_test_u testname np)
     set_properties(${testname})
     set_tests_properties(${testname} PROPERTIES LABELS "unit")
     if(ENABLE_OPENFAST)
-      # create symlink to nrelmw.fst 
+      # create symlink to nrelmw.fst
       execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_BINARY_DIR}/reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst
         ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}/nrel5mw.fst
@@ -126,7 +126,7 @@ function(add_test_u_gpu testname np)
     set_properties(${testname})
     set_tests_properties(${testname} PROPERTIES LABELS "unit")
     if(ENABLE_OPENFAST)
-      # create symlink to nrelmw.fst 
+      # create symlink to nrelmw.fst
       execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
         ${CMAKE_BINARY_DIR}/reg_tests/test_files/nrel5MWactuatorLine/nrel5mw.fst
         ${CMAKE_CURRENT_BINARY_DIR}/test_files/${testname}/nrel5mw.fst
@@ -240,7 +240,7 @@ if(NOT ENABLE_CUDA)
   # Convergence tests
   #=============================================================================
   add_test_v2(BoussinesqNonIso 8)
-  
+
   #=============================================================================
   # Unit tests
   #=============================================================================
@@ -284,7 +284,7 @@ else(NOT ENABLE_CUDA)
   if (ENABLE_TIOGA AND ENABLE_HYPRE)
     add_test_r(oversetRotCylNGPHypre 2)
   endif()
-  
+
   #=============================================================================
   # Comparing solution norm tests
   #=============================================================================

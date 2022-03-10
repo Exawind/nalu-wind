@@ -144,6 +144,7 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
 
   HypreDirectSolver* solver = reinterpret_cast<HypreDirectSolver*>(linearSolver_);
   HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
+
   for (unsigned i = 0; i < nDim_; ++i) {
     if (config->simpleHypreMatrixAssemble()) {
 #if 0
@@ -154,9 +155,37 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
 #endif
     }
 
+    if (config->getWritePreassemblyMatrixFiles()) {
+      MPI_Barrier(realm_.bulk_data().parallel());
+
+      char rank_str[5];
+      sprintf(rank_str, "%05d", rank_);
+      std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);
+      const std::string rhsFileRows = eqSysName_ + std::to_string(i) +  ".IJV." + writeCounter + ".rhs." + std::string(rank_str) + ".preassem.i";
+      const std::string rhsFileVals = eqSysName_ + std::to_string(i) +  ".IJV." + writeCounter + ".rhs." + std::string(rank_str) + ".preassem.v";
+      const std::string rhsFileMeta = eqSysName_ + std::to_string(i) +  ".IJV." + writeCounter + ".rhs." + std::string(rank_str) + ".preassem.meta";
+
+      FILE * fid = fopen(rhsFileRows.c_str(), "wb");
+      fwrite(rhs_rows_host_.data(), sizeof(HypreIntType), num_rows_owned+num_rows_shared, fid);
+      fclose(fid);
+
+      DoubleView2DHost temp("temp", hcApplier->rhs_uvm_.extent(0), hcApplier->nDim_);
+      Kokkos::deep_copy(temp, hcApplier->rhs_uvm_);
+      fid = fopen(rhsFileVals.c_str(), "wb");
+      fwrite(temp.data() + i * rhs_rows_uvm_.extent(0), sizeof(double), num_rows_owned+num_rows_shared, fid);
+      fclose(fid);
+
+      fid = fopen(rhsFileMeta.c_str(), "wb");
+      HypreIntType meta[3] = {num_rows_owned, num_rows_shared, (HypreIntType) rhs_rows_uvm_.extent(0)};
+      fwrite(meta, sizeof(HypreIntType), 3, fid);
+      fclose(fid);
+
+      MPI_Barrier(realm_.bulk_data().parallel());
+    }
+
     if (num_rows_owned) {
       /* Set the owned part */
-      HYPRE_IJVectorSetValues(rhs_[i], num_rows_owned, 
+      HYPRE_IJVectorSetValues(rhs_[i], num_rows_owned,
         rhs_rows_uvm_.data() + i * rhs_rows_uvm_.extent(0),
         hcApplier->rhs_uvm_.data() + i * rhs_rows_uvm_.extent(0));
     }
@@ -164,8 +193,8 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
     if (num_rows_shared) {
       /* Add the shared part */
       HYPRE_IJVectorAddToValues(
-        rhs_[i], num_rows_shared, 
-	rhs_rows_uvm_.data() + i * rhs_rows_uvm_.extent(0) + num_rows_owned,
+        rhs_[i], num_rows_shared,
+        rhs_rows_uvm_.data() + i * rhs_rows_uvm_.extent(0) + num_rows_owned,
         hcApplier->rhs_uvm_.data() + i * rhs_rows_uvm_.extent(0) + num_rows_owned);
     }
   }
@@ -360,6 +389,9 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
   std::vector<double> finalNorm(nDim_, 1.0);
   std::vector<double> rhsNorm(nDim_, std::numeric_limits<double>::max());
 
+  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
+  HYPRE_SetSpGemmUseCusparse(config->getUseCusparseSGEMM());
+
   for (unsigned d = 0; d < nDim_; ++d) {
     status = solver->solve(d, iters[d], finalNorm[d], realm_.isFinalOuterIter_);
   }
@@ -376,6 +408,8 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
         eqSysName_ + std::to_string(d) + ".IJV." + writeCounter + ".sln";
       HYPRE_IJVectorPrint(sln_[d], slnFile.c_str());
     }
+  }
+  if (solver->getConfig()->getWriteMatrixFiles() || config->getWritePreassemblyMatrixFiles()) {
     ++eqSys_->linsysWriteCounter_;
   }
 
@@ -603,10 +637,10 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::sum_into(
       for (unsigned k = 0; k < numEntities; ++k) {
         /* search sorted list from where we left off */
         HypreIntType col = localIds[k];
-	while(cols_uvm_ra_(matIndex)<col) matIndex++;
+        while(cols_uvm_ra_(matIndex)<col) matIndex++;
         /* write the matrix element */
         Kokkos::atomic_add(&values_uvm_(matIndex), lhs(ix, sortPermutation[k]));
-	matIndex++;
+        matIndex++;
       }
       for (unsigned d = 0; d < nDim; ++d) {
         int ir = ix + d;
@@ -620,10 +654,10 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::sum_into(
       for (unsigned k = 0; k < numEntities; ++k) {
         /* search sorted list from where we left off */
         HypreIntType col = localIds[k];
-	while(cols_uvm_ra_(matIndex)<col) matIndex++;
+        while(cols_uvm_ra_(matIndex)<col) matIndex++;
         /* write the matrix element */
         Kokkos::atomic_add(&values_uvm_(matIndex), lhs(ix, sortPermutation[k]));
-	matIndex++;
+        matIndex++;
       }
 
       unsigned rhsIndex = rhs_row_start_shared_(index) + (iUpper-iLower+1);
@@ -676,7 +710,7 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::reset_rows(
       unsigned upper = mat_row_start_owned_ra_(index + 1);
       for (unsigned k = lower; k < upper; ++k) {
         values_uvm_(k) = 0.0;
-	if (cols_uvm_ra_(k)==hid) values_uvm_(k) = diag_value;
+        if (cols_uvm_ra_(k)==hid) values_uvm_(k) = diag_value;
       }
       for (unsigned d = 0; d < nDim; ++d)
         rhs_uvm_(index, d) = rhs_residual;
@@ -690,7 +724,7 @@ HypreUVWLinearSystem::HypreUVWLinSysCoeffApplier::reset_rows(
       unsigned upper = mat_row_start_shared_ra_(index + 1) + memShift;
       for (unsigned k = lower; k < upper; ++k) {
         values_uvm_(k) = 0.0;
-	if (cols_uvm_ra_(k)==hid) values_uvm_(k) = diag_value;
+        if (cols_uvm_ra_(k)==hid) values_uvm_(k) = diag_value;
       }
       unsigned rhsIndex = rhs_row_start_shared_(index) + (iUpper-iLower+1);
       for (unsigned d = 0; d < nDim; ++d)
