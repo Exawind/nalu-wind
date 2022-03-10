@@ -31,6 +31,13 @@ HypreLinearSystem::HypreLinearSystem(
   localMatSharedRowCounts_.clear();
   globalRhsSharedRowCounts_.clear();
   localRhsSharedRowCounts_.clear();
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  sprintf(oname_,"debug_out_%d.txt",rank_);
+  output_ = fopen(oname_, "wt");
+  fprintf(output_, "rank_=%d EqnName=%s : %s %s %d\n",
+          rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__);
+  fclose(output_);
+#endif
 }
 
 HypreLinearSystem::~HypreLinearSystem()
@@ -855,13 +862,13 @@ HypreLinearSystem::finalizeLinearSystem()
   size_t used2 = 0, free2 = 0;
   stk::get_gpu_memory_info(used2, free2);
   size_t total = used2 + free2;
-  if (rank_ == 0) {
-    printf(
-      "rank_=%d EqnName=%s : %s %s %d : usedMem before=%1.5g, usedMem "
-      "after=%1.5g, total=%1.5g\n",
-      rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__, used1 / 1.e9,
-      used2 / 1.e9, total / 1.e9);
-  }
+  output_ = fopen(oname_, "at");
+  fprintf(output_,
+          "rank_=%d EqnName=%s : %s %s %d : usedMem before=%1.5g, usedMem "
+          "after=%1.5g, total=%1.5g\n",
+          rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__, used1 / 1.e9,
+          used2 / 1.e9, total / 1.e9);
+  fclose(output_);
 #endif
 
   // At this stage the LHS and RHS data structures are ready for
@@ -1328,12 +1335,12 @@ HypreLinearSystem::buildCoeffApplierDeviceDataStructures()
 
   // size_t used = 0, free = 0;
   // stk::get_gpu_memory_info(used, free);
-  if (rank_ == 0) {
-    printf(
-      "rank_=%d : %s %s %d : totalMemDevice=%1.5g, totalMemUVM=%1.5g\n", rank_,
-      __FILE__, __FUNCTION__, __LINE__, totalMemDevice / 1.e9,
-      totalMemUVM / 1.e9);
-  }
+  output_ = fopen(oname_, "at");
+  fprintf(output_,
+          "rank_=%d : %s %s %d : totalMemDevice=%1.5g, totalMemUVM=%1.5g\n", rank_,
+          __FILE__, __FUNCTION__, __LINE__, totalMemDevice / 1.e9,
+          totalMemUVM / 1.e9);
+  fclose(output_);
 #endif
 
   /* clear this data so that the next time a coeffApplier is built, these get
@@ -1569,12 +1576,20 @@ HypreLinearSystem::hypreIJMatrixSetAddToValues()
     /* Set the owned part */
     HYPRE_IJMatrixSetValues2(mat_, num_nonzeros_owned, NULL, rows_uvm_.data(), NULL,
                              hcApplier->cols_uvm_.data(), hcApplier->values_uvm_.data());
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+    scanBufferForBadValues(hcApplier->values_dev_.data(), num_nonzeros_owned, __FILE__,__FUNCTION__,__LINE__,"Owned Matrix");
+    scanOwnedIndicesForBadValues(rows_dev_.data(), hcApplier->cols_dev_.data(), num_nonzeros_owned, __FILE__,__FUNCTION__,__LINE__);
+#endif
   }
 
   if (num_nonzeros_shared) {
     /* Add the shared part */
     HYPRE_IJMatrixAddToValues2(mat_, num_nonzeros_shared, NULL, rows_uvm_.data()+num_nonzeros_owned, NULL,
                                hcApplier->cols_uvm_.data()+num_nonzeros_owned, hcApplier->values_uvm_.data()+num_nonzeros_owned);
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+    scanBufferForBadValues(hcApplier->values_dev_.data()+num_nonzeros_owned, num_nonzeros_shared, __FILE__,__FUNCTION__,__LINE__,"Shared Matrix");
+    scanSharedIndicesForBadValues(rows_dev_.data()+num_nonzeros_owned, hcApplier->cols_dev_.data()+num_nonzeros_owned, num_nonzeros_shared, __FILE__,__FUNCTION__,__LINE__);
+#endif
   }
 }
 
@@ -1753,6 +1768,21 @@ HypreLinearSystem::loadCompleteSolver()
   HYPRE_IJMatrixAssemble(mat_);
   HYPRE_IJMatrixGetObject(mat_, (void**)&(solver->parMat_));
 
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  hypre_CSRMatrix *diag = hypre_ParCSRMatrixDiag((hypre_ParCSRMatrix*)hypre_IJMatrixObject(mat_));
+  hypre_CSRMatrix *offd = hypre_ParCSRMatrixOffd((hypre_ParCSRMatrix*)hypre_IJMatrixObject(mat_));
+  HYPRE_Int nnz_diag = hypre_CSRMatrixNumNonzeros(diag);
+  HYPRE_Int nnz_offd = hypre_CSRMatrixNumNonzeros(offd);
+  double * ptr_diag = hypre_CSRMatrixData(diag);
+  double * ptr_offd = hypre_CSRMatrixData(offd);
+  scanBufferForBadValues(ptr_diag, nnz_diag, __FILE__,__FUNCTION__,__LINE__,"Diag Matrix");
+  scanBufferForBadValues(ptr_offd, nnz_offd, __FILE__,__FUNCTION__,__LINE__,"Offd Matrix");
+  output_ = fopen(oname_, "at");
+  fprintf(output_, "rank=%d : diag num_rows=%d, num_cols=%d, offd num_rows=%d, num_cols=%d\n",rank_,
+         hypre_CSRMatrixNumRows(diag),hypre_CSRMatrixNumCols(diag),hypre_CSRMatrixNumRows(offd),hypre_CSRMatrixNumCols(offd));
+  fclose(output_);
+#endif
+
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 +
@@ -1836,6 +1866,14 @@ HypreLinearSystem::zeroSystem()
 {
   HypreDirectSolver* solver =
     reinterpret_cast<HypreDirectSolver*>(linearSolver_);
+
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  sprintf(oname_,"debug_out_%d.txt",rank_);
+  output_ = fopen(oname_, "wt");
+  fprintf(output_, "rank_=%d EqnName=%s : %s %s %d\n",
+          rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__);
+  fclose(output_);
+#endif
 
   // It is unsafe to call IJMatrixInitialize multiple times without intervening
   // call to IJMatrixAssemble. This occurs during the first outer iteration (of
@@ -2346,7 +2384,17 @@ HypreLinearSystem::solve(stk::mesh::FieldBase* linearSolutionField)
   HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
   HYPRE_SetSpGemmUseCusparse(config->getUseCusparseSGEMM());
 
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  output_ = fopen(oname_, "at");
+  fprintf(output_, "%s %s %d %s : rank=%d\n",__FILE__,__FUNCTION__,__LINE__,eqSysName_.c_str(),rank_);
+#endif
+
   status = solver->solve(iters, finalResidNorm, realm_.isFinalOuterIter_);
+
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  output_ = fopen(oname_, "at");
+  fprintf(output_, "%s %s %d %s : rank=%d\n",__FILE__,__FUNCTION__,__LINE__,eqSysName_.c_str(),rank_);
+#endif
 
   /* set this after the solve calls */
   solver->set_initialize_solver_flag();
@@ -2462,8 +2510,76 @@ HypreLinearSystem::copy_hypre_to_stk(stk::mesh::FieldBase* stkField)
 
   double gblnorm2 = 0.0;
   stk::all_reduce_sum(bulk.parallel(), &rhsnorm2, &gblnorm2, 1);
+
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  scanBufferForBadValues(rhs_data, N, __FILE__,__FUNCTION__,__LINE__,"RHS");
+  scanBufferForBadValues(sln_data, N, __FILE__,__FUNCTION__,__LINE__,"SLN");
+#endif
+
   return std::sqrt(gblnorm2);
 }
+
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+void
+HypreLinearSystem::scanBufferForBadValues(double * ptr, int N, const char * file, const char * func, int line, char * bufferName)
+{
+  output_ = fopen(oname_, "at");
+  bool foundBadValue=false;
+  int index=-1;
+  double value=0;
+  for (int i=0; i<N; ++i)
+    if (!std::isfinite(ptr[i])) {
+      foundBadValue=true;
+      index = i;
+      value = ptr[i];
+      break;
+    }
+  if (foundBadValue)
+    fprintf(output_, "%s %s %d %s : Found Bad %s value %1.15g at %d on rank %d\n",file,func,line,eqSysName_.c_str(),bufferName,value,index,rank_);
+  else
+    fprintf(output_, "%s %s %d %s : All %s values good on rank %d\n",file,func,line,eqSysName_.c_str(),bufferName,rank_);
+  fclose(output_);
+  return;
+}
+
+void
+HypreLinearSystem::scanOwnedIndicesForBadValues(HypreIntType * rows, HypreIntType * cols, int N, const char * file, const char * func, int line)
+{
+  output_ = fopen(oname_, "at");
+  for (int i=0; i<N; ++i) {
+    if (rows[i]<0 || rows[i]>=globalNumRows_ || cols[i]<0 || cols[i]>=globalNumRows_) {
+      fprintf(output_, "Very Bad : %s %s %d %s, Owned Matrix : Found Row/Column Index (%d,%d) outside of (%d, %d) at %d on rank %d\n",file,func,line,eqSysName_.c_str(),rows[i],cols[i],0,globalNumRows_,i,rank_);
+      return;
+    }
+    else if (rows[i]<iLower_ || rows[i]>iUpper_) {
+      fprintf(output_, "Bad : %s %s %d %s, Owned Matrix : Found Row/Column Index (%d,%d) outside range (%d, %d) at %d on rank %d\n",file,func,line,eqSysName_.c_str(),rows[i],cols[i],iLower_,iUpper_,i,rank_);
+      return;
+    }
+  }
+  fprintf(output_, "%s %s %d %s : All Owned Indices good on rank %d\n",file,func,line,eqSysName_.c_str(),rank_);
+  fclose(output_);
+  return;
+}
+
+void
+HypreLinearSystem::scanSharedIndicesForBadValues(HypreIntType * rows, HypreIntType * cols, int N, const char * file, const char * func, int line)
+{
+  output_ = fopen(oname_, "at");
+  for (int i=0; i<N; ++i) {
+    if (rows[i]<0 || rows[i]>=globalNumRows_ || cols[i]<0 || cols[i]>=globalNumRows_) {
+      fprintf(output_, "Very Bad : %s %s %d %s, Shared Matrix : Found Row/Column Index (%d,%d) outside of (%d, %d) at %d on rank %d\n",file,func,line,eqSysName_.c_str(),rows[i],cols[i],0,globalNumRows_,i,rank_);
+      return;
+    }
+    else if (rows[i]>=iLower_ && rows[i]<=iUpper_) {
+      fprintf(output_, "Bad : %s %s %d %s, Shared Matrix : Found Row/Column Index (%d,%d) inside range (%d, %d) at %d on rank %d\n",file,func,line,eqSysName_.c_str(),rows[i],cols[i],iLower_,iUpper_,i,rank_);
+      return;
+    }
+  }
+  fprintf(output_, "%s %s %d %s : All Shared Indices good on rank %d\n",file,func,line,eqSysName_.c_str(),rank_);
+  fclose(output_);
+  return;
+}
+#endif
 
 } // namespace nalu
 } // namespace sierra

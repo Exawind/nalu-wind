@@ -152,6 +152,11 @@ public:
   HypreIntTypeView2DUVM rhs_rows_uvm_;
   HypreIntTypeView2DHost rhs_rows_host_;  
 
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  FILE * output_ = NULL;
+  char oname_[50];
+#endif
+
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   struct timeval _start, _stop;
   std::vector<double> buildBeginLinSysConstTimer_;
@@ -230,6 +235,12 @@ public:
   //! Helper method to transfer the solution from a HYPRE_IJVector instance to
   //! the STK field data instance.
   double copy_hypre_to_stk(stk::mesh::FieldBase*);
+
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  void scanBufferForBadValues(double * ptr, int N, const char * file, const char * func, int line, char *bufferName);
+  void scanOwnedIndicesForBadValues(HypreIntType * rows, HypreIntType * cols, int N, const char * file, const char * func, int line);
+  void scanSharedIndicesForBadValues(HypreIntType * rows, HypreIntType * cols, int N, const char * file, const char * func, int line);
+#endif
 
   /** Populate the LHS and RHS for the Dirichlet rows in linear system
    */

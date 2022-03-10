@@ -22,6 +22,12 @@ HypreUVWLinearSystem::HypreUVWLinearSystem(
     sln_(numDof, nullptr),
     nDim_(numDof)
 {
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  output_ = fopen(oname_, "at");
+  fprintf(output_, "rank_=%d EqnName=%s : %s %s %d\n",
+          rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__);
+  fclose(output_);
+#endif
 }
 
 HypreUVWLinearSystem::~HypreUVWLinearSystem()
@@ -85,13 +91,13 @@ HypreUVWLinearSystem::finalizeLinearSystem()
   size_t used2 = 0, free2 = 0;
   stk::get_gpu_memory_info(used2, free2);
   size_t total = used2 + free2;
-  if (rank_ == 0) {
-    printf(
-      "rank_=%d EqnName=%s : %s %s %d : usedMem before=%1.5g, usedMem "
-      "after=%1.5g, total=%1.5g\n",
-      rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__, used1 / 1.e9,
-      used2 / 1.e9, total / 1.e9);
-  }
+  output_ = fopen(oname_, "at");
+  fprintf(output_,
+          "rank_=%d EqnName=%s : %s %s %d : usedMem before=%1.5g, usedMem "
+          "after=%1.5g, total=%1.5g\n",
+          rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__, used1 / 1.e9,
+          used2 / 1.e9, total / 1.e9);
+  fclose(output_);
 #endif
 
   // At this stage the LHS and RHS data structures are ready for
@@ -188,6 +194,10 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
       HYPRE_IJVectorSetValues(rhs_[i], num_rows_owned,
         rhs_rows_uvm_.data() + i * rhs_rows_uvm_.extent(0),
         hcApplier->rhs_uvm_.data() + i * rhs_rows_uvm_.extent(0));
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+      double * ptr = hcApplier->rhs_dev_.data() + i * rhs_rows_dev_.extent(0);
+      scanBufferForBadValues(ptr, num_rows_owned, __FILE__,__FUNCTION__,__LINE__,"Owned RHS");
+#endif
     }
 
     if (num_rows_shared) {
@@ -196,6 +206,10 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
         rhs_[i], num_rows_shared,
         rhs_rows_uvm_.data() + i * rhs_rows_uvm_.extent(0) + num_rows_owned,
         hcApplier->rhs_uvm_.data() + i * rhs_rows_uvm_.extent(0) + num_rows_owned);
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+      double * ptr = hcApplier->rhs_dev_.data() + i * rhs_rows_dev_.extent(0) + num_rows_owned;
+      scanBufferForBadValues(ptr, num_rows_shared, __FILE__,__FUNCTION__,__LINE__,"Shared RHS");
+#endif
     }
   }
 }
@@ -259,6 +273,21 @@ HypreUVWLinearSystem::loadCompleteSolver()
   HYPRE_IJMatrixAssemble(mat_);
   HYPRE_IJMatrixGetObject(mat_, (void**)&(solver->parMat_));
 
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  hypre_CSRMatrix *diag = hypre_ParCSRMatrixDiag((hypre_ParCSRMatrix*)hypre_IJMatrixObject(mat_));
+  hypre_CSRMatrix *offd = hypre_ParCSRMatrixOffd((hypre_ParCSRMatrix*)hypre_IJMatrixObject(mat_));
+  HYPRE_Int nnz_diag = hypre_CSRMatrixNumNonzeros(diag);
+  HYPRE_Int nnz_offd = hypre_CSRMatrixNumNonzeros(offd);
+  double * ptr_diag = hypre_CSRMatrixData(diag);
+  double * ptr_offd = hypre_CSRMatrixData(offd);
+  scanBufferForBadValues(ptr_diag, nnz_diag, __FILE__,__FUNCTION__,__LINE__,"Diag Matrix");
+  scanBufferForBadValues(ptr_offd, nnz_offd, __FILE__,__FUNCTION__,__LINE__,"Offd Matrix");
+  output_ = fopen(oname_, "at");
+  fprintf(output_, "rank=%d : diag num_rows=%d, num_cols=%d, offd num_rows=%d, num_cols=%d\n",rank_,
+         hypre_CSRMatrixNumRows(diag),hypre_CSRMatrixNumCols(diag),hypre_CSRMatrixNumRows(offd),hypre_CSRMatrixNumCols(offd));
+  fclose(output_);
+#endif
+
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 +
@@ -273,6 +302,15 @@ HypreUVWLinearSystem::loadCompleteSolver()
 
     HYPRE_IJVectorAssemble(sln_[i]);
     HYPRE_IJVectorGetObject(sln_[i], (void**)&(solver->parSlnU_[i]));
+
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+    double* rhs_data = hypre_VectorData(
+        hypre_ParVectorLocalVector((hypre_ParVector*)hypre_IJVectorObject(rhs_[i])));
+    double* sln_data = hypre_VectorData(
+        hypre_ParVectorLocalVector((hypre_ParVector*)hypre_IJVectorObject(sln_[i])));
+    scanBufferForBadValues(rhs_data, numRows_, __FILE__,__FUNCTION__,__LINE__,"RHS");
+    scanBufferForBadValues(sln_data, numRows_, __FILE__,__FUNCTION__,__LINE__,"SLN");
+#endif
   }
 
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
@@ -297,6 +335,15 @@ void
 HypreUVWLinearSystem::zeroSystem()
 {
   HypreUVWSolver* solver = reinterpret_cast<HypreUVWSolver*>(linearSolver_);
+
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  sprintf(oname_,"debug_out_%d.txt",rank_);
+  output_ = fopen(oname_, "wt");
+  fprintf(output_, "rank_=%d EqnName=%s : %s %s %d\n",
+          rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__);
+  fclose(output_);
+#endif
+
   if (matrixAssembled_) {
     HYPRE_IJMatrixInitialize(mat_);
     for (unsigned i = 0; i < nDim_; ++i) {
@@ -392,9 +439,20 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
   HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
   HYPRE_SetSpGemmUseCusparse(config->getUseCusparseSGEMM());
 
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  output_ = fopen(oname_, "at");
+  fprintf(output_, "%s %s %d %s : rank=%d\n",__FILE__,__FUNCTION__,__LINE__,eqSysName_.c_str(),rank_);
+#endif
+
   for (unsigned d = 0; d < nDim_; ++d) {
     status = solver->solve(d, iters[d], finalNorm[d], realm_.isFinalOuterIter_);
   }
+
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  output_ = fopen(oname_, "at");
+  fprintf(output_, "%s %s %d %s : rank=%d\n",__FILE__,__FUNCTION__,__LINE__,eqSysName_.c_str(),rank_);
+#endif
+
   copy_hypre_to_stk(slnField, rhsNorm);
   sync_field(slnField);
 
@@ -572,6 +630,18 @@ HypreUVWLinearSystem::copy_hypre_to_stk(
   stk::all_reduce_sum(bulk.parallel(), rhsnorm.data(), rhsNorm.data(), nDim);
   for (unsigned i = 0; i < nDim; ++i)
     rhsNorm[i] = std::sqrt(rhsNorm[i]);
+
+#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+  for (unsigned d = 0; d < nDim; ++d) {
+    double* rhs_data = hypre_VectorData(hypre_ParVectorLocalVector(
+                                            (hypre_ParVector*)hypre_IJVectorObject(rhs_[d])));
+    double* sln_data = hypre_VectorData(hypre_ParVectorLocalVector(
+      (hypre_ParVector*)hypre_IJVectorObject(sln_[d])));
+
+    scanBufferForBadValues(rhs_data, numRows_, __FILE__,__FUNCTION__,__LINE__,"RHS");
+    scanBufferForBadValues(sln_data, numRows_, __FILE__,__FUNCTION__,__LINE__,"SLN");
+  }
+#endif
 }
 
 sierra::nalu::CoeffApplier*
