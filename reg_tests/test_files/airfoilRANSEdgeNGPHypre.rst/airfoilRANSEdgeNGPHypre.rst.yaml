@@ -24,6 +24,9 @@ linear_solvers:
     write_matrix_files: no
     simple_hypre_matrix_assemble: no
     dump_hypre_matrix_stats: no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    write_preassembly_matrix_files: no
 
     # File containing hypre specific configuration options
     hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
@@ -41,6 +44,9 @@ linear_solvers:
     write_matrix_files: no
     simple_hypre_matrix_assemble: no
     dump_hypre_matrix_stats: no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    write_preassembly_matrix_files: no
 
     # File containing hypre specific configuration options
     hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml
@@ -58,6 +64,9 @@ linear_solvers:
     write_matrix_files: no
     simple_hypre_matrix_assemble: no
     dump_hypre_matrix_stats: no
+    recompute_preconditioner_frequency: 1
+    reuse_linear_system: yes
+    write_preassembly_matrix_files: no
 
     # File containing hypre specific configuration options
     hypre_cfg_file: ../../hypre_settings/hypre_blade_resolved.yaml

@@ -29,8 +29,9 @@ namespace nalu_hypre {
 inline void hypre_initialize()
 {
   HYPRE_Init();
-  hypre_HandleDefaultExecPolicy(hypre_handle()) = HYPRE_EXEC_DEVICE;
-  hypre_HandleSpgemmUseCusparse(hypre_handle()) = 0;
+  HYPRE_SetMemoryLocation(HYPRE_MEMORY_DEVICE);
+  HYPRE_SetExecutionPolicy(HYPRE_EXEC_DEVICE);
+  HYPRE_SetUseGpuRand(true);
 }
 
 inline void hypre_finalize()
@@ -40,8 +41,12 @@ inline void hypre_finalize()
 
 #else
 
-inline void hypre_initialize() {}
-inline void hypre_finalize() {}
+inline void hypre_initialize() {
+  HYPRE_Init();
+}
+inline void hypre_finalize() {
+  HYPRE_Finalize();
+}
 
 #endif
 }
