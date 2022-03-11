@@ -78,8 +78,6 @@ private:
   bool lengthScaleLimiter_;
   NodeKernelTraits::DblType corfac_;
   NodeKernelTraits::DblType referenceVelocity_;
-  NodeKernelTraits::DblType gammaOne_;
-  NodeKernelTraits::DblType gammaTwo_;
 };
 
 }  // nalu
