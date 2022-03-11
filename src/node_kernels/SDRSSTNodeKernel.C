@@ -131,9 +131,9 @@ SDRSSTNodeKernel::execute(
     const DblType cEpsOneStar_two = cEpsOne_two + (cEpsTwo_two - cEpsOne_two) * (l_t/l_e);
     gammaTwo_apply = cEpsOneStar_two - 1.;
   }
-  else{ 
-   gammaOne_apply = gammaOne_;
-   gammaTwo_apply = gammaTwo_; 
+  else{
+    gammaOne_apply = gammaOne_;
+    gammaTwo_apply = gammaTwo_; 
   } 
   const DblType gamma = fOneBlend * gammaOne_apply + omf1 * gammaTwo_apply;
 
