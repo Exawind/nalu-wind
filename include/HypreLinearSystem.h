@@ -513,8 +513,6 @@ protected:
    */
   virtual void beginLinearSystemConstruction();
 
-  virtual void finalizeSolver();
-
   virtual void loadCompleteSolver();
 
   /** Return the Hypre ID corresponding to the given STK node entity
@@ -555,11 +553,8 @@ protected:
   //! Maximum Row ID in the Hypre linear system
   HypreIntType maxRowID_;
 
-  //! Flag indicating whether IJMatrixAssemble has been called on the system
-  bool matrixAssembled_{false};
-
-  //! Flag indicating whether the linear system has been initialized
-  bool systemInitialized_{false};
+  //! Flag indicating whether the linear system has been created and initialized
+  bool hypreMatrixVectorCreated_{false};
 
   //! Flag indicating whether the linear system has been initialized
   bool matrixStatsDumped_{false};

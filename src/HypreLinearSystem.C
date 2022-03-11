@@ -42,11 +42,11 @@ HypreLinearSystem::HypreLinearSystem(
 
 HypreLinearSystem::~HypreLinearSystem()
 {
-  if (systemInitialized_) {
+  if (hypreMatrixVectorCreated_) {
     HYPRE_IJMatrixDestroy(mat_);
     HYPRE_IJVectorDestroy(rhs_);
     HYPRE_IJVectorDestroy(sln_);
-    systemInitialized_ = false;
+    hypreMatrixVectorCreated_ = false;
   }
 
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
@@ -852,9 +852,6 @@ HypreLinearSystem::finalizeLinearSystem()
   /* fill the various device data structures need in device coeff applier */
   buildCoeffApplierDeviceDataStructures();
 
-  /* Call finalize solver here */
-  finalizeSolver();
-
   /* compute the exact row sizes by reducing row counts at row indices across all ranks */
   computeRowSizes();
 
@@ -870,10 +867,6 @@ HypreLinearSystem::finalizeLinearSystem()
           used2 / 1.e9, total / 1.e9);
   fclose(output_);
 #endif
-
-  // At this stage the LHS and RHS data structures are ready for
-  // sumInto/assembly.
-  systemInitialized_ = true;
 
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
@@ -980,40 +973,6 @@ HypreLinearSystem::computeRowSizes()
 
   rhs_rows_dev_ = HypreIntTypeView2D("rhs_rows_dev", totalRhsElmts, hcApplier->nDim_);
   Kokkos::deep_copy(rhs_rows_dev_, rhs_rows_host_);
-}
-
-
-void
-HypreLinearSystem::finalizeSolver()
-{
-  MPI_Comm comm = realm_.bulk_data().parallel();
-
-  // Now perform HYPRE assembly so that the data structures are ready to be used
-  // by the solvers/preconditioners.
-  HypreDirectSolver* solver =
-    reinterpret_cast<HypreDirectSolver*>(linearSolver_);
-
-  if (systemInitialized_) {
-    HYPRE_IJMatrixDestroy(mat_);
-    HYPRE_IJVectorDestroy(rhs_);
-    HYPRE_IJVectorDestroy(sln_);
-    systemInitialized_ = false;
-  }
-
-  HYPRE_IJMatrixCreate(comm, iLower_, iUpper_, jLower_, jUpper_, &mat_);
-  HYPRE_IJMatrixSetObjectType(mat_, HYPRE_PARCSR);
-  HYPRE_IJMatrixInitialize(mat_);
-  HYPRE_IJMatrixGetObject(mat_, (void**)&(solver->parMat_));
-
-  HYPRE_IJVectorCreate(comm, iLower_, iUpper_, &rhs_);
-  HYPRE_IJVectorSetObjectType(rhs_, HYPRE_PARCSR);
-  HYPRE_IJVectorInitialize(rhs_);
-  HYPRE_IJVectorGetObject(rhs_, (void**)&(solver->parRhs_));
-
-  HYPRE_IJVectorCreate(comm, iLower_, iUpper_, &sln_);
-  HYPRE_IJVectorSetObjectType(sln_, HYPRE_PARCSR);
-  HYPRE_IJVectorInitialize(sln_);
-  HYPRE_IJVectorGetObject(sln_, (void**)&(solver->parSln_));
 }
 
 /**************************************************************/
@@ -1536,7 +1495,7 @@ HypreLinearSystem::hypreIJMatrixSetAddToValues()
   if (config->getWritePreassemblyMatrixFiles()) {
     MPI_Barrier(realm_.bulk_data().parallel());
 
-    char rank_str[5];
+    char rank_str[8];
     sprintf(rank_str, "%05d", rank_);
     std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);
     const std::string matFileRows = eqSysName_ + ".IJM." + writeCounter + ".mat." + std::string(rank_str) + ".preassem.i";
@@ -1611,7 +1570,7 @@ HypreLinearSystem::hypreIJVectorSetAddToValues()
   if (config->getWritePreassemblyMatrixFiles()) {
     MPI_Barrier(realm_.bulk_data().parallel());
 
-    char rank_str[5];
+    char rank_str[8];
     sprintf(rank_str, "%05d", rank_);
     std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);
     const std::string rhsFileRows = eqSysName_ + ".IJV." + writeCounter + ".rhs." + std::string(rank_str) + ".preassem.i";
@@ -1805,10 +1764,6 @@ HypreLinearSystem::loadCompleteSolver()
     dumpMatrixStats();
     matrixStatsDumped_ = true;
   }
-
-  // Set flag to indicate zeroSystem that the matrix must be reinitialized
-  // during the next invocation.
-  matrixAssembled_ = true;
 }
 
 void
@@ -1861,33 +1816,41 @@ HypreLinearSystem::zeroSystem()
   HypreDirectSolver* solver =
     reinterpret_cast<HypreDirectSolver*>(linearSolver_);
 
+  MPI_Comm comm = realm_.bulk_data().parallel();
+
+  if (hypreMatrixVectorCreated_) {
 #ifdef HYPRE_LINEAR_SYSTEM_DEBUG
-  sprintf(oname_,"debug_out_%d.txt",rank_);
-  output_ = fopen(oname_, "wt");
-  fprintf(output_, "rank_=%d EqnName=%s : %s %s %d\n",
-          rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__);
-  fclose(output_);
+      sprintf(oname_,"debug_out_%d.txt",rank_);
+      output_ = fopen(oname_, "wt");
+      fprintf(output_, "rank_=%d EqnName=%s : %s %s %d\n",
+              rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__);
+      fclose(output_);
 #endif
-
-  // It is unsafe to call IJMatrixInitialize multiple times without intervening
-  // call to IJMatrixAssemble. This occurs during the first outer iteration (of
-  // first timestep in static application and every timestep in moving mesh
-  // applications) when the data structures have been created but never used and
-  // zeroSystem is called for a reset. Include a check to ensure we only
-  // initialize if it was previously assembled.
-  if (matrixAssembled_) {
-    HYPRE_IJMatrixInitialize(mat_);
-    HYPRE_IJVectorInitialize(rhs_);
-    HYPRE_IJVectorInitialize(sln_);
-
-    // Set flag to false until next invocation of IJMatrixAssemble in
-    // loadComplete
-    matrixAssembled_ = false;
+    HYPRE_IJMatrixDestroy(mat_);
+    HYPRE_IJVectorDestroy(rhs_);
+    HYPRE_IJVectorDestroy(sln_);
+    hypreMatrixVectorCreated_ = false;
   }
 
+  HYPRE_IJMatrixCreate(comm, iLower_, iUpper_, jLower_, jUpper_, &mat_);
+  HYPRE_IJMatrixSetObjectType(mat_, HYPRE_PARCSR);
+  HYPRE_IJMatrixInitialize(mat_);
+  HYPRE_IJMatrixGetObject(mat_, (void**)&(solver->parMat_));
   HYPRE_IJMatrixSetConstantValues(mat_, 0.0);
+
+  HYPRE_IJVectorCreate(comm, iLower_, iUpper_, &rhs_);
+  HYPRE_IJVectorSetObjectType(rhs_, HYPRE_PARCSR);
+  HYPRE_IJVectorInitialize(rhs_);
+  HYPRE_IJVectorGetObject(rhs_, (void**)&(solver->parRhs_));
   HYPRE_ParVectorSetConstantValues(solver->parRhs_, 0.0);
+
+  HYPRE_IJVectorCreate(comm, iLower_, iUpper_, &sln_);
+  HYPRE_IJVectorSetObjectType(sln_, HYPRE_PARCSR);
+  HYPRE_IJVectorInitialize(sln_);
+  HYPRE_IJVectorGetObject(sln_, (void**)&(solver->parSln_));
   HYPRE_ParVectorSetConstantValues(solver->parSln_, 0.0);
+
+  hypreMatrixVectorCreated_ = true;
 }
 
 sierra::nalu::CoeffApplier*
