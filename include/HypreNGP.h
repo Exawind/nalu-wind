@@ -42,10 +42,8 @@ inline void hypre_finalize()
 #else
 
 inline void hypre_initialize() {
-  HYPRE_Init();
 }
 inline void hypre_finalize() {
-  HYPRE_Finalize();
 }
 
 #endif
