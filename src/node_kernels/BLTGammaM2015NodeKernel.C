@@ -27,6 +27,9 @@ BLTGammaM2015NodeKernel::BLTGammaM2015NodeKernel(
     viscID_(get_field_ordinal(meta, "viscosity")),
     dudxID_(get_field_ordinal(meta, "dudx")),
     minDID_(get_field_ordinal(meta, "minimum_distance_to_wall")),
+    dWallDistdxID_(get_field_ordinal(meta, "dWallDistdx")),
+    dNDotVdxID_(get_field_ordinal(meta, "dNDotVdx")),
+    NDotVID_(get_field_ordinal(meta, "NDotV")),
     dualNodalVolumeID_(get_field_ordinal(meta, "dual_nodal_volume")),
     coordinatesID_(get_field_ordinal(meta, "coordinates")),
     velocityNp1ID_(get_field_ordinal(meta, "velocity")),
@@ -45,6 +48,9 @@ BLTGammaM2015NodeKernel::setup(Realm& realm)
   visc_            = fieldMgr.get_field<double>(viscID_);
   dudx_            = fieldMgr.get_field<double>(dudxID_);
   minD_            = fieldMgr.get_field<double>(minDID_);
+  dWallDistdx_     = fieldMgr.get_field<double>(dWallDistdxID_);
+  dNDotVdx_        = fieldMgr.get_field<double>(dNDotVdxID_);
+  NDotV_           = fieldMgr.get_field<double>(NDotVID_);
   dualNodalVolume_ = fieldMgr.get_field<double>(dualNodalVolumeID_);
   coordinates_     = fieldMgr.get_field<double>(coordinatesID_);
   velocityNp1_     = fieldMgr.get_field<double>(velocityNp1ID_);
@@ -127,6 +133,7 @@ BLTGammaM2015NodeKernel::execute(
   const DblType density   = density_.get(node, 0);
   const DblType visc      = visc_.get(node, 0);
   const DblType minD      = minD_.get(node, 0);
+  const DblType NDotV     = NDotV_.get(node, 0);
   const DblType dVol      = dualNodalVolume_.get(node, 0);
 
   // define the wall normal vector (for now, hardwire to NASA TM case: z = wall norm direction)
@@ -146,6 +153,7 @@ BLTGammaM2015NodeKernel::execute(
   DblType vortMag = 0.0;
 
   const DblType flength = 100.0;
+
   const DblType Ctu1=100.;
   const DblType Ctu2=1000.;
   const DblType Ctu3=1.0;
@@ -153,6 +161,9 @@ BLTGammaM2015NodeKernel::execute(
   for (int d = 0; d < nDim_; d++) {
     coords[d] = coordinates_.get(node, d);
     vel[d] = velocityNp1_.get(node, d);
+    dwalldistdx[d] = dWallDistdx_.get(node, d);
+    dndotvdx[d] = dNDotVdx_.get(node, d);
+    dvnn += dndotvdx[d] * dwalldistdx[d];
   }
 
   for (int i=0; i < nDim_; ++i) {
@@ -170,7 +181,7 @@ BLTGammaM2015NodeKernel::execute(
   sijMag = stk::math::sqrt(2.0*sijMag);
   vortMag = stk::math::sqrt(2.0*vortMag);
 
-  TuL = stk::math::min(81.6496580927726 * stk::math::sqrt(tke) / sdr / (minD + 1.0e-10), 100.0);
+  TuL = stk::math::min(TuL_const_ * stk::math::sqrt(tke) / sdr / (minD + 1.0e-10), 100.0);
   lamda0L = -7.57e-3 * dvnn * minD * minD *density / visc + 0.0128; // these floating numbers come directly from Menter (2015)
   lamda0L = stk::math::min(stk::math::max(lamda0L, -1.0), 1.0);
   Re0c = Ctu1 + Ctu2 * stk::math::exp(-Ctu3 * TuL * FPG(lamda0L));
@@ -178,7 +189,8 @@ BLTGammaM2015NodeKernel::execute(
   fonset1 = Rev / 2.2 / Re0c; // this floating number come directly from Menter (2015)
   fonset2 = stk::math::min(fonset1, 2.0);
   rt = density*tke/sdr/visc;
-  fonset3 = stk::math::max(0.0, 1.0 - 0.0233236151603499 * rt * rt * rt);
+
+  fonset3 = stk::math::max(0.0, 1.0 - fonset3_const_ * rt * rt * rt);
   fonset = stk::math::max(0.0, fonset2 - fonset3);
   fturb = stk::math::exp(-rt * rt * rt * rt / 16.0);
 

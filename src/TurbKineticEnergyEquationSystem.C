@@ -291,11 +291,9 @@ TurbKineticEnergyEquationSystem::register_interior_algorithm(
           break;
         case SST:
           if (!realm_.solutionOptions_->gammaEqActive_) {
-            NaluEnv::self().naluOutputP0() << "  call TKESSTNodeKernel  " << std::endl;
             nodeAlg.add_kernel<TKESSTNodeKernel>(realm_.meta_data());
           }
           else {
-            NaluEnv::self().naluOutputP0() << "  call TKESSTBLTM2015NodeKernel  " << std::endl;
             nodeAlg.add_kernel<TKESSTBLTM2015NodeKernel>(realm_.meta_data());
           }
           break;
@@ -396,6 +394,7 @@ TurbKineticEnergyEquationSystem::register_inflow_bc(
   else {
     throw std::runtime_error("TurbKineticEnergyEquationSystem: Attempted to set more than one inflow boundary");
   }
+
 
   // new it
   ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);

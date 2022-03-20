@@ -5,6 +5,15 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradEdgeAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradElemAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradBndryElemAlg.C
+
+  ${CMAKE_CURRENT_SOURCE_DIR}/WallDistGradEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/WallDistGradElemAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/WallDistGradBndryElemAlg.C
+
+  ${CMAKE_CURRENT_SOURCE_DIR}/NDotVGradEdgeAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/NDotVGradElemAlg.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/NDotVGradBndryElemAlg.C
+
   ${CMAKE_CURRENT_SOURCE_DIR}/EffDiffFluxCoeffAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/EffSSTDiffFluxCoeffAlg.C
   ${CMAKE_CURRENT_SOURCE_DIR}/EnthalpyEffDiffFluxCoeffAlg.C
@@ -35,6 +44,8 @@ target_sources(nalu PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/NgpAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/MdotAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/NodalGradAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/WallDistGradAlgDriver.C
+  ${CMAKE_CURRENT_SOURCE_DIR}/NDotVGradAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/TKEWallFuncAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/GeometryAlgDriver.C
   ${CMAKE_CURRENT_SOURCE_DIR}/WallFricVelAlgDriver.C

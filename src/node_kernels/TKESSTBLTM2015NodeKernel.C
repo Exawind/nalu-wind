@@ -95,6 +95,7 @@ TKESSTBLTM2015NodeKernel::execute(
   DblType vortMag   = 0.0;
   DblType velMag2   = 0.0;
   DblType Pk = 0.0;
+  DblType Dk = 0.0;
   DblType Pklim = 0.0;
   DblType tkeForcing = 0.0;
   DblType tc = 0.0;
@@ -134,10 +135,9 @@ TKESSTBLTM2015NodeKernel::execute(
   }
   else {
     if (timeStepCount_ >= iterSwitchTransition_) gamTMP = gamint;
-
     Pk = gamTMP * tvisc * sijMag * vortMag; // Pk based on Kato-Launder formulation. Recommended in Menter (2015) to avoid excessive levels of TKE in stagnation regions
     Pklim = 5.0 * Ck_BLT * stk::math::max(gamTMP - 0.20, 0.0) * (1.0 - gamTMP) * Fonlim * stk::math::max(3.0 * CSEP * visc - tvisc, 0.0) * sijMag * vortMag;
-    DblType Dk = betaStar_ * density * sdr * tke * stk::math::max(gamTMP, 0.1);
+    Dk = betaStar_ * density * sdr * tke * stk::math::max(gamTMP, 0.1);
 
     rhs(0) += (Pk + Pklim - Dk) * dVol;
     lhs(0, 0) += betaStar_ * density * sdr * stk::math::max(gamTMP, 0.1) * dVol;

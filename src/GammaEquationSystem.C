@@ -14,6 +14,7 @@
 #include <AssembleScalarNonConformalSolverAlgorithm.h>
 #include <AssembleNodeSolverAlgorithm.h>
 #include <AssembleNodalGradNonConformalAlgorithm.h>
+
 #include <AuxFunctionAlgorithm.h>
 #include <ConstantAuxFunction.h>
 #include <CopyFieldAlgorithm.h>
@@ -33,6 +34,7 @@
 #include <SolutionOptions.h>
 #include <TimeIntegrator.h>
 #include <SolverAlgorithmDriver.h>
+#include <WallDistEquationSystem.h>
 
 // template for supp algs
 #include <AlgTraits.h>
@@ -54,9 +56,19 @@
 
 // ngp
 #include "ngp_utils/NgpFieldBLAS.h"
+
 #include "ngp_algorithms/NodalGradEdgeAlg.h"
 #include "ngp_algorithms/NodalGradElemAlg.h"
 #include "ngp_algorithms/NodalGradBndryElemAlg.h"
+
+#include "ngp_algorithms/WallDistGradEdgeAlg.h"
+#include "ngp_algorithms/WallDistGradElemAlg.h"
+#include "ngp_algorithms/WallDistGradBndryElemAlg.h"
+
+#include "ngp_algorithms/NDotVGradEdgeAlg.h"
+#include "ngp_algorithms/NDotVGradElemAlg.h"
+#include "ngp_algorithms/NDotVGradBndryElemAlg.h"
+
 #include "ngp_algorithms/EffSSTDiffFluxCoeffAlg.h"
 #include "utils/StkHelpers.h"
 
@@ -100,12 +112,17 @@ GammaEquationSystem::GammaEquationSystem(
     managePNG_(realm_.get_consistent_mass_matrix_png("gamma_transition")),
     gamma_(NULL),
     dgamdx_(NULL),
+    dWallDistdx_(NULL),
+    dNDotVdx_(NULL),
     gamTmp_(NULL),
     minDistanceToWall_(NULL),
+    NDotV_(NULL),
     visc_(NULL),
     tvisc_(NULL),
     evisc_(NULL),
-    nodalGradAlgDriver_(realm_, "dgamdx")
+    nodalGradAlgDriver_(realm_, "dgamdx"),
+    walldistGradAlgDriver_(realm_, "dWallDistdx"),
+    ndotvGradAlgDriver_(realm_, "dNDotVdx")
 {
   dofName_ = "gamma_transition";
 
@@ -152,6 +169,18 @@ GammaEquationSystem::register_nodal_fields(
   dgamdx_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dgamdx"));
   stk::mesh::put_field_on_mesh(*dgamdx_, *part, nDim, nullptr);
 
+  dWallDistdx_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dWallDistdx"));
+  stk::mesh::put_field_on_mesh(*dWallDistdx_, *part, nDim, nullptr);
+
+  dNDotVdx_ =  &(meta_data.declare_field<VectorFieldType>(stk::topology::NODE_RANK, "dNDotVdx"));
+  stk::mesh::put_field_on_mesh(*dNDotVdx_, *part, nDim, nullptr);
+
+  NDotV_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "NDotV"));
+  stk::mesh::put_field_on_mesh(*NDotV_, *part, nullptr);
+
+  minDistanceToWall_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "minimum_distance_to_wall"));
+  stk::mesh::put_field_on_mesh(*minDistanceToWall_, *part, nullptr);
+
   // delta solution for linear solver; share delta since this is a split system
   gamTmp_ =  &(meta_data.declare_field<ScalarFieldType>(stk::topology::NODE_RANK, "gamTmp"));
   stk::mesh::put_field_on_mesh(*gamTmp_, *part, nullptr);
@@ -193,13 +222,36 @@ GammaEquationSystem::register_interior_algorithm(
   ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
-  if (edgeNodalGradient_ && realm_.realmUsesEdges_)
+  ScalarFieldType &minD = minDistanceToWall_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dWallDistdxNone = dWallDistdx_->field_of_state(stk::mesh::StateNone);
+
+  ScalarFieldType &NDotV = NDotV_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dNDotVdxNone = dNDotVdx_->field_of_state(stk::mesh::StateNone);
+
+  if (edgeNodalGradient_ && realm_.realmUsesEdges_) {
     nodalGradAlgDriver_.register_edge_algorithm<ScalarNodalGradEdgeAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone);
-  else
+
+    walldistGradAlgDriver_.register_edge_algorithm<ScalarWallDistGradEdgeAlg>(
+      algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone);
+
+    ndotvGradAlgDriver_.register_edge_algorithm<ScalarNDotVGradEdgeAlg>(
+      algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone);
+    }
+  else {
     nodalGradAlgDriver_.register_elem_algorithm<ScalarNodalGradElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone,
       edgeNodalGradient_);
+
+    walldistGradAlgDriver_.register_elem_algorithm<ScalarWallDistGradElemAlg>(
+      algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone,
+      edgeNodalGradient_);
+
+    ndotvGradAlgDriver_.register_elem_algorithm<ScalarNDotVGradElemAlg>(
+      algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone,
+      edgeNodalGradient_);
+
+  }
 
   // solver; interior contribution (advection + diffusion)
   if (!realm_.solutionOptions_->useConsolidatedSolverAlg_) {
@@ -245,9 +297,6 @@ GammaEquationSystem::register_interior_algorithm(
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg) {
         if (!elementMassAlg)
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), gamma_);
-          
-          NaluEnv::self().naluOutputP0() << "call BLTGammaM2015NodeKernel: " <<std::endl;
-
           nodeAlg.add_kernel<BLTGammaM2015NodeKernel>(realm_.meta_data());
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
@@ -288,6 +337,12 @@ GammaEquationSystem::register_inflow_bc(
 
   ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
+
+  ScalarFieldType &minD = minDistanceToWall_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dWallDistdxNone = dWallDistdx_->field_of_state(stk::mesh::StateNone);
+
+  ScalarFieldType &NDotV = NDotV_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dNDotVdxNone = dNDotVdx_->field_of_state(stk::mesh::StateNone);
 
   stk::mesh::MetaData &meta_data = realm_.meta_data();
 
@@ -332,6 +387,12 @@ GammaEquationSystem::register_inflow_bc(
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
 
+  walldistGradAlgDriver_.register_face_algorithm<ScalarWallDistGradBndryElemAlg>(
+     algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone, edgeNodalGradient_);
+
+  ndotvGradAlgDriver_.register_face_algorithm<ScalarNDotVGradBndryElemAlg>(
+     algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone, edgeNodalGradient_);
+
   // Dirichlet bc
   std::map<AlgorithmType, SolverAlgorithm *>::iterator itd =
     solverAlgDriver_->solverDirichAlgMap_.find(algType);
@@ -362,10 +423,21 @@ GammaEquationSystem::register_open_bc(
   ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
+  ScalarFieldType &minD = minDistanceToWall_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dWallDistdxNone = dWallDistdx_->field_of_state(stk::mesh::StateNone);
+  
+  ScalarFieldType &NDotV = NDotV_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dNDotVdxNone = dNDotVdx_->field_of_state(stk::mesh::StateNone);
+
   // non-solver; dgamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
 
+  walldistGradAlgDriver_.register_face_algorithm<ScalarWallDistGradBndryElemAlg>(
+      algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone, edgeNodalGradient_);
+                               
+  ndotvGradAlgDriver_.register_face_algorithm<ScalarNDotVGradBndryElemAlg>(
+      algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -385,9 +457,20 @@ GammaEquationSystem::register_wall_bc(
   ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
+  ScalarFieldType &minD = minDistanceToWall_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dWallDistdxNone = dWallDistdx_->field_of_state(stk::mesh::StateNone);
+
+  ScalarFieldType &NDotV = NDotV_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dNDotVdxNone = dNDotVdx_->field_of_state(stk::mesh::StateNone);
   // non-solver; dgamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
+
+  walldistGradAlgDriver_.register_face_algorithm<ScalarWallDistGradBndryElemAlg>(
+      algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone, edgeNodalGradient_);
+     
+  ndotvGradAlgDriver_.register_face_algorithm<ScalarNDotVGradBndryElemAlg>(
+      algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -407,9 +490,20 @@ GammaEquationSystem::register_symmetry_bc(
   ScalarFieldType &gammaNp1 = gamma_->field_of_state(stk::mesh::StateNP1);
   VectorFieldType &dgamdxNone = dgamdx_->field_of_state(stk::mesh::StateNone);
 
+  ScalarFieldType &minD = minDistanceToWall_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dWallDistdxNone = dWallDistdx_->field_of_state(stk::mesh::StateNone);
+  
+  ScalarFieldType &NDotV = NDotV_->field_of_state(stk::mesh::StateNP1);
+  VectorFieldType &dNDotVdxNone = dNDotVdx_->field_of_state(stk::mesh::StateNone);
   // non-solver; dgamdx; allow for element-based shifted
   nodalGradAlgDriver_.register_face_algorithm<ScalarNodalGradBndryElemAlg>(
       algType, part, "gamma_nodal_grad", &gammaNp1, &dgamdxNone, edgeNodalGradient_);
+
+  walldistGradAlgDriver_.register_face_algorithm<ScalarWallDistGradBndryElemAlg>(
+      algType, part, "gamma_walldist_grad", &minD, &dWallDistdxNone, edgeNodalGradient_);
+  
+  ndotvGradAlgDriver_.register_face_algorithm<ScalarNDotVGradBndryElemAlg>(
+      algType, part, "gamma_ndotv_grad", &NDotV, &dNDotVdxNone, edgeNodalGradient_);
 }
 
 //--------------------------------------------------------------------------
@@ -467,6 +561,20 @@ GammaEquationSystem::assemble_nodal_gradient()
   timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
 }
 
+void GammaEquationSystem::assemble_walldist_gradient()
+{
+  const double timeA = -NaluEnv::self().nalu_time();
+  walldistGradAlgDriver_.execute();
+  timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+}
+
+void GammaEquationSystem::assemble_ndotv_gradient()
+{
+  const double timeA = -NaluEnv::self().nalu_time();
+  ndotvGradAlgDriver_.execute();
+  timerMisc_ += (NaluEnv::self().nalu_time() + timeA);
+}
+
 //--------------------------------------------------------------------------
 //-------- compute_effective_flux_coeff() ----------------------------------
 //--------------------------------------------------------------------------
@@ -497,6 +605,82 @@ GammaEquationSystem::predict_state()
     & stk::mesh::selectField(*gamma_);
   nalu_ngp::field_copy(ngpMesh, sel, gammaNp1, gammaN);
   gammaNp1.modify_on_device();
+}
+
+//--------------------------------------------------------------------------
+//------------------------- normalize dwalldistdx vector -------------------
+//--------------------------------------------------------------------------
+void
+GammaEquationSystem::normalize_dwalldistdx()
+{ 
+  stk::mesh::MetaData & meta_data = realm_.meta_data();
+  
+  const int nDim = meta_data.spatial_dimension();
+  
+  VectorFieldType *dwalldistdx = dWallDistdx_;
+  double vmag = 0.0;
+  
+  printf("normalize_dwalldistdx\n");
+  
+  stk::mesh::Selector s_all_nodes
+    = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
+    &stk::mesh::selectField(*NDotV_);
+  
+  stk::mesh::BucketVector const& node_buckets =
+    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
+  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
+        ib != node_buckets.end() ; ++ib ) {
+    stk::mesh::Bucket & b = **ib ;
+    const stk::mesh::Bucket::size_type length   = b.size();
+    double * dwalldist = stk::mesh::field_data(*dwalldistdx, b);
+    
+    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
+      
+      vmag = 0.0; 
+      for ( int j = 0; j < nDim; ++j ) {
+        vmag += dwalldist[k*nDim+j]*dwalldist[k*nDim+j];
+      }
+      
+      if (stk::math::abs(vmag) >= 1.0e-10) {
+        vmag = stk::math::sqrt(vmag);
+        for ( int j = 0; j < nDim; ++j ) {
+          dwalldist[k*nDim+j] /= vmag;
+        }
+      }
+  
+  }
+}
+}
+
+void
+GammaEquationSystem::compute_norm_dot_vel()
+{
+  stk::mesh::MetaData & meta_data = realm_.meta_data();
+
+  const int nDim = meta_data.spatial_dimension();
+  VectorFieldType *velNp1 = meta_data.get_field<VectorFieldType>(stk::topology::NODE_RANK, "velocity");
+  VectorFieldType *dwalldistdx = dWallDistdx_;
+  stk::mesh::Selector s_all_nodes
+    = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
+    &stk::mesh::selectField(*NDotV_);
+
+  stk::mesh::BucketVector const& node_buckets =
+    realm_.get_buckets( stk::topology::NODE_RANK, s_all_nodes );
+  for ( stk::mesh::BucketVector::const_iterator ib = node_buckets.begin() ;
+        ib != node_buckets.end() ; ++ib ) {
+    stk::mesh::Bucket & b = **ib ;
+    const stk::mesh::Bucket::size_type length   = b.size();
+    const double * dwalldist = stk::mesh::field_data(*dwalldistdx, b);
+    double *vel = stk::mesh::field_data(*velNp1, b);
+    double * NDotV = stk::mesh::field_data(*NDotV_, b);
+    for ( stk::mesh::Bucket::size_type k = 0 ; k < length ; ++k ) {
+
+      NDotV[k] = 0.0;
+      for ( int j = 0; j < nDim; ++j ) {
+        NDotV[k] += dwalldist[k*nDim+j] * vel[k*nDim+j];
+      }
+    }
+  }
 }
 
 } // namespace nalu

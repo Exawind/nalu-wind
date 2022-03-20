@@ -246,7 +246,14 @@ ShearStressTransportEquationSystem::solve_and_update()
     // compute projected nodal gradients
     tkeEqSys_->compute_projected_nodal_gradient();
     sdrEqSys_->assemble_nodal_gradient();
-    if (realm_.solutionOptions_->gammaEqActive_) gammaEqSys_->assemble_nodal_gradient();
+    if (realm_.solutionOptions_->gammaEqActive_) {
+      gammaEqSys_->assemble_nodal_gradient();
+      gammaEqSys_->assemble_walldist_gradient();
+      gammaEqSys_->normalize_dwalldistdx();
+      gammaEqSys_->compute_norm_dot_vel();
+      gammaEqSys_->assemble_ndotv_gradient();
+    }
+
     clip_min_distance_to_wall();
 
     // deal with DES option

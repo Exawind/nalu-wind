@@ -256,11 +256,9 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
           nodeAlg.add_kernel<ScalarMassBDFNodeKernel>(realm_.bulk_data(), sdr_);
 
         if (SST == realm_.solutionOptions_->turbulenceModel_ && !realm_.solutionOptions_->gammaEqActive_){
-          NaluEnv::self().naluOutputP0() << "call SDRSSTNodeKernel: " <<std::endl;
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
         }
         else if (SST == realm_.solutionOptions_->turbulenceModel_ && realm_.solutionOptions_->gammaEqActive_){
-          NaluEnv::self().naluOutputP0() << "call SDRSSTBLTM2015NodeKernel: " <<std::endl;
           nodeAlg.add_kernel<SDRSSTBLTM2015NodeKernel>(realm_.meta_data());
         }
         else if ( (SST_DES == realm_.solutionOptions_->turbulenceModel_) || (SST_IDDES == realm_.solutionOptions_->turbulenceModel_ ) ){
@@ -272,7 +270,6 @@ SpecificDissipationRateEquationSystem::register_interior_algorithm(
             realm_.solutionOptions_->get_coordinates_name());
         else {
           nodeAlg.add_kernel<SDRSSTNodeKernel>(realm_.meta_data());
-          NaluEnv::self().naluOutputP0() << "call SDRSSTNodeKernel2: " <<std::endl;
         }
       },
       [&](AssembleNGPNodeSolverAlgorithm& nodeAlg, std::string& srcName) {
