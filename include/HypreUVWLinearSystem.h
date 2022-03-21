@@ -195,8 +195,6 @@ public:
 protected:
   virtual void finalizeLinearSystem();
 
-  virtual void finalizeSolver();
-
   virtual void loadCompleteSolver();
 
 private:

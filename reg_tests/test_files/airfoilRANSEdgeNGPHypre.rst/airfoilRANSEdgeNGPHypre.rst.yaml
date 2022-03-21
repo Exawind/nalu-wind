@@ -10,6 +10,11 @@ Simulations:
     time_integrator: ti_1
     optimizer: opt1
 
+# Hypre memory and other configurations
+hypre_config:
+    memory_pool_mbs: 1500
+    use_cusparse_sgemm: no
+
 linear_solvers:
 
   - name: solve_mom

@@ -3,7 +3,6 @@ hypre_simple_precon:
   bamg_relax_type: 12 # Use 11 for Hypre master or v2.21 and later, 8 for earlier
   bamg_num_sweeps: 2
   bamg_relax_order: 0
-  bamg_use_cusparse_sgemm: no
 
 hypre_elliptic:
   bamg_max_levels: 7
@@ -22,4 +21,3 @@ hypre_elliptic:
   bamg_agg_pmax_elmts: 3
   bamg_pmax_elmts: 3
   bamg_strong_threshold: 0.25
-  bamg_use_cusparse_sgemm: no

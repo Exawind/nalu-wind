@@ -82,7 +82,7 @@ int main( int argc, char ** argv )
   nalu_hypre::hypre_initialize();
 
   {
-  
+
   stk::diag::setEnabledTimerMetricsMask(stk::diag::METRICS_CPU_TIME | stk::diag::METRICS_WALL_TIME);
 
   sierra::nalu::Simulation::rootTimer().start();
@@ -163,6 +163,9 @@ int main( int argc, char ** argv )
     if (!naluEnv.parallel_rank())
       sierra::nalu::NaluParsingHelper::emit(std::cout, doc);
   }
+
+  // Hypre general parameter setting
+  nalu_hypre::hypre_set_params(doc);
 
   sierra::nalu::Simulation sim(doc);
   if (serializedIOGroupSize) {

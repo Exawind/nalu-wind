@@ -32,7 +32,7 @@ HypreUVWLinearSystem::HypreUVWLinearSystem(
 
 HypreUVWLinearSystem::~HypreUVWLinearSystem()
 {
-  if (systemInitialized_) {
+  if (hypreMatrixVectorsCreated_) {
     HYPRE_IJMatrixDestroy(mat_);
 
     for (unsigned i = 0; i < nDim_; ++i) {
@@ -40,7 +40,7 @@ HypreUVWLinearSystem::~HypreUVWLinearSystem()
       HYPRE_IJVectorDestroy(sln_[i]);
     }
   }
-  systemInitialized_ = false;
+  hypreMatrixVectorsCreated_ = false;
 }
 
 void
@@ -81,9 +81,6 @@ HypreUVWLinearSystem::finalizeLinearSystem()
   /* fill the various device data structures need in device coeff applier */
   buildCoeffApplierDeviceDataStructures();
 
-  /* Call finalize solver here */
-  finalizeSolver();
-
   /* compute the exact row sizes by reducing row counts at row indices across all ranks */
   computeRowSizes();
 
@@ -100,10 +97,6 @@ HypreUVWLinearSystem::finalizeLinearSystem()
   fclose(output_);
 #endif
 
-  // At this stage the LHS and RHS data structures are ready for
-  // sumInto/assembly.
-  systemInitialized_ = true;
-
 #ifdef HYPRE_LINEAR_SYSTEM_TIMER
   gettimeofday(&_stop, NULL);
   double msec = (double)(_stop.tv_usec - _start.tv_usec) / 1.e3 +
@@ -112,32 +105,6 @@ HypreUVWLinearSystem::finalizeLinearSystem()
 #endif
 }
 
-void
-HypreUVWLinearSystem::finalizeSolver()
-{
-
-  MPI_Comm comm = realm_.bulk_data().parallel();
-  // Now perform HYPRE assembly so that the data structures are ready to be used
-  // by the solvers/preconditioners.
-  HypreUVWSolver* solver = reinterpret_cast<HypreUVWSolver*>(linearSolver_);
-
-  HYPRE_IJMatrixCreate(comm, iLower_, iUpper_, jLower_, jUpper_, &mat_);
-  HYPRE_IJMatrixSetObjectType(mat_, HYPRE_PARCSR);
-  HYPRE_IJMatrixInitialize(mat_);
-  HYPRE_IJMatrixGetObject(mat_, (void**)&(solver->parMat_));
-
-  for (unsigned i = 0; i < nDim_; ++i) {
-    HYPRE_IJVectorCreate(comm, iLower_, iUpper_, &rhs_[i]);
-    HYPRE_IJVectorSetObjectType(rhs_[i], HYPRE_PARCSR);
-    HYPRE_IJVectorInitialize(rhs_[i]);
-    HYPRE_IJVectorGetObject(rhs_[i], (void**)&(solver->parRhsU_[i]));
-
-    HYPRE_IJVectorCreate(comm, iLower_, iUpper_, &sln_[i]);
-    HYPRE_IJVectorSetObjectType(sln_[i], HYPRE_PARCSR);
-    HYPRE_IJVectorInitialize(sln_[i]);
-    HYPRE_IJVectorGetObject(sln_[i], (void**)&(solver->parSlnU_[i]));
-  }
-}
 
 void
 HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
@@ -164,7 +131,7 @@ HypreUVWLinearSystem::hypreIJVectorSetAddToValues()
     if (config->getWritePreassemblyMatrixFiles()) {
       MPI_Barrier(realm_.bulk_data().parallel());
 
-      char rank_str[5];
+      char rank_str[8];
       sprintf(rank_str, "%05d", rank_);
       std::string writeCounter = std::to_string(eqSys_->linsysWriteCounter_);
       const std::string rhsFileRows = eqSysName_ + std::to_string(i) +  ".IJV." + writeCounter + ".rhs." + std::string(rank_str) + ".preassem.i";
@@ -327,8 +294,6 @@ HypreUVWLinearSystem::loadCompleteSolver()
     dumpMatrixStats();
     matrixStatsDumped_ = true;
   }
-
-  matrixAssembled_ = true;
 }
 
 void
@@ -336,29 +301,45 @@ HypreUVWLinearSystem::zeroSystem()
 {
   HypreUVWSolver* solver = reinterpret_cast<HypreUVWSolver*>(linearSolver_);
 
-#ifdef HYPRE_LINEAR_SYSTEM_DEBUG
-  sprintf(oname_,"debug_out_%d.txt",rank_);
-  output_ = fopen(oname_, "wt");
-  fprintf(output_, "rank_=%d EqnName=%s : %s %s %d\n",
-          rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__);
-  fclose(output_);
-#endif
+  MPI_Comm comm = realm_.bulk_data().parallel();
 
-  if (matrixAssembled_) {
-    HYPRE_IJMatrixInitialize(mat_);
-    for (unsigned i = 0; i < nDim_; ++i) {
-      HYPRE_IJVectorInitialize(rhs_[i]);
-      HYPRE_IJVectorInitialize(sln_[i]);
-    }
+   if (hypreMatrixVectorsCreated_) {
+ #ifdef HYPRE_LINEAR_SYSTEM_DEBUG
+       sprintf(oname_,"debug_out_%d.txt",rank_);
+       output_ = fopen(oname_, "wt");
+       fprintf(output_, "rank_=%d EqnName=%s : %s %s %d\n",
+               rank_, name_.c_str(), __FILE__, __FUNCTION__, __LINE__);
+       fclose(output_);
+ #endif
+     HYPRE_IJMatrixDestroy(mat_);
+     for (unsigned i = 0; i < nDim_; ++i) {
+       HYPRE_IJVectorDestroy(rhs_[i]);
+       HYPRE_IJVectorDestroy(sln_[i]);
+     }
+     hypreMatrixVectorsCreated_ = false;
+   }
 
-    matrixAssembled_ = false;
-  }
 
-  HYPRE_IJMatrixSetConstantValues(mat_, 0.0);
-  for (unsigned i = 0; i < nDim_; ++i) {
-    HYPRE_ParVectorSetConstantValues((solver->parRhsU_[i]), 0.0);
-    HYPRE_ParVectorSetConstantValues((solver->parSlnU_[i]), 0.0);
-  }
+   HYPRE_IJMatrixCreate(comm, iLower_, iUpper_, jLower_, jUpper_, &mat_);
+   HYPRE_IJMatrixSetObjectType(mat_, HYPRE_PARCSR);
+   HYPRE_IJMatrixInitialize(mat_);
+   HYPRE_IJMatrixGetObject(mat_, (void**)&(solver->parMat_));
+   HYPRE_IJMatrixSetConstantValues(mat_, 0.0);
+
+   for (unsigned i = 0; i < nDim_; ++i) {
+     HYPRE_IJVectorCreate(comm, iLower_, iUpper_, &rhs_[i]);
+     HYPRE_IJVectorSetObjectType(rhs_[i], HYPRE_PARCSR);
+     HYPRE_IJVectorInitialize(rhs_[i]);
+     HYPRE_IJVectorGetObject(rhs_[i], (void**)&(solver->parRhsU_[i]));
+     HYPRE_ParVectorSetConstantValues((solver->parRhsU_[i]), 0.0);
+
+     HYPRE_IJVectorCreate(comm, iLower_, iUpper_, &sln_[i]);
+     HYPRE_IJVectorSetObjectType(sln_[i], HYPRE_PARCSR);
+     HYPRE_IJVectorInitialize(sln_[i]);
+     HYPRE_IJVectorGetObject(sln_[i], (void**)&(solver->parSlnU_[i]));
+     HYPRE_ParVectorSetConstantValues((solver->parSlnU_[i]), 0.0);
+   }
+   hypreMatrixVectorsCreated_ = true;
 }
 
 void
@@ -436,9 +417,6 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
   std::vector<double> finalNorm(nDim_, 1.0);
   std::vector<double> rhsNorm(nDim_, std::numeric_limits<double>::max());
 
-  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
-  HYPRE_SetSpGemmUseCusparse(config->getUseCusparseSGEMM());
-
 #ifdef HYPRE_LINEAR_SYSTEM_DEBUG
   output_ = fopen(oname_, "at");
   fprintf(output_, "%s %s %d %s : rank=%d\n",__FILE__,__FUNCTION__,__LINE__,eqSysName_.c_str(),rank_);
@@ -467,6 +445,8 @@ HypreUVWLinearSystem::solve(stk::mesh::FieldBase* slnField)
       HYPRE_IJVectorPrint(sln_[d], slnFile.c_str());
     }
   }
+
+  HypreLinearSolverConfig* config = reinterpret_cast<HypreLinearSolverConfig*>(solver->getConfig());
   if (solver->getConfig()->getWriteMatrixFiles() || config->getWritePreassemblyMatrixFiles()) {
     ++eqSys_->linsysWriteCounter_;
   }
