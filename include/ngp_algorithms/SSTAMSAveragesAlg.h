@@ -36,7 +36,7 @@ private:
   const DblType CMdeg_;
   const DblType v2cMu_;
   const DblType aspectRatioSwitch_;
-  const DblType avgTimeScaleCoeff_;
+  const DblType avgTimeCoeff_;
   const bool meshMotion_;
   const bool RANSBelowKs_;
   const DblType z0_;

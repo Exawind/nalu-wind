@@ -117,6 +117,8 @@ SDRSSTNodeKernel::execute(
     const DblType l_t = stk::math::sqrt(tke)/(stk::math::pow(betaStar_, .25)*sdr);
 
     // calculate maximum mixing length
+    // the proportionality constant (.00027) was found by fitting to measurements
+    // of atmospheric conditions as described in ref. Kob13
     const DblType l_e = .00027*referenceVelocity_/corfac_;
 
     // apply limiter to cEpsOne -> calculate gammaOne

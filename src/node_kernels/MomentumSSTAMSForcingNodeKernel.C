@@ -35,8 +35,7 @@ MomentumSSTAMSForcingNodeKernel::MomentumSSTAMSForcingNodeKernel(
       solnOpts.get_turb_model_constant(TM_periodicForcingLengthY)),
     periodicForcingLengthZ_(
       solnOpts.get_turb_model_constant(TM_periodicForcingLengthZ)),
-    nDim_(bulk.mesh_meta_data().spatial_dimension()),
-    kappa_(solnOpts.get_turb_model_constant(TM_kappa))
+    nDim_(bulk.mesh_meta_data().spatial_dimension())
 {
   const auto& meta = bulk.mesh_meta_data();
 
@@ -215,6 +214,8 @@ MomentumSSTAMSForcingNodeKernel::execute(
   NodeKernelTraits::DblType gZ = C_F * hZ;
 
   if (RANSBelowKs_) {
+    // relationship b/w sand grain roughness height, k_s, and aerodynamic roughness, z0,
+    // as described in ref. Bau11, Eq. (2.29)
     const NodeKernelTraits::DblType k_s = 30.*z0_;
     if (coords[2] <= k_s) {
       gX = 0.0;

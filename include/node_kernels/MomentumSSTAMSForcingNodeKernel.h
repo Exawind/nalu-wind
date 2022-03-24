@@ -93,7 +93,6 @@ private:
 
   bool RANSBelowKs_;
   double z0_;
-  double kappa_;
 };
 
 } // namespace nalu

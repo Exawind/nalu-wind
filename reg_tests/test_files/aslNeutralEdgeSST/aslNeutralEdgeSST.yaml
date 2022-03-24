@@ -221,7 +221,7 @@ realms:
             sigmaKTwo: 1.0
             sigmaWOne: 0.5
             sigmaWTwo: 0.67
-            SDRWallFactor: 10.0 # for timestepping not turbulence model
+            SDRWallFactor: 0.625 # for timestepping not turbulence model
 
         - source_terms:
             momentum: 

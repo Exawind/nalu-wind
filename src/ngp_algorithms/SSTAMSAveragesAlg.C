@@ -28,7 +28,7 @@ SSTAMSAveragesAlg::SSTAMSAveragesAlg(Realm& realm, stk::mesh::Part* part)
     CMdeg_(realm.get_turb_model_constant(TM_CMdeg)),
     v2cMu_(realm.get_turb_model_constant(TM_v2cMu)),
     aspectRatioSwitch_(realm.get_turb_model_constant(TM_aspRatSwitch)),
-    avgTimeScaleCoeff_(realm.get_turb_model_constant(TM_avgTimeScaleCoeff)),
+    avgTimeCoeff_(realm.get_turb_model_constant(TM_avgTimeCoeff)),
     meshMotion_(realm.does_mesh_move()),
     velocity_(get_field_ordinal(realm.meta_data(), "velocity")),
     density_(get_field_ordinal(realm.meta_data(), "density")),
@@ -116,11 +116,13 @@ SSTAMSAveragesAlg::execute()
   const DblType v2cMu = v2cMu_;
   const DblType beta_kol_local = beta_kol;
   const DblType aspectRatioSwitch = aspectRatioSwitch_;
-  const DblType avgTimeScaleCoeff = avgTimeScaleCoeff_;
+  const DblType avgTimeCoeff = avgTimeCoeff_;
 
   const bool RANSBelowKs = RANSBelowKs_;
   DblType k_s;
   if (RANSBelowKs) {
+    // relationship b/w sand grain roughness height, k_s, and aerodynamic roughness, z0,
+    // as described in ref. Bau11, Eq. (2.29)
     k_s = 30.*z0_;
   }
 
@@ -136,7 +138,7 @@ SSTAMSAveragesAlg::execute()
       else {
         beta.get(mi, 0) =
           (tke.get(mi, 0) - avgTkeRes.get(mi, 0)) / tke.get(mi, 0);
-        
+ 
         // limiters
         beta.get(mi, 0) = stk::math::min(beta.get(mi, 0), 1.0);
 
@@ -148,10 +150,10 @@ SSTAMSAveragesAlg::execute()
       // store RANS time scale
      if (lengthScaleLimiter_) {
        const DblType l_t = stk::math::sqrt(tke.get(mi, 0))/(stk::math::pow(betaStar, .25)*sdr.get(mi, 0));
-       avgTime.get(mi, 0) = avgTimeScaleCoeff * l_t / stk::math::sqrt(tke.get(mi, 0));
+       avgTime.get(mi, 0) = avgTimeCoeff * l_t / stk::math::sqrt(tke.get(mi, 0));
      }
      else {
-       avgTime.get(mi, 0) = avgTimeScaleCoeff / (betaStar * sdr.get(mi, 0)); 
+       avgTime.get(mi, 0) = avgTimeCoeff / (betaStar * sdr.get(mi, 0)); 
      }
 
       // causal time average ODE: d<phi>/dt = 1/avgTime * (phi - <phi>)

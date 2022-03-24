@@ -241,7 +241,7 @@ enum TurbulenceModelConstant {
   TM_ceOne = 57,
   TM_ceTwo = 58,
   TM_c0t = 59,
-  TM_avgTimeScaleCoeff = 60,
+  TM_avgTimeCoeff = 60,
   TM_END = 61
 };
 
@@ -301,7 +301,7 @@ static const std::string TurbulenceModelConstantNames[] = {
   "ams_peclet_scale",
   "tke_amb",
   "sdr_amb",
-  "avgTimeScaleCoeff",
+  "avgTimeCoeff",
   "END"};
 
 enum ActuatorType {

@@ -228,7 +228,7 @@ realms:
             sigmaKTwo: 1.0
             sigmaWOne: 0.5
             sigmaWTwo: 0.67
-            SDRWallFactor: 10.0 # for timestepping not turbulence model
+            SDRWallFactor: 0.625 # for timestepping not turbulence model
 
         - source_terms:
             momentum: 
@@ -259,8 +259,6 @@ realms:
        - minimum_distance_to_wall
        - turbulent_viscosity
        - sst_f_one_blending
-       - l_t
-       - gamma
 
    # Compute spatial averages of velocity and temperature at all height levels
    # available on the ABL mesh. This is used for post-processing.

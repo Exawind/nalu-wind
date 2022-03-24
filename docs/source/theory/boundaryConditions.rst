@@ -943,22 +943,27 @@ field values are used for property evaluations. When flow is leaving the
 domain, the flow is advected out consistent with the choice of interior
 advection operator.
 
-.. _theory_symmetry_bc:
+.. _theory_strong_symmetry_bc:
 
-Symmetry Boundary Condition
+Strong Symmetry Boundary Condition
+++++++++++++++++++++++++++++++++++
+
+There are two implementations of the symmetry boundary condition: strong and weak. In the strong symmetry implementation, the normal velocity is set to zero at the boundary. Strong symmetry has only been implemented for a cartesian mesh, meaning it can be used for flat surfaces that are aligned with the principle Cartesian directions. It cannot be used for curved surfaces or flat surfaces that are not aligned with the principle Cartesian directions. Both the strong and weak symmetry boundary conditions have an associated error. In the strong form the associated error lies not on the boundary but in the domain.
+
+.. _theory_weak_symmetry_bc:
+
+Weak Symmetry Boundary Condition
 +++++++++++++++++++++++++++
 
 Continuity, Mixture Fraction, Enthalpy, Species, :math:`k_{sgs}`, k and :math:`\omega`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Zero diffusion is applied at the symmetry bc.
+Weak symmetry applies zero diffusion at the boundary for scalar quantities, which effectively sets the boundary-normal gradients of these quantities to zero. This means that, unlike for strong symmetry, in the weak symmetry implementation, normal velocity can be non-zero. This is possible because the cell averaged quantities in Nalu-Wind's discretization are stored at the nodes and therefore reside on the boundaries. In general, a non-zero normal velocity can cause net inflow or outflow. The Poisson solve prevents this by enforcing mass conservation globally to the order of linear solver convergence. 
 
 Momentum
-~~~~~~~~
+~~~~~~~
 
-A symmetry boundary is one that is described by removal of the
-tangential stress. Therefore, only the normal component of the stress is
-applied:
+A symmetry boundary is one that is described by removal of the tangential stress. For weak symmetry this is done in the momentum equation by applying only the normal component of stress:
 
 .. math:: F^n_x = (F_x n_x + F_y n_y ) n_x,
 
@@ -966,15 +971,16 @@ which can be written in general component form as,
 
 .. math:: F^n_i = F_j n_j n_i.
 
-Strong versus Weak Symmetry
-~~~~~~~~~~~~~~~
+The momentum equation also penalizes non-zero normal velocity. The strength of this penality depends on the penalty factor. One can enforce a stronger representation of the boundary by amplifying the penalty factor through the `symmetry_bc_penalty_factor` variable in `solution_options`. Its default value is 2.0 which is the minimum required for stability. Amplifying the penalty factor will enforce the boundary in a stronger sense, but can also lead to a more difficult matrix solve as with any large penalty term.
 
-There are two implementations of the symmetry boundary condition: strong and weak. In the strong symmetry implementation, the normal velocity is set to zero at the boundary. Strong symmetry has only been implemented for a cartesian mesh, meaning it can be used for flat but not curved surfaces. In the weak symmetry implementation, normal velocity can be nonzero. The Poisson solve tries to enforce mass conservation. Weak symmetry has not been implemented for Active Model Splits (AMS).
+Both strong and weak symmetry boundary conditions have associated error. In the weak form the error manifests as non-zero local velocities at the boundary. As the mesh is refined, the weak symmetry boundary condition converges to the strong symmetry boundary condition (zero normal velocity) with a first order rate. Note that this doesn't mean the error goes away; the error just moves off the boundary and into the domain.
+
+Weak symmetry has not been implemented for Active Model Split (AMS).
 
 If the symmetry type is not specified in the input file then the code defaults to weak symmetry. If the ABL top boundary condition is used and it defaults to symmetry, as described in ref:`Atmospheric Boundary Layer Top Conditions <theory_abltop_bc>`:, then strong or weak symmetry can be specified explicitly in the input file:
 
 .. literalinclude:: symmetry.yaml
-      :language: yaml 
+         :language: yaml 
 
 Specified Boundary-Normal Temperature Gradient Option
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

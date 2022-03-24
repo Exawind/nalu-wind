@@ -237,7 +237,7 @@ realms:
             sigmaWTwo: 0.67
             SDRWallFactor: 0.625 # for timestepping not turbulence model
             forcingFactor: 8.0 # for AMS
-            avgTimeScaleCoeff: 1.0 # for AMS
+            avgTimeCoeff: 1.0 # for AMS
 
         - source_terms:
             momentum:
@@ -284,8 +284,6 @@ realms:
        - average_dudx
        - forcing_components
        - sst_f_one_blending
-       - l_t
-       - gamma
 
    # Compute spatial averages of velocity and temperature at all height levels
    # available on the ABL mesh. This is used for post-processing as well as
