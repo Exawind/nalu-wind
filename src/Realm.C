@@ -1775,28 +1775,30 @@ Realm::advance_time_step()
     ablForcingAlg_->execute();
   }
 
-  const int numNonLinearIterations = equationSystems_.maxIterations_;
-  for ( int i = 0; i < numNonLinearIterations; ++i ) {
-    currentNonlinearIteration_ = i+1;
-    NaluEnv::self().naluOutputP0()
-      << currentNonlinearIteration_
-      << "/" << numNonLinearIterations
-      << std::setw(29) << std::right << "Equation System Iteration" << std::endl;
+  nonlinear_iterations(equationSystems_.maxIterations_);
+}
 
-    isFinalOuterIter_ = ((i+1) == numNonLinearIterations);
+void Realm::nonlinear_iterations(const int numNonLinearIterations){
+    for ( int i = 0; i < numNonLinearIterations; ++i ) {
+      currentNonlinearIteration_ = i+1;
+      NaluEnv::self().naluOutputP0()
+        << currentNonlinearIteration_
+        << "/" << numNonLinearIterations
+        << std::setw(29) << std::right << "Equation System Iteration" << std::endl;
 
-    const bool isConverged = equationSystems_.solve_and_update();
+      isFinalOuterIter_ = ((i+1) == numNonLinearIterations);
 
-    // evaluate properties based on latest np1 solution
-    evaluate_properties();
+      const bool isConverged = equationSystems_.solve_and_update();
 
-    if ( isConverged ) {
-      NaluEnv::self().naluOutputP0() << "norm convergence criteria met for all equation systems: " << std::endl;
-      NaluEnv::self().naluOutputP0() << "max scaled norm is: " << equationSystems_.provide_system_norm() << std::endl;
-      break;
+      // evaluate properties based on latest np1 solution
+      evaluate_properties();
+
+      if ( isConverged ) {
+        NaluEnv::self().naluOutputP0() << "norm convergence criteria met for all equation systems: " << std::endl;
+        NaluEnv::self().naluOutputP0() << "max scaled norm is: " << equationSystems_.provide_system_norm() << std::endl;
+        break;
+      }
     }
-  }
-
 }
 
 //--------------------------------------------------------------------------
