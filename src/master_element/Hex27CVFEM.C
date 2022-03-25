@@ -1493,13 +1493,18 @@ void Hex27SCS::face_grad_op(
   int face_ordinal,
   SharedMemView<DoubleType**, DeviceShmem>& coords,
   SharedMemView<DoubleType***, DeviceShmem>& gradop,
-  SharedMemView<DoubleType***, DeviceShmem>&)
+  SharedMemView<DoubleType***, DeviceShmem>& deriv)
 {
   using traits = AlgTraitsQuad9Hex27;
   const int offset = traits::numFaceIp_ * face_ordinal;
-  auto range = std::make_pair(offset, offset + traits::numFaceIp_);
-  auto face_weights = Kokkos::subview(expReferenceGradWeights_, range, Kokkos::ALL(), Kokkos::ALL());
-  generic_grad_op<AlgTraitsHex27>(face_weights, coords, gradop);
+  for(int faceIp = 0; faceIp < traits::numFaceIp_; ++faceIp) {
+    for(unsigned npe = 0; npe < expReferenceGradWeights_.extent(1); ++npe) {
+      for(unsigned d = 0; d < expReferenceGradWeights_.extent(2); ++d) {
+        deriv(faceIp,npe,d) = expReferenceGradWeights_(offset+faceIp,npe,d);
+      }
+    }
+  }
+  generic_grad_op<AlgTraitsHex27>(deriv, coords, gradop);
 }
 
 
