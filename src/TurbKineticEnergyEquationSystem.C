@@ -395,7 +395,6 @@ TurbKineticEnergyEquationSystem::register_inflow_bc(
     throw std::runtime_error("TurbKineticEnergyEquationSystem: Attempted to set more than one inflow boundary");
   }
 
-
   // new it
   ConstantAuxFunction *theAuxFunc = new ConstantAuxFunction(0, 1, userSpec);
 

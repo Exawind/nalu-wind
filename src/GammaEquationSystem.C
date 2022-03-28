@@ -620,8 +620,6 @@ GammaEquationSystem::normalize_dwalldistdx()
   VectorFieldType *dwalldistdx = dWallDistdx_;
   double vmag = 0.0;
   
-  printf("normalize_dwalldistdx\n");
-  
   stk::mesh::Selector s_all_nodes
     = (meta_data.locally_owned_part() | meta_data.globally_shared_part())
     &stk::mesh::selectField(*NDotV_);

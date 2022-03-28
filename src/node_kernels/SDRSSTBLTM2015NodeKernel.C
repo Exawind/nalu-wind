@@ -95,7 +95,6 @@ SDRSSTBLTM2015NodeKernel::execute(
   const DblType fOneBlend = fOneBlend_.get(node, 0);
 
   DblType Pk = 0.0;
-  DblType Dk = 0.0;
   DblType crossDiff = 0.0;
   DblType sdrForcing = 0.0;
   DblType tc = 0.0;
@@ -126,7 +125,7 @@ SDRSSTBLTM2015NodeKernel::execute(
   vortMag = stk::math::sqrt(2.0*vortMag);
   velMag2 = vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2] + 1.e-14;
 
-  Dk = betaStar_ * density * sdr * tke;
+  const DblType Dk = betaStar_ * density * sdr * tke;
   Pk = tvisc * sijMag * vortMag; // Pk based on Kato-Launder formulation. Recommended in Menter (2015) to avoid excessive levels of TKE in stagnation regions
 
   if (coords[0] < xcoordEndFixedTurb_) {
