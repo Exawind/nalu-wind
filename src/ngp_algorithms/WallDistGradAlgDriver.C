@@ -80,7 +80,6 @@ void WallDistGradAlgDriver<GradPhiType>::post_work()
   }
 
   ngpGradPhi.modify_on_host();
-  ngpGradPhi.sync_to_device();
 }
 
 template class WallDistGradAlgDriver<VectorFieldType>;

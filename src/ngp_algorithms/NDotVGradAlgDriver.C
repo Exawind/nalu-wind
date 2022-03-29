@@ -80,7 +80,6 @@ void NDotVGradAlgDriver<GradPhiType>::post_work()
   }
 
   ngpGradPhi.modify_on_host();
-  ngpGradPhi.sync_to_device();
 }
 
 template class NDotVGradAlgDriver<VectorFieldType>;
